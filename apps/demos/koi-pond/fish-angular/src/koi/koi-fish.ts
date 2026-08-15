@@ -19,7 +19,7 @@
 import type { AfterViewInit, ElementRef, OnDestroy } from '@angular/core'
 import type { KoiProfile } from '@hyperfrontend/demo-koi-lib'
 import { ChangeDetectionStrategy, Component, input, viewChild } from '@angular/core'
-import { FRAMEWORK_SITES } from '@hyperfrontend/demo-koi-lib'
+import { FRAMEWORK_SITES, koiSourceUrl } from '@hyperfrontend/demo-koi-lib'
 
 /** The card's committed nodes, handed to the imperative renderer as one piece. */
 export interface KoiCardHandles {
@@ -29,6 +29,8 @@ export interface KoiCardHandles {
   app: HTMLAnchorElement
   /** The framework-site anchor, whose rectangle the outline reports. */
   site: HTMLAnchorElement
+  /** The app-source anchor, whose rectangle the outline reports. */
+  source: HTMLAnchorElement
   /** The behaviour row. */
   state: HTMLElement
   /** The runtime row. */
@@ -63,6 +65,8 @@ export type KoiMount = (canvas: HTMLCanvasElement, handles: KoiCardHandles) => (
       <span class="koi-card-line koi-card-memory" #memory></span>
       <span class="koi-card-line koi-card-event" hidden #event></span>
       <a class="koi-card-site" [href]="site()" target="_blank" rel="noopener noreferrer" #siteAnchor>{{ profile().label }} website ↗</a>
+      <!-- why: The demo's claim is checkable — the card links straight to this very app's implementation in the repository. -->
+      <a class="koi-card-source" [href]="source()" target="_blank" rel="noopener noreferrer" #sourceAnchor>App source ↗</a>
     </div>
   `,
 })
@@ -78,6 +82,7 @@ export class KoiFish implements AfterViewInit, OnDestroy {
   private readonly cardRef = viewChild.required<ElementRef<HTMLDivElement>>('card')
   private readonly appRef = viewChild.required<ElementRef<HTMLAnchorElement>>('app')
   private readonly siteRef = viewChild.required<ElementRef<HTMLAnchorElement>>('siteAnchor')
+  private readonly sourceRef = viewChild.required<ElementRef<HTMLAnchorElement>>('sourceAnchor')
   private readonly stateRef = viewChild.required<ElementRef<HTMLElement>>('state')
   private readonly runtimeRef = viewChild.required<ElementRef<HTMLElement>>('runtime')
   private readonly memoryRef = viewChild.required<ElementRef<HTMLElement>>('memory')
@@ -85,9 +90,14 @@ export class KoiFish implements AfterViewInit, OnDestroy {
 
   private teardown: (() => void) | null = null
 
-  /** The framework's official site, linked from the card's last line. */
+  /** The framework's official site, linked from the card's penultimate line. */
   site(): string {
     return FRAMEWORK_SITES[this.profile().framework]
+  }
+
+  /** This very app's implementation in the repository, linked from the card's last line. */
+  source(): string {
+    return koiSourceUrl(this.profile().framework)
   }
 
   ngAfterViewInit(): void {
@@ -96,6 +106,7 @@ export class KoiFish implements AfterViewInit, OnDestroy {
       card: this.cardRef().nativeElement,
       app: this.appRef().nativeElement,
       site: this.siteRef().nativeElement,
+      source: this.sourceRef().nativeElement,
       state: this.stateRef().nativeElement,
       runtime: this.runtimeRef().nativeElement,
       memory: this.memoryRef().nativeElement,

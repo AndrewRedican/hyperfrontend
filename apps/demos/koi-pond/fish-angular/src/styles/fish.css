@@ -75,7 +75,8 @@ body,
 
 /* why: Styled as the links they are, but this frame never receives the pointer - the host floats real anchors over the rectangles the outline reports. */
 .koi-card-url,
-.koi-card-site {
+.koi-card-site,
+.koi-card-source {
   font-size: 0.68rem;
   color: rgba(124, 192, 255, 0.85);
   font-family: ui-monospace, 'SFMono-Regular', monospace;
@@ -84,7 +85,8 @@ body,
   text-underline-offset: 2px;
 }
 
-.koi-card-site {
+.koi-card-site,
+.koi-card-source {
   font-size: 0.64rem;
   font-family: inherit;
 }
