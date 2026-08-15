@@ -31,9 +31,10 @@ export interface KoiFishProps {
    *
    * @param canvas - The canvas the koi's body renders into.
    * @param card - The hover identity card the renderer reveals and parks.
+   * @param link - The card's URL anchor, whose rectangle the outline reports.
    * @returns The teardown that releases whatever the renderer built on them.
    */
-  mount(canvas: HTMLCanvasElement, card: HTMLDivElement): () => void
+  mount(canvas: HTMLCanvasElement, card: HTMLDivElement, link: HTMLAnchorElement): () => void
 }
 
 /**
@@ -45,13 +46,14 @@ export interface KoiFishProps {
 export function KoiFish({ profile, url, mount }: KoiFishProps): ReactElement {
   const canvas = useRef<HTMLCanvasElement>(null)
   const card = useRef<HTMLDivElement>(null)
+  const link = useRef<HTMLAnchorElement>(null)
 
   useLayoutEffect(() => {
-    if (canvas.current === null || card.current === null) {
+    if (canvas.current === null || card.current === null || link.current === null) {
       return
     }
     // why: The GPU scene needs a real canvas node, so it is built here — after React has committed one — and torn down by whatever cleanup the renderer hands back.
-    return mount(canvas.current, card.current)
+    return mount(canvas.current, card.current, link.current)
   }, [mount])
 
   return (
@@ -61,7 +63,10 @@ export function KoiFish({ profile, url, mount }: KoiFishProps): ReactElement {
         <span className="koi-card-name" style={{ color: profile.palette.accent }}>
           {profile.label}
         </span>
-        <span className="koi-card-url">{url}</span>
+        {/* why: The URL is a real anchor for semantics and link styling, but this frame never receives the pointer — the host reads its rectangle off the outline report and floats the anchor that actually opens it. */}
+        <a className="koi-card-url" href={url} target="_blank" rel="noopener noreferrer" ref={link}>
+          {url}
+        </a>
       </div>
     </>
   )

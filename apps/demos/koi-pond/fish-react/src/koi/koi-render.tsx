@@ -10,7 +10,7 @@
  * built from the latest pond the moment React commits the canvas, and the very
  * next frame paints onto it.
  */
-import type { KoiProfile, PondEnvironment } from '@hyperfrontend/demo-koi-lib'
+import type { KoiCardLink, KoiProfile, PondEnvironment } from '@hyperfrontend/demo-koi-lib'
 import type { Koi } from '@hyperfrontend/demo-koi-lib/three'
 import type { KoiState } from './koi-motion'
 import type { GlRenderer, KoiStage } from './koi-stage'
@@ -50,6 +50,15 @@ export interface KoiRenderer {
    * @param state - What the koi is doing right now.
    */
   placeCard(state: KoiState): void
+  /**
+   * Where the card's URL line currently sits, in pond space.
+   *
+   * This frame is pointer-transparent, so the link text drawn here can never be
+   * clicked directly; the host lays a real anchor over the reported rectangle.
+   *
+   * @returns The rectangle, or `null` while the card is hidden.
+   */
+  cardLinkRect(): KoiCardLink | null
   /** Releases the GPU resources the koi holds and unmounts its tree. */
   dispose(): void
 }
@@ -77,20 +86,23 @@ export function createKoiRenderer(
   pond: PondEnvironment,
   createGl: (canvas: HTMLCanvasElement) => GlRenderer = createPondRenderer
 ): KoiRenderer {
-  // why: The stage and card arrive when React commits the tree and leave when it unmounts, so everything below reaches them through these slots rather than closing over them.
+  // why: The stage, card, and URL anchor arrive when React commits the tree and leave when it unmounts, so everything below reaches them through these slots rather than closing over them.
   let stage: KoiStage | null = null
   let card: HTMLDivElement | null = null
+  let cardUrl: HTMLAnchorElement | null = null
   let latestPond = pond
 
-  const mount = (canvas: HTMLCanvasElement, cardNode: HTMLDivElement): (() => void) => {
+  const mount = (canvas: HTMLCanvasElement, cardNode: HTMLDivElement, linkNode: HTMLAnchorElement): (() => void) => {
     // why: A pond may have been announced while the tree was still mounting, so the stage is built from the latest one rather than the one this closure was born with.
     const built = createKoiStage(canvas, profile, latestPond, createGl)
     stage = built
     card = cardNode
+    cardUrl = linkNode
     return () => {
       built.dispose()
       stage = null
       card = null
+      cardUrl = null
     }
   }
 
@@ -130,6 +142,15 @@ export function createKoiRenderer(
         const size = { width: card.offsetWidth || 200, height: card.offsetHeight || 64 }
         card.style.transform = cardTransform(cardAnchor(state, latestPond, size))
       }
+    },
+
+    cardLinkRect() {
+      if (card === null || card.hidden || cardUrl === null) {
+        return null
+      }
+      // why: The frame fills the visible window exactly, so client coordinates become pond coordinates by adding the window's origin back on.
+      const rect = cardUrl.getBoundingClientRect()
+      return { x: rect.left + latestPond.view.x, y: rect.top + latestPond.view.y, width: rect.width, height: rect.height }
     },
 
     dispose() {
