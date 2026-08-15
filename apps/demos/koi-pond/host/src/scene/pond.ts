@@ -13,6 +13,7 @@ import { KOI_FRAMEWORKS, describePond, mayRipple, pondPoint, pondWindow } from '
 import { createDepthDirector } from './depth-director'
 import { createFrameLoop } from './raf-loop'
 import { createRelay } from './relay'
+import { createSelectionChrome } from './selection'
 import { createRoster } from './roster'
 import { createSequenceTracker } from './sequence'
 import { createStage, setCurtain, setLayerDepth } from './stage'
@@ -52,6 +53,15 @@ const OPEN_RETRIES = 2
 
 /** How long the pond waits before re-opening a timed-out koi, in milliseconds. */
 const OPEN_RETRY_DELAY_MS = 4000
+
+/** How far a press may wander before it stops being a tap and becomes a drag, in CSS pixels. */
+const DRAG_SLOP_PX = 6
+
+/** The wider slop a fingertip gets, in CSS pixels. */
+const TOUCH_DRAG_SLOP_PX = 12
+
+/** How close to the world's edge a carried koi may be set down, in nominal fish lengths. */
+const DRAG_EDGE_INSET_FL = 0.3
 
 /** What the pond tells whatever mounted it. */
 export interface PondHooks {
@@ -104,7 +114,28 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondScene {
   const inspected = new Set<KoiFramework>()
   const retries = new Map<KoiFramework, number>()
 
+  /** The press being tracked from a fish, from pointerdown until it resolves as a tap or a drag. */
+  let drag: {
+    framework: KoiFramework
+    pointerId: number
+    startX: number
+    startY: number
+    offset: Vec2
+    touch: boolean
+    wasHeld: boolean
+    dragging: boolean
+    pending: Vec2 | null
+    lastSent: Vec2 | null
+  } | null = null
+
   const sessions = openShoal(stage.layers)
+  const chrome = createSelectionChrome(root, stage.layers)
+
+  /** Keeps the cursor honest about what a press would do right here. */
+  const refreshCursor = (): void => {
+    root.style.cursor =
+      drag?.dragging === true ? 'grabbing' : hovered !== null && inspected.has(hovered) ? 'grab' : hovered !== null ? 'pointer' : 'default'
+  }
 
   /**
    * Tells one koi whether the pointer is on it, and only when that changed.
@@ -125,7 +156,64 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondScene {
     }
     hovered = next
     roster.setHovered(next)
-    root.style.cursor = next === null ? 'default' : 'pointer'
+    refreshCursor()
+  }
+
+  /**
+   * Sends one koi a contract action.
+   *
+   * @param framework - Which koi.
+   * @param type - The action type.
+   * @param data - Its payload.
+   */
+  const sendTo = (framework: KoiFramework, type: string, data: unknown): void => {
+    for (const session of sessions) {
+      if (session.framework === framework) {
+        session.shell.send(type, data)
+      }
+    }
+  }
+
+  /**
+   * Holds a koi for inspection: pauses it and raises its ring.
+   *
+   * @param framework - Which koi was pressed.
+   */
+  const hold = (framework: KoiFramework): void => {
+    if (inspected.has(framework)) {
+      return
+    }
+    inspected.add(framework)
+    chrome.hold(framework)
+    sendTo(framework, 'pause', { paused: true })
+  }
+
+  /**
+   * Releases a held koi back to its own swimming.
+   *
+   * @param framework - Which koi to free.
+   */
+  const release = (framework: KoiFramework): void => {
+    if (!inspected.has(framework)) {
+      return
+    }
+    inspected.delete(framework)
+    chrome.release(framework)
+    sendTo(framework, 'pause', { paused: false })
+  }
+
+  /**
+   * Clamps a carried koi's nose into the world, a little off every edge.
+   *
+   * @param point - Where the pointer is carrying it.
+   * @returns The point it may actually be set at.
+   */
+  const clampCarry = (point: Vec2): Vec2 => {
+    const inset = pond.fishLength * DRAG_EDGE_INSET_FL
+    return {
+      x: Math.min(Math.max(point.x, inset), pond.width - inset),
+      y: Math.min(Math.max(point.y, inset), pond.height - inset),
+    }
   }
 
   const roster = createRoster(root, fishHomeUrl, setHover)
@@ -208,6 +296,11 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondScene {
       opened = Math.max(0, opened - 1)
       relay.forget(framework)
       inspected.delete(framework)
+      chrome.release(framework)
+      if (drag?.framework === framework) {
+        drag = null
+        refreshCursor()
+      }
       roster.setConnected(framework, false)
       hooks.onShoal(opened, sessions.length)
       if (hovered === framework) {
@@ -270,38 +363,66 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondScene {
 
   // why: The host owns the only pointer stream in the pond — every koi frame is pointer-events:none, so this listener sees presses over the whole scene. Moves only record; the frame loop runs one hit-test per frame however fast the pointer reports.
   root.addEventListener('pointermove', (event: PointerEvent) => {
+    if (drag !== null && event.pointerId === drag.pointerId) {
+      if (!drag.dragging) {
+        const wander = Math.hypot(event.clientX - drag.startX, event.clientY - drag.startY)
+        if (wander > (drag.touch ? TOUCH_DRAG_SLOP_PX : DRAG_SLOP_PX)) {
+          drag.dragging = true
+          refreshCursor()
+        }
+      }
+      if (drag.dragging) {
+        const at = pondCoords(event)
+        // why: The grab offset keeps the body under the hand exactly where it was picked up — anchoring the nose to the pointer would snap the fish on the first move.
+        drag.pending = clampCarry({ x: at.x + drag.offset.x, y: at.y + drag.offset.y })
+      }
+      return
+    }
     pointer.x = event.clientX
     pointer.y = event.clientY
     pointer.fresh = true
   })
 
   root.addEventListener('pointerleave', () => {
+    if (drag !== null) {
+      return
+    }
     pointer.fresh = false
     setHover(null)
   })
 
   root.addEventListener('pointerdown', (event: PointerEvent) => {
+    if (drag !== null) {
+      return
+    }
     const at = pondCoords(event)
     // why: A fingertip is blunter than a cursor and gets no hover pass first, so a tap hit-tests with widened slack — precision must never be the price of selecting a fish on a phone.
     const touch = event.pointerType === 'touch'
-    const hit = relay.pick(at, pond, Date.now(), touch ? TOUCH_SLACK_SCALE : 1)
-    // why: A press lands on a fish or on the water, never both — pressing a koi holds it for inspection, pressing it again frees it, and only open water takes a strike.
+    const now = Date.now()
+    const hit = relay.pick(at, pond, now, touch ? TOUCH_SLACK_SCALE : 1)
+    // why: A press lands on a fish or on the water, never both — pressing a koi holds it, dragging carries it, releasing the press frees a koi that was already held, and only open water takes a strike.
     if (hit !== null) {
-      const holding = !inspected.has(hit)
-      if (holding) {
-        inspected.add(hit)
-      } else {
-        inspected.delete(hit)
+      const wasHeld = inspected.has(hit)
+      hold(hit)
+      const nose = relay.latest(hit, now)?.spine[0] ?? at
+      drag = {
+        framework: hit,
+        pointerId: event.pointerId,
+        startX: event.clientX,
+        startY: event.clientY,
+        offset: { x: nose.x - at.x, y: nose.y - at.y },
+        touch,
+        wasHeld,
+        dragging: false,
+        pending: null,
+        lastSent: null,
       }
-      for (const session of sessions) {
-        if (session.framework === hit) {
-          session.shell.send('pause', { paused: holding })
-        }
-      }
+      root.setPointerCapture(event.pointerId)
       // why: Touch has no hover stream, so the tap itself is what reveals the identity card; a second tap on open water clears it.
       if (touch) {
-        setHover(holding ? hit : null)
+        setHover(hit)
       }
+      refreshCursor()
       return
     }
     if (touch) {
@@ -309,6 +430,39 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondScene {
     }
     strike(at)
   })
+
+  /**
+   * Resolves the tracked press: a drag drops and frees the koi, a plain tap
+   * frees it only when it was already held before this press.
+   *
+   * @param event - The pointer event ending the press.
+   */
+  const endPress = (event: PointerEvent): void => {
+    if (drag === null || event.pointerId !== drag.pointerId) {
+      return
+    }
+    const press = drag
+    drag = null
+    if (press.dragging) {
+      if (press.pending !== null) {
+        sendTo(press.framework, 'place', press.pending)
+      }
+      // why: Dropping is releasing — the koi resumes its own swimming from wherever it was set down, with no second tap owed.
+      release(press.framework)
+      if (press.touch) {
+        setHover(null)
+      }
+    } else if (press.wasHeld) {
+      release(press.framework)
+      if (press.touch) {
+        setHover(null)
+      }
+    }
+    refreshCursor()
+  }
+
+  root.addEventListener('pointerup', endPress)
+  root.addEventListener('pointercancel', endPress)
 
   // why: The paint frame is one long-lived object the loop rewrites — a fresh literal per frame is sixty needless allocations a second on the hottest path the host owns.
   const surfaceFrame = {
@@ -327,10 +481,37 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondScene {
     const now = Date.now()
     field = advanceRipples(field, dt)
 
-    if (pointer.fresh) {
+    // why: The drag streams one placement per painted frame however fast the pointer reports, and the hover pick stands down — a hand carrying one fish must not flash every card it passes over.
+    if (drag !== null && drag.pending !== null) {
+      sendTo(drag.framework, 'place', drag.pending)
+      drag.lastSent = drag.pending
+      drag.pending = null
+    } else if (drag === null && pointer.fresh) {
       pointer.fresh = false
       setHover(relay.pick({ x: pointer.x - rootBounds.left + pond.view.x, y: pointer.y - rootBounds.top + pond.view.y }, pond, now))
     }
+
+    for (const framework of inspected) {
+      const outline = relay.latest(framework, now)
+      if (outline === null) {
+        continue
+      }
+      // why: While a fish is being carried the host's own drag point is the freshest truth — sliding the reported outline onto it keeps the ring under the hand instead of a report interval behind it.
+      const carried = drag !== null && drag.dragging && drag.framework === framework ? drag.lastSent : null
+      const nose = outline.spine[0]
+      if (carried !== null && nose !== undefined) {
+        const dx = carried.x - nose.x
+        const dy = carried.y - nose.y
+        chrome.track(framework, { ...outline, spine: outline.spine.map((point) => ({ x: point.x + dx, y: point.y + dy })) }, pond)
+      } else {
+        chrome.track(framework, outline, pond)
+      }
+    }
+
+    // why: The link anchor follows the hovered koi's reported card; while a fish is being carried nothing may sit clickable over the water.
+    const linked = drag?.dragging === true ? null : hovered
+    const card = linked === null ? null : (relay.latest(linked, now)?.card ?? null)
+    chrome.placeLink(card, linked === null ? null : fishHomeUrl(linked), pond)
 
     for (const framework of director.advance(now)) {
       setLayerDepth(stage, framework, director.settledLevel(framework))

@@ -59,6 +59,18 @@ export interface Relay {
    * @returns The koi under the pointer, or `null` over open water.
    */
   pick(point: Vec2, pond: PondEnvironment, now: number, slackScale?: number): KoiFramework | null
+  /**
+   * One koi's outline as it plausibly stands right now.
+   *
+   * The same dead-reckoned, staleness-filtered view `pick` hit-tests against,
+   * for host chrome that needs to sit on the body — a stale or missing report
+   * yields nothing rather than a ghost.
+   *
+   * @param framework - Whose outline to read.
+   * @param now - The moment to reckon the report forward to.
+   * @returns The reckoned outline, or `null` when none is trustworthy.
+   */
+  latest(framework: KoiFramework, now: number): KoiOutline | null
   /** Every outline currently known, in report order. */
   readonly outlines: readonly KoiOutline[]
 }
@@ -202,6 +214,14 @@ export function createRelay(): Relay {
         }
       }
       return picked
+    },
+
+    latest(framework, now) {
+      const entry = reported.get(framework)
+      if (entry === undefined || stale(entry, now)) {
+        return null
+      }
+      return current(entry, now)
     },
 
     get outlines() {

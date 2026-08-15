@@ -193,3 +193,27 @@ describe('dead reckoning', () => {
     expect(relay.pick({ x: 360, y: 402 }, POND, NOW)).toBe('svelte')
   })
 })
+
+describe('latest', () => {
+  it('returns nothing for a koi that never reported', () => {
+    expect(createRelay().latest('lit', NOW)).toBeNull()
+  })
+
+  it('reckons the outline forward exactly as the hit-test sees it', () => {
+    const relay = createRelay()
+    relay.record({ ...outlineAt('lit', 100, 100), speed: 100 }, NOW)
+    expect(relay.latest('lit', NOW + 500)?.spine[0]?.x).toBeCloseTo(150)
+  })
+
+  it('refuses a stale report rather than handing back a ghost', () => {
+    const relay = createRelay()
+    relay.record(outlineAt('lit', 100, 100), NOW)
+    expect(relay.latest('lit', NOW + 3001)).toBeNull()
+  })
+
+  it('carries the card rectangle through untouched', () => {
+    const relay = createRelay()
+    relay.record({ ...outlineAt('lit', 100, 100), card: { x: 120, y: 60, width: 180, height: 14 } }, NOW)
+    expect(relay.latest('lit', NOW)?.card).toEqual({ x: 120, y: 60, width: 180, height: 14 })
+  })
+})
