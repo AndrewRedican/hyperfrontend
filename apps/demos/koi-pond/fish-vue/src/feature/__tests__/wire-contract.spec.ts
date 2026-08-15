@@ -29,6 +29,7 @@ function createHarness() {
     setHovered: (hovered: boolean) => calls.push({ method: 'setHovered', value: hovered }),
     setPaused: (paused: boolean) => calls.push({ method: 'setPaused', value: paused }),
     setInspected: (inspected: boolean) => calls.push({ method: 'setInspected', value: inspected }),
+    placeAt: (point: { x: number; y: number }) => calls.push({ method: 'placeAt', value: point }),
     dispose: () => calls.push({ method: 'dispose', value: null }),
     connect: (emit: (type: string, data?: unknown) => void) => calls.push({ method: 'connect', value: emit }),
   }
@@ -113,6 +114,12 @@ describe('inbound wiring', () => {
     expect(harness.lastCall('setPaused')).toBe(true)
     harness.emit('sleep', { paused: false })
     expect(harness.lastCall('setPaused')).toBe(false)
+  })
+
+  it('carries a placement point through to the runtime', () => {
+    const harness = createHarness()
+    harness.emit('place', { x: 512, y: 384 })
+    expect(harness.lastCall('placeAt')).toEqual({ x: 512, y: 384 })
   })
 
   it('unwraps an inspection pause to the flag itself, either way', () => {

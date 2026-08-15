@@ -50,6 +50,7 @@ const props = defineProps<Props>()
 
 const canvasRef = useTemplateRef<HTMLCanvasElement>('canvas')
 const cardRef = useTemplateRef<HTMLDivElement>('card')
+const cardUrlRef = useTemplateRef<HTMLAnchorElement>('cardUrl')
 
 /** Whether the host's pointer is over this koi, which is what shows its identity card. */
 const hovered = ref(false)
@@ -112,6 +113,8 @@ onMounted(() => {
           canvas.style.display = 'none'
         }
         lastHeading = state.heading
+        // why: The speed memory must track through skipped frames too, or re-entering the view lands the whole offscreen speed change as a single-frame acceleration spike that convulses the body.
+        lastSpeed = state.speed / bodyPx
         return
       }
       if (!shown) {
@@ -175,6 +178,16 @@ onMounted(() => {
       // why: Writing the transform straight onto the element keeps the sixty-a-second card chase out of Vue's reactive re-render entirely.
       card.style.transform = `translate(${clampedX.toFixed(1)}px, ${clampedY.toFixed(1)}px)`
     },
+
+    cardLinkRect() {
+      const cardUrl = cardUrlRef.value
+      if (!hovered.value || cardUrl === null) {
+        return null
+      }
+      // why: The frame fills the visible window exactly, so client coordinates become pond coordinates by adding the window's origin back on.
+      const rect = cardUrl.getBoundingClientRect()
+      return { x: rect.left + current.view.x, y: rect.top + current.view.y, width: rect.width, height: rect.height }
+    },
   })
 })
 
@@ -187,6 +200,7 @@ onUnmounted(() => {
   <canvas ref="canvas" class="koi-canvas" aria-hidden="true"></canvas>
   <div ref="card" class="koi-card" :hidden="!hovered">
     <span class="koi-card-name" :style="{ color: profile.palette.accent }">{{ profile.label }}</span>
-    <span class="koi-card-url">{{ url }}</span>
+    <!-- why: The URL is a real anchor for semantics and link styling, but this frame never receives the pointer — the host reads its rectangle off the outline report and floats the anchor that actually opens it. -->
+    <a ref="cardUrl" class="koi-card-url" :href="url" target="_blank" rel="noopener noreferrer">{{ url }}</a>
   </div>
 </template>

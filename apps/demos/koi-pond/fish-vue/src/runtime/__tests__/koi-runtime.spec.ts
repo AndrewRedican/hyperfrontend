@@ -9,6 +9,7 @@ interface FakeRenderer extends KoiRenderer {
   draws: number
   disposed: number
   last: KoiState | null
+  cardRect: { x: number; y: number; width: number; height: number } | null
 }
 
 /**
@@ -24,6 +25,7 @@ function fakeRenderer(): FakeRenderer {
     draws: 0,
     disposed: 0,
     last: null,
+    cardRect: null,
     draw(state) {
       fake.draws += 1
       fake.last = state
@@ -31,6 +33,9 @@ function fakeRenderer(): FakeRenderer {
     setPond() {},
     setHovered() {},
     placeCard() {},
+    cardLinkRect() {
+      return fake.cardRect
+    },
     dispose() {
       fake.disposed += 1
     },
@@ -133,6 +138,27 @@ describe('createKoiRuntime', () => {
     }
     const resumed = lastNose(sent)
     expect(Math.hypot(resumed.x - held.x, resumed.y - held.y)).toBeGreaterThan(10)
+  })
+
+  it('carries the card link rectangle on the outline only while the card shows', () => {
+    const runtime = createKoiRuntime(root, build)
+    const sent = emissions(runtime)
+    const lastOutline = (): Record<string, unknown> =>
+      <Record<string, unknown>>sent.filter((action) => action.type === 'outline').at(-1)?.data
+    raf.tick(1000)
+    expect(lastOutline()).not.toHaveProperty('card')
+    renderer.cardRect = { x: 320, y: 200, width: 180, height: 14 }
+    raf.tick(1101)
+    expect(lastOutline()['card']).toEqual({ x: 320, y: 200, width: 180, height: 14 })
+  })
+
+  it('hands a placement straight to the brain and reports the outline from the new spot', () => {
+    const runtime = createKoiRuntime(root, build)
+    const sent = emissions(runtime)
+    runtime.setInspected(true)
+    runtime.placeAt({ x: 222, y: 333 })
+    raf.tick(1000)
+    expect(lastNose(sent)).toEqual({ x: 222, y: 333 })
   })
 
   it('cancels its animation frame outright while asleep', () => {
