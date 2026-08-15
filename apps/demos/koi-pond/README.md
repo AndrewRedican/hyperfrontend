@@ -64,9 +64,11 @@ exists to show.
   draws nothing at all. A shoal of viewport-sized antialiased framebuffers was the pond's real
   memory and fill bill, and this is what replaced them.
 - **The host paints the water on one small context.** The bed is a still canvas-2D painting,
-  refreshed only on resize; the moving surface — the caustic web and the ripple crests — is one
+  refreshed only on resize; the moving surface — the caustic web, the ripple crests, and a
+  slower, brighter, barely-there veil that reads as the water's own skin over the fish — is one
   fragment shader on the host's single WebGL context, rendered below device resolution because
-  water is soft, with the old canvas-2D painter kept as an automatic fallback.
+  water is soft, with the old canvas-2D painter kept as an automatic fallback (which skips the
+  veil on purpose — the fallback's whole point is its minimum per-frame cost).
 - **Depth is z-index.** Seven logical depth levels map to the stacking order of host-owned
   containers; passing above or below a neighbour requires a granted two-level shift with a
   cooldown, and the surface water always paints topmost. Each koi carries its own contact
@@ -74,7 +76,8 @@ exists to show.
 - **The host owns the pointer.** Every koi frame is `pointer-events: none`; the host runs one
   normalized stream, hit-tests against fish-reported outlines, and tells the winner. Hovering
   reveals a fish's framework and app URL; pressing a fish holds it in place for inspection
-  (it sculls, keeps reporting, and resumes on the next press); pressing open water strikes it,
+  (it sculls, keeps reporting, and resumes on the next press — and picking a different fish
+  releases the held one first, one inspection at a time); pressing open water strikes it,
   ripples the surface, and scatters the shoal. A fingertip gets the same experience as a
   cursor: taps hit-test with widened slack, a tap on a fish reveals its identity card, and the
   card clamps itself into the visible window.
