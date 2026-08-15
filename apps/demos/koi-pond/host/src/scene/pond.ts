@@ -47,6 +47,12 @@ const SHOAL_PULSE_MS = 10_000
 /** How much wider a fingertip's hit-test is than a cursor's. */
 const TOUCH_SLACK_SCALE = 2.6
 
+/** How many times the pond re-opens a koi whose handshake timed out. */
+const OPEN_RETRIES = 2
+
+/** How long the pond waits before re-opening a timed-out koi, in milliseconds. */
+const OPEN_RETRY_DELAY_MS = 4000
+
 /** What the pond tells whatever mounted it. */
 export interface PondHooks {
   /**
@@ -96,6 +102,7 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondScene {
   let rootBounds = root.getBoundingClientRect()
   const pointer = { x: 0, y: 0, fresh: false }
   const inspected = new Set<KoiFramework>()
+  const retries = new Map<KoiFramework, number>()
 
   const sessions = openShoal(stage.layers)
 
@@ -208,9 +215,16 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondScene {
       }
     })
 
-    shell.on('error', () => {
+    shell.on('error', (data: unknown) => {
       // why: A koi that never answers must not hold the pond dark behind a curtain waiting for it.
       setCurtain(stage, true)
+      // why: A timed-out handshake leaves a destroyed mount and the SDK never retries — on a slow device the seven heavy apps race one deadline, and without this a loser is simply a fish that never existed. Only the timeout is retried; an unresponsive session is still alive and must not be torn down under its visitor.
+      if ((<{ reason?: string }>data)?.reason === 'open-timeout' && (retries.get(framework) ?? 0) < OPEN_RETRIES) {
+        retries.set(framework, (retries.get(framework) ?? 0) + 1)
+        window.setTimeout(() => {
+          shell.open()
+        }, OPEN_RETRY_DELAY_MS)
+      }
     })
 
     shell.on('outline', (data: unknown) => {
