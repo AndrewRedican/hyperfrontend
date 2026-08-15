@@ -11,7 +11,7 @@
  * else: the swimming brain stays authoritative for where the fish *is*, and
  * the renderer only makes the koi's body express it.
  */
-import type { KoiProfile, PondEnvironment } from '@hyperfrontend/demo-koi-lib'
+import type { KoiCardLink, KoiProfile, PondEnvironment } from '@hyperfrontend/demo-koi-lib'
 import type { Koi } from '@hyperfrontend/demo-koi-lib/three'
 import type { WebGLRenderer } from 'three'
 import type { KoiState } from './koi-motion'
@@ -51,6 +51,15 @@ export interface KoiRenderer {
    * @param state - What the koi is doing right now.
    */
   placeCard(state: KoiState): void
+  /**
+   * Where the card's URL line currently sits, in pond space.
+   *
+   * This frame is pointer-transparent, so the link text drawn here can never be
+   * clicked directly; the host lays a real anchor over the reported rectangle.
+   *
+   * @returns The rectangle, or `null` while the card is hidden.
+   */
+  cardLinkRect(): KoiCardLink | null
   /** Releases the GPU resources the koi holds. */
   dispose(): void
 }
@@ -90,6 +99,7 @@ export function createKoiRenderer(
     setPond: stage.setPond,
     setHovered: stage.setHovered,
     placeCard: stage.placeCard,
+    cardLinkRect: stage.cardLinkRect,
     dispose() {
       void unmount(stage)
     },

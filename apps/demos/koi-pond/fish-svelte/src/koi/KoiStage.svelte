@@ -18,7 +18,7 @@
    * a second — the scene, the swim, the canvas placement — is driven through the
    * exported functions below, so no frame ever passes through a rune.
    */
-  import type { KoiFrameBox, KoiProfile, PondEnvironment } from '@hyperfrontend/demo-koi-lib'
+  import type { KoiCardLink, KoiFrameBox, KoiProfile, PondEnvironment } from '@hyperfrontend/demo-koi-lib'
   import type { Koi, PondView } from '@hyperfrontend/demo-koi-lib/three'
   import type { KoiState } from './koi-motion'
   import type { GlRenderer } from './koi-render'
@@ -77,6 +77,7 @@
 
   let canvas = $state<HTMLCanvasElement>()
   let card = $state<HTMLElement>()
+  let cardUrl = $state<HTMLAnchorElement>()
 
   // note: The stage is deliberately not a rune — every field mutates once per frame, and nothing declarative reads it.
   let stage: Stage | null = null
@@ -157,6 +158,8 @@
         stage.canvas.style.display = 'none'
       }
       stage.lastHeading = state.heading
+      // why: The speed memory must track through skipped frames too, or re-entering the view lands the whole offscreen speed change as a single-frame acceleration spike that convulses the body.
+      stage.lastSpeed = state.speed / stage.bodyPx
       return
     }
     if (!stage.shown) {
@@ -240,11 +243,29 @@
     const clampedY = Math.min(Math.max(y, 8), Math.max(8, stage.pond.view.height - height - 8))
     card.style.transform = `translate(${clampedX.toFixed(1)}px, ${clampedY.toFixed(1)}px)`
   }
+
+  /**
+   * Where the card's URL line currently sits, in pond space.
+   *
+   * This frame is pointer-transparent, so the link text drawn here can never be
+   * clicked directly; the host lays a real anchor over the reported rectangle.
+   *
+   * @returns The rectangle, or `null` while the card is hidden.
+   */
+  export function cardLinkRect(): KoiCardLink | null {
+    if (stage === null || card === undefined || card.hidden || cardUrl === undefined) {
+      return null
+    }
+    // why: The frame fills the visible window exactly, so client coordinates become pond coordinates by adding the window's origin back on.
+    const rect = cardUrl.getBoundingClientRect()
+    return { x: rect.left + stage.pond.view.x, y: rect.top + stage.pond.view.y, width: rect.width, height: rect.height }
+  }
 </script>
 
 <canvas class="koi-canvas" aria-hidden="true" bind:this={canvas}></canvas>
 
 <div class="koi-card" hidden bind:this={card}>
   <span class="koi-card-name" style:color={palette.accent}>{profile.label}</span>
-  <span class="koi-card-url">{url}</span>
+  <!-- why: The URL is a real anchor for semantics and link styling, but this frame never receives the pointer — the host reads its rectangle off the outline report and floats the anchor that actually opens it. -->
+  <a class="koi-card-url" href={url} target="_blank" rel="noopener noreferrer" bind:this={cardUrl}>{url}</a>
 </div>

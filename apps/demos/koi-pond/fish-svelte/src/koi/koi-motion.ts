@@ -58,13 +58,28 @@ const OUTLINE_SAMPLES = 5
 const CRUISE_BL_S = { min: 0.26, max: 0.62 }
 
 /** Escape speed band in body lengths per second. */
-const ESCAPE_BL_S = { min: 2.1, max: 4.3 }
+const ESCAPE_BL_S = { min: 1.9, max: 3.4 }
+
+/** The hardest any koi may ever swim, in body lengths per second, whatever multipliers stack. */
+const MAX_SPEED_BL_S = 3.4
+
+/** The hardest a koi can accelerate or brake, in body lengths per second squared. */
+const ACCEL_LIMIT_BL_S2 = 2.6
 
 /** Turn rate band in radians per second at a relaxed cruise. */
-const TURN_RATE = { min: 0.5, max: 1.25 }
+const TURN_RATE = { min: 0.35, max: 0.8 }
 
 /** How much faster a fleeing koi can turn than a cruising one. */
-const ESCAPE_TURN_GAIN = 2.4
+const ESCAPE_TURN_GAIN = 1.7
+
+/** How hard a koi can wind its turn rate up or down, in radians per second squared. */
+const TURN_ACCEL = 2.2
+
+/** How firmly remaining course error asks for turn rate, per second — the ramp-out of every turn. */
+const TURN_APPROACH = 1.8
+
+/** How much swimming past cruise pace taxes the helm, per body length per second of excess. */
+const TURN_SPEED_TAX = 0.45
 
 /** Escape duration band in seconds. */
 const ESCAPE_S = { min: 1.1, max: 2.9 }
@@ -86,13 +101,13 @@ const REDUCED_MOTION_DAMPING = 0.45
 const DECISION_INTERVAL_S = 0.1
 
 /** The bearing error that schedules an ordinary turn rather than a drift, in radians. */
-const TURN_TRIGGER = 0.35
+const TURN_TRIGGER = 0.5
 
 /** Longest an ordinary turn may run, in seconds. */
-const TURN_MAX_S = 2.4
+const TURN_MAX_S = 3
 
 /** The cooldown band after an ordinary turn, in seconds, drawn from the koi's seed. */
-const TURN_COOLDOWN_S = { min: 2.5, max: 6 }
+const TURN_COOLDOWN_S = { min: 4, max: 9 }
 
 /** How firmly the koi corrects its course between turns — a drift, not a manoeuvre. */
 const GLIDE_GAIN = 0.12
@@ -109,6 +124,18 @@ const EVASION_TURN = { min: Math.PI / 8, max: Math.PI / 3 }
 
 /** How far past the hard boundary a slipping koi swims before its absence starts, in body lengths. */
 const EXIT_CLEARANCE_BL = 0.6
+
+/** How far a carried koi leans toward where it is being led, in radians per placement. */
+const PLACE_LEAN_RAD = 0.015
+
+/** A placement below this step is pointer jitter, not leading, in CSS pixels. */
+const PLACE_LEAD_MIN_PX = 0.5
+
+/** The nominal frame the spine trails through per placement while carried, in seconds. */
+const PLACE_FOLLOW_S = 0.05
+
+/** How long a released koi drifts before its next ordinary turn may start, in seconds. */
+const PLACE_SETTLE_S = 2
 
 /**
  * Maps a normalised trait onto a band.
@@ -195,6 +222,17 @@ export interface KoiMotion {
    * @param neighbors - The koi close enough to matter.
    */
   observe(neighbors: readonly NeighborObservation[]): void
+  /**
+   * Carries the koi to a point while a visitor drags it.
+   *
+   * The body trails through the drag path and leans gently toward where it is
+   * being led; every standing intention — the flee, the evasion, the scheduled
+   * turn — is dropped, so releasing the koi resumes a calm cruise from wherever
+   * it was set down rather than whatever manoeuvre the grab interrupted.
+   *
+   * @param point - Where the koi's nose is being carried, in pond space.
+   */
+  place(point: Vec2): void
   /** What the koi is doing right now. */
   readonly state: KoiState
   /** Whether it is still fleeing. */
@@ -260,6 +298,7 @@ export function createKoiMotion(options: KoiMotionOptions): KoiMotion {
   let turnUntilS = 0
   let cooldownUntilS = 0
   let turnDraws = 0
+  let turnVelocity = 0
 
   const bodyLength = (): number => pond.fishLength * build.lengthScale * depthScale(depth)
   const bodyGirth = (): number => bodyLength() * build.girthRatio
@@ -356,7 +395,7 @@ export function createKoiMotion(options: KoiMotionOptions): KoiMotion {
     if (boundaryEngaged) {
       const caution = 0.4 + traits.directionalCaution * 0.6
       cooldownUntilS = Math.max(cooldownUntilS, elapsed + 1)
-      return { heading: Math.atan2(edge.inward.y, edge.inward.x), gain: 1 + edge.urgency * caution * 2 }
+      return { heading: Math.atan2(edge.inward.y, edge.inward.x), gain: 1 + edge.urgency * caution * 1.4 }
     }
 
     if (evasionHeading !== null) {
@@ -396,12 +435,14 @@ export function createKoiMotion(options: KoiMotionOptions): KoiMotion {
     if (shore === 'away') {
       return 0
     }
+    // why: A hard ceiling over every band and multiplier — whatever pace events and give-way scales stack, no koi ever flies across the pond.
+    const cap = pond.fishLength * MAX_SPEED_BL_S
     const damping = pond.reducedMotion ? REDUCED_MOTION_DAMPING : 1
     if (elapsed < fleeingUntilS) {
-      return pond.fishLength * lerp(traits.reactionIntensity, ESCAPE_BL_S) * damping
+      return Math.min(cap, pond.fishLength * lerp(traits.reactionIntensity, ESCAPE_BL_S) * damping)
     }
     // why: The trait sets this koi's own cruise; the pace schedule loafs and hurries it in bounded, exclusive events; an encounter's give-way scales ride on top.
-    return pond.fishLength * lerp(traits.cruiseSpeed, CRUISE_BL_S) * pace.multiplier(elapsed) * paceScale
+    return Math.min(cap, pond.fishLength * lerp(traits.cruiseSpeed, CRUISE_BL_S) * pace.multiplier(elapsed) * paceScale)
   }
 
   return {
@@ -429,17 +470,27 @@ export function createKoiMotion(options: KoiMotionOptions): KoiMotion {
         decide()
       }
 
-      const previousHeading = heading
       const wanted = desire()
-      const turnRate = lerp(traits.turnResponsiveness, TURN_RATE) * wanted.gain
-      heading = turnToward(heading, wanted.heading, turnRate * dt)
+      const error = wrapAngle(wanted.heading - heading)
+      // why: Speed taxes the helm — a koi past cruise pace physically cannot carve a tight arc, so a bolting fish sweeps through a wide curve instead of pivoting at full speed.
+      const overCruise = Math.max(0, speed / pond.fishLength - CRUISE_BL_S.max)
+      const ceiling = (lerp(traits.turnResponsiveness, TURN_RATE) * wanted.gain) / (1 + overCruise * TURN_SPEED_TAX)
+      // why: Rate follows the remaining error down, so every turn ramps out as the course closes instead of holding full curvature to the last degree and stopping dead.
+      const desired = Math.max(-ceiling, Math.min(ceiling, error * TURN_APPROACH))
+      // why: The turn rate is a state with bounded acceleration, never a step — the body winds into and out of each manoeuvre, and conflicting pulls are damped by inertia instead of alternating sides frame to frame.
+      const windup = TURN_ACCEL * dt
+      turnVelocity += Math.max(-windup, Math.min(windup, desired - turnVelocity))
+      heading = wrapAngle(heading + turnVelocity * dt)
 
-      speed += (targetSpeed() - speed) * Math.min(1, SPEED_EASE * dt)
+      // why: The exponential ease still shapes small adjustments, but the hard bound is what keeps a startled koi surging up to speed over a beat or two rather than leaping to it.
+      const accelLimit = pond.fishLength * ACCEL_LIMIT_BL_S2 * dt
+      const speedStep = (targetSpeed() - speed) * Math.min(1, SPEED_EASE * dt)
+      speed += Math.max(-accelLimit, Math.min(accelLimit, speedStep))
       if (shore !== 'away') {
         position = { x: position.x + Math.cos(heading) * speed * dt, y: position.y + Math.sin(heading) * speed * dt }
       }
 
-      const turnedBy = Math.abs(wrapAngle(heading - previousHeading)) / Math.max(dt, 1e-6)
+      const turnedBy = Math.abs(turnVelocity)
       if (elapsed < transitioningUntilS) {
         phase = 'depth-transition'
       } else if (elapsed < fleeingUntilS) {
@@ -492,6 +543,38 @@ export function createKoiMotion(options: KoiMotionOptions): KoiMotion {
 
     observe(next) {
       neighbors = next
+    },
+
+    place(point) {
+      const from = position
+      position = { x: point.x, y: point.y }
+      const step = Math.hypot(position.x - from.x, position.y - from.y)
+      if (step > PLACE_LEAD_MIN_PX) {
+        // why: The body leans toward where it is being led at a rate a held fish could actually muster — the mesh must never whip around under the visitor's hand.
+        heading = turnToward(heading, headingTo(from, position), PLACE_LEAN_RAD)
+      }
+      // why: Everything the grab interrupted is dropped — a stale flee, evasion, or scheduled turn resuming at the drop point is exactly the lunge a released fish must not make.
+      turnVelocity = 0
+      threat = null
+      fleeingUntilS = 0
+      evasionHeading = null
+      evasionUrgency = 0
+      boundaryEngaged = false
+      turnUntilS = 0
+      shore = 'in'
+      itinerary.abandon()
+      course = heading
+      cooldownUntilS = Math.max(cooldownUntilS, elapsed + PLACE_SETTLE_S)
+      speed = Math.min(speed, pond.fishLength * lerp(traits.cruiseSpeed, CRUISE_BL_S))
+      // why: The spine trails the carried nose through the drag path, so the outline the host hit-tests keeps matching the body a visitor is holding.
+      spine = advanceSpine(spine, {
+        nose: position,
+        length: bodyLength(),
+        speed: 0,
+        phase: 'relaxed',
+        dt: PLACE_FOLLOW_S,
+        reducedMotion: pond.reducedMotion,
+      })
     },
 
     get state() {
