@@ -17,6 +17,7 @@ import { commitChanges, createTree } from '@hyperfrontend/project-scope/vfs'
 import { generateShell } from '../../generators/shell/generate-shell'
 import { resolveBuildConfig } from '../config/resolve'
 import { EXIT_ERROR, EXIT_OK } from '../exit-codes'
+import { normalizeDeclarationMaps } from './normalize-declaration-maps'
 
 const DEFAULT_OUT = 'dist'
 
@@ -150,6 +151,8 @@ export async function runBuild(options: RunBuildOptions): Promise<number> {
 
     // why: The consumer project is the workspace — it holds node_modules (so the SDK bundles in) and the TypeScript binary the declaration pass spawns.
     await runBuilder({ projectRoot: tempDir, workspaceRoot: cwd, outputPath: out })
+    // why: The staging dir name embeds the PID, so the emitted declaration maps are rewritten to stable feature-derived paths — repacking an unchanged feature stays byte-identical.
+    normalizeDeclarationMaps(out, config.name, (message) => stderr.write(message))
     publishSidecars(tempDir, out)
     const tarball = packTarball(out)
     stdout.write(`Built "${config.name}" → ${out}\n${tarball ? `Packed ${tarball}\n` : ''}`)

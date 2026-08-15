@@ -196,6 +196,28 @@ describe('runBuild', () => {
     expect(parse(readFileSync(join(out, 'package.json'), 'utf-8'))).not.toHaveProperty('files')
   })
 
+  it('normalizes declaration-map sources before packing', async () => {
+    const runBuilder = jest.fn((input: { outputPath: string }) => {
+      writeFileSync(join(input.outputPath, 'index.d.ts.map'), '{"version":3,"sources":["../../.hf-shell-clock-123/src/index.ts"]}')
+      return Promise.resolve()
+    })
+    const out = join(dir, 'dist', 'clock-shell')
+    mkdirSync(out, { recursive: true })
+    await runBuild(deps({ runBuilder }))
+    expect(readFileSync(join(out, 'index.d.ts.map'), 'utf-8')).toBe('{"version":3,"sources":["clock/src/index.ts"]}')
+  })
+
+  it('notes a malformed declaration map on stderr without failing the build', async () => {
+    const runBuilder = jest.fn((input: { outputPath: string }) => {
+      writeFileSync(join(input.outputPath, 'index.d.ts.map'), 'not json')
+      return Promise.resolve()
+    })
+    mkdirSync(join(dir, 'dist', 'clock-shell'), { recursive: true })
+    const err = sink()
+    const code = await runBuild(deps({ runBuilder, stderr: err.stream }))
+    expect({ code, note: err.text() }).toEqual({ code: 0, note: expect.stringContaining('Skipping malformed declaration map') })
+  })
+
   it('defaults the output to a per-shell directory under dist', async () => {
     const runBuilder = jest.fn()
     await runBuild(deps({ runBuilder }))
