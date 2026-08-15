@@ -148,12 +148,12 @@ export interface UnresponsiveInfo {
 /**
  * What the host does when a feature misses too many heartbeats while visible.
  *
- * `emit` (the default) emits an `error`; `unmount` also tears the feature down;
- * a callback takes over handling entirely with the {@link UnresponsiveInfo}.
- * The policy runs once per `suspect` episode: a recovering beat returns the
- * feature to `healthy` and re-arms it. While either page is hidden the
- * watchdog pauses instead (`unobservable`) — throttled timers make silence
- * weak evidence.
+ * `emit` (the default) emits an `error` carrying `{ reason: 'unresponsive', missedBeats, lastBeatAt, displayMode }`;
+ * `unmount` also tears the feature down after emitting the same error; a
+ * callback takes over handling entirely with the {@link UnresponsiveInfo}.
+ * The policy runs once per `suspect` episode: a recovering beat returns the feature
+ * to `healthy` and re-arms it. While either page is hidden the watchdog pauses
+ * instead (`unobservable`) — throttled timers make silence weak evidence.
  */
 export type UnresponsivePolicy = 'emit' | 'unmount' | ((info: UnresponsiveInfo) => void)
 
@@ -557,6 +557,8 @@ export interface DevDebugConfig {
   messageLog?: boolean
   /** Whether the security inspector panel is shown. */
   securityView?: boolean
+  /** Port the debug UI's control server listens on; defaults to 4280, and the `--port` flag overrides it. */
+  port?: number
 }
 
 /**
@@ -570,9 +572,8 @@ export interface DevConfig {
 }
 
 /**
- * Identity helper that gives `feature.config.*` files type-checked authoring.
- *
- * This is a pure inference-only function — it returns its argument unchanged.
+ * Identity helper that gives `feature.config.*` files type-checked authoring —
+ * a pure inference-only function that returns its argument unchanged.
  *
  * @param config - The feature configuration object.
  * @returns The same configuration object, narrowed to {@link FeatureConfig}.

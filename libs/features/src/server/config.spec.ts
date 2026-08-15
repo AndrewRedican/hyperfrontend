@@ -66,6 +66,18 @@ describe('validateDevConfig', () => {
   it('omits debug when absent', () => {
     expect(validateDevConfig({ apps: [{ name: 'a', outputDir: './d' }] }, '/p')).toEqual({ apps: [{ name: 'a', outputDir: './d' }] })
   })
+
+  it('rejects an invalid debug port', () => {
+    expect(() => validateDevConfig({ apps: [{ name: 'a', outputDir: './d' }], debug: { port: 80.5 } }, '/p')).toThrow(
+      '"debug".port must be an integer between 1 and 65535'
+    )
+  })
+
+  it('keeps a valid debug port', () => {
+    expect(validateDevConfig({ apps: [{ name: 'a', outputDir: './d' }], debug: { port: 4290 } }, '/p')).toEqual(
+      expect.objectContaining({ debug: { port: 4290 } })
+    )
+  })
 })
 
 describe('resolveDevConfig', () => {
@@ -133,6 +145,38 @@ describe('resolveDevConfig', () => {
 
   it('overrides the debug port from --port', async () => {
     expect((await resolveDevConfig(opts({ flags: mkFlags({ port: '5000' }) }))).debugPort).toBe(5000)
+  })
+
+  it('honours the debug port from the config', async () => {
+    const resolved = await resolveDevConfig(
+      opts({ loadConfig: () => Promise.resolve({ apps: [{ name: 'a', outputDir: './a' }], debug: { port: 4290 } }) })
+    )
+    expect(resolved.debugPort).toBe(4290)
+  })
+
+  it('prefers --port over the config debug port', async () => {
+    const resolved = await resolveDevConfig(
+      opts({
+        flags: mkFlags({ port: '5000' }),
+        loadConfig: () => Promise.resolve({ apps: [{ name: 'a', outputDir: './a' }], debug: { port: 4290 } }),
+      })
+    )
+    expect(resolved.debugPort).toBe(5000)
+  })
+
+  it('rejects an app port that collides with the enabled debug UI', async () => {
+    await expect(
+      resolveDevConfig(opts({ loadConfig: () => Promise.resolve({ apps: [{ name: 'clock', outputDir: './a', port: 4280 }] }) }))
+    ).rejects.toThrow('app "clock" port 4280 collides with the debug UI port 4280; set "debug".port or pass --port to move the debug UI')
+  })
+
+  it('allows an app on the debug port when the debug UI is disabled', async () => {
+    const resolved = await resolveDevConfig(
+      opts({
+        loadConfig: () => Promise.resolve({ apps: [{ name: 'clock', outputDir: './a', port: 4280 }], debug: { enabled: false } }),
+      })
+    )
+    expect(resolved.debugPort).toBe(4280)
   })
 
   it('rejects an invalid --port', async () => {
