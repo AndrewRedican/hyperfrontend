@@ -7,18 +7,27 @@
    * frame for every koi below it. The canvas clears to transparent; only the
    * fish itself has colour.
    *
+   * The canvas covers only the koi's own frame box, never the whole viewport:
+   * the shared camera is narrowed onto that box each frame, so the small canvas
+   * paints pixel-identically what a full-viewport render would have put there,
+   * at a fraction of the fill and memory. A koi outside the visible window draws
+   * nothing at all.
+   *
    * Svelte owns exactly what is declarative here: the canvas, the card and its
    * text exist because the template says so. Everything that changes sixty times
-   * a second — the scene, the swim, the card's placement — is driven through the
+   * a second — the scene, the swim, the canvas placement — is driven through the
    * exported functions below, so no frame ever passes through a rune.
    */
-  import type { KoiProfile, KoiTune, PondEnvironment } from '@hyperfrontend/demo-koi-lib'
+  import type { KoiFrameBox, KoiProfile, PondEnvironment } from '@hyperfrontend/demo-koi-lib'
   import type { Koi, PondView } from '@hyperfrontend/demo-koi-lib/three'
   import type { KoiState } from './koi-motion'
   import type { GlRenderer } from './koi-render'
-  import { POND_VIEW, koiSeed, pxPerUnit, swimDepth, wrapAngle } from '@hyperfrontend/demo-koi-lib'
-  import { createKoi, createLighting, createPondView, sizePondRenderer } from '@hyperfrontend/demo-koi-lib/three'
+  import { POND_VIEW, koiFrameBox, koiSeed, pxPerUnit, swimDepth, wrapAngle } from '@hyperfrontend/demo-koi-lib'
+  import { createKoi, createLighting, createPondView, fitPondRenderer } from '@hyperfrontend/demo-koi-lib/three'
   import { Scene } from 'three'
+
+  /** How far the frame box's edge may drift from the fitted buffer before a re-fit, as a fraction. */
+  const REFIT_DRIFT = 0.1
 
   /** Everything the stage builds once its canvas exists, torn down as one. */
   interface Stage {
@@ -30,6 +39,8 @@
     scene: Scene
     /** The GL renderer drawing the scene. */
     gl: GlRenderer
+    /** The canvas the koi draws on, sized and slid to its frame box. */
+    canvas: HTMLCanvasElement
     /** The world as most recently announced, whose view maps pond space onto the frame. */
     pond: PondEnvironment
     /** This koi's body length in pond pixels, re-derived on every pond announcement. */
@@ -38,6 +49,12 @@
     lastHeading: number | null
     /** The speed of the previous frame, in body lengths per second. */
     lastSpeed: number
+    /** The frame-box edge the drawing buffer was last fitted to, in CSS pixels. */
+    fittedSize: number
+    /** Whether the canvas is currently displayed at all. */
+    shown: boolean
+    /** The scratch frame box `koiFrameBox` writes into each frame. */
+    box: KoiFrameBox
   }
 </script>
 
@@ -88,8 +105,20 @@
     })
     koi.mount(scene)
 
-    sizePondRenderer(gl, pond.view.width, pond.view.height)
-    stage = { koi, view, scene, gl, pond, bodyPx: pxPerUnit(pond.fishLength) * build.lengthScale, lastHeading: null, lastSpeed: 0 }
+    stage = {
+      koi,
+      view,
+      scene,
+      gl,
+      canvas,
+      pond,
+      bodyPx: pxPerUnit(pond.fishLength) * build.lengthScale,
+      lastHeading: null,
+      lastSpeed: 0,
+      fittedSize: 0,
+      shown: true,
+      box: { x: 0, y: 0, size: 0, visible: false },
+    }
 
     return () => {
       koi.dispose()
@@ -120,6 +149,29 @@
     if (stage === null) {
       return
     }
+    koiFrameBox(state.position, state.heading, state.length, stage.pond.view, stage.box)
+    // why: A koi outside the window pays nothing — no pose, no uniforms, no clear, no composite. The brain keeps swimming; only the pixels stop.
+    if (!stage.box.visible) {
+      if (stage.shown) {
+        stage.shown = false
+        stage.canvas.style.display = 'none'
+      }
+      stage.lastHeading = state.heading
+      return
+    }
+    if (!stage.shown) {
+      stage.shown = true
+      stage.canvas.style.display = ''
+    }
+    if (Math.abs(stage.box.size - stage.fittedSize) > stage.fittedSize * REFIT_DRIFT) {
+      // why: The buffer re-fits only when the body's size genuinely changed — reallocating a drawing buffer every frame would cost more than the render itself.
+      stage.fittedSize = stage.box.size
+      fitPondRenderer(stage.gl, stage.box.size)
+      stage.canvas.style.width = `${stage.box.size}px`
+      stage.canvas.style.height = `${stage.box.size}px`
+    }
+    stage.canvas.style.transform = `translate3d(${(stage.box.x - stage.pond.view.x).toFixed(1)}px, ${(stage.box.y - stage.pond.view.y).toFixed(1)}px, 0)`
+
     const seconds = dt > 0 ? dt : 1e-6
     // why: The swimming model thinks in this koi's own body lengths, while the brain and the wire think in pond pixels.
     const speed = state.speed / stage.bodyPx
@@ -135,6 +187,7 @@
     stage.lastHeading = state.heading
     stage.lastSpeed = speed
     stage.koi.update(dt)
+    stage.view.frame(stage.box)
     stage.view.place(stage.koi.object, state.position, state.heading)
     stage.gl.render(stage.scene, stage.view.camera)
   }
@@ -151,7 +204,8 @@
     stage.pond = next
     stage.bodyPx = pxPerUnit(next.fishLength) * build.lengthScale
     stage.view.setPond(next)
-    sizePondRenderer(stage.gl, next.view.width, next.view.height)
+    // why: A pond announcement moves the window, so the next draw must re-fit rather than trust a buffer sized against the old world.
+    stage.fittedSize = 0
   }
 
   /**
@@ -166,7 +220,7 @@
   }
 
   /**
-   * Positions the hover card beside the koi.
+   * Positions the hover card beside the koi, clamped into the visible window.
    *
    * @param state - What the koi is doing right now.
    */
@@ -179,28 +233,12 @@
     // why: The card lives in the frame's own CSS space while the spine is in pond space, so the visible window's origin comes off first.
     const x = head.x - stage.pond.view.x + state.length * 0.12
     const y = head.y - stage.pond.view.y - state.length * 0.38
-    card.style.transform = `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px)`
-  }
-
-  /**
-   * Takes the visitor's playground settings onto the body and the swim.
-   *
-   * @param tune - The scales to apply over this koi's own build and trim.
-   */
-  export function applyTune(tune: KoiTune): void {
-    if (stage === null) {
-      return
-    }
-    // why: The scales ride on this koi's own derived numbers rather than replacing them, so the playground moves the whole shoal while each fish keeps its identity.
-    stage.koi.setTrim({
-      amplitude: trim.amplitude * (tune.amplitudeScale ?? 1),
-      frequency: trim.frequency * (tune.frequencyScale ?? 1),
-      waveReach: tune.waveReach ?? trim.waveReach,
-    })
-    stage.koi.setPhysical({
-      width: (phenotype.width ?? 1) * (tune.widthScale ?? 1),
-      height: (phenotype.height ?? 1) * (tune.heightScale ?? 1),
-    })
+    // why: A tapped fish near a window edge must still show its whole card — on touch there is no hover to chase it with.
+    const width = card.offsetWidth || 200
+    const height = card.offsetHeight || 64
+    const clampedX = Math.min(Math.max(x, 8), Math.max(8, stage.pond.view.width - width - 8))
+    const clampedY = Math.min(Math.max(y, 8), Math.max(8, stage.pond.view.height - height - 8))
+    card.style.transform = `translate(${clampedX.toFixed(1)}px, ${clampedY.toFixed(1)}px)`
   }
 </script>
 
