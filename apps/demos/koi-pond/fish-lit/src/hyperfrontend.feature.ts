@@ -17,9 +17,9 @@ import { koi } from './state/koi'
 /** The koi feature handle; use it to send and receive contract actions. */
 export const feature = createFeature({
   name: '@hyperfrontend/demo-koi-fish-lit',
-  // why: The shared lib declares the contract structurally so it stays SDK-free; this is where the eight consumers each check it against the real type.
+  // why: The shared lib declares the contract structurally so it stays SDK-free; this is where the nine consumers each check it against the real type.
   contract: <FeatureContract>koiFishContract,
-  // why: No security protocol on purpose, matching the shell this koi packs as - seven koi report outlines at high cadence on one page, and a per-message security envelope across seven channels collapses delivery. Messages still pin to the host's origin.
+  // why: No security protocol on purpose, matching the shell this koi packs as - eight koi report outlines at high cadence on one page, and a per-message security envelope across eight channels collapses delivery. Messages still pin to the host's origin.
 })
 
 wireKoiContract(feature, koi)
