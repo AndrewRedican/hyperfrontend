@@ -17,11 +17,20 @@
  * else: the swimming brain stays authoritative for where the fish *is*, and
  * this module only makes the koi's body express it.
  */
-import type { KoiCardLink, KoiFrameBox, KoiProfile, PondEnvironment } from '@hyperfrontend/demo-koi-lib'
+import type { KoiCardDetails, KoiCardLink, KoiCardPanel, KoiFrameBox, KoiProfile, PondEnvironment } from '@hyperfrontend/demo-koi-lib'
 import type { Koi, PondView } from '@hyperfrontend/demo-koi-lib/three'
 import type { WebGLRenderer } from 'three'
 import type { KoiState } from './koi-motion'
-import { POND_VIEW, koiFrameBox, koiSeed, pxPerUnit, swimDepth, wrapAngle } from '@hyperfrontend/demo-koi-lib'
+import {
+  FRAMEWORK_SITES,
+  POND_VIEW,
+  describeKoiCard,
+  koiFrameBox,
+  koiSeed,
+  pxPerUnit,
+  swimDepth,
+  wrapAngle,
+} from '@hyperfrontend/demo-koi-lib'
 import { createKoi, createLighting, createPondRenderer, createPondView, fitPondRenderer } from '@hyperfrontend/demo-koi-lib/three'
 import { Scene } from 'three'
 
@@ -30,6 +39,12 @@ export type GlRenderer = Pick<WebGLRenderer, 'render' | 'setSize' | 'setPixelRat
 
 /** How far the frame box's edge may drift from the fitted buffer before a re-fit, as a fraction. */
 const REFIT_DRIFT = 0.1
+
+/** How firmly the silhouette reads when the pointer is merely over the koi. */
+const HOVER_OUTLINE = 0.35
+
+/** How firmly the silhouette reads while a visitor holds the koi. */
+const HELD_OUTLINE = 1
 
 /** A renderer bound to one koi. */
 export interface KoiRenderer {
@@ -49,26 +64,45 @@ export interface KoiRenderer {
    */
   setPond(pond: PondEnvironment): void
   /**
-   * Shows or hides the hover identity card.
+   * Marks whether the host's pointer is over this koi.
    *
-   * @param hovered - Whether the host's pointer is over this koi.
+   * Hover only says "this is selectable": the silhouette reads softly and
+   * nothing else changes — the identity card belongs to selection.
+   *
+   * @param hovered - Whether the pointer is over this koi.
    */
   setHovered(hovered: boolean): void
   /**
-   * Positions the hover card beside the koi, clamped into the visible window.
+   * Marks whether a visitor is holding this koi.
+   *
+   * Holding traces the full silhouette and keeps the identity card open until
+   * release, whatever the pointer does meanwhile.
+   *
+   * @param selected - Whether the koi is held.
+   */
+  setSelected(selected: boolean): void
+  /**
+   * Rewrites the card's live inspector rows.
+   *
+   * @param details - The koi's live facts.
+   */
+  updateCard(details: KoiCardDetails): void
+  /**
+   * Positions the identity card beside the koi, clamped into the visible window.
    *
    * @param state - What the koi is doing right now.
    */
   placeCard(state: KoiState): void
   /**
-   * Where the card's URL line currently sits, in pond space.
+   * Where the card and its two links currently sit, in pond space.
    *
-   * This frame is pointer-transparent, so the link text drawn here can never be
-   * clicked directly; the host lays a real anchor over the reported rectangle.
+   * This frame is pointer-transparent, so nothing drawn here can be clicked
+   * directly; the host floats real anchors over the reported rectangles and an
+   * inert shield over the frame.
    *
-   * @returns The rectangle, or `null` while the card is hidden.
+   * @returns The card's geometry, or `null` while the card is hidden.
    */
-  cardLinkRect(): KoiCardLink | null
+  cardRects(): KoiCardPanel | null
   /** Releases the GPU resources the koi holds. */
   dispose(): void
 }
@@ -105,17 +139,41 @@ export function createKoiRenderer(
   const card = document.createElement('div')
   card.className = 'koi-card'
   card.hidden = true
-  // why: The URL is a real anchor for semantics and link styling, but this frame never receives the pointer — the host reads its rectangle off the outline report and floats the anchor that actually opens it.
-  card.innerHTML = `<span class="koi-card-name"></span><a class="koi-card-url" target="_blank" rel="noopener noreferrer"></a>`
+  // why: The links are real anchors for semantics and styling, but this frame never receives the pointer — the host reads their rectangles off the outline report and floats the anchors that actually open them.
+  card.innerHTML =
+    `<span class="koi-card-name"></span><span class="koi-card-line koi-card-state"></span>` +
+    `<a class="koi-card-url" target="_blank" rel="noopener noreferrer"></a>` +
+    `<span class="koi-card-line koi-card-runtime"></span><span class="koi-card-line koi-card-memory"></span>` +
+    `<span class="koi-card-line koi-card-event" hidden></span>` +
+    `<a class="koi-card-site" target="_blank" rel="noopener noreferrer"></a>`
   const cardName = card.querySelector<HTMLElement>('.koi-card-name')
   const cardUrl = card.querySelector<HTMLAnchorElement>('.koi-card-url')
+  const cardState = card.querySelector<HTMLElement>('.koi-card-state')
+  const cardRuntime = card.querySelector<HTMLElement>('.koi-card-runtime')
+  const cardMemory = card.querySelector<HTMLElement>('.koi-card-memory')
+  const cardEvent = card.querySelector<HTMLElement>('.koi-card-event')
+  const cardSite = card.querySelector<HTMLAnchorElement>('.koi-card-site')
   if (cardName !== null) {
-    cardName.textContent = profile.label
-    cardName.style.color = palette.accent
+    // why: The variety rides beside the framework name — the pattern is the koi's own identity, and it costs one word to say this asagi is the React app.
+    cardName.innerHTML = `<span class="koi-card-title"></span><span class="koi-card-variety"></span>`
+    const title = cardName.querySelector<HTMLElement>('.koi-card-title')
+    const variety = cardName.querySelector<HTMLElement>('.koi-card-variety')
+    if (title !== null) {
+      title.textContent = profile.label
+      title.style.color = palette.accent
+    }
+    if (variety !== null) {
+      variety.textContent = palette.pattern
+    }
   }
   if (cardUrl !== null) {
     cardUrl.textContent = url
     cardUrl.href = url
+  }
+  if (cardSite !== null) {
+    const site = FRAMEWORK_SITES[profile.framework]
+    cardSite.textContent = `${profile.label} website ↗`
+    cardSite.href = site
   }
 
   root.append(canvas, card)
@@ -146,7 +204,26 @@ export function createKoiRenderer(
   let current = pond
   let fittedSize = 0
   let shown = true
+  let hovered = false
+  let selected = false
   const box: KoiFrameBox = { x: 0, y: 0, size: 0, visible: false }
+
+  /** Traces the silhouette at whatever the pointer and the hold currently justify. */
+  const applyOutline = (): void => {
+    koi.setOutline(selected ? HELD_OUTLINE : hovered ? HOVER_OUTLINE : 0)
+  }
+
+  /**
+   * A card element's rectangle lifted into pond space.
+   *
+   * @param element - The element to measure.
+   * @returns The pond-space rectangle.
+   */
+  const rectOf = (element: HTMLElement): KoiCardLink => {
+    // why: The frame fills the visible window exactly, so client coordinates become pond coordinates by adding the window's origin back on.
+    const rect = element.getBoundingClientRect()
+    return { x: rect.left + current.view.x, y: rect.top + current.view.y, width: rect.width, height: rect.height }
+  }
 
   return {
     koi,
@@ -204,8 +281,33 @@ export function createKoiRenderer(
       fittedSize = 0
     },
 
-    setHovered(hovered) {
-      card.hidden = !hovered
+    setHovered(next) {
+      hovered = next
+      applyOutline()
+    },
+
+    setSelected(next) {
+      selected = next
+      // why: The card belongs to the hold, not the pointer — it stays open however the pointer moves, because the visitor is about to interact with it.
+      card.hidden = !next
+      applyOutline()
+    },
+
+    updateCard(details) {
+      const rows = describeKoiCard(details)
+      if (cardState !== null) {
+        cardState.textContent = rows.state
+      }
+      if (cardRuntime !== null) {
+        cardRuntime.textContent = rows.runtime
+      }
+      if (cardMemory !== null) {
+        cardMemory.textContent = rows.memory
+      }
+      if (cardEvent !== null) {
+        cardEvent.hidden = rows.event === null
+        cardEvent.textContent = rows.event ?? ''
+      }
     },
 
     placeCard(state) {
@@ -224,13 +326,11 @@ export function createKoiRenderer(
       card.style.transform = `translate(${clampedX.toFixed(1)}px, ${clampedY.toFixed(1)}px)`
     },
 
-    cardLinkRect() {
-      if (card.hidden || cardUrl === null) {
+    cardRects() {
+      if (card.hidden || cardUrl === null || cardSite === null) {
         return null
       }
-      // why: The frame fills the visible window exactly, so client coordinates become pond coordinates by adding the window's origin back on.
-      const rect = cardUrl.getBoundingClientRect()
-      return { x: rect.left + current.view.x, y: rect.top + current.view.y, width: rect.width, height: rect.height }
+      return { frame: rectOf(card), app: rectOf(cardUrl), site: rectOf(cardSite) }
     },
 
     dispose() {

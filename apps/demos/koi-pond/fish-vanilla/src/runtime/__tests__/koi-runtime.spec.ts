@@ -9,9 +9,11 @@ interface FakeRenderer extends KoiRenderer {
   draws: number
   ponds: number
   hovers: boolean[]
+  selections: boolean[]
+  cardUpdates: number
   disposed: number
   last: KoiState | null
-  cardRect: { x: number; y: number; width: number; height: number } | null
+  panel: ReturnType<KoiRenderer['cardRects']>
 }
 
 /**
@@ -27,9 +29,11 @@ function fakeRenderer(): FakeRenderer {
     draws: 0,
     ponds: 0,
     hovers: [],
+    selections: [],
+    cardUpdates: 0,
     disposed: 0,
     last: null,
-    cardRect: null,
+    panel: null,
     draw(state) {
       fake.draws += 1
       fake.last = state
@@ -40,9 +44,15 @@ function fakeRenderer(): FakeRenderer {
     setHovered(hovered) {
       fake.hovers.push(hovered)
     },
+    setSelected(selected) {
+      fake.selections.push(selected)
+    },
+    updateCard() {
+      fake.cardUpdates += 1
+    },
     placeCard() {},
-    cardLinkRect() {
-      return fake.cardRect
+    cardRects() {
+      return fake.panel
     },
     dispose() {
       fake.disposed += 1
@@ -116,16 +126,59 @@ describe('createKoiRuntime', () => {
     expect(renderer.draws).toBe(2)
   })
 
-  it('carries the card link rectangle on the outline only while the card shows', () => {
+  it('carries the card panel on the outline only while the card shows', () => {
     const runtime = createKoiRuntime(root, build)
     const sent = emissions(runtime)
     const lastOutline = (): Record<string, unknown> =>
       <Record<string, unknown>>sent.filter((action) => action.type === 'outline').at(-1)?.data
     raf.tick(1000)
     expect(lastOutline()).not.toHaveProperty('card')
-    renderer.cardRect = { x: 320, y: 200, width: 180, height: 14 }
+    renderer.panel = {
+      frame: { x: 300, y: 180, width: 220, height: 96 },
+      app: { x: 312, y: 220, width: 180, height: 14 },
+      site: { x: 312, y: 250, width: 120, height: 13 },
+    }
     raf.tick(1101)
-    expect(lastOutline()['card']).toEqual({ x: 320, y: 200, width: 180, height: 14 })
+    expect((<{ frame: object }>lastOutline()['card']).frame).toEqual({ x: 300, y: 180, width: 220, height: 96 })
+  })
+
+  it('holds the card open through the hold and tears the inspector down on release', () => {
+    vi.useFakeTimers()
+    try {
+      const runtime = createKoiRuntime(root, build)
+      runtime.setInspected(true)
+      expect(renderer.selections.at(-1)).toBe(true)
+      const opened = renderer.cardUpdates
+      expect(opened).toBeGreaterThan(0)
+      vi.advanceTimersByTime(1100)
+      expect(renderer.cardUpdates).toBeGreaterThan(opened)
+      runtime.setInspected(false)
+      expect(renderer.selections.at(-1)).toBe(false)
+      const closed = renderer.cardUpdates
+      // why: Everything that exists only to power the card must stop with the release — a timer still rewriting rows after this is a leak.
+      vi.advanceTimersByTime(5000)
+      expect(renderer.cardUpdates).toBe(closed)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('reports its memory honestly as unavailable where the browser cannot attribute it', async () => {
+    vi.useFakeTimers()
+    try {
+      const runtime = createKoiRuntime(root, build)
+      const updates: string[] = []
+      renderer.updateCard = (details): void => {
+        updates.push(details.memoryState)
+      }
+      runtime.setInspected(true)
+      // why: jsdom has no measureUserAgentSpecificMemory and no isolation — the honest reading is `unavailable`, never a share of somebody else's heap.
+      await vi.advanceTimersByTimeAsync(1100)
+      expect(updates.at(-1)).toBe('unavailable')
+      runtime.setInspected(false)
+    } finally {
+      vi.useRealTimers()
+    }
   })
 
   it('hands a placement straight to the brain and reports the outline from the new spot', () => {
