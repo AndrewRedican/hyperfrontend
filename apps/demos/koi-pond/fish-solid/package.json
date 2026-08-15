@@ -18,7 +18,7 @@
   },
   "dependencies": {
     "@hyperfrontend/demo-koi-lib": "file:../vendor/hyperfrontend-demo-koi-lib-0.1.0.tgz",
-    "@hyperfrontend/features": "^0.5.1",
+    "@hyperfrontend/features": "^0.7.0",
     "solid-js": "^1.9.14",
     "three": "^0.185.1"
   },
