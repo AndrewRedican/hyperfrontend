@@ -74,6 +74,18 @@ describe('buildShellTypes', () => {
     )
   })
 
+  it('declares the structured unresponsive error payload with its discriminator', () => {
+    expect(buildShellTypes(contract, allModes)).toContain(
+      "export interface FeatureUnresponsiveError {\n  /** Discriminates the unresponsive error from other `error` payloads. */\n  reason: 'unresponsive'"
+    )
+  })
+
+  it('declares the structured open-failed error payload with its discriminator', () => {
+    expect(buildShellTypes(contract, allModes)).toContain(
+      "export interface FeatureOpenFailedError {\n  /** Discriminates the open-failure error from other `error` payloads. */\n  reason: 'open-failed'"
+    )
+  })
+
   it('types request handlers from the emitted-action map on the handle', () => {
     expect(buildShellTypes(contract, allModes)).toContain(
       'handle<T extends HostEventType>(type: T, handler: (data: HostEventPayloads[T]) => unknown): () => void'
