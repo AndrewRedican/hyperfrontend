@@ -111,6 +111,8 @@ export function createKoiStage(
           canvas.style.display = 'none'
         }
         lastHeading = state.heading
+        // why: The speed memory must track through skipped frames too, or re-entering the view lands the whole offscreen speed change as a single-frame acceleration spike that convulses the body.
+        lastSpeed = state.speed / bodyPx
         return
       }
       if (!shown) {

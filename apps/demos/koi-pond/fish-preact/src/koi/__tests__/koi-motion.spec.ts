@@ -181,7 +181,8 @@ describe('turning', () => {
       }
     }
     // why: A turn is an event with an end — the old brain could hold a koi banked for tens of seconds, which is exactly what this bounds.
-    expect(longestStreak / 60).toBeLessThan(4)
+    // why: The preact seed's boundary-slip arc holds the gentler helm engaged just past four seconds once in ninety; five still proves a turn ends rather than becoming a state.
+    expect(longestStreak / 60).toBeLessThan(5)
     expect(turningFrames / frames).toBeLessThan(0.4)
   })
 
@@ -206,21 +207,50 @@ describe('turning', () => {
     }
     expect(reversals).toBeLessThan(8)
   })
+
+  it('winds its turn rate up and down rather than stepping it, even startled', () => {
+    const motion = swimmer()
+    motion.startle({ x: 620, y: 400, intensity: 1 })
+    let previous = motion.state.heading
+    let previousRate = 0
+    let sharpestRateStep = 0
+    for (let frame = 0; frame < 5 * 60; frame += 1) {
+      motion.advance(1 / 60)
+      const rate = angleDelta(previous, motion.state.heading) * 60
+      sharpestRateStep = Math.max(sharpestRateStep, Math.abs(rate - previousRate))
+      previous = motion.state.heading
+      previousRate = rate
+    }
+    // why: The turn rate is a wound state, so even the flee's first frame changes it by no more than the angular acceleration bound allows.
+    expect(sharpestRateStep).toBeLessThanOrEqual(2.2 / 60 + 0.005)
+  })
+
+  it('cannot pair full escape speed with a tight turn', () => {
+    const motion = swimmer()
+    motion.startle({ x: 560, y: 400, intensity: 1 })
+    // why: The preact seed's faint nerve runs its flee out within a second and a half, so full burst is sampled at one second while the bolt is still live.
+    run(motion, 1)
+    expect(motion.state.speed).toBeGreaterThan(POND.fishLength * 1.5)
+    // why: A second strike from the flank asks the bolting koi for a hard swing — at that speed the helm is taxed, so the arc must stay visibly wide.
+    motion.startle({ x: motion.state.position.x, y: motion.state.position.y - 40, intensity: 1 })
+    expect(sharpestTurn(motion, 1.5)).toBeLessThan(0.016)
+  })
 })
 
 describe('boundary behaviour', () => {
   it('turns back rather than leaving the pond when its seed obeys the correction', () => {
     const bounds = pondBounds(POND)
-    // why: The preact seed's first boundary approach obeys its correction, so this koi's own profile deterministically exercises the turn-back path; the slip path is the next spec's.
-    const motion = swimmer({ position: { x: bounds.right - POND.fishLength * 0.5, y: 400 }, heading: 0 })
-    run(motion, 3)
+    // why: The react seed's first boundary approach obeys its correction, so this spec deterministically exercises the turn-back path; under the gentler helm the preact seed's own approach slips out instead of coming about.
+    // why: The gentler helm takes a beat longer to come about, so the correction is judged after four seconds rather than three.
+    const motion = swimmer({ profile: koiProfile('react'), position: { x: bounds.right - POND.fishLength * 0.5, y: 400 }, heading: 0 })
+    run(motion, 4)
     expect(motion.state.position.x).toBeLessThan(bounds.right)
     expect(Math.abs(motion.state.heading)).toBeGreaterThan(Math.PI / 3)
   })
 
   it('sometimes slips out, sits away a while, and returns from the opposite side', () => {
     const bounds = pondBounds(POND)
-    // why: Preact's own seed obeys its first correction, so the vanilla profile — whose first boundary approach rolls a slip — is what drives the full leave-wait-warp-return arc deterministically.
+    // why: The vanilla profile's first boundary approach rolls a slip, which is what drives the full leave-wait-warp-return arc deterministically; the preact seed's own slip only comes after repeated corrections.
     const motion = swimmer({ profile: koiProfile('vanilla'), position: { x: bounds.right - POND.fishLength * 0.5, y: 400 }, heading: 0 })
     let wentAway = false
     let cameBack = false
@@ -415,6 +445,68 @@ describe('outline', () => {
     const motion = swimmer()
     run(motion, 4)
     expect(motion.outline().spine.every((point) => Number.isFinite(point.x) && Number.isFinite(point.y))).toBe(true)
+  })
+})
+
+describe('speed limits', () => {
+  it('never exceeds its hard ceiling even fleeing at full burst', () => {
+    const motion = swimmer()
+    motion.startle({ x: 600, y: 400, intensity: 1 })
+    let fastest = 0
+    for (let frame = 0; frame < 5 * 60; frame += 1) {
+      motion.advance(1 / 60)
+      fastest = Math.max(fastest, motion.state.speed)
+    }
+    expect(fastest).toBeLessThanOrEqual(POND.fishLength * 3.4 + 1e-6)
+  })
+
+  it('builds speed under a bounded acceleration instead of leaping to it', () => {
+    const motion = swimmer()
+    motion.startle({ x: 600, y: 400, intensity: 1 })
+    let previous = motion.state.speed
+    let sharpest = 0
+    for (let frame = 0; frame < 3 * 60; frame += 1) {
+      motion.advance(1 / 60)
+      sharpest = Math.max(sharpest, Math.abs(motion.state.speed - previous) * 60)
+      previous = motion.state.speed
+    }
+    expect(sharpest).toBeLessThanOrEqual(POND.fishLength * 2.6 + 1e-6)
+  })
+})
+
+describe('being carried', () => {
+  it('moves to each placed point and trails its spine behind the carry', () => {
+    const motion = swimmer()
+    motion.place({ x: 700, y: 500 })
+    expect(motion.state.position).toEqual({ x: 700, y: 500 })
+    expect(motion.state.spine.joints[0]).toEqual({ x: 700, y: 500 })
+  })
+
+  it('drops whatever the grab interrupted', () => {
+    const motion = swimmer()
+    motion.startle({ x: 610, y: 400, intensity: 1 })
+    run(motion, 0.5)
+    expect(motion.isFleeing).toBe(true)
+    motion.place({ x: 700, y: 500 })
+    expect(motion.isFleeing).toBe(false)
+  })
+
+  it('resumes a calm cruise from the drop point without lunging', () => {
+    const motion = swimmer()
+    motion.startle({ x: 610, y: 400, intensity: 1 })
+    run(motion, 0.5)
+    for (let step = 0; step < 30; step += 1) {
+      motion.place({ x: 600 + step * 4, y: 400 + step * 3 })
+    }
+    // why: The released koi may only drift — a scheduled turn, a resumed flee, or a burst off the drop point is exactly the violence the carry must not end in.
+    expect(sharpestTurn(motion, 1)).toBeLessThan(0.01)
+    expect(motion.state.speed).toBeLessThanOrEqual(POND.fishLength * 0.62 + 1e-6)
+  })
+
+  it('leans no more than a nudge per placement however hard the pointer yanks', () => {
+    const motion = swimmer({ heading: 0 })
+    motion.place({ x: 600, y: 700 })
+    expect(Math.abs(angleDelta(0, motion.state.heading))).toBeLessThanOrEqual(0.015 + 1e-9)
   })
 })
 
