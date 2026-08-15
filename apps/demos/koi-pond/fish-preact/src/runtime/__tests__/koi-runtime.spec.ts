@@ -1,4 +1,3 @@
-import type { KoiTune } from '@hyperfrontend/demo-koi-lib'
 import type { KoiState } from '../../koi/koi-motion'
 import type { KoiRenderer } from '../../koi/koi-render'
 import type { KoiRendererFactory } from '../koi-runtime'
@@ -10,7 +9,7 @@ interface FakeRenderer extends KoiRenderer {
   draws: number
   ponds: number
   hovers: boolean[]
-  tunes: KoiTune[]
+  disposed: number
   last: KoiState | null
 }
 
@@ -27,7 +26,7 @@ function fakeRenderer(): FakeRenderer {
     draws: 0,
     ponds: 0,
     hovers: [],
-    tunes: [],
+    disposed: 0,
     last: null,
     draw(state) {
       fake.draws += 1
@@ -40,10 +39,9 @@ function fakeRenderer(): FakeRenderer {
       fake.hovers.push(hovered)
     },
     placeCard() {},
-    applyTune(tune) {
-      fake.tunes.push(tune)
+    dispose() {
+      fake.disposed += 1
     },
-    dispose() {},
   }
   return fake
 }
@@ -55,6 +53,9 @@ function createRaf() {
     pending = callback
     return 1
   }
+  const cancel = (): void => {
+    pending = null
+  }
   /**
    * Runs the frame the loop is waiting on at a chosen timestamp.
    *
@@ -65,7 +66,7 @@ function createRaf() {
     pending = null
     callback?.(timestamp)
   }
-  return { request, tick }
+  return { request, cancel, tick, waiting: () => pending !== null }
 }
 
 describe('createKoiRuntime', () => {
@@ -80,7 +81,9 @@ describe('createKoiRuntime', () => {
     renderer = fakeRenderer()
     raf = createRaf()
     vi.stubGlobal('requestAnimationFrame', raf.request)
+    vi.stubGlobal('cancelAnimationFrame', raf.cancel)
     window.requestAnimationFrame = raf.request
+    window.cancelAnimationFrame = raf.cancel
     // why: jsdom ships no matchMedia, and the standalone fallback reads it once at construction to honour reduced motion.
     vi.stubGlobal('matchMedia', () => ({ matches: false }))
   })
@@ -170,24 +173,39 @@ describe('createKoiRuntime', () => {
     expect(Math.hypot(resumed.x - held.x, resumed.y - held.y)).toBeGreaterThan(10)
   })
 
-  it('routes the playground tune to both the brain and the renderer', () => {
-    const tuned = createKoiRuntime(root, build)
-    const tunedSent = emissions(tuned)
-    tuned.applyTune({ speedScale: 0.4 })
-    for (let ts = 1000; ts <= 3000; ts += 16) {
-      raf.tick(ts)
-    }
-    expect(renderer.tunes).toEqual([{ speedScale: 0.4 }])
-    const tunedSpeed = lastSpeed(tunedSent)
+  it('cancels its animation frame outright while asleep', () => {
+    const runtime = createKoiRuntime(root, build)
+    raf.tick(1000)
+    runtime.setPaused(true)
+    // why: A sleeping koi must not even hold a pending callback — seven hidden frames each waking per frame is the battery cost sleep exists to remove.
+    expect(raf.waiting()).toBe(false)
+    runtime.setPaused(false)
+    expect(raf.waiting()).toBe(true)
+  })
 
-    // why: A second, untuned runtime swims the identical deterministic course, so its reported speed is the honest baseline proving the brain actually took the scale.
-    renderer = fakeRenderer()
-    const cruising = createKoiRuntime(root, build)
-    const cruisingSent = emissions(cruising)
-    for (let ts = 1000; ts <= 3000; ts += 16) {
-      raf.tick(ts)
-    }
-    expect(tunedSpeed).toBeLessThan(lastSpeed(cruisingSent) * 0.6)
+  it('resumes from sleep without a false stall', () => {
+    const runtime = createKoiRuntime(root, build)
+    const sent = emissions(runtime)
+    raf.tick(1000)
+    const before = lastNose(sent)
+    runtime.setPaused(true)
+    runtime.setPaused(false)
+    // why: The first frame back starts a fresh clock — an hour asleep must not arrive as one clamped leap of travel.
+    raf.tick(3_601_000)
+    raf.tick(3_601_016)
+    const after = lastNose(sent)
+    expect(Math.hypot(after.x - before.x, after.y - before.y)).toBeLessThan(10)
+  })
+
+  it('tears everything down on dispose', () => {
+    const runtime = createKoiRuntime(root, build)
+    raf.tick(1000)
+    runtime.dispose()
+    expect(renderer.disposed).toBe(1)
+    expect(raf.waiting()).toBe(false)
+    // why: A disposed koi stays disposed — waking it up again would leak the very loop dispose exists to stop.
+    runtime.setPaused(false)
+    expect(raf.waiting()).toBe(false)
   })
 
   it('forwards an announced world to both the brain and the renderer', () => {
