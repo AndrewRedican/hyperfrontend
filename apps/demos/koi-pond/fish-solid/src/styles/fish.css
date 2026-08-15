@@ -56,8 +56,12 @@ body,
   letter-spacing: 0.02em;
 }
 
+/* why: Styled as the link it is, but this frame never receives the pointer - the host floats a real anchor over the rectangle the outline reports. */
 .koi-card-url {
   font-size: 0.68rem;
-  color: rgba(232, 243, 239, 0.62);
+  color: rgba(124, 192, 255, 0.85);
   font-family: ui-monospace, 'SFMono-Regular', monospace;
+  text-decoration: underline;
+  text-decoration-color: rgba(124, 192, 255, 0.45);
+  text-underline-offset: 2px;
 }

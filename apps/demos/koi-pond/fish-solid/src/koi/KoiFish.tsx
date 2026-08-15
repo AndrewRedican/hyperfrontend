@@ -34,9 +34,10 @@ export interface KoiFishProps {
    *
    * @param canvas - The canvas the koi's body renders into.
    * @param card - The hover identity card the renderer parks each frame.
+   * @param link - The card's URL anchor, whose rectangle the outline reports.
    * @returns The teardown that releases whatever the renderer built on them.
    */
-  mount(canvas: HTMLCanvasElement, card: HTMLDivElement): () => void
+  mount(canvas: HTMLCanvasElement, card: HTMLDivElement, link: HTMLAnchorElement): () => void
 }
 
 /**
@@ -48,13 +49,14 @@ export interface KoiFishProps {
 export function KoiFish(props: KoiFishProps): JSX.Element {
   let canvas: HTMLCanvasElement | undefined
   let card: HTMLDivElement | undefined
+  let link: HTMLAnchorElement | undefined
 
   onMount(() => {
-    if (canvas === undefined || card === undefined) {
+    if (canvas === undefined || card === undefined || link === undefined) {
       return
     }
     // why: The GPU scene needs a real canvas node, so it is built here — after Solid has created one — and torn down by whatever cleanup the renderer hands back.
-    onCleanup(props.mount(canvas, card))
+    onCleanup(props.mount(canvas, card, link))
   })
 
   return (
@@ -76,7 +78,18 @@ export function KoiFish(props: KoiFishProps): JSX.Element {
         <span class="koi-card-name" style={{ color: props.profile.palette.accent }}>
           {props.profile.label}
         </span>
-        <span class="koi-card-url">{props.url}</span>
+        {/* why: The URL is a real anchor for semantics and link styling, but this frame never receives the pointer — the host reads its rectangle off the outline report and floats the anchor that actually opens it. */}
+        <a
+          class="koi-card-url"
+          href={props.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          ref={(node) => {
+            link = node
+          }}
+        >
+          {props.url}
+        </a>
       </div>
     </>
   )
