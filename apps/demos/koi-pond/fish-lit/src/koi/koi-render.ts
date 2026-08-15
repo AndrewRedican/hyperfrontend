@@ -9,21 +9,30 @@
  * from the frame loop. The swimming brain stays authoritative for where the
  * fish *is*; the renderer only makes the koi's body express it.
  *
+ * The canvas covers only the koi's own frame box, never the whole viewport:
+ * the shared camera is narrowed onto that box each frame, so the small canvas
+ * paints pixel-identically what a full-viewport render would have put there,
+ * at a fraction of the fill and memory. A koi outside the visible window draws
+ * nothing at all.
+ *
  * Nothing is painted on `body` or on the host element — the hostee SDK resets
  * the page to transparent, and anything painted there would blank the pond
  * behind this frame for every koi below it. The canvas clears to transparent;
  * only the fish itself has colour.
  */
-import type { KoiProfile, KoiTune, PondEnvironment } from '@hyperfrontend/demo-koi-lib'
+import type { KoiFrameBox, KoiProfile, PondEnvironment } from '@hyperfrontend/demo-koi-lib'
 import type { Koi, PondView } from '@hyperfrontend/demo-koi-lib/three'
 import type { WebGLRenderer } from 'three'
 import type { KoiState } from './koi-motion'
-import { POND_VIEW, koiSeed, pxPerUnit, swimDepth, wrapAngle } from '@hyperfrontend/demo-koi-lib'
-import { createKoi, createLighting, createPondRenderer, createPondView, sizePondRenderer } from '@hyperfrontend/demo-koi-lib/three'
+import { POND_VIEW, koiFrameBox, koiSeed, pxPerUnit, swimDepth, wrapAngle } from '@hyperfrontend/demo-koi-lib'
+import { createKoi, createLighting, createPondRenderer, createPondView, fitPondRenderer } from '@hyperfrontend/demo-koi-lib/three'
 import { Scene } from 'three'
 
 /** The subset of a renderer this app drives, injectable so specs run without a GPU. */
 export type GlRenderer = Pick<WebGLRenderer, 'render' | 'setSize' | 'setPixelRatio' | 'dispose'>
+
+/** How far the frame box's edge may drift from the fitted buffer before a re-fit, as a fraction. */
+const REFIT_DRIFT = 0.1
 
 /** A renderer bound to one koi. */
 export interface KoiRenderer {
@@ -49,17 +58,11 @@ export interface KoiRenderer {
    */
   setHovered(hovered: boolean): void
   /**
-   * Positions the hover card beside the koi.
+   * Positions the hover card beside the koi, clamped into the visible window.
    *
    * @param state - What the koi is doing right now.
    */
   placeCard(state: KoiState): void
-  /**
-   * Takes the visitor's playground settings onto the body and the swim.
-   *
-   * @param tune - The scales to apply over this koi's own build and trim.
-   */
-  applyTune(tune: KoiTune): void
   /** Releases the GPU resources the koi holds. */
   dispose(): void
 }
@@ -113,12 +116,36 @@ export function createKoiRenderer(
   let lastHeading: number | null = null
   let lastSpeed = 0
   let current = pond
-
-  sizePondRenderer(gl, pond.view.width, pond.view.height)
+  let fittedSize = 0
+  let shown = true
+  const box: KoiFrameBox = { x: 0, y: 0, size: 0, visible: false }
 
   return {
     koi,
     draw(state, dt) {
+      koiFrameBox(state.position, state.heading, state.length, current.view, box)
+      // why: A koi outside the window pays nothing — no pose, no uniforms, no clear, no composite. The brain keeps swimming; only the pixels stop.
+      if (!box.visible) {
+        if (shown) {
+          shown = false
+          canvas.style.display = 'none'
+        }
+        lastHeading = state.heading
+        return
+      }
+      if (!shown) {
+        shown = true
+        canvas.style.display = ''
+      }
+      if (Math.abs(box.size - fittedSize) > fittedSize * REFIT_DRIFT) {
+        // why: The buffer re-fits only when the body's size genuinely changed — reallocating a drawing buffer every frame would cost more than the render itself.
+        fittedSize = box.size
+        fitPondRenderer(gl, box.size)
+        canvas.style.width = `${box.size}px`
+        canvas.style.height = `${box.size}px`
+      }
+      canvas.style.transform = `translate3d(${(box.x - current.view.x).toFixed(1)}px, ${(box.y - current.view.y).toFixed(1)}px, 0)`
+
       const seconds = dt > 0 ? dt : 1e-6
       // why: The swimming model thinks in this koi's own body lengths, while the brain and the wire think in pond pixels.
       const speed = state.speed / bodyPx
@@ -134,6 +161,7 @@ export function createKoiRenderer(
       lastHeading = state.heading
       lastSpeed = speed
       koi.update(dt)
+      view.frame(box)
       view.place(koi.object, state.position, state.heading)
       gl.render(scene, view.camera)
     },
@@ -142,7 +170,8 @@ export function createKoiRenderer(
       bodyPx = pxPerUnit(next.fishLength) * build.lengthScale
       current = next
       view.setPond(next)
-      sizePondRenderer(gl, next.view.width, next.view.height)
+      // why: A pond announcement moves the window, so the next draw must re-fit rather than trust a buffer sized against the old world.
+      fittedSize = 0
     },
 
     setHovered(hovered) {
@@ -154,24 +183,15 @@ export function createKoiRenderer(
       if (head === undefined) {
         return
       }
-      // why: The card rides off the koi's shoulder rather than its nose, so it never covers the fish a visitor is pointing at.
       // why: The card lives in the frame's own CSS space while the spine is in pond space, so the visible window's origin comes off first.
       const x = head.x - current.view.x + state.length * 0.12
       const y = head.y - current.view.y - state.length * 0.38
-      card.style.transform = `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px)`
-    },
-
-    applyTune(tune) {
-      // why: The scales ride on this koi's own derived numbers rather than replacing them, so the playground moves the whole shoal while each fish keeps its identity.
-      koi.setTrim({
-        amplitude: trim.amplitude * (tune.amplitudeScale ?? 1),
-        frequency: trim.frequency * (tune.frequencyScale ?? 1),
-        waveReach: tune.waveReach ?? trim.waveReach,
-      })
-      koi.setPhysical({
-        width: (phenotype.width ?? 1) * (tune.widthScale ?? 1),
-        height: (phenotype.height ?? 1) * (tune.heightScale ?? 1),
-      })
+      // why: A tapped fish near a window edge must still show its whole card — on touch there is no hover to chase it with.
+      const width = card.offsetWidth || 200
+      const height = card.offsetHeight || 64
+      const clampedX = Math.min(Math.max(x, 8), Math.max(8, current.view.width - width - 8))
+      const clampedY = Math.min(Math.max(y, 8), Math.max(8, current.view.height - height - 8))
+      card.style.transform = `translate(${clampedX.toFixed(1)}px, ${clampedY.toFixed(1)}px)`
     },
 
     dispose() {

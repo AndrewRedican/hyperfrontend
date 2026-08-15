@@ -4,7 +4,7 @@
  *
  * A controller is how Lit attaches stateful behaviour to an element without
  * putting it in the element: the koi's swimming owns the animation frame, the
- * window listener and the renderer's lifetime, the element owns nothing but
+ * window listeners and the renderer's lifetime, the element owns nothing but
  * its template, and the component's own lifecycle is what starts and stops the
  * fish. The loop never asks the element to re-render — it advances the brain
  * and hands each frame to the renderer, which writes the scene directly.
@@ -15,7 +15,7 @@
  * who opens `/fish-lit/` sees one koi swimming in clear water. That is the
  * standalone story every fish app in the pond keeps.
  */
-import type { Disturbance, KoiIdentity, KoiProfile, KoiTune, NeighborObservation, PondEnvironment } from '@hyperfrontend/demo-koi-lib'
+import type { Disturbance, KoiIdentity, KoiProfile, NeighborObservation, PondEnvironment } from '@hyperfrontend/demo-koi-lib'
 import type { ReactiveController, ReactiveControllerHost } from 'lit'
 import type { KoiRuntime } from '../feature/wire-contract'
 import type { GlRenderer, KoiRenderer } from '../koi/koi-render'
@@ -46,7 +46,7 @@ interface KoiStageParts {
 const OUTLINE_INTERVAL_MS = 100
 
 /** Longest delta a single frame may report, in seconds. */
-const MAX_FRAME_S = 1 / 20
+const MAX_FRAME_S = 0.1
 
 /** How hard a koi breaking the surface strikes the water. */
 const WAKE_STRENGTH = 0.45
@@ -101,13 +101,13 @@ export class KoiSwimController implements ReactiveController, KoiRuntime {
   /** Whether the host is holding this koi in place for inspection. */
   #inspected = false
 
-  /** The playground settings applied so far, folded together so a rebuilt renderer can take them again. */
-  #tuned: KoiTune | null = null
-
   /** Whether a host has announced a world, making its announcements authoritative. */
   #hosted = false
 
-  /** The animation frame in flight, or `null` while the element is disconnected. */
+  /** Whether the koi has been torn down for good; a disposed koi never restarts. */
+  #disposed = false
+
+  /** The animation frame in flight, or `null` while the loop is stopped. */
   #frameHandle: number | null = null
 
   /** Timestamp of the last outline report. */
@@ -118,9 +118,6 @@ export class KoiSwimController implements ReactiveController, KoiRuntime {
 
   /** Timestamp of the previous frame. */
   #lastFrameAt = 0
-
-  /** Timestamp of the first frame, from which elapsed seconds are measured. */
-  #startedAt = 0
 
   /** Whether the koi was still fleeing as of the previous frame. */
   #wasFleeing = false
@@ -167,31 +164,24 @@ export class KoiSwimController implements ReactiveController, KoiRuntime {
   attach(canvas: HTMLCanvasElement, card: HTMLElement, createGl?: (canvas: HTMLCanvasElement) => GlRenderer): void {
     this.#parts = { canvas, card, createGl }
     this.#renderer = this.#buildRenderer(canvas, card, this.profile, this.#pond, createGl)
-    if (this.#tuned !== null) {
-      // why: A renderer rebuilt after a reconnect starts from the profile's own body, so the settings the visitor already dialled in go back on at once.
-      this.#renderer.applyTune(this.#tuned)
-    }
   }
 
-  /** Starts the koi swimming and begins tracking the frame it swims in. */
+  /** Starts the koi swimming and begins tracking the frame and the page it swims in. */
   hostConnected(): void {
     // why: A re-connected element renders no `firstUpdated`, so the scene disposed at disconnect is rebuilt from the stage it already handed over.
     if (this.#parts !== null && this.#renderer === null) {
       this.attach(this.#parts.canvas, this.#parts.card, this.#parts.createGl)
     }
-    this.#frameHandle = window.requestAnimationFrame(this.#frame)
+    this.#start()
     window.addEventListener('resize', this.#measure)
+    // why: The frame's GL context and callbacks should not outlive the page — a torn-down koi must leave nothing running.
+    window.addEventListener('pagehide', this.#onPagehide)
   }
 
   /** Stops the koi cleanly when its element leaves the document. */
   hostDisconnected(): void {
-    if (this.#frameHandle !== null) {
-      window.cancelAnimationFrame(this.#frameHandle)
-      this.#frameHandle = null
-    }
-    window.removeEventListener('resize', this.#measure)
-    this.#renderer?.dispose()
-    this.#renderer = null
+    // why: A disconnected element may come back, so this is the reversible half of dispose — the same teardown without the terminal latch.
+    this.#teardown()
   }
 
   /**
@@ -260,7 +250,13 @@ export class KoiSwimController implements ReactiveController, KoiRuntime {
    * @param paused - Whether the host asked this koi to stop.
    */
   setPaused(paused: boolean): void {
+    // why: A sleeping koi cancels its animation frame outright — seven hidden frames each still waking per frame is exactly the battery cost the host's sleep exists to remove.
     this.#paused = paused
+    if (this.#paused) {
+      this.#stop()
+    } else {
+      this.#start()
+    }
   }
 
   /**
@@ -272,16 +268,13 @@ export class KoiSwimController implements ReactiveController, KoiRuntime {
     this.#inspected = inspected
   }
 
-  /**
-   * Takes the visitor's playground settings onto the brain and the body.
-   *
-   * @param tune - The scales to apply over this koi's own derived behaviour and build.
-   */
-  applyTune(tune: KoiTune): void {
-    // why: Omitted fields keep their value, so what survives for a rebuilt renderer is the fold of everything dialled so far, not just the last message.
-    this.#tuned = { ...this.#tuned, ...tune }
-    this.#motion.setTune(tune)
-    this.#renderer?.applyTune(tune)
+  /** Stops the loop and releases everything the koi holds, once and for good. */
+  dispose(): void {
+    if (this.#disposed) {
+      return
+    }
+    this.#disposed = true
+    this.#teardown()
   }
 
   /**
@@ -291,6 +284,31 @@ export class KoiSwimController implements ReactiveController, KoiRuntime {
    */
   connect(emit: (type: string, data?: unknown) => void): void {
     this.#emit = emit
+  }
+
+  /** Stops the loop entirely; a stopped koi costs nothing, not even a callback. */
+  #stop(): void {
+    if (this.#frameHandle !== null) {
+      window.cancelAnimationFrame(this.#frameHandle)
+      this.#frameHandle = null
+    }
+  }
+
+  /** Starts the loop with a fresh clock, so the first frame back reports no false gap. */
+  #start(): void {
+    if (this.#frameHandle === null && !this.#disposed) {
+      this.#lastFrameAt = 0
+      this.#frameHandle = window.requestAnimationFrame(this.#frame)
+    }
+  }
+
+  /** Cancels the loop, unhooks the window, and releases the renderer's GPU hold. */
+  #teardown(): void {
+    this.#stop()
+    window.removeEventListener('resize', this.#measure)
+    window.removeEventListener('pagehide', this.#onPagehide)
+    this.#renderer?.dispose()
+    this.#renderer = null
   }
 
   /**
@@ -311,21 +329,15 @@ export class KoiSwimController implements ReactiveController, KoiRuntime {
    */
   readonly #frame = (timestamp: number): void => {
     this.#frameHandle = window.requestAnimationFrame(this.#frame)
-    if (this.#paused) {
-      this.#lastFrameAt = timestamp
-      return
-    }
-    if (this.#startedAt === 0) {
-      this.#startedAt = timestamp
+    if (this.#lastFrameAt === 0) {
       this.#lastFrameAt = timestamp
     }
     const raw = (timestamp - this.#lastFrameAt) / 1000
     this.#lastFrameAt = timestamp
     const dt = raw > MAX_FRAME_S ? MAX_FRAME_S : raw
-    const elapsedS = (timestamp - this.#startedAt) / 1000
 
     if (!this.#inspected) {
-      this.#motion.advance(dt, elapsedS)
+      this.#motion.advance(dt)
     }
     const state = this.#motion.state
     // why: An inspected koi holds its position but keeps sculling gently — a mesh frozen mid-beat reads as a rendering fault, not a fish waiting to be looked at.
@@ -374,5 +386,10 @@ export class KoiSwimController implements ReactiveController, KoiRuntime {
     }
     // why: Only the visible window follows the frame — the virtual pond took its dimensions from the screen at startup and never moves under the fish.
     this.#adopt({ ...this.#pond, view: pondWindow(this.#pond, window.innerWidth, window.innerHeight) })
+  }
+
+  /** Tears the koi down for good as the page goes away. */
+  readonly #onPagehide = (): void => {
+    this.dispose()
   }
 }

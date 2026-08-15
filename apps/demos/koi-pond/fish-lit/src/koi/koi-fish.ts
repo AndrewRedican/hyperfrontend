@@ -60,12 +60,13 @@ export class KoiFishElement extends LitElement {
       color: #e8f3ef;
     }
 
+    /* why: The canvas covers only the koi's own frame box — the renderer sizes it and slides it with a transform, so the compositor carries a fish-sized layer instead of a viewport-sized one. */
     .koi-canvas {
       position: absolute;
-      inset: 0;
+      top: 0;
+      left: 0;
       display: block;
-      width: 100%;
-      height: 100%;
+      will-change: transform;
     }
 
     /* why: Hover identity is the fish's own chrome — the host hit-tests and notifies, but every koi draws its own card in its own framework. */
