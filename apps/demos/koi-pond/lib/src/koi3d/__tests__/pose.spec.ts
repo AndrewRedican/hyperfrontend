@@ -102,6 +102,28 @@ describe('evaluateSpine', () => {
     const pose = evaluateSpine(1, { ...STILL_SWIM, pitch: 0.4 }, 0)
     expect(pose.stations[0]?.position[1] ?? 0).toBeGreaterThan(0.1)
   })
+
+  it('keeps the skull nearly rigid through a hard turn', () => {
+    const pose = evaluateSpine(1, { ...STILL_SWIM, turnBend: 1.4 }, 0)
+    const bendAt = (index: number): number => Math.abs((pose.stations[index + 1]?.yaw ?? 0) - (pose.stations[index]?.yaw ?? 0))
+    // why: The local bend at the snout must be a small fraction of the torso's — a fish turns with the muscle behind its head, never with its skull.
+    expect(bendAt(1)).toBeLessThan(bendAt(13) * 0.3)
+  })
+
+  it('still delivers the whole ordered bend once the skull sheds its share', () => {
+    const pose = evaluateSpine(1, { ...STILL_SWIM, turnBend: 1.4 }, 0)
+    const headToTail = (pose.stations[0]?.yaw ?? 0) - (pose.stations[SPINE_SAMPLES - 1]?.yaw ?? 0)
+    expect(headToTail).toBeCloseTo(1.4 * (SPINE_SAMPLES / (SPINE_SAMPLES - 1)), 1)
+  })
+
+  it('stiffens the snout against the travelling wave even at full escape', () => {
+    const swim = targetSwim(MOTION_PRESETS.Escape ?? DEFAULT_MOTION)
+    const noses = Array.from({ length: 24 }, (_unused, step) => {
+      const pose = evaluateSpine(1, swim, (step / 24) * Math.PI * 2)
+      return (pose.stations[1]?.yaw ?? 0) - (pose.stations[0]?.yaw ?? 0)
+    })
+    expect(Math.max(...noses.map(Math.abs))).toBeLessThan(0.12)
+  })
 })
 
 describe('sampleSpinePose', () => {
@@ -179,6 +201,23 @@ describe('createSwimState', () => {
     const swim = createSwimState({ speed: 1 })
     swim.advance(30)
     expect(swim.phase).toBeLessThan(Math.PI * 2)
+  })
+})
+
+describe('targetSwim limits', () => {
+  it('saturates the bend well short of a hoop however hard the helm is thrown', () => {
+    const extreme = targetSwim({ ...DEFAULT_MOTION, speed: 1.1, turnRate: 50 })
+    expect(Math.abs(extreme.turnBend)).toBeLessThanOrEqual(1.4)
+  })
+
+  it('centres the bend in the torso, behind the pectoral band', () => {
+    expect(targetSwim({ ...DEFAULT_MOTION, speed: 0.6, turnRate: 1 }).turnCentre).toBeGreaterThanOrEqual(0.4)
+  })
+
+  it('caps the surge kick so a one-frame acceleration spike cannot convulse the body', () => {
+    const spiked = targetSwim({ ...DEFAULT_MOTION, speed: 1, acceleration: 400 })
+    const bounded = targetSwim({ ...DEFAULT_MOTION, speed: 1, acceleration: 2.6 })
+    expect(spiked.amplitude).toBe(bounded.amplitude)
   })
 })
 

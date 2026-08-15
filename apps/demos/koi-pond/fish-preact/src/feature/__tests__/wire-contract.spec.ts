@@ -1,4 +1,4 @@
-import type { Disturbance, KoiIdentity, KoiTune, NeighborObservation, PondEnvironment } from '@hyperfrontend/demo-koi-lib'
+import type { Disturbance, KoiIdentity, NeighborObservation, PondEnvironment } from '@hyperfrontend/demo-koi-lib'
 import type { FeatureLink, KoiRuntime } from '../wire-contract'
 import { describe, expect, it } from 'vitest'
 import { describePond } from '@hyperfrontend/demo-koi-lib'
@@ -29,7 +29,8 @@ function createHarness() {
     setHovered: (hovered: boolean) => calls.push({ method: 'setHovered', value: hovered }),
     setPaused: (paused: boolean) => calls.push({ method: 'setPaused', value: paused }),
     setInspected: (inspected: boolean) => calls.push({ method: 'setInspected', value: inspected }),
-    applyTune: (tune: KoiTune) => calls.push({ method: 'applyTune', value: tune }),
+    placeAt: (point: { x: number; y: number }) => calls.push({ method: 'placeAt', value: point }),
+    dispose: () => calls.push({ method: 'dispose', value: null }),
     connect: (emit: (type: string, data?: unknown) => void) => calls.push({ method: 'connect', value: emit }),
   }
 
@@ -115,18 +116,18 @@ describe('inbound wiring', () => {
     expect(harness.lastCall('setPaused')).toBe(false)
   })
 
+  it('carries a placement point through to the runtime', () => {
+    const harness = createHarness()
+    harness.emit('place', { x: 512, y: 384 })
+    expect(harness.lastCall('placeAt')).toEqual({ x: 512, y: 384 })
+  })
+
   it('unwraps an inspection pause to the flag itself, either way', () => {
     const harness = createHarness()
     harness.emit('pause', { paused: true })
     expect(harness.lastCall('setInspected')).toBe(true)
     harness.emit('pause', { paused: false })
     expect(harness.lastCall('setInspected')).toBe(false)
-  })
-
-  it('passes the playground tune through untouched', () => {
-    const harness = createHarness()
-    harness.emit('tune', { speedScale: 0.7, waveReach: 0.2 })
-    expect(harness.lastCall('applyTune')).toEqual({ speedScale: 0.7, waveReach: 0.2 })
   })
 })
 

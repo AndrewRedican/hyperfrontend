@@ -122,6 +122,48 @@ export interface KoiOutline {
   depth: number
   /** The behavioural state the body is reading in. */
   phase: KoiPhase
+  /**
+   * Where the identity card and its interactive spots sit, while a visitor
+   * holds this koi.
+   *
+   * The koi's frame is pointer-transparent, so nothing drawn inside it can be
+   * clicked; reporting the card's geometry lets the host float real anchors
+   * over the links and an inert shield over the rest.
+   */
+  card?: KoiCardPanel
+}
+
+/** A pond-space rectangle inside one koi's identity card. */
+export interface KoiCardLink {
+  /** Pond-space x of the rectangle's left edge. */
+  x: number
+  /** Pond-space y of the rectangle's top edge. */
+  y: number
+  /** Rectangle width in CSS pixels. */
+  width: number
+  /** Rectangle height in CSS pixels. */
+  height: number
+}
+
+/** The geometry of one koi's identity card: its frame and its two links. */
+export interface KoiCardPanel {
+  /** The whole card's rectangle. */
+  frame: KoiCardLink
+  /** The rectangle of the app URL line, linking to this fish's own application. */
+  app: KoiCardLink
+  /** The rectangle of the framework line, linking to the framework's official site. */
+  site: KoiCardLink
+}
+
+/** The official website each framework's card links out to. */
+export const FRAMEWORK_SITES: Readonly<Record<KoiFramework, string>> = {
+  vanilla: 'https://www.typescriptlang.org/',
+  react: 'https://react.dev/',
+  vue: 'https://vuejs.org/',
+  svelte: 'https://svelte.dev/',
+  solid: 'https://www.solidjs.com/',
+  preact: 'https://preactjs.com/',
+  lit: 'https://lit.dev/',
 }
 
 /**
@@ -147,34 +189,6 @@ export interface NeighborObservation {
   length: number
   /** Neighbour's widest half-width in CSS pixels, so clearance can respect a heavier build. */
   girth: number
-}
-
-/**
- * The visitor's playground settings, broadcast by the host to the whole shoal.
- *
- * Scales multiply each koi's own derived behaviour rather than replacing it,
- * so the individual variety the seeds bought survives the sliders. Every
- * field is optional; an omitted field keeps its current value.
- */
-export interface KoiTune {
-  /** Multiplies cruise and escape speed. */
-  speedScale?: number
-  /** Multiplies turn rate. */
-  turnScale?: number
-  /** Multiplies the ambient wander drift. */
-  wanderScale?: number
-  /** Multiplies the clearance a koi claims in an encounter. */
-  clearanceScale?: number
-  /** Multiplies the body wave's amplitude. */
-  amplitudeScale?: number
-  /** Multiplies the tail-beat frequency. */
-  frequencyScale?: number
-  /** Overrides how far forward the body wave reaches; positive moves it toward the snout. */
-  waveReach?: number
-  /** Multiplies body width against each koi's own build. */
-  widthScale?: number
-  /** Multiplies body height against each koi's own build. */
-  heightScale?: number
 }
 
 /** The eight normalised behavioural traits that make each koi its own animal. */

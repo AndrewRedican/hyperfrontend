@@ -128,3 +128,49 @@ describe('createPondView', () => {
     expect(after.z).toBeCloseTo(anchored.z, 6)
   })
 })
+
+describe('createPondView frame', () => {
+  it('renders a sub-rect pixel-identical to the full view', () => {
+    const view = createPondView(POND)
+    const at = { x: 900, y: 500 }
+    const anchored = view.worldFromPond(at, new Vector3()).clone()
+    // how: Narrow the camera onto a koi-sized box; the box's NDC must map the same pond pixel onto the same world point, so the sub-rect canvas paints exactly what the full view would have put there.
+    const box = { x: 760, y: 380, size: 280 }
+    view.frame(box)
+    const projected = anchored.clone().project(view.camera)
+    expect(box.x + ((projected.x + 1) / 2) * box.size).toBeCloseTo(at.x, 4)
+    expect(box.y + ((1 - projected.y) / 2) * box.size).toBeCloseTo(at.y, 4)
+  })
+
+  it('unprojects through the narrowed camera consistently', () => {
+    const view = createPondView(POND)
+    const at = { x: 900, y: 500 }
+    const full = view.worldFromPond(at, new Vector3()).clone()
+    view.frame({ x: 760, y: 380, size: 280 })
+    const framed = view.worldFromPond(at, new Vector3())
+    expect(framed.x).toBeCloseTo(full.x, 6)
+    expect(framed.z).toBeCloseTo(full.z, 6)
+  })
+
+  it('keeps an anchored object in place across frame moves', () => {
+    const view = createPondView(POND)
+    const koi = new Object3D()
+    view.place(koi, { x: 900, y: 500 }, 0)
+    const anchored = koi.position.clone()
+    view.frame({ x: 700, y: 300, size: 300 })
+    view.place(koi, { x: 900, y: 500 }, 0)
+    expect(koi.position.x).toBeCloseTo(anchored.x, 6)
+    expect(koi.position.z).toBeCloseTo(anchored.z, 6)
+  })
+
+  it('drops the narrowing when the pond is re-announced', () => {
+    const view = createPondView(POND)
+    view.frame({ x: 760, y: 380, size: 280 })
+    view.setPond(POND)
+    const at = { x: POND.view.x + POND.view.width / 2, y: POND.view.y + POND.view.height / 2 }
+    const world = view.worldFromPond(at, new Vector3())
+    const back = pondFromWorld(view, world.clone(), POND)
+    expect(back.x).toBeCloseTo(at.x, 4)
+    expect(back.y).toBeCloseTo(at.y, 4)
+  })
+})

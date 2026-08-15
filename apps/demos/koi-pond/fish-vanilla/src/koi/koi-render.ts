@@ -6,21 +6,45 @@
  * frame for every koi below it. The canvas clears to transparent; only the fish
  * itself has colour.
  *
+ * The canvas covers only the koi's own frame box, never the whole viewport:
+ * the shared camera is narrowed onto that box each frame, so the small canvas
+ * paints pixel-identically what a full-viewport render would have put there,
+ * at a fraction of the fill and memory. A koi outside the visible window draws
+ * nothing at all.
+ *
  * This is the one browser-facing module in the app. The other six koi replace
  * exactly this file with their own framework's idiom, and share everything
  * else: the swimming brain stays authoritative for where the fish *is*, and
  * this module only makes the koi's body express it.
  */
-import type { KoiProfile, KoiTune, PondEnvironment } from '@hyperfrontend/demo-koi-lib'
+import type { KoiCardDetails, KoiCardLink, KoiCardPanel, KoiFrameBox, KoiProfile, PondEnvironment } from '@hyperfrontend/demo-koi-lib'
 import type { Koi, PondView } from '@hyperfrontend/demo-koi-lib/three'
 import type { WebGLRenderer } from 'three'
 import type { KoiState } from './koi-motion'
-import { POND_VIEW, koiSeed, pxPerUnit, swimDepth, wrapAngle } from '@hyperfrontend/demo-koi-lib'
-import { createKoi, createLighting, createPondRenderer, createPondView, sizePondRenderer } from '@hyperfrontend/demo-koi-lib/three'
+import {
+  FRAMEWORK_SITES,
+  POND_VIEW,
+  describeKoiCard,
+  koiFrameBox,
+  koiSeed,
+  pxPerUnit,
+  swimDepth,
+  wrapAngle,
+} from '@hyperfrontend/demo-koi-lib'
+import { createKoi, createLighting, createPondRenderer, createPondView, fitPondRenderer } from '@hyperfrontend/demo-koi-lib/three'
 import { Scene } from 'three'
 
 /** The subset of a renderer this app drives, injectable so specs run without a GPU. */
 export type GlRenderer = Pick<WebGLRenderer, 'render' | 'setSize' | 'setPixelRatio' | 'dispose'>
+
+/** How far the frame box's edge may drift from the fitted buffer before a re-fit, as a fraction. */
+const REFIT_DRIFT = 0.1
+
+/** How firmly the silhouette reads when the pointer is merely over the koi. */
+const HOVER_OUTLINE = 0.35
+
+/** How firmly the silhouette reads while a visitor holds the koi. */
+const HELD_OUTLINE = 1
 
 /** A renderer bound to one koi. */
 export interface KoiRenderer {
@@ -40,23 +64,45 @@ export interface KoiRenderer {
    */
   setPond(pond: PondEnvironment): void
   /**
-   * Shows or hides the hover identity card.
+   * Marks whether the host's pointer is over this koi.
    *
-   * @param hovered - Whether the host's pointer is over this koi.
+   * Hover only says "this is selectable": the silhouette reads softly and
+   * nothing else changes — the identity card belongs to selection.
+   *
+   * @param hovered - Whether the pointer is over this koi.
    */
   setHovered(hovered: boolean): void
   /**
-   * Positions the hover card beside the koi.
+   * Marks whether a visitor is holding this koi.
+   *
+   * Holding traces the full silhouette and keeps the identity card open until
+   * release, whatever the pointer does meanwhile.
+   *
+   * @param selected - Whether the koi is held.
+   */
+  setSelected(selected: boolean): void
+  /**
+   * Rewrites the card's live inspector rows.
+   *
+   * @param details - The koi's live facts.
+   */
+  updateCard(details: KoiCardDetails): void
+  /**
+   * Positions the identity card beside the koi, clamped into the visible window.
    *
    * @param state - What the koi is doing right now.
    */
   placeCard(state: KoiState): void
   /**
-   * Takes the visitor's playground settings onto the body and the swim.
+   * Where the card and its two links currently sit, in pond space.
    *
-   * @param tune - The scales to apply over this koi's own build and trim.
+   * This frame is pointer-transparent, so nothing drawn here can be clicked
+   * directly; the host floats real anchors over the reported rectangles and an
+   * inert shield over the frame.
+   *
+   * @returns The card's geometry, or `null` while the card is hidden.
    */
-  applyTune(tune: KoiTune): void
+  cardRects(): KoiCardPanel | null
   /** Releases the GPU resources the koi holds. */
   dispose(): void
 }
@@ -93,15 +139,41 @@ export function createKoiRenderer(
   const card = document.createElement('div')
   card.className = 'koi-card'
   card.hidden = true
-  card.innerHTML = `<span class="koi-card-name"></span><span class="koi-card-url"></span>`
+  // why: The links are real anchors for semantics and styling, but this frame never receives the pointer — the host reads their rectangles off the outline report and floats the anchors that actually open them.
+  card.innerHTML =
+    `<span class="koi-card-name"></span><span class="koi-card-line koi-card-state"></span>` +
+    `<a class="koi-card-url" target="_blank" rel="noopener noreferrer"></a>` +
+    `<span class="koi-card-line koi-card-runtime"></span><span class="koi-card-line koi-card-memory"></span>` +
+    `<span class="koi-card-line koi-card-event" hidden></span>` +
+    `<a class="koi-card-site" target="_blank" rel="noopener noreferrer"></a>`
   const cardName = card.querySelector<HTMLElement>('.koi-card-name')
-  const cardUrl = card.querySelector<HTMLElement>('.koi-card-url')
+  const cardUrl = card.querySelector<HTMLAnchorElement>('.koi-card-url')
+  const cardState = card.querySelector<HTMLElement>('.koi-card-state')
+  const cardRuntime = card.querySelector<HTMLElement>('.koi-card-runtime')
+  const cardMemory = card.querySelector<HTMLElement>('.koi-card-memory')
+  const cardEvent = card.querySelector<HTMLElement>('.koi-card-event')
+  const cardSite = card.querySelector<HTMLAnchorElement>('.koi-card-site')
   if (cardName !== null) {
-    cardName.textContent = profile.label
-    cardName.style.color = palette.accent
+    // why: The variety rides beside the framework name — the pattern is the koi's own identity, and it costs one word to say this asagi is the React app.
+    cardName.innerHTML = `<span class="koi-card-title"></span><span class="koi-card-variety"></span>`
+    const title = cardName.querySelector<HTMLElement>('.koi-card-title')
+    const variety = cardName.querySelector<HTMLElement>('.koi-card-variety')
+    if (title !== null) {
+      title.textContent = profile.label
+      title.style.color = palette.accent
+    }
+    if (variety !== null) {
+      variety.textContent = palette.pattern
+    }
   }
   if (cardUrl !== null) {
     cardUrl.textContent = url
+    cardUrl.href = url
+  }
+  if (cardSite !== null) {
+    const site = FRAMEWORK_SITES[profile.framework]
+    cardSite.textContent = `${profile.label} website ↗`
+    cardSite.href = site
   }
 
   root.append(canvas, card)
@@ -130,12 +202,57 @@ export function createKoiRenderer(
   let lastHeading: number | null = null
   let lastSpeed = 0
   let current = pond
+  let fittedSize = 0
+  let shown = true
+  let hovered = false
+  let selected = false
+  const box: KoiFrameBox = { x: 0, y: 0, size: 0, visible: false }
 
-  sizePondRenderer(gl, pond.view.width, pond.view.height)
+  /** Traces the silhouette at whatever the pointer and the hold currently justify. */
+  const applyOutline = (): void => {
+    koi.setOutline(selected ? HELD_OUTLINE : hovered ? HOVER_OUTLINE : 0)
+  }
+
+  /**
+   * A card element's rectangle lifted into pond space.
+   *
+   * @param element - The element to measure.
+   * @returns The pond-space rectangle.
+   */
+  const rectOf = (element: HTMLElement): KoiCardLink => {
+    // why: The frame fills the visible window exactly, so client coordinates become pond coordinates by adding the window's origin back on.
+    const rect = element.getBoundingClientRect()
+    return { x: rect.left + current.view.x, y: rect.top + current.view.y, width: rect.width, height: rect.height }
+  }
 
   return {
     koi,
     draw(state, dt) {
+      koiFrameBox(state.position, state.heading, state.length, current.view, box)
+      // why: A koi outside the window pays nothing — no pose, no uniforms, no clear, no composite. The brain keeps swimming; only the pixels stop.
+      if (!box.visible) {
+        if (shown) {
+          shown = false
+          canvas.style.display = 'none'
+        }
+        lastHeading = state.heading
+        // why: The speed memory must track through skipped frames too, or re-entering the view lands the whole offscreen speed change as a single-frame acceleration spike that convulses the body.
+        lastSpeed = state.speed / bodyPx
+        return
+      }
+      if (!shown) {
+        shown = true
+        canvas.style.display = ''
+      }
+      if (Math.abs(box.size - fittedSize) > fittedSize * REFIT_DRIFT) {
+        // why: The buffer re-fits only when the body's size genuinely changed — reallocating a drawing buffer every frame would cost more than the render itself.
+        fittedSize = box.size
+        fitPondRenderer(gl, box.size)
+        canvas.style.width = `${box.size}px`
+        canvas.style.height = `${box.size}px`
+      }
+      canvas.style.transform = `translate3d(${(box.x - current.view.x).toFixed(1)}px, ${(box.y - current.view.y).toFixed(1)}px, 0)`
+
       const seconds = dt > 0 ? dt : 1e-6
       // why: The swimming model thinks in this koi's own body lengths, while the brain and the wire think in pond pixels.
       const speed = state.speed / bodyPx
@@ -151,6 +268,7 @@ export function createKoiRenderer(
       lastHeading = state.heading
       lastSpeed = speed
       koi.update(dt)
+      view.frame(box)
       view.place(koi.object, state.position, state.heading)
       gl.render(scene, view.camera)
     },
@@ -159,11 +277,37 @@ export function createKoiRenderer(
       bodyPx = pxPerUnit(next.fishLength) * build.lengthScale
       current = next
       view.setPond(next)
-      sizePondRenderer(gl, next.view.width, next.view.height)
+      // why: A pond announcement moves the window, so the next draw must re-fit rather than trust a buffer sized against the old world.
+      fittedSize = 0
     },
 
-    setHovered(hovered) {
-      card.hidden = !hovered
+    setHovered(next) {
+      hovered = next
+      applyOutline()
+    },
+
+    setSelected(next) {
+      selected = next
+      // why: The card belongs to the hold, not the pointer — it stays open however the pointer moves, because the visitor is about to interact with it.
+      card.hidden = !next
+      applyOutline()
+    },
+
+    updateCard(details) {
+      const rows = describeKoiCard(details)
+      if (cardState !== null) {
+        cardState.textContent = rows.state
+      }
+      if (cardRuntime !== null) {
+        cardRuntime.textContent = rows.runtime
+      }
+      if (cardMemory !== null) {
+        cardMemory.textContent = rows.memory
+      }
+      if (cardEvent !== null) {
+        cardEvent.hidden = rows.event === null
+        cardEvent.textContent = rows.event ?? ''
+      }
     },
 
     placeCard(state) {
@@ -174,20 +318,19 @@ export function createKoiRenderer(
       // why: The card lives in the frame's own CSS space while the spine is in pond space, so the visible window's origin comes off first.
       const x = head.x - current.view.x + state.length * 0.12
       const y = head.y - current.view.y - state.length * 0.38
-      card.style.transform = `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px)`
+      // why: A tapped fish near a window edge must still show its whole card — on touch there is no hover to chase it with.
+      const width = card.offsetWidth || 200
+      const height = card.offsetHeight || 64
+      const clampedX = Math.min(Math.max(x, 8), Math.max(8, current.view.width - width - 8))
+      const clampedY = Math.min(Math.max(y, 8), Math.max(8, current.view.height - height - 8))
+      card.style.transform = `translate(${clampedX.toFixed(1)}px, ${clampedY.toFixed(1)}px)`
     },
 
-    applyTune(tune) {
-      // why: The scales ride on this koi's own derived numbers rather than replacing them, so the playground moves the whole shoal while each fish keeps its identity.
-      koi.setTrim({
-        amplitude: trim.amplitude * (tune.amplitudeScale ?? 1),
-        frequency: trim.frequency * (tune.frequencyScale ?? 1),
-        waveReach: tune.waveReach ?? trim.waveReach,
-      })
-      koi.setPhysical({
-        width: (phenotype.width ?? 1) * (tune.widthScale ?? 1),
-        height: (phenotype.height ?? 1) * (tune.heightScale ?? 1),
-      })
+    cardRects() {
+      if (card.hidden || cardUrl === null || cardSite === null) {
+        return null
+      }
+      return { frame: rectOf(card), app: rectOf(cardUrl), site: rectOf(cardSite) }
     },
 
     dispose() {

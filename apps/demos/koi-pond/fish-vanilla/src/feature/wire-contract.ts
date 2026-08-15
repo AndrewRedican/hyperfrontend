@@ -9,7 +9,7 @@
  * hot-path escape hatch the contract documents — so it is the one payload this
  * module narrows by hand instead of trusting the SDK's validator.
  */
-import type { Disturbance, KoiIdentity, KoiTune, NeighborObservation, PondEnvironment } from '@hyperfrontend/demo-koi-lib'
+import type { Disturbance, KoiIdentity, NeighborObservation, PondEnvironment, Vec2 } from '@hyperfrontend/demo-koi-lib'
 
 /** The slice of the feature handle this wiring needs. */
 export interface FeatureLink {
@@ -37,11 +37,16 @@ export interface KoiRuntime {
   setPaused(paused: boolean): void
   /** Holds position for inspection while sculling in place, or resumes swimming. */
   setInspected(inspected: boolean): void
-  /** Takes the visitor's playground settings. */
-  applyTune(tune: KoiTune): void
+  /** Carries the held koi to a pond point while a visitor drags it. */
+  placeAt(point: Vec2): void
+  /** Stops the loop and releases everything the koi holds. */
+  dispose(): void
   /** Hands the runtime the channel it emits on. */
   connect(emit: (type: string, data?: unknown) => void): void
 }
+
+/** The field names a relayed neighbour must carry as numbers. */
+const NEIGHBOR_NUMBERS = ['x', 'y', 'heading', 'speed', 'depth', 'length', 'girth']
 
 /**
  * Narrows a relayed neighbour, dropping anything that is not one.
@@ -54,8 +59,7 @@ function readNeighbor(value: unknown): NeighborObservation | null {
     return null
   }
   const record = <Record<string, unknown>>value
-  const numeric = ['x', 'y', 'heading', 'speed', 'depth', 'length', 'girth']
-  if (typeof record['framework'] !== 'string' || numeric.some((key) => typeof record[key] !== 'number')) {
+  if (typeof record['framework'] !== 'string' || NEIGHBOR_NUMBERS.some((key) => typeof record[key] !== 'number')) {
     return null
   }
   return <NeighborObservation>value
@@ -103,8 +107,9 @@ export function wireKoiContract(link: FeatureLink, koi: KoiRuntime): void {
     koi.setInspected((<{ paused: boolean }>data).paused)
   })
 
-  link.on('tune', (data) => {
-    koi.applyTune(<KoiTune>data)
+  link.on('place', (data) => {
+    const point = <{ x: number; y: number }>data
+    koi.placeAt({ x: point.x, y: point.y })
   })
 
   link.on('neighbors', (data) => {

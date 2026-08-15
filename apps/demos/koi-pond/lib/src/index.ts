@@ -32,12 +32,15 @@ export type { SpinePose, SpineStation, SwimParameters } from './koi3d/spine-pose
 export type { KoiSwimState } from './koi3d/swim-state.js'
 export type { Bounds } from './geometry/capsule.js'
 export type { SpineState, SpineStep } from './geometry/spine.js'
+export type { Itinerary, PaceSchedule, WaypointLeg } from './geometry/behaviour.js'
 export type { ClosestApproach, EncounterAction, EncounterMemory, EncounterResolution, EncounterSelf } from './geometry/steering.js'
-export type { BoundaryPressure, PondBounds } from './geometry/virtual-pond.js'
+export type { BoundaryPressure, KoiFrameBox, PondBounds } from './geometry/virtual-pond.js'
 export type { DepthState } from './model/depth.js'
 export type {
   Disturbance,
   KoiBuild,
+  KoiCardLink,
+  KoiCardPanel,
   KoiFramework,
   KoiIdentity,
   KoiOutline,
@@ -46,7 +49,6 @@ export type {
   KoiPhenotype,
   KoiProfile,
   KoiTraits,
-  KoiTune,
   NeighborObservation,
   PondEnvironment,
   PondWindow,
@@ -64,6 +66,7 @@ export {
   pointSegmentDistance,
   signedDistanceToChain,
 } from './geometry/capsule.js'
+export { SHORE_ABSENT_S, createItinerary, createPaceSchedule, slipsAway, wrapAcross } from './geometry/behaviour.js'
 export { SPINE_JOINTS, advanceSpine, createSpine, sampleSpine, spineGirth, widthProfile } from './geometry/spine.js'
 export {
   ENCOUNTER_CLEARANCE,
@@ -84,6 +87,7 @@ export {
   describePond,
   entryStation,
   isVisible,
+  koiFrameBox,
   nominalFishLength,
   pondBounds,
   pondCentre,
@@ -116,7 +120,9 @@ export { koiLabel, koiPalette } from './model/palette.js'
 export type { PondViewSpec } from './model/pond-view.js'
 export { POND_VIEW, pxPerUnit } from './model/pond-view.js'
 export { koiBuild, koiPhenotype, koiProfile, koiSeed, koiTraits, koiTrim } from './model/traits.js'
-export { KOI_FRAMEWORKS } from './model/types.js'
+export { FRAMEWORK_SITES, KOI_FRAMEWORKS } from './model/types.js'
+export type { KoiCardDetails, KoiCardText, KoiMemoryState } from './model/card.js'
+export { describeKoiCard } from './model/card.js'
 
 export { sampleSection, sectionPoint } from './koi3d/anatomy.js'
 export { bodyRingCount, buildBodyMesh, eyeTheta, surfaceNormal, surfacePoint } from './koi3d/body-mesh.js'

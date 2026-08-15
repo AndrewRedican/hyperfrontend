@@ -118,14 +118,58 @@ describe('<koi-fish>', () => {
     const { element } = await mountKoi()
     const { card } = stageOf(element)
     expect(card.hidden).toBe(true)
-    expect(card.querySelector('.koi-card-name')?.textContent).toBe(PROFILE.label)
+    expect(card.querySelector('.koi-card-title')?.textContent).toBe(PROFILE.label)
     expect(card.querySelector('.koi-card-url')?.textContent).toBe('https://pond.example/fish-lit/')
-    expect(gl.sizes.at(-1)).toEqual([POND.view.width, POND.view.height])
+    const site = card.querySelector<HTMLAnchorElement>('.koi-card-site')
+    expect(site?.href).toContain('lit.dev')
+    expect(site?.rel).toBe('noopener noreferrer')
+  })
+
+  it('sizes its buffer to the koi frame box, never the viewport', async () => {
+    const { renderer } = await mountKoi()
+    renderer.draw(cruising(), 1 / 60)
+    const size = gl.sizes.at(-1)
+    expect(size).toBeDefined()
+    // why: The box is square and covers one fish plus its sweep — a viewport-sized buffer here is exactly the fill-rate and memory cost the frame box exists to remove.
+    expect(size?.[0]).toBe(size?.[1])
+    expect(size?.[0] ?? Number.POSITIVE_INFINITY).toBeLessThan(POND.view.width)
+  })
+
+  it('re-fits the buffer only when the box genuinely changes size', async () => {
+    const { renderer } = await mountKoi()
+    renderer.draw(cruising(), 1 / 60)
+    renderer.draw(cruising({ position: { x: 700, y: 420 } }), 1 / 60)
+    renderer.draw(cruising({ position: { x: 760, y: 440 } }), 1 / 60)
+    expect(gl.sizes).toHaveLength(1)
+  })
+
+  it('slides the canvas with the koi instead of repainting the world', async () => {
+    const { element, renderer } = await mountKoi()
+    const { canvas } = stageOf(element)
+    renderer.draw(cruising({ position: { x: 400, y: 300 } }), 1 / 60)
+    const before = canvas.style.transform
+    renderer.draw(cruising({ position: { x: 900, y: 500 } }), 1 / 60)
+    expect(canvas.style.transform).toContain('translate3d(')
+    expect(canvas.style.transform).not.toBe(before)
+  })
+
+  it('draws nothing at all for a koi outside the visible window', async () => {
+    const { element, renderer } = await mountKoi()
+    const { canvas } = stageOf(element)
+    // why: The pond itself never changes size — a card-sized window onto it is what puts open water outside the frame for a koi to be culled in.
+    element.swim.setPond({ ...POND, view: pondWindow(POND, 420, 300) })
+    renderer.draw(cruising({ position: { x: 40, y: 40 }, spine: createSpine({ x: 40, y: 40 }, 0, POND.fishLength) }), 1 / 60)
+    // why: An off-screen koi pays nothing — no pose, no render, no composite; the brain keeps swimming and the canvas comes back the moment it does.
+    expect(gl.frames).toHaveLength(0)
+    expect(canvas.style.display).toBe('none')
+    renderer.draw(cruising({ position: { x: 640, y: 400 } }), 1 / 60)
+    expect(gl.frames).toHaveLength(1)
+    expect(canvas.style.display).not.toBe('none')
   })
 
   it('colours the card label with this koi accent', async () => {
     const { element } = await mountKoi()
-    const name = stageOf(element).card.querySelector<HTMLElement>('.koi-card-name')
+    const name = stageOf(element).card.querySelector<HTMLElement>('.koi-card-title')
     // how: Writing the accent through another element's style normalises the hex the same way jsdom normalised the label's, so the two strings compare exactly.
     const probe = document.createElement('span')
     probe.style.color = PROFILE.palette.accent
@@ -193,11 +237,14 @@ describe('<koi-fish>', () => {
     expect(renderer.koi.swim.motion.escapeIntensity).toBeGreaterThan(0.8)
   })
 
-  it('resizes camera and canvas to the visible window on a pond re-announcement', async () => {
-    const { element } = await mountKoi()
-    // why: The pond itself never changes size — only the window onto it follows the presenting frame.
+  it('re-fits against the new window after a pond re-announcement', async () => {
+    const { element, renderer } = await mountKoi()
+    renderer.draw(cruising(), 1 / 60)
+    const fitted = gl.sizes.length
+    // why: The pond itself never changes size — only the window onto it follows the presenting frame, and the next draw must size against that window rather than trust the old fit.
     element.swim.setPond({ ...POND, view: pondWindow(POND, 420, 300) })
-    expect(gl.sizes.at(-1)).toEqual([420, 300])
+    renderer.draw(cruising(), 1 / 60)
+    expect(gl.sizes.length).toBe(fitted + 1)
   })
 
   it('feeds a clockwise turn in as a positive turn rate, so the head bends into it', async () => {
@@ -215,20 +262,71 @@ describe('<koi-fish>', () => {
     expect(koi.getObjectByName('koi-shadow')).toBeDefined()
   })
 
-  it('lays the tune scales over this koi its own build', async () => {
-    const { renderer } = await mountKoi()
-    renderer.applyTune({ widthScale: 1.3 })
-    expect(renderer.koi.config.physical.width).toBeCloseTo((PROFILE.phenotype.width ?? 1) * 1.3, 5)
+  it('keeps the card closed on hover — hovering only says selectable', async () => {
+    const { element, renderer } = await mountKoi()
+    const { card } = stageOf(element)
+    renderer.setHovered(true)
+    expect(card.hidden).toBe(true)
   })
 
-  it('reveals and places the card only while hovered', async () => {
-    const { element } = await mountKoi()
+  it('traces the silhouette softly on hover and fully while held', async () => {
+    const { renderer } = await mountKoi()
+    const outline = renderer.koi.object.getObjectByName('koi-outline-skin')
+    expect(outline?.visible).toBe(false)
+    renderer.setHovered(true)
+    expect(outline?.visible).toBe(true)
+    renderer.setHovered(false)
+    expect(outline?.visible).toBe(false)
+    renderer.setSelected(true)
+    expect(outline?.visible).toBe(true)
+  })
+
+  it('opens the card with the hold and keeps it open however the pointer moves', async () => {
+    const { element, renderer } = await mountKoi()
     const { card } = stageOf(element)
-    element.swim.setHovered(true)
+    renderer.setSelected(true)
     expect(card.hidden).toBe(false)
+    // why: The visitor is about to move the pointer off the fish and into the card — losing the card to that move is exactly the regression this pins.
+    renderer.setHovered(true)
+    renderer.setHovered(false)
+    expect(card.hidden).toBe(false)
+    renderer.placeCard(cruising({ position: { x: 500, y: 320 } }))
     expect(card.style.transform).toContain('translate(')
-    element.swim.setHovered(false)
+    renderer.setSelected(false)
     expect(card.hidden).toBe(true)
+  })
+
+  it('rewrites the inspector rows from the live facts', async () => {
+    const { element, renderer } = await mountKoi()
+    const { card } = stageOf(element)
+    renderer.updateCard({
+      held: true,
+      phase: 'relaxed',
+      speedBL: 0.4,
+      neighbours: 2,
+      hosted: true,
+      origin: 'same-origin',
+      uptimeS: 30,
+      fps: 60,
+      memoryBytes: null,
+      memoryState: 'unavailable',
+      lastEvent: { kind: 'disturbance', ageS: 1.5 },
+    })
+    expect(card.querySelector('.koi-card-state')?.textContent).toContain('Held')
+    expect(card.querySelector('.koi-card-runtime')?.textContent).toContain('same-origin')
+    expect(card.querySelector('.koi-card-memory')?.textContent).toBe('Memory · unavailable')
+    expect(card.querySelector('.koi-card-event')?.textContent).toContain('disturbance')
+  })
+
+  it('reports the card frame and both link rectangles only while held', async () => {
+    const { renderer } = await mountKoi()
+    expect(renderer.cardRects()).toBeNull()
+    renderer.setSelected(true)
+    const rects = renderer.cardRects()
+    expect(rects).not.toBeNull()
+    expect(rects?.frame).toBeDefined()
+    expect(rects?.app).toBeDefined()
+    expect(rects?.site).toBeDefined()
   })
 
   it('tears the whole koi down when its element leaves the page', async () => {

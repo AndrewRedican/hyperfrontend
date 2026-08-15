@@ -20,12 +20,13 @@ body,
     sans-serif;
 }
 
+/* why: The canvas covers only the koi's own frame box — the renderer sizes it and slides it with a transform, so the compositor carries a fish-sized layer instead of a viewport-sized one. */
 .koi-canvas {
   position: absolute;
-  inset: 0;
+  top: 0;
+  left: 0;
   display: block;
-  width: 100%;
-  height: 100%;
+  will-change: transform;
 }
 
 /* why: Hover identity is the fish's own chrome — the host hit-tests and notifies, but every koi draws its own card in its own framework. */
@@ -50,13 +51,40 @@ body,
 }
 
 .koi-card-name {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
   font-size: 0.82rem;
   font-weight: 600;
   letter-spacing: 0.02em;
 }
 
-.koi-card-url {
+/* why: The variety names the animal the way the label names the app - one quiet word tying the pattern on the body to the framework driving it. */
+.koi-card-variety {
+  font-size: 0.62rem;
+  font-weight: 400;
+  font-style: italic;
+  color: rgba(232, 243, 239, 0.5);
+}
+
+.koi-card-line {
+  font-size: 0.64rem;
+  color: rgba(232, 243, 239, 0.68);
+  letter-spacing: 0.01em;
+}
+
+/* why: Styled as the links they are, but this frame never receives the pointer - the host floats real anchors over the rectangles the outline reports. */
+.koi-card-url,
+.koi-card-site {
   font-size: 0.68rem;
-  color: rgba(232, 243, 239, 0.62);
+  color: rgba(124, 192, 255, 0.85);
   font-family: ui-monospace, 'SFMono-Regular', monospace;
+  text-decoration: underline;
+  text-decoration-color: rgba(124, 192, 255, 0.45);
+  text-underline-offset: 2px;
+}
+
+.koi-card-site {
+  font-size: 0.64rem;
+  font-family: inherit;
 }

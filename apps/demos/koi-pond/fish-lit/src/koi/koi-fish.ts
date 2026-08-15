@@ -17,6 +17,7 @@
  */
 import type { PropertyDeclarations, TemplateResult } from 'lit'
 import type { GlRenderer } from './koi-render'
+import { FRAMEWORK_SITES } from '@hyperfrontend/demo-koi-lib'
 import { LitElement, css, html } from 'lit'
 import { styleMap } from 'lit/directives/style-map.js'
 import { KoiSwimController } from '../runtime/koi-runtime'
@@ -60,12 +61,13 @@ export class KoiFishElement extends LitElement {
       color: #e8f3ef;
     }
 
+    /* why: The canvas covers only the koi's own frame box — the renderer sizes it and slides it with a transform, so the compositor carries a fish-sized layer instead of a viewport-sized one. */
     .koi-canvas {
       position: absolute;
-      inset: 0;
+      top: 0;
+      left: 0;
       display: block;
-      width: 100%;
-      height: 100%;
+      will-change: transform;
     }
 
     /* why: Hover identity is the fish's own chrome — the host hit-tests and notifies, but every koi draws its own card in its own framework. */
@@ -90,15 +92,42 @@ export class KoiFishElement extends LitElement {
     }
 
     .koi-card-name {
+      display: flex;
+      align-items: baseline;
+      gap: 0.4rem;
       font-size: 0.82rem;
       font-weight: 600;
       letter-spacing: 0.02em;
     }
 
-    .koi-card-url {
+    /* why: The variety names the animal the way the label names the app - one quiet word tying the pattern on the body to the framework driving it. */
+    .koi-card-variety {
+      font-size: 0.62rem;
+      font-weight: 400;
+      font-style: italic;
+      color: rgba(232, 243, 239, 0.5);
+    }
+
+    .koi-card-line {
+      font-size: 0.64rem;
+      color: rgba(232, 243, 239, 0.68);
+      letter-spacing: 0.01em;
+    }
+
+    /* why: Styled as the links they are, but this frame never receives the pointer - the host floats real anchors over the rectangles the outline reports. */
+    .koi-card-url,
+    .koi-card-site {
       font-size: 0.68rem;
-      color: rgba(232, 243, 239, 0.62);
+      color: rgba(124, 192, 255, 0.85);
       font-family: ui-monospace, 'SFMono-Regular', monospace;
+      text-decoration: underline;
+      text-decoration-color: rgba(124, 192, 255, 0.45);
+      text-underline-offset: 2px;
+    }
+
+    .koi-card-site {
+      font-size: 0.64rem;
+      font-family: inherit;
     }
   `
 
@@ -111,7 +140,7 @@ export class KoiFishElement extends LitElement {
   /** The koi's brain, its animation frame, and its channel to the pond host. */
   readonly swim = new KoiSwimController(this)
 
-  /** The URL of the app rendering this koi, revealed on hover. */
+  /** The URL of the app rendering this koi, shown on its identity card. */
   declare appUrl: string
 
   /** The GL factory behind the canvas, replaceable so specs can run headless. */
@@ -125,17 +154,27 @@ export class KoiFishElement extends LitElement {
   }
 
   /**
-   * Draws the koi's stage: its canvas, and the card the host reveals on hover.
+   * Draws the koi's stage: its canvas, and the identity card a visitor opens by holding the koi.
    *
    * @returns The template; the fish itself is rendered onto the canvas, never through it.
    */
   override render(): TemplateResult {
-    const { label, palette } = this.swim.profile
+    const { framework, label, palette } = this.swim.profile
     return html`
       <canvas class="koi-canvas" aria-hidden="true"></canvas>
       <div class="koi-card" hidden>
-        <span class="koi-card-name" style=${styleMap({ color: palette.accent })}>${label}</span>
-        <span class="koi-card-url">${this.appUrl}</span>
+        <span class="koi-card-name">
+          <!-- why: The variety rides beside the framework name — the pattern is the koi's own identity, and it costs one word to say this asagi is the React app. -->
+          <span class="koi-card-title" style=${styleMap({ color: palette.accent })}>${label}</span>
+          <span class="koi-card-variety">${palette.pattern}</span>
+        </span>
+        <span class="koi-card-line koi-card-state"></span>
+        <!-- why: The links are real anchors for semantics and styling, but this frame never receives the pointer — the host reads their rectangles off the outline report and floats the anchors that actually open them. -->
+        <a class="koi-card-url" href=${this.appUrl} target="_blank" rel="noopener noreferrer">${this.appUrl}</a>
+        <span class="koi-card-line koi-card-runtime"></span>
+        <span class="koi-card-line koi-card-memory"></span>
+        <span class="koi-card-line koi-card-event" hidden></span>
+        <a class="koi-card-site" href=${FRAMEWORK_SITES[framework]} target="_blank" rel="noopener noreferrer">${label} website ↗</a>
       </div>
     `
   }

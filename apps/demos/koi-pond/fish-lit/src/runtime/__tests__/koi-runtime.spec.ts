@@ -1,4 +1,3 @@
-import type { KoiTune } from '@hyperfrontend/demo-koi-lib'
 import type { ReactiveControllerHost } from 'lit'
 import type { KoiState } from '../../koi/koi-motion'
 import type { KoiRenderer } from '../../koi/koi-render'
@@ -11,8 +10,11 @@ interface FakeRenderer extends KoiRenderer {
   draws: number
   ponds: number
   hovers: boolean[]
-  tunes: KoiTune[]
+  selections: boolean[]
+  cardUpdates: number
+  disposed: number
   last: KoiState | null
+  panel: ReturnType<KoiRenderer['cardRects']>
 }
 
 /**
@@ -28,8 +30,11 @@ function fakeRenderer(): FakeRenderer {
     draws: 0,
     ponds: 0,
     hovers: [],
-    tunes: [],
+    selections: [],
+    cardUpdates: 0,
+    disposed: 0,
     last: null,
+    panel: null,
     draw(state) {
       fake.draws += 1
       fake.last = state
@@ -40,11 +45,19 @@ function fakeRenderer(): FakeRenderer {
     setHovered(hovered) {
       fake.hovers.push(hovered)
     },
-    placeCard() {},
-    applyTune(tune) {
-      fake.tunes.push(tune)
+    setSelected(selected) {
+      fake.selections.push(selected)
     },
-    dispose() {},
+    updateCard() {
+      fake.cardUpdates += 1
+    },
+    placeCard() {},
+    cardRects() {
+      return fake.panel
+    },
+    dispose() {
+      fake.disposed += 1
+    },
   }
   return fake
 }
@@ -56,6 +69,9 @@ function createRaf() {
     pending = callback
     return 1
   }
+  const cancel = (): void => {
+    pending = null
+  }
   /**
    * Runs the frame the loop is waiting on at a chosen timestamp.
    *
@@ -66,7 +82,7 @@ function createRaf() {
     pending = null
     callback?.(timestamp)
   }
-  return { request, tick }
+  return { request, cancel, tick, waiting: () => pending !== null }
 }
 
 /** A host stand-in: the controller registers with it and never needs a render from it. */
@@ -88,7 +104,9 @@ describe('KoiSwimController', () => {
     renderer = fakeRenderer()
     raf = createRaf()
     vi.stubGlobal('requestAnimationFrame', raf.request)
+    vi.stubGlobal('cancelAnimationFrame', raf.cancel)
     window.requestAnimationFrame = raf.request
+    window.cancelAnimationFrame = raf.cancel
     // why: jsdom ships no matchMedia, and the standalone fallback reads it once at construction to honour reduced motion.
     vi.stubGlobal('matchMedia', () => ({ matches: false }))
   })
@@ -127,6 +145,71 @@ describe('KoiSwimController', () => {
     raf.tick(1000)
     raf.tick(1016)
     expect(renderer.draws).toBe(2)
+  })
+
+  it('carries the card panel on the outline only while the card shows', () => {
+    const swim = createSwim()
+    const sent = emissions(swim)
+    const lastOutline = (): Record<string, unknown> =>
+      sent.filter((action) => action.type === 'outline').at(-1)?.data as Record<string, unknown>
+    raf.tick(1000)
+    expect(lastOutline()).not.toHaveProperty('card')
+    renderer.panel = {
+      frame: { x: 300, y: 180, width: 220, height: 96 },
+      app: { x: 312, y: 220, width: 180, height: 14 },
+      site: { x: 312, y: 250, width: 120, height: 13 },
+    }
+    raf.tick(1101)
+    expect((lastOutline()['card'] as { frame: object }).frame).toEqual({ x: 300, y: 180, width: 220, height: 96 })
+  })
+
+  it('holds the card open through the hold and tears the inspector down on release', () => {
+    vi.useFakeTimers()
+    try {
+      const swim = createSwim()
+      swim.setInspected(true)
+      expect(renderer.selections.at(-1)).toBe(true)
+      const opened = renderer.cardUpdates
+      expect(opened).toBeGreaterThan(0)
+      vi.advanceTimersByTime(1100)
+      expect(renderer.cardUpdates).toBeGreaterThan(opened)
+      swim.setInspected(false)
+      expect(renderer.selections.at(-1)).toBe(false)
+      const closed = renderer.cardUpdates
+      // why: Everything that exists only to power the card must stop with the release — a timer still rewriting rows after this is a leak.
+      vi.advanceTimersByTime(5000)
+      expect(renderer.cardUpdates).toBe(closed)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('reports its memory honestly as unavailable where the browser cannot attribute it', async () => {
+    vi.useFakeTimers()
+    try {
+      const swim = createSwim()
+      const updates: string[] = []
+      renderer.updateCard = (details): void => {
+        updates.push(details.memoryState)
+      }
+      swim.setInspected(true)
+      // why: jsdom has no measureUserAgentSpecificMemory and no isolation — the honest reading is `unavailable`, never a share of somebody else's heap.
+      await vi.advanceTimersByTimeAsync(1100)
+      expect(updates.at(-1)).toBe('unavailable')
+      swim.setInspected(false)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('hands a placement straight to the brain and reports the outline from the new spot', () => {
+    const swim = createSwim()
+    const sent = emissions(swim)
+    swim.setInspected(true)
+    swim.placeAt({ x: 222, y: 333 })
+    raf.tick(1000)
+    const outline = sent.filter((action) => action.type === 'outline').at(-1)?.data as { spine: { x: number; y: number }[] }
+    expect(outline.spine[0]).toEqual({ x: 222, y: 333 })
   })
 
   it('reports its outline no more than once every hundred milliseconds', () => {
@@ -248,10 +331,39 @@ describe('KoiSwimController', () => {
     expect(Math.hypot(resumed.x - held.x, resumed.y - held.y)).toBeGreaterThan(10)
   })
 
-  it('routes the playground tune to both the brain and the renderer', () => {
+  it('cancels its animation frame outright while asleep', () => {
     const swim = createSwim()
-    swim.applyTune({ speedScale: 0.5, widthScale: 1.2 })
-    expect(renderer.tunes).toEqual([{ speedScale: 0.5, widthScale: 1.2 }])
+    raf.tick(1000)
+    swim.setPaused(true)
+    // why: A sleeping koi must not even hold a pending callback — seven hidden frames each waking per frame is the battery cost sleep exists to remove.
+    expect(raf.waiting()).toBe(false)
+    swim.setPaused(false)
+    expect(raf.waiting()).toBe(true)
+  })
+
+  it('resumes from sleep without a false stall', () => {
+    const swim = createSwim()
+    const sent = emissions(swim)
+    raf.tick(1000)
+    const before = lastNose(sent)
+    swim.setPaused(true)
+    swim.setPaused(false)
+    // why: The first frame back starts a fresh clock — an hour asleep must not arrive as one clamped leap of travel.
+    raf.tick(3_601_000)
+    raf.tick(3_601_016)
+    const after = lastNose(sent)
+    expect(Math.hypot(after.x - before.x, after.y - before.y)).toBeLessThan(10)
+  })
+
+  it('tears everything down on dispose', () => {
+    const swim = createSwim()
+    raf.tick(1000)
+    swim.dispose()
+    expect(renderer.disposed).toBe(1)
+    expect(raf.waiting()).toBe(false)
+    // why: A disposed koi stays disposed — waking it up again would leak the very loop dispose exists to stop.
+    swim.setPaused(false)
+    expect(raf.waiting()).toBe(false)
   })
 
   it('clamps a long stall so the koi cannot leap across the pond', () => {

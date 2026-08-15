@@ -17,7 +17,7 @@ export interface FrameTick {
 }
 
 /** Longest delta a single frame may report, in seconds. */
-export const MAX_FRAME_S = 1 / 20
+export const MAX_FRAME_S = 0.1
 
 /** A running frame loop. */
 export interface FrameLoop {

@@ -35,24 +35,24 @@
     "lint:eslint": "eslint . --fix --cache"
   },
   "dependencies": {
-    "@hyperfrontend/random-generator-utils": "^0.0.5"
+    "@hyperfrontend/random-generator-utils": "0.0.5"
   },
   "devDependencies": {
-    "@eslint/js": "^10.0.1",
-    "@tsconfig/node24": "^24.0.4",
-    "@types/node": "^24.13.2",
-    "@types/three": "^0.185.4",
-    "@vitest/eslint-plugin": "^1.6.20",
-    "eslint": "^10.5.0",
-    "eslint-plugin-oxlint": "~1.76.0",
-    "globals": "^17.9.0",
-    "jiti": "^2.7.0",
-    "npm-run-all2": "^9.0.2",
-    "oxlint": "~1.76.0",
-    "three": "^0.185.1",
-    "typescript": "~6.0.0",
-    "typescript-eslint": "^8.66.0",
-    "vitest": "^4.1.9"
+    "@eslint/js": "10.0.1",
+    "@tsconfig/node24": "24.0.5",
+    "@types/node": "24.13.3",
+    "@types/three": "0.185.4",
+    "@vitest/eslint-plugin": "1.6.27",
+    "eslint": "10.8.1",
+    "eslint-plugin-oxlint": "1.78.0",
+    "globals": "17.11.0",
+    "jiti": "2.7.0",
+    "npm-run-all2": "9.0.3",
+    "oxlint": "1.78.0",
+    "three": "0.185.1",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.67.0",
+    "vitest": "4.1.10"
   },
   "engines": {
     "node": "^22.18.0 || >=24.12.0"

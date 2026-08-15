@@ -334,6 +334,63 @@ export function pondPoint(pond: PondEnvironment, fx: number, fy: number): Vec2 {
   }
 }
 
+/** How much water a koi's frame box claims around its body, as a multiple of body length. */
+// why: The drawn snout reaches ~0.355 lengths ahead of the anchor while the box used to budget exactly 0.35 — this ratio buys real clearance at the front edge for the snout, barbels, and beat sway.
+const FRAME_BOX_RATIO = 1.785
+
+/** A koi's square screen footprint: the sub-rect of pond space its canvas needs to cover. */
+export interface KoiFrameBox {
+  /** Pond-space x of the box's left edge. */
+  x: number
+  /** Pond-space y of the box's top edge. */
+  y: number
+  /** Box edge length in CSS pixels. */
+  size: number
+  /** Whether any of the box currently falls inside the visible window. */
+  visible: boolean
+}
+
+/**
+ * The square of pond space one koi's canvas must cover this frame.
+ *
+ * The box is centred on the body's midpoint — half a length behind the nose —
+ * and sized generously enough that fins, tail sweep, banking, and the contact
+ * shadow always land inside it whatever the pose. Rendering only this box
+ * instead of the whole view is what keeps seven independent renderers cheap:
+ * the box's area is a small constant, not a function of the frame.
+ *
+ * @param nose - The koi's nose in pond space.
+ * @param heading - The koi's heading in radians.
+ * @param length - The koi's current nose-to-tail length in CSS pixels.
+ * @param view - The visible window.
+ * @param out - The box to write into, reused to keep the render loop allocation-free.
+ * @returns The box, `visible: false` when nothing of it would paint on screen.
+ *
+ * @example Skipping the render for an off-screen koi
+ * ```typescript
+ * const box = koiFrameBox(state.position, state.heading, state.length, pond.view, scratch)
+ * if (!box.visible) {
+ *   return
+ * }
+ * ```
+ */
+export function koiFrameBox(
+  nose: Vec2,
+  heading: number,
+  length: number,
+  view: PondWindow,
+  out: KoiFrameBox = { x: 0, y: 0, size: 0, visible: false }
+): KoiFrameBox {
+  const size = length * FRAME_BOX_RATIO
+  const centreX = nose.x - Math.cos(heading) * length * 0.5
+  const centreY = nose.y - Math.sin(heading) * length * 0.5
+  out.x = centreX - size / 2
+  out.y = centreY - size / 2
+  out.size = size
+  out.visible = out.x < view.x + view.width && out.x + size > view.x && out.y < view.y + view.height && out.y + size > view.y
+  return out
+}
+
 /** How hard the pond boundary is pushing on a koi, and which way it should turn. */
 export interface BoundaryPressure {
   /** How urgently the boundary is felt, 0 (not at all) to 1 (about to leave). */

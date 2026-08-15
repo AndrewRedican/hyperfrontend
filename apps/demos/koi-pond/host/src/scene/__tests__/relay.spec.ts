@@ -139,6 +139,15 @@ describe('pick', () => {
   it('finds nothing in an empty pond', () => {
     expect(createRelay().pick({ x: 0, y: 0 }, POND, NOW)).toBeNull()
   })
+
+  it('widens its slack for a fingertip', () => {
+    const relay = createRelay()
+    relay.record(outlineAt('svelte', 400, 400), NOW)
+    // why: A point a cursor would miss by a whisker is exactly the miss a tap must not make — same geometry, blunter instrument.
+    const wide = { x: 400, y: 400 + POND.fishLength * 0.3 }
+    expect(relay.pick(wide, POND, NOW)).toBeNull()
+    expect(relay.pick(wide, POND, NOW, 2.6)).toBe('svelte')
+  })
 })
 
 describe('dead reckoning', () => {
@@ -153,9 +162,18 @@ describe('dead reckoning', () => {
   it('stops reckoning at the cap rather than launching a ghost', () => {
     const relay = createRelay()
     relay.record({ ...outlineAt('svelte', 400, 400), speed: 200 }, NOW)
-    // why: Ten seconds of blind extrapolation would put the koi 2000 px away; the cap holds it at the 0.6 s mark.
-    expect(relay.pick({ x: 480, y: 402 }, POND, NOW + 10_000)).toBe('svelte')
-    expect(relay.pick({ x: 2360, y: 402 }, POND, NOW + 10_000)).toBeNull()
+    // why: Two seconds of blind extrapolation would put the koi 400 px away; the cap holds it at the 0.6 s mark.
+    expect(relay.pick({ x: 480, y: 402 }, POND, NOW + 2000)).toBe('svelte')
+    expect(relay.pick({ x: 780, y: 402 }, POND, NOW + 2000)).toBeNull()
+  })
+
+  it('evicts a koi whose reports stopped entirely', () => {
+    const relay = createRelay()
+    relay.record({ ...outlineAt('svelte', 400, 400), speed: 200 }, NOW)
+    // why: A report ten seconds old is a ghost — a session that silently died must not stay hoverable at its frozen outline, nor steer the living shoal.
+    expect(relay.pick({ x: 480, y: 402 }, POND, NOW + 10_000)).toBeNull()
+    relay.record(outlineAt('lit', 460, 400), NOW + 10_000)
+    expect(relay.neighborsFor('lit', POND, NOW + 10_000)).toEqual([])
   })
 
   it('reckons neighbours to the present before measuring distance', () => {
@@ -173,5 +191,34 @@ describe('dead reckoning', () => {
     const relay = createRelay()
     relay.record({ ...outlineAt('svelte', 400, 400), speed: 300 }, NOW)
     expect(relay.pick({ x: 360, y: 402 }, POND, NOW)).toBe('svelte')
+  })
+})
+
+describe('latest', () => {
+  it('returns nothing for a koi that never reported', () => {
+    expect(createRelay().latest('lit', NOW)).toBeNull()
+  })
+
+  it('reckons the outline forward exactly as the hit-test sees it', () => {
+    const relay = createRelay()
+    relay.record({ ...outlineAt('lit', 100, 100), speed: 100 }, NOW)
+    expect(relay.latest('lit', NOW + 500)?.spine[0]?.x).toBeCloseTo(150)
+  })
+
+  it('refuses a stale report rather than handing back a ghost', () => {
+    const relay = createRelay()
+    relay.record(outlineAt('lit', 100, 100), NOW)
+    expect(relay.latest('lit', NOW + 3001)).toBeNull()
+  })
+
+  it('carries the card panel through untouched', () => {
+    const relay = createRelay()
+    const card = {
+      frame: { x: 120, y: 60, width: 220, height: 96 },
+      app: { x: 132, y: 100, width: 180, height: 14 },
+      site: { x: 132, y: 130, width: 120, height: 13 },
+    }
+    relay.record({ ...outlineAt('lit', 100, 100), card }, NOW)
+    expect(relay.latest('lit', NOW)?.card).toEqual(card)
   })
 })

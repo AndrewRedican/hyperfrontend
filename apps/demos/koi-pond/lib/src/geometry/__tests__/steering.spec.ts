@@ -239,6 +239,26 @@ describe('createEncounterMemory', () => {
     const resolution = memory.resolve(self({ speed: 200 }), neighbor({ x: 130, y: 0, heading: 0, speed: 40 }), false, 0)
     expect(resolution.action).toBe('slow')
   })
+
+  it('tails a committed turn off gently instead of snapping straight', () => {
+    const memory = createEncounterMemory()
+    const committed = memory.resolve(self(), neighbor(), false, 0)
+    // why: The neighbour clearing the prediction one frame later must not drop the koi straight out of its manoeuvre — that snap is the vibration the memory exists to remove.
+    const cleared = memory.resolve(self(), neighbor({ x: 4000, y: 4000 }), false, 0.2)
+    expect({ action: cleared.action, side: cleared.turn, softer: cleared.urgency < committed.urgency }).toEqual({
+      action: 'turn',
+      side: committed.turn,
+      softer: true,
+    })
+  })
+
+  it('keeps an overtaking settled on its first kind while it flickers', () => {
+    const memory = createEncounterMemory()
+    const first = memory.resolve(self({ speed: 200 }), neighbor({ x: 130, y: 0, heading: 0, speed: 40 }), false, 0)
+    // why: Near the quarter-turn line the raw kind flips between slow and turn frame to frame; the settled kind must ride through.
+    const flickered = memory.resolve(self({ speed: 200 }), neighbor({ x: 130, y: 60, heading: 1, speed: 40 }), false, 0.2)
+    expect({ first: first.action, flickered: flickered.action }).toEqual({ first: 'slow', flickered: 'slow' })
+  })
 })
 
 describe('givesWay', () => {

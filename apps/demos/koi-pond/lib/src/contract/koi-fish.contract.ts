@@ -38,7 +38,7 @@ export interface KoiContract {
 }
 
 /** The contract cut every pond project is built against. */
-export const KOI_CONTRACT_VERSION = '0.2.0'
+export const KOI_CONTRACT_VERSION = '0.5.0'
 
 /** The contract the pond host and all seven koi share. */
 export const koiFishContract: KoiContract = {
@@ -144,22 +144,16 @@ export const koiFishContract: KoiContract = {
       },
     },
     {
-      type: 'tune',
+      type: 'place',
       description:
-        "The visitor's playground settings, broadcast to the whole shoal. Scales multiply this koi's own derived behaviour rather than replacing it, so individual variety survives the sliders; body settings pass straight to the 3D model. Every field is optional and omitted fields keep their current value.",
+        'Where a held koi is being carried: the visitor is dragging it to a new spot. Only meaningful while paused; the koi moves its body to the point, lets its spine trail through the drag, and resumes swimming from wherever it was dropped once unpaused.',
       schema: {
         type: 'object',
         properties: {
-          speedScale: { type: 'number' },
-          turnScale: { type: 'number' },
-          wanderScale: { type: 'number' },
-          clearanceScale: { type: 'number' },
-          amplitudeScale: { type: 'number' },
-          frequencyScale: { type: 'number' },
-          waveReach: { type: 'number' },
-          widthScale: { type: 'number' },
-          heightScale: { type: 'number' },
+          x: { type: 'number' },
+          y: { type: 'number' },
         },
+        required: ['x', 'y'],
       },
     },
   ],
@@ -167,7 +161,7 @@ export const koiFishContract: KoiContract = {
     {
       type: 'outline',
       description:
-        "The koi's occupied outline as nose-first spine samples with a half-width each, plus heading, speed, depth, and behavioural phase. High cadence, deliberately schema-less.",
+        "The koi's occupied outline as nose-first spine samples with a half-width each, plus heading, speed, depth, and behavioural phase. While a visitor holds this koi, also the identity card's geometry — its frame and its two link rectangles — so the host can float real anchors and an inert shield over a card the pointer-transparent frame could never make interactive itself. High cadence, deliberately schema-less.",
     },
     {
       type: 'depth-request',

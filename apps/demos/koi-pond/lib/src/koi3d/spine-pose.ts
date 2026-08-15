@@ -98,6 +98,32 @@ function turnWeight(station: number, centre: number, spread: number): number {
   return Math.exp(-distance * distance)
 }
 
+/** Where the skull's rigidity starts giving way to flexible torso muscle, along the body. */
+const SKULL_FLEX_START = 0.08
+
+/** The station by which the body is fully flexible. */
+const SKULL_FLEX_END = 0.34
+
+/** How much bend the skull itself is ever allowed, as a fraction of full flexibility. */
+const SKULL_FLEX = 0.12
+
+/**
+ * How flexible the body is at a station.
+ *
+ * A koi's head is a rigid box of bone: whatever the tail and torso are doing,
+ * the snout barely articulates. Fading every source of curvature out toward the
+ * snout is what keeps a hard manoeuvre reading as muscle behind the head rather
+ * than a neck no fish has.
+ *
+ * @param station - Position along the koi, 0 at the snout.
+ * @returns A weight from nearly rigid at the snout to 1 behind the head.
+ */
+function bodyFlexibility(station: number): number {
+  const t = Math.min(1, Math.max(0, (station - SKULL_FLEX_START) / (SKULL_FLEX_END - SKULL_FLEX_START)))
+  // how: A smoothstep keeps flexibility C1 across the skull boundary, so no crease forms where bone gives way to muscle.
+  return SKULL_FLEX + (1 - SKULL_FLEX) * t * t * (3 - 2 * t)
+}
+
 /**
  * How much of the travelling wave has grown in by a station.
  *
@@ -130,11 +156,13 @@ export function evaluateSpine(length: number, parameters: SwimParameters, phase:
   let turnTotal = 0
 
   for (let index = 0; index < SPINE_SAMPLES; index += 1) {
-    turnTotal += turnWeight(index * step, parameters.turnCentre, parameters.turnSpread)
+    // why: Stiffness is folded into the weights BEFORE normalisation, so the skull sheds its share of the bend into the torso and the body's total bend still integrates to exactly turnBend.
+    turnTotal += turnWeight(index * step, parameters.turnCentre, parameters.turnSpread) * bodyFlexibility(index * step)
   }
 
   for (let index = 0; index < SPINE_SAMPLES; index += 1) {
     const station = index * step
+    const flex = bodyFlexibility(station)
     // how: The tail fin is given extra phase lag past the caudal root, so the membrane arrives late and whips through the beat rather than swinging as one board with the peduncle.
     const lag = station <= CAUDAL_ROOT ? 0 : parameters.caudalLag * Math.PI * 2 * ((station - CAUDAL_ROOT) / (1 - CAUDAL_ROOT))
     const swim =
@@ -143,8 +171,8 @@ export function evaluateSpine(length: number, parameters: SwimParameters, phase:
     const turn =
       turnTotal === 0
         ? 0
-        : (-parameters.turnBend * turnWeight(station, parameters.turnCentre, parameters.turnSpread) * SPINE_SAMPLES) / turnTotal
-    curvature.push(swim + turn)
+        : (-parameters.turnBend * turnWeight(station, parameters.turnCentre, parameters.turnSpread) * flex * SPINE_SAMPLES) / turnTotal
+    curvature.push(swim * flex + turn)
   }
 
   const yaws: number[] = []

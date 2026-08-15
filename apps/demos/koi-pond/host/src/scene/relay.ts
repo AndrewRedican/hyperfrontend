@@ -22,6 +22,9 @@ export const HOVER_SLACK = 0.14
 /** The longest a report is carried forward before it is trusted as-is, in seconds. */
 export const DEAD_RECKON_MAX_S = 0.6
 
+/** The longest a silent koi's last report keeps taking part in hover and relay work, in seconds. */
+export const STALE_REPORT_S = 3
+
 /** The host's live picture of the shoal. */
 export interface Relay {
   /**
@@ -52,9 +55,22 @@ export interface Relay {
    * @param point - The pointer in pond space.
    * @param pond - The announced world, which sets the hit-test slack.
    * @param now - The moment to reckon every report forward to.
+   * @param slackScale - Widens the hit slack; a fingertip needs more than a cursor.
    * @returns The koi under the pointer, or `null` over open water.
    */
-  pick(point: Vec2, pond: PondEnvironment, now: number): KoiFramework | null
+  pick(point: Vec2, pond: PondEnvironment, now: number, slackScale?: number): KoiFramework | null
+  /**
+   * One koi's outline as it plausibly stands right now.
+   *
+   * The same dead-reckoned, staleness-filtered view `pick` hit-tests against,
+   * for host chrome that needs to sit on the body — a stale or missing report
+   * yields nothing rather than a ghost.
+   *
+   * @param framework - Whose outline to read.
+   * @param now - The moment to reckon the report forward to.
+   * @returns The reckoned outline, or `null` when none is trustworthy.
+   */
+  latest(framework: KoiFramework, now: number): KoiOutline | null
   /** Every outline currently known, in report order. */
   readonly outlines: readonly KoiOutline[]
 }
@@ -123,6 +139,9 @@ export function createRelay(): Relay {
     return reckoned(entry.outline, ageS)
   }
 
+  // why: A koi whose reports stopped is a ghost — hovering it or steering the shoal around its frozen outline would coordinate the living against the dead.
+  const stale = (entry: { outline: KoiOutline; at: number }, now: number): boolean => now - entry.at > STALE_REPORT_S * 1000
+
   return {
     record(outline, at) {
       reported.set(outline.framework, { outline, at })
@@ -134,7 +153,7 @@ export function createRelay(): Relay {
 
     neighborsFor(framework, pond, now) {
       const entry = reported.get(framework)
-      if (entry === undefined) {
+      if (entry === undefined || stale(entry, now)) {
         return []
       }
       const self = current(entry, now)
@@ -144,7 +163,7 @@ export function createRelay(): Relay {
 
       const near: Array<{ distance: number; observation: NeighborObservation }> = []
       for (const [other, otherEntry] of reported) {
-        if (other === framework) {
+        if (other === framework || stale(otherEntry, now)) {
           continue
         }
         const outline = current(otherEntry, now)
@@ -173,12 +192,15 @@ export function createRelay(): Relay {
       return near.map((entry) => entry.observation)
     },
 
-    pick(point, pond, now) {
-      const slack = pond.fishLength * HOVER_SLACK
+    pick(point, pond, now, slackScale = 1) {
+      const slack = pond.fishLength * HOVER_SLACK * slackScale
       let picked: KoiFramework | null = null
       let bestDepth = -1
       let bestDistance = Number.POSITIVE_INFINITY
       for (const entry of reported.values()) {
+        if (stale(entry, now)) {
+          continue
+        }
         const outline = current(entry, now)
         const distance = signedDistanceToChain(point, outline.spine, outline.girth)
         if (distance > slack) {
@@ -192,6 +214,14 @@ export function createRelay(): Relay {
         }
       }
       return picked
+    },
+
+    latest(framework, now) {
+      const entry = reported.get(framework)
+      if (entry === undefined || stale(entry, now)) {
+        return null
+      }
+      return current(entry, now)
     },
 
     get outlines() {

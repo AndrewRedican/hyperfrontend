@@ -8,7 +8,8 @@ export default defineConfig({
   protocol: 'v1',
   display: {
     // note: Embedded first — an open() without an explicit displayMode embeds; no fixed embedded dimensions, so the iframe fills the host's container.
-    modes: ['embedded', 'dialog', 'popup', 'standalone'],
+    // why: Nothing opens the pond as a full-page takeover, so standalone is not offered.
+    modes: ['embedded', 'dialog', 'popup'],
     dialog: { width: 960, height: 640 },
     popup: { width: 1020, height: 700 },
   },

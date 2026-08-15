@@ -1,4 +1,3 @@
-import type { KoiTune } from '@hyperfrontend/demo-koi-lib'
 import type { KoiState } from '../../koi/koi-motion'
 import type { KoiRenderer } from '../../koi/koi-render'
 import type { KoiRendererFactory } from '../koi-runtime'
@@ -10,8 +9,11 @@ interface FakeRenderer extends KoiRenderer {
   draws: number
   ponds: number
   hovers: boolean[]
-  tunes: KoiTune[]
+  selections: boolean[]
+  cardUpdates: number
+  disposed: number
   last: KoiState | null
+  panel: ReturnType<KoiRenderer['cardRects']>
 }
 
 /**
@@ -27,8 +29,11 @@ function fakeRenderer(): FakeRenderer {
     draws: 0,
     ponds: 0,
     hovers: [],
-    tunes: [],
+    selections: [],
+    cardUpdates: 0,
+    disposed: 0,
     last: null,
+    panel: null,
     draw(state) {
       fake.draws += 1
       fake.last = state
@@ -39,11 +44,19 @@ function fakeRenderer(): FakeRenderer {
     setHovered(hovered) {
       fake.hovers.push(hovered)
     },
-    placeCard() {},
-    applyTune(tune) {
-      fake.tunes.push(tune)
+    setSelected(selected) {
+      fake.selections.push(selected)
     },
-    dispose() {},
+    updateCard() {
+      fake.cardUpdates += 1
+    },
+    placeCard() {},
+    cardRects() {
+      return fake.panel
+    },
+    dispose() {
+      fake.disposed += 1
+    },
   }
   return fake
 }
@@ -55,6 +68,9 @@ function createRaf() {
     pending = callback
     return 1
   }
+  const cancel = (): void => {
+    pending = null
+  }
   /**
    * Runs the frame the loop is waiting on at a chosen timestamp.
    *
@@ -65,7 +81,7 @@ function createRaf() {
     pending = null
     callback?.(timestamp)
   }
-  return { request, tick }
+  return { request, cancel, tick, waiting: () => pending !== null }
 }
 
 describe('createKoiRuntime', () => {
@@ -80,7 +96,9 @@ describe('createKoiRuntime', () => {
     renderer = fakeRenderer()
     raf = createRaf()
     vi.stubGlobal('requestAnimationFrame', raf.request)
+    vi.stubGlobal('cancelAnimationFrame', raf.cancel)
     window.requestAnimationFrame = raf.request
+    window.cancelAnimationFrame = raf.cancel
     // why: jsdom ships no matchMedia, and the standalone fallback reads it once at construction to honour reduced motion.
     vi.stubGlobal('matchMedia', () => ({ matches: false }))
   })
@@ -170,24 +188,103 @@ describe('createKoiRuntime', () => {
     expect(Math.hypot(resumed.x - held.x, resumed.y - held.y)).toBeGreaterThan(10)
   })
 
-  it('routes the playground tune to both the brain and the renderer', () => {
-    const tuned = createKoiRuntime(root, build)
-    const tunedSent = emissions(tuned)
-    tuned.applyTune({ speedScale: 0.4 })
-    for (let ts = 1000; ts <= 3000; ts += 16) {
-      raf.tick(ts)
+  it('carries the card panel on the outline only while the card shows', () => {
+    const runtime = createKoiRuntime(root, build)
+    const sent = emissions(runtime)
+    const lastOutline = (): Record<string, unknown> =>
+      <Record<string, unknown>>sent.filter((action) => action.type === 'outline').at(-1)?.data
+    raf.tick(1000)
+    expect(lastOutline()).not.toHaveProperty('card')
+    renderer.panel = {
+      frame: { x: 300, y: 180, width: 220, height: 96 },
+      app: { x: 312, y: 220, width: 180, height: 14 },
+      site: { x: 312, y: 250, width: 120, height: 13 },
     }
-    expect(renderer.tunes).toEqual([{ speedScale: 0.4 }])
-    const tunedSpeed = lastSpeed(tunedSent)
+    raf.tick(1101)
+    expect((<{ frame: object }>lastOutline()['card']).frame).toEqual({ x: 300, y: 180, width: 220, height: 96 })
+  })
 
-    // why: A second, untuned runtime swims the identical deterministic course, so its reported speed is the honest baseline proving the brain actually took the scale.
-    renderer = fakeRenderer()
-    const cruising = createKoiRuntime(root, build)
-    const cruisingSent = emissions(cruising)
-    for (let ts = 1000; ts <= 3000; ts += 16) {
-      raf.tick(ts)
+  it('holds the card open through the hold and tears the inspector down on release', () => {
+    vi.useFakeTimers()
+    try {
+      const runtime = createKoiRuntime(root, build)
+      runtime.setInspected(true)
+      expect(renderer.selections.at(-1)).toBe(true)
+      const opened = renderer.cardUpdates
+      expect(opened).toBeGreaterThan(0)
+      vi.advanceTimersByTime(1100)
+      expect(renderer.cardUpdates).toBeGreaterThan(opened)
+      runtime.setInspected(false)
+      expect(renderer.selections.at(-1)).toBe(false)
+      const closed = renderer.cardUpdates
+      // why: Everything that exists only to power the card must stop with the release — a timer still rewriting rows after this is a leak.
+      vi.advanceTimersByTime(5000)
+      expect(renderer.cardUpdates).toBe(closed)
+    } finally {
+      vi.useRealTimers()
     }
-    expect(tunedSpeed).toBeLessThan(lastSpeed(cruisingSent) * 0.6)
+  })
+
+  it('reports its memory honestly as unavailable where the browser cannot attribute it', async () => {
+    vi.useFakeTimers()
+    try {
+      const runtime = createKoiRuntime(root, build)
+      const updates: string[] = []
+      renderer.updateCard = (details): void => {
+        updates.push(details.memoryState)
+      }
+      runtime.setInspected(true)
+      // why: jsdom has no measureUserAgentSpecificMemory and no isolation — the honest reading is `unavailable`, never a share of somebody else's heap.
+      await vi.advanceTimersByTimeAsync(1100)
+      expect(updates.at(-1)).toBe('unavailable')
+      runtime.setInspected(false)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('hands a placement straight to the brain and reports the outline from the new spot', () => {
+    const runtime = createKoiRuntime(root, build)
+    const sent = emissions(runtime)
+    runtime.setInspected(true)
+    runtime.placeAt({ x: 222, y: 333 })
+    raf.tick(1000)
+    expect(lastNose(sent)).toEqual({ x: 222, y: 333 })
+  })
+
+  it('cancels its animation frame outright while asleep', () => {
+    const runtime = createKoiRuntime(root, build)
+    raf.tick(1000)
+    runtime.setPaused(true)
+    // why: A sleeping koi must not even hold a pending callback — seven hidden frames each waking per frame is the battery cost sleep exists to remove.
+    expect(raf.waiting()).toBe(false)
+    runtime.setPaused(false)
+    expect(raf.waiting()).toBe(true)
+  })
+
+  it('resumes from sleep without a false stall', () => {
+    const runtime = createKoiRuntime(root, build)
+    const sent = emissions(runtime)
+    raf.tick(1000)
+    const before = lastNose(sent)
+    runtime.setPaused(true)
+    runtime.setPaused(false)
+    // why: The first frame back starts a fresh clock — an hour asleep must not arrive as one clamped leap of travel.
+    raf.tick(3_601_000)
+    raf.tick(3_601_016)
+    const after = lastNose(sent)
+    expect(Math.hypot(after.x - before.x, after.y - before.y)).toBeLessThan(10)
+  })
+
+  it('tears everything down on dispose', () => {
+    const runtime = createKoiRuntime(root, build)
+    raf.tick(1000)
+    runtime.dispose()
+    expect(renderer.disposed).toBe(1)
+    expect(raf.waiting()).toBe(false)
+    // why: A disposed koi stays disposed — waking it up again would leak the very loop dispose exists to stop.
+    runtime.setPaused(false)
+    expect(raf.waiting()).toBe(false)
   })
 
   it('forwards an announced world to both the brain and the renderer', () => {
