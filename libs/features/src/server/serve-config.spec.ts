@@ -13,6 +13,8 @@ const opts = (over: Partial<ResolveServeConfigOptions>): ResolveServeConfigOptio
   discover: () => '/project/hf-serve.config.json',
   loadConfig: () => Promise.resolve({}),
   exists: () => true,
+  // why: Hermetic by default — a PORT in the developer's real environment must not leak into these fixtures.
+  env: {},
   ...over,
 })
 
@@ -197,6 +199,32 @@ describe('resolveServeConfig', () => {
     expect((await resolveServeConfig(opts({ loadConfig: () => Promise.resolve({ port: 9000 }) }))).port).toBe(9000)
   })
 
+  it('takes the platform PORT when no flag is given', async () => {
+    expect((await resolveServeConfig(opts({ env: { PORT: '8125' } }))).port).toBe(8125)
+  })
+
+  it('lets the platform PORT beat the config port', async () => {
+    // why: The config travels inside the artifact; the platform assigns the socket — a baked port must not fight the injected one.
+    const resolved = await resolveServeConfig(opts({ env: { PORT: '8125' }, loadConfig: () => Promise.resolve({ port: 9000 }) }))
+    expect(resolved.port).toBe(8125)
+  })
+
+  it('prefers --port over the platform PORT', async () => {
+    expect((await resolveServeConfig(opts({ flags: mkFlags({ port: '5000' }), env: { PORT: '8125' } }))).port).toBe(5000)
+  })
+
+  it('never reads a malformed PORT that an explicit --port outranks', async () => {
+    expect((await resolveServeConfig(opts({ flags: mkFlags({ port: '5000' }), env: { PORT: 'abc' } }))).port).toBe(5000)
+  })
+
+  it.each(['0', 'abc'])('rejects the invalid PORT value %s', async (raw) => {
+    await expect(resolveServeConfig(opts({ env: { PORT: raw } }))).rejects.toThrow('PORT must be an integer between 1 and 65535')
+  })
+
+  it('treats an empty PORT as unset', async () => {
+    expect((await resolveServeConfig(opts({ env: { PORT: '' }, loadConfig: () => Promise.resolve({ port: 9000 }) }))).port).toBe(9000)
+  })
+
   it('prefers --host over the config host', async () => {
     const resolved = await resolveServeConfig(
       opts({ flags: mkFlags({ host: '127.0.0.1' }), loadConfig: () => Promise.resolve({ host: '0.0.0.0' }) })
@@ -220,13 +248,22 @@ describe('resolveServeConfig', () => {
 
 describe('default file system', () => {
   let dir: string
+  let previousPort: string | undefined
 
   beforeEach(() => {
     dir = mkdtempSync(join(tmpdir(), 'hf-serve-config-'))
+    // why: These tests exercise the real process.env default, so a PORT from the surrounding shell is parked and restored.
+    previousPort = process.env['PORT']
+    delete process.env['PORT']
   })
 
   afterEach(() => {
     rmSync(dir, { recursive: true, force: true })
+    if (previousPort === undefined) {
+      delete process.env['PORT']
+    } else {
+      process.env['PORT'] = previousPort
+    }
   })
 
   it('serves pure defaults when no config exists on disk', async () => {
@@ -238,5 +275,12 @@ describe('default file system', () => {
     writeFileSync(join(dir, 'hf-serve.config.json'), '{ "port": 5150 }')
     const resolved = await resolveServeConfig({ cwd: dir, flags: mkFlags({}) })
     expect({ port: resolved.port, sourcePath: resolved.sourcePath }).toEqual({ port: 5150, sourcePath: join(dir, 'hf-serve.config.json') })
+  })
+
+  it('reads the platform PORT from the real environment by default', async () => {
+    writeFileSync(join(dir, 'hf-serve.config.json'), '{ "port": 5150 }')
+    process.env['PORT'] = '6060'
+    const resolved = await resolveServeConfig({ cwd: dir, flags: mkFlags({}) })
+    expect(resolved.port).toBe(6060)
   })
 })

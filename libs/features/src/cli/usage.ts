@@ -24,7 +24,7 @@ Options:
   --allow-open          Acknowledge an explicit '--protocol none' and build an open, unauthenticated shell (build)
   --out <dir>           Output directory for the built shell (build)
   --apps <path>         Path to the dev-server apps array (dev)
-  --port <number>       Port the dev-server debug UI (dev) or the static server (serve) listens on
+  --port <number>       Port the dev-server debug UI (dev) or the static server (serve) listens on; serve falls back to $PORT
   --root <dir>          Directory served as the site root (serve)
   --host <interface>    Interface the static server binds; every interface when omitted (serve)
   --config <path>       Path to the whole feature.config.* / hf-dev.config.* / hf-serve.config.* file

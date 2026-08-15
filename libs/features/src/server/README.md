@@ -44,7 +44,7 @@ What varies is data, declared in `hf-serve.config.*`: the served `root`, the lis
 }
 ```
 
-No config is required at all: with none found, the working directory is served on port `4284` on every interface. The file is selected by `--config`, else — when `--root` names a directory carrying one — the artifact's own `<root>/hf-serve.config.json`, else discovered in the working directory; the `--root`/`--port`/`--host` flags override whatever it says.
+No config is required at all: with none found, the working directory is served on port `4284` on every interface. The file is selected by `--config`, else — when `--root` names a directory carrying one — the artifact's own `<root>/hf-serve.config.json`, else discovered in the working directory. A platform-assigned `PORT` environment variable overrides the config's port, and the `--root`/`--port`/`--host` flags override everything — so on a host that injects `PORT`, `hf serve --root <dir>` needs no port flag at all.
 
 Deliberately absent: SPA rewrites, extensionless `.html` rewriting, directory listings, `Range` requests, and CORS. Symlinked paths answer 404, and each response is read whole into memory (feature artifacts are small; there is no streaming path). The escape hatch is code, not config — custom steps prepend to the built-in pipeline (method guard → compression → header rules → file serving; rules sit inside compression so a rule-set `Cache-Control: no-transform` or `Content-Type` shapes what the compressor sees), so a step sees every request first and every response last, and either answers itself or transforms what `next()` returns:
 
