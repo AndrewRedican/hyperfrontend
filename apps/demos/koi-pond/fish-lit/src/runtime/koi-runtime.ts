@@ -15,7 +15,16 @@
  * who opens `/fish-lit/` sees one koi swimming in clear water. That is the
  * standalone story every fish app in the pond keeps.
  */
-import type { Disturbance, KoiIdentity, KoiProfile, NeighborObservation, PondEnvironment, Vec2 } from '@hyperfrontend/demo-koi-lib'
+import type {
+  Disturbance,
+  KoiCardDetails,
+  KoiIdentity,
+  KoiMemoryState,
+  KoiProfile,
+  NeighborObservation,
+  PondEnvironment,
+  Vec2,
+} from '@hyperfrontend/demo-koi-lib'
 import type { ReactiveController, ReactiveControllerHost } from 'lit'
 import type { KoiRuntime } from '../feature/wire-contract'
 import type { GlRenderer, KoiRenderer } from '../koi/koi-render'
@@ -36,7 +45,7 @@ export type KoiRendererFactory = (
 interface KoiStageParts {
   /** The canvas the koi is drawn onto. */
   canvas: HTMLCanvasElement
-  /** The hover identity card. */
+  /** The identity card. */
   card: HTMLElement
   /** The GL factory behind the canvas, replaceable so specs can run headless. */
   createGl?: (canvas: HTMLCanvasElement) => GlRenderer
@@ -54,11 +63,40 @@ const WAKE_STRENGTH = 0.45
 /** Shortest gap between two ripple requests from this koi, in milliseconds. */
 const RIPPLE_INTERVAL_MS = 700
 
+/** How often the held koi's card rows are rewritten, in milliseconds. */
+const CARD_REFRESH_MS = 500
+
+/** How often the held koi's memory is re-measured, in milliseconds. */
+const MEMORY_INTERVAL_MS = 10_000
+
 /** Which framework this app renders. */
 const FRAMEWORK = 'lit'
 
 /** The depth level the koi enters at before any host grants it one. */
 const ENTRY_DEPTH = 3
+
+/** The slice of the memory-measurement API this runtime feels for. */
+interface MemoryMeasurer {
+  measureUserAgentSpecificMemory?: () => Promise<{
+    breakdown: { bytes: number; attribution: { url?: string }[] }[]
+  }>
+}
+
+/**
+ * How this app's origin relates to the page embedding it.
+ *
+ * @returns The relation, or `null` when the app is its own top page.
+ */
+function originRelation(): 'same-origin' | 'cross-site' | null {
+  if (window.parent === window) {
+    return null
+  }
+  try {
+    return new URL(document.referrer).origin === window.location.origin ? 'same-origin' : 'cross-site'
+  } catch {
+    return 'cross-site'
+  }
+}
 
 /**
  * The koi's swimming, bound to the lifecycle of the element that shows it.
@@ -92,9 +130,6 @@ export class KoiSwimController implements ReactiveController, KoiRuntime {
   /** The channel it reports on, replaced once the contract wiring connects one. */
   #emit: (type: string, data?: unknown) => void = () => {}
 
-  /** Whether the host's pointer is over this koi. */
-  #hovered = false
-
   /** Whether the host asked this koi to hold still. */
   #paused = false
 
@@ -121,6 +156,30 @@ export class KoiSwimController implements ReactiveController, KoiRuntime {
 
   /** Whether the koi was still fleeing as of the previous frame. */
   #wasFleeing = false
+
+  /** How this app's origin relates to the page embedding it, or `null` as its own top page. */
+  readonly #origin = originRelation()
+
+  /** How many neighbours the host most recently relayed. */
+  #neighbourCount = 0
+
+  /** The most recent coordination event this app took part in, or `null`. */
+  #lastEvent: { kind: string; at: number } | null = null
+
+  /** This app's own render rate, smoothed, metered only while someone is looking. */
+  #fpsEma = 0
+
+  /** Memory attributed to this app's own browsing context, in bytes, when measured. */
+  #memoryBytes: number | null = null
+
+  /** How the memory reading stands. */
+  #memoryState: KoiMemoryState = 'pending'
+
+  /** The interval rewriting the held koi's card rows, or 0 while released. */
+  #cardTimer = 0
+
+  /** The interval re-measuring the held koi's memory, or 0 while released. */
+  #memoryTimer = 0
 
   /**
    * Places a koi in its own frame and registers it with the element that shows it.
@@ -158,7 +217,7 @@ export class KoiSwimController implements ReactiveController, KoiRuntime {
    * Takes the canvas and card the element's template rendered and builds the scene behind them.
    *
    * @param canvas - The canvas the koi is drawn onto.
-   * @param card - The hover identity card.
+   * @param card - The identity card.
    * @param createGl - The GL factory, replaceable so specs can run headless.
    */
   attach(canvas: HTMLCanvasElement, card: HTMLElement, createGl?: (canvas: HTMLCanvasElement) => GlRenderer): void {
@@ -210,6 +269,7 @@ export class KoiSwimController implements ReactiveController, KoiRuntime {
    */
   setDepth(level: number): void {
     this.#motion.setDepth(level)
+    this.#noteEvent('depth-grant')
   }
 
   /**
@@ -219,6 +279,7 @@ export class KoiSwimController implements ReactiveController, KoiRuntime {
    */
   startle(disturbance: Disturbance): void {
     this.#motion.startle(disturbance)
+    this.#noteEvent('disturbance')
   }
 
   /**
@@ -228,20 +289,16 @@ export class KoiSwimController implements ReactiveController, KoiRuntime {
    */
   observe(neighbors: readonly NeighborObservation[]): void {
     this.#motion.observe(neighbors)
+    this.#neighbourCount = neighbors.length
   }
 
   /**
-   * Shows or hides this koi's own hover identity.
+   * Marks whether the host's pointer is over this koi, which only shades its silhouette.
    *
    * @param hovered - Whether the host's pointer is over this koi.
    */
   setHovered(hovered: boolean): void {
-    this.#hovered = hovered
     this.#renderer?.setHovered(hovered)
-    if (hovered) {
-      // why: A hover notice can land while the pond is asleep and no frame is coming, so the card is parked beside the koi at once rather than waiting on the loop.
-      this.#renderer?.placeCard(this.#motion.state)
-    }
   }
 
   /**
@@ -265,7 +322,17 @@ export class KoiSwimController implements ReactiveController, KoiRuntime {
    * @param inspected - Whether the host is presenting this koi to the visitor.
    */
   setInspected(inspected: boolean): void {
+    if (inspected === this.#inspected) {
+      return
+    }
     this.#inspected = inspected
+    this.#renderer?.setSelected(inspected)
+    if (inspected) {
+      this.#renderer?.placeCard(this.#motion.state)
+      this.#openInspector()
+    } else {
+      this.#closeInspector()
+    }
   }
 
   /**
@@ -275,6 +342,7 @@ export class KoiSwimController implements ReactiveController, KoiRuntime {
    */
   placeAt(point: Vec2): void {
     this.#motion.place(point)
+    this.#noteEvent('place')
   }
 
   /** Stops the loop and releases everything the koi holds, once and for good. */
@@ -311,13 +379,99 @@ export class KoiSwimController implements ReactiveController, KoiRuntime {
     }
   }
 
-  /** Cancels the loop, unhooks the window, and releases the renderer's GPU hold. */
+  /** Cancels the loop, unhooks the window, closes the inspector, and releases the renderer's GPU hold. */
   #teardown(): void {
     this.#stop()
+    this.#closeInspector()
     window.removeEventListener('resize', this.#measure)
     window.removeEventListener('pagehide', this.#onPagehide)
     this.#renderer?.dispose()
     this.#renderer = null
+  }
+
+  /**
+   * Remembers the newest coordination event for the card's story.
+   *
+   * @param kind - The event kind the card names.
+   */
+  #noteEvent(kind: string): void {
+    this.#lastEvent = { kind, at: performance.now() }
+  }
+
+  /**
+   * Measures this app's own memory, honestly or not at all.
+   *
+   * `performance.measureUserAgentSpecificMemory` only runs in cross-origin
+   * isolated pages and attributes per browsing context; this frame keeps the
+   * breakdown entries attributed to its own directory and refuses to guess when
+   * the API, the isolation, or the attribution is missing. A failed measurement
+   * can never disturb the koi — everything lands in the card and nowhere else.
+   */
+  async #measureMemory(): Promise<void> {
+    try {
+      const measurer = (performance as MemoryMeasurer).measureUserAgentSpecificMemory
+      if (measurer === undefined || !window.crossOriginIsolated) {
+        this.#memoryState = 'unavailable'
+        return
+      }
+      const result = await measurer.call(performance)
+      const own = new URL('.', window.location.href).href
+      let bytes = 0
+      let attributed = false
+      for (const entry of result.breakdown) {
+        if (entry.attribution.some((source) => typeof source.url === 'string' && source.url.startsWith(own))) {
+          bytes += entry.bytes
+          attributed = true
+        }
+      }
+      this.#memoryBytes = attributed ? bytes : null
+      this.#memoryState = attributed ? 'measured' : 'unavailable'
+    } catch {
+      this.#memoryState = 'unavailable'
+    }
+  }
+
+  /**
+   * The live facts the card renders.
+   *
+   * @returns The details the renderer derives its rows from.
+   */
+  #cardDetails(): KoiCardDetails {
+    const state = this.#motion.state
+    return {
+      held: this.#inspected,
+      phase: state.phase,
+      speedBL: this.#pond.fishLength === 0 ? 0 : state.speed / this.#pond.fishLength,
+      neighbours: this.#neighbourCount,
+      hosted: this.#hosted,
+      origin: this.#hosted ? this.#origin : null,
+      uptimeS: performance.now() / 1000,
+      fps: this.#fpsEma === 0 ? null : this.#fpsEma,
+      memoryBytes: this.#memoryBytes,
+      memoryState: this.#memoryState,
+      lastEvent: this.#lastEvent === null ? null : { kind: this.#lastEvent.kind, ageS: (performance.now() - this.#lastEvent.at) / 1000 },
+    }
+  }
+
+  /** Starts everything that exists only to power the held koi's card. */
+  #openInspector(): void {
+    this.#renderer?.updateCard(this.#cardDetails())
+    this.#cardTimer = window.setInterval(() => {
+      this.#renderer?.updateCard(this.#cardDetails())
+    }, CARD_REFRESH_MS)
+    void this.#measureMemory()
+    this.#memoryTimer = window.setInterval(() => {
+      void this.#measureMemory()
+    }, MEMORY_INTERVAL_MS)
+  }
+
+  /** Tears the card's machinery down the moment the koi is released. */
+  #closeInspector(): void {
+    window.clearInterval(this.#cardTimer)
+    window.clearInterval(this.#memoryTimer)
+    this.#cardTimer = 0
+    this.#memoryTimer = 0
+    this.#fpsEma = 0
   }
 
   /**
@@ -351,8 +505,12 @@ export class KoiSwimController implements ReactiveController, KoiRuntime {
     const state = this.#motion.state
     // why: An inspected koi holds its position but keeps sculling gently — a mesh frozen mid-beat reads as a rendering fault, not a fish waiting to be looked at.
     this.#renderer?.draw(this.#inspected ? { ...state, speed: state.length * 0.08 } : state, dt)
-    if (this.#hovered) {
+    if (this.#inspected) {
       this.#renderer?.placeCard(state)
+      if (dt > 0) {
+        // why: The card's rate is this app's own render cadence, smoothed just enough to read — and only metered while someone is actually looking.
+        this.#fpsEma = this.#fpsEma === 0 ? 1 / dt : this.#fpsEma + (1 / dt - this.#fpsEma) * 0.1
+      }
     }
     this.#report(timestamp)
   }
@@ -368,8 +526,8 @@ export class KoiSwimController implements ReactiveController, KoiRuntime {
       this.#lastOutlineAt = timestamp
       // why: The host dead-reckons outlines forward by reported speed, so a held koi must report itself stationary or its hover target slides away from its body.
       const outline = this.#inspected ? { ...this.#motion.outline(), speed: 0 } : this.#motion.outline()
-      // why: This frame is pointer-transparent, so the card's link can only be opened by the host — the outline carries where the URL text sits whenever the card is showing.
-      const card = this.#renderer?.cardLinkRect() ?? null
+      // why: This frame is pointer-transparent, so the card's links can only be opened by the host — the outline carries the card's geometry whenever a visitor holds this koi.
+      const card = this.#renderer?.cardRects() ?? null
       this.#emit('outline', card === null ? outline : { ...outline, card })
       const requested = this.#motion.takeDepthRequest()
       if (requested !== null) {
@@ -385,6 +543,7 @@ export class KoiSwimController implements ReactiveController, KoiRuntime {
     if (this.#wasFleeing && !this.#motion.isFleeing) {
       // why: The host waits for every koi to report itself settled before it calls a disturbance sequence complete.
       this.#emit('settled', { framework: FRAMEWORK })
+      this.#noteEvent('settled')
     }
     this.#wasFleeing = this.#motion.isFleeing
   }

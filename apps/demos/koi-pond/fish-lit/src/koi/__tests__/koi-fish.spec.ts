@@ -118,8 +118,11 @@ describe('<koi-fish>', () => {
     const { element } = await mountKoi()
     const { card } = stageOf(element)
     expect(card.hidden).toBe(true)
-    expect(card.querySelector('.koi-card-name')?.textContent).toBe(PROFILE.label)
+    expect(card.querySelector('.koi-card-title')?.textContent).toBe(PROFILE.label)
     expect(card.querySelector('.koi-card-url')?.textContent).toBe('https://pond.example/fish-lit/')
+    const site = card.querySelector<HTMLAnchorElement>('.koi-card-site')
+    expect(site?.href).toContain('lit.dev')
+    expect(site?.rel).toBe('noopener noreferrer')
   })
 
   it('sizes its buffer to the koi frame box, never the viewport', async () => {
@@ -166,7 +169,7 @@ describe('<koi-fish>', () => {
 
   it('colours the card label with this koi accent', async () => {
     const { element } = await mountKoi()
-    const name = stageOf(element).card.querySelector<HTMLElement>('.koi-card-name')
+    const name = stageOf(element).card.querySelector<HTMLElement>('.koi-card-title')
     // how: Writing the accent through another element's style normalises the hex the same way jsdom normalised the label's, so the two strings compare exactly.
     const probe = document.createElement('span')
     probe.style.color = PROFILE.palette.accent
@@ -259,14 +262,71 @@ describe('<koi-fish>', () => {
     expect(koi.getObjectByName('koi-shadow')).toBeDefined()
   })
 
-  it('reveals and places the card only while hovered', async () => {
-    const { element } = await mountKoi()
+  it('keeps the card closed on hover — hovering only says selectable', async () => {
+    const { element, renderer } = await mountKoi()
     const { card } = stageOf(element)
-    element.swim.setHovered(true)
-    expect(card.hidden).toBe(false)
-    expect(card.style.transform).toContain('translate(')
-    element.swim.setHovered(false)
+    renderer.setHovered(true)
     expect(card.hidden).toBe(true)
+  })
+
+  it('traces the silhouette softly on hover and fully while held', async () => {
+    const { renderer } = await mountKoi()
+    const outline = renderer.koi.object.getObjectByName('koi-outline-skin')
+    expect(outline?.visible).toBe(false)
+    renderer.setHovered(true)
+    expect(outline?.visible).toBe(true)
+    renderer.setHovered(false)
+    expect(outline?.visible).toBe(false)
+    renderer.setSelected(true)
+    expect(outline?.visible).toBe(true)
+  })
+
+  it('opens the card with the hold and keeps it open however the pointer moves', async () => {
+    const { element, renderer } = await mountKoi()
+    const { card } = stageOf(element)
+    renderer.setSelected(true)
+    expect(card.hidden).toBe(false)
+    // why: The visitor is about to move the pointer off the fish and into the card — losing the card to that move is exactly the regression this pins.
+    renderer.setHovered(true)
+    renderer.setHovered(false)
+    expect(card.hidden).toBe(false)
+    renderer.placeCard(cruising({ position: { x: 500, y: 320 } }))
+    expect(card.style.transform).toContain('translate(')
+    renderer.setSelected(false)
+    expect(card.hidden).toBe(true)
+  })
+
+  it('rewrites the inspector rows from the live facts', async () => {
+    const { element, renderer } = await mountKoi()
+    const { card } = stageOf(element)
+    renderer.updateCard({
+      held: true,
+      phase: 'relaxed',
+      speedBL: 0.4,
+      neighbours: 2,
+      hosted: true,
+      origin: 'same-origin',
+      uptimeS: 30,
+      fps: 60,
+      memoryBytes: null,
+      memoryState: 'unavailable',
+      lastEvent: { kind: 'disturbance', ageS: 1.5 },
+    })
+    expect(card.querySelector('.koi-card-state')?.textContent).toContain('Held')
+    expect(card.querySelector('.koi-card-runtime')?.textContent).toContain('same-origin')
+    expect(card.querySelector('.koi-card-memory')?.textContent).toBe('Memory · unavailable')
+    expect(card.querySelector('.koi-card-event')?.textContent).toContain('disturbance')
+  })
+
+  it('reports the card frame and both link rectangles only while held', async () => {
+    const { renderer } = await mountKoi()
+    expect(renderer.cardRects()).toBeNull()
+    renderer.setSelected(true)
+    const rects = renderer.cardRects()
+    expect(rects).not.toBeNull()
+    expect(rects?.frame).toBeDefined()
+    expect(rects?.app).toBeDefined()
+    expect(rects?.site).toBeDefined()
   })
 
   it('tears the whole koi down when its element leaves the page', async () => {
