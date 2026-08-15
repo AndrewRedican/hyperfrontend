@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.7.0](https://github.com/AndrewRedican/hyperfrontend/compare/725db1b4556be686fd460b69424229a7d5ac5a63...711cd92957261be5b531486c08f51daab2f60cec) - 2026-08-15
+
+### Features
+
+- serve built sites in production with an hf serve command
+
+### Bug Fixes
+
+- answer malformed request paths instead of crashing the server
+- build generated shells without a declaration map
+- widen the unresponsive policy where a generated shell crosses into the sdk
+
+### Other
+
+- **lib-builder:** drop the declaration-map changes
+
 ## [0.6.0](https://github.com/AndrewRedican/hyperfrontend/compare/641f582281b0d20f2953e47aa7a815c210d916f2...a1f6e3b4e6b9f0ad51c8908b2fb641deed0078e3) - 2026-08-10
 
 ### Features
@@ -44,25 +60,25 @@ All notable changes to this project will be documented in this file.
 
 ### Breaking Changes
 
-- **BREAKING** **BREAKING:** **BREAKING:** **BREAKING:** **BREAKING:** coordinate presentation host-side with contract-declared display modes
-- **BREAKING** **BREAKING:** **BREAKING:** **BREAKING:** **BREAKING:** throw when registering v2 security without a shared key
-- **BREAKING** **BREAKING:** **BREAKING:** **BREAKING:** **BREAKING:** is Open stays false after open() until the handshake completes; ready() rejects when no host answers
+- **BREAKING** **BREAKING:** **BREAKING:** **BREAKING:** **BREAKING:** **BREAKING:** coordinate presentation host-side with contract-declared display modes
+- **BREAKING** **BREAKING:** **BREAKING:** **BREAKING:** **BREAKING:** **BREAKING:** throw when registering v2 security without a shared key
+- **BREAKING** **BREAKING:** **BREAKING:** **BREAKING:** **BREAKING:** **BREAKING:** is Open stays false after open() until the handshake completes; ready() rejects when no host answers
 
 ### Features
 
 - adopt a reloaded feature on its existing mount
-- **BREAKING** **BREAKING:** **BREAKING:** **BREAKING:** **BREAKING:** **BREAKING:** ⚠️ BREAKING: coordinate presentation host-side with contract-declared display modes
+- **BREAKING** **BREAKING:** **BREAKING:** **BREAKING:** **BREAKING:** **BREAKING:** **BREAKING:** ⚠️ BREAKING: coordinate presentation host-side with contract-declared display modes
 - delegate frame permissions and add host-only sandbox containment
 - add four-state liveness, closing flush window, and dirty state
 - validate action payloads on send and receive
 - announce contract versions and gate compatibility
 - add hostee security options and shared registration
 - add allow-open option to the nx build executor
-- **BREAKING** **BREAKING:** **BREAKING:** **BREAKING:** **BREAKING:** **BREAKING:** ⚠️ BREAKING: adopt asynchronous wire-gated open with origin pinning and timeout errors
+- **BREAKING** **BREAKING:** **BREAKING:** **BREAKING:** **BREAKING:** **BREAKING:** **BREAKING:** ⚠️ BREAKING: adopt asynchronous wire-gated open with origin pinning and timeout errors
 
 ### Bug Fixes
 
-- **BREAKING** **BREAKING:** **BREAKING:** **BREAKING:** **BREAKING:** **BREAKING:** ⚠️ BREAKING: throw when registering v2 security without a shared key
+- **BREAKING** **BREAKING:** **BREAKING:** **BREAKING:** **BREAKING:** **BREAKING:** **BREAKING:** ⚠️ BREAKING: throw when registering v2 security without a shared key
 
 ## [0.2.0](https://github.com/AndrewRedican/hyperfrontend/compare/6b5a02be62850b0509b9fd71ad9232655cf5fbbf...47a37497608ac765af3efb30f0b5e01950bae425) - 2026-07-05
 
