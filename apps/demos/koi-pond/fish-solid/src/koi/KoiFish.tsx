@@ -20,7 +20,7 @@
  */
 import type { KoiCardText, KoiProfile } from '@hyperfrontend/demo-koi-lib'
 import type { Accessor, JSX } from 'solid-js'
-import { FRAMEWORK_SITES } from '@hyperfrontend/demo-koi-lib'
+import { FRAMEWORK_SITES, koiSourceUrl } from '@hyperfrontend/demo-koi-lib'
 import { onCleanup, onMount } from 'solid-js'
 
 /** The card's mounted nodes, handed to the imperative renderer as one piece. */
@@ -31,6 +31,8 @@ export interface KoiCardHandles {
   app: HTMLAnchorElement
   /** The framework-site anchor, whose rectangle the outline reports. */
   site: HTMLAnchorElement
+  /** The app-source anchor, whose rectangle the outline reports. */
+  source: HTMLAnchorElement
 }
 
 /** Everything the koi component draws from. */
@@ -64,13 +66,14 @@ export function KoiFish(props: KoiFishProps): JSX.Element {
   let card: HTMLDivElement | undefined
   let app: HTMLAnchorElement | undefined
   let site: HTMLAnchorElement | undefined
+  let source: HTMLAnchorElement | undefined
 
   onMount(() => {
-    if (canvas === undefined || card === undefined || app === undefined || site === undefined) {
+    if (canvas === undefined || card === undefined || app === undefined || site === undefined || source === undefined) {
       return
     }
     // why: The GPU scene needs a real canvas node, so it is built here — after Solid has created one — and torn down by whatever cleanup the renderer hands back.
-    onCleanup(props.mount(canvas, { card, app, site }))
+    onCleanup(props.mount(canvas, { card, app, site, source }))
   })
 
   return (
@@ -124,6 +127,18 @@ export function KoiFish(props: KoiFishProps): JSX.Element {
           }}
         >
           {props.profile.label} website ↗
+        </a>
+        {/* why: The demo's claim is checkable — the card links straight to this very app's implementation in the repository. */}
+        <a
+          class="koi-card-source"
+          href={koiSourceUrl(props.profile.framework)}
+          target="_blank"
+          rel="noopener noreferrer"
+          ref={(node) => {
+            source = node
+          }}
+        >
+          App source ↗
         </a>
       </div>
     </>
