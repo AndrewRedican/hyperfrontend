@@ -7,17 +7,26 @@
  * lifecycle; this module owns the three.js objects behind it and mutates them
  * straight from the frame loop. The swimming brain stays authoritative for
  * where the fish *is* — the stage only makes the koi's body express it.
+ *
+ * The canvas covers only the koi's own frame box, never the whole viewport:
+ * the shared camera is narrowed onto that box each frame, so the small canvas
+ * paints pixel-identically what a full-viewport render would have put there,
+ * at a fraction of the fill and memory. A koi outside the visible window draws
+ * nothing at all.
  */
-import type { KoiProfile, KoiTune, PondEnvironment } from '@hyperfrontend/demo-koi-lib'
+import type { KoiFrameBox, KoiProfile, PondEnvironment } from '@hyperfrontend/demo-koi-lib'
 import type { Koi, PondView } from '@hyperfrontend/demo-koi-lib/three'
 import type { WebGLRenderer } from 'three'
 import type { KoiState } from './koi-motion'
-import { POND_VIEW, koiSeed, pxPerUnit, swimDepth, wrapAngle } from '@hyperfrontend/demo-koi-lib'
-import { createKoi, createLighting, createPondView, sizePondRenderer } from '@hyperfrontend/demo-koi-lib/three'
+import { POND_VIEW, koiFrameBox, koiSeed, pxPerUnit, swimDepth, wrapAngle } from '@hyperfrontend/demo-koi-lib'
+import { createKoi, createLighting, createPondView, fitPondRenderer } from '@hyperfrontend/demo-koi-lib/three'
 import { Scene } from 'three'
 
 /** The subset of a renderer this app drives, injectable so specs run without a GPU. */
 export type GlRenderer = Pick<WebGLRenderer, 'render' | 'setSize' | 'setPixelRatio' | 'dispose'>
+
+/** How far the frame box's edge may drift from the fitted buffer before a re-fit, as a fraction. */
+const REFIT_DRIFT = 0.1
 
 /** The three.js objects behind one mounted koi canvas. */
 export interface KoiStage {
@@ -36,12 +45,6 @@ export interface KoiStage {
    * @param pond - The world as the host most recently announced it.
    */
   setPond(pond: PondEnvironment): void
-  /**
-   * Takes the visitor's playground settings onto the body and the swim.
-   *
-   * @param tune - The scales to apply over this koi's own build and trim.
-   */
-  applyTune(tune: KoiTune): void
   /** Releases the GPU resources the koi holds. */
   dispose(): void
 }
@@ -92,12 +95,37 @@ export function createKoiStage(
   let bodyPx = pxPerUnit(pond.fishLength) * build.lengthScale
   let lastHeading: number | null = null
   let lastSpeed = 0
-
-  sizePondRenderer(gl, pond.view.width, pond.view.height)
+  let current = pond
+  let fittedSize = 0
+  let shown = true
+  const box: KoiFrameBox = { x: 0, y: 0, size: 0, visible: false }
 
   return {
     koi,
     draw(state, dt) {
+      koiFrameBox(state.position, state.heading, state.length, current.view, box)
+      // why: A koi outside the window pays nothing — no pose, no uniforms, no clear, no composite. The brain keeps swimming; only the pixels stop.
+      if (!box.visible) {
+        if (shown) {
+          shown = false
+          canvas.style.display = 'none'
+        }
+        lastHeading = state.heading
+        return
+      }
+      if (!shown) {
+        shown = true
+        canvas.style.display = ''
+      }
+      if (Math.abs(box.size - fittedSize) > fittedSize * REFIT_DRIFT) {
+        // why: The buffer re-fits only when the body's size genuinely changed — reallocating a drawing buffer every frame would cost more than the render itself.
+        fittedSize = box.size
+        fitPondRenderer(gl, box.size)
+        canvas.style.width = `${box.size}px`
+        canvas.style.height = `${box.size}px`
+      }
+      canvas.style.transform = `translate3d(${(box.x - current.view.x).toFixed(1)}px, ${(box.y - current.view.y).toFixed(1)}px, 0)`
+
       const seconds = dt > 0 ? dt : 1e-6
       // why: The swimming model thinks in this koi's own body lengths, while the brain and the wire think in pond pixels.
       const speed = state.speed / bodyPx
@@ -113,27 +141,17 @@ export function createKoiStage(
       lastHeading = state.heading
       lastSpeed = speed
       koi.update(dt)
+      view.frame(box)
       view.place(koi.object, state.position, state.heading)
       gl.render(scene, view.camera)
     },
 
     setPond(next) {
       bodyPx = pxPerUnit(next.fishLength) * build.lengthScale
+      current = next
       view.setPond(next)
-      sizePondRenderer(gl, next.view.width, next.view.height)
-    },
-
-    applyTune(tune) {
-      // why: The scales ride on this koi's own derived numbers rather than replacing them, so the playground moves the whole shoal while each fish keeps its identity.
-      koi.setTrim({
-        amplitude: trim.amplitude * (tune.amplitudeScale ?? 1),
-        frequency: trim.frequency * (tune.frequencyScale ?? 1),
-        waveReach: tune.waveReach ?? trim.waveReach,
-      })
-      koi.setPhysical({
-        width: (phenotype.width ?? 1) * (tune.widthScale ?? 1),
-        height: (phenotype.height ?? 1) * (tune.heightScale ?? 1),
-      })
+      // why: A pond announcement moves the window, so the next draw must re-fit rather than trust a buffer sized against the old world.
+      fittedSize = 0
     },
 
     dispose() {

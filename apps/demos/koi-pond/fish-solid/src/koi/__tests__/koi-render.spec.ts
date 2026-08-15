@@ -81,7 +81,47 @@ describe('createKoiRenderer', () => {
     expect(card?.hidden).toBe(true)
     expect(card?.querySelector('.koi-card-name')?.textContent).toBe(PROFILE.label)
     expect(card?.querySelector('.koi-card-url')?.textContent).toBe(APP_URL)
-    expect(gl.sizes.at(-1)).toEqual([POND.view.width, POND.view.height])
+  })
+
+  it('sizes its buffer to the koi frame box, never the viewport', () => {
+    const renderer = createKoiRenderer(root, PROFILE, APP_URL, POND, () => gl)
+    renderer.draw(cruising(), 1 / 60)
+    const size = gl.sizes.at(-1)
+    expect(size).toBeDefined()
+    // why: The box is square and covers one fish plus its sweep — a viewport-sized buffer here is exactly the fill-rate and memory cost the frame box exists to remove.
+    expect(size?.[0]).toBe(size?.[1])
+    expect(size?.[0] ?? Number.POSITIVE_INFINITY).toBeLessThan(POND.view.width)
+  })
+
+  it('re-fits the buffer only when the box genuinely changes size', () => {
+    const renderer = createKoiRenderer(root, PROFILE, APP_URL, POND, () => gl)
+    renderer.draw(cruising(), 1 / 60)
+    renderer.draw(cruising({ position: { x: 700, y: 420 } }), 1 / 60)
+    renderer.draw(cruising({ position: { x: 760, y: 440 } }), 1 / 60)
+    expect(gl.sizes).toHaveLength(1)
+  })
+
+  it('slides the canvas with the koi instead of repainting the world', () => {
+    const renderer = createKoiRenderer(root, PROFILE, APP_URL, POND, () => gl)
+    renderer.draw(cruising({ position: { x: 400, y: 300 } }), 1 / 60)
+    const canvas = <HTMLElement>root.querySelector('canvas.koi-canvas')
+    const before = canvas.style.transform
+    renderer.draw(cruising({ position: { x: 900, y: 500 } }), 1 / 60)
+    expect(canvas.style.transform).toContain('translate3d(')
+    expect(canvas.style.transform).not.toBe(before)
+  })
+
+  it('draws nothing at all for a koi outside the visible window', () => {
+    const card = describePond(1280, 800, 420, 300, false)
+    const renderer = createKoiRenderer(root, PROFILE, APP_URL, card, () => gl)
+    const canvas = <HTMLElement>root.querySelector('canvas.koi-canvas')
+    renderer.draw(cruising({ position: { x: 40, y: 40 }, spine: createSpine({ x: 40, y: 40 }, 0, card.fishLength) }), 1 / 60)
+    // why: An off-screen koi pays nothing — no pose, no render, no composite; the brain keeps swimming and the canvas comes back the moment it does.
+    expect(gl.frames).toHaveLength(0)
+    expect(canvas.style.display).toBe('none')
+    renderer.draw(cruising({ position: { x: 640, y: 400 } }), 1 / 60)
+    expect(gl.frames).toHaveLength(1)
+    expect(canvas.style.display).not.toBe('none')
   })
 
   it('puts a whole koi in the scene it renders', () => {
@@ -145,11 +185,14 @@ describe('createKoiRenderer', () => {
     expect(renderer.koi.swim.motion.escapeIntensity).toBeGreaterThan(0.8)
   })
 
-  it('resizes camera and canvas to the visible window on a pond re-announcement', () => {
+  it('re-fits against the new window after a pond re-announcement', () => {
     const renderer = createKoiRenderer(root, PROFILE, APP_URL, POND, () => gl)
-    // why: The pond itself never changes size — only the window onto it follows the presenting frame.
+    renderer.draw(cruising(), 1 / 60)
+    const fitted = gl.sizes.length
+    // why: The pond itself never changes size — only the window onto it follows the presenting frame, and the next draw must size against that window rather than trust the old fit.
     renderer.setPond({ ...POND, view: pondWindow(POND, 420, 300) })
-    expect(gl.sizes.at(-1)).toEqual([420, 300])
+    renderer.draw(cruising(), 1 / 60)
+    expect(gl.sizes.length).toBe(fitted + 1)
   })
 
   it('feeds a clockwise turn in as a positive turn rate, so the head bends into it', () => {
@@ -165,12 +208,6 @@ describe('createKoiRenderer', () => {
     renderer.draw(cruising(), 1 / 60)
     const koi = <Group>gl.frames.at(-1)?.scene.getObjectByName('koi')
     expect(koi.getObjectByName('koi-shadow')).toBeDefined()
-  })
-
-  it('lays the tune scales over this koi its own build', () => {
-    const renderer = createKoiRenderer(root, PROFILE, APP_URL, POND, () => gl)
-    renderer.applyTune({ widthScale: 1.3 })
-    expect(renderer.koi.config.physical.width).toBeCloseTo((PROFILE.phenotype.width ?? 1) * 1.3, 5)
   })
 
   it('reveals and places the card only while hovered', () => {

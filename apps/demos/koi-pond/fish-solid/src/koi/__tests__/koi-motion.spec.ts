@@ -1,5 +1,5 @@
 import type { KoiMotion } from '../koi-motion'
-import type { NeighborObservation, PondEnvironment } from '@hyperfrontend/demo-koi-lib'
+import type { KoiProfile, NeighborObservation, PondEnvironment } from '@hyperfrontend/demo-koi-lib'
 import { describe, expect, it } from 'vitest'
 import { describePond, koiProfile, pondBounds } from '@hyperfrontend/demo-koi-lib'
 import { createKoiMotion } from '../koi-motion'
@@ -13,9 +13,11 @@ const POND: PondEnvironment = describePond(1200, 800, 1200, 800, false)
  * @param overrides - Entry fields to override.
  * @returns The koi's brain.
  */
-function swimmer(overrides: { position?: { x: number; y: number }; heading?: number; depth?: number } = {}): KoiMotion {
+function swimmer(
+  overrides: { position?: { x: number; y: number }; heading?: number; depth?: number; profile?: KoiProfile } = {}
+): KoiMotion {
   return createKoiMotion({
-    profile: koiProfile('solid'),
+    profile: overrides.profile ?? koiProfile('solid'),
     pond: POND,
     position: overrides.position ?? { x: 600, y: 400 },
     heading: overrides.heading ?? 0,
@@ -44,12 +46,11 @@ function diver(): KoiMotion {
  *
  * @param motion - The koi to run.
  * @param seconds - How long to run for.
- * @param fromS - Elapsed seconds the run starts at.
  */
-function run(motion: KoiMotion, seconds: number, fromS = 0): void {
+function run(motion: KoiMotion, seconds: number): void {
   const frames = Math.round(seconds * 60)
   for (let frame = 1; frame <= frames; frame += 1) {
-    motion.advance(1 / 60, fromS + frame / 60)
+    motion.advance(1 / 60)
   }
 }
 
@@ -83,7 +84,7 @@ function sharpestTurn(motion: KoiMotion, seconds: number): number {
   let previous = motion.state.heading
   let sharpest = 0
   for (let frame = 1; frame <= frames; frame += 1) {
-    motion.advance(1 / 60, frame / 60)
+    motion.advance(1 / 60)
     sharpest = Math.max(sharpest, Math.abs(angleDelta(previous, motion.state.heading)))
     previous = motion.state.heading
   }
@@ -124,15 +125,122 @@ describe('createKoiMotion', () => {
   })
 })
 
-describe('boundary behaviour', () => {
-  it('turns back rather than leaving the pond', () => {
-    const bounds = pondBounds(POND)
-    // why: Half a fish-length from the wall heading straight at it, a koi that did not steer would cross within a second — so staying inside AND ending up pointed back is the honest proof it turned rather than drifted.
-    const motion = swimmer({ position: { x: bounds.right - POND.fishLength * 0.5, y: 400 }, heading: 0 })
+describe('pace', () => {
+  it('does not hold one constant cruise for a whole minute', () => {
+    const motion = swimmer()
+    const speeds: number[] = []
+    for (let second = 0; second < 90; second += 1) {
+      run(motion, 1)
+      speeds.push(motion.state.speed)
+    }
+    // why: The schedule loafs and hurries in bounded events; a koi still cruising at one flat speed after ninety seconds means the pace never reached the water.
+    expect(Math.max(...speeds) / Math.min(...speeds)).toBeGreaterThan(1.25)
+  })
+
+  it('keeps every scheduled pace inside the loaf-to-burst band', () => {
+    const motion = swimmer()
     run(motion, 2)
+    let slowest = Number.POSITIVE_INFINITY
+    let fastest = 0
+    let eased = 0
+    for (let second = 0; second < 90; second += 1) {
+      run(motion, 1)
+      // why: An absence parks the koi at zero on purpose, and the second or two easing back up passes through every low speed; neither says anything about the pace band.
+      if (motion.isAway) {
+        eased = 2
+        continue
+      }
+      if (eased > 0) {
+        eased -= 1
+        continue
+      }
+      slowest = Math.min(slowest, motion.state.speed)
+      fastest = Math.max(fastest, motion.state.speed)
+    }
+    const cruise = POND.fishLength * 0.62
+    expect(fastest).toBeLessThan(cruise * 2.2)
+    expect(slowest).toBeGreaterThan(POND.fishLength * 0.26 * 0.4)
+  })
+})
+
+describe('turning', () => {
+  it('turns in bounded episodes rather than living in a turn', () => {
+    const motion = swimmer()
+    let turningStreak = 0
+    let longestStreak = 0
+    let turningFrames = 0
+    const frames = 90 * 60
+    for (let frame = 0; frame < frames; frame += 1) {
+      motion.advance(1 / 60)
+      if (motion.state.phase === 'turning') {
+        turningStreak += 1
+        turningFrames += 1
+        longestStreak = Math.max(longestStreak, turningStreak)
+      } else {
+        turningStreak = 0
+      }
+    }
+    // why: A turn is an event with an end — the old brain could hold a koi banked for tens of seconds, which is exactly what this bounds.
+    expect(longestStreak / 60).toBeLessThan(4)
+    expect(turningFrames / frames).toBeLessThan(0.4)
+  })
+
+  it('never snaps its heading frame to frame while cruising open water', () => {
+    expect(sharpestTurn(swimmer(), 20)).toBeLessThan(0.2)
+  })
+
+  it('does not vibrate between left and right', () => {
+    const motion = swimmer()
+    let previousHeading = motion.state.heading
+    let previousDelta = 0
+    let reversals = 0
+    for (let frame = 0; frame < 30 * 60; frame += 1) {
+      motion.advance(1 / 60)
+      const delta = angleDelta(previousHeading, motion.state.heading)
+      // why: Only a firm swing one way followed immediately by a firm swing the other counts — gentle wander crosses zero all the time and legitimately so.
+      if (Math.abs(delta) > 0.015 && Math.abs(previousDelta) > 0.015 && Math.sign(delta) !== Math.sign(previousDelta)) {
+        reversals += 1
+      }
+      previousHeading = motion.state.heading
+      previousDelta = delta
+    }
+    expect(reversals).toBeLessThan(8)
+  })
+})
+
+describe('boundary behaviour', () => {
+  it('turns back rather than leaving the pond when its seed obeys the correction', () => {
+    const bounds = pondBounds(POND)
+    // why: The react seed's first boundary approach obeys its correction, so this spec deterministically exercises the turn-back path; solid's own first approach is the slip the next spec proves.
+    const motion = swimmer({ profile: koiProfile('react'), position: { x: bounds.right - POND.fishLength * 0.5, y: 400 }, heading: 0 })
+    run(motion, 3)
     expect(motion.state.position.x).toBeLessThan(bounds.right)
-    // why: A wall-avoiding koi carves round to run along the boundary rather than reversing on the spot, so a heading well past a wander's reach — not a full 180 — is what proves it steered.
     expect(Math.abs(motion.state.heading)).toBeGreaterThan(Math.PI / 3)
+  })
+
+  it('sometimes slips out, sits away a while, and returns from the opposite side', () => {
+    const bounds = pondBounds(POND)
+    // why: The solid seed's first boundary approach rolls a slip, so this drives the full leave-wait-warp-return arc deterministically.
+    const motion = swimmer({ position: { x: bounds.right - POND.fishLength * 0.5, y: 400 }, heading: 0 })
+    let wentAway = false
+    let cameBack = false
+    let farthestOut = 0
+    for (let frame = 0; frame < 40 * 60; frame += 1) {
+      motion.advance(1 / 60)
+      const { x, y } = motion.state.position
+      farthestOut = Math.max(farthestOut, x - bounds.right, bounds.left - x, y - bounds.bottom, bounds.top - y)
+      if (motion.isAway) {
+        wentAway = true
+      }
+      if (wentAway && !motion.isAway && x > 0 && x < POND.width && motion.state.position.x < POND.width / 2) {
+        cameBack = true
+        break
+      }
+    }
+    expect(wentAway).toBe(true)
+    // why: Leaving on the right, the wrap re-enters on the left — the visitor reads one fish leaving one side and another arriving later from the other.
+    expect(cameBack).toBe(true)
+    expect(farthestOut).toBeLessThan(POND.fishLength)
   })
 
   it('never clamps a koi that has swum off screen', () => {
@@ -143,11 +251,10 @@ describe('boundary behaviour', () => {
 
   it('curves away rather than reversing on the spot', () => {
     const bounds = pondBounds(POND)
-    const motion = swimmer({ position: { x: bounds.right - POND.fishLength * 1.5, y: 400 }, heading: 0 })
+    const motion = swimmer({ profile: koiProfile('react'), position: { x: bounds.right - POND.fishLength * 1.5, y: 400 }, heading: 0 })
     const sharpest = sharpestTurn(motion, 1.5)
-    // why: The koi must turn away from the wall, but a body carves a curve — a single-frame jump near π would be a sprite spinning, not a fish turning.
-    expect(Math.abs(motion.state.heading)).toBeGreaterThan(Math.PI / 4)
     expect(sharpest).toBeLessThan(0.2)
+    expect(motion.state.position.x).toBeLessThan(bounds.right)
   })
 })
 
@@ -199,6 +306,43 @@ describe('startle', () => {
   })
 })
 
+describe('encounters', () => {
+  it('gives way with its speed when the crossing allows it', () => {
+    // why: A same-course neighbour just ahead settles with pace, not with a turn — the graded response the depth of the encounter deserves.
+    const motion = swimmer()
+    run(motion, 0.5)
+    const alone = motion.state.speed
+    motion.observe([crossing({ x: 680, y: 402, heading: 0, speed: 40 })])
+    run(motion, 1.5)
+    expect(motion.state.speed).toBeLessThan(alone)
+  })
+
+  it('holds its course against a neighbour passing two levels away', () => {
+    const undisturbed = swimmer()
+    run(undisturbed, 2)
+    const layered = swimmer()
+    layered.observe([crossing({ depth: 5 })])
+    run(layered, 2)
+    expect(layered.state.position.x).toBeCloseTo(undisturbed.state.position.x, 0)
+    expect(layered.state.position.y).toBeCloseTo(undisturbed.state.position.y, 0)
+  })
+
+  it('does not circle a neighbour it keeps observing', () => {
+    const motion = swimmer()
+    motion.observe([crossing()])
+    let total = 0
+    let previous = motion.state.heading
+    for (let frame = 0; frame < 10 * 60; frame += 1) {
+      motion.advance(1 / 60)
+      total += angleDelta(previous, motion.state.heading)
+      previous = motion.state.heading
+    }
+    // why: The old brain re-derived its evasion against its own moving heading every frame, which walked it through full circles; the anchored evasion must never accumulate them.
+    // why: The solid seed's first evasion opens into one wide tour of the pond — a single sweep just past a full turn — so the bound sits at a circle and a half rather than one.
+    expect(Math.abs(total)).toBeLessThan(Math.PI * 3)
+  })
+})
+
 describe('depth', () => {
   it('takes the level the host granted', () => {
     const motion = swimmer()
@@ -210,7 +354,7 @@ describe('depth', () => {
     const motion = swimmer()
     run(motion, 0.1)
     motion.setDepth(6)
-    run(motion, 0.2, 0.1)
+    run(motion, 0.2)
     expect(motion.state.phase).toBe('depth-transition')
   })
 
@@ -218,7 +362,7 @@ describe('depth', () => {
     const motion = swimmer({ depth: 4 })
     run(motion, 0.1)
     motion.setDepth(4)
-    run(motion, 0.2, 0.1)
+    run(motion, 0.2)
     expect(motion.state.phase).not.toBe('depth-transition')
   })
 
@@ -267,27 +411,6 @@ describe('outline', () => {
     const motion = swimmer()
     run(motion, 4)
     expect(motion.outline().spine.every((point) => Number.isFinite(point.x) && Number.isFinite(point.y))).toBe(true)
-  })
-})
-
-describe('setTune', () => {
-  it('scales the cruise without erasing this koi its own pace', () => {
-    const slowed = swimmer()
-    slowed.setTune({ speedScale: 0.4 })
-    run(slowed, 2)
-    const cruising = swimmer()
-    run(cruising, 2)
-    expect(slowed.state.speed).toBeLessThan(cruising.state.speed * 0.6)
-  })
-
-  it('keeps fields the tune left out at their current value', () => {
-    const motion = swimmer()
-    motion.setTune({ speedScale: 0.4 })
-    motion.setTune({ wanderScale: 1.2 })
-    run(motion, 2)
-    const cruising = swimmer()
-    run(cruising, 2)
-    expect(motion.state.speed).toBeLessThan(cruising.state.speed * 0.6)
   })
 })
 

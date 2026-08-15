@@ -12,7 +12,7 @@
  * at pointer cadence; the card's per-frame placement writes its transform
  * directly so sixty updates a second never enter the reactive graph.
  */
-import type { KoiProfile, KoiTune, PondEnvironment } from '@hyperfrontend/demo-koi-lib'
+import type { KoiProfile, PondEnvironment } from '@hyperfrontend/demo-koi-lib'
 import type { Koi } from '@hyperfrontend/demo-koi-lib/three'
 import type { KoiState } from './koi-motion'
 import type { GlRenderer, KoiStage } from './koi-stage'
@@ -47,17 +47,11 @@ export interface KoiRenderer {
    */
   setHovered(hovered: boolean): void
   /**
-   * Positions the hover card beside the koi.
+   * Positions the hover card beside the koi, clamped into the visible window.
    *
    * @param state - What the koi is doing right now.
    */
   placeCard(state: KoiState): void
-  /**
-   * Takes the visitor's playground settings onto the body and the swim.
-   *
-   * @param tune - The scales to apply over this koi's own build and trim.
-   */
-  applyTune(tune: KoiTune): void
   /** Releases the GPU resources the koi holds and disposes its tree. */
   dispose(): void
 }
@@ -127,13 +121,10 @@ export function createKoiRenderer(
 
     placeCard(state) {
       if (card !== null) {
-        card.style.transform = cardTransform(cardAnchor(state, latestPond))
+        // why: A tapped fish near a window edge must still show its whole card — on touch there is no hover to chase it with.
+        const size = { width: card.offsetWidth || 200, height: card.offsetHeight || 64 }
+        card.style.transform = cardTransform(cardAnchor(state, latestPond, size))
       }
-    },
-
-    applyTune(tune) {
-      // why: Solid mounted the stage synchronously at creation, so the only tune a null slot can drop is one arriving after disposal — where dropping is correct.
-      stage?.applyTune(tune)
     },
 
     dispose() {

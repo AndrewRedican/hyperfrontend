@@ -14,18 +14,28 @@ const CARD_AHEAD = 0.12
 /** How far above the nose the card sits, as a fraction of body length. */
 const CARD_ABOVE = 0.38
 
+/** The gap the card keeps from every edge of the visible window, in pixels. */
+const CARD_MARGIN = 8
+
 /**
- * Reads where the card belongs for a given frame.
+ * Reads where the card belongs for a given frame, clamped into the visible window.
  *
  * @param state - What the koi is doing right now.
  * @param pond - The world as the host most recently announced it.
+ * @param size - The card's rendered width and height, in pixels.
  * @returns The card's position, in frame pixels.
  */
-export function cardAnchor(state: KoiState, pond: PondEnvironment): Vec2 {
+export function cardAnchor(state: KoiState, pond: PondEnvironment, size: { width: number; height: number }): Vec2 {
   const head = state.spine.joints[0] ?? state.position
   // why: The card lives in the frame's own CSS space while the spine is in pond space, so the visible window's origin comes off first.
   // why: The card rides off the koi's shoulder rather than its nose, so it never covers the fish a visitor is pointing at.
-  return { x: head.x - pond.view.x + state.length * CARD_AHEAD, y: head.y - pond.view.y - state.length * CARD_ABOVE }
+  const x = head.x - pond.view.x + state.length * CARD_AHEAD
+  const y = head.y - pond.view.y - state.length * CARD_ABOVE
+  // why: A koi near a window edge must still show its whole card, so the anchor clamps to a small margin inside the view.
+  return {
+    x: Math.min(Math.max(x, CARD_MARGIN), Math.max(CARD_MARGIN, pond.view.width - size.width - CARD_MARGIN)),
+    y: Math.min(Math.max(y, CARD_MARGIN), Math.max(CARD_MARGIN, pond.view.height - size.height - CARD_MARGIN)),
+  }
 }
 
 /**
@@ -36,7 +46,7 @@ export function cardAnchor(state: KoiState, pond: PondEnvironment): Vec2 {
  *
  * @example Following a koi with its card
  * ```typescript
- * card.style.transform = cardTransform(cardAnchor(motion.state))
+ * card.style.transform = cardTransform(cardAnchor(motion.state, pond, { width: 200, height: 64 }))
  * ```
  */
 export function cardTransform(at: Vec2): string {
