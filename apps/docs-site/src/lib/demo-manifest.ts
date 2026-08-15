@@ -106,7 +106,7 @@ export const DEMO_MANIFEST: readonly DemoManifestEntry[] = [
     slug: 'koi-pond',
     title: 'Koi Pond',
     description:
-      'Seven koi, seven separate applications, seven frameworks — swimming in one continuous scene. Disturb the water and watch the shoal scatter across the boundary; hover a fish to see which framework renders it.',
+      'Eight koi, eight separate applications, eight frameworks — swimming in one continuous scene. Disturb the water and watch the shoal scatter across the boundary; hover a fish to see which framework renders it.',
     boundary: 'cross-site',
     featureUrl: koiPondFeatureUrl(),
     expandable: true,
