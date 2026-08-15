@@ -34,6 +34,8 @@ export interface SurfaceFrame {
   elapsedMs: number
   /** Whether the visitor asked for reduced motion. */
   reducedMotion: boolean
+  /** How much the water's edges fade in the card scene, 0 (none) to 1; only the GPU painter honours it. */
+  fade: number
   /** The rings currently spreading. */
   field: RippleField
 }

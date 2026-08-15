@@ -63,6 +63,36 @@ export function layStones(width: number, height: number): Stone[] {
   })
 }
 
+/** How wide the card scene's edge fade runs, in CSS pixels. */
+const EDGE_FADE_PX = 28
+
+/** The corner radius the card scene's fade follows, matching the gallery card's rounding. */
+const EDGE_FADE_RADIUS = 18
+
+/**
+ * Softens the bed's outermost edges toward half transparency.
+ *
+ * In the card scene the pond sits inside a small rounded frame, and a bed
+ * painted hard to the edge reads as a pasted rectangle. A blurred stroke
+ * knocked out of the paint along the rounded border lets the page glimmer
+ * through the last stretch of water instead.
+ *
+ * @param context - The floor context, already transformed to CSS pixels.
+ * @param width - Bed width in CSS pixels.
+ * @param height - Bed height in CSS pixels.
+ */
+function fadeEdges(context: CanvasRenderingContext2D, width: number, height: number): void {
+  context.save()
+  context.globalCompositeOperation = 'destination-out'
+  context.filter = `blur(${EDGE_FADE_PX / 2}px)`
+  context.strokeStyle = 'rgba(0, 0, 0, 0.5)'
+  context.lineWidth = EDGE_FADE_PX * 2
+  context.beginPath()
+  context.roundRect(0, 0, width, height, EDGE_FADE_RADIUS)
+  context.stroke()
+  context.restore()
+}
+
 /**
  * Paints the pond bed onto a canvas.
  *
@@ -71,8 +101,16 @@ export function layStones(width: number, height: number): Stone[] {
  * @param height - Bed height in CSS pixels.
  * @param pixelRatio - Device pixel ratio to render at.
  * @param alpha - How opaque the bed paints, 0 to 1; below 1 the page beneath the pond stays perceptible.
+ * @param fadeCard - Whether to soften the outermost edges for the card scene.
  */
-export function paintFloor(canvas: HTMLCanvasElement, width: number, height: number, pixelRatio: number, alpha = 1): void {
+export function paintFloor(
+  canvas: HTMLCanvasElement,
+  width: number,
+  height: number,
+  pixelRatio: number,
+  alpha = 1,
+  fadeCard = false
+): void {
   const context = canvas.getContext('2d')
   if (context === null || width === 0 || height === 0) {
     return
@@ -129,4 +167,8 @@ export function paintFloor(canvas: HTMLCanvasElement, width: number, height: num
   vignette.addColorStop(1, 'rgba(2, 10, 10, 0.55)')
   context.fillStyle = vignette
   context.fillRect(0, 0, width, height)
+
+  if (fadeCard) {
+    fadeEdges(context, width, height)
+  }
 }

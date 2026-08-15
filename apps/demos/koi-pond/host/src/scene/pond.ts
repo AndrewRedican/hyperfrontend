@@ -10,7 +10,6 @@
 import type { KoiFramework, KoiOutline, Vec2 } from '@hyperfrontend/demo-koi-lib'
 import type { PondScene, SceneScale } from '../feature/wire-contract'
 import { KOI_FRAMEWORKS, describePond, mayRipple, pondPoint, pondWindow } from '@hyperfrontend/demo-koi-lib'
-import { createControls } from './controls'
 import { createDepthDirector } from './depth-director'
 import { createFrameLoop } from './raf-loop'
 import { createRelay } from './relay'
@@ -18,6 +17,7 @@ import { createRoster } from './roster'
 import { createSequenceTracker } from './sequence'
 import { createStage, setCurtain, setLayerDepth } from './stage'
 import { createSurfacePainter } from './surface-canvas'
+import { createWaterPainter } from './water-gl'
 import { acceptsRipple, addRipple, advanceRipples, createRippleField } from './ripples'
 import { fishHomeUrl, identityFor, openShoal } from './koi-sessions'
 import { paintFloor } from './floor'
@@ -33,6 +33,19 @@ const CURTAIN_DEADLINE_MS = 5000
 
 /** How opaque the pond's own paint is when it runs as a layer over a host page. */
 const OVERLAY_FLOOR_ALPHA = 0.7
+
+/**
+ * How often the pond repeats its shoal report while nothing changes, in milliseconds.
+ *
+ * An undisturbed pond is otherwise silent for as long as the visitor lets it
+ * be, and an embedder watching for signs of life reads that silence as an
+ * outage. The roll call is the pond's liveness, spoken through the same
+ * contract event a real change would use.
+ */
+const SHOAL_PULSE_MS = 10_000
+
+/** How much wider a fingertip's hit-test is than a cursor's. */
+const TOUCH_SLACK_SCALE = 2.6
 
 /** What the pond tells whatever mounted it. */
 export interface PondHooks {
@@ -65,7 +78,8 @@ export interface PondHooks {
  */
 export function createPond(root: HTMLElement, hooks: PondHooks): PondScene {
   const stage = createStage(root)
-  const surface = createSurfacePainter(stage.surface)
+  // why: The GPU water is preferred and the 2D painter is the fallback — one page already carries seven fish contexts, and this eighth is the only one the host ever asks for.
+  const surface = createWaterPainter(stage.surface) ?? createSurfacePainter(stage.surface)
   const relay = createRelay()
   const director = createDepthDirector(Date.now())
   const sequence = createSequenceTracker()
@@ -76,8 +90,11 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondScene {
   let field = createRippleField()
   let hovered: KoiFramework | null = null
   let lastRelayAt = 0
+  let lastPulseAt = 0
   let opened = 0
   let scale: SceneScale = 'full'
+  let rootBounds = root.getBoundingClientRect()
+  const pointer = { x: 0, y: 0, fresh: false }
   const inspected = new Set<KoiFramework>()
 
   const sessions = openShoal(stage.layers)
@@ -118,8 +135,16 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondScene {
   const remeasure = (): void => {
     pond = { ...pond, view: pondWindow(pond, root.clientWidth, root.clientHeight), reducedMotion: motionQuery.matches }
     root.dataset['scene'] = scale
-    // why: Presented full over a host page the pond is a translucent layer — the page must stay perceptible beneath it; in a card it paints solid so the small window stays legible.
-    paintFloor(stage.floor, pond.view.width, pond.view.height, window.devicePixelRatio, scale === 'full' ? OVERLAY_FLOOR_ALPHA : 1)
+    rootBounds = root.getBoundingClientRect()
+    // why: Presented full over a host page the pond is a translucent layer — the page must stay perceptible beneath it; in a card it paints solid but lets its rounded edges thin toward the page, so the water reads as sitting in the card rather than pasted onto it.
+    paintFloor(
+      stage.floor,
+      pond.view.width,
+      pond.view.height,
+      window.devicePixelRatio,
+      scale === 'full' ? OVERLAY_FLOOR_ALPHA : 1,
+      scale === 'card'
+    )
     for (const session of sessions) {
       session.shell.send('pond', pond)
     }
@@ -132,8 +157,8 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondScene {
    * @returns The point in pond space, view offset included.
    */
   const pondCoords = (event: PointerEvent): Vec2 => {
-    const bounds = root.getBoundingClientRect()
-    return { x: event.clientX - bounds.left + pond.view.x, y: event.clientY - bounds.top + pond.view.y }
+    // why: The rect is cached against resize — the pond root fills its frame, and measuring layout on every pointer move is the kind of per-event cost that adds up under seven compositing layers.
+    return { x: event.clientX - rootBounds.left + pond.view.x, y: event.clientY - rootBounds.top + pond.view.y }
   }
 
   /**
@@ -229,19 +254,24 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondScene {
     remeasure()
   })
 
-  // why: The host owns the only pointer stream in the pond — every koi frame is pointer-events:none, so this listener sees presses over the whole scene.
+  // why: The host owns the only pointer stream in the pond — every koi frame is pointer-events:none, so this listener sees presses over the whole scene. Moves only record; the frame loop runs one hit-test per frame however fast the pointer reports.
   root.addEventListener('pointermove', (event: PointerEvent) => {
-    setHover(relay.pick(pondCoords(event), pond, Date.now()))
+    pointer.x = event.clientX
+    pointer.y = event.clientY
+    pointer.fresh = true
   })
 
   root.addEventListener('pointerleave', () => {
+    pointer.fresh = false
     setHover(null)
   })
 
   root.addEventListener('pointerdown', (event: PointerEvent) => {
     const at = pondCoords(event)
-    const hit = relay.pick(at, pond, Date.now())
-    // why: A press lands on a fish or on the water, never both — clicking a koi holds it for inspection, clicking it again frees it, and only open water takes a strike.
+    // why: A fingertip is blunter than a cursor and gets no hover pass first, so a tap hit-tests with widened slack — precision must never be the price of selecting a fish on a phone.
+    const touch = event.pointerType === 'touch'
+    const hit = relay.pick(at, pond, Date.now(), touch ? TOUCH_SLACK_SCALE : 1)
+    // why: A press lands on a fish or on the water, never both — pressing a koi holds it for inspection, pressing it again frees it, and only open water takes a strike.
     if (hit !== null) {
       const holding = !inspected.has(hit)
       if (holding) {
@@ -254,14 +284,39 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondScene {
           session.shell.send('pause', { paused: holding })
         }
       }
+      // why: Touch has no hover stream, so the tap itself is what reveals the identity card; a second tap on open water clears it.
+      if (touch) {
+        setHover(holding ? hit : null)
+      }
       return
+    }
+    if (touch) {
+      setHover(null)
     }
     strike(at)
   })
 
+  // why: The paint frame is one long-lived object the loop rewrites — a fresh literal per frame is sixty needless allocations a second on the hottest path the host owns.
+  const surfaceFrame = {
+    width: 0,
+    height: 0,
+    view: { x: 0, y: 0 },
+    pixelRatio: 1,
+    fishLength: 0,
+    elapsedMs: 0,
+    reducedMotion: false,
+    fade: 0,
+    field,
+  }
+
   const loop = createFrameLoop(({ dt, elapsedMs }) => {
     const now = Date.now()
     field = advanceRipples(field, dt)
+
+    if (pointer.fresh) {
+      pointer.fresh = false
+      setHover(relay.pick({ x: pointer.x - rootBounds.left + pond.view.x, y: pointer.y - rootBounds.top + pond.view.y }, pond, now))
+    }
 
     for (const framework of director.advance(now)) {
       setLayerDepth(stage, framework, director.settledLevel(framework))
@@ -279,16 +334,23 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondScene {
       }
     }
 
-    surface.paint({
-      width: pond.view.width,
-      height: pond.view.height,
-      view: { x: pond.view.x, y: pond.view.y },
-      pixelRatio: window.devicePixelRatio,
-      fishLength: pond.fishLength,
-      elapsedMs,
-      reducedMotion: pond.reducedMotion,
-      field,
-    })
+    // why: A calm pond would otherwise say nothing for as long as the visitor lets it be calm, and an embedder watching for life reads thirty silent seconds as an outage — the roll call keeps the liveness flowing through the contract itself.
+    if (elapsedMs - lastPulseAt >= SHOAL_PULSE_MS) {
+      lastPulseAt = elapsedMs
+      hooks.onShoal(opened, sessions.length)
+    }
+
+    surfaceFrame.width = pond.view.width
+    surfaceFrame.height = pond.view.height
+    surfaceFrame.view.x = pond.view.x
+    surfaceFrame.view.y = pond.view.y
+    surfaceFrame.pixelRatio = window.devicePixelRatio
+    surfaceFrame.fishLength = pond.fishLength
+    surfaceFrame.elapsedMs = elapsedMs
+    surfaceFrame.reducedMotion = pond.reducedMotion
+    surfaceFrame.fade = scale === 'card' ? 1 : 0
+    surfaceFrame.field = field
+    surface.paint(surfaceFrame)
   })
 
   // why: Seven iframes on their own compositing layers is exactly where a loop running against a hidden tab costs a visitor real battery.
@@ -312,14 +374,6 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondScene {
   for (const framework of KOI_FRAMEWORKS) {
     roster.setConnected(framework, false)
   }
-
-  createControls(root, {
-    onTune(tune) {
-      for (const session of sessions) {
-        session.shell.send('tune', tune)
-      }
-    },
-  })
 
   remeasure()
   loop.start()
