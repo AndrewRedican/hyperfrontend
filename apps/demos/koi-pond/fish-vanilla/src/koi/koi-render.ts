@@ -17,7 +17,7 @@
  * else: the swimming brain stays authoritative for where the fish *is*, and
  * this module only makes the koi's body express it.
  */
-import type { KoiFrameBox, KoiProfile, PondEnvironment } from '@hyperfrontend/demo-koi-lib'
+import type { KoiCardLink, KoiFrameBox, KoiProfile, PondEnvironment } from '@hyperfrontend/demo-koi-lib'
 import type { Koi, PondView } from '@hyperfrontend/demo-koi-lib/three'
 import type { WebGLRenderer } from 'three'
 import type { KoiState } from './koi-motion'
@@ -60,6 +60,15 @@ export interface KoiRenderer {
    * @param state - What the koi is doing right now.
    */
   placeCard(state: KoiState): void
+  /**
+   * Where the card's URL line currently sits, in pond space.
+   *
+   * This frame is pointer-transparent, so the link text drawn here can never be
+   * clicked directly; the host lays a real anchor over the reported rectangle.
+   *
+   * @returns The rectangle, or `null` while the card is hidden.
+   */
+  cardLinkRect(): KoiCardLink | null
   /** Releases the GPU resources the koi holds. */
   dispose(): void
 }
@@ -96,15 +105,17 @@ export function createKoiRenderer(
   const card = document.createElement('div')
   card.className = 'koi-card'
   card.hidden = true
-  card.innerHTML = `<span class="koi-card-name"></span><span class="koi-card-url"></span>`
+  // why: The URL is a real anchor for semantics and link styling, but this frame never receives the pointer — the host reads its rectangle off the outline report and floats the anchor that actually opens it.
+  card.innerHTML = `<span class="koi-card-name"></span><a class="koi-card-url" target="_blank" rel="noopener noreferrer"></a>`
   const cardName = card.querySelector<HTMLElement>('.koi-card-name')
-  const cardUrl = card.querySelector<HTMLElement>('.koi-card-url')
+  const cardUrl = card.querySelector<HTMLAnchorElement>('.koi-card-url')
   if (cardName !== null) {
     cardName.textContent = profile.label
     cardName.style.color = palette.accent
   }
   if (cardUrl !== null) {
     cardUrl.textContent = url
+    cardUrl.href = url
   }
 
   root.append(canvas, card)
@@ -148,6 +159,8 @@ export function createKoiRenderer(
           canvas.style.display = 'none'
         }
         lastHeading = state.heading
+        // why: The speed memory must track through skipped frames too, or re-entering the view lands the whole offscreen speed change as a single-frame acceleration spike that convulses the body.
+        lastSpeed = state.speed / bodyPx
         return
       }
       if (!shown) {
@@ -209,6 +222,15 @@ export function createKoiRenderer(
       const clampedX = Math.min(Math.max(x, 8), Math.max(8, current.view.width - width - 8))
       const clampedY = Math.min(Math.max(y, 8), Math.max(8, current.view.height - height - 8))
       card.style.transform = `translate(${clampedX.toFixed(1)}px, ${clampedY.toFixed(1)}px)`
+    },
+
+    cardLinkRect() {
+      if (card.hidden || cardUrl === null) {
+        return null
+      }
+      // why: The frame fills the visible window exactly, so client coordinates become pond coordinates by adding the window's origin back on.
+      const rect = cardUrl.getBoundingClientRect()
+      return { x: rect.left + current.view.x, y: rect.top + current.view.y, width: rect.width, height: rect.height }
     },
 
     dispose() {

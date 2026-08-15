@@ -96,9 +96,11 @@ export function createKoiRuntime(root: HTMLElement, buildRenderer: KoiRendererFa
 
     if (timestamp - lastOutlineAt >= OUTLINE_INTERVAL_MS) {
       lastOutlineAt = timestamp
-      const outline = motion.outline()
       // why: The host dead-reckons outlines forward by reported speed, so a held koi must report itself stationary or its hover target slides away from its body.
-      emit('outline', inspected ? { ...outline, speed: 0 } : outline)
+      const outline = inspected ? { ...motion.outline(), speed: 0 } : motion.outline()
+      // why: This frame is pointer-transparent, so the card's link can only be opened by the host — the outline carries where the URL text sits whenever the card is showing.
+      const card = renderer.cardLinkRect()
+      emit('outline', card === null ? outline : { ...outline, card })
       const requested = motion.takeDepthRequest()
       if (requested !== null) {
         emit('depth-request', { level: requested })
@@ -197,6 +199,9 @@ export function createKoiRuntime(root: HTMLElement, buildRenderer: KoiRendererFa
     },
     setInspected(next) {
       inspected = next
+    },
+    placeAt(point) {
+      motion.place(point)
     },
     dispose,
     connect(next) {
