@@ -31,6 +31,7 @@ import {
   describeKoiCard,
   koiFrameBox,
   koiSeed,
+  koiSourceUrl,
   pxPerUnit,
   swimDepth,
   wrapAngle,
@@ -68,6 +69,7 @@ const canvasRef = useTemplateRef<HTMLCanvasElement>('canvas')
 const cardRef = useTemplateRef<HTMLDivElement>('card')
 const cardUrlRef = useTemplateRef<HTMLAnchorElement>('cardUrl')
 const cardSiteRef = useTemplateRef<HTMLAnchorElement>('cardSite')
+const cardSourceRef = useTemplateRef<HTMLAnchorElement>('cardSource')
 
 /** Whether a visitor is holding this koi, which is what shows its identity card. */
 const selected = ref(false)
@@ -77,6 +79,9 @@ const rows = ref<KoiCardText | null>(null)
 
 /** The official website of the framework driving this app, linked from the card. */
 const siteUrl = FRAMEWORK_SITES[props.profile.framework]
+
+/** Where this very app's implementation lives in the repository, linked from the card. */
+const sourceUrl = koiSourceUrl(props.profile.framework)
 
 /** Whether the host's pointer is over this koi; it only shades the silhouette, so it never touches the template. */
 let hovered = false
@@ -236,10 +241,11 @@ onMounted(() => {
     cardRects() {
       const cardUrl = cardUrlRef.value
       const cardSite = cardSiteRef.value
-      if (!selected.value || cardUrl === null || cardSite === null) {
+      const cardSource = cardSourceRef.value
+      if (!selected.value || cardUrl === null || cardSite === null || cardSource === null) {
         return null
       }
-      return { frame: rectOf(card), app: rectOf(cardUrl), site: rectOf(cardSite) }
+      return { frame: rectOf(card), app: rectOf(cardUrl), site: rectOf(cardSite), source: rectOf(cardSource) }
     },
   })
 })
@@ -264,5 +270,7 @@ onUnmounted(() => {
     <span class="koi-card-line koi-card-memory">{{ rows?.memory }}</span>
     <span class="koi-card-line koi-card-event" :hidden="!rows || rows.event === null">{{ rows?.event }}</span>
     <a ref="cardSite" class="koi-card-site" :href="siteUrl" target="_blank" rel="noopener noreferrer">{{ profile.label }} website ↗</a>
+    <!-- why: The demo's claim is checkable — the card links straight to this very app's implementation in the repository. -->
+    <a ref="cardSource" class="koi-card-source" :href="sourceUrl" target="_blank" rel="noopener noreferrer">App source ↗</a>
   </div>
 </template>
