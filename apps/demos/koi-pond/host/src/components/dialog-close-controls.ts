@@ -1,8 +1,9 @@
 /**
  * The pond's dialog chrome.
  *
- * A close control only makes sense when a host has announced that the pond is
- * being presented as a dialog. The app never guesses that from URLs or frame
+ * The visible ✕ only makes sense when a host has announced that the pond is
+ * being presented as a dialog — the Escape path next door serves the embedded
+ * overlay as well. The app never guesses its presentation from URLs or frame
  * ancestry — it renders the ✕ when, and only when, a presentation says dialog,
  * and it *requests* the close rather than performing it. The host owns the
  * presentation, so the host does the closing.
@@ -34,7 +35,12 @@ export function mountDialogCloseControls(root: HTMLElement, ui: FeatureUi): () =
   hint.textContent = 'Esc to close'
   hint.hidden = true
 
-  button.addEventListener('click', () => {
+  // why: The ✕ floats over the water — its press must read as a close, never also strike the pond behind it.
+  button.addEventListener('pointerdown', (event) => {
+    event.stopPropagation()
+  })
+  button.addEventListener('click', (event) => {
+    event.stopPropagation()
     ui.requestClose()
   })
 

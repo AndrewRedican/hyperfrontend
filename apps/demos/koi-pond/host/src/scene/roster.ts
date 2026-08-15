@@ -14,6 +14,9 @@
 import type { KoiFramework } from '@hyperfrontend/demo-koi-lib'
 import { KOI_FRAMEWORKS, koiLabel } from '@hyperfrontend/demo-koi-lib'
 
+/** Where the pond's source lives, linked from the roster for anyone who wants to read the trick. */
+const SOURCE_URL = 'https://github.com/AndrewRedican/hyperfrontend/tree/main/apps/demos/koi-pond'
+
 /** The accessible roster of koi. */
 export interface KoiRoster {
   /** The list element, already in the document. */
@@ -56,6 +59,13 @@ export function createRoster(
   section.className = 'koi-roster'
   section.setAttribute('aria-label', 'Koi in this pond')
 
+  // why: The roster is chrome floating over the water — a press on the panel must read the panel, never strike the pond showing behind it.
+  const contain = (event: Event): void => {
+    event.stopPropagation()
+  }
+  section.addEventListener('pointerdown', contain)
+  section.addEventListener('click', contain)
+
   const heading = document.createElement('h2')
   heading.className = 'koi-roster-heading'
   heading.textContent = 'Koi in this pond'
@@ -83,6 +93,15 @@ export function createRoster(
     list.append(row)
     rows.set(framework, row)
   }
+
+  // note: The whole demo exists to be read — the roster carries the one link out to the code that builds it.
+  const source = document.createElement('a')
+  source.className = 'koi-roster-source'
+  source.href = SOURCE_URL
+  source.target = '_blank'
+  source.rel = 'noopener noreferrer'
+  source.textContent = 'Source on GitHub ↗'
+  section.append(source)
 
   root.append(section)
 

@@ -4,7 +4,10 @@
  * The pond is a host to seven koi and a hostee to whatever gallery mounts it,
  * and this is where the second of those is wired. The gallery hears how much of
  * the shoal is connected and when a disturbance sequence has unwound; it can
- * ask for a card-sized scene or strike the water without a pointer.
+ * ask for a card-sized scene or strike the water without a pointer. When a
+ * visitor asks to leave — the dialog ✕ or the Escape key — the pond emits a
+ * close-request; the gallery owns the presentation and answers with set-scene,
+ * which re-arms the next request.
  *
  * Opened directly in a tab nothing announces anything: the SDK creates no
  * channel, `send` is a no-op, and the pond simply runs as a standalone scene.
@@ -15,6 +18,8 @@ import { createFeature } from '@hyperfrontend/features/hostee'
 import contract from '../koi-pond.contract'
 import { createPondReporter, wirePondContract } from './feature/wire-contract'
 import { mountDialogCloseControls } from './components/dialog-close-controls'
+import { mountInteractionsToggle } from './components/interactions-toggle'
+import { wireEscapeClose } from './components/escape-close'
 import { createPond } from './scene/pond'
 import { featureUi } from './state/feature-ui'
 
@@ -52,3 +57,15 @@ wirePondContract(feature, scene)
 // why: The dialog chrome keys off the host's presentation announcements — never off URLs or frame ancestry.
 featureUi.attach(feature)
 mountDialogCloseControls(root, featureUi)
+
+// why: Focus lives in this document once a visitor clicks the pond, so the host page never hears the key itself — the pond relays it as a close-request.
+wireEscapeClose(window, featureUi, () => scene.releaseHeld())
+
+// why: The gallery answers a close-request with set-scene rather than a fresh presentation — that acknowledgement is what re-arms the next request.
+feature.on('set-scene', () => {
+  featureUi.rearmClose()
+})
+
+mountInteractionsToggle(root, (on) => {
+  scene.setInteractions(on)
+})

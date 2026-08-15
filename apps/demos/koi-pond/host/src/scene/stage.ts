@@ -1,6 +1,7 @@
 /**
  * The pond's DOM: the bed underneath, one host-owned layer per koi, the surface
- * water above them all, and the curtain that hides the staggered reveal.
+ * water above them all, the diagnostics canvas the interaction overlay draws
+ * on above the surface, and the curtain that hides the staggered reveal.
  *
  * The host builds the koi containers itself rather than letting the SDK place
  * frames, because owning the containers is what lets it own the z-order — and
@@ -19,6 +20,8 @@ export interface PondStage {
   floor: HTMLCanvasElement
   /** The moving water, painted every frame above every koi. */
   surface: HTMLCanvasElement
+  /** The diagnostics layer the interaction overlay draws on, above the water. */
+  interactions: HTMLCanvasElement
   /** The cover held over the scene until every koi has connected. */
   curtain: HTMLElement
   /** One host-owned container per koi, keyed by framework slug. */
@@ -57,13 +60,19 @@ export function createStage(root: HTMLElement): PondStage {
   surface.setAttribute('aria-hidden', 'true')
   root.append(surface)
 
+  // why: The overlay annotates what is under the water, so it paints above the surface — a trace dimmed by caustics would defeat the point of asking for it.
+  const interactions = document.createElement('canvas')
+  interactions.id = 'interactions'
+  interactions.setAttribute('aria-hidden', 'true')
+  root.append(interactions)
+
   const curtain = document.createElement('div')
   curtain.id = 'curtain'
   curtain.dataset['open'] = 'false'
   curtain.innerHTML = '<p class="curtain-note">the pond is settling</p>'
   root.append(curtain)
 
-  return { root, floor, surface, curtain, layers }
+  return { root, floor, surface, interactions, curtain, layers }
 }
 
 /**

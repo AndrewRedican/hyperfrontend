@@ -2,7 +2,7 @@ import { defineConfig } from '@hyperfrontend/features'
 
 export default defineConfig({
   name: '@hyperfrontend/demo-koi-pond',
-  version: '0.1.0',
+  version: '0.2.0',
   contract: './koi-pond.contract.ts',
   url: 'https://demo-koi-pond-production.up.railway.app/',
   protocol: 'v1',
