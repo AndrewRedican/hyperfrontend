@@ -19,6 +19,7 @@
  */
 import type {
   Disturbance,
+  KoiIntent,
   KoiOutline,
   KoiPhase,
   KoiProfile,
@@ -28,6 +29,8 @@ import type {
   Vec2,
 } from '@hyperfrontend/demo-koi-lib'
 import {
+  ENCOUNTER_CLEARANCE,
+  ENCOUNTER_HORIZON_S,
   SHORE_ABSENT_S,
   advanceSpine,
   boundaryPressure,
@@ -139,6 +142,9 @@ const PLACE_FOLLOW_S = 0.05
 
 /** How long a released koi drifts before its next ordinary turn may start, in seconds. */
 const PLACE_SETTLE_S = 2
+
+/** How long a decided depth pass stays readable in the intent report, in seconds — the raw decision is a single tick, but the grant round-trip and the roll it starts deserve a visible story. */
+const DEPTH_INTENT_HOLD_S = 3
 
 /**
  * Maps a normalised trait onto a band.
@@ -303,6 +309,11 @@ export function createKoiMotion(options: KoiMotionOptions): KoiMotion {
   let turnDraws = 0
   let turnVelocity = 0
 
+  // why: The intent report replays decisions the steering ladder otherwise discards — the waypoint behind `course`, the decided side of a depth pass, and which family the current desire came from.
+  let travelTarget: Vec2 | null = null
+  let depthIntent: { direction: 'above' | 'below'; untilS: number } | null = null
+  let steer: { heading: number; kind: 'travel' | 'avoid' } = { heading: options.heading, kind: 'travel' }
+
   const bodyLength = (): number => pond.fishLength * build.lengthScale * depthScale(depth)
   const bodyGirth = (): number => bodyLength() * build.girthRatio
   let speed = pond.fishLength * lerp(traits.cruiseSpeed, CRUISE_BL_S)
@@ -344,6 +355,7 @@ export function createKoiMotion(options: KoiMotionOptions): KoiMotion {
       }
       if (resolution.depth !== null) {
         depthRequest = resolution.depth
+        depthIntent = { direction: resolution.action === 'pass-below' ? 'below' : 'above', untilS: elapsed + DEPTH_INTENT_HOLD_S }
         continue
       }
       if (resolution.action === 'slow') {
@@ -358,28 +370,33 @@ export function createKoiMotion(options: KoiMotionOptions): KoiMotion {
     }
 
     if (shore === 'in') {
-      course = headingTo(position, itinerary.current(pond, position, elapsed).point)
+      const waypoint = itinerary.current(pond, position, elapsed).point
+      course = headingTo(position, waypoint)
+      // why: Captured by value — the itinerary reuses its returned object, and the report must not read a mutated leg later.
+      travelTarget = { x: waypoint.x, y: waypoint.y }
     }
   }
 
   /**
-   * The heading this koi wants, and how hard it is committed to it.
+   * The heading this koi wants, how hard it is committed to it, and which
+   * decision family asked for it — `avoid` for every collision-avoidance pull,
+   * `travel` for ordinary progress.
    *
-   * @returns The desired heading and the turn gain to reach it with.
+   * @returns The desired heading, the turn gain to reach it with, and its family.
    */
-  const desire = (): { heading: number; gain: number } => {
+  const desire = (): { heading: number; gain: number; kind: 'travel' | 'avoid' } => {
     if (threat !== null && elapsed < fleeingUntilS) {
-      return { heading: headingAwayFrom(position, threat, heading), gain: ESCAPE_TURN_GAIN }
+      return { heading: headingAwayFrom(position, threat, heading), gain: ESCAPE_TURN_GAIN, kind: 'avoid' }
     }
 
     // why: A koi that chose to slip out holds its course — the whole point of the slip is that the correction was ignored.
     if (shore === 'leaving' || shore === 'away') {
-      return { heading, gain: GLIDE_GAIN }
+      return { heading, gain: GLIDE_GAIN, kind: 'travel' }
     }
 
     if (shore === 'returning') {
       // why: The itinerary's course predates the absence; until the koi is back inside, the only sensible pull is open water.
-      return { heading: headingTo(position, pondCentre(pond)), gain: 0.5 }
+      return { heading: headingTo(position, pondCentre(pond)), gain: 0.5, kind: 'travel' }
     }
 
     const edge = boundaryPressure(pond, position, heading)
@@ -389,7 +406,7 @@ export function createKoiMotion(options: KoiMotionOptions): KoiMotion {
       crossings += 1
       if (slipsAway(seed, crossings)) {
         shore = 'leaving'
-        return { heading, gain: GLIDE_GAIN }
+        return { heading, gain: GLIDE_GAIN, kind: 'travel' }
       }
       // why: The itinerary must not keep pulling at the wall the koi is being pushed off — the next leg starts from open water.
       itinerary.abandon()
@@ -399,12 +416,12 @@ export function createKoiMotion(options: KoiMotionOptions): KoiMotion {
     if (boundaryEngaged) {
       const caution = 0.4 + traits.directionalCaution * 0.6
       cooldownUntilS = Math.max(cooldownUntilS, elapsed + 1)
-      return { heading: Math.atan2(edge.inward.y, edge.inward.x), gain: 1 + edge.urgency * caution * 1.4 }
+      return { heading: Math.atan2(edge.inward.y, edge.inward.x), gain: 1 + edge.urgency * caution * 1.4, kind: 'avoid' }
     }
 
     if (evasionHeading !== null) {
       cooldownUntilS = Math.max(cooldownUntilS, elapsed + 1)
-      return { heading: evasionHeading, gain: 1 + evasionUrgency }
+      return { heading: evasionHeading, gain: 1 + evasionUrgency, kind: 'avoid' }
     }
 
     const damping = pond.reducedMotion ? REDUCED_MOTION_DAMPING : 1
@@ -419,15 +436,15 @@ export function createKoiMotion(options: KoiMotionOptions): KoiMotion {
     if (turnUntilS !== 0) {
       if (elapsed >= turnUntilS || Math.abs(error) < 0.06) {
         finish()
-        return { heading: course + ripple, gain: GLIDE_GAIN }
+        return { heading: course + ripple, gain: GLIDE_GAIN, kind: 'travel' }
       }
-      return { heading: course, gain: 1 }
+      return { heading: course, gain: 1, kind: 'travel' }
     }
     if (Math.abs(error) > TURN_TRIGGER && elapsed > cooldownUntilS) {
       turnUntilS = elapsed + Math.min(TURN_MAX_S, Math.abs(error) / lerp(traits.turnResponsiveness, TURN_RATE) + 0.3)
-      return { heading: course, gain: 1 }
+      return { heading: course, gain: 1, kind: 'travel' }
     }
-    return { heading: course + ripple, gain: GLIDE_GAIN }
+    return { heading: course + ripple, gain: GLIDE_GAIN, kind: 'travel' }
   }
 
   /**
@@ -447,6 +464,38 @@ export function createKoiMotion(options: KoiMotionOptions): KoiMotion {
     }
     // why: The trait sets this koi's own cruise; the pace schedule loafs and hurries it in bounded, exclusive events; an encounter's give-way scales ride on top.
     return Math.min(cap, pond.fishLength * lerp(traits.cruiseSpeed, CRUISE_BL_S) * pace.multiplier(elapsed) * paceScale)
+  }
+
+  /**
+   * The koi's current decision, told as the host's overlay wants it: a family,
+   * a steering target, and how far ahead this koi is anticipating.
+   *
+   * An avoidance projects along the desired escape heading — the trajectory the
+   * manoeuvre decided on — while ordinary travel points at the real itinerary
+   * waypoint. A decided depth pass is vertical, so it carries a direction
+   * instead of a point; it stays readable while the roll it started plays out,
+   * unless a horizontal avoidance takes over the story.
+   *
+   * @returns The intent report.
+   */
+  const intent = (): KoiIntent => {
+    // how: The self-sized reading of the pairwise encounter window — how far this koi closes in one anticipation horizon, plus the clearance it keeps for itself.
+    const reachPx = speed * ENCOUNTER_HORIZON_S + bodyLength() * ENCOUNTER_CLEARANCE + bodyGirth() * 2
+    if (steer.kind === 'avoid') {
+      return {
+        kind: 'avoid',
+        target: { x: position.x + Math.cos(steer.heading) * reachPx, y: position.y + Math.sin(steer.heading) * reachPx },
+        reachPx,
+      }
+    }
+    if (depthIntent !== null && elapsed < depthIntent.untilS) {
+      return { kind: 'depth-change', target: null, direction: depthIntent.direction, reachPx }
+    }
+    const target =
+      shore === 'in' && travelTarget !== null
+        ? { x: travelTarget.x, y: travelTarget.y }
+        : { x: position.x + Math.cos(heading) * reachPx, y: position.y + Math.sin(heading) * reachPx }
+    return { kind: 'travel', target, reachPx }
   }
 
   return {
@@ -475,6 +524,7 @@ export function createKoiMotion(options: KoiMotionOptions): KoiMotion {
       }
 
       const wanted = desire()
+      steer = wanted
       const error = wrapAngle(wanted.heading - heading)
       // why: Speed taxes the helm — a koi past cruise pace physically cannot carve a tight arc, so a bolting fish sweeps through a wide curve instead of pivoting at full speed.
       const overCruise = Math.max(0, speed / pond.fishLength - CRUISE_BL_S.max)
@@ -565,6 +615,9 @@ export function createKoiMotion(options: KoiMotionOptions): KoiMotion {
       evasionUrgency = 0
       boundaryEngaged = false
       turnUntilS = 0
+      travelTarget = null
+      depthIntent = null
+      steer = { heading, kind: 'travel' }
       shore = 'in'
       itinerary.abandon()
       course = heading
@@ -602,6 +655,7 @@ export function createKoiMotion(options: KoiMotionOptions): KoiMotion {
         speed,
         depth,
         phase,
+        intent: intent(),
       }
     },
 

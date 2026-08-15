@@ -204,6 +204,19 @@ describe('createKoiRuntime', () => {
     expect((<{ frame: object }>lastOutline()['card']).frame).toEqual({ x: 300, y: 180, width: 220, height: 96 })
   })
 
+  it('carries its steering intent on the outline until a hold suppresses it', () => {
+    const runtime = createKoiRuntime(root, build)
+    const sent = emissions(runtime)
+    const lastOutline = (): Record<string, unknown> =>
+      <Record<string, unknown>>sent.filter((action) => action.type === 'outline').at(-1)?.data
+    raf.tick(1000)
+    expect(lastOutline()['intent']).toBeDefined()
+    runtime.setInspected(true)
+    raf.tick(1101)
+    // why: A held koi is going nowhere — reporting its stale destination would draw an overlay trace for a decision that no longer stands.
+    expect(lastOutline()['intent']).toBeUndefined()
+  })
+
   it('holds the card open through the hold and tears the inspector down on release', () => {
     vi.useFakeTimers()
     try {
