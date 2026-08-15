@@ -1,7 +1,7 @@
 /**
  * Host integration for the "@hyperfrontend/demo-koi-pond" feature.
  *
- * The pond is a host to seven koi and a hostee to whatever gallery mounts it,
+ * The pond is a host to eight koi and a hostee to whatever gallery mounts it,
  * and this is where the second of those is wired. The gallery hears how much of
  * the shoal is connected and when a disturbance sequence has unwound; it can
  * ask for a card-sized scene or strike the water without a pointer. When a

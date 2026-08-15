@@ -3,7 +3,7 @@
  *
  * Every koi reports its own outline and knows nothing about the others. This is
  * where those reports are collected and turned back into each fish's local
- * world — the host is the only thing in the pond that can see all seven, and
+ * world — the host is the only thing in the pond that can see the whole shoal, and
  * relaying a filtered view is how it coordinates them without ever telling one
  * fish what another should do.
  *
@@ -167,7 +167,7 @@ export function createRelay(): Relay {
           continue
         }
         const outline = current(otherEntry, now)
-        // how: A box-overlap rejection is the broad phase. At seven bodies a spatial index costs more to maintain than the twenty-one comparisons it would save.
+        // how: A box-overlap rejection is the broad phase. At eight bodies a spatial index costs more to maintain than the twenty-eight comparisons it would save.
         if (!boundsOverlap(selfBounds, chainBounds(outline.spine, outline.girth), reach)) {
           continue
         }

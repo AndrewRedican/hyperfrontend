@@ -6,7 +6,7 @@
  * The host builds the koi containers itself rather than letting the SDK place
  * frames, because owning the containers is what lets it own the z-order — and
  * the z-order *is* the depth model. Every layer is `pointer-events: none`, so
- * the seven stacked full-viewport frames never intercept a press; the host runs
+ * the eight stacked full-viewport frames never intercept a press; the host runs
  * one normalized pointer stream and tells the fish what it found.
  */
 import type { KoiFramework } from '@hyperfrontend/demo-koi-lib'

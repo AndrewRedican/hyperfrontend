@@ -10,8 +10,8 @@
  *
  * This is the host's only WebGL context, and it is optional twice over: the
  * painter returns `null` where a context cannot be created, and the caller
- * falls back to the 2D painter next door. The koi never share it — seven fish
- * contexts belong to the seven fish apps, and that stays their budget.
+ * falls back to the 2D painter next door. The koi never share it — the fish
+ * contexts belong to the fish apps themselves, and that stays their budget.
  */
 import type { SurfaceFrame, SurfacePainter } from './surface-canvas'
 import { resolveRipple } from './ripples'

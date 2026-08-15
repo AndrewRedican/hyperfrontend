@@ -85,7 +85,8 @@
         "demo-koi-fish-svelte:pack-shell",
         "demo-koi-fish-solid:pack-shell",
         "demo-koi-fish-preact:pack-shell",
-        "demo-koi-fish-lit:pack-shell"
+        "demo-koi-fish-lit:pack-shell",
+        "demo-koi-fish-angular:pack-shell"
       ],
       "options": {
         "commands": [
@@ -96,6 +97,7 @@
           "cp ../../../../dist/apps/demos/koi-pond/fish-shell/solid/hyperfrontend-demo-koi-fish-solid-shell-*.tgz vendor/",
           "cp ../../../../dist/apps/demos/koi-pond/fish-shell/preact/hyperfrontend-demo-koi-fish-preact-shell-*.tgz vendor/",
           "cp ../../../../dist/apps/demos/koi-pond/fish-shell/lit/hyperfrontend-demo-koi-fish-lit-shell-*.tgz vendor/",
+          "cp ../../../../dist/apps/demos/koi-pond/fish-shell/angular/hyperfrontend-demo-koi-fish-angular-shell-*.tgz vendor/",
           "node ./scripts/install-vendored-shells.mjs"
         ],
         "cwd": "apps/demos/koi-pond/host",

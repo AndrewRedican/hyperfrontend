@@ -2,7 +2,7 @@
  * The pond scene: everything the host owns, assembled.
  *
  * The bed, the surface water, the pointer, the depth order, the curtain, the
- * roster, the decision overlay, and the seven channels. Every koi is a separate application in a
+ * roster, the decision overlay, and the eight channels. Every koi is a separate application in a
  * separate frame; this module's whole job is to make those read as one
  * continuous scene, and to keep the seams — the relay, the depth grants, the
  * ripple gate — on the host's side of the boundary where they belong.
@@ -113,7 +113,7 @@ export interface PondSceneHandle extends PondScene {
  */
 export function createPond(root: HTMLElement, hooks: PondHooks): PondSceneHandle {
   const stage = createStage(root)
-  // why: The GPU water is preferred and the 2D painter is the fallback — one page already carries seven fish contexts, and this eighth is the only one the host ever asks for.
+  // why: The GPU water is preferred and the 2D painter is the fallback — one page already carries eight fish contexts, and this ninth is the only one the host ever asks for.
   const surface = createWaterPainter(stage.surface) ?? createSurfacePainter(stage.surface)
   const relay = createRelay()
   const director = createDepthDirector(Date.now())
@@ -246,7 +246,7 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondSceneHandle
    * when the scene opened, and a frame that grows or shrinks merely shows more
    * or less of the same water. The bed is deliberately not painted per frame —
    * it is stone and still water, and repainting it would be the most expensive
-   * thing in a scene that already carries seven compositing layers.
+   * thing in a scene that already carries eight compositing layers.
    */
   const remeasure = (): void => {
     pond = { ...pond, view: pondWindow(pond, root.clientWidth, root.clientHeight), reducedMotion: motionQuery.matches }
@@ -273,7 +273,7 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondSceneHandle
    * @returns The point in pond space, view offset included.
    */
   const pondCoords = (event: PointerEvent): Vec2 => {
-    // why: The rect is cached against resize — the pond root fills its frame, and measuring layout on every pointer move is the kind of per-event cost that adds up under seven compositing layers.
+    // why: The rect is cached against resize — the pond root fills its frame, and measuring layout on every pointer move is the kind of per-event cost that adds up under eight compositing layers.
     return { x: event.clientX - rootBounds.left + pond.view.x, y: event.clientY - rootBounds.top + pond.view.y }
   }
 
@@ -332,7 +332,7 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondSceneHandle
     shell.on('error', (data: unknown) => {
       // why: A koi that never answers must not hold the pond dark behind a curtain waiting for it.
       setCurtain(stage, true)
-      // why: A timed-out handshake leaves a destroyed mount and the SDK never retries — on a slow device the seven heavy apps race one deadline, and without this a loser is simply a fish that never existed. Only the timeout is retried; an unresponsive session is still alive and must not be torn down under its visitor.
+      // why: A timed-out handshake leaves a destroyed mount and the SDK never retries — on a slow device the eight heavy apps race one deadline, and without this a loser is simply a fish that never existed. Only the timeout is retried; an unresponsive session is still alive and must not be torn down under its visitor.
       if ((<{ reason?: string }>data)?.reason === 'open-timeout' && (retries.get(framework) ?? 0) < OPEN_RETRIES) {
         retries.set(framework, (retries.get(framework) ?? 0) + 1)
         window.setTimeout(() => {
@@ -576,7 +576,7 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondSceneHandle
     }
   })
 
-  // why: Seven iframes on their own compositing layers is exactly where a loop running against a hidden tab costs a visitor real battery.
+  // why: Eight iframes on their own compositing layers is exactly where a loop running against a hidden tab costs a visitor real battery.
   document.addEventListener('visibilitychange', () => {
     const paused = document.hidden
     if (paused) {
