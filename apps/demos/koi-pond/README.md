@@ -160,6 +160,30 @@ canonical standalone service in its `project.json` `metadata.deploy` — until t
 provisioned and `COMPOSED_DEPLOYMENT` is flipped, the composed service serves every koi as a
 sub-path and the shells' baked origins stay dormant.
 
+**A koi is only ever framed from its directory URL** (`…/fish-<framework>/`, never
+`…/index.html`). Its assets are referenced relatively so that one build serves both the pond's
+sub-path and the koi's own origin root; a static host that rewrites `…/index.html` to an
+extensionless path leaves the document one directory up, where every relative asset misses and
+the koi never boots.
+
+### Who may frame what
+
+Each service ships a `serve.json` from its `public/` directory, so the policy travels with the
+artifact instead of living in a dashboard:
+
+| Served root                   | `frame-ancestors`                             |
+| ----------------------------- | --------------------------------------------- |
+| the pond (`site/`)            | the docs site (and Vercel previews of it)     |
+| every koi (`site/fish-<fw>/`) | the pond **and** the docs site, plus `'self'` |
+
+`frame-ancestors` is checked against **every** ancestor, not just the immediate parent, and the
+live chain is three deep — docs site → pond → koi. A koi policy naming only the pond therefore
+blanks the whole shoal in the gallery. Listing both the pond and the docs site is also what makes
+one value correct before and after the `COMPOSED_DEPLOYMENT` flip: while composed the pond is the
+koi's own origin (`'self'`), and afterwards it is the named pond origin. The pond's `serve.json`
+carries the koi override second, because `serve` merges matching header blocks in array order and
+the later one wins.
+
 ## Working on it
 
 ```bash

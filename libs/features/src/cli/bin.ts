@@ -3,6 +3,7 @@ import { parseCliArgs } from './args'
 import { runBuild } from './commands/build'
 import { runDev } from './commands/dev'
 import { runInit } from './commands/init'
+import { runServe } from './commands/serve'
 import { EXIT_ERROR, EXIT_OK } from './exit-codes'
 import { USAGE } from './usage'
 
@@ -19,9 +20,9 @@ export interface RunFeaturesCliOptions {
 }
 
 /**
- * Parses argv and dispatches to `init`, `build`, or `dev`. `--help` (and a
- * missing command) print usage; an unknown command or flag fails with usage.
- * The returned exit code is mapped to `process.exit` by the bin bootstrap.
+ * Parses argv and dispatches to `init`, `build`, `dev`, or `serve`. `--help`
+ * (and a missing command) print usage; an unknown command or flag fails with
+ * usage. The returned exit code is mapped to `process.exit` by the bin bootstrap.
  *
  * @param options - argv, working directory, and output sinks.
  * @returns The process exit code.
@@ -57,6 +58,7 @@ export async function runFeaturesCli(options: RunFeaturesCliOptions): Promise<nu
   if (command === 'init') return runInit(context)
   if (command === 'build') return runBuild(context)
   if (command === 'dev') return runDev(context)
+  if (command === 'serve') return runServe(context)
 
   stderr.write(`Unknown command: ${command}\n`)
   stderr.write(USAGE)

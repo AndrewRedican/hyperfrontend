@@ -7,6 +7,7 @@ export type { AsyncIteratorExecutor, GeneratorCallback, PromiseExecutor, Tree } 
 export type { EventHandler } from './shared/event-emitter'
 export type { PresentPayload, ViewportPayload } from './shared/presentation'
 export type { RequestHandler, RequestOptions } from './shared/request'
+export type { ServeConfig, ServeHeaderRule } from './shared/serve-types'
 export type {
   ActionDescription,
   BackdropBehavior,
@@ -34,4 +35,5 @@ export type {
 } from './shared/types'
 export { validateContract, validateFeatureConfig, validatePayload } from './shared/contract'
 export { sdkInfo } from './shared/sdk-info'
+export { defineServeConfig } from './shared/serve-types'
 export { DisplayMode, defineConfig, defineDevConfig } from './shared/types'

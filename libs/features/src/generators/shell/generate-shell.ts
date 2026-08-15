@@ -63,7 +63,8 @@ function buildShellEntry(config: ResolvedFeatureConfig, contract: FeatureContrac
   const mounts = modes.map((mode) => MODE_MOUNTS[mode])
   const imports = ['createShell', ...mounts].sort().join(', ')
   const modeMap = modes.map((mode) => `${mode}: ${MODE_MOUNTS[mode]}`).join(', ')
-  return `import { ${imports} } from '@hyperfrontend/features/host'
+  return `import type { UnresponsivePolicy } from '@hyperfrontend/features/host'
+import { ${imports} } from '@hyperfrontend/features/host'
 
 ${buildShellTypes(contract, modes)}
 /** Inlined contract describing the ${config.name} feature's actions as authored, stamped with the contract version this shell was built from. */
@@ -86,7 +87,9 @@ const modes = { ${modeMap} }
  * @returns A typed shell handle exposing the session lifecycle (\`open\`, \`close\`, \`destroy\`, \`isOpen\`), contract-typed messaging (\`send\`, \`on\`, \`request\`, \`handle\`), and the feature's \`isDirty\` state.
  */
 export function createFeatureShell(options: FeatureShellOptions): FeatureShellHandle {
-  return <FeatureShellHandle>createShell({ ...defaults, ...options, contract, modes })
+  // why: This shell narrows \`displayMode\` to the modes the feature declares, while the SDK types its unresponsive callback for every mode. A mount rejects an undeclared mode before the callback can ever fire, so the policy is widened here rather than widening what the shell hands its consumers.
+  const { onUnresponsive, ...rest } = options
+  return <FeatureShellHandle>createShell({ ...defaults, ...rest, onUnresponsive: <UnresponsivePolicy | undefined>onUnresponsive, contract, modes })
 }
 `
 }

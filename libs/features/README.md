@@ -47,8 +47,8 @@ It is organized into independent subpath entry points so consumers import only t
 
 - **Host SDK** (`/host`) - Embed features with a shell factory, display modes (embedded, dialog, popup, standalone), and open/close lifecycle.
 - **Hostee SDK** (`/hostee`) - Initialize a feature app, declare its contract, and manage its lifecycle.
-- **CLI** (`/cli`) - `init`, `build`, and `dev` commands driven by `feature.config.*`.
-- **Dev server** (`/server`) - Static file server plus a debug UI for inspecting host/hostee message traffic.
+- **CLI** (`/cli`) - `init`, `build`, and `dev` commands driven by `feature.config.*`, plus `serve` for production static hosting.
+- **Dev server** (`/server`) - Static file server plus a debug UI for inspecting host/hostee message traffic; the same core backs the `hf serve` production server.
 - **Zero-config bundling** - Direct dependencies are bundled by `@hyperfrontend/builder`, so generated shells stay self-contained.
 
 ### Architecture Highlights
@@ -119,17 +119,18 @@ What each of these controls is actually worth — and which parts of an integrat
 npx @hyperfrontend/features init                # scaffold the hostee glue into an app
 npx @hyperfrontend/features build --protocol v2 # generate + bundle a publishable shell package
 npx @hyperfrontend/features dev                 # serve apps with the debug UI
+npx @hyperfrontend/features serve --root dist   # serve a built site for production
 ```
 
 ## API Overview
 
-| Entry point                      | Purpose                                           |
-| -------------------------------- | ------------------------------------------------- |
-| `@hyperfrontend/features`        | Shared types, contract validation, `defineConfig` |
-| `@hyperfrontend/features/host`   | Host-side SDK (shell, display modes, lifecycle)   |
-| `@hyperfrontend/features/hostee` | Hostee-side SDK (feature init, lifecycle)         |
-| `@hyperfrontend/features/cli`    | CLI (`init`, `build`, `dev`) and `hf` bin         |
-| `@hyperfrontend/features/server` | Dev server and debug UI                           |
+| Entry point                      | Purpose                                            |
+| -------------------------------- | -------------------------------------------------- |
+| `@hyperfrontend/features`        | Shared types, contract validation, `defineConfig`  |
+| `@hyperfrontend/features/host`   | Host-side SDK (shell, display modes, lifecycle)    |
+| `@hyperfrontend/features/hostee` | Hostee-side SDK (feature init, lifecycle)          |
+| `@hyperfrontend/features/cli`    | CLI (`init`, `build`, `dev`, `serve`) and `hf` bin |
+| `@hyperfrontend/features/server` | Dev server, debug UI, and production static server |
 
 > Using Nx? `nx add @hyperfrontend/features` installs the package and runs its `init` generator to declare the dependency. The package also ships `init`/`feature` generators and `build`/`serve` executors — importable from the `@hyperfrontend/features/nx/generators` and `@hyperfrontend/features/nx/executors` entry points — that use the consumer workspace's `@nx/devkit` for formatting and installs when present, falling back to built-in equivalents.
 

@@ -60,7 +60,7 @@ export function createKoiRuntime(root: HTMLElement, buildRenderer: KoiRendererFa
 
   const entry = entryStation(pond, koiSeed(FRAMEWORK))
   const motion = createKoiMotion({ profile, pond, position: entry.position, heading: entry.heading, depth: 3 })
-  // why: The frame mounts from an explicit index.html URL, but the identity a visitor reads should be the app's clean home.
+  // why: The koi may be framed from a sub-path of the pond or served at its own origin's root, so the identity a visitor reads is resolved from wherever this page actually is.
   const renderer = buildRenderer(root, profile, new URL('.', window.location.href).href, pond)
 
   let emit: (type: string, data?: unknown) => void = () => {}

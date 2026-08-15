@@ -68,4 +68,18 @@ describe('runFeaturesCli', () => {
   it('routes to the dev command', async () => {
     await expect(run(['dev'], dir)).resolves.toEqual(expect.objectContaining({ err: expect.stringContaining('No hf-dev.config') }))
   })
+
+  it('routes to the serve command', async () => {
+    // why: A nonexistent --root fails serve's config resolution immediately, proving dispatch without leaving a server running.
+    await expect(run(['serve', '--root', 'missing-root'], dir)).resolves.toEqual(
+      expect.objectContaining({ code: 1, err: expect.stringContaining('Serve root does not exist') })
+    )
+  })
+
+  it('documents the serve command in usage', async () => {
+    // why: The word "serve" also appears inside other command descriptions, so only the command's own usage line proves it is documented.
+    await expect(run(['--help'], dir)).resolves.toEqual(
+      expect.objectContaining({ out: expect.stringContaining('serve    Serve a built site for production') })
+    )
+  })
 })
