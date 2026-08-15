@@ -19,6 +19,7 @@
     "dev:hosted": "run-p build:watch hf:dev"
   },
   "dependencies": {
+    "@hyperfrontend/demo-koi-fish-angular-shell": "file:vendor/hyperfrontend-demo-koi-fish-angular-shell-0.6.0.tgz",
     "@hyperfrontend/demo-koi-fish-lit-shell": "file:vendor/hyperfrontend-demo-koi-fish-lit-shell-0.6.0.tgz",
     "@hyperfrontend/demo-koi-fish-preact-shell": "file:vendor/hyperfrontend-demo-koi-fish-preact-shell-0.6.0.tgz",
     "@hyperfrontend/demo-koi-fish-react-shell": "file:vendor/hyperfrontend-demo-koi-fish-react-shell-0.6.0.tgz",
