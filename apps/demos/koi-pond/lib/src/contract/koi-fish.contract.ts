@@ -38,7 +38,7 @@ export interface KoiContract {
 }
 
 /** The contract cut every pond project is built against. */
-export const KOI_CONTRACT_VERSION = '0.6.0'
+export const KOI_CONTRACT_VERSION = '0.7.0'
 
 /** The contract the pond host and every koi share. */
 export const koiFishContract: KoiContract = {
@@ -161,7 +161,7 @@ export const koiFishContract: KoiContract = {
     {
       type: 'outline',
       description:
-        "The koi's occupied outline as nose-first spine samples with a half-width each, plus heading, speed, depth, and behavioural phase. Ordinarily also the koi's current steering intent — travel, avoidance, or a depth pass, with the point it is steering toward and its anticipation reach — so the host can visualise the decision; omitted while the koi is held. While a visitor holds this koi, also the identity card's geometry — its frame and its two link rectangles — so the host can float real anchors and an inert shield over a card the pointer-transparent frame could never make interactive itself. High cadence, deliberately schema-less.",
+        "The koi's occupied outline as nose-first spine samples with a half-width each, plus heading, speed, depth, and behavioural phase. Ordinarily also the koi's current steering intent — travel, avoidance, or a depth pass, with the point it is steering toward and its anticipation reach — so the host can visualise the decision; omitted while the koi is held. While a visitor holds this koi, also the identity card's geometry — its frame and its three link rectangles — so the host can float real anchors and an inert shield over a card the pointer-transparent frame could never make interactive itself. High cadence, deliberately schema-less.",
     },
     {
       type: 'depth-request',

@@ -122,7 +122,7 @@ export { koiLabel, koiPalette } from './model/palette.js'
 export type { PondViewSpec } from './model/pond-view.js'
 export { POND_VIEW, pxPerUnit } from './model/pond-view.js'
 export { koiBuild, koiPhenotype, koiProfile, koiSeed, koiTraits, koiTrim } from './model/traits.js'
-export { FRAMEWORK_SITES, KOI_FRAMEWORKS } from './model/types.js'
+export { FRAMEWORK_SITES, KOI_FRAMEWORKS, KOI_POND_SOURCE_URL, koiSourceUrl } from './model/types.js'
 export type { KoiCardDetails, KoiCardText, KoiMemoryState } from './model/card.js'
 export { describeKoiCard } from './model/card.js'
 

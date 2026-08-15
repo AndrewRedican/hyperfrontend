@@ -178,7 +178,7 @@ export interface KoiCardLink {
   height: number
 }
 
-/** The geometry of one koi's identity card: its frame and its two links. */
+/** The geometry of one koi's identity card: its frame and its three links. */
 export interface KoiCardPanel {
   /** The whole card's rectangle. */
   frame: KoiCardLink
@@ -186,6 +186,8 @@ export interface KoiCardPanel {
   app: KoiCardLink
   /** The rectangle of the framework line, linking to the framework's official site. */
   site: KoiCardLink
+  /** The rectangle of the source line, linking to this fish's own application code. */
+  source: KoiCardLink
 }
 
 /** The official website each framework's card links out to. */
@@ -198,6 +200,24 @@ export const FRAMEWORK_SITES: Readonly<Record<KoiFramework, string>> = {
   preact: 'https://preactjs.com/',
   lit: 'https://lit.dev/',
   angular: 'https://angular.dev/',
+}
+
+/** Where the koi pond's source code lives; each fish app sits under `fish-<framework>/`. */
+export const KOI_POND_SOURCE_URL = 'https://github.com/AndrewRedican/hyperfrontend/tree/main/apps/demos/koi-pond'
+
+/**
+ * The URL of one fish app's source code.
+ *
+ * @param framework - The framework slug.
+ * @returns The repository URL of that fish's application directory.
+ *
+ * @example Linking a card to its own implementation
+ * ```typescript
+ * sourceAnchor.href = koiSourceUrl('vue')
+ * ```
+ */
+export function koiSourceUrl(framework: KoiFramework): string {
+  return `${KOI_POND_SOURCE_URL}/fish-${framework}`
 }
 
 /**
