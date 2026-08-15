@@ -437,6 +437,57 @@ describe('outline', () => {
   })
 })
 
+describe('intent', () => {
+  it('reports ordinary progress as travel toward a real point', () => {
+    const motion = swimmer()
+    run(motion, 0.5)
+    const intent = motion.outline().intent
+    expect(intent?.kind).toBe('travel')
+    expect(intent?.target).not.toBeNull()
+    expect(Number.isFinite(intent?.target?.x)).toBe(true)
+    expect(Number.isFinite(intent?.target?.y)).toBe(true)
+  })
+
+  it('always anticipates some distance ahead', () => {
+    const motion = swimmer()
+    run(motion, 0.5)
+    expect(motion.outline().intent?.reachPx).toBeGreaterThan(0)
+  })
+
+  it('reports a flee as avoidance projected along its escape', () => {
+    const motion = swimmer()
+    motion.startle({ x: 610, y: 400, intensity: 1 })
+    run(motion, 0.2)
+    const intent = motion.outline().intent
+    expect(intent?.kind).toBe('avoid')
+    expect(intent?.target).not.toBeNull()
+  })
+
+  it('reports a decided depth pass with its direction', () => {
+    const bold = createKoiMotion({
+      profile: { ...koiProfile('vanilla'), traits: { ...koiProfile('vanilla').traits, depthWillingness: 0.95 } },
+      pond: POND,
+      position: { x: 600, y: 400 },
+      heading: 0,
+      depth: 3,
+    })
+    bold.observe([crossing()])
+    run(bold, 0.1)
+    const intent = bold.outline().intent
+    expect(intent?.kind).toBe('depth-change')
+    expect(intent?.target).toBeNull()
+    expect(intent?.direction === 'above' || intent?.direction === 'below').toBe(true)
+  })
+
+  it('drops the story the grab interrupted along with everything else', () => {
+    const motion = swimmer()
+    motion.startle({ x: 610, y: 400, intensity: 1 })
+    run(motion, 0.2)
+    motion.place({ x: 700, y: 500 })
+    expect(motion.outline().intent?.kind).toBe('travel')
+  })
+})
+
 describe('speed limits', () => {
   it('never exceeds its hard ceiling even fleeing at full burst', () => {
     const motion = swimmer()
