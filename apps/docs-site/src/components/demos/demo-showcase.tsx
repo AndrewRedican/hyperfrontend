@@ -8,6 +8,8 @@ import { min, pow } from '@hyperfrontend/immutable-api-utils/built-in-copy/math'
 import { cancelAnimationFrame, requestAnimationFrame } from '@hyperfrontend/immutable-api-utils/built-in-copy/timers'
 import { DemoEmbed } from './demo-embed'
 import { DemoFallbackCard, getDemoTheme, restingStatusFor } from './demo-fallback-card'
+import { ExpandButton, ExpandedChrome } from './expanded-chrome'
+import { useExpandedEmbed } from './use-expanded-embed'
 
 /** Snapshot taken when fast-forward begins so the easing can interpolate from that moment. */
 interface FastForwardStart {
@@ -41,12 +43,16 @@ export interface DemoShowcaseProps {
  * the incoming demo connects fresh behind its fallback card.
  * Planned entries render as DOM placeholder cards. The ring and the
  * pause/skip controls paint above the content — the buttons hang half outside
- * the frame — so nothing a layer renders can ever cover them. The staged
+ * the frame — so nothing a framed layer renders can cover them; only the
+ * expanded overlay deliberately paints over the whole page, supplying its own
+ * chrome while rotation is frozen. The staged
  * demo's accent hue glows out from behind the frame, clipped to the showcase's
  * own container, and crossfades as rotation hands the stage over. Pausing
- * freezes the ring and holds the current demo. Under reduced motion nothing
- * auto-advances: the ring and pause disappear and the skip button becomes a
- * plain next button.
+ * freezes the ring and holds the current demo. An expandable demo offers to
+ * stretch its running embed over the viewport — the same live session, only a
+ * wider window — and rotation stays frozen until the overlay closes. Under
+ * reduced motion nothing auto-advances: the ring and pause disappear and the
+ * skip button becomes a plain next button.
  * @param root0
  * @param root0.entries
  * @param root0.cycleDuration
@@ -65,6 +71,12 @@ export function DemoShowcase({ entries, cycleDuration = 20000, fastForwardDurati
   const startTimeRef = useRef(0)
   const progressRef = useRef(0)
   const fastForwardStartRef = useRef<FastForwardStart | null>(null)
+
+  const { expanded, expand, collapse, holdShell } = useExpandedEmbed({
+    expandable: entries[activeIndex]?.expandable ?? false,
+    live: embedStatus === 'live',
+    stageKey: activeIndex,
+  })
 
   // why: the rAF loop and skip() need the live percentage without subscribing to per-frame state.
   const applyProgress = useCallback((value: number) => {
@@ -112,8 +124,8 @@ export function DemoShowcase({ entries, cycleDuration = 20000, fastForwardDurati
       startTimeRef.current = 0
       return
     }
-    if (paused) {
-      // why: pausing freezes the ring in place; resuming re-seeds the cycle from the frozen percentage.
+    if (paused || expanded) {
+      // why: pausing freezes the ring in place; resuming re-seeds the cycle from the frozen percentage. The expanded overlay freezes it too — rotation handing the stage over would unmount the very scene the visitor just spread over the viewport.
       startTimeRef.current = 0
       return
     }
@@ -143,7 +155,7 @@ export function DemoShowcase({ entries, cycleDuration = 20000, fastForwardDurati
     }
     rafRef.current = requestAnimationFrame(animate)
     return () => cancelAnimationFrame(rafRef.current)
-  }, [advance, applyProgress, cycleDuration, fastForwardDuration, fastForwarding, paused, reduced])
+  }, [advance, applyProgress, cycleDuration, expanded, fastForwardDuration, fastForwarding, paused, reduced])
 
   // why: whoever hosts the showcase may tint surrounding ambience (the hero lattice) toward the staged demo; the latest-ref keeps the notification out of the rotation effect's deps.
   const notifyActive = useRef(onActive)
@@ -169,22 +181,47 @@ export function DemoShowcase({ entries, cycleDuration = 20000, fastForwardDurati
       <ShowcaseAmbient entries={entries} activeIndex={activeIndex} />
       <div className="relative w-full max-w-2xl">
         <div className="absolute inset-0 z-0 rounded-2xl border border-white/30 dark:border-white/20" />
-        <div className="relative z-10 flex flex-col items-center justify-center gap-4 rounded-2xl bg-slate-900/5 p-6 backdrop-blur-sm dark:bg-white/5 lg:p-8">
+        {/* why: backdrop-filter makes this container the containing block for fixed descendants, so it has to lift while the staged layer is stretched over the viewport. */}
+        <div
+          className={`relative z-10 flex flex-col items-center justify-center gap-4 rounded-2xl bg-slate-900/5 p-6 dark:bg-white/5 lg:p-8 ${
+            expanded ? '' : 'backdrop-blur-sm'
+          }`}
+        >
           {/* note: Only the staged layer mounts its live embed — losing the stage unmounts it, so its session tears down gracefully instead of running off-screen. */}
           <div className="relative aspect-square w-full max-w-md">
-            {entries.map((entry, index) => (
-              <div
-                key={entry.slug}
-                inert={index !== activeIndex}
-                className={`absolute inset-0 transition-opacity duration-500 ${index === activeIndex ? 'opacity-100' : 'pointer-events-none opacity-0'}`}
-              >
-                {index === activeIndex && entry.featureUrl ? (
-                  <DemoEmbed entry={entry} className="h-full w-full" onStatus={setEmbedStatus} />
-                ) : (
-                  <DemoFallbackCard entry={entry} status={restingStatusFor(entry)} />
-                )}
-              </div>
-            ))}
+            {entries.map((entry, index) => {
+              const staged = index === activeIndex
+              const overlay = expanded && staged
+              return (
+                <div
+                  key={entry.slug}
+                  inert={!staged}
+                  className={
+                    overlay
+                      ? 'fixed inset-0 z-[200]'
+                      : `absolute inset-0 transition-opacity duration-500 ${staged ? 'opacity-100' : 'pointer-events-none opacity-0'}`
+                  }
+                >
+                  {staged && entry.featureUrl ? (
+                    <>
+                      <DemoEmbed
+                        entry={entry}
+                        className="h-full w-full"
+                        frameless={overlay}
+                        onStatus={setEmbedStatus}
+                        onShell={holdShell}
+                      />
+                      {entry.expandable && embedStatus === 'live' && !overlay ? (
+                        <ExpandButton title={entry.title} onExpand={expand} />
+                      ) : null}
+                      {overlay ? <ExpandedChrome title={entry.title} onCollapse={collapse} /> : null}
+                    </>
+                  ) : (
+                    <DemoFallbackCard entry={entry} status={restingStatusFor(entry)} />
+                  )}
+                </div>
+              )
+            })}
           </div>
           <div className="flex min-h-[4.5rem] w-full max-w-md flex-col items-center justify-center text-center">
             {active.featureUrl ? (

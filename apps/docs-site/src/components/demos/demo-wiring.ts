@@ -150,7 +150,7 @@ const WIRINGS: Record<string, DemoWiring | undefined> = {
   },
   'koi-pond': {
     createShell: (options) => createKoiPondShell(options),
-    contractLabel: 'contract 0.1.0 · protocol v1',
+    contractLabel: 'contract 0.2.0 · protocol v1',
     // why: The pond reports its connected shoal as each koi lands, so the first `shoal` proves the scene is assembling behind the frame.
     proofEvents: ['shoal'],
     // why: An undisturbed pond is silent by design — it only speaks when the shoal changes or a scatter unwinds, so the budget must outlast a long calm.
