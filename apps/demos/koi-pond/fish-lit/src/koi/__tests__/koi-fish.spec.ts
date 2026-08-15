@@ -123,6 +123,10 @@ describe('<koi-fish>', () => {
     const site = card.querySelector<HTMLAnchorElement>('.koi-card-site')
     expect(site?.href).toContain('lit.dev')
     expect(site?.rel).toBe('noopener noreferrer')
+    const source = card.querySelector<HTMLAnchorElement>('.koi-card-source')
+    expect(source?.href).toContain('github.com/AndrewRedican/hyperfrontend')
+    expect(source?.href).toContain('fish-lit')
+    expect(source?.rel).toBe('noopener noreferrer')
   })
 
   it('sizes its buffer to the koi frame box, never the viewport', async () => {
@@ -318,7 +322,7 @@ describe('<koi-fish>', () => {
     expect(card.querySelector('.koi-card-event')?.textContent).toContain('disturbance')
   })
 
-  it('reports the card frame and both link rectangles only while held', async () => {
+  it('reports the card frame and all three link rectangles only while held', async () => {
     const { renderer } = await mountKoi()
     expect(renderer.cardRects()).toBeNull()
     renderer.setSelected(true)
@@ -327,6 +331,7 @@ describe('<koi-fish>', () => {
     expect(rects?.frame).toBeDefined()
     expect(rects?.app).toBeDefined()
     expect(rects?.site).toBeDefined()
+    expect(rects?.source).toBeDefined()
   })
 
   it('tears the whole koi down when its element leaves the page', async () => {

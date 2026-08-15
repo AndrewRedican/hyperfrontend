@@ -133,6 +133,7 @@ export function createKoiRenderer(
   const cardMemory = card.querySelector<HTMLElement>('.koi-card-memory')
   const cardEvent = card.querySelector<HTMLElement>('.koi-card-event')
   const cardSite = card.querySelector<HTMLAnchorElement>('.koi-card-site')
+  const cardSource = card.querySelector<HTMLAnchorElement>('.koi-card-source')
 
   const gl = createGl(canvas)
   const view: PondView = createPondView(pond)
@@ -283,10 +284,10 @@ export function createKoiRenderer(
     },
 
     cardRects() {
-      if (card.hidden || cardUrl === null || cardSite === null) {
+      if (card.hidden || cardUrl === null || cardSite === null || cardSource === null) {
         return null
       }
-      return { frame: rectOf(card), app: rectOf(cardUrl), site: rectOf(cardSite) }
+      return { frame: rectOf(card), app: rectOf(cardUrl), site: rectOf(cardSite), source: rectOf(cardSource) }
     },
 
     dispose() {
