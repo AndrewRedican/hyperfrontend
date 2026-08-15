@@ -184,9 +184,6 @@ koi's own origin (`'self'`), and afterwards it is the named pond origin. The pon
 the koi override as a later rule with `"prefix": "/fish-"` — rules apply in order and a later rule
 overrides an earlier one one header at a time.
 
-The legacy `serve.json` files carry the same policy for the `npx serve` deployment and are removed
-once every Railway start command runs `hf serve`.
-
 ## Working on it
 
 ```bash
