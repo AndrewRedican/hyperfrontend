@@ -7,7 +7,7 @@
  * who opens `/fish-react/` sees one koi swimming in clear water. That is the
  * standalone story every fish app in the pond keeps.
  */
-import type { Disturbance, KoiIdentity, KoiProfile, KoiTune, NeighborObservation, PondEnvironment } from '@hyperfrontend/demo-koi-lib'
+import type { Disturbance, KoiIdentity, KoiProfile, NeighborObservation, PondEnvironment } from '@hyperfrontend/demo-koi-lib'
 import type { KoiRuntime } from '../feature/wire-contract'
 import type { KoiRenderer } from '../koi/koi-render'
 import { describePond, entryStation, koiProfile, koiSeed, mayRipple, pondWindow } from '@hyperfrontend/demo-koi-lib'
@@ -21,7 +21,7 @@ export type KoiRendererFactory = (root: HTMLElement, profile: KoiProfile, url: s
 const OUTLINE_INTERVAL_MS = 100
 
 /** Longest delta a single frame may report, in seconds. */
-const MAX_FRAME_S = 1 / 20
+const MAX_FRAME_S = 0.1
 
 /** Shortest gap between two ripple requests, in milliseconds. */
 const RIPPLE_INTERVAL_MS = 700
@@ -68,29 +68,24 @@ export function createKoiRuntime(root: HTMLElement, buildRenderer: KoiRendererFa
   let paused = false
   let inspected = false
   let hosted = false
+  let disposed = false
+  let frameHandle = 0
   let lastOutlineAt = 0
   let lastFrameAt = 0
-  let startedAt = 0
   let wasFleeing = false
   let lastRippleAt = 0
 
   const frame = (timestamp: number): void => {
-    window.requestAnimationFrame(frame)
-    if (paused) {
-      lastFrameAt = timestamp
-      return
-    }
-    if (startedAt === 0) {
-      startedAt = timestamp
+    frameHandle = window.requestAnimationFrame(frame)
+    if (lastFrameAt === 0) {
       lastFrameAt = timestamp
     }
     const raw = (timestamp - lastFrameAt) / 1000
     lastFrameAt = timestamp
     const dt = raw > MAX_FRAME_S ? MAX_FRAME_S : raw
-    const elapsedS = (timestamp - startedAt) / 1000
 
     if (!inspected) {
-      motion.advance(dt, elapsedS)
+      motion.advance(dt)
     }
     const state = motion.state
     // why: An inspected koi holds its position but keeps sculling gently — a mesh frozen mid-beat reads as a rendering fault, not a fish waiting to be looked at.
@@ -122,9 +117,23 @@ export function createKoiRuntime(root: HTMLElement, buildRenderer: KoiRendererFa
     wasFleeing = motion.isFleeing
   }
 
-  window.requestAnimationFrame(frame)
+  /** Stops the loop entirely; a stopped koi costs nothing, not even a callback. */
+  const stop = (): void => {
+    if (frameHandle !== 0) {
+      window.cancelAnimationFrame(frameHandle)
+      frameHandle = 0
+    }
+  }
 
-  window.addEventListener('resize', () => {
+  /** Starts the loop with a fresh clock, so the first frame back reports no false gap. */
+  const start = (): void => {
+    if (frameHandle === 0 && !disposed) {
+      lastFrameAt = 0
+      frameHandle = window.requestAnimationFrame(frame)
+    }
+  }
+
+  const onResize = (): void => {
     // why: Once a host has spoken its announcements are authoritative and arrive on every resize; a window-measured view would briefly undo the host's.
     if (hosted) {
       return
@@ -133,7 +142,23 @@ export function createKoiRuntime(root: HTMLElement, buildRenderer: KoiRendererFa
     pond = { ...pond, view: pondWindow(pond, window.innerWidth, window.innerHeight) }
     motion.setPond(pond)
     renderer.setPond(pond)
-  })
+  }
+
+  const dispose = (): void => {
+    if (disposed) {
+      return
+    }
+    disposed = true
+    stop()
+    window.removeEventListener('resize', onResize)
+    window.removeEventListener('pagehide', dispose)
+    renderer.dispose()
+  }
+
+  start()
+  window.addEventListener('resize', onResize)
+  // why: The frame's GL context and callbacks should not outlive the page — a torn-down koi must leave nothing running.
+  window.addEventListener('pagehide', dispose)
 
   return {
     setPond(next) {
@@ -162,15 +187,18 @@ export function createKoiRuntime(root: HTMLElement, buildRenderer: KoiRendererFa
       }
     },
     setPaused(next) {
+      // why: A sleeping koi cancels its animation frame outright — seven hidden frames each still waking per frame is exactly the battery cost the host's sleep exists to remove.
       paused = next
+      if (paused) {
+        stop()
+      } else {
+        start()
+      }
     },
     setInspected(next) {
       inspected = next
     },
-    applyTune(tune: KoiTune) {
-      motion.setTune(tune)
-      renderer.applyTune(tune)
-    },
+    dispose,
     connect(next) {
       emit = next
     },

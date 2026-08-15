@@ -9,7 +9,7 @@
  * hot-path escape hatch the contract documents — so it is the one payload this
  * module narrows by hand instead of trusting the SDK's validator.
  */
-import type { Disturbance, KoiIdentity, KoiTune, NeighborObservation, PondEnvironment } from '@hyperfrontend/demo-koi-lib'
+import type { Disturbance, KoiIdentity, NeighborObservation, PondEnvironment } from '@hyperfrontend/demo-koi-lib'
 
 /** The numeric fields every usable relayed neighbour carries. */
 const NEIGHBOR_NUMBERS = ['x', 'y', 'heading', 'speed', 'depth', 'length', 'girth']
@@ -40,8 +40,8 @@ export interface KoiRuntime {
   setPaused(paused: boolean): void
   /** Holds position for inspection while sculling in place, or resumes swimming. */
   setInspected(inspected: boolean): void
-  /** Takes the visitor's playground settings. */
-  applyTune(tune: KoiTune): void
+  /** Stops the loop and releases everything the koi holds. */
+  dispose(): void
   /** Hands the runtime the channel it emits on. */
   connect(emit: (type: string, data?: unknown) => void): void
 }
@@ -103,10 +103,6 @@ export function wireKoiContract(link: FeatureLink, koi: KoiRuntime): void {
 
   link.on('pause', (data) => {
     koi.setInspected((<{ paused: boolean }>data).paused)
-  })
-
-  link.on('tune', (data) => {
-    koi.applyTune(<KoiTune>data)
   })
 
   link.on('neighbors', (data) => {

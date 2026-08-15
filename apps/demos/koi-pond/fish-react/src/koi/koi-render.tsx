@@ -10,7 +10,7 @@
  * built from the latest pond the moment React commits the canvas, and the very
  * next frame paints onto it.
  */
-import type { KoiProfile, KoiTune, PondEnvironment } from '@hyperfrontend/demo-koi-lib'
+import type { KoiProfile, PondEnvironment } from '@hyperfrontend/demo-koi-lib'
 import type { Koi } from '@hyperfrontend/demo-koi-lib/three'
 import type { KoiState } from './koi-motion'
 import type { GlRenderer, KoiStage } from './koi-stage'
@@ -45,17 +45,11 @@ export interface KoiRenderer {
    */
   setHovered(hovered: boolean): void
   /**
-   * Positions the hover card beside the koi.
+   * Positions the hover card beside the koi, clamped into the visible window.
    *
    * @param state - What the koi is doing right now.
    */
   placeCard(state: KoiState): void
-  /**
-   * Takes the visitor's playground settings onto the body and the swim.
-   *
-   * @param tune - The scales to apply over this koi's own build and trim.
-   */
-  applyTune(tune: KoiTune): void
   /** Releases the GPU resources the koi holds and unmounts its tree. */
   dispose(): void
 }
@@ -87,15 +81,10 @@ export function createKoiRenderer(
   let stage: KoiStage | null = null
   let card: HTMLDivElement | null = null
   let latestPond = pond
-  let latestTune: KoiTune | null = null
 
   const mount = (canvas: HTMLCanvasElement, cardNode: HTMLDivElement): (() => void) => {
     // why: A pond may have been announced while the tree was still mounting, so the stage is built from the latest one rather than the one this closure was born with.
     const built = createKoiStage(canvas, profile, latestPond, createGl)
-    if (latestTune !== null) {
-      // why: A tune that arrived before the commit — or before a StrictMode remount — must dress the fresh stage, or the visitor's settings silently reset with the tree.
-      built.applyTune(latestTune)
-    }
     stage = built
     card = cardNode
     return () => {
@@ -137,14 +126,10 @@ export function createKoiRenderer(
 
     placeCard(state) {
       if (card !== null) {
-        card.style.transform = cardTransform(cardAnchor(state, latestPond))
+        // why: A card that has not laid out yet still needs a footprint to clamp against, so nominal dimensions stand in until the browser has measured it.
+        const size = { width: card.offsetWidth || 200, height: card.offsetHeight || 64 }
+        card.style.transform = cardTransform(cardAnchor(state, latestPond, size))
       }
-    },
-
-    applyTune(tune) {
-      // why: An omitted field keeps its current value, so the remembered tune folds each delivery over the last rather than replacing it.
-      latestTune = { ...latestTune, ...tune }
-      stage?.applyTune(latestTune)
     },
 
     dispose() {
