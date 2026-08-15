@@ -1,9 +1,9 @@
 /**
- * Where this koi's hover identity card sits, and how that reaches CSS.
+ * Where this koi's identity card sits, and how that reaches CSS.
  *
  * Kept out of the components because the card is positioned from a ref rather
- * than from props: it parks itself here the moment React mounts it, and moves
- * itself here on every frame the host's pointer stays on the fish.
+ * than from props: it parks itself here the moment a visitor holds the fish,
+ * and moves itself here on every frame the hold lasts.
  */
 import type { PondEnvironment, Vec2 } from '@hyperfrontend/demo-koi-lib'
 import type { KoiState } from './koi-motion'
