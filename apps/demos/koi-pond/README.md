@@ -168,8 +168,8 @@ the koi never boots.
 
 ### Who may frame what
 
-Each service ships a `serve.json` from its `public/` directory, so the policy travels with the
-artifact instead of living in a dashboard:
+Each service ships an `hf-serve.config.json` from its `public/` directory, so the policy travels
+with the artifact instead of living in a dashboard (`hf serve` picks it up from the served root):
 
 | Served root                   | `frame-ancestors`                             |
 | ----------------------------- | --------------------------------------------- |
@@ -180,9 +180,12 @@ artifact instead of living in a dashboard:
 live chain is three deep — docs site → pond → koi. A koi policy naming only the pond therefore
 blanks the whole shoal in the gallery. Listing both the pond and the docs site is also what makes
 one value correct before and after the `COMPOSED_DEPLOYMENT` flip: while composed the pond is the
-koi's own origin (`'self'`), and afterwards it is the named pond origin. The pond's `serve.json`
-carries the koi override second, because `serve` merges matching header blocks in array order and
-the later one wins.
+koi's own origin (`'self'`), and afterwards it is the named pond origin. The pond's config carries
+the koi override as a later rule with `"prefix": "/fish-"` — rules apply in order and a later rule
+overrides an earlier one one header at a time.
+
+The legacy `serve.json` files carry the same policy for the `npx serve` deployment and are removed
+once every Railway start command runs `hf serve`.
 
 ## Working on it
 
