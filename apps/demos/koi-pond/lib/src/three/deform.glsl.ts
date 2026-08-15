@@ -4,7 +4,7 @@
  * The CPU poses a curve of thirty-two stations; this is what carries a hundred
  * thousand vertices along it. Every vertex knows which station it belongs to, so
  * bending the koi costs one interpolation and one rotation per vertex and
- * nothing at all per frame on the main thread — which is the whole reason seven
+ * nothing at all per frame on the main thread — which is the whole reason a shoal
  * of these can eventually swim in one scene.
  *
  * Each cross-section is carried *rigidly* by its station's frame. That is what

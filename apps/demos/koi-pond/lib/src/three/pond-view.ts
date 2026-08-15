@@ -1,8 +1,8 @@
 /**
  * The pond camera, and the renderer settings that go with it.
  *
- * Seven fish each render into their own full-viewport frame; this module is
- * what makes those seven renders composite as one scene. Every fish builds the
+ * Each fish renders into its own full-viewport frame; this module is
+ * what makes those independent renders composite as one scene. Every fish builds the
  * same camera from the same pond announcement, so a koi handed from one frame
  * to the next would not move, resize or change hue.
  *
@@ -177,7 +177,7 @@ export function createPondView(pond: PondViewport): PondView {
  * ```
  */
 export function createPondRenderer(canvas: HTMLCanvasElement): WebGLRenderer {
-  // why: The scenes are one small fish each, so the integrated GPU is always enough — asking for the high-performance one would spin up discrete silicon seven times over for no visible gain.
+  // why: The scenes are one small fish each, so the integrated GPU is always enough — asking for the high-performance one would spin up discrete silicon once per fish for no visible gain.
   const renderer = new WebGLRenderer({ canvas, antialias: true, alpha: true, powerPreference: 'low-power' })
   renderer.setClearAlpha(0)
   renderer.toneMapping = ACESFilmicToneMapping

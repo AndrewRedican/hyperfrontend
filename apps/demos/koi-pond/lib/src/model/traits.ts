@@ -43,6 +43,7 @@ const HEFT: Readonly<Record<KoiFramework, number>> = {
   solid: 0.5,
   preact: 0.3,
   lit: 0.45,
+  angular: 0.9,
 }
 
 /** The sculpted anatomy's widest half-width as a fraction of body length, at width multiplier 1. */

@@ -29,7 +29,7 @@ const LIB_PACKAGE = '@hyperfrontend/demo-koi-lib'
 const TARBALL_PREFIX = 'hyperfrontend-demo-koi-lib-'
 
 /** Every project that takes the koi lib as a `file:` dependency, in refresh order. */
-const CONSUMERS = ['host', 'fish-vanilla', 'fish-react', 'fish-vue', 'fish-svelte', 'fish-solid', 'fish-preact', 'fish-lit']
+const CONSUMERS = ['host', 'fish-vanilla', 'fish-react', 'fish-vue', 'fish-svelte', 'fish-solid', 'fish-preact', 'fish-lit', 'fish-angular']
 
 /**
  * Lists the koi-lib tarballs sitting in the shared vendor directory.

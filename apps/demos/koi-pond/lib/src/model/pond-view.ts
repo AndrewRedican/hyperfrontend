@@ -1,7 +1,7 @@
 /**
  * The one view of the pond every fish agrees to draw through.
  *
- * Seven applications each render one koi into their own transparent frame, and
+ * Eight applications each render one koi into their own transparent frame, and
  * the frames are composited into a single scene. That only reads as *one* pond
  * if every application builds the same camera, lights its koi the same way and
  * exposes the same tone curve — a koi that is warmer, larger or more oblique
@@ -32,13 +32,13 @@ export interface PondViewSpec {
   lighting: 'pond'
 }
 
-/** The framing the pond is drawn at, shared by all seven fish. */
+/** The framing the pond is drawn at, shared by every fish. */
 export const POND_VIEW: PondViewSpec = { tiltDeg: 10, fovDeg: 26, exposure: 1.15, lighting: 'pond' }
 
 /**
  * How many CSS pixels one world unit spans at the swim plane.
  *
- * The scale convention that keeps seven independent renders coherent: one
+ * The scale convention that keeps the independent renders coherent: one
  * world unit is one nominal fish length. A koi built at
  * `physical.length = lengthScale` therefore projects to the same on-screen
  * length the pond's 2D motion model reports on the wire.

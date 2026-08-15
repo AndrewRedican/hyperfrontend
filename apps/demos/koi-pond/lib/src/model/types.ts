@@ -20,11 +20,12 @@ export interface Vec2 {
   y: number
 }
 
-/** The seven framework slugs, one per koi; also each fish app's deployed sub-path. */
-export type KoiFramework = 'vanilla' | 'react' | 'vue' | 'svelte' | 'solid' | 'preact' | 'lit'
+/** The eight framework slugs, one per koi; also each fish app's deployed sub-path. */
+export type KoiFramework = 'vanilla' | 'react' | 'vue' | 'svelte' | 'solid' | 'preact' | 'lit' | 'angular'
 
 /** Every framework slug in the pond's canonical order, shallowest-first by default depth. */
-export const KOI_FRAMEWORKS: readonly KoiFramework[] = ['vanilla', 'react', 'vue', 'svelte', 'solid', 'preact', 'lit']
+// why: Order is identity — a koi's seed is its position here, so new frameworks append at the end and nothing may ever be reordered.
+export const KOI_FRAMEWORKS: readonly KoiFramework[] = ['vanilla', 'react', 'vue', 'svelte', 'solid', 'preact', 'lit', 'angular']
 
 /**
  * The four visibly distinct states a koi's body reads in.
@@ -196,6 +197,7 @@ export const FRAMEWORK_SITES: Readonly<Record<KoiFramework, string>> = {
   solid: 'https://www.solidjs.com/',
   preact: 'https://preactjs.com/',
   lit: 'https://lit.dev/',
+  angular: 'https://angular.dev/',
 }
 
 /**

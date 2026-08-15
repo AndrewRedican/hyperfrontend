@@ -23,6 +23,7 @@ const LABELS: Readonly<Record<KoiFramework, string>> = {
   solid: 'SolidJS',
   preact: 'Preact',
   lit: 'Lit',
+  angular: 'Angular',
 }
 
 /** Each framework's brand colour, worn as the dominant marking and the hover accent. */
@@ -35,6 +36,7 @@ const BRAND: Readonly<Record<KoiFramework, string>> = {
   solid: '#2c4f7c',
   preact: '#673ab8',
   lit: '#325cff',
+  angular: '#dd0031',
 }
 
 /** The white nishikigoi ground most varieties are written on. */
@@ -48,7 +50,7 @@ const BENI_ORANGE = '#e08a3c'
 
 /** How each framework's koi is dressed: variety, ground, and second marking colour. */
 const VARIETIES: Readonly<Record<KoiFramework, { pattern: KoiPalette['pattern']; body: string; shade: string }>> = {
-  // why: The mixture is deliberate — ogon and kohaku keep some fish simple while sanke, showa and asagi carry black or orange, so the shoal shows a spread of colour topologies rather than seven of one.
+  // why: The mixture is deliberate — ogon and kohaku keep some fish simple while sanke, showa and asagi carry black or orange, so the shoal shows a spread of colour topologies rather than eight of one.
   vanilla: { pattern: 'ogon', body: '#efe3c8', shade: '#d8c49a' },
   react: { pattern: 'asagi', body: '#eef0ee', shade: BENI_ORANGE },
   vue: { pattern: 'kohaku', body: WHITE_GROUND, shade: SUMI },
@@ -56,6 +58,8 @@ const VARIETIES: Readonly<Record<KoiFramework, { pattern: KoiPalette['pattern'];
   solid: { pattern: 'sanke', body: WHITE_GROUND, shade: SUMI },
   preact: { pattern: 'kohaku', body: '#f3eee6', shade: SUMI },
   lit: { pattern: 'brand', body: '#eff1f4', shade: BENI_ORANGE },
+  // why: The one red-marked koi in the shoal — Angular's brand red is a natural beni, so its sanke reads as the classic variety while staying unmistakably the Angular fish.
+  angular: { pattern: 'sanke', body: WHITE_GROUND, shade: SUMI },
 }
 
 /** Fin translucency applied to the brand colour, as an alpha channel byte. */

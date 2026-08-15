@@ -3,7 +3,7 @@
  *
  * These are the verbs every koi steers with — they are deliberately *not* a
  * swimming brain. Each fish app composes them into its own loop, with its own
- * weighting and its own idea of what a relaxed cruise feels like; seven
+ * weighting and its own idea of what a relaxed cruise feels like; eight
  * independent compositions over one shared vocabulary is what the pond is
  * demonstrating.
  *

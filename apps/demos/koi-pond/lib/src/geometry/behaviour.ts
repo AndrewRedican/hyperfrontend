@@ -6,7 +6,7 @@
  * *discrete, scheduled events* rather than continuous noise: an event begins,
  * runs its bounded course, and ends before another may start. Everything is
  * seeded through `randomPseudo`, so the same koi lives the same life on every
- * reload and none of the seven apps needs to exchange a message about it.
+ * reload and none of the fish apps needs to exchange a message about it.
  *
  * Each fish app composes these verbs with its own thresholds and priorities;
  * the shared part is only the vocabulary and the determinism.
