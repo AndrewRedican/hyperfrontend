@@ -64,26 +64,6 @@ body {
   height: 100%;
 }
 
-/* why: The ring is the host's only mark on a held koi — the fish paints itself inside a frame the host cannot draw into, so selection is painted from outside. It lives inside the fish's own layer so it stacks and occludes exactly as the fish does. */
-.koi-select-ring {
-  position: absolute;
-  top: 0;
-  left: 0;
-  border: 1.5px solid rgba(104, 178, 255, 0.85);
-  border-radius: 999px;
-  box-shadow:
-    0 0 16px rgba(104, 178, 255, 0.3),
-    inset 0 0 12px rgba(104, 178, 255, 0.16);
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 240ms ease;
-  will-change: transform;
-}
-
-.koi-select-ring[data-shown] {
-  opacity: 1;
-}
-
 /* why: The surface water is always topmost and never carries a fish — the visitor is looking through it at the shoal. */
 #surface {
   position: absolute;
@@ -93,7 +73,19 @@ body {
   display: block;
 }
 
-/* why: Invisible glass over the URL text the fish's own card draws — the fish styles the link, and this anchor, the one interactive thing over the water, is what actually opens it. */
+/* why: An inert pane over the held koi's card — presses on the card must read the card, never strike the water showing through behind it. */
+.koi-card-shield {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 158;
+}
+
+.koi-card-shield[hidden] {
+  display: none;
+}
+
+/* why: Invisible glass over the link text the fish's own card draws — the fish styles the links, and these anchors, the only interactive things over the water, are what actually open them. */
 .koi-card-link {
   position: absolute;
   top: 0;

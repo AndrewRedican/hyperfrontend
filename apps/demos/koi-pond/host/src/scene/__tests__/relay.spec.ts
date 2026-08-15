@@ -211,9 +211,14 @@ describe('latest', () => {
     expect(relay.latest('lit', NOW + 3001)).toBeNull()
   })
 
-  it('carries the card rectangle through untouched', () => {
+  it('carries the card panel through untouched', () => {
     const relay = createRelay()
-    relay.record({ ...outlineAt('lit', 100, 100), card: { x: 120, y: 60, width: 180, height: 14 } }, NOW)
-    expect(relay.latest('lit', NOW)?.card).toEqual({ x: 120, y: 60, width: 180, height: 14 })
+    const card = {
+      frame: { x: 120, y: 60, width: 220, height: 96 },
+      app: { x: 132, y: 100, width: 180, height: 14 },
+      site: { x: 132, y: 130, width: 120, height: 13 },
+    }
+    relay.record({ ...outlineAt('lit', 100, 100), card }, NOW)
+    expect(relay.latest('lit', NOW)?.card).toEqual(card)
   })
 })

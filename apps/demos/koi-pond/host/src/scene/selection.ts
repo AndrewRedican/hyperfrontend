@@ -1,149 +1,154 @@
 /**
- * The host-drawn chrome for a held koi: the selection ring and the card link.
+ * The host-side chrome that makes a held koi's card interactive.
  *
- * A koi paints itself inside its own pointer-transparent frame, so nothing the
- * fish draws can mark it as selected or take a click. Both affordances
- * therefore live host-side: a soft ring appended INTO the fish's own layer, so
- * it stacks and occludes exactly as the fish does across depth changes, and one
- * invisible anchor floated over the URL text the fish's identity card draws —
- * the fish styles the link, the host makes it clickable.
+ * A koi paints its own identity card inside its pointer-transparent frame, so
+ * nothing it draws can take a click. While a visitor holds a koi, the host
+ * floats three invisible pieces over the card the fish reports: one real anchor
+ * over the app URL, one over the framework's website line, and an inert shield
+ * over the rest of the card — so moving off the fish and into the card clicks
+ * links instead of striking the water behind them. The selection visual itself
+ * lives in the fish's own renderer as a silhouette trace; the host draws no
+ * shape of its own.
  */
-import type { KoiCardLink, KoiFramework, KoiOutline, PondEnvironment } from '@hyperfrontend/demo-koi-lib'
+import type { KoiCardLink, KoiCardPanel, KoiFramework, PondEnvironment } from '@hyperfrontend/demo-koi-lib'
+import { FRAMEWORK_SITES } from '@hyperfrontend/demo-koi-lib'
 
-/** How much water the ring claims past the body's own bounds, in nominal fish lengths. */
-const RING_PAD_FL = 0.1
+/** The pieces floated over one held koi's card. */
+interface CardChrome {
+  shield: HTMLElement
+  app: HTMLAnchorElement
+  site: HTMLAnchorElement
+}
 
-/** How far the drawn body leads its reported spine along the heading, as a fraction of body length. */
-// why: The mesh is anchored by its spine pivot at the reported nose, so the pixels a visitor sees sit ahead of the wire outline; the ring must sit on the pixels, not the report.
-const PIXEL_LEAD_FL = 0.355
-
-/** The host chrome around a held koi. */
+/** The host chrome around held koi. */
 export interface SelectionChrome {
   /**
-   * Raises the ring for a koi inside its own layer.
+   * Raises the card chrome for a koi, hidden until its card reports geometry.
    *
    * @param framework - Which koi was held.
+   * @param appUrl - The koi's own application URL.
    */
-  hold(framework: KoiFramework): void
+  hold(framework: KoiFramework, appUrl: string): void
   /**
-   * Removes a koi's ring.
+   * Removes a koi's card chrome.
    *
    * @param framework - Which koi was released.
    */
   release(framework: KoiFramework): void
   /**
-   * Fits a koi's ring around its reported body.
+   * Moves the chrome onto the card's reported geometry, or hides it.
    *
-   * @param framework - Whose ring to move.
-   * @param outline - The koi's current outline.
-   * @param pond - The announced world, for the view origin and the pad scale.
-   */
-  track(framework: KoiFramework, outline: KoiOutline, pond: PondEnvironment): void
-  /**
-   * Floats the link anchor over a reported card rectangle, or hides it.
-   *
-   * @param rect - Where the card's URL line sits in pond space, or `null`.
-   * @param url - The koi's app URL, or `null` when nothing is shown.
+   * @param framework - Whose chrome to move.
+   * @param panel - Where the card and its links sit, or `null` to hide.
    * @param pond - The announced world, for the view origin.
    */
-  placeLink(rect: KoiCardLink | null, url: string | null, pond: PondEnvironment): void
-  /** Removes every ring and the anchor. */
+  trackCard(framework: KoiFramework, panel: KoiCardPanel | null, pond: PondEnvironment): void
+  /** Removes every piece of chrome. */
   dispose(): void
+}
+
+/**
+ * Places one absolutely-positioned piece over a pond-space rectangle.
+ *
+ * @param element - The piece to place.
+ * @param rect - The pond-space rectangle.
+ * @param pond - The announced world, for the view origin.
+ */
+function place(element: HTMLElement, rect: KoiCardLink, pond: PondEnvironment): void {
+  element.style.width = `${rect.width.toFixed(1)}px`
+  element.style.height = `${rect.height.toFixed(1)}px`
+  element.style.transform = `translate3d(${(rect.x - pond.view.x).toFixed(1)}px, ${(rect.y - pond.view.y).toFixed(1)}px, 0)`
+  element.hidden = false
+}
+
+/**
+ * Keeps a press on the card from falling through to the pond.
+ *
+ * @param event - The event to contain.
+ */
+function contain(event: Event): void {
+  // why: The card floats over open water — without this, clicking a link would also bubble into the pond's press handling and strike the very water the visitor is reading over.
+  event.stopPropagation()
 }
 
 /**
  * Creates the selection chrome.
  *
- * @param root - The pond root the link anchor floats in.
- * @param layers - The host-owned koi containers, keyed by framework slug.
+ * @param root - The pond root the chrome floats in.
  * @returns The chrome.
  *
- * @example Marking a held koi from the frame loop
+ * @example Following a held koi's card from the frame loop
  * ```typescript
- * chrome.hold(framework)
- * chrome.track(framework, outline, pond)
+ * chrome.hold(framework, fishHomeUrl(framework))
+ * chrome.trackCard(framework, outline.card ?? null, pond)
  * ```
  */
-export function createSelectionChrome(root: HTMLElement, layers: ReadonlyMap<KoiFramework, HTMLElement>): SelectionChrome {
-  const rings = new Map<KoiFramework, HTMLElement>()
+export function createSelectionChrome(root: HTMLElement): SelectionChrome {
+  const held = new Map<KoiFramework, CardChrome>()
 
-  const link = document.createElement('a')
-  link.className = 'koi-card-link'
-  link.target = '_blank'
-  link.rel = 'noopener noreferrer'
-  link.setAttribute('aria-label', 'Open this fish app in a new tab')
-  link.hidden = true
-  root.append(link)
+  const anchor = (href: string, label: string): HTMLAnchorElement => {
+    const link = document.createElement('a')
+    link.className = 'koi-card-link'
+    link.target = '_blank'
+    link.rel = 'noopener noreferrer'
+    link.href = href
+    link.setAttribute('aria-label', label)
+    link.hidden = true
+    link.addEventListener('pointerdown', contain)
+    link.addEventListener('click', contain)
+    return link
+  }
 
   return {
-    hold(framework) {
-      const layer = layers.get(framework)
-      if (layer === undefined || rings.has(framework)) {
+    hold(framework, appUrl) {
+      if (held.has(framework)) {
         return
       }
-      const ring = document.createElement('div')
-      ring.className = 'koi-select-ring'
-      layer.append(ring)
-      rings.set(framework, ring)
+      const shield = document.createElement('div')
+      shield.className = 'koi-card-shield'
+      shield.hidden = true
+      shield.addEventListener('pointerdown', contain)
+      shield.addEventListener('click', contain)
+      const app = anchor(appUrl, 'Open this fish app in a new tab')
+      const site = anchor(FRAMEWORK_SITES[framework], "Open this framework's website in a new tab")
+      root.append(shield, app, site)
+      held.set(framework, { shield, app, site })
     },
 
     release(framework) {
-      rings.get(framework)?.remove()
-      rings.delete(framework)
+      const chrome = held.get(framework)
+      if (chrome === undefined) {
+        return
+      }
+      chrome.shield.remove()
+      chrome.app.remove()
+      chrome.site.remove()
+      held.delete(framework)
     },
 
-    track(framework, outline, pond) {
-      const ring = rings.get(framework)
-      if (ring === undefined) {
+    trackCard(framework, panel, pond) {
+      const chrome = held.get(framework)
+      if (chrome === undefined) {
         return
       }
-      let left = Number.POSITIVE_INFINITY
-      let top = Number.POSITIVE_INFINITY
-      let right = Number.NEGATIVE_INFINITY
-      let bottom = Number.NEGATIVE_INFINITY
-      outline.spine.forEach((point, index) => {
-        const halfWidth = outline.girth[index] ?? 0
-        left = Math.min(left, point.x - halfWidth)
-        right = Math.max(right, point.x + halfWidth)
-        top = Math.min(top, point.y - halfWidth)
-        bottom = Math.max(bottom, point.y + halfWidth)
-      })
-      if (left > right) {
-        ring.removeAttribute('data-shown')
+      if (panel === null) {
+        chrome.shield.hidden = true
+        chrome.app.hidden = true
+        chrome.site.hidden = true
         return
       }
-      const nose = outline.spine[0]
-      const tail = outline.spine.at(-1)
-      const chord = nose === undefined || tail === undefined ? 0 : Math.hypot(tail.x - nose.x, tail.y - nose.y)
-      const leadX = Math.cos(outline.heading) * chord * PIXEL_LEAD_FL
-      const leadY = Math.sin(outline.heading) * chord * PIXEL_LEAD_FL
-      const pad = pond.fishLength * RING_PAD_FL
-      const width = right - left + pad * 2
-      const height = bottom - top + pad * 2
-      ring.style.width = `${width.toFixed(1)}px`
-      ring.style.height = `${height.toFixed(1)}px`
-      ring.style.transform = `translate3d(${(left + leadX - pad - pond.view.x).toFixed(1)}px, ${(top + leadY - pad - pond.view.y).toFixed(1)}px, 0)`
-      ring.setAttribute('data-shown', '')
-    },
-
-    placeLink(rect, url, pond) {
-      if (rect === null || url === null) {
-        link.hidden = true
-        return
-      }
-      link.href = url
-      link.style.width = `${rect.width.toFixed(1)}px`
-      link.style.height = `${rect.height.toFixed(1)}px`
-      link.style.transform = `translate3d(${(rect.x - pond.view.x).toFixed(1)}px, ${(rect.y - pond.view.y).toFixed(1)}px, 0)`
-      link.hidden = false
+      place(chrome.shield, panel.frame, pond)
+      place(chrome.app, panel.app, pond)
+      place(chrome.site, panel.site, pond)
     },
 
     dispose() {
-      for (const ring of rings.values()) {
-        ring.remove()
+      for (const chrome of held.values()) {
+        chrome.shield.remove()
+        chrome.app.remove()
+        chrome.site.remove()
       }
-      rings.clear()
-      link.remove()
+      held.clear()
     },
   }
 }
