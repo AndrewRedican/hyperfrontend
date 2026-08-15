@@ -12,7 +12,7 @@
  * at a fraction of the fill and memory. A koi outside the visible window draws
  * nothing at all.
  *
- * This is the one browser-facing module in the app. The other six koi replace
+ * This is the one browser-facing module in the app. The other seven koi replace
  * exactly this file with their own framework's idiom, and share everything
  * else: the swimming brain stays authoritative for where the fish *is*, and
  * this module only makes the koi's body express it.
@@ -185,7 +185,7 @@ export function createKoiRenderer(
 
   const koi: Koi = createKoi({
     seed: koiSeed(profile.framework),
-    // why: The phenotype is the profile's own many-levered build — width, belly, head, fins — so the seven read as related but individually recognisable animals rather than one mesh at seven scales.
+    // why: The phenotype is the profile's own many-levered build — width, belly, head, fins — so the shoal reads as related but individually recognisable animals rather than one mesh at eight scales.
     physical: phenotype,
     appearance: {
       pattern: palette.pattern,
