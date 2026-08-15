@@ -524,8 +524,8 @@ export class KoiSwimController implements ReactiveController, KoiRuntime {
     const state = this.#motion.state
     if (timestamp - this.#lastOutlineAt >= OUTLINE_INTERVAL_MS) {
       this.#lastOutlineAt = timestamp
-      // why: The host dead-reckons outlines forward by reported speed, so a held koi must report itself stationary or its hover target slides away from its body.
-      const outline = this.#inspected ? { ...this.#motion.outline(), speed: 0 } : this.#motion.outline()
+      // why: The host dead-reckons outlines forward by reported speed, so a held koi must report itself stationary or its hover target slides away from its body — and a fish going nowhere has no intent for the overlay to draw.
+      const outline = this.#inspected ? { ...this.#motion.outline(), speed: 0, intent: undefined } : this.#motion.outline()
       // why: This frame is pointer-transparent, so the card's links can only be opened by the host — the outline carries the card's geometry whenever a visitor holds this koi.
       const card = this.#renderer?.cardRects() ?? null
       this.#emit('outline', card === null ? outline : { ...outline, card })

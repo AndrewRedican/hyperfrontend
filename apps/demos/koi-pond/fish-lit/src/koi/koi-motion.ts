@@ -21,6 +21,7 @@ import type {
   Disturbance,
   EncounterSelf,
   Itinerary,
+  KoiIntent,
   KoiOutline,
   KoiPhase,
   KoiProfile,
@@ -31,6 +32,8 @@ import type {
   Vec2,
 } from '@hyperfrontend/demo-koi-lib'
 import {
+  ENCOUNTER_CLEARANCE,
+  ENCOUNTER_HORIZON_S,
   SHORE_ABSENT_S,
   advanceSpine,
   boundaryPressure,
@@ -143,6 +146,9 @@ const PLACE_SETTLE_S = 2
 /** How long the roll between two depth levels reads as a state of its own, in seconds. */
 const DEPTH_ROLL_S = 1.4
 
+/** How long a decided depth pass stays readable in the intent report, in seconds — the raw decision is a single tick, but the grant round-trip and the roll it starts deserve a visible story. */
+const DEPTH_INTENT_HOLD_S = 3
+
 /**
  * Maps a normalised trait onto a band.
  *
@@ -189,12 +195,14 @@ export interface KoiMotionOptions {
   depth: number
 }
 
-/** The heading this koi wants, and how hard it is committed to reaching it. */
+/** The heading this koi wants, how hard it is committed to reaching it, and which decision family asked for it. */
 interface Desire {
   /** The heading to steer toward, in radians. */
   heading: number
   /** Multiplier on the koi's turn rate while it steers there. */
   gain: number
+  /** The decision family — `avoid` for every collision-avoidance pull, `travel` for ordinary progress. */
+  kind: 'travel' | 'avoid'
 }
 
 /**
@@ -292,6 +300,15 @@ export class KoiMotion {
   /** The turn rate the body currently carries, in radians per second. */
   #turnVelocity = 0
 
+  /** The itinerary waypoint behind `#course`, replayed by the intent report the steering ladder otherwise discards. */
+  #travelTarget: Vec2 | null = null
+
+  /** The decided side of a depth pass, and the elapsed reading it stays readable in the intent report until. */
+  #depthIntent: { direction: 'above' | 'below'; untilS: number } | null = null
+
+  /** Which family the current desire came from, recorded each frame for the intent report. */
+  #steer: { heading: number; kind: 'travel' | 'avoid' }
+
   /** The per-neighbour memory that keeps a chosen manoeuvre committed. */
   readonly #encounters = createEncounterMemory()
 
@@ -313,6 +330,7 @@ export class KoiMotion {
     this.#position = { ...options.position }
     this.#heading = options.heading
     this.#course = options.heading
+    this.#steer = { heading: options.heading, kind: 'travel' }
     this.#depth = options.depth
     this.#speed = options.pond.fishLength * lerp(options.profile.traits.cruiseSpeed, CRUISE_BL_S)
     this.#spine = createSpine(this.#position, this.#heading, this.#bodyLength())
@@ -387,6 +405,7 @@ export class KoiMotion {
     }
 
     const wanted = this.#desire()
+    this.#steer = wanted
     const error = wrapAngle(wanted.heading - this.#heading)
     // why: Speed taxes the helm — a koi past cruise pace physically cannot carve a tight arc, so a bolting fish sweeps through a wide curve instead of pivoting at full speed.
     const overCruise = Math.max(0, this.#speed / this.#pond.fishLength - CRUISE_BL_S.max)
@@ -515,6 +534,9 @@ export class KoiMotion {
     this.#evasionUrgency = 0
     this.#boundaryEngaged = false
     this.#turnUntilS = 0
+    this.#travelTarget = null
+    this.#depthIntent = null
+    this.#steer = { heading: this.#heading, kind: 'travel' }
     this.#shore = 'in'
     this.#itinerary.abandon()
     this.#course = this.#heading
@@ -545,6 +567,7 @@ export class KoiMotion {
       speed: this.#speed,
       depth: this.#depth,
       phase: this.#phase,
+      intent: this.#intent(),
     }
   }
 
@@ -610,6 +633,10 @@ export class KoiMotion {
       }
       if (resolution.depth !== null) {
         this.#depthRequest = resolution.depth
+        this.#depthIntent = {
+          direction: resolution.action === 'pass-below' ? 'below' : 'above',
+          untilS: this.#elapsed + DEPTH_INTENT_HOLD_S,
+        }
         continue
       }
       if (resolution.action === 'slow') {
@@ -624,29 +651,33 @@ export class KoiMotion {
     }
 
     if (this.#shore === 'in') {
-      this.#course = headingTo(this.#position, this.#itinerary.current(this.#pond, this.#position, this.#elapsed).point)
+      const waypoint = this.#itinerary.current(this.#pond, this.#position, this.#elapsed).point
+      this.#course = headingTo(this.#position, waypoint)
+      // why: Captured by value — the itinerary reuses its returned object, and the report must not read a mutated leg later.
+      this.#travelTarget = { x: waypoint.x, y: waypoint.y }
     }
   }
 
   /**
-   * The heading this koi wants, and how hard it is committed to it.
+   * The heading this koi wants, how hard it is committed to it, and which
+   * decision family asked for it.
    *
-   * @returns The desired heading and the turn gain to reach it with.
+   * @returns The desired heading, the turn gain to reach it with, and its family.
    */
   #desire(): Desire {
     const { traits } = this.profile
     if (this.#threat !== null && this.#elapsed < this.#fleeingUntilS) {
-      return { heading: headingAwayFrom(this.#position, this.#threat, this.#heading), gain: ESCAPE_TURN_GAIN }
+      return { heading: headingAwayFrom(this.#position, this.#threat, this.#heading), gain: ESCAPE_TURN_GAIN, kind: 'avoid' }
     }
 
     // why: A koi that chose to slip out holds its course — the whole point of the slip is that the correction was ignored.
     if (this.#shore === 'leaving' || this.#shore === 'away') {
-      return { heading: this.#heading, gain: GLIDE_GAIN }
+      return { heading: this.#heading, gain: GLIDE_GAIN, kind: 'travel' }
     }
 
     if (this.#shore === 'returning') {
       // why: The itinerary's course predates the absence; until the koi is back inside, the only sensible pull is open water.
-      return { heading: headingTo(this.#position, pondCentre(this.#pond)), gain: 0.5 }
+      return { heading: headingTo(this.#position, pondCentre(this.#pond)), gain: 0.5, kind: 'travel' }
     }
 
     const edge = boundaryPressure(this.#pond, this.#position, this.#heading)
@@ -656,7 +687,7 @@ export class KoiMotion {
       this.#crossings += 1
       if (slipsAway(this.#seed, this.#crossings)) {
         this.#shore = 'leaving'
-        return { heading: this.#heading, gain: GLIDE_GAIN }
+        return { heading: this.#heading, gain: GLIDE_GAIN, kind: 'travel' }
       }
       // why: The itinerary must not keep pulling at the wall the koi is being pushed off — the next leg starts from open water.
       this.#itinerary.abandon()
@@ -666,12 +697,12 @@ export class KoiMotion {
     if (this.#boundaryEngaged) {
       const caution = 0.4 + traits.directionalCaution * 0.6
       this.#cooldownUntilS = Math.max(this.#cooldownUntilS, this.#elapsed + 1)
-      return { heading: Math.atan2(edge.inward.y, edge.inward.x), gain: 1 + edge.urgency * caution * 1.4 }
+      return { heading: Math.atan2(edge.inward.y, edge.inward.x), gain: 1 + edge.urgency * caution * 1.4, kind: 'avoid' }
     }
 
     if (this.#evasionHeading !== null) {
       this.#cooldownUntilS = Math.max(this.#cooldownUntilS, this.#elapsed + 1)
-      return { heading: this.#evasionHeading, gain: 1 + this.#evasionUrgency }
+      return { heading: this.#evasionHeading, gain: 1 + this.#evasionUrgency, kind: 'avoid' }
     }
 
     const damping = this.#pond.reducedMotion ? REDUCED_MOTION_DAMPING : 1
@@ -686,15 +717,15 @@ export class KoiMotion {
     if (this.#turnUntilS !== 0) {
       if (this.#elapsed >= this.#turnUntilS || Math.abs(error) < 0.06) {
         finish()
-        return { heading: this.#course + ripple, gain: GLIDE_GAIN }
+        return { heading: this.#course + ripple, gain: GLIDE_GAIN, kind: 'travel' }
       }
-      return { heading: this.#course, gain: 1 }
+      return { heading: this.#course, gain: 1, kind: 'travel' }
     }
     if (Math.abs(error) > TURN_TRIGGER && this.#elapsed > this.#cooldownUntilS) {
       this.#turnUntilS = this.#elapsed + Math.min(TURN_MAX_S, Math.abs(error) / lerp(traits.turnResponsiveness, TURN_RATE) + 0.3)
-      return { heading: this.#course, gain: 1 }
+      return { heading: this.#course, gain: 1, kind: 'travel' }
     }
-    return { heading: this.#course + ripple, gain: GLIDE_GAIN }
+    return { heading: this.#course + ripple, gain: GLIDE_GAIN, kind: 'travel' }
   }
 
   /**
@@ -718,5 +749,41 @@ export class KoiMotion {
       cap,
       this.#pond.fishLength * lerp(traits.cruiseSpeed, CRUISE_BL_S) * this.#pace.multiplier(this.#elapsed) * this.#paceScale
     )
+  }
+
+  /**
+   * The koi's current decision, told as the host's overlay wants it: a family,
+   * a steering target, and how far ahead this koi is anticipating.
+   *
+   * An avoidance projects along the desired escape heading — the trajectory the
+   * manoeuvre decided on — while ordinary travel points at the real itinerary
+   * waypoint. A decided depth pass is vertical, so it carries a direction
+   * instead of a point; it stays readable while the roll it started plays out,
+   * unless a horizontal avoidance takes over the story.
+   *
+   * @returns The intent report.
+   */
+  #intent(): KoiIntent {
+    const length = this.#bodyLength()
+    // how: The self-sized reading of the pairwise encounter window — how far this koi closes in one anticipation horizon, plus the clearance it keeps for itself.
+    const reachPx = this.#speed * ENCOUNTER_HORIZON_S + length * ENCOUNTER_CLEARANCE + length * this.profile.build.girthRatio * 2
+    if (this.#steer.kind === 'avoid') {
+      return {
+        kind: 'avoid',
+        target: {
+          x: this.#position.x + Math.cos(this.#steer.heading) * reachPx,
+          y: this.#position.y + Math.sin(this.#steer.heading) * reachPx,
+        },
+        reachPx,
+      }
+    }
+    if (this.#depthIntent !== null && this.#elapsed < this.#depthIntent.untilS) {
+      return { kind: 'depth-change', target: null, direction: this.#depthIntent.direction, reachPx }
+    }
+    const target =
+      this.#shore === 'in' && this.#travelTarget !== null
+        ? { x: this.#travelTarget.x, y: this.#travelTarget.y }
+        : { x: this.#position.x + Math.cos(this.#heading) * reachPx, y: this.#position.y + Math.sin(this.#heading) * reachPx }
+    return { kind: 'travel', target, reachPx }
   }
 }
