@@ -15,7 +15,7 @@
  * frame for every koi below it. The canvas clears to transparent; only the
  * fish itself has colour.
  *
- * This is the one browser-facing part of the app. The other six koi replace it
+ * This is the one browser-facing part of the app. The other seven koi replace it
  * with their own framework's idiom, and share everything else.
  */
 import type { KoiCardText, KoiProfile } from '@hyperfrontend/demo-koi-lib'
