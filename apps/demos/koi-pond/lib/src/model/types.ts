@@ -122,6 +122,27 @@ export interface KoiOutline {
   depth: number
   /** The behavioural state the body is reading in. */
   phase: KoiPhase
+  /**
+   * The pond-space rectangle of the identity card's URL line, while the card is
+   * showing.
+   *
+   * The koi's frame is pointer-transparent, so a link drawn inside it can never
+   * be clicked; reporting where the URL text sits lets the host float a real
+   * anchor over it.
+   */
+  card?: KoiCardLink
+}
+
+/** The pond-space rectangle one koi's card URL line occupies. */
+export interface KoiCardLink {
+  /** Pond-space x of the rectangle's left edge. */
+  x: number
+  /** Pond-space y of the rectangle's top edge. */
+  y: number
+  /** Rectangle width in CSS pixels. */
+  width: number
+  /** Rectangle height in CSS pixels. */
+  height: number
 }
 
 /**

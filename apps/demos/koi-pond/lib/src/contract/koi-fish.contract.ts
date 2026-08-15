@@ -38,7 +38,7 @@ export interface KoiContract {
 }
 
 /** The contract cut every pond project is built against. */
-export const KOI_CONTRACT_VERSION = '0.3.0'
+export const KOI_CONTRACT_VERSION = '0.4.0'
 
 /** The contract the pond host and all seven koi share. */
 export const koiFishContract: KoiContract = {
@@ -143,12 +143,25 @@ export const koiFishContract: KoiContract = {
         required: ['paused'],
       },
     },
+    {
+      type: 'place',
+      description:
+        'Where a held koi is being carried: the visitor is dragging it to a new spot. Only meaningful while paused; the koi moves its body to the point, lets its spine trail through the drag, and resumes swimming from wherever it was dropped once unpaused.',
+      schema: {
+        type: 'object',
+        properties: {
+          x: { type: 'number' },
+          y: { type: 'number' },
+        },
+        required: ['x', 'y'],
+      },
+    },
   ],
   emitted: [
     {
       type: 'outline',
       description:
-        "The koi's occupied outline as nose-first spine samples with a half-width each, plus heading, speed, depth, and behavioural phase. High cadence, deliberately schema-less.",
+        "The koi's occupied outline as nose-first spine samples with a half-width each, plus heading, speed, depth, and behavioural phase. While the identity card is showing, also the pond-space rectangle of the card's URL line, so the host can lay a real link over text the pointer-transparent frame could never make clickable itself. High cadence, deliberately schema-less.",
     },
     {
       type: 'depth-request',

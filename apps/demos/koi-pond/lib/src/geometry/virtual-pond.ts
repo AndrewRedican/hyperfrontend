@@ -335,7 +335,8 @@ export function pondPoint(pond: PondEnvironment, fx: number, fy: number): Vec2 {
 }
 
 /** How much water a koi's frame box claims around its body, as a multiple of body length. */
-const FRAME_BOX_RATIO = 1.7
+// why: The drawn snout reaches ~0.355 lengths ahead of the anchor while the box used to budget exactly 0.35 — this ratio buys real clearance at the front edge for the snout, barbels, and beat sway.
+const FRAME_BOX_RATIO = 1.785
 
 /** A koi's square screen footprint: the sub-rect of pond space its canvas needs to cover. */
 export interface KoiFrameBox {

@@ -39,6 +39,7 @@ export type { DepthState } from './model/depth.js'
 export type {
   Disturbance,
   KoiBuild,
+  KoiCardLink,
   KoiFramework,
   KoiIdentity,
   KoiOutline,

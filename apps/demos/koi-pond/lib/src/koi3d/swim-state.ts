@@ -24,15 +24,16 @@ export const MOTION_PRESETS: Readonly<Record<string, KoiMotionInput>> = {
   'Fast swim': { ...DEFAULT_MOTION, speed: 1.7, acceleration: 0.2 },
   'Gentle left turn': { ...DEFAULT_MOTION, speed: 0.55, turnRate: -0.5 },
   'Gentle right turn': { ...DEFAULT_MOTION, speed: 0.55, turnRate: 0.5 },
-  'Hard left turn': { ...DEFAULT_MOTION, speed: 1.1, turnRate: -1.9 },
-  'Hard right turn': { ...DEFAULT_MOTION, speed: 1.1, turnRate: 1.9 },
+  'Hard left turn': { ...DEFAULT_MOTION, speed: 1.1, turnRate: -1.4 },
+  'Hard right turn': { ...DEFAULT_MOTION, speed: 1.1, turnRate: 1.4 },
   Escape: { ...DEFAULT_MOTION, speed: 3.4, turnRate: 1.2, acceleration: 2.6, escapeIntensity: 1 },
 }
 
 /** How fast each parameter chases its target, in seconds to close most of the gap. */
 const RESPONSE = <const>{
   wave: 0.22,
-  turn: 0.12,
+  // why: The bend answers the helm noticeably slower than the wave — a koi's turn is muscle working down the whole body, and a quick constant here is what read as the head snapping.
+  turn: 0.22,
   bank: 0.3,
   pitch: 0.35,
 }
@@ -78,8 +79,9 @@ function chase(current: number, target: number, response: number, dt: number): n
 export function targetSwim(motion: KoiMotionInput, trim: KoiSwimTrim = DEFAULT_TRIM): SwimParameters {
   const speed = Math.max(0, motion.speed)
   const escape = clamp(motion.escapeIntensity, 0, 1)
-  const surge = Math.max(0, motion.acceleration)
-  const turn = clamp(motion.turnRate, -3, 3)
+  // why: The surge kick is clamped because it is derived from a per-frame speed difference — one stalled or skipped frame would otherwise ask the body for a convulsion no fish could make.
+  const surge = clamp(motion.acceleration, 0, 2.6)
+  const turn = clamp(motion.turnRate, -2.2, 2.2)
   return {
     // magic: A swimming fish holds its tail-beat amplitude roughly constant across speeds and varies its frequency instead; these numbers are calibrated so the tail tip sweeps about a fifth of a body length at cruise, which is what a carp actually does.
     amplitude: (9 + Math.min(speed, 2.2) * 2.4 + escape * 2.5 + surge) * trim.amplitude,
@@ -88,11 +90,12 @@ export function targetSwim(motion: KoiMotionInput, trim: KoiSwimTrim = DEFAULT_T
     waveGrowth: clamp(2.3 - escape * 0.9 - Math.min(speed, 2) * 0.2, 1.15, 2.4),
     wavesPerBody: (0.95 + Math.min(speed, 3) * 0.07 + escape * 0.3) * trim.wavesPerBody,
     caudalLag: 0.12 + escape * 0.07,
-    // magic: Saturating the bend keeps a koi asked for an impossible turn rate looking like a fish at its limit rather than a hoop.
-    turnBend: 2.3 * Math.tanh(turn * 0.82) * trim.turn,
-    turnCentre: 0.32 + escape * 0.1,
-    turnSpread: 0.3 + escape * 0.13,
-    bank: clamp(turn * 0.22, -0.38, 0.38),
+    // magic: Saturating the bend keeps a koi asked for an impossible turn rate looking like a fish at its limit rather than a hoop; 1.4 rad across the whole body is a hard turn a real carp could actually hold.
+    turnBend: 1.4 * Math.tanh(turn * 0.95) * trim.turn,
+    // why: The bend is carried in the torso rather than at the shoulder — a fish turns with the muscle behind its skull, and centring the bend on the pectoral band is what read as a broken neck.
+    turnCentre: 0.4 + escape * 0.08,
+    turnSpread: 0.42 + escape * 0.1,
+    bank: clamp(turn * 0.28, -0.36, 0.36),
     rollBeat: 0.028 + escape * 0.055,
     pitch: clamp(motion.climbRate * 0.55, -0.5, 0.5),
     sway: 0.006 + escape * 0.012,
