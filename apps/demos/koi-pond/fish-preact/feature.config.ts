@@ -9,9 +9,7 @@ export default defineConfig({
   // why: An open shell, acknowledged at pack time - seven koi share one page reporting outlines at high cadence, and a per-message security envelope across seven channels collapses delivery. Messages still pin to the configured origin.
   protocol: 'none',
   display: {
-    // note: Embedded is the koi's real presentation - a host-owned transparent layer. The shell build only compiles with the full mode set declared, and the windowed modes let debug consoles inspect a single koi.
-    modes: ['embedded', 'dialog', 'popup', 'standalone'],
-    dialog: { width: 640, height: 480 },
-    popup: { width: 640, height: 480 },
+    // note: Embedded is the koi's only presentation - a host-owned transparent layer the pond composites into its scene.
+    modes: ['embedded'],
   },
 })
