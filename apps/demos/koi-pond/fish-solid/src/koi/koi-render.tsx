@@ -8,20 +8,29 @@
  * exist for the other end of the koi's life, where disposal empties them and
  * every later call falls harmlessly through.
  *
- * Hover visibility is the one thing routed through a signal, because it moves
- * at pointer cadence; the card's per-frame placement writes its transform
- * directly so sixty updates a second never enter the reactive graph.
+ * Selection visibility and the card's inspector rows are the only things
+ * routed through signals, because they change a handful of times a minute; the
+ * card's per-frame placement writes its transform directly so sixty updates a
+ * second never enter the reactive graph.
  */
-import type { KoiCardLink, KoiProfile, PondEnvironment } from '@hyperfrontend/demo-koi-lib'
+import type { KoiCardDetails, KoiCardLink, KoiCardPanel, KoiCardText, KoiProfile, PondEnvironment } from '@hyperfrontend/demo-koi-lib'
 import type { Koi } from '@hyperfrontend/demo-koi-lib/three'
 import type { KoiState } from './koi-motion'
 import type { GlRenderer, KoiStage } from './koi-stage'
+import type { KoiCardHandles } from './KoiFish'
+import { describeKoiCard } from '@hyperfrontend/demo-koi-lib'
 import { createPondRenderer } from '@hyperfrontend/demo-koi-lib/three'
 import { createSignal } from 'solid-js'
 import { render } from 'solid-js/web'
 import { cardAnchor, cardTransform } from './card-anchor'
 import { createKoiStage } from './koi-stage'
 import { KoiFish } from './KoiFish'
+
+/** How firmly the silhouette reads when the pointer is merely over the koi. */
+const HOVER_OUTLINE = 0.35
+
+/** How firmly the silhouette reads while a visitor holds the koi. */
+const HELD_OUTLINE = 1
 
 /** A renderer bound to one koi. */
 export interface KoiRenderer {
@@ -41,26 +50,45 @@ export interface KoiRenderer {
    */
   setPond(pond: PondEnvironment): void
   /**
-   * Shows or hides the hover identity card.
+   * Marks whether the host's pointer is over this koi.
    *
-   * @param hovered - Whether the host's pointer is over this koi.
+   * Hover only says "this is selectable": the silhouette reads softly and
+   * nothing else changes — the identity card belongs to selection.
+   *
+   * @param hovered - Whether the pointer is over this koi.
    */
   setHovered(hovered: boolean): void
   /**
-   * Positions the hover card beside the koi, clamped into the visible window.
+   * Marks whether a visitor is holding this koi.
+   *
+   * Holding traces the full silhouette and keeps the identity card open until
+   * release, whatever the pointer does meanwhile.
+   *
+   * @param selected - Whether the koi is held.
+   */
+  setSelected(selected: boolean): void
+  /**
+   * Rewrites the card's live inspector rows.
+   *
+   * @param details - The koi's live facts.
+   */
+  updateCard(details: KoiCardDetails): void
+  /**
+   * Positions the identity card beside the koi, clamped into the visible window.
    *
    * @param state - What the koi is doing right now.
    */
   placeCard(state: KoiState): void
   /**
-   * Where the card's URL line currently sits, in pond space.
+   * Where the card and its two links currently sit, in pond space.
    *
-   * This frame is pointer-transparent, so the link text drawn here can never be
-   * clicked directly; the host lays a real anchor over the reported rectangle.
+   * This frame is pointer-transparent, so nothing drawn here can be clicked
+   * directly; the host floats real anchors over the reported rectangles and an
+   * inert shield over the frame.
    *
-   * @returns The rectangle, or `null` while the card is hidden.
+   * @returns The card's geometry, or `null` while the card is hidden.
    */
-  cardLinkRect(): KoiCardLink | null
+  cardRects(): KoiCardPanel | null
   /** Releases the GPU resources the koi holds and disposes its tree. */
   dispose(): void
 }
@@ -70,7 +98,7 @@ export interface KoiRenderer {
  *
  * @param root - The app root the koi is drawn into.
  * @param profile - Everything about this koi that never changes.
- * @param url - The URL of the app rendering it, revealed on hover.
+ * @param url - The URL of the app rendering it, shown on the card.
  * @param pond - The world at build time; later announcements arrive via `setPond`.
  * @param createGl - The GL factory, replaceable so specs can run headless.
  * @returns The renderer.
@@ -88,27 +116,43 @@ export function createKoiRenderer(
   pond: PondEnvironment,
   createGl: (canvas: HTMLCanvasElement) => GlRenderer = createPondRenderer
 ): KoiRenderer {
-  // why: The stage, card, and URL anchor arrive when the koi's `onMount` runs and leave with its cleanup, so everything below reaches them through these slots rather than closing over them.
+  // why: The stage and the card's nodes arrive when the koi's `onMount` runs and leave with its cleanup, so everything below reaches them through these slots rather than closing over them.
   let stage: KoiStage | null = null
-  let card: HTMLDivElement | null = null
-  let cardUrl: HTMLAnchorElement | null = null
+  let handles: KoiCardHandles | null = null
   let latestPond = pond
-  const [isHovered, setIsHovered] = createSignal(false)
+  let hovered = false
+  const [isSelected, setIsSelected] = createSignal(false)
+  const [rows, setRows] = createSignal<KoiCardText | null>(null)
 
-  const mount = (canvas: HTMLCanvasElement, cardNode: HTMLDivElement, linkNode: HTMLAnchorElement): (() => void) => {
+  /** Traces the silhouette at whatever the pointer and the hold currently justify. */
+  const applyOutline = (): void => {
+    stage?.setOutline(isSelected() ? HELD_OUTLINE : hovered ? HOVER_OUTLINE : 0)
+  }
+
+  /**
+   * A card element's rectangle lifted into pond space.
+   *
+   * @param element - The element to measure.
+   * @returns The pond-space rectangle.
+   */
+  const rectOf = (element: HTMLElement): KoiCardLink => {
+    // why: The frame fills the visible window exactly, so client coordinates become pond coordinates by adding the window's origin back on.
+    const rect = element.getBoundingClientRect()
+    return { x: rect.left + latestPond.view.x, y: rect.top + latestPond.view.y, width: rect.width, height: rect.height }
+  }
+
+  const mount = (canvas: HTMLCanvasElement, cardHandles: KoiCardHandles): (() => void) => {
     const built = createKoiStage(canvas, profile, latestPond, createGl)
     stage = built
-    card = cardNode
-    cardUrl = linkNode
+    handles = cardHandles
     return () => {
       built.dispose()
       stage = null
-      card = null
-      cardUrl = null
+      handles = null
     }
   }
 
-  const unmount = render(() => <KoiFish profile={profile} url={url} hovered={isHovered} mount={mount} />, root)
+  const unmount = render(() => <KoiFish profile={profile} url={url} selected={isSelected} rows={rows} mount={mount} />, root)
 
   return {
     get koi() {
@@ -127,25 +171,34 @@ export function createKoiRenderer(
       stage?.setPond(next)
     },
 
-    setHovered(hovered) {
-      setIsHovered(hovered)
+    setHovered(next) {
+      hovered = next
+      applyOutline()
+    },
+
+    setSelected(next) {
+      // why: The card belongs to the hold, not the pointer — it stays open however the pointer moves, because the visitor is about to interact with it.
+      setIsSelected(next)
+      applyOutline()
+    },
+
+    updateCard(details) {
+      setRows(describeKoiCard(details))
     },
 
     placeCard(state) {
-      if (card !== null) {
+      if (handles !== null) {
         // why: A tapped fish near a window edge must still show its whole card — on touch there is no hover to chase it with.
-        const size = { width: card.offsetWidth || 200, height: card.offsetHeight || 64 }
-        card.style.transform = cardTransform(cardAnchor(state, latestPond, size))
+        const size = { width: handles.card.offsetWidth || 200, height: handles.card.offsetHeight || 64 }
+        handles.card.style.transform = cardTransform(cardAnchor(state, latestPond, size))
       }
     },
 
-    cardLinkRect() {
-      if (card === null || card.hidden || cardUrl === null) {
+    cardRects() {
+      if (handles === null || handles.card.hidden) {
         return null
       }
-      // why: The frame fills the visible window exactly, so client coordinates become pond coordinates by adding the window's origin back on.
-      const rect = cardUrl.getBoundingClientRect()
-      return { x: rect.left + latestPond.view.x, y: rect.top + latestPond.view.y, width: rect.width, height: rect.height }
+      return { frame: rectOf(handles.card), app: rectOf(handles.app), site: rectOf(handles.site) }
     },
 
     dispose() {

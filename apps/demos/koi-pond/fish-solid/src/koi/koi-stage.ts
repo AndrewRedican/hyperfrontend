@@ -45,6 +45,12 @@ export interface KoiStage {
    * @param pond - The world as the host most recently announced it.
    */
   setPond(pond: PondEnvironment): void
+  /**
+   * Traces the koi's silhouette, or stops tracing it.
+   *
+   * @param strength - How firmly the silhouette reads, 0 (off) to 1.
+   */
+  setOutline(strength: number): void
   /** Releases the GPU resources the koi holds. */
   dispose(): void
 }
@@ -154,6 +160,10 @@ export function createKoiStage(
       view.setPond(next)
       // why: A pond announcement moves the window, so the next draw must re-fit rather than trust a buffer sized against the old world.
       fittedSize = 0
+    },
+
+    setOutline(strength) {
+      koi.setOutline(strength)
     },
 
     dispose() {
