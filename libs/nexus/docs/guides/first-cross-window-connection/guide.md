@@ -2,7 +2,7 @@
 
 By the end of this tutorial you will have a page and an iframe exchanging contract-checked messages over a handshaken session, with queueing across the pre-open gap and a clean shutdown, and you will understand the model every layer above nexus is built on.
 
-A page and an iframe can already talk: `postMessage` on one side, a `message` listener on the other. What they cannot do, out of the box, is agree on anything. Nothing checks the message shape, nothing tells you the other side is ready, and a message sent one tick too early vanishes without a trace. You will build the smallest connection that fixes all three: a host page and a note-taking widget, each declaring what it sends and accepts.
+A page and an [`<iframe>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/iframe) can already talk: [`postMessage`](https://developer.mozilla.org/en-US/docs/Web/API/Window/postMessage) on one side, a [`message`](https://developer.mozilla.org/en-US/docs/Web/API/Window/message_event) listener on the other. What they cannot do, out of the box, is agree on anything. Nothing checks the message shape, nothing tells you the other side is ready, and a message sent one tick too early vanishes without a trace. You will build the smallest connection that fixes all three: a host page and a note-taking widget, each declaring what it sends and accepts.
 
 ## Install the package in both projects
 
@@ -136,4 +136,4 @@ const broker = createBroker({
 
 For anything finer than an origin list, a [`SecurityPolicy`](/docs/libraries/nexus#api-SecurityPolicy) decides per connection.
 
-You now have two windows with crossed contracts, a handshaken session, delivery in both directions, ordered queueing across the pre-open gap, a clean shutdown, and an origin rule — and neither side touched `postMessage` or event plumbing directly.
+You now have two windows with crossed contracts, a handshaken session, delivery in both directions, ordered queueing across the pre-open gap, a clean shutdown, and an origin rule. Neither side touched `postMessage` or event plumbing directly.

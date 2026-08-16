@@ -20,7 +20,7 @@
     }
   ],
   "prerequisites": {
-    "knowledge": ["A JavaScript project with a bundler", "What an iframe is"]
+    "knowledge": ["A JavaScript project with a bundler"]
   },
   "related": {
     "guides": ["embed-a-shipped-feature"],
