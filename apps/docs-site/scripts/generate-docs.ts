@@ -507,6 +507,9 @@ function generateTypeDoc(lib: LibraryConfig): boolean {
       '--excludeInternal',
       '--excludeNotDocumented',
       'false',
+      // why: The library page renders the README itself; letting TypeDoc embed a copy in api.json duplicates it into the page payload, authoring comments and all
+      '--readme',
+      'none',
       '--disableGit',
       '--basePath',
       WORKSPACE_ROOT,

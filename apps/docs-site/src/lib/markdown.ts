@@ -13,7 +13,8 @@ import remarkRehype from 'remark-rehype'
  * (`defaultColor: false`); the active palette is chosen by the `.dark` class
  * via the `pre.shiki` rules in `globals.css`. Raw HTML embedded in the markdown
  * (mermaid placeholders, badges, alignment wrappers) is preserved through
- * `rehype-raw`.
+ * `rehype-raw`, except for HTML comments: authoring notes stay useful in the
+ * source files and never reach the published page.
  *
  * @param markdown - The markdown string to convert
  * @returns A promise that resolves to the HTML string
@@ -30,9 +31,19 @@ export async function markdownToHtml(markdown: string): Promise<string> {
       lazy: true,
     })
     .use(rehypeStringify, { allowDangerousHtml: true })
-    .process(markdown)
+    .process(stripHtmlComments(markdown))
 
   return result.toString()
+}
+
+/**
+ * Remove HTML comments so in-source authoring notes never render.
+ *
+ * @param markdown - Raw markdown content
+ * @returns The markdown without HTML comments
+ */
+function stripHtmlComments(markdown: string): string {
+  return markdown.replace(/<!--[\s\S]*?-->/g, '')
 }
 
 /**
