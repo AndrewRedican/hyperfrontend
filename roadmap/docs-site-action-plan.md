@@ -23,10 +23,13 @@ The work below builds on these existing pieces:
   targets the `main` branch deliberately (documented in `generate-docs.ts`:
   git detection is disabled so links are identical in every build environment);
   tag/commit pinning is explicitly not wanted.
-- **Guides pipeline** — package-owned Guide Units (`libs/*/docs/guides/<slug>/`)
+- **Guides pipeline** — site-owned Guide Units (`apps/docs-site/content/guides/<slug>/`)
   compile through `scripts/generate-guides.ts` into the global `/docs/guides/[slug]`
   route with build-failing snippet extraction from executing specs and shipped demo
-  sources. Documented in `apps/docs-site/README.md`.
+  sources. Guides sit beside articles under `content/` rather than inside the packages
+  they describe, so editorial changes never reach a package's build, version, or
+  publish boundary; association is declared by `meta.json` `packages`.
+  Documented in `apps/docs-site/README.md`.
 - **Search** — a deterministic omni-search index over libraries, API symbols,
   submodules, guides, and articles is generated at build time to
   `public/search-index.json` behind the stable contract in
@@ -88,14 +91,18 @@ and **type/declaration** locations.
 Author a FAQ per package, consumed by the generation pipeline so it ships in the
 build (no manual page wiring).
 
-- Define a standard location/format per package (e.g. `docs/FAQ.md` in each lib).
+- Author them under `apps/docs-site/content/faq/`, one file per package, keyed to
+  the package by frontmatter. A FAQ is editorial content the site owns, so it
+  belongs beside articles and guides rather than inside a publishable project,
+  where it would make Nx, CI, versioning, and publishing treat the package as
+  changed for a documentation edit.
 - Extend `generate-docs.ts` to discover and emit FAQ content into `.generated`
   and the manifest.
 - Add a FAQ route/section to each library's docs page.
 
 **Files:**
 
-- `libs/*/docs/FAQ.md` — Create (per package)
+- `apps/docs-site/content/faq/<package-slug>.md` — Create (per package)
 - `apps/docs-site/scripts/generate-docs.ts` — Edit (ingest FAQ)
 - `apps/docs-site/src/components/library-doc-page.tsx` — Edit (render FAQ)
 
@@ -103,10 +110,11 @@ build (no manual page wiring).
 
 ## Phase 4: Per-package how-to tutorials
 
-Settled and shipped as the Guide Unit system: `libs/*/docs/guides/<slug>/`
+Settled and shipped as the Guide Unit system: `apps/docs-site/content/guides/<slug>/`
 (`guide.md` + `meta.json`), compiled by `scripts/generate-guides.ts` into
 `/docs/guides/[slug]`, with verified snippet extraction, a machine-readable corpus
-at `/guides/index.json`, and per-library guide surfacing on library pages.
+at `/guides/index.json`, and per-library guide surfacing on library pages driven by
+`meta.json` `packages` rather than by where the files sit.
 Mechanism documented in `apps/docs-site/README.md`.
 
 Remaining scope is content, not infrastructure: an adoption-path tutorial or
