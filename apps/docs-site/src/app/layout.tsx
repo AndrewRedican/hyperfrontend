@@ -37,6 +37,9 @@ export const metadata: Metadata = {
   },
   alternates: {
     canonical: './',
+    types: {
+      'application/atom+xml': [{ url: '/feed.xml', title: 'HyperFrontend Articles' }],
+    },
   },
   verification: {
     google: process.env['NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION'],
