@@ -4,7 +4,7 @@ Node.js-targeted bindings of the cryptography primitives, wired to `node:crypto`
 
 ## Overview
 
-This entry point composes the runtime-agnostic core (`createEncrypt`, `createValueCreator`, hashing, key derivation, time-based passwords) with Node.js implementations of `subtle`, `getRandomValues`, and UTF-8 encoding. Function signatures match `/browser` so encryption workflows can be shared across the stack — pick the adapter that matches the runtime and the rest of the code stays identical.
+This entry point composes the runtime-agnostic core (`createEncrypt`, `createValueCreator`, hashing, key derivation, time-based passwords) with Node.js implementations of `subtle`, `getRandomValues`, and UTF-8 encoding. Function signatures match `/browser` so encryption workflows can be shared across the stack: pick the adapter that matches the runtime and the rest of the code stays identical.
 
 ## Usage
 
