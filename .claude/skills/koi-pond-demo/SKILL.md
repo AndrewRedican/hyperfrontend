@@ -43,11 +43,11 @@ npx nx run demo-koi-lib:build           # tsc only; refresh does build+pack+inst
 npx nx run demo-koi-pond:refresh-fish-shells
 
 # the whole family
-npx nx run-many -t test build lint typecheck -p demo-koi-lib demo-koi-pond demo-koi-fish-*
+npx nx run-many -t build lint typecheck -p demo-koi-lib demo-koi-pond demo-koi-fish-*
 npx nx run-many -t build -p demo-koi-*  # composed site → dist/apps/demos/koi-pond/site
 
-# per project (test target is `test`; script is test:unit)
-npx nx test demo-koi-fish-vanilla
+# per project (only demo-koi-lib and demo-koi-pond carry a `test` target)
+npx nx test demo-koi-lib
 npx nx run demo-koi-fish-vanilla:build
 npx nx run demo-koi-fish-vanilla:lint
 
@@ -122,13 +122,13 @@ Renderer is injectable so specs run headless: `createKoiRenderer(root, profile, 
 
 **Adding a whole framework** (angular precedent): `KoiFramework` union + `KOI_FRAMEWORKS` are **append-only** — list position is the koi's seed, reordering re-rolls every fish. Touch: palette (LABELS/BRAND/VARIETIES), HEFT, FRAMEWORK_SITES, `tools/refresh-lib.mjs` CONSUMERS, host `koi-sessions.ts` (shell import + factory map), host `project.json` refresh-fish-shells (dependsOn + cp line), count prose everywhere, docs-site copy. Trait/body draw offsets are append-only too (body band next free slot: 14 — 13 took `caudalSpread`).
 
-**Angular specifics** (fish-angular): AOT via `@analogjs/vite-plugin-angular` pointed at `tsconfig.angular.json` (extends the app config with `noEmit: false` — the default no-emit config makes every module compile to NOTHING with no error, yielding a polyfill-only bundle). Never set `resolve.mainFields` (breaks vitest on the lib's ESM-in-CJS dep). vitest: `pool: 'forks'` (the plugin forces `vmThreads` for zone.js we don't use) + `src/test-setup.ts` = `import '@angular/compiler'` (JIT for partially-compiled published Angular libs); zoneless (`provideZonelessChangeDetection`), no TestBed, no zone.js. Seam: `createApplication` → `createComponent(KoiFish, { hostElement: root })` → `setInput` ×3 → `attachView` → `tick()`; `dispose()` must `root.replaceChildren()` after `app.destroy()` (Angular never clears a caller-provided host). Lint: `@angular-eslint/eslint-plugin` alone (the meta package peers on `@angular/cli`).
+**Angular specifics** (fish-angular): AOT via `@analogjs/vite-plugin-angular` pointed at `tsconfig.angular.json` (extends the app config with `noEmit: false` — the default no-emit config makes every module compile to NOTHING with no error, yielding a polyfill-only bundle). Never set `resolve.mainFields` (breaks the lib's ESM-in-CJS dep). Zoneless (`provideZonelessChangeDetection`), no TestBed, no zone.js. Seam: `createApplication` → `createComponent(KoiFish, { hostElement: root })` → `setInput` ×3 → `attachView` → `tick()`; `dispose()` must `root.replaceChildren()` after `app.destroy()` (Angular never clears a caller-provided host). Lint: `@angular-eslint/eslint-plugin` alone (the meta package peers on `@angular/cli`).
 
 ## Gotchas
 
 - **Framing**: a koi is mounted ONLY from its directory URL `fish-<fw>/` — its assets are relative, so a host that rewrites `…/index.html` to an extensionless path drops the document a directory up and every asset 404s (this blanked the shoal in production once). Needs features >=0.6.0, which serves directory URLs. **F-011**: v1 message collapse across concurrent channels (root-caused; inner channels drop v1) — still open in `roadmap/showcase/findings/`. F-010/F-015/F-016 are implemented in lib-features source (unreleased) and cleared from the registry; the koi host keeps `--port 4290` in `hf:dev` until a release lets `hf-dev.config` carry `debug.port`.
 - **Per-fish three.js** (~180 kB gzip × 8 ≈ 5.7 MB): inherent to eight independent apps; a shared chunk breaks the isolation the demo proves. Curtain covers the load. Not a bug.
-- **Vacuous-spec traps** (fixed, keep fixed): boundary specs mutation-proven (disable avoidance → they fail) across all seeds; hover/sleep wiring specs exercise both flag values; `?.foo()).not.toBe(null)` is banned (passes on absent nodes); every fish has a real 3D view spec + a `koi-runtime` emit-contract spec (hand-driven rAF, injected fake GL). Svelte typecheck (npm script `type-check`) chains `tsconfig.vitest.json` (tests) + `tsconfig.node.json` (configs, `allowJs`) — do not revert to app-only.
+- **Unit tests live in `demo-koi-lib` and `demo-koi-pond` only.** The eight `fish-*` apps carry no vitest, no `test` target, and no test devDeps by design: the demos themselves are the evidence they work, and eight parallel suites proving framework glue cost more dependency and maintenance surface than they return. Do not add unit tests back to a fish app; browser/integration coverage is the intended future lane. Keep the lib's specs mutation-proven (disable avoidance → boundary specs fail) across all seeds, and never write `?.foo()).not.toBe(null)` (passes on absent nodes).
 - **Devcontainer**: ten `npm install`s at `parallel:1`; full `nx lint docs-site` can SIGKILL — lint targeted file lists (`npx eslint <files>`).
 
 ## Presentation & tuning
