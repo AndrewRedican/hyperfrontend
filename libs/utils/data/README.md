@@ -342,7 +342,7 @@ isIdentical(g1, g2) // true
 
 ### Dependencies
 
-None — zero external dependencies.
+None: zero external dependencies.
 
 ## Part of hyperfrontend
 
