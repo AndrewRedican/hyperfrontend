@@ -68,6 +68,7 @@ interface KoiShellMountOptions {
 /** Creates one koi's shell session from its generated shell package. */
 type KoiShellFactory = (options: KoiShellMountOptions) => KoiShell
 
+// ref: [guide:compose-independent-features/shell-factories] start
 /** One factory per koi, each from its own vendored shell package. */
 const SHELL_FACTORIES: Record<KoiFramework, KoiShellFactory> = {
   vanilla: (options) => createVanillaKoiShell(options),
@@ -79,6 +80,7 @@ const SHELL_FACTORIES: Record<KoiFramework, KoiShellFactory> = {
   lit: (options) => createLitKoiShell(options),
   angular: (options) => createAngularKoiShell(options),
 }
+// ref: [guide:compose-independent-features/shell-factories] end
 
 /** One live koi: its host-owned layer and the shell driving its channel. */
 export interface KoiSession {
@@ -125,6 +127,7 @@ export function fishHomeUrl(framework: KoiFramework): string {
  * sessions.forEach((session) => session.shell.open())
  * ```
  */
+// ref: [guide:compose-independent-features/open-shoal] start
 export function openShoal(layers: ReadonlyMap<KoiFramework, HTMLElement>): KoiSession[] {
   const sessions: KoiSession[] = []
   for (const framework of KOI_FRAMEWORKS) {
@@ -142,6 +145,7 @@ export function openShoal(layers: ReadonlyMap<KoiFramework, HTMLElement>): KoiSe
   }
   return sessions
 }
+// ref: [guide:compose-independent-features/open-shoal] end
 
 /**
  * The identity payload a koi is sent as soon as its channel opens.

@@ -37,12 +37,14 @@ function el<T extends Element>(selector: string): T {
   return found
 }
 
+// ref: [guide:compose-independent-features/outer-boundary] start
 /** The @hyperfrontend/demo-koi-pond feature handle; use it to send and receive contract actions. */
 export const feature = createFeature({
   name: '@hyperfrontend/demo-koi-pond',
   contract,
   protocol: 'v1',
 })
+// ref: [guide:compose-independent-features/outer-boundary] end
 
 const reporter = createPondReporter(feature)
 const root = el<HTMLElement>('#pond')

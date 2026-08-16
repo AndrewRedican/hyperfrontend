@@ -317,6 +317,7 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondSceneHandle
       }
     })
 
+    // ref: [guide:compose-independent-features/survive-close] start
     shell.on('close', () => {
       opened = Math.max(0, opened - 1)
       relay.forget(framework)
@@ -332,7 +333,9 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondSceneHandle
         setHover(null)
       }
     })
+    // ref: [guide:compose-independent-features/survive-close] end
 
+    // ref: [guide:compose-independent-features/retry-open] start
     shell.on('error', (data: unknown) => {
       // why: A koi that never answers must not hold the pond dark behind a curtain waiting for it.
       setCurtain(stage, true)
@@ -344,6 +347,7 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondSceneHandle
         }, OPEN_RETRY_DELAY_MS)
       }
     })
+    // ref: [guide:compose-independent-features/retry-open] end
 
     shell.on('outline', (data: unknown) => {
       relay.record(<KoiOutline>data, Date.now())
@@ -538,18 +542,22 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondSceneHandle
       hooks.onSequenceComplete(abandoned)
     }
 
+    // ref: [guide:compose-independent-features/relay-fanout] start
     if (elapsedMs - lastRelayAt >= RELAY_INTERVAL_MS) {
       lastRelayAt = elapsedMs
       for (const session of sessions) {
         session.shell.send('neighbors', relay.neighborsFor(session.framework, pond, now))
       }
     }
+    // ref: [guide:compose-independent-features/relay-fanout] end
 
+    // ref: [guide:compose-independent-features/shoal-pulse] start
     // why: A calm pond would otherwise say nothing for as long as the visitor lets it be calm, and an embedder watching for life reads thirty silent seconds as an outage — the roll call keeps the liveness flowing through the contract itself.
     if (elapsedMs - lastPulseAt >= SHOAL_PULSE_MS) {
       lastPulseAt = elapsedMs
       hooks.onShoal(opened, sessions.length)
     }
+    // ref: [guide:compose-independent-features/shoal-pulse] end
 
     surfaceFrame.width = pond.view.width
     surfaceFrame.height = pond.view.height
