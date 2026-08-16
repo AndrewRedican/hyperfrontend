@@ -182,6 +182,11 @@ function findMarkdownFiles(dirPath: string, libraryRoot: string, results: Markdo
  * @returns A MarkdownFile entry or null if the file should be excluded.
  */
 function createMarkdownFileEntry(absolutePath: string, relativePath: string): MarkdownFile | null {
+  // why: Guide units under docs/guides/ are compiled by the docs-site generation pipeline into the global /docs/guides/[slug] route; generation itself fails on any guide directory that does not produce a rendered page, so the reachability invariant this rule protects is enforced there instead.
+  if (relativePath.startsWith('docs/guides/')) {
+    return null
+  }
+
   const fileName = basename(relativePath)
 
   if (fileName === 'README.md') {

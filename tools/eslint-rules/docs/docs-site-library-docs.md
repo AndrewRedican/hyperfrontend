@@ -24,6 +24,7 @@ The following files are excluded from documentation requirements:
 - `LICENSE.md` - License information
 - `CONTRIBUTING.md` - Contribution guidelines
 - `CODE_OF_CONDUCT.md` - Community guidelines
+- `docs/guides/**` - Guide units compiled by the docs-site generation pipeline into the global `/docs/guides/[slug]` route; the pipeline fails the build on any guide directory that does not produce a rendered page, so reachability is enforced there rather than by a literal page file
 
 ### Why?
 

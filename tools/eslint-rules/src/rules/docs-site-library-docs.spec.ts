@@ -641,6 +641,22 @@ describe('docs-site-library-docs', () => {
       expect(result).toContainEqual(expect.objectContaining({ relativePath: 'src/utils/README.md', routeSlug: 'utils' }))
     })
 
+    it('excludes pipeline-owned guide units under docs/guides/', () => {
+      const workspaceRoot = createTempWorkspace({
+        libraries: [
+          {
+            slug: 'test-lib',
+            category: 'core',
+            srcPath: 'libs/test-lib',
+            markdownFiles: ['README.md', 'docs/guides/first-connection/guide.md'],
+          },
+        ],
+      })
+
+      const result = getLibraryMarkdownFiles(`${workspaceRoot}/libs/test-lib`)
+      expect(result).toEqual([expect.objectContaining({ relativePath: 'README.md' })])
+    })
+
     it('excludes CHANGELOG.md files', () => {
       const workspaceRoot = createTempWorkspace({
         libraries: [
