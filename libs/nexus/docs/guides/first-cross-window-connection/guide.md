@@ -14,7 +14,7 @@ npm install @hyperfrontend/nexus
 
 ## Declare what each side says
 
-A contract is self-oriented: `emitted` lists what this side sends, `accepted` lists what it is willing to receive. Incoming messages that are not in `accepted` are dropped and logged rather than handed to your code, so a typo in a message type fails visibly instead of silently reaching a handler that never runs.
+A contract is self-oriented: `emitted` lists what this side sends, `accepted` lists what it is willing to receive. Incoming messages that are not in `accepted` are dropped instead of reaching your handlers. The drop is logged, but brokers run at the `error` log level by default, so pass `settings: { logLevel: 'info' }` to `createBroker` while you are wiring things up if you want to see it.
 
 Put the pair somewhere both projects can read, or copy them; they are plain data.
 
@@ -76,7 +76,7 @@ Once `open` fires, `isActive()` is true on both channels. Order does not matter:
 
 ## Send and receive
 
-`send(type, data)` validates the type against your `emitted` list. `onMessage` hands you everything the contract let through, and returns a function that unsubscribes.
+`send(type, data)` validates the type against your `emitted` list. `onMessage` hands you everything the contract let through, and returns a function that unsubscribes. One thing to know: a channel also delivers your own outbound messages to that channel's `onMessage` subscribers, so branch on `message.type` (as below) rather than assuming everything you receive came from the other side.
 
 On the host:
 
