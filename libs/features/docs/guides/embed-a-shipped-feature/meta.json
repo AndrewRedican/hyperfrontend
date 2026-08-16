@@ -21,10 +21,7 @@
     }
   ],
   "prerequisites": {
-    "knowledge": [
-      "A browser host app (the worked example is Next.js/React, but nothing here depends on React)",
-      "The shell package the feature team gave you: a registry name or a tarball"
-    ]
+    "knowledge": ["A browser app you can add a client-side module to", "The shell package the feature team published or sent you"]
   },
   "related": {
     "guides": ["first-cross-window-connection"],

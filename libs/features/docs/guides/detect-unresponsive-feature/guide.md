@@ -27,7 +27,7 @@ Derive any displayed rate from the events you actually received, never from the 
 Each transition hands you a [`HeartbeatStatus`](/docs/libraries/features/host#api-HeartbeatStatus) snapshot. Give each of its four [states](/docs/libraries/features/host#api-HeartbeatState) a different move:
 
 - `healthy`: clear whatever warning you raised.
-- `unobservable`: say "can't judge right now", never "offline" — throttled timers make silence meaningless.
+- `unobservable`: say "can't judge right now", never "offline", because [throttled timers](https://developer.mozilla.org/en-US/docs/Web/API/Page_Visibility_API) make silence meaningless.
 - `suspect`: decide per product. Report it verbatim when connection state is the product; do not demote a working embed on suspicion alone.
 - `gone`: drop the session-scoped state you inferred from beats.
 

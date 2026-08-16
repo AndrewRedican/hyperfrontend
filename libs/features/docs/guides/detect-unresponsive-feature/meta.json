@@ -22,10 +22,7 @@
   ],
   "prerequisites": {
     "guides": ["embed-a-shipped-feature"],
-    "knowledge": [
-      "A feature already embedded in a host page, through a generated shell or createShell directly",
-      "The feature's contract, so you know which product events prove it is working"
-    ]
+    "knowledge": ["The feature's contract, so you know which events prove it is working"]
   },
   "related": {
     "guides": ["compose-independent-features"],

@@ -1,6 +1,6 @@
 # Embed a feature someone else shipped
 
-By the end of this guide another team's app runs inside your page, tells you honestly whether it is alive, and degrades to your own fallback when it is not — in eight steps and one timer.
+By the end of this guide another team's app runs inside your page, tells you honestly whether it is alive, and degrades to your own fallback when it is not. It takes eight steps and one timer.
 
 That is worth doing because the app is not yours to learn. It arrives as a package, ships on its own schedule, and can be down when your page is up, so the integration is a contract and a liveness judgement rather than a build.
 
@@ -16,11 +16,11 @@ A registry name installs the same way.
 
 ## 2. Keep the import in browser-only code
 
-A shell mounts an iframe and runs a live message channel, so it belongs in code that only ever runs in the browser.
+A shell mounts an [`<iframe>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/iframe) and runs a live message channel, so it belongs in code that only ever runs in the browser.
 
 <!-- snippet: import-shells -->
 
-Every [generated shell](/docs/libraries/features/architecture#shell-generation) exports `createFeatureShell`, so hosting more than one means aliasing at the import.
+Every generated shell exports [`createFeatureShell`](/docs/libraries/features/architecture#shell-generation), so hosting more than one means aliasing at the import.
 
 ## 3. Decide what "alive" means
 

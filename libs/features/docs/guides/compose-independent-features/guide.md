@@ -2,7 +2,7 @@
 
 By the end of this guide you can put N independently built, independently deployed apps on one page, have them coordinate, and keep the page running when any one of them dies. It comes down to five decisions: a channel per feature, a shared contract, host-owned layers, host-mediated coordination, and a security choice per boundary.
 
-That matters because the alternative is a merge. Several teams ship separate apps, on different stacks and different deploy schedules, and one page needs all of them working together — without folding the codebases into one, and without a page that goes down because a single app did.
+That matters because the alternative is a merge. Several teams ship separate apps, on different stacks and different deploy schedules, and one page needs all of them working together, without folding the codebases into one and without a page that goes down because a single app did.
 
 The code examples come from the [koi pond](https://demo-koi-pond-production.up.railway.app/), which composes eight apps in eight frameworks over exactly these five decisions.
 
@@ -52,7 +52,7 @@ An open channel still pins messages to the configured origin and still runs as a
 
 ## 6. Allow the whole ancestor chain
 
-`frame-ancestors` is checked against every ancestor, so a policy naming only the immediate parent blanks the frame one level further out. Set it before you nest any of this [(example)](https://github.com/AndrewRedican/hyperfrontend/blob/main/apps/demos/koi-pond/README.md).
+[`frame-ancestors`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy/frame-ancestors) is checked against every ancestor, so a policy naming only the immediate parent blanks the frame one level further out. Set it before you nest any of this, e.g. [apps/demos/koi-pond/README.md](https://github.com/AndrewRedican/hyperfrontend/blob/main/apps/demos/koi-pond/README.md).
 
 ## 7. Survive any single feature dying
 

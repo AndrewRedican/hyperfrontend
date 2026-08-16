@@ -32,10 +32,7 @@
   ],
   "prerequisites": {
     "guides": ["embed-a-shipped-feature"],
-    "knowledge": [
-      "Each app you want to compose already ships as a feature: a feature.config.ts and a generated shell package",
-      "How a single embedded feature opens, proves life, and closes"
-    ]
+    "knowledge": ["Each app you want to compose already ships as a feature, with a feature.config.ts and a generated shell package"]
   },
   "related": {
     "guides": ["detect-unresponsive-feature"],
