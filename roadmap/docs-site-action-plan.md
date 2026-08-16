@@ -23,6 +23,18 @@ The work below builds on these existing pieces:
   targets the `main` branch deliberately (documented in `generate-docs.ts`:
   git detection is disabled so links are identical in every build environment);
   tag/commit pinning is explicitly not wanted.
+- **Guides pipeline** — package-owned Guide Units (`libs/*/docs/guides/<slug>/`)
+  compile through `scripts/generate-guides.ts` into the global `/docs/guides/[slug]`
+  route with build-failing snippet extraction from executing specs and shipped demo
+  sources. Documented in `apps/docs-site/README.md`.
+- **Search** — a deterministic omni-search index over libraries, API symbols,
+  submodules, guides, and articles is generated at build time to
+  `public/search-index.json` behind the stable contract in
+  `src/lib/search/search-contract.ts`; the client dialog (Ctrl/Cmd+K) consumes only
+  that contract, so the producer can later be replaced by an indexer package.
+- **Sharing + feed** — content pages carry a share menu (`src/components/share/`,
+  descriptors centralized in `src/lib/share.ts`); articles are served as an Atom
+  feed at `/feed.xml`.
 
 ---
 
@@ -40,13 +52,9 @@ than render as a plain anchor.
 
 ### 1.2 Social sharing links
 
-Twitter/LinkedIn share links (URL-based, no package), wired through
-`TrackedLink` so shares are measured like other outbound links.
-
-**Files:**
-
-- `apps/docs-site/src/components/share-buttons.tsx` — Create
-- `apps/docs-site/src/components/footer.tsx` — Import and use
+Superseded by the shipped per-page share menu (`src/components/share/share-menu.tsx`:
+native share sheet, LinkedIn, X, WhatsApp, copy link; analytics through the
+`share` event). No footer share surface is planned.
 
 ### Verification
 
@@ -95,17 +103,15 @@ build (no manual page wiring).
 
 ## Phase 4: Per-package how-to tutorials
 
-Task-oriented "how to" guides per package, ingested the same way as FAQ.
+Settled and shipped as the Guide Unit system: `libs/*/docs/guides/<slug>/`
+(`guide.md` + `meta.json`), compiled by `scripts/generate-guides.ts` into
+`/docs/guides/[slug]`, with verified snippet extraction, a machine-readable corpus
+at `/guides/index.json`, and per-library guide surfacing on library pages.
+Mechanism documented in `apps/docs-site/README.md`.
 
-- Standard location/format per package (e.g. `docs/tutorials/*.md`).
-- Pipeline discovery + manifest entries; multiple tutorials per package.
-- Tutorial index + pages per library in the site.
-
-**Files:**
-
-- `libs/*/docs/tutorials/*.md` — Create (per package)
-- `apps/docs-site/scripts/generate-docs.ts` — Edit (ingest tutorials)
-- `apps/docs-site/src/components/library-doc-page.tsx` — Edit (render tutorials)
+Remaining scope is content, not infrastructure: an adoption-path tutorial or
+how-to per package (the first wave shipped covers nexus and features), grown
+consumer-problem-first rather than to per-package quotas.
 
 ---
 
@@ -174,11 +180,13 @@ npx lighthouse https://hyperfrontend.dev --only-categories=accessibility
 
 ## Deferred
 
-| Item              | Reason                          |
-| ----------------- | ------------------------------- |
-| Algolia Search    | Not using Algolia               |
-| Monaco Editor     | Requires `@monaco-editor/react` |
-| Usefulness Voting | Requires `@vercel/kv`           |
-| RSS Feed          | Requires `feed` package         |
-| Version Selector  | Lower priority                  |
-| Versioned URLs    | Lower priority                  |
+| Item              | Reason                                                           |
+| ----------------- | ---------------------------------------------------------------- |
+| Algolia Search    | Declined permanently; deterministic local search shipped instead |
+| Monaco Editor     | Requires `@monaco-editor/react`                                  |
+| Usefulness Voting | Requires `@vercel/kv`                                            |
+| Version Selector  | Lower priority                                                   |
+| Versioned URLs    | Lower priority                                                   |
+
+An articles Atom feed shipped at `/feed.xml` (hand-serialized, no `feed` package),
+closing the earlier RSS deferral.
