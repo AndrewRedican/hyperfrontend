@@ -39,7 +39,7 @@ Higher-order function utilities for behavioral modification and composition.
 
 ## What is @hyperfrontend/function-utils?
 
-`@hyperfrontend/function-utils` provides lightweight functional wrappers that modify the execution behavior of functions without changing their signatures. The library focuses on common patterns like single-execution guarantees, conditional execution, error suppression, and no-op placeholders—all implemented as composable higher-order functions.
+`@hyperfrontend/function-utils` provides lightweight functional wrappers that modify the execution behavior of functions without changing their signatures. The library focuses on common patterns like single-execution guarantees, conditional execution, error suppression, and no-op placeholders, all implemented as composable higher-order functions.
 
 Each utility maintains the original function's type signature through generic constraints, ensuring type safety while adding behavioral modifications. The implementations use closure-based state management to track execution context (like memoized results or call counts) without external dependencies or complex class hierarchies.
 
@@ -268,7 +268,7 @@ const result: number = addOnce(2, 3) // Type safe ✓
 
 ### Dependencies
 
-None — zero external dependencies.
+None: zero external dependencies.
 
 ## Part of hyperfrontend
 
