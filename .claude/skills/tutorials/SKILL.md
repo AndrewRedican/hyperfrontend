@@ -56,11 +56,14 @@ Every API symbol, option, and event gets a link on first mention, so the lesson 
 | Target                                   | Link to                                                                  |
 | ---------------------------------------- | ------------------------------------------------------------------------ |
 | A symbol exported by a workspace package | `/docs/libraries/<lib>[/<submodule>]#api-<ExactSymbolName>`              |
+| A property of an exported type           | `…#api-<ExactSymbolName>-prop-<propertyName>`                            |
 | A concept with no symbol                 | The owning page's H2/H3 slug, GitHub-style                               |
 | A standard web or Node API               | MDN, or the runtime's own documentation                                  |
 | A file in this repo                      | Its GitHub blob URL, labelled `path#Lstart-Lend`, introduced with `e.g.` |
 
-Per-symbol `#api-` anchors are generated and stable. Heading slugs are derived from prose, so verify the heading exists before linking to it. Nothing validates an anchor, so check it.
+Per-symbol and per-property `#api-` anchors are generated and stable; methods of an interface have none, so link the method to its owning type. Heading slugs are derived from prose, so verify the heading exists before linking to it. Nothing validates an anchor, so check it.
+
+Name the package the learner installs, linked to its library page, in the opening or the install step. `meta.json` `packages` states it for machines; the body states it for the reader.
 
 ### Never document an absence
 
