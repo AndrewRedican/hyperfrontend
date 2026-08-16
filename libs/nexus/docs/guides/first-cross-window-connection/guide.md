@@ -1,8 +1,8 @@
 # Your first cross-window connection
 
-A page and an iframe can already talk: `postMessage` on one side, a `message` listener on the other. What they cannot do, out of the box, is agree on anything. Nothing checks the message shape, nothing tells you the other side is ready, and a message sent one tick too early vanishes without a trace.
+By the end of this tutorial you will have a page and an iframe exchanging contract-checked messages over a handshaken session, with queueing across the pre-open gap and a clean shutdown, and you will understand the model every layer above nexus is built on.
 
-This tutorial builds the smallest real connection with `@hyperfrontend/nexus`: a host page and a note-taking widget in an iframe, each declaring what it sends and accepts, connected through a handshake, exchanging messages both ways.
+A page and an iframe can already talk: `postMessage` on one side, a `message` listener on the other. What they cannot do, out of the box, is agree on anything. Nothing checks the message shape, nothing tells you the other side is ready, and a message sent one tick too early vanishes without a trace. You will build the smallest connection that fixes all three: a host page and a note-taking widget, each declaring what it sends and accepts.
 
 ## Install the package in both projects
 
@@ -14,7 +14,7 @@ npm install @hyperfrontend/nexus
 
 ## Declare what each side says
 
-A contract is self-oriented: `emitted` lists what this side sends, `accepted` lists what it is willing to receive.
+A [contract](/docs/libraries/nexus#api-IChannelContract) is self-oriented: `emitted` lists what this side sends, `accepted` lists what it is willing to receive.
 
 ```ts
 // host page
@@ -34,7 +34,7 @@ Anything one side emits that the other does not accept is dropped before it reac
 
 ## One broker per window, one channel per counterpart
 
-A broker owns a window and speaks for it. A channel is that broker's line to one specific counterpart window.
+A [broker](/docs/libraries/nexus#api-createBroker) owns a window and speaks for it. A [channel](/docs/libraries/nexus#api-ChannelHandle) is that broker's line to one specific counterpart window.
 
 ```ts
 import { createBroker } from '@hyperfrontend/nexus'
@@ -59,7 +59,7 @@ const toHost = broker.addChannel('host-page', window.parent)
 
 ## Open the session
 
-Both sides call `connect()`. Underneath, the brokers run a handshake and cross their contracts during that exchange, which is why the `open` event can hand you the peer's origin and declared contract before a single application message flows:
+Both sides call `connect()`. Underneath, the brokers run a handshake and cross their contracts during that exchange, which is why the [`open`](/docs/libraries/nexus#api-OpenEventData) event can hand you the peer's origin and declared contract before a single application message flows:
 
 ```ts
 toWidget.on('open', ({ origin, contract }) => {
@@ -101,7 +101,7 @@ toHost.onMessage((message) => {
 toHost.send('note-created', { text: 'Ship the widget' })
 ```
 
-The contract carries types, not payload shapes, so `message.data` arrives as `unknown` and you narrow it where you use it.
+The contract carries types, not payload shapes, so [`message.data`](/docs/libraries/nexus#api-IMessage) arrives as `unknown` and you narrow it where you use it.
 
 ## Send before the session opens
 
@@ -122,6 +122,18 @@ Either side can end the session. `disconnect()` proposes a polite close: the cha
 toWidget.disconnect()
 ```
 
-You now have two windows with crossed contracts, a handshaken session, delivery in both directions, ordered queueing across the pre-open gap, and a clean shutdown, and neither side touched `postMessage` or event plumbing directly.
+## Lock it to a trusted origin
 
-One thing this connection still lacks is an origin rule: a broker created without `settings.whitelist` or a security policy will accept a handshake from anyone.
+The connection works, and it will work with anyone. Name the origins you trust before it faces real traffic:
+
+```ts
+const broker = createBroker({
+  name: 'host-page',
+  contract: hostContract,
+  settings: { whitelist: ['https://widgets.example.com'] },
+})
+```
+
+For anything finer than an origin list, a [`SecurityPolicy`](/docs/libraries/nexus#api-SecurityPolicy) decides per connection.
+
+You now have two windows with crossed contracts, a handshaken session, delivery in both directions, ordered queueing across the pre-open gap, a clean shutdown, and an origin rule — and neither side touched `postMessage` or event plumbing directly.
