@@ -19,16 +19,16 @@ A tutorial ships as a guide unit: `libs/<lib>/docs/guides/<slug>/` holding `guid
 
 What the body must corroborate:
 
-| Field           | Must agree with                                                                         |
-| --------------- | --------------------------------------------------------------------------------------- |
-| `type`          | the quadrant the body is written in                                                     |
-| `title`         | the `guide.md` H1 (not enforced by the compiler; keep them identical)                   |
-| `problem`       | the situation the opening puts the reader in                                            |
-| `outcome`       | the working result the last step produces                                               |
-| `prerequisites` | rendered above the body — state them there, never repeat them in the body               |
-| `related`       | rendered below the body as onward links — put every outbound link here, not in the body |
-| `apis`          | the symbols the lesson teaches; validated against the generated API data                |
-| `verification`  | `demo` requires `source`; `authored` requires `verifiedAgainst` + `verifiedOn`          |
+| Field           | Must agree with                                                                        |
+| --------------- | -------------------------------------------------------------------------------------- |
+| `type`          | the quadrant the body is written in                                                    |
+| `title`         | the `guide.md` H1 (not enforced by the compiler; keep them identical)                  |
+| `problem`       | the situation the opening puts the reader in                                           |
+| `outcome`       | the working result the last step produces                                              |
+| `prerequisites` | rendered above the body as "Before you start"; state them there, never in the body     |
+| `related`       | rendered below the body as onward links; put every outbound link here, not in the body |
+| `apis`          | the symbols the lesson teaches; validated against the generated API data               |
+| `verification`  | `demo` requires `source`; `authored` requires `verifiedAgainst` + `verifiedOn`         |
 
 `packages[0]` must be the owning library's package name. Slugs are global and must be unique.
 
@@ -51,7 +51,16 @@ Reliability outranks realism. The learner is here to learn, not navigate unneces
 
 ### Deep link instead of explaining
 
-Every API symbol, option, and event gets a link on first mention, so the lesson stays on the build instead of turning into a tour of the surface. Anchors are GitHub-style slugs of the target page's H2/H3 headings, so verify the heading exists before linking to it.
+Every API symbol, option, and event gets a link on first mention, so the lesson stays on the build instead of turning into a tour of the surface. Miss no opportunity: if it has a name and a home, link it.
+
+| Target                                   | Link to                                                                  |
+| ---------------------------------------- | ------------------------------------------------------------------------ |
+| A symbol exported by a workspace package | `/docs/libraries/<lib>[/<submodule>]#api-<ExactSymbolName>`              |
+| A concept with no symbol                 | The owning page's H2/H3 slug, GitHub-style                               |
+| A standard web or Node API               | MDN, or the runtime's own documentation                                  |
+| A file in this repo                      | Its GitHub blob URL, labelled `path#Lstart-Lend`, introduced with `e.g.` |
+
+Per-symbol `#api-` anchors are generated and stable. Heading slugs are derived from prose, so verify the heading exists before linking to it. Nothing validates an anchor, so check it.
 
 ### Never document an absence
 
@@ -83,6 +92,10 @@ Write what the learner should do, never what the library lacks. A gap belongs un
 
 The tutorial ends on the result: onward links are rendered from `related`, so a hand-written trailer only competes with them.
 
+### Punctuation
+
+Em dashes are prohibited in `guide.md`, `README.md`, and JSDoc. Use a colon when the second clause explains the first, a semicolon when the clauses are co-equal, parentheses for an aside, or a full stop. The same applies to any prose these documents ship.
+
 ## Cut
 
 Delete:
@@ -108,3 +121,6 @@ Move practical variations to `how-to-guides`. Link deeper reasoning to `explanat
 - [ ] Concepts introduced through doing
 - [ ] Unnecessary choices removed
 - [ ] Ends with working software and acquired understanding
+- [ ] `prerequisites` are checkable preconditions, not context
+- [ ] Every symbol, concept, and standard API deep-linked on first mention
+- [ ] No em dashes

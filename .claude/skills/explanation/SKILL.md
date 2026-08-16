@@ -15,7 +15,7 @@ Looking up facts → `reference`
 
 ## Metadata
 
-Explanation does not ship as a guide unit. `meta.json` admits `tutorial`, `how-to`, `troubleshooting`, and `recipe` only, so a `docs/guides/<slug>/` directory is never the right home for it — if you are writing explanation there, you are in the wrong quadrant.
+Explanation does not ship as a guide unit. `meta.json` admits `tutorial`, `how-to`, `troubleshooting`, and `recipe` only, so a `docs/guides/<slug>/` directory is never the right home for it. If you are writing explanation there, you are in the wrong quadrant.
 
 Explanation lives in `ARCHITECTURE.md` beside the code it explains, and in the site's concept pages. Guides reach it through `related.explanation` in their `meta.json`, which takes site routes that must resolve to a real page. When a guide sheds rationale, that is where the rationale lands.
 
@@ -51,6 +51,10 @@ Explanation may be discursive. It may not be unfocused.
 
 Do not impose sections that the subject does not need.
 
+### Punctuation
+
+Em dashes are prohibited in `guide.md`, `README.md`, and JSDoc. Use a colon when the second clause explains the first, a semicolon when the clauses are co-equal, parentheses for an aside, or a full stop. The same applies to any prose these documents ship.
+
 ## Cut
 
 Delete:
@@ -72,3 +76,4 @@ Delete:
 - [ ] Reference facts linked rather than duplicated
 - [ ] No procedural drift
 - [ ] Every section strengthens the central idea
+- [ ] No em dashes

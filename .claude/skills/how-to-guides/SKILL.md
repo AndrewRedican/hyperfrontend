@@ -19,17 +19,17 @@ A how-to ships as a guide unit: `libs/<lib>/docs/guides/<slug>/` holding `guide.
 
 What the body must corroborate:
 
-| Field           | Must agree with                                                                         |
-| --------------- | --------------------------------------------------------------------------------------- |
-| `type`          | the quadrant the body is written in                                                     |
-| `title`         | the `guide.md` H1 (not enforced by the compiler; keep them identical)                   |
-| `problem`       | the goal the opening states                                                             |
-| `outcome`       | what the reader has after the last step                                                 |
-| `prerequisites` | rendered above the body — state them there, never repeat them in the body               |
-| `related`       | rendered below the body as onward links — put every outbound link here, not in the body |
-| `apis`          | the symbols the body teaches; validated against the generated API data                  |
-| `demo`          | the shipped demo the snippets come from                                                 |
-| `verification`  | `demo` requires `source`; `authored` requires `verifiedAgainst` + `verifiedOn`          |
+| Field           | Must agree with                                                                        |
+| --------------- | -------------------------------------------------------------------------------------- |
+| `type`          | the quadrant the body is written in                                                    |
+| `title`         | the `guide.md` H1 (not enforced by the compiler; keep them identical)                  |
+| `problem`       | the goal the opening states                                                            |
+| `outcome`       | what the reader has after the last step                                                |
+| `prerequisites` | rendered above the body as "Before you start"; state them there, never in the body     |
+| `related`       | rendered below the body as onward links; put every outbound link here, not in the body |
+| `apis`          | the symbols the body teaches; validated against the generated API data                 |
+| `demo`          | the shipped demo the snippets come from                                                |
+| `verification`  | `demo` requires `source`; `authored` requires `verifiedAgainst` + `verifiedOn`         |
 
 `packages[0]` must be the owning library's package name. Slugs are global and must be unique.
 
@@ -50,11 +50,20 @@ Code arrives through `<!-- snippet: <region> -->` placeholders resolved out of `
 
 ### Separate the general step from the worked example
 
-The step body is the instruction any reader can follow. Everything specific to the example app — its nouns, its layout, its numbers — belongs with the linked code, not in the instruction. Introduce the example's provenance once, in the opening, as a sentence that reads like prose rather than a build note. Where a general instruction has a verbatim implementation and no snippet of its own, append `[(example)](url)` pointing at it.
+The step body is the instruction any reader can follow. Everything specific to the example app (its nouns, its layout, its numbers) belongs with the linked code, not in the instruction. Introduce the example's provenance once, in the opening, as a sentence that reads like prose rather than a build note. Where a general instruction has a verbatim implementation and no snippet of its own, append `[(example)](url)` pointing at it.
 
 ### Deep link instead of explaining
 
-Every API symbol, option, event, error reason, and named concept gets a link on first mention, so the guide never spends a paragraph on something a reference page already carries. Anchors are GitHub-style slugs of the target page's H2/H3 headings, so verify the heading exists before linking to it.
+Every API symbol, option, event, error reason, and named concept gets a link on first mention, so the guide never spends a paragraph on something a reference page already carries. Miss no opportunity: if it has a name and a home, link it.
+
+| Target                                   | Link to                                                                  |
+| ---------------------------------------- | ------------------------------------------------------------------------ |
+| A symbol exported by a workspace package | `/docs/libraries/<lib>[/<submodule>]#api-<ExactSymbolName>`              |
+| A concept with no symbol                 | The owning page's H2/H3 slug, GitHub-style                               |
+| A standard web or Node API               | MDN, or the runtime's own documentation                                  |
+| A file in this repo                      | Its GitHub blob URL, labelled `path#Lstart-Lend`, introduced with `e.g.` |
+
+Per-symbol `#api-` anchors are generated and stable. Heading slugs are derived from prose, so verify the heading exists before linking to it. Nothing validates an anchor, so check it.
 
 ### Never document an absence
 
@@ -90,13 +99,17 @@ Write what the reader should do, never what the library lacks. "There is no X" a
 
 Headings follow the task; do not impose this shape when it adds ceremony. The guide ends on verification: onward links are rendered from `related`, so a hand-written trailer only competes with them. Link inline where a specific sentence needs it.
 
+### Punctuation
+
+Em dashes are prohibited in `guide.md`, `README.md`, and JSDoc. Use a colon when the second clause explains the first, a semicolon when the clauses are co-equal, parentheses for an aside, or a full stop. The same applies to any prose these documents ship.
+
 ## Cut
 
 Delete:
 
 - background;
 - conceptual teaching a link can carry;
-- demo narration — what the example app does, rather than what the reader does;
+- demo narration: what the example app does, rather than what the reader does;
 - statements of what the library does not provide;
 - self-evident code narration;
 - API surveys;
@@ -119,3 +132,5 @@ Prefer deletion to rewriting. Prefer a link to a tangent.
 - [ ] Necessary decisions included
 - [ ] Outcome verifiable against the reader's own build
 - [ ] Every section advances the goal
+- [ ] `prerequisites` are checkable preconditions, not context or restated steps
+- [ ] No em dashes
