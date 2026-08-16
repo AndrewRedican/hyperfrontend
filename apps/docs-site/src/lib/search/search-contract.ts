@@ -14,8 +14,10 @@
  * - Deterministic: identical content produces byte-identical output
  *   (documents sorted by url, then anchor, then title; no timestamps).
  * - Static: a single JSON file served from the site root, fetched lazily.
- * - Addressable: every entry resolves to a real route, optionally deepened
- *   by an anchor that exists on the rendered page.
+ * - Addressable: every entry names a real route. Section anchors are derived
+ *   with the same algorithm the pages use to assign heading ids
+ *   (`src/lib/slug.ts`), so a section link resolves wherever that algorithm is
+ *   the one in play; anchors are not verified against rendered HTML.
  */
 
 /** Kinds of documents the index can point at. */

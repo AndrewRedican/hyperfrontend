@@ -115,12 +115,17 @@ function collectNavDocuments(nodes: NavNode[], seen: Set<string>, parentPackage:
     const ownPackage = node.packageName ?? parentPackage
     if (node.href && !seen.has(node.href)) {
       seen.add(node.href)
-      const isSubmodule = node.href.startsWith('/docs/libraries/') && node.href.split('/').filter(Boolean).length > 3
+      const segments = node.href.split('/').filter(Boolean)
+      const isSubmodule = node.href.startsWith('/docs/libraries/') && segments.length > 3
+      // why: Many libraries expose a submodule of the same name (parse, models, operations); the import path is what makes a result identifiable
+      const subpath = isSubmodule ? segments.slice(3).join('/') : ''
       documents.push({
         url: node.href,
-        title: isSubmodule && ownPackage ? `${node.slug} (${ownPackage})` : node.slug,
+        title: isSubmodule && ownPackage ? `${ownPackage}/${subpath}` : node.slug,
         kind: isSubmodule ? 'submodule' : 'page',
+        description: isSubmodule && ownPackage ? `${subpath} entry point of ${ownPackage}` : undefined,
         package: isSubmodule ? ownPackage : undefined,
+        terms: isSubmodule ? [node.slug, subpath] : undefined,
       })
     }
     if (node.children) {
