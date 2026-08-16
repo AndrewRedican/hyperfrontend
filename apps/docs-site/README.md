@@ -114,17 +114,17 @@ Guides are package-owned: a directory `libs/<lib>/docs/guides/<slug>/` holding `
 plus `meta.json` (schema: `scripts/generate-guides.types.ts`). The compiler
 (`scripts/generate-guides.ts`) validates metadata, resolves every
 `<!-- snippet: region -->` placeholder from `// ref: [guide:<slug>/<region>] start|end`
-marker regions inside the shipped source named by `verification.spec` (plus optional
+marker regions inside the shipped source named by `verification.source` (plus optional
 `snippetSources`), and fails the build on any malformed unit, dangling placeholder,
 orphaned region, or slug collision.
 
 Two verification lanes, both stated on the page so a reader knows what a code block is
 worth:
 
-| Lane       | Meaning                                                                                                                                     | `meta.json` requires                 |
-| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------ |
-| `demo`     | Snippets are extracted from source that ships and runs for its own reasons (a demo app, the docs-site gallery), so they cannot silently rot | `spec` (+ optional `snippetSources`) |
-| `authored` | Code is written in the guide and was executed against a published package while writing                                                     | `verifiedAgainst`, `verifiedOn`      |
+| Lane       | Meaning                                                                                                                                     | `meta.json` requires                   |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------- |
+| `demo`     | Snippets are extracted from source that ships and runs for its own reasons (a demo app, the docs-site gallery), so they cannot silently rot | `source` (+ optional `snippetSources`) |
+| `authored` | Code is written in the guide and was executed against a published package while writing                                                     | `verifiedAgainst`, `verifiedOn`        |
 
 No test files exist to back documentation. The `authored` lane records the package
 version and the date the examples were run, and the page renders both, so drift is
