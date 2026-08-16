@@ -6,6 +6,7 @@ import { CodeBlock } from '@/components/code-block'
 import { H2 } from '@/components/heading-with-anchor'
 import { removeBadges, transformLinks } from '@/lib/content'
 import { getLibraryReadme, getLibraryArchitecture, getLibraryApi, getApiLinkIndex } from '@/lib/docs-loader'
+import { getGuidesForPackage } from '@/lib/guides'
 import { markdownToHtml } from '@/lib/markdown'
 import { extractMermaidBlocks } from '@/lib/mermaid-utils'
 import Link from 'next/link'
@@ -24,6 +25,7 @@ export async function LibraryDocPage({ title, packageName, slug, fallbackDescrip
   const readme = getLibraryReadme(slug)
   const hasArchitecture = !!getLibraryArchitecture(slug)
   const apiData = getLibraryApi(slug) as TypeDocOutput | null
+  const guides = getGuidesForPackage(packageName)
 
   if (readme) {
     let processed = removeBadges(readme)
@@ -54,6 +56,11 @@ export async function LibraryDocPage({ title, packageName, slug, fallbackDescrip
               Architecture →
             </Link>
           )}
+          {guides.length > 0 && (
+            <Link href="/docs/guides" className="text-sm text-primary-600 hover:underline dark:text-primary-400">
+              Guides →
+            </Link>
+          )}
           {apiData && (
             <a href="#api-reference" className="text-sm text-primary-600 hover:underline dark:text-primary-400">
               API Reference →
@@ -62,6 +69,27 @@ export async function LibraryDocPage({ title, packageName, slug, fallbackDescrip
         </div>
 
         <ReadmeContent html={html} mermaidDiagrams={diagrams} />
+
+        {/* Guides */}
+        {guides.length > 0 && (
+          <section className="mt-12 border-t border-slate-200 pt-8 dark:border-slate-700">
+            <h2 className="text-lg font-bold text-slate-900 dark:text-white">Guides using {packageName}</h2>
+            <div className="mt-4 grid gap-4 sm:grid-cols-2">
+              {guides.map((guide) => (
+                <Link
+                  key={guide.slug}
+                  href={guide.route}
+                  className="group rounded-lg border border-slate-200 bg-white p-4 transition-colors hover:border-primary-300 hover:bg-primary-50 dark:border-slate-700 dark:bg-slate-900 dark:hover:border-primary-700 dark:hover:bg-primary-950/30"
+                >
+                  <h3 className="font-semibold text-slate-900 group-hover:text-primary-600 dark:text-white dark:group-hover:text-primary-400">
+                    {guide.title}
+                  </h3>
+                  <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">{guide.problem}</p>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* API Reference */}
         {apiData && (

@@ -1,6 +1,7 @@
 import type { NavItem } from '@/lib/navigation'
 import type { MetadataRoute } from 'next'
 import { getAllArticleSlugs } from '@/lib/articles'
+import { getAllGuideSlugs } from '@/lib/guides'
 import { docsNavigation, mainNavLinks } from '@/lib/navigation'
 import { SITE_URL } from '@/lib/site'
 import { createDate } from '@hyperfrontend/immutable-api-utils/built-in-copy/date'
@@ -53,8 +54,9 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const navUrls = extractUrls(docsNavigation)
   const mainUrls = mainNavLinks.map((link) => link.href)
   const articleUrls = getAllArticleSlugs().map((slug) => `/articles/${slug}`)
+  const guideUrls = getAllGuideSlugs().map((slug) => `/docs/guides/${slug}`)
 
-  const allUrls = [...createSet([...staticPages, ...navUrls, ...mainUrls, ...articleUrls])]
+  const allUrls = [...createSet([...staticPages, ...navUrls, ...mainUrls, ...articleUrls, ...guideUrls])]
 
   return allUrls.map((url) => ({
     // why: trailingSlash is enabled site-wide, so sitemap locs must match the canonical trailing-slash form
