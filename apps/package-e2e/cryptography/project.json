@@ -12,7 +12,8 @@
       "options": {
         "formats": ["cjs", "esm", "browser"]
       }
-    }
+    },
+    "audit": {}
   },
   "implicitDependencies": ["lib-cryptography"]
 }

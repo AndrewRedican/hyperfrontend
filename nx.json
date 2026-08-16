@@ -61,10 +61,27 @@
       "cache": true,
       "inputs": ["default", "^default"],
       "executor": "@hyperfrontend/package:typecheck"
+    },
+    "audit": {
+      "cache": true,
+      "inputs": ["dependencyState"],
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npm audit --audit-level=high",
+        "cwd": "{projectRoot}"
+      }
     }
   },
   "namedInputs": {
     "default": ["{projectRoot}/**/*", "sharedGlobals"],
+    "dependencyState": [
+      "{projectRoot}/package.json",
+      "{projectRoot}/package-lock.json",
+      "{projectRoot}/.npmrc",
+      "{projectRoot}/project.json",
+      "{workspaceRoot}/.npmrc",
+      "{workspaceRoot}/nx.json"
+    ],
     "production": [
       "default",
       "!{projectRoot}/eslint.config.cjs",

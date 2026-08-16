@@ -103,6 +103,7 @@
         "cwd": "apps/demos/koi-pond/host",
         "parallel": false
       }
-    }
+    },
+    "audit": {}
   }
 }

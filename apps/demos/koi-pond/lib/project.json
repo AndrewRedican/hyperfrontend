@@ -60,6 +60,7 @@
         "command": "node ../tools/refresh-lib.mjs --check",
         "cwd": "apps/demos/koi-pond/lib"
       }
-    }
+    },
+    "audit": {}
   }
 }

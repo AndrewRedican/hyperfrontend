@@ -60,6 +60,7 @@
         "command": "npx hf build --ci --allow-open --out ../../../../dist/apps/demos/koi-pond/fish-shell/vanilla",
         "cwd": "apps/demos/koi-pond/fish-vanilla"
       }
-    }
+    },
+    "audit": {}
   }
 }

@@ -60,6 +60,7 @@
         "command": "npx hf build --ci --allow-open --out ../../../../dist/apps/demos/koi-pond/fish-shell/preact",
         "cwd": "apps/demos/koi-pond/fish-preact"
       }
-    }
+    },
+    "audit": {}
   }
 }

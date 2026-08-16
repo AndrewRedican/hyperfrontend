@@ -60,6 +60,7 @@
         "command": "npx hf build --ci --allow-open --out ../../../../dist/apps/demos/koi-pond/fish-shell/vue",
         "cwd": "apps/demos/koi-pond/fish-vue"
       }
-    }
+    },
+    "audit": {}
   }
 }
