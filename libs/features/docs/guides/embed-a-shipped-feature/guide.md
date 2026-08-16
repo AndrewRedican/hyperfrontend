@@ -1,8 +1,10 @@
 # Embed a feature someone else shipped
 
-Another team shipped their app as a feature package, and you need it running inside your page, alive and observable, without learning their stack.
+By the end of this guide another team's app runs inside your page, tells you honestly whether it is alive, and degrades to your own fallback when it is not — in eight steps and one timer.
 
-Every snippet is extracted from this site's [demo gallery](/demos).
+That is worth doing because the app is not yours to learn. It arrives as a package, ships on its own schedule, and can be down when your page is up, so the integration is a contract and a liveness judgement rather than a build.
+
+The code examples come from this site's [demo gallery](/demos), a Next.js host embedding a separately deployed Vue clock.
 
 ## 1. Install the shell
 
@@ -14,11 +16,11 @@ A registry name installs the same way.
 
 ## 2. Keep the import in browser-only code
 
-A shell mounts an iframe and runs a live message channel, so it never runs on the server.
+A shell mounts an iframe and runs a live message channel, so it belongs in code that only ever runs in the browser.
 
 <!-- snippet: import-shells -->
 
-Every generated shell exports `createFeatureShell`, so hosting more than one means aliasing at the import.
+Every [generated shell](/docs/libraries/features/architecture#shell-generation) exports `createFeatureShell`, so hosting more than one means aliasing at the import.
 
 ## 3. Decide what "alive" means
 
@@ -34,15 +36,13 @@ Arm a single deadline before you open, and push it out on every sign of life.
 
 <!-- snippet: silence-deadline -->
 
-`apply` is your own state setter.
-
 ## 5. Open the session and subscribe
 
-Create the shell against a container element, subscribe, then `open()`. Sends queue until the handshake completes, so everything you learn about the session arrives through `on`.
+Create the shell against a container element, subscribe, then [`open()`](/docs/libraries/features/host#api-ShellHandle). Sends queue until the handshake completes, so everything you learn about the session arrives through `on`.
 
 <!-- snippet: open-and-observe -->
 
-Three calls are yours to make, not the SDK's: ignore `suspect` while product traffic still arrives, report a mid-session `close` as `connecting` rather than `offline`, and treat `error` with `reason: 'open-timeout'` as terminal.
+Three calls are yours to make, not the SDK's: ignore [`suspect`](/docs/libraries/features/host#api-HeartbeatState) while product traffic still arrives, report a mid-session `close` as `connecting` rather than `offline`, and treat `error` with `reason: 'open-timeout'` as terminal.
 
 ## 6. Reveal the frame on the first proof event
 
@@ -54,11 +54,11 @@ Render your fallback under the iframe and swap to the frame on the first proof e
 
 <!-- snippet: teardown -->
 
-`destroy()` releases the DOM along with the channel. Use `close()` when the feature needs a flush window first.
+[`destroy()`](/docs/libraries/features/host#api-ShellHandle) releases the DOM along with the channel. Use `close()` when the feature needs a flush window first.
 
 ## 8. Compare the protocol pin on both sides
 
-A shell bakes the pin the feature declared in its `feature.config.ts`. Compare the two in your build or deploy step: a counterpart that omits the protocol falls back to plaintext, and no runtime signal reports it.
+A shell bakes the [protocol](/docs/libraries/features/host#api-SecurityProtocol) the feature declared in its [`feature.config.ts`](/docs/libraries/features/cli#config-resolution). Compare the two in your build or deploy step: a counterpart that omits the protocol falls back to plaintext, and no runtime signal reports it.
 
 ## Check it worked
 
