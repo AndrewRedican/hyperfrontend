@@ -13,6 +13,11 @@ export const DEFAULT_OG_IMAGE = {
   alt: 'HyperFrontend: compose your existing apps together securely, like Lego bricks.',
 }
 
+/** Atom feed advertisement, repeated on every page a reader might subscribe from. */
+export const ARTICLES_FEED_ALTERNATE = {
+  'application/atom+xml': [{ url: '/feed.xml', title: 'HyperFrontend Articles' }],
+}
+
 /** Default Twitter card image shared by every page that does not supply its own. */
 export const DEFAULT_TWITTER_IMAGE = {
   url: '/twitter-image.png',

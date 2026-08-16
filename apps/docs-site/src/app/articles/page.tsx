@@ -3,12 +3,14 @@ import { ArticlesIndexList } from '@/components/articles/articles-index-list'
 import { Footer } from '@/components/footer'
 import { Header } from '@/components/header'
 import { getAllArticles } from '@/lib/articles'
+import { ARTICLES_FEED_ALTERNATE } from '@/lib/metadata'
 
 export const metadata: Metadata = {
   title: 'Articles',
   description: 'Long-form writing on microfrontend architecture, integration boundaries, and the reasoning behind hyperfrontend.',
   alternates: {
     canonical: '/articles/',
+    types: ARTICLES_FEED_ALTERNATE,
   },
 }
 
