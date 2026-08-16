@@ -2,9 +2,11 @@
 
 A page and an iframe can already talk: `postMessage` on one side, a `message` listener on the other. What they cannot do, out of the box, is agree on anything. Nothing checks the message shape, nothing tells you the other side is ready, and a message sent one tick too early vanishes without a trace.
 
-This tutorial builds the smallest real connection with `@hyperfrontend/nexus`: a host page and a note-taking widget in an iframe, each declaring what it sends and accepts, connected through a handshake, exchanging typed messages both ways.
+This tutorial builds the smallest real connection with `@hyperfrontend/nexus`: a host page and a note-taking widget in an iframe, each declaring what it sends and accepts, connected through a handshake, exchanging messages both ways.
 
-The host and the widget are usually separate projects, so install the package in both:
+## Install the package in both projects
+
+The host and the widget are usually separate projects, so install it in both:
 
 ```bash
 npm install @hyperfrontend/nexus
@@ -12,7 +14,7 @@ npm install @hyperfrontend/nexus
 
 ## Declare what each side says
 
-A contract is self-oriented: `emitted` lists what this side sends, `accepted` lists what it is willing to receive. Incoming types outside `accepted` are dropped before they reach your handlers, and that drop is only logged if you lift the broker off its default `error` level by passing `settings: { logLevel: 'info' }` to `createBroker`.
+A contract is self-oriented: `emitted` lists what this side sends, `accepted` lists what it is willing to receive.
 
 ```ts
 // host page
@@ -28,7 +30,7 @@ export const widgetContract = {
 }
 ```
 
-The two do not have to be perfect mirrors, but anything one side emits that the other does not accept will never be delivered.
+Anything one side emits that the other does not accept is dropped before it reaches a handler.
 
 ## One broker per window, one channel per counterpart
 
@@ -39,6 +41,7 @@ import { createBroker } from '@hyperfrontend/nexus'
 import { hostContract } from './contracts'
 
 const frame = document.querySelector('iframe')
+if (!frame?.contentWindow) throw new Error('The widget iframe is not in the page yet')
 
 const broker = createBroker({ name: 'host-page', contract: hostContract })
 const toWidget = broker.addChannel('note-widget', frame.contentWindow)
@@ -56,7 +59,7 @@ const toHost = broker.addChannel('host-page', window.parent)
 
 ## Open the session
 
-Both sides call `connect()`. Underneath, the brokers run a handshake (request, accept, open) and cross their contracts during that exchange, which is why the `open` event can hand you the peer's origin and declared contract before a single application message flows:
+Both sides call `connect()`. Underneath, the brokers run a handshake and cross their contracts during that exchange, which is why the `open` event can hand you the peer's origin and declared contract before a single application message flows:
 
 ```ts
 toWidget.on('open', ({ origin, contract }) => {
@@ -66,7 +69,7 @@ toWidget.on('open', ({ origin, contract }) => {
 toWidget.connect()
 ```
 
-Once `open` fires, `isActive()` is true on both channels. Order does not matter: whichever side connects first waits for the other. Incompatible contracts are denied before the channel opens, and a `deny` event carries the reason instead.
+Order does not matter: whichever side connects first waits for the other.
 
 ## Send and receive
 
@@ -77,7 +80,8 @@ On the host:
 ```ts
 toWidget.onMessage((message) => {
   if (message.type === 'note-created') {
-    addNoteToSidebar(message.data.text)
+    const { text } = message.data as { text: string }
+    addNoteToSidebar(text)
   }
 })
 
@@ -89,36 +93,35 @@ In the widget:
 ```ts
 toHost.onMessage((message) => {
   if (message.type === 'theme-changed') {
-    document.body.dataset.theme = message.data.theme
+    const { theme } = message.data as { theme: string }
+    document.body.dataset.theme = theme
   }
 })
 
 toHost.send('note-created', { text: 'Ship the widget' })
 ```
 
-## The part that saves you at 2 in the morning
+The contract carries types, not payload shapes, so `message.data` arrives as `unknown` and you narrow it where you use it.
 
-In raw `postMessage` code, the classic failure is a race: the host sends before the iframe has attached its listener, and the message is simply gone. Nexus channels queue instead. A `send` before the session opens sits in the channel's queue and flushes, in order, the moment the handshake completes:
+## Send before the session opens
+
+Nexus channels queue. A `send` before the session opens sits in the channel's queue and flushes, in order, the moment the handshake completes, so the host could have sent the theme before it connected:
 
 ```ts
-const toWidget = broker.addChannel('note-widget', frame.contentWindow)
-
 toWidget.send('theme-changed', { theme: 'dark' })
 toWidget.connect()
 ```
 
-The widget receives that theme once it connects, however long that takes. No more `setTimeout(..., 100)` rituals.
+The widget receives that theme once it connects.
 
 ## Close it down
 
-Either side can end the session. The counterpart is notified, and both channels report inactive:
+Either side can end the session. `disconnect()` proposes a polite close: the channel fires `closing` and stays active so the counterpart can flush, then both sides fire `close` and report inactive once the acknowledgement lands.
 
 ```ts
 toWidget.disconnect()
 ```
 
-You now have two windows with crossed contracts, a handshaken session, typed delivery in both directions, ordered queueing across the pre-open gap, and a clean shutdown. Neither side touched `postMessage` or event plumbing directly.
+You now have two windows with crossed contracts, a handshaken session, delivery in both directions, ordered queueing across the pre-open gap, and a clean shutdown, and neither side touched `postMessage` or event plumbing directly.
 
-One gap before this ships: nothing above restricts who may connect, so give the broker a `whitelist` or a security policy.
-
-**Related:** [origin rules and broker settings](/docs/libraries/nexus) · [why the handshake queues](/docs/libraries/nexus/architecture)
+One thing this connection still lacks is an origin rule: a broker created without `settings.whitelist` or a security policy will accept a handshake from anyone.

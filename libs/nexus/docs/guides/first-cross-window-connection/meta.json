@@ -3,7 +3,7 @@
   "type": "tutorial",
   "title": "Your first cross-window connection",
   "problem": "I have a page and an iframe that need to talk to each other, and raw postMessage keeps turning into stringly-typed guesswork that breaks in production.",
-  "outcome": "A host page and a widget frame exchanging typed, contract-checked messages over a handshaken session, with queueing and clean shutdown, in about forty lines.",
+  "outcome": "A host page and a widget frame exchanging contract-checked messages over a handshaken session, with queueing across the pre-open gap and a clean shutdown.",
   "priority": "P0",
   "packages": ["@hyperfrontend/nexus"],
   "verification": {
@@ -13,7 +13,12 @@
   },
   "complexity": "beginner",
   "estMinutes": 15,
-  "apis": [{ "package": "@hyperfrontend/nexus", "symbol": "createBroker" }],
+  "apis": [
+    {
+      "package": "@hyperfrontend/nexus",
+      "symbol": "createBroker"
+    }
+  ],
   "prerequisites": {
     "knowledge": ["A JavaScript project with a bundler", "What an iframe is"]
   },
