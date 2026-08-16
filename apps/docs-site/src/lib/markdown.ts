@@ -14,7 +14,8 @@ import remarkRehype from 'remark-rehype'
  * via the `pre.shiki` rules in `globals.css`. Raw HTML embedded in the markdown
  * (mermaid placeholders, badges, alignment wrappers) is preserved through
  * `rehype-raw`, except for HTML comments: authoring notes stay useful in the
- * source files and never reach the published page.
+ * source files and never reach the published page. Comment syntax inside a
+ * fenced code block is sample text rather than a comment, so it still renders.
  *
  * @param markdown - The markdown string to convert
  * @returns A promise that resolves to the HTML string
@@ -24,6 +25,7 @@ export async function markdownToHtml(markdown: string): Promise<string> {
     .use(remarkGfm)
     .use(remarkRehype, { allowDangerousHtml: true })
     .use(rehypeRaw)
+    .use(rehypeRemoveComments)
     .use(rehypeShiki, {
       themes: { light: 'github-light', dark: 'github-dark' },
       defaultColor: false,
@@ -31,19 +33,55 @@ export async function markdownToHtml(markdown: string): Promise<string> {
       lazy: true,
     })
     .use(rehypeStringify, { allowDangerousHtml: true })
-    .process(stripHtmlComments(markdown))
+    .process(markdown)
 
   return result.toString()
 }
 
 /**
- * Remove HTML comments so in-source authoring notes never render.
- *
- * @param markdown - Raw markdown content
- * @returns The markdown without HTML comments
+ * The subset of a hast node the comment pass needs: its type, and its children
+ * when it is a container.
  */
-function stripHtmlComments(markdown: string): string {
-  return markdown.replace(/<!--[\s\S]*?-->/g, '')
+interface CommentableNode {
+  /** Node type, `'comment'` for an HTML comment */
+  type: string
+  /** Child nodes, absent on leaves */
+  children?: CommentableNode[]
+}
+
+/**
+ * Rehype plugin that drops HTML comments so in-source authoring notes never
+ * render.
+ *
+ * Comments are removed from the parsed tree rather than from the markdown
+ * text. A textual `<!--`...`-->` strip is both incomplete and overreaching:
+ * overlapping markers reassemble into a live comment once an inner one is
+ * removed, and comment syntax inside fenced code blocks is sample content that
+ * must survive to the page.
+ *
+ * @returns The tree transformer
+ */
+function rehypeRemoveComments(): (tree: CommentableNode) => void {
+  return (tree) => {
+    removeComments(tree)
+  }
+}
+
+/**
+ * Drop every comment node beneath a hast node, in place.
+ *
+ * @param node - Node whose subtree is filtered
+ */
+function removeComments(node: CommentableNode): void {
+  if (!node.children) {
+    return
+  }
+
+  node.children = node.children.filter((child) => child.type !== 'comment')
+
+  for (const child of node.children) {
+    removeComments(child)
+  }
 }
 
 /**
