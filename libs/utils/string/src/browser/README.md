@@ -24,4 +24,4 @@ const bytes = utf8StringToUint8Array('Hello')
 const restored = fromBase64(uint8ArrayToBase64(bytes))
 ```
 
-Use this entry point in browsers, Web Workers, Deno, Bun, and Cloudflare Workers — anywhere the Web Encoding APIs are available. For Node.js processes, import from `@hyperfrontend/string-utils/node` instead so the `Buffer`-based implementations are picked up by the bundler.
+Use this entry point in browsers, Web Workers, Deno, Bun, and Cloudflare Workers: anywhere the Web Encoding APIs are available. For Node.js processes, import from `@hyperfrontend/string-utils/node` instead so the `Buffer`-based implementations are picked up by the bundler.
