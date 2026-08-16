@@ -32,9 +32,9 @@ Last updated: July 31, 2026
 
 **Notes:**
 
-1. `ui-utils` — Some DOM utilities require browser APIs; check individual exports
+1. `ui-utils`: Some DOM utilities require browser APIs; check individual exports
 2. Build-time or CLI-time Node.js toolkits; not intended for browser, Web Worker, or CDN runtimes
-3. `features` — Support is per entry point, not per package. `/host` and `/hostee` are browser
+3. `features`: Support is per entry point, not per package. `/host` and `/hostee` are browser
    runtimes and ship IIFE/UMD bundles for CDN use; `/cli`, `/server`, and `/generators` are Node-only.
    The root entry (types, `defineConfig`, contract validation) is DOM-free and runs anywhere,
    including a Web Worker; `/host` and `/hostee` drive `window` directly, so neither does.
@@ -147,7 +147,7 @@ import type { Message } from '@hyperfrontend/network-protocol/lib/types'
 
 ### `@hyperfrontend/features`
 
-Entry points split by role rather than by platform. Import only the surface you need — each is an
+Entry points split by role rather than by platform. Import only the surface you need; each is an
 independent subpath, so a feature app never pulls in the host SDK or the CLI.
 
 ```typescript
@@ -243,9 +243,9 @@ All libraries specify minimum Node.js and npm versions in their `package.json` `
 
 ### Why Node 18+?
 
-- **ES2022 target** — All libraries compile to ES2022, which requires Node 18+ for full feature support
-- **ESM support** — Native ES modules with `exports` field conditions
-- **npm 8+** — Required for workspace dependencies and modern `package.json` features
+- **ES2022 target**: All libraries compile to ES2022, which requires Node 18+ for full feature support
+- **ESM support**: Native ES modules with `exports` field conditions
+- **npm 8+**: Required for workspace dependencies and modern `package.json` features
 
 ---
 
@@ -260,7 +260,7 @@ Every browser bundle except `@hyperfrontend/features` uses `globalThis.crypto` i
 - Deno
 - Bun
 
-The `features` `/host` and `/hostee` bundles are the exception — they drive `window` and DOM APIs directly, so they are browser-only (see note 3 above).
+The `features` `/host` and `/hostee` bundles are the exception: they drive `window` and DOM APIs directly, so they are browser-only (see note 3 above).
 
 ### Example: Using in a Web Worker
 
