@@ -22,6 +22,18 @@ describe('stripInlineMarkdown', () => {
   it('reduces inline code, links, and emphasis to display text', () => {
     expect(stripInlineMarkdown('Use **`createBroker`** from [nexus](/docs/libraries/nexus)')).toBe('Use createBroker from nexus')
   })
+
+  it('removes html tags whether or not they are terminated', () => {
+    expect(stripInlineMarkdown('Teardown <br> and <script src=x')).toBe('Teardown  and')
+  })
+
+  it('leaves no tag behind when tags nest', () => {
+    expect(stripInlineMarkdown('<<b>script>Setup</script>')).toBe('Setup')
+  })
+
+  it('keeps a bare comparison that is not a tag', () => {
+    expect(stripInlineMarkdown('Latency < 100ms')).toBe('Latency < 100ms')
+  })
 })
 
 describe('extractMarkdownSections', () => {

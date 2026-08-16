@@ -57,14 +57,34 @@ export function createHeadingSlugger(): (text: string) => string {
  * @returns Plain display text
  */
 export function stripInlineMarkdown(heading: string): string {
-  return heading
+  const withoutMarkdown = heading
     .replace(/!\[([^\]]*)\]\([^)]*\)/g, '$1')
     .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')
     .replace(/`([^`]*)`/g, '$1')
     .replace(/\*\*([^*]*)\*\*/g, '$1')
     .replace(/\*([^*]*)\*/g, '$1')
-    .replace(/<[^>]+>/g, '')
-    .trim()
+
+  return stripHtmlTags(withoutMarkdown).trim()
+}
+
+/**
+ * Remove HTML tags and comments from heading text, whether or not they are
+ * terminated.
+ *
+ * @param text - Heading text that may carry inline HTML
+ * @returns The text with every tag-like construct removed
+ */
+function stripHtmlTags(text: string): string {
+  let current = text
+  let previous = ''
+
+  // why: One pass can splice a stray `<` onto the text behind a removed tag and form a new one, so it repeats to a fixed point
+  while (current !== previous) {
+    previous = current
+    current = current.replace(/<\/?[a-zA-Z!][^>]*>?/g, '')
+  }
+
+  return current
 }
 
 /**
