@@ -36,45 +36,68 @@
 Modular DOM utilities for dynamic styling, gesture detection, element lifecycle, and color manipulation.
 
 • 👉 See [**documentation**](https://www.hyperfrontend.dev/docs/libraries/utils/ui/)
+• 👉 See [**API reference**](https://www.hyperfrontend.dev/docs/libraries/utils/ui/#api-reference)
 
 ## What is @hyperfrontend/ui-utils?
 
-@hyperfrontend/ui-utils provides framework-agnostic browser utilities organized into modular secondary entry points. Rather than importing the entire library, you import only the specific capabilities you need: `@hyperfrontend/ui-utils/element` for DOM creation, `@hyperfrontend/ui-utils/color` for color transformations, `@hyperfrontend/ui-utils/mobile` for device detection, etc.
+Sometimes a framework is not on the table. You are writing an embed that drops into someone else's page, a debug overlay, a script tag, a canvas experiment: something where React would be more runtime than the thing it wraps. So you are back to `document.createElement` and `appendChild`, a `<style>` tag you have to remember to remove, and a `ResizeObserver` you have to remember to disconnect. This package is that pile of chores, written once and tested.
 
-The library emphasizes dynamic styling through programmatic CSS injection, type-safe CSS selector building, and gesture detection for touch and keyboard events. All utilities support TypeScript and provide immutable patterns through frozen objects and functional composition.
+The parts worth the install: `createElement` gives you the node plus attach, detach, show, and hide, with an opacity transition when you pass a duration. `addStylesheet` injects real CSS and hands back the function that removes it, so your rules leave when your widget does. `syncElementDimensions` pins an overlay to an element you do not control and keeps it there through resizes. `getElementAsync` polls for a node that has not rendered yet and returns a cancel function. `createGestureListener` covers Escape and pinch-out with one cleanup. `setupAudio` waits for the click or touch that browsers require before an `AudioContext` will start. Anything that attaches something gives you back the function that detaches it.
+
+At a glance:
+
+```typescript
+import { createElement, syncElementDimensions } from '@hyperfrontend/ui-utils/element'
+import { addStylesheet } from '@hyperfrontend/ui-utils/style'
+
+const [, removeStyles] = addStylesheet({ '.hf-hint': { position: 'fixed', opacity: '0', outline: '2px solid #f0f' } }, 'hf-hint')
+
+const hint = createElement('div', { className: 'hf-hint' })
+hint.attachTo(document.body)
+hint.show(150) // opacity transition over 150ms
+
+// follow a node you do not own, through every resize
+const stopTracking = syncElementDimensions('#third-party-widget', hint.ref)
+
+// teardown leaves the page as you found it
+stopTracking()
+hint.detachFromParent()
+removeStyles()
+```
 
 ### Key Features
 
-- **Modular secondary entry points** for selective imports and tree-shaking
-- **Dynamic element creation** with fluent API for show/hide, attach/detach operations
-- **CSS-in-JS utilities** including selector builder, style injection, and CSS object transformation
-- **Color manipulation** (hex/RGB conversion, variation generation)
-- **Gesture detection** (pinch-to-zoom, escape key handling)
+- **Modular secondary entry points** for importing one corner of the package at a time
+- **Elements with a lifecycle** - attach, detach, show, hide, and a live `ref`, all on the object `createElement` returns
+- **Runtime stylesheets** - inject rules from a CSS string or a style map, label them, and get the remover back
+- **CSS selector builder** - chainable `id`, `class`, `attribute`, `nth`, `childOf`, and pseudo-class methods with validation
+- **Color conversion** - hex and RGB in both directions, with alpha, plus scaled variations of a base color
+- **Gestures** - Escape key and pinch-out behind one listener with one cleanup
+- **Element tracking** - `ResizeObserver` and dimension syncing that stop when you call what they returned
 - **Mobile device detection** via user agent parsing
-- **Element observers** (ResizeObserver wrapper with cleanup)
-- **Audio setup** utilities for web audio APIs
+- **Audio unlock** - resolves an `AudioContext` after the click or touch browsers insist on
 
 ### Architecture Highlights
 
-Built on secondary entry points (`/element`, `/color`, `/style`, `/event`, etc.) for optimal bundle sizes. All DOM manipulation returns frozen objects with cleanup functions to prevent memory leaks. Uses native browser APIs (ResizeObserver, TouchEvent, Web Audio) with zero external dependencies except sibling utilities.
+Each capability sits behind its own secondary entry point (`/element`, `/style`, `/selector`, `/color`, `/event`, `/audio`, `/mobile`, `/time`, `/misc`, `/component`), so importing one never drags in the rest. The pattern throughout is that anything touching the document returns its own undo: `addStylesheet` returns the style element and a remover, `onElementResize` and `syncElementDimensions` return disconnect functions, `getElementAsync` returns a cancel function. Everything is built on plain browser APIs (`ResizeObserver`, touch events, Web Audio) with no third-party dependencies.
 
 ## Why Use @hyperfrontend/ui-utils?
 
-### Eliminates Boilerplate for Dynamic DOM Operations
+### A framework is not always an option
 
-Creating, styling, and managing element lifecycles in vanilla JavaScript requires repetitive `createElement`, `appendChild`, and cleanup logic. The `createElement()` utility provides a fluent API with automatic parent attachment, fade in/out transitions, and cleanup methods—reducing 15+ lines of DOM code to 3-4 lines.
+Embeds on someone else's page, browser extensions, tooling panels, canvas demos, snippets that ship as one script tag: places where you cannot mount a component tree, or would rather not pay for one. These are plain functions over plain DOM nodes, so they run under any framework or none, and they do not care what rendered the page around them.
 
-### Type-Safe CSS Selector Building
+### The cleanup is the point
 
-Hand-writing CSS selectors as strings is error-prone and offers no IDE autocomplete. The `CssSelector` builder provides chainable methods (`.id()`, `.class()`, `.tag()`, `.attribute()`) with validation, preventing malformed selectors and enabling refactoring support. Particularly valuable when generating complex selectors programmatically.
+Overlay code leaks in predictable ways: a stylesheet that outlives the widget it styled, an observer nobody disconnected, a poll still running long after the element showed up. Every function here that attaches something returns the thing that removes it, so teardown is a short list of calls you already have instead of a hunt through the document.
 
-### Prevents ResizeObserver Memory Leaks
+### Following elements you do not control
 
-Raw ResizeObserver usage requires careful cleanup to avoid memory leaks in SPAs. `onElementResize()` returns a cleanup function and automatically handles disconnection, making it safe for component unmounting in React/Vue/Angular without manual observer management.
+`syncElementDimensions` takes a source and a target, copies width, height, top, left, and position from one to the other, and repeats that on every resize of the source. Both arguments accept a selector, so the source can be a node that has not rendered yet: `getElementAsync` polls for it every 100ms and gives up after 10 seconds by default, and the cleanup function cancels the poll if you gave up first.
 
-### Modular Imports Reduce Bundle Size
+### Import one corner, not the package
 
-Most DOM utility libraries force all-or-nothing imports. Secondary entry points let you import only what you need (`import { createElement } from '@hyperfrontend/ui-utils/element'`), keeping production bundles lean when you only need color conversion or mobile detection.
+Every capability is its own entry point, so `import { hexToRgb } from '@hyperfrontend/ui-utils/color'` pulls in the color conversions and nothing else. That matters when the whole budget for an embed is a few kilobytes.
 
 ## Installation
 
@@ -101,14 +124,14 @@ modal.detachFromParent() // Clean removal
 // Type-safe CSS selector building
 import { CssSelector } from '@hyperfrontend/ui-utils/selector'
 
-const selector = new CssSelector('div').class('card').attribute('data-status', 'active').pseudoClass('hover').toString() // "div.card[data-status='active']:hover"
+const selector = new CssSelector('div').class('card').attribute('data-status', 'active').hover().toString() // 'div.card[data-status="active"]:hover'
 
 // Color manipulation
 import { getColorVariation, hexToRgb, rgbToHex } from '@hyperfrontend/ui-utils/color'
 
-const lighterBlue = getColorVariation('#0066cc', 128) // Lightened version
+const dimmedBlue = getColorVariation('#0066cc', 128) // 'rgba(0,51,102,0.5019607843137255)'
 const rgb = hexToRgb('#ff5500') // { r: 255, g: 85, b: 0 }
-const hex = rgbToHex(255, 85, 0) // "#ff5500"
+const hex = rgbToHex(255, 85, 0) // '#ff5500'
 
 // Gesture detection with cleanup
 import { createGestureListener } from '@hyperfrontend/ui-utils/event'
@@ -121,55 +144,58 @@ const cleanup = createGestureListener(() => console.log('Escape or pinch detecte
 
 ### Element Utilities (`/element`)
 
-- **`createElement(tagName, config)`** - Create elements with fluent API for lifecycle management
-- **`getElementAsync(selector, timeout)`** - Wait for element to appear in DOM (Promise-based)
-- **`syncElementDimensions(source, target)`** - Keep target dimensions synchronized with source
-- **`onElementResize(element, callback)`** - ResizeObserver wrapper with cleanup
+- **`createElement(tagName, config)`** - Create an element and get attach, detach, show, hide, and `ref` back
+- **`div(config)`, `span(config)`, `button(config)`, and the rest** - Shorthands for the common tags
+- **`getElementAsync(selector, options)`** - Poll for an element, with `onSuccess`, `onFail`, `duration`, and `interval`; returns a cancel function
+- **`syncElementDimensions(source, target, options)`** - Copy size and position from source to target on every resize
+- **`onElementResize(element, callback)`** - `ResizeObserver` wrapper that returns its own disconnect
 
 ### Style Utilities (`/style`)
 
-- **`createApplyStyle(selector, style)`** - Inject CSS rules dynamically
-- **`cssObjectToString(css)`** - Convert style objects to CSS strings
-- **`CssRule` / `CssRules`** - Programmatic CSS rule generation
-- **`addStylesheet(rules, id)`** - Add stylesheet to document
+- **`addStylesheet(css, label)`** - Add a `<style>` element from a CSS string or style map; returns the element and a remover
+- **`removeStylesheet(styleElementOrLabel)`** - Remove a stylesheet added earlier
+- **`createApplyStyle(selector, style)` / `createApplyStyles(styles)`** - Build a run-once function that injects the rules on first call
+- **`cssRule(selector, css)` / `cssRules(styleMap)`** - Turn style objects into CSS rule text
+- **`cssObjectToString(css)`** - Convert a style object to a CSS declaration string
 
 ### Selector Utilities (`/selector`)
 
-- **`CssSelector`** - Chainable CSS selector builder with validation
+- **`CssSelector`** - Chainable selector builder: `id`, `class`, `attribute`, `first`, `last`, `nth`, `hover`, `active`, `focus`, `pseudo`, `childOf`, `parentOf`, sibling combinators
+- **`select`, `selectBy`, `selectByElement`, `selectById`, `selectByClass`, `selectByAttribute`, `selectAllElements`** - Start a builder from a tag, id, class, or attribute
 - **`isValidCssSelector(selector)`** - Validate CSS selector strings
 
 ### Color Utilities (`/color`)
 
-- **`getColorVariation(baseColor, intensity)`** - Generate lighter/darker color variations
-- **`hexToRgb(hex)`** / **`rgbToHex(r, g, b)`** - Color format conversion
-- **`rgbToString(rgb)`** - Convert RGB object to CSS string
-- **`rgbStringToHex(rgbString)`** - Parse CSS color strings to hex
+- **`getColorVariation(baseColor, intensity)`** - Scale a hex color by an intensity of 0 to 255, returned as an `rgba()` string with matching alpha
+- **`hexToRgb(hex)`** / **`rgbToHex(r, g, b, a?)`** - Convert between hex and channel values, with optional alpha
+- **`rgbToString(rgb)`** - Turn an RGB object into an `rgb()` or `rgba()` string
+- **`rgbStringToHex(rgbString)`** - Parse a CSS color string back to hex
 
 ### Event Utilities (`/event`)
 
-- **`createGestureListener(callback)`** - Detect pinch gestures and escape key
-- **`clickAtPosition(x, y)`** - Programmatic click at coordinates
+- **`createGestureListener(callback)`** - Fire on Escape or a pinch-out; returns one cleanup for all four listeners
+- **`clickAtPosition(x, y)`** - Dispatch a synthetic `mousedown` at document coordinates
 
 ### Mobile Utilities (`/mobile`)
 
-- **`isMobileDevice()`** - User agent-based mobile detection
+- **`isMobileDevice()`** - User agent based mobile detection
 
 ### Component Utilities (`/component`)
 
-- **`component(create, style)`** - Wrap element creation with style injection
+- **`component(create, style)`** - Pair a factory with a stylesheet function, injected once on first call
 
 ### Audio Utilities (`/audio`)
 
-- **`setupAudio()`** - Web Audio API setup utilities
+- **`setupAudio(elementOrSelector)`** - Resolve an `AudioContext` once the user clicks or touches the given element
 
 ### Time Utilities (`/time`)
 
-- **`timestampToDateTime(timestamp)`** - Convert timestamps to formatted date/time
+- **`pause(ms)`** - Promise that resolves after a delay
+- **`timestampToDateTime(timestamp)`** - Format a millisecond timestamp as a UTC date and time string
 
 ### Misc Utilities (`/misc`)
 
-- **`pause(ms)`** - Promise-based delay
-- **`simpleHash(str)`** - Generate simple string hashes
+- **`simpleHash(str)`** - Six character non-cryptographic string hash, handy for generated class names
 
 ## Compatibility
 
@@ -201,7 +227,7 @@ const cleanup = createGestureListener(() => console.log('Escape or pinch detecte
 <script src="https://cdn.jsdelivr.net/npm/@hyperfrontend/ui-utils"></script>
 
 <script>
-  const { hexToRgb, rgbToHex, isElementVisible } = HyperfrontendUIUtils
+  const { createElement, hexToRgb, rgbToHex } = HyperfrontendUIUtils
 </script>
 ```
 
