@@ -146,6 +146,10 @@ function SearchDialog({ onClose }: SearchDialogProps) {
     setSelected(0)
   }, [query])
 
+  useEffect(() => {
+    document.getElementById(`search-result-${selected}`)?.scrollIntoView({ block: 'nearest' })
+  }, [selected])
+
   const onKeyDown = (event: React.KeyboardEvent) => {
     if (event.key === 'Escape') {
       event.preventDefault()
@@ -165,9 +169,29 @@ function SearchDialog({ onClose }: SearchDialogProps) {
         onClose()
       }
     } else if (event.key === 'Tab') {
-      // why: The dialog has exactly two tab stops (input, close); cycling between them keeps focus from escaping to the page behind the backdrop
+      trapFocus(event)
+    }
+  }
+
+  /**
+   * Keeps Tab inside the dialog by cycling the real focusable descendants,
+   * so every result link and the failure fallback stay keyboard reachable.
+   *
+   * @param event - The keyboard event carrying the Tab press
+   */
+  function trapFocus(event: React.KeyboardEvent) {
+    // why: Result links are reached with the arrow keys, not Tab (they carry tabIndex -1), so the trap must cycle only the genuinely tabbable stops
+    const focusable = dialogRef.current?.querySelectorAll<HTMLElement>('a[href]:not([tabindex="-1"]), button:not([disabled]), input')
+    if (!focusable || focusable.length === 0) return
+    const first = focusable[0]
+    const last = focusable[focusable.length - 1]
+    const active = document.activeElement
+    if (event.shiftKey && active === first) {
       event.preventDefault()
-      closeRef.current?.focus()
+      last.focus()
+    } else if (!event.shiftKey && active === last) {
+      event.preventDefault()
+      first.focus()
     }
   }
 
@@ -222,11 +246,12 @@ function SearchDialog({ onClose }: SearchDialogProps) {
           ) : results.length === 0 ? (
             <p className="px-4 py-6 text-sm text-slate-500 dark:text-slate-400">No matches. Search is exact: try a shorter term.</p>
           ) : (
-            <ul className="py-2">
+            <div className="py-2">
               {results.map((result, resultIndex) => (
-                <li key={result.href} role="option" aria-selected={resultIndex === selected} id={`search-result-${resultIndex}`}>
+                <div key={result.href} role="option" aria-selected={resultIndex === selected} id={`search-result-${resultIndex}`}>
                   <Link
                     href={result.href}
+                    tabIndex={-1}
                     onClick={onClose}
                     onMouseEnter={() => setSelected(resultIndex)}
                     className={`flex min-h-[44px] items-center gap-3 px-4 py-2.5 ${
@@ -243,9 +268,9 @@ function SearchDialog({ onClose }: SearchDialogProps) {
                       ) : null}
                     </span>
                   </Link>
-                </li>
+                </div>
               ))}
-            </ul>
+            </div>
           )}
         </div>
 
