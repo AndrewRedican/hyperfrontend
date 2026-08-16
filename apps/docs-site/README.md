@@ -70,13 +70,15 @@ Documentation is automatically extracted from the monorepo via `npm run generate
 
 ### What Gets Generated
 
-| Content Type          | Source                                    | Output                                  |
-| --------------------- | ----------------------------------------- | --------------------------------------- |
-| **API Reference**     | TypeScript source files                   | `.generated/api/{lib}/api.json`         |
-| **README**            | `libs/*/README.md`, `plugins/*/README.md` | `.generated/docs/{lib}/readme.md`       |
-| **Architecture**      | `libs/*/ARCHITECTURE.md`                  | `.generated/docs/{lib}/architecture.md` |
-| **Root Architecture** | `ARCHITECTURE.md`                         | `.generated/docs/architecture.md`       |
-| **Contributing**      | `CONTRIBUTING.md`                         | `.generated/docs/contributing.md`       |
+| Content Type          | Source                                    | Output                                                   |
+| --------------------- | ----------------------------------------- | -------------------------------------------------------- |
+| **API Reference**     | TypeScript source files                   | `.generated/api/{lib}/api.json`                          |
+| **README**            | `libs/*/README.md`, `plugins/*/README.md` | `.generated/docs/{lib}/readme.md`                        |
+| **Architecture**      | `libs/*/ARCHITECTURE.md`                  | `.generated/docs/{lib}/architecture.md`                  |
+| **Root Architecture** | `ARCHITECTURE.md`                         | `.generated/docs/architecture.md`                        |
+| **Contributing**      | `CONTRIBUTING.md`                         | `.generated/docs/contributing.md`                        |
+| **Guides**            | `libs/*/docs/guides/{slug}/`              | `.generated/guides/{slug}/guide.md`, `guides/index.json` |
+| **Search index**      | Everything above + articles + navigation  | `public/search-index.json`                               |
 
 ### Entry Point Discovery
 
@@ -105,6 +107,61 @@ Links in markdown content are automatically transformed for the docs site:
 | `./ARCHITECTURE.md`          | `/docs/architecture`    |
 | `libs/nexus/ARCHITECTURE.md` | `/docs/libraries/nexus` |
 | `roadmap/*.md`               | GitHub blob URL         |
+
+### Guides (Guide Units)
+
+Guides are package-owned: a directory `libs/<lib>/docs/guides/<slug>/` holding `guide.md`
+plus `meta.json` (schema: `scripts/generate-guides.types.ts`). The compiler
+(`scripts/generate-guides.ts`) validates metadata, resolves every
+`<!-- snippet: region -->` placeholder from `// ref: [guide:<slug>/<region>] start|end`
+marker regions inside the shipped source named by `verification.spec` (plus optional
+`snippetSources`), and fails the build on any malformed unit, dangling placeholder,
+orphaned region, or slug collision.
+
+Two verification lanes, both stated on the page so a reader knows what a code block is
+worth:
+
+| Lane       | Meaning                                                                                                                                     | `meta.json` requires                 |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------ |
+| `demo`     | Snippets are extracted from source that ships and runs for its own reasons (a demo app, the docs-site gallery), so they cannot silently rot | `spec` (+ optional `snippetSources`) |
+| `authored` | Code is written in the guide and was executed against a published package while writing                                                     | `verifiedAgainst`, `verifiedOn`      |
+
+No test files exist to back documentation. The `authored` lane records the package
+version and the date the examples were run, and the page renders both, so drift is
+visible rather than hidden. Guide examples are never verified by adding specs to the
+repository.
+
+Outputs: `.generated/guides/<slug>/guide.md` (rendered at `/docs/guides/<slug>`),
+`.generated/guides/index.json`, and a public machine-readable copy at
+`/guides/index.json`. Library pages surface their guides from that index; there is no
+hand-maintained guide registry.
+
+Fast authoring loop (skips TypeDoc):
+
+```bash
+npm run generate:guides
+```
+
+### Search index
+
+`scripts/generate-search-index.ts` compiles a deterministic omni-search index (libraries,
+API symbols, submodules, guides, articles, architecture pages, and their section anchors)
+into `public/search-index.json`. The serialized shape is the contract in
+`src/lib/search/search-contract.ts`; the client (`src/components/search/search-dialog.tsx`,
+Ctrl/Cmd+K) fetches it lazily and matches with exact substring AND semantics via
+`src/lib/search/search-engine.ts`. The producer is replaceable: a future
+`@hyperfrontend/indexer` can emit the same contract without touching the consumer.
+Section anchors reproduce the page's own id algorithm (`src/lib/slug.ts`), so every
+search destination resolves.
+
+### Articles taxonomy and feed
+
+Article frontmatter stays flat quoted scalars; list-valued fields are comma-separated
+inside one quoted value (`tags`, `packages`, `related`), plus scalar `category` and
+`updated`. The loader (`src/lib/articles.ts`) parses lists; unknown related slugs fail
+the static build. Articles are served as an Atom feed at `/feed.xml`
+(`src/lib/feed.ts` + `src/app/feed.xml/route.ts`), advertised via the layout's
+`alternates.types`.
 
 ---
 
@@ -212,23 +269,31 @@ This runs:
 
 ### Link Validation
 
-The `validate-links.ts` script checks all internal links during build and reports broken links as warnings.
+The `validate-links.ts` script scans `.generated/**`, workspace-root `*.md`, `libs/**/*.md`,
+and `content/**` (articles) during build and fails on broken internal links. Site-absolute
+asset links resolve against `public/` as well as `src/app` routes.
 
 ---
 
 ## URL Structure
 
-| URL Pattern                    | Content                     |
-| ------------------------------ | --------------------------- |
-| `/`                            | Landing page                |
-| `/docs`                        | Getting Started             |
-| `/docs/quick-start`            | Quick Start guide           |
-| `/docs/core-concepts`          | Core Concepts               |
-| `/docs/libraries/{slug}`       | Library documentation       |
-| `/docs/libraries/utils/{slug}` | Utils package documentation |
-| `/docs/contributing`           | Contribution guide          |
-| `/docs/api`                    | API Reference index         |
-| `/architecture`                | Architecture overview       |
+| URL Pattern                     | Content                       |
+| ------------------------------- | ----------------------------- |
+| `/`                             | Landing page                  |
+| `/docs`                         | Getting Started               |
+| `/docs/quick-start`             | Quick Start guide             |
+| `/docs/core-concepts`           | Core Concepts                 |
+| `/docs/guides`                  | Guides index (problem-first)  |
+| `/docs/guides/{slug}`           | One compiled guide            |
+| `/docs/libraries/{slug}`        | Library documentation         |
+| `/docs/libraries/utils/{slug}`  | Utils package documentation   |
+| `/docs/contributing`            | Contribution guide            |
+| `/docs/api`                     | API Reference index           |
+| `/architecture`                 | Architecture overview         |
+| `/articles`, `/articles/{slug}` | Articles (canonical copies)   |
+| `/feed.xml`                     | Articles Atom feed            |
+| `/guides/index.json`            | Machine-readable guide corpus |
+| `/search-index.json`            | Serialized search index       |
 
 ---
 
