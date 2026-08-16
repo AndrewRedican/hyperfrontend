@@ -1,3 +1,4 @@
+// ref: [guide:compose-independent-features/shared-contract] start
 /**
  * Shell-packaging entry for the "@hyperfrontend/demo-koi-fish-vanilla" feature's contract.
  *
@@ -9,3 +10,4 @@
 import { koiFishContract } from '@hyperfrontend/demo-koi-lib/contract'
 
 export default koiFishContract
+// ref: [guide:compose-independent-features/shared-contract] end

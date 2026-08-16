@@ -1,3 +1,4 @@
+// ref: [guide:compose-independent-features/fish-config] start
 import { defineConfig } from '@hyperfrontend/features'
 
 export default defineConfig({
@@ -13,3 +14,4 @@ export default defineConfig({
     modes: ['embedded'],
   },
 })
+// ref: [guide:compose-independent-features/fish-config] end
