@@ -79,7 +79,7 @@ export interface GuideMeta {
   outcome: string
   /** Editorial priority */
   priority: 'P0' | 'P1' | 'P2'
-  /** Involved npm packages; the first entry is the owning package */
+  /** npm packages this guide concerns; the first entry is the one it is primarily about. A cross-cutting guide lists every package it involves. */
   packages: string[]
   /** How the guide's code examples are proven to execute */
   verification: GuideVerification
@@ -102,7 +102,7 @@ export interface GuideMeta {
 }
 
 /**
- * A discovered guide unit: one `libs/<lib>/docs/guides/<slug>/` directory.
+ * A discovered guide unit: one `apps/docs-site/content/guides/<slug>/` directory.
  */
 export interface GuideUnit {
   /** Global guide slug (the directory name) */
@@ -113,8 +113,6 @@ export interface GuideUnit {
   metaPath: string
   /** Absolute path to guide.md */
   guidePath: string
-  /** The library owning this unit */
-  library: LibrarySource
 }
 
 /**
@@ -149,7 +147,7 @@ export interface GuideIndexEntry {
   outcome: string
   /** Editorial priority */
   priority: GuideMeta['priority']
-  /** Involved npm packages; the first entry is the owning package */
+  /** npm packages this guide concerns; the first entry is the one it is primarily about */
   packages: string[]
   /** How the guide's code examples are proven to execute */
   verification: GuideVerification

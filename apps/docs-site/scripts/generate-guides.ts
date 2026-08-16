@@ -12,6 +12,8 @@ import { logger } from '@hyperfrontend/logging'
 
 // why: cwd-anchored like the src/ loaders (all entry points run from apps/docs-site), which also keeps this module importable by the vitest harness where __dirname does not exist
 const WORKSPACE_ROOT = resolve(process.cwd(), '../..')
+const GUIDES_SOURCE = resolve(process.cwd(), 'content/guides')
+const GUIDES_SOURCE_LABEL = 'content/guides'
 const OUTPUT_DIR = resolve(process.cwd(), '.generated')
 const GUIDES_OUTPUT = join(OUTPUT_DIR, 'guides')
 const API_OUTPUT = join(OUTPUT_DIR, 'api')
@@ -25,45 +27,34 @@ const VERIFICATION_KINDS = ['demo', 'authored']
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/
 
 /**
- * Discovers guide units across all configured libraries.
+ * Discovers every guide unit in the docs-site content root.
  *
- * A guide unit is a directory `libs/<lib>/docs/guides/<slug>/` containing a
- * `meta.json` and a `guide.md`. A directory with only one of the pair is an
- * authoring error and fails generation.
+ * A guide unit is a directory `apps/docs-site/content/guides/<slug>/` containing
+ * a `meta.json` and a `guide.md`. A directory with only one of the pair is an
+ * authoring error and fails generation. Guides are editorial artifacts of the
+ * docs site: a guide names the packages it concerns in `meta.json` rather than
+ * living inside any one package's source tree.
  *
- * @param libraries - Library sources to scan for guide directories
  * @param errors - Accumulator for validation errors
  * @returns Discovered guide units in deterministic (slug-sorted) order
  */
-function discoverGuideUnits(libraries: LibrarySource[], errors: string[]): GuideUnit[] {
+function discoverGuideUnits(errors: string[]): GuideUnit[] {
   const units: GuideUnit[] = []
-  const seenSlugs = createMap<string, string>()
+  if (!existsSync(GUIDES_SOURCE)) return units
 
-  for (const lib of libraries) {
-    const guidesDir = join(WORKSPACE_ROOT, lib.srcPath, 'docs', 'guides')
-    if (!existsSync(guidesDir)) continue
+  for (const entry of readdirSync(GUIDES_SOURCE, { withFileTypes: true })) {
+    if (!entry.isDirectory()) continue
+    const slug = entry.name
+    const unitDir = join(GUIDES_SOURCE, slug)
+    const metaPath = join(unitDir, 'meta.json')
+    const guidePath = join(unitDir, 'guide.md')
 
-    for (const entry of readdirSync(guidesDir, { withFileTypes: true })) {
-      if (!entry.isDirectory()) continue
-      const slug = entry.name
-      const unitDir = join(guidesDir, slug)
-      const metaPath = join(unitDir, 'meta.json')
-      const guidePath = join(unitDir, 'guide.md')
-
-      if (!existsSync(metaPath) || !existsSync(guidePath)) {
-        errors.push(`${lib.srcPath}/docs/guides/${slug}: a guide unit requires both meta.json and guide.md`)
-        continue
-      }
-
-      const previousOwner = seenSlugs.get(slug)
-      if (previousOwner) {
-        errors.push(`guide slug '${slug}' exists in both ${previousOwner} and ${lib.srcPath}; slugs are global and must be unique`)
-        continue
-      }
-      seenSlugs.set(slug, lib.srcPath)
-
-      units.push({ slug, dir: unitDir, metaPath, guidePath, library: lib })
+    if (!existsSync(metaPath) || !existsSync(guidePath)) {
+      errors.push(`${GUIDES_SOURCE_LABEL}/${slug}: a guide unit requires both meta.json and guide.md`)
+      continue
     }
+
+    units.push({ slug, dir: unitDir, metaPath, guidePath })
   }
 
   return units.sort((a, b) => a.slug.localeCompare(b.slug))
@@ -74,11 +65,12 @@ function discoverGuideUnits(libraries: LibrarySource[], errors: string[]): Guide
  *
  * @param meta - Parsed metadata candidate
  * @param unit - The guide unit the metadata belongs to
+ * @param libraries - All library sources, for validating package association
  * @param errors - Accumulator for validation errors
  * @returns True when the metadata passed every structural check
  */
-function validateMeta(meta: GuideMeta, unit: GuideUnit, errors: string[]): boolean {
-  const at = `${unit.library.srcPath}/docs/guides/${unit.slug}/meta.json`
+function validateMeta(meta: GuideMeta, unit: GuideUnit, libraries: LibrarySource[], errors: string[]): boolean {
+  const at = `${GUIDES_SOURCE_LABEL}/${unit.slug}/meta.json`
   const before = errors.length
 
   if (meta.schemaVersion !== 1) errors.push(`${at}: schemaVersion must be 1`)
@@ -88,10 +80,15 @@ function validateMeta(meta: GuideMeta, unit: GuideUnit, errors: string[]): boole
   if (!meta.outcome || typeof meta.outcome !== 'string') errors.push(`${at}: outcome is required`)
   if (!GUIDE_PRIORITIES.includes(meta.priority)) errors.push(`${at}: priority must be one of ${GUIDE_PRIORITIES.join(', ')}`)
 
+  // why: A guide belongs to the docs site, not to a package tree, so `packages` is the only statement of which packages it concerns; the first entry is the one the guide is primarily about and drives its placement on library pages.
   if (!isArray(meta.packages) || meta.packages.length === 0) {
-    errors.push(`${at}: packages must be a non-empty array; the first entry is the owning package`)
-  } else if (meta.packages[0] !== unit.library.packageName) {
-    errors.push(`${at}: packages[0] must be '${unit.library.packageName}' (the library that owns this guide unit)`)
+    errors.push(`${at}: packages must be a non-empty array; the first entry is the package the guide is primarily about`)
+  } else {
+    for (const packageName of meta.packages) {
+      if (!libraries.some((lib) => lib.packageName === packageName)) {
+        errors.push(`${at}: packages entry '${packageName}' is not a documented package`)
+      }
+    }
   }
 
   if (!meta.verification || !VERIFICATION_KINDS.includes(meta.verification.kind)) {
@@ -153,7 +150,7 @@ function collectTypedocNames(node: TypedocReflection, names: Set<string>): void 
  * @param errors - Accumulator for validation errors
  */
 function verifyApis(meta: GuideMeta, unit: GuideUnit, libraries: LibrarySource[], errors: string[]): void {
-  const at = `${unit.library.srcPath}/docs/guides/${unit.slug}/meta.json`
+  const at = `${GUIDES_SOURCE_LABEL}/${unit.slug}/meta.json`
 
   for (const api of meta.apis ?? []) {
     const lib = libraries.find((candidate) => candidate.packageName === api.package)
@@ -268,7 +265,7 @@ function fenceLanguage(sourcePath: string): string {
  * @returns The compiled guide markdown
  */
 function resolveSnippets(unit: GuideUnit, meta: GuideMeta, errors: string[]): string {
-  const at = `${unit.library.srcPath}/docs/guides/${unit.slug}/guide.md`
+  const at = `${GUIDES_SOURCE_LABEL}/${unit.slug}/guide.md`
   const content = readFileSync(unit.guidePath, 'utf-8')
 
   const sourceFiles: string[] = []
@@ -397,7 +394,7 @@ function generateGuides(libraries: LibrarySource[]): GuideIndex {
   logger.log('📖 Compiling guides...')
 
   const errors: string[] = []
-  const units = discoverGuideUnits(libraries, errors)
+  const units = discoverGuideUnits(errors)
   const compiledUnits: CompiledUnit[] = []
   const entries: GuideIndexEntry[] = []
 
@@ -406,11 +403,11 @@ function generateGuides(libraries: LibrarySource[]): GuideIndex {
     try {
       meta = parse(readFileSync(unit.metaPath, 'utf-8'))
     } catch {
-      errors.push(`${unit.library.srcPath}/docs/guides/${unit.slug}/meta.json: invalid JSON`)
+      errors.push(`${GUIDES_SOURCE_LABEL}/${unit.slug}/meta.json: invalid JSON`)
       continue
     }
 
-    if (!validateMeta(meta, unit, errors)) continue
+    if (!validateMeta(meta, unit, libraries, errors)) continue
     verifyApis(meta, unit, libraries, errors)
 
     compiledUnits.push({ slug: unit.slug, compiled: resolveSnippets(unit, meta, errors) })

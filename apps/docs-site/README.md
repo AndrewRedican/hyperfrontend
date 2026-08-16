@@ -68,6 +68,20 @@ apps/docs-site/
 
 Documentation is automatically extracted from the monorepo via `npm run generate`:
 
+Two kinds of source feed it. Package documentation (`README.md`, `ARCHITECTURE.md`, API
+types) is read out of the libraries, because a package owns the description of itself.
+Authored long-form documentation lives here instead, under `content/`:
+
+```text
+content/
+  articles/      one markdown file per article, frontmatter-classified
+  guides/        one directory per guide, guide.md + meta.json
+```
+
+That is the whole answer to where a new article or a new guide goes. Editorial content
+is a consumer of the packages, so it never lives inside a publishable project: a change
+under `content/` affects this site and nothing else.
+
 ### What Gets Generated
 
 | Content Type          | Source                                    | Output                                                   |
@@ -77,7 +91,7 @@ Documentation is automatically extracted from the monorepo via `npm run generate
 | **Architecture**      | `libs/*/ARCHITECTURE.md`                  | `.generated/docs/{lib}/architecture.md`                  |
 | **Root Architecture** | `ARCHITECTURE.md`                         | `.generated/docs/architecture.md`                        |
 | **Contributing**      | `CONTRIBUTING.md`                         | `.generated/docs/contributing.md`                        |
-| **Guides**            | `libs/*/docs/guides/{slug}/`              | `.generated/guides/{slug}/guide.md`, `guides/index.json` |
+| **Guides**            | `content/guides/{slug}/`                  | `.generated/guides/{slug}/guide.md`, `guides/index.json` |
 | **Search index**      | Everything above + articles + navigation  | `public/search-index.json`                               |
 
 ### Entry Point Discovery
@@ -110,8 +124,21 @@ Links in markdown content are automatically transformed for the docs site:
 
 ### Guides (Guide Units)
 
-Guides are package-owned: a directory `libs/<lib>/docs/guides/<slug>/` holding `guide.md`
-plus `meta.json` (schema: `scripts/generate-guides.types.ts`). The compiler
+Guides are editorial content owned by this site, not by the packages they describe. A
+guide unit is a directory `content/guides/<slug>/` holding `guide.md` plus `meta.json`
+(schema: `scripts/generate-guides.types.ts`). A guide may explain
+`@hyperfrontend/features`, use its APIs, and link to its reference pages without living
+inside that package: association is declared in `meta.json` via `packages`, whose first
+entry is the package the guide is primarily about and whose remaining entries let a
+cross-cutting guide name every package it involves. Every entry must be a documented
+package or the build fails. Nothing about a guide belongs in a publishable project tree,
+so editing one cannot mark a library changed for Nx, CI, versioning, or publishing.
+
+Slugs are global and flat: the directory name is the URL. Grouping folders are
+deliberately absent, because `meta.json` already carries the taxonomy the site filters
+and sorts on.
+
+The compiler
 (`scripts/generate-guides.ts`) validates metadata, resolves every
 `<!-- snippet: region -->` placeholder from `// ref: [guide:<slug>/<region>] start|end`
 marker regions inside the shipped source named by `verification.source` (plus optional
