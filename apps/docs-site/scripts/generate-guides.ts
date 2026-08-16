@@ -16,6 +16,7 @@ const OUTPUT_DIR = resolve(process.cwd(), '.generated')
 const GUIDES_OUTPUT = join(OUTPUT_DIR, 'guides')
 const API_OUTPUT = join(OUTPUT_DIR, 'api')
 const PUBLIC_INDEX = resolve(process.cwd(), 'public/guides/index.json')
+const APP_DIR = resolve(process.cwd(), 'src/app')
 const GITHUB_BLOB_BASE = 'https://github.com/AndrewRedican/hyperfrontend/blob/main'
 
 const GUIDE_TYPES = ['tutorial', 'how-to', 'troubleshooting', 'recipe']
@@ -102,10 +103,10 @@ function validateMeta(meta: GuideMeta, unit: GuideUnit, errors: string[]): boole
     if (!meta.verification.verifiedOn || !ISO_DATE.test(meta.verification.verifiedOn)) {
       errors.push(`${at}: verification.kind 'authored' requires verifiedOn as an ISO date (YYYY-MM-DD)`)
     }
-  } else if (!meta.verification.spec) {
-    errors.push(`${at}: verification.kind 'demo' requires a spec path (workspace-relative) to the shipped source`)
-  } else if (!existsSync(join(WORKSPACE_ROOT, meta.verification.spec))) {
-    errors.push(`${at}: verification.spec '${meta.verification.spec}' does not exist`)
+  } else if (!meta.verification.source) {
+    errors.push(`${at}: verification.kind 'demo' requires a workspace-relative 'source' path to the shipped file carrying the regions`)
+  } else if (!existsSync(join(WORKSPACE_ROOT, meta.verification.source))) {
+    errors.push(`${at}: verification.source '${meta.verification.source}' does not exist`)
   }
 
   for (const source of meta.snippetSources ?? []) {
@@ -270,7 +271,7 @@ function resolveSnippets(unit: GuideUnit, meta: GuideMeta, errors: string[]): st
   const content = readFileSync(unit.guidePath, 'utf-8')
 
   const sourceFiles: string[] = []
-  if (meta.verification.spec) sourceFiles.push(meta.verification.spec)
+  if (meta.verification.source) sourceFiles.push(meta.verification.source)
   sourceFiles.push(...(meta.snippetSources ?? []))
 
   const regions = createMap<string, SnippetRegion>()
@@ -338,7 +339,18 @@ function toIndexEntry(unit: GuideUnit, meta: GuideMeta): GuideIndexEntry {
 }
 
 /**
- * Validates cross-guide references once the whole corpus is known.
+ * Checks that a site-relative route is served by a real page.
+ *
+ * @param route - Site-relative route such as `/docs/libraries/nexus`
+ * @returns True when the route resolves to a page component
+ */
+function routeExists(route: string): boolean {
+  return existsSync(join(APP_DIR, route.replace(/^\//, ''), 'page.tsx'))
+}
+
+/**
+ * Validates cross-guide references and outbound routes once the whole corpus
+ * is known. Guide pages render these links, so a stale one is a broken link.
  *
  * @param entries - All compiled index entries
  * @param errors - Accumulator for validation errors
@@ -349,6 +361,11 @@ function verifyCrossReferences(entries: GuideIndexEntry[], errors: string[]): vo
     for (const ref of [...(entry.prerequisites?.guides ?? []), ...(entry.related?.guides ?? [])]) {
       if (!slugs.has(ref)) {
         errors.push(`guide '${entry.slug}' references guide '${ref}', which does not exist`)
+      }
+    }
+    for (const route of [...(entry.related?.reference ?? []), ...(entry.related?.explanation ?? [])]) {
+      if (!routeExists(route)) {
+        errors.push(`guide '${entry.slug}' links related route '${route}', which has no page`)
       }
     }
   }

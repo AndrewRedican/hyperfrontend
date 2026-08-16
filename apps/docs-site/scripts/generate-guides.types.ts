@@ -24,7 +24,7 @@ export interface GuideVerification {
   /** Verification lane */
   kind: 'demo' | 'authored'
   /** Workspace-relative path to the shipped source carrying the snippet regions (required when kind is 'demo') */
-  spec?: string
+  source?: string
   /** Package and version the examples were run against, e.g. '@hyperfrontend/nexus@2.0.1' (required when kind is 'authored') */
   verifiedAgainst?: string
   /** ISO date the examples were last executed (required when kind is 'authored') */
@@ -83,7 +83,7 @@ export interface GuideMeta {
   packages: string[]
   /** How the guide's code examples are proven to execute */
   verification: GuideVerification
-  /** Additional workspace-relative files holding snippet regions (beyond verification.spec) */
+  /** Additional workspace-relative files holding snippet regions (beyond verification.source) */
   snippetSources?: string[]
   /** Slug of the shipped demo this guide is built on, for demo-backed guides */
   demo?: string

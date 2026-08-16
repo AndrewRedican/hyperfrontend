@@ -35,7 +35,7 @@ describe('generateGuides validation gates', () => {
   })
 
   it('requires a demo guide to name shipped source that exists', () => {
-    expect(() => generateGuides([fixtureLib('lib-meta')])).toThrow(/verification\.spec '.*nope\.spec\.ts' does not exist/)
+    expect(() => generateGuides([fixtureLib('lib-meta')])).toThrow(/verification\.source '.*nope\.spec\.ts' does not exist/)
   })
 
   it('fails on a dangling placeholder and an orphaned region together', () => {

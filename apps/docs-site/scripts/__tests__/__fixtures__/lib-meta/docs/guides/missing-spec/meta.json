@@ -6,5 +6,5 @@
   "outcome": "Fixture outcome",
   "priority": "P2",
   "packages": ["@hyperfrontend/fixture"],
-  "verification": { "kind": "demo", "spec": "apps/docs-site/scripts/__tests__/__fixtures__/nope.spec.ts" }
+  "verification": { "kind": "demo", "source": "apps/docs-site/scripts/__tests__/__fixtures__/nope.spec.ts" }
 }
