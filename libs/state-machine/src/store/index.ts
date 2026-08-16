@@ -1,5 +1,5 @@
 /**
- * Store implementation for state machine — the dispatch/subscribe store and its listener type.
+ * Store implementation for state machine: the dispatch/subscribe store and its listener type.
  *
  * @module @hyperfrontend/state-machine/store
  */

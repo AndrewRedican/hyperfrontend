@@ -36,12 +36,32 @@
 Lightweight, functional state management library with Redux-inspired actions/reducers, async operation orchestration, and lifecycle-aware component abstractions for predictable application state.
 
 • 👉 See [**documentation**](https://www.hyperfrontend.dev/docs/libraries/state-machine/)
+• 👉 See [**API reference**](https://www.hyperfrontend.dev/docs/libraries/state-machine/#api-reference)
 
 ## What is @hyperfrontend/state-machine?
 
-@hyperfrontend/state-machine is a composable state management framework that combines Redux-style action/reducer patterns with specialized abstractions for asynchronous operations and component lifecycles. It provides a minimal `Store` implementation with subscribe/dispatch APIs, a pre-built reducer for process state (start, pause, cancel, success, fail), and higher-level abstractions like `AsyncOperation` for automatic state transitions and `LifecycleAwareComponent` for initialization/activation workflows.
+Most state libraries let you model anything. This one models one thing well: the lifecycle of an async operation. Four booleans go in (`inProgress`, `success`, `fail`, `halt`) and named states come out, and the interesting ones are the combinations a lone `isLoading` flag throws away. Running after a failure is `retrying`, not another first attempt. Running after a success is `restarting`, which is the state a table is in while it refreshes with the old rows still on screen. Never run at all is `notStarted`, which is usually a different screen from a spinner. Those distinctions come out of the same start, success, and fail dispatches you were going to write anyway.
 
-The library emphasizes explicit state modeling through a core `State` interface (inProgress, success, fail, halt) with derived state computation (notStarted, done, paused, cancelled, retrying, restarting). The event system dispatches actions through the store and notifies listeners when derived states activate, enabling decoupled state observation. Modular exports (`/actions`, `/reducer`, `/store`, `/async-operation`, `/lifecycle-aware-component`) allow selective imports for tree-shaking and custom composition.
+There is no framework here and no third-party dependency: no provider to mount, no hook, no adapter. `Store` is a subscribe and dispatch container over one reducer. `AsyncOperation` wraps a promise-returning function and dispatches start, success, and fail around it so you can listen for events instead of polling flags. `LifecycleAwareComponent` is a base class for anything with an init step, and it closes the usual startup race: a callback registered after the component is already ready fires immediately rather than waiting for a transition that has been and gone.
+
+Reach for Redux, Zustand, or XState when you want what they bring with them: devtools and time travel, a middleware ecosystem, or real statecharts with guards, hierarchy, and parallel regions. This library has none of that and is not trying to grow it.
+
+At a glance:
+
+```typescript
+import { start, success, fail } from '@hyperfrontend/state-machine/actions'
+import { derivedState } from '@hyperfrontend/state-machine/selectors'
+import { Store } from '@hyperfrontend/state-machine/store'
+
+const store = new Store()
+store.subscribe((state) => render(derivedState(state)))
+
+store.dispatch(start()) // inProgress
+store.dispatch(fail(new Error('offline'))) // failed, done
+store.dispatch(start()) // retrying: running, and the previous attempt failed
+store.dispatch(success()) // successful, done
+store.dispatch(start()) // restarting: running, with a good result still on screen
+```
 
 ### Key Features
 
@@ -53,7 +73,7 @@ The library emphasizes explicit state modeling through a core `State` interface 
 - **Coordinated async processes** - `CoordinatedAsyncProcess` for managing multiple async operations with startAll/cancelAll/pauseAll
 - **Lifecycle-aware components** - Abstract class with initializing/ready/starting/stopping/active state tracking and callbacks
 - **Modular exports** - Tree-shakeable secondary entry points for actions, reducers, selectors, events, and async operations
-- **Zero external dependencies** - Self-contained implementation with no third-party runtime dependencies
+- **No third-party runtime dependencies** - Only two hyperfrontend utility packages, nothing outside the org
 
 ### Architecture Highlights
 
@@ -63,25 +83,21 @@ For a detailed technical deep dive, see [ARCHITECTURE.md](https://github.com/And
 
 ## Why Use @hyperfrontend/state-machine?
 
-### Predictable Async Operation State Without Boilerplate
+### The states you actually need are the ones a loading flag cannot express
 
-Managing async operation states (loading, success, error) typically requires manual flag updates, error handling, and state synchronization across components. The `AsyncOperation` class wraps any async function and automatically dispatches start/success/fail actions, updating store state without repetitive try-catch blocks or flag management. Event handlers trigger on state transitions (notStarted→inProgress, inProgress→done) rather than requiring manual status checks. For data fetching, form submissions, or long-running computations, this eliminates state management bugs where flags aren't reset or errors aren't caught, reducing async-related defects by centralizing state logic.
+`isLoading` plus `error` is two booleans and four combinations, and none of them record what happened last time. It cannot tell a first load from a refresh, so the spinner covers rows you could have kept on screen. It cannot tell a retry from a first attempt, so the error banner vanishes the moment you try again and nobody can see that a second attempt is running. Here those are `restarting` and `retrying`, both falling out of the start and fail dispatches you were already making, and `notStarted` stays distinct from `inProgress`, so an empty screen and a loading screen are different renders.
 
-### Lifecycle Management for Initialization-Heavy Components
+### Nothing to mount, nothing to adapt
 
-Services, connections, or components with initialization → ready → active lifecycles require tracking multiple boolean flags and coordinating callbacks. The `LifecycleAwareComponent` abstract class provides a standardized pattern with five lifecycle states (initializing, ready, starting, stopping, active) and automatic callback invocation when states change. The callback stack pattern (`callStack`) ensures handlers execute in registration order and prevents duplicate notifications when state doesn't actually change. For WebSocket connections, database pools, or audio/video managers with multi-stage initialization, this eliminates race conditions and state inconsistencies that occur with ad-hoc flag management.
+There is no provider, no hook, no framework binding, no third-party package pulled in behind it. `store.subscribe` returns its own unsubscribe, `AsyncOperation` is a class you can hold in a closure, and both work the same in a React effect, a Svelte store, a worker, or a plain script. That matters most in the places a framework store cannot reach: a shared module, an SDK, an embed, a Node process.
 
-### Coordinated Multi-Process Orchestration
+### Init races handled by the base class, not by convention
 
-Applications with parallel async operations (bulk uploads, multi-step wizards, resource preloading) need orchestration for starting all processes, cancelling in-flight operations, or pausing work. `CoordinatedAsyncProcess` manages multiple `AsyncOperation` instances with `startAll()`, `cancelAll()`, and `pauseAll()` methods that operate on all registered processes atomically. This is critical for batch operations where partial completion is unacceptable (transaction-like behavior) or resource management where all operations must pause on throttling events. Trading platforms with multiple real-time data streams or ETL pipelines with parallel extract/transform jobs use this pattern to prevent resource exhaustion and ensure consistent operational state.
+Anything with a startup step has the same bug waiting in it: something subscribes after initialization finished and never hears about it. `LifecycleAwareComponent` fires a freshly registered `onReadyStatusChange` or `onActiveStatusChange` callback right away if the component is already in that state, and its setters skip the notification entirely when a value has not changed, so subscribers get one call per real transition and never miss the one that already happened.
 
-### Lightweight Alternative to Full Redux Stack
+### Coordination that is honest about what it can do
 
-Redux provides powerful state management but introduces significant complexity (action creators, middleware, selector libraries, DevTools integration) for small to medium applications. This library distills Redux's core concepts (store, actions, reducers, subscriptions) into ~200 lines of code with a focused API for process state management. The pre-built reducer handles 90% of async operation state without custom reducers or action types. For applications that need predictable state patterns but don't require Redux's ecosystem (time-travel debugging, middleware composition, community plugins), this provides sufficient structure with minimal learning curve and bundle size.
-
-### Type-Safe State Management with Explicit Contracts
-
-Dynamic state management systems (global objects, event buses) suffer from unclear contracts and runtime errors from missing or misshapen state. This library enforces explicit `State` and `Action` interfaces with TypeScript, making state shape and allowed actions visible at development time. The `Handlers` type maps action types to handler functions with specific action payloads, preventing action type typos. Derived state computation through typed selectors (`StateDeriver`, `StateStatusDeriver`) ensures consistent state interpretation. For teams maintaining large codebases or onboarding new developers, type-enforced contracts prevent entire classes of state management bugs that plague loosely-typed systems.
+`CoordinatedAsyncProcess` registers several processes and gives you `startAll()`, `pauseAll()`, and `cancelAll()`. Be clear on what cancel means: it marks the operations halted, it does not abort a promise already in flight. If your work needs a real abort, pass an `AbortSignal` into the process yourself and use this for the state around it.
 
 ## Installation
 
@@ -121,30 +137,26 @@ unsubscribe()
 ```typescript
 import { AsyncOperation } from '@hyperfrontend/state-machine/async-operation'
 
-// Define async process
-const fetchUserData = async () => {
+// AsyncProcess is () => Promise<void>, so keep the result outside it
+let user: User | null = null
+
+const fetchUser = async () => {
   const response = await fetch('/api/user')
-  if (!response.ok) throw new Error('Failed to fetch')
-  return response.json()
+  if (!response.ok) throw new Error(`User request failed: ${response.status}`)
+  user = await response.json()
 }
 
-// Wrap with AsyncOperation
-const operation = new AsyncOperation(fetchUserData)
+const operation = new AsyncOperation(fetchUser)
 
-// Listen to lifecycle events
-operation.on('inProgress', (event, current, previous) => {
-  console.log('Fetching user data...')
-})
+// start, success, and fail are dispatched for you; you listen instead of polling flags
+operation.on('inProgress', () => showSpinner())
+operation.on('successful', () => render(user))
+operation.on('failed', () => showError())
 
-operation.on('successful', (event, current, previous) => {
-  console.log('User data fetched successfully!')
-})
+// second call after a failure lands in retrying, after a success in restarting
+operation.on('retrying', () => keepErrorBannerUp())
+operation.on('restarting', () => keepStaleRowsVisible())
 
-operation.on('failed', (event, current, previous) => {
-  console.error('Failed to fetch user data')
-})
-
-// Start operation (automatically dispatches start/success/fail)
 await operation.start()
 ```
 
@@ -250,7 +262,7 @@ coordinator.cancelAll()
 
 - `AsyncOperation` - Wraps async functions with automatic action dispatching
 - `CoordinatedAsyncProcess` - Manages multiple async operations
-- `AsyncProcess` - Type for async functions: `(...args: any[]) => Promise<void>`
+- `AsyncProcess` - Type for the wrapped function: `() => Promise<void>`
 
 **Lifecycle Components:**
 
@@ -265,8 +277,9 @@ coordinator.cancelAll()
 
 **Selectors:**
 
-- Functions for computing derived state from core state
-- State status derivers for boolean flag computation
+- `derivedState(state)` - Compute all nine flags at once
+- `notStarted`, `inProgress`, `done`, `successful`, `failed`, `retrying`, `restarting`, `halted`, `paused`, `cancelled` - Each one on its own, `(state) => boolean`
+- `StateChange` - Keeps the previous and current derived state so you can compare them
 
 ### Modular Exports
 
@@ -275,6 +288,7 @@ coordinator.cancelAll()
 - `@hyperfrontend/state-machine/reducer` - Root reducer
 - `@hyperfrontend/state-machine/state` - State utilities and initial state
 - `@hyperfrontend/state-machine/selectors` - State selectors
+- `@hyperfrontend/state-machine/state-change` - Previous and current derived state tracking
 - `@hyperfrontend/state-machine/events` - Event system
 - `@hyperfrontend/state-machine/async-operation` - Async operation wrapper
 - `@hyperfrontend/state-machine/coordinated-async-operation` - Multi-process coordination
@@ -309,7 +323,7 @@ coordinator.cancelAll()
 <script src="https://cdn.jsdelivr.net/npm/@hyperfrontend/state-machine"></script>
 
 <script>
-  const { createStore, createReducer } = HyperfrontendStateMachine
+  const { Store, AsyncOperation, start, success, fail } = HyperfrontendStateMachine
 </script>
 ```
 
