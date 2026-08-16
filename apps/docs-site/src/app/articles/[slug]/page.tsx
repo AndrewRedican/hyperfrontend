@@ -2,13 +2,14 @@ import type { Metadata } from 'next'
 import { Footer } from '@/components/footer'
 import { Header } from '@/components/header'
 import { ReadmeContent } from '@/components/readme-content'
+import { ShareMenu } from '@/components/share/share-menu'
 import { formatArticleDate, getAllArticleSlugs, getArticle } from '@/lib/articles'
 import { markdownToHtml } from '@/lib/markdown'
 import { extractMermaidBlocks } from '@/lib/mermaid-utils'
-import { DEFAULT_OG_IMAGE, DEFAULT_TWITTER_IMAGE } from '@/lib/metadata'
-import { ShareMenu } from '@/components/share/share-menu'
+import { ARTICLES_FEED_ALTERNATE, DEFAULT_OG_IMAGE, DEFAULT_TWITTER_IMAGE } from '@/lib/metadata'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
+import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 
 /**
  * Route parameters for an article page.
@@ -38,6 +39,7 @@ export async function generateMetadata({ params }: ArticlePageProps): Promise<Me
     authors: [{ name: article.author }],
     alternates: {
       canonical: `/articles/${article.slug}/`,
+      types: ARTICLES_FEED_ALTERNATE,
     },
     keywords: [...article.tags, ...article.packages],
     openGraph: {
@@ -76,7 +78,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
     const related = getArticle(relatedSlug)
     if (!related) {
       // why: A dangling related slug would silently vanish from the page; failing the static build surfaces the authoring error instead
-      throw new Error(`article '${article.slug}' lists unknown related article '${relatedSlug}'`)
+      throw createError(`article '${article.slug}' lists unknown related article '${relatedSlug}'`)
     }
     return related
   })
