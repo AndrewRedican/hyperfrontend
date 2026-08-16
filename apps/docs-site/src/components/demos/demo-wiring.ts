@@ -12,7 +12,6 @@ export interface DemoRequestOptions {
   timeoutMs?: number
 }
 
-// ref: [guide:embed-a-shipped-feature/shell-surface] start
 /**
  * Structural surface of a generated demo shell handle — the members the
  * gallery drives on every demo, regardless of which contract the shell was
@@ -35,7 +34,6 @@ export interface DemoShell {
   /** Whether the feature channel is currently open. */
   readonly isOpen: boolean
 }
-// ref: [guide:embed-a-shipped-feature/shell-surface] end
 
 /** Options the gallery passes when creating a demo shell session. */
 export interface DemoShellMountOptions {
