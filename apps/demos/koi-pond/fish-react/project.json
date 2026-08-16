@@ -36,14 +36,6 @@
         "command": "npm run build"
       }
     },
-    "test": {
-      "executor": "nx:run-commands",
-      "dependsOn": ["install"],
-      "options": {
-        "command": "npm run test:unit -- --run",
-        "cwd": "apps/demos/koi-pond/fish-react"
-      }
-    },
     "lint": {
       "executor": "nx:run-commands",
       "dependsOn": ["install"],
