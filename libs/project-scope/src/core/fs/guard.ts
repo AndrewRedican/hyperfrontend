@@ -2,8 +2,8 @@
  * Reports whether a path is free of NUL bytes and therefore safe to hand to the
  * filesystem.
  *
- * A NUL byte (the U+0000 code point) can truncate a path inside native syscalls
- * — the classic "poison null byte" — so the target actually opened differs from
+ * A NUL byte (the U+0000 code point) can truncate a path inside native syscalls,
+ * the classic "poison null byte", so the target actually opened differs from
  * the string that was validated. Rejecting it before the path reaches `fs`
  * closes that gap.
  *

@@ -23,7 +23,7 @@ function contains(root: string, path: string): boolean {
  * The lexical check runs first and rejects `..` traversal and absolute escapes
  * with no filesystem access at all, so a hostile path is never stat-ed. Only a
  * path that is already lexically contained is then resolved through symlinks, so
- * an in-tree link cannot tunnel outside the root — and that realpath touches
+ * an in-tree link cannot tunnel outside the root, and that realpath touches
  * only paths the caller would legitimately read anyway.
  *
  * @param root - The directory the candidate must stay within.
