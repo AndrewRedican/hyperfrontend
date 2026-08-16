@@ -19,8 +19,8 @@ interface ShareMenuProps {
  * device share sheet (where supported), LinkedIn, X, WhatsApp, and copy link.
  *
  * Works without the Web Share API (the native entry simply does not render),
- * closes on Escape and outside interaction, restores focus to the trigger,
- * and keeps every target comfortably tappable.
+ * closes on Escape, outside interaction, and activation, restoring focus to
+ * the trigger, and keeps every target comfortably tappable on small screens.
  * @param props - Component props
  * @param props.path - Site-relative route of the page being shared
  * @param props.title - Page title
@@ -51,8 +51,7 @@ export function ShareMenu({ path, title, pageLine }: ShareMenuProps) {
     }
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
-        setOpen(false)
-        triggerRef.current?.focus()
+        close()
       }
     }
     document.addEventListener('pointerdown', onPointerDown)
@@ -70,11 +69,16 @@ export function ShareMenu({ path, title, pageLine }: ShareMenuProps) {
     return () => clearTimeout(timer)
   }, [copied])
 
+  const close = () => {
+    setOpen(false)
+    triggerRef.current?.focus()
+  }
+
   const nativeShare = async () => {
     trackShare('native', path)
     try {
       await navigator.share({ title: descriptor.title, text: descriptor.text, url: descriptor.url })
-      setOpen(false)
+      close()
     } catch {
       // why: The user dismissing the OS share sheet is not an error worth surfacing
     }
@@ -99,8 +103,8 @@ export function ShareMenu({ path, title, pageLine }: ShareMenuProps) {
         ref={triggerRef}
         type="button"
         onClick={() => setOpen((wasOpen) => !wasOpen)}
-        aria-haspopup="menu"
         aria-expanded={open}
+        aria-controls="share-menu-panel"
         className="flex min-h-[36px] items-center gap-1.5 rounded-lg border border-slate-200 px-2.5 py-1.5 text-sm text-slate-600 transition-colors hover:border-slate-300 hover:text-slate-900 dark:border-slate-700 dark:text-slate-400 dark:hover:border-slate-600 dark:hover:text-slate-200"
       >
         <ShareIcon className="h-4 w-4" />
@@ -109,9 +113,9 @@ export function ShareMenu({ path, title, pageLine }: ShareMenuProps) {
 
       {open ? (
         <div
-          role="menu"
+          id="share-menu-panel"
           aria-label="Share this page"
-          className="absolute right-0 z-[80] mt-2 w-60 overflow-hidden rounded-xl border border-slate-200 bg-white py-1 shadow-xl dark:border-slate-700 dark:bg-slate-900"
+          className="absolute left-0 z-[80] mt-2 w-60 max-w-[calc(100vw-2rem)] overflow-hidden rounded-xl border border-slate-200 bg-white py-1 shadow-xl sm:left-auto sm:right-0 dark:border-slate-700 dark:bg-slate-900"
         >
           {canNativeShare ? (
             <button
@@ -119,7 +123,6 @@ export function ShareMenu({ path, title, pageLine }: ShareMenuProps) {
                 firstItemRef.current = element
               }}
               type="button"
-              role="menuitem"
               onClick={nativeShare}
               className={itemClasses}
             >
@@ -137,21 +140,22 @@ export function ShareMenu({ path, title, pageLine }: ShareMenuProps) {
                     }
                   : undefined
               }
-              role="menuitem"
               href={target.href}
               target="_blank"
               rel="noopener noreferrer"
               onClick={() => {
                 trackShare(target.id, path)
-                setOpen(false)
+                close()
               }}
               className={itemClasses}
             >
-              <span className="w-4 text-center text-xs font-bold text-slate-400">{target.label.charAt(0)}</span>
+              <span aria-hidden="true" className="w-4 text-center text-xs font-bold text-slate-400">
+                {target.label.charAt(0)}
+              </span>
               {target.label}
             </a>
           ))}
-          <button type="button" role="menuitem" onClick={copyLink} className={itemClasses}>
+          <button type="button" onClick={copyLink} className={itemClasses}>
             <LinkIcon className="h-4 w-4 text-slate-400" />
             {copied ? 'Link copied ✓' : 'Copy link'}
           </button>
