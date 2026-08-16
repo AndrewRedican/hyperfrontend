@@ -238,15 +238,16 @@ This starts one static server per app plus an in-browser debug UI for inspecting
 
 Browse the interactive gallery at [hyperfrontend.dev/demos](https://www.hyperfrontend.dev/demos/). Each link below opens the carousel directly on that demo.
 
-| Demo                                                          | Description                                                                                    |
-| ------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| [Clock](https://www.hyperfrontend.dev/demos/#clock)           | A Vue 3 timepiece in a React host across a cross-site boundary: every flip is contract traffic |
-| [Chess](https://www.hyperfrontend.dev/demos/#chess)           | Two boards, one game: competing features negotiating shared state through the host             |
-| [Events](https://www.hyperfrontend.dev/demos/#events)         | A host orchestrating a swarm of event producers and consumers across origins                   |
-| [File Share](https://www.hyperfrontend.dev/demos/#file-share) | Moving real payloads across the boundary: chunking, progress, and back-pressure                |
-| [Heartbeat](https://www.hyperfrontend.dev/demos/#heartbeat)   | Liveness, latency, and what a host should do when a feature stops answering                    |
-| [Koi Pond](https://www.hyperfrontend.dev/demos/#koi-pond)     | Eight koi, eight frameworks, eight separate apps: composited into one continuous scene         |
-| [Views](https://www.hyperfrontend.dev/demos/#views)           | One feature, four display modes: embedded, dialog, popup, and standalone                       |
+| Demo                                                        | Description                                                                                    |
+| ----------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| [Clock](https://www.hyperfrontend.dev/demos/#clock)         | A Vue 3 timepiece in a React host across a cross-site boundary: every flip is contract traffic |
+| [Heartbeat](https://www.hyperfrontend.dev/demos/#heartbeat) | Liveness, latency, and what a host should do when a feature stops answering                    |
+| [Koi Pond](https://www.hyperfrontend.dev/demos/#koi-pond)   | Eight koi, eight frameworks, eight separate apps: composited into one continuous scene         |
+
+In planning, listed in the gallery but not yet running: Chess (two boards negotiating shared
+state through the host), Events (a swarm of producers and consumers across origins), File Share
+(chunking, progress, and back-pressure across the boundary), and Views (one feature in embedded,
+dialog, popup, and standalone modes).
 
 ## Main Packages
 
