@@ -8,7 +8,7 @@
   "packages": ["@hyperfrontend/features"],
   "verification": {
     "kind": "demo",
-    "spec": "apps/docs-site/src/components/demos/demo-wiring.ts"
+    "source": "apps/docs-site/src/components/demos/demo-wiring.ts"
   },
   "snippetSources": ["apps/docs-site/src/components/demos/demo-embed.tsx"],
   "demo": "docs-site-gallery",

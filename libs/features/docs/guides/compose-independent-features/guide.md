@@ -60,7 +60,7 @@ The eight pond-to-fish channels do not, and this is the ceiling to know about be
 
 <!-- snippet: fish-config -->
 
-Be precise about what each choice buys. The open channels still pin messages to the configured origin, and the frames are still separate documents with the browser's ordinary isolation between them; what they give up is the cryptographic envelope per message. The v1 pin on the outer channel, meanwhile, is advisory: a counterpart that omits the protocol downgrades the session to plaintext, and the only signal is a console warning, because there is no fail-closed mode today. If the envelope matters on a boundary, treat that warning as a test failure. The working rule the pond follows: spend the envelope on the boundary that actually crosses trust, keep high-frequency cooperative channels open while the per-message cost stands, and write the reason into the config where the next reader will trip over it. The [security model](/docs/core-concepts/security) covers what v1 actually protects.
+Be precise about what each choice buys. The open channels still pin messages to the configured origin, and the frames are still separate documents with the browser's ordinary isolation between them; what they give up is the cryptographic envelope per message. The v1 pin on the outer channel, meanwhile, is advisory: a counterpart that omits the protocol downgrades the session to plaintext, there is no fail-closed mode today, and nothing observable tells you it happened (no shell event, and the channel layer's warning is below the log level a shell runs at). Treat the pin as a build-time contract you verify on both sides, not a runtime guarantee. The working rule the pond follows: spend the envelope on the boundary that actually crosses trust, keep high-frequency cooperative channels open while the per-message cost stands, and write the reason into the config where the next reader will trip over it. The [security model](/docs/core-concepts/security) covers what v1 actually protects.
 
 ## Survive any single feature dying
 
@@ -92,7 +92,7 @@ Open the [live pond](https://demo-koi-pond-production.up.railway.app/). The curt
 
 - Fan-out is the host's cost. With no broadcast primitive, every cadence tick is N sends and every coordination pass is host CPU. At eight features this is nothing, but the pattern puts the scaling bill on the host by design.
 - Independence is paid in bytes. Each fish bundles its own renderer (about 180 kB gzipped of three.js, eight times over); a shared chunk would need a shared origin and reintroduce the coupling being removed. The curtain exists partly to cover that load.
-- The v1 throughput ceiling and the advisory protocol pin are the two facts most likely to surprise you in production. Design boundaries around them now, not after the console warning.
+- The v1 throughput ceiling and the advisory protocol pin are the two facts most likely to surprise you in production. Design boundaries around them now: neither failure announces itself at runtime.
 - Nested framing needs the whole ancestor chain allowed. `frame-ancestors` is checked against every ancestor, and the live chain here is three deep (docs site, pond, koi); a koi policy naming only the pond blanks the whole shoal inside the gallery. The [pond README](https://github.com/AndrewRedican/hyperfrontend/blob/main/apps/demos/koi-pond/README.md) documents the exact policy set.
 
 ## Where to go next

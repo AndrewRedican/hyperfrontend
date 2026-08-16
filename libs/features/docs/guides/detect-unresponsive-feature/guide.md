@@ -15,7 +15,7 @@ The demo has two things that are both called a heartbeat, and the point of the d
 | SDK liveness (`__hf:beat`)        | Fixed 1 s, not configurable  | `shell.on('status')`   | Is the feature frame alive and responsive? |
 | Product events (`beat`, `rhythm`) | ~72 bpm, visitor-disturbable | Contract handlers      | What is the feature actually doing?        |
 
-Control traffic under `__hf:` never reaches contract handlers, and contracts cannot declare `__hf:*` types, so the cardiac rhythm could not ride the transport heartbeat even if it wanted to. The separation cuts the other way too. Hold the demo's heart for three seconds and the rhythm flatlines: the ECG goes flat, a skull materialises over the heart, and the Connection panel does not move. The frame is perfectly healthy while its rhythm is dramatically dead. One layer answers "is it running?", the other "is it working?", and a host that cares about both has to watch both.
+Control traffic under `__hf:` never reaches contract handlers, so the cardiac rhythm and the transport heartbeat can never be confused for one another, however similar the words are. The separation cuts the other way too. Hold the demo's heart for three seconds and the rhythm flatlines: the ECG goes flat, a skull materialises over the heart, and the Connection panel does not move. The frame is perfectly healthy while its rhythm is dramatically dead. One layer answers "is it running?", the other "is it working?", and a host that cares about both has to watch both.
 
 ## Open the session
 

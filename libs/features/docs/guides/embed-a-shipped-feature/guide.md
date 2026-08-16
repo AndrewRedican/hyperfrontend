@@ -79,7 +79,7 @@ Open [/demos](/demos) and watch the clock card: the artwork crossfades into the 
 
 ## The caveat: the protocol pin is advisory
 
-The clock's shell pins security protocol v1, so product traffic normally crosses the boundary enveloped. The pin is advisory. A counterpart that omits the protocol downgrades the session to plaintext, and the only signal is a console warning; there is no fail-closed mode on a shell today, so a downgrade never blocks the connection. If the envelope matters to your integration, treat that warning as a test failure, and read the [security model](/docs/core-concepts/security) for what each protocol is worth and which guarantees stay yours.
+The clock's shell pins security protocol v1, so product traffic normally crosses the boundary enveloped. The pin is advisory, and the downgrade is quiet: if the counterpart omits the protocol, the session falls back to plaintext, no shell event reports it, and the warning the channel layer logs is suppressed at the log level a shell runs by default. There is no fail-closed mode today, so a downgrade never blocks the connection. The mitigation that actually exists is to own both sides of the boundary: pin the protocol in the feature's own config and check that pin at build or deploy time, rather than expecting a runtime signal. Read the [security model](/docs/core-concepts/security) for what each protocol is worth and which guarantees stay yours.
 
 ## Where to go next
 

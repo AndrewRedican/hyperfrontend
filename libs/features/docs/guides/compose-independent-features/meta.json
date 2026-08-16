@@ -8,7 +8,7 @@
   "packages": ["@hyperfrontend/features"],
   "verification": {
     "kind": "demo",
-    "spec": "apps/demos/koi-pond/host/src/scene/koi-sessions.ts"
+    "source": "apps/demos/koi-pond/host/src/scene/koi-sessions.ts"
   },
   "snippetSources": [
     "apps/demos/koi-pond/host/src/scene/pond.ts",

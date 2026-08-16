@@ -8,7 +8,7 @@
   "packages": ["@hyperfrontend/features"],
   "verification": {
     "kind": "demo",
-    "spec": "apps/demos/heartbeat/src/host/main.ts"
+    "source": "apps/demos/heartbeat/src/host/main.ts"
   },
   "snippetSources": ["apps/demos/heartbeat/heartbeat.contract.ts"],
   "demo": "heartbeat",
