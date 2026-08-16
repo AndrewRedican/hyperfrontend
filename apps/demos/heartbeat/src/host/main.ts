@@ -93,6 +93,7 @@ function log(message: string): void {
   }
 }
 
+// ref: [guide:detect-unresponsive-feature/create-shell] start
 const shell = createShell({
   modes: { embedded: mountEmbedded },
   container: '#stage',
@@ -103,7 +104,9 @@ const shell = createShell({
   // why: Matches the feature's declared protocol, so the pairing negotiates the v1 security envelope.
   protocol: 'v1',
 })
+// ref: [guide:detect-unresponsive-feature/create-shell] end
 
+// ref: [guide:detect-unresponsive-feature/product-beats] start
 shell.on('beat', (data: unknown) => {
   // note: Receive payloads are schema-validated by the SDK before consumer handlers run.
   const beat = <BeatPayload>data
@@ -125,6 +128,7 @@ shell.on('beat', (data: unknown) => {
   beatsTotalEl.textContent = String(totalBeats)
   beatsUserEl.textContent = String(userBeats)
 })
+// ref: [guide:detect-unresponsive-feature/product-beats] end
 
 shell.on('rhythm', (data: unknown) => {
   const rhythm = <RhythmPayload>data
@@ -141,6 +145,7 @@ shell.on('rhythm', (data: unknown) => {
   log(`rhythm: ${rhythm.state} @ ${rhythm.bpm} bpm`)
 })
 
+// ref: [guide:detect-unresponsive-feature/sdk-status] start
 shell.on('status', (data: unknown) => {
   // note: The SDK watchdog reports a snapshot object, not a bare state string.
   const status = <HeartbeatStatus>data
@@ -150,11 +155,13 @@ shell.on('status', (data: unknown) => {
   sdkLastBeatEl.textContent = status.lastBeatAt === null ? '—' : `${Math.max(0, Date.now() - status.lastBeatAt)} ms ago`
   log(`sdk liveness: ${status.state}`)
 })
+// ref: [guide:detect-unresponsive-feature/sdk-status] end
 
 shell.on('open', () => {
   log('channel open')
 })
 
+// ref: [guide:detect-unresponsive-feature/reset-on-close] start
 shell.on('close', () => {
   log('channel closed')
   rolling.reset()
@@ -163,6 +170,7 @@ shell.on('close', () => {
   rhythmState = 'beating'
   fx.hideSkull()
 })
+// ref: [guide:detect-unresponsive-feature/reset-on-close] end
 
 shell.on('error', (data: unknown) => {
   const record = <Record<string, unknown>>data
@@ -174,6 +182,7 @@ shell.on('dirty-state', (data: unknown) => {
   log(`dirty state: ${record['dirty'] === true ? 'disturbed rhythm' : 'steady'}`)
 })
 
+// ref: [guide:detect-unresponsive-feature/latency-probe] start
 // how: The latency probe is a correlated request — the feature's responder echoes sentAt, and the pong event fires for plain listeners too.
 setInterval(() => {
   if (!shell.isOpen) {
@@ -189,7 +198,9 @@ setInterval(() => {
       latencyEl.textContent = '—'
     })
 }, 2000)
+// ref: [guide:detect-unresponsive-feature/latency-probe] end
 
+// ref: [guide:detect-unresponsive-feature/product-silence] start
 // how: The vitals tick twice a second: rolling BPM from received intervals, plus the flatline judgement from state or silence.
 setInterval(() => {
   const now = Date.now()
@@ -219,6 +230,7 @@ setInterval(() => {
     }
   }
 }, 500)
+// ref: [guide:detect-unresponsive-feature/product-silence] end
 
 rateEl.addEventListener('input', () => {
   rateValueEl.textContent = rateEl.value
@@ -246,6 +258,7 @@ soundBtn.addEventListener('click', () => {
   })
 })
 
+// ref: [guide:detect-unresponsive-feature/close-and-reopen] start
 el<HTMLButtonElement>('#close-btn').addEventListener('click', () => {
   shell.close()
 })
@@ -254,6 +267,7 @@ el<HTMLButtonElement>('#reopen-btn').addEventListener('click', () => {
   // note: open() after close() remounts the same shell; a full destroy() is only for releasing the handle for good.
   shell.open()
 })
+// ref: [guide:detect-unresponsive-feature/close-and-reopen] end
 
 ecg.start()
 shell.open()
