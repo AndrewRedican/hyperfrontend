@@ -14,7 +14,12 @@
   "demo": "docs-site-gallery",
   "complexity": "beginner",
   "estMinutes": 15,
-  "apis": [{ "package": "@hyperfrontend/features", "symbol": "createShell" }],
+  "apis": [
+    {
+      "package": "@hyperfrontend/features",
+      "symbol": "createShell"
+    }
+  ],
   "prerequisites": {
     "knowledge": [
       "A browser host app (the worked example is Next.js/React, but nothing here depends on React)",
@@ -23,8 +28,8 @@
   },
   "related": {
     "guides": ["first-cross-window-connection"],
-    "reference": ["/docs/libraries/features"],
-    "explanation": ["/docs/libraries/features/architecture"]
+    "reference": ["/docs/libraries/features", "/docs/libraries/features/host"],
+    "explanation": ["/docs/libraries/features/architecture", "/docs/core-concepts/security"]
   },
   "keywords": [
     "embed",

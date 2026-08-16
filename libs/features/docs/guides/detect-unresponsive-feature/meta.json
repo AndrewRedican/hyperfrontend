@@ -14,7 +14,12 @@
   "demo": "heartbeat",
   "complexity": "intermediate",
   "estMinutes": 20,
-  "apis": [{ "package": "@hyperfrontend/features", "symbol": "createShell" }],
+  "apis": [
+    {
+      "package": "@hyperfrontend/features",
+      "symbol": "createShell"
+    }
+  ],
   "prerequisites": {
     "guides": ["embed-a-shipped-feature"],
     "knowledge": [
@@ -23,8 +28,8 @@
     ]
   },
   "related": {
-    "guides": ["embed-a-shipped-feature"],
-    "reference": ["/docs/libraries/features"],
+    "guides": ["compose-independent-features"],
+    "reference": ["/docs/libraries/features", "/docs/libraries/features/host"],
     "explanation": ["/docs/libraries/features/architecture"]
   },
   "keywords": [
