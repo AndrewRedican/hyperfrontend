@@ -38,23 +38,38 @@ Code arrives through `<!-- snippet: <region> -->` placeholders resolved out of `
 ## Contract
 
 - Address one real goal.
+- Open with what the reader will be able to do, then why it is worth doing. The problem framing follows that, not the reverse.
 - Start where the reader starts.
 - Number the steps; one action per step.
 - Write directions that hold for the reader's own codebase.
-- Let the snippet and its source link carry the worked implementation; name the demo once.
 - Lead to a working outcome.
 - Assume competence.
 - Include necessary choices and branching.
 - Explain only what prevents successful completion.
-- Link explanation and reference; do not reproduce them.
 - Omit alternatives unrelated to the goal.
+
+### Separate the general step from the worked example
+
+The step body is the instruction any reader can follow. Everything specific to the example app — its nouns, its layout, its numbers — belongs with the linked code, not in the instruction. Introduce the example's provenance once, in the opening, as a sentence that reads like prose rather than a build note. Where a general instruction has a verbatim implementation and no snippet of its own, append `[(example)](url)` pointing at it.
+
+### Deep link instead of explaining
+
+Every API symbol, option, event, error reason, and named concept gets a link on first mention, so the guide never spends a paragraph on something a reference page already carries. Anchors are GitHub-style slugs of the target page's H2/H3 headings, so verify the heading exists before linking to it.
+
+### Never document an absence
+
+Write what the reader should do, never what the library lacks. "There is no X" and "the SDK gives you no way to Y" are gaps, not documentation: record them under `_/` and mention them in prose only once the work lands. State the working approach positively instead.
 
 ## Pattern
 
 ````md
 # <Goal>
 
-<Only prerequisites not safely assumed. One line naming where the snippets come from.>
+<What the reader will be able to do, and why it matters.>
+
+<The situation that makes it necessary.>
+
+<Where the code examples come from.>
 
 ## 1. <Action>
 
@@ -80,8 +95,9 @@ Headings follow the task; do not impose this shape when it adds ceremony. The gu
 Delete:
 
 - background;
-- conceptual teaching;
+- conceptual teaching a link can carry;
 - demo narration — what the example app does, rather than what the reader does;
+- statements of what the library does not provide;
 - self-evident code narration;
 - API surveys;
 - irrelevant alternatives;
@@ -94,10 +110,12 @@ Prefer deletion to rewriting. Prefer a link to a tangent.
 
 - [ ] `meta.json` `type` matches, and `title`/`problem`/`outcome` match the body
 - [ ] One concrete goal
+- [ ] Opening states what the reader will be able to do, and why
 - [ ] Steps numbered, one action each
-- [ ] Directions generalize past the worked example
+- [ ] Directions generalize past the worked example; its specifics sit with the linked code
+- [ ] Every symbol and concept deep-linked on first mention, to a heading that exists
+- [ ] No absence documented; gaps recorded under `_/` instead
 - [ ] Shortest reliable path to completion
 - [ ] Necessary decisions included
-- [ ] Outcome verifiable
-- [ ] Explanation/reference linked, not duplicated
+- [ ] Outcome verifiable against the reader's own build
 - [ ] Every section advances the goal

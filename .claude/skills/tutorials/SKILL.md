@@ -49,6 +49,14 @@ Tutorial code is usually written for the lesson rather than extracted from a dem
 
 Reliability outranks realism. The learner is here to learn, not navigate unnecessary choices.
 
+### Deep link instead of explaining
+
+Every API symbol, option, and event gets a link on first mention, so the lesson stays on the build instead of turning into a tour of the surface. Anchors are GitHub-style slugs of the target page's H2/H3 headings, so verify the heading exists before linking to it.
+
+### Never document an absence
+
+Write what the learner should do, never what the library lacks. A gap belongs under `_/`, not in the lesson. Where the learner's own build is genuinely incomplete, say what to add and link it.
+
 ## Pattern
 
 ````md
