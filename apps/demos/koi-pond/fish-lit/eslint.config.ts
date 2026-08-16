@@ -1,5 +1,4 @@
 import js from '@eslint/js'
-import pluginVitest from '@vitest/eslint-plugin'
 import { globalIgnores } from 'eslint/config'
 import { configs as litConfigs } from 'eslint-plugin-lit'
 import pluginOxlint from 'eslint-plugin-oxlint'
@@ -29,11 +28,6 @@ export default tseslint.config(
     // why: Markup inside `html` and `svg` template literals is opaque to every other linter here, so these rules are the only ones that read the koi's template at all.
     ...litConfigs['flat/recommended'],
     files: ['**/*.{ts,mts}'],
-  },
-
-  {
-    ...pluginVitest.configs.recommended,
-    files: ['src/**/__tests__/*'],
   },
 
   ...pluginOxlint.buildFromOxlintConfigFile('.oxlintrc.json')
