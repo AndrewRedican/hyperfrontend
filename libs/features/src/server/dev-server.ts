@@ -109,7 +109,7 @@ function ascendForAssets(startDir: string, isFile: (path: string) => boolean): s
  * Resolves the directory the compiled debug-UI assets ship in by ascending
  * from the running module (located via `__dirname` in CommonJS or
  * `import.meta.url` in ESM). The ascent finds the assets wherever the package
- * lives — the built dist, an installed `node_modules` copy, or embedded
+ * lives: the built dist, an installed `node_modules` copy, or embedded
  * inside a consumer's bundle output.
  *
  * @param isFile - File probe used to confirm the assets exist.

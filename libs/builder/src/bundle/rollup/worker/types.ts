@@ -60,7 +60,7 @@ export interface RollupWorkerBin {
 /**
  * Serializable rollup-build descriptor: the contract between the parent
  * orchestrator and a forked worker. Every field must round-trip through
- * `JSON.stringify` / `JSON.parse` — no functions, no class instances.
+ * `JSON.stringify` / `JSON.parse`: no functions, no class instances.
  *
  * The worker reconstructs `RollupOptions` from the descriptor using the same
  * plugin factories the parent would have used in-process.

@@ -166,10 +166,7 @@ function findMarkdownFiles(dirPath: string, libraryRoot: string, results: Markdo
       findMarkdownFiles(entryPath, libraryRoot, results)
     } else if (entry.endsWith('.md') && !EXCLUDED_MARKDOWN_FILES.has(entry)) {
       const relativePath = relative(libraryRoot, entryPath)
-      const mdFile = createMarkdownFileEntry(entryPath, relativePath)
-      if (mdFile) {
-        results.push(mdFile)
-      }
+      results.push(createMarkdownFileEntry(entryPath, relativePath))
     }
   }
 }
@@ -179,9 +176,9 @@ function findMarkdownFiles(dirPath: string, libraryRoot: string, results: Markdo
  *
  * @param absolutePath - The absolute path to the markdown file.
  * @param relativePath - The path relative to the library root.
- * @returns A MarkdownFile entry or null if the file should be excluded.
+ * @returns A MarkdownFile entry describing where the file must be reachable from.
  */
-function createMarkdownFileEntry(absolutePath: string, relativePath: string): MarkdownFile | null {
+function createMarkdownFileEntry(absolutePath: string, relativePath: string): MarkdownFile {
   const fileName = basename(relativePath)
 
   if (fileName === 'README.md') {

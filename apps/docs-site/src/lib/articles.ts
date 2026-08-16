@@ -1,5 +1,8 @@
 import { existsSync, readFileSync, readdirSync } from 'node:fs'
 import { resolve, join } from 'node:path'
+import { splitList } from './article-format'
+
+export { formatArticleDate, splitList } from './article-format'
 
 const ARTICLES_DIR = resolve(process.cwd(), 'content/articles')
 
@@ -25,6 +28,16 @@ export interface Article {
   mediumUrl?: string
   /** URL of the syndicated copy on Hackernoon, if any */
   hackernoonUrl?: string
+  /** Content category (e.g., "first-principles"); empty when uncategorized */
+  category: string
+  /** Discovery tags */
+  tags: string[]
+  /** npm packages this article is most relevant to */
+  packages: string[]
+  /** Slugs of related articles */
+  related: string[]
+  /** Last substantive revision date in YYYY-MM-DD format; empty when never revised */
+  updated: string
   /** Markdown body without frontmatter */
   content: string
 }
@@ -49,6 +62,16 @@ interface ArticleFrontmatter {
   mediumUrl?: string
   /** URL of the syndicated copy on Hackernoon */
   hackernoonUrl?: string
+  /** Content category */
+  category?: string
+  /** Comma-separated discovery tags */
+  tags?: string
+  /** Comma-separated npm package names */
+  packages?: string
+  /** Comma-separated slugs of related articles */
+  related?: string
+  /** Last substantive revision date in YYYY-MM-DD format */
+  updated?: string
 }
 
 /**
@@ -130,6 +153,11 @@ export function getArticle(slug: string): Article | null {
     heroImage: frontmatter.heroImage ?? '',
     mediumUrl: frontmatter.mediumUrl,
     hackernoonUrl: frontmatter.hackernoonUrl,
+    category: frontmatter.category ?? '',
+    tags: splitList(frontmatter.tags),
+    packages: splitList(frontmatter.packages),
+    related: splitList(frontmatter.related),
+    updated: frontmatter.updated ?? '',
     content,
   }
 }
@@ -166,36 +194,4 @@ export function getAllArticles(): Article[] {
 
   // why: ISO YYYY-MM-DD dates sort correctly as plain strings
   return articles.sort((a, b) => b.date.localeCompare(a.date))
-}
-
-const MONTH_NAMES = [
-  'January',
-  'February',
-  'March',
-  'April',
-  'May',
-  'June',
-  'July',
-  'August',
-  'September',
-  'October',
-  'November',
-  'December',
-]
-
-/**
- * Format an ISO article date for display.
- *
- * @param date - Date string in YYYY-MM-DD format
- * @returns Human-readable date (e.g., "July 22, 2026"), or the input when it is not in the expected format
- */
-export function formatArticleDate(date: string): string {
-  const [year, month, day] = date.split('-')
-  const monthName = MONTH_NAMES[Number(month) - 1]
-
-  if (!year || !monthName || !day) {
-    return date
-  }
-
-  return `${monthName} ${Number(day)}, ${year}`
 }

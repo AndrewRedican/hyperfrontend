@@ -51,8 +51,8 @@ export interface ResolveDepEntryOptions {
   workspaceRoot: string
   /**
    * Pre-pass kind:
-   * - `'js'` — return the dep's runtime entry (`module` / `main`).
-   * - `'dts'` — return the dep's types entry (`types` / `typings`).
+   * - `'js'`: return the dep's runtime entry (`module` / `main`).
+   * - `'dts'`: return the dep's types entry (`types` / `typings`).
    */
   kind: 'js' | 'dts'
 }

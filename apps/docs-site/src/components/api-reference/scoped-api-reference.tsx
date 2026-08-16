@@ -149,7 +149,7 @@ export function ScopedApiReference({ data, packageName, subpath }: ScopedApiRefe
   if (!exports) {
     return (
       <div className="text-sm text-slate-500 dark:text-slate-400 py-4 italic">
-        API reference for <code className="font-mono">{subpath}</code> is not available yet — rebuild docs to regenerate.
+        API reference for <code className="font-mono">{subpath}</code> is not available yet; rebuild docs to regenerate.
       </div>
     )
   }

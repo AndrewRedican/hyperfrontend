@@ -342,7 +342,7 @@ const result = checkPatternSafety('(a+)+')
 
 ### Dependencies
 
-None — zero external dependencies.
+None: zero external dependencies.
 
 ## Part of hyperfrontend
 

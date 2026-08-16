@@ -274,7 +274,7 @@ ${buildReadmeModes(modes)}${buildReadmePermissions(config)}${buildReadmeSecurity
  *
  * Emits the entry source (with contract-projected types), source-level
  * `package.json`, `README.md`, and (via {@link generateMetadata})
- * `metadata.json`. Pure: stages only into `tree` — the CLI owns temp-dir
+ * `metadata.json`. Pure: stages only into `tree`; the CLI owns temp-dir
  * creation, bundling, and commit.
  *
  * @param config - The resolved feature config.

@@ -160,7 +160,7 @@ const resolveMonitor = (config: BuildConfig): MemoryMonitor | undefined => {
  * @param config - Top-level builder configuration.
  * @returns A `BuildResult` with per-format counts, raw format outputs, bin
  * outputs, and total duration in milliseconds.
- * @throws {Error} Whatever any phase throws — the facade does not swallow errors.
+ * @throws {Error} Whatever any phase throws; the facade does not swallow errors.
  *
  * @example Building a library with workspace-aware externals
  * ```typescript

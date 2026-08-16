@@ -933,7 +933,7 @@ window.addEventListener('message', async (event) => {
 | Entry Point | `@hyperfrontend/network-protocol/browser/v1` | `@hyperfrontend/network-protocol/node/v1` |
 | Base64      | `btoa`/`atob` or typed array utilities       | `Buffer`                                  |
 
-Both platforms expose identical `Protocol`, `Channel`, and other interfaces—only the internal implementations differ.
+Both platforms expose identical `Protocol`, `Channel`, and other interfaces; only the internal implementations differ.
 
 ---
 

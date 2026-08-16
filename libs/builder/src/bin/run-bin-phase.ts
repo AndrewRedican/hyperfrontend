@@ -17,7 +17,7 @@ const findCjsOutputPath = (jsOutputs: BinOutput[]): string | undefined => {
  * A bin that declares a `sea` block must also produce a CJS output (`format: 'cjs'`
  * or include `'cjs'` in the list); the CJS artifact becomes the SEA `main` script,
  * and a bin without one throws. Native emission is skipped silently with an info
- * log when the current host doesn't match any declared platform — CI orchestrates
+ * log when the current host doesn't match any declared platform: CI orchestrates
  * the matrix so each declared platform is built on the matching runner.
  *
  * @param ctx - Resolved build context.

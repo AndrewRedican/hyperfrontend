@@ -150,10 +150,10 @@ Uses `@hyperfrontend/project-scope` for file system operations and workspace det
 
 ## See Also
 
-- [git/](../git/README.md) — Git operations for version coordination
-- [changelog/](../changelog/README.md) — Changelog discovery and manipulation
-- [flow/](../flow/README.md) — Orchestrates workspace-wide versioning
-- [semver/](../semver/README.md) — Version parsing for cascade calculations
-- [@hyperfrontend/project-scope](../../../project-scope/README.md) — Virtual file system
-- [Main README](../../README.md) — Package overview and quick start
-- [ARCHITECTURE.md](../../ARCHITECTURE.md) — Design principles and data flow
+- [git/](../git/README.md): Git operations for version coordination
+- [changelog/](../changelog/README.md): Changelog discovery and manipulation
+- [flow/](../flow/README.md): Orchestrates workspace-wide versioning
+- [semver/](../semver/README.md): Version parsing for cascade calculations
+- [@hyperfrontend/project-scope](../../../project-scope/README.md): Virtual file system
+- [Main README](../../README.md): Package overview and quick start
+- [ARCHITECTURE.md](../../ARCHITECTURE.md): Design principles and data flow

@@ -157,6 +157,9 @@ export function validateDevConfig(value: unknown, sourcePath: string): DevConfig
   if (debug !== undefined && !isRecord(debug)) {
     throw createError(`${sourcePath}: "debug" must be an object.`)
   }
+  if (debug !== undefined && debug['port'] !== undefined && !isPort(debug['port'])) {
+    throw createError(`${sourcePath}: "debug".port must be an integer between 1 and 65535.`)
+  }
   return { apps, ...(debug !== undefined && { debug }) }
 }
 
@@ -199,11 +202,13 @@ function toggle(value: unknown, fallback: boolean): boolean {
 /**
  * Resolves the effective `hf-dev.config.*` into concrete app servers and debug
  * settings, applying `config file < flags` precedence: `--apps` replaces the
- * apps array, `--port` sets the debug-UI port, and `--config` selects the file.
+ * apps array, `--port` overrides the config's `debug.port` for the debug UI,
+ * and `--config` selects the file.
  *
  * @param options - The working directory, parsed flags, and injectable deps.
  * @returns The resolved apps, debug toggles, debug port, and source path.
- * @throws {Error} When no config is found or the config/apps are malformed.
+ * @throws {Error} When no config is found, the config/apps are malformed, or
+ * an app's port collides with the enabled debug UI's port.
  *
  * @example Resolving a discovered dev config
  * ```typescript
@@ -231,14 +236,20 @@ export async function resolveDevConfig(options: ResolveDevConfigOptions): Promis
     port: app.port ?? APP_PORT_BASE + index,
   }))
 
-  return {
-    apps: resolvedApps,
-    debug: {
-      enabled: toggle(config.debug?.enabled, true),
-      messageLog: toggle(config.debug?.messageLog, true),
-      securityView: toggle(config.debug?.securityView, true),
-    },
-    debugPort: flags.port ? parsePortFlag(flags.port) : DEFAULT_DEBUG_PORT,
-    sourcePath,
+  const debug = {
+    enabled: toggle(config.debug?.enabled, true),
+    messageLog: toggle(config.debug?.messageLog, true),
+    securityView: toggle(config.debug?.securityView, true),
   }
+  const debugPort = flags.port ? parsePortFlag(flags.port) : (config.debug?.port ?? DEFAULT_DEBUG_PORT)
+  if (debug.enabled) {
+    const collision = resolvedApps.find((app) => app.port === debugPort)
+    if (collision !== undefined) {
+      throw createError(
+        `${sourcePath}: app "${collision.name}" port ${collision.port} collides with the debug UI port ${debugPort}; set "debug".port or pass --port to move the debug UI.`
+      )
+    }
+  }
+
+  return { apps: resolvedApps, debug, debugPort, sourcePath }
 }

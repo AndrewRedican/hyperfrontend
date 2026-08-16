@@ -41,7 +41,7 @@ const NODE_SEA_FUSE_HASH = 'fce680ab2cc467b6e072b8b5df1996b2'
  * in the bundled JS of a bin that imports this module: that JS is embedded in the
  * SEA blob, and a contiguous copy there collides with the host binary's own sentinel,
  * making postject reject the inject with "Multiple occurences of sentinel". Keep it
- * split — do not inline into a single string literal.
+ * split; do not inline into a single string literal.
  */
 export const NODE_SEA_FUSE = NODE_SEA_FUSE_PREFIX + NODE_SEA_FUSE_HASH
 
@@ -49,7 +49,7 @@ export const NODE_SEA_FUSE = NODE_SEA_FUSE_PREFIX + NODE_SEA_FUSE_HASH
  * Clones the Node host binary to `outputBinary` and injects the SEA preparation
  * blob via [postject](https://www.npmjs.com/package/postject)'s programmatic API.
  *
- * The host binary itself is never modified — postject mutates the cloned copy
+ * The host binary itself is never modified: postject mutates the cloned copy
  * at `outputBinary`. The injection uses Node's expected SEA resource name and
  * fuse so the produced executable is recognized by Node's SEA runtime.
  *

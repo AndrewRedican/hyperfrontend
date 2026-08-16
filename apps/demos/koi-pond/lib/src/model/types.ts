@@ -20,11 +20,12 @@ export interface Vec2 {
   y: number
 }
 
-/** The seven framework slugs, one per koi; also each fish app's deployed sub-path. */
-export type KoiFramework = 'vanilla' | 'react' | 'vue' | 'svelte' | 'solid' | 'preact' | 'lit'
+/** The eight framework slugs, one per koi; also each fish app's deployed sub-path. */
+export type KoiFramework = 'vanilla' | 'react' | 'vue' | 'svelte' | 'solid' | 'preact' | 'lit' | 'angular'
 
 /** Every framework slug in the pond's canonical order, shallowest-first by default depth. */
-export const KOI_FRAMEWORKS: readonly KoiFramework[] = ['vanilla', 'react', 'vue', 'svelte', 'solid', 'preact', 'lit']
+// why: Order is identity — a koi's seed is its position here, so new frameworks append at the end and nothing may ever be reordered.
+export const KOI_FRAMEWORKS: readonly KoiFramework[] = ['vanilla', 'react', 'vue', 'svelte', 'solid', 'preact', 'lit', 'angular']
 
 /**
  * The four visibly distinct states a koi's body reads in.
@@ -131,6 +132,38 @@ export interface KoiOutline {
    * over the links and an inert shield over the rest.
    */
   card?: KoiCardPanel
+  /**
+   * What this koi is currently steering by, for the host's interaction
+   * overlay. Omitted while the koi is held — a paused fish is not going
+   * anywhere.
+   */
+  intent?: KoiIntent
+}
+
+/**
+ * Why a koi is steering where it is steering.
+ *
+ * `travel` is ordinary progress toward its own destination, `avoid` is any
+ * collision-avoidance manoeuvre — fleeing a disturbance, turning off a
+ * boundary, or giving way to a neighbour — and `depth-change` is the decision
+ * to pass above or underneath another koi instead of turning.
+ */
+export type KoiIntentKind = 'travel' | 'avoid' | 'depth-change'
+
+/** One koi's current decision, reported alongside its outline. */
+export interface KoiIntent {
+  /** The decision family, which is also the overlay's colour. */
+  kind: KoiIntentKind
+  /**
+   * The point the koi is currently steering toward, in pond space — its own
+   * waypoint while travelling, the projected escape path while avoiding.
+   * `null` when the manoeuvre is vertical.
+   */
+  target: Vec2 | null
+  /** Which way a depth change passes the neighbour. */
+  direction?: 'above' | 'below'
+  /** How far ahead the koi is anticipating encounters right now, in pond pixels. */
+  reachPx: number
 }
 
 /** A pond-space rectangle inside one koi's identity card. */
@@ -145,7 +178,7 @@ export interface KoiCardLink {
   height: number
 }
 
-/** The geometry of one koi's identity card: its frame and its two links. */
+/** The geometry of one koi's identity card: its frame and its three links. */
 export interface KoiCardPanel {
   /** The whole card's rectangle. */
   frame: KoiCardLink
@@ -153,6 +186,8 @@ export interface KoiCardPanel {
   app: KoiCardLink
   /** The rectangle of the framework line, linking to the framework's official site. */
   site: KoiCardLink
+  /** The rectangle of the source line, linking to this fish's own application code. */
+  source: KoiCardLink
 }
 
 /** The official website each framework's card links out to. */
@@ -164,6 +199,25 @@ export const FRAMEWORK_SITES: Readonly<Record<KoiFramework, string>> = {
   solid: 'https://www.solidjs.com/',
   preact: 'https://preactjs.com/',
   lit: 'https://lit.dev/',
+  angular: 'https://angular.dev/',
+}
+
+/** Where the koi pond's source code lives; each fish app sits under `fish-<framework>/`. */
+export const KOI_POND_SOURCE_URL = 'https://github.com/AndrewRedican/hyperfrontend/tree/main/apps/demos/koi-pond'
+
+/**
+ * The URL of one fish app's source code.
+ *
+ * @param framework - The framework slug.
+ * @returns The repository URL of that fish's application directory.
+ *
+ * @example Linking a card to its own implementation
+ * ```typescript
+ * sourceAnchor.href = koiSourceUrl('vue')
+ * ```
+ */
+export function koiSourceUrl(framework: KoiFramework): string {
+  return `${KOI_POND_SOURCE_URL}/fish-${framework}`
 }
 
 /**

@@ -219,7 +219,7 @@ export interface ChannelHandle {
   /**
    * Ends the active session because the target window now hosts a different
    * instance of the counterpart (a reload or in-frame navigation): closes
-   * silently — the instance the session belonged to is already gone — and
+   * silently (the instance the session belonged to is already gone) and
    * fires 'close' with `reason: 'peer-reload'` so subscribers can drop
    * session-scoped state before the new instance's handshake completes.
    * The channel stays registered and reconnectable.

@@ -38,7 +38,7 @@ const narratives: Narrative[] = [
       { italic: 'two-year-old dependencies' },
       '. Each hyperfrontend feature ',
       { bold: 'bundles its own stack' },
-      ' — upgrade when it makes sense for your team.',
+      '. Upgrade when it makes sense for your team.',
     ],
   },
   {
@@ -47,7 +47,7 @@ const narratives: Narrative[] = [
       { italic: 'not touch working code' },
       '. Rewriting legacy apps burns enormous time reverse-engineering forgotten behavior. With hyperfrontend, ',
       { bold: 'convert that jQuery dinosaur into a feature' },
-      ' and migrate on your own terms — when it actually matters.',
+      ' and migrate on your own terms, when it actually matters.',
     ],
   },
   {
@@ -56,7 +56,7 @@ const narratives: Narrative[] = [
       { italic: 'silently fail' },
       '. Hyperfrontend gives you ',
       { bold: 'contract-validated messaging' },
-      ' out of the box — type errors at build time, not production crashes.',
+      ' out of the box: type errors at build time, not production crashes.',
     ],
   },
   {
@@ -65,7 +65,7 @@ const narratives: Narrative[] = [
       { italic: 'because it is' },
       ". Plaintext flying between windows. Hyperfrontend's optional encryption layer uses ",
       { bold: 'real AES-256-GCM' },
-      ' — actual security, not security theater.',
+      '. Actual security, not security theater.',
     ],
   },
   {
@@ -83,7 +83,7 @@ const narratives: Narrative[] = [
       { italic: 'Six months, apparently.' },
       ' Custom API, custom events, custom everything. Hyperfrontend shells are ',
       { bold: 'self-contained' },
-      ' — partners drop in a script tag or npm install. Integration measured in days, not quarters.',
+      ': partners drop in a script tag or npm install. Integration measured in days, not quarters.',
     ],
   },
   {
@@ -97,11 +97,11 @@ const narratives: Narrative[] = [
   },
   {
     segments: [
-      'Your business ships payment widgets to thousands of merchant sites. Each host page is different — ',
+      'Your business ships payment widgets to thousands of merchant sites. Each host page is different: ',
       { italic: 'different frameworks, different CSPs, different everything' },
       ". You can't control what they run. Hyperfrontend features are ",
       { bold: 'fully self-contained sandboxes' },
-      ' — your widget works reliably no matter how chaotic the host environment.',
+      '. Your widget works reliably no matter how chaotic the host environment.',
     ],
   },
   {
@@ -110,7 +110,7 @@ const narratives: Narrative[] = [
       { italic: 'Runtime crash. No warning.' },
       " Handrolled solutions don't catch this. Hyperfrontend's registry enforces ",
       { bold: 'semantic version matching' },
-      ' — incompatible deploys fail fast at resolution, not in production.',
+      ': incompatible deploys fail fast at resolution, not in production.',
     ],
   },
   {
@@ -119,7 +119,7 @@ const narratives: Narrative[] = [
       { italic: 'Your message bus melts.' },
       ' Hyperfrontend handles ',
       { bold: '1:many connections with built-in backpressure' },
-      ' — offload to web workers when the main thread gets busy.',
+      '. Offload to web workers when the main thread gets busy.',
     ],
   },
   {
@@ -128,7 +128,7 @@ const narratives: Narrative[] = [
       { italic: 'archaeology' },
       ". That's what poorly-implemented micro-frontends get you. Hyperfrontend enforces ",
       { bold: 'strict domain isolation' },
-      ' — no leaky abstractions, no accidental coupling.',
+      ': no leaky abstractions, no accidental coupling.',
     ],
   },
   {
@@ -137,7 +137,7 @@ const narratives: Narrative[] = [
       { italic: 'the whole page crashes' },
       '. Users see a white screen. Hyperfrontend shells ',
       { bold: 'degrade gracefully' },
-      ' — one failed feature shows a fallback, everything else keeps working.',
+      ': one failed feature shows a fallback, everything else keeps working.',
     ],
   },
   {
@@ -164,7 +164,7 @@ const narratives: Narrative[] = [
       { italic: '"Eighteen-month integration roadmap"' },
       ' makes everyone queasy. Hyperfrontend ',
       { bold: 'wraps their app as-is' },
-      " — integrate in weeks, modernize when you're ready.",
+      ": integrate in weeks, modernize when you're ready.",
     ],
   },
   {
@@ -173,7 +173,7 @@ const narratives: Narrative[] = [
       { italic: "Congratulations, it's broken." },
       ' Hyperfrontend ',
       { bold: 'ships every format' },
-      " — ESM, CommonJS, IIFE, UMD. Works with whatever you're running.",
+      ": ESM, CommonJS, IIFE, UMD. Works with whatever you're running.",
     ],
   },
 ]

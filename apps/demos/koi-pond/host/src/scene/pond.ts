@@ -2,7 +2,7 @@
  * The pond scene: everything the host owns, assembled.
  *
  * The bed, the surface water, the pointer, the depth order, the curtain, the
- * roster, and the seven channels. Every koi is a separate application in a
+ * roster, the decision overlay, and the eight channels. Every koi is a separate application in a
  * separate frame; this module's whole job is to make those read as one
  * continuous scene, and to keep the seams — the relay, the depth grants, the
  * ripple gate — on the host's side of the boundary where they belong.
@@ -12,6 +12,7 @@ import type { PondScene, SceneScale } from '../feature/wire-contract'
 import { KOI_FRAMEWORKS, describePond, mayRipple, pondPoint, pondWindow } from '@hyperfrontend/demo-koi-lib'
 import { createDepthDirector } from './depth-director'
 import { createFrameLoop } from './raf-loop'
+import { createInteractionsPainter } from './interactions'
 import { createRelay } from './relay'
 import { createSelectionChrome } from './selection'
 import { createRoster } from './roster'
@@ -80,6 +81,24 @@ export interface PondHooks {
   onSequenceComplete(fish: number): void
 }
 
+/** The created scene: the contract-driven slice plus the host chrome's own handles. */
+export interface PondSceneHandle extends PondScene {
+  /**
+   * Releases every held koi and aborts any carry in flight.
+   *
+   * Serves the host's own chrome — the Escape key — rather than the contract.
+   *
+   * @returns `true` when at least one koi was held.
+   */
+  releaseHeld(): boolean
+  /**
+   * Turns the decision overlay on or off.
+   *
+   * @param on - Whether to draw each koi's sensing cone and decided trajectory.
+   */
+  setInteractions(on: boolean): void
+}
+
 /**
  * Raises the pond inside a root element and starts it.
  *
@@ -92,9 +111,9 @@ export interface PondHooks {
  * const scene = createPond(pondRoot, { onShoal: reporter.shoal, onSequenceComplete: reporter.sequenceComplete })
  * ```
  */
-export function createPond(root: HTMLElement, hooks: PondHooks): PondScene {
+export function createPond(root: HTMLElement, hooks: PondHooks): PondSceneHandle {
   const stage = createStage(root)
-  // why: The GPU water is preferred and the 2D painter is the fallback — one page already carries seven fish contexts, and this eighth is the only one the host ever asks for.
+  // why: The GPU water is preferred and the 2D painter is the fallback — one page already carries eight fish contexts, and this ninth is the only one the host ever asks for.
   const surface = createWaterPainter(stage.surface) ?? createSurfacePainter(stage.surface)
   const relay = createRelay()
   const director = createDepthDirector(Date.now())
@@ -130,6 +149,8 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondScene {
 
   const sessions = openShoal(stage.layers)
   const chrome = createSelectionChrome(root)
+  const diagnostics = createInteractionsPainter(stage.interactions)
+  let showInteractions = false
 
   /** Keeps the cursor honest about what a press would do right here. */
   const refreshCursor = (): void => {
@@ -183,6 +204,10 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondScene {
     if (inspected.has(framework)) {
       return
     }
+    // why: One inspection at a time — picking a new koi releases whichever one was held, whether the pick came from a tap or a click. release() only deletes the entry being visited, so walking the set while freeing is safe.
+    for (const other of inspected) {
+      release(other)
+    }
     inspected.add(framework)
     chrome.hold(framework, fishHomeUrl(framework))
     sendTo(framework, 'pause', { paused: true })
@@ -225,7 +250,7 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondScene {
    * when the scene opened, and a frame that grows or shrinks merely shows more
    * or less of the same water. The bed is deliberately not painted per frame —
    * it is stone and still water, and repainting it would be the most expensive
-   * thing in a scene that already carries seven compositing layers.
+   * thing in a scene that already carries eight compositing layers.
    */
   const remeasure = (): void => {
     pond = { ...pond, view: pondWindow(pond, root.clientWidth, root.clientHeight), reducedMotion: motionQuery.matches }
@@ -252,7 +277,7 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondScene {
    * @returns The point in pond space, view offset included.
    */
   const pondCoords = (event: PointerEvent): Vec2 => {
-    // why: The rect is cached against resize — the pond root fills its frame, and measuring layout on every pointer move is the kind of per-event cost that adds up under seven compositing layers.
+    // why: The rect is cached against resize — the pond root fills its frame, and measuring layout on every pointer move is the kind of per-event cost that adds up under eight compositing layers.
     return { x: event.clientX - rootBounds.left + pond.view.x, y: event.clientY - rootBounds.top + pond.view.y }
   }
 
@@ -292,6 +317,7 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondScene {
       }
     })
 
+    // ref: [guide:compose-independent-features/survive-close] start
     shell.on('close', () => {
       opened = Math.max(0, opened - 1)
       relay.forget(framework)
@@ -307,11 +333,13 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondScene {
         setHover(null)
       }
     })
+    // ref: [guide:compose-independent-features/survive-close] end
 
+    // ref: [guide:compose-independent-features/retry-open] start
     shell.on('error', (data: unknown) => {
       // why: A koi that never answers must not hold the pond dark behind a curtain waiting for it.
       setCurtain(stage, true)
-      // why: A timed-out handshake leaves a destroyed mount and the SDK never retries — on a slow device the seven heavy apps race one deadline, and without this a loser is simply a fish that never existed. Only the timeout is retried; an unresponsive session is still alive and must not be torn down under its visitor.
+      // why: A timed-out handshake leaves a destroyed mount and the SDK never retries — on a slow device the eight heavy apps race one deadline, and without this a loser is simply a fish that never existed. Only the timeout is retried; an unresponsive session is still alive and must not be torn down under its visitor.
       if ((<{ reason?: string }>data)?.reason === 'open-timeout' && (retries.get(framework) ?? 0) < OPEN_RETRIES) {
         retries.set(framework, (retries.get(framework) ?? 0) + 1)
         window.setTimeout(() => {
@@ -319,6 +347,7 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondScene {
         }, OPEN_RETRY_DELAY_MS)
       }
     })
+    // ref: [guide:compose-independent-features/retry-open] end
 
     shell.on('outline', (data: unknown) => {
       relay.record(<KoiOutline>data, Date.now())
@@ -475,6 +504,15 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondScene {
     field,
   }
 
+  // why: Reused for the same reason as the surface frame; the outlines array is refilled in place each drawn frame.
+  const interactionsFrame = {
+    width: 0,
+    height: 0,
+    view: { x: 0, y: 0 },
+    pixelRatio: 1,
+    outlines: <KoiOutline[]>[],
+  }
+
   const loop = createFrameLoop(({ dt, elapsedMs }) => {
     const now = Date.now()
     field = advanceRipples(field, dt)
@@ -504,12 +542,14 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondScene {
       hooks.onSequenceComplete(abandoned)
     }
 
+    // ref: [guide:compose-independent-features/relay-fanout] start
     if (elapsedMs - lastRelayAt >= RELAY_INTERVAL_MS) {
       lastRelayAt = elapsedMs
       for (const session of sessions) {
         session.shell.send('neighbors', relay.neighborsFor(session.framework, pond, now))
       }
     }
+    // ref: [guide:compose-independent-features/relay-fanout] end
 
     // why: A calm pond would otherwise say nothing for as long as the visitor lets it be calm, and an embedder watching for life reads thirty silent seconds as an outage — the roll call keeps the liveness flowing through the contract itself.
     if (elapsedMs - lastPulseAt >= SHOAL_PULSE_MS) {
@@ -528,9 +568,25 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondScene {
     surfaceFrame.fade = scale === 'card' ? 1 : 0
     surfaceFrame.field = field
     surface.paint(surfaceFrame)
+
+    if (showInteractions) {
+      interactionsFrame.width = pond.view.width
+      interactionsFrame.height = pond.view.height
+      interactionsFrame.view.x = pond.view.x
+      interactionsFrame.view.y = pond.view.y
+      interactionsFrame.pixelRatio = window.devicePixelRatio
+      interactionsFrame.outlines.length = 0
+      for (const session of sessions) {
+        const latest = relay.latest(session.framework, now)
+        if (latest !== null) {
+          interactionsFrame.outlines.push(latest)
+        }
+      }
+      diagnostics.paint(interactionsFrame)
+    }
   })
 
-  // why: Seven iframes on their own compositing layers is exactly where a loop running against a hidden tab costs a visitor real battery.
+  // why: Eight iframes on their own compositing layers is exactly where a loop running against a hidden tab costs a visitor real battery.
   document.addEventListener('visibilitychange', () => {
     const paused = document.hidden
     if (paused) {
@@ -565,6 +621,25 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondScene {
     },
     disturbAt(fx, fy) {
       strike(pondPoint(pond, fx, fy))
+    },
+    releaseHeld() {
+      if (inspected.size === 0) {
+        return false
+      }
+      // why: Escape lets go of a carry too — the koi is released from wherever the drag last streamed it, exactly as a drop would have left it.
+      drag = null
+      // note: release() only deletes the entry being visited, which set iteration allows mid-walk.
+      for (const framework of inspected) {
+        release(framework)
+      }
+      refreshCursor()
+      return true
+    },
+    setInteractions(on) {
+      showInteractions = on
+      if (!on) {
+        diagnostics.clear()
+      }
     },
   }
 }

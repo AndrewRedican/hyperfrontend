@@ -1,8 +1,10 @@
+// ref: [guide:embed-a-shipped-feature/import-shells] start
 'use client'
 
 import { createFeatureShell as createClockShell } from '@hyperfrontend/demo-clock-shell'
 import { createFeatureShell as createHeartbeatShell } from '@hyperfrontend/demo-heartbeat-shell'
 import { createFeatureShell as createKoiPondShell } from '@hyperfrontend/demo-koi-pond-shell'
+// ref: [guide:embed-a-shipped-feature/import-shells] end
 
 /** Per-request settings accepted by a demo shell request. */
 export interface DemoRequestOptions {
@@ -141,6 +143,7 @@ function attachHeartbeatEffects(shell: DemoShell, layer: HTMLElement): () => voi
 
 /** One wiring per live demo slug — a manifest entry gains a live embed by landing its vendored shell here. */
 const WIRINGS: Record<string, DemoWiring | undefined> = {
+  // ref: [guide:embed-a-shipped-feature/clock-wiring] start
   clock: {
     createShell: (options) => createClockShell(options),
     contractLabel: 'contract 0.3.0 · protocol v1',
@@ -148,9 +151,10 @@ const WIRINGS: Record<string, DemoWiring | undefined> = {
     proofEvents: ['tick'],
     silenceTimeoutMs: 6000,
   },
+  // ref: [guide:embed-a-shipped-feature/clock-wiring] end
   'koi-pond': {
     createShell: (options) => createKoiPondShell(options),
-    contractLabel: 'contract 0.1.0 · protocol v1',
+    contractLabel: 'contract 0.2.0 · protocol v1',
     // why: The pond reports its connected shoal as each koi lands, so the first `shoal` proves the scene is assembling behind the frame.
     proofEvents: ['shoal'],
     // why: An undisturbed pond is silent by design — it only speaks when the shoal changes or a scatter unwinds, so the budget must outlast a long calm.

@@ -126,7 +126,7 @@ if (outcome.status === 'committed') {
 
 ## Design Decisions
 
-- **D8** — Step order: `resolve-scope → type → scope → subject → body → breaking → issues → preview → commit`
-- **D15c** — Commit execution is default-on; inject `skipCommit` / `commitExecutor` to override
-- **D17a** — Config file lives at workspace root (not in `package.json`)
-- **E1a** — Empty staging refuses with an error; bins translate that to a non-zero exit code
+- **D8**: Step order: `resolve-scope → type → scope → subject → body → breaking → issues → preview → commit`
+- **D15c**: Commit execution is default-on; inject `skipCommit` / `commitExecutor` to override
+- **D17a**: Config file lives at workspace root (not in `package.json`)
+- **E1a**: Empty staging refuses with an error; bins translate that to a non-zero exit code

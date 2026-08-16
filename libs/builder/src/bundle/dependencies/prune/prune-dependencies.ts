@@ -46,8 +46,8 @@ export interface PruneReport {
  * `require` cycle. A final Comment Strip removes ordinary
  * comments from the surviving chunks while preserving `@__PURE__` /
  * `@__NO_SIDE_EFFECTS__` annotations and legal comments. Removal is conservative:
- * anything whose removal cannot be proven safe — including the entire run when a
- * dynamic specifier is present — is left untouched.
+ * anything whose removal cannot be proven safe (including the entire run when a
+ * dynamic specifier is present) is left untouched.
  *
  * @param context - Resolved build context. `outputPath` locates `_dependencies/`.
  * @param monitor - Optional memory monitor; checkpoints are captured after the

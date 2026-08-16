@@ -4,7 +4,6 @@ import type { DismissPayload } from '../shared/presentation'
 import type { ExperiencePlugin, ExperiencePluginContext, FeatureContract, SecurityProtocol, ShellOptions } from '../shared/types'
 import type { HeartbeatMonitor, HeartbeatStatus } from './heartbeat'
 import type { DisplayModeMount, ShellHandle } from './types'
-import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { promiseResolve } from '@hyperfrontend/immutable-api-utils/built-in-copy/promise'
 import { createURL } from '@hyperfrontend/immutable-api-utils/built-in-copy/url'
@@ -241,11 +240,13 @@ export function createShellHandle(
 
   const applyUnresponsive = (options: ShellOptions, missedBeats: number, lastBeatAt: number | null) => {
     const policy = options.onUnresponsive ?? 'emit'
+    const displayMode = options.displayMode ?? DisplayMode.Embedded
     if (typeof policy === 'function') {
-      policy({ missedBeats, lastBeatAt, displayMode: options.displayMode ?? DisplayMode.Embedded, close, destroy })
+      policy({ missedBeats, lastBeatAt, displayMode, close, destroy })
       return
     }
-    emitter.emit('error', createError('Feature became unresponsive.'))
+    // why: The reason field is the discriminator embedders switch on, so the unresponsive signal carries the same structured shape as the open-timeout error.
+    emitter.emit('error', { reason: 'unresponsive', missedBeats, lastBeatAt, displayMode })
     if (policy === 'unmount') {
       destroy()
     }
@@ -284,7 +285,7 @@ export function createShellHandle(
     const result = wiring.selectMount(displayMode)({ options, requestClose: close })
     cleanup = result.cleanup
     if (result.target === null) {
-      emitter.emit('error', createError('Feature window could not be opened.'))
+      emitter.emit('error', { reason: 'open-failed', displayMode })
       return
     }
     if (options.plugins && options.plugins.length > 0) {

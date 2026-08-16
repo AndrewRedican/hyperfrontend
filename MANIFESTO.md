@@ -8,13 +8,13 @@
 
 Hyperfrontend is a personal project years in the making, born from a simple frustration: the JavaScript ecosystem has become a battleground where frameworks compete rather than collaborate.
 
-Every few years, a new framework emerges and fragments the community further. Teams rewrite working applications chasing the latest paradigm. Companies end up maintaining parallel implementations of the same business logic in Angular, React, and Vue—not because any framework is wrong, but because we never agreed on how to share.
+Every few years, a new framework emerges and fragments the community further. Teams rewrite working applications chasing the latest paradigm. Companies end up maintaining parallel implementations of the same business logic in Angular, React, and Vue, not because any framework is wrong, but because we never agreed on how to share.
 
 This project is my attempt to solve that problem once and for all.
 
 The goal isn't to replace frameworks or pick winners. It's to create a neutral protocol layer where **any framework can participate**. A React application and an Angular application should be able to collaborate at runtime without caring about each other's internals. Legacy code shouldn't need rewrites to integrate with modern systems.
 
-The minimum bar is something useful that people don't hate using. The real vision is a focal point where the community can collaborate instead of splinter—an antithesis to the constant framework wars.
+The minimum bar is something useful that people don't hate using. The real vision is a focal point where the community can collaborate instead of splinter, an antithesis to the constant framework wars.
 
 If this sounds idealistic, that's fine. Good software often starts that way.
 
@@ -28,7 +28,7 @@ I'm one person, and even with a small group of future maintainers, there's only 
 
 I will not be building React hooks, Vue composables, Angular services, or Svelte stores. Ever.
 
-This isn't because I don't think they'd be useful—they would be. But hyperfrontend's value is in the **protocol layer**, not framework bindings. The `createBroker()` and channel APIs are deliberately vanilla JavaScript. They work everywhere, with anything.
+This isn't because I don't think they'd be useful. They would be. But hyperfrontend's value is in the **protocol layer**, not framework bindings. The `createBroker()` and channel APIs are deliberately vanilla JavaScript. They work everywhere, with anything.
 
 **If you want framework-specific ergonomics, build them yourself.** Seriously. A React hook wrapping `createBroker()` is maybe 30 lines of code. You know your patterns, your state management, your conventions better than I ever will. Build what makes sense for your team, publish it, share it with others using the same framework.
 
@@ -38,11 +38,11 @@ This is a feature, not a limitation. Framework experts should own framework inte
 
 Hyperfrontend uses iframes for isolation. Not Shadow DOM. Not Web Components.
 
-The reason is simple: iframes provide real security boundaries. They enforce the Same-Origin Policy. They isolate JavaScript runtimes. Shadow DOM gives you style encapsulation, but the JavaScript still shares a runtime—which means untrusted feature code could access your host application's globals, cookies, or DOM.
+The reason is simple: iframes provide real security boundaries. They enforce the Same-Origin Policy. They isolate JavaScript runtimes. Shadow DOM gives you style encapsulation, but the JavaScript still shares a runtime, which means untrusted feature code could access your host application's globals, cookies, or DOM.
 
 For trusted widgets on your own domain, Shadow DOM might be fine. But hyperfrontend is designed for scenarios where you're embedding applications you don't fully control. Iframes are the only browser primitive that actually delivers on that promise.
 
-I'm not interested in supporting both models. It would complicate the security story and split focus. Pick the right tool for your use case—if you need Shadow DOM, other solutions exist.
+I'm not interested in supporting both models. It would complicate the security story and split focus. Pick the right tool for your use case. If you need Shadow DOM, other solutions exist.
 
 ---
 
@@ -101,7 +101,7 @@ const broker = createBroker({
 ## What's Next
 
 > **This section is a roadmap, not an API reference.** Nothing below has shipped, and the code
-> sketches are illustrations of intent — package names, signatures, and file layouts will change as
+> sketches are illustrations of intent: package names, signatures, and file layouts will change as
 > each item is built. For what exists today, see the [Architecture Guide](ARCHITECTURE.md) and the
 > [documentation site](https://www.hyperfrontend.dev/docs).
 
@@ -155,14 +155,14 @@ flowchart TB
     classDef cleanWide text-align:left,padding:0px 0px 0px
 ```
 
-The API stays compatible with `@hyperfrontend/nexus`—it's just faster for heavy workloads.
+The API stays compatible with `@hyperfrontend/nexus`; it's just faster for heavy workloads.
 
 ---
 
 ### Host-Side Consumption Generator
 
 Turning an app _into_ a feature is automated; embedding one is still hand-written. The missing
-counterpart is a generator that runs in the host and does the wiring for you — install the shell
+counterpart is a generator that runs in the host and does the wiring for you: install the shell
 tarball or package, read its `metadata.json`, and scaffold a typed integration point in the
 host's own idiom:
 

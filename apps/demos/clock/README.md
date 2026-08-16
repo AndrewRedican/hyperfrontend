@@ -1,6 +1,6 @@
 # @hyperfrontend/demo-clock
 
-A clock coin: a minted-metal coin floating on a transparent background, an analog clock face on one side and a digital face on the other. Spin it — the resting face _is_ the clock's format, so every flip is contract traffic.
+A clock coin: a minted-metal coin floating on a transparent background, an analog clock face on one side and a digital face on the other. Spin it: the resting face _is_ the clock's format, so every flip is contract traffic.
 
 This app is a **self-contained hyperfrontend feature**: it consumes the published `@hyperfrontend/features` package from the npm registry exactly as an external consumer would (no workspace imports, its own lockfile and `node_modules`, a scaffold-native tsconfig that never extends the workspace base).
 
@@ -12,7 +12,7 @@ This app is a **self-contained hyperfrontend feature**: it consumes the publishe
 | Host: docs-site    | Vercel (landing hero + demos-page carousel)                                        | **cross-site**  |
 | Host: dev host     | `hf dev` debug UI, local                                                           | cross-origin    |
 
-The docs-site consumes this feature through the **vendored shell tarball** (`@hyperfrontend/demo-clock-shell`, committed under `apps/docs-site/vendor/`) — a real install step simulating "the feature team shipped us a shell". The shell is self-contained (`hf build` bundles the SDK; zero install-time dependencies) and carries the feature's declared display modes, its contract version, and the **v1 security envelope** — [feature.config.ts](feature.config.ts) declares `protocol: 'v1'`, so product traffic crosses the boundary enveloped without a key-provisioning story (v2's pre-shared key is the security demo's territory).
+The docs-site consumes this feature through the **vendored shell tarball** (`@hyperfrontend/demo-clock-shell`, committed under `apps/docs-site/vendor/`), a real install step simulating "the feature team shipped us a shell". The shell is self-contained (`hf build` bundles the SDK; zero install-time dependencies) and carries the feature's declared display modes, its contract version, and the **v1 security envelope**: [feature.config.ts](feature.config.ts) declares `protocol: 'v1'`, so product traffic crosses the boundary enveloped without a key-provisioning story (v2's pre-shared key is the security demo's territory).
 
 ## Contract
 
@@ -21,7 +21,7 @@ The feature owns all state; the host commands, the feature confirms with echo ev
 | accepted (host → feature)           | emitted (feature → host)                                                                           |
 | ----------------------------------- | -------------------------------------------------------------------------------------------------- |
 | `get-time`                          | `tick` `{epochMs, iso, timezone, locale, format, formatted}` @ 1 Hz                                |
-| `set-format` `{format}`             | `time` — same snapshot, answers `get-time`                                                         |
+| `set-format` `{format}`             | `time`: same snapshot, answers `get-time`                                                          |
 | `set-timezone` `{timezone}`         | `format-changed` `{format, cause: 'user'\|'host'\|'alarm'}`                                        |
 | `set-locale` `{locale}`             | `timezone-changed` `{timezone}`                                                                    |
 | `set-alarm` `{at: 'HH:mm', label?}` | `locale-changed` `{locale}`                                                                        |
@@ -29,7 +29,7 @@ The feature owns all state; the host commands, the feature confirms with echo ev
 
 Timezone = IANA id, locale = BCP-47, both applied via `Intl`. Alarms are multiple, one-shot, in-memory.
 
-The contract carries `version: 0.2.0` (gated for compatibility at the handshake). `get-time` doubles as a **correlated request**: a host calling `request('get-time')` gets the snapshot back directly, while plain listeners still observe the `time` echo. Armed alarms report as **dirty state** (`setDirty`), so a host proposing a polite close can see unsaved work first. The config declares all four display modes — `embedded` (default, fills the container), `dialog` (420×420 inner box), `popup` (480×480), and `standalone`.
+The contract carries `version: 0.3.0` (gated for compatibility at the handshake). `get-time` doubles as a **correlated request**: a host calling `request('get-time')` gets the snapshot back directly, while plain listeners still observe the `time` echo. Armed alarms report as **dirty state** (`setDirty`), so a host proposing a polite close can see unsaved work first. The config declares all four display modes: `embedded` (default, fills the container), `dialog` (420×420 inner box), `popup` (480×480), and `standalone`.
 
 ## Layout
 
@@ -38,7 +38,7 @@ The contract carries `version: 0.2.0` (gated for compatibility at the handshake)
 | `clock.contract.ts`            | The feature contract (accepted commands, emitted events)         |
 | `feature.config.ts`            | Feature identity + contract pointer for the `hf` CLI             |
 | `hf-dev.config.ts`             | Dev-server config (serves the built app from the workspace dist) |
-| `src/hyperfrontend.feature.ts` | Host integration — `createFeature` + `wireClockContract`         |
+| `src/hyperfrontend.feature.ts` | Host integration: `createFeature` + `wireClockContract`          |
 | `src/feature/`                 | Contract-to-store wiring (unit-tested, DI-friendly)              |
 | `src/physics/`                 | Framework-agnostic coin physics (drag, momentum, snap, flips)    |
 | `src/time/` · `src/alarms/`    | `Intl` time math and the one-shot alarm engine                   |
@@ -58,10 +58,10 @@ npx nx run docs-site:refresh-shell # re-pack, re-vendor, and reinstall the tarba
 ```
 
 To see the full host↔hostee wiring locally before any deploy: run `npx nx run demo-clock:dev`
-(serves the built app at `http://localhost:4280/`) alongside the docs-site's `npm run dev` — the
+(serves the built app at `http://localhost:4280/`) alongside the docs-site's `npm run dev`. The
 docs-site's committed `.env.development` points its embeds at that port, while production builds
 keep the deployed origin.
 
 ## SDK workarounds: none
 
-The demo consumes `@hyperfrontend/features@^0.4.0` with no workarounds. The 0.1.0-era scaffolding (hand-rolled dev host, `SharedArrayBuffer` stub, dev-server launcher script, external shell compiler) is gone — `hf dev` and `hf build` are the real dev loop — and the 0.3.0-era published-package gaps shipped fixed in `features@0.4.0`/`builder@0.1.3`: `hf build` runs in a fresh install with no extra devDependencies, the generated handle types `request`/`handle`/`isDirty` so typed hosts need no casts, and [feature.config.ts](feature.config.ts) authors its extended keys through `defineConfig` directly.
+The demo consumes `@hyperfrontend/features@0.5.1` with no workarounds. The 0.1.0-era scaffolding (hand-rolled dev host, `SharedArrayBuffer` stub, dev-server launcher script, external shell compiler) is gone (`hf dev` and `hf build` are the real dev loop), and the 0.3.0-era published-package gaps shipped fixed in `features@0.4.0`/`builder@0.1.3`: `hf build` runs in a fresh install with no extra devDependencies, the generated handle types `request`/`handle`/`isDirty` so typed hosts need no casts, and [feature.config.ts](feature.config.ts) authors its extended keys through `defineConfig` directly.

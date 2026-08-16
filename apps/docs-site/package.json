@@ -6,6 +6,7 @@
     "build": "npm run generate && npm run validate-links && npm run validate-sitemap && NODE_OPTIONS='--max-old-space-size=4096' next build",
     "start": "next start --port 3000",
     "generate": "npx tsx scripts/generate-docs.ts",
+    "generate:guides": "npx tsx scripts/generate-docs.ts --guides-only",
     "validate-links": "npx tsx scripts/validate-links.ts",
     "validate-sitemap": "npx tsx scripts/validate-sitemap.ts",
     "test": "vitest run"
@@ -13,7 +14,7 @@
   "dependencies": {
     "@hyperfrontend/demo-clock-shell": "file:vendor/hyperfrontend-demo-clock-shell-0.3.0.tgz",
     "@hyperfrontend/demo-heartbeat-shell": "file:vendor/hyperfrontend-demo-heartbeat-shell-0.2.0.tgz",
-    "@hyperfrontend/demo-koi-pond-shell": "file:vendor/hyperfrontend-demo-koi-pond-shell-0.1.0.tgz",
+    "@hyperfrontend/demo-koi-pond-shell": "file:vendor/hyperfrontend-demo-koi-pond-shell-0.2.0.tgz",
     "@hyperfrontend/function-utils": "0.0.4",
     "@hyperfrontend/immutable-api-utils": "0.1.4",
     "@hyperfrontend/logging": "0.1.1",

@@ -23,6 +23,21 @@ The work below builds on these existing pieces:
   targets the `main` branch deliberately (documented in `generate-docs.ts`:
   git detection is disabled so links are identical in every build environment);
   tag/commit pinning is explicitly not wanted.
+- **Guides pipeline** — site-owned Guide Units (`apps/docs-site/content/guides/<slug>/`)
+  compile through `scripts/generate-guides.ts` into the global `/docs/guides/[slug]`
+  route with build-failing snippet extraction from executing specs and shipped demo
+  sources. Guides sit beside articles under `content/` rather than inside the packages
+  they describe, so editorial changes never reach a package's build, version, or
+  publish boundary; association is declared by `meta.json` `packages`.
+  Documented in `apps/docs-site/README.md`.
+- **Search** — a deterministic omni-search index over libraries, API symbols,
+  submodules, guides, and articles is generated at build time to
+  `public/search-index.json` behind the stable contract in
+  `src/lib/search/search-contract.ts`; the client dialog (Ctrl/Cmd+K) consumes only
+  that contract, so the producer can later be replaced by an indexer package.
+- **Sharing + feed** — content pages carry a share menu (`src/components/share/`,
+  descriptors centralized in `src/lib/share.ts`); articles are served as an Atom
+  feed at `/feed.xml`.
 
 ---
 
@@ -40,13 +55,9 @@ than render as a plain anchor.
 
 ### 1.2 Social sharing links
 
-Twitter/LinkedIn share links (URL-based, no package), wired through
-`TrackedLink` so shares are measured like other outbound links.
-
-**Files:**
-
-- `apps/docs-site/src/components/share-buttons.tsx` — Create
-- `apps/docs-site/src/components/footer.tsx` — Import and use
+Superseded by the shipped per-page share menu (`src/components/share/share-menu.tsx`:
+native share sheet, LinkedIn, X, WhatsApp, copy link; analytics through the
+`share` event). No footer share surface is planned.
 
 ### Verification
 
@@ -80,14 +91,18 @@ and **type/declaration** locations.
 Author a FAQ per package, consumed by the generation pipeline so it ships in the
 build (no manual page wiring).
 
-- Define a standard location/format per package (e.g. `docs/FAQ.md` in each lib).
+- Author them under `apps/docs-site/content/faq/`, one file per package, keyed to
+  the package by frontmatter. A FAQ is editorial content the site owns, so it
+  belongs beside articles and guides rather than inside a publishable project,
+  where it would make Nx, CI, versioning, and publishing treat the package as
+  changed for a documentation edit.
 - Extend `generate-docs.ts` to discover and emit FAQ content into `.generated`
   and the manifest.
 - Add a FAQ route/section to each library's docs page.
 
 **Files:**
 
-- `libs/*/docs/FAQ.md` — Create (per package)
+- `apps/docs-site/content/faq/<package-slug>.md` — Create (per package)
 - `apps/docs-site/scripts/generate-docs.ts` — Edit (ingest FAQ)
 - `apps/docs-site/src/components/library-doc-page.tsx` — Edit (render FAQ)
 
@@ -95,17 +110,16 @@ build (no manual page wiring).
 
 ## Phase 4: Per-package how-to tutorials
 
-Task-oriented "how to" guides per package, ingested the same way as FAQ.
+Settled and shipped as the Guide Unit system: `apps/docs-site/content/guides/<slug>/`
+(`guide.md` + `meta.json`), compiled by `scripts/generate-guides.ts` into
+`/docs/guides/[slug]`, with verified snippet extraction, a machine-readable corpus
+at `/guides/index.json`, and per-library guide surfacing on library pages driven by
+`meta.json` `packages` rather than by where the files sit.
+Mechanism documented in `apps/docs-site/README.md`.
 
-- Standard location/format per package (e.g. `docs/tutorials/*.md`).
-- Pipeline discovery + manifest entries; multiple tutorials per package.
-- Tutorial index + pages per library in the site.
-
-**Files:**
-
-- `libs/*/docs/tutorials/*.md` — Create (per package)
-- `apps/docs-site/scripts/generate-docs.ts` — Edit (ingest tutorials)
-- `apps/docs-site/src/components/library-doc-page.tsx` — Edit (render tutorials)
+Remaining scope is content, not infrastructure: an adoption-path tutorial or
+how-to per package (the first wave shipped covers nexus and features), grown
+consumer-problem-first rather than to per-package quotas.
 
 ---
 
@@ -174,11 +188,13 @@ npx lighthouse https://hyperfrontend.dev --only-categories=accessibility
 
 ## Deferred
 
-| Item              | Reason                          |
-| ----------------- | ------------------------------- |
-| Algolia Search    | Not using Algolia               |
-| Monaco Editor     | Requires `@monaco-editor/react` |
-| Usefulness Voting | Requires `@vercel/kv`           |
-| RSS Feed          | Requires `feed` package         |
-| Version Selector  | Lower priority                  |
-| Versioned URLs    | Lower priority                  |
+| Item              | Reason                                                           |
+| ----------------- | ---------------------------------------------------------------- |
+| Algolia Search    | Declined permanently; deterministic local search shipped instead |
+| Monaco Editor     | Requires `@monaco-editor/react`                                  |
+| Usefulness Voting | Requires `@vercel/kv`                                            |
+| Version Selector  | Lower priority                                                   |
+| Versioned URLs    | Lower priority                                                   |
+
+An articles Atom feed shipped at `/feed.xml` (hand-serialized, no `feed` package),
+closing the earlier RSS deferral.

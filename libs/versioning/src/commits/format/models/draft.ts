@@ -22,13 +22,13 @@ export interface CommitDraft {
   /** Full commit body */
   readonly body?: string
 
-  /** Footer trailers — caller may leave out `BREAKING CHANGE:`; the formatter will synthesize it when needed */
+  /** Footer trailers: caller may leave out `BREAKING CHANGE:`; the formatter will synthesize it when needed */
   readonly footers?: readonly CommitFooter[]
 
-  /** Whether this is a breaking change — controls the `!` subject marker */
+  /** Whether this is a breaking change: controls the `!` subject marker */
   readonly breaking?: boolean
 
-  /** Breaking change description — surfaces as a `BREAKING CHANGE:` footer when none is already present */
+  /** Breaking change description: surfaces as a `BREAKING CHANGE:` footer when none is already present */
   readonly breakingDescription?: string
 }
 

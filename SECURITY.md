@@ -7,18 +7,18 @@ Before reporting or reviewing, read the model this project is built on:
 statement of what hyperfrontend defends against and what it does not, and it is the reference every
 other security claim in these docs points back to. In short:
 
-- **The named adversary is co-resident script** — an analytics snippet, tag manager, compromised
+- **The named adversary is co-resident script**: an analytics snippet, tag manager, compromised
   dependency, or unknown page that embeds a feature URL. A host that deliberately installs a feature
   is trusting it, the way it trusts any dependency; the controls exist to bound a trusted
   feature's bad day, not to treat its authors as hostile.
 - **Origin checks authenticate rooms, not speakers.** Once arbitrary script runs inside a page, no
   message check distinguishes it from the application. Threats inside a page need Content Security
-  Policy, Trusted Types, dependency provenance, and server-side authorisation — a different
+  Policy, Trusted Types, dependency provenance, and server-side authorisation. That is a different
   treatment, deliberately outside this model.
 - **Three parties carry the security of an integration.** The browser enforces document isolation
   and the frame's capability attributes; the protocol enforces the relationship (pinned
   counterparts, gated handshake, validated payloads, versioned contracts, an optional encrypted
-  envelope); and **you** decide authorisation — `frame-ancestors`, backend checks, HTTPS, the
+  envelope); and **you** decide authorisation: `frame-ancestors`, backend checks, HTTPS, the
   envelope you choose, and the containment posture you set.
 
 A vulnerability report is most useful when it names which of those three the issue defeats.
@@ -93,7 +93,7 @@ ends — is on by default and is not something you should be re-implementing by 
    Protected work needs credentials the feature's own backend validates.
 3. **Choose the envelope deliberately.** `v2` with a pre-shared key is the confidentiality control;
    `v1` is time-window obfuscation and buys deterrence only. Provision and rotate the `v2` key
-   yourself — a key is never baked into a built artifact. A handshake that cannot agree on an
+   yourself; a key is never baked into a built artifact. A handshake that cannot agree on an
    encrypted transport falls back to plaintext; where that would be unacceptable, drive
    `@hyperfrontend/nexus` directly and set `security.mode: 'fail-closed'` on the channel so the
    connection is denied instead.

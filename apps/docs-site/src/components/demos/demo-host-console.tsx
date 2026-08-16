@@ -81,7 +81,7 @@ const DEMO_BLURBS: Record<string, string> = {
   heartbeat:
     'Everything below drives the centered heart’s real session — cardiac beats and rhythm shifts crossing as contract events, a live host-drawn ECG and measured rate, a correlated ping, host-commanded pacing, an approval-gated heartbeat sound, polite teardown, and the contract-declared display modes.',
   'koi-pond':
-    'Everything below drives the centered pond’s real session — the outer, gallery-facing contract of a host that is itself a host to seven framework koi. Strike the water without a pointer, watch the connected shoal report itself, and see the pond announce when a scatter has settled — none of which reveals that seven apps compose the scene.',
+    'Everything below drives the centered pond’s real session — the outer, gallery-facing contract of a host that is itself a host to eight framework koi. Strike the water without a pointer, watch the connected shoal report itself, and see the pond announce when a scatter has settled — none of which reveals that eight apps compose the scene.',
 }
 
 /**

@@ -45,6 +45,8 @@ export interface ResolveServeConfigDeps {
   readonly discover?: (directory: string, baseName: string) => string | null
   /** Reports whether a path exists. */
   readonly exists?: (path: string) => boolean
+  /** Environment variables consulted for the `PORT` fallback. */
+  readonly env?: Record<string, string | undefined>
 }
 
 /** Inputs for {@link resolveServeConfig}. */
@@ -76,18 +78,35 @@ function isPort(value: unknown): value is number {
 }
 
 /**
- * Parses a `--port` flag string into a validated port number.
+ * Parses a port string into a validated port number.
  *
- * @param raw - The flag value.
+ * @param raw - The string value.
+ * @param source - Where the value came from, named in the error message.
  * @returns The parsed port.
  * @throws {Error} When the value is not an integer in the valid range.
  */
-function parsePortFlag(raw: string): number {
+function parsePort(raw: string, source: string): number {
   const port = Number(raw)
   if (!isPort(port)) {
-    throw createError(`--port must be an integer between 1 and 65535, got "${raw}".`)
+    throw createError(`${source} must be an integer between 1 and 65535, got "${raw}".`)
   }
   return port
+}
+
+/**
+ * Reads the platform-assigned `PORT` environment variable, when one is set.
+ *
+ * @param env - The environment variables to consult.
+ * @returns The validated port, or `undefined` when unset.
+ * @throws {Error} When `PORT` is set to something that is not a port.
+ */
+function envPort(env: Record<string, string | undefined>): number | undefined {
+  const raw = env['PORT']
+  // why: An empty PORT reads as unset — platforms inject a real value or nothing, and `PORT= hf serve` should not be an error.
+  if (raw === undefined || raw === '') {
+    return undefined
+  }
+  return parsePort(raw, 'PORT')
 }
 
 /**
@@ -215,10 +234,13 @@ function selectConfigPath(
 
 /**
  * Resolves the effective `hf-serve.config.*` into a concrete serving plan,
- * applying `defaults < config file < flags` precedence: `--root` sets the
- * served directory, `--port`/`--host` the listen address, and `--config`
- * selects the file. Unlike the dev server, serving is valid with no config at
- * all — the working directory is served with defaults.
+ * applying `defaults < config file < PORT environment variable < flags`
+ * precedence: `--root` sets the served directory, `--port`/`--host` the listen
+ * address, and `--config` selects the file. A platform-assigned `PORT` beats a
+ * port baked into the served artifact's config, and an explicit `--port` still
+ * beats both, so `hf serve --root <dir>` works without a port flag wherever
+ * the platform injects one. Unlike the dev server, serving is valid with no config at
+ * all: the working directory is served with defaults.
  *
  * @param options - The working directory, parsed flags, and injectable deps.
  * @returns The resolved root, listen address, header rules, and source path.
@@ -234,6 +256,7 @@ export async function resolveServeConfig(options: ResolveServeConfigOptions): Pr
   const discover = options.discover ?? discoverConfigFile
   const loadConfig = options.loadConfig ?? loadModuleFile
   const fileExists = options.exists ?? exists
+  const env = options.env ?? process.env
 
   const sourcePath = selectConfigPath(cwd, flags, discover, fileExists)
   const config: ServeConfig = sourcePath === null ? {} : validateServeConfig(await loadConfig(sourcePath), sourcePath)
@@ -249,7 +272,7 @@ export async function resolveServeConfig(options: ResolveServeConfigOptions): Pr
   const host = flags.host ?? config.host
   return {
     root,
-    port: flags.port !== undefined ? parsePortFlag(flags.port) : (config.port ?? DEFAULT_SERVE_PORT),
+    port: flags.port !== undefined ? parsePort(flags.port, '--port') : (envPort(env) ?? config.port ?? DEFAULT_SERVE_PORT),
     ...(host !== undefined && { host }),
     headers: config.headers ?? [],
     log: config.log ?? true,

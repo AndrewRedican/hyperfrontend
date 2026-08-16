@@ -165,7 +165,7 @@ export interface PropertyStripResult {
  * namespace absent from the map, or whose kept set is empty or covers every
  * slot, is left untouched. Dropping a slot removes the only reference its factory
  * binding had, so the subsequent dead-export pass collapses the now-dead
- * factories — this pass only edits the literal.
+ * factories; this pass only edits the literal.
  *
  * @param source - Raw chunk source text.
  * @param format - Module format selecting the export shape.

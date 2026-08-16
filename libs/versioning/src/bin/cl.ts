@@ -23,7 +23,7 @@ export interface ClArgs {
   readonly cwdOverride?: string
 }
 
-/** Injectable dependencies for `runCl` — defaulted for production, overridden in tests. */
+/** Injectable dependencies for `runCl`: defaulted for production, overridden in tests. */
 export interface RunClDeps {
   /** Loads the user's commit config (or returns an empty one) */
   readonly loadConfig?: (options: LoadCommitConfigOptions) => Promise<LoadedCommitConfig>
@@ -37,7 +37,7 @@ export interface RunClDeps {
 
 /** Inputs for a single `cl` invocation. */
 export interface RunClOptions extends RunClDeps {
-  /** Raw argv tail (excluding node + script) — usually `process.argv.slice(2)` */
+  /** Raw argv tail (excluding node + script), usually `process.argv.slice(2)` */
   readonly argv: readonly string[]
 
   /** Default cwd used when argv does not provide `--cwd` */

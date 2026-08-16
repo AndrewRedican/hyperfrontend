@@ -15,7 +15,7 @@ import { createSecurityErrorEventData, logSecurityError } from '../../security/e
  * Routes an encrypted message to the appropriate channel for decryption.
  *
  * This function handles Uint8Array payloads received via postMessage:
- * 1. Resolves the target channel by the event's source window — the source
+ * 1. Resolves the target channel by the event's source window: the source
  *    window is the counterpart's identity, exactly as in the handshake
  * 2. Enforces the channel's pinned origin; mismatching payloads are dropped
  *    with an 'invalid' event before any decryption runs

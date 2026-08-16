@@ -190,7 +190,7 @@ export function ClockConsoleActions({ shell, featureUrl, log, createExtraShell }
  * `shoal` readout of how many koi have connected behind the scene, and the
  * `sequence-complete` the pond emits once every fish has fled and settled back
  * into an ambient cruise — the outer, gallery-facing half of the two-contract
- * nesting, none of which knows there are seven framework apps behind it.
+ * nesting, none of which knows there are eight framework apps behind it.
  * @param root0
  * @param root0.shell
  * @param root0.log

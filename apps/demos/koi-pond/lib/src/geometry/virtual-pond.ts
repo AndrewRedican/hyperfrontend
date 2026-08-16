@@ -178,7 +178,7 @@ const ENTRY_RELAX_PASSES = 24
  */
 function rawEntry(pond: PondEnvironment, seed: number): Vec2 {
   const draw = (index: number): number => randomPseudo(seed + ENTRY_DRAWS + index)
-  // magic: The seeds are multiples of 977, and 977 mod 360 is coprime with 360 — so taking the residue fans the seven koi out on an almost perfectly even 51-degree spacing, which guarantees a base separation no random draw reliably would.
+  // magic: The seeds are multiples of 977, and 977 mod 360 is coprime with 360 — so taking the residue fans the koi out on an almost even 51-degree spacing. The eighth seed wraps back to within a degree of the first, so the base stations alone no longer guarantee separation; the relaxation passes below are what do.
   const angle = (seed % 360) * (Math.PI / 180) + (draw(0) - 0.5) * 2 * ENTRY_ANGLE_JITTER
   const centre = pondCentre(pond)
   // why: Measured on the shorter axis so every koi enters inside the pond proper rather than out in the margin.
@@ -193,16 +193,16 @@ function rawEntry(pond: PondEnvironment, seed: number): Vec2 {
  * Where one koi enters the pond, and pointing which way.
  *
  * Entry is a property of the pond rather than of any fish's brain, which is why
- * it lives here: seven apps that each chose their own entry would either
+ * it lives here: eight apps that each chose their own entry would either
  * collide on one spot or need to negotiate, and neither is the point of the
  * demo. The evenly spaced base stations plus the deterministic relaxation
  * guarantee a minimum opening separation; the seeded jitter around the
  * stations — angle, radius, and heading — breaks the circle they would
  * otherwise draw, so the first paint reads as a shoal that formed naturally
- * rather than seven placed markers.
+ * rather than eight placed markers.
  *
  * Every app computes the *whole* opening shoal and takes its own slot: the
- * relaxation needs all seven positions, and since every seed is shared
+ * relaxation needs every position, and since every seed is shared
  * knowledge, computing them all is what keeps the apps agreeing without a
  * message.
  *
@@ -226,7 +226,7 @@ export function entryStation(pond: PondEnvironment, seed: number): { position: V
   const separation = pond.fishLength * ENTRY_SEPARATION_FISH_LENGTHS
   const reach = shorter * ENTRY_REACH_RATIO
   for (let pass = 0; pass < ENTRY_RELAX_PASSES; pass += 1) {
-    // how: Overlapping pairs push each other apart by half their shortfall, then everyone is pulled back inside the opening reach; a couple of dozen passes settle seven points well past visual convergence.
+    // how: Overlapping pairs push each other apart by half their shortfall, then everyone is pulled back inside the opening reach; a couple of dozen passes settle the shoal well past visual convergence.
     for (let a = 0; a < positions.length; a += 1) {
       for (let b = a + 1; b < positions.length; b += 1) {
         const first = positions[a]
@@ -259,7 +259,7 @@ export function entryStation(pond: PondEnvironment, seed: number): { position: V
 
   const position = positions[slot === -1 ? 0 : slot] ?? centre
   const settled = Math.atan2(position.y - centre.y, position.x - centre.x)
-  // why: A tangential heading starts the shoal circulating instead of converging — seven fish all pointed at the centre meet there, and the opening seconds read as a collapse.
+  // why: A tangential heading starts the shoal circulating instead of converging — eight fish all pointed at the centre meet there, and the opening seconds read as a collapse.
   const tangent = settled + Math.PI / 2 + (randomPseudo(seed + ENTRY_DRAWS + 2) - 0.5) * 2 * ENTRY_HEADING_JITTER
   return { position, heading: Math.atan2(Math.sin(tangent), Math.cos(tangent)) }
 }
@@ -356,7 +356,7 @@ export interface KoiFrameBox {
  * The box is centred on the body's midpoint — half a length behind the nose —
  * and sized generously enough that fins, tail sweep, banking, and the contact
  * shadow always land inside it whatever the pose. Rendering only this box
- * instead of the whole view is what keeps seven independent renderers cheap:
+ * instead of the whole view is what keeps eight independent renderers cheap:
  * the box's area is a small constant, not a function of the frame.
  *
  * @param nose - The koi's nose in pond space.

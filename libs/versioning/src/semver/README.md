@@ -107,18 +107,18 @@ format(min(versions)!) // '1.0.0'
 
 ## Design Principles
 
-1. **Immutable** — All operations return new objects
-2. **Pure Functions** — No side effects, deterministic output
-3. **No Regex** — Character-by-character parsing eliminates ReDoS
-4. **Null Safety** — Parse functions return `null` on invalid input
-5. **Factory Pattern** — Use `create*` functions for object construction
+1. **Immutable**: All operations return new objects
+2. **Pure Functions**: No side effects, deterministic output
+3. **No Regex**: Character-by-character parsing eliminates ReDoS
+4. **Null Safety**: Parse functions return `null` on invalid input
+5. **Factory Pattern**: Use `create*` functions for object construction
 
 ## See Also
 
-- [changelog/](../changelog/README.md) — Uses semver for version entries
-- [flow/](../flow/README.md) — Uses semver for bump calculations
-- [commits/](../commits/README.md) — Maps commit types to bump types
-- [registry/](../registry/README.md) — Queries published versions
-- [workspace/](../workspace/README.md) — Cascade bump calculations
-- [Main README](../../README.md) — Package overview and quick start
-- [ARCHITECTURE.md](../../ARCHITECTURE.md) — Design principles and data flow
+- [changelog/](../changelog/README.md): Uses semver for version entries
+- [flow/](../flow/README.md): Uses semver for bump calculations
+- [commits/](../commits/README.md): Maps commit types to bump types
+- [registry/](../registry/README.md): Queries published versions
+- [workspace/](../workspace/README.md): Cascade bump calculations
+- [Main README](../../README.md): Package overview and quick start
+- [ARCHITECTURE.md](../../ARCHITECTURE.md): Design principles and data flow

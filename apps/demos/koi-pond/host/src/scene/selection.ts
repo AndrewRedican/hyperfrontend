@@ -3,21 +3,22 @@
  *
  * A koi paints its own identity card inside its pointer-transparent frame, so
  * nothing it draws can take a click. While a visitor holds a koi, the host
- * floats three invisible pieces over the card the fish reports: one real anchor
- * over the app URL, one over the framework's website line, and an inert shield
- * over the rest of the card — so moving off the fish and into the card clicks
+ * floats four invisible pieces over the card the fish reports: real anchors
+ * over the app URL, the framework's website line, and the app's source line,
+ * plus an inert shield over the rest of the card — so moving off the fish and into the card clicks
  * links instead of striking the water behind them. The selection visual itself
  * lives in the fish's own renderer as a silhouette trace; the host draws no
  * shape of its own.
  */
 import type { KoiCardLink, KoiCardPanel, KoiFramework, PondEnvironment } from '@hyperfrontend/demo-koi-lib'
-import { FRAMEWORK_SITES } from '@hyperfrontend/demo-koi-lib'
+import { FRAMEWORK_SITES, koiSourceUrl } from '@hyperfrontend/demo-koi-lib'
 
 /** The pieces floated over one held koi's card. */
 interface CardChrome {
   shield: HTMLElement
   app: HTMLAnchorElement
   site: HTMLAnchorElement
+  source: HTMLAnchorElement
 }
 
 /** The host chrome around held koi. */
@@ -111,8 +112,9 @@ export function createSelectionChrome(root: HTMLElement): SelectionChrome {
       shield.addEventListener('click', contain)
       const app = anchor(appUrl, 'Open this fish app in a new tab')
       const site = anchor(FRAMEWORK_SITES[framework], "Open this framework's website in a new tab")
-      root.append(shield, app, site)
-      held.set(framework, { shield, app, site })
+      const source = anchor(koiSourceUrl(framework), "Open this fish app's source code in a new tab")
+      root.append(shield, app, site, source)
+      held.set(framework, { shield, app, site, source })
     },
 
     release(framework) {
@@ -123,6 +125,7 @@ export function createSelectionChrome(root: HTMLElement): SelectionChrome {
       chrome.shield.remove()
       chrome.app.remove()
       chrome.site.remove()
+      chrome.source.remove()
       held.delete(framework)
     },
 
@@ -135,11 +138,19 @@ export function createSelectionChrome(root: HTMLElement): SelectionChrome {
         chrome.shield.hidden = true
         chrome.app.hidden = true
         chrome.site.hidden = true
+        chrome.source.hidden = true
         return
       }
       place(chrome.shield, panel.frame, pond)
       place(chrome.app, panel.app, pond)
       place(chrome.site, panel.site, pond)
+      // why: The panel crosses the schema-less outline, so a shell packed before the source line existed simply reports none — the anchor stays hidden rather than covering water.
+      const source: KoiCardLink | undefined = panel.source
+      if (source === undefined) {
+        chrome.source.hidden = true
+      } else {
+        place(chrome.source, source, pond)
+      }
     },
 
     dispose() {
@@ -147,6 +158,7 @@ export function createSelectionChrome(root: HTMLElement): SelectionChrome {
         chrome.shield.remove()
         chrome.app.remove()
         chrome.site.remove()
+        chrome.source.remove()
       }
       held.clear()
     },

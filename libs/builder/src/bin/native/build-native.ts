@@ -62,8 +62,8 @@ const cleanupSeaIntermediates = (seaConfigPath: string, blobPath: string): void 
 /**
  * Builds the Node SEA native binary for a single bin declaration.
  *
- * Pipeline (current-platform-only — cross-platform matrices are orchestrated externally):
- * 1. Validate the bin declares CJS — SEA requires a CJS bundle as the embedded script.
+ * Pipeline (current-platform-only; cross-platform matrices are orchestrated externally):
+ * 1. Validate the bin declares CJS: SEA requires a CJS bundle as the embedded script.
  * 2. Skip silently with an info log if the current host doesn't match any declared platform.
  * 3. Generate the SEA config JSON and write it to disk.
  * 4. Spawn `node --experimental-sea-config <path>` to emit the SEA preparation blob.
@@ -74,7 +74,7 @@ const cleanupSeaIntermediates = (seaConfigPath: string, blobPath: string): void 
  * 8. Delete the SEA build intermediates (config JSON + prep blob) so only the
  *    runtime binary remains in the publishable output.
  *
- * Native binaries are not auto-wired into `package.json#bin` — they are shipped
+ * Native binaries are not auto-wired into `package.json#bin`: they are shipped
  * as separate release artifacts.
  *
  * @param inputs - Bin declaration, resolved context, and the path to the already-built CJS bundle.

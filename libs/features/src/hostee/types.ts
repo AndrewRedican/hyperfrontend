@@ -61,7 +61,7 @@ export interface FeatureHandle {
    * draft, a pending write) and they arrive before the close completes.
    * `presentation` fires once with `{ mode }` when the host announces how the
    * feature is surfaced. `resize` fires with the available `{ width, height }`
-   * in exact pixels — host-reported in the iframe modes, from the feature's
+   * in exact pixels: host-reported in the iframe modes, from the feature's
    * own window in the windowed modes; the feature author owns making the
    * layout respond to it.
    *

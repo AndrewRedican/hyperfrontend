@@ -64,7 +64,7 @@ Native arrays don't enforce uniqueness, making it easy to accidentally register 
 
 ### Simplifies Round-Robin and Cyclical Patterns
 
-The value picker solves the boilerplate problem of cycling through options (load balancer endpoints, color schemes, retry strategies). No manual index tracking or modulo math—just call `next()`. Particularly useful for testing scenarios where you need predictable value rotation.
+The value picker solves the boilerplate problem of cycling through options (load balancer endpoints, color schemes, retry strategies). No manual index tracking or modulo math, just call `next()`. Particularly useful for testing scenarios where you need predictable value rotation.
 
 ### Type-Safe String Sanitization
 

@@ -1,6 +1,6 @@
 # Hyperfrontend Architecture
 
-Hyperfrontend is a layered architecture designed for runtime micro-frontend integration. At its core, it enables independently deployed frontend applications ("features") to communicate through secure, contract-validated messaging—regardless of what framework they use.
+Hyperfrontend is a layered architecture designed for runtime micro-frontend integration. At its core, it enables independently deployed frontend applications ("features") to communicate through secure, contract-validated messaging, regardless of what framework they use.
 
 ```mermaid
 ---
@@ -144,7 +144,7 @@ sequenceDiagram
   sending window, never by claimed identity.
 - **Instances are distinguished from windows.** A window outlives the documents loaded into
   it, so each side also records which incarnation of the counterpart it is talking to and
-  ignores frames from any other — traffic left over from a reloaded document cannot enter the
+  ignores frames from any other: traffic left over from a reloaded document cannot enter the
   session that replaced it.
 - **Contracts gate the session.** Required actions must appear in the counterpart's contract,
   and contracts carry an optional semver version checked by a compatibility rule at the
@@ -161,12 +161,12 @@ connection attempts and clean lifecycle management.
 A session that is open is not necessarily alive, so the runtime judges liveness with four
 states rather than a boolean:
 
-| State            | Meaning                                                                                                                             |
-| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| **healthy**      | Beats are arriving within the expected budget.                                                                                      |
-| **unobservable** | The host page or the feature page is hidden — browsers throttle hidden timers, so silence is weak evidence and the watchdog pauses. |
-| **suspect**      | The pages are visible and the miss budget is exhausted; the feature is probably unhealthy.                                          |
-| **gone**         | The session is closed or destroyed.                                                                                                 |
+| State            | Meaning                                                                                                                            |
+| ---------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| **healthy**      | Beats are arriving within the expected budget.                                                                                     |
+| **unobservable** | The host page or the feature page is hidden; browsers throttle hidden timers, so silence is weak evidence and the watchdog pauses. |
+| **suspect**      | The pages are visible and the miss budget is exhausted; the feature is probably unhealthy.                                         |
+| **gone**         | The session is closed or destroyed.                                                                                                |
 
 The feature pulses a hidden beat; the host watchdog counts misses only while both pages are
 visible (each side reports its own visibility). Entering `suspect` runs the host's
@@ -174,8 +174,8 @@ unresponsive policy once per episode, and a recovering beat returns the session 
 and re-arms it. Transitions surface as the shell's `status` event.
 
 Teardown is a protocol, not an event. The polite form is a short exchange: one side proposes
-closing (CLOSE), the other receives a `closing` notice while the channel still delivers — its
-flush window for unsaved work — then confirms (ACK), and only then does each side fire its
+closing (CLOSE), the other receives a `closing` notice while the channel still delivers (its
+flush window for unsaved work), then confirms (ACK), and only then does each side fire its
 single `close`. An unacknowledged close completes at a deadline, so an unresponsive
 counterpart cannot hold the channel open, and the impolite forms (crash, tab close) remain
 covered by the heartbeat. Dirty state is a contract event: the feature declares unsaved work
@@ -184,8 +184,8 @@ starting a polite teardown.
 
 A reload is a third form: the feature's document is replaced, so the session ends without
 either side asking. The host is told which one it was (`close` carries
-`reason: 'peer-reload'`) and keeps the mount — the new document handshakes on the same frame
-and is re-announced its presentation — so a refresh costs a session, not the feature.
+`reason: 'peer-reload'`) and keeps the mount; the new document handshakes on the same frame
+and is re-announced its presentation, so a refresh costs a session, not the feature.
 
 ### Contract System
 
@@ -275,7 +275,7 @@ flowchart LR
 
 ## Cryptography Layer
 
-`@hyperfrontend/cryptography` provides isomorphic cryptographic primitives—identical APIs for browser (Web Crypto API) and Node.js (crypto module).
+`@hyperfrontend/cryptography` provides isomorphic cryptographic primitives: identical APIs for browser (Web Crypto API) and Node.js (crypto module).
 
 ### Capabilities
 
@@ -338,7 +338,7 @@ shell.open()
 The **shell** is the outward-facing package a feature ships so a host can do that without installing
 the SDK at all: `hf build` inlines the feature's contract, bakes its declared display modes, security
 protocol and permissions as defaults, bundles every dependency, and packs a tarball. The host is
-never the shell — the host is the application the shell is installed into.
+never the shell: the host is the application the shell is installed into.
 
 ### What the Shell Contains
 
@@ -384,8 +384,8 @@ publishable tarball:
 import { createFeatureShell } from '@org/clock-shell'
 ```
 
-The published manifest declares no runtime dependencies—every @hyperfrontend library is bundled into
-the shell—so a host installs one package and inherits no transitive install burden.
+The published manifest declares no runtime dependencies (every @hyperfrontend library is bundled into
+the shell), so a host installs one package and inherits no transitive install burden.
 
 ### Consumption
 
@@ -497,17 +497,17 @@ This enables server-side features (SSR, API routes) to use the same security pro
 
 Each package contains its own architecture documentation with implementation details:
 
-- [Features Architecture](libs/features/ARCHITECTURE.md) — Host/hostee SDK, control plane, shell generation
-- [Nexus Architecture](libs/nexus/ARCHITECTURE.md) — Protocol design, handler reference, event system
-- [Network Protocol Architecture](libs/network-protocol/ARCHITECTURE.md) — Queue composition, security suite, end-to-end flow
-- [State Machine Architecture](libs/state-machine/ARCHITECTURE.md) — State patterns, transitions, reducers
+- [Features Architecture](libs/features/ARCHITECTURE.md): Host/hostee SDK, control plane, shell generation
+- [Nexus Architecture](libs/nexus/ARCHITECTURE.md): Protocol design, handler reference, event system
+- [Network Protocol Architecture](libs/network-protocol/ARCHITECTURE.md): Queue composition, security suite, end-to-end flow
+- [State Machine Architecture](libs/state-machine/ARCHITECTURE.md): State patterns, transitions, reducers
 
 Two cross-cutting documents sit beside them:
 
-- [Security Model](https://www.hyperfrontend.dev/docs/core-concepts/security) — the trust model, the
+- [Security Model](https://www.hyperfrontend.dev/docs/core-concepts/security): the trust model, the
   browser/protocol/operator split, the capability model, and the status of every control.
-- [Microfrontends from first principles](apps/docs-site/content/articles/microfrontends-from-first-principles.md)
-  — why the boundary is drawn where it is, derived from scratch. The canonical rationale for
+- [Microfrontends from first principles](apps/docs-site/content/articles/microfrontends-from-first-principles.md):
+  why the boundary is drawn where it is, derived from scratch. The canonical rationale for
   everything above.
 
 ---

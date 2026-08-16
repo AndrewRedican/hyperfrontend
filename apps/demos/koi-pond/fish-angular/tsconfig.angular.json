@@ -1,0 +1,9 @@
+// TSConfig the Angular compiler runs under inside the vite plugin.
+// It must emit — `noEmit` would have every module compile to nothing —
+// while `tsc --build` type-checking keeps using the no-emit app config.
+{
+  "extends": "./tsconfig.app.json",
+  "compilerOptions": {
+    "noEmit": false
+  }
+}

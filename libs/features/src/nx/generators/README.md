@@ -1,6 +1,6 @@
 # generators
 
-Nx generators for hyperfrontend features — `init` declares the SDK dependency in the consumer workspace, `feature` scaffolds a feature by delegating to the SDK's headless `hf init`.
+Nx generators for hyperfrontend features: `init` declares the SDK dependency in the consumer workspace, `feature` scaffolds a feature by delegating to the SDK's headless `hf init`.
 
 ```ts
 import { featureGenerator, initGenerator } from '@hyperfrontend/features/nx/generators'

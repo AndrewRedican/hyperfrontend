@@ -4,7 +4,7 @@ Property descriptor builder for non-writable, non-configurable property definiti
 
 ## Overview
 
-`lockedPropertyDescriptors()` returns a descriptor map suitable for `Object.defineProperties` that locks every property as both non-writable and non-configurable, while leaving enumeration controllable per-property. Use it when you need `Object.defineProperties`-style bulk application but want the safety profile of `locked-props` — for example, when freezing a class prototype, an exported namespace object, or the public surface of a factory result.
+`lockedPropertyDescriptors()` returns a descriptor map suitable for `Object.defineProperties` that locks every property as both non-writable and non-configurable, while leaving enumeration controllable per-property. Use it when you need `Object.defineProperties`-style bulk application but want the safety profile of `locked-props`, for example when freezing a class prototype, an exported namespace object, or the public surface of a factory result.
 
 ## Usage
 

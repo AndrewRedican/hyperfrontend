@@ -69,6 +69,7 @@
       "options": {
         "command": "npm run start"
       }
-    }
+    },
+    "audit": {}
   }
 }

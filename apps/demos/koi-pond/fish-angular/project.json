@@ -1,0 +1,66 @@
+{
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "name": "demo-koi-fish-angular",
+  "description": "Koi pond — the Angular koi, a standalone hostee feature rendering one fish inside a host-owned transparent full-viewport frame.",
+  "sourceRoot": "apps/demos/koi-pond/fish-angular/src",
+  "projectType": "application",
+  "tags": ["type:demo", "role:feature", "scope:standalone"],
+  "metadata": {
+    "deploy": {
+      "provider": "railway",
+      "service": "hyperfrontend-demo-koi-fish-angular",
+      "origin": "https://demo-koi-fish-angular-production.up.railway.app",
+      "boundary": "cross-site",
+      "kind": "static",
+      "publishDir": "dist/apps/demos/koi-pond/site/fish-angular"
+    }
+  },
+  "targets": {
+    "install": {
+      "executor": "@hyperfrontend/app:install",
+      "options": {}
+    },
+    "dev": {
+      "executor": "@hyperfrontend/app:serve",
+      "dependsOn": ["install"],
+      "options": {
+        "command": "npm run build:watch"
+      }
+    },
+    "build": {
+      "executor": "@hyperfrontend/app:build",
+      "dependsOn": ["install"],
+      "cache": false,
+      "outputs": ["{workspaceRoot}/dist/apps/demos/koi-pond/site/fish-angular"],
+      "options": {
+        "command": "npm run build"
+      }
+    },
+    "lint": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["install"],
+      "options": {
+        "command": "npm run lint",
+        "cwd": "apps/demos/koi-pond/fish-angular"
+      }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["install"],
+      "options": {
+        "command": "npm run type-check",
+        "cwd": "apps/demos/koi-pond/fish-angular"
+      }
+    },
+    "pack-shell": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["install"],
+      "outputs": ["{workspaceRoot}/dist/apps/demos/koi-pond/fish-shell/angular"],
+      "options": {
+        "command": "npx hf build --ci --allow-open --out ../../../../dist/apps/demos/koi-pond/fish-shell/angular",
+        "cwd": "apps/demos/koi-pond/fish-angular"
+      }
+    },
+    "audit": {}
+  }
+}

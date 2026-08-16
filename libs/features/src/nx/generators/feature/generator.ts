@@ -88,11 +88,11 @@ function createStagingTree(tree: Tree, scaffoldRoot: string, tally: WriteTally):
  * First ensures `@hyperfrontend/features` is declared in the workspace root
  * `package.json` (an existing declaration is left untouched), then forwards
  * options to `runInit` in headless mode with the SDK's tree seams backed by
- * the Nx tree — every scaffolding write stages into Nx's virtual tree, so
+ * the Nx tree: every scaffolding write stages into Nx's virtual tree, so
  * `nx g ... --dry-run` previews the full change set without touching the
  * disk. When the consumer workspace has `@nx/devkit` installed, staged files
- * are formatted with it before Nx flushes them. The returned callback — run
- * by Nx only after flushing real changes — installs dependencies only when
+ * are formatted with it before Nx flushes them. The returned callback (run
+ * by Nx only after flushing real changes) installs dependencies only when
  * the manifest was changed by this run.
  *
  * @param tree - The Nx virtual file-system tree every write is staged into.

@@ -8,13 +8,14 @@ import type { FeatureContract } from '@hyperfrontend/features/hostee'
  * fish appears here: the gallery does not know there are seven apps in the
  * scene, and does not need to.
  *
- * What it does need is the end of a sequence. In the expanded dialog a click
+ * What it does need is the end of a sequence. In the expanded presentation —
+ * a dialog, or an embedded overlay stretched over the host's page — a click
  * disturbs the water, the shoal scatters, and once every koi has settled back
  * into an ambient cruise the pond says so — which is the gallery's cue to
- * collapse the dialog back to its card.
+ * collapse the pond back to its card.
  */
 const contract = {
-  version: '0.1.0',
+  version: '0.2.0',
   accepted: [
     {
       type: 'set-scene',
@@ -66,11 +67,11 @@ const contract = {
     {
       type: 'close-request',
       description:
-        'The visitor activated the dialog close control inside the pond. The host owns the presentation and performs the actual close.',
+        'The visitor asked to leave the presentation from inside the pond — the dialog close control, or the Escape key while the pond holds focus. The host owns the presentation and performs the actual close.',
       schema: {
         type: 'object',
         properties: {
-          source: { type: 'string', enum: ['button'] },
+          source: { type: 'string', enum: ['button', 'escape'] },
         },
         required: ['source'],
       },

@@ -13,7 +13,7 @@ const FLEX_ALIGNMENT: Readonly<Record<ResolvedPosition['vertical'], string>> = {
  * Builds the dialog layout stylesheet: the body becomes the aligning flex
  * container placing the inner box per the agreed position.
  *
- * Geometry only — the dialog box's paint (background, border, shadow) belongs
+ * Geometry only: the dialog box's paint (background, border, shadow) belongs
  * to the feature author.
  *
  * @param position - The resolved per-axis alignments.
@@ -29,7 +29,7 @@ function buildDialogLayoutCss(position: ResolvedPosition): string {
  * transparent so the host shows through, and pins `color-scheme: normal`.
  *
  * The stylesheet is appended when the feature initializes, so it outranks the
- * page's own `body` rules at equal specificity — feature backgrounds belong on
+ * page's own `body` rules at equal specificity; feature backgrounds belong on
  * the root layout element.
  *
  * @example Resetting the body when a feature initializes

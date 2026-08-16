@@ -55,7 +55,7 @@ export default function DocsPage() {
         <CodeBlock language="bash" code="npx @hyperfrontend/features init" />
         <div className="mt-6 rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-900 dark:bg-blue-950/50">
           <p className="text-sm text-blue-800 dark:text-blue-200">
-            <strong>What happens:</strong> The CLI scaffolds the <em>hostee</em> glue module — the feature side of the boundary — into your
+            <strong>What happens:</strong> The CLI scaffolds the <em>hostee</em> glue module, the feature side of the boundary, into your
             app and wires it into the entry file, alongside a <code>feature.config.*</code> file and a contract that defines the messages
             your feature can send and receive.
           </p>
@@ -69,8 +69,8 @@ export default function DocsPage() {
         <CodeBlock language="bash" code="npx @hyperfrontend/features build --protocol v2" />
         <p className="mt-4 text-slate-600 dark:text-slate-400">
           The CLI generates the shell package, inlines the contract, bundles every dependency into it, and packs a publishable tarball with
-          typed bindings. The host installs one package and takes on no transitive deps. The security envelope is an explicit choice —{' '}
-          <code>--protocol v1</code> or <code>--protocol v2</code>, or a <code>protocol</code> entry in the feature config — and the build
+          typed bindings. The host installs one package and takes on no transitive deps. The security envelope is an explicit choice (
+          <code>--protocol v1</code> or <code>--protocol v2</code>, or a <code>protocol</code> entry in the feature config), and the build
           bakes it in as the shell&apos;s default.
         </p>
       </section>

@@ -17,15 +17,15 @@ export interface InitGeneratorSchema {
  *
  * A declaration in any dependency section satisfies the check and is left in
  * its section untouched, so repeat runs are no-ops. When the package is
- * undeclared it is added to `dependencies` — the SDK is a runtime dependency —
+ * undeclared it is added to `dependencies` (the SDK is a runtime dependency),
  * pinned to a caret range on the running plugin's own version. Passing
  * `keepExistingVersions: false` instead re-pins an existing declaration in its
  * own section. When the consumer workspace has `@nx/devkit` installed, staged
  * files are formatted with it before Nx flushes them.
  *
  * All writes go through the tree, so `--dry-run` previews the manifest change
- * without touching the disk. The returned callback — which Nx runs only after
- * flushing real changes — installs dependencies only when the manifest
+ * without touching the disk. The returned callback (which Nx runs only after
+ * flushing real changes) installs dependencies only when the manifest
  * actually changed (via the consumer's `installPackagesTask` when resolvable,
  * else the built-in installer) and then verifies rollup's native platform
  * binding, printing the exact fix when it is missing.

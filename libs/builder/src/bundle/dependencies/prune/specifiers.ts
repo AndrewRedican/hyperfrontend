@@ -20,7 +20,7 @@ const collectInto = (source: string, re: RegExp, specifiers: Set<string>): void 
  *
  * Scans ESM `from '…'` (covering both `import … from` and `export … from`),
  * CJS `require('…')`, and literal dynamic `import('…')`. Only specifiers that
- * start with `.` are returned — bare and node-builtin specifiers are never
+ * start with `.` are returned: bare and node-builtin specifiers are never
  * edges into the `_dependencies/` tree. The scan deliberately over-approximates
  * (a spurious match merely keeps a chunk alive), so it is implemented with
  * linear, backtracking-free regexes rather than a full parse.

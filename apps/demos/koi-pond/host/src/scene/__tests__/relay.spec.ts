@@ -217,6 +217,7 @@ describe('latest', () => {
       frame: { x: 120, y: 60, width: 220, height: 96 },
       app: { x: 132, y: 100, width: 180, height: 14 },
       site: { x: 132, y: 130, width: 120, height: 13 },
+      source: { x: 132, y: 146, width: 96, height: 13 },
     }
     relay.record({ ...outlineAt('lit', 100, 100), card }, NOW)
     expect(relay.latest('lit', NOW)?.card).toEqual(card)

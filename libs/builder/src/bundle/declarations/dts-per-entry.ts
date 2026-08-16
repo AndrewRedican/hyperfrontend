@@ -61,9 +61,9 @@ const buildJobs = (entries: EntryPoint[], context: BuildContext): PrePassJob[] =
  * self-containment is what lets `pruneOrphanDeclarations` delete the orphaned
  * per-source `.d.ts` afterwards without orphaning a still-referenced sibling.
  *
- * Runs whenever the build bundles any dep — npm (`bundledDeps`) **or** workspace
+ * Runs whenever the build bundles any dep: npm (`bundledDeps`) **or** workspace
  * (`workspaceBundledDeps`); a package whose deps are all `@hyperfrontend/*` still
- * needs the flatten. Entries whose tsc output is missing are skipped silently —
+ * needs the flatten. Entries whose tsc output is missing are skipped silently:
  * the bundle phase may have skipped them deliberately (e.g., empty bundles).
  *
  * @param context - Resolved build context.

@@ -35,7 +35,7 @@ export interface HfBuildArgs {
   readonly help: boolean
 }
 
-/** Injectable dependencies for `runHfBuild` — defaulted for production, overridden in tests. */
+/** Injectable dependencies for `runHfBuild`: defaulted for production, overridden in tests. */
 export interface RunHfBuildDeps {
   /** Reads and parses the JSON config file. */
   readonly readConfig?: (path: string) => BuildConfig
@@ -45,7 +45,7 @@ export interface RunHfBuildDeps {
 
 /** Inputs for a single `hf-build` invocation. */
 export interface RunHfBuildOptions extends RunHfBuildDeps {
-  /** Raw argv tail (excluding node + script) — usually `process.argv.slice(2)`. */
+  /** Raw argv tail (excluding node + script), usually `process.argv.slice(2)`. */
   readonly argv: readonly string[]
   /** Default cwd used when argv does not provide `--cwd`. */
   readonly cwd: string
@@ -63,7 +63,7 @@ const requireValue = (token: string, value: string | undefined): string => {
 /**
  * Parses the argv understood by `hf-build`. Unknown flags throw so typos surface
  * at the boundary instead of being silently ignored. No positional arguments are
- * accepted — supplying one throws.
+ * accepted: supplying one throws.
  *
  * @param argv - Argument list following the bin name (e.g. `process.argv.slice(2)`).
  * @returns Parsed arguments, with `verbose` and `help` defaulted to `false`.

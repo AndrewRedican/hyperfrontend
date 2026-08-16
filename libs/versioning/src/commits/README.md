@@ -175,9 +175,9 @@ BREAKING CHANGE: API signature changed
 
 ## See Also
 
-- [classify/](./classify/README.md) — Commit classification for changelog attribution
-- [changelog/](../changelog/README.md) — Generates entries from commits
-- [flow/](../flow/README.md) — Analyzes commits to determine version bumps
-- [semver/](../semver/README.md) — Version bumping based on commit types
-- [Main README](../../README.md) — Package overview and quick start
-- [ARCHITECTURE.md](../../ARCHITECTURE.md) — Design principles and data flow
+- [classify/](./classify/README.md): Commit classification for changelog attribution
+- [changelog/](../changelog/README.md): Generates entries from commits
+- [flow/](../flow/README.md): Analyzes commits to determine version bumps
+- [semver/](../semver/README.md): Version bumping based on commit types
+- [Main README](../../README.md): Package overview and quick start
+- [ARCHITECTURE.md](../../ARCHITECTURE.md): Design principles and data flow

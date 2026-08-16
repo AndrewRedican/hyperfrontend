@@ -152,7 +152,7 @@ const resolveCandidate = (source: string, importer: string | undefined, selfDtsP
  * Resolution outcome for the sibling-externalize plugin.
  */
 interface SiblingResolution {
-  /** Rewritten id — relative specifier targeting the sibling's directory. */
+  /** Rewritten id: relative specifier targeting the sibling's directory. */
   id: string
   /** Always `true`. */
   external: true
@@ -164,14 +164,14 @@ interface SiblingResolution {
  * relative path stripped of `/index` and `.d.ts` suffixes.
  *
  * The plugin's `resolveId` hook returns `null` for everything that does not
- * resolve into a sibling — that lets the rest of the rollup-plugin-dts chain
+ * resolve into a sibling: that lets the rest of the rollup-plugin-dts chain
  * inline third-party type imports as before.
  *
  * Self-ownership is enforced by adding the current entry into the ownership
  * pool: when the deepest-matching entry directory is the entry being rewritten
  * (and not a sibling), the resolver returns `null` so rollup keeps the path
  * internal. This matters for the package root entry whose directory prefix-
- * matches every other entry's path — without including self, root would
+ * matches every other entry's path; without including self, root would
  * spuriously claim its own subtree's files.
  *
  * @param input - Self + sibling entry descriptors.

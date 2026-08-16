@@ -15,7 +15,7 @@ const log = logger.channel('builder:bin:native:dispatch')
  * Caller-supplied options threaded through {@link dispatchInjectWorker}.
  */
 export interface DispatchInjectWorkerOptions {
-  /** Absolute path to the worker entry script. Required — see {@link resolveDefaultInjectWorkerPath}. */
+  /** Absolute path to the worker entry script. Required; see {@link resolveDefaultInjectWorkerPath}. */
   workerPath: string
   /** Optional memory monitor invoked before and after the spawned worker. */
   monitor?: MemoryMonitor

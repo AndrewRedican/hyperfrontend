@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { getLibraryArchitecture, getManifest, getSubmoduleReadme } from './docs-loader'
+import { getGuideIndex } from './guides'
 
 /** Longest description surfaced to search and social snippets before truncation. */
 const DESCRIPTION_MAX_LENGTH = 160
@@ -9,7 +10,12 @@ export const DEFAULT_OG_IMAGE = {
   url: '/opengraph-image.png',
   width: 1200,
   height: 630,
-  alt: 'HyperFrontend — compose your existing apps together securely, like Lego bricks.',
+  alt: 'HyperFrontend: compose your existing apps together securely, like Lego bricks.',
+}
+
+/** Atom feed advertisement, repeated on every page a reader might subscribe from. */
+export const ARTICLES_FEED_ALTERNATE = {
+  'application/atom+xml': [{ url: '/feed.xml', title: 'HyperFrontend Articles' }],
 }
 
 /** Default Twitter card image shared by every page that does not supply its own. */
@@ -17,7 +23,7 @@ export const DEFAULT_TWITTER_IMAGE = {
   url: '/twitter-image.png',
   width: 1200,
   height: 600,
-  alt: 'HyperFrontend — compose your existing apps together securely, like Lego bricks.',
+  alt: 'HyperFrontend: compose your existing apps together securely, like Lego bricks.',
 }
 
 /**
@@ -168,6 +174,28 @@ export function getSubmoduleMetadata(options: SubmoduleMetadataOptions): Metadat
     title,
     description,
     ...buildSocialMetadata(title, description, path),
+  }
+}
+
+/**
+ * Generate metadata for a guide page. The description is the guide's problem
+ * statement, the text a reader searching for this material would recognize.
+ *
+ * @param slug - The guide slug from the URL
+ * @returns Metadata object with title, description, keywords, canonical, and social cards
+ */
+export function getGuideMetadata(slug: string): Metadata {
+  const guide = getGuideIndex().find((entry) => entry.slug === slug)
+
+  if (!guide) {
+    return { title: 'Guide Not Found' }
+  }
+
+  return {
+    title: guide.title,
+    description: truncateDescription(guide.problem),
+    keywords: [...guide.packages, ...guide.keywords],
+    ...buildSocialMetadata(guide.title, truncateDescription(guide.problem), `/docs/guides/${slug}/`),
   }
 }
 

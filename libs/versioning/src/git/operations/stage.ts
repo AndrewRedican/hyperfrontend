@@ -169,7 +169,7 @@ export function hasUnstagedChanges(options: GitCommitOptions = {}): boolean {
  * Uses `git checkout -- <files>` to restore files from HEAD.
  * Returns true if successful, false otherwise (silent failure pattern).
  *
- * **Warning:** Destructive operation — discarded changes cannot be recovered.
+ * **Warning:** Destructive operation: discarded changes cannot be recovered.
  *
  * @param options - Configuration including optional file list
  * @returns True if discard succeeded
@@ -221,7 +221,7 @@ export function discardChanges(options: DiscardChangesOptions = {}): boolean {
  *
  * Combines `discardChanges()` + `unstage(['.'])` for complete working tree reset.
  *
- * **Warning:** Destructive operation — discarded changes cannot be recovered.
+ * **Warning:** Destructive operation: discarded changes cannot be recovered.
  *
  * @param options - Configuration for the operation
  * @returns True if both operations succeeded

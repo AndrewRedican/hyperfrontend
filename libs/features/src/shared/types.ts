@@ -105,7 +105,7 @@ export type FeaturePermission =
  * by the SDK and are not configurable: `allow-scripts` is always present (the
  * feature runtime is JavaScript, so a script-less frame can never connect), and
  * `allow-same-origin` is granted only when the feature URL resolves to a
- * different origin than the host page — a same-origin frame holding both
+ * different origin than the host page: a same-origin frame holding both
  * tokens could remove its own sandbox, so that pairing cannot be expressed.
  * A sandboxed same-origin feature therefore runs with an opaque origin (no
  * cookies or storage); the messaging protocol still connects. Every opt-in
@@ -123,7 +123,7 @@ export interface SandboxOptions {
   /**
    * Allow the feature to navigate the top-level page in response to a user
    * activation (e.g. a clicked link targeting `_top`); defaults to `false`.
-   * Unrestricted top-level navigation is deliberately not offered — it enables
+   * Unrestricted top-level navigation is deliberately not offered: it enables
    * an entire class of takeover incidents that user-activation gating avoids.
    */
   topNavigationByUserActivation?: boolean
@@ -148,12 +148,12 @@ export interface UnresponsiveInfo {
 /**
  * What the host does when a feature misses too many heartbeats while visible.
  *
- * `emit` (the default) emits an `error`; `unmount` also tears the feature down;
- * a callback takes over handling entirely with the {@link UnresponsiveInfo}.
- * The policy runs once per `suspect` episode: a recovering beat returns the
- * feature to `healthy` and re-arms it. While either page is hidden the
- * watchdog pauses instead (`unobservable`) — throttled timers make silence
- * weak evidence.
+ * `emit` (the default) emits an `error` carrying `{ reason: 'unresponsive', missedBeats, lastBeatAt, displayMode }`;
+ * `unmount` also tears the feature down after emitting the same error; a
+ * callback takes over handling entirely with the {@link UnresponsiveInfo}.
+ * The policy runs once per `suspect` episode: a recovering beat returns the feature
+ * to `healthy` and re-arms it. While either page is hidden the watchdog pauses
+ * instead (`unobservable`): throttled timers make silence weak evidence.
  */
 export type UnresponsivePolicy = 'emit' | 'unmount' | ((info: UnresponsiveInfo) => void)
 
@@ -276,7 +276,7 @@ export interface ShellOptions {
   /**
    * The feature's contract exactly as the feature authored it (`emitted` = what
    * the feature sends, `accepted` = what the feature handles). The shell
-   * derives the host-side orientation itself — hand it the feature's contract,
+   * derives the host-side orientation itself: hand it the feature's contract,
    * never a pre-swapped copy. Replaces the generic default when provided.
    */
   contract?: FeatureContract
@@ -288,7 +288,7 @@ export interface ShellOptions {
    * Fixed embedded width in pixels. When both `embedWidth` and `embedHeight`
    * are set, the embedded iframe receives exactly those dimensions instead of
    * filling its container, and the host application is responsible for placing
-   * the container somewhere the feature fits — the SDK never distorts or
+   * the container somewhere the feature fits: the SDK never distorts or
    * reinterprets fixed dimensions. Setting only one of the pair throws.
    */
   embedWidth?: number
@@ -299,7 +299,7 @@ export interface ShellOptions {
    * iframe `allow` attribute scoped to the frame's own origin. Shell builds
    * bake the feature's declared needs here; a host-supplied list
    * replaces the baked one entirely. Only the iframe modes (`embedded`,
-   * `dialog`) apply it — `popup` and `standalone` open top-level windows,
+   * `dialog`) apply it: `popup` and `standalone` open top-level windows,
    * which request these permissions from the user directly.
    */
   permissions?: readonly FeaturePermission[]
@@ -307,7 +307,7 @@ export interface ShellOptions {
    * Containment posture for the feature frame. `true` (or an opt-in object)
    * starts the frame from the browser's deny-all sandbox; the SDK always
    * returns `allow-scripts`, grants `allow-same-origin` only to cross-origin
-   * feature URLs, and denies everything else unless opted in — see
+   * feature URLs, and denies everything else unless opted in; see
    * {@link SandboxOptions} for the managed tokens and why. Host-decreed and
    * never baked by a shell build. Only meaningful for the iframe modes:
    * opening `popup` or `standalone` with a sandbox set throws, because no
@@ -335,7 +335,7 @@ export interface ShellOptions {
   /** Where the inner dialog box sits inside the pane (dialog mode only); defaults to `center`. */
   dialogPosition?: BoxPosition
   /**
-   * How the host reacts to a pointer interaction on the dialog backdrop —
+   * How the host reacts to a pointer interaction on the dialog backdrop,
    * the transparent area around the feature's dialog box; defaults to
    * `close`. See {@link BackdropBehavior}.
    */
@@ -376,7 +376,7 @@ export interface FeatureOptions {
   version?: string
   /**
    * Whether to neutralize the feature page's `html`/`body`; defaults to `true`. Zeroes margin and padding, forces
-   * `background: transparent`, and pins `color-scheme: normal` — on a standalone visit too, and injected late enough to outrank the
+   * `background: transparent`, and pins `color-scheme: normal`; on a standalone visit too, and injected late enough to outrank the
    * page's own `body` rules, so paint the feature's background on its root layout element instead.
    */
   resetBody?: boolean
@@ -466,7 +466,7 @@ export interface PopupWindowConfig {
  * Presentation agreement a feature declares in its `feature.config.*` `display`
  * key: the display modes it supports and the per-mode defaults.
  *
- * Builds bake this into the generated shell — the shell composes exactly the
+ * Builds bake this into the generated shell: the shell composes exactly the
  * declared modes (undeclared modes ship no code and are excluded from the
  * generated types) and merges the per-mode defaults under host-supplied
  * options, so the host still controls presentation within the declared set.
@@ -474,7 +474,7 @@ export interface PopupWindowConfig {
 export interface DisplayConfig {
   /**
    * Display modes the feature supports; defaults to all four. The first
-   * declared mode is the feature's default presentation — the one an `open()`
+   * declared mode is the feature's default presentation: the one an `open()`
    * call without an explicit `displayMode` uses.
    */
   modes?: DisplayMode[]
@@ -557,6 +557,8 @@ export interface DevDebugConfig {
   messageLog?: boolean
   /** Whether the security inspector panel is shown. */
   securityView?: boolean
+  /** Port the debug UI's control server listens on; defaults to 4280, and the `--port` flag overrides it. */
+  port?: number
 }
 
 /**
@@ -570,9 +572,8 @@ export interface DevConfig {
 }
 
 /**
- * Identity helper that gives `feature.config.*` files type-checked authoring.
- *
- * This is a pure inference-only function — it returns its argument unchanged.
+ * Identity helper that gives `feature.config.*` files type-checked authoring:
+ * a pure inference-only function that returns its argument unchanged.
  *
  * @param config - The feature configuration object.
  * @returns The same configuration object, narrowed to {@link FeatureConfig}.

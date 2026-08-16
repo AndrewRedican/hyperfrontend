@@ -4,7 +4,7 @@ import { conventionalPreset } from '../presets/conventional'
 import { resolveSessionConfig } from './resolve-config'
 
 /**
- * Inputs accepted by `createAuthorSession` — the caller may supply their own
+ * Inputs accepted by `createAuthorSession`: the caller may supply their own
  * step list; anything missing is resolved against the defaults used by the
  * conventional preset.
  */
@@ -31,7 +31,7 @@ export interface AuthorSession {
 /**
  * Prepares an authoring session without executing it. The returned object
  * carries a resolved `config` (defaults filled in) and the effective step
- * list — allowing bin wrappers to introspect before running.
+ * list, allowing bin wrappers to introspect before running.
  *
  * @param options - Optional overrides for steps and partial config
  * @returns Session description consumable by `runAuthorSession`

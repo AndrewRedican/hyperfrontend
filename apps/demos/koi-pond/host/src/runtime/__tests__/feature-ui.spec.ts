@@ -96,9 +96,16 @@ describe('close requests', () => {
     expect(sends).toHaveLength(2)
   })
 
-  it('sends nothing outside dialog mode', () => {
+  it('emits a close-request while embedded, naming the key that asked', () => {
     const { ui, emit, sends } = createHarness()
     emit('presentation', { mode: 'embedded' })
+    ui.requestClose('escape')
+    expect(sends).toEqual([{ type: 'close-request', data: { source: 'escape' } }])
+  })
+
+  it('sends nothing from a popup, which the visitor closes as a window', () => {
+    const { ui, emit, sends } = createHarness()
+    emit('presentation', { mode: 'popup' })
     const outcome = ui.requestClose()
     expect({ outcome, sent: sends.length }).toEqual({ outcome: false, sent: 0 })
   })
@@ -107,5 +114,16 @@ describe('close requests', () => {
     const { ui, sends } = createHarness()
     const outcome = ui.requestClose()
     expect({ outcome, sent: sends.length }).toEqual({ outcome: false, sent: 0 })
+  })
+
+  it('re-arms without a presentation change when the host acknowledges the close', () => {
+    const { ui, emit, sends } = createHarness()
+    emit('presentation', { mode: 'embedded' })
+    ui.requestClose('escape')
+    expect(ui.requestClose('escape')).toBe(false)
+    // why: The embedded overlay collapses through set-scene rather than a fresh presentation — re-arming on that acknowledgement is what lets the next expand close again.
+    ui.rearmClose()
+    expect(ui.requestClose('escape')).toBe(true)
+    expect(sends).toHaveLength(2)
   })
 })

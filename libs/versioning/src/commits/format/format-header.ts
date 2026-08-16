@@ -3,7 +3,7 @@ import type { CommitDraft } from './models/draft'
 /**
  * Builds the header line (`type(scope)!: subject`) from a draft.
  *
- * Missing fields render as empty — this is intentional so the header can be
+ * Missing fields render as empty; this is intentional so the header can be
  * displayed incrementally during authoring (e.g. before the subject has been
  * typed). Scopes are comma-joined to match the parser's multi-scope format.
  *

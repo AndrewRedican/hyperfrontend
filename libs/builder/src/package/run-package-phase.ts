@@ -20,7 +20,7 @@ const collectLicenseDeps = (ctx: BuildContext, distDeps: string[]): string[] => 
 /**
  * Runs the complete package phase: synthesizes and writes the dist
  * `package.json`, materializes any configured asset specs, and (when
- * `config.thirdPartyLicenses` is enabled — defaulting to `true` for builds
+ * `config.thirdPartyLicenses` is enabled, defaulting to `true` for builds
  * with at least one bundled dep) emits `THIRD_PARTY_LICENSES.md`.
  *
  * The phase consumes:

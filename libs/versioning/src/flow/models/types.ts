@@ -194,7 +194,7 @@ export interface ScopeFilteringConfig {
 
 /**
  * Explicit `undefined` placeholders for the infrastructure-related extensions
- * of the default config — they exist so the default object can be assigned to
+ * of the default config: they exist so the default object can be assigned to
  * a strictly-required type while still leaving infra unconfigured.
  */
 type DefaultInfrastructureFields = {

@@ -1,5 +1,4 @@
 import js from '@eslint/js'
-import pluginVitest from '@vitest/eslint-plugin'
 import { globalIgnores } from 'eslint/config'
 import pluginOxlint from 'eslint-plugin-oxlint'
 import pluginSvelte from 'eslint-plugin-svelte'
@@ -28,11 +27,6 @@ export default tseslint.config(
       // why: The Svelte parser owns the file, delegates every `<script lang="ts">` block to the TypeScript parser, and needs the project's own config to know which runes and options apply.
       parserOptions: { extraFileExtensions: ['.svelte'], parser: tseslint.parser, svelteConfig },
     },
-  },
-
-  {
-    ...pluginVitest.configs.recommended,
-    files: ['src/**/__tests__/*'],
   },
 
   ...pluginOxlint.buildFromOxlintConfigFile('.oxlintrc.json')

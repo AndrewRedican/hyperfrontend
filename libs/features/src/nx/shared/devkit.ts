@@ -15,7 +15,7 @@ export type DevkitResolver = (anchor: string) => unknown
 /**
  * The `@nx/devkit` surface the adapter consumes.
  *
- * Members are typed against the adapter's own minimal {@link Tree} shape — the
+ * Members are typed against the adapter's own minimal {@link Tree} shape: the
  * real Nx tree Nx hands to generators satisfies the extra members at runtime.
  */
 export interface DevkitApi {
@@ -64,7 +64,7 @@ function toDevkitApi(candidate: unknown): DevkitApi | null {
  * devkit copy the consumer installed (and version-matched to their `nx`) wins;
  * when that fails, a second anchor beside the running plugin module covers
  * hoisted layouts where devkit sits above the plugin instead of the root.
- * `@nx/devkit` is never a declared dependency of this package — a `null`
+ * `@nx/devkit` is never a declared dependency of this package, so a `null`
  * result is an expected outcome (pnpm isolated layouts, minimal installs) and
  * callers fall back to built-in equivalents.
  *

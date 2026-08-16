@@ -185,6 +185,23 @@ function resolveRelativePath(link: string, basePath: string): string {
 }
 
 /**
+ * Check whether a site-absolute link resolves to a static asset in public/.
+ *
+ * Root-relative links normally resolve against src/app routes, but images and
+ * other assets referenced from markdown (e.g. article hero images) are served
+ * from the public directory instead.
+ *
+ * @param link - The original link URL
+ * @returns True if the link maps to an existing file under public/
+ */
+function publicAssetExists(link: string): boolean {
+  if (!link.startsWith('/')) {
+    return false
+  }
+  return existsSync(join(DOCS_SITE_ROOT, 'public', link.split('#')[0]))
+}
+
+/**
  * Check whether a route path is served by a sibling dynamic segment.
  *
  * Next.js resolves `/articles/some-slug` through an `articles/[slug]/page.tsx`
@@ -271,7 +288,7 @@ function validateLink(link: string, filePath: string, line: number): LinkValidat
 
   const resolvedPath = resolveRelativePath(link, filePath)
 
-  if (pathExists(resolvedPath)) {
+  if (pathExists(resolvedPath) || publicAssetExists(link)) {
     return {
       file: filePath,
       line,
@@ -325,7 +342,9 @@ async function validateLinks(): Promise<ValidationSummary> {
 
   const libMdFiles = await glob('libs/**/*.md', { cwd: WORKSPACE_ROOT, absolute: true })
 
-  const allFiles = [...generatedMdFiles, ...rootMdFiles, ...libMdFiles]
+  const contentMdFiles = await glob('content/**/*.md', { cwd: DOCS_SITE_ROOT, absolute: true })
+
+  const allFiles = [...generatedMdFiles, ...rootMdFiles, ...libMdFiles, ...contentMdFiles]
 
   logger.log(`📄 Found ${allFiles.length} markdown files to validate\n`)
 

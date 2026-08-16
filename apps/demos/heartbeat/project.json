@@ -68,6 +68,7 @@
         "command": "npx hf build --ci --out ../../../dist/apps/demos/heartbeat/shell",
         "cwd": "apps/demos/heartbeat"
       }
-    }
+    },
+    "audit": {}
   }
 }

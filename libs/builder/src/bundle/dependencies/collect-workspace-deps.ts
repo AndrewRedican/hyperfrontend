@@ -4,7 +4,7 @@ import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 
 /**
  * Collects the distinct `whole-surface` workspace package names from the build
- * context — the packages whose entire import surface is hoisted into
+ * context: the packages whose entire import surface is hoisted into
  * `_dependencies/<packageName>/`.
  *
  * Supplies the `otherDeps` prefix list a job passes to the externalize plugin.
@@ -26,7 +26,7 @@ export const collectWorkspacePrefixDeps = (context: BuildContext): string[] => {
 }
 
 /**
- * Collects the distinct `sub-path` workspace specifiers from the build context —
+ * Collects the distinct `sub-path` workspace specifiers from the build context:
  * the exact `@scope/pkg/sub` imports that are hoisted individually rather than
  * across the whole package surface.
  *

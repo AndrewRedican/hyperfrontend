@@ -25,7 +25,7 @@ function readSdkManifestVersion(dir: string): string | undefined {
  *
  * Ascends from the executing module until it reaches the SDK's own
  * `package.json` (matched by package name, so unrelated manifests along the
- * way are skipped). The ascent finds the manifest wherever the package lives —
+ * way are skipped). The ascent finds the manifest wherever the package lives:
  * the built dist, an installed `node_modules` copy, or the source tree.
  *
  * @param startDir - Directory the ascent starts from; defaults to the running module's directory.

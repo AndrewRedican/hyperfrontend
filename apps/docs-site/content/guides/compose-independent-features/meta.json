@@ -1,0 +1,63 @@
+{
+  "schemaVersion": 1,
+  "type": "how-to",
+  "title": "How to compose independently shipped features on one page",
+  "problem": "I need several independently built, independently deployed apps working together on one page, coordinating with each other, without merging codebases and without one failure taking down the rest.",
+  "outcome": "N features on one page over per-feature channels, a shared contract as the common vocabulary, host-mediated coordination on a cadence, a deliberate security choice per boundary, and a page that keeps running when any single feature dies.",
+  "priority": "P0",
+  "packages": ["@hyperfrontend/features"],
+  "verification": {
+    "kind": "demo",
+    "source": "apps/demos/koi-pond/host/src/scene/koi-sessions.ts"
+  },
+  "snippetSources": [
+    "apps/demos/koi-pond/host/src/scene/pond.ts",
+    "apps/demos/koi-pond/fish-vanilla/koi-fish.contract.ts",
+    "apps/demos/koi-pond/fish-vanilla/feature.config.ts",
+    "apps/demos/koi-pond/fish-vanilla/src/feature/wire-contract.ts",
+    "apps/demos/koi-pond/host/src/hyperfrontend.feature.ts"
+  ],
+  "demo": "koi-pond",
+  "complexity": "advanced",
+  "estMinutes": 30,
+  "apis": [
+    {
+      "package": "@hyperfrontend/features",
+      "symbol": "createFeature"
+    },
+    {
+      "package": "@hyperfrontend/features",
+      "symbol": "defineConfig"
+    }
+  ],
+  "prerequisites": {
+    "guides": ["embed-a-shipped-feature"],
+    "knowledge": ["Each app you want to compose already ships as a feature, with a feature.config.ts and a generated shell package"]
+  },
+  "related": {
+    "guides": ["detect-unresponsive-feature"],
+    "reference": ["/docs/libraries/features", "/docs/libraries/features/host"],
+    "explanation": ["/docs/libraries/features/architecture", "/docs/libraries/nexus/architecture", "/docs/core-concepts/security"]
+  },
+  "keywords": [
+    "composition",
+    "micro-frontends",
+    "multiple features",
+    "many iframes",
+    "relay",
+    "fan-out",
+    "no broadcast",
+    "shared contract",
+    "open shell",
+    "protocol none",
+    "allow-open",
+    "open timeout",
+    "handshake queue",
+    "z-index",
+    "layers",
+    "isolation",
+    "failure isolation",
+    "roll call",
+    "koi pond"
+  ]
+}

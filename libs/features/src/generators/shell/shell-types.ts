@@ -234,6 +234,26 @@ export interface FeatureOpenTimeoutError {
   displayMode: FeatureDisplayMode
 }
 
+/** Error payload emitted when the feature stops answering the heartbeat watchdog. */
+export interface FeatureUnresponsiveError {
+  /** Discriminates the unresponsive error from other \`error\` payloads. */
+  reason: 'unresponsive'
+  /** Consecutive missed heartbeats that tripped the watchdog. */
+  missedBeats: number
+  /** Timestamp (ms) of the last heartbeat received, or \`null\` if none ever arrived. */
+  lastBeatAt: number | null
+  /** The display mode the unresponsive feature was using. */
+  displayMode: FeatureDisplayMode
+}
+
+/** Error payload emitted when the display mode could not produce a feature window (e.g. a blocked popup). */
+export interface FeatureOpenFailedError {
+  /** Discriminates the open-failure error from other \`error\` payloads. */
+  reason: 'open-failed'
+  /** The display mode the feature was being surfaced in. */
+  displayMode: FeatureDisplayMode
+}
+
 /** Per-request settings accepted by \`request\`. */
 export interface FeatureRequestOptions {
   /** Milliseconds to wait for the response before rejecting; defaults to 30000. */

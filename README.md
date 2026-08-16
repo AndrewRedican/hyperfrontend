@@ -42,21 +42,23 @@
 
 ---
 
-Look, nobody cares what framework you're using. [React](https://react.dev/), [Angular](https://angular.dev/), [Vue](https://vuejs.org/), that [jQuery](https://jquery.com/) thing from 2014 — whatever. You just want to ship the damn thing and go home.
+Look, nobody cares what framework you're using. [React](https://react.dev/), [Angular](https://angular.dev/), [Vue](https://vuejs.org/), that [jQuery](https://jquery.com/) thing from 2014. Whatever. You just want to ship the damn thing and go home.
 
-Hyperfrontend lets you **compose your existing apps together securely** — like Lego bricks. No rewrites. No "let's align on a shared component library" meetings. Just plug it in and _it works_.
+Hyperfrontend lets you **compose your existing apps together securely**, like Lego bricks. No rewrites. No "let's align on a shared component library" meetings. Just plug it in and _it works_.
 
-Display another app inside yours with a native look and feel — embed it seamlessly inline, throw it in a modal, pop it out in a new window, open a new tab. Your call. And you don't have to roll your own glue code to make them talk to each other.
+Display another app inside yours with a native look and feel: embed it seamlessly inline, throw it in a modal, pop it out in a new window, open a new tab. Your call. And you don't have to roll your own glue code to make them talk to each other.
 
-Need to pass sensitive stuff between apps? Transactions, [PII](https://en.wikipedia.org/wiki/Personal_data), [auth tokens](https://en.wikipedia.org/wiki/Access_token)? Opt into the **encrypted messaging protocol**. It's built to stop [man-in-the-middle](https://en.wikipedia.org/wiki/Man-in-the-middle_attack) snooping and limit [XSS](https://en.wikipedia.org/wiki/Cross-site_scripting) blast radius — not just "button clicked" events, but the stuff that actually matters.
+Need to pass sensitive stuff between apps? Transactions, [PII](https://en.wikipedia.org/wiki/Personal_data), [auth tokens](https://en.wikipedia.org/wiki/Access_token)? Opt into the **encrypted messaging protocol**. It's built to stop [man-in-the-middle](https://en.wikipedia.org/wiki/Man-in-the-middle_attack) snooping and limit [XSS](https://en.wikipedia.org/wiki/Cross-site_scripting) blast radius. Not just "button clicked" events, but the stuff that actually matters.
 
 > Want the full picture? The [Manifesto](MANIFESTO.md) digs into the _why_ behind all of this.
 
 ---
 
+<!-- TODO(asset): hero capture of the koi pond composing eight framework apps into one scene, for this README and the features README -->
+
 ## What is a Hyperfrontend Feature?
 
-A **hyperfrontend feature** is your standalone frontend app — whether it was written ten years ago or last month. It could be React, Angular, Vue, Svelte, vanilla JS... doesn't matter. It manages its own state, handles its own auth, talks to its own backend. It's _yours_.
+A **hyperfrontend feature** is your standalone frontend app, whether it was written ten years ago or last month. It could be React, Angular, Vue, Svelte, vanilla JS... doesn't matter. It manages its own state, handles its own auth, talks to its own backend. It's _yours_.
 
 The difference? Now it can be plugged into other apps (or have other apps plugged into it) without anyone having to rewrite anything.
 
@@ -218,7 +220,7 @@ Generate and bundle a self-contained shell package that any host can install:
 npx @hyperfrontend/features build --protocol v2
 ```
 
-The CLI generates the shell package, inlines the contract, bundles every dependency into it, and packs a publishable tarball with typed bindings — the host installs one package and takes on no transitive dependencies. The security envelope is an explicit choice: pass `--protocol v1` or `--protocol v2` (or declare `protocol` in the feature config) and the build bakes it in as the shell's default.
+The CLI generates the shell package, inlines the contract, bundles every dependency into it, and packs a publishable tarball with typed bindings. The host installs one package and takes on no transitive dependencies. The security envelope is an explicit choice: pass `--protocol v1` or `--protocol v2` (or declare `protocol` in the feature config) and the build bakes it in as the shell's default.
 
 ### Testing Your Feature
 
@@ -234,17 +236,18 @@ This starts one static server per app plus an in-browser debug UI for inspecting
 
 ## Live Demos
 
-Browse the interactive gallery at [hyperfrontend.dev/demos](https://www.hyperfrontend.dev/demos/) — each link below opens the carousel directly on that demo.
+Browse the interactive gallery at [hyperfrontend.dev/demos](https://www.hyperfrontend.dev/demos/). Each link below opens the carousel directly on that demo.
 
-| Demo                                                          | Description                                                                                     |
-| ------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
-| [Clock](https://www.hyperfrontend.dev/demos/#clock)           | A Vue 3 timepiece in a React host across a cross-site boundary — every flip is contract traffic |
-| [Chess](https://www.hyperfrontend.dev/demos/#chess)           | Two boards, one game — competing features negotiating shared state through the host             |
-| [Events](https://www.hyperfrontend.dev/demos/#events)         | A host orchestrating a swarm of event producers and consumers across origins                    |
-| [File Share](https://www.hyperfrontend.dev/demos/#file-share) | Moving real payloads across the boundary — chunking, progress, and back-pressure                |
-| [Heartbeat](https://www.hyperfrontend.dev/demos/#heartbeat)   | Liveness, latency, and what a host should do when a feature stops answering                     |
-| [Koi Pond](https://www.hyperfrontend.dev/demos/#koi-pond)     | Seven koi, seven frameworks, seven separate apps — composited into one continuous scene         |
-| [Views](https://www.hyperfrontend.dev/demos/#views)           | One feature, four display modes — embedded, dialog, popup, and standalone                       |
+| Demo                                                        | Description                                                                                    |
+| ----------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| [Clock](https://www.hyperfrontend.dev/demos/#clock)         | A Vue 3 timepiece in a React host across a cross-site boundary: every flip is contract traffic |
+| [Heartbeat](https://www.hyperfrontend.dev/demos/#heartbeat) | Liveness, latency, and what a host should do when a feature stops answering                    |
+| [Koi Pond](https://www.hyperfrontend.dev/demos/#koi-pond)   | Eight koi, eight frameworks, eight separate apps: composited into one continuous scene         |
+
+In planning, listed in the gallery but not yet running: Chess (two boards negotiating shared
+state through the host), Events (a swarm of producers and consumers across origins), File Share
+(chunking, progress, and back-pressure across the boundary), and Views (one feature in embedded,
+dialog, popup, and standalone modes).
 
 ## Main Packages
 
@@ -256,40 +259,41 @@ Browse the interactive gallery at [hyperfrontend.dev/demos](https://www.hyperfro
 
 ## Internal Packages
 
-| Package                                                                                                        | Description                                                                                                                                                                   |
-| -------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [cryptography](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/cryptography)                     | Cryptography utilities for browser and Node.js environments · [📖 docs](https://www.hyperfrontend.dev/docs/libraries/cryptography/)                                           |
-| [data-utils](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/utils/data)                         | Data manipulation and transformation utilities · [📖 docs](https://www.hyperfrontend.dev/docs/libraries/utils/data/)                                                          |
-| [function-utils](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/utils/function)                 | Function composition and manipulation utilities · [📖 docs](https://www.hyperfrontend.dev/docs/libraries/utils/function/)                                                     |
-| [immutable-api-utils](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/utils/immutable-api)       | Immutable API utilities for functional programming · [📖 docs](https://www.hyperfrontend.dev/docs/libraries/utils/immutable-api/)                                             |
-| [json-utils](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/utils/json)                         | Zero-dependency JSON Schema Draft v4 validation and schema generation · [📖 docs](https://www.hyperfrontend.dev/docs/libraries/utils/json/)                                   |
-| [list-utils](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/utils/list)                         | List and array manipulation utilities · [📖 docs](https://www.hyperfrontend.dev/docs/libraries/utils/list/)                                                                   |
-| [logging](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/logging)                               | Structured logging utilities for applications · [📖 docs](https://www.hyperfrontend.dev/docs/libraries/logging/)                                                              |
-| [network-protocol](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/network-protocol)             | Network protocol implementation with channels, routing, and security · [📖 docs](https://www.hyperfrontend.dev/docs/libraries/network-protocol/)                              |
-| [project-scope](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/project-scope)                   | Project analysis, technology stack detection, and transactional virtual file system · [📖 docs](https://www.hyperfrontend.dev/docs/libraries/project-scope/)                  |
-| [questions](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/questions)                           | Terminal prompting library with composable, functional API · [📖 docs](https://www.hyperfrontend.dev/docs/libraries/questions/)                                               |
-| [random-generator-utils](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/utils/random-generator) | Random number and data generation utilities · [📖 docs](https://www.hyperfrontend.dev/docs/libraries/utils/random-generator/)                                                 |
-| [state-machine](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/state-machine)                   | State machine implementation with lifecycle management, actions, and reducers · [📖 docs](https://www.hyperfrontend.dev/docs/libraries/state-machine/)                        |
-| [string-utils](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/utils/string)                     | String manipulation utilities for browser and Node.js environments · [📖 docs](https://www.hyperfrontend.dev/docs/libraries/utils/string/)                                    |
-| [time-utils](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/utils/time)                         | Time and date manipulation utilities · [📖 docs](https://www.hyperfrontend.dev/docs/libraries/utils/time/)                                                                    |
-| [ui-utils](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/utils/ui)                             | UI utilities for elements, events, styling, and mobile interactions · [📖 docs](https://www.hyperfrontend.dev/docs/libraries/utils/ui/)                                       |
-| [versioning](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/versioning)                         | One-stop commit lifecycle — `cz` author bin, `cl` validator bin, changelog parsing, semver release flow · [📖 docs](https://www.hyperfrontend.dev/docs/libraries/versioning/) |
-| [web-worker](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/web-worker)                         | Web Worker utilities and abstractions · [📖 docs](https://www.hyperfrontend.dev/docs/libraries/web-worker/)                                                                   |
+| Package                                                                                                        | Description                                                                                                                                                                  |
+| -------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [cryptography](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/cryptography)                     | Cryptography utilities for browser and Node.js environments · [📖 docs](https://www.hyperfrontend.dev/docs/libraries/cryptography/)                                          |
+| [data-utils](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/utils/data)                         | Data manipulation and transformation utilities · [📖 docs](https://www.hyperfrontend.dev/docs/libraries/utils/data/)                                                         |
+| [function-utils](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/utils/function)                 | Function composition and manipulation utilities · [📖 docs](https://www.hyperfrontend.dev/docs/libraries/utils/function/)                                                    |
+| [immutable-api-utils](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/utils/immutable-api)       | Immutable API utilities for functional programming · [📖 docs](https://www.hyperfrontend.dev/docs/libraries/utils/immutable-api/)                                            |
+| [json-utils](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/utils/json)                         | Zero-dependency JSON Schema Draft v4 validation and schema generation · [📖 docs](https://www.hyperfrontend.dev/docs/libraries/utils/json/)                                  |
+| [list-utils](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/utils/list)                         | List and array manipulation utilities · [📖 docs](https://www.hyperfrontend.dev/docs/libraries/utils/list/)                                                                  |
+| [logging](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/logging)                               | Structured logging utilities for applications · [📖 docs](https://www.hyperfrontend.dev/docs/libraries/logging/)                                                             |
+| [network-protocol](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/network-protocol)             | Network protocol implementation with channels, routing, and security · [📖 docs](https://www.hyperfrontend.dev/docs/libraries/network-protocol/)                             |
+| [project-scope](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/project-scope)                   | Project analysis, technology stack detection, and transactional virtual file system · [📖 docs](https://www.hyperfrontend.dev/docs/libraries/project-scope/)                 |
+| [questions](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/questions)                           | Terminal prompting library with composable, functional API · [📖 docs](https://www.hyperfrontend.dev/docs/libraries/questions/)                                              |
+| [random-generator-utils](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/utils/random-generator) | Random number and data generation utilities · [📖 docs](https://www.hyperfrontend.dev/docs/libraries/utils/random-generator/)                                                |
+| [state-machine](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/state-machine)                   | State machine implementation with lifecycle management, actions, and reducers · [📖 docs](https://www.hyperfrontend.dev/docs/libraries/state-machine/)                       |
+| [string-utils](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/utils/string)                     | String manipulation utilities for browser and Node.js environments · [📖 docs](https://www.hyperfrontend.dev/docs/libraries/utils/string/)                                   |
+| [time-utils](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/utils/time)                         | Time and date manipulation utilities · [📖 docs](https://www.hyperfrontend.dev/docs/libraries/utils/time/)                                                                   |
+| [ui-utils](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/utils/ui)                             | UI utilities for elements, events, styling, and mobile interactions · [📖 docs](https://www.hyperfrontend.dev/docs/libraries/utils/ui/)                                      |
+| [versioning](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/versioning)                         | One-stop commit lifecycle: `cz` author bin, `cl` validator bin, changelog parsing, semver release flow · [📖 docs](https://www.hyperfrontend.dev/docs/libraries/versioning/) |
+| [web-worker](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/web-worker)                         | Web Worker utilities and abstractions · [📖 docs](https://www.hyperfrontend.dev/docs/libraries/web-worker/)                                                                  |
 
 ## Documentation
 
-A comprehensive documentation site is under active development at [hyperfrontend.dev](https://www.hyperfrontend.dev).
+The documentation site is live at [hyperfrontend.dev](https://www.hyperfrontend.dev), and it keeps growing.
 
-**What to expect:**
+**What's there now:**
 
-- **Complete API Reference** — Auto-generated documentation for all libraries with TypeScript types, parameters, and examples
-- **Versioned Documentation** — Match documentation to your installed package version
-- **Fuzzy Search** — Find what you need instantly with Algolia-powered search
-- **Interactive Code Examples** — Syntax-highlighted, copyable code snippets
-- **Architecture Guides** — Deep dives into how the libraries work together
-- **Getting Started Tutorials** — Step-by-step guides for common use cases
+- **Complete API reference**: generated from the source of every library, with TypeScript types, parameters, and examples
+- **Architecture guides**: how the libraries compose, and why the seams sit where they do
+- **Guides**: [task-focused tutorials and how-to recipes](https://www.hyperfrontend.dev/docs/guides/), each one verified against code that really runs
+- **Demos gallery**: [every demo listed above](https://www.hyperfrontend.dev/demos/), live and interactive
+- **Articles**: longer pieces on the ideas behind the project, with an [Atom feed](https://www.hyperfrontend.dev/feed.xml) if you'd rather subscribe
+- **Site-wide search**: deterministic, local to the site, no third-party service. Press Ctrl/Cmd+K
+- **Interactive code examples**: syntax-highlighted, copyable snippets
 
-**Current documentation:**
+**Also in this repo:**
 
 - Each library has a detailed README with installation, usage, and architecture information
 - See the [Main Packages](#main-packages) and [Internal Packages](#internal-packages) tables above for links
@@ -359,7 +363,7 @@ This project follows the [all-contributors](https://allcontributors.org) specifi
 
 ## Acknowledgments
 
-This project wouldn't exist without the support of many people — family, friends, mentors, and the broader open source community. Read the full [Acknowledgments](ACKNOWLEDGMENTS.md) to learn about the humans behind the code.
+This project wouldn't exist without the support of many people: family, friends, mentors, and the broader open source community. Read the full [Acknowledgments](ACKNOWLEDGMENTS.md) to learn about the humans behind the code.
 
 ## License
 

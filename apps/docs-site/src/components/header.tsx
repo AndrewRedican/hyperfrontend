@@ -1,4 +1,5 @@
 import { TrackedLink } from '@/components/analytics/tracked-link'
+import { SearchControl } from '@/components/search/search-dialog'
 import Link from 'next/link'
 import { MobileMenu } from './mobile-menu'
 import { ThemeToggle } from './theme-toggle'
@@ -22,7 +23,8 @@ export function Header() {
           <NavLink href="/architecture">Architecture</NavLink>
         </nav>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3 sm:gap-4">
+          <SearchControl />
           <div className="hidden md:block">
             <ThemeToggle />
           </div>

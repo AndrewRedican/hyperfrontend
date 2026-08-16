@@ -62,7 +62,7 @@ All timing abstractions maintain internal state privately while exposing frozen 
 
 ### 1. Pause/Resume Capabilities Native APIs Lack
 
-JavaScript's `setTimeout` and `setInterval` cannot be paused—once started, they either complete or get cancelled. This creates problems for features like user-initiated pauses in games, animations during background tabs, or request throttling. `createTimer()` tracks elapsed time internally, enabling pause/resume without restarting from the beginning or losing progress.
+JavaScript's `setTimeout` and `setInterval` cannot be paused: once started, they either complete or get cancelled. This creates problems for features like user-initiated pauses in games, animations during background tabs, or request throttling. `createTimer()` tracks elapsed time internally, enabling pause/resume without restarting from the beginning or losing progress.
 
 **Example:** A countdown timer in a game needs to pause when the user switches tabs. With `setTimeout`, you'd need to calculate remaining time manually and create a new timeout. With `createTimer`, just call `timer.pause()`.
 
@@ -247,7 +247,7 @@ cleanup()
 
 ### Dependencies
 
-None — zero external dependencies.
+None: zero external dependencies.
 
 ## Part of hyperfrontend
 

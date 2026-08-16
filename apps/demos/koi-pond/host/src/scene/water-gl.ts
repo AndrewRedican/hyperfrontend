@@ -8,10 +8,15 @@
  * into a lit crest with a soft inner echo. The buffer renders below device
  * resolution on purpose — water is soft, and the upscale reads as depth.
  *
+ * A second, far slower field — the veil — rides over the caustics: the soft
+ * sheen of the surface itself, slightly brighter and much broader, so the fish
+ * visibly swim under a skin of water. It lives only here; the 2D fallback
+ * stays at its minimum per-frame cost and simply goes without.
+ *
  * This is the host's only WebGL context, and it is optional twice over: the
  * painter returns `null` where a context cannot be created, and the caller
- * falls back to the 2D painter next door. The koi never share it — seven fish
- * contexts belong to the seven fish apps, and that stays their budget.
+ * falls back to the 2D painter next door. The koi never share it — the fish
+ * contexts belong to the fish apps themselves, and that stays their budget.
  */
 import type { SurfaceFrame, SurfacePainter } from './surface-canvas'
 import { resolveRipple } from './ripples'
@@ -51,6 +56,13 @@ uniform vec4 uRipples[${MAX_SHADER_RIPPLES}];
 
 varying vec2 vUv;
 
+// how: One broad, slow-rolling field, read far softer than the caustics — the sheen of the surface itself rather than the light it refracts. Its crests drift at a fraction of the caustic pace, which is what reads as a calm skin of water over the fish.
+float veil(vec2 p, float t) {
+  vec2 q = p * 0.0034;
+  float roll = sin(q.x * 1.9 + t * 0.055) + sin(q.y * 1.4 - t * 0.043) + sin((q.x - q.y) * 1.15 + t * 0.07);
+  return smoothstep(0.35, 1.0, 0.5 + roll / 6.0);
+}
+
 // how: Two warped sine fields summed; the light lives where the sum crosses zero, which is what draws the filament web a real surface refracts onto everything under it.
 float caustic(vec2 p, float t) {
   vec2 q = p;
@@ -67,6 +79,8 @@ void main() {
 
   float light = caustic(pond, t) * 0.62 + caustic(pond * 2.1 + 57.0, t * 1.35) * 0.38;
   float alpha = light * 0.085 * uDamp;
+  // why: The veil stays a whisper — bright enough to say the fish swim under a surface, never enough to obscure them or the chrome above the water.
+  float sheen = veil(pond, t) * 0.045 * uDamp;
 
   float crestWidth = max(1.5, uFish * 0.045);
   for (int i = 0; i < ${MAX_SHADER_RIPPLES}; i += 1) {
@@ -90,10 +104,12 @@ void main() {
     vec2 corner = fromCentre - (half_ - vec2(18.0));
     float outside = length(max(corner, 0.0)) + min(max(corner.x, corner.y), 0.0);
     float edge = clamp(1.0 + outside / 28.0, 0.0, 1.0);
-    alpha *= mix(1.0, 0.5 + 0.5 * (1.0 - edge), uFade);
+    float shade = mix(1.0, 0.5 + 0.5 * (1.0 - edge), uFade);
+    alpha *= shade;
+    sheen *= shade;
   }
 
-  gl_FragColor = vec4(vec3(0.588, 0.886, 0.824) * alpha, alpha);
+  gl_FragColor = vec4(vec3(0.588, 0.886, 0.824) * alpha + vec3(0.82, 0.95, 0.93) * sheen, alpha + sheen);
 }
 `
 

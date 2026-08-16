@@ -43,32 +43,33 @@ A terminal prompting library built on functional programming principles. Create 
 
 ### Key Features
 
-- **Pure Functions** — Every prompt is a pure function returning `Promise<PromptOutcome<T>>`, making results predictable and easily testable
-- **Composable API** — Build complex interactive flows by combining simple prompt functions
-- **Type-Safe** — Full TypeScript support with discriminated unions for prompt outcomes
-- **Zero External Dependencies** — Uses only Node.js built-ins and `@hyperfrontend` utilities
-- **Searchable Multiselect** — Type-to-filter functionality for large option lists
-- **Clipboard Paste** — Bracketed paste mode on TTYs (with a multi-character-chunk fallback elsewhere); pasted text is sanitized and never auto-submits
-- **Resize-Aware Rendering** — Prompts hard-wrap to the terminal width and repaint on resize, preserving value, cursor, selection, and validation state
+- **Pure Functions**: Every prompt is a pure function returning `Promise<PromptOutcome<T>>`, making results predictable and easily testable
+- **Composable API**: Build complex interactive flows by combining simple prompt functions
+- **Type-Safe**: Full TypeScript support with discriminated unions for prompt outcomes
+- **Zero External Dependencies**: Uses only Node.js built-ins and `@hyperfrontend` utilities
+- **Searchable Multiselect**: Type-to-filter functionality for large option lists
+- **Clipboard Paste**: Bracketed paste mode on TTYs (with a multi-character-chunk fallback elsewhere); pasted text is sanitized and never auto-submits
+- **Resize-Aware Rendering**: Prompts hard-wrap to the terminal width and repaint on resize, preserving value, cursor, selection, and validation state
+<!-- TODO(asset): terminal capture of a searchable multiselect narrowing options as the user types -->
 
 ### Architecture Highlights
 
 Each prompt follows a functional state machine pattern:
 
-- **Immutable State** — All prompt state is frozen; updates create new state objects
-- **Explicit Outcomes** — Prompts return either `{ result: 'submitted', value: T }` or `{ result: 'cancelled', value: undefined }`
-- **Terminal Abstraction** — Low-level I/O is encapsulated in a `Terminal` interface for testability
-- **Token Input Stream** — Raw input is tokenized into keys, pastes, and resize notifications by a persistent listener, with raw mode held for the whole prompt session and restored on close
-- **Frame Renderer** — A width-aware screen helper erases and repaints exact frames; on resize it recomputes the previous frame's height at the new width (assumes a reflowing terminal; display width is code-point based, east-asian double width out of scope)
+- **Immutable State**: All prompt state is frozen; updates create new state objects
+- **Explicit Outcomes**: Prompts return either `{ result: 'submitted', value: T }` or `{ result: 'cancelled', value: undefined }`
+- **Terminal Abstraction**: Low-level I/O is encapsulated in a `Terminal` interface for testability
+- **Token Input Stream**: Raw input is tokenized into keys, pastes, and resize notifications by a persistent listener, with raw mode held for the whole prompt session and restored on close
+- **Frame Renderer**: A width-aware screen helper erases and repaints exact frames; on resize it recomputes the previous frame's height at the new width (assumes a reflowing terminal; display width is code-point based, east-asian double width out of scope)
 
 ## Why Use @hyperfrontend/questions?
 
 When building CLI tools, you need interactive prompts that are:
 
-1. **Predictable** — Know exactly what a prompt returns, always
-2. **Composable** — Chain prompts without callback hell
-3. **Cancellable** — Handle Ctrl+C gracefully with structured cancellation
-4. **Lightweight** — No large dependency trees for simple prompts
+1. **Predictable**: Know exactly what a prompt returns, always
+2. **Composable**: Chain prompts without callback hell
+3. **Cancellable**: Handle Ctrl+C gracefully with structured cancellation
+4. **Lightweight**: No large dependency trees for simple prompts
 
 This library provides all four while staying true to functional programming principles.
 

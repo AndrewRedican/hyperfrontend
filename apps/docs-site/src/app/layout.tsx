@@ -21,7 +21,7 @@ export const metadata: Metadata = {
   authors: [{ name: 'Andrew Redican' }],
   openGraph: {
     title: 'HyperFrontend',
-    description: 'Compose your existing apps together securely — like Lego bricks.',
+    description: 'Compose your existing apps together securely, like Lego bricks.',
     url: SITE_URL,
     siteName: 'HyperFrontend',
     type: 'website',
@@ -31,12 +31,15 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'HyperFrontend',
-    description: 'Compose your existing apps together securely — like Lego bricks.',
+    description: 'Compose your existing apps together securely, like Lego bricks.',
     creator: '@andrew_redican',
     images: [DEFAULT_TWITTER_IMAGE],
   },
   alternates: {
     canonical: './',
+    types: {
+      'application/atom+xml': [{ url: '/feed.xml', title: 'HyperFrontend Articles' }],
+    },
   },
   verification: {
     google: process.env['NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION'],

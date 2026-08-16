@@ -8,12 +8,12 @@ const MISS_THRESHOLD = 3
 /**
  * Liveness state of the connected feature, as judged by the watchdog.
  *
- * - `healthy` — beats are arriving within the expected budget.
- * - `unobservable` — the host page or the feature page is hidden, so browser
+ * - `healthy`: beats are arriving within the expected budget.
+ * - `unobservable`: the host page or the feature page is hidden, so browser
  *   timer throttling makes silence weak evidence; the watchdog pauses.
- * - `suspect` — the pages are visible and the miss budget is exhausted; the
+ * - `suspect`: the pages are visible and the miss budget is exhausted; the
  *   feature is probably unhealthy.
- * - `gone` — the session is closed or destroyed (or not yet open).
+ * - `gone`: the session is closed or destroyed (or not yet open).
  */
 export type HeartbeatState = 'healthy' | 'unobservable' | 'suspect' | 'gone'
 

@@ -13,7 +13,7 @@ import { baseName } from './attribute-modules'
 export interface CrossRef {
   /** Local identifier as written in this module's code (may carry a `$N` suffix). */
   ref: string
-  /** The referenced symbol's base name — the name the target chunk exports. */
+  /** The referenced symbol's base name: the name the target chunk exports. */
   base: string
   /** Owning module key of the referenced symbol. */
   moduleKey: ModuleKey
@@ -38,7 +38,7 @@ export interface ModuleResolution {
   crossModule: CrossRef[]
   /** References into dependency imports the entry carries. */
   depImports: DepRef[]
-  /** References that name an inlined, unattributable top-level entry binding — a hard blocker. */
+  /** References that name an inlined, unattributable top-level entry binding: a hard blocker. */
   unresolved: string[]
 }
 

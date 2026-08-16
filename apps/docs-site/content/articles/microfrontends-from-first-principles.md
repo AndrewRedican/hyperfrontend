@@ -5,6 +5,9 @@ date: '2026-07-22'
 author: 'Andrew Redican'
 readingTime: '39 min read'
 heroImage: '/articles/microfrontends-from-first-principles/hero.webp'
+category: 'first-principles'
+tags: 'microfrontends, iframes, security, contracts, architecture'
+packages: '@hyperfrontend/features, @hyperfrontend/nexus'
 mediumUrl: 'https://medium.com/@andrew.redican.mejia/microfrontends-from-first-principles-178aafe02ce5'
 hackernoonUrl: 'https://hackernoon.com/the-real-cost-of-microfrontends'
 ---
@@ -1275,9 +1278,9 @@ Start with the model, which states the same threat boundary this article assumes
 
 Then the implementations, from the two libraries that carry this article's subject down to the primitives beneath them:
 
-- [Features](/docs/libraries/features/architecture) — the host and hostee SDKs: handshake, presentation, capability, control plane
-- [Nexus](/docs/libraries/nexus/architecture) — the session protocol: origin filtering, security policy, contract validation, transport security
-- [Network Protocol](/docs/libraries/network-protocol) — the envelope the transport can carry
-- [Cryptography](/docs/libraries/cryptography) — the primitives beneath the envelope
-- [Immutable-Api](/docs/libraries/utils/immutable-api) — locked API surfaces and early-captured built-in copies
-- [Architecture Overview](/architecture) — how the layers compose
+- [Features](/docs/libraries/features/architecture): the host and hostee SDKs (handshake, presentation, capability, control plane)
+- [Nexus](/docs/libraries/nexus/architecture): the session protocol (origin filtering, security policy, contract validation, transport security)
+- [Network Protocol](/docs/libraries/network-protocol): the envelope the transport can carry
+- [Cryptography](/docs/libraries/cryptography): the primitives beneath the envelope
+- [Immutable-Api](/docs/libraries/utils/immutable-api): locked API surfaces and early-captured built-in copies
+- [Architecture Overview](/architecture): how the layers compose

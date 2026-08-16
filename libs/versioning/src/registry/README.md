@@ -133,8 +133,8 @@ Responses are cached in memory to reduce registry load:
 
 ## See Also
 
-- [semver/](../semver/README.md) — Version parsing for registry queries
-- [flow/](../flow/README.md) — Fetches registry versions in workflows
-- [workspace/](../workspace/README.md) — Package discovery and metadata
-- [Main README](../../README.md) — Package overview and quick start
-- [ARCHITECTURE.md](../../ARCHITECTURE.md) — Design principles and data flow
+- [semver/](../semver/README.md): Version parsing for registry queries
+- [flow/](../flow/README.md): Fetches registry versions in workflows
+- [workspace/](../workspace/README.md): Package discovery and metadata
+- [Main README](../../README.md): Package overview and quick start
+- [ARCHITECTURE.md](../../ARCHITECTURE.md): Design principles and data flow

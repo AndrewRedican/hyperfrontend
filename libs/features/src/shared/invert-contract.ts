@@ -18,8 +18,8 @@ function copyActions(actions: ActionDescription[]): ActionDescription[] {
  *
  * A feature contract is written from the feature's point of view: `emitted` is
  * what the feature sends, `accepted` is what the feature handles. The host
- * channel needs the mirror image — it sends what the feature accepts and
- * accepts what the feature emits — so the two lists are swapped. The contract
+ * channel needs the mirror image: it sends what the feature accepts and
+ * accepts what the feature emits, so the two lists are swapped. The contract
  * `version` is direction-free and carries through unchanged, so the host
  * announces the contract cut baked into its shell.
  *

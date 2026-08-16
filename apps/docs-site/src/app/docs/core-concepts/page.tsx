@@ -23,8 +23,8 @@ export default function CoreConceptsPage() {
       <section className="mt-12">
         <H2 className="text-2xl font-bold text-slate-900 dark:text-white">Vocabulary</H2>
         <p className="mt-3 text-slate-600 dark:text-slate-400">
-          Four words carry most of the weight in these docs. They name roles, not packages — one application can be a host in one place and
-          a hostee in another.
+          Four words carry most of the weight in these docs. They name roles, not packages: one application can be a host in one place and a
+          hostee in another.
         </p>
         <dl className="mt-4 space-y-3 text-slate-600 dark:text-slate-400">
           <div>
@@ -37,7 +37,7 @@ export default function CoreConceptsPage() {
           <div>
             <dt className="font-semibold text-slate-900 dark:text-white">Hostee</dt>
             <dd className="mt-1">
-              The application loaded inside the host. Not a dictionary word — the suffix does the same job it does in <em>employee</em> or{' '}
+              The application loaded inside the host. Not a dictionary word. The suffix does the same job it does in <em>employee</em> or{' '}
               <em>addressee</em>: a hostee is the one hosted.
             </dd>
           </div>
@@ -86,7 +86,7 @@ export default function CoreConceptsPage() {
         <p className="mt-3 text-slate-600 dark:text-slate-400">
           A <strong className="text-slate-900 dark:text-white">host</strong> is the parent application that loads and orchestrates features.
           The host manages feature lifecycle, routes messages, and provides shared context like authentication. It embeds a feature by
-          installing that feature&apos;s shell — the host writes no protocol code of its own.
+          installing that feature&apos;s shell; the host writes no protocol code of its own.
         </p>
         <ul className="mt-4 space-y-2 text-slate-600 dark:text-slate-400">
           <li className="flex items-start gap-2">

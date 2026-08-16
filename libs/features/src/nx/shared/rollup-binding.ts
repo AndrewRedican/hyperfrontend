@@ -46,7 +46,7 @@ function requireResolveBinding(packageName: string, workspaceRoot: string): stri
 /**
  * Warn on stderr when rollup's native binding for this platform is missing.
  *
- * Advisory only — never throws and writes nothing when the check cannot run or
+ * Advisory only: never throws and writes nothing when the check cannot run or
  * passes. Candidates are the plugin manifest's `optionalDependencies` whose
  * names carry the running `platform-arch` pair; when at least one resolves
  * from the consumer workspace the build can proceed and the check stays

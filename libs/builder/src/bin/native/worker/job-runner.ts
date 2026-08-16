@@ -26,7 +26,7 @@ const safeStatSize = (filePath: string): number => {
  * Call this to drive the worker logic without spawning a new Node process. The
  * inject normally runs in a forked child because `postject.inject` loads the
  * entire ~121 MB host binary into a Node `Buffer` and rewrites it with the
- * embedded blob — a single ~138 MB allocation that needs to be reclaimed on
+ * embedded blob: a single ~138 MB allocation that needs to be reclaimed on
  * process exit rather than retained in the parent's RSS.
  *
  * @param job - Descriptor describing the inject invocation.

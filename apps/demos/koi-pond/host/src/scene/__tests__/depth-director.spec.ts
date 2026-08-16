@@ -12,7 +12,8 @@ describe('opening the shoal', () => {
   it('spreads the koi across the whole water column', () => {
     const director = createDepthDirector(OPEN_AT)
     const levels = KOI_FRAMEWORKS.map((framework) => director.settledLevel(framework))
-    expect(new Set(levels).size).toBe(KOI_FRAMEWORKS.length)
+    // why: With more koi than levels every level is taken and the overflow doubles up; distinctness can only ever reach the column's own depth count.
+    expect(new Set(levels).size).toBe(Math.min(KOI_FRAMEWORKS.length, SURFACE_DEPTH + 1))
   })
 
   it('puts one koi on the pond floor', () => {

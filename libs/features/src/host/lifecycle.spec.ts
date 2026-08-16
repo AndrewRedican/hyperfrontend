@@ -244,12 +244,12 @@ describe('createShellHandle', () => {
     expect(handler).toHaveBeenCalledWith({ time: 1 })
   })
 
-  it('emits error when the mounted window is blocked', () => {
+  it('emits a structured open-failed error when the mounted window is blocked', () => {
     const ctx = setup({ target: null })
     const handler = jest.fn()
     ctx.handle.on('error', handler)
     ctx.handle.open()
-    expect(handler).toHaveBeenCalledWith(expect.any(Error))
+    expect(handler).toHaveBeenCalledWith({ reason: 'open-failed', displayMode: 'embedded' })
   })
 
   it('does not add a channel when the mounted window is blocked', () => {
@@ -634,13 +634,22 @@ describe('createShellHandle', () => {
     expect(ctx.monitor.stop).toHaveBeenCalledTimes(1)
   })
 
-  it('emits error when the feature becomes unresponsive by default', () => {
+  it('emits a structured unresponsive error when the feature stops beating by default', () => {
     const ctx = setup()
     const handler = jest.fn()
     ctx.handle.on('error', handler)
     ctx.handle.open()
     ctx.triggerUnresponsive(3, null)
-    expect(handler).toHaveBeenCalledWith(expect.any(Error))
+    expect(handler).toHaveBeenCalledWith({ reason: 'unresponsive', missedBeats: 3, lastBeatAt: null, displayMode: 'embedded' })
+  })
+
+  it('carries the last beat timestamp and display mode in the unresponsive error', () => {
+    const ctx = setup()
+    const handler = jest.fn()
+    ctx.handle.on('error', handler)
+    ctx.handle.open({ displayMode: 'dialog' })
+    ctx.triggerUnresponsive(2, 123)
+    expect(handler).toHaveBeenCalledWith(expect.objectContaining({ lastBeatAt: 123, displayMode: 'dialog' }))
   })
 
   it('tears the feature down when onUnresponsive is unmount', () => {

@@ -204,7 +204,7 @@ export function createKoiRenderer(
       if (handles === null || handles.card.hidden) {
         return null
       }
-      return { frame: rectOf(handles.card), app: rectOf(handles.app), site: rectOf(handles.site) }
+      return { frame: rectOf(handles.card), app: rectOf(handles.app), site: rectOf(handles.site), source: rectOf(handles.source) }
     },
 
     dispose() {

@@ -79,7 +79,7 @@ String manipulation with regular expressions can expose applications to ReDoS (R
 
 ### 5. Optimal Tree-Shaking Through Modular Exports
 
-By exposing separate `/browser` and `/node` entry points rather than auto-detecting environments at runtime, the library enables bundlers to eliminate unused code automatically. Frontend builds only include browser implementations, and backend builds only include Node.js implementations—no dead code, no runtime checks.
+By exposing separate `/browser` and `/node` entry points rather than auto-detecting environments at runtime, the library enables bundlers to eliminate unused code automatically. Frontend builds only include browser implementations, and backend builds only include Node.js implementations: no dead code, no runtime checks.
 
 ## Installation
 
@@ -176,7 +176,7 @@ Internal utilities (exported but typically not needed):
 
 ### Dependencies
 
-None — zero external dependencies.
+None: zero external dependencies.
 
 ## Part of hyperfrontend
 

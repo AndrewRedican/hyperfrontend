@@ -22,7 +22,7 @@ export default function DemosPage() {
           <h1 className="font-display text-4xl font-bold text-slate-900 dark:text-white">Live Demos</h1>
           {/* why: Vertical space is precious on narrow layouts — the preamble only earns its keep where the gallery has room to spare. */}
           <p className="mt-3 hidden text-base text-slate-600 dark:text-slate-400 sm:block">
-            Each demo is a real feature app on its own origin, embedded here through its generated shell. The centered card is live — browse
+            Each demo is a real feature app on its own origin, embedded here through its generated shell. The centered card is live; browse
             by dragging, scrolling, the arrow keys, or the side dial on portrait screens.
           </p>
           <div className="mt-10">

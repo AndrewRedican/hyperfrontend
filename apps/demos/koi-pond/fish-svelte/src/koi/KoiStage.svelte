@@ -22,7 +22,7 @@
   import type { Koi, PondView } from '@hyperfrontend/demo-koi-lib/three'
   import type { KoiState } from './koi-motion'
   import type { GlRenderer } from './koi-render'
-  import { FRAMEWORK_SITES, POND_VIEW, describeKoiCard, koiFrameBox, koiSeed, pxPerUnit, swimDepth, wrapAngle } from '@hyperfrontend/demo-koi-lib'
+  import { FRAMEWORK_SITES, POND_VIEW, describeKoiCard, koiFrameBox, koiSeed, koiSourceUrl, pxPerUnit, swimDepth, wrapAngle } from '@hyperfrontend/demo-koi-lib'
   import { createKoi, createLighting, createPondView, fitPondRenderer } from '@hyperfrontend/demo-koi-lib/three'
   import { Scene } from 'three'
 
@@ -98,6 +98,7 @@
   let card = $state<HTMLElement>()
   let cardUrl = $state<HTMLAnchorElement>()
   let cardSite = $state<HTMLAnchorElement>()
+  let cardSource = $state<HTMLAnchorElement>()
 
   /** Whether a visitor is holding this koi, which is what shows its identity card. */
   let selected = $state(false)
@@ -107,6 +108,9 @@
 
   /** The official website of the framework driving this app, linked from the card. */
   const siteUrl = $derived(FRAMEWORK_SITES[profile.framework])
+
+  /** Where this very app's implementation lives in the repository, linked from the card. */
+  const sourceUrl = $derived(koiSourceUrl(profile.framework))
 
   /** Whether the host's pointer is over this koi; it only shades the silhouette, so it never touches the template. */
   let hovered = false
@@ -130,7 +134,7 @@
 
     const koi = createKoi({
       seed: koiSeed(profile.framework),
-      // why: The phenotype is the profile's own many-levered build — width, belly, head, fins — so the seven read as related but individually recognisable animals rather than one mesh at seven scales.
+      // why: The phenotype is the profile's own many-levered build — width, belly, head, fins — so the shoal reads as related but individually recognisable animals rather than one mesh at eight scales.
       physical: phenotype,
       appearance: {
         pattern: palette.pattern,
@@ -316,11 +320,11 @@
    * @returns The card's geometry, or `null` while the card is hidden.
    */
   export function cardRects(): KoiCardPanel | null {
-    if (stage === null || !selected || card === undefined || cardUrl === undefined || cardSite === undefined) {
+    if (stage === null || !selected || card === undefined || cardUrl === undefined || cardSite === undefined || cardSource === undefined) {
       return null
     }
     const view = stage.pond.view
-    return { frame: rectOf(card, view), app: rectOf(cardUrl, view), site: rectOf(cardSite, view) }
+    return { frame: rectOf(card, view), app: rectOf(cardUrl, view), site: rectOf(cardSite, view), source: rectOf(cardSource, view) }
   }
 </script>
 
@@ -339,4 +343,6 @@
   <span class="koi-card-line koi-card-memory">{rows?.memory}</span>
   <span class="koi-card-line koi-card-event" hidden={rows === null || rows.event === null}>{rows?.event}</span>
   <a class="koi-card-site" href={siteUrl} target="_blank" rel="noopener noreferrer" bind:this={cardSite}>{profile.label} website ↗</a>
+  <!-- why: The demo's claim is checkable — the card links straight to this very app's implementation in the repository. -->
+  <a class="koi-card-source" href={sourceUrl} target="_blank" rel="noopener noreferrer" bind:this={cardSource}>App source ↗</a>
 </div>

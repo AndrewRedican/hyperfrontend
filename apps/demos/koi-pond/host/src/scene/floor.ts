@@ -3,7 +3,7 @@
  *
  * Painted once per resize rather than per frame: the bed is still water and
  * still stone, and repainting it sixty times a second would be the single most
- * expensive thing in a scene that already carries seven compositing layers.
+ * expensive thing in a scene that already carries eight compositing layers.
  * What moves — the caustic light, the ripples — lives on the surface canvas
  * above the koi.
  *

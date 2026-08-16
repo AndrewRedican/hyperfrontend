@@ -28,16 +28,8 @@ pre-push:
   commands:
     audit:
       priority: 1
-      run: |
-        set -e
-        echo "audit: ."
-        npm audit --audit-level=high
-        for lock in $(find apps -name package-lock.json -not -path '*/node_modules/*' | sort); do
-          dir=$(dirname "$lock")
-          echo "audit: $dir"
-          (cd "$dir" && npm audit --audit-level=high)
-        done
-      fail_text: 'Security audit failed. Run "npm audit" in the reported directory to see vulnerabilities and "npm audit fix" to resolve them.'
+      run: npx nx run-many -t audit
+      fail_text: 'Security audit failed. Run "npm audit" in the reported project directory to see vulnerabilities and "npm audit fix" to resolve them.'
     typecheck:
       priority: 2
       run: CI=1 npx nx affected -t=typecheck

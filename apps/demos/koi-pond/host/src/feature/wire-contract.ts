@@ -5,7 +5,7 @@
  * gallery mounted it. Nothing about an individual koi crosses here: the gallery
  * is told how many fish are swimming and when a disturbance sequence has
  * finished unwinding, and it can strike the water without a pointer. It is not
- * told that there are seven separate applications behind the scene, because it
+ * told that there are eight separate applications behind the scene, because it
  * does not need to be.
  *
  * It depends on a hand-written structural port rather than the SDK's concrete

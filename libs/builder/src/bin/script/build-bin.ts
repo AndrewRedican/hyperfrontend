@@ -35,7 +35,7 @@ const resolveWorkerOrThrow = (): RollupWorkerInvocation => {
  * - CJS only: `<name>.js`
  * - CJS alongside ESM: `<name>.cjs.js`
  *
- * Workspace dependencies are always inlined into bin bundles — bins are intended
+ * Workspace dependencies are always inlined into bin bundles: bins are intended
  * to ship as self-contained executable scripts.
  *
  * @param bin - Bin declaration including name, format(s), optional runner override, and bootstrap override.

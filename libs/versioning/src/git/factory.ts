@@ -268,14 +268,14 @@ export interface GitClient {
   /**
    * Discards uncommitted changes to tracked files.
    *
-   * **Warning:** Destructive operation — discarded changes cannot be recovered.
+   * **Warning:** Destructive operation: discarded changes cannot be recovered.
    */
   discardChanges(options?: Omit<DiscardChangesOptions, 'cwd'>): boolean
 
   /**
    * Discards all changes and unstages all files.
    *
-   * **Warning:** Destructive operation — discarded changes cannot be recovered.
+   * **Warning:** Destructive operation: discarded changes cannot be recovered.
    */
   discardAllChanges(): boolean
 

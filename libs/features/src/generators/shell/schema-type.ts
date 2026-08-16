@@ -95,7 +95,7 @@ function arrayType(schema: Record<string, unknown>, indent: string): string {
  * Bounded mapping: scalar `type`s, `object` with `properties`/`required`,
  * `array` with a single `items` schema, `enum`, and `const` are projected;
  * anything else (including a missing schema) falls back to `unknown`, so a
- * generated type is never wrong — at worst it is loose.
+ * generated type is never wrong; at worst it is loose.
  *
  * @param schema - The schema value to project.
  * @param indent - Indentation prefix applied to nested object members.

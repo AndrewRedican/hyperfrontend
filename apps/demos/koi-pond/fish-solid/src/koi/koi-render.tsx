@@ -80,7 +80,7 @@ export interface KoiRenderer {
    */
   placeCard(state: KoiState): void
   /**
-   * Where the card and its two links currently sit, in pond space.
+   * Where the card and its three links currently sit, in pond space.
    *
    * This frame is pointer-transparent, so nothing drawn here can be clicked
    * directly; the host floats real anchors over the reported rectangles and an
@@ -198,7 +198,7 @@ export function createKoiRenderer(
       if (handles === null || handles.card.hidden) {
         return null
       }
-      return { frame: rectOf(handles.card), app: rectOf(handles.app), site: rectOf(handles.site) }
+      return { frame: rectOf(handles.card), app: rectOf(handles.app), site: rectOf(handles.site), source: rectOf(handles.source) }
     },
 
     dispose() {

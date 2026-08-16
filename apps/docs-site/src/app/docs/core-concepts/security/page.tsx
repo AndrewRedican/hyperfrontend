@@ -27,7 +27,7 @@ export default function SecurityModelPage() {
         <H2 className="text-2xl font-bold text-slate-900 dark:text-white">The trust model</H2>
         <p className="mt-3 text-slate-600 dark:text-slate-400">
           A host embeds a feature the way it takes on any dependency: deliberately. Installing a shell is an act of trust, and the design
-          does not pretend otherwise — a feature you chose is not treated as an attacker.
+          does not pretend otherwise: a feature you chose is not treated as an attacker.
         </p>
         <p className="mt-3 text-slate-600 dark:text-slate-400">
           What the design does assume is that a trusted feature can have a bad day: a compromised transitive dependency, an injected
@@ -39,7 +39,7 @@ export default function SecurityModelPage() {
           <div className="rounded-lg border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-900">
             <h3 className="font-semibold text-slate-900 dark:text-white">In the model</h3>
             <ul className="mt-2 space-y-1 text-sm text-slate-600 dark:text-slate-400">
-              <li>• Other scripts co-resident in either page — analytics snippets, tag managers, chat widgets, compromised dependencies</li>
+              <li>• Other scripts co-resident in either page: analytics snippets, tag managers, chat widgets, compromised dependencies</li>
               <li>• Unknown pages that embed a publicly reachable feature URL</li>
               <li>• Stale traffic from a document that was replaced by a reload or navigation</li>
               <li>• Contract drift between two independently deployed vintages</li>
@@ -59,7 +59,7 @@ export default function SecurityModelPage() {
         <div className="mt-6 rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-900 dark:bg-amber-950/40">
           <p className="text-sm text-amber-900 dark:text-amber-200">
             <strong>The load-bearing limitation.</strong> Origin checks authenticate rooms, not speakers. Every script running inside a page
-            shares its window, and a message it posts reports that page&apos;s real origin — because that is where it runs. No additional
+            shares its window, and a message it posts reports that page&apos;s real origin, because that is where it runs. No additional
             message check distinguishes such a script from the application itself. Keeping authority away from a page&apos;s shared
             JavaScript realm is a different job, and it belongs to Content Security Policy, Trusted Types, dependency provenance, and
             server-side authorisation.
@@ -78,7 +78,7 @@ export default function SecurityModelPage() {
         <H3 className="mt-8 text-xl font-semibold text-slate-900 dark:text-white">The browser enforces isolation</H3>
         <p className="mt-3 text-slate-600 dark:text-slate-400">
           The same-origin policy keeps the feature&apos;s DOM, JavaScript state, and storage away from the host and the host&apos;s away
-          from the feature. This is not a convention that holds until someone is in a hurry — the browser refuses, on every page load. It is
+          from the feature. This is not a convention that holds until someone is in a hurry; the browser refuses, on every page load. It is
           the reason the boundary is an iframe and not a shared runtime. The browser also enforces the two capability attributes the host
           writes (<code>sandbox</code> and <code>allow</code>) and the <code>frame-ancestors</code> directive the feature&apos;s server
           sends.
@@ -112,7 +112,7 @@ export default function SecurityModelPage() {
           </li>
           <li>
             <strong className="text-slate-900 dark:text-white">A versioned contract.</strong> Each side presents the contract vintage it
-            bundled, and an incompatible pair is refused before product messages move — instead of going silently deaf weeks later.
+            bundled, and an incompatible pair is refused before product messages move, instead of going silently deaf weeks later.
           </li>
           <li>
             <strong className="text-slate-900 dark:text-white">An optional encrypted envelope.</strong> Product traffic can travel inside a
@@ -124,28 +124,28 @@ export default function SecurityModelPage() {
         <p className="mt-3 text-slate-600 dark:text-slate-400">
           Pinning answers <em>am I still talking to the same counterpart I started with?</em> It does not answer{' '}
           <em>was that counterpart ever allowed to embed me?</em> Those are different jobs, and the second one lives outside the protocol
-          entirely — at the framing and server boundaries you control:
+          entirely, at the framing and server boundaries you control:
         </p>
         <CodeBlock language="http" code={'Content-Security-Policy: frame-ancestors https://app.mysite.com'} />
         <ul className="mt-4 space-y-2 text-slate-600 dark:text-slate-400">
           <li>
-            • <strong className="text-slate-900 dark:text-white">Who may embed the feature</strong> — the <code>frame-ancestors</code>{' '}
+            • <strong className="text-slate-900 dark:text-white">Who may embed the feature</strong>: the <code>frame-ancestors</code>{' '}
             directive on the response that serves the feature document.
           </li>
           <li>
-            • <strong className="text-slate-900 dark:text-white">What an authenticated caller may do</strong> — credentials and
-            authorisation checks on the feature&apos;s own backend. A message that crossed the boundary is not an authorised operation.
+            • <strong className="text-slate-900 dark:text-white">What an authenticated caller may do</strong>: credentials and authorisation
+            checks on the feature&apos;s own backend. A message that crossed the boundary is not an authorised operation.
           </li>
           <li>
-            • <strong className="text-slate-900 dark:text-white">Whether traffic is encrypted at all</strong> — choosing a protocol version
+            • <strong className="text-slate-900 dark:text-white">Whether traffic is encrypted at all</strong>: choosing a protocol version
             and, for <code>v2</code>, provisioning and rotating the pre-shared key. The SDK never bakes a key into an artifact.
           </li>
           <li>
-            • <strong className="text-slate-900 dark:text-white">The containment posture</strong> — the sandbox tokens the frame runs under,
+            • <strong className="text-slate-900 dark:text-white">The containment posture</strong>: the sandbox tokens the frame runs under,
             priced against what the product actually needs.
           </li>
           <li>
-            • <strong className="text-slate-900 dark:text-white">The page&apos;s own integrity</strong> — HTTPS, Content Security Policy,
+            • <strong className="text-slate-900 dark:text-white">The page&apos;s own integrity</strong>: HTTPS, Content Security Policy,
             Trusted Types, Subresource Integrity, and dependency provenance on both sides.
           </li>
         </ul>
@@ -155,14 +155,14 @@ export default function SecurityModelPage() {
       <section className="mt-12">
         <H2 className="text-2xl font-bold text-slate-900 dark:text-white">Capability: delegation and containment</H2>
         <p className="mt-3 text-slate-600 dark:text-slate-400">
-          Capability flows one way — from the containing page into the frame. A feature cannot grant itself browser powers. The SDK splits
+          Capability flows one way: from the containing page into the frame. A feature cannot grant itself browser powers. The SDK splits
           that flow along two axes, and they answer different questions.
         </p>
 
         <div className="mt-6 grid gap-4 sm:grid-cols-2">
           <div className="rounded-lg border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-900">
             <h3 className="font-semibold text-slate-900 dark:text-white">
-              Delegation — <code>permissions</code>
+              Delegation: <code>permissions</code>
             </h3>
             <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
               <em>What powerful features may this frame use?</em> Feature-declared, host-applied. The feature lists the Permissions-Policy
@@ -173,12 +173,12 @@ export default function SecurityModelPage() {
           </div>
           <div className="rounded-lg border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-900">
             <h3 className="font-semibold text-slate-900 dark:text-white">
-              Containment — <code>sandbox</code>
+              Containment: <code>sandbox</code>
             </h3>
             <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
               <em>How large is the blast radius if this frame misbehaves?</em> Host-only, never baked. The SDK manages the two hazardous
               tokens itself: <code>allow-scripts</code> is always granted, and <code>allow-same-origin</code> only to cross-origin feature
-              URLs — the pairing that would let a same-origin frame shed its own sandbox is not expressible. Everything else is explicit
+              URLs. The pairing that would let a same-origin frame shed its own sandbox is not expressible. Everything else is explicit
               opt-in.
             </p>
           </div>
@@ -199,8 +199,8 @@ export default function SecurityModelPage() {
 
         <p className="mt-4 text-sm text-slate-500 dark:text-slate-400">
           Both attributes are written before the frame loads, which is the only moment they take effect, and both apply to the iframe modes
-          only — <code>popup</code> and <code>standalone</code> open top-level windows that ask the user for permissions directly.
-          Requesting a sandbox on those modes throws.
+          only: <code>popup</code> and <code>standalone</code> open top-level windows that ask the user for permissions directly. Requesting
+          a sandbox on those modes throws.
         </p>
       </section>
 
@@ -234,7 +234,7 @@ export default function SecurityModelPage() {
                 <td className="py-2 pr-4">Instance identity</td>
                 <td className="py-2 pr-4">On by default</td>
                 <td className="py-2">
-                  Keeps stale traffic out of a fresh session. Cooperative in plaintext — forgeable by anything that can post to the window —
+                  Keeps stale traffic out of a fresh session. Cooperative in plaintext (forgeable by anything that can post to the window)
                   and authenticated inside a <code>v2</code> envelope.
                 </td>
               </tr>
@@ -262,7 +262,7 @@ export default function SecurityModelPage() {
                 </td>
                 <td className="py-2 pr-4">Opt-in</td>
                 <td className="py-2">
-                  Time-window obfuscation with a clock-derived password — no secret is involved, so anything that can read the frames can
+                  Time-window obfuscation with a clock-derived password: no secret is involved, so anything that can read the frames can
                   reverse it. Deterrence against casual inspection, not a confidentiality control.
                 </td>
               </tr>
@@ -282,7 +282,7 @@ export default function SecurityModelPage() {
                 </td>
                 <td className="py-2">
                   Turns a failed negotiation into a denial instead of a plaintext fallback. Negotiation fails open by default, and the shell
-                  surface does not expose the switch — set it when driving the broker directly.
+                  surface does not expose the switch; set it when driving the broker directly.
                 </td>
               </tr>
               <tr className="border-b border-slate-100 dark:border-slate-800">
@@ -300,7 +300,7 @@ export default function SecurityModelPage() {
                 </td>
                 <td className="py-2 pr-4">Host-only, off unless requested</td>
                 <td className="py-2">
-                  Bounds the blast radius of a misbehaving frame. Correct by construction — the self-defeating pairing cannot be expressed.
+                  Bounds the blast radius of a misbehaving frame. Correct by construction: the self-defeating pairing cannot be expressed.
                 </td>
               </tr>
               <tr className="border-b border-slate-100 dark:border-slate-800">
@@ -357,11 +357,11 @@ export default function SecurityModelPage() {
           <DeeperLink
             href="/docs/libraries/utils/immutable-api"
             title="@hyperfrontend/immutable-api-utils"
-            description="Locked API surfaces and built-in copies captured at load time — mitigation for prototype pollution, not prevention."
+            description="Locked API surfaces and built-in copies captured at load time: mitigation for prototype pollution, not prevention."
           />
         </div>
         <p className="mt-6 text-sm text-slate-500 dark:text-slate-400">
-          Found a vulnerability? Report it privately — see the{' '}
+          Found a vulnerability? Report it privately; see the{' '}
           <a
             href="https://github.com/AndrewRedican/hyperfrontend/blob/main/SECURITY.md"
             className="text-primary-600 hover:underline dark:text-primary-400"

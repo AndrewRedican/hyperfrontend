@@ -48,7 +48,7 @@ export default function QuickStartPage() {
           <p className="text-slate-600 dark:text-slate-400">Convert an existing application into a HyperFrontend feature:</p>
           <CodeBlock code="npx @hyperfrontend/features init" />
           <p className="mt-4 text-sm text-slate-500 dark:text-slate-400">
-            This scaffolds the <em>hostee</em> glue module — the feature side of the boundary — into your app and wires it into the entry
+            This scaffolds the <em>hostee</em> glue module, the feature side of the boundary, into your app and wires it into the entry
             file, alongside your feature contract. The vocabulary is defined in{' '}
             <Link href="/docs/core-concepts" className="text-primary-600 hover:underline dark:text-primary-400">
               Core Concepts
@@ -73,7 +73,7 @@ export default function QuickStartPage() {
           <CodeBlock code="npx @hyperfrontend/features build --protocol v2" />
           <p className="mt-4 text-sm text-slate-500 dark:text-slate-400">
             The shell inlines the contract and bundles its dependencies, so the host installs one package and takes on no transitive deps.
-            The security envelope is an explicit choice — the build bakes in whichever protocol you pass.
+            The security envelope is an explicit choice: the build bakes in whichever protocol you pass.
           </p>
         </div>
       </section>

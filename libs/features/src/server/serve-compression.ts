@@ -22,7 +22,7 @@ interface CompressedEntry {
 /**
  * Parses an `Accept-Encoding` header into the preferred supported encoding.
  *
- * Preference is brotli, then gzip — the order every mainstream browser also
+ * Preference is brotli, then gzip: the order every mainstream browser also
  * ranks them in. A `*` token stands in for both. Encodings disabled with
  * `q=0` are never chosen.
  *

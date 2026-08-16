@@ -9,6 +9,8 @@ import { entries } from '@hyperfrontend/immutable-api-utils/built-in-copy/object
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { createURL } from '@hyperfrontend/immutable-api-utils/built-in-copy/url'
 import { logger } from '@hyperfrontend/logging'
+import { generateGuides } from './generate-guides'
+import { generateSearchIndex } from './generate-search-index'
 
 logger.setLogLevel('log')
 
@@ -505,6 +507,9 @@ function generateTypeDoc(lib: LibraryConfig): boolean {
       '--excludeInternal',
       '--excludeNotDocumented',
       'false',
+      // why: The library page renders the README itself; letting TypeDoc embed a copy in api.json duplicates it into the page payload, authoring comments and all
+      '--readme',
+      'none',
       '--disableGit',
       '--basePath',
       WORKSPACE_ROOT,
@@ -646,6 +651,8 @@ function generateDocs() {
     logger.log('  ✓ Contributing guide extracted\n')
   }
 
+  generateGuides(LIBRARIES)
+
   const manifest = {
     generatedAt: createDate().toISOString(),
     libraries: libraryDocs,
@@ -657,12 +664,19 @@ function generateDocs() {
 
   writeFileSync(join(OUTPUT_DIR, 'manifest.json'), stringify(manifest, null, 2))
 
+  generateSearchIndex()
+
   logger.log('✅ Documentation generation complete!')
   logger.log(`   Output: ${OUTPUT_DIR}`)
 }
 
 if (require.main === module) {
-  generateDocs()
+  // why: --guides-only gives guide authors a seconds-fast loop by skipping TypeDoc and README extraction
+  if (process.argv.includes('--guides-only')) {
+    generateGuides(LIBRARIES)
+  } else {
+    generateDocs()
+  }
 }
 
 export { generateDocs, LIBRARIES }

@@ -57,7 +57,7 @@ function isCrossOrigin(url: string): boolean {
 /**
  * Computes the sandbox token list for a feature frame.
  *
- * `allow-scripts` is unconditional — the feature runtime is JavaScript, so a
+ * `allow-scripts` is unconditional: the feature runtime is JavaScript, so a
  * script-less frame could never connect. `allow-same-origin` is granted only
  * to cross-origin feature URLs, because a same-origin frame holding both
  * tokens could remove its own sandbox. Everything else maps from the explicit
@@ -96,7 +96,7 @@ function buildSandboxTokens(url: string, sandbox: true | SandboxOptions): string
  *
  * When capabilities are supplied, `permissions` is applied as the frame's
  * `allow` attribute (delegating those Permissions-Policy features to the
- * frame's own origin) and `sandbox` as its sandbox tokens — both set before
+ * frame's own origin) and `sandbox` as its sandbox tokens, both set before
  * the frame loads, which is the only moment they take effect.
  *
  * @param url - The feature app URL to load.
@@ -142,7 +142,7 @@ interface FrameLoadHold {
  * when the handshake may begin immediately.
  *
  * A cross-origin frame cannot receive origin-pinned messages until it has
- * navigated — every handshake ping sent before then dies against the initial
+ * navigated: every handshake ping sent before then dies against the initial
  * `about:blank` document with a browser-logged target-origin error. The hook
  * holds the handshake until the frame's `load` event (with a grace fallback
  * for frames that never report one). A same-origin frame needs no gate: the

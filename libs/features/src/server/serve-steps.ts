@@ -98,7 +98,7 @@ function buildHeaderRulesStep(config: ResolvedServeConfig): ServeStep {
 }
 
 /**
- * Computes a weak ETag from a file's size and modification time — enough to
+ * Computes a weak ETag from a file's size and modification time, enough to
  * change whenever a deployment replaces the file, without hashing its bytes.
  *
  * @param stats - The file's stats.
@@ -201,7 +201,7 @@ function buildServeFileStep(config: ResolvedServeConfig, deps: ServeStepDeps): S
  * compression, header rules, then the terminal file-serving step.
  *
  * Header rules sit inside compression so a rule's headers shape what the
- * compressor sees — a rule-set `Cache-Control: no-transform` suppresses
+ * compressor sees: a rule-set `Cache-Control: no-transform` suppresses
  * encoding and a rule-set `Content-Type` decides compressibility. Custom
  * steps prepend to this chain, so a plugin sees every request first and
  * every response last.

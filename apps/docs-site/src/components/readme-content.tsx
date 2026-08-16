@@ -2,10 +2,9 @@
 
 import { useEffect, useMemo, useRef } from 'react'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
-import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { setTimeout, clearTimeout } from '@hyperfrontend/immutable-api-utils/built-in-copy/timers'
 import { useHashNavigation } from '../hooks/use-hash-navigation'
-import { generateSlug } from '../lib/markdown'
+import { createHeadingSlugger } from '../lib/slug'
 import { MermaidDiagram } from './mermaid-diagram'
 
 /**
@@ -102,26 +101,16 @@ function injectCopyButtons(container: HTMLElement): () => void {
  * Injects anchor IDs and clickable anchor links into all headings within a container.
  * Clicking the anchor copies the link and updates the URL hash.
  * @param container - The container element with rendered HTML content
+ * @param slugger - Document-wide slugger, so ids stay unique and stable across every prose container on the page
  */
-function injectHeadingAnchors(container: HTMLElement): () => void {
+function injectHeadingAnchors(container: HTMLElement, slugger: (text: string) => string): () => void {
   const headings = container.querySelectorAll('h1, h2, h3, h4, h5, h6')
   const cleanupFns: (() => void)[] = []
-  const usedIds = createSet<string>()
 
   headings.forEach((heading) => {
     if (heading.querySelector('[data-anchor-link]')) return
 
-    const text = heading.textContent ?? ''
-    let id = generateSlug(text)
-
-    if (usedIds.has(id)) {
-      let suffix = 1
-      while (usedIds.has(`${id}-${suffix}`)) {
-        suffix++
-      }
-      id = `${id}-${suffix}`
-    }
-    usedIds.add(id)
+    const id = slugger(heading.textContent ?? '')
 
     heading.id = id
 
@@ -268,10 +257,12 @@ export function ReadmeContent({ html, mermaidDiagrams }: ReadmeContentProps) {
     // why: Find all prose containers within the readme content
     const proseContainers = container.querySelectorAll('.prose')
     const cleanupFunctions: (() => void)[] = []
+    // why: Mermaid diagrams split the document into several prose containers; one slugger across all of them keeps heading ids matching the whole-document numbering that links and the search index address
+    const slugger = createHeadingSlugger()
 
     proseContainers.forEach((proseContainer) => {
       cleanupFunctions.push(injectCopyButtons(proseContainer as HTMLElement))
-      cleanupFunctions.push(injectHeadingAnchors(proseContainer as HTMLElement))
+      cleanupFunctions.push(injectHeadingAnchors(proseContainer as HTMLElement, slugger))
     })
 
     // why: Scroll after IDs are injected; hook handles delay internally

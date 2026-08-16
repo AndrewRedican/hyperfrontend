@@ -72,7 +72,7 @@ The human contributor remains accountable for the output. Code generated with AI
 
 ### AI Disclosure in Pull Requests
 
-If any part of a pull request was produced with AI assistance — code, tests, documentation, or commit messages — that must be stated in the PR description. This is required, not optional.
+If any part of a pull request was produced with AI assistance (code, tests, documentation, or commit messages), that must be stated in the PR description. This is required, not optional.
 
 When the maintainer needs to examine something closely or trace the origin of a bug, knowing whether code reflects personal expertise or came out of an LLM prompt matters. They are not equivalent. The level of scrutiny applied to a contribution, and the trust extended to a contributor over time, both depend on that distinction.
 

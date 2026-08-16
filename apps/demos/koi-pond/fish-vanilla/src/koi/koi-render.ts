@@ -12,7 +12,7 @@
  * at a fraction of the fill and memory. A koi outside the visible window draws
  * nothing at all.
  *
- * This is the one browser-facing module in the app. The other six koi replace
+ * This is the one browser-facing module in the app. The other seven koi replace
  * exactly this file with their own framework's idiom, and share everything
  * else: the swimming brain stays authoritative for where the fish *is*, and
  * this module only makes the koi's body express it.
@@ -27,6 +27,7 @@ import {
   describeKoiCard,
   koiFrameBox,
   koiSeed,
+  koiSourceUrl,
   pxPerUnit,
   swimDepth,
   wrapAngle,
@@ -145,7 +146,8 @@ export function createKoiRenderer(
     `<a class="koi-card-url" target="_blank" rel="noopener noreferrer"></a>` +
     `<span class="koi-card-line koi-card-runtime"></span><span class="koi-card-line koi-card-memory"></span>` +
     `<span class="koi-card-line koi-card-event" hidden></span>` +
-    `<a class="koi-card-site" target="_blank" rel="noopener noreferrer"></a>`
+    `<a class="koi-card-site" target="_blank" rel="noopener noreferrer"></a>` +
+    `<a class="koi-card-source" target="_blank" rel="noopener noreferrer"></a>`
   const cardName = card.querySelector<HTMLElement>('.koi-card-name')
   const cardUrl = card.querySelector<HTMLAnchorElement>('.koi-card-url')
   const cardState = card.querySelector<HTMLElement>('.koi-card-state')
@@ -153,6 +155,7 @@ export function createKoiRenderer(
   const cardMemory = card.querySelector<HTMLElement>('.koi-card-memory')
   const cardEvent = card.querySelector<HTMLElement>('.koi-card-event')
   const cardSite = card.querySelector<HTMLAnchorElement>('.koi-card-site')
+  const cardSource = card.querySelector<HTMLAnchorElement>('.koi-card-source')
   if (cardName !== null) {
     // why: The variety rides beside the framework name — the pattern is the koi's own identity, and it costs one word to say this asagi is the React app.
     cardName.innerHTML = `<span class="koi-card-title"></span><span class="koi-card-variety"></span>`
@@ -175,6 +178,11 @@ export function createKoiRenderer(
     cardSite.textContent = `${profile.label} website ↗`
     cardSite.href = site
   }
+  if (cardSource !== null) {
+    // why: The demo's claim is checkable — the card links straight to this very app's implementation in the repository.
+    cardSource.textContent = 'App source ↗'
+    cardSource.href = koiSourceUrl(profile.framework)
+  }
 
   root.append(canvas, card)
 
@@ -185,7 +193,7 @@ export function createKoiRenderer(
 
   const koi: Koi = createKoi({
     seed: koiSeed(profile.framework),
-    // why: The phenotype is the profile's own many-levered build — width, belly, head, fins — so the seven read as related but individually recognisable animals rather than one mesh at seven scales.
+    // why: The phenotype is the profile's own many-levered build — width, belly, head, fins — so the shoal reads as related but individually recognisable animals rather than one mesh at eight scales.
     physical: phenotype,
     appearance: {
       pattern: palette.pattern,
@@ -327,10 +335,10 @@ export function createKoiRenderer(
     },
 
     cardRects() {
-      if (card.hidden || cardUrl === null || cardSite === null) {
+      if (card.hidden || cardUrl === null || cardSite === null || cardSource === null) {
         return null
       }
-      return { frame: rectOf(card), app: rectOf(cardUrl), site: rectOf(cardSite) }
+      return { frame: rectOf(card), app: rectOf(cardUrl), site: rectOf(cardSite), source: rectOf(cardSource) }
     },
 
     dispose() {

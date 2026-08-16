@@ -1,11 +1,11 @@
 /**
- * Everything the koi pond's nine projects agree on: the model, the contract,
+ * Everything the koi pond's ten projects agree on: the model, the contract,
  * and the geometry.
  *
- * Deliberately not a simulation engine. Each of the seven fish apps composes
+ * Deliberately not a simulation engine. Each of the eight fish apps composes
  * these primitives into its own swimming brain and its own renderer, in its own
  * framework's idiom — that independence is what the pond exists to show. What
- * lives here is only what all seven must agree on to appear in one scene: the
+ * lives here is only what every fish app must agree on to appear in one scene: the
  * words, the wire, the shape of a koi, and the maths of the water.
  *
  * @module @hyperfrontend/demo-koi-lib
@@ -43,6 +43,8 @@ export type {
   KoiCardPanel,
   KoiFramework,
   KoiIdentity,
+  KoiIntent,
+  KoiIntentKind,
   KoiOutline,
   KoiPalette,
   KoiPhase,
@@ -120,7 +122,7 @@ export { koiLabel, koiPalette } from './model/palette.js'
 export type { PondViewSpec } from './model/pond-view.js'
 export { POND_VIEW, pxPerUnit } from './model/pond-view.js'
 export { koiBuild, koiPhenotype, koiProfile, koiSeed, koiTraits, koiTrim } from './model/traits.js'
-export { FRAMEWORK_SITES, KOI_FRAMEWORKS } from './model/types.js'
+export { FRAMEWORK_SITES, KOI_FRAMEWORKS, KOI_POND_SOURCE_URL, koiSourceUrl } from './model/types.js'
 export type { KoiCardDetails, KoiCardText, KoiMemoryState } from './model/card.js'
 export { describeKoiCard } from './model/card.js'
 

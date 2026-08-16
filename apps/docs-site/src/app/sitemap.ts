@@ -1,9 +1,11 @@
 import type { NavItem } from '@/lib/navigation'
 import type { MetadataRoute } from 'next'
-import { getAllArticleSlugs } from '@/lib/articles'
+import { getAllArticles } from '@/lib/articles'
+import { getAllGuideSlugs } from '@/lib/guides'
 import { docsNavigation, mainNavLinks } from '@/lib/navigation'
 import { SITE_URL } from '@/lib/site'
 import { createDate } from '@hyperfrontend/immutable-api-utils/built-in-copy/date'
+import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 
 export const dynamic = 'force-static'
@@ -52,15 +54,25 @@ export default function sitemap(): MetadataRoute.Sitemap {
 
   const navUrls = extractUrls(docsNavigation)
   const mainUrls = mainNavLinks.map((link) => link.href)
-  const articleUrls = getAllArticleSlugs().map((slug) => `/articles/${slug}`)
+  const articles = getAllArticles()
+  const articleUrls = articles.map((article) => `/articles/${article.slug}`)
+  const guideUrls = getAllGuideSlugs().map((slug) => `/docs/guides/${slug}`)
 
-  const allUrls = [...createSet([...staticPages, ...navUrls, ...mainUrls, ...articleUrls])]
+  // why: An article's sitemap lastModified should reflect its content revision, not the build timestamp
+  const articleDates = createMap(
+    articles.map((article): [string, string] => [`/articles/${article.slug}`, article.updated || article.date])
+  )
 
-  return allUrls.map((url) => ({
-    // why: trailingSlash is enabled site-wide, so sitemap locs must match the canonical trailing-slash form
-    url: `${SITE_URL}${url.endsWith('/') ? url : `${url}/`}`,
-    lastModified: createDate(),
-    changeFrequency: url === '/' ? 'weekly' : 'monthly',
-    priority: url === '/' ? 1.0 : url.startsWith('/docs/libraries') ? 0.8 : 0.6,
-  }))
+  const allUrls = [...createSet([...staticPages, ...navUrls, ...mainUrls, ...articleUrls, ...guideUrls])]
+
+  return allUrls.map((url) => {
+    const articleDate = articleDates.get(url)
+    return {
+      // why: trailingSlash is enabled site-wide, so sitemap locs must match the canonical trailing-slash form
+      url: `${SITE_URL}${url.endsWith('/') ? url : `${url}/`}`,
+      lastModified: articleDate ? createDate(articleDate) : createDate(),
+      changeFrequency: url === '/' ? <const>'weekly' : <const>'monthly',
+      priority: url === '/' ? 1.0 : url.startsWith('/docs/libraries') ? 0.8 : 0.6,
+    }
+  })
 }

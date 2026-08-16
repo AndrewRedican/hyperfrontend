@@ -13,7 +13,7 @@ export interface LoadCommitConfigOptions {
   /** Directory to start the upward search from */
   readonly cwd: string
 
-  /** Explicit override path from `--config <path>` — resolved against `cwd` when relative */
+  /** Explicit override path from `--config <path>`, resolved against `cwd` when relative */
   readonly overridePath?: string
 }
 
@@ -26,7 +26,7 @@ export interface LoadedCommitConfig {
   readonly sourcePath?: string
 }
 
-/** Module namespace returned by `await import(configUrl)` — ESM shape with optional CJS interop. */
+/** Module namespace returned by `await import(configUrl)`: ESM shape with optional CJS interop. */
 interface ImportedConfigModule extends Record<string, unknown> {
   /** Default export when the config uses `export default` (ESM) or `module.exports` (CJS interop) */
   readonly default?: unknown
@@ -43,7 +43,7 @@ interface TypeArrayEntry {
  *   1. `overridePath` wins when set
  *   2. Otherwise walk upward from `cwd` looking for one of `CONFIG_FILE_NAMES`
  *      until a workspace boundary marker (`.git`, `pnpm-workspace.yaml`) is hit
- *   3. Missing config is not an error — `config` becomes `{}`
+ *   3. Missing config is not an error: `config` becomes `{}`
  *
  * @param options - Search inputs
  * @returns Loaded partial config plus the file it came from (if any)

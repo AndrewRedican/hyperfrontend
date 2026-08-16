@@ -68,7 +68,7 @@ export interface ConditionalExport {
 }
 
 /**
- * Value form for an `exports` map entry — a resolved string path, a conditional
+ * Value form for an `exports` map entry: a resolved string path, a conditional
  * exports object, or a nested record for sub-conditions.
  */
 export type ExportValue = string | ConditionalExport | Record<string, unknown>

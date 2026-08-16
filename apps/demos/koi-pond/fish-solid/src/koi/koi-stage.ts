@@ -85,7 +85,7 @@ export function createKoiStage(
 
   const koi: Koi = createKoi({
     seed: koiSeed(profile.framework),
-    // why: The phenotype is the profile's own many-levered build — width, belly, head, fins — so the seven read as related but individually recognisable animals rather than one mesh at seven scales.
+    // why: The phenotype is the profile's own many-levered build — width, belly, head, fins — so the shoal reads as related but individually recognisable animals rather than one mesh at eight scales.
     physical: phenotype,
     appearance: {
       pattern: palette.pattern,

@@ -1,5 +1,5 @@
 /**
- * Seven shells, one per koi.
+ * Eight shells, one per koi.
  *
  * Every koi ships as an independent feature with its own vendored shell
  * package; the host opens one session per shell into a container it owns.
@@ -14,6 +14,7 @@
  * layer, and the z-order is the depth model.
  */
 import type { KoiFramework } from '@hyperfrontend/demo-koi-lib'
+import { createFeatureShell as createAngularKoiShell } from '@hyperfrontend/demo-koi-fish-angular-shell'
 import { createFeatureShell as createLitKoiShell } from '@hyperfrontend/demo-koi-fish-lit-shell'
 import { createFeatureShell as createPreactKoiShell } from '@hyperfrontend/demo-koi-fish-preact-shell'
 import { createFeatureShell as createReactKoiShell } from '@hyperfrontend/demo-koi-fish-react-shell'
@@ -36,7 +37,7 @@ const OPEN_TIMEOUT_MS = 20_000
 const COMPOSED_DEPLOYMENT: boolean = true
 
 /**
- * The shell surface the pond drives, identical across the seven generated
+ * The shell surface the pond drives, identical across the eight generated
  * shell packages.
  */
 export interface KoiShell {
@@ -67,6 +68,7 @@ interface KoiShellMountOptions {
 /** Creates one koi's shell session from its generated shell package. */
 type KoiShellFactory = (options: KoiShellMountOptions) => KoiShell
 
+// ref: [guide:compose-independent-features/shell-factories] start
 /** One factory per koi, each from its own vendored shell package. */
 const SHELL_FACTORIES: Record<KoiFramework, KoiShellFactory> = {
   vanilla: (options) => createVanillaKoiShell(options),
@@ -76,7 +78,9 @@ const SHELL_FACTORIES: Record<KoiFramework, KoiShellFactory> = {
   solid: (options) => createSolidKoiShell(options),
   preact: (options) => createPreactKoiShell(options),
   lit: (options) => createLitKoiShell(options),
+  angular: (options) => createAngularKoiShell(options),
 }
+// ref: [guide:compose-independent-features/shell-factories] end
 
 /** One live koi: its host-owned layer and the shell driving its channel. */
 export interface KoiSession {
@@ -123,6 +127,7 @@ export function fishHomeUrl(framework: KoiFramework): string {
  * sessions.forEach((session) => session.shell.open())
  * ```
  */
+// ref: [guide:compose-independent-features/open-shoal] start
 export function openShoal(layers: ReadonlyMap<KoiFramework, HTMLElement>): KoiSession[] {
   const sessions: KoiSession[] = []
   for (const framework of KOI_FRAMEWORKS) {
@@ -132,7 +137,7 @@ export function openShoal(layers: ReadonlyMap<KoiFramework, HTMLElement>): KoiSe
     }
     const shell = SHELL_FACTORIES[framework]({
       container: layer,
-      // why: Seven handshakes queue behind one another on a cold load, and the ten-second default times the last of them out.
+      // why: Eight handshakes queue behind one another on a cold load, and the ten-second default times the last of them out.
       openTimeoutMs: OPEN_TIMEOUT_MS,
       ...(COMPOSED_DEPLOYMENT && { url: fishHomeUrl(framework) }),
     })
@@ -140,6 +145,7 @@ export function openShoal(layers: ReadonlyMap<KoiFramework, HTMLElement>): KoiSe
   }
   return sessions
 }
+// ref: [guide:compose-independent-features/open-shoal] end
 
 /**
  * The identity payload a koi is sent as soon as its channel opens.

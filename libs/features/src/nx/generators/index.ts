@@ -1,5 +1,5 @@
 /**
- * Nx generators entry point — the `init` and `feature` generators plus their
+ * Nx generators entry point: the `init` and `feature` generators plus their
  * option shapes, for programmatic invocation and typed composition.
  *
  * @module @hyperfrontend/features/nx/generators

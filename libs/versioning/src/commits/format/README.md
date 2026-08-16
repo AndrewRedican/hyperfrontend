@@ -39,7 +39,7 @@ flowchart LR
 - **Missing fields render empty.** Drafts accumulate field-by-field, so the
   formatter tolerates any combination of absent values rather than throwing.
   `formatHeader({ type: 'fix' })` returns `'fix: '`.
-- **Multi-scope joins with `,`.** Matches the parser format —
+- **Multi-scope joins with `,`.** Matches the parser format:
   `scope: ['a', 'b']` → `(a,b)`.
 - **Breaking marker precedes the colon.** `breaking: true` adds `!` after
   the (optional) scope: `feat(core)!: subject`.
@@ -89,5 +89,5 @@ formatCommitMessage({ ...draft, subject: 'add sso login' })
 
 ## See Also
 
-- [../README.md](../README.md) — Parsing primitives that this formatter mirrors
-- [../validate/README.md](../validate/README.md) — Rule engine that consumes the same draft shape
+- [../README.md](../README.md): Parsing primitives that this formatter mirrors
+- [../validate/README.md](../validate/README.md): Rule engine that consumes the same draft shape

@@ -3,7 +3,7 @@
  *
  * One loop drives the whole scene. It hands out a clamped delta so a tab
  * returning from the background does not teleport the shoal across the pond,
- * and it stops entirely while the document is hidden — seven iframes each on
+ * and it stops entirely while the document is hidden — eight iframes each on
  * their own compositing layer is exactly the situation where a loop running
  * against a hidden tab costs a visitor real battery.
  */

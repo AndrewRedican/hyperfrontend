@@ -47,6 +47,7 @@
         "maxFixes": 5,
         "failOnError": true
       }
-    }
+    },
+    "audit": {}
   }
 }

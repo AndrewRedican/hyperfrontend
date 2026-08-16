@@ -73,6 +73,15 @@ body {
   display: block;
 }
 
+/* why: The decision overlay annotates what is under the water, so it paints above the surface — a trace dimmed by caustics would defeat the point of asking for it. */
+#interactions {
+  position: absolute;
+  inset: 0;
+  z-index: 120;
+  pointer-events: none;
+  display: block;
+}
+
 /* why: An inert pane over the held koi's card — presses on the card must read the card, never strike the water showing through behind it. */
 .koi-card-shield {
   position: absolute;
@@ -173,6 +182,50 @@ body {
   pointer-events: none;
 }
 
+.koi-roster-source {
+  display: block;
+  margin-top: 0.45rem;
+  padding: 0.2rem 0.3rem 0;
+  border-top: 1px solid rgba(232, 243, 239, 0.12);
+  border-radius: 0;
+  font-size: 0.66rem;
+  color: rgba(232, 243, 239, 0.55);
+  text-decoration: none;
+}
+
+.koi-roster-source:hover,
+.koi-roster-source:focus-visible {
+  color: #ffffff;
+}
+
+/* why: A diagnostics control dressed like the roster — chrome floating over the water, quiet until wanted. */
+.pond-interactions {
+  position: absolute;
+  left: 0.9rem;
+  bottom: 0.9rem;
+  z-index: 150;
+  padding: 0.45rem 0.7rem;
+  border: 1px solid rgba(232, 243, 239, 0.12);
+  border-radius: 999px;
+  background: rgba(9, 24, 22, 0.72);
+  backdrop-filter: blur(8px);
+  color: rgba(232, 243, 239, 0.78);
+  font-size: 0.7rem;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+}
+
+.pond-interactions:hover,
+.pond-interactions:focus-visible {
+  background: rgba(20, 48, 44, 0.92);
+  color: #ffffff;
+}
+
+.pond-interactions[aria-pressed='true'] {
+  border-color: rgba(126, 214, 198, 0.55);
+  color: #d6f5ee;
+}
+
 /* why: The pond only draws a close control when a host announces dialog mode; it requests the close and the host performs it. */
 .pond-close {
   position: absolute;
@@ -213,7 +266,8 @@ body {
 
 /* why: In a card-sized window the roster has no room — the card is an invitation to expand, not the venue; it returns with the space. */
 @media (max-width: 679px) {
-  .koi-roster {
+  .koi-roster,
+  .pond-interactions {
     display: none;
   }
 }

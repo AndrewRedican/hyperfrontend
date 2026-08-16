@@ -13,12 +13,12 @@
  * frame for every koi below it. The canvas clears to transparent; only the
  * fish itself has colour.
  *
- * This is the one browser-facing part of the app. The other six koi replace it
+ * This is the one browser-facing part of the app. The other seven koi replace it
  * with their own framework's idiom, and share everything else.
  */
 import type { KoiProfile } from '@hyperfrontend/demo-koi-lib'
 import type { ReactElement } from 'react'
-import { FRAMEWORK_SITES } from '@hyperfrontend/demo-koi-lib'
+import { FRAMEWORK_SITES, koiSourceUrl } from '@hyperfrontend/demo-koi-lib'
 import { useLayoutEffect, useRef } from 'react'
 
 /** The card's committed nodes, handed to the imperative renderer as one piece. */
@@ -29,6 +29,8 @@ export interface KoiCardHandles {
   app: HTMLAnchorElement
   /** The framework-site anchor, whose rectangle the outline reports. */
   site: HTMLAnchorElement
+  /** The app-source anchor, whose rectangle the outline reports. */
+  source: HTMLAnchorElement
   /** The behaviour row. */
   state: HTMLElement
   /** The runtime row. */
@@ -66,6 +68,7 @@ export function KoiFish({ profile, url, mount }: KoiFishProps): ReactElement {
   const card = useRef<HTMLDivElement>(null)
   const app = useRef<HTMLAnchorElement>(null)
   const site = useRef<HTMLAnchorElement>(null)
+  const source = useRef<HTMLAnchorElement>(null)
   const state = useRef<HTMLSpanElement>(null)
   const runtime = useRef<HTMLSpanElement>(null)
   const memory = useRef<HTMLSpanElement>(null)
@@ -77,6 +80,7 @@ export function KoiFish({ profile, url, mount }: KoiFishProps): ReactElement {
       card.current === null ||
       app.current === null ||
       site.current === null ||
+      source.current === null ||
       state.current === null ||
       runtime.current === null ||
       memory.current === null ||
@@ -89,6 +93,7 @@ export function KoiFish({ profile, url, mount }: KoiFishProps): ReactElement {
       card: card.current,
       app: app.current,
       site: site.current,
+      source: source.current,
       state: state.current,
       runtime: runtime.current,
       memory: memory.current,
@@ -117,6 +122,10 @@ export function KoiFish({ profile, url, mount }: KoiFishProps): ReactElement {
         <span className="koi-card-line koi-card-event" hidden ref={event} />
         <a className="koi-card-site" href={FRAMEWORK_SITES[profile.framework]} target="_blank" rel="noopener noreferrer" ref={site}>
           {profile.label} website ↗
+        </a>
+        {/* why: The demo's claim is checkable — the card links straight to this very app's implementation in the repository. */}
+        <a className="koi-card-source" href={koiSourceUrl(profile.framework)} target="_blank" rel="noopener noreferrer" ref={source}>
+          App source ↗
         </a>
       </div>
     </>

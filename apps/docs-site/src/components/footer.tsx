@@ -34,6 +34,9 @@ export function Footer() {
             <a href="https://github.com/sponsors/AndrewRedican" target="_blank" rel="noopener noreferrer" className={FOOTER_LINK_CLASSES}>
               Sponsor
             </a>
+            <a href="/feed.xml" className={FOOTER_LINK_CLASSES}>
+              Articles feed
+            </a>
             <Link href="/privacy" className={FOOTER_LINK_CLASSES}>
               Privacy
             </Link>

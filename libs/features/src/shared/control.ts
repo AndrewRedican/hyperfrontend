@@ -14,7 +14,7 @@ export const ControlType = freeze(<const>{
   Present: '__hf:present',
   /** Host-to-hostee report that the frame's usable space **changed**, as exact pixel dimensions (iframe modes only; the initial size travels in the presentation announcement). */
   Viewport: '__hf:viewport',
-  /** Hostee-to-host report of a dismiss interaction it detected — a backdrop pointer press or an in-frame Escape (dialog mode only). Purely a signal: it tears nothing down itself; the host applies its configured policy, and any teardown still runs through the ordinary close exchange. */
+  /** Hostee-to-host report of a dismiss interaction it detected: a backdrop pointer press or an in-frame Escape (dialog mode only). Purely a signal: it tears nothing down itself; the host applies its configured policy, and any teardown still runs through the ordinary close exchange. */
   Dismiss: '__hf:dismiss',
   /** Correlated request envelope carrying a consumer request in either direction. */
   Request: '__hf:request',

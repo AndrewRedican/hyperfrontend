@@ -5,7 +5,7 @@ import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 export const TestKey = freeze(<const>{
   /** Enter / carriage return */
   Enter: '\r',
-  /** Ctrl-C — drives the prompt's cancellation path */
+  /** Ctrl-C: drives the prompt's cancellation path */
   CtrlC: '\x03',
   /** Deletes the character before the cursor */
   Backspace: '\x7F',
@@ -15,7 +15,7 @@ export const TestKey = freeze(<const>{
   Down: '\x1B[B',
   /** Single literal space character */
   Space: ' ',
-  /** Horizontal tab — triggers completion / focus movement in prompts */
+  /** Horizontal tab: triggers completion / focus movement in prompts */
   Tab: '\t',
 })
 
@@ -43,9 +43,9 @@ export type MockOutput = NodeJS.WriteStream & MockOutputExtensions
 
 /** Paired mock streams usable as `input`/`output` for any lib-questions prompt. */
 export interface MockTerminal {
-  /** Mock readable — pass as `config.input` */
+  /** Mock readable, pass as `config.input` */
   input: MockInput
-  /** Mock writable — pass as `config.output` */
+  /** Mock writable, pass as `config.output` */
   output: MockOutput
   /** Releases both streams */
   destroy: () => void

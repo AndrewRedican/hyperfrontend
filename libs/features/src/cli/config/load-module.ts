@@ -8,7 +8,7 @@ const JSON_EXTENSION = '.json'
 /** Importable (non-JSON) config extensions resolved through native `await import()`. */
 const IMPORTABLE_EXTENSIONS: readonly string[] = ['.js', '.mjs', '.cjs', '.ts', '.cts', '.mts']
 
-/** Module namespace returned by `await import()` — ESM shape with optional CJS-interop default. */
+/** Module namespace returned by `await import()`: ESM shape with optional CJS-interop default. */
 interface ImportedModule {
   /** Default export when the config uses `export default` (or `module.exports` via interop). */
   readonly default?: unknown

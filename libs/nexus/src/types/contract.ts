@@ -33,7 +33,7 @@ export interface IChannelContract {
   /**
    * Optional version string announcing the contract cut this side holds.
    * Crossed to the counterpart during the handshake and stored on
-   * `peerContract`; nexus itself attaches no semantics to it — a
+   * `peerContract`; nexus itself attaches no semantics to it, though a
    * channel-supplied compatibility rule may compare the two announcements.
    */
   version?: string

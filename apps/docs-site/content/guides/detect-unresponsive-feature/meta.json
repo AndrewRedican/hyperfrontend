@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "type": "how-to",
+  "title": "How to detect and handle an unresponsive feature",
+  "problem": "An embedded feature can hang, crash, or lose its tab throttling fight; I need the host to notice within seconds, tell the user honestly, and recover when it returns.",
+  "outcome": "A host that keeps SDK liveness and product silence apart, reacts to all four liveness states with honest UI, measures round-trip latency with a correlated request, and recovers cleanly when the feature comes back.",
+  "priority": "P1",
+  "packages": ["@hyperfrontend/features"],
+  "verification": {
+    "kind": "demo",
+    "source": "apps/demos/heartbeat/src/host/main.ts"
+  },
+  "snippetSources": ["apps/demos/heartbeat/heartbeat.contract.ts"],
+  "demo": "heartbeat",
+  "complexity": "intermediate",
+  "estMinutes": 20,
+  "apis": [
+    {
+      "package": "@hyperfrontend/features",
+      "symbol": "createShell"
+    }
+  ],
+  "prerequisites": {
+    "guides": ["embed-a-shipped-feature"],
+    "knowledge": ["The feature's contract, so you know which events prove it is working"]
+  },
+  "related": {
+    "guides": ["compose-independent-features"],
+    "reference": ["/docs/libraries/features", "/docs/libraries/features/host"],
+    "explanation": ["/docs/libraries/features/architecture"]
+  },
+  "keywords": [
+    "heartbeat",
+    "liveness",
+    "watchdog",
+    "status",
+    "healthy",
+    "unobservable",
+    "suspect",
+    "gone",
+    "unresponsive",
+    "hang",
+    "crash",
+    "tab throttling",
+    "ping",
+    "pong",
+    "latency",
+    "flatline",
+    "recovery"
+  ]
+}

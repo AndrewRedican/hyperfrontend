@@ -4,7 +4,7 @@ import type { IsWorkspacePackagePredicate } from '../models'
  * Builds an {@link IsWorkspacePackagePredicate} that matches every package whose
  * name starts with the supplied scope.
  *
- * The scope is treated as a literal string prefix — pass the full scope including
+ * The scope is treated as a literal string prefix: pass the full scope including
  * the trailing slash (`'@hyperfrontend/'`) when matching scoped packages so the
  * predicate doesn't accidentally treat `@hyperfrontend-foo/x` as a workspace
  * package.

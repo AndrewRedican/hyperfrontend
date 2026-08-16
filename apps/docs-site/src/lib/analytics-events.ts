@@ -3,8 +3,8 @@
  * ever reach Google Analytics is defined here, and only here. The set is
  * deliberately small and limited to interactions that exist today and could
  * meaningfully measure paid-acquisition effectiveness: opening a live demo,
- * following the primary docs call to action, and visiting the repository or
- * an npm package. Parameters carry only fixed public identifiers (slugs,
+ * following the primary docs call to action, visiting the repository or an
+ * npm package, opening site search, and sharing a page. Parameters carry only fixed public identifiers (slugs,
  * package names, link locations) — never user-entered content or personal
  * data. Delivery rides {@link trackEvent}, so nothing leaves the page without
  * a configured measurement ID and granted analytics consent, and the hostee
@@ -66,6 +66,27 @@ export function trackRepoVisit(location: RepoLinkLocation): void {
  */
 export function trackNpmVisit(packageName: string): void {
   trackEvent('npm_visit', { package_name: packageName })
+}
+
+/** Share destinations the share menu offers. */
+export type SharePlatform = 'native' | 'linkedin' | 'x' | 'whatsapp' | 'copy-link'
+
+/**
+ * Reports the site search dialog being opened.
+ */
+export function trackSearchOpen(): void {
+  trackEvent('search_open')
+}
+
+/**
+ * Reports a page being shared. The query the user typed into search is never
+ * reported; the shared route is a fixed public identifier.
+ *
+ * @param platform - The share destination that was activated.
+ * @param path - Site-relative route of the shared page.
+ */
+export function trackShare(platform: SharePlatform, path: string): void {
+  trackEvent('share', { share_platform: platform, page_path: path })
 }
 
 /**

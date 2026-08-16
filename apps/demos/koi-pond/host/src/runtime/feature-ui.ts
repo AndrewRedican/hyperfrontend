@@ -18,7 +18,10 @@ export interface FeatureUiLink {
   send(type: string, data?: unknown): void
 }
 
-/** Presentation-fed UI state: the announced display mode plus the dialog close-request path. */
+/** What asked for the close: the ✕ control or the Escape key. */
+export type CloseRequestSource = 'button' | 'escape'
+
+/** Presentation-fed UI state: the announced display mode plus the close-request path. */
 export interface FeatureUi {
   /** Binds the state to a live feature handle (or a test double). */
   attach(link: FeatureUiLink): void
@@ -32,13 +35,24 @@ export interface FeatureUi {
    */
   subscribe(listener: () => void): () => void
   /**
-   * Emits one `close-request` to the host. Only meaningful in dialog mode, and
-   * latched until the presentation changes so a click racing a keyboard close
-   * can never produce duplicate requests.
+   * Emits one `close-request` to the host. Meaningful presented as a dialog or
+   * embedded — an embedded pond may be stretched over the host's page as an
+   * overlay the visitor wants out of — and latched so a click racing a
+   * keyboard close can never produce duplicate requests. The latch re-arms on
+   * every fresh presentation and on {@link rearmClose}.
    *
+   * @param source - What asked for the close.
    * @returns `true` when the request was sent, `false` when ignored.
    */
-  requestClose(): boolean
+  requestClose(source?: CloseRequestSource): boolean
+  /**
+   * Re-arms the close latch without a presentation change.
+   *
+   * The embedded overlay collapses through a `set-scene` rather than a fresh
+   * presentation, so the host acknowledging a close this way is what makes the
+   * next request possible.
+   */
+  rearmClose(): void
 }
 
 const MODES: readonly FeatureDisplayMode[] = ['embedded', 'dialog', 'popup', 'standalone']
@@ -103,13 +117,16 @@ export function createFeatureUi(): FeatureUi {
       listeners.add(listener)
       return () => listeners.delete(listener)
     },
-    requestClose() {
-      if (mode !== 'dialog' || closeRequested || send === null) {
+    requestClose(source = 'button') {
+      if ((mode !== 'dialog' && mode !== 'embedded') || closeRequested || send === null) {
         return false
       }
       closeRequested = true
-      send('close-request', { source: 'button' })
+      send('close-request', { source })
       return true
+    },
+    rearmClose() {
+      closeRequested = false
     },
   }
 }

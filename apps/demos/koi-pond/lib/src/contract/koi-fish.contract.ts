@@ -6,7 +6,7 @@
  * nearby, and the fish answers with where its body currently is.
  *
  * High-cadence traffic (`outline`, `neighbors`) is deliberately schema-less so
- * the SDK's payload validator is skipped on the hot path — seven fish reporting
+ * the SDK's payload validator is skipped on the hot path — a whole shoal reporting
  * ten times a second is the one place validation cost would show. Every
  * low-cadence action carries a schema, so a malformed world or a bad depth grant
  * is still caught at the boundary.
@@ -38,9 +38,9 @@ export interface KoiContract {
 }
 
 /** The contract cut every pond project is built against. */
-export const KOI_CONTRACT_VERSION = '0.5.0'
+export const KOI_CONTRACT_VERSION = '0.7.0'
 
-/** The contract the pond host and all seven koi share. */
+/** The contract the pond host and every koi share. */
 export const koiFishContract: KoiContract = {
   version: KOI_CONTRACT_VERSION,
   accepted: [
@@ -126,7 +126,7 @@ export const koiFishContract: KoiContract = {
     },
     {
       type: 'sleep',
-      description: 'Whether to hold still. The host pauses off-screen and hidden ponds so seven compositing layers stop costing anything.',
+      description: 'Whether to hold still. The host pauses off-screen and hidden ponds so the compositing layers stop costing anything.',
       schema: {
         type: 'object',
         properties: { paused: { type: 'boolean' } },
@@ -161,7 +161,7 @@ export const koiFishContract: KoiContract = {
     {
       type: 'outline',
       description:
-        "The koi's occupied outline as nose-first spine samples with a half-width each, plus heading, speed, depth, and behavioural phase. While a visitor holds this koi, also the identity card's geometry — its frame and its two link rectangles — so the host can float real anchors and an inert shield over a card the pointer-transparent frame could never make interactive itself. High cadence, deliberately schema-less.",
+        "The koi's occupied outline as nose-first spine samples with a half-width each, plus heading, speed, depth, and behavioural phase. Ordinarily also the koi's current steering intent — travel, avoidance, or a depth pass, with the point it is steering toward and its anticipation reach — so the host can visualise the decision; omitted while the koi is held. While a visitor holds this koi, also the identity card's geometry — its frame and its three link rectangles — so the host can float real anchors and an inert shield over a card the pointer-transparent frame could never make interactive itself. High cadence, deliberately schema-less.",
     },
     {
       type: 'depth-request',
@@ -190,7 +190,7 @@ export const koiFishContract: KoiContract = {
     {
       type: 'settled',
       description:
-        'This koi finished fleeing and resumed ambient cruising. The host waits for all seven before it calls a disturbance sequence complete.',
+        'This koi finished fleeing and resumed ambient cruising. The host waits for every koi before it calls a disturbance sequence complete.',
       schema: {
         type: 'object',
         properties: { framework: { type: 'string' } },

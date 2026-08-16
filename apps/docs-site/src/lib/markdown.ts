@@ -13,7 +13,9 @@ import remarkRehype from 'remark-rehype'
  * (`defaultColor: false`); the active palette is chosen by the `.dark` class
  * via the `pre.shiki` rules in `globals.css`. Raw HTML embedded in the markdown
  * (mermaid placeholders, badges, alignment wrappers) is preserved through
- * `rehype-raw`.
+ * `rehype-raw`, except for HTML comments: authoring notes stay useful in the
+ * source files and never reach the published page. Comment syntax inside a
+ * fenced code block is sample text rather than a comment, so it still renders.
  *
  * @param markdown - The markdown string to convert
  * @returns A promise that resolves to the HTML string
@@ -23,6 +25,7 @@ export async function markdownToHtml(markdown: string): Promise<string> {
     .use(remarkGfm)
     .use(remarkRehype, { allowDangerousHtml: true })
     .use(rehypeRaw)
+    .use(rehypeRemoveComments)
     .use(rehypeShiki, {
       themes: { light: 'github-light', dark: 'github-dark' },
       defaultColor: false,
@@ -33,6 +36,52 @@ export async function markdownToHtml(markdown: string): Promise<string> {
     .process(markdown)
 
   return result.toString()
+}
+
+/**
+ * The subset of a hast node the comment pass needs: its type, and its children
+ * when it is a container.
+ */
+interface CommentableNode {
+  /** Node type, `'comment'` for an HTML comment */
+  type: string
+  /** Child nodes, absent on leaves */
+  children?: CommentableNode[]
+}
+
+/**
+ * Rehype plugin that drops HTML comments so in-source authoring notes never
+ * render.
+ *
+ * Comments are removed from the parsed tree rather than from the markdown
+ * text. A textual `<!--`...`-->` strip is both incomplete and overreaching:
+ * overlapping markers reassemble into a live comment once an inner one is
+ * removed, and comment syntax inside fenced code blocks is sample content that
+ * must survive to the page.
+ *
+ * @returns The tree transformer
+ */
+function rehypeRemoveComments(): (tree: CommentableNode) => void {
+  return (tree) => {
+    removeComments(tree)
+  }
+}
+
+/**
+ * Drop every comment node beneath a hast node, in place.
+ *
+ * @param node - Node whose subtree is filtered
+ */
+function removeComments(node: CommentableNode): void {
+  if (!node.children) {
+    return
+  }
+
+  node.children = node.children.filter((child) => child.type !== 'comment')
+
+  for (const child of node.children) {
+    removeComments(child)
+  }
 }
 
 /**
@@ -96,25 +145,4 @@ export function processMarkdownTables(html: string): string {
     .replace(/<td>/g, '<td class="whitespace-nowrap px-4 py-3 text-sm text-slate-600 dark:text-slate-400">')
 }
 
-/**
- * Generate a URL-friendly slug from a heading text.
- * Follows the same algorithm as GitHub's anchor generation.
- *
- * @param text - The heading text to convert to a slug
- * @returns A URL-safe slug string
- *
- * @example
- * ```typescript
- * generateSlug('Installation Guide')  // 'installation-guide'
- * generateSlug('API Reference')       // 'api-reference'
- * generateSlug('Getting Started!')    // 'getting-started'
- * ```
- */
-export function generateSlug(text: string): string {
-  return text
-    .toLowerCase()
-    .replace(/[^a-z0-9\s-]/g, '')
-    .replace(/\s+/g, '-')
-    .replace(/-+/g, '-')
-    .replace(/^-|-$/g, '')
-}
+export { generateSlug } from './slug'

@@ -17,7 +17,7 @@
  */
 import type { PropertyDeclarations, TemplateResult } from 'lit'
 import type { GlRenderer } from './koi-render'
-import { FRAMEWORK_SITES } from '@hyperfrontend/demo-koi-lib'
+import { FRAMEWORK_SITES, koiSourceUrl } from '@hyperfrontend/demo-koi-lib'
 import { LitElement, css, html } from 'lit'
 import { styleMap } from 'lit/directives/style-map.js'
 import { KoiSwimController } from '../runtime/koi-runtime'
@@ -116,7 +116,8 @@ export class KoiFishElement extends LitElement {
 
     /* why: Styled as the links they are, but this frame never receives the pointer - the host floats real anchors over the rectangles the outline reports. */
     .koi-card-url,
-    .koi-card-site {
+    .koi-card-site,
+    .koi-card-source {
       font-size: 0.68rem;
       color: rgba(124, 192, 255, 0.85);
       font-family: ui-monospace, 'SFMono-Regular', monospace;
@@ -125,7 +126,8 @@ export class KoiFishElement extends LitElement {
       text-underline-offset: 2px;
     }
 
-    .koi-card-site {
+    .koi-card-site,
+    .koi-card-source {
       font-size: 0.64rem;
       font-family: inherit;
     }
@@ -175,6 +177,8 @@ export class KoiFishElement extends LitElement {
         <span class="koi-card-line koi-card-memory"></span>
         <span class="koi-card-line koi-card-event" hidden></span>
         <a class="koi-card-site" href=${FRAMEWORK_SITES[framework]} target="_blank" rel="noopener noreferrer">${label} website ↗</a>
+        <!-- why: The demo's claim is checkable — the card links straight to this very app's implementation in the repository. -->
+        <a class="koi-card-source" href=${koiSourceUrl(framework)} target="_blank" rel="noopener noreferrer">App source ↗</a>
       </div>
     `
   }

@@ -136,7 +136,7 @@ export function getDemoTheme(slug: string): DemoTheme {
 /** Status-pill copy per fallback status. */
 const STATUS_LABELS: Record<FallbackStatus, string> = {
   planned: 'In planning',
-  built: 'Built — deploy pending',
+  built: 'Built, deploy pending',
   connecting: 'Connecting…',
   offline: 'Warming up on its own origin',
   idle: 'Live demo',

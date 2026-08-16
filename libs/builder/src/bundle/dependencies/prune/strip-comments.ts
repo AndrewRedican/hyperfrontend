@@ -14,10 +14,10 @@ export interface CommentStripResult {
 /**
  * Comment text that must survive the strip.
  *
- * - `@__PURE__` / `#__PURE__` / `@__NO_SIDE_EFFECTS__` — tool-agnostic annotations
+ * - `@__PURE__` / `#__PURE__` / `@__NO_SIDE_EFFECTS__`: tool-agnostic annotations
  *   a downstream bundler reads to tree-shake our published package further;
  *   removing them degrades that.
- * - `@license` / `@preserve` / `@cc_on` and a `/*!` or `//!` legal banner — attribution
+ * - `@license` / `@preserve` / `@cc_on` and a `/*!` or `//!` legal banner: attribution
  *   that must ship.
  */
 const PRESERVE = /@(?:__PURE__|__NO_SIDE_EFFECTS__|license|preserve|cc_on)|^\s*\/[*/]!|#__PURE__/
@@ -60,7 +60,7 @@ interface CommentRange {
  * Enumerates every comment trivia range in `text` via a `ts.Scanner` over the raw
  * source. The scanner keeps comment-looking text inside strings, templates, and
  * (with regex re-lexing) regex literals bound to those tokens, so the ranges it
- * returns are always genuine comments — never a `//` buried in a string or regex.
+ * returns are always genuine comments: never a `//` buried in a string or regex.
  *
  * @param text - Raw chunk source to scan.
  * @returns Every comment trivia range, in ascending source order.
@@ -173,7 +173,7 @@ export const stripComments = (source: string): string | null => {
  * comments.
  *
  * Consumers read the package's public `index.d.ts`, never `_dependencies/**\/*.js`,
- * so these comments are pure runtime bytes — but the annotations a downstream
+ * so these comments are pure runtime bytes, but the annotations a downstream
  * bundler uses to tree-shake our package and the legal comments it must surface
  * really do ship inside the chunks, so the strip is a comment-aware text splice
  * (no minify, no reformat), not a blanket removal. A `ts.Scanner` enumerates

@@ -280,9 +280,9 @@ flowchart TB
 
 ## See Also
 
-- [semver/](../semver/README.md) — Version parsing and comparison
-- [commits/](../commits/README.md) — Generates changelog entries from commits
-- [flow/](../flow/README.md) — Orchestrates changelog generation
-- [workspace/](../workspace/README.md) — Discovers changelog files
-- [Main README](../../README.md) — Package overview and quick start
-- [ARCHITECTURE.md](../../ARCHITECTURE.md) — Design principles and data flow
+- [semver/](../semver/README.md): Version parsing and comparison
+- [commits/](../commits/README.md): Generates changelog entries from commits
+- [flow/](../flow/README.md): Orchestrates changelog generation
+- [workspace/](../workspace/README.md): Discovers changelog files
+- [Main README](../../README.md): Package overview and quick start
+- [ARCHITECTURE.md](../../ARCHITECTURE.md): Design principles and data flow

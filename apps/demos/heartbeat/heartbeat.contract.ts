@@ -12,6 +12,7 @@ import type { FeatureContract } from '@hyperfrontend/features/hostee'
 const contract = {
   version: '0.2.0',
   accepted: [
+    // ref: [guide:detect-unresponsive-feature/ping-declaration] start
     {
       type: 'ping',
       description:
@@ -26,6 +27,7 @@ const contract = {
       },
       respondsWith: 'pong',
     },
+    // ref: [guide:detect-unresponsive-feature/ping-declaration] end
     {
       type: 'set-rate',
       description: 'Adjust the baseline rhythm rate in bpm, clamped to 40–180. Confirmed by a `rhythm` echo carrying the applied rate.',

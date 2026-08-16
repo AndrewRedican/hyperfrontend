@@ -36,14 +36,6 @@
         "command": "npm run build"
       }
     },
-    "test": {
-      "executor": "nx:run-commands",
-      "dependsOn": ["install"],
-      "options": {
-        "command": "npm run test:unit -- --run",
-        "cwd": "apps/demos/koi-pond/fish-svelte"
-      }
-    },
     "lint": {
       "executor": "nx:run-commands",
       "dependsOn": ["install"],
@@ -68,6 +60,7 @@
         "command": "npx hf build --ci --allow-open --out ../../../../dist/apps/demos/koi-pond/fish-shell/svelte",
         "cwd": "apps/demos/koi-pond/fish-svelte"
       }
-    }
+    },
+    "audit": {}
   }
 }

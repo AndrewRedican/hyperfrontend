@@ -9,7 +9,7 @@ import { resolveEmbedFallback } from '../shared/presentation'
  * Created by a display-mode mount seeded with a synchronous initial
  * measurement: `current()` feeds the presentation announcement, and once the
  * shell calls `start`, only **changes** relative to what was already announced
- * are forwarded — the initial size never crosses twice.
+ * are forwarded: the initial size never crosses twice.
  */
 export interface ViewportReporter {
   /** The most recent measurement, in exact pixels. */
@@ -98,15 +98,15 @@ export function createObserverReporter(element: HTMLElement, initial: ViewportPa
  * keeps the feature informed of the exact pixel space its frame occupies.
  *
  * The container is an anchor the surrounding host UI owns, so the reporter
- * works from its **content box** — the box the frame actually fills.
+ * works from its **content box**: the box the frame actually fills.
  * Percentage or relative container sizing, layout shifts from surrounding
  * content, and dynamic resizes all surface through the same observation,
  * already resolved to pixels.
  *
  * While the container measures zero on an axis (hidden, not yet laid out, or
  * height-collapsed because nothing sizes it), the reporter applies a
- * viewport-derived fallback to the frame on that axis — giving an auto-height
- * container a workable size — and reports those dimensions. Each axis retires
+ * viewport-derived fallback to the frame on that axis (giving an auto-height
+ * container a workable size) and reports those dimensions. Each axis retires
  * independently as soon as a measurement diverges from its applied fallback
  * (the surrounding layout took over), returning the frame to filling the
  * container on that axis.
