@@ -259,7 +259,8 @@ function fenceLanguage(sourcePath: string): string {
 
 /**
  * Replaces every `<!-- snippet: <region> -->` placeholder in a guide with the
- * extracted code and a source link to its executable twin.
+ * extracted code and a source link to its executable twin, labelled with the
+ * exact line range so the reader sees where the example lives before clicking.
  *
  * @param unit - The guide unit being compiled
  * @param meta - The guide's validated metadata
@@ -293,9 +294,10 @@ function resolveSnippets(unit: GuideUnit, meta: GuideMeta, errors: string[]): st
       return placeholder
     }
     used.add(name)
-    const url = `${GITHUB_BLOB_BASE}/${region.sourcePath}#L${region.startLine}-L${region.endLine}`
+    const lineRange = `#L${region.startLine}-L${region.endLine}`
+    const url = `${GITHUB_BLOB_BASE}/${region.sourcePath}${lineRange}`
     const fence = `\`\`\`${fenceLanguage(region.sourcePath)}\n${region.code}\n\`\`\``
-    return `${fence}\n\n<sub>[${region.sourcePath}](${url})</sub>`
+    return `${fence}\n\n<sub>e.g. [${region.sourcePath}${lineRange}](${url})</sub>`
   })
 
   for (const [name] of regions) {
