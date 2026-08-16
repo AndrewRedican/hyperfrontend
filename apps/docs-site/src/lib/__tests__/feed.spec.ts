@@ -48,14 +48,16 @@ describe('buildArticlesFeed', () => {
 
   it('carries the required Atom fields on every entry', () => {
     const parsed = new DOMParser().parseFromString(xml, 'application/xml')
-    const entries = [...parsed.querySelectorAll('entry')]
-    expect(
-      entries.map((entry) =>
-        ['title', 'link', 'id', 'published', 'updated', 'author', 'summary'].every(
-          (tag) => entry.querySelector(tag) ?? entry.querySelector(`[href]`)
-        )
-      )
-    ).toEqual([true, true])
+    const missing = [...parsed.querySelectorAll('entry')].flatMap((entry) =>
+      ['title', 'id', 'published', 'updated', 'author', 'summary'].filter((tag) => entry.querySelector(tag) === null)
+    )
+    expect(missing).toEqual([])
+  })
+
+  it('gives every entry a link with an href', () => {
+    const parsed = new DOMParser().parseFromString(xml, 'application/xml')
+    const hrefs = [...parsed.querySelectorAll('entry')].map((entry) => entry.querySelector('link')?.getAttribute('href'))
+    expect(hrefs.every((href) => typeof href === 'string' && href.length > 0)).toBe(true)
   })
 
   it('links canonical trailing-slash URLs', () => {
