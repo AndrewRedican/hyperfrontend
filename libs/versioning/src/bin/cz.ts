@@ -21,7 +21,7 @@ export interface CzArgs {
   readonly cwdOverride?: string
 }
 
-/** Injectable dependencies for `runCz` — defaulted for production, overridden in tests. */
+/** Injectable dependencies for `runCz`: defaulted for production, overridden in tests. */
 export interface RunCzDeps {
   /** Loads the user's commit config (or returns an empty one) */
   readonly loadConfig?: typeof loadCommitConfig
@@ -35,7 +35,7 @@ export interface RunCzDeps {
 
 /** Inputs for a single `cz` invocation. */
 export interface RunCzOptions extends RunCzDeps {
-  /** Raw argv tail (excluding node + script) — usually `process.argv.slice(2)` */
+  /** Raw argv tail (excluding node + script), usually `process.argv.slice(2)` */
   readonly argv: readonly string[]
 
   /** Default cwd used when argv does not provide `--cwd` */

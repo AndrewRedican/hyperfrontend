@@ -1,4 +1,4 @@
-# CLIs — `cz` and `cl`
+# CLIs: `cz` and `cl`
 
 `@hyperfrontend/versioning` ships two command-line entries that are wired to the
 npm `bin` field. Install the package and they become available as `npx cz` and
@@ -13,7 +13,7 @@ Both read their configuration from a `commit.config.{js,mjs,cjs}` file
 discovered upward from the current working directory (or pointed at via
 `--config`).
 
-## `cz` — author a commit
+## `cz`: author a commit
 
 ```text
 npx cz [--config <path>] [--cwd <path>]
@@ -36,7 +36,7 @@ Exit codes:
 | `1`   | Argv error, config failure, empty staging, or git commit failure |
 | `130` | User cancelled the session (SIGINT / Ctrl-C)                     |
 
-## `cl` — validate a commit message
+## `cl`: validate a commit message
 
 ```text
 npx cl <commit-msg-path> [--config <path>] [--cwd <path>]

@@ -4,7 +4,7 @@ import { isBreakingFooterKey } from '../models/breaking'
 import { formatHeader } from './format-header'
 
 /**
- * Renders a draft as the final commit message string — the exact text that
+ * Renders a draft as the final commit message string: the exact text that
  * would be written to `.git/COMMIT_EDITMSG`. Layout: header, blank line,
  * body, blank line, footers.
  *

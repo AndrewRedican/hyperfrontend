@@ -311,11 +311,11 @@ for (const step of result.steps) {
 
 ## See Also
 
-- [commits/](../commits/README.md) — Commit parsing for analyze-commits step
-- [semver/](../semver/README.md) — Version bumping for calculate-bump step
-- [changelog/](../changelog/README.md) — Changelog generation step
-- [git/](../git/README.md) — Git operations for commit/tag steps
-- [registry/](../registry/README.md) — Registry queries for fetch-registry step
-- [workspace/](../workspace/README.md) — Workspace operations for batch flows
-- [Main README](../../README.md) — Package overview and quick start
-- [ARCHITECTURE.md](../../ARCHITECTURE.md) — Design principles and data flow
+- [commits/](../commits/README.md): Commit parsing for analyze-commits step
+- [semver/](../semver/README.md): Version bumping for calculate-bump step
+- [changelog/](../changelog/README.md): Changelog generation step
+- [git/](../git/README.md): Git operations for commit/tag steps
+- [registry/](../registry/README.md): Registry queries for fetch-registry step
+- [workspace/](../workspace/README.md): Workspace operations for batch flows
+- [Main README](../../README.md): Package overview and quick start
+- [ARCHITECTURE.md](../../ARCHITECTURE.md): Design principles and data flow

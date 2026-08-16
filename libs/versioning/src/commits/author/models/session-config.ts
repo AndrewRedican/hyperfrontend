@@ -33,14 +33,14 @@ export type StagedPathsProvider = (options: StagedPathsProviderOptions) => reado
 
 /**
  * Fully resolved authoring session configuration. Consumers typically supply a
- * partial shape — the config loader (or `createAuthorSession`) fills the gaps
+ * partial shape: the config loader (or `createAuthorSession`) fills the gaps
  * with defaults before handing the result to the runner.
  */
 export interface SessionConfig {
   /** Commit type enum shown in the `type` step */
   readonly types: readonly SessionType[]
 
-  /** Optional filter applied to discovered scopes — receives `{ path, name }` */
+  /** Optional filter applied to discovered scopes; receives `{ path, name }` */
   readonly scopeFilter?: (context: ScopeFilterContext) => boolean
 
   /** When true, the `scope` step may be skipped even if no candidates are found */

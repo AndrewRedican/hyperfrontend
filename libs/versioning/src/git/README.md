@@ -209,8 +209,8 @@ All user input undergoes character-by-character validation before being used in 
 
 ## See Also
 
-- [workspace/](../workspace/README.md) — Uses git for version coordination
-- [flow/](../flow/README.md) — Orchestrates git commit/tag operations
-- [commits/](../commits/README.md) — Parses conventional commit messages
-- [Main README](../../README.md) — Package overview and quick start
-- [ARCHITECTURE.md](../../ARCHITECTURE.md) — Design principles and data flow
+- [workspace/](../workspace/README.md): Uses git for version coordination
+- [flow/](../flow/README.md): Orchestrates git commit/tag operations
+- [commits/](../commits/README.md): Parses conventional commit messages
+- [Main README](../../README.md): Package overview and quick start
+- [ARCHITECTURE.md](../../ARCHITECTURE.md): Design principles and data flow

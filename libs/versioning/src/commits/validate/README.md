@@ -92,8 +92,8 @@ const dogfoodRuleset: Ruleset = {
 3. Write a colocated `.spec.ts` covering: happy path, each failure branch, the `off`/empty-options pass-through paths.
 4. If it should ship in the default preset, add it to [presets/conventional.ts](./presets/conventional.ts).
 
-The engine is intentionally dumb about rule semantics — rules own both the check and the message wording. Keep messages specific enough to act on (`'type must be one of [feat, fix] but was "wip"'`, not `'invalid type'`).
+The engine is intentionally dumb about rule semantics: rules own both the check and the message wording. Keep messages specific enough to act on (`'type must be one of [feat, fix] but was "wip"'`, not `'invalid type'`).
 
 ## See Also
 
-- [../README.md](../README.md) — Parsing primitives this engine consumes
+- [../README.md](../README.md): Parsing primitives this engine consumes

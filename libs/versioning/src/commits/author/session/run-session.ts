@@ -9,7 +9,7 @@ import { StepStatus } from '../models/step'
 
 /**
  * Executes the session step-by-step. Handles `goto` jumps, surfaces Ctrl-C
- * cancellations as `{ status: 'cancelled' }` outcomes, and — on success —
+ * cancellations as `{ status: 'cancelled' }` outcomes, and (on success)
  * returns the final formatted message alongside the `committed` status.
  *
  * @param session - Session description produced by `createAuthorSession`

@@ -24,7 +24,7 @@ export const BUILT_IN_RULES: Readonly<Record<string, Rule<never>>> = {
  * aggregates the resulting warnings and errors.
  *
  * Rules whose config is `'off'` (or absent from the ruleset) are skipped.
- * Unknown rule names in the ruleset are ignored — consumers extend the engine
+ * Unknown rule names in the ruleset are ignored: consumers extend the engine
  * by calling `validateCommitWithRules()` and supplying additional rules.
  *
  * @param commit - Parsed conventional commit to validate

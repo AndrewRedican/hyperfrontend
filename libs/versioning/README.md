@@ -52,6 +52,7 @@ Versioning library with changelog parsing, conventional commits, and semver flow
 - **Monorepo Scope Filtering** - Intelligent commit classification ensures changelogs only include relevant commits
 - **Composable Operations** - Build complex versioning workflows from simple, pure functions
 - **Zero External Dependencies** - Self-contained implementation with no third-party runtime dependencies
+<!-- TODO(asset): keystroke-live npx cz session showing scope pick and the subject character countdown -->
 
 ### Architecture Highlights
 
@@ -67,7 +68,7 @@ Working with CHANGELOG.md files programmatically typically involves fragile stri
 
 ### Unified Versioning Primitives
 
-Version management requires coordinating [semver](https://semver.org/) parsing, commit analysis, changelog generation, and registry queries. This library provides all these primitives in one cohesive package with consistent APIs. Query [npm](https://www.npmjs.com/) for published versions, parse commit history, calculate version bumps, and generate changelog entries — all composable into custom release workflows.
+Version management requires coordinating [semver](https://semver.org/) parsing, commit analysis, changelog generation, and registry queries. This library provides all these primitives in one cohesive package with consistent APIs. Query [npm](https://www.npmjs.com/) for published versions, parse commit history, calculate version bumps, and generate changelog entries, all composable into custom release workflows.
 
 ### Zero-Dependency CI Integration
 
@@ -75,7 +76,7 @@ Designed for automated pipelines where minimal attack surface matters. Zero exte
 
 ### One-Stop Commit Toolchain
 
-The interactive `cz` and validator `cl` bins cover the same ground as [commitizen](https://github.com/commitizen/cz-cli) + [cz-conventional-changelog](https://github.com/commitizen/cz-conventional-changelog) + [@commitlint/cli](https://github.com/conventional-changelog/commitlint) — in one package, without patch-package workarounds, with a config-driven session (`commit.config.{js,mjs,cjs}`), a live 72-char header countdown, and scope choices derived from staged files. Acknowledgment to those projects: they shaped the conventions this library now implements natively.
+The interactive `cz` and validator `cl` bins cover the same ground as [commitizen](https://github.com/commitizen/cz-cli) + [cz-conventional-changelog](https://github.com/commitizen/cz-conventional-changelog) + [@commitlint/cli](https://github.com/conventional-changelog/commitlint), in one package, without patch-package workarounds, with a config-driven session (`commit.config.{js,mjs,cjs}`), a live 72-char header countdown, and scope choices derived from staged files. Acknowledgment to those projects: they shaped the conventions this library now implements natively.
 
 ## Installation
 

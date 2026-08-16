@@ -17,7 +17,7 @@ This document describes the internal architecture of `@hyperfrontend/versioning`
 
 ### 1. Purely Functional Architecture
 
-All operations are implemented as pure functions. State is never mutated—instead, new objects are returned from each operation.
+All operations are implemented as pure functions. State is never mutated; instead, new objects are returned from each operation.
 
 ```typescript
 // ✅ Pure function - returns new object
@@ -112,7 +112,7 @@ graph TB
 
 ### Version Release Flow
 
-The primary use case—releasing a new version—flows through multiple modules:
+The primary use case, releasing a new version, flows through multiple modules:
 
 ```mermaid
 sequenceDiagram
