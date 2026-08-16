@@ -238,9 +238,9 @@ function selectConfigPath(
  * precedence: `--root` sets the served directory, `--port`/`--host` the listen
  * address, and `--config` selects the file. A platform-assigned `PORT` beats a
  * port baked into the served artifact's config, and an explicit `--port` still
- * beats both — so `hf serve --root <dir>` works without a port flag wherever
+ * beats both, so `hf serve --root <dir>` works without a port flag wherever
  * the platform injects one. Unlike the dev server, serving is valid with no config at
- * all — the working directory is served with defaults.
+ * all: the working directory is served with defaults.
  *
  * @param options - The working directory, parsed flags, and injectable deps.
  * @returns The resolved root, listen address, header rules, and source path.

@@ -7,7 +7,7 @@ import { runServe } from './commands/serve'
 import { EXIT_ERROR, EXIT_OK } from './exit-codes'
 import { USAGE } from './usage'
 
-/** Inputs for a single CLI invocation — matches the builder's bin bootstrap. */
+/** Inputs for a single CLI invocation, matching the builder's bin bootstrap. */
 export interface RunFeaturesCliOptions {
   /** Raw argv tail (excluding node + script), usually `process.argv.slice(2)`. */
   readonly argv: readonly string[]

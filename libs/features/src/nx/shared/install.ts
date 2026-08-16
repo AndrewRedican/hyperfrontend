@@ -43,7 +43,7 @@ export function detectPackageManager(exists: PathExists): PackageManager {
  * resolved: detects the package manager from the workspace lockfile and runs
  * its `install` synchronously at the tree root, inheriting stdio so the
  * consumer sees the install output. Run this only after the manifest has been
- * flushed to disk — the package manager reads the on-disk `package.json`.
+ * flushed to disk: the package manager reads the on-disk `package.json`.
  *
  * @param tree - The Nx virtual file-system tree for the consumer workspace.
  * @throws {Error} When the install command exits non-zero; the message names the exact command to run manually.

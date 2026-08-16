@@ -37,9 +37,25 @@ SDK, CLI, and dev server for building, embedding, and orchestrating hyperfronten
 
 • 👉 See [**documentation**](https://www.hyperfrontend.dev/docs/libraries/features/)
 
+• 👉 See [**API reference**](https://www.hyperfrontend.dev/docs/libraries/features/#api-reference)
+
 ## What is @hyperfrontend/features?
 
-`@hyperfrontend/features` is the batteries-included layer on top of [`@hyperfrontend/nexus`](https://www.hyperfrontend.dev/docs/libraries/nexus/) (cross-window messaging). Nexus handles the communication protocol; this package formalizes the frontend glue — iframe management, display modes, and lifecycle orchestration — needed to embed micro-frontend features in any host application.
+Embedding another team's app inside your page usually means an iframe, a pile of `postMessage` conventions nobody wrote down, and a frame that never quite fits the space you gave it. `@hyperfrontend/features` turns that into a contract: the feature app declares what it sends, what it accepts, and which display modes it supports; the host picks a mode and gets a typed handle back. The messaging protocol underneath is [`@hyperfrontend/nexus`](https://www.hyperfrontend.dev/docs/libraries/nexus/), and this package adds everything around it: iframe management, display modes and sizing, the open/close lifecycle, and a CLI that packages a feature app into an installable shell.
+
+<!-- TODO(asset): 20-second capture of a host page opening a feature in dialog mode with the hf dev debug UI streaming the handshake alongside -->
+
+```typescript
+// In the feature app, from '@hyperfrontend/features/hostee'
+const feature = createFeature({ name: 'checkout', contract })
+await feature.ready()
+feature.send('order-placed', { id: 'A-1094' })
+
+// In the host app, from '@hyperfrontend/features/host'
+const checkout = createShell({ modes: { dialog: mountDialog }, url: 'https://checkout.example.com' })
+checkout.on('order-placed', (order) => showReceipt(order))
+checkout.open({ displayMode: DisplayMode.Dialog })
+```
 
 It is organized into independent subpath entry points so consumers import only the surface they need.
 
@@ -53,11 +69,11 @@ It is organized into independent subpath entry points so consumers import only t
 
 ### Architecture Highlights
 
-The package separates the host and hostee surfaces behind independent subpath exports and builds them on top of the Nexus messaging layer. For a full architectural overview — with diagrams of the host/hostee handshake, display modes, and shell generation — see [`ARCHITECTURE.md`](./ARCHITECTURE.md).
+The package separates the host and hostee surfaces behind independent subpath exports and builds them on top of the Nexus messaging layer. The [architecture guide](https://www.hyperfrontend.dev/docs/libraries/features/architecture/) diagrams the host/hostee handshake, the display modes, and how a shell is generated.
 
 ## Why Use @hyperfrontend/features?
 
-You get typed host and hostee SDKs, a CLI, and a dev server for composing micro-frontend features — and it works with any framework (React, Vue, Angular, vanilla JS) and build tool. Features build into self-contained shell packages with their dependencies bundled in, so a host installs one package and inherits no transitive install burden.
+You get typed host and hostee SDKs, a CLI, and a dev server for composing micro-frontend features, and it works with any framework (React, Vue, Angular, vanilla JS) and build tool. Features build into self-contained shell packages with their dependencies bundled in, so a host installs one package and inherits no transitive install burden.
 
 ## Installation
 
@@ -99,19 +115,19 @@ shell.open()
 shell.send('set-timezone', { tz: 'UTC' })
 ```
 
-Presentation is host-controlled and contract-preconfigured: a feature declares the display modes it supports (`display.modes` in `feature.config.*`, plus per-mode defaults like fixed embedded dimensions or the dialog box footprint and position), the generated shell builds in exactly those modes, and the host picks one per open. The SDK measures the host-side space and reports it to the feature as exact pixels — the initial size travels with the mode announcement itself — and frames stay hidden until the session opens. In dialog mode the feature draws its own dialog box inside a transparent full-viewport pane and backdrop/Escape dismissal is coordinated for you. See [`src/host/README.md`](./src/host/README.md) for the mode-by-mode details.
+Presentation is host-controlled and contract-preconfigured: a feature declares the display modes it supports (`display.modes` in `feature.config.*`, plus per-mode defaults like fixed embedded dimensions or the dialog box footprint and position), the generated shell builds in exactly those modes, and the host picks one per open. The SDK measures the host-side space and reports it to the feature as exact pixels (the initial size travels with the mode announcement itself), and frames stay hidden until the session opens. In dialog mode the feature draws its own dialog box inside a transparent full-viewport pane and backdrop/Escape dismissal is coordinated for you. The [host SDK docs](https://www.hyperfrontend.dev/docs/libraries/features/host/) cover the modes one by one.
 
-Contract actions may carry a `required: true` flag on `accepted` entries — the connection is denied unless the counterpart emits that type. Unflagged actions never gate the connection, so adding actions to a contract stays backward compatible.
+Contract actions may carry a `required: true` flag on `accepted` entries, which denies the connection unless the counterpart emits that type. Unflagged actions never gate the connection, so adding actions to a contract stays backward compatible.
 
-The SDK's own traffic — the heartbeat, the presentation announcements, dismiss signals, dirty state, and the request/response envelopes — rides the same channel under a reserved `__hf:` prefix and is filtered out before your handlers run. Your contract must not declare action types beginning with `__hf:`; everything the plane carries is listed in [`ARCHITECTURE.md`](./ARCHITECTURE.md).
+The SDK's own traffic — the heartbeat, the presentation announcements, dismiss signals, dirty state, and the request/response envelopes — rides the same channel under a reserved `__hf:` prefix and is filtered out before your handlers run. Your contract must not declare action types beginning with `__hf:`; everything the plane carries is listed in the [architecture guide](https://www.hyperfrontend.dev/docs/libraries/features/architecture/).
 
-Both sides can opt into an encrypted envelope: pass `protocol: 'v1'`, or `protocol: 'v2'` together with a `sharedKey`, to `createShell` and `createFeature`, and the two sides negotiate it during the connection handshake — handshake frames stay plaintext while product messages (including sends queued before the handshake) travel encrypted. The `sharedKey` belongs to `v2` alone: selecting `v2` without a non-empty key throws immediately, while `v1` takes no key.
+Both sides can opt into an encrypted envelope: pass `protocol: 'v1'`, or `protocol: 'v2'` together with a `sharedKey`, to `createShell` and `createFeature`, and the two sides negotiate it during the connection handshake. Handshake frames stay plaintext while product messages (including sends queued before the handshake) travel encrypted. The `sharedKey` belongs to `v2` alone: selecting `v2` without a non-empty key throws immediately, while `v1` takes no key.
 
-A contract may carry a semver `version`, or `createFeature` can receive a `version` option that takes precedence over `contract.version`. Each side presents its version during the handshake, and incompatible cuts — a different major, or a different minor below `1.0.0` — are denied before the channel opens, surfacing as an `error` on both handles. A side without a version always passes the check, so unversioned peers keep connecting.
+A contract may carry a semver `version`, or `createFeature` can receive a `version` option that takes precedence over `contract.version`. Each side presents its version during the handshake, and incompatible cuts (a different major, or a different minor below `1.0.0`) are denied before the channel opens, surfacing as an `error` on both handles. A side without a version always passes the check, so unversioned peers keep connecting.
 
-Contract entries with a `schema` are enforced on both ends: `send` validates the payload against the sender's own `emitted` schema and throws in the sender's frame before anything crosses the wire, while incoming messages are validated against the receiver's own `accepted` schema — an invalid payload is dropped and surfaced as an `error` event shaped `{ reason: 'invalid-payload', type, errors }`. Schema-less actions pass through unchanged.
+Contract entries with a `schema` are enforced on both ends: `send` validates the payload against the sender's own `emitted` schema and throws in the sender's frame before anything crosses the wire, while incoming messages are validated against the receiver's own `accepted` schema. An invalid payload is dropped and surfaced as an `error` event shaped `{ reason: 'invalid-payload', type, errors }`. Schema-less actions pass through unchanged.
 
-What each of these controls is actually worth — and which parts of an integration's security remain the operator's job rather than the SDK's — is stated once, in the [Security Model](https://www.hyperfrontend.dev/docs/core-concepts/security).
+What each of these controls is actually worth, and which parts of an integration's security remain the operator's job rather than the SDK's, is stated once, in the [Security Model](https://www.hyperfrontend.dev/docs/core-concepts/security).
 
 **From the command line**, scaffold, build, and serve features with the bundled `hf` CLI:
 
@@ -132,7 +148,7 @@ npx @hyperfrontend/features serve --root dist   # serve a built site for product
 | `@hyperfrontend/features/cli`    | CLI (`init`, `build`, `dev`, `serve`) and `hf` bin |
 | `@hyperfrontend/features/server` | Dev server, debug UI, and production static server |
 
-> Using Nx? `nx add @hyperfrontend/features` installs the package and runs its `init` generator to declare the dependency. The package also ships `init`/`feature` generators and `build`/`serve` executors — importable from the `@hyperfrontend/features/nx/generators` and `@hyperfrontend/features/nx/executors` entry points — that use the consumer workspace's `@nx/devkit` for formatting and installs when present, falling back to built-in equivalents.
+> Using Nx? `nx add @hyperfrontend/features` installs the package and runs its `init` generator to declare the dependency. The package also ships `init`/`feature` generators and `build`/`serve` executors, importable from the `@hyperfrontend/features/nx/generators` and `@hyperfrontend/features/nx/executors` entry points, that use the consumer workspace's `@nx/devkit` for formatting and installs when present, falling back to built-in equivalents.
 
 ## Compatibility
 

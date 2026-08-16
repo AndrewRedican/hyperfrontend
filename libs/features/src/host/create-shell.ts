@@ -124,7 +124,7 @@ export function deriveShellName(options: ShellOptions, sequence: number): string
  *
  * Provisions a nexus broker and returns a handle whose `open` mounts the
  * feature in the requested display mode. The shell is built from an explicit
- * `modes` map — pass the mounts this host supports (which is how generated
+ * `modes` map: pass the mounts this host supports (which is how generated
  * shells exclude undeclared modes from their bundles) or
  * {@link builtInDisplayModes} for all of them; opening a mode outside the map
  * throws, naming the supported set. The `contract` option takes the feature's

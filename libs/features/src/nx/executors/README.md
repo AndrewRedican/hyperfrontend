@@ -1,6 +1,6 @@
 # executors
 
-Nx executors for hyperfrontend features — `build` packages a feature's shell by delegating to the SDK's headless `hf build`, `serve` runs the SDK dev server as a long-lived target.
+Nx executors for hyperfrontend features: `build` packages a feature's shell by delegating to the SDK's headless `hf build`, `serve` runs the SDK dev server as a long-lived target.
 
 ```ts
 import { runBuildExecutor, serveExecutor } from '@hyperfrontend/features/nx/executors'

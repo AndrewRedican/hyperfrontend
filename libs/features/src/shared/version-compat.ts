@@ -27,7 +27,7 @@ function isCompatible(own: SemVer, peer: SemVer): boolean {
  * The rule is deliberately permissive about absence: when either side
  * announces no version (peers built before versions existed, or contracts
  * that never declared one), the pair is compatible. When both sides announce
- * one, the versions must share a major — and, below `1.0.0`, a minor — to
+ * one, the versions must share a major (and, below `1.0.0`, a minor) to
  * interoperate; anything else is incompatible with a reason naming both
  * versions, surfaced as the connection-denial error.
  *

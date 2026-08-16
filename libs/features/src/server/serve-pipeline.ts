@@ -33,7 +33,7 @@ export interface ServeStepContext {
 /**
  * One link in the serve pipeline. A step may answer the request itself or
  * delegate to the rest of the pipeline with `next()` and transform what comes
- * back — the innermost step serves the file, so `next()` always yields a
+ * back: the innermost step serves the file, so `next()` always yields a
  * complete response.
  */
 export type ServeStep = (request: StaticRequest, context: ServeStepContext, next: () => StaticResponse) => StaticResponse

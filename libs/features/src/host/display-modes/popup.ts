@@ -8,12 +8,12 @@ import { assertNoSandbox, openExternalWindow } from './external-window'
  * Mounts a feature in a separate, sized browser popup window.
  *
  * The window opens at the agreed `popupWidth`/`popupHeight` (falling back to a
- * viewport-derived size), placed on the screen per `popupPosition` — centered
- * by default. Once open, the window is the browser's: the user may move and
+ * viewport-derived size), placed on the screen per `popupPosition` (centered
+ * by default). Once open, the window is the browser's: the user may move and
  * resize it freely, the feature's own window is its viewport (no viewport
  * reports cross the boundary), and no sandbox or permissions delegation can
  * apply to a top-level window. The window's title and chrome belong to the
- * loaded document and the browser — the feature sets `document.title`; the
+ * loaded document and the browser: the feature sets `document.title`; the
  * host cannot.
  *
  * @param context - Inputs the shell passes to this display mode.

@@ -184,7 +184,7 @@ function repairMissingBegin(lines: readonly string[], end: number, importSpecifi
  * gains the block below its shebang and directive prologue, a wired file has the
  * content between its markers regenerated in place, and a file that lost exactly
  * one marker line beside the managed import is repaired deterministically.
- * Everything outside the markers is user-owned and never touched — deleting the
+ * Everything outside the markers is user-owned and never touched; deleting the
  * whole block reverses the mutation. A mere mention of the marker token inside
  * another comment is not treated as a marker.
  *

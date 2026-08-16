@@ -9,7 +9,7 @@ import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/er
  *
  * The sandbox attribute only exists on iframes, so a popup or standalone
  * feature would open fully unconfined while the host believed containment was
- * in place — the mount fails fast in the caller's frame instead.
+ * in place; the mount fails fast in the caller's frame instead.
  *
  * @param sandbox - The `sandbox` value from the merged shell options.
  * @param mode - The display-mode name, used in the error message.

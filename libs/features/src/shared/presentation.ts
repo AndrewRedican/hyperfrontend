@@ -29,7 +29,7 @@ export interface PresentPayload {
   /**
    * The frame's usable space at mount time, in exact pixels (iframe modes
    * only), so the feature can lay itself out without waiting for the first
-   * viewport report — later changes arrive as viewport reports.
+   * viewport report; later changes arrive as viewport reports.
    */
   viewport?: ViewportPayload
   /** Agreed inner dialog box geometry (dialog mode only). */
@@ -84,7 +84,7 @@ export interface ResolvedSize {
  * Targets `coverage` of the viewport height, derives the width from the aspect
  * ratio, then shrinks both to honor `maxCoverage` of the viewport width. Used
  * by the host for popup window defaults and by the hostee for inner dialog box
- * defaults — both sides measure the same viewport, so they agree.
+ * defaults: both sides measure the same viewport, so they agree.
  *
  * @param viewportWidth - The viewport width in pixels.
  * @param viewportHeight - The viewport height in pixels.
@@ -178,7 +178,7 @@ export function alignOffset(alignment: ResolvedPosition['vertical'], extent: num
  *
  * Keeps any real measured width, fills a missing width from the viewport, and
  * derives the height from the viewport's own aspect ratio (capped at
- * `maxCoverage` of the viewport height) — a dynamic estimate rather than an
+ * `maxCoverage` of the viewport height), a dynamic estimate rather than an
  * arbitrary fixed value.
  *
  * @param measuredWidth - The container's measured content-box width, `0` when unmeasurable.

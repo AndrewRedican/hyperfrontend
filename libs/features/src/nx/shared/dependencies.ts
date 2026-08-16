@@ -70,7 +70,7 @@ function pluginVersionRange(): string {
  *
  * A declaration in any dependency section satisfies the check and is left in
  * its section untouched, so repeat runs are no-ops. When the package is
- * undeclared it is added to `dependencies` — the SDK is a runtime dependency —
+ * undeclared it is added to `dependencies` (the SDK is a runtime dependency),
  * pinned to a caret range on the running plugin's own version. Passing
  * `keepExistingVersions: false` instead re-pins an existing declaration to
  * that range, in whichever section it already lives. Writes preserve the

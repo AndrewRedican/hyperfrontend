@@ -1,5 +1,5 @@
 /**
- * Nx executors entry point — the `build` and `serve` executors plus their
+ * Nx executors entry point: the `build` and `serve` executors plus their
  * option shapes, for programmatic invocation and typed composition.
  *
  * @module @hyperfrontend/features/nx/executors

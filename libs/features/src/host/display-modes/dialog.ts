@@ -34,7 +34,7 @@ function buildDialogPresent(options: ShellOptions): PresentPayload {
  *
  * The pane is a single transparent iframe spanning the host viewport; the
  * feature renders its dialog box inside it and the transparent remainder is the
- * backdrop. It mounts hidden — inert to the user and the page — and is
+ * backdrop. It mounts hidden (inert to the user and the page) and is
  * revealed once the session opens. Backdrop and in-frame Escape interactions
  * are detected by the feature side and cross as dismiss signals the shell acts
  * on per `dialogBackdrop`/`closeOnEscape`; an Escape pressed while the host

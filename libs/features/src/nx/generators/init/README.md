@@ -5,8 +5,8 @@ consumer workspace's root `package.json`. `nx add @hyperfrontend/features`
 installs the package and then runs this generator automatically; it can also be
 run directly. Registered via the package's `generators.json`.
 
-A declaration in any dependency section — including `devDependencies`, where
-`nx add`'s install step places it — satisfies the check and is never moved
+A declaration in any dependency section (including `devDependencies`, where
+`nx add`'s install step places it) satisfies the check and is never moved
 between sections. When the package is undeclared it is added to `dependencies`
 (the SDK is a runtime dependency), pinned to a caret range on the running
 plugin's own version. Repeat runs are no-ops.
@@ -14,7 +14,7 @@ plugin's own version. Repeat runs are no-ops.
 When the workspace has `@nx/devkit` installed, staged files are formatted with
 it before Nx writes them to disk. The generator returns an install callback
 that Nx runs after flushing: it installs dependencies only when the manifest
-actually changed — through the workspace's own `@nx/devkit`
+actually changed, through the workspace's own `@nx/devkit`
 `installPackagesTask` when resolvable, otherwise through a built-in installer
 that detects the package manager from the workspace lockfile. The callback
 then verifies that rollup's native binding for the current platform is
