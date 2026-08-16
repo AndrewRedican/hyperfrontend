@@ -29,6 +29,16 @@ export async function generateMetadata({ params }: GuidePageProps): Promise<Meta
   return getGuideMetadata(slug)
 }
 
+/**
+ * Turn a site route into readable link text.
+ *
+ * @param route - Site-relative route such as `/docs/libraries/features/architecture`
+ * @returns Human-readable label, e.g. `features architecture`
+ */
+function routeLabel(route: string): string {
+  return route.replace('/docs/libraries/', '').replace(/^\//, '').split('/').join(' ')
+}
+
 export default async function GuidePage({ params }: GuidePageProps) {
   const { slug } = await params
   const guide = getGuide(slug)
@@ -93,6 +103,21 @@ export default async function GuidePage({ params }: GuidePageProps) {
       ) : null}
 
       <ReadmeContent html={html} mermaidDiagrams={diagrams} />
+
+      {(guide.related?.reference?.length ?? 0) + (guide.related?.explanation?.length ?? 0) > 0 ? (
+        <section className="mt-12 border-t border-slate-200 pt-8 dark:border-slate-700">
+          <h2 className="text-lg font-bold text-slate-900 dark:text-white">Reference and background</h2>
+          <ul className="mt-4 space-y-1 text-sm">
+            {[...(guide.related?.reference ?? []), ...(guide.related?.explanation ?? [])].map((route) => (
+              <li key={route}>
+                <Link href={route} className="text-primary-600 hover:underline dark:text-primary-400">
+                  {routeLabel(route)}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
 
       {relatedGuides.length > 0 ? (
         <section className="mt-12 border-t border-slate-200 pt-8 dark:border-slate-700">
