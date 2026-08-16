@@ -43,14 +43,14 @@ Decorators and utilities for creating immutable, tamper-proof object APIs with b
 
 The library offers three approaches: a TypeScript decorator (`@locked()`) for class methods, a functional API (`lockedProps()`) for bulk property locking, and descriptor builders (`lockedPropertyDescriptors()`) for granular control. All utilities enforce non-writable, non-configurable descriptors while maintaining correct `this` binding through per-instance caching.
 
-Additionally, the library provides **safe built-in copies**—pre-captured references to JavaScript built-in methods that mitigate prototype pollution attacks when loaded early.
+Additionally, the library provides **safe built-in copies**: pre-captured references to JavaScript built-in methods that mitigate prototype pollution attacks when loaded early.
 
 ### Key Features
 
-- **`@locked()` decorator** for TypeScript classes—prevents method overwriting and ensures correct `this` binding
+- **`@locked()` decorator** for TypeScript classes: prevents method overwriting and ensures correct `this` binding
 - **Bulk property locking** via `lockedProps()` for multiple properties in one call
 - **Property descriptor creation** with `lockedPropertyDescriptors()` for custom locking patterns
-- **Safe built-in copies** via secondary entrypoints—captured at module load time before any pollution can occur
+- **Safe built-in copies** via secondary entrypoints: captured at module load time before any pollution can occur
 - **Per-instance binding cache** to avoid repeated `.bind()` calls
 - **Zero runtime dependencies** - pure JavaScript property descriptor manipulation
 
@@ -58,13 +58,13 @@ Additionally, the library provides **safe built-in copies**—pre-captured refer
 
 The `@locked()` decorator uses Symbol-based caching to store bound methods per instance, avoiding the performance cost of repeated `.bind()` calls. Properties are marked `configurable: false` to prevent deletion or descriptor modification, and `writable: false` to block reassignment.
 
-The safe built-in copies are captured at module initialization time. **Important:** This only works if the module loads before any malicious code runs—it mitigates pollution, not prevents it retroactively.
+The safe built-in copies are captured at module initialization time. **Important:** This only works if the module loads before any malicious code runs; it mitigates pollution, not prevents it retroactively.
 
 ## Why Use @hyperfrontend/immutable-api-utils?
 
 ### Prevents Accidental API Tampering in Shared Contexts
 
-When exposing objects to third-party code, plugin systems, or sandboxed environments, you need guarantees that critical methods won't be overwritten. `@locked()` makes methods truly immutable—attempting reassignment throws a TypeError. This protects public APIs from accidental or malicious modification.
+When exposing objects to third-party code, plugin systems, or sandboxed environments, you need guarantees that critical methods won't be overwritten. `@locked()` makes methods truly immutable: attempting reassignment throws a TypeError. This protects public APIs from accidental or malicious modification.
 
 ### Eliminates `this` Binding Bugs Without Arrow Functions
 
@@ -72,7 +72,7 @@ Arrow functions in class fields break inheritance and bloat bundle sizes due to 
 
 ### Simplifies Immutable Object Construction
 
-Building frozen objects with `Object.freeze()` is shallow and doesn't prevent descriptor modification. `lockedProps()` provides deep immutability for specific properties while allowing controlled mutability elsewhere—ideal for partially frozen configs or API surfaces.
+Building frozen objects with `Object.freeze()` is shallow and doesn't prevent descriptor modification. `lockedProps()` provides deep immutability for specific properties while allowing controlled mutability elsewhere, ideal for partially frozen configs or API surfaces.
 
 ### TypeScript-First with Runtime Enforcement
 
@@ -222,7 +222,7 @@ setTimeout(() => log('Delayed message'), 1000)
 | IIFE   | `bundle/index.iife.min.js` |       ❌       |
 | UMD    | `bundle/index.umd.min.js`  |       ❌       |
 
-Secondary entrypoints (`built-in-copy/*`) are individually tree-shakeable—import only the built-ins you need.
+Secondary entrypoints (`built-in-copy/*`) are individually tree-shakeable: import only the built-ins you need.
 
 ### CDN Usage
 
@@ -242,7 +242,7 @@ Secondary entrypoints (`built-in-copy/*`) are individually tree-shakeable—impo
 
 ### Dependencies
 
-None — zero external dependencies.
+None: zero external dependencies.
 
 ## Part of hyperfrontend
 

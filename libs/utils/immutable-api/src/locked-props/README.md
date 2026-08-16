@@ -4,7 +4,7 @@ A functional helper that locks an arbitrary set of object properties in a single
 
 ## Overview
 
-`lockedProps()` accepts an object and a description of which properties to lock (and with what values). It applies the resulting descriptors via `Object.defineProperty`, so writes throw in strict mode and the descriptors themselves cannot be later reconfigured. Use it for partial-immutability cases that fall outside the class-method shape `@locked()` targets — config snapshots, frozen API surfaces, factory outputs, etc.
+`lockedProps()` accepts an object and a description of which properties to lock (and with what values). It applies the resulting descriptors via `Object.defineProperty`, so writes throw in strict mode and the descriptors themselves cannot be later reconfigured. Use it for partial-immutability cases that fall outside the class-method shape `@locked()` targets: config snapshots, frozen API surfaces, factory outputs, etc.
 
 ## Usage
 
