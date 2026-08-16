@@ -18,7 +18,7 @@ export default function QuestionsPage() {
         'Pure function prompts returning Promise<PromptOutcome<T>> for predictable, testable results',
         'Composable API for building complex interactive CLI flows',
         'Full TypeScript support with discriminated unions for prompt outcomes',
-        'Zero external dependencies — uses only Node.js built-ins and @hyperfrontend utilities',
+        'Zero external dependencies: uses only Node.js built-ins and @hyperfrontend utilities',
         'Searchable multiselect with type-to-filter functionality for large option lists',
       ]}
     />

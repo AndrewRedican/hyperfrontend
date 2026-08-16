@@ -21,7 +21,7 @@ export default function BuilderPage() {
         'Dependency bundling with first-party deduplication and license collection',
         'Memory-aware pipeline that recovers gracefully under constrained environments',
         'Programmatic API plus an `hf-build` command-line entry point',
-        'Composable phases — bundle, package, and bin — usable independently or together',
+        'Composable phases (bundle, package, and bin) usable independently or together',
       ]}
     />
   )

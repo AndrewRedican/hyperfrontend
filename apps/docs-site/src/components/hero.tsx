@@ -10,7 +10,7 @@ export function Hero() {
             Micro-frontends without the headache
           </h1>
           <p className="mt-6 text-lg text-slate-400 sm:text-xl">
-            Compose your existing apps together securely — like Lego bricks. No rewrites. No &quot;let&apos;s align on a shared component
+            Compose your existing apps together securely, like Lego bricks. No rewrites. No &quot;let&apos;s align on a shared component
             library&quot; meetings. Just plug it in and <em>it works</em>.
           </p>
           <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">

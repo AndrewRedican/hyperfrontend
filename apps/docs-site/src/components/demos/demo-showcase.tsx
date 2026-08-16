@@ -227,9 +227,9 @@ export function DemoShowcase({ entries, cycleDuration = 20000, fastForwardDurati
             {active.featureUrl ? (
               <p className="text-xs text-slate-600 dark:text-slate-400">
                 {embedStatus === 'live' ? (
-                  <>Live demo — {active.stack}, embedded via its generated shell. </>
+                  <>Live demo: {active.stack}, embedded via its generated shell. </>
                 ) : embedStatus === 'offline' ? (
-                  <>Preview — the live demo is warming up on its own origin. </>
+                  <>Preview: the live demo is warming up on its own origin. </>
                 ) : (
                   <>Connecting to the live demo on its own origin… </>
                 )}

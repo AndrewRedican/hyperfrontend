@@ -7,7 +7,7 @@ interface Feature {
 const features: Feature[] = [
   {
     title: 'Framework Agnostic',
-    description: 'React, Angular, Vue, Svelte, vanilla JS — it all works. Your apps keep their tech stack, their state, their identity.',
+    description: 'React, Angular, Vue, Svelte, vanilla JS: it all works. Your apps keep their tech stack, their state, their identity.',
     icon: <FrameworkIcon />,
   },
   {
@@ -27,7 +27,7 @@ const features: Feature[] = [
   },
   {
     title: 'Lifecycle Management',
-    description: 'Mount, unmount, show, hide — full control over feature lifecycle with clean event hooks.',
+    description: 'Mount, unmount, show, hide: full control over feature lifecycle with clean event hooks.',
     icon: <LifecycleIcon />,
   },
   {

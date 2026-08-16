@@ -24,7 +24,7 @@ export default function PrivacyPage() {
         <h1 className="font-display text-3xl font-bold text-slate-900 dark:text-white">Privacy</h1>
         <p className={BODY}>
           This page describes exactly what this site stores in your browser and what, if anything, it measures. It is written against the
-          implementation, not as boilerplate — when the implementation changes, this page changes with it.
+          implementation, not as boilerplate; when the implementation changes, this page changes with it.
         </p>
 
         <h2 className={SECTION_HEADING}>Storage this site always uses</h2>
@@ -40,14 +40,14 @@ export default function PrivacyPage() {
         {analyticsConfigured ? (
           <p className={BODY}>
             This deployment has Google Analytics 4 configured. It runs under Google Consent Mode v2 in <em>basic</em> mode with two separate
-            optional categories: <strong>analytics</strong> (controls Google Analytics measurement — page views and a small set of product
+            optional categories: <strong>analytics</strong> (controls Google Analytics measurement: page views and a small set of product
             events such as opening a demo or following a documentation link) and <strong>advertising</strong> (controls Google Ads
             conversion measurement, advertising storage, advertising user data, and ad personalization
-            {adsConfigured ? '' : ' — no Google Ads account is currently configured, so nothing in this category is active even if granted'}
-            ). Both categories default to denied for every visitor, worldwide — the site deliberately applies the conservative default
+            {adsConfigured ? '' : '; no Google Ads account is currently configured, so nothing in this category is active even if granted'}
+            ). Both categories default to denied for every visitor, worldwide: the site deliberately applies the conservative default
             globally instead of guessing your legal region. Until you grant a category, the Google tag library is not even loaded: no
             analytics or advertising request leaves the page, cookieless or otherwise. If you grant analytics, Google Analytics may set its
-            own identifiers and receives page paths, event names with their fixed parameters (demo slugs, package names, link locations —
+            own identifiers and receives page paths, event names with their fixed parameters (demo slugs, package names, link locations;
             never anything you type), and standard request metadata. You can change or withdraw your choice at any time from the Privacy
             settings control in the footer; withdrawal stops all future optional collection immediately.
           </p>
@@ -55,7 +55,7 @@ export default function PrivacyPage() {
           <p className={BODY}>
             In this deployment <strong>no analytics or advertising is active at all</strong>. The measurement integration exists in the code
             but is dormant: without a configured measurement ID it renders nothing, loads no Google script, sends no request, and sets no
-            identifier — which is also why you see no consent banner. If a future deployment activates Google Analytics or Google Ads, the
+            identifier, which is also why you see no consent banner. If a future deployment activates Google Analytics or Google Ads, the
             consent experience switches on automatically with both optional categories denied by default, and this page will describe the
             active configuration.
           </p>
@@ -64,8 +64,8 @@ export default function PrivacyPage() {
         <h2 className={SECTION_HEADING}>Embedded demos</h2>
         <p className={BODY}>
           The live demos on this site are independent applications embedded through the HyperFrontend protocol. The demo applications
-          themselves load no analytics of any kind. Only this site (the host) reports measurement, so a demo session is never counted twice
-          — whether it runs embedded in the gallery, in a dialog, in a popup, or not at all.
+          themselves load no analytics of any kind. Only this site (the host) reports measurement, so a demo session is never counted twice,
+          whether it runs embedded in the gallery, in a dialog, in a popup, or not at all.
         </p>
 
         <h2 className={SECTION_HEADING}>Your controls</h2>
