@@ -2,10 +2,9 @@
 
 import { useEffect, useMemo, useRef } from 'react'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
-import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { setTimeout, clearTimeout } from '@hyperfrontend/immutable-api-utils/built-in-copy/timers'
 import { useHashNavigation } from '../hooks/use-hash-navigation'
-import { generateSlug } from '../lib/markdown'
+import { createHeadingSlugger } from '../lib/slug'
 import { MermaidDiagram } from './mermaid-diagram'
 
 /**
@@ -106,22 +105,12 @@ function injectCopyButtons(container: HTMLElement): () => void {
 function injectHeadingAnchors(container: HTMLElement): () => void {
   const headings = container.querySelectorAll('h1, h2, h3, h4, h5, h6')
   const cleanupFns: (() => void)[] = []
-  const usedIds = createSet<string>()
+  const slugger = createHeadingSlugger()
 
   headings.forEach((heading) => {
     if (heading.querySelector('[data-anchor-link]')) return
 
-    const text = heading.textContent ?? ''
-    let id = generateSlug(text)
-
-    if (usedIds.has(id)) {
-      let suffix = 1
-      while (usedIds.has(`${id}-${suffix}`)) {
-        suffix++
-      }
-      id = `${id}-${suffix}`
-    }
-    usedIds.add(id)
+    const id = slugger(heading.textContent ?? '')
 
     heading.id = id
 
