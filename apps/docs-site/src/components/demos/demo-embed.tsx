@@ -85,6 +85,7 @@ export function DemoEmbed({ entry, className, frameless, onStatus, onShell }: De
       }
     }
 
+    // ref: [guide:embed-a-shipped-feature/silence-deadline] start
     // how: One re-arming deadline serves connect-timeout and mid-session death alike — every proof of life pushes it out, so only real silence fires it.
     let deadline: ReturnType<typeof setTimeout> | null = null
     const armDeadline = () => {
@@ -93,10 +94,12 @@ export function DemoEmbed({ entry, className, frameless, onStatus, onShell }: De
       }
       deadline = setTimeout(() => apply('offline'), wiring.silenceTimeoutMs)
     }
+    // ref: [guide:embed-a-shipped-feature/silence-deadline] end
 
     // why: A fresh mount owes its host the honest in-between state — the previous demo's liveness must not linger on the caption.
     apply('connecting')
 
+    // ref: [guide:embed-a-shipped-feature/open-and-observe] start
     const shell = wiring.createShell({ container: element, url: featureUrl })
     const subscriptions = [
       // why: A proof event is post-open product traffic — the app is rendering, so the crossfade never reveals a blank frame.
@@ -130,10 +133,12 @@ export function DemoEmbed({ entry, className, frameless, onStatus, onShell }: De
     ]
     armDeadline()
     shell.open()
+    // ref: [guide:embed-a-shipped-feature/open-and-observe] end
     notifyShell.current?.(shell)
     const overlay = effectsLayer.current
     const detachEffects = overlay ? wiring.attachEffects?.(shell, overlay) : undefined
 
+    // ref: [guide:embed-a-shipped-feature/teardown] start
     return () => {
       disposed = true
       if (deadline !== null) {
@@ -144,6 +149,7 @@ export function DemoEmbed({ entry, className, frameless, onStatus, onShell }: De
       notifyShell.current?.(null)
       shell.destroy()
     }
+    // ref: [guide:embed-a-shipped-feature/teardown] end
   }, [featureUrl, slug])
 
   return (

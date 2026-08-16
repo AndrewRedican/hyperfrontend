@@ -1,8 +1,10 @@
+// ref: [guide:embed-a-shipped-feature/import-shells] start
 'use client'
 
 import { createFeatureShell as createClockShell } from '@hyperfrontend/demo-clock-shell'
 import { createFeatureShell as createHeartbeatShell } from '@hyperfrontend/demo-heartbeat-shell'
 import { createFeatureShell as createKoiPondShell } from '@hyperfrontend/demo-koi-pond-shell'
+// ref: [guide:embed-a-shipped-feature/import-shells] end
 
 /** Per-request settings accepted by a demo shell request. */
 export interface DemoRequestOptions {
@@ -10,6 +12,7 @@ export interface DemoRequestOptions {
   timeoutMs?: number
 }
 
+// ref: [guide:embed-a-shipped-feature/shell-surface] start
 /**
  * Structural surface of a generated demo shell handle — the members the
  * gallery drives on every demo, regardless of which contract the shell was
@@ -32,6 +35,7 @@ export interface DemoShell {
   /** Whether the feature channel is currently open. */
   readonly isOpen: boolean
 }
+// ref: [guide:embed-a-shipped-feature/shell-surface] end
 
 /** Options the gallery passes when creating a demo shell session. */
 export interface DemoShellMountOptions {
@@ -141,6 +145,7 @@ function attachHeartbeatEffects(shell: DemoShell, layer: HTMLElement): () => voi
 
 /** One wiring per live demo slug — a manifest entry gains a live embed by landing its vendored shell here. */
 const WIRINGS: Record<string, DemoWiring | undefined> = {
+  // ref: [guide:embed-a-shipped-feature/clock-wiring] start
   clock: {
     createShell: (options) => createClockShell(options),
     contractLabel: 'contract 0.3.0 · protocol v1',
@@ -148,6 +153,7 @@ const WIRINGS: Record<string, DemoWiring | undefined> = {
     proofEvents: ['tick'],
     silenceTimeoutMs: 6000,
   },
+  // ref: [guide:embed-a-shipped-feature/clock-wiring] end
   'koi-pond': {
     createShell: (options) => createKoiPondShell(options),
     contractLabel: 'contract 0.2.0 · protocol v1',
