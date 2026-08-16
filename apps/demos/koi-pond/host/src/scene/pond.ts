@@ -551,13 +551,11 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondSceneHandle
     }
     // ref: [guide:compose-independent-features/relay-fanout] end
 
-    // ref: [guide:compose-independent-features/shoal-pulse] start
     // why: A calm pond would otherwise say nothing for as long as the visitor lets it be calm, and an embedder watching for life reads thirty silent seconds as an outage — the roll call keeps the liveness flowing through the contract itself.
     if (elapsedMs - lastPulseAt >= SHOAL_PULSE_MS) {
       lastPulseAt = elapsedMs
       hooks.onShoal(opened, sessions.length)
     }
-    // ref: [guide:compose-independent-features/shoal-pulse] end
 
     surfaceFrame.width = pond.view.width
     surfaceFrame.height = pond.view.height
