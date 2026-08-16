@@ -10,13 +10,13 @@ Hold one shell factory per feature. Each [generated shell](/docs/libraries/featu
 
 <!-- snippet: shell-factories -->
 
-## 2. Publish one contract as the shared vocabulary
+## 2. Give interoperating features one contract
 
-Put the contract in a library every app installs, and have each app re-export it as its shell-packaging input, so the packaged shell and the app that [`createFeature`](/docs/libraries/features/hostee#api-createFeature) runs cannot disagree about the wire.
+A feature already owns its contract: [`feature.config.ts`](/docs/libraries/features/cli#config-resolution) names the file and the glue module [`hf init`](/docs/libraries/features/cli#commands) writes imports the same one, so the shell and the running app are packed from a single authored source. Where several features exchange the same actions, publish that contract for each of them to install and point each config at a local module re-exporting it.
 
 <!-- snippet: shared-contract -->
 
-Pin the contract version and track it in every app's [`feature.config.ts`](/docs/libraries/features/cli#config-resolution). Then leave your highest-cadence actions without a [payload schema](/docs/libraries/features/host#api-ActionDescription) and keep one on the rest; validation costs per message.
+A contract that declares a `version` must match its config's or the build refuses, and the handshake then gates each pairing on caret compatibility, so independently deployed apps announce their skew instead of misreading each other. Validation costs per message, so leave your highest-cadence actions without a [payload schema](/docs/libraries/features/host#api-ActionDescription-prop-schema) and keep one on the rest.
 
 ## 3. Mount every feature into a layer you own
 
