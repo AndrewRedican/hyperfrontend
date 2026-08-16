@@ -176,7 +176,6 @@ function SearchDialog({ onClose }: SearchDialogProps) {
   /**
    * Keeps Tab inside the dialog by cycling the real focusable descendants,
    * so every result link and the failure fallback stay keyboard reachable.
-   *
    * @param event - The keyboard event carrying the Tab press
    */
   function trapFocus(event: React.KeyboardEvent) {

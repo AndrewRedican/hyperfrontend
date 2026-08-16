@@ -31,7 +31,6 @@ export async function generateMetadata({ params }: GuidePageProps): Promise<Meta
 
 /**
  * Turn a site route into readable link text.
- *
  * @param route - Site-relative route such as `/docs/libraries/features/architecture`
  * @returns Human-readable label, e.g. `features architecture`
  */
