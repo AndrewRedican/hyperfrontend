@@ -37,126 +37,70 @@ Secure cross-window communication library for micro-frontends with contract-vali
 
 • 👉 See [**documentation**](https://www.hyperfrontend.dev/docs/libraries/nexus/)
 
+• 👉 See [**API reference**](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-reference)
+
 ## What is @hyperfrontend/nexus?
 
-Nexus provides a complete infrastructure for building secure, reliable communication between browser windows, iframes, and micro-frontend applications. At its core, Nexus implements a **broker-channel architecture** where a central broker manages multiple channels, each representing a connection to another window or frame.
+Two windows talking over `postMessage` share a string and nothing else: no agreement on which message types exist, no way to tell whether anyone is listening, no signal when the other side goes away. Nexus puts a broker in front of that. One broker per app manages a channel per counterpart window or frame, and every channel carries a contract, the message types each side sends and accepts, exchanged during a three-way handshake. Types outside the contract are dropped, messages from an origin other than the pinned one are ignored, and the connection state is something you subscribe to instead of infer.
 
-Unlike raw `postMessage` usage, Nexus enforces **communication contracts**—typed agreements defining which message types each participant can send and receive. This contract-first approach catches integration errors at development time rather than production, making micro-frontend systems significantly more maintainable as they scale.
+```typescript
+import { createBroker } from '@hyperfrontend/nexus'
+
+const broker = createBroker({
+  name: 'host-app',
+  contract: { emitted: [{ type: 'THEME_CHANGED' }], accepted: [{ type: 'CART_UPDATED' }] },
+  settings: { whitelist: ['https://cart.example.com'] },
+})
+
+const cart = broker.addChannel('cart', cartFrame.contentWindow)
+cart.on('open', () => cart.send('THEME_CHANGED', { theme: 'dark' }))
+cart.onMessage(({ type, data }) => console.log(type, data))
+cart.connect()
+```
 
 ### Key Features
 
-- **Contract-Validated Messaging** — Define accepted and emitted message types, with optional JSON Schemas carried for consumers to validate payloads against
-- **Broker-Channel Architecture** — Central broker manages multiple independent channels to different windows
-- **Origin-Based Security** — Whitelist/blacklist filtering plus custom security policy functions
-- **Connection Lifecycle Management** — Full state machine for connect, disconnect, cancel, deny, and destroy operations
-- **Event Subscription System** — Subscribe to lifecycle events (open, close, cancel, deny, invalid, connect-timeout, security events) and user messages
-- **Message Queueing** — Automatically queue messages when channel is not yet active
-- **Contract Extension & Merging** — Dynamically extend contracts or merge multiple contracts together
-- **Functional API Design** — Factory functions with closure-based encapsulation for clean, testable code
+- **Contract-Validated Messaging**: define accepted and emitted message types, with optional JSON Schemas carried for consumers to validate payloads against
+- **Broker-Channel Architecture**: a central broker manages multiple independent channels to different windows
+- **Origin-Based Security**: whitelist/blacklist filtering plus custom security policy functions
+- **Connection Lifecycle Management**: full state machine for connect, disconnect, cancel, deny, and destroy operations
+- **Event Subscription System**: subscribe to lifecycle events (open, close, cancel, deny, invalid, connect-timeout, security events) and user messages
+- **Message Queueing**: messages sent before a channel is active are queued, not lost
+- **Contract Extension & Merging**: extend contracts at runtime or merge several into one
+- **Functional API Design**: factory functions with closure-based encapsulation, no class hierarchy to subclass
 
 ### Architecture Highlights
 
 Nexus uses a **functional programming approach** with factory functions (`createBroker`, `createChannel`) that return handle objects. Internal state is encapsulated via closures, making the system highly testable and avoiding the complexity of class-based inheritance. The routing layer uses a handler registry pattern, allowing protocol actions (REQUEST_CONNECTION, ACCEPT_CONNECTION, etc.) to be processed by dedicated handlers.
 
-For a comprehensive deep dive into the library's internals, see the [Architecture Documentation](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/nexus/ARCHITECTURE.md).
+For a comprehensive deep dive into the library's internals, see the [Architecture Documentation](https://www.hyperfrontend.dev/docs/libraries/nexus/architecture/).
 
 ## Why Use @hyperfrontend/nexus?
 
-### Type-Safe Contracts Prevent Integration Bugs
-
-Micro-frontend architectures often fail at integration points where different teams assume different message formats. Nexus contracts explicitly declare what each window sends and accepts:
+Micro-frontend integrations fail where two teams assumed different message shapes. A contract makes the assumption a value both sides exchange and the runtime enforces:
 
 ```typescript
 const contract: IChannelContract = {
-  emitted: [
-    {
-      type: 'USER_UPDATED',
-      schema: {
-        /* JSON Schema */
-      },
-    },
-    { type: 'NAVIGATION_REQUEST' },
-  ],
+  emitted: [{ type: 'USER_UPDATED', schema: userJsonSchema }, { type: 'NAVIGATION_REQUEST' }],
   accepted: [{ type: 'USER_DATA' }, { type: 'NAVIGATION_COMPLETE' }],
 }
 ```
 
-This makes communication agreements explicit, version-controlled, and enforced at runtime.
+Unknown inbound types are dropped and logged, and an `accepted` entry marked `required: true` denies the handshake outright when the counterpart cannot emit it. Adding actions stays backward compatible either way.
 
-### Origin-Based Security Without Boilerplate
+Origin checks come with it. A `whitelist`/`blacklist` pair on the broker settings, or `broker.setSecurityPolicy((event) => event.origin.endsWith('.example.com'))`, vets requests before the channel opens, so no message handler has to remember to test `event.origin` itself.
 
-Cross-origin messaging is a common attack vector. Nexus provides built-in security through whitelist/blacklist filtering and custom policy functions—eliminating the need to manually check `event.origin` in every message handler:
+One broker holds many channels, which is what a host coordinating several micro-apps needs: call `addChannel` per frame, then loop the handles to connect or broadcast. Each channel runs its own handshake and lifecycle, so a frame that never answers cannot stall the others, and messages sent before a channel goes active are queued rather than dropped.
 
-```typescript
-const broker = createBroker({
-  name: 'secure-broker',
-  contract,
-  settings: {
-    whitelist: ['https://app1.example.com', 'https://app2.example.com'],
-  },
-})
-
-// Or use custom logic
-broker.setSecurityPolicy((event) => {
-  return event.origin.endsWith('.example.com')
-})
-```
-
-### Hub-and-Spoke Patterns for Complex Topologies
-
-Real micro-frontend systems often have complex communication needs: a host application coordinating multiple micro-apps, broadcast messages to all participants, or direct messaging between specific windows. Nexus's broker architecture naturally supports these patterns:
-
-```typescript
-// Central hub managing multiple spokes
-const hub = createBroker({ name: 'host', contract })
-
-const spokes = [
-  hub.addChannel('user-app', userFrame.contentWindow),
-  hub.addChannel('cart-app', cartFrame.contentWindow),
-  hub.addChannel('checkout-app', checkoutFrame.contentWindow),
-]
-
-// Connect all
-spokes.forEach((ch) => ch.connect())
-
-// Broadcast to all
-spokes.forEach((ch) => ch.send('THEME_CHANGED', { theme: 'dark' }))
-```
-
-### Full Lifecycle Control
-
-Connection management in distributed systems is notoriously tricky. Nexus provides explicit lifecycle events and state transitions:
-
-```typescript
-const channel = broker.addChannel('partner', partnerWindow)
-
-channel.on((event, data, channelInfo) => {
-  switch (event) {
-    case 'open':
-      /* connection established */ break
-    case 'close':
-      /* graceful disconnect */ break
-    case 'cancel':
-      /* connection attempt cancelled */ break
-    case 'deny':
-      /* connection request denied */ break
-    case 'invalid':
-      /* protocol violation detected */ break
-  }
-})
-
-channel.connect()
-```
-
-### Message Filtering for Clean Handler Code
-
-Instead of large switch statements, use composable message filters:
+Handlers stay small. Subscribe to a single lifecycle event with `channel.on('open', handler)`, or replace a switch over message types with composed filters:
 
 ```typescript
 import { byType, compose } from '@hyperfrontend/nexus'
 
 channel.onMessage(compose(byType('USER_LOGIN', handleLogin), byType('USER_LOGOUT', handleLogout), byType('DATA_SYNC', handleSync)))
 ```
+
+Handshake states, denial reasons, queue behaviour, and the encrypted-envelope negotiation are worked through in the [architecture documentation](https://www.hyperfrontend.dev/docs/libraries/nexus/architecture/).
 
 ## Protocol Overview
 
@@ -168,11 +112,11 @@ Initiation is symmetric: either side may call `connect()` first, and simultaneou
 
 ### Contract Compatibility
 
-Contracts are exchanged during the handshake, but vocabulary differences never gate the connection — only `accepted` entries flagged `required: true` do (each must appear in the counterpart's `emitted` list), so additive contract evolution stays non-breaking in both directions. A contract may also carry an optional `version` string that nexus attaches no semantics to; a `contractCompat` rule in the channel settings can compare the two contracts and deny the pair before it opens — when the responder's rule rejects an incoming request, the `deny` event fires with the rule's reason and `reason: 'incompatible-contract'` on both the denying responder and the denied initiator. See [Contract Compatibility](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/nexus/ARCHITECTURE.md#contract-compatibility).
+Contracts are exchanged during the handshake, but vocabulary differences never gate the connection: only `accepted` entries flagged `required: true` do (each must appear in the counterpart's `emitted` list), so additive contract evolution stays non-breaking in both directions. A contract may also carry an optional `version` string that nexus attaches no semantics to; a `contractCompat` rule in the channel settings can compare the two contracts and deny the pair before it opens. When the responder's rule rejects an incoming request, the `deny` event fires with the rule's reason and `reason: 'incompatible-contract'` on both the denying responder and the denied initiator. See [Contract Compatibility](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/nexus/ARCHITECTURE.md#contract-compatibility).
 
 ### Security Negotiation
 
-Channels can negotiate an encrypted envelope during the handshake: register a security provider on the broker — via `broker.registerProtocol(version, provider)` or the `settings.security.protocols` bag — and opt the channel in with `security: { protocol: ... }`. Both ends attach the security transport before queued messages flush, so product traffic (including sends queued before the handshake) leaves as `Uint8Array` ciphertext while the handshake actions themselves stay plaintext. Negotiation fails open by default — plaintext fallback with a warning — and `mode: 'fail-closed'` denies the connection instead with `reason: 'security-unavailable'`. The transport seam is public: `createSecurityTransport` plus the `SecurityTransport` and `SecurityProvider` types define the boundary a security package implements — `@hyperfrontend/network-protocol` satisfies it directly. See [Security Model](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/nexus/ARCHITECTURE.md#security-model).
+Channels can negotiate an encrypted envelope during the handshake: register a security provider on the broker (via `broker.registerProtocol(version, provider)` or the `settings.security.protocols` bag) and opt the channel in with `security: { protocol: ... }`. Both ends attach the security transport before queued messages flush, so product traffic (including sends queued before the handshake) leaves as `Uint8Array` ciphertext while the handshake actions themselves stay plaintext. Negotiation fails open by default, falling back to plaintext with a warning; `mode: 'fail-closed'` denies the connection instead with `reason: 'security-unavailable'`. The transport seam is public: `createSecurityTransport` plus the `SecurityTransport` and `SecurityProvider` types define the boundary a security package implements, and `@hyperfrontend/network-protocol` satisfies it directly. See [Security Model](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/nexus/ARCHITECTURE.md#security-model).
 
 ### Disconnection & Cancellation
 
@@ -182,7 +126,7 @@ An active channel closes gracefully through a CLOSE/CLOSE_ACKNOWLEDGED exchange,
 
 What these gates are worth, and which controls sit outside the protocol entirely (`frame-ancestors`, backend authorisation, the pre-shared key), is stated in the [Security Model](https://www.hyperfrontend.dev/docs/core-concepts/security).
 
-Connection-time access control runs before a channel opens: origin `whitelist`/`blacklist` settings filter every inbound message (a non-empty whitelist takes precedence), and a custom policy function — `broker.setSecurityPolicy((event: MessageEvent) => boolean)` — vets requests during handshake handling, with rejected requests answered by DENY_CONNECTION. See [Security Model](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/nexus/ARCHITECTURE.md#security-model).
+Connection-time access control runs before a channel opens: origin `whitelist`/`blacklist` settings filter every inbound message (a non-empty whitelist takes precedence), and a custom policy function, `broker.setSecurityPolicy((event: MessageEvent) => boolean)`, vets requests during handshake handling, with rejected requests answered by DENY_CONNECTION. See [Security Model](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/nexus/ARCHITECTURE.md#security-model).
 
 ### Logging
 
@@ -298,7 +242,7 @@ Events delivered to `channel.on(...)` subscribers:
 
 ### Deny Reasons
 
-The `deny` payload's machine-readable `reason` (`DenyReason` — an open union, so a counterpart on a
+The `deny` payload's machine-readable `reason` (`DenyReason`, an open union, so a counterpart on a
 newer protocol can report a reason this build does not know yet):
 
 | Reason                       | Meaning                                                                       |

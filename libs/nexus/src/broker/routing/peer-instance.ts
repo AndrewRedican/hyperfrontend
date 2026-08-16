@@ -14,7 +14,7 @@ import type { ChannelHandle } from '../../types/channel'
  * A window outlives the documents loaded into it, so resolving a frame by its
  * source window identifies the *window*, not the instance inside it. Every
  * broker mints an id when it boots and stamps it on every action it sends, and
- * the channel records the counterpart's at handshake time — so comparing the
+ * the channel records the counterpart's at handshake time, so comparing the
  * two rejects frames left over from a previous incarnation (or sent by a second
  * broker sharing the counterpart's document) instead of accepting them into the
  * current session.
@@ -24,7 +24,7 @@ import type { ChannelHandle } from '../../types/channel'
  * before a handshake completes, and a channel activated directly (rather than
  * through the handshake) may never learn one.
  *
- * The id is cooperative, not a credential — any script that can post to the
+ * The id is cooperative, not a credential; any script that can post to the
  * window can claim one. It is authenticated only inside an encrypted envelope,
  * where producing a frame at all requires the negotiated key.
  *

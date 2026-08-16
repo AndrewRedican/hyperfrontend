@@ -5,7 +5,7 @@ import type { IAction } from '../../types/action'
  * Resolves the local channel an inbound action belongs to.
  *
  * The source window of the message event is the sole identity of the
- * counterpart — sender ids declared on the action are attacker-suppliable
+ * counterpart: sender ids declared on the action are attacker-suppliable
  * and are never used for lookup. When the resolved channel has a pinned
  * origin, the event origin must match or the message is dropped before
  * any handler runs.

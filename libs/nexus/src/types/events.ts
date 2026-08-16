@@ -40,7 +40,7 @@ export interface ClosingEventData {
  * Why a session ended, when the cause is something other than either side
  * asking for it.
  *
- * - `peer-reload` — the counterpart window now hosts a different instance
+ * - `peer-reload`: the counterpart window now hosts a different instance
  *   (a reload or in-frame navigation), so the session it belonged to is over.
  *   The channel stays reconnectable and the new instance's handshake is
  *   already in flight.
@@ -68,16 +68,16 @@ export interface CancelEventData {
 /**
  * Why a handshake gate refused the connection.
  *
- * - `invalid-contract` — the counterpart's contract failed structural
+ * - `invalid-contract`: the counterpart's contract failed structural
  *   validation, so there is nothing to negotiate against.
- * - `missing-required-actions` — the counterpart's contract does not emit an
+ * - `missing-required-actions`: the counterpart's contract does not emit an
  *   action this side accepts as `required: true`.
- * - `policy-rejected` — the broker's `securityPolicy` refused the request.
+ * - `policy-rejected`: the broker's `securityPolicy` refused the request.
  *   The refused counterpart is told only that it was not accepted, so this
  *   reason reaches the deciding side alone.
- * - `incompatible-contract` — a `contractCompat` rule rejected the contract
+ * - `incompatible-contract`: a `contractCompat` rule rejected the contract
  *   pair.
- * - `security-unavailable` — a fail-closed channel could not obtain an
+ * - `security-unavailable`: a fail-closed channel could not obtain an
  *   encrypted transport.
  *
  * Any other string is accepted so a counterpart running a newer protocol can

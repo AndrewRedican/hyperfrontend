@@ -5,7 +5,7 @@ import type { IChannelContract } from '../../types/contract'
  *
  * The gate is directional and permissive by default: only `accepted` entries
  * flagged `required` are checked, and each must appear in the counterpart's
- * `emitted` list by type name. Unflagged vocabulary never gates — a peer that
+ * `emitted` list by type name. Unflagged vocabulary never gates: a peer that
  * emits unknown types is compatible (unknown inbound types are dropped and
  * logged at receive), and a peer that emits nothing we merely *may* react to
  * is compatible too. This keeps additive contract evolution non-breaking in

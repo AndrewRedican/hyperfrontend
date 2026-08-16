@@ -75,7 +75,7 @@ export function clearCloseTimer(channel: ChannelInternals): void {
  * A notifying close is a polite exchange: this side posts CLOSE, fires a
  * 'closing' event, and stays active so the counterpart's final flush
  * messages still deliver. The single 'close' event fires once the
- * counterpart acknowledges — or once `closeTimeoutMs` expires, so an
+ * counterpart acknowledges, or once `closeTimeoutMs` expires, so an
  * unresponsive counterpart cannot hold the channel open. A silent close
  * (`notify = false`) completes immediately.
  *
