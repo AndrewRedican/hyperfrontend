@@ -166,10 +166,7 @@ function findMarkdownFiles(dirPath: string, libraryRoot: string, results: Markdo
       findMarkdownFiles(entryPath, libraryRoot, results)
     } else if (entry.endsWith('.md') && !EXCLUDED_MARKDOWN_FILES.has(entry)) {
       const relativePath = relative(libraryRoot, entryPath)
-      const mdFile = createMarkdownFileEntry(entryPath, relativePath)
-      if (mdFile) {
-        results.push(mdFile)
-      }
+      results.push(createMarkdownFileEntry(entryPath, relativePath))
     }
   }
 }
@@ -179,14 +176,9 @@ function findMarkdownFiles(dirPath: string, libraryRoot: string, results: Markdo
  *
  * @param absolutePath - The absolute path to the markdown file.
  * @param relativePath - The path relative to the library root.
- * @returns A MarkdownFile entry or null if the file should be excluded.
+ * @returns A MarkdownFile entry describing where the file must be reachable from.
  */
-function createMarkdownFileEntry(absolutePath: string, relativePath: string): MarkdownFile | null {
-  // why: Guide units under docs/guides/ are compiled by the docs-site generation pipeline into the global /docs/guides/[slug] route; generation itself fails on any guide directory that does not produce a rendered page, so the reachability invariant this rule protects is enforced there instead.
-  if (relativePath.startsWith('docs/guides/')) {
-    return null
-  }
-
+function createMarkdownFileEntry(absolutePath: string, relativePath: string): MarkdownFile {
   const fileName = basename(relativePath)
 
   if (fileName === 'README.md') {
