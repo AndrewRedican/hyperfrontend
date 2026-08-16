@@ -457,6 +457,10 @@ export const docsNavigation: NavItem[] = [
     children: gettingStarted,
   },
   {
+    slug: 'Guides',
+    href: '/docs/guides',
+  },
+  {
     slug: 'Libraries',
     children: [...coreLibraries, ...supportingLibraries, { slug: 'Utils', children: utilsLibraries }],
   },

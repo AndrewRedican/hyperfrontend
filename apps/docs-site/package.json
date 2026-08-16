@@ -6,6 +6,7 @@
     "build": "npm run generate && npm run validate-links && npm run validate-sitemap && NODE_OPTIONS='--max-old-space-size=4096' next build",
     "start": "next start --port 3000",
     "generate": "npx tsx scripts/generate-docs.ts",
+    "generate:guides": "npx tsx scripts/generate-docs.ts --guides-only",
     "validate-links": "npx tsx scripts/validate-links.ts",
     "validate-sitemap": "npx tsx scripts/validate-sitemap.ts",
     "test": "vitest run"

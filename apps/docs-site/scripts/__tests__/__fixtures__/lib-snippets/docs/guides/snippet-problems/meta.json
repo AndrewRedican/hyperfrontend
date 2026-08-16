@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "type": "how-to",
+  "title": "Fixture guide",
+  "problem": "Fixture problem",
+  "outcome": "Fixture outcome",
+  "priority": "P2",
+  "packages": ["@hyperfrontend/fixture"],
+  "verification": { "kind": "demo", "spec": "apps/docs-site/scripts/__tests__/__fixtures__/lib-snippets/spec/regions.ts" }
+}

@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "type": "how-to",
+  "title": "Fixture guide",
+  "problem": "Fixture problem",
+  "outcome": "Fixture outcome",
+  "priority": "P2",
+  "packages": ["@hyperfrontend/fixture"],
+  "verification": { "kind": "authored", "verifiedAgainst": "@hyperfrontend/fixture@1.0.0", "verifiedOn": "2026-08-16" }
+}
