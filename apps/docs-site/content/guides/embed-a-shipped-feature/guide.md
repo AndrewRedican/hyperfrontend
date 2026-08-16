@@ -1,4 +1,4 @@
-# Embed a feature someone else shipped
+# How to embed a feature someone else shipped
 
 Another team's app runs inside your page, tells you honestly whether it is alive, and gives way to your own fallback when it is not.
 

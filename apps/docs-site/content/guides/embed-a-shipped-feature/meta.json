@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "type": "how-to",
-  "title": "Embed a feature someone else shipped",
+  "title": "How to embed a feature someone else shipped",
   "problem": "Another team shipped their app as a feature package; I need it running inside my page, alive and observable, without learning their stack.",
   "outcome": "A generated shell package installed and opened embedded in a host page, with proof-of-life events driving a live indicator, a silence deadline that degrades to a fallback when the feature goes quiet, and a clean teardown.",
   "priority": "P0",

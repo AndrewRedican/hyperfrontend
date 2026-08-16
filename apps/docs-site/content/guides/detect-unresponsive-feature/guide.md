@@ -1,4 +1,4 @@
-# Detect and handle an unresponsive feature
+# How to detect and handle an unresponsive feature
 
 Notice a failing feature within seconds, tell the visitor something honest, measure how well the connection is performing, and recover when the feature comes back.
 

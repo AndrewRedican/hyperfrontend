@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "type": "how-to",
-  "title": "Detect and handle an unresponsive feature",
+  "title": "How to detect and handle an unresponsive feature",
   "problem": "An embedded feature can hang, crash, or lose its tab throttling fight; I need the host to notice within seconds, tell the user honestly, and recover when it returns.",
   "outcome": "A host that keeps SDK liveness and product silence apart, reacts to all four liveness states with honest UI, measures round-trip latency with a correlated request, and recovers cleanly when the feature comes back.",
   "priority": "P1",

@@ -1,4 +1,4 @@
-# Compose independently shipped features on one page
+# How to compose independently shipped features on one page
 
 Put N independently built, independently deployed apps on one page, have them coordinate through you, and keep the page running when any one of them dies. No merged codebases, no shared bundle.
 

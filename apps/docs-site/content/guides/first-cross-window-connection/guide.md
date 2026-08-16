@@ -1,4 +1,4 @@
-# Your first cross-window connection
+# How to make your first cross-window connection
 
 You will wire a page and an iframe into a handshaken session over [`@hyperfrontend/nexus`](/docs/libraries/nexus): contract-checked messages both ways, queued across the pre-open gap, closed cleanly.
 

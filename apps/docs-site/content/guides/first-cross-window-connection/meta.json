@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "type": "tutorial",
-  "title": "Your first cross-window connection",
+  "title": "How to make your first cross-window connection",
   "problem": "I have a page and an iframe that need to talk to each other, and raw postMessage keeps turning into stringly-typed guesswork that breaks in production.",
   "outcome": "A host page and a widget frame exchanging contract-checked messages over a handshaken session, with queueing across the pre-open gap, an origin rule, and a clean shutdown.",
   "priority": "P0",
