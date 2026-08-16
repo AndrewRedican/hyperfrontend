@@ -27,7 +27,7 @@ export async function LibraryDocPage({ title, packageName, slug, fallbackDescrip
 
   if (readme) {
     let processed = removeBadges(readme)
-    processed = transformLinks(processed)
+    processed = transformLinks(processed, { librarySlug: slug })
 
     const { processedContent, diagrams } = extractMermaidBlocks(processed)
 
