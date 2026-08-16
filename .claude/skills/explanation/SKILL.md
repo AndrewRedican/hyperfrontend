@@ -15,7 +15,7 @@ Looking up facts → `reference`
 
 ## Metadata
 
-Explanation does not ship as a guide unit. `meta.json` admits `tutorial`, `how-to`, `troubleshooting`, and `recipe` only, so a `docs/guides/<slug>/` directory is never the right home for it. If you are writing explanation there, you are in the wrong quadrant.
+Explanation does not ship as a guide unit. `meta.json` admits `tutorial`, `how-to`, `troubleshooting`, and `recipe` only, so an `apps/docs-site/content/guides/<slug>/` directory is never the right home for it. If you are writing explanation there, you are in the wrong quadrant.
 
 Explanation lives in `ARCHITECTURE.md` beside the code it explains, and in the site's concept pages. Guides reach it through `related.explanation` in their `meta.json`, which takes site routes that must resolve to a real page. When a guide sheds rationale, that is where the rationale lands.
 

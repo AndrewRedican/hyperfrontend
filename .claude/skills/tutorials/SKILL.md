@@ -15,7 +15,7 @@ Understanding why → `explanation`
 
 ## Metadata
 
-A tutorial ships as a guide unit: `libs/<lib>/docs/guides/<slug>/` holding `guide.md` and `meta.json`. Read `meta.json` before writing and confirm `"type": "tutorial"`. A mismatch is a decision to make, not a formality: change the type or move the content, never leave the two disagreeing.
+A tutorial ships as a guide unit: `apps/docs-site/content/guides/<slug>/` holding `guide.md` and `meta.json`. Guides are docs-site editorial artifacts. A tutorial may teach a package, use its APIs, and link to its reference pages, but it never lives inside that package: nothing goes under `libs/<lib>/docs/`, because a file inside a publishable project makes Nx, CI, versioning, and publishing treat the package itself as changed. Read `meta.json` before writing and confirm `"type": "tutorial"`. A mismatch is a decision to make, not a formality: change the type or move the content, never leave the two disagreeing.
 
 What the body must corroborate:
 
@@ -30,7 +30,7 @@ What the body must corroborate:
 | `apis`          | the symbols the lesson teaches; validated against the generated API data               |
 | `verification`  | `demo` requires `source`; `authored` requires `verifiedAgainst` + `verifiedOn`         |
 
-`packages[0]` must be the owning library's package name. Slugs are global and must be unique.
+`packages` is the only statement of which packages a guide concerns, since the filesystem no longer says. `packages[0]` is the package the tutorial is primarily about and decides which library page surfaces it; list every other package it genuinely involves after it, so a cross-cutting tutorial is reachable from all of them. Every entry must be a documented package. Slugs are global, flat, and must be unique: the directory name is the URL, and grouping folders are deliberately absent because `meta.json` already carries the taxonomy.
 
 Tutorial code is usually written for the lesson rather than extracted from a demo, which makes `verification.kind` `authored`. Run every example before you publish, then stamp `verifiedAgainst` with the package version and `verifiedOn` with the date you ran it. Re-run and re-stamp whenever you touch the code. Code that does not compile fails this quadrant outright.
 

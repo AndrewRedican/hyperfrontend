@@ -15,7 +15,7 @@ Understanding why → `explanation`
 
 ## Metadata
 
-A how-to ships as a guide unit: `libs/<lib>/docs/guides/<slug>/` holding `guide.md` and `meta.json`. Read `meta.json` before writing and confirm `type` is `how-to`, `troubleshooting`, or `recipe`. A mismatch is a decision to make, not a formality: change the type or move the content, never leave the two disagreeing.
+A how-to ships as a guide unit: `apps/docs-site/content/guides/<slug>/` holding `guide.md` and `meta.json`. Guides are docs-site editorial artifacts. A guide may describe a package, use its APIs, and link to its reference pages, but it never lives inside that package: nothing goes under `libs/<lib>/docs/`, because a file inside a publishable project makes Nx, CI, versioning, and publishing treat the package itself as changed. Read `meta.json` before writing and confirm `type` is `how-to`, `troubleshooting`, or `recipe`. A mismatch is a decision to make, not a formality: change the type or move the content, never leave the two disagreeing.
 
 What the body must corroborate:
 
@@ -31,7 +31,7 @@ What the body must corroborate:
 | `demo`          | the shipped demo the snippets come from                                                |
 | `verification`  | `demo` requires `source`; `authored` requires `verifiedAgainst` + `verifiedOn`         |
 
-`packages[0]` must be the owning library's package name. Slugs are global and must be unique.
+`packages` is the only statement of which packages a guide concerns, since the filesystem no longer says. `packages[0]` is the package the guide is primarily about and decides which library page surfaces it; list every other package the guide genuinely involves after it, so a cross-cutting guide is reachable from all of them. Every entry must be a documented package. Slugs are global, flat, and must be unique: the directory name is the URL, and grouping folders are deliberately absent because `meta.json` already carries the taxonomy.
 
 Code arrives through `<!-- snippet: <region> -->` placeholders resolved out of `verification.source` and `snippetSources`. Every placeholder needs a region and every region needs a placeholder. Each rendered snippet already carries a link to its source file and line range, so never restate that path in prose.
 

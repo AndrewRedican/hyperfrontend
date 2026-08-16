@@ -15,7 +15,7 @@ Understanding why → `explanation`
 
 ## Metadata
 
-Reference does not ship as a guide unit. `meta.json` admits `tutorial`, `how-to`, `troubleshooting`, and `recipe` only, so a `docs/guides/<slug>/` directory is never the right home for it. An enumeration of states, options, or errors sitting inside a guide belongs here instead.
+Reference does not ship as a guide unit. `meta.json` admits `tutorial`, `how-to`, `troubleshooting`, and `recipe` only, so an `apps/docs-site/content/guides/<slug>/` directory is never the right home for it. An enumeration of states, options, or errors sitting inside a guide belongs here instead.
 
 Reference lives in `README.md` beside the code it documents and in the generated API pages. Guides reach it through `related.reference` in their `meta.json`, which takes site routes that must resolve to a real page, and name the symbols they teach in `apis`, which is validated against the generated API data. Before moving facts out of a guide, confirm the reference page actually carries them; if it does not, write them there first.
 
