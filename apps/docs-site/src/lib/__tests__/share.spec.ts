@@ -1,13 +1,14 @@
 import { describe, expect, it } from 'vitest'
 import { buildShareDescriptor, buildShareTargets, SITE_ONE_LINER } from '../share'
+import { SITE_URL } from '../site'
 
 describe('buildShareDescriptor', () => {
   it('builds the canonical absolute URL with a trailing slash', () => {
-    expect(buildShareDescriptor('/docs/guides/example', 'Example').url).toBe('https://hyperfrontend.dev/docs/guides/example/')
+    expect(buildShareDescriptor('/docs/guides/example', 'Example').url).toBe(`${SITE_URL}/docs/guides/example/`)
   })
 
   it('does not double a trailing slash the caller already provided', () => {
-    expect(buildShareDescriptor('/articles/example/', 'Example').url).toBe('https://hyperfrontend.dev/articles/example/')
+    expect(buildShareDescriptor('/articles/example/', 'Example').url).toBe(`${SITE_URL}/articles/example/`)
   })
 
   it('composes the text as positioning line, page line, then URL', () => {
