@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "type": "how-to",
+  "title": "Embed a feature someone else shipped",
+  "problem": "Another team shipped their app as a feature package; I need it running inside my page, alive and observable, without learning their stack.",
+  "outcome": "A generated shell package installed and opened embedded in a host page, with proof-of-life events driving a live indicator, a silence deadline that degrades to a fallback when the feature goes quiet, and a clean teardown.",
+  "priority": "P0",
+  "packages": ["@hyperfrontend/features"],
+  "verification": {
+    "kind": "demo",
+    "spec": "apps/docs-site/src/components/demos/demo-wiring.ts"
+  },
+  "snippetSources": ["apps/docs-site/src/components/demos/demo-embed.tsx"],
+  "demo": "docs-site-gallery",
+  "complexity": "beginner",
+  "estMinutes": 15,
+  "apis": [{ "package": "@hyperfrontend/features", "symbol": "createShell" }],
+  "prerequisites": {
+    "knowledge": [
+      "A browser host app (the worked example is Next.js/React, but nothing here depends on React)",
+      "The shell package the feature team gave you: a registry name or a tarball"
+    ]
+  },
+  "related": {
+    "guides": ["first-cross-window-connection"],
+    "reference": ["/docs/libraries/features"],
+    "explanation": ["/docs/libraries/features/architecture"]
+  },
+  "keywords": [
+    "embed",
+    "shell",
+    "iframe",
+    "proof of life",
+    "silence timeout",
+    "fallback",
+    "degraded",
+    "vendored tarball",
+    "client component",
+    "Next.js",
+    "SSR"
+  ]
+}
