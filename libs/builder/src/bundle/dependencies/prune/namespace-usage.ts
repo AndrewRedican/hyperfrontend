@@ -6,7 +6,7 @@ import { classifyRequireBinding, getRequireSpecifier, parseChunk, resolveRelativ
 
 /**
  * Property-level demand on a single namespace export: either the concrete set of
- * property names statically read off it, or `'all'` — the safety sentinel
+ * property names statically read off it, or `'all'`: the safety sentinel
  * meaning the binding is consumed in a way that forbids dropping any slot
  * (spread, passed/returned/assigned wholesale, enumerated, dynamically indexed,
  * or re-exported).

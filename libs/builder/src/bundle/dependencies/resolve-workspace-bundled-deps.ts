@@ -85,7 +85,7 @@ const absolutize = (relativeTo: string, value: string): string => {
  * relative to the tsconfig's directory; we absolutize as we go so callers can
  * rely on the returned values being absolute.
  *
- * The function tolerates missing `extends` targets — a typical layout has the
+ * The function tolerates missing `extends` targets: a typical layout has the
  * project tsconfig extending a workspace-root one, which extends nothing.
  *
  * @param tsconfigPath - Absolute path to the tsconfig to read.
@@ -260,7 +260,7 @@ const collectMatchingSpecifiers = (packageName: string, mappings: Map<string, st
  * fully resolved is a contract violation, not a soft skip. The function throws
  * (rather than silently externalising) when an eligible dep has no resolvable
  * tsconfig mapping, when a mapped source has no owning tsconfig, or when a dep
- * is explicitly opted into `'whole-surface'` yet exposes no root export — each
+ * is explicitly opted into `'whole-surface'` yet exposes no root export, each
  * with a message naming the dep and the remedy.
  *
  * @param packageJsonPath - Absolute path to the project's `package.json`.

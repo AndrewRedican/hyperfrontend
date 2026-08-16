@@ -78,7 +78,7 @@ const collectExportEdits = (exports: ExportEntry[], removedLocals: Set<string>, 
  * top-level declaration that no kept declaration, kept export, or bare
  * side-effecting statement references. The matching entries are dropped from the
  * export surface, and import bindings left unreferenced by the surviving code are
- * narrowed away (whole import statements when fully unused) — which is what
+ * narrowed away (whole import statements when fully unused), which is what
  * shrinks the cross-chunk dependency graph for the next fixpoint pass.
  * Side-effecting initializers and bare statements are always kept.
  *

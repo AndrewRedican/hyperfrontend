@@ -16,7 +16,7 @@ const log = logger.channel('builder:bundle:rollup:dispatch')
  * Caller-supplied options threaded through {@link dispatchRollupWorker}.
  */
 export interface DispatchRollupWorkerOptions {
-  /** Absolute path to the worker entry script. Required — see `resolveDefaultRollupWorkerPath`. */
+  /** Absolute path to the worker entry script. Required; see `resolveDefaultRollupWorkerPath`. */
   workerPath: string
   /** Optional memory monitor invoked before and after the spawned worker. */
   monitor?: MemoryMonitor

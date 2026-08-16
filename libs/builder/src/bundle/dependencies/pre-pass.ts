@@ -105,7 +105,7 @@ export interface PrePassResult {
  * Caller-supplied options threaded through {@link runPrePass}.
  */
 export interface RunPrePassOptions {
-  /** Absolute path to the worker entry script. Required — see `resolveDefaultWorkerPath`. */
+  /** Absolute path to the worker entry script. Required; see `resolveDefaultWorkerPath`. */
   workerPath: string
   /** Optional memory monitor invoked between every spawned worker. */
   monitor?: MemoryMonitor
@@ -198,7 +198,7 @@ export const resolveDefaultWorkerPath = (startDir?: string): WorkerInvocation | 
 
 /**
  * Sequentially runs the supplied pre-pass jobs by forking a fresh Node child
- * per invocation. Strict sequential execution is mandatory — concurrent
+ * per invocation. Strict sequential execution is mandatory: concurrent
  * children would simultaneously pressure RAM and OOM the container.
  *
  * Each child writes a JSON report to a parent-supplied path; this function

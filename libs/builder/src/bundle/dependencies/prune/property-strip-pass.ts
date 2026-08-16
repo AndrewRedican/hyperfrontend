@@ -144,7 +144,7 @@ const processFormat = (
  * factory bindings.
  *
  * Runs per format (ESM and CJS) over `_dependencies/` chunks. The consumer graph
- * is the package's entry chunks plus every sibling dependency chunk — a complete
+ * is the package's entry chunks plus every sibling dependency chunk: a complete
  * importer set, since per-entry bundling inlines all other first-party code.
  * Each namespace's demand is the union of its `NS.prop` reads across that graph
  * (in CJS, a two-level `require(...).NS.prop`); a wholesale consumption (spread,

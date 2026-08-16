@@ -122,7 +122,7 @@ const computeSccIds = (nodes: string[], graph: Map<string, Set<string>>): Map<st
  *
  * Builds the relative-require graph over the CJS chunks, finds its
  * strongly-connected components, and lets each chunk destructure a target only
- * when the two sit in different components — i.e. the edge is acyclic, so an
+ * when the two sit in different components, i.e. the edge is acyclic, so an
  * eager destructure cannot capture an export before a circular dependency
  * finished initializing (the exact hazard rollup's namespace-access codegen
  * avoids). ESM chunks need nothing: their named imports already destructure. A

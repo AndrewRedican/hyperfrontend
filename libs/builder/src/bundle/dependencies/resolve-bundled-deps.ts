@@ -35,8 +35,8 @@ const readPkg = (packageJsonPath: string): PackageJson => (exists(packageJsonPat
  *
  * Algorithm:
  * 1. Read `dependencies` from the project's `package.json`.
- * 2. Subtract `peerDependencies` — those stay external.
- * 3. Subtract anything matching `isWorkspacePackage` — workspace deps are inlined per the existing flow.
+ * 2. Subtract `peerDependencies`: those stay external.
+ * 3. Subtract anything matching `isWorkspacePackage`: workspace deps are inlined per the existing flow.
  * 4. Apply `include` / `exclude` overrides.
  *
  * The returned list is sorted and de-duplicated.

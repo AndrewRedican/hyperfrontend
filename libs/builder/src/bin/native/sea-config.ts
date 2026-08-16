@@ -29,7 +29,7 @@ export interface SeaConfigDocument {
  * Builds the JSON document consumed by `node --experimental-sea-config <path>`.
  *
  * Builder always emits `disableExperimentalSEAWarning: true` to silence the
- * runtime warning banner on every native binary invocation — published bins
+ * runtime warning banner on every native binary invocation: published bins
  * are expected to behave like first-class executables.
  *
  * @param inputs - Resolved absolute paths for the SEA `main` script and `output` blob.

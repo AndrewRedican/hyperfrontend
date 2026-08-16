@@ -130,7 +130,7 @@ const pruneDtsOrphans = (context: BuildContext, depsRoot: string): OrphanPruneRe
  *
  * Runs reachability from the package's own entry output chunks over the
  * `_dependencies/` JS graph, unlinks every `index.{esm,cjs}.js` (and `.map`
- * sibling) that is unreachable, then applies the d.ts retention rule — a dep's
+ * sibling) that is unreachable, then applies the d.ts retention rule: a dep's
  * `index.d.ts` is kept only when it is reachable from an entry's `.d.ts` graph.
  * Entry `index.d.ts` are self-contained (dts-per-entry), so dep types no entry
  * type-graph references are dead and removed. Empty directories left behind are

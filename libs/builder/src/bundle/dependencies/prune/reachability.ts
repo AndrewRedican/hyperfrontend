@@ -16,11 +16,11 @@ const log = logger.channel('builder:bundle:dependencies:prune')
  *
  * If a reached file **under `depsRoot`** contains a dynamic (non-literal)
  * `import(`/`require(`, the dependency chunk graph cannot be fully resolved, so
- * the function logs and returns `null` — the guaranteed-safe sentinel that
+ * the function logs and returns `null`: the guaranteed-safe sentinel that
  * disables orphan deletion for the run. A dynamic specifier in a first-party
  * **root** (which is never under `depsRoot`) is ignored: its target is always an
  * external/user path, never a bundled dep chunk, so it cannot hide a
- * `_dependencies/` edge — bailing on it would needlessly strand emptied dep
+ * `_dependencies/` edge; bailing on it would needlessly strand emptied dep
  * chunks the sweep should reclaim.
  *
  * @param roots - Absolute paths to the root files reachability starts from.

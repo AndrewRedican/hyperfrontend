@@ -18,9 +18,9 @@ This document describes the internal architecture of `@hyperfrontend/builder`. F
 
 `@hyperfrontend/builder` turns a TypeScript source tree into a publishable npm package. A single declarative `BuildConfig` is resolved once into a fully-computed `BuildContext`, which is then handed to three composable phases that run in order:
 
-- **bundle** — discover entry points, resolve externals, emit per-entry bundles for each format (ESM, CJS, IIFE, UMD), generate declarations, and deduplicate shared internals.
-- **package** — synthesize the output `package.json`, copy assets, and optionally collect third-party licenses.
-- **bin** — synthesize JavaScript bins and, optionally, Node SEA native binaries.
+- **bundle**: discover entry points, resolve externals, emit per-entry bundles for each format (ESM, CJS, IIFE, UMD), generate declarations, and deduplicate shared internals.
+- **package**: synthesize the output `package.json`, copy assets, and optionally collect third-party licenses.
+- **bin**: synthesize JavaScript bins and, optionally, Node SEA native binaries.
 
 `build(config)` is a thin facade that resolves the context, runs all three phases, and reflects `package.json#files` from the materialized output. Each phase is also individually callable against a shared context, so a custom orchestrator can drive them à la carte.
 
@@ -74,7 +74,7 @@ await runPackagePhase(ctx, config, outputs)
 
 ### 2. Vendor-neutral via predicates, not config DSLs
 
-Workspace membership, externals, and asset conditions are expressed as plain functions. The core makes no assumptions about package naming or which deps are first-party — the consumer injects those opinions.
+Workspace membership, externals, and asset conditions are expressed as plain functions. The core makes no assumptions about package naming or which deps are first-party; the consumer injects those opinions.
 
 ```typescript
 // ✅ Classify packages with a predicate the consumer supplies
@@ -164,13 +164,13 @@ flowchart TB
 | `bundle/`  | Entry discovery, per-entry Rollup bundling, declaration emit, dependency bundling, and dedupe. |
 | `package/` | Synthesize the output `package.json`, copy assets, collect third-party licenses.               |
 | `bin/`     | Synthesize JavaScript bins and Node SEA native binaries.                                       |
-| `models/`  | Type definitions for config, context, and results — the contracts shared across every phase.   |
+| `models/`  | Type definitions for config, context, and results: the contracts shared across every phase.    |
 | `memory/`  | Opt-in memory monitor (`createMemoryMonitor`) and the inter-phase `recover()` primitive.       |
 | `presets/` | Predicate factories (`byPrefix`, `byNames`) for classifying workspace packages and externals.  |
 
 ### `bundle/` sub-modules
 
-Each sub-module is its own package entry point and ships its own README — follow the link on its name for the full surface.
+Each sub-module is its own package entry point and ships its own README; follow the link on its name for the full surface.
 
 | Sub-module                                             | Responsibility                                                                                                 |
 | ------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------- |
@@ -197,7 +197,7 @@ Each sub-module is its own package entry point and ships its own README — foll
 
 ### Full build pipeline
 
-The primary use case — `build(config)` — flows through context resolution and the three phases in sequence, with `recover()` yielding between the heavy phases:
+The primary use case, `build(config)`, flows through context resolution and the three phases in sequence, with `recover()` yielding between the heavy phases:
 
 ```mermaid
 ---
@@ -391,11 +391,11 @@ interface BuildResult {
 
 **Key components:**
 
-- `entries/` — `discoverEntries()` scans `src/` and categorizes the layout (root, platform, feature, hybrid, complex).
-- `rollup/` — `toEsmBuildDescriptor()` and siblings build JSON-serializable descriptors; `dispatchRollupWorker()` runs each in a child process.
-- `dependencies/` — `runPrePass()` bundles each dep once into `_dependencies/`; `createExternalizeBundledDepsPlugin()` routes imports to those chunks.
-- `declarations/` — `generateDeclarations()` drives tsc; per-entry passes inline bundled-dep types and prune orphans.
-- `dedupe/` — `hoistSharedFirstParty()` lifts duplicated first-party modules into `_shared/`.
+- `entries/`: `discoverEntries()` scans `src/` and categorizes the layout (root, platform, feature, hybrid, complex).
+- `rollup/`: `toEsmBuildDescriptor()` and siblings build JSON-serializable descriptors; `dispatchRollupWorker()` runs each in a child process.
+- `dependencies/`: `runPrePass()` bundles each dep once into `_dependencies/`; `createExternalizeBundledDepsPlugin()` routes imports to those chunks.
+- `declarations/`: `generateDeclarations()` drives tsc; per-entry passes inline bundled-dep types and prune orphans.
+- `dedupe/`: `hoistSharedFirstParty()` lifts duplicated first-party modules into `_shared/`.
 
 📖 [Full bundle/ documentation](./src/bundle/README.md)
 
@@ -405,9 +405,9 @@ interface BuildResult {
 
 **Key components:**
 
-- `json/` — `synthesizePackageJson()` builds `exports` from the emitted formats, strips bundled and workspace deps, inherits fields, and resolves CDN paths.
-- `assets/` — `copyAssets()` materializes file/glob specs, optionally gated by a condition predicate.
-- `licenses/` — `collectThirdPartyLicenses()` and `writeThirdPartyLicensesFile()` produce `THIRD_PARTY_LICENSES.md`.
+- `json/`: `synthesizePackageJson()` builds `exports` from the emitted formats, strips bundled and workspace deps, inherits fields, and resolves CDN paths.
+- `assets/`: `copyAssets()` materializes file/glob specs, optionally gated by a condition predicate.
+- `licenses/`: `collectThirdPartyLicenses()` and `writeThirdPartyLicensesFile()` produce `THIRD_PARTY_LICENSES.md`.
 
 📖 [Full package/ documentation](./src/package/README.md)
 
@@ -417,20 +417,20 @@ interface BuildResult {
 
 **Key components:**
 
-- `script/` — `buildJsBin()` bundles the bin, prepends `#!/usr/bin/env node`, appends a bootstrap footer, and sets the executable bit.
-- `native/` — the Node SEA pipeline: generate the SEA config and blob, resolve a host binary, inject the blob via postject, strip macOS signatures, and skip gracefully when the current platform is not a declared target.
+- `script/`: `buildJsBin()` bundles the bin, prepends `#!/usr/bin/env node`, appends a bootstrap footer, and sets the executable bit.
+- `native/`, the Node SEA pipeline: generate the SEA config and blob, resolve a host binary, inject the blob via postject, strip macOS signatures, and skip gracefully when the current platform is not a declared target.
 
 📖 [Full bin/ documentation](./src/bin/README.md)
 
 ### models/
 
-**Purpose:** Define the contracts every phase shares — the declarative input, the resolved context, and the result.
+**Purpose:** Define the contracts every phase shares: the declarative input, the resolved context, and the result.
 
 **Key components:**
 
-- `BuildConfig` plus the per-format shapes (`EsmConfig`, `CjsConfig`, `IifeConfig`, `UmdConfig`) and `BinConfig`/`SeaConfig` — the declarative input surface.
-- `BuildContext` — the resolved, immutable shape `createBuildContext()` produces and every phase consumes.
-- `BuildResult`, `FormatOutputs`, `BinOutput`, and the predicate aliases — the values phases return and the functions consumers inject.
+- `BuildConfig` plus the per-format shapes (`EsmConfig`, `CjsConfig`, `IifeConfig`, `UmdConfig`) and `BinConfig`/`SeaConfig`: the declarative input surface.
+- `BuildContext`: the resolved, immutable shape `createBuildContext()` produces and every phase consumes.
+- `BuildResult`, `FormatOutputs`, `BinOutput`, and the predicate aliases: the values phases return and the functions consumers inject.
 
 These types are reproduced in [Core Interfaces](#core-interfaces).
 
@@ -459,6 +459,6 @@ These types are reproduced in [Core Interfaces](#core-interfaces).
 
 ## Further Reading
 
-- [Main README](./README.md) — Installation and quick start
-- [Module Documentation](./src/) — Per-module README files
-- [Contributing Guide](../../CONTRIBUTING.md) — Development setup
+- [Main README](./README.md): Installation and quick start
+- [Module Documentation](./src/): Per-module README files
+- [Contributing Guide](../../CONTRIBUTING.md): Development setup

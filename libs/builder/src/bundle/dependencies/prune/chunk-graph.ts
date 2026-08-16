@@ -60,7 +60,7 @@ const EVAL_SIDE_EFFECT_KINDS = createSet<ts.SyntaxKind>([
 
 /**
  * Globals whose call observably only mutates-then-returns its (fresh-literal)
- * argument and is therefore side-effect-free — `freeze`/`seal`/`preventExtensions`
+ * argument and is therefore side-effect-free: `freeze`/`seal`/`preventExtensions`
  * all behave this way on a freshly-built object/array literal.
  */
 const PURE_GLOBAL_CALLEES = createSet<string>(['Object.freeze', 'Object.seal', 'Object.preventExtensions'])
@@ -70,7 +70,7 @@ const PURE_GLOBAL_CALLEES = createSet<string>(['Object.freeze', 'Object.seal', '
  * regardless of how the global was aliased.
  */
 export interface BindingResolution {
-  /** Every name bound at top level (const/var/function/class) — used to detect a global shadowed by a local. */
+  /** Every name bound at top level (const/var/function/class), used to detect a global shadowed by a local. */
   bindings: Set<string>
   /** Bindings whose initializer is an identifier/property chain rooted in a global, mapped to that global-rooted dotted form. */
   canonical: Map<string, string>
@@ -132,7 +132,7 @@ export const collectBindingCanonical = (sourceFile: ts.SourceFile): BindingResol
 /**
  * Reports whether a call is a recognized pure callee
  * (`Object.freeze`/`seal`/`preventExtensions`, however aliased) over a fresh
- * object/array literal. The argument must be a same-expression literal —
+ * object/array literal. The argument must be a same-expression literal:
  * freezing a shared binding mutates it observably, so an identifier argument is
  * rejected. This checks only the callee and argument shape, not the purity of
  * the argument's own subexpressions.
@@ -158,7 +158,7 @@ export const isPureFreezeCall = (call: ts.CallExpression, resolution: BindingRes
 
 /**
  * Reports whether a call is `<global-rooted chain>.bind(…)`.
- * `Function.prototype.bind` only builds and returns a new bound function — no
+ * `Function.prototype.bind` only builds and returns a new bound function: no
  * observable side effect. The receiver must canonicalize to a global so an
  * arbitrary user object's `.bind` — potentially a redefined, side-effecting
  * method — is never assumed pure. As with {@link isPureFreezeCall}, this checks

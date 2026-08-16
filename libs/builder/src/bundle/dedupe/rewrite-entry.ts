@@ -58,7 +58,7 @@ const collectIdentifierNames = (source: string): Set<string> => {
  *
  * Splices every hoisted declaration (and its leading comments) out of the entry
  * and prepends an import/`require` binding the chunk's base export to the
- * entry's local name — aliasing when rollup renamed the local (`foo as foo$1`).
+ * entry's local name, aliasing when rollup renamed the local (`foo as foo$1`).
  * Only the hoisted symbols the entry still references after splicing are
  * re-imported: a private helper used solely by another hoisted export (e.g. a
  * reducer's `handlers`, used only by the hoisted `rootReducer`) is seen as dead

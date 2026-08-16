@@ -2,7 +2,7 @@ import type { BuildContext } from '../../models'
 import { join } from '@hyperfrontend/project-scope/core'
 
 /**
- * Resolves the absolute `_dependencies/` root for a build — the bundled-dep
+ * Resolves the absolute `_dependencies/` root for a build: the bundled-dep
  * "never touch" zone every prune pass guards. Pair it with {@link isUnderDir} to
  * derive both the bundled-dep write paths and the guard from one source string.
  *

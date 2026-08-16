@@ -60,10 +60,10 @@ const categorize = (hasRootEntry: boolean, platformEntries: EntryPoint[], featur
  * Scans `<projectRoot>/src` for the root `index.ts` plus every nested directory
  * containing an `index.ts`. Recognized layouts include:
  *
- * - `src/index.ts` — root entry
- * - `src/browser/index.ts`, `src/node/index.ts` — platform entries
- * - `src/<feature>/index.ts` — feature entries
- * - `src/<platform>/<feature>/index.ts` — nested entries (max depth 3)
+ * - `src/index.ts`: root entry
+ * - `src/browser/index.ts`, `src/node/index.ts`: platform entries
+ * - `src/<feature>/index.ts`: feature entries
+ * - `src/<platform>/<feature>/index.ts`: nested entries (max depth 3)
  *
  * @param projectRoot - Absolute path to the project root.
  * @returns Discovery result containing every entry point with its layout category.

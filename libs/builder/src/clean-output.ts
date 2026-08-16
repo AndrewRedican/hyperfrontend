@@ -4,7 +4,7 @@ import { exists, join, relativePath, removeDirectory } from '@hyperfrontend/proj
 
 /**
  * Empties a build's own output directory before emission so a build never
- * inherits stale artifacts from a previous run — e.g. a `*.js.map` left behind
+ * inherits stale artifacts from a previous run, e.g. a `*.js.map` left behind
  * after sourcemaps were turned off, or a chunk for a since-renamed entry.
  *
  * Scoped and guarded: only the *target project's own* directory is removed
@@ -17,7 +17,7 @@ import { exists, join, relativePath, removeDirectory } from '@hyperfrontend/proj
  *
  * @param context - Resolved build context supplying `outputPath` and `workspaceRoot`.
  * @throws {Error} When `outputPath` is the workspace root, an ancestor of it,
- * outside the workspace, or the bare `dist/` root — anything broader than a
+ * outside the workspace, or the bare `dist/` root: anything broader than a
  * single project's output directory.
  *
  * @example Cleaning a library's output before the bundle phase

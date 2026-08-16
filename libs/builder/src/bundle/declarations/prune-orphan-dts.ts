@@ -22,7 +22,7 @@ const INDEX_DTS_NAME = 'index.d.ts'
  * or directory imports (`./shared` → `shared/index.d.ts`); the canonical
  * `_dependencies` routing uses an explicit runtime extension (`.../index.js`),
  * which is rewritten to its declaration sibling. Targets under `depsRoot` are
- * never edges for this pass — bundled-dep declarations are managed by the
+ * never edges for this pass: bundled-dep declarations are managed by the
  * dependency Type Prune, and this pass must never touch them.
  *
  * @param dir - Absolute directory of the referencing `.d.ts`.
@@ -52,7 +52,7 @@ const toDtsTarget = (dir: string, spec: string, depsRoot: string): string | null
  * over-keeps harmless bytes) so it never under-keeps a referenced sibling.
  *
  * If any reached `.d.ts` contains a dynamic (non-literal) `import(`/`require(`,
- * the graph cannot be fully resolved, so the function returns `null` — the
+ * the graph cannot be fully resolved, so the function returns `null`: the
  * safe sentinel that makes the caller keep every declaration.
  *
  * @param roots - Absolute paths to the entry-point `index.d.ts` roots.
@@ -124,8 +124,8 @@ const collectDeclarationFiles = (root: string, depsRoot: string): string[] => {
  *
  * Walks the whole package tree (excluding `_dependencies/`) and deletes every
  * declaration file **not reachable** from an entry-point `index.d.ts` via its
- * transitive relative specifiers. Reachability — rather than a per-directory
- * sweep — guarantees the invariant that after this runs no surviving `.d.ts`
+ * transitive relative specifiers. Reachability (rather than a per-directory
+ * sweep) guarantees the invariant that after this runs no surviving `.d.ts`
  * references a removed one: when the flatten made `index.d.ts` self-contained
  * the reachable set collapses to the roots and every per-source sibling is
  * pruned; when the flatten was skipped the siblings the public entry still

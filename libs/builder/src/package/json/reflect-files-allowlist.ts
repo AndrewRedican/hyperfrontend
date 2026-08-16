@@ -2,9 +2,9 @@ import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { exists, matchGlobPattern, readDirectory, relativePath } from '@hyperfrontend/project-scope/core'
 
 /**
- * Recursive glob covering every `index.*` entrypoint file at any depth — root,
+ * Recursive glob covering every `index.*` entrypoint file at any depth: root,
  * secondary entries, and nested `_dependencies` index declarations. `*` spans
- * multi-dot names, so it also matches `index.iife.min.js` — and, unhelpfully,
+ * multi-dot names, so it also matches `index.iife.min.js` and, unhelpfully,
  * any JS sourcemap sibling such as `index.esm.js.map`. {@link JS_MAP_EXCLUDE_GLOB}
  * is appended last to subtract those back out (npm resolves `files` patterns
  * top-to-bottom, last match wins).
@@ -19,7 +19,7 @@ const INDEX_DTS_GLOB = '**/index.d.ts'
 
 /**
  * Trailing negation that prevents JS sourcemaps from shipping even if a build
- * re-enables `sourcemap` — the broad {@link INDEX_GLOB} would otherwise match
+ * re-enables `sourcemap`: the broad {@link INDEX_GLOB} would otherwise match
  * `index.esm.js.map` and friends. Published packages carry no JS maps by policy.
  *
  * Scoped to JS (`*.js.map`), so `*.d.ts.map` (`declarationMap`) is intentionally
@@ -47,7 +47,7 @@ const ROOT_PACKAGE_JSON = 'package.json'
  * files are skipped (covered by the glob); metadata files (README, LICENSE,
  * THIRD_PARTY_LICENSES, …) are picked up by the walk only when present.
  *
- * The sorted positive entries are followed by {@link JS_MAP_EXCLUDE_GLOB} — a
+ * The sorted positive entries are followed by {@link JS_MAP_EXCLUDE_GLOB}: a
  * trailing negation that subtracts any JS sourcemap the index glob would
  * otherwise ship. It must come last (npm resolves `files` last-match-wins), so
  * it is appended after the sort rather than folded into the sorted set.

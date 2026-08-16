@@ -42,7 +42,7 @@ export interface EntryRef {
 /**
  * Parses a declaration file's text into a `ts.SourceFile`.
  *
- * Parent pointers are left unset — every statement this pass inspects is a
+ * Parent pointers are left unset: every statement this pass inspects is a
  * top-level import/export, reachable straight off `statements`.
  *
  * @param source - Raw `.d.ts` text.
@@ -84,7 +84,7 @@ const declaredExportNames = (statement: ts.Statement): string[] => {
 /**
  * Collects the names an entry's bundled `index.d.ts` exports.
  *
- * Returns `null` for an open export set — a bare `export * from '…'` re-exports
+ * Returns `null` for an open export set: a bare `export * from '…'` re-exports
  * names this pass cannot enumerate, so no reference against that entry can be
  * called dangling.
  *
@@ -183,7 +183,7 @@ const emittedEntryIndexes = (context: BuildContext): string[] => {
  * on the assumption that the entry re-exports what its subtree declares. When it
  * does not, the emitted reference resolves to nothing: `skipLibCheck` (on in
  * every consumer scaffold) hides the broken declaration file, and the symbol
- * silently degrades to an error type in consumer code instead — an event
+ * silently degrades to an error type in consumer code instead: an event
  * handler's parameter turning implicitly `any`, a re-exported payload type
  * becoming unusable. This pass reads the emitted entry declarations back and
  * reports each such reference.

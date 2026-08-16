@@ -22,7 +22,7 @@ export interface ResolveHostBinaryInputs {
  * CI matrix where each runner produces the binary for its own platform.
  *
  * Calling this function with a target platform that doesn't match the current
- * host throws — the caller is expected to gate via {@link currentPlatformMatches}
+ * host throws: the caller is expected to gate via {@link currentPlatformMatches}
  * before invoking the SEA pipeline. The throw exists as a defense-in-depth
  * check should that gate be bypassed.
  *

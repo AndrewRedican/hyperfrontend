@@ -101,7 +101,7 @@ const processFormat = (
  *
  * Each iteration re-derives the importer demand for every surviving chunk from
  * the current on-disk sources (entries plus sibling chunks), strips each chunk
- * to that demand, and repeats until no chunk changes — because removing one
+ * to that demand, and repeats until no chunk changes, because removing one
  * chunk's import can make another chunk's export dead in turn. ESM and CJS are
  * processed independently. The orphan sweep is expected to run afterwards to
  * reclaim any chunk whose last import was removed here.

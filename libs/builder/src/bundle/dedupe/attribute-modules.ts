@@ -20,7 +20,7 @@ export interface OwnerIndex {
   /**
    * Maps a runtime symbol's base name (rollup `$N` collision suffix stripped)
    * to its owning module key. Names declared by more than one module are
-   * omitted — an ambiguous name can never be safely attributed.
+   * omitted: an ambiguous name can never be safely attributed.
    */
   ownerOf: Map<string, ModuleKey>
 }
@@ -52,7 +52,7 @@ export interface EntryDecl {
   /** Emitted code text (leading comments excluded); the raw chunk-body source. */
   text: string
   /**
-   * Rename-insensitive identity key — `$N` suffixes stripped from identifier
+   * Rename-insensitive identity key: `$N` suffixes stripped from identifier
    * nodes; the raw {@link text} is still the chunk-body source.
    */
   fingerprint: string
@@ -72,7 +72,7 @@ export interface ParsedEntry {
   bareStatements: ts.Statement[]
   /** Every local name a top-level declaration binds. */
   declNames: Set<string>
-  /** End offset of the bundle's leading import/`require`/`'use strict'` header — the insertion point for hoisted imports. */
+  /** End offset of the bundle's leading import/`require`/`'use strict'` header: the insertion point for hoisted imports. */
   headerEnd: number
 }
 

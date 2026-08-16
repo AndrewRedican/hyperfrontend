@@ -35,7 +35,7 @@ interface Candidate {
   nameNode: ts.Identifier
   /** Property reads keyed by exported name → the member-access nodes selecting it. */
   members: Map<string, ts.Node[]>
-  /** True once any non-static use is seen — the binding is then left untouched. */
+  /** True once any non-static use is seen; the binding is then left untouched. */
   bail: boolean
 }
 
@@ -135,7 +135,7 @@ const allocateLocal = (exported: string, taken: Set<string>): string => {
  * `NS['member']` reads, the binding is collapsed to `const { member, … } =
  * require('./rel')` and each `NS.member` access is replaced by the bound local.
  * Locals that would collide with an existing free identifier or another bound
- * local are aliased (`member: member$1`) — so the rewrite never shadows the
+ * local are aliased (`member: member$1`), so the rewrite never shadows the
  * chunk's own names. Any wholesale, dynamic, or reassigning use of `NS` leaves
  * its binding untouched, matching rollup's namespace-access codegen.
  *

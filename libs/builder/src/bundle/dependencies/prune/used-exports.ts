@@ -5,7 +5,7 @@ import { classifyRequireBinding, getRequireSpecifier, parseChunk, resolveRelativ
 
 /**
  * Per-chunk usage demand from a single importer set: either the concrete set of
- * exported names referenced, or `'all'` — the safety sentinel meaning the
+ * exported names referenced, or `'all'`: the safety sentinel meaning the
  * importer consumes the chunk wholesale (namespace/default import, or a `require`
  * binding escaping member access) so nothing may be stripped.
  */

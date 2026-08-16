@@ -1,7 +1,7 @@
 /**
  * Serializable inject-worker job descriptor: the contract between
  * {@link dispatchInjectWorker} and the forked child. Every field must round-trip
- * through `JSON.stringify` / `JSON.parse` — no functions, no class instances.
+ * through `JSON.stringify` / `JSON.parse`: no functions, no class instances.
  */
 export interface InjectWorkerJob {
   /** Absolute path to the Node host binary the worker clones as the injection target. */
@@ -23,7 +23,7 @@ export interface InjectWorkerJob {
 /**
  * Memory + size summary written to `reportPath` when the worker exits cleanly.
  *
- * Captured from the worker process — the parent never observes the ~138 MB
+ * Captured from the worker process: the parent never observes the ~138 MB
  * postject buffer because the entire load lives and dies in the child.
  */
 export interface InjectWorkerReport {

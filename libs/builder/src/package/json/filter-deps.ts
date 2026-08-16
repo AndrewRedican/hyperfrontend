@@ -36,7 +36,7 @@ export const filterWorkspaceDepsFromOutput = (pkg: PackageJson, isWorkspacePacka
  * Returns a new `PackageJson` with bundled-dep entries stripped from `dependencies`.
  *
  * When the dist contains pre-passed copies under `_dependencies/<dep>/`, those packages
- * are no longer transitive runtime requirements — consumers get them inside the tarball.
+ * are no longer transitive runtime requirements: consumers get them inside the tarball.
  * Removing them from the published `dependencies` field keeps the manifest honest.
  *
  * If filtering empties the `dependencies` map, the field is removed entirely.

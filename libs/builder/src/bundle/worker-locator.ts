@@ -52,7 +52,7 @@ export const currentModuleDir = (): string => {
  * sibling (source-mode bootstrap) resolves with the swc loader attached.
  *
  * The worker ships inside the builder's own package, so resolving relative to the
- * running module finds it wherever the package lives — built dist, an installed
+ * running module finds it wherever the package lives: built dist, an installed
  * `node_modules` copy, or melded into a host bundle under `_dependencies/`.
  *
  * @param offset - In-package path segments to the worker directory (e.g. `['bundle', 'rollup', 'worker']`).

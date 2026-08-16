@@ -19,7 +19,7 @@ export const currentPlatformTarget = (): string => `${process.platform}-${proces
 
 /**
  * Returns `true` when the current Node process matches one of the declared
- * SEA target platforms — i.e., when `<process.platform>-<process.arch>` is
+ * SEA target platforms: i.e., when `<process.platform>-<process.arch>` is
  * present in `declaredPlatforms`.
  *
  * Builder uses this gate to skip native emission silently on runners that

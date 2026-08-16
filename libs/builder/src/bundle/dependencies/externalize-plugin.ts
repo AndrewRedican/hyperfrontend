@@ -81,9 +81,9 @@ export interface ExternalizeBundledDepsPluginOptions {
  * Resolution shape returned by the externalize-bundled-deps plugin's `resolveId` hook.
  */
 interface ExternalResolution {
-  /** Resolved import id — relative path under `_dependencies/` or original specifier for builtins. */
+  /** Resolved import id: relative path under `_dependencies/` or original specifier for builtins. */
   id: string
-  /** Always `true` — the plugin only emits external resolutions. */
+  /** Always `true`: the plugin only emits external resolutions. */
   external: true
 }
 

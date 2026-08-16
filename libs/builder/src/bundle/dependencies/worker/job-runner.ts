@@ -161,7 +161,7 @@ const matchesAnyExactSpecifier = (id: string, specifiers: string[] | undefined):
  * Packages whose JS implementation is intentionally NOT inlined during the JS pre-pass.
  *
  * Mirrors `ALWAYS_EXTERNAL_TYPE_DEPS` for the JS half. `typescript` is permanent
- * consumer-supplied — both `@rollup/plugin-typescript` and `rollup-plugin-dts`
+ * consumer-supplied: both `@rollup/plugin-typescript` and `rollup-plugin-dts`
  * follow `require('typescript')` into the compiler; without this gate, ~30 MB
  * of typescript bytecode ends up inlined into `_dependencies/<plugin>/index.<fmt>.js`.
  */
@@ -293,7 +293,7 @@ const buildJsOutput = (job: PrePassWorkerJob): OutputOptions => ({
 /**
  * Packages whose `.d.ts` is intentionally NOT inlined during the d.ts pre-pass.
  *
- * `typescript` is a permanent consumer requirement — never bundled, never inlined,
+ * `typescript` is a permanent consumer requirement: never bundled, never inlined,
  * never copied into `_dependencies/`. The compiler is too large (~10 MB just for
  * `lib/typescript.d.ts`), its namespace re-exports defeat `rollup-plugin-dts`,
  * and every consumer of `@hyperfrontend/builder` is, by definition, already a
@@ -324,7 +324,7 @@ type DtsFactory = (options?: DtsPluginOptions) => Plugin
  * result we read.
  */
 interface DtsModule {
-  /** Default export — present in the published ESM form, sometimes missing in the CJS form. */
+  /** Default export: present in the published ESM form, sometimes missing in the CJS form. */
   default?: DtsFactory
 }
 

@@ -60,7 +60,7 @@ export const getRequireSpecifier = (node: ts.Node): string | null => {
   return ts.isStringLiteralLike(arg) ? arg.text : null
 }
 
-/** `require('F').Export` — a single export selected by static property access. */
+/** `require('F').Export`: a single export selected by static property access. */
 export interface RequirePropShape {
   /** Discriminant. */
   kind: 'prop'
@@ -70,7 +70,7 @@ export interface RequirePropShape {
   name: string
 }
 
-/** `require('F')['Export']` — a single export selected by string-literal element access. */
+/** `require('F')['Export']`: a single export selected by string-literal element access. */
 export interface RequireElemStaticShape {
   /** Discriminant. */
   kind: 'elem-static'
@@ -80,19 +80,19 @@ export interface RequireElemStaticShape {
   name: string
 }
 
-/** `require('F')[k]` — a computed element access that could select any export. */
+/** `require('F')[k]`: a computed element access that could select any export. */
 export interface RequireElemDynamicShape {
   /** Discriminant. */
   kind: 'elem-dynamic'
 }
 
-/** A bare `require('F');` expression statement that binds nothing — side-effect only. */
+/** A bare `require('F');` expression statement that binds nothing: side-effect only. */
 export interface RequireSideEffectShape {
   /** Discriminant. */
   kind: 'side-effect'
 }
 
-/** `var dep = require('F')` — the whole module bound to a local identifier. */
+/** `var dep = require('F')`: the whole module bound to a local identifier. */
 export interface RequireNsBindingShape {
   /** Discriminant. */
   kind: 'ns-binding'
@@ -100,7 +100,7 @@ export interface RequireNsBindingShape {
   name: ts.Identifier
 }
 
-/** `var { … } = require('F')` — the module destructured into named locals. */
+/** `var { … } = require('F')`: the module destructured into named locals. */
 export interface RequireDestructureShape {
   /** Discriminant. */
   kind: 'destructure'
@@ -108,7 +108,7 @@ export interface RequireDestructureShape {
   pattern: ts.ObjectBindingPattern
 }
 
-/** Any other position (call argument, spread, reassignment, …) — consumes the module wholesale. */
+/** Any other position (call argument, spread, reassignment, …): consumes the module wholesale. */
 export interface RequireEscapeShape {
   /** Discriminant. */
   kind: 'escape'

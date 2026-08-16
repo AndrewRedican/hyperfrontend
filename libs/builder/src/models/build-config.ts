@@ -47,7 +47,7 @@ export interface InheritFromSpec {
  * Entry-point selection shared by every per-format configuration.
  */
 export interface FormatEntryConfig {
-  /** Entry pattern(s) — exact path, glob, or list. Omit to include all detected entries. */
+  /** Entry pattern(s): exact path, glob, or list. Omit to include all detected entries. */
   entry?: string | string[]
   /** Pattern(s) to exclude from the resolved entry set. */
   exclude?: string | string[]
@@ -188,7 +188,7 @@ export interface BinConfig {
  * Per-package hoist policy for a bundled workspace dependency.
  *
  * `'sub-path'` (the zero-config default) gives every public tsconfig specifier
- * of the dep — root and each sub-path — its own
+ * of the dep (root and each sub-path) its own
  * `_dependencies/<name>(/<sub>)?/index.<ext>` chunk, preserving sub-module
  * tree-shaking and reuse, and supporting subpath-only packages that expose no
  * root export. `'whole-surface'` is an explicit opt-in collapse: it routes every
@@ -257,7 +257,7 @@ export interface BuildConfig {
    * Override the published `package.json#files` allowlist.
    *
    * When omitted, the allowlist is reflected from the materialized output tree
-   * after every emit phase — it names exactly what shipped. Provide an explicit
+   * after every emit phase: it names exactly what shipped. Provide an explicit
    * array to take full control of what `npm publish` ships.
    */
   files?: string[]

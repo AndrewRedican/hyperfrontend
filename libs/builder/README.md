@@ -43,7 +43,7 @@ Composable, vendor-neutral build toolkit for TypeScript libraries, JS bins, and 
 source tree into a publishable npm package. From a single declarative config it
 discovers entry points, resolves externals, bundles each entry in isolation,
 emits type declarations, synthesizes the output `package.json`, copies assets,
-and — optionally — produces JavaScript bins and standalone Node SEA native
+and, optionally, produces JavaScript bins and standalone Node SEA native
 binaries.
 
 It is **vendor-neutral**: nothing about a consumer's workspace (package naming,
@@ -53,12 +53,12 @@ library and a multi-entry framework alike.
 
 ### Key Features
 
-- **Multi-format output** — emit ESM, CJS, IIFE, and UMD bundles from one config; omit a format to skip it.
-- **Bins & native binaries** — synthesize JavaScript bins and cross-platform Node SEA native executables.
-- **Per-entry isolation** — each entry point bundles independently, keeping peak memory bounded on large graphs.
-- **Predicate-driven extensibility** — classify workspace packages, externals, and assets with plain functions instead of config DSLs.
-- **Self-contained packages** — bundle first-party and third-party dependencies, with an additive post-emit pass that dedups shared internals into `_shared/` chunks.
-- **Composable phases** — run the bundle, package, and bin phases together via `build`, or drive each phase on its own.
+- **Multi-format output**: emit ESM, CJS, IIFE, and UMD bundles from one config; omit a format to skip it.
+- **Bins & native binaries**: synthesize JavaScript bins and cross-platform Node SEA native executables.
+- **Per-entry isolation**: each entry point bundles independently, keeping peak memory bounded on large graphs.
+- **Predicate-driven extensibility**: classify workspace packages, externals, and assets with plain functions instead of config DSLs.
+- **Self-contained packages**: bundle first-party and third-party dependencies, with an additive post-emit pass that dedups shared internals into `_shared/` chunks.
+- **Composable phases**: run the bundle, package, and bin phases together via `build`, or drive each phase on its own.
 
 ### Architecture Highlights
 
@@ -75,7 +75,7 @@ many packages with shared internals and varied output needs:
 - You need ESM **and** CJS **and** CDN-ready bundles from the same source.
 - You ship CLIs and want native binaries without standing up a separate SEA pipeline.
 - You want bundled, self-contained packages without forcing transitive installs on consumers.
-- You want to script the build programmatically — or hand it to the `hf-build` CLI — without adopting a heavyweight, opinionated framework.
+- You want to script the build programmatically (or hand it to the `hf-build` CLI) without adopting a heavyweight, opinionated framework.
 
 ## Installation
 
@@ -83,7 +83,7 @@ many packages with shared internals and varied output needs:
 npm install --save-dev @hyperfrontend/builder
 ```
 
-`typescript` is a required peer dependency — the builder drives declaration emit
+`typescript` is a required peer dependency: the builder drives declaration emit
 through your project's TypeScript and is built against **TypeScript >= 5.9**.
 Install it alongside the builder if your project does not already depend on it:
 
@@ -139,7 +139,7 @@ await runPackagePhase(ctx, config, /* formats */ [])
 | `createMemoryMonitor` / `recover` | Observe build memory pressure and recover from soft limits.          |
 | `byNames` / `byPrefix`            | Preset predicate factories for classifying packages and externals.   |
 
-Advanced primitives are available under sub-path entries — for example
+Advanced primitives are available under sub-path entries: for example
 `@hyperfrontend/builder/presets`, `@hyperfrontend/builder/bundle`,
 `@hyperfrontend/builder/package`, and `@hyperfrontend/builder/bin`. See the
 [documentation](https://www.hyperfrontend.dev/docs/libraries/builder/) for the
