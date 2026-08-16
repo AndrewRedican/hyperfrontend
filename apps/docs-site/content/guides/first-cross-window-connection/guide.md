@@ -1,20 +1,20 @@
 # Your first cross-window connection
 
-By the end of this tutorial you will have a page and an iframe exchanging contract-checked messages over a handshaken session, with queueing across the pre-open gap and a clean shutdown, and you will understand the model every layer above nexus is built on.
+You will wire a page and an iframe into a handshaken session over [`@hyperfrontend/nexus`](/docs/libraries/nexus): contract-checked messages both ways, queued across the pre-open gap, closed cleanly.
 
-A page and an [`<iframe>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/iframe) can already talk: [`postMessage`](https://developer.mozilla.org/en-US/docs/Web/API/Window/postMessage) on one side, a [`message`](https://developer.mozilla.org/en-US/docs/Web/API/Window/message_event) listener on the other. What they cannot do, out of the box, is agree on anything. Nothing checks the message shape, nothing tells you the other side is ready, and a message sent one tick too early vanishes without a trace. You will build the smallest connection that fixes all three: a host page and a note-taking widget, each declaring what it sends and accepts.
+A page and an [`<iframe>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/iframe) can already talk through [`postMessage`](https://developer.mozilla.org/en-US/docs/Web/API/Window/postMessage). What they cannot do is agree: nothing checks the message shape, nothing tells you the other side is ready, and a message sent one tick too early vanishes without a trace. You will build the smallest connection that fixes all three, a host page and a note-taking widget.
 
-## Install the package in both projects
+## 1. Install nexus in both projects
 
-The host and the widget are usually separate projects, so install it in both:
+The host and the widget ship as separate projects, so both need it:
 
 ```bash
 npm install @hyperfrontend/nexus
 ```
 
-## Declare what each side says
+## 2. Declare what each side says
 
-A [contract](/docs/libraries/nexus#api-IChannelContract) is self-oriented: `emitted` lists what this side sends, `accepted` lists what it is willing to receive.
+A [contract](/docs/libraries/nexus#api-IChannelContract) is self-oriented: [`emitted`](/docs/libraries/nexus#api-IChannelContract-prop-emitted) is what this side sends, [`accepted`](/docs/libraries/nexus#api-IChannelContract-prop-accepted) is what it will take in.
 
 ```ts
 // host page
@@ -32,7 +32,7 @@ export const widgetContract = {
 
 Anything one side emits that the other does not accept is dropped before it reaches a handler.
 
-## One broker per window, one channel per counterpart
+## 3. Give each window a broker, and each counterpart a channel
 
 A [broker](/docs/libraries/nexus#api-createBroker) owns a window and speaks for it. A [channel](/docs/libraries/nexus#api-ChannelHandle) is that broker's line to one specific counterpart window.
 
@@ -57,9 +57,9 @@ const broker = createBroker({ name: 'note-widget', contract: widgetContract })
 const toHost = broker.addChannel('host-page', window.parent)
 ```
 
-## Open the session
+## 4. Connect
 
-Both sides call `connect()`. Underneath, the brokers run a handshake and cross their contracts during that exchange, which is why the [`open`](/docs/libraries/nexus#api-OpenEventData) event can hand you the peer's origin and declared contract before a single application message flows:
+Both sides call [`connect()`](/docs/libraries/nexus#api-ChannelHandle); whichever gets there first waits for the other. The handshake crosses the two contracts, so [`open`](/docs/libraries/nexus#api-OpenEventData) hands you the peer's origin and declared contract before a single application message flows:
 
 ```ts
 toWidget.on('open', ({ origin, contract }) => {
@@ -69,11 +69,9 @@ toWidget.on('open', ({ origin, contract }) => {
 toWidget.connect()
 ```
 
-Order does not matter: whichever side connects first waits for the other.
+## 5. Send and receive
 
-## Send and receive
-
-`send(type, data)` throws if the type is not in your `emitted` list. A channel also delivers your own outbound messages to that channel's `onMessage` subscribers, so branch on `message.type` rather than assuming everything you receive came from the other side.
+[`send(type, data)`](/docs/libraries/nexus#api-ChannelHandle) throws when the type is not in your `emitted` list, and queues when the session is not open yet, flushing in order once the handshake completes. A channel also delivers your own outbound messages to its [`onMessage`](/docs/libraries/nexus#api-ChannelHandle) subscribers, so branch on [`message.type`](/docs/libraries/nexus#api-IMessage-prop-type) rather than assuming everything you receive came from the other side.
 
 On the host:
 
@@ -101,30 +99,19 @@ toHost.onMessage((message) => {
 toHost.send('note-created', { text: 'Ship the widget' })
 ```
 
-The contract carries types, not payload shapes, so [`message.data`](/docs/libraries/nexus#api-IMessage) arrives as `unknown` and you narrow it where you use it.
+The contract carries types, not payload shapes, so [`message.data`](/docs/libraries/nexus#api-IMessage-prop-data) arrives as `unknown` and you narrow it where you use it.
 
-## Send before the session opens
+## 6. Close politely
 
-Nexus channels queue. A `send` before the session opens sits in the channel's queue and flushes, in order, the moment the handshake completes, so the host could have sent the theme before it connected:
-
-```ts
-toWidget.send('theme-changed', { theme: 'dark' })
-toWidget.connect()
-```
-
-The widget receives that theme once it connects.
-
-## Close it down
-
-Either side can end the session. `disconnect()` proposes a polite close: the channel fires `closing` and stays active so the counterpart can flush, then both sides fire `close` and report inactive once the acknowledgement lands.
+Either side can end the session. [`disconnect()`](/docs/libraries/nexus#api-ChannelHandle) fires [`closing`](/docs/libraries/nexus#api-ChannelEvent) and keeps the channel active so the counterpart can flush, then both sides fire `close` and report inactive.
 
 ```ts
 toWidget.disconnect()
 ```
 
-## Lock it to a trusted origin
+## 7. Lock it to origins you trust
 
-The connection works, and it will work with anyone. Name the origins you trust before it faces real traffic:
+It works, and right now it works with anyone. Name the origins before this faces real traffic:
 
 ```ts
 const broker = createBroker({
@@ -134,6 +121,8 @@ const broker = createBroker({
 })
 ```
 
-For anything finer than an origin list, a [`SecurityPolicy`](/docs/libraries/nexus#api-SecurityPolicy) decides per connection.
+For anything finer than an [origin list](/docs/libraries/nexus#api-BrokerSettings-prop-whitelist), a [`SecurityPolicy`](/docs/libraries/nexus#api-SecurityPolicy) decides per connection.
 
-You now have two windows with crossed contracts, a handshaken session, delivery in both directions, ordered queueing across the pre-open gap, a clean shutdown, and an origin rule. Neither side touched `postMessage` or event plumbing directly.
+## Check it worked
+
+Load the host page. The `open` handler logs the widget's origin and contract, the widget picks up the theme, and a note the widget sends lands in your sidebar. Move the first `send` above `connect()` and it still arrives, in order, once the session opens.

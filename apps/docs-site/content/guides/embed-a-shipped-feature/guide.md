@@ -1,48 +1,46 @@
 # Embed a feature someone else shipped
 
-By the end of this guide another team's app runs inside your page, tells you honestly whether it is alive, and degrades to your own fallback when it is not. It takes eight steps and one timer.
+Another team's app runs inside your page, tells you honestly whether it is alive, and gives way to your own fallback when it is not.
 
-That is worth doing because the app is not yours to learn. It arrives as a package, ships on its own schedule, and can be down when your page is up, so the integration is a contract and a liveness judgement rather than a build.
+Their app is not yours to learn. It arrives as a package, ships on its own schedule, and can be down while your page is up, so what you build is a contract and a liveness judgement.
 
-The code examples come from this site's [demo gallery](/demos), a Next.js host embedding a separately deployed Vue clock.
+You install one thing: the shell package their build produced with [`@hyperfrontend/features`](/docs/libraries/features), which bundles the host SDK and declares no dependencies of its own. The snippets come from this site's [demo gallery](/demos), a Next.js host embedding a separately deployed Vue clock.
 
-## 1. Install the shell
+## 1. Install the shell package
 
 ```bash
-npm install file:vendor/hyperfrontend-demo-clock-shell-0.3.0.tgz
+npm install @acme/checkout-feature-shell
 ```
 
-A registry name installs the same way.
+A tarball the team sent you installs the same way: `npm install file:vendor/acme-checkout-feature-shell-1.0.0.tgz`.
 
 ## 2. Keep the import in browser-only code
 
-A shell mounts an [`<iframe>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/iframe) and runs a live message channel, so it belongs in code that only ever runs in the browser.
+A shell mounts an [`<iframe>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/iframe) and runs a live message channel, so import it from code that only ever runs in the browser.
 
 <!-- snippet: import-shells -->
 
-Every generated shell exports [`createFeatureShell`](/docs/libraries/features/architecture#shell-generation), so hosting more than one means aliasing at the import.
+Every generated shell exports [`createFeatureShell`](/docs/libraries/features/architecture#shell-generation), so alias at the import when you host more than one.
 
 ## 3. Decide what "alive" means
 
-Record, per feature, how to create its shell, which contract events prove it is rendering, and how much silence to tolerate before writing the session off.
+Per feature, record how to create its shell, which contract events prove it is rendering, and how much silence you will tolerate before writing the session off. Ask the feature's team which event fires soonest and what silence means for their app.
 
 <!-- snippet: clock-wiring -->
 
-Ask the feature's team which event fires soonest and what silence means for their app.
-
 ## 4. Arm the degradation path
 
-Arm a single deadline before you open, and push it out on every sign of life.
+One deadline, armed before you open and pushed out on every sign of life.
 
 <!-- snippet: silence-deadline -->
 
 ## 5. Open the session and subscribe
 
-Create the shell against a container element, subscribe, then [`open()`](/docs/libraries/features/host#api-ShellHandle). Sends queue until the handshake completes, so everything you learn about the session arrives through `on`.
+Create the shell against a [`container`](/docs/libraries/features/host#api-ShellOptions-prop-container) element, subscribe, then [`open()`](/docs/libraries/features/host#api-ShellHandle). Sends queue until the handshake completes, so everything you learn about the session arrives through `on`.
 
 <!-- snippet: open-and-observe -->
 
-Three calls are yours to make, not the SDK's: ignore [`suspect`](/docs/libraries/features/host#api-HeartbeatState) while product traffic still arrives, report a mid-session `close` as `connecting` rather than `offline`, and treat `error` with `reason: 'open-timeout'` as terminal.
+Three calls are yours rather than the SDK's: ignore [`suspect`](/docs/libraries/features/host#api-HeartbeatState) while product traffic still arrives, report a mid-session `close` as connecting rather than offline (it is usually the feature reloading), and treat `error` with [`reason: 'open-timeout'`](/docs/libraries/features/host#api) as terminal.
 
 ## 6. Reveal the frame on the first proof event
 
@@ -62,4 +60,4 @@ A shell bakes the [protocol](/docs/libraries/features/host#api-SecurityProtocol)
 
 ## Check it worked
 
-Your fallback gives way to the live frame on the first proof event. To rehearse the failure path, point the shell's `url` at any page that is not a feature, and watch the handshake time out, the deadline fire, and your fallback hold the space.
+Your fallback gives way to the live frame on the first proof event. To rehearse the failure path, point the shell's [`url`](/docs/libraries/features/host#api-ShellOptions-prop-url) at any page that is not a feature, and watch the handshake time out, the deadline fire, and your fallback hold the space.
