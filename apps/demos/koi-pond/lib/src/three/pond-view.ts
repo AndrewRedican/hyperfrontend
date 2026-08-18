@@ -15,6 +15,7 @@
 import type { Object3D } from 'three'
 import type { Vec2 } from '../model/types.js'
 import { ACESFilmicToneMapping, PerspectiveCamera, Vector3, WebGLRenderer } from 'three'
+import { PIVOT_STATION } from '../koi3d/config.js'
 import { POND_VIEW, pxPerUnit } from '../model/pond-view.js'
 
 /** The slice of a pond announcement the view is built from. */
@@ -80,6 +81,22 @@ export interface PondView {
    * @param heading - Pond-space heading in radians; 0 along +x, clockwise on screen.
    */
   place(object: Object3D, at: Vec2, heading: number): void
+  /**
+   * Anchors a koi so that its **nose** lands on a pond-space position.
+   *
+   * A koi model's origin is its pivot — the node of its own body wave, a third
+   * of the way back from the snout — while every position on the wire is the
+   * koi's nose. Anchoring the origin on the nose would swim the whole animal a
+   * third of a body length ahead of the outline it reports: the host's
+   * hit-testing would miss its head, and its own frame box would crowd the
+   * snout against one edge while wasting the space behind the tail.
+   *
+   * @param koi - The koi group to move; its scale is left alone.
+   * @param nose - Where the koi's nose belongs, in CSS pixels.
+   * @param heading - Pond-space heading in radians; 0 along +x, clockwise on screen.
+   * @param length - The koi's current nose-to-tail length in CSS pixels.
+   */
+  placeKoi(koi: Object3D, nose: Vec2, heading: number, length: number): void
 }
 
 /**
@@ -91,7 +108,7 @@ export interface PondView {
  * @example Rendering one koi through the shared view
  * ```typescript
  * const view = createPondView(pond)
- * view.place(koi.object, state.position, state.heading)
+ * view.placeKoi(koi.object, state.position, state.heading, state.length)
  * renderer.render(scene, view.camera)
  * ```
  */
@@ -99,6 +116,8 @@ export function createPondView(pond: PondViewport): PondView {
   const camera = new PerspectiveCamera(POND_VIEW.fovDeg, 1, 0.1, 10)
   const scratch = new Vector3()
   const anchor = new Vector3()
+  // why: Reused for the same reason as the vectors — placing a koi runs once per fish per frame.
+  const pivot = { x: 0, y: 0 }
   let viewport = pond
   // why: When the camera is narrowed onto a sub-rect, unprojection must read NDC against that rect — the offset projection maps the rect, not the view, onto clip space.
   let framed: { x: number; y: number; width: number; height: number } | null = null
@@ -156,6 +175,14 @@ export function createPondView(pond: PondViewport): PondView {
       object.position.copy(worldFromPond(at, anchor))
       // why: The koi's nose points along its local +x, and a pond heading grows clockwise on screen while a three.js yaw grows counter-clockwise.
       object.rotation.y = -heading
+    },
+    placeKoi(koi, nose, heading, length) {
+      // how: Stepping back along the heading by the pivot's own station puts the model's origin where the nose ends up on the reported point.
+      const back = PIVOT_STATION * length
+      pivot.x = nose.x - Math.cos(heading) * back
+      pivot.y = nose.y - Math.sin(heading) * back
+      koi.position.copy(worldFromPond(pivot, anchor))
+      koi.rotation.y = -heading
     },
   }
 }
