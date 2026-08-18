@@ -1,5 +1,5 @@
 /**
- * CJS (CommonJS) E2E tests for @hyperfrontend/ui-utils
+ * CJS (CommonJS) E2E tests for `@hyperfrontend/ui-utils`
  * Tests that the package sub-entries are requireable.
  *
  * Note: ui-utils is browser-focused but sub-entries should still be requireable.
