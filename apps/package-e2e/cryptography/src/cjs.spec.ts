@@ -1,5 +1,5 @@
 /**
- * CJS (CommonJS) E2E tests for @hyperfrontend/cryptography
+ * CJS (CommonJS) E2E tests for `@hyperfrontend/cryptography`
  * Tests that the package sub-entries are requireable and exports work correctly.
  *
  * Note: cryptography has platform-specific entries: ./browser, ./node, ./common
