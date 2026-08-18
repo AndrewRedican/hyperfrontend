@@ -1,5 +1,5 @@
 /**
- * UMD bundle E2E tests for @hyperfrontend/features
+ * UMD bundle E2E tests for `@hyperfrontend/features`
  * Tests that the host/hostee UMD bundles load, attach their globals, and
  * stay callable on a page without cross-origin isolation.
  */

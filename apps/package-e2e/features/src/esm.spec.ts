@@ -1,5 +1,5 @@
 /**
- * ESM (ES Modules) E2E tests for @hyperfrontend/features
+ * ESM (ES Modules) E2E tests for `@hyperfrontend/features`
  * Tests that the package is importable under plain Node (no window) and that
  * every documented exports subpath resolves with its expected symbol.
  */

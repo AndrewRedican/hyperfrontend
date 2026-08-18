@@ -1,6 +1,6 @@
 /**
  * Packed-tarball Nx plugin E2E tests for the generator callback and tree-staging
- * behavior of @hyperfrontend/features: the `init` generator's post-flush package
+ * behavior of `@hyperfrontend/features`: the `init` generator's post-flush package
  * manager install, dependency self-healing in the `feature` generator, honest
  * `--dry-run` staging, idempotent re-runs, and partial-apply recovery.
  */
