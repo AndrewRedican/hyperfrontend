@@ -1,0 +1,46 @@
+{
+  "schemaVersion": 1,
+  "type": "troubleshooting",
+  "title": "How to fix \"Converting circular structure to JSON\"",
+  "problem": "JSON.stringify throws on an object graph with back references, the engine names only one of them, and every edge I remove reveals another.",
+  "outcome": "A list of every loop in the value, a copy that serialises with those edges replaced by path pointers, and the original graph untouched.",
+  "priority": "P0",
+  "packages": ["@hyperfrontend/data-utils"],
+  "verification": {
+    "kind": "authored",
+    "verifiedAgainst": "@hyperfrontend/data-utils@0.0.5",
+    "verifiedOn": "2026-08-18"
+  },
+  "complexity": "beginner",
+  "estMinutes": 12,
+  "apis": [
+    {
+      "package": "@hyperfrontend/data-utils",
+      "symbol": "hasCircularReference"
+    },
+    {
+      "package": "@hyperfrontend/data-utils",
+      "symbol": "locateCircularReference"
+    },
+    {
+      "package": "@hyperfrontend/data-utils",
+      "symbol": "selectiveCopy"
+    }
+  ],
+  "prerequisites": {
+    "knowledge": ["A value that already throws on JSON.stringify"]
+  },
+  "related": {
+    "reference": ["/docs/libraries/utils/data"]
+  },
+  "keywords": [
+    "circular structure",
+    "JSON.stringify",
+    "TypeError",
+    "circular reference",
+    "deep clone",
+    "serialisation",
+    "back reference",
+    "object graph"
+  ]
+}
