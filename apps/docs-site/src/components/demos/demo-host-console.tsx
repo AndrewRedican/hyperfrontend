@@ -17,6 +17,8 @@ export interface DemoHostConsoleProps {
   shell: DemoShell | null
   /** `true` renders the portrait cog widget; `false` renders the landscape inline panel. */
   floating: boolean
+  /** `true` while the demo is stretched over the viewport, so the widget floats above the scene instead of under it. */
+  overlaid?: boolean
 }
 
 /** One line in the console's session event log. */
@@ -108,13 +110,17 @@ function isRecord(value: unknown): value is Record<string, unknown> {
  * The console floats beside the deck as a compact cog anchored to the
  * gallery's top-right corner — the session state stays visible as a dot on
  * the cog, and expanding it opens the full panel next to the embed instead of
- * a block at the bottom of the page.
+ * a block at the bottom of the page. Over a demo stretched across the whole
+ * viewport it stays on top of the scene, moves to the free corner opposite the
+ * overlay's close control, and names itself, because a bare cog floating on
+ * water reads as scene decoration rather than as the host's own instrument.
  * @param root0
  * @param root0.entry
  * @param root0.shell
  * @param root0.floating
+ * @param root0.overlaid
  */
-export function DemoHostConsole({ entry, shell, floating }: DemoHostConsoleProps) {
+export function DemoHostConsole({ entry, shell, floating, overlaid = false }: DemoHostConsoleProps) {
   const [session, setSession] = useState<SessionState>('connecting')
   const [dirty, setDirty] = useState(false)
   const [events, setEvents] = useState<ConsoleEvent[]>([])
@@ -366,17 +372,22 @@ export function DemoHostConsole({ entry, shell, floating }: DemoHostConsoleProps
     )
   }
 
+  // why: The expanded overlay is a fixed layer stacked above the whole deck, so the widget has to outrank it to stay operable at all — pinned to the viewport, because the page's scroll is locked while a demo owns the screen and an anchor inside the deck could be locked off-screen; it takes the corner opposite the overlay's own close control.
   return (
-    <section className="pointer-events-none absolute right-2 top-2 z-[130] flex flex-col items-end">
+    <section
+      className={`pointer-events-none flex flex-col ${overlaid ? 'fixed left-2 top-2 z-[210] items-start' : 'absolute right-2 top-2 z-[130] items-end'}`}
+    >
       <button
         type="button"
         onClick={() => setOpen((value) => !value)}
         aria-expanded={open}
         aria-label={open ? 'Collapse the host console' : 'Expand the host console'}
         title={`Host console — session: ${session}`}
-        className="pointer-events-auto relative rounded-full border border-slate-200 bg-white/80 p-2 text-slate-500 shadow-md backdrop-blur-sm transition-colors hover:text-primary-600 dark:border-slate-700 dark:bg-slate-900/80 dark:text-slate-400 dark:hover:text-primary-400"
+        className={`pointer-events-auto relative flex items-center gap-2 rounded-full border border-slate-200 bg-white/80 text-slate-500 shadow-md backdrop-blur-sm transition-colors hover:text-primary-600 dark:border-slate-700 dark:bg-slate-900/80 dark:text-slate-400 dark:hover:text-primary-400 ${overlaid ? 'px-3 py-2 shadow-lg' : 'p-2'}`}
       >
         <CogIcon className="h-5 w-5" />
+        {/* why: Floating over a live scene, an unlabelled cog reads as part of the scene; naming it is what makes it findable as the host's own console. */}
+        {overlaid ? <span className="pr-0.5 text-xs font-medium">Host console</span> : null}
         {/* note: The session state stays readable while collapsed — the dot on the cog tracks the liveness pill's color. */}
         {live ? (
           <span
@@ -387,7 +398,7 @@ export function DemoHostConsole({ entry, shell, floating }: DemoHostConsoleProps
       </button>
       {open ? (
         <div
-          className={`pointer-events-auto mt-2 max-h-[70vh] w-[min(24rem,calc(100vw-2rem))] overflow-y-auto rounded-2xl border border-slate-200 bg-white/90 p-4 text-left shadow-xl backdrop-blur-md dark:border-slate-700 dark:bg-slate-900/90 ${SCROLLBAR_CLASSES}`}
+          className={`pointer-events-auto mt-2 max-h-[70vh] w-[min(24rem,calc(100vw-2rem))] overflow-y-auto rounded-2xl border border-slate-200 p-4 text-left shadow-xl backdrop-blur-md dark:border-slate-700 ${overlaid ? 'bg-white/95 dark:bg-slate-900/95' : 'bg-white/90 dark:bg-slate-900/90'} ${SCROLLBAR_CLASSES}`}
         >
           {consoleBody}
         </div>

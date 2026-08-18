@@ -21,6 +21,8 @@ export interface CoverFlowProps {
   onShell?: (shell: DemoShell | null) => void
   /** Notified whenever a different demo settles into the center. */
   onCentered?: (entry: DemoManifestEntry) => void
+  /** Notified whenever the centered demo is stretched over the viewport, and when it collapses back. */
+  onExpandedChange?: (expanded: boolean) => void
 }
 
 /** Pixels of drag that move the deck by one card. */
@@ -50,8 +52,9 @@ const SPRING = 0.011
  * @param root0.entries
  * @param root0.onShell
  * @param root0.onCentered
+ * @param root0.onExpandedChange
  */
-export function CoverFlow({ entries, onShell, onCentered }: CoverFlowProps) {
+export function CoverFlow({ entries, onShell, onCentered, onExpandedChange }: CoverFlowProps) {
   const [position, setPosition] = useState(0)
   const [vertical, setVertical] = useState(false)
   const [reduced, setReduced] = useState(false)
@@ -70,6 +73,13 @@ export function CoverFlow({ entries, onShell, onCentered }: CoverFlowProps) {
     stageKey: centered,
     onShell,
   })
+
+  // why: The surrounding gallery owns chrome of its own — the host console — which has to move out of the overlay's way and above it while a demo holds the whole viewport; the latest-ref keeps the notification out of the overlay's own state machine.
+  const notifyExpanded = useRef(onExpandedChange)
+  notifyExpanded.current = onExpandedChange
+  useEffect(() => {
+    notifyExpanded.current?.(expanded)
+  }, [expanded])
 
   useEffect(() => {
     const portrait = window.matchMedia('(orientation: portrait)')
