@@ -1,5 +1,5 @@
 /**
- * Entry point for the \@hyperfrontend/app Nx plugin.
+ * Entry point for the `@hyperfrontend/app` Nx plugin.
  *
  * This plugin provides executors for hyperfrontend application projects
  * with self-contained dependencies.
