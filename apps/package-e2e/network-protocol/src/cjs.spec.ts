@@ -1,5 +1,5 @@
 /**
- * CJS (CommonJS) E2E tests for @hyperfrontend/network-protocol
+ * CJS (CommonJS) E2E tests for `@hyperfrontend/network-protocol`
  * Tests that the package sub-entries are requireable and exports work correctly.
  *
  * Note: network-protocol has many sub-entries for browser/node variants.

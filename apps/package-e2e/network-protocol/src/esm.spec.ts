@@ -1,5 +1,5 @@
 /**
- * ESM (ES Modules) E2E tests for @hyperfrontend/network-protocol
+ * ESM (ES Modules) E2E tests for `@hyperfrontend/network-protocol`
  * Tests that the package sub-entries are importable and exports work correctly.
  *
  * Note: network-protocol has many sub-entries for browser/node variants.

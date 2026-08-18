@@ -1,5 +1,5 @@
 /**
- * UMD bundle E2E tests for @hyperfrontend/network-protocol
+ * UMD bundle E2E tests for `@hyperfrontend/network-protocol`
  * Tests that the UMD bundles work in browser (global) context.
  *
  * Note: network-protocol has two browser bundles with separate global names:
