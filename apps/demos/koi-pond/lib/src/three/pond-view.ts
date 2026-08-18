@@ -178,7 +178,8 @@ export function createPondView(pond: PondViewport): PondView {
  */
 export function createPondRenderer(canvas: HTMLCanvasElement): WebGLRenderer {
   // why: The scenes are one small fish each, so the integrated GPU is always enough — asking for the high-performance one would spin up discrete silicon once per fish for no visible gain.
-  const renderer = new WebGLRenderer({ canvas, antialias: true, alpha: true, powerPreference: 'low-power' })
+  // why: Eight of these share one page, and multisampling multiplies every one of their framebuffers. On a display dense enough to hide the stair-steps on its own that is memory bought for nothing — and on a phone it is memory that gets a frame killed, which costs the visitor a whole koi rather than a soft edge.
+  const renderer = new WebGLRenderer({ canvas, antialias: window.devicePixelRatio < 2, alpha: true, powerPreference: 'low-power' })
   renderer.setClearAlpha(0)
   renderer.toneMapping = ACESFilmicToneMapping
   renderer.toneMappingExposure = POND_VIEW.exposure
