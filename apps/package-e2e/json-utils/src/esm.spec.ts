@@ -1,5 +1,5 @@
 /**
- * ESM (ES Modules) E2E tests for @hyperfrontend/json-utils
+ * ESM (ES Modules) E2E tests for `@hyperfrontend/json-utils`
  * Tests that the package is importable and exports work correctly.
  */
 
