@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "type": "how-to",
+  "title": "How to encrypt and decrypt a string with a password",
+  "problem": "I need to store an API key, a token, or a note encrypted under a password, and I do not want to hand-roll key derivation, salts, and initialisation vectors around the Web Crypto API.",
+  "outcome": "A value encrypted under a password, stored as base64 text, decrypted back in a separate process, with the wrong-password case handled by name rather than by message text.",
+  "priority": "P0",
+  "packages": ["@hyperfrontend/cryptography", "@hyperfrontend/string-utils"],
+  "verification": {
+    "kind": "authored",
+    "verifiedAgainst": "@hyperfrontend/cryptography@0.2.1",
+    "verifiedOn": "2026-08-18"
+  },
+  "complexity": "beginner",
+  "estMinutes": 10,
+  "apis": [
+    {
+      "package": "@hyperfrontend/cryptography",
+      "symbol": "encrypt"
+    },
+    {
+      "package": "@hyperfrontend/cryptography",
+      "symbol": "decrypt"
+    },
+    {
+      "package": "@hyperfrontend/string-utils",
+      "symbol": "uint8ArrayToBase64"
+    }
+  ],
+  "prerequisites": {
+    "knowledge": [
+      "A Node.js or browser project that can run async code",
+      "A password you already have somewhere safe, such as an environment variable"
+    ]
+  },
+  "related": {
+    "guides": ["base64-for-unicode-and-urls"],
+    "reference": ["/docs/libraries/cryptography", "/docs/libraries/cryptography/node", "/docs/libraries/cryptography/browser"],
+    "explanation": ["/docs/core-concepts/security"]
+  },
+  "keywords": ["encrypt", "decrypt", "password", "AES-GCM", "PBKDF2", "salt", "OperationError", "Web Crypto", "ciphertext"]
+}

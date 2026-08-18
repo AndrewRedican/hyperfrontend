@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "type": "how-to",
+  "title": "How to base64 text that survives Unicode and URLs",
+  "problem": "btoa either throws on emoji or quietly mangles accented text, and the base64 it does produce comes back percent-escaped when it travels in a query parameter.",
+  "outcome": "Encoding and decoding that round-trips any string, plus a URL-safe form that passes through query parameters and redirects unchanged, from the same API in the browser and in Node.",
+  "priority": "P1",
+  "packages": ["@hyperfrontend/string-utils"],
+  "verification": {
+    "kind": "authored",
+    "verifiedAgainst": "@hyperfrontend/string-utils@0.1.2",
+    "verifiedOn": "2026-08-18"
+  },
+  "complexity": "beginner",
+  "estMinutes": 8,
+  "apis": [
+    {
+      "package": "@hyperfrontend/string-utils",
+      "symbol": "toBase64"
+    },
+    {
+      "package": "@hyperfrontend/string-utils",
+      "symbol": "fromBase64"
+    },
+    {
+      "package": "@hyperfrontend/string-utils",
+      "symbol": "uint8ArrayToBase64"
+    }
+  ],
+  "prerequisites": {
+    "knowledge": ["A JavaScript project with a bundler, or a Node.js script"]
+  },
+  "related": {
+    "guides": ["encrypt-a-string-with-a-password"],
+    "reference": ["/docs/libraries/utils/string", "/docs/libraries/utils/string/browser", "/docs/libraries/utils/string/node"]
+  },
+  "keywords": ["base64", "btoa", "atob", "url-safe", "unicode", "emoji", "UTF-8", "encoding", "query parameter", "token"]
+}
