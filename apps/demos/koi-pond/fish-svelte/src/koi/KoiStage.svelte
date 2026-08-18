@@ -232,7 +232,7 @@
     stage.lastSpeed = speed
     stage.koi.update(dt)
     stage.view.frame(stage.box)
-    stage.view.place(stage.koi.object, state.position, state.heading)
+    stage.view.placeKoi(stage.koi.object, state.position, state.heading, state.length)
     stage.gl.render(stage.scene, stage.view.camera)
   }
 
