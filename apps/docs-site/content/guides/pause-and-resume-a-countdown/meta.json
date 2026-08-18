@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "type": "how-to",
+  "title": "How to pause and resume a countdown",
+  "problem": "My idle timeout has to stop while a dialog is open and continue from where it stopped, and every version I write with setTimeout drifts or restarts by accident.",
+  "outcome": "A countdown that holds and resumes without losing time, restarts on activity, and drives a label that freezes while it is held.",
+  "priority": "P0",
+  "packages": ["@hyperfrontend/time-utils"],
+  "verification": {
+    "kind": "authored",
+    "verifiedAgainst": "@hyperfrontend/time-utils@0.0.5",
+    "verifiedOn": "2026-08-18"
+  },
+  "complexity": "beginner",
+  "estMinutes": 10,
+  "apis": [
+    {
+      "package": "@hyperfrontend/time-utils",
+      "symbol": "createTimer"
+    },
+    {
+      "package": "@hyperfrontend/time-utils",
+      "symbol": "createClock"
+    }
+  ],
+  "prerequisites": {
+    "knowledge": ["A JavaScript project with a bundler, or a Node.js script"]
+  },
+  "related": {
+    "reference": ["/docs/libraries/utils/time"]
+  },
+  "keywords": ["timer", "countdown", "idle timeout", "pause", "resume", "session expiry", "setTimeout", "clock"]
+}
