@@ -1,5 +1,5 @@
 /**
- * ESM (ES Modules) E2E tests for @hyperfrontend/random-generator-utils
+ * ESM (ES Modules) E2E tests for `@hyperfrontend/random-generator-utils`
  * Tests that the package is importable and exports work correctly.
  */
 
