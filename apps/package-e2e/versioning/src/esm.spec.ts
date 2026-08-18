@@ -99,8 +99,9 @@ describe('@hyperfrontend/versioning ESM', () => {
 
       const result = parseVersion('1.2.3')
       expect(result.success).toBe(true)
-      if (result.success) {
-        expect(format(result.version!)).toBe('1.2.3')
+      expect(result.version).toBeDefined()
+      if (result.version) {
+        expect(format(result.version)).toBe('1.2.3')
       }
     })
 
@@ -109,8 +110,9 @@ describe('@hyperfrontend/versioning ESM', () => {
 
       const result = parseVersion('1.0.0')
       expect(result.success).toBe(true)
-      if (result.success) {
-        const incremented = increment(result.version!, 'minor')
+      expect(result.version).toBeDefined()
+      if (result.version) {
+        const incremented = increment(result.version, 'minor')
         expect(format(incremented)).toBe('1.1.0')
       }
     })
