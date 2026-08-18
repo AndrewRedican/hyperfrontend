@@ -182,9 +182,10 @@ export function DemoShowcase({ entries, cycleDuration = 20000, fastForwardDurati
       <div className="relative w-full max-w-2xl">
         <div className="absolute inset-0 z-0 rounded-2xl border border-white/30 dark:border-white/20" />
         {/* why: backdrop-filter makes this container the containing block for fixed descendants, so it has to lift while the staged layer is stretched over the viewport. */}
+        {/* why: A z-index makes it a stacking context too, which would trap the stretched layer inside this card's depth — the site header would paint over the scene and over its own close control, with no way out on a device that has no Escape key. */}
         <div
-          className={`relative z-10 flex flex-col items-center justify-center gap-4 rounded-2xl bg-slate-900/5 p-6 dark:bg-white/5 lg:p-8 ${
-            expanded ? '' : 'backdrop-blur-sm'
+          className={`relative flex flex-col items-center justify-center gap-4 rounded-2xl bg-slate-900/5 p-6 dark:bg-white/5 lg:p-8 ${
+            expanded ? '' : 'z-10 backdrop-blur-sm'
           }`}
         >
           {/* note: Only the staged layer mounts its live embed — losing the stage unmounts it, so its session tears down gracefully instead of running off-screen. */}
