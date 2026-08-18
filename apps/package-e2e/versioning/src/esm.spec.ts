@@ -1,5 +1,5 @@
 /**
- * ESM (ES Modules) E2E tests for @hyperfrontend/versioning
+ * ESM (ES Modules) E2E tests for `@hyperfrontend/versioning`
  * Tests that the package is importable and exports work correctly.
  */
 
