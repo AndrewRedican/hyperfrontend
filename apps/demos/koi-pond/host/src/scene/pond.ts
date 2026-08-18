@@ -17,7 +17,7 @@ import { createRelay } from './relay'
 import { createSelectionChrome } from './selection'
 import { createRoster } from './roster'
 import { createSequenceTracker } from './sequence'
-import { createStage, setCurtain, setLayerDepth } from './stage'
+import { createStage, setCurtain, setLayerDepth, setLayerPresent } from './stage'
 import { createSurfacePainter } from './surface-canvas'
 import { createWaterPainter } from './water-gl'
 import { acceptsRipple, addRipple, advanceRipples, createRippleField } from './ripples'
@@ -126,12 +126,13 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondSceneHandle
   let hovered: KoiFramework | null = null
   let lastRelayAt = 0
   let lastPulseAt = 0
-  let opened = 0
   let scale: SceneScale = 'full'
   let rootBounds = root.getBoundingClientRect()
   const pointer = { x: 0, y: 0, fresh: false }
   const inspected = new Set<KoiFramework>()
   const retries = new Map<KoiFramework, number>()
+  // why: Which koi are actually answering right now — not merely which ones once opened. A frame the browser has given up on still exists, and everything the pond shows about a koi has to follow this one set or the scene starts claiming fish it has lost.
+  const present = new Set<KoiFramework>()
 
   /** The press being tracked from a fish, from pointerdown until it resolves as a tap or a drag. */
   let drag: {
@@ -244,6 +245,42 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondSceneHandle
   const roster = createRoster(root, fishHomeUrl, setHover)
 
   /**
+   * Records whether one koi is in the scene, everywhere the pond says so.
+   *
+   * A koi that has stopped answering is not a still koi: its frame holds
+   * whatever the browser decided to put there, its last reported outline is
+   * stale, and a visitor pointing at that water would be told a fish is
+   * underneath it. Standing it down covers all four at once, and its next
+   * handshake brings it back.
+   *
+   * @param framework - Which koi.
+   * @param here - Whether its session is answering.
+   */
+  const setPresent = (framework: KoiFramework, here: boolean): void => {
+    if (here === present.has(framework)) {
+      return
+    }
+    if (here) {
+      present.add(framework)
+    } else {
+      present.delete(framework)
+      relay.forget(framework)
+      release(framework)
+      if (drag?.framework === framework) {
+        // why: A koi cannot be mid-carry once it has left the scene — the hand would be holding nothing and the cursor would keep saying otherwise.
+        drag = null
+      }
+      if (hovered === framework) {
+        setHover(null)
+      }
+      refreshCursor()
+    }
+    setLayerPresent(stage, framework, here)
+    roster.setConnected(framework, here)
+    hooks.onShoal(present.size, sessions.length)
+  }
+
+  /**
    * Re-measures the visible window, repaints the still bed, and tells every koi.
    *
    * Only the view moves — the virtual pond took its dimensions from the screen
@@ -305,33 +342,29 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondSceneHandle
     const { framework, shell } = session
 
     shell.on('open', () => {
-      opened += 1
       shell.send('pond', pond)
       shell.send('identity', identityFor(framework, director.settledLevel(framework)))
       setLayerDepth(stage, framework, director.settledLevel(framework))
-      roster.setConnected(framework, true)
-      hooks.onShoal(opened, sessions.length)
+      setPresent(framework, true)
       // why: The curtain holds until every koi has landed, so a visitor never watches the shoal arrive one frame at a time.
-      if (opened === sessions.length) {
+      if (present.size === sessions.length) {
         setCurtain(stage, true)
+      }
+    })
+
+    // why: The watchdog's verdict is the pond's only warning that a frame has died where the channel was never closed — a document killed under memory pressure is exactly that, and the browser paints its own opaque placeholder into it.
+    shell.on('status', (data: unknown) => {
+      const state = (<{ state?: string }>data)?.state
+      if (state === 'gone') {
+        setPresent(framework, false)
+      } else if (state === 'healthy') {
+        setPresent(framework, true)
       }
     })
 
     // ref: [guide:compose-independent-features/survive-close] start
     shell.on('close', () => {
-      opened = Math.max(0, opened - 1)
-      relay.forget(framework)
-      inspected.delete(framework)
-      chrome.release(framework)
-      if (drag?.framework === framework) {
-        drag = null
-        refreshCursor()
-      }
-      roster.setConnected(framework, false)
-      hooks.onShoal(opened, sessions.length)
-      if (hovered === framework) {
-        setHover(null)
-      }
+      setPresent(framework, false)
     })
     // ref: [guide:compose-independent-features/survive-close] end
 
@@ -339,6 +372,8 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondSceneHandle
     shell.on('error', (data: unknown) => {
       // why: A koi that never answers must not hold the pond dark behind a curtain waiting for it.
       setCurtain(stage, true)
+      // why: Whatever went wrong, the frame is no longer showing a koi — it waits for a handshake to earn its place back.
+      setPresent(framework, false)
       // why: A timed-out handshake leaves a destroyed mount and the SDK never retries — on a slow device the eight heavy apps race one deadline, and without this a loser is simply a fish that never existed. Only the timeout is retried; an unresponsive session is still alive and must not be torn down under its visitor.
       if ((<{ reason?: string }>data)?.reason === 'open-timeout' && (retries.get(framework) ?? 0) < OPEN_RETRIES) {
         retries.set(framework, (retries.get(framework) ?? 0) + 1)
@@ -554,7 +589,7 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondSceneHandle
     // why: A calm pond would otherwise say nothing for as long as the visitor lets it be calm, and an embedder watching for life reads thirty silent seconds as an outage — the roll call keeps the liveness flowing through the contract itself.
     if (elapsedMs - lastPulseAt >= SHOAL_PULSE_MS) {
       lastPulseAt = elapsedMs
-      hooks.onShoal(opened, sessions.length)
+      hooks.onShoal(present.size, sessions.length)
     }
 
     surfaceFrame.width = pond.view.width
