@@ -1,5 +1,5 @@
 /**
- * IIFE bundle E2E tests for @hyperfrontend/logging
+ * IIFE bundle E2E tests for `@hyperfrontend/logging`
  * Tests that the browser bundle loads correctly and attaches to window.
  */
 

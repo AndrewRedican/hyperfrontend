@@ -1,5 +1,5 @@
 /**
- * CJS (CommonJS) E2E tests for @hyperfrontend/data-utils
+ * CJS (CommonJS) E2E tests for `@hyperfrontend/data-utils`
  * Tests that the package is requireable and exports work correctly.
  */
 

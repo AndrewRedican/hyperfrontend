@@ -1,5 +1,5 @@
 /**
- * IIFE bundle E2E tests for @hyperfrontend/features
+ * IIFE bundle E2E tests for `@hyperfrontend/features`
  * Tests that the host/hostee browser bundles load, attach their globals, and
  * stay callable on a page without cross-origin isolation.
  */

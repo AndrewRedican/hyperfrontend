@@ -1,5 +1,5 @@
 /**
- * CJS (CommonJS) E2E tests for @hyperfrontend/versioning
+ * CJS (CommonJS) E2E tests for `@hyperfrontend/versioning`
  * Tests that the package is requireable and exports work correctly.
  */
 

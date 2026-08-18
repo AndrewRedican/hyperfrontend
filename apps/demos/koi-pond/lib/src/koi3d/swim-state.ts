@@ -29,6 +29,17 @@ export const MOTION_PRESETS: Readonly<Record<string, KoiMotionInput>> = {
   Escape: { ...DEFAULT_MOTION, speed: 3.4, turnRate: 1.2, acceleration: 2.6, escapeIntensity: 1 },
 }
 
+/**
+ * How much harder the body drives its wave than the tail tip's excursion alone
+ * would ask for.
+ *
+ * The caudal blade is a rayed membrane: it is carried by the peduncle and it
+ * lags, but it does not coil with the body's own curvature. Holding the blade's
+ * shape costs the tail a little of its reach, and the muscle behind it is what
+ * pays — which is also where the effort belongs.
+ */
+const BLADE_DRIVE = 1.14
+
 /** How fast each parameter chases its target, in seconds to close most of the gap. */
 const RESPONSE = <const>{
   wave: 0.22,
@@ -84,7 +95,7 @@ export function targetSwim(motion: KoiMotionInput, trim: KoiSwimTrim = DEFAULT_T
   const turn = clamp(motion.turnRate, -2.2, 2.2)
   return {
     // magic: A swimming fish holds its tail-beat amplitude roughly constant across speeds and varies its frequency instead; these numbers are calibrated so the tail tip sweeps about a fifth of a body length at cruise, which is what a carp actually does.
-    amplitude: (9 + Math.min(speed, 2.2) * 2.4 + escape * 2.5 + surge) * trim.amplitude,
+    amplitude: (9 + Math.min(speed, 2.2) * 2.4 + escape * 2.5 + surge) * BLADE_DRIVE * trim.amplitude,
     // why: The wave starts further forward the harder the koi swims, which is the difference a viewer reads as effort — a cruising fish waves only its tail, a bolting one throws its whole body.
     waveStart: clamp(0.64 - speed * 0.14 - escape * 0.44 - trim.waveReach, 0.02, 0.8),
     waveGrowth: clamp(2.3 - escape * 0.9 - Math.min(speed, 2) * 0.2, 1.15, 2.4),

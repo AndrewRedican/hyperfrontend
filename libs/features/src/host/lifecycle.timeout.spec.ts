@@ -1,6 +1,6 @@
 import type { BrokerHandle, ChannelHandle } from '@hyperfrontend/nexus'
 import type { ShellOptions } from '../shared/types'
-import type { MountContext, MountResult } from './types'
+import type { MountResult } from './types'
 import { createEventEmitter } from '../shared/event-emitter'
 import { createShellHandle } from './lifecycle'
 
@@ -40,7 +40,7 @@ function setup() {
   const addChannel = jest.fn(() => mock.channel)
   const broker = <BrokerHandle>(<unknown>{ addChannel })
   const cleanup = jest.fn()
-  const mount = jest.fn((_ctx: MountContext): MountResult => ({ target: TARGET, present: { mode: 'embedded' }, cleanup }))
+  const mount = jest.fn((): MountResult => ({ target: TARGET, present: { mode: 'embedded' }, cleanup }))
   const emitter = createEventEmitter()
   const handle = createShellHandle(broker, <ShellOptions>{ container: '#shell' }, emitter, {
     contract: { emitted: [], accepted: [] },

@@ -1,5 +1,5 @@
 /**
- * ESM (ES Modules) E2E tests for @hyperfrontend/nexus
+ * ESM (ES Modules) E2E tests for `@hyperfrontend/nexus`
  * Tests that the package is importable under plain Node (no window) and exports work correctly.
  */
 

@@ -1,5 +1,5 @@
 /**
- * ESM (ES Modules) E2E tests for @hyperfrontend/cryptography
+ * ESM (ES Modules) E2E tests for `@hyperfrontend/cryptography`
  * Tests that the package sub-entries are importable and exports work correctly.
  *
  * Note: cryptography has platform-specific entries: ./browser, ./node, ./common

@@ -43,9 +43,9 @@ export interface DemoShowcaseProps {
  * the incoming demo connects fresh behind its fallback card.
  * Planned entries render as DOM placeholder cards. The ring and the
  * pause/skip controls paint above the content — the buttons hang half outside
- * the frame — so nothing a framed layer renders can cover them; only the
- * expanded overlay deliberately paints over the whole page, supplying its own
- * chrome while rotation is frozen. The staged
+ * the frame — so nothing a framed layer renders can cover them; while a demo
+ * is expanded they stand down instead, because the overlay owns the whole page,
+ * carries its own chrome, and holds rotation frozen. The staged
  * demo's accent hue glows out from behind the frame, clipped to the showcase's
  * own container, and crossfades as rotation hands the stage over. Pausing
  * freezes the ring and holds the current demo. An expandable demo offers to
@@ -182,9 +182,10 @@ export function DemoShowcase({ entries, cycleDuration = 20000, fastForwardDurati
       <div className="relative w-full max-w-2xl">
         <div className="absolute inset-0 z-0 rounded-2xl border border-white/30 dark:border-white/20" />
         {/* why: backdrop-filter makes this container the containing block for fixed descendants, so it has to lift while the staged layer is stretched over the viewport. */}
+        {/* why: A z-index makes it a stacking context too, which would trap the stretched layer inside this card's depth — the site header would paint over the scene and over its own close control, with no way out on a device that has no Escape key. */}
         <div
-          className={`relative z-10 flex flex-col items-center justify-center gap-4 rounded-2xl bg-slate-900/5 p-6 dark:bg-white/5 lg:p-8 ${
-            expanded ? '' : 'backdrop-blur-sm'
+          className={`relative flex flex-col items-center justify-center gap-4 rounded-2xl bg-slate-900/5 p-6 dark:bg-white/5 lg:p-8 ${
+            expanded ? '' : 'z-10 backdrop-blur-sm'
           }`}
         >
           {/* note: Only the staged layer mounts its live embed — losing the stage unmounts it, so its session tears down gracefully instead of running off-screen. */}
@@ -245,30 +246,33 @@ export function DemoShowcase({ entries, cycleDuration = 20000, fastForwardDurati
             )}
           </div>
         </div>
-        {reduced ? null : <ProgressBorder progress={progress} color={ringRGB} />}
-        <div className="absolute -bottom-4 left-1/2 z-30 flex -translate-x-1/2 items-center gap-2">
-          {reduced ? null : (
+        {/* why: The ring and the rotation controls belong to the framed card. While the staged demo is stretched over the viewport they would paint on top of it — a fixed descendant cannot escape this container's stacking context — and they have nothing to say: rotation is frozen and the overlay carries its own chrome. */}
+        {reduced || expanded ? null : <ProgressBorder progress={progress} color={ringRGB} />}
+        {expanded ? null : (
+          <div className="absolute -bottom-4 left-1/2 z-30 flex -translate-x-1/2 items-center gap-2">
+            {reduced ? null : (
+              <button
+                type="button"
+                onClick={togglePause}
+                aria-pressed={paused}
+                aria-label={paused ? 'Resume demo rotation' : 'Pause demo rotation'}
+                className={CONTROL_BUTTON_CLASSES}
+              >
+                {paused ? <PlayIcon className="h-4 w-4" /> : <PauseIcon className="h-4 w-4" />}
+              </button>
+            )}
+            {/* note: aria-disabled + the skip() guard instead of `disabled`, which would drop keyboard focus to body mid-fast-forward. */}
             <button
               type="button"
-              onClick={togglePause}
-              aria-pressed={paused}
-              aria-label={paused ? 'Resume demo rotation' : 'Pause demo rotation'}
-              className={CONTROL_BUTTON_CLASSES}
+              onClick={skip}
+              aria-disabled={fastForwarding}
+              className={`${CONTROL_BUTTON_CLASSES} ${fastForwarding ? 'opacity-50' : ''}`}
+              aria-label="Skip to next demo"
             >
-              {paused ? <PlayIcon className="h-4 w-4" /> : <PauseIcon className="h-4 w-4" />}
+              <SkipIcon className="h-4 w-4" />
             </button>
-          )}
-          {/* note: aria-disabled + the skip() guard instead of `disabled`, which would drop keyboard focus to body mid-fast-forward. */}
-          <button
-            type="button"
-            onClick={skip}
-            aria-disabled={fastForwarding}
-            className={`${CONTROL_BUTTON_CLASSES} ${fastForwarding ? 'opacity-50' : ''}`}
-            aria-label="Skip to next demo"
-          >
-            <SkipIcon className="h-4 w-4" />
-          </button>
-        </div>
+          </div>
+        )}
       </div>
     </div>
   )

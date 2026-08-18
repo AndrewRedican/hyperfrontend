@@ -1,5 +1,5 @@
 /**
- * UMD bundle E2E tests for @hyperfrontend/state-machine
+ * UMD bundle E2E tests for `@hyperfrontend/state-machine`
  * Tests that the UMD bundle works in browser (global) context.
  */
 

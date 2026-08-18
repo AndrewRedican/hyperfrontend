@@ -7,7 +7,9 @@
  * frames, because owning the containers is what lets it own the z-order — and
  * the z-order *is* the depth model. Every layer is `pointer-events: none`, so
  * the eight stacked full-viewport frames never intercept a press; the host runs
- * one normalized pointer stream and tells the fish what it found.
+ * one normalized pointer stream and tells the fish what it found. Owning them
+ * is also what lets the host stand one down: a frame whose session has died is
+ * hidden rather than left to paint whatever the browser puts in its place.
  */
 import type { KoiFramework } from '@hyperfrontend/demo-koi-lib'
 import { KOI_FRAMEWORKS, depthZIndex } from '@hyperfrontend/demo-koi-lib'
@@ -88,6 +90,28 @@ export function setLayerDepth(stage: PondStage, framework: KoiFramework, level: 
     return
   }
   layer.style.zIndex = String(depthZIndex(level))
+}
+
+/**
+ * Shows or hides one koi's layer.
+ *
+ * A koi whose session has stopped answering is not in the scene any more, and
+ * its frame is no longer the host's to trust: a document the browser has given
+ * up on is painted with the browser's own placeholder, which is opaque and
+ * knows nothing about water. Standing the layer down is what keeps a lost koi
+ * from leaving a hole in the pond; its own reveal on the next handshake brings
+ * it back.
+ *
+ * @param stage - The pond stage.
+ * @param framework - Which koi.
+ * @param present - `true` while its session is answering.
+ */
+export function setLayerPresent(stage: PondStage, framework: KoiFramework, present: boolean): void {
+  const layer = stage.layers.get(framework)
+  if (layer === undefined) {
+    return
+  }
+  layer.style.opacity = present ? '' : '0'
 }
 
 /**

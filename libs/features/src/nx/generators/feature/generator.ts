@@ -102,7 +102,7 @@ function createStagingTree(tree: Tree, scaffoldRoot: string, tally: WriteTally):
  *
  * @example Scaffold a feature in a project directory
  * ```bash
- * nx generate \@hyperfrontend/features:feature \
+ * nx generate @hyperfrontend/features:feature \
  *   --name=clock --contract=./clock.contract.json --entry=./src/main.ts --directory=apps/clock
  * ```
  */

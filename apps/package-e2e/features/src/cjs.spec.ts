@@ -1,5 +1,5 @@
 /**
- * CJS (CommonJS) E2E tests for @hyperfrontend/features
+ * CJS (CommonJS) E2E tests for `@hyperfrontend/features`
  * Tests that the package is requireable under plain Node (no window) and that
  * every documented exports subpath resolves with its expected symbol.
  */

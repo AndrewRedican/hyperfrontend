@@ -1,5 +1,5 @@
 /**
- * Packed-tarball CLI E2E tests for the @hyperfrontend/features `hf` bin.
+ * Packed-tarball CLI E2E tests for the `@hyperfrontend/features` `hf` bin.
  * Drives the installed bin the way a consumer does: `hf --help`, a real
  * `hf dev` server held open until SIGINT, a real `hf build` producing a
  * self-contained shell tarball, and a real `hf serve` answering directory

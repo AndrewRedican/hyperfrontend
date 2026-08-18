@@ -3,18 +3,6 @@ const baseConfig = require('../../eslint.base.config.cjs')
 module.exports = [
   ...baseConfig,
   {
-    files: ['**/*.ts', '**/*.tsx'],
-    rules: {
-      'workspace/max-file-lines': [
-        'error',
-        {
-          maxLines: 510,
-          maxLinesTest: 900,
-        },
-      ],
-    },
-  },
-  {
     files: ['**/*.json'],
     rules: {
       '@nx/dependency-checks': [

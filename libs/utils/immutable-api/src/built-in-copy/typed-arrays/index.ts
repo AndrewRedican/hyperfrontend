@@ -50,7 +50,7 @@ export const isView = _ArrayBuffer.isView
  *
  * @param byteLength - The size, in bytes, of the shared array buffer to create.
  * @returns A new SharedArrayBuffer instance.
- * @throws TypeError when the SharedArrayBuffer constructor is unavailable (for example on pages without cross-origin isolation).
+ * @throws {TypeError} When the SharedArrayBuffer constructor is unavailable (for example on pages without cross-origin isolation).
  *
  * @example Creating SharedArrayBuffer for workers
  * ```typescript

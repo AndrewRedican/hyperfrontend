@@ -9,10 +9,10 @@ module.exports = [
     files: ['**/*.ts', '**/*.tsx'],
     rules: {
       'workspace/max-file-lines': [
-        'warn',
+        'error',
         {
           maxLines: 600,
-          maxLinesTest: 1200,
+          maxLinesTest: 1100,
         },
       ],
     },

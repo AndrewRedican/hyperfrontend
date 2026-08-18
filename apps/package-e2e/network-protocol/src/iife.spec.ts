@@ -1,5 +1,5 @@
 /**
- * IIFE bundle E2E tests for @hyperfrontend/network-protocol
+ * IIFE bundle E2E tests for `@hyperfrontend/network-protocol`
  * Tests that the browser bundles load correctly and attach to window.
  *
  * Note: network-protocol has two browser bundles with separate global names:

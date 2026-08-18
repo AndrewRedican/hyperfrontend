@@ -1,5 +1,5 @@
 /**
- * IIFE bundle E2E tests for @hyperfrontend/data-utils
+ * IIFE bundle E2E tests for `@hyperfrontend/data-utils`
  * Tests that the browser bundle loads correctly and attaches to window.
  */
 

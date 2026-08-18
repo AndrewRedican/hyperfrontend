@@ -194,7 +194,7 @@ onMounted(() => {
       lastSpeed = speed
       koi.update(dt)
       view.frame(box)
-      view.place(koi.object, state.position, state.heading)
+      view.placeKoi(koi.object, state.position, state.heading, state.length)
       gl.render(scene, view.camera)
     },
 

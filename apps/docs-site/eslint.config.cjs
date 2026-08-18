@@ -107,7 +107,7 @@ module.exports = [
         'error',
         {
           maxLines: 800,
-          maxLinesTest: 900,
+          maxLinesTest: 700,
         },
       ],
     },

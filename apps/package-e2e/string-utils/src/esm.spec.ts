@@ -1,5 +1,5 @@
 /**
- * ESM (ES Modules) E2E tests for @hyperfrontend/string-utils
+ * ESM (ES Modules) E2E tests for `@hyperfrontend/string-utils`
  * Tests that the package sub-entries are importable and exports work correctly.
  *
  * Note: string-utils has platform-specific entries: ./browser, ./node

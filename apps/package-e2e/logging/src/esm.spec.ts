@@ -1,5 +1,5 @@
 /**
- * ESM (ES Modules) E2E tests for @hyperfrontend/logging
+ * ESM (ES Modules) E2E tests for `@hyperfrontend/logging`
  * Tests that the package is importable and exports work correctly.
  */
 

@@ -1,5 +1,5 @@
 /**
- * CJS (CommonJS) E2E tests for @hyperfrontend/logging
+ * CJS (CommonJS) E2E tests for `@hyperfrontend/logging`
  * Tests that the package is requireable and exports work correctly.
  */
 

@@ -127,7 +127,10 @@ generators do nothing but loft the result.
   what conserves the koi's length: a fish bent double is exactly as long as one swimming straight.
   Every vertex carries the station it belongs to and is carried rigidly by that station's frame, so
   a hard turn bends the body without squashing any section of it. The CPU writes two small uniform
-  arrays a frame and never touches a vertex.
+  arrays a frame and never touches a vertex. Curvature fades out at both ends for the same reason it
+  exists: the skull is bone, and the caudal blade past the peduncle is a rayed membrane — carried and
+  lagging, but not coiling. A blade that took the body's own curvature would roll its fork onto its
+  edge every beat, and a fork seen edge-on from above the water is a fish with no tail.
 - **Behaviour, not animation.** A consumer says `speed`, `turnRate`, `escapeIntensity`, `depth`; the
   swim model turns those into curvature, easing every parameter on its own time constant. Positive
   `turnRate` turns clockwise on screen (the same direction a growing pond heading turns), so a

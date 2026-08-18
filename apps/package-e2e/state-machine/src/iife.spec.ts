@@ -1,5 +1,5 @@
 /**
- * IIFE bundle E2E tests for @hyperfrontend/state-machine
+ * IIFE bundle E2E tests for `@hyperfrontend/state-machine`
  * Tests that the browser bundle loads correctly and attaches to window.
  */
 

@@ -1,5 +1,5 @@
 /**
- * Packed-tarball Nx plugin E2E tests for @hyperfrontend/features.
+ * Packed-tarball Nx plugin E2E tests for `@hyperfrontend/features`.
  * Drives the `init` and `feature` generators the way a consumer does: inside a
  * real Nx workspace created by the official create-nx-workspace generator, with
  * the packed tarball installed the way `nx add` installs a plugin.

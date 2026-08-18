@@ -1,5 +1,5 @@
 /**
- * ESM (ES Modules) E2E tests for @hyperfrontend/state-machine
+ * ESM (ES Modules) E2E tests for `@hyperfrontend/state-machine`
  * Tests that the package sub-entries are importable and exports work correctly.
  *
  * Note: state-machine uses multiple sub-entry exports, not a single main entry.

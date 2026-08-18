@@ -1,5 +1,5 @@
 /**
- * UMD bundle E2E tests for @hyperfrontend/immutable-api-utils
+ * UMD bundle E2E tests for `@hyperfrontend/immutable-api-utils`
  * Tests that the UMD bundle works in browser (global) context.
  */
 

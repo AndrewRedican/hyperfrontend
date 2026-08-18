@@ -1,5 +1,5 @@
 /**
- * UMD bundle E2E tests for @hyperfrontend/cryptography
+ * UMD bundle E2E tests for `@hyperfrontend/cryptography`
  * Tests that the UMD bundle works in browser (global) context.
  */
 

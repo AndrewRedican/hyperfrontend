@@ -1,5 +1,5 @@
 /**
- * ESM (ES Modules) E2E tests for @hyperfrontend/ui-utils
+ * ESM (ES Modules) E2E tests for `@hyperfrontend/ui-utils`
  * Tests that the package sub-entries are importable.
  *
  * Note: ui-utils is browser-focused but sub-entries should still be importable.

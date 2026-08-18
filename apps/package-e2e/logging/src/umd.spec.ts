@@ -1,5 +1,5 @@
 /**
- * UMD bundle E2E tests for @hyperfrontend/logging
+ * UMD bundle E2E tests for `@hyperfrontend/logging`
  * Tests that the UMD bundle works in browser (global) context.
  */
 

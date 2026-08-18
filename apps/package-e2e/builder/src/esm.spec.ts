@@ -1,5 +1,5 @@
 /**
- * ESM (ES Modules) E2E tests for @hyperfrontend/builder
+ * ESM (ES Modules) E2E tests for `@hyperfrontend/builder`
  * Tests that the package is importable and exports work correctly.
  */
 

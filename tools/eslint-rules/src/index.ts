@@ -6,6 +6,7 @@ import docsSiteLibraryDocs, { RULE_NAME as DOCS_SITE_LIBRARY_DOCS } from './rule
 import docsSitePageMetadata, { RULE_NAME as DOCS_SITE_PAGE_METADATA } from './rules/docs-site-page-metadata'
 import docsSiteRoutes, { RULE_NAME as DOCS_SITE_ROUTES } from './rules/docs-site-routes'
 import docsSiteSecondaryEntries, { RULE_NAME as DOCS_SITE_SECONDARY_ENTRIES } from './rules/docs-site-secondary-entries'
+import escapePackageTags, { RULE_NAME as ESCAPE_PACKAGE_TAGS } from './rules/escape-package-tags'
 import exportOrder, { RULE_NAME as EXPORT_ORDER } from './rules/export-order'
 import importOrder, { RULE_NAME as IMPORT_ORDER } from './rules/import-order'
 import jestMockAfterImports, { RULE_NAME as JEST_MOCK_AFTER_IMPORTS } from './rules/jest-mock-after-imports'
@@ -61,7 +62,7 @@ import rootReadmePackages, { RULE_NAME as ROOT_README_PACKAGES } from './rules/r
 
 /**
  * Custom ESLint rules for the hyperfrontend monorepo.
- * Exported as a named export for \@nx/eslint-plugin workspace rules resolution.
+ * Exported as a named export for `@nx/eslint-plugin` workspace rules resolution.
  */
 export const rules: ESLint.Plugin['rules'] = {
   [ASSERTIVE_TEST_NAMES]: assertiveTestNames as unknown as Rule.RuleModule,
@@ -71,6 +72,7 @@ export const rules: ESLint.Plugin['rules'] = {
   [DOCS_SITE_PAGE_METADATA]: docsSitePageMetadata as unknown as Rule.RuleModule,
   [DOCS_SITE_ROUTES]: docsSiteRoutes as unknown as Rule.RuleModule,
   [DOCS_SITE_SECONDARY_ENTRIES]: docsSiteSecondaryEntries as unknown as Rule.RuleModule,
+  [ESCAPE_PACKAGE_TAGS]: escapePackageTags as unknown as Rule.RuleModule,
   [EXPORT_ORDER]: exportOrder as unknown as Rule.RuleModule,
   [LIB_COMPATIBILITY_DOCS]: libCompatibilityDocs as unknown as Rule.RuleModule,
   [LIB_ENTRY_EXPORT_SPACING]: libEntryExportSpacing as unknown as Rule.RuleModule,

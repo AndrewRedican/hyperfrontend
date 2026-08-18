@@ -1,5 +1,5 @@
 /**
- * CJS (CommonJS) E2E tests for @hyperfrontend/questions
+ * CJS (CommonJS) E2E tests for `@hyperfrontend/questions`
  * Tests that the package is requireable and exports work correctly.
  */
 
