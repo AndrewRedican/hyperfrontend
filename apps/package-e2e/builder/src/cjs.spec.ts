@@ -1,5 +1,5 @@
 /**
- * CJS (CommonJS) E2E tests for @hyperfrontend/builder
+ * CJS (CommonJS) E2E tests for `@hyperfrontend/builder`
  * Tests that the package is requireable, its subpaths resolve, and the bin is wired.
  */
 
