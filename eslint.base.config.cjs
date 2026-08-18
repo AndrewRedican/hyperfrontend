@@ -2,6 +2,13 @@ const nx = require('@nx/eslint-plugin')
 const pluginJest = require('eslint-plugin-jest')
 const eslintRules = require('./tools/eslint-rules/src/index.ts')
 
+/**
+ * Package scope prefixes that must never appear bare in a JSDoc description. `workspace/escape-package-tags`
+ * reports and fixes them; the same list is handed to `jsdoc/escape-inline-tags` as an allowlist so a single
+ * diagnostic and a single fixer own each occurrence.
+ */
+const WORKSPACE_PACKAGE_PREFIXES = ['@hyperfrontend', '@nx']
+
 module.exports = [
   ...nx.configs['flat/base'],
   ...nx.configs['flat/typescript'],
@@ -186,6 +193,13 @@ module.exports = [
           maxLinesTest: 700,
         },
       ],
+    },
+  },
+  {
+    files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
+    rules: {
+      'workspace/escape-package-tags': ['error', { prefixes: WORKSPACE_PACKAGE_PREFIXES }],
+      'jsdoc/escape-inline-tags': ['warn', { allowedInlineTags: WORKSPACE_PACKAGE_PREFIXES.map((prefix) => prefix.slice(1)) }],
     },
   },
   {
