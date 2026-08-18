@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "type": "tutorial",
+  "title": "Build a CLI with a --verbose mode",
+  "problem": "My command line tool is either silent or drowning in console.log, the diagnostics land on stdout where they break every pipe, and when a run fails I cannot tell which stage went wrong or how long it took.",
+  "outcome": "A working sync command that is quiet by default, prints labelled and timed stages under --verbose, reports the failing stage at any level, and keeps stdout clean enough to pipe into jq.",
+  "priority": "P0",
+  "packages": ["@hyperfrontend/logging"],
+  "verification": {
+    "kind": "authored",
+    "verifiedAgainst": "@hyperfrontend/logging@0.1.1",
+    "verifiedOn": "2026-08-18"
+  },
+  "complexity": "beginner",
+  "estMinutes": 20,
+  "apis": [
+    {
+      "package": "@hyperfrontend/logging",
+      "symbol": "createLogger"
+    },
+    {
+      "package": "@hyperfrontend/logging",
+      "symbol": "Logger"
+    }
+  ],
+  "prerequisites": {
+    "knowledge": ["Node.js 18 or newer", "An empty directory to build the command in"]
+  },
+  "related": {
+    "reference": ["/docs/libraries/logging"]
+  },
+  "keywords": ["logging", "CLI", "verbose", "log level", "channel", "timing", "stderr", "stdout", "debug", "instrumentation"]
+}
