@@ -157,7 +157,8 @@ function koiBody(framework: KoiFramework, seed: number): KoiBody {
     tailSpan: band(draw(6), 0.22, 0.3),
     caudalFork: band(draw(7), 0.24, 0.44),
     // why: The pond is watched from above, where a purely vertical tail blade reads as a sliver — every koi fans its lobes a little sideways so the tail keeps its silhouette straight overhead. Draw 13 was the body band's next free slot; earlier draws must never shift.
-    caudalSpread: band(draw(13), 0.16, 0.24),
+    // why: The band has to clear the bank as well as the level view: a koi leaning into a turn rolls its blade back toward the vertical, and a fan that only survives level flight is the tail that disappears mid-manoeuvre.
+    caudalSpread: band(draw(13), 0.2, 0.28),
     finSpan: band(draw(8), 0.15, 0.21),
     headWidth: 0.96 + heft * 0.09 + band(draw(9), -0.02, 0.02),
     snout: band(draw(10), 0.6, 0.95),
