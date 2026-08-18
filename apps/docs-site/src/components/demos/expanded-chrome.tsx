@@ -41,7 +41,8 @@ export interface ExpandedChromeProps {
 
 /**
  * The expanded overlay's own controls: close, and — where the hosting surface
- * offers neighbours — next/previous demo, floated over the revealed scene.
+ * offers neighbours and the viewport has room beside the scene — next/previous
+ * demo, floated over the revealed scene.
  * @param root0
  * @param root0.title
  * @param root0.onCollapse
@@ -62,13 +63,14 @@ export function ExpandedChrome({ title, onCollapse, onNeighbor }: ExpandedChrome
         ✕
       </button>
       <span className="pointer-events-none absolute right-14 top-6 text-[0.66rem] tracking-wider text-white/50">esc</span>
+      {/* why: On a phone the scene *is* the viewport, and these two sit right where a finger reaches into it — a tap meant for the demo hands the stage to another one instead. Closing the overlay puts the deck back within a swipe, so the neighbour controls only appear where there is room beside the scene for them. */}
       {onNeighbor ? (
         <>
           <button
             type="button"
             onClick={() => onNeighbor(-1)}
             onPointerDown={keep}
-            className="pointer-events-auto absolute left-4 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-slate-900/70 text-white backdrop-blur-sm transition-colors hover:bg-slate-900/90"
+            className="pointer-events-auto absolute left-4 top-1/2 hidden h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-slate-900/70 text-white backdrop-blur-sm transition-colors hover:bg-slate-900/90 sm:flex"
             aria-label="Previous demo"
           >
             ←
@@ -77,7 +79,7 @@ export function ExpandedChrome({ title, onCollapse, onNeighbor }: ExpandedChrome
             type="button"
             onClick={() => onNeighbor(1)}
             onPointerDown={keep}
-            className="pointer-events-auto absolute right-4 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-slate-900/70 text-white backdrop-blur-sm transition-colors hover:bg-slate-900/90"
+            className="pointer-events-auto absolute right-4 top-1/2 hidden h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-slate-900/70 text-white backdrop-blur-sm transition-colors hover:bg-slate-900/90 sm:flex"
             aria-label="Next demo"
           >
             →
