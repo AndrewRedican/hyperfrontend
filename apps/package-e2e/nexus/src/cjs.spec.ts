@@ -1,5 +1,5 @@
 /**
- * CJS (CommonJS) E2E tests for @hyperfrontend/nexus
+ * CJS (CommonJS) E2E tests for `@hyperfrontend/nexus`
  * Tests that the package is requireable under plain Node (no window) and exports work correctly.
  */
 

@@ -1,5 +1,5 @@
 /**
- * UMD bundle E2E tests for @hyperfrontend/nexus
+ * UMD bundle E2E tests for `@hyperfrontend/nexus`
  * Tests that the UMD bundle works in browser (global) context.
  */
 
