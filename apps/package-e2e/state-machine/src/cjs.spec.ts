@@ -1,5 +1,5 @@
 /**
- * CJS (CommonJS) E2E tests for @hyperfrontend/state-machine
+ * CJS (CommonJS) E2E tests for `@hyperfrontend/state-machine`
  * Tests that the package sub-entries are requireable and exports work correctly.
  *
  * Note: state-machine uses multiple sub-entry exports, not a single main entry.
