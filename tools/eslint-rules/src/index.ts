@@ -62,7 +62,7 @@ import rootReadmePackages, { RULE_NAME as ROOT_README_PACKAGES } from './rules/r
 
 /**
  * Custom ESLint rules for the hyperfrontend monorepo.
- * Exported as a named export for \@nx/eslint-plugin workspace rules resolution.
+ * Exported as a named export for `@nx/eslint-plugin` workspace rules resolution.
  */
 export const rules: ESLint.Plugin['rules'] = {
   [ASSERTIVE_TEST_NAMES]: assertiveTestNames as unknown as Rule.RuleModule,

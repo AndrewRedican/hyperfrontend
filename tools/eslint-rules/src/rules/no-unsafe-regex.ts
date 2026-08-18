@@ -44,7 +44,7 @@ interface NoUnsafeRegexOptions {
 
   /**
    * Additional function names to treat as RegExp constructors.
-   * Default: ['createRegExp'] (to support \@hyperfrontend/immutable-api-utils)
+   * Default: ['createRegExp'] (to support `@hyperfrontend/immutable-api-utils`)
    */
   regexpFactoryFunctions?: string[]
 
