@@ -124,6 +124,30 @@ function bodyFlexibility(station: number): number {
   return SKULL_FLEX + (1 - SKULL_FLEX) * t * t * (3 - 2 * t)
 }
 
+/** How much of the body's bend the caudal blade still takes at its outermost tip. */
+const CAUDAL_FLEX = 0.26
+
+/**
+ * How much of the body's bend a station past the peduncle takes.
+ *
+ * The blade past the caudal root is a rayed membrane rather than flesh: it is
+ * carried by the peduncle and lags behind it, but it does not coil the way the
+ * body does. Letting it take the body's own curvature — which is at its
+ * strongest exactly there — rolls the fork onto its edge every beat, and a
+ * fork seen edge-on from above the water is a fish with no tail.
+ *
+ * @param station - Position along the koi, 0 at the snout.
+ * @returns The share of curvature the station carries; 1 everywhere through the body.
+ */
+function finFlexibility(station: number): number {
+  if (station <= CAUDAL_ROOT) {
+    return 1
+  }
+  const t = (station - CAUDAL_ROOT) / (1 - CAUDAL_ROOT)
+  // how: Squaring the fade leaves the blade's root as flexible as the peduncle it grows out of, so the stiffening never creases the tail base.
+  return 1 - (1 - CAUDAL_FLEX) * t * t
+}
+
 /**
  * How much of the travelling wave has grown in by a station.
  *
@@ -172,7 +196,7 @@ export function evaluateSpine(length: number, parameters: SwimParameters, phase:
       turnTotal === 0
         ? 0
         : (-parameters.turnBend * turnWeight(station, parameters.turnCentre, parameters.turnSpread) * flex * SPINE_SAMPLES) / turnTotal
-    curvature.push(swim * flex + turn)
+    curvature.push((swim * flex + turn) * finFlexibility(station))
   }
 
   const yaws: number[] = []
