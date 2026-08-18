@@ -1,5 +1,5 @@
 /**
- * CJS (CommonJS) E2E tests for @hyperfrontend/immutable-api-utils
+ * CJS (CommonJS) E2E tests for `@hyperfrontend/immutable-api-utils`
  * Tests that the package is requireable and exports work correctly.
  */
 
