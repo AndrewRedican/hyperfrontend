@@ -1,5 +1,5 @@
 /**
- * CJS (CommonJS) E2E tests for @hyperfrontend/string-utils
+ * CJS (CommonJS) E2E tests for `@hyperfrontend/string-utils`
  * Tests that the package sub-entries are requireable and exports work correctly.
  *
  * Note: string-utils has platform-specific entries: ./browser, ./node
