@@ -1,5 +1,5 @@
 /**
- * \@hyperfrontend/immutable-api-utils
+ * `@hyperfrontend/immutable-api-utils`
  *
  * Decorators and utilities for creating immutable, tamper-proof object APIs.
  *
@@ -8,7 +8,7 @@
  * - Utilities for locking object properties
  * - Property descriptor utilities
  *
- * @module \@hyperfrontend/immutable-api-utils
+ * @module @hyperfrontend/immutable-api-utils
  */
 
 export type { LockedMethod } from './locked'
