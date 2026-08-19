@@ -39,6 +39,8 @@ SDK, CLI, and dev server for building, embedding, and orchestrating hyperfronten
 
 • 👉 See [**API reference**](https://www.hyperfrontend.dev/docs/libraries/features/#api-reference)
 
+• 👉 See [**guides & tutorials**](https://www.hyperfrontend.dev/docs/guides/?package=%40hyperfrontend%2Ffeatures)
+
 ## What is @hyperfrontend/features?
 
 Embedding another team's app inside your page usually means an iframe, a pile of `postMessage` conventions nobody wrote down, and a frame that never quite fits the space you gave it. `@hyperfrontend/features` turns that into a contract: the feature app declares what it sends, what it accepts, and which display modes it supports; the host picks a mode and gets a typed handle back. The messaging protocol underneath is [`@hyperfrontend/nexus`](https://www.hyperfrontend.dev/docs/libraries/nexus/), and this package adds everything around it: iframe management, display modes and sizing, the open/close lifecycle, and a CLI that packages a feature app into an installable shell.
