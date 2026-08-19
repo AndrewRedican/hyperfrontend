@@ -192,6 +192,20 @@ Based on [Keep a Changelog](https://keepachangelog.com).
       expect(items?.[1]?.breaking).toBe(false)
     })
 
+    it('reads the serialized breaking marker back off an item', () => {
+      const content = `## [1.0.0]
+
+### Breaking Changes
+- **BREAKING** Changed API
+`
+
+      const changelog = parseChangelog(content)
+
+      expect(changelog.entries[0]?.sections[0]?.items[0]).toEqual(
+        expect.objectContaining({ description: 'Changed API', scope: undefined, breaking: true })
+      )
+    })
+
     it('detects breaking change with ! prefix', () => {
       const content = `## [1.0.0]
 

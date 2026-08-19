@@ -4,6 +4,7 @@ import type { Token } from './tokenizer'
 import { createURL } from '@hyperfrontend/immutable-api-utils/built-in-copy/url'
 import { createChangelogItem } from '../models/entry'
 import { getSectionType } from '../models/section'
+import { parseBreakingFromItem } from './breaking'
 import { parseVersionFromHeading, parseScopeFromItem, parseCommitRefs, parseIssueRefs } from './line'
 import { tokenize } from './tokenizer'
 
@@ -300,11 +301,12 @@ function parseItem(state: ParserState): ChangelogItem | null {
   }
 
   const text = token.value
-  const { scope, description } = parseScopeFromItem(text)
+  const marker = parseBreakingFromItem(text)
+  const { scope, description } = parseScopeFromItem(marker.text)
   const commits = parseCommitRefs(text, state.repositoryUrl)
   const references = parseIssueRefs(text, state.repositoryUrl)
 
-  const breaking = isBreakingItem(text)
+  const breaking = marker.breaking || isBreakingItem(marker.text)
 
   advance(state)
 
@@ -317,7 +319,9 @@ function parseItem(state: ParserState): ChangelogItem | null {
 }
 
 /**
- * Checks if an item indicates a breaking change.
+ * Checks if an item indicates a breaking change. Runs on the text left after
+ * {@link parseBreakingFromItem} has removed the leading markers, so the
+ * serializer's own marker cannot feed back into the next parse.
  *
  * @param text - The text content of the item
  * @returns True if the item indicates a breaking change
