@@ -1,7 +1,7 @@
 import type { Rule } from 'eslint'
 import { dirname } from 'node:path'
 import { createURL } from '@hyperfrontend/immutable-api-utils/built-in-copy/url'
-import { isPublishableLibrary } from '../utils/nx-project'
+import { isPublishableLibrary, readPackageJson } from '../utils/nx-project'
 
 /**
  * The expected base URL for documentation links.
@@ -9,13 +9,26 @@ import { isPublishableLibrary } from '../utils/nx-project'
 const DOCS_BASE_URL = createURL('https://www.hyperfrontend.dev/docs/')
 
 /**
- * Checks if a line contains a URL that starts with the expected documentation base URL.
- * This properly parses URLs to avoid incomplete substring matching vulnerabilities.
- *
- * @param line - The line to check.
- * @returns True if the line contains a valid documentation URL.
+ * The canonical package-filtered guides destination, without its query string.
+ * One route serves every entry point into guides, so a README link and the
+ * site's own filter controls resolve to the same view.
  */
-function containsValidDocumentationUrl(line: string): boolean {
+const GUIDES_PATHNAME = '/docs/guides/'
+
+/**
+ * The query parameter naming the package a guides view is filtered to. Its
+ * value is the npm package name, which the guide corpus already carries in
+ * each unit's metadata, so no package-to-guide mapping is written by hand.
+ */
+const GUIDES_PACKAGE_PARAM = 'package'
+
+/**
+ * Collects the target URLs of every markdown link on a line.
+ *
+ * @param line - The line to scan.
+ * @returns The link targets, in order of appearance.
+ */
+function extractMarkdownUrls(line: string): string[] {
   const urls: string[] = []
   let searchStart = 0
 
@@ -31,18 +44,54 @@ function containsValidDocumentationUrl(line: string): boolean {
     searchStart = urlEnd + 1
   }
 
-  if (urls.length === 0) {
-    return false
-  }
+  return urls
+}
 
-  return urls.some((url) => {
+/**
+ * Tests every markdown link on a line against a predicate, parsing each target
+ * as a URL so an unparseable one is rejected rather than substring-matched.
+ *
+ * @param line - The line to check.
+ * @param matches - Predicate applied to each parsed link target.
+ * @returns True when at least one link on the line satisfies the predicate.
+ */
+function hasLinkMatching(line: string, matches: (url: URL) => boolean): boolean {
+  return extractMarkdownUrls(line).some((url) => {
     try {
-      const parsed = createURL(url)
-      return parsed.origin === DOCS_BASE_URL.origin && parsed.pathname.startsWith(DOCS_BASE_URL.pathname)
+      return matches(createURL(url))
     } catch {
       return false
     }
   })
+}
+
+/**
+ * Checks if a line contains a URL that starts with the expected documentation base URL.
+ * This properly parses URLs to avoid incomplete substring matching vulnerabilities.
+ *
+ * @param line - The line to check.
+ * @returns True if the line contains a valid documentation URL.
+ */
+function containsValidDocumentationUrl(line: string): boolean {
+  return hasLinkMatching(line, (parsed) => parsed.origin === DOCS_BASE_URL.origin && parsed.pathname.startsWith(DOCS_BASE_URL.pathname))
+}
+
+/**
+ * Checks if a line links to the canonical guides destination filtered to a
+ * specific package.
+ *
+ * @param line - The line to check.
+ * @param packageName - The npm package the README documents.
+ * @returns True if the line carries the package-filtered guides URL.
+ */
+function containsPackageGuidesUrl(line: string, packageName: string): boolean {
+  return hasLinkMatching(
+    line,
+    (parsed) =>
+      parsed.origin === DOCS_BASE_URL.origin &&
+      parsed.pathname === GUIDES_PATHNAME &&
+      parsed.searchParams.get(GUIDES_PACKAGE_PARAM) === packageName
+  )
 }
 
 /**
@@ -318,6 +367,30 @@ export function extractDocumentationLink(content: string): DocLinkInfo | null {
   return null
 }
 
+/**
+ * Extracts the package-filtered guides link from the content.
+ *
+ * The link must survive a package having no guides yet: it points at a filter,
+ * not at a list of slugs, so guides written later surface from the published
+ * README without another release.
+ *
+ * @param content - The markdown content.
+ * @param packageName - The npm package the README documents.
+ * @returns The guides link info, or null if not found.
+ */
+export function extractGuidesLink(content: string, packageName: string): DocLinkInfo | null {
+  const lines = content.split('\n')
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = <string>lines[i]
+    if (line.includes('•') && line.includes('👉') && containsPackageGuidesUrl(line, packageName)) {
+      return { line: i + 1 }
+    }
+  }
+
+  return null
+}
+
 const rule: Rule.RuleModule = {
   meta: {
     type: 'problem',
@@ -335,6 +408,8 @@ const rule: Rule.RuleModule = {
       emptyShortDescription: 'README short description must not be empty',
       missingDocumentationLink:
         'README must have a documentation link in format: • 👉 See [**documentation**](https://www.hyperfrontend.dev/docs/libraries/<name>/)',
+      missingGuidesLink:
+        'README must link its guides and tutorials in format: • 👉 See [**guides & tutorials**](https://www.hyperfrontend.dev/docs/guides/?package={{ encodedPackageName }}). The link stays valid while the package has no guides: it addresses the filter, so guides written later surface without another README change.',
       missingSection: "README must have section: '{{ section }}'",
       emptySectionContent: "README section '{{ section }}' must have content",
       sectionOutOfOrder:
@@ -414,6 +489,16 @@ const rule: Rule.RuleModule = {
           context.report({
             node,
             messageId: 'missingDocumentationLink',
+          })
+        }
+
+        // why: The package name is authoritative in package.json; the README title is prose that can drift from it
+        const packageName = readPackageJson(projectRoot)?.name
+        if (packageName && !extractGuidesLink(content, packageName)) {
+          context.report({
+            node,
+            messageId: 'missingGuidesLink',
+            data: { encodedPackageName: encodeURIComponent(packageName) },
           })
         }
 
