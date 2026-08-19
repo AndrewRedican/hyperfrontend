@@ -37,6 +37,7 @@ Production-grade network protocol for secure, real-time cross-window and cross-p
 
 • 👉 See [**documentation**](https://www.hyperfrontend.dev/docs/libraries/network-protocol/)
 • 👉 See [**API reference**](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-reference)
+• 👉 See [**guides & tutorials**](https://www.hyperfrontend.dev/docs/guides/?package=%40hyperfrontend%2Fnetwork-protocol)
 
 ## What is @hyperfrontend/network-protocol?
 
