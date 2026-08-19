@@ -37,6 +37,7 @@ Lightweight, functional state management library with Redux-inspired actions/red
 
 • 👉 See [**documentation**](https://www.hyperfrontend.dev/docs/libraries/state-machine/)
 • 👉 See [**API reference**](https://www.hyperfrontend.dev/docs/libraries/state-machine/#api-reference)
+• 👉 See [**guides & tutorials**](https://www.hyperfrontend.dev/docs/guides/?package=%40hyperfrontend%2Fstate-machine)
 
 ## What is @hyperfrontend/state-machine?
 
