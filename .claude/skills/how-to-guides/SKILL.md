@@ -17,6 +17,8 @@ Understanding why → `explanation`
 
 A how-to ships as a guide unit: `apps/docs-site/content/guides/<slug>/` holding `guide.md` and `meta.json`. Guides are docs-site editorial artifacts. A guide may describe a package, use its APIs, and link to its reference pages, but it never lives inside that package: nothing goes under `libs/<lib>/docs/`, because a file inside a publishable project makes Nx, CI, versioning, and publishing treat the package itself as changed. Read `meta.json` before writing and confirm `type` is `how-to`, `troubleshooting`, or `recipe`. A mismatch is a decision to make, not a formality: change the type or move the content, never leave the two disagreeing.
 
+`troubleshooting` is narrower than the word suggests: it means diagnosing HyperFrontend itself, when one of its APIs, its runtime, or a configuration is not behaving as documented. Teaching a reader to use a HyperFrontend package against a problem their own application or the platform handed them is a `how-to`, no matter how error-shaped the title is. "How to fix `Converting circular structure to JSON`" is a how-to: the error is `JSON.stringify`'s, and the guide teaches `@hyperfrontend/data-utils` as the way through it.
+
 What the body must corroborate:
 
 | Field           | Must agree with                                                                        |
