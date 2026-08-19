@@ -37,6 +37,8 @@
 
 • 👉 See [**documentation**](https://www.hyperfrontend.dev/docs/libraries/<%= libName %>/)
 
+• 👉 See [**guides & tutorials**](https://www.hyperfrontend.dev/docs/guides/?package=<%= packageNameEncoded %>)
+
 ## What is <%= packageName %>?
 
 TODO: Provide an overview of the library and its core functionality.
