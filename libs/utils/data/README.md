@@ -36,6 +36,7 @@
 Comprehensive data structure manipulation with circular reference handling and custom class support.
 
 • 👉 See [**documentation**](https://www.hyperfrontend.dev/docs/libraries/utils/data/)
+• 👉 See [**guides & tutorials**](https://www.hyperfrontend.dev/docs/guides/?package=%40hyperfrontend%2Fdata-utils)
 
 ## What is @hyperfrontend/data-utils?
 
