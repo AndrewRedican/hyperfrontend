@@ -36,6 +36,7 @@
 Functional time utilities for async operations, intervals, and time normalization.
 
 • 👉 See [**documentation**](https://www.hyperfrontend.dev/docs/libraries/utils/time/)
+• 👉 See [**guides & tutorials**](https://www.hyperfrontend.dev/docs/guides/?package=%40hyperfrontend%2Ftime-utils)
 
 ## What is @hyperfrontend/time-utils?
 
