@@ -64,8 +64,14 @@ The sub-module page renders this README plus an auto-generated scoped API refere
 
 ```markdown
 • 👉 See [**documentation**](https://www.hyperfrontend.dev/docs/libraries/<name>/)
+• 👉 See [**guides & tutorials**](https://www.hyperfrontend.dev/docs/guides/?package=%40hyperfrontend%2F<name>)
 • 👉 See [**roadmap**](https://github.com/AndrewRedican/hyperfrontend/blob/main/roadmap/<name>/)
 ```
+
+The guides link is checked by `lib-readme-structure` against `package.json`'s
+`name`, URL-encoded the way the site's own filter encodes it. It points at a
+filter rather than at guide slugs, so it is correct before any guide exists and
+starts surfacing guides the moment they are written.
 
 ---
 

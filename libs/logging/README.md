@@ -36,6 +36,7 @@
 Structured logging with configurable severity levels and error-resilient execution.
 
 • 👉 See [**documentation**](https://www.hyperfrontend.dev/docs/libraries/logging/)
+• 👉 See [**guides & tutorials**](https://www.hyperfrontend.dev/docs/guides/?package=%40hyperfrontend%2Flogging)
 
 ## What is @hyperfrontend/logging?
 

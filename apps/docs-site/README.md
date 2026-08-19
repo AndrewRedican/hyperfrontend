@@ -138,6 +138,10 @@ Slugs are global and flat: the directory name is the URL. Grouping folders are
 deliberately absent, because `meta.json` already carries the taxonomy the site filters
 and sorts on.
 
+`prerequisites.knowledge` entries are authored sentences, so they render through
+`markdownToInlineHtml`: an entry may carry a link or a code span, and nothing else. The
+rest of `meta.json` stays plain text.
+
 The compiler
 (`scripts/generate-guides.ts`) validates metadata, resolves every
 `<!-- snippet: region -->` placeholder from `// ref: [guide:<slug>/<region>] start|end`
@@ -162,6 +166,29 @@ Outputs: `.generated/guides/<slug>/guide.md` (rendered at `/docs/guides/<slug>`)
 `.generated/guides/index.json`, and a public machine-readable copy at
 `/guides/index.json`. Library pages surface their guides from that index; there is no
 hand-maintained guide registry.
+
+#### One filtered destination, many entry points
+
+`/docs/guides/` is the only guides destination, and both of its facets live in the query
+string: `?package=<npm package name>` and `?type=<tutorial|how-to|troubleshooting|recipe>`.
+The semantics are defined once in [src/lib/guide-filters.ts](src/lib/guide-filters.ts) and
+every consumer goes through it: the index page's own controls, the landing page's learning
+cards, each library page's guides link, and `getGuidesForPackage`, which library pages use
+to list a package's guides. There is no second filtering implementation and no
+package-to-guide table: association comes from each unit's `meta.json` `packages`, and the
+selectable package list comes from the documentation manifest, so a package with no guides
+yet is still a valid, shareable filter.
+
+Published package READMEs link the same URL
+(`https://www.hyperfrontend.dev/docs/guides/?package=%40hyperfrontend%2F<name>`), enforced
+by the `lib-readme-structure` ESLint rule against `package.json`'s `name`. Because the link
+addresses a filter rather than guide slugs, it is correct before a package has any guides
+and begins surfacing them the moment they ship, with no README change.
+
+A filtered view with no results is a deliberate empty state, not an error: it names the
+package and offers a prefilled guide request against the `guide_request.yml` issue form
+(`src/lib/guide-request.ts`), using GitHub's own field-prefill query parameters. A populated
+view carries the same request as a quieter secondary action.
 
 Fast authoring loop (skips TypeDoc):
 
@@ -189,6 +216,16 @@ inside one quoted value (`tags`, `packages`, `related`), plus scalar `category` 
 the static build. Articles are served as an Atom feed at `/feed.xml`
 (`src/lib/feed.ts` + `src/app/feed.xml/route.ts`), advertised via the layout's
 `alternates.types`.
+
+### Sharing
+
+One share implementation serves every reader-facing page: `src/lib/share.ts` composes the
+canonical URL and share text, `src/components/share/share-menu.tsx` renders the control, and
+`src/components/share/share-icons.tsx` holds the destination brand marks as inline SVG so a
+handful of icons costs no dependency and no extra request. Articles, how-to guides, and
+tutorials mount the same component with their own title and page line, so the experience does
+not depend on which kind of page the reader is on. Every mark is decorative and paired with a
+visible label.
 
 ---
 
@@ -311,6 +348,8 @@ asset links resolve against `public/` as well as `src/app` routes.
 | `/docs/quick-start`             | Quick Start guide             |
 | `/docs/core-concepts`           | Core Concepts                 |
 | `/docs/guides`                  | Guides index (problem-first)  |
+| `/docs/guides/?package={pkg}`   | Guides filtered to a package  |
+| `/docs/guides/?type={type}`     | Guides filtered to a type     |
 | `/docs/guides/{slug}`           | One compiled guide            |
 | `/docs/libraries/{slug}`        | Library documentation         |
 | `/docs/libraries/utils/{slug}`  | Utils package documentation   |

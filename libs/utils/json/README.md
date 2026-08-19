@@ -36,6 +36,7 @@
 Zero-dependency JSON Schema Draft v4 validation and schema generation utilities.
 
 • 👉 See [**documentation**](https://www.hyperfrontend.dev/docs/libraries/utils/json/)
+• 👉 See [**guides & tutorials**](https://www.hyperfrontend.dev/docs/guides/?package=%40hyperfrontend%2Fjson-utils)
 
 ## What is @hyperfrontend/json-utils?
 

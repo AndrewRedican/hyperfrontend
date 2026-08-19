@@ -11,3 +11,9 @@
  * compiles to `undefined` in the browser.
  */
 export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.hyperfrontend.dev'
+
+/**
+ * Canonical GitHub repository URL, without a trailing slash. Issue, discussion,
+ * and source links compose onto it so the coordinates live in one place.
+ */
+export const REPO_URL = 'https://github.com/AndrewRedican/hyperfrontend'

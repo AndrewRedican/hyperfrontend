@@ -39,6 +39,34 @@ export async function markdownToHtml(markdown: string): Promise<string> {
 }
 
 /**
+ * Convert a single line of markdown to inline HTML, without the wrapping
+ * paragraph.
+ *
+ * For short authored strings that live in metadata rather than in a document
+ * body: a guide's prerequisites, for example, which are sentences an author
+ * writes and should be able to punctuate with a link or a code span. Raw HTML
+ * and syntax highlighting are deliberately absent; a metadata line is a
+ * sentence, not a document.
+ *
+ * @param markdown - One line of markdown
+ * @returns A promise resolving to HTML with no block wrapper
+ *
+ * @example Link and code-format a prerequisite
+ * ```ts
+ * await markdownToInlineHtml('A value that throws on [`JSON.stringify`](https://example.com)')
+ * // 'A value that throws on <a href="https://example.com"><code>JSON.stringify</code></a>'
+ * ```
+ */
+export async function markdownToInlineHtml(markdown: string): Promise<string> {
+  const result = await remark().use(remarkGfm).use(remarkRehype).use(rehypeStringify).process(markdown)
+  return result
+    .toString()
+    .trim()
+    .replace(/^<p>/, '')
+    .replace(/<\/p>$/, '')
+}
+
+/**
  * The subset of a hast node the comment pass needs: its type, and its children
  * when it is a container.
  */

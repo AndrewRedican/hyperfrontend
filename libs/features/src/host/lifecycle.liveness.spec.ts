@@ -36,10 +36,26 @@ function createMockChannel(): MockChannel {
 
 const TARGET = <Window>(<unknown>{ name: 'target' })
 
-function setup() {
+/** Stands in for the iframe an in-document mount reports back, whose visibility the browser slaves to this page's. */
+const FRAME = <HTMLElement>(<unknown>{ tagName: 'IFRAME' })
+
+/** Options for {@link setup}. */
+interface LivenessSetupOptions {
+  /** `true` mounts the feature in this document (an iframe), as embedded and dialog do; omitted leaves it windowed. */
+  inDocument?: boolean
+}
+
+function setup(options: LivenessSetupOptions = {}) {
   const mock = createMockChannel()
   const broker = <BrokerHandle>(<unknown>{ addChannel: jest.fn(() => mock.channel) })
-  const mount = jest.fn((): MountResult => ({ target: TARGET, present: { mode: 'embedded' }, cleanup: jest.fn() }))
+  const mount = jest.fn(
+    (): MountResult => ({
+      target: TARGET,
+      present: { mode: 'embedded' },
+      cleanup: jest.fn(),
+      ...(options.inDocument === true && { element: FRAME }),
+    })
+  )
   const monitor = { beat: jest.fn(), start: jest.fn(), stop: jest.fn(), setObservable: jest.fn(), getStatus: jest.fn() }
   let stateChange: ((status: unknown) => void) | undefined
   const createHeartbeatMonitor = jest.fn(
@@ -102,13 +118,32 @@ describe('createShellHandle liveness states and observability', () => {
     expect(ctx.monitor.setObservable).toHaveBeenLastCalledWith(true)
   })
 
-  it('stays unobservable while either page is hidden', () => {
+  it('keeps a windowed feature unobservable while it reports itself hidden, whatever this page does', () => {
     const ctx = setup()
     ctx.handle.open()
     ctx.mock.trigger('open')
     ctx.triggerVisibility(true)
     ctx.mock.triggerMessage('__hf:visibility', { hidden: true })
     ctx.triggerVisibility(false)
+    expect(ctx.monitor.setObservable).toHaveBeenLastCalledWith(false)
+  })
+
+  it('stops believing an in-document frame is hidden once this page is not', () => {
+    const ctx = setup({ inDocument: true })
+    ctx.handle.open()
+    ctx.mock.trigger('open')
+    ctx.triggerVisibility(true)
+    ctx.mock.triggerMessage('__hf:visibility', { hidden: true })
+    ctx.triggerVisibility(false)
+    // why: The browser slaves an iframe's visibility to its embedder's, so the report cannot still be true — and a frame killed while this page was in the background can never send the one that would clear it.
+    expect(ctx.monitor.setObservable).toHaveBeenLastCalledWith(true)
+  })
+
+  it('still honours an in-document frame reporting itself hidden while this page is visible', () => {
+    const ctx = setup({ inDocument: true })
+    ctx.handle.open()
+    ctx.mock.trigger('open')
+    ctx.mock.triggerMessage('__hf:visibility', { hidden: true })
     expect(ctx.monitor.setObservable).toHaveBeenLastCalledWith(false)
   })
 

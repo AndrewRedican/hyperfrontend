@@ -3,9 +3,11 @@ import { TrackedLink } from '@/components/analytics/tracked-link'
 import { ApiLinkProvider, ApiReference } from '@/components/api-reference'
 import { Breadcrumb } from '@/components/breadcrumb'
 import { CodeBlock } from '@/components/code-block'
+import { SuggestGuideLink } from '@/components/guides/suggest-guide-link'
 import { H2 } from '@/components/heading-with-anchor'
 import { removeBadges, transformLinks } from '@/lib/content'
 import { getLibraryReadme, getLibraryArchitecture, getLibraryApi, getApiLinkIndex } from '@/lib/docs-loader'
+import { buildGuidesHref } from '@/lib/guide-filters'
 import { getGuidesForPackage } from '@/lib/guides'
 import { markdownToHtml } from '@/lib/markdown'
 import { extractMermaidBlocks } from '@/lib/mermaid-utils'
@@ -26,6 +28,8 @@ export async function LibraryDocPage({ title, packageName, slug, fallbackDescrip
   const hasArchitecture = !!getLibraryArchitecture(slug)
   const apiData = getLibraryApi(slug) as TypeDocOutput | null
   const guides = getGuidesForPackage(packageName)
+  // why: The same canonical destination the package README points at, so both entry points land on one filtered view
+  const guidesHref = buildGuidesHref({ package: packageName })
 
   if (readme) {
     let processed = removeBadges(readme)
@@ -56,11 +60,9 @@ export async function LibraryDocPage({ title, packageName, slug, fallbackDescrip
               Architecture →
             </Link>
           )}
-          {guides.length > 0 && (
-            <Link href="/docs/guides" className="text-sm text-primary-600 hover:underline dark:text-primary-400">
-              Guides →
-            </Link>
-          )}
+          <Link href={guidesHref} className="text-sm text-primary-600 hover:underline dark:text-primary-400">
+            Guides &amp; tutorials →
+          </Link>
           {apiData && (
             <a href="#api-reference" className="text-sm text-primary-600 hover:underline dark:text-primary-400">
               API Reference →
@@ -71,25 +73,38 @@ export async function LibraryDocPage({ title, packageName, slug, fallbackDescrip
         <ReadmeContent html={html} mermaidDiagrams={diagrams} />
 
         {/* Guides */}
-        {guides.length > 0 && (
-          <section className="mt-12 border-t border-slate-200 pt-8 dark:border-slate-700">
-            <h2 className="text-lg font-bold text-slate-900 dark:text-white">Guides using {packageName}</h2>
-            <div className="mt-4 grid gap-4 sm:grid-cols-2">
-              {guides.map((guide) => (
-                <Link
-                  key={guide.slug}
-                  href={guide.route}
-                  className="group rounded-lg border border-slate-200 bg-white p-4 transition-colors hover:border-primary-300 hover:bg-primary-50 dark:border-slate-700 dark:bg-slate-900 dark:hover:border-primary-700 dark:hover:bg-primary-950/30"
-                >
-                  <h3 className="font-semibold text-slate-900 group-hover:text-primary-600 dark:text-white dark:group-hover:text-primary-400">
-                    {guide.title}
-                  </h3>
-                  <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">{guide.problem}</p>
+        <section className="mt-12 border-t border-slate-200 pt-8 dark:border-slate-700">
+          <h2 className="text-lg font-bold text-slate-900 dark:text-white">Guides &amp; tutorials for {packageName}</h2>
+          {guides.length > 0 ? (
+            <>
+              <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                {guides.map((guide) => (
+                  <Link
+                    key={guide.slug}
+                    href={guide.route}
+                    className="group rounded-lg border border-slate-200 bg-white p-4 transition-colors hover:border-primary-300 hover:bg-primary-50 dark:border-slate-700 dark:bg-slate-900 dark:hover:border-primary-700 dark:hover:bg-primary-950/30"
+                  >
+                    <h3 className="font-semibold text-slate-900 group-hover:text-primary-600 dark:text-white dark:group-hover:text-primary-400">
+                      {guide.title}
+                    </h3>
+                    <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">{guide.problem}</p>
+                  </Link>
+                ))}
+              </div>
+              <p className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-slate-600 dark:text-slate-400">
+                <Link href={guidesHref} className="font-medium text-primary-600 hover:underline dark:text-primary-400">
+                  Browse them filtered to this package
                 </Link>
-              ))}
-            </div>
-          </section>
-        )}
+                <SuggestGuideLink packageName={packageName} />
+              </p>
+            </>
+          ) : (
+            <p className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-slate-600 dark:text-slate-400">
+              There are none for {packageName} yet.
+              <SuggestGuideLink packageName={packageName} label="Request one" />
+            </p>
+          )}
+        </section>
 
         {/* API Reference */}
         {apiData && (
@@ -142,7 +157,7 @@ export async function LibraryDocPage({ title, packageName, slug, fallbackDescrip
 
       <h1 className="font-display text-4xl font-bold tracking-tight text-slate-900 dark:text-white">{title}</h1>
 
-      <div className="mt-4 flex items-center gap-3">
+      <div className="mt-4 flex flex-wrap items-center gap-3">
         <code className="rounded-lg bg-slate-100 px-3 py-1.5 text-sm font-medium text-slate-700 dark:bg-slate-800 dark:text-slate-300">
           {packageName}
         </code>
@@ -154,6 +169,9 @@ export async function LibraryDocPage({ title, packageName, slug, fallbackDescrip
         >
           View on npm →
         </TrackedLink>
+        <Link href={guidesHref} className="text-sm text-primary-600 hover:underline dark:text-primary-400">
+          Guides &amp; tutorials →
+        </Link>
       </div>
 
       {fallbackDescription && <p className="mt-6 text-lg text-slate-600 dark:text-slate-400">{fallbackDescription}</p>}

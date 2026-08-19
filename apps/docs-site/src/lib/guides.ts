@@ -2,6 +2,8 @@ import type { GuideIndex, GuideIndexEntry } from '../../scripts/generate-guides.
 import { existsSync, readFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { parse } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
+import { getManifest } from './docs-loader'
+import { filterGuides } from './guide-filters'
 
 const GUIDES_DIR = resolve(process.cwd(), '.generated/guides')
 
@@ -63,10 +65,40 @@ export function getGuide(slug: string): Guide | null {
  * @returns Index entries of every guide whose packages list includes the package
  */
 export function getGuidesForPackage(packageName: string): GuideIndexEntry[] {
-  const involved = getGuideIndex().filter((guide) => guide.packages.includes(packageName))
-  return involved.sort((a, b) => {
-    const aOwns = a.packages[0] === packageName ? 0 : 1
-    const bOwns = b.packages[0] === packageName ? 0 : 1
-    return aOwns - bOwns || a.slug.localeCompare(b.slug)
-  })
+  return filterGuides(getGuideIndex(), { package: packageName })
+}
+
+/**
+ * One selectable package in the guides index's package filter.
+ */
+export interface GuidePackageOption {
+  /** npm package name, the filter's URL value */
+  packageName: string
+  /** Library display name */
+  name: string
+  /** How many compiled guides involve the package */
+  guideCount: number
+}
+
+/**
+ * List every documented package as a guides-filter option, with how many
+ * guides each one has.
+ *
+ * The options come from the documentation manifest rather than from the guide
+ * corpus, so a package nobody has written a guide for yet is still selectable
+ * and its shared URL still resolves to a deliberate empty state instead of a
+ * filter the reader cannot see.
+ *
+ * @returns Options for every documented package, display-name sorted
+ */
+export function getGuidePackageOptions(): GuidePackageOption[] {
+  const guides = getGuideIndex()
+  const libraries = getManifest()?.libraries ?? []
+  return libraries
+    .map((library) => ({
+      packageName: library.packageName,
+      name: library.name,
+      guideCount: guides.filter((guide) => guide.packages.includes(library.packageName)).length,
+    }))
+    .sort((a, b) => a.packageName.localeCompare(b.packageName))
 }

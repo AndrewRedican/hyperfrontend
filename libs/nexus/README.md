@@ -39,6 +39,8 @@ Secure cross-window communication library for micro-frontends with contract-vali
 
 • 👉 See [**API reference**](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-reference)
 
+• 👉 See [**guides & tutorials**](https://www.hyperfrontend.dev/docs/guides/?package=%40hyperfrontend%2Fnexus)
+
 ## What is @hyperfrontend/nexus?
 
 Two windows talking over `postMessage` share a string and nothing else: no agreement on which message types exist, no way to tell whether anyone is listening, no signal when the other side goes away. Nexus puts a broker in front of that. One broker per app manages a channel per counterpart window or frame, and every channel carries a contract, the message types each side sends and accepts, exchanged during a three-way handshake. Types outside the contract are dropped, messages from an origin other than the pinned one are ignored, and the connection state is something you subscribe to instead of infer.

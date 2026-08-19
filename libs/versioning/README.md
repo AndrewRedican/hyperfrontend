@@ -35,6 +35,7 @@ Versioning library with changelog parsing, conventional commits, and semver flow
 
 • 👉 See [**documentation**](https://www.hyperfrontend.dev/docs/libraries/versioning/)
 • 👉 See [**roadmap**](https://github.com/AndrewRedican/hyperfrontend/blob/main/roadmap/versioning/)
+• 👉 See [**guides & tutorials**](https://www.hyperfrontend.dev/docs/guides/?package=%40hyperfrontend%2Fversioning)
 
 ## What is @hyperfrontend/versioning?
 

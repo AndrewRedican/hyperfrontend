@@ -3,6 +3,7 @@ import { createTempWorkspaceManager } from '../testing'
 import rule, {
   extractBadgesBlock,
   extractDocumentationLink,
+  extractGuidesLink,
   extractShortDescription,
   extractTitle,
   parseMarkdownSections,
@@ -30,11 +31,13 @@ const validProjectJson = {
  *
  * @param config - Configuration for the temporary project.
  * @param config.projectJson - The project.json content.
+ * @param config.packageJson - The package.json content, omitted when the test does not need one.
  * @returns The path to the temporary project directory.
  */
-function createTempProject(config: { projectJson: object }): string {
+function createTempProject(config: { projectJson: object; packageJson?: object }): string {
   const workspace = manager.create({
     projectJson: config.projectJson,
+    packageJson: config.packageJson,
     directories: ['src'],
   })
   return workspace.root
@@ -85,6 +88,8 @@ function createValidReadme(packageName = 'test-library'): string {
 A short description of this library for testing purposes.
 
 • 👉 See [**documentation**](https://www.hyperfrontend.dev/docs/libraries/${packageName}/)
+
+• 👉 See [**guides & tutorials**](https://www.hyperfrontend.dev/docs/guides/?package=%40hyperfrontend%2F${packageName})
 
 ## What is @hyperfrontend/${packageName}?
 
@@ -156,6 +161,7 @@ describe('lib-readme-structure', () => {
       expect(messageIds).toContain('missingBadge')
       expect(messageIds).toContain('missingShortDescription')
       expect(messageIds).toContain('missingDocumentationLink')
+      expect(messageIds).toContain('missingGuidesLink')
       expect(messageIds).toContain('missingSection')
       expect(messageIds).toContain('emptySectionContent')
       expect(messageIds).toContain('sectionOutOfOrder')
@@ -284,6 +290,42 @@ A description`
 ## Content`
       const result = extractDocumentationLink(content)
       expect(result).toEqual({ line: 3 })
+    })
+  })
+
+  describe('extractGuidesLink', () => {
+    it('finds the package-filtered guides link', () => {
+      const content = `# Title
+
+• 👉 See [**guides & tutorials**](https://www.hyperfrontend.dev/docs/guides/?package=%40hyperfrontend%2Ftest)
+
+## Content`
+      expect(extractGuidesLink(content, '@hyperfrontend/test')).toEqual({ line: 3 })
+    })
+
+    it('returns null when the guides link is absent', () => {
+      const content = '# Title\n\n• 👉 See [**documentation**](https://www.hyperfrontend.dev/docs/libraries/test/)'
+      expect(extractGuidesLink(content, '@hyperfrontend/test')).toBeNull()
+    })
+
+    it('returns null when the link filters to a different package', () => {
+      const content = '# Title\n\n• 👉 See [**guides**](https://www.hyperfrontend.dev/docs/guides/?package=%40hyperfrontend%2Fother)'
+      expect(extractGuidesLink(content, '@hyperfrontend/test')).toBeNull()
+    })
+
+    it('returns null when the guides link carries no package filter', () => {
+      const content = '# Title\n\n• 👉 See [**guides**](https://www.hyperfrontend.dev/docs/guides/)'
+      expect(extractGuidesLink(content, '@hyperfrontend/test')).toBeNull()
+    })
+
+    it('returns null when the target is not a parseable URL', () => {
+      const content = '# Title\n\n• 👉 See [**guides**](/docs/guides/?package=%40hyperfrontend%2Ftest)'
+      expect(extractGuidesLink(content, '@hyperfrontend/test')).toBeNull()
+    })
+
+    it('returns null when the link is unterminated', () => {
+      const content = '# Title\n\n• 👉 See [**guides**](https://www.hyperfrontend.dev/docs/guides/?package=test'
+      expect(extractGuidesLink(content, '@hyperfrontend/test')).toBeNull()
     })
   })
 
@@ -570,11 +612,50 @@ npm install
     })
 
     it('does not report errors for valid README', () => {
-      const dir = createTempProject({ projectJson: validProjectJson })
+      const dir = createTempProject({ projectJson: validProjectJson, packageJson: { name: '@hyperfrontend/test' } })
       const reportMock = jest.fn()
       const context = {
         filename: join(dir, 'README.md'),
         sourceCode: { getText: () => createValidReadme('test') },
+        report: reportMock,
+      }
+      // @ts-expect-error - partial mock
+      const listener = rule.create(context)
+      const mockNode = { type: 'root' }
+      // @ts-expect-error - partial mock
+      listener.root?.(mockNode)
+
+      expect(reportMock).not.toHaveBeenCalled()
+    })
+
+    it('reports a README that never links its package-filtered guides', () => {
+      const dir = createTempProject({ projectJson: validProjectJson, packageJson: { name: '@hyperfrontend/test' } })
+      const reportMock = jest.fn()
+      const context = {
+        filename: join(dir, 'README.md'),
+        sourceCode: { getText: () => createValidReadme('test').replace(/^• 👉 See \[\*\*guides.*$/m, '') },
+        report: reportMock,
+      }
+      // @ts-expect-error - partial mock
+      const listener = rule.create(context)
+      const mockNode = { type: 'root' }
+      // @ts-expect-error - partial mock
+      listener.root?.(mockNode)
+
+      expect(reportMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          messageId: 'missingGuidesLink',
+          data: { encodedPackageName: '%40hyperfrontend%2Ftest' },
+        })
+      )
+    })
+
+    it('skips the guides link check when the project has no package.json to name the package', () => {
+      const dir = createTempProject({ projectJson: validProjectJson })
+      const reportMock = jest.fn()
+      const context = {
+        filename: join(dir, 'README.md'),
+        sourceCode: { getText: () => createValidReadme('test').replace(/^• 👉 See \[\*\*guides.*$/m, '') },
         report: reportMock,
       }
       // @ts-expect-error - partial mock

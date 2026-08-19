@@ -105,7 +105,42 @@ describe('createHeartbeatMonitor', () => {
     expect(onUnresponsive).not.toHaveBeenCalled()
     jest.advanceTimersByTime(1000)
     expect(onUnresponsive).toHaveBeenCalledTimes(1)
-    expect(states).toEqual(['healthy', 'unobservable', 'healthy', 'suspect'])
+    expect(states).toEqual(['healthy', 'unobservable', 'suspect'])
+  })
+
+  it('stays unobservable after watching resumes until a beat proves the feature is there', () => {
+    const states: string[] = []
+    const monitor = createHeartbeatMonitor(jest.fn(), (status) => states.push(status.state))
+    monitor.start()
+    monitor.setObservable(false)
+    monitor.setObservable(true)
+    jest.advanceTimersByTime(2000)
+    expect(states).toEqual(['healthy', 'unobservable'])
+    monitor.beat()
+    expect(states).toEqual(['healthy', 'unobservable', 'healthy'])
+  })
+
+  it('never calls a hidden feature healthy on a beat, because silence there is not evidence either', () => {
+    const states: string[] = []
+    const monitor = createHeartbeatMonitor(jest.fn(), (status) => states.push(status.state))
+    monitor.start()
+    monitor.setObservable(false)
+    monitor.beat()
+    expect(states).toEqual(['healthy', 'unobservable'])
+  })
+
+  it('declares a feature that went quiet while hidden suspect rather than healthy on return', () => {
+    const states: string[] = []
+    const onUnresponsive = jest.fn()
+    const monitor = createHeartbeatMonitor(onUnresponsive, (status) => states.push(status.state))
+    monitor.start()
+    monitor.beat()
+    monitor.setObservable(false)
+    jest.advanceTimersByTime(60_000)
+    monitor.setObservable(true)
+    jest.advanceTimersByTime(3000)
+    expect(states).toEqual(['healthy', 'unobservable', 'suspect'])
+    expect(onUnresponsive).toHaveBeenCalledTimes(1)
   })
 
   it('starts as unobservable when hidden before start', () => {

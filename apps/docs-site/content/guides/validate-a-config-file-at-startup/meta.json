@@ -1,0 +1,58 @@
+{
+  "schemaVersion": 1,
+  "type": "how-to",
+  "title": "How to validate a config file at startup",
+  "problem": "A wrong value in a config file does not fail where it is written, it fails hours later somewhere unrelated, and fixing one mistake only reveals the next one.",
+  "outcome": "A schema derived from a config you already trust and tightened by hand, a boot that refuses a bad file and names every problem in it at once with the path to each, and the same check reusable for payloads that arrive later.",
+  "priority": "P0",
+  "packages": ["@hyperfrontend/json-utils"],
+  "verification": {
+    "kind": "authored",
+    "verifiedAgainst": "@hyperfrontend/json-utils@0.1.1",
+    "verifiedOn": "2026-08-19"
+  },
+  "complexity": "beginner",
+  "estMinutes": 12,
+  "apis": [
+    {
+      "package": "@hyperfrontend/json-utils",
+      "symbol": "validate"
+    },
+    {
+      "package": "@hyperfrontend/json-utils",
+      "symbol": "createValidator"
+    },
+    {
+      "package": "@hyperfrontend/json-utils",
+      "symbol": "toJsonSchema"
+    },
+    {
+      "package": "@hyperfrontend/json-utils",
+      "symbol": "Schema"
+    },
+    {
+      "package": "@hyperfrontend/json-utils",
+      "symbol": "ValidationError"
+    }
+  ],
+  "prerequisites": {
+    "knowledge": ["A Node.js service or CLI that reads a JSON config file"]
+  },
+  "related": {
+    "reference": ["/docs/libraries/utils/json"]
+  },
+  "keywords": [
+    "JSON Schema",
+    "config",
+    "configuration",
+    "validation",
+    "validate",
+    "Draft v4",
+    "startup",
+    "fail fast",
+    "schema generation",
+    "webhook payload",
+    "additionalProperties",
+    "ReDoS"
+  ]
+}

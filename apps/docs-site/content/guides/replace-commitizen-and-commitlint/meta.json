@@ -1,0 +1,54 @@
+{
+  "schemaVersion": 1,
+  "type": "how-to",
+  "title": "How to replace commitizen and commitlint with one package",
+  "problem": "Guided commit authoring and commit-message linting take four packages and two config files that have to be kept agreeing with each other, and the prompt still offers types the linter rejects.",
+  "outcome": "One dev dependency and one config file driving both halves: a guided cz session whose choices come from your staged files, and a cl check running in the commit-msg hook and again on every pull request.",
+  "priority": "P1",
+  "packages": ["@hyperfrontend/versioning"],
+  "verification": {
+    "kind": "authored",
+    "verifiedAgainst": "@hyperfrontend/versioning@0.6.2",
+    "verifiedOn": "2026-08-19"
+  },
+  "complexity": "beginner",
+  "estMinutes": 15,
+  "apis": [
+    {
+      "package": "@hyperfrontend/versioning",
+      "symbol": "PartialSessionConfig"
+    },
+    {
+      "package": "@hyperfrontend/versioning",
+      "symbol": "Ruleset"
+    },
+    {
+      "package": "@hyperfrontend/versioning",
+      "symbol": "RuleConfig"
+    }
+  ],
+  "prerequisites": {
+    "knowledge": [
+      "A git repository using [Conventional Commits](https://www.conventionalcommits.org/)",
+      "A git hook manager such as husky or lefthook, or the willingness to add one"
+    ]
+  },
+  "related": {
+    "reference": ["/docs/libraries/versioning", "/docs/libraries/versioning/bin", "/docs/libraries/versioning/commits/validate"]
+  },
+  "keywords": [
+    "commitizen",
+    "commitlint",
+    "conventional commits",
+    "cz",
+    "cl",
+    "commit-msg",
+    "husky",
+    "lefthook",
+    "git hook",
+    "commit.config.js",
+    "scope",
+    "ruleset",
+    "migration"
+  ]
+}

@@ -36,6 +36,7 @@
 Purpose-built collection utilities for queue management, filtering, and iteration patterns.
 
 • 👉 See [**documentation**](https://www.hyperfrontend.dev/docs/libraries/utils/list/)
+• 👉 See [**guides & tutorials**](https://www.hyperfrontend.dev/docs/guides/?package=%40hyperfrontend%2Flist-utils)
 
 ## What is @hyperfrontend/list-utils?
 

@@ -36,6 +36,7 @@
 Decorators and utilities for creating immutable, tamper-proof object APIs with built-in prototype pollution defense.
 
 • 👉 See [**documentation**](https://www.hyperfrontend.dev/docs/libraries/utils/immutable-api/)
+• 👉 See [**guides & tutorials**](https://www.hyperfrontend.dev/docs/guides/?package=%40hyperfrontend%2Fimmutable-api-utils)
 
 ## What is @hyperfrontend/immutable-api-utils?
 

@@ -1,0 +1,32 @@
+name: 📘 Guide Request
+description: Ask for a how-to guide or tutorial covering something you are trying to do
+title: '[GUIDE] '
+labels: [documentation]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Guides are written from real problems. Tell us the one you have and we will know what to write.
+  - type: input
+    id: package
+    attributes:
+      label: Package
+      description: The `@hyperfrontend/…` package the guide should cover. Prefilled when you arrive from a package's guides page.
+      placeholder: '@hyperfrontend/nexus'
+    validations:
+      required: false
+  - type: textarea
+    id: goal
+    attributes:
+      label: What are you trying to accomplish?
+      description: The task or problem in your own words. A concrete situation beats a topic name.
+      placeholder: I need to keep an idle timeout running across a dialog that pauses it, and every version I write drifts.
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Anything you already tried or read?
+      description: Optional. Docs pages that got close, approaches that did not work, or the error you keep hitting.
+    validations:
+      required: false

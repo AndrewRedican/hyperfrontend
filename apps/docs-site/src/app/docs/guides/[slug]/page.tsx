@@ -4,11 +4,12 @@ import { GuideTypeBadge, VerificationBadge } from '@/components/guides/guide-bad
 import { ReadmeContent } from '@/components/readme-content'
 import { ShareMenu } from '@/components/share/share-menu'
 import { getAllGuideSlugs, getGuide, getGuideIndex } from '@/lib/guides'
-import { markdownToHtml } from '@/lib/markdown'
+import { markdownToHtml, markdownToInlineHtml } from '@/lib/markdown'
 import { extractMermaidBlocks } from '@/lib/mermaid-utils'
 import { getGuideMetadata } from '@/lib/metadata'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
+import { promiseAll } from '@hyperfrontend/immutable-api-utils/built-in-copy/promise'
 
 /**
  * Route parameters for a guide page.
@@ -51,6 +52,8 @@ export default async function GuidePage({ params }: GuidePageProps) {
   const index = getGuideIndex()
   const prerequisiteGuides = (guide.prerequisites?.guides ?? []).flatMap((ref) => index.filter((entry) => entry.slug === ref))
   const relatedGuides = (guide.related?.guides ?? []).flatMap((ref) => index.filter((entry) => entry.slug === ref))
+  // why: Prerequisites are authored sentences, so an API they name can carry its own reference link instead of going bare
+  const prerequisiteKnowledge: string[] = await promiseAll((guide.prerequisites?.knowledge ?? []).map(markdownToInlineHtml))
 
   return (
     <div className="mx-auto max-w-4xl">
@@ -83,7 +86,7 @@ export default async function GuidePage({ params }: GuidePageProps) {
         ))}
       </div>
 
-      {prerequisiteGuides.length > 0 || (guide.prerequisites?.knowledge?.length ?? 0) > 0 ? (
+      {prerequisiteGuides.length > 0 || prerequisiteKnowledge.length > 0 ? (
         <aside className="mb-8 rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm dark:border-slate-700 dark:bg-slate-800/50">
           <p className="font-semibold text-slate-900 dark:text-white">Before you start</p>
           <ul className="mt-2 space-y-1 text-slate-600 dark:text-slate-400">
@@ -94,8 +97,12 @@ export default async function GuidePage({ params }: GuidePageProps) {
                 </Link>
               </li>
             ))}
-            {(guide.prerequisites?.knowledge ?? []).map((item) => (
-              <li key={item}>{item}</li>
+            {prerequisiteKnowledge.map((item) => (
+              <li
+                key={item}
+                className="[&_a:hover]:underline [&_a]:text-primary-600 dark:[&_a]:text-primary-400 [&_code]:rounded [&_code]:bg-slate-200/70 [&_code]:px-1 [&_code]:py-0.5 [&_code]:font-mono [&_code]:text-xs dark:[&_code]:bg-slate-700/70"
+                dangerouslySetInnerHTML={{ __html: item }}
+              />
             ))}
           </ul>
         </aside>

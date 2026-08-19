@@ -429,6 +429,9 @@ export function ValueProposition() {
           <GitHubIcon className="mr-2 h-4 w-4" />
           GitHub
         </TrackedLink>
+        <Link href="/docs/guides" className="btn-ghost">
+          Guides
+        </Link>
         <Link href="/demos" className="btn-ghost">
           Demos
         </Link>

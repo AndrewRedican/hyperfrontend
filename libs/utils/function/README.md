@@ -36,6 +36,7 @@
 Higher-order function utilities for behavioral modification and composition.
 
 • 👉 See [**documentation**](https://www.hyperfrontend.dev/docs/libraries/utils/function/)
+• 👉 See [**guides & tutorials**](https://www.hyperfrontend.dev/docs/guides/?package=%40hyperfrontend%2Ffunction-utils)
 
 ## What is @hyperfrontend/function-utils?
 

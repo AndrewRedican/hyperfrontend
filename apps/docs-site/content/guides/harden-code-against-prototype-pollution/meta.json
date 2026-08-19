@@ -1,0 +1,64 @@
+{
+  "schemaVersion": 1,
+  "type": "how-to",
+  "title": "How to harden your code against prototype pollution",
+  "problem": "Anything else running on the page can add to Object.prototype or reassign a built-in like Array.isArray, and my authorisation checks, serialisers, and dispatch tables inherit the lie without an error anywhere.",
+  "outcome": "Built-in references captured before untrusted code runs, own-property checks that a polluted prototype cannot answer for, and lookup objects with no prototype chain to inherit from.",
+  "priority": "P0",
+  "packages": ["@hyperfrontend/immutable-api-utils"],
+  "verification": {
+    "kind": "authored",
+    "verifiedAgainst": "@hyperfrontend/immutable-api-utils@0.1.4",
+    "verifiedOn": "2026-08-19"
+  },
+  "complexity": "intermediate",
+  "estMinutes": 10,
+  "apis": [
+    {
+      "package": "@hyperfrontend/immutable-api-utils",
+      "symbol": "hasOwn"
+    },
+    {
+      "package": "@hyperfrontend/immutable-api-utils",
+      "symbol": "keys"
+    },
+    {
+      "package": "@hyperfrontend/immutable-api-utils",
+      "symbol": "create"
+    },
+    {
+      "package": "@hyperfrontend/immutable-api-utils",
+      "symbol": "isArray"
+    },
+    {
+      "package": "@hyperfrontend/immutable-api-utils",
+      "symbol": "stringify"
+    }
+  ],
+  "prerequisites": {
+    "knowledge": ["A JavaScript or TypeScript project with an entry module you control"]
+  },
+  "related": {
+    "reference": [
+      "/docs/libraries/utils/immutable-api",
+      "/docs/libraries/utils/immutable-api/built-in-copy/object",
+      "/docs/libraries/utils/immutable-api/built-in-copy/array",
+      "/docs/libraries/utils/immutable-api/built-in-copy/json"
+    ],
+    "explanation": ["/docs/core-concepts/security"]
+  },
+  "keywords": [
+    "prototype pollution",
+    "__proto__",
+    "Object.prototype",
+    "monkey patching",
+    "built-in copy",
+    "hasOwn",
+    "hasOwnProperty",
+    "create(null)",
+    "null prototype",
+    "supply chain",
+    "third-party script",
+    "tamper"
+  ]
+}

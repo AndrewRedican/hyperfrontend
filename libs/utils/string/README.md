@@ -36,6 +36,7 @@
 Isomorphic string encoding utilities with unified APIs for browser and Node.js environments.
 
 • 👉 See [**documentation**](https://www.hyperfrontend.dev/docs/libraries/utils/string/)
+• 👉 See [**guides & tutorials**](https://www.hyperfrontend.dev/docs/guides/?package=%40hyperfrontend%2Fstring-utils)
 
 ## What is @hyperfrontend/string-utils?
 

@@ -2,6 +2,7 @@ import { dateNow } from '@hyperfrontend/immutable-api-utils/built-in-copy/date'
 import { clearInterval, setInterval } from '@hyperfrontend/immutable-api-utils/built-in-copy/timers'
 
 // note: The watchdog counts ticks since the last beat; a beat resets the count. While the page pair is unobservable (either side hidden), ticks pause — a throttled timer's silence is weak evidence. Crossing the miss threshold enters 'suspect' and fires the unresponsive callback once per episode; a later beat recovers to 'healthy' and re-arms it.
+// note: 'healthy' is only ever spoken on evidence — the handshake that starts the watchdog, or a beat. Resuming observation grants a fresh miss budget but says nothing, because nothing has been heard yet.
 const BEAT_INTERVAL_MS = 1000
 const MISS_THRESHOLD = 3
 
@@ -9,8 +10,10 @@ const MISS_THRESHOLD = 3
  * Liveness state of the connected feature, as judged by the watchdog.
  *
  * - `healthy`: beats are arriving within the expected budget.
- * - `unobservable`: the host page or the feature page is hidden, so browser
- *   timer throttling makes silence weak evidence; the watchdog pauses.
+ * - `unobservable`: silence carries no information yet. Either a page is
+ *   hidden, so browser timer throttling makes the quiet meaningless and the
+ *   watchdog pauses, or watching has just resumed and no beat has arrived to
+ *   earn `healthy` back.
  * - `suspect`: the pages are visible and the miss budget is exhausted; the
  *   feature is probably unhealthy.
  * - `gone`: the session is closed or destroyed (or not yet open).
@@ -91,8 +94,9 @@ export function createHeartbeatMonitor(
     beat() {
       missed = 0
       lastBeatAt = dateNow()
-      // why: A beat is positive evidence of life — it ends a suspect episode and re-arms the unresponsive callback for the next one. Suspect implies observable (ticks pause while hidden, and hiding leaves suspect), so recovery is always to healthy.
-      if (timer !== undefined && state === 'suspect') {
+      // why: A beat is the only positive evidence of life there is — it ends a suspect episode, it is what earns `healthy` back after watching resumes, and it re-arms the unresponsive callback for the next episode.
+      // why: While a page is hidden it does no more than keep the budget full. Silence means nothing there, so a beat is not a verdict there either, and the pair stays honestly unobservable.
+      if (timer !== undefined && observable && state !== 'healthy') {
         transition('healthy')
       }
     },
@@ -127,8 +131,8 @@ export function createHeartbeatMonitor(
         return
       }
       // why: Returning to observability grants a fresh miss budget — beats throttled while hidden need time to resume before silence means anything again.
+      // why: It does not grant health. Nothing has been heard since watching stopped, and a frame the browser killed while this page sat in the background will never be heard from again — calling that `healthy` hands every host a proof of life no beat backs, and readmits a dead frame to the scene on every return to the tab. The next beat says healthy; its absence says suspect.
       missed = 0
-      transition('healthy')
     },
     getStatus,
   }

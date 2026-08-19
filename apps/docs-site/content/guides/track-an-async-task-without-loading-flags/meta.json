@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 1,
+  "type": "how-to",
+  "title": "How to track an async task without loading flags",
+  "problem": "isLoading and error cannot tell a background refresh from a first load or a retry from a fresh failure, so my spinner hides rows I already had and my error banner vanishes the moment someone clicks retry.",
+  "outcome": "One operation driving four distinct screens: an empty state, a first-load skeleton, a refresh that keeps the previous rows up, and a retry that keeps the error visible while it runs.",
+  "priority": "P0",
+  "packages": ["@hyperfrontend/state-machine"],
+  "verification": {
+    "kind": "authored",
+    "verifiedAgainst": "@hyperfrontend/state-machine@0.2.0",
+    "verifiedOn": "2026-08-19"
+  },
+  "complexity": "beginner",
+  "estMinutes": 12,
+  "apis": [
+    {
+      "package": "@hyperfrontend/state-machine",
+      "symbol": "AsyncOperation"
+    },
+    {
+      "package": "@hyperfrontend/state-machine",
+      "symbol": "AsyncProcess"
+    },
+    {
+      "package": "@hyperfrontend/state-machine",
+      "symbol": "DerivedState"
+    },
+    {
+      "package": "@hyperfrontend/state-machine",
+      "symbol": "Store"
+    }
+  ],
+  "prerequisites": {
+    "knowledge": ["A view that loads data and can be refreshed or retried"]
+  },
+  "related": {
+    "reference": ["/docs/libraries/state-machine", "/docs/libraries/state-machine/async-operation", "/docs/libraries/state-machine/models"],
+    "explanation": ["/docs/libraries/state-machine/architecture"]
+  },
+  "keywords": [
+    "isLoading",
+    "loading state",
+    "async",
+    "AsyncOperation",
+    "retry",
+    "refresh",
+    "stale while revalidate",
+    "skeleton",
+    "spinner",
+    "error banner",
+    "state machine",
+    "derived state"
+  ]
+}

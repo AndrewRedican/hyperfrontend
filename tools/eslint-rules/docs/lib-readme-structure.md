@@ -39,6 +39,29 @@ Must include a documentation link in format:
 • 👉 See [**documentation**](https://www.hyperfrontend.dev/docs/libraries/<name>/)
 ```
 
+### Guides Link
+
+Must also link the package's guides and tutorials, filtered to this package:
+
+```
+• 👉 See [**guides & tutorials**](https://www.hyperfrontend.dev/docs/guides/?package=<url-encoded package name>)
+```
+
+The package name is read from `package.json`, so the link is checked against the
+package the README actually ships with rather than the title text. The value is
+URL-encoded exactly as the site's own filter controls encode it
+(`%40hyperfrontend%2Fnexus`), so a link shared from the site and a link written
+in a README are the same URL.
+
+The link addresses a filter, not a list of guide slugs, which is the point: a
+package with no guides yet still gets a working link, and guides written later
+surface from the already-published README without another release. The filtered
+page has a deliberate empty state that invites a guide request.
+
+When a project has no `package.json`, this check is skipped: without a package
+name there is nothing to filter on. `lib-pkg-fields` is the rule that requires
+the field.
+
 ### Required Sections (in order)
 
 1. **What is @hyperfrontend/<name>?** - Library description
@@ -152,6 +175,8 @@ Should come before Installation.
 Utility functions for common operations.
 
 • 👉 See [**documentation**](https://www.hyperfrontend.dev/docs/libraries/utils/)
+
+• 👉 See [**guides & tutorials**](https://www.hyperfrontend.dev/docs/guides/?package=%40hyperfrontend%2Futils)
 
 ## What is @hyperfrontend/utils?
 

@@ -36,6 +36,7 @@
 Comprehensive project analysis, technology stack detection, and transactional virtual file system for Node.js tooling.
 
 • 👉 See [**documentation**](https://www.hyperfrontend.dev/docs/libraries/project-scope/)
+• 👉 See [**guides & tutorials**](https://www.hyperfrontend.dev/docs/guides/?package=%40hyperfrontend%2Fproject-scope)
 
 ## What is @hyperfrontend/project-scope?
 

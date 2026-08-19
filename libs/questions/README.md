@@ -36,6 +36,7 @@
 Terminal prompting library with composable, functional API for text, select, confirm, and multiselect prompts
 
 • 👉 See [**documentation**](https://www.hyperfrontend.dev/docs/libraries/questions/)
+• 👉 See [**guides & tutorials**](https://www.hyperfrontend.dev/docs/guides/?package=%40hyperfrontend%2Fquestions)
 
 ## What is @hyperfrontend/questions?
 
