@@ -37,6 +37,7 @@ Modular DOM utilities for dynamic styling, gesture detection, element lifecycle,
 
 • 👉 See [**documentation**](https://www.hyperfrontend.dev/docs/libraries/utils/ui/)
 • 👉 See [**API reference**](https://www.hyperfrontend.dev/docs/libraries/utils/ui/#api-reference)
+• 👉 See [**guides & tutorials**](https://www.hyperfrontend.dev/docs/guides/?package=%40hyperfrontend%2Fui-utils)
 
 ## What is @hyperfrontend/ui-utils?
 
