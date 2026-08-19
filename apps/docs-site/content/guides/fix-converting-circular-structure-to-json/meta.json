@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "type": "troubleshooting",
+  "type": "how-to",
   "title": "How to fix \"Converting circular structure to JSON\"",
   "problem": "JSON.stringify throws on an object graph with back references, the engine names only one of them, and every edge I remove reveals another.",
   "outcome": "A list of every loop in the value, a copy that serialises with those edges replaced by path pointers, and the original graph untouched.",

@@ -69,7 +69,18 @@ export interface GuideRelated {
 export interface GuideMeta {
   /** Schema version; currently always 1 */
   schemaVersion: number
-  /** Diátaxis-aligned document type */
+  /**
+   * Diátaxis-aligned document type.
+   *
+   * `tutorial` teaches through a progressive lesson that leaves the reader
+   * with something built. `how-to` takes a reader who already has a task from
+   * their problem to a working outcome. `troubleshooting` is narrower than it
+   * sounds here: it means diagnosing HyperFrontend itself, when an API,
+   * runtime, or configuration is not behaving as documented. Teaching someone
+   * to use a HyperFrontend package against a problem their own application
+   * has is a `how-to`, however error-shaped the title. `recipe` is a short,
+   * copyable answer to a narrow question.
+   */
   type: 'tutorial' | 'how-to' | 'troubleshooting' | 'recipe'
   /** Guide title, matching the guide.md H1 */
   title: string
