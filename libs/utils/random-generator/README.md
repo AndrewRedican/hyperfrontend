@@ -36,6 +36,7 @@
 Statistical random distributions and UUID generation for simulations, testing, and procedural content.
 
 • 👉 See [**documentation**](https://www.hyperfrontend.dev/docs/libraries/utils/random-generator/)
+• 👉 See [**guides & tutorials**](https://www.hyperfrontend.dev/docs/guides/?package=%40hyperfrontend%2Frandom-generator-utils)
 
 ## What is @hyperfrontend/random-generator-utils?
 
