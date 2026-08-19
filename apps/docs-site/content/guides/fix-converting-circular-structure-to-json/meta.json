@@ -28,7 +28,9 @@
     }
   ],
   "prerequisites": {
-    "knowledge": ["A value that already throws on JSON.stringify"]
+    "knowledge": [
+      "A value that already throws on [`JSON.stringify`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify)"
+    ]
   },
   "related": {
     "reference": ["/docs/libraries/utils/data"]

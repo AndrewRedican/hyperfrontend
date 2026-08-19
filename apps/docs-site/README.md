@@ -138,6 +138,10 @@ Slugs are global and flat: the directory name is the URL. Grouping folders are
 deliberately absent, because `meta.json` already carries the taxonomy the site filters
 and sorts on.
 
+`prerequisites.knowledge` entries are authored sentences, so they render through
+`markdownToInlineHtml`: an entry may carry a link or a code span, and nothing else. The
+rest of `meta.json` stays plain text.
+
 The compiler
 (`scripts/generate-guides.ts`) validates metadata, resolves every
 `<!-- snippet: region -->` placeholder from `// ref: [guide:<slug>/<region>] start|end`
