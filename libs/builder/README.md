@@ -36,6 +36,7 @@
 Composable, vendor-neutral build toolkit for TypeScript libraries, JS bins, and Node SEA native binaries.
 
 • 👉 See [**documentation**](https://www.hyperfrontend.dev/docs/libraries/builder/)
+• 👉 See [**guides & tutorials**](https://www.hyperfrontend.dev/docs/guides/?package=%40hyperfrontend%2Fbuilder)
 
 ## What is @hyperfrontend/builder?
 
