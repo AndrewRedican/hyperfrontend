@@ -130,10 +130,6 @@ function classifiedCommitToItem(classified: ClassifiedCommit): ChangelogItem {
     text = `${scopePrefix}${text}`
   }
 
-  if (commit.breaking) {
-    text = `⚠️ BREAKING: ${text}`
-  }
-
   return createChangelogItem(text, {
     source: classified.source,
     indirect,
@@ -155,11 +151,7 @@ function commitToItem(commit: ConventionalCommit): ChangelogItem {
     text = `${scopePrefix}${text}`
   }
 
-  if (commit.breaking) {
-    text = `⚠️ BREAKING: ${text}`
-  }
-
-  return createChangelogItem(text)
+  return createChangelogItem(text, { breaking: commit.breaking })
 }
 
 /**
@@ -330,7 +322,7 @@ export function createGenerateChangelogStep(): FlowStep {
               breakingCommits.map((c) => {
                 const text = c.breakingDescription ?? c.subject
                 const prefix = formatScopePrefix(c.scope)
-                return createChangelogItem(prefix ? `${prefix}${text}` : text)
+                return createChangelogItem(prefix ? `${prefix}${text}` : text, { breaking: true })
               })
             )
           )

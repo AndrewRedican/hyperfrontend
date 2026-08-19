@@ -185,7 +185,7 @@ describe('Generate Changelog Step', () => {
       expect(breakingSection?.items[0].description).toContain('**core:**')
     })
 
-    it('adds breaking indicator to feature items', async () => {
+    it('flags breaking feature items', async () => {
       const step = createGenerateChangelogStep()
       const ctx = createMockContext({
         nextVersion: '2.0.0',
@@ -203,7 +203,7 @@ describe('Generate Changelog Step', () => {
 
       const entry = result.stateUpdates?.changelogEntry
       const featuresSection = entry.sections.find((s: { type: string }) => s.type === 'features')
-      expect(featuresSection?.items[0].description).toContain('⚠️ BREAKING:')
+      expect(featuresSection?.items[0]).toEqual(expect.objectContaining({ description: 'breaking feature', breaking: true }))
     })
   })
 
