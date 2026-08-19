@@ -213,6 +213,16 @@ the static build. Articles are served as an Atom feed at `/feed.xml`
 (`src/lib/feed.ts` + `src/app/feed.xml/route.ts`), advertised via the layout's
 `alternates.types`.
 
+### Sharing
+
+One share implementation serves every reader-facing page: `src/lib/share.ts` composes the
+canonical URL and share text, `src/components/share/share-menu.tsx` renders the control, and
+`src/components/share/share-icons.tsx` holds the destination brand marks as inline SVG so a
+handful of icons costs no dependency and no extra request. Articles, how-to guides, and
+tutorials mount the same component with their own title and page line, so the experience does
+not depend on which kind of page the reader is on. Every mark is decorative and paired with a
+visible label.
+
 ---
 
 ## Libraries Documented
