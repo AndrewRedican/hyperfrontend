@@ -1,0 +1,64 @@
+{
+  "schemaVersion": 1,
+  "type": "tutorial",
+  "title": "Build a setup wizard for your CLI",
+  "problem": "My CLI takes its setup from a wall of flags nobody remembers, and every attempt at an interactive version turns into raw-mode handling, signal handlers, and a validation branch after every question.",
+  "outcome": "A working create-service command that asks four questions, rejects a name it cannot use while the reader is still typing, backs out cleanly on Ctrl+C from any step, and writes a project from the answers.",
+  "priority": "P0",
+  "packages": ["@hyperfrontend/questions"],
+  "verification": {
+    "kind": "authored",
+    "verifiedAgainst": "@hyperfrontend/questions@0.3.0",
+    "verifiedOn": "2026-08-19"
+  },
+  "complexity": "beginner",
+  "estMinutes": 20,
+  "apis": [
+    {
+      "package": "@hyperfrontend/questions",
+      "symbol": "text"
+    },
+    {
+      "package": "@hyperfrontend/questions",
+      "symbol": "select"
+    },
+    {
+      "package": "@hyperfrontend/questions",
+      "symbol": "multiselect"
+    },
+    {
+      "package": "@hyperfrontend/questions",
+      "symbol": "confirm"
+    },
+    {
+      "package": "@hyperfrontend/questions",
+      "symbol": "PromptResult"
+    },
+    {
+      "package": "@hyperfrontend/questions",
+      "symbol": "PromptOutcome"
+    }
+  ],
+  "prerequisites": {
+    "knowledge": ["Node.js 18 or newer", "An empty directory to build the command in"]
+  },
+  "related": {
+    "guides": ["instrument-a-cli-with-logging"],
+    "reference": ["/docs/libraries/questions"]
+  },
+  "keywords": [
+    "prompt",
+    "wizard",
+    "interactive CLI",
+    "scaffolding",
+    "select",
+    "multiselect",
+    "confirm",
+    "text input",
+    "validation",
+    "Ctrl+C",
+    "cancellation",
+    "searchable",
+    "terminal"
+  ]
+}
