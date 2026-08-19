@@ -36,6 +36,7 @@
 Production-grade cryptographic primitives with isomorphic APIs for browser and Node.js environments.
 
 • 👉 See [**documentation**](https://www.hyperfrontend.dev/docs/libraries/cryptography/)
+• 👉 See [**guides & tutorials**](https://www.hyperfrontend.dev/docs/guides/?package=%40hyperfrontend%2Fcryptography)
 
 ## What is @hyperfrontend/cryptography?
 
