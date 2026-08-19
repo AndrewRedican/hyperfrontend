@@ -317,8 +317,12 @@ export function createShellHandle(
     let selfHidden = false
     let peerHidden = false
     const applyObservability = () => activeMonitor.setObservable(!selfHidden && !peerHidden)
+    // why: An in-document frame's visibility is the browser's copy of this page's, so it cannot honestly still be hidden once this page is not — and a frame the browser killed while this page sat in the background can never send the report that clears the flag. Leaving it set pins the watchdog at `unobservable` for the rest of the session, blind to the one failure it exists to catch. A live frame re-reports within a message of this, so the flag costs nothing to drop; a feature in its own window really can be hidden while this page is not, and its report stands.
     visibilityTeardown = wiring.observeVisibility((hidden) => {
       selfHidden = hidden
+      if (!hidden && result.element !== undefined) {
+        peerHidden = false
+      }
       applyObservability()
     })
     channel.on('open', () => {
