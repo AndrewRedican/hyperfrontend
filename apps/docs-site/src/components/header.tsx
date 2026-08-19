@@ -1,6 +1,7 @@
 import { TrackedLink } from '@/components/analytics/tracked-link'
 import { SearchControl } from '@/components/search/search-dialog'
 import Link from 'next/link'
+import { mainNavLinks } from '../lib/navigation'
 import { MobileMenu } from './mobile-menu'
 import { ThemeToggle } from './theme-toggle'
 
@@ -16,11 +17,13 @@ export function Header() {
           </Link>
         </div>
 
-        <nav className="hidden items-center gap-8 md:flex">
-          <NavLink href="/docs">Docs</NavLink>
-          <NavLink href="/demos">Demos</NavLink>
-          <NavLink href="/articles">Articles</NavLink>
-          <NavLink href="/architecture">Architecture</NavLink>
+        {/* why: One nav list feeds the header, the mobile menu, and the sitemap, so a new destination cannot reach one and miss the others */}
+        <nav className="hidden items-center gap-6 md:flex lg:gap-8">
+          {mainNavLinks.map((link) => (
+            <NavLink key={link.href} href={link.href}>
+              {link.slug}
+            </NavLink>
+          ))}
         </nav>
 
         <div className="flex items-center gap-3 sm:gap-4">

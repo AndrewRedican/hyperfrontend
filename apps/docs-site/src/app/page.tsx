@@ -1,6 +1,7 @@
 import { Footer } from '@/components/footer'
 import { Header } from '@/components/header'
 import { LandingHero } from '@/components/landing-hero'
+import { LandingLearnSection } from '@/components/landing-learn-section'
 
 /**
  * Featured package tile shown on the landing page: display name, link target,
@@ -36,6 +37,9 @@ export default function HomePage() {
       <main id="main-content" className="flex-1">
         {/* Hero Section - 50/50 Split Layout */}
         <LandingHero />
+
+        {/* Guides, tutorials, demos, and articles as four distinct destinations */}
+        <LandingLearnSection />
 
         {/* Secondary Content - Collapsed for Landing */}
         <section id="how-it-works" className="border-t border-slate-200 bg-white py-16 dark:border-slate-800 dark:bg-slate-900 lg:py-24">

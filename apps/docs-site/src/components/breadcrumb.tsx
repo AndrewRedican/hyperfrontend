@@ -12,6 +12,7 @@ const pathLabels: Record<string, string> = {
   contributing: 'Contributing',
   'quick-start': 'Quick Start',
   'core-concepts': 'Core Concepts',
+  guides: 'Guides & Tutorials',
   architecture: 'Architecture',
   nexus: '@hyperfrontend/nexus',
   'network-protocol': '@hyperfrontend/network-protocol',
