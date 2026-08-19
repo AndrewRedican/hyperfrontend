@@ -144,6 +144,44 @@ describe('serializeChangelog', () => {
     expect(result).toContain('#456')
   })
 
+  it('omits a commit reference the description already carries', () => {
+    const changelog = createChangelog({
+      header: { title: '# Changelog', description: [], links: [] },
+      entries: [
+        createChangelogEntry('1.0.0', {
+          date: '2024-01-01',
+          sections: [
+            createChangelogSection('features', 'Features', [
+              createChangelogItem('New feature (abc1234)', { commits: [createCommitRef('abc1234')] }),
+            ]),
+          ],
+        }),
+      ],
+      metadata: { format: 'conventional', isConventional: true, warnings: [] },
+    })
+
+    expect(serializeChangelog(changelog)).toContain('- New feature (abc1234)\n')
+  })
+
+  it('omits an issue reference the description already carries', () => {
+    const changelog = createChangelog({
+      header: { title: '# Changelog', description: [], links: [] },
+      entries: [
+        createChangelogEntry('1.0.0', {
+          date: '2024-01-01',
+          sections: [
+            createChangelogSection('fixes', 'Bug Fixes', [
+              createChangelogItem('Fixed issue #123', { references: [createIssueRef(123, 'issue')] }),
+            ]),
+          ],
+        }),
+      ],
+      metadata: { format: 'conventional', isConventional: true, warnings: [] },
+    })
+
+    expect(serializeChangelog(changelog)).toContain('- Fixed issue #123\n')
+  })
+
   it('serializes with compare URL', () => {
     const changelog = createChangelog({
       header: { title: '# Changelog', description: [], links: [] },

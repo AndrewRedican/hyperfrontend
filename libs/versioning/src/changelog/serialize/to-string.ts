@@ -184,6 +184,10 @@ function serializeSection(section: ChangelogSection, opts: Required<SerializeOpt
 /**
  * Serializes a changelog item.
  *
+ * A reference the description already spells out is not appended again, so
+ * re-serializing a parsed item reproduces it byte for byte instead of growing
+ * a duplicate tail on every pass.
+ *
  * @param item - The item to serialize
  * @param opts - Resolved options
  * @returns The serialized item string
@@ -204,15 +208,20 @@ function serializeItem(item: ChangelogItem, opts: Required<SerializeOptions>): s
 
   parts.push(item.description)
 
-  if (opts.includeCommits && item.commits.length > 0) {
-    parts.push(' (')
-    parts.push(item.commits.map(serializeCommitRef).join(', '))
-    parts.push(')')
+  if (opts.includeCommits) {
+    const commits = item.commits.filter((ref) => !item.description.includes(ref.shortHash))
+    if (commits.length > 0) {
+      parts.push(' (')
+      parts.push(commits.map(serializeCommitRef).join(', '))
+      parts.push(')')
+    }
   }
 
-  if (opts.includeReferences && item.references.length > 0) {
-    const refs = item.references.map(serializeIssueRef).join(', ')
-    parts.push(` ${refs}`)
+  if (opts.includeReferences) {
+    const references = item.references.filter((ref) => !item.description.includes(`#${ref.number}`))
+    if (references.length > 0) {
+      parts.push(` ${references.map(serializeIssueRef).join(', ')}`)
+    }
   }
 
   return parts.join('')
