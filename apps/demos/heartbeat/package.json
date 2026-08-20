@@ -19,7 +19,7 @@
     "dev:hosted": "run-p build:watch hf:dev"
   },
   "dependencies": {
-    "@hyperfrontend/features": "0.5.1",
+    "@hyperfrontend/features": "0.7.1",
     "@hyperfrontend/random-generator-utils": "0.0.5",
     "react": "19.2.8",
     "react-dom": "19.2.8"
