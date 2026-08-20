@@ -198,31 +198,45 @@ body {
   color: #ffffff;
 }
 
-/* why: A diagnostics control dressed like the roster — chrome floating over the water, quiet until wanted. */
+/* why: The pond's primary control, not a diagnostic tucked in a corner: centred on the bottom edge, which is the one edge no embedding host's chrome ever claims, so it is the first thing over the water a visitor's eye finds that is not a fish. */
 .pond-interactions {
   position: absolute;
-  left: 0.9rem;
-  bottom: 0.9rem;
+  left: 50%;
+  bottom: calc(0.9rem + env(safe-area-inset-bottom, 0px));
   z-index: 150;
-  padding: 0.45rem 0.7rem;
-  border: 1px solid rgba(232, 243, 239, 0.12);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.95rem;
+  transform: translateX(-50%);
+  border: 1px solid rgba(232, 243, 239, 0.22);
   border-radius: 999px;
-  background: rgba(9, 24, 22, 0.72);
+  background: rgba(9, 24, 22, 0.82);
+  box-shadow: 0 6px 20px rgba(4, 14, 13, 0.4);
   backdrop-filter: blur(8px);
-  color: rgba(232, 243, 239, 0.78);
-  font-size: 0.7rem;
-  letter-spacing: 0.06em;
+  color: rgba(232, 243, 239, 0.92);
+  font: inherit;
+  font-size: 0.76rem;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
   cursor: pointer;
+}
+
+.pond-interactions svg {
+  flex: none;
+  display: block;
 }
 
 .pond-interactions:hover,
 .pond-interactions:focus-visible {
-  background: rgba(20, 48, 44, 0.92);
+  background: rgba(20, 48, 44, 0.94);
   color: #ffffff;
 }
 
+/* why: The lit ring is the only thing that says the overlay is on, because the label deliberately never changes — one identity the visitor can look for twice. */
 .pond-interactions[aria-pressed='true'] {
-  border-color: rgba(126, 214, 198, 0.55);
+  border-color: rgba(126, 214, 198, 0.65);
+  background: rgba(20, 56, 51, 0.9);
   color: #d6f5ee;
 }
 
@@ -264,10 +278,15 @@ body {
   display: none;
 }
 
-/* why: In a card-sized window the roster has no room — the card is an invitation to expand, not the venue; it returns with the space. */
+/* why: In a card-sized window the pond's chrome has no room — the card is an invitation to expand, not the venue; it all returns the moment the pond is the whole experience. Presentation is the honest question here, not viewport width: a pond presented full on a phone has room for its own control, and a width rule was what used to take it away there. */
+#pond[data-scene='card'] .koi-roster,
+#pond[data-scene='card'] .pond-interactions {
+  display: none;
+}
+
+/* why: Eight rows, a heading and a source link need width a phone does not have, and the roster's job — identity for anyone not using a pointer — has no equivalent claim on the single line of chrome a narrow pond can carry. */
 @media (max-width: 679px) {
-  .koi-roster,
-  .pond-interactions {
+  .koi-roster {
     display: none;
   }
 }
