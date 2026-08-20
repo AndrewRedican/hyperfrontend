@@ -199,11 +199,12 @@ body {
 }
 
 /* why: The pond's primary control, not a diagnostic tucked in a corner: centred on the bottom edge, which is the one edge no embedding host's chrome ever claims, so it is the first thing over the water a visitor's eye finds that is not a fish. */
+/* why: It outranks the held koi's card chrome because a card is transient and clamps to this same strip, while this control is always there: the card's invisible shield and link glass would otherwise win hit-testing over a button the visitor can plainly see, swallowing the press or opening a link instead. */
 .pond-interactions {
   position: absolute;
   left: 50%;
   bottom: calc(0.9rem + env(safe-area-inset-bottom, 0px));
-  z-index: 150;
+  z-index: 165;
   display: flex;
   align-items: center;
   gap: 0.4rem;
