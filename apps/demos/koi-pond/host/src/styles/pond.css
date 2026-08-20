@@ -241,6 +241,13 @@ body {
   color: #d6f5ee;
 }
 
+/* why: The lit treatment is declared after the hover one and shadows it at equal specificity, so without this the control answers a pointer or a focus ring with nothing at all in the state it spends most of its life in. */
+.pond-interactions[aria-pressed='true']:hover,
+.pond-interactions[aria-pressed='true']:focus-visible {
+  background: rgba(28, 74, 68, 0.94);
+  color: #ffffff;
+}
+
 /* why: The pond only draws a close control when a host announces dialog mode; it requests the close and the host performs it. */
 .pond-close {
   position: absolute;
