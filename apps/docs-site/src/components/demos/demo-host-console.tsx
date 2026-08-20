@@ -372,10 +372,11 @@ export function DemoHostConsole({ entry, shell, floating, overlaid = false }: De
     )
   }
 
-  // why: The expanded overlay is a fixed layer stacked above the whole deck, so the widget has to outrank it to stay operable at all — pinned to the viewport, because the page's scroll is locked while a demo owns the screen and an anchor inside the deck could be locked off-screen; it takes the corner opposite the overlay's own close control.
+  // why: Anchored to the gallery, the widget is demo-local chrome and sits in the page's demo-controls band (30) — above the deck it belongs to, below the site header (50) and the navigation drawer (60), because an opened menu is a higher-level surface and a cog for one demo must never float over it. See the layering ladder in styles/globals.css.
+  // why: The expanded overlay is a fixed layer stacked above the whole deck (200), so over it the same widget has to outrank the overlay to stay operable at all — pinned to the viewport, because the page's scroll is locked while a demo owns the screen and an anchor inside the deck could be locked off-screen; it takes the corner opposite the overlay's own close control.
   return (
     <section
-      className={`pointer-events-none flex flex-col ${overlaid ? 'fixed left-2 top-2 z-[210] items-start' : 'absolute right-2 top-2 z-[130] items-end'}`}
+      className={`pointer-events-none flex flex-col ${overlaid ? 'fixed left-2 top-2 z-[210] items-start' : 'absolute right-2 top-2 z-30 items-end'}`}
     >
       <button
         type="button"
