@@ -352,7 +352,7 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondSceneHandle
       }
     })
 
-    // why: The watchdog's verdict is the pond's only warning that a frame has died where the channel was never closed — a document killed under memory pressure is exactly that, and the browser paints its own opaque placeholder into it.
+    // why: Status is the road back into the scene — only a real beat earns `healthy`, so this is what re-admits a koi the watchdog stood down once its frame proves alive again. The dead-frame verdict itself never lands here: it arrives on `error` below as `unresponsive`, and `gone` only follows an explicit close the close handler already covers.
     shell.on('status', (data: unknown) => {
       const state = (<{ state?: string }>data)?.state
       if (state === 'gone') {
