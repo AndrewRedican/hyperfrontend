@@ -10,4 +10,8 @@ export default defineDevConfig({
       port: 4282,
     },
   ],
+  // why: Pinned clear of the whole demo family (clock 4280/4291, heartbeat 4281/4292, workbench 4283) so any of them can run beside the pond.
+  debug: {
+    port: 4290,
+  },
 })

@@ -15,7 +15,7 @@
     "lint:oxlint": "oxlint . --fix",
     "lint:eslint": "eslint . --fix --cache",
     "build:watch": "vite build --watch",
-    "hf:dev": "hf dev --port 4290",
+    "hf:dev": "hf dev",
     "dev:hosted": "run-p build:watch hf:dev"
   },
   "dependencies": {
