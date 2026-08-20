@@ -165,7 +165,7 @@ export function DemoHostConsole({ entry, shell, floating, overlaid = false }: De
           log('status — healthy', 'success')
         } else if (state === 'unobservable') {
           setSession(state)
-          log('status — unobservable (a page is hidden; silence is weak evidence)')
+          log('status — unobservable (hidden page or watching just resumed; silence is weak evidence)')
         } else if (state === 'suspect') {
           setSession(state)
           log('status — suspect (missed beats)', 'warn')
