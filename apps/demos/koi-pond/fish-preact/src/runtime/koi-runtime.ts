@@ -273,6 +273,22 @@ export function createKoiRuntime(root: HTMLElement, buildRenderer: KoiRendererFa
     renderer.setPond(pond)
   }
 
+  // why: `pagehide` fires for two opposite things, and only one of them is the end. A page frozen into the back/forward cache is coming back, and a koi disposed on the way in never returns: its GL context is released and the loop is latched shut for good, while the channel it shares with the host keeps answering beats. The host would see a perfectly healthy session over a hole in the water — the one failure no watchdog can catch. Only a page that is not coming back is torn down.
+  const onPageHide = (event: PageTransitionEvent): void => {
+    if (event.persisted) {
+      stop()
+      return
+    }
+    dispose()
+  }
+
+  // why: Restores the koi the cache handed back. The host resumes a sleeping shoal on its own, so a koi it deliberately paused must not swim itself awake here.
+  const onPageShow = (event: PageTransitionEvent): void => {
+    if (event.persisted && !paused) {
+      start()
+    }
+  }
+
   const dispose = (): void => {
     if (disposed) {
       return
@@ -281,14 +297,16 @@ export function createKoiRuntime(root: HTMLElement, buildRenderer: KoiRendererFa
     stop()
     closeInspector()
     window.removeEventListener('resize', onResize)
-    window.removeEventListener('pagehide', dispose)
+    window.removeEventListener('pagehide', onPageHide)
+    window.removeEventListener('pageshow', onPageShow)
     renderer.dispose()
   }
 
   start()
   window.addEventListener('resize', onResize)
   // why: The frame's GL context and callbacks should not outlive the page — a torn-down koi must leave nothing running.
-  window.addEventListener('pagehide', dispose)
+  window.addEventListener('pagehide', onPageHide)
+  window.addEventListener('pageshow', onPageShow)
 
   return {
     setPond(next) {
