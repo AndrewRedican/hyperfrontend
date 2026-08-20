@@ -9,4 +9,8 @@ export default defineDevConfig({
       port: 4280,
     },
   ],
+  // why: 4280 is also where the debug UI lands by default, and the dev server refuses to start on that collision; the app port is the one the docs-site embed is pinned to, so the debug UI is what moves.
+  debug: {
+    port: 4291,
+  },
 })
