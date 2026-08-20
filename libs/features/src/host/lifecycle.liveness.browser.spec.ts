@@ -40,6 +40,7 @@ const TARGET = <Window>(<unknown>{ name: 'target' })
 
 /**
  * Drives this page's reported visibility, the way a phone backgrounding the tab does.
+ *
  * @param value - The state `document.visibilityState` should report.
  */
 function setPageVisibility(value: 'visible' | 'hidden'): void {
@@ -50,6 +51,7 @@ function setPageVisibility(value: 'visible' | 'hidden'): void {
 /**
  * Builds a shell wired to the real watchdog and the real visibility observer,
  * mounted as an in-document frame.
+ *
  * @returns The handle, its channel double, and the errors it emitted.
  */
 function setup() {

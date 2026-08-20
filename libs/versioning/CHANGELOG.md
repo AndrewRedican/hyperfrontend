@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.6.3](https://github.com/AndrewRedican/hyperfrontend/compare/74110dd15151bfc8360ef4edcdb1086cb003c909...514941cca7b348b15dbc663174874f6237fc4f06) - 2026-08-20
+
+### Bug Fixes
+
+- skip references the description already carries
+- stop duplicating the breaking marker in item text
+- lift breaking markers off changelog item text
+
 ## [0.6.2](https://github.com/AndrewRedican/hyperfrontend/compare/5f116abb8ba6355dfb283fa03b7481e5eb029480...47a37497608ac765af3efb30f0b5e01950bae425) - 2026-07-05
 
 ### Bug Fixes

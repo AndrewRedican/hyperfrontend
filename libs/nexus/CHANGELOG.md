@@ -12,7 +12,7 @@ All notable changes to this project will be documented in this file.
 
 ### Breaking Changes
 
-- **BREAKING:** open fires only after a counterpr completes the handshake; unanswered connects time out instead of opening
+- **BREAKING** open fires only after a counterpr completes the handshake; unanswered connects time out instead of opening
 
 ### Features
 
@@ -22,7 +22,7 @@ All notable changes to this project will be documented in this file.
 - gate the handshake on a contract compatibility rule
 - activate security negotiation and transport attachment
 - rebuild the security transport on the real wire protocol and export it
-- **BREAKING** **BREAKING:** ⚠️ BREAKING: replace channel self-activation with the wire handshake, pinned origins, and connect deadline
+- **BREAKING** replace channel self-activation with the wire handshake, pinned origins, and connect deadline
 
 ### Bug Fixes
 
