@@ -7,9 +7,9 @@
  * coloured traces of what each koi has actually decided, which is the whole
  * point of the demo made literal. That is not an incidental diagnostic, so it
  * does not sit in a corner dressed as one: it holds the bottom edge of the
- * scene, centred, where no host's chrome ever lands — the close control takes
+ * scene, centred, where no host's chrome ever lands (the close control takes
  * the top-right, an embedding host's console the top-left, the roster the
- * bottom-right — and where a thumb reaches it on a phone.
+ * bottom-right) and where a thumb reaches it on a phone.
  *
  * Its presence follows the pond's presentation rather than the viewport's
  * width, because those are different questions. A thumbnail card has no room
