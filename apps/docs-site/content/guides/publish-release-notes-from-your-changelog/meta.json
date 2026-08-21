@@ -1,0 +1,73 @@
+{
+  "schemaVersion": 1,
+  "type": "how-to",
+  "title": "How to publish release notes from your CHANGELOG.md",
+  "problem": "My release job has a version and a CHANGELOG.md, and every attempt to get one from the other is a regex over markdown headings that breaks the first time an entry carries a compare link, a scope, or a breaking marker.",
+  "outcome": "A script that renders exactly one version's sections as the release body, refuses to publish when the version is missing from the file, flags breaking changes, and produces byte-identical output every time it runs.",
+  "priority": "P1",
+  "packages": ["@hyperfrontend/versioning"],
+  "verification": {
+    "kind": "authored",
+    "verifiedAgainst": "@hyperfrontend/versioning@0.6.3",
+    "verifiedOn": "2026-08-20"
+  },
+  "complexity": "beginner",
+  "estMinutes": 10,
+  "apis": [
+    {
+      "package": "@hyperfrontend/versioning",
+      "symbol": "parseChangelog"
+    },
+    {
+      "package": "@hyperfrontend/versioning",
+      "symbol": "getEntryByVersion"
+    },
+    {
+      "package": "@hyperfrontend/versioning",
+      "symbol": "serializeChangelog"
+    },
+    {
+      "package": "@hyperfrontend/versioning",
+      "symbol": "createChangelog"
+    },
+    {
+      "package": "@hyperfrontend/versioning",
+      "symbol": "ChangelogEntry"
+    },
+    {
+      "package": "@hyperfrontend/versioning",
+      "symbol": "ChangelogItem"
+    },
+    {
+      "package": "@hyperfrontend/versioning",
+      "symbol": "SerializeOptions"
+    }
+  ],
+  "prerequisites": {
+    "knowledge": [
+      "A `CHANGELOG.md` in [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) format",
+      "A release job that already knows the version it is publishing"
+    ]
+  },
+  "related": {
+    "guides": ["replace-commitizen-and-commitlint", "publish-a-typescript-library-to-npm"],
+    "reference": [
+      "/docs/libraries/versioning",
+      "/docs/libraries/versioning/changelog",
+      "/docs/libraries/versioning/changelog/parse",
+      "/docs/libraries/versioning/changelog/serialize"
+    ]
+  },
+  "keywords": [
+    "release notes",
+    "CHANGELOG.md",
+    "Keep a Changelog",
+    "GitHub release",
+    "gh release create",
+    "changelog parser",
+    "breaking changes",
+    "compare URL",
+    "CI",
+    "conventional commits"
+  ]
+}
