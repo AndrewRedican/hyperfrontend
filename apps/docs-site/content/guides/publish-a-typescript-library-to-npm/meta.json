@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "type": "tutorial",
+  "title": "Publish a TypeScript library to npm",
+  "problem": "Shipping a TypeScript library means an exports map, ESM and CJS builds, and a declaration pass that all have to agree, and every one of them is hand-maintained until it silently stops matching what was emitted.",
+  "outcome": "A packed, installable package built from one source file, whose exports map, main/module/types fields and files allowlist were synthesized from what the build produced, proven from both `import` and `require`.",
+  "priority": "P0",
+  "packages": ["@hyperfrontend/builder"],
+  "verification": {
+    "kind": "authored",
+    "verifiedAgainst": "@hyperfrontend/builder@0.2.0",
+    "verifiedOn": "2026-08-20"
+  },
+  "complexity": "beginner",
+  "estMinutes": 25,
+  "apis": [
+    {
+      "package": "@hyperfrontend/builder",
+      "symbol": "BuildConfig"
+    }
+  ],
+  "prerequisites": {
+    "knowledge": ["Node.js 18 or newer", "An empty directory to build the library in", "An npm account, for the last step only"]
+  },
+  "related": {
+    "guides": ["replace-commitizen-and-commitlint", "publish-release-notes-from-your-changelog"],
+    "reference": [
+      "/docs/libraries/builder",
+      "/docs/libraries/builder/models",
+      "/docs/libraries/builder/bundle",
+      "/docs/libraries/builder/package"
+    ],
+    "explanation": ["/docs/libraries/builder/architecture"]
+  },
+  "keywords": [
+    "publish",
+    "npm",
+    "TypeScript library",
+    "dual package",
+    "ESM",
+    "CommonJS",
+    "exports map",
+    "declarations",
+    "d.ts",
+    "bundler",
+    "hf-build",
+    "npm pack",
+    "package.json"
+  ]
+}
