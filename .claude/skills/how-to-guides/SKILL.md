@@ -66,7 +66,7 @@ Every API symbol, option, event, error reason, and named concept gets a link on 
 | A standard web or Node API               | MDN, or the runtime's own documentation                                  |
 | A file in this repo                      | Its GitHub blob URL, labelled `path#Lstart-Lend`, introduced with `e.g.` |
 
-Per-symbol and per-property `#api-` anchors are generated and stable; methods of an interface have none, so link the method to its owning type. Heading slugs are derived from prose, so verify the heading exists before linking to it. Nothing validates an anchor, so check it.
+Per-symbol and per-property `#api-` anchors are generated and stable; methods of an interface have none, so link the method to its owning type. Heading slugs are derived from prose, so verify the heading exists before linking to it. Nothing validates an anchor, so check it, and check it in a rendered browser: a multi-module library's root page mounts its per-symbol ids client-side, so fetching the HTML reports anchors missing that resolve fine for a reader.
 
 Name the SDK the reader installs, linked to its library page, in the opening or the install step. `meta.json` `packages` states it for machines; the body states it for the reader, along with anything that install brings with it.
 
