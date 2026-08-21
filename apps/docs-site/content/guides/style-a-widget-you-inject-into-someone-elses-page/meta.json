@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "type": "how-to",
+  "title": "How to style a widget you inject into someone else's page",
+  "problem": "My widget ships as one script into markup I do not own, and the style tag it injects has no owner: mounting twice leaves two copies, and unmounting leaves the rules behind.",
+  "outcome": "One labelled stylesheet per widget, added on mount, replaced rather than duplicated on remount, and removed by the same call that tears the widget down.",
+  "priority": "P1",
+  "packages": ["@hyperfrontend/ui-utils"],
+  "verification": {
+    "kind": "authored",
+    "verifiedAgainst": "@hyperfrontend/ui-utils@0.0.6",
+    "verifiedOn": "2026-08-20"
+  },
+  "complexity": "beginner",
+  "estMinutes": 8,
+  "apis": [
+    {
+      "package": "@hyperfrontend/ui-utils",
+      "symbol": "addStylesheet"
+    },
+    {
+      "package": "@hyperfrontend/ui-utils",
+      "symbol": "removeStylesheet"
+    },
+    {
+      "package": "@hyperfrontend/ui-utils",
+      "symbol": "StyleMap"
+    }
+  ],
+  "prerequisites": {
+    "knowledge": ["A browser widget that mounts and unmounts itself from a page you do not control"]
+  },
+  "related": {
+    "guides": ["embed-a-shipped-feature"],
+    "reference": ["/docs/libraries/utils/ui", "/docs/libraries/utils/ui/style", "/docs/libraries/utils/ui/element"]
+  },
+  "keywords": [
+    "stylesheet",
+    "inject CSS",
+    "runtime styles",
+    "widget",
+    "embed",
+    "third-party script",
+    "style tag",
+    "teardown",
+    "cleanup",
+    "cascade",
+    "prefix",
+    "CSS-in-JS"
+  ]
+}
