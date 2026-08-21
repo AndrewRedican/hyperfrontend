@@ -14,6 +14,7 @@ import { createDepthDirector } from './depth-director'
 import { createFrameLoop } from './raf-loop'
 import { createInteractionsPainter } from './interactions'
 import { createRelay } from './relay'
+import { createResurrection } from './resurrection'
 import { createSelectionChrome } from './selection'
 import { createRoster } from './roster'
 import { createSequenceTracker } from './sequence'
@@ -79,6 +80,14 @@ export interface PondHooks {
    * @param fish - How many koi took part.
    */
   onSequenceComplete(fish: number): void
+  /**
+   * Something happened to a session worth a line in a diagnostics log.
+   *
+   * @param framework - Which koi, or `null` for a pond-wide note.
+   * @param kind - What happened, as a short slug such as `error:unresponsive`.
+   * @param detail - The particulars, already phrased for a human.
+   */
+  onDiagnostic?(framework: KoiFramework | null, kind: string, detail?: string): void
 }
 
 /** The created scene: the contract-driven slice plus the host chrome's own handles. */
@@ -150,6 +159,18 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondSceneHandle
 
   const sessions = openShoal(stage.layers)
   const chrome = createSelectionChrome(root)
+  // why: The browser may kill any frame it likes on a phone; the resurrection is what turns that from a permanent hole in the shoal into a pause.
+  const resurrection = createResurrection({
+    isPresent: (framework) => present.has(framework),
+    reopen: (framework) => {
+      for (const session of sessions) {
+        if (session.framework === framework) {
+          session.shell.open()
+        }
+      }
+    },
+    note: (framework, kind, detail) => hooks.onDiagnostic?.(framework, `revive:${kind}`, detail),
+  })
   const diagnostics = createInteractionsPainter(stage.interactions)
   let showInteractions = false
 
@@ -346,6 +367,10 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondSceneHandle
       shell.send('identity', identityFor(framework, director.settledLevel(framework)))
       setLayerDepth(stage, framework, director.settledLevel(framework))
       setPresent(framework, true)
+      resurrection.opened(framework)
+      // why: A handshake that landed makes past timeouts history — the retry budget guards one opening episode, not the whole page, or a koi revived after a slow boot would have nothing left.
+      retries.delete(framework)
+      hooks.onDiagnostic?.(framework, 'open')
       // why: The curtain holds until every koi has landed, so a visitor never watches the shoal arrive one frame at a time.
       if (present.size === sessions.length) {
         setCurtain(stage, true)
@@ -354,7 +379,13 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondSceneHandle
 
     // why: Status is the road back into the scene — only a real beat earns `healthy`, so this is what re-admits a koi the watchdog stood down once its frame proves alive again. The dead-frame verdict itself never lands here: it arrives on `error` below as `unresponsive`, and `gone` only follows an explicit close the close handler already covers.
     shell.on('status', (data: unknown) => {
-      const state = (<{ state?: string }>data)?.state
+      const status = <{ state?: string; missedBeats?: number }>data
+      const state = status?.state
+      hooks.onDiagnostic?.(
+        framework,
+        `status:${state ?? 'unknown'}`,
+        status?.missedBeats === undefined ? undefined : `missed ${status.missedBeats}`
+      )
       if (state === 'gone') {
         setPresent(framework, false)
       } else if (state === 'healthy') {
@@ -368,13 +399,36 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondSceneHandle
     })
     // ref: [guide:compose-independent-features/survive-close] end
 
+    // why: The reopen policies listen separately: the guide-marked retry below answers a handshake that never landed, while the resurrection answers a frame that died mid-run and owes a live one the grace to speak again first. Subscribed ahead of the retry so the budget it reads is the one the retry is about to decide with.
+    shell.on('error', (data: unknown) => {
+      const error = <{ reason?: string; missedBeats?: number; elapsedMs?: number }>data
+      const detail =
+        error?.missedBeats !== undefined
+          ? `missed ${error.missedBeats}`
+          : error?.elapsedMs !== undefined
+            ? `after ${Math.round(error.elapsedMs)}ms`
+            : undefined
+      hooks.onDiagnostic?.(framework, `error:${error?.reason ?? 'unknown'}`, detail)
+      if (error?.reason === 'unresponsive') {
+        resurrection.frameDied(framework)
+      }
+      // why: A reopen whose handshake times out after the retry budget is spent would otherwise strand the koi between the two policies — the retry declines and no watchdog exists to speak again. Handing the death to the resurrection lets its own budget decide when to stop insisting.
+      if (error?.reason === 'open-timeout' && (retries.get(framework) ?? 0) >= OPEN_RETRIES) {
+        resurrection.frameDied(framework)
+      }
+    })
+
+    shell.on('close', () => {
+      hooks.onDiagnostic?.(framework, 'close')
+    })
+
     // ref: [guide:compose-independent-features/retry-open] start
     shell.on('error', (data: unknown) => {
       // why: A koi that never answers must not hold the pond dark behind a curtain waiting for it.
       setCurtain(stage, true)
       // why: Whatever went wrong, the frame is no longer showing a koi — it waits for a handshake to earn its place back.
       setPresent(framework, false)
-      // why: A timed-out handshake leaves a destroyed mount and the SDK never retries — on a slow device the eight heavy apps race one deadline, and without this a loser is simply a fish that never existed. Only the timeout is retried; an unresponsive session is still alive and must not be torn down under its visitor.
+      // why: A timed-out handshake leaves a destroyed mount and the SDK never retries — on a slow device the eight heavy apps race one deadline, and without this a loser is simply a fish that never existed. Only the timeout is retried; an unresponsive session may still be alive, and must not be torn down under its visitor.
       if ((<{ reason?: string }>data)?.reason === 'open-timeout' && (retries.get(framework) ?? 0) < OPEN_RETRIES) {
         retries.set(framework, (retries.get(framework) ?? 0) + 1)
         window.setTimeout(() => {
@@ -624,6 +678,7 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondSceneHandle
   // why: Eight iframes on their own compositing layers is exactly where a loop running against a hidden tab costs a visitor real battery.
   document.addEventListener('visibilitychange', () => {
     const paused = document.hidden
+    hooks.onDiagnostic?.(null, paused ? 'page-hidden' : 'page-visible')
     if (paused) {
       loop.stop()
     } else {
