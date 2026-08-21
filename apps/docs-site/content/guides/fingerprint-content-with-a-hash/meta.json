@@ -1,0 +1,58 @@
+{
+  "schemaVersion": 1,
+  "type": "how-to",
+  "title": "How to fingerprint content with a hash",
+  "problem": "I need a stable id for a piece of content so I can skip work I already did or ask the other side whether it already has this exact thing, and the browser and the server keep computing that id two different ways.",
+  "outcome": "One call producing the same hex digest for the same content in either runtime, used as a cache key that needs no filename or version, with incoming ids rejected before they are trusted as keys.",
+  "priority": "P1",
+  "packages": ["@hyperfrontend/cryptography"],
+  "verification": {
+    "kind": "authored",
+    "verifiedAgainst": "@hyperfrontend/cryptography@0.2.1",
+    "verifiedOn": "2026-08-20"
+  },
+  "complexity": "beginner",
+  "estMinutes": 8,
+  "apis": [
+    {
+      "package": "@hyperfrontend/cryptography",
+      "symbol": "createHash"
+    },
+    {
+      "package": "@hyperfrontend/cryptography",
+      "symbol": "isSHA256Hash"
+    },
+    {
+      "package": "@hyperfrontend/cryptography",
+      "symbol": "HashAlgorithm"
+    }
+  ],
+  "prerequisites": {
+    "knowledge": ["A Node.js or browser project that can run async code"]
+  },
+  "related": {
+    "guides": ["encrypt-a-string-with-a-password", "base64-for-unicode-and-urls"],
+    "reference": [
+      "/docs/libraries/cryptography",
+      "/docs/libraries/cryptography/node",
+      "/docs/libraries/cryptography/browser",
+      "/docs/libraries/cryptography/common"
+    ],
+    "explanation": ["/docs/core-concepts/security"]
+  },
+  "keywords": [
+    "hash",
+    "SHA-256",
+    "SHA-512",
+    "fingerprint",
+    "checksum",
+    "digest",
+    "content addressing",
+    "cache key",
+    "deduplication",
+    "ETag",
+    "change detection",
+    "isomorphic",
+    "Web Crypto"
+  ]
+}
