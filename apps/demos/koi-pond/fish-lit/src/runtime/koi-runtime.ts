@@ -235,6 +235,7 @@ export class KoiSwimController implements ReactiveController, KoiRuntime {
     window.addEventListener('resize', this.#measure)
     // why: The frame's GL context and callbacks should not outlive the page — a torn-down koi must leave nothing running.
     window.addEventListener('pagehide', this.#onPagehide)
+    window.addEventListener('pageshow', this.#onPageshow)
   }
 
   /** Stops the koi cleanly when its element leaves the document. */
@@ -385,6 +386,7 @@ export class KoiSwimController implements ReactiveController, KoiRuntime {
     this.#closeInspector()
     window.removeEventListener('resize', this.#measure)
     window.removeEventListener('pagehide', this.#onPagehide)
+    window.removeEventListener('pageshow', this.#onPageshow)
     this.#renderer?.dispose()
     this.#renderer = null
   }
@@ -558,8 +560,20 @@ export class KoiSwimController implements ReactiveController, KoiRuntime {
     this.#adopt({ ...this.#pond, view: pondWindow(this.#pond, window.innerWidth, window.innerHeight) })
   }
 
-  /** Tears the koi down for good as the page goes away. */
-  readonly #onPagehide = (): void => {
+  // why: `pagehide` fires for two opposite things, and only one of them is the end. A page frozen into the back/forward cache is coming back, and a koi disposed on the way in never returns: its GL context is released and the loop is latched shut for good, while the channel it shares with the host keeps answering beats. The host would see a perfectly healthy session over a hole in the water — the one failure no watchdog can catch. Only a page that is not coming back is torn down.
+  /** Freezes the koi for the back/forward cache, or tears it down for good as the page goes away. */
+  readonly #onPagehide = (event: PageTransitionEvent): void => {
+    if (event.persisted) {
+      this.#stop()
+      return
+    }
     this.dispose()
+  }
+
+  /** Restores the koi the back/forward cache handed back; a koi the host deliberately paused stays still. */
+  readonly #onPageshow = (event: PageTransitionEvent): void => {
+    if (event.persisted && !this.#paused) {
+      this.#start()
+    }
   }
 }

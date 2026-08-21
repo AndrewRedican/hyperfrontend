@@ -1,6 +1,6 @@
 # The blank prototype (feature-only variant)
 
-The shape every feature-only demo starts from, with the demo-specific flesh stripped away — documented against the current clock/heartbeat consumer shape on `@hyperfrontend/features` 0.5.x. This is the seed for the demo generator ([06](06-demo-2-and-generator.md)).
+The shape every feature-only demo starts from, with the demo-specific flesh stripped away — documented against the current clock/heartbeat consumer shape on `@hyperfrontend/features` 0.7.x. This is the seed for the demo generator ([06](06-demo-2-and-generator.md)).
 
 ## Vital components
 

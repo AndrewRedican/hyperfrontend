@@ -152,8 +152,8 @@ export interface UnresponsiveInfo {
  * `unmount` also tears the feature down after emitting the same error; a
  * callback takes over handling entirely with the {@link UnresponsiveInfo}.
  * The policy runs once per `suspect` episode: a recovering beat returns the feature
- * to `healthy` and re-arms it. While either page is hidden the watchdog pauses
- * instead (`unobservable`): throttled timers make silence weak evidence.
+ * to `healthy` and re-arms it. Hidden pages and freshly resumed watching both
+ * read `unobservable`: silence is weak evidence until a beat earns `healthy`.
  */
 export type UnresponsivePolicy = 'emit' | 'unmount' | ((info: UnresponsiveInfo) => void)
 

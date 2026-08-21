@@ -151,7 +151,7 @@ export function ClockConsoleActions({ shell, featureUrl, log, createExtraShell }
     mismatched.on('error', (data) => {
       if (isRecord(data) && typeof data['reason'] === 'string') {
         finish(`refused — reason: ${String(data['reason'])}`)
-        log(`deny — ${String(data['reason'])} (contract 9.9.9 vs 0.2.0)`, 'error')
+        log(`deny — ${String(data['reason'])} (contract 9.9.9 vs the vendored shell's)`, 'error')
       }
     })
     mismatched.open()

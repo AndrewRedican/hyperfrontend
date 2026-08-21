@@ -83,8 +83,8 @@ npx nx run demo-heartbeat:build      # type-check + vite build → dist/apps/dem
 npx nx run demo-heartbeat:pack-shell # hf build → self-contained shell tarball in dist/apps/demos/heartbeat/shell/
 ```
 
-To drive the full pair locally: `npx nx run demo-heartbeat:build`, then `npm run preview` in this directory and open `/host/`; the host page embeds the feature from the same preview origin. Under `hf dev` (`:4281`) the host page is at `/host/index.html` (the dev server's static handler resolves `/` to the feature's `index.html` but does not resolve directory paths to their index files).
+To drive the full pair locally: `npx nx run demo-heartbeat:build`, then `npm run preview` in this directory and open `/host/`; the host page embeds the feature from the same preview origin. Under `hf dev` (`:4281`) the host page is at `/host/` (the dev server resolves directory URLs to their `index.html`).
 
 ## SDK workarounds
 
-None. The pairing runs the v1 security envelope on `features@0.5.x`: the packet-layer rejection of the SDK's payload-less `__hf:beat` that once forced this demo to `protocol: 'none'` was fixed in the nexus transport, so the four-state watchdog reads `healthy` under v1 and `pack-shell` no longer needs `--allow-open`.
+None. The pairing runs the v1 security envelope on `features@0.7.x`: the packet-layer rejection of the SDK's payload-less `__hf:beat` that once forced this demo to `protocol: 'none'` was fixed in the nexus transport, so the four-state watchdog reads `healthy` under v1 and `pack-shell` no longer needs `--allow-open`.

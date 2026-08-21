@@ -161,12 +161,12 @@ connection attempts and clean lifecycle management.
 A session that is open is not necessarily alive, so the runtime judges liveness with four
 states rather than a boolean:
 
-| State            | Meaning                                                                                                                            |
-| ---------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| **healthy**      | Beats are arriving within the expected budget.                                                                                     |
-| **unobservable** | The host page or the feature page is hidden; browsers throttle hidden timers, so silence is weak evidence and the watchdog pauses. |
-| **suspect**      | The pages are visible and the miss budget is exhausted; the feature is probably unhealthy.                                         |
-| **gone**         | The session is closed or destroyed.                                                                                                |
+| State            | Meaning                                                                                                                                                             |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **healthy**      | Beats are arriving within the expected budget.                                                                                                                      |
+| **unobservable** | Silence carries no information yet: a page is hidden (throttled timers pause the watchdog), or watching has just resumed and no beat has yet earned `healthy` back. |
+| **suspect**      | The pages are visible and the miss budget is exhausted; the feature is probably unhealthy.                                                                          |
+| **gone**         | The session is closed or destroyed.                                                                                                                                 |
 
 The feature pulses a hidden beat; the host watchdog counts misses only while both pages are
 visible (each side reports its own visibility). Entering `suspect` runs the host's

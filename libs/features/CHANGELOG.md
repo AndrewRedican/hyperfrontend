@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ## [0.7.1](https://github.com/AndrewRedican/hyperfrontend/compare/ee192ea7bb541593e6590243a08a29b68d69a1ac...514941cca7b348b15dbc663174874f6237fc4f06) - 2026-08-20
 
+### Features
+
+- give shell errors a structured reason
+- emit reproducible shell tarballs
+- make the dev debug ui port configurable
+- fall back to the platform PORT variable for hf serve
+
 ### Bug Fixes
 
 - detect a frame killed while the page was hidden

@@ -15,7 +15,7 @@
     "lint:oxlint": "oxlint . --fix",
     "lint:eslint": "eslint . --fix --cache",
     "build:watch": "vite build --watch",
-    "hf:dev": "hf dev --port 4290",
+    "hf:dev": "hf dev",
     "dev:hosted": "run-p build:watch hf:dev"
   },
   "dependencies": {
@@ -28,7 +28,7 @@
     "@hyperfrontend/demo-koi-fish-vanilla-shell": "file:vendor/hyperfrontend-demo-koi-fish-vanilla-shell-0.7.0.tgz",
     "@hyperfrontend/demo-koi-fish-vue-shell": "file:vendor/hyperfrontend-demo-koi-fish-vue-shell-0.7.0.tgz",
     "@hyperfrontend/demo-koi-lib": "file:../vendor/hyperfrontend-demo-koi-lib-0.1.0.tgz",
-    "@hyperfrontend/features": "0.7.0",
+    "@hyperfrontend/features": "0.7.1",
     "@hyperfrontend/random-generator-utils": "0.0.5"
   },
   "devDependencies": {

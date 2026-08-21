@@ -2,6 +2,39 @@
 @tailwind components;
 @tailwind utilities;
 
+/* The site's layering ladder. Every floating surface picks its z-index from
+   one of these bands, and the ordering is the answer to a single question:
+   which surface is the more general one? A control that belongs to one demo
+   yields to the page's own navigation; the page's navigation yields to a
+   dialog the visitor opened deliberately.
+
+     0 -  40  page content, the demo surfaces themselves, and demo-local
+              floating controls (the showcase's ring and pause/skip, the
+              demos-page host console cog)
+          50  site header (sticky)
+          60  mobile navigation drawer
+          80  share menu
+         100  skip link, diagram modal
+         120  the demo deck's side dial
+     140-150  consent banner and its preferences dialog
+         160  search dialog
+         200  a demo expanded over the whole viewport
+         210  the host console over an expanded demo, the only chrome that
+              outranks it, because the overlay covers the header and the
+              session must stay drivable while the demo owns the screen
+
+   Two numbers in that list only look like they belong to it. The deck's side
+   dial (120) and the deck cards' own inline depth (up to 100) are sealed
+   inside the stacking context the deck's `perspective` creates, so they rank
+   against each other and never against the page; the deck drops that
+   perspective only while a demo is expanded, when the 200 overlay covers them
+   anyway. The koi pond's own 0-210 range is sealed the same way, by
+   `isolation: isolate` on `#pond` plus the iframe it renders in.
+
+   One surface sits outside the ladder entirely: a feature mounted in the
+   SDK's dialog display mode pins its iframe to the maximum z-index, so it
+   paints over everything here by design. */
+
 @layer base {
   :root {
     --color-bg: theme('colors.white');

@@ -25,7 +25,7 @@ Derive any displayed rate from the events you actually received, never from the 
 Each transition hands you a [`HeartbeatStatus`](/docs/libraries/features/host#api-HeartbeatStatus) snapshot. Give each of its four [states](/docs/libraries/features/host#api-HeartbeatState) a different move:
 
 - `healthy`: clear whatever warning you raised.
-- `unobservable`: say "can't judge right now", never "offline", because [throttled timers](https://developer.mozilla.org/en-US/docs/Web/API/Page_Visibility_API) make silence meaningless.
+- `unobservable`: say "can't judge right now", never "offline". Silence carries no information here: a page is hidden and [throttled timers](https://developer.mozilla.org/en-US/docs/Web/API/Page_Visibility_API) make the quiet meaningless, or watching has just resumed and no beat has arrived yet.
 - `suspect`: decide per product. Report it verbatim when connection state is the product; do not demote a working embed on suspicion alone.
 - `gone`: drop the session-scoped state you inferred from beats.
 
@@ -69,6 +69,6 @@ Your host must walk these transitions without you touching the feature's code:
 
 ## Limits
 
-- `suspect` needs visible silence, and returning to visibility grants a fresh miss budget, because throttled beats need time to resume. A feature that died while the visitor was on another tab reports `unobservable`, then `healthy` for up to about three seconds after they return, and only then `suspect`. Wait for actual traffic before you call it recovered.
+- `suspect` needs visible silence, and returning to visibility grants a fresh miss budget, because throttled beats need time to resume. A feature that died while the visitor was on another tab stays `unobservable` for up to about three seconds after they return, and only then goes `suspect`; `healthy` is never announced along the way, because the watchdog only speaks it on an actual beat.
 - The watchdog runs a fixed cadence of one beat a second against a budget of three. For a different silence budget, run your own deadline over product events, and set an [`onUnresponsive`](/docs/libraries/features/host#api-ShellOptions-prop-onUnresponsive) [policy](/docs/libraries/features/host#api-UnresponsivePolicy) to choose what the shell does when the budget trips.
 - A same-origin feature shares the host's thread, so a busy spin freezes the host page with it and no watchdog anywhere gets to run. `suspect` earns its keep with cross-origin features, which browsers typically isolate into their own processes.
