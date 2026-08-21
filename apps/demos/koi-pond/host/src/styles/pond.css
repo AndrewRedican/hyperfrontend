@@ -286,9 +286,90 @@ body {
   display: none;
 }
 
+/* why: Opt-in diagnostics for a pond under investigation on a real device; it outranks even the curtain because a shoal that never settles is exactly the moment its evidence matters. */
+.pond-vitals {
+  position: absolute;
+  top: 0.75rem;
+  left: 0.75rem;
+  z-index: 220;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  width: min(92vw, 22rem);
+  max-height: min(62vh, 27rem);
+  padding: 0.5rem 0.6rem;
+  border: 1px solid rgba(232, 243, 239, 0.18);
+  border-radius: 12px;
+  background: rgba(9, 24, 22, 0.82);
+  backdrop-filter: blur(8px);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.62rem;
+  line-height: 1.45;
+  color: rgba(232, 243, 239, 0.86);
+}
+
+.pond-vitals-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.64rem;
+  font-weight: 600;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: rgba(232, 243, 239, 0.52);
+}
+
+.pond-vitals-bar button {
+  margin-left: auto;
+  padding: 0.1rem 0.5rem;
+  border: 1px solid rgba(232, 243, 239, 0.22);
+  border-radius: 999px;
+  background: transparent;
+  color: rgba(232, 243, 239, 0.8);
+  font: inherit;
+  letter-spacing: normal;
+  text-transform: none;
+  cursor: pointer;
+}
+
+.pond-vitals-bar button + button {
+  margin-left: 0;
+}
+
+.pond-vitals-bar button:hover,
+.pond-vitals-bar button:focus-visible {
+  background: rgba(232, 243, 239, 0.12);
+  color: #ffffff;
+}
+
+.pond-vitals-row {
+  display: grid;
+  grid-template-columns: 3.6rem 7rem 1fr;
+  gap: 0.4rem;
+  white-space: nowrap;
+}
+
+.pond-vitals-row span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pond-vitals-log {
+  overflow-y: auto;
+  margin: 0;
+  padding: 0.25rem 0 0;
+  border-top: 1px solid rgba(232, 243, 239, 0.12);
+  list-style: none;
+}
+
+.pond-vitals-log li {
+  overflow-wrap: anywhere;
+}
+
 /* why: In a card-sized window the pond's chrome has no room — the card is an invitation to expand, not the venue; it all returns the moment the pond is the whole experience. Presentation is the honest question here, not viewport width: a pond presented full on a phone has room for its own control, and a width rule was what used to take it away there. */
 #pond[data-scene='card'] .koi-roster,
-#pond[data-scene='card'] .pond-interactions {
+#pond[data-scene='card'] .pond-interactions,
+#pond[data-scene='card'] .pond-vitals {
   display: none;
 }
 

@@ -19,6 +19,7 @@ import contract from '../koi-pond.contract'
 import { createPondReporter, wirePondContract } from './feature/wire-contract'
 import { mountDialogCloseControls } from './components/dialog-close-controls'
 import { mountInteractionsToggle } from './components/interactions-toggle'
+import { mountVitals, vitalsRequested } from './components/vitals'
 import { wireEscapeClose } from './components/escape-close'
 import { createPond } from './scene/pond'
 import { featureUi } from './state/feature-ui'
@@ -49,9 +50,13 @@ export const feature = createFeature({
 const reporter = createPondReporter(feature)
 const root = el<HTMLElement>('#pond')
 
+// why: The overlay exists only when a visitor asked for it — a scene under diagnosis on a real device needs its evidence recorded on the device, and every other visitor pays nothing.
+const vitals = vitalsRequested(window.location.search) ? mountVitals(root) : null
+
 const scene = createPond(root, {
   onShoal: (connected, expected) => reporter.shoal(connected, expected),
   onSequenceComplete: (fish) => reporter.sequenceComplete(fish),
+  ...(vitals !== null && { onDiagnostic: vitals.record }),
 })
 
 wirePondContract(feature, scene)
