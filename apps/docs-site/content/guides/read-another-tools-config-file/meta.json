@@ -1,0 +1,68 @@
+{
+  "schemaVersion": 1,
+  "type": "how-to",
+  "title": "How to read another tool's config file",
+  "problem": "My tool needs to read a project's tsconfig, bundler, or environment configuration, and every attempt turns into a list of seven candidate filenames per tool plus a JSON.parse that throws on the comments TypeScript allows.",
+  "outcome": "A tool that locates a config by which tool owns it rather than by filename, reads JSON-with-comments and dotenv values, walks the extends chain, hands code configs to a loader, and can list every config a directory holds.",
+  "priority": "P1",
+  "packages": ["@hyperfrontend/project-scope"],
+  "verification": {
+    "kind": "authored",
+    "verifiedAgainst": "@hyperfrontend/project-scope@0.2.4",
+    "verifiedOn": "2026-08-20"
+  },
+  "complexity": "intermediate",
+  "estMinutes": 12,
+  "apis": [
+    {
+      "package": "@hyperfrontend/project-scope",
+      "symbol": "findConfigFile"
+    },
+    {
+      "package": "@hyperfrontend/project-scope",
+      "symbol": "parseConfig"
+    },
+    {
+      "package": "@hyperfrontend/project-scope",
+      "symbol": "detectConfigs"
+    },
+    {
+      "package": "@hyperfrontend/project-scope",
+      "symbol": "ParsedConfig"
+    },
+    {
+      "package": "@hyperfrontend/project-scope",
+      "symbol": "DetectedConfig"
+    },
+    {
+      "package": "@hyperfrontend/project-scope",
+      "symbol": "ConfigType"
+    }
+  ],
+  "prerequisites": {
+    "knowledge": ["A Node.js tool that runs against someone else's project directory"]
+  },
+  "related": {
+    "guides": ["validate-a-config-file-at-startup", "build-a-setup-wizard-for-your-cli"],
+    "reference": [
+      "/docs/libraries/project-scope",
+      "/docs/libraries/project-scope/project/config",
+      "/docs/libraries/project-scope/project/package"
+    ],
+    "explanation": ["/docs/libraries/project-scope/architecture"]
+  },
+  "keywords": [
+    "config file",
+    "tsconfig",
+    "jsonc",
+    "comments in JSON",
+    "eslintrc",
+    "vite.config",
+    "dotenv",
+    "extends",
+    "config detection",
+    "codemod",
+    "tooling",
+    "project analysis"
+  ]
+}
