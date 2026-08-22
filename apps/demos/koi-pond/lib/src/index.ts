@@ -51,6 +51,8 @@ export type {
 } from './motion/koi-motion.js'
 export type { KoiCrossing, KoiFlankField, KoiTurnTier, KoiTurnTierName, KoiTurnTierWindows, KoiTurnTiers } from './motion/manoeuvre.js'
 export type { KoiFlight, KoiFlightAim, KoiFlightTerms } from './motion/predict.js'
+export type { KoiRenderer, KoiRendererFactory } from './runtime/koi-renderer.js'
+export type { KoiMotionFactory, KoiRuntimeInit } from './runtime/koi-runtime.js'
 export type { DepthState } from './model/depth.js'
 export type {
   Disturbance,
@@ -104,6 +106,7 @@ export {
 export { DEFAULT_MOTION_LIMITS, DEFAULT_MOTION_TRIM, createKoiMotion } from './motion/koi-motion.js'
 export { chooseTurnTier, flankCrowding } from './motion/manoeuvre.js'
 export { KOI_PATH_MAX_POINTS, predictFlight, stepFlight } from './motion/predict.js'
+export { createKoiRuntime } from './runtime/koi-runtime.js'
 export {
   MARGIN_FISH_LENGTHS,
   boundaryPressure,

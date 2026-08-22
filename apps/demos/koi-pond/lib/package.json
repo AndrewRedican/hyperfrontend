@@ -47,6 +47,7 @@
     "eslint-plugin-oxlint": "1.78.0",
     "globals": "17.11.0",
     "jiti": "2.7.0",
+    "jsdom": "29.1.1",
     "npm-run-all2": "9.0.3",
     "oxlint": "1.78.0",
     "three": "0.185.1",

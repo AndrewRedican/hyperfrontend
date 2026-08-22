@@ -127,7 +127,8 @@ export const koiFishContract: KoiContract = {
     },
     {
       type: 'sleep',
-      description: 'Whether to hold still. The host pauses off-screen and hidden ponds so the compositing layers stop costing anything.',
+      description:
+        'Whether to hold still. The host pauses off-screen and hidden ponds so the compositing layers stop costing anything. A koi stood down this way stops its loop and hands its drawing surface back, GL context and buffers and all, then builds a fresh one when it is stood back up, so a woken shoal takes a moment to paint again.',
       schema: {
         type: 'object',
         properties: { paused: { type: 'boolean' } },
