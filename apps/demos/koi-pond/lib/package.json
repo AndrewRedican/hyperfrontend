@@ -22,10 +22,13 @@
     "./three": {
       "types": "./dist/three/index.d.ts",
       "import": "./dist/three/index.js"
-    }
+    },
+    "./fish.css": "./dist/styles/fish.css"
   },
   "scripts": {
-    "build": "tsc -p tsconfig.build.json",
+    "build": "run-s \"build:*\"",
+    "build:tsc": "tsc -p tsconfig.build.json",
+    "build:styles": "mkdir -p dist/styles && cp src/styles/fish.css dist/styles/fish.css",
     "type-check": "run-s \"type-check:*\"",
     "type-check:src": "tsc -p tsconfig.spec.json",
     "type-check:node": "tsc -p tsconfig.node.json",
