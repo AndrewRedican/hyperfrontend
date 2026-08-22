@@ -162,6 +162,26 @@ export interface EncounterSelf {
 }
 
 /**
+ * How far apart a pair of koi has to stay to count as clear of each other.
+ *
+ * The girths ride on top of the length term, so two broad koi claim more water
+ * than two slender ones of the same length: clearance has to follow the bodies
+ * actually in the water.
+ *
+ * @param self - The koi deciding.
+ * @param neighbor - The koi it is closing on.
+ * @returns The separation in CSS pixels.
+ *
+ * @example Judging a predicted pass
+ * ```typescript
+ * const clear = closestApproach(nose, velocity, other.nose, other.velocity).distance >= encounterClearance(self, other)
+ * ```
+ */
+export function encounterClearance(self: EncounterSelf, neighbor: NeighborObservation): number {
+  return Math.max(self.length, neighbor.length) * ENCOUNTER_CLEARANCE + self.girth + neighbor.girth
+}
+
+/**
  * Decides how one koi settles a crossing with another.
  *
  * Two koi separated by {@link PASSING_SEPARATION} levels or more simply pass —
@@ -188,8 +208,7 @@ export function resolveEncounter(self: EncounterSelf, neighbor: NeighborObservat
   const velocity = { x: Math.cos(self.heading) * self.speed, y: Math.sin(self.heading) * self.speed }
   const otherVelocity = { x: Math.cos(neighbor.heading) * neighbor.speed, y: Math.sin(neighbor.heading) * neighbor.speed }
   const approach = closestApproach(self.position, velocity, { x: neighbor.x, y: neighbor.y }, otherVelocity)
-  // why: The girths ride on top of the length term so two broad koi claim more water than two slender ones of the same length — clearance has to follow the bodies actually in the water.
-  const clearance = Math.max(self.length, neighbor.length) * ENCOUNTER_CLEARANCE + self.girth + neighbor.girth
+  const clearance = encounterClearance(self, neighbor)
 
   if (approach.timeS > ENCOUNTER_HORIZON_S || approach.distance > clearance) {
     return held

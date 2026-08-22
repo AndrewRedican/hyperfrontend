@@ -24,6 +24,7 @@ export {
   ENCOUNTER_HORIZON_S,
   closestApproach,
   createEncounterMemory,
+  encounterClearance,
   givesWay,
   headingAwayFrom,
   headingTo,
