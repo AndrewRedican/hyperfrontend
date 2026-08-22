@@ -368,6 +368,56 @@ describe('createFeatureHandle', () => {
     expect(mock.send).toHaveBeenCalledWith(ControlType.Dirty, { dirty: false })
   })
 
+  describe('hosted', () => {
+    it('reports hosted when a host window is resolved', () => {
+      const mock = createMockChannel()
+      const handle = createFeatureHandle(createMockBroker(mock.channel).broker, hostWindow, createEventEmitter(), {
+        contract: emptyContract,
+      })
+      expect(handle.hosted).toBe(true)
+    })
+
+    it('reads identically before ready() is awaited and after the channel opens', async () => {
+      const mock = createMockChannel()
+      const handle = createFeatureHandle(createMockBroker(mock.channel).broker, hostWindow, createEventEmitter(), {
+        contract: emptyContract,
+      })
+      const beforeReady = handle.hosted
+      mock.trigger('open')
+      await handle.ready()
+      expect([beforeReady, handle.hosted]).toEqual([true, true])
+    })
+
+    it('stays true when the host never opens the connection', () => {
+      const mock = createMockChannel()
+      const emitter = createEventEmitter()
+      const errors: unknown[] = []
+      emitter.on('error', (data) => errors.push(data))
+      const handle = createFeatureHandle(createMockBroker(mock.channel).broker, hostWindow, emitter, { contract: emptyContract })
+      mock.trigger('connect-timeout', { elapsedMs: 10_000 })
+      expect({ hosted: handle.hosted, errors }).toEqual({ hosted: true, errors: [{ reason: 'ready-timeout', elapsedMs: 10_000 }] })
+    })
+
+    it('reports unhosted with no display mode when no host window is resolved', () => {
+      const handle = createFeatureHandle(createMockBroker(createMockChannel().channel).broker, null, createEventEmitter(), {
+        contract: emptyContract,
+      })
+      expect({ hosted: handle.hosted, displayMode: handle.displayMode }).toEqual({ hosted: false, displayMode: null })
+    })
+
+    it('leaves ready() pending while unhosted', async () => {
+      const handle = createFeatureHandle(createMockBroker(createMockChannel().channel).broker, null, createEventEmitter(), {
+        contract: emptyContract,
+      })
+      const settled = jest.fn()
+      void handle.ready().then(settled, settled)
+      await createPromise<void>((resolve) => {
+        setTimeout(resolve, 0)
+      })
+      expect(settled).not.toHaveBeenCalled()
+    })
+  })
+
   describe('payload validation', () => {
     // note: Feature-oriented contract — emitted is what the feature sends; the schemas exercise both validation directions.
     const contract = {

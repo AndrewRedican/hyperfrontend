@@ -217,7 +217,7 @@ flowchart TB
     S --> Win
 ```
 
-The two iframe modes are the ones with a geometry agreement, and it runs one way: the host measures its own container and reports exact pixels; the hostee sizes its document to match and announces nothing of its own. The windowed modes stay deliberately thin: once a popup is open the browser and the user own it, and standalone is a plain `_blank`.
+The two iframe modes are the ones with a geometry agreement, and it runs one way: the host measures its own container and reports exact pixels; the hostee sizes its document to match and announces nothing of its own. The windowed modes stay deliberately thin: once a popup is open the browser and the user own it, and standalone is a plain `_blank`. On the feature side even standalone is hosted, since the opener is the candidate host window; only a direct visit, with no parent and no opener, reads `hosted: false` and never receives a display mode.
 
 ---
 
@@ -321,6 +321,7 @@ interface FeatureHandle {
   setDirty(isDirty: boolean): void
   ready(): Promise<void>
   close(): void
+  readonly hosted: boolean
   readonly displayMode: DisplayMode | null
 }
 

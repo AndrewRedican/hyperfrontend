@@ -11,7 +11,8 @@ import { applyBodyReset } from './sizing'
  * Initializes a feature app on the hostee side and waits for the host connection.
  *
  * Creates a nexus broker for the feature, resolves the host window, and returns
- * a handle for messaging and lifecycle. When `protocol` selects the `v1` or
+ * a handle for messaging and lifecycle whose `hosted` flag reports synchronously
+ * whether a host window exists at all. When `protocol` selects the `v1` or
  * `v2` envelope, the feature negotiates it with the host during the connection
  * handshake and messages travel encrypted once it opens. A `version` announces
  * the contract cut this feature holds (overriding any `contract.version`), so

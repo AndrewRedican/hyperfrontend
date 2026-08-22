@@ -27,6 +27,17 @@ describe('createFeature', () => {
     )
   })
 
+  it('reports hosted when an opener window exists', () => {
+    stubHostOpener()
+    const feature = createFeature({ name: 'clock', contract: { emitted: [], accepted: [] } })
+    expect(feature.hosted).toBe(true)
+  })
+
+  it('reports unhosted on a direct top-level visit', () => {
+    const feature = createFeature({ name: 'clock', contract: { emitted: [], accepted: [] } })
+    expect(feature.hosted).toBe(false)
+  })
+
   it('resets the feature body by default', () => {
     createFeature({ name: 'clock', contract: { emitted: [], accepted: [] } })
     expect(document.head.querySelector('style')?.textContent).toContain('margin:0')
