@@ -48,6 +48,7 @@ export type {
   KoiState,
   KoiSteerContext,
 } from './motion/koi-motion.js'
+export type { KoiCrossing, KoiFlankField, KoiTurnTier, KoiTurnTierName, KoiTurnTierWindows, KoiTurnTiers } from './motion/manoeuvre.js'
 export type { DepthState } from './model/depth.js'
 export type {
   Disturbance,
@@ -98,6 +99,7 @@ export {
   wrapAngle,
 } from './geometry/steering.js'
 export { DEFAULT_MOTION_LIMITS, DEFAULT_MOTION_TRIM, createKoiMotion } from './motion/koi-motion.js'
+export { chooseTurnTier, flankCrowding } from './motion/manoeuvre.js'
 export {
   MARGIN_FISH_LENGTHS,
   boundaryPressure,
