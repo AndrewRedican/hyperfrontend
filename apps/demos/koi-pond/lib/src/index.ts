@@ -11,6 +11,7 @@
  * @module @hyperfrontend/demo-koi-lib
  */
 export type { KoiActionDescription, KoiContract } from './contract/koi-fish.contract.js'
+export type { FeatureLink, KoiRuntime } from './contract/wire.js'
 export type { KoiSection } from './koi3d/anatomy.js'
 export type {
   KoiAppearance,
@@ -73,6 +74,7 @@ export type {
 } from './model/types.js'
 
 export { KOI_CONTRACT_VERSION, koiFishContract } from './contract/koi-fish.contract.js'
+export { wireKoiContract } from './contract/wire.js'
 
 export {
   boundsOverlap,
