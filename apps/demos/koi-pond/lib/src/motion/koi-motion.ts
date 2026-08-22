@@ -13,12 +13,20 @@
  * each decision is anchored when it is made rather than re-derived against the
  * koi's own moving heading.
  *
+ * Manoeuvres are costed. An avoidance commits the least effort that is
+ * predicted to clear the obstacle, out of three tiers permitted by how near the
+ * crossing is; it breaks toward whichever flank the water reads clearer, and
+ * toward its right when the two read the same; and it brakes in proportion to
+ * the helm it wound on, so a koi slows into a turn and picks its pace back up
+ * out of it.
+ *
  * Every band, cadence, and physical limit the brain steers by is an option, and
  * two runtime hooks open the judgement itself: {@link KoiMotionOptions.onDecision}
  * watches what the brain commits to, and {@link KoiMotionOptions.desire} biases
  * the ladder that produced it. A koi built without options swims the shared
  * default.
  */
+import { randomPseudo } from '@hyperfrontend/random-generator-utils'
 import type {
   Disturbance,
   KoiIntent,
@@ -30,12 +38,14 @@ import type {
   Vec2,
 } from '../model/types.js'
 import type { SpineState } from '../geometry/spine.js'
+import type { KoiTurnTierName, KoiTurnTiers, KoiTurnTierWindows } from './manoeuvre.js'
 import { SHORE_ABSENT_S, createItinerary, createPaceSchedule, slipsAway, wrapAcross } from '../geometry/behaviour.js'
 import { advanceSpine, createSpine, sampleSpine, spineGirth } from '../geometry/spine.js'
 import {
   ENCOUNTER_CLEARANCE,
   ENCOUNTER_HORIZON_S,
   createEncounterMemory,
+  encounterClearance,
   givesWay,
   headingAwayFrom,
   headingTo,
@@ -46,9 +56,13 @@ import {
 import { boundaryPressure, pondBounds, pondCentre } from '../geometry/virtual-pond.js'
 import { depthScale } from '../model/depth.js'
 import { koiSeed } from '../model/traits.js'
+import { chooseTurnTier, flankCrowding } from './manoeuvre.js'
 
 /** How many spine samples travel in a reported outline. */
 const OUTLINE_SAMPLES = 5
+
+/** Where the avoidance side's draw band starts on the koi's seed. */
+const BREAK_DRAWS = 640
 
 /** A trait band: what the koi with the lowest trait gets, and what the koi with the highest gets. */
 export interface KoiMotionBand {
@@ -96,8 +110,16 @@ export interface KoiMotionTrim {
   boundaryEngage: number
   /** The softer boundary urgency that releases the correction. */
   boundaryRelease: number
-  /** The evasion arc band an encounter asks for, graded by urgency, in radians. */
-  evasionTurn: KoiMotionBand
+  /** The three manoeuvre tiers an avoidance is drawn from. */
+  evasionTiers: KoiTurnTiers
+  /** How near a crossing has to be before each tier is permitted. */
+  tierWindowS: KoiTurnTierWindows
+  /** How much of its pace a koi sheds when it puts its whole helm into a turn, 0 to 1. */
+  turnBrake: number
+  /** How often a koi with nothing to choose between breaks toward its right flank, 0 to 1. */
+  rightBias: number
+  /** How lopsided the water has to read before the field decides the side rather than the bias. */
+  sideEvidence: number
   /** How far past the hard boundary a slipping koi swims before its absence starts, in body lengths. */
   exitClearanceBl: number
   /** How long a koi reads as rolling between two depth levels, in seconds. */
@@ -126,6 +148,8 @@ export interface KoiMotionLimits {
   turnApproach: number
   /** How much swimming past cruise pace taxes the helm, per body length per second of excess. */
   turnSpeedTax: number
+  /** The share of every turn-rate ceiling anything may actually command, 0 to 1. */
+  turnMagnitudeCap: number
 }
 
 /** The trim every koi swims by unless its options say otherwise. */
@@ -148,7 +172,20 @@ export const DEFAULT_MOTION_TRIM: KoiMotionTrim = {
   decisionIntervalS: 0.1,
   boundaryEngage: 0.12,
   boundaryRelease: 0.05,
-  evasionTurn: { min: Math.PI / 8, max: Math.PI / 3 },
+  // why: Each tier is the smallest arc that settles its band of crossing, and its gain matches, because a lazy arc steered at full helm is not a lazy manoeuvre.
+  evasionTiers: {
+    subtle: { arc: Math.PI / 10, gain: 0.55 },
+    normal: { arc: Math.PI / 5, gain: 1 },
+    hard: { arc: Math.PI / 3, gain: 1.6 },
+  },
+  // why: Nearness is time to the closest approach rather than distance, so a fast crossing counts as near while a drifting one at the same range does not.
+  tierWindowS: { hardS: 0.8, normalS: 1.6 },
+  // why: Commanded braking: what the manoeuvre a koi chose costs it in pace. It is charged against cruise alone, because what uncommanded speed costs the helm is `turnSpeedTax`, and the two must never charge for the same thing twice.
+  turnBrake: 0.35,
+  // why: Two koi meeting head-on read exactly the same even water, so an even reading has to resolve to the same flank in both frames or neither of them clears.
+  rightBias: 0.7,
+  // why: A hair of asymmetry is not evidence; below this the water counts as even and the bias decides.
+  sideEvidence: 0.02,
   exitClearanceBl: 0.6,
   depthRollS: 1.4,
   depthIntentHoldS: 3,
@@ -164,7 +201,10 @@ export const DEFAULT_MOTION_LIMITS: KoiMotionLimits = {
   accelLimitBlS2: 2.6,
   turnAccel: 2.2,
   turnApproach: 1.8,
+  // why: Passive drag alone: what speed the koi did not ask for does to its helm. It reads only the excess over cruise, so the pace a chosen manoeuvre costs stays `turnBrake`'s to charge and the pair never stacks on one turn.
   turnSpeedTax: 0.45,
+  // why: Every ceiling above belongs to a fish rather than to a fighter jet, and nothing the judgement commits, escapes included, may command a larger share of one.
+  turnMagnitudeCap: 0.8,
 }
 
 /**
@@ -269,6 +309,8 @@ export interface KoiDecision {
   gain: number
   /** The depth level a pass asks the host for, or `null`. */
   depth: number | null
+  /** How much effort the koi's own avoidance arc commits, or `null` when what it decided was not one. */
+  tier: KoiTurnTierName | null
 }
 
 /** How this koi starts its life in the pond. */
@@ -438,13 +480,16 @@ export function createKoiMotion(init: KoiMotionInit, options: KoiMotionOptions =
 
   let lastDecisionS = -trim.decisionIntervalS
   let course = init.heading
-  let evasionHeading: number | null = null
-  let evasionUrgency = 0
+  let evasion: { heading: number; gain: number; tier: KoiTurnTierName } | null = null
   let paceScale = 1
   let turnUntilS = 0
   let cooldownUntilS = 0
   let turnDraws = 0
   let turnVelocity = 0
+
+  // why: A side chosen mid-crossing and then re-chosen is the vibration the whole encounter memory exists to stop, so the flank the koi broke toward is held until it has nothing left to avoid.
+  let breakSide: -1 | 1 | null = null
+  let breakDraws = 0
 
   // why: The intent report replays decisions the steering ladder otherwise discards: the waypoint behind `course`, the decided side of a depth pass, and which family the current desire came from.
   let travelTarget: Vec2 | null = null
@@ -474,6 +519,37 @@ export function createKoiMotion(init: KoiMotionInit, options: KoiMotionOptions =
   })
 
   /**
+   * The flank this koi breaks toward for as long as it has something to avoid.
+   *
+   * Drawn from the water rather than from any one crossing: the koi turns
+   * toward whichever side of it is the clearer. When the two read the same, as
+   * they do for a pair meeting exactly head-on, a seeded lean to the right
+   * settles it, which is what lets both fish of such a pair break the same way
+   * and clear each other without exchanging a message.
+   *
+   * @returns The flank: `1` for the koi's right, `-1` for its left.
+   */
+  const preferredSide = (): -1 | 1 => {
+    if (breakSide !== null) {
+      return breakSide
+    }
+    const crowding = flankCrowding({
+      position,
+      heading,
+      depth,
+      reach: pond.fishLength * lerp(traits.awareness, trim.awarenessBl),
+      neighbors,
+    })
+    if (Math.abs(crowding) > trim.sideEvidence) {
+      breakSide = crowding > 0 ? -1 : 1
+      return breakSide
+    }
+    breakDraws += 1
+    breakSide = randomPseudo(seed + BREAK_DRAWS + breakDraws) < trim.rightBias ? 1 : -1
+    return breakSide
+  }
+
+  /**
    * Re-forms the koi's judgement: the itinerary leg, the pace, and how every
    * nearby crossing is settled.
    *
@@ -484,12 +560,13 @@ export function createKoiMotion(init: KoiMotionInit, options: KoiMotionOptions =
   const decide = (): void => {
     lastDecisionS = elapsed
     paceScale = 1
-    evasionHeading = null
-    evasionUrgency = 0
+    evasion = null
+    let urgency = 0
+    let breaking = false
 
     const self = encounterSelf()
     for (const neighbor of neighbors) {
-      const resolution = encounters.resolve(self, neighbor, givesWay(profile.framework, neighbor.framework), elapsed)
+      const resolution = encounters.resolve(self, neighbor, givesWay(profile.framework, neighbor.framework), elapsed, preferredSide)
       if (resolution.action === 'hold') {
         continue
       }
@@ -505,6 +582,7 @@ export function createKoiMotion(init: KoiMotionInit, options: KoiMotionOptions =
             heading: null,
             gain: resolution.urgency,
             depth: resolution.depth,
+            tier: null,
           })
         }
         continue
@@ -513,11 +591,26 @@ export function createKoiMotion(init: KoiMotionInit, options: KoiMotionOptions =
         paceScale = Math.max(0.4, paceScale * (1 - 0.45 * resolution.urgency))
       } else if (resolution.action === 'accelerate') {
         paceScale = Math.min(1.7, paceScale * (1 + 0.5 * resolution.urgency))
-      } else if (resolution.urgency >= evasionUrgency) {
-        // why: The arc follows the urgency, so a grazing encounter asks for a lean while only a genuine collision course asks for the full break.
-        evasionUrgency = resolution.urgency
-        evasionHeading = heading + resolution.turn * lerp(resolution.urgency, trim.evasionTurn)
+      } else {
+        breaking = true
+        if (resolution.urgency >= urgency) {
+          urgency = resolution.urgency
+          const side = resolution.turn === -1 ? -1 : 1
+          // why: Effort follows how much of it the crossing actually needs, so a distant meeting is settled with a lean and only a close one is worth the whole break.
+          const tier = chooseTurnTier(
+            { position, heading, speed, neighbor, clearance: encounterClearance(self, neighbor), side },
+            trim.evasionTiers,
+            trim.tierWindowS
+          )
+          const committing = trim.evasionTiers[tier]
+          evasion = { heading: heading + side * committing.arc, gain: committing.gain, tier }
+        }
       }
+    }
+
+    // why: The held flank is released only once nothing is left to break for, so the next encounter reads the water afresh instead of inheriting a side chosen for a fish that has already gone past.
+    if (!breaking) {
+      breakSide = null
     }
 
     if (shore === 'in') {
@@ -532,21 +625,27 @@ export function createKoiMotion(init: KoiMotionInit, options: KoiMotionOptions =
    * The heading this koi wants, how hard it is committed to it, and what
    * prompted it.
    *
-   * @returns The desired heading, the turn gain to reach it with, its family, and its cause.
+   * @returns The desired heading, the turn gain to reach it with, its family, its cause, and the effort an avoidance arc commits.
    */
-  const wanted = (): KoiDesire & { cause: KoiDecisionCause } => {
+  const wanted = (): KoiDesire & { cause: KoiDecisionCause; tier: KoiTurnTierName | null } => {
     if (threat !== null && elapsed < fleeingUntilS) {
-      return { heading: headingAwayFrom(position, threat, heading), gain: trim.escapeTurnGain, kind: 'avoid', cause: 'flee' }
+      return {
+        heading: headingAwayFrom(position, threat, heading),
+        gain: trim.escapeTurnGain,
+        kind: 'avoid',
+        cause: 'flee',
+        tier: null,
+      }
     }
 
     // why: A koi that chose to slip out holds its course, because the whole point of the slip is that the correction was ignored.
     if (shore === 'leaving' || shore === 'away') {
-      return { heading, gain: trim.glideGain, kind: 'travel', cause: 'slip' }
+      return { heading, gain: trim.glideGain, kind: 'travel', cause: 'slip', tier: null }
     }
 
     if (shore === 'returning') {
       // why: The itinerary's course predates the absence; until the koi is back inside, the only sensible pull is open water.
-      return { heading: headingTo(position, pondCentre(pond)), gain: 0.5, kind: 'travel', cause: 'return' }
+      return { heading: headingTo(position, pondCentre(pond)), gain: 0.5, kind: 'travel', cause: 'return', tier: null }
     }
 
     const edge = boundaryPressure(pond, position, heading)
@@ -556,7 +655,7 @@ export function createKoiMotion(init: KoiMotionInit, options: KoiMotionOptions =
       crossings += 1
       if (slipsAway(seed, crossings)) {
         shore = 'leaving'
-        return { heading, gain: trim.glideGain, kind: 'travel', cause: 'slip' }
+        return { heading, gain: trim.glideGain, kind: 'travel', cause: 'slip', tier: null }
       }
       // why: The itinerary must not keep pulling at the wall the koi is being pushed off, so the next leg starts from open water.
       itinerary.abandon()
@@ -571,12 +670,13 @@ export function createKoiMotion(init: KoiMotionInit, options: KoiMotionOptions =
         gain: 1 + edge.urgency * caution * 1.4,
         kind: 'avoid',
         cause: 'boundary',
+        tier: null,
       }
     }
 
-    if (evasionHeading !== null) {
+    if (evasion !== null) {
       cooldownUntilS = Math.max(cooldownUntilS, elapsed + 1)
-      return { heading: evasionHeading, gain: 1 + evasionUrgency, kind: 'avoid', cause: 'evade' }
+      return { heading: evasion.heading, gain: evasion.gain, kind: 'avoid', cause: 'evade', tier: evasion.tier }
     }
 
     const damping = pond.reducedMotion ? trim.reducedMotionDamping : 1
@@ -591,23 +691,24 @@ export function createKoiMotion(init: KoiMotionInit, options: KoiMotionOptions =
     if (turnUntilS !== 0) {
       if (elapsed >= turnUntilS || Math.abs(error) < 0.06) {
         finish()
-        return { heading: course + ripple, gain: trim.glideGain, kind: 'travel', cause: 'glide' }
+        return { heading: course + ripple, gain: trim.glideGain, kind: 'travel', cause: 'glide', tier: null }
       }
-      return { heading: course, gain: 1, kind: 'travel', cause: 'turn' }
+      return { heading: course, gain: 1, kind: 'travel', cause: 'turn', tier: null }
     }
     if (Math.abs(error) > trim.turnTrigger && elapsed > cooldownUntilS) {
       turnUntilS = elapsed + Math.min(trim.turnMaxS, Math.abs(error) / lerp(traits.turnResponsiveness, trim.turnRate) + 0.3)
-      return { heading: course, gain: 1, kind: 'travel', cause: 'turn' }
+      return { heading: course, gain: 1, kind: 'travel', cause: 'turn', tier: null }
     }
-    return { heading: course + ripple, gain: trim.glideGain, kind: 'travel', cause: 'glide' }
+    return { heading: course + ripple, gain: trim.glideGain, kind: 'travel', cause: 'glide', tier: null }
   }
 
   /**
    * The speed this koi is aiming for right now, in pixels per second.
    *
+   * @param helmLoad - How much of its helm the koi currently has wound on, 0 to 1.
    * @returns The target speed.
    */
-  const targetSpeed = (): number => {
+  const targetSpeed = (helmLoad: number): number => {
     if (shore === 'away') {
       return 0
     }
@@ -615,10 +716,13 @@ export function createKoiMotion(init: KoiMotionInit, options: KoiMotionOptions =
     const cap = pond.fishLength * limits.maxSpeedBlS
     const damping = pond.reducedMotion ? trim.reducedMotionDamping : 1
     if (elapsed < fleeingUntilS) {
+      // why: A bolt is not braked for its own turns: what its speed costs is the helm itself, charged once by `turnSpeedTax`, and charging it again here is what would leave an escape reading as a shrug.
       return Math.min(cap, pond.fishLength * lerp(traits.reactionIntensity, trim.escapeBlS) * damping)
     }
     // why: The trait sets this koi's own cruise; the pace schedule loafs and hurries it in bounded, exclusive events; an encounter's give-way scales ride on top.
-    return Math.min(cap, pond.fishLength * lerp(traits.cruiseSpeed, trim.cruiseBlS) * pace.multiplier(elapsed) * paceScale)
+    const cruising = Math.min(cap, pond.fishLength * lerp(traits.cruiseSpeed, trim.cruiseBlS) * pace.multiplier(elapsed) * paceScale)
+    // why: A koi brakes into the turn it committed to and comes back onto its pace out of it, which is what stops a manoeuvre reading as a drift taken at cruise.
+    return cruising * (1 - helmLoad * trim.turnBrake)
   }
 
   /**
@@ -698,12 +802,14 @@ export function createKoiMotion(init: KoiMotionInit, options: KoiMotionOptions =
       committed = { heading: wants.heading, kind: wants.kind }
       if (onDecision !== undefined && cause !== reportedCause) {
         reportedCause = cause
-        onDecision({ atS: elapsed, cause, kind: wants.kind, heading: wants.heading, gain: wants.gain, depth: null })
+        onDecision({ atS: elapsed, cause, kind: wants.kind, heading: wants.heading, gain: wants.gain, depth: null, tier: formed.tier })
       }
       const error = wrapAngle(wants.heading - heading)
+      // why: This koi's own helm: what its turn trait is worth once the cap that keeps every fish inside a fish's agility has been taken off it.
+      const helm = lerp(traits.turnResponsiveness, trim.turnRate) * limits.turnMagnitudeCap
       // why: Speed taxes the helm, because a koi past cruise pace physically cannot carve a tight arc, so a bolting fish sweeps through a wide curve instead of pivoting at full speed.
       const overCruise = Math.max(0, speed / pond.fishLength - trim.cruiseBlS.max)
-      const ceiling = (lerp(traits.turnResponsiveness, trim.turnRate) * wants.gain) / (1 + overCruise * limits.turnSpeedTax)
+      const ceiling = (helm * wants.gain) / (1 + overCruise * limits.turnSpeedTax)
       // why: Rate follows the remaining error down, so every turn ramps out as the course closes instead of holding full curvature to the last degree and stopping dead.
       const desired = Math.max(-ceiling, Math.min(ceiling, error * limits.turnApproach))
       // why: The turn rate is a state with bounded acceleration, never a step, so the body winds into and out of each manoeuvre and conflicting pulls are damped by inertia instead of alternating sides frame to frame.
@@ -713,7 +819,8 @@ export function createKoiMotion(init: KoiMotionInit, options: KoiMotionOptions =
 
       // why: The exponential ease still shapes small adjustments, but the hard bound is what keeps a startled koi surging up to speed over a beat or two rather than leaping to it.
       const accelLimit = pond.fishLength * limits.accelLimitBlS2 * dt
-      const speedStep = (targetSpeed() - speed) * Math.min(1, trim.speedEase * dt)
+      // how: The brake is charged against the koi's own helm rather than against whatever gain this frame asked for, so a glide's nudge costs it nothing and a committed break costs it the lot.
+      const speedStep = (targetSpeed(Math.min(1, Math.abs(turnVelocity) / helm)) - speed) * Math.min(1, trim.speedEase * dt)
       speed += Math.max(-accelLimit, Math.min(accelLimit, speedStep))
       if (shore !== 'away') {
         position = { x: position.x + Math.cos(heading) * speed * dt, y: position.y + Math.sin(heading) * speed * dt }
@@ -787,8 +894,8 @@ export function createKoiMotion(init: KoiMotionInit, options: KoiMotionOptions =
       turnVelocity = 0
       threat = null
       fleeingUntilS = 0
-      evasionHeading = null
-      evasionUrgency = 0
+      evasion = null
+      breakSide = null
       boundaryEngaged = false
       turnUntilS = 0
       travelTarget = null
