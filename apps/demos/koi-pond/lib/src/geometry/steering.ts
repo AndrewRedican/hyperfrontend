@@ -277,9 +277,10 @@ export interface EncounterMemory {
    * @param neighbor - The koi it is closing on.
    * @param tieBreak - `true` when this koi takes the give-way side of the pair.
    * @param nowS - The koi's own clock, in seconds.
+   * @param prefer - Which flank the koi would rather break toward, asked for only when a side is about to be latched; the pairwise bearing decides when it is left out.
    * @returns The manoeuvre to make, stable across the crossing.
    */
-  resolve(self: EncounterSelf, neighbor: NeighborObservation, tieBreak: boolean, nowS: number): EncounterResolution
+  resolve(self: EncounterSelf, neighbor: NeighborObservation, tieBreak: boolean, nowS: number, prefer?: () => -1 | 1): EncounterResolution
 }
 
 /**
@@ -297,7 +298,7 @@ export function createEncounterMemory(): EncounterMemory {
   const held = new Map<string, { action: 'turn' | 'slow' | 'accelerate'; turn: -1 | 0 | 1; untilS: number }>()
 
   return {
-    resolve(self, neighbor, tieBreak, nowS) {
+    resolve(self, neighbor, tieBreak, nowS, prefer) {
       const resolution = resolveEncounter(self, neighbor, tieBreak)
       const memory = held.get(neighbor.framework)
       const remembered = memory !== undefined && nowS <= memory.untilS ? memory : undefined
@@ -307,7 +308,8 @@ export function createEncounterMemory(): EncounterMemory {
 
       if (remembered === undefined) {
         if (resolution.action === 'turn') {
-          const turn = resolution.turn === 0 ? 1 : resolution.turn
+          // why: Which side to break toward is the koi's own reading of the whole field it is swimming through; the pairwise bearing stands in only for a caller that offers nothing wider. Either way the choice is latched here, so the side survives the crossing it was made for.
+          const turn = prefer === undefined ? (resolution.turn === 0 ? 1 : resolution.turn) : prefer()
           held.set(neighbor.framework, { action: 'turn', turn, untilS: nowS + ENCOUNTER_HOLD_S })
           return turn === resolution.turn ? resolution : { ...resolution, turn }
         }
