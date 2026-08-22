@@ -35,6 +35,19 @@ export type { SpineState, SpineStep } from './geometry/spine.js'
 export type { Itinerary, PaceSchedule, WaypointLeg } from './geometry/behaviour.js'
 export type { ClosestApproach, EncounterAction, EncounterMemory, EncounterResolution, EncounterSelf } from './geometry/steering.js'
 export type { BoundaryPressure, KoiFrameBox, PondBounds } from './geometry/virtual-pond.js'
+export type {
+  KoiDecision,
+  KoiDecisionCause,
+  KoiDesire,
+  KoiMotion,
+  KoiMotionBand,
+  KoiMotionInit,
+  KoiMotionLimits,
+  KoiMotionOptions,
+  KoiMotionTrim,
+  KoiState,
+  KoiSteerContext,
+} from './motion/koi-motion.js'
 export type { DepthState } from './model/depth.js'
 export type {
   Disturbance,
@@ -83,6 +96,7 @@ export {
   wanderOffset,
   wrapAngle,
 } from './geometry/steering.js'
+export { DEFAULT_MOTION_LIMITS, DEFAULT_MOTION_TRIM, createKoiMotion } from './motion/koi-motion.js'
 export {
   MARGIN_FISH_LENGTHS,
   boundaryPressure,
