@@ -36,7 +36,9 @@ the three new behaviors: `resting`, outline `path` emission, and release-GL-on-h
   keeps today's held-inspection behavior exactly.
 - **Path emission.** Attach `predictPath` output (at most 20 points) to the outgoing
   outline every outline tick. Always emitted: it is 20 `Vec2`s at 10Hz on a schema-less
-  hot path, and the host overlay decides whether to use it.
+  hot path, and the host overlay decides whether to use it. The call shape follows
+  whichever signature [03-predicted-path.md](03-predicted-path.md) settles on, which is
+  likely `motion.predictPath(n, dtStep)` rather than a free function over `motion.state`.
 - **Release-GL-on-hidden.** On `sleep {paused:true}`, dispose the renderer (freeing the
   WebGL context and drawing buffers) after the loop stops; on wake, rebuild the renderer
   before resuming. Rebuild is staggered by a small per-instance delay derived from the

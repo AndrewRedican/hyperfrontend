@@ -16,12 +16,37 @@ curved advancement (position samples), not a direction ray.
   the brain file grows unwieldy; either way exported from the motion index)
 - `apps/demos/koi-pond/lib/src/motion/__tests__/predict.spec.ts` (new)
 
+## Carried over from the port
+
+`KoiState` already reports `position`, `heading`, `speed`, and the wound `turnVelocity`
+([01-motion-port.md](01-motion-port.md)), so a frozen manoeuvre can be integrated from the
+state alone. **That is not enough for the realized-trajectory parity spec below**, and the
+`predictPath(state, n, dtStep)` signature in the Goal has to be re-decided before the work
+starts. The brain does not hold `turnVelocity` steady across a horizon: it re-derives a
+turn rate every frame from the remaining course error, so reproducing the realized path
+additionally needs
+
+- the committed desire the ladder settled on, its heading and its gain;
+- the koi's turn ceiling `lerp(traits.turnResponsiveness, trim.turnRate)`, taxed by
+  `limits.turnSpeedTax` against `trim.cruiseBlS.max`;
+- `limits.turnApproach` and `limits.turnAccel` for the ramp-out and the windup;
+- the current target speed, with `trim.speedEase`, `limits.accelLimitBlS2`, and
+  `pond.fishLength`.
+
+Two shapes carry all of that. Either widen `KoiState` into a full flight state, which
+bloats a getter the fish runtime reads every frame, or make it `motion.predictPath(n,
+dtStep)` on `KoiMotion`, where the brain already holds every term, with the stepping math
+factored into one integrator that `advance` and `predictPath` both call. **Prefer the
+second**: it is also the cleanest reading of "share the integrator code path" below, and
+it keeps the retune ([02-motion-retune.md](02-motion-retune.md)) honest, since turn tiers,
+the magnitude cap, and the manoeuvre brake all land inside that same integrator rather
+than in a copy the predictor would drift from.
+
 ## Design
 
-- Pure function over the current motion state: integrate `turnVelocity`, `speed`, and
-  `heading` forward `n` steps of `dtStep` seconds, returning at most 20 `Vec2` points
-  (enforce the bound inside the function; the outline contract carries the same cap,
-  [04-contract-0-8-0.md](04-contract-0-8-0.md)).
+- Integrate `turnVelocity`, `speed`, and `heading` forward `n` steps of `dtStep` seconds,
+  returning at most 20 `Vec2` points (enforce the bound inside the function; the outline
+  contract carries the same cap, [04-contract-0-8-0.md](04-contract-0-8-0.md)).
 - No allocation churn concerns at the call cadence (20 points at the outline's 10Hz), but
   keep the function allocation-light anyway; it runs inside the fish frame loop.
 - The prediction deliberately ignores future decisions: it shows what the currently wound
