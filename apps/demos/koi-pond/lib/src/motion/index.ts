@@ -18,6 +18,8 @@ export type {
   KoiSteerContext,
 } from './koi-motion.js'
 export type { KoiCrossing, KoiFlankField, KoiTurnTier, KoiTurnTierName, KoiTurnTierWindows, KoiTurnTiers } from './manoeuvre.js'
+export type { KoiFlight, KoiFlightAim, KoiFlightTerms } from './predict.js'
 
 export { DEFAULT_MOTION_LIMITS, DEFAULT_MOTION_TRIM, createKoiMotion } from './koi-motion.js'
 export { chooseTurnTier, flankCrowding } from './manoeuvre.js'
+export { stepFlight } from './predict.js'

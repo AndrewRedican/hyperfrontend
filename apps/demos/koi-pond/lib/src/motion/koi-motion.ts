@@ -56,6 +56,8 @@ import {
 import { boundaryPressure, pondBounds, pondCentre } from '../geometry/virtual-pond.js'
 import { depthScale } from '../model/depth.js'
 import { koiSeed } from '../model/traits.js'
+import type { KoiFlightAim, KoiFlightTerms } from './predict.js'
+import { stepFlight } from './predict.js'
 import { chooseTurnTier, flankCrowding } from './manoeuvre.js'
 
 /** How many spine samples travel in a reported outline. */
@@ -276,6 +278,9 @@ export interface KoiDesire {
   /** The decision family: `avoid` for every collision-avoidance pull, `travel` for ordinary progress. */
   kind: 'travel' | 'avoid'
 }
+
+/** The rule a koi steers by, asked for the flight it is about to take. */
+type KoiMotionAim = (position: Vec2, heading: number, atS: number) => KoiFlightAim
 
 /** What the koi knows about itself as it forms a desire. */
 export interface KoiSteerContext {
@@ -499,6 +504,9 @@ export function createKoiMotion(init: KoiMotionInit, options: KoiMotionOptions =
   // why: The observer hears decisions, not frames, so a standing intention is reported once rather than sixty times a second.
   let reportedCause: KoiDecisionCause | null = null
   let reportedPass: number | null = null
+
+  // why: This koi's own helm: what its turn trait is worth once the cap that keeps every fish inside a fish's agility has been taken off it.
+  const helm = lerp(traits.turnResponsiveness, trim.turnRate) * limits.turnMagnitudeCap
 
   const bodyLength = (): number => pond.fishLength * build.lengthScale * depthScale(depth)
   const bodyGirth = (): number => bodyLength() * build.girthRatio
@@ -726,6 +734,27 @@ export function createKoiMotion(init: KoiMotionInit, options: KoiMotionOptions =
   }
 
   /**
+   * Everything outside the integrator that one step of this koi's flight turns
+   * on.
+   *
+   * @param aim - The rule the koi steers by.
+   * @returns The terms to step with.
+   */
+  const flightTerms = (aim: KoiMotionAim): KoiFlightTerms => ({
+    aim,
+    helm,
+    targetSpeed,
+    moves: shore !== 'away',
+    fishLength: pond.fishLength,
+    cruiseCeilingBlS: trim.cruiseBlS.max,
+    speedEase: trim.speedEase,
+    accelLimitBlS2: limits.accelLimitBlS2,
+    turnAccel: limits.turnAccel,
+    turnApproach: limits.turnApproach,
+    turnSpeedTax: limits.turnSpeedTax,
+  })
+
+  /**
    * The koi's current decision, told as the host's overlay wants it: a family,
    * a steering target, and how far ahead this koi is anticipating.
    *
@@ -759,6 +788,8 @@ export function createKoiMotion(init: KoiMotionInit, options: KoiMotionOptions =
 
   return {
     advance(dt) {
+      // why: The clock this frame started from, because the step reads its judgement at the moment it lands on rather than the one it left.
+      const startedAtS = elapsed
       elapsed += dt
 
       if (shore === 'leaving') {
@@ -804,27 +835,13 @@ export function createKoiMotion(init: KoiMotionInit, options: KoiMotionOptions =
         reportedCause = cause
         onDecision({ atS: elapsed, cause, kind: wants.kind, heading: wants.heading, gain: wants.gain, depth: null, tier: formed.tier })
       }
-      const error = wrapAngle(wants.heading - heading)
-      // why: This koi's own helm: what its turn trait is worth once the cap that keeps every fish inside a fish's agility has been taken off it.
-      const helm = lerp(traits.turnResponsiveness, trim.turnRate) * limits.turnMagnitudeCap
-      // why: Speed taxes the helm, because a koi past cruise pace physically cannot carve a tight arc, so a bolting fish sweeps through a wide curve instead of pivoting at full speed.
-      const overCruise = Math.max(0, speed / pond.fishLength - trim.cruiseBlS.max)
-      const ceiling = (helm * wants.gain) / (1 + overCruise * limits.turnSpeedTax)
-      // why: Rate follows the remaining error down, so every turn ramps out as the course closes instead of holding full curvature to the last degree and stopping dead.
-      const desired = Math.max(-ceiling, Math.min(ceiling, error * limits.turnApproach))
-      // why: The turn rate is a state with bounded acceleration, never a step, so the body winds into and out of each manoeuvre and conflicting pulls are damped by inertia instead of alternating sides frame to frame.
-      const windup = limits.turnAccel * dt
-      turnVelocity += Math.max(-windup, Math.min(windup, desired - turnVelocity))
-      heading = wrapAngle(heading + turnVelocity * dt)
-
-      // why: The exponential ease still shapes small adjustments, but the hard bound is what keeps a startled koi surging up to speed over a beat or two rather than leaping to it.
-      const accelLimit = pond.fishLength * limits.accelLimitBlS2 * dt
-      // how: The brake is charged against the koi's own helm rather than against whatever gain this frame asked for, so a glide's nudge costs it nothing and a committed break costs it the lot.
-      const speedStep = (targetSpeed(Math.min(1, Math.abs(turnVelocity) / helm)) - speed) * Math.min(1, trim.speedEase * dt)
-      speed += Math.max(-accelLimit, Math.min(accelLimit, speedStep))
-      if (shore !== 'away') {
-        position = { x: position.x + Math.cos(heading) * speed * dt, y: position.y + Math.sin(heading) * speed * dt }
-      }
+      // why: Every koi frame steps through the shared integrator, so the arithmetic that carries a koi forward has one home and cannot be quietly reimplemented beside it.
+      const held: KoiMotionAim = () => ({ heading: wants.heading, gain: wants.gain })
+      const flown = stepFlight({ position, heading, speed, turnVelocity, atS: startedAtS }, flightTerms(held), dt)
+      position = flown.position
+      heading = flown.heading
+      speed = flown.speed
+      turnVelocity = flown.turnVelocity
 
       const turnedBy = Math.abs(turnVelocity)
       if (elapsed < transitioningUntilS) {
