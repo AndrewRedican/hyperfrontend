@@ -150,6 +150,8 @@ export { koiBuild, koiPhenotype, koiProfile, koiSeed, koiTraits, koiTrim, koiVar
 export { FRAMEWORK_SITES, KOI_FRAMEWORKS, KOI_POND_SOURCE_URL, koiSourceUrl } from './model/types.js'
 export type { KoiCardDetails, KoiCardText, KoiMemoryState } from './model/card.js'
 export { describeKoiCard } from './model/card.js'
+export type { CardSize } from './model/card-anchor.js'
+export { cardAnchor, cardTransform } from './model/card-anchor.js'
 
 export { sampleSection, sectionPoint } from './koi3d/anatomy.js'
 export { bodyRingCount, buildBodyMesh, eyeTheta, surfaceNormal, surfacePoint } from './koi3d/body-mesh.js'
