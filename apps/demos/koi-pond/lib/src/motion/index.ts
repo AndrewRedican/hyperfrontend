@@ -22,4 +22,4 @@ export type { KoiFlight, KoiFlightAim, KoiFlightTerms } from './predict.js'
 
 export { DEFAULT_MOTION_LIMITS, DEFAULT_MOTION_TRIM, createKoiMotion } from './koi-motion.js'
 export { chooseTurnTier, flankCrowding } from './manoeuvre.js'
-export { stepFlight } from './predict.js'
+export { KOI_PATH_MAX_POINTS, predictFlight, stepFlight } from './predict.js'

@@ -101,7 +101,7 @@ export {
 } from './geometry/steering.js'
 export { DEFAULT_MOTION_LIMITS, DEFAULT_MOTION_TRIM, createKoiMotion } from './motion/koi-motion.js'
 export { chooseTurnTier, flankCrowding } from './motion/manoeuvre.js'
-export { stepFlight } from './motion/predict.js'
+export { KOI_PATH_MAX_POINTS, predictFlight, stepFlight } from './motion/predict.js'
 export {
   MARGIN_FISH_LENGTHS,
   boundaryPressure,

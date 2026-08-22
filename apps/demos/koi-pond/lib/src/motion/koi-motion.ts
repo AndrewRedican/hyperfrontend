@@ -57,7 +57,7 @@ import { boundaryPressure, pondBounds, pondCentre } from '../geometry/virtual-po
 import { depthScale } from '../model/depth.js'
 import { koiSeed } from '../model/traits.js'
 import type { KoiFlightAim, KoiFlightTerms } from './predict.js'
-import { stepFlight } from './predict.js'
+import { predictFlight, stepFlight } from './predict.js'
 import { chooseTurnTier, flankCrowding } from './manoeuvre.js'
 
 /** How many spine samples travel in a reported outline. */
@@ -65,6 +65,9 @@ const OUTLINE_SAMPLES = 5
 
 /** Where the avoidance side's draw band starts on the koi's seed. */
 const BREAK_DRAWS = 640
+
+/** The waviness an ordinary turn rides on: none, because a turn is a manoeuvre rather than a drift. */
+const NO_WANDER = (): number => 0
 
 /** A trait band: what the koi with the lowest trait gets, and what the koi with the highest gets. */
 export interface KoiMotionBand {
@@ -279,7 +282,15 @@ export interface KoiDesire {
   kind: 'travel' | 'avoid'
 }
 
-/** The rule a koi steers by, asked for the flight it is about to take. */
+/**
+ * A pull re-formed for a flight the koi has not taken yet.
+ *
+ * The ladder settles a desire against where the koi is now; the same branch also
+ * hands back the rule it settled it with, so the horizon a prediction integrates
+ * can re-take the identical bearing from each position it works out for itself
+ * rather than steering the whole way on the one the present frame happened to
+ * read.
+ */
 type KoiMotionAim = (position: Vec2, heading: number, atS: number) => KoiFlightAim
 
 /** What the koi knows about itself as it forms a desire. */
@@ -427,6 +438,34 @@ export interface KoiMotion {
    * @returns The requested level, or `null`.
    */
   takeDepthRequest(): number | null
+  /**
+   * Where this koi is about to be, as a curve of positions rather than a ray.
+   *
+   * The manoeuvre the koi has wound on is integrated forward through the very
+   * arithmetic {@link KoiMotion.advance} steps with, so the koi genuinely swims
+   * through the points it hands out: a drawing of them is a drawing of its own
+   * commitment, not a guess laid over it. Each point re-takes the koi's own
+   * bearing from the point before it, so a break really does curve and a bolt
+   * really does bend away from what struck the water.
+   *
+   * What it will not tell you is what the koi has not decided yet: the horizon
+   * holds the judgement of the frame that produced it, so a fresh decision
+   * simply parts the next path from this one at the moment it was taken, and a
+   * consumer that kept the old points can see exactly where that happened.
+   *
+   * Points are spaced `dtStep` seconds apart, nearest first, and at most twenty
+   * of them however many are asked for.
+   *
+   * @param steps - How many points to predict.
+   * @param dtStep - The seconds between two points.
+   * @returns The predicted positions in pond space.
+   *
+   * @example Reporting the next two seconds along with the outline
+   * ```typescript
+   * feature.send('outline', { ...motion.outline(), path: motion.predictPath(20, 0.1) })
+   * ```
+   */
+  predictPath(steps: number, dtStep: number): Vec2[]
 }
 
 /**
@@ -485,7 +524,7 @@ export function createKoiMotion(init: KoiMotionInit, options: KoiMotionOptions =
 
   let lastDecisionS = -trim.decisionIntervalS
   let course = init.heading
-  let evasion: { heading: number; gain: number; tier: KoiTurnTierName } | null = null
+  let evasion: { heading: number; gain: number; tier: KoiTurnTierName; offset: number } | null = null
   let paceScale = 1
   let turnUntilS = 0
   let cooldownUntilS = 0
@@ -500,6 +539,10 @@ export function createKoiMotion(init: KoiMotionInit, options: KoiMotionOptions =
   let travelTarget: Vec2 | null = null
   let depthIntent: { direction: 'above' | 'below'; untilS: number } | null = null
   let committed: { heading: number; kind: 'travel' | 'avoid' } = { heading: init.heading, kind: 'travel' }
+  // why: A koi with nothing to steer for holds the nose it has, and the pull is the same rule wherever it is taken from, so every branch of the ladder that comes to that answer shares this one.
+  const holdCourse: KoiMotionAim = (_at, facing) => ({ heading: facing, gain: trim.glideGain })
+  // why: A prediction replays the rule behind the last frame's pull rather than the bearing it produced, so a horizon re-takes the koi's judgement from every position it integrates.
+  let committedAim: KoiMotionAim = holdCourse
 
   // why: The observer hears decisions, not frames, so a standing intention is reported once rather than sixty times a second.
   let reportedCause: KoiDecisionCause | null = null
@@ -611,7 +654,9 @@ export function createKoiMotion(init: KoiMotionInit, options: KoiMotionOptions =
             trim.tierWindowS
           )
           const committing = trim.evasionTiers[tier]
-          evasion = { heading: heading + side * committing.arc, gain: committing.gain, tier }
+          // why: The arc is kept alongside the bearing it produced, so the break can be re-anchored off a hypothetical heading without the formula being written down twice.
+          const offset = side * committing.arc
+          evasion = { heading: heading + offset, gain: committing.gain, tier, offset }
         }
       }
     }
@@ -630,30 +675,39 @@ export function createKoiMotion(init: KoiMotionInit, options: KoiMotionOptions =
   }
 
   /**
-   * The heading this koi wants, how hard it is committed to it, and what
-   * prompted it.
+   * The heading this koi wants, how hard it is committed to it, what prompted
+   * it, and the rule that re-forms it from anywhere.
    *
-   * @returns The desired heading, the turn gain to reach it with, its family, its cause, and the effort an avoidance arc commits.
+   * Every branch pairs the pull it settled on with an {@link KoiFlightTerms.aim}
+   * that re-takes the very same bearing from a hypothetical flight, which is
+   * what {@link KoiMotion.predictPath} integrates the horizon against. Only the
+   * two pulls the koi anchors on its own decision beat, the itinerary's course
+   * and an evasion's break, read differently from the frame's own value: the
+   * rule re-anchors them where the next decision would, rather than freezing the
+   * bearing this one took.
+   *
+   * @returns The desired heading, the turn gain to reach it with, its family, its cause, the effort an avoidance arc commits, and the rule behind it.
    */
-  const wanted = (): KoiDesire & { cause: KoiDecisionCause; tier: KoiTurnTierName | null } => {
+  const wanted = (): KoiDesire & { cause: KoiDecisionCause; tier: KoiTurnTierName | null; aim: KoiMotionAim } => {
     if (threat !== null && elapsed < fleeingUntilS) {
-      return {
-        heading: headingAwayFrom(position, threat, heading),
+      const from = threat
+      // why: What a bolting koi steers by is the water between it and whatever broke it, and that bearing swings hard while the two are close, so it is re-read rather than fixed at the strike.
+      const aim = (at: Vec2, facing: number): KoiFlightAim => ({
+        heading: headingAwayFrom(at, from, facing),
         gain: trim.escapeTurnGain,
-        kind: 'avoid',
-        cause: 'flee',
-        tier: null,
-      }
+      })
+      return { ...aim(position, heading), kind: 'avoid', cause: 'flee', tier: null, aim }
     }
 
     // why: A koi that chose to slip out holds its course, because the whole point of the slip is that the correction was ignored.
     if (shore === 'leaving' || shore === 'away') {
-      return { heading, gain: trim.glideGain, kind: 'travel', cause: 'slip', tier: null }
+      return { ...holdCourse(position, heading, elapsed), kind: 'travel', cause: 'slip', tier: null, aim: holdCourse }
     }
 
     if (shore === 'returning') {
       // why: The itinerary's course predates the absence; until the koi is back inside, the only sensible pull is open water.
-      return { heading: headingTo(position, pondCentre(pond)), gain: 0.5, kind: 'travel', cause: 'return', tier: null }
+      const aim = (at: Vec2): KoiFlightAim => ({ heading: headingTo(at, pondCentre(pond)), gain: 0.5 })
+      return { ...aim(position), kind: 'travel', cause: 'return', tier: null, aim }
     }
 
     const edge = boundaryPressure(pond, position, heading)
@@ -663,7 +717,7 @@ export function createKoiMotion(init: KoiMotionInit, options: KoiMotionOptions =
       crossings += 1
       if (slipsAway(seed, crossings)) {
         shore = 'leaving'
-        return { heading, gain: trim.glideGain, kind: 'travel', cause: 'slip', tier: null }
+        return { ...holdCourse(position, heading, elapsed), kind: 'travel', cause: 'slip', tier: null, aim: holdCourse }
       }
       // why: The itinerary must not keep pulling at the wall the koi is being pushed off, so the next leg starts from open water.
       itinerary.abandon()
@@ -673,23 +727,35 @@ export function createKoiMotion(init: KoiMotionInit, options: KoiMotionOptions =
     if (boundaryEngaged) {
       const caution = 0.4 + traits.directionalCaution * 0.6
       cooldownUntilS = Math.max(cooldownUntilS, elapsed + 1)
-      return {
-        heading: Math.atan2(edge.inward.y, edge.inward.x),
-        gain: 1 + edge.urgency * caution * 1.4,
-        kind: 'avoid',
-        cause: 'boundary',
-        tier: null,
+      // why: The push off a shore is a field rather than a bearing, so it is re-read wherever the koi has got to and the correction eases off as the koi wins water instead of over-steering the wall it started from.
+      const aim = (at: Vec2, facing: number): KoiFlightAim => {
+        const push = boundaryPressure(pond, at, facing)
+        return { heading: Math.atan2(push.inward.y, push.inward.x), gain: 1 + push.urgency * caution * 1.4 }
       }
+      return { ...aim(position, heading), kind: 'avoid', cause: 'boundary', tier: null, aim }
     }
 
     if (evasion !== null) {
       cooldownUntilS = Math.max(cooldownUntilS, elapsed + 1)
-      return { heading: evasion.heading, gain: evasion.gain, kind: 'avoid', cause: 'evade', tier: evasion.tier }
+      const { heading: broken, gain, tier, offset } = evasion
+      // why: A break is a fixed arc off the koi's own nose that its next decision re-anchors, so the rule re-anchors it on the same beat rather than freezing the first bearing and quietly straightening the arc out.
+      const aim = (_at: Vec2, facing: number): KoiFlightAim => ({ heading: facing + offset, gain })
+      return { heading: broken, gain, kind: 'avoid', cause: 'evade', tier, aim }
     }
 
     const damping = pond.reducedMotion ? trim.reducedMotionDamping : 1
-    const ripple = wanderOffset(seed, elapsed) * trim.wanderRipple * damping
+    const rippleAt = (atS: number): number => wanderOffset(seed, atS) * trim.wanderRipple * damping
+    const ripple = rippleAt(elapsed)
     const error = wrapAngle(course - heading)
+    const leg = course
+    const waypoint = travelTarget
+    // why: The waypoint is a fixed point in the pond and the waviness is a function of the koi's own clock, so the rule re-takes both from where and when each step lands instead of carrying one frame's reading across a whole horizon.
+    const onward =
+      (wander: (atS: number) => number, gain: number) =>
+      (at: Vec2, _facing: number, atS: number): KoiFlightAim => ({
+        heading: (waypoint === null ? leg : headingTo(at, waypoint)) + wander(atS),
+        gain,
+      })
     const finish = (): void => {
       // why: However a turn ends, course reached or clock expired, its cooldown starts, so turns come as separate events rather than a continuous correction.
       turnUntilS = 0
@@ -699,15 +765,29 @@ export function createKoiMotion(init: KoiMotionInit, options: KoiMotionOptions =
     if (turnUntilS !== 0) {
       if (elapsed >= turnUntilS || Math.abs(error) < 0.06) {
         finish()
-        return { heading: course + ripple, gain: trim.glideGain, kind: 'travel', cause: 'glide', tier: null }
+        return {
+          heading: course + ripple,
+          gain: trim.glideGain,
+          kind: 'travel',
+          cause: 'glide',
+          tier: null,
+          aim: onward(rippleAt, trim.glideGain),
+        }
       }
-      return { heading: course, gain: 1, kind: 'travel', cause: 'turn', tier: null }
+      return { heading: course, gain: 1, kind: 'travel', cause: 'turn', tier: null, aim: onward(NO_WANDER, 1) }
     }
     if (Math.abs(error) > trim.turnTrigger && elapsed > cooldownUntilS) {
       turnUntilS = elapsed + Math.min(trim.turnMaxS, Math.abs(error) / lerp(traits.turnResponsiveness, trim.turnRate) + 0.3)
-      return { heading: course, gain: 1, kind: 'travel', cause: 'turn', tier: null }
+      return { heading: course, gain: 1, kind: 'travel', cause: 'turn', tier: null, aim: onward(NO_WANDER, 1) }
     }
-    return { heading: course + ripple, gain: trim.glideGain, kind: 'travel', cause: 'glide', tier: null }
+    return {
+      heading: course + ripple,
+      gain: trim.glideGain,
+      kind: 'travel',
+      cause: 'glide',
+      tier: null,
+      aim: onward(rippleAt, trim.glideGain),
+    }
   }
 
   /**
@@ -788,7 +868,7 @@ export function createKoiMotion(init: KoiMotionInit, options: KoiMotionOptions =
 
   return {
     advance(dt) {
-      // why: The clock this frame started from, because the step reads its judgement at the moment it lands on rather than the one it left.
+      // why: The clock this frame started from, so the step reads its judgement at the moment it lands on, which is the beat a horizon standing in for those frames has to read on too.
       const startedAtS = elapsed
       elapsed += dt
 
@@ -835,8 +915,10 @@ export function createKoiMotion(init: KoiMotionInit, options: KoiMotionOptions =
         reportedCause = cause
         onDecision({ atS: elapsed, cause, kind: wants.kind, heading: wants.heading, gain: wants.gain, depth: null, tier: formed.tier })
       }
-      // why: Every koi frame steps through the shared integrator, so the arithmetic that carries a koi forward has one home and cannot be quietly reimplemented beside it.
       const held: KoiMotionAim = () => ({ heading: wants.heading, gain: wants.gain })
+      // why: A biased desire is taken as read: the consumer's pull replaces the ladder's, so the rule behind it no longer describes what the koi is doing and a horizon holds the biased pull instead of re-forming it.
+      committedAim = wants === formed ? formed.aim : held
+      // why: The frame and the prediction step through one integrator, so what a koi tells the pond it is about to do cannot drift from what it then does.
       const flown = stepFlight({ position, heading, speed, turnVelocity, atS: startedAtS }, flightTerms(held), dt)
       position = flown.position
       heading = flown.heading
@@ -918,6 +1000,8 @@ export function createKoiMotion(init: KoiMotionInit, options: KoiMotionOptions =
       travelTarget = null
       depthIntent = null
       committed = { heading, kind: 'travel' }
+      // why: A prediction must drop the standing rule with everything else it dropped, or a released koi would go on predicting the flee or the break the grab interrupted.
+      committedAim = holdCourse
       reportedPass = null
       shore = 'in'
       itinerary.abandon()
@@ -964,6 +1048,10 @@ export function createKoiMotion(init: KoiMotionInit, options: KoiMotionOptions =
       const requested = depthRequest
       depthRequest = null
       return requested
+    },
+
+    predictPath(steps, dtStep) {
+      return predictFlight({ position, heading, speed, turnVelocity, atS: elapsed }, flightTerms(committedAim), steps, dtStep)
     },
   }
 }

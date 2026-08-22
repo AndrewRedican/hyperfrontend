@@ -1,22 +1,28 @@
 /**
- * The integrator a koi's flight runs through.
+ * The integrator a koi's flight runs through, and the advancement it predicts.
  *
  * One step of flight is a fixed sequence: the helm winds toward the rate the
  * remaining course error asks for, the heading follows the rate the koi now
  * carries, the pace eases toward its target under a hard acceleration bound, and
- * the nose travels along the heading it has just taken. Nothing about the step
- * belongs to any one caller, so every koi frame is stepped here and the
- * arithmetic exists in one place.
+ * the nose travels along the heading it has just taken. A koi's next frame and
+ * the path it predicts for itself are that same sequence run against different
+ * terms, so a prediction is the koi's own arithmetic rather than an
+ * approximation of it, and the koi really does arrive where it said it would.
  *
- * The pull among the terms is a rule rather than a number, read afresh at each
- * step, because most of what a koi steers by is a bearing taken from wherever it
- * has got to: away from what struck the water, off the shore it is closing on,
- * onto the waypoint it is crossing the pond for. A caller with a settled pull
- * hands back the same one every step; a caller working out a flight the koi has
- * not taken yet gets the koi's own judgement re-formed at every position.
+ * The terms are what a koi's judgement settled on, and the pull among them is a
+ * rule rather than a number: a prediction re-takes the koi's bearing from each
+ * position it integrates, exactly as the koi's next frames will. What a
+ * prediction holds still is the koi's judgement, not its geometry, so what it
+ * describes is the manoeuvre already committed to, played out to the horizon. It
+ * deliberately knows nothing about decisions the koi has yet to make; when one
+ * is taken, the path emitted next simply parts company with the one before it
+ * from that moment on.
  */
 import type { Vec2 } from '../model/types.js'
 import { wrapAngle } from '../geometry/steering.js'
+
+/** The most points a predicted path may ever carry. */
+export const KOI_PATH_MAX_POINTS = 20
 
 /** Where a koi is, where it is pointed, and what it carries into its next step. */
 export interface KoiFlight {
@@ -44,6 +50,13 @@ export interface KoiFlightAim {
 export interface KoiFlightTerms {
   /**
    * The pull the koi steers by from a given flight.
+   *
+   * Asked afresh at every step rather than settled once, because most of what a
+   * koi steers by is a bearing taken from wherever it has got to: away from what
+   * struck the water, off the shore it is closing on, onto the waypoint it is
+   * crossing the pond for. A prediction that re-takes those bearings from its
+   * own integrated positions arrives where the koi will; one that freezes the
+   * first bearing curves away from it.
    *
    * Read at the clock the step lands on rather than the one it left, because a
    * koi forms its judgement for the frame it is about to swim.
@@ -86,7 +99,7 @@ export interface KoiFlightTerms {
  *
  * Pure: the given flight is read, never written, and the step returned carries a
  * position of its own, so the same starting flight can be stepped repeatedly to
- * integrate a stretch of swimming forward.
+ * integrate a horizon forward.
  *
  * @param flight - Where the koi is and what it carries into the step.
  * @param terms - What its judgement and its world contribute.
@@ -122,4 +135,37 @@ export function stepFlight(flight: KoiFlight, terms: KoiFlightTerms, dt: number)
     ? { x: flight.position.x + Math.cos(heading) * speed * dt, y: flight.position.y + Math.sin(heading) * speed * dt }
     : { x: flight.position.x, y: flight.position.y }
   return { position, heading, speed, turnVelocity, atS }
+}
+
+/**
+ * Integrates a flight forward into the advancement it predicts.
+ *
+ * The horizon is capped at {@link KOI_PATH_MAX_POINTS} however many steps are
+ * asked for, and a step that is not a positive number of seconds predicts
+ * nothing. Every point returned is the koi's own, freshly allocated, so a
+ * consumer may keep the path for as long as it likes.
+ *
+ * @param flight - Where the koi is and what it carries into the horizon.
+ * @param terms - The judgement and world terms to hold across it.
+ * @param steps - How many points to integrate, capped at {@link KOI_PATH_MAX_POINTS}.
+ * @param dtStep - The seconds between two points.
+ * @returns The predicted positions, nearest first.
+ *
+ * @example Predicting two seconds of advancement
+ * ```typescript
+ * const path = predictFlight(flight, terms, 20, 0.1)
+ * ```
+ */
+export function predictFlight(flight: KoiFlight, terms: KoiFlightTerms, steps: number, dtStep: number): Vec2[] {
+  const path: Vec2[] = []
+  if (!(dtStep > 0)) {
+    return path
+  }
+  const count = Math.min(KOI_PATH_MAX_POINTS, Math.floor(steps))
+  let step = flight
+  for (let index = 0; index < count; index += 1) {
+    step = stepFlight(step, terms, dtStep)
+    path.push(step.position)
+  }
+  return path
 }
