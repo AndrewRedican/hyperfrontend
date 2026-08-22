@@ -1,12 +1,12 @@
 /**
  * Everything the koi pond's ten projects agree on: the model, the contract,
- * and the geometry.
+ * the geometry, and the steering brain.
  *
- * Deliberately not a simulation engine. Each of the eight fish apps composes
- * these primitives into its own swimming brain and its own renderer, in its own
- * framework's idiom — that independence is what the pond exists to show. What
- * lives here is only what every fish app must agree on to appear in one scene: the
- * words, the wire, the shape of a koi, and the maths of the water.
+ * Each of the eight fish apps renders the shoal in its own framework's idiom,
+ * and that independence is what the pond exists to show. What lives here is
+ * what every fish app must agree on to appear in one scene: the words, the
+ * wire, the shape of a koi, the maths of the water, and the judgement each koi
+ * swims by.
  *
  * @module @hyperfrontend/demo-koi-lib
  */
