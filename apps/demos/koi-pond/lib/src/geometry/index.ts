@@ -37,6 +37,7 @@ export {
   MARGIN_FISH_LENGTHS,
   boundaryPressure,
   describePond,
+  describePondForFrame,
   entryStation,
   isVisible,
   nominalFishLength,

@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import {
+  ENTRY_SEPARATION_FISH_LENGTHS,
   MARGIN_FISH_LENGTHS,
   boundaryPressure,
   describePond,
+  describePondForFrame,
   entryStation,
   isVisible,
   koiFrameBox,
@@ -71,6 +73,58 @@ describe('describePond', () => {
 
   it('offers seven depth levels', () => {
     expect(desktopPond().depthLevels).toBe(7)
+  })
+})
+
+describe('describePondForFrame', () => {
+  it('takes a card-sized frame as the whole world', () => {
+    const pond = describePondForFrame(288, 288, false)
+    expect({ width: pond.width, height: pond.height }).toEqual({ width: 288, height: 288 })
+  })
+
+  it('floors the koi at the legible length rather than flooring the world', () => {
+    expect(describePondForFrame(288, 288, false).fishLength).toBe(130)
+  })
+
+  it('fills its own view edge to edge', () => {
+    expect(describePondForFrame(288, 288, false).view).toEqual({ x: 0, y: 0, width: 288, height: 288 })
+  })
+
+  it('reports margins measured in fish lengths', () => {
+    const pond = describePondForFrame(288, 288, false)
+    expect(pond.margin).toBeCloseTo(pond.fishLength * MARGIN_FISH_LENGTHS)
+  })
+
+  it('agrees with describePond wherever the world floor is not in play', () => {
+    for (const [width, height] of [
+      [800, 600],
+      [1440, 900],
+      [1920, 1080],
+      [3840, 2400],
+      [7680, 4320],
+    ]) {
+      expect(describePondForFrame(width ?? 0, height ?? 0, false)).toEqual(
+        describePond(width ?? 0, height ?? 0, width ?? 0, height ?? 0, false)
+      )
+    }
+  })
+
+  it('still clamps a video wall down to a swimmable pond', () => {
+    const pond = describePondForFrame(7680, 4320, false)
+    expect({ width: pond.width, height: pond.height }).toEqual({ width: 3840, height: 2400 })
+  })
+
+  it('carries the reduced-motion posture through to every fish', () => {
+    expect(describePondForFrame(288, 288, true).reducedMotion).toBe(true)
+  })
+
+  it('falls back to the smallest honest pond for a frame measured before layout', () => {
+    expect(describePondForFrame(0, 0, false)).toEqual(describePond(0, 0, 0, 0, false))
+  })
+
+  it('treats a negative or unmeasurable frame axis as degenerate', () => {
+    const pond = describePondForFrame(-100, Number.NaN, false)
+    expect({ width: pond.width, height: pond.height }).toEqual({ width: 800, height: 600 })
   })
 })
 
@@ -226,10 +280,133 @@ describe('entryStation', () => {
     expect(entryStation(pond, koiSeed('vue'))).toEqual(entryStation(pond, koiSeed('vue')))
   })
 
+  it('holds every canonical station exactly where it has always been', () => {
+    // why: The ordinal-0 equality spec compares two calls through the same code, so only pinned values catch the whole canonical derivation drifting together.
+    const golden = [
+      {
+        pond: describePond(800, 600, 800, 600, false),
+        framework: 'vanilla',
+        x: 245.0968419680296,
+        y: 71.56836551886599,
+        heading: -0.9796259705432153,
+      },
+      {
+        pond: describePond(1440, 900, 1440, 900, false),
+        framework: 'vue',
+        x: 972.1574482015257,
+        y: 638.7358591719624,
+        heading: 2.809546692158815,
+      },
+      {
+        pond: describePond(1440, 900, 1440, 900, false),
+        framework: 'angular',
+        x: 640.9329748648748,
+        y: 474.9236177477412,
+        heading: -2.369508242213704,
+      },
+    ] as const
+    for (const { pond, framework, x, y, heading } of golden) {
+      const entry = entryStation(pond, koiSeed(framework))
+      expect(entry.position.x).toBeCloseTo(x, 8)
+      expect(entry.position.y).toBeCloseTo(y, 8)
+      expect(entry.heading).toBeCloseTo(heading, 8)
+    }
+  })
+
   it('places a koi with an unknown seed without touching the shoal relaxation', () => {
     const pond = desktopPond()
     const entry = entryStation(pond, 12345)
     expect(Number.isFinite(entry.position.x) && Number.isFinite(entry.heading)).toBe(true)
+  })
+
+  it('gives ordinal 0 exactly the station the two-argument call derives', () => {
+    const pond = desktopPond()
+    for (const framework of KOI_FRAMEWORKS) {
+      expect(entryStation(pond, koiSeed(framework), 0)).toEqual(entryStation(pond, koiSeed(framework)))
+    }
+  })
+
+  it('opens every twin of one framework at least the separation target from its siblings', () => {
+    for (const pond of [
+      describePond(800, 600, 800, 600, false),
+      describePond(1440, 900, 1440, 900, false),
+      describePond(1920, 1080, 1920, 1080, false),
+      describePond(3840, 2400, 3840, 2400, false),
+      describePondForFrame(288, 288, false),
+    ]) {
+      // why: A settling push can land a twin exactly on the separation rim, so the assertion concedes float rounding and nothing more.
+      const separation = pond.fishLength * ENTRY_SEPARATION_FISH_LENGTHS - 1e-6
+      for (const framework of KOI_FRAMEWORKS) {
+        const stations = [0, 1, 2, 3, 4].map((instance) => entryStation(pond, koiSeed(framework), instance).position)
+        for (let a = 0; a < stations.length; a += 1) {
+          for (let b = a + 1; b < stations.length; b += 1) {
+            const gap = Math.hypot((stations[a]?.x ?? 0) - (stations[b]?.x ?? 0), (stations[a]?.y ?? 0) - (stations[b]?.y ?? 0))
+            expect(gap).toBeGreaterThanOrEqual(separation)
+          }
+        }
+      }
+    }
+  })
+
+  it('opens first and second twins inside the pond proper, never out in the margin', () => {
+    const pond = desktopPond()
+    for (const framework of KOI_FRAMEWORKS) {
+      for (const instance of [1, 2]) {
+        const { position } = entryStation(pond, koiSeed(framework), instance)
+        expect(position.x).toBeGreaterThan(0)
+        expect(position.x).toBeLessThan(pond.width)
+        expect(position.y).toBeGreaterThan(0)
+        expect(position.y).toBeLessThan(pond.height)
+      }
+    }
+  })
+
+  it('keeps every twin of even a saturated pond at an honest pond-space position', () => {
+    const pond = desktopPond()
+    const bounds = pondBounds(pond)
+    for (const framework of KOI_FRAMEWORKS) {
+      for (const instance of [1, 2, 3, 4]) {
+        const { position } = entryStation(pond, koiSeed(framework), instance)
+        expect(position.x).toBeGreaterThanOrEqual(bounds.left)
+        expect(position.x).toBeLessThanOrEqual(bounds.right)
+        expect(position.y).toBeGreaterThanOrEqual(bounds.top)
+        expect(position.y).toBeLessThanOrEqual(bounds.bottom)
+      }
+    }
+  })
+
+  it('gives the same twin the same station on every reload', () => {
+    const pond = desktopPond()
+    expect(entryStation(pond, koiSeed('vue'), 3)).toEqual(entryStation(pond, koiSeed('vue'), 3))
+  })
+
+  it('never opens two koi of a crowded pond on the same spot, whatever their frameworks', () => {
+    for (const pond of [
+      describePond(800, 600, 800, 600, false),
+      describePond(1440, 900, 1440, 900, false),
+      describePond(1920, 1080, 1920, 1080, false),
+      describePond(3840, 2400, 3840, 2400, false),
+      describePondForFrame(288, 288, false),
+    ]) {
+      const stations = KOI_FRAMEWORKS.flatMap((framework) =>
+        [0, 1, 2, 3, 4].map((instance) => entryStation(pond, koiSeed(framework), instance).position)
+      )
+      for (let a = 0; a < stations.length; a += 1) {
+        for (let b = a + 1; b < stations.length; b += 1) {
+          const gap = Math.hypot((stations[a]?.x ?? 0) - (stations[b]?.x ?? 0), (stations[a]?.y ?? 0) - (stations[b]?.y ?? 0))
+          // why: Twins of different frameworks cannot be told about each other, so a saturated pond only promises visibly distinct spots; identical stations are the failure this guards, not mere closeness.
+          expect(gap).toBeGreaterThan(pond.fishLength * 0.05)
+        }
+      }
+    }
+  })
+
+  it('separates the twins of a koi with an unknown seed from each other', () => {
+    const pond = desktopPond()
+    const canonical = entryStation(pond, 12345)
+    const twin = entryStation(pond, 12345, 1)
+    expect(twin.position).not.toEqual(canonical.position)
+    expect(Number.isFinite(twin.position.x) && Number.isFinite(twin.heading)).toBe(true)
   })
 })
 

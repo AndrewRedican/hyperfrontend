@@ -10,8 +10,9 @@
  *
  * Draw offsets are allocated in bands so adding a band never shifts another:
  * traits take 0–7, the body takes 8–23, the swimming trim takes 24–29, and the
- * pond's entry jitter takes 40–43. Duplicates of a framework's koi step their
- * whole allocation clear of it, so no ordinal ever reads another koi's draws.
+ * pond's entry takes 40 upward, an open tail for its jitter and probe draws.
+ * Duplicates of a framework's koi step their whole allocation clear of it, so
+ * no ordinal ever reads another koi's draws.
  */
 import { randomPseudo } from '@hyperfrontend/random-generator-utils'
 import type { KoiSwimTrim } from '../koi3d/config.js'
@@ -26,9 +27,11 @@ const SEED_STRIDE = 977
  * Spacing between a framework's canonical koi and each duplicate of it.
  *
  * Wide enough to clear every seed in the shoal and every draw either koi
- * makes, so no ordinal a pond can hold lands on another koi's numbers.
+ * makes, so no ordinal a pond can hold lands on another koi's numbers. The
+ * pond's entry jitter applies the same stride to any seed, so a duplicate's
+ * entry draws step clear of its siblings' exactly as its trait draws do.
  */
-const VARIANT_STRIDE = 10_007
+export const VARIANT_STRIDE = 10_007
 
 /** Where the body's draw band starts, after the eight trait draws. */
 const BODY_DRAWS = 8
