@@ -1,7 +1,7 @@
 # Guides verification
 
 Part of [Phase 5](README.md) · Guardrails: [plan index](../README.md) · Depends on:
-[phase 1 item 11](../phase-1-lib-consolidation/11-guide-markers.md)
+[phase 1, guide markers](../phase-1-lib-consolidation.md#guide-extraction-markers)
 
 ## Goal
 

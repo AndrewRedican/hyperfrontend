@@ -53,7 +53,7 @@ item. Read the phase README first; it orders the sub-plans and states the phase 
 
 | Phase | Folder                                                                   | Theme                                                                                                      | Depends on |
 | ----- | ------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------- | ---------- |
-| 1     | [phase-1-lib-consolidation](phase-1-lib-consolidation/README.md)         | The consolidated koi lib: brain, runtime, wire, stage, geometry; motion retune; contract 0.8.0             | none       |
+| 1     | [phase-1-lib-consolidation](phase-1-lib-consolidation.md) (shipped)      | The consolidated koi lib: brain, runtime, wire, stage, geometry; motion retune; contract 0.8.0             | none       |
 | 2     | [phase-2-isolated-improvements](phase-2-isolated-improvements/README.md) | Self-contained fixes: SDK `hosted` signal, visibility polling, DPR caps, gallery resurrection, device tier | none       |
 | 3     | [phase-3-instance-model](phase-3-instance-model/README.md)               | Instance keying, dynamic shoal, deferred boot, card profile, fish migration, repack                        | 1, 2       |
 | 4     | [phase-4-chrome-and-overlay](phase-4-chrome-and-overlay/README.md)       | Unified shoal panel, overlay grammar replacement, vitals                                                   | 1, 3       |
@@ -61,7 +61,9 @@ item. Read the phase README first; it orders the sub-plans and states the phase 
 
 ### Sequencing constraints that are easy to miss
 
-- **Phases 1 and 2 can run in parallel**; nothing in one blocks the other.
+- **Phase 1 has shipped** (its record is the collapsed
+  [phase-1-lib-consolidation.md](phase-1-lib-consolidation.md)); phase 2 never depended
+  on it and can land any time.
 - **The SDK change gates phase 3.** Demos consume the published `@hyperfrontend/features`
   package, never workspace source. The `hosted` signal
   ([phase 2, item 1](phase-2-isolated-improvements/01-lib-features-hosted.md)) must land on

@@ -1,7 +1,7 @@
 # Fish migration
 
 Part of [Phase 3](README.md) · Guardrails: [plan index](../README.md) · Depends on:
-[phase 1](../phase-1-lib-consolidation/README.md) complete · Evidence:
+[phase 1](../phase-1-lib-consolidation.md) complete · Evidence:
 [recon §1](../recon.md#1-duplication-across-the-eight-fish-apps)
 
 ## Goal

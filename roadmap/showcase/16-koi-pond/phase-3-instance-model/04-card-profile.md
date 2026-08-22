@@ -19,7 +19,7 @@ world, at about one eighth of today's footprint.
 ## Design
 
 - **World**: `describePondForFrame(containerWidth, containerHeight, reducedMotion)`
-  ([phase 1](../phase-1-lib-consolidation/07-frame-world.md)) instead of the
+  ([phase 1](../phase-1-lib-consolidation.md#frame-derived-world)) instead of the
   screen-derived `describePond`. Hosted fish adopt the announced pond wholesale, so no
   fish-side change is involved.
 - **Roster**: exactly one instance, `KOI_FRAMEWORKS[hour % 8]` by local hour, ordinal 0
@@ -27,7 +27,7 @@ world, at about one eighth of today's footprint.
   mid-mount.
 - **Resting**: send `pause {paused: true, resting: true}` on open; the fish holds
   position and sculls with no held chrome
-  ([contract 0.8.0](../phase-1-lib-consolidation/04-contract-0-8-0.md)). This sidesteps
+  ([contract 0.8.0](../phase-1-lib-consolidation.md#contract-080)). This sidesteps
   the small-world roaming pathologies entirely (recon §4: waypoint churn, boundary
   slip-outs leaving the card empty for seconds).
 - **Depth**: the live-roster spread ([01](01-instance-id-refactor.md)) puts the solo koi

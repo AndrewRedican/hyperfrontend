@@ -1,7 +1,7 @@
 # Pearl trace
 
 Part of [Phase 4](README.md) · Guardrails: [plan index](../README.md) · Depends on: the
-outline `path` from [phase 1](../phase-1-lib-consolidation/03-predicted-path.md), live
+outline `path` from [phase 1](../phase-1-lib-consolidation.md#predicted-path), live
 via the [phase 3 repack](../phase-3-instance-model/06-repack-pipeline.md)
 
 ## Goal
@@ -27,7 +27,7 @@ fish-side predicted advancement drawn as a consumable pearl chain.
   minted at the horizon. The effect is the fish visibly swimming through fixed
   waypoints it predicted, which only reads as truth because the prediction is held to
   the accuracy bar in
-  [phase 1, predicted path](../phase-1-lib-consolidation/03-predicted-path.md).
+  [phase 1, predicted path](../phase-1-lib-consolidation.md#predicted-path).
 - **Steady state**: each fresh path emission agrees with the pearls already drawn
   (same maneuver, integrated the same way), so the painter's only work is the
   endpoint walk: drop pearls the nose has reached, append new ones from the fresh

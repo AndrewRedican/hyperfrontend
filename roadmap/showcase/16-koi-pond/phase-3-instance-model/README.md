@@ -4,7 +4,7 @@ The structural heart of the plan: the host stops assuming "one session per frame
 eight forever" and becomes instance-based; the fish adopt the consolidated lib; the whole
 family repacks on contract 0.8.0.
 
-Depends on [phase 1](../phase-1-lib-consolidation/README.md) (lib primitives, contract)
+Depends on [phase 1](../phase-1-lib-consolidation.md) (shipped: lib primitives, contract)
 and [phase 2](../phase-2-isolated-improvements/README.md) (published `hosted` signal,
 device tier). Decisions and guardrails: [plan index](../README.md). Evidence:
 [recon §3](../recon.md#3-eight-fish-assumptions-in-the-host) and
@@ -57,5 +57,5 @@ Browser checks against the composed build (SwiftShader recipe in the koi skill):
 No shipped prose changes in this phase by design; every doctrine and guide consequence is
 deliberately batched into phase 5 so it ships against the final shape. The one exception:
 guide extraction markers inside host files being refactored must stay intact and
-extraction-green ([phase 1, item 11](../phase-1-lib-consolidation/11-guide-markers.md)
+extraction-green ([phase 1, guide markers](../phase-1-lib-consolidation.md#guide-extraction-markers)
 lists them).

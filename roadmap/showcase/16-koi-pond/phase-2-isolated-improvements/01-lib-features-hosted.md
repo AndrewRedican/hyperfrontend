@@ -55,7 +55,7 @@ sniffing `window.parent` themselves. The SDK is the one party allowed to know.
 The `window.parent === window` sniff exists today in `originRelation()` in every fish app
 (`apps/demos/koi-pond/fish-*/src/runtime/koi-runtime.ts`), feeding the model field
 documented at `apps/demos/koi-pond/lib/src/model/card.ts:25`. The lib runtime port
-([phase 1, runtime](../phase-1-lib-consolidation/05-runtime.md)) takes hosted-ness as an
+([phase 1, runtime](../phase-1-lib-consolidation.md#runtime)) takes hosted-ness as an
 argument, and the [phase 3 migration](../phase-3-instance-model/05-fish-migration.md)
 feeds it from this handle, deleting the sniff eight times.
 

@@ -14,7 +14,7 @@ guardrails: [plan index](../README.md).
 | #   | Sub-plan                                         | Depends on                   |
 | --- | ------------------------------------------------ | ---------------------------- |
 | 01  | [Expand choreography](01-expand-choreography.md) | phase 3                      |
-| 02  | [Guides verification](02-guides-verification.md) | 01, phase 1 item 11          |
+| 02  | [Guides verification](02-guides-verification.md) | 01, phase 1 guide markers    |
 | 03  | [Doctrine rewrites](03-doctrine-rewrites.md)     | phases 3 and 4 final shape   |
 | 04  | [Findings](04-findings.md)                       | everything surfaced en route |
 | 05  | [Device acceptance](05-device-acceptance.md)     | the deployed result          |
