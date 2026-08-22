@@ -85,6 +85,25 @@ describe('createKoiMotion', () => {
     expect(traceScenarios((init) => createKoiMotion(init, options))).toEqual(GOLDEN_TRACE)
   })
 
+  it('reports the turn rate the heading actually moved at', () => {
+    const motion = createKoiMotion(born('react', pond()))
+    swim(motion, 12)
+    for (let frame = 0; frame < 240; frame += 1) {
+      const before = motion.state.heading
+      motion.advance(DT)
+      const { heading, turnVelocity } = motion.state
+      expect(wrapAngle(heading - before)).toBeCloseTo(turnVelocity * DT, 12)
+    }
+  })
+
+  it('unwinds the turn rate when a visitor takes hold', () => {
+    const world = pond()
+    const motion = createKoiMotion(born('react', world))
+    swim(motion, 12)
+    motion.place({ x: world.width / 2, y: world.height / 2 })
+    expect(motion.state.turnVelocity).toBe(0)
+  })
+
   it('gives every koi its own body, clock, and judgement', () => {
     const world = pond()
     const first = createKoiMotion(born('react', world))

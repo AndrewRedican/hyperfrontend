@@ -189,6 +189,15 @@ export interface KoiState {
   heading: number
   /** Its speed in pixels per second. */
   speed: number
+  /**
+   * The turn rate it currently has wound up, in radians per second.
+   *
+   * Positive swings the heading clockwise on screen, toward the koi's right
+   * flank. The rate is a state with bounded acceleration rather than a fresh
+   * reading each frame, so it is what a manoeuvre already committed to carries
+   * forward.
+   */
+  turnVelocity: number
   /** The behavioural state its body reads in. */
   phase: KoiPhase
   /** The depth level the host granted. */
@@ -803,7 +812,7 @@ export function createKoiMotion(init: KoiMotionInit, options: KoiMotionOptions =
     },
 
     get state() {
-      return { position, heading, speed, phase, depth, length: bodyLength(), spine }
+      return { position, heading, speed, turnVelocity, phase, depth, length: bodyLength(), spine }
     },
 
     get isFleeing() {
