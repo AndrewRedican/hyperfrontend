@@ -11,14 +11,14 @@ skill.
 
 ## Filed already (graduations pending the SDK release)
 
-- **[F-020](../../findings/020-feature-cannot-know-it-is-unhosted.md)**: no
-  hosted/standalone signal on the feature handle.
-- **[F-021](../../findings/021-missed-visibility-edge-parks-the-watchdog-for-the-session.md)**:
-  a missed visibility edge parks every watchdog at `unobservable` and nothing resets it.
+- **F-020**: no hosted/top-level signal on the feature handle.
+- **F-021**: a missed visibility edge parks every watchdog at `unobservable` and nothing
+  resets it.
 
 Both are answered by the
 [phase 2 release](../phase-2-isolated-improvements.md#release-gate-cleared) (features
-0.8.0, published 2026-08-23); record each graduation.
+0.8.0, published 2026-08-23). **Done:** the registry tracks open friction only, so both
+rows and both files were removed.
 
 ## To evaluate during the instance work (file only if confirmed)
 
@@ -26,17 +26,24 @@ Both are answered by the
   sessions and got them via gallery `set-scene` timing plus a fallback deadline; a
   host-declared boot hint on the presentation payload would remove the deadline
   entirely. File if the deferred-boot implementation confirms the friction is real
-  rather than theoretical.
+  rather than theoretical. **Not filed:** the choreography sends the scene cue on the
+  shell's `open` event, so every real presentation names its scene inside the first
+  handshake and the deadline is never reached. The friction stayed theoretical.
 - Anything else the instance refactor, dynamic shoal, or choreography surfaces:
   unclear APIs, confusing errors, DX papercuts. The invariant stands: file before
-  working around.
+  working around. **Nothing new filed:** the one problem the choreography surfaced was
+  gallery-side (a scene cue gated on liveness cannot reach a feature whose liveness
+  depends on the cue), and `open` is the SDK hook that answers it.
 
 ## Graduations to record
 
 - F-018 (no way to revive a dead session) and F-019 (dead iframe paints the crash
   placeholder): the gallery-side handling ships in
   [phase 2](../phase-2-isolated-improvements.md#gallery-outer-resurrection); record the
-  graduation per the registry's rules once released.
+  graduation per the registry's rules once released. **Done as triage, not clearance:**
+  both ask the SDK for an affordance it still does not have, and the shipped policy is
+  the hand-rolled machine they describe, so both are `triaged` / `api-refinement`
+  against the phase 2 record and stay in the registry.
 
 ## Specs
 

@@ -122,11 +122,12 @@ name goes into the
 
 ## Findings
 
-- [F-020](../findings/020-feature-cannot-know-it-is-unhosted.md) (a feature cannot know it
-  is unhosted) and [F-021](../findings/021-missed-visibility-edge-parks-the-watchdog-for-the-session.md)
-  (a missed visibility edge parks every watchdog at `unobservable`) are filed. Both are
-  answered by the release above; [phase 5](phase-5-integration/04-findings.md) records the
-  graduations once it lands.
+- **F-020** (a feature cannot know it is unhosted) and **F-021** (a missed visibility edge
+  parks every watchdog at `unobservable`) are resolved by the release above and were cleared
+  from the registry in [phase 5](phase-5-integration/04-findings.md), which tracks open
+  friction only.
 - [F-018](../findings/018-no-way-to-revive-a-session-whose-frame-died.md) and
   [F-019](../findings/019-dead-iframe-left-mounted-paints-the-browser-crash-placeholder.md)
-  are answered by the gallery resurrection above; their graduation rows are phase 5's too.
+  stay open as SDK friction: the gallery resurrection above is the hand-rolled policy they
+  ask the SDK to carry, so both are triaged to `api-refinement` against this record rather
+  than cleared.
