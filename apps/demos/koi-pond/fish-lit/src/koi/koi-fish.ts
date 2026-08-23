@@ -1,37 +1,51 @@
 /**
  * The Lit view: `<koi-fish>`, one custom element whose template is the koi's
- * stage — a transparent canvas the 3D fish renders onto, and its identity card.
+ * identity card, over a canvas the renderer mounts for the 3D fish.
  *
- * The element owns exactly what is declarative: the canvas, the card and its
- * text exist because the template says so, and that template renders once.
- * Everything that changes sixty times a second — the scene, the swim, the
- * card's placement — is written imperatively by the renderer the swim
- * controller drives, so no frame ever passes through a reactive update.
+ * The element owns exactly what is declarative: the card and its text exist
+ * because the template says so, and that template renders once. Everything
+ * that changes sixty times a second lives behind the shared runtime a
+ * reactive controller ties to this element's lifecycle: the runtime owns the
+ * animation frame and the channel to the pond host, and drives the renderer
+ * that writes the scene imperatively, so no frame ever passes through a
+ * reactive update.
  *
- * Nothing is painted on `body`, on the host element, or on its shadow root —
+ * Nothing is painted on `body`, on the host element, or on its shadow root:
  * the hostee SDK resets the page to transparent, and anything painted here
- * would blank the pond behind this frame for every koi below it. Only the fish
- * itself has colour.
+ * would blank the pond behind this frame for every koi below it. Only the
+ * fish itself has colour.
  *
  * @module @hyperfrontend/demo-koi-fish-lit.element
  */
+import type { KoiRuntime } from '@hyperfrontend/demo-koi-lib'
+import type { GlRenderer } from '@hyperfrontend/demo-koi-lib/three'
 import type { PropertyDeclarations, TemplateResult } from 'lit'
-import type { GlRenderer } from './koi-render'
-import { FRAMEWORK_SITES, koiSourceUrl } from '@hyperfrontend/demo-koi-lib'
+import { FRAMEWORK_SITES, koiProfile, koiSourceUrl } from '@hyperfrontend/demo-koi-lib'
 import { LitElement, css, html } from 'lit'
 import { styleMap } from 'lit/directives/style-map.js'
-import { KoiSwimController } from '../runtime/koi-runtime'
+import { feature } from '../hyperfrontend.feature'
+import { createKoiRenderer } from './koi-render'
+import { KoiSwimController } from './koi-swim-controller'
 
 /** The tag this koi registers itself under. */
 const KOI_TAG = 'koi-fish'
 
+/** Which framework this app renders. */
+const FRAMEWORK = 'lit'
+
+// why: Label and palette bind to the framework slug, never the seed, so the card text this template renders stays true even when the host deals the runtime a variant seed.
+/** Everything about this koi that never changes; the runtime derives the same canonical profile for itself. */
+const KOI_PROFILE = koiProfile(FRAMEWORK)
+
 /**
- * One koi, drawn in 3D onto the canvas this element's template declares.
+ * One koi, drawn in 3D onto the canvas its renderer mounts behind this
+ * element's template.
  *
  * The element owns nothing but its template: the swimming, the animation
  * frame, the scene behind the canvas, and the channel to the pond host all
- * live in the reactive controller it attaches, so the component's own
- * lifecycle is what starts and stops the fish.
+ * live in the shared runtime its controller births once the template has
+ * rendered, so the component's own lifecycle is what starts and stops the
+ * fish.
  *
  * @example Putting a koi on a page
  * ```html
@@ -139,14 +153,23 @@ export class KoiFishElement extends LitElement {
     appUrl: { type: String, attribute: 'app-url' },
   }
 
-  /** The koi's brain, its animation frame, and its channel to the pond host. */
-  readonly swim = new KoiSwimController(this)
-
   /** The URL of the app rendering this koi, shown on its identity card. */
   declare appUrl: string
 
-  /** The GL factory behind the canvas, replaceable so specs can run headless. */
+  /** The GL factory behind the canvas, replaceable so specs can run headless; set it before the element first renders. */
   createGl?: (canvas: HTMLCanvasElement) => GlRenderer
+
+  // why: The runtime builds its renderer the moment it is born and the renderer needs the card this template declares, so the controller births the koi on the element's first update rather than at upgrade.
+  /** The controller tying the shared runtime's lifetime to this element's. */
+  readonly #swim = new KoiSwimController(this, () => ({
+    framework: FRAMEWORK,
+    root: this,
+    link: feature,
+    // why: The renderer works in the shadow root behind this element, with the element's own GL seam threaded through so specs can run headless.
+    rendererFactory: (_root, profile, _url, pond) => createKoiRenderer(this.renderRoot, profile, pond, this.createGl),
+    // why: Whether a host embeds this app comes from the SDK handle, never from the window above this frame.
+    hosted: feature.hosted,
+  }))
 
   /** Adopts the page the koi is being drawn on as the identity it reveals. */
   constructor() {
@@ -156,14 +179,22 @@ export class KoiFishElement extends LitElement {
   }
 
   /**
-   * Draws the koi's stage: its canvas, and the identity card a visitor opens by holding the koi.
+   * The koi's brain, its animation frame, and its channel to the pond host.
+   *
+   * @returns The runtime, or `null` before the element's first update.
+   */
+  get swim(): KoiRuntime | null {
+    return this.#swim.runtime
+  }
+
+  /**
+   * Draws the identity card a visitor opens by holding the koi; the renderer mounts the canvas behind it.
    *
    * @returns The template; the fish itself is rendered onto the canvas, never through it.
    */
   override render(): TemplateResult {
-    const { framework, label, palette } = this.swim.profile
+    const { label, palette } = KOI_PROFILE
     return html`
-      <canvas class="koi-canvas" aria-hidden="true"></canvas>
       <div class="koi-card" hidden>
         <span class="koi-card-name">
           <!-- why: The variety rides beside the framework name — the pattern is the koi's own identity, and it costs one word to say this asagi is the React app. -->
@@ -176,21 +207,11 @@ export class KoiFishElement extends LitElement {
         <span class="koi-card-line koi-card-runtime"></span>
         <span class="koi-card-line koi-card-memory"></span>
         <span class="koi-card-line koi-card-event" hidden></span>
-        <a class="koi-card-site" href=${FRAMEWORK_SITES[framework]} target="_blank" rel="noopener noreferrer">${label} website ↗</a>
+        <a class="koi-card-site" href=${FRAMEWORK_SITES[FRAMEWORK]} target="_blank" rel="noopener noreferrer">${label} website ↗</a>
         <!-- why: The demo's claim is checkable — the card links straight to this very app's implementation in the repository. -->
-        <a class="koi-card-source" href=${koiSourceUrl(framework)} target="_blank" rel="noopener noreferrer">App source ↗</a>
+        <a class="koi-card-source" href=${koiSourceUrl(FRAMEWORK)} target="_blank" rel="noopener noreferrer">App source ↗</a>
       </div>
     `
-  }
-
-  /** Hands the rendered canvas and card to the controller, which builds the scene behind them. */
-  protected override firstUpdated(): void {
-    const canvas = this.renderRoot.querySelector<HTMLCanvasElement>('canvas.koi-canvas')
-    const card = this.renderRoot.querySelector<HTMLElement>('.koi-card')
-    if (canvas === null || card === null) {
-      throw new Error('missing stage: the koi template rendered without its canvas or card')
-    }
-    this.swim.attach(canvas, card, this.createGl)
   }
 }
 
