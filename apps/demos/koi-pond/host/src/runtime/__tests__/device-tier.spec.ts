@@ -1,6 +1,6 @@
 import type { DeviceSignals } from '../device-tier'
 import { describe, expect, it } from 'vitest'
-import { readDeviceProfile } from '../device-tier'
+import { openingShoal, readDeviceProfile } from '../device-tier'
 
 /**
  * The tier a device reporting these signals lands in.
@@ -86,5 +86,43 @@ describe('the live device', () => {
   it('reads the browser itself when handed no signals', () => {
     // why: The test environment withholds deviceMemory exactly as Safari and Firefox do, which is the unknown-means-middle path.
     expect(readDeviceProfile()).toEqual({ tier: 'middle', cap: 8 })
+  })
+})
+
+describe('the opening shoal', () => {
+  /** A device with room for every band, so a reading is the frame's and not the cap's. */
+  const ROOMY = 12
+
+  it.each([
+    ['a full desktop window', 1600, 900, 8],
+    ['a laptop window', 1280, 800, 8],
+    ['a tablet held upright', 768, 1024, 5],
+    ['a small laptop window', 900, 560, 5],
+    ['a phone held upright', 390, 844, 3],
+    ['the same phone on its side', 844, 390, 3],
+    ['a gallery card', 288, 180, 1],
+  ])('opens %s with its own share of the shoal', (_frame, width, height, koi) => {
+    expect(openingShoal(width, height, ROOMY)).toBe(koi)
+  })
+
+  it('reads a frame the same however it is held', () => {
+    expect(openingShoal(844, 390, ROOMY)).toBe(openingShoal(390, 844, ROOMY))
+  })
+
+  it('never opens more koi than the device seats', () => {
+    expect([openingShoal(1600, 900, 4), openingShoal(1600, 900, 8)]).toEqual([4, 8])
+  })
+
+  it('never empties the pond, whatever the cap says', () => {
+    expect(openingShoal(1600, 900, 0)).toBe(1)
+  })
+
+  it.each([
+    ['a frame with no height yet', 1600, 0],
+    ['a frame with no width yet', 0, 900],
+    ['a frame measured before layout', 0, 0],
+  ])('stands in a middling frame for %s', (_frame, width, height) => {
+    // why: A container reports zero on an axis until it is laid out, and reading that as a tiny screen would open a single koi on a desktop.
+    expect(openingShoal(width, height, ROOMY)).toBe(5)
   })
 })

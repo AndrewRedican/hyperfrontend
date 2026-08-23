@@ -106,7 +106,11 @@ vi.mock('../water-gl', () => ({ createWaterPainter: () => null }))
 vi.mock('../surface-canvas', () => ({ createSurfacePainter: () => ({ paint: () => {} }) }))
 vi.mock('../floor', () => ({ paintFloor: () => {} }))
 vi.mock('../interactions', () => ({ createInteractionsPainter: () => ({ paint: () => {}, clear: () => {} }) }))
-vi.mock('../../runtime/device-tier', () => ({ readDeviceProfile: () => ({ ...device }) }))
+// why: Only the hardware reading is stood in for; the frame-size banding is real arithmetic these specs drive through the root they measure.
+vi.mock('../../runtime/device-tier', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../../runtime/device-tier')>()),
+  readDeviceProfile: () => ({ ...device }),
+}))
 
 /**
  * Reads one instance's fake shell, failing loudly when the pond never made it.
@@ -125,8 +129,10 @@ function shellOf(id: KoiInstanceId): FakeShell {
 /**
  * Builds a pond root, raises the scene, and hands back its spies.
  *
- * The clock is pinned to an hour-eight boot, so the full profile's trio is
- * always vanilla, react, and vue; pass `null` to leave the scene undecided.
+ * The clock is pinned to an hour-eight boot, so a full scene always opens on
+ * vanilla and counts up the roster from there; pass `null` to leave the scene
+ * undecided. A frame left out reports jsdom's zeros, which the opening shoal
+ * reads as a middling frame.
  *
  * @param scale - The scene to decide at boot, or `null` to hold the water empty.
  * @param frame - CSS dimensions the root pretends to have; jsdom's zeros otherwise.
@@ -248,9 +254,9 @@ describe('deciding the scene', () => {
     expect(shells.size).toBe(0)
   })
 
-  it('opens the hour-anchored trio for a full scene, in the deciding tick', () => {
+  it('opens the shoal its own frame carries for a full scene, in the deciding tick', () => {
     harness('full')
-    expect([...shells.keys()]).toEqual(['vanilla:0', 'react:0', 'vue:0'])
+    expect([...shells.keys()]).toEqual(['vanilla:0', 'react:0', 'vue:0', 'svelte:0', 'solid:0'])
   })
 
   it('opens the hour koi alone for a card scene', () => {
@@ -258,16 +264,39 @@ describe('deciding the scene', () => {
     expect([...shells.keys()]).toEqual(['vanilla:0'])
   })
 
-  it('anchors the trio on the local hour', () => {
-    vi.setSystemTime(new Date('2026-08-23T14:15:00'))
-    harness('full')
-    expect([...shells.keys()]).toEqual(['lit:0', 'angular:0', 'vanilla:0'])
+  it('opens the hour koi alone for a card however much room the card has', () => {
+    // why: A card is an invitation to expand rather than a scene in itself, so its shoal is one koi at any size.
+    harness('card', { width: 1600, height: 900 })
+    expect([...shells.keys()]).toEqual(['vanilla:0'])
   })
 
-  it('wraps the trio past the end of the roster', () => {
+  it.each([
+    ['a full desktop window', 1600, 900, 8],
+    ['a tablet held upright', 768, 1024, 5],
+    ['a phone held upright', 390, 844, 3],
+    ['a frame barely bigger than a card', 300, 220, 1],
+  ])('opens %s with the shoal that frame carries', (_frame, width, height, koi) => {
+    device.cap = 12
+    harness('full', { width, height })
+    expect(shells.size).toBe(koi)
+  })
+
+  it('never opens a shoal the device cannot seat', () => {
+    device.cap = 4
+    harness('full', { width: 1600, height: 900 })
+    expect(shells.size).toBe(4)
+  })
+
+  it('anchors the shoal on the local hour', () => {
+    vi.setSystemTime(new Date('2026-08-23T14:15:00'))
+    harness('full')
+    expect([...shells.keys()]).toEqual(['lit:0', 'angular:0', 'vanilla:0', 'react:0', 'vue:0'])
+  })
+
+  it('wraps the shoal past the end of the roster', () => {
     vi.setSystemTime(new Date('2026-08-23T07:05:00'))
     harness('full')
-    expect([...shells.keys()]).toEqual(['angular:0', 'vanilla:0', 'react:0'])
+    expect([...shells.keys()]).toEqual(['angular:0', 'vanilla:0', 'react:0', 'vue:0', 'svelte:0'])
   })
 
   it('ignores and diagnoses a scene that contradicts the decision', () => {
@@ -380,14 +409,14 @@ describe('growing the shoal', () => {
     device.cap = 12
     const { scene, onShoal } = harness()
     scene.addKoi('react')
-    expect(onShoal).toHaveBeenLastCalledWith(0, 4)
+    expect(onShoal).toHaveBeenLastCalledWith(0, 6)
   })
 
   it('diagnoses the koi it took in and the roster it grew to', () => {
     device.cap = 12
     const { scene, onDiagnostic } = harness()
     scene.addKoi('react')
-    expect(onDiagnostic).toHaveBeenCalledWith('react:1', 'added', '4 of 12 koi')
+    expect(onDiagnostic).toHaveBeenCalledWith('react:1', 'added', '6 of 12 koi')
   })
 })
 
@@ -424,7 +453,7 @@ describe('shrinking the shoal', () => {
     const { scene, onShoal } = harness()
     scene.addKoi('react')
     scene.removeKoi('react:1')
-    expect(onShoal).toHaveBeenLastCalledWith(0, 3)
+    expect(onShoal).toHaveBeenLastCalledWith(0, 5)
   })
 
   it('diagnoses the koi it let go and the roster it shrank to', () => {
@@ -432,7 +461,7 @@ describe('shrinking the shoal', () => {
     const { scene, onDiagnostic } = harness()
     scene.addKoi('react')
     scene.removeKoi('react:1')
-    expect(onDiagnostic).toHaveBeenCalledWith('react:1', 'removed', '3 of 12 koi')
+    expect(onDiagnostic).toHaveBeenCalledWith('react:1', 'removed', '5 of 12 koi')
   })
 
   it('cancels a revive still pending for a removed koi', () => {
@@ -450,7 +479,7 @@ describe('shrinking the shoal', () => {
     const { scene, onDiagnostic } = harness()
     const roster = scene.shoalState().roster.map((member) => member.id)
     const outcomes = roster.map((id) => scene.removeKoi(id))
-    expect(outcomes).toEqual([true, true, false])
+    expect(outcomes).toEqual([true, true, true, true, false])
     expect(onDiagnostic).toHaveBeenCalledWith(null, 'shoal:refused', 'the pond is never empty')
   })
 
@@ -502,7 +531,7 @@ describe('twins in the scene', () => {
     shellOf('react:0').emit('open')
     shellOf('react:1').emit('open')
     shellOf('react:0').emit('status', { state: 'gone' })
-    expect(onShoal).toHaveBeenLastCalledWith(1, 4)
+    expect(onShoal).toHaveBeenLastCalledWith(1, 6)
   })
 
   it('keeps the panel row lit while either twin answers', () => {
@@ -541,7 +570,7 @@ describe('the shoal panel', () => {
 
   it('hides the badge for a framework with no koi in the water', () => {
     const { root } = harness()
-    expect(panelPart<HTMLElement>(root, '.koi-shoal-row[data-fish="svelte"] .koi-shoal-tally').hidden).toBe(true)
+    expect(panelPart<HTMLElement>(root, '.koi-shoal-row[data-fish="preact"] .koi-shoal-tally').hidden).toBe(true)
   })
 
   it('lights a row only once one of its koi answers', () => {
@@ -604,6 +633,8 @@ describe('the shoal panel', () => {
     const { root, scene } = harness()
     scene.removeKoi('react:0')
     scene.removeKoi('vue:0')
+    scene.removeKoi('svelte:0')
+    scene.removeKoi('solid:0')
     const last = panelPart<HTMLButtonElement>(root, '.koi-shoal-instance[data-instance="vanilla:0"]')
     expect([last.disabled, last.title]).toEqual([true, 'The pond is never empty.'])
   })
@@ -611,7 +642,7 @@ describe('the shoal panel', () => {
   it('says how much room the device has left', () => {
     device.cap = 12
     const { root } = harness()
-    expect(panelPart(root, '.koi-shoal-note').textContent).toBe('Room for 9 more.')
+    expect(panelPart(root, '.koi-shoal-note').textContent).toBe('Room for 7 more.')
   })
 
   it('keeps the koi in seeded order as ordinals are re-dealt', () => {
@@ -628,7 +659,7 @@ describe('the shoal panel', () => {
   })
 
   it('carries focus to the newcomer when the press that made it reached the cap', () => {
-    device.cap = 4
+    device.cap = 6
     const { root } = harness()
     const add = panelPart<HTMLButtonElement>(root, '.koi-shoal-add[data-fish="react"]')
     add.focus()

@@ -16,7 +16,7 @@ import type { KoiInstanceId } from './instance-id'
 import type { KoiSighting } from './interactions'
 import type { KoiSession } from './koi-sessions'
 import { KOI_FRAMEWORKS, describePond, describePondForFrame, mayRipple, pondPoint, pondWindow } from '@hyperfrontend/demo-koi-lib'
-import { readDeviceProfile } from '../runtime/device-tier'
+import { openingShoal, readDeviceProfile } from '../runtime/device-tier'
 import { createDepthDirector } from './depth-director'
 import { createFrameLoop } from './raf-loop'
 import { createInteractionsPainter } from './interactions'
@@ -630,12 +630,16 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondSceneHandle
 
   /**
    * Opens the decided scene's roster: the hour-anchored koi alone in a card,
-   * or the trio it anchors in the full scene.
+   * or the shoal it anchors in the full scene.
+   *
+   * A card is one koi whatever it measures, because a card is an invitation to
+   * expand rather than a scene in itself. A full scene opens the shoal its own
+   * frame can carry, bounded by what the device seats.
    *
    * @param decided - The scene the pond opens as.
    */
   const openProfile = (decided: SceneScale): void => {
-    const count = Math.min(decided === 'card' ? 1 : 3, device.cap)
+    const count = decided === 'card' ? 1 : openingShoal(root.clientWidth, root.clientHeight, device.cap)
     for (let offset = 0; offset < count; offset += 1) {
       openSession(KOI_FRAMEWORKS[(bootHour + offset) % KOI_FRAMEWORKS.length] ?? 'vanilla', 0).shell.open()
     }
