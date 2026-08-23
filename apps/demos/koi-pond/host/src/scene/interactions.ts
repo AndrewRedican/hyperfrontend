@@ -14,8 +14,17 @@
  * of ink at every boundary rather than ending at a line, so what a visitor
  * reads is a field of attention carried by the animal instead of a lit wedge
  * stuck to its snout.
+ *
+ * The outline also carries the advancement the koi has committed to, and that
+ * is drawn as a chain of pearls the fish visibly swims through. The chain is
+ * the one thing on this canvas that outlives the frame it was drawn in: pearls
+ * are placed in the water, not recomputed against it, so the painter carries a
+ * chain per koi and walks its ends. What the chain is worth is the koi's own
+ * accuracy, and the walk is in `pearl-trace.ts`.
  */
 import type { KoiOutline, Vec2 } from '@hyperfrontend/demo-koi-lib'
+import type { KoiInstanceId } from './instance-id'
+import { PEARL_MAX, PEARL_SPACING_BODIES, advanceTrace, pearlAlpha } from './pearl-trace'
 import { canvasPixelRatio } from './pixel-ratio'
 
 /** The overlay colour of each decision family, as an `r, g, b` triple. */
@@ -25,8 +34,14 @@ const INTENT_COLORS = {
   'depth-change': '250, 204, 21',
 } as const
 
-/** The single ink the awareness cone is drawn in, as an `r, g, b` triple. */
-const CONE_INK = '255, 255, 255'
+/** The single ink the cone and the pearl trace are drawn in, as an `r, g, b` triple. */
+const OVERLAY_INK = '255, 255, 255'
+
+/** Half a pearl's width, in CSS pixels: the trace is a chain of 5 to 6 pixel beads whatever the koi is doing. */
+const PEARL_RADIUS_PX = 2.8
+
+/** Stands in for an absent chain or an absent path, so neither costs an allocation on the hot path. */
+const NOTHING: readonly Vec2[] = []
 
 /** Half-angle of the sensing cone, in radians — presentational: the brain's perception is a time horizon, not a view angle. */
 export const CONE_HALF_RAD = 0.5
@@ -167,7 +182,7 @@ function paintCone(context: CanvasRenderingContext2D, x: number, y: number, head
   const fade = context.createRadialGradient(x, y, 0, x, y, reach)
   for (let stop = 0; stop <= CONE_FADE_STOPS; stop += 1) {
     const along = stop / CONE_FADE_STOPS
-    fade.addColorStop(along, `rgba(${CONE_INK}, ${CONE_INK_ALPHA * (1 - along) ** CONE_FADE_POWER})`)
+    fade.addColorStop(along, `rgba(${OVERLAY_INK}, ${CONE_INK_ALPHA * (1 - along) ** CONE_FADE_POWER})`)
   }
   context.fillStyle = fade
   for (const wedge of CONE_WEDGES) {
@@ -181,6 +196,39 @@ function paintCone(context: CanvasRenderingContext2D, x: number, y: number, head
   context.globalAlpha = 1
 }
 
+/**
+ * One koi's report, named by the instance that made it.
+ *
+ * The overlay carries a pearl chain per koi from frame to frame, and a
+ * framework stops naming a fish the moment two koi of one framework swim at
+ * once — so the report travels here under the host's own name for the animal.
+ */
+export interface KoiSighting {
+  /** The instance whose channel the report arrived on. */
+  id: KoiInstanceId
+  /** What that koi reported, carried forward to now. */
+  outline: KoiOutline
+}
+
+/**
+ * Lays one koi's pearl chain down.
+ *
+ * @param context - The overlay's drawing context.
+ * @param chain - The pearls to draw in pond space, nearest first.
+ * @param nose - The koi's nose in pond space, which the fade is measured from.
+ * @param view - The pond-space origin of the visible window.
+ * @param reachPx - How far a full chain reaches, in pond pixels.
+ */
+function paintTrace(context: CanvasRenderingContext2D, chain: readonly Vec2[], nose: Vec2, view: Vec2, reachPx: number): void {
+  for (const pearl of chain) {
+    // how: The fade is taken from where the pearl is rather than from its place in the chain, so a pearl brightens as the fish closes on it instead of stepping up each time the one ahead of it is swallowed.
+    context.fillStyle = `rgba(${OVERLAY_INK}, ${pearlAlpha(Math.hypot(pearl.x - nose.x, pearl.y - nose.y), reachPx)})`
+    context.beginPath()
+    context.arc(pearl.x - view.x, pearl.y - view.y, PEARL_RADIUS_PX, 0, Math.PI * 2)
+    context.fill()
+  }
+}
+
 /** What the overlay needs to paint one frame. */
 export interface InteractionsFrame {
   /** Overlay width in CSS pixels. */
@@ -191,8 +239,8 @@ export interface InteractionsFrame {
   view: { x: number; y: number }
   /** Device pixel ratio to render at; a ratio past the canvas ceiling paints at the ceiling. */
   pixelRatio: number
-  /** The dead-reckoned outlines to annotate; entries without an intent draw nothing. */
-  outlines: readonly KoiOutline[]
+  /** The dead-reckoned reports to annotate; a koi with neither an intent nor a path draws nothing. */
+  shoal: readonly KoiSighting[]
 }
 
 /** A painter bound to the interactions canvas. */
@@ -216,11 +264,15 @@ export interface InteractionsPainter {
  * @example Drawing the overlay while it is enabled
  * ```typescript
  * const overlay = createInteractionsPainter(canvas)
- * overlay.paint({ width, height, view, pixelRatio, outlines })
+ * overlay.paint({ width, height, view, pixelRatio, shoal })
  * ```
  */
 export function createInteractionsPainter(canvas: HTMLCanvasElement): InteractionsPainter {
   let sizedTo = ''
+  // why: A pearl is placed in the water rather than worked out afresh against each frame, so the chains outlive the frames that drew them and are carried here between them.
+  const traces = new Map<KoiInstanceId, readonly Vec2[]>()
+  // why: Reused rather than rebuilt per frame, for the same reason the caller reuses the frame itself.
+  const present = new Set<KoiInstanceId>()
 
   return {
     paint(frame) {
@@ -242,11 +294,24 @@ export function createInteractionsPainter(canvas: HTMLCanvasElement): Interactio
       context.setTransform(ratio, 0, 0, ratio, 0, 0)
       context.clearRect(0, 0, frame.width, frame.height)
 
-      for (const outline of frame.outlines) {
-        const intent = outline.intent
+      present.clear()
+      for (const sighting of frame.shoal) {
+        const outline = sighting.outline
         const nose = outline.spine[0]
         const head = headCentre(outline)
-        if (intent === undefined || nose === undefined || head === null) {
+        if (nose === undefined || head === null) {
+          continue
+        }
+        present.add(sighting.id)
+
+        // why: The chain is walked before a pearl of it is drawn, so a pearl the fresh report contradicts never outlives the tick that heard the contradiction.
+        const spacing = spineLength(outline.spine) * PEARL_SPACING_BODIES
+        const chain = advanceTrace(traces.get(sighting.id) ?? NOTHING, nose, outline.heading, outline.path ?? NOTHING, spacing)
+        traces.set(sighting.id, chain)
+        paintTrace(context, chain, nose, frame.view, spacing * PEARL_MAX)
+
+        const intent = outline.intent
+        if (intent === undefined) {
           continue
         }
         const color = INTENT_COLORS[intent.kind]
@@ -295,9 +360,18 @@ export function createInteractionsPainter(canvas: HTMLCanvasElement): Interactio
         }
         context.setLineDash([])
       }
+
+      // why: A koi that has left the pond takes its chain with it, and a shoal this size is swept for a fraction of what tracking departures would cost.
+      for (const id of traces.keys()) {
+        if (!present.has(id)) {
+          traces.delete(id)
+        }
+      }
     },
 
     clear() {
+      // why: The overlay comes back on against wherever the shoal has got to by then, so no chain survives being switched off.
+      traces.clear()
       const context = canvas.getContext('2d')
       if (context !== null) {
         context.setTransform(1, 0, 0, 1, 0, 0)

@@ -2,6 +2,7 @@ import type { KoiIntent, KoiOutline, KoiPhase, Vec2 } from '@hyperfrontend/demo-
 import { describe, expect, it } from 'vitest'
 import { advanceSpine, createSpine, outlineContains, sampleSpine, spineGirth } from '@hyperfrontend/demo-koi-lib'
 import { CONE_HALF_RAD, CONE_WEDGES, HEAD_CENTRE_ALONG, createInteractionsPainter, headCentre, spineLength } from '../interactions'
+import { PEARL_MAX, PEARL_SPACING_BODIES } from '../pearl-trace'
 
 /** The nose-to-tail length every koi in these fixtures swims at, in pond pixels. */
 const BODY_PX = 140
@@ -126,12 +127,16 @@ interface FillRecord {
   x: number
   /** Arc centre y in overlay pixels. */
   y: number
+  /** The arc's radius in overlay pixels. */
+  radius: number
   /** Where the arc starts, in radians. */
   from: number
   /** Where the arc ends, in radians. */
   to: number
   /** The alpha the fill was laid at. */
   alpha: number
+  /** The flat colour the fill was laid in, or the empty string when a gradient was. */
+  ink: string
   /** Whether a gradient was in the fill style, as against a flat colour. */
   gradient: boolean
 }
@@ -149,7 +154,7 @@ function recordingOverlay() {
   const fills: FillRecord[] = []
   const strokes: string[] = []
   const stops: { at: number; color: string }[] = []
-  let pending = { x: 0, y: 0, from: 0, to: 0 }
+  let pending = { x: 0, y: 0, radius: 0, from: 0, to: 0 }
   let fillStyle: unknown = ''
   let strokeStyle = ''
   let alpha = 1
@@ -177,11 +182,11 @@ function recordingOverlay() {
         stops.push({ at, color })
       },
     }),
-    arc: (x: number, y: number, _radius: number, from: number, to: number): void => {
-      pending = { x, y, from, to }
+    arc: (x: number, y: number, radius: number, from: number, to: number): void => {
+      pending = { x, y, radius, from, to }
     },
     fill: (): void => {
-      fills.push({ ...pending, alpha, gradient: typeof fillStyle !== 'string' })
+      fills.push({ ...pending, alpha, ink: typeof fillStyle === 'string' ? fillStyle : '', gradient: typeof fillStyle !== 'string' })
     },
     stroke: (): void => {
       strokes.push(strokeStyle)
@@ -194,6 +199,8 @@ function recordingOverlay() {
     canvas: <HTMLCanvasElement>(<unknown>canvas),
     // how: The cone is the only thing filled with a gradient, so the flat-coloured waypoint dot sorts itself out of the way.
     wedges: (): FillRecord[] => fills.filter((fill) => fill.gradient),
+    // how: The pearls are the only flat white fills the overlay lays; the waypoint dot is flat, but it takes the decision's colour.
+    pearls: (): FillRecord[] => fills.filter((fill) => !fill.gradient && fill.ink.startsWith('rgba(255, 255, 255')),
     strokes,
     stops,
   }
@@ -207,8 +214,59 @@ function recordingOverlay() {
  */
 function painted(outline: KoiOutline) {
   const overlay = recordingOverlay()
-  createInteractionsPainter(overlay.canvas).paint({ width: 800, height: 600, view: VIEW, pixelRatio: 1, outlines: [outline] })
+  createInteractionsPainter(overlay.canvas).paint({
+    width: 800,
+    height: 600,
+    view: VIEW,
+    pixelRatio: 1,
+    shoal: [{ id: 'vanilla:0', outline }],
+  })
   return overlay
+}
+
+/**
+ * Gives a koi the advancement it has committed to: a straight run one pearl-spacing per point.
+ *
+ * A path sampled at exactly the spacing the trace lays pearls at puts a pearl
+ * on every reported point, so a spec can read the drawn chain straight off the
+ * report instead of re-deriving where the arc lengths landed.
+ *
+ * @param outline - The koi's reported outline.
+ * @returns The same outline, reporting its advancement.
+ */
+function advancing(outline: KoiOutline): KoiOutline {
+  const nose = sampleAt(outline, 0)
+  const step = spineLength(outline.spine) * PEARL_SPACING_BODIES
+  return {
+    ...outline,
+    path: Array.from({ length: 20 }, (_unused, index) => ({
+      x: nose.x + Math.cos(outline.heading) * step * (index + 1),
+      y: nose.y + Math.sin(outline.heading) * step * (index + 1),
+    })),
+  }
+}
+
+/**
+ * The same koi, further along its heading and reporting from where it has got to.
+ *
+ * @param outline - The koi's reported outline.
+ * @param byPx - How far it has swum, in pond pixels.
+ * @returns The koi's next outline.
+ */
+function advanced(outline: KoiOutline, byPx: number): KoiOutline {
+  const dx = Math.cos(outline.heading) * byPx
+  const dy = Math.sin(outline.heading) * byPx
+  return advancing({ ...outline, spine: outline.spine.map((point) => ({ x: point.x + dx, y: point.y + dy })) })
+}
+
+/**
+ * Where a fill went down, past the last place the arc-length arithmetic is exact.
+ *
+ * @param fill - The recorded fill.
+ * @returns The centre, as a comparable pair.
+ */
+function centre(fill: { x: number; y: number }): string {
+  return `${fill.x.toFixed(3)},${fill.y.toFixed(3)}`
 }
 
 describe('spineLength', () => {
@@ -334,5 +392,65 @@ describe('the painted cone', () => {
   it('draws nothing for a koi reporting no body', () => {
     const overlay = painted({ ...swum(0), spine: [], girth: [] })
     expect([overlay.wedges().length, overlay.strokes.length]).toEqual([0, 0])
+  })
+})
+
+describe('the painted trace', () => {
+  it('lays a pearl wherever the koi said it would be', () => {
+    const outline = advancing(swum(0))
+    expect(painted(outline).pearls().map(centre)).toEqual(
+      (outline.path ?? []).slice(0, PEARL_MAX).map((point) => centre({ x: point.x - VIEW.x, y: point.y - VIEW.y }))
+    )
+  })
+
+  it('lays the trace in the ink the cone is drawn in', () => {
+    const inks = painted(advancing(swum(0)))
+      .pearls()
+      .map((pearl) => pearl.ink.slice(0, pearl.ink.lastIndexOf(',')))
+    expect([...new Set(inks)]).toEqual(['rgba(255, 255, 255'])
+  })
+
+  it('draws every pearl between five and six pixels across', () => {
+    const widths = painted(advancing(swum(0)))
+      .pearls()
+      .map((pearl) => pearl.radius * 2)
+    expect([Math.min(...widths) >= 5, Math.max(...widths) <= 6]).toEqual([true, true])
+  })
+
+  it('thins the trace out with every pearl further from the nose', () => {
+    const alphas = painted(advancing(swum(0)))
+      .pearls()
+      .map((pearl) => Number(pearl.ink.slice(pearl.ink.lastIndexOf(' ') + 1, -1)))
+    expect(alphas).toEqual([...alphas].sort((first, second) => second - first))
+  })
+
+  it('lays no trace for a koi reporting no advancement', () => {
+    expect(painted(swum(0)).pearls()).toEqual([])
+  })
+
+  it('holds each koi of a framework to a chain of its own', () => {
+    const overlay = recordingOverlay()
+    const painter = createInteractionsPainter(overlay.canvas)
+    const first = advancing(swum(0))
+    const twin = advancing({ ...swum(0), spine: swum(0).spine.map((point) => ({ x: point.x, y: point.y + 300 })) })
+    const frame = (koi: KoiOutline, other: KoiOutline) => ({
+      width: 800,
+      height: 600,
+      view: VIEW,
+      pixelRatio: 1,
+      shoal: [
+        { id: <const>'vanilla:0', outline: koi },
+        { id: <const>'vanilla:1', outline: other },
+      ],
+    })
+    painter.paint(frame(first, twin))
+    const placed = overlay.pearls().map(centre)
+    painter.paint(frame(advanced(first, 4), advanced(twin, 4)))
+    expect(
+      overlay
+        .pearls()
+        .map(centre)
+        .slice(PEARL_MAX * 2)
+    ).toEqual(placed)
   })
 })

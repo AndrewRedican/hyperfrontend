@@ -13,6 +13,7 @@ import type { KoiFramework, KoiOutline, Vec2 } from '@hyperfrontend/demo-koi-lib
 import type { PondScene, SceneScale } from '../feature/wire-contract'
 import type { DeviceTier } from '../runtime/device-tier'
 import type { KoiInstanceId } from './instance-id'
+import type { KoiSighting } from './interactions'
 import type { KoiSession } from './koi-sessions'
 import { KOI_FRAMEWORKS, describePond, describePondForFrame, mayRipple, pondPoint, pondWindow } from '@hyperfrontend/demo-koi-lib'
 import { readDeviceProfile } from '../runtime/device-tier'
@@ -840,13 +841,13 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondSceneHandle
     field,
   }
 
-  // why: Reused for the same reason as the surface frame; the outlines array is refilled in place each drawn frame.
+  // why: Reused for the same reason as the surface frame; the shoal array is refilled in place each drawn frame.
   const interactionsFrame = {
     width: 0,
     height: 0,
     view: { x: 0, y: 0 },
     pixelRatio: 1,
-    outlines: <KoiOutline[]>[],
+    shoal: <KoiSighting[]>[],
   }
 
   const loop = createFrameLoop(({ dt, elapsedMs }) => {
@@ -911,11 +912,12 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondSceneHandle
       interactionsFrame.view.x = pond.view.x
       interactionsFrame.view.y = pond.view.y
       interactionsFrame.pixelRatio = window.devicePixelRatio
-      interactionsFrame.outlines.length = 0
+      interactionsFrame.shoal.length = 0
       for (const session of sessions.values()) {
         const latest = relay.latest(session.id, now)
         if (latest !== null) {
-          interactionsFrame.outlines.push(latest)
+          // why: The overlay carries a pearl chain per koi across frames, so a report reaches it under the host's own name for the fish that made it.
+          interactionsFrame.shoal.push({ id: session.id, outline: latest })
         }
       }
       diagnostics.paint(interactionsFrame)
