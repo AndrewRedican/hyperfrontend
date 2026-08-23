@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.8.0](https://github.com/AndrewRedican/hyperfrontend/compare/b22d3335975d9dc7f70253c08bb39fc0a4b47b16...999f0dbfbe2e5e700ec06899bc2467b5e17539de) - 2026-08-23
+
+### Features
+
+- expose hosted-ness on the feature handle
+
+### Bug Fixes
+
+- reconcile page visibility instead of trusting its announcement
+
 ## [0.7.1](https://github.com/AndrewRedican/hyperfrontend/compare/ee192ea7bb541593e6590243a08a29b68d69a1ac...514941cca7b348b15dbc663174874f6237fc4f06) - 2026-08-20
 
 ### Features
