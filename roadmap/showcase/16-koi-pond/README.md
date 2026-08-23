@@ -48,24 +48,26 @@ All decisions below were interrogated and settled with the author on 2026-08-22.
 
 ## Phases
 
-Each phase is independently verifiable and has its own folder with one sub-plan per work
-item. Read the phase README first; it orders the sub-plans and states the phase gate.
+Each phase is independently verifiable. A shipped phase is one collapsed record holding
+the residue later phases build against; a phase still to run has a folder with one
+sub-plan per work item, and its README orders them and states the phase gate.
 
 | Phase | Folder                                                                         | Theme                                                                                                             | Depends on |
 | ----- | ------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------- | ---------- |
 | 1     | [phase-1-lib-consolidation](phase-1-lib-consolidation.md) (shipped)            | The consolidated koi lib: brain, runtime, wire, stage, geometry; motion retune; contract 0.8.0                    | none       |
 | 2     | [phase-2-isolated-improvements.md](phase-2-isolated-improvements.md) (shipped) | Self-contained fixes: SDK `hosted` signal, visibility reconciliation, DPR caps, gallery resurrection, device tier | none       |
 | 3     | [phase-3-instance-model.md](phase-3-instance-model.md) (shipped)               | Instance keying, dynamic shoal, deferred boot, card profile, fish migration, repack                               | 1, 2       |
-| 4     | [phase-4-chrome-and-overlay](phase-4-chrome-and-overlay/README.md)             | Unified shoal panel, overlay grammar replacement, vitals                                                          | 1, 3       |
+| 4     | [phase-4-chrome-and-overlay.md](phase-4-chrome-and-overlay.md) (shipped)       | Unified shoal panel, overlay grammar replacement, vitals                                                          | 1, 3       |
 | 5     | [phase-5-integration](phase-5-integration/README.md)                           | Gallery choreography, guides, doctrine, findings, device acceptance                                               | 3, 4       |
 
 ### Sequencing constraints that are easy to miss
 
-- **Phases 1 through 3 have shipped**; their records are the collapsed
+- **Phases 1 through 4 have shipped**; their records are the collapsed
   [phase-1-lib-consolidation.md](phase-1-lib-consolidation.md),
-  [phase-2-isolated-improvements.md](phase-2-isolated-improvements.md), and
-  [phase-3-instance-model.md](phase-3-instance-model.md). Phase 2 never depended on
-  phase 1 and landed independently of it.
+  [phase-2-isolated-improvements.md](phase-2-isolated-improvements.md),
+  [phase-3-instance-model.md](phase-3-instance-model.md), and
+  [phase-4-chrome-and-overlay.md](phase-4-chrome-and-overlay.md). Phase 2 never depended
+  on phase 1 and landed independently of it.
 - **The SDK release gate cleared.** `@hyperfrontend/features` 0.8.0 published on
   2026-08-23 with the `hosted` signal and the visibility fix; every koi project pins it
   and every vendored shell is rebuilt against it. The

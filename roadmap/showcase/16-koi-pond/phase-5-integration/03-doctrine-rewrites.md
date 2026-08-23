@@ -45,7 +45,9 @@ monochrome overlay grammar (cones, pearls, caret); `resting`; deferred boot and 
 `hosted` signal; release-GL-on-hidden; the 0.8.0 repack pipeline (including the 0.7.0
 tarball pruning); the vitals additions; and the supersession note for the 2026-08-09
 single-session expand decision (the skill's decision log is the right home for
-supersessions; shipped READMEs are not).
+supersessions; shipped READMEs are not). The shipped shape of the panel, the overlay
+grammar, and the vitals additions is recorded in
+[phase 4](../phase-4-chrome-and-overlay.md).
 
 ## Method
 

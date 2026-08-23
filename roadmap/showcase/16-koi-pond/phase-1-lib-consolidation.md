@@ -28,8 +28,8 @@ the parity and retune suites are mutation-proven.
 
 ## Predicted path
 
-Facts the [phase 4 pearl trace](phase-4-chrome-and-overlay/03-pearl-trace.md) is built
-against:
+Facts the [phase 4 pearl trace](phase-4-chrome-and-overlay.md#the-overlay-grammar) is
+built against:
 
 - The path is `motion.predictPath(steps, dtStep)` on `KoiMotion`: curved predicted
   advancement (position samples), never a direction ray. At most 20 points

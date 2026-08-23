@@ -70,7 +70,7 @@ silence never puts the pond to sleep.
   [expand choreography](phase-5-integration/01-expand-choreography.md) both touch this
   handle.
 - **One overlay instrument shipped early**, as an explicit exception to
-  [phase 4's ownership](phase-4-chrome-and-overlay/05-vitals-updates.md) of the overlay:
+  [phase 4's ownership](phase-4-chrome-and-overlay.md#the-vitals-overlay) of the overlay:
   the vitals panel title reads `vitals · visible` or `vitals · hidden`, refreshed every
   probe, so a capture carries the browser's own answer beside the log that says what the
   pond believes. The log vocabulary stays `page-hidden` and `page-visible` with a source
@@ -116,8 +116,9 @@ user-agent sniffing.
   is the only mechanism, and no separate duplicate gate exists.
 
 The cap feeds the [dynamic shoal](phase-3-instance-model.md#the-shoal-handle) and the
-[shoal panel's](phase-4-chrome-and-overlay/01-shoal-panel.md) refusal state; the tier name
-goes into the [vitals boot record](phase-4-chrome-and-overlay/05-vitals-updates.md).
+[shoal panel's](phase-4-chrome-and-overlay.md#the-shoal-panel) refusal state; the tier
+name goes into the
+[vitals boot record](phase-4-chrome-and-overlay.md#the-vitals-overlay).
 
 ## Findings
 

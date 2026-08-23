@@ -22,7 +22,8 @@ whole family speaks contract 0.8.0 in the composed build.
 
 The pond harness (`host/src/scene/__tests__/pond.spec.ts`: faked shells, hand-driven
 clock, pointer events against relayed outlines) is where the shoal, boot, and profile
-behaviour is specified; phase 4's panel and vitals specs extend it.
+behaviour is specified; the [phase 4](phase-4-chrome-and-overlay.md) panel and vitals
+specs extend it.
 
 ## Doctrine coherence
 
@@ -40,7 +41,7 @@ Do not merge this work to `main` in a cycle that will not also carry phases 4 an
 
 ## The instance model
 
-Facts phase 4's panel and vitals display build on:
+Facts the [phase 4](phase-4-chrome-and-overlay.md) panel and vitals display build on:
 
 - `KoiInstanceId` is the branded string `framework:ordinal`
   (`host/src/scene/instance-id.ts`: `koiInstanceId`, `instanceFramework`,
@@ -48,13 +49,12 @@ Facts phase 4's panel and vitals display build on:
   channel boundary.
 - Layers carry `data-fish` (framework, for styling) and `data-instance` (the id);
   they are raised and torn down with the roster (`stage.ts` `addLayer`/`removeLayer`).
-- Roster rows stay per framework: a row is lit while **any** instance of its framework
-  answers, and focusing it hovers the framework's first answering instance. Per-instance
-  rows, count badges, and presence are the
-  [phase 4 panel's](phase-4-chrome-and-overlay/01-shoal-panel.md) to add.
+- Roster rows were left per framework here, lit while **any** instance of that framework
+  answers; per-instance rows, count badges, presence, and the cap state came with the
+  [phase 4 panel](phase-4-chrome-and-overlay.md#the-shoal-panel).
 - The vitals overlay already keys probe rows by instance (rows follow
-  `.koi-layer[data-instance]`, appearing and disappearing with churn);
-  [phase 4's vitals work](phase-4-chrome-and-overlay/05-vitals-updates.md) is display
+  `.koi-layer[data-instance]`, appearing and disappearing with churn); the
+  [phase 4 vitals work](phase-4-chrome-and-overlay.md#the-vitals-overlay) was display
   only: labels, the tier boot record, roster-change log lines.
 - The depth spread re-deals from the live roster on every join and leave
   (`depth-director.ts`); a lone koi holds the surface at full scale and light, and a
@@ -65,7 +65,7 @@ Facts phase 4's panel and vitals display build on:
 
 ## The shoal handle
 
-The API the [phase 4 panel](phase-4-chrome-and-overlay/01-shoal-panel.md) wires to, on
+The API the [phase 4 panel](phase-4-chrome-and-overlay.md#the-shoal-panel) wires to, on
 `PondSceneHandle` (`pond.ts`):
 
 - `addKoi(framework)` returns the new `KoiInstanceId`, or `null` at the cap with
