@@ -37,6 +37,15 @@ directory so no link dangles on a fresh box, and leaves alone anything in
 `_/claude/` that is not a symlink it made. Both the workspace slug and the uid
 are derived at run time, so a different checkout path or user works unchanged.
 
+Nothing here is load bearing, so nothing here should ever break a container
+build. Expected gaps degrade to a warning and a note about what to do: a target
+Claude has not written yet is reported as `skip`, and a directory that cannot be
+created is reported with the path to check. Anything unforeseen is trapped and
+reported with the line that failed and what it does and does not affect.
+`postCreateCommand` passes `--soft-fail`, which makes that last case exit 0 so
+container creation still succeeds; run the script by hand without the flag to
+get a real exit code.
+
 ## Keeping the shortcuts current
 
 Session dirs are named by UUID, so `latest-scratch` and `latest-session` are the

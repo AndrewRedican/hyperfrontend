@@ -41,5 +41,5 @@
     }
   },
   "remoteUser": "vscode",
-  "postCreateCommand": "npm ci && bash .devcontainer/claude-links/setup.sh"
+  "postCreateCommand": "npm ci && bash .devcontainer/claude-links/setup.sh --soft-fail"
 }
