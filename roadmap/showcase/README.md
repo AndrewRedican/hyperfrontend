@@ -43,9 +43,8 @@ D = discovery-heavy · E = execution-heavy · ⭐ = special, prominent handling
 | 11  | [Flagship composed app](11-flagship-composed-app.md)                        | E    | 08–10      | The composed centerpiece (e.g. fake desktop/OS)                             |
 | 12  | [Gallery / docs-site integration — residue](12-gallery-docs-integration.md) | E    | 08–11      | Per-demo how-to guides; register future demos as they land                  |
 | 13  | [v2 release — residue](13-v2-release.md)                                    | E    | —          | Docs refresh; verify live embeds after the next main-merge redeploy         |
-| 16  | [Koi pond instance model](16-koi-pond/README.md)                            | E    | —          | Card/full instance split, dynamic shoal, lib consolidation, overlay grammar |
 
-> **Numbering convention.** Plans that complete are removed and their numbers are never reused (01, 02, 04, 14, and 15 — the koi pond — are gone this way; 03 was folded into [00-strategy.md](00-strategy.md#deployment-and-the-origin-boundary-layer)).
+> **Numbering convention.** Plans that complete are removed and their numbers are never reused (01, 02, 04, 14, and the koi pond's 15 and 16 are gone this way; 03 was folded into [00-strategy.md](00-strategy.md#deployment-and-the-origin-boundary-layer)).
 
 **Parallelism**: 07 runs alongside anything; the breadth batches (08–10) parallelize once 06 lands.
 

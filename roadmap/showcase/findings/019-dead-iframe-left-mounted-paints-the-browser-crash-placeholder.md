@@ -1,13 +1,13 @@
 # F-019 — A dead feature frame stays mounted, so the browser paints its crash placeholder into my page
 
-| Field        | Value                                                                                                                      |
-| ------------ | -------------------------------------------------------------------------------------------------------------------------- |
-| Category     | api-friction                                                                                                               |
-| Severity     | medium                                                                                                                     |
-| Surfaced by  | demo-koi-pond                                                                                                              |
-| Status       | triaged                                                                                                                    |
-| Disposition  | api-refinement                                                                                                             |
-| Graduated to | [koi pond phase 2, gallery outer resurrection](../16-koi-pond/phase-2-isolated-improvements.md#gallery-outer-resurrection) |
+| Field        | Value          |
+| ------------ | -------------- |
+| Category     | api-friction   |
+| Severity     | medium         |
+| Surfaced by  | demo-koi-pond  |
+| Status       | triaged        |
+| Disposition  | api-refinement |
+| Graduated to | —              |
 
 ## What happened
 
