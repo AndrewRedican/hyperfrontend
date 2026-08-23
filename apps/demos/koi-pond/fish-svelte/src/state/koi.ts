@@ -1,9 +1,11 @@
-import { createKoiRuntime } from '../runtime/koi-runtime'
+import { createKoiRuntime } from '@hyperfrontend/demo-koi-lib'
+import { createKoiRenderer } from '../koi/koi-render'
+import { feature } from '../hyperfrontend.feature'
 
 /**
  * Looks up the app root, failing loudly when the markup drifts.
  *
- * @returns The root element the koi is mounted into.
+ * @returns The root element the koi is drawn into.
  */
 function appRoot(): HTMLElement {
   const found = document.querySelector<HTMLElement>('#app')
@@ -13,5 +15,12 @@ function appRoot(): HTMLElement {
   return found
 }
 
-/** The app-wide koi; wired to the live feature handle at boot. */
-export const koi = createKoiRuntime(appRoot())
+/** The app-wide koi; born wired to the live feature handle. */
+export const koi = createKoiRuntime({
+  framework: 'svelte',
+  root: appRoot(),
+  link: feature,
+  rendererFactory: createKoiRenderer,
+  // why: Whether a host embeds this app comes from the SDK handle, never from the window above this frame.
+  hosted: feature.hosted,
+})
