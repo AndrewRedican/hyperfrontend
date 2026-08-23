@@ -1,40 +1,38 @@
 /**
  * The interaction overlay: what each koi is deciding, drawn over the water.
  *
- * Every outline already carries the fish's reported intent: its decision
- * family, the point it is steering toward, and how far ahead it is
- * anticipating. This painter turns those reports into an awareness cone over
- * each head and a dashed trace to each destination, coloured by the decision:
- * red for collision avoidance, green for ordinary travel, yellow for a
- * decided pass above or underneath a neighbour. The traces redraw from the
- * dead-reckoned noses every frame, so they follow the fish as it makes its
- * progress. A held koi reports no intent and simply has nothing drawn.
+ * Every outline already carries the fish's own account of itself: the decision
+ * family it is acting on, how far ahead it is anticipating, the point it is
+ * steering toward, and the advancement it has committed to. This painter turns
+ * those reports into three marks around each head, and lays all three in one
+ * ink at varying strength. Nothing on this canvas is colour-coded; what a
+ * decision is reads from where the marks sit and how fast they move, which is
+ * the only reading that survives eight fish overlapping on a phone. A held koi
+ * reports no intent and simply has nothing drawn.
  *
  * The cone hangs off the middle of the head rather than the nose, and runs out
  * of ink at every boundary rather than ending at a line, so what a visitor
  * reads is a field of attention carried by the animal instead of a lit wedge
  * stuck to its snout.
  *
- * The outline also carries the advancement the koi has committed to, and that
- * is drawn as a chain of pearls the fish visibly swims through. The chain is
- * the one thing on this canvas that outlives the frame it was drawn in: pearls
- * are placed in the water, not recomputed against it, so the painter carries a
- * chain per koi and walks its ends. What the chain is worth is the koi's own
- * accuracy, and the walk is in `pearl-trace.ts`.
+ * The pearls are the one thing on this canvas that outlives the frame they were
+ * drawn in: they are placed in the water, not recomputed against it, so the
+ * painter carries a chain per koi and walks its ends. What a chain is worth is
+ * the koi's own accuracy, and the walk is in `pearl-trace.ts`.
+ *
+ * The caret rides ahead of both, on an orbit around the same head centre the
+ * cone hangs from, and answers what neither of the others can: not where the
+ * koi is going, but that it has already decided to. Its slide is in
+ * `sliding-caret.ts`.
  */
 import type { KoiOutline, Vec2 } from '@hyperfrontend/demo-koi-lib'
 import type { KoiInstanceId } from './instance-id'
+import { turnToward } from '@hyperfrontend/demo-koi-lib'
 import { PEARL_MAX, PEARL_SPACING_BODIES, advanceTrace, pearlAlpha } from './pearl-trace'
 import { canvasPixelRatio } from './pixel-ratio'
+import { CARET_SLIDE_RAD_S, committedHeading, paintCaret } from './sliding-caret'
 
-/** The overlay colour of each decision family, as an `r, g, b` triple. */
-const INTENT_COLORS = {
-  travel: '74, 222, 128',
-  avoid: '255, 95, 86',
-  'depth-change': '250, 204, 21',
-} as const
-
-/** The single ink the cone and the pearl trace are drawn in, as an `r, g, b` triple. */
+/** The single ink every mark on the overlay is drawn in, as an `r, g, b` triple. */
 const OVERLAY_INK = '255, 255, 255'
 
 /** Half a pearl's width, in CSS pixels: the trace is a chain of 5 to 6 pixel beads whatever the koi is doing. */
@@ -60,12 +58,6 @@ const CONE_FADE_STOPS = 6
 
 /** How many wedges each flank of the cone is filled in. */
 const CONE_FLANK_WEDGES = 16
-
-/** Dash pattern of every anticipated-path trace, in CSS pixels. */
-const TRACE_DASH: readonly number[] = [7, 7]
-
-/** How far along its heading a vertical manoeuvre's stub projects, as a fraction of the reach. */
-const DEPTH_STUB_REACH = 0.55
 
 /** One wedge of the awareness cone, cut relative to the koi's heading. */
 export interface ConeWedge {
@@ -239,6 +231,8 @@ export interface InteractionsFrame {
   view: { x: number; y: number }
   /** Device pixel ratio to render at; a ratio past the canvas ceiling paints at the ceiling. */
   pixelRatio: number
+  /** Seconds since the previous painted frame, which is what holds each caret to a slide. */
+  dt: number
   /** The dead-reckoned reports to annotate; a koi with neither an intent nor a path draws nothing. */
   shoal: readonly KoiSighting[]
 }
@@ -271,6 +265,8 @@ export function createInteractionsPainter(canvas: HTMLCanvasElement): Interactio
   let sizedTo = ''
   // why: A pearl is placed in the water rather than worked out afresh against each frame, so the chains outlive the frames that drew them and are carried here between them.
   const traces = new Map<KoiInstanceId, readonly Vec2[]>()
+  // why: A caret is only a slide because it remembers where it was riding last frame; a caret worked out from the decision alone would snap onto every one of them.
+  const carets = new Map<KoiInstanceId, number>()
   // why: Reused rather than rebuilt per frame, for the same reason the caller reuses the frame itself.
   const present = new Set<KoiInstanceId>()
 
@@ -305,7 +301,8 @@ export function createInteractionsPainter(canvas: HTMLCanvasElement): Interactio
         present.add(sighting.id)
 
         // why: The chain is walked before a pearl of it is drawn, so a pearl the fresh report contradicts never outlives the tick that heard the contradiction.
-        const spacing = spineLength(outline.spine) * PEARL_SPACING_BODIES
+        const body = spineLength(outline.spine)
+        const spacing = body * PEARL_SPACING_BODIES
         const chain = advanceTrace(traces.get(sighting.id) ?? NOTHING, nose, outline.heading, outline.path ?? NOTHING, spacing)
         traces.set(sighting.id, chain)
         paintTrace(context, chain, nose, frame.view, spacing * PEARL_MAX)
@@ -314,64 +311,31 @@ export function createInteractionsPainter(canvas: HTMLCanvasElement): Interactio
         if (intent === undefined) {
           continue
         }
-        const color = INTENT_COLORS[intent.kind]
-        const noseX = nose.x - frame.view.x
-        const noseY = nose.y - frame.view.y
 
         // how: The cone is the fish's forward anticipation window — it stretches with speed, so a bolting koi visibly sees further ahead.
         paintCone(context, head.x - frame.view.x, head.y - frame.view.y, outline.heading, intent.reachPx)
 
-        context.setLineDash(<number[]>TRACE_DASH)
-        context.lineWidth = 1.6
-        context.strokeStyle = `rgba(${color}, 0.85)`
-        if (intent.target !== null) {
-          const targetX = intent.target.x - frame.view.x
-          const targetY = intent.target.y - frame.view.y
-          context.beginPath()
-          context.moveTo(noseX, noseY)
-          context.lineTo(targetX, targetY)
-          context.stroke()
-          context.setLineDash([])
-          context.beginPath()
-          context.arc(targetX, targetY, 3.2, 0, Math.PI * 2)
-          context.fillStyle = `rgba(${color}, 0.9)`
-          context.fill()
-        } else {
-          // how: A depth pass is vertical, so its trace is a short stub along the heading capped with chevrons pointing the way the fish decided to pass.
-          const stub = intent.reachPx * DEPTH_STUB_REACH
-          const stubX = noseX + Math.cos(outline.heading) * stub
-          const stubY = noseY + Math.sin(outline.heading) * stub
-          context.beginPath()
-          context.moveTo(noseX, noseY)
-          context.lineTo(stubX, stubY)
-          context.stroke()
-          context.setLineDash([])
-          const up = intent.direction !== 'below'
-          const step = up ? -5 : 5
-          context.beginPath()
-          for (const rank of [0, 1]) {
-            const baseY = stubY + step * rank
-            context.moveTo(stubX - 4, baseY)
-            context.lineTo(stubX, baseY + step)
-            context.lineTo(stubX + 4, baseY)
-          }
-          context.strokeStyle = `rgba(${color}, 0.9)`
-          context.stroke()
-        }
-        context.setLineDash([])
+        // why: A koi is first seen already committed to something, so its caret starts where the decision is instead of sliding in from an angle nothing ever chose.
+        const riding = carets.get(sighting.id)
+        const committed = committedHeading(outline, head)
+        const angle = riding === undefined ? committed : turnToward(riding, committed, CARET_SLIDE_RAD_S * frame.dt)
+        carets.set(sighting.id, angle)
+        paintCaret(context, OVERLAY_INK, head.x - frame.view.x, head.y - frame.view.y, angle, body)
       }
 
-      // why: A koi that has left the pond takes its chain with it, and a shoal this size is swept for a fraction of what tracking departures would cost.
+      // why: A koi that has left the pond takes its chain and its caret with it, and a shoal this size is swept for a fraction of what tracking departures would cost.
       for (const id of traces.keys()) {
         if (!present.has(id)) {
           traces.delete(id)
+          carets.delete(id)
         }
       }
     },
 
     clear() {
-      // why: The overlay comes back on against wherever the shoal has got to by then, so no chain survives being switched off.
+      // why: The overlay comes back on against wherever the shoal has got to by then, so neither a chain nor a caret survives being switched off.
       traces.clear()
+      carets.clear()
       const context = canvas.getContext('2d')
       if (context !== null) {
         context.setTransform(1, 0, 0, 1, 0, 0)

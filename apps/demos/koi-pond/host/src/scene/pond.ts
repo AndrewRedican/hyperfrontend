@@ -847,6 +847,7 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondSceneHandle
     height: 0,
     view: { x: 0, y: 0 },
     pixelRatio: 1,
+    dt: 0,
     shoal: <KoiSighting[]>[],
   }
 
@@ -912,6 +913,7 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondSceneHandle
       interactionsFrame.view.x = pond.view.x
       interactionsFrame.view.y = pond.view.y
       interactionsFrame.pixelRatio = window.devicePixelRatio
+      interactionsFrame.dt = dt
       interactionsFrame.shoal.length = 0
       for (const session of sessions.values()) {
         const latest = relay.latest(session.id, now)

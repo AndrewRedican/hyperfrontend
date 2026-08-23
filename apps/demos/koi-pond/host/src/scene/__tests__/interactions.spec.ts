@@ -3,6 +3,8 @@ import { describe, expect, it } from 'vitest'
 import { advanceSpine, createSpine, outlineContains, sampleSpine, spineGirth } from '@hyperfrontend/demo-koi-lib'
 import { CONE_HALF_RAD, CONE_WEDGES, HEAD_CENTRE_ALONG, createInteractionsPainter, headCentre, spineLength } from '../interactions'
 import { PEARL_MAX, PEARL_SPACING_BODIES } from '../pearl-trace'
+import { committedHeading } from '../sliding-caret'
+import { VIEW, anchorOf, caretAngle, frameOf, painted, recordingOverlay } from './overlay-recorder'
 
 /** The nose-to-tail length every koi in these fixtures swims at, in pond pixels. */
 const BODY_PX = 140
@@ -22,9 +24,6 @@ const SETTLE_FRAMES = 90
 /** How far ahead every fixture koi is anticipating, in pond pixels. */
 const REACH_PX = 260
 
-/** The visible window the overlay paints, so a spec reading coordinates proves the offset came off them. */
-const VIEW = { x: 40, y: 25 }
-
 /** Which spine sample the fixtures read as the middle of the body. */
 const BODY_CENTRE_SAMPLE = 2
 
@@ -36,13 +35,17 @@ const POSES: readonly [string, number][] = [
 ]
 
 /** The travel decision every fixture koi reports unless a spec asks for another. */
-const TRAVELLING: KoiIntent = { kind: 'travel', target: { x: 900, y: 400 }, reachPx: REACH_PX }
+const TRAVELLING: KoiIntent = { kind: 'travel', target: { x: 2600, y: 400 }, reachPx: REACH_PX }
 
-/** One decision of each family, so the cone can be read against everything a koi reports. */
+/** A waypoint well off any fixture koi's course, so a bearing taken to it is unmistakably a decision. */
+const OFF_COURSE: Vec2 = { x: 900, y: 3400 }
+
+/** One decision of every shape a koi can report, so no mark can be read against only part of the vocabulary. */
 const INTENTS: readonly [string, KoiIntent][] = [
   ['travel', TRAVELLING],
   ['avoid', { kind: 'avoid', target: { x: 200, y: 700 }, reachPx: REACH_PX }],
-  ['depth-change', { kind: 'depth-change', target: null, direction: 'above', reachPx: REACH_PX }],
+  ['a pass above', { kind: 'depth-change', target: null, direction: 'above', reachPx: REACH_PX }],
+  ['a pass below', { kind: 'depth-change', target: null, direction: 'below', reachPx: REACH_PX }],
 ]
 
 /**
@@ -94,20 +97,6 @@ function sampleAt(outline: KoiOutline, index: number): Vec2 {
 }
 
 /**
- * The anchor an outline resolves to, refusing an outline without one.
- *
- * @param outline - The koi's reported outline.
- * @returns The anchor in pond space.
- */
-function anchorOf(outline: KoiOutline): Vec2 {
-  const anchor = headCentre(outline)
-  if (anchor === null) {
-    throw new Error('the fixture outline reported no body')
-  }
-  return anchor
-}
-
-/**
  * How far along a run a point projects, as a share of the run.
  *
  * @param point - The point to project.
@@ -119,109 +108,6 @@ function projected(point: Vec2, from: Vec2, to: Vec2): number {
   const dx = to.x - from.x
   const dy = to.y - from.y
   return ((point.x - from.x) * dx + (point.y - from.y) * dy) / (dx * dx + dy * dy)
-}
-
-/** One arc the painter filled, with the state that was in force when it went down. */
-interface FillRecord {
-  /** Arc centre x in overlay pixels. */
-  x: number
-  /** Arc centre y in overlay pixels. */
-  y: number
-  /** The arc's radius in overlay pixels. */
-  radius: number
-  /** Where the arc starts, in radians. */
-  from: number
-  /** Where the arc ends, in radians. */
-  to: number
-  /** The alpha the fill was laid at. */
-  alpha: number
-  /** The flat colour the fill was laid in, or the empty string when a gradient was. */
-  ink: string
-  /** Whether a gradient was in the fill style, as against a flat colour. */
-  gradient: boolean
-}
-
-/**
- * An overlay canvas that remembers what a painter did to it.
- *
- * The environment carries no 2D backend, and none is wanted: what these specs
- * ask about is where the painter drew and in what ink, and both of those are
- * arguments rather than pixels.
- *
- * @returns The stand-in canvas and the record of the calls made against it.
- */
-function recordingOverlay() {
-  const fills: FillRecord[] = []
-  const strokes: string[] = []
-  const stops: { at: number; color: string }[] = []
-  let pending = { x: 0, y: 0, radius: 0, from: 0, to: 0 }
-  let fillStyle: unknown = ''
-  let strokeStyle = ''
-  let alpha = 1
-
-  const context = {
-    lineWidth: 1,
-    set fillStyle(value: unknown) {
-      fillStyle = value
-    },
-    set strokeStyle(value: string) {
-      strokeStyle = value
-    },
-    set globalAlpha(value: number) {
-      alpha = value
-    },
-    setTransform: (): void => undefined,
-    clearRect: (): void => undefined,
-    beginPath: (): void => undefined,
-    closePath: (): void => undefined,
-    moveTo: (): void => undefined,
-    lineTo: (): void => undefined,
-    setLineDash: (): void => undefined,
-    createRadialGradient: () => ({
-      addColorStop: (at: number, color: string): void => {
-        stops.push({ at, color })
-      },
-    }),
-    arc: (x: number, y: number, radius: number, from: number, to: number): void => {
-      pending = { x, y, radius, from, to }
-    },
-    fill: (): void => {
-      fills.push({ ...pending, alpha, ink: typeof fillStyle === 'string' ? fillStyle : '', gradient: typeof fillStyle !== 'string' })
-    },
-    stroke: (): void => {
-      strokes.push(strokeStyle)
-    },
-  }
-
-  const canvas = { width: 0, height: 0, style: { width: '', height: '' }, getContext: () => context }
-
-  return {
-    canvas: <HTMLCanvasElement>(<unknown>canvas),
-    // how: The cone is the only thing filled with a gradient, so the flat-coloured waypoint dot sorts itself out of the way.
-    wedges: (): FillRecord[] => fills.filter((fill) => fill.gradient),
-    // how: The pearls are the only flat white fills the overlay lays; the waypoint dot is flat, but it takes the decision's colour.
-    pearls: (): FillRecord[] => fills.filter((fill) => !fill.gradient && fill.ink.startsWith('rgba(255, 255, 255')),
-    strokes,
-    stops,
-  }
-}
-
-/**
- * Paints one overlay frame over a single koi.
- *
- * @param outline - The koi to annotate.
- * @returns The record of what the painter drew.
- */
-function painted(outline: KoiOutline) {
-  const overlay = recordingOverlay()
-  createInteractionsPainter(overlay.canvas).paint({
-    width: 800,
-    height: 600,
-    view: VIEW,
-    pixelRatio: 1,
-    shoal: [{ id: 'vanilla:0', outline }],
-  })
-  return overlay
 }
 
 /**
@@ -381,7 +267,8 @@ describe('the painted cone', () => {
   })
 
   it('leaves no outline around the cone', () => {
-    expect(painted(swum(0)).strokes).toEqual(['rgba(74, 222, 128, 0.85)'])
+    // how: The caret is the only stroke the overlay lays, so a second one could only be an edge drawn around the fill.
+    expect(painted(swum(0)).strokes).toHaveLength(1)
   })
 
   it('draws nothing for a held koi', () => {
@@ -403,8 +290,8 @@ describe('the painted trace', () => {
     )
   })
 
-  it('lays the trace in the ink the cone is drawn in', () => {
-    const inks = painted(advancing(swum(0)))
+  it.each(INTENTS)('lays the trace in the ink the cone is drawn in whatever a koi decided, here %s', (_kind, intent) => {
+    const inks = painted(advancing(swum(0, intent)))
       .pearls()
       .map((pearl) => pearl.ink.slice(0, pearl.ink.lastIndexOf(',')))
     expect([...new Set(inks)]).toEqual(['rgba(255, 255, 255'])
@@ -438,6 +325,7 @@ describe('the painted trace', () => {
       height: 600,
       view: VIEW,
       pixelRatio: 1,
+      dt: STEP_S,
       shoal: [
         { id: <const>'vanilla:0', outline: koi },
         { id: <const>'vanilla:1', outline: other },
@@ -452,5 +340,54 @@ describe('the painted trace', () => {
         .map(centre)
         .slice(PEARL_MAX * 2)
     ).toEqual(placed)
+  })
+})
+
+describe('the painted caret', () => {
+  it('starts a koi on the heading it is already committed to', () => {
+    const outline = swum(0, { kind: 'travel', target: OFF_COURSE, reachPx: REACH_PX })
+    expect(caretAngle(painted(outline).strokes, outline)).toBeCloseTo(committedHeading(outline, anchorOf(outline)), 9)
+  })
+
+  it('rides a caret on every koi in the shoal at once', () => {
+    const overlay = recordingOverlay()
+    const twin = { ...swum(0), spine: swum(0).spine.map((point) => ({ x: point.x, y: point.y + 300 })) }
+    createInteractionsPainter(overlay.canvas).paint({
+      width: 800,
+      height: 600,
+      view: VIEW,
+      pixelRatio: 1,
+      dt: STEP_S,
+      shoal: [
+        { id: <const>'vanilla:0', outline: swum(0) },
+        { id: <const>'vanilla:1', outline: twin },
+      ],
+    })
+    expect(overlay.strokes).toHaveLength(2)
+  })
+
+  it.each(INTENTS)('lays every stroke in the single overlay ink whatever a koi decided, here %s', (_kind, intent) => {
+    const inks = painted(advancing(swum(0, intent))).strokes.map((stroke) => stroke.ink.slice(0, stroke.ink.lastIndexOf(',')))
+    expect([...new Set(inks)]).toEqual(['rgba(255, 255, 255'])
+  })
+})
+
+describe('switching the overlay off', () => {
+  it('wipes the whole canvas', () => {
+    const overlay = recordingOverlay()
+    const painter = createInteractionsPainter(overlay.canvas)
+    painter.paint(frameOf(swum(0)))
+    painter.clear()
+    expect(overlay.wipes[overlay.wipes.length - 1]).toEqual({ width: 800, height: 600 })
+  })
+
+  it('leaves no caret riding for the next time it comes on', () => {
+    const overlay = recordingOverlay()
+    const painter = createInteractionsPainter(overlay.canvas)
+    const decided = swum(0, { kind: 'avoid', target: OFF_COURSE, reachPx: REACH_PX })
+    painter.paint(frameOf(swum(0)))
+    painter.clear()
+    painter.paint(frameOf(decided))
+    expect(caretAngle(overlay.strokes, decided)).toBeCloseTo(committedHeading(decided, anchorOf(decided)), 9)
   })
 })

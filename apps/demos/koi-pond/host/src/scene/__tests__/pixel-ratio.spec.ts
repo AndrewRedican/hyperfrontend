@@ -83,7 +83,7 @@ function stubCanvas() {
  * @returns The frame to paint.
  */
 function overlayFrame(pixelRatio: number) {
-  return { width: CARD_PX, height: CARD_PX, view: { x: 0, y: 0 }, pixelRatio, shoal: [] }
+  return { width: CARD_PX, height: CARD_PX, view: { x: 0, y: 0 }, pixelRatio, dt: 1 / 60, shoal: [] }
 }
 
 /**
