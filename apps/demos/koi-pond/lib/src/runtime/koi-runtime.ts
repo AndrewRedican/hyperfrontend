@@ -2,10 +2,12 @@
  * The loop a koi swims by: its brain, its renderer, and the frames that drive
  * them.
  *
- * A koi swims whether or not a pond is listening. Standalone the SDK creates no
- * channel and nothing announces a world, so the runtime falls back to its own
- * frame, and a visitor sees a single fish swimming in clear water; the composed
- * pond is that same code path with the announcements switched on.
+ * A koi swims whether or not a pond is listening. Opened as a top-level page the
+ * SDK creates no channel and nothing announces a world, so the runtime falls
+ * back to a world of its own and a visitor sees a single fish swimming in clear
+ * water; the composed pond is that same code path with the announcements
+ * switched on, and a koi told of a world other than the one it invented enters
+ * that one instead.
  *
  * What differs between the apps that swim a koi is how the fish is drawn and
  * mounted, so both the renderer and the brain are built through factories the
@@ -321,8 +323,16 @@ export function createKoiRuntime(init: KoiRuntimeInit): KoiRuntime {
   const runtime: KoiRuntime = {
     setPond(next) {
       hosted = true
+      // why: A koi builds a world from its own screen so it can swim before anything answers it. A host that announces a world of different dimensions is correcting that guess, and the station the koi took in the world it invented means nothing in this one: it would sit wherever the guess put it, which on a small world is off the water entirely. So it enters the water it was actually given, exactly as it entered the one it imagined.
+      const restation = next.width !== pond.width || next.height !== pond.height
       pond = next
-      motion.setPond(next)
+      if (restation) {
+        const station = entryStation(pond, koiSeed(framework), instance)
+        motion = buildMotion({ profile, pond, position: station.position, heading: station.heading, depth: ENTRY_DEPTH })
+        wasFleeing = false
+      } else {
+        motion.setPond(next)
+      }
       renderer?.setPond(next)
     },
     adopt(identity) {

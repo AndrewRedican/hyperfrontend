@@ -3,10 +3,11 @@
  */
 import type { FeatureLink, KoiRuntime } from '../../contract/wire.js'
 import type { KoiCardDetails } from '../../model/card.js'
-import type { KoiFramework, KoiOutline, KoiProfile, PondEnvironment } from '../../model/types.js'
+import type { KoiFramework, KoiOutline, KoiProfile, PondEnvironment, Vec2 } from '../../model/types.js'
 import type { KoiState } from '../../motion/koi-motion.js'
 import type { KoiRenderer } from '../koi-renderer.js'
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import { describePond, describePondForFrame, entryStation } from '../../geometry/virtual-pond.js'
 import { koiSeed, koiVariantSeed } from '../../model/traits.js'
 import { KOI_PATH_MAX_POINTS } from '../../motion/predict.js'
 import { createKoiRuntime } from '../koi-runtime.js'
@@ -488,5 +489,57 @@ describe('adopting a dealt identity', () => {
     koi.deliver('hover', { hovered: true })
     koi.deliver('identity', identity(koiVariantSeed('vanilla', 1), 1))
     expect(built(koi, 1).hovers).toEqual([true])
+  })
+})
+
+describe('entering an announced world', () => {
+  /** The card world a small frame is given: far smaller than any screen snapshot. */
+  const CARD_EDGE = 320
+
+  /** How far a koi drifts in one frame at its very fastest, in pond pixels. */
+  const FRAME_TRAVEL_PX = 30
+
+  /** The world a koi builds for itself before anything answers it. */
+  const guessed = (): PondEnvironment =>
+    describePond(window.screen.width, window.screen.height, window.innerWidth, window.innerHeight, false)
+
+  /**
+   * How far a koi's last drawn nose sits from a point.
+   *
+   * @param koi - The mounted koi.
+   * @param from - The pond-space point to measure against.
+   * @returns The distance in pond pixels.
+   */
+  function drawnAwayFrom(koi: MountedKoi, from: Vec2): number {
+    const position = built(koi, 0).draws.at(-1)?.state.position ?? { x: 0, y: 0 }
+    return Math.hypot(position.x - from.x, position.y - from.y)
+  }
+
+  it('re-enters a koi told of a world it never stationed itself in', () => {
+    const card = describePondForFrame(CARD_EDGE, CARD_EDGE, false)
+    const koi = mount({ hosted: true })
+    koi.step(FRAME_MS)
+    koi.deliver('pond', card)
+    koi.step(FRAME_MS)
+    // how: The station is a pure function of the world and the seed, so the koi that entered this one is on the very spot this world would have opened it at.
+    expect(drawnAwayFrom(koi, entryStation(card, koiSeed('vanilla')).position)).toBeLessThan(FRAME_TRAVEL_PX)
+  })
+
+  it('leaves a koi swimming where it is when the announced world is the one it has', () => {
+    const koi = mount({ hosted: true })
+    // why: Long enough to carry the koi well clear of its entry station, so a station it should never have been dealt again reads as the teleport it would be.
+    for (let frame = 0; frame < 60; frame += 1) {
+      koi.step(FRAME_MS)
+    }
+    const before = built(koi, 0).draws.at(-1)?.state.position ?? { x: 0, y: 0 }
+    koi.deliver('pond', { ...guessed(), view: { x: 40, y: 40, width: 200, height: 200 } })
+    koi.step(FRAME_MS)
+    expect(drawnAwayFrom(koi, before)).toBeLessThan(FRAME_TRAVEL_PX)
+  })
+
+  it('hands the announced world to the renderer either way', () => {
+    const koi = mount({ hosted: true })
+    koi.deliver('pond', describePondForFrame(CARD_EDGE, CARD_EDGE, false))
+    expect(built(koi, 0).ponds.at(-1)?.width).toBe(CARD_EDGE)
   })
 })
