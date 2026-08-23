@@ -2,7 +2,7 @@
  * The pond scene: everything the host owns, assembled.
  *
  * The bed, the surface water, the pointer, the depth order, the curtain, the
- * roster, the decision overlay, and one channel per swimming koi. Every koi is
+ * shoal panel, the decision overlay, and one channel per swimming koi. Every koi is
  * a separate application in a separate frame; this module's whole job is to
  * make those read as one continuous scene, and to keep the seams — the relay,
  * the depth grants, the ripple gate — on the host's side of the boundary where
@@ -22,7 +22,7 @@ import { createInteractionsPainter } from './interactions'
 import { createRelay } from './relay'
 import { createResurrection } from './resurrection'
 import { createSelectionChrome } from './selection'
-import { createRoster } from './roster'
+import { createShoalPanel } from './roster'
 import { createSequenceTracker } from './sequence'
 import { createStage, removeLayer, setCurtain, setLayerDepth, setLayerPresent } from './stage'
 import { createSurfacePainter } from './surface-canvas'
@@ -187,7 +187,10 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondSceneHandle
   // why: The virtual pond derives from the screen, once — a gallery card, an expanded overlay, and a debug panel are windows onto this same water, and none of them may redefine it.
   let pond = describePond(window.screen.width, window.screen.height, root.clientWidth, root.clientHeight, motionQuery.matches)
   let field = createRippleField()
-  let hovered: KoiInstanceId | null = null
+  // why: Every koi currently told the visitor is on it. The pointer lights exactly one; a keyboard visitor on a framework's row lights all of that framework's koi at once, which is how the shoal answers "which of these are the React ones".
+  const hovered = new Set<KoiInstanceId>()
+  // why: The one koi under the pointer, which is a narrower question than who is lit and the only one the cursor can answer.
+  let picked: KoiInstanceId | null = null
   let lastRelayAt = 0
   let lastPulseAt = 0
   let scale: SceneScale = 'full'
@@ -237,27 +240,54 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondSceneHandle
   /** Keeps the cursor honest about what a press would do right here. */
   const refreshCursor = (): void => {
     root.style.cursor =
-      drag?.dragging === true ? 'grabbing' : hovered !== null && inspected.has(hovered) ? 'grab' : hovered !== null ? 'pointer' : 'default'
+      drag?.dragging === true ? 'grabbing' : picked !== null && inspected.has(picked) ? 'grab' : picked !== null ? 'pointer' : 'default'
   }
 
   /**
-   * Tells one koi whether the pointer is on it, and only when that changed.
+   * Tells koi whether a visitor is on them, and only the ones whose answer changed.
+   *
+   * @param next - Every koi to light, which may be none.
+   */
+  const setHover = (next: readonly KoiInstanceId[]): void => {
+    const wanted = new Set(next)
+    for (const id of hovered) {
+      if (!wanted.has(id)) {
+        sessions.get(id)?.shell.send('hover', { hovered: false })
+        hovered.delete(id)
+      }
+    }
+    for (const id of wanted) {
+      if (!hovered.has(id)) {
+        sessions.get(id)?.shell.send('hover', { hovered: true })
+        hovered.add(id)
+      }
+    }
+    panel.setHovered(hovered)
+    refreshCursor()
+  }
+
+  /**
+   * Records what the pointer found, which is at most one koi.
    *
    * @param next - The koi under the pointer, or `null` over open water.
    */
-  const setHover = (next: KoiInstanceId | null): void => {
-    if (next === hovered) {
-      return
+  const setPick = (next: KoiInstanceId | null): void => {
+    picked = next
+    setHover(next === null ? [] : [next])
+  }
+
+  /**
+   * Drops a koi that has left the scene from everything hover-shaped.
+   *
+   * @param id - The koi that is no longer there.
+   */
+  const forgetHover = (id: KoiInstanceId): void => {
+    if (picked === id) {
+      picked = null
     }
-    if (hovered !== null) {
-      sessions.get(hovered)?.shell.send('hover', { hovered: false })
+    if (hovered.delete(id)) {
+      panel.setHovered(hovered)
     }
-    if (next !== null) {
-      sessions.get(next)?.shell.send('hover', { hovered: true })
-    }
-    hovered = next
-    roster.setHovered(next === null ? null : instanceFramework(next))
-    refreshCursor()
   }
 
   /**
@@ -330,44 +360,36 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondSceneHandle
   }
 
   /**
-   * The instance a roster row stands for: the framework's first answering koi,
-   * or its first koi at all while none is answering.
+   * The living roster and the ceiling the device puts over it.
    *
-   * @param framework - The row's framework, or `null` on blur.
-   * @returns The instance to hover, or `null`.
+   * @returns What the pond's own chrome and its console driver both read.
    */
-  const rosterInstance = (framework: KoiFramework | null): KoiInstanceId | null => {
-    if (framework === null) {
-      return null
-    }
-    let fallback: KoiInstanceId | null = null
-    for (const session of sessions.values()) {
-      if (session.framework !== framework) {
-        continue
-      }
-      if (present.has(session.id)) {
-        return session.id
-      }
-      fallback = fallback ?? session.id
-    }
-    return fallback
-  }
+  const shoalState = (): ShoalState => ({
+    tier: device.tier,
+    cap: device.cap,
+    roster: [...sessions.values()].map((session) => ({ id: session.id, framework: session.framework, ordinal: session.ordinal })),
+  })
 
-  const roster = createRoster(root, fishHomeUrl, (framework) => setHover(rosterInstance(framework)))
+  const panel = createShoalPanel(root, shoalState(), {
+    fishUrl: fishHomeUrl,
+    identify: (instances) => {
+      setHover(instances)
+    },
+    add: (framework) => {
+      addKoi(framework)
+    },
+    remove: (id) => {
+      removeKoi(id)
+    },
+    interactions: (on) => {
+      applyInteractions(on)
+    },
+  })
 
-  /**
-   * Whether any of a framework's koi is answering, for its roster row.
-   *
-   * @param framework - The row's framework.
-   * @returns `true` while at least one instance is present.
-   */
-  const frameworkPresent = (framework: KoiFramework): boolean => {
-    for (const id of present) {
-      if (instanceFramework(id) === framework) {
-        return true
-      }
-    }
-    return false
+  /** Re-reads the whole shoal into the panel, which is what any churn owes it. */
+  const refreshPanel = (): void => {
+    panel.setShoal(shoalState())
+    panel.setPresent(present)
   }
 
   /**
@@ -396,14 +418,12 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondSceneHandle
         // why: A koi cannot be mid-carry once it has left the scene — the hand would be holding nothing and the cursor would keep saying otherwise.
         drag = null
       }
-      if (hovered === id) {
-        setHover(null)
-      }
+      forgetHover(id)
       refreshCursor()
     }
     setLayerPresent(stage, id, here)
-    // why: A roster row speaks for a framework, so it stands while any of that framework's koi is answering.
-    roster.setConnected(instanceFramework(id), frameworkPresent(instanceFramework(id)))
+    // why: A framework's row stands while any of that framework's koi is answering, and each koi's own control speaks only for itself; the panel reads both from this one set.
+    panel.setPresent(present)
     hooks.onShoal(present.size, sessions.size)
   }
 
@@ -420,6 +440,8 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondSceneHandle
     pond = { ...pond, view: pondWindow(pond, root.clientWidth, root.clientHeight), reducedMotion: motionQuery.matches }
     root.dataset['scene'] = scale
     rootBounds = root.getBoundingClientRect()
+    // why: The pill threshold is the pond's own width rather than the viewport's, because a pond embedded in a narrow column on a wide screen has exactly the same shortage of room.
+    panel.setFrameWidth(root.clientWidth)
     // why: Presented full over a host page the pond is a translucent layer — the page must stay perceptible beneath it; in a card it paints solid but lets its rounded edges thin toward the page, so the water reads as sitting in the card rather than pasted onto it.
     paintFloor(
       stage.floor,
@@ -614,6 +636,85 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondSceneHandle
     for (let offset = 0; offset < count; offset += 1) {
       openSession(KOI_FRAMEWORKS[(bootHour + offset) % KOI_FRAMEWORKS.length] ?? 'vanilla', 0).shell.open()
     }
+    refreshPanel()
+  }
+
+  /**
+   * Adds another koi of a framework to the shoal.
+   *
+   * @param framework - The framework to grow.
+   * @returns The new instance's id, or `null` when the cap refused it.
+   */
+  const addKoi = (framework: KoiFramework): KoiInstanceId | null => {
+    if (sessions.size >= device.cap) {
+      hooks.onDiagnostic?.(null, 'shoal:refused', `${device.tier}-tier device seats ${device.cap}`)
+      return null
+    }
+    const session = openSession(framework, nextOrdinal([...sessions.keys(), ...leaving], framework))
+    refreshPanel()
+    hooks.onShoal(present.size, sessions.size)
+    session.shell.open()
+    return session.id
+  }
+
+  /**
+   * Removes one koi from the shoal, politely first.
+   *
+   * @param id - The instance to remove.
+   * @returns `true` when the removal began.
+   */
+  const removeKoi = (id: KoiInstanceId): boolean => {
+    const session = sessions.get(id)
+    if (session === undefined) {
+      return false
+    }
+    if (sessions.size <= 1) {
+      hooks.onDiagnostic?.(null, 'shoal:refused', 'the pond is never empty')
+      return false
+    }
+    sessions.delete(id)
+    leaving.add(id)
+    // why: The roster no longer wants this koi, so a revive still pending for it must die with it — the policy only governs instances the roster still wants.
+    resurrection.forget(id)
+    retries.delete(id)
+    setPresent(id, false)
+    for (const moved of director.remove(id, Date.now())) {
+      notifyDepth(moved)
+    }
+    refreshPanel()
+    hooks.onShoal(present.size, sessions.size)
+    hooks.onDiagnostic?.(id, 'removed')
+    let torndown = false
+    const finalize = (): void => {
+      if (torndown) {
+        return
+      }
+      torndown = true
+      unsubscribe()
+      session.shell.destroy()
+      removeLayer(stage, id)
+      leaving.delete(id)
+    }
+    // why: The polite close is given first say — never a hard destroy under a live fish — and the grace covers a session past answering.
+    const unsubscribe = session.shell.on('close', () => {
+      finalize()
+    })
+    window.setTimeout(finalize, CLOSE_GRACE_MS)
+    session.shell.close()
+    return true
+  }
+
+  /**
+   * Turns the decision overlay on or off, everywhere it is spoken for.
+   *
+   * @param on - Whether to draw each koi's sensing cone and decided trajectory.
+   */
+  const applyInteractions = (on: boolean): void => {
+    showInteractions = on
+    panel.setInteractions(on)
+    if (!on) {
+      diagnostics.clear()
+    }
   }
 
   const observer = new ResizeObserver(() => {
@@ -652,7 +753,7 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondSceneHandle
       return
     }
     pointer.fresh = false
-    setHover(null)
+    setPick(null)
   })
 
   root.addEventListener('pointerdown', (event: PointerEvent) => {
@@ -759,7 +860,7 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondSceneHandle
       drag.pending = null
     } else if (drag === null && pointer.fresh) {
       pointer.fresh = false
-      setHover(relay.pick({ x: pointer.x - rootBounds.left + pond.view.x, y: pointer.y - rootBounds.top + pond.view.y }, pond, now))
+      setPick(relay.pick({ x: pointer.x - rootBounds.left + pond.view.x, y: pointer.y - rootBounds.top + pond.view.y }, pond, now))
     }
 
     // why: The chrome follows each held koi's reported card; while a fish is being carried its card chrome hides so nothing sits clickable under the moving hand.
@@ -842,10 +943,6 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondSceneHandle
     setCurtain(stage, true)
   }, CURTAIN_DEADLINE_MS)
 
-  for (const framework of KOI_FRAMEWORKS) {
-    roster.setConnected(framework, false)
-  }
-
   remeasure()
   loop.start()
 
@@ -884,66 +981,16 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondSceneHandle
       return true
     },
     setInteractions(on) {
-      showInteractions = on
-      if (!on) {
-        diagnostics.clear()
-      }
+      applyInteractions(on)
     },
     addKoi(framework) {
-      if (sessions.size >= device.cap) {
-        hooks.onDiagnostic?.(null, 'shoal:refused', `${device.tier}-tier device seats ${device.cap}`)
-        return null
-      }
-      const session = openSession(framework, nextOrdinal([...sessions.keys(), ...leaving], framework))
-      hooks.onShoal(present.size, sessions.size)
-      session.shell.open()
-      return session.id
+      return addKoi(framework)
     },
     removeKoi(id) {
-      const session = sessions.get(id)
-      if (session === undefined) {
-        return false
-      }
-      if (sessions.size <= 1) {
-        hooks.onDiagnostic?.(null, 'shoal:refused', 'the pond is never empty')
-        return false
-      }
-      sessions.delete(id)
-      leaving.add(id)
-      // why: The roster no longer wants this koi, so a revive still pending for it must die with it — the policy only governs instances the roster still wants.
-      resurrection.forget(id)
-      retries.delete(id)
-      setPresent(id, false)
-      for (const moved of director.remove(id, Date.now())) {
-        notifyDepth(moved)
-      }
-      hooks.onShoal(present.size, sessions.size)
-      hooks.onDiagnostic?.(id, 'removed')
-      let torndown = false
-      const finalize = (): void => {
-        if (torndown) {
-          return
-        }
-        torndown = true
-        unsubscribe()
-        session.shell.destroy()
-        removeLayer(stage, id)
-        leaving.delete(id)
-      }
-      // why: The polite close is given first say — never a hard destroy under a live fish — and the grace covers a session past answering.
-      const unsubscribe = session.shell.on('close', () => {
-        finalize()
-      })
-      window.setTimeout(finalize, CLOSE_GRACE_MS)
-      session.shell.close()
-      return true
+      return removeKoi(id)
     },
     shoalState() {
-      return {
-        tier: device.tier,
-        cap: device.cap,
-        roster: [...sessions.values()].map((session) => ({ id: session.id, framework: session.framework, ordinal: session.ordinal })),
-      }
+      return shoalState()
     },
   }
 }

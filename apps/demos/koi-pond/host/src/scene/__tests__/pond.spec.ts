@@ -165,6 +165,32 @@ function identitySeed(shell: FakeShell): number {
 }
 
 /**
+ * Reads one part of the shoal panel, failing loudly when the panel never built it.
+ *
+ * @param root - The pond root.
+ * @param selector - What to find inside the panel.
+ * @returns The element.
+ */
+function panelPart<T extends HTMLElement>(root: HTMLElement, selector: string): T {
+  const found = root.querySelector<T>(selector)
+  if (found === null) {
+    throw new Error(`the shoal panel has no ${selector}`)
+  }
+  return found
+}
+
+/**
+ * Whether a koi was last told a visitor is on it.
+ *
+ * @param shell - The shell to read.
+ * @returns `true` when the last hover notice lit it.
+ */
+function litUp(shell: FakeShell): boolean {
+  const last = shell.sent.filter((message) => message.type === 'hover').at(-1)
+  return last !== undefined && (<{ hovered: boolean }>last.data).hovered
+}
+
+/**
  * An outline whose nose sits at a pond point, as a fish would report it.
  *
  * @param framework - The reporting fish's framework.
@@ -451,14 +477,14 @@ describe('twins in the scene', () => {
     expect(onShoal).toHaveBeenLastCalledWith(1, 4)
   })
 
-  it('keeps the roster row lit while either twin answers', () => {
+  it('keeps the panel row lit while either twin answers', () => {
     device.cap = 12
     const { root, scene } = harness()
     scene.addKoi('react')
     shellOf('react:0').emit('open')
     shellOf('react:1').emit('open')
     shellOf('react:0').emit('status', { state: 'gone' })
-    expect(root.querySelector('.koi-roster li a[data-fish="react"]')?.closest('li')?.dataset['connected']).toBe('true')
+    expect(panelPart(root, '.koi-shoal-row[data-fish="react"]').dataset['connected']).toBe('true')
   })
 
   it('holds one twin without pausing the other', () => {
@@ -474,5 +500,219 @@ describe('twins in the scene', () => {
     const paused = (shell: FakeShell) =>
       shell.sent.some((message) => message.type === 'pause' && (<{ paused: boolean }>message.data).paused)
     expect([paused(shellOf('react:0')), paused(shellOf('react:1'))]).toEqual([true, false])
+  })
+})
+
+describe('the shoal panel', () => {
+  it('counts the koi a framework has in its badge', () => {
+    device.cap = 12
+    const { root, scene } = harness()
+    scene.addKoi('react')
+    expect(panelPart(root, '.koi-shoal-row[data-fish="react"] .koi-shoal-tally').textContent).toBe('2 in the pond')
+  })
+
+  it('hides the badge for a framework with no koi in the water', () => {
+    const { root } = harness()
+    expect(panelPart<HTMLElement>(root, '.koi-shoal-row[data-fish="svelte"] .koi-shoal-tally').hidden).toBe(true)
+  })
+
+  it('lights a row only once one of its koi answers', () => {
+    const { root } = harness()
+    const before = panelPart(root, '.koi-shoal-row[data-fish="react"]').dataset['connected']
+    shellOf('react:0').emit('open')
+    expect([before, panelPart(root, '.koi-shoal-row[data-fish="react"]').dataset['connected']]).toEqual(['false', 'true'])
+  })
+
+  it('gives every living koi its own control', () => {
+    device.cap = 12
+    const { root, scene } = harness()
+    scene.addKoi('react')
+    expect(
+      [...root.querySelectorAll('.koi-shoal-row[data-fish="react"] .koi-shoal-instance')].map((control) => control.textContent)
+    ).toEqual(['1×', '2×'])
+  })
+
+  it('takes a removed koi and its control away together', () => {
+    device.cap = 12
+    const { root, scene } = harness()
+    scene.addKoi('react')
+    scene.removeKoi('react:1')
+    expect(root.querySelector('.koi-shoal-instance[data-instance="react:1"]')).toBeNull()
+  })
+
+  it('grows the shoal when a row add control is pressed', () => {
+    device.cap = 12
+    const { root } = harness()
+    panelPart<HTMLButtonElement>(root, '.koi-shoal-add[data-fish="react"]').click()
+    expect(shells.has('react:1')).toBe(true)
+  })
+
+  it('sends a koi away when its own control is pressed', () => {
+    const { root } = harness()
+    panelPart<HTMLButtonElement>(root, '.koi-shoal-instance[data-instance="react:0"]').click()
+    expect(shellOf('react:0').closed).toBe(1)
+  })
+
+  it('stands every add control down at the cap', () => {
+    device.cap = 3
+    const { root } = harness()
+    expect([...root.querySelectorAll<HTMLButtonElement>('.koi-shoal-add')].every((control) => control.disabled)).toBe(true)
+  })
+
+  it('names the tier that decided the ceiling on the control it stood down', () => {
+    device.cap = 3
+    const { root } = harness()
+    expect(panelPart<HTMLButtonElement>(root, '.koi-shoal-add[data-fish="react"]').title).toBe('A middle-tier device seats 3 koi.')
+  })
+
+  it('offers the adds again once the shoal drops under the cap', () => {
+    device.cap = 3
+    const { root, scene } = harness()
+    scene.removeKoi('vue:0')
+    expect(panelPart<HTMLButtonElement>(root, '.koi-shoal-add[data-fish="react"]').disabled).toBe(false)
+  })
+
+  it('refuses to offer the removal of the last koi', () => {
+    const { root, scene } = harness()
+    scene.removeKoi('react:0')
+    scene.removeKoi('vue:0')
+    const last = panelPart<HTMLButtonElement>(root, '.koi-shoal-instance[data-instance="vanilla:0"]')
+    expect([last.disabled, last.title]).toEqual([true, 'The pond is never empty.'])
+  })
+
+  it('says how much room the device has left', () => {
+    device.cap = 12
+    const { root } = harness()
+    expect(panelPart(root, '.koi-shoal-note').textContent).toBe('Room for 9 more.')
+  })
+
+  it('keeps the koi in seeded order as ordinals are re-dealt', () => {
+    device.cap = 12
+    const { root, scene } = harness()
+    scene.addKoi('react')
+    scene.addKoi('react')
+    scene.removeKoi('react:1')
+    shellOf('react:1').emit('close')
+    scene.addKoi('react')
+    expect(
+      [...root.querySelectorAll('.koi-shoal-row[data-fish="react"] .koi-shoal-instance')].map((control) => control.textContent)
+    ).toEqual(['1×', '2×', '3×'])
+  })
+
+  it('carries focus to the newcomer when the press that made it reached the cap', () => {
+    device.cap = 4
+    const { root } = harness()
+    const add = panelPart<HTMLButtonElement>(root, '.koi-shoal-add[data-fish="react"]')
+    add.focus()
+    add.click()
+    expect(document.activeElement).toBe(panelPart(root, '.koi-shoal-instance[data-instance="react:1"]'))
+  })
+
+  it('carries focus to the row when the koi holding it is removed', () => {
+    device.cap = 12
+    const { root, scene } = harness()
+    scene.addKoi('react')
+    panelPart<HTMLButtonElement>(root, '.koi-shoal-instance[data-instance="react:1"]').focus()
+    scene.removeKoi('react:1')
+    expect(document.activeElement).toBe(panelPart(root, '.koi-shoal-add[data-fish="react"]'))
+  })
+})
+
+describe('identity without a pointer', () => {
+  it('lights every answering koi of a framework from its row', () => {
+    device.cap = 12
+    const { root, scene } = harness()
+    scene.addKoi('react')
+    shellOf('react:0').emit('open')
+    shellOf('react:1').emit('open')
+    panelPart<HTMLElement>(root, '.koi-shoal-name[data-fish="react"]').focus()
+    expect([litUp(shellOf('react:0')), litUp(shellOf('react:1'))]).toEqual([true, true])
+  })
+
+  it('leaves a koi that is not answering unlit', () => {
+    device.cap = 12
+    const { root, scene } = harness()
+    scene.addKoi('react')
+    shellOf('react:0').emit('open')
+    panelPart<HTMLElement>(root, '.koi-shoal-name[data-fish="react"]').focus()
+    expect([litUp(shellOf('react:0')), litUp(shellOf('react:1'))]).toEqual([true, false])
+  })
+
+  it('lights only the koi whose own control took focus', () => {
+    device.cap = 12
+    const { root, scene } = harness()
+    scene.addKoi('react')
+    shellOf('react:0').emit('open')
+    shellOf('react:1').emit('open')
+    panelPart<HTMLButtonElement>(root, '.koi-shoal-instance[data-instance="react:1"]').focus()
+    expect([litUp(shellOf('react:0')), litUp(shellOf('react:1'))]).toEqual([false, true])
+  })
+
+  it('marks that koi own row entry as the lit one', () => {
+    device.cap = 12
+    const { root, scene } = harness()
+    scene.addKoi('react')
+    shellOf('react:1').emit('open')
+    panelPart<HTMLButtonElement>(root, '.koi-shoal-instance[data-instance="react:1"]').focus()
+    expect(panelPart(root, '.koi-shoal-instances li[data-instance="react:1"]').dataset['hovered']).toBe('true')
+  })
+
+  it('puts every koi out again when the panel loses focus', () => {
+    device.cap = 12
+    const { root, scene } = harness()
+    scene.addKoi('react')
+    shellOf('react:0').emit('open')
+    shellOf('react:1').emit('open')
+    const link = panelPart<HTMLElement>(root, '.koi-shoal-name[data-fish="react"]')
+    link.focus()
+    link.blur()
+    expect([litUp(shellOf('react:0')), litUp(shellOf('react:1'))]).toEqual([false, false])
+  })
+
+  it('keeps a framework with nothing in the water out of the tab order', () => {
+    const { root } = harness()
+    expect(panelPart<HTMLAnchorElement>(root, '.koi-shoal-name[data-fish="svelte"]').tabIndex).toBe(-1)
+  })
+})
+
+describe('the interactions control', () => {
+  it('round-trips the overlay through the panel', () => {
+    const { root } = harness()
+    const control = panelPart<HTMLButtonElement>(root, '.koi-shoal-interactions')
+    control.click()
+    const on = control.getAttribute('aria-pressed')
+    control.click()
+    expect([on, control.getAttribute('aria-pressed')]).toEqual(['true', 'false'])
+  })
+
+  it('reflects an overlay the scene was told to draw', () => {
+    const { root, scene } = harness()
+    scene.setInteractions(true)
+    expect(panelPart(root, '.koi-shoal-interactions').getAttribute('aria-pressed')).toBe('true')
+  })
+})
+
+describe('the panel in a narrow pond', () => {
+  it('collapses to a pill under the threshold', () => {
+    const { root } = harness('full', { width: 400, height: 720 })
+    const panel = panelPart<HTMLElement>(root, '.koi-shoal')
+    expect([panel.dataset['narrow'], panel.dataset['collapsed']]).toEqual(['true', 'true'])
+  })
+
+  it('stays open in a pond with room for it', () => {
+    const { root } = harness('full', { width: 1200, height: 800 })
+    const panel = panelPart<HTMLElement>(root, '.koi-shoal')
+    expect([panel.dataset['narrow'], panel.dataset['collapsed']]).toEqual(['false', 'false'])
+  })
+
+  it('opens the pill when it is pressed', () => {
+    const { root } = harness('full', { width: 400, height: 720 })
+    panelPart<HTMLButtonElement>(root, '.koi-shoal-pill').click()
+    expect(panelPart(root, '.koi-shoal').dataset['collapsed']).toBe('false')
+  })
+
+  it('says what the pill is standing for', () => {
+    const { root } = harness('full', { width: 400, height: 720 })
+    expect(panelPart(root, '.koi-shoal-summary').textContent).toBe('3 of 8 koi')
   })
 })

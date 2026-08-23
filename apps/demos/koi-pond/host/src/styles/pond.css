@@ -130,122 +130,294 @@ body {
   color: #6f948b;
 }
 
-/* why: Hovering a moving koi inside a frame is a pointer gesture no keyboard or screen reader can make, so the same identity is published as a list they can walk. */
-.koi-roster {
+/* why: Hovering a moving koi inside a frame is a pointer gesture no keyboard or screen reader can make, so the same identity is published as a list they can walk — and the same list is where the shoal is grown, thinned, and put under the interaction overlay. */
+/* why: It outranks the held koi's card chrome because a card is transient and clamps to whatever strip it is over, while the panel is always there: the card's invisible shield and link glass would otherwise win hit-testing over controls the visitor can plainly see, swallowing the press or opening a link instead. */
+.koi-shoal {
   position: absolute;
   right: 0.9rem;
-  bottom: 0.9rem;
-  z-index: 150;
+  bottom: calc(0.9rem + env(safe-area-inset-bottom, 0px));
+  z-index: 165;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  max-width: calc(100% - 1.8rem);
   padding: 0.55rem 0.7rem;
-  border: 1px solid rgba(232, 243, 239, 0.12);
+  border: 1px solid rgba(232, 243, 239, 0.14);
   border-radius: 12px;
-  background: rgba(9, 24, 22, 0.72);
+  background: rgba(9, 24, 22, 0.78);
+  box-shadow: 0 6px 20px rgba(4, 14, 13, 0.34);
   backdrop-filter: blur(8px);
   font-size: 0.74rem;
 }
 
-.koi-roster-heading {
-  margin: 0 0 0.35rem;
+.koi-shoal-heading {
+  margin: 0;
+  font-size: inherit;
+  font-weight: 400;
+}
+
+/* why: The heading is the collapse control, so a narrow pond's pill and a wide pond's title are one element rather than two that have to be kept in step. */
+.koi-shoal-pill {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  width: 100%;
+  padding: 0.1rem 0.1rem 0.3rem;
+  border: none;
+  border-bottom: 1px solid rgba(232, 243, 239, 0.12);
+  background: transparent;
+  color: rgba(232, 243, 239, 0.52);
+  font: inherit;
   font-size: 0.64rem;
   font-weight: 600;
   letter-spacing: 0.13em;
   text-transform: uppercase;
-  color: rgba(232, 243, 239, 0.52);
+  cursor: pointer;
 }
 
-.koi-roster ul {
+.koi-shoal-pill:hover,
+.koi-shoal-pill:focus-visible {
+  color: rgba(232, 243, 239, 0.9);
+}
+
+.koi-shoal-summary {
+  margin-right: auto;
+}
+
+/* why: The panel is anchored to the bottom edge, so it grows upward out of its own pill — the chevron points the way the rows will actually arrive, and back down at the pill they fold into. */
+.koi-shoal-chevron {
+  display: flex;
+}
+
+.koi-shoal[data-collapsed='true'] .koi-shoal-chevron {
+  transform: rotate(180deg);
+}
+
+/* why: The dot is the shoal's own liveness at a glance, which is the one thing the pill still has to say once the rows are folded away. */
+.koi-shoal-dot {
+  flex: none;
+  width: 0.42rem;
+  height: 0.42rem;
+  border-radius: 50%;
+  background: rgba(232, 243, 239, 0.24);
+}
+
+.koi-shoal-dot[data-connected='true'],
+.koi-shoal-row[data-connected='true'] .koi-shoal-dot {
+  background: #7ed6c6;
+  box-shadow: 0 0 6px rgba(126, 214, 198, 0.6);
+}
+
+.koi-shoal[data-collapsed='true'] .koi-shoal-body {
+  display: none;
+}
+
+.koi-shoal[data-collapsed='true'] .koi-shoal-pill {
+  padding-bottom: 0.1rem;
+  border-bottom: none;
+}
+
+.koi-shoal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  overflow-y: auto;
+  max-height: min(62vh, 30rem);
+}
+
+.koi-shoal-rows {
   display: grid;
-  gap: 0.1rem;
+  gap: 0.15rem;
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
-.koi-roster a {
-  display: block;
-  padding: 0.14rem 0.3rem;
+.koi-shoal-line {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.1rem 0.1rem 0.1rem 0.2rem;
   border-radius: 6px;
+}
+
+.koi-shoal-row[data-hovered='true'] .koi-shoal-line {
+  background: rgba(232, 243, 239, 0.12);
+}
+
+.koi-shoal-name {
+  flex: 1;
+  padding: 0.1rem 0.2rem;
+  border-radius: 5px;
   color: rgba(232, 243, 239, 0.86);
   text-decoration: none;
+  white-space: nowrap;
 }
 
-.koi-roster a:hover,
-.koi-roster a:focus-visible,
-.koi-roster li[data-hovered='true'] a {
-  background: rgba(232, 243, 239, 0.12);
+.koi-shoal-name:hover,
+.koi-shoal-name:focus-visible {
   color: #ffffff;
+  text-decoration: underline;
 }
 
-/* why: A koi that never connected is not in the scene, so the roster shows it as absent rather than offering a dead link. */
-.koi-roster li[data-connected='false'] a {
-  opacity: 0.34;
+/* why: A koi that never connected is not in the scene, so the panel shows it as absent rather than offering a dead link; the row stays reachable through its add control. */
+.koi-shoal-row[data-connected='false'] .koi-shoal-name {
+  opacity: 0.4;
   pointer-events: none;
 }
 
-.koi-roster-source {
-  display: block;
-  margin-top: 0.45rem;
-  padding: 0.2rem 0.3rem 0;
-  border-top: 1px solid rgba(232, 243, 239, 0.12);
-  border-radius: 0;
-  font-size: 0.66rem;
-  color: rgba(232, 243, 239, 0.55);
-  text-decoration: none;
+.koi-shoal-tally {
+  min-width: 1.1rem;
+  padding: 0 0.25rem;
+  border-radius: 999px;
+  background: rgba(232, 243, 239, 0.14);
+  font-size: 0.64rem;
+  text-align: center;
+  color: rgba(232, 243, 239, 0.8);
 }
 
-.koi-roster-source:hover,
-.koi-roster-source:focus-visible {
+.koi-shoal-tally[hidden],
+.koi-shoal-instances[hidden] {
+  display: none;
+}
+
+.koi-shoal-add,
+.koi-shoal-instance {
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0.05rem 0.4rem;
+  border: 1px solid rgba(232, 243, 239, 0.22);
+  border-radius: 999px;
+  background: transparent;
+  color: rgba(232, 243, 239, 0.86);
+  font: inherit;
+  font-size: 0.68rem;
+  line-height: 1.5;
+  cursor: pointer;
+}
+
+.koi-shoal-add {
+  flex: none;
+  font-size: 0.8rem;
+}
+
+.koi-shoal-add:hover,
+.koi-shoal-add:focus-visible,
+.koi-shoal-instance:hover,
+.koi-shoal-instance:focus-visible {
+  background: rgba(232, 243, 239, 0.14);
   color: #ffffff;
 }
 
-/* why: The pond's primary control, not a diagnostic tucked in a corner: centred on the bottom edge, which is the one edge no embedding host's chrome ever claims, so it is the first thing over the water a visitor's eye finds that is not a fish. */
-/* why: It outranks the held koi's card chrome because a card is transient and clamps to this same strip, while this control is always there: the card's invisible shield and link glass would otherwise win hit-testing over a button the visitor can plainly see, swallowing the press or opening a link instead. */
-.pond-interactions {
-  position: absolute;
-  left: 50%;
-  bottom: calc(0.9rem + env(safe-area-inset-bottom, 0px));
-  z-index: 165;
+/* why: A ceiling the device set is a refusal a visitor deserves to see coming, so the control that will not answer stops looking like one that would. */
+.koi-shoal-add:disabled,
+.koi-shoal-instance:disabled {
+  opacity: 0.32;
+  cursor: not-allowed;
+}
+
+.koi-shoal-add:disabled:hover,
+.koi-shoal-instance:disabled:hover {
+  background: transparent;
+  color: rgba(232, 243, 239, 0.86);
+}
+
+.koi-shoal-cross {
+  opacity: 0.55;
+}
+
+.koi-shoal-instances {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.2rem;
+  margin: 0.1rem 0 0.2rem;
+  padding: 0 0 0 1.05rem;
+  list-style: none;
+}
+
+.koi-shoal-instances li[data-connected='false'] .koi-shoal-instance {
+  opacity: 0.4;
+}
+
+.koi-shoal-instances li[data-hovered='true'] .koi-shoal-instance {
+  border-color: rgba(126, 214, 198, 0.65);
+  background: rgba(232, 243, 239, 0.14);
+  color: #ffffff;
+}
+
+.koi-shoal-note {
+  margin: 0;
+  padding: 0 0.2rem;
+  font-size: 0.64rem;
+  color: rgba(232, 243, 239, 0.48);
+}
+
+.koi-shoal-interactions {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 0.4rem;
-  padding: 0.5rem 0.95rem;
-  transform: translateX(-50%);
+  padding: 0.35rem 0.7rem;
   border: 1px solid rgba(232, 243, 239, 0.22);
   border-radius: 999px;
-  background: rgba(9, 24, 22, 0.82);
-  box-shadow: 0 6px 20px rgba(4, 14, 13, 0.4);
-  backdrop-filter: blur(8px);
+  background: rgba(9, 24, 22, 0.6);
   color: rgba(232, 243, 239, 0.92);
   font: inherit;
-  font-size: 0.76rem;
-  letter-spacing: 0.05em;
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
   white-space: nowrap;
   cursor: pointer;
 }
 
-.pond-interactions svg {
+.koi-shoal-interactions svg {
   flex: none;
   display: block;
 }
 
-.pond-interactions:hover,
-.pond-interactions:focus-visible {
+.koi-shoal-interactions:hover,
+.koi-shoal-interactions:focus-visible {
   background: rgba(20, 48, 44, 0.94);
   color: #ffffff;
 }
 
 /* why: The lit ring is the only thing that says the overlay is on, because the label deliberately never changes — one identity the visitor can look for twice. */
-.pond-interactions[aria-pressed='true'] {
+.koi-shoal-interactions[aria-pressed='true'] {
   border-color: rgba(126, 214, 198, 0.65);
   background: rgba(20, 56, 51, 0.9);
   color: #d6f5ee;
 }
 
 /* why: The lit treatment is declared after the hover one and shadows it at equal specificity, so without this the control answers a pointer or a focus ring with nothing at all in the state it spends most of its life in. */
-.pond-interactions[aria-pressed='true']:hover,
-.pond-interactions[aria-pressed='true']:focus-visible {
+.koi-shoal-interactions[aria-pressed='true']:hover,
+.koi-shoal-interactions[aria-pressed='true']:focus-visible {
   background: rgba(28, 74, 68, 0.94);
   color: #ffffff;
+}
+
+.koi-shoal-source {
+  padding: 0.2rem 0.2rem 0;
+  border-top: 1px solid rgba(232, 243, 239, 0.12);
+  font-size: 0.66rem;
+  color: rgba(232, 243, 239, 0.55);
+  text-decoration: none;
+}
+
+.koi-shoal-source:hover,
+.koi-shoal-source:focus-visible {
+  color: #ffffff;
+}
+
+/* why: Text only a screen reader needs: the count badge reads as a bare number without it, and a number on its own tells a listener nothing. */
+.koi-visually-hidden {
+  position: absolute;
+  overflow: hidden;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  border: 0;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
 /* why: The pond only draws a close control when a host announces dialog mode; it requests the close and the host performs it. */
@@ -366,18 +538,10 @@ body {
   overflow-wrap: anywhere;
 }
 
-/* why: In a card-sized window the pond's chrome has no room — the card is an invitation to expand, not the venue; it all returns the moment the pond is the whole experience. Presentation is the honest question here, not viewport width: a pond presented full on a phone has room for its own control, and a width rule was what used to take it away there. */
-#pond[data-scene='card'] .koi-roster,
-#pond[data-scene='card'] .pond-interactions,
+/* why: In a card-sized window the pond's chrome has no room — the card is an invitation to expand, not the venue; it all returns the moment the pond is the whole experience. Presentation is the honest question here, not viewport width: a narrow pond folds its panel to a pill instead, because a phone showing the whole scene is exactly where none of these gestures has a pointer equivalent. */
+#pond[data-scene='card'] .koi-shoal,
 #pond[data-scene='card'] .pond-vitals {
   display: none;
-}
-
-/* why: Eight rows, a heading and a source link need width a phone does not have, and the roster's job — identity for anyone not using a pointer — has no equivalent claim on the single line of chrome a narrow pond can carry. */
-@media (max-width: 679px) {
-  .koi-roster {
-    display: none;
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {

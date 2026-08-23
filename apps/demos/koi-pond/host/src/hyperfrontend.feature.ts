@@ -18,7 +18,6 @@ import { createFeature } from '@hyperfrontend/features/hostee'
 import contract from '../koi-pond.contract'
 import { createPondReporter, wirePondContract, wireSceneBoot } from './feature/wire-contract'
 import { mountDialogCloseControls } from './components/dialog-close-controls'
-import { mountInteractionsToggle } from './components/interactions-toggle'
 import { mountVitals, vitalsRequested } from './components/vitals'
 import { wireEscapeClose } from './components/escape-close'
 import { createPond } from './scene/pond'
@@ -79,8 +78,4 @@ wireEscapeClose(window, featureUi, () => scene.releaseHeld())
 // why: The gallery answers a close-request with set-scene rather than a fresh presentation — that acknowledgement is what re-arms the next request.
 feature.on('set-scene', () => {
   featureUi.rearmClose()
-})
-
-mountInteractionsToggle(root, (on) => {
-  scene.setInteractions(on)
 })
