@@ -2,8 +2,8 @@ import type { KoiOutline, Vec2 } from '@hyperfrontend/demo-koi-lib'
 import { describe, expect, it } from 'vitest'
 import { wrapAngle } from '@hyperfrontend/demo-koi-lib'
 import { createInteractionsPainter } from '../interactions'
-import { CARET_SLIDE_RAD_S, committedHeading } from '../sliding-caret'
-import { STEP_S, anchorOf, caretAngle, frameOf, recordingOverlay } from './overlay-recorder'
+import { CARET_SLIDE_RAD_S } from '../sliding-caret'
+import { STEP_S, caretAngle, frameOf, recordingOverlay } from './overlay-recorder'
 
 /** What the caret, the decision, and the body were doing on one painted frame. */
 interface TurnFrame {
@@ -27,14 +27,14 @@ const SPEED_PX_S = 210
 /** How far ahead the scripted koi is anticipating, in pond pixels. */
 const REACH_PX = 260
 
+/** How near a neighbour has to pass the scripted koi to matter, in pond pixels. */
+const CLEARANCE_PX = 90
+
 /** Where the scripted koi holds its nose while its heading winds, in pond space. */
 const NOSE: Vec2 = { x: 600, y: 400 }
 
 /** How many samples the scripted koi reports its spine as. */
 const SPINE_SAMPLES = 5
-
-/** How far off the scripted koi's waypoints sit, in pond pixels: far enough that a bearing to one is the decision itself. */
-const TARGET_PX = 3000
 
 /** How far around the scripted koi commits, in radians. */
 const COMMIT_RAD = 1.2
@@ -52,17 +52,17 @@ const SCRIPT_FRAMES = 160
 const READBACK_RAD = 1e-9
 
 /**
- * A koi holding a straight pose, reporting the heading it is on and the point it is steering for.
+ * A koi holding a straight pose, reporting the heading it is on and the one it has committed to.
  *
- * The nose is pinned while the heading winds, because what the caret answers to
- * is a bearing taken from the head: pinning the body isolates the decision from
- * wherever the koi would have swum to by the time it made it.
+ * The nose is pinned while the heading winds, so what these specs read is the
+ * gap between the two headings and nothing about where the koi would have swum
+ * to by the time it decided.
  *
  * @param heading - The heading the koi reports, in radians.
- * @param target - The point it reports it is steering toward.
+ * @param committed - The heading it reports it has committed to, in radians.
  * @returns The koi's reported outline.
  */
-function poised(heading: number, target: Vec2): KoiOutline {
+function poised(heading: number, committed: number): KoiOutline {
   return {
     framework: 'vanilla',
     spine: Array.from({ length: SPINE_SAMPLES }, (_unused, index) => ({
@@ -74,7 +74,14 @@ function poised(heading: number, target: Vec2): KoiOutline {
     speed: SPEED_PX_S,
     depth: 2,
     phase: 'turning',
-    intent: { kind: 'travel', target, reachPx: REACH_PX },
+    intent: {
+      kind: 'travel',
+      heading: committed,
+      gain: 1,
+      target: { x: NOSE.x + Math.cos(committed) * REACH_PX, y: NOSE.y + Math.sin(committed) * REACH_PX },
+      reachPx: REACH_PX,
+      clearancePx: CLEARANCE_PX,
+    },
   }
 }
 
@@ -90,17 +97,16 @@ function poised(heading: number, target: Vec2): KoiOutline {
 function scriptedTurn(): TurnFrame[] {
   const overlay = recordingOverlay()
   const painter = createInteractionsPainter(overlay.canvas)
-  const held = { x: NOSE.x + TARGET_PX, y: NOSE.y }
-  const decided = { x: NOSE.x + Math.cos(COMMIT_RAD) * TARGET_PX, y: NOSE.y + Math.sin(COMMIT_RAD) * TARGET_PX }
   const run: TurnFrame[] = []
   let heading = 0
 
   for (let frame = 0; frame < SCRIPT_FRAMES; frame += 1) {
     // why: The koi is settled on its old course before it decides, so the slide these specs read is the whole of the caret's answer to the decision.
     const committing = frame >= SETTLED_FRAMES
-    const outline = poised(heading, committing ? decided : held)
+    const committed = committing ? COMMIT_RAD : 0
+    const outline = poised(heading, committed)
     painter.paint(frameOf(outline))
-    run.push({ caret: caretAngle(overlay.strokes, outline), committed: committedHeading(outline, anchorOf(outline)), heading })
+    run.push({ caret: caretAngle(overlay.strokes, outline), committed, heading })
     if (committing) {
       heading = Math.min(COMMIT_RAD, heading + TURN_RAD_S * STEP_S)
     }
@@ -141,5 +147,16 @@ describe('the caret through a scripted turn', () => {
     const caretArrived = decided.findIndex((frame) => Math.abs(wrapAngle(frame.caret - frame.committed)) < READBACK_RAD)
     const bodyArrived = decided.findIndex((frame) => Math.abs(wrapAngle(frame.heading - frame.committed)) < READBACK_RAD)
     expect([caretArrived > 0, caretArrived < bodyArrived]).toEqual([true, true])
+  })
+
+  it('closes the gap between the nose and the caret all the way to nothing', () => {
+    const decided = scriptedTurn().slice(SETTLED_FRAMES)
+    const gaps = decided.map((frame) => Math.abs(wrapAngle(frame.caret - frame.heading)))
+    const opened = Math.max(...gaps)
+    // why: The whole point of the mark is that a visitor watches the koi converge on it; a caret that held a constant offset would be a compass pinned beside the fish rather than a heading it is steering for. The gap peaks short of the whole commitment because the body is already swinging while the caret is still sliding out to meet it.
+    expect(opened).toBeGreaterThan(COMMIT_RAD * 0.6)
+    expect(gaps[gaps.length - 1]).toBeLessThan(READBACK_RAD)
+    const closing = gaps.slice(gaps.indexOf(opened))
+    expect(closing).toEqual([...closing].sort((first, second) => second - first))
   })
 })

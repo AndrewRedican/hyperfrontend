@@ -23,9 +23,9 @@ export const FRAME_WIDTH = 800
 /** How tall every painted frame is, in CSS pixels. */
 export const FRAME_HEIGHT = 600
 
-/** One arc the painter filled, with the state that was in force when it went down. */
+/** One shape the painter filled, with the state that was in force when it went down. */
 export interface FillRecord {
-  /** Arc centre x in overlay pixels. */
+  /** Arc centre x in overlay pixels, or the origin when the shape carried no arc. */
   x: number
   /** Arc centre y in overlay pixels. */
   y: number
@@ -35,6 +35,10 @@ export interface FillRecord {
   from: number
   /** Where the arc ends, in radians. */
   to: number
+  /** Whether an arc went into the shape. */
+  arc: boolean
+  /** The straight points the shape ran through, in overlay pixels. */
+  points: readonly Vec2[]
   /** The alpha the fill was laid at. */
   alpha: number
   /** The flat colour the fill was laid in, or the empty string when a gradient was. */
@@ -69,7 +73,7 @@ export function recordingOverlay() {
   const stops: { at: number; color: string }[] = []
   const wipes: { width: number; height: number }[] = []
   let path: Vec2[] = []
-  let pending = { x: 0, y: 0, radius: 0, from: 0, to: 0 }
+  let pending = { x: 0, y: 0, radius: 0, from: 0, to: 0, arc: false }
   let fillStyle: unknown = ''
   let strokeStyle = ''
   let alpha = 1
@@ -91,6 +95,7 @@ export function recordingOverlay() {
     },
     beginPath: (): void => {
       path = []
+      pending = { x: 0, y: 0, radius: 0, from: 0, to: 0, arc: false }
     },
     closePath: (): void => undefined,
     moveTo: (x: number, y: number): void => {
@@ -99,16 +104,22 @@ export function recordingOverlay() {
     lineTo: (x: number, y: number): void => {
       path.push({ x, y })
     },
-    createRadialGradient: () => ({
+    createLinearGradient: () => ({
       addColorStop: (at: number, color: string): void => {
         stops.push({ at, color })
       },
     }),
     arc: (x: number, y: number, radius: number, from: number, to: number): void => {
-      pending = { x, y, radius, from, to }
+      pending = { x, y, radius, from, to, arc: true }
     },
     fill: (): void => {
-      fills.push({ ...pending, alpha, ink: typeof fillStyle === 'string' ? fillStyle : '', gradient: typeof fillStyle !== 'string' })
+      fills.push({
+        ...pending,
+        points: path,
+        alpha,
+        ink: typeof fillStyle === 'string' ? fillStyle : '',
+        gradient: typeof fillStyle !== 'string',
+      })
     },
     stroke: (): void => {
       strokes.push({ ink: strokeStyle, points: path })
@@ -119,10 +130,12 @@ export function recordingOverlay() {
 
   return {
     canvas: <HTMLCanvasElement>(<unknown>canvas),
-    // how: The cone is the only thing the overlay fills with a gradient, so the pearls sort themselves out of the way.
-    wedges: (): FillRecord[] => fills.filter((fill) => fill.gradient),
-    // how: Every flat fill the overlay lays is a pearl; the cone is a gradient and the caret is a stroke.
-    pearls: (): FillRecord[] => fills.filter((fill) => !fill.gradient),
+    // how: The field is the only thing the overlay fills with a gradient, so its shells sort themselves out of the way.
+    shells: (): FillRecord[] => fills.filter((fill) => fill.gradient),
+    // how: A pearl is the only flat fill the overlay lays around an arc; the field is a gradient and a caret's core is a straight-sided shape.
+    pearls: (): FillRecord[] => fills.filter((fill) => !fill.gradient && fill.arc),
+    // how: What is left is a caret core, filled only by a koi that has committed to an avoidance.
+    cores: (): FillRecord[] => fills.filter((fill) => !fill.gradient && !fill.arc),
     strokes,
     stops,
     wipes,

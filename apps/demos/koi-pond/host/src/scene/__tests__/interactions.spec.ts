@@ -1,9 +1,8 @@
 import type { KoiIntent, KoiOutline, KoiPhase, Vec2 } from '@hyperfrontend/demo-koi-lib'
 import { describe, expect, it } from 'vitest'
 import { advanceSpine, createSpine, outlineContains, sampleSpine, spineGirth } from '@hyperfrontend/demo-koi-lib'
-import { CONE_HALF_RAD, CONE_WEDGES, HEAD_CENTRE_ALONG, createInteractionsPainter, headCentre, spineLength } from '../interactions'
+import { FIELD_STANDOFF_BODIES, HEAD_CENTRE_ALONG, beamOf, createInteractionsPainter, headCentre, spineLength } from '../interactions'
 import { PEARL_MAX, PEARL_SPACING_BODIES } from '../pearl-trace'
-import { committedHeading } from '../sliding-caret'
 import { VIEW, anchorOf, caretAngle, frameOf, painted, recordingOverlay } from './overlay-recorder'
 
 /** The nose-to-tail length every koi in these fixtures swims at, in pond pixels. */
@@ -24,6 +23,9 @@ const SETTLE_FRAMES = 90
 /** How far ahead every fixture koi is anticipating, in pond pixels. */
 const REACH_PX = 260
 
+/** How near a neighbour has to pass a fixture koi to matter, in pond pixels. */
+const CLEARANCE_PX = 110
+
 /** Which spine sample the fixtures read as the middle of the body. */
 const BODY_CENTRE_SAMPLE = 2
 
@@ -35,17 +37,24 @@ const POSES: readonly [string, number][] = [
 ]
 
 /** The travel decision every fixture koi reports unless a spec asks for another. */
-const TRAVELLING: KoiIntent = { kind: 'travel', target: { x: 2600, y: 400 }, reachPx: REACH_PX }
+const TRAVELLING: KoiIntent = {
+  kind: 'travel',
+  heading: 0,
+  gain: 1,
+  target: { x: 2600, y: 400 },
+  reachPx: REACH_PX,
+  clearancePx: CLEARANCE_PX,
+}
 
-/** A waypoint well off any fixture koi's course, so a bearing taken to it is unmistakably a decision. */
-const OFF_COURSE: Vec2 = { x: 900, y: 3400 }
+/** A heading well off any fixture koi's course, so a caret riding it is unmistakably a decision. */
+const OFF_COURSE = 1.9
 
 /** One decision of every shape a koi can report, so no mark can be read against only part of the vocabulary. */
 const INTENTS: readonly [string, KoiIntent][] = [
   ['travel', TRAVELLING],
-  ['avoid', { kind: 'avoid', target: { x: 200, y: 700 }, reachPx: REACH_PX }],
-  ['a pass above', { kind: 'depth-change', target: null, direction: 'above', reachPx: REACH_PX }],
-  ['a pass below', { kind: 'depth-change', target: null, direction: 'below', reachPx: REACH_PX }],
+  ['avoid', { ...TRAVELLING, kind: 'avoid', target: { x: 200, y: 700 } }],
+  ['a pass above', { ...TRAVELLING, kind: 'depth-change', target: null, direction: 'above' }],
+  ['a pass below', { ...TRAVELLING, kind: 'depth-change', target: null, direction: 'below' }],
 ]
 
 /**
@@ -146,6 +155,40 @@ function advanced(outline: KoiOutline, byPx: number): KoiOutline {
 }
 
 /**
+ * How far a point sits off the nearest segment of a reported chain.
+ *
+ * @param point - The point in pond space.
+ * @param spine - The reported spine samples, nose first.
+ * @returns The distance in pond pixels.
+ */
+function offChain(point: Vec2, spine: readonly Vec2[]): number {
+  let nearest = Infinity
+  for (const [index, sample] of spine.slice(1).entries()) {
+    const from = spine[index] ?? sample
+    const dx = sample.x - from.x
+    const dy = sample.y - from.y
+    const span = dx * dx + dy * dy
+    const along = span === 0 ? 0 : Math.max(0, Math.min(1, ((point.x - from.x) * dx + (point.y - from.y) * dy) / span))
+    nearest = Math.min(nearest, Math.hypot(point.x - (from.x + dx * along), point.y - (from.y + dy * along)))
+  }
+  return nearest
+}
+
+/**
+ * How far along a koi's heading a drawn point sits from a pond-space origin.
+ *
+ * @param point - The point in overlay pixels.
+ * @param outline - The koi that was drawn.
+ * @param from - The pond-space origin to measure from; its nose by default.
+ * @returns The distance along the heading, in pixels.
+ */
+function alongOf(point: Vec2 | undefined, outline: KoiOutline, from: Vec2 = sampleAt(outline, 0)): number {
+  return (
+    ((point?.x ?? 0) - (from.x - VIEW.x)) * Math.cos(outline.heading) + ((point?.y ?? 0) - (from.y - VIEW.y)) * Math.sin(outline.heading)
+  )
+}
+
+/**
  * Where a fill went down, past the last place the arc-length arithmetic is exact.
  *
  * @param fill - The recorded fill.
@@ -176,11 +219,25 @@ describe('headCentre', () => {
     expect(headCentre({ ...swum(0), spine: [] })).toBeNull()
   })
 
-  it('pulls the anchor its share of the reported body back along the heading', () => {
+  it('pulls the anchor its share of the reported body back along the spine', () => {
     const outline = swum(0)
     const nose = sampleAt(outline, 0)
     const back = spineLength(outline.spine) * HEAD_CENTRE_ALONG
-    expect(anchorOf(outline)).toEqual({ x: nose.x - Math.cos(outline.heading) * back, y: nose.y - Math.sin(outline.heading) * back })
+    expect(Math.hypot(anchorOf(outline).x - nose.x, anchorOf(outline).y - nose.y)).toBeCloseTo(back, 9)
+  })
+
+  it.each(POSES)('sets the anchor on the reported chain itself through %s', (_pose, turnRate) => {
+    // why: Walking the chain rather than projecting along the heading is what keeps the anchor on the body a bending koi actually reported, whatever its build.
+    expect(offChain(anchorOf(swum(turnRate)), swum(turnRate).spine)).toBeLessThan(1e-9)
+  })
+
+  it('parts from a straight-heading projection once the body is bending', () => {
+    const outline = swum(1.1)
+    const nose = sampleAt(outline, 0)
+    const back = spineLength(outline.spine) * HEAD_CENTRE_ALONG
+    const projected = { x: nose.x - Math.cos(outline.heading) * back, y: nose.y - Math.sin(outline.heading) * back }
+    const anchor = anchorOf(outline)
+    expect(Math.hypot(anchor.x - projected.x, anchor.y - projected.y)).toBeGreaterThan(1)
   })
 
   it('puts the anchor behind the nose rather than ahead of it', () => {
@@ -202,83 +259,89 @@ describe('headCentre', () => {
   })
 })
 
-describe('the cone wedges', () => {
-  it('span the cone from one lateral edge to the other', () => {
-    expect([CONE_WEDGES[0]?.from, CONE_WEDGES[CONE_WEDGES.length - 1]?.to]).toEqual([-CONE_HALF_RAD, CONE_HALF_RAD])
+describe('beamOf', () => {
+  it('reads the widest half-width a koi reported', () => {
+    const reported = sampleSpine(spineGirth(BODY_PX, GIRTH_RATIO), 5)
+    expect(beamOf(reported)).toBe(Math.max(...reported))
+    // how: The samples land either side of the beam rather than on it, so the widest reported half-width is a shade under the koi's true one and never over it.
+    expect(beamOf(reported) / (BODY_PX * GIRTH_RATIO)).toBeGreaterThan(0.95)
   })
 
-  it('leave no water between neighbours', () => {
-    expect(CONE_WEDGES.slice(1).map((wedge) => wedge.from)).toEqual(CONE_WEDGES.slice(0, -1).map((wedge) => wedge.to))
-  })
-
-  it('carry the ink down the middle and next to none at either edge', () => {
-    const inks = CONE_WEDGES.map((wedge) => wedge.ink)
-    expect(Math.max(...inks)).toBeGreaterThan(0.95)
-    expect(Math.max(inks[0] ?? 1, inks[inks.length - 1] ?? 1)).toBeLessThan(0.05)
-  })
-
-  it('read the same on both flanks', () => {
-    const inks = CONE_WEDGES.map((wedge) => Number(wedge.ink.toPrecision(12)))
-    expect(inks).toEqual([...inks].reverse())
-  })
-
-  it('never step by enough for an edge to show between two of them', () => {
-    const steps = CONE_WEDGES.slice(1).map((wedge, index) => Math.abs(wedge.ink - (CONE_WEDGES[index]?.ink ?? 0)))
-    expect(Math.max(...steps)).toBeLessThan(0.07)
+  it('reads nothing from a koi that reported no body', () => {
+    expect(beamOf([])).toBe(0)
   })
 })
 
-describe('the painted cone', () => {
-  it('hangs every wedge off the head centre rather than the nose', () => {
-    const outline = swum(1.1)
-    const anchor = anchorOf(outline)
-    const centres = painted(outline)
-      .wedges()
-      .map((wedge) => `${wedge.x},${wedge.y}`)
-    expect([...new Set(centres)]).toEqual([`${anchor.x - VIEW.x},${anchor.y - VIEW.y}`])
+describe('the painted field', () => {
+  it('draws the very region the koi said it is watching', () => {
+    const outline = swum(0)
+    const corners = painted(outline).shells()[0]?.points ?? []
+    const across = Math.hypot((corners[0]?.x ?? 0) - (corners[3]?.x ?? 0), (corners[0]?.y ?? 0) - (corners[3]?.y ?? 0))
+    // why: The band is the koi's own reported clearance across and it stops at the koi's own reported reach; every number in it came off the wire rather than out of this painter.
+    expect(across).toBeCloseTo(CLEARANCE_PX * 2, 6)
+    expect(alongOf(corners[1], outline)).toBeCloseTo(REACH_PX, 6)
   })
 
-  it('sweeps its wedges across the whole cone', () => {
-    const outline = swum(0.45)
-    const wedges = painted(outline).wedges()
-    expect([Math.min(...wedges.map((wedge) => wedge.from)), Math.max(...wedges.map((wedge) => wedge.to))]).toEqual([
-      outline.heading - CONE_HALF_RAD,
-      outline.heading + CONE_HALF_RAD,
-    ])
+  it.each(POSES)('opens the field ahead of the nose it hangs from through %s', (_pose, turnRate) => {
+    const outline = swum(turnRate)
+    const opened = Math.min(
+      ...painted(outline)
+        .shells()
+        .flatMap((shell) => shell.points.map((point) => alongOf(point, outline)))
+    )
+    // why: A koi's whole body lies behind the point it judges a crossing from, so a band that opens ahead of that point cannot be laid over the animal at any build; the standoff is only what keeps the ink off the snout itself.
+    expect(opened).toBeGreaterThan(0)
+    expect(opened).toBeCloseTo(spineLength(outline.spine) * FIELD_STANDOFF_BODIES, 6)
   })
 
-  it('thins its wedges away toward the lateral edges', () => {
-    const alphas = painted(swum(0))
-      .wedges()
-      .map((wedge) => wedge.alpha)
-    const flanks = Math.max(alphas[0] ?? 1, alphas[alphas.length - 1] ?? 1)
-    expect(Math.max(...alphas)).toBeGreaterThan(flanks)
-    expect(flanks).toBeLessThan(0.05)
+  it.each(POSES)('lays no part of the field behind the nose through %s', (_pose, turnRate) => {
+    const outline = swum(turnRate)
+    const behind = painted(outline)
+      .shells()
+      .flatMap((shell) => shell.points)
+      .filter((point) => alongOf(point, outline) <= 0)
+    expect(behind).toEqual([])
   })
 
-  it('runs its ink out entirely at the horizon', () => {
+  it('narrows every shell in toward the middle of the band', () => {
+    const widths = painted(swum(0))
+      .shells()
+      .map((shell) =>
+        Math.hypot((shell.points[0]?.x ?? 0) - (shell.points[3]?.x ?? 0), (shell.points[0]?.y ?? 0) - (shell.points[3]?.y ?? 0))
+      )
+    expect(widths).toEqual([...widths].sort((first, second) => second - first))
+    expect(new Set(widths).size).toBe(widths.length)
+  })
+
+  it('runs its ink out entirely at the standoff and at the horizon', () => {
     const stops = painted(swum(0)).stops
+    expect(stops[0]).toEqual({ at: 0, color: 'rgba(255, 255, 255, 0)' })
+    expect(stops[1]?.color).toBe('rgba(255, 255, 255, 0)')
     expect(stops[stops.length - 1]).toEqual({ at: 1, color: 'rgba(255, 255, 255, 0)' })
   })
 
-  it.each(INTENTS)('draws the cone in one ink whatever a koi decided, here %s', (_kind, intent) => {
+  it('draws nothing ahead of a koi anticipating no further than its own head', () => {
+    expect(painted(swum(0, { ...TRAVELLING, reachPx: 1 })).shells()).toEqual([])
+  })
+
+  it.each(INTENTS)('draws the field in one ink whatever a koi decided, here %s', (_kind, intent) => {
     const inks = painted(swum(0, intent)).stops.map((stop) => stop.color.slice(0, stop.color.lastIndexOf(',')))
     expect([...new Set(inks)]).toEqual(['rgba(255, 255, 255'])
   })
 
-  it('leaves no outline around the cone', () => {
+  it('leaves no outline around the field', () => {
     // how: The caret is the only stroke the overlay lays, so a second one could only be an edge drawn around the fill.
     expect(painted(swum(0)).strokes).toHaveLength(1)
   })
 
   it('draws nothing for a held koi', () => {
     const overlay = painted({ ...swum(0), intent: undefined })
-    expect([overlay.wedges().length, overlay.strokes.length]).toEqual([0, 0])
+    expect([overlay.shells().length, overlay.strokes.length]).toEqual([0, 0])
   })
 
   it('draws nothing for a koi reporting no body', () => {
     const overlay = painted({ ...swum(0), spine: [], girth: [] })
-    expect([overlay.wedges().length, overlay.strokes.length]).toEqual([0, 0])
+    expect([overlay.shells().length, overlay.strokes.length]).toEqual([0, 0])
   })
 })
 
@@ -345,8 +408,42 @@ describe('the painted trace', () => {
 
 describe('the painted caret', () => {
   it('starts a koi on the heading it is already committed to', () => {
-    const outline = swum(0, { kind: 'travel', target: OFF_COURSE, reachPx: REACH_PX })
-    expect(caretAngle(painted(outline).strokes, outline)).toBeCloseTo(committedHeading(outline, anchorOf(outline)), 9)
+    const outline = swum(0, { ...TRAVELLING, heading: OFF_COURSE })
+    expect(caretAngle(painted(outline).strokes, outline)).toBeCloseTo(OFF_COURSE, 9)
+  })
+
+  it('rides the heading the koi reported rather than a bearing worked out about it', () => {
+    // why: The koi hands over the very term its own integrator steers by, so the mark cannot describe a manoeuvre the animal is not making, and the host never re-derives one.
+    const outline = swum(0, { ...TRAVELLING, heading: OFF_COURSE, target: { x: 0, y: 0 } })
+    expect(caretAngle(painted(outline).strokes, outline)).toBeCloseTo(OFF_COURSE, 9)
+  })
+
+  it('fills its core once a koi has committed to an avoidance, and not before', () => {
+    const filled = INTENTS.map(([, intent]) => painted(swum(0, intent)).cores().length)
+    expect(filled).toEqual([0, 1, 1, 1])
+  })
+
+  it('weighs the mark by how hard the koi is committed to it', () => {
+    const alphaOf = (gain: number): number => {
+      const ink = painted(swum(0, { ...TRAVELLING, gain })).strokes[0]?.ink ?? ''
+      return Number(ink.slice(ink.lastIndexOf(' ') + 1, -1))
+    }
+    // why: A koi drifting onto its next waypoint has decided nothing worth announcing; one that has committed its helm has, and the difference is the whole reading.
+    expect(alphaOf(0.12)).toBeLessThan(alphaOf(1))
+    expect(alphaOf(1)).toBe(alphaOf(1.6))
+  })
+
+  it('sizes and orbits the mark from the body that reported it', () => {
+    const reach = (body: number): number => {
+      const outline = {
+        ...swum(0),
+        spine: sampleSpine(createSpine({ x: 600, y: 400 }, 0, body).joints, 5),
+        girth: sampleSpine(spineGirth(body, GIRTH_RATIO), 5),
+      }
+      return alongOf(painted(outline).strokes[0]?.points[1], outline)
+    }
+    // why: A pond scales its koi to the water it was given, so a mark measured in pixels would crowd a large koi and be lost on a small one.
+    expect(reach(BODY_PX * 2)).toBeGreaterThan(reach(BODY_PX) * 1.8)
   })
 
   it('rides a caret on every koi in the shoal at once', () => {
@@ -384,10 +481,10 @@ describe('switching the overlay off', () => {
   it('leaves no caret riding for the next time it comes on', () => {
     const overlay = recordingOverlay()
     const painter = createInteractionsPainter(overlay.canvas)
-    const decided = swum(0, { kind: 'avoid', target: OFF_COURSE, reachPx: REACH_PX })
+    const decided = swum(0, { ...TRAVELLING, kind: 'avoid', heading: OFF_COURSE })
     painter.paint(frameOf(swum(0)))
     painter.clear()
     painter.paint(frameOf(decided))
-    expect(caretAngle(overlay.strokes, decided)).toBeCloseTo(committedHeading(decided, anchorOf(decided)), 9)
+    expect(caretAngle(overlay.strokes, decided)).toBeCloseTo(OFF_COURSE, 9)
   })
 })
