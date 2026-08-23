@@ -194,9 +194,12 @@ genuinely changes destroys the pond and opens it again.
   travel. The bed paints solid, with its outermost edges thinning toward half transparency
   along the card's rounded corners, so the water sits _in_ the card rather than reading as a
   square image pasted onto it.
-- **Full**: the hour-anchored koi and the next two frameworks after it, in the screen-derived
-  world, so an expand reads as the same koi with company, and the visitor stocks the pond
-  from there. The bed paints at ~70% opacity so the page beneath stays perceptible.
+- **Full**: the hour-anchored koi and the frameworks after it in list order, in the
+  screen-derived world, so an expand reads as the same koi with company, and the visitor
+  stocks the pond from there. How many come with it is the frame's own to answer: a full
+  desktop window opens eight, an ordinary window five, a phone three, and anything barely
+  larger than a card just one, always bounded by what the device seats. The bed paints at
+  ~70% opacity so the page beneath stays perceptible.
 
 Escape inside the pond releases a held koi if there is one, and otherwise asks the host to
 close; the host owns the presentation and answers with `set-scene`, which is also what
@@ -208,16 +211,27 @@ re-arms the next request.
 the overlay is colour-coded: an escape and a depth pass read from the shape of the path and
 the motion of the caret, not from a hue.
 
-- A **gradient cone** anchored just behind the koi's nose, its radius the reach the fish
-  itself reported, filled as wedges over a radial fade so it runs out of ink at the lateral
-  edges and at the horizon rather than ending on a line.
+- A **perception field**: the very region the koi's own narrow phase judges a crossing in,
+  from the two numbers it reports for it, so a neighbour inside the mark is a neighbour the
+  animal is actually weighing. It hangs from the nose the koi judges from and opens ahead of
+  it, which is what keeps it off the body at every build, and it is laid as nested shells
+  over a length fade so it runs out of ink at its flanks and at its horizon rather than
+  ending on a line. What it cannot show is depth: a koi drawn inside another's field may be
+  passing two levels underneath it.
 - A **pearl trace**: the koi's own predicted advancement, drawn as stationary dots at a
   fixed spacing along its body length, brightest at the nose and fading toward the horizon.
   A pearl never moves once placed. The nose consumes the pearls it passes, fresh ones are
   minted at the far end, and a decision that invalidates the path cuts the trace from the
   first pearl that no longer lies on it.
-- A **sliding double caret** orbiting the head, which slides toward the heading the brain has
-  committed to faster than any helm the koi has, so it arrives before the body does.
+- A **double chevron** orbiting the head, sized and stood off from the body the koi
+  reported, which slides toward the heading it has committed to faster than any helm the koi
+  has, so it arrives before the body does and the gap between the two closes as the animal
+  swings onto it. The koi answers only for the arc its own helm carries it through in the
+  seconds just ahead, so nothing is ever announced that then fails to happen. Its weight is
+  how hard the koi is committed: a drift between turns wears a whisper of a mark and a
+  decided manoeuvre a firm one. Its core fills once that manoeuvre is an avoidance, which is
+  how a koi that has noticed something and broken for it reads apart from one merely
+  swimming somewhere.
 
 A held koi reports no intent and draws nothing.
 
