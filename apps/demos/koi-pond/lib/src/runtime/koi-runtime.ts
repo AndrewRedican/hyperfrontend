@@ -96,7 +96,8 @@ export interface KoiRuntimeInit {
  */
 export function createKoiRuntime(init: KoiRuntimeInit): KoiRuntime {
   const { framework, root, rendererFactory } = init
-  const profile: KoiProfile = koiProfile(framework)
+  let seed = koiSeed(framework)
+  let profile: KoiProfile = koiProfile(framework)
   const buildMotion: KoiMotionFactory = init.motionFactory ?? createKoiMotion
   // why: The koi may be framed from a sub-path of the pond or served at its own origin's root, so the identity a visitor reads is resolved from wherever this page actually is.
   const url = new URL('.', window.location.href).href
@@ -111,7 +112,7 @@ export function createKoiRuntime(init: KoiRuntimeInit): KoiRuntime {
   )
 
   const entry = entryStation(pond, koiSeed(framework))
-  const motion = buildMotion({ profile, pond, position: entry.position, heading: entry.heading, depth: ENTRY_DEPTH })
+  let motion = buildMotion({ profile, pond, position: entry.position, heading: entry.heading, depth: ENTRY_DEPTH })
   let renderer: KoiRenderer | null = rendererFactory(root, profile, url, pond)
 
   let emit: (type: string, data?: unknown) => void = () => {}
@@ -327,6 +328,21 @@ export function createKoiRuntime(init: KoiRuntimeInit): KoiRuntime {
     adopt(identity) {
       // why: A shoal stood back up together builds its GL contexts one ordinal at a time, so a koi keeps the ordinal that says when its own turn comes.
       instance = identity.instance
+      if (identity.seed !== seed) {
+        // why: The dealt seed is the authority every trait derives from — a duplicate is told apart by the seed the host chose for it, so the whole animal is rebuilt around it: body, brain, and a station clear of its siblings.
+        seed = identity.seed
+        profile = koiProfile(framework, seed)
+        const station = entryStation(pond, koiSeed(framework), identity.instance)
+        motion = buildMotion({ profile, pond, position: station.position, heading: station.heading, depth: ENTRY_DEPTH })
+        wasFleeing = false
+        if (renderer !== null) {
+          renderer.dispose()
+          const view = rendererFactory(root, profile, url, pond)
+          renderer = view
+          view.setHovered(hovered)
+          view.setSelected(held && !resting)
+        }
+      }
       motion.setDepth(identity.depth)
     },
     setDepth(level) {

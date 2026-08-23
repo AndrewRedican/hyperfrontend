@@ -3,10 +3,11 @@
  */
 import type { FeatureLink, KoiRuntime } from '../../contract/wire.js'
 import type { KoiCardDetails } from '../../model/card.js'
-import type { KoiFramework, KoiOutline, PondEnvironment } from '../../model/types.js'
+import type { KoiFramework, KoiOutline, KoiProfile, PondEnvironment } from '../../model/types.js'
 import type { KoiState } from '../../motion/koi-motion.js'
 import type { KoiRenderer } from '../koi-renderer.js'
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import { koiSeed, koiVariantSeed } from '../../model/traits.js'
 import { KOI_PATH_MAX_POINTS } from '../../motion/predict.js'
 import { createKoiRuntime } from '../koi-runtime.js'
 
@@ -48,6 +49,8 @@ interface MountedKoi {
   runtime: KoiRuntime
   /** Every renderer it built, oldest first. */
   renderers: RecordingRenderer[]
+  /** The profile each renderer was built around, oldest first. */
+  profiles: KoiProfile[]
   /** The interval each inspector timer was started at, in milliseconds. */
   intervals: number[]
   /** The delay each timer still waiting to fire was scheduled at, in milliseconds. */
@@ -134,6 +137,7 @@ function built(koi: MountedKoi, index: number): RecordingRenderer {
  */
 function mount(options: { framework?: KoiFramework; hosted?: boolean } = {}): MountedKoi {
   const renderers: RecordingRenderer[] = []
+  const profiles: KoiProfile[] = []
   const sent: Array<{ type: string; data: unknown }> = []
   const handlers = new Map<string, (data: unknown) => void>()
   const intervals: number[] = []
@@ -172,7 +176,8 @@ function mount(options: { framework?: KoiFramework; hosted?: boolean } = {}): Mo
     root: document.createElement('div'),
     link,
     hosted: options.hosted,
-    rendererFactory: () => {
+    rendererFactory: (_root, profile) => {
+      profiles.push(profile)
       const renderer = recordingRenderer()
       renderers.push(renderer)
       return renderer
@@ -182,6 +187,7 @@ function mount(options: { framework?: KoiFramework; hosted?: boolean } = {}): Mo
   return {
     runtime,
     renderers,
+    profiles,
     intervals,
     sent,
     delays: () => [...timers.values()].map((timer) => timer.delay),
@@ -436,5 +442,51 @@ describe('createKoiRuntime', () => {
     koi.step(REPORT_MS)
     koi.deliver('pause', { paused: true })
     expect(above).not.toHaveBeenCalled()
+  })
+})
+
+describe('adopting a dealt identity', () => {
+  /** The identity a host deals one of vanilla's koi. */
+  const identity = (seed: number, instance: number) => ({ framework: 'vanilla', seed, instance, url: 'https://pond.test/', depth: 4 })
+
+  it('keeps the canonical animal when the dealt seed is its own', () => {
+    const koi = mount()
+    koi.deliver('identity', identity(koiSeed('vanilla'), 0))
+    expect(koi.renderers).toHaveLength(1)
+  })
+
+  it('rebuilds the animal around a variant seed', () => {
+    const koi = mount()
+    koi.deliver('identity', identity(koiVariantSeed('vanilla', 1), 1))
+    expect(koi.renderers).toHaveLength(2)
+  })
+
+  it('hands the old body back before growing the new one', () => {
+    const koi = mount()
+    koi.deliver('identity', identity(koiVariantSeed('vanilla', 1), 1))
+    expect(built(koi, 0).disposals).toBe(1)
+  })
+
+  it('deals a variant its own body', () => {
+    const koi = mount()
+    koi.deliver('identity', identity(koiVariantSeed('vanilla', 1), 1))
+    // why: Only the phenotype channels read the variant seed — same species, same colours, a different animal.
+    expect(koi.profiles[1]?.build).not.toEqual(koi.profiles[0]?.build)
+  })
+
+  it('stations a variant clear of the canonical entry', () => {
+    const canonical = mount()
+    canonical.step(FRAME_MS)
+    const koi = mount()
+    koi.deliver('identity', identity(koiVariantSeed('vanilla', 1), 1))
+    koi.step(FRAME_MS)
+    expect(built(koi, 1).draws[0]?.state.position).not.toEqual(built(canonical, 0).draws[0]?.state.position)
+  })
+
+  it('keeps hover through the rebirth', () => {
+    const koi = mount()
+    koi.deliver('hover', { hovered: true })
+    koi.deliver('identity', identity(koiVariantSeed('vanilla', 1), 1))
+    expect(built(koi, 1).hovers).toEqual([true])
   })
 })
