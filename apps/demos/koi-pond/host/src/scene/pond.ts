@@ -654,6 +654,8 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondSceneHandle
     const session = openSession(framework, nextOrdinal([...sessions.keys(), ...leaving], framework))
     refreshPanel()
     hooks.onShoal(present.size, sessions.size)
+    // why: A roster that changed under a visitor's hand is the first thing to know when reading back what a device did with the shoal it was carrying — the size it grew to is what every later reading has to be read against.
+    hooks.onDiagnostic?.(session.id, 'added', `${sessions.size} of ${device.cap} koi`)
     session.shell.open()
     return session.id
   }
@@ -684,7 +686,7 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondSceneHandle
     }
     refreshPanel()
     hooks.onShoal(present.size, sessions.size)
-    hooks.onDiagnostic?.(id, 'removed')
+    hooks.onDiagnostic?.(id, 'removed', `${sessions.size} of ${device.cap} koi`)
     let torndown = false
     const finalize = (): void => {
       if (torndown) {

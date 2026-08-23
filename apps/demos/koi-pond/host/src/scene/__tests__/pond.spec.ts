@@ -369,6 +369,13 @@ describe('growing the shoal', () => {
     scene.addKoi('react')
     expect(onShoal).toHaveBeenLastCalledWith(0, 4)
   })
+
+  it('diagnoses the koi it took in and the roster it grew to', () => {
+    device.cap = 12
+    const { scene, onDiagnostic } = harness()
+    scene.addKoi('react')
+    expect(onDiagnostic).toHaveBeenCalledWith('react:1', 'added', '4 of 12 koi')
+  })
 })
 
 describe('shrinking the shoal', () => {
@@ -405,6 +412,14 @@ describe('shrinking the shoal', () => {
     scene.addKoi('react')
     scene.removeKoi('react:1')
     expect(onShoal).toHaveBeenLastCalledWith(0, 3)
+  })
+
+  it('diagnoses the koi it let go and the roster it shrank to', () => {
+    device.cap = 12
+    const { scene, onDiagnostic } = harness()
+    scene.addKoi('react')
+    scene.removeKoi('react:1')
+    expect(onDiagnostic).toHaveBeenCalledWith('react:1', 'removed', '3 of 12 koi')
   })
 
   it('cancels a revive still pending for a removed koi', () => {

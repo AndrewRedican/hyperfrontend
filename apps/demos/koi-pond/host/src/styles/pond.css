@@ -514,9 +514,10 @@ body {
   color: #ffffff;
 }
 
+/* why: The name column holds the longest framework label a koi can carry plus its ordinal; the readings that follow are what the remaining width is for. */
 .pond-vitals-row {
   display: grid;
-  grid-template-columns: 3.6rem 7rem 1fr;
+  grid-template-columns: 4.9rem 6.4rem 1fr;
   gap: 0.4rem;
   white-space: nowrap;
 }

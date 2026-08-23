@@ -10,11 +10,21 @@
  * context loss the moment it fires. The log survives a page death in storage,
  * so the report of what killed the pond is waiting when the pond comes back.
  *
+ * The shoal it reports on is alive, so the report is too: a row belongs to one
+ * koi rather than to a framework, rows arrive and leave with the fish they
+ * name, and the boot record states the device tier and the ceiling that tier
+ * puts over the roster. A log read back afterwards then says what the pond was
+ * allowed to be as well as what it did.
+ *
  * It is never part of the scene: nothing mounts it unless the visitor asked
  * with `?vitals=1` (remembered until `?vitals=0`), and when it is off the
  * pond spends nothing on it.
  */
+import type { DeviceSignals } from '../runtime/device-tier'
 import type { KoiInstanceId } from '../scene/instance-id'
+import { koiLabel } from '@hyperfrontend/demo-koi-lib'
+import { readDeviceProfile } from '../runtime/device-tier'
+import { instanceFramework, instanceOrdinal } from '../scene/instance-id'
 
 /** Where the opt-in flag is remembered, per origin. */
 const VITALS_FLAG_KEY = 'koi-pond:vitals'
@@ -281,8 +291,10 @@ export function mountVitals(root: HTMLElement): PondVitals {
     }
     const row = document.createElement('div')
     row.className = 'pond-vitals-row'
+    row.dataset['instance'] = instance
     const name = document.createElement('span')
-    name.textContent = instance
+    // why: A row names the framework the way a reader says it and the ordinal the way its id spells it, so a row and every log line about that koi are the same fish with no arithmetic in between.
+    name.textContent = `${koiLabel(instanceFramework(instance))} ${instanceOrdinal(instance)}`
     const state = document.createElement('span')
     state.textContent = '·'
     const reading = document.createElement('span')
@@ -311,7 +323,11 @@ export function mountVitals(root: HTMLElement): PondVitals {
   }
 
   const screenLine = `dpr=${window.devicePixelRatio} screen=${window.screen.width}x${window.screen.height} view=${Math.round(window.visualViewport?.width ?? window.innerWidth)}x${Math.round(window.visualViewport?.height ?? window.innerHeight)}`
-  record(null, 'boot', `${screenLine} isolated=${window.crossOriginIsolated} cores=${navigator.hardwareConcurrency}`)
+  const device = readDeviceProfile()
+  // why: The tier is a verdict about the machine, and a verdict read back off a device weeks later is worth little without the signals behind it — `middle` alone cannot tell a middling device from one that withheld its memory.
+  const reported = (<DeviceSignals>navigator).deviceMemory
+  const deviceLine = `cores=${navigator.hardwareConcurrency} memory=${reported === undefined ? 'unreported' : `${reported}GB`} tier=${device.tier} cap=${device.cap}`
+  record(null, 'boot', `${screenLine} isolated=${window.crossOriginIsolated} ${deviceLine}`)
   record(null, 'agent', navigator.userAgent)
 
   const watchCanvas = (canvas: HTMLCanvasElement, instance: KoiInstanceId | null, label: string): void => {

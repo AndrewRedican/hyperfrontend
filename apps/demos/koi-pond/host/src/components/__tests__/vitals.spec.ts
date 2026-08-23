@@ -128,8 +128,19 @@ describe('the vitals overlay', () => {
     vitals.record('react:0', 'error:unresponsive', 'missed 3')
     const log = root.querySelector('.pond-vitals-log')
     expect(log?.textContent).toContain('react:0 error:unresponsive missed 3')
-    const badges = [...root.querySelectorAll('.pond-vitals-row')].map((row) => row.textContent)
-    expect(badges.some((text) => text?.includes('react:0') === true && text.includes('error:unresponsive'))).toBe(true)
+    expect(root.querySelector('.pond-vitals-row[data-instance="react:0"]')?.textContent).toContain('error:unresponsive')
+  })
+
+  it('names each row by its framework and its ordinal', () => {
+    const { root } = harness()
+    addKoiLayer(root, 'solid:1')
+    vi.advanceTimersByTime(5000)
+    expect(root.querySelector('.pond-vitals-row span')?.textContent).toBe('SolidJS 1')
+  })
+
+  it('opens the log with the tier the device reports and the ceiling it sets', () => {
+    const { root } = harness()
+    expect(root.querySelector('.pond-vitals-log')?.textContent).toMatch(/boot .*tier=middle cap=8/)
   })
 
   it('keeps the log for the next page in storage', () => {
@@ -159,6 +170,38 @@ describe('the vitals overlay', () => {
     addKoiLayer(root, 'react:1')
     vi.advanceTimersByTime(5000)
     expect(root.querySelectorAll('.pond-vitals-row')).toHaveLength(2)
+  })
+
+  it('follows a scripted sequence of koi joining and leaving, row for row', () => {
+    const { root } = harness()
+    const roster = (): string[] => [...root.querySelectorAll('.pond-vitals-row')].map((row) => (<HTMLElement>row).dataset['instance'] ?? '')
+    const seen: string[][] = []
+    addKoiLayer(root, 'react:0')
+    vi.advanceTimersByTime(5000)
+    seen.push(roster())
+    addKoiLayer(root, 'react:1')
+    addKoiLayer(root, 'vue:0')
+    vi.advanceTimersByTime(5000)
+    seen.push(roster())
+    root.querySelector('.koi-layer[data-instance="react:0"]')?.remove()
+    vi.advanceTimersByTime(5000)
+    seen.push(roster())
+    expect(seen).toEqual([['react:0'], ['react:0', 'react:1', 'vue:0'], ['react:1', 'vue:0']])
+  })
+
+  it('keeps the roster changes and the cap refusals for the next page', () => {
+    const { vitals } = harness()
+    vitals.record('react:1', 'added', '4 of 8 koi')
+    vitals.record(null, 'shoal:refused', 'middle-tier device seats 8')
+    vitals.record('react:1', 'removed', '3 of 8 koi')
+    vi.advanceTimersByTime(1500)
+    expect((<{ lines?: string[] }>JSON.parse(window.localStorage.getItem(LOG_KEY) ?? '{}')).lines).toEqual(
+      expect.arrayContaining([
+        expect.stringContaining('react:1 added 4 of 8 koi'),
+        expect.stringContaining('pond shoal:refused middle-tier device seats 8'),
+        expect.stringContaining('react:1 removed 3 of 8 koi'),
+      ])
+    )
   })
 
   it('drops the row of an instance whose layer left the scene', () => {
