@@ -32,7 +32,8 @@ world, at about one eighth of today's footprint.
   slip-outs leaving the card empty for seconds).
 - **Depth**: the live-roster spread ([01](01-instance-id-refactor.md)) puts the solo koi
   at the surface level: full scale, full opacity, wake ripples eligible.
-- **Floor**: DPR-capped ([phase 2](../phase-2-isolated-improvements/03-floor-dpr-cap.md)).
+- **Floor**: DPR-capped
+  ([phase 2](../phase-2-isolated-improvements.md#canvas-pixel-ratio-cap)).
 - **Curtain**: lifts on the single handshake (the `present.size === sessions.length`
   rule already reads 1 of 1).
 - **Expanded and standalone profile**: initial trio `hour % 8`, `+1`, `+2` (mod 8), all

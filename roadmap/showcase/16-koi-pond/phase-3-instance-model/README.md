@@ -5,8 +5,10 @@ eight forever" and becomes instance-based; the fish adopt the consolidated lib; 
 family repacks on contract 0.8.0.
 
 Depends on [phase 1](../phase-1-lib-consolidation.md) (shipped: lib primitives, contract)
-and [phase 2](../phase-2-isolated-improvements/README.md) (published `hosted` signal,
-device tier). Decisions and guardrails: [plan index](../README.md). Evidence:
+and [phase 2](../phase-2-isolated-improvements.md) (shipped: device tier, canvas caps,
+visibility watch; the `hosted` signal still awaiting
+[release](../phase-2-isolated-improvements.md#release-gate-blocks-phase-3-item-03)).
+Decisions and guardrails: [plan index](../README.md). Evidence:
 [recon §3](../recon.md#3-eight-fish-assumptions-in-the-host) and
 [recon §4](../recon.md#4-a-container-derived-card-world).
 
@@ -15,8 +17,8 @@ device tier). Decisions and guardrails: [plan index](../README.md). Evidence:
 | #   | Sub-plan                                           | Depends on                       |
 | --- | -------------------------------------------------- | -------------------------------- |
 | 01  | [Instance-ID refactor](01-instance-id-refactor.md) | phase 1                          |
-| 02  | [Dynamic shoal machinery](02-dynamic-shoal.md)     | 01, phase 2 item 05              |
-| 03  | [Deferred boot](03-deferred-boot.md)               | 01, phase 2 item 01 **released** |
+| 02  | [Dynamic shoal machinery](02-dynamic-shoal.md)     | 01, phase 2 device tier          |
+| 03  | [Deferred boot](03-deferred-boot.md)               | 01, `hosted` signal **released** |
 | 04  | [Card profile](04-card-profile.md)                 | 01, 03                           |
 | 05  | [Fish migration](05-fish-migration.md)             | phase 1 complete                 |
 | 06  | [Repack pipeline](06-repack-pipeline.md)           | all of the above                 |

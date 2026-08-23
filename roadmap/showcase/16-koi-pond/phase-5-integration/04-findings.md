@@ -9,14 +9,16 @@ Close the loop on the findings ledger: file every SDK gap this plan surfaced, an
 graduations for the ones this plan resolved. Process and template: the `demo-findings`
 skill.
 
-## To file (confirmed already; file when their work items land, if not filed then)
+## Filed already (graduations pending the SDK release)
 
-- **No hosted/standalone signal on the feature handle** (F-020 if still free): filed as
-  part of [phase 2 item 01](../phase-2-isolated-improvements/01-lib-features-hosted.md),
-  which also graduates it in the same release.
-- **Visibility edges are trusted where visibility state is the truth**: the SDK-side
-  twin of the pond's [visibility polling](../phase-2-isolated-improvements/02-visibility-polling.md);
-  the demo carries the workaround, the finding records the SDK exposure.
+- **[F-020](../../findings/020-feature-cannot-know-it-is-unhosted.md)**: no
+  hosted/standalone signal on the feature handle.
+- **[F-021](../../findings/021-missed-visibility-edge-parks-the-watchdog-for-the-session.md)**:
+  a missed visibility edge parks every watchdog at `unobservable` and nothing resets it.
+
+Both are answered by the
+[phase 2 release](../phase-2-isolated-improvements.md#release-gate-blocks-phase-3-item-03);
+record each graduation once it publishes.
 
 ## To evaluate during the instance work (file only if confirmed)
 
@@ -33,8 +35,8 @@ skill.
 
 - F-018 (no way to revive a dead session) and F-019 (dead iframe paints the crash
   placeholder): the gallery-side handling ships in
-  [phase 2 item 04](../phase-2-isolated-improvements/04-docs-embed-resurrection.md);
-  record the graduation per the registry's rules once released.
+  [phase 2](../phase-2-isolated-improvements.md#gallery-outer-resurrection); record the
+  graduation per the registry's rules once released.
 
 ## Specs
 

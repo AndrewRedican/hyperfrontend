@@ -2,7 +2,7 @@
 
 Part of [Phase 3](README.md) · Guardrails: [plan index](../README.md) · Depends on:
 [01-instance-id-refactor.md](01-instance-id-refactor.md),
-[phase 2 device tier](../phase-2-isolated-improvements/05-device-tier.md)
+[phase 2 device tier](../phase-2-isolated-improvements.md#device-tier)
 
 ## Goal
 

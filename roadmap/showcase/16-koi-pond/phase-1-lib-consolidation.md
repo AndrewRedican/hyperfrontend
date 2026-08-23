@@ -70,7 +70,7 @@ lean on:
 
 - **Hosted-ness is an argument.** The runtime never touches `window.parent` (spec-guarded);
   the glue module supplies the hosted fact. The
-  [phase 2 `hosted` signal](phase-2-isolated-improvements/01-lib-features-hosted.md) is
+  [phase 2 `hosted` signal](phase-2-isolated-improvements.md#the-hosted-signal) is
   its intended source, and the [phase 3 migration](phase-3-instance-model/05-fish-migration.md)
   feeds it from the SDK handle, deleting the eight per-app `window.parent` sniffs.
 - `resting` holds position, keeps the scull, and never starts the inspector timers.

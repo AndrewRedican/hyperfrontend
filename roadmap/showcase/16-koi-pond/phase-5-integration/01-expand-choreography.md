@@ -39,7 +39,7 @@ koi skill's decision notes and the demo working log, not in shipped prose).
   choreography, set for the koi entry only.
 - **Outer contract untouched**: 0.2.0, no outer shell repack; the choreography is pure
   gallery-side session management.
-- The [outer resurrection](../phase-2-isolated-improvements/04-docs-embed-resurrection.md)
+- The [outer resurrection](../phase-2-isolated-improvements.md#gallery-outer-resurrection)
   policy applies to whichever instance is current; a pending revive for a destroyed
   instance cancels on the swap.
 

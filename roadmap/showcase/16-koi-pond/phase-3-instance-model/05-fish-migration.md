@@ -34,7 +34,7 @@ What each app keeps (the thesis layer):
 
 - The hosted fact reaches the runtime as an argument from the SDK handle
   (`feature.hosted`), deleting each app's `window.parent` sniff in `originRelation()`
-  ([phase 2 item 01](../phase-2-isolated-improvements/01-lib-features-hosted.md) is the
+  ([the `hosted` signal](../phase-2-isolated-improvements.md#the-hosted-signal) is the
   enabler).
 - Lit deliberately remains the proof that the runtime seam supports an idiomatic wrapper:
   its `ReactiveController` composes `createKoiRuntime` rather than reimplementing it.

@@ -51,26 +51,26 @@ All decisions below were interrogated and settled with the author on 2026-08-22.
 Each phase is independently verifiable and has its own folder with one sub-plan per work
 item. Read the phase README first; it orders the sub-plans and states the phase gate.
 
-| Phase | Folder                                                                   | Theme                                                                                                      | Depends on |
-| ----- | ------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------- | ---------- |
-| 1     | [phase-1-lib-consolidation](phase-1-lib-consolidation.md) (shipped)      | The consolidated koi lib: brain, runtime, wire, stage, geometry; motion retune; contract 0.8.0             | none       |
-| 2     | [phase-2-isolated-improvements](phase-2-isolated-improvements/README.md) | Self-contained fixes: SDK `hosted` signal, visibility polling, DPR caps, gallery resurrection, device tier | none       |
-| 3     | [phase-3-instance-model](phase-3-instance-model/README.md)               | Instance keying, dynamic shoal, deferred boot, card profile, fish migration, repack                        | 1, 2       |
-| 4     | [phase-4-chrome-and-overlay](phase-4-chrome-and-overlay/README.md)       | Unified shoal panel, overlay grammar replacement, vitals                                                   | 1, 3       |
-| 5     | [phase-5-integration](phase-5-integration/README.md)                     | Gallery choreography, guides, doctrine, findings, device acceptance                                        | 3, 4       |
+| Phase | Folder                                                                         | Theme                                                                                                             | Depends on |
+| ----- | ------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------- | ---------- |
+| 1     | [phase-1-lib-consolidation](phase-1-lib-consolidation.md) (shipped)            | The consolidated koi lib: brain, runtime, wire, stage, geometry; motion retune; contract 0.8.0                    | none       |
+| 2     | [phase-2-isolated-improvements.md](phase-2-isolated-improvements.md) (shipped) | Self-contained fixes: SDK `hosted` signal, visibility reconciliation, DPR caps, gallery resurrection, device tier | none       |
+| 3     | [phase-3-instance-model](phase-3-instance-model/README.md)                     | Instance keying, dynamic shoal, deferred boot, card profile, fish migration, repack                               | 1, 2       |
+| 4     | [phase-4-chrome-and-overlay](phase-4-chrome-and-overlay/README.md)             | Unified shoal panel, overlay grammar replacement, vitals                                                          | 1, 3       |
+| 5     | [phase-5-integration](phase-5-integration/README.md)                           | Gallery choreography, guides, doctrine, findings, device acceptance                                               | 3, 4       |
 
 ### Sequencing constraints that are easy to miss
 
-- **Phase 1 has shipped** (its record is the collapsed
-  [phase-1-lib-consolidation.md](phase-1-lib-consolidation.md)); phase 2 never depended
-  on it and can land any time.
-- **The SDK change gates phase 3.** Demos consume the published `@hyperfrontend/features`
-  package, never workspace source. The `hosted` signal
-  ([phase 2, item 1](phase-2-isolated-improvements/01-lib-features-hosted.md)) must land on
-  `main` and publish before the pond's deferred boot can be written against it. Land it
-  early. Watch the version bump: the change is a `feat` and must produce a minor bump; the
-  changelog window has under-bumped feature releases before, so verify the computed version
-  before the release merge.
+- **Phases 1 and 2 have shipped**; their records are the collapsed
+  [phase-1-lib-consolidation.md](phase-1-lib-consolidation.md) and
+  [phase-2-isolated-improvements.md](phase-2-isolated-improvements.md). Phase 2 never
+  depended on phase 1 and landed independently of it.
+- **The SDK release gates phase 3.** Demos consume the published `@hyperfrontend/features`
+  package, never workspace source. The `hosted` signal is in source and unreleased; it must
+  publish before the pond's deferred boot can be written against it, and the version bump
+  needs watching. The
+  [phase 2 release gate](phase-2-isolated-improvements.md#release-gate-blocks-phase-3-item-03)
+  carries the details.
 - **Phases 3, 4, and 5 land on `main` in the same release cycle.** The pond README's
   standing doctrine ("never a simulation engine", `apps/demos/koi-pond/README.md:16`)
   becomes false the moment the fish adopt lib primitives in phase 3; its rewrite ships in

@@ -57,8 +57,9 @@ supersessions; shipped READMEs are not).
   references plans, phases, or this folder (guardrail 1).
 - Fish-app and demo READMEs: read `apps/demos/koi-pond/README.md` neighbors (clock,
   heartbeat) only for the standalone-claims check from
-  [phase 2 item 01](../phase-2-isolated-improvements/01-lib-features-hosted.md); they
-  need no koi-driven changes.
+  [the `hosted` signal](../phase-2-isolated-improvements.md#the-hosted-signal); they
+  need no koi-driven changes. Its vocabulary trap governs this rewrite: `hosted: false`
+  is never called "standalone".
 
 ## Specs
 

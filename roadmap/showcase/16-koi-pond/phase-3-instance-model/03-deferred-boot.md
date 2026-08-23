@@ -1,9 +1,9 @@
 # Deferred boot
 
 Part of [Phase 3](README.md) · Guardrails: [plan index](../README.md) · Depends on:
-[01-instance-id-refactor.md](01-instance-id-refactor.md), and
-[phase 2 item 01](../phase-2-isolated-improvements/01-lib-features-hosted.md) **published
-to npm** · Evidence:
+[01-instance-id-refactor.md](01-instance-id-refactor.md), and the `hosted` signal
+[**published to npm**](../phase-2-isolated-improvements.md#release-gate-blocks-phase-3-item-03)
+· Evidence:
 [recon §2](../recon.md#2-scene-signals-when-a-pond-can-know-card-vs-full)
 
 ## Goal

@@ -1,13 +1,13 @@
 # F-020 — A feature opened directly cannot learn it has no host, so an adaptive boot waits out a deadline nobody will answer
 
-| Field        | Value                                                                                                           |
-| ------------ | --------------------------------------------------------------------------------------------------------------- |
-| Category     | missing-feature                                                                                                 |
-| Severity     | medium                                                                                                          |
-| Surfaced by  | demo-koi-pond                                                                                                   |
-| Status       | triaged                                                                                                         |
-| Disposition  | api-refinement                                                                                                  |
-| Graduated to | [koi pond phase 2, SDK `hosted` signal](../16-koi-pond/phase-2-isolated-improvements/01-lib-features-hosted.md) |
+| Field        | Value                                                                                                      |
+| ------------ | ---------------------------------------------------------------------------------------------------------- |
+| Category     | missing-feature                                                                                            |
+| Severity     | medium                                                                                                     |
+| Surfaced by  | demo-koi-pond                                                                                              |
+| Status       | triaged                                                                                                    |
+| Disposition  | api-refinement                                                                                             |
+| Graduated to | [koi pond phase 2, SDK `hosted` signal](../16-koi-pond/phase-2-isolated-improvements.md#the-hosted-signal) |
 
 ## What happened
 
