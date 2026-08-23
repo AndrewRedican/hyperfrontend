@@ -16,7 +16,7 @@
  * A koi that then stays for a while earns the full budget back: losing a frame
  * to a backgrounded tab is ordinary life on a phone, not a verdict on the koi.
  */
-import type { KoiFramework } from '@hyperfrontend/demo-koi-lib'
+import type { KoiInstanceId } from './instance-id'
 
 /** How long a verdict must stand before the first reopen, in milliseconds. */
 const REVIVE_DELAY_MS = 4000
@@ -36,21 +36,21 @@ export type ResurrectionNote = 'scheduled' | 'deferred' | 'recovered' | 'reopene
 /** What the resurrection policy needs from the pond. */
 export interface ResurrectionOptions {
   /** Whether a koi's session is answering right now. */
-  isPresent(framework: KoiFramework): boolean
+  isPresent(id: KoiInstanceId): boolean
   /** Whether the page is hidden, as the pond understands it. */
   isHidden(): boolean
   /** Opens a koi's session again; the shell replaces the dead mount itself. */
-  reopen(framework: KoiFramework): void
+  reopen(id: KoiInstanceId): void
   /** Hears what the policy decided, for the diagnostics log. */
-  note?(framework: KoiFramework, kind: ResurrectionNote, detail: string): void
+  note?(id: KoiInstanceId, kind: ResurrectionNote, detail: string): void
 }
 
 /** The resurrection policy, wired into the pond's session events. */
 export interface Resurrection {
   /** A koi's session stopped answering; considers bringing it back. */
-  frameDied(framework: KoiFramework): void
+  frameDied(id: KoiInstanceId): void
   /** A koi's session opened; arms the stability window that restores its budget. */
-  opened(framework: KoiFramework): void
+  opened(id: KoiInstanceId): void
   /** The page can be watched again; releases whatever was held for it. */
   pageVisible(): void
   /** Stops every pending timer and stands the policy down. */
@@ -74,33 +74,33 @@ interface FishRecord {
  * @example Reviving a koi whose frame the browser killed
  * ```typescript
  * const resurrection = createResurrection({
- *   isPresent: (framework) => present.has(framework),
+ *   isPresent: (id) => present.has(id),
  *   isHidden: () => visibility.hidden,
- *   reopen: (framework) => shellFor(framework).open(),
+ *   reopen: (id) => sessions.get(id)?.shell.open(),
  * })
  * shell.on('error', (data) => {
  *   if (data?.reason === 'unresponsive') {
- *     resurrection.frameDied(framework)
+ *     resurrection.frameDied(session.id)
  *   }
  * })
  * ```
  */
 export function createResurrection(options: ResurrectionOptions): Resurrection {
-  const fishes = new Map<KoiFramework, FishRecord>()
+  const fishes = new Map<KoiInstanceId, FishRecord>()
 
-  const recordFor = (framework: KoiFramework): FishRecord => {
-    let record = fishes.get(framework)
+  const recordFor = (id: KoiInstanceId): FishRecord => {
+    let record = fishes.get(id)
     if (record === undefined) {
       record = { attempts: 0, timer: null, stability: null, waitingForVisible: false }
-      fishes.set(framework, record)
+      fishes.set(id, record)
     }
     return record
   }
 
-  const attempt = (framework: KoiFramework, record: FishRecord): void => {
+  const attempt = (id: KoiInstanceId, record: FishRecord): void => {
     record.attempts += 1
-    options.note?.(framework, 'reopened', `attempt ${record.attempts} of ${REVIVE_ATTEMPTS}`)
-    options.reopen(framework)
+    options.note?.(id, 'reopened', `attempt ${record.attempts} of ${REVIVE_ATTEMPTS}`)
+    options.reopen(id)
   }
 
   const armStability = (record: FishRecord): void => {
@@ -113,27 +113,27 @@ export function createResurrection(options: ResurrectionOptions): Resurrection {
     }, REVIVE_STABLE_MS)
   }
 
-  const fire = (framework: KoiFramework): void => {
-    const record = recordFor(framework)
+  const fire = (id: KoiInstanceId): void => {
+    const record = recordFor(id)
     record.timer = null
-    if (options.isPresent(framework)) {
+    if (options.isPresent(id)) {
       // why: The frame spoke again on its own during the grace — the verdict was a stall, not a death, and a reopen now would tear down a live session under its visitor. The budget comes back only once the koi has stayed, exactly as it would after a reopen.
       armStability(record)
-      options.note?.(framework, 'recovered', 'answered during the grace')
+      options.note?.(id, 'recovered', 'answered during the grace')
       return
     }
     if (options.isHidden()) {
       // why: Reopening into a hidden page races throttled timers against the handshake deadline for a scene nobody is watching; the attempt keeps until the visitor returns.
       record.waitingForVisible = true
-      options.note?.(framework, 'deferred', 'until the page is visible')
+      options.note?.(id, 'deferred', 'until the page is visible')
       return
     }
-    attempt(framework, record)
+    attempt(id, record)
   }
 
   return {
-    frameDied(framework) {
-      const record = recordFor(framework)
+    frameDied(id) {
+      const record = recordFor(id)
       // why: A death inside the stability window belongs to the same episode — the budget keeps counting instead of resetting.
       if (record.stability !== null) {
         window.clearTimeout(record.stability)
@@ -143,17 +143,17 @@ export function createResurrection(options: ResurrectionOptions): Resurrection {
         return
       }
       if (record.attempts >= REVIVE_ATTEMPTS) {
-        options.note?.(framework, 'exhausted', `${REVIVE_ATTEMPTS} reopens spent`)
+        options.note?.(id, 'exhausted', `${REVIVE_ATTEMPTS} reopens spent`)
         return
       }
       const delay = REVIVE_DELAY_MS * REVIVE_BACKOFF ** record.attempts
-      options.note?.(framework, 'scheduled', `reopen in ${Math.round(delay / 1000)}s`)
+      options.note?.(id, 'scheduled', `reopen in ${Math.round(delay / 1000)}s`)
       record.timer = window.setTimeout(() => {
-        fire(framework)
+        fire(id)
       }, delay)
     },
-    opened(framework) {
-      const record = recordFor(framework)
+    opened(id) {
+      const record = recordFor(id)
       // why: A session that just opened supersedes any reopen still waiting — firing it would tear the fresh mount down again.
       if (record.timer !== null) {
         window.clearTimeout(record.timer)
@@ -163,14 +163,14 @@ export function createResurrection(options: ResurrectionOptions): Resurrection {
       armStability(record)
     },
     pageVisible() {
-      for (const [framework, record] of fishes) {
+      for (const [id, record] of fishes) {
         if (!record.waitingForVisible) {
           continue
         }
         record.waitingForVisible = false
         // why: A frame that recovered while hidden has not been allowed to say so — the watchdog grants no health until the page can watch it beat again. The grace runs once more from here, and only an absence that survives it is acted on.
         record.timer = window.setTimeout(() => {
-          fire(framework)
+          fire(id)
         }, REVIVE_DELAY_MS)
       }
     },

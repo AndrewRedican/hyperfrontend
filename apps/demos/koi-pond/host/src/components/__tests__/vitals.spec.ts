@@ -11,6 +11,22 @@ const LOG_KEY = 'koi-pond:vitals-log'
 /** Every overlay mounted in a test, so no probe timer outlives it. */
 const mounted: PondVitals[] = []
 
+/**
+ * Raises a bare koi layer the probe can find.
+ *
+ * @param root - The pond root.
+ * @param instance - The instance id the layer carries.
+ * @returns The layer.
+ */
+function addKoiLayer(root: HTMLElement, instance: string): HTMLElement {
+  const layer = document.createElement('div')
+  layer.className = 'koi-layer'
+  layer.dataset['fish'] = instance.slice(0, instance.indexOf(':'))
+  layer.dataset['instance'] = instance
+  root.append(layer)
+  return layer
+}
+
 /** Builds a pond root and mounts the overlay into it. */
 function harness() {
   const root = document.createElement('div')
@@ -107,11 +123,13 @@ describe('the frame classifier', () => {
 describe('the vitals overlay', () => {
   it('logs what the pond reports and badges the koi it names', () => {
     const { root, vitals } = harness()
-    vitals.record('react', 'error:unresponsive', 'missed 3')
+    addKoiLayer(root, 'react:0')
+    vi.advanceTimersByTime(5000)
+    vitals.record('react:0', 'error:unresponsive', 'missed 3')
     const log = root.querySelector('.pond-vitals-log')
-    expect(log?.textContent).toContain('react error:unresponsive missed 3')
+    expect(log?.textContent).toContain('react:0 error:unresponsive missed 3')
     const badges = [...root.querySelectorAll('.pond-vitals-row')].map((row) => row.textContent)
-    expect(badges.some((text) => text?.includes('react') === true && text.includes('error:unresponsive'))).toBe(true)
+    expect(badges.some((text) => text?.includes('react:0') === true && text.includes('error:unresponsive'))).toBe(true)
   })
 
   it('keeps the log for the next page in storage', () => {
@@ -130,12 +148,26 @@ describe('the vitals overlay', () => {
 
   it('notices a koi layer with nothing in it on the next probe', () => {
     const { root } = harness()
-    const layer = document.createElement('div')
-    layer.className = 'koi-layer'
-    layer.dataset['fish'] = 'vanilla'
-    root.append(layer)
+    addKoiLayer(root, 'vanilla:0')
     vi.advanceTimersByTime(5000)
-    expect(root.querySelector('.pond-vitals-log')?.textContent).toContain('vanilla frame unseen to no-frame')
+    expect(root.querySelector('.pond-vitals-log')?.textContent).toContain('vanilla:0 frame unseen to no-frame')
+  })
+
+  it('keeps one row per living instance, twins included', () => {
+    const { root } = harness()
+    addKoiLayer(root, 'react:0')
+    addKoiLayer(root, 'react:1')
+    vi.advanceTimersByTime(5000)
+    expect(root.querySelectorAll('.pond-vitals-row')).toHaveLength(2)
+  })
+
+  it('drops the row of an instance whose layer left the scene', () => {
+    const { root } = harness()
+    const layer = addKoiLayer(root, 'react:1')
+    vi.advanceTimersByTime(5000)
+    layer.remove()
+    vi.advanceTimersByTime(5000)
+    expect(root.querySelectorAll('.pond-vitals-row')).toHaveLength(0)
   })
 
   it('shows only its window of the log however long the session runs', () => {

@@ -10,7 +10,8 @@
  * There is no broadcast in the SDK and none is wanted here: each koi gets a
  * different answer, because each koi has different neighbours.
  */
-import type { KoiFramework, KoiOutline, NeighborObservation, PondEnvironment, Vec2 } from '@hyperfrontend/demo-koi-lib'
+import type { KoiOutline, NeighborObservation, PondEnvironment, Vec2 } from '@hyperfrontend/demo-koi-lib'
+import type { KoiInstanceId } from './instance-id'
 import { boundsOverlap, chainBounds, signedDistanceToChain } from '@hyperfrontend/demo-koi-lib'
 
 /** How far out a koi is told about its neighbours, in nominal fish lengths. */
@@ -30,25 +31,30 @@ export interface Relay {
   /**
    * Records one koi's latest outline.
    *
+   * The reporter is named by the host from the channel the outline arrived on,
+   * because the wire payload carries only a framework — and a framework stops
+   * naming a fish the moment two koi of one framework swim at once.
+   *
+   * @param reporter - The instance whose channel delivered the outline.
    * @param outline - What the koi reported.
    * @param at - When it arrived, in milliseconds on the caller's clock.
    */
-  record(outline: KoiOutline, at: number): void
+  record(reporter: KoiInstanceId, outline: KoiOutline, at: number): void
   /**
    * Forgets a koi whose session has closed.
    *
-   * @param framework - Which koi left.
+   * @param reporter - Which koi left.
    */
-  forget(framework: KoiFramework): void
+  forget(reporter: KoiInstanceId): void
   /**
    * The neighbours one koi should be told about.
    *
-   * @param framework - Whose view to build.
+   * @param reporter - Whose view to build.
    * @param pond - The announced world, which sets the relay reach.
    * @param now - The moment to reckon every report forward to.
    * @returns The observations to relay, nearest first.
    */
-  neighborsFor(framework: KoiFramework, pond: PondEnvironment, now: number): NeighborObservation[]
+  neighborsFor(reporter: KoiInstanceId, pond: PondEnvironment, now: number): NeighborObservation[]
   /**
    * Which koi the host's pointer is over.
    *
@@ -58,7 +64,7 @@ export interface Relay {
    * @param slackScale - Widens the hit slack; a fingertip needs more than a cursor.
    * @returns The koi under the pointer, or `null` over open water.
    */
-  pick(point: Vec2, pond: PondEnvironment, now: number, slackScale?: number): KoiFramework | null
+  pick(point: Vec2, pond: PondEnvironment, now: number, slackScale?: number): KoiInstanceId | null
   /**
    * One koi's outline as it plausibly stands right now.
    *
@@ -66,11 +72,11 @@ export interface Relay {
    * for host chrome that needs to sit on the body — a stale or missing report
    * yields nothing rather than a ghost.
    *
-   * @param framework - Whose outline to read.
+   * @param reporter - Whose outline to read.
    * @param now - The moment to reckon the report forward to.
    * @returns The reckoned outline, or `null` when none is trustworthy.
    */
-  latest(framework: KoiFramework, now: number): KoiOutline | null
+  latest(reporter: KoiInstanceId, now: number): KoiOutline | null
   /** Every outline currently known, in report order. */
   readonly outlines: readonly KoiOutline[]
 }
@@ -127,12 +133,12 @@ function reckoned(outline: KoiOutline, ageS: number): KoiOutline {
  *
  * @example Relaying each koi its own view
  * ```typescript
- * relay.record(outline, now)
- * session.shell.send('neighbors', relay.neighborsFor(session.framework, pond, now))
+ * relay.record(session.id, outline, now)
+ * session.shell.send('neighbors', relay.neighborsFor(session.id, pond, now))
  * ```
  */
 export function createRelay(): Relay {
-  const reported = new Map<KoiFramework, { outline: KoiOutline; at: number }>()
+  const reported = new Map<KoiInstanceId, { outline: KoiOutline; at: number }>()
 
   const current = (entry: { outline: KoiOutline; at: number }, now: number): KoiOutline => {
     const ageS = Math.min(Math.max(0, (now - entry.at) / 1000), DEAD_RECKON_MAX_S)
@@ -143,16 +149,16 @@ export function createRelay(): Relay {
   const stale = (entry: { outline: KoiOutline; at: number }, now: number): boolean => now - entry.at > STALE_REPORT_S * 1000
 
   return {
-    record(outline, at) {
-      reported.set(outline.framework, { outline, at })
+    record(reporter, outline, at) {
+      reported.set(reporter, { outline, at })
     },
 
-    forget(framework) {
-      reported.delete(framework)
+    forget(reporter) {
+      reported.delete(reporter)
     },
 
-    neighborsFor(framework, pond, now) {
-      const entry = reported.get(framework)
+    neighborsFor(reporter, pond, now) {
+      const entry = reported.get(reporter)
       if (entry === undefined || stale(entry, now)) {
         return []
       }
@@ -162,8 +168,9 @@ export function createRelay(): Relay {
       const selfNose = noseOf(self)
 
       const near: Array<{ distance: number; observation: NeighborObservation }> = []
+      // why: Self is excluded by instance, never by framework — that is exactly what lets two koi of one framework see each other as neighbours and steer apart.
       for (const [other, otherEntry] of reported) {
-        if (other === framework || stale(otherEntry, now)) {
+        if (other === reporter || stale(otherEntry, now)) {
           continue
         }
         const outline = current(otherEntry, now)
@@ -175,7 +182,7 @@ export function createRelay(): Relay {
         near.push({
           distance: Math.hypot(nose.x - selfNose.x, nose.y - selfNose.y),
           observation: {
-            framework: other,
+            framework: outline.framework,
             x: nose.x,
             y: nose.y,
             heading: outline.heading,
@@ -194,10 +201,10 @@ export function createRelay(): Relay {
 
     pick(point, pond, now, slackScale = 1) {
       const slack = pond.fishLength * HOVER_SLACK * slackScale
-      let picked: KoiFramework | null = null
+      let picked: KoiInstanceId | null = null
       let bestDepth = -1
       let bestDistance = Number.POSITIVE_INFINITY
-      for (const entry of reported.values()) {
+      for (const [reporter, entry] of reported) {
         if (stale(entry, now)) {
           continue
         }
@@ -210,14 +217,14 @@ export function createRelay(): Relay {
         if (outline.depth > bestDepth || (outline.depth === bestDepth && distance < bestDistance)) {
           bestDepth = outline.depth
           bestDistance = distance
-          picked = outline.framework
+          picked = reporter
         }
       }
       return picked
     },
 
-    latest(framework, now) {
-      const entry = reported.get(framework)
+    latest(reporter, now) {
+      const entry = reported.get(reporter)
       if (entry === undefined || stale(entry, now)) {
         return null
       }

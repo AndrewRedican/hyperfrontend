@@ -2,13 +2,17 @@
  * The pond scene: everything the host owns, assembled.
  *
  * The bed, the surface water, the pointer, the depth order, the curtain, the
- * roster, the decision overlay, and the eight channels. Every koi is a separate application in a
- * separate frame; this module's whole job is to make those read as one
- * continuous scene, and to keep the seams — the relay, the depth grants, the
- * ripple gate — on the host's side of the boundary where they belong.
+ * roster, the decision overlay, and one channel per swimming koi. Every koi is
+ * a separate application in a separate frame; this module's whole job is to
+ * make those read as one continuous scene, and to keep the seams — the relay,
+ * the depth grants, the ripple gate — on the host's side of the boundary where
+ * they belong. Sessions key by instance, never by framework: two koi of one
+ * framework are two fish, each with its own layer, depth, chrome, and budget.
  */
 import type { KoiFramework, KoiOutline, Vec2 } from '@hyperfrontend/demo-koi-lib'
 import type { PondScene, SceneScale } from '../feature/wire-contract'
+import type { KoiInstanceId } from './instance-id'
+import type { KoiSession } from './koi-sessions'
 import { KOI_FRAMEWORKS, describePond, mayRipple, pondPoint, pondWindow } from '@hyperfrontend/demo-koi-lib'
 import { createDepthDirector } from './depth-director'
 import { createFrameLoop } from './raf-loop'
@@ -23,7 +27,8 @@ import { createSurfacePainter } from './surface-canvas'
 import { createVisibilityWatch } from './visibility'
 import { createWaterPainter } from './water-gl'
 import { acceptsRipple, addRipple, advanceRipples, createRippleField } from './ripples'
-import { fishHomeUrl, identityFor, openShoal } from './koi-sessions'
+import { fishHomeUrl, identityFor, openInstance } from './koi-sessions'
+import { instanceFramework } from './instance-id'
 import { paintFloor } from './floor'
 
 /** How often the host relays each koi its neighbours, in milliseconds. */
@@ -84,11 +89,11 @@ export interface PondHooks {
   /**
    * Something happened to a session worth a line in a diagnostics log.
    *
-   * @param framework - Which koi, or `null` for a pond-wide note.
+   * @param instance - Which koi, or `null` for a pond-wide note.
    * @param kind - What happened, as a short slug such as `error:unresponsive`.
    * @param detail - The particulars, already phrased for a human.
    */
-  onDiagnostic?(framework: KoiFramework | null, kind: string, detail?: string): void
+  onDiagnostic?(instance: KoiInstanceId | null, kind: string, detail?: string): void
 }
 
 /** The created scene: the contract-driven slice plus the host chrome's own handles. */
@@ -126,27 +131,27 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondSceneHandle
   // why: The GPU water is preferred and the 2D painter is the fallback — one page already carries eight fish contexts, and this ninth is the only one the host ever asks for.
   const surface = createWaterPainter(stage.surface) ?? createSurfacePainter(stage.surface)
   const relay = createRelay()
-  const director = createDepthDirector(Date.now())
+  const director = createDepthDirector()
   const sequence = createSequenceTracker()
   const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
 
   // why: The virtual pond derives from the screen, once — a gallery card, an expanded overlay, and a debug panel are windows onto this same water, and none of them may redefine it.
   let pond = describePond(window.screen.width, window.screen.height, root.clientWidth, root.clientHeight, motionQuery.matches)
   let field = createRippleField()
-  let hovered: KoiFramework | null = null
+  let hovered: KoiInstanceId | null = null
   let lastRelayAt = 0
   let lastPulseAt = 0
   let scale: SceneScale = 'full'
   let rootBounds = root.getBoundingClientRect()
   const pointer = { x: 0, y: 0, fresh: false }
-  const inspected = new Set<KoiFramework>()
-  const retries = new Map<KoiFramework, number>()
+  const inspected = new Set<KoiInstanceId>()
+  const retries = new Map<KoiInstanceId, number>()
   // why: Which koi are actually answering right now — not merely which ones once opened. A frame the browser has given up on still exists, and everything the pond shows about a koi has to follow this one set or the scene starts claiming fish it has lost.
-  const present = new Set<KoiFramework>()
+  const present = new Set<KoiInstanceId>()
 
   /** The press being tracked from a fish, from pointerdown until it resolves as a tap or a drag. */
   let drag: {
-    framework: KoiFramework
+    id: KoiInstanceId
     pointerId: number
     startX: number
     startY: number
@@ -158,21 +163,17 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondSceneHandle
     lastSent: Vec2 | null
   } | null = null
 
-  const sessions = openShoal(stage.layers)
+  const sessions = new Map<KoiInstanceId, KoiSession>()
   const chrome = createSelectionChrome(root)
   // why: The browser may kill any frame it likes on a phone; the resurrection is what turns that from a permanent hole in the shoal into a pause.
   const resurrection = createResurrection({
-    isPresent: (framework) => present.has(framework),
+    isPresent: (id) => present.has(id),
     // why: The policy reads the pond's own answer about visibility rather than the document's, so a page that recovered without saying so does not leave a reopen waiting forever.
     isHidden: () => visibility.hidden,
-    reopen: (framework) => {
-      for (const session of sessions) {
-        if (session.framework === framework) {
-          session.shell.open()
-        }
-      }
+    reopen: (id) => {
+      sessions.get(id)?.shell.open()
     },
-    note: (framework, kind, detail) => hooks.onDiagnostic?.(framework, `revive:${kind}`, detail),
+    note: (id, kind, detail) => hooks.onDiagnostic?.(id, `revive:${kind}`, detail),
   })
   const diagnostics = createInteractionsPainter(stage.interactions)
   let showInteractions = false
@@ -188,68 +189,73 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondSceneHandle
    *
    * @param next - The koi under the pointer, or `null` over open water.
    */
-  const setHover = (next: KoiFramework | null): void => {
+  const setHover = (next: KoiInstanceId | null): void => {
     if (next === hovered) {
       return
     }
-    for (const session of sessions) {
-      if (session.framework === hovered) {
-        session.shell.send('hover', { hovered: false })
-      }
-      if (session.framework === next) {
-        session.shell.send('hover', { hovered: true })
-      }
+    if (hovered !== null) {
+      sessions.get(hovered)?.shell.send('hover', { hovered: false })
+    }
+    if (next !== null) {
+      sessions.get(next)?.shell.send('hover', { hovered: true })
     }
     hovered = next
-    roster.setHovered(next)
+    roster.setHovered(next === null ? null : instanceFramework(next))
     refreshCursor()
   }
 
   /**
    * Sends one koi a contract action.
    *
-   * @param framework - Which koi.
+   * @param id - Which koi.
    * @param type - The action type.
    * @param data - Its payload.
    */
-  const sendTo = (framework: KoiFramework, type: string, data: unknown): void => {
-    for (const session of sessions) {
-      if (session.framework === framework) {
-        session.shell.send(type, data)
-      }
-    }
+  const sendTo = (id: KoiInstanceId, type: string, data: unknown): void => {
+    sessions.get(id)?.shell.send(type, data)
+  }
+
+  /**
+   * Tells one koi the level it now holds and restacks its layer to match.
+   *
+   * @param id - Which koi.
+   */
+  const notifyDepth = (id: KoiInstanceId): void => {
+    sendTo(id, 'depth', { level: director.settledLevel(id) })
+    setLayerDepth(stage, id, director.settledLevel(id))
   }
 
   /**
    * Holds a koi for inspection: pauses it and raises its ring.
    *
-   * @param framework - Which koi was pressed.
+   * @param id - Which koi was pressed.
    */
-  const hold = (framework: KoiFramework): void => {
-    if (inspected.has(framework)) {
+  const hold = (id: KoiInstanceId): void => {
+    if (inspected.has(id)) {
       return
     }
     // why: One inspection at a time — picking a new koi releases whichever one was held, whether the pick came from a tap or a click. release() only deletes the entry being visited, so walking the set while freeing is safe.
     for (const other of inspected) {
       release(other)
     }
-    inspected.add(framework)
-    chrome.hold(framework, fishHomeUrl(framework))
-    sendTo(framework, 'pause', { paused: true })
+    inspected.add(id)
+    const framework = instanceFramework(id)
+    chrome.hold(id, framework, fishHomeUrl(framework))
+    sendTo(id, 'pause', { paused: true })
   }
 
   /**
    * Releases a held koi back to its own swimming.
    *
-   * @param framework - Which koi to free.
+   * @param id - Which koi to free.
    */
-  const release = (framework: KoiFramework): void => {
-    if (!inspected.has(framework)) {
+  const release = (id: KoiInstanceId): void => {
+    if (!inspected.has(id)) {
       return
     }
-    inspected.delete(framework)
-    chrome.release(framework)
-    sendTo(framework, 'pause', { paused: false })
+    inspected.delete(id)
+    chrome.release(id)
+    sendTo(id, 'pause', { paused: false })
   }
 
   /**
@@ -266,7 +272,46 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondSceneHandle
     }
   }
 
-  const roster = createRoster(root, fishHomeUrl, setHover)
+  /**
+   * The instance a roster row stands for: the framework's first answering koi,
+   * or its first koi at all while none is answering.
+   *
+   * @param framework - The row's framework, or `null` on blur.
+   * @returns The instance to hover, or `null`.
+   */
+  const rosterInstance = (framework: KoiFramework | null): KoiInstanceId | null => {
+    if (framework === null) {
+      return null
+    }
+    let fallback: KoiInstanceId | null = null
+    for (const session of sessions.values()) {
+      if (session.framework !== framework) {
+        continue
+      }
+      if (present.has(session.id)) {
+        return session.id
+      }
+      fallback = fallback ?? session.id
+    }
+    return fallback
+  }
+
+  const roster = createRoster(root, fishHomeUrl, (framework) => setHover(rosterInstance(framework)))
+
+  /**
+   * Whether any of a framework's koi is answering, for its roster row.
+   *
+   * @param framework - The row's framework.
+   * @returns `true` while at least one instance is present.
+   */
+  const frameworkPresent = (framework: KoiFramework): boolean => {
+    for (const id of present) {
+      if (instanceFramework(id) === framework) {
+        return true
+      }
+    }
+    return false
+  }
 
   /**
    * Records whether one koi is in the scene, everywhere the pond says so.
@@ -277,31 +322,32 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondSceneHandle
    * underneath it. Standing it down covers all four at once, and its next
    * handshake brings it back.
    *
-   * @param framework - Which koi.
+   * @param id - Which koi.
    * @param here - Whether its session is answering.
    */
-  const setPresent = (framework: KoiFramework, here: boolean): void => {
-    if (here === present.has(framework)) {
+  const setPresent = (id: KoiInstanceId, here: boolean): void => {
+    if (here === present.has(id)) {
       return
     }
     if (here) {
-      present.add(framework)
+      present.add(id)
     } else {
-      present.delete(framework)
-      relay.forget(framework)
-      release(framework)
-      if (drag?.framework === framework) {
+      present.delete(id)
+      relay.forget(id)
+      release(id)
+      if (drag?.id === id) {
         // why: A koi cannot be mid-carry once it has left the scene — the hand would be holding nothing and the cursor would keep saying otherwise.
         drag = null
       }
-      if (hovered === framework) {
+      if (hovered === id) {
         setHover(null)
       }
       refreshCursor()
     }
-    setLayerPresent(stage, framework, here)
-    roster.setConnected(framework, here)
-    hooks.onShoal(present.size, sessions.length)
+    setLayerPresent(stage, id, here)
+    // why: A roster row speaks for a framework, so it stands while any of that framework's koi is answering.
+    roster.setConnected(instanceFramework(id), frameworkPresent(instanceFramework(id)))
+    hooks.onShoal(present.size, sessions.size)
   }
 
   /**
@@ -326,7 +372,7 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondSceneHandle
       scale === 'full' ? OVERLAY_FLOOR_ALPHA : 1,
       scale === 'card'
     )
-    for (const session of sessions) {
+    for (const session of sessions.values()) {
       session.shell.send('pond', pond)
     }
   }
@@ -352,30 +398,32 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondSceneHandle
     if (acceptsRipple(field, 'pointer', now)) {
       field = addRipple(field, 'pointer', origin, POINTER_STRENGTH, now)
     }
-    sequence.begin(
-      sessions.map((session) => session.framework),
-      now
-    )
+    sequence.begin([...sessions.keys()], now)
     // why: The strike goes to every koi; how far each one is and whether it cares is its own judgement, not the host's.
-    for (const session of sessions) {
+    for (const session of sessions.values()) {
       session.shell.send('disturbance', { x: origin.x, y: origin.y, intensity: POINTER_STRENGTH })
     }
   }
 
-  for (const session of sessions) {
-    const { framework, shell } = session
+  /**
+   * Subscribes the pond to everything one koi's session says.
+   *
+   * @param session - The session to wire.
+   */
+  const wireSession = (session: KoiSession): void => {
+    const { id, framework, ordinal, shell } = session
 
     shell.on('open', () => {
       shell.send('pond', pond)
-      shell.send('identity', identityFor(framework, director.settledLevel(framework)))
-      setLayerDepth(stage, framework, director.settledLevel(framework))
-      setPresent(framework, true)
-      resurrection.opened(framework)
+      shell.send('identity', identityFor(framework, ordinal, director.settledLevel(id)))
+      setLayerDepth(stage, id, director.settledLevel(id))
+      setPresent(id, true)
+      resurrection.opened(id)
       // why: A handshake that landed makes past timeouts history — the retry budget guards one opening episode, not the whole page, or a koi revived after a slow boot would have nothing left.
-      retries.delete(framework)
-      hooks.onDiagnostic?.(framework, 'open')
+      retries.delete(id)
+      hooks.onDiagnostic?.(id, 'open')
       // why: The curtain holds until every koi has landed, so a visitor never watches the shoal arrive one frame at a time.
-      if (present.size === sessions.length) {
+      if (present.size === sessions.size) {
         setCurtain(stage, true)
       }
     })
@@ -385,20 +433,20 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondSceneHandle
       const status = <{ state?: string; missedBeats?: number }>data
       const state = status?.state
       hooks.onDiagnostic?.(
-        framework,
+        id,
         `status:${state ?? 'unknown'}`,
         status?.missedBeats === undefined ? undefined : `missed ${status.missedBeats}`
       )
       if (state === 'gone') {
-        setPresent(framework, false)
+        setPresent(id, false)
       } else if (state === 'healthy') {
-        setPresent(framework, true)
+        setPresent(id, true)
       }
     })
 
     // ref: [guide:compose-independent-features/survive-close] start
     shell.on('close', () => {
-      setPresent(framework, false)
+      setPresent(id, false)
     })
     // ref: [guide:compose-independent-features/survive-close] end
 
@@ -411,18 +459,18 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondSceneHandle
           : error?.elapsedMs !== undefined
             ? `after ${Math.round(error.elapsedMs)}ms`
             : undefined
-      hooks.onDiagnostic?.(framework, `error:${error?.reason ?? 'unknown'}`, detail)
+      hooks.onDiagnostic?.(id, `error:${error?.reason ?? 'unknown'}`, detail)
       if (error?.reason === 'unresponsive') {
-        resurrection.frameDied(framework)
+        resurrection.frameDied(id)
       }
       // why: A reopen whose handshake times out after the retry budget is spent would otherwise strand the koi between the two policies — the retry declines and no watchdog exists to speak again. Handing the death to the resurrection lets its own budget decide when to stop insisting.
-      if (error?.reason === 'open-timeout' && (retries.get(framework) ?? 0) >= OPEN_RETRIES) {
-        resurrection.frameDied(framework)
+      if (error?.reason === 'open-timeout' && (retries.get(id) ?? 0) >= OPEN_RETRIES) {
+        resurrection.frameDied(id)
       }
     })
 
     shell.on('close', () => {
-      hooks.onDiagnostic?.(framework, 'close')
+      hooks.onDiagnostic?.(id, 'close')
     })
 
     // ref: [guide:compose-independent-features/retry-open] start
@@ -430,10 +478,10 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondSceneHandle
       // why: A koi that never answers must not hold the pond dark behind a curtain waiting for it.
       setCurtain(stage, true)
       // why: Whatever went wrong, the frame is no longer showing a koi — it waits for a handshake to earn its place back.
-      setPresent(framework, false)
-      // why: A timed-out handshake leaves a destroyed mount and the SDK never retries — on a slow device the eight heavy apps race one deadline, and without this a loser is simply a fish that never existed. Only the timeout is retried; an unresponsive session may still be alive, and must not be torn down under its visitor.
-      if ((<{ reason?: string }>data)?.reason === 'open-timeout' && (retries.get(framework) ?? 0) < OPEN_RETRIES) {
-        retries.set(framework, (retries.get(framework) ?? 0) + 1)
+      setPresent(id, false)
+      // why: A timed-out handshake leaves a destroyed mount and the SDK never retries — on a slow device the heavy apps race one deadline, and without this a loser is simply a fish that never existed. Only the timeout is retried; an unresponsive session may still be alive, and must not be torn down under its visitor.
+      if ((<{ reason?: string }>data)?.reason === 'open-timeout' && (retries.get(id) ?? 0) < OPEN_RETRIES) {
+        retries.set(id, (retries.get(id) ?? 0) + 1)
         window.setTimeout(() => {
           shell.open()
         }, OPEN_RETRY_DELAY_MS)
@@ -442,14 +490,14 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondSceneHandle
     // ref: [guide:compose-independent-features/retry-open] end
 
     shell.on('outline', (data: unknown) => {
-      relay.record(<KoiOutline>data, Date.now())
+      relay.record(id, <KoiOutline>data, Date.now())
     })
 
     shell.on('depth-request', (data: unknown) => {
       const level = (<{ level: number }>data).level
-      if (director.request(framework, level, Date.now())) {
-        shell.send('depth', { level: director.settledLevel(framework) })
-        setLayerDepth(stage, framework, director.settledLevel(framework))
+      if (director.request(id, level, Date.now())) {
+        shell.send('depth', { level: director.settledLevel(id) })
+        setLayerDepth(stage, id, director.settledLevel(id))
       }
     })
 
@@ -457,20 +505,42 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondSceneHandle
       const request = <{ x: number; y: number; strength: number }>data
       const now = Date.now()
       // why: Only the koi just under the surface may break it, and the host is what enforces that — a fish asking from the pond floor is simply refused.
-      if (!mayRipple(director.settledLevel(framework)) || !acceptsRipple(field, framework, now)) {
+      if (!mayRipple(director.settledLevel(id)) || !acceptsRipple(field, id, now)) {
         return
       }
-      field = addRipple(field, framework, { x: request.x, y: request.y }, request.strength, now)
+      field = addRipple(field, id, { x: request.x, y: request.y }, request.strength, now)
     })
 
     shell.on('settled', () => {
-      const fish = sequence.settle(framework, Date.now())
+      const fish = sequence.settle(id, Date.now())
       if (fish !== null) {
         hooks.onSequenceComplete(fish)
       }
     })
+  }
 
-    shell.open()
+  /**
+   * Raises one koi instance: its layer, its shell, its wiring, and its place
+   * in the depth spread.
+   *
+   * @param framework - The framework rendering it.
+   * @param ordinal - Which of that framework's koi it is.
+   * @returns The session, wired but not yet opened.
+   */
+  const openSession = (framework: KoiFramework, ordinal: number): KoiSession => {
+    const session = openInstance(stage, framework, ordinal)
+    sessions.set(session.id, session)
+    // why: A joining koi re-deals the whole spread; everyone whose slot moved is told so their render and their layer keep agreeing about who is nearer the light.
+    for (const moved of director.add(session.id, Date.now())) {
+      notifyDepth(moved)
+    }
+    setLayerDepth(stage, session.id, director.settledLevel(session.id))
+    wireSession(session)
+    return session
+  }
+
+  for (const framework of KOI_FRAMEWORKS) {
+    openSession(framework, 0).shell.open()
   }
 
   const observer = new ResizeObserver(() => {
@@ -527,7 +597,7 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondSceneHandle
       hold(hit)
       const nose = relay.latest(hit, now)?.spine[0] ?? at
       drag = {
-        framework: hit,
+        id: hit,
         pointerId: event.pointerId,
         startX: event.clientX,
         startY: event.clientY,
@@ -570,12 +640,12 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondSceneHandle
     drag = null
     if (press.dragging) {
       if (press.pending !== null) {
-        sendTo(press.framework, 'place', press.pending)
+        sendTo(press.id, 'place', press.pending)
       }
       // why: Dropping is releasing — the koi resumes its own swimming from wherever it was set down, with no second tap owed.
-      release(press.framework)
+      release(press.id)
     } else if (press.wasHeld) {
-      release(press.framework)
+      release(press.id)
     }
     refreshCursor()
   }
@@ -611,7 +681,7 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondSceneHandle
 
     // why: The drag streams one placement per painted frame however fast the pointer reports, and the hover pick stands down — a hand carrying one fish must not flash every card it passes over.
     if (drag !== null && drag.pending !== null) {
-      sendTo(drag.framework, 'place', drag.pending)
+      sendTo(drag.id, 'place', drag.pending)
       drag.lastSent = drag.pending
       drag.pending = null
     } else if (drag === null && pointer.fresh) {
@@ -620,13 +690,13 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondSceneHandle
     }
 
     // why: The chrome follows each held koi's reported card; while a fish is being carried its card chrome hides so nothing sits clickable under the moving hand.
-    for (const framework of inspected) {
-      const carried = drag !== null && drag.dragging && drag.framework === framework
-      chrome.trackCard(framework, carried ? null : (relay.latest(framework, now)?.card ?? null), pond)
+    for (const id of inspected) {
+      const carried = drag !== null && drag.dragging && drag.id === id
+      chrome.trackCard(id, carried ? null : (relay.latest(id, now)?.card ?? null), pond)
     }
 
-    for (const framework of director.advance(now)) {
-      setLayerDepth(stage, framework, director.settledLevel(framework))
+    for (const id of director.advance(now)) {
+      setLayerDepth(stage, id, director.settledLevel(id))
     }
 
     const abandoned = sequence.expire(now)
@@ -637,8 +707,8 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondSceneHandle
     // ref: [guide:compose-independent-features/relay-fanout] start
     if (elapsedMs - lastRelayAt >= RELAY_INTERVAL_MS) {
       lastRelayAt = elapsedMs
-      for (const session of sessions) {
-        session.shell.send('neighbors', relay.neighborsFor(session.framework, pond, now))
+      for (const session of sessions.values()) {
+        session.shell.send('neighbors', relay.neighborsFor(session.id, pond, now))
       }
     }
     // ref: [guide:compose-independent-features/relay-fanout] end
@@ -646,7 +716,7 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondSceneHandle
     // why: A calm pond would otherwise say nothing for as long as the visitor lets it be calm, and an embedder watching for life reads thirty silent seconds as an outage — the roll call keeps the liveness flowing through the contract itself.
     if (elapsedMs - lastPulseAt >= SHOAL_PULSE_MS) {
       lastPulseAt = elapsedMs
-      hooks.onShoal(present.size, sessions.length)
+      hooks.onShoal(present.size, sessions.size)
     }
 
     surfaceFrame.width = pond.view.width
@@ -668,8 +738,8 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondSceneHandle
       interactionsFrame.view.y = pond.view.y
       interactionsFrame.pixelRatio = window.devicePixelRatio
       interactionsFrame.outlines.length = 0
-      for (const session of sessions) {
-        const latest = relay.latest(session.framework, now)
+      for (const session of sessions.values()) {
+        const latest = relay.latest(session.id, now)
         if (latest !== null) {
           interactionsFrame.outlines.push(latest)
         }
@@ -688,7 +758,7 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondSceneHandle
         loop.start()
         resurrection.pageVisible()
       }
-      for (const session of sessions) {
+      for (const session of sessions.values()) {
         session.shell.send('sleep', { paused })
       }
     },
@@ -724,8 +794,8 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondSceneHandle
       // why: Escape lets go of a carry too — the koi is released from wherever the drag last streamed it, exactly as a drop would have left it.
       drag = null
       // note: release() only deletes the entry being visited, which set iteration allows mid-walk.
-      for (const framework of inspected) {
-        release(framework)
+      for (const id of inspected) {
+        release(id)
       }
       refreshCursor()
       return true

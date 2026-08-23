@@ -14,8 +14,7 @@
  * with `?vitals=1` (remembered until `?vitals=0`), and when it is off the
  * pond spends nothing on it.
  */
-import type { KoiFramework } from '@hyperfrontend/demo-koi-lib'
-import { KOI_FRAMEWORKS } from '@hyperfrontend/demo-koi-lib'
+import type { KoiInstanceId } from '../scene/instance-id'
 
 /** Where the opt-in flag is remembered, per origin. */
 const VITALS_FLAG_KEY = 'koi-pond:vitals'
@@ -40,8 +39,8 @@ export type FrameHealth = 'ok' | 'loading' | 'no-canvas' | 'no-document' | 'no-f
 
 /** The mounted vitals overlay. */
 export interface PondVitals {
-  /** Adds one line to the log; koi-level notes name their framework. */
-  record(framework: KoiFramework | null, kind: string, detail?: string): void
+  /** Adds one line to the log; koi-level notes name their instance. */
+  record(instance: KoiInstanceId | null, kind: string, detail?: string): void
   /** Stops the probe and removes the panel. */
   dispose(): void
 }
@@ -150,6 +149,18 @@ interface FishProbe {
   reading: HTMLElement
 }
 
+/** Reads which instances currently hold a layer in the scene. */
+function livingInstances(root: HTMLElement): KoiInstanceId[] {
+  const ids: KoiInstanceId[] = []
+  for (const layer of root.querySelectorAll('.koi-layer[data-instance]')) {
+    const id = (<HTMLElement>layer).dataset['instance']
+    if (id !== undefined) {
+      ids.push(<KoiInstanceId>id)
+    }
+  }
+  return ids
+}
+
 /**
  * Mounts the vitals overlay into the pond root.
  *
@@ -159,7 +170,7 @@ interface FishProbe {
  * @example Arming the overlay when the visitor asked for it
  * ```typescript
  * const vitals = vitalsRequested(window.location.search) ? mountVitals(root) : null
- * vitals?.record('react', 'error:unresponsive', 'missed 3')
+ * vitals?.record('react:0', 'error:unresponsive', 'missed 3')
  * ```
  */
 export function mountVitals(root: HTMLElement): PondVitals {
@@ -171,7 +182,7 @@ export function mountVitals(root: HTMLElement): PondVitals {
   // why: The watched canvases live inside frames the panel does not own, so their listeners are cut by one abort rather than enumerated.
   const canvasWatch = new AbortController()
   const watchedCanvases = new WeakMap<HTMLCanvasElement, { lost: boolean }>()
-  const probes = new Map<KoiFramework, FishProbe>()
+  const probes = new Map<KoiInstanceId, FishProbe>()
 
   const panel = document.createElement('section')
   panel.className = 'pond-vitals'
@@ -206,11 +217,11 @@ export function mountVitals(root: HTMLElement): PondVitals {
     }
   }
 
-  const record = (framework: KoiFramework | null, kind: string, detail?: string): void => {
+  const record = (instance: KoiInstanceId | null, kind: string, detail?: string): void => {
     if (disposed) {
       return
     }
-    const line = `${stamp()} ${framework === null ? 'pond' : framework} ${kind}${detail === undefined ? '' : ` ${detail}`}`
+    const line = `${stamp()} ${instance === null ? 'pond' : instance} ${kind}${detail === undefined ? '' : ` ${detail}`}`
     lines.push(line)
     if (lines.length > LOG_LIMIT) {
       lines.splice(0, lines.length - LOG_LIMIT)
@@ -223,8 +234,8 @@ export function mountVitals(root: HTMLElement): PondVitals {
     }
     // why: The newest line is the one a visitor mid-incident needs on screen.
     log.scrollTop = log.scrollHeight
-    if (framework !== null) {
-      const probe = probes.get(framework)
+    if (instance !== null) {
+      const probe = probes.get(instance)
       if (probe !== undefined) {
         probe.state.textContent = kind
       }
@@ -261,18 +272,26 @@ export function mountVitals(root: HTMLElement): PondVitals {
 
   const rows = document.createElement('div')
   rows.className = 'pond-vitals-rows'
-  for (const framework of KOI_FRAMEWORKS) {
+
+  // why: The roster is alive — koi join and leave at a visitor's hand — so rows follow the layers the scene actually holds rather than a fixed rank of eight.
+  const probeFor = (instance: KoiInstanceId): FishProbe => {
+    let probe = probes.get(instance)
+    if (probe !== undefined) {
+      return probe
+    }
     const row = document.createElement('div')
     row.className = 'pond-vitals-row'
     const name = document.createElement('span')
-    name.textContent = framework
+    name.textContent = instance
     const state = document.createElement('span')
     state.textContent = '·'
     const reading = document.createElement('span')
     reading.textContent = '·'
     row.append(name, state, reading)
     rows.append(row)
-    probes.set(framework, { health: null, buffer: null, row, state, reading })
+    probe = { health: null, buffer: null, row, state, reading }
+    probes.set(instance, probe)
+    return probe
   }
 
   panel.append(bar, rows, log)
@@ -295,7 +314,7 @@ export function mountVitals(root: HTMLElement): PondVitals {
   record(null, 'boot', `${screenLine} isolated=${window.crossOriginIsolated} cores=${navigator.hardwareConcurrency}`)
   record(null, 'agent', navigator.userAgent)
 
-  const watchCanvas = (canvas: HTMLCanvasElement, framework: KoiFramework | null, label: string): void => {
+  const watchCanvas = (canvas: HTMLCanvasElement, instance: KoiInstanceId | null, label: string): void => {
     if (watchedCanvases.has(canvas)) {
       return
     }
@@ -305,7 +324,7 @@ export function mountVitals(root: HTMLElement): PondVitals {
       'webglcontextlost',
       () => {
         state.lost = true
-        record(framework, 'context-lost', label)
+        record(instance, 'context-lost', label)
       },
       { signal: canvasWatch.signal }
     )
@@ -313,20 +332,20 @@ export function mountVitals(root: HTMLElement): PondVitals {
       'webglcontextrestored',
       () => {
         state.lost = false
-        record(framework, 'context-restored', label)
+        record(instance, 'context-restored', label)
       },
       { signal: canvasWatch.signal }
     )
   }
 
-  const probeFish = (framework: KoiFramework, probe: FishProbe): void => {
-    const layer = root.querySelector(`.koi-layer[data-fish="${framework}"]`)
+  const probeFish = (instance: KoiInstanceId, probe: FishProbe): void => {
+    const layer = root.querySelector(`.koi-layer[data-instance="${instance}"]`)
     if (layer === null) {
       return
     }
     const health = classifyFrame(layer)
     if (health !== probe.health) {
-      record(framework, 'frame', `${probe.health ?? 'unseen'} to ${health}`)
+      record(instance, 'frame', `${probe.health ?? 'unseen'} to ${health}`)
       probe.health = health
     }
     let reading: string = health
@@ -336,7 +355,7 @@ export function mountVitals(root: HTMLElement): PondVitals {
       const doc = frame?.contentDocument ?? null
       const canvas = doc === null ? null : findCanvas(doc)
       if (canvas !== null) {
-        watchCanvas(canvas, framework, 'fish canvas')
+        watchCanvas(canvas, instance, 'fish canvas')
         buffer = `${canvas.width}x${canvas.height}`
         // why: Loss is read from the listener's own memory, never by asking the canvas for a context — a probe that touches getContext would CREATE one on a canvas whose renderer failed, and on a context-starved device could evict the very context it came to observe.
         if (watchedCanvases.get(canvas)?.lost === true) {
@@ -349,7 +368,7 @@ export function mountVitals(root: HTMLElement): PondVitals {
       probe.reading.textContent = reading
     }
     if (buffer !== null && probe.buffer !== null && buffer !== probe.buffer) {
-      record(framework, 'buffer', `${probe.buffer} to ${buffer}`)
+      record(instance, 'buffer', `${probe.buffer} to ${buffer}`)
     }
     probe.buffer = buffer
   }
@@ -357,8 +376,15 @@ export function mountVitals(root: HTMLElement): PondVitals {
   const probeAll = (): void => {
     // why: What the browser says about this page belongs on screen beside the readings: a stopped scene and a hidden page look identical in a capture that shows only one of them.
     title.textContent = `vitals · ${document.visibilityState}`
-    for (const [framework, probe] of probes) {
-      probeFish(framework, probe)
+    const living = new Set(livingInstances(root))
+    for (const instance of living) {
+      probeFish(instance, probeFor(instance))
+    }
+    for (const [instance, probe] of probes) {
+      if (!living.has(instance)) {
+        probe.row.remove()
+        probes.delete(instance)
+      }
     }
     const water = root.querySelector<HTMLCanvasElement>('#surface')
     if (water !== null) {
