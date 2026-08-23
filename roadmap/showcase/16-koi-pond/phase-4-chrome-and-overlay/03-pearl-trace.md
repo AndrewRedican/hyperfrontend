@@ -2,7 +2,7 @@
 
 Part of [Phase 4](README.md) · Guardrails: [plan index](../README.md) · Depends on: the
 outline `path` from [phase 1](../phase-1-lib-consolidation.md#predicted-path), live
-via the [phase 3 repack](../phase-3-instance-model/06-repack-pipeline.md)
+via the [phase 3 repack](../phase-3-instance-model.md#the-repack)
 
 ## Goal
 

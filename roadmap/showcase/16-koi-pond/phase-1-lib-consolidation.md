@@ -3,9 +3,10 @@
 Phase 1 grew `demo-koi-lib` into the single home of the shared koi simulation. All eleven
 sub-plans shipped by 2026-08-22 and their documents were collapsed into this record; what
 remains here is only the residue that phases 2 to 4 build against. Everything landed
-additive to the lib: the eight fish apps still hold their local copies until the
-[phase 3 migration](phase-3-instance-model/05-fish-migration.md), so nothing on `main`
-contradicts shipped prose.
+additive to the lib: the eight fish apps held their local copies until the
+[phase 3 migration](phase-3-instance-model.md#the-migration-shape), and the doctrine
+consequences of that adoption are tracked in
+[phase 3, doctrine coherence](phase-3-instance-model.md#doctrine-coherence).
 
 ## What shipped
 
@@ -45,15 +46,14 @@ against:
 ## Contract 0.8.0
 
 `KOI_CONTRACT_VERSION` reads 0.8.0 in the lib. Both sides must agree on major and minor
-below 1.0.0, so the bump only becomes live when host and fish repack together in the
-[phase 3 repack](phase-3-instance-model/06-repack-pipeline.md); until then the vendored
-shells still speak 0.7.0. The additions:
+below 1.0.0, so the bump went live when host and fish repacked together in the
+[phase 3 repack](phase-3-instance-model.md#the-repack). The additions:
 
 - `pause` carries `resting?: boolean`. With `paused: true, resting: true` the fish holds
   position and sculls, and suppresses the held-inspection chrome entirely (no held
   silhouette, no identity card, no inspector timers). Plain `paused` keeps the
   held-inspection behaviour exactly. The card host sends it in the
-  [phase 3 card profile](phase-3-instance-model/04-card-profile.md).
+  [phase 3 card profile](phase-3-instance-model.md#card-and-full-profiles).
 - `identity` carries a required `instance: number`: 0 for the canonical fish of a
   framework, 1..n for duplicates. The host-chosen `seed` remains the authority the fish
   obeys; the host derives it per instance via `koiVariantSeed(framework, instance)`.
@@ -71,8 +71,8 @@ lean on:
 - **Hosted-ness is an argument.** The runtime never touches `window.parent` (spec-guarded);
   the glue module supplies the hosted fact. The
   [phase 2 `hosted` signal](phase-2-isolated-improvements.md#the-hosted-signal) is
-  its intended source, and the [phase 3 migration](phase-3-instance-model/05-fish-migration.md)
-  feeds it from the SDK handle, deleting the eight per-app `window.parent` sniffs.
+  its intended source, and the [phase 3 migration](phase-3-instance-model.md#the-migration-shape)
+  feeds it from the SDK handle; no per-app `window.parent` sniff survives.
 - `resting` holds position, keeps the scull, and never starts the inspector timers.
 - The outgoing outline carries the predicted path every emission.
 - Release-GL-on-hidden: `sleep {paused: true}` disposes the renderer after the loop
@@ -89,8 +89,8 @@ the world from the frame's own container instead of the device screen:
   floor (the card koi spanning roughly half the card edge is the intended look);
   `MAX_POND` still applies. Above `MIN_POND` it equals `describePond` exactly.
 - It is a sibling entry point, not a flag: the eight fish standalone fallbacks keep
-  `describePond` untouched. Only the host's call site changes, in the
-  [phase 3 card profile](phase-3-instance-model/04-card-profile.md).
+  `describePond` untouched. Only the host's call site changed, in the
+  [phase 3 card profile](phase-3-instance-model.md#card-and-full-profiles).
 - `entryStation(pond, seed, instance)` is instance-aware: ordinal 0 stations are
   byte-identical to the canonical ones; duplicates jitter by the variant seed so twins
   never spawn stacked, respecting the existing separation relaxation.
@@ -115,7 +115,6 @@ Current inventory:
   `relay-fanout`
 
 The host-file markers sit inside files the
-[phase 3 instance refactor](phase-3-instance-model/01-instance-id-refactor.md) rewrites;
-they must stay intact and extraction-green through that refactor, and the whole set is
-re-verified against the final shape in
-[phase 5](phase-5-integration/02-guides-verification.md).
+[phase 3 instance refactor](phase-3-instance-model.md#the-instance-model) rewrote; they
+stayed intact and extraction-green through it, and the whole set is re-verified against
+the final shape in [phase 5](phase-5-integration/02-guides-verification.md).

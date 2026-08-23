@@ -17,8 +17,8 @@ behavior directly.
 
 - **Rows**: one probe row per live instance, labeled framework plus ordinal; rows appear
   and disappear with roster churn instead of the fixed eight (the keying landed in
-  [phase 3 item 01](../phase-3-instance-model/01-instance-id-refactor.md); this is the
-  display side).
+  [phase 3](../phase-3-instance-model.md#the-instance-model); this is the display
+  side).
 - **Log lines**: roster changes (`add`/`remove` with instance id) and cap refusals (with
   the tier named) enter the persisted log via the existing `onDiagnostic` channel.
 - **Boot record**: the first log line records the device tier and the derived cap next

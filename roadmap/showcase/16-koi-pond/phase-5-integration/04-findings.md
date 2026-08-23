@@ -17,8 +17,8 @@ skill.
   a missed visibility edge parks every watchdog at `unobservable` and nothing resets it.
 
 Both are answered by the
-[phase 2 release](../phase-2-isolated-improvements.md#release-gate-blocks-phase-3-item-03);
-record each graduation once it publishes.
+[phase 2 release](../phase-2-isolated-improvements.md#release-gate-cleared) (features
+0.8.0, published 2026-08-23); record each graduation.
 
 ## To evaluate during the instance work (file only if confirmed)
 

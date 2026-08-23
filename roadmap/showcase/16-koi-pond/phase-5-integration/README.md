@@ -4,9 +4,9 @@ The outer world catches up with the new pond: the docs-site swaps instances on e
 the guides stay true, the doctrine prose is rewritten against the final shape, findings
 graduate, and the plan's original victim device signs off.
 
-Depends on [phases 3 and 4](../phase-3-instance-model/README.md); phases 3, 4, and 5
-land on `main` in the same release cycle
-([why](../phase-3-instance-model/README.md#doctrine-coherence)). Decisions and
+Depends on [phase 3](../phase-3-instance-model.md) (shipped) and phase 4; phases 3, 4,
+and 5 land on `main` in the same release cycle
+([why](../phase-3-instance-model.md#doctrine-coherence)). Decisions and
 guardrails: [plan index](../README.md).
 
 ## Sub-plans, in execution order

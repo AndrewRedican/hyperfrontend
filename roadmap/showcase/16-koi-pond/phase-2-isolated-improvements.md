@@ -14,23 +14,15 @@ the residue phases 3 to 5 build against.
 | Gallery outer resurrection | `apps/docs-site/src/components/demos/embed-resurrection.ts`                       |
 | Device tier                | `apps/demos/koi-pond/host/src/runtime/device-tier.ts`                             |
 
-## Release gate (blocks phase 3, item 03)
+## Release gate (cleared)
 
-**The `hosted` signal and the SDK visibility fix are in source but not published.** The
-released `@hyperfrontend/features` is 0.7.1 and carries neither; every demo, including the
-pond, consumes the published package and its vendored shells, never workspace source.
-[Deferred boot](phase-3-instance-model/03-deferred-boot.md) cannot be written until the
-release lands and the pond's dependency moves off 0.7.1.
-
-The `hosted` change is a `feat` and must produce a **minor** bump, with the visibility
-`fix` absorbed into the same release. Verify the computed version before the release
-merge: the changelog window has under-bumped feature releases before (0.7.1 shipped four
-feats as a patch).
-
-Each vendored fish shell bundles the whole SDK and declares no dependency on it, so the
-SDK-side fix reaches the eight inner sessions only when the shells are rebuilt against the
-release. The [repack](phase-3-instance-model/06-repack-pipeline.md) that carries contract
-0.8.0 is the same pass that carries it.
+The gate cleared on 2026-08-23: `@hyperfrontend/features` **0.8.0** published carrying
+the `hosted` signal and the visibility fix, as a correct minor bump (the changelog
+window did not under-bump this time). The pond host and all eight fish pin 0.8.0, and
+the [phase 3 repack](phase-3-instance-model.md#the-repack) rebuilt every vendored shell
+against it, so the SDK-side fixes reach the inner sessions in the composed build.
+[Deferred boot](phase-3-instance-model.md#the-boot-decision) is written against the
+released handle.
 
 ## The `hosted` signal
 
@@ -52,8 +44,8 @@ returns and readable before any handshake. Facts later phases code against:
 - **The sniffs it retires.** `window.parent === window` lives in `originRelation()` in all
   eight fish apps; the lib runtime takes hosted-ness as an argument
   ([phase 1, runtime](phase-1-lib-consolidation.md#runtime)) and the
-  [phase 3 migration](phase-3-instance-model/05-fish-migration.md) feeds it from this
-  handle, deleting the sniff eight times.
+  [phase 3 migration](phase-3-instance-model.md#the-migration-shape) feeds it from
+  this handle; no sniff survives.
 - Phase 5's doctrine sweep reads `apps/demos/koi-pond/README.md` and its clock and
   heartbeat neighbours only to confirm no sentence implies a feature cannot know it is
   unhosted; they need no koi-driven changes.
@@ -68,12 +60,13 @@ silence never puts the pond to sleep.
 
 - **`dispose()` is an obligation, not a courtesy.** `createVisibilityWatch`
   (`host/src/scene/visibility.ts`) releases its listener, poll and probe frame on
-  `dispose()`. Nothing calls it yet. [Phase 3](phase-3-instance-model/README.md) destroys
-  the card instance to cold-open the expanded one, and a discarded instance still holding a
+  `dispose()`. Nothing calls it yet. The
+  [expand choreography](phase-5-integration/01-expand-choreography.md) destroys the card
+  instance to cold-open the expanded one, and a discarded instance still holding a
   timer and a probe frame would keep waking a scene that no longer exists.
 - **Resurrection no longer listens for itself.** `createResurrection` takes an `isHidden()`
   seam and exposes `pageVisible()`; the pond calls it from the watch's `apply`. The
-  [instance refactor](phase-3-instance-model/01-instance-id-refactor.md) and the
+  [instance refactor](phase-3-instance-model.md#the-instance-model) and the
   [expand choreography](phase-5-integration/01-expand-choreography.md) both touch this
   handle.
 - **One overlay instrument shipped early**, as an explicit exception to
@@ -94,7 +87,7 @@ silence never puts the pond to sleep.
 `MAX_CANVAS_DPR` is 2 (`host/src/scene/pixel-ratio.ts`), applied by the floor, the
 interactions overlay and the 2D surface painter, matching the ceiling the WebGL surfaces
 already lived by. A straight capability cap: no tiering, no user-agent checks. The
-[card profile](phase-3-instance-model/04-card-profile.md) inherits it with no work.
+[card profile](phase-3-instance-model.md#card-and-full-profiles) inherits it with no work.
 
 ## Gallery outer resurrection
 
@@ -122,7 +115,7 @@ user-agent sniffing.
 - Eight frameworks swim in this pond, so duplicates only become reachable above 8: the cap
   is the only mechanism, and no separate duplicate gate exists.
 
-The cap feeds the [dynamic shoal](phase-3-instance-model/02-dynamic-shoal.md) and the
+The cap feeds the [dynamic shoal](phase-3-instance-model.md#the-shoal-handle) and the
 [shoal panel's](phase-4-chrome-and-overlay/01-shoal-panel.md) refusal state; the tier name
 goes into the [vitals boot record](phase-4-chrome-and-overlay/05-vitals-updates.md).
 

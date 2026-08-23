@@ -4,7 +4,7 @@ The visitor-facing layer over the instance model: the roster becomes the interac
 shoal panel, and the interaction overlay's color-coded grammar is fully replaced by the
 monochrome grammar (gradient cones, pearl trace, sliding caret).
 
-Depends on [phase 3](../phase-3-instance-model/README.md) (instances, dynamic shoal) and
+Depends on [phase 3](../phase-3-instance-model.md) (shipped: instances, dynamic shoal) and
 [phase 1](../phase-1-lib-consolidation.md#predicted-path) (the path on the outline).
 Decisions and guardrails: [plan index](../README.md).
 
