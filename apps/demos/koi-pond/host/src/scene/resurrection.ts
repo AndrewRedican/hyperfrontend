@@ -37,6 +37,8 @@ export type ResurrectionNote = 'scheduled' | 'deferred' | 'recovered' | 'reopene
 export interface ResurrectionOptions {
   /** Whether a koi's session is answering right now. */
   isPresent(framework: KoiFramework): boolean
+  /** Whether the page is hidden, as the pond understands it. */
+  isHidden(): boolean
   /** Opens a koi's session again; the shell replaces the dead mount itself. */
   reopen(framework: KoiFramework): void
   /** Hears what the policy decided, for the diagnostics log. */
@@ -49,6 +51,8 @@ export interface Resurrection {
   frameDied(framework: KoiFramework): void
   /** A koi's session opened; arms the stability window that restores its budget. */
   opened(framework: KoiFramework): void
+  /** The page can be watched again; releases whatever was held for it. */
+  pageVisible(): void
   /** Stops every pending timer and stands the policy down. */
   dispose(): void
 }
@@ -71,6 +75,7 @@ interface FishRecord {
  * ```typescript
  * const resurrection = createResurrection({
  *   isPresent: (framework) => present.has(framework),
+ *   isHidden: () => visibility.hidden,
  *   reopen: (framework) => shellFor(framework).open(),
  * })
  * shell.on('error', (data) => {
@@ -117,7 +122,7 @@ export function createResurrection(options: ResurrectionOptions): Resurrection {
       options.note?.(framework, 'recovered', 'answered during the grace')
       return
     }
-    if (document.hidden) {
+    if (options.isHidden()) {
       // why: Reopening into a hidden page races throttled timers against the handshake deadline for a scene nobody is watching; the attempt keeps until the visitor returns.
       record.waitingForVisible = true
       options.note?.(framework, 'deferred', 'until the page is visible')
@@ -125,24 +130,6 @@ export function createResurrection(options: ResurrectionOptions): Resurrection {
     }
     attempt(framework, record)
   }
-
-  const onVisibilityChange = (): void => {
-    if (document.hidden) {
-      return
-    }
-    for (const [framework, record] of fishes) {
-      if (!record.waitingForVisible) {
-        continue
-      }
-      record.waitingForVisible = false
-      // why: A frame that recovered while hidden has not been allowed to say so — the watchdog grants no health until the page can watch it beat again. The grace runs once more from here, and only an absence that survives it is acted on.
-      record.timer = window.setTimeout(() => {
-        fire(framework)
-      }, REVIVE_DELAY_MS)
-    }
-  }
-
-  document.addEventListener('visibilitychange', onVisibilityChange)
 
   return {
     frameDied(framework) {
@@ -175,8 +162,19 @@ export function createResurrection(options: ResurrectionOptions): Resurrection {
       record.waitingForVisible = false
       armStability(record)
     },
+    pageVisible() {
+      for (const [framework, record] of fishes) {
+        if (!record.waitingForVisible) {
+          continue
+        }
+        record.waitingForVisible = false
+        // why: A frame that recovered while hidden has not been allowed to say so — the watchdog grants no health until the page can watch it beat again. The grace runs once more from here, and only an absence that survives it is acted on.
+        record.timer = window.setTimeout(() => {
+          fire(framework)
+        }, REVIVE_DELAY_MS)
+      }
+    },
     dispose() {
-      document.removeEventListener('visibilitychange', onVisibilityChange)
       for (const record of fishes.values()) {
         if (record.timer !== null) {
           window.clearTimeout(record.timer)
