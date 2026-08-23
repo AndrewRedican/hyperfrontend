@@ -23,8 +23,10 @@ export interface DemoManifestEntry {
   featureUrl?: string
   /** `true` once the demo's implementation is merged but its live origin has not deployed yet. */
   built?: boolean
-  /** `true` when the card offers expanding the running embed over the page — the card is a window onto the same live scene, never a second session. */
+  /** `true` when the card offers stretching the demo over the page. */
   expandable?: boolean
+  /** `true` when expanding opens the demo afresh for the overlay, and collapsing opens it afresh for the card; otherwise one session is carried across both scenes. */
+  reopensOnExpand?: boolean
   /** Frameworks on each side of the boundary. */
   stack: string
   /** High-value source locations for the demo's host and hostee implementations. */
@@ -106,10 +108,11 @@ export const DEMO_MANIFEST: readonly DemoManifestEntry[] = [
     slug: 'koi-pond',
     title: 'Koi Pond',
     description:
-      'Eight koi, eight separate applications, eight frameworks, all swimming in one continuous scene. Disturb the water and watch the shoal scatter across the boundary; hover a fish to see which framework renders it.',
+      'Eight frameworks, eight separate applications, one continuous scene. Expand the pond and stock it: add koi, remove them, keep two of a framework side by side. Disturb the water and watch the shoal scatter across the boundary; hover a fish to see which framework renders it.',
     boundary: 'cross-site',
     featureUrl: koiPondFeatureUrl(),
     expandable: true,
+    reopensOnExpand: true,
     stack: 'Eight feature apps · vanilla-TS pond host',
     sourceLinks: [
       { label: 'Pond host (vanilla TS)', href: `${REPO}/tree/main/apps/demos/koi-pond/host` },
