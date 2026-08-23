@@ -53,6 +53,15 @@ export interface Resurrection {
   opened(id: KoiInstanceId): void
   /** The page can be watched again; releases whatever was held for it. */
   pageVisible(): void
+  /**
+   * A koi left the roster on purpose; drops its record and any pending reopen.
+   *
+   * The policy only governs instances the roster still wants — reviving a koi
+   * a visitor just removed would put the fish straight back in their hand.
+   *
+   * @param id - The instance that was removed.
+   */
+  forget(id: KoiInstanceId): void
   /** Stops every pending timer and stands the policy down. */
   dispose(): void
 }
@@ -161,6 +170,19 @@ export function createResurrection(options: ResurrectionOptions): Resurrection {
       }
       record.waitingForVisible = false
       armStability(record)
+    },
+    forget(id) {
+      const record = fishes.get(id)
+      if (record === undefined) {
+        return
+      }
+      if (record.timer !== null) {
+        window.clearTimeout(record.timer)
+      }
+      if (record.stability !== null) {
+        window.clearTimeout(record.stability)
+      }
+      fishes.delete(id)
     },
     pageVisible() {
       for (const [id, record] of fishes) {

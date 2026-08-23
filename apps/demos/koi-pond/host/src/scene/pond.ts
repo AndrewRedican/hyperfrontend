@@ -11,9 +11,11 @@
  */
 import type { KoiFramework, KoiOutline, Vec2 } from '@hyperfrontend/demo-koi-lib'
 import type { PondScene, SceneScale } from '../feature/wire-contract'
+import type { DeviceTier } from '../runtime/device-tier'
 import type { KoiInstanceId } from './instance-id'
 import type { KoiSession } from './koi-sessions'
 import { KOI_FRAMEWORKS, describePond, mayRipple, pondPoint, pondWindow } from '@hyperfrontend/demo-koi-lib'
+import { readDeviceProfile } from '../runtime/device-tier'
 import { createDepthDirector } from './depth-director'
 import { createFrameLoop } from './raf-loop'
 import { createInteractionsPainter } from './interactions'
@@ -22,13 +24,13 @@ import { createResurrection } from './resurrection'
 import { createSelectionChrome } from './selection'
 import { createRoster } from './roster'
 import { createSequenceTracker } from './sequence'
-import { createStage, setCurtain, setLayerDepth, setLayerPresent } from './stage'
+import { createStage, removeLayer, setCurtain, setLayerDepth, setLayerPresent } from './stage'
 import { createSurfacePainter } from './surface-canvas'
 import { createVisibilityWatch } from './visibility'
 import { createWaterPainter } from './water-gl'
 import { acceptsRipple, addRipple, advanceRipples, createRippleField } from './ripples'
 import { fishHomeUrl, identityFor, openInstance } from './koi-sessions'
-import { instanceFramework } from './instance-id'
+import { instanceFramework, nextOrdinal } from './instance-id'
 import { paintFloor } from './floor'
 
 /** How often the host relays each koi its neighbours, in milliseconds. */
@@ -71,6 +73,9 @@ const TOUCH_DRAG_SLOP_PX = 12
 /** How close to the world's edge a carried koi may be set down, in nominal fish lengths. */
 const DRAG_EDGE_INSET_FL = 0.3
 
+/** How long a removed koi's polite close may take before its layer is torn down anyway, in milliseconds. */
+const CLOSE_GRACE_MS = 4000
+
 /** What the pond tells whatever mounted it. */
 export interface PondHooks {
   /**
@@ -96,6 +101,26 @@ export interface PondHooks {
   onDiagnostic?(instance: KoiInstanceId | null, kind: string, detail?: string): void
 }
 
+/** One living koi, as the host's shoal chrome reads the roster. */
+export interface ShoalMember {
+  /** The instance id everything session-shaped keys by. */
+  id: KoiInstanceId
+  /** The framework rendering it. */
+  framework: KoiFramework
+  /** Which of its framework's koi it is; 0 is the canonical fish. */
+  ordinal: number
+}
+
+/** The living roster and the ceiling the device puts over it. */
+export interface ShoalState {
+  /** The device tier the ceiling derives from. */
+  tier: DeviceTier
+  /** The most koi this device seats. */
+  cap: number
+  /** Every living koi, in joining order. */
+  roster: ShoalMember[]
+}
+
 /** The created scene: the contract-driven slice plus the host chrome's own handles. */
 export interface PondSceneHandle extends PondScene {
   /**
@@ -112,6 +137,30 @@ export interface PondSceneHandle extends PondScene {
    * @param on - Whether to draw each koi's sensing cone and decided trajectory.
    */
   setInteractions(on: boolean): void
+  /**
+   * Adds another koi of a framework to the shoal.
+   *
+   * The newcomer takes its framework's lowest free ordinal, so a fish removed
+   * and re-added comes back as the same animal. At the device-tier cap the add
+   * is refused and diagnosed instead.
+   *
+   * @param framework - The framework to grow.
+   * @returns The new instance's id, or `null` when the cap refused it.
+   */
+  addKoi(framework: KoiFramework): KoiInstanceId | null
+  /**
+   * Removes one koi from the shoal.
+   *
+   * The session closes politely first; the layer is torn down once the close
+   * lands, or after a grace for a session past answering. The last koi is
+   * refused — the pond is never empty.
+   *
+   * @param id - The instance to remove.
+   * @returns `true` when the removal began.
+   */
+  removeKoi(id: KoiInstanceId): boolean
+  /** The living roster and the device ceiling, for the host's shoal chrome. */
+  shoalState(): ShoalState
 }
 
 /**
@@ -164,6 +213,9 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondSceneHandle
   } | null = null
 
   const sessions = new Map<KoiInstanceId, KoiSession>()
+  // why: A removed koi's layer lives on until its polite close lands, so its ordinal is not free yet — a twin re-added into that window would inherit a layer still holding the dying frame.
+  const leaving = new Set<KoiInstanceId>()
+  const device = readDeviceProfile()
   const chrome = createSelectionChrome(root)
   // why: The browser may kill any frame it likes on a phone; the resurrection is what turns that from a permanent hole in the shoal into a pause.
   const resurrection = createResurrection({
@@ -483,7 +535,10 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondSceneHandle
       if ((<{ reason?: string }>data)?.reason === 'open-timeout' && (retries.get(id) ?? 0) < OPEN_RETRIES) {
         retries.set(id, (retries.get(id) ?? 0) + 1)
         window.setTimeout(() => {
-          shell.open()
+          // why: The roster may have let this koi go while the retry waited; reopening a removed session would mount a frame into a layer the pond already tore down.
+          if (sessions.get(id) === session) {
+            shell.open()
+          }
         }, OPEN_RETRY_DELAY_MS)
       }
     })
@@ -804,6 +859,62 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondSceneHandle
       showInteractions = on
       if (!on) {
         diagnostics.clear()
+      }
+    },
+    addKoi(framework) {
+      if (sessions.size >= device.cap) {
+        hooks.onDiagnostic?.(null, 'shoal:refused', `${device.tier}-tier device seats ${device.cap}`)
+        return null
+      }
+      const session = openSession(framework, nextOrdinal([...sessions.keys(), ...leaving], framework))
+      hooks.onShoal(present.size, sessions.size)
+      session.shell.open()
+      return session.id
+    },
+    removeKoi(id) {
+      const session = sessions.get(id)
+      if (session === undefined) {
+        return false
+      }
+      if (sessions.size <= 1) {
+        hooks.onDiagnostic?.(null, 'shoal:refused', 'the pond is never empty')
+        return false
+      }
+      sessions.delete(id)
+      leaving.add(id)
+      // why: The roster no longer wants this koi, so a revive still pending for it must die with it — the policy only governs instances the roster still wants.
+      resurrection.forget(id)
+      retries.delete(id)
+      setPresent(id, false)
+      for (const moved of director.remove(id, Date.now())) {
+        notifyDepth(moved)
+      }
+      hooks.onShoal(present.size, sessions.size)
+      hooks.onDiagnostic?.(id, 'removed')
+      let torndown = false
+      const finalize = (): void => {
+        if (torndown) {
+          return
+        }
+        torndown = true
+        unsubscribe()
+        session.shell.destroy()
+        removeLayer(stage, id)
+        leaving.delete(id)
+      }
+      // why: The polite close is given first say — never a hard destroy under a live fish — and the grace covers a session past answering.
+      const unsubscribe = session.shell.on('close', () => {
+        finalize()
+      })
+      window.setTimeout(finalize, CLOSE_GRACE_MS)
+      session.shell.close()
+      return true
+    },
+    shoalState() {
+      return {
+        tier: device.tier,
+        cap: device.cap,
+        roster: [...sessions.values()].map((session) => ({ id: session.id, framework: session.framework, ordinal: session.ordinal })),
       }
     },
   }

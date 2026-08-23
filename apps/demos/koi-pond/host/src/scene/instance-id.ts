@@ -49,3 +49,28 @@ export function instanceFramework(id: KoiInstanceId): KoiFramework {
 export function instanceOrdinal(id: KoiInstanceId): number {
   return Number(id.slice(id.indexOf(':') + 1))
 }
+
+/**
+ * The lowest free ordinal for a framework, given the ids already spoken for.
+ *
+ * A freed ordinal is deliberately reusable: the variant seed is a pure
+ * function of framework and ordinal, so a re-added twin returns with the
+ * phenotype it left with — the same fish comes back.
+ *
+ * @param taken - Every id currently spoken for, leaving instances included.
+ * @param framework - The framework wanting another koi.
+ * @returns The lowest ordinal no listed id holds.
+ */
+export function nextOrdinal(taken: Iterable<KoiInstanceId>, framework: KoiFramework): number {
+  const held = new Set<number>()
+  for (const id of taken) {
+    if (instanceFramework(id) === framework) {
+      held.add(instanceOrdinal(id))
+    }
+  }
+  let ordinal = 0
+  while (held.has(ordinal)) {
+    ordinal += 1
+  }
+  return ordinal
+}
