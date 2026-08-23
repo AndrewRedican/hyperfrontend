@@ -100,6 +100,7 @@ export interface SceneBootOptions {
  * wireSceneBoot(feature, scene, { hosted: feature.hosted })
  * ```
  */
+// ref: [guide:compose-independent-features/defer-the-opens] start
 export function wireSceneBoot(link: PondLink, scene: PondScene, options: SceneBootOptions): void {
   if (!options.hosted) {
     scene.setScale('full')
@@ -130,6 +131,7 @@ export function wireSceneBoot(link: PondLink, scene: PondScene, options: SceneBo
     }
   }, SCENE_FALLBACK_MS)
 }
+// ref: [guide:compose-independent-features/defer-the-opens] end
 
 /** What the pond reports back to the gallery that mounted it. */
 export interface PondReporter {
