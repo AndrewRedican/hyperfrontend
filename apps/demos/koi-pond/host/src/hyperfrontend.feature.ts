@@ -64,6 +64,11 @@ wirePondContract(feature, scene)
 // why: The pond decides its scene before opening anything: a direct visit opens the full profile in this same tick, a hosted pond holds its water until the host says what it mounted.
 wireSceneBoot(feature, scene, { hosted: feature.hosted })
 
+if (vitals !== null) {
+  // why: A pond under diagnosis is driven from the console — growing, shrinking, and reading the shoal on the very device whose evidence is being taken — so the armed overlay hands the session the scene handle.
+  ;(<{ koiPond?: typeof scene }>(<unknown>window)).koiPond = scene
+}
+
 // why: The dialog chrome keys off the host's presentation announcements — never off URLs or frame ancestry.
 featureUi.attach(feature)
 mountDialogCloseControls(root, featureUi)
