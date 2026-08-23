@@ -26,7 +26,12 @@ export type SceneScale = 'card' | 'full'
 /** The slice of the scene the pond's own contract drives. */
 export interface PondScene {
   /**
-   * Adopts a presentation scale.
+   * Adopts the scene the pond opens as.
+   *
+   * The first scale to arrive decides the scene: the pond opens the matching
+   * profile and holds it, because an instance never morphs — a card that must
+   * become a full pond is destroyed and reopened by whatever presents it. A
+   * later scale that contradicts the decision is diagnosed and ignored.
    *
    * @param scale - How the pond is being surfaced.
    */
@@ -62,6 +67,68 @@ export function wirePondContract(link: PondLink, scene: PondScene): void {
     const request = <{ fx: number; fy: number }>data
     scene.disturbAt(request.fx, request.fy)
   })
+}
+
+/** How long a hosted pond waits for scene semantics before opening the full profile anyway, in milliseconds. */
+export const SCENE_FALLBACK_MS = 1000
+
+/** What the boot decision knows about how the pond is running. */
+export interface SceneBootOptions {
+  /** Whether a candidate host exists, straight from the SDK handle. */
+  hosted: boolean
+  /** Schedules the fallback deadline; `window.setTimeout` unless a spec drives time by hand. */
+  schedule?(callback: () => void, afterMs: number): void
+}
+
+/**
+ * Decides when the pond opens its scene.
+ *
+ * Unhosted, the answer is synchronous: no host will ever speak, so the full
+ * profile opens in the same tick as boot. Hosted, the pond holds its water
+ * empty until the host says what it mounted: the first `set-scene` names the
+ * scene outright, a presentation in any mode but `embedded` means no gallery
+ * card is coming and reads as full, and a host that never sends scene
+ * semantics forfeits its say when the fallback deadline expires.
+ *
+ * @param link - The feature handle, or a test double of it.
+ * @param scene - The scene whose opening is being decided.
+ * @param options - The hosted fact and, for specs, the clock.
+ *
+ * @example Booting the pond
+ * ```typescript
+ * wirePondContract(feature, scene)
+ * wireSceneBoot(feature, scene, { hosted: feature.hosted })
+ * ```
+ */
+export function wireSceneBoot(link: PondLink, scene: PondScene, options: SceneBootOptions): void {
+  if (!options.hosted) {
+    scene.setScale('full')
+    return
+  }
+  const schedule =
+    options.schedule ??
+    ((callback: () => void, afterMs: number): void => {
+      window.setTimeout(callback, afterMs)
+    })
+  let decided = false
+  // why: The contract wiring routes the scale itself; this subscription only stops the fallback from second-guessing a host that already spoke.
+  link.on('set-scene', () => {
+    decided = true
+  })
+  link.on('presentation', (data) => {
+    const mode = (<{ mode?: unknown }>data).mode
+    // why: Only the gallery's embedded mounts ever send scene semantics — a dialog, popup, or host-opened tab says everything it will ever say with its presentation, so the full profile opens now rather than after a silent second.
+    if (!decided && typeof mode === 'string' && mode !== 'embedded') {
+      decided = true
+      scene.setScale('full')
+    }
+  })
+  schedule(() => {
+    if (!decided) {
+      decided = true
+      scene.setScale('full')
+    }
+  }, SCENE_FALLBACK_MS)
 }
 
 /** What the pond reports back to the gallery that mounted it. */

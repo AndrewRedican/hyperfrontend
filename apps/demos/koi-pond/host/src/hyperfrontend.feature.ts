@@ -16,7 +16,7 @@
  */
 import { createFeature } from '@hyperfrontend/features/hostee'
 import contract from '../koi-pond.contract'
-import { createPondReporter, wirePondContract } from './feature/wire-contract'
+import { createPondReporter, wirePondContract, wireSceneBoot } from './feature/wire-contract'
 import { mountDialogCloseControls } from './components/dialog-close-controls'
 import { mountInteractionsToggle } from './components/interactions-toggle'
 import { mountVitals, vitalsRequested } from './components/vitals'
@@ -60,6 +60,9 @@ const scene = createPond(root, {
 })
 
 wirePondContract(feature, scene)
+
+// why: The pond decides its scene before opening anything: a direct visit opens the full profile in this same tick, a hosted pond holds its water until the host says what it mounted.
+wireSceneBoot(feature, scene, { hosted: feature.hosted })
 
 // why: The dialog chrome keys off the host's presentation announcements — never off URLs or frame ancestry.
 featureUi.attach(feature)

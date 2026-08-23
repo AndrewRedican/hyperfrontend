@@ -191,6 +191,10 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondSceneHandle
   let lastRelayAt = 0
   let lastPulseAt = 0
   let scale: SceneScale = 'full'
+  // why: The scene is decided exactly once — a pond never morphs between card and full in place; whatever presents it destroys and reopens instead.
+  let sceneDecided = false
+  // why: The card's koi rotates by local hour, chosen at boot and held — a card never swaps fish mid-mount, and the expanded trio anchors on the same fish so an expand reads as the same koi with company.
+  const bootHour = new Date().getHours()
   let rootBounds = root.getBoundingClientRect()
   const pointer = { x: 0, y: 0, fresh: false }
   const inspected = new Set<KoiInstanceId>()
@@ -594,8 +598,17 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondSceneHandle
     return session
   }
 
-  for (const framework of KOI_FRAMEWORKS) {
-    openSession(framework, 0).shell.open()
+  /**
+   * Opens the decided scene's roster: the hour-anchored koi alone in a card,
+   * or the trio it anchors in the full scene.
+   *
+   * @param decided - The scene the pond opens as.
+   */
+  const openProfile = (decided: SceneScale): void => {
+    const count = Math.min(decided === 'card' ? 1 : 3, device.cap)
+    for (let offset = 0; offset < count; offset += 1) {
+      openSession(KOI_FRAMEWORKS[(bootHour + offset) % KOI_FRAMEWORKS.length] ?? 'vanilla', 0).shell.open()
+    }
   }
 
   const observer = new ResizeObserver(() => {
@@ -833,11 +846,17 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondSceneHandle
 
   return {
     setScale(next) {
-      if (next === scale) {
+      if (!sceneDecided) {
+        sceneDecided = true
+        scale = next
+        openProfile(next)
+        remeasure()
         return
       }
-      scale = next
-      remeasure()
+      if (next !== scale) {
+        // why: An instance never morphs — a contradicting scene this late is a host bug worth a log line, never a rebuild of the world under a swimming shoal.
+        hooks.onDiagnostic?.(null, 'scene:ignored', `decided ${scale}, told ${next}`)
+      }
     },
     disturbAt(fx, fy) {
       strike(pondPoint(pond, fx, fy))

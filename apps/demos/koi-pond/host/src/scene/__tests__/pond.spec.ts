@@ -1,4 +1,5 @@
 import type { KoiFramework, KoiOutline } from '@hyperfrontend/demo-koi-lib'
+import type { SceneScale } from '../../feature/wire-contract'
 import type { KoiInstanceId } from '../instance-id'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createPond } from '../pond'
@@ -70,7 +71,7 @@ const { shells, createFakeShell, device } = vi.hoisted(() => {
           }
         },
         emit(event, data) {
-          for (const handler of [...(handlers.get(event) ?? [])]) {
+          for (const handler of handlers.get(event) ?? []) {
             handler(data)
           }
         },
@@ -121,17 +122,41 @@ function shellOf(id: KoiInstanceId): FakeShell {
   return shell
 }
 
-/** Builds a pond root, raises the scene, and hands back its spies. */
-function harness() {
+/**
+ * Builds a pond root, raises the scene, and hands back its spies.
+ *
+ * The clock is pinned to an hour-eight boot, so the full profile's trio is
+ * always vanilla, react, and vue; pass `null` to leave the scene undecided.
+ *
+ * @param scale - The scene to decide at boot, or `null` to hold the water empty.
+ */
+function harness(scale: SceneScale | null = 'full') {
   const root = document.createElement('div')
   root.id = 'pond'
   root.setPointerCapture = () => {}
   document.body.append(root)
-  const onShoal = vi.fn()
-  const onSequenceComplete = vi.fn()
-  const onDiagnostic = vi.fn()
+  const onShoal = vi.fn<(connected: number, expected: number) => void>()
+  const onSequenceComplete = vi.fn<(fish: number) => void>()
+  const onDiagnostic = vi.fn<(instance: KoiInstanceId | null, kind: string, detail?: string) => void>()
   const scene = createPond(root, { onShoal, onSequenceComplete, onDiagnostic })
+  if (scale !== null) {
+    scene.setScale(scale)
+  }
   return { root, scene, onShoal, onSequenceComplete, onDiagnostic }
+}
+
+/**
+ * The seed the pond dealt one shell in its identity, failing loudly when none was sent.
+ *
+ * @param shell - The shell whose identity to read.
+ * @returns The dealt seed.
+ */
+function identitySeed(shell: FakeShell): number {
+  const identity = shell.sent.find((message) => message.type === 'identity')
+  if (identity === undefined) {
+    throw new Error('no identity was dealt')
+  }
+  return (<{ seed: number }>identity.data).seed
 }
 
 /**
@@ -163,6 +188,7 @@ beforeEach(() => {
   device.tier = 'middle'
   device.cap = 8
   vi.useFakeTimers()
+  vi.setSystemTime(new Date('2026-08-23T08:15:00'))
   window.matchMedia = <typeof window.matchMedia>(<unknown>((query: string) => ({
     matches: false,
     media: query,
@@ -185,10 +211,39 @@ afterEach(() => {
   document.body.replaceChildren()
 })
 
-describe('raising the pond', () => {
-  it('opens each framework once, as its canonical instance', () => {
-    harness()
-    expect([...shells.keys()]).toEqual(['vanilla:0', 'react:0', 'vue:0', 'svelte:0', 'solid:0', 'preact:0', 'lit:0', 'angular:0'])
+describe('deciding the scene', () => {
+  it('opens nothing until the scene is decided', () => {
+    harness(null)
+    expect(shells.size).toBe(0)
+  })
+
+  it('opens the hour-anchored trio for a full scene, in the deciding tick', () => {
+    harness('full')
+    expect([...shells.keys()]).toEqual(['vanilla:0', 'react:0', 'vue:0'])
+  })
+
+  it('opens the hour koi alone for a card scene', () => {
+    harness('card')
+    expect([...shells.keys()]).toEqual(['vanilla:0'])
+  })
+
+  it('anchors the trio on the local hour', () => {
+    vi.setSystemTime(new Date('2026-08-23T14:15:00'))
+    harness('full')
+    expect([...shells.keys()]).toEqual(['lit:0', 'angular:0', 'vanilla:0'])
+  })
+
+  it('ignores and diagnoses a scene that contradicts the decision', () => {
+    const { scene, onDiagnostic } = harness('card')
+    scene.setScale('full')
+    expect(shells.size).toBe(1)
+    expect(onDiagnostic).toHaveBeenCalledWith(null, 'scene:ignored', 'decided card, told full')
+  })
+
+  it('lets the decided scene be repeated without complaint', () => {
+    const { scene, onDiagnostic } = harness('full')
+    scene.setScale('full')
+    expect(onDiagnostic).not.toHaveBeenCalledWith(null, 'scene:ignored', expect.anything())
   })
 
   it('deals an identity carrying the instance ordinal on open', () => {
@@ -214,22 +269,24 @@ describe('growing the shoal', () => {
   })
 
   it('refuses the koi past the cap and diagnoses the tier', () => {
+    device.cap = 3
     const { scene, onDiagnostic } = harness()
     expect(scene.addKoi('react')).toBeNull()
     expect(onDiagnostic).toHaveBeenCalledWith(null, 'shoal:refused', expect.stringContaining('middle'))
   })
 
   it('leaves no session behind with a refusal', () => {
+    device.cap = 3
     const { scene } = harness()
     scene.addKoi('react')
-    expect(scene.shoalState().roster).toHaveLength(8)
+    expect(scene.shoalState().roster).toHaveLength(3)
   })
 
   it('reports the grown roster to the gallery', () => {
     device.cap = 12
     const { scene, onShoal } = harness()
     scene.addKoi('react')
-    expect(onShoal).toHaveBeenLastCalledWith(0, 9)
+    expect(onShoal).toHaveBeenLastCalledWith(0, 4)
   })
 })
 
@@ -266,7 +323,7 @@ describe('shrinking the shoal', () => {
     const { scene, onShoal } = harness()
     scene.addKoi('react')
     scene.removeKoi('react:1')
-    expect(onShoal).toHaveBeenLastCalledWith(0, 8)
+    expect(onShoal).toHaveBeenLastCalledWith(0, 3)
   })
 
   it('cancels a revive still pending for a removed koi', () => {
@@ -284,7 +341,7 @@ describe('shrinking the shoal', () => {
     const { scene, onDiagnostic } = harness()
     const roster = scene.shoalState().roster.map((member) => member.id)
     const outcomes = roster.map((id) => scene.removeKoi(id))
-    expect(outcomes).toEqual([true, true, true, true, true, true, true, false])
+    expect(outcomes).toEqual([true, true, false])
     expect(onDiagnostic).toHaveBeenCalledWith(null, 'shoal:refused', 'the pond is never empty')
   })
 
@@ -317,12 +374,12 @@ describe('the ordinal deal', () => {
     const { scene } = harness()
     scene.addKoi('react')
     shellOf('react:1').emit('open')
-    const firstSeed = (<{ seed: number }>shellOf('react:1').sent.find((message) => message.type === 'identity')?.data).seed
+    const firstSeed = identitySeed(shellOf('react:1'))
     scene.removeKoi('react:1')
     shellOf('react:1').emit('close')
     scene.addKoi('react')
     shellOf('react:1').emit('open')
-    const secondSeed = (<{ seed: number }>shellOf('react:1').sent.find((message) => message.type === 'identity')?.data).seed
+    const secondSeed = identitySeed(shellOf('react:1'))
     // why: The variant seed is a pure function of framework and ordinal — the same fish comes back, and that determinism is the feature.
     expect(secondSeed).toBe(firstSeed)
   })
@@ -336,7 +393,7 @@ describe('twins in the scene', () => {
     shellOf('react:0').emit('open')
     shellOf('react:1').emit('open')
     shellOf('react:0').emit('status', { state: 'gone' })
-    expect(onShoal).toHaveBeenLastCalledWith(1, 9)
+    expect(onShoal).toHaveBeenLastCalledWith(1, 4)
   })
 
   it('keeps the roster row lit while either twin answers', () => {
