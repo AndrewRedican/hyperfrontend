@@ -14,7 +14,7 @@ import type { PondScene, SceneScale } from '../feature/wire-contract'
 import type { DeviceTier } from '../runtime/device-tier'
 import type { KoiInstanceId } from './instance-id'
 import type { KoiSession } from './koi-sessions'
-import { KOI_FRAMEWORKS, describePond, mayRipple, pondPoint, pondWindow } from '@hyperfrontend/demo-koi-lib'
+import { KOI_FRAMEWORKS, describePond, describePondForFrame, mayRipple, pondPoint, pondWindow } from '@hyperfrontend/demo-koi-lib'
 import { readDeviceProfile } from '../runtime/device-tier'
 import { createDepthDirector } from './depth-director'
 import { createFrameLoop } from './raf-loop'
@@ -311,7 +311,8 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondSceneHandle
     }
     inspected.delete(id)
     chrome.release(id)
-    sendTo(id, 'pause', { paused: false })
+    // why: In a card the fish's home posture is the resting hold, so letting go returns it there — unpausing outright would set it roaming a world barely bigger than its body.
+    sendTo(id, 'pause', scale === 'card' ? { paused: true, resting: true } : { paused: false })
   }
 
   /**
@@ -472,6 +473,10 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondSceneHandle
     shell.on('open', () => {
       shell.send('pond', pond)
       shell.send('identity', identityFor(framework, ordinal, director.settledLevel(id)))
+      if (scale === 'card') {
+        // why: A card wants a stationary-but-alive fish — the resting hold keeps the scull and drops every piece of held chrome, and it sidesteps the roaming pathologies a card-sized world invites.
+        shell.send('pause', { paused: true, resting: true })
+      }
       setLayerDepth(stage, id, director.settledLevel(id))
       setPresent(id, true)
       resurrection.opened(id)
@@ -849,6 +854,10 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondSceneHandle
       if (!sceneDecided) {
         sceneDecided = true
         scale = next
+        if (next === 'card') {
+          // why: A card is a small world of its own, derived from the frame that shows it — not the device's screen seen through a keyhole, which left the card empty water most of the time.
+          pond = describePondForFrame(root.clientWidth, root.clientHeight, motionQuery.matches)
+        }
         openProfile(next)
         remeasure()
         return

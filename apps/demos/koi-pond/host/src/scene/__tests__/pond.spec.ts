@@ -129,11 +129,16 @@ function shellOf(id: KoiInstanceId): FakeShell {
  * always vanilla, react, and vue; pass `null` to leave the scene undecided.
  *
  * @param scale - The scene to decide at boot, or `null` to hold the water empty.
+ * @param frame - CSS dimensions the root pretends to have; jsdom's zeros otherwise.
  */
-function harness(scale: SceneScale | null = 'full') {
+function harness(scale: SceneScale | null = 'full', frame?: { width: number; height: number }) {
   const root = document.createElement('div')
   root.id = 'pond'
   root.setPointerCapture = () => {}
+  if (frame !== undefined) {
+    Object.defineProperty(root, 'clientWidth', { value: frame.width, configurable: true })
+    Object.defineProperty(root, 'clientHeight', { value: frame.height, configurable: true })
+  }
   document.body.append(root)
   const onShoal = vi.fn<(connected: number, expected: number) => void>()
   const onSequenceComplete = vi.fn<(fish: number) => void>()
@@ -233,6 +238,12 @@ describe('deciding the scene', () => {
     expect([...shells.keys()]).toEqual(['lit:0', 'angular:0', 'vanilla:0'])
   })
 
+  it('wraps the trio past the end of the roster', () => {
+    vi.setSystemTime(new Date('2026-08-23T07:05:00'))
+    harness('full')
+    expect([...shells.keys()]).toEqual(['angular:0', 'vanilla:0', 'react:0'])
+  })
+
   it('ignores and diagnoses a scene that contradicts the decision', () => {
     const { scene, onDiagnostic } = harness('card')
     scene.setScale('full')
@@ -251,6 +262,50 @@ describe('deciding the scene', () => {
     shellOf('react:0').emit('open')
     const identity = shellOf('react:0').sent.find((message) => message.type === 'identity')
     expect(identity?.data).toMatchObject({ framework: 'react', instance: 0 })
+  })
+})
+
+describe('the card profile', () => {
+  it('derives the card world from the frame itself', () => {
+    harness('card', { width: 288, height: 180 })
+    shellOf('vanilla:0').emit('open')
+    const world = shellOf('vanilla:0').sent.find((message) => message.type === 'pond')
+    expect(world?.data).toMatchObject({ width: 288, height: 180 })
+  })
+
+  it('keeps the full world derived from the screen', () => {
+    harness('full', { width: 288, height: 180 })
+    shellOf('vanilla:0').emit('open')
+    const world = shellOf('vanilla:0').sent.find((message) => message.type === 'pond')
+    // why: jsdom reports no screen, so the screen-derived world sits at the clamp floor — the point is that a small frame did not shrink it.
+    expect(world?.data).toMatchObject({ width: 800, height: 600 })
+  })
+
+  it('sends the resting hold as soon as the card koi opens', () => {
+    harness('card')
+    shellOf('vanilla:0').emit('open')
+    const pause = shellOf('vanilla:0').sent.find((message) => message.type === 'pause')
+    expect(pause?.data).toEqual({ paused: true, resting: true })
+  })
+
+  it('sends no hold when a full-scene koi opens', () => {
+    harness('full')
+    shellOf('vanilla:0').emit('open')
+    expect(shellOf('vanilla:0').sent.some((message) => message.type === 'pause')).toBe(false)
+  })
+
+  it('returns a released card koi to its resting hold', () => {
+    const { root } = harness('card')
+    shellOf('vanilla:0').emit('open')
+    shellOf('vanilla:0').emit('outline', outlineFor('vanilla', 400, 300))
+    root.dispatchEvent(new MouseEvent('pointerdown', { bubbles: true, clientX: 0, clientY: 0 }))
+    root.dispatchEvent(new MouseEvent('pointerup', { bubbles: true, clientX: 0, clientY: 0 }))
+    root.dispatchEvent(new MouseEvent('pointerdown', { bubbles: true, clientX: 0, clientY: 0 }))
+    root.dispatchEvent(new MouseEvent('pointerup', { bubbles: true, clientX: 0, clientY: 0 }))
+    const lastPause = shellOf('vanilla:0')
+      .sent.filter((message) => message.type === 'pause')
+      .at(-1)
+    expect(lastPause?.data).toEqual({ paused: true, resting: true })
   })
 })
 
