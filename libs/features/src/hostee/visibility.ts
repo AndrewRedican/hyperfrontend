@@ -1,4 +1,5 @@
 import { ControlType } from '../shared/control'
+import { watchPageVisibility } from '../shared/page-visibility'
 
 // note: The feature reports its own page visibility so the host's watchdog can treat silence from a hidden (timer-throttled) page as weak evidence rather than failure — the pages differ when the feature runs in a popup.
 
@@ -15,6 +16,9 @@ export interface VisibilityReporter {
 /**
  * Creates the hostee-side page-visibility reporter.
  *
+ * Each state is sent once: the current one when the reporter starts, and every
+ * change after that.
+ *
  * @param send - The control-channel send function (receives the reserved visibility type).
  * @returns A start/stop handle for the visibility reports.
  *
@@ -26,15 +30,12 @@ export interface VisibilityReporter {
  */
 export function createVisibilityReporter(send: (type: string, data: unknown) => void): VisibilityReporter {
   let cleanup: (() => void) | undefined
-  const report = () => send(ControlType.Visibility, { hidden: document.visibilityState === 'hidden' })
   return {
     start() {
       if (cleanup) {
         return
       }
-      report()
-      document.addEventListener('visibilitychange', report)
-      cleanup = () => document.removeEventListener('visibilitychange', report)
+      cleanup = watchPageVisibility((hidden) => send(ControlType.Visibility, { hidden }))
     },
     stop() {
       if (cleanup) {

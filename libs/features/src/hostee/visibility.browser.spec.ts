@@ -28,11 +28,23 @@ describe('createVisibilityReporter', () => {
     reporter.stop()
   })
 
+  it('sends each state once', () => {
+    const send = jest.fn()
+    const reporter = createVisibilityReporter(send)
+    reporter.start()
+    setVisibilityState('hidden')
+    document.dispatchEvent(new Event('visibilitychange'))
+    document.dispatchEvent(new Event('visibilitychange'))
+    expect(send).toHaveBeenCalledTimes(2)
+    reporter.stop()
+  })
+
   it('does not double-subscribe when started twice', () => {
     const send = jest.fn()
     const reporter = createVisibilityReporter(send)
     reporter.start()
     reporter.start()
+    setVisibilityState('hidden')
     document.dispatchEvent(new Event('visibilitychange'))
     expect(send).toHaveBeenCalledTimes(2)
     reporter.stop()
@@ -44,6 +56,7 @@ describe('createVisibilityReporter', () => {
     reporter.start()
     reporter.stop()
     reporter.stop()
+    setVisibilityState('hidden')
     document.dispatchEvent(new Event('visibilitychange'))
     expect(send).toHaveBeenCalledTimes(1)
   })
