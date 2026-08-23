@@ -15,7 +15,8 @@
     "apps/demos/koi-pond/fish-vanilla/koi-fish.contract.ts",
     "apps/demos/koi-pond/fish-vanilla/feature.config.ts",
     "apps/demos/koi-pond/lib/src/contract/wire.ts",
-    "apps/demos/koi-pond/host/src/hyperfrontend.feature.ts"
+    "apps/demos/koi-pond/host/src/hyperfrontend.feature.ts",
+    "apps/demos/koi-pond/host/src/feature/wire-contract.ts"
   ],
   "demo": "koi-pond",
   "complexity": "advanced",
