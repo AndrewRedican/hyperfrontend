@@ -143,7 +143,7 @@ function approachOn(crossing: KoiCrossing, heading: number): ClosestApproach {
  * @returns `true` when the pair keeps its clearance.
  */
 function clears(crossing: KoiCrossing, arc: number): boolean {
-  // how: The candidate is judged along the heading the arc lands on, which reads the manoeuvre at its most optimistic; a koi swings onto it over a beat rather than instantly, and the tier is re-picked every decision while it does.
+  // how: The candidate is judged along the heading the arc lands on, which reads the manoeuvre at its most optimistic; a koi swings onto it over a beat rather than instantly, and the ladder is re-climbed every decision while it does.
   const approach = approachOn(crossing, crossing.heading + crossing.side * arc)
   return approach.timeS > ENCOUNTER_HORIZON_S || approach.distance >= crossing.clearance
 }

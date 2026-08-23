@@ -69,6 +69,9 @@ const BREAK_DRAWS = 640
 /** The waviness an ordinary turn rides on: none, because a turn is a manoeuvre rather than a drift. */
 const NO_WANDER = (): number => 0
 
+/** How the three avoidance tiers rank against each other, so a standing break can be told a heavier one from a lighter. */
+const EVASION_EFFORT: Readonly<Record<KoiTurnTierName, number>> = { subtle: 0, normal: 1, hard: 2 }
+
 /** A trait band: what the koi with the lowest trait gets, and what the koi with the highest gets. */
 export interface KoiMotionBand {
   /** The value at trait 0. */
@@ -111,6 +114,8 @@ export interface KoiMotionTrim {
   reducedMotionDamping: number
   /** How often the koi re-forms its judgement about neighbours and its itinerary, in seconds. */
   decisionIntervalS: number
+  /** How far ahead the koi speaks for its own heading when it reports what it has committed to, in seconds. */
+  intentHorizonS: number
   /** The boundary urgency that engages a correction. */
   boundaryEngage: number
   /** The softer boundary urgency that releases the correction. */
@@ -175,6 +180,8 @@ export const DEFAULT_MOTION_TRIM: KoiMotionTrim = {
   awarenessBl: { min: 2.2, max: 5.4 },
   reducedMotionDamping: 0.45,
   decisionIntervalS: 0.1,
+  // why: A koi's pull is a bearing it leans on, not a promise it can keep: a waypoint abeam asks for a right angle the animal has no intention of taking this second, and a drift between turns asks for one it will spend ten seconds not taking. What it can honestly answer for is the heading its own helm carries it to over the next couple of seconds, which is long enough for a decided manoeuvre to read as one and short enough that nothing is announced that never happens.
+  intentHorizonS: 2,
   boundaryEngage: 0.12,
   boundaryRelease: 0.05,
   // why: Each tier is the smallest arc that settles its band of crossing, and its gain matches, because a lazy arc steered at full helm is not a lazy manoeuvre.
@@ -352,9 +359,12 @@ export interface KoiMotionOptions {
   /**
    * Watches what the koi commits to.
    *
-   * Fires when the family of what the koi is doing changes and when it decides
-   * to pass a neighbour at another depth, not on every frame that a standing
-   * intention persists. Does nothing by default.
+   * Fires when the family of what the koi is doing changes, when it commits to
+   * a fresh avoidance heading, and when it decides to pass a neighbour at
+   * another depth; not on every frame that a standing intention persists. An
+   * avoidance escalating into a heavier one is a decision the koi takes without
+   * changing what it is doing, so it is announced on its own. Does nothing by
+   * default.
    */
   onDecision?: (decision: KoiDecision) => void
   /**
@@ -524,7 +534,8 @@ export function createKoiMotion(init: KoiMotionInit, options: KoiMotionOptions =
 
   let lastDecisionS = -trim.decisionIntervalS
   let course = init.heading
-  let evasion: { heading: number; gain: number; tier: KoiTurnTierName; offset: number } | null = null
+  // why: An avoidance is a heading the koi commits to, not an arc it re-takes off its own nose every beat: re-anchoring each decision runs the target away from the koi at exactly the rate the koi turns onto it, so the gap never closes and the break becomes an unbounded spiral instead of the costed arc it was chosen as.
+  let evasion: { heading: number; gain: number; tier: KoiTurnTierName; side: -1 | 1 } | null = null
   let paceScale = 1
   let turnUntilS = 0
   let cooldownUntilS = 0
@@ -538,7 +549,11 @@ export function createKoiMotion(init: KoiMotionInit, options: KoiMotionOptions =
   // why: The intent report replays decisions the steering ladder otherwise discards: the waypoint behind `course`, the decided side of a depth pass, and which family the current desire came from.
   let travelTarget: Vec2 | null = null
   let depthIntent: { direction: 'above' | 'below'; untilS: number } | null = null
-  let committed: { heading: number; kind: 'travel' | 'avoid' } = { heading: init.heading, kind: 'travel' }
+  let committed: { heading: number; gain: number; kind: 'travel' | 'avoid' } = {
+    heading: init.heading,
+    gain: trim.glideGain,
+    kind: 'travel',
+  }
   // why: A koi with nothing to steer for holds the nose it has, and the pull is the same rule wherever it is taken from, so every branch of the ladder that comes to that answer shares this one.
   const holdCourse: KoiMotionAim = (_at, facing) => ({ heading: facing, gain: trim.glideGain })
   // why: A prediction replays the rule behind the last frame's pull rather than the bearing it produced, so a horizon re-takes the koi's judgement from every position it integrates.
@@ -547,6 +562,9 @@ export function createKoiMotion(init: KoiMotionInit, options: KoiMotionOptions =
   // why: The observer hears decisions, not frames, so a standing intention is reported once rather than sixty times a second.
   let reportedCause: KoiDecisionCause | null = null
   let reportedPass: number | null = null
+  // why: One evasion escalating into a heavier one is a fresh commitment rather than the same intention persisting, and it is the only decision a koi takes without changing what it is doing, so the beat it was taken on is what tells the two apart.
+  let brokeAtS = 0
+  let reportedBreakS = 0
 
   // why: This koi's own helm: what its turn trait is worth once the cap that keeps every fish inside a fish's agility has been taken off it.
   const helm = lerp(traits.turnResponsiveness, trim.turnRate) * limits.turnMagnitudeCap
@@ -611,6 +629,8 @@ export function createKoiMotion(init: KoiMotionInit, options: KoiMotionOptions =
   const decide = (): void => {
     lastDecisionS = elapsed
     paceScale = 1
+    // why: The break the koi is already swimming is offered back to this beat rather than discarded by it, so a manoeuvre survives its own decision cadence and only changes when the water it was chosen against stops answering it.
+    const standing = evasion
     evasion = null
     let urgency = 0
     let breaking = false
@@ -646,17 +666,17 @@ export function createKoiMotion(init: KoiMotionInit, options: KoiMotionOptions =
         breaking = true
         if (resolution.urgency >= urgency) {
           urgency = resolution.urgency
-          const side = resolution.turn === -1 ? -1 : 1
+          const side: -1 | 1 = resolution.turn === -1 ? -1 : 1
+          const crossing = { position, heading, speed, neighbor, clearance: encounterClearance(self, neighbor), side }
           // why: Effort follows how much of it the crossing actually needs, so a distant meeting is settled with a lean and only a close one is worth the whole break.
-          const tier = chooseTurnTier(
-            { position, heading, speed, neighbor, clearance: encounterClearance(self, neighbor), side },
-            trim.evasionTiers,
-            trim.tierWindowS
-          )
-          const committing = trim.evasionTiers[tier]
-          // why: The arc is kept alongside the bearing it produced, so the break can be re-anchored off a hypothetical heading without the formula being written down twice.
-          const offset = side * committing.arc
-          evasion = { heading: heading + offset, gain: committing.gain, tier, offset }
+          const tier = chooseTurnTier(crossing, trim.evasionTiers, trim.tierWindowS)
+          if (standing !== null && standing.side === side && EVASION_EFFORT[tier] <= EVASION_EFFORT[standing.tier]) {
+            // why: The heading the koi committed to is kept until the crossing asks for more effort than it bought, which is what lets the animal actually arrive on the break it chose; the ladder reads a beat below its own commitment all through a manoeuvre, and honouring that would walk the target away from the koi at exactly the rate the koi closes on it.
+            evasion = standing
+          } else {
+            evasion = { heading: wrapAngle(heading + side * trim.evasionTiers[tier].arc), gain: trim.evasionTiers[tier].gain, tier, side }
+            brokeAtS = elapsed
+          }
         }
       }
     }
@@ -737,9 +757,9 @@ export function createKoiMotion(init: KoiMotionInit, options: KoiMotionOptions =
 
     if (evasion !== null) {
       cooldownUntilS = Math.max(cooldownUntilS, elapsed + 1)
-      const { heading: broken, gain, tier, offset } = evasion
-      // why: A break is a fixed arc off the koi's own nose that its next decision re-anchors, so the rule re-anchors it on the same beat rather than freezing the first bearing and quietly straightening the arc out.
-      const aim = (_at: Vec2, facing: number): KoiFlightAim => ({ heading: facing + offset, gain })
+      const { heading: broken, gain, tier } = evasion
+      // why: A break is an absolute heading the koi has committed to, so the rule holds it across a whole horizon and the prediction curves onto it and straightens out exactly as the koi will.
+      const aim = (): KoiFlightAim => ({ heading: broken, gain })
       return { heading: broken, gain, kind: 'avoid', cause: 'evade', tier, aim }
     }
 
@@ -835,35 +855,69 @@ export function createKoiMotion(init: KoiMotionInit, options: KoiMotionOptions =
   })
 
   /**
-   * The koi's current decision, told as the host's overlay wants it: a family,
-   * a steering target, and how far ahead this koi is anticipating.
+   * The turn rate ceiling the koi's helm actually answers a gain with, in
+   * radians per second.
    *
-   * An avoidance projects along the desired escape heading, the trajectory the
-   * manoeuvre decided on, while ordinary travel points at the real itinerary
-   * waypoint. A decided depth pass is vertical, so it carries a direction
-   * instead of a point; it stays readable while the roll it started plays out,
-   * unless a horizontal avoidance takes over the story.
+   * The very expression the integrator bounds each step by, so what the koi
+   * reports it can do and what it then does are the one arithmetic.
+   *
+   * @param gain - The multiplier the koi is steering with.
+   * @returns The ceiling in radians per second.
+   */
+  const helmCeiling = (gain: number): number => {
+    const overCruise = Math.max(0, speed / pond.fishLength - trim.cruiseBlS.max)
+    return (helm * gain) / (1 + overCruise * limits.turnSpeedTax)
+  }
+
+  /**
+   * The koi's current decision, told as the host's overlay wants it: a family,
+   * the heading and effort it has committed to, a steering target, and the
+   * region it is anticipating encounters in.
+   *
+   * The heading is what the koi will answer for: the pull it settled on, held
+   * to the arc its own helm carries it through in {@link KoiMotionTrim.intentHorizonS}.
+   * A koi leaning on a bearing it has decided not to take yet therefore reports
+   * the lean rather than the bearing, and a koi that has committed to a
+   * manoeuvre reports a heading it is genuinely about to be on, so the gap
+   * between this and {@link KoiOutline.heading} closes as the animal swings and
+   * stands at nothing once it has arrived. The gain beside it is what stands
+   * behind the pull: a drift between turns carries a fraction of the helm, a
+   * decided manoeuvre carries all of it.
+   *
+   * The reach and the clearance are the two numbers {@link resolveEncounter}
+   * tests a neighbour's closest approach against, self-sized: together they are
+   * the capsule this koi genuinely perceives through.
+   *
+   * An avoidance projects its target along the committed escape heading, the
+   * trajectory the manoeuvre decided on, while ordinary travel points at the
+   * real itinerary waypoint. A decided depth pass is vertical, so it carries a
+   * direction instead of a point; it stays readable while the roll it started
+   * plays out, unless a horizontal avoidance takes over the story.
    *
    * @returns The intent report.
    */
   const intent = (): KoiIntent => {
-    // how: The self-sized reading of the pairwise encounter window: how far this koi closes in one anticipation horizon, plus the clearance it keeps for itself.
-    const reachPx = speed * ENCOUNTER_HORIZON_S + bodyLength() * ENCOUNTER_CLEARANCE + bodyGirth() * 2
+    // how: The clearance a same-sized neighbour is owed, which is the half-width of the window the narrow phase judges every crossing in.
+    const clearancePx = bodyLength() * ENCOUNTER_CLEARANCE + bodyGirth() * 2
+    // how: That window's length: the water this koi covers in one anticipation horizon, which is exactly what the closest-approach test is allowed to look through.
+    const reachPx = speed * ENCOUNTER_HORIZON_S
+    const answered = turnToward(heading, committed.heading, helmCeiling(committed.gain) * trim.intentHorizonS)
+    const steering = { heading: answered, gain: committed.gain, reachPx, clearancePx }
+    // why: A steering point has to sit clear of the koi whatever it is doing, and a koi easing to a stop anticipates no water at all, so the projection carries the clearance as its floor.
+    const projection = reachPx + clearancePx
+    const ahead = (): Vec2 => ({
+      x: position.x + Math.cos(committed.heading) * projection,
+      y: position.y + Math.sin(committed.heading) * projection,
+    })
     if (committed.kind === 'avoid') {
-      return {
-        kind: 'avoid',
-        target: { x: position.x + Math.cos(committed.heading) * reachPx, y: position.y + Math.sin(committed.heading) * reachPx },
-        reachPx,
-      }
+      return { ...steering, kind: 'avoid', target: ahead() }
     }
     if (depthIntent !== null && elapsed < depthIntent.untilS) {
-      return { kind: 'depth-change', target: null, direction: depthIntent.direction, reachPx }
+      return { ...steering, kind: 'depth-change', target: null, direction: depthIntent.direction }
     }
-    const target =
-      shore === 'in' && travelTarget !== null
-        ? { x: travelTarget.x, y: travelTarget.y }
-        : { x: position.x + Math.cos(heading) * reachPx, y: position.y + Math.sin(heading) * reachPx }
-    return { kind: 'travel', target, reachPx }
+    // why: A koi outside the pond is steering by something the itinerary knows nothing about, so its target is projected along what it has actually committed to rather than along a waypoint it abandoned.
+    const target = shore === 'in' && travelTarget !== null ? { x: travelTarget.x, y: travelTarget.y } : ahead()
+    return { ...steering, kind: 'travel', target }
   }
 
   return {
@@ -910,9 +964,10 @@ export function createKoiMotion(init: KoiMotionInit, options: KoiMotionOptions =
                 pond,
               }
             )
-      committed = { heading: wants.heading, kind: wants.kind }
-      if (onDecision !== undefined && cause !== reportedCause) {
+      committed = { heading: wants.heading, gain: wants.gain, kind: wants.kind }
+      if (onDecision !== undefined && (cause !== reportedCause || (cause === 'evade' && brokeAtS !== reportedBreakS))) {
         reportedCause = cause
+        reportedBreakS = brokeAtS
         onDecision({ atS: elapsed, cause, kind: wants.kind, heading: wants.heading, gain: wants.gain, depth: null, tier: formed.tier })
       }
       const held: KoiMotionAim = () => ({ heading: wants.heading, gain: wants.gain })
@@ -999,7 +1054,7 @@ export function createKoiMotion(init: KoiMotionInit, options: KoiMotionOptions =
       turnUntilS = 0
       travelTarget = null
       depthIntent = null
-      committed = { heading, kind: 'travel' }
+      committed = { heading, gain: trim.glideGain, kind: 'travel' }
       // why: A prediction must drop the standing rule with everything else it dropped, or a released koi would go on predicting the flee or the break the grab interrupted.
       committedAim = holdCourse
       reportedPass = null

@@ -52,26 +52,35 @@ interface Watched {
   /** The brain. */
   motion: KoiMotion
   /** What it last committed to, or `null` before its first frame. */
-  committed(): KoiDecisionCause | null
+  committed(): string | null
+  /** What prompted that commitment, or `null` before its first frame. */
+  cause(): KoiDecisionCause | null
 }
 
 /**
  * Builds a koi whose committed decisions are observable.
  *
+ * A commitment is named by what prompted it *and* by the heading it settled on,
+ * because a koi escalating one avoidance into a heavier one takes a fresh
+ * decision without changing what it is doing, and a horizon predicted before
+ * that escalation knew nothing about it.
+ *
  * @param init - Everything the brain needs to be born.
  * @returns The brain and the watch on it.
  */
 function watched(init: KoiMotionInit): Watched {
-  let last: KoiDecisionCause | null = null
+  let last: string | null = null
+  let prompted: KoiDecisionCause | null = null
   const motion = createKoiMotion(init, {
     onDecision: (decision) => {
       // why: A granted depth pass is vertical, so it settles nothing about where the koi is steering and must not count as parting from the horizontal manoeuvre a horizon was predicted for.
       if (decision.kind !== 'depth-change') {
-        last = decision.cause
+        last = `${decision.cause}@${decision.heading ?? 'none'}`
+        prompted = decision.cause
       }
     },
   })
-  return { motion, committed: () => last }
+  return { motion, committed: () => last, cause: () => prompted }
 }
 
 /**
@@ -114,7 +123,7 @@ function replay(watch: Watched, steps: number): Replay {
   for (const point of path) {
     motion.advance(DT)
     if (watch.committed() !== at || motion.isAway) {
-      return { gaps, parted: watch.committed() }
+      return { gaps, parted: watch.cause() }
     }
     const { position } = motion.state
     gaps.push(Math.hypot(position.x - point.x, position.y - point.y))

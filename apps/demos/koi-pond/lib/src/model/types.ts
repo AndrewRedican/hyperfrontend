@@ -172,18 +172,58 @@ export type KoiIntentKind = 'travel' | 'avoid' | 'depth-change'
 
 /** One koi's current decision, reported alongside its outline. */
 export interface KoiIntent {
-  /** The decision family, which is also the overlay's colour. */
+  /** The decision family the koi is acting on. */
   kind: KoiIntentKind
   /**
-   * The point the koi is currently steering toward, in pond space — its own
+   * The heading the koi has committed to reaching, in radians.
+   *
+   * The bearing its own steering settled on, held to the arc the koi's helm
+   * genuinely carries it through in the seconds just ahead. That bound is what
+   * makes it answerable: a koi leaning on a waypoint abeam, or drifting between
+   * turns, reports the lean it is actually taking rather than a right angle it
+   * has no intention of turning through this second, while a koi that has
+   * committed to a manoeuvre reports a heading it really is about to be on. So
+   * the gap between this and {@link KoiOutline.heading} is the turn still to
+   * come, it closes as the manoeuvre runs, and it stands at nothing once the
+   * animal has arrived.
+   */
+  heading: number
+  /**
+   * How hard the koi is committed to that heading: the multiplier on its own
+   * turn rate while it steers there.
+   *
+   * A drift between manoeuvres carries a fraction of the helm; a decided turn,
+   * a break, or an escape carries all of it and more. What separates a koi that
+   * is merely pointed somewhere from one that has committed to going there.
+   */
+  gain: number
+  /**
+   * The point the koi is currently steering toward, in pond space: its own
    * waypoint while travelling, the projected escape path while avoiding.
    * `null` when the manoeuvre is vertical.
    */
   target: Vec2 | null
   /** Which way a depth change passes the neighbour. */
   direction?: 'above' | 'below'
-  /** How far ahead the koi is anticipating encounters right now, in pond pixels. */
+  /**
+   * How far ahead the koi is anticipating encounters right now, in pond pixels:
+   * the water it will cover in one anticipation horizon.
+   *
+   * Zero for a koi holding still, which anticipates nothing ahead of it.
+   */
   reachPx: number
+  /**
+   * The clearance the koi keeps around itself, in pond pixels, sized for a
+   * neighbour its own size.
+   *
+   * Together the two are exactly the pair the narrow phase gates every crossing
+   * on: a neighbour is worth avoiding when its closest approach falls inside
+   * {@link KoiIntent.reachPx} of travel and passes within this clearance. So
+   * the region they describe, a band this wide reaching that far ahead with a
+   * cap of the same radius behind, is what the koi genuinely perceives through,
+   * and a drawing of it is a drawing of what the koi can actually notice.
+   */
+  clearancePx: number
 }
 
 /** A pond-space rectangle inside one koi's identity card. */
