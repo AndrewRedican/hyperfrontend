@@ -499,6 +499,8 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondSceneHandle
       if (scale === 'card') {
         // why: A card wants a stationary-but-alive fish — the resting hold keeps the scull and drops every piece of held chrome, and it sidesteps the roaming pathologies a card-sized world invites.
         shell.send('pause', { paused: true, resting: true })
+        // why: Opening stations are laid out to seat a whole shoal without crowding, so on water the size of a card they settle against its edges and hang the animal half outside the frame. One koi in a card belongs in the middle of it, and where a koi sits is the host's call.
+        shell.send('place', pondPoint(pond, 0.5, 0.5))
       }
       setLayerDepth(stage, id, director.settledLevel(id))
       setPresent(id, true)

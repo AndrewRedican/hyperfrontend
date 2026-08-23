@@ -320,6 +320,19 @@ describe('the card profile', () => {
     expect(shellOf('vanilla:0').sent.some((message) => message.type === 'pause')).toBe(false)
   })
 
+  it('seats the card koi in the middle of the card', () => {
+    harness('card', { width: 288, height: 180 })
+    shellOf('vanilla:0').emit('open')
+    const seat = shellOf('vanilla:0').sent.find((message) => message.type === 'place')
+    expect(seat?.data).toEqual({ x: 144, y: 90 })
+  })
+
+  it('seats no full-scene koi anywhere', () => {
+    harness('full')
+    shellOf('vanilla:0').emit('open')
+    expect(shellOf('vanilla:0').sent.some((message) => message.type === 'place')).toBe(false)
+  })
+
   it('returns a released card koi to its resting hold', () => {
     const { root } = harness('card')
     shellOf('vanilla:0').emit('open')
