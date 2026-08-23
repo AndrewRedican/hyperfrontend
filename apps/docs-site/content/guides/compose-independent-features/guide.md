@@ -32,7 +32,7 @@ The host is the only party that can see every feature, so coordination lives the
 
 <!-- snippet: relay-fanout -->
 
-On the receiving side of a schema-less hot path, narrow the payload yourself.
+On the receiving side of a schema-less hot path, narrow the payload yourself. Keep that narrowing in the shared contract package, so every feature reading the action agrees on what counts as usable, and drop what fails rather than throwing: a malformed relay should cost you one entry, not the frame.
 
 <!-- snippet: neighbors-handler -->
 

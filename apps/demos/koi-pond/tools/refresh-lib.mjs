@@ -97,6 +97,43 @@ function lockedIntegrity(consumer) {
 }
 
 /**
+ * Lists the file paths the lib's `exports` map points consumers at.
+ *
+ * @returns {string[]} Package-relative target paths, without the `./` prefix.
+ */
+function exportTargets() {
+  const manifest = JSON.parse(readFileSync(join(LIB_DIR, 'package.json'), 'utf-8'))
+  const targets = []
+  const walk = (node) => {
+    if (typeof node === 'string') {
+      targets.push(node.startsWith('./') ? node.slice(2) : node)
+      return
+    }
+    for (const value of Object.values(node)) {
+      walk(value)
+    }
+  }
+  walk(manifest.exports ?? {})
+  return targets
+}
+
+/**
+ * Lists the package-relative file paths inside a packed tarball.
+ *
+ * @param {string} file - Absolute path to the tarball.
+ * @returns {Set<string>} Every packed path, without the `package/` prefix.
+ */
+function packedPaths(file) {
+  const listing = execFileSync('tar', ['-tzf', file], { encoding: 'utf-8' })
+  return new Set(
+    listing
+      .trim()
+      .split('\n')
+      .map((entry) => entry.slice('package/'.length))
+  )
+}
+
+/**
  * Regenerates the tarball and re-points every consumer at it.
  */
 function refresh() {
@@ -125,6 +162,13 @@ function check() {
   try {
     const fresh = packInto(temp)
     const freshIntegrity = integrityOf(join(temp, fresh))
+    // why: tsc only emits TypeScript output, so a non-TS export target (the stylesheet) reaches the tarball via a separate build step; this catches that step being dropped or an exports entry pointing at nothing.
+    const packed = packedPaths(join(temp, fresh))
+    for (const target of exportTargets()) {
+      if (!packed.has(target)) {
+        failures.push(`exports target ${target} is missing from a fresh pack`)
+      }
+    }
     if (vendored.length !== 1) {
       failures.push(`expected exactly one vendored tarball, found ${vendored.length}`)
     } else if (vendored[0] !== fresh) {

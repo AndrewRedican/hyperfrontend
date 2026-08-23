@@ -8,15 +8,18 @@ import { createEventEmitter } from '../shared/event-emitter'
 import { installResizeObserverStub } from '../testing/resize-observer-stub'
 import { createFeatureHandle, resolveHostWindow } from './lifecycle'
 
+// note: Intervals hand back their own delay as the handle, so a test can say which timer it means: the heartbeat's beat and the visibility watch's poll both run while a feature is open.
 jest.mock('@hyperfrontend/immutable-api-utils/built-in-copy/timers', () => ({
-  setInterval: jest.fn((callback: () => void) => {
+  setInterval: jest.fn((callback: () => void, delay: number) => {
     callback()
-    return 1
+    return delay
   }),
   clearInterval: jest.fn(),
   // note: Request timeouts never fire here — timeout behaviour is covered by the shared request peer spec.
   setTimeout: jest.fn(() => 1),
   clearTimeout: jest.fn(),
+  requestAnimationFrame: jest.fn(() => 1),
+  cancelAnimationFrame: jest.fn(),
 }))
 
 jest.mock('@hyperfrontend/network-protocol/browser/v1', () => ({ createProtocol: jest.fn(() => 'v1-provider') }))
@@ -314,7 +317,7 @@ describe('createFeatureHandle', () => {
     const mock = createMockChannel()
     createFeatureHandle(createMockBroker(mock.channel).broker, hostWindow, createEventEmitter(), { contract: emptyContract })
     mock.trigger('open')
-    expect(setInterval).toHaveBeenCalledTimes(1)
+    expect(setInterval).toHaveBeenCalledWith(expect.any(Function), 1000)
   })
 
   it('stops the heartbeat when the host channel closes', () => {
@@ -322,7 +325,7 @@ describe('createFeatureHandle', () => {
     createFeatureHandle(createMockBroker(mock.channel).broker, hostWindow, createEventEmitter(), { contract: emptyContract })
     mock.trigger('open')
     mock.trigger('close')
-    expect(clearInterval).toHaveBeenCalledTimes(1)
+    expect(clearInterval).toHaveBeenCalledWith(1000)
   })
 
   it('sends a beat through the channel once running', () => {
@@ -366,6 +369,56 @@ describe('createFeatureHandle', () => {
     expect(mock.send).toHaveBeenCalledWith(ControlType.Dirty, { dirty: true })
     handle.setDirty(false)
     expect(mock.send).toHaveBeenCalledWith(ControlType.Dirty, { dirty: false })
+  })
+
+  describe('hosted', () => {
+    it('reports hosted when a host window is resolved', () => {
+      const mock = createMockChannel()
+      const handle = createFeatureHandle(createMockBroker(mock.channel).broker, hostWindow, createEventEmitter(), {
+        contract: emptyContract,
+      })
+      expect(handle.hosted).toBe(true)
+    })
+
+    it('reads identically before ready() is awaited and after the channel opens', async () => {
+      const mock = createMockChannel()
+      const handle = createFeatureHandle(createMockBroker(mock.channel).broker, hostWindow, createEventEmitter(), {
+        contract: emptyContract,
+      })
+      const beforeReady = handle.hosted
+      mock.trigger('open')
+      await handle.ready()
+      expect([beforeReady, handle.hosted]).toEqual([true, true])
+    })
+
+    it('stays true when the host never opens the connection', () => {
+      const mock = createMockChannel()
+      const emitter = createEventEmitter()
+      const errors: unknown[] = []
+      emitter.on('error', (data) => errors.push(data))
+      const handle = createFeatureHandle(createMockBroker(mock.channel).broker, hostWindow, emitter, { contract: emptyContract })
+      mock.trigger('connect-timeout', { elapsedMs: 10_000 })
+      expect({ hosted: handle.hosted, errors }).toEqual({ hosted: true, errors: [{ reason: 'ready-timeout', elapsedMs: 10_000 }] })
+    })
+
+    it('reports unhosted with no display mode when no host window is resolved', () => {
+      const handle = createFeatureHandle(createMockBroker(createMockChannel().channel).broker, null, createEventEmitter(), {
+        contract: emptyContract,
+      })
+      expect({ hosted: handle.hosted, displayMode: handle.displayMode }).toEqual({ hosted: false, displayMode: null })
+    })
+
+    it('leaves ready() pending while unhosted', async () => {
+      const handle = createFeatureHandle(createMockBroker(createMockChannel().channel).broker, null, createEventEmitter(), {
+        contract: emptyContract,
+      })
+      const settled = jest.fn()
+      void handle.ready().then(settled, settled)
+      await createPromise<void>((resolve) => {
+        setTimeout(resolve, 0)
+      })
+      expect(settled).not.toHaveBeenCalled()
+    })
   })
 
   describe('payload validation', () => {

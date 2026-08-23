@@ -38,7 +38,7 @@ export interface KoiContract {
 }
 
 /** The contract cut every pond project is built against. */
-export const KOI_CONTRACT_VERSION = '0.7.0'
+export const KOI_CONTRACT_VERSION = '0.8.0'
 
 /** The contract the pond host and every koi share. */
 export const koiFishContract: KoiContract = {
@@ -74,16 +74,17 @@ export const koiFishContract: KoiContract = {
     {
       type: 'identity',
       description:
-        'Who this koi is: its framework slug, the stable seed every trait derives from, the URL of the app rendering it, and its opening depth level.',
+        "Who this koi is: its framework slug, the stable seed every trait derives from, which of that framework's koi it is, the URL of the app rendering it, and its opening depth level. Instance 0 is the framework's canonical koi and duplicates count up from there; the seed stays the authority every trait derives from, so a duplicate is told apart by the seed the host chose for it, not by its ordinal.",
       schema: {
         type: 'object',
         properties: {
           framework: { type: 'string' },
           seed: { type: 'number' },
+          instance: { type: 'number' },
           url: { type: 'string' },
           depth: { type: 'number' },
         },
-        required: ['framework', 'seed', 'url', 'depth'],
+        required: ['framework', 'seed', 'instance', 'url', 'depth'],
       },
     },
     {
@@ -126,7 +127,8 @@ export const koiFishContract: KoiContract = {
     },
     {
       type: 'sleep',
-      description: 'Whether to hold still. The host pauses off-screen and hidden ponds so the compositing layers stop costing anything.',
+      description:
+        'Whether to hold still. The host pauses off-screen and hidden ponds so the compositing layers stop costing anything. A koi stood down this way stops its loop and hands its drawing surface back, GL context and buffers and all, then builds a fresh one when it is stood back up, so a woken shoal takes a moment to paint again.',
       schema: {
         type: 'object',
         properties: { paused: { type: 'boolean' } },
@@ -136,10 +138,10 @@ export const koiFishContract: KoiContract = {
     {
       type: 'pause',
       description:
-        'Whether this koi should hold its position for inspection. A paused koi stops travelling but keeps sculling in place, keeps reporting its outline, and keeps answering hover — a visitor clicked it to look at it, not to freeze it.',
+        'Whether this koi should hold its position for inspection. A paused koi stops travelling but keeps sculling in place, keeps reporting its outline, and keeps answering hover — a visitor clicked it to look at it, not to freeze it. A resting hold is the same stillness without the inspection: the koi sculls where it is and shows none of the held chrome, no silhouette, no identity card, and no inspector readings.',
       schema: {
         type: 'object',
-        properties: { paused: { type: 'boolean' } },
+        properties: { paused: { type: 'boolean' }, resting: { type: 'boolean' } },
         required: ['paused'],
       },
     },
@@ -161,7 +163,7 @@ export const koiFishContract: KoiContract = {
     {
       type: 'outline',
       description:
-        "The koi's occupied outline as nose-first spine samples with a half-width each, plus heading, speed, depth, and behavioural phase. Ordinarily also the koi's current steering intent — travel, avoidance, or a depth pass, with the point it is steering toward and its anticipation reach — so the host can visualise the decision; omitted while the koi is held. While a visitor holds this koi, also the identity card's geometry — its frame and its three link rectangles — so the host can float real anchors and an inert shield over a card the pointer-transparent frame could never make interactive itself. High cadence, deliberately schema-less.",
+        "The koi's occupied outline as nose-first spine samples with a half-width each, plus heading, speed, depth, and behavioural phase. Ordinarily also the koi's current steering intent — travel, avoidance, or a depth pass, with the point it is steering toward and its anticipation reach — so the host can visualise the decision; omitted while the koi is held. Ordinarily also the advancement the koi has committed to: at most twenty points along the path its wound manoeuvre carries it through, capped by the koi that produces it rather than by wire validation. While a visitor holds this koi, also the identity card's geometry — its frame and its three link rectangles — so the host can float real anchors and an inert shield over a card the pointer-transparent frame could never make interactive itself. High cadence, deliberately schema-less.",
     },
     {
       type: 'depth-request',

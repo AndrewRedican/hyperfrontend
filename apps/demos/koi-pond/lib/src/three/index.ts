@@ -8,6 +8,7 @@
  * @module @hyperfrontend/demo-koi-lib/three
  */
 export type { KoiDebugFlags, KoiDebugLayer } from './debug.js'
+export type { GlRenderer, KoiStage, KoiStagePose } from './koi-stage.js'
 export type { Koi, KoiCollisionChain, KoiDepthResponse, KoiMetrics } from './koi.js'
 export type { KoiUniforms } from './materials.js'
 export type { PondFrameRect, PondView, PondViewport } from './pond-view.js'
@@ -15,6 +16,7 @@ export type { KoiCameraFraming, KoiLightingPreset } from './scene.js'
 
 export { NO_DEBUG, createKoiDebugLayer } from './debug.js'
 export { toBufferGeometry } from './geometry.js'
+export { createKoiStage } from './koi-stage.js'
 export { createKoi } from './koi.js'
 export { applyAppearance, createEyeMaterial, createFinMaterial, createKoiUniforms, createSkinMaterial } from './materials.js'
 export { createPondRenderer, createPondView, fitPondRenderer, sizePondRenderer } from './pond-view.js'

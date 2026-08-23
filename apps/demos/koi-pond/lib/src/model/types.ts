@@ -85,6 +85,16 @@ export interface KoiIdentity {
   framework: KoiFramework
   /** Stable integer seed; every reproducible trait derives from it. */
   seed: number
+  /**
+   * Which of its framework's koi this one is: 0 for the canonical fish, 1 and
+   * up for duplicates of it.
+   *
+   * The ordinal names the copy; it never shapes the animal. Two koi of one
+   * framework differ because the host chose a different {@link KoiIdentity.seed}
+   * for each, so an instance that reads its ordinal to vary itself would be
+   * reading the wrong field.
+   */
+  instance: number
   /** Absolute URL of the app rendering this koi, revealed on hover. */
   url: string
   /** Depth level the host assigned at open. */
@@ -138,6 +148,16 @@ export interface KoiOutline {
    * anywhere.
    */
   intent?: KoiIntent
+  /**
+   * Where this koi is about to be: the advancement its wound manoeuvre carries
+   * it through, as pond-space points nearest first.
+   *
+   * At most twenty points, bounded by the koi that integrates them rather than
+   * by the wire, since the outline is deliberately schema-less. The path
+   * describes only the manoeuvre already committed to, so a decision taken
+   * mid-horizon simply parts company with the path reported before it.
+   */
+  path?: readonly Vec2[]
 }
 
 /**

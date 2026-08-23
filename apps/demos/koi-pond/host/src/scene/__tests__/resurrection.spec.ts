@@ -21,8 +21,10 @@ const policies: Resurrection[] = []
 function harness(present = () => false) {
   const reopened: string[] = []
   const notes: { kind: ResurrectionNote; detail: string }[] = []
+  const page = { hidden: false }
   const policy = createResurrection({
     isPresent: present,
+    isHidden: () => page.hidden,
     reopen: (framework) => {
       reopened.push(framework)
     },
@@ -31,12 +33,7 @@ function harness(present = () => false) {
     },
   })
   policies.push(policy)
-  return { policy, reopened, notes }
-}
-
-/** Pins `document.hidden` for one test. */
-function setHidden(hidden: boolean): void {
-  Object.defineProperty(document, 'hidden', { configurable: true, get: () => hidden })
+  return { policy, reopened, notes, page }
 }
 
 beforeEach(() => {
@@ -47,7 +44,6 @@ afterEach(() => {
   for (const policy of policies.splice(0)) {
     policy.dispose()
   }
-  Reflect.deleteProperty(document, 'hidden')
   vi.useRealTimers()
 })
 
@@ -95,14 +91,14 @@ describe('the resurrection policy', () => {
   })
 
   it('keeps a reopen owed to a hidden page and re-runs the grace when the visitor returns', () => {
-    const { policy, reopened, notes } = harness()
+    const { policy, reopened, notes, page } = harness()
     policy.frameDied('react')
-    setHidden(true)
+    page.hidden = true
     vi.advanceTimersByTime(FIRST_DELAY_MS)
     expect(reopened).toHaveLength(0)
     expect(notes.map((note) => note.kind)).toContain('deferred')
-    setHidden(false)
-    document.dispatchEvent(new Event('visibilitychange'))
+    page.hidden = false
+    policy.pageVisible()
     expect(reopened).toHaveLength(0)
     vi.advanceTimersByTime(FIRST_DELAY_MS)
     expect(reopened).toEqual(['react'])
@@ -110,17 +106,28 @@ describe('the resurrection policy', () => {
 
   it('spares a frame that recovered while the page was hidden', () => {
     let present = false
-    const { policy, reopened, notes } = harness(() => present)
+    const { policy, reopened, notes, page } = harness(() => present)
     policy.frameDied('react')
-    setHidden(true)
+    page.hidden = true
     vi.advanceTimersByTime(FIRST_DELAY_MS)
-    setHidden(false)
+    page.hidden = false
     // why: The watchdog cannot speak health while the page is hidden, so presence only returns after the page does — the re-run grace is what gives it the chance.
     present = true
-    document.dispatchEvent(new Event('visibilitychange'))
+    policy.pageVisible()
     vi.advanceTimersByTime(FIRST_DELAY_MS)
     expect(reopened).toHaveLength(0)
     expect(notes.map((note) => note.kind)).toContain('recovered')
+  })
+
+  it('takes its cue from the pond rather than from the document', () => {
+    const { policy, reopened, page } = harness()
+    policy.frameDied('react')
+    page.hidden = true
+    vi.advanceTimersByTime(FIRST_DELAY_MS)
+    page.hidden = false
+    document.dispatchEvent(new Event('visibilitychange'))
+    vi.advanceTimersByTime(FIRST_DELAY_MS * 2)
+    expect(reopened).toHaveLength(0)
   })
 
   it('makes a grace recovery earn the budget back the same way a reopen does', () => {

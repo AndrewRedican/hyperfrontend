@@ -20,10 +20,10 @@ setInterval(() => feature.send('tick', Date.now()), 1000)
 
 ## API
 
-| Export          | Purpose                                                                 |
-| --------------- | ----------------------------------------------------------------------- |
-| `createFeature` | Connect a feature app to its host; returns `send`/`on`/`ready`/`close`. |
-| `FeatureHandle` | Type of the handle returned by `createFeature`.                         |
+| Export          | Purpose                                                                                 |
+| --------------- | --------------------------------------------------------------------------------------- |
+| `createFeature` | Connect a feature app to its host; returns `send`/`on`/`ready`/`close`.                 |
+| `FeatureHandle` | Type of the handle returned by `createFeature`; carries `hosted` and `displayMode` too. |
 
 `ready()` resolves once the wire handshake with the host completes, and rejects if the host does not open the connection within `readyTimeoutMs` (default 10 s; an `error` with `reason: 'ready-timeout'` is also emitted). Sends issued before the handshake completes queue and flush on open. `send` emits a contract action to the host; `on` subscribes to host messages and the `open`/`closing`/`close`/`error`/`presentation`/`resize` lifecycle events (`closing` is the flush window before a polite close completes). `setDirty` declares unsaved work to the host. `close` disconnects from the host politely.
 
@@ -37,4 +37,6 @@ In **dialog** mode the frame spans the host's viewport, transparent. The SDK pla
 
 The body reset (`resetBody`, on by default) keeps `html`/`body` margin-free and **transparent**, with a `color-scheme` pin matched to the host frame: overriding the background or `color-scheme` with an opaque/dark scheme breaks the transparency that embedded blending and dialog backdrops depend on.
 
-It applies on a standalone visit too, and its stylesheet is injected when `createFeature` runs, landing after the page's own stylesheet and winning at equal specificity. So paint the feature's background on its root layout element, never on `body`; a `body { background: … }` rule silently loses to the reset. Pass `resetBody: false` to opt out entirely and own the reset yourself.
+It applies on a direct top-level visit too: the reset does not need a host. A feature distinguishes that case with `feature.hosted`, `true` when a parent or opener window exists, `false` when the document is top-level, known synchronously from the moment `createFeature` returns; apps never sniff `window.parent` themselves. `hosted: true` promises a host window, not a host that speaks: connection state stays with `ready()` and the lifecycle events, and unhosted, `displayMode` stays `null` and `ready()` stays pending.
+
+The reset stylesheet is injected when `createFeature` runs, landing after the page's own stylesheet and winning at equal specificity. So paint the feature's background on its root layout element, never on `body`; a `body { background: … }` rule silently loses to the reset. Pass `resetBody: false` to opt out entirely and own the reset yourself.

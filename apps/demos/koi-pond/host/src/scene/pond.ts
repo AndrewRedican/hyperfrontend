@@ -20,6 +20,7 @@ import { createRoster } from './roster'
 import { createSequenceTracker } from './sequence'
 import { createStage, setCurtain, setLayerDepth, setLayerPresent } from './stage'
 import { createSurfacePainter } from './surface-canvas'
+import { createVisibilityWatch } from './visibility'
 import { createWaterPainter } from './water-gl'
 import { acceptsRipple, addRipple, advanceRipples, createRippleField } from './ripples'
 import { fishHomeUrl, identityFor, openShoal } from './koi-sessions'
@@ -162,6 +163,8 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondSceneHandle
   // why: The browser may kill any frame it likes on a phone; the resurrection is what turns that from a permanent hole in the shoal into a pause.
   const resurrection = createResurrection({
     isPresent: (framework) => present.has(framework),
+    // why: The policy reads the pond's own answer about visibility rather than the document's, so a page that recovered without saying so does not leave a reopen waiting forever.
+    isHidden: () => visibility.hidden,
     reopen: (framework) => {
       for (const session of sessions) {
         if (session.framework === framework) {
@@ -676,17 +679,19 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondSceneHandle
   })
 
   // why: Eight iframes on their own compositing layers is exactly where a loop running against a hidden tab costs a visitor real battery.
-  document.addEventListener('visibilitychange', () => {
-    const paused = document.hidden
-    hooks.onDiagnostic?.(null, paused ? 'page-hidden' : 'page-visible')
-    if (paused) {
-      loop.stop()
-    } else {
-      loop.start()
-    }
-    for (const session of sessions) {
-      session.shell.send('sleep', { paused })
-    }
+  const visibility = createVisibilityWatch({
+    apply: (paused, source) => {
+      hooks.onDiagnostic?.(null, paused ? 'page-hidden' : 'page-visible', `by ${source}`)
+      if (paused) {
+        loop.stop()
+      } else {
+        loop.start()
+        resurrection.pageVisible()
+      }
+      for (const session of sessions) {
+        session.shell.send('sleep', { paused })
+      }
+    },
   })
 
   // why: A koi whose app is unreachable emits neither open nor error until its handshake deadline; the pond should not be a dark rectangle while that plays out.

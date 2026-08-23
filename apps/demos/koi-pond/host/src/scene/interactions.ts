@@ -11,6 +11,7 @@
  * progress. A held koi reports no intent and simply has nothing drawn.
  */
 import type { KoiOutline } from '@hyperfrontend/demo-koi-lib'
+import { canvasPixelRatio } from './pixel-ratio'
 
 /** The overlay colour of each decision family, as an `r, g, b` triple. */
 const INTENT_COLORS = {
@@ -36,7 +37,7 @@ export interface InteractionsFrame {
   height: number
   /** Pond-space origin of the visible window, so pond-space traces land on the right frame pixels. */
   view: { x: number; y: number }
-  /** Device pixel ratio to render at. */
+  /** Device pixel ratio to render at; a ratio past the canvas ceiling paints at the ceiling. */
   pixelRatio: number
   /** The dead-reckoned outlines to annotate; entries without an intent draw nothing. */
   outlines: readonly KoiOutline[]
@@ -75,16 +76,18 @@ export function createInteractionsPainter(canvas: HTMLCanvasElement): Interactio
       if (context === null || frame.width === 0 || frame.height === 0) {
         return
       }
-      const signature = `${frame.width}x${frame.height}@${frame.pixelRatio}`
+      const ratio = canvasPixelRatio(frame.pixelRatio)
+      // why: The signature is taken from the capped ratio, so a device reporting more than the ceiling never reallocates the backing store over a difference the canvas does not paint.
+      const signature = `${frame.width}x${frame.height}@${ratio}`
       if (signature !== sizedTo) {
         // why: Assigning width resets the whole canvas state, so it only happens when the size actually changed.
-        canvas.width = Math.round(frame.width * frame.pixelRatio)
-        canvas.height = Math.round(frame.height * frame.pixelRatio)
+        canvas.width = Math.round(frame.width * ratio)
+        canvas.height = Math.round(frame.height * ratio)
         canvas.style.width = `${frame.width}px`
         canvas.style.height = `${frame.height}px`
         sizedTo = signature
       }
-      context.setTransform(frame.pixelRatio, 0, 0, frame.pixelRatio, 0, 0)
+      context.setTransform(ratio, 0, 0, ratio, 0, 0)
       context.clearRect(0, 0, frame.width, frame.height)
 
       for (const outline of frame.outlines) {

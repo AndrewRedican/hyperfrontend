@@ -71,6 +71,17 @@ export interface FeatureHandle {
    */
   on(event: string, handler: EventHandler): () => void
   /**
+   * Whether a host window exists for this feature at all: `true` when the
+   * document has a parent window (an embedding iframe) or an opener, `false`
+   * on a direct top-level visit. Known synchronously by the time `createFeature`
+   * returns and never changes; it does not promise the host will speak, since
+   * connection state stays with `ready()` and the lifecycle events. Where
+   * `displayMode` answers how the host mounted the feature, `hosted` answers
+   * whether a host exists: unhosted, `displayMode` stays `null` and `ready()`
+   * stays pending.
+   */
+  readonly hosted: boolean
+  /**
    * The display mode the host announced for this mount, or `null` before the
    * announcement arrives (it is the first message after `open`) and after the
    * channel closes.

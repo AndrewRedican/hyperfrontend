@@ -162,6 +162,26 @@ export interface EncounterSelf {
 }
 
 /**
+ * How far apart a pair of koi has to stay to count as clear of each other.
+ *
+ * The girths ride on top of the length term, so two broad koi claim more water
+ * than two slender ones of the same length: clearance has to follow the bodies
+ * actually in the water.
+ *
+ * @param self - The koi deciding.
+ * @param neighbor - The koi it is closing on.
+ * @returns The separation in CSS pixels.
+ *
+ * @example Judging a predicted pass
+ * ```typescript
+ * const clear = closestApproach(nose, velocity, other.nose, other.velocity).distance >= encounterClearance(self, other)
+ * ```
+ */
+export function encounterClearance(self: EncounterSelf, neighbor: NeighborObservation): number {
+  return Math.max(self.length, neighbor.length) * ENCOUNTER_CLEARANCE + self.girth + neighbor.girth
+}
+
+/**
  * Decides how one koi settles a crossing with another.
  *
  * Two koi separated by {@link PASSING_SEPARATION} levels or more simply pass —
@@ -188,8 +208,7 @@ export function resolveEncounter(self: EncounterSelf, neighbor: NeighborObservat
   const velocity = { x: Math.cos(self.heading) * self.speed, y: Math.sin(self.heading) * self.speed }
   const otherVelocity = { x: Math.cos(neighbor.heading) * neighbor.speed, y: Math.sin(neighbor.heading) * neighbor.speed }
   const approach = closestApproach(self.position, velocity, { x: neighbor.x, y: neighbor.y }, otherVelocity)
-  // why: The girths ride on top of the length term so two broad koi claim more water than two slender ones of the same length — clearance has to follow the bodies actually in the water.
-  const clearance = Math.max(self.length, neighbor.length) * ENCOUNTER_CLEARANCE + self.girth + neighbor.girth
+  const clearance = encounterClearance(self, neighbor)
 
   if (approach.timeS > ENCOUNTER_HORIZON_S || approach.distance > clearance) {
     return held
@@ -258,9 +277,10 @@ export interface EncounterMemory {
    * @param neighbor - The koi it is closing on.
    * @param tieBreak - `true` when this koi takes the give-way side of the pair.
    * @param nowS - The koi's own clock, in seconds.
+   * @param prefer - Which flank the koi would rather break toward, asked for only when a side is about to be latched; the pairwise bearing decides when it is left out.
    * @returns The manoeuvre to make, stable across the crossing.
    */
-  resolve(self: EncounterSelf, neighbor: NeighborObservation, tieBreak: boolean, nowS: number): EncounterResolution
+  resolve(self: EncounterSelf, neighbor: NeighborObservation, tieBreak: boolean, nowS: number, prefer?: () => -1 | 1): EncounterResolution
 }
 
 /**
@@ -278,7 +298,7 @@ export function createEncounterMemory(): EncounterMemory {
   const held = new Map<string, { action: 'turn' | 'slow' | 'accelerate'; turn: -1 | 0 | 1; untilS: number }>()
 
   return {
-    resolve(self, neighbor, tieBreak, nowS) {
+    resolve(self, neighbor, tieBreak, nowS, prefer) {
       const resolution = resolveEncounter(self, neighbor, tieBreak)
       const memory = held.get(neighbor.framework)
       const remembered = memory !== undefined && nowS <= memory.untilS ? memory : undefined
@@ -288,7 +308,8 @@ export function createEncounterMemory(): EncounterMemory {
 
       if (remembered === undefined) {
         if (resolution.action === 'turn') {
-          const turn = resolution.turn === 0 ? 1 : resolution.turn
+          // why: Which side to break toward is the koi's own reading of the whole field it is swimming through; the pairwise bearing stands in only for a caller that offers nothing wider. Either way the choice is latched here, so the side survives the crossing it was made for.
+          const turn = prefer === undefined ? (resolution.turn === 0 ? 1 : resolution.turn) : prefer()
           held.set(neighbor.framework, { action: 'turn', turn, untilS: nowS + ENCOUNTER_HOLD_S })
           return turn === resolution.turn ? resolution : { ...resolution, turn }
         }

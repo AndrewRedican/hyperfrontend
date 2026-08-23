@@ -355,6 +355,8 @@ export function mountVitals(root: HTMLElement): PondVitals {
   }
 
   const probeAll = (): void => {
+    // why: What the browser says about this page belongs on screen beside the readings: a stopped scene and a hidden page look identical in a capture that shows only one of them.
+    title.textContent = `vitals · ${document.visibilityState}`
     for (const [framework, probe] of probes) {
       probeFish(framework, probe)
     }

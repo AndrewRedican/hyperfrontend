@@ -12,6 +12,7 @@
  * machine.
  */
 import { randomPseudo } from '@hyperfrontend/random-generator-utils'
+import { canvasPixelRatio } from './pixel-ratio'
 
 /** Seed the bed is laid out from; changing it lays a different pond. */
 const BED_SEED = 20_260_806
@@ -99,7 +100,7 @@ function fadeEdges(context: CanvasRenderingContext2D, width: number, height: num
  * @param canvas - The floor canvas.
  * @param width - Bed width in CSS pixels.
  * @param height - Bed height in CSS pixels.
- * @param pixelRatio - Device pixel ratio to render at.
+ * @param pixelRatio - Device pixel ratio to render at; a ratio past the canvas ceiling paints at the ceiling.
  * @param alpha - How opaque the bed paints, 0 to 1; below 1 the page beneath the pond stays perceptible.
  * @param fadeCard - Whether to soften the outermost edges for the card scene.
  */
@@ -115,11 +116,12 @@ export function paintFloor(
   if (context === null || width === 0 || height === 0) {
     return
   }
-  canvas.width = Math.round(width * pixelRatio)
-  canvas.height = Math.round(height * pixelRatio)
+  const ratio = canvasPixelRatio(pixelRatio)
+  canvas.width = Math.round(width * ratio)
+  canvas.height = Math.round(height * ratio)
   canvas.style.width = `${width}px`
   canvas.style.height = `${height}px`
-  context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0)
+  context.setTransform(ratio, 0, 0, ratio, 0, 0)
   context.globalAlpha = alpha
 
   // how: A wide radial gradient reads as depth — the middle of the pond falls away, the edges shelve up toward the bank.

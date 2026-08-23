@@ -1,8 +1,10 @@
 /**
  * The virtual pond: a stable coordinate space, and windows onto it.
  *
- * The pond is sized once, from a screen snapshot taken when the scene first
- * opens, and never changes for the life of the running instance. What changes
+ * The pond is sized once, when the scene first opens, from a screen snapshot
+ * for {@link describePond} or from the presenting frame itself for
+ * {@link describePondForFrame}, and never changes for the life of the
+ * running instance. What changes
  * is the *view* — the window of pond space the presenting frame currently
  * shows. A gallery card, an expanded overlay, and a debug panel are different
  * windows onto the same pond; none of them redefines the water. Pond space
@@ -20,7 +22,7 @@
 import { randomPseudo } from '@hyperfrontend/random-generator-utils'
 import type { PondEnvironment, PondWindow, Vec2 } from '../model/types.js'
 import { DEPTH_LEVELS, KOI_FRAMEWORKS } from '../model/types.js'
-import { koiSeed } from '../model/traits.js'
+import { VARIANT_STRIDE, koiSeed } from '../model/traits.js'
 
 /** How far pond space runs past each pond edge, in nominal fish lengths. */
 export const MARGIN_FISH_LENGTHS = 1.05
@@ -98,9 +100,13 @@ export function pondWindow(pond: { width: number; height: number }, frameWidth: 
  * Describes the pond for a screen snapshot and a presenting frame.
  *
  * The virtual pond derives from the *screen*, not the frame — the frame only
- * decides how much of that pond is visible. Call this once, when the scene
- * first opens; afterwards follow frame resizes with {@link pondWindow} alone
- * so the world the fish swim in never moves underneath them.
+ * decides how much of that pond is visible. The world is also floored at a
+ * swimmable minimum, so a small frame is a small window onto a larger pond
+ * rather than a small pond; {@link describePondForFrame} is the sibling
+ * derivation for a frame that should be the whole world. Call this once, when
+ * the scene first opens; afterwards follow frame resizes with
+ * {@link pondWindow} alone so the world the fish swim in never moves
+ * underneath them.
  *
  * @param screenWidth - Screen width in CSS pixels, as `window.screen` reports it.
  * @param screenHeight - Screen height in CSS pixels.
@@ -136,6 +142,47 @@ export function describePond(
 }
 
 /**
+ * Describes a pond whose world is the presenting frame itself.
+ *
+ * Where {@link describePond} floors the world at a swimmable minimum and lets
+ * a small frame window into it, this derivation has no world floor at all: a
+ * 288px card yields a 288-scale pond whose view fills it edge to edge, and
+ * the fish-length floor alone keeps the koi legible, spanning about half the
+ * card rather than shrinking with it. The world ceiling still applies, and
+ * for frames inside both of `describePond`'s clamps the two derivations
+ * produce identical environments. A frame axis that reports nothing honest,
+ * zero, negative, or not a number, falls back to the smallest pond exactly
+ * as `describePond` treats a degenerate screen, so a container measured
+ * before layout never yields a world with every koi stacked at its origin.
+ * Call this once, when the scene first opens, exactly as with
+ * `describePond`: a resize never rebuilds the world.
+ *
+ * @param width - The presenting frame's width in CSS pixels.
+ * @param height - The presenting frame's height in CSS pixels.
+ * @param reducedMotion - Whether the visitor asked for reduced motion.
+ * @returns The environment to announce to every fish.
+ *
+ * @example Deriving a card-sized world at startup
+ * ```typescript
+ * const pond = describePondForFrame(root.clientWidth, root.clientHeight, motionQuery.matches)
+ * ```
+ */
+export function describePondForFrame(width: number, height: number, reducedMotion: boolean): PondEnvironment {
+  const pondWidth = width >= 1 ? Math.min(width, MAX_POND.width) : MIN_POND.width
+  const pondHeight = height >= 1 ? Math.min(height, MAX_POND.height) : MIN_POND.height
+  const fishLength = nominalFishLength(pondWidth, pondHeight)
+  return {
+    width: pondWidth,
+    height: pondHeight,
+    margin: fishLength * MARGIN_FISH_LENGTHS,
+    fishLength,
+    view: pondWindow({ width: pondWidth, height: pondHeight }, width, height),
+    depthLevels: DEPTH_LEVELS,
+    reducedMotion,
+  }
+}
+
+/**
  * The centre of the pond, which the shoal loosely orbits.
  *
  * @param pond - The announced environment.
@@ -161,7 +208,7 @@ const ENTRY_HEADING_JITTER = 0.85
 const ENTRY_DRAWS = 40
 
 /** The closest two koi may open, in nominal fish lengths. */
-const ENTRY_SEPARATION_FISH_LENGTHS = 1.05
+export const ENTRY_SEPARATION_FISH_LENGTHS = 1.05
 
 /** The furthest from the centre a koi may open, as a fraction of the shorter pond axis. */
 const ENTRY_REACH_RATIO = 0.46
@@ -169,15 +216,26 @@ const ENTRY_REACH_RATIO = 0.46
 /** How many relaxation passes settle the opening shoal. */
 const ENTRY_RELAX_PASSES = 24
 
+/** The fraction of the opening separation a late entry still owes the already-settled shoal. */
+// why: A pond holding the whole canonical shoal has no room left at full separation, and demanding it anyway collapses every latecomer onto the same few pockets of free water; tolerating a closer pass keeps each twin near its own seeded entry instead.
+const LATE_ENTRY_CROWDING = 0.55
+
+/** How many seeded spots a late entry may probe for open water before settling among the crowd. */
+// why: Each probe spends two draws, and the whole entry band has to stay well inside one seed stride so no probe ever reads a neighbouring koi's numbers.
+const LATE_ENTRY_PROBES = 24
+
 /**
  * One koi's raw jittered entry, before the shoal is relaxed apart.
  *
  * @param pond - The announced environment.
  * @param seed - The koi's stable seed.
+ * @param probe - Which of the seed's entry draws to read; 0 is the canonical pair.
  * @returns Its unrelaxed entry position.
  */
-function rawEntry(pond: PondEnvironment, seed: number): Vec2 {
-  const draw = (index: number): number => randomPseudo(seed + ENTRY_DRAWS + index)
+function rawEntry(pond: PondEnvironment, seed: number, probe = 0): Vec2 {
+  // why: Probe 0 must read the canonical draw pair, and every later probe steps past the heading draw two above it, so probing never re-reads a number another purpose already spent.
+  const shift = probe === 0 ? 0 : probe * 2 + 2
+  const draw = (index: number): number => randomPseudo(seed + ENTRY_DRAWS + shift + index)
   // magic: The seeds are multiples of 977, and 977 mod 360 is coprime with 360 — so taking the residue fans the koi out on an almost even 51-degree spacing. The eighth seed wraps back to within a degree of the first, so the base stations alone no longer guarantee separation; the relaxation passes below are what do.
   const angle = (seed % 360) * (Math.PI / 180) + (draw(0) - 0.5) * 2 * ENTRY_ANGLE_JITTER
   const centre = pondCentre(pond)
@@ -206,8 +264,18 @@ function rawEntry(pond: PondEnvironment, seed: number): Vec2 {
  * knowledge, computing them all is what keeps the apps agreeing without a
  * message.
  *
+ * Duplicates get an instance dimension on the same terms. Ordinal 0 is the
+ * canonical fish at exactly the station described above; each ordinal above
+ * it adds a phantom round in which every framework's next twin, in list
+ * order, probes a variant-seeded entry of its own against everything already
+ * settled. A twin therefore seeks water clear of the whole crowd a pond
+ * could hold, owes its own kind the full opening separation however crowded
+ * the water gets, and any two agents still derive every station from shared
+ * knowledge alone.
+ *
  * @param pond - The announced environment.
  * @param seed - The koi's stable seed, from `koiSeed`.
+ * @param instance - Which of that seed's koi this is; 0, the default, is the canonical fish.
  * @returns Its entry nose position and heading.
  *
  * @example Placing a koi at boot
@@ -216,15 +284,54 @@ function rawEntry(pond: PondEnvironment, seed: number): Vec2 {
  * const motion = createKoiMotion({ profile, pond, ...entry, depth: 3 })
  * ```
  */
-export function entryStation(pond: PondEnvironment, seed: number): { position: Vec2; heading: number } {
+export function entryStation(pond: PondEnvironment, seed: number, instance = 0): { position: Vec2; heading: number } {
   const seeds = KOI_FRAMEWORKS.map((framework) => koiSeed(framework))
   const slot = seeds.indexOf(seed)
-  const positions = (slot === -1 ? [seed] : seeds).map((each) => rawEntry(pond, each))
+  // why: Ordinals are whole and finite by construction; anything else settles as the canonical fish rather than hanging the round loop or deriving a station no other agent could reproduce.
+  const duplicates = Number.isFinite(instance) && instance > 0 ? Math.floor(instance) : 0
+  // why: A duplicate draws every entry number from its variant seed, the same stride its trait draws step by, so twins never share a jitter; ordinal 0 reads exactly the base seed.
+  const entrySeed = seed + duplicates * VARIANT_STRIDE
+  const positions = (slot === -1 ? [entrySeed] : seeds).map((each) => rawEntry(pond, each))
+
+  relaxShoal(pond, positions)
 
   const centre = pondCentre(pond)
-  const shorter = Math.min(pond.width, pond.height)
+  let position = positions[slot === -1 ? 0 : slot] ?? centre
+  if (slot !== -1 && duplicates > 0) {
+    // how: Twin rounds extend the phantom principle to ordinals: every round derives each framework's next twin, in list order, against everything settled before it, so any two agents compute identical stations for every koi a pond could hold and no twin ever opens on a stranger it cannot be told about.
+    const chains = positions.map((station) => [station])
+    for (let round = 1; round <= duplicates; round += 1) {
+      for (let framework = 0; framework < chains.length; framework += 1) {
+        const siblings = chains[framework]
+        const frameworkSeed = seeds[framework]
+        if (siblings === undefined || frameworkSeed === undefined) {
+          continue
+        }
+        const shoal = chains.flatMap((chain, index) => (index === framework ? [] : chain))
+        const candidate = probeEntry(pond, frameworkSeed + round * VARIANT_STRIDE, shoal, siblings)
+        settleClearOfSiblings(pond, siblings, candidate)
+        siblings.push(candidate)
+      }
+    }
+    const own = chains[slot]
+    position = own?.[own.length - 1] ?? position
+  }
+  const settled = Math.atan2(position.y - centre.y, position.x - centre.x)
+  // why: A tangential heading starts the shoal circulating instead of converging — eight fish all pointed at the centre meet there, and the opening seconds read as a collapse.
+  const tangent = settled + Math.PI / 2 + (randomPseudo(entrySeed + ENTRY_DRAWS + 2) - 0.5) * 2 * ENTRY_HEADING_JITTER
+  return { position, heading: Math.atan2(Math.sin(tangent), Math.cos(tangent)) }
+}
+
+/**
+ * Relaxes the opening shoal apart, in place.
+ *
+ * @param pond - The announced environment.
+ * @param positions - Every koi's raw entry, nudged toward separation.
+ */
+function relaxShoal(pond: PondEnvironment, positions: Vec2[]): void {
+  const centre = pondCentre(pond)
   const separation = pond.fishLength * ENTRY_SEPARATION_FISH_LENGTHS
-  const reach = shorter * ENTRY_REACH_RATIO
+  const reach = Math.min(pond.width, pond.height) * ENTRY_REACH_RATIO
   for (let pass = 0; pass < ENTRY_RELAX_PASSES; pass += 1) {
     // how: Overlapping pairs push each other apart by half their shortfall, then everyone is pulled back inside the opening reach; a couple of dozen passes settle the shoal well past visual convergence.
     for (let a = 0; a < positions.length; a += 1) {
@@ -256,12 +363,110 @@ export function entryStation(pond: PondEnvironment, seed: number): { position: V
       }
     }
   }
+}
 
-  const position = positions[slot === -1 ? 0 : slot] ?? centre
-  const settled = Math.atan2(position.y - centre.y, position.x - centre.x)
-  // why: A tangential heading starts the shoal circulating instead of converging — eight fish all pointed at the centre meet there, and the opening seconds read as a collapse.
-  const tangent = settled + Math.PI / 2 + (randomPseudo(seed + ENTRY_DRAWS + 2) - 0.5) * 2 * ENTRY_HEADING_JITTER
-  return { position, heading: Math.atan2(Math.sin(tangent), Math.cos(tangent)) }
+/**
+ * Draws seeded entry spots for a late entry until one lies in open water.
+ *
+ * The first probe is the seed's canonical entry jitter; each later probe
+ * redraws the angle and radius from the next pair of its entry draws. The
+ * first spot clear of the whole crowd is taken; when every probe lands in
+ * crowded water, the probe with the most room around it comes back for
+ * {@link settleClearOfSiblings} to enforce the floor. Either way the chosen
+ * spot is a pure seeded draw, distinct per koi: a push away from the shared
+ * crowd would instead walk many koi onto the same corner of free water, and
+ * two twins of different frameworks, each unaware the other exists, would
+ * open on the same pixel.
+ *
+ * @param pond - The announced environment.
+ * @param seed - The late entry's variant seed.
+ * @param shoal - Settled stations owed the crowding tolerance.
+ * @param siblings - Settled stations of the koi's own kind, owed full separation.
+ * @returns The chosen entry spot.
+ */
+function probeEntry(pond: PondEnvironment, seed: number, shoal: readonly Vec2[], siblings: readonly Vec2[]): Vec2 {
+  const separation = pond.fishLength * ENTRY_SEPARATION_FISH_LENGTHS
+  const crowding = separation * LATE_ENTRY_CROWDING
+  let best: Vec2 | undefined
+  let bestRoom = -Infinity
+  for (let probe = 0; probe < LATE_ENTRY_PROBES; probe += 1) {
+    const candidate = rawEntry(pond, seed, probe)
+    // how: Room is the worst clearance ratio against everyone owed one; 1 or better means the spot is honestly open water.
+    let room = Infinity
+    for (const station of shoal) {
+      room = Math.min(room, Math.hypot(candidate.x - station.x, candidate.y - station.y) / crowding)
+    }
+    for (const station of siblings) {
+      room = Math.min(room, Math.hypot(candidate.x - station.x, candidate.y - station.y) / separation)
+    }
+    if (room >= 1) {
+      return candidate
+    }
+    if (room > bestRoom) {
+      bestRoom = room
+      best = candidate
+    }
+  }
+  return best ?? rawEntry(pond, seed)
+}
+
+/**
+ * Nudges one late entry clear of its own kind, in place.
+ *
+ * The siblings never move: the newcomer alone takes each push, by the full
+ * shortfall rather than the half a mutual pass shares, and the sweeps repeat
+ * until every sibling is cleared. This is the hard floor under a twin's
+ * entry: probing yields to the whole crowd wherever the water allows it, but
+ * however crowded the pond, a koi never opens within the opening separation
+ * of its own kind.
+ *
+ * @param pond - The announced environment.
+ * @param siblings - Stations of the newcomer's own kind, which it must clear.
+ * @param candidate - The newcomer's chosen entry, nudged into open water.
+ */
+function settleClearOfSiblings(pond: PondEnvironment, siblings: readonly Vec2[], candidate: Vec2): void {
+  const separation = pond.fishLength * ENTRY_SEPARATION_FISH_LENGTHS
+
+  /**
+   * The nearest sibling still inside the candidate's separation, if any.
+   *
+   * @returns The crowding sibling, or `undefined` once all are cleared.
+   */
+  const crowding = (): Vec2 | undefined =>
+    siblings.find((station) => Math.hypot(candidate.x - station.x, candidate.y - station.y) < separation)
+
+  for (let pass = 0; pass < ENTRY_RELAX_PASSES; pass += 1) {
+    for (const station of siblings) {
+      const dx = candidate.x - station.x
+      const dy = candidate.y - station.y
+      const distance = Math.hypot(dx, dy)
+      if (distance >= separation || distance === 0) {
+        continue
+      }
+      const push = (separation - distance) / distance
+      candidate.x += dx * push
+      candidate.y += dy * push
+    }
+  }
+
+  if (crowding() === undefined) {
+    return
+  }
+  // why: Sequential rim pushes can cycle for ever between clustered siblings, so a residual shortfall walks straight out of the cluster instead; a fixed ray away from its centroid always leaves every disc behind.
+  let rayX = candidate.x - siblings.reduce((sum, station) => sum + station.x, 0) / siblings.length
+  let rayY = candidate.y - siblings.reduce((sum, station) => sum + station.y, 0) / siblings.length
+  const magnitude = Math.hypot(rayX, rayY)
+  if (magnitude === 0) {
+    rayX = 1
+    rayY = 0
+  } else {
+    rayX /= magnitude
+    rayY /= magnitude
+  }
+  for (let step = 0; step < ENTRY_RELAX_PASSES && crowding() !== undefined; step += 1) {
+    candidate.x += rayX * separation * 0.5
+    candidate.y += rayY * separation * 0.5
+  }
 }
 
 /** The rectangle pond space occupies, pond plus margins. */

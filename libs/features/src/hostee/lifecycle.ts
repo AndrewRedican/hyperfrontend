@@ -177,6 +177,7 @@ export function createFeatureHandle(
     setDirty: (isDirty: boolean) => {
       channel?.send(ControlType.Dirty, { dirty: isDirty === true })
     },
+    hosted: hostWindow !== null,
     get displayMode() {
       return applier?.mode() ?? null
     },

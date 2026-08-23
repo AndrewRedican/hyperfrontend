@@ -112,7 +112,6 @@ export function wireKoiContract(link: FeatureLink, koi: KoiRuntime): void {
     koi.placeAt({ x: point.x, y: point.y })
   })
 
-  // ref: [guide:compose-independent-features/neighbors-handler] start
   link.on('neighbors', (data) => {
     // why: `neighbors` is schema-less so the SDK never validated it; a malformed relay must thin the shoal, never crash the frame.
     const entries = Array.isArray(data) ? data : []
@@ -125,7 +124,6 @@ export function wireKoiContract(link: FeatureLink, koi: KoiRuntime): void {
     }
     koi.observe(observed)
   })
-  // ref: [guide:compose-independent-features/neighbors-handler] end
 
   link.on('close', () => {
     // why: A closed channel means no host is watching; the koi keeps swimming but stops reporting and drops any hover the host had set.

@@ -10,7 +10,9 @@
  *
  * Draw offsets are allocated in bands so adding a band never shifts another:
  * traits take 0–7, the body takes 8–23, the swimming trim takes 24–29, and the
- * pond's entry jitter takes 40–43.
+ * pond's entry takes 40 upward, an open tail for its jitter and probe draws.
+ * Duplicates of a framework's koi step their whole allocation clear of it, so
+ * no ordinal ever reads another koi's draws.
  */
 import { randomPseudo } from '@hyperfrontend/random-generator-utils'
 import type { KoiSwimTrim } from '../koi3d/config.js'
@@ -20,6 +22,16 @@ import { KOI_FRAMEWORKS } from './types.js'
 
 /** Spacing between a fish's seed and its neighbour's, so their draws never correlate. */
 const SEED_STRIDE = 977
+
+/**
+ * Spacing between a framework's canonical koi and each duplicate of it.
+ *
+ * Wide enough to clear every seed in the shoal and every draw either koi
+ * makes, so no ordinal a pond can hold lands on another koi's numbers. The
+ * pond's entry jitter applies the same stride to any seed, so a duplicate's
+ * entry draws step clear of its siblings' exactly as its trait draws do.
+ */
+export const VARIANT_STRIDE = 10_007
 
 /** Where the body's draw band starts, after the eight trait draws. */
 const BODY_DRAWS = 8
@@ -76,6 +88,32 @@ function band(draw: number, min: number, max: number): number {
 export function koiSeed(framework: KoiFramework): number {
   // why: Position in the canonical list rather than a string hash — stable, inspectable, and trivially reproducible by the host and the fish alike.
   return (KOI_FRAMEWORKS.indexOf(framework) + 1) * SEED_STRIDE
+}
+
+/**
+ * Derives the seed for one of a framework's koi, by ordinal.
+ *
+ * Ordinal 0 is the canonical fish and returns exactly {@link koiSeed}, so a
+ * shoal of one koi per framework is the same shoal whichever function seeds
+ * it; every ordinal above it steps clear by a fixed stride.
+ *
+ * Only the phenotype channels read this seed: build, markings, and
+ * temperament. Variety and palette stay bound to the framework itself, since
+ * {@link koiPalette} takes the slug and never a seed. Two koi of one framework
+ * are therefore the same species in the same colours, wearing different
+ * bodies.
+ *
+ * @param framework - The framework slug.
+ * @param instance - Which of that framework's koi this is; 0 is the canonical fish.
+ * @returns An integer seed, distinct for every framework and ordinal.
+ *
+ * @example Seeding a second React koi
+ * ```typescript
+ * const twin = koiProfile('react', koiVariantSeed('react', 1))
+ * ```
+ */
+export function koiVariantSeed(framework: KoiFramework, instance: number): number {
+  return koiSeed(framework) + instance * VARIANT_STRIDE
 }
 
 /**
