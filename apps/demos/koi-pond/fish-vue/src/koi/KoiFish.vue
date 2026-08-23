@@ -1,47 +1,28 @@
 <script setup lang="ts">
 /**
- * The Vue renderer: one 3D koi, drawn through the shared pond view.
+ * The Vue renderer: one 3D koi, drawn through the shared stage.
  *
  * The template owns exactly two elements — the canvas the koi renders into and
  * the identity card a visitor opens by holding the koi — and `onMounted` is
  * where the scene behind them comes to life. The component hands an imperative
  * handle up through `onReady` so the frame loop can drive the koi directly:
- * sixty draws a second write GPU uniforms and one element transform, never
- * reactive state. Only the selection flag and the card's inspector rows are
- * refs, because they change a handful of times a minute and the card is the
- * one thing the template decides.
- *
- * The canvas covers only the koi's own frame box, never the whole viewport:
- * the shared camera is narrowed onto that box each frame, so the small canvas
- * paints pixel-identically what a full-viewport render would have put there,
- * at a fraction of the fill and memory. A koi outside the visible window draws
- * nothing at all.
+ * sixty draws a second go straight to the shared stage, never through reactive
+ * state. Only the selection flag and the card's inspector rows are refs,
+ * because they change a handful of times a minute and the card is the one
+ * thing the template decides.
  *
  * This is the one browser-facing module in the app. The other seven koi replace
  * exactly this file with their own framework's idiom, and share everything
  * else: the swimming brain stays authoritative for where the fish *is*, and
- * this component only makes the koi's body express it.
+ * this component only makes the koi's body express it; the shared stage draws
+ * the animal into the canvas the template owns.
  */
-import type { KoiCardLink, KoiCardText, KoiFrameBox, KoiProfile, PondEnvironment } from '@hyperfrontend/demo-koi-lib'
-import type { Koi, PondView } from '@hyperfrontend/demo-koi-lib/three'
-import type { GlRenderer, KoiSceneHandle } from './koi-render'
-import {
-  FRAMEWORK_SITES,
-  POND_VIEW,
-  describeKoiCard,
-  koiFrameBox,
-  koiSeed,
-  koiSourceUrl,
-  pxPerUnit,
-  swimDepth,
-  wrapAngle,
-} from '@hyperfrontend/demo-koi-lib'
-import { createKoi, createLighting, createPondView, fitPondRenderer } from '@hyperfrontend/demo-koi-lib/three'
-import { Scene } from 'three'
+import type { KoiCardLink, KoiCardText, KoiProfile, PondEnvironment } from '@hyperfrontend/demo-koi-lib'
+import type { GlRenderer } from '@hyperfrontend/demo-koi-lib/three'
+import type { KoiSceneHandle } from './koi-render'
+import { FRAMEWORK_SITES, cardAnchor, cardTransform, describeKoiCard, koiSourceUrl } from '@hyperfrontend/demo-koi-lib'
+import { createKoiStage } from '@hyperfrontend/demo-koi-lib/three'
 import { onMounted, onUnmounted, ref, useTemplateRef } from 'vue'
-
-/** How far the frame box's edge may drift from the fitted buffer before a re-fit, as a fraction. */
-const REFIT_DRIFT = 0.1
 
 /** How firmly the silhouette reads when the pointer is merely over the koi. */
 const HOVER_OUTLINE = 0.35
@@ -97,40 +78,15 @@ onMounted(() => {
     throw new Error('missing template ref: canvas or card')
   }
 
-  const { profile, pond } = props
-  const { palette, build, phenotype, trim } = profile
+  const { pond } = props
+  // why: The stage owns the scene, camera, and animal behind the canvas; this component only decides the card and hands the frame loop a plain handle.
+  const stage = createKoiStage(canvas, props.profile, pond, props.createGl)
 
-  const gl = props.createGl(canvas)
-  const view: PondView = createPondView(pond)
-  const scene = new Scene()
-  scene.add(createLighting(POND_VIEW.lighting))
-
-  const koi: Koi = createKoi({
-    seed: koiSeed(profile.framework),
-    // why: The phenotype is the profile's own many-levered build — width, belly, head, fins — so the shoal reads as related but individually recognisable animals rather than one mesh at eight scales.
-    physical: phenotype,
-    appearance: {
-      pattern: palette.pattern,
-      base: palette.body,
-      primary: palette.marking,
-      secondary: palette.shade,
-      accent: palette.accent,
-    },
-    trim,
-  })
-  koi.mount(scene)
-
-  let bodyPx = pxPerUnit(pond.fishLength) * build.lengthScale
-  let lastHeading: number | null = null
-  let lastSpeed = 0
   let current = pond
-  let fittedSize = 0
-  let shown = true
-  const box: KoiFrameBox = { x: 0, y: 0, size: 0, visible: false }
 
   /** Traces the silhouette at whatever the pointer and the hold currently justify. */
   const applyOutline = (): void => {
-    koi.setOutline(selected.value ? HELD_OUTLINE : hovered ? HOVER_OUTLINE : 0)
+    stage.setOutline(selected.value ? HELD_OUTLINE : hovered ? HOVER_OUTLINE : 0)
   }
 
   /**
@@ -146,64 +102,17 @@ onMounted(() => {
   }
 
   cleanup = () => {
-    koi.dispose()
-    gl.dispose()
+    stage.dispose()
   }
 
   props.onReady({
-    koi,
     draw(state, dt) {
-      koiFrameBox(state.position, state.heading, state.length, current.view, box)
-      // why: A koi outside the window pays nothing — no pose, no uniforms, no clear, no composite. The brain keeps swimming; only the pixels stop.
-      if (!box.visible) {
-        if (shown) {
-          shown = false
-          canvas.style.display = 'none'
-        }
-        lastHeading = state.heading
-        // why: The speed memory must track through skipped frames too, or re-entering the view lands the whole offscreen speed change as a single-frame acceleration spike that convulses the body.
-        lastSpeed = state.speed / bodyPx
-        return
-      }
-      if (!shown) {
-        shown = true
-        canvas.style.display = ''
-      }
-      if (Math.abs(box.size - fittedSize) > fittedSize * REFIT_DRIFT) {
-        // why: The buffer re-fits only when the body's size genuinely changed — reallocating a drawing buffer every frame would cost more than the render itself.
-        fittedSize = box.size
-        fitPondRenderer(gl, box.size)
-        canvas.style.width = `${box.size}px`
-        canvas.style.height = `${box.size}px`
-      }
-      canvas.style.transform = `translate3d(${(box.x - current.view.x).toFixed(1)}px, ${(box.y - current.view.y).toFixed(1)}px, 0)`
-
-      const seconds = dt > 0 ? dt : 1e-6
-      // why: The swimming model thinks in this koi's own body lengths, while the brain and the wire think in pond pixels.
-      const speed = state.speed / bodyPx
-      // why: Both grow clockwise on screen — the model's positive turn bends toward the right flank exactly as a growing pond heading turns — so the heading's own rate feeds straight in and the head leads into the turn.
-      const turnRate = lastHeading === null ? 0 : wrapAngle(state.heading - lastHeading) / seconds
-      koi.setMotion({
-        speed,
-        turnRate,
-        acceleration: (speed - lastSpeed) / seconds,
-        escapeIntensity: state.phase === 'escape' ? 1 : 0,
-        depth: swimDepth(state.depth),
-      })
-      lastHeading = state.heading
-      lastSpeed = speed
-      koi.update(dt)
-      view.frame(box)
-      view.placeKoi(koi.object, state.position, state.heading, state.length)
-      gl.render(scene, view.camera)
+      stage.draw(state, dt)
     },
 
     setPond(next) {
-      bodyPx = pxPerUnit(next.fishLength) * build.lengthScale
       current = next
-      view.setPond(next)
-      // why: A pond announcement moves the window, so the next draw must re-fit rather than trust a buffer sized against the old world.
-      fittedSize = 0
+      stage.setPond(next)
     },
 
     setHovered(next) {
@@ -222,20 +131,10 @@ onMounted(() => {
     },
 
     placeCard(state) {
-      const head = state.spine.joints[0]
-      if (head === undefined) {
-        return
-      }
-      // why: The card lives in the frame's own CSS space while the spine is in pond space, so the visible window's origin comes off first.
-      const x = head.x - current.view.x + state.length * 0.12
-      const y = head.y - current.view.y - state.length * 0.38
-      // why: A tapped fish near a window edge must still show its whole card — on touch there is no hover to chase it with.
-      const width = card.offsetWidth || 200
-      const height = card.offsetHeight || 64
-      const clampedX = Math.min(Math.max(x, 8), Math.max(8, current.view.width - width - 8))
-      const clampedY = Math.min(Math.max(y, 8), Math.max(8, current.view.height - height - 8))
+      // why: A hidden card measures nothing, so a nominal footprint keeps the window clamp honest on the very first placement.
+      const at = cardAnchor(state, current, { width: card.offsetWidth || 200, height: card.offsetHeight || 64 })
       // why: Writing the transform straight onto the element keeps the sixty-a-second card chase out of Vue's reactive re-render entirely.
-      card.style.transform = `translate(${clampedX.toFixed(1)}px, ${clampedY.toFixed(1)}px)`
+      card.style.transform = cardTransform(at)
     },
 
     cardRects() {
