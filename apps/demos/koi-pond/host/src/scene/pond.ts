@@ -25,7 +25,7 @@ import { createResurrection } from './resurrection'
 import { createSelectionChrome } from './selection'
 import { createShoalPanel } from './roster'
 import { createSequenceTracker } from './sequence'
-import { createStage, removeLayer, setCurtain, setLayerDepth, setLayerPresent } from './stage'
+import { createStage, removeLayer, reseatSurface, setCurtain, setLayerDepth, setLayerPresent } from './stage'
 import { createSurfacePainter } from './surface-canvas'
 import { createVisibilityWatch } from './visibility'
 import { createWaterPainter } from './water-gl'
@@ -45,6 +45,10 @@ const CURTAIN_DEADLINE_MS = 5000
 
 /** How opaque the pond's own paint is when it runs as a layer over a host page. */
 const OVERLAY_FLOOR_ALPHA = 0.7
+
+/** How long the water waits for a browser to give its context back before hanging a new canvas, in milliseconds. */
+// why: Restoring the context the page already has is much the better outcome — the canvas stays, nothing is rebuilt twice — and a browser that means to do it does so promptly. This is long enough to let it, and short enough that a visitor who came back to a still pond sees the water return rather than wonders where it went.
+const WATER_RESTORE_GRACE_MS = 1500
 
 /**
  * How often the pond repeats its shoal report while nothing changes, in milliseconds.
@@ -179,7 +183,32 @@ export interface PondSceneHandle extends PondScene {
 export function createPond(root: HTMLElement, hooks: PondHooks): PondSceneHandle {
   const stage = createStage(root)
   // why: The GPU water is preferred and the 2D painter is the fallback — one page already carries eight fish contexts, and this ninth is the only one the host ever asks for.
-  const surface = createWaterPainter(stage.surface) ?? createSurfacePainter(stage.surface)
+  let surface = createWaterPainter(stage.surface, () => waterLost()) ?? createSurfacePainter(stage.surface)
+  let waterHandle = 0
+
+  /**
+   * Hangs new water where the browser took the last.
+   *
+   * The painter asks for its context back on the way out, and a browser that
+   * obliges leaves nothing to do here, which is why this waits before looking.
+   * What it cannot do is wait forever: a context that is lost and not restored
+   * can never be replaced on the canvas that held it, so the element goes and
+   * the water is built again on a fresh one.
+   */
+  const reviveWater = (): void => {
+    waterHandle = 0
+    if (surface.lost?.() !== true || visibility.hidden) {
+      return
+    }
+    hooks.onDiagnostic?.(null, 'water:reseated', 'the surface never got its context back')
+    surface = createWaterPainter(reseatSurface(stage), () => waterLost()) ?? createSurfacePainter(stage.surface)
+  }
+
+  /** Gives the browser its chance to restore the context, then replaces the water if it did not. */
+  const waterLost = (): void => {
+    window.clearTimeout(waterHandle)
+    waterHandle = window.setTimeout(reviveWater, WATER_RESTORE_GRACE_MS)
+  }
   const relay = createRelay()
   const director = createDepthDirector()
   const sequence = createSequenceTracker()
@@ -941,6 +970,10 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondSceneHandle
       if (paused) {
         loop.stop()
       } else {
+        // why: A context lost while the pond was hidden is left alone until this moment, because building a GPU context for a page nobody is looking at is exactly the cost the sleep was for.
+        if (surface.lost?.() === true) {
+          waterLost()
+        }
         loop.start()
         resurrection.pageVisible()
       }

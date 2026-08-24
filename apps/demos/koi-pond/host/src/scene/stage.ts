@@ -74,6 +74,35 @@ export function createStage(root: HTMLElement): PondStage {
 }
 
 /**
+ * Hangs a fresh canvas where the water was, and hands it back.
+ *
+ * A drawing context that has been lost and not restored can never be replaced
+ * on the canvas that held it: asking that canvas for a context again returns
+ * the same dead one. The element is what has to go. This puts a new one in
+ * exactly the same place, between the koi layers and the overlay, so the water
+ * can be built again on a page whose browser took the last one and declined to
+ * give it back.
+ *
+ * @param stage - The pond's DOM.
+ * @returns The new surface canvas, already installed and already the stage's.
+ *
+ * @example Recovering water that never came back
+ * ```typescript
+ * if (surface.lost?.() === true) {
+ *   surface = createWaterPainter(reseatSurface(stage)) ?? createSurfacePainter(stage.surface)
+ * }
+ * ```
+ */
+export function reseatSurface(stage: PondStage): HTMLCanvasElement {
+  const surface = document.createElement('canvas')
+  surface.id = stage.surface.id
+  surface.setAttribute('aria-hidden', 'true')
+  stage.surface.replaceWith(surface)
+  stage.surface = surface
+  return surface
+}
+
+/**
  * Raises the host-owned layer for one koi instance.
  *
  * @param stage - The pond stage.

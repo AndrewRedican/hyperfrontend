@@ -33,12 +33,13 @@ interface FakeShell {
   emit(event: string, data?: unknown): void
 }
 
-const { shells, createFakeShell, device } = vi.hoisted(() => {
+const { shells, createFakeShell, device, water } = vi.hoisted(() => {
   const shellsByInstance = new Map<string, FakeShell>()
   const profile = { tier: 'middle', cap: 8 }
   return {
     shells: shellsByInstance,
     device: profile,
+    water: { lost: false, tell: <() => void>(() => {}) },
     createFakeShell(id: string): FakeShell {
       const handlers = new Map<string, Set<(data?: unknown) => void>>()
       const shell: FakeShell = {
@@ -102,7 +103,13 @@ vi.mock('../koi-sessions', async (importOriginal) => {
   }
 })
 
-vi.mock('../water-gl', () => ({ createWaterPainter: () => null }))
+// why: The GPU painter is stood in for rather than skipped, because losing its context is the one thing it tells the pond about and the one thing the pond acts on.
+vi.mock('../water-gl', () => ({
+  createWaterPainter: (_canvas: HTMLCanvasElement, onLost?: () => void) => {
+    water.tell = onLost ?? (() => {})
+    return { paint: () => {}, lost: () => water.lost }
+  },
+}))
 vi.mock('../surface-canvas', () => ({ createSurfacePainter: () => ({ paint: () => {} }) }))
 vi.mock('../floor', () => ({ paintFloor: () => {} }))
 vi.mock('../interactions', () => ({ createInteractionsPainter: () => ({ paint: () => {}, clear: () => {} }) }))
@@ -224,6 +231,7 @@ beforeEach(() => {
   shells.clear()
   device.tier = 'middle'
   device.cap = 8
+  water.lost = false
   vi.useFakeTimers()
   vi.setSystemTime(new Date('2026-08-23T08:15:00'))
   window.matchMedia = <typeof window.matchMedia>(<unknown>((query: string) => ({
@@ -773,5 +781,92 @@ describe('the panel in a narrow pond', () => {
   it('says what the pill is standing for', () => {
     const { root } = harness('full', { width: 400, height: 720 })
     expect(panelPart(root, '.koi-shoal-summary').textContent).toBe('3 of 8 koi')
+  })
+})
+
+describe('water the browser reclaimed', () => {
+  /** Longer than the grace the water gives a browser to restore the context it took. */
+  const AFTER_THE_GRACE_MS = 2000
+
+  /**
+   * Takes the visitor away from the pond and brings them back.
+   *
+   * The watch settles on `document.visibilityState`, so that is what a spec
+   * changes; the announcement is what the pond acts on.
+   */
+  function away(): void {
+    for (const state of ['hidden', 'visible']) {
+      Object.defineProperty(document, 'visibilityState', { value: state, configurable: true })
+      document.dispatchEvent(new Event('visibilitychange'))
+    }
+  }
+
+  /** Speaks as the browser taking the water's context away. */
+  function takeTheContext(): void {
+    water.lost = true
+    water.tell()
+  }
+
+  it('hangs a new surface for water whose context never came back', () => {
+    const { root, onDiagnostic } = harness()
+    const before = root.querySelector('#surface')
+    takeTheContext()
+    vi.advanceTimersByTime(AFTER_THE_GRACE_MS)
+    // why: A context that was lost and never restored can never be replaced on the canvas that held it, so the element itself has to go; without this the pond simply has no water for the rest of the visit.
+    expect(root.querySelector('#surface')).not.toBe(before)
+    expect(onDiagnostic).toHaveBeenCalledWith(null, 'water:reseated', expect.any(String))
+  })
+
+  it('lets a browser that restores the context keep the canvas it restored it on', () => {
+    const { root, onDiagnostic } = harness()
+    const before = root.querySelector('#surface')
+    takeTheContext()
+    water.lost = false
+    vi.advanceTimersByTime(AFTER_THE_GRACE_MS)
+    expect(root.querySelector('#surface')).toBe(before)
+    expect(onDiagnostic).not.toHaveBeenCalledWith(null, 'water:reseated', expect.any(String))
+  })
+
+  it('waits for the visitor before building a context for a hidden pond', () => {
+    const { root } = harness()
+    const before = root.querySelector('#surface')
+    Object.defineProperty(document, 'visibilityState', { value: 'hidden', configurable: true })
+    document.dispatchEvent(new Event('visibilitychange'))
+    takeTheContext()
+    vi.advanceTimersByTime(AFTER_THE_GRACE_MS)
+    // why: Building a GPU context for a page nobody is looking at is the very cost the sleep was for.
+    expect(root.querySelector('#surface')).toBe(before)
+    away()
+    vi.advanceTimersByTime(AFTER_THE_GRACE_MS)
+    expect(root.querySelector('#surface')).not.toBe(before)
+  })
+
+  it('leaves a surface nothing happened to exactly where it is', () => {
+    const { root } = harness()
+    const before = root.querySelector('#surface')
+    away()
+    vi.advanceTimersByTime(AFTER_THE_GRACE_MS)
+    expect(root.querySelector('#surface')).toBe(before)
+  })
+
+  it('hangs the new surface over the koi and under the overlay', () => {
+    const { root } = harness()
+    takeTheContext()
+    vi.advanceTimersByTime(AFTER_THE_GRACE_MS)
+    const surface = root.querySelector('#surface')
+    // why: The stacking is DOM order: a surface hung in the wrong place would put the water under the fish or over the marks the overlay draws on it.
+    expect(surface?.compareDocumentPosition(<Node>root.querySelector('#interactions'))).toBe(Node.DOCUMENT_POSITION_FOLLOWING)
+    expect(root.querySelector('.koi-layer')?.compareDocumentPosition(<Node>surface)).toBe(Node.DOCUMENT_POSITION_FOLLOWING)
+  })
+
+  it('keeps seating later koi under the surface it hung', () => {
+    const { root, scene } = harness()
+    takeTheContext()
+    vi.advanceTimersByTime(AFTER_THE_GRACE_MS)
+    scene.addKoi('lit')
+    const surface = root.querySelector('#surface')
+    for (const layer of root.querySelectorAll('.koi-layer')) {
+      expect(layer.compareDocumentPosition(<Node>surface)).toBe(Node.DOCUMENT_POSITION_FOLLOWING)
+    }
   })
 })
