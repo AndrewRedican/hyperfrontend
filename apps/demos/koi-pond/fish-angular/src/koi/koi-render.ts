@@ -65,6 +65,11 @@ export function createKoiRenderer(
   let selected = false
   let disposed = false
 
+  // why: Angular takes the element it is handed as its component's host and takes that element out of the document when the application is destroyed. The app root is the page's, not this renderer's, and it is handed back to a fresh renderer every time the koi wakes or adopts a dealt seed — so Angular is given a node this module made instead, and the root outlives every rebuild the way the other seven frameworks' roots do. `display: contents` keeps it out of the layout, so the canvas and the card still position against the root itself.
+  const host = document.createElement('div')
+  host.style.display = 'contents'
+  root.append(host)
+
   /** Traces the silhouette at whatever the pointer and the hold currently justify. */
   const applyOutline = (): void => {
     stage?.setOutline(selected ? HELD_OUTLINE : hovered ? HOVER_OUTLINE : 0)
@@ -99,7 +104,7 @@ export function createKoiRenderer(
 
   // why: The application runs zoneless — every per-frame mutation goes through the imperative stage, so nothing here ever needs a change-detection sweep after the first.
   const application: Promise<ApplicationRef> = createApplication({ providers: [provideZonelessChangeDetection()] }).then((app) => {
-    const component = createComponent(KoiFish, { environmentInjector: app.injector, hostElement: root })
+    const component = createComponent(KoiFish, { environmentInjector: app.injector, hostElement: host })
     component.setInput('profile', profile)
     component.setInput('url', url)
     component.setInput('mount', mount)
@@ -166,12 +171,12 @@ export function createKoiRenderer(
 
     dispose() {
       disposed = true
-      // why: Destroying the application runs the component's teardown; the host element was this module's to fill, so it is this module's to empty — Angular removes only nodes it inserted itself.
+      // why: Destroying the application runs the component's teardown, which releases the GPU handle. Angular usually takes the host node with it; removing it here covers the case where it does not, and touches nothing a renderer built since — this module owns exactly the node it made.
       void application.then((app) => {
         if (!app.destroyed) {
           app.destroy()
         }
-        root.replaceChildren()
+        host.remove()
       })
     },
   }
