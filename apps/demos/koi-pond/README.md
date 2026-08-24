@@ -51,6 +51,7 @@ Two more claims run alongside it:
 | `lib/src/koi3d/`                                           | the koi itself: build, anatomy, mesh generation, markings, and the spine that poses it. No renderer   |
 | `lib/src/three/`                                           | the three.js adapter: materials, shaders, cameras, lighting, the koi stage, debug overlays            |
 | `lib/src/styles/fish.css`                                  | the chrome every fish app shares: canvas, identity card, links                                        |
+| `lib/src/solo/`                                            | the page a fish app dresses for itself when nothing is hosting it, and a mark per framework           |
 | `workbench/`                                               | `demo-koi-workbench`: the koi model's development environment. Never deployed                         |
 | `vendor/`                                                  | the committed `demo-koi-lib` tarball its consumers install by `file:`                                 |
 | `tools/refresh-lib.mjs`                                    | rebuilds, repacks and reinstalls the lib into every consumer in one pass                              |
@@ -164,8 +165,11 @@ answering koi of that framework, one koi's remove control lights that koi alone.
 The ceiling is stated rather than merely enforced. `readDeviceProfile()` reads
 `navigator.deviceMemory` and `navigator.hardwareConcurrency` (capability signals only, no
 user-agent sniffing) and returns a tier and a cap: **low** seats 4 (at most 2GB or at most
-4 cores), **high** seats 12 (at least 8GB and at least 8 cores), and **middle** seats 8,
-which is also where any device that withholds either signal lands. At the ceiling every add
+2 cores), **high** seats 12 (at least 8GB and at least 8 cores), and **middle** seats 8,
+which is also where any device that withholds either signal lands. The low gate is
+deliberately narrow: it is meant for a device that will drop frames whatever the pond does,
+not for an ordinary machine reporting a modest core count, because what a device is asked to
+hold at once is the opening band rather than the cap. At the ceiling every add
 control disables and names the tier; below it the note line counts the room left. The last
 koi's remove control disables too: the pond is never empty. Since eight frameworks share
 the pond, duplicates are reachable only above eight, which makes the cap the only mechanism
@@ -205,6 +209,21 @@ Escape inside the pond releases a held koi if there is one, and otherwise asks t
 close; the host owns the presentation and answers with `set-scene`, which is also what
 re-arms the next request.
 
+## One fish, opened on its own
+
+Every koi is a whole application, and every one of them has a URL. Follow it and the app
+answers on its own terms: the runtime is told nothing is hosting it, so it swims a world the
+size of the window rather than one derived from the screen behind it, paints its own water,
+and names the framework that drew it beside a mark in that project's colour, a sentence on
+how that framework mounts and drives this particular fish, the contract it speaks, and links
+on to the framework, to this app's own source, and to the pond that composes all eight.
+
+None of it exists inside the pond. The chrome is mounted only when the app states it is
+top-level, and any pond announcing a world takes it straight back down, because water
+painted inside a framed koi would blank every koi below it. An app that says nothing either
+way is treated as hosted: a bare page on a direct visit is a missed opportunity, while a
+painted page inside a frame is a broken pond.
+
 ## The interaction overlay
 
 "View interactions" draws what each koi is deciding, in one ink at varying alpha. Nothing in
@@ -214,10 +233,19 @@ the motion of the caret, not from a hue.
 - A **perception field**: the very region the koi's own narrow phase judges a crossing in,
   from the two numbers it reports for it, so a neighbour inside the mark is a neighbour the
   animal is actually weighing. It hangs from the nose the koi judges from and opens ahead of
-  it, which is what keeps it off the body at every build, and it is laid as nested shells
-  over a length fade so it runs out of ink at its flanks and at its horizon rather than
-  ending on a line. What it cannot show is depth: a koi drawn inside another's field may be
-  passing two levels underneath it.
+  it, which is what keeps it off the body at every build. The two numbers are its two axes,
+  the reach along the heading and the clearance across it, and the ink inside is one gradient
+  poured from a point near the animal, so it thins away in every direction at once and
+  reaches nothing exactly where the koi stops caring. What the arithmetic keeps and the mark
+  gives up are the corners of that region, which lie where the ink had already run out. What
+  it cannot show at all is depth: a koi drawn inside another's field may be passing two
+  levels underneath it.
+
+  The shape is the simulation's rather than the animal's. A real fish sees almost all the way
+  around itself; this one has no view angle at all, and judges a neighbour by where the pair
+  of them will be a couple of seconds from now, which is a corridor along its course rather
+  than a cone out of its eyes.
+
 - A **pearl trace**: the koi's own predicted advancement, drawn as stationary dots at a
   fixed spacing along its body length, brightest at the nose and fading toward the horizon.
   A pearl never moves once placed. The nose consumes the pearls it passes, fresh ones are
