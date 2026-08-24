@@ -217,28 +217,39 @@ export function parseMarkdownSections(content: string): ParsedSection[] {
 }
 
 /**
- * Extracts the badges block from the README content.
+ * Reports whether a centered block holds at least one of the required badges.
+ *
+ * @param block - The centered paragraph's text.
+ * @returns True if the block looks like the badges block.
+ */
+function containsAnyBadge(block: string): boolean {
+  return REQUIRED_BADGES.some(({ pattern }) => pattern.test(block))
+}
+
+/**
+ * Collects every centered paragraph in the README, merging adjacent ones.
  *
  * @param content - The markdown content.
- * @returns The badges block content, or null if not found.
+ * @returns Each centered block, in document order.
  */
-export function extractBadgesBlock(content: string): BadgesBlockInfo | null {
+export function collectCenteredBlocks(content: string): BadgesBlockInfo[] {
   const lines = content.split('\n')
-  let inBadgesBlock = false
+  const blocks: BadgesBlockInfo[] = []
+  let inBlock = false
   let startLine = -1
-  let endLine = -1
-  const blockLines: string[] = []
+  let blockLines: string[] = []
 
   for (let i = 0; i < lines.length; i++) {
     const line = <string>lines[i]
 
     const trimmedLine = line.trim().toLowerCase()
-    if (!inBadgesBlock && trimmedLine.startsWith('<p') && trimmedLine.includes('align="center"')) {
-      inBadgesBlock = true
+    if (!inBlock && trimmedLine.startsWith('<p') && trimmedLine.includes('align="center"')) {
+      inBlock = true
       startLine = i + 1
+      blockLines = []
     }
 
-    if (inBadgesBlock) {
+    if (inBlock) {
       blockLines.push(line)
       if (trimmedLine.includes('</p>')) {
         if (i + 1 < lines.length) {
@@ -247,17 +258,31 @@ export function extractBadgesBlock(content: string): BadgesBlockInfo | null {
             continue
           }
         }
-        endLine = i + 1
-        break
+        blocks.push({ block: blockLines.join('\n'), startLine, endLine: i + 1 })
+        inBlock = false
       }
     }
   }
 
-  if (startLine === -1) {
-    return null
-  }
+  return blocks
+}
 
-  return { block: blockLines.join('\n'), startLine, endLine }
+/**
+ * Extracts the badges block from the README content.
+ *
+ * A README may centre other things than badges, most often a demo capture near
+ * the top. Taking the first centered paragraph of any kind would treat such an
+ * image as the badges block and report all ten badges as missing, so the first
+ * paragraph that actually carries a badge wins. When nothing in the file looks
+ * like a badge, the first centered paragraph is still returned so that a README
+ * with no badges at all is reported as missing them rather than as having none.
+ *
+ * @param content - The markdown content.
+ * @returns The badges block content, or null if not found.
+ */
+export function extractBadgesBlock(content: string): BadgesBlockInfo | null {
+  const blocks = collectCenteredBlocks(content)
+  return blocks.find((candidate) => containsAnyBadge(candidate.block)) ?? blocks[0] ?? null
 }
 
 /**
@@ -302,6 +327,10 @@ export interface DescriptionInfo {
 /**
  * Extracts the short description paragraph after badges block.
  *
+ * A bare markdown image is skipped rather than adopted as the description.
+ * Taking one would silently stop validating the real one-line description
+ * underneath it, which is the sentence npm and the docs site both lead with.
+ *
  * @param content - The markdown content.
  * @param badgesEndLine - The ending line of the badges block.
  * @returns The description and its line number, or null if not found.
@@ -313,6 +342,10 @@ export function extractShortDescription(content: string, badgesEndLine: number):
     const line = (<string>lines[i]).trim()
 
     if (!line) {
+      continue
+    }
+
+    if (line.startsWith('![')) {
       continue
     }
 
