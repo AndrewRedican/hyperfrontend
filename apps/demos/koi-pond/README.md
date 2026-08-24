@@ -86,10 +86,13 @@ Two more claims run alongside it:
   once when the scene opens; `pond.view` is the window the presenting frame currently
   shows, centred on the pond and recomputed on every resize. Simulation, spawning and
   steering read the world; cameras, canvases, culling and the pointer read the view.
-  Resizing a frame never rebuilds the world underneath the fish. A koi app opened on its
-  own builds a world from its own screen so it can swim before anything answers it, and a
+  Resizing a frame never rebuilds the world underneath the fish. A koi app that may yet be
+  framed builds a world from its own screen so it can swim before anything answers it, and a
   koi told of a world of other dimensions enters that one instead: the station it took in a
-  world it invented means nothing in the one it was given.
+  world it invented means nothing in the one it was given. A koi told it is top-level will
+  never be told anything, so its world is the window it was opened in: nothing is coming to
+  correct it, and a screen-derived world would send the fish off to swim in the part of it
+  nobody is looking at.
 - **One camera, N renders.** Every fish builds the same camera from the pond announcement
   (`lib/src/model/pond-view.ts` holds the numbers, `lib/src/three/pond-view.ts` the
   builder): ~10° tilt, agreed px-per-unit at the swim plane, `pond` lighting,
@@ -110,6 +113,16 @@ Two more claims run alongside it:
   automatic fallback (which skips the veil on purpose: the fallback's whole point is its
   minimum per-frame cost). Every 2D surface the host paints is capped at 2x device pixel
   ratio, the same ceiling the WebGL surfaces already lived by.
+
+  That context is also the first thing a browser reclaims from a tab left in the background,
+  and it is the koi themselves that usually cost it: they give their own contexts back when
+  they sleep and build fresh ones on waking, and somewhere in that exchange the water's is
+  dropped. So the painter asks for it back, which is the only way a browser will ever offer
+  one, and the pond gives it a second and a half to arrive. If none does, the whole canvas is
+  replaced and the water built again on a new one, because a context that is lost and not
+  restored can never be replaced on the element that held it. A visitor who leaves the tab
+  and comes back gets water either way.
+
 - **Depth is z-index.** Seven logical depth levels map to the stacking order of host-owned
   containers; passing above or below a neighbour requires a granted two-level shift with a
   cooldown, and the surface water always paints topmost. The spread is re-dealt from the
