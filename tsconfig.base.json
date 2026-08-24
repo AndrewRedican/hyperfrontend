@@ -98,6 +98,7 @@
       "@hyperfrontend/json-utils": ["libs/utils/json/src/index.ts"],
       "@hyperfrontend/list-utils": ["libs/utils/list/src/index.ts"],
       "@hyperfrontend/logging": ["libs/logging/src/index.ts"],
+      "@hyperfrontend/media": ["tools/media/src/index.ts"],
       "@hyperfrontend/network-protocol/browser/channel": ["libs/network-protocol/src/browser/channel/index.ts"],
       "@hyperfrontend/network-protocol/browser/data": ["libs/network-protocol/src/browser/data/index.ts"],
       "@hyperfrontend/network-protocol/browser/packet": ["libs/network-protocol/src/browser/packet/index.ts"],

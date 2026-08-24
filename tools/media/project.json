@@ -1,0 +1,54 @@
+{
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "name": "tool-media",
+  "description": "Configuration-driven recorder that captures browser and terminal sessions and emits size-budgeted GIFs and stills.",
+  "sourceRoot": "{projectRoot}/src",
+  "projectType": "library",
+  "tags": ["type:util", "scope:internal"],
+  "targets": {
+    "install": {
+      "executor": "@hyperfrontend/app:install",
+      "options": {}
+    },
+    "media": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["install"],
+      "cache": false,
+      "options": {
+        "command": "npx tsx src/cli/main.ts record",
+        "cwd": "tools/media"
+      }
+    },
+    "shot": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["install"],
+      "cache": false,
+      "options": {
+        "command": "npx tsx src/cli/main.ts shot",
+        "cwd": "tools/media"
+      }
+    },
+    "check": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["install"],
+      "cache": false,
+      "options": {
+        "command": "npx tsx src/cli/main.ts check",
+        "cwd": "tools/media"
+      }
+    },
+    "doctor": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["install"],
+      "cache": false,
+      "options": {
+        "command": "npx tsx src/cli/main.ts doctor",
+        "cwd": "tools/media"
+      }
+    },
+    "typecheck": {
+      "dependsOn": ["install"]
+    },
+    "audit": {}
+  }
+}
