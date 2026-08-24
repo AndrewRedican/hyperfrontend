@@ -1,13 +1,13 @@
 # F-019 — A dead feature frame stays mounted, so the browser paints its crash placeholder into my page
 
-| Field        | Value         |
-| ------------ | ------------- |
-| Category     | api-friction  |
-| Severity     | medium        |
-| Surfaced by  | demo-koi-pond |
-| Status       | open          |
-| Disposition  | —             |
-| Graduated to | —             |
+| Field        | Value          |
+| ------------ | -------------- |
+| Category     | api-friction   |
+| Severity     | medium         |
+| Surfaced by  | demo-koi-pond  |
+| Status       | triaged        |
+| Disposition  | api-refinement |
+| Graduated to | —              |
 
 ## What happened
 

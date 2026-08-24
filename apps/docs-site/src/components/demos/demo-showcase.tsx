@@ -49,10 +49,9 @@ export interface DemoShowcaseProps {
  * demo's accent hue glows out from behind the frame, clipped to the showcase's
  * own container, and crossfades as rotation hands the stage over. Pausing
  * freezes the ring and holds the current demo. An expandable demo offers to
- * stretch its running embed over the viewport — the same live session, only a
- * wider window — and rotation stays frozen until the overlay closes. Under
- * reduced motion nothing auto-advances: the ring and pause disappear and the
- * skip button becomes a plain next button.
+ * stretch itself over the viewport, and rotation stays frozen until the
+ * overlay closes. Under reduced motion nothing auto-advances: the ring and
+ * pause disappear and the skip button becomes a plain next button.
  * @param root0
  * @param root0.entries
  * @param root0.cycleDuration
@@ -72,9 +71,9 @@ export function DemoShowcase({ entries, cycleDuration = 20000, fastForwardDurati
   const progressRef = useRef(0)
   const fastForwardStartRef = useRef<FastForwardStart | null>(null)
 
-  const { expanded, expand, collapse, holdShell } = useExpandedEmbed({
+  const { expanded, sessionKey, expand, collapse, holdShell } = useExpandedEmbed({
     expandable: entries[activeIndex]?.expandable ?? false,
-    live: embedStatus === 'live',
+    reopens: entries[activeIndex]?.reopensOnExpand ?? false,
     stageKey: activeIndex,
   })
 
@@ -206,6 +205,7 @@ export function DemoShowcase({ entries, cycleDuration = 20000, fastForwardDurati
                   {staged && entry.featureUrl ? (
                     <>
                       <DemoEmbed
+                        key={sessionKey}
                         entry={entry}
                         className="h-full w-full"
                         frameless={overlay}

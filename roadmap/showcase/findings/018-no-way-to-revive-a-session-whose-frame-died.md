@@ -1,13 +1,13 @@
 # F-018 — A dead frame and a slow frame raise the same error, and nothing brings a dead session back
 
-| Field        | Value         |
-| ------------ | ------------- |
-| Category     | api-friction  |
-| Severity     | high          |
-| Surfaced by  | demo-koi-pond |
-| Status       | open          |
-| Disposition  | —             |
-| Graduated to | —             |
+| Field        | Value          |
+| ------------ | -------------- |
+| Category     | api-friction   |
+| Severity     | high           |
+| Surfaced by  | demo-koi-pond  |
+| Status       | triaged        |
+| Disposition  | api-refinement |
+| Graduated to | —              |
 
 ## What happened
 

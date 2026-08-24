@@ -57,9 +57,17 @@ export interface DeviceProfile {
 /**
  * Places a device in its tier.
  *
- * A device is low when it reports at most 2GB of memory or at most 4 cores,
+ * A device is low when it reports at most 2GB of memory or at most 2 cores,
  * high when it reports at least 8GB and at least 8 cores, and middle for
  * everything between those and for anything it declines to report.
+ *
+ * The low gate is deliberately narrow. It is meant for the device that will
+ * drop frames or lose a context whatever the pond does, not for an ordinary
+ * machine that happens to report a modest core count: a four-core laptop with
+ * memory to spare carries this scene comfortably, and thinning its shoal to
+ * four costs a visitor half the demo for nothing. What a device is asked to
+ * hold at once is the opening band, which the frame decides, and the cap only
+ * bounds what a visitor may then stock by hand.
  *
  * @param signals - What the browser reports about the hardware.
  * @returns The tier the device belongs to.
@@ -70,10 +78,54 @@ function classifyTier(signals: DeviceSignals): DeviceTier {
   if (deviceMemory === undefined || hardwareConcurrency === undefined) {
     return 'middle'
   }
-  if (deviceMemory <= 2 || hardwareConcurrency <= 4) {
+  if (deviceMemory <= 2 || hardwareConcurrency <= 2) {
     return 'low'
   }
   return deviceMemory >= 8 && hardwareConcurrency >= 8 ? 'high' : 'middle'
+}
+
+/**
+ * The shoal each band of frame size opens with, and the size it opens there.
+ *
+ * Read largest first: the first band a frame is at least as big as is the one
+ * it opens in. The measure is the frame's own geometric mean, which is the edge
+ * of the square that covers the same water, so a phone held either way up reads
+ * the same and a short wide desktop window is not mistaken for a card.
+ *
+ * The counts are a presence judgement rather than a fit one. A pond scales its
+ * koi to the water it was given, so the same shoal fits at every size; what
+ * changes with the frame is how much of a crowd a visitor can take in at once,
+ * and how much of a device's frame budget a demo may reasonably ask for.
+ */
+const OPENING_SHOAL: readonly { readonly atPx: number; readonly koi: number }[] = [
+  { atPx: 1000, koi: 8 },
+  { atPx: 640, koi: 5 },
+  { atPx: 320, koi: 3 },
+  { atPx: 0, koi: 1 },
+]
+
+/** The frame a pond stands in for its own when that reports nothing honest, in CSS pixels. */
+// why: A container measured before layout reports zero on an axis, and reading that as a tiny screen would open a single koi on a desktop. The smallest swimmable pond is the stand-in the world derivation already falls back to, and it lands squarely in the middle band.
+const UNMEASURED_FRAME = { width: 800, height: 600 }
+
+/**
+ * How many koi a frame of a given size opens with.
+ *
+ * @param width - The presenting frame's width in CSS pixels.
+ * @param height - The presenting frame's height in CSS pixels.
+ * @param cap - The most koi this device seats.
+ * @returns The opening count, never past the cap and never below one.
+ *
+ * @example Opening the full scene
+ * ```typescript
+ * const count = openingShoal(root.clientWidth, root.clientHeight, device.cap)
+ * ```
+ */
+export function openingShoal(width: number, height: number, cap: number): number {
+  const frame = width > 0 && height > 0 ? { width, height } : UNMEASURED_FRAME
+  const measured = Math.sqrt(frame.width * frame.height)
+  const band = OPENING_SHOAL.find((step) => measured >= step.atPx)
+  return Math.max(1, Math.min(band?.koi ?? 1, cap))
 }
 
 /**

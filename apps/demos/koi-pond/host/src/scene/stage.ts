@@ -6,13 +6,18 @@
  * The host builds the koi containers itself rather than letting the SDK place
  * frames, because owning the containers is what lets it own the z-order — and
  * the z-order *is* the depth model. Every layer is `pointer-events: none`, so
- * the eight stacked full-viewport frames never intercept a press; the host runs
+ * the stacked full-viewport frames never intercept a press; the host runs
  * one normalized pointer stream and tells the fish what it found. Owning them
  * is also what lets the host stand one down: a frame whose session has died is
  * hidden rather than left to paint whatever the browser puts in its place.
+ *
+ * Layers come and go with the roster: one is raised for each instance the
+ * scene opens and torn down when that instance leaves, so the DOM carries
+ * exactly the koi that exist rather than a fixed rank of eight.
  */
 import type { KoiFramework } from '@hyperfrontend/demo-koi-lib'
-import { KOI_FRAMEWORKS, depthZIndex } from '@hyperfrontend/demo-koi-lib'
+import type { KoiInstanceId } from './instance-id'
+import { depthZIndex } from '@hyperfrontend/demo-koi-lib'
 
 /** The elements the pond scene is built from. */
 export interface PondStage {
@@ -26,15 +31,15 @@ export interface PondStage {
   interactions: HTMLCanvasElement
   /** The cover held over the scene until every koi has connected. */
   curtain: HTMLElement
-  /** One host-owned container per koi, keyed by framework slug. */
-  layers: ReadonlyMap<KoiFramework, HTMLElement>
+  /** One host-owned container per living koi instance. */
+  layers: Map<KoiInstanceId, HTMLElement>
 }
 
 /**
  * Builds the pond's DOM inside a root element.
  *
  * @param root - The `#pond` element from the page.
- * @returns The stage.
+ * @returns The stage, with no koi layers yet; {@link addLayer} raises them.
  *
  * @example Raising the pond
  * ```typescript
@@ -47,15 +52,6 @@ export function createStage(root: HTMLElement): PondStage {
   floor.id = 'floor'
   floor.setAttribute('aria-hidden', 'true')
   root.append(floor)
-
-  const layers = new Map<KoiFramework, HTMLElement>()
-  for (const framework of KOI_FRAMEWORKS) {
-    const layer = document.createElement('div')
-    layer.className = 'koi-layer'
-    layer.dataset['fish'] = framework
-    root.append(layer)
-    layers.set(framework, layer)
-  }
 
   const surface = document.createElement('canvas')
   surface.id = 'surface'
@@ -74,18 +70,85 @@ export function createStage(root: HTMLElement): PondStage {
   curtain.innerHTML = '<p class="curtain-note">the pond is settling</p>'
   root.append(curtain)
 
-  return { root, floor, surface, interactions, curtain, layers }
+  return { root, floor, surface, interactions, curtain, layers: new Map() }
+}
+
+/**
+ * Hangs a fresh canvas where the water was, and hands it back.
+ *
+ * A drawing context that has been lost and not restored can never be replaced
+ * on the canvas that held it: asking that canvas for a context again returns
+ * the same dead one. The element is what has to go. This puts a new one in
+ * exactly the same place, between the koi layers and the overlay, so the water
+ * can be built again on a page whose browser took the last one and declined to
+ * give it back.
+ *
+ * @param stage - The pond's DOM.
+ * @returns The new surface canvas, already installed and already the stage's.
+ *
+ * @example Recovering water that never came back
+ * ```typescript
+ * if (surface.lost?.() === true) {
+ *   surface = createWaterPainter(reseatSurface(stage)) ?? createSurfacePainter(stage.surface)
+ * }
+ * ```
+ */
+export function reseatSurface(stage: PondStage): HTMLCanvasElement {
+  const surface = document.createElement('canvas')
+  surface.id = stage.surface.id
+  surface.setAttribute('aria-hidden', 'true')
+  stage.surface.replaceWith(surface)
+  stage.surface = surface
+  return surface
+}
+
+/**
+ * Raises the host-owned layer for one koi instance.
+ *
+ * @param stage - The pond stage.
+ * @param id - The instance the layer belongs to.
+ * @param framework - The framework rendering it, published on the element for styling and diagnostics.
+ * @returns The layer, already in the document.
+ */
+export function addLayer(stage: PondStage, id: KoiInstanceId, framework: KoiFramework): HTMLElement {
+  const existing = stage.layers.get(id)
+  if (existing !== undefined) {
+    return existing
+  }
+  const layer = document.createElement('div')
+  layer.className = 'koi-layer'
+  layer.dataset['fish'] = framework
+  layer.dataset['instance'] = id
+  // why: Layers sit between the bed and the surface water in DOM order, so a koi can never paint over the water it swims under whatever z-index its depth grants.
+  stage.surface.before(layer)
+  stage.layers.set(id, layer)
+  return layer
+}
+
+/**
+ * Tears down one koi instance's layer.
+ *
+ * @param stage - The pond stage.
+ * @param id - The instance that left the scene.
+ */
+export function removeLayer(stage: PondStage, id: KoiInstanceId): void {
+  const layer = stage.layers.get(id)
+  if (layer === undefined) {
+    return
+  }
+  layer.remove()
+  stage.layers.delete(id)
 }
 
 /**
  * Restacks a koi's layer for the depth level it now holds.
  *
  * @param stage - The pond stage.
- * @param framework - Which koi moved.
+ * @param id - Which koi moved.
  * @param level - Its depth level; fractional levels round to a whole layer.
  */
-export function setLayerDepth(stage: PondStage, framework: KoiFramework, level: number): void {
-  const layer = stage.layers.get(framework)
+export function setLayerDepth(stage: PondStage, id: KoiInstanceId, level: number): void {
+  const layer = stage.layers.get(id)
   if (layer === undefined) {
     return
   }
@@ -103,11 +166,11 @@ export function setLayerDepth(stage: PondStage, framework: KoiFramework, level: 
  * it back.
  *
  * @param stage - The pond stage.
- * @param framework - Which koi.
+ * @param id - Which koi.
  * @param present - `true` while its session is answering.
  */
-export function setLayerPresent(stage: PondStage, framework: KoiFramework, present: boolean): void {
-  const layer = stage.layers.get(framework)
+export function setLayerPresent(stage: PondStage, id: KoiInstanceId, present: boolean): void {
+  const layer = stage.layers.get(id)
   if (layer === undefined) {
     return
   }

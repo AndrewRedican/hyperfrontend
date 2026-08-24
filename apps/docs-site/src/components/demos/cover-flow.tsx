@@ -43,11 +43,10 @@ const SPRING = 0.011
  * Horizontal on landscape, a vertical stack-flow on portrait; drag, wheel, and
  * arrow keys all carry momentum and snap onto a card. Only the centered card
  * mounts its live feature — every other card renders the demo's themed
- * fallback card. An expandable centered demo offers to stretch its running
- * embed over the viewport — the same live session, only a wider window — with
- * the deck caption restyled as a dark plaque beneath the translucent scene;
- * Escape or the feature's own close-request collapses it. Under reduced motion
- * the deck flattens to a previous/next pager.
+ * fallback card. An expandable centered demo offers to stretch itself over the
+ * viewport, with the deck caption restyled as a dark plaque beneath the
+ * translucent scene; Escape or the feature's own close-request collapses it.
+ * Under reduced motion the deck flattens to a previous/next pager.
  * @param root0
  * @param root0.entries
  * @param root0.onShell
@@ -67,9 +66,9 @@ export function CoverFlow({ entries, onShell, onCentered, onExpandedChange }: Co
   const centered = clampIndex(round(position))
   const current = entries[centered]
 
-  const { expanded, expand, collapse, holdShell } = useExpandedEmbed({
+  const { expanded, sessionKey, expand, collapse, handOver, holdShell } = useExpandedEmbed({
     expandable: current?.expandable ?? false,
-    live: embedStatus === 'live',
+    reopens: current?.reopensOnExpand ?? false,
     stageKey: centered,
     onShell,
   })
@@ -320,10 +319,11 @@ export function CoverFlow({ entries, onShell, onCentered, onExpandedChange }: Co
             vertical={vertical}
             live={index === centered && arrived}
             expanded={expanded && index === centered}
+            sessionKey={sessionKey}
             onExpand={entry.expandable && index === centered && embedStatus === 'live' ? expand : undefined}
             onCollapse={collapse}
             onNeighbor={(direction) => {
-              collapse()
+              handOver()
               goTo(centered + direction)
             }}
             onSelect={() => goTo(index)}
@@ -426,6 +426,8 @@ interface CoverFlowCardProps {
   live: boolean
   /** `true` while this card is stretched over the viewport as the demo's overlay. */
   expanded: boolean
+  /** Names the session this card mounts; a change opens the demo afresh for the scene it is now showing. */
+  sessionKey: number
   /** Offered when this card can expand right now; absent hides the affordance. */
   onExpand?: () => void
   /** Collapses the overlay back into the card. */
@@ -438,15 +440,18 @@ interface CoverFlowCardProps {
 }
 
 /**
- * One deck card. Expanded, the same element — same live iframe, same session —
- * restyles into a viewport overlay: the card was only ever a window onto the
- * running scene, and expanding it just widens the window.
+ * One deck card. Expanded, the same element restyles into a viewport overlay.
+ * Whether the session inside it travels with the element or is traded for one
+ * opened into the overlay is the demo's own choreography, carried here as the
+ * session key: one key is mounted at a time, so a demo that trades sessions
+ * never has two of them alive together.
  * @param root0
  * @param root0.entry
  * @param root0.offset
  * @param root0.vertical
  * @param root0.live
  * @param root0.expanded
+ * @param root0.sessionKey
  * @param root0.onExpand
  * @param root0.onCollapse
  * @param root0.onNeighbor
@@ -460,6 +465,7 @@ function CoverFlowCard({
   vertical,
   live,
   expanded,
+  sessionKey,
   onExpand,
   onCollapse,
   onNeighbor,
@@ -483,7 +489,7 @@ function CoverFlowCard({
     >
       {live && entry.featureUrl ? (
         <>
-          <DemoEmbed entry={entry} className="h-full w-full" frameless={expanded} onStatus={onStatus} onShell={onShell} />
+          <DemoEmbed key={sessionKey} entry={entry} className="h-full w-full" frameless={expanded} onStatus={onStatus} onShell={onShell} />
           {onExpand && !expanded ? <ExpandButton title={entry.title} onExpand={onExpand} /> : null}
           {expanded ? <ExpandedChrome title={entry.title} onCollapse={onCollapse} onNeighbor={onNeighbor} /> : null}
         </>

@@ -2,4 +2,5 @@
 import './hyperfrontend.feature'
 // </hf:feature>
 
-import './styles/fish.css'
+import '@hyperfrontend/demo-koi-lib/fish.css'
+import './state/koi'

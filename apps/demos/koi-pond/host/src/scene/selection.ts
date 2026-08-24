@@ -11,6 +11,7 @@
  * shape of its own.
  */
 import type { KoiCardLink, KoiCardPanel, KoiFramework, PondEnvironment } from '@hyperfrontend/demo-koi-lib'
+import type { KoiInstanceId } from './instance-id'
 import { FRAMEWORK_SITES, koiSourceUrl } from '@hyperfrontend/demo-koi-lib'
 
 /** The pieces floated over one held koi's card. */
@@ -26,24 +27,25 @@ export interface SelectionChrome {
   /**
    * Raises the card chrome for a koi, hidden until its card reports geometry.
    *
-   * @param framework - Which koi was held.
+   * @param id - Which koi was held.
+   * @param framework - The framework rendering it, for the card's outbound links.
    * @param appUrl - The koi's own application URL.
    */
-  hold(framework: KoiFramework, appUrl: string): void
+  hold(id: KoiInstanceId, framework: KoiFramework, appUrl: string): void
   /**
    * Removes a koi's card chrome.
    *
-   * @param framework - Which koi was released.
+   * @param id - Which koi was released.
    */
-  release(framework: KoiFramework): void
+  release(id: KoiInstanceId): void
   /**
    * Moves the chrome onto the card's reported geometry, or hides it.
    *
-   * @param framework - Whose chrome to move.
+   * @param id - Whose chrome to move.
    * @param panel - Where the card and its links sit, or `null` to hide.
    * @param pond - The announced world, for the view origin.
    */
-  trackCard(framework: KoiFramework, panel: KoiCardPanel | null, pond: PondEnvironment): void
+  trackCard(id: KoiInstanceId, panel: KoiCardPanel | null, pond: PondEnvironment): void
   /** Removes every piece of chrome. */
   dispose(): void
 }
@@ -80,12 +82,12 @@ function contain(event: Event): void {
  *
  * @example Following a held koi's card from the frame loop
  * ```typescript
- * chrome.hold(framework, fishHomeUrl(framework))
- * chrome.trackCard(framework, outline.card ?? null, pond)
+ * chrome.hold(session.id, session.framework, fishHomeUrl(session.framework))
+ * chrome.trackCard(session.id, outline.card ?? null, pond)
  * ```
  */
 export function createSelectionChrome(root: HTMLElement): SelectionChrome {
-  const held = new Map<KoiFramework, CardChrome>()
+  const held = new Map<KoiInstanceId, CardChrome>()
 
   const anchor = (href: string, label: string): HTMLAnchorElement => {
     const link = document.createElement('a')
@@ -101,8 +103,8 @@ export function createSelectionChrome(root: HTMLElement): SelectionChrome {
   }
 
   return {
-    hold(framework, appUrl) {
-      if (held.has(framework)) {
+    hold(id, framework, appUrl) {
+      if (held.has(id)) {
         return
       }
       const shield = document.createElement('div')
@@ -114,11 +116,11 @@ export function createSelectionChrome(root: HTMLElement): SelectionChrome {
       const site = anchor(FRAMEWORK_SITES[framework], "Open this framework's website in a new tab")
       const source = anchor(koiSourceUrl(framework), "Open this fish app's source code in a new tab")
       root.append(shield, app, site, source)
-      held.set(framework, { shield, app, site, source })
+      held.set(id, { shield, app, site, source })
     },
 
-    release(framework) {
-      const chrome = held.get(framework)
+    release(id) {
+      const chrome = held.get(id)
       if (chrome === undefined) {
         return
       }
@@ -126,11 +128,11 @@ export function createSelectionChrome(root: HTMLElement): SelectionChrome {
       chrome.app.remove()
       chrome.site.remove()
       chrome.source.remove()
-      held.delete(framework)
+      held.delete(id)
     },
 
-    trackCard(framework, panel, pond) {
-      const chrome = held.get(framework)
+    trackCard(id, panel, pond) {
+      const chrome = held.get(id)
       if (chrome === undefined) {
         return
       }

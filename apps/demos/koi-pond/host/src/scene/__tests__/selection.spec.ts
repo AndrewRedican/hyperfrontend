@@ -24,21 +24,21 @@ function harness() {
 describe('the card chrome', () => {
   it('raises a shield and three anchors for a held koi, hidden until the card reports', () => {
     const { root, chrome } = harness()
-    chrome.hold('lit', 'https://pond.test/fish-lit/')
+    chrome.hold('lit:0', 'lit', 'https://pond.test/fish-lit/')
     expect(root.querySelector('.koi-card-shield')?.hasAttribute('hidden')).toBe(true)
     expect(root.querySelectorAll('.koi-card-link')).toHaveLength(3)
   })
 
   it('never doubles up however many times the same koi is held', () => {
     const { root, chrome } = harness()
-    chrome.hold('lit', 'https://pond.test/fish-lit/')
-    chrome.hold('lit', 'https://pond.test/fish-lit/')
+    chrome.hold('lit:0', 'lit', 'https://pond.test/fish-lit/')
+    chrome.hold('lit:0', 'lit', 'https://pond.test/fish-lit/')
     expect(root.querySelectorAll('.koi-card-shield')).toHaveLength(1)
   })
 
   it('links the app URL, the framework site, and the app source as ordinary new-tab anchors', () => {
     const { root, chrome } = harness()
-    chrome.hold('lit', 'https://pond.test/fish-lit/')
+    chrome.hold('lit:0', 'lit', 'https://pond.test/fish-lit/')
     const [app, site, source] = [...root.querySelectorAll<HTMLAnchorElement>('.koi-card-link')]
     expect(app?.href).toBe('https://pond.test/fish-lit/')
     expect(site?.href).toBe('https://lit.dev/')
@@ -52,8 +52,8 @@ describe('the card chrome', () => {
 
   it('floats every piece over the reported card, in view coordinates', () => {
     const { root, chrome } = harness()
-    chrome.hold('lit', 'https://pond.test/fish-lit/')
-    chrome.trackCard('lit', PANEL, POND)
+    chrome.hold('lit:0', 'lit', 'https://pond.test/fish-lit/')
+    chrome.trackCard('lit:0', PANEL, POND)
     const shield = root.querySelector<HTMLElement>('.koi-card-shield')
     const [app, site] = [...root.querySelectorAll<HTMLAnchorElement>('.koi-card-link')]
     expect(shield?.hidden).toBe(false)
@@ -65,9 +65,9 @@ describe('the card chrome', () => {
 
   it('hides only the source anchor when an older shell reports a card without one', () => {
     const { root, chrome } = harness()
-    chrome.hold('lit', 'https://pond.test/fish-lit/')
+    chrome.hold('lit:0', 'lit', 'https://pond.test/fish-lit/')
     const bare = <KoiCardPanel>(<unknown>{ frame: PANEL.frame, app: PANEL.app, site: PANEL.site })
-    chrome.trackCard('lit', bare, POND)
+    chrome.trackCard('lit:0', bare, POND)
     const [app, site, source] = [...root.querySelectorAll<HTMLAnchorElement>('.koi-card-link')]
     expect(app?.hidden).toBe(false)
     expect(site?.hidden).toBe(false)
@@ -76,9 +76,9 @@ describe('the card chrome', () => {
 
   it('hides while the card has no geometry to sit on', () => {
     const { root, chrome } = harness()
-    chrome.hold('lit', 'https://pond.test/fish-lit/')
-    chrome.trackCard('lit', PANEL, POND)
-    chrome.trackCard('lit', null, POND)
+    chrome.hold('lit:0', 'lit', 'https://pond.test/fish-lit/')
+    chrome.trackCard('lit:0', PANEL, POND)
+    chrome.trackCard('lit:0', null, POND)
     expect(root.querySelector<HTMLElement>('.koi-card-shield')?.hidden).toBe(true)
     expect([...root.querySelectorAll<HTMLAnchorElement>('.koi-card-link')].every((link) => link.hidden)).toBe(true)
   })
@@ -87,8 +87,8 @@ describe('the card chrome', () => {
     const { root, chrome } = harness()
     const reached = vi.fn<() => void>()
     root.addEventListener('pointerdown', reached)
-    chrome.hold('lit', 'https://pond.test/fish-lit/')
-    chrome.trackCard('lit', PANEL, POND)
+    chrome.hold('lit:0', 'lit', 'https://pond.test/fish-lit/')
+    chrome.trackCard('lit:0', PANEL, POND)
     const shield = root.querySelector<HTMLElement>('.koi-card-shield')
     shield?.dispatchEvent(new Event('pointerdown', { bubbles: true }))
     root.querySelector<HTMLAnchorElement>('.koi-card-link')?.dispatchEvent(new Event('pointerdown', { bubbles: true }))
@@ -97,16 +97,16 @@ describe('the card chrome', () => {
 
   it('leaves with the release', () => {
     const { root, chrome } = harness()
-    chrome.hold('lit', 'https://pond.test/fish-lit/')
-    chrome.release('lit')
+    chrome.hold('lit:0', 'lit', 'https://pond.test/fish-lit/')
+    chrome.release('lit:0')
     expect(root.querySelector('.koi-card-shield')).toBeNull()
     expect(root.querySelectorAll('.koi-card-link')).toHaveLength(0)
   })
 
   it('takes everything down on dispose', () => {
     const { root, chrome } = harness()
-    chrome.hold('lit', 'https://pond.test/fish-lit/')
-    chrome.hold('vue', 'https://pond.test/fish-vue/')
+    chrome.hold('lit:0', 'lit', 'https://pond.test/fish-lit/')
+    chrome.hold('vue:0', 'vue', 'https://pond.test/fish-vue/')
     chrome.dispose()
     expect(root.querySelectorAll('.koi-card-shield, .koi-card-link')).toHaveLength(0)
   })

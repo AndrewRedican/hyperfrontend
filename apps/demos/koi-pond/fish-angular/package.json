@@ -21,7 +21,7 @@
     "@angular/core": "22.1.2",
     "@angular/platform-browser": "22.1.2",
     "@hyperfrontend/demo-koi-lib": "file:../vendor/hyperfrontend-demo-koi-lib-0.1.0.tgz",
-    "@hyperfrontend/features": "0.7.1",
+    "@hyperfrontend/features": "0.8.0",
     "rxjs": "7.8.2",
     "three": "0.185.1",
     "tslib": "2.8.1"

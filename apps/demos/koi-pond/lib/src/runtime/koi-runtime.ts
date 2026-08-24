@@ -2,10 +2,13 @@
  * The loop a koi swims by: its brain, its renderer, and the frames that drive
  * them.
  *
- * A koi swims whether or not a pond is listening. Standalone the SDK creates no
- * channel and nothing announces a world, so the runtime falls back to its own
- * frame, and a visitor sees a single fish swimming in clear water; the composed
- * pond is that same code path with the announcements switched on.
+ * A koi swims whether or not a pond is listening. Opened as a top-level page the
+ * SDK creates no channel and nothing announces a world, so the runtime falls
+ * back to a world of its own, dresses the page around the fish, and a visitor
+ * sees a single koi swimming in water of its own with the framework that drew
+ * it named beside it; the composed pond is that same code path with the
+ * announcements switched on and the page left bare, and a koi told of a world
+ * other than the one it invented enters that one instead.
  *
  * What differs between the apps that swim a koi is how the fish is drawn and
  * mounted, so both the renderer and the brain are built through factories the
@@ -19,10 +22,11 @@ import type { KoiFramework, KoiProfile, PondEnvironment } from '../model/types.j
 import type { KoiMotion, KoiMotionInit } from '../motion/koi-motion.js'
 import type { KoiRenderer, KoiRendererFactory } from './koi-renderer.js'
 import { wireKoiContract } from '../contract/wire.js'
-import { describePond, entryStation, pondWindow } from '../geometry/virtual-pond.js'
+import { describePond, describePondForFrame, entryStation, pondWindow } from '../geometry/virtual-pond.js'
 import { mayRipple } from '../model/depth.js'
 import { koiProfile, koiSeed } from '../model/traits.js'
 import { createKoiMotion } from '../motion/koi-motion.js'
+import { mountSoloPage } from '../solo/solo-page.js'
 import { measureOwnMemory, originRelation } from './browsing-context.js'
 
 /** How often the koi reports its outline to the host, in milliseconds. */
@@ -96,23 +100,31 @@ export interface KoiRuntimeInit {
  */
 export function createKoiRuntime(init: KoiRuntimeInit): KoiRuntime {
   const { framework, root, rendererFactory } = init
-  const profile: KoiProfile = koiProfile(framework)
+  let seed = koiSeed(framework)
+  let profile: KoiProfile = koiProfile(framework)
   const buildMotion: KoiMotionFactory = init.motionFactory ?? createKoiMotion
   // why: The koi may be framed from a sub-path of the pond or served at its own origin's root, so the identity a visitor reads is resolved from wherever this page actually is.
   const url = new URL('.', window.location.href).href
 
-  // why: Standalone the host never announces a world, so the koi takes the same screen snapshot the host would: the virtual pond derives from the screen, and the frame only decides how much of it shows.
-  let pond: PondEnvironment = describePond(
-    window.screen.width,
-    window.screen.height,
-    window.innerWidth,
-    window.innerHeight,
-    window.matchMedia('(prefers-reduced-motion: reduce)').matches
-  )
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  // why: A koi that may yet be framed takes the same screen snapshot the host would, because the world has to survive being told about a view it has not seen yet. A koi told it is top-level will never be told anything: its window is the whole of the water there is, and a world derived from the screen behind that window would send the animal off to swim in the part of it nobody is looking at.
+  let pond: PondEnvironment =
+    init.hosted === false
+      ? describePondForFrame(window.innerWidth, window.innerHeight, reducedMotion)
+      : describePond(window.screen.width, window.screen.height, window.innerWidth, window.innerHeight, reducedMotion)
 
   const entry = entryStation(pond, koiSeed(framework))
-  const motion = buildMotion({ profile, pond, position: entry.position, heading: entry.heading, depth: ENTRY_DEPTH })
+  let motion = buildMotion({ profile, pond, position: entry.position, heading: entry.heading, depth: ENTRY_DEPTH })
   let renderer: KoiRenderer | null = rendererFactory(root, profile, url, pond)
+
+  // why: Only an app that states it is top-level dresses its page. An app that says nothing is treated as hosted, because the cost of the two mistakes is not the same: a bare page on a direct visit is the demo as it stood, while water painted inside a pond's frame blanks every koi below it.
+  let undress: (() => void) | null = init.hosted === false ? mountSoloPage({ profile, url }) : null
+
+  /** Takes the page a koi dressed for itself back down, the moment anything claims to be hosting it. */
+  const undressed = (): void => {
+    undress?.()
+    undress = null
+  }
 
   let emit: (type: string, data?: unknown) => void = () => {}
   let hosted = init.hosted === true
@@ -311,6 +323,7 @@ export function createKoiRuntime(init: KoiRuntimeInit): KoiRuntime {
     }
     disposed = true
     standDown()
+    undressed()
     closeInspector()
     window.removeEventListener('resize', onResize)
     window.removeEventListener('pagehide', onPageHide)
@@ -320,13 +333,37 @@ export function createKoiRuntime(init: KoiRuntimeInit): KoiRuntime {
   const runtime: KoiRuntime = {
     setPond(next) {
       hosted = true
+      undressed()
+      // why: A koi builds a world from its own screen so it can swim before anything answers it. A host that announces a world of different dimensions is correcting that guess, and the station the koi took in the world it invented means nothing in this one: it would sit wherever the guess put it, which on a small world is off the water entirely. So it enters the water it was actually given, exactly as it entered the one it imagined.
+      const restation = next.width !== pond.width || next.height !== pond.height
       pond = next
-      motion.setPond(next)
+      if (restation) {
+        const station = entryStation(pond, koiSeed(framework), instance)
+        motion = buildMotion({ profile, pond, position: station.position, heading: station.heading, depth: ENTRY_DEPTH })
+        wasFleeing = false
+      } else {
+        motion.setPond(next)
+      }
       renderer?.setPond(next)
     },
     adopt(identity) {
       // why: A shoal stood back up together builds its GL contexts one ordinal at a time, so a koi keeps the ordinal that says when its own turn comes.
       instance = identity.instance
+      if (identity.seed !== seed) {
+        // why: The dealt seed is the authority every trait derives from — a duplicate is told apart by the seed the host chose for it, so the whole animal is rebuilt around it: body, brain, and a station clear of its siblings.
+        seed = identity.seed
+        profile = koiProfile(framework, seed)
+        const station = entryStation(pond, koiSeed(framework), identity.instance)
+        motion = buildMotion({ profile, pond, position: station.position, heading: station.heading, depth: ENTRY_DEPTH })
+        wasFleeing = false
+        if (renderer !== null) {
+          renderer.dispose()
+          const view = rendererFactory(root, profile, url, pond)
+          renderer = view
+          view.setHovered(hovered)
+          view.setSelected(held && !resting)
+        }
+      }
       motion.setDepth(identity.depth)
     },
     setDepth(level) {

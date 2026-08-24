@@ -233,6 +233,38 @@ Content here`
       const result = extractBadgesBlock(content)
       expect(result).toBeNull()
     })
+
+    it('skips a centered capture above the badges', () => {
+      const content = `# Title
+
+<p align="center">
+  <img src="https://www.hyperfrontend.dev/media/thing/hero.gif" alt="A capture">
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/npm/v/thing" alt="npm version">
+</p>
+
+Content here`
+      const result = extractBadgesBlock(content)
+      expect(result?.block).toContain('img.shields.io')
+    })
+
+    it('skips a centered capture below the badges', () => {
+      const content = `# Title
+
+<p align="center">
+  <img src="https://img.shields.io/npm/v/thing" alt="npm version">
+</p>
+
+<p align="center">
+  <img src="https://www.hyperfrontend.dev/media/thing/hero.gif" alt="A capture">
+</p>
+
+Content here`
+      const result = extractBadgesBlock(content)
+      expect(result?.block).not.toContain('hero.gif')
+    })
   })
 
   describe('extractShortDescription', () => {
@@ -262,6 +294,17 @@ A short description here.
 A description`
       const result = extractShortDescription(content, 2)
       expect(result?.text).toBe('A description')
+    })
+
+    it('skips a bare markdown image so the real description is still checked', () => {
+      const content = `Line 0
+</p>
+
+![A capture](https://www.hyperfrontend.dev/media/thing/hero.gif)
+
+A short description here.`
+      const result = extractShortDescription(content, 2)
+      expect(result?.text).toBe('A short description here.')
     })
   })
 

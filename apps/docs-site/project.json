@@ -53,6 +53,7 @@
         "{workspaceRoot}/MANIFESTO.md",
         "{workspaceRoot}/REGARDING_AI.md",
         "{workspaceRoot}/.all-contributorsrc",
+        "{workspaceRoot}/assets/media/**",
         "{workspaceRoot}/libs/**/*.md",
         "{workspaceRoot}/libs/**/src/**/*.ts",
         "{workspaceRoot}/plugins/**/*.md",

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { Disturbance, KoiFramework, NeighborObservation, PondEnvironment } from '../../model/types.js'
 import { describePond, entryStation } from '../../geometry/virtual-pond.js'
-import { wrapAngle } from '../../geometry/steering.js'
+import { ENCOUNTER_CLEARANCE, ENCOUNTER_HORIZON_S, wrapAngle } from '../../geometry/steering.js'
 import { KOI_FRAMEWORKS } from '../../model/types.js'
 import { koiProfile, koiSeed } from '../../model/traits.js'
 import type { KoiTurnTierName } from '../manoeuvre.js'
@@ -24,6 +24,17 @@ const OBSTACLE_AHEAD = 200
 
 /** How far to one side of that a check parks it when the water has to read lopsided, in CSS pixels. */
 const OBSTACLE_ASIDE = 280
+
+/**
+ * Maps a normalised trait onto a band, exactly as the brain does.
+ *
+ * @param trait - The trait, 0 to 1.
+ * @param band - The band to map onto.
+ * @returns The mapped value.
+ */
+function lerp(trait: number, band: { min: number; max: number }): number {
+  return band.min + trait * (band.max - band.min)
+}
 
 /**
  * Builds the pond the checks swim in.
@@ -234,7 +245,7 @@ describe('createKoiMotion decision observer', () => {
     swim(motion, 60)
     expect(decisions.length).toBeGreaterThan(1)
     expect(decisions.length).toBeLessThan(60)
-    // why: A repeated cause would mean the same standing intention was reported twice running, which is the frame-by-frame chatter the observer exists to avoid.
+    // why: With nothing to avoid, a repeated cause would mean the same standing intention was reported twice running, which is the frame-by-frame chatter the observer exists to avoid. A koi that re-commits a break speaks twice on purpose, and is checked where the breaks are.
     const repeated = decisions.filter((decision, index) => index > 0 && decision.cause === decisions[index - 1]?.cause)
     expect(repeated).toEqual([])
   })
@@ -398,6 +409,79 @@ function againstAStillKoi(ahead: number, aside: number, frames: number): { decis
   return { decisions, turnVelocity: motion.state.turnVelocity }
 }
 
+/** How the tiers rank against each other, so a spec can read one break as heavier than another. */
+const EFFORT: Readonly<Record<KoiTurnTierName, number>> = { subtle: 0, normal: 1, hard: 2 }
+
+/** What a koi did about a neighbour crossing its bow. */
+interface Breaking {
+  /** The heading it had committed to, sampled every frame. */
+  committed: number[]
+  /** How far its own heading still had to swing to reach that commitment, sampled every frame. */
+  gaps: number[]
+  /** Every decision it committed to, in order. */
+  decisions: KoiDecision[]
+}
+
+/**
+ * Runs a koi at a neighbour coming the other way and watches the break it commits.
+ *
+ * The neighbour is reported from a fixed station on a fixed course, so what the
+ * geometry does over the run is the koi's own doing and nothing else's.
+ *
+ * @param seconds - How long to run for.
+ * @returns What it committed to, frame by frame.
+ */
+function breaking(seconds: number): Breaking {
+  const world = pond()
+  const centre = { x: world.width / 2, y: world.height / 2 }
+  const decisions: KoiDecision[] = []
+  const motion = createKoiMotion(
+    { ...born('react', world), position: { ...centre }, heading: 0 },
+    { onDecision: (decision) => decisions.push(decision) }
+  )
+  const oncoming: NeighborObservation = {
+    framework: 'angular',
+    x: centre.x + world.fishLength * 1.2,
+    y: centre.y,
+    heading: Math.PI,
+    speed: motion.state.speed,
+    depth: ENTRY_DEPTH,
+    length: motion.state.length,
+    girth: motion.state.length * koiProfile('angular').build.girthRatio,
+  }
+  const committed: number[] = []
+  const gaps: number[] = []
+  const frames = Math.round(seconds / DT)
+  for (let frame = 1; frame <= frames; frame += 1) {
+    motion.observe([oncoming])
+    motion.advance(DT)
+    const intent = motion.outline().intent
+    committed.push(intent?.heading ?? motion.state.heading)
+    gaps.push(Math.abs(wrapAngle((intent?.heading ?? motion.state.heading) - motion.state.heading)))
+  }
+  return { committed, gaps, decisions }
+}
+
+/**
+ * The longest stretch a koi held one committed heading for.
+ *
+ * @param committed - The heading it had committed to, frame by frame.
+ * @returns Where that stretch starts and how many frames it runs.
+ */
+function longestHold(committed: readonly number[]): { from: number; length: number } {
+  let best = { from: 0, length: 0 }
+  let from = 0
+  for (let index = 1; index <= committed.length; index += 1) {
+    if (index === committed.length || committed[index] !== committed[from]) {
+      if (index - from > best.length) {
+        best = { from, length: index - from }
+      }
+      from = index
+    }
+  }
+  return best
+}
+
 /**
  * The speed a koi settles at while it holds a fully committed turn.
  *
@@ -501,6 +585,66 @@ describe('createKoiMotion avoidance side', () => {
 
   it('reaches the same decisions, bias included, on the same seeds', () => {
     expect(headOn().decisions).toEqual(headOn().decisions)
+  })
+})
+
+describe('createKoiMotion reported intent', () => {
+  it('never answers for a heading its own helm could not carry it to', () => {
+    const world = pond()
+    const overrun: { gap: number; reachable: number }[] = []
+    for (const framework of KOI_FRAMEWORKS) {
+      const { traits } = koiProfile(framework)
+      const motion = createKoiMotion(born(framework, world))
+      const helm = lerp(traits.turnResponsiveness, DEFAULT_MOTION_TRIM.turnRate) * DEFAULT_MOTION_LIMITS.turnMagnitudeCap
+      swim(motion, 40, () => {
+        const intent = motion.outline().intent
+        if (intent === undefined) {
+          return
+        }
+        const { speed, heading } = motion.state
+        const overCruise = Math.max(0, speed / world.fishLength - DEFAULT_MOTION_TRIM.cruiseBlS.max)
+        const reachable =
+          ((helm * intent.gain) / (1 + overCruise * DEFAULT_MOTION_LIMITS.turnSpeedTax)) * DEFAULT_MOTION_TRIM.intentHorizonS
+        overrun.push({ gap: Math.abs(wrapAngle(intent.heading - heading)), reachable })
+      })
+    }
+    // why: A koi leaning on a waypoint abeam is not turning through a right angle this second, and announcing one is exactly the manoeuvre a visitor then watches never happen.
+    expect(overrun.filter((sample) => sample.gap > sample.reachable + 1e-9)).toEqual([])
+    expect(Math.max(...overrun.map((sample) => sample.gap))).toBeGreaterThan(0.2)
+  })
+
+  it('reports the region its own narrow phase judges a crossing in', () => {
+    const world = pond()
+    const profile = koiProfile('react')
+    const motion = createKoiMotion(born('react', world))
+    swim(motion, 4)
+    const intent = motion.outline().intent
+    const { speed, length } = motion.state
+    expect(intent?.reachPx).toBeCloseTo(speed * ENCOUNTER_HORIZON_S, 9)
+    expect(intent?.clearancePx).toBeCloseTo(length * ENCOUNTER_CLEARANCE + length * profile.build.girthRatio * 2, 9)
+  })
+})
+
+describe('createKoiMotion committed break', () => {
+  it('holds the heading it broke onto, so the koi arrives on it', () => {
+    const { committed, gaps } = breaking(3)
+    const hold = longestHold(committed)
+    const opened = gaps[hold.from] ?? 0
+    const closed = gaps[hold.from + hold.length - 1] ?? 0
+    // why: A break re-anchored off the koi's own nose every decision beat runs away at exactly the rate the koi turns onto it, so the gap stays open for the whole encounter and the manoeuvre never ends. An anchored one is a heading the animal reaches.
+    expect(hold.length).toBeGreaterThan(Math.round(0.6 / DT))
+    expect(opened).toBeGreaterThan(DEFAULT_MOTION_TRIM.evasionTiers.subtle.arc / 2)
+    expect(closed).toBeLessThan(opened * 0.35)
+  })
+
+  it('announces a heavier break when the crossing outgrows the one it committed to', () => {
+    const breaks = breaking(6).decisions.filter((decision) => decision.cause === 'evade')
+    expect(breaks.length).toBeGreaterThan(1)
+    // why: Escalating is a fresh commitment rather than a standing intention persisting, so an observer hears it; and effort only ever climbs inside one encounter, because a break that unwound itself would read as a fish changing its mind mid-manoeuvre.
+    expect(new Set(breaks.map((decision) => decision.heading)).size).toBe(breaks.length)
+    const efforts = breaks.map((decision) => EFFORT[decision.tier ?? 'subtle'])
+    expect(efforts).toEqual([...efforts].sort((first, second) => first - second))
+    expect(efforts.at(-1)).toBeGreaterThan(efforts[0] ?? 0)
   })
 })
 

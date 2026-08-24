@@ -1,8 +1,9 @@
 /**
- * Eight shells, one per koi.
+ * One shell session per swimming koi.
  *
  * Every koi ships as an independent feature with its own vendored shell
- * package; the host opens one session per shell into a container it owns.
+ * package; the host opens one session per instance into a container it owns,
+ * and two koi of one framework are simply two sessions of the same shell.
  * There is no broadcast in the SDK and none is wanted: each koi is a separate
  * application on its own channel, and the host fans out by looping. Every frame
  * one of these is a different conversation — different neighbours, a different
@@ -13,7 +14,9 @@
  * instance to the same maximum z-index and appends above the host's water
  * layer, and the z-order is the depth model.
  */
-import type { KoiFramework } from '@hyperfrontend/demo-koi-lib'
+import type { KoiFramework, KoiIdentity } from '@hyperfrontend/demo-koi-lib'
+import type { KoiInstanceId } from './instance-id'
+import type { PondStage } from './stage'
 import { createFeatureShell as createAngularKoiShell } from '@hyperfrontend/demo-koi-fish-angular-shell'
 import { createFeatureShell as createLitKoiShell } from '@hyperfrontend/demo-koi-fish-lit-shell'
 import { createFeatureShell as createPreactKoiShell } from '@hyperfrontend/demo-koi-fish-preact-shell'
@@ -22,7 +25,9 @@ import { createFeatureShell as createSolidKoiShell } from '@hyperfrontend/demo-k
 import { createFeatureShell as createSvelteKoiShell } from '@hyperfrontend/demo-koi-fish-svelte-shell'
 import { createFeatureShell as createVanillaKoiShell } from '@hyperfrontend/demo-koi-fish-vanilla-shell'
 import { createFeatureShell as createVueKoiShell } from '@hyperfrontend/demo-koi-fish-vue-shell'
-import { KOI_FRAMEWORKS, koiSeed } from '@hyperfrontend/demo-koi-lib'
+import { koiVariantSeed } from '@hyperfrontend/demo-koi-lib'
+import { koiInstanceId } from './instance-id'
+import { addLayer } from './stage'
 
 /** How long the host waits for a koi's handshake before giving up on it. */
 const OPEN_TIMEOUT_MS = 20_000
@@ -69,7 +74,7 @@ interface KoiShellMountOptions {
 type KoiShellFactory = (options: KoiShellMountOptions) => KoiShell
 
 // ref: [guide:compose-independent-features/shell-factories] start
-/** One factory per koi, each from its own vendored shell package. */
+/** One factory per koi app, each from its own vendored shell package. */
 const SHELL_FACTORIES: Record<KoiFramework, KoiShellFactory> = {
   vanilla: (options) => createVanillaKoiShell(options),
   react: (options) => createReactKoiShell(options),
@@ -84,8 +89,12 @@ const SHELL_FACTORIES: Record<KoiFramework, KoiShellFactory> = {
 
 /** One live koi: its host-owned layer and the shell driving its channel. */
 export interface KoiSession {
+  /** The host-side key everything session-shaped files this koi under. */
+  id: KoiInstanceId
   /** The framework slug rendering it, also its deployed sub-path. */
   framework: KoiFramework
+  /** Which of its framework's koi this one is; 0 is the canonical fish. */
+  ordinal: number
   /** The host-owned container its frame mounts into. */
   layer: HTMLElement
   /** The shell driving its channel. */
@@ -104,7 +113,7 @@ export interface KoiSession {
  * would leave the document one directory up, where every relative asset
  * misses.
  *
- * @param framework - Which koi.
+ * @param framework - Which koi app.
  * @returns Its absolute app URL, without any index file spelled out.
  */
 export function fishHomeUrl(framework: KoiFramework): string {
@@ -116,44 +125,46 @@ export function fishHomeUrl(framework: KoiFramework): string {
 }
 
 /**
- * Opens one embedded session per koi.
+ * Opens one koi instance: a host-owned layer raised on demand, and an embedded
+ * session of its framework's shell mounted into it.
  *
- * @param layers - The host-owned containers, keyed by framework slug.
- * @returns One session per koi, in the pond's canonical order.
+ * @param stage - The pond stage the layer is raised in.
+ * @param framework - The framework rendering this koi.
+ * @param ordinal - Which of that framework's koi this is; 0 is the canonical fish.
+ * @returns The session, not yet opened.
  *
- * @example Raising the shoal
+ * @example Raising one koi
  * ```typescript
- * const sessions = openShoal(stage.layers)
- * sessions.forEach((session) => session.shell.open())
+ * const session = openInstance(stage, 'react', 0)
+ * session.shell.open()
  * ```
  */
 // ref: [guide:compose-independent-features/open-shoal] start
-export function openShoal(layers: ReadonlyMap<KoiFramework, HTMLElement>): KoiSession[] {
-  const sessions: KoiSession[] = []
-  for (const framework of KOI_FRAMEWORKS) {
-    const layer = layers.get(framework)
-    if (layer === undefined) {
-      continue
-    }
-    const shell = SHELL_FACTORIES[framework]({
-      container: layer,
-      // why: Eight handshakes queue behind one another on a cold load, and the ten-second default times the last of them out.
-      openTimeoutMs: OPEN_TIMEOUT_MS,
-      ...(COMPOSED_DEPLOYMENT && { url: fishHomeUrl(framework) }),
-    })
-    sessions.push({ framework, layer, shell })
-  }
-  return sessions
+export function openInstance(stage: PondStage, framework: KoiFramework, ordinal: number): KoiSession {
+  const id = koiInstanceId(framework, ordinal)
+  const layer = addLayer(stage, id, framework)
+  const shell = SHELL_FACTORIES[framework]({
+    container: layer,
+    // why: Several handshakes queue behind one another on a cold load, and the ten-second default times the last of them out.
+    openTimeoutMs: OPEN_TIMEOUT_MS,
+    ...(COMPOSED_DEPLOYMENT && { url: fishHomeUrl(framework) }),
+  })
+  return { id, framework, ordinal, layer, shell }
 }
 // ref: [guide:compose-independent-features/open-shoal] end
 
 /**
  * The identity payload a koi is sent as soon as its channel opens.
  *
- * @param framework - Which koi.
+ * The seed is the variant seed for its ordinal: the canonical fish keeps its
+ * framework's canonical seed, and a duplicate is dealt a derived one, so twins
+ * share a species and a palette while every phenotype detail jitters apart.
+ *
+ * @param framework - Which koi app.
+ * @param ordinal - Which of that framework's koi this is.
  * @param depth - The level the host is starting it at.
  * @returns The identity to send.
  */
-export function identityFor(framework: KoiFramework, depth: number): { framework: KoiFramework; seed: number; url: string; depth: number } {
-  return { framework, seed: koiSeed(framework), url: fishHomeUrl(framework), depth }
+export function identityFor(framework: KoiFramework, ordinal: number, depth: number): KoiIdentity {
+  return { framework, seed: koiVariantSeed(framework, ordinal), instance: ordinal, url: fishHomeUrl(framework), depth }
 }

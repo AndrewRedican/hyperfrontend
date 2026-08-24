@@ -313,14 +313,21 @@ export function extractSections(content: string): ExtractedSection[] {
   return sections
 }
 
+/** Hosts that identify a centered paragraph as a badge block rather than content. */
+const BADGE_HOST_PATTERN = /img\.shields\.io|codecov\.io|\/badge\//i
+
 /**
  * Remove badge section from README content (typically at the top)
+ *
+ * Only centered paragraphs that actually contain badge images are removed. A
+ * README may also centre a screenshot or demo capture, and that belongs on the
+ * page: stripping every centered paragraph would delete it with no trace.
  *
  * @param content - The markdown content to clean
  * @returns The content with badges removed
  */
 export function removeBadges(content: string): string {
-  const cleaned = content.replace(/<p align="center">[\s\S]*?<\/p>/g, '')
+  const cleaned = content.replace(/<p align="center">[\s\S]*?<\/p>/g, (block) => (BADGE_HOST_PATTERN.test(block) ? '' : block))
 
   return cleaned.replace(/^\[!\[.*?\]\(.*?\)\]\(.*?\)\s*$/gm, '').trim()
 }

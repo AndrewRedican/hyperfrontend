@@ -8,6 +8,7 @@ heroImage: '/articles/microfrontends-from-first-principles/hero.webp'
 category: 'first-principles'
 tags: 'microfrontends, iframes, security, contracts, architecture'
 packages: '@hyperfrontend/features, @hyperfrontend/nexus'
+related: 'hyperfrontend-vs-module-federation'
 mediumUrl: 'https://medium.com/@andrew.redican.mejia/microfrontends-from-first-principles-178aafe02ce5'
 hackernoonUrl: 'https://hackernoon.com/the-real-cost-of-microfrontends'
 ---

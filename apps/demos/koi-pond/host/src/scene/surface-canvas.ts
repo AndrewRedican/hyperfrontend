@@ -49,6 +49,17 @@ export interface SurfacePainter {
    * @param frame - Everything the surface needs to draw.
    */
   paint(frame: SurfaceFrame): void
+  /**
+   * Whether this painter has lost the context it draws through and is waiting for another.
+   *
+   * Only the GPU painter can answer anything but `false`: a 2D context is never
+   * taken away, while a GPU one is the first thing a browser reclaims from a
+   * backgrounded tab. A painter still lost when the visitor comes back has to
+   * be replaced rather than waited on.
+   *
+   * @returns `true` while nothing this painter draws would reach the screen.
+   */
+  lost?(): boolean
 }
 
 /**

@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+# Repoint the `latest-*` links at the most recently touched session.
+#
+# Session directories are named by UUID, so the newest one is the only useful
+# entry point. Run this whenever the shortcuts have gone stale:
+#
+#   _/claude/refresh
+set -euo pipefail
+
+# why: Resolved two levels up rather than from this file's own directory, so the
+# same script works whether it is run from .devcontainer/claude-links/ or
+# through the _/claude/ symlink. Both sit at the same depth.
+repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+links_dir="$repo_root/_/claude"
+
+# The most recently modified session directory under a root, or nothing.
+# how: Matched on the UUID shape a session is named by, so a sibling that is not
+# a session (`memory`, say) can never win the race for newest.
+newest() {
+  find -L "$1" -mindepth 1 -maxdepth 1 -type d \
+    -name '????????-????-????-????-????????????' -printf '%T@ %p\n' 2>/dev/null |
+    sort -rn | head -1 | cut -d' ' -f2-
+}
+
+for pair in "latest-scratch:scratch" "latest-session:sessions"; do
+  name="${pair%%:*}"
+  root="$links_dir/${pair##*:}"
+  target="$(newest "$root")"
+  if [ -n "$target" ]; then
+    ln -sfn "$target" "$links_dir/$name"
+    printf '%-15s -> %s\n' "$name" "${target#"$repo_root"/}"
+  else
+    printf '%-15s -> (nothing under %s yet)\n' "$name" "${root#"$repo_root"/}"
+  fi
+done

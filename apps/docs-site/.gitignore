@@ -13,6 +13,9 @@ dist/
 public/guides/
 public/search-index.json
 
+# Copied from the workspace assets/media directory at build time
+public/media/
+
 # Local env files
 .env.local
 .env.development.local

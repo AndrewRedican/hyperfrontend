@@ -44,6 +44,10 @@ export interface KoiRuntime {
   /**
    * Takes the identity the host assigned at open.
    *
+   * The dealt seed is the authority every trait derives from: a koi handed a
+   * seed other than the one it assumed rebuilds itself around it, so a
+   * duplicate swims as its own animal rather than a copy of the canonical one.
+   *
    * @param identity - Who this koi is and where its app lives.
    */
   adopt(identity: KoiIdentity): void

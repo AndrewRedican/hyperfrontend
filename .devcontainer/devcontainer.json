@@ -31,10 +31,15 @@
         "files.trimTrailingWhitespace": true,
         "git.useEditorAsCommitInput": false,
         "telemetry.telemetryLevel": "off",
-        "gitlens.telemetry.enabled": false
+        "gitlens.telemetry.enabled": false,
+        "files.watcherExclude": {
+          "_/claude/sessions/**": true,
+          "_/claude/all-projects/**": true,
+          "_/claude/file-history/**": true
+        }
       }
     }
   },
   "remoteUser": "vscode",
-  "postCreateCommand": "npm ci"
+  "postCreateCommand": "bash .devcontainer/media-tools.sh --soft-fail && npm ci && bash .devcontainer/claude-links/setup.sh --soft-fail"
 }

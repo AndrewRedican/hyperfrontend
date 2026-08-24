@@ -198,7 +198,31 @@ function publicAssetExists(link: string): boolean {
   if (!link.startsWith('/')) {
     return false
   }
-  return existsSync(join(DOCS_SITE_ROOT, 'public', link.split('#')[0]))
+  const path = link.split('#')[0]
+  if (path.startsWith('/media/')) {
+    return existsSync(join(WORKSPACE_ROOT, 'assets', path.replace(/^\//, '')))
+  }
+  return existsSync(join(DOCS_SITE_ROOT, 'public', path))
+}
+
+/**
+ * Strip the site's own origin from a link, leaving a site-absolute path.
+ *
+ * READMEs are copied byte-identical to npm, so an asset they show has to be
+ * named by absolute URL. Those URLs are still ours, and checking them against
+ * the filesystem rather than fetching them means a newly committed asset
+ * validates before it has been deployed.
+ *
+ * @param link - The link URL to check
+ * @returns The site-absolute path, or an empty string when the link is not ours
+ */
+function toSitePath(link: string): string {
+  for (const origin of ['https://www.hyperfrontend.dev', 'https://hyperfrontend.dev']) {
+    if (link.startsWith(`${origin}/`)) {
+      return link.slice(origin.length)
+    }
+  }
+  return ''
 }
 
 /**
@@ -265,6 +289,25 @@ function validateLink(link: string, filePath: string, line: number): LinkValidat
   }
 
   if (isExternalLink(link)) {
+    const sitePath = toSitePath(link)
+    if (sitePath !== '') {
+      if (publicAssetExists(sitePath) || pathExists(resolveRelativePath(sitePath, filePath))) {
+        return {
+          file: filePath,
+          line,
+          link,
+          status: 'valid',
+        }
+      }
+      return {
+        file: filePath,
+        line,
+        link,
+        status: 'broken',
+        message: `Target not found on this site: ${sitePath}`,
+      }
+    }
+
     const githubTransform = transformGitHubUrl(link)
     if (githubTransform.transformed) {
       return {
@@ -344,7 +387,9 @@ async function validateLinks(): Promise<ValidationSummary> {
 
   const contentMdFiles = await glob('content/**/*.md', { cwd: DOCS_SITE_ROOT, absolute: true })
 
-  const allFiles = [...generatedMdFiles, ...rootMdFiles, ...libMdFiles, ...contentMdFiles]
+  const demoMdFiles = await glob('apps/demos/*/README.md', { cwd: WORKSPACE_ROOT, absolute: true })
+
+  const allFiles = [...generatedMdFiles, ...rootMdFiles, ...libMdFiles, ...contentMdFiles, ...demoMdFiles]
 
   logger.log(`📄 Found ${allFiles.length} markdown files to validate\n`)
 

@@ -19,16 +19,16 @@
     "dev:hosted": "run-p build:watch hf:dev"
   },
   "dependencies": {
-    "@hyperfrontend/demo-koi-fish-angular-shell": "file:vendor/hyperfrontend-demo-koi-fish-angular-shell-0.7.0.tgz",
-    "@hyperfrontend/demo-koi-fish-lit-shell": "file:vendor/hyperfrontend-demo-koi-fish-lit-shell-0.7.0.tgz",
-    "@hyperfrontend/demo-koi-fish-preact-shell": "file:vendor/hyperfrontend-demo-koi-fish-preact-shell-0.7.0.tgz",
-    "@hyperfrontend/demo-koi-fish-react-shell": "file:vendor/hyperfrontend-demo-koi-fish-react-shell-0.7.0.tgz",
-    "@hyperfrontend/demo-koi-fish-solid-shell": "file:vendor/hyperfrontend-demo-koi-fish-solid-shell-0.7.0.tgz",
-    "@hyperfrontend/demo-koi-fish-svelte-shell": "file:vendor/hyperfrontend-demo-koi-fish-svelte-shell-0.7.0.tgz",
-    "@hyperfrontend/demo-koi-fish-vanilla-shell": "file:vendor/hyperfrontend-demo-koi-fish-vanilla-shell-0.7.0.tgz",
-    "@hyperfrontend/demo-koi-fish-vue-shell": "file:vendor/hyperfrontend-demo-koi-fish-vue-shell-0.7.0.tgz",
+    "@hyperfrontend/demo-koi-fish-angular-shell": "file:vendor/hyperfrontend-demo-koi-fish-angular-shell-0.8.0.tgz",
+    "@hyperfrontend/demo-koi-fish-lit-shell": "file:vendor/hyperfrontend-demo-koi-fish-lit-shell-0.8.0.tgz",
+    "@hyperfrontend/demo-koi-fish-preact-shell": "file:vendor/hyperfrontend-demo-koi-fish-preact-shell-0.8.0.tgz",
+    "@hyperfrontend/demo-koi-fish-react-shell": "file:vendor/hyperfrontend-demo-koi-fish-react-shell-0.8.0.tgz",
+    "@hyperfrontend/demo-koi-fish-solid-shell": "file:vendor/hyperfrontend-demo-koi-fish-solid-shell-0.8.0.tgz",
+    "@hyperfrontend/demo-koi-fish-svelte-shell": "file:vendor/hyperfrontend-demo-koi-fish-svelte-shell-0.8.0.tgz",
+    "@hyperfrontend/demo-koi-fish-vanilla-shell": "file:vendor/hyperfrontend-demo-koi-fish-vanilla-shell-0.8.0.tgz",
+    "@hyperfrontend/demo-koi-fish-vue-shell": "file:vendor/hyperfrontend-demo-koi-fish-vue-shell-0.8.0.tgz",
     "@hyperfrontend/demo-koi-lib": "file:../vendor/hyperfrontend-demo-koi-lib-0.1.0.tgz",
-    "@hyperfrontend/features": "0.7.1",
+    "@hyperfrontend/features": "0.8.0",
     "@hyperfrontend/random-generator-utils": "0.0.5"
   },
   "devDependencies": {

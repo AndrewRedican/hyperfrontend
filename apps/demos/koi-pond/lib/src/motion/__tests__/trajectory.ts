@@ -113,8 +113,9 @@ export type TracedFactory = (init: TracedInit) => TracedMotion
  *
  * The fields are, in order: simulated seconds, nose x, nose y, heading, speed,
  * phase, depth level, body length, a `fleeing`/`away`/`depthRequest` flag
- * string, intent kind, intent target x, intent target y, anticipation reach,
- * the reported spine flattened nose-first, and the half-width at each of those
+ * string, intent kind, the heading and the gain the koi committed to, intent
+ * target x, intent target y, anticipation reach, encounter clearance, the
+ * reported spine flattened nose-first, and the half-width at each of those
  * spine samples.
  */
 export type TraceSample = readonly [
@@ -128,9 +129,12 @@ export type TraceSample = readonly [
   length: number,
   flags: string,
   intentKind: string,
+  intentHeading: number | null,
+  intentGain: number | null,
   targetX: number | null,
   targetY: number | null,
   reachPx: number,
+  clearancePx: number,
   spine: readonly number[],
   girth: readonly number[],
 ]
@@ -162,9 +166,12 @@ function sample(motion: TracedMotion, at: number, request: number | null): Trace
     length,
     flags,
     intent?.kind ?? 'none',
+    intent?.heading ?? null,
+    intent?.gain ?? null,
     intent?.target?.x ?? null,
     intent?.target?.y ?? null,
     intent?.reachPx ?? 0,
+    intent?.clearancePx ?? 0,
     outline.spine.flatMap((point) => [point.x, point.y]),
     [...outline.girth],
   ]

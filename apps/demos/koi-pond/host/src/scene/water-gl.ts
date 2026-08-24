@@ -135,28 +135,23 @@ function compile(gl: WebGLRenderingContext, kind: number, source: string): WebGL
   return shader
 }
 
-/**
- * Binds a GPU painter to the surface canvas.
- *
- * @param canvas - The surface canvas, sitting above every koi layer.
- * @returns The painter, or `null` where WebGL is unavailable — the caller falls back to the 2D painter.
- *
- * @example Preferring the GPU with a graceful fallback
- * ```typescript
- * const surface = createWaterPainter(canvas) ?? createSurfacePainter(canvas)
- * ```
- */
-export function createWaterPainter(canvas: HTMLCanvasElement): SurfacePainter | null {
-  let gl: WebGLRenderingContext | null = null
-  try {
-    gl = canvas.getContext('webgl', { alpha: true, antialias: false, depth: false, stencil: false, premultipliedAlpha: true })
-  } catch {
-    return null
-  }
-  if (gl === null) {
-    return null
-  }
+/** Everything the water is drawn with that belongs to one GPU context, and dies with it. */
+interface WaterScene {
+  /** Where each uniform lives in the linked program. */
+  locations: Record<'size' | 'view' | 'time' | 'damp' | 'fish' | 'fade' | 'count' | 'ripples', WebGLUniformLocation | null>
+}
 
+/**
+ * Builds everything the water is drawn with inside one context.
+ *
+ * Separated from the painter because a context can be taken away and given
+ * back: every shader, program, buffer and uniform location above is owned by
+ * the context that made it, so a restored context needs all of them again.
+ *
+ * @param gl - The context to build in.
+ * @returns The scene, or `null` where the GPU would not take it.
+ */
+function buildScene(gl: WebGLRenderingContext): WaterScene | null {
   const vertex = compile(gl, gl.VERTEX_SHADER, VERTEX_SOURCE)
   const fragment = compile(gl, gl.FRAGMENT_SHADER, FRAGMENT_SOURCE)
   const program = gl.createProgram()
@@ -179,25 +174,83 @@ export function createWaterPainter(canvas: HTMLCanvasElement): SurfacePainter | 
   gl.enableVertexAttribArray(aCorner)
   gl.vertexAttribPointer(aCorner, 2, gl.FLOAT, false, 0, 0)
 
-  const locations = {
-    size: gl.getUniformLocation(program, 'uSize'),
-    view: gl.getUniformLocation(program, 'uView'),
-    time: gl.getUniformLocation(program, 'uTime'),
-    damp: gl.getUniformLocation(program, 'uDamp'),
-    fish: gl.getUniformLocation(program, 'uFish'),
-    fade: gl.getUniformLocation(program, 'uFade'),
-    count: gl.getUniformLocation(program, 'uCount'),
-    ripples: gl.getUniformLocation(program, 'uRipples'),
+  return {
+    locations: {
+      size: gl.getUniformLocation(program, 'uSize'),
+      view: gl.getUniformLocation(program, 'uView'),
+      time: gl.getUniformLocation(program, 'uTime'),
+      damp: gl.getUniformLocation(program, 'uDamp'),
+      fish: gl.getUniformLocation(program, 'uFish'),
+      fade: gl.getUniformLocation(program, 'uFade'),
+      count: gl.getUniformLocation(program, 'uCount'),
+      ripples: gl.getUniformLocation(program, 'uRipples'),
+    },
+  }
+}
+
+/**
+ * Binds a GPU painter to the surface canvas.
+ *
+ * The painter survives losing its context. A browser reclaiming GPU memory from
+ * a backgrounded tab takes this one first, and it is never given back unless
+ * the page asks for it by preventing the loss event's default. Nothing else on
+ * the pond covers for it: every koi rebuilds its own context on waking, and
+ * those rebuilds are themselves the likeliest reason this context went, so a
+ * visitor returning to the tab would find the fish exactly as they were and the
+ * water simply gone.
+ *
+ * @param canvas - The surface canvas, sitting above every koi layer.
+ * @param onLost - Told the moment the context goes, so a caller can arrange a replacement if none is restored.
+ * @returns The painter, or `null` where WebGL is unavailable — the caller falls back to the 2D painter.
+ *
+ * @example Preferring the GPU with a graceful fallback
+ * ```typescript
+ * const surface = createWaterPainter(canvas) ?? createSurfacePainter(canvas)
+ * ```
+ */
+export function createWaterPainter(canvas: HTMLCanvasElement, onLost?: () => void): SurfacePainter | null {
+  let asked: WebGLRenderingContext | null
+  try {
+    asked = canvas.getContext('webgl', { alpha: true, antialias: false, depth: false, stencil: false, premultipliedAlpha: true })
+  } catch {
+    return null
+  }
+  if (asked === null) {
+    return null
+  }
+
+  const gl = asked
+  let scene = buildScene(gl)
+  if (scene === null) {
+    return null
   }
 
   const rippleData = new Float32Array(MAX_SHADER_RIPPLES * 4)
   let sizedTo = ''
 
+  // why: Preventing the default is the whole request — a browser only attempts to restore a context the page has said it still wants, and this listener is the difference between water that comes back and water that does not.
+  canvas.addEventListener('webglcontextlost', (event) => {
+    event.preventDefault()
+    scene = null
+    // why: The loss arrives long after the page came back — it is the koi waking that costs the water its context, not the tab switch itself — so the owner is told when it happens rather than asked at a moment that turns out to be too early.
+    onLost?.()
+  })
+
+  canvas.addEventListener('webglcontextrestored', () => {
+    scene = buildScene(gl)
+    // why: The new context starts at the canvas's default size with a viewport to match, so the next frame has to size it again rather than trusting what the last context was told.
+    sizedTo = ''
+  })
+
   return {
+    lost: () => scene === null || gl.isContextLost(),
+
     paint(frame: SurfaceFrame) {
-      if (gl === null || gl.isContextLost() || frame.width === 0 || frame.height === 0) {
+      const drawn = scene
+      if (drawn === null || gl.isContextLost() || frame.width === 0 || frame.height === 0) {
         return
       }
+      const { locations } = drawn
       const ratio = Math.min(frame.pixelRatio, WATER_MAX_DPR) * WATER_RESOLUTION
       const signature = `${frame.width}x${frame.height}@${ratio}`
       if (signature !== sizedTo) {
