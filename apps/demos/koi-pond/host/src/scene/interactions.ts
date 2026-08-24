@@ -55,25 +55,28 @@ export const HEAD_CENTRE_ALONG = 0.12
 // why: The koi judges every crossing from its nose, and its whole body lies behind that point, so a band that opens ahead of it cannot be laid over the animal at any size or build. The standoff is what keeps the ink off the snout itself, with room to spare for the body a frame draws sitting a little behind the body the wire reports.
 export const FIELD_STANDOFF_BODIES = 0.12
 
-/** Alpha one shell of the field lays down; the shells stack toward the middle of the band. */
-const FIELD_SHELL_ALPHA = 0.052
-
-/** How many nested shells the field's lateral falloff is laid in. */
-const FIELD_SHELLS = 9
+/** Alpha at the point the field is brightest. */
+// why: The water carries its own moving light, and a mark under about a fifth reads as one more caustic shaft rather than as something a fish is doing.
+const FIELD_ALPHA = 0.26
 
 /**
- * How sharply the field's ink falls off toward its flanks.
+ * Where the field's ink comes from, as a share of the band's half-length back
+ * from its middle.
  *
- * Above 1 the shells crowd the middle of the band, so what a visitor reads is a
- * beam down the koi's own course that thins away rather than a slab of even
- * light; the boundary stays where the koi's clearance actually is, because that
- * is the edge the arithmetic gates on.
+ * The ink is poured from a point rather than spread evenly, and that point sits
+ * near the end of the band the koi is at. What a visitor reads is perception
+ * leaving the animal and running out toward the horizon, which is what the
+ * arithmetic behind it does: the further ahead a crossing is, the less of the
+ * koi's attention it has.
  */
-const FIELD_TAPER = 2.2
+const FIELD_SOURCE = 0.74
 
-/** Where along the field the ink reaches full strength, as a share of the run left after the standoff. */
-// why: The mark is brightest where it leaves the animal and lets go toward the horizon, which is what reads as perception radiating off the koi rather than as another shaft of the light already on the water.
-const FIELD_RISE = 0.07
+/** Where the ink has thinned to a share of its strength, as a fraction of the way out to the boundary. */
+const FIELD_SHOULDER = 0.55
+
+/** The share of the ink left at that shoulder. */
+// why: Below the straight line a gradient would run, so the mark keeps a soft body near the koi and lets go early rather than ending on a perceptible ring.
+const FIELD_SHOULDER_SHARE = 0.34
 
 /**
  * The nose-to-tail length an outline reports.
@@ -201,9 +204,13 @@ function headStandoff(outline: KoiOutline, body: number): number {
  * underneath it; what the band answers is where this koi is looking, not which
  * of the shoal it can see.
  *
- * Nothing about it ends at a line. The flanks are laid in nested shells that
- * step the ink down to nothing at the clearance edge, and one gradient along
- * the run raises it out of the standoff and lets it go at the horizon.
+ * Nothing about it ends at a line, and nothing about it is stepped. The two
+ * numbers the koi reports are the two axes of one ellipse — its reach along the
+ * heading, its clearance across it — and the ink inside is a single gradient
+ * poured from a point near the animal, so the mark thins away in every
+ * direction at once and reaches nothing exactly where the koi stops caring. The
+ * corners the arithmetic would keep are the only thing given up for that, and
+ * they lie where the ink had already run out.
  *
  * @param context - The overlay's drawing context.
  * @param x - The reporting koi's nose x in overlay pixels.
@@ -225,32 +232,22 @@ function paintField(
   if (reach <= standoff || clearance <= 0) {
     return
   }
-  const alongX = Math.cos(heading)
-  const alongY = Math.sin(heading)
-  const sideX = -alongY
-  const sideY = alongX
-  const opens = standoff / reach
-  const fade = context.createLinearGradient(x, y, x + alongX * reach, y + alongY * reach)
-  fade.addColorStop(0, `rgba(${OVERLAY_INK}, 0)`)
-  fade.addColorStop(opens, `rgba(${OVERLAY_INK}, 0)`)
-  fade.addColorStop(opens + (1 - opens) * FIELD_RISE, `rgba(${OVERLAY_INK}, ${FIELD_SHELL_ALPHA})`)
+  const half = (reach - standoff) / 2
+  const middle = standoff + half
+  context.save()
+  // why: The mark is drawn as a unit circle under the koi's own frame — along its heading, scaled to its reach and its clearance — so one gradient carries a falloff that is smooth in both directions at once. Laid in overlay pixels it would take a shape per step, and a stack of shapes is what a visitor reads as banding.
+  context.translate(x + Math.cos(heading) * middle, y + Math.sin(heading) * middle)
+  context.rotate(heading)
+  context.scale(half, clearance)
+  const fade = context.createRadialGradient(-FIELD_SOURCE, 0, 0, 0, 0, 1)
+  fade.addColorStop(0, `rgba(${OVERLAY_INK}, ${FIELD_ALPHA})`)
+  fade.addColorStop(FIELD_SHOULDER, `rgba(${OVERLAY_INK}, ${FIELD_ALPHA * FIELD_SHOULDER_SHARE})`)
   fade.addColorStop(1, `rgba(${OVERLAY_INK}, 0)`)
   context.fillStyle = fade
-  for (let shell = 0; shell < FIELD_SHELLS; shell += 1) {
-    // how: Each shell is the same band at a narrower clearance, so the ink a point ends up under is how many of them reach it, which steps from nothing at the clearance edge to full down the middle.
-    const half = clearance * ((FIELD_SHELLS - shell) / FIELD_SHELLS) ** FIELD_TAPER
-    const nearX = x + alongX * standoff
-    const nearY = y + alongY * standoff
-    const farX = x + alongX * reach
-    const farY = y + alongY * reach
-    context.beginPath()
-    context.moveTo(nearX + sideX * half, nearY + sideY * half)
-    context.lineTo(farX + sideX * half, farY + sideY * half)
-    context.lineTo(farX - sideX * half, farY - sideY * half)
-    context.lineTo(nearX - sideX * half, nearY - sideY * half)
-    context.closePath()
-    context.fill()
-  }
+  context.beginPath()
+  context.arc(0, 0, 1, 0, Math.PI * 2)
+  context.fill()
+  context.restore()
 }
 
 /**

@@ -1,4 +1,5 @@
 import type { KoiIntent, KoiOutline, KoiPhase, Vec2 } from '@hyperfrontend/demo-koi-lib'
+import type { FillRecord } from './overlay-recorder'
 import { describe, expect, it } from 'vitest'
 import { advanceSpine, createSpine, outlineContains, sampleSpine, spineGirth } from '@hyperfrontend/demo-koi-lib'
 import { FIELD_STANDOFF_BODIES, HEAD_CENTRE_ALONG, beamOf, createInteractionsPainter, headCentre, spineLength } from '../interactions'
@@ -189,6 +190,20 @@ function alongOf(point: Vec2 | undefined, outline: KoiOutline, from: Vec2 = samp
 }
 
 /**
+ * The perception field one koi was painted with, refusing a frame that laid none.
+ *
+ * @param outline - The koi to annotate.
+ * @returns The recorded fill, in overlay pixels.
+ */
+function fieldOf(outline: KoiOutline): FillRecord {
+  const field = painted(outline).fields()[0]
+  if (field === undefined) {
+    throw new Error('the painter laid no field')
+  }
+  return field
+}
+
+/**
  * Where a fill went down, past the last place the arc-length arithmetic is exact.
  *
  * @param fill - The recorded fill.
@@ -275,53 +290,49 @@ describe('beamOf', () => {
 describe('the painted field', () => {
   it('draws the very region the koi said it is watching', () => {
     const outline = swum(0)
-    const corners = painted(outline).shells()[0]?.points ?? []
-    const across = Math.hypot((corners[0]?.x ?? 0) - (corners[3]?.x ?? 0), (corners[0]?.y ?? 0) - (corners[3]?.y ?? 0))
-    // why: The band is the koi's own reported clearance across and it stops at the koi's own reported reach; every number in it came off the wire rather than out of this painter.
-    expect(across).toBeCloseTo(CLEARANCE_PX * 2, 6)
-    expect(alongOf(corners[1], outline)).toBeCloseTo(REACH_PX, 6)
+    const field = fieldOf(outline)
+    const standoff = spineLength(outline.spine) * FIELD_STANDOFF_BODIES
+    // why: The mark is the koi's own reported clearance across and it stops at the koi's own reported reach; every number in it came off the wire rather than out of this painter.
+    expect(field.radiusAcross).toBeCloseTo(CLEARANCE_PX, 6)
+    expect(field.radius * 2 + standoff).toBeCloseTo(REACH_PX, 6)
+    expect(alongOf(field, outline)).toBeCloseTo(standoff + field.radius, 6)
+  })
+
+  it.each(POSES)('turns the field with the koi through %s', (_pose, turnRate) => {
+    const outline = swum(turnRate)
+    const field = fieldOf(outline)
+    // why: A mark elongated along a stale heading would sweep its own reach sideways through the water beside a turning koi.
+    expect(Math.cos(field.facing - outline.heading)).toBeCloseTo(1, 9)
   })
 
   it.each(POSES)('opens the field ahead of the nose it hangs from through %s', (_pose, turnRate) => {
     const outline = swum(turnRate)
-    const opened = Math.min(
-      ...painted(outline)
-        .shells()
-        .flatMap((shell) => shell.points.map((point) => alongOf(point, outline)))
-    )
-    // why: A koi's whole body lies behind the point it judges a crossing from, so a band that opens ahead of that point cannot be laid over the animal at any build; the standoff is only what keeps the ink off the snout itself.
+    const field = fieldOf(outline)
+    // why: A koi's whole body lies behind the point it judges a crossing from, so a mark that opens ahead of that point cannot be laid over the animal at any build; the standoff is only what keeps the ink off the snout itself.
+    const opened = alongOf(field, outline) - field.radius
     expect(opened).toBeGreaterThan(0)
     expect(opened).toBeCloseTo(spineLength(outline.spine) * FIELD_STANDOFF_BODIES, 6)
   })
 
-  it.each(POSES)('lays no part of the field behind the nose through %s', (_pose, turnRate) => {
-    const outline = swum(turnRate)
-    const behind = painted(outline)
-      .shells()
-      .flatMap((shell) => shell.points)
-      .filter((point) => alongOf(point, outline) <= 0)
-    expect(behind).toEqual([])
+  it('lays the field down in a single fill', () => {
+    // why: A falloff built out of stacked shapes bands, however many are stacked; one gradient under the koi's own frame is smooth in both directions at once and costs a fill rather than nine.
+    expect(painted(swum(0)).fields()).toHaveLength(1)
   })
 
-  it('narrows every shell in toward the middle of the band', () => {
-    const widths = painted(swum(0))
-      .shells()
-      .map((shell) =>
-        Math.hypot((shell.points[0]?.x ?? 0) - (shell.points[3]?.x ?? 0), (shell.points[0]?.y ?? 0) - (shell.points[3]?.y ?? 0))
-      )
-    expect(widths).toEqual([...widths].sort((first, second) => second - first))
-    expect(new Set(widths).size).toBe(widths.length)
-  })
-
-  it('runs its ink out entirely at the standoff and at the horizon', () => {
+  it('runs its ink out entirely at the boundary the koi gave it', () => {
     const stops = painted(swum(0)).stops
-    expect(stops[0]).toEqual({ at: 0, color: 'rgba(255, 255, 255, 0)' })
-    expect(stops[1]?.color).toBe('rgba(255, 255, 255, 0)')
+    expect(stops[0]?.color).not.toBe('rgba(255, 255, 255, 0)')
     expect(stops[stops.length - 1]).toEqual({ at: 1, color: 'rgba(255, 255, 255, 0)' })
   })
 
+  it('thins the ink the further out it is asked to carry', () => {
+    const alphas = painted(swum(0)).stops.map((stop) => Number(stop.color.slice(stop.color.lastIndexOf(',') + 1, -1)))
+    expect(alphas).toEqual([...alphas].sort((first, second) => second - first))
+    expect(new Set(alphas).size).toBe(alphas.length)
+  })
+
   it('draws nothing ahead of a koi anticipating no further than its own head', () => {
-    expect(painted(swum(0, { ...TRAVELLING, reachPx: 1 })).shells()).toEqual([])
+    expect(painted(swum(0, { ...TRAVELLING, reachPx: 1 })).fields()).toEqual([])
   })
 
   it.each(INTENTS)('draws the field in one ink whatever a koi decided, here %s', (_kind, intent) => {
@@ -336,12 +347,12 @@ describe('the painted field', () => {
 
   it('draws nothing for a held koi', () => {
     const overlay = painted({ ...swum(0), intent: undefined })
-    expect([overlay.shells().length, overlay.strokes.length]).toEqual([0, 0])
+    expect([overlay.fields().length, overlay.strokes.length]).toEqual([0, 0])
   })
 
   it('draws nothing for a koi reporting no body', () => {
     const overlay = painted({ ...swum(0), spine: [], girth: [] })
-    expect([overlay.shells().length, overlay.strokes.length]).toEqual([0, 0])
+    expect([overlay.fields().length, overlay.strokes.length]).toEqual([0, 0])
   })
 })
 
