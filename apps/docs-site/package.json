@@ -3,8 +3,9 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "build": "npm run generate && npm run validate-links && npm run validate-sitemap && NODE_OPTIONS='--max-old-space-size=4096' next build",
+    "build": "npm run generate && npm run copy-media && npm run validate-links && npm run validate-sitemap && NODE_OPTIONS='--max-old-space-size=4096' next build",
     "start": "next start --port 3000",
+    "copy-media": "npx tsx scripts/copy-media.ts",
     "generate": "npx tsx scripts/generate-docs.ts",
     "generate:guides": "npx tsx scripts/generate-docs.ts --guides-only",
     "validate-links": "npx tsx scripts/validate-links.ts",
