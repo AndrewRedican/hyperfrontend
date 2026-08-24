@@ -54,7 +54,14 @@ Need to pass sensitive stuff between apps? Transactions, [PII](https://en.wikipe
 
 ---
 
-<!-- TODO(asset): hero capture of the koi pond composing eight framework apps into one scene, for this README and the features README -->
+<p align="center">
+  <a href="https://www.hyperfrontend.dev/demos/#koi-pond">
+    <img width="560" src="https://www.hyperfrontend.dev/media/koi-pond/hero.gif" alt="Eight koi swimming in a single pond, each one rendered by a different framework app">
+  </a>
+</p>
+<p align="center">
+  <sub>Eight separate apps (React, Vue, Svelte, Solid, Preact, Lit, Angular, vanilla TS) composited into one continuous scene. <a href="https://www.hyperfrontend.dev/demos/#koi-pond">Open the live pond</a>.</sub>
+</p>
 
 ## What is a Hyperfrontend Feature?
 
