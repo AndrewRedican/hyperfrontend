@@ -57,9 +57,17 @@ export interface DeviceProfile {
 /**
  * Places a device in its tier.
  *
- * A device is low when it reports at most 2GB of memory or at most 4 cores,
+ * A device is low when it reports at most 2GB of memory or at most 2 cores,
  * high when it reports at least 8GB and at least 8 cores, and middle for
  * everything between those and for anything it declines to report.
+ *
+ * The low gate is deliberately narrow. It is meant for the device that will
+ * drop frames or lose a context whatever the pond does, not for an ordinary
+ * machine that happens to report a modest core count: a four-core laptop with
+ * memory to spare carries this scene comfortably, and thinning its shoal to
+ * four costs a visitor half the demo for nothing. What a device is asked to
+ * hold at once is the opening band, which the frame decides, and the cap only
+ * bounds what a visitor may then stock by hand.
  *
  * @param signals - What the browser reports about the hardware.
  * @returns The tier the device belongs to.
@@ -70,7 +78,7 @@ function classifyTier(signals: DeviceSignals): DeviceTier {
   if (deviceMemory === undefined || hardwareConcurrency === undefined) {
     return 'middle'
   }
-  if (deviceMemory <= 2 || hardwareConcurrency <= 4) {
+  if (deviceMemory <= 2 || hardwareConcurrency <= 2) {
     return 'low'
   }
   return deviceMemory >= 8 && hardwareConcurrency >= 8 ? 'high' : 'middle'

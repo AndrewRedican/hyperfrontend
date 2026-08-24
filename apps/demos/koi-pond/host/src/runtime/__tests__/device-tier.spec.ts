@@ -14,7 +14,7 @@ function tierOf(signals: DeviceSignals) {
 
 describe('classification', () => {
   it('reads a device at both low boundaries as low', () => {
-    expect(tierOf({ deviceMemory: 2, hardwareConcurrency: 4 })).toBe('low')
+    expect(tierOf({ deviceMemory: 2, hardwareConcurrency: 2 })).toBe('low')
   })
 
   it('reads a device at both high boundaries as high', () => {
@@ -34,11 +34,16 @@ describe('classification', () => {
   })
 
   it('lets a thin core count alone decide a device is low', () => {
-    expect(tierOf({ deviceMemory: 16, hardwareConcurrency: 4 })).toBe('low')
+    expect(tierOf({ deviceMemory: 16, hardwareConcurrency: 2 })).toBe('low')
   })
 
   it('reads a device just past both low boundaries as middle', () => {
-    expect(tierOf({ deviceMemory: 3, hardwareConcurrency: 5 })).toBe('middle')
+    expect(tierOf({ deviceMemory: 3, hardwareConcurrency: 3 })).toBe('middle')
+  })
+
+  // why: The core count alone used to condemn a device, which put an ordinary four-core laptop on the smallest shoal there is.
+  it('seats a four-core machine with memory to spare at middle', () => {
+    expect(tierOf({ deviceMemory: 8, hardwareConcurrency: 4 })).toBe('middle')
   })
 
   it('reads a device well past both high boundaries as high', () => {
@@ -70,7 +75,7 @@ describe('a device that withholds a signal', () => {
 
 describe('the shoal cap', () => {
   it('seats four koi on a low device', () => {
-    expect(readDeviceProfile({ deviceMemory: 2, hardwareConcurrency: 4 })).toEqual({ tier: 'low', cap: 4 })
+    expect(readDeviceProfile({ deviceMemory: 2, hardwareConcurrency: 2 })).toEqual({ tier: 'low', cap: 4 })
   })
 
   it('seats eight koi on a middle device', () => {
