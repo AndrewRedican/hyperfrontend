@@ -38,7 +38,7 @@ GitHub Sponsors benefits:
 
 You can also make a one-time contribution:
 
-**[Donate via hyperfrontend.dev](https://hyperfrontend.dev/sponsor)**
+**[Make a one-time donation via GitHub Sponsors](https://github.com/sponsors/AndrewRedican)**
 
 ### 🏢 Corporate Sponsorship
 
