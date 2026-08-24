@@ -285,6 +285,13 @@ module.exports = [
     rules: {
       'workspace/lib-readme-structure': 'error',
       'workspace/no-ascii-art-diagrams': 'error',
+      'workspace/readme-media-asset': [
+        'error',
+        {
+          baseUrl: 'https://www.hyperfrontend.dev/media/',
+          assetRoot: 'assets/media',
+        },
+      ],
       'workspace/require-codeblock-language': 'error',
     },
   },
