@@ -492,6 +492,50 @@ describe('adopting a dealt identity', () => {
   })
 })
 
+describe('a koi opened on its own', () => {
+  /** Whether the page this koi swims on is dressed. */
+  const dressed = (): boolean => document.querySelector('.koi-solo') !== null
+
+  it('dresses its page when the app states nothing is hosting it', () => {
+    const koi = mount({ hosted: false })
+    expect(dressed()).toBe(true)
+    koi.runtime.dispose()
+  })
+
+  it('leaves the page bare for an app that states it is hosted', () => {
+    mount({ hosted: true })
+    expect(dressed()).toBe(false)
+  })
+
+  it('leaves the page bare for an app that states nothing either way', () => {
+    // why: Water painted inside a pond's frame blanks every koi below it, so silence is read as hosted; the cost of the opposite mistake is only the bare page this demo already had.
+    mount()
+    expect(dressed()).toBe(false)
+  })
+
+  it('swims the window it was opened in rather than the screen behind it', () => {
+    const koi = mount({ hosted: false })
+    koi.step(FRAME_MS)
+    const drawn = built(koi, 0).draws.at(-1)?.state.position ?? { x: 0, y: 0 }
+    // why: A world derived from the screen would send a koi off to swim in the part of it a windowed visitor is not looking at.
+    expect(drawn.x).toBeLessThanOrEqual(window.innerWidth)
+    expect(drawn.y).toBeLessThanOrEqual(window.innerHeight)
+    koi.runtime.dispose()
+  })
+
+  it('takes the page back down the moment a pond announces a world', () => {
+    const koi = mount({ hosted: false })
+    koi.deliver('pond', describePondForFrame(640, 480, false))
+    expect(dressed()).toBe(false)
+  })
+
+  it('takes the page back down when the koi is disposed', () => {
+    const koi = mount({ hosted: false })
+    koi.runtime.dispose()
+    expect(dressed()).toBe(false)
+  })
+})
+
 describe('entering an announced world', () => {
   /** The card world a small frame is given: far smaller than any screen snapshot. */
   const CARD_EDGE = 320
