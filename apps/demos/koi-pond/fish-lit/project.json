@@ -41,14 +41,6 @@
         "command": "npm run build"
       }
     },
-    "lint": {
-      "executor": "nx:run-commands",
-      "dependsOn": ["install"],
-      "options": {
-        "command": "npm run lint",
-        "cwd": "apps/demos/koi-pond/fish-lit"
-      }
-    },
     "typecheck": {
       "executor": "nx:run-commands",
       "dependsOn": ["install"],

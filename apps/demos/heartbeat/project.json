@@ -41,22 +41,6 @@
         "command": "npm run build"
       }
     },
-    "test": {
-      "executor": "nx:run-commands",
-      "dependsOn": ["install"],
-      "options": {
-        "command": "npm run test:unit -- --run",
-        "cwd": "apps/demos/heartbeat"
-      }
-    },
-    "lint": {
-      "executor": "nx:run-commands",
-      "dependsOn": ["install"],
-      "options": {
-        "command": "npm run lint",
-        "cwd": "apps/demos/heartbeat"
-      }
-    },
     "typecheck": {
       "executor": "nx:run-commands",
       "dependsOn": ["install"],

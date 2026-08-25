@@ -24,23 +24,6 @@
         "command": "npm run dev"
       }
     },
-    "build": {
-      "executor": "@hyperfrontend/app:build",
-      "dependsOn": ["install"],
-      "cache": false,
-      "outputs": ["{workspaceRoot}/dist/apps/demos/koi-pond/workbench"],
-      "options": {
-        "command": "npm run build"
-      }
-    },
-    "lint": {
-      "executor": "nx:run-commands",
-      "dependsOn": ["install"],
-      "options": {
-        "command": "npm run lint",
-        "cwd": "apps/demos/koi-pond/workbench"
-      }
-    },
     "typecheck": {
       "executor": "nx:run-commands",
       "dependsOn": ["install"],
