@@ -1,0 +1,62 @@
+{
+  "schemaVersion": 1,
+  "type": "how-to",
+  "title": "How to close a feature without losing unsaved work",
+  "problem": "The host owns the frame and can tear it out whenever it likes, but only the embedded feature knows whether a draft, an armed timer, or an unsent edit is still inside, and removing an iframe fires nothing the feature can act on.",
+  "outcome": "A feature that declares unsaved work as it changes, a host that takes that declaration into account before starting a teardown, a last flush window on a channel that still delivers, and a close control inside the feature that asks the host rather than acting alone.",
+  "priority": "P1",
+  "packages": ["@hyperfrontend/features"],
+  "verification": {
+    "kind": "demo",
+    "source": "apps/demos/clock/src/feature/wire-contract.ts"
+  },
+  "snippetSources": [
+    "apps/demos/clock/src/runtime/feature-ui.ts",
+    "apps/demos/clock/clock.contract.ts",
+    "apps/docs-site/src/components/demos/demo-host-console.tsx"
+  ],
+  "demo": "clock",
+  "complexity": "intermediate",
+  "estMinutes": 15,
+  "apis": [
+    {
+      "package": "@hyperfrontend/features",
+      "symbol": "FeatureHandle"
+    },
+    {
+      "package": "@hyperfrontend/features",
+      "symbol": "ShellHandle"
+    },
+    {
+      "package": "@hyperfrontend/features",
+      "symbol": "ActionDescription"
+    }
+  ],
+  "prerequisites": {
+    "guides": ["embed-a-shipped-feature"],
+    "knowledge": [
+      "Access to both sides, or agreement with the team that owns the other one, since the exchange needs a contract action and a handler at each end"
+    ]
+  },
+  "related": {
+    "guides": ["detect-unresponsive-feature", "compose-independent-features"],
+    "reference": ["/docs/libraries/features", "/docs/libraries/features/host", "/docs/libraries/features/hostee"],
+    "explanation": ["/docs/libraries/features/architecture"]
+  },
+  "keywords": [
+    "close",
+    "teardown",
+    "unsaved work",
+    "dirty state",
+    "setDirty",
+    "dirty-state",
+    "isDirty",
+    "closing",
+    "flush",
+    "confirm before close",
+    "close-request",
+    "dialog close button",
+    "polite close",
+    "lifecycle"
+  ]
+}
