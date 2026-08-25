@@ -103,7 +103,8 @@
       "plugin": "@nx/eslint/plugin",
       "options": {
         "targetName": "lint"
-      }
+      },
+      "exclude": ["apps/demos/**/*"]
     },
     {
       "plugin": "@nx/jest/plugin",

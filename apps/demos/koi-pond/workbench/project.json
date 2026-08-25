@@ -5,6 +5,13 @@
   "sourceRoot": "apps/demos/koi-pond/workbench/src",
   "projectType": "application",
   "tags": ["type:demo", "role:tool", "scope:standalone"],
+  "metadata": {
+    "lifecycle": {
+      "state": "frozen",
+      "since": "2026-08-25",
+      "reason": "Shipped demonstration. Its behaviour is the exhibit the docs site embeds and the guides extract from; process added here is maintenance cost that buys nothing."
+    }
+  },
   "targets": {
     "install": {
       "executor": "@hyperfrontend/app:install",

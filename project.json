@@ -17,7 +17,10 @@
         "{workspaceRoot}/eslint.base.config.cjs",
         "{workspaceRoot}/tools/eslint-rules/**/*",
         "{workspaceRoot}/libs/**/project.json",
-        "{workspaceRoot}/plugins/**/project.json"
+        "{workspaceRoot}/plugins/**/project.json",
+        "{workspaceRoot}/apps/**/project.json",
+        "{workspaceRoot}/apps/**/package.json",
+        "{workspaceRoot}/.devcontainer/devcontainer.json"
       ],
       "options": {
         "lintFilePatterns": [
@@ -26,7 +29,13 @@
           "README.md",
           "ARCHITECTURE.md",
           "LIBRARY_COMPATIBILITY.md",
-          "tsconfig.base.json"
+          "tsconfig.base.json",
+          "apps/*/project.json",
+          "apps/*/*/project.json",
+          "apps/*/*/*/project.json",
+          "apps/*/package.json",
+          "apps/*/*/package.json",
+          "apps/*/*/*/package.json"
         ],
         "maxWarnings": 0,
         "errorOnUnmatchedPattern": false

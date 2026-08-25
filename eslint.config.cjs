@@ -1,4 +1,62 @@
 const baseConfig = require('./eslint.base.config.cjs')
+const eslintRules = require('./tools/eslint-rules/src/index.ts')
+
+/**
+ * What a project declaring `metadata.lifecycle.state: "frozen"` may not carry.
+ *
+ * Shipped demonstrations are artefacts rather than living code: they keep only what a deployed
+ * artifact needs, and every linter, test runner and quality gate added to one is maintenance cost
+ * that buys nothing. `workspace/project-lifecycle-policy` skips any project declaring no lifecycle,
+ * so libraries, tools and e2e projects are untouched by this.
+ */
+const FROZEN_PROJECT_POLICY = {
+  forbiddenTargets: ['lint', 'test', 'e2e'],
+  forbiddenScripts: ['lint', 'lint:*', 'test', 'test:*'],
+  forbiddenDependencies: [
+    'eslint',
+    'eslint-*',
+    '@eslint/*',
+    '@*/eslint-*',
+    'typescript-eslint',
+    'oxlint',
+    'globals',
+    'jiti',
+    'vitest',
+    '@vitest/*',
+    'jest',
+    '@jest/*',
+    'ts-jest',
+    '@testing-library/*',
+    '@vue/test-utils',
+    'axe-core',
+    'jsdom',
+    '@types/jsdom',
+    'playwright*',
+    'cypress',
+  ],
+  forbiddenFiles: [
+    '**/*.spec.*',
+    '**/*.test.*',
+    '**/__tests__/**',
+    'eslint.config.*',
+    '.oxlintrc.json',
+    '.eslintrc*',
+    'vitest.config.*',
+    'jest.config.*',
+    'tsconfig.vitest.json',
+    'tsconfig.spec.json',
+  ],
+  forbidNpmPublishing: true,
+}
+
+/**
+ * What a project declaring `metadata.lifecycle.state: "planned"` may not carry: a reserved slot
+ * holds a README and its manifests, and nothing that pretends the demo already exists.
+ */
+const PLANNED_PROJECT_POLICY = {
+  forbiddenTargets: ['*'],
+  forbiddenFiles: ['src/**'],
+}
 
 module.exports = [
   {
@@ -11,6 +69,32 @@ module.exports = [
   },
 
   ...baseConfig,
+  {
+    // context: the projects this governs deliberately have no lint target of their own, so the
+    // context: workspace-root lint target names their manifests in lintFilePatterns and reports here.
+    files: ['**/project.json', '**/package.json'],
+    plugins: {
+      workspace: eslintRules,
+    },
+    languageOptions: {
+      parser: require('jsonc-eslint-parser'),
+    },
+    rules: {
+      'workspace/project-lifecycle-policy': ['error', { states: { frozen: FROZEN_PROJECT_POLICY, planned: PLANNED_PROJECT_POLICY } }],
+    },
+  },
+  {
+    files: ['**/package.json'],
+    plugins: {
+      workspace: eslintRules,
+    },
+    languageOptions: {
+      parser: require('jsonc-eslint-parser'),
+    },
+    rules: {
+      'workspace/no-vscode-config': 'error',
+    },
+  },
   {
     // context: package-e2e projects consume @hyperfrontend packages installed from built tarballs, not workspace sources.
     // context: their specs also import shared helpers that live one level above each project root.
