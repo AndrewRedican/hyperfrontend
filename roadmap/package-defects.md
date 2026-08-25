@@ -13,22 +13,19 @@ about the documentation once it lands.
 
 Reproduced on Node 24.18.1 against the versions named, 2026-08-25.
 
-| #    | Package                                    | Defect                                                             | Severity |
-| ---- | ------------------------------------------ | ------------------------------------------------------------------ | -------- |
-| D-01 | builder / project-scope / network-protocol | Dedupe pass drops renamed builtin imports, breaking ESM output     | high     |
-| D-02 | package-e2e (all)                          | The ESM lane is not real ESM, so D-01 shipped unnoticed            | high     |
-| D-03 | generated feature shells                   | `require()` resolves to an empty object                            | high     |
-| D-04 | ui-utils                                   | No working TypeScript declarations                                 | high     |
-| D-05 | data-utils                                 | `hasCircularReference` false-positives on any shared reference     | high     |
-| D-06 | builder                                    | Emitted manifest inherits `scripts`, `devDependencies` and `type`  | medium   |
-| D-07 | nexus                                      | README filter example and `createBroker` `@example` cannot work    | medium   |
-| D-08 | random-generator-utils                     | `randomPowerLaw` inverts the standard exponent                     | medium   |
-| D-09 | logging                                    | A channel shares its level with its parent in both directions      | medium   |
-| D-10 | state-machine                              | Lifecycle replay hits every handler; nothing makes `init` run once | medium   |
-| D-11 | versioning                                 | Bumps are computed from only the newest 100 commits                | medium   |
-| D-12 | ui-utils                                   | `syncElementDimensions` discards the caller's `onSuccess`          | low      |
-| D-13 | list-utils                                 | `pull()` returns `undefined` while typed `T`                       | low      |
-| D-14 | questions                                  | Enter sharing a write with typed text hangs the prompt silently    | low      |
+| #    | Package                                    | Defect                                                                  | Severity |
+| ---- | ------------------------------------------ | ----------------------------------------------------------------------- | -------- |
+| D-01 | builder / project-scope / network-protocol | Dedupe pass drops renamed builtin imports, breaking ESM output          | high     |
+| D-02 | package-e2e (all)                          | The ESM lane is not real ESM, so D-01 shipped unnoticed                 | high     |
+| D-03 | generated feature shells                   | `require()` resolves to an empty object                                 | high     |
+| D-04 | ui-utils                                   | No working TypeScript declarations                                      | high     |
+| D-05 | data-utils                                 | `hasCircularReference` false-positives on any shared reference          | high     |
+| D-06 | builder                                    | Emitted manifest inherits `scripts`, `devDependencies` and `type`       | medium   |
+| D-09 | logging                                    | A channel shares its level with its parent in both directions           | medium   |
+| D-10 | state-machine                              | Lifecycle replay hits every handler; nothing makes `init` run once      | medium   |
+| D-11 | versioning                                 | `createIndependentFlow` cascade steps are no-op stubs reporting success | medium   |
+| D-12 | ui-utils                                   | `syncElementDimensions` copies the source's inline `position`           | low      |
+| D-14 | questions                                  | Enter sharing a write with typed text hangs the prompt silently         | low      |
 
 ---
 
@@ -160,52 +157,6 @@ this is fixed, and cannot promise a clean zero-config path. The shipped
 tutorial already shows the leak honestly in its manifest listing; that passage comes out when
 the fix ships.
 
-## D-07 — the nexus README filter example and `createBroker` `@example` cannot work
-
-`nexus@2.0.1`.
-
-`byType(messageType: string)` takes one parameter
-(`libs/nexus/src/filters/messages/by-type.ts:19`), but `libs/nexus/README.md:102` calls it as
-`byType('USER_LOGIN', handleLogin)`, so the handler is silently discarded. `compose` then
-conjoins the predicates rather than alternating them, so three mutually exclusive type filters
-can never match: the composed handler fires zero times across any input. The README's API table
-documents the wrong arity to match.
-
-Separately, `createBroker`'s JSDoc `@example` passes `contract: { messages: { ping: {}, pong: {} } }`.
-`messages` is not part of the contract type, and `validateContract` throws
-`Contract must contain at least one accepted or emitted action`. That example ships into the
-generated API reference, so it is the first thing a reader copies off the nexus page.
-
-Both are doc edits, not code changes.
-
-**Docs follow-up.** Gates every planned nexus guide that touches message filtering, and no guide
-should cite `#api-createBroker` as an example source until the JSDoc is corrected. The
-compatibility table in the same README also claims Web Worker, Deno, Bun and Cloudflare support
-that nothing tests and the code does not implement (the broker resolves `window` with no `self`
-branch, and the send path uses the two-argument Window `postMessage`); guides must promise
-Browser and Node only.
-
-## D-08 — `randomPowerLaw` inverts the standard exponent
-
-`random-generator-utils@0.0.5`. The effective exponent is `2 - alpha`, the reverse of the
-Pareto/Zipf convention the parameter name implies.
-
-Measured over 50,000 draws: `randomPowerLaw(2.5, 1, 1000000)` has a median near 630,000 against
-its own `@example` promising `127`, and the mass sits at the maximum rather than the minimum.
-The second `@example`, `randomPowerLaw(2.0, 1, 10000)` captioned "many small files", is exactly
-uniform. `alpha = 1` returns `NaN`. The documented long tail needs `alpha <= 0.5`.
-
-The README repeats the inverted convention five more times, including a "Zipf's law for cities"
-example that produces the opposite of Zipf.
-
-**Docs follow-up.** Blocks the planned mock-data recipe. Fixing the two `@example`s alone leaves
-the API semantically inverted for anyone who knows the convention, so the fix is either `1 - alpha`
-in the formula (a behaviour break) or an explicit statement that this package's alpha is
-`2 - standard_exponent`. The shipped
-[generate-values-that-look-natural](../apps/docs-site/content/guides/generate-values-that-look-natural/guide.md)
-guide deliberately teaches `randomGaussian`, `randomUniform`, `randomExponential` and
-`randomPseudo` only, and needs no change.
-
 ## D-09 — a logging channel shares its level with its parent in both directions
 
 `logging@0.1.1`. A channel borrows the parent's level, which is documented, but
@@ -255,51 +206,41 @@ examples are verified against 0.2.0. If the base class grows a concurrency guard
 guide collapses to a much shorter one and should be rewritten rather than left teaching a
 workaround.
 
-## D-11 — bumps are computed from only the newest 100 commits
+## D-11 — `createIndependentFlow`'s cascade steps are no-op stubs
 
-`versioning@0.6.3`. `analyze-commits` calls `getCommitsSince(publishedCommit)` with no
-`maxCount`, and the default log options cap the window at 100. A release whose base is further
-back than that silently analyses a truncated history: a breaking change past the cut is dropped
-and a major bump degrades to a patch.
+`versioning@0.6.3`. `createIndependentFlow`'s two cascade steps are no-op stubs that report
+`status: 'success'`, so a caller cannot tell the work did not happen. The misleading `@example` that told
+readers to log a never-written `cascadedBumps` field is corrected, but the stubs themselves are
+unimplemented.
 
-`createIndependentFlow`'s two cascade steps are separately no-op stubs that report
-`status: 'success'`, while their JSDoc `@example` tells readers to log a state field that is
-always `undefined`.
+The 100-commit window that the original entry filed alongside this is **not a defect**: the cap is the
+intended behaviour of `getCommitsSince`, and lifting it at the `analyze-commits` call sites was considered
+and rejected. `maxCommitFallback` remains the knob for a release whose base is further back.
 
-**Docs follow-up.** All three planned versioning guides teach a flow that is wrong past 100
-commits, and the CI-idempotency guide's premise is exactly where a long window matters most. The
-cascade guide cannot teach the flow-shaped API until the stubs are implemented; the
+**Docs follow-up.** The cascade guide cannot teach the flow-shaped API until the stubs are implemented; the
 `calculateCascadeBumps` chain underneath works and is what that guide should teach meanwhile.
 
-## D-12 — `syncElementDimensions` discards the caller's `onSuccess`
+## D-12 — `syncElementDimensions` copies the source's inline `position`
 
-`ui-utils@0.0.6`. Both element lookups spread the caller's options and then overwrite
-`onSuccess` with an internal handler
-(`libs/utils/ui/src/lib/sync-element-dimensions.ts:65-70` and `:90-94`), so a caller's
-`onSuccess` can never fire. `onFail` is forwarded explicitly and does work. The published
-`@example` for the function is exactly the call that does nothing.
+`ui-utils@0.0.6`. The `onSuccess` half of this entry is fixed: both element lookups still overwrite
+`onSuccess` internally, but the caller's callback is now re-emitted once from `onTargetElementFound`,
+after the first sync has been applied, and receives the target element.
 
-The same function copies only the source's **inline** `position`, so a source styled from a
-stylesheet leaves the overlay with `top`/`left` and no positioning context, and a source
-carrying `position: static` stamps that onto the overlay and destroys pinning outright.
+What remains is a **deferred decision**, not an agreed defect. `syncDimensions` writes `top`/`left` from
+`getBoundingClientRect()`, which are viewport coordinates, and then copies the source's **inline**
+`position` onto the target. Those two are incoherent with each other: only `fixed` reads `top`/`left` as
+viewport coordinates, `absolute` resolves them against the target's offsetParent, and `static` ignores
+them. A source carrying `position: static` therefore stamps that onto the overlay and destroys pinning.
 
-**Docs follow-up.** The planned element-tracking guide must drop `onSuccess`, tell the reader to
-set the overlay's `position` from their own stylesheet, and use `js` fences until D-04 is fixed.
-`onElementResize` and `getElementAsync` are sound and their examples are accurate.
+Pinning the target with `fixed` was implemented and then reverted. It is a design decision rather than a
+derivation: `fixed` behaves differently inside a transformed ancestor, and a caller whose source is
+inline-`absolute` with a viewport-anchored offsetParent has working code today that it would change. The
+alternatives are to leave `position` untouched and document that the caller owns it, or to add an opt-in
+option. **Pending a call on which of the three to take.**
 
-## D-13 — `pull()` returns `undefined` while typed `T`
-
-`list-utils@0.0.5`. `FifoList.pull()` is declared to return `T` and returns `undefined` on an
-empty list, so every drain loop needs a `size()` guard the type system cannot see. Pushing an
-object already in the list throws rather than queueing it twice, which is defensible but
-undocumented. Both error strings are ungrammatical: `Cannot a item that already exists` and
-`A fifo list only non-primitive values`.
-
-**Docs follow-up.** The shipped
-[run-async-jobs-one-at-a-time](../apps/docs-site/content/guides/run-async-jobs-one-at-a-time/guide.md)
-guide guards `size()` before every `pull` and makes the duplicate check deliberate, so it stays
-correct either way. Fixing the return type to `T | undefined` would be a breaking change worth
-batching with the message wording.
+**Docs follow-up.** The planned element-tracking guide must tell the reader to set the overlay's
+`position` from their own stylesheet, and use `js` fences until D-04 is fixed. `onElementResize` and
+`getElementAsync` are sound and their examples are accurate.
 
 ## D-14 — Enter sharing a write with typed text hangs the prompt silently
 
