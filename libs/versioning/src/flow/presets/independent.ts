@@ -103,8 +103,8 @@ export function createCheckDependentBumpsStep(): FlowStep {
  * const flow = createIndependentFlow()
  * const result = await executeFlow(flow, 'lib-utils', '/workspace')
  *
- * // Check which dependents were bumped
- * console.log(result.state.cascadedBumps)
+ * // Inspect the version that was released
+ * console.log(result.state.nextVersion)
  * ```
  */
 export function createIndependentFlow(config?: Partial<FlowConfig>): VersionFlow {

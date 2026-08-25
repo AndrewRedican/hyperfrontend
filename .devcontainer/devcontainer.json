@@ -15,9 +15,14 @@
         "eamodio.gitlens",
         "DavidAnson.vscode-markdownlint",
         "firsttris.vscode-jest-runner",
+        "vitest.explorer",
         "dbaeumer.vscode-eslint",
+        "EditorConfig.EditorConfig",
         "esbenp.prettier-vscode",
         "bradlc.vscode-tailwindcss",
+        "Vue.volar",
+        "svelte.svelte-vscode",
+        "runem.lit-plugin",
         "shd101wyy.markdown-preview-enhanced",
         "github.vscode-github-actions",
         "yzhang.markdown-all-in-one",
@@ -32,6 +37,11 @@
         "git.useEditorAsCommitInput": false,
         "telemetry.telemetryLevel": "off",
         "gitlens.telemetry.enabled": false,
+        "explorer.excludeGitIgnore": false,
+        "files.exclude": {
+          "**/.git": true,
+          "**/.claude": false
+        },
         "files.watcherExclude": {
           "_/claude/sessions/**": true,
           "_/claude/all-projects/**": true,

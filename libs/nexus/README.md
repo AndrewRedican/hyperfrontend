@@ -94,12 +94,22 @@ Origin checks come with it. A `whitelist`/`blacklist` pair on the broker setting
 
 One broker holds many channels, which is what a host coordinating several micro-apps needs: call `addChannel` per frame, then loop the handles to connect or broadcast. Each channel runs its own handshake and lifecycle, so a frame that never answers cannot stall the others, and messages sent before a channel goes active are queued rather than dropped.
 
-Handlers stay small. Subscribe to a single lifecycle event with `channel.on('open', handler)`, or replace a switch over message types with composed filters:
+Handlers stay small. Subscribe to a single lifecycle event with `channel.on('open', handler)`, or replace a switch over message types with one filtered subscription per type:
 
 ```typescript
-import { byType, compose } from '@hyperfrontend/nexus'
+import { byType, compose, createMessageFilter } from '@hyperfrontend/nexus'
 
-channel.onMessage(compose(byType('USER_LOGIN', handleLogin), byType('USER_LOGOUT', handleLogout), byType('DATA_SYNC', handleSync)))
+channel.onMessage(byType('USER_LOGIN')(handleLogin))
+channel.onMessage(byType('USER_LOGOUT')(handleLogout))
+channel.onMessage(byType('DATA_SYNC')(handleSync))
+
+// compose narrows a single subscription: a message must pass every filter
+channel.onMessage(
+  compose(
+    byType('DATA_SYNC'),
+    createMessageFilter((message) => message.data?.priority === 'high')
+  )(handleUrgentSync)
+)
 ```
 
 Handshake states, denial reasons, queue behaviour, and the encrypted-envelope negotiation are worked through in the [architecture documentation](https://www.hyperfrontend.dev/docs/libraries/nexus/architecture/).
@@ -261,11 +271,11 @@ except for a policy rejection: the refused requester is told only `'Not accepted
 
 ### Filter Utilities
 
-| Export                                                                     | Description                       |
-| -------------------------------------------------------------------------- | --------------------------------- |
-| `openFilter`, `closeFilter`, `cancelFilter`, `denyFilter`, `invalidFilter` | Event-specific filter creators    |
-| `byType(type, handler)`                                                    | Message type filter               |
-| `compose(...filters)`                                                      | Combines multiple message filters |
+| Export                                                                     | Description                                                |
+| -------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| `openFilter`, `closeFilter`, `cancelFilter`, `denyFilter`, `invalidFilter` | Event-specific filter creators                             |
+| `byType(type)`                                                             | Message type filter, returns a handler wrapper             |
+| `compose(...filters)`                                                      | Combines message filters, a message must pass every filter |
 
 ### Types
 
@@ -284,12 +294,10 @@ except for a policy rejection: the refused requester is told only `'Not accepted
 
 ## Compatibility
 
-| Platform                      | Support |
-| ----------------------------- | :-----: |
-| Browser                       |   ✅    |
-| Node.js                       |   ✅    |
-| Web Workers                   |   ✅    |
-| Deno, Bun, Cloudflare Workers |   ✅    |
+| Platform | Support |
+| -------- | :-----: |
+| Browser  |   ✅    |
+| Node.js  |   ✅    |
 
 ### Output Formats
 

@@ -174,7 +174,9 @@ export function DemoHostConsole({ entry, shell, floating, overlaid = false }: De
           log('status — gone', 'error')
         }
       }),
+      // ref: [guide:close-a-feature-without-losing-work/watch-closing] start
       shell.on('closing', () => log('closing — flush window open, channel still delivering')),
+      // ref: [guide:close-a-feature-without-losing-work/watch-closing] end
       shell.on('close', (data) => {
         setSession('closed')
         setDirty(false)
@@ -184,11 +186,13 @@ export function DemoHostConsole({ entry, shell, floating, overlaid = false }: De
           log('close — session ended')
         }
       }),
+      // ref: [guide:close-a-feature-without-losing-work/watch-dirty] start
       shell.on('dirty-state', (data) => {
         const next = isRecord(data) && data['dirty'] === true
         setDirty(next)
         log(`dirty-state — ${next ? 'unsaved work' : 'clean'}`, next ? 'warn' : 'info')
       }),
+      // ref: [guide:close-a-feature-without-losing-work/watch-dirty] end
       shell.on('error', (data) => {
         log(`error — ${isRecord(data) && typeof data['reason'] === 'string' ? String(data['reason']) : 'unspecified'}`, 'error')
       }),
@@ -221,6 +225,7 @@ export function DemoHostConsole({ entry, shell, floating, overlaid = false }: De
     [entry.slug, featureUrl]
   )
 
+  // ref: [guide:close-a-feature-without-losing-work/guard-close] start
   const toggleSession = useCallback(() => {
     if (!shell) {
       return
@@ -233,6 +238,7 @@ export function DemoHostConsole({ entry, shell, floating, overlaid = false }: De
       shell.open()
     }
   }, [dirty, log, shell])
+  // ref: [guide:close-a-feature-without-losing-work/guard-close] end
 
   const openMode = useCallback(
     (displayMode: 'dialog' | 'popup') => {
@@ -251,11 +257,13 @@ export function DemoHostConsole({ entry, shell, floating, overlaid = false }: De
       })
       if (displayMode === 'dialog') {
         // why: The feature's ✕ only requests — the host owns the dialog, so the actual close happens here.
+        // ref: [guide:close-a-feature-without-losing-work/honour-close-request] start
         extra.on('close-request', (data) => {
           const source = isRecord(data) && typeof data['source'] === 'string' ? String(data['source']) : 'unknown'
           log(`close-request (${source}) — host closing the dialog`)
           extra.close()
         })
+        // ref: [guide:close-a-feature-without-losing-work/honour-close-request] end
       }
       extra.on('error', (data) => {
         const reason = isRecord(data) && typeof data['reason'] === 'string' ? String(data['reason']) : 'unspecified'

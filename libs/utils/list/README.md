@@ -61,7 +61,7 @@ Queue implementations return frozen objects to prevent external mutation while u
 
 ### Prevents Queue Bugs in Event-Driven Systems
 
-Native arrays don't enforce uniqueness, making it easy to accidentally register the same event handler, task, or subscription multiple times. FIFO/LIFO lists automatically reject duplicates based on reference equality, eliminating a common source of memory leaks and duplicate processing in event loops, job queues, and observer patterns.
+Native arrays don't enforce uniqueness, making it easy to accidentally register the same event handler, task, or subscription multiple times. Both list kinds reject duplicates based on reference equality, eliminating a common source of memory leaks and duplicate processing in event loops, job queues, and observer patterns. A FIFO list throws on a duplicate push; a LIFO list ignores it.
 
 ### Simplifies Round-Robin and Cyclical Patterns
 
@@ -90,7 +90,7 @@ import { createFifoList, createValuePicker, nonEmptyStrings, uniqueStrings } fro
 const taskQueue = createFifoList<{ id: string; execute: () => void }>()
 taskQueue.push({ id: 'task1', execute: () => console.log('Task 1') })
 taskQueue.push({ id: 'task2', execute: () => console.log('Task 2') })
-const nextTask = taskQueue.pull() // Gets task1 (first in)
+const nextTask = taskQueue.pull() // Gets task1 (first in), or undefined once the queue is drained
 
 // Round-robin value picker
 const colorPicker = createValuePicker(['red', 'blue', 'green'])

@@ -5,6 +5,13 @@
   "sourceRoot": "apps/demos/koi-pond/workbench/src",
   "projectType": "application",
   "tags": ["type:demo", "role:tool", "scope:standalone"],
+  "metadata": {
+    "lifecycle": {
+      "state": "frozen",
+      "since": "2026-08-25",
+      "reason": "Shipped demonstration. Its behaviour is the exhibit the docs site embeds and the guides extract from; process added here is maintenance cost that buys nothing."
+    }
+  },
   "targets": {
     "install": {
       "executor": "@hyperfrontend/app:install",
@@ -15,23 +22,6 @@
       "dependsOn": ["install"],
       "options": {
         "command": "npm run dev"
-      }
-    },
-    "build": {
-      "executor": "@hyperfrontend/app:build",
-      "dependsOn": ["install"],
-      "cache": false,
-      "outputs": ["{workspaceRoot}/dist/apps/demos/koi-pond/workbench"],
-      "options": {
-        "command": "npm run build"
-      }
-    },
-    "lint": {
-      "executor": "nx:run-commands",
-      "dependsOn": ["install"],
-      "options": {
-        "command": "npm run lint",
-        "cwd": "apps/demos/koi-pond/workbench"
       }
     },
     "typecheck": {

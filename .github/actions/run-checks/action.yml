@@ -22,11 +22,17 @@ runs:
         AFFECTED_ONLY="${{ inputs.affected-only }}"
         AFFECTED_PROJECTS="${{ inputs.affected-projects }}"
 
+        # Formatting is a top-level Nx command over the whole tree rather than a project
+        # target, so it never takes the run-many path below. Checking every file costs
+        # about a second and keeps the gate independent of the affected calculation.
+        if [ "$CHECK_TYPE" = "format" ]; then
+          echo "Running format:check on all files"
+          CI=1 npx nx format:check
+          exit $?
+        fi
+
         # Determine the Nx target based on check type
         case "$CHECK_TYPE" in
-          format)
-            TARGET="format:check"
-            ;;
           lint)
             TARGET="lint"
             ;;

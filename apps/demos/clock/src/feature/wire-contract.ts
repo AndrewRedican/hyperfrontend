@@ -94,9 +94,11 @@ export function wireClockContract(feature: FeatureLink, store: ClockStore, optio
 
   // why: Armed alarms are the clock's unsaved state — a host proposing a close
   // sees `dirty` until every alarm has fired or been cleared.
+  // ref: [guide:close-a-feature-without-losing-work/report-dirty] start
   const reportAlarmDirty = () => {
     feature.setDirty(store.alarms.value.length > 0)
   }
+  // ref: [guide:close-a-feature-without-losing-work/report-dirty] end
 
   feature.on('set-format', (data) => {
     if (isRecord(data) && (data['format'] === 'analog' || data['format'] === 'digital')) {

@@ -1,0 +1,58 @@
+{
+  "schemaVersion": 1,
+  "type": "how-to",
+  "title": "How to generate values that look natural instead of random",
+  "problem": "Everything I generate with Math.random comes out looking mechanical: sizes are spread evenly instead of clustering around a typical one, jitter is as likely to be huge as tiny, and spawned things arrive on a metronome no crowd ever moves to.",
+  "outcome": "Sizes and offsets that cluster around a typical value and never leave the range you allowed, arrival timings that clump and gap like independent events, and a seeded layout that reproduces exactly on the next run.",
+  "priority": "P1",
+  "packages": ["@hyperfrontend/random-generator-utils"],
+  "verification": {
+    "kind": "authored",
+    "verifiedAgainst": "@hyperfrontend/random-generator-utils@0.0.5",
+    "verifiedOn": "2026-08-25"
+  },
+  "complexity": "beginner",
+  "estMinutes": 10,
+  "apis": [
+    {
+      "package": "@hyperfrontend/random-generator-utils",
+      "symbol": "randomGaussian"
+    },
+    {
+      "package": "@hyperfrontend/random-generator-utils",
+      "symbol": "randomUniform"
+    },
+    {
+      "package": "@hyperfrontend/random-generator-utils",
+      "symbol": "randomExponential"
+    },
+    {
+      "package": "@hyperfrontend/random-generator-utils",
+      "symbol": "randomPseudo"
+    }
+  ],
+  "prerequisites": {
+    "knowledge": ["Somewhere in your app that generates values: an animation, a placement pass, a spawner, or seeded sample data"]
+  },
+  "related": {
+    "guides": ["pause-and-resume-a-countdown"],
+    "reference": ["/docs/libraries/utils/random-generator"]
+  },
+  "keywords": [
+    "gaussian",
+    "normal distribution",
+    "bell curve",
+    "jitter",
+    "organic motion",
+    "procedural generation",
+    "particles",
+    "spawn rate",
+    "exponential",
+    "poisson",
+    "seeded random",
+    "deterministic",
+    "reproducible layout",
+    "mock data",
+    "Math.random"
+  ]
+}

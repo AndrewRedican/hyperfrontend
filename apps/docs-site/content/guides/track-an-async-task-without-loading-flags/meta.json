@@ -35,6 +35,7 @@
     "knowledge": ["A view that loads data and can be refreshed or retried"]
   },
   "related": {
+    "guides": ["make-a-service-safe-to-use-before-it-is-ready", "run-async-jobs-one-at-a-time"],
     "reference": ["/docs/libraries/state-machine", "/docs/libraries/state-machine/async-operation", "/docs/libraries/state-machine/models"],
     "explanation": ["/docs/libraries/state-machine/architecture"]
   },

@@ -1,8 +1,10 @@
 import type { Metadata } from 'next'
 import { Breadcrumb } from '@/components/breadcrumb'
 import { GuideTypeBadge, VerificationBadge } from '@/components/guides/guide-badges'
+import { PackagePill } from '@/components/guides/package-pill'
 import { ReadmeContent } from '@/components/readme-content'
 import { ShareMenu } from '@/components/share/share-menu'
+import { buildGuidesHref } from '@/lib/guide-filters'
 import { getAllGuideSlugs, getGuide, getGuideIndex } from '@/lib/guides'
 import { markdownToHtml, markdownToInlineHtml } from '@/lib/markdown'
 import { extractMermaidBlocks } from '@/lib/mermaid-utils'
@@ -80,9 +82,7 @@ export default async function GuidePage({ params }: GuidePageProps) {
 
       <div className="mb-6 flex flex-wrap gap-1.5">
         {guide.packages.map((packageName) => (
-          <code key={packageName} className="rounded bg-slate-100 px-2 py-1 text-xs text-slate-600 dark:bg-slate-800 dark:text-slate-400">
-            {packageName}
-          </code>
+          <PackagePill key={packageName} packageName={packageName} href={buildGuidesHref({ package: packageName })} />
         ))}
       </div>
 

@@ -112,28 +112,6 @@ This directory contains the CI/CD workflows for the hyperfrontend monorepo.
 
 - `check-status`: Queries GitHub API to find library build result from `ci-libraries.yml`
 
-### CI - Plugins ([ci-plugins.yml](./ci-plugins.yml))
-
-**Trigger**: Pushes to `main` branch affecting `plugins/**`
-**Purpose**: Targeted CI for individual plugin changes
-
-**Features**:
-
-- Uses `dorny/paths-filter` to detect which plugins changed
-- Runs CI only for affected plugins using a dynamic matrix
-- Efficient: only builds/tests what changed
-- Same mechanism as library CI for consistency
-
-**Excluded Plugins** (explicitly excluded from CI):
-
-- `plugin-features`: Experimental/unstable (v0.0.0)
-- `plugin-features-e2e`: E2E test project for features plugin
-
-**Jobs**:
-
-- `detect-changes`: Determines which plugins were modified
-- `ci`: Matrix job that runs `_lib-ci.yml` template for each changed plugin
-
 ### Library CI Template ([\_lib-ci.yml](./_lib-ci.yml))
 
 **Trigger**: Called by other workflows via `workflow_call`

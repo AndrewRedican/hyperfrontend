@@ -50,12 +50,14 @@ import noTodoComments, { RULE_NAME as NO_TODO_COMMENTS } from './rules/no-todo-c
 import noUnsafeBuiltinMethods, { RULE_NAME as NO_UNSAFE_BUILTIN_METHODS } from './rules/no-unsafe-builtin-methods'
 import noUnsafeRegex, { RULE_NAME as NO_UNSAFE_REGEX } from './rules/no-unsafe-regex'
 import noUnwantedBarrelFiles, { RULE_NAME as NO_UNWARRANTED_BARREL_FILES } from './rules/no-unwanted-barrel-files'
+import noVscodeConfig, { RULE_NAME as NO_VSCODE_CONFIG } from './rules/no-vscode-config'
 import preferAngleBracketAssertion, { RULE_NAME as PREFER_ANGLE_BRACKET_ASSERTION } from './rules/prefer-angle-bracket-assertion'
 import preferExecFileSync, { RULE_NAME as PREFER_EXEC_FILE_SYNC } from './rules/prefer-exec-file-sync'
 import preferInlineSingleUse, { RULE_NAME as PREFER_INLINE_SINGLE_USE } from './rules/prefer-inline-single-use'
 import preferJsDocOverTrailingComments, {
   RULE_NAME as PREFER_JSDOC_OVER_TRAILING_COMMENTS,
 } from './rules/prefer-jsdoc-over-trailing-comments'
+import projectLifecyclePolicy, { RULE_NAME as PROJECT_LIFECYCLE_POLICY } from './rules/project-lifecycle-policy'
 import readmeMediaAsset, { RULE_NAME as README_MEDIA_ASSET } from './rules/readme-media-asset'
 import requireCodeblockLanguage, { RULE_NAME as REQUIRE_CODEBLOCK_LANGUAGE } from './rules/require-codeblock-language'
 import requireNodeProtocol, { RULE_NAME as REQUIRE_NODE_PROTOCOL } from './rules/require-node-protocol'
@@ -117,6 +119,8 @@ export const rules: ESLint.Plugin['rules'] = {
   [NO_UNSAFE_REGEX]: noUnsafeRegex as unknown as Rule.RuleModule,
   [NO_UNWARRANTED_BARREL_FILES]: noUnwantedBarrelFiles as unknown as Rule.RuleModule,
   [NO_UNSAFE_BUILTIN_METHODS]: noUnsafeBuiltinMethods as unknown as Rule.RuleModule,
+  [NO_VSCODE_CONFIG]: noVscodeConfig as unknown as Rule.RuleModule,
+  [PROJECT_LIFECYCLE_POLICY]: projectLifecyclePolicy as unknown as Rule.RuleModule,
   [PREFER_ANGLE_BRACKET_ASSERTION]: preferAngleBracketAssertion as unknown as Rule.RuleModule,
   [PREFER_EXEC_FILE_SYNC]: preferExecFileSync as unknown as Rule.RuleModule,
   [PREFER_INLINE_SINGLE_USE]: preferInlineSingleUse as unknown as Rule.RuleModule,

@@ -25,7 +25,7 @@
     "knowledge": ["The feature's contract, so you know which events prove it is working"]
   },
   "related": {
-    "guides": ["compose-independent-features"],
+    "guides": ["close-a-feature-without-losing-work", "compose-independent-features"],
     "reference": ["/docs/libraries/features", "/docs/libraries/features/host"],
     "explanation": ["/docs/libraries/features/architecture"]
   },

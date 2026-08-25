@@ -1,7 +1,7 @@
 import type { NavItem } from '@/lib/navigation'
 import type { MetadataRoute } from 'next'
 import { getAllArticles } from '@/lib/articles'
-import { getAllGuideSlugs } from '@/lib/guides'
+import { getGuideIndex } from '@/lib/guides'
 import { docsNavigation, mainNavLinks } from '@/lib/navigation'
 import { SITE_URL } from '@/lib/site'
 import { createDate } from '@hyperfrontend/immutable-api-utils/built-in-copy/date'
@@ -55,24 +55,26 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const navUrls = extractUrls(docsNavigation)
   const mainUrls = mainNavLinks.map((link) => link.href)
   const articles = getAllArticles()
+  const guides = getGuideIndex()
   const articleUrls = articles.map((article) => `/articles/${article.slug}`)
-  const guideUrls = getAllGuideSlugs().map((slug) => `/docs/guides/${slug}`)
+  const guideUrls = guides.map((guide) => guide.route)
 
-  // why: An article's sitemap lastModified should reflect its content revision, not the build timestamp
-  const articleDates = createMap(
-    articles.map((article): [string, string] => [`/articles/${article.slug}`, article.updated || article.date])
-  )
+  // why: A page's sitemap lastModified should reflect its content revision, not the build timestamp; a guide's is the day its examples were last run
+  const contentDates = createMap([
+    ...articles.map((article): [string, string] => [`/articles/${article.slug}`, article.updated || article.date]),
+    ...guides.flatMap((guide): [string, string][] => (guide.verification.verifiedOn ? [[guide.route, guide.verification.verifiedOn]] : [])),
+  ])
 
   const allUrls = [...createSet([...staticPages, ...navUrls, ...mainUrls, ...articleUrls, ...guideUrls])]
 
   return allUrls.map((url) => {
-    const articleDate = articleDates.get(url)
+    const contentDate = contentDates.get(url)
     return {
       // why: trailingSlash is enabled site-wide, so sitemap locs must match the canonical trailing-slash form
       url: `${SITE_URL}${url.endsWith('/') ? url : `${url}/`}`,
-      lastModified: articleDate ? createDate(articleDate) : createDate(),
+      lastModified: contentDate ? createDate(contentDate) : createDate(),
       changeFrequency: url === '/' ? <const>'weekly' : <const>'monthly',
-      priority: url === '/' ? 1.0 : url.startsWith('/docs/libraries') ? 0.8 : 0.6,
+      priority: url === '/' ? 1.0 : url.startsWith('/docs/libraries') ? 0.8 : url.startsWith('/docs/guides/') ? 0.7 : 0.6,
     }
   })
 }

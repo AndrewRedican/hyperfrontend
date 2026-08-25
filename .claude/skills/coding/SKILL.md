@@ -20,8 +20,9 @@ Know all enforced rules **before** generating code. Violations will be caught by
 | What                    | Where                                |
 | ----------------------- | ------------------------------------ |
 | Shared libs             | `libs/`                              |
-| Frontend apps           | `apps/frontend/`                     |
-| Backend apps            | `apps/backend/`                      |
+| Demos                   | `apps/demos/`                        |
+| Docs site               | `apps/docs-site/`                    |
+| Package e2e             | `apps/package-e2e/`                  |
 | Tooling                 | `tools/`, `plugins/`                 |
 | ESLint rule docs        | `tools/eslint-rules/docs/`           |
 | Base ESLint config      | `eslint.base.config.cjs`             |

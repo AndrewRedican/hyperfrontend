@@ -104,7 +104,7 @@ const failureRate = randomExponential(0.1) // λ=0.1, mean=10 units
 
 // Power law distribution - models "rich get richer" phenomena
 const popularity = randomPowerLaw(2, 1, 1000) // Few items very popular
-const citySize = randomPowerLaw(2.5, 100, 1000000) // Zipf's law for cities
+const citySize = randomPowerLaw(1.1, 100, 1000000) // Zipf's law for cities
 
 // Uniform distribution - flat probability across range
 const randomDelay = randomUniform(0, 1000) // Any value 0-1000ms equally likely
@@ -127,7 +127,7 @@ console.log(isUuidV4('not-a-uuid')) // false
 - **`randomUniform(min, max)`** - Uniform distribution (flat probability)
 - **`randomGaussian(min, max)`** - Gaussian/normal distribution (bell curve)
 - **`randomExponential(lambda)`** - Exponential distribution (decay)
-- **`randomPowerLaw(alpha, min, max)`** - Power law distribution (long tail)
+- **`randomPowerLaw(alpha, min, max)`** - Power law distribution (long tail; alpha is the standard Pareto exponent, so a higher alpha concentrates more mass near min)
 - **`randomLogarithmic(scale)`** - Logarithmic distribution
 
 ### Pseudo-Random Generators

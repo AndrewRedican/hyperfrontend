@@ -5,5 +5,12 @@
   "sourceRoot": "{projectRoot}/src",
   "projectType": "application",
   "tags": ["type:demo", "scope:standalone"],
+  "metadata": {
+    "lifecycle": {
+      "state": "planned",
+      "since": "2026-08-25",
+      "reason": "Catalogued in roadmap/showcase/catalog.md and carried as a gallery card in the docs site; nothing is implemented yet."
+    }
+  },
   "targets": {}
 }

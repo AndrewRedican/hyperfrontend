@@ -1,14 +1,19 @@
 # compiled output
 dist
+dist-ssr
 tmp
 .tmp
 /out-tsc
 *.tgz
+*.tsbuildinfo
 
 # dependencies
 node_modules
 
 # ide
+# VS Code configuration lives in .devcontainer/devcontainer.json under customizations.vscode,
+# enforced by the workspace/no-vscode-config lint rule
+.vscode
 /.idea
 *.iml
 .project
@@ -17,22 +22,19 @@ node_modules
 *.launch
 .settings/
 *.sublime-workspace
-.vscode/*
-!.vscode/settings.json
-!.vscode/tasks.json
-!.vscode/launch.json
-!.vscode/extensions.json
 
 # misc
 /.sass-cache
 /connect.lock
-/coverage
+coverage
 /libpeerconnection.log
 npm-debug.log
 yarn-error.log
 testem.log
 /typings
 projectStructure.cache.json
+*.local
+.eslintcache
 
 # system files
 .DS_Store

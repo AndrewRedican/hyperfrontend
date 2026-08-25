@@ -75,7 +75,10 @@ type BrokerStateContractRef = {
  * ```typescript
  * const broker = createBroker({
  *   name: 'app-broker',
- *   contract: { messages: { ping: {}, pong: {} } },
+ *   contract: {
+ *     emitted: [{ type: 'PING' }],
+ *     accepted: [{ type: 'PONG' }],
+ *   },
  *   settings: { logLevel: 'warn' },
  * })
  * ```

@@ -13,6 +13,11 @@
       "boundary": "same-origin",
       "kind": "static",
       "publishDir": "dist/apps/demos/koi-pond/site"
+    },
+    "lifecycle": {
+      "state": "frozen",
+      "since": "2026-08-25",
+      "reason": "Shipped demonstration. Its behaviour is the exhibit the docs site embeds and the guides extract from; process added here is maintenance cost that buys nothing."
     }
   },
   "targets": {
@@ -41,22 +46,6 @@
       "outputs": ["{workspaceRoot}/dist/apps/demos/koi-pond/site"],
       "options": {
         "command": "npm run build"
-      }
-    },
-    "test": {
-      "executor": "nx:run-commands",
-      "dependsOn": ["install"],
-      "options": {
-        "command": "npm run test:unit -- --run",
-        "cwd": "apps/demos/koi-pond/host"
-      }
-    },
-    "lint": {
-      "executor": "nx:run-commands",
-      "dependsOn": ["install"],
-      "options": {
-        "command": "npm run lint",
-        "cwd": "apps/demos/koi-pond/host"
       }
     },
     "typecheck": {

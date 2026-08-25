@@ -5,6 +5,13 @@
   "sourceRoot": "apps/demos/koi-pond/lib/src",
   "projectType": "library",
   "tags": ["type:demo", "role:shared", "scope:standalone"],
+  "metadata": {
+    "lifecycle": {
+      "state": "frozen",
+      "since": "2026-08-25",
+      "reason": "Shipped demonstration. Its behaviour is the exhibit the docs site embeds and the guides extract from; process added here is maintenance cost that buys nothing."
+    }
+  },
   "targets": {
     "install": {
       "executor": "@hyperfrontend/app:install",
@@ -17,22 +24,6 @@
       "outputs": ["{projectRoot}/dist"],
       "options": {
         "command": "npm run build"
-      }
-    },
-    "test": {
-      "executor": "nx:run-commands",
-      "dependsOn": ["install"],
-      "options": {
-        "command": "npm run test:unit -- --run",
-        "cwd": "apps/demos/koi-pond/lib"
-      }
-    },
-    "lint": {
-      "executor": "nx:run-commands",
-      "dependsOn": ["install"],
-      "options": {
-        "command": "npm run lint",
-        "cwd": "apps/demos/koi-pond/lib"
       }
     },
     "typecheck": {

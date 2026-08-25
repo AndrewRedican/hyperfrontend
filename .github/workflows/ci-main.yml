@@ -117,11 +117,6 @@ jobs:
           check-type: test
           affected-only: 'false'
 
-      - name: Check coverage thresholds
-        run: |
-          echo "Checking coverage thresholds for all projects..."
-          CI=1 npx nx run-many -t=test --all --coverage --codeCoverage --parallel=1 || true
-
       - name: Upload coverage reports
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2

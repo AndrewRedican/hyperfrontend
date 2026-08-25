@@ -53,6 +53,32 @@ describe('syncElementDimensions', () => {
     cleanup()
   })
 
+  it('calls onSuccess once with the target element after the first sync', () => {
+    const onSuccess = jest.fn()
+
+    const cleanup = syncElementDimensions(sourceElement, targetElement, { onSuccess })
+
+    jest.runAllTimers()
+
+    expect(onSuccess).toHaveBeenCalledTimes(1)
+    expect(onSuccess).toHaveBeenCalledWith(targetElement)
+    expect(targetElement.style.width).toBe('200px')
+
+    cleanup()
+  })
+
+  it('does not call onSuccess when only the source element resolves', () => {
+    const onSuccess = jest.fn()
+
+    const cleanup = syncElementDimensions(sourceElement, '#nonexistent', { onSuccess })
+
+    jest.advanceTimersByTime(10001)
+
+    expect(onSuccess).not.toHaveBeenCalled()
+
+    cleanup()
+  })
+
   it('syncs dimensions when source element resizes', () => {
     const cleanup = syncElementDimensions(sourceElement, targetElement)
 

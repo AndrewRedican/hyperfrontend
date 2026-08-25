@@ -1,8 +1,0 @@
-{
-  "name": "@hyperfrontend/app-angular",
-  "version": "0.0.0",
-  "description": "Angular micro-frontend application.",
-  "main": "./src/index.js",
-  "private": true,
-  "dependencies": {}
-}

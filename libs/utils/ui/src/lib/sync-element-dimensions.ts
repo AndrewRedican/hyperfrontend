@@ -8,14 +8,14 @@ import { onElementResize } from './on-element-resize'
  *
  * @param sourceElementRefOrString - The source element to copy dimensions from (element or selector)
  * @param targetElementRefOrString - The target element to apply dimensions to (element or selector)
- * @param options - Optional configuration for element retrieval and callbacks
+ * @param options - Optional configuration for element retrieval and callbacks. onSuccess fires once, after both elements are found and the first sync has been applied, and receives the target element. onFail fires if either lookup times out.
  * @returns A cleanup function to stop synchronization
  *
  * @example Syncing overlay to video dimensions
  * ```typescript
  * // Sync an overlay to match a video player's dimensions
  * const stopSync = syncElementDimensions('#video-player', '#overlay', {
- *   onSuccess: () => console.log('Elements synced'),
+ *   onSuccess: (overlay) => overlay.classList.add('ready'),
  * })
  *
  * // Stop syncing when component unmounts
@@ -64,7 +64,6 @@ export function syncElementDimensions<S extends HTMLElement = HTMLElement, T ext
   function onSourceElementFound(sourceElement: HTMLElement): void {
     const cancelGetTarget = getElementAsync(targetElementRefOrString, {
       ...options,
-      /* istanbul ignore next */
       onSuccess: (targetElement) => onTargetElementFound(sourceElement, targetElement),
       onFail: options?.onFail,
     })
@@ -85,6 +84,9 @@ export function syncElementDimensions<S extends HTMLElement = HTMLElement, T ext
    */
   function onTargetElementFound(sourceElement: HTMLElement, targetElement: HTMLElement): void {
     startSyncing(sourceElement, targetElement)
+    if (options?.onSuccess) {
+      options.onSuccess(targetElement)
+    }
   }
 
   const cancelGetSource = getElementAsync(sourceElementRefOrString, {

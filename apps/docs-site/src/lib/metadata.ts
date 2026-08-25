@@ -85,24 +85,44 @@ function extractDescription(markdown: string): string | null {
 }
 
 /**
+ * What a page needs to be shared as a piece of writing rather than as a
+ * destination.
+ */
+interface SocialArticleOptions {
+  /** ISO date the page's claims were last re-established, when the page records one */
+  modifiedTime?: string
+}
+
+/**
  * Build the canonical, Open Graph, and Twitter fields shared by docs pages.
  *
  * @param title - Page title without the site suffix
  * @param description - Page description
  * @param path - Site-relative page path with a trailing slash
+ * @param article - Present when the page is a piece of writing, so it is shared as an article rather than as a website
  * @returns Metadata slice with alternates, openGraph, and twitter populated
  */
-function buildSocialMetadata(title: string, description: string | undefined, path: string): Metadata {
+function buildSocialMetadata(title: string, description: string | undefined, path: string, article?: SocialArticleOptions): Metadata {
   return {
     alternates: { canonical: path },
-    openGraph: {
-      title,
-      description,
-      url: path,
-      siteName: 'HyperFrontend',
-      type: 'website',
-      images: [DEFAULT_OG_IMAGE],
-    },
+    openGraph: article
+      ? {
+          title,
+          description,
+          url: path,
+          siteName: 'HyperFrontend',
+          type: 'article',
+          modifiedTime: article.modifiedTime,
+          images: [DEFAULT_OG_IMAGE],
+        }
+      : {
+          title,
+          description,
+          url: path,
+          siteName: 'HyperFrontend',
+          type: 'website',
+          images: [DEFAULT_OG_IMAGE],
+        },
     twitter: {
       card: 'summary_large_image',
       title,
@@ -178,8 +198,28 @@ export function getSubmoduleMetadata(options: SubmoduleMetadataOptions): Metadat
 }
 
 /**
+ * Generate metadata for the guides index.
+ *
+ * @returns Metadata object with title, description, canonical, and social cards
+ */
+export function getGuidesIndexMetadata(): Metadata {
+  const description =
+    'Tutorials and how-to guides for the HyperFrontend packages. Every code example is extracted from running source or run against a named version.'
+
+  return {
+    title: 'Guides & Tutorials',
+    description,
+    ...buildSocialMetadata('Guides & Tutorials', description, '/docs/guides/'),
+  }
+}
+
+/**
  * Generate metadata for a guide page. The description is the guide's problem
  * statement, the text a reader searching for this material would recognize.
+ *
+ * A guide is shared as an article rather than as a website, dated by the day
+ * its examples were last run: that is the claim the page actually makes about
+ * its own freshness.
  *
  * @param slug - The guide slug from the URL
  * @returns Metadata object with title, description, keywords, canonical, and social cards
@@ -195,7 +235,9 @@ export function getGuideMetadata(slug: string): Metadata {
     title: guide.title,
     description: truncateDescription(guide.problem),
     keywords: [...guide.packages, ...guide.keywords],
-    ...buildSocialMetadata(guide.title, truncateDescription(guide.problem), `/docs/guides/${slug}/`),
+    ...buildSocialMetadata(guide.title, truncateDescription(guide.problem), `/docs/guides/${slug}/`, {
+      modifiedTime: guide.verification.verifiedOn,
+    }),
   }
 }
 

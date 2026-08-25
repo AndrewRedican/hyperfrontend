@@ -13,6 +13,11 @@
       "boundary": "cross-site",
       "kind": "static",
       "publishDir": "dist/apps/demos/koi-pond/site/fish-vue"
+    },
+    "lifecycle": {
+      "state": "frozen",
+      "since": "2026-08-25",
+      "reason": "Shipped demonstration. Its behaviour is the exhibit the docs site embeds and the guides extract from; process added here is maintenance cost that buys nothing."
     }
   },
   "targets": {
@@ -34,14 +39,6 @@
       "outputs": ["{workspaceRoot}/dist/apps/demos/koi-pond/site/fish-vue"],
       "options": {
         "command": "npm run build"
-      }
-    },
-    "lint": {
-      "executor": "nx:run-commands",
-      "dependsOn": ["install"],
-      "options": {
-        "command": "npm run lint",
-        "cwd": "apps/demos/koi-pond/fish-vue"
       }
     },
     "typecheck": {

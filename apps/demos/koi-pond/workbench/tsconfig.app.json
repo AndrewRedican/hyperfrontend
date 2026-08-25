@@ -1,6 +1,5 @@
 {
   "include": ["env.d.ts", "src/**/*", "../lib/src/**/*"],
-  "exclude": ["src/**/__tests__/*", "../lib/src/**/__tests__/*"],
   "compilerOptions": {
     "target": "ES2022",
     "useDefineForClassFields": true,
@@ -23,8 +22,6 @@
 
     // Path mapping for cleaner imports.
     "paths": {
-      "@/*": ["./src/*"],
-
       // why: The workbench compiles the koi lib from source rather than from its packed tarball, so a geometry edit type-checks and hot-reloads without a repack.
       "@hyperfrontend/demo-koi-lib": ["../lib/src/index.ts"],
       "@hyperfrontend/demo-koi-lib/three": ["../lib/src/three/index.ts"]

@@ -33,9 +33,14 @@ export function GuideTypeBadge({ type }: GuideTypeBadgeProps) {
   )
 }
 
+const VERIFICATION_BADGE_CLASS =
+  'inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-medium text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-200'
+
 interface VerificationBadgeProps {
   /** How the guide's code examples are proven to execute */
   verification: GuideIndexEntry['verification']
+  /** Show the claim alone and move the version and date it rests on into the tooltip, for lists where the claim is one field among many */
+  compact?: boolean
 }
 
 /**
@@ -44,26 +49,30 @@ interface VerificationBadgeProps {
  * on a named date. The reader is told which, and how old the claim is.
  * @param props - Component props
  * @param props.verification - How the guide's examples were proven correct
+ * @param props.compact - Show the claim alone, with the version and date in the tooltip
  * @returns The rendered badge
  */
-export function VerificationBadge({ verification }: VerificationBadgeProps) {
+export function VerificationBadge({ verification, compact = false }: VerificationBadgeProps) {
   const target = (verification.verifiedAgainst ?? '').replace('@hyperfrontend/', '').replace('@', ' ')
   const label = verification.kind === 'demo' ? 'Code from a running demo' : `Verified · ${target || 'published package'}`
+  const explanation =
+    verification.kind === 'authored' ? 'Examples were run against this version on this date' : 'Extracted from source that ships and runs'
+  const verifiedOn = verification.kind === 'authored' && verification.verifiedOn ? verification.verifiedOn : ''
+
+  if (compact) {
+    return (
+      <span className={VERIFICATION_BADGE_CLASS} title={`${label}${verifiedOn ? ` · ${verifiedOn}` : ''}. ${explanation}.`}>
+        <CheckIcon className="h-3 w-3" />
+        {verification.kind === 'demo' ? 'From a demo' : 'Verified'}
+      </span>
+    )
+  }
 
   return (
-    <span
-      className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-medium text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-200"
-      title={
-        verification.kind === 'authored'
-          ? 'Examples were run against this version on this date'
-          : 'Extracted from source that ships and runs'
-      }
-    >
+    <span className={VERIFICATION_BADGE_CLASS} title={explanation}>
       <CheckIcon className="h-3 w-3" />
       {label}
-      {verification.kind === 'authored' && verification.verifiedOn ? (
-        <span className="font-normal opacity-75">· {verification.verifiedOn}</span>
-      ) : null}
+      {verifiedOn ? <span className="font-normal opacity-75">· {verifiedOn}</span> : null}
     </span>
   )
 }
