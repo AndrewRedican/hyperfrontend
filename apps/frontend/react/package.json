@@ -1,8 +1,0 @@
-{
-  "name": "@hyperfrontend/app-react",
-  "version": "0.0.0",
-  "description": "React micro-frontend application.",
-  "main": "./src/index.js",
-  "private": true,
-  "dependencies": {}
-}
