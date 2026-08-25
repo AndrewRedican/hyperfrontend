@@ -4,7 +4,8 @@ import { createURLSearchParams } from '@hyperfrontend/immutable-api-utils/built-
 import { buildGuidesHref, filterGuides, GUIDE_FILTER_ALL, GUIDES_ROUTE, readGuideFilter } from './guide-filters'
 
 /**
- * Build a guide index entry with only the fields the filters read.
+ * Build a guide index entry with only the fields the filters read. The title
+ * is the slug in words, so a search facet has something to match on.
  *
  * @param slug - Global identifier, also the route segment and the sort key
  * @param type - Which Diátaxis quadrant the guide sits in
@@ -12,7 +13,17 @@ import { buildGuidesHref, filterGuides, GUIDE_FILTER_ALL, GUIDES_ROUTE, readGuid
  * @returns An index entry carrying just enough shape for the filters
  */
 function guide(slug: string, type: GuideIndexEntry['type'], packages: string[]): GuideIndexEntry {
-  return <GuideIndexEntry>{ slug, type, packages, route: `/docs/guides/${slug}` }
+  return <GuideIndexEntry>{
+    slug,
+    type,
+    packages,
+    route: `/docs/guides/${slug}`,
+    title: slug.split('-').join(' '),
+    problem: '',
+    outcome: '',
+    keywords: <string[]>[],
+    headings: <string[]>[],
+  }
 }
 
 const CORPUS = [
@@ -43,16 +54,37 @@ describe('buildGuidesHref', () => {
       '/docs/guides/?package=%40hyperfrontend%2Fnexus&type=how-to'
     )
   })
+
+  it('carries the search after the facets that narrow', () => {
+    expect(buildGuidesHref({ type: 'tutorial', query: 'cross window' })).toBe('/docs/guides/?type=tutorial&q=cross+window')
+  })
+
+  it('drops a search that is only whitespace rather than serializing it', () => {
+    expect(buildGuidesHref({ query: '   ' })).toBe(GUIDES_ROUTE)
+  })
 })
 
 describe('readGuideFilter', () => {
-  it('falls back to the all-value for both facets on a bare URL', () => {
-    expect(readGuideFilter(createURLSearchParams())).toEqual({ package: GUIDE_FILTER_ALL, type: GUIDE_FILTER_ALL })
+  it('falls back to the all-value for both facets and an empty search on a bare URL', () => {
+    expect(readGuideFilter(createURLSearchParams())).toEqual({ package: GUIDE_FILTER_ALL, type: GUIDE_FILTER_ALL, query: '' })
   })
 
   it('round-trips a href built for a package and type', () => {
     const query = buildGuidesHref({ package: '@hyperfrontend/nexus', type: 'tutorial' }).split('?')[1] ?? ''
-    expect(readGuideFilter(createURLSearchParams(query))).toEqual({ package: '@hyperfrontend/nexus', type: 'tutorial' })
+    expect(readGuideFilter(createURLSearchParams(query))).toEqual({
+      package: '@hyperfrontend/nexus',
+      type: 'tutorial',
+      query: '',
+    })
+  })
+
+  it('round-trips a href built for a search', () => {
+    const query = buildGuidesHref({ query: 'cross window' }).split('?')[1] ?? ''
+    expect(readGuideFilter(createURLSearchParams(query))).toEqual({
+      package: GUIDE_FILTER_ALL,
+      type: GUIDE_FILTER_ALL,
+      query: 'cross window',
+    })
   })
 })
 
@@ -88,5 +120,21 @@ describe('filterGuides', () => {
     const source = [...CORPUS]
     filterGuides(source, { package: '@hyperfrontend/nexus' })
     expect(source).toEqual(CORPUS)
+  })
+
+  it('narrows to the guides a reader searched for', () => {
+    expect(filterGuides(CORPUS, { query: 'crosses' }).map((entry) => entry.slug)).toEqual(['b-crosses-into-nexus'])
+  })
+
+  it('applies the search after the facets that narrow', () => {
+    expect(filterGuides(CORPUS, { type: 'tutorial', query: 'crosses' })).toEqual([])
+  })
+
+  it('keeps ownership order as the tiebreak between equally relevant guides', () => {
+    expect(filterGuides(CORPUS, { package: '@hyperfrontend/nexus', query: 'nexus' }).map((entry) => entry.slug)).toEqual([
+      'a-nexus-tutorial',
+      'c-nexus-how-to',
+      'b-crosses-into-nexus',
+    ])
   })
 })
