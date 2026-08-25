@@ -1,0 +1,63 @@
+{
+  "schemaVersion": 1,
+  "type": "how-to",
+  "title": "How to test interactive prompts without a terminal",
+  "problem": "My CLI's prompts are the only part of it with no tests, because a test runner has no TTY to give them and driving raw keystrokes from a spawned process is more machinery than the code being tested.",
+  "outcome": "A fake terminal built from two streams that drives any prompt in the package, with tests covering a submitted answer, a highlighted choice, a validator that rejects and then accepts, and a Ctrl+C cancellation.",
+  "priority": "P1",
+  "packages": ["@hyperfrontend/questions"],
+  "verification": {
+    "kind": "authored",
+    "verifiedAgainst": "@hyperfrontend/questions@0.3.0",
+    "verifiedOn": "2026-08-25"
+  },
+  "complexity": "intermediate",
+  "estMinutes": 12,
+  "apis": [
+    {
+      "package": "@hyperfrontend/questions",
+      "symbol": "PromptConfig"
+    },
+    {
+      "package": "@hyperfrontend/questions",
+      "symbol": "PromptOutcome"
+    },
+    {
+      "package": "@hyperfrontend/questions",
+      "symbol": "PromptResult"
+    },
+    {
+      "package": "@hyperfrontend/questions",
+      "symbol": "text"
+    },
+    {
+      "package": "@hyperfrontend/questions",
+      "symbol": "select"
+    }
+  ],
+  "prerequisites": {
+    "knowledge": ["Prompts already wired into a command", "A test runner; the examples use Node's built-in `node:test`"]
+  },
+  "related": {
+    "guides": ["build-a-setup-wizard-for-your-cli", "instrument-a-cli-with-logging"],
+    "reference": ["/docs/libraries/questions"]
+  },
+  "keywords": [
+    "testing",
+    "unit test",
+    "jest",
+    "vitest",
+    "node:test",
+    "mock stdin",
+    "fake terminal",
+    "PassThrough",
+    "raw mode",
+    "isTTY",
+    "keystrokes",
+    "prompt",
+    "validate",
+    "cancellation",
+    "Ctrl+C",
+    "interactive CLI"
+  ]
+}
