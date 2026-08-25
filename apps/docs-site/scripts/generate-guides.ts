@@ -9,6 +9,7 @@ import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { min } from '@hyperfrontend/immutable-api-utils/built-in-copy/math'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { logger } from '@hyperfrontend/logging'
+import { extractMarkdownSections } from '../src/lib/slug'
 
 // why: cwd-anchored like the src/ loaders (all entry points run from apps/docs-site), which also keeps this module importable by the vitest harness where __dirname does not exist
 const WORKSPACE_ROOT = resolve(process.cwd(), '../..')
@@ -315,9 +316,10 @@ function resolveSnippets(unit: GuideUnit, meta: GuideMeta, errors: string[]): st
  *
  * @param unit - The compiled guide unit
  * @param meta - The guide's validated metadata
+ * @param compiled - The guide's compiled markdown, mined for the headings the index carries
  * @returns Index entry exposing the guide to the site, search, and external consumers
  */
-function toIndexEntry(unit: GuideUnit, meta: GuideMeta): GuideIndexEntry {
+function toIndexEntry(unit: GuideUnit, meta: GuideMeta, compiled: string): GuideIndexEntry {
   return {
     slug: unit.slug,
     route: `/docs/guides/${unit.slug}`,
@@ -334,6 +336,7 @@ function toIndexEntry(unit: GuideUnit, meta: GuideMeta): GuideIndexEntry {
     prerequisites: meta.prerequisites,
     related: meta.related,
     keywords: meta.keywords ?? [],
+    headings: extractMarkdownSections(compiled).map((section) => section.title),
   }
 }
 
@@ -410,8 +413,9 @@ function generateGuides(libraries: LibrarySource[]): GuideIndex {
     if (!validateMeta(meta, unit, libraries, errors)) continue
     verifyApis(meta, unit, libraries, errors)
 
-    compiledUnits.push({ slug: unit.slug, compiled: resolveSnippets(unit, meta, errors) })
-    entries.push(toIndexEntry(unit, meta))
+    const compiled = resolveSnippets(unit, meta, errors)
+    compiledUnits.push({ slug: unit.slug, compiled })
+    entries.push(toIndexEntry(unit, meta, compiled))
     logger.log(`  ✓ ${unit.slug} (${meta.type}, ${meta.packages[0]})`)
   }
 

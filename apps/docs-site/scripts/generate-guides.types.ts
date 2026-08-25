@@ -174,6 +174,8 @@ export interface GuideIndexEntry {
   related?: GuideRelated
   /** Additional discovery keywords */
   keywords: string[]
+  /** Section headings (H2 and H3) of the compiled guide, in document order, so a reader can search what a guide covers without the corpus shipping its bodies */
+  headings: string[]
 }
 
 /**
