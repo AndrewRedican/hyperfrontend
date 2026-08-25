@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "type": "how-to",
+  "title": "How to make a service safe to use before it is ready",
+  "problem": "A shared service with async setup only ever serves one of its two callers: whoever subscribed early waits for a signal, and whoever subscribed late missed the signal that already fired, so I end up guarding every call site with an isReady check that can go stale between the check and the subscribe.",
+  "outcome": "A service whose callers subscribe whenever they load, before or after setup completes, each running as soon as it is usable, with concurrent starts sharing one setup, the same subscriptions covering shutdown, and repeat starts costing nothing.",
+  "priority": "P1",
+  "packages": ["@hyperfrontend/state-machine"],
+  "verification": {
+    "kind": "authored",
+    "verifiedAgainst": "@hyperfrontend/state-machine@0.2.0",
+    "verifiedOn": "2026-08-25"
+  },
+  "complexity": "intermediate",
+  "estMinutes": 12,
+  "apis": [
+    {
+      "package": "@hyperfrontend/state-machine",
+      "symbol": "LifecycleAwareComponent"
+    }
+  ],
+  "prerequisites": {
+    "knowledge": ["A service, client, or connection in your app that does async work before it can be used"]
+  },
+  "related": {
+    "guides": ["track-an-async-task-without-loading-flags"],
+    "reference": ["/docs/libraries/state-machine", "/docs/libraries/state-machine/lifecycle-aware-component"],
+    "explanation": ["/docs/libraries/state-machine/architecture"]
+  },
+  "keywords": [
+    "initialization race",
+    "startup race",
+    "async setup",
+    "ready state",
+    "lifecycle",
+    "subscribe late",
+    "missed event",
+    "isReady",
+    "singleton service",
+    "bootstrap",
+    "teardown",
+    "idempotent start"
+  ]
+}
