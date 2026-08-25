@@ -10,8 +10,8 @@ import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 export interface FifoList<T extends object> {
   /** Adds an item to the end of the list */
   push(item: T): void
-  /** Removes and returns the first item in the list */
-  pull(): T
+  /** Removes and returns the first item in the list, or undefined when the list is empty */
+  pull(): T | undefined
   /** Maps each item using the provided callback */
   map<U>(callback: (item: T) => U): U[]
   /** Iterates over each item in the list */
@@ -41,25 +41,28 @@ export interface FifoList<T extends object> {
  *
  * queue.pull() // => { id: 1, name: 'first' }
  * queue.pull() // => { id: 2, name: 'second' }
+ * queue.pull() // => undefined (the list is empty)
  * ```
+ * @throws {Error} When the pushed item is a primitive rather than an object.
+ * @throws {Error} When the pushed item is already in the list. Use has() to check first if a duplicate is expected.
  */
 export function createFifoList<T extends object>(): FifoList<T> {
   const list: Set<T> = createSet()
 
   const push = (item: T): void => {
     if (getType(item) !== 'object') {
-      throw createError('A fifo list only non-primitive values')
+      throw createError('A fifo list only supports non-primitive values')
     }
     if (list.has(item)) {
-      throw createError('Cannot a item that already exists')
+      throw createError('Cannot push an item that already exists in the list')
     }
     list.add(item)
   }
 
-  const pull = (): T => {
+  const pull = (): T | undefined => {
     const value = list.values().next().value
     list.delete(<T>value)
-    return <T>value
+    return value
   }
 
   const map = <U>(callback: (item: T) => U): U[] => {
