@@ -24,7 +24,7 @@
     "knowledge": ["A browser app you can add a client-side module to", "The shell package the feature team published or sent you"]
   },
   "related": {
-    "guides": ["first-cross-window-connection"],
+    "guides": ["close-a-feature-without-losing-work", "first-cross-window-connection"],
     "reference": ["/docs/libraries/features", "/docs/libraries/features/host"],
     "explanation": ["/docs/libraries/features/architecture", "/docs/core-concepts/security"]
   },

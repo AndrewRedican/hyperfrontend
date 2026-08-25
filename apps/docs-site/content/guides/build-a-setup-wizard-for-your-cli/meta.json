@@ -43,7 +43,7 @@
     "knowledge": ["Node.js 18 or newer", "An empty directory to build the command in"]
   },
   "related": {
-    "guides": ["instrument-a-cli-with-logging"],
+    "guides": ["test-interactive-prompts-without-a-terminal", "instrument-a-cli-with-logging"],
     "reference": ["/docs/libraries/questions"]
   },
   "keywords": [

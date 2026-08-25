@@ -27,6 +27,7 @@
     "knowledge": ["A JavaScript project with a bundler, or a Node.js script"]
   },
   "related": {
+    "guides": ["generate-values-that-look-natural"],
     "reference": ["/docs/libraries/utils/time"]
   },
   "keywords": ["timer", "countdown", "idle timeout", "pause", "resume", "session expiry", "setTimeout", "clock"]
