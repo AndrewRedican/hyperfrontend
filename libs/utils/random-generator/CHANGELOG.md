@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.0](https://github.com/AndrewRedican/hyperfrontend/compare/5f116abb8ba6355dfb283fa03b7481e5eb029480...cc16961a470190848f71a7cce41f7377bc4511a4) - 2026-08-25
+
+### Breaking Changes
+
+- **BREAKING** use the standard pareto exponent
+
+### Bug Fixes
+
+- **BREAKING** use the standard pareto exponent
+
 ## [0.0.5](https://github.com/AndrewRedican/hyperfrontend/compare/c8db08be8b183addd26caf81fdd17fb3693f296f...466c0388c4cd516b9c704214140b4df1004098e6) - 2026-06-23
 
 ### Other
