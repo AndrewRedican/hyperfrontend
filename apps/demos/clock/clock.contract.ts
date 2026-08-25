@@ -163,6 +163,7 @@ const contract = {
         required: ['id'],
       },
     },
+    // ref: [guide:close-a-feature-without-losing-work/declare-close-request] start
     {
       type: 'close-request',
       description:
@@ -175,6 +176,7 @@ const contract = {
         required: ['source'],
       },
     },
+    // ref: [guide:close-a-feature-without-losing-work/declare-close-request] end
   ],
 } satisfies FeatureContract
 

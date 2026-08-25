@@ -103,6 +103,7 @@ export function createFeatureUi(): FeatureUi {
       listeners.add(listener)
       return () => listeners.delete(listener)
     },
+    // ref: [guide:close-a-feature-without-losing-work/request-close] start
     requestClose() {
       if (mode !== 'dialog' || closeRequested || send === null) {
         return false
@@ -111,5 +112,6 @@ export function createFeatureUi(): FeatureUi {
       send('close-request', { source: 'button' })
       return true
     },
+    // ref: [guide:close-a-feature-without-losing-work/request-close] end
   }
 }
