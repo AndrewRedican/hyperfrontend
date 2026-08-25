@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { GOOGLE_CONSENT_DEFAULTS, googleConsentSignals } from '../google-consent'
+import { GOOGLE_CONSENT_DEFAULTS, googleConsentSignals } from './google-consent'
 
 describe('googleConsentSignals', () => {
   it('defaults every signal to denied', () => {

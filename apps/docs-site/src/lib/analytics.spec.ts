@@ -142,18 +142,4 @@ describe('with a measurement id', () => {
       { analytics_storage: 'denied', ad_storage: 'denied', ad_user_data: 'denied', ad_personalization: 'denied' },
     ])
   })
-
-  it('conversions require the advertising grant', async () => {
-    const { trackConversion, consentStore } = await loadAnalytics('G-TEST', 'AW-TEST')
-    consentStore.decide({ analytics: true, advertising: false })
-    trackConversion('label')
-    expect(layerCalls().filter((call) => call[0] === 'event')).toHaveLength(0)
-  })
-
-  it('conversions flow once advertising is granted', async () => {
-    const { trackConversion, consentStore } = await loadAnalytics('G-TEST', 'AW-TEST')
-    consentStore.decide({ analytics: false, advertising: true })
-    trackConversion('label', { value: 1 })
-    expect(layerCalls()).toEqual(expect.arrayContaining([['event', 'conversion', { send_to: 'AW-TEST/label', value: 1 }]]))
-  })
 })

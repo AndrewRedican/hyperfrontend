@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { markdownToHtml } from '../markdown'
+import { markdownToHtml } from './markdown'
 
 // why: The first render loads the shiki highlighter, which outruns the default per-test timeout
 const RENDER_TIMEOUT_MS = 30_000

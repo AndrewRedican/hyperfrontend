@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { CARD_SESSION, stageHandover, stageScene } from '../expand-choreography'
+import { CARD_SESSION, stageHandover, stageScene } from './expand-choreography'
 
 describe('staging a demo in a scene', () => {
   it('opens a fresh session for the overlay when the demo reopens', () => {

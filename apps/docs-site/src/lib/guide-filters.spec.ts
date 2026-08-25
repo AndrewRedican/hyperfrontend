@@ -1,7 +1,7 @@
-import type { GuideIndexEntry } from '../../../scripts/generate-guides.types'
+import type { GuideIndexEntry } from '../../scripts/generate-guides.types'
 import { describe, expect, it } from 'vitest'
 import { createURLSearchParams } from '@hyperfrontend/immutable-api-utils/built-in-copy/url'
-import { buildGuidesHref, filterGuides, GUIDE_FILTER_ALL, GUIDES_ROUTE, readGuideFilter } from '../guide-filters'
+import { buildGuidesHref, filterGuides, GUIDE_FILTER_ALL, GUIDES_ROUTE, readGuideFilter } from './guide-filters'
 
 /**
  * Build a guide index entry with only the fields the filters read.

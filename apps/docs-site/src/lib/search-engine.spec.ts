@@ -1,7 +1,7 @@
-import type { SearchDocument } from '../search/search-contract'
+import type { SearchDocument } from './search/search-contract'
 import { describe, expect, it } from 'vitest'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
-import { normalize, search, tokenize } from '../search/search-engine'
+import { normalize, search, tokenize } from './search/search-engine'
 
 const DOCUMENTS: SearchDocument[] = [
   {

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { createURL } from '@hyperfrontend/immutable-api-utils/built-in-copy/url'
-import { buildGuideRequestUrl } from '../guide-request'
+import { buildGuideRequestUrl } from './guide-request'
 
 describe('buildGuideRequestUrl', () => {
   it("opens GitHub's own new-issue page rather than any custom integration", () => {

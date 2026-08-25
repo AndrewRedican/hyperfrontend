@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { removeBadges } from '../content'
+import { removeBadges } from './content'
 
 const BADGES = [
   '<p align="center">',

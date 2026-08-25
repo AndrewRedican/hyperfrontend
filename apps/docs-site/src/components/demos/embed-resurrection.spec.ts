@@ -1,6 +1,6 @@
-import type { EmbedResurrection } from '../embed-resurrection'
+import type { EmbedResurrection } from './embed-resurrection'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { createEmbedResurrection } from '../embed-resurrection'
+import { createEmbedResurrection } from './embed-resurrection'
 
 // why: The built-in copies capture the real timers when their module loads, which is before any fake clock is installed; deferring to `globalThis` at call time is what puts the policy's waits under the test's control.
 vi.mock('@hyperfrontend/immutable-api-utils/built-in-copy/timers', () => ({

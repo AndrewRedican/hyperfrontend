@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { createHeadingSlugger, extractMarkdownSections, generateSlug, stripInlineMarkdown } from '../slug'
+import { createHeadingSlugger, extractMarkdownSections, generateSlug, stripInlineMarkdown } from './slug'
 
 describe('generateSlug', () => {
   it('lowercases, strips punctuation, and hyphenates spaces', () => {

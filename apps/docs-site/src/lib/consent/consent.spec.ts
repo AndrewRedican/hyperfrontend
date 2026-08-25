@@ -1,6 +1,6 @@
-import type { ConsentStorage } from '../consent'
+import type { ConsentStorage } from './consent'
 import { describe, expect, it, vi } from 'vitest'
-import { CONSENT_STORAGE_KEY, createConsentStore, parseStoredConsent } from '../consent'
+import { CONSENT_STORAGE_KEY, createConsentStore, parseStoredConsent } from './consent'
 
 /**
  * An in-memory localStorage stand-in.

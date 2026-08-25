@@ -118,18 +118,3 @@ export function trackEvent(name: string, params?: Record<string, unknown>): void
   }
   callGtag('event', name, params ?? {})
 }
-
-/**
- * Report a Google Ads conversion. A no-op outside the browser, when either
- * the GA4 or Google Ads ID is not configured, or until the visitor grants the
- * advertising category.
- *
- * @param conversionLabel - Conversion label from the Google Ads tag setup
- * @param params - Extra conversion parameters (value, currency, transaction_id, …)
- */
-export function trackConversion(conversionLabel: string, params?: Record<string, unknown>): void {
-  if (!GA_MEASUREMENT_ID || !GOOGLE_ADS_ID || typeof window === 'undefined' || !consentStore.isGranted('advertising')) {
-    return
-  }
-  callGtag('event', 'conversion', { send_to: `${GOOGLE_ADS_ID}/${conversionLabel}`, ...(params ?? {}) })
-}
