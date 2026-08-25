@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 1,
+  "type": "how-to",
+  "title": "How to run async jobs one at a time, in order",
+  "problem": "My writes need to happen one at a time and in order, and the array-plus-busy-flag queue I wrote breaks the moment a second caller starts it, a rejected job leaves the flag stuck, or a retry queues the same work twice.",
+  "outcome": "A queue that runs jobs strictly in arrival order, accepts more work while it is draining without starting a second pump, keeps going when a job throws, and answers what is still waiting and what can still be cancelled.",
+  "priority": "P1",
+  "packages": ["@hyperfrontend/list-utils"],
+  "verification": {
+    "kind": "authored",
+    "verifiedAgainst": "@hyperfrontend/list-utils@0.0.5",
+    "verifiedOn": "2026-08-25"
+  },
+  "complexity": "intermediate",
+  "estMinutes": 10,
+  "apis": [
+    {
+      "package": "@hyperfrontend/list-utils",
+      "symbol": "createFifoList"
+    },
+    {
+      "package": "@hyperfrontend/list-utils",
+      "symbol": "FifoList"
+    }
+  ],
+  "prerequisites": {
+    "knowledge": ["Work in your app that must not overlap or reorder: an outbox, an upload queue, or saves against one record"]
+  },
+  "related": {
+    "guides": ["make-a-service-safe-to-use-before-it-is-ready", "track-an-async-task-without-loading-flags"],
+    "reference": ["/docs/libraries/utils/list"]
+  },
+  "keywords": [
+    "queue",
+    "FIFO",
+    "sequential",
+    "async",
+    "one at a time",
+    "serialize",
+    "outbox",
+    "upload queue",
+    "concurrency 1",
+    "backpressure",
+    "ordering",
+    "cancel",
+    "retry",
+    "drain"
+  ]
+}
