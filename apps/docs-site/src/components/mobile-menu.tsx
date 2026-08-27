@@ -353,7 +353,12 @@ function MobileNavSection({ section, pathname, onClose, path, depth = 0 }: Mobil
         }`}
       >
         {hasHref && section.href ? (
-          <Link href={section.href} onClick={onClose} className="flex flex-1 items-center gap-2 px-3 py-2">
+          <Link
+            href={section.href}
+            onClick={onClose}
+            className="flex flex-1 items-center gap-2 px-3 py-2"
+            aria-current={isActive ? 'page' : undefined}
+          >
             {section.iconKind && <NavItemIcon kind={section.iconKind} />}
             {section.title}
           </Link>

@@ -232,7 +232,7 @@ function SidebarItem({ item, pathname, path }: SidebarItemProps) {
           }`}
         >
           {hasHref && item.href ? (
-            <Link href={item.href} className="flex flex-1 items-center gap-2 px-3 py-2">
+            <Link href={item.href} className="flex flex-1 items-center gap-2 px-3 py-2" aria-current={isActive ? 'page' : undefined}>
               {item.iconKind && <NavItemIcon kind={item.iconKind} />}
               {item.title}
             </Link>

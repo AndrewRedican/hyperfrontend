@@ -461,13 +461,11 @@ export const docsNavigation: NavItem[] = [
     slug: 'Guides & Tutorials',
     href: '/docs/guides',
   },
+  // why: Libraries is both the ecosystem landing page and the parent of every package subtree, so its label links and its caret expands, the same split the package entries below it already use.
   {
     slug: 'Libraries',
-    children: [...coreLibraries, ...supportingLibraries, { slug: 'Utils', children: utilsLibraries }],
-  },
-  {
-    slug: 'API Reference',
     href: '/docs/libraries',
+    children: [...coreLibraries, ...supportingLibraries, { slug: 'Utils', children: utilsLibraries }],
   },
   {
     slug: 'Articles',
