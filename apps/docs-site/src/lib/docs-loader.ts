@@ -1,6 +1,8 @@
 import type { ApiLinkIndex, PackageSymbolLinks } from '@/components/api-reference/api-link-context'
+import type { EcosystemLibrary } from '@/lib/ecosystem'
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs'
 import { resolve, join } from 'node:path'
+import { LIBRARIES } from '@/lib/content'
 import { isArray } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
 import { parse } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
@@ -69,6 +71,10 @@ interface ManifestLibrary {
   keywords: string[]
   /** Description from package.json */
   description: string
+  /** Released version, empty when the package.json carries none */
+  version?: string
+  /** Whether the package is withheld from the registry */
+  isPrivate?: boolean
 }
 
 /**
@@ -536,58 +542,45 @@ export function getApiLinkIndex(slug: string, packageName: string): ApiLinkIndex
 /**
  * Library data for the packages index page.
  */
-export interface LibraryData {
-  /** Library display name */
-  name: string
-  /** npm package name */
-  packageName: string
+export interface LibraryData extends EcosystemLibrary {
   /** URL slug */
   slug: string
   /** Library category */
   category: string
   /** Whether API docs exist */
   hasApi: boolean
-  /** Keywords from package.json */
-  keywords: string[]
-  /** Description from package.json */
-  description: string
-  /** Full href path for the library */
-  href: string
 }
 
 /**
- * Get all library data for the packages index page.
- * Returns data from manifest if available, otherwise constructs from filesystem.
+ * Every documented library, ready for the ecosystem index page.
  *
- * @returns Array of library data with keywords and descriptions
+ * The package set comes from `LIBRARIES`, the list the `docs-site-libraries`
+ * lint rule holds against the workspace, so a library that lint accepts can
+ * never be missing from the page. Description, keywords, and version are read
+ * from the generated manifest, which copies them straight out of each
+ * package.json, so the cards say what npm says. A library the manifest has not
+ * covered yet still appears, with the fields the manifest owns left empty.
+ *
+ * @returns One entry per documented library, in `LIBRARIES` order
  */
 export function getAllLibraryData(): LibraryData[] {
   const manifest = getManifest()
+  const published = createMap((manifest?.libraries ?? []).map((lib) => [lib.packageName, lib]))
 
-  if (manifest) {
-    return manifest.libraries.map((lib) => {
-      const isUtils = lib.category === 'utils'
-      let href: string
+  return LIBRARIES.map((lib) => {
+    const entry = published.get(lib.packageName)
 
-      if (isUtils) {
-        const shortSlug = lib.slug.replace('-utils', '')
-        href = `/docs/libraries/utils/${shortSlug}`
-      } else {
-        href = `/docs/libraries/${lib.slug}`
-      }
-
-      return {
-        name: lib.name,
-        packageName: lib.packageName,
-        slug: lib.slug,
-        category: lib.category,
-        hasApi: lib.hasApi,
-        keywords: lib.keywords || [],
-        description: lib.description || '',
-        href,
-      }
-    })
-  }
-
-  return []
+    return {
+      name: lib.name,
+      packageName: lib.packageName,
+      slug: lib.slug,
+      category: lib.category,
+      hasApi: entry?.hasApi ?? false,
+      keywords: entry?.keywords ?? [],
+      description: entry?.description ?? '',
+      version: entry?.version ?? '',
+      isPrivate: entry?.isPrivate ?? false,
+      href: `/docs/libraries/${lib.slug}`,
+    }
+  })
 }
