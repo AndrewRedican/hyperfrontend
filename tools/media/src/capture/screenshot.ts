@@ -2,6 +2,11 @@ import type { Page } from 'playwright-core'
 import { mediaError } from '../lib/media-error'
 import { ExitCode } from '../models/exit-code'
 
+// why: a page whose clock has been pinned answers a screenshot request an order of
+// why: magnitude slower than a live one, well past the thirty seconds Playwright allows
+// why: by default, and the request completes rather than hangs once it is given room
+const CAPTURE_TIMEOUT_MS = 120_000
+
 /** Which part of a page a still shows. */
 export interface ShotFraming {
   /** Element to capture instead of the viewport. */
@@ -23,11 +28,11 @@ export interface ShotFraming {
  */
 export async function capturePng(page: Page, framing: ShotFraming): Promise<Buffer> {
   if (framing.selector === undefined) {
-    return page.screenshot({ type: 'png', fullPage: framing.fullPage ?? false })
+    return page.screenshot({ type: 'png', fullPage: framing.fullPage ?? false, timeout: CAPTURE_TIMEOUT_MS })
   }
   const element = await page.$(framing.selector)
   if (element === null) {
     throw mediaError(ExitCode.SceneFailed, `No element matches "${framing.selector}"`)
   }
-  return element.screenshot({ type: 'png' })
+  return element.screenshot({ type: 'png', timeout: CAPTURE_TIMEOUT_MS })
 }
