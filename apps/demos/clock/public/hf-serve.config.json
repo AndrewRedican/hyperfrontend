@@ -1,0 +1,14 @@
+{
+  "headers": [
+    {
+      "headers": {
+        "Content-Security-Policy": "frame-ancestors 'self' https://www.hyperfrontend.dev https://hyperfrontend.dev https://*.vercel.app",
+        "X-Content-Type-Options": "nosniff",
+        "Referrer-Policy": "strict-origin-when-cross-origin",
+        "Cross-Origin-Opener-Policy": "same-origin",
+        "Cross-Origin-Embedder-Policy": "require-corp",
+        "Cross-Origin-Resource-Policy": "cross-origin"
+      }
+    }
+  ]
+}
