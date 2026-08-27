@@ -8,7 +8,7 @@
   "metadata": {
     "deploy": {
       "provider": "railway",
-      "service": "hyperfrontend-demo-heartbeat",
+      "service": "heartbeat",
       "origin": "https://demo-heartbeat-production.up.railway.app",
       "boundary": "same-origin",
       "kind": "static",
