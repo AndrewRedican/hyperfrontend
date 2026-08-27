@@ -2,7 +2,15 @@ import type { Rule } from 'eslint'
 import type { ArrayExpression, Identifier, Node, VariableDeclaration, VariableDeclarator } from 'estree'
 import { basename, dirname, join } from 'node:path'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
-import { exists, findNxWorkspaceRoot, isDirectory, isPublishableLibraryDir, readDirectory, readJsonFileIfExists } from '../utils'
+import {
+  exists,
+  findNxWorkspaceRoot,
+  isDirectory,
+  isPublishableLibraryDir,
+  readDirectory,
+  readFileIfExists,
+  readJsonFileIfExists,
+} from '../utils'
 
 /**
  * Rule identifier for the docs-site-libraries rule.
@@ -13,6 +21,13 @@ export const RULE_NAME = 'docs-site-libraries'
  * Folders to scan for publishable libraries.
  */
 const LIBRARY_FOLDERS = ['libs', 'plugins'] as const
+
+/**
+ * Editorial hierarchy behind the docs-site library index, relative to the
+ * workspace root. Every library the index lists is also placed on one of its
+ * levels, which is what puts the library on the page at all.
+ */
+const ECOSYSTEM_FILE = 'apps/docs-site/src/lib/ecosystem.ts'
 
 /**
  * Represents a publishable library project.
@@ -163,12 +178,14 @@ const rule: Rule.RuleModule = {
   meta: {
     type: 'problem',
     docs: {
-      description: 'Ensure all publishable libraries are listed in the docs-site LIBRARIES array',
+      description: 'Ensure all publishable libraries are listed in the docs-site LIBRARIES array and placed in the ecosystem hierarchy',
       url: 'https://github.com/AndrewRedican/hyperfrontend/blob/main/tools/eslint-rules/docs/docs-site-libraries.md',
     },
     schema: [],
     messages: {
       missingLibrary: "Publishable library '{{ packageName }}' ({{ path }}) is not listed in the LIBRARIES array",
+      missingFromEcosystem:
+        "Publishable library '{{ packageName }}' ({{ path }}) is not placed on any level of ECOSYSTEM_TIERS in {{ file }}, so it would not appear on /docs/libraries",
     },
   },
 
@@ -227,6 +244,9 @@ const rule: Rule.RuleModule = {
 
           const publishableLibraries = getAllPublishableLibraries(workspaceRoot)
 
+          // context: only content.ts drives the index page, so only it answers for a library missing from the hierarchy.
+          const ecosystemContent = isContentTs ? readFileIfExists(join(workspaceRoot, ECOSYSTEM_FILE)) : null
+
           for (const lib of publishableLibraries) {
             if (!declaredPackages.has(lib.packageName)) {
               context.report({
@@ -235,6 +255,18 @@ const rule: Rule.RuleModule = {
                 data: {
                   packageName: lib.packageName,
                   path: lib.relativePath,
+                },
+              })
+            }
+
+            if (ecosystemContent !== null && !ecosystemContent.includes(`'${lib.packageName}'`)) {
+              context.report({
+                node: decl as unknown as Rule.Node,
+                messageId: 'missingFromEcosystem',
+                data: {
+                  packageName: lib.packageName,
+                  path: lib.relativePath,
+                  file: ECOSYSTEM_FILE,
                 },
               })
             }

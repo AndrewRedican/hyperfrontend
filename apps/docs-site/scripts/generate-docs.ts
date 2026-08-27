@@ -71,6 +71,10 @@ interface PackageJson {
   keywords?: string[]
   /** Package description */
   description?: string
+  /** Released version */
+  version?: string
+  /** Whether the package is withheld from the registry */
+  private?: boolean
 }
 
 /**
@@ -553,6 +557,10 @@ interface LibraryDoc {
   keywords: string[]
   /** Description from package.json */
   description: string
+  /** Released version, empty when the package.json carries none */
+  version: string
+  /** Whether the package is withheld from the registry */
+  isPrivate: boolean
 }
 
 /** Metadata extracted from a package.json */
@@ -561,25 +569,31 @@ interface PackageMetadata {
   keywords: string[]
   /** Description from package.json */
   description: string
+  /** Released version, empty when the package.json carries none */
+  version: string
+  /** Whether the package is withheld from the registry */
+  isPrivate: boolean
 }
 
 /**
- * Load keywords and description from a library's package.json.
+ * Load the published-facing fields of a library's package.json.
  *
  * @param lib - The library configuration
- * @returns Object with keywords array and description
+ * @returns Keywords, description, version, and registry visibility
  */
 function extractPackageMetadata(lib: LibraryConfig): PackageMetadata {
   const packageJsonPath = join(WORKSPACE_ROOT, lib.srcPath, 'package.json')
 
   if (!existsSync(packageJsonPath)) {
-    return { keywords: [], description: '' }
+    return { keywords: [], description: '', version: '', isPrivate: false }
   }
 
   const packageJson: PackageJson = parse(readFileSync(packageJsonPath, 'utf-8'))
   return {
     keywords: packageJson.keywords ?? [],
     description: packageJson.description ?? '',
+    version: packageJson.version ?? '',
+    isPrivate: packageJson.private === true,
   }
 }
 
@@ -604,7 +618,7 @@ function generateDocs() {
 
     const hasApi = generateTypeDoc(lib)
 
-    const { keywords, description } = extractPackageMetadata(lib)
+    const { keywords, description, version, isPrivate } = extractPackageMetadata(lib)
 
     if (readme.exists) {
       const readmeOutput = join(DOCS_OUTPUT, lib.slug, 'readme.md')
@@ -628,6 +642,8 @@ function generateDocs() {
       hasApi,
       keywords,
       description,
+      version,
+      isPrivate,
     })
 
     logger.log('')

@@ -27,19 +27,43 @@ const NON_PUBLISHABLE_PROJECT_JSON = {
 }
 
 /**
+ * One project inside a temporary workspace.
+ */
+interface TempProject {
+  /** Directory name under libs/ or plugins/ */
+  name: string
+  /** project.json contents */
+  projectJson: object
+  /** package.json contents, omitted to simulate a project without one */
+  packageJson?: object
+}
+
+/**
+ * Configuration for a temporary workspace.
+ */
+interface TempWorkspaceConfig {
+  /** Projects created under libs/ */
+  libs?: TempProject[]
+  /** Projects created under plugins/ */
+  plugins?: TempProject[]
+  /** Package names the ecosystem hierarchy places, omitted to leave ecosystem.ts absent */
+  ecosystem?: string[]
+}
+
+/**
  * Creates a temporary workspace structure for testing.
  *
  * @param config - Configuration for the workspace.
- * @param config.libs - Array of library configurations.
- * @param config.plugins - Array of plugin configurations.
  * @returns The path to the temporary workspace directory.
  */
-function createTempWorkspace(config: {
-  libs?: Array<{ name: string; projectJson: object; packageJson?: object }>
-  plugins?: Array<{ name: string; projectJson: object; packageJson?: object }>
-}): string {
+function createTempWorkspace(config: TempWorkspaceConfig): string {
   const files: Record<string, string> = {
     'nx.json': JSON.stringify({ version: 2 }, null, 2),
+  }
+
+  if (config.ecosystem) {
+    const placed = config.ecosystem.map((name) => `'${name}'`).join(', ')
+    files['apps/docs-site/src/lib/ecosystem.ts'] = `export const ECOSYSTEM_TIERS = [{ id: 'sdk', packages: [${placed}] }]\n`
   }
 
   if (config.libs && config.libs.length > 0) {
@@ -115,6 +139,7 @@ describe('docs-site-libraries', () => {
     it('has all required message IDs', () => {
       const messageIds = Object.keys(rule.meta?.messages ?? {})
       expect(messageIds).toContain('missingLibrary')
+      expect(messageIds).toContain('missingFromEcosystem')
     })
   })
 
@@ -526,8 +551,54 @@ describe('docs-site-libraries', () => {
             return join(dir, 'apps', 'docs-site', 'src', 'lib', 'content.ts')
           })(),
         },
+        {
+          name: 'passes when a listed library is also placed in the ecosystem hierarchy',
+          code: createContentTsCode(['@hyperfrontend/logging']),
+          filename: (() => {
+            const dir = createTempWorkspace({
+              libs: [{ name: 'logging', projectJson: PUBLISHABLE_PROJECT_JSON, packageJson: { name: '@hyperfrontend/logging' } }],
+              ecosystem: ['@hyperfrontend/logging'],
+            })
+            return join(dir, 'apps', 'docs-site', 'src', 'lib', 'content.ts')
+          })(),
+        },
+        {
+          name: 'leaves the ecosystem hierarchy unchecked from generate-docs.ts',
+          code: createContentTsCode(['@hyperfrontend/logging']),
+          filename: (() => {
+            const dir = createTempWorkspace({
+              libs: [{ name: 'logging', projectJson: PUBLISHABLE_PROJECT_JSON, packageJson: { name: '@hyperfrontend/logging' } }],
+              ecosystem: [],
+            })
+            return join(dir, 'apps', 'docs-site', 'scripts', 'generate-docs.ts')
+          })(),
+        },
       ],
       invalid: [
+        {
+          name: 'reports a library the ecosystem hierarchy does not place',
+          code: createContentTsCode(['@hyperfrontend/logging']),
+          filename: (() => {
+            const dir = createTempWorkspace({
+              libs: [{ name: 'logging', projectJson: PUBLISHABLE_PROJECT_JSON, packageJson: { name: '@hyperfrontend/logging' } }],
+              ecosystem: ['@hyperfrontend/nexus'],
+            })
+            return join(dir, 'apps', 'docs-site', 'src', 'lib', 'content.ts')
+          })(),
+          errors: [{ messageId: 'missingFromEcosystem' }],
+        },
+        {
+          name: 'reports both the missing listing and the missing placement',
+          code: createContentTsCode([]),
+          filename: (() => {
+            const dir = createTempWorkspace({
+              libs: [{ name: 'logging', projectJson: PUBLISHABLE_PROJECT_JSON, packageJson: { name: '@hyperfrontend/logging' } }],
+              ecosystem: [],
+            })
+            return join(dir, 'apps', 'docs-site', 'src', 'lib', 'content.ts')
+          })(),
+          errors: [{ messageId: 'missingLibrary' }, { messageId: 'missingFromEcosystem' }],
+        },
         {
           name: 'reports missing library',
           code: createContentTsCode(['@hyperfrontend/logging']),
