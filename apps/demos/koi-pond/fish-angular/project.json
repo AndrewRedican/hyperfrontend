@@ -8,7 +8,7 @@
   "metadata": {
     "deploy": {
       "provider": "railway",
-      "service": "hyperfrontend-demo-koi-fish-angular",
+      "service": "koi-angular",
       "origin": "https://demo-koi-fish-angular-production.up.railway.app",
       "boundary": "cross-site",
       "kind": "static",

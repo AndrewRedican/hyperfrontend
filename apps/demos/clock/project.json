@@ -8,7 +8,7 @@
   "metadata": {
     "deploy": {
       "provider": "railway",
-      "service": "hyperfrontend-demo-clock",
+      "service": "clock",
       "origin": "https://demo-clock-production.up.railway.app",
       "boundary": "cross-site",
       "kind": "static",

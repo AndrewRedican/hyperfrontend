@@ -35,7 +35,7 @@
 
 <p align="center">
   <a href="https://www.hyperfrontend.dev/demos/#koi-pond">
-    <img width="560" src="https://www.hyperfrontend.dev/media/koi-pond/hero.gif" alt="Eight koi swimming in a single pond, each one rendered by a different framework app">
+    <img width="560" src="https://www.hyperfrontend.dev/media/koi-pond/hero-clip.gif" alt="Eight koi swimming in a single pond, each one rendered by a different framework app">
   </a>
 </p>
 <p align="center">
