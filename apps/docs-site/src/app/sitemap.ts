@@ -43,6 +43,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     '/demos',
     '/privacy',
     // why: these pages exist but the sidebar navigation does not link them directly; validate-sitemap fails the build if one goes missing here
+    '/docs/is-hyperfrontend-right-for-you',
     '/docs/libraries/utils',
     '/docs/libraries/network-protocol/channel',
     '/docs/libraries/network-protocol/data',

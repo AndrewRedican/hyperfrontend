@@ -17,6 +17,8 @@ const APP_DIR = join(resolve(__dirname, '..'), 'src', 'app')
 const SITEMAP_EXEMPT_ROUTES = createSet([
   // why: /docs/api/ is a noindex meta-refresh redirect stub, so listing it in the sitemap would be self-contradictory
   '/docs/api/',
+  // why: the fit assessment result renders from an assessment held in the reader's own browser, so it is noindex and has nothing stable for a crawler to fetch
+  '/docs/is-hyperfrontend-right-for-you/result/',
 ])
 
 /**
