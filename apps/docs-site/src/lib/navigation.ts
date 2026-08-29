@@ -429,7 +429,8 @@ const utilsLibraries: NavItem[] = [
  * Getting started section navigation.
  */
 const gettingStarted: NavItem[] = [
-  { slug: 'Installation', href: '/docs' },
+  // why: `/docs` renders the page titled Getting Started, so the entry pointing at it carries that name; labelling it Installation sent readers looking for Getting Started past the canonical page.
+  { slug: 'Getting Started', href: '/docs' },
   { slug: 'Quick Start', href: '/docs/quick-start' },
   { slug: 'Core Concepts', href: '/docs/core-concepts' },
   { slug: 'Security Model', href: '/docs/core-concepts/security' },
