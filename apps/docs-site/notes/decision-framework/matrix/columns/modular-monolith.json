@@ -1,0 +1,2207 @@
+{
+  "unit": "modular-monolith",
+  "dossier": "research/solutions/non-mfe-baselines.md",
+  "verifiedAt": "2026-08-28",
+  "verdicts": [
+    {
+      "id": "unit.type.adoptable-implementation",
+      "value": "no",
+      "note": "Architectural strategy (non-MFE baseline), not an adoptable product",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Non-MFE Baselines preamble"
+      ]
+    },
+    {
+      "id": "unit.availability.installable-today",
+      "value": "yes",
+      "note": "Realized today with commodity tooling; no vendor or version required",
+      "claimType": "common-pattern",
+      "confidence": "high",
+      "evidence": [
+        "Non-MFE Baselines preamble"
+      ]
+    },
+    {
+      "id": "unit.availability.stable-line-shipped",
+      "value": "na",
+      "note": "Strategy: no release line exists",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Non-MFE Baselines preamble"
+      ]
+    },
+    {
+      "id": "unit.availability.single-current-line",
+      "value": "na",
+      "note": "Strategy: no release lines",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Non-MFE Baselines preamble"
+      ]
+    },
+    {
+      "id": "unit.availability.planned-capability-claims",
+      "value": "no",
+      "note": "No vendor, no roadmap; everything is usable today",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Non-MFE Baselines preamble"
+      ]
+    },
+    {
+      "id": "unit.maintenance.release-within-12mo",
+      "value": "na",
+      "note": "Strategy: dossier marks release cadence NA",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Non-MFE Baselines preamble"
+      ]
+    },
+    {
+      "id": "unit.maintenance.commit-within-6mo",
+      "value": "na",
+      "note": "No repository; a practiced default, not a project",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Non-MFE Baselines preamble"
+      ]
+    },
+    {
+      "id": "unit.maintenance.multi-maintainer",
+      "value": "na",
+      "note": "No maintainers; practiced defaults cannot die",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Non-MFE Baselines preamble"
+      ]
+    },
+    {
+      "id": "unit.maintenance.org-steward",
+      "value": "na",
+      "note": "No project to steward",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Non-MFE Baselines preamble"
+      ]
+    },
+    {
+      "id": "unit.maintenance.adoption-outside-sponsor",
+      "value": "na",
+      "note": "No sponsor; 2026 practitioner writing treats it as the explicit default",
+      "claimType": "common-pattern",
+      "confidence": "high",
+      "evidence": [
+        "Shared decision context"
+      ]
+    },
+    {
+      "id": "unit.maintenance.adoption-scale-10k",
+      "value": "na",
+      "note": "No core package; strategies score NA per attribute notes",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Non-MFE Baselines preamble"
+      ]
+    },
+    {
+      "id": "unit.license.osi-core",
+      "value": "na",
+      "note": "No licensed core; realized with commodity OSS tooling",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Editions and commercial layer"
+      ]
+    },
+    {
+      "id": "unit.editions.commercial-tier",
+      "value": "no",
+      "note": "Dossier: none; remote caching and boundary tooling are optional accelerants",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Editions and commercial layer"
+      ]
+    },
+    {
+      "id": "unit.editions.oss-self-sufficient",
+      "value": "yes",
+      "note": "Free and commodity tooling performs the entire function",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Editions and commercial layer"
+      ]
+    },
+    {
+      "id": "hosting.operator",
+      "value": "na",
+      "note": "Layer-3 operability atom; strategy has no unit-specific hosting product",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Editions and commercial layer"
+      ]
+    },
+    {
+      "id": "hosting.control-plane",
+      "value": "na",
+      "note": "No control plane beyond ordinary CI/CD, all adopter-run",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Editions and commercial layer"
+      ]
+    },
+    {
+      "id": "registry.deployable-feature",
+      "value": "na",
+      "note": "Strategy ships nothing; single artifact, no runtime participants",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Editions and commercial layer"
+      ]
+    },
+    {
+      "id": "governance.rollback",
+      "value": "na",
+      "note": "No per-participant versions; rollback is whole-app atomic redeploy (dossier: simple and total)",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Deployment"
+      ]
+    },
+    {
+      "id": "governance.usage-monitoring",
+      "value": "na",
+      "note": "No platform surface; one app",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Editions and commercial layer"
+      ]
+    },
+    {
+      "id": "governance.rbac",
+      "value": "na",
+      "note": "No platform surface",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Editions and commercial layer"
+      ]
+    },
+    {
+      "id": "composition.kind.js-module-graph",
+      "value": "yes",
+      "note": "Statically enforced import rules over one JS module graph",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Composition mechanics"
+      ]
+    },
+    {
+      "id": "composition.kind.lifecycle-contract",
+      "value": "no",
+      "note": "Plain imports; no lifecycle exports",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Composition mechanics"
+      ]
+    },
+    {
+      "id": "composition.kind.custom-element",
+      "value": "no",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Composition mechanics"
+      ]
+    },
+    {
+      "id": "composition.kind.html-fragment-endpoint",
+      "value": "no",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Composition mechanics"
+      ]
+    },
+    {
+      "id": "composition.kind.html-entry",
+      "value": "no",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Composition mechanics"
+      ]
+    },
+    {
+      "id": "composition.kind.http-route-partition",
+      "value": "no",
+      "note": "One app owns the whole URL space",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Composition mechanics"
+      ]
+    },
+    {
+      "id": "composition.kind.build-artifact",
+      "value": "no",
+      "note": "Modules are source directories, not versioned artifacts (that is the monorepo-package baseline)",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: What it is"
+      ]
+    },
+    {
+      "id": "composition.kind.inherits-underlying",
+      "value": "no",
+      "note": "Defines its own boundary: enforced module imports",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Composition mechanics"
+      ]
+    },
+    {
+      "id": "composition.phase.deploy-unit-per-participant",
+      "value": "no",
+      "note": "Exactly one deploy unit",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: What it cannot solve"
+      ]
+    },
+    {
+      "id": "composition.exec.client-composed",
+      "value": "no",
+      "note": "Composition happens at build; no client assembly",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Composition mechanics"
+      ]
+    },
+    {
+      "id": "buildtime.host-build-consumes-participants",
+      "value": "yes",
+      "note": "One compiler invocation; a broken module breaks the whole build",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Build-time coupling"
+      ]
+    },
+    {
+      "id": "buildtime.host-integrates-buildless",
+      "value": "no",
+      "note": "The strategy presumes one build with lint or graph boundary enforcement",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: What it is"
+      ]
+    },
+    {
+      "id": "buildtime.participant-tooling-required",
+      "value": "na",
+      "note": "Modules have no independent pipeline or artifact; boundary lint is repo-wide",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Unit 1: Build-time coupling"
+      ]
+    },
+    {
+      "id": "buildtime.bundler-family-restricted",
+      "value": "no",
+      "note": "Any compiler or bundler; enforcement tooling is pluggable (Nx, dependency-cruiser, ESLint)",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: What it is"
+      ]
+    },
+    {
+      "id": "buildtime.share-metadata-emitted",
+      "value": "no",
+      "note": "No federation metadata; one dependency graph",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Build-time coupling"
+      ]
+    },
+    {
+      "id": "buildtime.shared-dep-change-rebuilds-center",
+      "value": "yes",
+      "note": "Any dependency change rebuilds the single artifact",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Build-time coupling"
+      ]
+    },
+    {
+      "id": "buildtime.central-input-for-participant-build",
+      "value": "yes",
+      "note": "Modules build only inside the app's one build; maximal central coupling",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Build-time coupling"
+      ]
+    },
+    {
+      "id": "buildtime.asset-prefix-coordination",
+      "value": "no",
+      "note": "One build owns asset naming",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Build-time coupling"
+      ]
+    },
+    {
+      "id": "runtime.shared-js-realm",
+      "value": "yes",
+      "note": "Shared realm, shared DOM, single bundle graph",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Composition mechanics"
+      ]
+    },
+    {
+      "id": "runtime.patched-globals-layer",
+      "value": "no",
+      "note": "Native globals, nothing interposed",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Runtime coupling"
+      ]
+    },
+    {
+      "id": "runtime.primordials-blast-radius",
+      "value": "yes",
+      "note": "Fully shared realm; one module's built-in mutation reaches all",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Runtime coupling"
+      ]
+    },
+    {
+      "id": "runtime.concurrent-participants",
+      "value": "yes",
+      "note": "Modules from many teams render live in one document",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Runtime coupling"
+      ]
+    },
+    {
+      "id": "runtime.multi-router-participants",
+      "value": "na",
+      "note": "Single-app-per-document: one router; modules contribute routes, never own one",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Runtime coupling"
+      ]
+    },
+    {
+      "id": "runtime.shared-runtime-library",
+      "value": "no",
+      "note": "No strategy runtime exists; composition resolved at build",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Runtime coupling"
+      ]
+    },
+    {
+      "id": "runtime.central-routing-map",
+      "value": "na",
+      "note": "Build-time composed; no runtime roster",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Runtime coupling"
+      ]
+    },
+    {
+      "id": "runtime.shared-dep-negotiation",
+      "value": "no",
+      "note": "Versions resolved at build in one lockfile",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Build-time coupling"
+      ]
+    },
+    {
+      "id": "runtime.dep-conflict-surfaces-runtime",
+      "value": "na",
+      "note": "No runtime negotiation exists",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Build-time coupling"
+      ]
+    },
+    {
+      "id": "runtime.side-by-side-versions",
+      "value": "no",
+      "note": "One dependency graph; frameworks and singletons single-version (nested npm duplicates aside)",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Unit 1: What it cannot solve"
+      ]
+    },
+    {
+      "id": "runtime.global-registration-collision",
+      "value": "no",
+      "note": "Namespaces are lexical; collisions fail the build, not the page",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Runtime coupling"
+      ]
+    },
+    {
+      "id": "runtime.late-participant-registration",
+      "value": "no",
+      "note": "Integration cannot happen after the host ships",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Composition mechanics"
+      ]
+    },
+    {
+      "id": "runtime.loaded-version-hot-swap",
+      "value": "no",
+      "note": "A new module version means a new whole-app deploy and reload",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Deployment"
+      ]
+    },
+    {
+      "id": "isolation.document-boundary",
+      "value": "no",
+      "note": "Shared visible document",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Composition mechanics"
+      ]
+    },
+    {
+      "id": "isolation.js.virtualized-global",
+      "value": "no",
+      "note": "No virtualization; source-level isolation only, zero runtime isolation",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "isolation.dom.virtualized",
+      "value": "no",
+      "note": "Bare shared DOM",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "isolation.css.outbound",
+      "value": "no",
+      "note": "One global cascade; class-scoping tooling is an app choice, not the strategy",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Unit 1: Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "isolation.css.inbound",
+      "value": "no",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "isolation.resource.main-thread",
+      "value": "no",
+      "note": "One shared main thread",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "isolation.process.crash",
+      "value": "no",
+      "note": "Single process, single document",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "isolation.storage.partition",
+      "value": "no",
+      "note": "One origin, one app; all storage shared",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "isolation.origin.host-authority",
+      "value": "no",
+      "note": "Modules are first-party host code with full origin authority",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Security and trust"
+      ]
+    },
+    {
+      "id": "isolation.navigation.top-level-guard",
+      "value": "no",
+      "note": "Any module may navigate or push history",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "isolation.security.malicious-participant",
+      "value": "no",
+      "note": "No runtime boundary; a compromised module owns the app (review is the only gate)",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Security and trust"
+      ]
+    },
+    {
+      "id": "isolation.failure.lifecycle-quarantine",
+      "value": "no",
+      "note": "No runtime containment; an unhandled error can take down the shared shell",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "isolation.failure.post-mount-exception",
+      "value": "no",
+      "note": "Shared realm; exceptions propagate app-wide",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "isolation.failure.load-fallback",
+      "value": "na",
+      "note": "Modules never fetch independently; a broken module breaks the build, not the page",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Build-time coupling"
+      ]
+    },
+    {
+      "id": "isolation.lifecycle.reclaim",
+      "value": "no",
+      "note": "Same-realm residue; nothing strategy-provided reclaims side effects",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "isolation.recovery.in-page",
+      "value": "no",
+      "note": "No fresh execution context without a full reload",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "isolation.server.process",
+      "value": "na",
+      "note": "Single deployable; no per-participant server processes",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Deployment"
+      ]
+    },
+    {
+      "id": "security.cross-origin-boundary",
+      "value": "no",
+      "note": "All modules execute in the host origin and realm",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Security and trust"
+      ]
+    },
+    {
+      "id": "security.sandbox-attribute-applicable",
+      "value": "no",
+      "note": "Same-document strategy",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Security and trust"
+      ]
+    },
+    {
+      "id": "security.per-participant-csp",
+      "value": "no",
+      "note": "One document, one policy",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Security and trust"
+      ]
+    },
+    {
+      "id": "security.capability-narrowing",
+      "value": "no",
+      "note": "Whole page shares one capability surface",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Security and trust"
+      ]
+    },
+    {
+      "id": "security.host-dom-reach",
+      "value": "yes",
+      "note": "Boundaries are lint-time only; runtime DOM reach unrestricted",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Security and trust"
+      ]
+    },
+    {
+      "id": "security.host-js-state-reach",
+      "value": "yes",
+      "note": "Import rules do not constrain runtime state access",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Security and trust"
+      ]
+    },
+    {
+      "id": "security.untrusted-third-party-viable",
+      "value": "no",
+      "note": "Trust model is a single first-party domain; no third-party ingestion",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Security and trust",
+        "Unit 1: What it cannot solve"
+      ]
+    },
+    {
+      "id": "security.channel-origin-pinning",
+      "value": "na",
+      "note": "No cross-document channel exists",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Security and trust"
+      ]
+    },
+    {
+      "id": "security.channel-confidentiality",
+      "value": "na",
+      "note": "No inter-party wire; everything shares one realm",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Security and trust"
+      ]
+    },
+    {
+      "id": "security.embedding-authorization",
+      "value": "na",
+      "note": "Build-time composition; no runtime embedding",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Security and trust"
+      ]
+    },
+    {
+      "id": "security.artifact-integrity-verification",
+      "value": "na",
+      "note": "No runtime participant ingestion to verify; supply chain is ordinary app tooling",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Unit 1: Security and trust"
+      ]
+    },
+    {
+      "id": "security.delivery-intermediary-trust",
+      "value": "no",
+      "note": "Delivery is the app's own hosting; no composition intermediary",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Security and trust"
+      ]
+    },
+    {
+      "id": "security.isolation-escape-hatches",
+      "value": "na",
+      "note": "Claims no isolation; nothing to escape",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "security.composition-injection-surface",
+      "value": "no",
+      "note": "No tier interprets composition directives",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Security and trust"
+      ]
+    },
+    {
+      "id": "framework.host-framework-agnostic",
+      "value": "yes",
+      "note": "Any single framework, or none; the strategy imposes no choice",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Framework requirements"
+      ]
+    },
+    {
+      "id": "framework.participant-framework-agnostic",
+      "value": "no",
+      "note": "Modules must use the app's one framework and version",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Framework requirements"
+      ]
+    },
+    {
+      "id": "framework.mixed-frameworks-one-page",
+      "value": "no",
+      "note": "No second framework can coexist as a peer",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: What it cannot solve"
+      ]
+    },
+    {
+      "id": "framework.per-team-framework-autonomy",
+      "value": "no",
+      "note": "All teams share one build pipeline",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Framework requirements"
+      ]
+    },
+    {
+      "id": "framework.same-framework-major-coexistence",
+      "value": "no",
+      "note": "No staggered majors as peers",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: What it cannot solve"
+      ]
+    },
+    {
+      "id": "framework.esm-artifact-required",
+      "value": "na",
+      "note": "Modules are source inside one build; no per-participant artifact format",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Composition mechanics"
+      ]
+    },
+    {
+      "id": "framework.html-document-entry",
+      "value": "no",
+      "note": "Integration unit is a source module",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Composition mechanics"
+      ]
+    },
+    {
+      "id": "framework.client-library-required",
+      "value": "no",
+      "note": "No platform runtime exists",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Runtime coupling"
+      ]
+    },
+    {
+      "id": "framework.foreign-artifact-no-rebuild",
+      "value": "no",
+      "note": "Participation requires source inside the build",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Build-time coupling"
+      ]
+    },
+    {
+      "id": "framework.official-adapters-exist",
+      "value": "na",
+      "note": "No participation contract needing adapters",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Framework requirements"
+      ]
+    },
+    {
+      "id": "framework.adapters-track-current-majors",
+      "value": "na",
+      "note": "No adapters exist",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Framework requirements"
+      ]
+    },
+    {
+      "id": "framework.zero-framework-participant",
+      "value": "yes",
+      "note": "A module, or the whole app, may be vanilla JS",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Unit 1: Framework requirements"
+      ]
+    },
+    {
+      "id": "framework.version-floor-imposed",
+      "value": "no",
+      "note": "The strategy imposes none; chosen enforcement tooling may",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Unit 1: What it is"
+      ]
+    },
+    {
+      "id": "framework.composition-tier-stack-mandated",
+      "value": "no",
+      "note": "The build is the composition tier; no server stack mandated",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Composition mechanics"
+      ]
+    },
+    {
+      "id": "framework.multi-framework-demonstrated",
+      "value": "na",
+      "note": "Multi-framework composition is outside the model",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: What it cannot solve"
+      ]
+    },
+    {
+      "id": "contracts.formal-descriptor",
+      "value": "no",
+      "note": "Interfaces are code-level module APIs only",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Contracts and communication"
+      ]
+    },
+    {
+      "id": "contracts.contract-versioned",
+      "value": "na",
+      "note": "Both sides ship in one commit; no independently versioned contract",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Contracts and communication"
+      ]
+    },
+    {
+      "id": "contracts.connect-compat-gate",
+      "value": "na",
+      "note": "No separate meeting moment; the compiler checks everything pre-ship",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Contracts and communication"
+      ]
+    },
+    {
+      "id": "contracts.drift-surface",
+      "value": "no",
+      "note": "Host and modules deploy atomically; drift is structurally impossible",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Deployment"
+      ]
+    },
+    {
+      "id": "contracts.drift-explicit",
+      "value": "na",
+      "note": "Drift cannot occur",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Contracts and communication"
+      ]
+    },
+    {
+      "id": "contracts.types-shared",
+      "value": "yes",
+      "note": "Ordinary in-repo TypeScript; whole-program compilation",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Contracts and communication"
+      ]
+    },
+    {
+      "id": "contracts.schema-validated-payloads",
+      "value": "na",
+      "note": "No wire; typed in-realm calls checked at compile time",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Contracts and communication"
+      ]
+    },
+    {
+      "id": "contracts.sync-calls",
+      "value": "yes",
+      "note": "Direct imports and function calls",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Contracts and communication"
+      ]
+    },
+    {
+      "id": "contracts.serialized-boundary",
+      "value": "no",
+      "note": "Live references cross freely",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Contracts and communication"
+      ]
+    },
+    {
+      "id": "contracts.frame-messaging",
+      "value": "no",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Contracts and communication"
+      ]
+    },
+    {
+      "id": "contracts.builtin-messaging",
+      "value": "no",
+      "note": "Strategy ships nothing; ordinary in-app events and state",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Contracts and communication"
+      ]
+    },
+    {
+      "id": "contracts.builtin-shared-state",
+      "value": "no",
+      "note": "The app's own store, not strategy-provided",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Contracts and communication"
+      ]
+    },
+    {
+      "id": "contracts.host-push-updates",
+      "value": "na",
+      "note": "Host and modules are one app; ordinary props and state flow",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Contracts and communication"
+      ]
+    },
+    {
+      "id": "contracts.http-request-contract",
+      "value": "no",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Contracts and communication"
+      ]
+    },
+    {
+      "id": "contracts.server-context-propagation",
+      "value": "na",
+      "note": "No fragment tier exists",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Contracts and communication"
+      ]
+    },
+    {
+      "id": "ssr.composed-page",
+      "value": "no",
+      "note": "No participant output exists at request time; any SSR renders one app",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: SSR and delivery"
+      ]
+    },
+    {
+      "id": "ssr.fragment-granularity",
+      "value": "na",
+      "note": "Composition is build-time",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: SSR and delivery"
+      ]
+    },
+    {
+      "id": "ssr.streaming-assembly",
+      "value": "na",
+      "note": "Nothing is assembled at request time; streaming SSR is the app framework's own",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: SSR and delivery"
+      ]
+    },
+    {
+      "id": "ssr.participant-internal",
+      "value": "yes",
+      "note": "Modules share the app framework's SSR, unimpaired",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: SSR and delivery"
+      ]
+    },
+    {
+      "id": "ssr.dual-mode-render",
+      "value": "conditional",
+      "condition": "varies by implementation: the app's framework (e.g. Next.js) may offer SSR/CSR selection",
+      "note": "The strategy adds nothing either way",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Unit 1: SSR and delivery"
+      ]
+    },
+    {
+      "id": "ssr.no-js-first-paint",
+      "value": "conditional",
+      "condition": "varies by implementation: SSR/SSG app frameworks yes; CSR-only monolith no",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Unit 1: SSR and delivery"
+      ]
+    },
+    {
+      "id": "ssr.hydration-orchestration",
+      "value": "no",
+      "note": "Strategy ships no runtime; hydration is the app framework's own",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: SSR and delivery"
+      ]
+    },
+    {
+      "id": "ssr.crawler-indexable",
+      "value": "conditional",
+      "condition": "varies by implementation: server-rendered apps yes; CSR-only apps no",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Unit 1: SSR and delivery"
+      ]
+    },
+    {
+      "id": "ssr.static-prerender",
+      "value": "conditional",
+      "condition": "varies by implementation: app-framework SSG (Next.js, Astro-style) where chosen",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Unit 1: SSR and delivery"
+      ]
+    },
+    {
+      "id": "ssr.edge-composition",
+      "value": "na",
+      "note": "Composition happens at build; nothing to assemble at the edge",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: SSR and delivery"
+      ]
+    },
+    {
+      "id": "ssr.static-hosting-sufficient",
+      "value": "yes",
+      "note": "No composition compute exists; CSR builds are fully static-hostable",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: SSR and delivery"
+      ]
+    },
+    {
+      "id": "ssr.server-loadable-artifact",
+      "value": "na",
+      "note": "No distributed participant artifact exists",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: SSR and delivery"
+      ]
+    },
+    {
+      "id": "ssr.rsc-federation",
+      "value": "na",
+      "note": "No cross-deploy boundary; RSC inside the single app is unaffected",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: SSR and delivery"
+      ]
+    },
+    {
+      "id": "ssr.dev-prod-parity",
+      "value": "na",
+      "note": "No composition tier to diverge; parity is the app framework's own concern",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Unit 1: SSR and delivery"
+      ]
+    },
+    {
+      "id": "ssr.html-fragment-contract",
+      "value": "na",
+      "note": "No server-rendered participant format exists",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: SSR and delivery"
+      ]
+    },
+    {
+      "id": "ux.cross-boundary-soft-nav",
+      "value": "na",
+      "note": "Single-deploy baseline: no cross-deploy boundaries",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: UX implications"
+      ]
+    },
+    {
+      "id": "ux.within-unit-soft-nav",
+      "value": "yes",
+      "note": "The app's own router, unimpaired",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: UX implications"
+      ]
+    },
+    {
+      "id": "ux.cross-boundary-prefetch",
+      "value": "na",
+      "note": "No boundaries to mask",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: UX implications"
+      ]
+    },
+    {
+      "id": "ux.cross-doc-view-transitions",
+      "value": "na",
+      "note": "No cross-document crossings",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: UX implications"
+      ]
+    },
+    {
+      "id": "ux.persistent-shared-chrome",
+      "value": "yes",
+      "note": "Single app shell stays mounted",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: UX implications"
+      ]
+    },
+    {
+      "id": "ux.unit-keepalive",
+      "value": "yes",
+      "note": "Ordinary in-app state and framework keep-alive retain hidden-view state",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Unit 1: UX implications"
+      ]
+    },
+    {
+      "id": "ux.keepalive-scroll-restoration",
+      "value": "conditional",
+      "condition": "varies by implementation: router scroll-restoration APIs (Vue Router scrollBehavior, React Router)",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Unit 1: UX implications"
+      ]
+    },
+    {
+      "id": "ux.deep-link-inner-route",
+      "value": "yes",
+      "note": "Single router: URL state is inherent",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: UX implications"
+      ]
+    },
+    {
+      "id": "ux.frame-history-pollution",
+      "value": "no",
+      "note": "Single-document composition",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: UX implications"
+      ]
+    },
+    {
+      "id": "ux.overlay-viewport-escape",
+      "value": "yes",
+      "note": "Same-DOM; overlays cover the viewport",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: UX implications"
+      ]
+    },
+    {
+      "id": "ux.host-overlay-protocol",
+      "value": "na",
+      "note": "Same-DOM; none needed",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: UX implications"
+      ]
+    },
+    {
+      "id": "ux.body-portal-compat",
+      "value": "yes",
+      "note": "Same DOM, no shadow boundaries",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: UX implications"
+      ]
+    },
+    {
+      "id": "ux.natural-layout-flow",
+      "value": "yes",
+      "note": "All content flows in one page",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: UX implications"
+      ]
+    },
+    {
+      "id": "ux.cross-boundary-focus-mgmt",
+      "value": "yes",
+      "note": "One focus order",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: UX implications"
+      ]
+    },
+    {
+      "id": "ux.screenreader-continuity",
+      "value": "yes",
+      "note": "One document, one accessibility tree",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: UX implications"
+      ]
+    },
+    {
+      "id": "ux.composed-first-paint",
+      "value": "yes",
+      "note": "No client composition step to flash; app boot behavior is the app's own",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Unit 1: UX implications"
+      ]
+    },
+    {
+      "id": "ux.builtin-loading-ui",
+      "value": "na",
+      "note": "No composition boundaries requiring loading states",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: UX implications"
+      ]
+    },
+    {
+      "id": "ux.builtin-error-fallback-ui",
+      "value": "na",
+      "note": "No separately loaded units; error UI is ordinary app code",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Unit 1: UX implications"
+      ]
+    },
+    {
+      "id": "ux.mount-layout-shift-risk",
+      "value": "na",
+      "note": "Single-build baseline; no post-paint unit arrival",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: UX implications"
+      ]
+    },
+    {
+      "id": "ux.token-theming-mechanism",
+      "value": "na",
+      "note": "One design-system instance in one build; nothing to propagate across",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: UX implications"
+      ]
+    },
+    {
+      "id": "performance.client-composition-runtime",
+      "value": "no",
+      "note": "Zero composition tax; no runtime loader",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Performance causes"
+      ]
+    },
+    {
+      "id": "performance.pre-render-orchestration-fetch",
+      "value": "no",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Performance causes"
+      ]
+    },
+    {
+      "id": "performance.sequential-waterfall-default",
+      "value": "no",
+      "note": "Single bundle graph",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Performance causes"
+      ]
+    },
+    {
+      "id": "performance.first-party-preload-levers",
+      "value": "na",
+      "note": "No unit-activation fetches exist to accelerate",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Performance causes"
+      ]
+    },
+    {
+      "id": "performance.duplicate-framework-same-page",
+      "value": "na",
+      "note": "No separately built units; one framework copy is structural",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Performance causes"
+      ]
+    },
+    {
+      "id": "performance.shared-dependency-dedup",
+      "value": "yes",
+      "note": "The single build dedupes shared vendor chunks structurally",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Performance causes"
+      ]
+    },
+    {
+      "id": "performance.dedup-failure-on-version-skew",
+      "value": "no",
+      "note": "Versions resolve at build in one lockfile; no deploy-skew path",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Performance causes"
+      ]
+    },
+    {
+      "id": "performance.per-unit-document-boot",
+      "value": "no",
+      "note": "One document, one realm",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Performance causes"
+      ]
+    },
+    {
+      "id": "performance.process-memory-overhead",
+      "value": "na",
+      "note": "Same-realm strategy",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Performance causes"
+      ]
+    },
+    {
+      "id": "performance.sandbox-execution-tax",
+      "value": "no",
+      "note": "No sandbox exists",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Performance causes"
+      ]
+    },
+    {
+      "id": "performance.per-message-serialization-cost",
+      "value": "no",
+      "note": "In-realm references",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Performance causes"
+      ]
+    },
+    {
+      "id": "performance.hydration-deferrable-per-unit",
+      "value": "conditional",
+      "condition": "varies by implementation: framework lazy/defer primitives (dynamic import, React.lazy, Angular @defer)",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Unit 1: Performance causes"
+      ]
+    },
+    {
+      "id": "performance.request-time-server-fanout",
+      "value": "na",
+      "note": "Build-time composition",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Performance causes"
+      ]
+    },
+    {
+      "id": "performance.per-unit-http-cacheable",
+      "value": "no",
+      "note": "Modules compile into one host bundle",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Performance causes"
+      ]
+    },
+    {
+      "id": "performance.default-content-caching",
+      "value": "na",
+      "note": "No composition tier exists",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Performance causes"
+      ]
+    },
+    {
+      "id": "deployment.host-rebuild-required",
+      "value": "yes",
+      "note": "Atomic artifact; every change ships the whole app on one release train",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Deployment"
+      ]
+    },
+    {
+      "id": "deployment.new-participant-host-change",
+      "value": "yes",
+      "note": "A new module is a code change plus whole-app rebuild and redeploy",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Deployment"
+      ]
+    },
+    {
+      "id": "deployment.golive-central-pointer",
+      "value": "na",
+      "note": "No participant releases; one release train",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Deployment"
+      ]
+    },
+    {
+      "id": "deployment.consumer-version-pin",
+      "value": "na",
+      "note": "Modules have no independent versions; the lockfile pins everything at build",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Deployment"
+      ]
+    },
+    {
+      "id": "deployment.per-user-version-targeting",
+      "value": "no",
+      "note": "Whole-app canary via hosting platform only; no per-module versions",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Unit 1: Deployment"
+      ]
+    },
+    {
+      "id": "deployment.immutable-version-retention",
+      "value": "na",
+      "note": "No per-participant publish mechanism",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Deployment"
+      ]
+    },
+    {
+      "id": "deployment.cache-busting-operator-burden",
+      "value": "no",
+      "note": "Content-hashed bundle assets are commodity bundler defaults",
+      "claimType": "common-pattern",
+      "confidence": "medium",
+      "evidence": [
+        "Unit 1: Deployment"
+      ]
+    },
+    {
+      "id": "deployment.participants-static-artifacts",
+      "value": "na",
+      "note": "Modules never deploy separately",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Deployment"
+      ]
+    },
+    {
+      "id": "deployment.strategy-service-in-path",
+      "value": "no",
+      "note": "Nothing beyond the app's own hosting",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Deployment"
+      ]
+    },
+    {
+      "id": "deployment.runtime-discovery-first-party",
+      "value": "na",
+      "note": "Nothing to discover; composition fixed at build",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Deployment"
+      ]
+    },
+    {
+      "id": "deployment.single-domain-required",
+      "value": "na",
+      "note": "One app, one origin by construction; no multi-participant serving topology",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Deployment"
+      ]
+    },
+    {
+      "id": "deployment.cross-origin-cors-required",
+      "value": "na",
+      "note": "No cross-origin participant loading exists",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Deployment"
+      ]
+    },
+    {
+      "id": "deployment.vendor-hosting-required",
+      "value": "no",
+      "note": "Any hosting",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Editions and commercial layer"
+      ]
+    },
+    {
+      "id": "migration.participant.min-level",
+      "value": "conditional",
+      "condition": "migration.major-refactor",
+      "note": "Merging an existing app reorganizes its structure into the single build; foreign-framework apps escalate to migration.framework-migration",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Unit 1: What it is",
+        "model/migration.md section 2"
+      ]
+    },
+    {
+      "id": "migration.host.min-level",
+      "value": "conditional",
+      "condition": "migration.bundler-change",
+      "note": "Boundary-enforcement tooling is toolchain-level config; an entangled codebase escalates to major-refactor",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Unit 1: What it is",
+        "model/migration.md section 2"
+      ]
+    },
+    {
+      "id": "migration.source-modification-required",
+      "value": "yes",
+      "note": "Absorbing an existing app edits its source (entry removal, import rewiring)",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Unit 1: What it is"
+      ]
+    },
+    {
+      "id": "migration.participant.bootstrap-change-required",
+      "value": "yes",
+      "note": "The merged app gives up its own bootstrap; the monolith owns boot",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Unit 1: What it is"
+      ]
+    },
+    {
+      "id": "migration.participant.internals-refactor-required",
+      "value": "yes",
+      "note": "Routing, globals, styles and dependencies must align with the host app",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Unit 1: What it cannot solve"
+      ]
+    },
+    {
+      "id": "migration.participant.deployment-change-required",
+      "value": "yes",
+      "note": "Its independent deployment ceases; it ships inside the single artifact",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: What it cannot solve"
+      ]
+    },
+    {
+      "id": "migration.participant.extraction-required",
+      "value": "no",
+      "note": "Absorbs features in place; no independent deploy unit is created",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Migration requirements"
+      ]
+    },
+    {
+      "id": "migration.participant.rewrite-required",
+      "value": "conditional",
+      "condition": "framework-mismatched apps require a port (one framework per app); same-framework apps do not",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Unit 1: What it cannot solve"
+      ]
+    },
+    {
+      "id": "migration.participant.thirdparty-unmodified-viable",
+      "value": "no",
+      "note": "An unmodifiable deployed app cannot become a module",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: What it cannot solve"
+      ]
+    },
+    {
+      "id": "migration.participant.legacy-no-build-viable",
+      "value": "no",
+      "note": "Requires source in a modern build",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: What it is"
+      ]
+    },
+    {
+      "id": "migration.strangler.incremental",
+      "value": "yes",
+      "note": "Modularize one domain at a time inside the shipping app; boundary mistakes stay cheap",
+      "claimType": "common-pattern",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Migration requirements"
+      ]
+    },
+    {
+      "id": "migration.host.new-infra-tier-required",
+      "value": "no",
+      "note": "Tooling only; no new tier",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Migration requirements"
+      ]
+    },
+    {
+      "id": "migration.host.shell-takeover-required",
+      "value": "no",
+      "note": "The app remains its own root",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Migration requirements"
+      ]
+    },
+    {
+      "id": "migration.exit.participants-standalone",
+      "value": "no",
+      "note": "Modules are not runnable alone, though drawn boundaries ease later extraction",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Migration requirements"
+      ]
+    },
+    {
+      "id": "migration.path.from-incumbent-format",
+      "value": "no",
+      "note": "No owning vendor; consolidation write-ups are community guidance, not an official path",
+      "claimType": "community-convention",
+      "confidence": "medium",
+      "evidence": [
+        "Shared decision context"
+      ]
+    },
+    {
+      "id": "migration.forced-remigration-pending",
+      "value": "no",
+      "note": "Commodity primitives; nothing EOL-bound",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Non-MFE Baselines preamble"
+      ]
+    },
+    {
+      "id": "migration.permanent-viability",
+      "value": "yes",
+      "note": "2026 practitioner default; consolidation trend runs toward it, not away",
+      "claimType": "common-pattern",
+      "confidence": "high",
+      "evidence": [
+        "Non-MFE Baselines preamble",
+        "Shared decision context"
+      ]
+    },
+    {
+      "id": "ownership.single-team-endorsed",
+      "value": "yes",
+      "note": "Practitioner writing treats it as the explicit default until an organizational problem is proven",
+      "claimType": "common-pattern",
+      "confidence": "high",
+      "evidence": [
+        "Shared decision context",
+        "Unit 1: REQ-Q-04 findings"
+      ]
+    },
+    {
+      "id": "ownership.code-boundary-ownership",
+      "value": "yes",
+      "note": "Path-scoped modules plus CODEOWNERS with required review",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Ownership topology fit"
+      ]
+    },
+    {
+      "id": "ownership.deploy-schedule-ownership",
+      "value": "no",
+      "note": "All teams share one release train",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Ownership topology fit"
+      ]
+    },
+    {
+      "id": "ownership.runtime-operational-ownership",
+      "value": "no",
+      "note": "One running app; no per-team operated surface",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Ambiguities and decomposition candidates"
+      ]
+    },
+    {
+      "id": "ownership.external-participant",
+      "value": "no",
+      "note": "A third party cannot ship code into the app after release",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: What it cannot solve"
+      ]
+    },
+    {
+      "id": "ownership.participant-unmodifiable-host",
+      "value": "no",
+      "note": "Modules cannot run in arbitrary host pages",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Composition mechanics"
+      ]
+    },
+    {
+      "id": "ownership.distrusted-cadence",
+      "value": "no",
+      "note": "Modules cannot deploy at all; one train",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Ownership topology fit"
+      ]
+    },
+    {
+      "id": "ownership.uncoordinated-upgrades",
+      "value": "no",
+      "note": "Single build: no staggered majors as peers",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: What it cannot solve"
+      ]
+    },
+    {
+      "id": "ownership.onboarding-without-central-owner",
+      "value": "no",
+      "note": "A new module lands through the shared repo's review and release gates",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Unit 1: Ownership topology fit"
+      ]
+    },
+    {
+      "id": "ownership.platform-team-role-required",
+      "value": "no",
+      "note": "Commodity lint and build tooling; no platform tier to own",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: REQ-Q-04 findings"
+      ]
+    },
+    {
+      "id": "ownership.non-developer-composition",
+      "value": "no",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: What it is"
+      ]
+    },
+    {
+      "id": "ownership.participant-bytes-verbatim",
+      "value": "na",
+      "note": "No pre-shipped participant bytes; the single build compiles everything",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Build-time coupling"
+      ]
+    },
+    {
+      "id": "ownership.nested-host-seat",
+      "value": "na",
+      "note": "Module nesting is directory structure; no host/participant seam",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Composition mechanics"
+      ]
+    },
+    {
+      "id": "ownership.upstream-contract-lifetime",
+      "value": "no",
+      "note": "Boundary is its own repo's import rules, not another project's contract",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Composition mechanics"
+      ]
+    },
+    {
+      "id": "coordination.shared-dependency-governance",
+      "value": "no",
+      "note": "One lockfile; upgrades are whole-app changes, not cross-team runtime negotiation",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Build-time coupling"
+      ]
+    },
+    {
+      "id": "operations.version-skew-machinery",
+      "value": "na",
+      "note": "No skew moments can exist; atomic artifact",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Deployment"
+      ]
+    },
+    {
+      "id": "operations.stack-traces-cross-boundary",
+      "value": "yes",
+      "note": "One realm, one error stream",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Operational model"
+      ]
+    },
+    {
+      "id": "operations.owner-attribution-builtin",
+      "value": "no",
+      "note": "Module attribution needs adopter tooling (sourcemaps, ownership mapping)",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Unit 1: Operational model"
+      ]
+    },
+    {
+      "id": "operations.cross-journey-correlation-diy",
+      "value": "na",
+      "note": "Nothing to correlate across; one runtime context",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Operational model"
+      ]
+    },
+    {
+      "id": "operations.deploy-inventory-firstparty",
+      "value": "na",
+      "note": "Inventory is the single app version; no per-participant matrix",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Operational model"
+      ]
+    },
+    {
+      "id": "operations.first-party-debug-tooling",
+      "value": "no",
+      "note": "No composition runtime to debug; ordinary framework devtools apply",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Operational model"
+      ]
+    },
+    {
+      "id": "operations.local-composed-dev-firstparty",
+      "value": "yes",
+      "note": "The ordinary dev server runs the entire composed app",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Operational model"
+      ]
+    },
+    {
+      "id": "operations.composition-tier-local-parity",
+      "value": "yes",
+      "note": "The build is the composition tier; it runs anywhere",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Operational model"
+      ]
+    },
+    {
+      "id": "operations.standalone-participant-dev",
+      "value": "no",
+      "note": "Modules run only inside the app; harnesses like Storybook are add-ons",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Unit 1: Operational model"
+      ]
+    },
+    {
+      "id": "operations.composed-test-utilities",
+      "value": "na",
+      "note": "No composition seam to test; standard app testing covers everything",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Unit 1: Operational model"
+      ]
+    },
+    {
+      "id": "operations.deploy-time-contract-verification",
+      "value": "yes",
+      "note": "Whole-program compilation checks every consumer contract before ship",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: Contracts and communication"
+      ]
+    },
+    {
+      "id": "operations.single-sponsor-concentration",
+      "value": "no",
+      "note": "No sponsor; a practiced multi-vendor default",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Non-MFE Baselines preamble"
+      ]
+    },
+    {
+      "id": "operations.mode-forked-operations",
+      "value": "no",
+      "note": "Single-config strategy",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 1: What it is"
+      ]
+    }
+  ]
+}

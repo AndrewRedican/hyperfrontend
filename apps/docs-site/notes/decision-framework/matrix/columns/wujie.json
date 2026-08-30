@@ -1,0 +1,2200 @@
+{
+  "unit": "wujie",
+  "dossier": "research/solutions/wujie.md",
+  "verifiedAt": "2026-08-28",
+  "verdicts": [
+    {
+      "id": "unit.type.adoptable-implementation",
+      "value": "yes",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "What it is"
+      ]
+    },
+    {
+      "id": "unit.availability.installable-today",
+      "value": "yes",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Availability",
+        "Version / release cadence"
+      ]
+    },
+    {
+      "id": "unit.availability.stable-line-shipped",
+      "value": "yes",
+      "note": "v2 stable line current (2.1.0, 2026-06-15); 1.x closed at 1.0.29.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Version / release cadence"
+      ]
+    },
+    {
+      "id": "unit.availability.single-current-line",
+      "value": "yes",
+      "note": "Single 2.x line; 1.x closed, no dormant stable beside an unshipped successor.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Status (Aug 2026)",
+        "Version / release cadence"
+      ]
+    },
+    {
+      "id": "unit.availability.planned-capability-claims",
+      "value": "no",
+      "note": "No planned edition or roadmap-only capability advertised.",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Editions and commercial layer"
+      ]
+    },
+    {
+      "id": "unit.maintenance.release-within-12mo",
+      "value": "yes",
+      "note": "2.0.0 (2026-06-01) and 2.1.0 (2026-06-15).",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Status (Aug 2026)",
+        "Version / release cadence"
+      ]
+    },
+    {
+      "id": "unit.maintenance.commit-within-6mo",
+      "value": "yes",
+      "note": "Commits through 2026-06-16; cadence bursty rather than continuous.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Status (Aug 2026)"
+      ]
+    },
+    {
+      "id": "unit.maintenance.multi-maintainer",
+      "value": "no",
+      "note": "One dominant maintainer visible in recent releases; 2024-2025 stall evidences bus-factor risk.",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Operational model"
+      ]
+    },
+    {
+      "id": "unit.maintenance.org-steward",
+      "value": "yes",
+      "note": "Tencent-stewarded repository.",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Operational model"
+      ]
+    },
+    {
+      "id": "unit.maintenance.adoption-outside-sponsor",
+      "value": "yes",
+      "note": "~145 npm dependents, ~5k stars, community forks (wujie-x); installed base beyond Tencent.",
+      "claimType": "community-convention",
+      "confidence": "medium",
+      "evidence": [
+        "Version / release cadence"
+      ]
+    },
+    {
+      "id": "unit.maintenance.adoption-scale-10k",
+      "value": "no",
+      "note": "~5.6k weekly downloads per matrix baseline, below the 10k threshold.",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "matrix/attributes.json (adoption-scale note)",
+        "Version / release cadence"
+      ]
+    },
+    {
+      "id": "unit.license.osi-core",
+      "value": "yes",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Version / release cadence"
+      ]
+    },
+    {
+      "id": "unit.editions.commercial-tier",
+      "value": "no",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Editions and commercial layer"
+      ]
+    },
+    {
+      "id": "unit.editions.oss-self-sufficient",
+      "value": "yes",
+      "note": "The MIT library is the whole product; no commercial tier exists.",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Editions and commercial layer"
+      ]
+    },
+    {
+      "id": "hosting.operator",
+      "value": "no",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Editions and commercial layer",
+        "Operational model"
+      ]
+    },
+    {
+      "id": "hosting.control-plane",
+      "value": "yes",
+      "note": "No control plane beyond host application code; everything runs on adopter infrastructure.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Operational model"
+      ]
+    },
+    {
+      "id": "registry.deployable-feature",
+      "value": "no",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Operational model"
+      ]
+    },
+    {
+      "id": "governance.rollback",
+      "value": "no",
+      "note": "Same-URL entries; rollback is redeploying old content, no first-party pointer repoint.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Deployment"
+      ]
+    },
+    {
+      "id": "governance.usage-monitoring",
+      "value": "no",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Operational model"
+      ]
+    },
+    {
+      "id": "governance.rbac",
+      "value": "no",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Operational model"
+      ]
+    },
+    {
+      "id": "composition.kind.js-module-graph",
+      "value": "no",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "composition.kind.lifecycle-contract",
+      "value": "conditional",
+      "condition": "singleton/alive JS-reuse modes require window.__WUJIE_MOUNT/__WUJIE_UNMOUNT exports; reconstruction mode composes unmodified apps",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Build-time coupling",
+        "Migration requirements"
+      ]
+    },
+    {
+      "id": "composition.kind.custom-element",
+      "value": "yes",
+      "note": "Child DOM renders inside a shadow-rooted custom element placed in the host document.",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "What it is"
+      ]
+    },
+    {
+      "id": "composition.kind.html-fragment-endpoint",
+      "value": "no",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "composition.kind.html-entry",
+      "value": "yes",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "What it is",
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "composition.kind.http-route-partition",
+      "value": "no",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "composition.kind.build-artifact",
+      "value": "no",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "composition.kind.inherits-underlying",
+      "value": "no",
+      "note": "Defines its own iframe-realm plus shadow-DOM boundary.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "What it is"
+      ]
+    },
+    {
+      "id": "composition.phase.deploy-unit-per-participant",
+      "value": "yes",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Deployment"
+      ]
+    },
+    {
+      "id": "composition.exec.client-composed",
+      "value": "yes",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "buildtime.host-build-consumes-participants",
+      "value": "no",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Build-time coupling"
+      ]
+    },
+    {
+      "id": "buildtime.host-integrates-buildless",
+      "value": "unknown",
+      "note": "Imperative core exists but a script-tag/no-build host path is undocumented in reviewed sources.",
+      "claimType": "inference",
+      "confidence": "low",
+      "evidence": [
+        "Framework requirements"
+      ]
+    },
+    {
+      "id": "buildtime.participant-tooling-required",
+      "value": "no",
+      "note": "Reconstruction mode consumes unmodified builds; no bundler plugin or output-format requirement.",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Build-time coupling"
+      ]
+    },
+    {
+      "id": "buildtime.bundler-family-restricted",
+      "value": "no",
+      "note": "Any artifact loadable from an HTML entry; Vite/ESM children supported.",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Build-time coupling"
+      ]
+    },
+    {
+      "id": "buildtime.share-metadata-emitted",
+      "value": "no",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Build-time coupling"
+      ]
+    },
+    {
+      "id": "buildtime.shared-dep-change-rebuilds-center",
+      "value": "na",
+      "note": "No central dependency sharing exists; each iframe realm loads its own copies.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Build-time coupling"
+      ]
+    },
+    {
+      "id": "buildtime.central-input-for-participant-build",
+      "value": "no",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Build-time coupling"
+      ]
+    },
+    {
+      "id": "buildtime.asset-prefix-coordination",
+      "value": "no",
+      "note": "Children keep their own URLs/origins; no shared-origin prefix scheme required.",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Deployment"
+      ]
+    },
+    {
+      "id": "runtime.shared-js-realm",
+      "value": "no",
+      "note": "Each child executes in a real hidden same-origin iframe realm.",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "What it is"
+      ]
+    },
+    {
+      "id": "runtime.patched-globals-layer",
+      "value": "yes",
+      "note": "Patched document routes to the shadow root; proxied location/history; degrade mode loses location-hijack fidelity.",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "What it is",
+        "Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "runtime.primordials-blast-radius",
+      "value": "no",
+      "note": "Own prototypes and built-ins per iframe realm.",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "runtime.concurrent-participants",
+      "value": "yes",
+      "note": "Multiple children, including nested wujie, mount concurrently.",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Ownership topology fit"
+      ]
+    },
+    {
+      "id": "runtime.multi-router-participants",
+      "value": "yes",
+      "note": "Each child owns a virtualized location/history; sync serializes multiple children's routes as distinct query params.",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Runtime coupling"
+      ]
+    },
+    {
+      "id": "runtime.shared-runtime-library",
+      "value": "yes",
+      "note": "The host page runs the wujie runtime that every child's environment is welded to.",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "What it is"
+      ]
+    },
+    {
+      "id": "runtime.central-routing-map",
+      "value": "no",
+      "note": "No central registration; children mount via host components or imperative startApp calls.",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Composition mechanics",
+        "Operational model"
+      ]
+    },
+    {
+      "id": "runtime.shared-dep-negotiation",
+      "value": "no",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Build-time coupling"
+      ]
+    },
+    {
+      "id": "runtime.dep-conflict-surfaces-runtime",
+      "value": "na",
+      "note": "No shared-dependency negotiation exists.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Build-time coupling"
+      ]
+    },
+    {
+      "id": "runtime.side-by-side-versions",
+      "value": "yes",
+      "note": "Realm separation makes conflicting versions coexist trivially.",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "runtime.global-registration-collision",
+      "value": "no",
+      "note": "Per-iframe namespaces; app names are framework-internal keys, not a page-global runtime namespace.",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "What it is"
+      ]
+    },
+    {
+      "id": "runtime.late-participant-registration",
+      "value": "yes",
+      "note": "startApp/preloadApp load any URL into the running document at any time.",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "runtime.loaded-version-hot-swap",
+      "value": "yes",
+      "note": "Remount re-fetches the entry; v2.1.0 refreshApp forces a full rebuild.",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Performance causes"
+      ]
+    },
+    {
+      "id": "isolation.document-boundary",
+      "value": "no",
+      "note": "Hidden iframe supplies only the realm; rendered DOM lives in the host document behind a shadow root.",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "What it is"
+      ]
+    },
+    {
+      "id": "isolation.js.virtualized-global",
+      "value": "na",
+      "note": "A real separate iframe realm exists; no simulated global needed.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "isolation.dom.virtualized",
+      "value": "conditional",
+      "condition": "patched document surface routes into the shadow root; unpatched access paths hit the hidden iframe document instead",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "isolation.css.outbound",
+      "value": "yes",
+      "note": "Shadow-DOM scoping in normal mode; degrade mode's rendering iframe also contains styles.",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "isolation.css.inbound",
+      "value": "conditional",
+      "condition": "shadow root blocks host selectors, but inherited and custom properties flow in; degrade mode's iframe blocks fully",
+      "claimType": "browser-guarantee",
+      "confidence": "medium",
+      "evidence": [
+        "Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "isolation.resource.main-thread",
+      "value": "no",
+      "note": "Shared event loop; a child's tight loop blocks the host (fiber slices boot only).",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "isolation.process.crash",
+      "value": "no",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "isolation.storage.partition",
+      "value": "no",
+      "note": "Same-origin children share host cookies, localStorage, IndexedDB.",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Security and trust"
+      ]
+    },
+    {
+      "id": "isolation.origin.host-authority",
+      "value": "no",
+      "note": "Same-origin iframe holds full host-origin authority by construction (cookies, storage, fetch-as-host, window.parent).",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Isolation and failure containment",
+        "Security and trust"
+      ]
+    },
+    {
+      "id": "isolation.navigation.top-level-guard",
+      "value": "no",
+      "note": "Unpatched window.parent; nothing stops a child redirecting or pushing top-level history.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Security and trust"
+      ]
+    },
+    {
+      "id": "isolation.security.malicious-participant",
+      "value": "no",
+      "note": "Own docs frame isolation as accidental-interference hygiene, never adversary containment.",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Security and trust"
+      ]
+    },
+    {
+      "id": "isolation.failure.lifecycle-quarantine",
+      "value": "conditional",
+      "condition": "loadError lifecycle hook signals load failure; no built-in fallback UI or quarantine",
+      "claimType": "officially-supported",
+      "confidence": "medium",
+      "evidence": [
+        "Contracts and communication"
+      ]
+    },
+    {
+      "id": "isolation.failure.post-mount-exception",
+      "value": "yes",
+      "note": "Uncaught child errors surface on the child iframe's window, not the host stream.",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "isolation.failure.load-fallback",
+      "value": "no",
+      "note": "loadError hook only; no fallback content or timeout ships.",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Contracts and communication"
+      ]
+    },
+    {
+      "id": "isolation.lifecycle.reclaim",
+      "value": "yes",
+      "note": "Iframe teardown reclaims side effects; v2.1.0 fixed a destroy-race memory leak.",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "What it is",
+        "https://github.com/Tencent/wujie/releases"
+      ]
+    },
+    {
+      "id": "isolation.recovery.in-page",
+      "value": "yes",
+      "note": "destroyApp/startApp recreate a fresh realm; refreshApp rebuilds in place.",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics",
+        "Performance causes"
+      ]
+    },
+    {
+      "id": "isolation.server.process",
+      "value": "na",
+      "note": "Purely client-composed.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "SSR and delivery"
+      ]
+    },
+    {
+      "id": "security.cross-origin-boundary",
+      "value": "no",
+      "note": "Same-origin realms by design; the origin boundary is deliberately traded away.",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Security and trust"
+      ]
+    },
+    {
+      "id": "security.sandbox-attribute-applicable",
+      "value": "no",
+      "note": "The framework-built same-origin iframe must stay host-scriptable; sandbox would break rewriting or be shed, never a boundary.",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Security and trust"
+      ]
+    },
+    {
+      "id": "security.per-participant-csp",
+      "value": "unknown",
+      "note": "Dossier flags CSP interaction with the rewritten same-origin iframe as an open question.",
+      "claimType": "inference",
+      "confidence": "low",
+      "evidence": [
+        "Security and trust"
+      ]
+    },
+    {
+      "id": "security.capability-narrowing",
+      "value": "no",
+      "note": "One trust domain and one capability surface; no per-child grants.",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Security and trust"
+      ]
+    },
+    {
+      "id": "security.host-dom-reach",
+      "value": "yes",
+      "note": "Unpatched window.parent plus rendering into the host document.",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Runtime coupling",
+        "Security and trust"
+      ]
+    },
+    {
+      "id": "security.host-js-state-reach",
+      "value": "yes",
+      "note": "window.parent exposes host globals, prototypes, in-memory tokens.",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Runtime coupling"
+      ]
+    },
+    {
+      "id": "security.untrusted-third-party-viable",
+      "value": "no",
+      "note": "Not a sandbox for untrusted code; any child can read/write host DOM, storage, cookies.",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Security and trust"
+      ]
+    },
+    {
+      "id": "security.channel-origin-pinning",
+      "value": "na",
+      "note": "Channels are same-origin direct calls and an in-realm EventBus; no cross-document message layer exists to pin.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Contracts and communication"
+      ]
+    },
+    {
+      "id": "security.channel-confidentiality",
+      "value": "no",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Contracts and communication"
+      ]
+    },
+    {
+      "id": "security.embedding-authorization",
+      "value": "no",
+      "note": "Child code is fetched and executed in host context; frame-ancestors/XFO never apply; CORS gates fetch, not evaluation.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Deployment",
+        "Security and trust"
+      ]
+    },
+    {
+      "id": "security.artifact-integrity-verification",
+      "value": "no",
+      "note": "No SRI or signing; the host may instead rewrite child code at injection.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Security and trust"
+      ]
+    },
+    {
+      "id": "security.delivery-intermediary-trust",
+      "value": "no",
+      "note": "Host fetches child URLs directly; no feed, registry, or composer in the path.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Operational model"
+      ]
+    },
+    {
+      "id": "security.isolation-escape-hatches",
+      "value": "yes",
+      "note": "Unpatched window.parent is a documented cross-realm channel bypassing the realm split.",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Runtime coupling",
+        "Contracts and communication"
+      ]
+    },
+    {
+      "id": "security.composition-injection-surface",
+      "value": "no",
+      "note": "No server-side directive interpretation.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "framework.host-framework-agnostic",
+      "value": "yes",
+      "note": "Vue2/Vue3/React wrappers plus imperative core for any host.",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Framework requirements"
+      ]
+    },
+    {
+      "id": "framework.participant-framework-agnostic",
+      "value": "yes",
+      "note": "Anything rendering via standard document APIs; Angular/zone.js compatibility unverified.",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Framework requirements"
+      ]
+    },
+    {
+      "id": "framework.mixed-frameworks-one-page",
+      "value": "yes",
+      "note": "Per-child realms make simultaneous different-framework children trivial.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "framework.per-team-framework-autonomy",
+      "value": "yes",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Ownership topology fit"
+      ]
+    },
+    {
+      "id": "framework.same-framework-major-coexistence",
+      "value": "yes",
+      "note": "Separate realms, no sharing; majors never negotiate.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Isolation and failure containment",
+        "Build-time coupling"
+      ]
+    },
+    {
+      "id": "framework.esm-artifact-required",
+      "value": "no",
+      "note": "Any script format an HTML entry can carry; Vite/ESM also supported.",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Build-time coupling"
+      ]
+    },
+    {
+      "id": "framework.html-document-entry",
+      "value": "yes",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "framework.client-library-required",
+      "value": "no",
+      "note": "The host injects the patched environment; children embed nothing (singleton mode adds window hook exports only).",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Build-time coupling"
+      ]
+    },
+    {
+      "id": "framework.foreign-artifact-no-rebuild",
+      "value": "yes",
+      "note": "Reconstruction mode runs artifacts built with no wujie knowledge; cross-origin entries need CORS serving.",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Migration requirements",
+        "Deployment"
+      ]
+    },
+    {
+      "id": "framework.official-adapters-exist",
+      "value": "conditional",
+      "condition": "wujie-vue2/wujie-vue3/wujie-react are host-side mount wrappers; children need no participation adapter at all",
+      "claimType": "officially-supported",
+      "confidence": "medium",
+      "evidence": [
+        "Version / release cadence",
+        "Framework requirements"
+      ]
+    },
+    {
+      "id": "framework.adapters-track-current-majors",
+      "value": "unknown",
+      "note": "Wrapper verification against 2025-2026 framework majors not recorded.",
+      "claimType": "inference",
+      "confidence": "low",
+      "evidence": [
+        "Framework requirements"
+      ]
+    },
+    {
+      "id": "framework.zero-framework-participant",
+      "value": "yes",
+      "note": "Vanilla DOM apps work against the proxied document.",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Framework requirements"
+      ]
+    },
+    {
+      "id": "framework.version-floor-imposed",
+      "value": "no",
+      "note": "No framework/tooling floor; older browsers fall to degrade mode (IE9+).",
+      "claimType": "officially-supported",
+      "confidence": "medium",
+      "evidence": [
+        "Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "framework.composition-tier-stack-mandated",
+      "value": "no",
+      "note": "The browser is the composition tier.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "framework.multi-framework-demonstrated",
+      "value": "unknown",
+      "note": "No official multi-framework composition reference verified this session.",
+      "claimType": "inference",
+      "confidence": "low",
+      "evidence": [
+        "Framework requirements"
+      ]
+    },
+    {
+      "id": "contracts.formal-descriptor",
+      "value": "no",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Contracts and communication"
+      ]
+    },
+    {
+      "id": "contracts.contract-versioned",
+      "value": "no",
+      "note": "No contract artifact or wire version exists.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Contracts and communication"
+      ]
+    },
+    {
+      "id": "contracts.connect-compat-gate",
+      "value": "no",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Contracts and communication"
+      ]
+    },
+    {
+      "id": "contracts.drift-surface",
+      "value": "yes",
+      "note": "Host and children deploy independently; drift is structural.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Deployment"
+      ]
+    },
+    {
+      "id": "contracts.drift-explicit",
+      "value": "no",
+      "note": "Untyped channels; incompatible drift fails later in application code.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Contracts and communication"
+      ]
+    },
+    {
+      "id": "contracts.types-shared",
+      "value": "no",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Contracts and communication"
+      ]
+    },
+    {
+      "id": "contracts.schema-validated-payloads",
+      "value": "no",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Contracts and communication"
+      ]
+    },
+    {
+      "id": "contracts.sync-calls",
+      "value": "yes",
+      "note": "Unpatched window.parent enables plain same-origin function calls.",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Contracts and communication"
+      ]
+    },
+    {
+      "id": "contracts.serialized-boundary",
+      "value": "no",
+      "note": "Live object references cross via props and window.parent.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Contracts and communication"
+      ]
+    },
+    {
+      "id": "contracts.frame-messaging",
+      "value": "no",
+      "note": "Iframe is a realm container, not a channel; communication is direct calls and EventBus.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Contracts and communication"
+      ]
+    },
+    {
+      "id": "contracts.builtin-messaging",
+      "value": "yes",
+      "note": "Decentralized EventBus spans host and all children.",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Contracts and communication",
+        "Runtime coupling"
+      ]
+    },
+    {
+      "id": "contracts.builtin-shared-state",
+      "value": "no",
+      "note": "props injection and EventBus only; no persisting store with change subscription.",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Contracts and communication"
+      ]
+    },
+    {
+      "id": "contracts.host-push-updates",
+      "value": "yes",
+      "note": "Via EventBus emits or direct same-origin calls into the mounted child.",
+      "claimType": "officially-supported",
+      "confidence": "medium",
+      "evidence": [
+        "Contracts and communication"
+      ]
+    },
+    {
+      "id": "contracts.http-request-contract",
+      "value": "no",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "contracts.server-context-propagation",
+      "value": "na",
+      "note": "Purely client-side composition.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "SSR and delivery"
+      ]
+    },
+    {
+      "id": "ssr.composed-page",
+      "value": "no",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "SSR and delivery"
+      ]
+    },
+    {
+      "id": "ssr.fragment-granularity",
+      "value": "na",
+      "note": "No server-side composition exists.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "SSR and delivery"
+      ]
+    },
+    {
+      "id": "ssr.streaming-assembly",
+      "value": "na",
+      "note": "Client-composed; no server or edge assembly tier.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "SSR and delivery"
+      ]
+    },
+    {
+      "id": "ssr.participant-internal",
+      "value": "unknown",
+      "note": "Whether server-rendered child HTML hydrates correctly through the proxied document is unverified.",
+      "claimType": "inference",
+      "confidence": "low",
+      "evidence": [
+        "SSR and delivery"
+      ]
+    },
+    {
+      "id": "ssr.dual-mode-render",
+      "value": "no",
+      "note": "No server path exists.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "SSR and delivery"
+      ]
+    },
+    {
+      "id": "ssr.no-js-first-paint",
+      "value": "no",
+      "note": "Child content requires the wujie runtime to fetch and execute the entry.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "SSR and delivery"
+      ]
+    },
+    {
+      "id": "ssr.hydration-orchestration",
+      "value": "na",
+      "note": "Nothing is server-rendered by the composition.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "SSR and delivery"
+      ]
+    },
+    {
+      "id": "ssr.crawler-indexable",
+      "value": "no",
+      "note": "Composed child content never appears in server-delivered host HTML.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "SSR and delivery"
+      ]
+    },
+    {
+      "id": "ssr.static-prerender",
+      "value": "no",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "SSR and delivery"
+      ]
+    },
+    {
+      "id": "ssr.edge-composition",
+      "value": "na",
+      "note": "Browser-composed.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "SSR and delivery"
+      ]
+    },
+    {
+      "id": "ssr.static-hosting-sufficient",
+      "value": "yes",
+      "note": "Host and children ship as static assets; no request-time composition compute.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Operational model",
+        "Deployment"
+      ]
+    },
+    {
+      "id": "ssr.server-loadable-artifact",
+      "value": "no",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "SSR and delivery"
+      ]
+    },
+    {
+      "id": "ssr.rsc-federation",
+      "value": "na",
+      "note": "HTML-entry contract; no cross-boundary server render exists to carry RSC.",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "SSR and delivery"
+      ]
+    },
+    {
+      "id": "ssr.dev-prod-parity",
+      "value": "na",
+      "note": "No SSR exists.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "SSR and delivery"
+      ]
+    },
+    {
+      "id": "ssr.html-fragment-contract",
+      "value": "no",
+      "note": "The HTML entry is executed by client JS, not consumed as inert fragment HTML.",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "ux.cross-boundary-soft-nav",
+      "value": "yes",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "ux.within-unit-soft-nav",
+      "value": "yes",
+      "note": "Children keep SPA routing against virtualized location/history.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Runtime coupling"
+      ]
+    },
+    {
+      "id": "ux.cross-boundary-prefetch",
+      "value": "na",
+      "note": "Boundary navigation is soft; preloadApp is a unit-activation lever.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Performance causes"
+      ]
+    },
+    {
+      "id": "ux.cross-doc-view-transitions",
+      "value": "na",
+      "note": "Soft-nav unit.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "ux.persistent-shared-chrome",
+      "value": "yes",
+      "note": "Host document and chrome stay mounted across child switches.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "ux.unit-keepalive",
+      "value": "conditional",
+      "condition": "alive:true preserves instance and DOM; URL stops driving child routes (bus required); refreshApp escape hatch",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "UX implications"
+      ]
+    },
+    {
+      "id": "ux.keepalive-scroll-restoration",
+      "value": "unknown",
+      "note": "DOM kept alive suggests scroll survives, but it is undocumented.",
+      "claimType": "inference",
+      "confidence": "low",
+      "evidence": [
+        "UX implications"
+      ]
+    },
+    {
+      "id": "ux.deep-link-inner-route",
+      "value": "conditional",
+      "condition": "sync:true serializes the child route into host URL query params (prefix short-paths) and restores on load",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Runtime coupling",
+        "UX implications"
+      ]
+    },
+    {
+      "id": "ux.frame-history-pollution",
+      "value": "unknown",
+      "note": "Hidden same-origin iframes share joint session history; wrapped pushState/replaceState vs Back behavior undocumented.",
+      "claimType": "inference",
+      "confidence": "low",
+      "evidence": [
+        "https://raw.githubusercontent.com/Tencent/wujie/master/packages/wujie-core/src/iframe.ts"
+      ]
+    },
+    {
+      "id": "ux.overlay-viewport-escape",
+      "value": "conditional",
+      "condition": "normal mode: overlays cover the full viewport; degrade mode confines modals to the child's area",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "UX implications"
+      ]
+    },
+    {
+      "id": "ux.host-overlay-protocol",
+      "value": "na",
+      "note": "Same-document rendering; overlays escape natively, no protocol needed.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "UX implications"
+      ]
+    },
+    {
+      "id": "ux.body-portal-compat",
+      "value": "yes",
+      "note": "Patched document.body routes portals into the child's shadow root with scoped styles intact.",
+      "claimType": "framework-guarantee",
+      "confidence": "medium",
+      "evidence": [
+        "What it is",
+        "Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "ux.natural-layout-flow",
+      "value": "yes",
+      "note": "Child content flows in the host page; no fixed rectangle or height-reporting.",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "UX implications"
+      ]
+    },
+    {
+      "id": "ux.cross-boundary-focus-mgmt",
+      "value": "conditional",
+      "condition": "normal mode: one DOM tree, ordinary focus management; degrade mode renders into an iframe, restoring frame focus boundaries",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "What it is",
+        "Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "ux.screenreader-continuity",
+      "value": "conditional",
+      "condition": "normal mode: one continuous tree through shadow roots; degrade mode renders child DOM inside an iframe",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "ux.composed-first-paint",
+      "value": "no",
+      "note": "Children mount client-side after host boot.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "SSR and delivery"
+      ]
+    },
+    {
+      "id": "ux.builtin-loading-ui",
+      "value": "unknown",
+      "note": "No loading UI in the reviewed startApp surface; a loading option may exist, unverified.",
+      "claimType": "inference",
+      "confidence": "low",
+      "evidence": [
+        "https://wujie-micro.github.io/doc/api/startApp.html"
+      ]
+    },
+    {
+      "id": "ux.builtin-error-fallback-ui",
+      "value": "no",
+      "note": "loadError hook signals only; no designated fallback UI ships.",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Contracts and communication"
+      ]
+    },
+    {
+      "id": "ux.mount-layout-shift-risk",
+      "value": "yes",
+      "note": "Content arrives after first paint; authors size the mount container to avoid shift.",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "SSR and delivery"
+      ]
+    },
+    {
+      "id": "ux.token-theming-mechanism",
+      "value": "conditional",
+      "condition": "normal mode only: inherited and custom CSS properties cross the shadow boundary (browser behavior, not a shipped feature); degrade mode's iframe blocks them",
+      "claimType": "browser-guarantee",
+      "confidence": "medium",
+      "evidence": [
+        "Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "performance.client-composition-runtime",
+      "value": "yes",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "What it is"
+      ]
+    },
+    {
+      "id": "performance.pre-render-orchestration-fetch",
+      "value": "yes",
+      "note": "The child's HTML entry must be fetched and parsed before first render; preload can front-run it.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics",
+        "Performance causes"
+      ]
+    },
+    {
+      "id": "performance.sequential-waterfall-default",
+      "value": "yes",
+      "note": "Entry fetch and parse precede discovery of its scripts/styles; preload and pre-execution mitigate.",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Composition mechanics",
+        "Performance causes"
+      ]
+    },
+    {
+      "id": "performance.first-party-preload-levers",
+      "value": "yes",
+      "note": "preloadApp, optional pre-execution, keep-alive and singleton reuse, refreshApp.",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Performance causes"
+      ]
+    },
+    {
+      "id": "performance.duplicate-framework-same-page",
+      "value": "yes",
+      "note": "Each iframe realm loads its own framework copy; no dedup facility.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Build-time coupling"
+      ]
+    },
+    {
+      "id": "performance.shared-dependency-dedup",
+      "value": "no",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Build-time coupling"
+      ]
+    },
+    {
+      "id": "performance.dedup-failure-on-version-skew",
+      "value": "na",
+      "note": "No sharing mechanism exists.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Build-time coupling"
+      ]
+    },
+    {
+      "id": "performance.per-unit-document-boot",
+      "value": "yes",
+      "note": "One hidden iframe realm plus one custom element per child instance; meaningful memory overhead, magnitude unknown.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Performance causes"
+      ]
+    },
+    {
+      "id": "performance.process-memory-overhead",
+      "value": "na",
+      "note": "Same-origin hidden iframes never cross a site boundary; site isolation never splits them.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "What it is"
+      ]
+    },
+    {
+      "id": "performance.sandbox-execution-tax",
+      "value": "no",
+      "note": "Child JS runs at native speed in its own realm; no with(proxyWindow) tax.",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Performance causes"
+      ]
+    },
+    {
+      "id": "performance.per-message-serialization-cost",
+      "value": "no",
+      "note": "Same-origin direct calls and in-realm EventBus pass live references.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Contracts and communication"
+      ]
+    },
+    {
+      "id": "performance.hydration-deferrable-per-unit",
+      "value": "conditional",
+      "condition": "fiber:true (default) slices child boot into requestIdleCallback; activation timing is host-code-controlled; no visibility directives ship",
+      "claimType": "officially-supported",
+      "confidence": "medium",
+      "evidence": [
+        "UX implications"
+      ]
+    },
+    {
+      "id": "performance.request-time-server-fanout",
+      "value": "no",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "SSR and delivery"
+      ]
+    },
+    {
+      "id": "performance.per-unit-http-cacheable",
+      "value": "yes",
+      "note": "Each child is its own endpoint with its own cache headers.",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Deployment"
+      ]
+    },
+    {
+      "id": "performance.default-content-caching",
+      "value": "no",
+      "note": "Reconstruction re-fetches and re-executes per mount; preload, alive, singleton caching are opt-in config.",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Performance causes"
+      ]
+    },
+    {
+      "id": "deployment.host-rebuild-required",
+      "value": "no",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics",
+        "Deployment"
+      ]
+    },
+    {
+      "id": "deployment.new-participant-host-change",
+      "value": "yes",
+      "note": "A new child needs host code (component or startApp call); no registry or config path ships.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "deployment.golive-central-pointer",
+      "value": "no",
+      "note": "A child deploy behind its URL is immediately live.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Deployment"
+      ]
+    },
+    {
+      "id": "deployment.consumer-version-pin",
+      "value": "no",
+      "note": "The host receives whatever is deployed behind the entry URL.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Deployment"
+      ]
+    },
+    {
+      "id": "deployment.per-user-version-targeting",
+      "value": "no",
+      "note": "Nothing documented.",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Deployment"
+      ]
+    },
+    {
+      "id": "deployment.immutable-version-retention",
+      "value": "no",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Deployment"
+      ]
+    },
+    {
+      "id": "deployment.cache-busting-operator-burden",
+      "value": "yes",
+      "note": "Mutable same-URL entry; operators manage TTLs and busting of child HTML and assets.",
+      "claimType": "common-pattern",
+      "confidence": "high",
+      "evidence": [
+        "Deployment"
+      ]
+    },
+    {
+      "id": "deployment.participants-static-artifacts",
+      "value": "yes",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Deployment"
+      ]
+    },
+    {
+      "id": "deployment.strategy-service-in-path",
+      "value": "no",
+      "note": "Static hosting suffices; no registry, gateway, or router service.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Operational model"
+      ]
+    },
+    {
+      "id": "deployment.runtime-discovery-first-party",
+      "value": "no",
+      "note": "Child discovery is host application code.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Operational model"
+      ]
+    },
+    {
+      "id": "deployment.single-domain-required",
+      "value": "no",
+      "note": "Any origin works subject to CORS on the entry fetch.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Deployment"
+      ]
+    },
+    {
+      "id": "deployment.cross-origin-cors-required",
+      "value": "yes",
+      "note": "Host-side fetch() of the entry; cross-origin child hosts must serve CORS headers.",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Deployment"
+      ]
+    },
+    {
+      "id": "deployment.vendor-hosting-required",
+      "value": "no",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Operational model"
+      ]
+    },
+    {
+      "id": "migration.participant.min-level",
+      "value": "conditional",
+      "condition": "migration.trivial-adaptation",
+      "note": "Reconstruction mode runs unmodified apps (CORS serving config at most); singleton/alive reuse escalates to migration.bootstrap-change.",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Migration requirements",
+        "Build-time coupling"
+      ]
+    },
+    {
+      "id": "migration.host.min-level",
+      "value": "conditional",
+      "condition": "migration.bootstrap-change",
+      "note": "Host entry installs the runtime and mounts children via wrappers or startApp; no shell takeover.",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Composition mechanics",
+        "Framework requirements"
+      ]
+    },
+    {
+      "id": "migration.source-modification-required",
+      "value": "no",
+      "note": "Reconstruction mode: none; singleton reuse optionally adds window hook exports.",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Migration requirements"
+      ]
+    },
+    {
+      "id": "migration.participant.bootstrap-change-required",
+      "value": "conditional",
+      "condition": "only for singleton/alive JS reuse (export __WUJIE_MOUNT/__WUJIE_UNMOUNT); reconstruction mode needs none",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Build-time coupling",
+        "Migration requirements"
+      ]
+    },
+    {
+      "id": "migration.participant.internals-refactor-required",
+      "value": "no",
+      "note": "Realm plus virtualized location preserve child assumptions; no documented internals edits.",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "migration.participant.deployment-change-required",
+      "value": "no",
+      "note": "Children stay on existing hosting; cross-origin serving needs CORS headers only.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Deployment"
+      ]
+    },
+    {
+      "id": "migration.participant.extraction-required",
+      "value": "no",
+      "note": "Any addressable HTML entry works; an existing monolith route can serve as the child entry.",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "migration.participant.rewrite-required",
+      "value": "no",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Migration requirements"
+      ]
+    },
+    {
+      "id": "migration.participant.thirdparty-unmodified-viable",
+      "value": "yes",
+      "note": "Reconstruction mode; cross-origin children need CORS or a host-side proxy for the entry fetch.",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Migration requirements",
+        "Deployment"
+      ]
+    },
+    {
+      "id": "migration.participant.legacy-no-build-viable",
+      "value": "yes",
+      "note": "Any fetchable HTML entry qualifies; no modern build required.",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Migration requirements"
+      ]
+    },
+    {
+      "id": "migration.strangler.incremental",
+      "value": "yes",
+      "note": "Embed the legacy app unmodified, add lifecycle exports later.",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Migration requirements"
+      ]
+    },
+    {
+      "id": "migration.host.new-infra-tier-required",
+      "value": "no",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Operational model"
+      ]
+    },
+    {
+      "id": "migration.host.shell-takeover-required",
+      "value": "no",
+      "note": "Host keeps its root; children mount as components.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "migration.exit.participants-standalone",
+      "value": "yes",
+      "note": "Children must remain standalone URL-runnable apps.",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Migration requirements"
+      ]
+    },
+    {
+      "id": "migration.path.from-incumbent-format",
+      "value": "unknown",
+      "note": "No documented migration path from qiankun or single-spa formats verified.",
+      "claimType": "inference",
+      "confidence": "low",
+      "evidence": [
+        "Migration requirements"
+      ]
+    },
+    {
+      "id": "migration.forced-remigration-pending",
+      "value": "no",
+      "note": "v2 is the current line since June 2026; no announced EOL or breaking successor.",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Status (Aug 2026)"
+      ]
+    },
+    {
+      "id": "migration.permanent-viability",
+      "value": "conditional",
+      "condition": "long production adoption supports staying, but the 2024-2025 stall, bus-factor risk, and fork history temper permanence",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Operational model",
+        "Status (Aug 2026)"
+      ]
+    },
+    {
+      "id": "ownership.single-team-endorsed",
+      "value": "no",
+      "note": "No documented single-team endorsement; positioned for multi-team app splitting.",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "What it is"
+      ]
+    },
+    {
+      "id": "ownership.code-boundary-ownership",
+      "value": "yes",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Ownership topology fit"
+      ]
+    },
+    {
+      "id": "ownership.deploy-schedule-ownership",
+      "value": "yes",
+      "note": "Children reach production on their own deploys, no shared train.",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Deployment",
+        "Ownership topology fit"
+      ]
+    },
+    {
+      "id": "ownership.runtime-operational-ownership",
+      "value": "no",
+      "note": "Children are static artifacts fetched and executed in the host page, not operated services.",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Deployment"
+      ]
+    },
+    {
+      "id": "ownership.external-participant",
+      "value": "no",
+      "note": "Composable by URL but never a distinct security principal; full host authority.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Security and trust"
+      ]
+    },
+    {
+      "id": "ownership.participant-unmodifiable-host",
+      "value": "no",
+      "note": "Host installs the runtime and authors mount code; more than a one-tag change.",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "ownership.distrusted-cadence",
+      "value": "yes",
+      "note": "No skew mechanism errors or forces trains; realm separation absorbs dependency drift (API drift stays silent).",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Deployment",
+        "Contracts and communication"
+      ]
+    },
+    {
+      "id": "ownership.uncoordinated-upgrades",
+      "value": "yes",
+      "note": "Per-realm copies; no shared dependencies, no forced upgrade train.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Build-time coupling"
+      ]
+    },
+    {
+      "id": "ownership.onboarding-without-central-owner",
+      "value": "no",
+      "note": "The host application owner must add the mount; no registry path.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "ownership.platform-team-role-required",
+      "value": "no",
+      "note": "No shell, registry, or router tier; the embedding host team owns its mounts.",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Operational model"
+      ]
+    },
+    {
+      "id": "ownership.non-developer-composition",
+      "value": "no",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Operational model"
+      ]
+    },
+    {
+      "id": "ownership.participant-bytes-verbatim",
+      "value": "no",
+      "note": "replace and plugins rewrite child HTML/JS/CSS at injection; children cannot assume shipped bytes run verbatim.",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Ownership topology fit"
+      ]
+    },
+    {
+      "id": "ownership.nested-host-seat",
+      "value": "yes",
+      "note": "Nested wujie, including keep-alive nesting, is documented.",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Ownership topology fit"
+      ]
+    },
+    {
+      "id": "ownership.upstream-contract-lifetime",
+      "value": "no",
+      "note": "Defines its own composition boundary.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "What it is"
+      ]
+    },
+    {
+      "id": "coordination.shared-dependency-governance",
+      "value": "no",
+      "note": "No runtime sharing; duplication is a performance cost, not a governance need.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Build-time coupling"
+      ]
+    },
+    {
+      "id": "operations.version-skew-machinery",
+      "value": "no",
+      "note": "No handshake, negotiation, or skew routing; drift fails silently in app code.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Contracts and communication"
+      ]
+    },
+    {
+      "id": "operations.stack-traces-cross-boundary",
+      "value": "no",
+      "note": "Errors surface on the child iframe's window; host can attach same-origin listeners per child.",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "operations.owner-attribution-builtin",
+      "value": "conditional",
+      "condition": "the realm split attributes uncaught errors to the owning child window and loadError flags load failures; the host wires per-child listeners itself",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Isolation and failure containment",
+        "Contracts and communication"
+      ]
+    },
+    {
+      "id": "operations.cross-journey-correlation-diy",
+      "value": "yes",
+      "note": "Separate realms need per-child instrumentation; same-origin access eases it but nothing spans them.",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "operations.deploy-inventory-firstparty",
+      "value": "no",
+      "note": "What is live is whatever each child URL serves; no inventory surface.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Operational model"
+      ]
+    },
+    {
+      "id": "operations.first-party-debug-tooling",
+      "value": "no",
+      "note": "No devtools extension or debug UI documented.",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Operational model"
+      ]
+    },
+    {
+      "id": "operations.local-composed-dev-firstparty",
+      "value": "no",
+      "note": "No dev proxy or emulator ships; devs run host and child dev servers as ordinary apps.",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Operational model"
+      ]
+    },
+    {
+      "id": "operations.composition-tier-local-parity",
+      "value": "yes",
+      "note": "The browser is the composition tier; identical on a laptop.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "operations.standalone-participant-dev",
+      "value": "yes",
+      "note": "Children are standalone URL-runnable apps by construction.",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Migration requirements"
+      ]
+    },
+    {
+      "id": "operations.composed-test-utilities",
+      "value": "no",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Operational model"
+      ]
+    },
+    {
+      "id": "operations.deploy-time-contract-verification",
+      "value": "no",
+      "note": "No contract exists to verify.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Contracts and communication"
+      ]
+    },
+    {
+      "id": "operations.single-sponsor-concentration",
+      "value": "yes",
+      "note": "Tencent single-vendor with one dominant maintainer; the 2024-2025 stall spawned community forks.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Operational model"
+      ]
+    },
+    {
+      "id": "operations.mode-forked-operations",
+      "value": "yes",
+      "note": "Three run modes (reconstruction/singleton/keep-alive) plus normal-vs-degrade tier flip isolation and UX cells.",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Ambiguities and decomposition candidates",
+        "UX implications"
+      ]
+    }
+  ]
+}

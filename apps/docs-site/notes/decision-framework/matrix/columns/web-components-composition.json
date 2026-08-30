@@ -1,0 +1,2229 @@
+{
+  "unit": "web-components-composition",
+  "dossier": "research/solutions/web-components-composition.md",
+  "verifiedAt": "2026-08-28",
+  "verdicts": [
+    {
+      "id": "unit.type.adoptable-implementation",
+      "value": "no",
+      "note": "architectural strategy (browser standards), not an adoptable implementation",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "header"
+      ]
+    },
+    {
+      "id": "unit.availability.installable-today",
+      "value": "yes",
+      "note": "core contract available in every evergreen browser",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "header"
+      ]
+    },
+    {
+      "id": "unit.availability.stable-line-shipped",
+      "value": "na",
+      "note": "living standards; no release line or semver commitments exist",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "header"
+      ]
+    },
+    {
+      "id": "unit.availability.single-current-line",
+      "value": "na",
+      "note": "no release lines; capabilities ratchet per-browser, tracked via Baseline",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "header"
+      ]
+    },
+    {
+      "id": "unit.availability.planned-capability-claims",
+      "value": "no",
+      "note": "scoped registries are shipped-in-part (2/3 engines), available-immature, not announced-planned",
+      "claimType": "browser-guarantee",
+      "confidence": "medium",
+      "evidence": [
+        "header",
+        "E5",
+        "E6"
+      ]
+    },
+    {
+      "id": "unit.maintenance.release-within-12mo",
+      "value": "yes",
+      "note": "no versioned line; engines shipped new capabilities: scoped registries (Chrome/Edge 146 ~2026-03), DSD Widely Available 2026-08",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "header",
+        "E4",
+        "E5"
+      ]
+    },
+    {
+      "id": "unit.maintenance.commit-within-6mo",
+      "value": "yes",
+      "note": "living HTML/DOM specs; scoped registries an active Interop 2026 focus area",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "header",
+        "E6"
+      ]
+    },
+    {
+      "id": "unit.maintenance.multi-maintainer",
+      "value": "yes",
+      "note": "multi-vendor: WHATWG specs implemented by three independent engines",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "What it is"
+      ]
+    },
+    {
+      "id": "unit.maintenance.org-steward",
+      "value": "yes",
+      "note": "browser vendors and WHATWG steward the standards",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "What it is"
+      ]
+    },
+    {
+      "id": "unit.maintenance.adoption-outside-sponsor",
+      "value": "yes",
+      "note": "micro-app (JD), Entando, countless in-house design-system/MFE hybrids",
+      "claimType": "common-pattern",
+      "confidence": "medium",
+      "evidence": [
+        "header",
+        "Editions and commercial layer"
+      ]
+    },
+    {
+      "id": "unit.maintenance.adoption-scale-10k",
+      "value": "na",
+      "note": "browser standard, no core npm package; adoption is platform-wide",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "header"
+      ]
+    },
+    {
+      "id": "unit.license.osi-core",
+      "value": "na",
+      "note": "browser standards; no vendor, no license",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Editions and commercial layer"
+      ]
+    },
+    {
+      "id": "unit.editions.commercial-tier",
+      "value": "no",
+      "note": "no vendor or editions; Entando, Piral, OC layer on top under their own dossiers",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Editions and commercial layer"
+      ]
+    },
+    {
+      "id": "unit.editions.oss-self-sufficient",
+      "value": "yes",
+      "note": "the standards are the whole capability; no commercial tier exists",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Editions and commercial layer"
+      ]
+    },
+    {
+      "id": "hosting.operator",
+      "value": "na",
+      "note": "layer-3 enterprise atom; NA for strategies (REQ-ENT-01); strategy defines no hosting",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Editions and commercial layer"
+      ]
+    },
+    {
+      "id": "hosting.control-plane",
+      "value": "na",
+      "note": "layer-3 enterprise atom; NA for strategies (REQ-ENT-01); no control plane defined",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Operational model"
+      ]
+    },
+    {
+      "id": "registry.deployable-feature",
+      "value": "na",
+      "note": "layer-3 enterprise atom; NA for strategies (REQ-ENT-01); discovery/registry is a gap by design",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Deployment"
+      ]
+    },
+    {
+      "id": "governance.rollback",
+      "value": "na",
+      "note": "layer-3 enterprise atom; NA for strategies (REQ-ENT-01); no versioning or rollback defined",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Deployment"
+      ]
+    },
+    {
+      "id": "governance.usage-monitoring",
+      "value": "na",
+      "note": "layer-3 enterprise atom; NA for strategies (REQ-ENT-01)",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Operational model"
+      ]
+    },
+    {
+      "id": "governance.rbac",
+      "value": "na",
+      "note": "layer-3 enterprise atom; NA for strategies (REQ-ENT-01)",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Editions and commercial layer"
+      ]
+    },
+    {
+      "id": "composition.kind.js-module-graph",
+      "value": "no",
+      "note": "boundary is the custom element tag, not module specifiers",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "composition.kind.lifecycle-contract",
+      "value": "no",
+      "note": "lifecycle is the browser's element-class callbacks, not an exported bootstrap/mount contract",
+      "claimType": "browser-guarantee",
+      "confidence": "medium",
+      "evidence": [
+        "Composition mechanics",
+        "E1"
+      ]
+    },
+    {
+      "id": "composition.kind.custom-element",
+      "value": "yes",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "composition.kind.html-fragment-endpoint",
+      "value": "conditional",
+      "condition": "primary seam is the tag; DSD fragments served from per-team endpoints form the secondary server-fragment family",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "SSR and delivery",
+        "Family mapping (provisional)"
+      ]
+    },
+    {
+      "id": "composition.kind.html-entry",
+      "value": "no",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "composition.kind.http-route-partition",
+      "value": "no",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "composition.kind.build-artifact",
+      "value": "conditional",
+      "condition": "when elements are distributed as versioned packages into host builds (design-system distribution) rather than runtime bundle URLs",
+      "claimType": "common-pattern",
+      "confidence": "medium",
+      "evidence": [
+        "Family mapping (provisional)"
+      ]
+    },
+    {
+      "id": "composition.kind.inherits-underlying",
+      "value": "no",
+      "note": "defines its own boundary: the custom element tag",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "composition.phase.deploy-unit-per-participant",
+      "value": "conditional",
+      "condition": "yes under the MFE pairing (per-team bundle URLs); no when elements ship as build-time packages",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "What it is",
+        "Family mapping (provisional)"
+      ]
+    },
+    {
+      "id": "composition.exec.client-composed",
+      "value": "yes",
+      "note": "host emits tags, browser upgrades; DSD adds a secondary server path",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "buildtime.host-build-consumes-participants",
+      "value": "no",
+      "note": "host emits tags; no participant inputs at build",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Build-time coupling"
+      ]
+    },
+    {
+      "id": "buildtime.host-integrates-buildless",
+      "value": "yes",
+      "note": "host can be static HTML",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Framework requirements"
+      ]
+    },
+    {
+      "id": "buildtime.participant-tooling-required",
+      "value": "no",
+      "note": "any artifact calling customElements.define() participates; framework compilers optional",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Build-time coupling"
+      ]
+    },
+    {
+      "id": "buildtime.bundler-family-restricted",
+      "value": "no",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Build-time coupling"
+      ]
+    },
+    {
+      "id": "buildtime.share-metadata-emitted",
+      "value": "no",
+      "note": "dedup only via out-of-band convention",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Build-time coupling"
+      ]
+    },
+    {
+      "id": "buildtime.shared-dep-change-rebuilds-center",
+      "value": "na",
+      "note": "no central sharing mechanism exists",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Build-time coupling"
+      ]
+    },
+    {
+      "id": "buildtime.central-input-for-participant-build",
+      "value": "no",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Build-time coupling"
+      ]
+    },
+    {
+      "id": "buildtime.asset-prefix-coordination",
+      "value": "no",
+      "note": "bundles load from arbitrary URLs; no prefix namespace to coordinate",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Deployment"
+      ]
+    },
+    {
+      "id": "runtime.shared-js-realm",
+      "value": "yes",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "What it is",
+        "Runtime coupling"
+      ]
+    },
+    {
+      "id": "runtime.patched-globals-layer",
+      "value": "no",
+      "note": "globals are native; vendor sandboxes (micro-app) are additions, not the standard",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Runtime coupling"
+      ]
+    },
+    {
+      "id": "runtime.primordials-blast-radius",
+      "value": "yes",
+      "note": "a patched Array.prototype in one element affects all",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "runtime.concurrent-participants",
+      "value": "yes",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "What it is"
+      ]
+    },
+    {
+      "id": "runtime.multi-router-participants",
+      "value": "conditional",
+      "condition": "no routing model in-strategy; multiple router-owning elements share one history and must coordinate by convention",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Ownership topology fit"
+      ]
+    },
+    {
+      "id": "runtime.shared-runtime-library",
+      "value": "no",
+      "note": "the browser is the runtime",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Performance causes"
+      ]
+    },
+    {
+      "id": "runtime.central-routing-map",
+      "value": "no",
+      "note": "naming governance only; no central roster or map",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Ownership topology fit"
+      ]
+    },
+    {
+      "id": "runtime.shared-dep-negotiation",
+      "value": "no",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Build-time coupling"
+      ]
+    },
+    {
+      "id": "runtime.dep-conflict-surfaces-runtime",
+      "value": "na",
+      "note": "no shared-dependency negotiation mechanism exists",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Build-time coupling"
+      ]
+    },
+    {
+      "id": "runtime.side-by-side-versions",
+      "value": "conditional",
+      "condition": "distinct tag names always; same tag name only via scoped registries (Chrome/Edge 146, Safari 26; Firefox flagged; not Baseline Aug 2026)",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Runtime coupling",
+        "Ambiguities and decomposition candidates"
+      ]
+    },
+    {
+      "id": "runtime.global-registration-collision",
+      "value": "yes",
+      "note": "second define() throws NotSupportedError, undefinable; versioned tag names are the convention workaround",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Runtime coupling",
+        "E2"
+      ]
+    },
+    {
+      "id": "runtime.late-participant-registration",
+      "value": "yes",
+      "note": "lazy define() upgrades already-parsed instances in place",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Runtime coupling",
+        "E1"
+      ]
+    },
+    {
+      "id": "runtime.loaded-version-hot-swap",
+      "value": "no",
+      "note": "definitions permanent for document lifetime; swap needs new tag names or scoped-registry subtrees",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Runtime coupling",
+        "E2"
+      ]
+    },
+    {
+      "id": "isolation.document-boundary",
+      "value": "no",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "What it is"
+      ]
+    },
+    {
+      "id": "isolation.js.virtualized-global",
+      "value": "no",
+      "note": "no simulation at all; vendor sandboxes are additions, not the standard",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "isolation.dom.virtualized",
+      "value": "conditional",
+      "condition": "shadow DOM confines accidental traversal; open roots scriptable via .shadowRoot, closed mode circumventable: convention-strength only",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Isolation and failure containment",
+        "E12"
+      ]
+    },
+    {
+      "id": "isolation.css.outbound",
+      "value": "yes",
+      "note": "two-way via shadow DOM; light-DOM elements forgo it",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Isolation and failure containment",
+        "E12"
+      ]
+    },
+    {
+      "id": "isolation.css.inbound",
+      "value": "conditional",
+      "condition": "shadow DOM blocks outer selectors, but inherited properties and CSS custom properties flow in by design",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Isolation and failure containment",
+        "E12"
+      ]
+    },
+    {
+      "id": "isolation.resource.main-thread",
+      "value": "no",
+      "note": "single realm; a tight loop in one element freezes all",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "isolation.process.crash",
+      "value": "no",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "isolation.storage.partition",
+      "value": "no",
+      "note": "all participants share window, storage, cookies",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Runtime coupling"
+      ]
+    },
+    {
+      "id": "isolation.origin.host-authority",
+      "value": "no",
+      "note": "all element code runs same-origin with full page privileges",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Security and trust"
+      ]
+    },
+    {
+      "id": "isolation.navigation.top-level-guard",
+      "value": "no",
+      "note": "any participant can redirect or pushState; URL/history fully shared",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Runtime coupling"
+      ]
+    },
+    {
+      "id": "isolation.security.malicious-participant",
+      "value": "no",
+      "note": "trusted-code-only strategy; no security boundary of any kind",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Security and trust"
+      ]
+    },
+    {
+      "id": "isolation.failure.lifecycle-quarantine",
+      "value": "conditional",
+      "condition": "lifecycle-callback throws are reported and a failed constructor silos that element, but only at callback granularity; no fallback UI",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Isolation and failure containment",
+        "E15"
+      ]
+    },
+    {
+      "id": "isolation.failure.post-mount-exception",
+      "value": "conditional",
+      "condition": "uncaught handler throws are reported without unwinding siblings, but shared-realm state corruption propagates unchecked",
+      "claimType": "browser-guarantee",
+      "confidence": "medium",
+      "evidence": [
+        "Isolation and failure containment",
+        "E15"
+      ]
+    },
+    {
+      "id": "isolation.failure.load-fallback",
+      "value": "no",
+      "note": ":defined styling and DSD fallback content are author-supplied mitigations, not a shipped mechanism",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "UX implications"
+      ]
+    },
+    {
+      "id": "isolation.lifecycle.reclaim",
+      "value": "no",
+      "note": "disconnectedCallback cleanup is the element's own duty; same-realm residue persists",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "isolation.recovery.in-page",
+      "value": "conditional",
+      "condition": "element instances can be removed and recreated, but the realm, module state, and registered definition persist for the document lifetime",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Runtime coupling",
+        "E15"
+      ]
+    },
+    {
+      "id": "isolation.server.process",
+      "value": "na",
+      "note": "no server composition tier in-strategy; DSD fragments inherit whatever assembly tier is chosen",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "SSR and delivery"
+      ]
+    },
+    {
+      "id": "security.cross-origin-boundary",
+      "value": "no",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Security and trust"
+      ]
+    },
+    {
+      "id": "security.sandbox-attribute-applicable",
+      "value": "no",
+      "note": "same-document strategy",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Security and trust"
+      ]
+    },
+    {
+      "id": "security.per-participant-csp",
+      "value": "no",
+      "note": "one document, one policy",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Security and trust"
+      ]
+    },
+    {
+      "id": "security.capability-narrowing",
+      "value": "no",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Security and trust"
+      ]
+    },
+    {
+      "id": "security.host-dom-reach",
+      "value": "yes",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Security and trust"
+      ]
+    },
+    {
+      "id": "security.host-js-state-reach",
+      "value": "yes",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Security and trust"
+      ]
+    },
+    {
+      "id": "security.untrusted-third-party-viable",
+      "value": "no",
+      "note": "trusted-code-only; untrusted participants require iframes or vendor sandboxes instead",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Security and trust"
+      ]
+    },
+    {
+      "id": "security.channel-origin-pinning",
+      "value": "na",
+      "note": "no cross-document channel exists",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Security and trust"
+      ]
+    },
+    {
+      "id": "security.channel-confidentiality",
+      "value": "no",
+      "note": "same-realm co-residents can read everything; no channel layer exists",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Security and trust"
+      ]
+    },
+    {
+      "id": "security.embedding-authorization",
+      "value": "no",
+      "note": "CORS can gate module fetch, not evaluation; no browser-enforced embed authorization",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Security and trust"
+      ]
+    },
+    {
+      "id": "security.artifact-integrity-verification",
+      "value": "no",
+      "note": "SRI possible on script tags but conflicts with independent redeploys under stable URLs; nothing strategy-specific",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Security and trust"
+      ]
+    },
+    {
+      "id": "security.delivery-intermediary-trust",
+      "value": "no",
+      "note": "bundles load directly from team origins; no shared intermediary in-strategy",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Deployment"
+      ]
+    },
+    {
+      "id": "security.isolation-escape-hatches",
+      "value": "na",
+      "note": "no JS isolation claimed; open .shadowRoot and ::part theming are designed surface, not escapes",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Isolation and failure containment",
+        "E12"
+      ]
+    },
+    {
+      "id": "security.composition-injection-surface",
+      "value": "no",
+      "note": "no server-side directive interpretation",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Security and trust"
+      ]
+    },
+    {
+      "id": "framework.host-framework-agnostic",
+      "value": "yes",
+      "note": "host can be static HTML",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Framework requirements"
+      ]
+    },
+    {
+      "id": "framework.participant-framework-agnostic",
+      "value": "yes",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Framework requirements",
+        "E7"
+      ]
+    },
+    {
+      "id": "framework.mixed-frameworks-one-page",
+      "value": "yes",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Framework requirements"
+      ]
+    },
+    {
+      "id": "framework.per-team-framework-autonomy",
+      "value": "yes",
+      "note": "no shared build pipeline",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Build-time coupling"
+      ]
+    },
+    {
+      "id": "framework.same-framework-major-coexistence",
+      "value": "conditional",
+      "condition": "two majors coexist as duplicate runtimes; colliding shared element tag names need versioned names or scoped registries (not Baseline)",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Runtime coupling",
+        "E2",
+        "E5"
+      ]
+    },
+    {
+      "id": "framework.esm-artifact-required",
+      "value": "no",
+      "note": "any script that calls define() participates; no module-format mandate",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Build-time coupling"
+      ]
+    },
+    {
+      "id": "framework.html-document-entry",
+      "value": "no",
+      "note": "integration unit is a JS bundle registering tags, not a deployed HTML page",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "framework.client-library-required",
+      "value": "no",
+      "note": "zero mandatory runtime; the browser is the framework",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Performance causes"
+      ]
+    },
+    {
+      "id": "framework.foreign-artifact-no-rebuild",
+      "value": "no",
+      "note": "artifact must register a custom element; foreign artifacts need a wrapper build",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Migration requirements"
+      ]
+    },
+    {
+      "id": "framework.official-adapters-exist",
+      "value": "yes",
+      "note": "each framework's own compiler: Lit, Stencil, Angular Elements, Vue defineCustomElement, Svelte",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Framework requirements",
+        "E7"
+      ]
+    },
+    {
+      "id": "framework.adapters-track-current-majors",
+      "value": "yes",
+      "note": "React 19 reached 100% consuming score; compilers are first-party per framework",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Framework requirements",
+        "E7",
+        "E8"
+      ]
+    },
+    {
+      "id": "framework.zero-framework-participant",
+      "value": "yes",
+      "note": "vanilla classes; static-HTML host",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Framework requirements"
+      ]
+    },
+    {
+      "id": "framework.version-floor-imposed",
+      "value": "conditional",
+      "condition": "consuming-side floors: React >= 19 for full property/event support (older React needs wrappers); evergreen-browser floor for platform features",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Framework requirements",
+        "E8"
+      ]
+    },
+    {
+      "id": "framework.composition-tier-stack-mandated",
+      "value": "no",
+      "note": "the browser is the composition tier",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Framework requirements"
+      ]
+    },
+    {
+      "id": "framework.multi-framework-demonstrated",
+      "value": "yes",
+      "note": "custom-elements-everywhere scores plus production multi-framework hybrids (micro-app, Entando)",
+      "claimType": "common-pattern",
+      "confidence": "medium",
+      "evidence": [
+        "Framework requirements",
+        "E7"
+      ]
+    },
+    {
+      "id": "contracts.formal-descriptor",
+      "value": "conditional",
+      "condition": "Custom Elements Manifest (custom-elements.json) is a community format consumed by IDE/doc tooling; nothing enforces it at runtime",
+      "claimType": "community-convention",
+      "confidence": "high",
+      "evidence": [
+        "Build-time coupling",
+        "E14"
+      ]
+    },
+    {
+      "id": "contracts.contract-versioned",
+      "value": "no",
+      "note": "no version identifier in the DOM contract; CEM carries no enforced version semantics",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Contracts and communication"
+      ]
+    },
+    {
+      "id": "contracts.connect-compat-gate",
+      "value": "no",
+      "note": "silent contract drift; nothing checks host-supplied properties against element expectations",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Contracts and communication"
+      ]
+    },
+    {
+      "id": "contracts.drift-surface",
+      "value": "yes",
+      "note": "independently deployed bundles vs host markup drift freely",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Deployment"
+      ]
+    },
+    {
+      "id": "contracts.drift-explicit",
+      "value": "no",
+      "note": "property mismatches unchecked at runtime; failures surface later in application code",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Contracts and communication"
+      ]
+    },
+    {
+      "id": "contracts.types-shared",
+      "value": "conditional",
+      "condition": "CEM-generated or npm-published types distributed out of band; community convention, unenforced",
+      "claimType": "community-convention",
+      "confidence": "high",
+      "evidence": [
+        "Build-time coupling",
+        "E14"
+      ]
+    },
+    {
+      "id": "contracts.schema-validated-payloads",
+      "value": "no",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Contracts and communication"
+      ]
+    },
+    {
+      "id": "contracts.sync-calls",
+      "value": "yes",
+      "note": "public methods and property access on live element objects",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Contracts and communication"
+      ]
+    },
+    {
+      "id": "contracts.serialized-boundary",
+      "value": "no",
+      "note": "properties carry arbitrary live references",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Contracts and communication"
+      ]
+    },
+    {
+      "id": "contracts.frame-messaging",
+      "value": "no",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Contracts and communication"
+      ]
+    },
+    {
+      "id": "contracts.builtin-messaging",
+      "value": "no",
+      "note": "DOM CustomEvents are raw browser primitives; no bus shipped",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Contracts and communication"
+      ]
+    },
+    {
+      "id": "contracts.builtin-shared-state",
+      "value": "no",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Contracts and communication"
+      ]
+    },
+    {
+      "id": "contracts.host-push-updates",
+      "value": "yes",
+      "note": "host sets properties/attributes on mounted elements; attributeChangedCallback reacts",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Contracts and communication",
+        "E1"
+      ]
+    },
+    {
+      "id": "contracts.http-request-contract",
+      "value": "no",
+      "note": "client DOM contract, not an HTTP fragment interface",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "contracts.server-context-propagation",
+      "value": "na",
+      "note": "strategy defines only the DSD serialization format, no server composition tier or context contract",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "SSR and delivery"
+      ]
+    },
+    {
+      "id": "ssr.composed-page",
+      "value": "conditional",
+      "condition": "DSD makes fragments serializable as inert HTML; the assembly tier (SSI, ESI, streaming) must come from outside the strategy",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "SSR and delivery"
+      ]
+    },
+    {
+      "id": "ssr.fragment-granularity",
+      "value": "conditional",
+      "condition": "per-element fragments when an external assembly tier stitches DSD output",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "SSR and delivery"
+      ]
+    },
+    {
+      "id": "ssr.streaming-assembly",
+      "value": "conditional",
+      "condition": "DSD parses and attaches streaming-safe; the streaming composer itself is out of strategy",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "SSR and delivery",
+        "E3"
+      ]
+    },
+    {
+      "id": "ssr.participant-internal",
+      "value": "conditional",
+      "condition": "per-stack DSD render tooling required (e.g. Lit SSR); maturity varies by framework",
+      "claimType": "officially-supported",
+      "confidence": "medium",
+      "evidence": [
+        "SSR and delivery",
+        "E3",
+        "E13"
+      ]
+    },
+    {
+      "id": "ssr.dual-mode-render",
+      "value": "conditional",
+      "condition": "DSD server path and client upgrade coexist with documented fallback patterns; selection/failover is per-stack tooling, not a shipped mechanism",
+      "claimType": "common-pattern",
+      "confidence": "medium",
+      "evidence": [
+        "SSR and delivery",
+        "E3"
+      ]
+    },
+    {
+      "id": "ssr.no-js-first-paint",
+      "value": "yes",
+      "note": "via declarative shadow DOM, Baseline Widely Available ~2026-08-20",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "SSR and delivery",
+        "E3",
+        "E4"
+      ]
+    },
+    {
+      "id": "ssr.hydration-orchestration",
+      "value": "no",
+      "note": "each bundle upgrades its own tags; no scheduling runtime shipped",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "SSR and delivery"
+      ]
+    },
+    {
+      "id": "ssr.crawler-indexable",
+      "value": "conditional",
+      "condition": "yes when server-rendered via DSD; client-upgraded-only content is absent from delivered HTML",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "SSR and delivery"
+      ]
+    },
+    {
+      "id": "ssr.static-prerender",
+      "value": "yes",
+      "note": "DSD is inert HTML servable statically",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "SSR and delivery"
+      ]
+    },
+    {
+      "id": "ssr.edge-composition",
+      "value": "conditional",
+      "condition": "DSD fragments compose at edge via an external assembler (ESI, HTMLRewriter); nothing shipped in-strategy",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "SSR and delivery"
+      ]
+    },
+    {
+      "id": "ssr.static-hosting-sufficient",
+      "value": "yes",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Deployment"
+      ]
+    },
+    {
+      "id": "ssr.server-loadable-artifact",
+      "value": "no",
+      "note": "element bundles target the DOM; server evaluation needs per-stack shims, not first-party",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "SSR and delivery"
+      ]
+    },
+    {
+      "id": "ssr.rsc-federation",
+      "value": "na",
+      "note": "no federation layer; custom elements appear in RSC output as plain HTML tags",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "SSR and delivery"
+      ]
+    },
+    {
+      "id": "ssr.dev-prod-parity",
+      "value": "na",
+      "note": "strategy ships no dev or SSR tier; parity is a property of the chosen per-stack tooling",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Operational model"
+      ]
+    },
+    {
+      "id": "ssr.html-fragment-contract",
+      "value": "yes",
+      "note": "DSD is standards-based inert HTML; producing it is per-stack tooling (conditional maturity)",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "SSR and delivery",
+        "E3",
+        "E4"
+      ]
+    },
+    {
+      "id": "ux.cross-boundary-soft-nav",
+      "value": "yes",
+      "note": "single document; swapping units is DOM work, though routing itself is out of scope",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "UX implications"
+      ]
+    },
+    {
+      "id": "ux.within-unit-soft-nav",
+      "value": "yes",
+      "note": "nothing impairs internal SPA behavior; URL/history ownership is shared",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "UX implications"
+      ]
+    },
+    {
+      "id": "ux.cross-boundary-prefetch",
+      "value": "na",
+      "note": "boundary navigation is soft; nothing to mask",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "UX implications"
+      ]
+    },
+    {
+      "id": "ux.cross-doc-view-transitions",
+      "value": "na",
+      "note": "soft-nav unit; no cross-document crossings",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "UX implications"
+      ]
+    },
+    {
+      "id": "ux.persistent-shared-chrome",
+      "value": "yes",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "UX implications"
+      ]
+    },
+    {
+      "id": "ux.unit-keepalive",
+      "value": "no",
+      "note": "no documented keep-alive; detached-instance state retention is an app-level pattern, not a mechanism",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "UX implications"
+      ]
+    },
+    {
+      "id": "ux.keepalive-scroll-restoration",
+      "value": "na",
+      "note": "no keep-alive mechanism in-strategy",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "UX implications"
+      ]
+    },
+    {
+      "id": "ux.deep-link-inner-route",
+      "value": "conditional",
+      "condition": "elements share the top-level URL and history APIs; the strategy defines no URL-ownership or serialization convention",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Ownership topology fit"
+      ]
+    },
+    {
+      "id": "ux.frame-history-pollution",
+      "value": "no",
+      "note": "single-document composition",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "UX implications"
+      ]
+    },
+    {
+      "id": "ux.overlay-viewport-escape",
+      "value": "yes",
+      "note": "same-DOM; top-layer dialog/popover works from within shadow roots",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "UX implications"
+      ]
+    },
+    {
+      "id": "ux.host-overlay-protocol",
+      "value": "na",
+      "note": "same-DOM unit; overlays need no protocol",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "UX implications"
+      ]
+    },
+    {
+      "id": "ux.body-portal-compat",
+      "value": "conditional",
+      "condition": "portals to document.body leave the element's shadow scope, losing its encapsulated styles",
+      "claimType": "common-pattern",
+      "confidence": "medium",
+      "evidence": [
+        "UX implications"
+      ]
+    },
+    {
+      "id": "ux.natural-layout-flow",
+      "value": "yes",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "UX implications"
+      ]
+    },
+    {
+      "id": "ux.cross-boundary-focus-mgmt",
+      "value": "yes",
+      "note": "one DOM, one focus order; delegatesFocus available",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "UX implications"
+      ]
+    },
+    {
+      "id": "ux.screenreader-continuity",
+      "value": "yes",
+      "note": "one accessibility tree; cross-shadow-root ARIA idrefs remain a known gap",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "UX implications"
+      ]
+    },
+    {
+      "id": "ux.composed-first-paint",
+      "value": "conditional",
+      "condition": "client-upgraded path has pre-upgrade flash; server-rendered DSD paints composed",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "UX implications",
+        "E3"
+      ]
+    },
+    {
+      "id": "ux.builtin-loading-ui",
+      "value": "no",
+      "note": ":defined styling is author-supplied, not a shipped indicator",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "UX implications"
+      ]
+    },
+    {
+      "id": "ux.builtin-error-fallback-ui",
+      "value": "no",
+      "note": "a failed element leaves blank or inert markup",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "ux.mount-layout-shift-risk",
+      "value": "yes",
+      "note": "pre-upgrade flash; mitigable via :defined sizing or DSD fallback content",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "UX implications",
+        "E1",
+        "E3"
+      ]
+    },
+    {
+      "id": "ux.token-theming-mechanism",
+      "value": "yes",
+      "note": "inherited CSS custom properties flow across boundaries by design",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "UX implications",
+        "E12"
+      ]
+    },
+    {
+      "id": "performance.client-composition-runtime",
+      "value": "no",
+      "note": "zero mandatory runtime; the browser is the framework",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Performance causes"
+      ]
+    },
+    {
+      "id": "performance.pre-render-orchestration-fetch",
+      "value": "no",
+      "note": "no manifest, feed, or registry fetch precedes first render",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Performance causes"
+      ]
+    },
+    {
+      "id": "performance.sequential-waterfall-default",
+      "value": "no",
+      "note": "per-team bundles are discovered in host markup and fetched in parallel",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Performance causes"
+      ]
+    },
+    {
+      "id": "performance.first-party-preload-levers",
+      "value": "no",
+      "note": "modulepreload/link preload are browser patterns, nothing shipped by the strategy",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Performance causes"
+      ]
+    },
+    {
+      "id": "performance.duplicate-framework-same-page",
+      "value": "yes",
+      "note": "N teams shipping N runtimes is the principal weight cause absent coordination",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Performance causes",
+        "E7"
+      ]
+    },
+    {
+      "id": "performance.shared-dependency-dedup",
+      "value": "conditional",
+      "condition": "only via explicit cross-team convention (import maps or externals); nothing in-strategy enforces it",
+      "claimType": "common-pattern",
+      "confidence": "high",
+      "evidence": [
+        "Build-time coupling"
+      ]
+    },
+    {
+      "id": "performance.dedup-failure-on-version-skew",
+      "value": "na",
+      "note": "no built-in sharing mechanism to fail",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Build-time coupling"
+      ]
+    },
+    {
+      "id": "performance.per-unit-document-boot",
+      "value": "no",
+      "note": "shared document and realm",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Runtime coupling"
+      ]
+    },
+    {
+      "id": "performance.process-memory-overhead",
+      "value": "na",
+      "note": "same-realm strategy; site isolation never applies",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "performance.sandbox-execution-tax",
+      "value": "no",
+      "note": "no sandbox; native execution",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Performance causes"
+      ]
+    },
+    {
+      "id": "performance.per-message-serialization-cost",
+      "value": "no",
+      "note": "in-realm references and DOM events",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Contracts and communication"
+      ]
+    },
+    {
+      "id": "performance.hydration-deferrable-per-unit",
+      "value": "conditional",
+      "condition": "per-element upgrade is independently deferrable; visibility/idle gating is tooling-dependent, not shipped",
+      "claimType": "browser-guarantee",
+      "confidence": "medium",
+      "evidence": [
+        "SSR and delivery",
+        "E1"
+      ]
+    },
+    {
+      "id": "performance.request-time-server-fanout",
+      "value": "no",
+      "note": "client-composed",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "performance.per-unit-http-cacheable",
+      "value": "yes",
+      "note": "per-team bundles at their own URLs with their own cache headers",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Deployment"
+      ]
+    },
+    {
+      "id": "performance.default-content-caching",
+      "value": "na",
+      "note": "no shipped composition tier to do the caching",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Operational model"
+      ]
+    },
+    {
+      "id": "deployment.host-rebuild-required",
+      "value": "no",
+      "note": "publish a new bundle behind the URL the host loads",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Deployment"
+      ]
+    },
+    {
+      "id": "deployment.new-participant-host-change",
+      "value": "yes",
+      "note": "host must emit the new tag and script URL; no registry exists to make it config-only",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Deployment"
+      ]
+    },
+    {
+      "id": "deployment.golive-central-pointer",
+      "value": "no",
+      "note": "same-URL model; the participant's own deploy goes live",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Deployment"
+      ]
+    },
+    {
+      "id": "deployment.consumer-version-pin",
+      "value": "conditional",
+      "condition": "via versioned bundle URLs chosen by the host (convention); mutable stable URLs give no pin",
+      "claimType": "common-pattern",
+      "confidence": "high",
+      "evidence": [
+        "Deployment"
+      ]
+    },
+    {
+      "id": "deployment.per-user-version-targeting",
+      "value": "no",
+      "note": "nothing documented; adopter-built URL selection at best",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Deployment"
+      ]
+    },
+    {
+      "id": "deployment.immutable-version-retention",
+      "value": "conditional",
+      "condition": "versioned-URL immutability is convention, not enforced by any mechanism",
+      "claimType": "common-pattern",
+      "confidence": "medium",
+      "evidence": [
+        "Deployment"
+      ]
+    },
+    {
+      "id": "deployment.cache-busting-operator-burden",
+      "value": "yes",
+      "note": "URL versioning convention carries the burden; stable URLs rely on TTLs",
+      "claimType": "common-pattern",
+      "confidence": "high",
+      "evidence": [
+        "Deployment"
+      ]
+    },
+    {
+      "id": "deployment.participants-static-artifacts",
+      "value": "yes",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Deployment"
+      ]
+    },
+    {
+      "id": "deployment.strategy-service-in-path",
+      "value": "no",
+      "note": "static origins only",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Deployment"
+      ]
+    },
+    {
+      "id": "deployment.runtime-discovery-first-party",
+      "value": "no",
+      "note": "discovery is a gap by design; import maps or a product layer supply it",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Deployment"
+      ]
+    },
+    {
+      "id": "deployment.single-domain-required",
+      "value": "no",
+      "note": "any origin, subject to CORS for module loads",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Deployment"
+      ]
+    },
+    {
+      "id": "deployment.cross-origin-cors-required",
+      "value": "conditional",
+      "condition": "classic script tags load cross-origin without CORS; ES module bundles require CORS headers",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Deployment"
+      ]
+    },
+    {
+      "id": "deployment.vendor-hosting-required",
+      "value": "no",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Deployment"
+      ]
+    },
+    {
+      "id": "migration.participant.min-level",
+      "value": "conditional",
+      "condition": "migration.integration-adapter",
+      "note": "wrapper layer (mount/unmount bridging, property/event plumbing) around unchanged source",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Migration requirements"
+      ]
+    },
+    {
+      "id": "migration.host.min-level",
+      "value": "conditional",
+      "condition": "migration.trivial-adaptation",
+      "note": "add the tag and script URL to host markup; adoption is per-tag",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Migration requirements"
+      ]
+    },
+    {
+      "id": "migration.source-modification-required",
+      "value": "no",
+      "note": "the wrapper is new code; existing application source stays untouched",
+      "claimType": "common-pattern",
+      "confidence": "medium",
+      "evidence": [
+        "Migration requirements"
+      ]
+    },
+    {
+      "id": "migration.participant.bootstrap-change-required",
+      "value": "conditional",
+      "condition": "avoidable when a separate wrapper entry mounts the app; apps that auto-boot into document.body need entry changes",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Migration requirements"
+      ]
+    },
+    {
+      "id": "migration.participant.internals-refactor-required",
+      "value": "conditional",
+      "condition": "only for apps assuming document exclusivity: global styles, body-level DOM, URL ownership",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Migration requirements"
+      ]
+    },
+    {
+      "id": "migration.participant.deployment-change-required",
+      "value": "no",
+      "note": "any static host serves element bundles",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Deployment"
+      ]
+    },
+    {
+      "id": "migration.participant.extraction-required",
+      "value": "no",
+      "note": "a tag can wrap a feature in place",
+      "claimType": "common-pattern",
+      "confidence": "high",
+      "evidence": [
+        "Migration requirements"
+      ]
+    },
+    {
+      "id": "migration.participant.rewrite-required",
+      "value": "no",
+      "claimType": "common-pattern",
+      "confidence": "high",
+      "evidence": [
+        "Migration requirements"
+      ]
+    },
+    {
+      "id": "migration.participant.thirdparty-unmodified-viable",
+      "value": "no",
+      "note": "someone must build an artifact that defines an element; untouched third-party apps cannot participate",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Migration requirements"
+      ]
+    },
+    {
+      "id": "migration.participant.legacy-no-build-viable",
+      "value": "yes",
+      "note": "a web-component tag wrapped around a legacy screen; wrapper needs no participant build",
+      "claimType": "common-pattern",
+      "confidence": "high",
+      "evidence": [
+        "Migration requirements"
+      ]
+    },
+    {
+      "id": "migration.strangler.incremental",
+      "value": "yes",
+      "note": "per-tag adoption into any host, including server-rendered legacy pages",
+      "claimType": "common-pattern",
+      "confidence": "high",
+      "evidence": [
+        "Migration requirements"
+      ]
+    },
+    {
+      "id": "migration.host.new-infra-tier-required",
+      "value": "no",
+      "note": "client-side composition; no new tier",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Migration requirements"
+      ]
+    },
+    {
+      "id": "migration.host.shell-takeover-required",
+      "value": "no",
+      "note": "host adopts per-tag, keeps its own root",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Migration requirements"
+      ]
+    },
+    {
+      "id": "migration.exit.participants-standalone",
+      "value": "conditional",
+      "condition": "an element bundle is a library, not an app; a one-line harness page runs it standalone",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Migration requirements"
+      ]
+    },
+    {
+      "id": "migration.path.from-incumbent-format",
+      "value": "no",
+      "note": "framework compilers document element output; no documented path from incumbent composition formats",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Framework requirements"
+      ]
+    },
+    {
+      "id": "migration.forced-remigration-pending",
+      "value": "no",
+      "note": "browser-primitive unit; standards do not break back-compat",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "header"
+      ]
+    },
+    {
+      "id": "migration.permanent-viability",
+      "value": "yes",
+      "note": "living multi-vendor standards with backwards-compatibility guarantees",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "header"
+      ]
+    },
+    {
+      "id": "ownership.single-team-endorsed",
+      "value": "yes",
+      "note": "documented as a general component model; single-team design-system use is its mainstream documented use",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "What it is"
+      ]
+    },
+    {
+      "id": "ownership.code-boundary-ownership",
+      "value": "yes",
+      "claimType": "common-pattern",
+      "confidence": "high",
+      "evidence": [
+        "Ownership topology fit"
+      ]
+    },
+    {
+      "id": "ownership.deploy-schedule-ownership",
+      "value": "yes",
+      "note": "under the per-team bundle-URL pairing, a team's deploy reaches users directly",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Deployment"
+      ]
+    },
+    {
+      "id": "ownership.runtime-operational-ownership",
+      "value": "no",
+      "note": "static artifacts executed by the host page, not team-operated services",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Deployment"
+      ]
+    },
+    {
+      "id": "ownership.external-participant",
+      "value": "no",
+      "note": "no distinct security principal; shared realm and origin",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Security and trust"
+      ]
+    },
+    {
+      "id": "ownership.participant-unmodifiable-host",
+      "value": "yes",
+      "note": "one tag plus one script; host adopts no build tool or framework",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Ownership topology fit"
+      ]
+    },
+    {
+      "id": "ownership.distrusted-cadence",
+      "value": "yes",
+      "note": "no mechanism errors on skew; property-contract drift fails silently instead",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Contracts and communication"
+      ]
+    },
+    {
+      "id": "ownership.uncoordinated-upgrades",
+      "value": "conditional",
+      "condition": "dependency copies coexist indefinitely with no forced train; page-global tag names still require naming coordination",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Runtime coupling",
+        "E2"
+      ]
+    },
+    {
+      "id": "ownership.onboarding-without-central-owner",
+      "value": "no",
+      "note": "the host page owner must add the tag and script; no feed or registry in-strategy",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Deployment"
+      ]
+    },
+    {
+      "id": "ownership.platform-team-role-required",
+      "value": "no",
+      "note": "naming and dependency-sharing governance needed, but no standing shell, router, or registry owner",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Operational model"
+      ]
+    },
+    {
+      "id": "ownership.non-developer-composition",
+      "value": "no",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Operational model"
+      ]
+    },
+    {
+      "id": "ownership.participant-bytes-verbatim",
+      "value": "yes",
+      "note": "no host-side rewriting; the browser executes shipped bundles as-is",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "ownership.nested-host-seat",
+      "value": "yes",
+      "note": "elements freely compose other teams' elements and slots",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "What it is"
+      ]
+    },
+    {
+      "id": "ownership.upstream-contract-lifetime",
+      "value": "no",
+      "note": "the boundary is the web platform's own contract",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "header"
+      ]
+    },
+    {
+      "id": "coordination.shared-dependency-governance",
+      "value": "conditional",
+      "condition": "required only if dedup is wanted (import-map/externals convention); default duplication needs none, and tag-name governance is a separate standing need",
+      "claimType": "common-pattern",
+      "confidence": "medium",
+      "evidence": [
+        "Build-time coupling",
+        "Operational model"
+      ]
+    },
+    {
+      "id": "operations.version-skew-machinery",
+      "value": "no",
+      "note": "uncoordinated releases silently break the property contract; nothing ships",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Contracts and communication"
+      ]
+    },
+    {
+      "id": "operations.stack-traces-cross-boundary",
+      "value": "yes",
+      "note": "shared realm; errors surface in the host document's error stream",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Operational model"
+      ]
+    },
+    {
+      "id": "operations.owner-attribution-builtin",
+      "value": "no",
+      "note": "deliberate per-team tagging (source maps, per-element boundaries) required",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Operational model"
+      ]
+    },
+    {
+      "id": "operations.cross-journey-correlation-diy",
+      "value": "no",
+      "note": "one APM agent sees the whole shared-realm page",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Operational model"
+      ]
+    },
+    {
+      "id": "operations.deploy-inventory-firstparty",
+      "value": "no",
+      "note": "no manifest, map, or registry to enumerate",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Deployment"
+      ]
+    },
+    {
+      "id": "operations.first-party-debug-tooling",
+      "value": "no",
+      "note": "generic browser devtools only; nothing composition-specific",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Operational model"
+      ]
+    },
+    {
+      "id": "operations.local-composed-dev-firstparty",
+      "value": "no",
+      "note": "no tooling shipped; composing locally is trivially a static page",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Operational model"
+      ]
+    },
+    {
+      "id": "operations.composition-tier-local-parity",
+      "value": "yes",
+      "note": "the browser is the composition tier",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Operational model"
+      ]
+    },
+    {
+      "id": "operations.standalone-participant-dev",
+      "value": "yes",
+      "note": "elements run on any bare harness page (demo pages, Storybook)",
+      "claimType": "common-pattern",
+      "confidence": "high",
+      "evidence": [
+        "Operational model"
+      ]
+    },
+    {
+      "id": "operations.composed-test-utilities",
+      "value": "no",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Operational model"
+      ]
+    },
+    {
+      "id": "operations.deploy-time-contract-verification",
+      "value": "no",
+      "note": "CEM gives editor-time hints at best; nothing verifies at deploy",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Contracts and communication"
+      ]
+    },
+    {
+      "id": "operations.single-sponsor-concentration",
+      "value": "no",
+      "note": "multi-vendor browser platform; no single sponsor to lose",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "header"
+      ]
+    },
+    {
+      "id": "operations.mode-forked-operations",
+      "value": "no",
+      "note": "capability ramps (scoped registries, DSD) and per-element choices vary answers, but no official mode fork",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Ambiguities and decomposition candidates"
+      ]
+    }
+  ]
+}

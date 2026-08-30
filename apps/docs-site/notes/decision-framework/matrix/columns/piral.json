@@ -1,0 +1,2215 @@
+{
+  "unit": "piral",
+  "dossier": "research/solutions/piral.md",
+  "verifiedAt": "2026-08-28",
+  "verdicts": [
+    {
+      "id": "unit.type.adoptable-implementation",
+      "value": "yes",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "What it is"
+      ]
+    },
+    {
+      "id": "unit.availability.installable-today",
+      "value": "yes",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Header [E2][E3]"
+      ]
+    },
+    {
+      "id": "unit.availability.stable-line-shipped",
+      "value": "yes",
+      "note": "v1.12.3 (2026-08-18), stable 1.x line, monthly cadence",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Header [E2]"
+      ]
+    },
+    {
+      "id": "unit.availability.single-current-line",
+      "value": "conditional",
+      "condition": "v1 is the only shipped, actively released line; an announced Picard-based v2 successor remains unshipped (Picard dormant)",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Header [E2]",
+        "[E12]"
+      ]
+    },
+    {
+      "id": "unit.availability.planned-capability-claims",
+      "value": "yes",
+      "note": "Piral v2 on Picard.js is announced-planned only; all v1 capabilities ship today",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "[E12]"
+      ]
+    },
+    {
+      "id": "unit.maintenance.release-within-12mo",
+      "value": "yes",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "[E2]"
+      ]
+    },
+    {
+      "id": "unit.maintenance.commit-within-6mo",
+      "value": "yes",
+      "note": "repo pushed 2026-08-18; releases monthly through Aug 2026",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "[E2]"
+      ]
+    },
+    {
+      "id": "unit.maintenance.multi-maintainer",
+      "value": "unknown",
+      "note": "dossier records org steward and 4,258 commits but not trailing-12mo commit authorship",
+      "claimType": "inference",
+      "confidence": "low",
+      "evidence": [
+        "[E1]"
+      ]
+    },
+    {
+      "id": "unit.maintenance.org-steward",
+      "value": "yes",
+      "note": "vendor: smapiot GmbH",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "[E1]"
+      ]
+    },
+    {
+      "id": "unit.maintenance.adoption-outside-sponsor",
+      "value": "unknown",
+      "note": "~12k weekly downloads imply outside use, but no production adopters documented in dossier",
+      "claimType": "inference",
+      "confidence": "low",
+      "evidence": [
+        "[E3]"
+      ]
+    },
+    {
+      "id": "unit.maintenance.adoption-scale-10k",
+      "value": "yes",
+      "note": "piral-cli 11,996 / piral-base 13,862 weekly (2026-08-21..27)",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "[E3]"
+      ]
+    },
+    {
+      "id": "unit.license.osi-core",
+      "value": "yes",
+      "note": "MIT across framework, CLI, specs, sample feed",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "[E1]",
+        "Editions and commercial layer"
+      ]
+    },
+    {
+      "id": "unit.editions.commercial-tier",
+      "value": "yes",
+      "note": "Piral Cloud hosted/managed feed tiers",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "[E8]"
+      ]
+    },
+    {
+      "id": "unit.editions.oss-self-sufficient",
+      "value": "yes",
+      "note": "open Feed API spec plus MIT sample feed cover core composition; commercial adds flags/analytics/management",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Editions and commercial layer [E10][E11]"
+      ]
+    },
+    {
+      "id": "hosting.operator",
+      "value": "yes",
+      "note": "Piral Cloud: hosted feed plus app-shell hosting",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "[E8]"
+      ]
+    },
+    {
+      "id": "hosting.control-plane",
+      "value": "yes",
+      "note": "self-hosted sample feed or own Feed API implementation; no routine vendor SaaS dependency",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "[E10]",
+        "[E11]"
+      ]
+    },
+    {
+      "id": "registry.deployable-feature",
+      "value": "yes",
+      "note": "pilet feed stores versioned runtime artifacts with metadata",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "[E10]",
+        "[E11]"
+      ]
+    },
+    {
+      "id": "governance.rollback",
+      "value": "conditional",
+      "condition": "feed-implementation-dependent: Piral Cloud manages versions; the open spec does not mandate retention or repin semantics",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "[E8]",
+        "[E11]"
+      ]
+    },
+    {
+      "id": "governance.usage-monitoring",
+      "value": "conditional",
+      "condition": "Piral Cloud only (dependency and style tracking analytics); absent from OSS sample feed",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "[E8]"
+      ]
+    },
+    {
+      "id": "governance.rbac",
+      "value": "conditional",
+      "condition": "Piral Cloud user management; no RBAC in the OSS edition",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "[E8]"
+      ]
+    },
+    {
+      "id": "composition.kind.js-module-graph",
+      "value": "conditional",
+      "condition": "pilets load as SystemJS/MF modules sharing dependency specifiers via importmap, but participants meet through the Pilet API and extension slots, not direct imports",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Composition mechanics [E5][E7]"
+      ]
+    },
+    {
+      "id": "composition.kind.lifecycle-contract",
+      "value": "yes",
+      "note": "root module must export setup (optionally teardown)",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics [E4]"
+      ]
+    },
+    {
+      "id": "composition.kind.custom-element",
+      "value": "no",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "composition.kind.html-fragment-endpoint",
+      "value": "no",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "composition.kind.html-entry",
+      "value": "no",
+      "note": "pilets are JS bundles, not fetched HTML documents",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "[E7]"
+      ]
+    },
+    {
+      "id": "composition.kind.http-route-partition",
+      "value": "no",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "composition.kind.build-artifact",
+      "value": "no",
+      "note": "pilets are npm-packaged but feed-served at runtime; never consumed by the shell build",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Build-time coupling [E4]"
+      ]
+    },
+    {
+      "id": "composition.kind.inherits-underlying",
+      "value": "no",
+      "note": "defines its own pilet and feed specifications",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "What it is [E7]"
+      ]
+    },
+    {
+      "id": "composition.phase.deploy-unit-per-participant",
+      "value": "yes",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "[E1]",
+        "[E4]"
+      ]
+    },
+    {
+      "id": "composition.exec.client-composed",
+      "value": "yes",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics [E4]"
+      ]
+    },
+    {
+      "id": "buildtime.host-build-consumes-participants",
+      "value": "no",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Build-time coupling [E4]"
+      ]
+    },
+    {
+      "id": "buildtime.host-integrates-buildless",
+      "value": "no",
+      "note": "shell is a built React app; even piral-base embedding needs a bundled host",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "[E4]"
+      ]
+    },
+    {
+      "id": "buildtime.participant-tooling-required",
+      "value": "yes",
+      "note": "pilet schema output plus piral-cli or bundler-plugin tooling",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "[E7]",
+        "[E9]",
+        "[E13]"
+      ]
+    },
+    {
+      "id": "buildtime.bundler-family-restricted",
+      "value": "no",
+      "note": "schemas are output-format specs; seven first-party bundler plugins; any bundler emitting a valid schema works",
+      "claimType": "officially-supported",
+      "confidence": "medium",
+      "evidence": [
+        "[E7]",
+        "[E9]"
+      ]
+    },
+    {
+      "id": "buildtime.share-metadata-emitted",
+      "value": "conditional",
+      "condition": "mf-schema pilets emit Module Federation share metadata; v2/v3 pilets declare importmap externals with no composition-time version negotiation",
+      "claimType": "officially-supported",
+      "confidence": "medium",
+      "evidence": [
+        "[E5]",
+        "[E7]"
+      ]
+    },
+    {
+      "id": "buildtime.shared-dep-change-rebuilds-center",
+      "value": "yes",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "[E5]"
+      ]
+    },
+    {
+      "id": "buildtime.central-input-for-participant-build",
+      "value": "yes",
+      "note": "pilets build against the shell's emulator package",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "[E6]",
+        "[E13]"
+      ]
+    },
+    {
+      "id": "buildtime.asset-prefix-coordination",
+      "value": "no",
+      "note": "pilet assets are feed-addressed; no shared-origin prefix scheme",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "[E4]"
+      ]
+    },
+    {
+      "id": "runtime.shared-js-realm",
+      "value": "yes",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics [E4]"
+      ]
+    },
+    {
+      "id": "runtime.patched-globals-layer",
+      "value": "no",
+      "note": "native globals; no proxy or synthetic window",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "[E4]"
+      ]
+    },
+    {
+      "id": "runtime.primordials-blast-radius",
+      "value": "yes",
+      "note": "fully shared realm; no primordial protection",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "[E4]"
+      ]
+    },
+    {
+      "id": "runtime.concurrent-participants",
+      "value": "yes",
+      "note": "pages, tiles, menus, modals, extensions from many pilets render simultaneously",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "[E4]"
+      ]
+    },
+    {
+      "id": "runtime.multi-router-participants",
+      "value": "no",
+      "note": "one shell-owned react-router; a single page component owns the URL, though non-page registrations co-display",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "[E4]",
+        "[E6]"
+      ]
+    },
+    {
+      "id": "runtime.shared-runtime-library",
+      "value": "yes",
+      "note": "piral-base loader plus shell state container mediate all pilets",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "[E4]"
+      ]
+    },
+    {
+      "id": "runtime.central-routing-map",
+      "value": "yes",
+      "note": "the feed (or requestPilets source) is the central roster",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "[E4]"
+      ]
+    },
+    {
+      "id": "runtime.shared-dep-negotiation",
+      "value": "yes",
+      "note": "importmap central/distributed/optional sharing resolves shared deps at runtime",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "[E5]"
+      ]
+    },
+    {
+      "id": "runtime.dep-conflict-surfaces-runtime",
+      "value": "conditional",
+      "condition": "conflicts never error: shell version (central) or first-loaded (distributed) silently wins at runtime",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "[E5]"
+      ]
+    },
+    {
+      "id": "runtime.side-by-side-versions",
+      "value": "conditional",
+      "condition": "only by a pilet bundling its copy privately; centrally shared deps resolve to the shell's single version (shell wins)",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "[E5]"
+      ]
+    },
+    {
+      "id": "runtime.global-registration-collision",
+      "value": "no",
+      "note": "pilet modules are name-keyed via the feed; extension slots accept multiple providers by design",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "[E4]",
+        "[E6]"
+      ]
+    },
+    {
+      "id": "runtime.late-participant-registration",
+      "value": "yes",
+      "note": "feed decides the pilet set per request; new pilets attach without shell changes",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "[E4]"
+      ]
+    },
+    {
+      "id": "runtime.loaded-version-hot-swap",
+      "value": "no",
+      "note": "production model is next-load pickup of new pilet versions; only dev tooling injects pilets live",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "[E1]",
+        "[E4]"
+      ]
+    },
+    {
+      "id": "isolation.document-boundary",
+      "value": "no",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "[E4]"
+      ]
+    },
+    {
+      "id": "isolation.js.virtualized-global",
+      "value": "no",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Isolation and failure containment [E4]"
+      ]
+    },
+    {
+      "id": "isolation.dom.virtualized",
+      "value": "no",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "[E4]"
+      ]
+    },
+    {
+      "id": "isolation.css.outbound",
+      "value": "no",
+      "note": "prefixing or PostCSS scoping is guidance, not an enforced mechanism",
+      "claimType": "community-convention",
+      "confidence": "high",
+      "evidence": [
+        "[E6]"
+      ]
+    },
+    {
+      "id": "isolation.css.inbound",
+      "value": "no",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "[E6]"
+      ]
+    },
+    {
+      "id": "isolation.resource.main-thread",
+      "value": "no",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "[E4]"
+      ]
+    },
+    {
+      "id": "isolation.process.crash",
+      "value": "no",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "[E4]"
+      ]
+    },
+    {
+      "id": "isolation.storage.partition",
+      "value": "no",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "[E4]"
+      ]
+    },
+    {
+      "id": "isolation.origin.host-authority",
+      "value": "no",
+      "note": "pilets run with full application privilege in the host origin",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Security and trust [E4][E6]"
+      ]
+    },
+    {
+      "id": "isolation.navigation.top-level-guard",
+      "value": "no",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "[E4]"
+      ]
+    },
+    {
+      "id": "isolation.security.malicious-participant",
+      "value": "no",
+      "note": "stated trust model: pilets are first-party deliberately published code; no boundary",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "[E4]",
+        "[E6]"
+      ]
+    },
+    {
+      "id": "isolation.failure.lifecycle-quarantine",
+      "value": "yes",
+      "note": "per-component ErrorBoundary plus logged pilet errors; shell continues without the failed pilet",
+      "claimType": "framework-guarantee",
+      "confidence": "medium",
+      "evidence": [
+        "[E14]"
+      ]
+    },
+    {
+      "id": "isolation.failure.post-mount-exception",
+      "value": "yes",
+      "note": "React ErrorBoundary per registered component; render-phase exceptions contained (event-handler/async escape per React semantics)",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "[E14]"
+      ]
+    },
+    {
+      "id": "isolation.failure.load-fallback",
+      "value": "conditional",
+      "condition": "extension slots render declared fallbacks and error components cover failed components; a pilet failing to fetch simply never registers (silent absence)",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "[E6]",
+        "[E14]"
+      ]
+    },
+    {
+      "id": "isolation.lifecycle.reclaim",
+      "value": "no",
+      "note": "unregister APIs remove registrations; same-realm timers, listeners, and globals are not reclaimed",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "[E4]"
+      ]
+    },
+    {
+      "id": "isolation.recovery.in-page",
+      "value": "no",
+      "note": "no fresh execution context short of a page reload",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "[E4]"
+      ]
+    },
+    {
+      "id": "isolation.server.process",
+      "value": "na",
+      "note": "purely client-composed; no server-side participant processes",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "[E4]"
+      ]
+    },
+    {
+      "id": "security.cross-origin-boundary",
+      "value": "no",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "[E4]"
+      ]
+    },
+    {
+      "id": "security.sandbox-attribute-applicable",
+      "value": "no",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "[E4]"
+      ]
+    },
+    {
+      "id": "security.per-participant-csp",
+      "value": "no",
+      "note": "one document, one policy",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "[E4]"
+      ]
+    },
+    {
+      "id": "security.capability-narrowing",
+      "value": "no",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "[E4]"
+      ]
+    },
+    {
+      "id": "security.host-dom-reach",
+      "value": "yes",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "[E4]"
+      ]
+    },
+    {
+      "id": "security.host-js-state-reach",
+      "value": "yes",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "[E4]"
+      ]
+    },
+    {
+      "id": "security.untrusted-third-party-viable",
+      "value": "no",
+      "note": "pilets are trusted first-party code by stated model",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "[E4]",
+        "[E6]"
+      ]
+    },
+    {
+      "id": "security.channel-origin-pinning",
+      "value": "na",
+      "note": "same-document composition; no cross-document channel",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "[E4]"
+      ]
+    },
+    {
+      "id": "security.channel-confidentiality",
+      "value": "no",
+      "note": "event bus and shared data pass plain in-realm objects",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "[E4]"
+      ]
+    },
+    {
+      "id": "security.embedding-authorization",
+      "value": "no",
+      "note": "official guidance forbids access restrictions on pilet delivery",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "[E6]"
+      ]
+    },
+    {
+      "id": "security.artifact-integrity-verification",
+      "value": "no",
+      "note": "feed publish auth gates entry; no SRI or signing before execution documented",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "[E10]",
+        "[E11]"
+      ]
+    },
+    {
+      "id": "security.delivery-intermediary-trust",
+      "value": "yes",
+      "note": "the feed service is the code-delivery intermediary and effective trust gate",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "[E10]",
+        "[E11]"
+      ]
+    },
+    {
+      "id": "security.isolation-escape-hatches",
+      "value": "na",
+      "note": "no isolation mechanism exists to escape; shared realm by design",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "[E4]"
+      ]
+    },
+    {
+      "id": "security.composition-injection-surface",
+      "value": "no",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "[E4]"
+      ]
+    },
+    {
+      "id": "framework.host-framework-agnostic",
+      "value": "no",
+      "note": "piral/piral-core shell is React; piral-base (loader-only, framework-free) is the documented escape",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "[E4]"
+      ]
+    },
+    {
+      "id": "framework.participant-framework-agnostic",
+      "value": "yes",
+      "note": "converter plugins (piral-vue, piral-svelte, ...)",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "[E4]"
+      ]
+    },
+    {
+      "id": "framework.mixed-frameworks-one-page",
+      "value": "yes",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "[E4]",
+        "https://demo-cross.piral.io/"
+      ]
+    },
+    {
+      "id": "framework.per-team-framework-autonomy",
+      "value": "yes",
+      "note": "each pilet has its own repo and build pipeline",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "[E1]",
+        "[E4]"
+      ]
+    },
+    {
+      "id": "framework.same-framework-major-coexistence",
+      "value": "conditional",
+      "condition": "only via pilets bundling their own copies outside the importmap; the shell-shared framework is single-version",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "[E5]"
+      ]
+    },
+    {
+      "id": "framework.esm-artifact-required",
+      "value": "no",
+      "note": "schemas are UMD (v0/v1), SystemJS (v2/v3), or MF, not standard ESM",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "[E7]"
+      ]
+    },
+    {
+      "id": "framework.html-document-entry",
+      "value": "no",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "[E4]",
+        "[E7]"
+      ]
+    },
+    {
+      "id": "framework.client-library-required",
+      "value": "no",
+      "note": "Pilet API is injected by the shell at setup; shell packages are externals, not embedded",
+      "claimType": "framework-guarantee",
+      "confidence": "medium",
+      "evidence": [
+        "[E4]"
+      ]
+    },
+    {
+      "id": "framework.foreign-artifact-no-rebuild",
+      "value": "conditional",
+      "condition": "mf schema hosts existing Module Federation artifacts if they follow the pilet mf conventions; all other formats require pilet builds",
+      "claimType": "officially-supported",
+      "confidence": "medium",
+      "evidence": [
+        "[E7]"
+      ]
+    },
+    {
+      "id": "framework.official-adapters-exist",
+      "value": "yes",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "[E4]"
+      ]
+    },
+    {
+      "id": "framework.adapters-track-current-majors",
+      "value": "unknown",
+      "note": "converter-plugin currency against 2025-2026 framework majors not verified",
+      "claimType": "inference",
+      "confidence": "low",
+      "evidence": [
+        "[E4]"
+      ]
+    },
+    {
+      "id": "framework.zero-framework-participant",
+      "value": "yes",
+      "note": "a pilet is a plain JS library; vanilla components register via converter-accepting APIs",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "[E4]"
+      ]
+    },
+    {
+      "id": "framework.version-floor-imposed",
+      "value": "yes",
+      "note": "shell pins its React/react-router line; pilet builds need piral-cli-compatible Node; exact floors not in dossier",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "[E4]",
+        "[E9]"
+      ]
+    },
+    {
+      "id": "framework.composition-tier-stack-mandated",
+      "value": "no",
+      "note": "the browser composes; the feed is delivery and any Feed API implementation works",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "[E4]"
+      ]
+    },
+    {
+      "id": "framework.multi-framework-demonstrated",
+      "value": "yes",
+      "note": "official cross-framework demo, verified 2026-08-28",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "https://demo-cross.piral.io/",
+        "https://docs.piral.io/guidelines/examples/demo-cross"
+      ]
+    },
+    {
+      "id": "contracts.formal-descriptor",
+      "value": "yes",
+      "note": "feed metadata (name, version, schema, link, dependency info) per the open Feed API and pilet specs",
+      "claimType": "officially-supported",
+      "confidence": "medium",
+      "evidence": [
+        "[E7]",
+        "[E11]"
+      ]
+    },
+    {
+      "id": "contracts.contract-versioned",
+      "value": "yes",
+      "note": "pilet schema version (v0-v3/mf) travels with the artifact; pilets are semver-versioned",
+      "claimType": "officially-supported",
+      "confidence": "medium",
+      "evidence": [
+        "[E7]"
+      ]
+    },
+    {
+      "id": "contracts.connect-compat-gate",
+      "value": "no",
+      "note": "loader picks a strategy by schema version; Pilet API compatibility is never checked at load",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "[E4]",
+        "[E7]"
+      ]
+    },
+    {
+      "id": "contracts.drift-surface",
+      "value": "yes",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "[E1]",
+        "[E4]"
+      ]
+    },
+    {
+      "id": "contracts.drift-explicit",
+      "value": "no",
+      "note": "incompatible shell/pilet API drift surfaces as runtime component errors, not a machine-readable refusal",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "[E4]"
+      ]
+    },
+    {
+      "id": "contracts.types-shared",
+      "value": "yes",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "[E13]"
+      ]
+    },
+    {
+      "id": "contracts.schema-validated-payloads",
+      "value": "no",
+      "note": "events and shared data pass untyped values; pilet validate checks packages, not messages",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "[E13]"
+      ]
+    },
+    {
+      "id": "contracts.sync-calls",
+      "value": "yes",
+      "note": "shared realm; extension components and shared modules are live objects",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "[E4]"
+      ]
+    },
+    {
+      "id": "contracts.serialized-boundary",
+      "value": "no",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "[E4]"
+      ]
+    },
+    {
+      "id": "contracts.frame-messaging",
+      "value": "no",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "[E4]"
+      ]
+    },
+    {
+      "id": "contracts.builtin-messaging",
+      "value": "yes",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "[E1]",
+        "[E13]"
+      ]
+    },
+    {
+      "id": "contracts.builtin-shared-state",
+      "value": "yes",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "[E13]"
+      ]
+    },
+    {
+      "id": "contracts.host-push-updates",
+      "value": "yes",
+      "note": "shared-data updates and events reach mounted pilets without remount",
+      "claimType": "officially-supported",
+      "confidence": "medium",
+      "evidence": [
+        "[E13]"
+      ]
+    },
+    {
+      "id": "contracts.http-request-contract",
+      "value": "no",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "[E4]"
+      ]
+    },
+    {
+      "id": "contracts.server-context-propagation",
+      "value": "na",
+      "note": "purely client-side composition; no request-context serialization defined",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "[E4]"
+      ]
+    },
+    {
+      "id": "ssr.composed-page",
+      "value": "conditional",
+      "condition": "custom adopter-built pipeline only; default is client-side composition (v3 pilets are Node-evaluable to enable it)",
+      "claimType": "possible-extension",
+      "confidence": "medium",
+      "evidence": [
+        "[E4]",
+        "[E7]"
+      ]
+    },
+    {
+      "id": "ssr.fragment-granularity",
+      "value": "na",
+      "note": "no first-party server composition to stitch fragments",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "[E4]"
+      ]
+    },
+    {
+      "id": "ssr.streaming-assembly",
+      "value": "na",
+      "note": "client-composed; no server assembly step",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "[E4]"
+      ]
+    },
+    {
+      "id": "ssr.participant-internal",
+      "value": "no",
+      "note": "pilets render client-side inside the shell; no per-pilet SSR endpoint or zone",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "[E4]"
+      ]
+    },
+    {
+      "id": "ssr.dual-mode-render",
+      "value": "no",
+      "note": "no documented server render path with selection or failover",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "[E4]",
+        "[E7]"
+      ]
+    },
+    {
+      "id": "ssr.no-js-first-paint",
+      "value": "no",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "[E4]"
+      ]
+    },
+    {
+      "id": "ssr.hydration-orchestration",
+      "value": "na",
+      "note": "nothing is server-rendered by default",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "[E4]"
+      ]
+    },
+    {
+      "id": "ssr.crawler-indexable",
+      "value": "no",
+      "note": "pilet content exists only after client-side composition",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "[E4]"
+      ]
+    },
+    {
+      "id": "ssr.static-prerender",
+      "value": "no",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "[E4]"
+      ]
+    },
+    {
+      "id": "ssr.edge-composition",
+      "value": "na",
+      "note": "browser-composed",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "[E4]"
+      ]
+    },
+    {
+      "id": "ssr.static-hosting-sufficient",
+      "value": "yes",
+      "note": "static shell; feed responses CDN-cacheable; static pilet list possible",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "[E4]"
+      ]
+    },
+    {
+      "id": "ssr.server-loadable-artifact",
+      "value": "conditional",
+      "condition": "v3 pilet schema is defined to evaluate in Node.js (and mf via the MF runtime); v0-v2 are browser-targeted",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "[E7]"
+      ]
+    },
+    {
+      "id": "ssr.rsc-federation",
+      "value": "unknown",
+      "note": "nothing documented about RSC or streaming SSR across the pilet boundary",
+      "claimType": "inference",
+      "confidence": "low",
+      "evidence": [
+        "[E4]",
+        "[E7]"
+      ]
+    },
+    {
+      "id": "ssr.dev-prod-parity",
+      "value": "na",
+      "note": "no SSR exists to compare",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "[E4]"
+      ]
+    },
+    {
+      "id": "ssr.html-fragment-contract",
+      "value": "no",
+      "note": "JS module contract, not inert HTML",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "[E7]"
+      ]
+    },
+    {
+      "id": "ux.cross-boundary-soft-nav",
+      "value": "yes",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "[E4]"
+      ]
+    },
+    {
+      "id": "ux.within-unit-soft-nav",
+      "value": "yes",
+      "note": "one react-router SPA throughout",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "[E4]"
+      ]
+    },
+    {
+      "id": "ux.cross-boundary-prefetch",
+      "value": "na",
+      "note": "boundary navigation is already soft",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "[E4]"
+      ]
+    },
+    {
+      "id": "ux.cross-doc-view-transitions",
+      "value": "na",
+      "note": "soft-nav unit; no document crossings",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "[E4]"
+      ]
+    },
+    {
+      "id": "ux.persistent-shared-chrome",
+      "value": "yes",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "[E4]",
+        "[E6]"
+      ]
+    },
+    {
+      "id": "ux.unit-keepalive",
+      "value": "no",
+      "note": "React components unmount normally; no documented pilet keep-alive",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "[E4]"
+      ]
+    },
+    {
+      "id": "ux.keepalive-scroll-restoration",
+      "value": "na",
+      "note": "no keep-alive mechanism",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "[E4]"
+      ]
+    },
+    {
+      "id": "ux.deep-link-inner-route",
+      "value": "yes",
+      "note": "pilet pages are real routes in the shell's top-level URL",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "[E4]"
+      ]
+    },
+    {
+      "id": "ux.frame-history-pollution",
+      "value": "no",
+      "note": "single-document composition; no frames",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "[E4]"
+      ]
+    },
+    {
+      "id": "ux.overlay-viewport-escape",
+      "value": "yes",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "[E4]"
+      ]
+    },
+    {
+      "id": "ux.host-overlay-protocol",
+      "value": "yes",
+      "note": "pilets register and open shell-rendered modals via the Pilet API",
+      "claimType": "officially-supported",
+      "confidence": "medium",
+      "evidence": [
+        "[E4]"
+      ]
+    },
+    {
+      "id": "ux.body-portal-compat",
+      "value": "yes",
+      "note": "same DOM, no shadow roots",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "[E4]"
+      ]
+    },
+    {
+      "id": "ux.natural-layout-flow",
+      "value": "yes",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "[E4]"
+      ]
+    },
+    {
+      "id": "ux.cross-boundary-focus-mgmt",
+      "value": "yes",
+      "note": "one DOM, one focus order",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "[E4]"
+      ]
+    },
+    {
+      "id": "ux.screenreader-continuity",
+      "value": "yes",
+      "note": "single document, one accessibility tree",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "[E4]"
+      ]
+    },
+    {
+      "id": "ux.composed-first-paint",
+      "value": "no",
+      "note": "feed and pilet loading happen client-side after first paint",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "[E4]"
+      ]
+    },
+    {
+      "id": "ux.builtin-loading-ui",
+      "value": "yes",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "[E6]"
+      ]
+    },
+    {
+      "id": "ux.builtin-error-fallback-ui",
+      "value": "yes",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "[E14]"
+      ]
+    },
+    {
+      "id": "ux.mount-layout-shift-risk",
+      "value": "yes",
+      "note": "content arrives after first paint; reserving dimensions is author responsibility beyond shipped loaders",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "[E6]"
+      ]
+    },
+    {
+      "id": "ux.token-theming-mechanism",
+      "value": "no",
+      "note": "shell owns layout and chrome; token propagation into pilet UI is convention",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "[E4]",
+        "[E6]"
+      ]
+    },
+    {
+      "id": "performance.client-composition-runtime",
+      "value": "yes",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "[E4]"
+      ]
+    },
+    {
+      "id": "performance.pre-render-orchestration-fetch",
+      "value": "yes",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "[E4]"
+      ]
+    },
+    {
+      "id": "performance.sequential-waterfall-default",
+      "value": "yes",
+      "note": "shell boot, then feed response, then pilet bundles; pilets fetch in parallel within the stage",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "[E4]"
+      ]
+    },
+    {
+      "id": "performance.first-party-preload-levers",
+      "value": "no",
+      "note": "dossier documents no preload or warm-up mechanism; code splitting is deferral, not preload",
+      "claimType": "inference",
+      "confidence": "low",
+      "evidence": [
+        "[E6]"
+      ]
+    },
+    {
+      "id": "performance.duplicate-framework-same-page",
+      "value": "no",
+      "note": "shell-shared importmap dedups the framework by default",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "[E5]"
+      ]
+    },
+    {
+      "id": "performance.shared-dependency-dedup",
+      "value": "yes",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "[E5]"
+      ]
+    },
+    {
+      "id": "performance.dedup-failure-on-version-skew",
+      "value": "conditional",
+      "condition": "importmap sharing never duplicates (shell or first-loaded silently wins, possibly incompatibly); mf-schema pilets under MF negotiation can double-load",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "[E5]",
+        "[E7]"
+      ]
+    },
+    {
+      "id": "performance.per-unit-document-boot",
+      "value": "no",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "[E4]"
+      ]
+    },
+    {
+      "id": "performance.process-memory-overhead",
+      "value": "na",
+      "note": "same-realm strategy; site isolation never applies",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "[E4]"
+      ]
+    },
+    {
+      "id": "performance.sandbox-execution-tax",
+      "value": "no",
+      "note": "no sandbox; native execution",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "[E4]"
+      ]
+    },
+    {
+      "id": "performance.per-message-serialization-cost",
+      "value": "no",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "[E4]"
+      ]
+    },
+    {
+      "id": "performance.hydration-deferrable-per-unit",
+      "value": "conditional",
+      "condition": "per-pilet code splitting defers heavy chunks until rendered and optional shared deps load on demand; pilet setup runs at boot, no visibility/idle gating",
+      "claimType": "officially-supported",
+      "confidence": "medium",
+      "evidence": [
+        "[E5]",
+        "[E6]"
+      ]
+    },
+    {
+      "id": "performance.request-time-server-fanout",
+      "value": "no",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "[E4]"
+      ]
+    },
+    {
+      "id": "performance.per-unit-http-cacheable",
+      "value": "yes",
+      "note": "pilets are feed-served JS plus assets, CDN-cacheable per pilet",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "[E4]"
+      ]
+    },
+    {
+      "id": "performance.default-content-caching",
+      "value": "conditional",
+      "condition": "feed responses are CDN-cacheable but a caching tier is operator-deployed; clients revalidate the feed each load",
+      "claimType": "inference",
+      "confidence": "low",
+      "evidence": [
+        "[E4]",
+        "[E6]"
+      ]
+    },
+    {
+      "id": "deployment.host-rebuild-required",
+      "value": "no",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "[E1]",
+        "[E4]"
+      ]
+    },
+    {
+      "id": "deployment.new-participant-host-change",
+      "value": "no",
+      "note": "feed publish onboards a new pilet; shell untouched",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "[E1]",
+        "[E10]"
+      ]
+    },
+    {
+      "id": "deployment.golive-central-pointer",
+      "value": "no",
+      "note": "pilet publish itself goes live within feed propagation; no central pointer edit (feed rules/flags optional)",
+      "claimType": "framework-guarantee",
+      "confidence": "medium",
+      "evidence": [
+        "[E1]",
+        "[E13]"
+      ]
+    },
+    {
+      "id": "deployment.consumer-version-pin",
+      "value": "conditional",
+      "condition": "the feed decides served versions; pinning is feed-side configuration (e.g. Piral Cloud rules), not a host-side pin",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "[E4]",
+        "[E8]"
+      ]
+    },
+    {
+      "id": "deployment.per-user-version-targeting",
+      "value": "yes",
+      "note": "feed decides per request; centralized flag management UI is Piral Cloud",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "[E4]",
+        "[E6]",
+        "[E8]"
+      ]
+    },
+    {
+      "id": "deployment.immutable-version-retention",
+      "value": "unknown",
+      "note": "duplicate-version rejection and retention behavior of the reference feed not documented in dossier",
+      "claimType": "inference",
+      "confidence": "low",
+      "evidence": [
+        "[E10]",
+        "[E11]"
+      ]
+    },
+    {
+      "id": "deployment.cache-busting-operator-burden",
+      "value": "no",
+      "note": "the per-request feed response is the version pointer; pilet artifact URLs are per-version",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "[E4]"
+      ]
+    },
+    {
+      "id": "deployment.participants-static-artifacts",
+      "value": "yes",
+      "note": "pilets are static tarball/JS artifacts; the feed serves them",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "[E4]"
+      ]
+    },
+    {
+      "id": "deployment.strategy-service-in-path",
+      "value": "conditional",
+      "condition": "standard model puts a feed service at boot (self-hosted sample or Piral Cloud); a static pilet list or own requestPilets endpoint avoids it",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "[E4]",
+        "[E11]"
+      ]
+    },
+    {
+      "id": "deployment.runtime-discovery-first-party",
+      "value": "yes",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "[E11]"
+      ]
+    },
+    {
+      "id": "deployment.single-domain-required",
+      "value": "no",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "[E4]"
+      ]
+    },
+    {
+      "id": "deployment.cross-origin-cors-required",
+      "value": "conditional",
+      "condition": "the feed metadata fetch needs CORS cross-origin; pilet script evaluation depends on load path (script-injected schemas exempt, fetch-based paths need CORS)",
+      "claimType": "inference",
+      "confidence": "low",
+      "evidence": [
+        "[E4]",
+        "[E7]"
+      ]
+    },
+    {
+      "id": "deployment.vendor-hosting-required",
+      "value": "no",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "[E10]",
+        "[E11]"
+      ]
+    },
+    {
+      "id": "migration.participant.min-level",
+      "value": "conditional",
+      "condition": "migration.bootstrap-change",
+      "note": "pilet tooling (level 3) plus setup-exporting entry (level 4) always required; internals refactor only conditional",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "[E6]",
+        "[E7]",
+        "[E13]"
+      ]
+    },
+    {
+      "id": "migration.host.min-level",
+      "value": "conditional",
+      "condition": "migration.major-refactor",
+      "note": "existing host re-roots under the Piral instance; embedding piral-core/piral-base as a library is a possible-extension escape",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "[E4]"
+      ]
+    },
+    {
+      "id": "migration.source-modification-required",
+      "value": "yes",
+      "note": "root module must export setup",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "[E4]",
+        "[E6]"
+      ]
+    },
+    {
+      "id": "migration.participant.bootstrap-change-required",
+      "value": "yes",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "[E4]"
+      ]
+    },
+    {
+      "id": "migration.participant.internals-refactor-required",
+      "value": "conditional",
+      "condition": "apps owning their document, router, or global styles must rework those under shell registrations; self-contained widgets need not",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "[E6]"
+      ]
+    },
+    {
+      "id": "migration.participant.deployment-change-required",
+      "value": "yes",
+      "note": "pilets publish to a feed instead of self-hosting",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "[E1]",
+        "[E10]"
+      ]
+    },
+    {
+      "id": "migration.participant.extraction-required",
+      "value": "yes",
+      "note": "features become independently built npm pilets; no in-place wrapping",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "[E6]"
+      ]
+    },
+    {
+      "id": "migration.participant.rewrite-required",
+      "value": "no",
+      "note": "single setup touchpoint; components beneath can stay framework-plain",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "[E6]"
+      ]
+    },
+    {
+      "id": "migration.participant.thirdparty-unmodified-viable",
+      "value": "no",
+      "note": "artifacts must be built as pilets",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "[E4]",
+        "[E7]"
+      ]
+    },
+    {
+      "id": "migration.participant.legacy-no-build-viable",
+      "value": "no",
+      "note": "pilets require a modern reproducible build with pilet tooling",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "[E7]",
+        "[E13]"
+      ]
+    },
+    {
+      "id": "migration.strangler.incremental",
+      "value": "conditional",
+      "condition": "pilet-by-pilet migration works after the shell takes the application root (upfront shell cutover)",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "[E6]"
+      ]
+    },
+    {
+      "id": "migration.host.new-infra-tier-required",
+      "value": "conditional",
+      "condition": "standard model adds a pilet feed service beside the site (self-hosted or SaaS); a static pilet list avoids it",
+      "claimType": "officially-supported",
+      "confidence": "medium",
+      "evidence": [
+        "[E4]",
+        "[E11]"
+      ]
+    },
+    {
+      "id": "migration.host.shell-takeover-required",
+      "value": "conditional",
+      "condition": "yes on the standard path (Piral instance is the application root); embedding piral-core/piral-base as a library is the documented possible-extension escape",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "[E4]"
+      ]
+    },
+    {
+      "id": "migration.exit.participants-standalone",
+      "value": "no",
+      "note": "pilets are plain libraries, not standalone runnable apps; emulator-hosted standalone debug is dev-time only",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "[E6]"
+      ]
+    },
+    {
+      "id": "migration.path.from-incumbent-format",
+      "value": "conditional",
+      "condition": "mf pilet schema hosts existing Module Federation artifacts (subject to pilet mf conventions); no documented full path from single-spa/SystemJS estates",
+      "claimType": "officially-supported",
+      "confidence": "medium",
+      "evidence": [
+        "[E7]",
+        "[E12]"
+      ]
+    },
+    {
+      "id": "migration.forced-remigration-pending",
+      "value": "conditional",
+      "condition": "Piral v2 (Picard-based, replacing piral-base) is announced but unshipped and Picard is dormant; no EOL declared for v1",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "[E12]"
+      ]
+    },
+    {
+      "id": "migration.permanent-viability",
+      "value": "yes",
+      "note": "stable v1 line with years of releases and sustained adoption; named adopter evidence absent from dossier",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Header [E2][E3]"
+      ]
+    },
+    {
+      "id": "ownership.single-team-endorsed",
+      "value": "unknown",
+      "note": "no explicit single-team endorsement or redirection documented in dossier",
+      "claimType": "inference",
+      "confidence": "low",
+      "evidence": [
+        "[E6]"
+      ]
+    },
+    {
+      "id": "ownership.code-boundary-ownership",
+      "value": "yes",
+      "note": "separate repos per pilet",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "[E1]",
+        "[E4]"
+      ]
+    },
+    {
+      "id": "ownership.deploy-schedule-ownership",
+      "value": "yes",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "[E1]",
+        "[E13]"
+      ]
+    },
+    {
+      "id": "ownership.runtime-operational-ownership",
+      "value": "no",
+      "note": "pilets are static artifacts executed by the shell, not team-operated services",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "[E4]"
+      ]
+    },
+    {
+      "id": "ownership.external-participant",
+      "value": "no",
+      "note": "no security-principal separation; pilets are trusted first-party code",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "[E4]",
+        "[E6]"
+      ]
+    },
+    {
+      "id": "ownership.participant-unmodifiable-host",
+      "value": "no",
+      "note": "the host must be a built Piral shell",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "[E4]"
+      ]
+    },
+    {
+      "id": "ownership.distrusted-cadence",
+      "value": "yes",
+      "note": "skew never errors or forces a train; shell-owned deps silently win (silent breakage risk, not a gate)",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "[E5]"
+      ]
+    },
+    {
+      "id": "ownership.uncoordinated-upgrades",
+      "value": "no",
+      "note": "centrally shared deps (React included) follow the shell for all pilets; private bundling is the per-dep escape",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "[E5]"
+      ]
+    },
+    {
+      "id": "ownership.onboarding-without-central-owner",
+      "value": "yes",
+      "note": "publish to the feed; no shell-owner action beyond feed credentials",
+      "claimType": "framework-guarantee",
+      "confidence": "medium",
+      "evidence": [
+        "[E1]",
+        "[E10]"
+      ]
+    },
+    {
+      "id": "ownership.platform-team-role-required",
+      "value": "yes",
+      "note": "shell, layout, plugin set, and shared-dependency policy need a platform owner",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "[E4]",
+        "[E5]"
+      ]
+    },
+    {
+      "id": "ownership.non-developer-composition",
+      "value": "no",
+      "note": "Piral Cloud flags gate which pilets serve; placement stays code-defined",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "[E8]"
+      ]
+    },
+    {
+      "id": "ownership.participant-bytes-verbatim",
+      "value": "yes",
+      "note": "loader evaluates published pilet bundles as shipped; no host-side rewriting",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "[E4]",
+        "[E7]"
+      ]
+    },
+    {
+      "id": "ownership.nested-host-seat",
+      "value": "unknown",
+      "note": "no documentation of a pilet acting as a nested shell",
+      "claimType": "inference",
+      "confidence": "low",
+      "evidence": [
+        "[E4]"
+      ]
+    },
+    {
+      "id": "ownership.upstream-contract-lifetime",
+      "value": "no",
+      "note": "defines its own pilet and feed specifications",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "[E7]",
+        "[E11]"
+      ]
+    },
+    {
+      "id": "coordination.shared-dependency-governance",
+      "value": "yes",
+      "note": "shell-owned importmap and dependency policy require standing governance",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "[E5]"
+      ]
+    },
+    {
+      "id": "operations.version-skew-machinery",
+      "value": "no",
+      "note": "no skew gate or renegotiation; new pilet versions simply arrive on next load",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "[E4]"
+      ]
+    },
+    {
+      "id": "operations.stack-traces-cross-boundary",
+      "value": "yes",
+      "note": "shared realm; pilet exceptions surface in the host error stream, tagged by pilet",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "[E14]"
+      ]
+    },
+    {
+      "id": "operations.owner-attribution-builtin",
+      "value": "yes",
+      "note": "ErrorBoundary logs [pilet] Exception in component",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "[E14]"
+      ]
+    },
+    {
+      "id": "operations.cross-journey-correlation-diy",
+      "value": "no",
+      "note": "one realm; one APM agent sees the whole page",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "[E4]"
+      ]
+    },
+    {
+      "id": "operations.deploy-inventory-firstparty",
+      "value": "yes",
+      "note": "the feed's pilet list is the live inventory; Piral Cloud adds a management UI",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "[E10]",
+        "[E11]"
+      ]
+    },
+    {
+      "id": "operations.first-party-debug-tooling",
+      "value": "yes",
+      "note": "Piral Inspector devtools extension (Chrome/Firefox/Edge/Opera), verified 2026-08-28",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "https://docs.piral.io/tooling/piral-inspector",
+        "https://github.com/smapiot/piral-inspector"
+      ]
+    },
+    {
+      "id": "operations.local-composed-dev-firstparty",
+      "value": "yes",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "[E13]"
+      ]
+    },
+    {
+      "id": "operations.composition-tier-local-parity",
+      "value": "yes",
+      "note": "browser-composed; the mechanism runs anywhere",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "[E4]"
+      ]
+    },
+    {
+      "id": "operations.standalone-participant-dev",
+      "value": "yes",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "[E13]"
+      ]
+    },
+    {
+      "id": "operations.composed-test-utilities",
+      "value": "conditional",
+      "condition": "emulator plus kras request mocking support composed testing; no dedicated composed e2e utilities shipped",
+      "claimType": "officially-supported",
+      "confidence": "medium",
+      "evidence": [
+        "[E13]"
+      ]
+    },
+    {
+      "id": "operations.deploy-time-contract-verification",
+      "value": "no",
+      "note": "pilet validate checks package structure, not shell-API compatibility; emulator types are editor-time",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "[E13]"
+      ]
+    },
+    {
+      "id": "operations.single-sponsor-concentration",
+      "value": "yes",
+      "note": "maintenance concentrated in smapiot GmbH",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "[E1]"
+      ]
+    },
+    {
+      "id": "operations.mode-forked-operations",
+      "value": "yes",
+      "note": "pilet schemas (v0-v3, mf) and piral vs piral-base layer flip sharing, SSR, and framework cells; isolation posture is single-mode",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "[E7]"
+      ]
+    }
+  ]
+}

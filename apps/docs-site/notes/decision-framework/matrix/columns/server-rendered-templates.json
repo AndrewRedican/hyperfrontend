@@ -1,0 +1,2249 @@
+{
+  "unit": "server-rendered-templates",
+  "dossier": "research/solutions/non-mfe-baselines.md",
+  "verifiedAt": "2026-08-28",
+  "verdicts": [
+    {
+      "id": "unit.type.adoptable-implementation",
+      "value": "no",
+      "note": "Architectural strategy (non-MFE baseline), not an adoptable product",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Non-MFE Baselines preamble"
+      ]
+    },
+    {
+      "id": "unit.availability.installable-today",
+      "value": "yes",
+      "note": "Practiced default of most of the web; realized with any commodity server stack",
+      "claimType": "common-pattern",
+      "confidence": "high",
+      "evidence": [
+        "Non-MFE Baselines preamble",
+        "Unit 3: What it is"
+      ]
+    },
+    {
+      "id": "unit.availability.stable-line-shipped",
+      "value": "na",
+      "note": "Strategy: no release line exists",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Non-MFE Baselines preamble"
+      ]
+    },
+    {
+      "id": "unit.availability.single-current-line",
+      "value": "na",
+      "note": "Strategy: no release lines",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Non-MFE Baselines preamble"
+      ]
+    },
+    {
+      "id": "unit.availability.planned-capability-claims",
+      "value": "no",
+      "note": "No vendor; nothing announced or roadmapped",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Non-MFE Baselines preamble",
+        "Editions and commercial layer"
+      ]
+    },
+    {
+      "id": "unit.maintenance.release-within-12mo",
+      "value": "na",
+      "note": "Strategy: version and cadence are NA",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Non-MFE Baselines preamble"
+      ]
+    },
+    {
+      "id": "unit.maintenance.commit-within-6mo",
+      "value": "na",
+      "note": "Strategy: no repository",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Non-MFE Baselines preamble"
+      ]
+    },
+    {
+      "id": "unit.maintenance.multi-maintainer",
+      "value": "na",
+      "note": "Strategy: no maintainer set",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Non-MFE Baselines preamble"
+      ]
+    },
+    {
+      "id": "unit.maintenance.org-steward",
+      "value": "na",
+      "note": "Strategy: no project to steward; realized by many independently stewarded stacks",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Non-MFE Baselines preamble",
+        "Unit 3: What it is"
+      ]
+    },
+    {
+      "id": "unit.maintenance.adoption-outside-sponsor",
+      "value": "na",
+      "note": "No sponsor exists; adoption evidence is the large non-SPA majority of the web",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: What it is",
+        "[E6] w3techs.com"
+      ]
+    },
+    {
+      "id": "unit.maintenance.adoption-scale-10k",
+      "value": "na",
+      "note": "Strategy: no core package; W3Techs framework-absence data is the adoption signal",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: What it is",
+        "[E6] w3techs.com"
+      ]
+    },
+    {
+      "id": "unit.license.osi-core",
+      "value": "na",
+      "note": "Strategy has no licensed core; realized with commodity stacks",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Non-MFE Baselines preamble",
+        "Editions and commercial layer"
+      ]
+    },
+    {
+      "id": "unit.editions.commercial-tier",
+      "value": "no",
+      "note": "No editions; only optional commercial accelerants adjacent to the strategy",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Editions and commercial layer"
+      ]
+    },
+    {
+      "id": "unit.editions.oss-self-sufficient",
+      "value": "yes",
+      "note": "Fully realized with commodity or free tooling",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Editions and commercial layer"
+      ]
+    },
+    {
+      "id": "hosting.operator",
+      "value": "na",
+      "note": "Layer-3 operability atom; NA for strategies (REQ-ENT-01)",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Non-MFE Baselines preamble"
+      ]
+    },
+    {
+      "id": "hosting.control-plane",
+      "value": "na",
+      "note": "Layer-3 operability atom; NA for strategies",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Non-MFE Baselines preamble"
+      ]
+    },
+    {
+      "id": "registry.deployable-feature",
+      "value": "na",
+      "note": "Layer-3 atom; NA for strategies; no runtime artifacts beyond the one app",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Non-MFE Baselines preamble"
+      ]
+    },
+    {
+      "id": "governance.rollback",
+      "value": "na",
+      "note": "Layer-3 governance atom; whole-app rollback is a redeploy concern of the one deployable",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Non-MFE Baselines preamble",
+        "Unit 3: Findings: Deployment"
+      ]
+    },
+    {
+      "id": "governance.usage-monitoring",
+      "value": "na",
+      "note": "Layer-3 governance atom; no consumer/feature version split exists",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Non-MFE Baselines preamble"
+      ]
+    },
+    {
+      "id": "governance.rbac",
+      "value": "na",
+      "note": "Layer-3 governance atom; NA for strategies",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Non-MFE Baselines preamble"
+      ]
+    },
+    {
+      "id": "composition.kind.js-module-graph",
+      "value": "no",
+      "note": "Composition boundary is a server-side template include, not a JS module graph",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Composition mechanics"
+      ]
+    },
+    {
+      "id": "composition.kind.lifecycle-contract",
+      "value": "no",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Composition mechanics"
+      ]
+    },
+    {
+      "id": "composition.kind.custom-element",
+      "value": "no",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Composition mechanics"
+      ]
+    },
+    {
+      "id": "composition.kind.html-fragment-endpoint",
+      "value": "no",
+      "note": "Partials are in-process includes, not HTTP fragment endpoints",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Composition mechanics"
+      ]
+    },
+    {
+      "id": "composition.kind.html-entry",
+      "value": "no",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Composition mechanics"
+      ]
+    },
+    {
+      "id": "composition.kind.http-route-partition",
+      "value": "no",
+      "note": "One application; the page seam merely adjoins later reverse-proxy partitioning",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Composition mechanics",
+        "Family mapping (provisional)"
+      ]
+    },
+    {
+      "id": "composition.kind.build-artifact",
+      "value": "no",
+      "note": "Templates are source in one codebase, not versioned artifacts consumed by another build",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Composition mechanics"
+      ]
+    },
+    {
+      "id": "composition.kind.inherits-underlying",
+      "value": "no",
+      "note": "Defines its own boundary: template include plus per-request HTML document",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Composition mechanics"
+      ]
+    },
+    {
+      "id": "composition.phase.deploy-unit-per-participant",
+      "value": "no",
+      "note": "Single deployable; templates are render/ownership units only",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Composition mechanics",
+        "Unit 3: Findings: Deployment"
+      ]
+    },
+    {
+      "id": "composition.exec.client-composed",
+      "value": "no",
+      "note": "Server-composed single document; client JS is optional enhancement",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Composition mechanics"
+      ]
+    },
+    {
+      "id": "buildtime.host-build-consumes-participants",
+      "value": "yes",
+      "note": "All templates and controllers build and deploy as one server application",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Findings: Build-time coupling"
+      ]
+    },
+    {
+      "id": "buildtime.host-integrates-buildless",
+      "value": "conditional",
+      "condition": "varies by implementation: interpreted stacks (PHP, classic ERB) need no build tooling; compiled stacks build the server app",
+      "claimType": "common-pattern",
+      "confidence": "medium",
+      "evidence": [
+        "Unit 3: What it is"
+      ]
+    },
+    {
+      "id": "buildtime.participant-tooling-required",
+      "value": "na",
+      "note": "No independently built participants; templates use the app's own stack",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Composition mechanics"
+      ]
+    },
+    {
+      "id": "buildtime.bundler-family-restricted",
+      "value": "no",
+      "note": "No bundler involvement required; client JS is optional per page",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: What it is"
+      ]
+    },
+    {
+      "id": "buildtime.share-metadata-emitted",
+      "value": "no",
+      "note": "Non-federation unit; no shared-dependency metadata exists",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Composition mechanics"
+      ]
+    },
+    {
+      "id": "buildtime.shared-dep-change-rebuilds-center",
+      "value": "yes",
+      "note": "Any dependency change is a whole-app rebuild and redeploy (single artifact)",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Findings: Build-time coupling"
+      ]
+    },
+    {
+      "id": "buildtime.central-input-for-participant-build",
+      "value": "yes",
+      "note": "Templates render only inside the one app; the shared layout is a central input",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Composition mechanics",
+        "Unit 3: Findings: Ownership topology fit"
+      ]
+    },
+    {
+      "id": "buildtime.asset-prefix-coordination",
+      "value": "no",
+      "note": "One app owns its asset URL space; nothing to coordinate across builds",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Composition mechanics"
+      ]
+    },
+    {
+      "id": "runtime.shared-js-realm",
+      "value": "na",
+      "note": "One page per document; no concurrent host/participant code shares a realm",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Composition mechanics",
+        "Unit 3: Findings: Runtime coupling"
+      ]
+    },
+    {
+      "id": "runtime.patched-globals-layer",
+      "value": "no",
+      "note": "Globals are native in every page",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Composition mechanics"
+      ]
+    },
+    {
+      "id": "runtime.primordials-blast-radius",
+      "value": "na",
+      "note": "Pages never co-execute; mutations die with the document at navigation",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Findings: Runtime coupling"
+      ]
+    },
+    {
+      "id": "runtime.concurrent-participants",
+      "value": "no",
+      "note": "Page-granular: partials within a page are source-level, not runtime participants",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Composition mechanics",
+        "Unit 3: Findings: Runtime coupling"
+      ]
+    },
+    {
+      "id": "runtime.multi-router-participants",
+      "value": "na",
+      "note": "Single app; no client routers required at all",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Findings: Framework requirements"
+      ]
+    },
+    {
+      "id": "runtime.shared-runtime-library",
+      "value": "no",
+      "note": "No strategy runtime exists on any page",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Composition mechanics"
+      ]
+    },
+    {
+      "id": "runtime.central-routing-map",
+      "value": "na",
+      "note": "Routing is internal to the one app; no cross-deployable roster artifact",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Composition mechanics"
+      ]
+    },
+    {
+      "id": "runtime.shared-dep-negotiation",
+      "value": "no",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Composition mechanics"
+      ]
+    },
+    {
+      "id": "runtime.dep-conflict-surfaces-runtime",
+      "value": "na",
+      "note": "No shared-dependency negotiation exists",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Composition mechanics"
+      ]
+    },
+    {
+      "id": "runtime.side-by-side-versions",
+      "value": "na",
+      "note": "No composed page; each page ships its own assets, so versions never meet",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: MFE-motivating problems it already solves"
+      ]
+    },
+    {
+      "id": "runtime.global-registration-collision",
+      "value": "no",
+      "note": "URL partition of sequential pages, not a shared page namespace",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Composition mechanics"
+      ]
+    },
+    {
+      "id": "runtime.late-participant-registration",
+      "value": "na",
+      "note": "No composed document to register into; new pages arrive by app redeploy",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Composition mechanics",
+        "Unit 3: Findings: Deployment"
+      ]
+    },
+    {
+      "id": "runtime.loaded-version-hot-swap",
+      "value": "na",
+      "note": "Nothing stays loaded; every navigation fetches a fresh document",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Composition mechanics"
+      ]
+    },
+    {
+      "id": "isolation.document-boundary",
+      "value": "yes",
+      "note": "Sequential full documents (MPA); pair with runtime.concurrent-participants no",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Composition mechanics",
+        "Unit 3: Findings: Runtime coupling"
+      ]
+    },
+    {
+      "id": "isolation.js.virtualized-global",
+      "value": "na",
+      "note": "Each page is a real fresh document; nothing to virtualize",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Composition mechanics"
+      ]
+    },
+    {
+      "id": "isolation.dom.virtualized",
+      "value": "na",
+      "note": "Page-granular document boundary; no same-page participant subtrees",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Composition mechanics"
+      ]
+    },
+    {
+      "id": "isolation.css.outbound",
+      "value": "na",
+      "note": "Pages never co-display; within one page partials share one global cascade",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Composition mechanics",
+        "Unit 3: Findings: Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "isolation.css.inbound",
+      "value": "na",
+      "note": "Each page owns its whole document; shared layout styles are the app's own",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Composition mechanics"
+      ]
+    },
+    {
+      "id": "isolation.resource.main-thread",
+      "value": "na",
+      "note": "No concurrent host UI; a long task freezes only the current page, cleared by navigation",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Composition mechanics",
+        "Unit 3: Findings: Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "isolation.process.crash",
+      "value": "na",
+      "note": "No host page coexists with a participant",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Composition mechanics"
+      ]
+    },
+    {
+      "id": "isolation.storage.partition",
+      "value": "no",
+      "note": "One origin; cookies and storage are shared across all pages",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Composition mechanics"
+      ]
+    },
+    {
+      "id": "isolation.origin.host-authority",
+      "value": "no",
+      "note": "One origin, one trust domain; script on any page holds full origin authority",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Findings: Security and trust"
+      ]
+    },
+    {
+      "id": "isolation.navigation.top-level-guard",
+      "value": "na",
+      "note": "No embedded participants; each page legitimately owns its document and history",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Composition mechanics"
+      ]
+    },
+    {
+      "id": "isolation.security.malicious-participant",
+      "value": "na",
+      "note": "No runtime third-party code; external content is composed server-side under owner review",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Findings: Security and trust"
+      ]
+    },
+    {
+      "id": "isolation.failure.lifecycle-quarantine",
+      "value": "no",
+      "note": "No mount pipeline; a failed render yields the stack's error response for that request only",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Findings: Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "isolation.failure.post-mount-exception",
+      "value": "na",
+      "note": "No co-mounted host or siblings; a page's JS failure clears at next navigation (page-granular containment)",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Findings: Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "isolation.failure.load-fallback",
+      "value": "na",
+      "note": "No separately fetched regions; a failed request is a whole-page error",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Composition mechanics"
+      ]
+    },
+    {
+      "id": "isolation.lifecycle.reclaim",
+      "value": "yes",
+      "note": "Navigation unloads the document; the browser reclaims everything",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Composition mechanics",
+        "Unit 3: Findings: Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "isolation.recovery.in-page",
+      "value": "na",
+      "note": "Page-granular unit; recovery is just navigation",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Findings: Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "isolation.server.process",
+      "value": "no",
+      "note": "One server application renders every page; no process separation between template regions",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Findings: Build-time coupling",
+        "Unit 3: Findings: Operational model"
+      ]
+    },
+    {
+      "id": "security.cross-origin-boundary",
+      "value": "na",
+      "note": "Sequential pages of one app; never composed on one page",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Composition mechanics"
+      ]
+    },
+    {
+      "id": "security.sandbox-attribute-applicable",
+      "value": "no",
+      "note": "No frames; each page is an ordinary top-level document",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Composition mechanics"
+      ]
+    },
+    {
+      "id": "security.per-participant-csp",
+      "value": "na",
+      "note": "One document at a time; each page response can still carry its own headers",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Composition mechanics"
+      ]
+    },
+    {
+      "id": "security.capability-narrowing",
+      "value": "na",
+      "note": "No per-participant capability surface; one page owns the whole document",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Composition mechanics"
+      ]
+    },
+    {
+      "id": "security.host-dom-reach",
+      "value": "na",
+      "note": "No concurrent host document exists",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Composition mechanics"
+      ]
+    },
+    {
+      "id": "security.host-js-state-reach",
+      "value": "no",
+      "note": "Documents never concurrent; cookies and storage do persist across pages",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Composition mechanics",
+        "Unit 3: Findings: Security and trust"
+      ]
+    },
+    {
+      "id": "security.untrusted-third-party-viable",
+      "value": "no",
+      "note": "Third-party content is composed server-side under owner review; no runtime code ingestion",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Findings: Security and trust"
+      ]
+    },
+    {
+      "id": "security.channel-origin-pinning",
+      "value": "na",
+      "note": "No cross-document channel exists",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Findings: Contracts and communication"
+      ]
+    },
+    {
+      "id": "security.channel-confidentiality",
+      "value": "na",
+      "note": "No inter-participant channel exists",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Findings: Contracts and communication"
+      ]
+    },
+    {
+      "id": "security.embedding-authorization",
+      "value": "na",
+      "note": "No embedding relationship inside the unit",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Composition mechanics"
+      ]
+    },
+    {
+      "id": "security.artifact-integrity-verification",
+      "value": "na",
+      "note": "No cross-deployable participant artifacts; all page assets are first-party",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Findings: Security and trust"
+      ]
+    },
+    {
+      "id": "security.delivery-intermediary-trust",
+      "value": "no",
+      "note": "The app serves its own pages; no shared intermediary executes participant code",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Findings: Security and trust"
+      ]
+    },
+    {
+      "id": "security.isolation-escape-hatches",
+      "value": "na",
+      "note": "No framework isolation mechanism exists to escape",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Findings: Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "security.composition-injection-surface",
+      "value": "no",
+      "note": "Directives live in first-party template files; user input renders as escaped data (SSTI needs developer error)",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Unit 3: Findings: Security and trust"
+      ]
+    },
+    {
+      "id": "framework.host-framework-agnostic",
+      "value": "yes",
+      "note": "Any server stack; no client framework required",
+      "claimType": "common-pattern",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: What it is",
+        "Unit 3: Findings: Framework requirements"
+      ]
+    },
+    {
+      "id": "framework.participant-framework-agnostic",
+      "value": "yes",
+      "note": "Any page may independently adopt any client framework as enhancement",
+      "claimType": "common-pattern",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Findings: Framework requirements"
+      ]
+    },
+    {
+      "id": "framework.mixed-frameworks-one-page",
+      "value": "no",
+      "note": "Polyglot client frameworks within a page is a stated cannot-solve",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: What it cannot solve"
+      ]
+    },
+    {
+      "id": "framework.per-team-framework-autonomy",
+      "value": "conditional",
+      "condition": "client enhancement per page is team-chosen (even buildless); server code shares the one app pipeline and release train",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Unit 3: Findings: Framework requirements",
+        "Unit 3: What it cannot solve"
+      ]
+    },
+    {
+      "id": "framework.same-framework-major-coexistence",
+      "value": "no",
+      "note": "Not within one page; different pages may ship different majors (per-page assets)",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Unit 3: What it cannot solve",
+        "Unit 3: MFE-motivating problems it already solves"
+      ]
+    },
+    {
+      "id": "framework.esm-artifact-required",
+      "value": "na",
+      "note": "No JS artifact contract exists; client JS optional",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Composition mechanics"
+      ]
+    },
+    {
+      "id": "framework.html-document-entry",
+      "value": "no",
+      "note": "Templates integrate server-side by include; pages are outputs, not integration units",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Unit 3: Composition mechanics"
+      ]
+    },
+    {
+      "id": "framework.client-library-required",
+      "value": "no",
+      "note": "No platform client library exists",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Composition mechanics"
+      ]
+    },
+    {
+      "id": "framework.foreign-artifact-no-rebuild",
+      "value": "no",
+      "note": "A foreign artifact cannot participate; integration means absorption into the app source",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: What it cannot solve"
+      ]
+    },
+    {
+      "id": "framework.official-adapters-exist",
+      "value": "na",
+      "note": "No participation contract to adapt to",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Composition mechanics"
+      ]
+    },
+    {
+      "id": "framework.adapters-track-current-majors",
+      "value": "na",
+      "note": "No adapters exist",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Composition mechanics"
+      ]
+    },
+    {
+      "id": "framework.zero-framework-participant",
+      "value": "yes",
+      "note": "The default: server-rendered HTML with optional vanilla JS enhancement",
+      "claimType": "common-pattern",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: What it is",
+        "Unit 3: Findings: Framework requirements"
+      ]
+    },
+    {
+      "id": "framework.version-floor-imposed",
+      "value": "no",
+      "note": "No floor; any stack of any age",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: What it is"
+      ]
+    },
+    {
+      "id": "framework.composition-tier-stack-mandated",
+      "value": "no",
+      "note": "Template assembly is native to whichever server stack is chosen; none is mandated",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: What it is"
+      ]
+    },
+    {
+      "id": "framework.multi-framework-demonstrated",
+      "value": "na",
+      "note": "Polyglot composition is not claimed (listed cannot-solve)",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: What it cannot solve"
+      ]
+    },
+    {
+      "id": "contracts.formal-descriptor",
+      "value": "no",
+      "note": "Templates integrate by include; no machine-readable interface artifact",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Findings: Contracts and communication"
+      ]
+    },
+    {
+      "id": "contracts.contract-versioned",
+      "value": "na",
+      "note": "No contract artifact exists",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Findings: Contracts and communication"
+      ]
+    },
+    {
+      "id": "contracts.connect-compat-gate",
+      "value": "na",
+      "note": "Both sides ship in one deploy; no meeting point to gate",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Findings: Contracts and communication",
+        "Unit 3: Composition mechanics"
+      ]
+    },
+    {
+      "id": "contracts.drift-surface",
+      "value": "no",
+      "note": "Single deployable; both sides of every interface ship together",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Composition mechanics",
+        "Unit 3: Findings: Deployment"
+      ]
+    },
+    {
+      "id": "contracts.drift-explicit",
+      "value": "na",
+      "note": "Drift is structurally impossible (drift-surface no)",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Composition mechanics"
+      ]
+    },
+    {
+      "id": "contracts.types-shared",
+      "value": "na",
+      "note": "No cross-boundary API; inter-page channel is URL, cookies, server session",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Findings: Contracts and communication"
+      ]
+    },
+    {
+      "id": "contracts.schema-validated-payloads",
+      "value": "na",
+      "note": "No boundary-crossing payload mechanism exists",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Findings: Contracts and communication"
+      ]
+    },
+    {
+      "id": "contracts.sync-calls",
+      "value": "na",
+      "note": "Pages never concurrent; no client runtime relationship between units",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Composition mechanics"
+      ]
+    },
+    {
+      "id": "contracts.serialized-boundary",
+      "value": "yes",
+      "note": "Inter-page channel is URL, cookies, and server session: serialized by nature",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Findings: Contracts and communication"
+      ]
+    },
+    {
+      "id": "contracts.frame-messaging",
+      "value": "no",
+      "note": "No frame boundary or postMessage channel",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Composition mechanics"
+      ]
+    },
+    {
+      "id": "contracts.builtin-messaging",
+      "value": "no",
+      "note": "Nothing shipped beyond URL, cookies, session",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Findings: Contracts and communication"
+      ]
+    },
+    {
+      "id": "contracts.builtin-shared-state",
+      "value": "no",
+      "note": "Server session shares state across pages but has no change subscription",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Findings: Contracts and communication"
+      ]
+    },
+    {
+      "id": "contracts.host-push-updates",
+      "value": "no",
+      "note": "Fresh render per request; nothing stays mounted to push to",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Composition mechanics"
+      ]
+    },
+    {
+      "id": "contracts.http-request-contract",
+      "value": "no",
+      "note": "Template inclusion is in-process; no fragment HTTP contract",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Composition mechanics"
+      ]
+    },
+    {
+      "id": "contracts.server-context-propagation",
+      "value": "na",
+      "note": "No serialization boundary; templates read request context in-process",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Composition mechanics"
+      ]
+    },
+    {
+      "id": "ssr.composed-page",
+      "value": "yes",
+      "note": "Server-composed full documents are the native mode",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Composition mechanics",
+        "Unit 3: Findings: SSR and delivery"
+      ]
+    },
+    {
+      "id": "ssr.fragment-granularity",
+      "value": "yes",
+      "note": "Layouts and partials stitch into one document in-process; not a cross-deployable seam",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Unit 3: What it is",
+        "Unit 3: Composition mechanics"
+      ]
+    },
+    {
+      "id": "ssr.streaming-assembly",
+      "value": "conditional",
+      "condition": "varies by implementation: some stacks stream template output (Rails streaming, PHP flush); buffered per-request render is the common default",
+      "claimType": "common-pattern",
+      "confidence": "medium",
+      "evidence": [
+        "Unit 3: What it is"
+      ]
+    },
+    {
+      "id": "ssr.participant-internal",
+      "value": "yes",
+      "note": "Every page is server-rendered by the stack itself",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Findings: SSR and delivery"
+      ]
+    },
+    {
+      "id": "ssr.dual-mode-render",
+      "value": "no",
+      "note": "Server render only; no client-side render path exists",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Composition mechanics"
+      ]
+    },
+    {
+      "id": "ssr.no-js-first-paint",
+      "value": "yes",
+      "note": "Fast first paint and SEO with no hydration machinery",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: MFE-motivating problems it already solves",
+        "Unit 3: Findings: SSR and delivery"
+      ]
+    },
+    {
+      "id": "ssr.hydration-orchestration",
+      "value": "no",
+      "note": "No hydration exists; JS is optional per-page enhancement",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: What it is",
+        "Unit 3: Findings: SSR and delivery"
+      ]
+    },
+    {
+      "id": "ssr.crawler-indexable",
+      "value": "yes",
+      "note": "Full server HTML at every crawlable URL",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: MFE-motivating problems it already solves",
+        "Unit 3: Findings: SSR and delivery"
+      ]
+    },
+    {
+      "id": "ssr.static-prerender",
+      "value": "conditional",
+      "condition": "varies by implementation: full-page caching and static-export tooling are common add-ons; the model itself renders per request",
+      "claimType": "common-pattern",
+      "confidence": "medium",
+      "evidence": [
+        "Unit 3: What it is"
+      ]
+    },
+    {
+      "id": "ssr.edge-composition",
+      "value": "no",
+      "note": "Template assembly runs on the origin server",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Composition mechanics"
+      ]
+    },
+    {
+      "id": "ssr.static-hosting-sufficient",
+      "value": "no",
+      "note": "Per-request server rendering is definitional",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: What it is"
+      ]
+    },
+    {
+      "id": "ssr.server-loadable-artifact",
+      "value": "na",
+      "note": "No distributed participant artifact; everything is one server app",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Composition mechanics"
+      ]
+    },
+    {
+      "id": "ssr.rsc-federation",
+      "value": "na",
+      "note": "No cross-boundary render exists; RSC not implicated",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Composition mechanics"
+      ]
+    },
+    {
+      "id": "ssr.dev-prod-parity",
+      "value": "yes",
+      "note": "Stack dev servers render the same templates server-side; parity is the norm",
+      "claimType": "common-pattern",
+      "confidence": "medium",
+      "evidence": [
+        "Unit 3: What it is"
+      ]
+    },
+    {
+      "id": "ssr.html-fragment-contract",
+      "value": "no",
+      "note": "Partials are engine-specific template source, not standards-based inert HTML fragments",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Unit 3: Composition mechanics"
+      ]
+    },
+    {
+      "id": "ux.cross-boundary-soft-nav",
+      "value": "na",
+      "note": "Single-deploy baseline; no separately deployed units to navigate between",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Composition mechanics"
+      ]
+    },
+    {
+      "id": "ux.within-unit-soft-nav",
+      "value": "no",
+      "note": "MPA: every navigation is a full document load unless a client router is layered on",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Composition mechanics",
+        "Unit 3: Findings: UX implications"
+      ]
+    },
+    {
+      "id": "ux.cross-boundary-prefetch",
+      "value": "na",
+      "note": "No cross-unit boundary; ordinary web prefetch (Speculation Rules) applies to page links",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Composition mechanics"
+      ]
+    },
+    {
+      "id": "ux.cross-doc-view-transitions",
+      "value": "no",
+      "note": "Nothing shipped; an MPA can adopt cross-document View Transitions itself (possible-extension)",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Unit 3: Composition mechanics"
+      ]
+    },
+    {
+      "id": "ux.persistent-shared-chrome",
+      "value": "no",
+      "note": "No persistent client shell; chrome re-renders on every navigation",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Findings: UX implications"
+      ]
+    },
+    {
+      "id": "ux.unit-keepalive",
+      "value": "no",
+      "note": "Fresh documents per navigation; browser BFCache may restore pages on back/forward only",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Unit 3: Composition mechanics"
+      ]
+    },
+    {
+      "id": "ux.keepalive-scroll-restoration",
+      "value": "na",
+      "note": "No keep-alive mechanism exists",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Composition mechanics"
+      ]
+    },
+    {
+      "id": "ux.deep-link-inner-route",
+      "value": "yes",
+      "note": "Every view is a URL; deep linking is the native model",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Composition mechanics"
+      ]
+    },
+    {
+      "id": "ux.frame-history-pollution",
+      "value": "na",
+      "note": "Hard-nav model; one document at a time, no frames",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Composition mechanics"
+      ]
+    },
+    {
+      "id": "ux.overlay-viewport-escape",
+      "value": "na",
+      "note": "Each page owns the whole viewport; no unit rectangle exists",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Composition mechanics"
+      ]
+    },
+    {
+      "id": "ux.host-overlay-protocol",
+      "value": "na",
+      "note": "No host/unit split; overlays are ordinary page elements",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Composition mechanics"
+      ]
+    },
+    {
+      "id": "ux.body-portal-compat",
+      "value": "yes",
+      "note": "Ordinary single document; portals to document.body work unimpaired",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Composition mechanics"
+      ]
+    },
+    {
+      "id": "ux.natural-layout-flow",
+      "value": "na",
+      "note": "No embedded rectangle; content is the page",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Composition mechanics"
+      ]
+    },
+    {
+      "id": "ux.cross-boundary-focus-mgmt",
+      "value": "na",
+      "note": "No unit boundaries within a page; hard navigation between pages",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Composition mechanics"
+      ]
+    },
+    {
+      "id": "ux.screenreader-continuity",
+      "value": "yes",
+      "note": "Each delivered page is one ordinary document with one accessibility tree",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Composition mechanics"
+      ]
+    },
+    {
+      "id": "ux.composed-first-paint",
+      "value": "yes",
+      "note": "Server HTML arrives fully composed; no loader waterfall",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: MFE-motivating problems it already solves",
+        "Unit 3: Findings: SSR and delivery"
+      ]
+    },
+    {
+      "id": "ux.builtin-loading-ui",
+      "value": "na",
+      "note": "No intra-page unit boundaries; the browser's navigation indicator is the only loading surface",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Composition mechanics"
+      ]
+    },
+    {
+      "id": "ux.builtin-error-fallback-ui",
+      "value": "na",
+      "note": "No per-region units; a failure renders the stack's error page",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Composition mechanics"
+      ]
+    },
+    {
+      "id": "ux.mount-layout-shift-risk",
+      "value": "no",
+      "note": "Fully server-composed pages; nothing mounts after first paint",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Findings: SSR and delivery",
+        "Unit 3: Findings: UX implications"
+      ]
+    },
+    {
+      "id": "ux.token-theming-mechanism",
+      "value": "na",
+      "note": "No unit boundaries; one global stylesheet serves every page",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Findings: UX implications"
+      ]
+    },
+    {
+      "id": "performance.client-composition-runtime",
+      "value": "no",
+      "note": "No composition runtime; per-page cost is whatever that page includes",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Findings: Performance causes"
+      ]
+    },
+    {
+      "id": "performance.pre-render-orchestration-fetch",
+      "value": "no",
+      "note": "The document itself is the first response; nothing precedes render",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Findings: Performance causes"
+      ]
+    },
+    {
+      "id": "performance.sequential-waterfall-default",
+      "value": "no",
+      "note": "Server-composed HTML; no discovery chain",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Findings: Performance causes"
+      ]
+    },
+    {
+      "id": "performance.first-party-preload-levers",
+      "value": "na",
+      "note": "No units to activate; standard web preload hints remain available per page",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Composition mechanics"
+      ]
+    },
+    {
+      "id": "performance.duplicate-framework-same-page",
+      "value": "na",
+      "note": "Units never co-display on one page",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Composition mechanics"
+      ]
+    },
+    {
+      "id": "performance.shared-dependency-dedup",
+      "value": "no",
+      "note": "No mechanism; repeated assets across pages dedupe only via the HTTP cache",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Composition mechanics"
+      ]
+    },
+    {
+      "id": "performance.dedup-failure-on-version-skew",
+      "value": "na",
+      "note": "No sharing mechanism exists",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Composition mechanics"
+      ]
+    },
+    {
+      "id": "performance.per-unit-document-boot",
+      "value": "yes",
+      "note": "Sequential MPA: every navigation parses and boots a full fresh document; never concurrent",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Composition mechanics"
+      ]
+    },
+    {
+      "id": "performance.process-memory-overhead",
+      "value": "na",
+      "note": "No concurrent cross-origin frames",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Composition mechanics"
+      ]
+    },
+    {
+      "id": "performance.sandbox-execution-tax",
+      "value": "no",
+      "note": "No sandbox machinery; native execution",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Composition mechanics"
+      ]
+    },
+    {
+      "id": "performance.per-message-serialization-cost",
+      "value": "na",
+      "note": "No cross-unit runtime channel exists",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Findings: Contracts and communication"
+      ]
+    },
+    {
+      "id": "performance.hydration-deferrable-per-unit",
+      "value": "na",
+      "note": "No hydration model; page scripts use ordinary defer/lazy attributes",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: What it is"
+      ]
+    },
+    {
+      "id": "performance.request-time-server-fanout",
+      "value": "no",
+      "note": "Template assembly is in-process; no composer-to-fragment fetches",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Unit 3: Composition mechanics"
+      ]
+    },
+    {
+      "id": "performance.per-unit-http-cacheable",
+      "value": "yes",
+      "note": "Each page is its own HTTP resource with its own cache headers (classic full-page caching)",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Unit 3: Composition mechanics"
+      ]
+    },
+    {
+      "id": "performance.default-content-caching",
+      "value": "no",
+      "note": "Per-request render by default; page caching is operator and stack configuration",
+      "claimType": "common-pattern",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: What it is"
+      ]
+    },
+    {
+      "id": "deployment.host-rebuild-required",
+      "value": "yes",
+      "note": "Single atomic deployable; any change ships the whole app",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: What it cannot solve",
+        "Unit 3: Findings: Deployment"
+      ]
+    },
+    {
+      "id": "deployment.new-participant-host-change",
+      "value": "yes",
+      "note": "A new page is a code change and whole-app redeploy",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Findings: Deployment"
+      ]
+    },
+    {
+      "id": "deployment.golive-central-pointer",
+      "value": "na",
+      "note": "No participant releases; the app release is the only go-live",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Findings: Deployment"
+      ]
+    },
+    {
+      "id": "deployment.consumer-version-pin",
+      "value": "na",
+      "note": "No participant versions exist to pin",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Findings: Deployment"
+      ]
+    },
+    {
+      "id": "deployment.per-user-version-targeting",
+      "value": "no",
+      "note": "Nothing first-party; whole-app canarying is infrastructure-level, outside the strategy",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Findings: Deployment"
+      ]
+    },
+    {
+      "id": "deployment.immutable-version-retention",
+      "value": "na",
+      "note": "No published participant versions",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Findings: Deployment"
+      ]
+    },
+    {
+      "id": "deployment.cache-busting-operator-burden",
+      "value": "no",
+      "note": "No cross-deployable version targeting; stacks fingerprint their own assets",
+      "claimType": "common-pattern",
+      "confidence": "medium",
+      "evidence": [
+        "Unit 3: Composition mechanics"
+      ]
+    },
+    {
+      "id": "deployment.participants-static-artifacts",
+      "value": "na",
+      "note": "No separate participant artifacts; the single deployable is a running server app",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Composition mechanics"
+      ]
+    },
+    {
+      "id": "deployment.strategy-service-in-path",
+      "value": "no",
+      "note": "The application server is the product itself, not an added composition tier (see ssr.static-hosting-sufficient)",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Unit 3: Composition mechanics"
+      ]
+    },
+    {
+      "id": "deployment.runtime-discovery-first-party",
+      "value": "na",
+      "note": "Nothing to discover; one app serves every page",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Composition mechanics"
+      ]
+    },
+    {
+      "id": "deployment.single-domain-required",
+      "value": "na",
+      "note": "Single app on its origin; no multi-origin topology question arises",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Composition mechanics"
+      ]
+    },
+    {
+      "id": "deployment.cross-origin-cors-required",
+      "value": "na",
+      "note": "No cross-origin client fetch of participants",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Composition mechanics"
+      ]
+    },
+    {
+      "id": "deployment.vendor-hosting-required",
+      "value": "no",
+      "note": "Any host that runs the chosen stack",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Non-MFE Baselines preamble"
+      ]
+    },
+    {
+      "id": "migration.participant.min-level",
+      "value": "conditional",
+      "condition": "migration.major-refactor",
+      "note": "Same-stack server apps merge via major refactor; SPAs escalate to migration.framework-migration (server-first inversion)",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Unit 3: What it cannot solve",
+        "Unit 3: Findings: Migration requirements"
+      ]
+    },
+    {
+      "id": "migration.host.min-level",
+      "value": "conditional",
+      "condition": "migration.trivial-adaptation",
+      "note": "A server app with a template hierarchy already embodies the strategy; no added tier or tooling",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Unit 3: What it is",
+        "Unit 3: Findings: Migration requirements"
+      ]
+    },
+    {
+      "id": "migration.source-modification-required",
+      "value": "yes",
+      "note": "Absorbing an existing app rewrites it as routes and templates in the one codebase",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: What it cannot solve"
+      ]
+    },
+    {
+      "id": "migration.participant.bootstrap-change-required",
+      "value": "yes",
+      "note": "A merged app gives up its own bootstrap; the server app owns request handling",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: What it cannot solve"
+      ]
+    },
+    {
+      "id": "migration.participant.internals-refactor-required",
+      "value": "yes",
+      "note": "Routing, state, and styling must align with the app's template hierarchy",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: What it cannot solve"
+      ]
+    },
+    {
+      "id": "migration.participant.deployment-change-required",
+      "value": "yes",
+      "note": "Independent deployment ceases; it ships inside the single server app",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: What it cannot solve"
+      ]
+    },
+    {
+      "id": "migration.participant.extraction-required",
+      "value": "no",
+      "note": "Features live in place inside the one app; nothing is extracted",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Composition mechanics"
+      ]
+    },
+    {
+      "id": "migration.participant.rewrite-required",
+      "value": "conditional",
+      "condition": "client-rendered apps require a server-first port (architectural inversion); server-rendered same-stack apps need none",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Unit 3: What it cannot solve",
+        "Unit 3: Findings: Migration requirements"
+      ]
+    },
+    {
+      "id": "migration.participant.thirdparty-unmodified-viable",
+      "value": "no",
+      "note": "No runtime participation surface; external apps can be linked, not composed",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: What it cannot solve"
+      ]
+    },
+    {
+      "id": "migration.participant.legacy-no-build-viable",
+      "value": "yes",
+      "note": "No modern build is ever demanded; a jQuery-era server-rendered app already embodies this baseline",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Unit 3: What it is"
+      ]
+    },
+    {
+      "id": "migration.strangler.incremental",
+      "value": "yes",
+      "note": "Page-at-a-time conversion inside the shipping app; the full-document seam keeps steps independent",
+      "claimType": "common-pattern",
+      "confidence": "medium",
+      "evidence": [
+        "Unit 3: Findings: Migration requirements"
+      ]
+    },
+    {
+      "id": "migration.host.new-infra-tier-required",
+      "value": "no",
+      "note": "No tier beyond the application server itself",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Composition mechanics"
+      ]
+    },
+    {
+      "id": "migration.host.shell-takeover-required",
+      "value": "no",
+      "note": "The app remains its own root; no shell exists",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Composition mechanics"
+      ]
+    },
+    {
+      "id": "migration.exit.participants-standalone",
+      "value": "no",
+      "note": "Templates are not runnable alone; the page seam eases later proxy-based extraction",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Findings: Migration requirements",
+        "Family mapping (provisional)"
+      ]
+    },
+    {
+      "id": "migration.path.from-incumbent-format",
+      "value": "no",
+      "note": "No owning vendor; no documented path from MFE composition formats",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Non-MFE Baselines preamble"
+      ]
+    },
+    {
+      "id": "migration.forced-remigration-pending",
+      "value": "no",
+      "note": "The oldest stable web model; nothing EOL-bound",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: What it is"
+      ]
+    },
+    {
+      "id": "migration.permanent-viability",
+      "value": "yes",
+      "note": "The destination, not a waypoint, for content-shaped products; most of the web operates this way",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Findings: Migration requirements",
+        "[E6] w3techs.com",
+        "Unit 3: REQ-Q-04 findings"
+      ]
+    },
+    {
+      "id": "ownership.single-team-endorsed",
+      "value": "yes",
+      "note": "Non-MFE baseline; the least-architecture recommendation for content-shaped products",
+      "claimType": "common-pattern",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: REQ-Q-04 findings"
+      ]
+    },
+    {
+      "id": "ownership.code-boundary-ownership",
+      "value": "yes",
+      "note": "Template-path ownership plus CODEOWNERS; the shared layout is the central chokepoint",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Findings: Ownership topology fit",
+        "[E7] CODEOWNERS docs"
+      ]
+    },
+    {
+      "id": "ownership.deploy-schedule-ownership",
+      "value": "no",
+      "note": "All teams share one release train",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Findings: Ownership topology fit",
+        "Unit 3: What it cannot solve"
+      ]
+    },
+    {
+      "id": "ownership.runtime-operational-ownership",
+      "value": "no",
+      "note": "One server app operated as a whole; no per-team service surface",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Findings: Operational model"
+      ]
+    },
+    {
+      "id": "ownership.external-participant",
+      "value": "no",
+      "note": "A third party cannot ship code into the app after release",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: What it cannot solve"
+      ]
+    },
+    {
+      "id": "ownership.participant-unmodifiable-host",
+      "value": "no",
+      "note": "Participation requires full integration into the app; no one-tag embedding model",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Composition mechanics"
+      ]
+    },
+    {
+      "id": "ownership.distrusted-cadence",
+      "value": "no",
+      "note": "One release train; no independent deploys exist",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: What it cannot solve"
+      ]
+    },
+    {
+      "id": "ownership.uncoordinated-upgrades",
+      "value": "conditional",
+      "condition": "client libraries per page: yes, pages never co-display and each ships its own scripts; server-side stack: no, one dependency graph and release train",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Unit 3: MFE-motivating problems it already solves",
+        "Unit 3: What it cannot solve"
+      ]
+    },
+    {
+      "id": "ownership.onboarding-without-central-owner",
+      "value": "no",
+      "note": "Joining means committing to the one app; routes and shared layout are centrally reviewed",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Unit 3: Findings: Ownership topology fit"
+      ]
+    },
+    {
+      "id": "ownership.platform-team-role-required",
+      "value": "no",
+      "note": "Ordinary app ownership; the shared layout owner is the one chokepoint, not a platform tier",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Unit 3: Findings: Ownership topology fit",
+        "Unit 3: Findings: Operational model"
+      ]
+    },
+    {
+      "id": "ownership.non-developer-composition",
+      "value": "conditional",
+      "condition": "varies by implementation: CMS realizations (WordPress) ship page-composition UIs; code-first stacks (Rails, Django) do not",
+      "claimType": "common-pattern",
+      "confidence": "medium",
+      "evidence": [
+        "Unit 3: What it is"
+      ]
+    },
+    {
+      "id": "ownership.participant-bytes-verbatim",
+      "value": "na",
+      "note": "No cross-party code shipping; all code is first-party",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Findings: Security and trust"
+      ]
+    },
+    {
+      "id": "ownership.nested-host-seat",
+      "value": "na",
+      "note": "No host/participant seats exist",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Composition mechanics"
+      ]
+    },
+    {
+      "id": "ownership.upstream-contract-lifetime",
+      "value": "no",
+      "note": "The boundary is the web platform itself (HTML documents per URL); no upstream project lifetime inherited",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Composition mechanics"
+      ]
+    },
+    {
+      "id": "coordination.shared-dependency-governance",
+      "value": "no",
+      "note": "No runtime dependency sharing exists to govern",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Composition mechanics"
+      ]
+    },
+    {
+      "id": "operations.version-skew-machinery",
+      "value": "na",
+      "note": "No host-participant skew is possible; one atomic deployable",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Findings: Deployment"
+      ]
+    },
+    {
+      "id": "operations.stack-traces-cross-boundary",
+      "value": "yes",
+      "note": "One application; all errors land in its own client and server streams",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Findings: Operational model"
+      ]
+    },
+    {
+      "id": "operations.owner-attribution-builtin",
+      "value": "no",
+      "note": "No built-in attribution; failure-to-team mapping is by code path",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Unit 3: Findings: Ownership topology fit"
+      ]
+    },
+    {
+      "id": "operations.cross-journey-correlation-diy",
+      "value": "na",
+      "note": "Single-deploy baseline; nothing to correlate across",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Findings: Operational model"
+      ]
+    },
+    {
+      "id": "operations.deploy-inventory-firstparty",
+      "value": "na",
+      "note": "One deployable; the app version is the whole inventory",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Findings: Deployment"
+      ]
+    },
+    {
+      "id": "operations.first-party-debug-tooling",
+      "value": "no",
+      "note": "No composition layer to debug; stacks ship their own app debug tooling",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Findings: Operational model"
+      ]
+    },
+    {
+      "id": "operations.local-composed-dev-firstparty",
+      "value": "yes",
+      "note": "Any stack's dev server runs the entire app locally",
+      "claimType": "common-pattern",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Findings: Operational model"
+      ]
+    },
+    {
+      "id": "operations.composition-tier-local-parity",
+      "value": "yes",
+      "note": "The template engine runs identically on a laptop and in production",
+      "claimType": "common-pattern",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Findings: Operational model"
+      ]
+    },
+    {
+      "id": "operations.standalone-participant-dev",
+      "value": "no",
+      "note": "Templates render only inside the app; no standalone participant exists",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Unit 3: Composition mechanics"
+      ]
+    },
+    {
+      "id": "operations.composed-test-utilities",
+      "value": "conditional",
+      "condition": "varies by implementation: stack test harnesses (Rails system tests, Django test client) exercise fully rendered pages",
+      "claimType": "officially-supported",
+      "confidence": "medium",
+      "evidence": [
+        "Unit 3: What it is"
+      ]
+    },
+    {
+      "id": "operations.deploy-time-contract-verification",
+      "value": "conditional",
+      "condition": "varies by implementation: compiled or typed template systems check at build; interpreted engines (ERB, Jinja) surface errors at render unless tested",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Unit 3: What it is"
+      ]
+    },
+    {
+      "id": "operations.single-sponsor-concentration",
+      "value": "no",
+      "note": "Commodity multi-stack practice; no sponsor to lose",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Non-MFE Baselines preamble"
+      ]
+    },
+    {
+      "id": "operations.mode-forked-operations",
+      "value": "no",
+      "note": "No documented modes; stack variety is implementation choice, not configuration forking",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Non-MFE Baselines preamble"
+      ]
+    }
+  ]
+}

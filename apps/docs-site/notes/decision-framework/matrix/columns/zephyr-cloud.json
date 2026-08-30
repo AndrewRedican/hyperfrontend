@@ -1,0 +1,2231 @@
+{
+  "unit": "zephyr-cloud",
+  "dossier": "research/solutions/zephyr-cloud.md",
+  "verifiedAt": "2026-08-28",
+  "verdicts": [
+    {
+      "id": "unit.type.adoptable-implementation",
+      "value": "yes",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "What it is"
+      ]
+    },
+    {
+      "id": "unit.availability.installable-today",
+      "value": "yes",
+      "note": "Managed PaaS generally available; BYOC for a documented provider subset.",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "What it is"
+      ]
+    },
+    {
+      "id": "unit.availability.stable-line-shipped",
+      "value": "yes",
+      "note": "Plugins 1.x stable (1.2.4, 2026-08-27); SaaS control plane consumer-unversioned; SSR worker runtime beta excepted.",
+      "claimType": "officially-supported",
+      "confidence": "medium",
+      "evidence": [
+        "What it is",
+        "SSR and delivery"
+      ]
+    },
+    {
+      "id": "unit.availability.single-current-line",
+      "value": "yes",
+      "note": "Single 1.x plugin line; canary/next are dist-tags, not a dormant successor.",
+      "claimType": "officially-supported",
+      "confidence": "medium",
+      "evidence": [
+        "What it is"
+      ]
+    },
+    {
+      "id": "unit.availability.planned-capability-claims",
+      "value": "yes",
+      "note": "Non-MF architectures \"possibly already working or planned\"; Azure BYOC marketing-only; observability named as direction in seed press.",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics",
+        "Ambiguities and decomposition candidates"
+      ]
+    },
+    {
+      "id": "unit.maintenance.release-within-12mo",
+      "value": "yes",
+      "note": "zephyr-rspack-plugin 1.2.4 published 2026-08-27.",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "What it is"
+      ]
+    },
+    {
+      "id": "unit.maintenance.commit-within-6mo",
+      "value": "yes",
+      "note": "Plugin releases within 24h of research date; docs actively expanding.",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "What it is"
+      ]
+    },
+    {
+      "id": "unit.maintenance.multi-maintainer",
+      "value": "yes",
+      "note": "30 contributors on zephyr-packages; several currently active committers.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "https://api.github.com/repos/ZephyrCloudIO/zephyr-packages/contributors"
+      ]
+    },
+    {
+      "id": "unit.maintenance.org-steward",
+      "value": "yes",
+      "note": "Venture-backed company (True Ventures-led seed) employs the maintainers.",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "What it is"
+      ]
+    },
+    {
+      "id": "unit.maintenance.adoption-outside-sponsor",
+      "value": "unknown",
+      "note": "No named production adopters documented; npm volume implies use but names absent.",
+      "claimType": "inference",
+      "confidence": "low",
+      "evidence": [
+        "Operational model"
+      ]
+    },
+    {
+      "id": "unit.maintenance.adoption-scale-10k",
+      "value": "yes",
+      "note": "zephyr-agent ~26.6k, zephyr-rspack-plugin ~14.5k weekly downloads (2026-08-21..27).",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "https://api.npmjs.org/downloads/point/last-week/zephyr-webpack-plugin,zephyr-rspack-plugin,vite-plugin-zephyr,zephyr-agent"
+      ]
+    },
+    {
+      "id": "unit.license.osi-core",
+      "value": "conditional",
+      "condition": "Plugins Apache-2.0 OSS, but the core deploy/versioning function requires the proprietary SaaS control plane; OSS code alone cannot perform it",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Editions and commercial layer"
+      ]
+    },
+    {
+      "id": "unit.editions.commercial-tier",
+      "value": "yes",
+      "note": "Seat plus usage pricing; Personal free through Enterprise tiers.",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Editions and commercial layer"
+      ]
+    },
+    {
+      "id": "unit.editions.oss-self-sufficient",
+      "value": "no",
+      "note": "Plugins authenticate to the Zephyr API on init; useless without the SaaS.",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Editions and commercial layer"
+      ]
+    },
+    {
+      "id": "hosting.operator",
+      "value": "yes",
+      "note": "Vendor-managed global edge PaaS is the default serving model.",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "What it is",
+        "Deployment"
+      ]
+    },
+    {
+      "id": "hosting.control-plane",
+      "value": "no",
+      "note": "Control plane always Zephyr SaaS; BYOC is data-plane residency only.",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Deployment",
+        "Ambiguities and decomposition candidates"
+      ]
+    },
+    {
+      "id": "registry.deployable-feature",
+      "value": "yes",
+      "note": "Immutable content-addressed snapshots with versions, tags, environments and metadata.",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "What it is",
+        "Operational model"
+      ]
+    },
+    {
+      "id": "governance.rollback",
+      "value": "yes",
+      "note": "Atomic pointer swap to a retained snapshot; compatibility verification of the rolled-back remote unevidenced.",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Operational model",
+        "Ambiguities and decomposition candidates"
+      ]
+    },
+    {
+      "id": "governance.usage-monitoring",
+      "value": "conditional",
+      "condition": "Deploy-inventory visibility (Mission Control, remote-dependency graphs) evidenced; runtime telemetry Unknown",
+      "claimType": "officially-supported",
+      "confidence": "medium",
+      "evidence": [
+        "Operational model",
+        "Ambiguities and decomposition candidates"
+      ]
+    },
+    {
+      "id": "governance.rbac",
+      "value": "conditional",
+      "condition": "Org permissions, permission-gated version switching, Enterprise child organizations evidenced; role granularity and tier mapping Unknown",
+      "claimType": "officially-supported",
+      "confidence": "medium",
+      "evidence": [
+        "Security and trust",
+        "Editions and commercial layer"
+      ]
+    },
+    {
+      "id": "composition.kind.js-module-graph",
+      "value": "na",
+      "note": "Ops layer defines no composition boundary; mechanics belong to the underlying mechanism (chiefly Module Federation).",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "composition.kind.lifecycle-contract",
+      "value": "na",
+      "note": "Ops layer defines no composition boundary; mechanics belong to the underlying mechanism (chiefly Module Federation).",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "composition.kind.custom-element",
+      "value": "na",
+      "note": "Ops layer defines no composition boundary; mechanics belong to the underlying mechanism (chiefly Module Federation).",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "composition.kind.html-fragment-endpoint",
+      "value": "na",
+      "note": "Ops layer defines no composition boundary; mechanics belong to the underlying mechanism (chiefly Module Federation).",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "composition.kind.html-entry",
+      "value": "na",
+      "note": "Ops layer defines no composition boundary; mechanics belong to the underlying mechanism (chiefly Module Federation).",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "composition.kind.http-route-partition",
+      "value": "na",
+      "note": "Ops layer defines no composition boundary; mechanics belong to the underlying mechanism (chiefly Module Federation).",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "composition.kind.build-artifact",
+      "value": "na",
+      "note": "Ops layer defines no composition boundary; mechanics belong to the underlying mechanism (chiefly Module Federation).",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "composition.kind.inherits-underlying",
+      "value": "yes",
+      "note": "Explicitly \"based on Module Federation\"; deploys, versions and resolves that mechanism's artifacts.",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "composition.phase.deploy-unit-per-participant",
+      "value": "yes",
+      "note": "Each app builds and deploys independently as its own immutable snapshot.",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Build-time coupling"
+      ]
+    },
+    {
+      "id": "composition.exec.client-composed",
+      "value": "na",
+      "note": "Assembly is the underlying MF's, in-browser; Zephyr only late-binds remote URLs.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "buildtime.host-build-consumes-participants",
+      "value": "no",
+      "note": "Apps build independently; Zephyr tracks cross-app relationships server-side.",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Build-time coupling"
+      ]
+    },
+    {
+      "id": "buildtime.host-integrates-buildless",
+      "value": "no",
+      "note": "Deploy rides a bundler build; host needs a Zephyr-plugin-equipped build.",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Build-time coupling",
+        "Deployment"
+      ]
+    },
+    {
+      "id": "buildtime.participant-tooling-required",
+      "value": "yes",
+      "note": "withZephyr() plugin required in every participating app's bundler config.",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Build-time coupling"
+      ]
+    },
+    {
+      "id": "buildtime.bundler-family-restricted",
+      "value": "yes",
+      "note": "First-party plugin list: webpack, Rspack, Vite, Rollup, Rolldown, Parcel, Re.Pack, plus Modern.js/Nuxt/Vinext adapters.",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Build-time coupling"
+      ]
+    },
+    {
+      "id": "buildtime.share-metadata-emitted",
+      "value": "na",
+      "note": "MF's share scope emits it; Zephyr records extracted relationships server-side, adds no negotiation metadata.",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "What it is"
+      ]
+    },
+    {
+      "id": "buildtime.shared-dep-change-rebuilds-center",
+      "value": "na",
+      "note": "Central-sharing semantics belong to MF; the Zephyr layer has no shared central artifact.",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Runtime coupling"
+      ]
+    },
+    {
+      "id": "buildtime.central-input-for-participant-build",
+      "value": "yes",
+      "note": "Git metadata required at build and the plugin authenticates to the cloud.",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Build-time coupling"
+      ]
+    },
+    {
+      "id": "buildtime.asset-prefix-coordination",
+      "value": "no",
+      "note": "Content-addressed snapshot URLs; no manual prefix or namespace coordination.",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "What it is"
+      ]
+    },
+    {
+      "id": "runtime.shared-js-realm",
+      "value": "na",
+      "note": "Mechanism-level cell; inherited from Module Federation, Zephyr adds nothing.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "runtime.patched-globals-layer",
+      "value": "na",
+      "note": "Ops layer interposes no global surface; mechanism-level cell.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "runtime.primordials-blast-radius",
+      "value": "na",
+      "note": "Mechanism-level cell; inherited from Module Federation, Zephyr adds nothing.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "runtime.concurrent-participants",
+      "value": "na",
+      "note": "Mechanism-level cell; inherited from Module Federation, Zephyr adds nothing.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "runtime.multi-router-participants",
+      "value": "na",
+      "note": "Mechanism-level cell; inherited from Module Federation, Zephyr adds nothing.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "runtime.shared-runtime-library",
+      "value": "na",
+      "note": "MF runtime requirement inherited; Zephyr contributes build-generated resolution config, not a page runtime.",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Runtime coupling"
+      ]
+    },
+    {
+      "id": "runtime.central-routing-map",
+      "value": "yes",
+      "note": "Environments and remote-version selectors live in Zephyr's control plane; vendor-operated, permission-gated writes.",
+      "claimType": "officially-supported",
+      "confidence": "medium",
+      "evidence": [
+        "Operational model"
+      ]
+    },
+    {
+      "id": "runtime.shared-dep-negotiation",
+      "value": "na",
+      "note": "MF share scope answers; Zephyr adds no negotiation of its own.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Runtime coupling"
+      ]
+    },
+    {
+      "id": "runtime.dep-conflict-surfaces-runtime",
+      "value": "na",
+      "note": "Mechanism-level cell; inherited from Module Federation, Zephyr adds nothing.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Runtime coupling"
+      ]
+    },
+    {
+      "id": "runtime.side-by-side-versions",
+      "value": "na",
+      "note": "Mechanism-level cell; inherited from Module Federation, Zephyr adds nothing.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Runtime coupling"
+      ]
+    },
+    {
+      "id": "runtime.global-registration-collision",
+      "value": "na",
+      "note": "Mechanism-level cell; inherited from Module Federation, Zephyr adds nothing.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "runtime.late-participant-registration",
+      "value": "na",
+      "note": "MF 2.0 registerRemotes inherited; Zephyr overrides bind at load-time resolution.",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "runtime.loaded-version-hot-swap",
+      "value": "unknown",
+      "note": "Extension switches remote versions against a live host; in-document swap vs reload undocumented; MF container-cache semantics unknown.",
+      "claimType": "inference",
+      "confidence": "low",
+      "evidence": [
+        "Operational model"
+      ]
+    },
+    {
+      "id": "isolation.document-boundary",
+      "value": "na",
+      "note": "Zephyr adds no isolation; contained entirely by the underlying composition mechanism (dossier-explicit).",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "isolation.js.virtualized-global",
+      "value": "na",
+      "note": "Zephyr adds no isolation; contained entirely by the underlying composition mechanism (dossier-explicit).",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "isolation.dom.virtualized",
+      "value": "na",
+      "note": "Zephyr adds no isolation; contained entirely by the underlying composition mechanism (dossier-explicit).",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "isolation.css.outbound",
+      "value": "na",
+      "note": "Zephyr adds no isolation; contained entirely by the underlying composition mechanism (dossier-explicit).",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "isolation.css.inbound",
+      "value": "na",
+      "note": "Zephyr adds no isolation; contained entirely by the underlying composition mechanism (dossier-explicit).",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "isolation.resource.main-thread",
+      "value": "na",
+      "note": "Zephyr adds no isolation; contained entirely by the underlying composition mechanism (dossier-explicit).",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "isolation.process.crash",
+      "value": "na",
+      "note": "Zephyr adds no isolation; contained entirely by the underlying composition mechanism (dossier-explicit).",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "isolation.storage.partition",
+      "value": "na",
+      "note": "Zephyr adds no isolation; contained entirely by the underlying composition mechanism (dossier-explicit).",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "isolation.origin.host-authority",
+      "value": "na",
+      "note": "Zephyr adds no isolation; contained entirely by the underlying composition mechanism (dossier-explicit).",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "isolation.navigation.top-level-guard",
+      "value": "na",
+      "note": "Zephyr adds no isolation; contained entirely by the underlying composition mechanism (dossier-explicit).",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "isolation.security.malicious-participant",
+      "value": "na",
+      "note": "Zephyr adds no isolation; contained entirely by the underlying composition mechanism (dossier-explicit).",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "isolation.failure.lifecycle-quarantine",
+      "value": "na",
+      "note": "Zephyr adds no isolation; contained entirely by the underlying composition mechanism (dossier-explicit).",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "isolation.failure.post-mount-exception",
+      "value": "na",
+      "note": "Zephyr adds no isolation; contained entirely by the underlying composition mechanism (dossier-explicit).",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "isolation.failure.load-fallback",
+      "value": "na",
+      "note": "Zephyr adds no isolation; contained entirely by the underlying composition mechanism (dossier-explicit).",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "isolation.lifecycle.reclaim",
+      "value": "na",
+      "note": "Zephyr adds no isolation; contained entirely by the underlying composition mechanism (dossier-explicit).",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "isolation.recovery.in-page",
+      "value": "na",
+      "note": "Zephyr adds no isolation; contained entirely by the underlying composition mechanism (dossier-explicit).",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "isolation.server.process",
+      "value": "na",
+      "note": "Primary model client-composed; SSR-beta worker topology undocumented.",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "SSR and delivery"
+      ]
+    },
+    {
+      "id": "security.cross-origin-boundary",
+      "value": "na",
+      "note": "Mechanism-level cell; inherited from MF's shared-document model, Zephyr adds no boundary.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Security and trust"
+      ]
+    },
+    {
+      "id": "security.sandbox-attribute-applicable",
+      "value": "na",
+      "note": "Mechanism-level cell; inherited from MF's shared-document model, Zephyr adds no boundary.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Security and trust"
+      ]
+    },
+    {
+      "id": "security.per-participant-csp",
+      "value": "na",
+      "note": "Mechanism-level cell; inherited from MF's shared-document model, Zephyr adds no boundary.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Security and trust"
+      ]
+    },
+    {
+      "id": "security.capability-narrowing",
+      "value": "na",
+      "note": "Mechanism-level cell; inherited from MF's shared-document model, Zephyr adds no boundary.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Security and trust"
+      ]
+    },
+    {
+      "id": "security.host-dom-reach",
+      "value": "na",
+      "note": "Mechanism-level cell; inherited from MF's shared-document model, Zephyr adds no boundary.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Security and trust"
+      ]
+    },
+    {
+      "id": "security.host-js-state-reach",
+      "value": "na",
+      "note": "Mechanism-level cell; inherited from MF's shared-document model, Zephyr adds no boundary.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Security and trust"
+      ]
+    },
+    {
+      "id": "security.untrusted-third-party-viable",
+      "value": "na",
+      "note": "Trust model inherited from MF's shared realm; Zephyr adds SaaS trust requirements, no boundary.",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Security and trust"
+      ]
+    },
+    {
+      "id": "security.channel-origin-pinning",
+      "value": "na",
+      "note": "Ships no messaging layer.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Contracts and communication"
+      ]
+    },
+    {
+      "id": "security.channel-confidentiality",
+      "value": "na",
+      "note": "Ships no messaging layer.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Contracts and communication"
+      ]
+    },
+    {
+      "id": "security.embedding-authorization",
+      "value": "na",
+      "note": "Mechanism-level; MF fetched-bundle semantics inherited.",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Security and trust"
+      ]
+    },
+    {
+      "id": "security.artifact-integrity-verification",
+      "value": "no",
+      "note": "SHA-256 content addressing secures storage/serving identity; no browser pre-execution verification (SRI, signing) documented.",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "What it is"
+      ]
+    },
+    {
+      "id": "security.delivery-intermediary-trust",
+      "value": "yes",
+      "note": "All builds upload through and resolve via Zephyr's SaaS and edge tier; mandatory even under BYOC.",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Security and trust"
+      ]
+    },
+    {
+      "id": "security.isolation-escape-hatches",
+      "value": "na",
+      "note": "Claims no isolation of its own; nothing to escape.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "security.composition-injection-surface",
+      "value": "no",
+      "note": "No server-side directive interpretation; composition is client-side MF.",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "framework.host-framework-agnostic",
+      "value": "yes",
+      "note": "Framework-agnostic; constraints come from MF sharing semantics, not Zephyr.",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Framework requirements"
+      ]
+    },
+    {
+      "id": "framework.participant-framework-agnostic",
+      "value": "yes",
+      "note": "Any UI framework the underlying bundler/MF setup supports; React Native via Re.Pack included.",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Framework requirements"
+      ]
+    },
+    {
+      "id": "framework.mixed-frameworks-one-page",
+      "value": "na",
+      "note": "Mechanism-level cell; inherited from Module Federation, Zephyr adds nothing.",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "framework.per-team-framework-autonomy",
+      "value": "yes",
+      "note": "Per-app builds and pipelines; no shared build graph.",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Build-time coupling",
+        "Ownership topology fit"
+      ]
+    },
+    {
+      "id": "framework.same-framework-major-coexistence",
+      "value": "na",
+      "note": "MF singleton/fallback semantics inherited.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "framework.esm-artifact-required",
+      "value": "no",
+      "note": "Plugin list spans non-ESM-emitting bundlers; no ESM mandate of its own.",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Build-time coupling"
+      ]
+    },
+    {
+      "id": "framework.html-document-entry",
+      "value": "na",
+      "note": "Integration unit is the underlying MF container, not a Zephyr construct.",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "framework.client-library-required",
+      "value": "no",
+      "note": "Build-time plugin only; no Zephyr client library; MF runtime inherited.",
+      "claimType": "officially-supported",
+      "confidence": "medium",
+      "evidence": [
+        "What it is",
+        "Performance causes"
+      ]
+    },
+    {
+      "id": "framework.foreign-artifact-no-rebuild",
+      "value": "no",
+      "note": "Participation requires rebuilding with the Zephyr plugin; deploy rides the build.",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Build-time coupling",
+        "Deployment"
+      ]
+    },
+    {
+      "id": "framework.official-adapters-exist",
+      "value": "na",
+      "note": "Adapters are bundler-level, not UI-framework-level; the participation contract is MF's.",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Build-time coupling"
+      ]
+    },
+    {
+      "id": "framework.adapters-track-current-majors",
+      "value": "na",
+      "note": "No framework adapters; bundler plugins actively released (1.2.4, 2026-08-27).",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "What it is"
+      ]
+    },
+    {
+      "id": "framework.zero-framework-participant",
+      "value": "yes",
+      "note": "Static/vanilla deploys documented (Astro, Nitro, static sites), though those are plain hosting.",
+      "claimType": "officially-supported",
+      "confidence": "medium",
+      "evidence": [
+        "SSR and delivery"
+      ]
+    },
+    {
+      "id": "framework.version-floor-imposed",
+      "value": "unknown",
+      "note": "Plugin Node/bundler version floors not recorded; webpack-5-generation bundlers implied by plugin list.",
+      "claimType": "inference",
+      "confidence": "low",
+      "evidence": [
+        "Build-time coupling"
+      ]
+    },
+    {
+      "id": "framework.composition-tier-stack-mandated",
+      "value": "yes",
+      "note": "Ops tier requires Zephyr SaaS control plane plus Zephyr-managed or supported-provider data plane.",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Deployment"
+      ]
+    },
+    {
+      "id": "framework.multi-framework-demonstrated",
+      "value": "unknown",
+      "note": "No Zephyr-specific multi-framework reference recorded; MF ecosystem demos belong to the mechanism.",
+      "claimType": "inference",
+      "confidence": "low",
+      "evidence": [
+        "Framework requirements"
+      ]
+    },
+    {
+      "id": "contracts.formal-descriptor",
+      "value": "conditional",
+      "condition": "Deploy manifest captures assets plus MF host/remote/shared-dependency relationships; no application-interface schema beyond that",
+      "claimType": "officially-supported",
+      "confidence": "medium",
+      "evidence": [
+        "What it is"
+      ]
+    },
+    {
+      "id": "contracts.contract-versioned",
+      "value": "yes",
+      "note": "Every build is an immutable version; label selectors like design-system@stable.",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Contracts and communication",
+        "Operational model"
+      ]
+    },
+    {
+      "id": "contracts.connect-compat-gate",
+      "value": "conditional",
+      "condition": "Only MF's shared-dependency semver negotiation, inherited; a Zephyr-layer compatibility check on re-point or rollback is unevidenced",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Ambiguities and decomposition candidates"
+      ]
+    },
+    {
+      "id": "contracts.drift-surface",
+      "value": "yes",
+      "note": "Host and remotes deploy and re-version independently; managing that skew is the product's purpose.",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Runtime coupling"
+      ]
+    },
+    {
+      "id": "contracts.drift-explicit",
+      "value": "no",
+      "note": "No drift error of its own documented; MF's silent type-lag caveat inherited.",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Ambiguities and decomposition candidates"
+      ]
+    },
+    {
+      "id": "contracts.types-shared",
+      "value": "na",
+      "note": "Type delivery belongs to MF 2.0; Zephyr ships none.",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Contracts and communication"
+      ]
+    },
+    {
+      "id": "contracts.schema-validated-payloads",
+      "value": "na",
+      "note": "Inter-MFE communication out of scope for this layer (dossier-explicit).",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Contracts and communication"
+      ]
+    },
+    {
+      "id": "contracts.sync-calls",
+      "value": "na",
+      "note": "Mechanism-level cell; inherited from Module Federation, Zephyr adds nothing.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Contracts and communication"
+      ]
+    },
+    {
+      "id": "contracts.serialized-boundary",
+      "value": "na",
+      "note": "Mechanism-level cell; inherited from Module Federation, Zephyr adds nothing.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Contracts and communication"
+      ]
+    },
+    {
+      "id": "contracts.frame-messaging",
+      "value": "na",
+      "note": "Mechanism-level cell; inherited from Module Federation, Zephyr adds nothing.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Contracts and communication"
+      ]
+    },
+    {
+      "id": "contracts.builtin-messaging",
+      "value": "na",
+      "note": "Inter-MFE communication out of scope for this layer.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Contracts and communication"
+      ]
+    },
+    {
+      "id": "contracts.builtin-shared-state",
+      "value": "na",
+      "note": "Inter-MFE communication out of scope for this layer.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Contracts and communication"
+      ]
+    },
+    {
+      "id": "contracts.host-push-updates",
+      "value": "na",
+      "note": "Inter-MFE communication out of scope for this layer.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Contracts and communication"
+      ]
+    },
+    {
+      "id": "contracts.http-request-contract",
+      "value": "na",
+      "note": "Integration contract is build plugin plus SaaS API, not an HTTP fragment interface.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Contracts and communication"
+      ]
+    },
+    {
+      "id": "contracts.server-context-propagation",
+      "value": "na",
+      "note": "Pure client-side composition inherited; no composing server tier.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Contracts and communication"
+      ]
+    },
+    {
+      "id": "ssr.composed-page",
+      "value": "no",
+      "note": "Primary model is client-composed static/edge assets; no multi-participant server stitching evidenced.",
+      "claimType": "officially-supported",
+      "confidence": "medium",
+      "evidence": [
+        "SSR and delivery"
+      ]
+    },
+    {
+      "id": "ssr.fragment-granularity",
+      "value": "na",
+      "note": "Composition is client-side; nothing stitched server-side.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "SSR and delivery"
+      ]
+    },
+    {
+      "id": "ssr.streaming-assembly",
+      "value": "na",
+      "note": "Composition is client-side; nothing assembled server-side.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "SSR and delivery"
+      ]
+    },
+    {
+      "id": "ssr.participant-internal",
+      "value": "conditional",
+      "condition": "SSR worker runtime is beta and only on Zephyr-managed Cloudflare, not BYOC",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "SSR and delivery"
+      ]
+    },
+    {
+      "id": "ssr.dual-mode-render",
+      "value": "no",
+      "note": "No documented SSR/CSR selection or failover.",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "SSR and delivery"
+      ]
+    },
+    {
+      "id": "ssr.no-js-first-paint",
+      "value": "na",
+      "note": "Inherited from the client-composed mechanism; SSR-beta apps render their own HTML.",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "SSR and delivery"
+      ]
+    },
+    {
+      "id": "ssr.hydration-orchestration",
+      "value": "na",
+      "note": "Ships no hydration runtime; nothing composed server-side.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "SSR and delivery"
+      ]
+    },
+    {
+      "id": "ssr.crawler-indexable",
+      "value": "na",
+      "note": "Mechanism-level; MF's client-rendered answer inherited.",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "SSR and delivery"
+      ]
+    },
+    {
+      "id": "ssr.static-prerender",
+      "value": "conditional",
+      "condition": "Static-site deploys (Astro/Nitro guides) are plain hosting; federated participants follow MF with no prerendered composed content",
+      "claimType": "officially-supported",
+      "confidence": "medium",
+      "evidence": [
+        "SSR and delivery"
+      ]
+    },
+    {
+      "id": "ssr.edge-composition",
+      "value": "conditional",
+      "condition": "Edge tier performs per-environment resolution and serving at PoPs; MF composition itself stays in-browser; SSR beta is Cloudflare-managed only",
+      "claimType": "officially-supported",
+      "confidence": "medium",
+      "evidence": [
+        "What it is",
+        "Performance causes"
+      ]
+    },
+    {
+      "id": "ssr.static-hosting-sufficient",
+      "value": "yes",
+      "note": "Primary model: content-addressed static assets from edge; KV lookup, not composition compute.",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "SSR and delivery"
+      ]
+    },
+    {
+      "id": "ssr.server-loadable-artifact",
+      "value": "conditional",
+      "condition": "SSR worker runtime loads app server code but is beta and Zephyr-managed Cloudflare only; MF 2.0 Node loading inherited",
+      "claimType": "officially-supported",
+      "confidence": "medium",
+      "evidence": [
+        "SSR and delivery"
+      ]
+    },
+    {
+      "id": "ssr.rsc-federation",
+      "value": "no",
+      "note": "Inherits MF's stated RSC absence; Zephyr adds no render capability.",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "ssr.dev-prod-parity",
+      "value": "na",
+      "note": "No SSR in the primary model; SSR-beta dev parity undocumented.",
+      "claimType": "inference",
+      "confidence": "low",
+      "evidence": [
+        "SSR and delivery"
+      ]
+    },
+    {
+      "id": "ssr.html-fragment-contract",
+      "value": "na",
+      "note": "Participant format is MF's JS module contract, not inert HTML.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "SSR and delivery"
+      ]
+    },
+    {
+      "id": "ux.cross-boundary-soft-nav",
+      "value": "na",
+      "note": "Ops layer has no direct UX surface (dossier-explicit); user-visible behavior belongs to the underlying mechanism.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "UX implications"
+      ]
+    },
+    {
+      "id": "ux.within-unit-soft-nav",
+      "value": "na",
+      "note": "Ops layer has no direct UX surface (dossier-explicit); user-visible behavior belongs to the underlying mechanism.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "UX implications"
+      ]
+    },
+    {
+      "id": "ux.cross-boundary-prefetch",
+      "value": "na",
+      "note": "Ops layer has no direct UX surface (dossier-explicit); user-visible behavior belongs to the underlying mechanism.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "UX implications"
+      ]
+    },
+    {
+      "id": "ux.cross-doc-view-transitions",
+      "value": "na",
+      "note": "Ops layer has no direct UX surface (dossier-explicit); user-visible behavior belongs to the underlying mechanism.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "UX implications"
+      ]
+    },
+    {
+      "id": "ux.persistent-shared-chrome",
+      "value": "na",
+      "note": "Ops layer has no direct UX surface (dossier-explicit); user-visible behavior belongs to the underlying mechanism.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "UX implications"
+      ]
+    },
+    {
+      "id": "ux.unit-keepalive",
+      "value": "na",
+      "note": "Ops layer has no direct UX surface (dossier-explicit); user-visible behavior belongs to the underlying mechanism.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "UX implications"
+      ]
+    },
+    {
+      "id": "ux.keepalive-scroll-restoration",
+      "value": "na",
+      "note": "Ops layer has no direct UX surface (dossier-explicit); user-visible behavior belongs to the underlying mechanism.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "UX implications"
+      ]
+    },
+    {
+      "id": "ux.deep-link-inner-route",
+      "value": "na",
+      "note": "Ops layer has no direct UX surface (dossier-explicit); user-visible behavior belongs to the underlying mechanism.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "UX implications"
+      ]
+    },
+    {
+      "id": "ux.frame-history-pollution",
+      "value": "na",
+      "note": "Ops layer has no direct UX surface (dossier-explicit); user-visible behavior belongs to the underlying mechanism.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "UX implications"
+      ]
+    },
+    {
+      "id": "ux.overlay-viewport-escape",
+      "value": "na",
+      "note": "Ops layer has no direct UX surface (dossier-explicit); user-visible behavior belongs to the underlying mechanism.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "UX implications"
+      ]
+    },
+    {
+      "id": "ux.host-overlay-protocol",
+      "value": "na",
+      "note": "Ops layer has no direct UX surface (dossier-explicit); user-visible behavior belongs to the underlying mechanism.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "UX implications"
+      ]
+    },
+    {
+      "id": "ux.body-portal-compat",
+      "value": "na",
+      "note": "Ops layer has no direct UX surface (dossier-explicit); user-visible behavior belongs to the underlying mechanism.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "UX implications"
+      ]
+    },
+    {
+      "id": "ux.natural-layout-flow",
+      "value": "na",
+      "note": "Ops layer has no direct UX surface (dossier-explicit); user-visible behavior belongs to the underlying mechanism.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "UX implications"
+      ]
+    },
+    {
+      "id": "ux.cross-boundary-focus-mgmt",
+      "value": "na",
+      "note": "Ops layer has no direct UX surface (dossier-explicit); user-visible behavior belongs to the underlying mechanism.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "UX implications"
+      ]
+    },
+    {
+      "id": "ux.screenreader-continuity",
+      "value": "na",
+      "note": "Ops layer has no direct UX surface (dossier-explicit); user-visible behavior belongs to the underlying mechanism.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "UX implications"
+      ]
+    },
+    {
+      "id": "ux.composed-first-paint",
+      "value": "na",
+      "note": "Ops layer has no direct UX surface (dossier-explicit); user-visible behavior belongs to the underlying mechanism.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "UX implications"
+      ]
+    },
+    {
+      "id": "ux.builtin-loading-ui",
+      "value": "na",
+      "note": "Ops layer has no direct UX surface (dossier-explicit); user-visible behavior belongs to the underlying mechanism.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "UX implications"
+      ]
+    },
+    {
+      "id": "ux.builtin-error-fallback-ui",
+      "value": "na",
+      "note": "Ops layer has no direct UX surface (dossier-explicit); user-visible behavior belongs to the underlying mechanism.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "UX implications"
+      ]
+    },
+    {
+      "id": "ux.mount-layout-shift-risk",
+      "value": "na",
+      "note": "Ops layer has no direct UX surface (dossier-explicit); user-visible behavior belongs to the underlying mechanism.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "UX implications"
+      ]
+    },
+    {
+      "id": "ux.token-theming-mechanism",
+      "value": "na",
+      "note": "Ops layer has no direct UX surface (dossier-explicit); user-visible behavior belongs to the underlying mechanism.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "UX implications"
+      ]
+    },
+    {
+      "id": "performance.client-composition-runtime",
+      "value": "na",
+      "note": "No Zephyr client runtime; MF loading cost inherited unchanged (dossier-explicit).",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Performance causes"
+      ]
+    },
+    {
+      "id": "performance.pre-render-orchestration-fetch",
+      "value": "na",
+      "note": "MF remoteEntry/manifest flow inherited; Zephyr resolution rides it.",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Performance causes"
+      ]
+    },
+    {
+      "id": "performance.sequential-waterfall-default",
+      "value": "na",
+      "note": "MF loading flow inherited unchanged.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Performance causes"
+      ]
+    },
+    {
+      "id": "performance.first-party-preload-levers",
+      "value": "na",
+      "note": "Ships none of its own; MF 2.0 levers belong to the mechanism.",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Performance causes"
+      ]
+    },
+    {
+      "id": "performance.duplicate-framework-same-page",
+      "value": "na",
+      "note": "MF share semantics inherited unchanged.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Performance causes"
+      ]
+    },
+    {
+      "id": "performance.shared-dependency-dedup",
+      "value": "no",
+      "note": "Content-addressed dedup is CDN-tier across versions, not on-page; on-page dedup is MF's share scope.",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Performance causes"
+      ]
+    },
+    {
+      "id": "performance.dedup-failure-on-version-skew",
+      "value": "na",
+      "note": "The sharing mechanism is MF's; no Zephyr sharing exists.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Performance causes"
+      ]
+    },
+    {
+      "id": "performance.per-unit-document-boot",
+      "value": "na",
+      "note": "Mechanism-level; MF single-document answer inherited.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "performance.process-memory-overhead",
+      "value": "na",
+      "note": "Same-realm mechanism inherited; no cross-origin frame topology.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "performance.sandbox-execution-tax",
+      "value": "na",
+      "note": "No sandbox layer; adds no execution overhead.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "performance.per-message-serialization-cost",
+      "value": "na",
+      "note": "No messaging layer of its own.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Contracts and communication"
+      ]
+    },
+    {
+      "id": "performance.hydration-deferrable-per-unit",
+      "value": "na",
+      "note": "Hydration belongs to app frameworks and MF; Zephyr ships nothing.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "SSR and delivery"
+      ]
+    },
+    {
+      "id": "performance.request-time-server-fanout",
+      "value": "no",
+      "note": "Serving is per-asset KV/snapshot/file lookup; no composer-to-fragment fan-out.",
+      "claimType": "officially-supported",
+      "confidence": "medium",
+      "evidence": [
+        "Performance causes"
+      ]
+    },
+    {
+      "id": "performance.per-unit-http-cacheable",
+      "value": "yes",
+      "note": "Per-app content-addressed immutable assets on edge; cross-version dedup improves cacheability.",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Performance causes"
+      ]
+    },
+    {
+      "id": "performance.default-content-caching",
+      "value": "yes",
+      "note": "Edge platform serves and caches content-addressed assets without operator configuration; vendor architecture claim.",
+      "claimType": "officially-supported",
+      "confidence": "medium",
+      "evidence": [
+        "Performance causes"
+      ]
+    },
+    {
+      "id": "deployment.host-rebuild-required",
+      "value": "no",
+      "note": "Late-bound resolution: remotes re-versioned per environment without host rebuild.",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics",
+        "Runtime coupling"
+      ]
+    },
+    {
+      "id": "deployment.new-participant-host-change",
+      "value": "no",
+      "note": "Onboarding via platform records and resolution; MF 2.0 runtime registration inherited for truly host-unknown remotes.",
+      "claimType": "officially-supported",
+      "confidence": "medium",
+      "evidence": [
+        "Deployment",
+        "Runtime coupling"
+      ]
+    },
+    {
+      "id": "deployment.golive-central-pointer",
+      "value": "yes",
+      "note": "Environment pointers (hostname to snapshot) gate go-live; promotion pipelines move them.",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Operational model"
+      ]
+    },
+    {
+      "id": "deployment.consumer-version-pin",
+      "value": "yes",
+      "note": "Per-environment override pins which remote version a host resolves.",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Runtime coupling"
+      ]
+    },
+    {
+      "id": "deployment.per-user-version-targeting",
+      "value": "yes",
+      "note": "Per-version preview URLs, environment overrides, extension-driven live version switching.",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Operational model"
+      ]
+    },
+    {
+      "id": "deployment.immutable-version-retention",
+      "value": "yes",
+      "note": "Every build an immutable content-addressed snapshot; rollback repoints to retained versions.",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "What it is"
+      ]
+    },
+    {
+      "id": "deployment.cache-busting-operator-burden",
+      "value": "no",
+      "note": "Content-addressed immutable URLs plus pointer swap; no TTL juggling.",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "What it is"
+      ]
+    },
+    {
+      "id": "deployment.participants-static-artifacts",
+      "value": "yes",
+      "note": "Static assets on edge storage; SSR worker runtime (beta) is the exception.",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "SSR and delivery"
+      ]
+    },
+    {
+      "id": "deployment.strategy-service-in-path",
+      "value": "conditional",
+      "condition": "Zephyr edge resolution/serving tier sits in the production request path; vendor-operated (or BYOC data plane), not adopter-optional",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Deployment"
+      ]
+    },
+    {
+      "id": "deployment.runtime-discovery-first-party",
+      "value": "yes",
+      "note": "Environments, tags, version records and generated runtime config resolve remotes.",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Runtime coupling",
+        "Operational model"
+      ]
+    },
+    {
+      "id": "deployment.single-domain-required",
+      "value": "no",
+      "note": "Per-app URLs on the edge network; no single-origin constraint.",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "What it is"
+      ]
+    },
+    {
+      "id": "deployment.cross-origin-cors-required",
+      "value": "conditional",
+      "condition": "MF loading semantics inherited: classic script tag exempt, manifest and ESM fetches need CORS; Zephyr-edge CORS defaults undocumented",
+      "claimType": "inference",
+      "confidence": "low",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "deployment.vendor-hosting-required",
+      "value": "conditional",
+      "condition": "Zephyr-managed edge by default; BYOC moves only the data plane to a documented provider subset; control plane always Zephyr SaaS",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Deployment"
+      ]
+    },
+    {
+      "id": "migration.participant.min-level",
+      "value": "conditional",
+      "condition": "migration.bundler-change",
+      "note": "Add plugin to bundler config, matching name, git metadata; underlying MF adoption is the composition layer's own cost.",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Migration requirements"
+      ]
+    },
+    {
+      "id": "migration.host.min-level",
+      "value": "conditional",
+      "condition": "migration.bundler-change",
+      "note": "Host build adds the same plugin; MF host adoption is costed to the mechanism, not Zephyr.",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Migration requirements"
+      ]
+    },
+    {
+      "id": "migration.source-modification-required",
+      "value": "no",
+      "note": "Config-level: plugin, package.json name matching the MF config name, git metadata.",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Migration requirements",
+        "Build-time coupling"
+      ]
+    },
+    {
+      "id": "migration.participant.bootstrap-change-required",
+      "value": "no",
+      "note": "No entry-code changes demanded by the ops layer.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Migration requirements"
+      ]
+    },
+    {
+      "id": "migration.participant.internals-refactor-required",
+      "value": "no",
+      "note": "No internals changes demanded by the ops layer.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Migration requirements"
+      ]
+    },
+    {
+      "id": "migration.participant.deployment-change-required",
+      "value": "yes",
+      "note": "Serving moves to Zephyr-managed or Zephyr-orchestrated (BYOC) infrastructure.",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Migration requirements"
+      ]
+    },
+    {
+      "id": "migration.participant.extraction-required",
+      "value": "yes",
+      "note": "A monolith feature must first be an independently built, deployable unit (MF remote) to participate.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "migration.participant.rewrite-required",
+      "value": "no",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Migration requirements"
+      ]
+    },
+    {
+      "id": "migration.participant.thirdparty-unmodified-viable",
+      "value": "no",
+      "note": "Requires rebuild with the plugin and SaaS authentication; unmodified third-party artifacts cannot join.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Build-time coupling",
+        "Security and trust"
+      ]
+    },
+    {
+      "id": "migration.participant.legacy-no-build-viable",
+      "value": "no",
+      "note": "Requires a working modern bundler build to host the plugin.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Build-time coupling"
+      ]
+    },
+    {
+      "id": "migration.strangler.incremental",
+      "value": "yes",
+      "note": "Per-app adoption; each app joins independently at its own pace.",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Build-time coupling"
+      ]
+    },
+    {
+      "id": "migration.host.new-infra-tier-required",
+      "value": "conditional",
+      "condition": "Managed default requires no adopter infrastructure; the BYOC path requires provisioning data-plane workers/storage in the adopter's cloud",
+      "claimType": "officially-supported",
+      "confidence": "medium",
+      "evidence": [
+        "Deployment"
+      ]
+    },
+    {
+      "id": "migration.host.shell-takeover-required",
+      "value": "no",
+      "note": "No shell or root-config re-rooting; ops attaches to existing builds.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Migration requirements"
+      ]
+    },
+    {
+      "id": "migration.exit.participants-standalone",
+      "value": "yes",
+      "note": "Artifacts are standard bundler output; exit forfeits the proprietary version/rollback workflow.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Migration requirements"
+      ]
+    },
+    {
+      "id": "migration.path.from-incumbent-format",
+      "value": "yes",
+      "note": "One-line plugin adoption for existing MF apps; featured deployment path in official MF docs.",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Migration requirements",
+        "Sources"
+      ]
+    },
+    {
+      "id": "migration.forced-remigration-pending",
+      "value": "no",
+      "note": "No announced EOL or breaking major; 1.x line active.",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "What it is"
+      ]
+    },
+    {
+      "id": "migration.permanent-viability",
+      "value": "conditional",
+      "condition": "Vendor positions it as permanent, but seed-stage funding (nothing beyond $3.5M found) plus mandatory SaaS control plane leave longevity unproven; no multi-year adopter evidence",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Operational model"
+      ]
+    },
+    {
+      "id": "ownership.single-team-endorsed",
+      "value": "unknown",
+      "note": "No explicit statement recorded either way; a Personal free tier implies small-team use but is not an endorsement.",
+      "claimType": "inference",
+      "confidence": "low",
+      "evidence": [
+        "Editions and commercial layer"
+      ]
+    },
+    {
+      "id": "ownership.code-boundary-ownership",
+      "value": "yes",
+      "note": "Per-app repos and builds; ordinary review authority applies.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Ownership topology fit"
+      ]
+    },
+    {
+      "id": "ownership.deploy-schedule-ownership",
+      "value": "yes",
+      "note": "Per-app deploy cadence; environment-promotion permissions can centralize or delegate go-live.",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Ownership topology fit",
+        "Operational model"
+      ]
+    },
+    {
+      "id": "ownership.runtime-operational-ownership",
+      "value": "no",
+      "note": "Participants are static artifacts on Zephyr's platform, not team-operated services.",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Deployment"
+      ]
+    },
+    {
+      "id": "ownership.external-participant",
+      "value": "no",
+      "note": "External code must build with the plugin into the same org and shares the MF realm; no distinct security principal.",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Security and trust"
+      ]
+    },
+    {
+      "id": "ownership.participant-unmodifiable-host",
+      "value": "no",
+      "note": "Host must run a Zephyr-plugin-equipped, MF-capable build.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Build-time coupling"
+      ]
+    },
+    {
+      "id": "ownership.distrusted-cadence",
+      "value": "conditional",
+      "condition": "Environment pinning insulates consumers from uncoordinated remote deploys; once versions meet, MF singleton/strictVersion skew semantics apply",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Runtime coupling",
+        "Operational model"
+      ]
+    },
+    {
+      "id": "ownership.uncoordinated-upgrades",
+      "value": "na",
+      "note": "Shared-dependency semantics are MF's; Zephyr pins versions, not dependency policy.",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Runtime coupling"
+      ]
+    },
+    {
+      "id": "ownership.onboarding-without-central-owner",
+      "value": "yes",
+      "note": "Publish-style: a team's deploy registers itself with the platform; org admission and permissions still apply.",
+      "claimType": "officially-supported",
+      "confidence": "medium",
+      "evidence": [
+        "Ownership topology fit"
+      ]
+    },
+    {
+      "id": "ownership.platform-team-role-required",
+      "value": "conditional",
+      "condition": "Org, environment and promotion administration needs an owner, but infrastructure operation is vendor-managed",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Ownership topology fit"
+      ]
+    },
+    {
+      "id": "ownership.non-developer-composition",
+      "value": "no",
+      "note": "Dashboard manages versions and environments, not page composition.",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Operational model"
+      ]
+    },
+    {
+      "id": "ownership.participant-bytes-verbatim",
+      "value": "yes",
+      "note": "Content-addressed SHA-256 snapshots served as built; \"silent observation\" no-modification is a vendor claim.",
+      "claimType": "officially-supported",
+      "confidence": "medium",
+      "evidence": [
+        "Build-time coupling",
+        "What it is"
+      ]
+    },
+    {
+      "id": "ownership.nested-host-seat",
+      "value": "na",
+      "note": "Chained hosting is MF's capability; Zephyr records the host/remote relationships.",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "What it is"
+      ]
+    },
+    {
+      "id": "ownership.upstream-contract-lifetime",
+      "value": "yes",
+      "note": "Boundary is Module Federation's contract; Zephyr inherits that ecosystem's lifetime.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Family mapping (provisional)"
+      ]
+    },
+    {
+      "id": "coordination.shared-dependency-governance",
+      "value": "yes",
+      "note": "Inherited unchanged from MF share scope; Zephyr surfaces dependency inventory but does not negotiate semantics.",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Runtime coupling"
+      ]
+    },
+    {
+      "id": "operations.version-skew-machinery",
+      "value": "yes",
+      "note": "Per-environment resolution, label selectors, atomic promotion/rollback at deploy tier; MF semver negotiation inherited at runtime.",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Operational model"
+      ]
+    },
+    {
+      "id": "operations.stack-traces-cross-boundary",
+      "value": "na",
+      "note": "Shared-realm error semantics are MF's; Zephyr adds no error plumbing.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "operations.owner-attribution-builtin",
+      "value": "unknown",
+      "note": "Runtime failure attribution unevidenced; runtime telemetry itself Unknown despite observability marketing.",
+      "claimType": "inference",
+      "confidence": "low",
+      "evidence": [
+        "Ambiguities and decomposition candidates"
+      ]
+    },
+    {
+      "id": "operations.cross-journey-correlation-diy",
+      "value": "na",
+      "note": "Journey observability belongs to the shared-realm mechanism and app APM, not this layer.",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Operational model"
+      ]
+    },
+    {
+      "id": "operations.deploy-inventory-firstparty",
+      "value": "yes",
+      "note": "Mission Control lists remotes with deployed and historical versions per environment.",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Operational model"
+      ]
+    },
+    {
+      "id": "operations.first-party-debug-tooling",
+      "value": "yes",
+      "note": "Browser extension (Chromium-only as of Aug 2026), Zephyr Devtools, MF Chrome devtool integration.",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Operational model"
+      ]
+    },
+    {
+      "id": "operations.local-composed-dev-firstparty",
+      "value": "unknown",
+      "note": "Every build deploys to cloud preview URLs; a local no-cloud composed mode is unevidenced.",
+      "claimType": "inference",
+      "confidence": "low",
+      "evidence": [
+        "Deployment"
+      ]
+    },
+    {
+      "id": "operations.composition-tier-local-parity",
+      "value": "no",
+      "note": "Resolution/serving tier and control plane are vendor SaaS; cannot run on a laptop.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Deployment"
+      ]
+    },
+    {
+      "id": "operations.standalone-participant-dev",
+      "value": "yes",
+      "note": "Apps are standard bundler apps runnable standalone; MF remote caveats inherited.",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Migration requirements"
+      ]
+    },
+    {
+      "id": "operations.composed-test-utilities",
+      "value": "no",
+      "note": "No first-party composed-testing utilities documented.",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Operational model"
+      ]
+    },
+    {
+      "id": "operations.deploy-time-contract-verification",
+      "value": "unknown",
+      "note": "Nothing evidenced verifying a re-pointed or rolled-back remote still satisfies host contracts.",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Ambiguities and decomposition candidates"
+      ]
+    },
+    {
+      "id": "operations.single-sponsor-concentration",
+      "value": "yes",
+      "note": "Single seed-stage company; the mandatory SaaS control plane makes sponsor loss an outage risk, not just a stall.",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Operational model"
+      ]
+    },
+    {
+      "id": "operations.mode-forked-operations",
+      "value": "no",
+      "note": "Managed vs BYOC and SSR-beta fork deployment/SSR cells, not isolation or runtime attributes.",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Deployment",
+        "SSR and delivery"
+      ]
+    }
+  ]
+}
