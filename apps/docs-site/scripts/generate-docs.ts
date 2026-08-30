@@ -10,6 +10,7 @@ import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { createURL } from '@hyperfrontend/immutable-api-utils/built-in-copy/url'
 import { logger } from '@hyperfrontend/logging'
 import { generateGuides } from './generate-guides'
+import { generateMachineReadableDocs } from './generate-machine-readable'
 import { generateSearchIndex } from './generate-search-index'
 
 logger.setLogLevel('log')
@@ -679,6 +680,9 @@ function generateDocs() {
   }
 
   writeFileSync(join(OUTPUT_DIR, 'manifest.json'), stringify(manifest, null, 2))
+
+  // why: the markdown counterparts read the manifest, the guide corpus, and the extracted root documents, so they are published only once all three exist
+  generateMachineReadableDocs()
 
   generateSearchIndex()
 
