@@ -54,6 +54,10 @@ it as data, so no `as`, no `satisfies`, no computed values inside `decisionFrame
 - HyperFrontend must be able to lose. `scenarios/` proves it: one fixture ends in "no
   microfrontends", one in a competitor. Keep it that way.
 - Dotted ids are stable identity. Rename the wording, never the id.
+- Each question is asked once. The `Prompt` and `Technical note` bullets in
+  `model/questions.md` are published verbatim and the guard compares them, so change model
+  and dataset together. Keep the prompt naming a circumstance or a constraint, never a
+  mechanism or a benefit (the anti-steering audit, `questions.md` 1.3).
 - Every ecosystem claim is dated and labelled with its claim type. Never promote possible to
   supported, typically to required, or isolated to secure. `unknown` is an honest verdict.
 - Claims are a snapshot (August 2026). Refreshing moves the snapshot rather than silently
