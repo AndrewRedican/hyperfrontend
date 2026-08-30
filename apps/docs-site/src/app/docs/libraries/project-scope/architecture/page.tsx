@@ -1,38 +1,11 @@
 import type { Metadata } from 'next'
-import { Breadcrumb } from '@/components/breadcrumb'
-import { ReadmeContent } from '@/components/readme-content'
-import { getLibraryArchitecture } from '@/lib/docs-loader'
-import { markdownToHtml } from '@/lib/markdown'
-import { extractMermaidBlocks } from '@/lib/mermaid-utils'
+import { LibraryArchitecturePage } from '@/components/library-architecture-page'
 import { getArchitectureMetadata } from '@/lib/metadata'
-import Link from 'next/link'
-import { notFound } from 'next/navigation'
 
 export function generateMetadata(): Metadata {
   return getArchitectureMetadata('project-scope')
 }
 
-export default async function ProjectScopeArchitecturePage() {
-  const content = getLibraryArchitecture('project-scope')
-
-  if (!content) {
-    notFound()
-  }
-
-  const { processedContent, diagrams } = extractMermaidBlocks(content)
-  const html = await markdownToHtml(processedContent)
-
-  return (
-    <>
-      <Breadcrumb />
-
-      <div className="mb-6">
-        <Link href="/docs/libraries/project-scope" className="text-sm text-primary-600 hover:underline dark:text-primary-400">
-          ← Back to @hyperfrontend/project-scope
-        </Link>
-      </div>
-
-      <ReadmeContent html={html} mermaidDiagrams={diagrams} />
-    </>
-  )
+export default function ProjectScopeArchitecturePage() {
+  return <LibraryArchitecturePage slug="project-scope" packageName="@hyperfrontend/project-scope" />
 }

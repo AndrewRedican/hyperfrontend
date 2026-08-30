@@ -3,14 +3,17 @@ import { TrackedLink } from '@/components/analytics/tracked-link'
 import { ApiLinkProvider, ApiReference } from '@/components/api-reference'
 import { Breadcrumb } from '@/components/breadcrumb'
 import { CodeBlock } from '@/components/code-block'
+import { DocumentShell } from '@/components/document/document-shell'
 import { SuggestGuideLink } from '@/components/guides/suggest-guide-link'
 import { H2 } from '@/components/heading-with-anchor'
 import { removeBadges, transformLinks } from '@/lib/content'
 import { getLibraryReadme, getLibraryArchitecture, getLibraryApi, getApiLinkIndex } from '@/lib/docs-loader'
+import { documentSubject } from '@/lib/document-model'
 import { buildGuidesHref } from '@/lib/guide-filters'
 import { getGuidesForPackage } from '@/lib/guides'
 import { markdownToHtml } from '@/lib/markdown'
 import { extractMermaidBlocks } from '@/lib/mermaid-utils'
+import { extractMarkdownSections } from '@/lib/slug'
 import Link from 'next/link'
 import { ReadmeContent } from './readme-content'
 
@@ -23,7 +26,7 @@ interface LibraryPageProps {
   fallbackFeatures?: string[]
 }
 
-export async function LibraryDocPage({ title, packageName, slug, fallbackDescription, fallbackFeatures }: LibraryPageProps) {
+export async function LibraryDocPage({ title, packageName, slug, category, fallbackDescription, fallbackFeatures }: LibraryPageProps) {
   const readme = getLibraryReadme(slug)
   const hasArchitecture = !!getLibraryArchitecture(slug)
   const apiData = getLibraryApi(slug) as TypeDocOutput | null
@@ -39,8 +42,17 @@ export async function LibraryDocPage({ title, packageName, slug, fallbackDescrip
 
     const html = await markdownToHtml(processedContent)
 
+    const sections = extractMarkdownSections(processedContent)
+    if (apiData) {
+      // why: the reference is a section of this page with a server-rendered anchor, but its symbols are not; there are hundreds per package and they have their own filter, so the index offers the way in and stops there
+      sections.push({ title: 'API Reference', anchor: 'api-reference', level: 2 })
+    }
+
     return (
-      <>
+      <DocumentShell
+        descriptor={{ route: libraryDocRoute(slug, category), title, subject: documentSubject('package', packageName), kind: 'package' }}
+        sections={sections}
+      >
         <Breadcrumb />
 
         <div className="mb-4 flex flex-wrap items-center gap-3">
@@ -142,7 +154,7 @@ export async function LibraryDocPage({ title, packageName, slug, fallbackDescrip
             </Link>
           </div>
         </section>
-      </>
+      </DocumentShell>
     )
   }
 
@@ -196,6 +208,20 @@ export async function LibraryDocPage({ title, packageName, slug, fallbackDescrip
       </section>
     </>
   )
+}
+
+/**
+ * Route a library's documentation page is published at.
+ *
+ * Utility packages are namespaced under a shared umbrella and their pages
+ * address them by the short slug, which is the same slug this component is
+ * given.
+ * @param slug - The library's URL slug as the page passes it
+ * @param category - The library's category
+ * @returns Site-relative route without a trailing slash
+ */
+function libraryDocRoute(slug: string, category: LibraryPageProps['category']): string {
+  return category === 'utils' ? `/docs/libraries/utils/${slug}` : `/docs/libraries/${slug}`
 }
 
 type IconProps = { className?: string }

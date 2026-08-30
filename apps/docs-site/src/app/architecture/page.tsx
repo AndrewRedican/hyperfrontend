@@ -1,13 +1,14 @@
 import type { Metadata } from 'next'
+import { MarkdownDocPage } from '@/components/document/markdown-doc-page'
 import { Footer } from '@/components/footer'
 import { Header } from '@/components/header'
-import { ReadmeContent } from '@/components/readme-content'
 import { getRootArchitecture } from '@/lib/docs-loader'
-import { markdownToHtml } from '@/lib/markdown'
-import { extractMermaidBlocks } from '@/lib/mermaid-utils'
+import { documentSubject } from '@/lib/document-model'
+import { markdownAlternate } from '@/lib/metadata'
 
 export const metadata: Metadata = {
   title: 'Architecture',
+  alternates: { canonical: '/architecture/', types: markdownAlternate('/architecture', 'Architecture') },
   description:
     'Layered architecture for runtime micro-frontend integration enabling frameworks to communicate through secure, contract-validated messaging.',
 }
@@ -28,14 +29,19 @@ export default async function ArchitecturePage() {
     )
   }
 
-  const { processedContent, diagrams } = extractMermaidBlocks(content)
-  const html = await markdownToHtml(processedContent)
-
   return (
     <>
       <Header />
-      <main className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-        <ReadmeContent html={html} mermaidDiagrams={diagrams} />
+      <main id="main-content" className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+        <MarkdownDocPage
+          markdown={content}
+          descriptor={{
+            route: '/architecture',
+            title: 'Architecture',
+            subject: documentSubject('page', 'the HyperFrontend architecture'),
+            kind: 'page',
+          }}
+        />
       </main>
       <Footer />
     </>

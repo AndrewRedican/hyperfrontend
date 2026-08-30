@@ -1,12 +1,13 @@
 import type { Metadata } from 'next'
 import { Breadcrumb } from '@/components/breadcrumb'
-import { ReadmeContent } from '@/components/readme-content'
+import { MarkdownDocPage } from '@/components/document/markdown-doc-page'
 import { getRegardingAi } from '@/lib/docs-loader'
-import { markdownToHtml } from '@/lib/markdown'
-import { extractMermaidBlocks } from '@/lib/mermaid-utils'
+import { documentSubject } from '@/lib/document-model'
+import { markdownAlternate } from '@/lib/metadata'
 
 export const metadata: Metadata = {
   title: 'Regarding AI',
+  alternates: { canonical: '/docs/regarding-ai/', types: markdownAlternate('/docs/regarding-ai', 'Regarding AI') },
   description: 'How AI and LLMs are used in hyperfrontend development with a human-in-the-loop verification process.',
 }
 
@@ -23,13 +24,16 @@ export default async function RegardingAiPage() {
     )
   }
 
-  const { processedContent, diagrams } = extractMermaidBlocks(content)
-  const html = await markdownToHtml(processedContent)
-
   return (
-    <>
-      <Breadcrumb />
-      <ReadmeContent html={html} mermaidDiagrams={diagrams} />
-    </>
+    <MarkdownDocPage
+      markdown={content}
+      descriptor={{
+        route: '/docs/regarding-ai',
+        title: 'Regarding AI',
+        subject: documentSubject('page', "HyperFrontend's position on AI-assisted development"),
+        kind: 'page',
+      }}
+      before={<Breadcrumb />}
+    />
   )
 }
