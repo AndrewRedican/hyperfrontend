@@ -102,7 +102,6 @@ const RAIL_WORDS: Record<RailStyle, string> = {
 const GHOST_CAPTION = 'However many others there are: you have not told us, and it does not change the verdict.'
 const HANDOVER_FOOTNOTE = 'One modification ceiling was recorded and is shown for every party. Nothing here differs per party.'
 const DEPENDENCY_LOCKED = 'Framework copies on one screen only arise once two teams share a screen.'
-const NOT_OBSERVED = 'This describes constraints you reported, not a system anyone observed: the assessment never asks what you do today.'
 
 /**
  * Renders an element no answer has established: a real control leading to the
@@ -286,10 +285,14 @@ function PositionRow({ position }: PositionRowProps) {
  * @returns The band section.
  */
 function Band({ number, title, rail, provenance, assessmentRoute, children }: BandProps) {
+  // why: an answered band needs no chip saying so, since the band is drawn from that answer; only a question still open is worth a control
+  const open = provenance.filter((chip) => !chip.answerLabel)
   return (
     <section
       aria-label={`Band ${number}: ${title}`}
-      className="border-t border-slate-200 p-4 dark:border-slate-800 md:grid md:grid-cols-[3rem_minmax(0,1fr)_9rem] md:gap-4 md:p-6 print:break-inside-avoid"
+      className={`border-t border-slate-200 p-4 dark:border-slate-800 md:grid md:gap-4 md:p-6 print:break-inside-avoid ${
+        open.length > 0 ? 'md:grid-cols-[3rem_minmax(0,1fr)_9rem]' : 'md:grid-cols-[3rem_minmax(0,1fr)]'
+      }`}
     >
       <div className={`hidden md:col-start-1 md:row-start-1 md:flex md:flex-col md:items-center md:gap-2 md:pl-3 ${RAIL_CLASS[rail]}`}>
         <span className="text-sm font-bold text-slate-400 dark:text-slate-500">{number}</span>
@@ -305,26 +308,20 @@ function Band({ number, title, rail, provenance, assessmentRoute, children }: Ba
         <span className="sr-only">{RAIL_WORDS[rail]}</span>
         <div className="mt-3">{children}</div>
       </div>
-      <div className="mt-3 flex flex-wrap gap-1.5 md:col-start-3 md:row-start-1 md:mt-0 md:flex-col">
-        {provenance.map((chip) => (
-          <Link
-            key={chip.questionId}
-            href={`${assessmentRoute}?question=${encodeURIComponent(chip.questionId)}`}
-            aria-label={
-              chip.answerLabel
-                ? `From your answer to question ${chip.questionNumber}: ${chip.answerLabel}. Change it.`
-                : `Question ${chip.questionNumber} is not answered. Answer it.`
-            }
-            className={`rounded-md border px-2 py-1 text-[11px] hover:border-slate-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-500 dark:hover:border-slate-400 ${
-              chip.answerLabel
-                ? 'border-slate-200 text-slate-600 dark:border-slate-700 dark:text-slate-300'
-                : 'border-dotted border-slate-300 text-slate-500 dark:border-slate-600 dark:text-slate-400'
-            }`}
-          >
-            {chip.answerLabel ? `from your answer to Q${chip.questionNumber}` : `Q${chip.questionNumber}: not asked yet`}
-          </Link>
-        ))}
-      </div>
+      {open.length > 0 ? (
+        <div className="mt-3 flex flex-wrap gap-1.5 md:col-start-3 md:row-start-1 md:mt-0 md:flex-col">
+          {open.map((chip) => (
+            <Link
+              key={chip.questionId}
+              href={`${assessmentRoute}?question=${encodeURIComponent(chip.questionId)}`}
+              aria-label={`Question ${chip.questionNumber} is not answered. Answer it.`}
+              className="rounded-md border border-dotted border-slate-300 px-2 py-1 text-[11px] text-slate-500 hover:border-slate-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-500 dark:border-slate-600 dark:text-slate-400 dark:hover:border-slate-400"
+            >
+              Q{chip.questionNumber}: not asked yet
+            </Link>
+          ))}
+        </div>
+      ) : null}
     </section>
   )
 }
@@ -342,7 +339,7 @@ function pageShapeOf(topology: DeliveryTopology): ReactNode {
   const frame = 'aspect-[16/10] w-full max-w-sm rounded-lg border border-slate-300 p-2 dark:border-slate-600'
   if (shape === 'page-per-team') {
     return (
-      <div className="flex flex-col items-center gap-2 sm:flex-row">
+      <div className="flex flex-col items-center justify-center gap-2 sm:flex-row">
         <div className={`${frame} flex bg-primary-50 dark:bg-primary-950/40`}>
           <span className={region}>your team&apos;s page</span>
         </div>
@@ -357,7 +354,7 @@ function pageShapeOf(topology: DeliveryTopology): ReactNode {
     )
   }
   return (
-    <div className={`${frame} flex gap-2`}>
+    <div className={`${frame} mx-auto flex gap-2`}>
       <span className={`${region} bg-primary-50 dark:bg-primary-950/40`}>your team</span>
       <span
         aria-hidden="true"
@@ -397,11 +394,7 @@ export function IndependenceSeam({ result, assessmentRoute }: IndependenceSeamPr
   return (
     <figure className="mt-6 rounded-2xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950">
       <figcaption className="p-4 md:p-6">
-        <h3 className="text-base font-bold text-slate-900 dark:text-white">Your delivery topology</h3>
-        <p className="mt-2 text-sm leading-relaxed text-slate-700 dark:text-slate-200">{topology.thesis}</p>
-        <p className="mt-2 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
-          Drawn from {topology.drawnFrom} of your {topology.answered} answers. {NOT_OBSERVED}
-        </p>
+        <p className="text-sm leading-relaxed text-slate-700 dark:text-slate-200">{topology.thesis}</p>
       </figcaption>
 
       <p aria-live="polite" className="sr-only">
@@ -424,7 +417,7 @@ export function IndependenceSeam({ result, assessmentRoute }: IndependenceSeamPr
         {ownership.controlNote ? (
           <p className="mt-2 text-xs text-slate-600 dark:text-slate-300">
             <span aria-hidden="true" className="mr-1 font-mono">
-              {ownership.controlGlyph === 'both-ways' ? '-(/)-' : '-(/)&gt;'}
+              {ownership.controlGlyph === 'both-ways' ? '-(/)-' : '-(/)>'}
             </span>
             {ownership.controlNote}
           </p>
