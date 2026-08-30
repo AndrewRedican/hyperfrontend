@@ -99,6 +99,17 @@ const THEMES: Record<string, DemoTheme> = {
     accent: { light: '220, 38, 38', dark: '248, 113, 113' },
     ring: { light: '239, 68, 68', dark: '252, 165, 165' },
   },
+  'koi-pond': {
+    surface: 'border-teal-200 from-teal-50 to-teal-100 dark:border-teal-900 dark:from-teal-950 dark:to-slate-950',
+    chip: 'bg-teal-100 text-teal-600 dark:bg-teal-900/40 dark:text-teal-400',
+    pill: 'bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-300',
+    dot: 'bg-teal-500',
+    glowOuter: 'bg-teal-400/25 dark:bg-teal-500/20',
+    glowCore: 'bg-teal-300/40 dark:bg-teal-400/25',
+    // why: the pond paints its own water in deep blue-greens and its chrome in a mint highlight, so the hue the page lends it is the one it already uses.
+    accent: { light: '13, 148, 136', dark: '45, 212, 191' },
+    ring: { light: '20, 184, 166', dark: '94, 234, 212' },
+  },
   views: {
     surface: 'border-indigo-200 from-indigo-50 to-indigo-100 dark:border-indigo-900 dark:from-indigo-950 dark:to-slate-950',
     chip: 'bg-indigo-100 text-indigo-600 dark:bg-indigo-900/40 dark:text-indigo-400',
