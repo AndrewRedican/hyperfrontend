@@ -47,7 +47,7 @@ export function EliminationCascade({ result }: EliminationCascadeProps) {
   const rows: CascadeRow[] = result.answered
     .map(({ question, answer }) => ({
       answerId: answer.id,
-      question: question.circumstance,
+      question: question.prompt,
       answer: answer.label,
       consequence: answer.consequence,
       hard: answer.answerClass === 'hard',

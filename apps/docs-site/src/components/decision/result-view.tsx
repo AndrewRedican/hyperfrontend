@@ -276,7 +276,7 @@ export function ResultView({ assessmentRoute }: ResultViewProps) {
                     <span className="min-w-0">
                       <span className="block text-sm font-medium text-slate-900 dark:text-white">{answer.label}</span>
                       <span className="mt-1 block text-xs leading-relaxed text-slate-600 dark:text-slate-400">{answer.consequence}</span>
-                      <span className="mt-1 block text-[11px] text-slate-400 dark:text-slate-500">{question.circumstance}</span>
+                      <span className="mt-1 block text-[11px] text-slate-400 dark:text-slate-500">{question.prompt}</span>
                     </span>
                   </li>
                 ))}
@@ -482,7 +482,7 @@ export function ResultView({ assessmentRoute }: ResultViewProps) {
         <ul className="mt-4 space-y-3 sm:hidden">
           {result.answered.map(({ question, answer }) => (
             <li key={question.id} className="rounded-xl border border-slate-200 p-4 dark:border-slate-800">
-              <p className="text-xs text-slate-500 dark:text-slate-400">{question.circumstance}</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400">{question.prompt}</p>
               <p className="mt-1.5 text-sm font-medium text-slate-900 dark:text-white">{answer.label}</p>
               <span className="mt-2 inline-block rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-600 dark:bg-slate-800 dark:text-slate-300">
                 {answer.answerClass === 'hard' ? 'Hard requirement' : 'Preference'}
@@ -503,7 +503,7 @@ export function ResultView({ assessmentRoute }: ResultViewProps) {
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
               {result.answered.map(({ question, answer }) => (
                 <tr key={question.id}>
-                  <td className="py-3 pr-4 align-top text-slate-600 dark:text-slate-400">{question.circumstance}</td>
+                  <td className="py-3 pr-4 align-top text-slate-600 dark:text-slate-400">{question.prompt}</td>
                   <td className="py-3 pr-4 align-top font-medium text-slate-900 dark:text-white">{answer.label}</td>
                   <td className="py-3 align-top text-xs text-slate-500 dark:text-slate-400">
                     {answer.answerClass === 'hard' ? 'Hard requirement' : 'Preference'}

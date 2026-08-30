@@ -12,8 +12,9 @@
 //                             names, integration-phase poles
 //   model/implementations.md  implementation and edition ids, availability states,
 //                             family mappings
-//   model/questions.md        question ids, ranks, exposed dimensions, and the
-//                             Eliminates/favors bullets
+//   model/questions.md        question ids, ranks, exposed dimensions, the asked
+//                             prompt and its technical note (both compared verbatim),
+//                             and the Eliminates/favors bullets
 //   matrix/attributes.json    attribute count; matrix/columns/ supplies the unit count
 //
 // Projection side: the .ts file is read as text; the exported object literal is
@@ -70,6 +71,16 @@ const ids = (text, re) => {
   for (const match of text.matchAll(new RegExp(re.source, 'g'))) found.push(match[1])
   return found
 }
+// The model quotes the wording it publishes; the projection stores the same sentence
+// as data. Compare with the surrounding quotes, code-span backticks, and line wrapping
+// removed, so only the words themselves have to match.
+const spoken = (text) =>
+  (text ?? '')
+    .trim()
+    .replace(/^"|"$/g, '')
+    .replace(/`/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
 const uniq = (list) => [...new Set(list)]
 const sortedList = (set) => [...set].sort().join(', ')
 const setsEqual = (a, b) => a.size === b.size && [...a].every((value) => b.has(value))
@@ -200,6 +211,8 @@ function parseQuestions() {
       rank: ranked.get(id),
       dimensions: new Set(ids(entry.fields.Exposes ?? '', DIMENSION_ID_RE)),
       eliminationText: (entry.fields['Eliminates/favors'] ?? '').trim(),
+      prompt: entry.fields.Prompt,
+      technicalNote: entry.fields['Technical note'],
     })
   }
   return { ranked, questions }
@@ -498,6 +511,25 @@ function checkQuestions(projection, model, families) {
       skip('questions', `${id}: the model names no dimension.* id under Exposes, so the projected dimension "${question.dimension}" is unverifiable`)
     }
 
+    // The asked wording is published, so it is compared verbatim rather than trusted:
+    // a reader can trace any question on the page back to the model entry that owns it.
+    for (const [field, label, modelText] of [
+      ['prompt', 'Prompt', entry.prompt],
+      ['technicalNote', 'Technical note', entry.technicalNote],
+    ]) {
+      if (modelText === undefined) {
+        fail('questions', `${id}: the model has no ${label} bullet, so the published wording has no stated origin`)
+        continue
+      }
+      if (spoken(modelText) === spoken(question[field])) pass()
+      else {
+        fail(
+          'questions',
+          `${id} ${field} differs from the model ${label}: projection says "${spoken(question[field])}", model says "${spoken(modelText)}"`,
+        )
+      }
+    }
+
     const analysis = readEliminationBullet(entry.eliminationText, families)
     const union = new Set(analysis.groups.flatMap((group) => [...group.ids]))
     for (const answer of question.answers) {
@@ -598,7 +630,7 @@ function checkQuestions(projection, model, families) {
   )
   skip('questions', 'answerClass values are unverifiable: the model classifies bindings in prose per constraint, not per answer id')
   skip('questions', 'favors sets are unverifiable: the model states ranking effects per constraint binding in constraints.md, not per answer')
-  skip('questions', 'circumstance, architect, why, and consequence prose is paraphrased from the model phrasings')
+  skip('questions', 'why and consequence prose is paraphrased from the model phrasings')
 }
 
 function checkMetadata(projection) {

@@ -182,10 +182,10 @@ export interface Question {
   id: string
   /** Position in the ranked index, ordered by how much of the landscape the worst answer removes. */
   rank: number
-  /** The plain-language phrasing, describing a situation rather than a mechanism. */
-  circumstance: string
-  /** The technical phrasing, which exposes the underlying attribute vocabulary. */
-  architect: string
+  /** The question as asked: one professional sentence naming a circumstance or a constraint, never a mechanism. */
+  prompt: string
+  /** The technical note offered under the question, adding the mechanism and what makes an answer bind. */
+  technicalNote: string
   /** One sentence on what this question buys that no other question buys. */
   why: string
   /** The taxonomy dimension the answers position the reader on. */
@@ -741,9 +741,9 @@ export const decisionFramework: DecisionFramework = {
     {
       id: 'question.ownership.composition-parties',
       rank: 1,
-      circumstance: 'Who builds and ships each piece: all one team, several teams at your company, or somebody you cannot direct?',
-      architect:
-        'For each piece being composed: which organization owns its source, its build, its deploy pipeline, and its release schedule: your team, another team in your company, an acquired company, or an outside vendor or customer?',
+      prompt: 'Who owns the source, build, and deployment pipeline for each piece?',
+      technicalNote:
+        'Control is the fact that matters, not headcount. A piece owned by another team in your company can still be scheduled; one owned by a vendor, a customer, or an acquired company cannot. Your answer fills the ownership checklist the model infers your topology from, rather than ruling anything out by itself.',
       why: 'Ownership facts decide which of the big eliminators may ever bind at all, so asking anything else first risks spending questions that cannot matter.',
       dimension: 'ownership.fact-checklist',
       answers: [
@@ -802,10 +802,9 @@ export const decisionFramework: DecisionFramework = {
     {
       id: 'question.deploy.independence',
       rank: 2,
-      circumstance:
-        'When one team finishes a change, can everyone live with it shipping in the next release of the whole product, or must that team be able to put it in front of users on its own schedule, without waiting for anyone?',
-      architect:
-        'Must a participant deploy reach production without rebuilding or redeploying the host (deployment.host-rebuild-required=n, ownership.deploy-schedule-ownership), or is one coordinated release train acceptable, structurally?',
+      prompt: 'Must teams be able to deploy to production on their own schedule, without a coordinated release?',
+      technicalNote:
+        'Structurally the question is whether a piece can reach production without rebuilding or redeploying the host. Independent deployment is also what makes the two sides drift out of contract with each other, so it buys the versioning and validation machinery needed to survive that.',
       why: 'This is the single largest guaranteed split in the landscape: the same answer fixes integration time and prices the contract machinery that comes with it.',
       dimension: 'dimension.integration-time',
       answers: [
@@ -871,10 +870,9 @@ export const decisionFramework: DecisionFramework = {
     {
       id: 'question.granularity.single-screen',
       rank: 3,
-      circumstance:
-        'Picture the finished product: is there a page where the work of two different teams is visible at the same time, or does each page belong to one team and you move between them by navigating?',
-      architect:
-        'Does any single screen concurrently render output owned by more than one independently deploying team (runtime.concurrent-participants), or do team boundaries align with whole-page navigations?',
+      prompt: 'Does a single screen ever show work from more than one team at the same time?',
+      technicalNote:
+        'The test is concurrent rendering: output owned by two independently deploying teams alive on the same screen at once. Where team boundaries line up with whole-page navigation instead, everything about co-residence stops applying: shared dependencies, overlays crossing sections, and one piece taking down another.',
       why: 'It is a cheap product fact with double leverage: it either removes the page-partition families or makes the whole co-residence question cluster vacuous.',
       dimension: 'dimension.composition-granularity',
       answers: [
@@ -910,10 +908,9 @@ export const decisionFramework: DecisionFramework = {
     {
       id: 'question.migration.participant-ceiling',
       rank: 4,
-      circumstance:
-        'For each piece: could the people who own it change how it is built or how it starts up if integration required it; could your own team only wrap it as it is; or can nothing about it be touched at all?',
-      architect:
-        'Per participant: the deepest modification its owners can and will accept before integration, on the migration scale: config and serving only (1), adapter around unchanged code (2), build-tool change (3), entry or bootstrap edit (4), bounded internal refactor (5), or practically nothing (9)?',
+      prompt: 'What is the deepest change the owners of a piece can accept in order to integrate it?',
+      technicalNote:
+        'The model scales it: configuration and serving only, an adapter around unchanged code, a build-tool change, an entry or bootstrap edit, a bounded internal refactor, or practically nothing. What counts is the deepest change the owners will accept, not the deepest change that is technically possible.',
       why: 'A modification ceiling is the canonical eliminating answer of the model, and it is often entailed for free by who owns the piece.',
       dimension: 'dimension.adaptation-floor',
       answers: [
@@ -985,10 +982,9 @@ export const decisionFramework: DecisionFramework = {
     {
       id: 'question.trust.malicious-participant',
       rank: 5,
-      circumstance:
-        'If the people behind one piece turned out to be careless, hacked, or hostile, must the rest of the product stay safe anyway? Or do you fundamentally trust everyone whose code you are combining and just want their mistakes not to trample each other?',
-      architect:
-        'If a participant is compromised or malicious, must the composition boundary itself contain it: no host DOM or JS-state reach, partitioned storage, bounded navigation and capability surface (isolation.security.malicious-participant, security.capability-narrowing)? Or is the risk model accidental interference between trusted teams?',
+      prompt: 'If one piece were compromised or hostile, must the rest of the product stay safe anyway?',
+      technicalNote:
+        'Two different adversaries. Containing a hostile piece calls for a boundary the browser enforces: no reach into host state, partitioned storage, bounded navigation, a narrowed capability surface. Keeping trusted teams from tripping over each other calls for convention and review, and rules out almost nothing.',
       why: 'It is the sharpest eliminator in the landscape: when it binds hard it removes more of the space than any other single answer.',
       dimension: 'dimension.trust-ceiling',
       answers: [
@@ -1039,10 +1035,9 @@ export const decisionFramework: DecisionFramework = {
     {
       id: 'question.coordination.upgrade-train',
       rank: 6,
-      circumstance:
-        'When a shared library needs an upgrade today, does every affected team actually move in step, or does each team upgrade whenever it can and you live with the skew?',
-      architect:
-        'Can this organization run standing cross-team dependency-version governance: aligned upgrade trains before and after builds, runtime conflicts fixed on a real sprint, indefinitely (coordination.shared-dependency-governance)?',
+      prompt: 'When a shared library upgrades, do all teams move together, or must several versions run side by side?',
+      technicalNote:
+        'Standing version governance means aligned upgrade trains before and after every build, and runtime conflicts fixed on a real sprint, indefinitely. Approaches that put every piece in one JavaScript realm need that discipline permanently, not once during adoption.',
       why: 'It separates the two coordination-hungry shared-realm families from everything else, and it asks about observed behaviour rather than intent.',
       dimension: 'dimension.dependency-economy',
       answers: [
@@ -1080,10 +1075,9 @@ export const decisionFramework: DecisionFramework = {
     {
       id: 'question.delivery.server-capacity',
       rank: 7,
-      circumstance:
-        'Is there a team that runs servers for this product and could be on call for one more service, or do you ship files to a CDN and nothing else?',
-      architect:
-        'Must production delivery run entirely from static hosting or a CDN, with no composition or routing service you operate on the request path (ssr.static-hosting-sufficient, deployment.strategy-service-in-path=n)?',
+      prompt: 'Can you operate a service on the request path, or is delivery limited to static hosting and a CDN?',
+      technicalNote:
+        "Assembly happens either on the request path, in a server or edge service you operate, or in the reader's browser. Static-only delivery removes the first group outright, whatever else it offers, so the question is really whether a team would carry one more service in production.",
       why: 'It cleanly splits request-path assembly from static delivery, and organizations answer it reliably because it is a capability fact.',
       dimension: 'dimension.assembly-locus',
       answers: [
@@ -1119,10 +1113,9 @@ export const decisionFramework: DecisionFramework = {
     {
       id: 'question.delivery.first-paint',
       rank: 8,
-      circumstance:
-        'Do the combined pages need to appear in search engines and render before any script runs, or do users sign in before they see anything anyway?',
-      architect:
-        'Must first paint deliver composed, crawler-indexable content with no client-side JavaScript execution (ux.composed-first-paint, ssr.crawler-indexable, ssr.no-js-first-paint)?',
+      prompt: 'Must the composed page render and be crawlable before any JavaScript runs?',
+      technicalNote:
+        'This binds only where a business surface depends on composed content existing in the first response: indexable markup, or a page that works before scripts execute. Wanting the page to feel fast is a different requirement and is better bought elsewhere.',
       why: 'Its elimination width is large, but it may only bind when a business surface actually depends on crawlability rather than on page speed.',
       dimension: 'dimension.assembly-locus',
       answers: [
@@ -1171,10 +1164,9 @@ export const decisionFramework: DecisionFramework = {
     {
       id: 'question.failure.containment',
       rank: 9,
-      circumstance:
-        'If one piece crashes in production, is it acceptable that the whole page might need a reload, or must everything else keep working while the broken piece recovers on its own?',
-      architect:
-        'When a mounted participant throws, leaks timers or listeners, or corrupts its own state, must host and siblings continue unaffected, with in-page recovery and full resource reclaim (isolation.failure.post-mount-exception, isolation.lifecycle.reclaim, isolation.recovery.in-page)?',
+      prompt: 'When one piece fails in production, must everything else keep working?',
+      technicalNote:
+        'Containment means an uncaught exception, a leaked timer, or corrupted state inside one piece cannot reach the host or its siblings, and that the piece can be restarted in place with its resources reclaimed. Without an enforced boundary, one exception is a page-wide event and recovery means a reload.',
       why: 'It separates architectures where a failure is contained by construction from those where a single exception reaches every participant on the page.',
       dimension: 'dimension.runtime-realm',
       answers: [
@@ -1211,10 +1203,9 @@ export const decisionFramework: DecisionFramework = {
     {
       id: 'question.ux.seam-tolerance',
       rank: 10,
-      circumstance:
-        'Do dropdowns, dialogs, tab order, and screen readers have to work across the whole page as if one team built it, or are visible edges between sections acceptable for this product?',
-      architect:
-        'Must composed regions behave as one document: natural layout flow, overlays and portals escaping region bounds, continuous focus order, a single accessibility tree (ux.natural-layout-flow, ux.overlay-viewport-escape, ux.cross-boundary-focus-mgmt, ux.screenreader-continuity)?',
+      prompt: 'Must the composed page behave as one document for layout, overlays, focus, and screen readers?',
+      technicalNote:
+        'The demanding version is one accessibility tree and one focus order across the whole page, with dialogs and menus free to escape the section that owns them. The same boundary that contains a failing or hostile piece is what makes those seams appear.',
       why: 'It is the counterweight: the only high-rank question whose hard answer removes the architecture that survives the trust question.',
       dimension: 'dimension.runtime-realm',
       answers: [
@@ -1253,9 +1244,9 @@ export const decisionFramework: DecisionFramework = {
     {
       id: 'question.deps.major-coexistence',
       rank: 11,
-      circumstance: 'Are some pieces stuck on an old version of the same framework newer pieces use, with nobody budgeted to upgrade them?',
-      architect:
-        'Must incompatible majors of one framework coexist on composed pages indefinitely, with no funded alignment work (framework.same-framework-major-coexistence, runtime.side-by-side-versions)?',
+      prompt: 'Must incompatible major versions of the same framework run side by side indefinitely?',
+      technicalNote:
+        'The estate fact decides nothing on its own. It binds once no work is funded to align the versions, which makes the coexistence permanent rather than transitional, and permanent coexistence is what a single shared module graph cannot express.',
       why: 'A mixed stack routes nowhere on its own: it only binds when the estate fact arrives together with the fact that nobody is funded to fix it.',
       dimension: 'dimension.dependency-economy',
       answers: [
@@ -1297,10 +1288,9 @@ export const decisionFramework: DecisionFramework = {
     {
       id: 'question.deps.payload-budget',
       rank: 12,
-      circumstance:
-        'Is there a hard page-weight or low-end-device budget that all the pieces on one screen must fit inside together, or is some duplication tolerable?',
-      architect:
-        'Must a library shared by several co-displayed participants ship once per page (performance.shared-dependency-dedup), as a stated budget requirement rather than a wish?',
+      prompt: 'Is there a stated page-weight or device budget that every piece on a screen shares?',
+      technicalNote:
+        'Shipping one copy of a shared library across independently deployed pieces costs coupling: an agreed version policy plus the machinery to enforce it at runtime. What the duplication actually costs depends on how many pieces are on screen together and on the devices they must run on.',
       why: 'Deduplication machinery is only worth its coupling when a real budget pays for it, and duplication is only acceptable given the number of pieces on screen.',
       dimension: 'dimension.dependency-economy',
       answers: [
@@ -1338,10 +1328,9 @@ export const decisionFramework: DecisionFramework = {
     {
       id: 'question.roster.runtime-admission',
       rank: 13,
-      circumstance:
-        'When a new application is added to the combined product, is it acceptable to rebuild and redeploy the main application every time, or must new pieces appear without anyone touching the host?',
-      architect:
-        'Must new participants or new versions be admitted into a running document without host code change, rebuild, or a central owner action (runtime.late-participant-registration, deployment.new-participant-host-change=n, ownership.onboarding-without-central-owner)?',
+      prompt: 'Can new pieces be added without rebuilding or redeploying the host?',
+      technicalNote:
+        'Stated structurally: new pieces, or new versions of existing ones, admitted into a running product with no host code change and no central owner acting. Approaches that resolve their participants while the host builds cannot do this by construction.',
       why: 'It is the plugin-ecosystem requirement in question form, and it is entailed whenever the participant roster contains pieces that do not exist yet.',
       dimension: 'dimension.roster-authority',
       answers: [
@@ -1376,10 +1365,9 @@ export const decisionFramework: DecisionFramework = {
     {
       id: 'question.host.negotiability',
       rank: 14,
-      circumstance:
-        'When your product runs inside the sites of your customers, can you realistically ask every one of them to change their site for you, and would they do it, or must it work with whatever their pages already do?',
-      architect:
-        'Can you require embedding hosts to adopt anything, a runtime, a shell, or a build integration, or must the product run inside host pages you cannot modify, neither leaking styles and globals out nor breaking when a hostile host environment leaks in (ownership.participant-unmodifiable-host)?',
+      prompt: "When your product runs inside a customer's site, can you require them to change that site?",
+      technicalNote:
+        'Asked from the seat of the embedded product rather than the host. Where nothing can be required, the piece has to survive whatever the host page already does: nothing of yours leaking out into their styles or globals, nothing of theirs breaking you on the way in.',
       why: 'It is the only question asked from the seat of the embedded product, and its hard answer removes seven of the twelve families, a wider cut than anything but the release-train question.',
       dimension: 'dimension.adaptation-floor',
       answers: [
@@ -1427,10 +1415,9 @@ export const decisionFramework: DecisionFramework = {
     {
       id: 'question.contracts.sync-calls',
       rank: 15,
-      circumstance:
-        'Do the pieces need to work on the same objects instantly, like one program, or can they send each other messages and wait for answers?',
-      architect:
-        'Must participants call the live objects of another participant synchronously in one stack (contracts.sync-calls), or is asynchronous, serialized messaging acceptable at the boundary?',
+      prompt: "Do pieces need to call each other's live objects directly, or is asynchronous messaging enough?",
+      technicalNote:
+        "Acting on another piece's live objects in one call stack requires a shared JavaScript realm. Across an enforced boundary the same exchange is serialized and asynchronous, which is a different programming model rather than a slower version of the same one.",
       why: 'It rarely fires, but when the surviving candidates span serialized and live-object boundaries it is a genuine eliminator.',
       dimension: 'dimension.runtime-realm',
       answers: [
@@ -1463,10 +1450,9 @@ export const decisionFramework: DecisionFramework = {
     {
       id: 'question.orchestration.appetite',
       rank: 16,
-      circumstance:
-        'Would you adopt a framework that every team then upgrades together for years, if it hands you loading screens, error handling, messaging, and local development, or do you want browser primitives only and will build those parts yourselves?',
-      architect:
-        'May the strategy ship a page-wide runtime that every participant co-versions, with a tooling or framework floor (runtime.shared-runtime-library, framework.version-floor-imposed), or must nothing strategy-owned outlive the browser on the page (buildtime.host-integrates-buildless)?',
+      prompt: 'Are you willing to adopt a page-wide runtime that every team then upgrades together?',
+      technicalNote:
+        'A strategy-owned runtime pays for loading states, error handling, messaging between pieces, and local development, and charges a version floor that every piece co-versions for as long as the product runs. The alternative is browser primitives only, with nothing of the strategy outliving the page.',
       why: 'Only its hard limb belongs at this stage: refusing a strategy-owned runtime removes the two families whose mechanism is a runtime on the page, while the appetite for a paved road ranks implementations rather than families.',
       dimension: 'dimension.orchestration-thickness',
       answers: [

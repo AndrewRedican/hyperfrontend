@@ -4,8 +4,8 @@ Status: DERIVED v1 (2026-08-29). Deliverable 6 (MASTER.md section 16). Requireme
 served: REQ-Q-01 (smallest high-information set, gain argued, eliminations named),
 REQ-Q-02 (hard vs preference per answer), REQ-Q-04 (the no-MFE outcome can fire after
 two questions), REQ-Q-05 (anti-steering audit per phrasing), REQ-Q-06 (no numeric
-scoring; gain is argued structurally), REQ-AUD-01 (architect and circumstance phrasing
-per question), REQ-STATE-03/09 (desirability separated from readiness; trajectory
+scoring; gain is argued structurally), REQ-AUD-01 (one asked prompt per question,
+with the architect vocabulary held in a technical note), REQ-STATE-03/09 (desirability separated from readiness; trajectory
 questions), REQ-ENT-03 (operability questions bound to implementation/edition stage),
 REQ-ORCH-10 (unanswered never defaults to hard).
 
@@ -113,9 +113,11 @@ Each answer is classified hard (eliminates via the named binding), strong prefer
 (ranks; violated ones reported as tradeoffs), weak preference (tie-break), or
 irrelevant. Unanswered is always `class.irrelevant-by-default` (REQ-ORCH-10); no
 question below binds hard without an explicit answer or an entailed `derive.*` premise.
-The two audiences answer the same underlying question (REQ-AUD-01): the architect
-phrasing exposes attribute vocabulary; the circumstance phrasing describes the
-situation and the system infers the binding.
+Both audiences answer the same question (REQ-AUD-01). The asked prompt states a
+circumstance or a constraint and the system infers the binding; the technical note
+under it carries the attribute vocabulary and the mechanism, for readers who want
+them. Section 3 records both verbatim and the published questionnaire renders them as
+written, so a displayed question always has a citable origin (2026-08-30).
 
 ---
 
@@ -157,7 +159,9 @@ branch (the whole co-residence cluster of ranks 6, 9, 11, 12, 15 becomes vacuous
 
 Field key: Why / Exposes (dimension ids) / Sets (constraint bindings per answer with
 class) / Eliminates-favors (verified in the cited constraints.md section) / Unlocks
-(follow-up ids + condition) / Phrasings (A architect, C circumstance) / Audit.
+(follow-up ids + condition) / Prompt (asked verbatim) / Technical note (offered under
+it, verbatim) / Audit. Sections 4 to 7 keep the older A-and-C phrasing pair: those
+questions are modelled but not published, so nothing renders them.
 
 ### 3.1 `question.ownership.composition-parties` (rank 1)
 
@@ -186,11 +190,11 @@ class) / Eliminates-favors (verified in the cited constraints.md section) / Unlo
 - **Unlocks**: everything. Specifically rank 2 (always), rank 5 (external/plugin/b2b
   facts), rank 14 (when the user's product is the embedded party), section 4
   trajectory battery (when any answer differs current vs target).
-- **Phrasing A**: "For each piece being composed: which organization owns its source,
-  its build, its deploy pipeline, and its release schedule: your team, another team in
-  your company, an acquired company, or an outside vendor/customer?"
-- **Phrasing C**: "Who builds and ships each piece: all one team, several teams at
-  your company, or somebody you cannot direct?"
+- **Prompt**: "Who owns the source, build, and deployment pipeline for each piece?"
+- **Technical note**: "Control is the fact that matters, not headcount. A piece owned by
+  another team in your company can still be scheduled; one owned by a vendor, a
+  customer, or an acquired company cannot. Your answer fills the ownership checklist the
+  model infers your topology from, rather than ruling anything out by itself."
 - **Audit**: B3 (asks parties and control, not stack inventory; the framework-mix
   answer deliberately does not exist here); B1 clean (no mechanism named).
 
@@ -229,13 +233,12 @@ class) / Eliminates-favors (verified in the cited constraints.md section) / Unlo
 - **Unlocks**: rank 3 (if independent deploy binds), `question.impl.drift-machinery`
   (drift becomes structurally possible), `question.trajectory.bounded-exit`.
   If atomic-release binds hard: family stage ends; jump to section 5.
-- **Phrasing A**: "Must a participant's deploy reach production without rebuilding or
-  redeploying the host (`deployment.host-rebuild-required`=n,
-  `ownership.deploy-schedule-ownership`), or is one coordinated release train
-  acceptable, structurally?"
-- **Phrasing C**: "When one team finishes a change, can everyone live with it shipping
-  in the next release of the whole product, or must that team be able to put it in
-  front of users on its own schedule, without waiting for anyone?"
+- **Prompt**: "Must teams be able to deploy to production on their own schedule, without
+  a coordinated release?"
+- **Technical note**: "Structurally the question is whether a piece can reach production
+  without rebuilding or redeploying the host. Independent deployment is also what makes
+  the two sides drift out of contract with each other, so it buys the versioning and
+  validation machinery needed to survive that."
 - **Audit**: B1 (deployment stated as circumstance, no autonomy rhetoric); B4 (the
   value/readiness split keeps the wish out of the hard slot: an org that merely *wants*
   independence keeps the baselines in play as candidates with a reported tradeoff).
@@ -259,12 +262,13 @@ class) / Eliminates-favors (verified in the cited constraints.md section) / Unlo
 - **Unlocks**: yes unlocks `question.ux.chrome-persistence` (follow-up id, binds
   `constraint.persistent-chrome` and `constraint.cross-boundary-soft-nav`,
   constraints.md 2.5) plus ranks 6, 9, 11, 12, 15; no prunes those same ranks.
-- **Phrasing A**: "Does any single screen concurrently render output owned by more
-  than one independently deploying team (`runtime.concurrent-participants`), or do
-  team boundaries align with whole-page navigations?"
-- **Phrasing C**: "Picture the finished product: is there a page where two different
-  teams' work is visible at the same time, or does each page belong to one team and
-  you move between them by navigating?"
+- **Prompt**: "Does a single screen ever show work from more than one team at the same
+  time?"
+- **Technical note**: "The test is concurrent rendering: output owned by two
+  independently deploying teams alive on the same screen at once. Where team boundaries
+  line up with whole-page navigation instead, everything about co-residence stops
+  applying: shared dependencies, overlays crossing sections, and one piece taking down
+  another."
 - **Audit**: B1 clean (describes the product, not a capability); B2 (the entire
   co-residence cost is only taken on the strength of a product fact).
 
@@ -304,13 +308,12 @@ class) / Eliminates-favors (verified in the cited constraints.md section) / Unlo
   `question.trajectory.legacy-horizon` (split horizons, migration.md section 6),
   strangler follow-up `question.migration.strangler` (binds
   `constraint.strangler-path`).
-- **Phrasing A**: "Per participant: the deepest modification its owners can and will
-  accept before integration, on the migration scale: config/serving only (1), adapter
-  around unchanged code (2), build-tool change (3), entry/bootstrap edit (4), bounded
-  internal refactor (5), or practically nothing (9)?"
-- **Phrasing C**: "For each piece: could the people who own it change how it is built
-  or how it starts up if integration required it; could your own team only wrap it
-  as-is; or can nothing about it be touched at all?"
+- **Prompt**: "What is the deepest change the owners of a piece can accept in order to
+  integrate it?"
+- **Technical note**: "The model scales it: configuration and serving only, an adapter
+  around unchanged code, a build-tool change, an entry or bootstrap edit, a bounded
+  internal refactor, or practically nothing. What counts is the deepest change the
+  owners will accept, not the deepest change that is technically possible."
 - **Audit**: B3/B4 (appetite is bounded by capability preconditions asked as facts, so
   a willing answer cannot raise a ceiling the build cannot cash); B1 clean.
 
@@ -342,15 +345,12 @@ class) / Eliminates-favors (verified in the cited constraints.md section) / Unlo
 - **Unlocks**: rank 10 (with the exclusion warning), `question.guard.verbatim-bytes`
   when audit/regulatory context is present, the identity block reference for b2b
   (section 6).
-- **Phrasing A**: "If a participant is compromised or malicious, must the composition
-  boundary itself contain it: no host DOM/JS-state reach, partitioned storage,
-  bounded navigation and capability surface
-  (`isolation.security.malicious-participant`, `security.capability-narrowing`)? Or is
-  the risk model accidental interference between trusted teams?"
-- **Phrasing C**: "If the people behind one piece turned out to be careless, hacked,
-  or hostile, must the rest of the product stay safe anyway? Or do you fundamentally
-  trust everyone whose code you are combining and just want their mistakes not to
-  trample each other?"
+- **Prompt**: "If one piece were compromised or hostile, must the rest of the product
+  stay safe anyway?"
+- **Technical note**: "Two different adversaries. Containing a hostile piece calls for a
+  boundary the browser enforces: no reach into host state, partitioned storage, bounded
+  navigation, a narrowed capability surface. Keeping trusted teams from tripping over
+  each other calls for convention and review, and rules out almost nothing."
 - **Audit**: B1 (this is exactly the question the REQ-Q-05 bad example advertises as
   "superior isolation"; the constraint form names the adversary and the containment
   obligation, never the mechanism); B2 (the document-embedding costs downstream are
@@ -377,12 +377,12 @@ class) / Eliminates-favors (verified in the cited constraints.md section) / Unlo
   the `deps.duplicated` families and the baselines.
 - **Unlocks**: rank 12 only if governance available or fusion still live; else rank 12
   is pruned (its hard form would be a proven gap, `gap.autonomous-dedup`).
-- **Phrasing A**: "Can this organization run standing cross-team dependency-version
-  governance: aligned upgrade trains before and after builds, runtime conflicts fixed
-  on somebody's sprint, indefinitely (`coordination.shared-dependency-governance`)?"
-- **Phrasing C**: "When a shared library needs an upgrade today, does every affected
-  team actually move in step, or does each team upgrade whenever it can and you live
-  with the skew?"
+- **Prompt**: "When a shared library upgrades, do all teams move together, or must
+  several versions run side by side?"
+- **Technical note**: "Standing version governance means aligned upgrade trains before
+  and after every build, and runtime conflicts fixed on a real sprint, indefinitely.
+  Approaches that put every piece in one JavaScript realm need that discipline
+  permanently, not once during adoption."
 - **Audit**: B3 (asks observed behavior, "does it happen today", because
   fragmentation is the topology least likely to be self-reported honestly,
   topology.md 2.9); B4 (a promised future governance change is a section 4 trajectory
@@ -410,11 +410,12 @@ class) / Eliminates-favors (verified in the cited constraints.md section) / Unlo
   composed-first-paint jointly redirect to the prerendered build-fused baselines
   (`rel.excludes`, constraints.md section 4); the engine surfaces this before both are
   bound.
-- **Phrasing A**: "Must production delivery run entirely from static hosting/CDN, with
-  no composition or routing service you operate on the request path
-  (`ssr.static-hosting-sufficient`, `deployment.strategy-service-in-path`=n)?"
-- **Phrasing C**: "Is there a team that runs servers for this product and could be on
-  call for one more service, or do you ship files to a CDN and nothing else?"
+- **Prompt**: "Can you operate a service on the request path, or is delivery limited to
+  static hosting and a CDN?"
+- **Technical note**: "Assembly happens either on the request path, in a server or edge
+  service you operate, or in the reader's browser. Static-only delivery removes the
+  first group outright, whatever else it offers, so the question is really whether a
+  team would carry one more service in production."
 - **Audit**: B1 clean; B2 (the no-servers answer's cost, losing composed first paint,
   is surfaced through the exclusion warning at bind time).
 
@@ -442,11 +443,12 @@ class) / Eliminates-favors (verified in the cited constraints.md section) / Unlo
 - **Unlocks**: `question.ux.chrome-persistence` tension: hard first-paint plus hard
   persistent chrome is reachable only via web-fragments pierced mode or the
   build-fused baselines (constraints.md 2.5).
-- **Phrasing A**: "Must first paint deliver composed, crawler-indexable content with
-  no client-side JS execution (`ux.composed-first-paint`, `ssr.crawler-indexable`,
-  `ssr.no-js-first-paint`)?"
-- **Phrasing C**: "Do the combined pages need to appear in search engines and render
-  before any script runs, or do users sign in before they see anything anyway?"
+- **Prompt**: "Must the composed page render and be crawlable before any JavaScript
+  runs?"
+- **Technical note**: "This binds only where a business surface depends on composed
+  content existing in the first response: indexable markup, or a page that works before
+  scripts execute. Wanting the page to feel fast is a different requirement and is
+  better bought elsewhere."
 - **Audit**: B2 (hard requires a stated business surface; a performance taste is
   rerouted to simpler architectures per REQ-Q-04 instead of buying a composition
   tier); B1 clean.
@@ -475,13 +477,11 @@ class) / Eliminates-favors (verified in the cited constraints.md section) / Unlo
 - **Unlocks**: rank 10 (the seam question becomes decision-relevant once
   document-boundary families are favored), memory-budget cost note
   (`constraint.memory-budget`, weak, never hard-eliminating: constraints.md 2.12).
-- **Phrasing A**: "When a mounted participant throws, leaks timers/listeners, or
-  corrupts its own state, must host and siblings continue unaffected, with in-page
-  recovery and full resource reclaim (`isolation.failure.post-mount-exception`,
-  `isolation.lifecycle.reclaim`, `isolation.recovery.in-page`)?"
-- **Phrasing C**: "If one piece crashes in production, is it acceptable that the whole
-  page might need a reload, or must everything else keep working while the broken
-  piece recovers on its own?"
+- **Prompt**: "When one piece fails in production, must everything else keep working?"
+- **Technical note**: "Containment means an uncaught exception, a leaked timer, or
+  corrupted state inside one piece cannot reach the host or its siblings, and that the
+  piece can be restarted in place with its resources reclaimed. Without an enforced
+  boundary, one exception is a page-wide event and recovery means a reload."
 - **Audit**: B1 (describes the failure event and the obligation, not "better
   isolation"); B2 (the hard form cites who is harmed by shared blast radius: paged
   teams, plugin users, vendors' customers).
@@ -510,13 +510,12 @@ class) / Eliminates-favors (verified in the cited constraints.md section) / Unlo
   `ux.host-overlay-protocol`, constraints.md 6.1), never a silent downgrade.
 - **Unlocks**: rank 15 (boundary call style), `question.impl.paved-road` aspects
   (host-overlay protocols are implementation properties).
-- **Phrasing A**: "Must composed regions behave as one document: natural layout flow,
-  overlays and portals escaping region bounds, continuous focus order, a single
-  accessibility tree (`ux.natural-layout-flow`, `ux.overlay-viewport-escape`,
-  `ux.cross-boundary-focus-mgmt`, `ux.screenreader-continuity`)?"
-- **Phrasing C**: "Do dropdowns, dialogs, tab order, and screen readers have to work
-  across the whole page as if one team built it, or are visible edges between sections
-  acceptable for this product?"
+- **Prompt**: "Must the composed page behave as one document for layout, overlays,
+  focus, and screen readers?"
+- **Technical note**: "The demanding version is one accessibility tree and one focus
+  order across the whole page, with dialogs and menus free to escape the section that
+  owns them. The same boundary that contains a failing or hostile piece is what makes
+  those seams appear."
 - **Audit**: B1/B2 (seam cost stated as concrete behaviors; the hard form requires a
   mandate such as accessibility law or a product requirement, not aesthetics); B3
   (a11y is split out so a legal fact is never blended with visual taste).
@@ -536,11 +535,12 @@ class) / Eliminates-favors (verified in the cited constraints.md section) / Unlo
   conditionally the negotiated units (cells c: skew falls back to duplication);
   eliminates the build-fused baselines for the affected participants.
 - **Unlocks**: nothing new; narrows survivors.
-- **Phrasing A**: "Must incompatible majors of one framework coexist on composed pages
-  indefinitely, with no funded alignment work
-  (`framework.same-framework-major-coexistence`, `runtime.side-by-side-versions`)?"
-- **Phrasing C**: "Are some pieces stuck on an old version of the same framework newer
-  pieces use, with nobody budgeted to upgrade them?"
+- **Prompt**: "Must incompatible major versions of the same framework run side by side
+  indefinitely?"
+- **Technical note**: "The estate fact decides nothing on its own. It binds once no work
+  is funded to align the versions, which makes the coexistence permanent rather than
+  transitional, and permanent coexistence is what a single shared module graph cannot
+  express."
 - **Audit**: B3 (binds only with the funding fact attached; a stack list alone is
   insufficient by design); B4 ("the upgrade will happen eventually" is a trajectory
   answer, checked for credibility, never a relaxation of the hard binding:
@@ -567,11 +567,12 @@ class) / Eliminates-favors (verified in the cited constraints.md section) / Unlo
   neither survives, the hard form is the proven gap `gap.autonomous-dedup` (or
   `gap.untrusted-dedup` with rank 5 hard) and the question is presented as a tradeoff
   acknowledgment, not a live choice.
-- **Phrasing A**: "Must a library shared by several co-displayed participants ship
-  once per page (`performance.shared-dependency-dedup`), as a stated budget
-  requirement rather than a wish?"
-- **Phrasing C**: "Is there a hard page-weight or low-end-device budget that all the
-  pieces on one screen must fit inside together, or is some duplication tolerable?"
+- **Prompt**: "Is there a stated page-weight or device budget that every piece on a
+  screen shares?"
+- **Technical note**: "Shipping one copy of a shared library across independently
+  deployed pieces costs coupling: an agreed version policy plus the machinery to enforce
+  it at runtime. What the duplication actually costs depends on how many pieces are on
+  screen together and on the devices they must run on."
 - **Audit**: B2 (this question exists to force the "for what benefit" ledger both
   ways: no budget fact, no dedup requirement; a real budget fact is the concrete
   benefit that justifies shared-realm coupling).
@@ -601,14 +602,11 @@ class) / Eliminates-favors (verified in the cited constraints.md section) / Unlo
   `constraint.no-delivery-intermediary` (`gap.governed-ownerless-onboarding`).
 - **Unlocks**: rank 5 confirm (plugin authors' trust), `question.impl.paved-road`
   (plugin-author DX preference), section 6 review/registry operability seeds.
-- **Phrasing A**: "Must new participants or new versions be admitted into a running
-  document without host code change, rebuild, or a central owner's action
-  (`runtime.late-participant-registration`,
-  `deployment.new-participant-host-change`=n,
-  `ownership.onboarding-without-central-owner`)?"
-- **Phrasing C**: "When a new application is added to the combined product, is it
-  acceptable to rebuild and redeploy the main application every time, or must new
-  pieces appear without anyone touching the host?"
+- **Prompt**: "Can new pieces be added without rebuilding or redeploying the host?"
+- **Technical note**: "Stated structurally: new pieces, or new versions of existing
+  ones, admitted into a running product with no host code change and no central owner
+  acting. Approaches that resolve their participants while the host builds cannot do
+  this by construction."
 - **Audit**: B1 clean (mechanics of admission, not "runtime flexibility"); B2 (the
   registry-mediation cost, an intermediary in the trust path, is surfaced through the
   exclusion at bind time).
@@ -634,13 +632,12 @@ class) / Eliminates-favors (verified in the cited constraints.md section) / Unlo
   row).
 - **Unlocks**: section 6 b2b credentials block when customer data/credentials are
   involved (topology.md 2.8 follow-ups), rank 5 from the customer's seat.
-- **Phrasing A**: "Can you require embedding hosts to adopt anything (runtime, shell,
-  build integration), or must your product run inside host pages you cannot modify,
-  neither leaking styles/globals out nor breaking when hostile host environments leak
-  in (`ownership.participant-unmodifiable-host`)?"
-- **Phrasing C**: "When your product runs inside customers' own sites: can you
-  realistically ask every customer to change their site for you, and would they do
-  it? Or must it work with whatever their pages already do?"
+- **Prompt**: "When your product runs inside a customer's site, can you require them to
+  change that site?"
+- **Technical note**: "Asked from the seat of the embedded product rather than the host.
+  Where nothing can be required, the piece has to survive whatever the host page already
+  does: nothing of yours leaking out into their styles or globals, nothing of theirs
+  breaking you on the way in."
 - **Audit**: B1/B3 (asks the negotiation reality per customer, never "do you want
   self-containment"); B2 clean (the self-containment cost is paid by an ownership
   fact).
@@ -660,11 +657,12 @@ class) / Eliminates-favors (verified in the cited constraints.md section) / Unlo
   Excluded jointly with hard rank 5 (no unit is untrusted-viable with sync calls) and
   effectively with hard rank 9 (only the hidden-realm virtualized units satisfy both,
   at damping trust only; constraints.md section 4).
-- **Phrasing A**: "Must participants call each other's live objects synchronously in
-  one stack (`contracts.sync-calls`), or is asynchronous, serialized messaging
-  acceptable at the boundary?"
-- **Phrasing C**: "Do the pieces need to work on the same objects instantly, like one
-  program, or can they send each other messages and wait for answers?"
+- **Prompt**: "Do pieces need to call each other's live objects directly, or is
+  asynchronous messaging enough?"
+- **Technical note**: "Acting on another piece's live objects in one call stack requires
+  a shared JavaScript realm. Across an enforced boundary the same exchange is serialized
+  and asynchronous, which is a different programming model rather than a slower version
+  of the same one."
 - **Audit**: B2 (a yes must name the interaction that needs it, e.g. a shared editing
   surface, else it stays preference); B1 clean.
 
@@ -686,14 +684,12 @@ class) / Eliminates-favors (verified in the cited constraints.md section) / Unlo
   route-partition practices and the build-time baselines; taxonomy 2.11) and
   eliminates thick-runtime members at pole scope (piral, luigi, entando, qiankun,
   hyperfrontend, and the library-tier units per cell).
-- **Phrasing A**: "May the strategy ship a page-wide runtime that every participant
-  co-versions, with a tooling/framework floor (`runtime.shared-runtime-library`,
-  `framework.version-floor-imposed`), or must nothing strategy-owned outlive the
-  browser on the page (`buildtime.host-integrates-buildless`)?"
-- **Phrasing C**: "Would you accept adopting a framework all teams must upgrade
-  together for years if it hands you loading screens, error handling, messaging, and
-  local dev; or do you want only browser primitives and will build those parts
-  yourselves?"
+- **Prompt**: "Are you willing to adopt a page-wide runtime that every team then
+  upgrades together?"
+- **Technical note**: "A strategy-owned runtime pays for loading states, error handling,
+  messaging between pieces, and local development, and charges a version floor that
+  every piece co-versions for as long as the product runs. The alternative is browser
+  primitives only, with nothing of the strategy outliving the page."
 - **Audit**: B1/B2 (the costs of both poles are stated symmetrically in the same
   sentence: co-versioned runtime vs recurring DIY; neither pole is advertised).
 

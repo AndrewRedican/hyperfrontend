@@ -368,7 +368,10 @@ Community and Enterprise. [7 transcript msg id: [7]; guidance [9]]
   ownership, migration) and MFE-unfamiliar users (early questions phrased in circumstances they
   understand, e.g. "can the host be rebuilt and redeployed whenever a new application is
   added?"; system infers the architectural consequence; terminology taught progressively; never
-  dumbed-down reasoning). [4]
+  dumbed-down reasoning). [4] AMENDED 2026-08-30: satisfied by one professional prompt per
+  question plus an optional technical note, rather than by two alternative phrasings the
+  reader switches between. Asking the reader to pick a register was itself a failure to word
+  the question clearly, and it split the audiences the requirement asks to serve together.
 - **REQ-FRAME-01** Explicitly present the methodology as first-principles ("starts with
   boundaries, ownership, deployment, coordination, isolation, and change constraints, then
   derives which strategies fit"); link the Medium/docs article "Microfrontends from First

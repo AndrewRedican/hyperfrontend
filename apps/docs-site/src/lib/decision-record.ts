@@ -90,7 +90,7 @@ export function buildDecisionRecord({ label, generatedOn, result }: DecisionReco
   lines.push('| Question | Answer | Weight |')
   lines.push('| --- | --- | --- |')
   for (const { question, answer } of result.answered) {
-    lines.push(`| ${question.circumstance} | ${answer.label} | ${answer.answerClass === 'hard' ? 'Hard requirement' : 'Preference'} |`)
+    lines.push(`| ${question.prompt} | ${answer.label} | ${answer.answerClass === 'hard' ? 'Hard requirement' : 'Preference'} |`)
   }
   if (result.answered.length === 0) lines.push('| No questions answered | | |')
   lines.push('')
@@ -172,7 +172,7 @@ export function buildDecisionRecord({ label, generatedOn, result }: DecisionReco
   lines.push('## Unresolved')
   lines.push('')
   const unanswered = result.relevant.filter((question) => !result.answered.some((entry) => entry.question.id === question.id))
-  for (const question of unanswered) lines.push(`- ${question.circumstance}`)
+  for (const question of unanswered) lines.push(`- ${question.prompt}`)
   if (unanswered.length === 0) lines.push('- Nothing relevant is unanswered.')
   lines.push('')
 
