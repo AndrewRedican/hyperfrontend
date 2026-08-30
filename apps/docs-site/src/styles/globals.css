@@ -248,6 +248,11 @@
     display: block !important;
   }
 
+  /* collapsed record sections and topology bands are hidden, not absent, so print restores them */
+  .decision-record [hidden] {
+    display: block !important;
+  }
+
   .decision-record a[href^='http']::after {
     content: ' (' attr(href) ')';
     font-size: 8pt;

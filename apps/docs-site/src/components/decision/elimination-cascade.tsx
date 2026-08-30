@@ -42,7 +42,7 @@ interface CascadeRow {
  * ```
  */
 export function EliminationCascade({ result }: EliminationCascadeProps) {
-  const familyNames = createMap(decisionFramework.families.map((family) => [family.id, family.plainName]))
+  const familyNames = createMap(decisionFramework.families.map((family) => [family.id, family.name]))
 
   const rows: CascadeRow[] = result.answered
     .map(({ question, answer }) => ({
