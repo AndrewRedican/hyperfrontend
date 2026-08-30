@@ -6,12 +6,11 @@ import type {
   BandProvenance,
   CompositionPosition,
   DeliveryTopology,
-  PartyLane,
-  PartyTreatment,
   RailStyle,
   SeamMark,
   TopologyPlaceholder,
 } from '../../lib/delivery-topology'
+import type { PartyLane, PartyTreatment } from '../../lib/delivery-topology-table'
 import Link from 'next/link'
 import { useMemo, useState } from 'react'
 import { deriveDeliveryTopology } from '../../lib/delivery-topology'

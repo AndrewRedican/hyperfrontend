@@ -11,7 +11,7 @@ apart. Research snapshot: August 2026.
 | ------ | ------- |
 | Published dataset | [../../src/data/decision-framework.ts](../../src/data/decision-framework.ts) |
 | Engine and record builder | [../../src/lib/decision-engine.ts](../../src/lib/decision-engine.ts), [../../src/lib/decision-record.ts](../../src/lib/decision-record.ts) |
-| Result diagrams | [../../src/components/decision/](../../src/components/decision/) and [../../src/lib/delivery-topology.ts](../../src/lib/delivery-topology.ts), specified in [ux/result-diagrams-spec.md](ux/result-diagrams-spec.md) |
+| Result diagrams | [../../src/components/decision/](../../src/components/decision/) and [../../src/lib/delivery-topology.ts](../../src/lib/delivery-topology.ts) over the answer-to-element table in [../../src/lib/delivery-topology-table.ts](../../src/lib/delivery-topology-table.ts), specified in [ux/result-diagrams-spec.md](ux/result-diagrams-spec.md) |
 | Model (the authority) | [model/](model/) |
 | Evidence under the model | [matrix/](matrix/), [research/](research/) |
 | Drift guard | [matrix/check-projection.mjs](matrix/check-projection.mjs) |
