@@ -1,12 +1,10 @@
 'use client'
 
-import type { ReactNode } from 'react'
 import type { FloorRequirement } from '../../data/decision-framework'
-import type { EngineResult, FitStrength } from '../../lib/decision-engine'
+import type { EngineResult } from '../../lib/decision-engine'
 import Link from 'next/link'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { createDate } from '@hyperfrontend/immutable-api-utils/built-in-copy/date'
-import { setTimeout } from '@hyperfrontend/immutable-api-utils/built-in-copy/timers'
 import { decisionFramework } from '../../data/decision-framework'
 import { evaluate, HYPERFRONTEND_FAMILY_ID, loadAssessment, pruneAnswers, saveAssessment } from '../../lib/decision-engine'
 import { buildDecisionRecord } from '../../lib/decision-record'
@@ -15,6 +13,8 @@ import { BandedLandscape } from './banded-landscape'
 import { EliminationCascade } from './elimination-cascade'
 import { IndependenceSeam } from './independence-seam'
 import { LogoMark } from './logo-mark'
+import { RecordActions } from './record-actions'
+import { RecordVerdict } from './record-verdict'
 
 /** Props for {@link ResultView}. */
 export interface ResultViewProps {
@@ -51,9 +51,7 @@ export function ResultView({ assessmentRoute }: ResultViewProps) {
   const [answers, setAnswers] = useState<Record<string, string> | null>(null)
   const [label, setLabel] = useState('')
   const [generatedOn, setGeneratedOn] = useState('')
-  const [copied, setCopied] = useState(false)
   const [expanded, setExpanded] = useState<string | null>(null)
-  const labelRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     const stored = loadAssessment()
@@ -66,33 +64,9 @@ export function ResultView({ assessmentRoute }: ResultViewProps) {
     setGeneratedOn(createDate().toISOString().slice(0, 10))
   }, [])
 
-  useEffect(() => {
-    // why: the label is the one field a reader is expected to fill on arrival, and naming the record is what makes it shareable
-    if (generatedOn) labelRef.current?.focus()
-  }, [generatedOn])
-
   const result: EngineResult | null = useMemo(() => (answers ? evaluate(answers) : null), [answers])
 
-  const record = useMemo(
-    () => (result && generatedOn ? buildDecisionRecord({ label, generatedOn, result }) : ''),
-    [label, generatedOn, result]
-  )
-
-  const copy = useCallback(() => {
-    void navigator.clipboard?.writeText(record).then(
-      () => {
-        setCopied(true)
-        setTimeout(() => setCopied(false), 2000)
-      },
-      () => setCopied(false)
-    )
-  }, [record])
-
-  const print = useCallback(() => {
-    window.print()
-  }, [])
-
-  const updateLabel = useCallback(
+  const nameRecord = useCallback(
     (next: string) => {
       setLabel(next)
       if (answers) saveAssessment(next, answers)
@@ -139,114 +113,24 @@ export function ResultView({ assessmentRoute }: ResultViewProps) {
 
   return (
     <div className="decision-record mt-8">
-      {/* record header */}
-      <div className="rounded-2xl border border-slate-200 p-6 dark:border-slate-800">
-        <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
-          <div className="min-w-0 flex-1">
-            <label htmlFor="record-label" className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
-              Decision record
-            </label>
-            <input
-              ref={labelRef}
-              id="record-label"
-              type="text"
-              value={label}
-              onChange={(event) => updateLabel(event.target.value)}
-              placeholder="Name this assessment"
-              className="mt-1 block w-full border-0 border-b border-transparent bg-transparent p-0 font-display text-2xl font-bold text-slate-900 placeholder:text-slate-300 focus:border-slate-300 focus:outline-none focus:ring-0 dark:text-white dark:placeholder:text-slate-700 print:border-0"
-            />
-          </div>
+      <RecordActions buildRecord={(name) => buildDecisionRecord({ label: name, generatedOn, result })} label={label} onLabel={nameRecord} />
 
-          {/* why: the actions stack in their own column so they never share a line with the title, and the label keeps the full width of the container for the meta line below */}
-          <div className="flex shrink-0 flex-col gap-2 print:hidden sm:w-52">
-            <RecordAction onClick={copy} icon={copied ? <TickIcon className="h-4 w-4" /> : <CopyIcon className="h-4 w-4" />}>
-              {copied ? 'Copied' : 'Copy as Markdown'}
-            </RecordAction>
-            <RecordAction onClick={print} icon={<PrinterIcon className="h-4 w-4" />}>
-              Print or save as PDF
-            </RecordAction>
-            <RecordAction href={assessmentRoute} icon={<PencilIcon className="h-4 w-4" />}>
-              Change answers
-            </RecordAction>
-          </div>
-        </div>
-
-        <dl className="mt-5 grid grid-cols-2 gap-x-4 gap-y-3 border-t border-slate-100 pt-4 text-xs dark:border-slate-800 sm:grid-cols-4">
-          <div>
-            <dt className="text-slate-400 dark:text-slate-500">Generated</dt>
-            <dd className="mt-0.5 font-medium text-slate-700 dark:text-slate-300">{generatedOn}</dd>
-          </div>
-          <div>
-            <dt className="text-slate-400 dark:text-slate-500">Decision framework</dt>
-            <dd className="mt-0.5 font-medium text-slate-700 dark:text-slate-300">v{metadata.frameworkVersion}</dd>
-          </div>
-          <div>
-            <dt className="text-slate-400 dark:text-slate-500">Research verified</dt>
-            <dd className="mt-0.5 font-medium text-slate-700 dark:text-slate-300">{metadata.researchSnapshot}</dd>
-          </div>
-          <div>
-            <dt className="text-slate-400 dark:text-slate-500">Stored</dt>
-            <dd className="mt-0.5 font-medium text-slate-700 dark:text-slate-300">In this browser only</dd>
-          </div>
+      <header className="border-b border-slate-200 pb-5 dark:border-slate-800">
+        <h1 className="font-display text-3xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-4xl">Decision record</h1>
+        <dl className="mt-4 grid grid-cols-1 gap-y-2 text-xs sm:grid-cols-3 sm:gap-x-6">
+          <MetaPair label="Generated" value={generatedOn} />
+          <MetaPair label="Decision framework" value={`v${metadata.frameworkVersion}`} />
+          <MetaPair label="Research verified" value={metadata.researchSnapshot} />
         </dl>
-      </div>
+      </header>
 
-      {/* verdict */}
+      {/* why: the verdict leads, because everything after it is the working that produced it */}
       <section className="mt-6">
-        {result.hyperfrontend.viable && result.outcome === 'microfrontend' ? (
-          <div className="overflow-hidden rounded-2xl border border-emerald-300 bg-emerald-50 dark:border-emerald-800/70 dark:bg-emerald-950/30">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-stretch sm:gap-6">
-              {/* why: the mark fills the container height on wide screens so the verdict reads before any text does, and caps to a badge on narrow ones */}
-              <div className="flex shrink-0 items-stretch justify-center bg-emerald-100 px-6 py-5 dark:bg-emerald-900/40 sm:px-6 sm:py-6">
-                <VerdictTickIcon className="h-14 w-14 self-center text-emerald-600 dark:text-emerald-400 sm:h-auto sm:min-h-[7.5rem] sm:w-20 sm:self-stretch" />
-              </div>
-              <div className="min-w-0 flex-1 px-6 py-5 sm:pl-0 sm:pr-7">
-                <p className="flex items-center gap-2">
-                  <ProductLogo className="h-5 w-5 shrink-0" />
-                  <span className="font-display text-lg font-bold text-slate-900 dark:text-white">HyperFrontend</span>
-                </p>
-                <h2 className="mt-2 text-xl font-bold text-emerald-900 dark:text-emerald-200">
-                  {fitHeadline(result.hyperfrontend.strength)}
-                </h2>
-                <p className="mt-2 max-w-2xl text-sm leading-relaxed text-emerald-900/80 dark:text-emerald-100/80">
-                  {fitSubline(result.hyperfrontend.strength, result.hyperfrontend.alternatives)}
-                </p>
-              </div>
-            </div>
-          </div>
-        ) : (
-          <div
-            className={`rounded-2xl border p-6 ${
-              result.outcome === 'no-match'
-                ? 'border-amber-300 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/30'
-                : 'border-slate-300 bg-slate-50 dark:border-slate-700 dark:bg-slate-900/50'
-            }`}
-          >
-            <h2 className="text-xl font-bold text-slate-900 dark:text-white">
-              {result.outcome === 'no-match'
-                ? 'No researched approach satisfies every requirement'
-                : result.outcome === 'baselines-only'
-                  ? 'You do not need microfrontends'
-                  : 'HyperFrontend is not the right fit'}
-            </h2>
-            <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-700 dark:text-slate-300">
-              {result.outcome === 'no-match'
-                ? 'Your requirements combine in a way nothing in the researched set satisfies. That is a real finding rather than a failure to choose: the section below names which single requirement would reopen which options.'
-                : result.outcome === 'baselines-only'
-                  ? 'Every approach that survives your answers ships as one deployment. Adopting a microfrontend architecture would add coordination and runtime cost without buying independence you need.'
-                  : 'Your answers rule out the architecture HyperFrontend implements. What follows is which approaches do fit, and exactly what would have to change for it to become viable.'}
-            </p>
-          </div>
-        )}
+        <RecordVerdict result={result} />
       </section>
 
-      {/* how the reader's own delivery works, before the landscape they are choosing from */}
       <section className="mt-10">
-        <h2 className="text-lg font-bold text-slate-900 dark:text-white">How your delivery works</h2>
-        <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-          Who ships each piece, what they hand over, where the pieces are joined, and what reaches the user. Drawn only from what you told
-          us: anything still open is a link back to the question that settles it.
-        </p>
+        <h2 className="text-lg font-bold text-slate-900 dark:text-white">Your delivery topology</h2>
         <IndependenceSeam result={result} assessmentRoute={assessmentRoute} />
       </section>
 
@@ -528,53 +412,6 @@ export function ResultView({ assessmentRoute }: ResultViewProps) {
   )
 }
 
-/**
- * The headline for a viable verdict, graded by how strongly the answers point
- * at this approach rather than merely permitting it.
- * @param strength - The graded fit from the engine.
- * @returns The headline sentence.
- */
-function fitHeadline(strength: FitStrength): string {
-  switch (strength) {
-    case 'only-option':
-      return 'Excellent. It is the only approach that fits'
-    case 'strong':
-      return 'Excellent. It is a strong fit'
-    case 'good':
-      return 'Good news. It is a good fit'
-    default:
-      return 'It fits your situation'
-  }
-}
-
-/**
- * The supporting line for a viable verdict, which stays honest about company:
- * surviving alongside six other approaches is not the same as winning.
- * @param strength - The graded fit from the engine.
- * @param alternatives - How many other microfrontend approaches also survive.
- * @returns The supporting sentence.
- */
-function fitSubline(strength: FitStrength, alternatives: number): string {
-  if (strength === 'only-option') return 'No other researched approach meets every requirement you stated.'
-  if (alternatives === 1) return 'One other approach also meets your requirements. Both are shown below.'
-  return `${alternatives} other approaches also meet your requirements, and are shown below.`
-}
-
-/** Props for the product logo. */
-interface ProductLogoProps {
-  /** Sizing classes. */
-  className?: string
-}
-
-function ProductLogo({ className }: ProductLogoProps) {
-  return (
-    <>
-      <img src="/hf-light.svg" alt="" aria-hidden="true" className={`${className ?? ''} block dark:hidden`} />
-      <img src="/hf-dark.svg" alt="" aria-hidden="true" className={`${className ?? ''} hidden dark:block`} />
-    </>
-  )
-}
-
 /** Props for the chevron icon. */
 interface ChevronIconProps {
   /** Sizing and rotation classes. */
@@ -628,83 +465,6 @@ function FloorGroup({ title, requirements }: FloorGroupProps) {
   )
 }
 
-/** Props for a record action, which renders as a button or a link. */
-interface RecordActionProps {
-  /** Leading icon. */
-  icon: ReactNode
-  /** Action label. */
-  children: ReactNode
-  /** Click handler, for actions that act on the page. */
-  onClick?: () => void
-  /** Destination, for actions that navigate. */
-  href?: string
-}
-
-/**
- * One action in the record's action column, kept visually identical whether it
- * navigates or acts in place.
- * @param props - See {@link RecordActionProps}.
- * @param props.icon
- * @param props.children
- * @param props.onClick
- * @param props.href
- * @returns The action control.
- */
-function RecordAction({ icon, children, onClick, href }: RecordActionProps) {
-  const shared =
-    'flex w-full items-center gap-2 rounded-lg border border-slate-300 px-3 py-2 text-xs font-medium text-slate-700 transition-colors hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800'
-  if (href) {
-    return (
-      <Link href={href} className={shared}>
-        {icon}
-        {children}
-      </Link>
-    )
-  }
-  return (
-    <button type="button" onClick={onClick} className={shared}>
-      {icon}
-      {children}
-    </button>
-  )
-}
-
-function CopyIcon({ className }: ChevronIconProps) {
-  return (
-    <svg className={className} fill="none" viewBox="0 0 24 24" strokeWidth={1.6} stroke="currentColor" aria-hidden="true">
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M8.25 7.5V6.108c0-1.135.845-2.098 1.976-2.192.373-.03.748-.057 1.123-.08M15.75 18H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08M15.75 18.75v-1.875a3.375 3.375 0 0 0-3.375-3.375h-1.5a1.125 1.125 0 0 1-1.125-1.125v-1.5A3.375 3.375 0 0 0 6.375 7.5H5.25m11.9-3.664A2.251 2.251 0 0 0 15 2.25h-1.5a2.251 2.251 0 0 0-2.15 1.586m5.8 0c.065.21.1.433.1.664v.75h-6V4.5c0-.231.035-.454.1-.664M6.75 7.5H4.875c-.621 0-1.125.504-1.125 1.125v12c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V16.5a9 9 0 0 0-9-9Z"
-      />
-    </svg>
-  )
-}
-
-function PrinterIcon({ className }: ChevronIconProps) {
-  return (
-    <svg className={className} fill="none" viewBox="0 0 24 24" strokeWidth={1.6} stroke="currentColor" aria-hidden="true">
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0 1 10.56 0m-10.56 0L6.34 18m10.94-4.171c.24.03.48.062.72.096m-.72-.096L17.66 18m0 0 .229 2.523a1.125 1.125 0 0 1-1.12 1.227H7.231c-.662 0-1.18-.568-1.12-1.227L6.34 18m11.318 0h1.091A2.25 2.25 0 0 0 21 15.75V9.456c0-1.081-.768-2.015-1.837-2.175a48.055 48.055 0 0 0-1.913-.247M6.34 18H5.25A2.25 2.25 0 0 1 3 15.75V9.456c0-1.081.768-2.015 1.837-2.175a48.041 48.041 0 0 1 1.913-.247m10.5 0a48.536 48.536 0 0 0-10.5 0m10.5 0V3.375c0-.621-.504-1.125-1.125-1.125h-8.25c-.621 0-1.125.504-1.125 1.125v3.659M18 10.5h.008v.008H18V10.5Z"
-      />
-    </svg>
-  )
-}
-
-function PencilIcon({ className }: ChevronIconProps) {
-  return (
-    <svg className={className} fill="none" viewBox="0 0 24 24" strokeWidth={1.6} stroke="currentColor" aria-hidden="true">
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125"
-      />
-    </svg>
-  )
-}
-
 function TickIcon({ className }: ChevronIconProps) {
   return (
     <svg className={className} fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" aria-hidden="true">
@@ -713,11 +473,27 @@ function TickIcon({ className }: ChevronIconProps) {
   )
 }
 
-function VerdictTickIcon({ className }: ChevronIconProps) {
+/** Props for one line of record provenance. */
+interface MetaPairProps {
+  /** What the value states. */
+  label: string
+  /** The value itself. */
+  value: string
+}
+
+/**
+ * One provenance pair, set as label and value on a shared baseline so the three
+ * of them read as one line rather than as a table of stacked cells.
+ * @param props - See {@link MetaPairProps}.
+ * @param props.label
+ * @param props.value
+ * @returns The pair.
+ */
+function MetaPair({ label, value }: MetaPairProps) {
   return (
-    <svg className={className} viewBox="0 0 48 48" fill="none" stroke="currentColor" aria-hidden="true" preserveAspectRatio="xMidYMid meet">
-      <circle cx="24" cy="24" r="20" strokeWidth={2.5} className="opacity-30" />
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={4} d="m14 24.5 7 7 13-15" />
-    </svg>
+    <div className="flex items-baseline gap-2 sm:justify-center">
+      <dt className="shrink-0 text-slate-400 dark:text-slate-500">{label}</dt>
+      <dd className="font-medium text-slate-700 dark:text-slate-300">{value}</dd>
+    </div>
   )
 }
