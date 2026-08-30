@@ -10,6 +10,7 @@
     "generate:guides": "npx tsx scripts/generate-docs.ts --guides-only",
     "validate-links": "npx tsx scripts/validate-links.ts",
     "validate-sitemap": "npx tsx scripts/validate-sitemap.ts",
+    "check:decision-framework": "node notes/decision-framework/matrix/check-projection.mjs",
     "test": "vitest run"
   },
   "dependencies": {

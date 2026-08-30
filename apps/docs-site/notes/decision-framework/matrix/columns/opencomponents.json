@@ -1,0 +1,2196 @@
+{
+  "unit": "opencomponents",
+  "dossier": "research/solutions/opencomponents.md",
+  "verifiedAt": "2026-08-28",
+  "verdicts": [
+    {
+      "id": "unit.type.adoptable-implementation",
+      "value": "yes",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "What it is"
+      ]
+    },
+    {
+      "id": "unit.availability.installable-today",
+      "value": "yes",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Status (Aug 2026)"
+      ]
+    },
+    {
+      "id": "unit.availability.stable-line-shipped",
+      "value": "no",
+      "note": "0.50.x after ~12 years; never reached 1.0, so semver stability commitments are weak by convention",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Operational model"
+      ]
+    },
+    {
+      "id": "unit.availability.single-current-line",
+      "value": "yes",
+      "note": "one active 0.50.x line; no dormant stable beside an unshipped successor",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Status (Aug 2026)"
+      ]
+    },
+    {
+      "id": "unit.availability.planned-capability-claims",
+      "value": "no",
+      "note": "no planned-only editions or roadmap capability claims advertised",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Editions and commercial layer"
+      ]
+    },
+    {
+      "id": "unit.maintenance.release-within-12mo",
+      "value": "yes",
+      "note": "oc 0.50.63 published 2026-08-20",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Status (Aug 2026)"
+      ]
+    },
+    {
+      "id": "unit.maintenance.commit-within-6mo",
+      "value": "yes",
+      "note": "monorepo pushed 2026-08-25; metadata-adapter feature work landed in 2026",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Status (Aug 2026)"
+      ]
+    },
+    {
+      "id": "unit.maintenance.multi-maintainer",
+      "value": "no",
+      "note": "trailing 12mo: 92 of 100 commits by one maintainer (ricardo-devis-agullo); remainder bots",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "https://api.github.com/repos/opencomponents/oc/commits?since=2025-08-28"
+      ]
+    },
+    {
+      "id": "unit.maintenance.org-steward",
+      "value": "yes",
+      "note": "OpenTable-originated and stewarded per landscape guidance; dossier does not verify current employment of the active maintainer",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "What it is",
+        "landscape-inventory.md"
+      ]
+    },
+    {
+      "id": "unit.maintenance.adoption-outside-sponsor",
+      "value": "unknown",
+      "note": "dossier documents OpenTable production use only; no non-sponsor adopters evidenced",
+      "claimType": "inference",
+      "confidence": "low",
+      "evidence": [
+        "Operational model"
+      ]
+    },
+    {
+      "id": "unit.maintenance.adoption-scale-10k",
+      "value": "yes",
+      "note": "oc 10,829 weekly downloads (2026-08-21..27); barely over threshold",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "https://api.npmjs.org/downloads/point/last-week/oc"
+      ]
+    },
+    {
+      "id": "unit.license.osi-core",
+      "value": "yes",
+      "note": "MIT",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Editions and commercial layer"
+      ]
+    },
+    {
+      "id": "unit.editions.commercial-tier",
+      "value": "no",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Editions and commercial layer"
+      ]
+    },
+    {
+      "id": "unit.editions.oss-self-sufficient",
+      "value": "yes",
+      "note": "entirely OSS and self-hosted; there is no commercial tier to depend on",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Editions and commercial layer"
+      ]
+    },
+    {
+      "id": "hosting.operator",
+      "value": "no",
+      "note": "no SaaS or vendor-managed hosting exists; adopter operates registry, storage, CDN",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Operational model"
+      ]
+    },
+    {
+      "id": "hosting.control-plane",
+      "value": "yes",
+      "note": "registry (publish, versions, metadata, serving) runs entirely on adopter infrastructure",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Operational model"
+      ]
+    },
+    {
+      "id": "registry.deployable-feature",
+      "value": "yes",
+      "note": "the registry of versioned runtime components with metadata is the product core",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "What it is"
+      ]
+    },
+    {
+      "id": "governance.rollback",
+      "value": "yes",
+      "note": "immutable retained versions plus consumer repin, no rebuild; no registry-side rollback command exists",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Deployment"
+      ]
+    },
+    {
+      "id": "governance.usage-monitoring",
+      "value": "no",
+      "note": "no first-party consumer-usage or version-usage visibility documented",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Operational model"
+      ]
+    },
+    {
+      "id": "governance.rbac",
+      "value": "no",
+      "note": "only basic-auth publish credentials and validation hooks; no org-wide roles or permissions surface",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Ownership topology fit"
+      ]
+    },
+    {
+      "id": "composition.kind.js-module-graph",
+      "value": "no",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "composition.kind.lifecycle-contract",
+      "value": "no",
+      "note": "components are compiled templates plus optional server data provider; no prescribed lifecycle exports",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "composition.kind.custom-element",
+      "value": "no",
+      "note": "the oc-component placeholder tag is scanned by the oc-client script, not a registered custom element; the seam is the HTTP endpoint",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "What it is"
+      ]
+    },
+    {
+      "id": "composition.kind.html-fragment-endpoint",
+      "value": "yes",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "composition.kind.html-entry",
+      "value": "no",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "composition.kind.http-route-partition",
+      "value": "no",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "composition.kind.build-artifact",
+      "value": "no",
+      "note": "versioned artifacts are consumed at runtime over HTTP, not by another build",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "composition.kind.inherits-underlying",
+      "value": "no",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "What it is"
+      ]
+    },
+    {
+      "id": "composition.phase.deploy-unit-per-participant",
+      "value": "yes",
+      "note": "each component is independently published and versioned",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Build-time coupling"
+      ]
+    },
+    {
+      "id": "composition.exec.client-composed",
+      "value": "conditional",
+      "condition": "client-side rendering mode (oc-client resolves oc-component tags in the browser); server-client mode inlines fragments before delivery",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "What it is"
+      ]
+    },
+    {
+      "id": "buildtime.host-build-consumes-participants",
+      "value": "no",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Build-time coupling"
+      ]
+    },
+    {
+      "id": "buildtime.host-integrates-buildless",
+      "value": "yes",
+      "note": "registry-served oc-client script plus oc-component tags work on static HTML; server clients are libraries, not build tooling",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "What it is",
+        "Migration requirements"
+      ]
+    },
+    {
+      "id": "buildtime.participant-tooling-required",
+      "value": "yes",
+      "note": "oc CLI publish flow; views compiled by the template's compiler at publish",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Build-time coupling"
+      ]
+    },
+    {
+      "id": "buildtime.bundler-family-restricted",
+      "value": "conditional",
+      "condition": "authoring flows through oc template compilers (ES6, React, Vue, Svelte, legacy Handlebars/Jade); the registry must have the template type registered - arbitrary bundler output cannot participate",
+      "claimType": "framework-guarantee",
+      "confidence": "medium",
+      "evidence": [
+        "Build-time coupling",
+        "Framework requirements"
+      ]
+    },
+    {
+      "id": "buildtime.share-metadata-emitted",
+      "value": "no",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Build-time coupling"
+      ]
+    },
+    {
+      "id": "buildtime.shared-dep-change-rebuilds-center",
+      "value": "na",
+      "note": "no central shared-dependency mechanism exists",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Build-time coupling"
+      ]
+    },
+    {
+      "id": "buildtime.central-input-for-participant-build",
+      "value": "no",
+      "note": "publish targets a registry, but no central artifact is consumed as a build input",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Build-time coupling"
+      ]
+    },
+    {
+      "id": "buildtime.asset-prefix-coordination",
+      "value": "no",
+      "note": "statics are namespaced per component and version under the registry/CDN path automatically",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Deployment"
+      ]
+    },
+    {
+      "id": "runtime.shared-js-realm",
+      "value": "yes",
+      "note": "client-rendered and inlined fragment scripts execute in the host page realm; no iframe or sandbox",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "runtime.patched-globals-layer",
+      "value": "no",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "runtime.primordials-blast-radius",
+      "value": "yes",
+      "note": "fully shared realm; nothing virtualizes built-ins",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "runtime.concurrent-participants",
+      "value": "yes",
+      "note": "multiple components per page; batch endpoint and nested components documented",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Runtime coupling",
+        "Performance causes"
+      ]
+    },
+    {
+      "id": "runtime.multi-router-participants",
+      "value": "na",
+      "note": "components are widget/fragment scoped, not URL- or router-owning applications",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "What it is"
+      ]
+    },
+    {
+      "id": "runtime.shared-runtime-library",
+      "value": "conditional",
+      "condition": "client-side rendering requires the registry-served oc-client script on the page; server-composed pages need no browser runtime",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Runtime coupling"
+      ]
+    },
+    {
+      "id": "runtime.central-routing-map",
+      "value": "yes",
+      "note": "the registry is the central roster and serving service needing an accountable operator; publishes themselves are independent",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "What it is",
+        "Operational model"
+      ]
+    },
+    {
+      "id": "runtime.shared-dep-negotiation",
+      "value": "no",
+      "note": "no cross-participant dependency resolution; the server-side whitelist is registry-internal",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Runtime coupling"
+      ]
+    },
+    {
+      "id": "runtime.dep-conflict-surfaces-runtime",
+      "value": "na",
+      "note": "no shared-dependency negotiation exists",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Runtime coupling"
+      ]
+    },
+    {
+      "id": "runtime.side-by-side-versions",
+      "value": "conditional",
+      "condition": "per-component bundled dependencies coexist as separate module instances; libraries that register page globals still collide in the shared realm",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "runtime.global-registration-collision",
+      "value": "no",
+      "note": "component names are registry-scoped; nothing registers page-global runtime names",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "What it is"
+      ]
+    },
+    {
+      "id": "runtime.late-participant-registration",
+      "value": "yes",
+      "note": "any registry component is addressable at runtime via oc.build()/renderUnloadedComponents()",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "SSR and delivery"
+      ]
+    },
+    {
+      "id": "runtime.loaded-version-hot-swap",
+      "value": "conditional",
+      "condition": "re-render the placeholder against a new version URL via the browser client; no documented in-place swap of a mounted instance",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "SSR and delivery"
+      ]
+    },
+    {
+      "id": "isolation.document-boundary",
+      "value": "no",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "isolation.js.virtualized-global",
+      "value": "no",
+      "note": "no simulated global isolation of any kind",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "isolation.dom.virtualized",
+      "value": "no",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "isolation.css.outbound",
+      "value": "no",
+      "note": "fragment styles resolve in the page-global cascade; no enforced scoping mechanism",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "isolation.css.inbound",
+      "value": "no",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "isolation.resource.main-thread",
+      "value": "no",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "isolation.process.crash",
+      "value": "no",
+      "note": "browser-side execution is in-page; server-side process separation is scored under isolation.server.process",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "isolation.storage.partition",
+      "value": "no",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "isolation.origin.host-authority",
+      "value": "no",
+      "note": "component client code runs with full host-origin authority",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Security and trust"
+      ]
+    },
+    {
+      "id": "isolation.navigation.top-level-guard",
+      "value": "no",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "isolation.security.malicious-participant",
+      "value": "no",
+      "note": "stated trust model is single-organization; publishers' code runs with page privileges and inside the registry",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Security and trust"
+      ]
+    },
+    {
+      "id": "isolation.failure.lifecycle-quarantine",
+      "value": "yes",
+      "note": "server clients time out, retry, and render fallback markup; client tags can carry fallback content - the region degrades, not the page",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Isolation and failure containment",
+        "UX implications"
+      ]
+    },
+    {
+      "id": "isolation.failure.post-mount-exception",
+      "value": "no",
+      "note": "no containment mechanism exists; dossier records failure containment for client-rendered components as undocumented",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "isolation.failure.load-fallback",
+      "value": "yes",
+      "note": "Node client timeouts, retries, fallback markup; degradation can be silent",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "isolation.lifecycle.reclaim",
+      "value": "no",
+      "note": "no unmount lifecycle; injected scripts, styles, timers persist in the shared realm",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "isolation.recovery.in-page",
+      "value": "no",
+      "note": "a region can be re-rendered, but the shared realm keeps prior side effects; no fresh execution context",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "isolation.server.process",
+      "value": "yes",
+      "note": "component server logic executes in the registry service, separate from the host application process",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "security.cross-origin-boundary",
+      "value": "no",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "security.sandbox-attribute-applicable",
+      "value": "no",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "security.per-participant-csp",
+      "value": "no",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "security.capability-narrowing",
+      "value": "no",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "security.host-dom-reach",
+      "value": "yes",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "security.host-js-state-reach",
+      "value": "yes",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "security.untrusted-third-party-viable",
+      "value": "no",
+      "note": "trust model is explicitly single-organization; no signing or consumer-side verification",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Security and trust"
+      ]
+    },
+    {
+      "id": "security.channel-origin-pinning",
+      "value": "na",
+      "note": "no cross-document channel exists",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Contracts and communication"
+      ]
+    },
+    {
+      "id": "security.channel-confidentiality",
+      "value": "na",
+      "note": "no framework messaging channel exists",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Contracts and communication"
+      ]
+    },
+    {
+      "id": "security.embedding-authorization",
+      "value": "no",
+      "note": "nothing browser-enforced restricts which hosts consume a component; fragments are inlined or fetched",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Security and trust"
+      ]
+    },
+    {
+      "id": "security.artifact-integrity-verification",
+      "value": "no",
+      "note": "publish auth documented, no signing or consumer-side integrity verification",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Security and trust"
+      ]
+    },
+    {
+      "id": "security.delivery-intermediary-trust",
+      "value": "yes",
+      "note": "all delivery routes through the registry, which also executes publishers' server code",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "What it is"
+      ]
+    },
+    {
+      "id": "security.isolation-escape-hatches",
+      "value": "na",
+      "note": "no client-side isolation mechanism is claimed, so there is nothing to escape",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "security.composition-injection-surface",
+      "value": "no",
+      "note": "no composition directives are interpreted from content; clients fetch configured components only",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "What it is"
+      ]
+    },
+    {
+      "id": "framework.host-framework-agnostic",
+      "value": "yes",
+      "note": "Node, .NET, PHP, Java, Go consumers documented; any or no frontend framework",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Framework requirements"
+      ]
+    },
+    {
+      "id": "framework.participant-framework-agnostic",
+      "value": "conditional",
+      "condition": "the framework needs an oc template package registered on the registry (ES6 default; React, Vue, Svelte first-party; others pluggable)",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Framework requirements"
+      ]
+    },
+    {
+      "id": "framework.mixed-frameworks-one-page",
+      "value": "yes",
+      "note": "template type is per-component metadata; mixing across one registry and page is supported",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Framework requirements"
+      ]
+    },
+    {
+      "id": "framework.per-team-framework-autonomy",
+      "value": "yes",
+      "note": "teams publish independently, each choosing its own template type",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Framework requirements",
+        "Ownership topology fit"
+      ]
+    },
+    {
+      "id": "framework.same-framework-major-coexistence",
+      "value": "unknown",
+      "note": "per-component bundling suggests coexistence but no documented verification of mixed majors on one page",
+      "claimType": "inference",
+      "confidence": "low",
+      "evidence": [
+        "Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "framework.esm-artifact-required",
+      "value": "no",
+      "note": "ES-module components auto-detected but not required; legacy Handlebars/Jade still supported",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "SSR and delivery",
+        "Framework requirements"
+      ]
+    },
+    {
+      "id": "framework.html-document-entry",
+      "value": "no",
+      "note": "the integration unit is a fragment endpoint, not the participant's own HTML page",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "framework.client-library-required",
+      "value": "no",
+      "note": "no per-component runtime library is embedded; the compiled template is consumed by the page-level oc-client or a server client",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "What it is"
+      ]
+    },
+    {
+      "id": "framework.foreign-artifact-no-rebuild",
+      "value": "no",
+      "note": "artifacts must be authored and compiled as oc components; foreign build output cannot participate",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Build-time coupling"
+      ]
+    },
+    {
+      "id": "framework.official-adapters-exist",
+      "value": "yes",
+      "note": "first-party template packages for ES6, React, Vue, Svelte plus legacy Handlebars/Jade",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Framework requirements"
+      ]
+    },
+    {
+      "id": "framework.adapters-track-current-majors",
+      "value": "unknown",
+      "note": "dossier does not state which 2025-2026 framework majors the templates are verified against",
+      "claimType": "inference",
+      "confidence": "low",
+      "evidence": [
+        "Framework requirements"
+      ]
+    },
+    {
+      "id": "framework.zero-framework-participant",
+      "value": "yes",
+      "note": "ES6 (vanilla) template is the default; static template types exist",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Framework requirements"
+      ]
+    },
+    {
+      "id": "framework.version-floor-imposed",
+      "value": "yes",
+      "note": "Node >= 18 for registry and CLI",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Operational model"
+      ]
+    },
+    {
+      "id": "framework.composition-tier-stack-mandated",
+      "value": "yes",
+      "note": "a Node.js registry service is mandatory",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Operational model"
+      ]
+    },
+    {
+      "id": "framework.multi-framework-demonstrated",
+      "value": "unknown",
+      "note": "mixing template types is documented as supported; no official multi-framework demo cited in the dossier",
+      "claimType": "inference",
+      "confidence": "low",
+      "evidence": [
+        "Framework requirements"
+      ]
+    },
+    {
+      "id": "contracts.formal-descriptor",
+      "value": "yes",
+      "note": "declared, typed parameters in component package.json plus the HTTP request/response shape",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Contracts and communication"
+      ]
+    },
+    {
+      "id": "contracts.contract-versioned",
+      "value": "yes",
+      "note": "component semver is the contract version",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Contracts and communication"
+      ]
+    },
+    {
+      "id": "contracts.connect-compat-gate",
+      "value": "conditional",
+      "condition": "the registry resolves the consumer's requested semver pin or range at request time; no interface-shape check beyond version resolution and parameter validation",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Runtime coupling",
+        "Contracts and communication"
+      ]
+    },
+    {
+      "id": "contracts.drift-surface",
+      "value": "yes",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "contracts.drift-explicit",
+      "value": "conditional",
+      "condition": "requests failing declared parameter validation are rejected by the registry; semantic drift beyond declared params surfaces only in rendered output",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Contracts and communication"
+      ]
+    },
+    {
+      "id": "contracts.types-shared",
+      "value": "no",
+      "note": "no d.ts or typed-package delivery to consumer builds documented",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Contracts and communication"
+      ]
+    },
+    {
+      "id": "contracts.schema-validated-payloads",
+      "value": "yes",
+      "note": "registry-enforced declared parameters with types",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Contracts and communication"
+      ]
+    },
+    {
+      "id": "contracts.sync-calls",
+      "value": "yes",
+      "note": "shared realm permits direct global access between co-resident components; no module surface is provided",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "contracts.serialized-boundary",
+      "value": "conditional",
+      "condition": "declared params cross as serialized HTTP data, but client-side co-resident scripts share the realm, so live references are not prevented",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Contracts and communication",
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "contracts.frame-messaging",
+      "value": "no",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "contracts.builtin-messaging",
+      "value": "no",
+      "note": "no inter-component bus; browser client exposes rendering lifecycle events only",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Contracts and communication"
+      ]
+    },
+    {
+      "id": "contracts.builtin-shared-state",
+      "value": "no",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Contracts and communication"
+      ]
+    },
+    {
+      "id": "contracts.host-push-updates",
+      "value": "no",
+      "note": "changing params means re-fetching and re-rendering the fragment; no push channel",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Contracts and communication"
+      ]
+    },
+    {
+      "id": "contracts.http-request-contract",
+      "value": "yes",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "contracts.server-context-propagation",
+      "value": "unknown",
+      "note": "dossier documents declared params only; forwarding of host request context (headers, locale) not covered there",
+      "claimType": "inference",
+      "confidence": "low",
+      "evidence": [
+        "Contracts and communication"
+      ]
+    },
+    {
+      "id": "ssr.composed-page",
+      "value": "conditional",
+      "condition": "server-side consumption mode: Node/PHP/Ruby clients inline fragments before the page ships",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "SSR and delivery"
+      ]
+    },
+    {
+      "id": "ssr.fragment-granularity",
+      "value": "conditional",
+      "condition": "server-client mode stitches multiple component fragments into one document",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "SSR and delivery"
+      ]
+    },
+    {
+      "id": "ssr.streaming-assembly",
+      "value": "no",
+      "note": "documented server-client model is fetch-then-inline; no streaming assembly documented",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "SSR and delivery"
+      ]
+    },
+    {
+      "id": "ssr.participant-internal",
+      "value": "yes",
+      "note": "rendered mode is the registry executing the component template's server render",
+      "claimType": "framework-guarantee",
+      "confidence": "medium",
+      "evidence": [
+        "SSR and delivery"
+      ]
+    },
+    {
+      "id": "ssr.dual-mode-render",
+      "value": "yes",
+      "note": "Accept-header content negotiation; failed server renders can fail over to client-side rendering",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "SSR and delivery"
+      ]
+    },
+    {
+      "id": "ssr.no-js-first-paint",
+      "value": "conditional",
+      "condition": "server-side consumption mode only; client-side tags render after page load",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "UX implications"
+      ]
+    },
+    {
+      "id": "ssr.hydration-orchestration",
+      "value": "no",
+      "note": "no hydration-scheduling runtime ships; components self-manage",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "SSR and delivery"
+      ]
+    },
+    {
+      "id": "ssr.crawler-indexable",
+      "value": "conditional",
+      "condition": "server-side rendering path inlines SEO-visible HTML; client-rendered components are not in delivered HTML",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "UX implications"
+      ]
+    },
+    {
+      "id": "ssr.static-prerender",
+      "value": "no",
+      "note": "rendering is request-time registry compute; no build-time SSG documented",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Deployment"
+      ]
+    },
+    {
+      "id": "ssr.edge-composition",
+      "value": "no",
+      "note": "registry is origin compute; CDN fronts static assets only",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Deployment"
+      ]
+    },
+    {
+      "id": "ssr.static-hosting-sufficient",
+      "value": "no",
+      "note": "the registry service is in the production request path",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Operational model"
+      ]
+    },
+    {
+      "id": "ssr.server-loadable-artifact",
+      "value": "yes",
+      "note": "component server logic and templates are registry-executed in Node",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "ssr.rsc-federation",
+      "value": "na",
+      "note": "HTML fragment contract; cross-boundary RSC does not apply",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "ssr.dev-prod-parity",
+      "value": "yes",
+      "note": "oc dev runs a local registry rendering components the same way; local mode is explicitly not for production operation",
+      "claimType": "officially-supported",
+      "confidence": "medium",
+      "evidence": [
+        "Operational model"
+      ]
+    },
+    {
+      "id": "ssr.html-fragment-contract",
+      "value": "conditional",
+      "condition": "rendered mode returns inert HTML; unrendered JSON mode requires an OC client runtime to render",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "SSR and delivery"
+      ]
+    },
+    {
+      "id": "ux.cross-boundary-soft-nav",
+      "value": "na",
+      "note": "components are embedded fragments; the strategy owns no navigation between units",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "What it is"
+      ]
+    },
+    {
+      "id": "ux.within-unit-soft-nav",
+      "value": "na",
+      "note": "components do not own routes",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "What it is"
+      ]
+    },
+    {
+      "id": "ux.cross-boundary-prefetch",
+      "value": "na",
+      "note": "no boundary navigation concept exists",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "What it is"
+      ]
+    },
+    {
+      "id": "ux.cross-doc-view-transitions",
+      "value": "na",
+      "note": "no cross-document boundary crossings exist",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "What it is"
+      ]
+    },
+    {
+      "id": "ux.persistent-shared-chrome",
+      "value": "yes",
+      "note": "the host page owns chrome; embedding components never unloads it",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "What it is"
+      ]
+    },
+    {
+      "id": "ux.unit-keepalive",
+      "value": "no",
+      "note": "no keep-alive or instance-reuse mechanism documented",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "SSR and delivery"
+      ]
+    },
+    {
+      "id": "ux.keepalive-scroll-restoration",
+      "value": "na",
+      "note": "no keep-alive mechanism exists",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "SSR and delivery"
+      ]
+    },
+    {
+      "id": "ux.deep-link-inner-route",
+      "value": "no",
+      "note": "no mechanism reflects component state into the top-level URL",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Contracts and communication"
+      ]
+    },
+    {
+      "id": "ux.frame-history-pollution",
+      "value": "no",
+      "note": "single-document composition, no frames",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "ux.overlay-viewport-escape",
+      "value": "yes",
+      "note": "same-DOM composition; overlays can cover the viewport",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "ux.host-overlay-protocol",
+      "value": "na",
+      "note": "same-DOM composition needs no host overlay protocol",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "ux.body-portal-compat",
+      "value": "yes",
+      "note": "same-DOM, non-shadow rendering; body portals work unmodified",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "ux.natural-layout-flow",
+      "value": "yes",
+      "note": "fragments size and scroll in the host page flow",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "ux.cross-boundary-focus-mgmt",
+      "value": "yes",
+      "note": "one DOM, one focus order",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "ux.screenreader-continuity",
+      "value": "yes",
+      "note": "one continuous accessibility tree in one document",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "ux.composed-first-paint",
+      "value": "conditional",
+      "condition": "server-side consumption paints composed; client-side path renders after load",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "UX implications"
+      ]
+    },
+    {
+      "id": "ux.builtin-loading-ui",
+      "value": "no",
+      "note": "fallback content in the tag is author-provided; no shipped loading indicator",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "UX implications"
+      ]
+    },
+    {
+      "id": "ux.builtin-error-fallback-ui",
+      "value": "conditional",
+      "condition": "server clients render author-supplied fallback markup on failure and client tags can carry fallback content; no default UI ships and degradation can be silent",
+      "claimType": "framework-guarantee",
+      "confidence": "medium",
+      "evidence": [
+        "Isolation and failure containment",
+        "UX implications"
+      ]
+    },
+    {
+      "id": "ux.mount-layout-shift-risk",
+      "value": "conditional",
+      "condition": "client-side rendering path: content arrives after first paint unless placeholder dimensions or fallback content are authored; server-inlined fragments paint composed",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "UX implications"
+      ]
+    },
+    {
+      "id": "ux.token-theming-mechanism",
+      "value": "no",
+      "note": "no enforcing cross-component theming mechanism; consistency is convention",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "UX implications"
+      ]
+    },
+    {
+      "id": "performance.client-composition-runtime",
+      "value": "conditional",
+      "condition": "client-side rendering mode loads the oc-client runtime; server-composed pages ship none",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Runtime coupling"
+      ]
+    },
+    {
+      "id": "performance.pre-render-orchestration-fetch",
+      "value": "conditional",
+      "condition": "client-side path requires registry request(s) before a component renders; server path inlines before delivery",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Performance causes"
+      ]
+    },
+    {
+      "id": "performance.sequential-waterfall-default",
+      "value": "conditional",
+      "condition": "client path chains oc-client load, then registry request, then template/static assets; the batch endpoint reduces request count; server path has no client waterfall",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Performance causes"
+      ]
+    },
+    {
+      "id": "performance.first-party-preload-levers",
+      "value": "no",
+      "note": "no preload, prefetch, or warm-up mechanism documented",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Performance causes"
+      ]
+    },
+    {
+      "id": "performance.duplicate-framework-same-page",
+      "value": "yes",
+      "note": "each component bundles its own dependencies; two components on one framework each ship their copy",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Performance causes"
+      ]
+    },
+    {
+      "id": "performance.shared-dependency-dedup",
+      "value": "no",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Performance causes"
+      ]
+    },
+    {
+      "id": "performance.dedup-failure-on-version-skew",
+      "value": "na",
+      "note": "no sharing mechanism exists",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Performance causes"
+      ]
+    },
+    {
+      "id": "performance.per-unit-document-boot",
+      "value": "no",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "performance.process-memory-overhead",
+      "value": "na",
+      "note": "same-realm strategy; site isolation never applies",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "performance.sandbox-execution-tax",
+      "value": "no",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "performance.per-message-serialization-cost",
+      "value": "no",
+      "note": "no framework channel; co-resident code passes in-realm references",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Contracts and communication"
+      ]
+    },
+    {
+      "id": "performance.hydration-deferrable-per-unit",
+      "value": "no",
+      "note": "programmatic oc.build allows author-managed deferral; no first-party visibility or idle gating",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "SSR and delivery"
+      ]
+    },
+    {
+      "id": "performance.request-time-server-fanout",
+      "value": "conditional",
+      "condition": "server-side consumption fans out to the registry per page (batch POST aggregates); client mode moves the requests to the browser",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Performance causes"
+      ]
+    },
+    {
+      "id": "performance.per-unit-http-cacheable",
+      "value": "conditional",
+      "condition": "static assets are CDN-cacheable per component version; rendered fragment responses are registry compute unless the operator adds a caching layer",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Deployment"
+      ]
+    },
+    {
+      "id": "performance.default-content-caching",
+      "value": "conditional",
+      "condition": "the registry caches immutable published component data internally (high refresh interval); response-level caching remains operator-added",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Performance causes"
+      ]
+    },
+    {
+      "id": "deployment.host-rebuild-required",
+      "value": "no",
+      "note": "consumers on ranges/latest receive new versions at next request with no host redeploy",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Deployment"
+      ]
+    },
+    {
+      "id": "deployment.new-participant-host-change",
+      "value": "yes",
+      "note": "a brand-new component appears only after the host page adds its tag or client call",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Migration requirements"
+      ]
+    },
+    {
+      "id": "deployment.golive-central-pointer",
+      "value": "conditional",
+      "condition": "consumers on semver ranges or latest go live on registry publish alone; exact-pin consumers require a consumer-side pin update",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Runtime coupling",
+        "Deployment"
+      ]
+    },
+    {
+      "id": "deployment.consumer-version-pin",
+      "value": "yes",
+      "note": "exact-version pinning with immutable retention",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Runtime coupling"
+      ]
+    },
+    {
+      "id": "deployment.per-user-version-targeting",
+      "value": "no",
+      "note": "host-side version selection could be built, but no first-party mechanism or documented pattern exists",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Deployment"
+      ]
+    },
+    {
+      "id": "deployment.immutable-version-retention",
+      "value": "yes",
+      "note": "duplicate name+version publish rejected; whether registry-side deletion is possible at all is undocumented",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Deployment"
+      ]
+    },
+    {
+      "id": "deployment.cache-busting-operator-burden",
+      "value": "no",
+      "note": "immutable versioned artifacts; range resolution is registry-side per request, not TTL-managed mutable URLs",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Deployment"
+      ]
+    },
+    {
+      "id": "deployment.participants-static-artifacts",
+      "value": "no",
+      "note": "components live in storage but serving and server logic require the registry service; statics alone are CDN-servable",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Deployment"
+      ]
+    },
+    {
+      "id": "deployment.strategy-service-in-path",
+      "value": "yes",
+      "note": "registry plus storage (optionally CDN and metadata DB) operate in the production request path",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Operational model"
+      ]
+    },
+    {
+      "id": "deployment.runtime-discovery-first-party",
+      "value": "yes",
+      "note": "the registry is the discovery surface with HTML UI and API endpoints",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Ownership topology fit"
+      ]
+    },
+    {
+      "id": "deployment.single-domain-required",
+      "value": "no",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "What it is"
+      ]
+    },
+    {
+      "id": "deployment.cross-origin-cors-required",
+      "value": "conditional",
+      "condition": "browser-client mode fetching a cross-origin registry needs CORS; server-composed mode needs none",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "What it is"
+      ]
+    },
+    {
+      "id": "deployment.vendor-hosting-required",
+      "value": "no",
+      "note": "self-hosted on any Node-capable infrastructure with pluggable storage",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Operational model"
+      ]
+    },
+    {
+      "id": "migration.participant.min-level",
+      "value": "conditional",
+      "condition": "migration.integration-adapter",
+      "note": "an isolated widget with importable source wraps into a new oc component without source edits; whole applications must be decomposed into oc-compiled components (migration.major-refactor)",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Migration requirements",
+        "Build-time coupling"
+      ]
+    },
+    {
+      "id": "migration.host.min-level",
+      "value": "conditional",
+      "condition": "migration.integration-adapter",
+      "note": "add the oc-client script and oc-component tags (or one server client call) to existing pages; the registry prerequisite is scored under migration.host.new-infra-tier-required",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Migration requirements"
+      ]
+    },
+    {
+      "id": "migration.source-modification-required",
+      "value": "no",
+      "note": "components are new oc-authored units wrapping code; host pages take additive edits only",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Migration requirements"
+      ]
+    },
+    {
+      "id": "migration.participant.bootstrap-change-required",
+      "value": "no",
+      "note": "no lifecycle exports demanded of existing apps; components define their own template plus server.js entry as new code",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "migration.participant.internals-refactor-required",
+      "value": "conditional",
+      "condition": "code wrapped into a component must fit template compilation, take data via declared params, and avoid page-global and style collisions",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Build-time coupling",
+        "Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "migration.participant.deployment-change-required",
+      "value": "yes",
+      "note": "every component must be published to the registry",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Deployment"
+      ]
+    },
+    {
+      "id": "migration.participant.extraction-required",
+      "value": "yes",
+      "note": "a monolith feature must be extracted into an independently published oc component; no in-place wrapping",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Migration requirements"
+      ]
+    },
+    {
+      "id": "migration.participant.rewrite-required",
+      "value": "no",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Migration requirements"
+      ]
+    },
+    {
+      "id": "migration.participant.thirdparty-unmodified-viable",
+      "value": "no",
+      "note": "an already-deployed app whose owners change nothing cannot participate; artifacts must be authored and published as oc components",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Build-time coupling"
+      ]
+    },
+    {
+      "id": "migration.participant.legacy-no-build-viable",
+      "value": "no",
+      "note": "participation requires the oc compile-and-publish toolchain, above level 2",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Build-time coupling"
+      ]
+    },
+    {
+      "id": "migration.strangler.incremental",
+      "value": "yes",
+      "note": "one tag or client call embeds a component into any existing page",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Migration requirements"
+      ]
+    },
+    {
+      "id": "migration.host.new-infra-tier-required",
+      "value": "yes",
+      "note": "registry service plus cloud storage must exist before the first component ships",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Migration requirements"
+      ]
+    },
+    {
+      "id": "migration.host.shell-takeover-required",
+      "value": "no",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Migration requirements"
+      ]
+    },
+    {
+      "id": "migration.exit.participants-standalone",
+      "value": "no",
+      "note": "components are registry-served template bundles, not standalone runnable applications",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "What it is"
+      ]
+    },
+    {
+      "id": "migration.path.from-incumbent-format",
+      "value": "no",
+      "note": "no documented migration path from MF, SystemJS, or similar formats",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Migration requirements"
+      ]
+    },
+    {
+      "id": "migration.forced-remigration-pending",
+      "value": "no",
+      "note": "no announced EOL or breaking major; perpetual 0.x means stability rests on convention, not commitment",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Operational model"
+      ]
+    },
+    {
+      "id": "migration.permanent-viability",
+      "value": "yes",
+      "note": "~12 years of OpenTable production use; adopter evidence is sponsor-internal",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "What it is",
+        "Operational model"
+      ]
+    },
+    {
+      "id": "ownership.single-team-endorsed",
+      "value": "unknown",
+      "note": "dossier records no explicit documentation statement either way",
+      "claimType": "inference",
+      "confidence": "low",
+      "evidence": [
+        "What it is"
+      ]
+    },
+    {
+      "id": "ownership.code-boundary-ownership",
+      "value": "yes",
+      "note": "components live in team-owned repos published independently",
+      "claimType": "common-pattern",
+      "confidence": "high",
+      "evidence": [
+        "Ownership topology fit"
+      ]
+    },
+    {
+      "id": "ownership.deploy-schedule-ownership",
+      "value": "yes",
+      "note": "publishing is a registry publish on the owning team's schedule",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Deployment"
+      ]
+    },
+    {
+      "id": "ownership.runtime-operational-ownership",
+      "value": "no",
+      "note": "component server logic runs inside the shared registry service, not a team-operated service",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "ownership.external-participant",
+      "value": "no",
+      "note": "single-organization trust model; an external publisher's code runs with page privileges and inside the registry",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Security and trust"
+      ]
+    },
+    {
+      "id": "ownership.participant-unmodifiable-host",
+      "value": "yes",
+      "note": "one script plus tag on any page; no build tool or framework adoption by the host owner",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Migration requirements"
+      ]
+    },
+    {
+      "id": "ownership.distrusted-cadence",
+      "value": "yes",
+      "note": "independent publishes; pinned or range consumers absorb skew with nothing erroring or forcing a train",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Deployment",
+        "Runtime coupling"
+      ]
+    },
+    {
+      "id": "ownership.uncoordinated-upgrades",
+      "value": "yes",
+      "note": "no shared-dependency mechanism; each component bundles its own versions indefinitely",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Performance causes"
+      ]
+    },
+    {
+      "id": "ownership.onboarding-without-central-owner",
+      "value": "yes",
+      "note": "publish-to-registry suffices for discovery (given credentials where publishAuth is configured); page placement still needs a host edit",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Ownership topology fit"
+      ]
+    },
+    {
+      "id": "ownership.platform-team-role-required",
+      "value": "yes",
+      "note": "someone must own and operate registry, storage, CDN, and publish governance",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Operational model"
+      ]
+    },
+    {
+      "id": "ownership.non-developer-composition",
+      "value": "no",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Ownership topology fit"
+      ]
+    },
+    {
+      "id": "ownership.participant-bytes-verbatim",
+      "value": "yes",
+      "note": "compilation happens at publish under the publisher's action; served artifacts are immutable and injected without host-side rewriting",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "What it is",
+        "Deployment"
+      ]
+    },
+    {
+      "id": "ownership.nested-host-seat",
+      "value": "yes",
+      "note": "nested components (components rendering components) are supported",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Runtime coupling"
+      ]
+    },
+    {
+      "id": "ownership.upstream-contract-lifetime",
+      "value": "no",
+      "note": "defines its own registry and HTTP+HTML boundary",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "What it is"
+      ]
+    },
+    {
+      "id": "coordination.shared-dependency-governance",
+      "value": "no",
+      "note": "no client-side sharing to govern; the registry dependency whitelist is operator configuration, not cross-team version negotiation",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Runtime coupling",
+        "Security and trust"
+      ]
+    },
+    {
+      "id": "operations.version-skew-machinery",
+      "value": "yes",
+      "note": "registry-side semver resolution per request; immutable retention makes pinned consumers immune to skew",
+      "claimType": "framework-guarantee",
+      "confidence": "medium",
+      "evidence": [
+        "Runtime coupling",
+        "Deployment"
+      ]
+    },
+    {
+      "id": "operations.stack-traces-cross-boundary",
+      "value": "conditional",
+      "condition": "client-rendered component errors share the host document error stream; server.js failures stay in registry logs behind fallbacks",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "operations.owner-attribution-builtin",
+      "value": "conditional",
+      "condition": "server-side fetch failures attribute per component via timeout/fallback paths; client-rendered runtime errors get no attribution",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "operations.cross-journey-correlation-diy",
+      "value": "yes",
+      "note": "host tiers and registry logs are separate; no journey correlation id ships",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Operational model"
+      ]
+    },
+    {
+      "id": "operations.deploy-inventory-firstparty",
+      "value": "yes",
+      "note": "the registry enumerates components and versions via its discovery UI and API",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Ownership topology fit"
+      ]
+    },
+    {
+      "id": "operations.first-party-debug-tooling",
+      "value": "no",
+      "note": "no devtools extension or runtime debug UI documented",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Operational model"
+      ]
+    },
+    {
+      "id": "operations.local-composed-dev-firstparty",
+      "value": "yes",
+      "note": "local mode serves components from the filesystem with hot reload",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Operational model"
+      ]
+    },
+    {
+      "id": "operations.composition-tier-local-parity",
+      "value": "yes",
+      "note": "the registry is a Node service runnable on a laptop",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Operational model"
+      ]
+    },
+    {
+      "id": "operations.standalone-participant-dev",
+      "value": "yes",
+      "note": "components develop and run against the local dev registry without any host",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Operational model"
+      ]
+    },
+    {
+      "id": "operations.composed-test-utilities",
+      "value": "no",
+      "note": "no first-party composed-system test utilities documented",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Operational model"
+      ]
+    },
+    {
+      "id": "operations.deploy-time-contract-verification",
+      "value": "conditional",
+      "condition": "publishValidation hooks and declared-parameter enforcement gate publishes; nothing verifies consumers' expectations against a new version",
+      "claimType": "framework-guarantee",
+      "confidence": "medium",
+      "evidence": [
+        "Ownership topology fit",
+        "Contracts and communication"
+      ]
+    },
+    {
+      "id": "operations.single-sponsor-concentration",
+      "value": "yes",
+      "note": "one dominant maintainer landed 92 of the last 100 human commits; OpenTable-originated project",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "https://api.github.com/repos/opencomponents/oc/commits?since=2025-08-28"
+      ]
+    },
+    {
+      "id": "operations.mode-forked-operations",
+      "value": "yes",
+      "note": "server-composed vs browser-rendered consumption and rendered vs unrendered modes flip runtime, SSR, UX, and performance cells",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "SSR and delivery",
+        "What it is"
+      ]
+    }
+  ]
+}

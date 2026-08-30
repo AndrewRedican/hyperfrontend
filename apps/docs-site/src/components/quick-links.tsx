@@ -4,7 +4,7 @@ const quickLinks = [
   {
     title: 'Getting Started',
     description: 'Install and create your first hyperfrontend feature in minutes.',
-    href: '/docs/getting-started',
+    href: '/docs',
   },
   {
     title: 'Core Libraries',
@@ -19,7 +19,7 @@ const quickLinks = [
   {
     title: 'Architecture',
     description: 'Understand the monorepo structure and design decisions.',
-    href: '/docs/architecture',
+    href: '/architecture',
   },
 ]
 

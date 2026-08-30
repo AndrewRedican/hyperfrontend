@@ -1,0 +1,2199 @@
+{
+  "unit": "islands-architecture",
+  "dossier": "research/solutions/islands-architecture.md",
+  "verifiedAt": "2026-08-28",
+  "verdicts": [
+    {
+      "id": "unit.type.adoptable-implementation",
+      "value": "no",
+      "note": "Architectural strategy with multiple implementations (Astro, Fresh, is-land), not one adoptable product.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "What it is"
+      ]
+    },
+    {
+      "id": "unit.availability.installable-today",
+      "value": "yes",
+      "note": "Multiple stable, independently maintained OSS implementations.",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Status (Aug 2026)"
+      ]
+    },
+    {
+      "id": "unit.availability.stable-line-shipped",
+      "value": "na",
+      "note": "Strategy row per matrix rule; representatives all stable (Astro 7.2.1, Fresh 2.x, is-land 5.0.1).",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Status (Aug 2026)"
+      ]
+    },
+    {
+      "id": "unit.availability.single-current-line",
+      "value": "yes",
+      "note": "Each representative has one unambiguous current line; no dormant-stable-vs-unshipped-successor split.",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Status (Aug 2026)"
+      ]
+    },
+    {
+      "id": "unit.availability.planned-capability-claims",
+      "value": "no",
+      "note": "No editions; every documented capability ships today.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Editions and commercial layer"
+      ]
+    },
+    {
+      "id": "unit.maintenance.release-within-12mo",
+      "value": "yes",
+      "note": "Astro 7.2.1 (2026-08-11), Fresh 2.x stable, is-land 5.0.1 (~Mar 2026).",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Status (Aug 2026)"
+      ]
+    },
+    {
+      "id": "unit.maintenance.commit-within-6mo",
+      "value": "yes",
+      "note": "Astro monthly cadence, 7.0 Jun 2026 and 7.2.1 Aug 2026.",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Status (Aug 2026)"
+      ]
+    },
+    {
+      "id": "unit.maintenance.multi-maintainer",
+      "value": "conditional",
+      "condition": "varies by implementation: Astro multi-contributor org and Fresh Deno-staffed; is-land effectively single-maintainer",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Status (Aug 2026)"
+      ]
+    },
+    {
+      "id": "unit.maintenance.org-steward",
+      "value": "conditional",
+      "condition": "varies by implementation: Astro (Astro Technology Company) and Fresh (Deno) are org-stewarded; is-land is individual-led under 11ty",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Status (Aug 2026)"
+      ]
+    },
+    {
+      "id": "unit.maintenance.adoption-outside-sponsor",
+      "value": "yes",
+      "note": "Mainstream default for content-heavy sites; adoption far beyond the sponsoring vendors.",
+      "claimType": "community-convention",
+      "confidence": "medium",
+      "evidence": [
+        "Status (Aug 2026)"
+      ]
+    },
+    {
+      "id": "unit.maintenance.adoption-scale-10k",
+      "value": "na",
+      "note": "Strategy row per matrix rule; representative Astro alone far exceeds the bar.",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Status (Aug 2026)"
+      ]
+    },
+    {
+      "id": "unit.license.osi-core",
+      "value": "yes",
+      "note": "Pattern vendor-neutral; Astro and is-land MIT, Fresh MIT under Deno.",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Editions and commercial layer"
+      ]
+    },
+    {
+      "id": "unit.editions.commercial-tier",
+      "value": "no",
+      "note": "Hosting sponsorships and adapters only; no gated editions.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Editions and commercial layer"
+      ]
+    },
+    {
+      "id": "unit.editions.oss-self-sufficient",
+      "value": "yes",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Editions and commercial layer"
+      ]
+    },
+    {
+      "id": "hosting.operator",
+      "value": "na",
+      "note": "Strategy: hosting is generic app hosting (Netlify, Vercel, Cloudflare, Deno Deploy), not a strategy capability.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Editions and commercial layer"
+      ]
+    },
+    {
+      "id": "hosting.control-plane",
+      "value": "na",
+      "note": "No control plane exists; a single app on adopter infrastructure.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Deployment"
+      ]
+    },
+    {
+      "id": "registry.deployable-feature",
+      "value": "na",
+      "note": "No registry exists or is needed; single deploy unit.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Deployment"
+      ]
+    },
+    {
+      "id": "governance.rollback",
+      "value": "na",
+      "note": "No per-participant versions; rollback is a whole-app redeploy.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Deployment"
+      ]
+    },
+    {
+      "id": "governance.usage-monitoring",
+      "value": "na",
+      "note": "Strategy with no platform surface.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Editions and commercial layer"
+      ]
+    },
+    {
+      "id": "governance.rbac",
+      "value": "na",
+      "note": "Strategy with no platform surface.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Editions and commercial layer"
+      ]
+    },
+    {
+      "id": "composition.kind.js-module-graph",
+      "value": "yes",
+      "note": "Islands are components imported in the app's own module graph.",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "composition.kind.lifecycle-contract",
+      "value": "no",
+      "note": "Islands are marked by directives or directory convention; no lifecycle exports.",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "composition.kind.custom-element",
+      "value": "conditional",
+      "condition": "varies by implementation: is-land mounts via an <is-land> custom element; Astro and Fresh use compile-time markers",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "composition.kind.html-fragment-endpoint",
+      "value": "no",
+      "note": "Astro server islands fetch from an internal same-deployment endpoint, not a separately shipped participant service.",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics",
+        "Deployment"
+      ]
+    },
+    {
+      "id": "composition.kind.html-entry",
+      "value": "no",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "composition.kind.http-route-partition",
+      "value": "no",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "composition.kind.build-artifact",
+      "value": "no",
+      "note": "Islands are source components in one build, not versioned artifacts crossing builds.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Build-time coupling"
+      ]
+    },
+    {
+      "id": "composition.kind.inherits-underlying",
+      "value": "no",
+      "note": "Defines its own mechanic: server-rendered HTML with per-region hydration.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "What it is"
+      ]
+    },
+    {
+      "id": "composition.phase.deploy-unit-per-participant",
+      "value": "no",
+      "note": "Render unit only; one deploy unit. Server islands defer render, not deployment.",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "What it is",
+        "Deployment"
+      ]
+    },
+    {
+      "id": "composition.exec.client-composed",
+      "value": "no",
+      "note": "Server-composed HTML; hydration and the server-island fallback swap are not participant assembly.",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "buildtime.host-build-consumes-participants",
+      "value": "yes",
+      "note": "Pages and islands compile in one shared build; a broken island breaks the build.",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Build-time coupling"
+      ]
+    },
+    {
+      "id": "buildtime.host-integrates-buildless",
+      "value": "conditional",
+      "condition": "varies by implementation: is-land is one custom element added to any server-rendered page; Astro/Fresh require the framework's build",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Framework requirements"
+      ]
+    },
+    {
+      "id": "buildtime.participant-tooling-required",
+      "value": "conditional",
+      "condition": "varies by implementation: Astro/Fresh islands compile inside the framework toolchain; is-land attaches any pre-built script",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Build-time coupling"
+      ]
+    },
+    {
+      "id": "buildtime.bundler-family-restricted",
+      "value": "conditional",
+      "condition": "varies by implementation: Astro/Fresh mandate their own toolchain; is-land accepts output of any pipeline",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Build-time coupling"
+      ]
+    },
+    {
+      "id": "buildtime.share-metadata-emitted",
+      "value": "no",
+      "note": "No federation metadata; the one build resolves dependencies.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Build-time coupling"
+      ]
+    },
+    {
+      "id": "buildtime.shared-dep-change-rebuilds-center",
+      "value": "yes",
+      "note": "Trivially: any dependency change rebuilds the sole artifact.",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Deployment"
+      ]
+    },
+    {
+      "id": "buildtime.central-input-for-participant-build",
+      "value": "na",
+      "note": "No separate participant build exists.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Build-time coupling"
+      ]
+    },
+    {
+      "id": "buildtime.asset-prefix-coordination",
+      "value": "no",
+      "note": "One build owns asset naming.",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Build-time coupling"
+      ]
+    },
+    {
+      "id": "runtime.shared-js-realm",
+      "value": "yes",
+      "note": "Fully shared realm, document, and DOM across islands.",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Runtime coupling"
+      ]
+    },
+    {
+      "id": "runtime.patched-globals-layer",
+      "value": "no",
+      "note": "Globals are native; no interposed surface.",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Runtime coupling"
+      ]
+    },
+    {
+      "id": "runtime.primordials-blast-radius",
+      "value": "yes",
+      "note": "Nothing prevents one island mutating state under another.",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Runtime coupling"
+      ]
+    },
+    {
+      "id": "runtime.concurrent-participants",
+      "value": "yes",
+      "note": "Many islands live at once in one document; all owned by one team.",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "What it is"
+      ]
+    },
+    {
+      "id": "runtime.multi-router-participants",
+      "value": "na",
+      "note": "Islands own no URL or router; the single app does.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "UX implications"
+      ]
+    },
+    {
+      "id": "runtime.shared-runtime-library",
+      "value": "yes",
+      "note": "The implementation's hydration loader; version lockstep automatic within one build.",
+      "claimType": "framework-guarantee",
+      "confidence": "medium",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "runtime.central-routing-map",
+      "value": "na",
+      "note": "Build-time-composed; no runtime roster or map.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Deployment"
+      ]
+    },
+    {
+      "id": "runtime.shared-dep-negotiation",
+      "value": "no",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Build-time coupling"
+      ]
+    },
+    {
+      "id": "runtime.dep-conflict-surfaces-runtime",
+      "value": "na",
+      "note": "No runtime dependency negotiation exists.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Build-time coupling"
+      ]
+    },
+    {
+      "id": "runtime.side-by-side-versions",
+      "value": "no",
+      "note": "One build resolves one version per package; multi-version needs bespoke bundler aliasing.",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Build-time coupling"
+      ]
+    },
+    {
+      "id": "runtime.global-registration-collision",
+      "value": "no",
+      "note": "Single build; naming resolved at compile time, no cross-team governance.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Contracts and communication"
+      ]
+    },
+    {
+      "id": "runtime.late-participant-registration",
+      "value": "conditional",
+      "condition": "varies by implementation: is-land can attach independently produced scripts at runtime; Astro/Fresh islands are compiled in",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "runtime.loaded-version-hot-swap",
+      "value": "no",
+      "note": "No version indirection; new code arrives only via redeploy and page load.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Deployment"
+      ]
+    },
+    {
+      "id": "isolation.document-boundary",
+      "value": "no",
+      "note": "All islands render in the shared visible host document.",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "isolation.js.virtualized-global",
+      "value": "no",
+      "note": "No simulated isolation of any kind.",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "isolation.dom.virtualized",
+      "value": "no",
+      "note": "Bare shared DOM; no framework patching.",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "isolation.css.outbound",
+      "value": "conditional",
+      "condition": "varies by implementation: Astro scopes component styles at compile time; the pattern itself resolves in the page-global cascade",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "isolation.css.inbound",
+      "value": "no",
+      "note": "Global styles flow into islands; same document.",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "isolation.resource.main-thread",
+      "value": "no",
+      "note": "Perf isolation is boot-time only; a hot island loop blocks the whole page.",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "isolation.process.crash",
+      "value": "no",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "isolation.storage.partition",
+      "value": "no",
+      "note": "Islands share window, storage, and the URL.",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Runtime coupling"
+      ]
+    },
+    {
+      "id": "isolation.origin.host-authority",
+      "value": "no",
+      "note": "All islands are first-party code with full origin authority.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Security and trust"
+      ]
+    },
+    {
+      "id": "isolation.navigation.top-level-guard",
+      "value": "no",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "isolation.security.malicious-participant",
+      "value": "no",
+      "note": "No trust boundary; all code first-party by assumption.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Security and trust"
+      ]
+    },
+    {
+      "id": "isolation.failure.lifecycle-quarantine",
+      "value": "yes",
+      "note": "Failed hydration leaves the island as its server-rendered HTML; other islands proceed.",
+      "claimType": "common-pattern",
+      "confidence": "medium",
+      "evidence": [
+        "Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "isolation.failure.post-mount-exception",
+      "value": "conditional",
+      "condition": "errors are confined to event turns, but shared-state corruption and a blocked main thread propagate after boot",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "isolation.failure.load-fallback",
+      "value": "yes",
+      "note": "Server HTML is the built-in fallback; degradation is silent. Server islands add explicit fallback slots.",
+      "claimType": "framework-guarantee",
+      "confidence": "medium",
+      "evidence": [
+        "Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "isolation.lifecycle.reclaim",
+      "value": "na",
+      "note": "Islands are never unmounted; page navigation discards the document.",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "UX implications"
+      ]
+    },
+    {
+      "id": "isolation.recovery.in-page",
+      "value": "no",
+      "note": "No destroy-and-recreate machinery.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "isolation.server.process",
+      "value": "no",
+      "note": "One deployment renders everything; server islands use the same deployment.",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Deployment"
+      ]
+    },
+    {
+      "id": "security.cross-origin-boundary",
+      "value": "no",
+      "note": "All first-party, same origin.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Security and trust"
+      ]
+    },
+    {
+      "id": "security.sandbox-attribute-applicable",
+      "value": "no",
+      "note": "Same-document strategy.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Security and trust"
+      ]
+    },
+    {
+      "id": "security.per-participant-csp",
+      "value": "no",
+      "note": "One document, one policy.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Security and trust"
+      ]
+    },
+    {
+      "id": "security.capability-narrowing",
+      "value": "no",
+      "note": "Whole page shares one capability surface.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Security and trust"
+      ]
+    },
+    {
+      "id": "security.host-dom-reach",
+      "value": "yes",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Runtime coupling"
+      ]
+    },
+    {
+      "id": "security.host-js-state-reach",
+      "value": "yes",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Runtime coupling"
+      ]
+    },
+    {
+      "id": "security.untrusted-third-party-viable",
+      "value": "no",
+      "note": "Dossier-explicit: untrusted or third-party code is out of scope for this strategy.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Security and trust"
+      ]
+    },
+    {
+      "id": "security.channel-origin-pinning",
+      "value": "na",
+      "note": "No cross-document channel exists.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Contracts and communication"
+      ]
+    },
+    {
+      "id": "security.channel-confidentiality",
+      "value": "na",
+      "note": "No inter-party channel; all code is first-party.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Security and trust"
+      ]
+    },
+    {
+      "id": "security.embedding-authorization",
+      "value": "na",
+      "note": "Build-time composition; nothing is embedded across owners.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "security.artifact-integrity-verification",
+      "value": "na",
+      "note": "Participants are not independently delivered; app-level SRI is orthogonal.",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Deployment"
+      ]
+    },
+    {
+      "id": "security.delivery-intermediary-trust",
+      "value": "no",
+      "note": "Ordinary first-party hosting; no composer, feed, or registry in the path.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Security and trust"
+      ]
+    },
+    {
+      "id": "security.isolation-escape-hatches",
+      "value": "na",
+      "note": "Claims no isolation to escape.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "security.composition-injection-surface",
+      "value": "no",
+      "note": "Island markers live in templates, not interpreted from content.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Security and trust"
+      ]
+    },
+    {
+      "id": "framework.host-framework-agnostic",
+      "value": "conditional",
+      "condition": "varies by implementation: Astro/Fresh are themselves the app and shell; is-land drops into any server-rendered host page",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Framework requirements"
+      ]
+    },
+    {
+      "id": "framework.participant-framework-agnostic",
+      "value": "conditional",
+      "condition": "varies by implementation: Astro supports React/Vue/Svelte/Solid/Preact/Lit per island; Fresh mandates Preact; is-land accepts any",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Build-time coupling",
+        "Framework requirements"
+      ]
+    },
+    {
+      "id": "framework.mixed-frameworks-one-page",
+      "value": "conditional",
+      "condition": "varies by implementation: yes in Astro and is-land; Fresh is Preact-only",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Build-time coupling"
+      ]
+    },
+    {
+      "id": "framework.per-team-framework-autonomy",
+      "value": "no",
+      "note": "Per-island choice is a build-time decision by one team in one repo.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Build-time coupling"
+      ]
+    },
+    {
+      "id": "framework.same-framework-major-coexistence",
+      "value": "no",
+      "note": "One build resolves one major per framework.",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Build-time coupling"
+      ]
+    },
+    {
+      "id": "framework.esm-artifact-required",
+      "value": "na",
+      "note": "No independent participant artifact; islands compile from source in the app build.",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "framework.html-document-entry",
+      "value": "no",
+      "note": "The integration unit is a component, not a deployed page or URL.",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "framework.client-library-required",
+      "value": "no",
+      "note": "Islands are plain components; the hydration loader is supplied by the implementation.",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "framework.foreign-artifact-no-rebuild",
+      "value": "conditional",
+      "condition": "varies by implementation: is-land attaches pre-built output of other pipelines (SvelteKit demonstrated); Astro/Fresh islands must be compiled in the app build",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Build-time coupling",
+        "Migration requirements"
+      ]
+    },
+    {
+      "id": "framework.official-adapters-exist",
+      "value": "conditional",
+      "condition": "varies by implementation: Astro ships official integrations for six-plus frameworks; Fresh is Preact-only; is-land ships framework examples",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Build-time coupling"
+      ]
+    },
+    {
+      "id": "framework.adapters-track-current-majors",
+      "value": "yes",
+      "note": "Astro's monthly cadence keeps official integrations on current majors; not dossier-verified.",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Status (Aug 2026)"
+      ]
+    },
+    {
+      "id": "framework.zero-framework-participant",
+      "value": "yes",
+      "note": "Zero-JS static regions are the default; islands can be vanilla scripts.",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Framework requirements"
+      ]
+    },
+    {
+      "id": "framework.version-floor-imposed",
+      "value": "conditional",
+      "condition": "varies by implementation: Astro pins Node versions, Fresh requires Deno; is-land imposes none",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Framework requirements"
+      ]
+    },
+    {
+      "id": "framework.composition-tier-stack-mandated",
+      "value": "conditional",
+      "condition": "varies by implementation: the meta-framework is the composition tier (Astro build/adapters, Fresh on Deno); is-land composes on any server-rendered page",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Framework requirements"
+      ]
+    },
+    {
+      "id": "framework.multi-framework-demonstrated",
+      "value": "yes",
+      "note": "Astro officially documents multiple frameworks per page; is-land ships multi-framework examples.",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Build-time coupling"
+      ]
+    },
+    {
+      "id": "contracts.formal-descriptor",
+      "value": "no",
+      "note": "Contracts are code-level imports and props.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Contracts and communication"
+      ]
+    },
+    {
+      "id": "contracts.contract-versioned",
+      "value": "na",
+      "note": "Guard: both sides ship in one commit; versioning rows NA for islands.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Contracts and communication"
+      ]
+    },
+    {
+      "id": "contracts.connect-compat-gate",
+      "value": "na",
+      "note": "Guard: no drift surface exists.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Contracts and communication"
+      ]
+    },
+    {
+      "id": "contracts.drift-surface",
+      "value": "no",
+      "note": "Both sides of every contract ship in the same commit.",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Contracts and communication"
+      ]
+    },
+    {
+      "id": "contracts.drift-explicit",
+      "value": "na",
+      "note": "Guard: no drift surface exists.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Contracts and communication"
+      ]
+    },
+    {
+      "id": "contracts.types-shared",
+      "value": "yes",
+      "note": "Ordinary in-repo types; both sides compile in one build.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Contracts and communication"
+      ]
+    },
+    {
+      "id": "contracts.schema-validated-payloads",
+      "value": "conditional",
+      "condition": "serializability of island props is framework-enforced; payload shape is not validated",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Contracts and communication"
+      ]
+    },
+    {
+      "id": "contracts.sync-calls",
+      "value": "yes",
+      "note": "Shared realm; cross-island reach via shared stores or globals is possible and officially patterned.",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Runtime coupling"
+      ]
+    },
+    {
+      "id": "contracts.serialized-boundary",
+      "value": "conditional",
+      "condition": "server-to-island props are serialization-restricted; client-side cross-island stores pass live references",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Contracts and communication"
+      ]
+    },
+    {
+      "id": "contracts.frame-messaging",
+      "value": "no",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "contracts.builtin-messaging",
+      "value": "conditional",
+      "condition": "no shipped bus; officially recommended shared stores (Astro nano stores, Fresh shared state) fill the role",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Runtime coupling",
+        "Contracts and communication"
+      ]
+    },
+    {
+      "id": "contracts.builtin-shared-state",
+      "value": "conditional",
+      "condition": "varies by implementation: Fresh ships shared state between islands; Astro recommends nano stores rather than shipping a store",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Runtime coupling"
+      ]
+    },
+    {
+      "id": "contracts.host-push-updates",
+      "value": "no",
+      "note": "Props are fixed at render.",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Contracts and communication"
+      ]
+    },
+    {
+      "id": "contracts.http-request-contract",
+      "value": "no",
+      "note": "Islands render in-process; the server-island endpoint is internal to the same app.",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "contracts.server-context-propagation",
+      "value": "yes",
+      "note": "Request context reaches islands via framework-defined props serialization.",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Contracts and communication"
+      ]
+    },
+    {
+      "id": "ssr.composed-page",
+      "value": "yes",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "SSR and delivery"
+      ]
+    },
+    {
+      "id": "ssr.fragment-granularity",
+      "value": "yes",
+      "note": "Region-granular within one document, though one renderer emits all regions.",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "What it is"
+      ]
+    },
+    {
+      "id": "ssr.streaming-assembly",
+      "value": "conditional",
+      "condition": "server islands ship the cached shell first and stream slow regions in behind it; fully static output has nothing to stream",
+      "claimType": "framework-guarantee",
+      "confidence": "medium",
+      "evidence": [
+        "Isolation and failure containment",
+        "SSR and delivery"
+      ]
+    },
+    {
+      "id": "ssr.participant-internal",
+      "value": "yes",
+      "note": "Each island is server-rendered with its own framework's SSR.",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "What it is"
+      ]
+    },
+    {
+      "id": "ssr.dual-mode-render",
+      "value": "no",
+      "note": "No documented server/client failover; client-only rendering is a static opt-out, not failover.",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "SSR and delivery"
+      ]
+    },
+    {
+      "id": "ssr.no-js-first-paint",
+      "value": "yes",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "UX implications"
+      ]
+    },
+    {
+      "id": "ssr.hydration-orchestration",
+      "value": "yes",
+      "note": "client:* and on: directives schedule per-island hydration.",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Performance causes"
+      ]
+    },
+    {
+      "id": "ssr.crawler-indexable",
+      "value": "yes",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "SSR and delivery"
+      ]
+    },
+    {
+      "id": "ssr.static-prerender",
+      "value": "yes",
+      "note": "Static or hybrid per-route output is standard.",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "SSR and delivery"
+      ]
+    },
+    {
+      "id": "ssr.edge-composition",
+      "value": "conditional",
+      "condition": "via hosting adapters (Cloudflare, Netlify/Vercel edge, Deno Deploy) the render itself can run at edge; nothing strategy-specific",
+      "claimType": "officially-supported",
+      "confidence": "medium",
+      "evidence": [
+        "Editions and commercial layer"
+      ]
+    },
+    {
+      "id": "ssr.static-hosting-sufficient",
+      "value": "conditional",
+      "condition": "full prerender serves from any CDN; on-demand SSR and server islands need request-time compute",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "SSR and delivery"
+      ]
+    },
+    {
+      "id": "ssr.server-loadable-artifact",
+      "value": "na",
+      "note": "No independently distributed participant artifact.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "ssr.rsc-federation",
+      "value": "na",
+      "note": "No cross-build boundary; framework streaming inside the single app is unaffected.",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "What it is"
+      ]
+    },
+    {
+      "id": "ssr.dev-prod-parity",
+      "value": "yes",
+      "note": "Dev server renders islands the same way as production.",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "SSR and delivery"
+      ]
+    },
+    {
+      "id": "ssr.html-fragment-contract",
+      "value": "no",
+      "note": "The composer consumes components via its JS renderer, not inert HTML fragments.",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "ux.cross-boundary-soft-nav",
+      "value": "na",
+      "note": "Single deploy unit; no cross-unit boundary exists.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Deployment"
+      ]
+    },
+    {
+      "id": "ux.within-unit-soft-nav",
+      "value": "conditional",
+      "condition": "MPA full-page navigation by default; SPA feel needs the implementation's optional client router or view transitions",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "UX implications"
+      ]
+    },
+    {
+      "id": "ux.cross-boundary-prefetch",
+      "value": "na",
+      "note": "No cross-unit boundary; page prefetch is ordinary app tooling.",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "UX implications"
+      ]
+    },
+    {
+      "id": "ux.cross-doc-view-transitions",
+      "value": "conditional",
+      "condition": "varies by implementation: Astro ships first-party View Transitions for its page navigations, rendering browser-support-dependent; not dossier-verified",
+      "claimType": "officially-supported",
+      "confidence": "medium",
+      "evidence": [
+        "https://docs.astro.build/en/guides/view-transitions/"
+      ]
+    },
+    {
+      "id": "ux.persistent-shared-chrome",
+      "value": "conditional",
+      "condition": "MPA reloads chrome each navigation; Astro's client router with transition:persist can keep islands mounted; not dossier-verified",
+      "claimType": "officially-supported",
+      "confidence": "medium",
+      "evidence": [
+        "https://docs.astro.build/en/guides/view-transitions/"
+      ]
+    },
+    {
+      "id": "ux.unit-keepalive",
+      "value": "no",
+      "note": "Islands live and die with the document; no keep-alive machinery.",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "UX implications"
+      ]
+    },
+    {
+      "id": "ux.keepalive-scroll-restoration",
+      "value": "na",
+      "note": "No keep-alive exists.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "UX implications"
+      ]
+    },
+    {
+      "id": "ux.deep-link-inner-route",
+      "value": "na",
+      "note": "Islands own no routes; the single app owns the URL.",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "UX implications"
+      ]
+    },
+    {
+      "id": "ux.frame-history-pollution",
+      "value": "no",
+      "note": "Single-document composition; no frames.",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "UX implications"
+      ]
+    },
+    {
+      "id": "ux.overlay-viewport-escape",
+      "value": "yes",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "UX implications"
+      ]
+    },
+    {
+      "id": "ux.host-overlay-protocol",
+      "value": "na",
+      "note": "Same-DOM composition needs none.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "UX implications"
+      ]
+    },
+    {
+      "id": "ux.body-portal-compat",
+      "value": "yes",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "UX implications"
+      ]
+    },
+    {
+      "id": "ux.natural-layout-flow",
+      "value": "yes",
+      "note": "Islands are in-flow regions of the page.",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "UX implications"
+      ]
+    },
+    {
+      "id": "ux.cross-boundary-focus-mgmt",
+      "value": "yes",
+      "note": "One DOM, one focus order.",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "UX implications"
+      ]
+    },
+    {
+      "id": "ux.screenreader-continuity",
+      "value": "yes",
+      "note": "One document, one accessibility tree, no embedding seams.",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "UX implications"
+      ]
+    },
+    {
+      "id": "ux.composed-first-paint",
+      "value": "yes",
+      "note": "Server-composed HTML paints complete; server islands excepted (see layout-shift row).",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "UX implications"
+      ]
+    },
+    {
+      "id": "ux.builtin-loading-ui",
+      "value": "no",
+      "note": "Server-island fallback slots are author-supplied placeholders, not shipped indicators.",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "UX implications"
+      ]
+    },
+    {
+      "id": "ux.builtin-error-fallback-ui",
+      "value": "conditional",
+      "condition": "inert server-rendered HTML remains in place on hydration failure (silent degradation); no designated error UI ships",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "ux.mount-layout-shift-risk",
+      "value": "conditional",
+      "condition": "server islands only: authors must size fallback slots for the two-phase paint; client islands paint final HTML first",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "UX implications"
+      ]
+    },
+    {
+      "id": "ux.token-theming-mechanism",
+      "value": "na",
+      "note": "Single app; theming is ordinary intra-app CSS with no cross-unit propagation problem.",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "What it is"
+      ]
+    },
+    {
+      "id": "performance.client-composition-runtime",
+      "value": "no",
+      "note": "Only a minimal per-island hydration loader; no orchestration runtime.",
+      "claimType": "framework-guarantee",
+      "confidence": "medium",
+      "evidence": [
+        "Performance causes"
+      ]
+    },
+    {
+      "id": "performance.pre-render-orchestration-fetch",
+      "value": "no",
+      "note": "Content arrives as server HTML before any orchestration fetch.",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "UX implications"
+      ]
+    },
+    {
+      "id": "performance.sequential-waterfall-default",
+      "value": "no",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Performance causes"
+      ]
+    },
+    {
+      "id": "performance.first-party-preload-levers",
+      "value": "conditional",
+      "condition": "varies by implementation: Astro ships page prefetch and hydration-scheduling directives; the pattern itself mandates none",
+      "claimType": "officially-supported",
+      "confidence": "medium",
+      "evidence": [
+        "Performance causes",
+        "https://docs.astro.build/en/guides/prefetch/"
+      ]
+    },
+    {
+      "id": "performance.duplicate-framework-same-page",
+      "value": "no",
+      "note": "The single build shares one framework chunk across islands.",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Build-time coupling"
+      ]
+    },
+    {
+      "id": "performance.shared-dependency-dedup",
+      "value": "yes",
+      "note": "Build-time: the shared bundler graph dedupes automatically.",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Build-time coupling"
+      ]
+    },
+    {
+      "id": "performance.dedup-failure-on-version-skew",
+      "value": "na",
+      "note": "One build resolves one version; skew cannot arise.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Build-time coupling"
+      ]
+    },
+    {
+      "id": "performance.per-unit-document-boot",
+      "value": "no",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Runtime coupling"
+      ]
+    },
+    {
+      "id": "performance.process-memory-overhead",
+      "value": "na",
+      "note": "Same-realm strategy.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Runtime coupling"
+      ]
+    },
+    {
+      "id": "performance.sandbox-execution-tax",
+      "value": "no",
+      "note": "No sandbox exists.",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "performance.per-message-serialization-cost",
+      "value": "no",
+      "note": "Cross-island stores pass in-realm references.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Runtime coupling"
+      ]
+    },
+    {
+      "id": "performance.hydration-deferrable-per-unit",
+      "value": "yes",
+      "note": "client:visible / on:visible etc.; client JS scales with the interactive surface.",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Performance causes"
+      ]
+    },
+    {
+      "id": "performance.request-time-server-fanout",
+      "value": "no",
+      "note": "One renderer in-process; server-island requests are client-initiated, not composer fanout.",
+      "claimType": "framework-guarantee",
+      "confidence": "medium",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "performance.per-unit-http-cacheable",
+      "value": "conditional",
+      "condition": "server islands only: per-island GET endpoints carry Cache-Control (props past 2048 bytes switch to POST, forfeiting caching); client islands ship inside the page",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Contracts and communication",
+        "SSR and delivery"
+      ]
+    },
+    {
+      "id": "performance.default-content-caching",
+      "value": "no",
+      "note": "Nothing strategy-shipped caches content; standard HTTP caching applies.",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "SSR and delivery"
+      ]
+    },
+    {
+      "id": "deployment.host-rebuild-required",
+      "value": "yes",
+      "note": "Single artifact; the is-land loader variant can swap independently produced scripts without rebuild.",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Deployment"
+      ]
+    },
+    {
+      "id": "deployment.new-participant-host-change",
+      "value": "yes",
+      "note": "A new island is a code change, rebuild, and redeploy of the one app.",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "deployment.golive-central-pointer",
+      "value": "na",
+      "note": "Participants have no independent releases.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Deployment"
+      ]
+    },
+    {
+      "id": "deployment.consumer-version-pin",
+      "value": "na",
+      "note": "No participant versions exist to pin.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Deployment"
+      ]
+    },
+    {
+      "id": "deployment.per-user-version-targeting",
+      "value": "na",
+      "note": "No participant versions; app-level canary is a hosting concern.",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Deployment"
+      ]
+    },
+    {
+      "id": "deployment.immutable-version-retention",
+      "value": "na",
+      "note": "No published participant versions.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Deployment"
+      ]
+    },
+    {
+      "id": "deployment.cache-busting-operator-burden",
+      "value": "no",
+      "note": "Builds emit content-hashed assets; no mutable participant URLs.",
+      "claimType": "common-pattern",
+      "confidence": "medium",
+      "evidence": [
+        "Deployment"
+      ]
+    },
+    {
+      "id": "deployment.participants-static-artifacts",
+      "value": "na",
+      "note": "Participants are not separately deployed at all.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Deployment"
+      ]
+    },
+    {
+      "id": "deployment.strategy-service-in-path",
+      "value": "no",
+      "note": "No composition service; the SSR server, where used, is the app itself.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Deployment"
+      ]
+    },
+    {
+      "id": "deployment.runtime-discovery-first-party",
+      "value": "na",
+      "note": "Nothing to discover.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Deployment"
+      ]
+    },
+    {
+      "id": "deployment.single-domain-required",
+      "value": "yes",
+      "note": "Inherent: one deployment serves everything; the server-island endpoint is same-origin.",
+      "claimType": "framework-guarantee",
+      "confidence": "medium",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "deployment.cross-origin-cors-required",
+      "value": "na",
+      "note": "No cross-origin participant hosting in canonical form.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Deployment"
+      ]
+    },
+    {
+      "id": "deployment.vendor-hosting-required",
+      "value": "no",
+      "note": "Adapters for many hosts; sponsorships, not dependencies.",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Editions and commercial layer"
+      ]
+    },
+    {
+      "id": "migration.participant.min-level",
+      "value": "conditional",
+      "condition": "scale 1-2 via is-land (in-place tag wrap of an existing server-rendered page); scale 7 for an existing SPA entering Astro/Fresh (server-first inversion)",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Migration requirements"
+      ]
+    },
+    {
+      "id": "migration.host.min-level",
+      "value": "conditional",
+      "condition": "scale 1 for is-land (one script tag on any server-rendered page); scale 7-8 for Astro/Fresh (the site becomes the meta-framework app)",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Migration requirements",
+        "Framework requirements"
+      ]
+    },
+    {
+      "id": "migration.source-modification-required",
+      "value": "conditional",
+      "condition": "varies by implementation: is-land wraps existing markup unmodified; Astro/Fresh require porting code into the framework",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Migration requirements"
+      ]
+    },
+    {
+      "id": "migration.participant.bootstrap-change-required",
+      "value": "conditional",
+      "condition": "varies by implementation: none for is-land; Astro/Fresh subsume the app entry entirely",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Migration requirements"
+      ]
+    },
+    {
+      "id": "migration.participant.internals-refactor-required",
+      "value": "conditional",
+      "condition": "varies by implementation: none for is-land on server-rendered pages; SPA adoption exceeds bounded refactor (see rewrite row)",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Migration requirements"
+      ]
+    },
+    {
+      "id": "migration.participant.deployment-change-required",
+      "value": "no",
+      "note": "No mandated platform, registry, or serving change.",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Deployment"
+      ]
+    },
+    {
+      "id": "migration.participant.extraction-required",
+      "value": "no",
+      "note": "Features stay in place; no independent unit ever required.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Migration requirements"
+      ]
+    },
+    {
+      "id": "migration.participant.rewrite-required",
+      "value": "conditional",
+      "condition": "existing SPA adoption is a server-first architectural inversion; MPA, greenfield, and is-land retrofit are cheap",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Migration requirements"
+      ]
+    },
+    {
+      "id": "migration.participant.thirdparty-unmodified-viable",
+      "value": "no",
+      "note": "Islands compose components in one build, not deployed applications; is-land attaches pre-built scripts, not apps.",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Migration requirements"
+      ]
+    },
+    {
+      "id": "migration.participant.legacy-no-build-viable",
+      "value": "conditional",
+      "condition": "is-land: yes, progressive enhancement in place on legacy server-rendered pages; Astro/Fresh: no, the app must be rebuilt in the framework",
+      "claimType": "officially-supported",
+      "confidence": "medium",
+      "evidence": [
+        "Migration requirements"
+      ]
+    },
+    {
+      "id": "migration.strangler.incremental",
+      "value": "conditional",
+      "condition": "per-page adoption is cheap for MPA and server-rendered estates (especially is-land); SPA estates face inversion first",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Migration requirements"
+      ]
+    },
+    {
+      "id": "migration.host.new-infra-tier-required",
+      "value": "no",
+      "note": "Ordinary app hosting only.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Operational model"
+      ]
+    },
+    {
+      "id": "migration.host.shell-takeover-required",
+      "value": "conditional",
+      "condition": "varies by implementation: Astro/Fresh become the application root; is-land is a per-page tag",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Framework requirements"
+      ]
+    },
+    {
+      "id": "migration.exit.participants-standalone",
+      "value": "no",
+      "note": "Islands are components of one app, never standalone applications.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "migration.path.from-incumbent-format",
+      "value": "no",
+      "note": "Dossier-explicit: no documented migration path in either direction.",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Migration requirements"
+      ]
+    },
+    {
+      "id": "migration.forced-remigration-pending",
+      "value": "no",
+      "note": "No announced EOL or format deprecation; Astro's frequent majors are routine upgrades.",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Status (Aug 2026)"
+      ]
+    },
+    {
+      "id": "migration.permanent-viability",
+      "value": "yes",
+      "note": "Mainstream default for content-heavy sites; multi-year production adoption.",
+      "claimType": "community-convention",
+      "confidence": "high",
+      "evidence": [
+        "Status (Aug 2026)"
+      ]
+    },
+    {
+      "id": "ownership.single-team-endorsed",
+      "value": "yes",
+      "note": "Design center: one team, one app; the pattern author distinguishes it from micro-frontends.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Ownership topology fit"
+      ]
+    },
+    {
+      "id": "ownership.code-boundary-ownership",
+      "value": "yes",
+      "note": "Ordinary repo path ownership.",
+      "claimType": "common-pattern",
+      "confidence": "high",
+      "evidence": [
+        "Ownership topology fit"
+      ]
+    },
+    {
+      "id": "ownership.deploy-schedule-ownership",
+      "value": "no",
+      "note": "Deploy cadence, release gating, and rollback remain shared.",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Ownership topology fit"
+      ]
+    },
+    {
+      "id": "ownership.runtime-operational-ownership",
+      "value": "no",
+      "note": "Islands execute inside the app; no separate on-call surface.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Operational model"
+      ]
+    },
+    {
+      "id": "ownership.external-participant",
+      "value": "no",
+      "note": "No distinct security principal; all code first-party.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Security and trust"
+      ]
+    },
+    {
+      "id": "ownership.participant-unmodifiable-host",
+      "value": "conditional",
+      "condition": "varies by implementation: is-land needs one script tag on any page; Astro/Fresh hosts are the framework app itself",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Framework requirements"
+      ]
+    },
+    {
+      "id": "ownership.distrusted-cadence",
+      "value": "na",
+      "note": "No independent participant deploys exist.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Deployment"
+      ]
+    },
+    {
+      "id": "ownership.uncoordinated-upgrades",
+      "value": "no",
+      "note": "Single build; no staggered majors as peers.",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Build-time coupling"
+      ]
+    },
+    {
+      "id": "ownership.onboarding-without-central-owner",
+      "value": "no",
+      "note": "Adding an island is a code change merged and shipped by the app's owners.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Ownership topology fit"
+      ]
+    },
+    {
+      "id": "ownership.platform-team-role-required",
+      "value": "no",
+      "note": "One app team; no distinct composition-platform role.",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Operational model"
+      ]
+    },
+    {
+      "id": "ownership.non-developer-composition",
+      "value": "no",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Editions and commercial layer"
+      ]
+    },
+    {
+      "id": "ownership.participant-bytes-verbatim",
+      "value": "na",
+      "note": "No cross-owner delivery; islands are compiled by the same build.",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "ownership.nested-host-seat",
+      "value": "na",
+      "note": "Single-owner single build; chained ownership does not arise.",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Ownership topology fit"
+      ]
+    },
+    {
+      "id": "ownership.upstream-contract-lifetime",
+      "value": "no",
+      "note": "Self-defined, vendor-neutral pattern.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Family mapping (provisional)"
+      ]
+    },
+    {
+      "id": "coordination.shared-dependency-governance",
+      "value": "no",
+      "note": "No runtime sharing; the one build resolves versions.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Build-time coupling"
+      ]
+    },
+    {
+      "id": "operations.version-skew-machinery",
+      "value": "na",
+      "note": "No independently deployed sides; skew cannot arise.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Deployment"
+      ]
+    },
+    {
+      "id": "operations.stack-traces-cross-boundary",
+      "value": "yes",
+      "note": "Shared realm; island errors surface in the page's error stream.",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Runtime coupling"
+      ]
+    },
+    {
+      "id": "operations.owner-attribution-builtin",
+      "value": "no",
+      "note": "No per-island failure attribution machinery ships.",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Operational model"
+      ]
+    },
+    {
+      "id": "operations.cross-journey-correlation-diy",
+      "value": "na",
+      "note": "Single deploy; nothing to correlate across.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Operational model"
+      ]
+    },
+    {
+      "id": "operations.deploy-inventory-firstparty",
+      "value": "na",
+      "note": "One deployable; no per-participant versions to enumerate.",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Operational model"
+      ]
+    },
+    {
+      "id": "operations.first-party-debug-tooling",
+      "value": "conditional",
+      "condition": "varies by implementation: Astro's dev toolbar inspects islands; Fresh and is-land ship none; not dossier-verified",
+      "claimType": "officially-supported",
+      "confidence": "medium",
+      "evidence": [
+        "https://docs.astro.build/en/guides/dev-toolbar/"
+      ]
+    },
+    {
+      "id": "operations.local-composed-dev-firstparty",
+      "value": "yes",
+      "note": "The app's own dev server runs the fully composed experience.",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Operational model"
+      ]
+    },
+    {
+      "id": "operations.composition-tier-local-parity",
+      "value": "yes",
+      "note": "The render pipeline runs identically on a laptop.",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Operational model"
+      ]
+    },
+    {
+      "id": "operations.standalone-participant-dev",
+      "value": "no",
+      "note": "No first-party emulator; islands are components developed inside the app.",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Operational model"
+      ]
+    },
+    {
+      "id": "operations.composed-test-utilities",
+      "value": "no",
+      "note": "Nothing beyond each framework's ordinary app-testing story.",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Operational model"
+      ]
+    },
+    {
+      "id": "operations.deploy-time-contract-verification",
+      "value": "conditional",
+      "condition": "TypeScript apps: the one build compiles both sides together, so prop breaks fail the build; untyped apps get only serializability enforcement",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Contracts and communication"
+      ]
+    },
+    {
+      "id": "operations.single-sponsor-concentration",
+      "value": "conditional",
+      "condition": "the strategy is multi-vendor; each implementation is single-sponsor (Astro company, Deno, 11ty individual-led)",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Status (Aug 2026)"
+      ]
+    },
+    {
+      "id": "operations.mode-forked-operations",
+      "value": "no",
+      "note": "Variance is across implementations, not documented modes of one unit.",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Ambiguities and decomposition candidates"
+      ]
+    }
+  ]
+}

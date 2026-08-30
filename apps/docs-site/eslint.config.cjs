@@ -6,7 +6,7 @@ const eslintRules = require('../../tools/eslint-rules/src/index.ts')
 
 module.exports = [
   {
-    ignores: ['.generated/', '.next/', 'out/', 'node_modules/', 'next-env.d.ts'],
+    ignores: ['.generated/', '.next/', 'notes/', 'out/', 'node_modules/', 'next-env.d.ts'],
   },
   ...baseConfig,
   {

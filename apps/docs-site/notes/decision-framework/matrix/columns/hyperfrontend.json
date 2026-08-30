@@ -1,0 +1,2191 @@
+{
+  "unit": "hyperfrontend",
+  "dossier": "research/solutions/hyperfrontend.md",
+  "verifiedAt": "2026-08-28",
+  "verdicts": [
+    {
+      "id": "unit.type.adoptable-implementation",
+      "value": "yes",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "What it is"
+      ]
+    },
+    {
+      "id": "unit.availability.installable-today",
+      "value": "yes",
+      "note": "Community edition available-immature (pre-1.0), installable and runnable today",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Status",
+        "Editions and commercial layer"
+      ]
+    },
+    {
+      "id": "unit.availability.stable-line-shipped",
+      "value": "no",
+      "note": "0.x line throughout; breaking wire changes explicitly allowed",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Status"
+      ]
+    },
+    {
+      "id": "unit.availability.single-current-line",
+      "value": "yes",
+      "note": "one active 0.x multi-package line; no dormant stable beside an unshipped successor",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Status"
+      ]
+    },
+    {
+      "id": "unit.availability.planned-capability-claims",
+      "value": "yes",
+      "note": "HyperFrontend Enterprise (hosting, registry, governance, identity) is announced-planned only",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Editions and commercial layer"
+      ]
+    },
+    {
+      "id": "unit.maintenance.release-within-12mo",
+      "value": "yes",
+      "note": "frequent releases automated per merge; features 0.8.0 current",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Status"
+      ]
+    },
+    {
+      "id": "unit.maintenance.commit-within-6mo",
+      "value": "yes",
+      "note": "active monorepo with per-merge releases",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Status"
+      ]
+    },
+    {
+      "id": "unit.maintenance.multi-maintainer",
+      "value": "no",
+      "note": "effectively one maintainer across recent history; dossier says must not be softened",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Ownership topology fit"
+      ]
+    },
+    {
+      "id": "unit.maintenance.org-steward",
+      "value": "no",
+      "note": "single individual; no corporate or foundation stewardship",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Ownership topology fit",
+        "Operational model"
+      ]
+    },
+    {
+      "id": "unit.maintenance.adoption-outside-sponsor",
+      "value": "unknown",
+      "note": "no documented production adopters; repo alone cannot establish external adoption",
+      "claimType": "inference",
+      "confidence": "low",
+      "evidence": [
+        "Ownership topology fit"
+      ]
+    },
+    {
+      "id": "unit.maintenance.adoption-scale-10k",
+      "value": "unknown",
+      "note": "no download or adoption metrics established",
+      "claimType": "inference",
+      "confidence": "low",
+      "evidence": [
+        "Ownership topology fit"
+      ]
+    },
+    {
+      "id": "unit.license.osi-core",
+      "value": "yes",
+      "note": "MIT",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "What it is"
+      ]
+    },
+    {
+      "id": "unit.editions.commercial-tier",
+      "value": "conditional",
+      "condition": "Enterprise tier is announced-planned only; nothing purchasable or hosted exists today",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Editions and commercial layer"
+      ]
+    },
+    {
+      "id": "unit.editions.oss-self-sufficient",
+      "value": "yes",
+      "note": "Community edition is the whole product today; Enterprise adds only planned managed services",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Editions and commercial layer"
+      ]
+    },
+    {
+      "id": "hosting.operator",
+      "value": "no",
+      "note": "managed hosting is a planned Enterprise capability; never scored available",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Editions and commercial layer"
+      ]
+    },
+    {
+      "id": "hosting.control-plane",
+      "value": "yes",
+      "note": "no vendor service exists; shells, hf serve, and mounts are fully adopter-hosted",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Deployment"
+      ]
+    },
+    {
+      "id": "registry.deployable-feature",
+      "value": "no",
+      "note": "metadata.json descriptor format exists; no registry ships today (planned Enterprise)",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Operational model",
+        "Editions and commercial layer"
+      ]
+    },
+    {
+      "id": "governance.rollback",
+      "value": "no",
+      "note": "same-URL model: rollback means redeploying prior content; no pointer-repoint mechanism",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Deployment"
+      ]
+    },
+    {
+      "id": "governance.usage-monitoring",
+      "value": "no",
+      "note": "planned Enterprise only",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Editions and commercial layer"
+      ]
+    },
+    {
+      "id": "governance.rbac",
+      "value": "no",
+      "note": "planned Enterprise only",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Editions and commercial layer"
+      ]
+    },
+    {
+      "id": "composition.kind.js-module-graph",
+      "value": "no",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "composition.kind.lifecycle-contract",
+      "value": "no",
+      "note": "feature embeds the hostee SDK; no prescribed lifecycle export interface",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics",
+        "Framework requirements"
+      ]
+    },
+    {
+      "id": "composition.kind.custom-element",
+      "value": "no",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "composition.kind.html-fragment-endpoint",
+      "value": "no",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "composition.kind.html-entry",
+      "value": "no",
+      "note": "frame loads the feature document natively; no fetch-and-rewrite",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "composition.kind.http-route-partition",
+      "value": "no",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "composition.kind.build-artifact",
+      "value": "no",
+      "note": "shell package is install-time glue; the composed unit is a URL-addressed runtime app",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "What it is",
+        "Deployment"
+      ]
+    },
+    {
+      "id": "composition.kind.inherits-underlying",
+      "value": "no",
+      "note": "branded implementation of the iframe family with its own contract boundary; wraps no other product",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Family mapping (provisional)"
+      ]
+    },
+    {
+      "id": "composition.phase.deploy-unit-per-participant",
+      "value": "yes",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "composition.exec.client-composed",
+      "value": "yes",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "buildtime.host-build-consumes-participants",
+      "value": "no",
+      "note": "a broken feature never breaks the host build; shell is a stable generated package",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Build-time coupling"
+      ]
+    },
+    {
+      "id": "buildtime.host-integrates-buildless",
+      "value": "yes",
+      "note": "script-tag consumption of the generated shell",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Build-time coupling"
+      ]
+    },
+    {
+      "id": "buildtime.participant-tooling-required",
+      "value": "yes",
+      "note": "hf CLI (Node >= 18) generates the shell",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Build-time coupling"
+      ]
+    },
+    {
+      "id": "buildtime.bundler-family-restricted",
+      "value": "no",
+      "note": "feature app builds with any toolchain or none; hf only packages the shell",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Build-time coupling"
+      ]
+    },
+    {
+      "id": "buildtime.share-metadata-emitted",
+      "value": "no",
+      "note": "no shared-dependency layer exists by design",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Build-time coupling"
+      ]
+    },
+    {
+      "id": "buildtime.shared-dep-change-rebuilds-center",
+      "value": "na",
+      "note": "no central dependency sharing exists",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Build-time coupling"
+      ]
+    },
+    {
+      "id": "buildtime.central-input-for-participant-build",
+      "value": "no",
+      "note": "SDK only; no shell emulator, roster, or cloud handshake",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Build-time coupling"
+      ]
+    },
+    {
+      "id": "buildtime.asset-prefix-coordination",
+      "value": "no",
+      "note": "separate documents and origins; no shared asset namespace",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "runtime.shared-js-realm",
+      "value": "no",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Runtime coupling"
+      ]
+    },
+    {
+      "id": "runtime.patched-globals-layer",
+      "value": "no",
+      "note": "globals are native in every frame; nothing interposed",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Runtime coupling"
+      ]
+    },
+    {
+      "id": "runtime.primordials-blast-radius",
+      "value": "no",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Runtime coupling",
+        "Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "runtime.concurrent-participants",
+      "value": "yes",
+      "note": "koi pond demo composes eight features live in one page",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Framework requirements"
+      ]
+    },
+    {
+      "id": "runtime.multi-router-participants",
+      "value": "yes",
+      "note": "each frame owns its own document URL and router; top-level URL integration unsolved",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "runtime.shared-runtime-library",
+      "value": "yes",
+      "note": "every participant carries the SDK; handshake version gate enforces compatibility",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Runtime coupling"
+      ]
+    },
+    {
+      "id": "runtime.central-routing-map",
+      "value": "no",
+      "note": "per-host mounts; feature team ships the glue; no shared roster artifact",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Ownership topology fit"
+      ]
+    },
+    {
+      "id": "runtime.shared-dep-negotiation",
+      "value": "no",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Runtime coupling"
+      ]
+    },
+    {
+      "id": "runtime.dep-conflict-surfaces-runtime",
+      "value": "na",
+      "note": "no shared-dependency negotiation exists",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Runtime coupling"
+      ]
+    },
+    {
+      "id": "runtime.side-by-side-versions",
+      "value": "yes",
+      "note": "separate realms; any versions coexist without interference",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "runtime.global-registration-collision",
+      "value": "no",
+      "note": "per-frame namespaces; no page-global registration surface",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Runtime coupling"
+      ]
+    },
+    {
+      "id": "runtime.late-participant-registration",
+      "value": "yes",
+      "note": "host can install and mount a shell at any time in a running document",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "runtime.loaded-version-hot-swap",
+      "value": "yes",
+      "note": "remount or peer reload; mount survives, consumer sees close then fresh open",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Contracts and communication"
+      ]
+    },
+    {
+      "id": "isolation.document-boundary",
+      "value": "yes",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "isolation.js.virtualized-global",
+      "value": "na",
+      "note": "a real separate realm exists; nothing to simulate",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Runtime coupling"
+      ]
+    },
+    {
+      "id": "isolation.dom.virtualized",
+      "value": "na",
+      "note": "document boundary exists",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "isolation.css.outbound",
+      "value": "yes",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "isolation.css.inbound",
+      "value": "yes",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "isolation.resource.main-thread",
+      "value": "conditional",
+      "condition": "only cross-origin frames on process-isolating engines; a same-origin feature shares the host thread and a busy spin freezes host and watchdog",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "isolation.process.crash",
+      "value": "conditional",
+      "condition": "cross-site frames on engines with site isolation (engine/platform-dependent); same-origin frames share the host process",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "isolation.storage.partition",
+      "value": "conditional",
+      "condition": "cross-origin feature frames get partitioned third-party storage; same-origin deployments share host storage; cookie-policy interplay stays shared",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "isolation.origin.host-authority",
+      "value": "conditional",
+      "condition": "cross-origin frames only; a same-origin unsandboxed frame holds host-origin authority",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Isolation and failure containment",
+        "Security and trust"
+      ]
+    },
+    {
+      "id": "isolation.navigation.top-level-guard",
+      "value": "conditional",
+      "condition": "only when the host applies its decreed sandbox; absent sandboxing, top-level navigation is unisolated",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Isolation and failure containment",
+        "Security and trust"
+      ]
+    },
+    {
+      "id": "isolation.security.malicious-participant",
+      "value": "conditional",
+      "condition": "cross-origin frames with host-decreed sandbox; Spectre-class needs cross-site process isolation; in-page co-resident scripts are outside the trust model",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Security and trust"
+      ]
+    },
+    {
+      "id": "isolation.failure.lifecycle-quarantine",
+      "value": "yes",
+      "note": "open/ready deadlines tear down with machine-readable errors; frames hidden until session opens",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Contracts and communication",
+        "Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "isolation.failure.post-mount-exception",
+      "value": "yes",
+      "note": "exceptions surface on the feature's own window; host and siblings unaffected",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "isolation.failure.load-fallback",
+      "value": "yes",
+      "note": "deadlines plus machine-readable errors; kill-at-network acceptance test; visible fallback UI stays host-authored",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "isolation.lifecycle.reclaim",
+      "value": "yes",
+      "note": "frame teardown reclaims the whole document",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "isolation.recovery.in-page",
+      "value": "yes",
+      "note": "automated: four-state liveness, once-per-suspect-episode recovery; ~3 s visibility blind window, fixed 1/s cadence",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "isolation.server.process",
+      "value": "na",
+      "note": "purely client-composed; no server composition tier (each feature's own hosting is separate anyway)",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "security.cross-origin-boundary",
+      "value": "yes",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Security and trust"
+      ]
+    },
+    {
+      "id": "security.sandbox-attribute-applicable",
+      "value": "yes",
+      "note": "host-decreed; SDK blocks the allow-scripts plus allow-same-origin self-unsandbox combo",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Security and trust"
+      ]
+    },
+    {
+      "id": "security.per-participant-csp",
+      "value": "yes",
+      "note": "each document carries its own headers",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "security.capability-narrowing",
+      "value": "yes",
+      "note": "feature-declared Permissions-Policy needs, host-applied; delegation only narrows",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Security and trust"
+      ]
+    },
+    {
+      "id": "security.host-dom-reach",
+      "value": "conditional",
+      "condition": "cross-origin frames: no (SOP-blocked); a same-origin unsandboxed frame can reach the host DOM via parent",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Security and trust",
+        "Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "security.host-js-state-reach",
+      "value": "conditional",
+      "condition": "cross-origin frames: no; a same-origin unsandboxed frame can touch host globals via parent",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Security and trust"
+      ]
+    },
+    {
+      "id": "security.untrusted-third-party-viable",
+      "value": "conditional",
+      "condition": "cross-origin embedding with sandbox; in-page co-resident scripts are explicitly outside the trust model; Spectre-class needs cross-site",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Security and trust"
+      ]
+    },
+    {
+      "id": "security.channel-origin-pinning",
+      "value": "yes",
+      "note": "pins window-at-origin; authenticates rooms, not speakers within a page",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Security and trust"
+      ]
+    },
+    {
+      "id": "security.channel-confidentiality",
+      "value": "conditional",
+      "condition": "opt-in v2 plus sharedKey is real PSK protection; v1 is deterrence-grade; handshake frames stay plaintext; silent runtime plaintext downgrade, gated only at build (--allow-open)",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Security and trust",
+        "Contracts and communication"
+      ]
+    },
+    {
+      "id": "security.embedding-authorization",
+      "value": "conditional",
+      "condition": "via participant-set frame-ancestors/XFO headers; explicitly out of SDK scope (operator job)",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Security and trust"
+      ]
+    },
+    {
+      "id": "security.artifact-integrity-verification",
+      "value": "no",
+      "note": "no first-party signing or SRI for feature code; CSP/SRI offered only as defence-in-depth guidance",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Security and trust"
+      ]
+    },
+    {
+      "id": "security.delivery-intermediary-trust",
+      "value": "no",
+      "note": "code loads directly from each feature's own origin; no feed, registry, or composer in path",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Deployment"
+      ]
+    },
+    {
+      "id": "security.isolation-escape-hatches",
+      "value": "no",
+      "note": "nothing framework-granted crosses the browser boundary",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Security and trust"
+      ]
+    },
+    {
+      "id": "security.composition-injection-surface",
+      "value": "no",
+      "note": "no server-side directive interpretation exists",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "framework.host-framework-agnostic",
+      "value": "yes",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Framework requirements"
+      ]
+    },
+    {
+      "id": "framework.participant-framework-agnostic",
+      "value": "conditional",
+      "condition": "demonstrated for 8 frameworks (koi pond); any-framework beyond those is vendor extrapolation",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Framework requirements"
+      ]
+    },
+    {
+      "id": "framework.mixed-frameworks-one-page",
+      "value": "yes",
+      "note": "eight frameworks composed live in the koi pond demo",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Framework requirements"
+      ]
+    },
+    {
+      "id": "framework.per-team-framework-autonomy",
+      "value": "yes",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Build-time coupling"
+      ]
+    },
+    {
+      "id": "framework.same-framework-major-coexistence",
+      "value": "yes",
+      "note": "separate documents; no version negotiation to collide",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "framework.esm-artifact-required",
+      "value": "no",
+      "note": "integration unit is a hosted HTML document, not a module artifact",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "framework.html-document-entry",
+      "value": "yes",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Framework requirements"
+      ]
+    },
+    {
+      "id": "framework.client-library-required",
+      "value": "yes",
+      "note": "feature must embed the hostee SDK runtime",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Framework requirements"
+      ]
+    },
+    {
+      "id": "framework.foreign-artifact-no-rebuild",
+      "value": "no",
+      "note": "participation requires the hostee SDK glue and an hf-generated shell",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Migration requirements"
+      ]
+    },
+    {
+      "id": "framework.official-adapters-exist",
+      "value": "no",
+      "note": "SDK is framework-neutral plain JS; no per-framework adapter packages documented, demos only",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Framework requirements"
+      ]
+    },
+    {
+      "id": "framework.adapters-track-current-majors",
+      "value": "na",
+      "note": "no per-framework adapter layer exists to track",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Framework requirements"
+      ]
+    },
+    {
+      "id": "framework.zero-framework-participant",
+      "value": "yes",
+      "note": "vanilla TS feature demonstrated in the koi pond",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Framework requirements"
+      ]
+    },
+    {
+      "id": "framework.version-floor-imposed",
+      "value": "yes",
+      "note": "tooling requires Node >= 18",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Framework requirements"
+      ]
+    },
+    {
+      "id": "framework.composition-tier-stack-mandated",
+      "value": "no",
+      "note": "the browser is the composition tier; hf serve optional",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "framework.multi-framework-demonstrated",
+      "value": "yes",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Framework requirements"
+      ]
+    },
+    {
+      "id": "contracts.formal-descriptor",
+      "value": "yes",
+      "note": "versioned FeatureContract plus metadata.json FeatureDescriptor",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Contracts and communication",
+        "Operational model"
+      ]
+    },
+    {
+      "id": "contracts.contract-versioned",
+      "value": "yes",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Contracts and communication"
+      ]
+    },
+    {
+      "id": "contracts.connect-compat-gate",
+      "value": "yes",
+      "note": "handshake version gate; permissive edge: unversioned peers always pass",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Contracts and communication"
+      ]
+    },
+    {
+      "id": "contracts.drift-surface",
+      "value": "yes",
+      "note": "both sides deploy independently; drift structurally possible",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Deployment"
+      ]
+    },
+    {
+      "id": "contracts.drift-explicit",
+      "value": "yes",
+      "note": "denied handshake with machine-readable errors",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Contracts and communication"
+      ]
+    },
+    {
+      "id": "contracts.types-shared",
+      "value": "yes",
+      "note": "generated shell carries contract .d.ts; types narrowed to declared modes",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "libs/features/ARCHITECTURE.md (generators: contract .d.ts types)"
+      ]
+    },
+    {
+      "id": "contracts.schema-validated-payloads",
+      "value": "conditional",
+      "condition": "only actions that declare a schema are validated; schema-less actions pass through",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Runtime coupling"
+      ]
+    },
+    {
+      "id": "contracts.sync-calls",
+      "value": "no",
+      "note": "async postMessage only; the boundary forbids direct references",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Contracts and communication"
+      ]
+    },
+    {
+      "id": "contracts.serialized-boundary",
+      "value": "yes",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Contracts and communication"
+      ]
+    },
+    {
+      "id": "contracts.frame-messaging",
+      "value": "yes",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "What it is"
+      ]
+    },
+    {
+      "id": "contracts.builtin-messaging",
+      "value": "yes",
+      "note": "contract-validated channel with correlated request/response and control plane",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Contracts and communication"
+      ]
+    },
+    {
+      "id": "contracts.builtin-shared-state",
+      "value": "no",
+      "note": "message passing only; no persistent shared store",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Contracts and communication"
+      ]
+    },
+    {
+      "id": "contracts.host-push-updates",
+      "value": "yes",
+      "note": "contract actions and control traffic reach a mounted feature without remount",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Contracts and communication"
+      ]
+    },
+    {
+      "id": "contracts.http-request-contract",
+      "value": "no",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "contracts.server-context-propagation",
+      "value": "na",
+      "note": "purely client-side composition; no composition-tier request exists",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "ssr.composed-page",
+      "value": "no",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "SSR and delivery"
+      ]
+    },
+    {
+      "id": "ssr.fragment-granularity",
+      "value": "na",
+      "note": "composition is client-side",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "SSR and delivery"
+      ]
+    },
+    {
+      "id": "ssr.streaming-assembly",
+      "value": "na",
+      "note": "client-composed; nothing assembles server-side",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "SSR and delivery"
+      ]
+    },
+    {
+      "id": "ssr.participant-internal",
+      "value": "conditional",
+      "condition": "a feature may use its own SSR for its own document; the frame still boots client-side inside the host",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "SSR and delivery"
+      ]
+    },
+    {
+      "id": "ssr.dual-mode-render",
+      "value": "no",
+      "note": "no server render path exists",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "SSR and delivery"
+      ]
+    },
+    {
+      "id": "ssr.no-js-first-paint",
+      "value": "no",
+      "note": "frames stay hidden until frame boot plus handshake complete",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "SSR and delivery"
+      ]
+    },
+    {
+      "id": "ssr.hydration-orchestration",
+      "value": "na",
+      "note": "nothing is server-rendered",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "SSR and delivery"
+      ]
+    },
+    {
+      "id": "ssr.crawler-indexable",
+      "value": "no",
+      "note": "embedded content is not part of the host document; the feature's own URL indexes as itself",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "SSR and delivery"
+      ]
+    },
+    {
+      "id": "ssr.static-prerender",
+      "value": "no",
+      "note": "a feature's own document may be static, but composed content is never prerendered",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "SSR and delivery"
+      ]
+    },
+    {
+      "id": "ssr.edge-composition",
+      "value": "na",
+      "note": "browser-composed",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "SSR and delivery"
+      ]
+    },
+    {
+      "id": "ssr.static-hosting-sufficient",
+      "value": "yes",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "SSR and delivery",
+        "Deployment"
+      ]
+    },
+    {
+      "id": "ssr.server-loadable-artifact",
+      "value": "no",
+      "note": "no first-party server loader for shells or features",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "SSR and delivery"
+      ]
+    },
+    {
+      "id": "ssr.rsc-federation",
+      "value": "na",
+      "note": "document-boundary composition; no cross-boundary render tree exists",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "SSR and delivery"
+      ]
+    },
+    {
+      "id": "ssr.dev-prod-parity",
+      "value": "na",
+      "note": "no SSR exists",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "SSR and delivery"
+      ]
+    },
+    {
+      "id": "ssr.html-fragment-contract",
+      "value": "no",
+      "note": "participant format is a live app document needing its SDK runtime, not inert fragment HTML",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "SSR and delivery"
+      ]
+    },
+    {
+      "id": "ux.cross-boundary-soft-nav",
+      "value": "conditional",
+      "condition": "host document persists across feature switches, but the destination feature boots a full frame document (its assets re-download and re-parse)",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Performance causes"
+      ]
+    },
+    {
+      "id": "ux.within-unit-soft-nav",
+      "value": "yes",
+      "note": "a feature is a normal app in its own document; internal routing unimpaired",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "ux.cross-boundary-prefetch",
+      "value": "no",
+      "note": "nothing shipped",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Performance causes"
+      ]
+    },
+    {
+      "id": "ux.cross-doc-view-transitions",
+      "value": "na",
+      "note": "boundary crossings are in-page frame mounts, not top-level document navigations",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "ux.persistent-shared-chrome",
+      "value": "yes",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "UX implications"
+      ]
+    },
+    {
+      "id": "ux.unit-keepalive",
+      "value": "conditional",
+      "condition": "a host may hide a mounted frame and reshow it (live document persists, browser behavior); no documented first-party keep-alive API",
+      "claimType": "common-pattern",
+      "confidence": "medium",
+      "evidence": [
+        "UX implications",
+        "libs/features/ARCHITECTURE.md"
+      ]
+    },
+    {
+      "id": "ux.keepalive-scroll-restoration",
+      "value": "conditional",
+      "condition": "where the host hides rather than destroys the frame, the live document retains its own scroll",
+      "claimType": "browser-guarantee",
+      "confidence": "medium",
+      "evidence": [
+        "UX implications"
+      ]
+    },
+    {
+      "id": "ux.deep-link-inner-route",
+      "value": "no",
+      "note": "self-acknowledged gap: routing and deep-linking need per-integration design",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "UX implications"
+      ]
+    },
+    {
+      "id": "ux.frame-history-pollution",
+      "value": "yes",
+      "note": "framed navigations enter top-level history; no routing-sync mitigation shipped",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "UX implications"
+      ]
+    },
+    {
+      "id": "ux.overlay-viewport-escape",
+      "value": "conditional",
+      "condition": "embedded mode clips to the frame rectangle; contract-declared dialog/popup modes provide full-viewport surfaces",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "UX implications"
+      ]
+    },
+    {
+      "id": "ux.host-overlay-protocol",
+      "value": "yes",
+      "note": "contract-declared dialog and popup modes; dismiss crosses as a signal under host policy",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "UX implications"
+      ]
+    },
+    {
+      "id": "ux.body-portal-compat",
+      "value": "na",
+      "note": "portals stay inside the frame document; clipping is scored separately",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "UX implications"
+      ]
+    },
+    {
+      "id": "ux.natural-layout-flow",
+      "value": "no",
+      "note": "deliberate host geometry authority; child content auto-sizing excluded by design",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "UX implications"
+      ]
+    },
+    {
+      "id": "ux.cross-boundary-focus-mgmt",
+      "value": "no",
+      "note": "acknowledged unsolved",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "UX implications"
+      ]
+    },
+    {
+      "id": "ux.screenreader-continuity",
+      "value": "unknown",
+      "note": "cross-frame accessibility is an acknowledged gap; tree continuity unassessed",
+      "claimType": "inference",
+      "confidence": "low",
+      "evidence": [
+        "UX implications"
+      ]
+    },
+    {
+      "id": "ux.composed-first-paint",
+      "value": "no",
+      "note": "frames load and reveal after handshake",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "SSR and delivery"
+      ]
+    },
+    {
+      "id": "ux.builtin-loading-ui",
+      "value": "conditional",
+      "condition": "frames hidden until the session opens masks half-loaded flash; no spinner or indicator shipped",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "UX implications"
+      ]
+    },
+    {
+      "id": "ux.builtin-error-fallback-ui",
+      "value": "no",
+      "note": "machine-readable errors surface; visible fallback UI is host-authored",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Operational model"
+      ]
+    },
+    {
+      "id": "ux.mount-layout-shift-risk",
+      "value": "no",
+      "note": "host geometry authority plus baked default dimensions size the region before content arrives",
+      "claimType": "framework-guarantee",
+      "confidence": "medium",
+      "evidence": [
+        "UX implications"
+      ]
+    },
+    {
+      "id": "ux.token-theming-mechanism",
+      "value": "no",
+      "note": "theming explicitly out of jurisdiction; agreements between applications",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "UX implications"
+      ]
+    },
+    {
+      "id": "performance.client-composition-runtime",
+      "value": "yes",
+      "note": "host loads the shell/nexus runtime",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Performance causes"
+      ]
+    },
+    {
+      "id": "performance.pre-render-orchestration-fetch",
+      "value": "no",
+      "note": "no manifest, feed, or registry fetch; the frame fetch is the unit itself",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Performance causes"
+      ]
+    },
+    {
+      "id": "performance.sequential-waterfall-default",
+      "value": "yes",
+      "note": "host JS mounts frame, then frame HTML, assets, handshake; reveal gated on the chain",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "SSR and delivery"
+      ]
+    },
+    {
+      "id": "performance.first-party-preload-levers",
+      "value": "no",
+      "note": "nothing shipped",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Performance causes"
+      ]
+    },
+    {
+      "id": "performance.duplicate-framework-same-page",
+      "value": "yes",
+      "note": "no cross-feature dependency dedup; each frame carries its own framework copy",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Performance causes"
+      ]
+    },
+    {
+      "id": "performance.shared-dependency-dedup",
+      "value": "no",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Performance causes"
+      ]
+    },
+    {
+      "id": "performance.dedup-failure-on-version-skew",
+      "value": "na",
+      "note": "no sharing mechanism exists",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Performance causes"
+      ]
+    },
+    {
+      "id": "performance.per-unit-document-boot",
+      "value": "yes",
+      "note": "acknowledged per-feature document cost; magnitude unquantified in sources",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Performance causes"
+      ]
+    },
+    {
+      "id": "performance.process-memory-overhead",
+      "value": "conditional",
+      "condition": "cross-origin frames on site-isolating engines carry per-process memory overhead",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Isolation and failure containment"
+      ]
+    },
+    {
+      "id": "performance.sandbox-execution-tax",
+      "value": "no",
+      "note": "native execution in each frame's own realm; no proxy or rewriting layer",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Performance causes"
+      ]
+    },
+    {
+      "id": "performance.per-message-serialization-cost",
+      "value": "yes",
+      "note": "structured clone plus schema validation; v1 crypto envelope silently drops messages under chatty concurrent channels",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Performance causes"
+      ]
+    },
+    {
+      "id": "performance.hydration-deferrable-per-unit",
+      "value": "conditional",
+      "condition": "host controls mount timing per feature; no shipped visibility/idle gating primitives",
+      "claimType": "common-pattern",
+      "confidence": "medium",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "performance.request-time-server-fanout",
+      "value": "no",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Performance causes"
+      ]
+    },
+    {
+      "id": "performance.per-unit-http-cacheable",
+      "value": "yes",
+      "note": "each feature's assets load from its own origin with its own cache headers",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Performance causes"
+      ]
+    },
+    {
+      "id": "performance.default-content-caching",
+      "value": "na",
+      "note": "no composition-tier server exists; browser HTTP caching applies",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "deployment.host-rebuild-required",
+      "value": "conditional",
+      "condition": "no while the contract holds; contract-changing updates require the host to install a regenerated shell",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Deployment"
+      ]
+    },
+    {
+      "id": "deployment.new-participant-host-change",
+      "value": "yes",
+      "note": "host must install the feature's shell and declare a mount (one-time; script tag or npm)",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Deployment"
+      ]
+    },
+    {
+      "id": "deployment.golive-central-pointer",
+      "value": "no",
+      "note": "the feature's own deploy behind its URL goes live directly",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Deployment"
+      ]
+    },
+    {
+      "id": "deployment.consumer-version-pin",
+      "value": "no",
+      "note": "host receives whatever is deployed behind the URL; the gate refuses incompatibles but cannot pin",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Deployment"
+      ]
+    },
+    {
+      "id": "deployment.per-user-version-targeting",
+      "value": "no",
+      "note": "nothing documented",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Deployment"
+      ]
+    },
+    {
+      "id": "deployment.immutable-version-retention",
+      "value": "no",
+      "note": "same-URL model retains nothing",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Deployment"
+      ]
+    },
+    {
+      "id": "deployment.cache-busting-operator-burden",
+      "value": "yes",
+      "note": "feature URL is a mutable well-known document; hf serve's conditional requests mitigate",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Deployment"
+      ]
+    },
+    {
+      "id": "deployment.participants-static-artifacts",
+      "value": "yes",
+      "note": "features can be static files on any host; hf serve optional",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Deployment"
+      ]
+    },
+    {
+      "id": "deployment.strategy-service-in-path",
+      "value": "no",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Deployment"
+      ]
+    },
+    {
+      "id": "deployment.runtime-discovery-first-party",
+      "value": "no",
+      "note": "metadata.json describes a shell at rest; no discovery service or registry",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Operational model"
+      ]
+    },
+    {
+      "id": "deployment.single-domain-required",
+      "value": "no",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Deployment"
+      ]
+    },
+    {
+      "id": "deployment.cross-origin-cors-required",
+      "value": "no",
+      "note": "frame navigation is CORS-exempt",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Deployment"
+      ]
+    },
+    {
+      "id": "deployment.vendor-hosting-required",
+      "value": "no",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Deployment"
+      ]
+    },
+    {
+      "id": "migration.participant.min-level",
+      "value": "conditional",
+      "condition": "migration.bootstrap-change",
+      "note": "hostee SDK glue in entry plus feature.config plus hf build; internals otherwise untouched",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Migration requirements"
+      ]
+    },
+    {
+      "id": "migration.host.min-level",
+      "value": "conditional",
+      "condition": "migration.trivial-adaptation",
+      "note": "one script tag or npm install plus a mount declaration",
+      "claimType": "officially-supported",
+      "confidence": "medium",
+      "evidence": [
+        "Ownership topology fit",
+        "Build-time coupling"
+      ]
+    },
+    {
+      "id": "migration.source-modification-required",
+      "value": "yes",
+      "note": "hostee SDK glue",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Migration requirements"
+      ]
+    },
+    {
+      "id": "migration.participant.bootstrap-change-required",
+      "value": "yes",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Migration requirements"
+      ]
+    },
+    {
+      "id": "migration.participant.internals-refactor-required",
+      "value": "no",
+      "note": "the app otherwise stays itself",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Migration requirements"
+      ]
+    },
+    {
+      "id": "migration.participant.deployment-change-required",
+      "value": "no",
+      "note": "any hosting works; hf serve optional; app must already be (or become) independently hosted",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Deployment"
+      ]
+    },
+    {
+      "id": "migration.participant.extraction-required",
+      "value": "yes",
+      "note": "a feature must be an independently hosted app with its own URL; no in-place wrapping",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Framework requirements"
+      ]
+    },
+    {
+      "id": "migration.participant.rewrite-required",
+      "value": "no",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Migration requirements"
+      ]
+    },
+    {
+      "id": "migration.participant.thirdparty-unmodified-viable",
+      "value": "no",
+      "note": "full participation needs SDK glue and an hf-generated shell",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Migration requirements"
+      ]
+    },
+    {
+      "id": "migration.participant.legacy-no-build-viable",
+      "value": "conditional",
+      "condition": "the app's own build is never consumed (hf build packages the shell from config), but the hostee SDK must run in its pages and hf CLI needs Node >= 18",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Build-time coupling",
+        "What it is"
+      ]
+    },
+    {
+      "id": "migration.strangler.incremental",
+      "value": "yes",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Migration requirements"
+      ]
+    },
+    {
+      "id": "migration.host.new-infra-tier-required",
+      "value": "no",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "migration.host.shell-takeover-required",
+      "value": "no",
+      "note": "host keeps its document shell; mounts features where it chooses",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Ownership topology fit"
+      ]
+    },
+    {
+      "id": "migration.exit.participants-standalone",
+      "value": "yes",
+      "note": "features are standalone hosted apps by construction",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "migration.path.from-incumbent-format",
+      "value": "no",
+      "note": "no documented conversion path from MF, single-spa, or other formats",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Migration requirements"
+      ]
+    },
+    {
+      "id": "migration.forced-remigration-pending",
+      "value": "yes",
+      "note": "pre-1.0: breaking wire changes permitted and have occurred; adopters track a fast-moving contract",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Operational model"
+      ]
+    },
+    {
+      "id": "migration.permanent-viability",
+      "value": "conditional",
+      "condition": "vendor rationale argues it as permanent architecture, but pre-1.0 wire instability, single maintainer, and zero documented production adopters leave no multi-year evidence",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Operational model",
+        "Ownership topology fit"
+      ]
+    },
+    {
+      "id": "ownership.single-team-endorsed",
+      "value": "no",
+      "note": "self-conceded: a single team on one release train probably does not need it",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Ownership topology fit"
+      ]
+    },
+    {
+      "id": "ownership.code-boundary-ownership",
+      "value": "yes",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Ownership topology fit"
+      ]
+    },
+    {
+      "id": "ownership.deploy-schedule-ownership",
+      "value": "yes",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Deployment"
+      ]
+    },
+    {
+      "id": "ownership.runtime-operational-ownership",
+      "value": "yes",
+      "note": "each feature is an independently hosted URL its team must serve and keep alive",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Deployment"
+      ]
+    },
+    {
+      "id": "ownership.external-participant",
+      "value": "yes",
+      "note": "design center; the cross-origin frame is the security-principal boundary",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Ownership topology fit",
+        "Security and trust"
+      ]
+    },
+    {
+      "id": "ownership.participant-unmodifiable-host",
+      "value": "yes",
+      "note": "design center: one script tag or install on an unmodifiable host",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Ownership topology fit"
+      ]
+    },
+    {
+      "id": "ownership.distrusted-cadence",
+      "value": "conditional",
+      "condition": "compatible-contract deploys are fully uncoordinated; contract-breaking deploys are refused by the handshake gate until the host installs a regenerated shell",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Deployment",
+        "Contracts and communication"
+      ]
+    },
+    {
+      "id": "ownership.uncoordinated-upgrades",
+      "value": "yes",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Ownership topology fit"
+      ]
+    },
+    {
+      "id": "ownership.onboarding-without-central-owner",
+      "value": "no",
+      "note": "no central artifact exists, but each embedding host must install the shell and declare the mount",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Deployment"
+      ]
+    },
+    {
+      "id": "ownership.platform-team-role-required",
+      "value": "no",
+      "note": "vendor-argued: per-host mounts, no shared tier to operate",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Ownership topology fit"
+      ]
+    },
+    {
+      "id": "ownership.non-developer-composition",
+      "value": "no",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Ownership topology fit"
+      ]
+    },
+    {
+      "id": "ownership.participant-bytes-verbatim",
+      "value": "yes",
+      "note": "frame loads the feature document as served; no host-side rewriting",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "ownership.nested-host-seat",
+      "value": "yes",
+      "note": "koi pond: the pond is a gallery-hosted feature while hosting eight fish features",
+      "claimType": "officially-supported",
+      "confidence": "medium",
+      "evidence": [
+        "Framework requirements"
+      ]
+    },
+    {
+      "id": "ownership.upstream-contract-lifetime",
+      "value": "no",
+      "note": "defines its own contract boundary over the browser primitive",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Family mapping (provisional)"
+      ]
+    },
+    {
+      "id": "coordination.shared-dependency-governance",
+      "value": "no",
+      "note": "no runtime sharing; duplication cost scored under performance",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Build-time coupling"
+      ]
+    },
+    {
+      "id": "operations.version-skew-machinery",
+      "value": "yes",
+      "note": "handshake version gate plus machine-readable denial",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Contracts and communication"
+      ]
+    },
+    {
+      "id": "operations.stack-traces-cross-boundary",
+      "value": "no",
+      "note": "traces stay behind the boundary; forces per-feature error reporting",
+      "claimType": "browser-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Operational model"
+      ]
+    },
+    {
+      "id": "operations.owner-attribution-builtin",
+      "value": "yes",
+      "note": "typed relationship failures and four-state liveness attribute the failing side",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Operational model"
+      ]
+    },
+    {
+      "id": "operations.cross-journey-correlation-diy",
+      "value": "yes",
+      "note": "self-conceded: cross-app debugging needs correlation IDs",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Operational model"
+      ]
+    },
+    {
+      "id": "operations.deploy-inventory-firstparty",
+      "value": "no",
+      "note": "metadata.json is a shell descriptor at rest; no live inventory surface",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Operational model"
+      ]
+    },
+    {
+      "id": "operations.first-party-debug-tooling",
+      "value": "yes",
+      "note": "hf dev in-browser debug UI",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Operational model"
+      ]
+    },
+    {
+      "id": "operations.local-composed-dev-firstparty",
+      "value": "yes",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Operational model"
+      ]
+    },
+    {
+      "id": "operations.composition-tier-local-parity",
+      "value": "yes",
+      "note": "the browser is the composition tier; identical locally",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Composition mechanics"
+      ]
+    },
+    {
+      "id": "operations.standalone-participant-dev",
+      "value": "yes",
+      "note": "a feature is a normal standalone app; hf dev supplies the host-side harness",
+      "claimType": "officially-supported",
+      "confidence": "high",
+      "evidence": [
+        "Operational model"
+      ]
+    },
+    {
+      "id": "operations.composed-test-utilities",
+      "value": "no",
+      "note": "no first-party composed-system test utilities; hf dev is a debug UI, not tests",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Operational model"
+      ]
+    },
+    {
+      "id": "operations.deploy-time-contract-verification",
+      "value": "conditional",
+      "condition": "build/deploy-time security-protocol pin comparison only; contract compatibility is checked at runtime handshake, not deploy",
+      "claimType": "framework-guarantee",
+      "confidence": "high",
+      "evidence": [
+        "Operational model",
+        "Security and trust"
+      ]
+    },
+    {
+      "id": "operations.single-sponsor-concentration",
+      "value": "yes",
+      "note": "one maintainer; must not be softened",
+      "claimType": "inference",
+      "confidence": "high",
+      "evidence": [
+        "Ownership topology fit"
+      ]
+    },
+    {
+      "id": "operations.mode-forked-operations",
+      "value": "yes",
+      "note": "origin topology, display modes, and crypto levels fork isolation/security/UX cells; scored as conditionals here",
+      "claimType": "inference",
+      "confidence": "medium",
+      "evidence": [
+        "Family mapping (provisional)",
+        "Ambiguities and decomposition candidates"
+      ]
+    }
+  ]
+}

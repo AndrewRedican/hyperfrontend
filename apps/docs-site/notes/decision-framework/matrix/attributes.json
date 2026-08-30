@@ -1,0 +1,1197 @@
+{
+  "schemaVersion": "0.1.0",
+  "researchSnapshot": "2026-08",
+  "generated": "2026-08-28",
+  "groups": [
+    {
+      "key": "unit",
+      "title": "Unit identity, availability, and editions",
+      "attributes": [
+        {
+          "id": "unit.type.adoptable-implementation",
+          "question": "Is the unit a concrete adoptable implementation (product, framework, library, or platform capability) rather than an architectural strategy?",
+          "notes": "No: strategy dossiers (iframe, import-maps, islands, edge-side, reverse-proxy, server-fragment, web-components, non-MFE baselines, graveyard). Layer-3 operability and governance atoms score NA for strategies; strategies are never eliminated on those grounds (REQ-ENT-01)."
+        },
+        {
+          "id": "unit.availability.installable-today",
+          "question": "Can at least one edition of the unit be obtained and run in production today (REQ-AVAIL-01 available or available-immature)?",
+          "notes": "Hard-constraint guard. No: graveyard illustrations (deprecated or inactive). Yes even for dormant-but-installable picard (available-immature). Never reversible by commercial features."
+        },
+        {
+          "id": "unit.availability.stable-line-shipped",
+          "question": "Is the unit's currently recommended release line a stable, non-beta, non-RC release at 1.0 or higher, with semver commitments currently in effect?",
+          "notes": "Absorbs operations.stable-api-line. No: hyperfrontend (0.x, breaking wire changes), micro-app (1.x perpetually RC for 3+ years), web-fragments (0.8 beta), picard (0.2), opencomponents (0.50.x since 2014). Conditional: qiankun (v2 stable, v3 RC). Yes: MF, Luigi, Piral, Podium. NA: strategies."
+        },
+        {
+          "id": "unit.availability.single-current-line",
+          "question": "Does the unit have exactly one unambiguous current release line, with no dormant stable tag alongside an unshipped successor?",
+          "notes": "Forced by single-spa (6.x dormant vs v7 beta since 2024), qiankun (2.10 dormant vs v3 RC), piral (v1 vs unshipped Picard-based v2). Conditional: Module Federation (core fine; nextjs-mf EOL-bound, originjs abandoned). No: micro-app (only line is RC)."
+        },
+        {
+          "id": "unit.availability.planned-capability-claims",
+          "question": "Does the unit advertise an edition or capability set whose availability is announced-planned or future-roadmap only?",
+          "notes": "Yes: HyperFrontend Enterprise (hosting, governance, registry, backchannel atoms all planned). Guard: planned capabilities are never scored available; when a competitor ships the equivalent today, show both (REQ-AVAIL-02)."
+        },
+        {
+          "id": "unit.maintenance.release-within-12mo",
+          "question": "Did the unit's currently recommended line ship a release in the 12 months before 2026-08-28?",
+          "notes": "Graveyard atom (a). No: single-spa (last stable 6.0.3; betas Sept 2024), picard (2024-07). Conditional: qiankun (stable tag No, v3 RC Yes). Yes: most others, including web-fragments barely (0.8.2, 2025-11)."
+        },
+        {
+          "id": "unit.maintenance.commit-within-6mo",
+          "question": "Did the unit's repository receive non-trivial commits, or its current line a release, in the 6 months before 2026-08-28?",
+          "notes": "Absorbs operations.maintenance-active-6mo; moves independently of releases. No: picard (last push 2025-03), single-spa (core stalled since ~late 2024, open abandonment issue). Conditional: web-fragments (2026-03, docs-only). Yes: luigi (monthly), native-federation, qiankun repo. Score dated activity, never archived status; archive lag runs years both directions."
+        },
+        {
+          "id": "unit.maintenance.multi-maintainer",
+          "question": "Did more than one person land substantive commits on the unit in the trailing 12 months (bus factor above one)?",
+          "notes": "Decidability: score from repository commit history only; record Unknown until checked. No: hyperfrontend (dossier concedes effectively one maintainer). Graveyard lesson: FrintJS died when one sponsor's attention moved."
+        },
+        {
+          "id": "unit.maintenance.org-steward",
+          "question": "Does an organization currently employ or sponsor the unit's maintainers (corporate or foundation stewardship, not an individual project)?",
+          "notes": "Graveyard atom (c). Yes: SAP, Tencent, JD, Ant/umijs, ByteDance, OpenTable, FINN.no, smapiot, commercial vendors. No: hyperfrontend, single-spa (community, stalled). Conditional: web-fragments (Cloudflare sponsorship stated, activity stalled)."
+        },
+        {
+          "id": "unit.maintenance.adoption-outside-sponsor",
+          "question": "Are production adopters outside the sponsoring organization documented?",
+          "notes": "Graveyard atom (d): Ara/Hypernova and FrintJS failed here. Score only documented adopters; Unknown is the honest cell. Unknown: web-fragments (sponsor-internal only), hyperfrontend. Yes: qiankun, micro-app, wujie, single-spa (large installed bases)."
+        },
+        {
+          "id": "unit.maintenance.adoption-scale-10k",
+          "question": "Does the unit's core package sustain at least 10k weekly npm downloads (or equivalent documented adoption)?",
+          "notes": "Yes: single-spa ~367k, qiankun ~70k, piral ~12k. No: wujie ~5.6k, micro-app ~4.1k, picard 27. Unknown: hyperfrontend. NA: strategies and non-npm platforms (score platform adoption evidence as Conditional)."
+        },
+        {
+          "id": "unit.license.osi-core",
+          "question": "Is the unit's core composition capability licensed under an OSI-approved open-source license?",
+          "notes": "No: commercetools Frontend (SaaS only). Conditional: Zephyr (Apache plugins nonfunctional without proprietary SaaS), Vercel (MIT mechanics, paid platform layer). Yes: most others (Luigi Apache-2.0, Bit core Apache, MIT elsewhere). NA: browser-standard strategies."
+        },
+        {
+          "id": "unit.editions.commercial-tier",
+          "question": "Does a first-party commercial edition, tier, hosted service, or paid support offering attach to the unit today?",
+          "notes": "Absorbs operations.commercial-support-available. Yes: Bit Cloud, Piral Cloud, Zephyr, Vercel Microfrontends, commercetools, Entando. No: MF core (third-party support via Zephyr only), qiankun, wujie, micro-app, podium, OC, single-spa, luigi, native-federation. Conditional: hyperfrontend (planned only; see unit.availability.planned-capability-claims)."
+        },
+        {
+          "id": "unit.editions.oss-self-sufficient",
+          "question": "Can the community or OSS edition perform the unit's core composition function in production without the commercial tier?",
+          "notes": "Forced by Bit and Zephyr lock-in decompositions. No: Zephyr (plugins authenticate to SaaS). NA: commercetools (no OSS edition). Conditional: Bit (bare scopes bare-bones; CI and governance cloud-only). Yes: piral (open feed spec plus MIT sample), Multi-Zones (any proxy)."
+        },
+        {
+          "id": "hosting.operator",
+          "question": "Is a vendor-managed hosting option (vendor operates hosting.artifacts, hosting.applications, or hosting.runtime-delivery) available for the unit today?",
+          "notes": "Id reused verbatim (REQ-ENT-04); decompose any managed-hosting claim before crediting. Yes: commercetools, Vercel, Zephyr edge, Bit hosted scopes, Piral Cloud (feed plus app-shell hosting), Cloudflare Workers. No: OC, podium, luigi, single-spa; hyperfrontend planned only."
+        },
+        {
+          "id": "hosting.control-plane",
+          "question": "Can the unit's control plane (metadata, configuration, version records, wiring, promotion, rollback routing) run entirely on adopter-controlled infrastructure, with no routine dependency on a vendor SaaS?",
+          "notes": "Id reused verbatim (REQ-ENT-04). Absorbs deployment.control-plane-self-hostable and operations.vendor-control-plane-dependency (inverted). No: Zephyr (control plane always vendor SaaS; BYOC is data-plane residency only), commercetools, Bit Ripple. Conditional: Bit (bare scopes exist, governance cloud-only), Vercel (OSS routing yes; skew and preview routing DIY). Yes: OC, piral, podium, single-spa import maps, Entando (customer Kubernetes)."
+        },
+        {
+          "id": "registry.deployable-feature",
+          "question": "Does the unit ship or offer a registry of deployable runtime artifacts with version history and metadata (beyond npm-style code packages)?",
+          "notes": "Id reused verbatim (REQ-ENT-08); npm-compatible registries credit only registry.code-package. Yes: OpenComponents (core is the registry), Piral feed, Zephyr snapshots. Conditional: Bit (component registry), picard (consumes discovery schemas, ships none). No: hyperfrontend (metadata format exists, no registry today), single-spa, MF core."
+        },
+        {
+          "id": "governance.rollback",
+          "question": "Does the unit provide first-party rollback to a prior participant version by repointing a reference to a retained artifact, without rebuilding or redeploying the participant?",
+          "notes": "Id reused verbatim (REQ-ENT). Absorbs deployment.rollback-pointer-swap. Serving rollback only; compatibility gating is contracts.connect-compat-gate. Yes: Zephyr atomic pointer swap (rollback compat verification Unknown), OC immutable versions plus repin, import-map edit. Conditional: MF and single-spa (indirection built or bought, e.g. import-map-deployer), Vercel skew fallbacks, Piral feed. No: same-URL strategies (rollback is a redeploy of old content), Bit (consumer rebuild)."
+        },
+        {
+          "id": "governance.usage-monitoring",
+          "question": "Does the unit provide first-party visibility into which consuming applications use which feature or version?",
+          "notes": "Id reused verbatim. Yes: Piral Cloud analytics (dependency and style tracking), Bit Cloud. Conditional: Zephyr (deploy inventory evidenced; runtime telemetry Unknown; never conflate the two). No: OSS-only units; hyperfrontend planned only."
+        },
+        {
+          "id": "governance.rbac",
+          "question": "Does the unit provide organization-wide roles and permissions over its platform surface today?",
+          "notes": "Id reused verbatim. Yes: Bit Cloud (RBAC, SSO-SAML, audit logs), Vercel platform, commercetools Studio, Entando Hub roles, Piral Cloud user management. Conditional: Zephyr (permissions evidenced; tier mapping Unknown). No: pure-OSS units; hyperfrontend planned only, never scored available."
+        }
+      ]
+    },
+    {
+      "key": "composition",
+      "title": "Composition mechanics",
+      "attributes": [
+        {
+          "id": "composition.kind.js-module-graph",
+          "question": "Do participants meet as modules in one JS module graph (importing and exposing module specifiers)?",
+          "notes": "Renamed from boundary.kind.js-module-graph. Yes: module-federation, native-federation, import-maps, bit, monolith/package/SPA-chunk baselines. No: iframe, fragment, route units. Conditional: wrappers per inherited mechanism. Template-listed boundary kind; anchors family clustering."
+        },
+        {
+          "id": "composition.kind.lifecycle-contract",
+          "question": "Must each participant export a prescribed lifecycle interface (e.g. bootstrap/mount/unmount, setup/teardown) to be composed?",
+          "notes": "Renamed from boundary.kind.lifecycle-contract; absorbs framework.lifecycle-exports-required. Yes: single-spa, piral, qiankun v2 (UMD lifecycles), FrintJS. Conditional: wujie (singleton and keep-alive modes only), picard (per-format adapters), micro-app (optional UMD mode). No: iframe, HTML-fragment, import-map units, Luigi, podium, SSR fragments."
+        },
+        {
+          "id": "composition.kind.custom-element",
+          "question": "Is a custom element tag the mount seam the host places for a participant?",
+          "notes": "Renamed from boundary.kind.custom-element. Yes: web-components, micro-app, web-fragments, picard, wujie host components, Entando page model. Conditional: luigi (WC mode only). No: route, fragment-over-HTTP, pure module units."
+        },
+        {
+          "id": "composition.kind.html-fragment-endpoint",
+          "question": "Does a participant ship as an HTTP endpoint returning an HTML fragment for insertion into a composed page?",
+          "notes": "Renamed from boundary.kind.html-fragment-endpoint. Yes: podium, opencomponents, edge-side/ESI, server-side-fragment family, web-fragments, Tailor/Mosaic/Hypernova. No: module, lifecycle, document units. Fragment (partial) is distinct from full-page HTML entry (composition.kind.html-entry)."
+        },
+        {
+          "id": "composition.kind.html-entry",
+          "question": "Does the mechanism fetch a participant's deployed HTML page (HTML entry URL) and rewrite or execute it inside the host context?",
+          "notes": "Renamed from boundary.kind.html-entry. Yes: qiankun, micro-app, wujie. No: iframe (browser loads the document natively), MF and single-spa (JS entry). Differentiates the rewrite-based family from both frames and module federation."
+        },
+        {
+          "id": "composition.kind.http-route-partition",
+          "question": "Are participants whole applications partitioned by URL path or subdomain, with the full page as the unit of composition?",
+          "notes": "Renamed from boundary.kind.http-route-partition. Yes: nextjs-multi-zones, reverse-proxy, cloudflare-workers. No: fragment and module units. Guards the page-level family; implies runtime.concurrent-participants No and hard cross-boundary navigation."
+        },
+        {
+          "id": "composition.kind.build-artifact",
+          "question": "Is the composition boundary a versioned package or build artifact consumed by another build (npm package, component snap)?",
+          "notes": "Renamed from boundary.kind.build-artifact. Yes: bit, monorepo-package baseline. Conditional: web-components when distributed as packages. No: URL-addressed runtime units. From bit's split: composability marketing vs mechanical absence of a runtime seam."
+        },
+        {
+          "id": "composition.kind.inherits-underlying",
+          "question": "Does the unit define no composition boundary of its own, inheriting mechanics from an underlying mechanism it wraps?",
+          "notes": "Renamed from boundary.kind.inherits-underlying. Yes: zephyr-cloud, toolchain-branded wrappers (Nx = MF, Vercel MFE = multi-zones, Angular = native-federation). Conditional: picard (adapts foreign formats but owns its mount seam). No: mechanisms proper. Forces brand resolution before family clustering."
+        },
+        {
+          "id": "composition.phase.deploy-unit-per-participant",
+          "question": "Is each participant its own independently shippable deploy unit (artifact or service), not merely a render or ownership unit?",
+          "notes": "Renamed from boundary.phase.deploy-unit-per-participant. No: islands (render unit, one deploy unit; server islands defer render only), all non-MFE baselines, commercetools-style single-app platforms. Yes: MFE units proper. Guards the is-it-an-MFE boundary cases."
+        },
+        {
+          "id": "composition.exec.client-composed",
+          "question": "Does client-side JS in the browser perform the assembly, fetching or mounting participants into the page?",
+          "notes": "Renamed from boundary.exec.client-composed. Yes: MF, NF, import-maps, single-spa, piral, qiankun, micro-app, wujie, iframe frameworks, web-fragments. No: pure server/edge fragment units, route-partitioned units, baselines. Yes on both this and ssr.composed-page marks hybrids (web-fragments, ILC)."
+        }
+      ]
+    },
+    {
+      "key": "buildtime",
+      "title": "Build-time coupling",
+      "attributes": [
+        {
+          "id": "buildtime.host-build-consumes-participants",
+          "question": "Does producing the host's deployable artifact require participant source, artifacts, or types as build inputs, so a broken participant breaks the host build?",
+          "notes": "Absorbs boundary.phase.host-build-consumes-participants. Guards the MFE-vs-monolith boundary; config-only references (MF remote URLs, roster entries) do not count as artifacts. Yes: bit, islands, all four non-MFE baselines, commercial DXP Frontend unit. No: module-federation, native-federation, piral, iframe-composition, podium, hyperfrontend, and the rest."
+        },
+        {
+          "id": "buildtime.host-integrates-buildless",
+          "question": "Can a host adopt the mechanism with no build tooling at all (script tag, static HTML, or pure config), rather than requiring a mechanism-built host?",
+          "notes": "Yes: hyperfrontend (script-tag shell), picard-js, iframe, web-components, import-maps. No: module-federation (MF-capable host build), piral (React shell), native-federation. NA or Conditional: server-composition units where the host is a server process, not a bundled app (podium, edge-side)."
+        },
+        {
+          "id": "buildtime.participant-tooling-required",
+          "question": "Must each participant's build pipeline adopt mechanism-specific tooling (bundler plugin, adapter, CLI, or output-format configuration) to emit a valid artifact?",
+          "notes": "Absorbs framework.build-plugin-required and migration.participant.bundler-change-required (this row doubles as the migration-scale level-3 atom; preconditions are source access plus a reproducible build). Yes: module-federation, native-federation, zephyr-cloud, piral (pilet tooling), hyperfrontend (hf CLI, Node >= 18), bit, opencomponents (registry compiles at publish), qiankun v2 (UMD output plus publicPath). No: iframe, podium, web-fragments, picard-js (consumes artifacts of original toolchains), reverse-proxy, ESI. Conditional: multi-zones on Vercel (withMicrofrontends), import maps (must emit ESM)."
+        },
+        {
+          "id": "buildtime.bundler-family-restricted",
+          "question": "Is participation restricted to artifacts produced by a specific list of supported bundlers?",
+          "notes": "From native-federation's bundler-agnostic ambiguity. Yes: module-federation (webpack5/Rspack/Vite list), zephyr-cloud (first-party plugin list). Conditional: native-federation (esbuild first-party; other bundlers need custom adapters). No: import-maps (any tool or none), picard-js, iframe, podium, web-components."
+        },
+        {
+          "id": "buildtime.share-metadata-emitted",
+          "question": "Does each participant's build emit machine-readable shared-dependency metadata (versions, ranges, singleton flags) that is negotiated at composition time?",
+          "notes": "The exact MF-vs-import-maps distinction; NF exists to add this layer. Yes: module-federation (share scope), native-federation (remoteEntry.json). No: import-maps (map writer decides versions) and all non-federation units."
+        },
+        {
+          "id": "buildtime.shared-dep-change-rebuilds-center",
+          "question": "Does changing the set or versions of centrally shared dependencies require rebuilding and redeploying a central artifact (shell or host)?",
+          "notes": "Yes: piral (shell importmap is a build-time construct, framework-guarantee). Conditional: module-federation (host share-scope changes). No: import maps (map regeneration is config, not build). NA where no central sharing exists (iframe, multi-zones, podium)."
+        },
+        {
+          "id": "buildtime.central-input-for-participant-build",
+          "question": "Does building a participant require an input obtained from the host or central platform (shell emulator, roster config file, cloud handshake, git metadata)?",
+          "notes": "Yes: piral (pilets build against the shell emulator), zephyr-cloud (git metadata plus cloud at build), bit (workspace/scope objects). Conditional: nextjs-multi-zones on Vercel (build fails without microfrontends.json). No: module-federation remotes, native-federation, hyperfrontend features (SDK only), iframe, podium."
+        },
+        {
+          "id": "buildtime.asset-prefix-coordination",
+          "question": "Must participant builds coordinate unique asset URL prefixes or namespaces to avoid collisions when served behind one origin?",
+          "notes": "Differentiates the route-composition family. Yes: nextjs-multi-zones (unique assetPrefix required; withMicrofrontends auto-hashes). Conditional: reverse-proxy (convention only, nothing enforces it). No: units composing by iframe, module graph, or separate origins."
+        }
+      ]
+    },
+    {
+      "key": "runtime",
+      "title": "Runtime coupling",
+      "attributes": [
+        {
+          "id": "runtime.shared-js-realm",
+          "question": "Do host and participant code execute in one shared JS realm (same global object and prototype chain) by default?",
+          "notes": "Canonical guidance id; absorbs boundary.exec.shared-js-realm, security.same-realm-execution, and isolation.js.realm (inverted: a genuine separate realm, visible or hidden iframe, scores No here). Yes: MF, NF, single-spa, import-maps, islands, WC, piral, qiankun (Proxy view, still one realm), bit. No: cross-origin iframe, hyperfrontend, wujie, web-fragments, luigi iframe mode. Conditional: luigi WC mode, micro-app (with-sandbox vs iframe-sandbox). NA: one-participant-per-document units (multi-zones, reverse-proxy)."
+        },
+        {
+          "id": "runtime.patched-globals-layer",
+          "question": "Does participant code run against a framework-interposed synthetic or patched global surface (Proxy window, hidden same-origin iframe realm, patched document or location) whose fidelity the framework must maintain?",
+          "notes": "Absorbs boundary.exec.synthetic-global. Yes: qiankun (with(proxyWindow)), micro-app (documented mismatch catalog, both modes), wujie (location patch, degrade-mode fidelity loss), web-fragments (reframing; currentScript bug class). No everywhere globals are native, whether shared (MF, single-spa, WC) or separate (plain iframe, hyperfrontend)."
+        },
+        {
+          "id": "runtime.primordials-blast-radius",
+          "question": "Can one participant's mutation of shared built-ins (Array.prototype, fetch, etc.) affect other participants by default?",
+          "notes": "Separates sandboxed-same-realm from separate-realm. Yes: qiankun (membrane does not virtualize primordials) and all fully-shared-realm units. No: wujie, web-fragments, iframes, hyperfrontend. Conditional: micro-app (with-sandbox Yes, iframe mode No)."
+        },
+        {
+          "id": "runtime.concurrent-participants",
+          "question": "Can two or more participants (including ones owned by different teams) be mounted live in the same browser tab and document at the same time?",
+          "notes": "Absorbs boundary.exec.concurrent-participants, ownership.serves-intra-page, and isolation.page-granular (inverted: No here is page-granular containment, the strongest per-page containment; same-page attributes then score NA). No: multi-zones, reverse-proxy, cloudflare-workers (one app per tab, hard navigation between). Conditional: qiankun (Proxy sandbox with singular:false; snapshot sandbox cannot). Yes: fragment, federation, iframe, web-component families (micro-app documents multi-child explicitly). Primary family split."
+        },
+        {
+          "id": "runtime.multi-router-participants",
+          "question": "Can more than one URL- or router-owning participant be active and displayed at the same time?",
+          "notes": "No: qiankun (FAQ: at most one router-dependent app per URL). Yes: single-spa (multiple frameworks live simultaneously). Conditional: luigi (split view). NA: widget-only embedding or single-app-per-document units."
+        },
+        {
+          "id": "runtime.shared-runtime-library",
+          "question": "Must every participant load, or stay version-compatible with, one strategy runtime (shell, orchestrator, loader) present on the composed page?",
+          "notes": "Yes: single-spa, piral, picard, qiankun, micro-app, wujie, luigi Client, web-fragments, MF/NF runtimes, hyperfrontend (nexus plus handshake version gate). No: raw iframe, WC, multi-zones, reverse-proxy, edge/SSI. Conditional: import-maps (native; shim for older engines), opencomponents (oc-client, CSR only), podium (MessageBus opt-in)."
+        },
+        {
+          "id": "runtime.central-routing-map",
+          "question": "Does runtime composition depend on one central map, registry, or config binding URL space or the participant roster (a single shared artifact or service that needs one accountable owner and serialized writes)?",
+          "notes": "Absorbs ownership.central-composition-artifact and operations.central-artifact-owner-required. Yes: single-spa root config (import-map-deployer concurrency), qiankun registration, luigi nav tree, multi-zones microfrontends.json, reverse-proxy config, Cloudflare route map, web-fragments gateway registry, piral feed, import maps (single-writer, last-writer-wins). No: hyperfrontend (per-host mounts; feature team ships the glue), raw iframe, WC (naming governance only). NA: build-time-composed units. Guards the survival condition: without platform investment, MFE overhead dominates."
+        },
+        {
+          "id": "runtime.shared-dep-negotiation",
+          "question": "Does the strategy provide a runtime mechanism that resolves shared dependency versions across independently built participants?",
+          "notes": "Yes: MF share scope, NF initFederation import-map emission, piral importmap, picard cross-format (conflict semantics Unknown), import-maps (URL dedup plus scopes). No: iframe, hyperfrontend, single-spa core, WC, islands, multi-zones, reverse-proxy, podium. Zephyr inherits MF's answer."
+        },
+        {
+          "id": "runtime.dep-conflict-surfaces-runtime",
+          "question": "Can a shared-dependency version conflict first manifest at runtime (silent duplicate copy, or singleton mismatch warning or error) rather than at build time?",
+          "notes": "Yes: MF (documented duplicate-React fallback; singleton breaks or warns at runtime), NF (fallback/reuse/throw mirror). Conditional: piral (shell or first-loaded wins silently). NA wherever runtime.shared-dep-negotiation is No."
+        },
+        {
+          "id": "runtime.side-by-side-versions",
+          "question": "Can two participants concurrently use different or conflicting versions of the same shared library in one composed page without interfering with each other?",
+          "notes": "Absorbs isolation.dependency.version-coexistence. Yes: import-map scopes (two module instances), MF fallback copies, realm-separated units trivially (iframes, wujie, web-fragments). No: piral centrally-shared deps (shell wins), singleton-shared setups. Conditional: import-map scopes and MF non-singleton shares give binding-level side-by-side only; the shared realm stays exposed to prototype and global mutation (bindings-not-realms split; module-errored-cache poisoning caveat). WC elements: distinct tag names always; same tag only via scoped registries (not Baseline Aug 2026)."
+        },
+        {
+          "id": "runtime.global-registration-collision",
+          "question": "Do participants occupy a page-global runtime namespace (custom-element tags, globals, import-map specifiers) where a second registration can hard-fail and cross-team naming governance is required?",
+          "notes": "Absorbs ownership.namespace-governance-required. Yes: web-components (second customElements.define with the same tag throws NotSupportedError, undefinable; tag commons until scoped registries are Baseline), import-maps (single global map), single-spa, custom-element platforms (Entando, luigi WC mode). No: realm-separated units (per-frame namespaces), URL-keyed module graphs, multi-zones and reverse-proxy (URL partition instead of page namespace). Versioned tag names are the convention workaround."
+        },
+        {
+          "id": "runtime.late-participant-registration",
+          "question": "Can a participant or remote unknown at boot be registered and loaded into an already-running document via a documented API?",
+          "notes": "Yes: MF 2.0 registerRemotes, single-spa, qiankun loadMicroApp, piral feed, frame-based mounting. Conditional: import maps (multiple or dynamic maps: Chrome 133+, Safari 18.4+, or es-module-shims). Unknown: Native Federation v4 (dossier-flagged undocumented). NA: HTTP-layer route composition."
+        },
+        {
+          "id": "runtime.loaded-version-hot-swap",
+          "question": "Can the version behind an already-loaded participant or module specifier be replaced within the same live document, without a full page reload?",
+          "notes": "No: import maps (resolved specifiers permanent for document lifetime, browser-guarantee). Yes: frame and HTML-entry units via remount (iframe, qiankun, wujie, micro-app; hyperfrontend documents peer-reload survival). Unknown: MF and NF container-cache semantics."
+        }
+      ]
+    },
+    {
+      "key": "isolation",
+      "title": "Isolation and failure containment",
+      "attributes": [
+        {
+          "id": "isolation.document-boundary",
+          "question": "Is each participant's rendered DOM contained in its own browser document (e.g. a visible iframe), rather than injected into a shared visible host document?",
+          "notes": "Canonical guidance id; absorbs boundary.kind.separate-document, boundary.exec.shared-visible-document (inverted), and runtime.shared-dom-document (inverted). Yes is a browser-guarantee: iframe, Luigi iframe mode, hyperfrontend, and route-partitioned units (sequential full pages; pair with runtime.concurrent-participants to separate frames from MPAs). No: wujie, web-fragments, micro-app iframe-sandbox (hidden iframe supplies only the realm; rendered DOM lives in the host document) and all fragment, module, custom-element units. The split separating browser-guaranteed from virtualized isolation."
+        },
+        {
+          "id": "isolation.js.virtualized-global",
+          "question": "Absent a separate realm, does the framework simulate global isolation (Proxy fake-window or snapshot) that prevents accidental global collisions between cooperating participants?",
+          "notes": "Yes: qiankun, micro-app default mode (cooperative, officially escapable: rawWindow, excludeAssetFilter). NA when a real realm exists. No: MF, single-spa, import maps, native federation. Separates framework-virtualized hygiene from nothing-at-all; never conflate with security."
+        },
+        {
+          "id": "isolation.dom.virtualized",
+          "question": "Is participant DOM access confined to its own subtree only by framework patching or open shadow roots (soft, bypassable confinement)?",
+          "notes": "Conditional: wujie (patched document routes to shadow root; unpatched paths leak), micro-app (child-confined only, host reaches in, async unbind pitfalls), web components (.shadowRoot scriptable, closed mode circumventable). NA where a document boundary exists. No for bare shared-DOM units."
+        },
+        {
+          "id": "isolation.css.outbound",
+          "question": "Are a participant's styles prevented from affecting the host or sibling participants by an enforced mechanism (separate document, shadow DOM, or rewriting), rather than resolving in the page-global cascade?",
+          "notes": "Absorbs runtime.shared-css-cascade (inverted). Yes, browser-guarantee: iframes, shadow DOM (wujie, web-fragments, Luigi WC). Conditional: micro-app and qiankun prefix rewriting (at-rule gaps, mode-dependent, portal breakage; qiankun default scoping is unmount-lifetime only). No: MF, single-spa, piral (convention only), Podium and server-fragment client side."
+        },
+        {
+          "id": "isolation.css.inbound",
+          "question": "Are host or global styles prevented from leaking into a participant's rendered DOM?",
+          "notes": "Yes: iframe documents only. Conditional: shadow DOM (inherited properties and custom properties flow in by design). No: micro-app (docs recommend naming conventions for this direction), qiankun all modes, every shared-document unit. Direction asymmetry forced by the micro-app dossier."
+        },
+        {
+          "id": "isolation.resource.main-thread",
+          "question": "Does a tight synchronous loop or long task in one participant leave the host UI responsive?",
+          "notes": "Absorbs runtime.shared-main-thread, performance.main-thread-contention, and security.main-thread-blocking (all inverted). Conditional: only with a real process boundary (cross-site iframes on OOPIF engines). No: all shared-realm units, wujie, web-fragments (states it explicitly), same-origin frames (hyperfrontend documents host and watchdog freezing; one agent cluster is a browser-guarantee). This is the ceiling every virtualized sandbox hits; islands' perf isolation is boot-time only. Viewport, focus, and device CPU/memory/network budgets stay shared regardless."
+        },
+        {
+          "id": "isolation.process.crash",
+          "question": "Can a participant run in a separate OS process from the host, so a renderer crash, OOM, or Spectre-class attack inside it leaves the host page alive and contained?",
+          "notes": "Absorbs security.process-isolation-available. Conditional: cross-SITE iframes where process isolation applies; boundary is site-keyed (scheme plus registrable domain, so a.example.com and b.example.com may share a process) and engine/platform-dependent (Chrome desktop since 67, Android partial, Firefox 94+/147 Android, Safari mid-rollout 2026). No: all single-document and same-process units."
+        },
+        {
+          "id": "isolation.storage.partition",
+          "question": "Is a participant's own storage (cookies, localStorage, IndexedDB, service workers) separated from the host's and siblings'?",
+          "notes": "Yes: cross-origin iframes (2026: third-party storage partitioned by default in all engines; cookies engine/user-conditional, CHIPS and Storage Access API). Conditional: subdomain routing (parent-Domain cookies opt shared). No: every same-origin composition (wujie explicitly, multi-zones, path-based proxy, CF workers client side)."
+        },
+        {
+          "id": "isolation.origin.host-authority",
+          "question": "Is participant code denied the host origin's authority (credentialed fetch as the host, host cookies and storage)?",
+          "notes": "Absorbs security.host-origin-authority (inverted). Yes: cross-origin frames only. No by construction: wujie (same-origin iframe holds full host authority including fetch-as-host), micro-app, all shared-document units, shared-origin routing (an XSS in one app reaches every app's state; service-worker scope hijack). Conditional: subdomain routing (parent-Domain cookies still shared). Synchronous DOM and JS-state reach are scored separately (security.host-dom-reach, security.host-js-state-reach)."
+        },
+        {
+          "id": "isolation.navigation.top-level-guard",
+          "question": "Can the host prevent a participant from navigating or manipulating the top-level document and history without an explicit grant?",
+          "notes": "Yes: iframe sandbox default-denies top navigation (individually re-grantable). No: any shared-document unit (any script may redirect or pushState); hyperfrontend lists top-level navigation as unisolated absent sandboxing. Framed navigations still pollute host history (see ux.frame-history-pollution)."
+        },
+        {
+          "id": "isolation.security.malicious-participant",
+          "question": "Does the isolation boundary contain a deliberately malicious or compromised participant, judged by the vendor's own stated trust model plus the browser boundary class in use, not merely accidental interference?",
+          "notes": "Decidability: tightened to score from documented trust-model statements and boundary class only. Yes: cross-origin (strongest cross-site) iframes; sandboxed opaque-origin frames. No per their own docs: qiankun, micro-app, wujie, web-fragments (cooperative, bypassable). Caveats: allow-scripts plus allow-same-origin on same-origin content voids sandbox; Luigi token broadcast presumes trust; Spectre needs the process boundary."
+        },
+        {
+          "id": "isolation.failure.lifecycle-quarantine",
+          "question": "Does the framework detect a participant failing during load, bootstrap, or mount and quarantine it (fallback UI or siloed broken state) without crashing the composition?",
+          "notes": "Yes: single-spa (SKIP_BECAUSE_BROKEN plus configurable timeouts), piral, islands (failed hydration keeps server HTML). Conditional: micro-app error lifecycle (signal only, no containment). No or Conditional: import maps and native federation (rejected import; host must implement fallbacks)."
+        },
+        {
+          "id": "isolation.failure.post-mount-exception",
+          "question": "If a participant throws an unhandled exception after mount, do the host and sibling participants keep functioning without host-authored error handlers?",
+          "notes": "Yes, browser: iframes, wujie and web-fragments (errors surface on the child window). Yes, framework: piral per-component ErrorBoundary. No or Conditional: single-spa and qiankun (lifecycle-phase quarantine only; post-mount propagates), all shared-realm units (bit, MF, import maps)."
+        },
+        {
+          "id": "isolation.failure.load-fallback",
+          "question": "Is there a built-in per-participant fallback (fallback content and/or timeout) when a participant fails to fetch or load, so only its region degrades?",
+          "notes": "Yes: Podium (throwable:false default, 1000ms timeout, retries; throwable:true escalation opt-in), OC node client, nginx SSI stub, hyperfrontend (kill-at-network acceptance test). Conditional: ESI dialect-dependent (Varnish subset lacks fallback), MF host-authored retry plugin. Caveat: degradation can be silent. The user-visible fallback surface is ux.builtin-error-fallback-ui."
+        },
+        {
+          "id": "isolation.lifecycle.reclaim",
+          "question": "Does unmounting a participant automatically reclaim its timers, global event listeners, injected scripts and styles, and memory?",
+          "notes": "Yes: iframe teardown, web-fragments (documented context destruction), wujie. Conditional: qiankun and micro-app (only side effects routed through patched paths; excludeAssetFilter escapes). No: single-spa, MF, piral, import maps (same-realm residue). Event and timer scoping decided here."
+        },
+        {
+          "id": "isolation.recovery.in-page",
+          "question": "Can a failed participant be destroyed and recreated with a fresh execution context without reloading the host document?",
+          "notes": "Yes: iframe reload, web-fragments element recreate; hyperfrontend automates it (four-state liveness, once-per-suspect-episode recovery, ~3s visibility blind window, fixed 1/s cadence). Conditional or manual: single-spa unloadApplication. NA: page-granular units (recovery is just navigation)."
+        },
+        {
+          "id": "isolation.server.process",
+          "question": "Are participants' server-side render and logic processes isolated from the composer and from each other (separate services, isolates, or deployments)?",
+          "notes": "Yes: CF Workers (per-vertical isolates and limits), Podium podlet services, OC registry, ESI and edge fragment services, multi-zones apps. NA: purely client-composed units. Guards the server-family mislabel: server Yes never implies client isolation."
+        }
+      ]
+    },
+    {
+      "key": "security",
+      "title": "Security and trust",
+      "attributes": [
+        {
+          "id": "security.cross-origin-boundary",
+          "question": "Can each participant execute behind a browser-enforced cross-origin boundary from the host while composed on the same page?",
+          "notes": "Absorbs boundary.exec.cross-origin-execution. Yes: iframe, hyperfrontend, luigi iframe mode. Conditional: subdomain reverse-proxy (origin split minus shared parent cookies). No: wujie, micro-app, web-fragments (same-origin realms by design), qiankun (executes in host origin even when fetched cross-origin), all module units. Same-origin iframes give realm split only, never a trust boundary. NA: route-partitioned units (sequential, never composed on one page)."
+        },
+        {
+          "id": "security.sandbox-attribute-applicable",
+          "question": "Can the host meaningfully apply the iframe sandbox attribute (default-deny, selectively re-granted) to a participant?",
+          "notes": "Yes: iframe, luigi (customSandboxRules), hyperfrontend (host-decreed; SDK blocks the allow-scripts plus allow-same-origin self-unsandbox combo). No: same-document strategies. Conditional or Unknown: wujie and micro-app iframe mode (same-origin frames can shed sandbox; not a boundary)."
+        },
+        {
+          "id": "security.per-participant-csp",
+          "question": "Can host and participant be governed by different CSPs simultaneously while composed?",
+          "notes": "Yes: separate-document strategies (each response carries its own headers). No: same-document (one policy covers all fragments). Unknown: wujie (rewritten same-origin iframe; dossier flags CSP interaction as open). NA: route-composition (one document at a time; the routing tier is the CSP chokepoint)."
+        },
+        {
+          "id": "security.capability-narrowing",
+          "question": "Can the host grant or deny powerful browser capabilities (camera, popups, top navigation, downloads) per participant?",
+          "notes": "Yes: frame strategies via Permissions-Policy allow plus sandbox; hyperfrontend adds feature-declared permissions, host-applied (capability flows from host, delegation only narrows). No: same-document (whole page shares one capability surface). NA: route-composition."
+        },
+        {
+          "id": "security.host-dom-reach",
+          "question": "Can participant code synchronously read or mutate the host page's live DOM?",
+          "notes": "Yes: all same-document strategies, wujie (unpatched window.parent), micro-app (renders into host DOM; rawWindow). No: cross-origin frames (SOP-blocked; luigi frames cannot script the shell). NA: route-composition (no concurrent host document)."
+        },
+        {
+          "id": "security.host-js-state-reach",
+          "question": "Can participant code inspect or mutate host JS runtime state (globals, prototypes, in-memory tokens)?",
+          "notes": "Separates multi-zones and proxy routing (No: documents never concurrent despite shared origin) from single-spa and qiankun (Yes: proxy escapable, host-global secrets readable per dossier). wujie: Yes via parent. No: cross-origin frames."
+        },
+        {
+          "id": "security.untrusted-third-party-viable",
+          "question": "Is executing untrusted or semi-trusted third-party participant code a supported use under the strategy's own stated trust model?",
+          "notes": "Conditional: iframe (cross-origin required; cross-site for Spectre-class), hyperfrontend (scoped: in-page co-resident scripts outside model). No elsewhere, with explicit admissions: qiankun, wujie, micro-app, web-components, luigi (broadcasts host tokens to frames with a wildcard target)."
+        },
+        {
+          "id": "security.channel-origin-pinning",
+          "question": "Does the framework's messaging layer itself enforce origin and source verification on cross-document messages?",
+          "notes": "Yes: hyperfrontend (pins window-at-origin; authenticates rooms, not speakers). No: raw iframe composition (event.origin check is application duty, classic vuln) and luigi (documented wildcard targetOrigin token broadcast). NA: same-document and route strategies (no cross-document channel)."
+        },
+        {
+          "id": "security.channel-confidentiality",
+          "question": "Can inter-party message payloads be encrypted against co-resident in-page scripts?",
+          "notes": "Conditional: hyperfrontend only (opt-in v2 plus sharedKey is real PSK protection, v1 deterrence; handshake frames plaintext; silent runtime plaintext downgrade, gated only at build via --allow-open). No or NA: all others. Mandated split; never credit as generic secure."
+        },
+        {
+          "id": "security.embedding-authorization",
+          "question": "Can a participant itself restrict, browser-enforced, which hosts may embed or execute it?",
+          "notes": "Conditional: frame strategies via participant-set frame-ancestors or XFO; hyperfrontend declares this out of SDK scope (operator job). No: fetched-bundle strategies (MF, NF, import-maps: CORS gates fetch, not evaluation; piral guidance forbids delivery restrictions). NA: build-time composition (bit)."
+        },
+        {
+          "id": "security.artifact-integrity-verification",
+          "question": "Does a first-party mechanism verify participant code integrity or authenticity before execution (SRI pinning, signing)?",
+          "notes": "Conditional: import maps integrity key (Chrome 127+, Safari 18.4; Firefox unknown). Unknown: MF and NF (nothing documented). No: most others; web-components dossier notes SRI conflicts with independent redeploys under stable URLs; OC documents publish auth, no signing."
+        },
+        {
+          "id": "security.delivery-intermediary-trust",
+          "question": "Does canonical delivery route participant code through a shared intermediary (feed, registry, router, SaaS control plane, transform CDN, composer) requiring code-execution trust?",
+          "notes": "Yes: piral feed, OC registry, zephyr SaaS (mandatory even BYOC), CF-workers router (privileged injection), edge/SSI composers, podium layout plus proxy, web-fragments gateway, reverse proxy. Conditional: import maps (map author always; transform CDN unless self-hosted). No: iframe, hyperfrontend, MF direct-URL loading."
+        },
+        {
+          "id": "security.isolation-escape-hatches",
+          "question": "Does the framework document official escape hatches that bypass its own isolation mechanism?",
+          "notes": "Yes: qiankun (excludeAssetFilter, acknowledged direct-window misses), micro-app (rawWindow, removeDomScope), wujie (unpatched window.parent). No: browser-boundary strategies (nothing framework-granted crosses SOP). NA: strategies claiming no isolation. Distinguishes hygiene sandboxes from enforced boundaries."
+        },
+        {
+          "id": "security.composition-injection-surface",
+          "question": "Does the composition tier interpret composition directives found in content, creating an injection surface (e.g. ESI tags in user-supplied markup)?",
+          "notes": "Conditional-Yes: ESI edge composition (vendor-acknowledged risk class; Akamai ships detect_injection). Conditional: SSI dialects; the composer also fully trusts configured fragment URLs and responses. No: client-side strategies (no server-side directive interpretation)."
+        }
+      ]
+    },
+    {
+      "key": "framework",
+      "title": "Framework requirements",
+      "attributes": [
+        {
+          "id": "framework.host-framework-agnostic",
+          "question": "Can the host or shell application be written in any UI framework, or none?",
+          "notes": "Yes: qiankun, single-spa, iframe, wujie, micro-app, web-fragments (any-SPA shell). No: Piral (React shell; piral-base escape), commercetools (Next.js mandatory), Astro/Fresh (meta-framework IS the app). Conditional: Luigi (any framework, but Core must own the outer frame), Multi-Zones (Next-first ergonomics)."
+        },
+        {
+          "id": "framework.participant-framework-agnostic",
+          "question": "Can a participant be built with any UI framework, subject only to the platform's contract?",
+          "notes": "Yes for most units. No: commercetools (React only), Fresh islands (Preact mandated). Conditional: Cloudflare Workers (needs a Workers/Vite adapter), Picard (must be convertible to its lifecycle), Bit (per-framework env maturity varies)."
+        },
+        {
+          "id": "framework.mixed-frameworks-one-page",
+          "question": "Can participants built with different UI frameworks render simultaneously in one composed page?",
+          "notes": "single-spa canonical Yes. Yes: MF, Astro islands, SSR fragments, iframe, hyperfrontend. No: SPA/monolith baselines, commercetools; Multi-Zones mixes per-route, not per-page. Unknown: Bit (no verified multi-framework shell reference)."
+        },
+        {
+          "id": "framework.per-team-framework-autonomy",
+          "question": "Can each team choose its framework without sharing one build pipeline with other participants?",
+          "notes": "Islands ambiguity forced this split from mixed-frameworks-one-page: Astro allows per-island frameworks inside ONE build (No autonomy); single-spa, iframe, fragment families give per-team autonomy (Yes). Monorepo-packages baseline Conditional (repo-level polyglot, app-level single graph)."
+        },
+        {
+          "id": "framework.same-framework-major-coexistence",
+          "question": "Can two participants run different major versions of the same framework in one composed page without breakage?",
+          "notes": "Framework-major specialization of runtime.side-by-side-versions. Yes: import maps (scopes), iframe, web-fragments (version parity explicitly not required). Conditional: MF (fallback double-loads; singleton negotiation is the canonical duplicate-React hazard; bridge-react helpers), web components (tag-name collision; scoped registries not Baseline). No: single-version baselines, NF defaults."
+        },
+        {
+          "id": "framework.esm-artifact-required",
+          "question": "Must a participant's build emit standard ES modules to participate?",
+          "notes": "Yes: import maps, Native Federation. Inverted for qiankun v2 (UMD/window lifecycles required; stock Vite ESM unsupported without community plugin; v3 RC adds native ESM). Conditional: single-spa (SystemJS traditional; ESM-native core beta). No or NA: iframe, HTML-fragment families."
+        },
+        {
+          "id": "framework.html-document-entry",
+          "question": "Is the participant's integration unit its own deployed HTML page or URL rather than a JS artifact?",
+          "notes": "Yes: iframe, Luigi, qiankun, wujie, micro-app, web-fragments (HTTP endpoint), hyperfrontend (hosted app, own URL). No: single-spa (JS module), MF (container), Piral (npm pilet), import maps (ESM). Distinct from unmodified participation: qiankun is Yes here, No there."
+        },
+        {
+          "id": "framework.client-library-required",
+          "question": "Must a participant embed a platform client library or runtime for full (non-degraded) participation?",
+          "notes": "Luigi's split: embed-only works without Luigi Client but loses routing sync, context, UX services (Conditional). Yes: hyperfrontend (feature runtime), podium (@podium/podlet server-side). No: raw iframe, qiankun children (host injects the sandbox), reverse-proxy. Score the full-participation tier."
+        },
+        {
+          "id": "framework.foreign-artifact-no-rebuild",
+          "question": "Can an artifact built for another system, with no knowledge of this platform, participate without being rebuilt?",
+          "notes": "Picard's headline: Yes for MF v1/v2, Native Federation, SystemJS/pilet, and native ESM artifacts (score per format if shortlisted). Yes: iframe, Luigi, reverse-proxy. No: MF itself, single-spa, Bit, hyperfrontend."
+        },
+        {
+          "id": "framework.official-adapters-exist",
+          "question": "Do maintained first-party adapters or converters generate the participation contract for three or more major frameworks?",
+          "notes": "Yes: single-spa (React/Vue/Angular/Svelte/Ember), Piral converters, micro-app per-framework guides, web components (each framework's own compiler). No: Native Federation (Angular-only first-class), Bit (React first-class, others' depth Unknown). Mechanical count of maintained integrations."
+        },
+        {
+          "id": "framework.adapters-track-current-majors",
+          "question": "Are the framework adapters or integrations verified against current (2025-2026) framework majors?",
+          "notes": "The single-spa fight: adapter compatibility with React 19 / Angular 18-19 community-questioned, no maintainer commitment (Unknown). Yes: NF Angular adapter (tracks Angular majors 1:1), web-components consuming (React 19 at 100%). No: MF nextjs-mf (EOL ~2026, App Router never)."
+        },
+        {
+          "id": "framework.zero-framework-participant",
+          "question": "Can a participant ship with no JS framework at all (static HTML or vanilla JS)?",
+          "notes": "Yes: podium (HTML strings), SSR and edge fragments, islands (zero-JS default), Workers static assets, iframe, web components (vanilla classes). Conditional: qiankun (jQuery/JSP-era pages still need lifecycle exports). No: commercetools (registry maps ids to React components)."
+        },
+        {
+          "id": "framework.version-floor-imposed",
+          "question": "Does participation impose a minimum framework or tooling version on host or participant?",
+          "notes": "Yes or Conditional: web-components consuming (React >= 19, else wrapper components), NF (Angular 16.1 floor; adapter pinned to Angular versions), Cloudflare auxiliary Workers (Vite 7+), hyperfrontend tooling (Node >= 18). No: raw iframe, reverse-proxy, SSI."
+        },
+        {
+          "id": "framework.composition-tier-stack-mandated",
+          "question": "Does the composition tier itself require a specific server stack, runtime, or platform?",
+          "notes": "Yes: Podium layout client (Node.js; connector health varies), OC (registry service), Entando (Kubernetes operator), Cloudflare (Workers runtime), SSI (capable proxy). No: client-side composition families (the browser is the tier). Conditional per implementation for the neutral SSR-fragment strategy."
+        },
+        {
+          "id": "framework.multi-framework-demonstrated",
+          "question": "Does an official reference or demo demonstrate multi-framework composition, beyond a claim?",
+          "notes": "Bit forced the claim-vs-demonstration split: Bit Unknown (no verified multi-framework-in-one-shell reference). Yes: hyperfrontend (8 frameworks, koi pond), Cloudflare (Astro plus Remix plus Next launch app), single-spa examples. Score demonstration only; hyperfrontend splits demonstrated-for-8 vs claimed-for-all."
+        }
+      ]
+    },
+    {
+      "key": "contracts",
+      "title": "Contracts and communication",
+      "attributes": [
+        {
+          "id": "contracts.formal-descriptor",
+          "question": "Does a machine-readable artifact (manifest, schema, descriptor) declare the participant's interface to the integration layer, beyond code-level imports or bare URLs?",
+          "notes": "Yes: hyperfrontend contract, podium manifest, opencomponents params, entando.json, commercetools schema, native-federation remoteEntry.json. Conditional: multi-zones (routing-only schema). No: qiankun, wujie, single-spa, import maps, raw iframes, edge and proxy thin contracts."
+        },
+        {
+          "id": "contracts.contract-versioned",
+          "question": "Does the contract artifact or wire protocol carry an explicit version identifier?",
+          "notes": "Yes: hyperfrontend versioned contract, podium manifest version field, opencomponents component semver, commercetools extension-version header, zephyr labels. No: micro-app (payloads keyed only by app name), import maps (names, no version semantics). Unknown: Luigi core-client wire version."
+        },
+        {
+          "id": "contracts.connect-compat-gate",
+          "question": "Is a compatibility or contract version stamped into each side's artifact at build and mechanically checked when the pieces first meet (connect, load, or activation), refusing or flagging incompatible pairs before integration completes?",
+          "notes": "Absorbs deployment.version-compat-gate and buildtime.contract-version-baked. Yes: hyperfrontend handshake version gate (permissive edge: unversioned peers always pass), Luigi init handshake. Conditional: MF and NF (semver ranges baked and negotiated for shared deps only, strictVersion; exposed-API shape never checked, types can lag runtime), opencomponents (registry resolves requested semver, pin or range), Vercel Multi-Zones (platform-only skew-fallback routing). No: raw iframes, qiankun, wujie, micro-app, web components, import maps (silent contract drift)."
+        },
+        {
+          "id": "contracts.drift-surface",
+          "question": "Can the two sides of the contract be deployed at different times, making version drift structurally possible?",
+          "notes": "Guard attribute: No for islands and non-MFE baselines (both sides ship in one commit), making versioning, gate, and drift attributes NA for them. Yes for federation, iframe, and server-fragment families."
+        },
+        {
+          "id": "contracts.drift-explicit",
+          "question": "When host and participant versions drift incompatibly, does the mechanism itself surface an explicit machine-readable error rather than silently wiring and failing later in application code?",
+          "notes": "Yes: hyperfrontend (denied handshake, machine-readable errors). No: import maps silently wire incompatible versions; MF types can lag deployed remotes; web-components property mismatches unchecked at runtime."
+        },
+        {
+          "id": "contracts.types-shared",
+          "question": "Does the solution provide a supported mechanism to deliver compile-time types for the cross-boundary API to consumers' builds (generated d.ts, typed API package, emulator)?",
+          "notes": "Absorbs buildtime.types-delivered-at-build. Yes: module-federation 2.0 (auto d.ts, dynamic type prompt), piral (Pilet API declaration, shell emulator via npm init pilet), bit and monorepo (ordinary package types). Conditional: web components (Custom Elements Manifest plus out-of-band types, community convention, unenforced). No: native-federation (explicit absence), qiankun, wujie, micro-app, podium, import maps, iframe; contracts out of band. Type-lag-vs-runtime is scored under contracts.drift-explicit."
+        },
+        {
+          "id": "contracts.schema-validated-payloads",
+          "question": "Is data crossing the boundary validated against a declared schema or parameter list by the mechanism itself, at publish, request, or message time?",
+          "notes": "Yes: hyperfrontend per-message validation, opencomponents registry-enforced params, commercetools schema. Conditional: islands (serializability enforced, not shape). No: qiankun, wujie, micro-app, MF pass untyped values. Split forced by the iframe dossier: the wire has no type system."
+        },
+        {
+          "id": "contracts.sync-calls",
+          "question": "Can one participant synchronously invoke another participant's live JS objects (direct import or function call) without going through a message channel?",
+          "notes": "Absorbs runtime.sync-cross-participant-access. Yes: MF, native-federation, import maps, single-spa, bit, qiankun, web components, and wujie (unpatched window.parent, same-origin). Conditional: micro-app by sandbox mode; same-origin unsandboxed iframes (realm split is organizational only). No: cross-origin frames (restricted window surface), hyperfrontend (async postMessage only; boundary forbids direct references). NA: server and proxy families with no client runtime relationship."
+        },
+        {
+          "id": "contracts.serialized-boundary",
+          "question": "Is the communication channel restricted to serializable data (structured clone, JSON, HTML), so live object references cannot cross the boundary?",
+          "notes": "Yes: cross-origin iframes, hyperfrontend, islands server-props, server-HTML families. No: shared-realm units pass live references (qiankun props, wujie, MF). Channel property only; realm sharing itself belongs to the runtime and isolation groups."
+        },
+        {
+          "id": "contracts.frame-messaging",
+          "question": "Does cross-participant communication cross a window or frame boundary via postMessage (or a wrapper over it)?",
+          "notes": "Yes: raw iframes, luigi, hyperfrontend. No: wujie (same-origin direct calls despite iframe containers), shared-realm units. Conditional: micro-app (iframe sandbox mode only). Exposes wujie's iframe-as-realm-container, not channel, distinction."
+        },
+        {
+          "id": "contracts.builtin-messaging",
+          "question": "Does the solution ship its own cross-participant messaging API (event bus, pub/sub, data channel) beyond raw browser primitives?",
+          "notes": "Absorbs runtime.builtin-cross-participant-messaging. Yes: qiankun initGlobalState pub/sub, wujie EventBus, micro-app dispatch/listeners, luigi services, piral events, hyperfrontend contract channel, Entando mediator. Conditional: podium (@podium/browser separate package), islands (officially recommended stores). Unknown: web-fragments (broadcasting listed, semantics unverified), picard. No: single-spa core, MF, native-federation, WC, import-maps, multi-zones, edge and proxy families."
+        },
+        {
+          "id": "contracts.builtin-shared-state",
+          "question": "Does the solution provide a shared cross-participant state store with change subscription?",
+          "notes": "Yes: qiankun initGlobalState, piral shared-data APIs, micro-app data channel (cached past unmount: stale hazard), luigi storageManager. No: single-spa, MF, hyperfrontend (message passing only), web components. Distinct from messaging: a store persists values between reads."
+        },
+        {
+          "id": "contracts.host-push-updates",
+          "question": "Can the host push updated context or data to an already-mounted participant through a solution-provided channel, without remounting it?",
+          "notes": "Yes: luigi context listeners, micro-app setData, qiankun setGlobalState, wujie, piral, hyperfrontend. Conditional: single-spa (parcel update lifecycle only). No: islands (props fixed at render), server-composed and reverse-proxy families."
+        },
+        {
+          "id": "contracts.http-request-contract",
+          "question": "Is the participant's integration contract an HTTP request/response interface consumed by the composition tier (fragment endpoint, extension API)?",
+          "notes": "Yes: podium, opencomponents, edge-side, server-fragment composition, cloudflare verticals, web-fragments endpoints, commercetools extensions, reverse-proxy. No: client-composed units (MF, single-spa, qiankun, piral). Separates the server-contract family cleanly."
+        },
+        {
+          "id": "contracts.server-context-propagation",
+          "question": "Does the solution define how request context (locale, device, mount origin, auth) is serialized to participants, with built-in forwarding or parsers?",
+          "notes": "Yes: podium (podium-* headers plus registrable custom parsers), edge-side forwarded headers, islands props serialization. No: cloudflare (raw request only, nothing defined). NA: pure client-side units. Differentiates within the http-request-contract family."
+        }
+      ]
+    },
+    {
+      "key": "ssr",
+      "title": "SSR and delivery",
+      "attributes": [
+        {
+          "id": "ssr.composed-page",
+          "question": "Is a page containing multiple participants assembled from participant output into one HTML document on a server or edge tier before the browser receives it?",
+          "notes": "Absorbs boundary.exec.server-composed. Yes: SSFC, ESC, Podium, OC, NF (Angular prod), web-fragments (streamed piercing), islands, server-template baseline. Conditional: MF (Modern.js only), single-spa (recipe), picard Node variants. No: hyperfrontend, qiankun, wujie, luigi, micro-app, import maps, iframe, multi-zones (server never stitches zones), CF Workers route-only mode."
+        },
+        {
+          "id": "ssr.fragment-granularity",
+          "question": "Does server-side composition stitch multiple participants into one document (fragment granularity) rather than only routing whole per-participant pages?",
+          "notes": "Separates SSFC, ESC, Podium, OC, web-fragments (Yes) from multi-zones, reverse-proxy, CF Workers verticals (No; framework-guarantee for multi-zones). NA where composition is client-side. Prevents route-composition units scoring as fragment SSR."
+        },
+        {
+          "id": "ssr.streaming-assembly",
+          "question": "Can participant content stream into the delivered or composed document as it arrives, flushing the shell or early fragments before slow participants finish, rather than being fully buffered?",
+          "notes": "Absorbs performance.streaming-assembly. Yes: CF Workers (HTMLRewriter streaming transform, early interactivity of finished fragments), web-fragments (piercing), SSFC (Tailor lineage, parallel nginx SSI), qiankun v3 (streamed entry vs v2 fetch-and-parse). Conditional: ESC (Cloudflare and Fastly yes, classic Varnish no; Varnish ESI re-gzips part-wise, losing compression). Unknown: Podium (dossier mandates a distinct cell). No: MF, buffered composers. NA: client-composed."
+        },
+        {
+          "id": "ssr.participant-internal",
+          "question": "Can an individual participant use its own framework's SSR for its own document, zone, or fragment endpoint regardless of composition-layer SSR support?",
+          "notes": "Yes: multi-zones (all modes unchanged), reverse-proxy, CF Workers, iframe, bit (env-dependent). Conditional: hyperfrontend (frame still boots client-side in host), micro-app (ssr attribute), luigi. Unknown: wujie (hydration through proxied document unverified)."
+        },
+        {
+          "id": "ssr.dual-mode-render",
+          "question": "Do server-side and client-side rendering paths both exist for the same participant, with documented selection or failover between them?",
+          "notes": "OC-forced: Yes (Accept-header content negotiation, CSR failover on failed server render). Conditional: single-spa (CSR default plus SSR recipe), MF (Modern.js). No: Podium (no client-only mode), islands, ESC, and all client-only units (no server path)."
+        },
+        {
+          "id": "ssr.no-js-first-paint",
+          "question": "Is participant content visible in the initial render without executing any client-side JavaScript?",
+          "notes": "Yes: server-composed families, islands static regions, WC via DSD. No: hyperfrontend (frames hidden until handshake; framework-guarantee) and client-composed loaders. Conditional: iframe (frame renders without host JS; the frame's own document may need JS), reverse-proxy (per-app). Distinct from ux.composed-first-paint (composition flash), whose verdicts differ for iframes."
+        },
+        {
+          "id": "ssr.hydration-orchestration",
+          "question": "Does the solution ship a runtime that schedules or orchestrates hydration across participants, beyond each participant self-hydrating?",
+          "notes": "Podium/SSFC-mandated split: asset loading strategies (beforeInteractive, lazy) are Conditional; an absent hydration runtime is No. Islands frameworks Yes (client:* directives). NF Yes via Angular incremental hydration. NA where nothing is server-rendered."
+        },
+        {
+          "id": "ssr.crawler-indexable",
+          "question": "Is participant content present in server-delivered HTML at a crawlable URL, either in the composed page or at the participant's own route?",
+          "notes": "Yes: server-composed families, multi-zones, reverse-proxy, OC server mode (SEO-visible). No: hyperfrontend (embedded content not part of host document), qiankun, wujie, luigi, single-spa default. Unknown: iframe (host-vs-frame attribution inconsistent across search engines)."
+        },
+        {
+          "id": "ssr.static-prerender",
+          "question": "Can participant content be prerendered at build time and served as static HTML (SSG), fully or per route or region?",
+          "notes": "Yes: islands (static or hybrid per-route standard), multi-zones (per-zone SSG/ISR), reverse-proxy (per-subtree static), WC (DSD is inert HTML). Conditional: ESC (runtime fragment caching, not build-time). No: client-composed units; static JS assets are not prerendered content."
+        },
+        {
+          "id": "ssr.edge-composition",
+          "question": "Can the composition or assembly step itself execute at CDN edge PoPs near the user rather than an origin server?",
+          "notes": "Absorbs performance.edge-pop-assembly. Yes: ESC (definitional), CF Workers, zephyr serving tier. Conditional: web-fragments (gateway on Web-Fetch runtimes), multi-zones (Vercel in-network routing, platform-only), reverse-proxy. No: SSFC origin tier, origin-server or client composition. Unknown: NF (edge undocumented). NA: browser-composed. The win is conditional on fragment cache-hit ratio (uncached fragments haul from origin inside the request); platform limits (Lambda@Edge 40KB/1MB) bound feasibility."
+        },
+        {
+          "id": "ssr.static-hosting-sufficient",
+          "question": "Can production delivery run entirely from static hosting or CDN with no request-time server compute performing composition?",
+          "notes": "Yes: import maps, single-spa default, qiankun, wujie, micro-app, MF client-side, hyperfrontend, WC, piral (feed CDN-cacheable), zephyr primary model. No: Podium, SSFC, OC (layout or registry compute), ESC, CF Workers, web-fragments (edge compute). Conditional: islands (prerender yes; server islands no), multi-zones (router required)."
+        },
+        {
+          "id": "ssr.server-loadable-artifact",
+          "question": "Can the participant's distributed artifact be loaded and evaluated in a server-side JS runtime through first-party means?",
+          "notes": "MF-mandated split: Node container loading is Yes even where framework SSR paths are No. Yes: MF 2.0, NF (/node loader hook), piral v3 (Node-evaluable pilet schema), picard (Node and Bun variants), OC (registry-executed). Conditional: single-spa recipe. No: qiankun, wujie, micro-app, hyperfrontend. NA: HTML-contract families."
+        },
+        {
+          "id": "ssr.rsc-federation",
+          "question": "Are React Server Components or framework-native streaming SSR supported first-party across the participant boundary (host server tree includes a federated participant's server components)?",
+          "notes": "Hard-constraint guard for App-Router and RSC orgs; mostly NA. No: MF (absence stated by both Vercel and MF, Aug 2026; nextjs-mf EOL). NA: multi-zones (no cross-boundary render; RSC inside a zone unaffected) and HTML-contract families. Unknown elsewhere."
+        },
+        {
+          "id": "ssr.dev-prod-parity",
+          "question": "Does the development server render participants server-side identically to production builds?",
+          "notes": "NF-mandated split: production renders shell and remotes on the server, but ng serve loads remotes client-side only (fallback components recommended), so No. Yes: islands frameworks, Podium (same layout code). NA where no SSR exists."
+        },
+        {
+          "id": "ssr.html-fragment-contract",
+          "question": "Is the server-rendered participant format standards-based inert HTML (including declarative shadow DOM) consumable without a JS runtime on the composing tier?",
+          "notes": "WC-mandated split: the serialization standard (DSD Baseline Widely Available ~2026-08-20) is separate from per-stack render tooling (Conditional, e.g. Lit SSR maturity). Yes: WC, SSFC, ESC, Podium. Conditional: OC (rendered HTML yes; unrendered JSON mode no). No: MF, NF, piral (JS module contract)."
+        }
+      ]
+    },
+    {
+      "key": "ux",
+      "title": "UX implications",
+      "attributes": [
+        {
+          "id": "ux.cross-boundary-soft-nav",
+          "question": "Is navigation between two separately deployed units a soft client-side navigation (no full document unload, re-download, and re-parse of the destination's assets)?",
+          "notes": "Absorbs performance.boundary-full-page-navigation (inverted). Yes: single-spa, MF, native-federation, piral, qiankun, wujie, micro-app. No: multi-zones (asset prefixes defeat HTTP-cache sharing), reverse-proxy, edge-side, cloudflare-workers (mitigated by HTTP caching, prefetch, View Transitions). Conditional: server-fragments (ILC single-spa handoff). NA: single-deploy baselines."
+        },
+        {
+          "id": "ux.within-unit-soft-nav",
+          "question": "Can one unit deliver SPA-style soft navigation among its own routes, unimpaired by the strategy?",
+          "notes": "Reverse-proxy split: within-app feel vs boundary cost. Yes: reverse-proxy, multi-zones (app-controlled inside a zone). No or Conditional: islands, edge-side, server-fragments (MPA unless a client router is layered). Differentiates the server families from route composition."
+        },
+        {
+          "id": "ux.cross-boundary-prefetch",
+          "question": "Does the solution ship prefetch or prerender of cross-boundary destinations to mask hard-navigation latency?",
+          "notes": "Conditional: multi-zones (Vercel PrefetchCrossZoneLinks, Next.js-only; prerender limited browser support, exposes route map to client), Cloudflare (preload:true). No: generic reverse-proxy. NA where boundary nav is soft. Unit-activation preloading is performance.first-party-preload-levers."
+        },
+        {
+          "id": "ux.cross-doc-view-transitions",
+          "question": "Does the solution inject cross-document View Transitions code at boundary crossings?",
+          "notes": "Cloudflare-mandated split: score injection shipped (Yes for cloudflare), never actual rendering, which is browser-support-dependent (Unknown matrix); note the dependence. Reverse-proxy: No (possible-extension only). NA for soft-nav units."
+        },
+        {
+          "id": "ux.persistent-shared-chrome",
+          "question": "Can shared chrome (nav, header, media player) stay continuously mounted across all cross-unit transitions?",
+          "notes": "Yes: shell-based composition (single-spa, piral, luigi, iframe hosts, hyperfrontend host). No: hard-nav families; multi-zones loses in-memory chrome state (unsent forms, playing media) at every crossing."
+        },
+        {
+          "id": "ux.unit-keepalive",
+          "question": "Can a unit retain in-memory app state while hidden or unmounted and have it restored when shown again (documented keep-alive or instance reuse, trading resident memory for faster re-activation)?",
+          "notes": "Absorbs performance.keepalive-memory-tradeoff. Conditional: wujie (alive:true; URL stops driving child routes; singleton JS reuse, refreshApp escape hatch), micro-app (attribute; app-level only, below destroy priority; resources kept after unmount with leak checklist), luigi (viewGroup caching and state restore). No: qiankun and single-spa default remount, all hard-nav and page-per-navigation families."
+        },
+        {
+          "id": "ux.keepalive-scroll-restoration",
+          "question": "Does the keep-alive restore mechanism also restore scroll position, not just app state?",
+          "notes": "Micro-app mandated split: explicitly No (scroll not restored). Unknown: wujie (DOM kept alive, unstated). NA: units without keep-alive."
+        },
+        {
+          "id": "ux.deep-link-inner-route",
+          "question": "Is there a documented mechanism reflecting a unit's internal route or state into a shareable top-level URL and restoring it from that URL?",
+          "notes": "Absorbs runtime.participant-route-in-url. Yes inherent: single-spa, qiankun, multi-zones, web-fragments bound fragments (shared location and history), single-router SPAs. Yes by contract: luigi (pathSegment, modal path in URL, routing sync). Conditional: wujie (sync:true plus prefix query serialization). No: raw iframe (browser-guarantee absence), hyperfrontend (self-acknowledged gap: routing and deep-linking unsolved)."
+        },
+        {
+          "id": "ux.frame-history-pollution",
+          "question": "Can embedded-unit navigations enter top-level session history so Back invisibly navigates an inner unit?",
+          "notes": "Yes (hazard): raw iframes (browser-guarantee linearization). Conditional: mitigated via location.replace or postMessage routing sync (Luigi framework-guarantee). No: single-document composition. NA: hard-nav (one document)."
+        },
+        {
+          "id": "ux.overlay-viewport-escape",
+          "question": "Can a unit's overlays (modal, dropdown, toast) cover the full viewport rather than clip to the unit's rectangle?",
+          "notes": "No: raw iframe (browser-guarantee clipping). Yes: same-DOM composition, wujie normal mode (Conditional: degrade mode confines). Pair with ux.host-overlay-protocol per the iframe dossier's browser-vs-framework distinction."
+        },
+        {
+          "id": "ux.host-overlay-protocol",
+          "question": "Does the solution provide a first-class protocol for host- or shell-drawn overlays requested by a unit?",
+          "notes": "Yes: Luigi (modals, alerts, drawers, split views drawn by Core), hyperfrontend (contract-declared dialog and popup modes, dismiss-as-signal). No: raw iframe (DIY postMessage is common-pattern only). NA: same-DOM units that need none."
+        },
+        {
+          "id": "ux.body-portal-compat",
+          "question": "Do component libraries that portal overlays to document.body work unmodified inside a unit?",
+          "notes": "No: qiankun strictStyleIsolation (documented antd conflict). Conditional: shadow-DOM composition (portal escapes style scope). Yes: same-DOM non-shadow modes. NA: iframes (portals stay in the frame document; the clipping attribute covers it). Mode-dependent: footnote per configuration."
+        },
+        {
+          "id": "ux.natural-layout-flow",
+          "question": "Does embedded unit content size and scroll as part of the host page flow, with no fixed rectangle needing height-reporting workarounds or inner scrollbars?",
+          "notes": "No: iframe (iframe-resizer pattern; MDN opt-in resize extension support Unknown), hyperfrontend (deliberate host geometry authority, child auto-size excluded). Yes: wujie, web-fragments, web-components, qiankun. NA: route-level composition. Merges the iframe resize and nested-scrollbar findings."
+        },
+        {
+          "id": "ux.cross-boundary-focus-mgmt",
+          "question": "Can focus traps, roving focus, and focus restoration across a unit boundary be implemented without explicit cross-boundary messaging?",
+          "notes": "No: iframe (host cannot observe inner focus cross-origin), hyperfrontend (acknowledged unsolved). Yes: single-DOM (one focus order). Unknown: Luigi (dossier-explicit). NA: hard-nav."
+        },
+        {
+          "id": "ux.screenreader-continuity",
+          "question": "Does the composed page expose one continuous accessibility tree, so assistive tech traverses all unit content as one document without per-unit labeling workarounds?",
+          "notes": "Decidability: score from platform accessibility-tree structure, not assistive-technology behavior claims. Yes: single-DOM (one tree; islands and web-components browser-guarantee). Conditional: iframe (traversal works but frames require title attributes). Unknown: hyperfrontend (cross-frame a11y an acknowledged gap). Distinct from focus management: iframe answers differ across the two."
+        },
+        {
+          "id": "ux.composed-first-paint",
+          "question": "Does first paint deliver fully composed unit content, with no client-side composition flash or loader waterfall?",
+          "notes": "Yes: edge-side, server-fragments, podium, islands, web-fragments (piercing), commercial single-app. Conditional: opencomponents (SSR path yes, client path no). No: MF, single-spa, piral, import-maps, qiankun, iframe-based (frames load after). Distinct from ssr.no-js-first-paint: iframe verdicts differ."
+        },
+        {
+          "id": "ux.builtin-loading-ui",
+          "question": "Does the solution ship built-in loading indicators for unit boundaries rather than requiring host-authored ones?",
+          "notes": "Yes: piral (automatic), Luigi (loadingIndicator, configurable). Conditional: single-spa (only via single-spa-layout), hyperfrontend (frames hidden until session opens: masks flash, not a spinner). No: MF (host suspense), import-maps. Unknown: picard (dossier-explicit)."
+        },
+        {
+          "id": "ux.builtin-error-fallback-ui",
+          "question": "Does a failed unit render a designated fallback UI in place rather than a blank hole or crash?",
+          "notes": "User-visible surface only; containment mechanics live in the isolation group (isolation.failure.load-fallback). Yes: piral (error component), podium and server-fragments (fallback content; silent-staleness caveat). Conditional: single-spa-layout, opencomponents tag fallback. No: MF (hole or crash), import-maps. Unknown: picard."
+        },
+        {
+          "id": "ux.mount-layout-shift-risk",
+          "question": "Must authors reserve placeholder dimensions to avoid layout shift when unit content arrives after first paint?",
+          "notes": "Yes: islands server-islands (two-phase paint), opencomponents client path, web-components pre-upgrade flash (mitigable via :defined or DSD). Conditional: web-fragments (prePiercingStyles, author responsibility, officially acknowledged). No: fully server-composed pages. NA: single-build baselines."
+        },
+        {
+          "id": "ux.token-theming-mechanism",
+          "question": "Does the strategy include an enforcing mechanism, not convention or discipline, that propagates design tokens or theming across unit boundaries?",
+          "notes": "Forced by the graveyard split (who owns cross-participant UX consistency; Zalando centralized) and reverse-proxy (explicit No: discipline, not mechanism). Yes: web-components (inherited custom properties, browser-guarantee). No: iframe (out-of-band delivery), hyperfrontend (out of jurisdiction). Conditional: platform templates (Entando, commercial)."
+        }
+      ]
+    },
+    {
+      "key": "performance",
+      "title": "Performance causes",
+      "attributes": [
+        {
+          "id": "performance.client-composition-runtime",
+          "question": "Must the page load a client-side composition or orchestration runtime (loader, orchestrator, sandbox library) beyond the units themselves?",
+          "notes": "Yes: single-spa (plus SystemJS until v7 ESM ships), piral shell, picard, MF runtime, qiankun, wujie, micro-app, hyperfrontend host lib. No or near-zero: web components (the browser is the framework), raw iframes, server-composed HTML, non-MFE baselines. Conditional: import maps (es-module-shims only on old engines)."
+        },
+        {
+          "id": "performance.pre-render-orchestration-fetch",
+          "question": "Must the client complete at least one orchestration fetch (manifest, feed, discovery, registry, remote entry, import-map install) before the first unit can render?",
+          "notes": "Yes: piral (feed request), picard (discovery round trip), MF (remoteEntry or manifest), native federation (manifest plus N remote entries startup phase), qiankun (HTML entry fetch and parse), OC (registry request). No: server-composed HTML, non-MFE baselines, document-inlined import maps."
+        },
+        {
+          "id": "performance.sequential-waterfall-default",
+          "question": "Does the default client loading flow discover requests sequentially (each fetch known only after a prior response parses or executes), producing a request waterfall?",
+          "notes": "Yes: unbundled import-map graphs (browser-guarantee), MF v1 naive chain (remoteEntry, negotiation, chunk, deps). No: single-bundle baselines, server-composed HTML. Mitigations are performance.first-party-preload-levers; conflating them hides the MF 2.0 nuance."
+        },
+        {
+          "id": "performance.first-party-preload-levers",
+          "question": "Does the solution ship first-party preload, prefetch, or warm-up mechanisms that cut unit activation latency?",
+          "notes": "Yes: MF 2.0 (manifest plus preloadRemote plus shared tree-shaking), qiankun (prefetch default true), micro-app (prefetch API), luigi (preloadUrl, preloadViewGroups), wujie (preload plus pre-execution), single-spa (start() split). No: import maps (modulepreload is a browser pattern, not shipped), podium, raw iframes."
+        },
+        {
+          "id": "performance.duplicate-framework-same-page",
+          "question": "Under default configuration, can two co-displayed units using the same framework each load their own copy of that framework runtime on one page?",
+          "notes": "Yes: iframe family (iframe, luigi iframe, hyperfrontend, wujie, web-fragments), qiankun, single-spa, micro-app, uncoordinated web components, server-fragment client side. Conditional: MF (skew or eager). No: import maps, native federation, piral. NA where units never co-display (multi-zones, reverse-proxy, non-MFE)."
+        },
+        {
+          "id": "performance.shared-dependency-dedup",
+          "question": "Does the solution provide a built-in mechanism (runtime negotiation or build-time declaration) so a dependency shared by multiple units is downloaded and instantiated once per page?",
+          "notes": "Absorbs buildtime.dedup-by-build-declaration. Yes: MF (negotiated share scope), native federation (import map), import maps (URL identity), piral (shell-shared importmap). Conditional: single-spa and web-components (externals plus naming convention, not enforced). No: iframe family, podium core, qiankun, wujie, multi-zones, cloudflare-workers, server-side fragments, web-fragments (roadmap only). Zephyr's content-addressed dedup is CDN-tier across versions, not on-page: No with note."
+        },
+        {
+          "id": "performance.dedup-failure-on-version-skew",
+          "question": "Can the sharing mechanism silently fall back to loading duplicate copies when units declare incompatible dependency versions?",
+          "notes": "Yes: MF (page-weight regressions arrive via remote deploys the host never saw). No: import maps (one resolved URL, no negotiation). Native federation: startup version resolution, likely Conditional. NA where no sharing exists."
+        },
+        {
+          "id": "performance.per-unit-document-boot",
+          "question": "Does each unit instance instantiate its own browser document or realm that separately parses HTML/CSS and boots its own JS realm?",
+          "notes": "Yes: iframe, luigi iframe mode, hyperfrontend, wujie and web-fragments (hidden iframe realms). Conditional: luigi (compound mode shares realm). No: MF, single-spa, qiankun (proxy sandbox in host document). Covers per-frame heap and boot cost as its own cell."
+        },
+        {
+          "id": "performance.process-memory-overhead",
+          "question": "Where the engine applies site isolation, do cross-origin units run in separate OS processes carrying measurable per-process memory overhead?",
+          "notes": "Conditional: cross-origin iframe family (Chrome measured ~10-13% desktop, 3-5% partial Android). NA: same-realm strategies. Split from main-thread contention; the overhead buys CPU containment (see isolation.resource.main-thread)."
+        },
+        {
+          "id": "performance.sandbox-execution-tax",
+          "question": "Does the isolation mechanism impose continuous execution overhead on unit code (proxy-wrapped globals, runtime selector rewriting, instrumented eval)?",
+          "notes": "Yes: qiankun (with(proxyWindow) per-statement model; experimentalStyleIsolation rewriting with @keyframes and @font-face gaps), micro-app (sandboxed eval; fiber chunking mitigates blocking). No: wujie (native speed in own realm, the docs' stated comparison), raw iframes, MF."
+        },
+        {
+          "id": "performance.per-message-serialization-cost",
+          "question": "Does cross-unit communication pay per-message overhead (structured clone, schema validation, crypto envelope) rather than passing in-realm references?",
+          "notes": "Yes: iframe family (structured clone; transferables mitigate). Hyperfrontend adds per-message schema validation plus a v1 crypto envelope that drops messages silently under chatty concurrent channels (documented, thresholds unpublished). No: in-realm props and exports (MF, single-spa, piral)."
+        },
+        {
+          "id": "performance.hydration-deferrable-per-unit",
+          "question": "Can each unit's hydration or boot be individually gated on visibility, idle, interaction, or media query, so client JS cost scales with the interactive surface?",
+          "notes": "Absorbs ssr.partial-hydration. Yes: islands (client:visible and on:visible directives, framework-guarantee; static regions zero JS), NF (Angular incremental hydration since 18.2.3+). Conditional: iframe loading=lazy (JS-enabled only), luigi deferred mounting, WC (independent per-element upgrade, tooling-dependent), Podium (lazy asset strategy only). No: podium core (podlet-owned), MF (app-level concern, not shipped)."
+        },
+        {
+          "id": "performance.request-time-server-fanout",
+          "question": "Does serving one page trigger per-unit server-side fetches (composer-to-fragment or registry calls) on the request path?",
+          "notes": "Yes: podium (N podlet fetches, 1000ms default timeout), server-side fragments, OC (batch POST mitigates), edge composition on cache miss, cloudflare (service-binding hop, positioned near-zero-cost). No: client-composed strategies. NA: build-time composition."
+        },
+        {
+          "id": "performance.per-unit-http-cacheable",
+          "question": "Is each unit an independently HTTP-cacheable resource, served from its own endpoint or origin with its own cache headers, at CDN or proxy tier where server-rendered?",
+          "notes": "Absorbs ssr.fragment-http-cacheable. Structural Yes: server fragments (fragment endpoints independently cacheable), OC (static assets CDN; rendered HTML is registry compute, Conditional), podium, edge (PoP-cached fragments, cache-hit-ratio-dependent), Astro server islands (GET Cache-Control), hyperfrontend (per-origin assets, no shared vendor chunk). No: units compiled into one host bundle. Composer-side caching is performance.default-content-caching. Zephyr adds content-addressed cross-version asset caching at CDN tier."
+        },
+        {
+          "id": "performance.default-content-caching",
+          "question": "Does the shipped composition tier cache unit content (not merely manifests or metadata) without operator configuration?",
+          "notes": "No: Podium (manifests only; dossier ambiguity mandates this split from cacheability). Conditional: SSI, ESI, nginx tiers (per-deployment ops). Yes-leaning: OC registry (immutable published data, high refresh interval). Guards the cacheable-vs-cached-by-default conflation."
+        }
+      ]
+    },
+    {
+      "key": "deployment",
+      "title": "Deployment",
+      "attributes": [
+        {
+          "id": "deployment.host-rebuild-required",
+          "question": "Does shipping a new version of an already-integrated participant require rebuilding or redeploying the host or composer application before it reaches users?",
+          "notes": "Canonical guidance id; absorbs boundary.phase.post-ship-update (inverted) and buildtime.update-without-consumer-rebuild (inverted). The defining MFE boundary guard. Yes: bit (every consuming app rebuilds and redeploys; producer-release vs consumer-visible split lives here), islands (single artifact), commercetools shared code, all non-MFE baselines. No: runtime-composition families (iframe and hyperfrontend browser-guarantee, MF remotes, podium, OC semver ranges, import-map rewrite, qiankun, wujie). Conditional: OC exact pins, is-land loader variant, commercial DXP (page composition No, component code Yes), hyperfrontend (No while contract holds; contract change needs regenerated shell install)."
+        },
+        {
+          "id": "deployment.new-participant-host-change",
+          "question": "Does onboarding a brand-new participant after the host ships require a host, composer, router, or gateway code change, rebuild, or redeploy (rather than a config, registry, or data change)?",
+          "notes": "Absorbs boundary.phase.onboard-without-host-deploy (inverted), buildtime.onboard-without-host-rebuild (inverted), and migration.host.rebuild-per-participant (recurring host-side cost; feeds cost.operate, never cost.adopt). Distinct from updating an existing participant. No for registry and feed models: piral feed publish, OC registry, ILC, MF 2.0 runtime registration, zephyr. Yes: podium (layout code change), single-spa root config (absent a custom registry), web-fragments gateway registry, qiankun registration, bit, islands. Conditional: luigi (dynamic config fetch vs bundled), cloudflare (router config plus redeploy), registry-based SSF, import maps (map rewrite is config-level)."
+        },
+        {
+          "id": "deployment.golive-central-pointer",
+          "question": "Does a participant release reach users only after a centrally owned pointer or artifact (import map entry, environment pointer, router config, version pin) is updated, rather than the participant's own deploy alone going live?",
+          "notes": "Host- or platform-controlled vs participant-controlled go-live. Yes: import-map architectures, single-spa, Zephyr environments. No: same-URL strategies (iframe, qiankun, wujie, micro-app, hyperfrontend, Podium, fragments). Conditional: OpenComponents (range consumers get it immediately, pinned consumers do not). Pairs with consumer-version-pin as the two directions of version control."
+        },
+        {
+          "id": "deployment.consumer-version-pin",
+          "question": "Can the host or consumer pin an exact participant version and keep receiving it regardless of newer participant deploys?",
+          "notes": "Yes: OpenComponents exact pin, import maps (versioned URLs), Zephyr per-environment override, Bit (npm versions). No: same-URL strategies (the host receives whatever is deployed behind the URL). Conditional: MF (URL pinning by convention), Piral (feed decides)."
+        },
+        {
+          "id": "deployment.per-user-version-targeting",
+          "question": "Can a specific user, session, or preview audience be served a different participant version while production users keep the current one, via a first-party mechanism or documented pattern?",
+          "notes": "Covers canary, preview, staged rollout. Yes: Piral feed (per-user, feature-flagged pilet sets), Zephyr (per-version preview URLs, per-environment overrides), Vercel platform (preview and branch routing). Conditional: import maps (import-map-overrides tooling, common-pattern). No or Unknown: Podium, qiankun, wujie, raw iframes (nothing documented). Score mechanism presence, not marketing."
+        },
+        {
+          "id": "deployment.immutable-version-retention",
+          "question": "Does a first-party mechanism keep every published participant version immutable and permanently addressable (duplicate name+version publish rejected, prior versions retained)?",
+          "notes": "Yes: OpenComponents (version-exists rejection; registry-side delete a residual Unknown), Zephyr (immutable snapshots), Bit (component versions). Conditional: import maps (immutability is convention, not enforced). No: same-URL strategies (nothing retained). Prerequisite for governance.rollback but deliberately split (retention vs repoint vs delete)."
+        },
+        {
+          "id": "deployment.cache-busting-operator-burden",
+          "question": "Does keeping consumers on the intended participant version rely on operator-managed cache-busting or short TTLs of a mutable well-known URL, rather than immutable content-addressed URLs or a versioned pointer?",
+          "notes": "Yes: MF (remoteEntry and manifest URLs, community-convention finding), web components (URL versioning convention), same-URL child entries (qiankun, wujie, micro-app, iframe documents). No: Zephyr (content-addressed snapshots), import maps (immutable versioned artifact URLs), OC (versioned registry paths)."
+        },
+        {
+          "id": "deployment.participants-static-artifacts",
+          "question": "Do participants deploy as static artifacts servable by any static file host or CDN, as opposed to running HTTP services?",
+          "notes": "Yes: MF, Native Federation, import maps, single-spa, web components, iframe and hyperfrontend feature apps, qiankun, wujie, micro-app children. No: Podium podlets, OC components with server logic, SSR fragment services, Multi-Zones apps. Conditional: edge-side fragments (static fragment HTML possible, services common). Splits client-composition from server-composition families."
+        },
+        {
+          "id": "deployment.strategy-service-in-path",
+          "question": "Must a strategy-specific server or service (registry, feed, gateway, composition proxy, router, layout tier) be deployed and operated in the production request path, beyond static file hosting?",
+          "notes": "Absorbs runtime.shared-service-critical-path and operations.selfop-central-service (who operates it: self-host vs managed noted per unit; vendor dependence is hosting.control-plane). Yes: OC registry (plus storage, optional DB), web-fragments gateway, Multi-Zones router, reverse-proxy tier, ESI and edge composer, Cloudflare router worker, ILC, podium layout servers. Conditional: Piral (feed at boot is the standard model; self-host sample, buy cloud, or static pilet list), zephyr (resolution layer), reverse-proxy (self-host vs managed). No: MF, NF CSR, single-spa, qiankun, import maps, iframes, hyperfrontend (hf serve optional), web components (static origins only)."
+        },
+        {
+          "id": "deployment.runtime-discovery-first-party",
+          "question": "Does the solution define or ship a first-party runtime discovery artifact or service (manifest, feed, registry, routing map) that the host consults to resolve participants?",
+          "notes": "Yes: MF 2.0 mf-manifest.json, NF federation.manifest.json, Piral feed spec, OC registry, Picard (Piral plus MFEWG schemas), Podium manifest, Zephyr, import maps (the map itself), Vercel microfrontends.json. No: raw iframes, web components (gap by design), qiankun, wujie, micro-app (code registration), hyperfrontend (metadata format exists, no registry today). NA: islands (nothing to discover)."
+        },
+        {
+          "id": "deployment.single-domain-required",
+          "question": "Must all participants be served to end users under a single public origin or domain (path-split or proxied) for the strategy to function?",
+          "notes": "Yes: Multi-Zones, reverse-proxy route composition (subdomain variant conditional), Cloudflare Workers MFE, server and edge fragment composition (one composed origin). No: iframes, hyperfrontend, MF, NF, import maps, web components (any origin, subject to CORS). Domain-topology axis; also drives cookie and session findings elsewhere."
+        },
+        {
+          "id": "deployment.cross-origin-cors-required",
+          "question": "When a participant is hosted on a different origin than the host page, must the participant origin serve CORS headers for loading to work?",
+          "notes": "Yes: qiankun, wujie, micro-app (host-side fetch), NF and import maps (module fetches). Conditional: MF (classic script tag exempt; manifest and ESM fetches need CORS). No: iframe and hyperfrontend (frame navigation exempt). NA: proxy and server-composed families (no cross-origin client fetch)."
+        },
+        {
+          "id": "deployment.vendor-hosting-required",
+          "question": "Must participants or their serving infrastructure run on one specific vendor's hosting platform?",
+          "notes": "Yes: Cloudflare Workers MFE (all verticals are Workers; hosting captivity split), commercetools Frontend (vendor delivery layer). Conditional: Zephyr (managed default; BYOC moves data plane only). No: Vercel Multi-Zones (self-hostable core; platform features separate), web-fragments (sponsorship, not dependency), all OSS strategies."
+        }
+      ]
+    },
+    {
+      "key": "migration",
+      "title": "Migration requirements",
+      "attributes": [
+        {
+          "id": "migration.participant.min-level",
+          "question": "What is the lowest level on the migration scale (model/migration.md section 2, ids 1-8) this unit demands of an existing application before first successful participation?",
+          "notes": "Value is a scale-level id, not the standard Yes/No vocabulary: the normalization layered over the atoms below (REQ-MATRIX-03). Record per mode where modes differ: Luigi embed-only vs full client, wujie reconstruction vs singleton, micro-app zero-mod marketing vs sandbox tolerance."
+        },
+        {
+          "id": "migration.host.min-level",
+          "question": "What is the lowest migration-scale level this unit demands of the composing or host application as one-time adoption work?",
+          "notes": "Scale-level value, not Yes/No; one-time only (recurring per-participant cost is deployment.new-participant-host-change). Forced by the spread: Picard and OC (add script or tag) vs Podium and web-fragments (new tier) vs Piral (instance becomes app root) vs commercial platforms (platform migration)."
+        },
+        {
+          "id": "migration.source-modification-required",
+          "question": "Must any of the participant application's existing source code be edited before it can participate at all?",
+          "notes": "Canonical guidance id (renamed from migration.participant.source-modification-required). No: iframe, reverse-proxy, ESI, wujie reconstruction, Luigi embed-only. Yes: single-spa, qiankun, hyperfrontend (hostee SDK glue). Conditional: micro-app (global-leakage or router-base issues can force edits despite zero-mod marketing)."
+        },
+        {
+          "id": "migration.participant.bootstrap-change-required",
+          "question": "Must the participant's entry or startup code change (export mount/unmount lifecycles, defer boot, parameterize the mount node) for full participation?",
+          "notes": "Level-4 atom. Yes: single-spa, qiankun, Piral pilet setup, Luigi full client, hyperfrontend. Conditional by mode: wujie singleton (__WUJIE_MOUNT), micro-app optional UMD hooks, Luigi (embed-only skips it, degraded). No: iframe, route and proxy composition."
+        },
+        {
+          "id": "migration.participant.internals-refactor-required",
+          "question": "Must application internals change in bounded areas beyond the entry point (routing base or publicPath, mount-path or URL-prefix assumptions, global or DOM exclusivity, style scoping)?",
+          "notes": "Level-5 atom. Conditional: Workers router (mount-path-agnostic code), reverse-proxy and multi-zones (prefix-separable URL space), qiankun (publicPath, CORS), micro-app (sandbox tolerance), single-spa (surrender the document shell). No: iframe, ESI fragments."
+        },
+        {
+          "id": "migration.participant.deployment-change-required",
+          "question": "Must the participant change where or how it is hosted or served (mandated platform, registry publish, new serving infrastructure)?",
+          "notes": "Candidate missing level flagged in migration.md section 2. Yes: Cloudflare Workers (every vertical on Workers), Zephyr (managed or orchestrated serving), OC (registry publish), commercial platforms. No: iframe, import maps, web components (any static host)."
+        },
+        {
+          "id": "migration.participant.extraction-required",
+          "question": "Starting from a feature inside an existing monolith, must that feature first be extracted into an independently built and deployed unit before it can participate (no in-place wrapping)?",
+          "notes": "Level-6 atom. Yes: multi-zones (carve URL boundaries, no runtime shims), MF and NF remotes, Zephyr. No: is-land (in-place progressive enhancement), web-component tag wrap. Conditional: ESI and SSF (region endpoint extraction only)."
+        },
+        {
+          "id": "migration.participant.rewrite-required",
+          "question": "For an existing application, does adoption amount to level 7-8 work: a framework port, architectural inversion, or wholesale platform and workflow migration?",
+          "notes": "Yes: commercial platforms (scaffolded repo, Studio, hub: wholesale, not a layer). Conditional: islands for an existing SPA (server-first inversion), Bit full value (workspace model). No for most. A Yes triggers REQ-Q-04: simpler non-MFE alternatives re-enter."
+        },
+        {
+          "id": "migration.participant.thirdparty-unmodified-viable",
+          "question": "Can an already-deployed application whose owners will change nothing (build output, exports, and source all untouched) participate through host-side work alone?",
+          "notes": "Canonical eliminating-answer guard (migration.md section 5); absorbs framework.unmodified-app-participates (URL-only participation) and buildtime.unmodified-app-participates (build output format unchanged). Yes: Luigi by-URL embed (degraded participation), reverse-proxy, iframe (framing headers are participant-controlled: Conditional), wujie reconstruction mode, web-fragments, multi-zones. Conditional: micro-app (fetchable entry plus CORS are participant-side). No: single-spa (lifecycle adoption), qiankun v2 (UMD exports plus public-path.js plus CORS), MF, Piral, hyperfrontend, web-components (must define an element), all bundler-coupled units."
+        },
+        {
+          "id": "migration.participant.legacy-no-build-viable",
+          "question": "Can a decades-old application with no reproducible modern build (server-rendered, jQuery-era) participate without first acquiring one (required level at most 2)?",
+          "notes": "A broken build caps appetite at level 2 regardless of willingness (migration.md section 8). Yes: iframe (classic strangler entry), proxy, ESI, Podium wrap, web-component tag around a legacy screen. No: MF, NF, import maps (need ESM artifacts)."
+        },
+        {
+          "id": "migration.strangler.incremental",
+          "question": "Can adoption proceed one route, region, or feature at a time while the untouched legacy stays in production (strangler-fig), with no big-bang cutover?",
+          "notes": "Near-universal Yes (multi-zones, web-fragments, proxy, ESI, Workers, hyperfrontend) but guards a hard constraint: No for commercial platforms (wholesale adoption). Conditional: islands (cheap for MPA, rewrite for SPA), Piral (shell becomes root first)."
+        },
+        {
+          "id": "migration.host.new-infra-tier-required",
+          "question": "Does adoption require standing up or controlling a new infrastructure tier in front of or beside the existing site (proxy or CDN contract, gateway middleware, layout server, component registry)?",
+          "notes": "Capability precondition that blocks teams without infra control (ESI, reverse-proxy dossiers). Yes: reverse-proxy, ESI (capable CDN or proxy tier), Podium layout tier, web-fragments gateway, OC registry plus storage. No: client-side composition (single-spa, MF, web components, wujie). Steady-state operation of the tier is deployment.strategy-service-in-path."
+        },
+        {
+          "id": "migration.host.shell-takeover-required",
+          "question": "Must the composing application be re-rooted under the unit's shell or root config (host gives up ownership of its document shell or application root)?",
+          "notes": "Yes: single-spa root config, Piral standard path (instance is the application root). Conditional: Piral as embedded library (possible-extension), Luigi container mode (avoids rehosting under Core). No: OC tag, Picard script add, web-components per-tag, iframe."
+        },
+        {
+          "id": "migration.exit.participants-standalone",
+          "question": "After adoption, do participants remain standalone runnable and deployable applications outside the composition (bounded exit, low cost.evolve)?",
+          "notes": "Transitional-architecture viability atom. Yes: wujie and micro-app (HTML-entry children), multi-zones, iframe. No: Piral pilets (plain libraries), single-spa apps that surrendered their HTML entry. Conditional: MF remotes (need a standalone build mode)."
+        },
+        {
+          "id": "migration.path.from-incumbent-format",
+          "question": "Is there an officially documented migration path into this unit from an incumbent composition format (webpack MF, SystemJS/single-spa, a prior major)?",
+          "notes": "Yes: NF from MF (import-path swap, side-by-side mode), import maps from SystemJS. Conditional: Picard and Piral mf schema (host foreign formats), import maps from MF (via NF only). No: single-spa's promised SystemJS-to-ESM guide has not shipped."
+        },
+        {
+          "id": "migration.forced-remigration-pending",
+          "question": "Does the currently adoptable line carry a known forced breaking migration ahead (announced EOL, breaking next major, format deprecation)?",
+          "notes": "Yes: qiankun v2 to v3 rearchitecture (v3 still RC), nextjs-mf EOL, originjs Vite plugin to official runtime. Conditional: NF v3 to v4 (guided, bridge package), single-spa SystemJS estates (path exists, guide absent). No: browser-primitive units (iframe, import maps, web components)."
+        },
+        {
+          "id": "migration.permanent-viability",
+          "question": "Is there documented vendor guidance or multi-year production-adopter evidence supporting the unit as the permanent architecture, rather than solely migration scaffolding?",
+          "notes": "Decidability: tightened from a judgment call to documented evidence; the REQ-STATE-09 robustness test depends on it. Most Yes. No or Conditional where evidence forces exit: Picard dormancy risk, qiankun v2 (pending v3), graveyard units. Distinct from forced-remigration-pending: asks whether staying indefinitely is supportable."
+        }
+      ]
+    },
+    {
+      "key": "ownership",
+      "title": "Ownership topology fit",
+      "attributes": [
+        {
+          "id": "ownership.single-team-endorsed",
+          "question": "Does the unit's own documentation explicitly endorse use by a single coordinated team on one release train, rather than redirecting that case to simpler tooling?",
+          "notes": "Renamed from ownership.serves-single-team. Decidability: score only explicit documentation statements. Yes: non-MFE baselines, islands (design center). No: hyperfrontend (self-conceded, you probably do not need it). Guards the REQ-Q-04 no-MFE outcome."
+        },
+        {
+          "id": "ownership.code-boundary-ownership",
+          "question": "Can a team hold enforceable review and ownership authority over its participant's source (separate repo, or path ownership with required review)?",
+          "notes": "Near-universal Yes (CODEOWNERS covers monorepo baselines). Kept as anchor of the mandated three-way team-ownership split so baselines never score ambiguously against MFEs."
+        },
+        {
+          "id": "ownership.deploy-schedule-ownership",
+          "question": "Does the owning team control when its participant's changes reach production users, independent of any shared release train?",
+          "notes": "No: all non-MFE baselines, islands, bit (consumer rebuild gates visibility). Yes: runtime-composed families. Second member of the team-ownership split; deployment.host-rebuild-required owns the rebuild mechanics, this row records the ownership role."
+        },
+        {
+          "id": "ownership.runtime-operational-ownership",
+          "question": "Does the owning team operate its participant as its own running service or origin in production (its own on-call surface)?",
+          "notes": "Yes: podium and server-side fragment services, edge fragments, multi-zones, reverse-proxy zones. No: static-artifact participants executed by the host runtime (MF remotes, pilets, packages, islands). Third member of the team-ownership split."
+        },
+        {
+          "id": "ownership.external-participant",
+          "question": "Can a participant owned by a separate organization be composed via surfaces it already exposes (URL, script tag, published artifact) while treated as a distinct security principal?",
+          "notes": "Canonical guidance id (renamed from ownership.serves-external-participant). Yes: iframe (strongest, browser-enforced), hyperfrontend (claimed). No: server-side fragments (explicitly trusted-only), shared-realm families. Boundary-strength decomposition lives in the security group."
+        },
+        {
+          "id": "ownership.participant-unmodifiable-host",
+          "question": "Can the participant run inside a host page whose owner makes at most one minimal documented change (one tag, URL, or script), adopting no build tool or framework?",
+          "notes": "Renamed from ownership.serves-unmodifiable-host to align the guidance id. Yes: hyperfrontend (design center), iframes, web-components. No: single-spa, piral, multi-zones, where the host must be the unit's own shell or router. Aligns the white-label topology."
+        },
+        {
+          "id": "ownership.distrusted-cadence",
+          "question": "Can a participant deploy on a schedule other teams neither know nor approve, with no first-party mechanism erroring or requiring a freeze, train, or synchronized rollout on the resulting skew?",
+          "notes": "Renamed from ownership.serves-distrusted-cadence; decidability tightened to mechanical skew behavior. Conditional: module-federation and native-federation (singleton plus strictVersion errors on skew; governance required). Yes: iframes, import-map scopes; bit passes via consumer pinning (insulation, not runtime tolerance)."
+        },
+        {
+          "id": "ownership.uncoordinated-upgrades",
+          "question": "Can participants run mutually incompatible versions of shared dependencies (including framework majors) indefinitely, with no cross-team upgrade train ever forced by default configuration?",
+          "notes": "Renamed from ownership.serves-uncoordinated-upgrades; absorbs framework.default-version-lockstep (inverted) and migration.participant.framework-alignment-forced (inverted). Yes: import-maps (scoped side-by-side), iframes, reverse-proxy, hyperfrontend. No or Conditional: MF and native-federation under default singleton plus strictVersion (coordinated major upgrades remain necessary; NF couples framework majors), Piral (shell-owned importmap), single-build units (islands, baselines, modular monolith: no staggered majors as peers)."
+        },
+        {
+          "id": "ownership.onboarding-without-central-owner",
+          "question": "Can a new participant team join the composition without any action by the central artifact's owner (e.g. publish-to-registry or feed discovery)?",
+          "notes": "Asks whose action, not what rebuilds (deployment.new-participant-host-change owns that). Yes: piral feed, opencomponents registry, zephyr. No: single-spa root config, podium (layout code change), web-fragments (gateway registry), qiankun. Conditional: luigi (adopter-built aggregation), server-side fragments (registry-based only)."
+        },
+        {
+          "id": "ownership.platform-team-role-required",
+          "question": "Does effective operation require a standing platform-owner role distinct from product teams (shell, router, layout, registry, or CDN and edge-config owner)?",
+          "notes": "Yes: piral, luigi, podium, cloudflare router, reverse-proxy routing tier, edge-side (CDN-config owner is a deployment gatekeeper: strongest form). No: hyperfrontend (claimed), plain iframes, web-components contract."
+        },
+        {
+          "id": "ownership.non-developer-composition",
+          "question": "Can non-developers hold page-composition authority (which participants appear where) through a supported UI?",
+          "notes": "Yes only in commercial platforms (Studio's developer vs business-user role split); forced by commercial-platform-illustrations. Nearly all engineering units No; keeps that product class from falsely scoring as team-topology MFE."
+        },
+        {
+          "id": "ownership.participant-bytes-verbatim",
+          "question": "Is the participant's shipped code guaranteed to execute as shipped, with no host-side rewriting of its HTML, JS, or CSS?",
+          "notes": "No: wujie (replace and plugins rewrite at injection; a trust-topology fact), micro-app (plugin code patching). Yes: iframes, module-federation. Decisive for vendor and white-label seats where the participant owner must vouch for its bytes."
+        },
+        {
+          "id": "ownership.nested-host-seat",
+          "question": "Can a participant simultaneously act as a host composing its own participants (chained ownership)?",
+          "notes": "Yes: wujie (nested keep-alive documented), iframes, module-federation (hosts can be remotes). Unknown for many units; record Unknown honestly. Aligns the B2B-distribution topology where the middle party is participant-owner and host-owner at once."
+        },
+        {
+          "id": "ownership.upstream-contract-lifetime",
+          "question": "Is the unit's composition boundary another project's contract, so it inherits that project's lifetime (the Ara-on-Hypernova pattern)?",
+          "notes": "Yes: picard (interop over MF, NF, pilet formats), toolchain-branded wrappers (brands over module-federation), zephyr (serves the MF ecosystem). No: primaries defining their own boundary. From graveyard-illustrations' ownership finding."
+        }
+      ]
+    },
+    {
+      "key": "operations",
+      "title": "Operational model",
+      "attributes": [
+        {
+          "id": "coordination.shared-dependency-governance",
+          "question": "Does avoiding duplicated, conflicting, or broken shared dependencies require standing cross-team version governance (agreed names, ranges, singleton policy, upgrade trains) before and after builds?",
+          "notes": "Canonical guidance id (renamed from operations.shared-dep-governance-required); absorbs buildtime.dep-agreement-before-build. Yes: MF (share-scope governance, documented skew and double-React), NF (singleton plus strictVersion couples framework majors), Piral (shell-owned importmap and dep policy), import-maps (bare-specifier naming plus externals), single-spa (externals convention). Conditional: import maps with scopes (divergence without lockstep). No or NA: iframes, proxy, zones, multi-zones, podium, hyperfrontend, wujie, qiankun, cloudflare-workers, web-fragments, islands (no runtime sharing; duplication cost is a performance-group question)."
+        },
+        {
+          "id": "operations.version-skew-machinery",
+          "question": "Does the unit ship machinery for host-participant version-skew moments (deploy-skew fallback routing, semver renegotiation, manifest polling and refresh, runtime handshake version gate)?",
+          "notes": "Yes: Vercel (skew fallbacks, platform-only), Podium (manifest polling, retries, timeouts), HyperFrontend (handshake version gate), MF (semver negotiation; silent double-load caveat). No: raw iframes (uncoordinated releases silently break the message contract), WC, single-spa core. Conditional where platform-tier-only. The pure connect-time gate is contracts.connect-compat-gate."
+        },
+        {
+          "id": "operations.stack-traces-cross-boundary",
+          "question": "Do a participant's runtime errors and stack traces surface directly in the host document's error stream (same realm), rather than staying behind the composition boundary?",
+          "notes": "Yes: shared-realm units (MF, NF, single-spa, Piral, WC, islands, qiankun). No: cross-origin iframes and HyperFrontend (window.onerror does not cross; browser-guarantee) and server and edge composition (failures live in server logs). No forces in-participant reporting."
+        },
+        {
+          "id": "operations.owner-attribution-builtin",
+          "question": "Does the unit ship a mechanism that attributes a runtime failure to the owning participant (per-unit error boundary, liveness state, or per-fragment fallback-serve signal) without adopter-built tagging?",
+          "notes": "Yes: Piral (per-component containment), Podium and SSI (fallbacks), HyperFrontend (typed relationship failures). No: web components (deliberate per-team tagging required), MF, import maps. Conditional: single-spa (lifecycle-phase only, SKIP_BECAUSE_BROKEN). Distinct from containment (isolation group): this is who gets paged."
+        },
+        {
+          "id": "operations.cross-journey-correlation-diy",
+          "question": "Does correlating one user journey across the composition boundary require adopter-implemented correlation IDs because no shared runtime context spans the boundary?",
+          "notes": "Yes: reverse-proxy (correlation discipline), multi-zones, iframes, HyperFrontend, edge and server composition (multi-tier logs). No: shared-realm units (one APM agent sees the whole page). NA: single-deploy baselines and islands (nothing to correlate across)."
+        },
+        {
+          "id": "operations.deploy-inventory-firstparty",
+          "question": "Can an operator enumerate which participant versions are live per environment through a first-party surface (dashboard, registry, manifest, or the map itself)?",
+          "notes": "Yes: Zephyr (Mission Control), OC registry, import-map family (the map is the inventory), multi-zones dashboard. No: raw MF (what-is-deployed-where is adopter-built or third-party: the MF-vs-Zephyr fight), WC. Keep distinct from runtime telemetry (governance.usage-monitoring)."
+        },
+        {
+          "id": "operations.first-party-debug-tooling",
+          "question": "Does a first-party runtime debugging surface exist for the composition (browser devtools extension or built-in debug UI)?",
+          "notes": "Yes: MF (Chrome DevTools), micro-app (chrome plugin), Native Federation (read-only panel), Zephyr (Chromium-only extension), HyperFrontend (hf dev). Conditional: single-spa (import-map-overrides is ecosystem lineage, not platform). No: most server, edge, iframe, WC units."
+        },
+        {
+          "id": "operations.local-composed-dev-firstparty",
+          "question": "Does first-party tooling run the fully composed experience on a developer machine (dev proxy, shell emulator, local registry or dev mode)?",
+          "notes": "Yes: multi-zones (microfrontends proxy), Piral (pilet debug plus kras mocking), OC (local:true), HyperFrontend. Conditional: import maps (ecosystem overrides tooling). No: edge-side, its stated weakest operational point."
+        },
+        {
+          "id": "operations.composition-tier-local-parity",
+          "question": "Can the production composition mechanism itself execute on a developer laptop without vendor infrastructure or simulators (dev-prod parity of the composition tier)?",
+          "notes": "No: edge-side (Varnish and CDN PoP require containers or vendor simulators). Conditional: Cloudflare VMFE (wrangler-local), Vercel (OSS rewrites yes; platform skew and preview routing no). Yes: browser-composed and Node-composed families."
+        },
+        {
+          "id": "operations.standalone-participant-dev",
+          "question": "Can a participant be developed and run standalone, without the host or composer running, via a documented mechanism (mocked context defaults, emulator package)?",
+          "notes": "Yes: Podium (.defaults() context), Piral (emulator), qiankun and micro-app sub-apps, iframes and zones (normal apps). Conditional: MF remotes (authoring choice), Luigi (embed-only degrades: no routing, context, UX services)."
+        },
+        {
+          "id": "operations.composed-test-utilities",
+          "question": "Does the unit ship first-party utilities for testing the composed system (integration and e2e helpers, routing validation, emulator-backed tests)?",
+          "notes": "Yes: multi-zones (validateRouting, middleware test utils, published JSON schema), Cloudflare VMFE (vitest-pool-workers integration tests). Conditional: Piral (emulator plus kras). No: nearly all others; the e2e story is an evidence gap across dossiers, not parity."
+        },
+        {
+          "id": "operations.deploy-time-contract-verification",
+          "question": "Does anything verify at build or deploy time that a participant still satisfies its consumers' contracts (beyond editor-time type hints)?",
+          "notes": "No: MF (explicit split: d.ts hinting yes, deploy-time enforcement no; types can lag runtime). Unknown: Zephyr (rollback compatibility check unevidenced). Conditional: Bit (Ripple rebuilds dependents, cloud-only), HyperFrontend (build-time downgrade signal only), multi-zones (routing schema only)."
+        },
+        {
+          "id": "operations.single-sponsor-concentration",
+          "question": "Is maintenance concentrated in a single company or single dominant individual, such that losing that one sponsor plausibly stalls the project?",
+          "notes": "Absorbs ownership.solution-sponsor-diversity (inverted). Yes: wujie (Tencent, one maintainer, prior stall), micro-app (JD), qiankun (Ant), MF (ByteDance plus one lead), Luigi (SAP), HyperFrontend (one maintainer; dossier says must not be softened), web-fragments (Cloudflare-sponsored), picard, Hypernova pattern (archive tied to sponsor exit). No: browser-standard strategies (iframes, WC, import maps: multi-vendor platform)."
+        },
+        {
+          "id": "operations.mode-forked-operations",
+          "question": "Does official documentation define two or more configuration modes or version lines that change this unit's answers to isolation or runtime attributes, requiring it to be scored as distinct configurations?",
+          "notes": "Decidability: tightened to documented modes that flip other cells. Yes: micro-app (with vs iframe sandbox), qiankun (v2 vs v3-RC, Proxy vs snapshot), wujie (three run modes plus degrade tier), Luigi (iframe vs WC). No: single-config units. A concrete cognitive-overhead cause; four dossiers requested per-mode scoring."
+        }
+      ]
+    }
+  ]
+}

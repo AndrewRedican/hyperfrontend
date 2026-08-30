@@ -40,3 +40,5 @@ apps/docs-site/.generated/
 **/CHANGELOG.md
 
 .nx/self-healing
+# Research notes kept verbatim as written (apps/docs-site/notes)
+apps/docs-site/notes/

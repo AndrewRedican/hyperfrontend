@@ -214,3 +214,49 @@
     }
   }
 }
+
+/*
+ * Print presentation for generated decision records.
+ *
+ * A record is meant to be taken into an architecture discussion, so printing
+ * one drops the site chrome, opens every collapsed section, and keeps a card
+ * from being split across a page break.
+ */
+@media print {
+  header,
+  footer,
+  aside,
+  nav {
+    display: none !important;
+  }
+
+  main {
+    max-width: none !important;
+    padding: 0 !important;
+  }
+
+  .decision-record {
+    font-size: 11pt;
+  }
+
+  .decision-record section {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .decision-record [aria-expanded='false'] + div {
+    display: block !important;
+  }
+
+  /* collapsed record sections and topology bands are hidden, not absent, so print restores them */
+  .decision-record [hidden] {
+    display: block !important;
+  }
+
+  .decision-record a[href^='http']::after {
+    content: ' (' attr(href) ')';
+    font-size: 8pt;
+    color: #64748b;
+    word-break: break-all;
+  }
+}

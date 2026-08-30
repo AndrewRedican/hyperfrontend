@@ -21,6 +21,21 @@ export default function DocsPage() {
         Set up hyperfrontend and create your first micro-frontend feature in minutes.
       </p>
 
+      {/* why: the cheapest failure to prevent is a team adopting an architecture that does not fit them, so the fit check sits above installation rather than in the sidebar competing as a destination */}
+      <Link
+        href="/docs/is-hyperfrontend-right-for-you"
+        className="mt-8 flex items-start gap-4 rounded-xl border border-primary-200 bg-primary-50/60 p-5 transition-colors hover:border-primary-400 hover:bg-primary-50 dark:border-primary-900 dark:bg-primary-950/30 dark:hover:border-primary-700 dark:hover:bg-primary-950/50"
+      >
+        <CompassIcon className="mt-0.5 h-6 w-6 shrink-0 text-primary-600 dark:text-primary-400" />
+        <span className="block">
+          <span className="block font-semibold text-slate-900 dark:text-white">First, check this is the right fit</span>
+          <span className="mt-1 block text-sm text-slate-600 dark:text-slate-400">
+            Ten minutes now beats a rewrite later. Answer a few questions about your systems and teams to find out whether HyperFrontend
+            suits your situation, and what fits better if it does not.
+          </span>
+        </span>
+      </Link>
+
       {/* Prerequisites */}
       <section className="mt-12">
         <H2 className="text-2xl font-bold text-slate-900 dark:text-white">Prerequisites</H2>
@@ -135,6 +150,15 @@ export default function DocsPage() {
 }
 
 type CheckIconProps = { className?: string }
+
+function CompassIcon({ className }: CheckIconProps) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" strokeWidth={1.6} stroke="currentColor" aria-hidden="true">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Z" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="m14.6 9.4-1.5 4.1-4.1 1.5 1.5-4.1 4.1-1.5Z" />
+    </svg>
+  )
+}
 
 function CheckIcon({ className }: CheckIconProps) {
   return (

@@ -1,0 +1,2229 @@
+{
+ "unit": "bit",
+ "dossier": "research/solutions/bit.md",
+ "verifiedAt": "2026-08-28",
+ "verdicts": [
+  {
+   "id": "unit.type.adoptable-implementation",
+   "value": "yes",
+   "note": "product (OSS toolchain plus commercial cloud); positioned as an alternative strategy to runtime MFE, but concretely adoptable",
+   "claimType": "officially-supported",
+   "confidence": "high",
+   "evidence": [
+    "What it is",
+    "Family mapping"
+   ]
+  },
+  {
+   "id": "unit.availability.installable-today",
+   "value": "yes",
+   "claimType": "officially-supported",
+   "confidence": "high",
+   "evidence": [
+    "Status header"
+   ]
+  },
+  {
+   "id": "unit.availability.stable-line-shipped",
+   "value": "yes",
+   "note": "CLI 1.13.x line, frequent releases, well past 1.0",
+   "claimType": "officially-supported",
+   "confidence": "high",
+   "evidence": [
+    "Status header",
+    "Sources [E2]"
+   ]
+  },
+  {
+   "id": "unit.availability.single-current-line",
+   "value": "yes",
+   "note": "one 1.13.x line; no dormant stable beside an unshipped successor",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "Status header",
+    "Sources [E2]"
+   ]
+  },
+  {
+   "id": "unit.availability.planned-capability-claims",
+   "value": "no",
+   "note": "all cited capabilities ship today; no roadmap-only edition advertised",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "Editions and commercial layer"
+   ]
+  },
+  {
+   "id": "unit.maintenance.release-within-12mo",
+   "value": "yes",
+   "note": "v1.13.177 2026-05-12; bvm 2026-08-09",
+   "claimType": "officially-supported",
+   "confidence": "high",
+   "evidence": [
+    "Status header",
+    "Sources [E2]"
+   ]
+  },
+  {
+   "id": "unit.maintenance.commit-within-6mo",
+   "value": "yes",
+   "note": "repo activity through 2026-08-11",
+   "claimType": "officially-supported",
+   "confidence": "high",
+   "evidence": [
+    "Status header",
+    "Sources [E1]"
+   ]
+  },
+  {
+   "id": "unit.maintenance.multi-maintainer",
+   "value": "yes",
+   "note": "commits since 2025-08: David First 30, Gilad Shoham 13, Luv Kapur 13, Zoltan Kochan 12",
+   "claimType": "inference",
+   "confidence": "high",
+   "evidence": [
+    "https://api.github.com/repos/teambit/bit/commits?since=2025-08-28"
+   ]
+  },
+  {
+   "id": "unit.maintenance.org-steward",
+   "value": "yes",
+   "note": "Cocycles Ltd, trading as Bit / teambit, employs the maintainers",
+   "claimType": "officially-supported",
+   "confidence": "high",
+   "evidence": [
+    "Status header"
+   ]
+  },
+  {
+   "id": "unit.maintenance.adoption-outside-sponsor",
+   "value": "unknown",
+   "note": "dossier evidences only vendor self-report of its own platform; external production adopters undocumented",
+   "claimType": "inference",
+   "confidence": "low",
+   "evidence": [
+    "Deployment",
+    "Sources [E10]"
+   ]
+  },
+  {
+   "id": "unit.maintenance.adoption-scale-10k",
+   "value": "no",
+   "note": "weekly npm 2026-08-27: bit-bin 1224, @teambit/bvm 2098, harmony 3284, legacy 5424; bvm distribution may bypass npm",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "https://api.npmjs.org/downloads/point/last-week/bit-bin"
+   ]
+  },
+  {
+   "id": "unit.license.osi-core",
+   "value": "yes",
+   "note": "Apache-2.0 core",
+   "claimType": "officially-supported",
+   "confidence": "high",
+   "evidence": [
+    "Editions and commercial layer",
+    "Sources [E1]"
+   ]
+  },
+  {
+   "id": "unit.editions.commercial-tier",
+   "value": "yes",
+   "note": "Bit Cloud: hosted scopes, Ripple CI, registry, governance",
+   "claimType": "officially-supported",
+   "confidence": "high",
+   "evidence": [
+    "Editions and commercial layer"
+   ]
+  },
+  {
+   "id": "unit.editions.oss-self-sufficient",
+   "value": "conditional",
+   "condition": "OSS core builds, versions, exports, and serves bare scopes; self-hosting is bare-bones (no permissions, no registry, DIY npm publishing) and Ripple CI plus governance are Bit Cloud only",
+   "claimType": "officially-supported",
+   "confidence": "high",
+   "evidence": [
+    "Operational model",
+    "Sources [E8]"
+   ]
+  },
+  {
+   "id": "hosting.operator",
+   "value": "yes",
+   "note": "Bit Cloud hosted scopes and component registry",
+   "claimType": "officially-supported",
+   "confidence": "high",
+   "evidence": [
+    "Editions and commercial layer"
+   ]
+  },
+  {
+   "id": "hosting.control-plane",
+   "value": "conditional",
+   "condition": "self-hosted bare scopes keep component records on adopter infrastructure; Ripple CI, registry, and governance run only on vendor SaaS",
+   "claimType": "officially-supported",
+   "confidence": "high",
+   "evidence": [
+    "Operational model",
+    "Editions and commercial layer"
+   ]
+  },
+  {
+   "id": "registry.deployable-feature",
+   "value": "conditional",
+   "condition": "Bit Cloud component registry with semver history and metadata; entries are code packages, not runtime artifacts",
+   "claimType": "officially-supported",
+   "confidence": "medium",
+   "evidence": [
+    "Editions and commercial layer"
+   ]
+  },
+  {
+   "id": "governance.rollback",
+   "value": "no",
+   "note": "reverting means repinning a prior component version and rebuilding every consuming app",
+   "claimType": "inference",
+   "confidence": "high",
+   "evidence": [
+    "Runtime coupling",
+    "Deployment"
+   ]
+  },
+  {
+   "id": "governance.usage-monitoring",
+   "value": "conditional",
+   "condition": "Bit Cloud only (hosted scopes expose component usage and dependents); OSS scopes have none",
+   "note": "edition split rests on a pre-2026 vendor deck",
+   "claimType": "officially-supported",
+   "confidence": "medium",
+   "evidence": [
+    "Security and trust",
+    "Sources [E9]"
+   ]
+  },
+  {
+   "id": "governance.rbac",
+   "value": "conditional",
+   "condition": "Bit Cloud (RBAC, SSO-SAML, audit logs); OSS scopes have no permissions at all, maintainers advise a reverse proxy",
+   "claimType": "officially-supported",
+   "confidence": "high",
+   "evidence": [
+    "Security and trust",
+    "Sources [E8]",
+    "Sources [E9]"
+   ]
+  },
+  {
+   "id": "composition.kind.js-module-graph",
+   "value": "yes",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "Composition mechanics"
+   ]
+  },
+  {
+   "id": "composition.kind.lifecycle-contract",
+   "value": "no",
+   "note": "components are plain modules; Harmony aspects use DI providers, not mount/unmount lifecycles",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "Composition mechanics",
+    "Sources [E16]"
+   ]
+  },
+  {
+   "id": "composition.kind.custom-element",
+   "value": "no",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "Composition mechanics"
+   ]
+  },
+  {
+   "id": "composition.kind.html-fragment-endpoint",
+   "value": "no",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "Composition mechanics"
+   ]
+  },
+  {
+   "id": "composition.kind.html-entry",
+   "value": "no",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "Composition mechanics"
+   ]
+  },
+  {
+   "id": "composition.kind.http-route-partition",
+   "value": "no",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "Composition mechanics"
+   ]
+  },
+  {
+   "id": "composition.kind.build-artifact",
+   "value": "yes",
+   "note": "versioned component packages consumed by other builds",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "Composition mechanics",
+    "What it is"
+   ]
+  },
+  {
+   "id": "composition.kind.inherits-underlying",
+   "value": "no",
+   "note": "defines its own package/build boundary; the Module Federation pairing is an optional adjacency",
+   "claimType": "inference",
+   "confidence": "high",
+   "evidence": [
+    "Family mapping"
+   ]
+  },
+  {
+   "id": "composition.phase.deploy-unit-per-participant",
+   "value": "no",
+   "note": "components version independently but reach users only inside the composed app build",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "What it is",
+    "Ambiguities and decomposition candidates"
+   ]
+  },
+  {
+   "id": "composition.exec.client-composed",
+   "value": "no",
+   "note": "assembly happens before deployment, not in the browser",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "What it is"
+   ]
+  },
+  {
+   "id": "buildtime.host-build-consumes-participants",
+   "value": "yes",
+   "note": "the composed app build consumes component packages; a broken participant breaks the consumer build",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "Build-time coupling"
+   ]
+  },
+  {
+   "id": "buildtime.host-integrates-buildless",
+   "value": "no",
+   "note": "the host is the Bit-built composed app; adoption is build tooling by definition",
+   "claimType": "inference",
+   "confidence": "high",
+   "evidence": [
+    "What it is"
+   ]
+  },
+  {
+   "id": "buildtime.participant-tooling-required",
+   "value": "yes",
+   "note": "components are built by Bit envs/CLI in isolated capsules",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "Build-time coupling",
+    "Isolation and failure containment"
+   ]
+  },
+  {
+   "id": "buildtime.bundler-family-restricted",
+   "value": "no",
+   "note": "Bit envs own the component build; no external bundler allowlist applies",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "Build-time coupling"
+   ]
+  },
+  {
+   "id": "buildtime.share-metadata-emitted",
+   "value": "no",
+   "note": "dependencies resolve at install/build; no composition-time negotiation metadata",
+   "claimType": "inference",
+   "confidence": "high",
+   "evidence": [
+    "Composition mechanics"
+   ]
+  },
+  {
+   "id": "buildtime.shared-dep-change-rebuilds-center",
+   "value": "yes",
+   "note": "every dependency change ships via composed-app rebuild",
+   "claimType": "inference",
+   "confidence": "high",
+   "evidence": [
+    "Build-time coupling"
+   ]
+  },
+  {
+   "id": "buildtime.central-input-for-participant-build",
+   "value": "yes",
+   "note": "component builds require workspace/scope objects",
+   "claimType": "officially-supported",
+   "confidence": "high",
+   "evidence": [
+    "What it is",
+    "Sources [E7]"
+   ]
+  },
+  {
+   "id": "buildtime.asset-prefix-coordination",
+   "value": "no",
+   "note": "one build owns asset naming; nothing served as separate colliding artifacts",
+   "claimType": "inference",
+   "confidence": "high",
+   "evidence": [
+    "Composition mechanics"
+   ]
+  },
+  {
+   "id": "runtime.shared-js-realm",
+   "value": "yes",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "Composition mechanics"
+   ]
+  },
+  {
+   "id": "runtime.patched-globals-layer",
+   "value": "no",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "Composition mechanics"
+   ]
+  },
+  {
+   "id": "runtime.primordials-blast-radius",
+   "value": "yes",
+   "note": "fully shared realm; nothing intercepts built-in mutation",
+   "claimType": "inference",
+   "confidence": "high",
+   "evidence": [
+    "Composition mechanics",
+    "Isolation and failure containment"
+   ]
+  },
+  {
+   "id": "runtime.concurrent-participants",
+   "value": "yes",
+   "note": "different teams' components render simultaneously as compiled-in modules of one app",
+   "claimType": "inference",
+   "confidence": "high",
+   "evidence": [
+    "Composition mechanics"
+   ]
+  },
+  {
+   "id": "runtime.multi-router-participants",
+   "value": "na",
+   "note": "components are not URL-owning apps; routing belongs to the composed app",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "Composition mechanics"
+   ]
+  },
+  {
+   "id": "runtime.shared-runtime-library",
+   "value": "conditional",
+   "condition": "Harmony platform apps: aspects require the Harmony DI runtime; plain npm component consumption needs none",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "What it is",
+    "Sources [E16]"
+   ]
+  },
+  {
+   "id": "runtime.central-routing-map",
+   "value": "na",
+   "note": "composition resolved at build; no runtime roster artifact exists",
+   "claimType": "inference",
+   "confidence": "high",
+   "evidence": [
+    "What it is"
+   ]
+  },
+  {
+   "id": "runtime.shared-dep-negotiation",
+   "value": "no",
+   "note": "versions fixed at install/build time",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "Composition mechanics"
+   ]
+  },
+  {
+   "id": "runtime.dep-conflict-surfaces-runtime",
+   "value": "na",
+   "note": "no runtime negotiation exists",
+   "claimType": "inference",
+   "confidence": "high",
+   "evidence": [
+    "Composition mechanics"
+   ]
+  },
+  {
+   "id": "runtime.side-by-side-versions",
+   "value": "conditional",
+   "condition": "package-manager nested resolution can bundle two library versions (bindings only, shared realm stays exposed); framework singletons must converge per app",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "Composition mechanics"
+   ]
+  },
+  {
+   "id": "runtime.global-registration-collision",
+   "value": "no",
+   "note": "module imports; no page-global runtime namespace",
+   "claimType": "inference",
+   "confidence": "high",
+   "evidence": [
+    "Composition mechanics"
+   ]
+  },
+  {
+   "id": "runtime.late-participant-registration",
+   "value": "no",
+   "note": "no first-party runtime injection; the documented MF pairing delegates this to Module Federation",
+   "claimType": "common-pattern",
+   "confidence": "high",
+   "evidence": [
+    "Runtime coupling",
+    "Sources [E14]"
+   ]
+  },
+  {
+   "id": "runtime.loaded-version-hot-swap",
+   "value": "no",
+   "note": "modules fixed at build; new versions arrive via full rebuild and page reload",
+   "claimType": "inference",
+   "confidence": "high",
+   "evidence": [
+    "What it is"
+   ]
+  },
+  {
+   "id": "isolation.document-boundary",
+   "value": "no",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "Composition mechanics"
+   ]
+  },
+  {
+   "id": "isolation.js.virtualized-global",
+   "value": "no",
+   "note": "no simulated global isolation of any kind",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "Isolation and failure containment"
+   ]
+  },
+  {
+   "id": "isolation.dom.virtualized",
+   "value": "no",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "Composition mechanics"
+   ]
+  },
+  {
+   "id": "isolation.css.outbound",
+   "value": "no",
+   "note": "page-global cascade; any scoping comes from the app's own CSS tooling, unenforced by Bit",
+   "claimType": "inference",
+   "confidence": "high",
+   "evidence": [
+    "Composition mechanics"
+   ]
+  },
+  {
+   "id": "isolation.css.inbound",
+   "value": "no",
+   "claimType": "inference",
+   "confidence": "high",
+   "evidence": [
+    "Composition mechanics"
+   ]
+  },
+  {
+   "id": "isolation.resource.main-thread",
+   "value": "no",
+   "claimType": "inference",
+   "confidence": "high",
+   "evidence": [
+    "Composition mechanics"
+   ]
+  },
+  {
+   "id": "isolation.process.crash",
+   "value": "no",
+   "claimType": "inference",
+   "confidence": "high",
+   "evidence": [
+    "Composition mechanics"
+   ]
+  },
+  {
+   "id": "isolation.storage.partition",
+   "value": "no",
+   "note": "one app, one origin, one storage surface",
+   "claimType": "inference",
+   "confidence": "high",
+   "evidence": [
+    "Composition mechanics"
+   ]
+  },
+  {
+   "id": "isolation.origin.host-authority",
+   "value": "no",
+   "note": "components run with the app's full authority; supply-chain trust model",
+   "claimType": "inference",
+   "confidence": "high",
+   "evidence": [
+    "Security and trust"
+   ]
+  },
+  {
+   "id": "isolation.navigation.top-level-guard",
+   "value": "no",
+   "claimType": "inference",
+   "confidence": "high",
+   "evidence": [
+    "Composition mechanics"
+   ]
+  },
+  {
+   "id": "isolation.security.malicious-participant",
+   "value": "no",
+   "note": "vendor model is supply-chain trust: consuming a component is consuming code into your bundle, no runtime sandbox",
+   "claimType": "inference",
+   "confidence": "high",
+   "evidence": [
+    "Security and trust"
+   ]
+  },
+  {
+   "id": "isolation.failure.lifecycle-quarantine",
+   "value": "no",
+   "note": "no load/mount phase or quarantine; failures are ordinary app exceptions",
+   "claimType": "inference",
+   "confidence": "high",
+   "evidence": [
+    "Isolation and failure containment"
+   ]
+  },
+  {
+   "id": "isolation.failure.post-mount-exception",
+   "value": "no",
+   "note": "an exception in one component's code is an exception in the app",
+   "claimType": "inference",
+   "confidence": "high",
+   "evidence": [
+    "Isolation and failure containment"
+   ]
+  },
+  {
+   "id": "isolation.failure.load-fallback",
+   "value": "na",
+   "note": "components are compiled in; no runtime participant fetch can fail",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "What it is"
+   ]
+  },
+  {
+   "id": "isolation.lifecycle.reclaim",
+   "value": "no",
+   "note": "no participant lifecycle; cleanup is whatever the app framework does",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "Composition mechanics"
+   ]
+  },
+  {
+   "id": "isolation.recovery.in-page",
+   "value": "no",
+   "note": "no fresh execution context short of a page reload",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "Composition mechanics"
+   ]
+  },
+  {
+   "id": "isolation.server.process",
+   "value": "no",
+   "note": "full-stack aspects compose into one platform process by default",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "Composition mechanics",
+    "Sources [E16]"
+   ]
+  },
+  {
+   "id": "security.cross-origin-boundary",
+   "value": "no",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "Composition mechanics"
+   ]
+  },
+  {
+   "id": "security.sandbox-attribute-applicable",
+   "value": "no",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "Composition mechanics"
+   ]
+  },
+  {
+   "id": "security.per-participant-csp",
+   "value": "no",
+   "note": "one document, one policy",
+   "claimType": "inference",
+   "confidence": "high",
+   "evidence": [
+    "Composition mechanics"
+   ]
+  },
+  {
+   "id": "security.capability-narrowing",
+   "value": "no",
+   "claimType": "inference",
+   "confidence": "high",
+   "evidence": [
+    "Composition mechanics"
+   ]
+  },
+  {
+   "id": "security.host-dom-reach",
+   "value": "yes",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "Composition mechanics"
+   ]
+  },
+  {
+   "id": "security.host-js-state-reach",
+   "value": "yes",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "Composition mechanics"
+   ]
+  },
+  {
+   "id": "security.untrusted-third-party-viable",
+   "value": "no",
+   "note": "stated trust model is supply-chain: no runtime sandbox between components",
+   "claimType": "inference",
+   "confidence": "high",
+   "evidence": [
+    "Security and trust"
+   ]
+  },
+  {
+   "id": "security.channel-origin-pinning",
+   "value": "na",
+   "note": "communication is in-process calls; no cross-document channel exists",
+   "claimType": "inference",
+   "confidence": "high",
+   "evidence": [
+    "Contracts and communication"
+   ]
+  },
+  {
+   "id": "security.channel-confidentiality",
+   "value": "na",
+   "note": "no message channel exists to encrypt",
+   "claimType": "inference",
+   "confidence": "high",
+   "evidence": [
+    "Contracts and communication"
+   ]
+  },
+  {
+   "id": "security.embedding-authorization",
+   "value": "na",
+   "note": "build-time composition; nothing is embedded at runtime",
+   "claimType": "inference",
+   "confidence": "high",
+   "evidence": [
+    "What it is"
+   ]
+  },
+  {
+   "id": "security.artifact-integrity-verification",
+   "value": "no",
+   "note": "no Bit signing documented; consumers inherit only the package manager's lockfile integrity",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "Security and trust"
+   ]
+  },
+  {
+   "id": "security.delivery-intermediary-trust",
+   "value": "yes",
+   "note": "scope servers and the Bit Cloud registry deliver code consumers execute; publish auth, no signing",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "What it is",
+    "Security and trust"
+   ]
+  },
+  {
+   "id": "security.isolation-escape-hatches",
+   "value": "na",
+   "note": "no isolation mechanism is claimed, so nothing to escape",
+   "claimType": "inference",
+   "confidence": "high",
+   "evidence": [
+    "Security and trust"
+   ]
+  },
+  {
+   "id": "security.composition-injection-surface",
+   "value": "no",
+   "note": "no composition tier interprets content directives",
+   "claimType": "inference",
+   "confidence": "high",
+   "evidence": [
+    "What it is"
+   ]
+  },
+  {
+   "id": "framework.host-framework-agnostic",
+   "value": "conditional",
+   "condition": "React is first-class for the composed app; other-framework envs exist with unverified depth",
+   "claimType": "officially-supported",
+   "confidence": "medium",
+   "evidence": [
+    "Framework requirements"
+   ]
+  },
+  {
+   "id": "framework.participant-framework-agnostic",
+   "value": "conditional",
+   "condition": "Angular/Vue/Node environments exist; maturity far below the first-class React env",
+   "claimType": "officially-supported",
+   "confidence": "medium",
+   "evidence": [
+    "Framework requirements"
+   ]
+  },
+  {
+   "id": "framework.mixed-frameworks-one-page",
+   "value": "unknown",
+   "note": "no verified multi-framework-in-one-shell reference; a single composed app realistically standardizes",
+   "claimType": "inference",
+   "confidence": "low",
+   "evidence": [
+    "Framework requirements"
+   ]
+  },
+  {
+   "id": "framework.per-team-framework-autonomy",
+   "value": "conditional",
+   "condition": "component builds are independent per env, but the consuming app's single build and framework context bind all participants",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "What it is",
+    "Framework requirements"
+   ]
+  },
+  {
+   "id": "framework.same-framework-major-coexistence",
+   "value": "no",
+   "note": "one build resolves one framework major per app",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "Composition mechanics"
+   ]
+  },
+  {
+   "id": "framework.esm-artifact-required",
+   "value": "no",
+   "note": "envs emit whatever formats the package needs",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "Build-time coupling"
+   ]
+  },
+  {
+   "id": "framework.html-document-entry",
+   "value": "no",
+   "note": "participants are packages, not deployed pages",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "Composition mechanics"
+   ]
+  },
+  {
+   "id": "framework.client-library-required",
+   "value": "conditional",
+   "condition": "Harmony aspects depend on the Harmony runtime; plain components are ordinary packages",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "Sources [E16]",
+    "What it is"
+   ]
+  },
+  {
+   "id": "framework.foreign-artifact-no-rebuild",
+   "value": "no",
+   "note": "participation means being built as a Bit component",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "Build-time coupling"
+   ]
+  },
+  {
+   "id": "framework.official-adapters-exist",
+   "value": "no",
+   "note": "React first-class; other framework envs' maintenance depth unknown, under the three-framework bar",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "Framework requirements"
+   ]
+  },
+  {
+   "id": "framework.adapters-track-current-majors",
+   "value": "unknown",
+   "note": "env currency against 2025-2026 framework majors unverified",
+   "claimType": "inference",
+   "confidence": "low",
+   "evidence": [
+    "Framework requirements"
+   ]
+  },
+  {
+   "id": "framework.zero-framework-participant",
+   "value": "yes",
+   "note": "components can be plain JS/TS or Node modules",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "Sources [E16]",
+    "What it is"
+   ]
+  },
+  {
+   "id": "framework.version-floor-imposed",
+   "value": "yes",
+   "note": "participation requires Bit CLI/workspace tooling on a modern Node; exact floor undocumented in dossier",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "Build-time coupling"
+   ]
+  },
+  {
+   "id": "framework.composition-tier-stack-mandated",
+   "value": "conditional",
+   "condition": "composition executes at build time on Node/Bit CLI; production serving has no mandated stack",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "What it is",
+    "Deployment"
+   ]
+  },
+  {
+   "id": "framework.multi-framework-demonstrated",
+   "value": "unknown",
+   "note": "claim exists; no verified official multi-framework composition reference",
+   "claimType": "inference",
+   "confidence": "low",
+   "evidence": [
+    "Framework requirements"
+   ]
+  },
+  {
+   "id": "contracts.formal-descriptor",
+   "value": "no",
+   "note": "contracts are typed package APIs; the Harmony manifest wires aspects but declares no interface schema",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "Contracts and communication"
+   ]
+  },
+  {
+   "id": "contracts.contract-versioned",
+   "value": "yes",
+   "note": "component semver versions the package API",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "What it is"
+   ]
+  },
+  {
+   "id": "contracts.connect-compat-gate",
+   "value": "yes",
+   "note": "sides meet at consumer build: semver resolution plus type-checked compilation gate incompatibilities before ship",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "Contracts and communication",
+    "Build-time coupling"
+   ]
+  },
+  {
+   "id": "contracts.drift-surface",
+   "value": "no",
+   "note": "both sides ship in one composed build; runtime drift is structurally impossible",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "What it is"
+   ]
+  },
+  {
+   "id": "contracts.drift-explicit",
+   "value": "na",
+   "note": "no runtime drift surface exists (see contracts.drift-surface)",
+   "claimType": "inference",
+   "confidence": "high",
+   "evidence": [
+    "What it is"
+   ]
+  },
+  {
+   "id": "contracts.types-shared",
+   "value": "yes",
+   "note": "ordinary package types",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "Contracts and communication"
+   ]
+  },
+  {
+   "id": "contracts.schema-validated-payloads",
+   "value": "no",
+   "note": "compile-time types only; no runtime payload validation",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "Contracts and communication"
+   ]
+  },
+  {
+   "id": "contracts.sync-calls",
+   "value": "yes",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "Contracts and communication"
+   ]
+  },
+  {
+   "id": "contracts.serialized-boundary",
+   "value": "no",
+   "note": "live references cross freely in one realm",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "Contracts and communication"
+   ]
+  },
+  {
+   "id": "contracts.frame-messaging",
+   "value": "no",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "Contracts and communication"
+   ]
+  },
+  {
+   "id": "contracts.builtin-messaging",
+   "value": "no",
+   "note": "cross-feature communication is ordinary in-process calls; DI slots are extension points, not an event bus",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "Contracts and communication"
+   ]
+  },
+  {
+   "id": "contracts.builtin-shared-state",
+   "value": "no",
+   "note": "state management is the app's own affair",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "Contracts and communication"
+   ]
+  },
+  {
+   "id": "contracts.host-push-updates",
+   "value": "no",
+   "note": "context flows via ordinary framework props/calls, nothing solution-provided",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "Contracts and communication"
+   ]
+  },
+  {
+   "id": "contracts.http-request-contract",
+   "value": "no",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "Composition mechanics"
+   ]
+  },
+  {
+   "id": "contracts.server-context-propagation",
+   "value": "na",
+   "note": "no HTTP fragment contract exists",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "Composition mechanics"
+   ]
+  },
+  {
+   "id": "ssr.composed-page",
+   "value": "conditional",
+   "condition": "only via the composed app's own framework SSR (env-dependent); Bit ships no composition tier",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "SSR and delivery"
+   ]
+  },
+  {
+   "id": "ssr.fragment-granularity",
+   "value": "na",
+   "note": "no server composition tier stitches anything",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "SSR and delivery"
+   ]
+  },
+  {
+   "id": "ssr.streaming-assembly",
+   "value": "na",
+   "note": "any streaming is the app framework's, not a composition capability",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "SSR and delivery"
+   ]
+  },
+  {
+   "id": "ssr.participant-internal",
+   "value": "conditional",
+   "condition": "env/app-framework dependent; SSR comes from the chosen framework, not from Bit",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "SSR and delivery"
+   ]
+  },
+  {
+   "id": "ssr.dual-mode-render",
+   "value": "no",
+   "note": "no solution-defined render-mode selection or failover",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "SSR and delivery"
+   ]
+  },
+  {
+   "id": "ssr.no-js-first-paint",
+   "value": "conditional",
+   "condition": "only if the composed app itself SSRs or prerenders (framework-dependent)",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "SSR and delivery"
+   ]
+  },
+  {
+   "id": "ssr.hydration-orchestration",
+   "value": "no",
+   "note": "Bit ships no hydration runtime",
+   "claimType": "inference",
+   "confidence": "high",
+   "evidence": [
+    "SSR and delivery"
+   ]
+  },
+  {
+   "id": "ssr.crawler-indexable",
+   "value": "conditional",
+   "condition": "depends on the composed app's SSR/SSG; Bit adds nothing",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "SSR and delivery"
+   ]
+  },
+  {
+   "id": "ssr.static-prerender",
+   "value": "conditional",
+   "condition": "via the composed app's framework SSG; not a Bit capability",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "SSR and delivery"
+   ]
+  },
+  {
+   "id": "ssr.edge-composition",
+   "value": "na",
+   "note": "nothing composed at request time; no runtime delivery model of its own",
+   "claimType": "inference",
+   "confidence": "high",
+   "evidence": [
+    "SSR and delivery"
+   ]
+  },
+  {
+   "id": "ssr.static-hosting-sufficient",
+   "value": "yes",
+   "note": "no request-time composition compute; backend aspects, where used, are app compute, not composition",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "SSR and delivery",
+    "Deployment"
+   ]
+  },
+  {
+   "id": "ssr.server-loadable-artifact",
+   "value": "yes",
+   "note": "components are npm packages; Harmony aspects ship Node runtimes",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "Sources [E16]",
+    "What it is"
+   ]
+  },
+  {
+   "id": "ssr.rsc-federation",
+   "value": "na",
+   "note": "no runtime boundary to cross; RSC inside the app is the framework's affair",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "What it is"
+   ]
+  },
+  {
+   "id": "ssr.dev-prod-parity",
+   "value": "na",
+   "note": "no composition-layer SSR exists",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "SSR and delivery"
+   ]
+  },
+  {
+   "id": "ssr.html-fragment-contract",
+   "value": "na",
+   "note": "participants are packages, not server-rendered fragments",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "Composition mechanics"
+   ]
+  },
+  {
+   "id": "ux.cross-boundary-soft-nav",
+   "value": "yes",
+   "note": "one composed app; all navigation is ordinary in-app routing",
+   "claimType": "inference",
+   "confidence": "high",
+   "evidence": [
+    "UX implications"
+   ]
+  },
+  {
+   "id": "ux.within-unit-soft-nav",
+   "value": "yes",
+   "claimType": "inference",
+   "confidence": "high",
+   "evidence": [
+    "UX implications"
+   ]
+  },
+  {
+   "id": "ux.cross-boundary-prefetch",
+   "value": "na",
+   "note": "boundary navigation is already soft",
+   "claimType": "inference",
+   "confidence": "high",
+   "evidence": [
+    "UX implications"
+   ]
+  },
+  {
+   "id": "ux.cross-doc-view-transitions",
+   "value": "na",
+   "note": "no cross-document boundary crossings exist",
+   "claimType": "inference",
+   "confidence": "high",
+   "evidence": [
+    "UX implications"
+   ]
+  },
+  {
+   "id": "ux.persistent-shared-chrome",
+   "value": "yes",
+   "note": "single app; chrome stays mounted",
+   "claimType": "inference",
+   "confidence": "high",
+   "evidence": [
+    "UX implications"
+   ]
+  },
+  {
+   "id": "ux.unit-keepalive",
+   "value": "no",
+   "note": "state retention is the app framework's affair; no Bit mechanism",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "UX implications"
+   ]
+  },
+  {
+   "id": "ux.keepalive-scroll-restoration",
+   "value": "na",
+   "note": "no keep-alive mechanism exists",
+   "claimType": "inference",
+   "confidence": "high",
+   "evidence": [
+    "UX implications"
+   ]
+  },
+  {
+   "id": "ux.deep-link-inner-route",
+   "value": "yes",
+   "note": "single-router app: internal routes are top-level URLs inherently",
+   "claimType": "inference",
+   "confidence": "high",
+   "evidence": [
+    "UX implications"
+   ]
+  },
+  {
+   "id": "ux.frame-history-pollution",
+   "value": "no",
+   "note": "single-document composition; no embedded-unit history entries",
+   "claimType": "inference",
+   "confidence": "high",
+   "evidence": [
+    "Composition mechanics"
+   ]
+  },
+  {
+   "id": "ux.overlay-viewport-escape",
+   "value": "yes",
+   "note": "same-DOM composition",
+   "claimType": "inference",
+   "confidence": "high",
+   "evidence": [
+    "Composition mechanics"
+   ]
+  },
+  {
+   "id": "ux.host-overlay-protocol",
+   "value": "na",
+   "note": "same-DOM composition needs none",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "Composition mechanics"
+   ]
+  },
+  {
+   "id": "ux.body-portal-compat",
+   "value": "yes",
+   "note": "same-DOM, non-shadow composition",
+   "claimType": "inference",
+   "confidence": "high",
+   "evidence": [
+    "Composition mechanics"
+   ]
+  },
+  {
+   "id": "ux.natural-layout-flow",
+   "value": "yes",
+   "claimType": "inference",
+   "confidence": "high",
+   "evidence": [
+    "Composition mechanics"
+   ]
+  },
+  {
+   "id": "ux.cross-boundary-focus-mgmt",
+   "value": "yes",
+   "note": "single DOM, one focus order",
+   "claimType": "inference",
+   "confidence": "high",
+   "evidence": [
+    "Composition mechanics"
+   ]
+  },
+  {
+   "id": "ux.screenreader-continuity",
+   "value": "yes",
+   "note": "one document, one accessibility tree",
+   "claimType": "browser-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "Composition mechanics"
+   ]
+  },
+  {
+   "id": "ux.composed-first-paint",
+   "value": "yes",
+   "note": "no client-side composition seams or loader waterfall; loading behavior is the app's own",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "UX implications"
+   ]
+  },
+  {
+   "id": "ux.builtin-loading-ui",
+   "value": "na",
+   "note": "no runtime unit boundaries to indicate",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "UX implications"
+   ]
+  },
+  {
+   "id": "ux.builtin-error-fallback-ui",
+   "value": "no",
+   "note": "error boundaries are app-authored, not solution-provided",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "Isolation and failure containment"
+   ]
+  },
+  {
+   "id": "ux.mount-layout-shift-risk",
+   "value": "no",
+   "note": "content is compiled in; no late-arriving unit content beyond normal app behavior",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "UX implications"
+   ]
+  },
+  {
+   "id": "ux.token-theming-mechanism",
+   "value": "conditional",
+   "condition": "shared token/theme components propagate by construction at build; adopting them stays a per-app convention",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "What it is"
+   ]
+  },
+  {
+   "id": "performance.client-composition-runtime",
+   "value": "no",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "Performance causes"
+   ]
+  },
+  {
+   "id": "performance.pre-render-orchestration-fetch",
+   "value": "no",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "Performance causes"
+   ]
+  },
+  {
+   "id": "performance.sequential-waterfall-default",
+   "value": "no",
+   "note": "single-bundle app",
+   "claimType": "inference",
+   "confidence": "high",
+   "evidence": [
+    "Performance causes"
+   ]
+  },
+  {
+   "id": "performance.first-party-preload-levers",
+   "value": "no",
+   "note": "code-splitting and preload belong to the app bundler, not Bit",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "Performance causes"
+   ]
+  },
+  {
+   "id": "performance.duplicate-framework-same-page",
+   "value": "no",
+   "note": "single build; vendor cites eliminating duplicate framework downloads",
+   "claimType": "officially-supported",
+   "confidence": "high",
+   "evidence": [
+    "Performance causes"
+   ]
+  },
+  {
+   "id": "performance.shared-dependency-dedup",
+   "value": "yes",
+   "note": "one build resolves and instantiates shared dependencies once by construction",
+   "claimType": "inference",
+   "confidence": "high",
+   "evidence": [
+    "Performance causes"
+   ]
+  },
+  {
+   "id": "performance.dedup-failure-on-version-skew",
+   "value": "conditional",
+   "condition": "npm nested resolution can bundle duplicates when ranges conflict; visible at build, never injected post-ship",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "Performance causes"
+   ]
+  },
+  {
+   "id": "performance.per-unit-document-boot",
+   "value": "no",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "Composition mechanics"
+   ]
+  },
+  {
+   "id": "performance.process-memory-overhead",
+   "value": "na",
+   "note": "same-realm strategy",
+   "claimType": "inference",
+   "confidence": "high",
+   "evidence": [
+    "Composition mechanics"
+   ]
+  },
+  {
+   "id": "performance.sandbox-execution-tax",
+   "value": "no",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "Composition mechanics"
+   ]
+  },
+  {
+   "id": "performance.per-message-serialization-cost",
+   "value": "no",
+   "note": "in-realm references",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "Contracts and communication"
+   ]
+  },
+  {
+   "id": "performance.hydration-deferrable-per-unit",
+   "value": "conditional",
+   "condition": "via the app framework's own lazy/deferred rendering; nothing Bit-specific",
+   "claimType": "common-pattern",
+   "confidence": "medium",
+   "evidence": [
+    "SSR and delivery"
+   ]
+  },
+  {
+   "id": "performance.request-time-server-fanout",
+   "value": "na",
+   "note": "build-time composition; nothing fetched per request",
+   "claimType": "inference",
+   "confidence": "high",
+   "evidence": [
+    "SSR and delivery"
+   ]
+  },
+  {
+   "id": "performance.per-unit-http-cacheable",
+   "value": "na",
+   "note": "components are not runtime-served resources",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "Composition mechanics"
+   ]
+  },
+  {
+   "id": "performance.default-content-caching",
+   "value": "na",
+   "note": "no composition tier exists",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "Composition mechanics"
+   ]
+  },
+  {
+   "id": "deployment.host-rebuild-required",
+   "value": "yes",
+   "note": "every consuming app rebuilds and redeploys; vendor frames this as the safety of monoliths",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "Build-time coupling",
+    "Sources [E12]"
+   ]
+  },
+  {
+   "id": "deployment.new-participant-host-change",
+   "value": "yes",
+   "note": "adding a component is a consumer code change plus rebuild",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "Build-time coupling"
+   ]
+  },
+  {
+   "id": "deployment.golive-central-pointer",
+   "value": "yes",
+   "note": "a producer export alone never goes live; the consumer dependency bump plus rebuild gates go-live",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "Build-time coupling",
+    "Deployment"
+   ]
+  },
+  {
+   "id": "deployment.consumer-version-pin",
+   "value": "yes",
+   "note": "npm-style version pinning",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "Build-time coupling"
+   ]
+  },
+  {
+   "id": "deployment.per-user-version-targeting",
+   "value": "no",
+   "note": "no first-party per-user runtime targeting; previews are lane/build-level",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "Deployment",
+    "Ownership topology fit"
+   ]
+  },
+  {
+   "id": "deployment.immutable-version-retention",
+   "value": "yes",
+   "note": "exported component versions are immutable and retained in the scope",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "What it is"
+   ]
+  },
+  {
+   "id": "deployment.cache-busting-operator-burden",
+   "value": "no",
+   "note": "versioned package artifacts; no mutable well-known URL to bust",
+   "claimType": "inference",
+   "confidence": "high",
+   "evidence": [
+    "Deployment"
+   ]
+  },
+  {
+   "id": "deployment.participants-static-artifacts",
+   "value": "yes",
+   "note": "components publish as npm-compatible package artifacts, not running services",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "Build-time coupling"
+   ]
+  },
+  {
+   "id": "deployment.strategy-service-in-path",
+   "value": "no",
+   "note": "scopes/registry sit in the build path, never the production request path",
+   "claimType": "inference",
+   "confidence": "high",
+   "evidence": [
+    "Deployment"
+   ]
+  },
+  {
+   "id": "deployment.runtime-discovery-first-party",
+   "value": "no",
+   "note": "no runtime discovery artifact; resolution happens at build",
+   "claimType": "inference",
+   "confidence": "high",
+   "evidence": [
+    "What it is"
+   ]
+  },
+  {
+   "id": "deployment.single-domain-required",
+   "value": "na",
+   "note": "participants are not runtime-served; the composed app is one ordinary app",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "Composition mechanics"
+   ]
+  },
+  {
+   "id": "deployment.cross-origin-cors-required",
+   "value": "na",
+   "note": "no runtime cross-origin participant loading",
+   "claimType": "inference",
+   "confidence": "high",
+   "evidence": [
+    "Composition mechanics"
+   ]
+  },
+  {
+   "id": "deployment.vendor-hosting-required",
+   "value": "no",
+   "note": "Bit does not dictate the composed app's hosting; only Ripple CI is vendor-bound",
+   "claimType": "officially-supported",
+   "confidence": "high",
+   "evidence": [
+    "Deployment"
+   ]
+  },
+  {
+   "id": "migration.participant.min-level",
+   "value": "conditional",
+   "condition": "migration.trivial-adaptation (wrap existing packages/MFEs as-is via the adoption bridge); target model needs migration.bundler-change (Bit envs own the build); full value trends migration.major-refactor (component-granularity decomposition)",
+   "claimType": "officially-supported",
+   "confidence": "medium",
+   "evidence": [
+    "Migration requirements",
+    "Sources [E5]"
+   ]
+  },
+  {
+   "id": "migration.host.min-level",
+   "value": "conditional",
+   "condition": "migration.trivial-adaptation (consume components as plain npm packages); migration.bundler-change to migration.bootstrap-change (adopt a Bit workspace / Harmony platform as the composed app)",
+   "claimType": "officially-supported",
+   "confidence": "medium",
+   "evidence": [
+    "Migration requirements",
+    "Operational model"
+   ]
+  },
+  {
+   "id": "migration.source-modification-required",
+   "value": "conditional",
+   "condition": "wrap-existing-packages path edits no source (vendor claim, effort unquantified); decomposing into components edits structure",
+   "claimType": "officially-supported",
+   "confidence": "medium",
+   "evidence": [
+    "Migration requirements",
+    "Sources [E5]"
+   ]
+  },
+  {
+   "id": "migration.participant.bootstrap-change-required",
+   "value": "no",
+   "note": "no lifecycle exports; components are modules",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "Composition mechanics"
+   ]
+  },
+  {
+   "id": "migration.participant.internals-refactor-required",
+   "value": "conditional",
+   "condition": "not for wrapping whole packages; extracting reusable components from an app edits internals",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "Migration requirements"
+   ]
+  },
+  {
+   "id": "migration.participant.deployment-change-required",
+   "value": "yes",
+   "note": "components must export to a Bit scope (bare self-hosted or Bit Cloud)",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "What it is",
+    "Operational model"
+   ]
+  },
+  {
+   "id": "migration.participant.extraction-required",
+   "value": "conditional",
+   "condition": "source can stay in place in a workspace, but the feature must become an independently built, exported component with its own dependency graph",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "What it is",
+    "Migration requirements"
+   ]
+  },
+  {
+   "id": "migration.participant.rewrite-required",
+   "value": "conditional",
+   "condition": "full value requires adopting the workspace model, component granularity, and versioning workflow across producing teams",
+   "claimType": "inference",
+   "confidence": "high",
+   "evidence": [
+    "Migration requirements"
+   ]
+  },
+  {
+   "id": "migration.participant.thirdparty-unmodified-viable",
+   "value": "no",
+   "note": "participation is build integration; an untouched already-deployed app cannot join",
+   "claimType": "inference",
+   "confidence": "high",
+   "evidence": [
+    "What it is"
+   ]
+  },
+  {
+   "id": "migration.participant.legacy-no-build-viable",
+   "value": "no",
+   "note": "components require a reproducible modern build",
+   "claimType": "inference",
+   "confidence": "high",
+   "evidence": [
+    "Build-time coupling"
+   ]
+  },
+  {
+   "id": "migration.strangler.incremental",
+   "value": "yes",
+   "note": "documented gradual adoption wraps code and stitches existing MFEs; wrapping effort unquantified",
+   "claimType": "officially-supported",
+   "confidence": "medium",
+   "evidence": [
+    "Migration requirements",
+    "Sources [E5]"
+   ]
+  },
+  {
+   "id": "migration.host.new-infra-tier-required",
+   "value": "conditional",
+   "condition": "a scope server (bare self-hosted or Bit Cloud) is required, in the build path rather than the serving path",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "Operational model"
+   ]
+  },
+  {
+   "id": "migration.host.shell-takeover-required",
+   "value": "conditional",
+   "condition": "no for consuming components in an existing app; Harmony platform adoption re-roots the app under the aspect model",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "What it is",
+    "Sources [E16]"
+   ]
+  },
+  {
+   "id": "migration.exit.participants-standalone",
+   "value": "no",
+   "note": "components are packages, not runnable applications",
+   "claimType": "inference",
+   "confidence": "high",
+   "evidence": [
+    "Composition mechanics"
+   ]
+  },
+  {
+   "id": "migration.path.from-incumbent-format",
+   "value": "yes",
+   "note": "documented gradual-adoption path stitches existing microfrontends into a Harmony platform",
+   "claimType": "officially-supported",
+   "confidence": "medium",
+   "evidence": [
+    "Runtime coupling",
+    "Sources [E5]"
+   ]
+  },
+  {
+   "id": "migration.forced-remigration-pending",
+   "value": "no",
+   "note": "1.13.x line active; the AI-workspace marketing pivot announces no format break",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "Status header"
+   ]
+  },
+  {
+   "id": "migration.permanent-viability",
+   "value": "yes",
+   "note": "vendor runs its own platform on it (self-report: 320+ features, ~3h deploys) and positions it as permanent",
+   "claimType": "officially-supported",
+   "confidence": "medium",
+   "evidence": [
+    "Deployment",
+    "Sources [E10]"
+   ]
+  },
+  {
+   "id": "ownership.single-team-endorsed",
+   "value": "unknown",
+   "note": "dossier records no explicit statement endorsing or redirecting the single-team case",
+   "claimType": "inference",
+   "confidence": "low",
+   "evidence": [
+    "What it is"
+   ]
+  },
+  {
+   "id": "ownership.code-boundary-ownership",
+   "value": "yes",
+   "note": "team-owned scopes; ownership encoded in the component ID",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "Ownership topology fit"
+   ]
+  },
+  {
+   "id": "ownership.deploy-schedule-ownership",
+   "value": "no",
+   "note": "consumer rebuild gates when changes reach production users",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "Build-time coupling"
+   ]
+  },
+  {
+   "id": "ownership.runtime-operational-ownership",
+   "value": "no",
+   "note": "components execute inside the consuming app's runtime",
+   "claimType": "inference",
+   "confidence": "high",
+   "evidence": [
+    "Composition mechanics"
+   ]
+  },
+  {
+   "id": "ownership.external-participant",
+   "value": "no",
+   "note": "an external component is npm-style supply chain, never a distinct security principal",
+   "claimType": "inference",
+   "confidence": "high",
+   "evidence": [
+    "Security and trust"
+   ]
+  },
+  {
+   "id": "ownership.participant-unmodifiable-host",
+   "value": "no",
+   "note": "the host must be a Bit-built or npm-consuming build, not a one-tag page",
+   "claimType": "inference",
+   "confidence": "high",
+   "evidence": [
+    "What it is"
+   ]
+  },
+  {
+   "id": "ownership.distrusted-cadence",
+   "value": "yes",
+   "note": "producers export at will; consumer pinning insulates (insulation, not runtime skew tolerance)",
+   "claimType": "inference",
+   "confidence": "high",
+   "evidence": [
+    "Deployment",
+    "Build-time coupling"
+   ]
+  },
+  {
+   "id": "ownership.uncoordinated-upgrades",
+   "value": "no",
+   "note": "components share each consuming app's resolution; framework majors converge per app",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "Composition mechanics"
+   ]
+  },
+  {
+   "id": "ownership.onboarding-without-central-owner",
+   "value": "no",
+   "note": "the consuming app's owners must add the dependency; publish alone changes nothing",
+   "claimType": "inference",
+   "confidence": "high",
+   "evidence": [
+    "Build-time coupling"
+   ]
+  },
+  {
+   "id": "ownership.platform-team-role-required",
+   "value": "yes",
+   "note": "the composed platform app, shared envs, and scope hosting need standing owners",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "What it is",
+    "Operational model"
+   ]
+  },
+  {
+   "id": "ownership.non-developer-composition",
+   "value": "no",
+   "claimType": "inference",
+   "confidence": "high",
+   "evidence": [
+    "What it is"
+   ]
+  },
+  {
+   "id": "ownership.participant-bytes-verbatim",
+   "value": "no",
+   "note": "the consuming build re-bundles, transforms, and may patch component code; no as-shipped byte guarantee",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "Composition mechanics"
+   ]
+  },
+  {
+   "id": "ownership.nested-host-seat",
+   "value": "yes",
+   "note": "components consume components; the dependency graph is the core model",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "What it is"
+   ]
+  },
+  {
+   "id": "ownership.upstream-contract-lifetime",
+   "value": "no",
+   "note": "defines its own composition boundary",
+   "claimType": "inference",
+   "confidence": "high",
+   "evidence": [
+    "Family mapping"
+   ]
+  },
+  {
+   "id": "coordination.shared-dependency-governance",
+   "value": "yes",
+   "note": "cross-team env/dependency-policy alignment prevents nested duplicates and peer conflicts; breakage surfaces at consumer build",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "Performance causes",
+    "Build-time coupling"
+   ]
+  },
+  {
+   "id": "operations.version-skew-machinery",
+   "value": "na",
+   "note": "no runtime skew surface; Ripple propagates changes at build (cloud-only)",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "What it is",
+    "Sources [E6]"
+   ]
+  },
+  {
+   "id": "operations.stack-traces-cross-boundary",
+   "value": "yes",
+   "note": "one realm, one error stream",
+   "claimType": "inference",
+   "confidence": "high",
+   "evidence": [
+    "Composition mechanics"
+   ]
+  },
+  {
+   "id": "operations.owner-attribution-builtin",
+   "value": "no",
+   "note": "no per-component runtime attribution; failures are ordinary app exceptions",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "Isolation and failure containment"
+   ]
+  },
+  {
+   "id": "operations.cross-journey-correlation-diy",
+   "value": "no",
+   "note": "one APM agent sees the whole app",
+   "claimType": "inference",
+   "confidence": "high",
+   "evidence": [
+    "Composition mechanics"
+   ]
+  },
+  {
+   "id": "operations.deploy-inventory-firstparty",
+   "value": "conditional",
+   "condition": "component versions per app live in workspace/lockfile and Bit Cloud; per-environment live-deploy inventory is the app pipeline's affair",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "Operational model"
+   ]
+  },
+  {
+   "id": "operations.first-party-debug-tooling",
+   "value": "conditional",
+   "condition": "workspace dev UI inspects components (previews, dependency graphs); no composed-runtime debug surface",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "Operational model"
+   ]
+  },
+  {
+   "id": "operations.local-composed-dev-firstparty",
+   "value": "yes",
+   "note": "the composed app builds and runs locally by construction; workspace dev server included",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "What it is",
+    "Operational model"
+   ]
+  },
+  {
+   "id": "operations.composition-tier-local-parity",
+   "value": "yes",
+   "note": "the build is the composition and runs on any laptop; only Ripple CI is cloud-bound",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "What it is",
+    "Sources [E6]"
+   ]
+  },
+  {
+   "id": "operations.standalone-participant-dev",
+   "value": "yes",
+   "note": "isolated capsule builds and workspace component previews",
+   "claimType": "officially-supported",
+   "confidence": "high",
+   "evidence": [
+    "Isolation and failure containment",
+    "Operational model"
+   ]
+  },
+  {
+   "id": "operations.composed-test-utilities",
+   "value": "no",
+   "note": "per-component capsule testing exists; no composed-system e2e utilities documented",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "Operational model"
+   ]
+  },
+  {
+   "id": "operations.deploy-time-contract-verification",
+   "value": "conditional",
+   "condition": "Ripple CI rebuilds and verifies dependents on export; Bit Cloud only",
+   "claimType": "officially-supported",
+   "confidence": "high",
+   "evidence": [
+    "Sources [E6]",
+    "Editions and commercial layer"
+   ]
+  },
+  {
+   "id": "operations.single-sponsor-concentration",
+   "value": "yes",
+   "note": "one vendor company (Cocycles/teambit); losing it plausibly stalls the project",
+   "claimType": "inference",
+   "confidence": "high",
+   "evidence": [
+    "Status header"
+   ]
+  },
+  {
+   "id": "operations.mode-forked-operations",
+   "value": "no",
+   "note": "the OSS-vs-Cloud fork changes governance rows only, not isolation or runtime answers",
+   "claimType": "inference",
+   "confidence": "high",
+   "evidence": [
+    "Editions and commercial layer"
+   ]
+  }
+ ]
+}

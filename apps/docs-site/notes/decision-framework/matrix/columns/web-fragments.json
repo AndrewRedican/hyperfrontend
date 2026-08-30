@@ -1,0 +1,2194 @@
+{
+ "unit": "web-fragments",
+ "dossier": "research/solutions/web-fragments.md",
+ "verifiedAt": "2026-08-28",
+ "verdicts": [
+  {
+   "id": "unit.type.adoptable-implementation",
+   "value": "yes",
+   "claimType": "officially-supported",
+   "confidence": "high",
+   "evidence": [
+    "What it is"
+   ]
+  },
+  {
+   "id": "unit.availability.installable-today",
+   "value": "yes",
+   "note": "available-immature: npm package, MIT, explicitly in beta.",
+   "claimType": "officially-supported",
+   "confidence": "high",
+   "evidence": [
+    "Availability"
+   ]
+  },
+  {
+   "id": "unit.availability.stable-line-shipped",
+   "value": "no",
+   "note": "0.8.x, explicitly in beta; no 1.0 or semver commitment.",
+   "claimType": "officially-supported",
+   "confidence": "high",
+   "evidence": [
+    "Availability",
+    "Version / release cadence"
+   ]
+  },
+  {
+   "id": "unit.availability.single-current-line",
+   "value": "yes",
+   "note": "Single 0.8.x line; companion reframed package frozen, its code absorbed into web-fragments.",
+   "claimType": "inference",
+   "confidence": "high",
+   "evidence": [
+    "Version / release cadence"
+   ]
+  },
+  {
+   "id": "unit.availability.planned-capability-claims",
+   "value": "yes",
+   "note": "Dependency reuse and ShadowRealm adoption are roadmap items in maintainer talks only.",
+   "claimType": "officially-supported",
+   "confidence": "medium",
+   "evidence": [
+    "Build-time coupling",
+    "Operational model"
+   ]
+  },
+  {
+   "id": "unit.maintenance.release-within-12mo",
+   "value": "yes",
+   "note": "0.8.2 on 2025-11-06, barely inside the window; nothing since.",
+   "claimType": "officially-supported",
+   "confidence": "high",
+   "evidence": [
+    "Version / release cadence"
+   ]
+  },
+  {
+   "id": "unit.maintenance.commit-within-6mo",
+   "value": "conditional",
+   "condition": "counting the docs-only 2026-03-09 commit: yes; counting code commits or releases: no",
+   "claimType": "inference",
+   "confidence": "high",
+   "evidence": [
+    "Status (Aug 2026)"
+   ]
+  },
+  {
+   "id": "unit.maintenance.multi-maintainer",
+   "value": "unknown",
+   "note": "Minar-led, 570 total commits; per-author trailing-12mo breakdown unchecked.",
+   "claimType": "inference",
+   "confidence": "low",
+   "evidence": [
+    "Operational model"
+   ]
+  },
+  {
+   "id": "unit.maintenance.org-steward",
+   "value": "conditional",
+   "condition": "Cloudflare sponsorship stated and current; observed maintenance activity stalled since 2026-03",
+   "claimType": "officially-supported",
+   "confidence": "high",
+   "evidence": [
+    "Operational model"
+   ]
+  },
+  {
+   "id": "unit.maintenance.adoption-outside-sponsor",
+   "value": "unknown",
+   "note": "Only Cloudflare-internal production use documented; independent adopters unverified.",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "Operational model"
+   ]
+  },
+  {
+   "id": "unit.maintenance.adoption-scale-10k",
+   "value": "yes",
+   "note": "npm API: 12,913 weekly (2026-08-21..27), 54,475 last month; just above the bar.",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "https://api.npmjs.org/downloads/point/last-week/web-fragments"
+   ]
+  },
+  {
+   "id": "unit.license.osi-core",
+   "value": "yes",
+   "claimType": "officially-supported",
+   "confidence": "high",
+   "evidence": [
+    "Availability"
+   ]
+  },
+  {
+   "id": "unit.editions.commercial-tier",
+   "value": "no",
+   "claimType": "officially-supported",
+   "confidence": "high",
+   "evidence": [
+    "Editions and commercial layer"
+   ]
+  },
+  {
+   "id": "unit.editions.oss-self-sufficient",
+   "value": "yes",
+   "note": "The single MIT package is the whole product.",
+   "claimType": "officially-supported",
+   "confidence": "high",
+   "evidence": [
+    "Editions and commercial layer"
+   ]
+  },
+  {
+   "id": "hosting.operator",
+   "value": "no",
+   "note": "Sponsorship, not hosting; gateway self-run on any Node or Web Fetch runtime.",
+   "claimType": "inference",
+   "confidence": "high",
+   "evidence": [
+    "Editions and commercial layer",
+    "Deployment"
+   ]
+  },
+  {
+   "id": "hosting.control-plane",
+   "value": "yes",
+   "note": "Gateway registry is adopter-run code/config; no vendor SaaS anywhere.",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "Composition mechanics",
+    "Deployment"
+   ]
+  },
+  {
+   "id": "registry.deployable-feature",
+   "value": "no",
+   "note": "registerFragment holds routes and endpoints only; no version history or artifact registry.",
+   "claimType": "inference",
+   "confidence": "high",
+   "evidence": [
+    "Composition mechanics"
+   ]
+  },
+  {
+   "id": "governance.rollback",
+   "value": "no",
+   "note": "Same-URL endpoints; rollback is redeploying old content at the fragment endpoint.",
+   "claimType": "inference",
+   "confidence": "high",
+   "evidence": [
+    "Deployment"
+   ]
+  },
+  {
+   "id": "governance.usage-monitoring",
+   "value": "no",
+   "claimType": "inference",
+   "confidence": "high",
+   "evidence": [
+    "Editions and commercial layer",
+    "Operational model"
+   ]
+  },
+  {
+   "id": "governance.rbac",
+   "value": "no",
+   "claimType": "inference",
+   "confidence": "high",
+   "evidence": [
+    "Editions and commercial layer"
+   ]
+  },
+  {
+   "id": "composition.kind.js-module-graph",
+   "value": "no",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "Composition mechanics"
+   ]
+  },
+  {
+   "id": "composition.kind.lifecycle-contract",
+   "value": "no",
+   "note": "Any HTTP endpoint qualifies; no prescribed lifecycle exports.",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "Framework requirements"
+   ]
+  },
+  {
+   "id": "composition.kind.custom-element",
+   "value": "yes",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "Composition mechanics"
+   ]
+  },
+  {
+   "id": "composition.kind.html-fragment-endpoint",
+   "value": "yes",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "What it is",
+    "Composition mechanics"
+   ]
+  },
+  {
+   "id": "composition.kind.html-entry",
+   "value": "yes",
+   "note": "Gateway-proxied same-origin fetch of the fragment endpoint HTML, reframed and executed in host context; wujie-like.",
+   "claimType": "framework-guarantee",
+   "confidence": "medium",
+   "evidence": [
+    "What it is",
+    "Runtime coupling"
+   ]
+  },
+  {
+   "id": "composition.kind.http-route-partition",
+   "value": "no",
+   "note": "Gateway routes by path but composes fragments into one concurrent page, not whole-page partitions.",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "Composition mechanics"
+   ]
+  },
+  {
+   "id": "composition.kind.build-artifact",
+   "value": "no",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "Composition mechanics"
+   ]
+  },
+  {
+   "id": "composition.kind.inherits-underlying",
+   "value": "no",
+   "note": "Owns its boundary: gateway, custom element, reframing.",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "What it is"
+   ]
+  },
+  {
+   "id": "composition.phase.deploy-unit-per-participant",
+   "value": "yes",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "Deployment"
+   ]
+  },
+  {
+   "id": "composition.exec.client-composed",
+   "value": "yes",
+   "note": "Hybrid: client element mounting plus server-side pierced SSR.",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "What it is",
+    "SSR and delivery"
+   ]
+  },
+  {
+   "id": "buildtime.host-build-consumes-participants",
+   "value": "no",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "Build-time coupling"
+   ]
+  },
+  {
+   "id": "buildtime.host-integrates-buildless",
+   "value": "conditional",
+   "condition": "browser side needs only element registration via a script import; the serving tier must run gateway middleware (Node or Web Fetch API)",
+   "claimType": "inference",
+   "confidence": "low",
+   "evidence": [
+    "Composition mechanics",
+    "Migration requirements"
+   ]
+  },
+  {
+   "id": "buildtime.participant-tooling-required",
+   "value": "no",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "Build-time coupling"
+   ]
+  },
+  {
+   "id": "buildtime.bundler-family-restricted",
+   "value": "no",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "Build-time coupling"
+   ]
+  },
+  {
+   "id": "buildtime.share-metadata-emitted",
+   "value": "no",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "Build-time coupling"
+   ]
+  },
+  {
+   "id": "buildtime.shared-dep-change-rebuilds-center",
+   "value": "na",
+   "note": "No central shared-dependency mechanism exists.",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "Build-time coupling"
+   ]
+  },
+  {
+   "id": "buildtime.central-input-for-participant-build",
+   "value": "no",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "Build-time coupling"
+   ]
+  },
+  {
+   "id": "buildtime.asset-prefix-coordination",
+   "value": "yes",
+   "note": "Single-origin serving; documented /_fragment/<fragment-id>/ prefix keyed by unique fragment id.",
+   "claimType": "community-convention",
+   "confidence": "medium",
+   "evidence": [
+    "Ownership topology fit"
+   ]
+  },
+  {
+   "id": "runtime.shared-js-realm",
+   "value": "no",
+   "note": "Per-fragment hidden same-origin iframe realm.",
+   "claimType": "browser-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "What it is",
+    "Isolation and failure containment"
+   ]
+  },
+  {
+   "id": "runtime.patched-globals-layer",
+   "value": "yes",
+   "note": "Reframing monkey-patches DOM/JS APIs; known fidelity bug class, e.g. document.currentScript (issue #124).",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "Runtime coupling"
+   ]
+  },
+  {
+   "id": "runtime.primordials-blast-radius",
+   "value": "no",
+   "claimType": "browser-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "Isolation and failure containment"
+   ]
+  },
+  {
+   "id": "runtime.concurrent-participants",
+   "value": "yes",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "What it is"
+   ]
+  },
+  {
+   "id": "runtime.multi-router-participants",
+   "value": "yes",
+   "note": "Unbound fragments keep independent location/history; bound fragments share the host URL.",
+   "claimType": "framework-guarantee",
+   "confidence": "medium",
+   "evidence": [
+    "Runtime coupling"
+   ]
+  },
+  {
+   "id": "runtime.shared-runtime-library",
+   "value": "yes",
+   "note": "Shell loads the element/reframing runtime every fragment runs under.",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "What it is",
+    "Runtime coupling"
+   ]
+  },
+  {
+   "id": "runtime.central-routing-map",
+   "value": "yes",
+   "note": "Gateway fragment registry (route patterns, endpoints) is shared infrastructure someone must own.",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "Composition mechanics",
+    "Ownership topology fit"
+   ]
+  },
+  {
+   "id": "runtime.shared-dep-negotiation",
+   "value": "no",
+   "note": "Dependency reuse is roadmap only (ShadowRealm talks).",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "Build-time coupling"
+   ]
+  },
+  {
+   "id": "runtime.dep-conflict-surfaces-runtime",
+   "value": "na",
+   "note": "No shared-dependency negotiation exists.",
+   "claimType": "inference",
+   "confidence": "high",
+   "evidence": [
+    "Build-time coupling"
+   ]
+  },
+  {
+   "id": "runtime.side-by-side-versions",
+   "value": "yes",
+   "note": "Realm separation makes conflicting versions trivial; each fragment duplicates its stack.",
+   "claimType": "browser-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "Isolation and failure containment",
+    "Performance causes"
+   ]
+  },
+  {
+   "id": "runtime.global-registration-collision",
+   "value": "no",
+   "note": "Per-fragment realms; only gateway fragment-ids need uniqueness.",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "Composition mechanics"
+   ]
+  },
+  {
+   "id": "runtime.late-participant-registration",
+   "value": "conditional",
+   "condition": "new <web-fragment> elements mount into a live document anytime; a fragment unknown to the gateway needs gateway re-registration first",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "Composition mechanics"
+   ]
+  },
+  {
+   "id": "runtime.loaded-version-hot-swap",
+   "value": "yes",
+   "note": "Destroy/recreate the element; fresh context fetches whatever the endpoint now serves.",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "Isolation and failure containment",
+    "Deployment"
+   ]
+  },
+  {
+   "id": "isolation.document-boundary",
+   "value": "no",
+   "note": "Hidden iframe supplies only the realm; rendered DOM lives in the host document.",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "Isolation and failure containment"
+   ]
+  },
+  {
+   "id": "isolation.js.virtualized-global",
+   "value": "na",
+   "note": "A real per-fragment iframe realm exists; no simulation needed.",
+   "claimType": "browser-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "Isolation and failure containment"
+   ]
+  },
+  {
+   "id": "isolation.dom.virtualized",
+   "value": "conditional",
+   "condition": "reframing routes DOM ops into the fragment shadow root; code reaching real globals bypasses it",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "Isolation and failure containment",
+    "Ambiguities and decomposition candidates"
+   ]
+  },
+  {
+   "id": "isolation.css.outbound",
+   "value": "yes",
+   "note": "Fragment DOM renders inside a shadow root.",
+   "claimType": "browser-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "Isolation and failure containment"
+   ]
+  },
+  {
+   "id": "isolation.css.inbound",
+   "value": "conditional",
+   "condition": "shadow DOM blocks selector leakage; inherited and custom properties still flow in by design",
+   "claimType": "browser-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "Isolation and failure containment"
+   ]
+  },
+  {
+   "id": "isolation.resource.main-thread",
+   "value": "no",
+   "note": "Same-origin frames share the event loop; a tight loop in any fragment freezes the whole page.",
+   "claimType": "inference",
+   "confidence": "high",
+   "evidence": [
+    "Isolation and failure containment"
+   ]
+  },
+  {
+   "id": "isolation.process.crash",
+   "value": "no",
+   "claimType": "browser-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "Isolation and failure containment"
+   ]
+  },
+  {
+   "id": "isolation.storage.partition",
+   "value": "no",
+   "note": "Single origin by design; cookies and storage shared across all fragments.",
+   "claimType": "browser-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "Security and trust"
+   ]
+  },
+  {
+   "id": "isolation.origin.host-authority",
+   "value": "no",
+   "note": "Fragments execute with full host-origin authority (fetch-as-host, cookies, storage).",
+   "claimType": "browser-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "Security and trust"
+   ]
+  },
+  {
+   "id": "isolation.navigation.top-level-guard",
+   "value": "no",
+   "note": "Bound fragments share top-level location/history by design; no grant mechanism.",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "Runtime coupling"
+   ]
+  },
+  {
+   "id": "isolation.security.malicious-participant",
+   "value": "no",
+   "note": "Cooperative, bypassable same-origin illusion; docs make no security-boundary claim.",
+   "claimType": "inference",
+   "confidence": "high",
+   "evidence": [
+    "Isolation and failure containment"
+   ]
+  },
+  {
+   "id": "isolation.failure.lifecycle-quarantine",
+   "value": "unknown",
+   "note": "No load/mount failure quarantine or fallback documented in reviewed sources.",
+   "claimType": "inference",
+   "confidence": "low",
+   "evidence": [
+    "Isolation and failure containment"
+   ]
+  },
+  {
+   "id": "isolation.failure.post-mount-exception",
+   "value": "yes",
+   "note": "Unhandled errors surface on the fragment's own hidden window.",
+   "claimType": "browser-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "Isolation and failure containment"
+   ]
+  },
+  {
+   "id": "isolation.failure.load-fallback",
+   "value": "unknown",
+   "note": "No built-in per-fragment fallback or timeout found in reviewed docs.",
+   "claimType": "inference",
+   "confidence": "low",
+   "evidence": [
+    "Isolation and failure containment"
+   ]
+  },
+  {
+   "id": "isolation.lifecycle.reclaim",
+   "value": "yes",
+   "note": "Documented: destruction frees memory, loaded code, module registry, timers, listeners.",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "Isolation and failure containment"
+   ]
+  },
+  {
+   "id": "isolation.recovery.in-page",
+   "value": "yes",
+   "note": "Element destroy/recreate rebuilds a clean context.",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "Isolation and failure containment"
+   ]
+  },
+  {
+   "id": "isolation.server.process",
+   "value": "yes",
+   "note": "Each fragment endpoint is its own service; gateway is separate middleware.",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "What it is",
+    "Deployment"
+   ]
+  },
+  {
+   "id": "security.cross-origin-boundary",
+   "value": "no",
+   "note": "Same-origin realms by design; single-origin gateway model.",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "Security and trust"
+   ]
+  },
+  {
+   "id": "security.sandbox-attribute-applicable",
+   "value": "no",
+   "note": "Hidden same-origin iframe is a framework internal; sandbox never mentioned in the model.",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "Security and trust"
+   ]
+  },
+  {
+   "id": "security.per-participant-csp",
+   "value": "unknown",
+   "note": "Rendered DOM sits under the host document policy; hidden-iframe CSP interaction undocumented.",
+   "claimType": "inference",
+   "confidence": "low",
+   "evidence": [
+    "Security and trust"
+   ]
+  },
+  {
+   "id": "security.capability-narrowing",
+   "value": "no",
+   "note": "One origin, one shared document capability surface.",
+   "claimType": "inference",
+   "confidence": "high",
+   "evidence": [
+    "Security and trust"
+   ]
+  },
+  {
+   "id": "security.host-dom-reach",
+   "value": "yes",
+   "note": "Fragment DOM ops target the host document by design; bypass reaches anything.",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "What it is",
+    "Isolation and failure containment"
+   ]
+  },
+  {
+   "id": "security.host-js-state-reach",
+   "value": "yes",
+   "note": "Same-origin frame can reach the real parent window; the patch is cooperative.",
+   "claimType": "browser-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "Isolation and failure containment"
+   ]
+  },
+  {
+   "id": "security.untrusted-third-party-viable",
+   "value": "no",
+   "claimType": "inference",
+   "confidence": "high",
+   "evidence": [
+    "Security and trust"
+   ]
+  },
+  {
+   "id": "security.channel-origin-pinning",
+   "value": "na",
+   "note": "No framework cross-document messaging layer; broadcasting-events semantics unverified.",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "Contracts and communication"
+   ]
+  },
+  {
+   "id": "security.channel-confidentiality",
+   "value": "no",
+   "claimType": "inference",
+   "confidence": "high",
+   "evidence": [
+    "Security and trust"
+   ]
+  },
+  {
+   "id": "security.embedding-authorization",
+   "value": "no",
+   "note": "Gateway fetches and reframes fragment HTML; frame-ancestors/XFO never consulted.",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "Composition mechanics"
+   ]
+  },
+  {
+   "id": "security.artifact-integrity-verification",
+   "value": "no",
+   "note": "No SRI or signing mechanism documented.",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "Security and trust"
+   ]
+  },
+  {
+   "id": "security.delivery-intermediary-trust",
+   "value": "yes",
+   "note": "All fragment traffic routes through the shared gateway, which also transforms responses.",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "What it is",
+    "Composition mechanics"
+   ]
+  },
+  {
+   "id": "security.isolation-escape-hatches",
+   "value": "no",
+   "note": "No official escape API documented; the same-origin bypass exists but is not framework-granted.",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "Isolation and failure containment"
+   ]
+  },
+  {
+   "id": "security.composition-injection-surface",
+   "value": "no",
+   "note": "Piercing is driven by gateway registration, not directives found in content.",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "Composition mechanics"
+   ]
+  },
+  {
+   "id": "framework.host-framework-agnostic",
+   "value": "yes",
+   "note": "Any existing SPA can be the shell.",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "Framework requirements"
+   ]
+  },
+  {
+   "id": "framework.participant-framework-agnostic",
+   "value": "yes",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "Framework requirements"
+   ]
+  },
+  {
+   "id": "framework.mixed-frameworks-one-page",
+   "value": "yes",
+   "note": "Per-fragment realms; any framework per fragment, fragments concurrent.",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "What it is",
+    "Framework requirements"
+   ]
+  },
+  {
+   "id": "framework.per-team-framework-autonomy",
+   "value": "yes",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "Build-time coupling",
+    "Ownership topology fit"
+   ]
+  },
+  {
+   "id": "framework.same-framework-major-coexistence",
+   "value": "yes",
+   "note": "Version parity explicitly not required; separate realms.",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "Framework requirements"
+   ]
+  },
+  {
+   "id": "framework.esm-artifact-required",
+   "value": "no",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "Build-time coupling"
+   ]
+  },
+  {
+   "id": "framework.html-document-entry",
+   "value": "yes",
+   "note": "Integration unit is an HTTP endpoint serving HTML.",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "Composition mechanics"
+   ]
+  },
+  {
+   "id": "framework.client-library-required",
+   "value": "no",
+   "note": "The shell loads the runtime; fragments embed no platform library.",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "Framework requirements",
+    "Build-time coupling"
+   ]
+  },
+  {
+   "id": "framework.foreign-artifact-no-rebuild",
+   "value": "yes",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "Migration requirements"
+   ]
+  },
+  {
+   "id": "framework.official-adapters-exist",
+   "value": "na",
+   "note": "No per-framework adapters needed; the participation contract is an HTTP endpoint.",
+   "claimType": "framework-guarantee",
+   "confidence": "medium",
+   "evidence": [
+    "Framework requirements"
+   ]
+  },
+  {
+   "id": "framework.adapters-track-current-majors",
+   "value": "na",
+   "note": "No adapters exist to track majors.",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "Framework requirements"
+   ]
+  },
+  {
+   "id": "framework.zero-framework-participant",
+   "value": "yes",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "Framework requirements"
+   ]
+  },
+  {
+   "id": "framework.version-floor-imposed",
+   "value": "no",
+   "note": "No participant floor; gateway needs a Node or Web Fetch API runtime, versions undocumented.",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "Deployment"
+   ]
+  },
+  {
+   "id": "framework.composition-tier-stack-mandated",
+   "value": "yes",
+   "note": "Gateway middleware requires a JS server runtime: Node.js or Web Fetch API (Workers, Netlify).",
+   "claimType": "officially-supported",
+   "confidence": "high",
+   "evidence": [
+    "Deployment"
+   ]
+  },
+  {
+   "id": "framework.multi-framework-demonstrated",
+   "value": "unknown",
+   "note": "No official multi-framework demo verified in reviewed sources.",
+   "claimType": "inference",
+   "confidence": "low",
+   "evidence": [
+    "Framework requirements"
+   ]
+  },
+  {
+   "id": "contracts.formal-descriptor",
+   "value": "no",
+   "note": "Gateway registration is host-side config, not a participant-published descriptor.",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "Contracts and communication"
+   ]
+  },
+  {
+   "id": "contracts.contract-versioned",
+   "value": "no",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "Contracts and communication"
+   ]
+  },
+  {
+   "id": "contracts.connect-compat-gate",
+   "value": "no",
+   "note": "Nothing is checked when shell, gateway, and fragment meet.",
+   "claimType": "inference",
+   "confidence": "high",
+   "evidence": [
+    "Contracts and communication"
+   ]
+  },
+  {
+   "id": "contracts.drift-surface",
+   "value": "yes",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "Deployment"
+   ]
+  },
+  {
+   "id": "contracts.drift-explicit",
+   "value": "no",
+   "note": "Silent drift; no machine-readable incompatibility surfacing.",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "Contracts and communication"
+   ]
+  },
+  {
+   "id": "contracts.types-shared",
+   "value": "no",
+   "note": "No type-delivery mechanism found; absence not conclusively verified.",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "Contracts and communication"
+   ]
+  },
+  {
+   "id": "contracts.schema-validated-payloads",
+   "value": "no",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "Contracts and communication"
+   ]
+  },
+  {
+   "id": "contracts.sync-calls",
+   "value": "yes",
+   "note": "Same-origin realms; synchronous reach via the real window graph, outside the intended model.",
+   "claimType": "browser-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "Isolation and failure containment"
+   ]
+  },
+  {
+   "id": "contracts.serialized-boundary",
+   "value": "no",
+   "note": "Live references reachable across same-origin realms and the shared DOM.",
+   "claimType": "inference",
+   "confidence": "high",
+   "evidence": [
+    "Isolation and failure containment"
+   ]
+  },
+  {
+   "id": "contracts.frame-messaging",
+   "value": "no",
+   "note": "Iframe is a realm container, not the channel; coordination is shared navigation/history.",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "Contracts and communication"
+   ]
+  },
+  {
+   "id": "contracts.builtin-messaging",
+   "value": "unknown",
+   "note": "Docs list a broadcasting-events concept; API and guarantees unverified.",
+   "claimType": "inference",
+   "confidence": "low",
+   "evidence": [
+    "Contracts and communication"
+   ]
+  },
+  {
+   "id": "contracts.builtin-shared-state",
+   "value": "no",
+   "note": "No shared-state store documented.",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "Contracts and communication"
+   ]
+  },
+  {
+   "id": "contracts.host-push-updates",
+   "value": "unknown",
+   "note": "No documented host-to-fragment context channel beyond navigation and element attributes.",
+   "claimType": "inference",
+   "confidence": "low",
+   "evidence": [
+    "Contracts and communication"
+   ]
+  },
+  {
+   "id": "contracts.http-request-contract",
+   "value": "yes",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "Contracts and communication"
+   ]
+  },
+  {
+   "id": "contracts.server-context-propagation",
+   "value": "unknown",
+   "note": "Gateway proxies requests; a documented context-forwarding contract was not found.",
+   "claimType": "inference",
+   "confidence": "low",
+   "evidence": [
+    "Composition mechanics"
+   ]
+  },
+  {
+   "id": "ssr.composed-page",
+   "value": "yes",
+   "note": "Gateway pierces fragment SSR into the initial HTML stream.",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "SSR and delivery"
+   ]
+  },
+  {
+   "id": "ssr.fragment-granularity",
+   "value": "yes",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "SSR and delivery"
+   ]
+  },
+  {
+   "id": "ssr.streaming-assembly",
+   "value": "yes",
+   "note": "Streamed piercing before the shell boots.",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "SSR and delivery"
+   ]
+  },
+  {
+   "id": "ssr.participant-internal",
+   "value": "yes",
+   "note": "Per-fragment SSR at its own endpoint, any server stack.",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "SSR and delivery"
+   ]
+  },
+  {
+   "id": "ssr.dual-mode-render",
+   "value": "yes",
+   "note": "Pierced server-side on initial load, fetched and mounted client-side thereafter; selection automatic.",
+   "claimType": "framework-guarantee",
+   "confidence": "medium",
+   "evidence": [
+    "SSR and delivery",
+    "Composition mechanics"
+   ]
+  },
+  {
+   "id": "ssr.no-js-first-paint",
+   "value": "yes",
+   "note": "Pierced fragment HTML rides the initial stream; later portaled under the element.",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "UX implications",
+    "SSR and delivery"
+   ]
+  },
+  {
+   "id": "ssr.hydration-orchestration",
+   "value": "no",
+   "note": "Fragments self-boot under reframing; no cross-fragment hydration scheduler.",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "SSR and delivery"
+   ]
+  },
+  {
+   "id": "ssr.crawler-indexable",
+   "value": "conditional",
+   "condition": "pierced fragments are present in the composed server HTML; client-mounted-only fragments are not",
+   "claimType": "framework-guarantee",
+   "confidence": "medium",
+   "evidence": [
+    "SSR and delivery"
+   ]
+  },
+  {
+   "id": "ssr.static-prerender",
+   "value": "yes",
+   "note": "A fragment endpoint may serve build-time-prerendered static HTML; gateway composition still runs per request.",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "Framework requirements",
+    "SSR and delivery"
+   ]
+  },
+  {
+   "id": "ssr.edge-composition",
+   "value": "conditional",
+   "condition": "gateway deployed on edge Web Fetch API runtimes (Cloudflare Workers, Netlify)",
+   "claimType": "officially-supported",
+   "confidence": "high",
+   "evidence": [
+    "Deployment"
+   ]
+  },
+  {
+   "id": "ssr.static-hosting-sufficient",
+   "value": "no",
+   "note": "Gateway compute sits in the production request path.",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "Deployment"
+   ]
+  },
+  {
+   "id": "ssr.server-loadable-artifact",
+   "value": "na",
+   "note": "Participant contract is an HTTP endpoint, not a loadable JS artifact.",
+   "claimType": "inference",
+   "confidence": "high",
+   "evidence": [
+    "Contracts and communication"
+   ]
+  },
+  {
+   "id": "ssr.rsc-federation",
+   "value": "na",
+   "note": "HTML-over-HTTP boundary; RSC inside a fragment's own app is unaffected.",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "Contracts and communication"
+   ]
+  },
+  {
+   "id": "ssr.dev-prod-parity",
+   "value": "unknown",
+   "note": "Gateway is plain middleware so local parity is plausible; not documented.",
+   "claimType": "inference",
+   "confidence": "low",
+   "evidence": [
+    "Deployment"
+   ]
+  },
+  {
+   "id": "ssr.html-fragment-contract",
+   "value": "yes",
+   "note": "Fragment endpoints speak standard HTML; interactivity relies on the client reframing runtime.",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "Composition mechanics"
+   ]
+  },
+  {
+   "id": "ux.cross-boundary-soft-nav",
+   "value": "yes",
+   "note": "Shell SPA soft-navigates; fragments mount/unmount client-side on shared history.",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "Runtime coupling",
+    "UX implications"
+   ]
+  },
+  {
+   "id": "ux.within-unit-soft-nav",
+   "value": "yes",
+   "note": "Bound fragments route on shared history; unbound fragments route independently.",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "Runtime coupling"
+   ]
+  },
+  {
+   "id": "ux.cross-boundary-prefetch",
+   "value": "na",
+   "note": "Boundary navigation is soft; no hard-nav latency to mask.",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "UX implications"
+   ]
+  },
+  {
+   "id": "ux.cross-doc-view-transitions",
+   "value": "na",
+   "note": "Soft-nav unit; no cross-document boundary crossings.",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "UX implications"
+   ]
+  },
+  {
+   "id": "ux.persistent-shared-chrome",
+   "value": "yes",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "UX implications"
+   ]
+  },
+  {
+   "id": "ux.unit-keepalive",
+   "value": "no",
+   "note": "No keep-alive documented; unmount destroys the context and frees resources.",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "Isolation and failure containment"
+   ]
+  },
+  {
+   "id": "ux.keepalive-scroll-restoration",
+   "value": "na",
+   "note": "No keep-alive exists.",
+   "claimType": "inference",
+   "confidence": "high",
+   "evidence": [
+    "Isolation and failure containment"
+   ]
+  },
+  {
+   "id": "ux.deep-link-inner-route",
+   "value": "yes",
+   "note": "Bound fragments share top-level location/history; unbound fragments deliberately keep state off the URL.",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "Runtime coupling"
+   ]
+  },
+  {
+   "id": "ux.frame-history-pollution",
+   "value": "unknown",
+   "note": "Whether unbound fragments' independent history enters joint session history is undocumented.",
+   "claimType": "inference",
+   "confidence": "low",
+   "evidence": [
+    "Runtime coupling"
+   ]
+  },
+  {
+   "id": "ux.overlay-viewport-escape",
+   "value": "yes",
+   "note": "Visible UI lives in the host document, not the iframe.",
+   "claimType": "browser-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "UX implications"
+   ]
+  },
+  {
+   "id": "ux.host-overlay-protocol",
+   "value": "na",
+   "note": "Same-DOM rendering; overlays escape naturally, no protocol needed.",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "UX implications"
+   ]
+  },
+  {
+   "id": "ux.body-portal-compat",
+   "value": "conditional",
+   "condition": "reframed document.body fidelity decides; portals escaping the shadow root lose the fragment style scope",
+   "claimType": "inference",
+   "confidence": "low",
+   "evidence": [
+    "Runtime coupling",
+    "Isolation and failure containment"
+   ]
+  },
+  {
+   "id": "ux.natural-layout-flow",
+   "value": "yes",
+   "note": "Fragment content flows in the host page; no fixed rectangle or height reporting.",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "UX implications"
+   ]
+  },
+  {
+   "id": "ux.cross-boundary-focus-mgmt",
+   "value": "yes",
+   "note": "One document and focus order; reframed activeElement fidelity untested.",
+   "claimType": "browser-guarantee",
+   "confidence": "medium",
+   "evidence": [
+    "UX implications"
+   ]
+  },
+  {
+   "id": "ux.screenreader-continuity",
+   "value": "yes",
+   "note": "One accessibility tree; shadow roots participate.",
+   "claimType": "browser-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "UX implications"
+   ]
+  },
+  {
+   "id": "ux.composed-first-paint",
+   "value": "yes",
+   "note": "Via piercing on initial load; client-mounted fragments arrive post-paint.",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "UX implications"
+   ]
+  },
+  {
+   "id": "ux.builtin-loading-ui",
+   "value": "no",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "UX implications"
+   ]
+  },
+  {
+   "id": "ux.builtin-error-fallback-ui",
+   "value": "unknown",
+   "note": "No fallback UI documented in reviewed sources.",
+   "claimType": "inference",
+   "confidence": "low",
+   "evidence": [
+    "UX implications"
+   ]
+  },
+  {
+   "id": "ux.mount-layout-shift-risk",
+   "value": "conditional",
+   "condition": "author-supplied prePiercingStyles mitigate CLS; risk officially acknowledged, mitigation manual",
+   "claimType": "officially-supported",
+   "confidence": "high",
+   "evidence": [
+    "UX implications"
+   ]
+  },
+  {
+   "id": "ux.token-theming-mechanism",
+   "value": "yes",
+   "note": "Host CSS custom properties inherit into fragment shadow roots.",
+   "claimType": "browser-guarantee",
+   "confidence": "medium",
+   "evidence": [
+    "Isolation and failure containment"
+   ]
+  },
+  {
+   "id": "performance.client-composition-runtime",
+   "value": "yes",
+   "note": "Shell loads the element plus reframing runtime.",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "What it is"
+   ]
+  },
+  {
+   "id": "performance.pre-render-orchestration-fetch",
+   "value": "conditional",
+   "condition": "no with piercing (content in the initial stream); client-mounted fragments need a fragment-HTML fetch first",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "SSR and delivery"
+   ]
+  },
+  {
+   "id": "performance.sequential-waterfall-default",
+   "value": "conditional",
+   "condition": "pierced fragments stream with the page; client-mounted fragments chain fragment-HTML then asset fetches",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "SSR and delivery"
+   ]
+  },
+  {
+   "id": "performance.first-party-preload-levers",
+   "value": "no",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "Performance causes"
+   ]
+  },
+  {
+   "id": "performance.duplicate-framework-same-page",
+   "value": "yes",
+   "note": "One hidden iframe context per fragment; duplicated framework runtimes, no sharing yet.",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "Performance causes"
+   ]
+  },
+  {
+   "id": "performance.shared-dependency-dedup",
+   "value": "no",
+   "note": "Dependency reuse is roadmap only.",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "Performance causes",
+    "Build-time coupling"
+   ]
+  },
+  {
+   "id": "performance.dedup-failure-on-version-skew",
+   "value": "na",
+   "note": "No sharing mechanism exists.",
+   "claimType": "inference",
+   "confidence": "high",
+   "evidence": [
+    "Performance causes"
+   ]
+  },
+  {
+   "id": "performance.per-unit-document-boot",
+   "value": "yes",
+   "note": "Per-fragment hidden iframe realm boots separately.",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "Performance causes"
+   ]
+  },
+  {
+   "id": "performance.process-memory-overhead",
+   "value": "na",
+   "note": "Same-origin frames never cross a site boundary; no OOPIF applies.",
+   "claimType": "browser-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "Isolation and failure containment"
+   ]
+  },
+  {
+   "id": "performance.sandbox-execution-tax",
+   "value": "no",
+   "note": "Monkey-patched API surface adds per-call indirection, not a per-statement proxy tax; native realm execution.",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "Runtime coupling"
+   ]
+  },
+  {
+   "id": "performance.per-message-serialization-cost",
+   "value": "no",
+   "note": "No framework message channel; shared history and same-origin access pass references.",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "Contracts and communication"
+   ]
+  },
+  {
+   "id": "performance.hydration-deferrable-per-unit",
+   "value": "no",
+   "note": "No shipped visibility/idle gating; deferral only via when the author adds elements.",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "Performance causes"
+   ]
+  },
+  {
+   "id": "performance.request-time-server-fanout",
+   "value": "yes",
+   "note": "Gateway proxies fragment routes and fetches endpoints during piercing.",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "Performance causes"
+   ]
+  },
+  {
+   "id": "performance.per-unit-http-cacheable",
+   "value": "yes",
+   "note": "Each fragment is its own endpoint with its own cache headers.",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "Composition mechanics"
+   ]
+  },
+  {
+   "id": "performance.default-content-caching",
+   "value": "unknown",
+   "note": "No gateway content-caching behavior documented either way.",
+   "claimType": "inference",
+   "confidence": "low",
+   "evidence": [
+    "Composition mechanics"
+   ]
+  },
+  {
+   "id": "deployment.host-rebuild-required",
+   "value": "no",
+   "note": "Fragment endpoint redeploys reach users directly.",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "Deployment"
+   ]
+  },
+  {
+   "id": "deployment.new-participant-host-change",
+   "value": "yes",
+   "note": "Adding a fragment requires gateway re-registration/redeploy.",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "Composition mechanics",
+    "Deployment"
+   ]
+  },
+  {
+   "id": "deployment.golive-central-pointer",
+   "value": "no",
+   "note": "Same-URL endpoint; the fragment's own deploy goes live.",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "Deployment"
+   ]
+  },
+  {
+   "id": "deployment.consumer-version-pin",
+   "value": "no",
+   "note": "Host receives whatever the endpoint currently serves.",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "Deployment"
+   ]
+  },
+  {
+   "id": "deployment.per-user-version-targeting",
+   "value": "no",
+   "note": "No first-party mechanism or documented pattern; endpoint-side routing would be DIY.",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "Deployment"
+   ]
+  },
+  {
+   "id": "deployment.immutable-version-retention",
+   "value": "no",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "Deployment"
+   ]
+  },
+  {
+   "id": "deployment.cache-busting-operator-burden",
+   "value": "yes",
+   "note": "Fragment HTML lives at a mutable well-known endpoint; freshness is endpoint cache discipline.",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "Deployment"
+   ]
+  },
+  {
+   "id": "deployment.participants-static-artifacts",
+   "value": "conditional",
+   "condition": "a fragment may be static files behind the gateway; SSR fragments run as services",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "SSR and delivery"
+   ]
+  },
+  {
+   "id": "deployment.strategy-service-in-path",
+   "value": "yes",
+   "note": "The fragment gateway must run in the production request path.",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "Deployment"
+   ]
+  },
+  {
+   "id": "deployment.runtime-discovery-first-party",
+   "value": "no",
+   "note": "registerFragment is code-level gateway config, not a discovery artifact or service.",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "Composition mechanics"
+   ]
+  },
+  {
+   "id": "deployment.single-domain-required",
+   "value": "yes",
+   "note": "Single-origin gateway model is required.",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "Runtime coupling"
+   ]
+  },
+  {
+   "id": "deployment.cross-origin-cors-required",
+   "value": "na",
+   "note": "Gateway proxies everything on one origin; no cross-origin client fetch path.",
+   "claimType": "inference",
+   "confidence": "high",
+   "evidence": [
+    "Runtime coupling"
+   ]
+  },
+  {
+   "id": "deployment.vendor-hosting-required",
+   "value": "no",
+   "note": "Cloudflare sponsorship, not dependency; Node and generic Web runtimes first-class.",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "Deployment"
+   ]
+  },
+  {
+   "id": "migration.participant.min-level",
+   "value": "conditional",
+   "condition": "migration.trivial-adaptation",
+   "note": "Unmodified apps participate as endpoints; at most serving/asset-prefix configuration.",
+   "claimType": "officially-supported",
+   "confidence": "medium",
+   "evidence": [
+    "Migration requirements"
+   ]
+  },
+  {
+   "id": "migration.host.min-level",
+   "value": "conditional",
+   "condition": "migration.bootstrap-change",
+   "note": "Gateway middleware added at the server entry plus <web-fragment> elements in the shell; static-only hosts must first stand up a server tier.",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "Migration requirements"
+   ]
+  },
+  {
+   "id": "migration.source-modification-required",
+   "value": "no",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "Migration requirements"
+   ]
+  },
+  {
+   "id": "migration.participant.bootstrap-change-required",
+   "value": "no",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "Migration requirements"
+   ]
+  },
+  {
+   "id": "migration.participant.internals-refactor-required",
+   "value": "no",
+   "note": "Reframing preserves top-level-app assumptions; beta fidelity gaps (currentScript) may force edge-case workarounds.",
+   "claimType": "framework-guarantee",
+   "confidence": "medium",
+   "evidence": [
+    "Runtime coupling"
+   ]
+  },
+  {
+   "id": "migration.participant.deployment-change-required",
+   "value": "no",
+   "note": "Any HTTP-reachable deployment works; only the asset-prefix convention may touch serving config.",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "Ownership topology fit"
+   ]
+  },
+  {
+   "id": "migration.participant.extraction-required",
+   "value": "no",
+   "note": "An existing monolith route already is an HTTP endpoint the gateway can register.",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "Migration requirements"
+   ]
+  },
+  {
+   "id": "migration.participant.rewrite-required",
+   "value": "no",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "Migration requirements"
+   ]
+  },
+  {
+   "id": "migration.participant.thirdparty-unmodified-viable",
+   "value": "yes",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "Migration requirements"
+   ]
+  },
+  {
+   "id": "migration.participant.legacy-no-build-viable",
+   "value": "yes",
+   "note": "Any server-rendered endpoint qualifies; reframing fidelity for old code untested.",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "Framework requirements"
+   ]
+  },
+  {
+   "id": "migration.strangler.incremental",
+   "value": "yes",
+   "note": "Flagship use case; reportedly how Cloudflare migrates its dashboard.",
+   "claimType": "officially-supported",
+   "confidence": "high",
+   "evidence": [
+    "Migration requirements"
+   ]
+  },
+  {
+   "id": "migration.host.new-infra-tier-required",
+   "value": "yes",
+   "note": "Gateway middleware tier in front of the existing app.",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "Migration requirements"
+   ]
+  },
+  {
+   "id": "migration.host.shell-takeover-required",
+   "value": "no",
+   "note": "Existing SPA stays the shell; adoption is per-route/per-element.",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "Framework requirements"
+   ]
+  },
+  {
+   "id": "migration.exit.participants-standalone",
+   "value": "yes",
+   "note": "Fragments remain ordinary standalone web apps at their own endpoints.",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "Build-time coupling"
+   ]
+  },
+  {
+   "id": "migration.path.from-incumbent-format",
+   "value": "no",
+   "note": "Migration story targets monoliths, not incumbent composition formats.",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "Migration requirements"
+   ]
+  },
+  {
+   "id": "migration.forced-remigration-pending",
+   "value": "no",
+   "note": "Nothing announced; pre-1.0 beta carries implicit breaking-change risk before any 1.0.",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "Status (Aug 2026)"
+   ]
+  },
+  {
+   "id": "migration.permanent-viability",
+   "value": "no",
+   "note": "Pre-1.0, stalled cadence, no independent multi-year adopters; permanence unsupported by evidence today.",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "Operational model"
+   ]
+  },
+  {
+   "id": "ownership.single-team-endorsed",
+   "value": "no",
+   "note": "Docs target enterprise monolith decomposition; no explicit single-team endorsement.",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "What it is"
+   ]
+  },
+  {
+   "id": "ownership.code-boundary-ownership",
+   "value": "yes",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "Ownership topology fit"
+   ]
+  },
+  {
+   "id": "ownership.deploy-schedule-ownership",
+   "value": "yes",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "Deployment"
+   ]
+  },
+  {
+   "id": "ownership.runtime-operational-ownership",
+   "value": "yes",
+   "note": "Each fragment team runs its own endpoint service.",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "Ownership topology fit"
+   ]
+  },
+  {
+   "id": "ownership.external-participant",
+   "value": "no",
+   "note": "Gateway can proxy any URL, but the fragment executes with host-origin authority; no distinct principal.",
+   "claimType": "inference",
+   "confidence": "high",
+   "evidence": [
+    "Security and trust"
+   ]
+  },
+  {
+   "id": "ownership.participant-unmodifiable-host",
+   "value": "no",
+   "note": "Host must run the gateway, load the runtime, and place elements; more than one minimal change.",
+   "claimType": "inference",
+   "confidence": "high",
+   "evidence": [
+    "Migration requirements"
+   ]
+  },
+  {
+   "id": "ownership.distrusted-cadence",
+   "value": "yes",
+   "note": "No mechanism errors on skew; implicit route/event contracts can still break silently.",
+   "claimType": "framework-guarantee",
+   "confidence": "medium",
+   "evidence": [
+    "Deployment",
+    "Contracts and communication"
+   ]
+  },
+  {
+   "id": "ownership.uncoordinated-upgrades",
+   "value": "yes",
+   "note": "No shared dependencies; realm separation tolerates incompatible majors indefinitely.",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "Build-time coupling"
+   ]
+  },
+  {
+   "id": "ownership.onboarding-without-central-owner",
+   "value": "no",
+   "note": "Gateway registry owner must register the new fragment.",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "Composition mechanics"
+   ]
+  },
+  {
+   "id": "ownership.platform-team-role-required",
+   "value": "yes",
+   "note": "Someone must own the gateway and its fragment registry.",
+   "claimType": "inference",
+   "confidence": "high",
+   "evidence": [
+    "Ownership topology fit"
+   ]
+  },
+  {
+   "id": "ownership.non-developer-composition",
+   "value": "no",
+   "claimType": "inference",
+   "confidence": "high",
+   "evidence": [
+    "Editions and commercial layer"
+   ]
+  },
+  {
+   "id": "ownership.participant-bytes-verbatim",
+   "value": "no",
+   "note": "Gateway/element pipeline transforms fragment HTML for piercing and reframing patches the API surface; script bytes run unrewritten.",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "What it is",
+    "Runtime coupling"
+   ]
+  },
+  {
+   "id": "ownership.nested-host-seat",
+   "value": "unknown",
+   "note": "Fragment-hosting-fragments undocumented.",
+   "claimType": "inference",
+   "confidence": "low",
+   "evidence": [
+    "Composition mechanics"
+   ]
+  },
+  {
+   "id": "ownership.upstream-contract-lifetime",
+   "value": "no",
+   "note": "Defines its own boundary.",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "What it is"
+   ]
+  },
+  {
+   "id": "coordination.shared-dependency-governance",
+   "value": "no",
+   "note": "No runtime sharing; duplication cost is a performance question.",
+   "claimType": "framework-guarantee",
+   "confidence": "high",
+   "evidence": [
+    "Build-time coupling"
+   ]
+  },
+  {
+   "id": "operations.version-skew-machinery",
+   "value": "no",
+   "claimType": "inference",
+   "confidence": "high",
+   "evidence": [
+    "Contracts and communication"
+   ]
+  },
+  {
+   "id": "operations.stack-traces-cross-boundary",
+   "value": "no",
+   "note": "Errors surface on the hidden frame window, not the host stream; same-origin hosts can attach handlers.",
+   "claimType": "browser-guarantee",
+   "confidence": "medium",
+   "evidence": [
+    "Isolation and failure containment"
+   ]
+  },
+  {
+   "id": "operations.owner-attribution-builtin",
+   "value": "no",
+   "note": "No shipped attribution; per-fragment windows make DIY tagging natural.",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "Isolation and failure containment"
+   ]
+  },
+  {
+   "id": "operations.cross-journey-correlation-diy",
+   "value": "yes",
+   "note": "No shared runtime context spans fragment contexts, gateway, and endpoints.",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "Composition mechanics"
+   ]
+  },
+  {
+   "id": "operations.deploy-inventory-firstparty",
+   "value": "no",
+   "note": "Gateway registry maps routes to endpoints; versions are invisible to it.",
+   "claimType": "inference",
+   "confidence": "high",
+   "evidence": [
+    "Composition mechanics"
+   ]
+  },
+  {
+   "id": "operations.first-party-debug-tooling",
+   "value": "no",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "Operational model"
+   ]
+  },
+  {
+   "id": "operations.local-composed-dev-firstparty",
+   "value": "unknown",
+   "note": "No documented first-party composed-dev workflow reviewed; plain middleware suggests it is possible.",
+   "claimType": "inference",
+   "confidence": "low",
+   "evidence": [
+    "Deployment"
+   ]
+  },
+  {
+   "id": "operations.composition-tier-local-parity",
+   "value": "yes",
+   "note": "Node gateway middleware runs on a laptop; Workers-targeted gateways use wrangler-local.",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "Deployment"
+   ]
+  },
+  {
+   "id": "operations.standalone-participant-dev",
+   "value": "yes",
+   "note": "Fragments develop and test standalone as ordinary web apps.",
+   "claimType": "officially-supported",
+   "confidence": "high",
+   "evidence": [
+    "Build-time coupling"
+   ]
+  },
+  {
+   "id": "operations.composed-test-utilities",
+   "value": "no",
+   "claimType": "inference",
+   "confidence": "medium",
+   "evidence": [
+    "Operational model"
+   ]
+  },
+  {
+   "id": "operations.deploy-time-contract-verification",
+   "value": "no",
+   "claimType": "inference",
+   "confidence": "high",
+   "evidence": [
+    "Contracts and communication"
+   ]
+  },
+  {
+   "id": "operations.single-sponsor-concentration",
+   "value": "yes",
+   "note": "Cloudflare-sponsored, Minar-led; losing that sponsor plausibly stalls it (cadence already stalled).",
+   "claimType": "inference",
+   "confidence": "high",
+   "evidence": [
+    "Operational model"
+   ]
+  },
+  {
+   "id": "operations.mode-forked-operations",
+   "value": "yes",
+   "note": "Bound vs unbound fragments (src attribute) flip location/history-sharing and deep-link rows; isolation model is single.",
+   "claimType": "framework-guarantee",
+   "confidence": "medium",
+   "evidence": [
+    "Runtime coupling"
+   ]
+  }
+ ]
+}

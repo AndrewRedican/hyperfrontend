@@ -262,3 +262,36 @@ export function getArchitectureMetadata(librarySlug: string): Metadata {
     ...buildSocialMetadata(title, description, `/docs/libraries/${librarySlug}/architecture/`),
   }
 }
+
+/**
+ * Generate metadata for the fit assessment. The description is written for the
+ * search result itself: someone deciding between microfrontend approaches has
+ * to recognize this page as the thing that answers that question.
+ *
+ * It is shared as an article dated by the research snapshot, because the page's
+ * claims are only as current as the comparison behind them.
+ *
+ * @param lastReviewed - ISO date the underlying research was last verified
+ * @returns Metadata object with title, description, keywords, canonical, and social cards
+ */
+export function getFitAssessmentMetadata(lastReviewed: string): Metadata {
+  const title = 'Is HyperFrontend right for you?'
+  const description =
+    'Answer a few questions about ownership, deployment, and isolation to see which microfrontend approach fits your situation, or whether you need one at all.'
+
+  return {
+    title,
+    description,
+    keywords: [
+      'microfrontend decision',
+      'microfrontend architecture',
+      'choose a microfrontend framework',
+      'module federation alternative',
+      'iframe microfrontends',
+      'single-spa alternative',
+      'do I need microfrontends',
+      'hyperfrontend',
+    ],
+    ...buildSocialMetadata(title, description, '/docs/is-hyperfrontend-right-for-you/', { modifiedTime: lastReviewed }),
+  }
+}
