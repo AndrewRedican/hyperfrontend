@@ -1,9 +1,22 @@
-import type { Answer, Question } from '../data/decision-framework'
+import type { Answer, Question, QuestionUnlock } from '../data/decision-framework'
 import type { Elimination } from './decision-engine'
 import { describe, expect, it } from 'vitest'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { decisionFramework } from '../data/decision-framework'
 import { evaluate, HYPERFRONTEND_FAMILY_ID, isRelevant, progressOf, pruneAnswers } from './decision-engine'
+
+/**
+ * Narrows a dataset lookup a test depends on, failing with a message that names what is
+ * missing instead of letting an absent value surface as a downstream type error.
+ *
+ * @param value - The looked-up value.
+ * @param what - Names what the lookup was for.
+ * @returns The value, never null or undefined.
+ */
+function mustFind<T>(value: T | null | undefined, what: string): T {
+  if (value === null || value === undefined) throw new Error(`the dataset has no ${what}`)
+  return value
+}
 
 /**
  * Picks the first answer of a question that eliminates at least one family, so
@@ -20,6 +33,29 @@ function findEliminatingAnswer(predicate: (familyIds: string[]) => boolean): { q
     }
   }
   return null
+}
+
+/**
+ * Finds the first question the dataset asks unconditionally.
+ *
+ * @returns The question, or undefined when every question is gated.
+ */
+function findUngatedQuestion(): Question | undefined {
+  return decisionFramework.questions.find((question) => !question.unlockedBy?.length)
+}
+
+/**
+ * Finds the first question the dataset hides behind a gate, along with the gate that
+ * reveals it, so a test can exercise gating without naming ids the research may renumber.
+ *
+ * @returns The question and its first gate, or undefined when no question is gated.
+ */
+function findGatedQuestion(): { question: Question; gate: QuestionUnlock } | undefined {
+  for (const question of decisionFramework.questions) {
+    const gate = question.unlockedBy?.[0]
+    if (gate) return { question, gate }
+  }
+  return undefined
 }
 
 const MICROFRONTEND_FAMILIES = decisionFramework.families.filter((family) => family.kind === 'microfrontend').map((family) => family.id)
@@ -72,9 +108,11 @@ describe('evaluate', () => {
   })
 
   it('is deterministic: the same answers always produce the same eliminations', () => {
-    const chosen = findEliminatingAnswer(() => true)
-    expect(chosen).not.toBeNull()
-    const answers = { [chosen!.questionId]: chosen!.answerId }
+    const chosen = mustFind(
+      findEliminatingAnswer(() => true),
+      'eliminating answer'
+    )
+    const answers = { [chosen.questionId]: chosen.answerId }
 
     const first = evaluate(answers)
     const second = evaluate(answers)
@@ -84,13 +122,16 @@ describe('evaluate', () => {
   })
 
   it('attributes every elimination to the answer responsible', () => {
-    const chosen = findEliminatingAnswer(() => true)
-    const result = evaluate({ [chosen!.questionId]: chosen!.answerId })
+    const chosen = mustFind(
+      findEliminatingAnswer(() => true),
+      'eliminating answer'
+    )
+    const result = evaluate({ [chosen.questionId]: chosen.answerId })
 
     expect(result.eliminated.length).toBeGreaterThan(0)
     for (const entry of result.eliminated) {
-      expect(entry.by.questionId).toBe(chosen!.questionId)
-      expect(entry.by.answerId).toBe(chosen!.answerId)
+      expect(entry.by.questionId).toBe(chosen.questionId)
+      expect(entry.by.answerId).toBe(chosen.answerId)
     }
   })
 
@@ -104,25 +145,27 @@ describe('evaluate', () => {
   })
 
   it('reports the no-microfrontends outcome when only baselines survive', () => {
-    const killsEveryMicrofrontend = findEliminatingAnswer((familyIds) =>
-      MICROFRONTEND_FAMILIES.every((familyId) => familyIds.includes(familyId))
+    const killsEveryMicrofrontend = mustFind(
+      findEliminatingAnswer((familyIds) => MICROFRONTEND_FAMILIES.every((familyId) => familyIds.includes(familyId))),
+      'answer that eliminates every microfrontend family'
     )
-    expect(killsEveryMicrofrontend).not.toBeNull()
 
-    const result = evaluate({ [killsEveryMicrofrontend!.questionId]: killsEveryMicrofrontend!.answerId })
+    const result = evaluate({ [killsEveryMicrofrontend.questionId]: killsEveryMicrofrontend.answerId })
 
     expect(result.outcome).toBe('baselines-only')
     expect(result.surviving.every((family) => family.kind === 'baseline')).toBe(true)
   })
 
   it('records how hyperfrontend fared and what ruled it out', () => {
-    const kills = findEliminatingAnswer((familyIds) => familyIds.includes(HYPERFRONTEND_FAMILY_ID))
-    expect(kills).not.toBeNull()
+    const kills = mustFind(
+      findEliminatingAnswer((familyIds) => familyIds.includes(HYPERFRONTEND_FAMILY_ID)),
+      'answer that eliminates hyperfrontend'
+    )
 
-    const result = evaluate({ [kills!.questionId]: kills!.answerId })
+    const result = evaluate({ [kills.questionId]: kills.answerId })
 
     expect(result.hyperfrontend.viable).toBe(false)
-    expect(result.hyperfrontend.ruledOutBy?.answerId).toBe(kills!.answerId)
+    expect(result.hyperfrontend.ruledOutBy?.answerId).toBe(kills.answerId)
   })
 
   it('leaves hyperfrontend viable when no answer eliminates its family', () => {
@@ -212,8 +255,11 @@ describe('inertAnswers', () => {
   })
 
   it('excludes an answer that ruled a family out', () => {
-    const chosen = findEliminatingAnswer(() => true)
-    const result = evaluate({ [chosen!.questionId]: chosen!.answerId })
+    const chosen = mustFind(
+      findEliminatingAnswer(() => true),
+      'eliminating answer'
+    )
+    const result = evaluate({ [chosen.questionId]: chosen.answerId })
 
     expect(result.inertAnswers).toHaveLength(0)
   })
@@ -225,42 +271,43 @@ describe('inertAnswers', () => {
 
 describe('isRelevant', () => {
   it('treats an ungated question as always relevant', () => {
-    const ungated = decisionFramework.questions.find((question) => !question.unlockedBy?.length)
-    expect(ungated).toBeDefined()
+    const ungated = mustFind(findUngatedQuestion(), 'ungated question')
 
-    expect(isRelevant(ungated!, {})).toBe(true)
+    expect(isRelevant(ungated, {})).toBe(true)
   })
 
   it('hides a gated question until one of its unlocking answers is chosen', () => {
-    const gated = decisionFramework.questions.find((question) => (question.unlockedBy?.length ?? 0) > 0)
-    expect(gated).toBeDefined()
-    const gate = gated!.unlockedBy![0]
+    const { question: gated, gate } = mustFind(findGatedQuestion(), 'gated question')
 
-    expect(isRelevant(gated!, {})).toBe(false)
-    expect(isRelevant(gated!, { [gate.questionId]: gate.answerId })).toBe(true)
+    expect(isRelevant(gated, {})).toBe(false)
+    expect(isRelevant(gated, { [gate.questionId]: gate.answerId })).toBe(true)
   })
 })
 
 describe('pruneAnswers', () => {
   it('keeps answers whose questions are still relevant', () => {
-    const ungated = decisionFramework.questions.find((question) => !question.unlockedBy?.length)
-    const answers = { [ungated!.id]: ungated!.answers[0].id }
+    const ungated = mustFind(findUngatedQuestion(), 'ungated question')
+    const answers = { [ungated.id]: ungated.answers[0].id }
 
     expect(pruneAnswers(answers)).toEqual(answers)
   })
 
   it('drops an answer once the gate that revealed its question closes', () => {
-    const gated = decisionFramework.questions.find((question) => (question.unlockedBy?.length ?? 0) > 0)
-    const gate = gated!.unlockedBy![0]
-    const gateQuestion = decisionFramework.questions.find((question) => question.id === gate.questionId)
-    const otherAnswer = gateQuestion!.answers.find((answer) => answer.id !== gate.answerId)
-    expect(otherAnswer).toBeDefined()
+    const { question: gated, gate } = mustFind(findGatedQuestion(), 'gated question')
+    const gateQuestion = mustFind(
+      decisionFramework.questions.find((question) => question.id === gate.questionId),
+      `question ${gate.questionId}`
+    )
+    const otherAnswer = mustFind(
+      gateQuestion.answers.find((answer) => answer.id !== gate.answerId),
+      `second answer to ${gateQuestion.id}`
+    )
 
-    const withGateOpen = { [gate.questionId]: gate.answerId, [gated!.id]: gated!.answers[0].id }
-    expect(pruneAnswers(withGateOpen)[gated!.id]).toBe(gated!.answers[0].id)
+    const withGateOpen = { [gate.questionId]: gate.answerId, [gated.id]: gated.answers[0].id }
+    expect(pruneAnswers(withGateOpen)[gated.id]).toBe(gated.answers[0].id)
 
-    const withGateClosed = { ...withGateOpen, [gate.questionId]: otherAnswer!.id }
-    expect(pruneAnswers(withGateClosed)[gated!.id]).toBeUndefined()
+    const withGateClosed = { ...withGateOpen, [gate.questionId]: otherAnswer.id }
+    expect(pruneAnswers(withGateClosed)[gated.id]).toBeUndefined()
   })
 
   it('discards an answer to a question the dataset no longer has', () => {
@@ -270,9 +317,9 @@ describe('pruneAnswers', () => {
 
 describe('progressOf', () => {
   it('counts answered questions against those currently relevant', () => {
-    const ungated = decisionFramework.questions.find((question) => !question.unlockedBy?.length)
+    const ungated = mustFind(findUngatedQuestion(), 'ungated question')
 
-    const progress = progressOf(evaluate({ [ungated!.id]: ungated!.answers[0].id }))
+    const progress = progressOf(evaluate({ [ungated.id]: ungated.answers[0].id }))
 
     expect(progress.answered).toBe(1)
     expect(progress.total).toBeGreaterThanOrEqual(progress.answered)
@@ -297,7 +344,7 @@ describe('dataset integrity', () => {
       for (const gate of question.unlockedBy ?? []) {
         const source = decisionFramework.questions.find((candidate) => candidate.id === gate.questionId)
         expect(source, `${question.id} gated by unknown ${gate.questionId}`).toBeDefined()
-        expect(source!.answers.some((answer) => answer.id === gate.answerId)).toBe(true)
+        expect(source?.answers.some((answer) => answer.id === gate.answerId)).toBe(true)
       }
     }
   })
