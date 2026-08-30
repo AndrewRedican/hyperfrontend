@@ -29,22 +29,20 @@ export default function FitAssessmentPage() {
 
       <H1 className="font-display text-4xl font-bold tracking-tight text-slate-900 dark:text-white">Is HyperFrontend right for you?</H1>
       <p className="mt-4 max-w-2xl text-lg text-slate-600 dark:text-slate-400">
-        Answer a few questions about your systems and teams to find out whether HyperFrontend suits your situation. If it does not, you will
-        see which class of microfrontend solution matches your requirements better, and exactly what would have to change for HyperFrontend
-        to become viable.
+        Answer a few questions to see if HyperFrontend fits your needs, or find the right alternative.
       </p>
 
-      <Questionnaire resultRoute={`${ROUTE}/result`} />
+      <ResearchDisclosure
+        collapsible
+        className="mt-5"
+        reviewed={frameworkMeta.researchSnapshot}
+        route={ROUTE}
+        subject="fit assessment"
+        unitCount={frameworkMeta.unitCount}
+        attributeCount={frameworkMeta.attributeCount}
+      />
 
-      <div className="mt-8">
-        <ResearchDisclosure
-          reviewed={frameworkMeta.researchSnapshot}
-          route={ROUTE}
-          subject="fit assessment"
-          unitCount={frameworkMeta.unitCount}
-          attributeCount={frameworkMeta.attributeCount}
-        />
-      </div>
+      <Questionnaire resultRoute={`${ROUTE}/result`} />
     </DocsContentWrapper>
   )
 }
