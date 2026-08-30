@@ -1,23 +1,23 @@
 'use client'
 
-import type { DemoManifestEntry } from '@/lib/demo-manifest'
+import { useDemoStage } from '@/components/demo-stage'
 import { getDemoTheme } from '@/components/demos/demo-fallback-card'
 import { DemoShowcase } from '@/components/demos/demo-showcase'
 import { ScrollToExplore } from '@/components/scroll-to-explore'
 import { TesseractBackground } from '@/components/tesseract-background'
 import { ValueProposition } from '@/components/value-proposition'
 import { DEMO_MANIFEST } from '@/lib/demo-manifest'
-import { useState } from 'react'
 
 /**
  * The landing page's full-height hero: value proposition on the left, the
  * rotating demo showcase on the right, and the diving tesseract backdrop
- * behind both. Owns which demo currently holds the showcase stage so the
- * lattice can tint toward that demo's ambient hue as the rotation advances.
+ * behind both. Which demo holds the showcase stage lives on the shared stage
+ * rather than here, because the lattice is no longer the only thing tinting
+ * toward it: the band below the hero takes the same hue.
  * @returns The hero section.
  */
 export function LandingHero() {
-  const [activeDemo, setActiveDemo] = useState<DemoManifestEntry | null>(DEMO_MANIFEST[0] ?? null)
+  const { activeDemo, setActiveDemo } = useDemoStage()
   return (
     <section className="relative min-h-[calc(100vh-4rem)] overflow-hidden bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-900 dark:via-slate-900 dark:to-slate-800">
       {/* Subtle background pattern */}

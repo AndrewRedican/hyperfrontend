@@ -1,7 +1,9 @@
+import { DemoStageProvider } from '@/components/demo-stage'
 import { Footer } from '@/components/footer'
 import { Header } from '@/components/header'
 import { LandingHero } from '@/components/landing-hero'
 import { LandingLearnSection } from '@/components/landing-learn-section'
+import { LightWell } from '@/components/light-well'
 import { getAllLibraryData } from '@/lib/docs-loader'
 import { FLAGSHIP_PACKAGE } from '@/lib/ecosystem'
 import { selectFeaturedPackages } from '@/lib/landing-highlights'
@@ -17,11 +19,15 @@ export default function HomePage() {
     <div className="flex min-h-screen flex-col">
       <Header />
       <main id="main-content" className="flex-1">
-        {/* Hero Section - 50/50 Split Layout */}
-        <LandingHero />
+        <DemoStageProvider>
+          {/* Hero Section - 50/50 Split Layout */}
+          <LandingHero />
 
-        {/* Guides, tutorials, demos, and articles as four distinct destinations */}
-        <LandingLearnSection />
+          {/* Guides, tutorials, demos, and articles as four distinct destinations, in water lit by the staged demo */}
+          <LightWell>
+            <LandingLearnSection />
+          </LightWell>
+        </DemoStageProvider>
 
         {/* Secondary Content - Collapsed for Landing */}
         <section id="how-it-works" className="border-t border-slate-200 bg-white py-16 dark:border-slate-800 dark:bg-slate-900 lg:py-24">
