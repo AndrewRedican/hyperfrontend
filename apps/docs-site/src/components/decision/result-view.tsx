@@ -8,7 +8,6 @@ import { createDate } from '@hyperfrontend/immutable-api-utils/built-in-copy/dat
 import { decisionFramework } from '../../data/decision-framework'
 import { evaluate, HYPERFRONTEND_FAMILY_ID, loadAssessment, pruneAnswers, saveAssessment } from '../../lib/decision-engine'
 import { buildDecisionRecord } from '../../lib/decision-record'
-import { ResearchDisclosure } from '../research-disclosure'
 import { BandedLandscape } from './banded-landscape'
 import { EliminationCascade } from './elimination-cascade'
 import { IndependenceSeam } from './independence-seam'
@@ -39,8 +38,9 @@ const AVAILABILITY_LABELS: Record<string, string> = {
  * It reads the assessment the questionnaire persisted locally; with nothing
  * saved it offers the way back rather than inventing a result. Everything on
  * the page is derived from the reader's answers and the dated dataset, so it can
- * be printed, saved, and argued with line by line. The verdict is stated in
- * full; the working behind it is filed into sections the reader opens.
+ * be printed, saved, and argued with line by line. The verdict and the sections
+ * that carry it are stated in full; the working behind them is filed into
+ * sections the reader opens.
  * @param props - See {@link ResultViewProps}.
  * @param props.assessmentRoute
  * @returns The record, or an empty state.
@@ -106,7 +106,7 @@ export function ResultView({ assessmentRoute }: ResultViewProps) {
     )
   }
 
-  const { hyperfrontendFloor, implementations, metadata } = decisionFramework
+  const { hyperfrontendFloor, implementations } = decisionFramework
   const hfRuledOutAnswer = result.hyperfrontend.ruledOutBy
     ? decisionFramework.questions
         .find((question) => question.id === result.hyperfrontend.ruledOutBy?.questionId)
@@ -184,7 +184,7 @@ export function ResultView({ assessmentRoute }: ResultViewProps) {
             <>
               {result.hyperfrontend.matchedAnswers.length > 0 ? (
                 <ul className="space-y-2.5">
-                  {result.hyperfrontend.matchedAnswers.map(({ question, answer }) => (
+                  {result.hyperfrontend.matchedAnswers.map(({ answer }) => (
                     <li
                       key={answer.id}
                       className="flex gap-3 rounded-xl border border-emerald-200 bg-emerald-50/50 p-4 dark:border-emerald-900/60 dark:bg-emerald-950/20"
@@ -193,7 +193,6 @@ export function ResultView({ assessmentRoute }: ResultViewProps) {
                       <span className="min-w-0">
                         <span className="block text-sm font-medium text-slate-900 dark:text-white">{answer.label}</span>
                         <span className="mt-1 block text-xs leading-relaxed text-slate-600 dark:text-slate-400">{answer.consequence}</span>
-                        <span className="mt-1 block text-[11px] text-slate-400 dark:text-slate-500">{question.prompt}</span>
                       </span>
                     </li>
                   ))}
@@ -395,16 +394,6 @@ export function ResultView({ assessmentRoute }: ResultViewProps) {
           </p>
           <BandedLandscape result={result} onSelect={selectFamily} />
         </RecordSection>
-      </div>
-
-      <div className="mt-10 print:hidden">
-        <ResearchDisclosure
-          reviewed={metadata.researchSnapshot}
-          route="/docs/is-hyperfrontend-right-for-you/result"
-          subject="fit assessment result"
-          unitCount={metadata.unitCount}
-          attributeCount={metadata.attributeCount}
-        />
       </div>
     </div>
   )
