@@ -1,5 +1,7 @@
 import type { TypeDocOutput } from '@/components/api-reference'
 import { ApiLinkProvider, CopyButton, ScopedApiReference } from '@/components/api-reference'
+// why: the barrel is a client module, and a predicate re-exported through it cannot be called while rendering on the server
+import { hasScopedApiReference } from '@/components/api-reference/scoped-api-reference'
 import { Breadcrumb } from '@/components/breadcrumb'
 import { DocumentShell } from '@/components/document/document-shell'
 import { ReadmeContent } from '@/components/readme-content'
@@ -51,6 +53,11 @@ export async function SubmoduleDocPage({ librarySlug, packageName, submodulePath
     readmeDiagrams = extracted.diagrams
     readmeHtml = await markdownToHtml(extracted.processedContent)
     sections = extractMarkdownSections(extracted.processedContent)
+  }
+
+  if (apiData && hasScopedApiReference(apiData, packageName, submodulePath)) {
+    // why: the reference is a section of this page with a server-rendered anchor, but its symbols are not; the index offers the way in and the reference's own listing takes over from there
+    sections.push({ title: 'API Reference', anchor: 'api-reference', level: 2 })
   }
 
   return (
