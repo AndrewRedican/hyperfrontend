@@ -8,6 +8,18 @@ import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 export const NAV_BREAKPOINT = 1024
 
 /**
+ * Viewport width, in pixels, at or above which a document's index stands beside
+ * it as a third column. Matches the `rail` screen in the Tailwind config.
+ *
+ * The docs shell is capped at `max-w-7xl`, so a third column is taken out of
+ * the document's own width rather than added beside it. Below this width the
+ * sidebar, a readable measure, and an index do not all fit, and the index
+ * folds into a disclosure above the document instead. Above it the document
+ * still reads at roughly the width the typography is set for.
+ */
+export const DOC_INDEX_BREAKPOINT = 1400
+
+/**
  * Tailwind visibility classes for every navigation surface.
  *
  * They live together because they describe one switch rather than three
@@ -29,4 +41,8 @@ export const navVisibility = freeze(<const>{
   sidebar: 'hidden lg:block',
   /** Drawer trigger and panel: shown below {@link NAV_BREAKPOINT}, exactly where the other two are absent. */
   drawer: 'lg:hidden',
+  /** Document index rail: stands beside the document from {@link DOC_INDEX_BREAKPOINT} up. */
+  documentRail: 'hidden rail:block',
+  /** Document toolbar above the document: shown below {@link DOC_INDEX_BREAKPOINT}, exactly where the rail is absent. */
+  documentToolbar: 'rail:hidden',
 })
