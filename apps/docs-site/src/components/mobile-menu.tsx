@@ -7,7 +7,7 @@ import { createContext, useContext, useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
-import { docsNavigation, getNavIconKind, mainNavLinks as sharedMainNavLinks } from '../lib/navigation'
+import { docsNavigation, getNavIconKind, getNavLabel, mainNavLinks as sharedMainNavLinks } from '../lib/navigation'
 import { NavItemIcon } from './nav-item-icon'
 import { ThemeToggle } from './theme-toggle'
 
@@ -20,15 +20,16 @@ interface NavItem {
 
 /**
  * Converts shared navigation items to mobile menu-specific format.
- * Uses the slug as the display title (without `@hyperfrontend/` prefix) and
- * bakes in the package/submodule icon kind for each entry.
+ * Titles come from the shared label helper, so the drawer and the desktop
+ * sidebar shorten an entry the same way, and each entry bakes in its
+ * package/submodule icon kind.
  * @param items - The shared navigation items to convert
  * @param insidePackage - Whether the items live inside a package subtree
  * @returns The converted navigation items for mobile menu
  */
 function convertToMobileNav(items: SharedNavItem[], insidePackage = false): NavItem[] {
   return items.map((item) => ({
-    title: item.slug,
+    title: getNavLabel(item),
     href: item.href,
     iconKind: getNavIconKind(item, insidePackage),
     children: item.children ? convertToMobileNav(item.children, insidePackage || Boolean(item.packageName)) : undefined,

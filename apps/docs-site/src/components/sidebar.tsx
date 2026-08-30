@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
-import { docsNavigation, getNavIconKind } from '../lib/navigation'
+import { docsNavigation, getNavIconKind, getNavLabel } from '../lib/navigation'
 import { NavItemIcon } from './nav-item-icon'
 
 interface NavItem {
@@ -17,15 +17,16 @@ interface NavItem {
 
 /**
  * Converts shared navigation items to sidebar-specific format.
- * Uses the slug as the display title (without `@hyperfrontend/` prefix) and
- * bakes in the package/submodule icon kind for each entry.
+ * Titles come from the shared label helper, so the sidebar and the mobile
+ * drawer shorten an entry the same way, and each entry bakes in its
+ * package/submodule icon kind.
  * @param items - The shared navigation items to convert
  * @param insidePackage - Whether the items live inside a package subtree
  * @returns The converted navigation items for sidebar
  */
 function convertToSidebarNav(items: SharedNavItem[], insidePackage = false): NavItem[] {
   return items.map((item) => ({
-    title: item.slug,
+    title: getNavLabel(item),
     href: item.href,
     iconKind: getNavIconKind(item, insidePackage),
     children: item.children ? convertToSidebarNav(item.children, insidePackage || Boolean(item.packageName)) : undefined,

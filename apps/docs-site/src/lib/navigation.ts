@@ -490,16 +490,25 @@ export const docsNavigation: NavItem[] = [
   },
 ]
 
+/** Suffix carried by every utility package slug, redundant once the entry sits under `Utils`. */
+const UTILS_SLUG_SUFFIX = '-utils'
+
 /**
- * Formats a navigation item's display title.
+ * Formats a navigation entry's label.
  *
- * @param item - The navigation item
- * @param usePackageName - Whether to use the full package name (for mobile) or slug (for desktop)
- * @returns The formatted display title
+ * A label drops the context its group already supplies: package entries read as
+ * their slug rather than the full `@hyperfrontend/` name, and a utility package
+ * under `Utils` drops the `-utils` suffix too, so
+ * `@hyperfrontend/random-generator-utils` is listed as `random-generator`. Both
+ * navigations call this, so the sidebar and the drawer always agree.
+ *
+ * Only the label is shortened. The canonical package name stays on
+ * `packageName` for the page itself, its metadata, and every npm-facing surface.
+ *
+ * @param item - The navigation item to label.
+ * @returns The text to render for that entry.
  */
-export function getDisplayTitle(item: NavItem, usePackageName = false): string {
-  if (usePackageName && item.packageName) {
-    return item.packageName
-  }
+export function getNavLabel(item: NavItem): string {
+  if (item.packageName && item.slug.endsWith(UTILS_SLUG_SUFFIX)) return item.slug.slice(0, -UTILS_SLUG_SUFFIX.length)
   return item.slug
 }
