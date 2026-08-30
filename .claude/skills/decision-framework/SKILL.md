@@ -10,15 +10,15 @@ the recommendation path. Two sides, one direction of travel.
 
 ## Paths
 
-| Role              | Path                                                                      |
-| ----------------- | ------------------------------------------------------------------------- |
-| Model + evidence  | `apps/docs-site/notes/decision-framework/` (start at its README)          |
-| Known defects     | `.../notes/decision-framework/BACKLOG.md`                                 |
-| Published dataset | `apps/docs-site/src/data/decision-framework.ts`                           |
-| Engine + record   | `apps/docs-site/src/lib/decision-engine.ts`, `decision-record.ts`         |
-| Diagrams          | `apps/docs-site/src/components/decision/`, `src/lib/delivery-topology.ts` |
-| Pages             | `apps/docs-site/src/app/docs/is-hyperfrontend-right-for-you/`             |
-| Drift guard       | `.../notes/decision-framework/matrix/check-projection.mjs`                |
+| Role              | Path                                                                                                    |
+| ----------------- | ------------------------------------------------------------------------------------------------------- |
+| Model + evidence  | `apps/docs-site/notes/decision-framework/` (start at its README)                                        |
+| Known defects     | `.../notes/decision-framework/BACKLOG.md`                                                               |
+| Published dataset | `apps/docs-site/src/data/decision-framework.ts`                                                         |
+| Engine + record   | `apps/docs-site/src/lib/decision-engine.ts`, `decision-record.ts`                                       |
+| Diagrams          | `apps/docs-site/src/components/decision/`, `src/lib/delivery-topology.ts`, `delivery-topology-table.ts` |
+| Pages             | `apps/docs-site/src/app/docs/is-hyperfrontend-right-for-you/`                                           |
+| Drift guard       | `.../notes/decision-framework/matrix/check-projection.mjs`                                              |
 
 ## Gate
 
