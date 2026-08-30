@@ -11,6 +11,8 @@ export interface RecordSectionProps {
   id: string
   /** Section heading. */
   title: string
+  /** Whether the section starts open. Set on the sections that carry the answer, so the record reads without a click. */
+  defaultOpen?: boolean
   /** Section body. */
   children: ReactNode
 }
@@ -26,13 +28,15 @@ interface ToggleIconProps {
 /**
  * One collapsible, linkable section of the record.
  *
- * Sections start closed so the record opens as a readable outline rather than
- * a wall, and each one carries an anchor: a link someone saved to a section
+ * The sections that answer the question start open and the supporting working
+ * starts closed, so the record reads as a result with its evidence filed
+ * behind it. Each one carries an anchor: a link someone saved to a section
  * lands on it and opens it. The body stays in the document while closed, so
  * find-in-page and printing still reach it.
  * @param props - See {@link RecordSectionProps}.
  * @param props.id
  * @param props.title
+ * @param props.defaultOpen
  * @param props.children
  * @returns The section.
  * @example
@@ -40,8 +44,8 @@ interface ToggleIconProps {
  * <RecordSection id="recorded-answers" title="Recorded answers">{table}</RecordSection>
  * ```
  */
-export function RecordSection({ id, title, children }: RecordSectionProps) {
-  const [open, setOpen] = useState(false)
+export function RecordSection({ id, title, defaultOpen = false, children }: RecordSectionProps) {
+  const [open, setOpen] = useState(defaultOpen)
 
   useEffect(() => {
     const openWhenAddressed = () => {

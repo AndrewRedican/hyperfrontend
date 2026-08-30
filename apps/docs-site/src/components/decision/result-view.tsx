@@ -178,6 +178,7 @@ export function ResultView({ assessmentRoute }: ResultViewProps) {
         <RecordSection
           id="hyperfrontend-fit"
           title={result.hyperfrontend.viable ? 'Why HyperFrontend fits' : 'Why HyperFrontend does not fit'}
+          defaultOpen
         >
           {result.hyperfrontend.viable ? (
             <>
@@ -269,11 +270,11 @@ export function ResultView({ assessmentRoute }: ResultViewProps) {
           )}
         </RecordSection>
 
-        <RecordSection id="delivery-topology" title="Delivery topology">
+        <RecordSection id="delivery-topology" title="Delivery topology" defaultOpen>
           <IndependenceSeam result={result} assessmentRoute={assessmentRoute} />
         </RecordSection>
 
-        <RecordSection id="viable-approaches" title="Viable approaches">
+        <RecordSection id="viable-approaches" title="Viable approaches" defaultOpen>
           <div className="space-y-3">
             {result.surviving.map((family) => {
               const impls = implementations.filter((impl) => impl.families.includes(family.id))
