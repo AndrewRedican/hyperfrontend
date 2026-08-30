@@ -14,7 +14,6 @@ export const metadata: Metadata = {
 
 /**
  * Renders the decision record for an assessment held in the reader's browser.
- *
  * @returns The result page.
  */
 export default function FitAssessmentResultPage() {
