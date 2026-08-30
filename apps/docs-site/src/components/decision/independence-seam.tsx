@@ -13,7 +13,7 @@ import type {
   TopologyPlaceholder,
 } from '../../lib/delivery-topology'
 import Link from 'next/link'
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { deriveDeliveryTopology } from '../../lib/delivery-topology'
 
 /** Props for {@link IndependenceSeam}. */
@@ -85,13 +85,6 @@ const LANE_CLASS: Record<PartyTreatment, string> = {
   'not-established': 'border-dotted border-slate-300 dark:border-slate-600',
 }
 
-const RAIL_CLASS: Record<RailStyle, string> = {
-  hard: 'border-l-2 border-solid border-slate-500 dark:border-slate-400',
-  'strong-preference': 'border-l-2 border-dashed border-slate-400 dark:border-slate-500',
-  'weak-preference': 'border-l border-dashed border-slate-300 dark:border-slate-600',
-  unanswered: 'border-l border-dotted border-slate-300 dark:border-slate-700',
-}
-
 const RAIL_WORDS: Record<RailStyle, string> = {
   hard: 'Drawn from a hard requirement you stated.',
   'strong-preference': 'Drawn from a preference you ranked, not a requirement.',
@@ -100,8 +93,9 @@ const RAIL_WORDS: Record<RailStyle, string> = {
 }
 
 const GHOST_CAPTION = 'However many others there are: you have not told us, and it does not change the verdict.'
-const HANDOVER_FOOTNOTE = 'One modification ceiling was recorded and is shown for every party. Nothing here differs per party.'
 const DEPENDENCY_LOCKED = 'Framework copies on one screen only arise once two teams share a screen.'
+const LEGEND =
+  '* Solid fill is your team, hatched fill is a party you cannot direct, and a dotted outline is something no answer has established yet. Every dotted element is a link to the question that would fill it.'
 
 /**
  * Renders an element no answer has established: a real control leading to the
@@ -225,15 +219,18 @@ function PositionRow({ position }: PositionRowProps) {
     <li
       className={`rounded-lg border p-3 ${position.struck ? 'border-slate-300 dark:border-slate-700' : 'border-emerald-600 dark:border-emerald-400'}`}
     >
-      <p className="text-sm font-semibold">
-        <span aria-hidden="true" className="mr-2 font-mono text-xs">
-          {position.struck ? '(x)' : '(o)'}
+      <p className="flex flex-wrap items-center gap-2 text-sm font-semibold">
+        <span
+          className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${
+            position.struck
+              ? 'bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300'
+              : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300'
+          }`}
+        >
+          {position.struck ? 'ruled out' : 'open'}
         </span>
         {position.struck ? (
-          <s className="text-slate-500 decoration-slate-400 dark:text-slate-400 dark:decoration-slate-500">
-            <span className="sr-only">Ruled out: </span>
-            {position.poleLabel}
-          </s>
+          <s className="text-slate-500 decoration-slate-400 dark:text-slate-400 dark:decoration-slate-500">{position.poleLabel}</s>
         ) : (
           <span className="text-emerald-700 dark:text-emerald-300">{position.poleLabel}</span>
         )}
@@ -285,44 +282,57 @@ function PositionRow({ position }: PositionRowProps) {
  * @returns The band section.
  */
 function Band({ number, title, rail, provenance, assessmentRoute, children }: BandProps) {
+  const [open, setOpen] = useState(false)
   // why: an answered band needs no chip saying so, since the band is drawn from that answer; only a question still open is worth a control
-  const open = provenance.filter((chip) => !chip.answerLabel)
+  const unanswered = provenance.filter((chip) => !chip.answerLabel)
+  const panelId = `topology-band-${number}`
+
   return (
-    <section
-      aria-label={`Band ${number}: ${title}`}
-      className={`border-t border-slate-200 p-4 dark:border-slate-800 md:grid md:gap-4 md:p-6 print:break-inside-avoid ${
-        open.length > 0 ? 'md:grid-cols-[3rem_minmax(0,1fr)_9rem]' : 'md:grid-cols-[3rem_minmax(0,1fr)]'
-      }`}
-    >
-      <div className={`hidden md:col-start-1 md:row-start-1 md:flex md:flex-col md:items-center md:gap-2 md:pl-3 ${RAIL_CLASS[rail]}`}>
-        <span className="text-sm font-bold text-slate-400 dark:text-slate-500">{number}</span>
-        <svg viewBox="0 0 8 40" aria-hidden="true" className="h-10 w-2 text-slate-300 dark:text-slate-600">
-          <path d="M4 0v32M0 30l4 8 4-8" fill="none" stroke="currentColor" strokeWidth="1.5" />
-        </svg>
-      </div>
-      <div className="md:col-start-2 md:row-start-1">
-        <h4 className="text-xs font-bold uppercase tracking-wide text-slate-900 dark:text-white">
-          <span className="md:hidden">{number}. </span>
-          {title}
-        </h4>
+    <section aria-label={`Band ${number}: ${title}`} className="border-t border-slate-200 dark:border-slate-800 print:break-inside-avoid">
+      <button
+        type="button"
+        onClick={() => setOpen((current) => !current)}
+        aria-expanded={open}
+        aria-controls={panelId}
+        className="flex w-full items-center gap-3 p-4 text-left transition-colors hover:bg-slate-50 dark:hover:bg-slate-900/60 md:px-6"
+      >
+        <span className="w-4 shrink-0 text-sm font-bold text-slate-400 dark:text-slate-500">{number}</span>
+        <h4 className="min-w-0 flex-1 text-xs font-bold uppercase tracking-wide text-slate-900 dark:text-white">{title}</h4>
+        <BandChevron className={`h-4 w-4 shrink-0 text-slate-400 transition-transform ${open ? 'rotate-180' : ''}`} />
+      </button>
+      <div id={panelId} hidden={!open} className="px-4 pb-5 md:px-6">
         <span className="sr-only">{RAIL_WORDS[rail]}</span>
-        <div className="mt-3">{children}</div>
+        {children}
+        {unanswered.length > 0 ? (
+          <div className="mt-4 flex flex-wrap gap-1.5">
+            {unanswered.map((chip) => (
+              <Link
+                key={chip.questionId}
+                href={`${assessmentRoute}?question=${encodeURIComponent(chip.questionId)}`}
+                aria-label={`Question ${chip.questionNumber} is not answered. Answer it.`}
+                className="rounded-md border border-dotted border-slate-300 px-2 py-1 text-[11px] text-slate-500 hover:border-slate-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-500 dark:border-slate-600 dark:text-slate-400 dark:hover:border-slate-400"
+              >
+                Q{chip.questionNumber}: not asked yet
+              </Link>
+            ))}
+          </div>
+        ) : null}
       </div>
-      {open.length > 0 ? (
-        <div className="mt-3 flex flex-wrap gap-1.5 md:col-start-3 md:row-start-1 md:mt-0 md:flex-col">
-          {open.map((chip) => (
-            <Link
-              key={chip.questionId}
-              href={`${assessmentRoute}?question=${encodeURIComponent(chip.questionId)}`}
-              aria-label={`Question ${chip.questionNumber} is not answered. Answer it.`}
-              className="rounded-md border border-dotted border-slate-300 px-2 py-1 text-[11px] text-slate-500 hover:border-slate-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-500 dark:border-slate-600 dark:text-slate-400 dark:hover:border-slate-400"
-            >
-              Q{chip.questionNumber}: not asked yet
-            </Link>
-          ))}
-        </div>
-      ) : null}
     </section>
+  )
+}
+
+/** Props for the band chevron. */
+interface BandChevronProps {
+  /** Sizing and rotation classes. */
+  className?: string
+}
+
+function BandChevron({ className }: BandChevronProps) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" aria-hidden="true">
+      <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+    </svg>
   )
 }
 
@@ -395,6 +405,7 @@ export function IndependenceSeam({ result, assessmentRoute }: IndependenceSeamPr
     <figure className="mt-6 rounded-2xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950">
       <figcaption className="p-4 md:p-6">
         <p className="text-sm leading-relaxed text-slate-700 dark:text-slate-200">{topology.thesis}</p>
+        <p className="mt-3 text-xs leading-relaxed text-slate-500 dark:text-slate-400">{LEGEND}</p>
       </figcaption>
 
       <p aria-live="polite" className="sr-only">
@@ -437,14 +448,11 @@ export function IndependenceSeam({ result, assessmentRoute }: IndependenceSeamPr
         assessmentRoute={assessmentRoute}
       >
         {handover.artifact ? (
-          <>
-            <div className="grid gap-3 sm:grid-cols-2">
-              {ownership.lanes.map((lane) => (
-                <PartyCard key={lane.id} lane={lane} artifact={handover.artifact} locked={handover.locked} />
-              ))}
-            </div>
-            <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">{HANDOVER_FOOTNOTE}</p>
-          </>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {ownership.lanes.map((lane) => (
+              <PartyCard key={lane.id} lane={lane} artifact={handover.artifact} locked={handover.locked} />
+            ))}
+          </div>
         ) : handover.placeholder ? (
           <Placeholder placeholder={handover.placeholder} assessmentRoute={assessmentRoute} />
         ) : null}
@@ -452,42 +460,12 @@ export function IndependenceSeam({ result, assessmentRoute }: IndependenceSeamPr
 
       <Band number={3} title="Where the parts are joined" rail={join.rail} provenance={join.provenance} assessmentRoute={assessmentRoute}>
         <SeamView seam={join.seam} contract={join.contract.text} assessmentRoute={assessmentRoute} />
-        <p className="text-xs text-slate-600 dark:text-slate-300">{join.positionsCaption}</p>
-        <ul className="mt-2 space-y-2">
+        <ul className="space-y-2">
           {join.positions.map((position) => (
             <PositionRow key={position.id} position={position} />
           ))}
         </ul>
-        <div className="mt-3 space-y-2 text-xs text-slate-600 dark:text-slate-300">
-          {join.operator ? (
-            <p>who runs the composition point: {join.operator}</p>
-          ) : join.operatorPlaceholder ? (
-            <Placeholder placeholder={join.operatorPlaceholder} assessmentRoute={assessmentRoute} />
-          ) : null}
-          {join.admission ? <p>admission: {join.admission.text}</p> : null}
-          <p>
-            The boundary here is about{' '}
-            <span
-              className={
-                join.boundaryLanguage === 'attackers'
-                  ? 'rounded bg-rose-100 px-1 font-medium text-rose-800 dark:bg-rose-950/60 dark:text-rose-200'
-                  : 'font-medium'
-              }
-            >
-              {join.boundaryLanguage}
-            </span>
-            , because that is what your answers stated.
-          </p>
-          {join.requirements.length > 0 ? (
-            <ul className="flex flex-wrap gap-1.5">
-              {join.requirements.map((requirement) => (
-                <li key={requirement} className="rounded-md bg-slate-100 px-2 py-1 text-slate-700 dark:bg-slate-800 dark:text-slate-200">
-                  {requirement}
-                </li>
-              ))}
-            </ul>
-          ) : null}
-        </div>
+        {join.admission ? <p className="mt-3 text-xs text-slate-600 dark:text-slate-300">admission: {join.admission.text}</p> : null}
       </Band>
 
       <Band number={4} title="What the user sees" rail={surface.rail} provenance={surface.provenance} assessmentRoute={assessmentRoute}>
@@ -504,7 +482,7 @@ export function IndependenceSeam({ result, assessmentRoute }: IndependenceSeamPr
           )}
           {pageShapeOf(topology)}
         </div>
-        <p className="mt-2 text-xs text-slate-600 dark:text-slate-300">{surface.shapeText}</p>
+        <p className="mt-6 text-xs text-slate-600 dark:text-slate-300">{surface.shapeText}</p>
         {surface.divider ? <p className="mt-1 text-xs text-slate-600 dark:text-slate-300">{surface.divider.label}</p> : null}
         {surface.regionLink ? (
           <p className="mt-1 text-xs text-slate-600 dark:text-slate-300">across it: {surface.regionLink.text}</p>
@@ -528,11 +506,6 @@ export function IndependenceSeam({ result, assessmentRoute }: IndependenceSeamPr
           ) : null}
         </div>
       </Band>
-
-      <p className="border-t border-slate-200 p-4 text-xs leading-relaxed text-slate-500 dark:border-slate-800 dark:text-slate-400 md:p-6">
-        Solid fill is your team, hatched fill is a party you cannot direct, and a dotted outline is something no answer has established yet.
-        Every dotted element is a link to the question that would fill it.
-      </p>
     </figure>
   )
 }
