@@ -7,6 +7,7 @@ import { createContext, useContext, useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
+import { navVisibility } from '../lib/nav-visibility'
 import { docsNavigation, getNavIconKind, getNavLabel, mainNavLinks as sharedMainNavLinks } from '../lib/navigation'
 import { NavItemIcon } from './nav-item-icon'
 import { ThemeToggle } from './theme-toggle'
@@ -237,7 +238,7 @@ export function MobileMenu() {
       {/* Hamburger Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center justify-center rounded-lg p-2 text-slate-500 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white md:hidden"
+        className={`flex items-center justify-center rounded-lg p-2 text-slate-500 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white ${navVisibility.drawer}`}
         aria-label={isOpen ? 'Close menu' : 'Open menu'}
         aria-expanded={isOpen}
       >
@@ -248,9 +249,9 @@ export function MobileMenu() {
       {mounted &&
         isOpen &&
         createPortal(
-          <div className="fixed inset-0 top-16 z-[60] bg-white dark:bg-slate-900 md:hidden">
+          <div className={`fixed inset-0 top-16 z-[60] bg-white dark:bg-slate-900 ${navVisibility.drawer}`}>
             <div className="h-full overflow-y-auto px-4 pb-6 pt-4">
-              {/* Main Navigation */}
+              {/* why: the drawer only ever renders below the breakpoint, where the header withholds these destinations, so it always carries them */}
               <div className="mb-6 border-b border-slate-200 pb-6 dark:border-slate-700">
                 <ul className="space-y-1">
                   {mainNavLinks.map((link) => (
