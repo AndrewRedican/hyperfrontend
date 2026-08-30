@@ -128,6 +128,38 @@ export const ECOSYSTEM_TIERS: readonly EcosystemTier[] = [
 ]
 
 /**
+ * Every placed package, flattened from the apex down: the levels in their own
+ * order, and inside a level the order that level lists.
+ *
+ * This is the site's single answer to "which package matters most to someone
+ * who has just arrived", so any surface with room for a handful of packages
+ * rather than all of them ranks with this instead of keeping a list of its own.
+ */
+export const ECOSYSTEM_ORDER: readonly string[] = ECOSYSTEM_TIERS.flatMap((tier) => tier.packages)
+
+/** The package the hierarchy opens on: the SDK the rest of the site exists to explain. */
+export const FLAGSHIP_PACKAGE: string = ECOSYSTEM_ORDER[0]
+
+/** Position lookup backing {@link ecosystemRank}. */
+const RANK_BY_PACKAGE = createMap(ECOSYSTEM_ORDER.map((packageName, index): [string, number] => [packageName, index]))
+
+/**
+ * How high a package sits in the hierarchy, as a sort key.
+ *
+ * @param packageName - npm package name
+ * @returns Zero-based position in {@link ECOSYSTEM_ORDER}; a package no level names ranks below every package that has one
+ *
+ * @example Ordering a shortlist by altitude
+ * ```typescript
+ * ['@hyperfrontend/list-utils', '@hyperfrontend/features'].sort((a, b) => ecosystemRank(a) - ecosystemRank(b))
+ * // ['@hyperfrontend/features', '@hyperfrontend/list-utils']
+ * ```
+ */
+export function ecosystemRank(packageName: string): number {
+  return RANK_BY_PACKAGE.get(packageName) ?? ECOSYSTEM_ORDER.length
+}
+
+/**
  * The facts about one package that the ecosystem view draws.
  */
 export interface EcosystemLibrary {

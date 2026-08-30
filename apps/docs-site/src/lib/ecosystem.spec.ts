@@ -2,7 +2,7 @@ import type { EcosystemLibrary } from './ecosystem'
 import { describe, expect, it } from 'vitest'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { LIBRARIES } from './content'
-import { buildEcosystem, ECOSYSTEM_TIERS, selectTopics } from './ecosystem'
+import { buildEcosystem, ecosystemRank, ECOSYSTEM_TIERS, FLAGSHIP_PACKAGE, selectTopics } from './ecosystem'
 
 /**
  * Build a library with only the fields the ecosystem model reads.
@@ -64,6 +64,20 @@ describe('ECOSYSTEM_TIERS', () => {
 
   it('carries a distinct identifier per level', () => {
     expect(createSet(ECOSYSTEM_TIERS.map((tier) => tier.id)).size).toBe(ECOSYSTEM_TIERS.length)
+  })
+})
+
+describe('ecosystemRank', () => {
+  it('ranks the flagship above everything else', () => {
+    expect(ecosystemRank(FLAGSHIP_PACKAGE)).toBe(0)
+  })
+
+  it('ranks a package by where its level sits, not by where the level lists it', () => {
+    expect(ecosystemRank('@hyperfrontend/network-protocol')).toBeLessThan(ecosystemRank('@hyperfrontend/builder'))
+  })
+
+  it('sinks a package no level names below every placed one', () => {
+    expect(ecosystemRank('@hyperfrontend/not-a-package')).toBeGreaterThan(ecosystemRank('@hyperfrontend/web-worker'))
   })
 })
 
