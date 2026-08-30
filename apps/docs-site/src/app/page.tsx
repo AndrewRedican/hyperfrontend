@@ -2,35 +2,17 @@ import { Footer } from '@/components/footer'
 import { Header } from '@/components/header'
 import { LandingHero } from '@/components/landing-hero'
 import { LandingLearnSection } from '@/components/landing-learn-section'
+import { getAllLibraryData } from '@/lib/docs-loader'
+import { FLAGSHIP_PACKAGE } from '@/lib/ecosystem'
+import { selectFeaturedPackages } from '@/lib/landing-highlights'
 
-/**
- * Featured package tile shown on the landing page: display name, link target,
- * and a priority used to sort the list ascending.
- */
-type FeaturedPackage = {
-  name: string
-  href: string
-  priority: number
-}
-
-/**
- * High-value packages to display on the landing page, sorted by priority.
- * Lower priority numbers appear first.
- */
-const FEATURED_PACKAGES: Array<FeaturedPackage> = [
-  { name: '@hyperfrontend/nexus', href: '/docs/libraries/nexus', priority: 1 },
-  { name: '@hyperfrontend/features', href: '/docs/libraries/features', priority: 2 },
-  { name: '@hyperfrontend/builder', href: '/docs/libraries/builder', priority: 3 },
-  { name: '@hyperfrontend/state-machine', href: '/docs/libraries/state-machine', priority: 4 },
-  { name: '@hyperfrontend/data-utils', href: '/docs/libraries/utils/data', priority: 5 },
-  { name: '@hyperfrontend/string-utils', href: '/docs/libraries/utils/string', priority: 6 },
-  { name: '@hyperfrontend/list-utils', href: '/docs/libraries/utils/list', priority: 7 },
-  { name: '@hyperfrontend/time-utils', href: '/docs/libraries/utils/time', priority: 8 },
-  { name: '@hyperfrontend/json-utils', href: '/docs/libraries/utils/json', priority: 9 },
-  { name: '@hyperfrontend/function-utils', href: '/docs/libraries/utils/function', priority: 10 },
-].sort((a, b) => a.priority - b.priority)
+/** How many packages the strip names before sending readers to the library index. */
+const NAMED_PACKAGE_COUNT = 8
 
 export default function HomePage() {
+  const libraries = getAllLibraryData()
+  const featuredPackages = selectFeaturedPackages(libraries, NAMED_PACKAGE_COUNT)
+
   return (
     <div className="flex min-h-screen flex-col">
       <Header />
@@ -88,7 +70,7 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Standalone Packages Strip */}
+        {/* Packages Strip - the top of the library hierarchy, flagship first */}
         <section className="border-t border-slate-200 bg-slate-50 py-8 dark:border-slate-800 dark:bg-slate-900/50">
           <div className="mx-auto max-w-7xl px-6 sm:px-8 lg:px-12">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -101,7 +83,9 @@ export default function HomePage() {
                 <NpmIcon className="h-6 w-6 text-red-500 dark:text-red-400 shrink-0" />
                 <div>
                   <span className="text-sm font-medium text-slate-900 dark:text-white">Also on npm</span>
-                  <span className="ml-2 text-sm text-slate-500 dark:text-slate-400">18+ standalone utility packages for any project</span>
+                  <span className="ml-2 text-sm text-slate-500 dark:text-slate-400">
+                    {libraries.length} packages, from the SDK down to the single-purpose utilities
+                  </span>
                 </div>
               </a>
               <a
@@ -113,10 +97,12 @@ export default function HomePage() {
               </a>
             </div>
             <div className="mt-4 flex flex-wrap gap-2">
-              {FEATURED_PACKAGES.map((pkg) => (
-                <PackageTag key={pkg.name} name={pkg.name} href={pkg.href} />
+              {featuredPackages.map((pkg) => (
+                <PackageTag key={pkg.packageName} name={pkg.packageName} href={pkg.href} flagship={pkg.packageName === FLAGSHIP_PACKAGE} />
               ))}
-              <span className="text-xs text-slate-400 dark:text-slate-500 self-center">+8 more</span>
+              <span className="text-xs text-slate-400 dark:text-slate-500 self-center">
+                +{libraries.length - featuredPackages.length} more
+              </span>
             </div>
           </div>
         </section>
@@ -127,13 +113,28 @@ export default function HomePage() {
 }
 
 /** Props for {@link PackageTag} */
-type PackageTagProps = { name: string; href: string }
+type PackageTagProps = { name: string; href: string; flagship?: boolean }
 
-function PackageTag({ name, href }: PackageTagProps) {
+/**
+ * One named package. The flagship keeps the shape of every other tag and gains
+ * the page's own colour, which is the whole difference the strip needs: the
+ * hierarchy already put it first, so the tag only has to say that the package
+ * leading the row is leading it for a reason.
+ * @param props - Component props
+ * @param props.name - npm package name
+ * @param props.href - Route to the package's documentation
+ * @param props.flagship - Whether this is the package the hierarchy opens on
+ * @returns The rendered tag
+ */
+function PackageTag({ name, href, flagship }: PackageTagProps) {
   return (
     <a
       href={href}
-      className="inline-flex items-center rounded-full bg-white px-2.5 py-1 text-xs font-medium text-slate-600 ring-1 ring-inset ring-slate-200 hover:bg-slate-50 hover:text-primary-600 hover:ring-primary-200 transition-colors dark:bg-slate-800 dark:text-slate-300 dark:ring-slate-700 dark:hover:bg-slate-700 dark:hover:text-primary-400 dark:hover:ring-primary-500/50"
+      className={
+        flagship
+          ? 'inline-flex items-center rounded-full bg-primary-50 px-2.5 py-1 text-xs font-semibold text-primary-700 ring-1 ring-inset ring-primary-200 hover:bg-primary-100 transition-colors dark:bg-primary-950/60 dark:text-primary-300 dark:ring-primary-800 dark:hover:bg-primary-900/50'
+          : 'inline-flex items-center rounded-full bg-white px-2.5 py-1 text-xs font-medium text-slate-600 ring-1 ring-inset ring-slate-200 hover:bg-slate-50 hover:text-primary-600 hover:ring-primary-200 transition-colors dark:bg-slate-800 dark:text-slate-300 dark:ring-slate-700 dark:hover:bg-slate-700 dark:hover:text-primary-400 dark:hover:ring-primary-500/50'
+      }
     >
       {name}
     </a>
