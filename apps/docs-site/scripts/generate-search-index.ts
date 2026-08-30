@@ -238,6 +238,27 @@ function generateSearchIndex(): void {
     })
   }
 
+  // why: the fit assessment is linked from the docs landing page rather than the sidebar, so nav traversal never reaches it and site search would miss the one page that answers "which approach do I need"
+  seen.add('/docs/is-hyperfrontend-right-for-you')
+  documents.push({
+    url: '/docs/is-hyperfrontend-right-for-you',
+    title: 'Is HyperFrontend right for you?',
+    kind: 'page',
+    description: 'A short assessment that names the microfrontend approach your constraints allow, or tells you that you need none',
+    terms: [
+      'microfrontend',
+      'decision',
+      'assessment',
+      'fit',
+      'compare',
+      'alternatives',
+      'module federation',
+      'single-spa',
+      'iframe',
+      'should I use microfrontends',
+    ],
+  })
+
   collectNavDocuments(<NavNode[]>docsNavigation, seen, undefined, documents)
   collectNavDocuments(<NavNode[]>mainNavLinks, seen, undefined, documents)
 

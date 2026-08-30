@@ -3,17 +3,15 @@ import { Breadcrumb } from '@/components/breadcrumb'
 import { Questionnaire } from '@/components/decision/questionnaire'
 import { DocsContentWrapper } from '@/components/docs-content-wrapper'
 import { H1 } from '@/components/heading-with-anchor'
+import { JsonLd } from '@/components/json-ld'
 import { ResearchDisclosure } from '@/components/research-disclosure'
 import { decisionFramework } from '@/data/decision-framework'
+import { getFitAssessmentMetadata } from '@/lib/metadata'
+import { SITE_URL } from '@/lib/site'
 
 const ROUTE = '/docs/is-hyperfrontend-right-for-you'
 
-export const metadata: Metadata = {
-  title: 'Is HyperFrontend right for you?',
-  description:
-    'Answer a few questions about your systems and teams to find out whether HyperFrontend fits, and which microfrontend approach fits better if it does not.',
-  alternates: { canonical: `${ROUTE}/` },
-}
+export const metadata: Metadata = getFitAssessmentMetadata(decisionFramework.metadata.lastReviewed)
 
 /**
  * The fit assessment: a short questionnaire that decides whether HyperFrontend
@@ -25,6 +23,26 @@ export default function FitAssessmentPage() {
 
   return (
     <DocsContentWrapper>
+      <JsonLd
+        data={{
+          '@context': 'https://schema.org',
+          '@type': 'WebApplication',
+          name: 'HyperFrontend fit assessment',
+          url: `${SITE_URL}${ROUTE}/`,
+          applicationCategory: 'DeveloperApplication',
+          operatingSystem: 'Any',
+          browserRequirements: 'Requires JavaScript',
+          isAccessibleForFree: true,
+          dateModified: frameworkMeta.lastReviewed,
+          description: metadata.description,
+          about: [
+            { '@type': 'Thing', name: 'Microfrontend architecture' },
+            { '@type': 'Thing', name: 'Frontend composition' },
+          ],
+          publisher: { '@type': 'Organization', name: 'HyperFrontend', url: SITE_URL },
+        }}
+      />
+
       <Breadcrumb />
 
       <H1 className="font-display text-4xl font-bold tracking-tight text-slate-900 dark:text-white">Is HyperFrontend right for you?</H1>
