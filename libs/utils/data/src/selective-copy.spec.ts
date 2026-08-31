@@ -1,5 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-empty-function */
+import { afterEach, beforeEach } from 'node:test'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { deregisterIterableClass } from './deregister-iterable-class'
 import { isIdentical } from './is-identical'
 import { registerIterableClass } from './register-iterable-class'

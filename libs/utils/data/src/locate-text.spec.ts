@@ -1,3 +1,5 @@
+import { afterEach, beforeEach } from 'node:test'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { locateText } from './locate-text'
 import { setConfig } from './shared/consts'
 

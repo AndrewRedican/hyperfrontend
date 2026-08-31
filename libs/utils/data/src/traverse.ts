@@ -39,7 +39,7 @@ const circularDependencyTraversal: TraversalCircular = (
 ) => {
   if (stack.exists(value)) return state
   const ok = condition(config, key, value, path, parent)
-  /* istanbul ignore next */
+  /* node:coverage ignore next */
   if (config.exitEarly) return state
   if (ok) callback(key, value, path, state, parent)
   stack.add(value)
@@ -56,7 +56,7 @@ const circularDependencyTraversal: TraversalCircular = (
 
 const nonCircularDependencyTraversal: TraversalNonCircular = (condition, callback, config, key, path, value, parent, state) => {
   const ok = condition(config, key, value, path, parent)
-  /* istanbul ignore next */
+  /* node:coverage ignore next */
   if (config.exitEarly) return state
   if (ok) callback(key, value, path, state, parent)
   const type = getType(value)

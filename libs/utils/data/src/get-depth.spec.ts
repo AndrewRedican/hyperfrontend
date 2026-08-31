@@ -1,3 +1,5 @@
+import { afterEach, beforeEach } from 'node:test'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { getDepth } from './get-depth'
 import { setConfig } from './shared/consts'
 

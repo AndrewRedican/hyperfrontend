@@ -1,3 +1,5 @@
+import { afterEach, beforeEach } from 'node:test'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { marker } from '../marker'
 import { getConfig, setConfig, registeredIterableClasses } from './consts'
 

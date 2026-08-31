@@ -1,3 +1,5 @@
+import { beforeEach } from 'node:test'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { CircularReference } from './circular-reference'
 
 describe('CircularReference', () => {

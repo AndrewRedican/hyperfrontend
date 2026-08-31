@@ -1,6 +1,9 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-empty-function */
+import type { Mock } from '@hyperfrontend/testing'
+import { afterEach, beforeEach } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { setConfig } from './shared/consts'
 import { createTraversal, traverse } from './traverse'
 
@@ -52,7 +55,7 @@ describe('traverse', () => {
 
 describe('traverse - with config detectCircularReferences:false', () => {
   let target: unknown
-  let callback: jest.Mock<void, [key: string, value: unknown, path: string[], state: any, parent: unknown]>
+  let callback: Mock<void, [key: string, value: unknown, path: string[], state: any, parent: unknown]>
 
   const setupCallbackSpy = () => (callback = jest.fn((key, value, path, state, parent) => {}))
 
@@ -130,7 +133,7 @@ describe('traverse - with config detectCircularReferences:false', () => {
 
 describe('traverse - with config detectCircularReferences:true', () => {
   let target: unknown
-  let callback: jest.Mock<void, [key: string, value: unknown, path: string[], state: any, parent: unknown]>
+  let callback: Mock<void, [key: string, value: unknown, path: string[], state: any, parent: unknown]>
 
   const setupCallbackSpy = () => (callback = jest.fn((key, value, path, state, parent) => {}))
 

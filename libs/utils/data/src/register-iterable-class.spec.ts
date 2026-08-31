@@ -1,3 +1,5 @@
+import { after as afterAll, beforeEach } from 'node:test'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { deregisterIterableClass } from './deregister-iterable-class'
 import { registerIterableClass } from './register-iterable-class'
 import { registeredIterableClasses, registeredClasses } from './shared/consts'

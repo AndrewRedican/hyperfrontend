@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { deregisterClassTypes } from './deregister-class-types'
 import { getType } from './get-type'
 import { registerClassTypes } from './register-class-types'

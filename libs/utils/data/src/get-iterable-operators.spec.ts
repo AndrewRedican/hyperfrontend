@@ -1,4 +1,6 @@
 import type { RegisteredIterableClassEntry } from './models'
+import { after as afterAll, beforeEach } from 'node:test'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { deregisterIterableClass } from './deregister-iterable-class'
 import { getIterableOperators } from './get-iterable-operators'
 import { registerIterableClass } from './register-iterable-class'

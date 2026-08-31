@@ -136,21 +136,19 @@ export const selectiveCopyForCircularReferencesRecursive = <T extends Record<str
       let [start, destination] = [iterableInstance, iterableInstance] as [Record<string, unknown>, Record<string, unknown>]
 
       for (let i = 0; i < startPath.length - 1; i += 1) {
-        /* istanbul ignore else */
         if (startPath[i] !== '__proto__') {
           start = start[startPath[i]] as Record<string, unknown>
         }
       }
 
       for (let j = 0; j < destinationPath.length; j += 1) {
-        /* istanbul ignore else */
         if (destinationPath[j] !== '__proto__') {
           destination = destination[destinationPath[j]] as Record<string, unknown>
         }
       }
 
       const lastKey = startPath[startPath.length - 1]
-      /* istanbul ignore else -- __proto__ is already filtered during iteration, this is defensive */
+      // why: __proto__ is already filtered during iteration, so this guard is defensive and never falls through.
       if (lastKey !== '__proto__') {
         start[lastKey] = destination
       }
