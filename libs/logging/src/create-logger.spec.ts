@@ -1,14 +1,17 @@
+import type { Mock } from '@hyperfrontend/testing'
 import type { ErrorLevelFn, WarnLevelFn, LogLevelFn, InfoLevelFn, DebugLevelFn } from './create-logger'
+import { beforeEach } from 'node:test'
 import { getType } from '@hyperfrontend/data-utils'
 import { noop } from '@hyperfrontend/function-utils'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { createLogger } from './create-logger'
 
 describe('createLogger', () => {
-  let error: jest.Mock<ErrorLevelFn>
-  let warn: jest.Mock<WarnLevelFn>
-  let log: jest.Mock<LogLevelFn>
-  let info: jest.Mock<InfoLevelFn>
-  let debug: jest.Mock<DebugLevelFn>
+  let error: Mock<ErrorLevelFn>
+  let warn: Mock<WarnLevelFn>
+  let log: Mock<LogLevelFn>
+  let info: Mock<InfoLevelFn>
+  let debug: Mock<DebugLevelFn>
 
   beforeEach(() => {
     error = jest.fn()
@@ -72,11 +75,11 @@ describe('logger', () => {
 })
 
 describe('logger.channel', () => {
-  let error: jest.Mock
-  let warn: jest.Mock
-  let log: jest.Mock
-  let info: jest.Mock
-  let debug: jest.Mock
+  let error: Mock
+  let warn: Mock
+  let log: Mock
+  let info: Mock
+  let debug: Mock
 
   beforeEach(() => {
     error = jest.fn()
@@ -136,8 +139,8 @@ describe('logger.channel', () => {
 })
 
 describe('logger.timed', () => {
-  let error: jest.Mock
-  let debug: jest.Mock
+  let error: Mock
+  let debug: Mock
 
   beforeEach(() => {
     error = jest.fn()
@@ -185,8 +188,8 @@ describe('logger.timed', () => {
 })
 
 describe('logger.timedAsync', () => {
-  let error: jest.Mock
-  let debug: jest.Mock
+  let error: Mock
+  let debug: Mock
 
   beforeEach(() => {
     error = jest.fn()
