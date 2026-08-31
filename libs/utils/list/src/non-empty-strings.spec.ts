@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { nonEmptyStrings } from './non-empty-strings'
 
 describe('nonEmptyStrings', () => {

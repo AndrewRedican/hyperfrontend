@@ -116,7 +116,7 @@
       "options": {
         "targetName": "test"
       },
-      "exclude": ["**/*-e2e/**/*"]
+      "exclude": ["**/*-e2e/**/*", "libs/utils/list/**/*"]
     }
   ],
   "nxCloudId": "6991685ccc04119366337805",

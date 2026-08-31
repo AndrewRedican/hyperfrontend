@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { getLastKeyInMap } from './get-last-key-in-map'
 
 describe('getLastKeyInMap', () => {
