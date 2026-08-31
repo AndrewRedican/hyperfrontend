@@ -42,6 +42,9 @@ export function registerResolutionHooks(): void {
     resolve(specifier, resolveContext, nextResolve) {
       const url = resolveSpecifier(specifier, resolveContext.parentURL, context) ?? nextResolve(specifier, resolveContext).url
 
+      // why: a replacement reaches the module it stands in for by importing it, so its own imports must not be replaced in turn.
+      if (resolveContext.parentURL?.startsWith(MOCK_SCHEME)) return { url, shortCircuit: true }
+
       // why: substituting here rather than at load is what lets a built-in be replaced at all, since one this loader has already imported would never be loaded again.
       if (isMocked(url)) return { url: `${MOCK_SCHEME}${encodeURIComponent(url)}`, shortCircuit: true }
 
