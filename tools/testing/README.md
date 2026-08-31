@@ -22,16 +22,20 @@ else.
 
 ## What a spec imports
 
-Take from `node:test` everything it can serve. Reach for this package only for what it
-cannot.
+Hooks come from `node:test`, which serves them directly. `describe`, `it`, `expect` and
+`jest` come from here.
 
 ```typescript
-import { describe, it, beforeEach, before as beforeAll, after as afterAll } from 'node:test'
-import { expect, jest } from '@hyperfrontend/testing'
+import { beforeEach, afterEach, before as beforeAll, after as afterAll } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 ```
 
-Import `describe` or `it` from here instead when the file needs `.each`, `.failing`,
-`.concurrent`, the `done` callback, or `expect.assertions`:
+`describe` and `it` are taken from this package everywhere rather than only in the files
+that need `.each`, `.failing`, `.concurrent` or the `done` callback. `expect.assertions`
+is the reason: it is the shim's `it` that resets the counter and checks it once the body
+settles, so a spec running on `node:test`'s own `it` would declare an assertion count that
+is never verified. That failure is silent, which makes it the wrong thing to leave to a
+per-file judgement.
 
 ```typescript
 import { it } from '@hyperfrontend/testing'
@@ -82,6 +86,8 @@ These are the places the runtime cannot be identical, and what it does instead.
 | `it.todo`         | Any body is ignored, matching Jest. `node:test` would run it.                                                                                                                               |
 | `clearAllTimers`  | Node has no primitive, so the clock is torn down and rebuilt at the same instant.                                                                                                           |
 | Module mocking    | Not available here. ES modules evaluate imports before any body runs, so `jest.mock` cannot take effect the way it does under Jest's CommonJS transform.                                    |
+| Decorators        | Neither of Node's TypeScript modes parses them. A decorated class in a spec applies its decorator explicitly, the way the compiler would.                                                   |
+| HTML report       | Node has no HTML coverage reporter. The per-file table on stdout and `lcov.info` are what a run produces.                                                                                   |
 
 ## Testing the runtime
 
