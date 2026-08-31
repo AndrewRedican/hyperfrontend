@@ -7,7 +7,7 @@
     "pack-install": "cd ../../../dist/libs/utils/immutable-api && npm pack && cd - && npm install ../../../dist/libs/utils/immutable-api/*.tgz"
   },
   "dependencies": {
-    "@hyperfrontend/immutable-api-utils": "file:../../../tmp/e2e-packs/hyperfrontend-immutable-api-utils-0.1.4.tgz"
+    "@hyperfrontend/immutable-api-utils": "file:../../../tmp/e2e-packs/hyperfrontend-immutable-api-utils-1.0.0.tgz"
   },
   "devDependencies": {
     "@types/jest": "29.5.14",

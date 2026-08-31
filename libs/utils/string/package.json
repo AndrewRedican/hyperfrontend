@@ -27,7 +27,7 @@
     "binary-data"
   ],
   "dependencies": {
-    "@hyperfrontend/immutable-api-utils": "0.1.4"
+    "@hyperfrontend/immutable-api-utils": "1.0.0"
   },
   "exports": {
     "./browser": "./src/browser/index.js",

@@ -4,7 +4,7 @@
   "description": "Configuration-driven recorder that captures browser and terminal sessions and emits size-budgeted GIFs and stills.",
   "private": true,
   "dependencies": {
-    "@hyperfrontend/immutable-api-utils": "0.1.4",
+    "@hyperfrontend/immutable-api-utils": "1.0.0",
     "@hyperfrontend/logging": "0.1.1",
     "playwright-core": "1.62.1",
     "sharp": "0.35.3"

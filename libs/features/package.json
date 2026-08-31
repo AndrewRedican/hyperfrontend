@@ -6,7 +6,7 @@
   "sideEffects": false,
   "dependencies": {
     "@hyperfrontend/builder": "0.2.0",
-    "@hyperfrontend/immutable-api-utils": "0.1.4",
+    "@hyperfrontend/immutable-api-utils": "1.0.0",
     "@hyperfrontend/json-utils": "0.1.1",
     "@hyperfrontend/network-protocol": "0.2.1",
     "@hyperfrontend/nexus": "2.0.1",

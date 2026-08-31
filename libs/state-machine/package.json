@@ -42,7 +42,7 @@
   },
   "dependencies": {
     "@hyperfrontend/data-utils": "0.0.5",
-    "@hyperfrontend/immutable-api-utils": "0.1.4"
+    "@hyperfrontend/immutable-api-utils": "1.0.0"
   },
   "funding": {
     "type": "github",
