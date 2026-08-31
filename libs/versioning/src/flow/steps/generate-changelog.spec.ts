@@ -66,7 +66,7 @@ describe('Generate Changelog Step', () => {
       expect(result.message).toContain('initial release')
     })
 
-    it('records a no-change release instead of an initial release when a version was published before', async () => {
+    it('announces a stable promotion when a published 0.x line reaches 1.0.0', async () => {
       const step = createGenerateChangelogStep()
       const ctx = createMockContext({
         nextVersion: '1.0.0',
@@ -79,12 +79,49 @@ describe('Generate Changelog Step', () => {
       const result = await step.execute(ctx)
 
       expect(result.status).toBe('success')
-      expect(result.message).toContain('no-change')
+      expect(result.message).toContain('stable promotion')
 
       const entry = result.stateUpdates?.changelogEntry
       expect(entry.version).toBe('1.0.0')
+      expect(entry.sections[0].heading).toBe('Features')
+      expect(entry.sections[0].items[0].description).toBe('Marked stable. No API changes since 0.2.1.')
+    })
+
+    it('records a plain no-change release when the version does not cross into 1.0.0', async () => {
+      const step = createGenerateChangelogStep()
+      const ctx = createMockContext({
+        nextVersion: '1.2.4',
+        bumpType: 'patch',
+        commits: [],
+        publishedVersion: '1.2.3',
+        isFirstRelease: false,
+      })
+
+      const result = await step.execute(ctx)
+
+      expect(result.status).toBe('success')
+      expect(result.message).toContain('no-change')
+
+      const entry = result.stateUpdates?.changelogEntry
       expect(entry.sections[0].heading).toBe('Other')
-      expect(entry.sections[0].items[0].description).toBe('Released with no functional changes since 0.2.1.')
+      expect(entry.sections[0].items[0].description).toBe('Released with no functional changes since 1.2.3.')
+    })
+
+    it('records a plain no-change release when a 0.x line stays below 1.0.0', async () => {
+      const step = createGenerateChangelogStep()
+      const ctx = createMockContext({
+        nextVersion: '0.3.0',
+        bumpType: 'minor',
+        commits: [],
+        publishedVersion: '0.2.1',
+        isFirstRelease: false,
+      })
+
+      const result = await step.execute(ctx)
+
+      expect(result.status).toBe('success')
+      expect(result.message).toContain('no-change')
+      expect(result.stateUpdates?.changelogEntry.sections[0].items[0].description).toBe('Released with no functional changes since 0.2.1.')
     })
 
     it('generates initial release entry when commits is undefined', async () => {
