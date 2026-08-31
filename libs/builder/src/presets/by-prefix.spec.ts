@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { byPrefix } from './by-prefix'
 
 describe('byPrefix', () => {

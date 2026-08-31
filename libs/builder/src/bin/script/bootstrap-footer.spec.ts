@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { defaultBootstrap } from './bootstrap-footer'
 
 describe('defaultBootstrap', () => {

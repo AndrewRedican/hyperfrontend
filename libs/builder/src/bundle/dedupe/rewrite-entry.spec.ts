@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { parseEntry } from './attribute-modules'
 import { rewriteEntry } from './rewrite-entry'
 

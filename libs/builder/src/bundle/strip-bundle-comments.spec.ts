@@ -2,6 +2,8 @@ import type { FormatOutputs, IifeConfig, IifeOutput, UmdConfig, UmdOutput } from
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
+import { afterEach, beforeEach } from 'node:test'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { stripBundleCommentsPass } from './strip-bundle-comments'
 
 const PRAGMA = '// eslint-disable-next-line workspace/no-unsafe-builtin-methods'

@@ -1,5 +1,6 @@
 import type { BuildContext, EntryPoint } from '../../models'
 import { join } from '@hyperfrontend/project-scope/core'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { entryDirOf } from './entry-dir'
 
 const OUT = '/abs/out'

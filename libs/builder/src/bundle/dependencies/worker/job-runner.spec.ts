@@ -2,6 +2,8 @@ import type { RollupLog } from 'rollup'
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { afterEach, beforeEach } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { onWarn, runPrePassWorkerJob } from './job-runner'
 
 describe('runPrePassWorkerJob', () => {

@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { constructLicenseUrl } from './license-url'
 
 describe('constructLicenseUrl', () => {

@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { join, normalizeToForwardSlashes } from './posix-path'
 
 describe('normalizeToForwardSlashes', () => {

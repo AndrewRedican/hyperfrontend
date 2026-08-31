@@ -26,7 +26,7 @@ interface PreparedRollupJob {
 }
 
 const importMatchesWorkspaceRoute = (id: string | undefined, routes: WorkspaceBundledDepRoute[]): boolean => {
-  /* istanbul ignore if -- @preserve defensive: rollup always populates `exporter` on UNRESOLVED_IMPORT warnings */
+  // why: defensive: rollup always populates `exporter` on UNRESOLVED_IMPORT warnings
   if (id === undefined) return false
   for (const route of routes) {
     if (id === route.packageName || id.startsWith(`${route.packageName}/`)) return true
@@ -234,7 +234,7 @@ const ensureDir = (path: string): void => {
 }
 
 const safeStatSize = (filePath: string): number => {
-  /* istanbul ignore next -- @preserve defensive: rollup always produces the declared output file */
+  // why: defensive: rollup always produces the declared output file
   try {
     return statSync(filePath).size
   } catch {

@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { destructureRequires } from './destructure-requires'
 
 const CHUNK_DIR = '/d/p'

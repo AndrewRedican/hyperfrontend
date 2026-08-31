@@ -1,10 +1,13 @@
+import type { Mock } from '@hyperfrontend/testing'
 import type { MemoryMonitor, MemorySnapshot } from '../../memory/monitor'
 import type { InjectWorkerJob } from './worker/types'
 import { spawn } from 'node:child_process'
 import { EventEmitter } from 'node:events'
-import { existsSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { afterEach, beforeEach } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { dispatchInjectWorker, resolveDefaultInjectWorkerPath } from './dispatch'
 jest.mock('@hyperfrontend/logging', () => {
   const actual = jest.requireActual('@hyperfrontend/logging')
@@ -34,8 +37,8 @@ const makeFakeChild = (): SpawnRecord['child'] => {
   return child
 }
 
-const captureSpawn = (records: SpawnRecord[]): jest.Mock =>
-  (spawn as jest.Mock).mockImplementation((execPath: string, args: string[]) => {
+const captureSpawn = (records: SpawnRecord[]): Mock =>
+  (spawn as Mock).mockImplementation((execPath: string, args: string[]) => {
     const child = makeFakeChild()
     const jobJson = args[args.length - 1] as string
     const job = JSON.parse(jobJson) as InjectWorkerJob
@@ -59,7 +62,7 @@ const baseJob = (overrides: Partial<InjectWorkerJob> = {}): InjectWorkerJob => (
 })
 
 beforeEach(() => {
-  ;(spawn as jest.Mock).mockReset()
+  ;(spawn as Mock).mockReset()
 })
 
 describe('dispatchInjectWorker', () => {
@@ -229,14 +232,14 @@ describe('resolveDefaultInjectWorkerPath', () => {
 
   it('returns the dist path when the dist worker exists', () => {
     const targetDir = join(root, 'dist', 'libs', 'builder', 'bin', 'native', 'worker')
-    require('node:fs').mkdirSync(targetDir, { recursive: true })
+    mkdirSync(targetDir, { recursive: true })
     const path = writeWorkerAt('dist/libs/builder/bin/native/worker/index.cjs.js')
     expect(resolveDefaultInjectWorkerPath(root)).toEqual({ path, execArgv: [] })
   })
 
   it('falls back to node_modules when the dist worker is missing', () => {
     const targetDir = join(root, 'node_modules', '@hyperfrontend', 'builder', 'bin', 'native', 'worker')
-    require('node:fs').mkdirSync(targetDir, { recursive: true })
+    mkdirSync(targetDir, { recursive: true })
     const path = writeWorkerAt('node_modules/@hyperfrontend/builder/bin/native/worker/index.cjs.js')
     expect(resolveDefaultInjectWorkerPath(root)).toEqual({ path, execArgv: [] })
   })
@@ -244,8 +247,8 @@ describe('resolveDefaultInjectWorkerPath', () => {
   it('prefers the dist worker when both are present', () => {
     const distDir = join(root, 'dist', 'libs', 'builder', 'bin', 'native', 'worker')
     const nmDir = join(root, 'node_modules', '@hyperfrontend', 'builder', 'bin', 'native', 'worker')
-    require('node:fs').mkdirSync(distDir, { recursive: true })
-    require('node:fs').mkdirSync(nmDir, { recursive: true })
+    mkdirSync(distDir, { recursive: true })
+    mkdirSync(nmDir, { recursive: true })
     const distPath = writeWorkerAt('dist/libs/builder/bin/native/worker/index.cjs.js')
     writeWorkerAt('node_modules/@hyperfrontend/builder/bin/native/worker/index.cjs.js')
     expect(resolveDefaultInjectWorkerPath(root)).toEqual({ path: distPath, execArgv: [] })
@@ -254,8 +257,8 @@ describe('resolveDefaultInjectWorkerPath', () => {
   it('falls back to the in-source worker.ts via @swc-node/register when dist+node_modules are missing', () => {
     const sourceDir = join(root, 'libs', 'builder', 'src', 'bin', 'native', 'worker')
     const swcDir = join(root, 'node_modules', '@swc-node', 'register')
-    require('node:fs').mkdirSync(sourceDir, { recursive: true })
-    require('node:fs').mkdirSync(swcDir, { recursive: true })
+    mkdirSync(sourceDir, { recursive: true })
+    mkdirSync(swcDir, { recursive: true })
     const sourcePath = writeWorkerAt('libs/builder/src/bin/native/worker/index.ts')
     writeWorkerAt('node_modules/@swc-node/register/index.js')
     expect(resolveDefaultInjectWorkerPath(root)).toEqual({ path: sourcePath, execArgv: ['--require', '@swc-node/register'] })
@@ -263,7 +266,7 @@ describe('resolveDefaultInjectWorkerPath', () => {
 
   it('returns undefined when only the source worker.ts is present but @swc-node/register is missing', () => {
     const sourceDir = join(root, 'libs', 'builder', 'src', 'bin', 'native', 'worker')
-    require('node:fs').mkdirSync(sourceDir, { recursive: true })
+    mkdirSync(sourceDir, { recursive: true })
     writeWorkerAt('libs/builder/src/bin/native/worker/index.ts')
     expect(resolveDefaultInjectWorkerPath(root)).toBeUndefined()
   })

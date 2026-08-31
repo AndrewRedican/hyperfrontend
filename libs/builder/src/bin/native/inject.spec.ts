@@ -1,12 +1,15 @@
+import type { Mock } from '@hyperfrontend/testing'
 import { copyFileSync, readFileSync } from 'node:fs'
+import { beforeEach } from 'node:test'
 import { inject } from 'postject'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { injectBlob, NODE_SEA_FUSE, NODE_SEA_MACHO_SEGMENT, NODE_SEA_RESOURCE_NAME } from './inject'
 jest.mock('node:fs', () => ({ copyFileSync: jest.fn(), readFileSync: jest.fn() }))
 jest.mock('postject', () => ({ inject: jest.fn().mockResolvedValue(undefined) }))
 
-const mockCopy = copyFileSync as jest.Mock
-const mockRead = readFileSync as jest.Mock
-const mockInject = inject as jest.Mock
+const mockCopy = copyFileSync as Mock
+const mockRead = readFileSync as Mock
+const mockInject = inject as Mock
 
 beforeEach(() => {
   mockCopy.mockReset()

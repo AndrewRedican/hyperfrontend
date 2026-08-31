@@ -1,5 +1,6 @@
 import type { OwnerIndex } from './attribute-modules'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { parseEntry } from './attribute-modules'
 import { renderChunk, resolveModuleRefs } from './extract-chunk'
 

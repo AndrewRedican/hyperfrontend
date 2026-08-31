@@ -1,4 +1,5 @@
 import type { BuildContext, WorkspaceBundledDep } from '../../models'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { collectWorkspaceExactSpecifiers, collectWorkspacePrefixDeps } from './collect-workspace-deps'
 
 const dep = (over: Partial<WorkspaceBundledDep>): WorkspaceBundledDep => ({

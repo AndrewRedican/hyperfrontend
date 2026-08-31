@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { collectChunkSpecifiers, hasDynamicSpecifier } from './specifiers'
 
 describe('collectChunkSpecifiers', () => {

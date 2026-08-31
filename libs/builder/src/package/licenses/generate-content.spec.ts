@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { generateThirdPartyLicensesContent } from './generate-content'
 
 describe('generateThirdPartyLicensesContent', () => {

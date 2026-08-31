@@ -1,4 +1,5 @@
 import type { EntryPoint, FormatOutputs, IifeConfig, UmdConfig } from '../../models'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { getCdnPaths } from './cdn-paths'
 
 const ROOT: EntryPoint = { exportPath: '.', srcPath: '', inputFile: '/abs/src/index.ts', isRoot: true }

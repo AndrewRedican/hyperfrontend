@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { currentPlatformMatches, currentPlatformTarget } from './platform-check'
 
 describe('currentPlatformTarget', () => {

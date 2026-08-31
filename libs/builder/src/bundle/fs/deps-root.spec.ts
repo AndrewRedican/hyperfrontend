@@ -1,4 +1,5 @@
 import type { BuildContext } from '../../models'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { depsRootOf } from './deps-root'
 
 describe('depsRootOf', () => {

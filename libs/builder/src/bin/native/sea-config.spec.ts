@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { generateSeaConfig } from './sea-config'
 
 describe('generateSeaConfig', () => {

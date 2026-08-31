@@ -1,6 +1,7 @@
 import type { Statement } from 'typescript'
 import type { ChunkFormat } from './used-exports'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { parseChunk } from './ast-utils'
 import { analyzeChunk, collectRefs, computeKeepClosure, requireBindingLocals } from './chunk-graph'
 

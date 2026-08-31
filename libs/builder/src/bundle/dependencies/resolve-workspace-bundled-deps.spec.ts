@@ -1,6 +1,8 @@
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { afterEach, beforeEach } from 'node:test'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { loadWorkspacePathMappings, resolveWorkspaceBundledDeps } from './resolve-workspace-bundled-deps'
 
 const writeFile = (p: string, contents: string): void => {

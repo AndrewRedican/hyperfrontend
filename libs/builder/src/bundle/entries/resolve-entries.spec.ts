@@ -1,4 +1,5 @@
 import type { EntryPoint } from '../../models'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { resolveEntries } from './resolve-entries'
 
 const entry = (exportPath: string, srcPath = exportPath.replace(/^\.\/?/, '')): EntryPoint => ({

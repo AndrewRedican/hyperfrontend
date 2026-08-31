@@ -1,6 +1,10 @@
+import type { Mock } from '@hyperfrontend/testing'
 import type { BinConfig, BuildContext } from '../../models'
 import { unlinkSync } from 'node:fs'
+import { beforeEach } from 'node:test'
+import { __mockChannel } from '@hyperfrontend/logging'
 import { ensureDir, exists, writeJsonFile } from '@hyperfrontend/project-scope/core'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { buildNativeBin } from './build-native'
 import { removeCodesign } from './codesign'
 import { dispatchInjectWorker, resolveDefaultInjectWorkerPath } from './dispatch'
@@ -53,32 +57,32 @@ const makeContext = (): BuildContext => ({
 
 const seaBin: BinConfig = { name: 'hf-build', format: 'cjs', sea: { platforms: ['linux-x64'] } }
 
-const mockChannel = jest.requireMock('@hyperfrontend/logging').__mockChannel as {
-  error: jest.Mock
-  warn: jest.Mock
-  info: jest.Mock
-  debug: jest.Mock
-  log: jest.Mock
+const mockChannel = __mockChannel as {
+  error: Mock
+  warn: Mock
+  info: Mock
+  debug: Mock
+  log: Mock
 }
 
 beforeEach(() => {
-  ;(ensureDir as jest.Mock).mockReset()
-  ;(writeJsonFile as jest.Mock).mockReset()
-  ;(exists as jest.Mock).mockReset().mockReturnValue(true)
-  ;(unlinkSync as jest.Mock).mockReset()
-  ;(removeCodesign as jest.Mock).mockReset()
-  ;(resolveHostBinary as jest.Mock).mockReset().mockReturnValue('/opt/node')
-  ;(dispatchInjectWorker as jest.Mock)
+  ;(ensureDir as Mock).mockReset()
+  ;(writeJsonFile as Mock).mockReset()
+  ;(exists as Mock).mockReset().mockReturnValue(true)
+  ;(unlinkSync as Mock).mockReset()
+  ;(removeCodesign as Mock).mockReset()
+  ;(resolveHostBinary as Mock).mockReset().mockReturnValue('/opt/node')
+  ;(dispatchInjectWorker as Mock)
     .mockReset()
     .mockResolvedValue({ outputSize: 138_000_000, endHeapMB: 220, endRssMB: 480, durationMs: 1234 })
-  ;(resolveDefaultInjectWorkerPath as jest.Mock).mockReset().mockReturnValue({
+  ;(resolveDefaultInjectWorkerPath as Mock).mockReset().mockReturnValue({
     path: '/abs/repo/dist/libs/builder/bin/native/worker/index.cjs.js',
     execArgv: [],
   })
-  ;(currentPlatformMatches as jest.Mock).mockReset().mockReturnValue(true)
-  ;(currentPlatformTarget as jest.Mock).mockReset().mockReturnValue('linux-x64')
-  ;(generateSeaBlob as jest.Mock).mockReset().mockReturnValue({ blobPath: '', status: 0 })
-  ;(generateSeaConfig as jest.Mock).mockReset().mockReturnValue({ main: '', output: '', disableExperimentalSEAWarning: true })
+  ;(currentPlatformMatches as Mock).mockReset().mockReturnValue(true)
+  ;(currentPlatformTarget as Mock).mockReset().mockReturnValue('linux-x64')
+  ;(generateSeaBlob as Mock).mockReset().mockReturnValue({ blobPath: '', status: 0 })
+  ;(generateSeaConfig as Mock).mockReset().mockReturnValue({ main: '', output: '', disableExperimentalSEAWarning: true })
   mockChannel.error.mockReset()
   mockChannel.warn.mockReset()
   mockChannel.info.mockReset()
@@ -114,8 +118,8 @@ describe('buildNativeBin', () => {
   })
 
   it('skips with an info log when the current platform does not match declared platforms', async () => {
-    ;(currentPlatformMatches as jest.Mock).mockReturnValueOnce(false)
-    ;(currentPlatformTarget as jest.Mock).mockReturnValueOnce('darwin-arm64')
+    ;(currentPlatformMatches as Mock).mockReturnValueOnce(false)
+    ;(currentPlatformTarget as Mock).mockReturnValueOnce('darwin-arm64')
     const result = await buildNativeBin({ bin: seaBin, ctx: makeContext(), cjsOutputPath: '/abs/dist/libs/builder/bin/hf-build.js' })
     expect(result).toEqual([])
     expect(ensureDir).not.toHaveBeenCalled()
@@ -155,7 +159,7 @@ describe('buildNativeBin', () => {
   })
 
   it('throws when the inject worker cannot be resolved', async () => {
-    ;(resolveDefaultInjectWorkerPath as jest.Mock).mockReturnValueOnce(undefined)
+    ;(resolveDefaultInjectWorkerPath as Mock).mockReturnValueOnce(undefined)
     await expect(
       buildNativeBin({ bin: seaBin, ctx: makeContext(), cjsOutputPath: '/abs/dist/libs/builder/bin/hf-build.js' })
     ).rejects.toThrow(/inject worker could not be resolved/)
@@ -183,7 +187,7 @@ describe('buildNativeBin', () => {
   })
 
   it('threads execArgv from the source-mode resolution into the dispatch options', async () => {
-    ;(resolveDefaultInjectWorkerPath as jest.Mock).mockReturnValueOnce({
+    ;(resolveDefaultInjectWorkerPath as Mock).mockReturnValueOnce({
       path: '/abs/repo/libs/builder/src/bin/native/worker/index.ts',
       execArgv: ['--require', '@swc-node/register'],
     })
@@ -198,13 +202,13 @@ describe('buildNativeBin', () => {
   })
 
   it('appends `.exe` for win32 platforms', async () => {
-    ;(currentPlatformTarget as jest.Mock).mockReturnValue('win32-x64')
+    ;(currentPlatformTarget as Mock).mockReturnValue('win32-x64')
     await buildNativeBin({
       bin: { name: 'hf-build', format: 'cjs', sea: { platforms: ['win32-x64'] } },
       ctx: makeContext(),
       cjsOutputPath: '/abs/dist/libs/builder/bin/hf-build.js',
     })
-    const call = (dispatchInjectWorker as jest.Mock).mock.calls[0][0]
+    const call = (dispatchInjectWorker as Mock).mock.calls[0][0]
     expect(call.outputBinary).toBe('/abs/dist/libs/builder/bin/hf-build.win32-x64.exe')
   })
 
@@ -215,14 +219,14 @@ describe('buildNativeBin', () => {
 
   it('deletes the SEA config JSON and prep blob intermediates after the binary is produced', async () => {
     await buildNativeBin({ bin: seaBin, ctx: makeContext(), cjsOutputPath: '/abs/dist/libs/builder/bin/hf-build.js' })
-    expect((unlinkSync as jest.Mock).mock.calls).toEqual([
+    expect((unlinkSync as Mock).mock.calls).toEqual([
       ['/abs/dist/libs/builder/bin/hf-build.sea-config.json'],
       ['/abs/dist/libs/builder/bin/hf-build.sea-prep.blob'],
     ])
   })
 
   it('skips deleting SEA intermediates that are absent from disk', async () => {
-    ;(exists as jest.Mock).mockReturnValue(false)
+    ;(exists as Mock).mockReturnValue(false)
     await buildNativeBin({ bin: seaBin, ctx: makeContext(), cjsOutputPath: '/abs/dist/libs/builder/bin/hf-build.js' })
     expect(unlinkSync).not.toHaveBeenCalled()
   })
@@ -266,7 +270,7 @@ describe('buildNativeBin', () => {
 
   it('logs an error and re-throws when dispatchInjectWorker rejects with an Error', async () => {
     const failure = new Error('worker boom')
-    ;(dispatchInjectWorker as jest.Mock).mockRejectedValueOnce(failure)
+    ;(dispatchInjectWorker as Mock).mockRejectedValueOnce(failure)
     await expect(buildNativeBin({ bin: seaBin, ctx: makeContext(), cjsOutputPath: '/abs/dist/libs/builder/bin/hf-build.js' })).rejects.toBe(
       failure
     )
@@ -274,7 +278,7 @@ describe('buildNativeBin', () => {
   })
 
   it('formats non-Error dispatchInjectWorker rejections via String()', async () => {
-    ;(dispatchInjectWorker as jest.Mock).mockRejectedValueOnce('not-an-error')
+    ;(dispatchInjectWorker as Mock).mockRejectedValueOnce('not-an-error')
     await expect(buildNativeBin({ bin: seaBin, ctx: makeContext(), cjsOutputPath: '/abs/dist/libs/builder/bin/hf-build.js' })).rejects.toBe(
       'not-an-error'
     )

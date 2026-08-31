@@ -1,5 +1,8 @@
+import type { Mock } from '@hyperfrontend/testing'
 import type { BuildConfig, BuildContext, EntryPoint, EntryPointDiscovery } from '../models'
+import { beforeEach } from 'node:test'
 import { ensureDir } from '@hyperfrontend/project-scope/core'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { runDtsPerEntry } from './declarations/dts-per-entry'
 import { runDtsPrePass } from './declarations/dts-pre-pass'
 import { generateDeclarations } from './declarations/generate-declarations'
@@ -79,20 +82,20 @@ const makeContext = (): BuildContext => ({
 })
 
 beforeEach(() => {
-  ;(dispatchRollupWorker as jest.Mock).mockClear()
-  ;(generateDeclarations as jest.Mock).mockClear()
-  ;(ensureDir as jest.Mock).mockClear()
-  ;(runPrePass as jest.Mock).mockClear()
-  ;(runDtsPrePass as jest.Mock).mockClear()
-  ;(runDtsPerEntry as jest.Mock).mockClear()
-  ;(pruneOrphanDeclarations as jest.Mock).mockClear()
-  ;(verifyEntryTypeRefs as jest.Mock).mockClear()
-  ;(pruneDependencies as jest.Mock).mockClear()
-  ;(stripBundleCommentsPass as jest.Mock).mockClear()
-  ;(resolveDefaultWorkerPath as jest.Mock)
+  ;(dispatchRollupWorker as Mock).mockClear()
+  ;(generateDeclarations as Mock).mockClear()
+  ;(ensureDir as Mock).mockClear()
+  ;(runPrePass as Mock).mockClear()
+  ;(runDtsPrePass as Mock).mockClear()
+  ;(runDtsPerEntry as Mock).mockClear()
+  ;(pruneOrphanDeclarations as Mock).mockClear()
+  ;(verifyEntryTypeRefs as Mock).mockClear()
+  ;(pruneDependencies as Mock).mockClear()
+  ;(stripBundleCommentsPass as Mock).mockClear()
+  ;(resolveDefaultWorkerPath as Mock)
     .mockReset()
     .mockReturnValue({ path: '/abs/dist/libs/builder/bundle/dependencies/worker/index.cjs.js', execArgv: [] })
-  ;(resolveDefaultRollupWorkerPath as jest.Mock).mockReset().mockReturnValue({ path: ROLLUP_WORKER_PATH, execArgv: [] })
+  ;(resolveDefaultRollupWorkerPath as Mock).mockReset().mockReturnValue({ path: ROLLUP_WORKER_PATH, execArgv: [] })
 })
 
 describe('runBundlePhase', () => {
@@ -108,7 +111,7 @@ describe('runBundlePhase', () => {
       esm: { bundleWorkspaceDeps: false },
     } as BuildConfig)
     expect(dispatchRollupWorker).toHaveBeenCalledTimes(2)
-    const [descriptor, options] = (dispatchRollupWorker as jest.Mock).mock.calls[0]
+    const [descriptor, options] = (dispatchRollupWorker as Mock).mock.calls[0]
     expect(descriptor.format).toBe('esm')
     expect(options.workerPath).toBe(ROLLUP_WORKER_PATH)
   })
@@ -129,7 +132,7 @@ describe('runBundlePhase', () => {
       cjs: { bundleWorkspaceDeps: false },
     } as BuildConfig)
     expect(dispatchRollupWorker).toHaveBeenCalledTimes(2)
-    const [descriptor] = (dispatchRollupWorker as jest.Mock).mock.calls[0]
+    const [descriptor] = (dispatchRollupWorker as Mock).mock.calls[0]
     expect(descriptor.format).toBe('cjs')
   })
 
@@ -330,14 +333,14 @@ describe('runBundlePhase', () => {
     ctx.bundledDeps = ['rollup', 'postject']
     await runBundlePhase(ctx, config)
     expect(runPrePass).toHaveBeenCalledTimes(1)
-    const [jobs, options] = (runPrePass as jest.Mock).mock.calls[0]
+    const [jobs, options] = (runPrePass as Mock).mock.calls[0]
     expect(jobs).toHaveLength(4)
     expect(jobs.every((j: { kind: string }) => j.kind === 'js')).toBe(true)
     expect(options.workerPath).toBe('/abs/dist/libs/builder/bundle/dependencies/worker/index.cjs.js')
   })
 
   it('throws a context-rich error when the pre-pass worker cannot be located', async () => {
-    ;(resolveDefaultWorkerPath as jest.Mock).mockReturnValueOnce(undefined)
+    ;(resolveDefaultWorkerPath as Mock).mockReturnValueOnce(undefined)
     const config = {
       projectRoot: '',
       workspaceRoot: '',
@@ -349,7 +352,7 @@ describe('runBundlePhase', () => {
   })
 
   it('throws a context-rich error when the rollup worker cannot be located', async () => {
-    ;(resolveDefaultRollupWorkerPath as jest.Mock).mockReturnValueOnce(undefined)
+    ;(resolveDefaultRollupWorkerPath as Mock).mockReturnValueOnce(undefined)
     const config = {
       projectRoot: '',
       workspaceRoot: '',
@@ -359,7 +362,7 @@ describe('runBundlePhase', () => {
   })
 
   it('does not require the rollup worker when no format resolves any entry', async () => {
-    ;(resolveDefaultRollupWorkerPath as jest.Mock).mockReturnValueOnce(undefined)
+    ;(resolveDefaultRollupWorkerPath as Mock).mockReturnValueOnce(undefined)
     await runBundlePhase(makeContext(), { projectRoot: '', workspaceRoot: '' } as BuildConfig)
     expect(dispatchRollupWorker).not.toHaveBeenCalled()
   })
@@ -470,7 +473,7 @@ describe('runBundlePhase', () => {
       },
     ]
     await runBundlePhase(ctx, config)
-    const jobs = (runPrePass as jest.Mock).mock.calls[0][0]
+    const jobs = (runPrePass as Mock).mock.calls[0][0]
     const npmJobs = jobs.filter((j: { kind: string }) => j.kind === 'js')
     expect(npmJobs).toHaveLength(2)
     expect(npmJobs[0].depsRoot).toBe('/abs/dist/libs/foo/_dependencies')
@@ -508,7 +511,7 @@ describe('runBundlePhase', () => {
       },
     ]
     await runBundlePhase(ctx, config)
-    const jobs = (runPrePass as jest.Mock).mock.calls[0][0]
+    const jobs = (runPrePass as Mock).mock.calls[0][0]
     const workspaceJobs = jobs.filter((j: { kind: string }) => j.kind === 'workspace-js')
     expect(workspaceJobs).toHaveLength(2)
     expect(workspaceJobs[0].dep).toBe('@hyperfrontend/logging')

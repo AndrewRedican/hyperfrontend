@@ -1,6 +1,9 @@
+import type { Mock } from '@hyperfrontend/testing'
 import type { RollupBuildDescriptor } from '../../bundle/rollup/worker/types'
 import type { BinConfig, BuildContext } from '../../models'
+import { beforeEach } from 'node:test'
 import { ensureDir } from '@hyperfrontend/project-scope/core'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { dispatchRollupWorker, resolveDefaultRollupWorkerPath } from '../../bundle/rollup/dispatch'
 import { buildJsBin } from './build-bin'
 jest.mock('../../bundle/rollup/dispatch', () => ({
@@ -29,16 +32,16 @@ const makeContext = (overrides: Partial<BuildContext> = {}): BuildContext => ({
 })
 
 beforeEach(() => {
-  ;(dispatchRollupWorker as jest.Mock).mockClear()
-  ;(resolveDefaultRollupWorkerPath as jest.Mock).mockClear().mockReturnValue({
+  ;(dispatchRollupWorker as Mock).mockClear()
+  ;(resolveDefaultRollupWorkerPath as Mock).mockClear().mockReturnValue({
     path: '/abs/repo/dist/libs/builder/bundle/rollup/worker/index.cjs.js',
     execArgv: [],
   })
-  ;(ensureDir as jest.Mock).mockClear()
+  ;(ensureDir as Mock).mockClear()
 })
 
 const dispatchedDescriptor = (callIndex: number): RollupBuildDescriptor =>
-  (dispatchRollupWorker as jest.Mock).mock.calls[callIndex][0] as RollupBuildDescriptor
+  (dispatchRollupWorker as Mock).mock.calls[callIndex][0] as RollupBuildDescriptor
 
 describe('buildJsBin', () => {
   it('ensures the bin output directory exists before dispatching', async () => {
@@ -85,7 +88,7 @@ describe('buildJsBin', () => {
   })
 
   it('threads the resolved worker path + execArgv into the dispatch options', async () => {
-    ;(resolveDefaultRollupWorkerPath as jest.Mock).mockReturnValue({
+    ;(resolveDefaultRollupWorkerPath as Mock).mockReturnValue({
       path: '/abs/repo/libs/builder/src/bundle/rollup/worker/index.ts',
       execArgv: ['--require', '@swc-node/register'],
     })
@@ -100,7 +103,7 @@ describe('buildJsBin', () => {
   })
 
   it('throws when the rollup worker cannot be resolved', async () => {
-    ;(resolveDefaultRollupWorkerPath as jest.Mock).mockReturnValue(undefined)
+    ;(resolveDefaultRollupWorkerPath as Mock).mockReturnValue(undefined)
     await expect(buildJsBin({ name: 'cz', format: 'cjs' } as BinConfig, makeContext())).rejects.toThrow(/rollup worker/)
   })
 

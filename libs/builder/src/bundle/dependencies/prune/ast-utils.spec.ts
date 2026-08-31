@@ -1,4 +1,5 @@
 import type ts from 'typescript'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { getRequireSpecifier, parseChunk, resolveRelativeTarget } from './ast-utils'
 
 const firstExpression = (source: string): ts.Node => {

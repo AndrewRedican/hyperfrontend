@@ -1,3 +1,4 @@
+import type { Mock } from '@hyperfrontend/testing'
 import type { MemoryMonitor, MemorySnapshot } from '../../memory/monitor'
 import type { PrePassJob } from './pre-pass'
 import { spawn } from 'node:child_process'
@@ -5,6 +6,8 @@ import { EventEmitter } from 'node:events'
 import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { afterEach, beforeEach } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { resolveDefaultWorkerPath, runPrePass } from './pre-pass'
 jest.mock('@hyperfrontend/logging', () => {
   const actual = jest.requireActual('@hyperfrontend/logging')
@@ -28,8 +31,8 @@ interface SpawnRecord {
   child: EventEmitter
 }
 
-const captureSpawn = (records: SpawnRecord[]): jest.Mock => {
-  return (spawn as jest.Mock).mockImplementation((execPath: string, args: string[]) => {
+const captureSpawn = (records: SpawnRecord[]): Mock => {
+  return (spawn as Mock).mockImplementation((execPath: string, args: string[]) => {
     const child = makeFakeChild()
     const jobJson = args[args.length - 1] as string
     const job = JSON.parse(jobJson) as { reportPath: string }
@@ -53,7 +56,7 @@ const baseJob = (overrides: Partial<PrePassJob> = {}): PrePassJob => ({
 })
 
 beforeEach(() => {
-  ;(spawn as jest.Mock).mockReset()
+  ;(spawn as Mock).mockReset()
 })
 
 describe('runPrePass', () => {

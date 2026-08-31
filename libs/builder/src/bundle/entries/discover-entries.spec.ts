@@ -1,6 +1,8 @@
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { afterEach } from 'node:test'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { discoverEntries } from './discover-entries'
 
 const makeFixture = (): string => mkdtempSync(join(tmpdir(), 'builder-discover-'))

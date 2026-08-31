@@ -1,5 +1,8 @@
+import type { Mock } from '@hyperfrontend/testing'
 import type { BuildContext, EntryPoint, EntryPointDiscovery } from '../../models'
+import { beforeEach } from 'node:test'
 import { exists } from '@hyperfrontend/project-scope/core/fs'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { resolveDefaultWorkerPath, runPrePass } from '../dependencies/pre-pass'
 import { runDtsPerEntry } from './dts-per-entry'
 jest.mock('../dependencies/pre-pass', () => ({
@@ -43,11 +46,11 @@ const makeContext = (bundledDeps: string[], entries: EntryPoint[]): BuildContext
 })
 
 beforeEach(() => {
-  ;(runPrePass as jest.Mock).mockClear()
-  ;(resolveDefaultWorkerPath as jest.Mock)
+  ;(runPrePass as Mock).mockClear()
+  ;(resolveDefaultWorkerPath as Mock)
     .mockReset()
     .mockReturnValue({ path: '/abs/dist/libs/builder/bundle/dependencies/worker/index.cjs.js', execArgv: [] })
-  ;(exists as jest.Mock).mockReset().mockReturnValue(true)
+  ;(exists as Mock).mockReset().mockReturnValue(true)
 })
 
 describe('runDtsPerEntry', () => {
@@ -70,13 +73,13 @@ describe('runDtsPerEntry', () => {
     ]
     await runDtsPerEntry(ctx)
     expect(runPrePass).toHaveBeenCalledTimes(1)
-    const jobs = (runPrePass as jest.Mock).mock.calls[0][0]
+    const jobs = (runPrePass as Mock).mock.calls[0][0]
     expect(jobs).toHaveLength(1)
     expect(jobs[0].inputPath).toBe('/abs/dist/libs/foo/index.d.ts')
   })
 
   it('throws a context-rich error when the worker artifact is missing', async () => {
-    ;(resolveDefaultWorkerPath as jest.Mock).mockReturnValueOnce(undefined)
+    ;(resolveDefaultWorkerPath as Mock).mockReturnValueOnce(undefined)
     await expect(runDtsPerEntry(makeContext(['rollup'], [ROOT_ENTRY]))).rejects.toThrow(
       /worker could not be located beside the builder module/
     )
@@ -85,7 +88,7 @@ describe('runDtsPerEntry', () => {
   it('builds one dts job per entry whose tsc-emitted .d.ts exists', async () => {
     await runDtsPerEntry(makeContext(['rollup'], [ROOT_ENTRY, SUB_ENTRY]))
     expect(runPrePass).toHaveBeenCalledTimes(1)
-    const jobs = (runPrePass as jest.Mock).mock.calls[0][0]
+    const jobs = (runPrePass as Mock).mock.calls[0][0]
     expect(jobs).toHaveLength(2)
     expect(jobs[0].inputPath).toBe('/abs/dist/libs/foo/index.d.ts')
     expect(jobs[1].inputPath).toBe('/abs/dist/libs/foo/sub/index.d.ts')
@@ -94,7 +97,7 @@ describe('runDtsPerEntry', () => {
 
   it('threads sibling-entry descriptors and selfDtsPath into each job', async () => {
     await runDtsPerEntry(makeContext(['rollup'], [ROOT_ENTRY, SUB_ENTRY]))
-    const jobs = (runPrePass as jest.Mock).mock.calls[0][0]
+    const jobs = (runPrePass as Mock).mock.calls[0][0]
     expect(jobs[0].selfDtsPath).toBe('/abs/dist/libs/foo/index.d.ts')
     expect(jobs[0].selfSrcPath).toBe('')
     expect(jobs[0].siblingEntries).toEqual([{ srcPath: 'sub', indexDtsPath: '/abs/dist/libs/foo/sub/index.d.ts' }])
@@ -103,15 +106,15 @@ describe('runDtsPerEntry', () => {
   })
 
   it('skips entries whose tsc output is missing', async () => {
-    ;(exists as jest.Mock).mockImplementation((path: string) => path.endsWith('index.d.ts') && !path.includes('sub'))
+    ;(exists as Mock).mockImplementation((path: string) => path.endsWith('index.d.ts') && !path.includes('sub'))
     await runDtsPerEntry(makeContext(['rollup'], [ROOT_ENTRY, SUB_ENTRY]))
-    const jobs = (runPrePass as jest.Mock).mock.calls[0][0]
+    const jobs = (runPrePass as Mock).mock.calls[0][0]
     expect(jobs).toHaveLength(1)
     expect(jobs[0].inputPath).toBe('/abs/dist/libs/foo/index.d.ts')
   })
 
   it('exits early when no entry has a tsc-emitted .d.ts', async () => {
-    ;(exists as jest.Mock).mockReturnValue(false)
+    ;(exists as Mock).mockReturnValue(false)
     await runDtsPerEntry(makeContext(['rollup'], [ROOT_ENTRY]))
     expect(runPrePass).not.toHaveBeenCalled()
   })
@@ -119,7 +122,7 @@ describe('runDtsPerEntry', () => {
   it('threads the optional memory monitor through to runPrePass', async () => {
     const monitor = { check: jest.fn() }
     await runDtsPerEntry(makeContext(['rollup'], [ROOT_ENTRY]), monitor as unknown as Parameters<typeof runDtsPerEntry>[1])
-    expect((runPrePass as jest.Mock).mock.calls[0][1].monitor).toBe(monitor)
+    expect((runPrePass as Mock).mock.calls[0][1].monitor).toBe(monitor)
     expect(monitor.check).toHaveBeenCalledWith('bundle:declarations:dts-perentry:start')
     expect(monitor.check).toHaveBeenCalledWith('bundle:declarations:dts-perentry:end')
   })
@@ -145,7 +148,7 @@ describe('runDtsPerEntry', () => {
       },
     ]
     await runDtsPerEntry(ctx)
-    const jobs = (runPrePass as jest.Mock).mock.calls[0][0]
+    const jobs = (runPrePass as Mock).mock.calls[0][0]
     expect(jobs).toHaveLength(2)
     for (const job of jobs) {
       expect(job.depsRoot).toBe('/abs/dist/libs/foo/_dependencies')

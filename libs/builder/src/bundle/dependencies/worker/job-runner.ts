@@ -351,7 +351,7 @@ interface DtsPluginInvocationOptions {
 
 const loadDtsFactory = async (): Promise<(options?: DtsPluginInvocationOptions) => Plugin> => {
   const dtsModule: DtsModule = await import('rollup-plugin-dts')
-  /* istanbul ignore next -- @preserve fallback path for CJS-style rollup-plugin-dts module shapes */
+  // why: fallback path for CJS-style rollup-plugin-dts module shapes
   return (dtsModule.default ?? (dtsModule as unknown as DtsFactory)) as (options?: DtsPluginInvocationOptions) => Plugin
 }
 

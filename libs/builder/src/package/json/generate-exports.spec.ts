@@ -1,4 +1,5 @@
 import type { EntryPoint, EntryPointDiscovery, FormatOutputs, IifeConfig, PackageJson, UmdConfig } from '../../models'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { generateExportsFromFormats } from './generate-exports'
 
 const ROOT: EntryPoint = { exportPath: '.', srcPath: '', inputFile: '/abs/src/index.ts', isRoot: true }

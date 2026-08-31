@@ -1,6 +1,7 @@
 import type { PropDemand } from './namespace-usage'
 import ts from 'typescript'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { parseChunk } from './ast-utils'
 import { classifyNamespaceUse, collectNamespaceUsage, mergeDemand } from './namespace-usage'
 
