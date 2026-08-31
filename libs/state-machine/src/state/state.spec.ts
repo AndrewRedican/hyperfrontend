@@ -1,4 +1,5 @@
 import type { State } from '../models'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { createInitialState } from './state'
 
 describe('store', () => {

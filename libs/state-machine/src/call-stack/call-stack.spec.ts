@@ -1,4 +1,5 @@
 import type { Callback } from './call-stack.model'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { callStack } from './call-stack'
 
 describe('callStack', () => {

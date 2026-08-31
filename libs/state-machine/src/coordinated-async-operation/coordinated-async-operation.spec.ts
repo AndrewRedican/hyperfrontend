@@ -1,3 +1,4 @@
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { CoordinatedAsyncProcess } from './coordinated-async-operation'
 
 describe('CoordinatedAsyncProcess', () => {
@@ -13,7 +14,6 @@ describe('CoordinatedAsyncProcess', () => {
     expect(process2).toHaveBeenCalled()
   })
 
-  // eslint-disable-next-line jest/expect-expect
   it('cancels all registered async processes', () => {
     const process1 = jest.fn().mockResolvedValue(undefined)
     const process2 = jest.fn().mockResolvedValue(undefined)
@@ -23,7 +23,6 @@ describe('CoordinatedAsyncProcess', () => {
     coordinator.cancelAll()
   })
 
-  // eslint-disable-next-line jest/expect-expect
   it('pauses all registered async processes', () => {
     const process1 = jest.fn().mockResolvedValue(undefined)
     const process2 = jest.fn().mockResolvedValue(undefined)

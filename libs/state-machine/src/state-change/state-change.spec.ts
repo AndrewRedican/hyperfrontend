@@ -1,4 +1,6 @@
 import type { DerivedState } from '../models'
+import { beforeEach } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { StateChange } from './state-change'
 
 describe('StateChange', () => {
