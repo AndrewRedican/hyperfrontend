@@ -52,6 +52,8 @@ export default async function testExecutor(options: TestExecutorOptions, context
   const result = spawnSync(
     process.execPath,
     [
+      // why: the config and the runner are TypeScript, which carries no module type of its own, and Node would warn about inferring one for each.
+      '--disable-warning=MODULE_TYPELESS_PACKAGE_JSON',
       '--import',
       join(workspaceRoot, RUNTIME_ROOT, 'hooks', 'register.ts'),
       join(workspaceRoot, RUNTIME_ROOT, 'runner', 'cli.ts'),
