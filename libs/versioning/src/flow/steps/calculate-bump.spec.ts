@@ -576,6 +576,36 @@ describe('Calculate Bump Step', () => {
       )
     })
 
+    it('realigns a derived bump onto the published version when the branch is behind', async () => {
+      const step = createCalculateBumpStep()
+      const ctx = createMockContext({
+        currentVersion: '0.1.0',
+        publishedVersion: '0.2.1',
+        commits: [createMockCommit({ type: 'fix', subject: 'a fix', breaking: false })],
+      })
+
+      const result = await step.execute(ctx)
+
+      expect(result.status).toBe('success')
+      expect(result.stateUpdates?.nextVersion).toBe('0.2.2')
+      expect(result.stateUpdates?.isPendingPublication).toBe(false)
+    })
+
+    it('keeps recalculating from the published version when the branch is ahead', async () => {
+      const step = createCalculateBumpStep()
+      const ctx = createMockContext({
+        currentVersion: '0.3.0',
+        publishedVersion: '0.2.1',
+        commits: [createMockCommit({ type: 'fix', subject: 'a fix', breaking: false })],
+      })
+
+      const result = await step.execute(ctx)
+
+      expect(result.status).toBe('success')
+      expect(result.stateUpdates?.nextVersion).toBe('0.2.2')
+      expect(result.stateUpdates?.isPendingPublication).toBe(true)
+    })
+
     it('forces the bump from the published version rather than the local one', async () => {
       const step = createCalculateBumpStep()
       const ctx = createMockContext({ currentVersion: '0.1.1', publishedVersion: '0.1.1', commits: [] }, { releaseAs: 'major' })

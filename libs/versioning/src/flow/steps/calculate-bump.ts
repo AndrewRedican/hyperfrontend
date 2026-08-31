@@ -198,23 +198,25 @@ export function createCalculateBumpStep(): FlowStep {
       const { publishedVersion } = state
       const published = parseVersion(publishedVersion ?? '0.0.0')
 
-      const isPendingPublication =
-        published.success && published.version && publishedVersion != null && gt(current.version, published.version)
+      const hasPublishedVersion = published.success && published.version !== undefined && publishedVersion != null
+      const isOutOfStep = hasPublishedVersion && published.version && !eq(current.version, published.version)
+      const isPendingPublication = hasPublishedVersion && published.version && gt(current.version, published.version)
 
-      if (isPendingPublication && published.version) {
+      if (isOutOfStep && published.version) {
         const next = increment(published.version, bumpType)
         const nextVersion = format(next)
 
-        logger.info(`Pending publication detected: recalculating from ${publishedVersion} → ${nextVersion}`)
+        const drift = isPendingPublication ? 'Pending publication detected' : 'Local version is behind the registry'
+        logger.info(`${drift}: recalculating from ${publishedVersion} → ${nextVersion}`)
 
         return {
           status: 'success',
           stateUpdates: {
             bumpType,
             nextVersion,
-            isPendingPublication: true,
+            isPendingPublication: isPendingPublication === true,
           },
-          message: `${bumpType} bump (pending): ${publishedVersion} → ${nextVersion}`,
+          message: `${bumpType} bump (${isPendingPublication ? 'pending' : 'realigned'}): ${publishedVersion} → ${nextVersion}`,
         }
       }
 
