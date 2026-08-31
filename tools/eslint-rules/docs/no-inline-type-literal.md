@@ -101,5 +101,4 @@ const dict: { [k: string]: number } = {}
 
 ## Related Rules
 
-- [prefer-angle-bracket-assertion](./prefer-angle-bracket-assertion.md)
 - [no-mixed-type-import](./no-mixed-type-import.md)
