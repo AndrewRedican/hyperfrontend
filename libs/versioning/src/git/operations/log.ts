@@ -7,7 +7,7 @@ import { createGitCommit } from '../models/commit'
  * Options for git log operations.
  */
 export interface GitLogOptions {
-  /** Maximum number of commits to retrieve */
+  /** Maximum number of commits to retrieve. Zero retrieves every matching commit. */
   readonly maxCount?: number
 
   /** Starting commit reference (inclusive) */
@@ -141,7 +141,7 @@ export function getCommitsBetween(from: string, to = 'HEAD', options: Omit<GitLo
  * const commits = getCommitsSince('v1.0.0')
  */
 export function getCommitsSince(since: string, options: Omit<GitLogOptions, 'from'> = {}): readonly GitCommit[] {
-  return getCommitLog({ ...options, from: since })
+  return getCommitLog({ maxCount: 0, ...options, from: since })
 }
 
 /**
