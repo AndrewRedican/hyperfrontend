@@ -29,7 +29,7 @@ function getActualType(value: unknown): string {
   const t = typeof value
   if (t === 'number') {
     const num = value as number
-    // why: naN/Infinity edge case
+    // why: NaN/Infinity edge case
     /* node:coverage ignore next 1 */
     if (!globalIsFinite(num)) return 'number'
     return isInteger(num) ? 'integer' : 'number'
