@@ -17,6 +17,8 @@
 - [MAX_VERSION_LENGTH Config](./max-version-length-config.md)
 - [GPG Signature Support](./gpg-signature-support.md)
 - [Custom Git Log Format](./custom-git-log-format.md)
+- [Release Rationale in the Changelog](./release-rationale-in-changelog.md)
+- [releaseAs Scope and Prerelease Reach](./release-as-scope-and-prerelease-reach.md)
 
 ## Declined
 
