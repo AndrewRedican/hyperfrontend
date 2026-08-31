@@ -1,0 +1,15 @@
+{
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "name": "tool-testing",
+  "description": "Node test-runner runtime for the workspace: module resolution hooks, Jest-compatible expect and mock APIs, and coverage completeness enforcement.",
+  "sourceRoot": "{projectRoot}/src",
+  "projectType": "library",
+  "tags": ["type:core", "scope:internal"],
+  "targets": {
+    "typecheck": {},
+    "test": {
+      "executor": "@hyperfrontend/package:test",
+      "options": {}
+    }
+  }
+}

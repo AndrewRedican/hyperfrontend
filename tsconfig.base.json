@@ -165,6 +165,7 @@
       "@hyperfrontend/state-machine/store": ["libs/state-machine/src/store/index.ts"],
       "@hyperfrontend/string-utils/browser": ["libs/utils/string/src/browser/index.ts"],
       "@hyperfrontend/string-utils/node": ["libs/utils/string/src/node/index.ts"],
+      "@hyperfrontend/testing": ["tools/testing/src/index.ts"],
       "@hyperfrontend/time-utils": ["libs/utils/time/src/index.ts"],
       "@hyperfrontend/ui-utils": ["libs/utils/ui/src/index.ts"],
       "@hyperfrontend/ui-utils/audio": ["libs/utils/ui/src/audio/index.ts"],
