@@ -9,11 +9,10 @@ import { advanceTimersByTime, clearAllTimers, runAllTimers, setSystemTime, useFa
 /**
  * The `jest` namespace object, carrying the mock, spy, and timer controls the suites use.
  *
- * Module mocking is deliberately absent: ES modules evaluate their imports before any
- * module body runs, so a `jest.mock` call cannot take effect the way it does under Jest's
- * CommonJS transform. Projects that need it are migrated in a later phase with a
- * mechanism designed for it, and calling it here fails loudly rather than silently
- * letting a spec assert against unmocked code.
+ * `mock` and `requireActual` are the shapes of calls that have already happened by the time
+ * a spec body runs. The loader reads them out of the spec's source and substitutes the
+ * module before the spec's imports are linked, so what remains here is the call the spec
+ * still makes at runtime, by which point the substitution has already happened.
  */
 export type JestApi = {
   /** Creates a mock function. */
@@ -46,6 +45,10 @@ export type JestApi = {
   setSystemTime(instant: number | Date): void
   /** Forces later dynamic imports to re-evaluate their target module. */
   resetModules(): JestApi
+  /** Declares a module replacement. The loader has already applied it by the time this runs. */
+  mock(specifier: string, factory?: () => unknown): JestApi
+  /** Reads the module a replacement stands in for. Only meaningful inside a `mock` factory. */
+  requireActual<TModule = unknown>(specifier: string): TModule
 }
 
 /**
@@ -89,5 +92,10 @@ export const jest: JestApi = {
   resetModules: () => {
     advanceGeneration()
     return jest
+  },
+  // why: the loader read this call out of the source and substituted the module before the spec was linked, so this call has no remaining work.
+  mock: () => jest,
+  requireActual: (specifier) => {
+    throw new Error(`jest.requireActual('${specifier}') is only available inside a jest.mock factory`)
   },
 }

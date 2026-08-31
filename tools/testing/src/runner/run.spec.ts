@@ -190,4 +190,46 @@ it('sees the setup flag', () => {
       true
     )
   })
+
+  it('replaces a module a spec declares with jest.mock', () => {
+    const fixture = createFixture({
+      'src/dep.ts': "export const label = (): string => 'real'\nexport const untouched = (): string => 'kept'\n",
+      'src/subject.ts': "import { label, untouched } from './dep'\nexport const describeIt = (): string => `${label()}/${untouched()}`\n",
+      'src/subject.spec.ts': `import assert from 'node:assert/strict'
+import { it } from 'node:test'
+import { jest } from '@hyperfrontend/testing'
+import { describeIt } from './subject'
+
+jest.mock('./dep', () => {
+  const actual = jest.requireActual('./dep')
+  return { ...actual, label: () => 'mocked' }
+})
+
+it('sees the replacement and keeps the rest', () => {
+  assert.equal(describeIt(), 'mocked/kept')
+})
+`,
+    })
+
+    assert.equal(run(fixture, { coverageInclude: ['src/subject.ts'] }).success, true)
+  })
+
+  it('replaces a built-in a spec declares with jest.mock', () => {
+    const fixture = createFixture({
+      'src/subject.ts': "import { basename } from 'node:path'\nexport const name = (): string => basename('/a/b')\n",
+      'src/subject.spec.ts': `import assert from 'node:assert/strict'
+import { it } from 'node:test'
+import { jest } from '@hyperfrontend/testing'
+import { name } from './subject'
+
+jest.mock('node:path', () => ({ basename: () => 'mocked' }))
+
+it('sees the replacement', () => {
+  assert.equal(name(), 'mocked')
+})
+`,
+    })
+
+    assert.equal(run(fixture, { coverageInclude: ['src/subject.ts'] }).success, true)
+  })
 })
