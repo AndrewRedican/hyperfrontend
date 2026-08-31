@@ -31,32 +31,33 @@ export function validateDependencies(instance: Record<string, unknown>, schema: 
   let valid = true
 
   for (const [key, dependency] of entries(schema.dependencies)) {
-    /* istanbul ignore next -- key presence check */
+    // why: key presence check
+    /* node:coverage ignore next 3 */
     if (!hasOwn(instance, key)) {
       continue
     }
 
-    /* istanbul ignore next -- dependency type check */
+    // why: dependency type check
     if (isArray(dependency)) {
       for (const requiredKey of dependency) {
-        /* istanbul ignore next -- required key check */
+        // why: required key check
         if (!hasOwn(instance, requiredKey)) {
           addError(ctx, `Property '${key}' requires property '${requiredKey}' to also be present`, instance, 'dependencies', {
             property: key,
-            /* istanbul ignore next -- required key assignment */
+            // why: required key assignment
             required: requiredKey,
           })
           valid = false
-          /* istanbul ignore if -- early exit tested in validate.spec.ts */
+          // why: early exit tested in validate.spec.ts
           if (!shouldContinue(ctx)) return false
         }
       }
     } else {
-      /* istanbul ignore next -- schema dependency validation */
+      // why: schema dependency validation
       if (!ctx.validate(instance, dependency, ctx)) {
-        /* istanbul ignore next -- failure path */
+        // why: failure path
         valid = false
-        /* istanbul ignore if -- early exit tested in validate.spec.ts */
+        // why: early exit tested in validate.spec.ts
         if (!shouldContinue(ctx)) return false
       }
     }

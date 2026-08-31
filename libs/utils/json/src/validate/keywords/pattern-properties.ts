@@ -43,7 +43,7 @@ export function validatePatternProperties(instance: Record<string, unknown>, sch
   const patterns: Array<CompiledPatternProperty> = []
 
   for (const [pattern, patternSchema] of entries(schema.patternProperties)) {
-    /* istanbul ignore if -- patternSafetyChecker branch tested in validate.spec.ts */
+    // why: patternSafetyChecker branch tested in validate.spec.ts
     if (ctx.patternSafetyChecker) {
       const safetyResult = ctx.patternSafetyChecker(pattern)
       if (!safetyResult.safe) {
@@ -67,17 +67,19 @@ export function validatePatternProperties(instance: Record<string, unknown>, sch
       // eslint-disable-next-line workspace/no-unsafe-regex -- Pattern safety validated above when safePatterns enabled
       patterns.push({ regex: createRegExp(pattern), schema: patternSchema })
     } catch (e) {
-      /* istanbul ignore next -- strictPatterns mode verified in validate.spec.ts */
+      // why: strictPatterns mode verified in validate.spec.ts
       if (ctx.strictPatterns) {
-        /* istanbul ignore next -- error reporting for invalid regex */
+        // why: error reporting for invalid regex
         addError(ctx, `Invalid regex pattern in patternProperties: ${pattern}`, instance, 'patternProperties', {
-          /* istanbul ignore next -- error message extraction */
+          // why: error message extraction
           pattern,
-          /* istanbul ignore next -- ternary expression */
+          // why: ternary expression
+          /* node:coverage ignore next 1 */
           error: e instanceof Error ? e.message : 'Invalid regex',
         })
         valid = false
-        /* istanbul ignore if -- early exit tested in validate.spec.ts */
+        // why: early exit tested in validate.spec.ts
+        /* node:coverage ignore next 1 */
         if (!shouldContinue(ctx)) return false
       }
     }

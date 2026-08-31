@@ -35,12 +35,12 @@ export function validateItems(instance: unknown[], schema: Schema, ctx: Validati
   if (isArray(items)) {
     for (let i = 0; i < (items as Schema[]).length && i < instance.length; i++) {
       const itemSchema = (items as Schema[])[i]
-      /* istanbul ignore if -- defensive null check for sparse arrays */
+      // why: defensive null check for sparse arrays
       if (!itemSchema) continue
       const itemCtx = pushPath(ctx, i)
       if (!ctx.validate(instance[i], itemSchema, itemCtx)) {
         valid = false
-        /* istanbul ignore if -- early exit already tested in validate.spec.ts */
+        // why: early exit already tested in validate.spec.ts
         if (!shouldContinue(ctx)) return false
       }
     }
@@ -75,15 +75,15 @@ export function validateItems(instance: unknown[], schema: Schema, ctx: Validati
 function validateAdditionalItems(instance: unknown[], schema: Schema, ctx: ValidationContext, startIndex: number): boolean {
   const additionalItems = schema.additionalItems
 
-  /* istanbul ignore if -- default case handled in items.spec.ts */
+  // why: default case handled in items.spec.ts
   if (additionalItems === undefined) {
     return true
   }
 
-  /* istanbul ignore next -- additionalItems initialization and branching */
+  // why: additionalItems initialization and branching
   let valid = true
 
-  /* istanbul ignore next -- additionalItems branching */
+  // why: additionalItems branching
   if (additionalItems === false) {
     if (instance.length > startIndex) {
       addError(ctx, `Array has too many items. Expected at most ${startIndex}, got ${instance.length}`, instance, 'additionalItems', {
@@ -95,10 +95,10 @@ function validateAdditionalItems(instance: unknown[], schema: Schema, ctx: Valid
   } else if (typeof additionalItems === 'object') {
     for (let i = startIndex; i < instance.length; i++) {
       const itemCtx = pushPath(ctx, i)
-      /* istanbul ignore else -- validation failure tested in items.spec.ts */
+      // why: validation failure tested in items.spec.ts
       if (!ctx.validate(instance[i], additionalItems, itemCtx)) {
         valid = false
-        /* istanbul ignore if -- early exit tested in validate.spec.ts */
+        // why: early exit tested in validate.spec.ts
         if (!shouldContinue(ctx)) return false
       }
     }

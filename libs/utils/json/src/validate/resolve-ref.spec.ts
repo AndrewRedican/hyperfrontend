@@ -1,4 +1,5 @@
 import type { Schema } from '../types/schema'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { createValidationContext } from './context'
 import { resolveRef } from './resolve-ref'
 

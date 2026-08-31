@@ -29,7 +29,8 @@ function getActualType(value: unknown): string {
   const t = typeof value
   if (t === 'number') {
     const num = value as number
-    /* istanbul ignore next -- NaN/Infinity edge case */
+    // why: naN/Infinity edge case
+    /* node:coverage ignore next 1 */
     if (!globalIsFinite(num)) return 'number'
     return isInteger(num) ? 'integer' : 'number'
   }
@@ -61,11 +62,12 @@ export function validateType(instance: unknown, schema: Schema, ctx: ValidationC
 
   for (const type of types) {
     const checker = typeCheckers[type as JsonType]
-    /* istanbul ignore if -- defensive check for unknown type */
+    // why: defensive check for unknown type
     if (checker && checker(instance)) {
       return true
     }
-    /* istanbul ignore if -- defensive fallback for integer/number coercion */
+    // why: defensive fallback for integer/number coercion
+    /* node:coverage ignore next 3 */
     if (type === 'number' && typeCheckers['integer']?.(instance)) {
       return true
     }

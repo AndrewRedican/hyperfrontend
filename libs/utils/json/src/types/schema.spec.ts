@@ -1,4 +1,5 @@
 import type { Schema, JsonType } from './schema'
+import { describe, expect, it } from '@hyperfrontend/testing'
 
 describe('Schema type', () => {
   it('allows all JsonType values', () => {

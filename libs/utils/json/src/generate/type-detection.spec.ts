@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { getJsonType } from './type-detection'
 
 describe('getJsonType', () => {

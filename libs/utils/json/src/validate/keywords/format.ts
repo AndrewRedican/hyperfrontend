@@ -89,7 +89,7 @@ const formatValidators: Record<string, (value: string) => boolean> = {
     try {
       createURL(v)
       return true
-      /* istanbul ignore next -- URL constructor always throws for invalid URI */
+      // why: URL constructor always throws for invalid URI
     } catch {
       return false
     }
@@ -98,10 +98,11 @@ const formatValidators: Record<string, (value: string) => boolean> = {
   'uri-reference': (v) => {
     try {
       createURL(v, 'http://example.com')
-      /* istanbul ignore next -- success path just returns true */
+      // why: success path just returns true
       return true
+      /* node:coverage ignore next 4 */
     } catch {
-      /* istanbul ignore next -- URL constructor is very permissive with base URL */
+      // why: URL constructor is very permissive with base URL
       return false
     }
   },

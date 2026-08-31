@@ -1,5 +1,6 @@
 import type { Schema } from '../../types/schema'
 import type { ValidationContext } from '../context'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { validateItems } from './items'
 
 describe('validateItems', () => {

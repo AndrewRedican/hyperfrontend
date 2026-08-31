@@ -1,3 +1,5 @@
+import { describe, expect, it } from '@hyperfrontend/testing'
+import { validate } from '../validate/validate'
 import { toJsonSchema } from './to-json-schema'
 
 describe('toJsonSchema', () => {
@@ -190,7 +192,6 @@ describe('toJsonSchema', () => {
       }
       const schema = toJsonSchema(data)
 
-      const { validate } = require('../validate/validate')
       const result = validate(data, schema)
       expect(result.valid).toBe(true)
     })
