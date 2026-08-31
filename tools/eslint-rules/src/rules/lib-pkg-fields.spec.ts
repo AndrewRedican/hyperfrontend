@@ -1,4 +1,6 @@
 import type { RuleTester as ESLintRuleTester } from 'eslint'
+import { after as afterAll } from 'node:test'
+import { describe } from '@hyperfrontend/testing'
 import {
   createJsonRuleTester,
   createTempWorkspaceManager,

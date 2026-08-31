@@ -1,4 +1,6 @@
 import { join } from 'node:path'
+import { after as afterAll, beforeEach } from 'node:test'
+import { describe } from '@hyperfrontend/testing'
 import { createTempWorkspaceManager, createTypeScriptRuleTester } from '../testing'
 import rule, { clearCache } from './deepest-import-path'
 

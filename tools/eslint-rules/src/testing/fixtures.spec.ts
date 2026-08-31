@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@hyperfrontend/testing'
 import {
   APPLICATION_PROJECT_JSON,
   createNamedPackageJson,

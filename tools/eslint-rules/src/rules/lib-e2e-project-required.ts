@@ -63,7 +63,7 @@ const rule: Rule.RuleModule = {
     const projectRoot = dirname(filePath)
     const workspaceRoot = findNxWorkspaceRoot(projectRoot)
 
-    /* istanbul ignore next - workspace root should always exist */
+    // why: workspace root should always exist
     if (!workspaceRoot) {
       return {}
     }
@@ -80,7 +80,7 @@ const rule: Rule.RuleModule = {
 
     return {
       JSONProperty(node: JSONNode) {
-        // istanbul ignore next -- type guard for jsonc-eslint-parser
+        // why: type guard for jsonc-eslint-parser
         if (node.type !== 'JSONProperty') {
           return
         }

@@ -122,7 +122,7 @@ const rule: Rule.RuleModule = {
     const projectRoot = dirname(context.filename)
     const projectJson = readProjectJson(projectRoot)
 
-    /* istanbul ignore next - the linted file is the project.json being read */
+    // why: the linted file is the project.json being read
     if (!projectJson) {
       return {}
     }

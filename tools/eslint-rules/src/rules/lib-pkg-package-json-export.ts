@@ -33,7 +33,7 @@ const rule: Rule.RuleModule = {
     const filePath = context.filename
     const projectRoot = dirname(filePath)
 
-    /* istanbul ignore next - only publishable libraries are linted via config */
+    // why: only publishable libraries are linted via config
     if (!isPublishableLibrary(projectRoot)) {
       return {}
     }
@@ -43,7 +43,7 @@ const rule: Rule.RuleModule = {
 
     return {
       JSONProperty(node: JSONNode) {
-        // istanbul ignore next -- type guard for jsonc-eslint-parser
+        // why: type guard for jsonc-eslint-parser
         if (node.type !== 'JSONProperty') {
           return
         }
@@ -62,7 +62,7 @@ const rule: Rule.RuleModule = {
           const value = node.value
           if (value.type === 'JSONObjectExpression') {
             for (const prop of value.properties) {
-              /* istanbul ignore if -- type guard */
+              // why: type guard
               if (prop.type !== 'JSONProperty') continue
               const propKey = prop.key
               let propKeyName: string | null = null

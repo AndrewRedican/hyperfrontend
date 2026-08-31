@@ -1,3 +1,7 @@
+import { existsSync } from 'node:fs'
+import { join } from 'node:path'
+import { after as afterAll } from 'node:test'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { createTempWorkspaceManager } from '../testing'
 import {
   findNxWorkspaceRoot,
@@ -135,12 +139,7 @@ describe('findUpwardWhere', () => {
     })
 
     const result = findUpwardWhere(workspace.getPath('libs/my-lib/src'), (dir) => {
-      try {
-        const fs = require('node:fs')
-        return fs.existsSync(require('node:path').join(dir, 'marker-file.txt'))
-      } catch {
-        return false
-      }
+      return existsSync(join(dir, 'marker-file.txt'))
     })
 
     expect(result).toBe(workspace.root)

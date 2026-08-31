@@ -25,9 +25,9 @@ export function getImportCategory(source: string): ImportCategoryType {
     return ImportCategory.NodeBuiltin
   }
 
-  /* istanbul ignore next - defensive fallback for empty source */
+  // why: defensive fallback for empty source
   const moduleName = source.split('/')[0] ?? ''
-  /* istanbul ignore next - node builtins without prefix caught by require-node-protocol */
+  // why: node builtins without prefix caught by require-node-protocol
   if (NODE_BUILTIN_MODULES.has(moduleName)) {
     return ImportCategory.NodeBuiltin
   }
@@ -54,7 +54,7 @@ export function getImportCategory(source: string): ImportCategoryType {
  * @returns The depth count (0 for non-relative imports).
  */
 export function getRelativeDepth(source: string): number {
-  /* istanbul ignore next - early return for non-relative imports */
+  // why: early return for non-relative imports
   if (!source.startsWith('../')) {
     return 0
   }
@@ -86,16 +86,16 @@ export function compareImportSources(sourceA: string, sourceB: string): number {
     return categoryA - categoryB
   }
 
-  /* istanbul ignore next - covered via import-order tests */
+  // why: covered via import-order tests
   if (categoryA === ImportCategory.Relative) {
     const depthA = getRelativeDepth(sourceA)
     const depthB = getRelativeDepth(sourceB)
-    /* istanbul ignore else - same depth falls through to alphabetical */
+    // why: same depth falls through to alphabetical
     if (depthA !== depthB) {
       return depthB - depthA
     }
   }
 
-  /* istanbul ignore next - alphabetical fallback */
+  // why: alphabetical fallback
   return sourceA.localeCompare(sourceB)
 }

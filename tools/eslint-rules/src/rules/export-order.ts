@@ -51,9 +51,9 @@ function isTypeOnlyExport(node: ExportFromDeclaration): boolean {
  * @returns The export source string.
  */
 function getExportSource(node: ExportFromDeclaration): string {
-  /* istanbul ignore next - source is always present when isExportFromSource is true */
+  // why: source is always present when isExportFromSource is true
   if (!node.source) return ''
-  /* istanbul ignore next - source.value is always string for valid exports */
+  // why: source.value is always string for valid exports
   return typeof node.source.value === 'string' ? node.source.value : ''
 }
 
@@ -100,9 +100,9 @@ export default createRule<[], MessageIds>({
         }
 
         const exportIndices = exports.map((exp) => node.body.indexOf(exp))
-        /* istanbul ignore next - defensive: exportIndices always has values when exports.length > 1 */
+        // why: defensive: exportIndices always has values when exports.length > 1
         const firstIndex = exportIndices[0] ?? 0
-        /* istanbul ignore next - defensive: exportIndices always has values when exports.length > 1 */
+        // why: defensive: exportIndices always has values when exports.length > 1
         const lastIndex = exportIndices[exportIndices.length - 1] ?? 0
         const isContiguous = lastIndex - firstIndex + 1 === exports.length
 
@@ -122,7 +122,7 @@ export default createRule<[], MessageIds>({
         }
 
         const firstExport = exports[0]
-        /* istanbul ignore next - defensive check, exports.length >= 2 */
+        // why: defensive check, exports.length >= 2
         if (!firstExport) {
           return
         }
@@ -138,7 +138,7 @@ export default createRule<[], MessageIds>({
                 })
 
                 const lastExport = exports[exports.length - 1]
-                /* istanbul ignore next - defensive check, exports.length >= 2 */
+                // why: defensive check, exports.length >= 2
                 if (!lastExport) {
                   return null
                 }

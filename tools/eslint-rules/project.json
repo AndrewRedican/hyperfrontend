@@ -6,6 +6,10 @@
   "projectType": "library",
   "tags": ["type:util", "scope:internal"],
   "targets": {
-    "typecheck": {}
+    "typecheck": {},
+    "test": {
+      "executor": "@hyperfrontend/package:test",
+      "options": {}
+    }
   }
 }

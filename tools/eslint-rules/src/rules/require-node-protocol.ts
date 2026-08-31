@@ -33,7 +33,7 @@ export default createRule<[], MessageIds>({
       ImportDeclaration(node) {
         const source = node.source.value
 
-        /* istanbul ignore next - defensive check for non-string source */
+        // why: defensive check for non-string source
         if (typeof source !== 'string') {
           return
         }
@@ -53,12 +53,12 @@ export default createRule<[], MessageIds>({
           },
           fix(fixer) {
             const raw = node.source.raw
-            /* istanbul ignore else - raw is always defined for valid imports */
+            // why: raw is always defined for valid imports
             if (raw) {
               const quote = raw[0]
               return fixer.replaceText(node.source, `${quote}${fixed}${quote}`)
             }
-            /* istanbul ignore next - fallback for edge case */
+            // why: fallback for edge case
             return fixer.replaceText(node.source, `'${fixed}'`)
           },
         })

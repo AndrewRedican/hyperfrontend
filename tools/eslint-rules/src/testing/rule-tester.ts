@@ -1,5 +1,6 @@
 import { RuleTester as TypeScriptRuleTester } from '@typescript-eslint/rule-tester'
 import { RuleTester } from 'eslint'
+import jsoncParser from 'jsonc-eslint-parser'
 
 /**
  * Configuration for JSON rule tester.
@@ -51,9 +52,6 @@ export interface TypeScriptRuleTesterConfig {
  * ```
  */
 export function createJsonRuleTester(config?: JsonRuleTesterConfig): RuleTester {
-  // Note: Using require() here because jsonc-eslint-parser is a CommonJS module
-  const jsoncParser = require('jsonc-eslint-parser')
-
   return new RuleTester({
     languageOptions: {
       parser: jsoncParser,

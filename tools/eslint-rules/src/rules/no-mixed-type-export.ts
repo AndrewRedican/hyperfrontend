@@ -60,7 +60,7 @@ export default createRule<[], MessageIds>({
         }
 
         const typeSpecifiers = specifiers.filter(isTypeSpecifier)
-        /* istanbul ignore next - filter callback always executed when specifiers exist */
+        // why: filter callback always executed when specifiers exist
         const valueSpecifiers = specifiers.filter((s) => !isTypeSpecifier(s))
 
         if (typeSpecifiers.length === 0 || valueSpecifiers.length === 0) {
@@ -74,26 +74,26 @@ export default createRule<[], MessageIds>({
             const source = node.source ? ` from ${node.source.raw ?? `'${node.source.value}'`}` : ''
 
             const typeNames = typeSpecifiers.map((s) => {
-              /* istanbul ignore else - always Identifier for standard exports */
+              // why: always Identifier for standard exports
               if (s.local.type === AST_NODE_TYPES.Identifier) {
                 const local = s.local.name
                 const exported = s.exported.type === AST_NODE_TYPES.Identifier ? s.exported.name : sourceCode.getText(s.exported)
-                /* istanbul ignore next - both branches tested but coverage varies */
+                // why: both branches tested but coverage varies
                 return local === exported ? local : `${local} as ${exported}`
               }
-              /* istanbul ignore next - fallback for non-Identifier exports */
+              // why: fallback for non-Identifier exports
               return sourceCode.getText(s)
             })
 
             const valueNames = valueSpecifiers.map((s) => {
-              /* istanbul ignore else - always Identifier for standard exports */
+              // why: always Identifier for standard exports
               if (s.local.type === AST_NODE_TYPES.Identifier) {
                 const local = s.local.name
                 const exported = s.exported.type === AST_NODE_TYPES.Identifier ? s.exported.name : sourceCode.getText(s.exported)
-                /* istanbul ignore next - both branches tested but coverage varies */
+                // why: both branches tested but coverage varies
                 return local === exported ? local : `${local} as ${exported}`
               }
-              /* istanbul ignore next - fallback for non-Identifier exports */
+              // why: fallback for non-Identifier exports
               return sourceCode.getText(s)
             })
 

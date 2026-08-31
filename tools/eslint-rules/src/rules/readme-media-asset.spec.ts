@@ -1,3 +1,5 @@
+import { after as afterAll } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { createTempWorkspaceManager } from '../testing'
 import rule, { detectMediaReferences, isBadgeUrl, isMediaUrl, RULE_NAME, shouldApplyRule } from './readme-media-asset'
 

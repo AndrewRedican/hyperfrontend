@@ -99,7 +99,7 @@ const rule: Rule.RuleModule = {
     const projectJson = readProjectJson(projectRoot)
 
     if (!projectJson) {
-      /* istanbul ignore next -- the linted file is itself a project.json, always readable */
+      // why: the linted file is itself a project.json, always readable
       return {}
     }
 
@@ -137,7 +137,7 @@ const rule: Rule.RuleModule = {
             return
           }
           for (const element of value.elements) {
-            /* istanbul ignore if -- JSON arrays never contain holes */
+            // why: JSON arrays never contain holes
             if (!element) {
               continue
             }
@@ -162,7 +162,7 @@ const rule: Rule.RuleModule = {
               return fixer.replaceText(property.value as unknown as Rule.Node, `[${merged}]`)
             }
             const lastProp = root.properties[root.properties.length - 1]
-            /* istanbul ignore if -- a valid project.json always has at least one property */
+            // why: a valid project.json always has at least one property
             if (!lastProp) {
               return null
             }

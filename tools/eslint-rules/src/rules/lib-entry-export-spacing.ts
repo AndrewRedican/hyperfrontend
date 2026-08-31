@@ -128,7 +128,7 @@ const rule = ESLintUtils.RuleCreator(
           const currentExport = exportStatements[i]
           const nextExport = exportStatements[i + 1]
 
-          /* istanbul ignore next -- defensive: loop bounds guarantee these exist */
+          // why: defensive: loop bounds guarantee these exist
           if (!currentExport || !nextExport) {
             continue
           }
@@ -153,7 +153,7 @@ const rule = ESLintUtils.RuleCreator(
                 const currentExportEndToken = sourceCode.getLastToken(currentExport)
                 const nextExportStartToken = sourceCode.getFirstToken(nextExport)
 
-                /* istanbul ignore if -- defensive: tokens always exist for valid export statements */
+                // why: defensive: tokens always exist for valid export statements
                 if (!currentExportEndToken || !nextExportStartToken) {
                   return null
                 }

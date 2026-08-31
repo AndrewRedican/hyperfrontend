@@ -88,7 +88,7 @@ export default createRule<[], MessageIds>({
      * @returns The path string or null if invalid.
      */
     function getSourcePath(source: TSESTree.Literal | TSESTree.StringLiteral | null): string | null {
-      /* istanbul ignore if -- defensive check; import/export sources are always string literals in valid ASTs */
+      // why: defensive check; import/export sources are always string literals in valid ASTs
       if (!source || typeof source.value !== 'string') {
         return null
       }
@@ -98,7 +98,7 @@ export default createRule<[], MessageIds>({
     return {
       ImportDeclaration(node) {
         const path = getSourcePath(node.source)
-        /* istanbul ignore else -- getSourcePath only returns null for malformed ASTs */
+        // why: getSourcePath only returns null for malformed ASTs
         if (path) {
           recordPath(importPaths, path, node, node.importKind === 'type')
         }
@@ -109,7 +109,7 @@ export default createRule<[], MessageIds>({
           return
         }
         const path = getSourcePath(node.source)
-        /* istanbul ignore else -- getSourcePath only returns null for malformed ASTs */
+        // why: getSourcePath only returns null for malformed ASTs
         if (path) {
           recordPath(exportPaths, path, node, node.exportKind === 'type')
         }
@@ -120,7 +120,7 @@ export default createRule<[], MessageIds>({
           return
         }
         const path = getSourcePath(node.source)
-        /* istanbul ignore else -- getSourcePath only returns null for malformed ASTs */
+        // why: getSourcePath only returns null for malformed ASTs
         if (path) {
           recordPath(exportPaths, path, node, node.exportKind === 'type')
         }

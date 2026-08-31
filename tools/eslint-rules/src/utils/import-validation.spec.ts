@@ -9,6 +9,7 @@ import {
   isDirectory,
   readDirectory,
 } from '@hyperfrontend/project-scope'
+import { describe, expect, it } from '@hyperfrontend/testing'
 
 describe('Import Validation', () => {
   it('imports findWorkspaceRoot from project-scope', () => {

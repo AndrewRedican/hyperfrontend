@@ -1,5 +1,6 @@
 import type { InvalidTestCase, ValidTestCase } from '@typescript-eslint/rule-tester'
 import type { RuleOptions } from './escape-package-tags'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { createTypeScriptRuleTester } from '../testing'
 import rule, { DEFAULT_PREFIXES, findBarePackageTags, findBareTagsOnLine, findContentStart, measureSpecifier } from './escape-package-tags'
 

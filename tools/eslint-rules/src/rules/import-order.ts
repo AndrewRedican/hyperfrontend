@@ -33,7 +33,7 @@ function isTypeOnlyImport(node: TSESTree.ImportDeclaration): boolean {
  * @returns The import source string.
  */
 function getImportSource(node: TSESTree.ImportDeclaration): string {
-  /* istanbul ignore next - source.value is always string for valid imports */
+  // why: source.value is always string for valid imports
   return typeof node.source.value === 'string' ? node.source.value : ''
 }
 
@@ -80,9 +80,9 @@ export default createRule<[], MessageIds>({
         }
 
         const importIndices = imports.map((imp) => node.body.indexOf(imp))
-        /* istanbul ignore next - defensive: importIndices always has values when imports.length > 1 */
+        // why: defensive: importIndices always has values when imports.length > 1
         const firstIndex = importIndices[0] ?? 0
-        /* istanbul ignore next - defensive: importIndices always has values when imports.length > 1 */
+        // why: defensive: importIndices always has values when imports.length > 1
         const lastIndex = importIndices[importIndices.length - 1] ?? 0
         const isContiguous = lastIndex - firstIndex + 1 === imports.length
 
@@ -102,7 +102,7 @@ export default createRule<[], MessageIds>({
         }
 
         const firstImport = imports[0]
-        /* istanbul ignore next - defensive check, imports.length >= 2 */
+        // why: defensive check, imports.length >= 2
         if (!firstImport) {
           return
         }
@@ -118,7 +118,7 @@ export default createRule<[], MessageIds>({
                 })
 
                 const lastImport = imports[imports.length - 1]
-                /* istanbul ignore next - defensive check, imports.length >= 2 */
+                // why: defensive check, imports.length >= 2
                 if (!lastImport) {
                   return null
                 }

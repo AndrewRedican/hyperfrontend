@@ -1,5 +1,6 @@
 import { RuleTester as TypeScriptRuleTester } from '@typescript-eslint/rule-tester'
 import { RuleTester } from 'eslint'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { createJsonRuleTester, createPackageJsonRuleTester, createProjectJsonRuleTester, createTypeScriptRuleTester } from './rule-tester'
 
 describe('createJsonRuleTester', () => {

@@ -1,3 +1,6 @@
+import { beforeEach } from 'node:test'
+import { logger as mockNxLogger } from '@nx/devkit'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { logger, createRuleLogger, createNxScopedLogger } from './logger'
 
 jest.mock('@nx/devkit', () => ({
@@ -9,8 +12,6 @@ jest.mock('@nx/devkit', () => ({
     debug: jest.fn(),
   },
 }))
-
-const { logger: mockNxLogger } = require('@nx/devkit')
 
 describe('logger', () => {
   beforeEach(() => {

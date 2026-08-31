@@ -1,4 +1,6 @@
 import { join } from 'node:path'
+import { after as afterAll } from 'node:test'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { createTempWorkspaceManager } from '../testing'
 import rule, { deriveCoverageFlag, hasCoverageEntry, hasMatrixEntry, hasPathFilter, hasStatusWorkflow, RULE_NAME } from './lib-ci-workflows'
 

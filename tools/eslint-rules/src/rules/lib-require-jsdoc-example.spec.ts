@@ -1,4 +1,6 @@
 import type { InvalidTestCase, ValidTestCase } from '@typescript-eslint/rule-tester'
+import { after as afterAll } from 'node:test'
+import { describe } from '@hyperfrontend/testing'
 import {
   createTempWorkspaceManager,
   createTypeScriptRuleTester,

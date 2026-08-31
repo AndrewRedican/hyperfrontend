@@ -1,4 +1,6 @@
 import { join } from 'node:path'
+import { after as afterAll } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { createTempWorkspaceManager } from '../testing'
 import rule, { extractMentionedPackages, RULE_NAME } from './lib-compatibility-docs'
 

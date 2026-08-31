@@ -74,7 +74,7 @@ interface PathMappingEntry {
  */
 function resolveExportToSourcePath(exportPath: string, projectDir: string, workspaceRoot: string): string | null {
   // Remove leading ./ -- istanbul ignore next is for the else branch where path doesn't start with ./
-  /* istanbul ignore next -- exports conventionally start with ./, unlikely to hit else */
+  // why: exports conventionally start with ./, unlikely to hit else
   let normalizedPath = exportPath.startsWith('./') ? exportPath.slice(2) : exportPath
 
   // Convert .js/.mjs/.cjs to .ts
@@ -89,11 +89,11 @@ function resolveExportToSourcePath(exportPath: string, projectDir: string, works
   const mtsPath = absolutePath.replace(/\.ts$/, '.mts')
   const ctsPath = absolutePath.replace(/\.ts$/, '.cts')
 
-  /* istanbul ignore if -- mts fallback tested via dedicated test */
+  // why: mts fallback tested via dedicated test
   if (exists(mtsPath)) {
     return relative(workspaceRoot, mtsPath)
   }
-  /* istanbul ignore if -- cts fallback tested via dedicated test */
+  // why: cts fallback tested via dedicated test
   if (exists(ctsPath)) {
     return relative(workspaceRoot, ctsPath)
   }
@@ -120,7 +120,7 @@ function getLibraryEntryPoints(projectDir: string, workspaceRoot: string): Entry
   const packageName = packageJson.name
 
   for (const [exportKey, exportValue] of entries(packageJson.exports)) {
-    /* istanbul ignore if -- tested in separate case */
+    // why: tested in separate case
     if (exportKey === './package.json' || exportValue === './package.json') {
       continue
     }
@@ -128,12 +128,12 @@ function getLibraryEntryPoints(projectDir: string, workspaceRoot: string): Entry
     let exportPath: string | null = null
     if (typeof exportValue === 'string') {
       exportPath = exportValue
-      /* istanbul ignore else -- conditional exports tested separately */
+      // why: conditional exports tested separately
     } else if (typeof exportValue === 'object' && exportValue !== null) {
       exportPath = exportValue['import'] ?? exportValue['default'] ?? (values(exportValue)[0] as string) ?? null
     }
 
-    /* istanbul ignore if -- defensive for invalid export types */
+    // why: defensive for invalid export types
     if (!exportPath || typeof exportPath !== 'string') {
       continue
     }
@@ -177,13 +177,13 @@ function getLibraryEntryPoints(projectDir: string, workspaceRoot: string): Entry
 function extractExistingPaths(pathsNode: JSONNode): Map<string, string[]> {
   const paths = createMap<string, string[]>()
 
-  /* istanbul ignore if -- defensive type guard for jsonc-eslint-parser */
+  // why: defensive type guard for jsonc-eslint-parser
   if (pathsNode.type !== 'JSONObjectExpression') {
     return paths
   }
 
   for (const prop of pathsNode.properties) {
-    /* istanbul ignore if -- defensive type guard for jsonc-eslint-parser */
+    // why: defensive type guard for jsonc-eslint-parser
     if (prop.type !== 'JSONProperty') {
       continue
     }
@@ -197,7 +197,7 @@ function extractExistingPaths(pathsNode: JSONNode): Map<string, string[]> {
       keyName = key.value
     }
 
-    /* istanbul ignore if -- defensive for malformed JSON keys */
+    // why: defensive for malformed JSON keys
     if (!keyName) {
       continue
     }
@@ -328,7 +328,7 @@ const rule: Rule.RuleModule = {
 
     return {
       JSONProperty(node: JSONNode) {
-        /* istanbul ignore if -- type guard for jsonc-eslint-parser */
+        // why: type guard for jsonc-eslint-parser
         if (node.type !== 'JSONProperty') {
           return
         }
@@ -380,7 +380,7 @@ const rule: Rule.RuleModule = {
         const orphanPaths: OrphanPathInfo[] = []
 
         for (const prop of pathsValue.properties) {
-          /* istanbul ignore if -- defensive type guard for jsonc-eslint-parser */
+          // why: defensive type guard for jsonc-eslint-parser
           if (prop.type !== 'JSONProperty') {
             continue
           }
@@ -394,7 +394,7 @@ const rule: Rule.RuleModule = {
             keyName = key.value
           }
 
-          /* istanbul ignore if -- defensive for malformed JSON keys */
+          // why: defensive for malformed JSON keys
           if (!keyName) {
             continue
           }
@@ -411,7 +411,7 @@ const rule: Rule.RuleModule = {
           }
 
           // Check if this path belongs to a known package (one with exports in package.json)
-          /* istanbul ignore next -- callback may not execute if packageNameSet is empty */
+          // why: callback may not execute if packageNameSet is empty
           const matchesKnownPackage = from(packageNameSet).some((pkg) => keyName === pkg || keyName.startsWith(`${pkg}/`))
 
           if (!matchesKnownPackage) {
@@ -455,7 +455,7 @@ const rule: Rule.RuleModule = {
               const propIndex = properties.findIndex((p) => p === orphan.propertyNode)
               const propRange = orphan.propertyNode.range
 
-              /* istanbul ignore if -- defensive for missing range */
+              // why: defensive for missing range
               if (!propRange) {
                 return null
               }
@@ -478,12 +478,12 @@ const rule: Rule.RuleModule = {
               const commaMatch = textAfter.match(/^\s*,/)
               if (commaMatch) {
                 endPos += commaMatch[0].length
-                /* istanbul ignore else -- edge case when orphan is last property and not first */
+                // why: edge case when orphan is last property and not first
               } else if (propIndex > 0) {
                 // If no trailing comma and not first, remove leading comma instead
                 const textBefore = fullText.slice(leadingStart - 10, leadingStart)
                 const leadingCommaMatch = textBefore.match(/,\s*$/)
-                /* istanbul ignore if -- edge case for leading comma removal */
+                // why: edge case for leading comma removal
                 if (leadingCommaMatch) {
                   leadingStart -= leadingCommaMatch[0].length
                 }
@@ -513,7 +513,7 @@ const rule: Rule.RuleModule = {
         // This ensures all missing mappings are fixed in a single pass
         for (let i = 0; i < missingMappings.length; i++) {
           const mapping = missingMappings[i]
-          /* istanbul ignore if -- defensive for array access */
+          // why: defensive for array access
           if (!mapping) {
             continue
           }
@@ -536,7 +536,7 @@ const rule: Rule.RuleModule = {
 
                     // Add existing paths (excluding orphans which will be removed by their own fix)
                     for (const [alias, sourcePaths] of existingPaths.entries()) {
-                      /* istanbul ignore next -- callback may not execute if orphanPaths is empty */
+                      // why: callback may not execute if orphanPaths is empty
                       if (!orphanPaths.some((o) => o.pathAlias === alias)) {
                         allMappings.push({ pathAlias: alias, sourcePaths })
                       }
@@ -555,7 +555,7 @@ const rule: Rule.RuleModule = {
                             return m.packageName
                           }
                         }
-                        /* istanbul ignore next -- fallback for unknown packages */
+                        // why: fallback for unknown packages
                         return alias
                       }
 
@@ -591,14 +591,14 @@ const rule: Rule.RuleModule = {
         }
 
         // Only check paths that aren't orphans
-        /* istanbul ignore next -- callback may not execute if orphanPaths is empty */
+        // why: callback may not execute if orphanPaths is empty
         const nonOrphanPaths = existingPathsList.filter((p) => !orphanPaths.some((o) => o.pathAlias === p))
 
         const packageIndices = createMap<string, number[]>()
 
         for (let i = 0; i < nonOrphanPaths.length; i++) {
           const pathAlias = nonOrphanPaths[i]
-          /* istanbul ignore if -- defensive for array access */
+          // why: defensive for array access
           if (pathAlias === undefined) {
             continue
           }
@@ -637,7 +637,7 @@ const rule: Rule.RuleModule = {
                 const allMappings: PathMappingEntry[] = []
 
                 for (const prop of pathsValue.properties) {
-                  /* istanbul ignore if -- defensive type guard for jsonc-eslint-parser */
+                  // why: defensive type guard for jsonc-eslint-parser
                   if (prop.type !== 'JSONProperty') {
                     continue
                   }
@@ -651,7 +651,7 @@ const rule: Rule.RuleModule = {
                     keyName = key.value
                   }
 
-                  /* istanbul ignore if -- defensive for malformed JSON keys */
+                  // why: defensive for malformed JSON keys
                   if (!keyName) {
                     continue
                   }
@@ -675,7 +675,7 @@ const rule: Rule.RuleModule = {
                       }
                     }
                     // Fallback: use the alias itself as package name
-                    /* istanbul ignore next -- fallback for unknown packages */
+                    // why: fallback for unknown packages
                     return alias
                   }
 

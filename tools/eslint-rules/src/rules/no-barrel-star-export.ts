@@ -27,7 +27,7 @@ function resolveExportValue(exportValue: string | Record<string, string>): strin
     return exportValue['import'] ?? exportValue['require'] ?? exportValue['default'] ?? null
   }
 
-  /* istanbul ignore next -- unreachable given TypeScript types, defensive fallback for malformed JSON */
+  // why: unreachable given TypeScript types, defensive fallback for malformed JSON
   return null
 }
 
@@ -82,7 +82,7 @@ const rule = ESLintUtils.RuleCreator(
   create(context) {
     const filename = context.filename
 
-    /* istanbul ignore next -- Windows path separator only testable on Windows */
+    // why: Windows path separator only testable on Windows
     if (!filename.endsWith('/index.ts') && !filename.endsWith('\\index.ts')) {
       return {}
     }

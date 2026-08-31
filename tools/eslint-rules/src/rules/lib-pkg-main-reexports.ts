@@ -117,7 +117,7 @@ function resolveExportPath(exportValue: string | Record<string, string>): string
   if (typeof exportValue === 'object' && exportValue !== null) {
     return exportValue['import'] ?? exportValue['require'] ?? exportValue['default'] ?? null
   }
-  /* istanbul ignore next -- unreachable: type guards above cover all cases */
+  // why: unreachable: type guards above cover all cases
   return null
 }
 
