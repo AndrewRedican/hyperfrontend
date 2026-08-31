@@ -1,4 +1,5 @@
 import type { Tree } from '@hyperfrontend/project-scope/vfs'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { changeJsonFile, DEFAULT_CHANGE_JSON_FILE_OPTIONS } from './change-json-file'
 
 /**

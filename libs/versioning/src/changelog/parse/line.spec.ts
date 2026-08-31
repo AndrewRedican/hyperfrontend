@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { parseVersionFromHeading, parseScopeFromItem, parseCommitRefs, parseIssueRefs } from './line'
 
 describe('parseVersionFromHeading', () => {

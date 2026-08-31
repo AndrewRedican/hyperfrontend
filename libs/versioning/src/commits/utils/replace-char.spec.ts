@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { hyphenToSpace, replaceChar } from './replace-char'
 
 describe('replaceChar', () => {

@@ -1,4 +1,8 @@
 import type { Tree } from '@hyperfrontend/project-scope/vfs'
+import { beforeEach } from 'node:test'
+import * as projectScopeFs from '@hyperfrontend/project-scope/core/fs'
+import * as projectScopeTraversal from '@hyperfrontend/project-scope/project/traversal'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import {
   CHANGELOG_NAMES,
   findChangelogs,
@@ -10,6 +14,8 @@ import {
 
 jest.mock('@hyperfrontend/project-scope/core/fs', () => ({
   exists: jest.fn(),
+  readDirectory: jest.fn(),
+  locateByMarkers: jest.fn(),
 }))
 
 jest.mock('@hyperfrontend/project-scope/project/traversal', () => ({
@@ -34,8 +40,6 @@ describe('CHANGELOG_NAMES', () => {
 })
 
 describe('findProjectChangelog', () => {
-  const projectScopeFs = require('@hyperfrontend/project-scope/core/fs')
-
   beforeEach(() => {
     jest.clearAllMocks()
   })
@@ -90,8 +94,6 @@ describe('findProjectChangelog', () => {
 })
 
 describe('findChangelogs', () => {
-  const projectScopeFs = require('@hyperfrontend/project-scope/core/fs')
-
   beforeEach(() => {
     jest.clearAllMocks()
   })
@@ -138,8 +140,6 @@ describe('findChangelogs', () => {
 })
 
 describe('discoverAllChangelogs', () => {
-  const projectScopeTraversal = require('@hyperfrontend/project-scope/project/traversal')
-
   beforeEach(() => {
     jest.clearAllMocks()
   })

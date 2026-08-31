@@ -1,4 +1,3 @@
-/* eslint-disable @nx/enforce-module-boundaries */
 import type { ScopeFilterContext } from '../models/session-config'
 import { isAbsolute, join } from 'node:path'
 import { parse } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'

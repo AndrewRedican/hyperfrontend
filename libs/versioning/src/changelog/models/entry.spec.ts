@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { createChangelogEntry, createUnreleasedEntry, createChangelogItem, createChangelogSection, createCommitRef } from './index'
 
 describe('createChangelogEntry', () => {

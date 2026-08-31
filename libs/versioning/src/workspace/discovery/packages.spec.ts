@@ -1,4 +1,10 @@
 import type { Tree } from '@hyperfrontend/project-scope/vfs'
+import { beforeEach } from 'node:test'
+import * as projectScopeFs from '@hyperfrontend/project-scope/core/fs'
+import * as projectScopePackage from '@hyperfrontend/project-scope/project/package'
+import * as projectScopeRoot from '@hyperfrontend/project-scope/project/root'
+import * as projectScopeTraversal from '@hyperfrontend/project-scope/project/traversal'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { discoverPackages, discoverProject, discoverProjectByName } from './packages'
 
 jest.mock('@hyperfrontend/project-scope/project/package', () => ({
@@ -17,11 +23,6 @@ jest.mock('@hyperfrontend/project-scope/project/traversal', () => ({
 jest.mock('@hyperfrontend/project-scope/core/fs', () => ({
   exists: jest.fn(),
 }))
-
-const projectScopePackage = require('@hyperfrontend/project-scope/project/package')
-const projectScopeRoot = require('@hyperfrontend/project-scope/project/root')
-const projectScopeTraversal = require('@hyperfrontend/project-scope/project/traversal')
-const projectScopeFs = require('@hyperfrontend/project-scope/core/fs')
 
 const projectScope = {
   readPackageJson: projectScopePackage.readPackageJson,

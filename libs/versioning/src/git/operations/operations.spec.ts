@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { escapeFilePath, escapeAuthor } from './commit'
 import { escapeGitRef, escapeGitPath, escapeGitArg } from './log'
 import { escapeGitMessage } from './manage-tags'

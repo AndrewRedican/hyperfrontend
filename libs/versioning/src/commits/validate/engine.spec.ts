@@ -1,5 +1,6 @@
 import type { Rule } from './models/rule'
 import type { Ruleset } from './models/ruleset'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { createConventionalCommit } from '../models/conventional'
 import { BUILT_IN_RULES, validateCommit, validateCommitWithRules } from './engine'
 

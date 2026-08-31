@@ -1,10 +1,10 @@
 import type { Logger } from '@hyperfrontend/logging'
 import type { Tree } from '@hyperfrontend/project-scope/vfs'
-
+import type { Mock } from '@hyperfrontend/testing'
 import type { GitClient } from '../../git/factory'
 import type { Registry } from '../../registry/models/registry'
 import type { FlowConfig, FlowContext, FlowState } from '../models/types'
-
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { createUpdatePackageStep, createCascadeDependenciesStep, UPDATE_PACKAGES_STEP_ID } from './update-packages'
 
 function createMockLogger(): Logger {
@@ -278,7 +278,7 @@ describe('Update Packages Step', () => {
 
       await step.execute(ctx)
 
-      const writeCall = (tree.write as jest.Mock).mock.calls[0]
+      const writeCall = (tree.write as Mock).mock.calls[0]
       const written = JSON.parse(writeCall[1])
 
       expect(written.name).toBe('@test/pkg')
@@ -386,7 +386,7 @@ describe('Update Packages Step', () => {
 
       await step.execute(ctx)
 
-      const writeCall = (tree.write as jest.Mock).mock.calls[0]
+      const writeCall = (tree.write as Mock).mock.calls[0]
       const written = writeCall[1]
 
       expect(written).toContain('  "')

@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { escapePackageName, escapeVersion } from './client'
 
 describe('escapePackageName', () => {

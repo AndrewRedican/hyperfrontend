@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { createVersionInfo } from './version-info'
 
 describe('createVersionInfo', () => {

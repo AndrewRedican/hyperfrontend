@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { formatCommitMessage } from './format-message'
 
 describe('formatCommitMessage', () => {

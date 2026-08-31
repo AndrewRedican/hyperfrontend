@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { createTestConfig } from '../__test-utils__/base-config'
 import { createMockTerminal, TestKey } from '../__test-utils__/mock-terminal'
 import { createSessionContext } from '../models/session-context'

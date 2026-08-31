@@ -1,9 +1,12 @@
+import type { MockedFunction } from '@hyperfrontend/testing'
 import * as childProcess from 'node:child_process'
+import { beforeEach } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { getStagedPaths } from './staged-paths'
 
 jest.mock('node:child_process')
 
-const execFileSync = childProcess.execFileSync as jest.MockedFunction<typeof childProcess.execFileSync>
+const execFileSync = childProcess.execFileSync as MockedFunction<typeof childProcess.execFileSync>
 
 /**
  * Configures the execFileSync mock to answer `rev-parse --show-toplevel` with

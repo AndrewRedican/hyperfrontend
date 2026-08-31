@@ -1,12 +1,13 @@
 import type { SessionConfig } from '../models/session-config'
 import { resolve } from 'node:path'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { conventionalPreset } from '../../validate/presets/conventional'
 import { DEFAULT_IMPERATIVE_WORDLIST } from '../../validate/rules/imperative-mood'
 import { createSessionContext } from '../models/session-context'
 import { StepStatus } from '../models/step'
 import { EMPTY_STAGING_MESSAGE, resolveScopeStep } from './resolve-scope'
 
-const fixturesRoot = resolve(__dirname, '../../../../__fixtures__/scope-discovery')
+const fixturesRoot = resolve(import.meta.dirname, '../../../../__fixtures__/scope-discovery')
 
 function configWith(stagedPaths: readonly string[]): SessionConfig {
   return {

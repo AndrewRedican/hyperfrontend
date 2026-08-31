@@ -1,4 +1,3 @@
-/* eslint-disable @nx/enforce-module-boundaries */
 import type { Logger } from '@hyperfrontend/logging'
 import type { Tree } from '@hyperfrontend/project-scope/vfs'
 import type { GitClient } from '../../git/factory'

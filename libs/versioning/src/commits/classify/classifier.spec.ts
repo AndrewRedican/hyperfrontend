@@ -1,4 +1,5 @@
 import type { ClassificationContext, CommitWithRaw } from './models'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { createGitCommit } from '../../git/models/commit'
 import { createConventionalCommit } from '../models/conventional'
 import {

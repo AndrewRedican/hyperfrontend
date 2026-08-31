@@ -1,4 +1,7 @@
+import type { MockedFunction } from '@hyperfrontend/testing'
 import { execFileSync } from 'node:child_process'
+import { beforeEach } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { commit, amendCommit, amendCommitNoEdit, createEmptyCommit, DEFAULT_COMMIT_OPTIONS } from './commit'
 import { getCommit } from './log'
 jest.mock('./log', () => ({
@@ -7,8 +10,8 @@ jest.mock('./log', () => ({
 }))
 jest.mock('node:child_process')
 
-const mockExecFileSync = execFileSync as jest.MockedFunction<typeof execFileSync>
-const mockGetCommit = getCommit as jest.MockedFunction<typeof getCommit>
+const mockExecFileSync = execFileSync as MockedFunction<typeof execFileSync>
+const mockGetCommit = getCommit as MockedFunction<typeof getCommit>
 
 describe('commit', () => {
   beforeEach(() => {

@@ -1,7 +1,8 @@
 import { resolve } from 'node:path'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { discoverScopes } from './scope-discovery'
 
-const fixturesRoot = resolve(__dirname, '../../../../__fixtures__/scope-discovery')
+const fixturesRoot = resolve(import.meta.dirname, '../../../../__fixtures__/scope-discovery')
 
 describe('discoverScopes', () => {
   it('returns empty when no paths are staged', () => {

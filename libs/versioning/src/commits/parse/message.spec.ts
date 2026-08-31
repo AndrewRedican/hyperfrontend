@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { parseConventionalCommit, isConventionalCommit } from './message'
 
 describe('parseConventionalCommit', () => {

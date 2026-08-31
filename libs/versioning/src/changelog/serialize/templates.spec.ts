@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { resolveOptions, getSectionHeading, formatLink, getListMarker, createSpacing, DEFAULT_SERIALIZE_OPTIONS } from './templates'
 
 describe('resolveOptions', () => {

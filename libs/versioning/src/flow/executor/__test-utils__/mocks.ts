@@ -6,6 +6,7 @@ import { createDate } from '@hyperfrontend/immutable-api-utils/built-in-copy/dat
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { entries } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
+import { jest } from '@hyperfrontend/testing'
 
 /** A pending virtual file system change reported by the mock tree. */
 export interface MockFileChange {

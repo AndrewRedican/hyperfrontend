@@ -1,4 +1,3 @@
-/* eslint-disable @nx/enforce-module-boundaries */
 import type { FileChange, FileDiff, Tree } from '@hyperfrontend/project-scope/vfs'
 import type { Logger } from '../models/types'
 import { commitChanges, formatUnifiedDiff, generateAllDiffs } from '@hyperfrontend/project-scope/vfs'

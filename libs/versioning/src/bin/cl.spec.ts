@@ -2,6 +2,7 @@ import type { LoadCommitConfigOptions, LoadedCommitConfig } from '../commits/aut
 import type { Ruleset, ValidationResult } from '../commits/validate/models/ruleset'
 import { PassThrough } from 'node:stream'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { CL_EXIT_INVALID, CL_EXIT_VALID, formatValidationResult, parseClArgs, runCl } from './cl'
 
 /**

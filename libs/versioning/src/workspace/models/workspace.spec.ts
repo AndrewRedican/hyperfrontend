@@ -1,5 +1,6 @@
 import type { Project } from './project'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { createProject } from './project'
 import {
   createWorkspaceConfig,

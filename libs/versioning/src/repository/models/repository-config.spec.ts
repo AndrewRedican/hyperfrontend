@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { createRepositoryConfig, isRepositoryConfig } from './repository-config'
 
 describe('createRepositoryConfig', () => {

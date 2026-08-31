@@ -1,5 +1,7 @@
+import type { Mock } from '@hyperfrontend/testing'
 import type { GitClient } from '../../git/factory'
 import type { FlowContext } from '../models/types'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { createMockContext, createMockGitClient, createMockLogger } from './__test-utils__/analyze-commits-mocks'
 import { createAnalyzeCommitsStep, ANALYZE_COMMITS_STEP_ID } from './analyze-commits'
 
@@ -380,7 +382,7 @@ describe('analyze-commits step', () => {
 
           await step.execute(context)
 
-          const debugCalls = (logger.debug as jest.Mock).mock.calls.map((call) => call[0])
+          const debugCalls = (logger.debug as Mock).mock.calls.map((call) => call[0])
           const fileCommitLogs = debugCalls.filter((msg: string) => msg.includes('commits touching'))
           expect(fileCommitLogs).toHaveLength(0)
         })

@@ -1,9 +1,9 @@
 import type { Logger } from '@hyperfrontend/logging'
 import type { Tree } from '@hyperfrontend/project-scope/vfs'
-
 import type { GitClient } from '../../../git/factory'
 import type { Registry } from '../../../registry/models/registry'
 import type { FlowConfig, FlowContext, FlowState } from '../../models/types'
+import { jest } from '@hyperfrontend/testing'
 
 /** Raw commit record as the git client hands it to the analyze-commits step. */
 export interface MockCommit {

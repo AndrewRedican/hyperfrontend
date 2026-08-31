@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { defaultScope } from './default-scope'
 
 describe('defaultScope', () => {

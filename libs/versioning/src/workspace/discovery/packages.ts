@@ -1,4 +1,3 @@
-/* eslint-disable @nx/enforce-module-boundaries */
 import type { PackageJson, Tree } from '@hyperfrontend/project-scope'
 import type { Project, CreateProjectOptions } from '../models/project'
 import type { WorkspaceConfig } from '../models/workspace'

@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { COMMIT_TYPES, isStandardType, isReleaseType, getSemverBump, RELEASE_TYPES, MINOR_TYPES, PATCH_TYPES } from './commit-type'
 
 describe('COMMIT_TYPES', () => {

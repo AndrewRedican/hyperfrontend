@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { SessionStatus } from './session-outcome'
 
 describe('SessionStatus', () => {

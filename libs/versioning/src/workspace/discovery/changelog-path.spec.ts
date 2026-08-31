@@ -1,3 +1,6 @@
+import { beforeEach } from 'node:test'
+import * as projectScopeFs from '@hyperfrontend/project-scope/core/fs'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { getExpectedChangelogPath, hasChangelog } from './changelog-path'
 
 jest.mock('@hyperfrontend/project-scope/core/fs', () => ({
@@ -32,8 +35,6 @@ describe('getExpectedChangelogPath', () => {
 })
 
 describe('hasChangelog', () => {
-  const projectScopeFs = require('@hyperfrontend/project-scope/core/fs')
-
   beforeEach(() => {
     jest.clearAllMocks()
   })

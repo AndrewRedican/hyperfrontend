@@ -6,7 +6,7 @@ import type { FlowStep } from '../models/step'
 import type { FlowContext, ScopeFilteringConfig, ScopeFilteringStrategy } from '../models/types'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
-// eslint-disable-next-line @nx/enforce-module-boundaries
+
 import { buildSimpleProjectGraph, discoverNxProjects } from '@hyperfrontend/project-scope/nx'
 import {
   buildInfrastructureMatcher,

@@ -1,5 +1,7 @@
 import type { Logger } from '@hyperfrontend/logging'
+import type { Mock, Mocked } from '@hyperfrontend/testing'
 import type { GitClient } from '../../git/factory'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { createMockContext, createMockGitClient, createMockLogger } from './__test-utils__/analyze-commits-mocks'
 import { createAnalyzeCommitsStep } from './analyze-commits'
 
@@ -469,7 +471,7 @@ describe('analyze-commits step', () => {
           const result = await step.execute(context)
 
           expect(result.status).toBe('success')
-          const logger = context.logger as jest.Mocked<Logger>
+          const logger = context.logger as Mocked<Logger>
           const debugCalls = logger.debug.mock.calls.map((call) => call[0])
           const infraLogs = debugCalls.filter((msg: string) => msg.includes('infrastructure') || msg.includes('Infrastructure'))
           expect(infraLogs).toHaveLength(0)
@@ -579,7 +581,7 @@ describe('analyze-commits step', () => {
 
           await step.execute(context)
 
-          const debugCalls = (logger.debug as jest.Mock).mock.calls.map((call) => call[0])
+          const debugCalls = (logger.debug as Mock).mock.calls.map((call) => call[0])
           const depLogs = debugCalls.filter((msg: string) => msg.includes('dependencies') || msg.includes('Dependency'))
           expect(depLogs).toHaveLength(0)
         })
@@ -603,7 +605,7 @@ describe('analyze-commits step', () => {
 
           await step.execute(context)
 
-          const debugCalls = (logger.debug as jest.Mock).mock.calls.map((call) => call[0])
+          const debugCalls = (logger.debug as Mock).mock.calls.map((call) => call[0])
           const depLogs = debugCalls.filter(
             (msg: string) => msg.includes('dependencies') || msg.includes('Dependency') || msg.includes('dependency')
           )

@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { createMockCommit, createMockContext } from './__test-utils__/generate-changelog-mocks'
 import { createGenerateChangelogStep } from './generate-changelog'
 

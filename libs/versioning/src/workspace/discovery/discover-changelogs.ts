@@ -1,4 +1,3 @@
-/* eslint-disable @nx/enforce-module-boundaries */
 import type { Tree } from '@hyperfrontend/project-scope/vfs'
 import { join, dirname, relative } from 'node:path'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'

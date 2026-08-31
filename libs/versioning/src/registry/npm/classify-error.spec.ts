@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { classifyNpmError } from './classify-error'
 
 describe('classifyNpmError', () => {

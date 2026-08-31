@@ -1,4 +1,5 @@
 import type { Rule, RuleContext, RuleMessage } from './rule'
+import { describe, expect, it } from '@hyperfrontend/testing'
 
 describe('rule types', () => {
   it('accepts a conforming rule implementation', () => {
