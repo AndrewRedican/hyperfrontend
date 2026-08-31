@@ -24,7 +24,7 @@ export const stringify = _JSON.stringify
  * (Safe copy) Namespace object containing all JSON methods.
  * Note: Importing this imports all methods in this namespace (no tree-shaking).
  */
-export const JSON = _freeze(<const>{
+export const JSON = _freeze({
   parse,
   stringify,
-})
+} as const)

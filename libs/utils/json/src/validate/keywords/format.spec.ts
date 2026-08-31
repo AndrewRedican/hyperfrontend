@@ -3,7 +3,7 @@ import type { ValidationContext } from '../context'
 import { validateFormat } from './format'
 
 describe('validateFormat', () => {
-  const ctx = <ValidationContext>{ errors: [] }
+  const ctx = { errors: [] } as ValidationContext
 
   it('returns true if no format', () => {
     expect(validateFormat('abc', {}, ctx)).toBe(true)

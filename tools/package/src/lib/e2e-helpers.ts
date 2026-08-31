@@ -56,7 +56,7 @@ export function checkE2EProject(tree: Tree, options: E2ECheckOptions): void {
     }
     replaceDescriptionPackageName(json, options.currentPackageName, options.newPackageName)
     if (isArray(json.implicitDependencies)) {
-      json.implicitDependencies = (<string[]>json.implicitDependencies).map((dep) =>
+      json.implicitDependencies = (json.implicitDependencies as string[]).map((dep) =>
         dep === `lib-${currentLibName}` ? `lib-${newLibName}` : dep
       )
     }
@@ -69,12 +69,12 @@ export function checkE2EProject(tree: Tree, options: E2ECheckOptions): void {
       json.name = `@hyperfrontend/e2e-${newLibName}`
       replaceDescriptionPackageName(json, options.currentPackageName, options.newPackageName)
       if (json.dependencies?.[options.currentPackageName]) {
-        const oldTgzPath = <string>json.dependencies[options.currentPackageName]
+        const oldTgzPath = json.dependencies[options.currentPackageName] as string
         json.dependencies[options.newPackageName] = oldTgzPath.replace(`hyperfrontend-${currentLibName}-`, `hyperfrontend-${newLibName}-`)
         delete json.dependencies[options.currentPackageName]
       }
       if (json.scripts?.['pack-install'] && typeof json.scripts['pack-install'] === 'string') {
-        json.scripts['pack-install'] = (<string>json.scripts['pack-install']).replaceAll(`/${currentLibName}`, `/${newLibName}`)
+        json.scripts['pack-install'] = (json.scripts['pack-install'] as string).replaceAll(`/${currentLibName}`, `/${newLibName}`)
       }
       return json
     })

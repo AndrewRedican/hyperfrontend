@@ -61,7 +61,7 @@ export function createSyncAllPackagesStep(): FlowStep {
       try {
         const content = tree.read(rootPackageJson, 'utf-8')
         if (content) {
-          const pkg = <Record<string, unknown>>parse(content)
+          const pkg = parse(content) as Record<string, unknown>
           pkg['version'] = nextVersion
           tree.write(rootPackageJson, stringify(pkg, null, 2) + '\n')
           modifiedFiles.push(rootPackageJson)

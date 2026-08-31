@@ -38,7 +38,7 @@ describe('channel/lifecycle/handshake-timers', () => {
       removeProcess: jest.fn(),
       notifyEvent: jest.fn(),
       notifyMessage: jest.fn(),
-      actions: <ChannelInternals['actions']>(<unknown>{}),
+      actions: {} as unknown as ChannelInternals['actions'],
     }
   })
 

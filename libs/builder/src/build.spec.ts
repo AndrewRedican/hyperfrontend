@@ -39,12 +39,12 @@ const makeMonitor = (): jest.Mocked<MemoryMonitor> => ({
 })
 
 beforeEach(() => {
-  ;(<jest.Mock>discoverEntries).mockReset().mockReturnValue(DISCOVERY)
-  ;(<jest.Mock>runBundlePhase).mockReset().mockResolvedValue(EMPTY_FORMATS)
-  ;(<jest.Mock>runPackagePhase).mockReset().mockResolvedValue(undefined)
-  ;(<jest.Mock>finalizeFilesAllowlist).mockReset()
-  ;(<jest.Mock>runBinPhase).mockReset().mockResolvedValue([])
-  ;(<jest.Mock>createMemoryMonitor).mockReset()
+  ;(discoverEntries as jest.Mock).mockReset().mockReturnValue(DISCOVERY)
+  ;(runBundlePhase as jest.Mock).mockReset().mockResolvedValue(EMPTY_FORMATS)
+  ;(runPackagePhase as jest.Mock).mockReset().mockResolvedValue(undefined)
+  ;(finalizeFilesAllowlist as jest.Mock).mockReset()
+  ;(runBinPhase as jest.Mock).mockReset().mockResolvedValue([])
+  ;(createMemoryMonitor as jest.Mock).mockReset()
 })
 
 describe('createBuildContext', () => {
@@ -193,18 +193,18 @@ describe('createBuildContext', () => {
 describe('build', () => {
   it('runs bundle, package, bin, then files-finalize in order with the resolved context', async () => {
     const callOrder: string[] = []
-    ;(<jest.Mock>runBundlePhase).mockImplementationOnce(async () => {
+    ;(runBundlePhase as jest.Mock).mockImplementationOnce(async () => {
       callOrder.push('bundle')
       return EMPTY_FORMATS
     })
-    ;(<jest.Mock>runPackagePhase).mockImplementationOnce(async () => {
+    ;(runPackagePhase as jest.Mock).mockImplementationOnce(async () => {
       callOrder.push('package')
     })
-    ;(<jest.Mock>runBinPhase).mockImplementationOnce(async () => {
+    ;(runBinPhase as jest.Mock).mockImplementationOnce(async () => {
       callOrder.push('bin')
       return []
     })
-    ;(<jest.Mock>finalizeFilesAllowlist).mockImplementationOnce(() => {
+    ;(finalizeFilesAllowlist as jest.Mock).mockImplementationOnce(() => {
       callOrder.push('finalize')
     })
     await build(baseConfig())
@@ -214,16 +214,16 @@ describe('build', () => {
   it('finalizes the files allowlist with the resolved context and config', async () => {
     const config = baseConfig()
     await build(config)
-    const ctxArg = (<jest.Mock>runBinPhase).mock.calls[0][0]
+    const ctxArg = (runBinPhase as jest.Mock).mock.calls[0][0]
     expect(finalizeFilesAllowlist).toHaveBeenCalledWith(ctxArg, config)
   })
 
   it('forwards the resolved BuildContext to every phase', async () => {
     await build(baseConfig())
-    const ctxArg = (<jest.Mock>runBundlePhase).mock.calls[0][0]
+    const ctxArg = (runBundlePhase as jest.Mock).mock.calls[0][0]
     expect(ctxArg).toEqual(expect.objectContaining({ projectRoot: '/abs/repo/libs/foo', workspaceRoot: '/abs/repo' }))
-    expect((<jest.Mock>runPackagePhase).mock.calls[0][0]).toBe(ctxArg)
-    expect((<jest.Mock>runBinPhase).mock.calls[0][0]).toBe(ctxArg)
+    expect((runPackagePhase as jest.Mock).mock.calls[0][0]).toBe(ctxArg)
+    expect((runBinPhase as jest.Mock).mock.calls[0][0]).toBe(ctxArg)
   })
 
   it('forwards the BuildConfig to bundle and package phases', async () => {
@@ -235,7 +235,7 @@ describe('build', () => {
 
   it('feeds the bundle outputs into the package phase', async () => {
     const formats: FormatOutputs = { esm: [ROOT_ENTRY], cjs: [], iife: [], umd: [] }
-    ;(<jest.Mock>runBundlePhase).mockResolvedValueOnce(formats)
+    ;(runBundlePhase as jest.Mock).mockResolvedValueOnce(formats)
     await build(baseConfig())
     expect(runPackagePhase).toHaveBeenCalledWith(expect.any(Object), expect.any(Object), formats)
   })
@@ -261,7 +261,7 @@ describe('build', () => {
         { config: { globalName: 'X' }, entries: [ROOT_ENTRY] },
       ],
     }
-    ;(<jest.Mock>runBundlePhase).mockResolvedValueOnce(formats)
+    ;(runBundlePhase as jest.Mock).mockResolvedValueOnce(formats)
     const result = await build(baseConfig())
     expect(result.success).toBe(true)
     expect(result.formatCounts).toEqual({ esm: 2, cjs: 1, iife: 1, umd: 2 })
@@ -269,7 +269,7 @@ describe('build', () => {
 
   it('aggregates the bin outputs returned by runBinPhase', async () => {
     const binOutputs: BinOutput[] = [{ name: 'cz', kind: 'cjs', outputPath: '/abs/dist/cz.js' }]
-    ;(<jest.Mock>runBinPhase).mockResolvedValueOnce(binOutputs)
+    ;(runBinPhase as jest.Mock).mockResolvedValueOnce(binOutputs)
     const result = await build(baseConfig())
     expect(result.binOutputs).toBe(binOutputs)
   })
@@ -286,7 +286,7 @@ describe('build', () => {
 
   it('creates a memory monitor with default thresholds when memoryMonitor is true', async () => {
     const monitor = makeMonitor()
-    ;(<jest.Mock>createMemoryMonitor).mockReturnValueOnce(monitor)
+    ;(createMemoryMonitor as jest.Mock).mockReturnValueOnce(monitor)
     await build({ ...baseConfig(), memoryMonitor: true })
     expect(createMemoryMonitor).toHaveBeenCalledWith(undefined)
     expect(monitor.logDebug).toHaveBeenCalledWith('build:start')
@@ -298,7 +298,7 @@ describe('build', () => {
 
   it('creates a memory monitor with custom thresholds when memoryMonitor is an options object', async () => {
     const monitor = makeMonitor()
-    ;(<jest.Mock>createMemoryMonitor).mockReturnValueOnce(monitor)
+    ;(createMemoryMonitor as jest.Mock).mockReturnValueOnce(monitor)
     const opts = { warningMB: 100, criticalMB: 200, growthMB: 25 }
     await build({ ...baseConfig(), memoryMonitor: opts })
     expect(createMemoryMonitor).toHaveBeenCalledWith(opts)
@@ -306,7 +306,7 @@ describe('build', () => {
 
   it('threads the resolved monitor into runBundlePhase so per-rollup checkpoints fire', async () => {
     const monitor = makeMonitor()
-    ;(<jest.Mock>createMemoryMonitor).mockReturnValueOnce(monitor)
+    ;(createMemoryMonitor as jest.Mock).mockReturnValueOnce(monitor)
     const config = { ...baseConfig(), memoryMonitor: true }
     await build(config)
     expect(runBundlePhase).toHaveBeenCalledWith(expect.any(Object), config, monitor)
@@ -314,9 +314,9 @@ describe('build', () => {
 
   it('flushes the monitor summary and rethrows when a phase fails', async () => {
     const monitor = makeMonitor()
-    ;(<jest.Mock>createMemoryMonitor).mockReturnValueOnce(monitor)
+    ;(createMemoryMonitor as jest.Mock).mockReturnValueOnce(monitor)
     const boom = new Error('bundle failed')
-    ;(<jest.Mock>runBundlePhase).mockRejectedValueOnce(boom)
+    ;(runBundlePhase as jest.Mock).mockRejectedValueOnce(boom)
     await expect(build({ ...baseConfig(), memoryMonitor: true })).rejects.toBe(boom)
     expect(monitor.logSummary).toHaveBeenCalledTimes(1)
     expect(runPackagePhase).not.toHaveBeenCalled()
@@ -325,7 +325,7 @@ describe('build', () => {
 
   it('rethrows phase failures even when no monitor is configured', async () => {
     const boom = new Error('package failed')
-    ;(<jest.Mock>runPackagePhase).mockRejectedValueOnce(boom)
+    ;(runPackagePhase as jest.Mock).mockRejectedValueOnce(boom)
     await expect(build(baseConfig())).rejects.toBe(boom)
   })
 
@@ -369,7 +369,7 @@ describe('build', () => {
     it('empties the project output directory before any phase runs, so stale artifacts do not survive', async () => {
       const stale = nodeJoin(outDir, 'index.cjs.js.map')
       writeFileSync(stale, '{}')
-      ;(<jest.Mock>runBundlePhase).mockImplementationOnce(async () => {
+      ;(runBundlePhase as jest.Mock).mockImplementationOnce(async () => {
         // why: clean must run before the first emitting phase, so by the time the bundle phase starts the stale file is already gone.
         expect(existsSync(stale)).toBe(false)
         return EMPTY_FORMATS

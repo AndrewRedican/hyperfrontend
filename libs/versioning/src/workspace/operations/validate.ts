@@ -265,7 +265,7 @@ function validateDependencyVersions(workspace: Workspace, project: Project): Val
       continue
     }
 
-    const depTypes = <const>['dependencies', 'devDependencies', 'peerDependencies', 'optionalDependencies']
+    const depTypes = ['dependencies', 'devDependencies', 'peerDependencies', 'optionalDependencies'] as const
     let versionRange: string | undefined
 
     for (const depType of depTypes) {
@@ -332,19 +332,19 @@ function validatePackageNameFormat(name: string): PackageNameFormatValidation {
       return { valid: false }
     }
 
-    const scope = <string>name.slice(1, slashIndex)
-    if (!isValidFirstChar(<string>scope[0])) return { valid: false }
+    const scope = name.slice(1, slashIndex) as string
+    if (!isValidFirstChar(scope[0] as string)) return { valid: false }
     for (const char of scope) {
       if (!isValidChar(char)) return { valid: false }
     }
 
-    const packageName = <string>name.slice(slashIndex + 1)
-    if (!isValidFirstChar(<string>packageName[0])) return { valid: false }
+    const packageName = name.slice(slashIndex + 1) as string
+    if (!isValidFirstChar(packageName[0] as string)) return { valid: false }
     for (const char of packageName) {
       if (!isValidChar(char)) return { valid: false }
     }
   } else {
-    if (!isValidFirstChar(<string>name[0])) return { valid: false }
+    if (!isValidFirstChar(name[0] as string)) return { valid: false }
     for (const char of name) {
       if (!isValidChar(char)) return { valid: false }
     }

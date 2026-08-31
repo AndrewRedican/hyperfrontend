@@ -27,12 +27,12 @@ describe('stripBundleCommentsPass', () => {
   const read = (relPath: string): string => readFileSync(join(outputPath, relPath), 'utf8')
 
   const iifeOutput = (config: Partial<IifeConfig> = {}): IifeOutput => ({
-    config: <IifeConfig>{ globalName: 'MyLib', ...config },
+    config: { globalName: 'MyLib', ...config } as IifeConfig,
     entries: [],
   })
 
   const umdOutput = (config: Partial<UmdConfig> = {}): UmdOutput => ({
-    config: <UmdConfig>{ globalName: 'MyLib', ...config },
+    config: { globalName: 'MyLib', ...config } as UmdConfig,
     entries: [],
   })
 

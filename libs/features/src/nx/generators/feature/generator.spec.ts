@@ -54,7 +54,7 @@ describe('featureGenerator', () => {
     expect(ensureSdkDependencyMock).toHaveBeenCalledWith(tree, { keepExistingVersions: true })
     const ensureOrder = ensureSdkDependencyMock.mock.invocationCallOrder[0]
     const runOrder = runInitMock.mock.invocationCallOrder[0]
-    expect(ensureOrder).toBeLessThan(<number>runOrder)
+    expect(ensureOrder).toBeLessThan(runOrder as number)
   })
 
   it('delegates to runInit with mapped headless flags and resolved cwd', async () => {

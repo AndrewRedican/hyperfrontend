@@ -37,7 +37,7 @@ describe('createUnencryptedPacket', () => {
   it('throws error when data is invalid', () => {
     const invalidData = { invalid: 'data' }
 
-    expect(() => createUnencryptedPacket(validOrigin, validTarget, <unknown>invalidData)).toThrow(
+    expect(() => createUnencryptedPacket(validOrigin, validTarget, invalidData as unknown)).toThrow(
       'Cannot create a packet without a valid data value'
     )
   })

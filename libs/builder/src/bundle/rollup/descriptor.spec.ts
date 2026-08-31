@@ -30,7 +30,7 @@ const makeContext = (overrides: Partial<BuildContext> = {}): BuildContext => ({
 })
 
 beforeEach(() => {
-  ;(<jest.Mock>resolveExternals).mockReset().mockReturnValue(['react'])
+  ;(resolveExternals as jest.Mock).mockReset().mockReturnValue(['react'])
 })
 
 describe('toEsmBuildDescriptor', () => {

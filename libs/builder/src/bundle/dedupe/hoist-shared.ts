@@ -84,7 +84,7 @@ const writeChunks = (
 ): void => {
   for (const [moduleKey, planned] of plan) {
     const chunkDir = join(context.outputPath, sharedDirFor(moduleKey))
-    const chunkPlan = buildChunkPlan(planned, context, chunkDir, (<EntryLocation>locations[planned.canonicalEntryIndex]).dir, format)
+    const chunkPlan = buildChunkPlan(planned, context, chunkDir, (locations[planned.canonicalEntryIndex] as EntryLocation).dir, format)
     const source = renderChunk(chunkPlan, format)
     ensureDir(chunkDir)
     writeFileContent(chunkFileFor(context, moduleKey, format), source)
@@ -108,11 +108,11 @@ const rewriteEntries = (
       if (decls === undefined) continue
       hoists.push({
         decls,
-        specifier: toSpecifier(relativePath((<EntryLocation>locations[index]).dir, chunkFileFor(context, moduleKey, format))),
+        specifier: toSpecifier(relativePath((locations[index] as EntryLocation).dir, chunkFileFor(context, moduleKey, format))),
       })
       for (const decl of decls) report.bytesReclaimed += Buffer.byteLength(decl.text)
     }
-    if (hoists.length > 0) writeFileContent((<EntryLocation>locations[index]).file, rewriteEntry(entry.parsed, hoists, format))
+    if (hoists.length > 0) writeFileContent((locations[index] as EntryLocation).file, rewriteEntry(entry.parsed, hoists, format))
   }
 }
 
@@ -120,7 +120,7 @@ const processFormat = (context: BuildContext, owners: OwnerIndex, format: ChunkF
   const locations = locateEntries(context, format)
   if (locations.length < 2) return
   const entries: EntryInput[] = locations.map((location) => {
-    const parsed = parseEntry(readFileContent((<EntryLocation>location).file), format)
+    const parsed = parseEntry(readFileContent((location as EntryLocation).file), format)
     return { parsed, byModule: attribute(parsed, owners) }
   })
   const plan = planHoists(entries, owners)

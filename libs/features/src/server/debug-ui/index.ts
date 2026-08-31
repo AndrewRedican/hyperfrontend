@@ -10,7 +10,7 @@ interface DebugWindow {
 
 // note: Page entry — reads the server-injected manifest and mounts the debug UI. Excluded from coverage as a thin DOM bootstrap; its rendering is covered by app.browser.spec.ts.
 const root = document.getElementById('hf-debug-root')
-const manifest = (<DebugWindow>(<unknown>window)).__HF_DEBUG_MANIFEST__
+const manifest = (window as unknown as DebugWindow).__HF_DEBUG_MANIFEST__
 
 if (root !== null && manifest !== undefined) {
   mountDebugUi(root, manifest)

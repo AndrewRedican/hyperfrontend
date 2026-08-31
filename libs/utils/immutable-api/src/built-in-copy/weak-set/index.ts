@@ -17,12 +17,12 @@ const _freeze = globalThis.Object.freeze
  * @returns A new WeakSet instance.
  */
 export const createWeakSet = <T extends WeakKey>(iterable?: Iterable<T> | null): WeakSet<T> =>
-  <WeakSet<T>>_Reflect.construct(_WeakSet, iterable ? [iterable] : [])
+  _Reflect.construct(_WeakSet, iterable ? [iterable] : []) as WeakSet<T>
 
 /**
  * (Safe copy) Namespace object containing WeakSet factory.
  * Note: Importing this imports all methods in this namespace (no tree-shaking).
  */
-export const WeakSet = _freeze(<const>{
+export const WeakSet = _freeze({
   create: createWeakSet,
-})
+} as const)

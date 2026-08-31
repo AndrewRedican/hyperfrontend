@@ -31,9 +31,9 @@ import { resolveChannel } from './resolve-channel'
 export function handleCancel(context: RoutingContext, message: MessageEvent<IAction>): void {
   const { state, registry, processManager } = context
   const action = message.data
-  const processId = <string>(<Record<string, unknown>>(<unknown>action))['processId']
+  const processId = (action as unknown as Record<string, unknown>)['processId'] as string
 
-  const channel = <ChannelHandle | undefined>(resolveChannel(registry, message) || processManager.get(processId))
+  const channel = (resolveChannel(registry, message) || processManager.get(processId)) as ChannelHandle | undefined
 
   if (!channel || !isPeerInstance(channel, action)) {
     return

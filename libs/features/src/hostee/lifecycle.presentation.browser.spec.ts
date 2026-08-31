@@ -28,7 +28,7 @@ function createMockChannel(): MockChannel {
   const send = jest.fn()
   const disconnect = jest.fn()
   const connect = jest.fn()
-  const channel = <ChannelHandle>(<unknown>{
+  const channel = {
     on: (event: string, handler: (data?: unknown) => void) => {
       ;(listeners[event] ?? (listeners[event] = [])).push(handler)
       return () => undefined
@@ -40,7 +40,7 @@ function createMockChannel(): MockChannel {
     send,
     disconnect,
     connect,
-  })
+  } as unknown as ChannelHandle
   return {
     channel,
     trigger: (event, data) => listeners[event]?.forEach((handler) => handler(data)),
@@ -53,11 +53,11 @@ function createMockChannel(): MockChannel {
 
 function createMockBroker(channel: ChannelHandle): { broker: BrokerHandle; addChannel: jest.Mock } {
   const addChannel = jest.fn(() => channel)
-  return { broker: <BrokerHandle>(<unknown>{ addChannel, registerProtocol: jest.fn(), logger: { id: 'logger' } }), addChannel }
+  return { broker: { addChannel, registerProtocol: jest.fn(), logger: { id: 'logger' } } as unknown as BrokerHandle, addChannel }
 }
 
 describe('createFeatureHandle presentation', () => {
-  const hostWindow = <Window>(<unknown>{ name: 'host' })
+  const hostWindow = { name: 'host' } as unknown as Window
   const emptyContract: FeatureContract = { emitted: [], accepted: [] }
 
   function styleTexts(): string[] {

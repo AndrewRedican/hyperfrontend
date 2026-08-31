@@ -13,7 +13,7 @@ import { createTokenParser, TokenType } from './token-parser'
 /**
  * Key codes for terminal navigation.
  */
-export const Key = freeze(<const>{
+export const Key = freeze({
   Up: '\x1B[A',
   Down: '\x1B[B',
   Left: '\x1B[D',
@@ -25,7 +25,7 @@ export const Key = freeze(<const>{
   Backspace: '\x7F',
   Delete: '\x1B[3~',
   CtrlC: '\x03',
-})
+} as const)
 
 /** Terminal key code type. */
 export type Key = (typeof Key)[keyof typeof Key]
@@ -33,7 +33,7 @@ export type Key = (typeof Key)[keyof typeof Key]
 /**
  * ANSI escape codes for terminal styling.
  */
-export const Ansi = freeze(<const>{
+export const Ansi = freeze({
   /** Clear entire line */
   ClearLine: '\x1B[2K',
   /** Move cursor to start of line */
@@ -96,7 +96,7 @@ export const Ansi = freeze(<const>{
   Red: '\x1B[31m',
   /** Escape code for gray foreground */
   Gray: '\x1B[90m',
-})
+} as const)
 
 /**
  * Terminal interface configuration.

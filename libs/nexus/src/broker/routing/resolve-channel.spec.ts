@@ -3,15 +3,15 @@ import { createRegistry } from '../../core/registry/factory'
 import { resolveChannel } from './resolve-channel'
 
 describe('resolveChannel', () => {
-  const sourceWindow = <Window>(<unknown>{ postMessage: jest.fn() })
-  const otherWindow = <Window>(<unknown>{ postMessage: jest.fn() })
+  const sourceWindow = { postMessage: jest.fn() } as unknown as Window
+  const otherWindow = { postMessage: jest.fn() } as unknown as Window
 
   function createEvent(senderId: string, source: Window | null, origin = 'http://remote.example'): MessageEvent<IAction> {
-    return <MessageEvent<IAction>>{
-      data: <IAction>{ type: '[nexus] new-message', senderId },
+    return {
+      data: { type: '[nexus] new-message', senderId } as IAction,
       source,
       origin,
-    }
+    } as MessageEvent<IAction>
   }
 
   let registry: ReturnType<typeof createRegistry>

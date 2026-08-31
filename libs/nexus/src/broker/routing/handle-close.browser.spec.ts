@@ -38,7 +38,7 @@ describe('handleClose', () => {
     mockBrokerState = {
       id: 'broker-1',
       name: 'test-broker',
-      window: <Window>global.window,
+      window: global.window as Window,
       contract: validContract,
       settings: {
         contract: validContract,
@@ -52,9 +52,9 @@ describe('handleClose', () => {
       getBrokerId: () => 'broker-1',
       getContract: () => mockBrokerState.contract,
     })
-    mockWindow = <Window>(<unknown>{
+    mockWindow = {
       postMessage: jest.fn(),
-    })
+    } as unknown as Window
 
     routingContext = {
       state: mockBrokerState,
@@ -80,10 +80,10 @@ describe('handleClose', () => {
       senderId: 'remote-broker-1',
     }
 
-    const message = <MessageEvent<IAction>>{
+    const message = {
       data: action,
       source: mockWindow,
-    }
+    } as MessageEvent<IAction>
 
     handleClose(routingContext, message)
 
@@ -103,10 +103,10 @@ describe('handleClose', () => {
       senderId: 'non-existent-sender',
     }
 
-    const message = <MessageEvent<IAction>>{
+    const message = {
       data: action,
       source: mockWindow,
-    }
+    } as MessageEvent<IAction>
 
     expect(() => {
       handleClose(routingContext, message)
@@ -123,16 +123,16 @@ describe('handleClose', () => {
       senderId: 'remote-broker-1',
     }
 
-    const message = <MessageEvent<IAction>>{
+    const message = {
       data: action,
       source: mockWindow,
-    }
+    } as MessageEvent<IAction>
 
-    const postMessageCallsBefore = (<jest.Mock>mockWindow.postMessage).mock.calls.length
+    const postMessageCallsBefore = (mockWindow.postMessage as jest.Mock).mock.calls.length
 
     handleClose(routingContext, message)
 
-    expect((<jest.Mock>mockWindow.postMessage).mock.calls.length).toBe(postMessageCallsBefore)
+    expect((mockWindow.postMessage as jest.Mock).mock.calls.length).toBe(postMessageCallsBefore)
   })
 
   it('calls channel close method without notification', () => {
@@ -149,10 +149,10 @@ describe('handleClose', () => {
       senderId: 'remote-broker-1',
     }
 
-    const message = <MessageEvent<IAction>>{
+    const message = {
       data: action,
       source: mockWindow,
-    }
+    } as MessageEvent<IAction>
 
     handleClose(routingContext, message)
 
@@ -164,28 +164,28 @@ describe('handleClose', () => {
     Object.defineProperty(channel1, 'isActive', { value: () => true, writable: true })
     const processId1 = processManager.create(channel1)
 
-    const window2 = <Window>(<unknown>{ postMessage: jest.fn() })
+    const window2 = { postMessage: jest.fn() } as unknown as Window
     const channel2 = addChannel(mockBrokerState, registry, processManager, actions, 'channel-2', window2)
     Object.defineProperty(channel2, 'isActive', { value: () => true, writable: true })
     const processId2 = processManager.create(channel2)
 
-    handleClose(routingContext, <MessageEvent<IAction>>{
-      data: <IAction>{
+    handleClose(routingContext, {
+      data: {
         type: '[nexus] connection-closed',
         processId: processId1,
         senderId: 'remote-1',
-      },
+      } as IAction,
       source: mockWindow,
-    })
+    } as MessageEvent<IAction>)
 
-    handleClose(routingContext, <MessageEvent<IAction>>{
-      data: <IAction>{
+    handleClose(routingContext, {
+      data: {
         type: '[nexus] connection-closed',
         processId: processId2,
         senderId: 'remote-2',
-      },
+      } as IAction,
       source: window2,
-    })
+    } as MessageEvent<IAction>)
 
     expect(mockWindow.postMessage).toHaveBeenCalled()
     expect(window2.postMessage).toHaveBeenCalled()
@@ -203,10 +203,10 @@ describe('handleClose', () => {
       senderId: 'remote-broker-1',
     }
 
-    const message = <MessageEvent<IAction>>{
+    const message = {
       data: action,
       source: mockWindow,
-    }
+    } as MessageEvent<IAction>
 
     handleClose(routingContext, message)
 
@@ -223,16 +223,16 @@ describe('handleClose', () => {
     channel.activate('*', validContract, 'remote-broker-1')
     const processId = processManager.create(channel)
 
-    handleClose(routingContext, <MessageEvent<IAction>>{
-      data: <IAction>{
+    handleClose(routingContext, {
+      data: {
         type: '[nexus] connection-closed',
         processId,
         senderId: 'remote-broker-2',
-      },
+      } as IAction,
       source: mockWindow,
-    })
+    } as MessageEvent<IAction>)
 
-    expect({ active: channel.isActive(), acknowledged: (<jest.Mock>mockWindow.postMessage).mock.calls }).toEqual({
+    expect({ active: channel.isActive(), acknowledged: (mockWindow.postMessage as jest.Mock).mock.calls }).toEqual({
       active: true,
       acknowledged: [],
     })
@@ -244,10 +244,10 @@ describe('handleClose', () => {
       senderId: 'remote-broker-1',
     }
 
-    const message = <MessageEvent<IAction>>{
-      data: <IAction>action,
+    const message = {
+      data: action as IAction,
       source: mockWindow,
-    }
+    } as MessageEvent<IAction>
 
     expect(() => {
       handleClose(routingContext, message)

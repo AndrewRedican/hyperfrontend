@@ -17,4 +17,4 @@ import { isArray } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
  * ```
  */
 export const normalizeFormats = (format: BinFormatSpec): BinScriptFormat[] =>
-  isArray(format) ? <BinScriptFormat[]>format : [<BinScriptFormat>format]
+  isArray(format) ? (format as BinScriptFormat[]) : [format as BinScriptFormat]

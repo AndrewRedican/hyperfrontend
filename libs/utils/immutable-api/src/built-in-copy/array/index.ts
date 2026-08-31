@@ -29,8 +29,8 @@ export const of = _Array.of
  * (Safe copy) Namespace object containing all Array static methods.
  * Note: Importing this imports all methods in this namespace (no tree-shaking).
  */
-export const Array = _freeze(<const>{
+export const Array = _freeze({
   isArray,
   from,
   of,
-})
+} as const)

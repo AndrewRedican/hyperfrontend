@@ -117,7 +117,7 @@ export const buildNativeBin = async (inputs: BuildNativeBinInputs): Promise<BinO
   generateSeaBlob({ seaConfigPath, outputBlobPath: blobPath })
   log.debug(`${bin.name}: sea blob generated in ${dateNow() - blobStart}ms`)
 
-  const hostBinary = resolveHostBinary({ platform: <SeaPlatform>target })
+  const hostBinary = resolveHostBinary({ platform: target as SeaPlatform })
 
   memorySnapshot(`${bin.name}: pre-inject (host=${hostBinary})`)
   const invocation = resolveDefaultInjectWorkerPath(ctx.workspaceRoot)

@@ -79,135 +79,135 @@ const makeContext = (): BuildContext => ({
 })
 
 beforeEach(() => {
-  ;(<jest.Mock>dispatchRollupWorker).mockClear()
-  ;(<jest.Mock>generateDeclarations).mockClear()
-  ;(<jest.Mock>ensureDir).mockClear()
-  ;(<jest.Mock>runPrePass).mockClear()
-  ;(<jest.Mock>runDtsPrePass).mockClear()
-  ;(<jest.Mock>runDtsPerEntry).mockClear()
-  ;(<jest.Mock>pruneOrphanDeclarations).mockClear()
-  ;(<jest.Mock>verifyEntryTypeRefs).mockClear()
-  ;(<jest.Mock>pruneDependencies).mockClear()
-  ;(<jest.Mock>stripBundleCommentsPass).mockClear()
-  ;(<jest.Mock>resolveDefaultWorkerPath)
+  ;(dispatchRollupWorker as jest.Mock).mockClear()
+  ;(generateDeclarations as jest.Mock).mockClear()
+  ;(ensureDir as jest.Mock).mockClear()
+  ;(runPrePass as jest.Mock).mockClear()
+  ;(runDtsPrePass as jest.Mock).mockClear()
+  ;(runDtsPerEntry as jest.Mock).mockClear()
+  ;(pruneOrphanDeclarations as jest.Mock).mockClear()
+  ;(verifyEntryTypeRefs as jest.Mock).mockClear()
+  ;(pruneDependencies as jest.Mock).mockClear()
+  ;(stripBundleCommentsPass as jest.Mock).mockClear()
+  ;(resolveDefaultWorkerPath as jest.Mock)
     .mockReset()
     .mockReturnValue({ path: '/abs/dist/libs/builder/bundle/dependencies/worker/index.cjs.js', execArgv: [] })
-  ;(<jest.Mock>resolveDefaultRollupWorkerPath).mockReset().mockReturnValue({ path: ROLLUP_WORKER_PATH, execArgv: [] })
+  ;(resolveDefaultRollupWorkerPath as jest.Mock).mockReset().mockReturnValue({ path: ROLLUP_WORKER_PATH, execArgv: [] })
 })
 
 describe('runBundlePhase', () => {
   it('returns empty per-format arrays when no formats are configured', async () => {
-    const result = await runBundlePhase(makeContext(), <BuildConfig>{ projectRoot: '', workspaceRoot: '' })
+    const result = await runBundlePhase(makeContext(), { projectRoot: '', workspaceRoot: '' } as BuildConfig)
     expect(result).toEqual({ esm: [], cjs: [], iife: [], umd: [] })
   })
 
   it('forks one rollup worker per resolved ESM entry', async () => {
-    await runBundlePhase(makeContext(), <BuildConfig>{
+    await runBundlePhase(makeContext(), {
       projectRoot: '',
       workspaceRoot: '',
       esm: { bundleWorkspaceDeps: false },
-    })
+    } as BuildConfig)
     expect(dispatchRollupWorker).toHaveBeenCalledTimes(2)
-    const [descriptor, options] = (<jest.Mock>dispatchRollupWorker).mock.calls[0]
+    const [descriptor, options] = (dispatchRollupWorker as jest.Mock).mock.calls[0]
     expect(descriptor.format).toBe('esm')
     expect(options.workerPath).toBe(ROLLUP_WORKER_PATH)
   })
 
   it('respects per-format entry filters when resolving entries', async () => {
-    const result = await runBundlePhase(makeContext(), <BuildConfig>{
+    const result = await runBundlePhase(makeContext(), {
       projectRoot: '',
       workspaceRoot: '',
       esm: { bundleWorkspaceDeps: false, entry: '.' },
-    })
+    } as BuildConfig)
     expect(result.esm).toEqual([expect.objectContaining({ exportPath: '.' })])
   })
 
   it('forks one rollup worker per resolved CJS entry', async () => {
-    await runBundlePhase(makeContext(), <BuildConfig>{
+    await runBundlePhase(makeContext(), {
       projectRoot: '',
       workspaceRoot: '',
       cjs: { bundleWorkspaceDeps: false },
-    })
+    } as BuildConfig)
     expect(dispatchRollupWorker).toHaveBeenCalledTimes(2)
-    const [descriptor] = (<jest.Mock>dispatchRollupWorker).mock.calls[0]
+    const [descriptor] = (dispatchRollupWorker as jest.Mock).mock.calls[0]
     expect(descriptor.format).toBe('cjs')
   })
 
   it('records IIFE outputs and ensures the bundle directory exists when at least one entry resolves', async () => {
-    const result = await runBundlePhase(makeContext(), <BuildConfig>{
+    const result = await runBundlePhase(makeContext(), {
       projectRoot: '',
       workspaceRoot: '',
       iife: { globalName: 'MyLib', entry: '.' },
-    })
+    } as BuildConfig)
     expect(result.iife).toEqual([expect.objectContaining({ entries: [expect.objectContaining({ exportPath: '.' })] })])
     expect(ensureDir).toHaveBeenCalledWith('/abs/dist/libs/foo/bundle')
   })
 
   it('skips IIFE bookkeeping when no entry resolves', async () => {
-    const result = await runBundlePhase(makeContext(), <BuildConfig>{
+    const result = await runBundlePhase(makeContext(), {
       projectRoot: '',
       workspaceRoot: '',
       iife: { globalName: 'MyLib', entry: './missing' },
-    })
+    } as BuildConfig)
     expect(result.iife).toEqual([])
   })
 
   it('records UMD outputs and ensures the bundle directory exists when at least one entry resolves', async () => {
-    const result = await runBundlePhase(makeContext(), <BuildConfig>{
+    const result = await runBundlePhase(makeContext(), {
       projectRoot: '',
       workspaceRoot: '',
       umd: { globalName: 'MyLib', entry: '.' },
-    })
+    } as BuildConfig)
     expect(result.umd).toEqual([expect.objectContaining({ entries: [expect.objectContaining({ exportPath: '.' })] })])
   })
 
   it('skips UMD bookkeeping when no entry resolves', async () => {
-    const result = await runBundlePhase(makeContext(), <BuildConfig>{
+    const result = await runBundlePhase(makeContext(), {
       projectRoot: '',
       workspaceRoot: '',
       umd: { globalName: 'MyLib', entry: './missing' },
-    })
+    } as BuildConfig)
     expect(result.umd).toEqual([])
   })
 
   it('honors the per-format `output` override when ensuring the bundle directory', async () => {
-    await runBundlePhase(makeContext(), <BuildConfig>{
+    await runBundlePhase(makeContext(), {
       projectRoot: '',
       workspaceRoot: '',
       iife: { globalName: 'MyLib', entry: '.', output: 'iife-bundle' },
-    })
+    } as BuildConfig)
     expect(ensureDir).toHaveBeenCalledWith('/abs/dist/libs/foo/iife-bundle')
   })
 
   it('runs the bundle comment strip once with the output path and the recorded format outputs', async () => {
-    const result = await runBundlePhase(makeContext(), <BuildConfig>{
+    const result = await runBundlePhase(makeContext(), {
       projectRoot: '',
       workspaceRoot: '',
       iife: { globalName: 'MyLib', entry: '.' },
       umd: { globalName: 'MyLib', entry: '.' },
-    })
+    } as BuildConfig)
     expect(stripBundleCommentsPass).toHaveBeenCalledWith('/abs/dist/libs/foo', result)
   })
 
   it('runs declaration emission exactly once after every format is built', async () => {
-    await runBundlePhase(makeContext(), <BuildConfig>{
+    await runBundlePhase(makeContext(), {
       projectRoot: '',
       workspaceRoot: '',
       esm: { bundleWorkspaceDeps: false },
       cjs: { bundleWorkspaceDeps: false },
-    })
+    } as BuildConfig)
     expect(generateDeclarations).toHaveBeenCalledTimes(1)
   })
 
   it('accepts an array of per-format configurations and processes them in order', async () => {
-    await runBundlePhase(makeContext(), <BuildConfig>{
+    await runBundlePhase(makeContext(), {
       projectRoot: '',
       workspaceRoot: '',
       esm: [
         { bundleWorkspaceDeps: false, entry: '.' },
         { bundleWorkspaceDeps: false, entry: './browser' },
       ],
-    })
+    } as BuildConfig)
     expect(dispatchRollupWorker).toHaveBeenCalledTimes(2)
   })
 
@@ -216,12 +216,12 @@ describe('runBundlePhase', () => {
     const monitor = { check: (label: string) => void labels.push(label) } as unknown as Parameters<typeof runBundlePhase>[2]
     await runBundlePhase(
       makeContext(),
-      <BuildConfig>{
+      {
         projectRoot: '',
         workspaceRoot: '',
         esm: { bundleWorkspaceDeps: false },
         cjs: { bundleWorkspaceDeps: false, entry: '.' },
-      },
+      } as BuildConfig,
       monitor
     )
     expect(labels).toEqual([
@@ -248,7 +248,7 @@ describe('runBundlePhase', () => {
     const monitor = { check: (label: string) => void labels.push(label) } as unknown as Parameters<typeof runBundlePhase>[2]
     await runBundlePhase(
       makeContext(),
-      <BuildConfig>{ projectRoot: '', workspaceRoot: '', esm: { bundleWorkspaceDeps: false }, dedupeSharedInternals: false },
+      { projectRoot: '', workspaceRoot: '', esm: { bundleWorkspaceDeps: false }, dedupeSharedInternals: false } as BuildConfig,
       monitor
     )
     expect(labels).not.toContain('bundle:dedupe:shared-first-party:end')
@@ -259,12 +259,12 @@ describe('runBundlePhase', () => {
     const monitor = { check: (label: string) => void labels.push(label) } as unknown as Parameters<typeof runBundlePhase>[2]
     await runBundlePhase(
       makeContext(),
-      <BuildConfig>{
+      {
         projectRoot: '',
         workspaceRoot: '',
         iife: { globalName: 'MyLib', entry: '.' },
         umd: { globalName: 'MyLib', entry: '.' },
-      },
+      } as BuildConfig,
       monitor
     )
     expect(labels).toEqual([
@@ -285,12 +285,12 @@ describe('runBundlePhase', () => {
   })
 
   it('produces identical outputs whether or not a monitor is supplied', async () => {
-    const config = <BuildConfig>{
+    const config = {
       projectRoot: '',
       workspaceRoot: '',
       esm: { bundleWorkspaceDeps: false },
       cjs: { bundleWorkspaceDeps: false },
-    }
+    } as BuildConfig
     const withoutMonitor = await runBundlePhase(makeContext(), config)
     const monitor = { check: jest.fn() } as unknown as Parameters<typeof runBundlePhase>[2]
     const withMonitor = await runBundlePhase(makeContext(), config, monitor)
@@ -298,21 +298,21 @@ describe('runBundlePhase', () => {
   })
 
   it('skips the dependencies pre-pass when bundledDeps is empty', async () => {
-    const config = <BuildConfig>{
+    const config = {
       projectRoot: '',
       workspaceRoot: '',
       esm: { bundleWorkspaceDeps: false, bundleAllDeps: true },
-    }
+    } as BuildConfig
     await runBundlePhase(makeContext(), config)
     expect(runPrePass).not.toHaveBeenCalled()
   })
 
   it('skips the dependencies pre-pass when no format opts in', async () => {
-    const config = <BuildConfig>{
+    const config = {
       projectRoot: '',
       workspaceRoot: '',
       esm: { bundleWorkspaceDeps: false },
-    }
+    } as BuildConfig
     const ctx = makeContext()
     ctx.bundledDeps = ['rollup']
     await runBundlePhase(ctx, config)
@@ -320,58 +320,58 @@ describe('runBundlePhase', () => {
   })
 
   it('runs the dependencies pre-pass when bundledDeps is non-empty and at least one format opts in', async () => {
-    const config = <BuildConfig>{
+    const config = {
       projectRoot: '',
       workspaceRoot: '',
       esm: { bundleWorkspaceDeps: false, bundleAllDeps: true },
       cjs: { bundleWorkspaceDeps: false, bundleAllDeps: true },
-    }
+    } as BuildConfig
     const ctx = makeContext()
     ctx.bundledDeps = ['rollup', 'postject']
     await runBundlePhase(ctx, config)
     expect(runPrePass).toHaveBeenCalledTimes(1)
-    const [jobs, options] = (<jest.Mock>runPrePass).mock.calls[0]
+    const [jobs, options] = (runPrePass as jest.Mock).mock.calls[0]
     expect(jobs).toHaveLength(4)
     expect(jobs.every((j: { kind: string }) => j.kind === 'js')).toBe(true)
     expect(options.workerPath).toBe('/abs/dist/libs/builder/bundle/dependencies/worker/index.cjs.js')
   })
 
   it('throws a context-rich error when the pre-pass worker cannot be located', async () => {
-    ;(<jest.Mock>resolveDefaultWorkerPath).mockReturnValueOnce(undefined)
-    const config = <BuildConfig>{
+    ;(resolveDefaultWorkerPath as jest.Mock).mockReturnValueOnce(undefined)
+    const config = {
       projectRoot: '',
       workspaceRoot: '',
       esm: { bundleWorkspaceDeps: false, bundleAllDeps: true },
-    }
+    } as BuildConfig
     const ctx = makeContext()
     ctx.bundledDeps = ['rollup']
     await expect(runBundlePhase(ctx, config)).rejects.toThrow(/pre-pass worker could not be located beside the builder module/)
   })
 
   it('throws a context-rich error when the rollup worker cannot be located', async () => {
-    ;(<jest.Mock>resolveDefaultRollupWorkerPath).mockReturnValueOnce(undefined)
-    const config = <BuildConfig>{
+    ;(resolveDefaultRollupWorkerPath as jest.Mock).mockReturnValueOnce(undefined)
+    const config = {
       projectRoot: '',
       workspaceRoot: '',
       esm: { bundleWorkspaceDeps: false },
-    }
+    } as BuildConfig
     await expect(runBundlePhase(makeContext(), config)).rejects.toThrow(/rollup worker could not be located beside the builder module/)
   })
 
   it('does not require the rollup worker when no format resolves any entry', async () => {
-    ;(<jest.Mock>resolveDefaultRollupWorkerPath).mockReturnValueOnce(undefined)
-    await runBundlePhase(makeContext(), <BuildConfig>{ projectRoot: '', workspaceRoot: '' })
+    ;(resolveDefaultRollupWorkerPath as jest.Mock).mockReturnValueOnce(undefined)
+    await runBundlePhase(makeContext(), { projectRoot: '', workspaceRoot: '' } as BuildConfig)
     expect(dispatchRollupWorker).not.toHaveBeenCalled()
   })
 
   it('emits monitor checkpoints around the pre-pass when active', async () => {
     const checks: string[] = []
     const monitor = { check: (label: string) => checks.push(label) } as unknown as Parameters<typeof runBundlePhase>[2]
-    const config = <BuildConfig>{
+    const config = {
       projectRoot: '',
       workspaceRoot: '',
       esm: { bundleWorkspaceDeps: false, bundleAllDeps: true },
-    }
+    } as BuildConfig
     const ctx = makeContext()
     ctx.bundledDeps = ['rollup']
     await runBundlePhase(ctx, config, monitor)
@@ -380,11 +380,11 @@ describe('runBundlePhase', () => {
   })
 
   it('runs the d.ts pre-pass and per-entry d.ts pass after declarations when bundledDeps is non-empty', async () => {
-    const config = <BuildConfig>{
+    const config = {
       projectRoot: '',
       workspaceRoot: '',
       esm: { bundleWorkspaceDeps: false, bundleAllDeps: true },
-    }
+    } as BuildConfig
     const ctx = makeContext()
     ctx.bundledDeps = ['rollup']
     await runBundlePhase(ctx, config)
@@ -393,20 +393,20 @@ describe('runBundlePhase', () => {
   })
 
   it('always prunes orphan .d.ts files after declarations, regardless of bundleAllDeps', async () => {
-    await runBundlePhase(makeContext(), <BuildConfig>{ projectRoot: '', workspaceRoot: '' })
+    await runBundlePhase(makeContext(), { projectRoot: '', workspaceRoot: '' } as BuildConfig)
     expect(pruneOrphanDeclarations).toHaveBeenCalledTimes(1)
   })
 
   it('verifies the emitted entry type references, regardless of bundleAllDeps', async () => {
     const ctx = makeContext()
-    await runBundlePhase(ctx, <BuildConfig>{ projectRoot: '', workspaceRoot: '' })
+    await runBundlePhase(ctx, { projectRoot: '', workspaceRoot: '' } as BuildConfig)
     expect(verifyEntryTypeRefs).toHaveBeenCalledWith(ctx)
   })
 
   it('prunes dependency orphans when bundledDeps is non-empty', async () => {
     const ctx = makeContext()
     ctx.bundledDeps = ['rollup']
-    await runBundlePhase(ctx, <BuildConfig>{ projectRoot: '', workspaceRoot: '' })
+    await runBundlePhase(ctx, { projectRoot: '', workspaceRoot: '' } as BuildConfig)
     expect(pruneDependencies).toHaveBeenCalledWith(ctx, undefined)
   })
 
@@ -422,12 +422,12 @@ describe('runBundlePhase', () => {
         tsConfigPath: '/abs/repo/libs/logging/tsconfig.lib.json',
       },
     ]
-    await runBundlePhase(ctx, <BuildConfig>{ projectRoot: '', workspaceRoot: '' })
+    await runBundlePhase(ctx, { projectRoot: '', workspaceRoot: '' } as BuildConfig)
     expect(pruneDependencies).toHaveBeenCalledTimes(1)
   })
 
   it('skips dependency orphan pruning when no deps are bundled', async () => {
-    await runBundlePhase(makeContext(), <BuildConfig>{ projectRoot: '', workspaceRoot: '' })
+    await runBundlePhase(makeContext(), { projectRoot: '', workspaceRoot: '' } as BuildConfig)
     expect(pruneDependencies).not.toHaveBeenCalled()
   })
 
@@ -436,27 +436,27 @@ describe('runBundlePhase', () => {
     const monitor = { check: (label: string) => checks.push(label) } as unknown as Parameters<typeof runBundlePhase>[2]
     const ctx = makeContext()
     ctx.bundledDeps = ['rollup']
-    await runBundlePhase(ctx, <BuildConfig>{ projectRoot: '', workspaceRoot: '' }, monitor)
+    await runBundlePhase(ctx, { projectRoot: '', workspaceRoot: '' } as BuildConfig, monitor)
     expect(checks).toContain('bundle:dependencies:prune:end')
   })
 
   it('skips the d.ts pre-pass and per-entry pass when no bundled deps', async () => {
-    const config = <BuildConfig>{
+    const config = {
       projectRoot: '',
       workspaceRoot: '',
       esm: { bundleWorkspaceDeps: false },
-    }
+    } as BuildConfig
     await runBundlePhase(makeContext(), config)
     expect(runDtsPrePass).not.toHaveBeenCalled()
     expect(runDtsPerEntry).not.toHaveBeenCalled()
   })
 
   it('threads npmDeps, workspaceRoutes, and depsRoot into js pre-pass jobs', async () => {
-    const config = <BuildConfig>{
+    const config = {
       projectRoot: '',
       workspaceRoot: '',
       esm: { bundleWorkspaceDeps: false, bundleAllDeps: true },
-    }
+    } as BuildConfig
     const ctx = makeContext()
     ctx.bundledDeps = ['rollup', 'postject']
     ctx.workspaceBundledDeps = [
@@ -470,7 +470,7 @@ describe('runBundlePhase', () => {
       },
     ]
     await runBundlePhase(ctx, config)
-    const jobs = (<jest.Mock>runPrePass).mock.calls[0][0]
+    const jobs = (runPrePass as jest.Mock).mock.calls[0][0]
     const npmJobs = jobs.filter((j: { kind: string }) => j.kind === 'js')
     expect(npmJobs).toHaveLength(2)
     expect(npmJobs[0].depsRoot).toBe('/abs/dist/libs/foo/_dependencies')
@@ -482,11 +482,11 @@ describe('runBundlePhase', () => {
   })
 
   it('threads npmDeps and self-excluded workspaceRoutes into workspace-js pre-pass jobs', async () => {
-    const config = <BuildConfig>{
+    const config = {
       projectRoot: '',
       workspaceRoot: '',
       esm: { bundleWorkspaceDeps: true, bundleAllDeps: true },
-    }
+    } as BuildConfig
     const ctx = makeContext()
     ctx.bundledDeps = ['rollup']
     ctx.workspaceBundledDeps = [
@@ -508,7 +508,7 @@ describe('runBundlePhase', () => {
       },
     ]
     await runBundlePhase(ctx, config)
-    const jobs = (<jest.Mock>runPrePass).mock.calls[0][0]
+    const jobs = (runPrePass as jest.Mock).mock.calls[0][0]
     const workspaceJobs = jobs.filter((j: { kind: string }) => j.kind === 'workspace-js')
     expect(workspaceJobs).toHaveLength(2)
     expect(workspaceJobs[0].dep).toBe('@hyperfrontend/logging')

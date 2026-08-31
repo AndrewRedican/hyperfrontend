@@ -48,7 +48,7 @@ export function attachSecurityTransport(
 ): boolean {
   const { state, logger } = context
 
-  const provider = <SecurityProvider | undefined>context.getProtocol(protocol)
+  const provider = context.getProtocol(protocol) as SecurityProvider | undefined
   if (!provider) {
     return false
   }
@@ -63,14 +63,14 @@ export function attachSecurityTransport(
     targetId: peerId,
     onAction: (action) => {
       // why: Synthesizing the counterpart window as the source lets decrypted actions clear the same source-and-pinned-origin checks as plaintext ones.
-      context.routeAction(<MessageEvent<IAction>>{
-        data: <IAction>action,
+      context.routeAction({
+        data: action as IAction,
         origin: channel.getOrigin() ?? '',
         source: channel.getTarget(),
-      })
+      } as MessageEvent<IAction>)
     },
     onError: (error) => {
-      const errorData = <SecurityErrorEventData>error
+      const errorData = error as SecurityErrorEventData
       logSecurityError(logger, channel.getName(), errorData)
       channel.notifyEvent('security-error', errorData)
     },

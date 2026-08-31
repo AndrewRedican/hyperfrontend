@@ -139,7 +139,7 @@ export function identifyFrameworks(projectPath: string, options?: IdentifyFramew
       name: d.name,
       version: d.version,
       confidence: d.confidence,
-      category: d.category === 'meta-framework' ? <const>'frontend' : <const>'frontend',
+      category: d.category === 'meta-framework' ? ('frontend' as const) : ('frontend' as const),
       metaFrameworks: d.metaFrameworks?.map((m) => m.id),
     }))
 
@@ -176,7 +176,7 @@ export function identifyFrameworks(projectPath: string, options?: IdentifyFramew
       name: d.name,
       version: d.version,
       confidence: d.confidence,
-      category: <const>'backend',
+      category: 'backend' as const,
     }))
 
   const testingFrameworks: TestingInfo[] = detections.testingFrameworks

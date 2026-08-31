@@ -18,7 +18,7 @@ describe('handleInvalid', () => {
   const mockBrokerState: BrokerState = {
     id: 'broker-1',
     name: 'test-broker',
-    window: <Window>global.window,
+    window: global.window as Window,
     contract: validContract,
     settings: {
       contract: validContract,
@@ -39,9 +39,9 @@ describe('handleInvalid', () => {
       getBrokerId: () => 'broker-1',
       getContract: () => mockBrokerState.contract,
     })
-    mockWindow = <Window>(<unknown>{
+    mockWindow = {
       postMessage: jest.fn(),
-    })
+    } as unknown as Window
     mockLogger = {
       error: jest.fn(),
       warn: jest.fn(),
@@ -74,10 +74,10 @@ describe('handleInvalid', () => {
       error: 'Invalid action format',
     }
 
-    const message = <MessageEvent<IAction>>{
+    const message = {
       data: action,
       source: mockWindow,
-    }
+    } as MessageEvent<IAction>
 
     expect(() => {
       handleInvalid(routingContext, message)
@@ -92,10 +92,10 @@ describe('handleInvalid', () => {
       error: 'Invalid action format',
     }
 
-    const message = <MessageEvent<IAction>>{
+    const message = {
       data: action,
       source: mockWindow,
-    }
+    } as MessageEvent<IAction>
 
     expect(() => {
       handleInvalid(routingContext, message)
@@ -113,10 +113,10 @@ describe('handleInvalid', () => {
       error: 'Detailed error message',
     }
 
-    const message = <MessageEvent<IAction>>{
+    const message = {
       data: action,
       source: mockWindow,
-    }
+    } as MessageEvent<IAction>
 
     expect(() => {
       handleInvalid(routingContext, message)
@@ -133,10 +133,10 @@ describe('handleInvalid', () => {
       senderId: 'remote-broker-1',
     }
 
-    const message = <MessageEvent<IAction>>{
+    const message = {
       data: action,
       source: mockWindow,
-    }
+    } as MessageEvent<IAction>
 
     expect(() => {
       handleInvalid(routingContext, message)
@@ -147,7 +147,7 @@ describe('handleInvalid', () => {
     const channel1 = addChannel(mockBrokerState, registry, processManager, actions, 'channel-1', mockWindow)
     const processId1 = processManager.create(channel1)
 
-    const window2 = <Window>(<unknown>{ postMessage: jest.fn() })
+    const window2 = { postMessage: jest.fn() } as unknown as Window
     const channel2 = addChannel(mockBrokerState, registry, processManager, actions, 'channel-2', window2)
     const processId2 = processManager.create(channel2)
 
@@ -165,15 +165,15 @@ describe('handleInvalid', () => {
       error: 'Error 2',
     }
 
-    handleInvalid(routingContext, <MessageEvent<IAction>>{
+    handleInvalid(routingContext, {
       data: action1,
       source: mockWindow,
-    })
+    } as MessageEvent<IAction>)
 
-    handleInvalid(routingContext, <MessageEvent<IAction>>{
+    handleInvalid(routingContext, {
       data: action2,
       source: window2,
-    })
+    } as MessageEvent<IAction>)
 
     expect(true).toBe(true)
   })
@@ -192,10 +192,10 @@ describe('handleInvalid', () => {
         error: errorMessage,
       }
 
-      const message = <MessageEvent<IAction>>{
+      const message = {
         data: action,
         source: mockWindow,
-      }
+      } as MessageEvent<IAction>
 
       expect(() => {
         handleInvalid(routingContext, message)
@@ -214,16 +214,16 @@ describe('handleInvalid', () => {
       error: 'Test error',
     }
 
-    const message = <MessageEvent<IAction>>{
+    const message = {
       data: action,
       source: mockWindow,
-    }
+    } as MessageEvent<IAction>
 
-    const postMessageCallsBefore = (<jest.Mock>mockWindow.postMessage).mock.calls.length
+    const postMessageCallsBefore = (mockWindow.postMessage as jest.Mock).mock.calls.length
 
     handleInvalid(routingContext, message)
 
-    expect((<jest.Mock>mockWindow.postMessage).mock.calls.length).toBe(postMessageCallsBefore)
+    expect((mockWindow.postMessage as jest.Mock).mock.calls.length).toBe(postMessageCallsBefore)
   })
 
   it('returns early when action does not have processId', () => {
@@ -233,10 +233,10 @@ describe('handleInvalid', () => {
       error: 'Test error',
     }
 
-    const message = <MessageEvent<IAction>>{
-      data: <IAction>action,
+    const message = {
+      data: action as IAction,
       source: mockWindow,
-    }
+    } as MessageEvent<IAction>
 
     expect(() => {
       handleInvalid(routingContext, message)

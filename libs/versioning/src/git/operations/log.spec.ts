@@ -14,7 +14,7 @@ import {
 
 jest.mock('node:child_process')
 
-const mockExecFileSync = <jest.MockedFunction<typeof execFileSync>>execFileSync
+const mockExecFileSync = execFileSync as jest.MockedFunction<typeof execFileSync>
 
 const RECORD_SEPARATOR = '\x1e'
 const FIELD_SEPARATOR = '\x00'
@@ -354,7 +354,7 @@ describe('getCommitsSince', () => {
 
     getCommitsSince('v1.0.0')
 
-    const args = <string[]>mockExecFileSync.mock.calls[0][1]
+    const args = mockExecFileSync.mock.calls[0][1] as string[]
     expect(args.some((arg) => arg.startsWith('-n'))).toBe(false)
   })
 

@@ -3,7 +3,7 @@ import { createNoneTransport } from './none-transport'
 
 describe('NoneTransport', () => {
   const createConfig = (overrides: Partial<NoneTransportConfig> = {}): NoneTransportConfig => ({
-    target: <Window>(<unknown>{ postMessage: jest.fn() }),
+    target: { postMessage: jest.fn() } as unknown as Window,
     getOrigin: () => null,
     onAction: jest.fn(),
     ...overrides,
@@ -12,7 +12,7 @@ describe('NoneTransport', () => {
   describe('send', () => {
     it('posts the action unchanged with a wildcard target before the origin is pinned', () => {
       const postMessage = jest.fn()
-      const transport = createNoneTransport(createConfig({ target: <Window>(<unknown>{ postMessage }) }))
+      const transport = createNoneTransport(createConfig({ target: { postMessage } as unknown as Window }))
 
       transport.send({ type: 'TEST', data: 123 })
 
@@ -23,7 +23,7 @@ describe('NoneTransport', () => {
       const postMessage = jest.fn()
       const transport = createNoneTransport(
         createConfig({
-          target: <Window>(<unknown>{ postMessage }),
+          target: { postMessage } as unknown as Window,
           getOrigin: () => 'null',
         })
       )
@@ -37,7 +37,7 @@ describe('NoneTransport', () => {
       const postMessage = jest.fn()
       const transport = createNoneTransport(
         createConfig({
-          target: <Window>(<unknown>{ postMessage }),
+          target: { postMessage } as unknown as Window,
           getOrigin: () => 'https://feature.example.com',
         })
       )
@@ -49,7 +49,7 @@ describe('NoneTransport', () => {
 
     it('drops actions while stopped', () => {
       const postMessage = jest.fn()
-      const transport = createNoneTransport(createConfig({ target: <Window>(<unknown>{ postMessage }) }))
+      const transport = createNoneTransport(createConfig({ target: { postMessage } as unknown as Window }))
 
       transport.stop()
       transport.send({ type: 'TEST' })
@@ -59,7 +59,7 @@ describe('NoneTransport', () => {
 
     it('sends again after resume', () => {
       const postMessage = jest.fn()
-      const transport = createNoneTransport(createConfig({ target: <Window>(<unknown>{ postMessage }) }))
+      const transport = createNoneTransport(createConfig({ target: { postMessage } as unknown as Window }))
 
       transport.stop()
       transport.resume()

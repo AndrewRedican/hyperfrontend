@@ -6,7 +6,7 @@ import contractSchema from '../definitions/contract.json'
 import { createValidator } from './create-validator'
 
 /* istanbul ignore next -- validator initialization happens at module load */
-const validateContractData = createValidator(<Schema>contractSchema)
+const validateContractData = createValidator(contractSchema as Schema)
 
 /**
  * Validates a channel contract against the contract schema.

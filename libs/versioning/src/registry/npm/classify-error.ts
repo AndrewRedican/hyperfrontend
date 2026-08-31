@@ -74,7 +74,7 @@ function readStderr(failure: ChildProcessFailure): string {
  * ```
  */
 export function classifyNpmError(error: unknown): NpmLookupFailure {
-  const failure = <ChildProcessFailure>(error ?? {})
+  const failure = (error ?? {}) as ChildProcessFailure
   const stderr = readStderr(failure)
 
   if (stderr.includes('E404')) {

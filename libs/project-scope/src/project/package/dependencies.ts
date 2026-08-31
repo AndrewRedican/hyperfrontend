@@ -152,7 +152,7 @@ export function hasDependency(
   const typesToCheck = depTypes ?? ['dependencies', 'devDependencies', 'peerDependencies', 'optionalDependencies']
 
   for (const depType of typesToCheck) {
-    if (packageJson[depType] && name in <DependencyMap>packageJson[depType]) {
+    if (packageJson[depType] && name in (packageJson[depType] as DependencyMap)) {
       return true
     }
   }
@@ -198,7 +198,7 @@ export function getWorkspaces(packageJson: PackageJson): string[] {
   if (!packageJson.workspaces) return []
 
   if (isArray(packageJson.workspaces)) {
-    return <string[]>packageJson.workspaces
+    return packageJson.workspaces as string[]
   }
 
   if (typeof packageJson.workspaces === 'object' && 'packages' in packageJson.workspaces) {

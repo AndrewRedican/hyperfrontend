@@ -77,7 +77,7 @@ const declaredExportNames = (statement: ts.Statement): string[] => {
       ts.isIdentifier(declaration.name) ? [declaration.name.text] : []
     )
   }
-  const named = <ts.DeclarationStatement>statement
+  const named = statement as ts.DeclarationStatement
   return named.name !== undefined && ts.isIdentifier(named.name) ? [named.name.text] : []
 }
 

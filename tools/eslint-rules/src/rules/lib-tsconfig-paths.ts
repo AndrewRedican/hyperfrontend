@@ -130,7 +130,7 @@ function getLibraryEntryPoints(projectDir: string, workspaceRoot: string): Entry
       exportPath = exportValue
       /* istanbul ignore else -- conditional exports tested separately */
     } else if (typeof exportValue === 'object' && exportValue !== null) {
-      exportPath = exportValue['import'] ?? exportValue['default'] ?? <string>values(exportValue)[0] ?? null
+      exportPath = exportValue['import'] ?? exportValue['default'] ?? (values(exportValue)[0] as string) ?? null
     }
 
     /* istanbul ignore if -- defensive for invalid export types */
@@ -348,9 +348,9 @@ const rule: Rule.RuleModule = {
         }
 
         // Verify we're inside compilerOptions
-        const parent = (<JSONNodeWithParent>node).parent
+        const parent = (node as JSONNodeWithParent).parent
         if (parent?.type === 'JSONObjectExpression') {
-          const grandparent = (<JSONNodeWithParent>parent).parent
+          const grandparent = (parent as JSONNodeWithParent).parent
           if (grandparent?.type === 'JSONProperty') {
             const gpKey = grandparent.key
             let gpKeyName: string | null = null

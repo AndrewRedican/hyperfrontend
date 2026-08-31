@@ -8,7 +8,7 @@ jest.mock('@hyperfrontend/network-protocol/browser/v2', () => ({ createProtocol:
 
 function createMockBroker(): { broker: BrokerHandle; registerProtocol: jest.Mock } {
   const registerProtocol = jest.fn()
-  return { broker: <BrokerHandle>(<unknown>{ registerProtocol, logger: { id: 'logger' } }), registerProtocol }
+  return { broker: { registerProtocol, logger: { id: 'logger' } } as unknown as BrokerHandle, registerProtocol }
 }
 
 describe('registerSecurity', () => {

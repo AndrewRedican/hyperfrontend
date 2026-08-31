@@ -6,7 +6,7 @@ import { createFeatureHandle } from './lifecycle'
 jest.unmock('@hyperfrontend/immutable-api-utils/built-in-copy/object')
 
 function createUnhostedHandle() {
-  return createFeatureHandle(<BrokerHandle>(<unknown>{}), null, createEventEmitter(), { contract: { emitted: [], accepted: [] } })
+  return createFeatureHandle({} as unknown as BrokerHandle, null, createEventEmitter(), { contract: { emitted: [], accepted: [] } })
 }
 
 describe('the frozen feature handle', () => {
@@ -17,7 +17,7 @@ describe('the frozen feature handle', () => {
   it('keeps hosted unchanged when assignment is attempted', () => {
     const handle = createUnhostedHandle()
     expect(() => {
-      ;(<{ hosted: boolean }>(<unknown>handle)).hosted = true
+      ;(handle as unknown as { hosted: boolean }).hosted = true
     }).toThrow(TypeError)
     expect(handle.hosted).toBe(false)
   })

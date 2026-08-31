@@ -32,7 +32,7 @@ function readRootManifest(tree: Tree): Record<string, unknown> {
   if (typeof manifest !== 'object' || manifest === null || isArray(manifest)) {
     throw createError('The workspace root package.json must contain a JSON object.')
   }
-  return <Record<string, unknown>>manifest
+  return manifest as Record<string, unknown>
 }
 
 /**
@@ -98,7 +98,7 @@ export function ensureSdkDependency(tree: Tree, options: EnsureSdkDependencyOpti
   const range = pluginVersionRange()
   let updated = manifest
   for (const section of declared.length > 0 ? declared : ['dependencies']) {
-    const declarations = <Record<string, unknown>>(updated[section] ?? {})
+    const declarations = (updated[section] ?? {}) as Record<string, unknown>
     updated = { ...updated, [section]: { ...declarations, [sdkInfo.packageName]: range } }
   }
   tree.write('package.json', `${stringify(updated, null, 2)}\n`)

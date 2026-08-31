@@ -28,7 +28,7 @@ interface WorkspaceManifest {
  */
 function readRepoUrl(): string {
   const manifestPath = join(WORKSPACE_ROOT, 'package.json')
-  const manifest = <WorkspaceManifest>parse(readFileSync(manifestPath, 'utf8'))
+  const manifest = parse(readFileSync(manifestPath, 'utf8')) as WorkspaceManifest
   const declared = manifest.repository?.url
 
   if (declared === undefined || declared === '') {

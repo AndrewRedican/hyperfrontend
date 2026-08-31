@@ -20,5 +20,5 @@ import * as v4Schema from './v4.json'
  * ```
  */
 export function isValidSchema(schema: unknown): boolean {
-  return validate(schema, <Schema>v4Schema).valid
+  return validate(schema, v4Schema as Schema).valid
 }

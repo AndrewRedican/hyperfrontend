@@ -131,8 +131,8 @@ export const createMemoryMonitor = (options: MemoryMonitorOptions = {}): MemoryM
       }
       const peakHeap = history.reduce((peak, snap) => max(peak, snap.heapUsedMB), 0)
       const peakRss = history.reduce((peak, snap) => max(peak, snap.rssMB), 0)
-      const first = <MemorySnapshot>history[0]
-      const last = <MemorySnapshot>history[history.length - 1]
+      const first = history[0] as MemorySnapshot
+      const last = history[history.length - 1] as MemorySnapshot
       const elapsed = last.timestampMs - first.timestampMs
       log.info(`peak heap=${formatMB(peakHeap)}MB peak rss=${formatMB(peakRss)}MB across ${history.length} snapshots over ${elapsed}ms`)
     },

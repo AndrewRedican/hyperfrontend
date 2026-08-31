@@ -169,7 +169,7 @@ export function createShellHandle(
   }
 
   const mountPlugins = (registered: readonly ExperiencePlugin[], element: HTMLElement | null, displayMode: DisplayMode) => {
-    const context = freeze(<ExperiencePluginContext>{ element, displayMode })
+    const context = freeze({ element, displayMode } as ExperiencePluginContext)
     const teardowns: Array<() => void> = []
     for (const plugin of registered) {
       try {
@@ -257,7 +257,7 @@ export function createShellHandle(
     if ((options.displayMode ?? DisplayMode.Embedded) !== DisplayMode.Dialog) {
       return
     }
-    const source = (<DismissPayload | undefined>data)?.source
+    const source = (data as DismissPayload | undefined)?.source
     if (source === 'escape') {
       if (options.closeOnEscape !== false) {
         close()
@@ -280,7 +280,7 @@ export function createShellHandle(
       queuedOpen = () => open(overrides)
       return
     }
-    const options = <ShellOptions>{ ...baseOptions, ...overrides }
+    const options = { ...baseOptions, ...overrides } as ShellOptions
     const displayMode = options.displayMode ?? DisplayMode.Embedded
     const result = wiring.selectMount(displayMode)({ options, requestClose: close })
     cleanup = result.cleanup
@@ -377,12 +377,12 @@ export function createShellHandle(
           return true
         }
         if (type === ControlType.Visibility) {
-          peerHidden = (<ControlFlagPayload | undefined>data)?.hidden === true
+          peerHidden = (data as ControlFlagPayload | undefined)?.hidden === true
           applyObservability()
           return true
         }
         if (type === ControlType.Dirty) {
-          dirty = (<ControlFlagPayload | undefined>data)?.dirty === true
+          dirty = (data as ControlFlagPayload | undefined)?.dirty === true
           emitter.emit('dirty-state', { dirty })
           return true
         }
@@ -402,7 +402,7 @@ export function createShellHandle(
     }
   }
 
-  return freeze(<ShellHandle>{
+  return freeze({
     open,
     close,
     destroy,
@@ -416,5 +416,5 @@ export function createShellHandle(
     get isDirty() {
       return dirty
     },
-  })
+  } as ShellHandle)
 }

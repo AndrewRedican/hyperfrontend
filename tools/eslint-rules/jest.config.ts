@@ -1,6 +1,6 @@
 import type { Config } from 'jest'
 
-export default <Config>{
+export default {
   displayName: 'eslint-rules',
   preset: '../../jest.preset.cjs',
   moduleFileExtensions: ['ts', 'js', 'html'],
@@ -14,4 +14,4 @@ export default <Config>{
       statements: 96,
     },
   },
-}
+} as Config

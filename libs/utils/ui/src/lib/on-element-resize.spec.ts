@@ -28,7 +28,7 @@ describe('onElementResize', () => {
     }
 
     const entry = { contentRect, target: element }
-    mock.callback(<ResizeObserverEntry[]>(<unknown>[entry]), <ResizeObserver>{})
+    mock.callback([entry] as unknown as ResizeObserverEntry[], {} as ResizeObserver)
 
     expect(callback).toHaveBeenCalledWith(contentRect)
     expect(mock.observe).toHaveBeenCalledWith(element)
@@ -56,7 +56,7 @@ describe('onElementResize', () => {
     }
 
     const entry = { contentRect, target: element }
-    mock.callback(<ResizeObserverEntry[]>(<unknown>[entry]), <ResizeObserver>{})
+    mock.callback([entry] as unknown as ResizeObserverEntry[], {} as ResizeObserver)
 
     expect(callback).not.toHaveBeenCalled()
     expect(mock.unobserve).toHaveBeenCalledWith(element)

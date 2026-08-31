@@ -13,25 +13,25 @@ describe('createChannel', () => {
   })
 
   it('throws error when sender is invalid', () => {
-    expect(() => createChannel(label, <any>null, receiver, protocolProvider)).toThrow(
+    expect(() => createChannel(label, null as any, receiver, protocolProvider)).toThrow(
       'Cannot create a channel without a valid send function'
     )
   })
 
   it('throws error when receiver is invalid', () => {
-    expect(() => createChannel(label, sender, <any>null, protocolProvider)).toThrow(
+    expect(() => createChannel(label, sender, null as any, protocolProvider)).toThrow(
       'Cannot create a channel without a valid receive function'
     )
   })
 
   it('throws error when protocol provider is invalid', () => {
-    expect(() => createChannel(label, sender, receiver, <any>null)).toThrow(
+    expect(() => createChannel(label, sender, receiver, null as any)).toThrow(
       'Cannot create a channel without a valid protocol provider function'
     )
   })
 
   it('throws error if any protocol details is invalid', () => {
-    expect(() => createChannel(label, sender, receiver, () => <any>{})).toThrow(
+    expect(() => createChannel(label, sender, receiver, () => ({}) as any)).toThrow(
       'Cannot create a channel without a valid packetEncryption function'
     )
   })

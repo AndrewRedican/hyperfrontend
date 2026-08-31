@@ -13,7 +13,7 @@ import { EXIT_COMMITTED, EXIT_ERROR, EXIT_SIGINT, outcomeToExit, parseCzArgs, ru
 function drain(stream: PassThrough): string {
   const chunks: Buffer[] = []
   let buf: Buffer | null
-  while ((buf = <Buffer | null>stream.read()) !== null) chunks.push(buf)
+  while ((buf = stream.read() as Buffer | null) !== null) chunks.push(buf)
   return Buffer.concat(chunks).toString('utf8')
 }
 
@@ -93,14 +93,14 @@ describe('runCz', () => {
   function stubCreateSession(capture: { options?: CreateAuthorSessionOptions }): (options?: CreateAuthorSessionOptions) => AuthorSession {
     return (options = {}) => {
       capture.options = options
-      return <AuthorSession>{ steps: [], config: {} }
+      return { steps: [], config: {} } as AuthorSession
     }
   }
 
   it('returns 0 when the session commits', async () => {
     const stderr = new PassThrough()
-    const load = { options: <LoadCommitConfigOptions | undefined>undefined }
-    const create = { options: <CreateAuthorSessionOptions | undefined>undefined }
+    const load = { options: undefined as LoadCommitConfigOptions | undefined }
+    const create = { options: undefined as CreateAuthorSessionOptions | undefined }
 
     const code = await runCz({
       argv: ['--cwd', '/repo', '--config', './cfg.cjs'],
@@ -198,7 +198,7 @@ describe('runCz', () => {
 
   it('falls back to options.cwd when --cwd is not provided', async () => {
     const stderr = new PassThrough()
-    const load = { options: <LoadCommitConfigOptions | undefined>undefined }
+    const load = { options: undefined as LoadCommitConfigOptions | undefined }
 
     await runCz({
       argv: [],

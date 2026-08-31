@@ -15,9 +15,9 @@ import { mountStandalone } from './standalone'
  * the individual mounts and compose only the modes their feature declared, so
  * this map (and the modes it would drag in) stays out of their bundles.
  */
-export const builtInDisplayModes: Readonly<Record<DisplayMode, DisplayModeMount>> = freeze(<Record<DisplayMode, DisplayModeMount>>{
+export const builtInDisplayModes: Readonly<Record<DisplayMode, DisplayModeMount>> = freeze({
   embedded: mountEmbedded,
   dialog: mountDialog,
   popup: mountPopup,
   standalone: mountStandalone,
-})
+} as Record<DisplayMode, DisplayModeMount>)

@@ -56,7 +56,7 @@ interface DispatchOptions {
  */
 type ResolveDispatch = () => DispatchOptions
 
-const toArray = <T>(value: T | T[] | undefined): T[] => (value === undefined ? [] : isArray(value) ? <T[]>value : [<T>value])
+const toArray = <T>(value: T | T[] | undefined): T[] => (value === undefined ? [] : isArray(value) ? (value as T[]) : [value as T])
 
 const collectFormatsRequestingPrePass = (config: BuildConfig): Array<'esm' | 'cjs'> => {
   const formats = createSet<'esm' | 'cjs'>([])
@@ -216,7 +216,7 @@ const runIifeFormats = async (
   resolveDispatch: ResolveDispatch,
   monitor?: MemoryMonitor
 ): Promise<void> => {
-  for (const iifeConfig of <IifeConfig[]>toArray(config.iife)) {
+  for (const iifeConfig of toArray(config.iife) as IifeConfig[]) {
     const entries = resolveEntries(iifeConfig, context.entryPointDiscovery.entryPoints)
     if (entries.length === 0) continue
     ensureDir(join(context.outputPath, iifeConfig.output ?? 'bundle'))
@@ -238,7 +238,7 @@ const runUmdFormats = async (
   resolveDispatch: ResolveDispatch,
   monitor?: MemoryMonitor
 ): Promise<void> => {
-  for (const umdConfig of <UmdConfig[]>toArray(config.umd)) {
+  for (const umdConfig of toArray(config.umd) as UmdConfig[]) {
     const entries = resolveEntries(umdConfig, context.entryPointDiscovery.entryPoints)
     if (entries.length === 0) continue
     ensureDir(join(context.outputPath, umdConfig.output ?? 'bundle'))

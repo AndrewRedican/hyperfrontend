@@ -65,7 +65,7 @@ describe('createDeserializedEncryptedPacketCreator (Browser)', () => {
       it(`rejects ${description}`, () => {
         const createDeserializedPacket = createDeserializedEncryptedPacketCreator(base64ToUint8Array)
 
-        expect(() => createDeserializedPacket(<SerializedEncryptedPacket>packet)).toThrow('Cannot deserialize data of an invalid packet')
+        expect(() => createDeserializedPacket(packet as SerializedEncryptedPacket)).toThrow('Cannot deserialize data of an invalid packet')
       })
     })
 
@@ -90,13 +90,13 @@ describe('createDeserializedEncryptedPacketCreator (Browser)', () => {
     })
 
     it('handles null decoding function', () => {
-      const createDeserializedPacket = createDeserializedEncryptedPacketCreator(<typeof base64ToUint8Array>(<unknown>null))
+      const createDeserializedPacket = createDeserializedEncryptedPacketCreator(null as unknown as typeof base64ToUint8Array)
 
       expect(() => createDeserializedPacket(sampleSerializedPacket)).toThrow()
     })
 
     it('handles undefined decoding function', () => {
-      const createDeserializedPacket = createDeserializedEncryptedPacketCreator(<typeof base64ToUint8Array>(<unknown>undefined))
+      const createDeserializedPacket = createDeserializedEncryptedPacketCreator(undefined as unknown as typeof base64ToUint8Array)
 
       expect(() => createDeserializedPacket(sampleSerializedPacket)).toThrow()
     })

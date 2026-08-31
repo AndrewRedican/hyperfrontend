@@ -33,7 +33,7 @@ export function mergeSchemas(schemas: Schema[]): Schema {
   const typeGroups = createMap<JsonType | 'mixed', Schema[]>()
 
   for (const schema of schemas) {
-    const type = <JsonType | undefined>schema.type
+    const type = schema.type as JsonType | undefined
     const key: JsonType | 'mixed' = type ?? 'mixed'
     const group = typeGroups.get(key) ?? []
     group.push(schema)
@@ -56,7 +56,7 @@ export function mergeSchemas(schemas: Schema[]): Schema {
     if (schema.type) {
       /* istanbul ignore next -- array types are rare */
       if (isArray(schema.type)) {
-        ;(<JsonType[]>schema.type).forEach((t) => uniqueTypes.add(t))
+        ;(schema.type as JsonType[]).forEach((t) => uniqueTypes.add(t))
       } else {
         uniqueTypes.add(schema.type)
       }
@@ -157,9 +157,9 @@ function mergeArraySchemas(schemas: Schema[]): Schema {
   for (const schema of schemas) {
     if (schema.items) {
       if (isArray(schema.items)) {
-        itemSchemas.push(...(<Schema[]>schema.items))
+        itemSchemas.push(...(schema.items as Schema[]))
       } else {
-        itemSchemas.push(<Schema>schema.items)
+        itemSchemas.push(schema.items as Schema)
       }
     }
   }

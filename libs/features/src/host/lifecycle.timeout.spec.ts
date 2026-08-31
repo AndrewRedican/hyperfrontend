@@ -15,7 +15,7 @@ interface MockChannel {
 function createMockChannel(): MockChannel {
   const listeners: Record<string, Array<(data?: unknown) => void>> = {}
   const destroy = jest.fn()
-  const channel = <ChannelHandle>(<unknown>{
+  const channel = {
     on: (event: string, handler: (data?: unknown) => void) => {
       ;(listeners[event] ?? (listeners[event] = [])).push(handler)
       return () => undefined
@@ -25,7 +25,7 @@ function createMockChannel(): MockChannel {
     disconnect: jest.fn(),
     destroy,
     connect: jest.fn(),
-  })
+  } as unknown as ChannelHandle
   return {
     channel,
     trigger: (event, data) => listeners[event]?.forEach((handler) => handler(data)),
@@ -33,16 +33,16 @@ function createMockChannel(): MockChannel {
   }
 }
 
-const TARGET = <Window>(<unknown>{ name: 'target' })
+const TARGET = { name: 'target' } as unknown as Window
 
 function setup() {
   const mock = createMockChannel()
   const addChannel = jest.fn(() => mock.channel)
-  const broker = <BrokerHandle>(<unknown>{ addChannel })
+  const broker = { addChannel } as unknown as BrokerHandle
   const cleanup = jest.fn()
   const mount = jest.fn((): MountResult => ({ target: TARGET, present: { mode: 'embedded' }, cleanup }))
   const emitter = createEventEmitter()
-  const handle = createShellHandle(broker, <ShellOptions>{ container: '#shell' }, emitter, {
+  const handle = createShellHandle(broker, { container: '#shell' } as ShellOptions, emitter, {
     contract: { emitted: [], accepted: [] },
     selectMount: jest.fn(() => mount),
     registerSecurity: jest.fn(() => undefined),
@@ -83,7 +83,7 @@ describe('createShellHandle origin pin and open deadline', () => {
   it('applies the contract-version compatibility rule to the channel', () => {
     const ctx = setup()
     ctx.handle.open()
-    const settings = <{ contractCompat: (own: unknown, peer: unknown) => unknown }>ctx.addChannel.mock.calls[0][2]
+    const settings = ctx.addChannel.mock.calls[0][2] as { contractCompat: (own: unknown, peer: unknown) => unknown }
     expect(settings.contractCompat({ version: '1.0.0' }, { version: '2.0.0' })).toEqual({ compatible: false, reason: expect.any(String) })
   })
 

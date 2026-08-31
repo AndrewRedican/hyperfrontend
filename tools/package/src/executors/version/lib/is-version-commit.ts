@@ -1,5 +1,5 @@
+import type { COMMIT_TYPES } from '@hyperfrontend/versioning/commits/models'
 import { stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
-import { COMMIT_TYPES } from '@hyperfrontend/versioning/commits/models'
 import { extractScope, extractType } from '@hyperfrontend/versioning/git/models'
 import { getCommit } from '@hyperfrontend/versioning/git/operations'
 import { isValidPackageName } from './is-valid-package-name'

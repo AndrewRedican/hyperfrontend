@@ -177,24 +177,24 @@ export function analyzeProject(projectPath: string, options?: AnalyzeOptions): A
       ? [
           ...detections.frontendFrameworks.map(
             (d) =>
-              <FrameworkInfo>{
+              ({
                 id: d.id,
                 name: d.name,
                 version: d.version,
                 confidence: d.confidence,
                 category: 'frontend',
                 metaFrameworks: d.metaFrameworks?.map((m) => m.id),
-              }
+              }) as FrameworkInfo
           ),
           ...detections.backendFrameworks.map(
             (d) =>
-              <FrameworkInfo>{
+              ({
                 id: d.id,
                 name: d.name,
                 version: d.version,
                 confidence: d.confidence,
                 category: 'backend',
-              }
+              }) as FrameworkInfo
           ),
         ]
       : []

@@ -18,8 +18,8 @@ interface FakeResponse {
 }
 
 const fakeRes = (): FakeResponse => {
-  const state: FakeResponse = { statusCode: 0, headers: {}, body: '', res: <ServerResponse>{} }
-  state.res = <ServerResponse>(<unknown>{
+  const state: FakeResponse = { statusCode: 0, headers: {}, body: '', res: {} as ServerResponse }
+  state.res = {
     set statusCode(value: number) {
       state.statusCode = value
     },
@@ -32,12 +32,12 @@ const fakeRes = (): FakeResponse => {
     end: (chunk?: Buffer | string) => {
       state.body = chunk === undefined ? '' : chunk.toString()
     },
-  })
+  } as unknown as ServerResponse
   return state
 }
 
 const fakeReq = (over: { method?: string; url?: string; headers?: IncomingHttpHeaders } = {}): IncomingMessage =>
-  <IncomingMessage>(<unknown>{ headers: {}, ...over })
+  ({ headers: {}, ...over }) as unknown as IncomingMessage
 
 const config = (over: Partial<ResolvedServeConfig> = {}): ResolvedServeConfig => ({
   root: '/site',
@@ -190,13 +190,13 @@ describe('createServeListener', () => {
     let rejected = false
     // why: A setHeader that throws once models Node refusing a header byte; the listener must fall back to a bare 500 instead of crashing the server.
     const original = out.res.setHeader.bind(out.res)
-    out.res.setHeader = <ServerResponse['setHeader']>((name: string, value: string) => {
+    out.res.setHeader = ((name: string, value: string) => {
       if (!rejected) {
         rejected = true
         throw new TypeError('Invalid character in header content')
       }
       return original(name, value)
-    })
+    }) as ServerResponse['setHeader']
     const lines: string[] = []
     createServeListener(config(), { ...fsDeps(), log: (line) => lines.push(line) })(fakeReq({ method: 'GET', url: '/app.js' }), out.res)
     expect({ status: out.statusCode, body: out.body, lines }).toEqual({
@@ -208,10 +208,10 @@ describe('createServeListener', () => {
 
   it('stringifies a non-Error write failure into the error line', () => {
     const out = fakeRes()
-    out.res.setHeader = <ServerResponse['setHeader']>(() => {
+    out.res.setHeader = (() => {
       // note: A string throw exercises the non-Error logging branch of the write guard.
       throw 'refused'
-    })
+    }) as ServerResponse['setHeader']
     const lines: string[] = []
     createServeListener(config(), { ...fsDeps(), log: (line) => lines.push(line) })(fakeReq({ method: 'GET', url: '/app.js' }), out.res)
     expect({ status: out.statusCode, lines }).toEqual({ status: 500, lines: ['error refused'] })
@@ -219,12 +219,12 @@ describe('createServeListener', () => {
 
   it('survives a socket that rejects even the fallback write', () => {
     const out = fakeRes()
-    out.res.setHeader = <ServerResponse['setHeader']>(() => {
+    out.res.setHeader = (() => {
       throw new TypeError('no headers')
-    })
-    out.res.end = <ServerResponse['end']>(() => {
+    }) as ServerResponse['setHeader']
+    out.res.end = (() => {
       throw new Error('socket gone')
-    })
+    }) as ServerResponse['end']
     const run = (): void => createServeListener(config(), fsDeps())(fakeReq({ method: 'GET', url: '/app.js' }), out.res)
     expect(run).not.toThrow()
   })

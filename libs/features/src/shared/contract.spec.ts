@@ -247,7 +247,7 @@ describe('validateDisplayConfig', () => {
     )
   })
 
-  it.each(<const>[
+  it.each([
     'center',
     'top-left',
     'top-center',
@@ -257,7 +257,7 @@ describe('validateDisplayConfig', () => {
     'bottom-left',
     'bottom-center',
     'bottom-right',
-  ])('accepts the %s dialog position', (position) => {
+  ] as const)('accepts the %s dialog position', (position) => {
     expect(validateDisplayConfig({ dialog: { position } })).toEqual({ dialog: { position } })
   })
 
@@ -294,7 +294,7 @@ describe('validateDisplayConfig', () => {
     expect(validateDisplayConfig(display)).toBe(display)
   })
 
-  it.each(<const>['close', 'event', 'none'])('accepts the %s backdrop behavior', (backdrop) => {
+  it.each(['close', 'event', 'none'] as const)('accepts the %s backdrop behavior', (backdrop) => {
     expect(validateDisplayConfig({ dialog: { backdrop } })).toEqual({ dialog: { backdrop } })
   })
 

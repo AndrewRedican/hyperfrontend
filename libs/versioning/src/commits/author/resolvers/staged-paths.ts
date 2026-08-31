@@ -52,7 +52,7 @@ export function getStagedPaths(options: StagedPathsOptions): readonly string[] {
  * @returns Raw stdout of the git invocation
  */
 function runGit(args: readonly string[], options: StagedPathsOptions): string {
-  return execFileSync('git', <string[]>args, {
+  return execFileSync('git', args as string[], {
     encoding: 'utf-8',
     cwd: options.cwd,
     timeout: options.timeout ?? DEFAULT_TIMEOUT,

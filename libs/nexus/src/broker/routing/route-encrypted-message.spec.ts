@@ -20,7 +20,7 @@ describe('routeEncryptedMessage', () => {
   const createMockBrokerState = (): BrokerState => ({
     id: 'broker-1',
     name: 'test-broker',
-    window: <Window>global.window,
+    window: global.window as Window,
     contract: validContract,
     settings: {
       contract: validContract,
@@ -63,7 +63,7 @@ describe('routeEncryptedMessage', () => {
       getProtocol: () => undefined,
       routeAction: () => undefined,
     }
-    sourceWindow = <Window>(<unknown>{ postMessage: jest.fn() })
+    sourceWindow = { postMessage: jest.fn() } as unknown as Window
   })
 
   function createMockTransport(overrides: Partial<SecurityTransport> = {}): SecurityTransport {
@@ -87,20 +87,20 @@ describe('routeEncryptedMessage', () => {
       target: sourceWindow,
       isActive: () => true,
       getName: () => 'test-channel',
-      getOrigin: () => ('origin' in overrides ? <string | null>overrides.origin : 'http://example.com'),
-      getSecurityTransport: () => ('transport' in overrides ? <SecurityTransport | null>overrides.transport : null),
+      getOrigin: () => ('origin' in overrides ? (overrides.origin as string | null) : 'http://example.com'),
+      getSecurityTransport: () => ('transport' in overrides ? (overrides.transport as SecurityTransport | null) : null),
       notifyEvent: overrides.notifyEvent ?? jest.fn(),
     }
-    registry.add(<ChannelHandle>mockChannel)
+    registry.add(mockChannel as ChannelHandle)
     return mockChannel
   }
 
   function encryptedEvent(overrides: Partial<{ data: unknown; origin: string; source: Window | null }> = {}) {
-    return <MessageEvent<Uint8Array>>(<unknown>{
+    return {
       data: 'data' in overrides ? overrides.data : new Uint8Array([1, 2, 3]),
       origin: overrides.origin ?? 'http://example.com',
       source: 'source' in overrides ? overrides.source : sourceWindow,
-    })
+    } as unknown as MessageEvent<Uint8Array>
   }
 
   it('returns early when payload is not Uint8Array', () => {
@@ -123,7 +123,7 @@ describe('routeEncryptedMessage', () => {
 
   it('resolves the channel by source window even when another channel shares the origin', () => {
     addMockChannel({ transport: null })
-    const otherWindow = <Window>(<unknown>{ postMessage: jest.fn() })
+    const otherWindow = { postMessage: jest.fn() } as unknown as Window
     const transport = createMockTransport()
     const otherChannel: Partial<ChannelHandle> = {
       id: 'channel-2',
@@ -135,7 +135,7 @@ describe('routeEncryptedMessage', () => {
       getSecurityTransport: () => transport,
       notifyEvent: jest.fn(),
     }
-    registry.add(<ChannelHandle>otherChannel)
+    registry.add(otherChannel as ChannelHandle)
 
     routeEncryptedMessage(routingContext, router, encryptedEvent({ source: otherWindow }))
 
@@ -149,7 +149,7 @@ describe('routeEncryptedMessage', () => {
 
     routeEncryptedMessage(routingContext, router, encryptedEvent({ origin: 'http://evil.example' }))
 
-    expect({ received: (<jest.Mock>transport.receive).mock.calls, invalid: notifyEvent.mock.calls }).toEqual({
+    expect({ received: (transport.receive as jest.Mock).mock.calls, invalid: notifyEvent.mock.calls }).toEqual({
       received: [],
       invalid: [['invalid', { error: "Dropped encrypted message from unexpected origin 'http://evil.example'." }]],
     })
@@ -180,7 +180,7 @@ describe('routeEncryptedMessage', () => {
 
     routeEncryptedMessage(routingContext, router, encryptedEvent())
 
-    expect({ warns: (<jest.Mock>mockLogger.warn).mock.calls, received: (<jest.Mock>transport.receive).mock.calls }).toEqual({
+    expect({ warns: (mockLogger.warn as jest.Mock).mock.calls, received: (transport.receive as jest.Mock).mock.calls }).toEqual({
       warns: [[expect.stringContaining('received encrypted message but security transport not ready')]],
       received: [],
     })

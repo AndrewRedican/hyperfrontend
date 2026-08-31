@@ -45,9 +45,9 @@ describe('channel/messaging/queue', () => {
       removeProcess: jest.fn(),
       notifyEvent: jest.fn(),
       notifyMessage: jest.fn(),
-      actions: <ActionCreators>{},
+      actions: {} as ActionCreators,
     }
-    ;(<jest.Mock>queueMessageModule.queueMessage).mockReturnValue({
+    ;(queueMessageModule.queueMessage as jest.Mock).mockReturnValue({
       ...state,
       queuedMessages: [{ type: 'TEST', data: {} }],
     })

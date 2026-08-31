@@ -76,7 +76,7 @@ export function warnIfRollupBindingMissing(workspaceRoot: string, options: Rollu
   if (typeof optional !== 'object' || optional === null) {
     return
   }
-  const declarations = <Record<string, unknown>>optional
+  const declarations = optional as Record<string, unknown>
   const platformMarker = `-${process.platform}-${process.arch}`
   // why: the marker must end on a token boundary so an 'arm' host never matches 'arm64' binding names.
   const candidates = keys(declarations).filter((name) => {

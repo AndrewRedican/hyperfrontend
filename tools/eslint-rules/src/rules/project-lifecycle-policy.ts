@@ -314,7 +314,7 @@ const rule: Rule.RuleModule = {
       return {}
     }
 
-    const options = <RuleOptions>(context.options[0] ?? {})
+    const options = (context.options[0] ?? {}) as RuleOptions
     const policy = options.states?.[state]
     if (!policy) {
       return {}
@@ -329,7 +329,7 @@ const rule: Rule.RuleModule = {
      */
     const reportRemovable = (node: JSONProperty, messageId: string, name: string): void => {
       context.report({
-        node: <Rule.Node>(<unknown>node),
+        node: node as unknown as Rule.Node,
         messageId,
         data: { state, name },
         suggest: [{ messageId: 'removeProperty', data: { name }, fix: removePropertyFixer(node, context) }],
@@ -340,7 +340,7 @@ const rule: Rule.RuleModule = {
       const forbiddenTargets = policy.forbiddenTargets ?? []
       const publishing = policy.forbidNpmPublishing === true
 
-      return <Rule.RuleListener>(<unknown>{
+      return {
         JSONProperty(node: JSONProperty) {
           if (!isTopLevel(node) || keyNameOf(node) !== 'targets') {
             return
@@ -374,7 +374,7 @@ const rule: Rule.RuleModule = {
             for (const path of files) {
               if (matchesGlob(path, pattern)) {
                 context.report({
-                  node: <Rule.Node>(<unknown>node),
+                  node: node as unknown as Rule.Node,
                   messageId: 'forbiddenFile',
                   data: { state, path, pattern },
                 })
@@ -382,7 +382,7 @@ const rule: Rule.RuleModule = {
             }
           }
         },
-      })
+      } as unknown as Rule.RuleListener
     }
 
     if (manifest !== 'package.json') {
@@ -395,7 +395,7 @@ const rule: Rule.RuleModule = {
     let privateNode: JSONProperty | null = null
     let isPrivate = false
 
-    return <Rule.RuleListener>(<unknown>{
+    return {
       JSONProperty(node: JSONProperty) {
         if (!isTopLevel(node)) {
           return
@@ -434,7 +434,7 @@ const rule: Rule.RuleModule = {
             }
             if (forbiddenDependencies.some((pattern) => matchesWildcard(dependencyName, pattern))) {
               context.report({
-                node: <Rule.Node>(<unknown>dependency),
+                node: dependency as unknown as Rule.Node,
                 messageId: 'forbiddenDependency',
                 data: { state, name: dependencyName },
               })
@@ -450,16 +450,16 @@ const rule: Rule.RuleModule = {
         if (privateNode !== null) {
           const declared = privateNode
           context.report({
-            node: <Rule.Node>(<unknown>declared),
+            node: declared as unknown as Rule.Node,
             messageId: 'missingPrivate',
             data: { state },
-            suggest: [{ messageId: 'addPrivate', fix: (fixer) => fixer.replaceText(<Rule.Node>(<unknown>declared.value), 'true') }],
+            suggest: [{ messageId: 'addPrivate', fix: (fixer) => fixer.replaceText(declared.value as unknown as Rule.Node, 'true') }],
           })
           return
         }
-        context.report({ node: <Rule.Node>(<unknown>node), messageId: 'missingPrivate', data: { state } })
+        context.report({ node: node as unknown as Rule.Node, messageId: 'missingPrivate', data: { state } })
       },
-    })
+    } as unknown as Rule.RuleListener
   },
 }
 

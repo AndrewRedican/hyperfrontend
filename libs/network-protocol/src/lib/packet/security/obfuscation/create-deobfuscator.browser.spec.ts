@@ -101,7 +101,7 @@ describe('createPacketDeobfuscator (Browser)', () => {
     it('handles null packet', async () => {
       const deobfuscatePacket = createPacketDeobfuscator(decrypt)
 
-      await expect(deobfuscatePacket(<ObfuscatedPacket>(<unknown>null), testPasswords.valid)).rejects.toThrow(
+      await expect(deobfuscatePacket(null as unknown as ObfuscatedPacket, testPasswords.valid)).rejects.toThrow(
         'Cannot deobfuscate an invalid packet'
       )
     })
@@ -109,7 +109,7 @@ describe('createPacketDeobfuscator (Browser)', () => {
     it('handles undefined packet', async () => {
       const deobfuscatePacket = createPacketDeobfuscator(decrypt)
 
-      await expect(deobfuscatePacket(<ObfuscatedPacket>(<unknown>undefined), testPasswords.valid)).rejects.toThrow(
+      await expect(deobfuscatePacket(undefined as unknown as ObfuscatedPacket, testPasswords.valid)).rejects.toThrow(
         'Cannot deobfuscate an invalid packet'
       )
     })
@@ -117,7 +117,7 @@ describe('createPacketDeobfuscator (Browser)', () => {
     it('handles non-Uint8Array packet', async () => {
       const deobfuscatePacket = createPacketDeobfuscator(decrypt)
 
-      await expect(deobfuscatePacket(<ObfuscatedPacket>(<unknown>'not-a-uint8array'), testPasswords.valid)).rejects.toThrow(
+      await expect(deobfuscatePacket('not-a-uint8array' as unknown as ObfuscatedPacket, testPasswords.valid)).rejects.toThrow(
         'Cannot deobfuscate an invalid packet'
       )
     })
@@ -169,7 +169,7 @@ describe('createPacketDeobfuscator (Browser)', () => {
 
       expect(Object.isFrozen(result)).toBe(true)
       expect(() => {
-        ;(<{ origin: string }>result).origin = 'modified'
+        ;(result as { origin: string }).origin = 'modified'
       }).toThrow()
     })
   })

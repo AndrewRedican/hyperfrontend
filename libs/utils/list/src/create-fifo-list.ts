@@ -61,7 +61,7 @@ export function createFifoList<T extends object>(): FifoList<T> {
 
   const pull = (): T | undefined => {
     const value = list.values().next().value
-    list.delete(<T>value)
+    list.delete(value as T)
     return value
   }
 

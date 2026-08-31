@@ -25,7 +25,7 @@ describe('createLogger', () => {
   })
 
   it('throws an error if error function is invalid', () => {
-    const empty = <() => undefined>(<unknown>null)
+    const empty = null as unknown as () => undefined
     expect(() => createLogger(empty)).toThrow()
     expect(() => createLogger(console.error, empty)).toThrow()
     expect(() => createLogger(console.error, console.warn, empty)).toThrow()

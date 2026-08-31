@@ -51,7 +51,7 @@ export function parseHeader(line: string): ParsedHeader {
     }
   }
 
-  const type = <CommitType>line.slice(typeStart, pos).toLowerCase()
+  const type = line.slice(typeStart, pos).toLowerCase() as CommitType
 
   let scope: readonly string[] = []
   if (line[pos] === '(') {

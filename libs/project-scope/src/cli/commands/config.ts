@@ -68,7 +68,7 @@ const CONFIG_CATEGORIES: Record<ConfigType, ConfigCategory> = {
  * @returns Comma-separated list of config type names
  */
 function getAvailableTypes(): string {
-  return <string>keys(CONFIG_PATTERNS).join(', ')
+  return keys(CONFIG_PATTERNS).join(', ') as string
 }
 
 /**
@@ -231,9 +231,9 @@ function parseConfigArgs(args: string[]): ConfigCommandOptions {
 
   return {
     path: positionals[0],
-    type: <ConfigType | undefined>values.type,
-    showContents: <boolean>values['show-contents'],
-    format: <OutputFormat>values.format,
+    type: values.type as ConfigType | undefined,
+    showContents: values['show-contents'] as boolean,
+    format: values.format as OutputFormat,
   }
 }
 

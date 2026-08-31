@@ -18,7 +18,7 @@ const _freeze = globalThis.Object.freeze
  *
  * @returns A new TextEncoder instance.
  */
-export const createTextEncoder = (): TextEncoder => <TextEncoder>_Reflect.construct(_TextEncoder, [])
+export const createTextEncoder = (): TextEncoder => _Reflect.construct(_TextEncoder, []) as TextEncoder
 
 /**
  * (Safe copy) Creates a new TextDecoder using the captured TextDecoder constructor.
@@ -29,7 +29,7 @@ export const createTextEncoder = (): TextEncoder => <TextEncoder>_Reflect.constr
  * @returns A new TextDecoder instance.
  */
 export const createTextDecoder = (label?: string, options?: TextDecoderOptions): TextDecoder =>
-  <TextDecoder>_Reflect.construct(_TextDecoder, [label, options])
+  _Reflect.construct(_TextDecoder, [label, options]) as TextDecoder
 
 /**
  * (Safe copy) Decodes a base64-encoded string.
@@ -53,9 +53,9 @@ export const btoa = (data: string): string => _btoa(data)
  * (Safe copy) Namespace object containing all encoding utilities.
  * Note: Importing this imports all methods in this namespace (no tree-shaking).
  */
-export const Encoding = _freeze(<const>{
+export const Encoding = _freeze({
   createTextEncoder,
   createTextDecoder,
   atob,
   btoa,
-})
+} as const)

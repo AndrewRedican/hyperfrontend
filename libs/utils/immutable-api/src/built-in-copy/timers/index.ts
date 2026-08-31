@@ -135,7 +135,7 @@ export const cancelAnimationFrame = _cancelAnimationFrame
  * (Safe copy) Namespace object containing all Timer/Scheduling functions.
  * Note: Importing this imports all methods in this namespace (no tree-shaking).
  */
-export const Timers = _freeze(<const>{
+export const Timers = _freeze({
   setTimeout,
   setInterval,
   clearTimeout,
@@ -143,4 +143,4 @@ export const Timers = _freeze(<const>{
   queueMicrotask,
   requestAnimationFrame,
   cancelAnimationFrame,
-})
+} as const)

@@ -32,7 +32,7 @@ describe('attachSecurityTransport', () => {
           resume: jest.fn(),
         }
       },
-      protocolProvider: <SecurityProtocolProvider>(<unknown>(() => undefined)),
+      protocolProvider: (() => undefined) as unknown as SecurityProtocolProvider,
     }
   }
 
@@ -48,12 +48,12 @@ describe('attachSecurityTransport', () => {
     }
     routeAction = jest.fn()
     notifyEvent = jest.fn()
-    targetWindow = <Window>(<unknown>{ postMessage: jest.fn() })
+    targetWindow = { postMessage: jest.fn() } as unknown as Window
     origin = 'https://feature.example.com'
     attachedTransport = null
     wire = { sent: [], failSend: false }
 
-    channel = <ChannelHandle>(<unknown>{
+    channel = {
       getName: () => 'test-channel',
       getTarget: () => targetWindow,
       getOrigin: () => origin,
@@ -61,18 +61,18 @@ describe('attachSecurityTransport', () => {
       setSecurityTransport: (transport: unknown) => {
         attachedTransport = transport
       },
-    })
+    } as unknown as ChannelHandle
 
-    context = <RoutingContext>(<unknown>{
+    context = {
       state: { id: 'broker-1', name: 'test-broker' },
       logger: mockLogger,
       getProtocol: () => createFakeProvider(),
       routeAction,
-    })
+    } as unknown as RoutingContext
   })
 
   it('returns false and attaches nothing when no provider is registered', () => {
-    const bare = <RoutingContext>(<unknown>{ ...context, getProtocol: () => undefined })
+    const bare = { ...context, getProtocol: () => undefined } as unknown as RoutingContext
 
     const attached = attachSecurityTransport(bare, channel, 'v2', 'peer-1')
 
@@ -82,7 +82,7 @@ describe('attachSecurityTransport', () => {
   it('attaches a transport for the negotiated protocol', () => {
     const attached = attachSecurityTransport(context, channel, 'v2', 'peer-1')
 
-    expect({ attached, protocol: (<{ getProtocol: () => string }>attachedTransport).getProtocol() }).toEqual({
+    expect({ attached, protocol: (attachedTransport as { getProtocol: () => string }).getProtocol() }).toEqual({
       attached: true,
       protocol: 'v2',
     })
@@ -90,7 +90,7 @@ describe('attachSecurityTransport', () => {
 
   it('stamps outbound packets with the broker id and the peer id', () => {
     attachSecurityTransport(context, channel, 'v2', 'peer-1')
-    ;(<{ send: (action: unknown) => void }>attachedTransport).send({ type: 'PING' })
+    ;(attachedTransport as { send: (action: unknown) => void }).send({ type: 'PING' })
 
     expect(wire.sent).toEqual([expect.objectContaining({ origin: 'broker-1', target: 'peer-1' })])
   })
@@ -101,7 +101,7 @@ describe('attachSecurityTransport', () => {
     wire.deliver?.({
       origin: 'peer-1',
       target: 'broker-1',
-      data: <SecurityPacketData>(<unknown>{ message: { type: '[nexus] new-message', senderId: 'peer-1', data: { type: 'PING' } } }),
+      data: { message: { type: '[nexus] new-message', senderId: 'peer-1', data: { type: 'PING' } } } as unknown as SecurityPacketData,
     })
 
     expect(routeAction).toHaveBeenCalledWith({
@@ -118,7 +118,7 @@ describe('attachSecurityTransport', () => {
     wire.deliver?.({
       origin: 'peer-1',
       target: 'broker-1',
-      data: <SecurityPacketData>(<unknown>{ message: { type: '[nexus] new-message', senderId: 'peer-1' } }),
+      data: { message: { type: '[nexus] new-message', senderId: 'peer-1' } } as unknown as SecurityPacketData,
     })
 
     expect(routeAction).toHaveBeenCalledWith(expect.objectContaining({ origin: '' }))
@@ -127,7 +127,7 @@ describe('attachSecurityTransport', () => {
   it('surfaces transport failures as security-error events', () => {
     wire.failSend = true
     attachSecurityTransport(context, channel, 'v2', 'peer-1')
-    ;(<{ send: (action: unknown) => void }>attachedTransport).send({ type: 'PING' })
+    ;(attachedTransport as { send: (action: unknown) => void }).send({ type: 'PING' })
 
     expect(notifyEvent).toHaveBeenCalledWith('security-error', expect.objectContaining({ message: 'encryption transport failure' }))
   })
@@ -135,7 +135,7 @@ describe('attachSecurityTransport', () => {
   it('logs transport failures through the broker logger', () => {
     wire.failSend = true
     attachSecurityTransport(context, channel, 'v2', 'peer-1')
-    ;(<{ send: (action: unknown) => void }>attachedTransport).send({ type: 'PING' })
+    ;(attachedTransport as { send: (action: unknown) => void }).send({ type: 'PING' })
 
     expect(mockLogger.warn).toHaveBeenCalledWith('test-channel security error:', '[transport_error]', 'encryption transport failure')
   })

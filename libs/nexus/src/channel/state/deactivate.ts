@@ -15,8 +15,8 @@ import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
  * ```
  */
 export function deactivate(state: ChannelState): ChannelState {
-  return freeze(<ChannelState>{
+  return freeze({
     ...state,
     active: false,
-  })
+  } as ChannelState)
 }

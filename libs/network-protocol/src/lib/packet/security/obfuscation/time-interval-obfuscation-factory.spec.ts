@@ -206,7 +206,7 @@ describe('createTimeIntervalObfuscationFactory', () => {
 
       const mockDeobfuscateFn = jest
         .fn()
-        .mockResolvedValueOnce(<unknown>invalidPacket)
+        .mockResolvedValueOnce(invalidPacket as unknown)
         .mockResolvedValueOnce(mockPacket)
 
       const factory = createTimeIntervalObfuscationFactory(mockObfuscate, mockDeobfuscateFn, mockGetTimeBasedPassword, mockGetPasswords)

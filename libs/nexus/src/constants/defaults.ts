@@ -7,22 +7,22 @@ import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
  * Default empty contract.
  * No actions accepted or emitted.
  */
-export const DEFAULT_EMPTY_CONTRACT: IChannelContract = freeze(<IChannelContract>{
+export const DEFAULT_EMPTY_CONTRACT: IChannelContract = freeze({
   accepted: freeze([]),
   emitted: freeze([]),
-})
+} as IChannelContract)
 
 /**
  * Default broker settings.
  * Safe defaults that allow all origins and queue messages.
  */
-export const DEFAULT_BROKER_SETTINGS: Partial<IBrokerSettings> = freeze(<Partial<IBrokerSettings>>{
+export const DEFAULT_BROKER_SETTINGS: Partial<IBrokerSettings> = freeze({
   contract: DEFAULT_EMPTY_CONTRACT,
   debug: false,
   originWhitelist: freeze([]),
   originBlacklist: freeze([]),
   securityPolicy: undefined,
-})
+} as Partial<IBrokerSettings>)
 
 /**
  * Default connection deadline in milliseconds.
@@ -46,9 +46,9 @@ export const DEFAULT_CLOSE_TIMEOUT_MS = 2_000
  * Default channel settings.
  * Accept any origin, queue messages, inherit contract from broker.
  */
-export const DEFAULT_CHANNEL_SETTINGS: Partial<IChannelSettings> = freeze(<Partial<IChannelSettings>>{
+export const DEFAULT_CHANNEL_SETTINGS: Partial<IChannelSettings> = freeze({
   origin: '*',
   queueMessages: true,
   debug: false,
   contract: undefined,
-})
+} as Partial<IChannelSettings>)

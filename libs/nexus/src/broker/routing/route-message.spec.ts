@@ -14,7 +14,7 @@ describe('routeMessage', () => {
   const mockBrokerState: BrokerState = {
     id: 'broker-1',
     name: 'test-broker',
-    window: <Window>global.window,
+    window: global.window as Window,
     contract: {
       accepted: [{ type: 'test', description: 'Test action' }],
       emitted: [],
@@ -68,14 +68,14 @@ describe('routeMessage', () => {
       'test-action': mockHandler,
     })
 
-    const message = <MessageEvent<IAction>>{
-      data: <IAction>(<unknown>{
+    const message = {
+      data: {
         type: 'test-action',
         senderId: 'sender-1',
         data: {},
-      }),
-      source: <Window>{},
-    }
+      } as unknown as IAction,
+      source: {} as Window,
+    } as MessageEvent<IAction>
 
     routeMessage(router, routingContext, message)
 
@@ -88,10 +88,10 @@ describe('routeMessage', () => {
       'test-action': mockHandler,
     })
 
-    const message = <MessageEvent<IAction>>{
-      data: <IAction>{},
-      source: <Window>{},
-    }
+    const message = {
+      data: {} as IAction,
+      source: {} as Window,
+    } as MessageEvent<IAction>
 
     routeMessage(router, routingContext, message)
 
@@ -101,10 +101,10 @@ describe('routeMessage', () => {
   it('logs warning when action type is missing', () => {
     const router = createRouter({})
 
-    const message = <MessageEvent<IAction>>{
-      data: <IAction>{},
-      source: <Window>{},
-    }
+    const message = {
+      data: {} as IAction,
+      source: {} as Window,
+    } as MessageEvent<IAction>
 
     routeMessage(router, routingContext, message)
 
@@ -116,14 +116,14 @@ describe('routeMessage', () => {
       'registered-action': mockHandler,
     })
 
-    const message = <MessageEvent<IAction>>{
-      data: <IAction>(<unknown>{
+    const message = {
+      data: {
         type: 'unregistered-action',
         senderId: 'sender-1',
         data: {},
-      }),
-      source: <Window>{},
-    }
+      } as unknown as IAction,
+      source: {} as Window,
+    } as MessageEvent<IAction>
 
     routeMessage(router, routingContext, message)
 
@@ -133,14 +133,14 @@ describe('routeMessage', () => {
   it('logs warning for unregistered action type', () => {
     const router = createRouter({})
 
-    const message = <MessageEvent<IAction>>{
-      data: <IAction>(<unknown>{
+    const message = {
+      data: {
         type: 'unknown-action',
         senderId: 'sender-1',
         data: {},
-      }),
-      source: <Window>{},
-    }
+      } as unknown as IAction,
+      source: {} as Window,
+    } as MessageEvent<IAction>
 
     routeMessage(router, routingContext, message)
 
@@ -156,14 +156,14 @@ describe('routeMessage', () => {
       'error-action': errorHandler,
     })
 
-    const message = <MessageEvent<IAction>>{
-      data: <IAction>(<unknown>{
+    const message = {
+      data: {
         type: 'error-action',
         senderId: 'sender-1',
         data: {},
-      }),
-      source: <Window>{},
-    }
+      } as unknown as IAction,
+      source: {} as Window,
+    } as MessageEvent<IAction>
 
     expect(() => {
       routeMessage(router, routingContext, message)
@@ -181,14 +181,14 @@ describe('routeMessage', () => {
       'error-action': errorHandler,
     })
 
-    const message = <MessageEvent<IAction>>{
-      data: <IAction>(<unknown>{
+    const message = {
+      data: {
         type: 'error-action',
         senderId: 'sender-1',
         data: {},
-      }),
-      source: <Window>{},
-    }
+      } as unknown as IAction,
+      source: {} as Window,
+    } as MessageEvent<IAction>
 
     routeMessage(router, routingContext, message)
 
@@ -200,10 +200,10 @@ describe('routeMessage', () => {
       'test-action': mockHandler,
     })
 
-    const message = <MessageEvent<IAction>>(<unknown>{
+    const message = {
       data: null,
-      source: <Window>{},
-    })
+      source: {} as Window,
+    } as unknown as MessageEvent<IAction>
 
     expect(() => {
       routeMessage(router, routingContext, message)
@@ -221,15 +221,15 @@ describe('routeMessage', () => {
       'action-2': handler2,
     })
 
-    const message1 = <MessageEvent<IAction>>{
-      data: <IAction>(<unknown>{ type: 'action-1', senderId: 'sender-1', data: {} }),
-      source: <Window>{},
-    }
+    const message1 = {
+      data: { type: 'action-1', senderId: 'sender-1', data: {} } as unknown as IAction,
+      source: {} as Window,
+    } as MessageEvent<IAction>
 
-    const message2 = <MessageEvent<IAction>>{
-      data: <IAction>(<unknown>{ type: 'action-2', senderId: 'sender-1', data: {} }),
-      source: <Window>{},
-    }
+    const message2 = {
+      data: { type: 'action-2', senderId: 'sender-1', data: {} } as unknown as IAction,
+      source: {} as Window,
+    } as MessageEvent<IAction>
 
     routeMessage(router, routingContext, message1)
     routeMessage(router, routingContext, message2)
@@ -243,14 +243,14 @@ describe('routeMessage', () => {
       'test-action': mockHandler,
     })
 
-    const message = <MessageEvent<IAction>>{
-      data: <IAction>(<unknown>{
+    const message = {
+      data: {
         type: 'test-action',
         senderId: 'sender-1',
         data: {},
-      }),
-      source: <Window>{},
-    }
+      } as unknown as IAction,
+      source: {} as Window,
+    } as MessageEvent<IAction>
 
     routeMessage(router, routingContext, message)
 

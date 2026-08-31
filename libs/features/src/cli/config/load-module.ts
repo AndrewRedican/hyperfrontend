@@ -52,7 +52,7 @@ export async function loadModuleFile(absolutePath: string): Promise<unknown> {
  */
 async function importModule(absolutePath: string): Promise<ImportedModule> {
   try {
-    return <ImportedModule>await import(pathToFileURL(absolutePath).href)
+    return (await import(pathToFileURL(absolutePath).href)) as ImportedModule
   } catch (error) {
     throw createError(
       `Failed to load config ${absolutePath}: ${String(error)}. ` +

@@ -10,7 +10,7 @@ describe('CircularReference', () => {
   })
 
   it('throws error when incorrect location is provided', () => {
-    expect(() => new CircularReference(<[string]>(<unknown>[]), ['a', 'b'])).toThrow(
+    expect(() => new CircularReference([] as unknown as [string], ['a', 'b'])).toThrow(
       'Expected location to be a list with at list one string value.'
     )
     expect(() => new CircularReference(null, ['a', 'b'])).toThrow('Expected location to be a list with at list one string value.')

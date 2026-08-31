@@ -17,12 +17,12 @@ const _freeze = globalThis.Object.freeze
  * @param flags - Optional flags string.
  * @returns A new RegExp instance.
  */
-export const createRegExp = (pattern: string | RegExp, flags?: string): RegExp => <RegExp>_Reflect.construct(_RegExp, [pattern, flags])
+export const createRegExp = (pattern: string | RegExp, flags?: string): RegExp => _Reflect.construct(_RegExp, [pattern, flags]) as RegExp
 
 /**
  * (Safe copy) Namespace object containing RegExp factory.
  * Note: Importing this imports all methods in this namespace (no tree-shaking).
  */
-export const RegExp = _freeze(<const>{
+export const RegExp = _freeze({
   create: createRegExp,
-})
+} as const)

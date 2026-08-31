@@ -17,7 +17,7 @@ import { createPromise } from '@hyperfrontend/immutable-api-utils/built-in-copy/
  */
 export function waitForShutdown(): Promise<void> {
   return createPromise<void>((resolve) => {
-    for (const signal of <const>['SIGINT', 'SIGTERM']) {
+    for (const signal of ['SIGINT', 'SIGTERM'] as const) {
       process.once(signal, () => resolve())
     }
   })

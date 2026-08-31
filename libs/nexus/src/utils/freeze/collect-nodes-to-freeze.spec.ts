@@ -381,7 +381,7 @@ describe('collectNodesToFreeze', () => {
       const root = current
       for (let i = 0; i < 50; i++) {
         current['child'] = {}
-        current = <Record<string, unknown>>current['child']
+        current = current['child'] as Record<string, unknown>
       }
 
       const result = collectNodesToFreeze(root)

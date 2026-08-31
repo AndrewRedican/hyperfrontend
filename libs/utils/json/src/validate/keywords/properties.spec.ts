@@ -3,7 +3,7 @@ import type { ValidationContext } from '../context'
 import { validateProperties, validateRequired, validateAdditionalProperties } from './properties'
 
 describe('validateProperties', () => {
-  const ctx = <ValidationContext>(<unknown>{ errors: [], validate: () => true })
+  const ctx = { errors: [], validate: () => true } as unknown as ValidationContext
 
   it('returns true if no properties', () => {
     expect(validateProperties({}, {}, ctx)).toBe(true)
@@ -19,7 +19,7 @@ describe('validateProperties', () => {
 })
 
 describe('validateRequired', () => {
-  const ctx = <ValidationContext>(<unknown>{ errors: [], shouldContinue: () => true })
+  const ctx = { errors: [], shouldContinue: () => true } as unknown as ValidationContext
 
   it('returns true if no required', () => {
     expect(validateRequired({}, {}, ctx)).toBe(true)
@@ -37,7 +37,7 @@ describe('validateRequired', () => {
 })
 
 describe('validateAdditionalProperties', () => {
-  const ctx = <ValidationContext>(<unknown>{ errors: [], validate: () => true })
+  const ctx = { errors: [], validate: () => true } as unknown as ValidationContext
 
   it('returns true if no additionalProperties', () => {
     expect(validateAdditionalProperties({ foo: 1 }, {}, ctx)).toBe(true)

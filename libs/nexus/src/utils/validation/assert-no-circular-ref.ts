@@ -13,7 +13,7 @@ import { createWeakSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/
 function hasCircular(value: unknown, seen: WeakSet<object>): boolean {
   if (!isIterable(value)) return false
 
-  const obj = <object>value
+  const obj = value as object
 
   if (seen.has(obj)) return true
 
@@ -22,7 +22,7 @@ function hasCircular(value: unknown, seen: WeakSet<object>): boolean {
   const type = getType(value)
   const keys = getKeysFromIterable(value, type)
   for (const key of keys) {
-    if (hasCircular((<Record<string, unknown>>value)[key], seen)) {
+    if (hasCircular((value as Record<string, unknown>)[key], seen)) {
       return true
     }
   }

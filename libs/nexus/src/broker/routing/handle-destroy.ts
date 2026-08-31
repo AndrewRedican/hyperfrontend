@@ -30,7 +30,7 @@ import { resolveChannel } from './resolve-channel'
 export function handleDestroy(context: RoutingContext, message: MessageEvent<IAction>): void {
   const { registry } = context
 
-  const channel = <ChannelHandle | undefined>resolveChannel(registry, message)
+  const channel = resolveChannel(registry, message) as ChannelHandle | undefined
 
   if (!channel || !isPeerInstance(channel, message.data)) {
     return

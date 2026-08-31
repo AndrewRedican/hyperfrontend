@@ -23,7 +23,7 @@ describe('nonEmptyStrings', () => {
   })
 
   it('handles null and undefined values correctly', () => {
-    const input = <string[]>['hello', null, undefined, 'world']
+    const input = ['hello', null, undefined, 'world'] as string[]
     const expectedOutput = ['hello', 'world']
     expect(nonEmptyStrings(input)).toEqual(expectedOutput)
   })

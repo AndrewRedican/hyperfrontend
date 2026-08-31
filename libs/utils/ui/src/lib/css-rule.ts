@@ -34,7 +34,7 @@ export function cssRule(selector: string, css: string | Style): string {
     throw createError('A valid css select must be provided')
   }
   if (getType(css) === 'object') {
-    css = cssObjectToString(<Style>css).trim()
+    css = cssObjectToString(css as Style).trim()
   }
 
   if (getType(css) !== 'string' || css.length === 0) {

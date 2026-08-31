@@ -10,7 +10,7 @@ const IMPORT_LITERAL_RE = /import\s*\(\s*['"]([^'"]+)['"]/g
 
 const collectInto = (source: string, re: RegExp, specifiers: Set<string>): void => {
   for (const match of source.matchAll(re)) {
-    const spec = <string>match[1]
+    const spec = match[1] as string
     if (spec.startsWith('.')) specifiers.add(spec)
   }
 }

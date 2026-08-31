@@ -18,7 +18,7 @@ jest.mock('@hyperfrontend/project-scope/core', () => {
 const drain = (stream: PassThrough): string => {
   const chunks: Buffer[] = []
   let buf: Buffer | null
-  while ((buf = <Buffer | null>stream.read()) !== null) chunks.push(buf)
+  while ((buf = stream.read() as Buffer | null) !== null) chunks.push(buf)
   return Buffer.concat(chunks).toString('utf8')
 }
 
@@ -34,8 +34,8 @@ const EMPTY_RESULT: BuildResult = {
 const baseConfig = (): BuildConfig => ({ projectRoot: '/abs/repo/libs/foo', workspaceRoot: '/abs/repo' })
 
 beforeEach(() => {
-  ;(<jest.Mock>build).mockReset().mockResolvedValue(EMPTY_RESULT)
-  ;(<jest.Mock>readJsonFile).mockReset().mockReturnValue(baseConfig())
+  ;(build as jest.Mock).mockReset().mockResolvedValue(EMPTY_RESULT)
+  ;(readJsonFile as jest.Mock).mockReset().mockReturnValue(baseConfig())
 })
 
 describe('parseHfBuildArgs', () => {
@@ -119,14 +119,14 @@ describe('runHfBuild', () => {
   it('forwards the parsed config to build()', async () => {
     const stderr = new PassThrough()
     const config = baseConfig()
-    ;(<jest.Mock>readJsonFile).mockReturnValueOnce(config)
+    ;(readJsonFile as jest.Mock).mockReturnValueOnce(config)
     await runHfBuild({ argv: [], cwd: '/repo', stderr })
     expect(build).toHaveBeenCalledWith(config)
   })
 
   it('forces config.verbose=true when --verbose is supplied', async () => {
     const stderr = new PassThrough()
-    ;(<jest.Mock>readJsonFile).mockReturnValueOnce({ ...baseConfig(), verbose: false })
+    ;(readJsonFile as jest.Mock).mockReturnValueOnce({ ...baseConfig(), verbose: false })
     await runHfBuild({ argv: ['--verbose'], cwd: '/repo', stderr })
     expect(build).toHaveBeenCalledWith(expect.objectContaining({ verbose: true }))
   })
@@ -134,7 +134,7 @@ describe('runHfBuild', () => {
   it('leaves config.verbose untouched when --verbose is omitted', async () => {
     const stderr = new PassThrough()
     const config = { ...baseConfig(), verbose: false as const }
-    ;(<jest.Mock>readJsonFile).mockReturnValueOnce(config)
+    ;(readJsonFile as jest.Mock).mockReturnValueOnce(config)
     await runHfBuild({ argv: [], cwd: '/repo', stderr })
     expect(build).toHaveBeenCalledWith(config)
   })
@@ -168,7 +168,7 @@ describe('runHfBuild', () => {
 
   it('returns 1 and echoes the message when config loading throws an Error', async () => {
     const stderr = new PassThrough()
-    ;(<jest.Mock>readJsonFile).mockImplementationOnce(() => {
+    ;(readJsonFile as jest.Mock).mockImplementationOnce(() => {
       throw new Error('Config file not found: /repo/builder.config.json')
     })
     const code = await runHfBuild({ argv: [], cwd: '/repo', stderr })
@@ -179,7 +179,7 @@ describe('runHfBuild', () => {
 
   it('stringifies non-Error throws from config loading before writing them', async () => {
     const stderr = new PassThrough()
-    ;(<jest.Mock>readJsonFile).mockImplementationOnce(() => {
+    ;(readJsonFile as jest.Mock).mockImplementationOnce(() => {
       throw 'plain string failure'
     })
     const code = await runHfBuild({ argv: [], cwd: '/repo', stderr })
@@ -189,7 +189,7 @@ describe('runHfBuild', () => {
 
   it('returns 1 and echoes the message when build() rejects with an Error', async () => {
     const stderr = new PassThrough()
-    ;(<jest.Mock>build).mockRejectedValueOnce(new Error('rollup blew up'))
+    ;(build as jest.Mock).mockRejectedValueOnce(new Error('rollup blew up'))
     const code = await runHfBuild({ argv: [], cwd: '/repo', stderr })
     expect(code).toBe(HF_BUILD_EXIT_ERROR)
     expect(drain(stderr)).toBe('rollup blew up\n')
@@ -197,7 +197,7 @@ describe('runHfBuild', () => {
 
   it('stringifies non-Error rejections from build() before writing them', async () => {
     const stderr = new PassThrough()
-    ;(<jest.Mock>build).mockRejectedValueOnce('opaque failure')
+    ;(build as jest.Mock).mockRejectedValueOnce('opaque failure')
     const code = await runHfBuild({ argv: [], cwd: '/repo', stderr })
     expect(code).toBe(HF_BUILD_EXIT_ERROR)
     expect(drain(stderr)).toBe('opaque failure\n')

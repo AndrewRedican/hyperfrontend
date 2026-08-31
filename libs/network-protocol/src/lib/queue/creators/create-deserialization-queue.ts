@@ -54,7 +54,7 @@ export const createDeserializationQueue: DeserializationQueueCreater = (label, p
       try {
         processed = await packetDeserialization(raw)
       } catch (e) {
-        log(`${label}: ${(<Error>e)?.message}`)
+        log(`${label}: ${(e as Error)?.message}`)
         onFail(raw)
         return
       }

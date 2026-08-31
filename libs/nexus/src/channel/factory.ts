@@ -121,13 +121,13 @@ export function createChannel(config: IChannelConfig, deps: ChannelDependencies)
 
     // why: A payload-less send must omit the data key entirely — an explicit `data: undefined` fails the security envelope's serializability validation, which rejects undefined anywhere in the message.
     send: (type, data) => send(internals, data === undefined ? { type } : { type, data }),
-    sendAction: (action: unknown) => sendActionImpl(internals, <IAction>action),
+    sendAction: (action: unknown) => sendActionImpl(internals, action as IAction),
 
     on: <E extends ChannelEvent>(eventOrHandler: E | EventHandler, handler?: EventCallbackMap[E]) => {
       if (typeof eventOrHandler === 'string' && typeof handler === 'function') {
         return subscribeToEvents(internals, eventOrHandler, handler)
       }
-      return subscribeToEvents(internals, <EventHandler>eventOrHandler)
+      return subscribeToEvents(internals, eventOrHandler as EventHandler)
     },
     onMessage: (handler) => subscribeToMessages(internals, handler),
 
@@ -137,7 +137,7 @@ export function createChannel(config: IChannelConfig, deps: ChannelDependencies)
     },
 
     beginResponse: (senderId: string, origin: string, contract: IChannelContract, processId: string, acceptAction: IAction) => {
-      beginResponse(internals, <const>[senderId, origin, contract, processId], acceptAction)
+      beginResponse(internals, [senderId, origin, contract, processId] as const, acceptAction)
     },
 
     abandonRequest: () => {
@@ -183,7 +183,7 @@ export function createChannel(config: IChannelConfig, deps: ChannelDependencies)
       security?: SecurityNegotiationResponse
     ) => {
       internals.updateState({
-        scheduledActivation: <const>[senderId, origin, contract, processId, security],
+        scheduledActivation: [senderId, origin, contract, processId, security] as const,
       })
     },
 

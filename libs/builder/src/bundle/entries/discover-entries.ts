@@ -2,9 +2,9 @@ import type { EntryPoint, EntryPointCategory, EntryPointDiscovery, EntryPointPla
 import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { exists, isDirectory, join, readDirectory } from '@hyperfrontend/project-scope/core'
 
-const PLATFORM_DIRS = freeze(<const>['browser', 'node'])
+const PLATFORM_DIRS = freeze(['browser', 'node'] as const)
 
-const isPlatformDir = (name: string): name is EntryPointPlatform => (<readonly string[]>PLATFORM_DIRS).includes(name)
+const isPlatformDir = (name: string): name is EntryPointPlatform => (PLATFORM_DIRS as readonly string[]).includes(name)
 
 const hasIndexFile = (dirPath: string): boolean => exists(join(dirPath, 'index.ts'))
 
@@ -26,7 +26,7 @@ const recurseEntries = (basePath: string, relativePath: string, maxDepth: number
     const subdirRelative = relativePath ? `${relativePath}/${subdir}` : subdir
 
     if (hasIndexFile(subdirPath)) {
-      const firstSegment = <string>subdirRelative.split('/')[0]
+      const firstSegment = subdirRelative.split('/')[0] as string
       const platform = isPlatformDir(subdir) ? subdir : isPlatformDir(firstSegment) ? firstSegment : undefined
       entries.push({
         exportPath: `./${subdirRelative}`,
@@ -92,7 +92,7 @@ export const discoverEntries = (projectRoot: string): EntryPointDiscovery => {
 
   entryPoints.push(...recurseEntries(srcPath, '', 3))
 
-  const firstSegmentOf = (entry: EntryPoint): string => <string>entry.srcPath.split('/')[0]
+  const firstSegmentOf = (entry: EntryPoint): string => entry.srcPath.split('/')[0] as string
   const platformEntries = entryPoints.filter((e) => !e.isRoot && isPlatformDir(firstSegmentOf(e)))
   const featureEntries = entryPoints.filter((e) => !e.isRoot && !isPlatformDir(firstSegmentOf(e)))
 

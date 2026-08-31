@@ -36,9 +36,9 @@ export function handleClose(context: RoutingContext, message: MessageEvent<IActi
   if (!('processId' in action)) {
     return
   }
-  const processId = <string>action.processId
+  const processId = action.processId as string
 
-  const channel = <ChannelHandle | undefined>resolveChannel(registry, message)
+  const channel = resolveChannel(registry, message) as ChannelHandle | undefined
 
   if (!channel || !channel.isActive() || !isPeerInstance(channel, action)) {
     return

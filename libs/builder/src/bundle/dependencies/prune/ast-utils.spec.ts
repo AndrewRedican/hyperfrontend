@@ -3,7 +3,7 @@ import { getRequireSpecifier, parseChunk, resolveRelativeTarget } from './ast-ut
 
 const firstExpression = (source: string): ts.Node => {
   const statement = parseChunk(source).statements[0]
-  return (<ts.ExpressionStatement>statement).expression
+  return (statement as ts.ExpressionStatement).expression
 }
 
 describe('parseChunk', () => {

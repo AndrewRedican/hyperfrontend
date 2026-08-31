@@ -81,7 +81,7 @@ export function parseHfBuildArgs(argv: readonly string[]): HfBuildArgs {
   let help = false
 
   for (let i = 0; i < argv.length; i++) {
-    const token = <string>argv[i]
+    const token = argv[i] as string
     if (token === '--config') {
       configPath = requireValue(token, argv[i + 1])
       i++
@@ -150,7 +150,7 @@ export async function runHfBuild(options: RunHfBuildOptions): Promise<number> {
   try {
     args = parseHfBuildArgs(options.argv)
   } catch (error) {
-    stderr.write(`${(<Error>error).message}\n`)
+    stderr.write(`${(error as Error).message}\n`)
     return HF_BUILD_EXIT_ERROR
   }
 

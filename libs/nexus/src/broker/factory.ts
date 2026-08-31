@@ -172,14 +172,14 @@ export function createBroker(config: CreateBrokerConfig): BrokerHandle {
     }
 
     if (event.data instanceof Uint8Array) {
-      routeEncryptedMessage(routingContext, router, <MessageEvent<Uint8Array>>event)
+      routeEncryptedMessage(routingContext, router, event as MessageEvent<Uint8Array>)
       return
     }
 
-    routeMessage(router, routingContext, <MessageEvent<IAction>>event)
+    routeMessage(router, routingContext, event as MessageEvent<IAction>)
   }
 
-  brokerWindow.addEventListener('message', <EventListener>onMessage)
+  brokerWindow.addEventListener('message', onMessage as EventListener)
 
   const broker: BrokerHandle = {
     id: state.id,
@@ -215,7 +215,7 @@ export function createBroker(config: CreateBrokerConfig): BrokerHandle {
 
     setSecurityPolicy(policy: SecurityPolicy) {
       validatePolicy(policy)
-      ;(<Record<string, unknown>>(<unknown>state.settings))['securityPolicy'] = policy
+      ;(state.settings as unknown as Record<string, unknown>)['securityPolicy'] = policy
       return broker
     },
 
@@ -224,7 +224,7 @@ export function createBroker(config: CreateBrokerConfig): BrokerHandle {
         throw createError('Original contract cannot be extended.')
       }
       validateContract(contract)
-      ;(<BrokerStateContractRef>state).contract = mergeContracts(state.contract, contract)
+      ;(state as BrokerStateContractRef).contract = mergeContracts(state.contract, contract)
       return broker
     },
 

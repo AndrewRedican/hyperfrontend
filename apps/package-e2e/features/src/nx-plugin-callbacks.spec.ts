@@ -274,7 +274,7 @@ describe('@hyperfrontend/features Nx plugin callbacks and tree staging', () => {
       entryBefore = readFileSync(join(scenarioDir, 'demo', 'src', 'main.ts'), 'utf8')
       rmSync(join(scenarioDir, 'demo', 'feature.config.json'))
       secondRun = runNx(scenarioDir, [...FEATURE_ARGS])
-      configJson = <Record<string, unknown>>JSON.parse(readFileSync(join(scenarioDir, 'demo', 'feature.config.json'), 'utf8'))
+      configJson = JSON.parse(readFileSync(join(scenarioDir, 'demo', 'feature.config.json'), 'utf8')) as Record<string, unknown>
     }, SCENARIO_TIMEOUT)
 
     it('exits 0 and recreates the deleted config file', () => {

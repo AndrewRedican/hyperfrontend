@@ -5,8 +5,8 @@ import { getOperationState, isOperationInProgress, DEFAULT_OPERATION_STATE_OPTIO
 jest.mock('node:child_process')
 jest.mock('node:fs')
 
-const mockExecFileSync = <jest.MockedFunction<typeof execFileSync>>execFileSync
-const mockExistsSync = <jest.MockedFunction<typeof existsSync>>existsSync
+const mockExecFileSync = execFileSync as jest.MockedFunction<typeof execFileSync>
+const mockExistsSync = existsSync as jest.MockedFunction<typeof existsSync>
 
 describe('getOperationState', () => {
   beforeEach(() => {

@@ -34,7 +34,7 @@ export function resolveContainer(container: string | HTMLElement | undefined): H
   if (found === null) {
     throw createError(`Shell container not found for selector "${container}".`)
   }
-  return <HTMLElement>found
+  return found as HTMLElement
 }
 
 /**
@@ -68,7 +68,7 @@ function isCrossOrigin(url: string): boolean {
  * @returns The space-joinable sandbox tokens.
  */
 function buildSandboxTokens(url: string, sandbox: true | SandboxOptions): string[] {
-  const optIns = sandbox === true ? <SandboxOptions>{} : sandbox
+  const optIns = sandbox === true ? ({} as SandboxOptions) : sandbox
   const tokens = ['allow-scripts']
   if (isCrossOrigin(url)) {
     tokens.push('allow-same-origin')

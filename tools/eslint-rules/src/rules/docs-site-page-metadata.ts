@@ -269,7 +269,7 @@ function helperInsertionTarget(imports: TSESTree.ImportDeclaration[]): TSESTree.
     if (declaration.importKind === 'type') {
       continue
     }
-    const source = <string>declaration.source.value
+    const source = declaration.source.value as string
     if (!source.startsWith('@/') || source > '@/lib/metadata') {
       return declaration
     }
@@ -304,7 +304,7 @@ function isWithinMetadataExport(node: TSESTree.Node): boolean {
   while (current.parent !== undefined && current.parent.type !== 'Program') {
     current = current.parent
   }
-  return metadataNamesExportedBy(<TSESTree.ProgramStatement>current).length > 0
+  return metadataNamesExportedBy(current as TSESTree.ProgramStatement).length > 0
 }
 
 const createRule = ESLintUtils.RuleCreator(

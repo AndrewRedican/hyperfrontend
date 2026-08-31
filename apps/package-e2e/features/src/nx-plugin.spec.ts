@@ -97,7 +97,7 @@ describe('@hyperfrontend/features Nx plugin', () => {
       copyWorkspace(workspace.pristineDir, scenarioDir)
       const manifest = readManifest(scenarioDir)
       const devDeps = sectionOf(manifest, 'devDependencies')
-      const installedDeclaration = <string>devDeps[PLUGIN_NAME]
+      const installedDeclaration = devDeps[PLUGIN_NAME] as string
       delete devDeps[PLUGIN_NAME]
       manifest['dependencies'] = { [PLUGIN_NAME]: installedDeclaration }
       writeManifest(scenarioDir, manifest)
@@ -131,7 +131,7 @@ describe('@hyperfrontend/features Nx plugin', () => {
       const devDeps = sectionOf(manifest, 'devDependencies')
       delete devDeps[PLUGIN_NAME]
       // how: prettier moves from devDependencies into a seeded dependencies section so the run exercises insertion into an existing, non-empty section.
-      const prettierRange = <string>devDeps['prettier']
+      const prettierRange = devDeps['prettier'] as string
       delete devDeps['prettier']
       manifest['dependencies'] = { prettier: prettierRange }
       writeManifest(scenarioDir, manifest)
@@ -275,7 +275,7 @@ describe('@hyperfrontend/features Nx plugin', () => {
       copyWorkspace(workspace.pristineDir, scenarioDir)
       seedDemo(scenarioDir)
       result = runNx(scenarioDir, [...FEATURE_ARGS])
-      configJson = <Record<string, unknown>>JSON.parse(readFileSync(join(scenarioDir, 'demo', 'feature.config.json'), 'utf8'))
+      configJson = JSON.parse(readFileSync(join(scenarioDir, 'demo', 'feature.config.json'), 'utf8')) as Record<string, unknown>
       glueModule = readFileSync(join(scenarioDir, 'demo', 'src', 'hyperfrontend.feature.ts'), 'utf8')
       entryFile = readFileSync(join(scenarioDir, 'demo', 'src', 'main.ts'), 'utf8')
       showProjects = runNx(scenarioDir, ['show', 'projects'])

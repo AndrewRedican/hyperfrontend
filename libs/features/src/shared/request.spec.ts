@@ -28,7 +28,7 @@ jest.mock('@hyperfrontend/immutable-api-utils/built-in-copy/timers', () => {
   }
 })
 
-const timers = <{ __getScheduled(): ScheduledTimer[] }>jest.requireMock('@hyperfrontend/immutable-api-utils/built-in-copy/timers')
+const timers = jest.requireMock('@hyperfrontend/immutable-api-utils/built-in-copy/timers') as { __getScheduled(): ScheduledTimer[] }
 
 function scheduledTimers(): ScheduledTimer[] {
   return timers.__getScheduled()
@@ -53,7 +53,7 @@ function envelopeAt(send: jest.Mock, index: number): Record<string, unknown> {
   if (!call) {
     throw createError(`expected a sent envelope at index ${index}`)
   }
-  return <Record<string, unknown>>call[1]
+  return call[1] as Record<string, unknown>
 }
 
 beforeEach(() => {

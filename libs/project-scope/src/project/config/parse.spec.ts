@@ -12,7 +12,7 @@ describe('parseConfig', () => {
     expect(result.format).toBe('json')
     expect(result.type).toBe('package.json')
     expect(result.data).toBeDefined()
-    expect((<Record<string, unknown>>result.data)['name']).toBe('minimal-test-project')
+    expect((result.data as Record<string, unknown>)['name']).toBe('minimal-test-project')
   })
 
   it('parses tsconfig.json as JSONC', () => {
@@ -21,7 +21,7 @@ describe('parseConfig', () => {
     expect(result.format).toBe('jsonc')
     expect(result.type).toBe('tsconfig')
     expect(result.data).toBeDefined()
-    expect((<Record<string, unknown>>result.data)['compilerOptions']).toBeDefined()
+    expect((result.data as Record<string, unknown>)['compilerOptions']).toBeDefined()
   })
 
   it('returns raw content for JS config files', () => {
@@ -41,7 +41,7 @@ describe('parseConfig', () => {
 
     expect(result.format).toBe('ini')
     expect(result.data).toBeDefined()
-    expect((<Record<string, unknown>>(result.data as Record<string, unknown>)['section1'])['key1']).toBe('value1')
+    expect(((result.data as Record<string, unknown>)['section1'] as Record<string, unknown>)['key1']).toBe('value1')
   })
 
   it('parses dotenv format config files', () => {

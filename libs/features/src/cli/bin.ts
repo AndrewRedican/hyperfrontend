@@ -39,7 +39,7 @@ export async function runFeaturesCli(options: RunFeaturesCliOptions): Promise<nu
   try {
     parsed = parseCliArgs(argv)
   } catch (error) {
-    stderr.write(`${(<Error>error).message}\n`)
+    stderr.write(`${(error as Error).message}\n`)
     stderr.write(USAGE)
     return EXIT_ERROR
   }

@@ -74,11 +74,11 @@ function refuseSecurityUnavailable(context: RoutingContext, channel: ChannelHand
 export function handleOpen(context: RoutingContext, message: MessageEvent<IAction>): void {
   const { state, processManager, logger } = context
   const action = message.data
-  const processId = <string>(<Record<string, unknown>>(<unknown>action))['processId']
+  const processId = (action as unknown as Record<string, unknown>)['processId'] as string
 
-  const securityConfirmation = <SecurityConfirmation | undefined>(<Record<string, unknown>>(<unknown>action))['security']
+  const securityConfirmation = (action as unknown as Record<string, unknown>)['security'] as SecurityConfirmation | undefined
 
-  const channel = <ChannelHandle | undefined>processManager.get(processId)
+  const channel = processManager.get(processId) as ChannelHandle | undefined
 
   if (!channel) {
     return
@@ -102,7 +102,7 @@ export function handleOpen(context: RoutingContext, message: MessageEvent<IActio
     let confirmedProtocol = securityConfirmation.active ? securityConfirmation.protocol : 'none'
     channel.setNegotiatedProtocol(confirmedProtocol)
 
-    if (confirmedProtocol !== 'none' && !attachSecurityTransport(context, channel, confirmedProtocol, <string>channel.getPeerId())) {
+    if (confirmedProtocol !== 'none' && !attachSecurityTransport(context, channel, confirmedProtocol, channel.getPeerId() as string)) {
       // why: The counterpart confirmed encryption but no local provider is registered for the protocol, so the outcome degrades to plaintext.
       logger.warn(`${state.name} has no provider registered for the negotiated '${confirmedProtocol}' protocol.`)
       confirmedProtocol = 'none'

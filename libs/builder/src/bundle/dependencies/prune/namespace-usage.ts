@@ -143,7 +143,7 @@ const collectImports = (
 ): void => {
   for (const statement of sourceFile.statements) {
     if (ts.isImportDeclaration(statement)) {
-      const target = resolveRelativeTarget(importerDir, (<ts.StringLiteral>statement.moduleSpecifier).text)
+      const target = resolveRelativeTarget(importerDir, (statement.moduleSpecifier as ts.StringLiteral).text)
       // why: a side-effect-only import has no clause and binds nothing to track.
       if (target === null || !statement.importClause) continue
       const clause = statement.importClause
@@ -163,7 +163,7 @@ const collectImports = (
       continue
     }
     if (ts.isExportDeclaration(statement) && statement.moduleSpecifier) {
-      const target = resolveRelativeTarget(importerDir, (<ts.StringLiteral>statement.moduleSpecifier).text)
+      const target = resolveRelativeTarget(importerDir, (statement.moduleSpecifier as ts.StringLiteral).text)
       if (target === null) continue
       const usage = ensureUsage(edges, target)
       // why: `export * from 'F'` re-exports every name wholesale — keep the whole surface.
@@ -252,7 +252,7 @@ const collectRequires = (
     const specifier = getRequireSpecifier(node)
     if (specifier !== null) {
       const target = resolveRelativeTarget(importerDir, specifier)
-      if (target !== null) bindRequire(<ts.CallExpression>node, target, edges, locals, namespaceBindings, bindingNodes)
+      if (target !== null) bindRequire(node as ts.CallExpression, target, edges, locals, namespaceBindings, bindingNodes)
     }
     ts.forEachChild(node, visit)
   }

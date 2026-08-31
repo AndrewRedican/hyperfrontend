@@ -56,7 +56,7 @@ export default async function versionBatchExecutor(
   const workspaceRoot = context.root
   const { base = 'origin/main', head = 'HEAD', dryRun = false, verbose = false } = options
 
-  const versionTargetDefaults = <VersionTargetDefaults | undefined>context.nxJsonConfiguration?.targetDefaults?.['version']
+  const versionTargetDefaults = context.nxJsonConfiguration?.targetDefaults?.['version'] as VersionTargetDefaults | undefined
   const scopeFiltering = options.scopeFiltering ?? versionTargetDefaults?.options?.scopeFiltering
 
   const logger = getLogger()

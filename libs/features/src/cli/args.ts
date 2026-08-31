@@ -101,7 +101,7 @@ export function parseCliArgs(argv: readonly string[]): ParsedArgs {
   const booleans: Record<string, boolean> = {}
 
   while (queue.length > 0) {
-    const token = <string>queue.shift()
+    const token = queue.shift() as string
     if (!token.startsWith('-')) {
       if (command !== undefined) throw createError(`Unexpected argument: ${token}`)
       command = token
@@ -120,7 +120,7 @@ export function parseCliArgs(argv: readonly string[]): ParsedArgs {
   }
 
   const flags: CliFlags = {
-    ...(<Partial<CliFlags>>strings),
+    ...(strings as Partial<CliFlags>),
     allowOpen: booleans['allowOpen'] ?? false,
     ci: booleans['ci'] ?? false,
     yes: booleans['yes'] ?? false,

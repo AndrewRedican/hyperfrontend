@@ -28,7 +28,7 @@ async function loadAnalytics(ga?: string, ads?: string) {
  * @returns Every queued command, argument lists included.
  */
 function layerCalls(): unknown[][] {
-  return (window.dataLayer ?? []).map((entry) => Array.from(<ArrayLike<unknown>>entry))
+  return (window.dataLayer ?? []).map((entry) => Array.from(entry as ArrayLike<unknown>))
 }
 
 /**

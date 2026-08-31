@@ -25,6 +25,6 @@ describe('cssRule', () => {
   })
 
   it('throws error for non-string non-object css', () => {
-    expect(() => cssRule('.class', <string>(<unknown>123))).toThrow('A valid string value must be provided to add in styleesheet.')
+    expect(() => cssRule('.class', 123 as unknown as string)).toThrow('A valid string value must be provided to add in styleesheet.')
   })
 })

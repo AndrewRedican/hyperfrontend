@@ -58,5 +58,5 @@ export function createEventEmitter(): EventEmitter {
     registry[event]?.forEach((handler) => handler(data))
   }
 
-  return freeze(<EventEmitter>{ on, emit })
+  return freeze({ on, emit } as EventEmitter)
 }

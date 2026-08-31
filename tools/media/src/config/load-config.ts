@@ -25,7 +25,7 @@ export async function loadConfig(configPath: string): Promise<ResolvedMediaConfi
   if (!existsSync(configPath)) {
     throw createError(`No media configuration at ${configPath}`)
   }
-  const loaded = <ConfigModule>await import(pathToFileURL(configPath).href)
+  const loaded = (await import(pathToFileURL(configPath).href)) as ConfigModule
   const config = loaded.default
   if (config === undefined || typeof config.rootDir !== 'string' || config.rootDir === '') {
     throw createError(`${configPath} must default-export defineConfig({ rootDir: '...' })`)

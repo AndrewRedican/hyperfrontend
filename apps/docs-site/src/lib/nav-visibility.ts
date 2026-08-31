@@ -32,7 +32,7 @@ export const DOC_INDEX_BREAKPOINT = 1400
  * complete class names, so a composed `${screen}:block` never reaches the
  * stylesheet.
  */
-export const navVisibility = freeze(<const>{
+export const navVisibility = freeze({
   /** Header main links: listed inline from {@link NAV_BREAKPOINT} up. */
   headerLinks: 'hidden lg:flex',
   /** Header controls beside those links, revealed on the same range. */
@@ -45,4 +45,4 @@ export const navVisibility = freeze(<const>{
   documentRail: 'hidden rail:block',
   /** Document toolbar above the document: shown below {@link DOC_INDEX_BREAKPOINT}, exactly where the rail is absent. */
   documentToolbar: 'rail:hidden',
-})
+} as const)

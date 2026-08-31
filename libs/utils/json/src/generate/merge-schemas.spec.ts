@@ -117,7 +117,7 @@ describe('mergeSchemas', () => {
 
   describe('edge cases and uncovered branches', () => {
     it('returns {} if single schema is undefined', () => {
-      expect(mergeSchemas([<Schema>(<unknown>undefined)])).toEqual({})
+      expect(mergeSchemas([undefined as unknown as Schema])).toEqual({})
     })
 
     it('returns anyOf for complex schemas with no types', () => {

@@ -4,7 +4,7 @@ import type { MermaidConfig } from 'mermaid'
  * Light mode theme variables using the docs-site color palette.
  * Primary: blue-600, text: slate-900, backgrounds: white/slate-50
  */
-export const lightThemeVariables = <const>{
+export const lightThemeVariables = {
   // why: Base colors match the docs-site typography and spacing
   fontSize: '14px',
   fontFamily: 'ui-sans-serif, system-ui, sans-serif',
@@ -88,13 +88,13 @@ export const lightThemeVariables = <const>{
   gitInv7: '#374151',
   commitLabelColor: '#ffffff',
   commitLabelBackground: '#2563eb',
-}
+} as const
 
 /**
  * Dark mode theme variables.
  * Primary: blue-500, text: slate-100, backgrounds: slate-900/slate-800
  */
-export const darkThemeVariables = <const>{
+export const darkThemeVariables = {
   // why: Base colors match the docs-site dark mode typography
   fontSize: '14px',
   fontFamily: 'ui-sans-serif, system-ui, sans-serif',
@@ -176,7 +176,7 @@ export const darkThemeVariables = <const>{
   gitInv7: '#9ca3af',
   commitLabelColor: '#ffffff',
   commitLabelBackground: '#3b82f6',
-}
+} as const
 
 /**
  * Returns theme variables for the given theme mode.

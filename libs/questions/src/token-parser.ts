@@ -24,14 +24,14 @@ const PasteEnd = '\x1B[201~'
 /**
  * Kinds of tokens produced while reading terminal input.
  */
-export const TokenType = freeze(<const>{
+export const TokenType = freeze({
   /** A single keypress (character or escape sequence) */
   Key: 'key',
   /** A block of pasted text */
   Paste: 'paste',
   /** The output terminal was resized */
   Resize: 'resize',
-})
+} as const)
 
 /** Kind of an input token. */
 export type TokenType = (typeof TokenType)[keyof typeof TokenType]

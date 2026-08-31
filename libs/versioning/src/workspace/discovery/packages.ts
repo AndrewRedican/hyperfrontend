@@ -246,7 +246,7 @@ function parsePackageJsonFilesFromTree(tree: Tree, workspaceRoot: string, packag
         continue
       }
 
-      const packageJson = <PackageJson>parse(content)
+      const packageJson = parse(content) as PackageJson
 
       if (!packageJson.name) {
         continue

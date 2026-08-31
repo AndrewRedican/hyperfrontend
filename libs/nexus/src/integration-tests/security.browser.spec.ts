@@ -123,8 +123,8 @@ describe('Integration: Security', () => {
 
       broker.setSecurityPolicy(conditionalPolicy)
 
-      const httpsEvent = <MessageEvent>{ origin: 'https://test.com' }
-      const httpEvent = <MessageEvent>{ origin: 'http://test.com' }
+      const httpsEvent = { origin: 'https://test.com' } as MessageEvent
+      const httpEvent = { origin: 'http://test.com' } as MessageEvent
       expect(conditionalPolicy(httpsEvent)).toBe(true)
       expect(conditionalPolicy(httpEvent)).toBe(false)
     })
@@ -181,7 +181,7 @@ describe('Integration: Security', () => {
         },
       })
 
-      const channel = broker.addChannel('test-channel', <Window>(<unknown>mockWindow))
+      const channel = broker.addChannel('test-channel', mockWindow as unknown as Window)
 
       expect(channel).toBeDefined()
     })
@@ -197,8 +197,8 @@ describe('Integration: Security', () => {
 
       const mockWindow2 = createMockWindow()
 
-      const channel1 = broker.addChannel('channel-1', <Window>(<unknown>mockWindow))
-      const channel2 = broker.addChannel('channel-2', <Window>(<unknown>mockWindow2))
+      const channel1 = broker.addChannel('channel-1', mockWindow as unknown as Window)
+      const channel2 = broker.addChannel('channel-2', mockWindow2 as unknown as Window)
 
       expect(channel1).toBeDefined()
       expect(channel2).toBeDefined()
@@ -213,15 +213,15 @@ describe('Integration: Security', () => {
       })
 
       expect(() => {
-        broker.setSecurityPolicy(<SecurityPolicy>(<unknown>'not a function'))
+        broker.setSecurityPolicy('not a function' as unknown as SecurityPolicy)
       }).toThrow()
 
       expect(() => {
-        broker.setSecurityPolicy(<SecurityPolicy>(<unknown>null))
+        broker.setSecurityPolicy(null as unknown as SecurityPolicy)
       }).toThrow()
 
       expect(() => {
-        broker.setSecurityPolicy(<SecurityPolicy>(<unknown>undefined))
+        broker.setSecurityPolicy(undefined as unknown as SecurityPolicy)
       }).toThrow()
     })
   })
@@ -242,8 +242,8 @@ describe('Integration: Security', () => {
 
       broker.setSecurityPolicy(tenantPolicy)
 
-      const event1 = <MessageEvent>{ data: { processId: 'tenant-1-abc' } }
-      const event2 = <MessageEvent>{ data: { processId: 'tenant-5-abc' } }
+      const event1 = { data: { processId: 'tenant-1-abc' } } as MessageEvent
+      const event2 = { data: { processId: 'tenant-5-abc' } } as MessageEvent
       expect(tenantPolicy(event1)).toBe(true)
       expect(tenantPolicy(event2)).toBe(false)
     })
@@ -266,7 +266,7 @@ describe('Integration: Security', () => {
 
       broker.setSecurityPolicy(rateLimitPolicy)
 
-      const mockEvent = <MessageEvent>{ origin: 'https://test.com' }
+      const mockEvent = { origin: 'https://test.com' } as MessageEvent
       for (let i = 0; i < 7; i++) {
         rateLimitPolicy(mockEvent)
       }

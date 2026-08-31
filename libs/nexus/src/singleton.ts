@@ -43,7 +43,7 @@ function resolveBroker(): BrokerHandle {
  * channel.send('MESSAGE', { hello: 'world' })
  * ```
  */
-export const broker: BrokerHandle = <BrokerHandle>(<unknown>new Proxy(<Record<string | symbol, unknown>>{}, {
+export const broker: BrokerHandle = new Proxy({} as Record<string | symbol, unknown>, {
   get: (_target, property) => get(resolveBroker(), property),
   has: (_target, property) => has(resolveBroker(), property),
   ownKeys: () => ownKeys(resolveBroker()),
@@ -52,7 +52,7 @@ export const broker: BrokerHandle = <BrokerHandle>(<unknown>new Proxy(<Record<st
     // why: the proxy target holds no own properties, so descriptors must be reported configurable to satisfy proxy invariants
     return descriptor ? { ...descriptor, configurable: true } : undefined
   },
-}))
+}) as unknown as BrokerHandle
 
 /**
  * Export default contract for reference

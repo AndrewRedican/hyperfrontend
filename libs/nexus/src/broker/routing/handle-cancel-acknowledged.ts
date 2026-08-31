@@ -23,9 +23,9 @@ import type { RoutingContext } from './types'
 export function handleCancelAcknowledged(context: RoutingContext, message: MessageEvent<IAction>): void {
   const { processManager } = context
   const action = message.data
-  const processId = <string>(<Record<string, unknown>>(<unknown>action))['processId']
+  const processId = (action as unknown as Record<string, unknown>)['processId'] as string
 
-  const channel = <ChannelHandle | undefined>processManager.get(processId)
+  const channel = processManager.get(processId) as ChannelHandle | undefined
 
   if (!channel) {
     return

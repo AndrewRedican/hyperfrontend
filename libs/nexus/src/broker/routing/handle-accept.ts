@@ -113,17 +113,18 @@ export function handleAccept(context: RoutingContext, message: MessageEvent<IAct
   const processId = action.processId
   const contract = action.contract
 
-  const securityResponse = <SecurityNegotiationResponse | undefined>(<IActionBase>action).security
+  const securityResponse = (action as IActionBase).security as SecurityNegotiationResponse | undefined
 
   // why: The process is removed at handshake completion, so a duplicate ACCEPT (lost OPEN) resolves by source window with the origin pin enforced.
-  const channel = <ChannelHandle | undefined>processManager.get(processId) ?? <ChannelHandle | undefined>resolveChannel(registry, message)
+  const channel =
+    (processManager.get(processId) as ChannelHandle | undefined) ?? (resolveChannel(registry, message) as ChannelHandle | undefined)
 
   if (!channel) {
     return
   }
 
   if (channel.isActive()) {
-    if (channel.getPeerId() === <string>action.senderId) {
+    if (channel.getPeerId() === (action.senderId as string)) {
       // why: The replayed OPEN must repeat the original security confirmation, or the responder recovering from a lost OPEN would complete a plaintext open.
       const negotiated = channel.getNegotiatedProtocol()
       channel.sendAction({
@@ -146,7 +147,7 @@ export function handleAccept(context: RoutingContext, message: MessageEvent<IAct
     validateContract(contract)
   } catch (error) {
     abortConnection(context, channel, processId, message.origin, {
-      error: `Invalid contract: ${(<Error>error).message}.`,
+      error: `Invalid contract: ${(error as Error).message}.`,
       reason: 'invalid-contract',
       warning: `${state.name} aborted the ${channel.getName()} connection: the counterpart accepted with an invalid contract.`,
     })
@@ -195,7 +196,7 @@ export function handleAccept(context: RoutingContext, message: MessageEvent<IAct
 
     logger.info(`${state.name} accepted security protocol: ${negotiatedProtocol}`)
 
-    if (negotiatedProtocol !== 'none' && !attachSecurityTransport(context, channel, negotiatedProtocol, <string>action.senderId)) {
+    if (negotiatedProtocol !== 'none' && !attachSecurityTransport(context, channel, negotiatedProtocol, action.senderId as string)) {
       // why: The counterpart agreed to encrypt but no local provider is registered for the protocol, so the outcome degrades to plaintext.
       logger.warn(`${state.name} has no provider registered for the negotiated '${negotiatedProtocol}' protocol.`)
       negotiatedProtocol = 'none'
@@ -232,7 +233,7 @@ export function handleAccept(context: RoutingContext, message: MessageEvent<IAct
     )
   }
 
-  channel.completeConnection(message.origin, contract, <string>action.senderId, {
+  channel.completeConnection(message.origin, contract, action.senderId as string, {
     type: '[nexus] connection-opened',
     processId,
     senderId: state.id,

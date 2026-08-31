@@ -3,7 +3,7 @@ import type { ValidationContext } from '../context'
 import { validateNumberBounds } from './number-bounds'
 
 describe('validateNumberBounds', () => {
-  const ctx = <ValidationContext>{ errors: [] }
+  const ctx = { errors: [] } as ValidationContext
 
   it('returns true if no constraints', () => {
     expect(validateNumberBounds(5, {}, ctx)).toBe(true)

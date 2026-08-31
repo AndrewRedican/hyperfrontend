@@ -41,7 +41,7 @@ describe('channel/subscription/messages', () => {
       removeProcess: jest.fn(),
       notifyEvent: jest.fn(),
       notifyMessage: jest.fn(),
-      actions: <ActionCreators>{},
+      actions: {} as ActionCreators,
     }
   })
 
@@ -108,9 +108,9 @@ describe('channel/subscription/messages', () => {
   })
 
   it('throws error if handler is not a function', () => {
-    expect(() => subscribeToMessages(mockChannel, <MessageHandler>(<unknown>null))).toThrow('Expected callback function.')
-    expect(() => subscribeToMessages(mockChannel, <MessageHandler>(<unknown>undefined))).toThrow('Expected callback function.')
-    expect(() => subscribeToMessages(mockChannel, <MessageHandler>(<unknown>'not a function'))).toThrow('Expected callback function.')
+    expect(() => subscribeToMessages(mockChannel, null as unknown as MessageHandler)).toThrow('Expected callback function.')
+    expect(() => subscribeToMessages(mockChannel, undefined as unknown as MessageHandler)).toThrow('Expected callback function.')
+    expect(() => subscribeToMessages(mockChannel, 'not a function' as unknown as MessageHandler)).toThrow('Expected callback function.')
   })
 
   it('handles multiple unsubscribe calls gracefully', () => {

@@ -12,7 +12,7 @@ describe('Log Level Configuration Tests', () => {
 
   it('returns false for invalid log levels', () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    expect(isValidLogLevel(<any>'querty')).toBe(false)
+    expect(isValidLogLevel('querty' as any)).toBe(false)
   })
 
   describe('createLogLevelConfig', () => {
@@ -28,14 +28,14 @@ describe('Log Level Configuration Tests', () => {
 
     it('throws an error when created with an invalid log level', () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      expect(() => createLogLevelConfig(<any>'qwerty')).toThrow(Error)
+      expect(() => createLogLevelConfig('qwerty' as any)).toThrow(Error)
     })
 
     it('returns an immutable log level configuration', () => {
       const config = createLogLevelConfig()
       expect(() => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        ;(<any>config).newProp = 'test'
+        ;(config as any).newProp = 'test'
       }).toThrow()
     })
 
@@ -56,7 +56,7 @@ describe('Log Level Configuration Tests', () => {
       it('throws an error for invalid log levels', () => {
         const config = createLogLevelConfig()
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        expect(() => config.setLogLevel(<any>'qwerty')).toThrow(Error)
+        expect(() => config.setLogLevel('qwerty' as any)).toThrow(Error)
       })
     })
 
@@ -75,7 +75,7 @@ describe('Log Level Configuration Tests', () => {
       it('returns false if the level is invalid', () => {
         const config = createLogLevelConfig()
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        expect(config.shouldLog(<any>'qwerty')).toBe(false)
+        expect(config.shouldLog('qwerty' as any)).toBe(false)
       })
 
       it('returns false if current level is none', () => {

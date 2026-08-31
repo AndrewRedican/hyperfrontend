@@ -1,7 +1,7 @@
 import type { ExecutorContext, PromiseExecutor } from '@nx/devkit'
+import type { VersionExecutorSchema } from './schema'
 import { getLogger } from './lib/logger'
 import { runVersionForProject } from './lib/run-version-for-project'
-import { VersionExecutorSchema } from './schema'
 
 /**
  * Nx executor that versions a project using `@hyperfrontend/versioning`.

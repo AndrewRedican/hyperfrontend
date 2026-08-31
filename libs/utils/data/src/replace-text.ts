@@ -35,10 +35,10 @@ export const replaceText = (target: unknown, pattern: string | RegExp, text: str
     const { getKeys, read, write } = getIterableOperators(type)
     getKeys(value).forEach((nextKey) => {
       const nextValue = read(value, nextKey)
-      if (getType(nextValue) !== 'string' || !match(<string>nextValue)) return
-      write(value, replace(<string>nextValue), nextKey)
+      if (getType(nextValue) !== 'string' || !match(nextValue as string)) return
+      write(value, replace(nextValue as string), nextKey)
       state.locations.push([...path, nextKey])
     })
   }
-  return traverse(target, callback, <DepthConfig>{ depth: [0, '*'], ...options }, { locations: [] }).locations
+  return traverse(target, callback, { depth: [0, '*'], ...options } as DepthConfig, { locations: [] }).locations
 }

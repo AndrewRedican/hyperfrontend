@@ -100,7 +100,7 @@ function updateProjectJson(tree: Tree, options: NormalizedOptions): void {
   const projectJsonPath = joinPathFragments(options.projectRoot, 'project.json')
 
   updateJson(tree, projectJsonPath, (json) => {
-    const tags = <string[]>(json.tags || [])
+    const tags = (json.tags || []) as string[]
     const newTags = tags.filter((tag: string) => !tag.startsWith('scope:')).concat('scope:public')
     json.tags = newTags
 

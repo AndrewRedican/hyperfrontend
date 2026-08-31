@@ -29,7 +29,7 @@ export function resolveChannel(registry: ChannelRegistry, message: MessageEvent<
     return undefined
   }
 
-  const channel = registry.getByWindow(<Window>source)
+  const channel = registry.getByWindow(source as Window)
   if (!channel) {
     return undefined
   }

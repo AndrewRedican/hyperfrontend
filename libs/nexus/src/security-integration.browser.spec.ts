@@ -47,18 +47,18 @@ function connectParties(negotiated: SecurityProtocolVersion, createProvider?: ()
   const transports: { initiator?: SecurityTransport; responder?: SecurityTransport } = {}
   const initiator: Partial<Endpoint> = { received: [] }
   const responder: Partial<Endpoint> = { received: [] }
-  const responderWindow = <Window>(<unknown>{
+  const responderWindow = {
     postMessage: (payload: Uint8Array) => {
       wire.push(payload)
       transports.responder?.receive(payload)
     },
-  })
-  const initiatorWindow = <Window>(<unknown>{
+  } as unknown as Window
+  const initiatorWindow = {
     postMessage: (payload: Uint8Array) => {
       wire.push(payload)
       transports.initiator?.receive(payload)
     },
-  })
+  } as unknown as Window
   const initiatorId = uuidV4()
   const responderId = uuidV4()
   transports.initiator = createSecurityTransport({
@@ -83,7 +83,7 @@ function connectParties(negotiated: SecurityProtocolVersion, createProvider?: ()
   })
   initiator.transport = transports.initiator
   responder.transport = transports.responder
-  return { initiator: <Endpoint>initiator, responder: <Endpoint>responder, wire }
+  return { initiator: initiator as Endpoint, responder: responder as Endpoint, wire }
 }
 
 describe('Integration: Security Protocol', () => {
@@ -205,9 +205,9 @@ describe('Integration: Security Protocol', () => {
 
       const transport = createSecurityTransport({
         protocol: 'v2',
-        provider: <SecurityProvider>registry.get('v2'),
+        provider: registry.get('v2') as SecurityProvider,
         label: 'from-registry',
-        target: <Window>(<unknown>{ postMessage: jest.fn() }),
+        target: { postMessage: jest.fn() } as unknown as Window,
         getOrigin: () => null,
         originId: uuidV4(),
         targetId: uuidV4(),
@@ -223,9 +223,9 @@ describe('Integration: Security Protocol', () => {
       expect(() =>
         createSecurityTransport({
           protocol: 'v2',
-          provider: <SecurityProvider | undefined>registry.get('v2'),
+          provider: registry.get('v2') as SecurityProvider | undefined,
           label: 'missing-provider',
-          target: <Window>(<unknown>{ postMessage: jest.fn() }),
+          target: { postMessage: jest.fn() } as unknown as Window,
           getOrigin: () => null,
           originId: uuidV4(),
           targetId: uuidV4(),

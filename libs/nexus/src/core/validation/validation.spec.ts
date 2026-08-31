@@ -14,17 +14,17 @@ describe('Validation Functions', () => {
     })
 
     it('rejects null name', () => {
-      expect(() => validateName(<string>(<unknown>null))).toThrow('Name cannot be null or undefined')
+      expect(() => validateName(null as unknown as string)).toThrow('Name cannot be null or undefined')
     })
 
     it('rejects undefined name', () => {
-      expect(() => validateName(<string>(<unknown>undefined))).toThrow('Name cannot be null or undefined')
+      expect(() => validateName(undefined as unknown as string)).toThrow('Name cannot be null or undefined')
     })
 
     it('rejects non-string names', () => {
-      expect(() => validateName(<string>(<unknown>123))).toThrow('Name must be a string')
-      expect(() => validateName(<string>(<unknown>{}))).toThrow('Name must be a string')
-      expect(() => validateName(<string>(<unknown>[]))).toThrow('Name must be a string')
+      expect(() => validateName(123 as unknown as string)).toThrow('Name must be a string')
+      expect(() => validateName({} as unknown as string)).toThrow('Name must be a string')
+      expect(() => validateName([] as unknown as string)).toThrow('Name must be a string')
     })
 
     it('rejects empty strings', () => {
@@ -67,9 +67,9 @@ describe('Validation Functions', () => {
     })
 
     it('rejects non-object contracts', () => {
-      expect(() => validateContract(<unknown>'contract')).toThrow('Contract must be an object')
-      expect(() => validateContract(<unknown>123)).toThrow('Contract must be an object')
-      expect(() => validateContract(<unknown>[])).toThrow('Contract must be an object')
+      expect(() => validateContract('contract' as unknown)).toThrow('Contract must be an object')
+      expect(() => validateContract(123 as unknown)).toThrow('Contract must be an object')
+      expect(() => validateContract([] as unknown)).toThrow('Contract must be an object')
     })
 
     it('rejects empty contracts', () => {
@@ -150,7 +150,7 @@ describe('Validation Functions', () => {
 
     it('rejects contracts with null action in emitted', () => {
       const contract = {
-        emitted: [<{ type: string }>(<unknown>null)],
+        emitted: [null as unknown as { type: string }],
         accepted: [{ type: 'valid' }],
       }
       expect(() => validateContract(contract)).toThrow('Contract action types must be non-empty strings')
@@ -159,14 +159,14 @@ describe('Validation Functions', () => {
     it('rejects contracts with null action in accepted', () => {
       const contract = {
         emitted: [{ type: 'valid' }],
-        accepted: [<{ type: string }>(<unknown>null)],
+        accepted: [null as unknown as { type: string }],
       }
       expect(() => validateContract(contract)).toThrow('Contract action types must be non-empty strings')
     })
 
     it('rejects contracts with action missing type property in emitted', () => {
       const contract = {
-        emitted: [<{ type: string }>(<unknown>{ description: 'no type' })],
+        emitted: [{ description: 'no type' } as unknown as { type: string }],
         accepted: [{ type: 'valid' }],
       }
       expect(() => validateContract(contract)).toThrow('Contract action types must be non-empty strings')
@@ -175,14 +175,14 @@ describe('Validation Functions', () => {
     it('rejects contracts with action missing type property in accepted', () => {
       const contract = {
         emitted: [{ type: 'valid' }],
-        accepted: [<{ type: string }>(<unknown>{ description: 'no type' })],
+        accepted: [{ description: 'no type' } as unknown as { type: string }],
       }
       expect(() => validateContract(contract)).toThrow('Contract action types must be non-empty strings')
     })
 
     it('rejects contracts with non-string type in emitted', () => {
       const contract = {
-        emitted: [<{ type: string }>(<unknown>{ type: 123 })],
+        emitted: [{ type: 123 } as unknown as { type: string }],
         accepted: [{ type: 'valid' }],
       }
       expect(() => validateContract(contract)).toThrow('Contract action types must be non-empty strings')
@@ -191,7 +191,7 @@ describe('Validation Functions', () => {
     it('rejects contracts with non-string type in accepted', () => {
       const contract = {
         emitted: [{ type: 'valid' }],
-        accepted: [<{ type: string }>(<unknown>{ type: 123 })],
+        accepted: [{ type: 123 } as unknown as { type: string }],
       }
       expect(() => validateContract(contract)).toThrow('Contract action types must be non-empty strings')
     })
@@ -225,13 +225,13 @@ describe('Validation Functions', () => {
     })
 
     it('rejects non-object actions', () => {
-      expect(() => validateAction(<unknown>'action')).toThrow('Action must be an object')
-      expect(() => validateAction(<unknown>123)).toThrow('Action must be an object')
+      expect(() => validateAction('action' as unknown)).toThrow('Action must be an object')
+      expect(() => validateAction(123 as unknown)).toThrow('Action must be an object')
     })
 
     it('rejects action without type', () => {
       const action = { ...validAction }
-      delete (<Record<string, unknown>>action)['type']
+      delete (action as Record<string, unknown>)['type']
       expect(() => validateAction(action)).toThrow('Action must have a string type')
     })
 
@@ -242,7 +242,7 @@ describe('Validation Functions', () => {
 
     it('rejects action without senderId', () => {
       const action = { ...validAction }
-      delete (<Record<string, unknown>>action)['senderId']
+      delete (action as Record<string, unknown>)['senderId']
       expect(() => validateAction(action)).toThrow('Action must have a valid UUID senderId')
     })
 
@@ -253,7 +253,7 @@ describe('Validation Functions', () => {
 
     it('rejects action without timestamp', () => {
       const action = { ...validAction }
-      delete (<Record<string, unknown>>action)['timestamp']
+      delete (action as Record<string, unknown>)['timestamp']
       expect(() => validateAction(action)).toThrow('Action must have a valid positive timestamp')
     })
 
@@ -299,16 +299,16 @@ describe('Validation Functions', () => {
     })
 
     it('rejects null origin', () => {
-      expect(() => validateOrigin(<string>(<unknown>null))).toThrow('Origin cannot be null or undefined')
+      expect(() => validateOrigin(null as unknown as string)).toThrow('Origin cannot be null or undefined')
     })
 
     it('rejects undefined origin', () => {
-      expect(() => validateOrigin(<string>(<unknown>undefined))).toThrow('Origin cannot be null or undefined')
+      expect(() => validateOrigin(undefined as unknown as string)).toThrow('Origin cannot be null or undefined')
     })
 
     it('rejects non-string origins', () => {
-      expect(() => validateOrigin(<string>(<unknown>123))).toThrow('Origin must be a string')
-      expect(() => validateOrigin(<string>(<unknown>{}))).toThrow('Origin must be a string')
+      expect(() => validateOrigin(123 as unknown as string)).toThrow('Origin must be a string')
+      expect(() => validateOrigin({} as unknown as string)).toThrow('Origin must be a string')
     })
 
     it('rejects empty string', () => {
@@ -371,29 +371,29 @@ describe('Validation Functions', () => {
     })
 
     it('rejects non-object settings', () => {
-      expect(() => validateSettings(<unknown>'settings')).toThrow('Settings must be an object')
-      expect(() => validateSettings(<unknown>123)).toThrow('Settings must be an object')
-      expect(() => validateSettings(<unknown>[])).toThrow('Settings must be an object')
+      expect(() => validateSettings('settings' as unknown)).toThrow('Settings must be an object')
+      expect(() => validateSettings(123 as unknown)).toThrow('Settings must be an object')
+      expect(() => validateSettings([] as unknown)).toThrow('Settings must be an object')
     })
 
     it('rejects invalid queueMessages type', () => {
-      expect(() => validateSettings({ queueMessages: <unknown>'true' })).toThrow('Setting queueMessages must be a boolean')
-      expect(() => validateSettings({ queueMessages: <unknown>1 })).toThrow('Setting queueMessages must be a boolean')
+      expect(() => validateSettings({ queueMessages: 'true' as unknown })).toThrow('Setting queueMessages must be a boolean')
+      expect(() => validateSettings({ queueMessages: 1 as unknown })).toThrow('Setting queueMessages must be a boolean')
     })
 
     it('rejects invalid debug type', () => {
-      expect(() => validateSettings({ debug: <unknown>'true' })).toThrow('Setting debug must be a boolean')
-      expect(() => validateSettings({ debug: <unknown>1 })).toThrow('Setting debug must be a boolean')
+      expect(() => validateSettings({ debug: 'true' as unknown })).toThrow('Setting debug must be a boolean')
+      expect(() => validateSettings({ debug: 1 as unknown })).toThrow('Setting debug must be a boolean')
     })
 
     it('rejects invalid origin type', () => {
-      expect(() => validateSettings({ origin: <unknown>123 })).toThrow('Setting origin must be a string')
-      expect(() => validateSettings({ origin: <unknown>{} })).toThrow('Setting origin must be a string')
+      expect(() => validateSettings({ origin: 123 as unknown })).toThrow('Setting origin must be a string')
+      expect(() => validateSettings({ origin: {} as unknown })).toThrow('Setting origin must be a string')
     })
 
     it('rejects invalid contract type', () => {
-      expect(() => validateSettings({ contract: <unknown>'contract' })).toThrow('Setting contract must be an object')
-      expect(() => validateSettings({ contract: <unknown>123 })).toThrow('Setting contract must be an object')
+      expect(() => validateSettings({ contract: 'contract' as unknown })).toThrow('Setting contract must be an object')
+      expect(() => validateSettings({ contract: 123 as unknown })).toThrow('Setting contract must be an object')
     })
 
     it('acceptss null contract', () => {

@@ -149,7 +149,7 @@ export function createShell(options: CreateShellOptions): ShellHandle {
   }
   const emitter = createEventEmitter()
   // how: A feature-authored contract is inverted into the host's perspective; the generic default contract is already channel-oriented and is used as-is.
-  const contract = withControlContract(options.contract ? invertFeatureContract(options.contract) : <FeatureContract>DEFAULT_CONTRACT)
+  const contract = withControlContract(options.contract ? invertFeatureContract(options.contract) : (DEFAULT_CONTRACT as FeatureContract))
   const broker = createBroker({ name: deriveShellName(options, (shellCount += 1)), contract })
   return createShellHandle(broker, options, emitter, {
     contract,

@@ -36,7 +36,7 @@ describe('Timestamp Converter', () => {
       Object.defineProperty(navigator, 'language', originalLanguage)
     }
 
-    delete (<{ userLanguage?: unknown }>(<unknown>navigator)).userLanguage
+    delete (navigator as unknown as { userLanguage?: unknown }).userLanguage
   })
 
   afterAll(() => {

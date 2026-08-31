@@ -10,7 +10,7 @@ import { parse, stringify } from '@hyperfrontend/immutable-api-utils/built-in-co
  */
 function copyActions(actions: ActionDescription[]): ActionDescription[] {
   // why: The messaging layer rejects configs containing repeated object references, so the inverted contract must be built from fresh literals rather than aliasing the caller's action objects.
-  return actions.map((action) => <ActionDescription>parse(stringify(action)))
+  return actions.map((action) => parse(stringify(action)) as ActionDescription)
 }
 
 /**

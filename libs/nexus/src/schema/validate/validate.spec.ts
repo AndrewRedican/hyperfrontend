@@ -92,9 +92,9 @@ describe('Schema Validation', () => {
     })
 
     it('detects missing required fields', () => {
-      const action = <IAction>{
+      const action = {
         type: ACTION_TYPES.REQUEST_CONNECTION,
-      }
+      } as IAction
 
       const result = validateAction(action)
       expect(result.valid).toBe(false)
@@ -102,7 +102,7 @@ describe('Schema Validation', () => {
     })
 
     it('detects invalid processId format', () => {
-      const action = <IAction>{
+      const action = {
         type: ACTION_TYPES.REQUEST_CONNECTION,
         senderId: 'test-broker',
         processId: 'invalid-uuid',
@@ -110,19 +110,19 @@ describe('Schema Validation', () => {
           accepted: [],
           emitted: [],
         },
-      }
+      } as IAction
 
       const result = validateAction(action)
       expect(result.valid).toBe(false)
     })
 
     it('validates DENY action with error', () => {
-      const action = <IAction>{
+      const action = {
         type: ACTION_TYPES.DENY_CONNECTION,
         senderId: 'test-broker',
         processId: '550e8400-e29b-41d4-a716-446655440000',
         error: 'Connection not allowed',
-      }
+      } as IAction
 
       const result = validateAction(action)
       expect(result.valid).toBe(true)
@@ -156,9 +156,9 @@ describe('Schema Validation', () => {
     })
 
     it('detects missing required properties', () => {
-      const contract = <IChannelContract>{
+      const contract = {
         accepted: [],
-      }
+      } as IChannelContract
 
       const result = validateContract(contract)
       expect(result.valid).toBe(false)
@@ -188,9 +188,9 @@ describe('Schema Validation', () => {
     })
 
     it('detects missing type', () => {
-      const message = <IMessage>{
+      const message = {
         data: { some: 'data' },
-      }
+      } as IMessage
 
       const result = validateMessage(message)
       expect(result.valid).toBe(false)

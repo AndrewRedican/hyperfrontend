@@ -41,7 +41,7 @@ export function createDataFactory(createHash: (data: string, algorithm: string) 
     }
     let serialized: JSONString<T>
     try {
-      serialized = <JSONString<T>>stringify(message)
+      serialized = stringify(message) as JSONString<T>
     } /* istanbul ignore next - covered by hasCircularReference check above */ catch {
       throw createError('Cannot create data with unserializable message')
     }
@@ -64,7 +64,7 @@ export function createDataFactory(createHash: (data: string, algorithm: string) 
       id,
       sequence,
       key,
-      message: <JSONString<T>>serialized,
+      message: serialized as JSONString<T>,
       schema,
       schemaHash,
     }

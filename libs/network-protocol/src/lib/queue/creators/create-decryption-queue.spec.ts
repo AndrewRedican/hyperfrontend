@@ -23,7 +23,7 @@ describe('createDecryptionQueue', () => {
     const onSuccess = jest.fn()
     const onFail = jest.fn()
     const queue = createDecryptionQueue(label, packetDecryption, logger, onSuccess, onFail)
-    const invalidPacket = <UnserializedEncryptedPacket>(<unknown>{ invalid: 'data' })
+    const invalidPacket = { invalid: 'data' } as unknown as UnserializedEncryptedPacket
     queue.addMessage(invalidPacket)
     await sleep(100)
     expect(onFail).toHaveBeenCalledWith(invalidPacket)
@@ -59,7 +59,7 @@ describe('createDecryptionQueue', () => {
     }
     const onSuccess = jest.fn()
     const onFail = jest.fn()
-    const queue = createDecryptionQueue(label, <PacketDecryption>(<unknown>throwingDecryption), logger, onSuccess, onFail)
+    const queue = createDecryptionQueue(label, throwingDecryption as unknown as PacketDecryption, logger, onSuccess, onFail)
     queue.addMessage(unserializedEncryptedPacket)
     await sleep(100)
     expect(onFail).toHaveBeenCalledWith(unserializedEncryptedPacket)

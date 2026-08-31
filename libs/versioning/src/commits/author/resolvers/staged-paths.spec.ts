@@ -3,7 +3,7 @@ import { getStagedPaths } from './staged-paths'
 
 jest.mock('node:child_process')
 
-const execFileSync = <jest.MockedFunction<typeof childProcess.execFileSync>>childProcess.execFileSync
+const execFileSync = childProcess.execFileSync as jest.MockedFunction<typeof childProcess.execFileSync>
 
 /**
  * Configures the execFileSync mock to answer `rev-parse --show-toplevel` with
@@ -13,7 +13,7 @@ const execFileSync = <jest.MockedFunction<typeof childProcess.execFileSync>>chil
  * @param diffOutput - NUL-separated staged-paths output
  */
 function mockGit(repoRoot: string, diffOutput: string): void {
-  execFileSync.mockImplementation((_command, args) => ((<readonly string[]>args)[0] === 'rev-parse' ? repoRoot : diffOutput))
+  execFileSync.mockImplementation((_command, args) => ((args as readonly string[])[0] === 'rev-parse' ? repoRoot : diffOutput))
 }
 
 describe('getStagedPaths', () => {

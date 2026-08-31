@@ -136,7 +136,7 @@ function collectTypedocNames(node: TypedocReflection, names: Set<string>): void 
   if (typeof node.name === 'string') names.add(node.name)
   if (isArray(node.children)) {
     for (const child of node.children) {
-      collectTypedocNames(<TypedocReflection>child, names)
+      collectTypedocNames(child as TypedocReflection, names)
     }
   }
 }

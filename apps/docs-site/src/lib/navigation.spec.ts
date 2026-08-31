@@ -72,6 +72,6 @@ describe('getNavIconKind', () => {
   })
 
   it('leaves a section heading such as Libraries unmarked', () => {
-    expect(getNavIconKind(<NavItem>LIBRARIES_ENTRY, false)).toBeNull()
+    expect(getNavIconKind(LIBRARIES_ENTRY as NavItem, false)).toBeNull()
   })
 })

@@ -144,7 +144,7 @@ export async function runCz(options: RunCzOptions): Promise<number> {
   try {
     args = parseCzArgs(options.argv)
   } catch (error) {
-    stderr.write(`${(<Error>error).message}\n`)
+    stderr.write(`${(error as Error).message}\n`)
     return EXIT_ERROR
   }
 

@@ -200,7 +200,7 @@ const classify = (source: string): ReturnType<typeof classifyNamespaceUse> => {
     ts.forEachChild(node, visit)
   }
   visit(sourceFile)
-  return <ReturnType<typeof classifyNamespaceUse>>result
+  return result as ReturnType<typeof classifyNamespaceUse>
 }
 
 describe('classifyNamespaceUse', () => {
@@ -243,13 +243,13 @@ describe('mergeDemand', () => {
   it('seeds a fresh name with a copy of the contribution', () => {
     const map = new Map<string, PropDemand>()
     mergeDemand(map, 'X', createSet(['a']))
-    expect(dump(<PropDemand>map.get('X'))).toEqual(['a'])
+    expect(dump(map.get('X') as PropDemand)).toEqual(['a'])
   })
 
   it('unions two set contributions', () => {
     const map = new Map<string, PropDemand>([['X', createSet(['a'])]])
     mergeDemand(map, 'X', createSet(['b']))
-    expect(dump(<PropDemand>map.get('X'))).toEqual(['a', 'b'])
+    expect(dump(map.get('X') as PropDemand)).toEqual(['a', 'b'])
   })
 
   it('promotes a set to all', () => {

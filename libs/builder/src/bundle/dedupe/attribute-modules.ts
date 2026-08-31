@@ -194,7 +194,7 @@ const collectCjsBindings = (statement: ts.VariableStatement, bindings: Map<strin
 }
 
 const collectEsmBindings = (statement: ts.ImportDeclaration, bindings: Map<string, ImportBinding>): void => {
-  const specifier = (<ts.StringLiteral>statement.moduleSpecifier).text
+  const specifier = (statement.moduleSpecifier as ts.StringLiteral).text
   const clause = statement.importClause
   if (!clause) return
   if (clause.name) bindings.set(clause.name.text, { specifier, kind: 'default' })
@@ -259,7 +259,7 @@ export const parseEntry = (source: string, format: ChunkFormat): ParsedEntry => 
       continue
     }
     if (format === 'cjs' && isRequireVarStatement(statement)) {
-      collectCjsBindings(<ts.VariableStatement>statement, importBindings)
+      collectCjsBindings(statement as ts.VariableStatement, importBindings)
       continue
     }
     if (isUseStrict(statement) || isExportSurface(statement, format)) continue
@@ -271,8 +271,8 @@ export const parseEntry = (source: string, format: ChunkFormat): ParsedEntry => 
       continue
     }
     decls.push({
-      base: baseName(<string>names[0]),
-      localName: <string>names[0],
+      base: baseName(names[0] as string),
+      localName: names[0] as string,
       statement,
       text: statement.getText(sourceFile),
       fingerprint: fingerprintOf(statement, sourceFile),

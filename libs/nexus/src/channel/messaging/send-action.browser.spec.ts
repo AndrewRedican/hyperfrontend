@@ -17,7 +17,7 @@ describe('channel/messaging/send-action', () => {
     state = {
       id: 'channel-123',
       name: 'test-channel',
-      target: <Window>(<unknown>mockWindow),
+      target: mockWindow as unknown as Window,
       origin: 'https://example.com',
       active: true,
       connectTimestamp: Date.now(),
@@ -114,25 +114,25 @@ describe('channel/messaging/send-action', () => {
   })
 
   it('throws error if action is null', () => {
-    expect(() => sendAction(mockChannel, <IAction>(<unknown>null))).toThrow(
+    expect(() => sendAction(mockChannel, null as unknown as IAction)).toThrow(
       "Action must contain a 'type' property that is a non-empty string."
     )
   })
 
   it('throws error if action is undefined', () => {
-    expect(() => sendAction(mockChannel, <IAction>(<unknown>undefined))).toThrow(
+    expect(() => sendAction(mockChannel, undefined as unknown as IAction)).toThrow(
       "Action must contain a 'type' property that is a non-empty string."
     )
   })
 
   it('throws error if action has no type', () => {
-    const action = <IAction>{}
+    const action = {} as IAction
 
     expect(() => sendAction(mockChannel, action)).toThrow("Action must contain a 'type' property that is a non-empty string.")
   })
 
   it('throws error if action type is not a string', () => {
-    const action = <IAction>(<unknown>{ type: 123 })
+    const action = { type: 123 } as unknown as IAction
 
     expect(() => sendAction(mockChannel, action)).toThrow("Action must contain a 'type' property that is a non-empty string.")
   })

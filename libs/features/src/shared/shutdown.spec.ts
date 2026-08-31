@@ -6,10 +6,10 @@ describe('waitForShutdown', () => {
   })
 
   it('resolves when a termination signal handler fires', async () => {
-    jest.spyOn(process, 'once').mockImplementation(<typeof process.once>((_event: string, listener: () => void) => {
+    jest.spyOn(process, 'once').mockImplementation(((_event: string, listener: () => void) => {
       listener()
       return process
-    }))
+    }) as typeof process.once)
     await expect(waitForShutdown()).resolves.toBeUndefined()
   })
 })

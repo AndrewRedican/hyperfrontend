@@ -103,7 +103,7 @@ describe('core/fs/read', () => {
 
       jest.spyOn(require('node:fs'), 'readFileSync').mockImplementationOnce(() => {
         const error = new Error('EACCES: permission denied')
-        ;(<{ code?: string }>error).code = 'EACCES'
+        ;(error as { code?: string }).code = 'EACCES'
         throw error
       })
 

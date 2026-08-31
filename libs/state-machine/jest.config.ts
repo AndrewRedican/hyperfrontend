@@ -1,6 +1,6 @@
 import type { Config } from 'jest'
 
-export default <Config>{
+export default {
   displayName: 'state-machine',
   preset: '../../jest.preset.cjs',
   moduleFileExtensions: ['ts', 'js', 'html'],
@@ -8,4 +8,4 @@ export default <Config>{
   testEnvironment: 'node',
   coveragePathIgnorePatterns: ['/node_modules/', '\\.model\\.ts$', '\\.types\\.ts$'],
   coverageProvider: 'v8',
-}
+} as Config

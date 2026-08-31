@@ -25,7 +25,7 @@ interface MockChannel {
 function createMockChannel(): MockChannel {
   const messageHandlers: Array<(message: { type: string; data?: unknown }) => void> = []
   const send = jest.fn()
-  const channel = <ChannelHandle>(<unknown>{
+  const channel = {
     on: () => () => undefined,
     onMessage: (handler: (message: { type: string; data?: unknown }) => void) => {
       messageHandlers.push(handler)
@@ -35,7 +35,7 @@ function createMockChannel(): MockChannel {
     disconnect: jest.fn(),
     destroy: jest.fn(),
     connect: jest.fn(),
-  })
+  } as unknown as ChannelHandle
   return {
     channel,
     triggerMessage: (type, data) => messageHandlers.forEach((handler) => handler({ type, data })),
@@ -43,14 +43,14 @@ function createMockChannel(): MockChannel {
   }
 }
 
-const TARGET = <Window>(<unknown>{ name: 'target' })
+const TARGET = { name: 'target' } as unknown as Window
 
 function setup() {
   const mock = createMockChannel()
-  const broker = <BrokerHandle>(<unknown>{ addChannel: jest.fn(() => mock.channel) })
+  const broker = { addChannel: jest.fn(() => mock.channel) } as unknown as BrokerHandle
   const mount = jest.fn((): MountResult => ({ target: TARGET, present: { mode: 'embedded' }, cleanup: jest.fn() }))
   const emitter = createEventEmitter()
-  const handle = createShellHandle(broker, <ShellOptions>{ container: '#shell' }, emitter, {
+  const handle = createShellHandle(broker, { container: '#shell' } as ShellOptions, emitter, {
     contract: HOST_CONTRACT,
     selectMount: jest.fn(() => mount),
     registerSecurity: jest.fn(() => undefined),

@@ -31,7 +31,7 @@ describe('cssObjectToString', () => {
       badProperty: problematicValue,
     }
 
-    const result = cssObjectToString(<Partial<CSSStyleDeclaration>>problematicObject)
+    const result = cssObjectToString(problematicObject as Partial<CSSStyleDeclaration>)
 
     expect(result).toContain('background-color: red;')
     expect(loggerWarnSpy).toHaveBeenCalledWith(expect.stringContaining('Some properties failed to convert'))

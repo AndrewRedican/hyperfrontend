@@ -72,7 +72,7 @@ export interface DetectConfigOptions {
  * ```
  */
 export function detectConfigs(rootPath: string, types?: ConfigType[], options?: DetectConfigOptions): DetectedConfig[] {
-  const typesToCheck = types ?? <ConfigType[]>keys(CONFIG_PATTERNS)
+  const typesToCheck = types ?? (keys(CONFIG_PATTERNS) as ConfigType[])
   const results: DetectedConfig[] = []
   const maxDepth = options?.maxDepth ?? 10
   const includeHidden = options?.includeHidden ?? true

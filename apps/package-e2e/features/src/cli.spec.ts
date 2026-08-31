@@ -29,7 +29,7 @@ const BUILD_SUITE_TIMEOUT = 600000
 function resolveHfBin(): string {
   const pkg = require('@hyperfrontend/features/package.json')
   const packageDir = dirname(require.resolve('@hyperfrontend/features/package.json'))
-  return join(packageDir, <string>pkg.bin['hf'])
+  return join(packageDir, pkg.bin['hf'] as string)
 }
 
 /**
@@ -287,7 +287,7 @@ export default contract
     it('narrows the declared display modes in the emitted declarations', () => {
       const declaration = outFiles.find((file) => file.endsWith('.d.ts'))
       expect(declaration).toBeDefined()
-      expect(readFileSync(join(outDir, <string>declaration), 'utf8')).toContain("export type FeatureDisplayMode = 'embedded' | 'dialog'")
+      expect(readFileSync(join(outDir, declaration as string), 'utf8')).toContain("export type FeatureDisplayMode = 'embedded' | 'dialog'")
     })
   })
 })
@@ -378,9 +378,9 @@ describe('hf serve', () => {
     rootHeaders = (await fetchRawUrl(serveUrl)).headers
     widgetResponse = await fetchUrl(`${serveUrl}widget/`)
     const unslashed = await fetchRawUrl(`${serveUrl}widget`)
-    unslashedWidget = { status: unslashed.status, location: <string | undefined>unslashed.headers['location'] }
+    unslashedWidget = { status: unslashed.status, location: unslashed.headers['location'] as string | undefined }
     const bigJs = await fetchRawUrl(`${serveUrl}big.js`, { 'accept-encoding': 'gzip' })
-    bigJsResponse = { status: bigJs.status, encoding: <string | undefined>bigJs.headers['content-encoding'], body: bigJs.body }
+    bigJsResponse = { status: bigJs.status, encoding: bigJs.headers['content-encoding'] as string | undefined, body: bigJs.body }
     configResponse = await fetchUrl(`${serveUrl}hf-serve.config.json`)
 
     // why: The regression being pinned is the serve command exiting right after startup; the server must still answer past the three-second mark.
@@ -423,7 +423,7 @@ describe('hf serve', () => {
   it('gzip-compresses the large script for a client that accepts gzip', () => {
     // note: Encoding and payload are two facets of the same compressed response, so both expectations live in this one test.
     expect(bigJsResponse).toEqual(expect.objectContaining({ status: 200, encoding: 'gzip' }))
-    expect(gunzipSync(<Buffer>bigJsResponse?.body).toString('utf8')).toBe(BIG_JS_BODY)
+    expect(gunzipSync(bigJsResponse?.body as Buffer).toString('utf8')).toBe(BIG_JS_BODY)
   })
 
   it('denies the artifact-carried config file itself', () => {

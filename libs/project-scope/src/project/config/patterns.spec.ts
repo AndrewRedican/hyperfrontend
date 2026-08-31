@@ -46,7 +46,7 @@ describe('getConfigPatternsByType', () => {
   })
 
   it('returns empty array for unknown type', () => {
-    const patterns = getConfigPatternsByType(<ConfigType[]>(<unknown>['unknown']))
+    const patterns = getConfigPatternsByType(['unknown'] as unknown as ConfigType[])
 
     expect(patterns).toEqual([])
   })

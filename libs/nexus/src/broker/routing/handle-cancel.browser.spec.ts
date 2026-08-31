@@ -38,7 +38,7 @@ describe('handleCancel', () => {
     mockBrokerState = {
       id: 'broker-1',
       name: 'test-broker',
-      window: <Window>global.window,
+      window: global.window as Window,
       contract: validContract,
       settings: {
         contract: validContract,
@@ -52,9 +52,9 @@ describe('handleCancel', () => {
       getBrokerId: () => 'broker-1',
       getContract: () => mockBrokerState.contract,
     })
-    mockWindow = <Window>(<unknown>{
+    mockWindow = {
       postMessage: jest.fn(),
-    })
+    } as unknown as Window
 
     routingContext = {
       state: mockBrokerState,
@@ -78,10 +78,10 @@ describe('handleCancel', () => {
       senderId: 'remote-broker-1',
     }
 
-    const message = <MessageEvent<IAction>>{
+    const message = {
       data: action,
       source: mockWindow,
-    }
+    } as MessageEvent<IAction>
 
     handleCancel(routingContext, message)
 
@@ -104,10 +104,10 @@ describe('handleCancel', () => {
       senderId: channel.id,
     }
 
-    const message = <MessageEvent<IAction>>{
+    const message = {
       data: action,
       source: null,
-    }
+    } as MessageEvent<IAction>
 
     handleCancel(routingContext, message)
 
@@ -124,10 +124,10 @@ describe('handleCancel', () => {
       senderId: 'different-id',
     }
 
-    const message = <MessageEvent<IAction>>{
+    const message = {
       data: action,
       source: null,
-    }
+    } as MessageEvent<IAction>
 
     handleCancel(routingContext, message)
 
@@ -141,10 +141,10 @@ describe('handleCancel', () => {
       senderId: 'non-existent-sender',
     }
 
-    const message = <MessageEvent<IAction>>{
+    const message = {
       data: action,
       source: mockWindow,
-    }
+    } as MessageEvent<IAction>
 
     expect(() => {
       handleCancel(routingContext, message)
@@ -163,10 +163,10 @@ describe('handleCancel', () => {
       senderId: 'remote-broker-1',
     }
 
-    const message = <MessageEvent<IAction>>{
+    const message = {
       data: action,
       source: mockWindow,
-    }
+    } as MessageEvent<IAction>
 
     handleCancel(routingContext, message)
 
@@ -177,27 +177,27 @@ describe('handleCancel', () => {
     const channel1 = addChannel(mockBrokerState, registry, processManager, actions, 'channel-1', mockWindow)
     const processId1 = processManager.create(channel1)
 
-    const window2 = <Window>(<unknown>{ postMessage: jest.fn() })
+    const window2 = { postMessage: jest.fn() } as unknown as Window
     const channel2 = addChannel(mockBrokerState, registry, processManager, actions, 'channel-2', window2)
     const processId2 = processManager.create(channel2)
 
-    handleCancel(routingContext, <MessageEvent<IAction>>{
-      data: <IAction>{
+    handleCancel(routingContext, {
+      data: {
         type: '[nexus] connection-request-cancelled',
         processId: processId1,
         senderId: 'remote-1',
-      },
+      } as IAction,
       source: mockWindow,
-    })
+    } as MessageEvent<IAction>)
 
-    handleCancel(routingContext, <MessageEvent<IAction>>{
-      data: <IAction>{
+    handleCancel(routingContext, {
+      data: {
         type: '[nexus] connection-request-cancelled',
         processId: processId2,
         senderId: 'remote-2',
-      },
+      } as IAction,
       source: window2,
-    })
+    } as MessageEvent<IAction>)
 
     expect(mockWindow.postMessage).toHaveBeenCalled()
     expect(window2.postMessage).toHaveBeenCalled()
@@ -209,16 +209,16 @@ describe('handleCancel', () => {
     const processId = processManager.create(channel)
     const cancelSpy = jest.spyOn(channel, 'cancel')
 
-    handleCancel(routingContext, <MessageEvent<IAction>>{
-      data: <IAction>{
+    handleCancel(routingContext, {
+      data: {
         type: '[nexus] connection-request-cancelled',
         processId,
         senderId: 'remote-broker-2',
-      },
+      } as IAction,
       source: mockWindow,
-    })
+    } as MessageEvent<IAction>)
 
-    expect({ cancelled: cancelSpy.mock.calls, acknowledged: (<jest.Mock>mockWindow.postMessage).mock.calls }).toEqual({
+    expect({ cancelled: cancelSpy.mock.calls, acknowledged: (mockWindow.postMessage as jest.Mock).mock.calls }).toEqual({
       cancelled: [],
       acknowledged: [],
     })

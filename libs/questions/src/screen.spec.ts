@@ -27,7 +27,7 @@ function createStubTerminal(
     getSize: (): TerminalSize => size,
   }
   return {
-    terminal: <Terminal>(<unknown>stub),
+    terminal: stub as unknown as Terminal,
     getWrites: () => written,
     clearWrites: (): void => {
       written = ''

@@ -64,7 +64,7 @@ export function detectUnlabeledCodeBlocks(content: string): UnlabeledCodeBlock[]
   let inCodeBlock = false
 
   for (let i = 0; i < lines.length; i++) {
-    const line = <string>lines[i]
+    const line = lines[i] as string
     const trimmedLine = line.trimStart()
 
     if (trimmedLine.startsWith('```')) {

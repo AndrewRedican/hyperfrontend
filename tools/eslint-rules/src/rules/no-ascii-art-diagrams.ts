@@ -208,7 +208,7 @@ export function detectAsciiArtDiagrams(content: string): AsciiArtBlock[] {
   let codeBlockLines: string[] = []
 
   for (let i = 0; i < lines.length; i++) {
-    const line = <string>lines[i]
+    const line = lines[i] as string
     const trimmedLine = line.trim()
 
     if (trimmedLine.startsWith('```')) {

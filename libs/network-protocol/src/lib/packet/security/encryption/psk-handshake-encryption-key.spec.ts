@@ -35,8 +35,8 @@ describe('createPSKHandshakeEncryptionFactory (Node.js)', () => {
 
     it('throws error for non-string PSK', () => {
       const keyProvider = () => undefined
-      expect(() => createPSKHandshakeEncryption(<string>null, keyProvider)).toThrow('PSK must be a non-empty string')
-      expect(() => createPSKHandshakeEncryption(<string>undefined, keyProvider)).toThrow('PSK must be a non-empty string')
+      expect(() => createPSKHandshakeEncryption(null as string, keyProvider)).toThrow('PSK must be a non-empty string')
+      expect(() => createPSKHandshakeEncryption(undefined as string, keyProvider)).toThrow('PSK must be a non-empty string')
     })
   })
 

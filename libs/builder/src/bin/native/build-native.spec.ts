@@ -62,23 +62,23 @@ const mockChannel = jest.requireMock('@hyperfrontend/logging').__mockChannel as 
 }
 
 beforeEach(() => {
-  ;(<jest.Mock>ensureDir).mockReset()
-  ;(<jest.Mock>writeJsonFile).mockReset()
-  ;(<jest.Mock>exists).mockReset().mockReturnValue(true)
-  ;(<jest.Mock>unlinkSync).mockReset()
-  ;(<jest.Mock>removeCodesign).mockReset()
-  ;(<jest.Mock>resolveHostBinary).mockReset().mockReturnValue('/opt/node')
-  ;(<jest.Mock>dispatchInjectWorker)
+  ;(ensureDir as jest.Mock).mockReset()
+  ;(writeJsonFile as jest.Mock).mockReset()
+  ;(exists as jest.Mock).mockReset().mockReturnValue(true)
+  ;(unlinkSync as jest.Mock).mockReset()
+  ;(removeCodesign as jest.Mock).mockReset()
+  ;(resolveHostBinary as jest.Mock).mockReset().mockReturnValue('/opt/node')
+  ;(dispatchInjectWorker as jest.Mock)
     .mockReset()
     .mockResolvedValue({ outputSize: 138_000_000, endHeapMB: 220, endRssMB: 480, durationMs: 1234 })
-  ;(<jest.Mock>resolveDefaultInjectWorkerPath).mockReset().mockReturnValue({
+  ;(resolveDefaultInjectWorkerPath as jest.Mock).mockReset().mockReturnValue({
     path: '/abs/repo/dist/libs/builder/bin/native/worker/index.cjs.js',
     execArgv: [],
   })
-  ;(<jest.Mock>currentPlatformMatches).mockReset().mockReturnValue(true)
-  ;(<jest.Mock>currentPlatformTarget).mockReset().mockReturnValue('linux-x64')
-  ;(<jest.Mock>generateSeaBlob).mockReset().mockReturnValue({ blobPath: '', status: 0 })
-  ;(<jest.Mock>generateSeaConfig).mockReset().mockReturnValue({ main: '', output: '', disableExperimentalSEAWarning: true })
+  ;(currentPlatformMatches as jest.Mock).mockReset().mockReturnValue(true)
+  ;(currentPlatformTarget as jest.Mock).mockReset().mockReturnValue('linux-x64')
+  ;(generateSeaBlob as jest.Mock).mockReset().mockReturnValue({ blobPath: '', status: 0 })
+  ;(generateSeaConfig as jest.Mock).mockReset().mockReturnValue({ main: '', output: '', disableExperimentalSEAWarning: true })
   mockChannel.error.mockReset()
   mockChannel.warn.mockReset()
   mockChannel.info.mockReset()
@@ -114,8 +114,8 @@ describe('buildNativeBin', () => {
   })
 
   it('skips with an info log when the current platform does not match declared platforms', async () => {
-    ;(<jest.Mock>currentPlatformMatches).mockReturnValueOnce(false)
-    ;(<jest.Mock>currentPlatformTarget).mockReturnValueOnce('darwin-arm64')
+    ;(currentPlatformMatches as jest.Mock).mockReturnValueOnce(false)
+    ;(currentPlatformTarget as jest.Mock).mockReturnValueOnce('darwin-arm64')
     const result = await buildNativeBin({ bin: seaBin, ctx: makeContext(), cjsOutputPath: '/abs/dist/libs/builder/bin/hf-build.js' })
     expect(result).toEqual([])
     expect(ensureDir).not.toHaveBeenCalled()
@@ -155,7 +155,7 @@ describe('buildNativeBin', () => {
   })
 
   it('throws when the inject worker cannot be resolved', async () => {
-    ;(<jest.Mock>resolveDefaultInjectWorkerPath).mockReturnValueOnce(undefined)
+    ;(resolveDefaultInjectWorkerPath as jest.Mock).mockReturnValueOnce(undefined)
     await expect(
       buildNativeBin({ bin: seaBin, ctx: makeContext(), cjsOutputPath: '/abs/dist/libs/builder/bin/hf-build.js' })
     ).rejects.toThrow(/inject worker could not be resolved/)
@@ -183,7 +183,7 @@ describe('buildNativeBin', () => {
   })
 
   it('threads execArgv from the source-mode resolution into the dispatch options', async () => {
-    ;(<jest.Mock>resolveDefaultInjectWorkerPath).mockReturnValueOnce({
+    ;(resolveDefaultInjectWorkerPath as jest.Mock).mockReturnValueOnce({
       path: '/abs/repo/libs/builder/src/bin/native/worker/index.ts',
       execArgv: ['--require', '@swc-node/register'],
     })
@@ -198,13 +198,13 @@ describe('buildNativeBin', () => {
   })
 
   it('appends `.exe` for win32 platforms', async () => {
-    ;(<jest.Mock>currentPlatformTarget).mockReturnValue('win32-x64')
+    ;(currentPlatformTarget as jest.Mock).mockReturnValue('win32-x64')
     await buildNativeBin({
       bin: { name: 'hf-build', format: 'cjs', sea: { platforms: ['win32-x64'] } },
       ctx: makeContext(),
       cjsOutputPath: '/abs/dist/libs/builder/bin/hf-build.js',
     })
-    const call = (<jest.Mock>dispatchInjectWorker).mock.calls[0][0]
+    const call = (dispatchInjectWorker as jest.Mock).mock.calls[0][0]
     expect(call.outputBinary).toBe('/abs/dist/libs/builder/bin/hf-build.win32-x64.exe')
   })
 
@@ -215,14 +215,14 @@ describe('buildNativeBin', () => {
 
   it('deletes the SEA config JSON and prep blob intermediates after the binary is produced', async () => {
     await buildNativeBin({ bin: seaBin, ctx: makeContext(), cjsOutputPath: '/abs/dist/libs/builder/bin/hf-build.js' })
-    expect((<jest.Mock>unlinkSync).mock.calls).toEqual([
+    expect((unlinkSync as jest.Mock).mock.calls).toEqual([
       ['/abs/dist/libs/builder/bin/hf-build.sea-config.json'],
       ['/abs/dist/libs/builder/bin/hf-build.sea-prep.blob'],
     ])
   })
 
   it('skips deleting SEA intermediates that are absent from disk', async () => {
-    ;(<jest.Mock>exists).mockReturnValue(false)
+    ;(exists as jest.Mock).mockReturnValue(false)
     await buildNativeBin({ bin: seaBin, ctx: makeContext(), cjsOutputPath: '/abs/dist/libs/builder/bin/hf-build.js' })
     expect(unlinkSync).not.toHaveBeenCalled()
   })
@@ -266,7 +266,7 @@ describe('buildNativeBin', () => {
 
   it('logs an error and re-throws when dispatchInjectWorker rejects with an Error', async () => {
     const failure = new Error('worker boom')
-    ;(<jest.Mock>dispatchInjectWorker).mockRejectedValueOnce(failure)
+    ;(dispatchInjectWorker as jest.Mock).mockRejectedValueOnce(failure)
     await expect(buildNativeBin({ bin: seaBin, ctx: makeContext(), cjsOutputPath: '/abs/dist/libs/builder/bin/hf-build.js' })).rejects.toBe(
       failure
     )
@@ -274,7 +274,7 @@ describe('buildNativeBin', () => {
   })
 
   it('formats non-Error dispatchInjectWorker rejections via String()', async () => {
-    ;(<jest.Mock>dispatchInjectWorker).mockRejectedValueOnce('not-an-error')
+    ;(dispatchInjectWorker as jest.Mock).mockRejectedValueOnce('not-an-error')
     await expect(buildNativeBin({ bin: seaBin, ctx: makeContext(), cjsOutputPath: '/abs/dist/libs/builder/bin/hf-build.js' })).rejects.toBe(
       'not-an-error'
     )

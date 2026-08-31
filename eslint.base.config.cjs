@@ -217,10 +217,15 @@ module.exports = [
     },
   },
   {
-    files: ['**/*.ts'],
-    ignores: ['**/jest.config.ts', '**/jest.setup.ts', '**/jest.setup.browser.ts', '**/*.spec.ts'],
+    files: ['**/*.ts', '**/*.tsx'],
     rules: {
-      'workspace/prefer-angle-bracket-assertion': 'error',
+      // why: Node's TypeScript type stripping rejects `<T>expr` outright, so `as` is the only assertion syntax the test runner can parse.
+      '@typescript-eslint/consistent-type-assertions': ['error', { assertionStyle: 'as' }],
+      // why: Under real ESM a type imported as a value fails at link time, because nothing elides it before the module is linked.
+      '@typescript-eslint/consistent-type-imports': [
+        'error',
+        { prefer: 'type-imports', fixStyle: 'separate-type-imports', disallowTypeAnnotations: false },
+      ],
     },
   },
   {

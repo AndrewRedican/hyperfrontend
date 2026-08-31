@@ -8,7 +8,7 @@ describe('addChannel', () => {
   const mockBrokerState: BrokerState = {
     id: 'broker-1',
     name: 'test-broker',
-    window: <Window>global.window,
+    window: global.window as Window,
     contract: {
       accepted: [{ type: 'test', description: 'Test action' }],
       emitted: [],
@@ -42,7 +42,7 @@ describe('addChannel', () => {
       getBrokerId: () => 'broker-1',
       getContract: () => mockBrokerState.contract,
     })
-    mockWindow = <Window>(<unknown>{})
+    mockWindow = {} as unknown as Window
   })
 
   it('creates and add new channel to registry', () => {
@@ -110,8 +110,8 @@ describe('addChannel', () => {
   })
 
   it('handles multiple channels with different windows', () => {
-    const window1 = <Window>{}
-    const window2 = <Window>{}
+    const window1 = {} as Window
+    const window2 = {} as Window
 
     const channel1 = addChannel(mockBrokerState, registry, processManager, actions, 'channel-1', window1)
     const channel2 = addChannel(mockBrokerState, registry, processManager, actions, 'channel-2', window2)

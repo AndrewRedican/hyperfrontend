@@ -22,7 +22,7 @@ const context: ExecutorContext = {
  */
 function startsWith(handle: unknown): void {
   runDevMock.mockImplementation(async (options) => {
-    await options.waitForClose?.(<never>handle)
+    await options.waitForClose?.(handle as never)
     return 0
   })
   waitForShutdownMock.mockResolvedValue(undefined)

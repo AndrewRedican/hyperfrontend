@@ -8,12 +8,12 @@ const rootLogger = createScopedLogger('project-scope:root')
 /**
  * Files indicating project root.
  */
-export const ROOT_MARKERS = <const>['package.json', '.git']
+export const ROOT_MARKERS = ['package.json', '.git'] as const
 
 /**
  * Files indicating workspace/monorepo root.
  */
-export const WORKSPACE_MARKERS = <const>['nx.json', 'turbo.json', 'lerna.json', 'pnpm-workspace.yaml', 'rush.json']
+export const WORKSPACE_MARKERS = ['nx.json', 'turbo.json', 'lerna.json', 'pnpm-workspace.yaml', 'rush.json'] as const
 
 /**
  * Check if directory looks like a project directory.

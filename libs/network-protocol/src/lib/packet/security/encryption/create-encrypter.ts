@@ -33,7 +33,7 @@ export function createPacketEncrypter<T = unknown>(encryptData: (data: Data<T>, 
         data: await encryptData(packet.data, password),
       }
     } catch (e) {
-      throw createError(`Cannot encrypt packet. ${(<Error>e)?.message}`)
+      throw createError(`Cannot encrypt packet. ${(e as Error)?.message}`)
     }
     return freeze(unserializedEncryptedPacket)
   }

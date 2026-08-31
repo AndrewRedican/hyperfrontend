@@ -3,7 +3,7 @@ import type { ValidationContext } from '../context'
 import { validateObjectBounds } from './object-bounds'
 
 describe('validateObjectBounds', () => {
-  const ctx = <ValidationContext>{ errors: [] }
+  const ctx = { errors: [] } as ValidationContext
 
   it('returns true if no constraints', () => {
     expect(validateObjectBounds({}, {}, ctx)).toBe(true)

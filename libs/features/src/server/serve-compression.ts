@@ -42,7 +42,7 @@ export function negotiateEncoding(header: string | undefined): 'br' | 'gzip' | n
   for (const token of header.split(',')) {
     const parts = token.trim().split(';')
     // why: `split` always yields a first element, so the index type's `undefined` is asserted away rather than branched on.
-    const name = (<string>parts[0]).trim().toLowerCase()
+    const name = (parts[0] as string).trim().toLowerCase()
     if (name === '') {
       continue
     }
@@ -50,7 +50,7 @@ export function negotiateEncoding(header: string | undefined): 'br' | 'gzip' | n
     for (const param of parts.slice(1)) {
       const [key, value] = param.trim().split('=')
       // why: `split` always yields a first element, and the quality parameter name is case-insensitive per RFC 9110.
-      if ((<string>key).toLowerCase() === 'q' && value !== undefined) {
+      if ((key as string).toLowerCase() === 'q' && value !== undefined) {
         q = Number(value)
       }
     }
@@ -98,7 +98,7 @@ function withVary(headers: Readonly<Record<string, string>>): Record<string, str
   if (varyKey === undefined) {
     return { ...headers, Vary: 'Accept-Encoding' }
   }
-  const existing = <string>headers[varyKey]
+  const existing = headers[varyKey] as string
   if (existing.toLowerCase().includes('accept-encoding')) {
     return { ...headers }
   }
@@ -148,7 +148,7 @@ export function buildCompressionStep(): ServeStep {
     if (response.body.length < COMPRESSION_THRESHOLD) {
       return { ...response, headers: withVary(response.headers) }
     }
-    const encoding = negotiateEncoding(<string | undefined>request.headers['accept-encoding'])
+    const encoding = negotiateEncoding(request.headers['accept-encoding'] as string | undefined)
     if (encoding === null) {
       return { ...response, headers: withVary(response.headers) }
     }
@@ -164,7 +164,7 @@ export function buildCompressionStep(): ServeStep {
           : gzipSync(response.body)
     if (cacheKey !== null && (cached === undefined || cached.etag !== etag)) {
       // why: A non-null cache key is only ever built from a defined etag, so the assertion restates what the key construction guarantees.
-      cache.set(cacheKey, { etag: <string>etag, bytes })
+      cache.set(cacheKey, { etag: etag as string, bytes })
     }
     const headers: Record<string, string> = { ...withVary(response.headers), 'Content-Encoding': encoding }
     const lengthKey = keys(headers).find((key) => key.toLowerCase() === 'content-length')

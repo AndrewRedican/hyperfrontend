@@ -18,11 +18,11 @@ describe('applyPolicy', () => {
   })
 
   const createMockEvent = (origin = 'https://example.com'): MessageEvent => {
-    return <MessageEvent>{
+    return {
       origin,
       data: {},
       source: null,
-    }
+    } as MessageEvent
   }
 
   it('return true when policy returns true', () => {
@@ -44,7 +44,7 @@ describe('applyPolicy', () => {
   })
 
   it('coerces truthy values to true', () => {
-    const policy: SecurityPolicy = () => <boolean>(<unknown>'truthy')
+    const policy: SecurityPolicy = () => 'truthy' as unknown as boolean
     const event = createMockEvent()
 
     const result = applyPolicy(policy, event, mockLogger)
@@ -53,7 +53,7 @@ describe('applyPolicy', () => {
   })
 
   it('coerces falsy values to false', () => {
-    const policy: SecurityPolicy = () => <boolean>(<unknown>0)
+    const policy: SecurityPolicy = () => 0 as unknown as boolean
     const event = createMockEvent()
 
     const result = applyPolicy(policy, event, mockLogger)

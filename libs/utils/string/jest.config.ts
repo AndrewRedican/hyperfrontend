@@ -1,6 +1,6 @@
 import type { Config } from 'jest'
 
-export default <Config>{
+export default {
   preset: '../../../jest.preset.cjs',
   collectCoverageFrom: [
     '**/*.{ts,tsx}',
@@ -30,4 +30,4 @@ export default <Config>{
       setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
     },
   ],
-}
+} as Config

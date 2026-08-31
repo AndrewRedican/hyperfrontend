@@ -100,7 +100,7 @@ describe('createPacketObfuscator (Browser)', () => {
       it(`handles ${description}`, async () => {
         const obfuscatePacket = createPacketObfuscator(encrypt)
 
-        await expect(obfuscatePacket(<SerializedEncryptedPacket>(<unknown>packet), password)).rejects.toThrow(
+        await expect(obfuscatePacket(packet as unknown as SerializedEncryptedPacket, password)).rejects.toThrow(
           'Cannot obfuscate an invalid packet'
         )
       })
@@ -120,11 +120,11 @@ describe('createPacketObfuscator (Browser)', () => {
     it('handles packet with invalid origin UUID', async () => {
       const obfuscatePacket = createPacketObfuscator(encrypt)
 
-      const packet = <SerializedEncryptedPacket>{
+      const packet = {
         origin: 'invalid-uuid',
         target: testUUIDs.target1,
         data: 'encrypted-data',
-      }
+      } as SerializedEncryptedPacket
 
       await expect(obfuscatePacket(packet, testPasswords.valid)).rejects.toThrow('Cannot obfuscate an invalid packet')
     })
@@ -132,11 +132,11 @@ describe('createPacketObfuscator (Browser)', () => {
     it('handles packet with invalid target UUID', async () => {
       const obfuscatePacket = createPacketObfuscator(encrypt)
 
-      const packet = <SerializedEncryptedPacket>{
+      const packet = {
         origin: testUUIDs.origin1,
         target: 'invalid-uuid',
         data: 'encrypted-data',
-      }
+      } as SerializedEncryptedPacket
 
       await expect(obfuscatePacket(packet, testPasswords.valid)).rejects.toThrow('Cannot obfuscate an invalid packet')
     })
@@ -151,7 +151,7 @@ describe('createPacketObfuscator (Browser)', () => {
       }
       circularRef.self = circularRef
 
-      await expect(obfuscatePacket(<SerializedEncryptedPacket>circularRef, testPasswords.valid)).rejects.toThrow(
+      await expect(obfuscatePacket(circularRef as SerializedEncryptedPacket, testPasswords.valid)).rejects.toThrow(
         'Cannot obfuscate packet because it is not serializable'
       )
     })

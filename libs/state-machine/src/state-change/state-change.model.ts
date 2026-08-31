@@ -1,4 +1,4 @@
-import { DerivedState } from '../models'
+import type { DerivedState } from '../models'
 
 /** A snapshot of the current state, or null if no state exists. */
 export type StateSnapshot = DerivedState | null

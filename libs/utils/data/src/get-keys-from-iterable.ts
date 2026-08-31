@@ -14,9 +14,9 @@ import { registeredIterableClasses } from './shared/consts'
  * ```
  */
 export const getKeysFromIterable = <T extends string = DataType>(target: unknown, dataType: T): string[] => {
-  if (dataType === 'array') dataType = <T>Array.name
-  if (dataType === 'object') dataType = <T>Object.name
-  const iterableClass = registeredIterableClasses.find(({ classRef }) => dataType === <T>classRef.name)
+  if (dataType === 'array') dataType = Array.name as T
+  if (dataType === 'object') dataType = Object.name as T
+  const iterableClass = registeredIterableClasses.find(({ classRef }) => dataType === (classRef.name as T))
   if (iterableClass === undefined) return []
   return iterableClass.getKeys(target)
 }

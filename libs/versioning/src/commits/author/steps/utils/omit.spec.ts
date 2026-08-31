@@ -11,7 +11,7 @@ describe('omitKeys', () => {
 
   it('returns a copy even when no keys match', () => {
     const source = { a: 1 }
-    const result = omitKeys(source, <(keyof typeof source)[]>[])
+    const result = omitKeys(source, [] as (keyof typeof source)[])
     expect(result).toEqual({ a: 1 })
     expect(result).not.toBe(source)
   })

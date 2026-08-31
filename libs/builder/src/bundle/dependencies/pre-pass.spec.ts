@@ -29,7 +29,7 @@ interface SpawnRecord {
 }
 
 const captureSpawn = (records: SpawnRecord[]): jest.Mock => {
-  return (<jest.Mock>spawn).mockImplementation((execPath: string, args: string[]) => {
+  return (spawn as jest.Mock).mockImplementation((execPath: string, args: string[]) => {
     const child = makeFakeChild()
     const jobJson = args[args.length - 1] as string
     const job = JSON.parse(jobJson) as { reportPath: string }
@@ -53,7 +53,7 @@ const baseJob = (overrides: Partial<PrePassJob> = {}): PrePassJob => ({
 })
 
 beforeEach(() => {
-  ;(<jest.Mock>spawn).mockReset()
+  ;(spawn as jest.Mock).mockReset()
 })
 
 describe('runPrePass', () => {
@@ -70,12 +70,12 @@ describe('runPrePass', () => {
     const promise = runPrePass(jobs, { workerPath: '/abs/worker.cjs.js' })
     await tick()
     expect(records).toHaveLength(1)
-    writeReport((<SpawnRecord>records[0]).reportPath, { outputSize: 100, endHeapMB: 1.5, endRssMB: 50, durationMs: 25 })
-    ;(<SpawnRecord>records[0]).child.emit('exit', 0)
+    writeReport((records[0] as SpawnRecord).reportPath, { outputSize: 100, endHeapMB: 1.5, endRssMB: 50, durationMs: 25 })
+    ;(records[0] as SpawnRecord).child.emit('exit', 0)
     await tick()
     expect(records).toHaveLength(2)
-    writeReport((<SpawnRecord>records[1]).reportPath, { outputSize: 200, endHeapMB: 2.5, endRssMB: 75, durationMs: 30 })
-    ;(<SpawnRecord>records[1]).child.emit('exit', 0)
+    writeReport((records[1] as SpawnRecord).reportPath, { outputSize: 200, endHeapMB: 2.5, endRssMB: 75, durationMs: 30 })
+    ;(records[1] as SpawnRecord).child.emit('exit', 0)
     const results = await promise
     expect(results).toHaveLength(2)
     expect(results[0]).toMatchObject({ outputSize: 100, endHeapMB: 1.5, endRssMB: 50, durationMs: 25, job: jobs[0] })
@@ -87,7 +87,7 @@ describe('runPrePass', () => {
     captureSpawn(records)
     const promise = runPrePass([baseJob({ dep: 'rollup' })], { workerPath: '/abs/worker.cjs.js' })
     await tick()
-    ;(<SpawnRecord>records[0]).child.emit('exit', 1)
+    ;(records[0] as SpawnRecord).child.emit('exit', 1)
     await expect(promise).rejects.toThrow(/pre-pass worker for rollup .*exited with code 1/)
   })
 
@@ -96,7 +96,7 @@ describe('runPrePass', () => {
     captureSpawn(records)
     const promise = runPrePass([baseJob({ dep: 'rollup' })], { workerPath: '/abs/worker.cjs.js' })
     await tick()
-    ;(<SpawnRecord>records[0]).child.emit('error', new Error('ENOENT'))
+    ;(records[0] as SpawnRecord).child.emit('error', new Error('ENOENT'))
     await expect(promise).rejects.toThrow(/failed to spawn: ENOENT/)
   })
 
@@ -105,7 +105,7 @@ describe('runPrePass', () => {
     captureSpawn(records)
     const promise = runPrePass([baseJob({ dep: 'rollup' })], { workerPath: '/abs/worker.cjs.js' })
     await tick()
-    ;(<SpawnRecord>records[0]).child.emit('exit', 0)
+    ;(records[0] as SpawnRecord).child.emit('exit', 0)
     await expect(promise).rejects.toThrow(/did not write a report/)
   })
 
@@ -118,10 +118,10 @@ describe('runPrePass', () => {
       execArgv: ['--require', '@swc-node/register'],
     })
     await tick()
-    expect((<SpawnRecord>records[0]).execPath).toBe('/usr/bin/custom-node')
-    expect((<SpawnRecord>records[0]).args.slice(0, 3)).toEqual(['--require', '@swc-node/register', '/abs/worker.cjs.js'])
-    writeReport((<SpawnRecord>records[0]).reportPath, { outputSize: 1, endHeapMB: 1, endRssMB: 1, durationMs: 1 })
-    ;(<SpawnRecord>records[0]).child.emit('exit', 0)
+    expect((records[0] as SpawnRecord).execPath).toBe('/usr/bin/custom-node')
+    expect((records[0] as SpawnRecord).args.slice(0, 3)).toEqual(['--require', '@swc-node/register', '/abs/worker.cjs.js'])
+    writeReport((records[0] as SpawnRecord).reportPath, { outputSize: 1, endHeapMB: 1, endRssMB: 1, durationMs: 1 })
+    ;(records[0] as SpawnRecord).child.emit('exit', 0)
     await promise
   })
 
@@ -141,8 +141,8 @@ describe('runPrePass', () => {
     captureSpawn(records)
     const promise = runPrePass([baseJob()], { workerPath: '/abs/worker.cjs.js', monitor })
     await tick()
-    writeReport((<SpawnRecord>records[0]).reportPath, { outputSize: 10, endHeapMB: 1, endRssMB: 1, durationMs: 1 })
-    ;(<SpawnRecord>records[0]).child.emit('exit', 0)
+    writeReport((records[0] as SpawnRecord).reportPath, { outputSize: 10, endHeapMB: 1, endRssMB: 1, durationMs: 1 })
+    ;(records[0] as SpawnRecord).child.emit('exit', 0)
     await promise
     expect(checks).toEqual(['bundle:dependencies:prepass:1/1:rollup:js:esm:start', 'bundle:dependencies:prepass:1/1:rollup:js:esm:end'])
   })
@@ -152,8 +152,8 @@ describe('runPrePass', () => {
     captureSpawn(records)
     const promise = runPrePass([baseJob()], { workerPath: '/abs/worker.cjs.js' })
     await tick()
-    const reportDir = (<SpawnRecord>records[0]).reportPath.substring(0, (<SpawnRecord>records[0]).reportPath.lastIndexOf('/'))
-    ;(<SpawnRecord>records[0]).child.emit('exit', 2)
+    const reportDir = (records[0] as SpawnRecord).reportPath.substring(0, (records[0] as SpawnRecord).reportPath.lastIndexOf('/'))
+    ;(records[0] as SpawnRecord).child.emit('exit', 2)
     await expect(promise).rejects.toThrow()
     expect(existsSync(reportDir)).toBe(false)
   })

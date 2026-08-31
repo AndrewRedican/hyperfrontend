@@ -20,7 +20,7 @@ describe('Security Transport Factory', () => {
   const createConfig = (overrides: Partial<SecurityTransportConfig> = {}): SecurityTransportConfig => ({
     protocol: 'none',
     label: 'factory-spec',
-    target: <Window>(<unknown>{ postMessage: jest.fn() }),
+    target: { postMessage: jest.fn() } as unknown as Window,
     getOrigin: () => null,
     originId: uuidV4(),
     targetId: uuidV4(),
@@ -46,7 +46,7 @@ describe('Security Transport Factory', () => {
       const transport = createSecurityTransport(
         createConfig({
           provider: createV2Provider(),
-          target: <Window>(<unknown>{ postMessage }),
+          target: { postMessage } as unknown as Window,
         })
       )
 
@@ -59,7 +59,7 @@ describe('Security Transport Factory', () => {
       const postMessage = jest.fn()
       const transport = createSecurityTransport(
         createConfig({
-          target: <Window>(<unknown>{ postMessage }),
+          target: { postMessage } as unknown as Window,
           getOrigin: () => 'https://custom.example.com',
         })
       )

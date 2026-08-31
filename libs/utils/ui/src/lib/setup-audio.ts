@@ -26,7 +26,7 @@ import { getElementAsync } from './get-element-async'
 export async function setupAudio(selector: ElementRefOrString): Promise<AudioContext> {
   return createPromise((resolve, reject) => {
     const initializeAudioContext = (event: Event) => {
-      const audioContext = new (globalThis.AudioContext || (<any>globalThis).webkitAudioContext)()
+      const audioContext = new (globalThis.AudioContext || (globalThis as any).webkitAudioContext)()
 
       const target = event.currentTarget
       /* istanbul ignore next */

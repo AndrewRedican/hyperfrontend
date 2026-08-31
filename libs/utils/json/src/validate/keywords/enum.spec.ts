@@ -3,7 +3,7 @@ import type { ValidationContext } from '../context'
 import { validateEnum } from './enum'
 
 describe('validateEnum', () => {
-  const ctx = <ValidationContext>{ errors: [] }
+  const ctx = { errors: [] } as ValidationContext
 
   it('returns true if no enum', () => {
     expect(validateEnum(1, {}, ctx)).toBe(true)

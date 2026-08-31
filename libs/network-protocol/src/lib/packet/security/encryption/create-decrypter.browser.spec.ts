@@ -130,14 +130,14 @@ describe('createPacketDecrypter (Browser)', () => {
       const decryptData = createDataDecrypter(decrypt)
       const decryptPacket = createPacketDecrypter(decryptData)
 
-      await expect(decryptPacket(<UnserializedEncryptedPacket>null, testPasswords.valid)).rejects.toThrow('Cannot decrypt invalid packet')
+      await expect(decryptPacket(null as UnserializedEncryptedPacket, testPasswords.valid)).rejects.toThrow('Cannot decrypt invalid packet')
     })
 
     it('handles invalid encrypted packet (undefined)', async () => {
       const decryptData = createDataDecrypter(decrypt)
       const decryptPacket = createPacketDecrypter(decryptData)
 
-      await expect(decryptPacket(<UnserializedEncryptedPacket>undefined, testPasswords.valid)).rejects.toThrow(
+      await expect(decryptPacket(undefined as UnserializedEncryptedPacket, testPasswords.valid)).rejects.toThrow(
         'Cannot decrypt invalid packet'
       )
     })
@@ -151,7 +151,7 @@ describe('createPacketDecrypter (Browser)', () => {
         target: testUUIDs.target1,
       }
 
-      await expect(decryptPacket(<UnserializedEncryptedPacket>invalidPacket, testPasswords.valid)).rejects.toThrow(
+      await expect(decryptPacket(invalidPacket as UnserializedEncryptedPacket, testPasswords.valid)).rejects.toThrow(
         'Cannot decrypt invalid packet'
       )
     })
@@ -166,7 +166,7 @@ describe('createPacketDecrypter (Browser)', () => {
         data: new Uint8Array([1, 2, 3]),
       }
 
-      await expect(decryptPacket(<UnserializedEncryptedPacket>invalidPacket, testPasswords.valid)).rejects.toThrow(
+      await expect(decryptPacket(invalidPacket as UnserializedEncryptedPacket, testPasswords.valid)).rejects.toThrow(
         'Cannot decrypt invalid packet'
       )
     })
@@ -181,7 +181,7 @@ describe('createPacketDecrypter (Browser)', () => {
         data: new Uint8Array([1, 2, 3]),
       }
 
-      await expect(decryptPacket(<UnserializedEncryptedPacket>invalidPacket, testPasswords.valid)).rejects.toThrow(
+      await expect(decryptPacket(invalidPacket as UnserializedEncryptedPacket, testPasswords.valid)).rejects.toThrow(
         'Cannot decrypt invalid packet'
       )
     })
@@ -261,7 +261,7 @@ describe('createPacketDecrypter (Browser)', () => {
 
       expect(Object.isFrozen(result)).toBe(true)
       expect(() => {
-        ;(<{ origin: string }>result).origin = 'modified'
+        ;(result as { origin: string }).origin = 'modified'
       }).toThrow()
     })
   })

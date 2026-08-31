@@ -25,25 +25,25 @@ export function validateContract(contract: unknown): void {
     throw createError('Contract must be an object')
   }
 
-  const c = <Record<string, unknown>>contract
+  const c = contract as Record<string, unknown>
 
   if (c['version'] !== undefined && typeof c['version'] !== 'string') {
     throw createError('Contract version must be a string')
   }
 
-  const emittedCount = isArray(c['emitted']) ? (<Record<string, unknown>[]>c['emitted']).length : 0
-  const acceptedCount = isArray(c['accepted']) ? (<Record<string, unknown>[]>c['accepted']).length : 0
+  const emittedCount = isArray(c['emitted']) ? (c['emitted'] as Record<string, unknown>[]).length : 0
+  const acceptedCount = isArray(c['accepted']) ? (c['accepted'] as Record<string, unknown>[]).length : 0
 
   if (emittedCount + acceptedCount === 0) {
     throw createError('Contract must contain at least one accepted or emitted action')
   }
 
   if (isArray(c['emitted'])) {
-    for (const action of <Record<string, unknown>[]>c['emitted']) {
+    for (const action of c['emitted'] as Record<string, unknown>[]) {
       if (
         !action ||
-        typeof (<Record<string, unknown>>action)['type'] !== 'string' ||
-        (<Record<string, unknown>>action)['type'].toString().trim() === ''
+        typeof (action as Record<string, unknown>)['type'] !== 'string' ||
+        (action as Record<string, unknown>)['type'].toString().trim() === ''
       ) {
         throw createError('Contract action types must be non-empty strings')
       }
@@ -51,11 +51,11 @@ export function validateContract(contract: unknown): void {
   }
 
   if (isArray(c['accepted'])) {
-    for (const action of <Record<string, unknown>[]>c['accepted']) {
+    for (const action of c['accepted'] as Record<string, unknown>[]) {
       if (
         !action ||
-        typeof (<Record<string, unknown>>action)['type'] !== 'string' ||
-        (<Record<string, unknown>>action)['type'].toString().trim() === ''
+        typeof (action as Record<string, unknown>)['type'] !== 'string' ||
+        (action as Record<string, unknown>)['type'].toString().trim() === ''
       ) {
         throw createError('Contract action types must be non-empty strings')
       }

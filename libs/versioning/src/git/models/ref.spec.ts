@@ -1,3 +1,4 @@
+import type { GitRefType } from './ref'
 import {
   createGitRef,
   isBranchRef,
@@ -9,7 +10,6 @@ import {
   filterRefsByRemote,
   getRemote,
   compareRefsByName,
-  GitRefType,
 } from './ref'
 
 describe('createGitRef', () => {

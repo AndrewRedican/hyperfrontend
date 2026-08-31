@@ -151,7 +151,7 @@ export function isRepositoryResolution(value: unknown): value is RepositoryResol
     return false
   }
 
-  const obj = <Record<string, unknown>>value
+  const obj = value as Record<string, unknown>
   const mode = obj['mode']
 
   return mode === 'explicit' || mode === 'inferred' || mode === 'disabled'

@@ -48,7 +48,7 @@ export function createFetchRegistryStep(): FlowStep {
     try {
       const content = tree.read(packageJsonPath, 'utf-8')
       if (content) {
-        const pkg = <PackageJsonWithVersion>parse(content)
+        const pkg = parse(content) as PackageJsonWithVersion
         currentVersion = pkg.version ?? '0.0.0'
       }
     } catch (error) {

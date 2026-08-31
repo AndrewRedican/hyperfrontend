@@ -54,7 +54,7 @@ export const createDeobfuscationQueue: DeobfuscationQueueCreater = (label, packe
       try {
         processed = await packetDeobfuscation(raw)
       } catch (e) {
-        log(`${label}: ${(<Error>e)?.message}`)
+        log(`${label}: ${(e as Error)?.message}`)
         onFail(raw)
         return
       }

@@ -62,9 +62,9 @@ describe('channel/messaging/flush', () => {
       removeProcess: jest.fn(),
       notifyEvent: jest.fn(),
       notifyMessage: jest.fn(),
-      actions: <ActionCreators>{},
+      actions: {} as ActionCreators,
     }
-    ;(<jest.Mock>clearQueueModule.clearQueue).mockReturnValue({
+    ;(clearQueueModule.clearQueue as jest.Mock).mockReturnValue({
       ...state,
       queuedMessages: [],
     })
@@ -107,8 +107,8 @@ describe('channel/messaging/flush', () => {
 
     flush(mockChannel)
 
-    expect((<jest.Mock>mockChannel.updateState).mock.invocationCallOrder[0]).toBeLessThan(
-      (<jest.Mock>sendModule.send).mock.invocationCallOrder[0] ?? 0
+    expect((mockChannel.updateState as jest.Mock).mock.invocationCallOrder[0]).toBeLessThan(
+      (sendModule.send as jest.Mock).mock.invocationCallOrder[0] ?? 0
     )
   })
 
@@ -130,7 +130,7 @@ describe('channel/messaging/flush', () => {
     ]
     state = { ...state, queuedMessages: messages }
     mockGetState.mockReturnValue(state)
-    ;(<jest.Mock>sendModule.send).mockImplementation((channel, message) => {
+    ;(sendModule.send as jest.Mock).mockImplementation((channel, message) => {
       if (message.type === 'MESSAGE_2') {
         throw new Error('Send failed')
       }

@@ -11,12 +11,12 @@ import { typeEnumRule } from './rules/type-enum'
 
 /** Registry of built-in rules the engine knows how to run, keyed by rule name. */
 export const BUILT_IN_RULES: Readonly<Record<string, Rule<never>>> = {
-  [typeEnumRule.name]: <Rule<never>>typeEnumRule,
-  [scopeEnumRule.name]: <Rule<never>>scopeEnumRule,
-  [subjectCaseRule.name]: <Rule<never>>subjectCaseRule,
-  [subjectEmptyRule.name]: <Rule<never>>subjectEmptyRule,
-  [headerMaxLengthRule.name]: <Rule<never>>headerMaxLengthRule,
-  [imperativeMoodRule.name]: <Rule<never>>imperativeMoodRule,
+  [typeEnumRule.name]: typeEnumRule as Rule<never>,
+  [scopeEnumRule.name]: scopeEnumRule as Rule<never>,
+  [subjectCaseRule.name]: subjectCaseRule as Rule<never>,
+  [subjectEmptyRule.name]: subjectEmptyRule as Rule<never>,
+  [headerMaxLengthRule.name]: headerMaxLengthRule as Rule<never>,
+  [imperativeMoodRule.name]: imperativeMoodRule as Rule<never>,
 }
 
 /**
@@ -66,13 +66,13 @@ export function validateCommitWithRules(
   const errors: RuleMessage[] = []
 
   for (const [ruleName, config] of entries(ruleset)) {
-    const level = <RuleLevel>config[0]
+    const level = config[0] as RuleLevel
     if (level === 'off') continue
     const rule = rules[ruleName]
     if (rule === undefined) continue
 
     const options = config.length > 1 ? config[1] : undefined
-    const violations = rule.check(commit, { level, options: <never>options })
+    const violations = rule.check(commit, { level, options: options as never })
 
     for (const message of violations) {
       const entry: RuleMessage = { level, message, ruleName }

@@ -142,7 +142,7 @@ function readExistingConfig(tree: Tree): Record<string, unknown> | null {
   if (typeof parsed !== 'object' || parsed === null || isArray(parsed)) {
     throw createError(`${CONFIG_FILE} exists but is not a JSON object — fix or delete it, then re-run init.`)
   }
-  return <Record<string, unknown>>parsed
+  return parsed as Record<string, unknown>
 }
 
 /**
@@ -216,7 +216,7 @@ function wireEntry(tree: Tree, cwd: string, entry: string): 'kept' | 'missing' |
   try {
     result = insertFeatureImport(content, specifier)
   } catch (error) {
-    throw createError(`${entryRel}: ${(<Error>error).message}`)
+    throw createError(`${entryRel}: ${(error as Error).message}`)
   }
   if (!result.changed) return 'kept'
   tree.write(entryRel, result.content)

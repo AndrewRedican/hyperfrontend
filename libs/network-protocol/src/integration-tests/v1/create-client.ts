@@ -36,7 +36,7 @@ export function createClient<T = MessagePayload>(label: string): Client<T> {
   }
 
   const receivePacket: ReceivePacketFn = (packet) => {
-    const typedPacket = <ReceivedPacket<T>>packet
+    const typedPacket = packet as ReceivedPacket<T>
     listeners.forEach((callback) => callback(typedPacket))
   }
 

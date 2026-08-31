@@ -10,5 +10,5 @@ import { create } from './create'
  * @returns Wrapped handler that filters for INVALID events
  */
 export function invalid(handler: InvalidEventHandler): EventHandler {
-  return create('invalid')(<EventHandler>handler)
+  return create('invalid')(handler as EventHandler)
 }

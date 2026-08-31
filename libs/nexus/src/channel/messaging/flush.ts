@@ -27,7 +27,7 @@ export function flush(channel: ChannelInternals): void {
       send(channel, message)
     } catch (error) {
       if (state.logger) {
-        state.logger.error('Failed to send queued message:', <Error>error)
+        state.logger.error('Failed to send queued message:', error as Error)
       }
     }
   }

@@ -12,6 +12,6 @@ describe('createHash (node)', () => {
   })
 
   it('throws error for unsupported algorithm', async () => {
-    await expect(createHash(testData, <any>'unsupported-algorithm')).rejects.toThrow('Error creating hash')
+    await expect(createHash(testData, 'unsupported-algorithm' as any)).rejects.toThrow('Error creating hash')
   })
 })

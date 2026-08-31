@@ -14,11 +14,11 @@ describe('isValidDecryptedPacket', () => {
 
   it('returns true when packet is valid and data is decrypted correctly', () => {
     const data = {}
-    ;(<jest.Mock>isValidUnobfuscatedPacketBase).mockImplementation(() => ({
+    ;(isValidUnobfuscatedPacketBase as jest.Mock).mockImplementation(() => ({
       isValid: true,
       pkt: { data },
     }))
-    ;(<jest.Mock>isValidUnencryptedData).mockImplementation(() => true)
+    ;(isValidUnencryptedData as jest.Mock).mockImplementation(() => true)
     const packet = 'mocked packet'
     const result = isValidUnencryptedPacket(packet)
     expect(result).toBe(true)
@@ -27,7 +27,7 @@ describe('isValidDecryptedPacket', () => {
   })
 
   it('returns false when packet is invalid', () => {
-    ;(<jest.Mock>isValidUnobfuscatedPacketBase).mockImplementation(() => ({
+    ;(isValidUnobfuscatedPacketBase as jest.Mock).mockImplementation(() => ({
       isValid: false,
       pkt: { data: '' },
     }))
@@ -38,11 +38,11 @@ describe('isValidDecryptedPacket', () => {
   })
 
   it('returns false when data is not serialized correctly', () => {
-    ;(<jest.Mock>isValidUnobfuscatedPacketBase).mockImplementation(() => ({
+    ;(isValidUnobfuscatedPacketBase as jest.Mock).mockImplementation(() => ({
       isValid: true,
       pkt: { data: 'invalid decrypted data' },
     }))
-    ;(<jest.Mock>isValidUnencryptedData).mockImplementation(() => false)
+    ;(isValidUnencryptedData as jest.Mock).mockImplementation(() => false)
     const packet = 'mocked packet with invalid data'
     const result = isValidUnencryptedPacket(packet)
     expect(result).toBe(false)

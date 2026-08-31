@@ -49,7 +49,7 @@ export function readSidecar(filePath: string): AssetSidecar | undefined {
     return undefined
   }
   try {
-    return <AssetSidecar>parse(readFileSync(filePath, 'utf8'))
+    return parse(readFileSync(filePath, 'utf8')) as AssetSidecar
   } catch {
     return undefined
   }

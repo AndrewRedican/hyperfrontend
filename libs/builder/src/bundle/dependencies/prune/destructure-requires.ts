@@ -180,7 +180,7 @@ export const destructureRequires = (
       taken.add(local)
       assignments.push({ exported, local })
       // why: the member-access node (`NS.member` or `NS['member']`) collapses to the bound local; the key came from this same map, so the lookup always resolves.
-      for (const accessNode of <ts.Node[]>candidate.members.get(exported))
+      for (const accessNode of candidate.members.get(exported) as ts.Node[])
         edits.push({ start: accessNode.getStart(sourceFile), end: accessNode.getEnd(), text: local })
     }
     edits.push({

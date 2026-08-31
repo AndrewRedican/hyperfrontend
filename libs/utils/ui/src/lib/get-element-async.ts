@@ -53,11 +53,11 @@ export interface GetElementAsyncOptions {
  * ```
  */
 export function getElementAsync(elementRefOrString: ElementRefOrString, options?: GetElementAsyncOptions): () => void {
-  const { duration, interval, onSuccess, onFail } = <GetElementAsyncOptions>{
+  const { duration, interval, onSuccess, onFail } = {
     duration: 10000,
     interval: 100,
     ...options,
-  }
+  } as GetElementAsyncOptions
 
   let timer: ReturnType<typeof setInterval> | undefined
   let timeout: ReturnType<typeof setTimeout> | undefined
@@ -74,7 +74,7 @@ export function getElementAsync(elementRefOrString: ElementRefOrString, options?
     if (isCancelled) return
     /* istanbul ignore next */
     if (getType(callback) !== 'function') return
-    ;(<OnSuccess | OnFail>callback)(element)
+    ;(callback as OnSuccess | OnFail)(element)
   }
 
   /**
@@ -92,7 +92,9 @@ export function getElementAsync(elementRefOrString: ElementRefOrString, options?
    */
   function getElement(): HTMLElement | null {
     try {
-      return getType(elementRefOrString) === 'string' ? document.querySelector(<string>elementRefOrString) : <HTMLElement>elementRefOrString
+      return getType(elementRefOrString) === 'string'
+        ? document.querySelector(elementRefOrString as string)
+        : (elementRefOrString as HTMLElement)
     } catch {
       return null
     }

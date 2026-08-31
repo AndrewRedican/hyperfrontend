@@ -21,13 +21,13 @@ describe('generateKey (node)', () => {
   })
 
   it('throws an error when password is empty', async () => {
-    await expect(generateKey(<string>(<unknown>null), getRandomValues(4))).rejects.toThrow(
+    await expect(generateKey(null as unknown as string, getRandomValues(4))).rejects.toThrow(
       'Cannot generate key without a password type string'
     )
     await expect(generateKey('', getRandomValues(4))).rejects.toThrow('Cannot generate key with an empty string as password')
   })
 
   it('throws an error when salt is missing', async () => {
-    await expect(generateKey('test-password', <Uint8Array>(<unknown>null))).rejects.toThrow('Cannot generate key without a salt')
+    await expect(generateKey('test-password', null as unknown as Uint8Array)).rejects.toThrow('Cannot generate key without a salt')
   })
 })

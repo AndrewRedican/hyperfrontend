@@ -39,7 +39,7 @@ describe('resolveBoxPosition', () => {
     expect(resolveBoxPosition('center')).toEqual({ vertical: 'center', horizontal: 'center' })
   })
 
-  it.each(<const>[
+  it.each([
     ['top-left', 'start', 'start'],
     ['top-center', 'start', 'center'],
     ['top-right', 'start', 'end'],
@@ -48,7 +48,7 @@ describe('resolveBoxPosition', () => {
     ['bottom-left', 'end', 'start'],
     ['bottom-center', 'end', 'center'],
     ['bottom-right', 'end', 'end'],
-  ])('resolves %s to vertical %s and horizontal %s', (position, vertical, horizontal) => {
+  ] as const)('resolves %s to vertical %s and horizontal %s', (position, vertical, horizontal) => {
     expect(resolveBoxPosition(position)).toEqual({ vertical, horizontal })
   })
 })

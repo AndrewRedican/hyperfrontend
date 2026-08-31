@@ -469,7 +469,7 @@ describe('channel/factory', () => {
     })
 
     it('getContractCompat returns the configured compatibility rule', () => {
-      const contractCompat = () => <const>{ compatible: true }
+      const contractCompat = () => ({ compatible: true }) as const
       const channel = createChannel({ ...config, settings: { contractCompat } }, deps)
 
       expect(channel.getContractCompat()).toBe(contractCompat)
@@ -551,7 +551,7 @@ describe('channel/factory', () => {
       channel.send('msg1')
 
       expect(sent).toEqual([{ type: '[nexus] new-message', senderId: 'test-broker-id', data: { type: 'msg1' } }])
-      expect(hasOwn(<object>(<{ data: unknown }>sent[0]).data, 'data')).toBe(false)
+      expect(hasOwn((sent[0] as { data: unknown }).data as object, 'data')).toBe(false)
     })
 
     it('does not flush when the channel is not active', () => {

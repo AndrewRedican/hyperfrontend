@@ -20,11 +20,11 @@ describe('Message Delivery Integration', () => {
   })
 
   function createConnectedPair(contractA: IChannelContract, contractB: IChannelContract) {
-    const brokerA = createBroker({ name: 'broker-a', contract: contractA, window: <Window>(<unknown>windowA) })
-    const channelA = brokerA.addChannel('to-b', <Window>(<unknown>windowB))
+    const brokerA = createBroker({ name: 'broker-a', contract: contractA, window: windowA as unknown as Window })
+    const channelA = brokerA.addChannel('to-b', windowB as unknown as Window)
 
-    const brokerB = createBroker({ name: 'broker-b', contract: contractB, window: <Window>(<unknown>windowB) })
-    const channelB = brokerB.addChannel('to-a', <Window>(<unknown>windowA))
+    const brokerB = createBroker({ name: 'broker-b', contract: contractB, window: windowB as unknown as Window })
+    const channelB = brokerB.addChannel('to-a', windowA as unknown as Window)
 
     channelA.connect()
     channelB.connect()

@@ -22,6 +22,7 @@ export const locateText = (target: unknown, pattern: string | RegExp, options?: 
   const patternIsString = typeof pattern === 'string'
   if (!patternIsString && !(pattern instanceof RegExp)) throw createError('Expected pattern to be either a string of a regular expression.')
   const match = patternIsString ? (text: string) => text === pattern : (key: string) => pattern.test(key)
-  const callback: Callback = (key, value, path, state) => getType(value) === 'string' && match(<string>value) && state.locations.push(path)
-  return traverse(target, callback, <DepthConfig>{ depth: [0, '*'], ...options }, { locations: [] }).locations
+  const callback: Callback = (key, value, path, state) =>
+    getType(value) === 'string' && match(value as string) && state.locations.push(path)
+  return traverse(target, callback, { depth: [0, '*'], ...options } as DepthConfig, { locations: [] }).locations
 }

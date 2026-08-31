@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { cleanOutputPath } from './clean-output'
 
-const ctx = (outputPath: string, workspaceRoot: string): BuildContext => <BuildContext>(<unknown>{ outputPath, workspaceRoot })
+const ctx = (outputPath: string, workspaceRoot: string): BuildContext => ({ outputPath, workspaceRoot }) as unknown as BuildContext
 
 describe('cleanOutputPath', () => {
   let workspaceRoot: string

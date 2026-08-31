@@ -21,8 +21,8 @@ const makeContext = (): BuildContext => ({
 })
 
 beforeEach(() => {
-  ;(<jest.Mock>buildJsBin).mockReset()
-  ;(<jest.Mock>buildNativeBin).mockReset().mockResolvedValue([])
+  ;(buildJsBin as jest.Mock).mockReset()
+  ;(buildNativeBin as jest.Mock).mockReset().mockResolvedValue([])
 })
 
 describe('runBinPhase', () => {
@@ -34,35 +34,35 @@ describe('runBinPhase', () => {
   })
 
   it('invokes buildJsBin once per declared bin', async () => {
-    ;(<jest.Mock>buildJsBin).mockResolvedValue([])
-    await runBinPhase(makeContext(), <BinConfig[]>[
+    ;(buildJsBin as jest.Mock).mockResolvedValue([])
+    await runBinPhase(makeContext(), [
       { name: 'cz', format: 'cjs' },
       { name: 'cl', format: 'cjs' },
-    ])
+    ] as BinConfig[])
     expect(buildJsBin).toHaveBeenCalledTimes(2)
   })
 
   it('aggregates outputs from every bin in declaration order', async () => {
     const czOut: BinOutput = { name: 'cz', kind: 'cjs', outputPath: '/abs/dist/libs/foo/bin/cz.js' }
     const clOut: BinOutput = { name: 'cl', kind: 'cjs', outputPath: '/abs/dist/libs/foo/bin/cl.js' }
-    ;(<jest.Mock>buildJsBin).mockResolvedValueOnce([czOut]).mockResolvedValueOnce([clOut])
-    const result = await runBinPhase(makeContext(), <BinConfig[]>[
+    ;(buildJsBin as jest.Mock).mockResolvedValueOnce([czOut]).mockResolvedValueOnce([clOut])
+    const result = await runBinPhase(makeContext(), [
       { name: 'cz', format: 'cjs' },
       { name: 'cl', format: 'cjs' },
-    ])
+    ] as BinConfig[])
     expect(result).toEqual([czOut, clOut])
   })
 
   it('flattens multi-format output arrays returned by buildJsBin', async () => {
     const cjs: BinOutput = { name: 'hf', kind: 'cjs', outputPath: '/abs/dist/libs/foo/bin/hf.cjs.js' }
     const esm: BinOutput = { name: 'hf', kind: 'esm', outputPath: '/abs/dist/libs/foo/bin/hf.mjs' }
-    ;(<jest.Mock>buildJsBin).mockResolvedValueOnce([cjs, esm])
-    const result = await runBinPhase(makeContext(), <BinConfig[]>[{ name: 'hf', format: ['cjs', 'esm'] }])
+    ;(buildJsBin as jest.Mock).mockResolvedValueOnce([cjs, esm])
+    const result = await runBinPhase(makeContext(), [{ name: 'hf', format: ['cjs', 'esm'] }] as BinConfig[])
     expect(result).toEqual([cjs, esm])
   })
 
   it('forwards the resolved BuildContext to each buildJsBin invocation', async () => {
-    ;(<jest.Mock>buildJsBin).mockResolvedValue([])
+    ;(buildJsBin as jest.Mock).mockResolvedValue([])
     const ctx = makeContext()
     const bin: BinConfig = { name: 'cz', format: 'cjs' }
     await runBinPhase(ctx, [bin])
@@ -70,14 +70,14 @@ describe('runBinPhase', () => {
   })
 
   it('skips buildNativeBin for bins without a sea config', async () => {
-    ;(<jest.Mock>buildJsBin).mockResolvedValueOnce([{ name: 'cz', kind: 'cjs', outputPath: '/abs/dist/libs/foo/bin/cz.js' }])
-    await runBinPhase(makeContext(), <BinConfig[]>[{ name: 'cz', format: 'cjs' }])
+    ;(buildJsBin as jest.Mock).mockResolvedValueOnce([{ name: 'cz', kind: 'cjs', outputPath: '/abs/dist/libs/foo/bin/cz.js' }])
+    await runBinPhase(makeContext(), [{ name: 'cz', format: 'cjs' }] as BinConfig[])
     expect(buildNativeBin).not.toHaveBeenCalled()
   })
 
   it('runs buildNativeBin for bins with a sea config and forwards the CJS output path', async () => {
     const cjs: BinOutput = { name: 'hf-build', kind: 'cjs', outputPath: '/abs/dist/libs/foo/bin/hf-build.js' }
-    ;(<jest.Mock>buildJsBin).mockResolvedValueOnce([cjs])
+    ;(buildJsBin as jest.Mock).mockResolvedValueOnce([cjs])
     const ctx = makeContext()
     const bin: BinConfig = { name: 'hf-build', format: 'cjs', sea: { platforms: ['linux-x64'] } }
     await runBinPhase(ctx, [bin])
@@ -92,27 +92,27 @@ describe('runBinPhase', () => {
       outputPath: '/abs/dist/libs/foo/bin/hf-build.linux-x64',
       platform: 'linux-x64',
     }
-    ;(<jest.Mock>buildJsBin).mockResolvedValueOnce([cjs])
-    ;(<jest.Mock>buildNativeBin).mockResolvedValueOnce([native])
-    const result = await runBinPhase(makeContext(), <BinConfig[]>[{ name: 'hf-build', format: 'cjs', sea: { platforms: ['linux-x64'] } }])
+    ;(buildJsBin as jest.Mock).mockResolvedValueOnce([cjs])
+    ;(buildNativeBin as jest.Mock).mockResolvedValueOnce([native])
+    const result = await runBinPhase(makeContext(), [{ name: 'hf-build', format: 'cjs', sea: { platforms: ['linux-x64'] } }] as BinConfig[])
     expect(result).toEqual([cjs, native])
   })
 
   it('throws when a sea-enabled bin has no CJS output (defense in depth)', async () => {
-    ;(<jest.Mock>buildJsBin).mockResolvedValueOnce([{ name: 'hf-build', kind: 'esm', outputPath: '/abs/dist/libs/foo/bin/hf-build.mjs' }])
+    ;(buildJsBin as jest.Mock).mockResolvedValueOnce([{ name: 'hf-build', kind: 'esm', outputPath: '/abs/dist/libs/foo/bin/hf-build.mjs' }])
     await expect(
-      runBinPhase(makeContext(), <BinConfig[]>[{ name: 'hf-build', format: 'esm', sea: { platforms: ['linux-x64'] } }])
+      runBinPhase(makeContext(), [{ name: 'hf-build', format: 'esm', sea: { platforms: ['linux-x64'] } }] as BinConfig[])
     ).rejects.toThrow(/SEA requires a CJS bin output/)
     expect(buildNativeBin).not.toHaveBeenCalled()
   })
 
   it('emits no native outputs when buildNativeBin returns [] (platform skip)', async () => {
     const cjs: BinOutput = { name: 'hf-build', kind: 'cjs', outputPath: '/abs/dist/libs/foo/bin/hf-build.js' }
-    ;(<jest.Mock>buildJsBin).mockResolvedValueOnce([cjs])
-    ;(<jest.Mock>buildNativeBin).mockResolvedValueOnce([])
-    const result = await runBinPhase(makeContext(), <BinConfig[]>[
+    ;(buildJsBin as jest.Mock).mockResolvedValueOnce([cjs])
+    ;(buildNativeBin as jest.Mock).mockResolvedValueOnce([])
+    const result = await runBinPhase(makeContext(), [
       { name: 'hf-build', format: 'cjs', sea: { platforms: ['darwin-arm64'] } },
-    ])
+    ] as BinConfig[])
     expect(result).toEqual([cjs])
   })
 })

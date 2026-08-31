@@ -17,12 +17,12 @@ const _freeze = globalThis.Object.freeze
  * @returns A new WeakMap instance.
  */
 export const createWeakMap = <K extends WeakKey, V>(iterable?: Iterable<readonly [K, V]> | null): WeakMap<K, V> =>
-  <WeakMap<K, V>>_Reflect.construct(_WeakMap, iterable ? [iterable] : [])
+  _Reflect.construct(_WeakMap, iterable ? [iterable] : []) as WeakMap<K, V>
 
 /**
  * (Safe copy) Namespace object containing WeakMap factory.
  * Note: Importing this imports all methods in this namespace (no tree-shaking).
  */
-export const WeakMap = _freeze(<const>{
+export const WeakMap = _freeze({
   create: createWeakMap,
-})
+} as const)

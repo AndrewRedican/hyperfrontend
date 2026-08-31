@@ -167,7 +167,7 @@ export async function validateVersionState(options: ValidateVersionStateOptions)
 
   const expected: ExpectedVersionState = {
     version: state.nextVersion,
-    bumpType: <'major' | 'minor' | 'patch' | 'none'>state.bumpType,
+    bumpType: state.bumpType as 'major' | 'minor' | 'patch' | 'none',
     changelogEntry: state.changelogEntry,
     commitCount: state.commits?.length ?? 0,
   }

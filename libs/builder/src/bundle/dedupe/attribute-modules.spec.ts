@@ -18,7 +18,7 @@ describe('baseName', () => {
 describe('fingerprintOf', () => {
   const fingerprint = (source: string): string => {
     const sourceFile = ts.createSourceFile('chunk.js', source, ts.ScriptTarget.Latest, true, ts.ScriptKind.JS)
-    return fingerprintOf(<ts.Statement>sourceFile.statements[0], sourceFile)
+    return fingerprintOf(sourceFile.statements[0] as ts.Statement, sourceFile)
   }
 
   it('strips $N from a dep-namespace property access', () => {

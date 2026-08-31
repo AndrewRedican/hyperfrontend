@@ -36,7 +36,7 @@ const _freeze = globalThis.Object.freeze
  * const wrapped = createError('Request failed', { cause: originalError })
  * ```
  */
-export const createError = (message?: string, options?: ErrorOptions): Error => <Error>_Reflect.construct(_Error, [message, options])
+export const createError = (message?: string, options?: ErrorOptions): Error => _Reflect.construct(_Error, [message, options]) as Error
 
 /**
  * (Safe copy) Creates a new TypeError using the captured TypeError constructor.
@@ -54,7 +54,7 @@ export const createError = (message?: string, options?: ErrorOptions): Error => 
  * ```
  */
 export const createTypeError = (message?: string, options?: ErrorOptions): TypeError =>
-  <TypeError>_Reflect.construct(_TypeError, [message, options])
+  _Reflect.construct(_TypeError, [message, options]) as TypeError
 
 /**
  * (Safe copy) Creates a new RangeError using the captured RangeError constructor.
@@ -72,7 +72,7 @@ export const createTypeError = (message?: string, options?: ErrorOptions): TypeE
  * ```
  */
 export const createRangeError = (message?: string, options?: ErrorOptions): RangeError =>
-  <RangeError>_Reflect.construct(_RangeError, [message, options])
+  _Reflect.construct(_RangeError, [message, options]) as RangeError
 
 /**
  * (Safe copy) Creates a new ReferenceError using the captured ReferenceError constructor.
@@ -90,7 +90,7 @@ export const createRangeError = (message?: string, options?: ErrorOptions): Rang
  * ```
  */
 export const createReferenceError = (message?: string, options?: ErrorOptions): ReferenceError =>
-  <ReferenceError>_Reflect.construct(_ReferenceError, [message, options])
+  _Reflect.construct(_ReferenceError, [message, options]) as ReferenceError
 
 /**
  * (Safe copy) Creates a new SyntaxError using the captured SyntaxError constructor.
@@ -108,7 +108,7 @@ export const createReferenceError = (message?: string, options?: ErrorOptions): 
  * ```
  */
 export const createSyntaxError = (message?: string, options?: ErrorOptions): SyntaxError =>
-  <SyntaxError>_Reflect.construct(_SyntaxError, [message, options])
+  _Reflect.construct(_SyntaxError, [message, options]) as SyntaxError
 
 /**
  * (Safe copy) Creates a new URIError using the captured URIError constructor.
@@ -126,7 +126,7 @@ export const createSyntaxError = (message?: string, options?: ErrorOptions): Syn
  * ```
  */
 export const createURIError = (message?: string, options?: ErrorOptions): URIError =>
-  <URIError>_Reflect.construct(_URIError, [message, options])
+  _Reflect.construct(_URIError, [message, options]) as URIError
 
 /**
  * (Safe copy) Creates a new EvalError using the captured EvalError constructor.
@@ -142,7 +142,7 @@ export const createURIError = (message?: string, options?: ErrorOptions): URIErr
  * ```
  */
 export const createEvalError = (message?: string, options?: ErrorOptions): EvalError =>
-  <EvalError>_Reflect.construct(_EvalError, [message, options])
+  _Reflect.construct(_EvalError, [message, options]) as EvalError
 
 /**
  * (Safe copy) Creates a new AggregateError using the captured AggregateError constructor.
@@ -163,13 +163,13 @@ export const createEvalError = (message?: string, options?: ErrorOptions): EvalE
  * ```
  */
 export const createAggregateError = (errors: Iterable<unknown>, message?: string, options?: ErrorOptions): AggregateError =>
-  <AggregateError>_Reflect.construct(_AggregateError, [errors, message, options])
+  _Reflect.construct(_AggregateError, [errors, message, options]) as AggregateError
 
 /**
  * (Safe copy) Namespace object containing Error factory functions.
  * Note: Importing this imports all methods in this namespace (no tree-shaking).
  */
-export const Error = _freeze(<const>{
+export const Error = _freeze({
   create: createError,
   TypeError: createTypeError,
   RangeError: createRangeError,
@@ -178,4 +178,4 @@ export const Error = _freeze(<const>{
   URIError: createURIError,
   EvalError: createEvalError,
   AggregateError: createAggregateError,
-})
+} as const)

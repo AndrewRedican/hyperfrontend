@@ -157,7 +157,7 @@ export function isRepositoryConfig(value: unknown): value is RepositoryConfig {
     return false
   }
 
-  const obj = <Record<string, unknown>>value
+  const obj = value as Record<string, unknown>
 
   return (
     typeof obj['platform'] === 'string' &&

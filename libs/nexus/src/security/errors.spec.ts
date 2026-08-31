@@ -234,7 +234,7 @@ describe('security/errors', () => {
       try {
         retryFn(new Uint8Array([1, 2, 3]))
       } catch (error) {
-        thrownError = <SecurityError>error
+        thrownError = error as SecurityError
       }
 
       expect(thrownError).not.toBeNull()
@@ -292,7 +292,7 @@ describe('security/errors', () => {
       try {
         retryFn(new Uint8Array([1]))
       } catch (error) {
-        thrownError = <SecurityError>error
+        thrownError = error as SecurityError
       }
 
       expect(thrownError).not.toBeNull()
@@ -311,7 +311,7 @@ describe('security/errors', () => {
       try {
         retryFn(new Uint8Array([1]))
       } catch (error) {
-        thrownError = <SecurityError>error
+        thrownError = error as SecurityError
       }
 
       expect(thrownError).not.toBeNull()

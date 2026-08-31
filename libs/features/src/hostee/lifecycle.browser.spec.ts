@@ -45,7 +45,7 @@ function createMockChannel(): MockChannel {
   const send = jest.fn()
   const disconnect = jest.fn()
   const connect = jest.fn()
-  const channel = <ChannelHandle>(<unknown>{
+  const channel = {
     on: (event: string, handler: (data?: unknown) => void) => {
       ;(listeners[event] ?? (listeners[event] = [])).push(handler)
       return () => undefined
@@ -57,7 +57,7 @@ function createMockChannel(): MockChannel {
     send,
     disconnect,
     connect,
-  })
+  } as unknown as ChannelHandle
   return {
     channel,
     trigger: (event, data) => listeners[event]?.forEach((handler) => handler(data)),
@@ -71,31 +71,31 @@ function createMockChannel(): MockChannel {
 function createMockBroker(channel: ChannelHandle): { broker: BrokerHandle; addChannel: jest.Mock; registerProtocol: jest.Mock } {
   const addChannel = jest.fn(() => channel)
   const registerProtocol = jest.fn()
-  return { broker: <BrokerHandle>(<unknown>{ addChannel, registerProtocol, logger: { id: 'logger' } }), addChannel, registerProtocol }
+  return { broker: { addChannel, registerProtocol, logger: { id: 'logger' } } as unknown as BrokerHandle, addChannel, registerProtocol }
 }
 
 describe('resolveHostWindow', () => {
   it('returns the parent window when embedded in an iframe', () => {
-    const parent = <Window>(<unknown>{ name: 'parent' })
-    expect(resolveHostWindow(<Window>(<unknown>{ parent, opener: null }))).toBe(parent)
+    const parent = { name: 'parent' } as unknown as Window
+    expect(resolveHostWindow({ parent, opener: null } as unknown as Window)).toBe(parent)
   })
 
   it('returns the opener window when launched as a popup', () => {
-    const opener = <Window>(<unknown>{ name: 'opener' })
-    const win = <Window>(<unknown>{ opener })
+    const opener = { name: 'opener' } as unknown as Window
+    const win = { opener } as unknown as Window
     Object.assign(win, { parent: win })
     expect(resolveHostWindow(win)).toBe(opener)
   })
 
   it('returns null when running at the top level', () => {
-    const win = <Window>(<unknown>{ opener: null })
+    const win = { opener: null } as unknown as Window
     Object.assign(win, { parent: win })
     expect(resolveHostWindow(win)).toBeNull()
   })
 })
 
 describe('createFeatureHandle', () => {
-  const hostWindow = <Window>(<unknown>{ name: 'host' })
+  const hostWindow = { name: 'host' } as unknown as Window
   // note: A schema-free contract keeps payload validation inert here; the schema paths are covered by the payload validation block below.
   const emptyContract: FeatureContract = { emitted: [], accepted: [] }
 
@@ -110,7 +110,7 @@ describe('createFeatureHandle', () => {
     const mock = createMockChannel()
     const { broker, addChannel } = createMockBroker(mock.channel)
     createFeatureHandle(broker, hostWindow, createEventEmitter(), { contract: emptyContract })
-    const settings = <{ contractCompat: (own: unknown, peer: unknown) => unknown }>addChannel.mock.calls[0][2]
+    const settings = addChannel.mock.calls[0][2] as { contractCompat: (own: unknown, peer: unknown) => unknown }
     expect(
       settings.contractCompat({ emitted: [], accepted: [], version: '1.0.0' }, { emitted: [], accepted: [], version: '2.0.0' })
     ).toEqual({ compatible: false, reason: expect.stringContaining('2.0.0') })
@@ -515,7 +515,7 @@ describe('createFeatureHandle', () => {
       if (!call) {
         throw createError(`expected a sent envelope at index ${index}`)
       }
-      return <Record<string, unknown>>call[1]
+      return call[1] as Record<string, unknown>
     }
 
     it('sends a correlated request envelope to the host', async () => {

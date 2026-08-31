@@ -33,7 +33,7 @@ export function createPacketObfuscator(encrypt: (message: string, password: stri
     try {
       encrypted = await encrypt(text, password)
     } catch (e) {
-      throw createError(`Cannot obfuscate packet. ${(<Error>e)?.message}`)
+      throw createError(`Cannot obfuscate packet. ${(e as Error)?.message}`)
     }
     return encrypted
   }

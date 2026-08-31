@@ -6,13 +6,13 @@ describe('openExternalWindow', () => {
   })
 
   it('opens the url in a blank window with the given features', () => {
-    const open = jest.spyOn(window, 'open').mockReturnValue(<Window>(<unknown>{ closed: false, close: jest.fn() }))
+    const open = jest.spyOn(window, 'open').mockReturnValue({ closed: false, close: jest.fn() } as unknown as Window)
     openExternalWindow('https://feature.example/', 'width=400')
     expect(open).toHaveBeenCalledWith('https://feature.example/', '_blank', 'width=400')
   })
 
   it('exposes the opened window as the target', () => {
-    const opened = <Window>(<unknown>{ closed: false, close: jest.fn() })
+    const opened = { closed: false, close: jest.fn() } as unknown as Window
     jest.spyOn(window, 'open').mockReturnValue(opened)
     expect(openExternalWindow('https://feature.example/').target).toBe(opened)
   })
@@ -23,20 +23,20 @@ describe('openExternalWindow', () => {
   })
 
   it('exposes no in-document element', () => {
-    jest.spyOn(window, 'open').mockReturnValue(<Window>(<unknown>{ closed: false, close: jest.fn() }))
+    jest.spyOn(window, 'open').mockReturnValue({ closed: false, close: jest.fn() } as unknown as Window)
     expect(openExternalWindow('https://feature.example/').element).toBeUndefined()
   })
 
   it('closes a still-open window on cleanup', () => {
     const close = jest.fn()
-    jest.spyOn(window, 'open').mockReturnValue(<Window>(<unknown>{ closed: false, close }))
+    jest.spyOn(window, 'open').mockReturnValue({ closed: false, close } as unknown as Window)
     openExternalWindow('https://feature.example/').cleanup()
     expect(close).toHaveBeenCalledTimes(1)
   })
 
   it('does not re-close an already-closed window', () => {
     const close = jest.fn()
-    jest.spyOn(window, 'open').mockReturnValue(<Window>(<unknown>{ closed: true, close }))
+    jest.spyOn(window, 'open').mockReturnValue({ closed: true, close } as unknown as Window)
     openExternalWindow('https://feature.example/').cleanup()
     expect(close).not.toHaveBeenCalled()
   })

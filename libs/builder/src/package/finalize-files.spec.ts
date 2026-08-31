@@ -29,9 +29,9 @@ const makeContext = (overrides?: Partial<BuildContext>): BuildContext => ({
 const baseConfig: BuildConfig = { projectRoot: '/abs/libs/foo', workspaceRoot: '/abs/repo' }
 
 beforeEach(() => {
-  ;(<jest.Mock>reflectFilesAllowlist).mockReset().mockReturnValue(['**/index.*', '**/index.d.ts', 'README.md'])
-  ;(<jest.Mock>readJsonFile).mockReset().mockReturnValue(<PackageJson>{ name: 'foo' })
-  ;(<jest.Mock>writeOutputPackageJson).mockReset()
+  ;(reflectFilesAllowlist as jest.Mock).mockReset().mockReturnValue(['**/index.*', '**/index.d.ts', 'README.md'])
+  ;(readJsonFile as jest.Mock).mockReset().mockReturnValue({ name: 'foo' } as PackageJson)
+  ;(writeOutputPackageJson as jest.Mock).mockReset()
 })
 
 describe('finalizeFilesAllowlist', () => {

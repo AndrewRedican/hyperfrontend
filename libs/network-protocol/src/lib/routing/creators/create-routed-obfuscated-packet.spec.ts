@@ -12,7 +12,7 @@ describe('createRoutedObfuscatedPacket', () => {
   })
 
   it('throws error when obfuscated packet is not valid', () => {
-    expect(() => createRoutedObfuscatedPacket(topicId, <any>{})).toThrow(
+    expect(() => createRoutedObfuscatedPacket(topicId, {} as any)).toThrow(
       'Cannot create a routed obfuscated packet without a valid obfuscated packet'
     )
   })

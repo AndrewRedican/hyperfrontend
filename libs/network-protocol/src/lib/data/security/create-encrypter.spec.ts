@@ -17,7 +17,7 @@ describe('createDataEncrypter (Node.js)', () => {
 
     it('produces different outputs for different passwords', async () => {
       const encryptData = createDataEncrypter(encrypt)
-      const data = <SerializedData>{ message: JSON.stringify('test') }
+      const data = { message: JSON.stringify('test') } as SerializedData
 
       const result1 = await encryptData(data, 'password1')
       const result2 = await encryptData(data, 'password2')
@@ -29,7 +29,7 @@ describe('createDataEncrypter (Node.js)', () => {
 
     it('produces different outputs for same data due to encryption randomness', async () => {
       const encryptData = createDataEncrypter(encrypt)
-      const data = <SerializedData>{ message: JSON.stringify('test') }
+      const data = { message: JSON.stringify('test') } as SerializedData
       const password = 'same-password'
 
       const result1 = await encryptData(data, password)
@@ -46,7 +46,7 @@ describe('createDataEncrypter (Node.js)', () => {
       it(`handles ${description}`, async () => {
         const encryptData = createDataEncrypter(encrypt)
 
-        await expect(encryptData(<SerializedData>(<unknown>data), password)).rejects.toThrow()
+        await expect(encryptData(data as unknown as SerializedData, password)).rejects.toThrow()
       })
     })
 
@@ -55,14 +55,14 @@ describe('createDataEncrypter (Node.js)', () => {
       const circular: { self?: unknown } = {}
       circular.self = circular
 
-      await expect(encryptData(<SerializedData>(<unknown>circular), 'valid-password')).rejects.toThrow()
+      await expect(encryptData(circular as unknown as SerializedData, 'valid-password')).rejects.toThrow()
     })
 
     it('handles encryption function failure', async () => {
       const mockEncrypt = jest.fn().mockRejectedValue(new Error('Encryption failed'))
       const encryptData = createDataEncrypter(mockEncrypt)
 
-      const data = <SerializedData>{ message: JSON.stringify('test') }
+      const data = { message: JSON.stringify('test') } as SerializedData
 
       await expect(encryptData(data, 'password')).rejects.toThrow('Cannot encrypt data')
     })

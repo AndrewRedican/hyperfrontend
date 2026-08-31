@@ -96,7 +96,7 @@ describe('selectiveCopy', () => {
   it('supports custom classes', () => {
     registerIterableClass<Map<unknown, unknown>>(
       Map,
-      (map) => <string[]>Array.from(map.keys()),
+      (map) => Array.from(map.keys()) as string[],
       (map, key) => map.get(key),
       (map, value, key) => map.set(key, value),
       (map, key) => map.delete(key)
@@ -114,7 +114,7 @@ describe('selectiveCopy', () => {
       constructor() {
         const sym = Symbol('testKey')
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        ;(<any>this)[sym] = 'symbolValue'
+        ;(this as any)[sym] = 'symbolValue'
         this['regular'] = 'value'
       }
     }
@@ -123,11 +123,11 @@ describe('selectiveCopy', () => {
       (obj) => {
         const stringKeys = Object.keys(obj)
         const symbolKeys = Object.getOwnPropertySymbols(obj)
-        return [...stringKeys, ...(<string[]>(<unknown>symbolKeys))]
+        return [...stringKeys, ...(symbolKeys as unknown as string[])]
       },
-      (obj, key) => (<Record<string | symbol, unknown>>obj)[<string | symbol>key],
-      (obj, value, key) => ((<Record<string | symbol, unknown>>obj)[<string | symbol>key] = value),
-      (obj, key) => delete (<Record<string | symbol, unknown>>obj)[<string | symbol>key]
+      (obj, key) => (obj as Record<string | symbol, unknown>)[key as string | symbol],
+      (obj, value, key) => ((obj as Record<string | symbol, unknown>)[key as string | symbol] = value),
+      (obj, key) => delete (obj as Record<string | symbol, unknown>)[key as string | symbol]
     )
     const target = new CustomObject()
     const { clone } = selectiveCopy(target)
@@ -142,9 +142,9 @@ describe('selectiveCopy - with config detectCircularReferences:true', () => {
   afterEach(() => {
     setConfig({ detectCircularReferences: false })
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    delete (<any>Object.prototype).polluted
+    delete (Object.prototype as any).polluted
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    delete (<any>Object.prototype).value
+    delete (Object.prototype as any).value
   })
 
   it('clones primitive type data', () => {
@@ -236,7 +236,7 @@ describe('selectiveCopy - with config detectCircularReferences:true', () => {
   it('supports custom classes', () => {
     registerIterableClass<Map<unknown, unknown>>(
       Map,
-      (map) => <string[]>Array.from(map.keys()),
+      (map) => Array.from(map.keys()) as string[],
       (map, key) => map.get(key),
       (map, value, key) => map.set(key, value),
       (map, key) => map.delete(key)
@@ -262,7 +262,7 @@ describe('selectiveCopy - with config detectCircularReferences:true', () => {
       constructor() {
         const sym = Symbol('testKey')
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        ;(<any>this)[sym] = 'symbolValue'
+        ;(this as any)[sym] = 'symbolValue'
         this['regular'] = 'value'
       }
     }
@@ -271,11 +271,11 @@ describe('selectiveCopy - with config detectCircularReferences:true', () => {
       (obj) => {
         const stringKeys = Object.keys(obj)
         const symbolKeys = Object.getOwnPropertySymbols(obj)
-        return [...stringKeys, ...(<string[]>(<unknown>symbolKeys))]
+        return [...stringKeys, ...(symbolKeys as unknown as string[])]
       },
-      (obj, key) => (<Record<string | symbol, unknown>>obj)[<string | symbol>key],
-      (obj, value, key) => ((<Record<string | symbol, unknown>>obj)[<string | symbol>key] = value),
-      (obj, key) => delete (<Record<string | symbol, unknown>>obj)[<string | symbol>key]
+      (obj, key) => (obj as Record<string | symbol, unknown>)[key as string | symbol],
+      (obj, value, key) => ((obj as Record<string | symbol, unknown>)[key as string | symbol] = value),
+      (obj, key) => delete (obj as Record<string | symbol, unknown>)[key as string | symbol]
     )
     const target = new CustomObject()
     const { clone } = selectiveCopy(target)
@@ -287,16 +287,16 @@ describe('selectiveCopy - with config detectCircularReferences:true', () => {
     const target: Record<string, unknown> = { value: 42 }
     target['self'] = target
     const { clone } = selectiveCopy(target)
-    expect(<Record<string, unknown>>clone['self']).toBe(clone)
-    expect(<Record<string, unknown>>clone['value']).toBe(42)
+    expect(clone['self'] as Record<string, unknown>).toBe(clone)
+    expect(clone['value'] as Record<string, unknown>).toBe(42)
   })
 
   it('recreates circular references in arrays', () => {
     const target: unknown[] = [1, 2, 3]
     target.push(target)
     const { clone } = selectiveCopy(target)
-    expect(<unknown[]>clone[3]).toBe(clone)
-    expect(<unknown[]>clone[0]).toBe(1)
+    expect(clone[3] as unknown[]).toBe(clone)
+    expect(clone[0] as unknown[]).toBe(1)
   })
 })
 
@@ -306,9 +306,9 @@ describe('selectiveCopy - __proto__ pollution prevention (non-circular)', () => 
   afterEach(() => {
     setConfig({ detectCircularReferences: false })
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    delete (<any>Object.prototype).polluted
+    delete (Object.prototype as any).polluted
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    delete (<any>Object.prototype).value
+    delete (Object.prototype as any).value
   })
 
   it('prevents __proto__ pollution during basic copy', () => {
@@ -334,7 +334,7 @@ describe('selectiveCopy - __proto__ pollution prevention (non-circular)', () => 
     const target = { safe: 'value', nested }
     const { clone } = selectiveCopy(target)
     expect(clone).toEqual({ safe: 'value', nested: { alsoSafe: 42 } })
-    expect(Object.keys(<object>(<Record<string, unknown>>clone)['nested'])).toEqual(['alsoSafe'])
+    expect(Object.keys((clone as Record<string, unknown>)['nested'] as object)).toEqual(['alsoSafe'])
     expect(Object.prototype).not.toHaveProperty('polluted')
   })
 
@@ -357,11 +357,11 @@ describe('selectiveCopy - __proto__ pollution prevention (circular references)',
   afterEach(() => {
     setConfig({ detectCircularReferences: false })
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    delete (<any>Object.prototype).polluted
+    delete (Object.prototype as any).polluted
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    delete (<any>Object.prototype).value
+    delete (Object.prototype as any).value
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    delete (<any>Object.prototype).traversal
+    delete (Object.prototype as any).traversal
   })
 
   it('prevents pollution via __proto__ in circular reference paths', () => {
@@ -376,14 +376,14 @@ describe('selectiveCopy - __proto__ pollution prevention (circular references)',
     const { clone } = selectiveCopy(outer)
     expect(clone).toHaveProperty('inner')
     expect(clone['inner']).toEqual({ value: 'inner' })
-    expect(Object.keys(<Record<string, unknown>>clone['inner'])).toEqual(['value'])
+    expect(Object.keys(clone['inner'] as Record<string, unknown>)).toEqual(['value'])
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    delete (<any>inner).__proto__
+    delete (inner as any).__proto__
   })
 
   it('prevents pollution when __proto__ appears in startPath during circular ref resolution', () => {
     const target: Record<string, unknown> = { a: { b: {} } }
-    ;(<Record<string, unknown>>target['a'])['b'] = target['a']
+    ;(target['a'] as Record<string, unknown>)['b'] = target['a']
     Object.defineProperty(target, '__proto__', {
       value: { polluted: 'bad' },
       enumerable: true,
@@ -391,7 +391,7 @@ describe('selectiveCopy - __proto__ pollution prevention (circular references)',
     })
     const { clone } = selectiveCopy(target)
     expect(clone).toHaveProperty('a')
-    expect(<Record<string, unknown>>clone['a']).toHaveProperty('b')
+    expect(clone['a'] as Record<string, unknown>).toHaveProperty('b')
     expect(Object.prototype).not.toHaveProperty('polluted')
   })
 
@@ -406,8 +406,8 @@ describe('selectiveCopy - __proto__ pollution prevention (circular references)',
     })
     const { clone } = selectiveCopy(target)
     expect(clone).toHaveProperty('inner')
-    expect(<Record<string, unknown>>clone['inner']).toHaveProperty('self')
-    expect(<Record<string, unknown>>clone['inner']).toHaveProperty('safe')
+    expect(clone['inner'] as Record<string, unknown>).toHaveProperty('self')
+    expect(clone['inner'] as Record<string, unknown>).toHaveProperty('safe')
     expect(Object.prototype).not.toHaveProperty('polluted')
   })
 
@@ -423,7 +423,7 @@ describe('selectiveCopy - __proto__ pollution prevention (circular references)',
     })
     const { clone } = selectiveCopy(target)
     expect(clone).toHaveProperty('level1')
-    expect(<Record<string, unknown>>clone['level1']).toHaveProperty('level2')
+    expect(clone['level1'] as Record<string, unknown>).toHaveProperty('level2')
     expect(Object.prototype).not.toHaveProperty('polluted')
   })
 })

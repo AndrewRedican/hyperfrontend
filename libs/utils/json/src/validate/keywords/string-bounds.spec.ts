@@ -3,7 +3,7 @@ import type { ValidationContext } from '../context'
 import { validateStringBounds } from './string-bounds'
 
 describe('validateStringBounds', () => {
-  const ctx = <ValidationContext>{ errors: [], strictPatterns: false }
+  const ctx = { errors: [], strictPatterns: false } as ValidationContext
 
   it('returns true if no constraints', () => {
     expect(validateStringBounds('abc', {}, ctx)).toBe(true)
@@ -36,11 +36,11 @@ describe('validateStringBounds', () => {
 
   describe('strictPatterns mode', () => {
     it('reports error for invalid regex pattern when strictPatterns is true', () => {
-      const strictCtx = <ValidationContext>{
+      const strictCtx = {
         errors: [],
         strictPatterns: true,
         collectAllErrors: true,
-      }
+      } as ValidationContext
       const schema: Schema = { pattern: '[' }
       const result = validateStringBounds('abc', schema, strictCtx)
 
@@ -51,11 +51,11 @@ describe('validateStringBounds', () => {
     })
 
     it('does not report error for invalid regex when strictPatterns is false', () => {
-      const nonStrictCtx = <ValidationContext>{
+      const nonStrictCtx = {
         errors: [],
         strictPatterns: false,
         collectAllErrors: true,
-      }
+      } as ValidationContext
       const schema: Schema = { pattern: '[' }
       const result = validateStringBounds('abc', schema, nonStrictCtx)
 

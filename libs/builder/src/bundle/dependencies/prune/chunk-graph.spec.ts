@@ -30,23 +30,23 @@ describe('collectRefs', () => {
 
 describe('requireBindingLocals', () => {
   it('returns the identifier binding of a namespace require', () => {
-    expect(requireBindingLocals(<Statement>parseChunk("var a = require('x')").statements[0])).toEqual(['a'])
+    expect(requireBindingLocals(parseChunk("var a = require('x')").statements[0] as Statement)).toEqual(['a'])
   })
 
   it('returns every name of a destructured require', () => {
-    expect(requireBindingLocals(<Statement>parseChunk("var { a, b } = require('x')").statements[0])).toEqual(['a', 'b'])
+    expect(requireBindingLocals(parseChunk("var { a, b } = require('x')").statements[0] as Statement)).toEqual(['a', 'b'])
   })
 
   it('returns an empty list for a non-variable statement', () => {
-    expect(requireBindingLocals(<Statement>parseChunk('function f() {}').statements[0])).toEqual([])
+    expect(requireBindingLocals(parseChunk('function f() {}').statements[0] as Statement)).toEqual([])
   })
 
   it('skips a nested binding pattern element', () => {
-    expect(requireBindingLocals(<Statement>parseChunk("var { a: { b } } = require('x')").statements[0])).toEqual([])
+    expect(requireBindingLocals(parseChunk("var { a: { b } } = require('x')").statements[0] as Statement)).toEqual([])
   })
 
   it('skips an array-destructured require binding', () => {
-    expect(requireBindingLocals(<Statement>parseChunk("var [a] = require('x')").statements[0])).toEqual([])
+    expect(requireBindingLocals(parseChunk("var [a] = require('x')").statements[0] as Statement)).toEqual([])
   })
 })
 

@@ -21,7 +21,7 @@ import { subtle } from '../subtle/browser'
  */
 export async function createHash(data: string, algorithm: HashAlgorithm = 'SHA-256'): Promise<string> {
   try {
-    return from(createUint8Array(await subtle.digest(algorithm, <BufferSource>utf8StringToUint8Array(data))))
+    return from(createUint8Array(await subtle.digest(algorithm, utf8StringToUint8Array(data) as BufferSource)))
       .map((b) => b.toString(16).padStart(2, '0'))
       .join('')
   } catch {

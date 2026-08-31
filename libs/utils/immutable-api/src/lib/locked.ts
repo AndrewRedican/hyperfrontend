@@ -37,9 +37,9 @@ export type LockedMethod = (
 export const locked = (): LockedMethod => {
   return function lockMethod(target, key, descriptor) {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
-    const original = <Function>descriptor.value
+    const original = descriptor.value as Function
     const BOUND = Symbol(`[[locked.bound:${String(key)}]]`)
-    return <PropertyDescriptor>{
+    return {
       configurable: false,
       enumerable: false,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -57,6 +57,6 @@ export const locked = (): LockedMethod => {
       set() {
         throw createTypeError(`Cannot overwrite locked method ${String(key)}`)
       },
-    }
+    } as PropertyDescriptor
   }
 }

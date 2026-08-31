@@ -40,6 +40,6 @@ const handlers: Handlers = {
  * ```
  */
 export const rootReducer = (state = createInitialState(), action: Action): State => {
-  const handler = <((state: State, action: Action) => State) | undefined>handlers[<keyof Handlers>action.type]
+  const handler = handlers[action.type as keyof Handlers] as ((state: State, action: Action) => State) | undefined
   return handler ? handler(state, action) : state
 }

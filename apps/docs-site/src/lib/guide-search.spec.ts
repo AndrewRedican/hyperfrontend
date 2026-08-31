@@ -10,7 +10,7 @@ import { searchGuides } from './guide-search'
  * @returns An index entry carrying every field the search reads
  */
 function guide(overrides: Partial<GuideIndexEntry>): GuideIndexEntry {
-  return <GuideIndexEntry>{
+  return {
     slug: 'a-guide',
     route: '/docs/guides/a-guide',
     type: 'how-to',
@@ -21,7 +21,7 @@ function guide(overrides: Partial<GuideIndexEntry>): GuideIndexEntry {
     keywords: [],
     headings: [],
     ...overrides,
-  }
+  } as GuideIndexEntry
 }
 
 const CORPUS = [

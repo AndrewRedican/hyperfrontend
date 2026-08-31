@@ -74,7 +74,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
       // why: trailingSlash is enabled site-wide, so sitemap locs must match the canonical trailing-slash form
       url: `${SITE_URL}${url.endsWith('/') ? url : `${url}/`}`,
       lastModified: contentDate ? createDate(contentDate) : createDate(),
-      changeFrequency: url === '/' ? <const>'weekly' : <const>'monthly',
+      changeFrequency: url === '/' ? ('weekly' as const) : ('monthly' as const),
       priority: url === '/' ? 1.0 : url.startsWith('/docs/libraries') ? 0.8 : url.startsWith('/docs/guides/') ? 0.7 : 0.6,
     }
   })

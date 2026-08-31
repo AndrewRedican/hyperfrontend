@@ -17,7 +17,7 @@ interface MockChannel {
 function createMockChannel(): MockChannel {
   const listeners: Record<string, Array<(data?: unknown) => void>> = {}
   const destroy = jest.fn()
-  const channel = <ChannelHandle>(<unknown>{
+  const channel = {
     on: (event: string, handler: (data?: unknown) => void) => {
       ;(listeners[event] ?? (listeners[event] = [])).push(handler)
       return () => undefined
@@ -27,7 +27,7 @@ function createMockChannel(): MockChannel {
     disconnect: jest.fn(),
     destroy,
     connect: jest.fn(),
-  })
+  } as unknown as ChannelHandle
   return {
     channel,
     trigger: (event, data) => listeners[event]?.forEach((handler) => handler(data)),
@@ -35,7 +35,7 @@ function createMockChannel(): MockChannel {
   }
 }
 
-const TARGET = <Window>(<unknown>{ name: 'target' })
+const TARGET = { name: 'target' } as unknown as Window
 
 function createDeferred() {
   const settle: { resolve(): void; reject(reason: unknown): void } = { resolve: () => undefined, reject: () => undefined }
@@ -54,20 +54,20 @@ function flush() {
 
 function setup(config: { target?: Window | null; element?: HTMLElement } = {}) {
   const mock = createMockChannel()
-  const broker = <BrokerHandle>(<unknown>{ addChannel: jest.fn(() => mock.channel) })
+  const broker = { addChannel: jest.fn(() => mock.channel) } as unknown as BrokerHandle
   const cleanup = jest.fn()
   let context: MountContext | undefined
   const mount = jest.fn((ctx: MountContext): MountResult => {
     context = ctx
     return {
-      target: 'target' in config ? <Window | null>config.target : TARGET,
+      target: 'target' in config ? (config.target as Window | null) : TARGET,
       element: config.element,
       present: { mode: 'embedded' },
       cleanup,
     }
   })
   const emitter = createEventEmitter()
-  const handle = createShellHandle(broker, <ShellOptions>{ container: '#shell' }, emitter, {
+  const handle = createShellHandle(broker, { container: '#shell' } as ShellOptions, emitter, {
     contract: { emitted: [], accepted: [] },
     selectMount: jest.fn(() => mount),
     registerSecurity: jest.fn(() => undefined),
@@ -105,7 +105,7 @@ describe('createShellHandle', () => {
     }
 
     it('invokes onMount with the mounted element and display mode', () => {
-      const element = <HTMLElement>(<unknown>{ tagName: 'IFRAME' })
+      const element = { tagName: 'IFRAME' } as unknown as HTMLElement
       const ctx = setup({ element })
       const onMount = jest.fn()
       ctx.handle.open({ plugins: [{ name: 'fade', onMount }] })
@@ -180,7 +180,7 @@ describe('createShellHandle', () => {
     })
 
     it('invokes onUnmount with the plugin context on destroy', async () => {
-      const element = <HTMLElement>(<unknown>{ tagName: 'IFRAME' })
+      const element = { tagName: 'IFRAME' } as unknown as HTMLElement
       const ctx = setup({ element })
       const onUnmount = jest.fn()
       ctx.handle.open({ plugins: [{ name: 'exit', onUnmount }] })

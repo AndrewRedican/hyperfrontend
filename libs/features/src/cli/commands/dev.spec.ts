@@ -8,12 +8,12 @@ const mkFlags = (over: Partial<CliFlags>): CliFlags => ({ ci: false, yes: false,
 
 const sink = (): { stream: NodeJS.WritableStream; text: () => string } => {
   const chunks: string[] = []
-  const stream = <NodeJS.WritableStream>(<unknown>{
+  const stream = {
     write: (chunk: string): boolean => {
       chunks.push(chunk)
       return true
     },
-  })
+  } as unknown as NodeJS.WritableStream
   return { stream, text: () => chunks.join('') }
 }
 
@@ -100,10 +100,10 @@ describe('runDev', () => {
   })
 
   it('closes every server after a termination signal by default', async () => {
-    jest.spyOn(process, 'once').mockImplementation(<typeof process.once>((_event: string, listener: () => void) => {
+    jest.spyOn(process, 'once').mockImplementation(((_event: string, listener: () => void) => {
       listener()
       return process
-    }))
+    }) as typeof process.once)
     const close = jest.fn(() => Promise.resolve())
     const code = await runDev(deps({ waitForClose: undefined, startServer: () => Promise.resolve(handle({ close })) }))
     expect({ code, closed: close.mock.calls.length }).toEqual({ code: 0, closed: 1 })

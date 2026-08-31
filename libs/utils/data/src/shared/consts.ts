@@ -9,29 +9,29 @@ export const registeredIterableClasses: RegisteredIterableClassEntry[] = [
     classRef: Array,
     instantiate: () => [],
     getKeys: (target: unknown) => {
-      const keysArray = keys(<Iterable<string>>target)
+      const keysArray = keys(target as Iterable<string>)
       if (getConfig().detectCircularReferences) {
         return keysArray.filter((key) => !isMarker(key))
       }
       return keysArray
     },
-    read: (target, key) => (<Array<unknown>>target)[<number>key],
-    write: (target, value, key) => ((<Array<unknown>>target)[<number>key] = value),
-    remove: (target, value) => (<Array<unknown>>target).splice(<number>value, 1),
+    read: (target, key) => (target as Array<unknown>)[key as number],
+    write: (target, value, key) => ((target as Array<unknown>)[key as number] = value),
+    remove: (target, value) => (target as Array<unknown>).splice(value as number, 1),
   },
   {
     classRef: Object,
     instantiate: () => ({}),
     getKeys: (target: unknown) => {
-      const keysArray = keys(<Iterable<string>>target)
+      const keysArray = keys(target as Iterable<string>)
       if (getConfig().detectCircularReferences) {
         return keysArray.filter((key) => !isMarker(key))
       }
       return keysArray
     },
-    read: (target, key) => (<Record<string, unknown>>target)[<string>key],
-    write: (target, value, key) => ((<Record<string, unknown>>target)[<string>key] = value),
-    remove: (target, value) => delete (<Record<string, unknown>>target)[<string>value],
+    read: (target, key) => (target as Record<string, unknown>)[key as string],
+    write: (target, value, key) => ((target as Record<string, unknown>)[key as string] = value),
+    remove: (target, value) => delete (target as Record<string, unknown>)[value as string],
   },
 ]
 

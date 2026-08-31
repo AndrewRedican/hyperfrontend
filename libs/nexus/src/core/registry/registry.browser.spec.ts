@@ -51,16 +51,16 @@ describe('Channel Registry', () => {
     it('throws error for invalid channel', () => {
       const registry = createRegistry()
 
-      expect(() => add(registry, <MinimalChannel>(<unknown>null))).toThrow('Invalid channel')
-      expect(() => add(registry, <MinimalChannel>(<unknown>{}))).toThrow('Invalid channel')
-      expect(() => add(registry, <MinimalChannel>(<unknown>{ id: 'test' }))).toThrow('Invalid channel')
-      expect(() => add(registry, <MinimalChannel>(<unknown>{ name: 'test' }))).toThrow('Invalid channel')
+      expect(() => add(registry, null as unknown as MinimalChannel)).toThrow('Invalid channel')
+      expect(() => add(registry, {} as unknown as MinimalChannel)).toThrow('Invalid channel')
+      expect(() => add(registry, { id: 'test' } as unknown as MinimalChannel)).toThrow('Invalid channel')
+      expect(() => add(registry, { name: 'test' } as unknown as MinimalChannel)).toThrow('Invalid channel')
     })
 
     it('allows adding multiple channels', () => {
       const registry = createRegistry()
-      const mockWindow1 = <Window>{}
-      const mockWindow2 = <Window>{}
+      const mockWindow1 = {} as Window
+      const mockWindow2 = {} as Window
 
       const channel1 = { id: 'id1', name: 'channel1', target: mockWindow1 }
       const channel2 = { id: 'id2', name: 'channel2', target: mockWindow2 }
@@ -117,7 +117,7 @@ describe('Channel Registry', () => {
   describe('getByWindow', () => {
     it('retrieves channel by window', () => {
       const registry = createRegistry()
-      const mockWindow = <Window>{}
+      const mockWindow = {} as Window
       const channel = { id: 'test-id', name: 'test-channel', target: mockWindow }
 
       add(registry, channel)
@@ -127,14 +127,14 @@ describe('Channel Registry', () => {
 
     it('return undefined for non-existent window', () => {
       const registry = createRegistry()
-      const mockWindow = <Window>{}
+      const mockWindow = {} as Window
 
       expect(getByWindow(registry, mockWindow)).toBeUndefined()
     })
 
     it('uses WeakMap (no memory leak)', () => {
       const registry = createRegistry()
-      let mockWindow: Window | null = <Window>{}
+      let mockWindow: Window | null = {} as Window
       const channel = { id: 'test-id', name: 'test-channel', target: mockWindow }
 
       add(registry, channel)
@@ -204,9 +204,9 @@ describe('Channel Registry', () => {
 
     it('return all registered channels', () => {
       const registry = createRegistry()
-      const mockWindow1 = <Window>{}
-      const mockWindow2 = <Window>{}
-      const mockWindow3 = <Window>{}
+      const mockWindow1 = {} as Window
+      const mockWindow2 = {} as Window
+      const mockWindow3 = {} as Window
 
       const channel1 = { id: 'id1', name: 'channel1', target: mockWindow1 }
       const channel2 = { id: 'id2', name: 'channel2', target: mockWindow2 }
@@ -241,8 +241,8 @@ describe('Channel Registry', () => {
   describe('clear', () => {
     it('removes all channels from registry', () => {
       const registry = createRegistry()
-      const mockWindow1 = <Window>{}
-      const mockWindow2 = <Window>{}
+      const mockWindow1 = {} as Window
+      const mockWindow2 = {} as Window
 
       const channel1 = { id: 'id1', name: 'channel1', target: mockWindow1 }
       const channel2 = { id: 'id2', name: 'channel2', target: mockWindow2 }
@@ -286,8 +286,8 @@ describe('Channel Registry', () => {
   describe('Integration scenarios', () => {
     it('handles complex add/remove sequences', () => {
       const registry = createRegistry()
-      const mockWindow1 = <Window>{}
-      const mockWindow2 = <Window>{}
+      const mockWindow1 = {} as Window
+      const mockWindow2 = {} as Window
 
       const channel1 = { id: 'id1', name: 'channel1', target: mockWindow1 }
       const channel2 = { id: 'id2', name: 'channel2', target: mockWindow2 }
@@ -309,7 +309,7 @@ describe('Channel Registry', () => {
 
     it('maintain lookup consistency across operations', () => {
       const registry = createRegistry()
-      const mockWindow = <Window>{}
+      const mockWindow = {} as Window
       const channel = { id: 'test-id', name: 'test-channel', target: mockWindow }
 
       add(registry, channel)
@@ -327,9 +327,9 @@ describe('Channel Registry', () => {
 
     it('handles multiple channels with different targets', () => {
       const registry = createRegistry()
-      const mockWindow1 = <Window>{}
-      const mockWindow2 = <Window>{}
-      const mockWindow3 = <Window>{}
+      const mockWindow1 = {} as Window
+      const mockWindow2 = {} as Window
+      const mockWindow3 = {} as Window
 
       const channel1 = { id: 'id1', name: 'channel1', target: mockWindow1 }
       const channel2 = { id: 'id2', name: 'channel2', target: mockWindow2 }

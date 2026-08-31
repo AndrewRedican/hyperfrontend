@@ -1,6 +1,6 @@
 import type { Config } from 'jest'
 
-export default <Config>{
+export default {
   displayName: 'project-scope',
   preset: '../../jest.preset.cjs',
   moduleFileExtensions: ['ts', 'js', 'html'],
@@ -15,4 +15,4 @@ export default <Config>{
       statements: 98,
     },
   },
-}
+} as Config

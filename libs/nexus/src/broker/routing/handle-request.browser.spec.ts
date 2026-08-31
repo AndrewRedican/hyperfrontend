@@ -57,7 +57,7 @@ describe('handleRequest', () => {
     mockBrokerState = {
       id: 'broker-1',
       name: 'test-broker',
-      window: <Window>global.window,
+      window: global.window as Window,
       contract: ownContract,
       settings: {
         contract: ownContract,
@@ -71,9 +71,9 @@ describe('handleRequest', () => {
       getBrokerId: () => 'broker-1',
       getContract: () => ownContract,
     })
-    mockWindow = <Window>(<unknown>{
+    mockWindow = {
       postMessage: jest.fn(),
-    })
+    } as unknown as Window
 
     routingContext = {
       state: mockBrokerState,
@@ -90,17 +90,17 @@ describe('handleRequest', () => {
   function requestEvent(
     overrides: Partial<{ senderId: string; processId: string; contract: IChannelContract; origin: string; security: unknown }> = {}
   ) {
-    return <MessageEvent<IAction>>{
-      data: <IAction>{
+    return {
+      data: {
         type: '[nexus] connection-request',
         senderId: overrides.senderId ?? 'remote-broker-1',
         processId: overrides.processId ?? 'process-1',
         contract: overrides.contract ?? peerContract,
         ...(overrides.security ? { security: overrides.security } : {}),
-      },
+      } as IAction,
       source: mockWindow,
       origin: overrides.origin ?? 'https://example.com',
-    }
+    } as MessageEvent<IAction>
   }
 
   function addReadyChannel(settings: Record<string, unknown> = {}) {
@@ -108,7 +108,7 @@ describe('handleRequest', () => {
     // how: connect() marks the channel ready; cancel(false) clears the
     channel.connect()
     channel.cancel(false)
-    ;(<jest.Mock>mockWindow.postMessage).mockClear()
+    ;(mockWindow.postMessage as jest.Mock).mockClear()
     return channel
   }
 
@@ -137,7 +137,7 @@ describe('handleRequest', () => {
     handleRequest(routingContext, requestEvent())
 
     const channel = registry.getByName('inbound-https://example.com')
-    expect({ tracked: processManager.get('process-1'), accepted: (<jest.Mock>mockWindow.postMessage).mock.calls }).toEqual({
+    expect({ tracked: processManager.get('process-1'), accepted: (mockWindow.postMessage as jest.Mock).mock.calls }).toEqual({
       tracked: channel,
       accepted: [],
     })
@@ -191,8 +191,8 @@ describe('handleRequest', () => {
     handleRequest(routingContext, requestEvent())
     jest.advanceTimersByTime(1000)
 
-    const acceptFrames = (<jest.Mock>mockWindow.postMessage).mock.calls.filter(
-      (call) => (<IAction>call[0]).type === '[nexus] connection-request-accepted'
+    const acceptFrames = (mockWindow.postMessage as jest.Mock).mock.calls.filter(
+      (call) => (call[0] as IAction).type === '[nexus] connection-request-accepted'
     )
     expect(acceptFrames).toHaveLength(3)
   })
@@ -204,7 +204,7 @@ describe('handleRequest', () => {
 
     handleRequest(routingContext, requestEvent({ origin: 'https://evil.example' }))
 
-    expect({ posts: (<jest.Mock>mockWindow.postMessage).mock.calls, invalids: invalidHandler.mock.calls.length }).toEqual({
+    expect({ posts: (mockWindow.postMessage as jest.Mock).mock.calls, invalids: invalidHandler.mock.calls.length }).toEqual({
       posts: [],
       invalids: 1,
     })
@@ -306,7 +306,7 @@ describe('handleRequest', () => {
 
       handleRequest(routingContext, requestEvent())
 
-      expect({ accept: (<jest.Mock>mockWindow.postMessage).mock.calls[0][0], warns: (<jest.Mock>mockLogger.warn).mock.calls }).toEqual({
+      expect({ accept: (mockWindow.postMessage as jest.Mock).mock.calls[0][0], warns: (mockLogger.warn as jest.Mock).mock.calls }).toEqual({
         accept: expect.objectContaining({ type: '[nexus] connection-request-accepted' }),
         warns: [[expect.stringContaining('continuing without encryption')]],
       })
@@ -353,7 +353,7 @@ describe('handleRequest', () => {
 
       handleRequest(routingContext, requestEvent())
 
-      const sent = <IAction & { security?: unknown }>(<jest.Mock>mockWindow.postMessage).mock.calls[0][0]
+      const sent = (mockWindow.postMessage as jest.Mock).mock.calls[0][0] as IAction & { security?: unknown }
       expect(sent.security).toBeUndefined()
     })
 
@@ -367,7 +367,7 @@ describe('handleRequest', () => {
       expect({
         peerId: channel.getPeerId(),
         closed: close.mock.calls[0]?.[0],
-        accepted: (<jest.Mock>mockWindow.postMessage).mock.calls[0][0],
+        accepted: (mockWindow.postMessage as jest.Mock).mock.calls[0][0],
       }).toEqual({
         peerId: 'remote-broker-2',
         closed: { notify: false, reason: 'peer-reload' },
@@ -386,7 +386,7 @@ describe('handleRequest', () => {
     it('detaches the stale security transport when the counterpart reloaded', () => {
       const channel = addActiveChannel()
       channel.setNegotiatedProtocol('v2')
-      channel.setSecurityTransport(<SecurityTransport>(<unknown>{ send: jest.fn(), isReady: () => true }))
+      channel.setSecurityTransport({ send: jest.fn(), isReady: () => true } as unknown as SecurityTransport)
 
       handleRequest(routingContext, requestEvent({ senderId: 'remote-broker-2', processId: 'process-2' }))
 
@@ -401,7 +401,7 @@ describe('handleRequest', () => {
     function addRequestingChannel() {
       const channel = addChannel(mockBrokerState, registry, processManager, mockActions, 'local-channel', mockWindow)
       channel.connect()
-      ;(<jest.Mock>mockWindow.postMessage).mockClear()
+      ;(mockWindow.postMessage as jest.Mock).mockClear()
       return channel
     }
 
@@ -410,7 +410,7 @@ describe('handleRequest', () => {
 
       handleRequest(routingContext, requestEvent({ senderId: 'z-remote-broker' }))
 
-      expect({ pending: channel.getPendingProcessId(), reply: (<jest.Mock>mockWindow.postMessage).mock.calls[0][0] }).toEqual({
+      expect({ pending: channel.getPendingProcessId(), reply: (mockWindow.postMessage as jest.Mock).mock.calls[0][0] }).toEqual({
         pending: null,
         reply: expect.objectContaining({ type: '[nexus] connection-request-accepted', processId: 'process-1' }),
       })
@@ -421,7 +421,7 @@ describe('handleRequest', () => {
 
       handleRequest(routingContext, requestEvent({ senderId: 'a-remote-broker' }))
 
-      expect({ pending: channel.getPendingProcessId(), posts: (<jest.Mock>mockWindow.postMessage).mock.calls }).toEqual({
+      expect({ pending: channel.getPendingProcessId(), posts: (mockWindow.postMessage as jest.Mock).mock.calls }).toEqual({
         pending: expect.any(String),
         posts: [],
       })
@@ -429,15 +429,15 @@ describe('handleRequest', () => {
   })
 
   it('returns early when action lacks contract property', () => {
-    const message = <MessageEvent<IAction>>{
-      data: <IAction>{
+    const message = {
+      data: {
         type: '[nexus] connection-request',
         senderId: 'remote-broker-1',
         processId: 'process-1',
-      },
+      } as IAction,
       source: mockWindow,
       origin: 'https://example.com',
-    }
+    } as MessageEvent<IAction>
 
     handleRequest(routingContext, message)
 
@@ -445,7 +445,7 @@ describe('handleRequest', () => {
   })
 
   it('tracks the process for the coming OPEN when responding', () => {
-    const channel = <ChannelHandle>(<unknown>addReadyChannel())
+    const channel = addReadyChannel() as unknown as ChannelHandle
 
     handleRequest(routingContext, requestEvent())
 

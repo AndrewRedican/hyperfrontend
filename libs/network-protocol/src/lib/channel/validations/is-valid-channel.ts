@@ -14,7 +14,7 @@ import { getType } from '@hyperfrontend/data-utils'
  * ```
  */
 export function isValidChannel(channel: unknown): boolean {
-  const ch = <Channel>channel
+  const ch = channel as Channel
   return (
     getType(ch) === 'object' &&
     'send' in ch &&

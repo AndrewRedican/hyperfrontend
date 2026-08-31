@@ -38,14 +38,14 @@ export const registerIterableClass = <T = unknown>(
   const existingEntryLocation = registeredIterableClasses.findIndex((entry) => entry.classRef === classRef)
   const GetKeys = (target: T) =>
     getConfig().detectCircularReferences ? [...getKeys(target)].filter((key) => !isMarker(key)) : getKeys(target)
-  const entry = <RegisteredIterableClassEntry>{
+  const entry = {
     classRef,
     getKeys: GetKeys,
     read,
     write,
     remove,
     instantiate,
-  }
+  } as RegisteredIterableClassEntry
   if (existingEntryLocation >= 0) {
     registeredIterableClasses[existingEntryLocation] = entry
     return

@@ -29,7 +29,7 @@ interface GlobalWithGc {
 export const recover = (): Promise<void> =>
   createPromise<void>((resolve) => {
     setTimeout(() => {
-      const gc = (<GlobalWithGc>globalThis).gc
+      const gc = (globalThis as GlobalWithGc).gc
       if (typeof gc === 'function') gc()
       resolve()
     }, 0)

@@ -40,7 +40,7 @@ function detectConfigType(filePath: string): ConfigType | undefined {
   for (const [type, info] of entries(CONFIG_PATTERNS)) {
     for (const pattern of info.patterns) {
       if (matchGlobPattern(fileName, pattern)) {
-        return <ConfigType>type
+        return type as ConfigType
       }
     }
   }
@@ -215,7 +215,7 @@ function parseIniConfig(content: string): Record<string, unknown> {
       const value = keyValueMatch[2].trim()
 
       if (currentSection) {
-        ;(<Record<string, unknown>>result[currentSection])[key] = value
+        ;(result[currentSection] as Record<string, unknown>)[key] = value
       } else {
         result[key] = value
       }
@@ -283,13 +283,13 @@ export function parseJsonConfig(filePath: string, content: string, type?: Config
   const cleanContent = format === 'jsonc' ? stripJsonComments(content) : content
 
   try {
-    const data = <Record<string, unknown>>parseJson(cleanContent)
+    const data = parseJson(cleanContent) as Record<string, unknown>
 
     let extendsPath: string[] | undefined
     if (typeof data['extends'] === 'string') {
       extendsPath = [data['extends']]
     } else if (isArray(data['extends'])) {
-      extendsPath = <string[]>data['extends']
+      extendsPath = data['extends'] as string[]
     }
 
     return {
@@ -426,13 +426,13 @@ export function readConfigIfExists<T = unknown>(configPath: string): T | null {
 
     switch (format) {
       case 'json':
-        return <T>parseJson(content)
+        return parseJson(content) as T
 
       case 'jsonc':
-        return <T>parseJson(stripJsonComments(content))
+        return parseJson(stripJsonComments(content)) as T
 
       case 'yaml':
-        return <T>parseSimpleYaml(content)
+        return parseSimpleYaml(content) as T
 
       default:
         return null

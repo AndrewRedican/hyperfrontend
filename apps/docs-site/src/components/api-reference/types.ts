@@ -216,7 +216,7 @@ export interface ReflectionFlags {
 }
 
 /** Constant mapping reflection kind names to their numeric values */
-export const ReflectionKind = <const>{
+export const ReflectionKind = {
   Project: 1,
   Module: 2,
   Namespace: 4,
@@ -240,4 +240,4 @@ export const ReflectionKind = <const>{
   SetSignature: 1048576,
   TypeAlias: 2097152,
   Reference: 4194304,
-}
+} as const

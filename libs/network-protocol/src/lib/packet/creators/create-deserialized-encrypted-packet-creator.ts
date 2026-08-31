@@ -29,7 +29,7 @@ export function createDeserializedEncryptedPacketCreator(
     try {
       data = base64ToUint8Array(packet.data)
     } catch (e) {
-      throw createError(`Cannot deserialize packet encrypted data. ${(<Error>e)?.message}`)
+      throw createError(`Cannot deserialize packet encrypted data. ${(e as Error)?.message}`)
     }
     return freeze({ ...packet, data })
   }

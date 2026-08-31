@@ -55,7 +55,7 @@ describe('handleRequest deny gates', () => {
     mockBrokerState = {
       id: 'broker-1',
       name: 'test-broker',
-      window: <Window>global.window,
+      window: global.window as Window,
       contract: ownContract,
       settings: {
         contract: ownContract,
@@ -69,9 +69,9 @@ describe('handleRequest deny gates', () => {
       getBrokerId: () => 'broker-1',
       getContract: () => ownContract,
     })
-    mockWindow = <Window>(<unknown>{
+    mockWindow = {
       postMessage: jest.fn(),
-    })
+    } as unknown as Window
 
     routingContext = {
       state: mockBrokerState,
@@ -88,17 +88,17 @@ describe('handleRequest deny gates', () => {
   function requestEvent(
     overrides: Partial<{ senderId: string; processId: string; contract: IChannelContract; origin: string; security: unknown }> = {}
   ) {
-    return <MessageEvent<IAction>>{
-      data: <IAction>{
+    return {
+      data: {
         type: '[nexus] connection-request',
         senderId: overrides.senderId ?? 'remote-broker-1',
         processId: overrides.processId ?? 'process-1',
         contract: overrides.contract ?? peerContract,
         ...(overrides.security ? { security: overrides.security } : {}),
-      },
+      } as IAction,
       source: mockWindow,
       origin: overrides.origin ?? 'https://example.com',
-    }
+    } as MessageEvent<IAction>
   }
 
   function addReadyChannel(settings: Record<string, unknown> = {}) {
@@ -106,7 +106,7 @@ describe('handleRequest deny gates', () => {
     // how: connect() marks the channel ready; cancel(false) clears the
     channel.connect()
     channel.cancel(false)
-    ;(<jest.Mock>mockWindow.postMessage).mockClear()
+    ;(mockWindow.postMessage as jest.Mock).mockClear()
     return channel
   }
 
@@ -121,11 +121,13 @@ describe('handleRequest deny gates', () => {
   }
 
   function denyFrames() {
-    return (<jest.Mock>mockWindow.postMessage).mock.calls.filter((call) => (<IAction>call[0]).type === '[nexus] connection-request-denied')
+    return (mockWindow.postMessage as jest.Mock).mock.calls.filter(
+      (call) => (call[0] as IAction).type === '[nexus] connection-request-denied'
+    )
   }
 
   describe('invalid contract gate', () => {
-    const brokenContract = <IChannelContract>(<unknown>{ accepted: null })
+    const brokenContract = { accepted: null } as unknown as IChannelContract
 
     it('denies with reason invalid-contract and the validator detail the requester can act on', () => {
       addReadyChannel()
@@ -315,7 +317,7 @@ describe('handleRequest deny gates', () => {
     })
 
     it('hands the rule the own contract and the requested peer contract', () => {
-      const contractCompat = jest.fn(() => <const>{ compatible: true })
+      const contractCompat = jest.fn(() => ({ compatible: true }) as const)
       addReadyChannel({ contractCompat })
 
       handleRequest(routingContext, requestEvent())

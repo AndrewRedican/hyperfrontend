@@ -10,7 +10,7 @@ describe('TopicStore', () => {
   describe('create', () => {
     it('successfully creates a topic', () => {
       store.create('New Topic')
-      const topic = <Topic>store.getByName('New Topic')
+      const topic = store.getByName('New Topic') as Topic
       expect(isValidTopic(topic)).toBe(true)
       expect(topic.name).toEqual('New Topic')
     })
@@ -108,7 +108,7 @@ describe('TopicStore', () => {
   describe('getByName', () => {
     it('retrieves a topic by name', () => {
       store.create('Topic By Name')
-      const topic = <Topic>store.getByName('Topic By Name')
+      const topic = store.getByName('Topic By Name') as Topic
       expect(isValidTopic(topic)).toBe(true)
       expect(topic.name).toEqual('Topic By Name')
     })
@@ -121,8 +121,8 @@ describe('TopicStore', () => {
   describe('getById', () => {
     it('retrieves a topic by id', () => {
       store.create('Topic By ID')
-      const topicByName = <Topic>store.getByName('Topic By ID')
-      const topic = <Topic>store.getById(topicByName.id)
+      const topicByName = store.getByName('Topic By ID') as Topic
+      const topic = store.getById(topicByName.id) as Topic
       expect(isValidTopic(topic)).toBe(true)
       expect(topic.id).toBe(topicByName.id)
     })
@@ -175,7 +175,7 @@ describe('TopicStore', () => {
   describe('removeById 2', () => {
     it('successfully removes a topic by id', () => {
       store.create('Another Removable Topic')
-      const topic = <Topic>store.getByName('Another Removable Topic')
+      const topic = store.getByName('Another Removable Topic') as Topic
       store.removeById(topic.id)
       expect(store.existsById(topic.id)).toBe(false)
     })

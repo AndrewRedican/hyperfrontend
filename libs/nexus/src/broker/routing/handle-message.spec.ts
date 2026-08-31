@@ -38,7 +38,7 @@ describe('handleMessage', () => {
     mockBrokerState = {
       id: 'broker-1',
       name: 'test-broker',
-      window: <Window>global.window,
+      window: global.window as Window,
       contract: validContract,
       settings: {
         contract: validContract,
@@ -52,9 +52,9 @@ describe('handleMessage', () => {
       getBrokerId: () => 'broker-1',
       getContract: () => mockBrokerState.contract,
     })
-    mockWindow = <Window>(<unknown>{
+    mockWindow = {
       postMessage: jest.fn(),
-    })
+    } as unknown as Window
 
     routingContext = {
       state: mockBrokerState,
@@ -87,10 +87,10 @@ describe('handleMessage', () => {
       },
     }
 
-    handleMessage(routingContext, <MessageEvent<IAction>>{
+    handleMessage(routingContext, {
       data: action,
       source: mockWindow,
-    })
+    } as MessageEvent<IAction>)
 
     expect(notifySpy).toHaveBeenCalledWith({ type: 'test-message', data: 'Hello' })
   })
@@ -108,10 +108,10 @@ describe('handleMessage', () => {
       },
     }
 
-    handleMessage(routingContext, <MessageEvent<IAction>>{
+    handleMessage(routingContext, {
       data: action,
       source: null,
-    })
+    } as MessageEvent<IAction>)
 
     expect(notifySpy).not.toHaveBeenCalled()
   })
@@ -127,10 +127,10 @@ describe('handleMessage', () => {
     }
 
     expect(() => {
-      handleMessage(routingContext, <MessageEvent<IAction>>{
+      handleMessage(routingContext, {
         data: action,
         source: mockWindow,
-      })
+      } as MessageEvent<IAction>)
     }).not.toThrow()
   })
 
@@ -147,10 +147,10 @@ describe('handleMessage', () => {
       },
     }
 
-    handleMessage(routingContext, <MessageEvent<IAction>>{
+    handleMessage(routingContext, {
       data: action,
       source: mockWindow,
-    })
+    } as MessageEvent<IAction>)
 
     expect(notifySpy).not.toHaveBeenCalled()
   })
@@ -171,13 +171,13 @@ describe('handleMessage', () => {
     const action: IAction = {
       type: '[nexus] new-message',
       senderId: 'remote-broker-1',
-      data: <unknown>null,
+      data: null as unknown,
     }
 
-    handleMessage(debugContext, <MessageEvent<IAction>>{
+    handleMessage(debugContext, {
       data: action,
       source: mockWindow,
-    })
+    } as MessageEvent<IAction>)
 
     expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('ignored message from'))
   })
@@ -185,7 +185,7 @@ describe('handleMessage', () => {
   it('does not output to console when log level is error', () => {
     const infoSpy = jest.spyOn(console, 'info').mockImplementation()
 
-    const { createLogger } = <typeof import('./../../utils/logging/create-logger')>require('./../../utils/logging/create-logger')
+    const { createLogger } = require('./../../utils/logging/create-logger') as typeof import('./../../utils/logging/create-logger')
     const realLogger = createLogger({ level: 'error' })
 
     const errorLevelContext: RoutingContext = {
@@ -198,13 +198,13 @@ describe('handleMessage', () => {
     const action: IAction = {
       type: '[nexus] new-message',
       senderId: 'remote-broker-1',
-      data: <unknown>null,
+      data: null as unknown,
     }
 
-    handleMessage(errorLevelContext, <MessageEvent<IAction>>{
+    handleMessage(errorLevelContext, {
       data: action,
       source: mockWindow,
-    })
+    } as MessageEvent<IAction>)
 
     expect(infoSpy).not.toHaveBeenCalled()
     infoSpy.mockRestore()
@@ -223,10 +223,10 @@ describe('handleMessage', () => {
       },
     }
 
-    handleMessage(routingContext, <MessageEvent<IAction>>{
+    handleMessage(routingContext, {
       data: action,
       source: mockWindow,
-    })
+    } as MessageEvent<IAction>)
 
     expect(notifySpy).not.toHaveBeenCalled()
   })
@@ -235,16 +235,19 @@ describe('handleMessage', () => {
     const channel = addConnectedChannel('test-channel', mockWindow)
     const notifySpy = jest.spyOn(channel, 'notifyMessage')
 
-    handleMessage(routingContext, <MessageEvent<IAction>>{
-      data: <IAction>{
+    handleMessage(routingContext, {
+      data: {
         type: '[nexus] new-message',
         senderId: 'remote-broker-2',
         data: { type: 'test-message', data: 'from the previous incarnation' },
-      },
+      } as IAction,
       source: mockWindow,
-    })
+    } as MessageEvent<IAction>)
 
-    expect({ notified: notifySpy.mock.calls, logged: (<jest.Mock>mockLogger.info).mock.calls.length }).toEqual({ notified: [], logged: 1 })
+    expect({ notified: notifySpy.mock.calls, logged: (mockLogger.info as jest.Mock).mock.calls.length }).toEqual({
+      notified: [],
+      logged: 1,
+    })
   })
 
   it('logs the dropped message type when it is not accepted by the channel contract', () => {
@@ -259,10 +262,10 @@ describe('handleMessage', () => {
       },
     }
 
-    handleMessage(routingContext, <MessageEvent<IAction>>{
+    handleMessage(routingContext, {
       data: action,
       source: mockWindow,
-    })
+    } as MessageEvent<IAction>)
 
     expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining("dropped message type 'unexpected-type'"))
   })
@@ -280,10 +283,10 @@ describe('handleMessage', () => {
         data: { type: 'test-message', data: payload },
       }
 
-      handleMessage(routingContext, <MessageEvent<IAction>>{
+      handleMessage(routingContext, {
         data: action,
         source: mockWindow,
-      })
+      } as MessageEvent<IAction>)
     })
 
     expect(notifySpy).toHaveBeenCalledTimes(4)
@@ -293,18 +296,18 @@ describe('handleMessage', () => {
     const channel1 = addConnectedChannel('channel-1', mockWindow)
     const notify1Spy = jest.spyOn(channel1, 'notifyMessage')
 
-    const window2 = <Window>(<unknown>{ postMessage: jest.fn() })
+    const window2 = { postMessage: jest.fn() } as unknown as Window
     const channel2 = addConnectedChannel('channel-2', window2)
     const notify2Spy = jest.spyOn(channel2, 'notifyMessage')
 
-    handleMessage(routingContext, <MessageEvent<IAction>>{
-      data: <IAction>{
+    handleMessage(routingContext, {
+      data: {
         type: '[nexus] new-message',
         senderId: 'remote-broker-1',
         data: { type: 'test-message', data: 'for channel 2' },
-      },
+      } as IAction,
       source: window2,
-    })
+    } as MessageEvent<IAction>)
 
     expect(notify2Spy).toHaveBeenCalledWith({ type: 'test-message', data: 'for channel 2' })
     expect(notify1Spy).not.toHaveBeenCalled()
@@ -317,10 +320,10 @@ describe('handleMessage', () => {
     }
 
     expect(() => {
-      handleMessage(routingContext, <MessageEvent<IAction>>{
-        data: <IAction>action,
+      handleMessage(routingContext, {
+        data: action as IAction,
         source: mockWindow,
-      })
+      } as MessageEvent<IAction>)
     }).not.toThrow()
   })
 })

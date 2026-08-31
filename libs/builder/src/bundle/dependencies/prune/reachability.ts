@@ -55,7 +55,7 @@ export const computeReachable = (
   }
   let head = 0
   while (head < queue.length) {
-    const file = <string>queue[head]
+    const file = queue[head] as string
     head += 1
     const source = readFileContent(file)
     // why: a dynamic specifier only threatens the sweep when it sits in a `_dependencies/` chunk, where it can hide an intra-deps edge to a sibling chunk we'd otherwise delete. First-party entry roots legitimately carry dynamic `import(<expr>)` (e.g. runtime config loading) whose targets are always external user paths — never bundled dep chunks — so bailing on those needlessly disables the entire sweep and strands emptied dep chunks. Roots are never under `depsRoot` (collectEntryFiles excludes them), so this scopes the bail to dep chunks only.

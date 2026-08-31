@@ -46,13 +46,13 @@ function toDevkitApi(candidate: unknown): DevkitApi | null {
   if (typeof candidate !== 'object' || candidate === null) {
     return null
   }
-  const moduleExports = <Record<string, unknown>>candidate
+  const moduleExports = candidate as Record<string, unknown>
   const api: DevkitApi = {}
   if (typeof moduleExports['formatFiles'] === 'function') {
-    api.formatFiles = <FormatFilesFn>moduleExports['formatFiles']
+    api.formatFiles = moduleExports['formatFiles'] as FormatFilesFn
   }
   if (typeof moduleExports['installPackagesTask'] === 'function') {
-    api.installPackagesTask = <InstallPackagesTaskFn>moduleExports['installPackagesTask']
+    api.installPackagesTask = moduleExports['installPackagesTask'] as InstallPackagesTaskFn
   }
   return api
 }

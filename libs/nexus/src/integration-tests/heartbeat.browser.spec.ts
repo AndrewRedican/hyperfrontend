@@ -30,11 +30,11 @@ describe('Integration: Heartbeat', () => {
   const { contractA, contractB } = createContractPair(['PING', 'DATA'], ['PONG', 'ACK'])
 
   const setupPair = () => {
-    const brokerA = createBroker({ name: 'heartbeat-broker-a', contract: contractA, window: <Window>(<unknown>windowA) })
-    const brokerB = createBroker({ name: 'heartbeat-broker-b', contract: contractB, window: <Window>(<unknown>windowB) })
+    const brokerA = createBroker({ name: 'heartbeat-broker-a', contract: contractA, window: windowA as unknown as Window })
+    const brokerB = createBroker({ name: 'heartbeat-broker-b', contract: contractB, window: windowB as unknown as Window })
     return {
-      channelA: brokerA.addChannel('to-b', <Window>(<unknown>windowB)),
-      channelB: brokerB.addChannel('to-a', <Window>(<unknown>windowA)),
+      channelA: brokerA.addChannel('to-b', windowB as unknown as Window),
+      channelB: brokerB.addChannel('to-a', windowA as unknown as Window),
     }
   }
 

@@ -12,8 +12,8 @@ interface FakeResponse {
 }
 
 const fakeRes = (): FakeResponse => {
-  const state: FakeResponse = { statusCode: 0, headers: {}, body: '', res: <ServerResponse>{} }
-  state.res = <ServerResponse>(<unknown>{
+  const state: FakeResponse = { statusCode: 0, headers: {}, body: '', res: {} as ServerResponse }
+  state.res = {
     set statusCode(value: number) {
       state.statusCode = value
     },
@@ -26,7 +26,7 @@ const fakeRes = (): FakeResponse => {
     end: (chunk?: Buffer | string) => {
       state.body = chunk === undefined ? '' : chunk.toString()
     },
-  })
+  } as unknown as ServerResponse
   return state
 }
 
@@ -238,7 +238,7 @@ describe('createStaticHandler', () => {
     createStaticHandler(
       '/srv',
       deps(() => true)
-    )(<IncomingMessage>{ url: '/app.js' }, out.res)
+    )({ url: '/app.js' } as IncomingMessage, out.res)
     expect(out.body).toBe('bytes:/srv/app.js')
   })
 
@@ -247,7 +247,7 @@ describe('createStaticHandler', () => {
     createStaticHandler(
       '/srv',
       deps(() => true)
-    )(<IncomingMessage>{}, out.res)
+    )({} as IncomingMessage, out.res)
     expect(out.body).toBe('bytes:/srv/index.html')
   })
 })
@@ -274,7 +274,7 @@ describe('default file system', () => {
     mkdirSync(join(dir, 'host'))
     writeFileSync(join(dir, 'host', 'index.html'), 'HOST')
     const out = fakeRes()
-    createStaticHandler(dir)(<IncomingMessage>{ url: '/host/' }, out.res)
+    createStaticHandler(dir)({ url: '/host/' } as IncomingMessage, out.res)
     expect(out.body).toBe('HOST')
   })
 
@@ -282,13 +282,13 @@ describe('default file system', () => {
     mkdirSync(join(dir, 'host'))
     writeFileSync(join(dir, 'host', 'index.html'), 'HOST')
     const out = fakeRes()
-    createStaticHandler(dir)(<IncomingMessage>{ url: '/host' }, out.res)
+    createStaticHandler(dir)({ url: '/host' } as IncomingMessage, out.res)
     expect({ status: out.statusCode, location: out.headers['Location'] }).toEqual({ status: 301, location: '/host/' })
   })
 
   it('reports a missing file from disk when no overrides are given', () => {
     const out = fakeRes()
-    createStaticHandler(dir)(<IncomingMessage>{ url: '/missing.js' }, out.res)
+    createStaticHandler(dir)({ url: '/missing.js' } as IncomingMessage, out.res)
     expect(out.statusCode).toBe(404)
   })
 })

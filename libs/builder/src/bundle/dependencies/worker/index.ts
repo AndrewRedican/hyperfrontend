@@ -21,7 +21,7 @@ interface RequireWithMain {
 }
 
 const isMainModule = (): boolean => {
-  if (typeof require !== 'undefined' && typeof module !== 'undefined' && (<RequireWithMain>(<unknown>require)).main === module) {
+  if (typeof require !== 'undefined' && typeof module !== 'undefined' && (require as unknown as RequireWithMain).main === module) {
     return true
   }
   const argv1 = process.argv[1] ?? ''
@@ -34,7 +34,7 @@ if (isMainModule()) {
     process.stderr.write('pre-pass worker: missing job spec on argv\n')
     process.exit(2)
   }
-  const job = <PrePassWorkerJob>JSON.parse(raw)
+  const job = JSON.parse(raw) as PrePassWorkerJob
   runPrePassWorkerJob(job).then(
     () => process.exit(0),
     (error: unknown) => {

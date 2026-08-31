@@ -10,5 +10,5 @@ import { create } from './create'
  * @returns Wrapped handler that filters for CANCEL events
  */
 export function cancel(handler: CancelEventHandler): EventHandler {
-  return create('cancel')(<EventHandler>handler)
+  return create('cancel')(handler as EventHandler)
 }

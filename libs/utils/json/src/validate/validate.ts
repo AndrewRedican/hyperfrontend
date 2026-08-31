@@ -111,18 +111,18 @@ export function validateSchema(instance: unknown, schema: Schema, ctx: Validatio
   }
 
   if (isArray(instance)) {
-    if (!validateItems(<unknown[]>instance, schema, ctx)) {
+    if (!validateItems(instance as unknown[], schema, ctx)) {
       valid = false
       if (!shouldContinue(ctx)) return false
     }
-    if (!validateArrayBounds(<unknown[]>instance, schema, ctx)) {
+    if (!validateArrayBounds(instance as unknown[], schema, ctx)) {
       valid = false
       if (!shouldContinue(ctx)) return false
     }
   }
 
   if (instance !== null && typeof instance === 'object' && !isArray(instance)) {
-    const obj = <Record<string, unknown>>instance
+    const obj = instance as Record<string, unknown>
 
     if (!validateProperties(obj, schema, ctx)) {
       valid = false

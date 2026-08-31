@@ -60,10 +60,10 @@ function createStubWindow(): StubWindow {
 // how: Mirrors real postMessage semantics — posting to a window dispatches to that window's own listeners with the counterpart as the source.
 function linkStubWindows(hostWindow: StubWindow, featureWindow: StubWindow): void {
   hostWindow.postMessage.mockImplementation((data: unknown) => {
-    hostWindow._dispatchMessage(new MessageEvent('message', { data, origin: FEATURE_ORIGIN, source: <Window>(<unknown>featureWindow) }))
+    hostWindow._dispatchMessage(new MessageEvent('message', { data, origin: FEATURE_ORIGIN, source: featureWindow as unknown as Window }))
   })
   featureWindow.postMessage.mockImplementation((data: unknown) => {
-    featureWindow._dispatchMessage(new MessageEvent('message', { data, origin: HOST_ORIGIN, source: <Window>(<unknown>hostWindow) }))
+    featureWindow._dispatchMessage(new MessageEvent('message', { data, origin: HOST_ORIGIN, source: hostWindow as unknown as Window }))
   })
 }
 
@@ -120,7 +120,7 @@ describe('Integration: host and hostee across the hardened handshake', () => {
     const broker = createBroker({
       name: 'shell-host',
       contract,
-      window: <Window>(<unknown>hostWindow),
+      window: hostWindow as unknown as Window,
     })
     const emitter = createEventEmitter()
     const received: unknown[] = []
@@ -129,11 +129,11 @@ describe('Integration: host and hostee across the hardened handshake', () => {
     emitter.on('error', (data) => errors.push(data))
     const handle = createShellHandle(
       broker,
-      <ShellOptions>{ container: '#shell', url: `${FEATURE_ORIGIN}/`, protocol, ...(protocol === 'v2' && { sharedKey: PSK }) },
+      { container: '#shell', url: `${FEATURE_ORIGIN}/`, protocol, ...(protocol === 'v2' && { sharedKey: PSK }) } as ShellOptions,
       emitter,
       {
         contract,
-        selectMount: () => () => ({ target: <Window>(<unknown>featureWindow), present: { mode: 'embedded' }, cleanup: () => undefined }),
+        selectMount: () => () => ({ target: featureWindow as unknown as Window, present: { mode: 'embedded' }, cleanup: () => undefined }),
         registerSecurity,
         createHeartbeatMonitor,
         observeVisibility: () => () => undefined,
@@ -150,14 +150,14 @@ describe('Integration: host and hostee across the hardened handshake', () => {
     const broker = createBroker({
       name: 'clock-feature',
       contract,
-      window: <Window>(<unknown>featureWindow),
+      window: featureWindow as unknown as Window,
     })
     const emitter = createEventEmitter()
     const received: unknown[] = []
     const errors: unknown[] = []
     emitter.on('setTimezone', (data) => received.push(data))
     emitter.on('error', (data) => errors.push(data))
-    const handle = createFeatureHandle(broker, <Window>(<unknown>hostWindow), emitter, {
+    const handle = createFeatureHandle(broker, hostWindow as unknown as Window, emitter, {
       contract,
       protocol,
       ...(protocol === 'v2' && { sharedKey: PSK }),
@@ -166,7 +166,7 @@ describe('Integration: host and hostee across the hardened handshake', () => {
     return { handle, received, errors }
   }
 
-  const framesTo = (target: StubWindow) => target.postMessage.mock.calls.map((call) => <unknown>call[0])
+  const framesTo = (target: StubWindow) => target.postMessage.mock.calls.map((call) => call[0] as unknown)
 
   const plaintextFrames = (target: StubWindow) => framesTo(target).filter((frame) => !(frame instanceof Uint8Array))
 
@@ -183,7 +183,7 @@ describe('Integration: host and hostee across the hardened handshake', () => {
         encrypted: framesTo(featureWindow).some((frame) => frame instanceof Uint8Array),
         plaintextLeaks: plaintextFrames(featureWindow).filter((frame) => stringify(frame).includes('classified-payload')),
         nonHandshakePlaintext: plaintextFrames(featureWindow).filter(
-          (frame) => !(<{ type: string }>frame).type.startsWith('[nexus] connection-')
+          (frame) => !(frame as { type: string }).type.startsWith('[nexus] connection-')
         ),
       }).toEqual({
         delivered: [{ timezone: 'UTC', marker: 'classified-payload' }],
@@ -218,7 +218,7 @@ describe('Integration: host and hostee across the hardened handshake', () => {
     it('keeps the watchdog healthy past the miss threshold under the v1 envelope', async () => {
       const host = openHostShell(featureContract, 'v1')
       const states: string[] = []
-      host.handle.on('status', (data) => states.push((<{ state: string }>data).state))
+      host.handle.on('status', (data) => states.push((data as { state: string }).state))
       const featureParty = connectFeature(featureContract, 'v1')
       await featureParty.handle.ready()
       await waitFor(() => host.handle.isOpen)

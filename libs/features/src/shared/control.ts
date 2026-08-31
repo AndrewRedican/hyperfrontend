@@ -7,7 +7,7 @@ const CONTROL_PREFIX = '__hf:'
 /**
  * Internal control message types carried on the feature channel and hidden from consumers.
  */
-export const ControlType = freeze(<const>{
+export const ControlType = freeze({
   /** Hostee-to-host liveness beat. */
   Beat: '__hf:beat',
   /** Host-to-hostee presentation announcement, first message after open: the display mode, the frame's initial dimensions, and any agreed dialog box geometry. */
@@ -24,7 +24,7 @@ export const ControlType = freeze(<const>{
   Visibility: '__hf:visibility',
   /** Hostee-to-host declaration that it holds (or no longer holds) unsaved work. */
   Dirty: '__hf:dirty',
-})
+} as const)
 
 /**
  * Union of the reserved control message types.

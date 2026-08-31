@@ -8,7 +8,7 @@ describe('sameStructure', () => {
     setConfig({ samePositionOfOwnProperties: false })
     registerIterableClass<Set<unknown>>(
       Set,
-      (set) => <string[]>Array.from(set.keys()).map(String),
+      (set) => Array.from(set.keys()).map(String) as string[],
       (_, key) => key,
       (set, value) => set.add(value),
       (set, key) => set.delete(key)

@@ -254,8 +254,8 @@ export function updateDependencyReferencesInTree(tree: Tree, packageJsonPath: st
   const content = tree.read(packageJsonPath, 'utf-8')
   if (!content) return
 
-  const pkg = <PackageJson>parse(content)
-  const depTypes = <const>['dependencies', 'devDependencies', 'peerDependencies', 'optionalDependencies']
+  const pkg = parse(content) as PackageJson
+  const depTypes = ['dependencies', 'devDependencies', 'peerDependencies', 'optionalDependencies'] as const
 
   let hasMatchingDeps = false
   for (const depType of depTypes) {

@@ -63,22 +63,23 @@ const buildEntryPlugins = (job: RollupBuildDescriptor, format: 'esm' | 'cjs'): P
   const hasWorkspaceRoutes = job.workspaceRoutes.length > 0
   if (job.bundledDepsPlugin) {
     plugins.push(
-      <Plugin>createExternalizeBundledDepsPlugin({
+      createExternalizeBundledDepsPlugin({
         deps: job.bundledDepsPlugin.deps,
         entryOutDir: job.outputDir,
         format,
         depsRoot: job.bundledDepsPlugin.depsRoot,
         workspaceRoutes: job.workspaceRoutes,
-      })
+      }) as Plugin
     )
   }
   // why: when workspaceRoutes is populated, the externalize plugin owns @hyperfrontend/* resolution; the typescript plugin's baseUrl path-mapping must not preempt it. Falling through to the paths:{} branch lets externalize win.
   const useBaseUrlMapping = job.bundleWorkspaceDeps && !hasWorkspaceRoutes
   plugins.push(
-    <Plugin>json(),
-    <Plugin>nodeResolve({ extensions: ['.ts', '.js'] }),
-    <Plugin>commonjs(),
-    useBaseUrlMapping ? <Plugin>typescript({
+    json() as Plugin,
+    nodeResolve({ extensions: ['.ts', '.js'] }) as Plugin,
+    commonjs() as Plugin,
+    useBaseUrlMapping
+      ? (typescript({
           tsconfig: job.tsConfigPath,
           declaration: false,
           declarationMap: false,
@@ -89,7 +90,8 @@ const buildEntryPlugins = (job: RollupBuildDescriptor, format: 'esm' | 'cjs'): P
             baseUrl: job.workspaceRoot,
             outDir: job.outputDir,
           },
-        }) : <Plugin>typescript({
+        }) as Plugin)
+      : (typescript({
           tsconfig: job.tsConfigPath,
           declaration: false,
           declarationMap: false,
@@ -97,16 +99,16 @@ const buildEntryPlugins = (job: RollupBuildDescriptor, format: 'esm' | 'cjs'): P
           outDir: job.outputDir,
           sourceMap: job.sourcemap,
           compilerOptions: { paths: {} },
-        })
+        }) as Plugin)
   )
   return plugins
 }
 
 const buildBundlePlugins = (job: RollupBuildDescriptor): Plugin[] => [
-  <Plugin>json(),
-  <Plugin>nodeResolve({ extensions: ['.ts', '.js'], browser: true, preferBuiltins: false }),
-  <Plugin>commonjs(),
-  <Plugin>typescript({
+  json() as Plugin,
+  nodeResolve({ extensions: ['.ts', '.js'], browser: true, preferBuiltins: false }) as Plugin,
+  commonjs() as Plugin,
+  typescript({
     tsconfig: job.tsConfigPath,
     declaration: false,
     declarationMap: false,
@@ -117,7 +119,7 @@ const buildBundlePlugins = (job: RollupBuildDescriptor): Plugin[] => [
       baseUrl: job.workspaceRoot,
       outDir: job.outputDir,
     },
-  }),
+  }) as Plugin,
 ]
 
 const buildEntryOutput = (job: RollupBuildDescriptor, format: 'esm' | 'cjs'): OutputOptions => {
@@ -131,7 +133,7 @@ const buildEntryOutput = (job: RollupBuildDescriptor, format: 'esm' | 'cjs'): Ou
       exports: job.bin.exports,
       inlineDynamicImports: job.bin.inlineDynamicImports,
       generatedCode: { constBindings: true },
-      ...(format === 'cjs' && { interop: <const>'compat' }),
+      ...(format === 'cjs' && { interop: 'compat' as const }),
     }
   }
   const filename = format === 'esm' ? 'index.esm.js' : 'index.cjs.js'
@@ -140,7 +142,7 @@ const buildEntryOutput = (job: RollupBuildDescriptor, format: 'esm' | 'cjs'): Ou
     format,
     sourcemap: job.sourcemap,
     generatedCode: { constBindings: true },
-    ...(format === 'cjs' && { interop: <const>'compat' }),
+    ...(format === 'cjs' && { interop: 'compat' as const }),
   }
 }
 
@@ -165,7 +167,7 @@ const buildCjsJob = (job: RollupBuildDescriptor): PreparedRollupJob => ({
 })
 
 const buildIifeJob = (job: RollupBuildDescriptor): PreparedRollupJob => {
-  const bundle = <NonNullable<RollupBuildDescriptor['bundle']>>job.bundle
+  const bundle = job.bundle as NonNullable<RollupBuildDescriptor['bundle']>
   const outputs: OutputOptions[] = [
     {
       file: join(job.outputDir, 'index.iife.js'),
@@ -182,7 +184,7 @@ const buildIifeJob = (job: RollupBuildDescriptor): PreparedRollupJob => {
       name: bundle.globalName,
       sourcemap: job.sourcemap,
       globals: bundle.globals,
-      plugins: [<Plugin>terser()],
+      plugins: [terser() as Plugin],
     })
   }
   return {
@@ -197,7 +199,7 @@ const buildIifeJob = (job: RollupBuildDescriptor): PreparedRollupJob => {
 }
 
 const buildUmdJob = (job: RollupBuildDescriptor): PreparedRollupJob => {
-  const bundle = <NonNullable<RollupBuildDescriptor['bundle']>>job.bundle
+  const bundle = job.bundle as NonNullable<RollupBuildDescriptor['bundle']>
   const base: Partial<OutputOptions> = {
     format: 'umd',
     name: bundle.globalName,
@@ -205,9 +207,9 @@ const buildUmdJob = (job: RollupBuildDescriptor): PreparedRollupJob => {
     globals: bundle.globals,
   }
   if (bundle.amdId) base.amd = { id: bundle.amdId }
-  const outputs: OutputOptions[] = [<OutputOptions>{ ...base, file: join(job.outputDir, 'index.umd.js') }]
+  const outputs: OutputOptions[] = [{ ...base, file: join(job.outputDir, 'index.umd.js') } as OutputOptions]
   if (bundle.minify) {
-    outputs.push(<OutputOptions>{ ...base, file: join(job.outputDir, 'index.umd.min.js'), plugins: [<Plugin>terser()] })
+    outputs.push({ ...base, file: join(job.outputDir, 'index.umd.min.js'), plugins: [terser() as Plugin] } as OutputOptions)
   }
   return {
     config: {
@@ -265,7 +267,7 @@ export const runRollupWorkerJob = async (job: RollupBuildDescriptor): Promise<Ro
   try {
     for (const output of outputs) {
       await bundle.write(output)
-      totalSize += safeStatSize(<string>output.file)
+      totalSize += safeStatSize(output.file as string)
     }
   } finally {
     await bundle.close()

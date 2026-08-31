@@ -34,7 +34,7 @@ export const getUniqueKeys = (target: unknown, pattern: string | RegExp = /.+/, 
     getKeys(value).forEach((nextKey) => match(nextKey) && state.names.add(nextKey))
   }
   return from(
-    traverse(target, callback, <DepthConfig>{ depth: [0, '*'], ...options }, {
+    traverse(target, callback, { depth: [0, '*'], ...options } as DepthConfig, {
       names: createSet<string>(),
     }).names.values()
   )

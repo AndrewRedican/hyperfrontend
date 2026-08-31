@@ -33,7 +33,7 @@ export function resolveHostWindow(win: Window): Window | null {
     return win.parent
   }
   if (win.opener) {
-    return <Window>win.opener
+    return win.opener as Window
   }
   return null
 }
@@ -156,11 +156,11 @@ export function createFeatureHandle(
     activeChannel.onMessage(
       messaging.createRouter((type, data) => {
         if (type === ControlType.Present) {
-          applyPresent(<PresentPayload>data)
+          applyPresent(data as PresentPayload)
           return true
         }
         if (type === ControlType.Viewport) {
-          applyViewport(<ViewportPayload>data)
+          applyViewport(data as ViewportPayload)
           return true
         }
         return false
@@ -169,7 +169,7 @@ export function createFeatureHandle(
     activeChannel.connect()
   }
 
-  return freeze(<FeatureHandle>{
+  return freeze({
     send: messaging.send,
     request: messaging.request,
     handle: messaging.requests.handle,
@@ -191,5 +191,5 @@ export function createFeatureHandle(
         readyRejects.push(reject)
       }),
     close: () => channel?.disconnect(),
-  })
+  } as FeatureHandle)
 }

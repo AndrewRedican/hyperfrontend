@@ -20,7 +20,7 @@ import { isValidTopicId } from '../../topic/validations/is-valid-topic-id'
  * ```
  */
 export function isValidRoutedObfuscatedPacket(routedPacket: unknown) {
-  const rtp = <RoutedUnencryptedPacket>routedPacket
+  const rtp = routedPacket as RoutedUnencryptedPacket
   return (
     getType(rtp) === 'object' && 'topicId' in rtp && 'packet' in rtp && isValidTopicId(rtp.topicId) && isValidObfuscatedPacket(rtp.packet)
   )

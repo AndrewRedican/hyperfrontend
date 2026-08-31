@@ -32,8 +32,8 @@ const makeContext = (bundledDeps: string[]): BuildContext => ({
 })
 
 beforeEach(() => {
-  ;(<jest.Mock>runPrePass).mockClear()
-  ;(<jest.Mock>resolveDefaultWorkerPath)
+  ;(runPrePass as jest.Mock).mockClear()
+  ;(resolveDefaultWorkerPath as jest.Mock)
     .mockReset()
     .mockReturnValue({ path: '/abs/dist/libs/builder/bundle/dependencies/worker/index.cjs.js', execArgv: [] })
 })
@@ -45,14 +45,14 @@ describe('runDtsPrePass', () => {
   })
 
   it('throws a context-rich error when the worker artifact is missing', async () => {
-    ;(<jest.Mock>resolveDefaultWorkerPath).mockReturnValueOnce(undefined)
+    ;(resolveDefaultWorkerPath as jest.Mock).mockReturnValueOnce(undefined)
     await expect(runDtsPrePass(makeContext(['rollup']))).rejects.toThrow(/worker could not be located beside the builder module/)
   })
 
   it('builds one dts job per bundled dep and forwards them to runPrePass', async () => {
     await runDtsPrePass(makeContext(['rollup', 'postject']))
     expect(runPrePass).toHaveBeenCalledTimes(1)
-    const [jobs, options] = (<jest.Mock>runPrePass).mock.calls[0]
+    const [jobs, options] = (runPrePass as jest.Mock).mock.calls[0]
     expect(jobs).toHaveLength(2)
     expect(jobs.every((j: { kind: string; format: string }) => j.kind === 'dts' && j.format === 'esm')).toBe(true)
     expect(jobs[0].outputPath).toMatch(/_dependencies\/rollup\/index\.d\.ts$/)
@@ -64,8 +64,8 @@ describe('runDtsPrePass', () => {
 
   it('threads the optional memory monitor through to runPrePass', async () => {
     const monitor = { check: jest.fn() }
-    await runDtsPrePass(makeContext(['rollup']), <Parameters<typeof runDtsPrePass>[1]>(<unknown>monitor))
-    expect((<jest.Mock>runPrePass).mock.calls[0][1].monitor).toBe(monitor)
+    await runDtsPrePass(makeContext(['rollup']), monitor as unknown as Parameters<typeof runDtsPrePass>[1])
+    expect((runPrePass as jest.Mock).mock.calls[0][1].monitor).toBe(monitor)
     expect(monitor.check).toHaveBeenCalledWith('bundle:declarations:dts-prepass:start')
     expect(monitor.check).toHaveBeenCalledWith('bundle:declarations:dts-prepass:end')
   })
@@ -83,7 +83,7 @@ describe('runDtsPrePass', () => {
       },
     ]
     await runDtsPrePass(ctx)
-    const jobs = (<jest.Mock>runPrePass).mock.calls[0][0]
+    const jobs = (runPrePass as jest.Mock).mock.calls[0][0]
     expect(jobs[0].depsRoot).toBe('/abs/dist/libs/foo/_dependencies')
     expect(jobs[0].npmDeps).toEqual(['postject'])
     expect(jobs[0].workspaceRoutes).toEqual([{ packageName: '@hyperfrontend/logging', policy: 'whole-surface' }])
@@ -111,7 +111,7 @@ describe('runDtsPrePass', () => {
       },
     ]
     await runDtsPrePass(ctx)
-    const jobs = (<jest.Mock>runPrePass).mock.calls[0][0]
+    const jobs = (runPrePass as jest.Mock).mock.calls[0][0]
     expect(jobs).toHaveLength(2)
     expect(jobs[0].kind).toBe('workspace-dts')
     expect(jobs[0].dep).toBe('@hyperfrontend/logging')
@@ -143,7 +143,7 @@ describe('runDtsPrePass', () => {
       },
     ]
     await runDtsPrePass(ctx)
-    const jobs = (<jest.Mock>runPrePass).mock.calls[0][0]
+    const jobs = (runPrePass as jest.Mock).mock.calls[0][0]
     expect(jobs).toHaveLength(2)
     expect(jobs[0].dep).toBe('@hyperfrontend/iau/a')
     expect(jobs[0].workspaceRoutes).toEqual([

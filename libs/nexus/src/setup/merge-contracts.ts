@@ -41,8 +41,8 @@ export function mergeContracts(...contracts: IChannelContract[]): IChannelContra
     })
   })
 
-  return freeze(<IChannelContract>{
+  return freeze({
     accepted: freeze(mergedContract.accepted),
     emitted: freeze(mergedContract.emitted),
-  })
+  } as IChannelContract)
 }

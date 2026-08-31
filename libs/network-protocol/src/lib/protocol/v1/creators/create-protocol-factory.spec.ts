@@ -294,7 +294,7 @@ describe('createProtocolFactory (Node.js)', () => {
 
       const createProtocol = createProtocolFactory(createDynamicKeyEncryption, createTimeIntervalObfuscation)
 
-      expect(() => createProtocol(<never>null)).toThrow('Cannot create protocol provider without a valid logger')
+      expect(() => createProtocol(null as never)).toThrow('Cannot create protocol provider without a valid logger')
     })
 
     it('triggers error when creating protocol provider without valid refresh rate', () => {
@@ -347,7 +347,7 @@ describe('createProtocolFactory (Node.js)', () => {
 
       const receivePacket = () => void 0
 
-      expect(() => protocolProvider(<never>null, receivePacket)).toThrow('Cannot create protocol without a valid send function')
+      expect(() => protocolProvider(null as never, receivePacket)).toThrow('Cannot create protocol without a valid send function')
     })
 
     it('triggers error when creating protocol without valid receive function', () => {
@@ -375,7 +375,7 @@ describe('createProtocolFactory (Node.js)', () => {
 
       const sendPacket = () => void 0
 
-      expect(() => protocolProvider(sendPacket, <never>null)).toThrow('Cannot create protocol without a valid receive function')
+      expect(() => protocolProvider(sendPacket, null as never)).toThrow('Cannot create protocol without a valid receive function')
     })
   })
 })

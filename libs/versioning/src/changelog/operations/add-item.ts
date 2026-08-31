@@ -34,7 +34,7 @@ export function addItemToEntry(changelog: Changelog, version: string, sectionTyp
     newSections = [
       ...entry.sections,
       {
-        type: <ChangelogSection['type']>sectionType,
+        type: sectionType as ChangelogSection['type'],
         heading: sectionType.charAt(0).toUpperCase() + sectionType.slice(1),
         items: [item],
       },

@@ -100,7 +100,7 @@ const readReport = (reportPath: string, label: string): RollupWorkerReport => {
   if (!existsSync(reportPath)) {
     throw createError(`rollup worker for ${label} did not write a report at ${reportPath}`)
   }
-  const data = <RollupWorkerReport>parse(readFileSync(reportPath, 'utf8'))
+  const data = parse(readFileSync(reportPath, 'utf8')) as RollupWorkerReport
   return data
 }
 

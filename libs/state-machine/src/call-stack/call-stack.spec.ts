@@ -21,7 +21,7 @@ describe('callStack', () => {
 
   it('throws an error if a non-function is added', () => {
     const stack = callStack()
-    expect(() => stack.add(<Callback>(<unknown>'notAFunction'))).toThrow('Cannot add items that are not functions.')
+    expect(() => stack.add('notAFunction' as unknown as Callback)).toThrow('Cannot add items that are not functions.')
   })
 
   it('calls the callbacks with the specified arguments', () => {

@@ -18,5 +18,5 @@ import { isUuidV4 } from '@hyperfrontend/random-generator-utils'
  * ```
  */
 export function isValidId(id: unknown): boolean {
-  return getType(id) === 'string' && (<string>id).length === 36 && isUuidV4(<string>id)
+  return getType(id) === 'string' && (id as string).length === 36 && isUuidV4(id as string)
 }

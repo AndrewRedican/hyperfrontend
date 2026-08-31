@@ -132,7 +132,7 @@ export function isJSONString<T = unknown>(value: unknown): value is JSONString<T
  * ```
  */
 export function asJSONString<T = unknown>(value: string): JSONString<T> {
-  return <JSONString<T>>value
+  return value as JSONString<T>
 }
 
 /**
@@ -148,7 +148,7 @@ export function asJSONString<T = unknown>(value: string): JSONString<T> {
  * ```
  */
 export function parseJSONString<T>(jsonString: JSONString<T>): T {
-  return <T>parse(jsonString)
+  return parse(jsonString) as T
 }
 
 /**

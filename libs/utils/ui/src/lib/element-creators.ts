@@ -1,6 +1,6 @@
 import type { ElementConfig, ElementMethods } from './create-element'
+import type { HtmlTagName } from './html.model'
 import { createElement } from './create-element'
-import { HtmlTagName } from './html.model'
 
 /* istanbul ignore next */
 /**
@@ -136,7 +136,7 @@ export function paragraph(config?: ElementConfig | undefined): ElementMethods<HT
  * ```
  */
 export function header(level: number, config?: ElementConfig | undefined): ElementMethods<HTMLHeadingElement> {
-  return createElement<HTMLHeadingElement>(<HtmlTagName>`h${level}`, config)
+  return createElement<HTMLHeadingElement>(`h${level}` as HtmlTagName, config)
 }
 
 /* istanbul ignore next */

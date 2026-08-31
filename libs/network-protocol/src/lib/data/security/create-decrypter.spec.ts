@@ -22,12 +22,12 @@ describe('createDataDecrypter (Node.js)', () => {
       const encryptData = createDataEncrypter(encrypt)
       const decryptData = createDataDecrypter(decrypt)
 
-      const originalData = <SerializedData>(<unknown>{
+      const originalData = {
         nested: {
           array: [1, 2, 3],
           object: { key: 'value' },
         },
-      })
+      } as unknown as SerializedData
       const password = 'test-password'
 
       let encrypted = await encryptData(originalData, password)
@@ -44,26 +44,26 @@ describe('createDataDecrypter (Node.js)', () => {
     it('handles invalid encrypted data (null)', async () => {
       const decryptData = createDataDecrypter(decrypt)
 
-      await expect(decryptData(<Uint8Array>null, 'valid-password')).rejects.toThrow()
+      await expect(decryptData(null as Uint8Array, 'valid-password')).rejects.toThrow()
     })
 
     it('handles invalid encrypted data (undefined)', async () => {
       const decryptData = createDataDecrypter(decrypt)
 
-      await expect(decryptData(<Uint8Array>undefined, 'valid-password')).rejects.toThrow()
+      await expect(decryptData(undefined as Uint8Array, 'valid-password')).rejects.toThrow()
     })
 
     it('handles invalid encrypted data (not Uint8Array)', async () => {
       const decryptData = createDataDecrypter(decrypt)
 
-      await expect(decryptData(<Uint8Array>(<unknown>'not-a-uint8array'), 'valid-password')).rejects.toThrow()
+      await expect(decryptData('not-a-uint8array' as unknown as Uint8Array, 'valid-password')).rejects.toThrow()
     })
 
     it('handles wrong password', async () => {
       const encryptData = createDataEncrypter(encrypt)
       const decryptData = createDataDecrypter(decrypt)
 
-      const data = <SerializedData>{ message: JSON.stringify('test') }
+      const data = { message: JSON.stringify('test') } as SerializedData
       const encrypted = await encryptData(data, 'correct-password')
 
       await expect(decryptData(encrypted, 'wrong-password')).rejects.toThrow()
@@ -73,7 +73,7 @@ describe('createDataDecrypter (Node.js)', () => {
       const encryptData = createDataEncrypter(encrypt)
       const decryptData = createDataDecrypter(decrypt)
 
-      const data = <SerializedData>{ message: JSON.stringify('test') }
+      const data = { message: JSON.stringify('test') } as SerializedData
       const encrypted = await encryptData(data, 'password')
 
       const corrupted = new Uint8Array(encrypted)

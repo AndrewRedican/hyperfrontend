@@ -132,7 +132,7 @@ function getRegexPattern(node: TSESTree.Literal): string | null {
  * @returns True if the node is a string literal.
  */
 function isStringLiteral(node: TSESTree.Node): node is TSESTree.Literal {
-  return node.type === AST_NODE_TYPES.Literal && typeof (<TSESTree.Literal>node).value === 'string'
+  return node.type === AST_NODE_TYPES.Literal && typeof (node as TSESTree.Literal).value === 'string'
 }
 
 /**
@@ -166,7 +166,7 @@ function getStaticStringValue(node: TSESTree.Node): string | null {
     return String(node.value)
   }
   if (isSimpleTemplateLiteral(node)) {
-    const firstQuasi = <TSESTree.TemplateElement>node.quasis[0]
+    const firstQuasi = node.quasis[0] as TSESTree.TemplateElement
     return firstQuasi.value.cooked ?? firstQuasi.value.raw
   }
   return null
@@ -308,7 +308,7 @@ export default createRule<[NoUnsafeRegexOptions], MessageIds>({
         return
       }
 
-      const patternArg = <TSESTree.Node>args[0]
+      const patternArg = args[0] as TSESTree.Node
 
       const staticValue = getStaticStringValue(patternArg)
       if (staticValue !== null) {

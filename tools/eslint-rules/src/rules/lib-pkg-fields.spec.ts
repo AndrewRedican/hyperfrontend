@@ -72,7 +72,7 @@ function createValidPublishableCase(): ESLintRuleTester.ValidTestCase {
 
 function createMissingNameCase(): ESLintRuleTester.InvalidTestCase {
   const pkg = { ...validPackageJson }
-  delete (<Record<string, unknown>>pkg)['name']
+  delete (pkg as Record<string, unknown>)['name']
   const workspace = manager.create({
     projectJson: PUBLISHABLE_LIBRARY_PROJECT_JSON,
     packageJson: pkg,
@@ -86,7 +86,7 @@ function createMissingNameCase(): ESLintRuleTester.InvalidTestCase {
 
 function createMissingDescriptionCase(): ESLintRuleTester.InvalidTestCase {
   const pkg = { ...validPackageJson }
-  delete (<Record<string, unknown>>pkg)['description']
+  delete (pkg as Record<string, unknown>)['description']
   const workspace = manager.create({
     projectJson: PUBLISHABLE_LIBRARY_PROJECT_JSON,
     packageJson: pkg,
@@ -100,7 +100,7 @@ function createMissingDescriptionCase(): ESLintRuleTester.InvalidTestCase {
 
 function createMissingLicenseCase(): ESLintRuleTester.InvalidTestCase {
   const pkg = { ...validPackageJson }
-  delete (<Record<string, unknown>>pkg)['license']
+  delete (pkg as Record<string, unknown>)['license']
   const workspace = manager.create({
     projectJson: PUBLISHABLE_LIBRARY_PROJECT_JSON,
     packageJson: pkg,
@@ -114,7 +114,7 @@ function createMissingLicenseCase(): ESLintRuleTester.InvalidTestCase {
 
 function createMissingSideEffectsCase(): ESLintRuleTester.InvalidTestCase {
   const pkg = { ...validPackageJson }
-  delete (<Record<string, unknown>>pkg)['sideEffects']
+  delete (pkg as Record<string, unknown>)['sideEffects']
   const workspace = manager.create({
     projectJson: PUBLISHABLE_LIBRARY_PROJECT_JSON,
     packageJson: pkg,
@@ -128,7 +128,7 @@ function createMissingSideEffectsCase(): ESLintRuleTester.InvalidTestCase {
 
 function createMissingEnginesCase(): ESLintRuleTester.InvalidTestCase {
   const pkg = { ...validPackageJson }
-  delete (<Record<string, unknown>>pkg)['engines']
+  delete (pkg as Record<string, unknown>)['engines']
   const workspace = manager.create({
     projectJson: PUBLISHABLE_LIBRARY_PROJECT_JSON,
     packageJson: pkg,
@@ -142,7 +142,7 @@ function createMissingEnginesCase(): ESLintRuleTester.InvalidTestCase {
 
 function createMissingKeywordsCase(): ESLintRuleTester.InvalidTestCase {
   const pkg = { ...validPackageJson }
-  delete (<Record<string, unknown>>pkg)['keywords']
+  delete (pkg as Record<string, unknown>)['keywords']
   const workspace = manager.create({
     projectJson: PUBLISHABLE_LIBRARY_PROJECT_JSON,
     packageJson: pkg,

@@ -179,7 +179,7 @@ export function updateEntry(
     throw createError(`Entry with version "${version}" not found`)
   }
 
-  const entry = <ChangelogEntry>changelog.entries[entryIndex]
+  const entry = changelog.entries[entryIndex] as ChangelogEntry
   const updatedEntry = typeof updates === 'function' ? updates(entry) : { ...entry, ...updates }
 
   const newEntries = [...changelog.entries]
@@ -216,7 +216,7 @@ export function sortEntries(changelog: Changelog): Changelog {
       return b.version.localeCompare(a.version)
     }
 
-    return compare(<SemVer>bResult.version, <SemVer>aResult.version)
+    return compare(bResult.version as SemVer, aResult.version as SemVer)
   })
 
   return {
@@ -247,7 +247,7 @@ export function sortEntriesByDate(changelog: Changelog): Changelog {
     if (a.date && !b.date) return -1
     if (!a.date && !b.date) return 0
 
-    return (<string>b.date).localeCompare(<string>a.date)
+    return (b.date as string).localeCompare(a.date as string)
   })
 
   return {

@@ -109,7 +109,7 @@ export function validateDevApp(value: unknown, index: number, sourcePath: string
   if (value['port'] !== undefined && !isPort(value['port'])) {
     throw createError(`${sourcePath}: apps[${index}].port must be an integer between 1 and 65535.`)
   }
-  return <DevAppConfig>(<unknown>value)
+  return value as unknown as DevAppConfig
 }
 
 /**

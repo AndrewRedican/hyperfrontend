@@ -2,14 +2,14 @@ import type { SessionContext } from './session-context'
 import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 
 /** Result status constants returned by steps. */
-export const StepStatus = freeze(<const>{
+export const StepStatus = freeze({
   /** Step completed normally; runner advances to the next step */
   Done: 'done',
   /** Step aborted the session (error surfaces via `error` field) */
   Cancelled: 'cancelled',
   /** Step requested a jump back to a named step */
   Goto: 'goto',
-})
+} as const)
 
 /** Result status values returned by steps. */
 export type StepStatus = (typeof StepStatus)[keyof typeof StepStatus]

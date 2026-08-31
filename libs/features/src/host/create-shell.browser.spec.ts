@@ -45,7 +45,7 @@ describe('createShell', () => {
   })
 
   it('throws when no modes option is given', () => {
-    expect(() => createShell(<CreateShellOptions>(<unknown>{ container: '#shell' }))).toThrow(
+    expect(() => createShell({ container: '#shell' } as unknown as CreateShellOptions)).toThrow(
       'createShell needs at least one display mode: pass modes (e.g. { embedded: mountEmbedded }) or builtInDisplayModes.'
     )
   })
@@ -86,7 +86,7 @@ describe('createShell', () => {
 
   it('mounts a dialog pane on open with the dialog display mode', () => {
     createShell({ modes: builtInDisplayModes, url: 'https://feature.example/' }).open({ displayMode: 'dialog' })
-    expect((<HTMLIFrameElement>document.body.querySelector('iframe')).style.position).toBe('fixed')
+    expect((document.body.querySelector('iframe') as HTMLIFrameElement).style.position).toBe('fixed')
   })
 
   it('rejects opening a display mode outside the modes map', () => {
@@ -97,7 +97,7 @@ describe('createShell', () => {
   })
 
   it('opens through a custom mount map', () => {
-    const mount = jest.fn(() => <MountResult>{ target: null, present: { mode: 'embedded' }, cleanup: jest.fn() })
+    const mount = jest.fn(() => ({ target: null, present: { mode: 'embedded' }, cleanup: jest.fn() }) as MountResult)
     createShell({ modes: { embedded: mount } }).open()
     expect(mount).toHaveBeenCalledTimes(1)
   })

@@ -6,7 +6,7 @@ import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
  * Distinct codes are what let a caller react without parsing output: a build
  * script can retry a toolchain problem and must not retry a budget failure.
  */
-export const ExitCode = freeze(<const>{
+export const ExitCode = freeze({
   /** Everything asked for was produced. */
   Ok: 0,
   /** The command line was malformed. */
@@ -21,7 +21,7 @@ export const ExitCode = freeze(<const>{
   ToolchainMissing: 5,
   /** A committed asset is missing, oversized or stale. */
   CheckFailed: 6,
-})
+} as const)
 
 /** One of the process exit codes. */
 export type ExitCode = (typeof ExitCode)[keyof typeof ExitCode]

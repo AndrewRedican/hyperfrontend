@@ -103,7 +103,7 @@ export function linkMockWindows(windowA: MockWindow, windowB: MockWindow, origin
       new MessageEvent('message', {
         data,
         origin: originB,
-        source: <Window>(<unknown>windowB),
+        source: windowB as unknown as Window,
       })
     )
   })
@@ -113,7 +113,7 @@ export function linkMockWindows(windowA: MockWindow, windowB: MockWindow, origin
       new MessageEvent('message', {
         data,
         origin: originA,
-        source: <Window>(<unknown>windowA),
+        source: windowA as unknown as Window,
       })
     )
   })
@@ -139,7 +139,7 @@ export function simulateMessage(targetWindow: MockWindow, message: IAction, orig
   const event = new MessageEvent('message', {
     data: message,
     origin,
-    source: <Window>(<unknown>source) || null,
+    source: (source as unknown as Window) || null,
   })
   targetWindow._dispatchMessage(event)
 }
@@ -164,7 +164,7 @@ export function createMessageEvent<T = IAction>(data: T, origin: string, source?
   return new MessageEvent<T>('message', {
     data,
     origin,
-    source: <Window>(<unknown>source) || null,
+    source: (source as unknown as Window) || null,
   })
 }
 

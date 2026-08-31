@@ -1,9 +1,9 @@
+import type { DefaultValueOptions } from './get-value.model'
 import type { DataType, IterableOperators } from './models'
 import { isArray } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { getIterableOperators } from './get-iterable-operators'
 import { getType } from './get-type'
-import { DefaultValueOptions } from './get-value.model'
 import { isIterableType } from './is-iterable-type'
 
 /**
@@ -28,7 +28,7 @@ export const getValue = <T = unknown>(target: unknown, path: [string, ...string[
   if (isArray(path) === false) {
     throw createError('Expected path to be a non-empty array of strings.')
   }
-  if (path.length === 0) return <T>target
+  if (path.length === 0) return target as T
   const hasOnMissingKeyDefault = !!(defaultValue && 'onMissingKey' in defaultValue)
   const hasOnErrorDefault = !!(defaultValue && 'onError' in defaultValue)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

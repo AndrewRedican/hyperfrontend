@@ -41,8 +41,8 @@ describe('createActionCreators', () => {
     it('creates REQUEST_CONNECTION action with security negotiation request', () => {
       const processId = 'process-secure'
       const security = {
-        supported: <const>['v2', 'v1', 'none'],
-        preferred: <const>'v2',
+        supported: ['v2', 'v1', 'none'] as const,
+        preferred: 'v2' as const,
       }
       const action = actions.requestConnection(processId, security)
 
@@ -95,7 +95,7 @@ describe('createActionCreators', () => {
 
     it('creates ACCEPT_CONNECTION action with security negotiation response', () => {
       const processId = 'process-secure'
-      const security = { negotiated: <const>'v2' }
+      const security = { negotiated: 'v2' as const }
       const action = actions.acceptConnection(processId, security)
 
       expect(action).toEqual({
@@ -175,7 +175,7 @@ describe('createActionCreators', () => {
       const processId = 'process-secure'
       const security = {
         active: true,
-        protocol: <const>'v2',
+        protocol: 'v2' as const,
       }
       const action = actions.openConnection(processId, security)
 

@@ -43,7 +43,7 @@ function createMockRegistry(options: MockRegistryOptions = {}): Registry {
     name: 'mock',
     url: 'https://mock.registry.com',
     async getLatestVersion() {
-      return publishedVersions.length > 0 ? <string>publishedVersions[publishedVersions.length - 1] : null
+      return publishedVersions.length > 0 ? (publishedVersions[publishedVersions.length - 1] as string) : null
     },
     async isVersionPublished(_packageName: string, version: string) {
       return publishedVersions.includes(version)

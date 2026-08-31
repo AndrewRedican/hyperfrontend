@@ -23,7 +23,7 @@ function createMockChannel(): MockChannel {
   const disconnect = jest.fn()
   const destroy = jest.fn()
   const connect = jest.fn()
-  const channel = <ChannelHandle>(<unknown>{
+  const channel = {
     on: (event: string, handler: (data?: unknown) => void) => {
       ;(listeners[event] ?? (listeners[event] = [])).push(handler)
       return () => undefined
@@ -36,7 +36,7 @@ function createMockChannel(): MockChannel {
     disconnect,
     destroy,
     connect,
-  })
+  } as unknown as ChannelHandle
   return {
     channel,
     trigger: (event, data) => listeners[event]?.forEach((handler) => handler(data)),
@@ -48,7 +48,7 @@ function createMockChannel(): MockChannel {
   }
 }
 
-const TARGET = <Window>(<unknown>{ name: 'target' })
+const TARGET = { name: 'target' } as unknown as Window
 
 function setup(
   config: {
@@ -63,14 +63,14 @@ function setup(
 ) {
   const mock = createMockChannel()
   const addChannel = jest.fn(() => mock.channel)
-  const broker = <BrokerHandle>(<unknown>{ addChannel })
+  const broker = { addChannel } as unknown as BrokerHandle
   const cleanup = jest.fn()
   let context: MountContext | undefined
   const present = config.present ?? { mode: 'embedded' }
   const mount = jest.fn((ctx: MountContext): MountResult => {
     context = ctx
     return {
-      target: 'target' in config ? <Window | null>config.target : TARGET,
+      target: 'target' in config ? (config.target as Window | null) : TARGET,
       element: config.element,
       present,
       viewport: config.viewport,
@@ -88,7 +88,7 @@ function setup(
     return monitor
   })
   const emitter = createEventEmitter()
-  const base = <ShellOptions>{ container: '#shell' }
+  const base = { container: '#shell' } as ShellOptions
   // note: A schema-free contract keeps payload validation inert here; that path is covered by lifecycle.validation.spec.ts. Liveness, visibility, closing, and dirty-state wiring are covered by lifecycle.liveness.spec.ts; experience-plugin wiring by lifecycle.plugins.spec.ts.
   const handle = createShellHandle(broker, base, emitter, {
     contract: { emitted: [], accepted: [] },

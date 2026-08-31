@@ -38,13 +38,13 @@ const formats: FormatOutputs = { esm: [], cjs: [], iife: [], umd: [] }
 const baseConfig: BuildConfig = { projectRoot: '/abs/libs/foo', workspaceRoot: '/abs/repo' }
 
 beforeEach(() => {
-  ;(<jest.Mock>readProjectPackageJson).mockReset().mockReturnValue(<PackageJson>{ name: 'foo' })
-  ;(<jest.Mock>synthesizePackageJson).mockReset().mockReturnValue(<PackageJson>{ name: 'foo', dependencies: { rollup: '*' } })
-  ;(<jest.Mock>writeOutputPackageJson).mockReset()
-  ;(<jest.Mock>copyAssets).mockReset()
-  ;(<jest.Mock>collectThirdPartyLicenses).mockReset().mockReturnValue([])
-  ;(<jest.Mock>generateThirdPartyLicensesContent).mockReset().mockReturnValue('content')
-  ;(<jest.Mock>writeThirdPartyLicensesFile).mockReset()
+  ;(readProjectPackageJson as jest.Mock).mockReset().mockReturnValue({ name: 'foo' } as PackageJson)
+  ;(synthesizePackageJson as jest.Mock).mockReset().mockReturnValue({ name: 'foo', dependencies: { rollup: '*' } } as PackageJson)
+  ;(writeOutputPackageJson as jest.Mock).mockReset()
+  ;(copyAssets as jest.Mock).mockReset()
+  ;(collectThirdPartyLicenses as jest.Mock).mockReset().mockReturnValue([])
+  ;(generateThirdPartyLicensesContent as jest.Mock).mockReset().mockReturnValue('content')
+  ;(writeThirdPartyLicensesFile as jest.Mock).mockReset()
 })
 
 describe('runPackagePhase', () => {
@@ -94,45 +94,45 @@ describe('runPackagePhase', () => {
   })
 
   it('collects licenses from the dist package.json dependencies when enabled', async () => {
-    ;(<jest.Mock>synthesizePackageJson).mockReturnValue(<PackageJson>{ name: 'foo', dependencies: { rollup: '*', typescript: '*' } })
-    ;(<jest.Mock>collectThirdPartyLicenses).mockReturnValue([{ name: 'rollup', licenseType: 'MIT', licenseUrl: null }])
+    ;(synthesizePackageJson as jest.Mock).mockReturnValue({ name: 'foo', dependencies: { rollup: '*', typescript: '*' } } as PackageJson)
+    ;(collectThirdPartyLicenses as jest.Mock).mockReturnValue([{ name: 'rollup', licenseType: 'MIT', licenseUrl: null }])
     await runPackagePhase(makeContext(), { ...baseConfig, thirdPartyLicenses: true }, formats)
     expect(collectThirdPartyLicenses).toHaveBeenCalledWith('/abs/repo', ['rollup', 'typescript'])
   })
 
   it('writes THIRD_PARTY_LICENSES.md only when there are entries to render', async () => {
-    ;(<jest.Mock>collectThirdPartyLicenses).mockReturnValue([{ name: 'rollup', licenseType: 'MIT', licenseUrl: null }])
+    ;(collectThirdPartyLicenses as jest.Mock).mockReturnValue([{ name: 'rollup', licenseType: 'MIT', licenseUrl: null }])
     await runPackagePhase(makeContext(), { ...baseConfig, thirdPartyLicenses: true }, formats)
     expect(writeThirdPartyLicensesFile).toHaveBeenCalledWith('/abs/dist/libs/foo', 'content')
   })
 
   it('does not write THIRD_PARTY_LICENSES.md when no licenses were collected', async () => {
-    ;(<jest.Mock>collectThirdPartyLicenses).mockReturnValue([])
+    ;(collectThirdPartyLicenses as jest.Mock).mockReturnValue([])
     await runPackagePhase(makeContext(), { ...baseConfig, thirdPartyLicenses: true }, formats)
     expect(writeThirdPartyLicensesFile).not.toHaveBeenCalled()
   })
 
   it('passes an empty externals list when the dist package has no dependencies', async () => {
-    ;(<jest.Mock>synthesizePackageJson).mockReturnValue(<PackageJson>{ name: 'foo' })
+    ;(synthesizePackageJson as jest.Mock).mockReturnValue({ name: 'foo' } as PackageJson)
     await runPackagePhase(makeContext(), { ...baseConfig, thirdPartyLicenses: true }, formats)
     expect(collectThirdPartyLicenses).toHaveBeenCalledWith('/abs/repo', [])
   })
 
   it('forwards config.bin to synthesize', async () => {
     await runPackagePhase(makeContext(), { ...baseConfig, bin: [{ name: 'hf-build', format: ['cjs'] }] }, formats)
-    const passed = (<jest.Mock>synthesizePackageJson).mock.calls[0][3]
+    const passed = (synthesizePackageJson as jest.Mock).mock.calls[0][3]
     expect(passed.bins).toEqual([{ name: 'hf-build', format: ['cjs'] }])
   })
 
   it('no longer computes the files allowlist — finalizeFilesAllowlist owns the field', async () => {
     await runPackagePhase(makeContext(), { ...baseConfig, files: ['only-this/'] }, formats)
-    const passed = (<jest.Mock>synthesizePackageJson).mock.calls[0][3]
+    const passed = (synthesizePackageJson as jest.Mock).mock.calls[0][3]
     expect(passed.files).toBeUndefined()
   })
 
   it('defaults thirdPartyLicenses to true when bundled deps are present', async () => {
-    ;(<jest.Mock>synthesizePackageJson).mockReturnValue(<PackageJson>{ name: 'foo' })
-    ;(<jest.Mock>collectThirdPartyLicenses).mockReturnValue([{ name: 'rollup', licenseType: 'MIT', licenseUrl: null }])
+    ;(synthesizePackageJson as jest.Mock).mockReturnValue({ name: 'foo' } as PackageJson)
+    ;(collectThirdPartyLicenses as jest.Mock).mockReturnValue([{ name: 'rollup', licenseType: 'MIT', licenseUrl: null }])
     await runPackagePhase(makeContext({ bundledDeps: ['rollup', 'postject'] }), baseConfig, formats)
     expect(collectThirdPartyLicenses).toHaveBeenCalledWith('/abs/repo', ['rollup', 'postject'])
     expect(writeThirdPartyLicensesFile).toHaveBeenCalled()
@@ -144,10 +144,10 @@ describe('runPackagePhase', () => {
   })
 
   it('merges bundledDeps with the dist dependencies for license collection', async () => {
-    ;(<jest.Mock>synthesizePackageJson).mockReturnValue(<PackageJson>{ name: 'foo', dependencies: { tslib: '*' } })
-    ;(<jest.Mock>collectThirdPartyLicenses).mockReturnValue([{ name: 'rollup', licenseType: 'MIT', licenseUrl: null }])
+    ;(synthesizePackageJson as jest.Mock).mockReturnValue({ name: 'foo', dependencies: { tslib: '*' } } as PackageJson)
+    ;(collectThirdPartyLicenses as jest.Mock).mockReturnValue([{ name: 'rollup', licenseType: 'MIT', licenseUrl: null }])
     await runPackagePhase(makeContext({ bundledDeps: ['rollup', 'postject'] }), baseConfig, formats)
-    const externals = (<jest.Mock>collectThirdPartyLicenses).mock.calls[0][1]
+    const externals = (collectThirdPartyLicenses as jest.Mock).mock.calls[0][1]
     expect(externals).toEqual(['rollup', 'postject', 'tslib'])
   })
 })

@@ -533,7 +533,7 @@ const thesisOf = (topology: Omit<DeliveryTopology, 'thesis' | 'announcement'>): 
  */
 export function deriveDeliveryTopology(result: EngineResult): DeliveryTopology {
   const rules: TopologyRule[] = []
-  const answersByQuestion = createMap(result.answered.map((entry) => <readonly [string, Answer]>[entry.question.id, entry.answer]))
+  const answersByQuestion = createMap(result.answered.map((entry) => [entry.question.id, entry.answer] as readonly [string, Answer]))
   for (const entry of result.answered) {
     const rule = ruleFor(entry.answer.id)
     if (rule) rules.push(rule)

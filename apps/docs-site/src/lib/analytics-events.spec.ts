@@ -19,7 +19,7 @@ async function loadGrantedTaxonomy() {
  */
 function queuedEvents(): unknown[][] {
   return (window.dataLayer ?? [])
-    .map((entry) => Array.from(<ArrayLike<unknown>>entry))
+    .map((entry) => Array.from(entry as ArrayLike<unknown>))
     .filter((call) => call[0] === 'event')
     .map((call) => call.slice(1))
 }

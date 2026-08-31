@@ -27,7 +27,7 @@ interface FakeChild extends EventEmitter {
 }
 
 const makeFakeChild = (pid = 12345): FakeChild => {
-  const child = <FakeChild>new EventEmitter()
+  const child = new EventEmitter() as FakeChild
   child.stdout = new EventEmitter()
   child.stderr = new EventEmitter()
   child.pid = pid
@@ -60,10 +60,10 @@ const mockChannel = jest.requireMock('@hyperfrontend/logging').__mockChannel as 
 }
 
 beforeEach(() => {
-  ;(<jest.Mock>spawn).mockReset()
-  ;(<jest.Mock>flattenDeclarationPaths).mockReset()
-  ;(<jest.Mock>setInterval).mockReset().mockReturnValue('fake-interval-id')
-  ;(<jest.Mock>clearInterval).mockReset()
+  ;(spawn as jest.Mock).mockReset()
+  ;(flattenDeclarationPaths as jest.Mock).mockReset()
+  ;(setInterval as jest.Mock).mockReset().mockReturnValue('fake-interval-id')
+  ;(clearInterval as jest.Mock).mockReset()
   mockChannel.error.mockReset()
   mockChannel.warn.mockReset()
   mockChannel.info.mockReset()
@@ -74,7 +74,7 @@ beforeEach(() => {
 describe('generateDeclarations', () => {
   it('spawns the workspace-local tsc binary with the declaration emission flags', async () => {
     const child = makeFakeChild()
-    ;(<jest.Mock>spawn).mockReturnValue(child)
+    ;(spawn as jest.Mock).mockReturnValue(child)
     const promise = generateDeclarations(makeContext())
     await tick()
     child.emit('close', 0)
@@ -94,7 +94,7 @@ describe('generateDeclarations', () => {
 
   it('flattens declaration paths after a successful tsc run', async () => {
     const child = makeFakeChild()
-    ;(<jest.Mock>spawn).mockReturnValue(child)
+    ;(spawn as jest.Mock).mockReturnValue(child)
     const ctx = makeContext()
     const promise = generateDeclarations(ctx)
     await tick()
@@ -105,7 +105,7 @@ describe('generateDeclarations', () => {
 
   it('resolves with the streamed stdout and stderr concatenated', async () => {
     const child = makeFakeChild()
-    ;(<jest.Mock>spawn).mockReturnValue(child)
+    ;(spawn as jest.Mock).mockReturnValue(child)
     const promise = generateDeclarations(makeContext())
     await tick()
     child.stdout.emit('data', Buffer.from('compiled.\n'))
@@ -117,7 +117,7 @@ describe('generateDeclarations', () => {
 
   it('forwards stdout chunks to log.debug as they stream in', async () => {
     const child = makeFakeChild()
-    ;(<jest.Mock>spawn).mockReturnValue(child)
+    ;(spawn as jest.Mock).mockReturnValue(child)
     const promise = generateDeclarations(makeContext())
     await tick()
     child.stdout.emit('data', Buffer.from('chunk-a\n'))
@@ -130,7 +130,7 @@ describe('generateDeclarations', () => {
 
   it('forwards stderr chunks to log.warn as they stream in', async () => {
     const child = makeFakeChild()
-    ;(<jest.Mock>spawn).mockReturnValue(child)
+    ;(spawn as jest.Mock).mockReturnValue(child)
     const promise = generateDeclarations(makeContext())
     await tick()
     child.stderr.emit('data', Buffer.from('boom\n'))
@@ -141,7 +141,7 @@ describe('generateDeclarations', () => {
 
   it('rejects with the original error when the child emits an error event', async () => {
     const child = makeFakeChild()
-    ;(<jest.Mock>spawn).mockReturnValue(child)
+    ;(spawn as jest.Mock).mockReturnValue(child)
     const promise = generateDeclarations(makeContext())
     await tick()
     const spawnError = new Error('spawn failed')
@@ -153,7 +153,7 @@ describe('generateDeclarations', () => {
 
   it('rejects with a descriptive error when tsc closes with a non-zero exit code', async () => {
     const child = makeFakeChild()
-    ;(<jest.Mock>spawn).mockReturnValue(child)
+    ;(spawn as jest.Mock).mockReturnValue(child)
     const promise = generateDeclarations(makeContext())
     await tick()
     child.emit('close', 2)
@@ -164,7 +164,7 @@ describe('generateDeclarations', () => {
 
   it('resolves with empty stdout and stderr when tsc emits no output', async () => {
     const child = makeFakeChild()
-    ;(<jest.Mock>spawn).mockReturnValue(child)
+    ;(spawn as jest.Mock).mockReturnValue(child)
     const promise = generateDeclarations(makeContext())
     await tick()
     child.emit('close', 0)
@@ -173,7 +173,7 @@ describe('generateDeclarations', () => {
 
   it('logs a pre-tsc memory snapshot before spawning', async () => {
     const child = makeFakeChild()
-    ;(<jest.Mock>spawn).mockReturnValue(child)
+    ;(spawn as jest.Mock).mockReturnValue(child)
     const promise = generateDeclarations(makeContext())
     await tick()
     child.emit('close', 0)
@@ -183,7 +183,7 @@ describe('generateDeclarations', () => {
 
   it('logs the tsc pid at info level after spawning', async () => {
     const child = makeFakeChild(54321)
-    ;(<jest.Mock>spawn).mockReturnValue(child)
+    ;(spawn as jest.Mock).mockReturnValue(child)
     const promise = generateDeclarations(makeContext())
     await tick()
     child.emit('close', 0)
@@ -194,7 +194,7 @@ describe('generateDeclarations', () => {
   it('falls back to "unknown" when the child has no pid', async () => {
     const child = makeFakeChild()
     delete child.pid
-    ;(<jest.Mock>spawn).mockReturnValue(child)
+    ;(spawn as jest.Mock).mockReturnValue(child)
     const promise = generateDeclarations(makeContext())
     await tick()
     child.emit('close', 0)
@@ -204,7 +204,7 @@ describe('generateDeclarations', () => {
 
   it('logs the full tsc args at debug level', async () => {
     const child = makeFakeChild()
-    ;(<jest.Mock>spawn).mockReturnValue(child)
+    ;(spawn as jest.Mock).mockReturnValue(child)
     const promise = generateDeclarations(makeContext())
     await tick()
     child.emit('close', 0)
@@ -214,7 +214,7 @@ describe('generateDeclarations', () => {
 
   it('starts a heartbeat interval on spawn and clears it on close', async () => {
     const child = makeFakeChild()
-    ;(<jest.Mock>spawn).mockReturnValue(child)
+    ;(spawn as jest.Mock).mockReturnValue(child)
     const promise = generateDeclarations(makeContext())
     await tick()
     expect(setInterval).toHaveBeenCalledWith(expect.any(Function), 5000)
@@ -225,7 +225,7 @@ describe('generateDeclarations', () => {
 
   it('clears the heartbeat interval on tsc spawn error', async () => {
     const child = makeFakeChild()
-    ;(<jest.Mock>spawn).mockReturnValue(child)
+    ;(spawn as jest.Mock).mockReturnValue(child)
     const promise = generateDeclarations(makeContext())
     await tick()
     child.emit('error', new Error('boom'))
@@ -235,10 +235,10 @@ describe('generateDeclarations', () => {
 
   it('emits a heartbeat info line with parent heap and rss when the interval fires', async () => {
     const child = makeFakeChild()
-    ;(<jest.Mock>spawn).mockReturnValue(child)
+    ;(spawn as jest.Mock).mockReturnValue(child)
     const promise = generateDeclarations(makeContext())
     await tick()
-    const heartbeatFn = (<jest.Mock>setInterval).mock.calls[0]?.[0] as () => void
+    const heartbeatFn = (setInterval as jest.Mock).mock.calls[0]?.[0] as () => void
     heartbeatFn()
     expect(mockChannel.info).toHaveBeenCalledWith(
       expect.stringMatching(/^tsc still running: elapsed=[\d.]+s parent heap=[\d.]+MB rss=[\d.]+MB$/)
@@ -249,7 +249,7 @@ describe('generateDeclarations', () => {
 
   it('logs the tsc duration at info level on success', async () => {
     const child = makeFakeChild()
-    ;(<jest.Mock>spawn).mockReturnValue(child)
+    ;(spawn as jest.Mock).mockReturnValue(child)
     const promise = generateDeclarations(makeContext())
     await tick()
     child.emit('close', 0)
@@ -259,7 +259,7 @@ describe('generateDeclarations', () => {
 
   it('logs the flatten phase boundaries at info level', async () => {
     const child = makeFakeChild()
-    ;(<jest.Mock>spawn).mockReturnValue(child)
+    ;(spawn as jest.Mock).mockReturnValue(child)
     const promise = generateDeclarations(makeContext())
     await tick()
     child.emit('close', 0)

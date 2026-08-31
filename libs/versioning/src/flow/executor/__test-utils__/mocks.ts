@@ -74,13 +74,13 @@ export function createMockTree(files: Record<string, string> = {}, changes: Mock
       if (content === null) {
         throw createError(`File not found: ${filePath}`)
       }
-      const buffer = typeof content === 'string' ? Buffer.from(content) : <Buffer>content
+      const buffer = typeof content === 'string' ? Buffer.from(content) : (content as Buffer)
       const result = transform(buffer)
       tree.write(filePath, result)
     },
   }
 
-  return <Tree>(<unknown>tree)
+  return tree as unknown as Tree
 }
 
 /**
@@ -105,10 +105,10 @@ export function createMockRegistry(publishedVersion: string | null = null): Regi
       return version === publishedVersion
     },
     async getPackageInfo() {
-      return <Awaited<ReturnType<Registry['getPackageInfo']>>>(<unknown>null)
+      return null as unknown as Awaited<ReturnType<Registry['getPackageInfo']>>
     },
     async getVersionInfo() {
-      return <Awaited<ReturnType<Registry['getVersionInfo']>>>(<unknown>null)
+      return null as unknown as Awaited<ReturnType<Registry['getVersionInfo']>>
     },
     async listVersions() {
       return publishedVersion ? [publishedVersion] : []
@@ -138,7 +138,7 @@ export function createMockGitClient(commits: readonly Partial<ConventionalCommit
     ...c,
   }))
 
-  return <GitClient>(<unknown>{
+  return {
     cwd: '/workspace',
     timeout: 30000,
     getCommitLog: () => mockCommits,
@@ -151,7 +151,7 @@ export function createMockGitClient(commits: readonly Partial<ConventionalCommit
     createTag: (name: string) => ({
       name,
       hash: 'abc123',
-      type: <const>'annotated',
+      type: 'annotated' as const,
       message: 'Release',
       tagger: { name: 'Test', email: 'test@test.com', date: createDate() },
     }),
@@ -206,7 +206,7 @@ export function createMockGitClient(commits: readonly Partial<ConventionalCommit
     getModifiedFiles: () => [],
     getUntrackedFiles: () => [],
     getStagedFiles: () => [],
-  })
+  } as unknown as GitClient
 }
 
 /**

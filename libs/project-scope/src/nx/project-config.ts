@@ -166,7 +166,7 @@ export function getProjectConfig(projectPath: string, workspacePath: string): Nx
 
   if (packageJson && typeof packageJson['nx'] === 'object') {
     nxConfigLogger.debug('Using package.json nx field', { projectPath, name: packageJson.name })
-    const nxConfig = <Record<string, unknown>>packageJson['nx']
+    const nxConfig = packageJson['nx'] as Record<string, unknown>
     return {
       name: packageJson.name,
       root: relative(workspacePath, projectPath),
@@ -258,7 +258,7 @@ export function discoverNxProjects(workspacePath: string): Map<string, NxProject
           projects.set(name, { ...projectConfig, name })
         }
       } else if (typeof config === 'object' && config !== null) {
-        projects.set(name, { name, ...(<NxProjectConfig>config) })
+        projects.set(name, { name, ...(config as NxProjectConfig) })
       }
     }
 

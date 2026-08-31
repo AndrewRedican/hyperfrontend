@@ -13,28 +13,28 @@ const mkFlags = (over: Partial<CliFlags>): CliFlags => ({ ci: false, yes: false,
 
 const fakeTree = (initial: Record<string, string> = {}): { tree: Tree; files: Record<string, string> } => {
   const files: Record<string, string> = { ...initial }
-  const tree = <Tree>(<unknown>{
+  const tree = {
     root: '/project',
-    read: (path: string): string | null => (path in files ? <string>files[path] : null),
+    read: (path: string): string | null => (path in files ? (files[path] as string) : null),
     write: (path: string, content: string): void => {
       files[path] = content
     },
-  })
+  } as unknown as Tree
   return { tree, files }
 }
 
 const sink = (): { stream: NodeJS.WritableStream; text: () => string } => {
   const chunks: string[] = []
-  const stream = <NodeJS.WritableStream>(<unknown>{
+  const stream = {
     write: (chunk: string): boolean => {
       chunks.push(chunk)
       return true
     },
-  })
+  } as unknown as NodeJS.WritableStream
   return { stream, text: () => chunks.join('') }
 }
 
-const commitResult = (dryRun: boolean): CommitResult => <CommitResult>{ created: 2, updated: 1, deleted: 0, changes: [], dryRun }
+const commitResult = (dryRun: boolean): CommitResult => ({ created: 2, updated: 1, deleted: 0, changes: [], dryRun }) as CommitResult
 
 const baseDeps = (over: Partial<RunInitOptions>): RunInitOptions => {
   const stdout = sink()

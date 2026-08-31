@@ -24,7 +24,7 @@ describe('channel/messaging/send', () => {
     state = {
       id: 'channel-123',
       name: 'test-channel',
-      target: <Window>(<unknown>mockWindow),
+      target: mockWindow as unknown as Window,
       origin: 'https://example.com',
       active: true,
       connectTimestamp: Date.now(),

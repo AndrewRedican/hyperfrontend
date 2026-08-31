@@ -179,7 +179,7 @@ function publishSidecars(tempDir: string, out: string): void {
   const manifestPath = join(out, 'package.json')
   const manifest = readJsonFileIfExists<Record<string, unknown>>(manifestPath)
   if (manifest !== null && isArray(manifest['files'])) {
-    writeJsonFile(manifestPath, { ...manifest, files: [...(<unknown[]>manifest['files']), 'metadata.json'] })
+    writeJsonFile(manifestPath, { ...manifest, files: [...(manifest['files'] as unknown[]), 'metadata.json'] })
   }
 }
 

@@ -3,14 +3,14 @@ import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 /**
  * Write mode for file operations.
  */
-export const Mode = freeze(<const>{
+export const Mode = freeze({
   /** Overwrite existing files */
   Overwrite: 'overwrite',
   /** Fail if file exists */
   ExclusiveCreate: 'exclusive',
   /** Skip if file exists */
   SkipIfExists: 'skip',
-})
+} as const)
 
 /**
  * Write mode type extracted from Mode object.

@@ -29,7 +29,7 @@ export async function runRecord(config: ResolvedMediaConfig, args: ParsedArgs): 
     throw mediaError(ExitCode.Usage, `--encoder must be one of ${PREFERENCES.join(', ')}`)
   }
   const effective: ResolvedMediaConfig =
-    preference === '' ? config : { ...config, encoder: { ...config.encoder, prefer: <EncoderPreference>preference } }
+    preference === '' ? config : { ...config, encoder: { ...config.encoder, prefer: preference as EncoderPreference } }
   const scenes = await discoverScenes(config.roots.sceneDir, readString(args, 'scene', ''))
   const rows: RunSummaryRow[] = []
   for (const loaded of scenes) {

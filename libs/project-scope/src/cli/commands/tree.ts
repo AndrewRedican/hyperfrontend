@@ -263,19 +263,19 @@ function parseTreeArgs(args: string[]): TreeCommandOptions {
     strict: false,
   })
 
-  const depthStr = <string>values.depth
-  const ignoreStr = <string | undefined>values.ignore
+  const depthStr = values.depth as string
+  const ignoreStr = values.ignore as string | undefined
 
   return {
     path: positionals[0],
     depth: safeParseInt(depthStr, 10),
-    pattern: <string | undefined>values.pattern,
+    pattern: values.pattern as string | undefined,
     ignore: ignoreStr ? ignoreStr.split(',').map((s) => s.trim()) : undefined,
-    dirsOnly: <boolean>values['dirs-only'],
-    filesOnly: <boolean>values['files-only'],
-    showSize: <boolean>values.size,
-    showModified: <boolean>values.modified,
-    format: <OutputFormat>values.format,
+    dirsOnly: values['dirs-only'] as boolean,
+    filesOnly: values['files-only'] as boolean,
+    showSize: values.size as boolean,
+    showModified: values.modified as boolean,
+    format: values.format as OutputFormat,
   }
 }
 

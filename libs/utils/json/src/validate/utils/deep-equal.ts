@@ -24,22 +24,22 @@ export function isEqual(a: unknown, b: unknown): boolean {
 
   if (typeof a === 'object') {
     if (isArray(a) && isArray(b)) {
-      if ((<unknown[]>a).length !== (<unknown[]>b).length) return false
-      for (let i = 0; i < (<unknown[]>a).length; i++) {
-        if (!isEqual((<unknown[]>a)[i], (<unknown[]>b)[i])) return false
+      if ((a as unknown[]).length !== (b as unknown[]).length) return false
+      for (let i = 0; i < (a as unknown[]).length; i++) {
+        if (!isEqual((a as unknown[])[i], (b as unknown[])[i])) return false
       }
       return true
     }
 
     if (isArray(a) || isArray(b)) return false
 
-    const keysA = keys(<object>a)
-    const keysB = keys(<object>b)
+    const keysA = keys(a as object)
+    const keysB = keys(b as object)
     if (keysA.length !== keysB.length) return false
 
     for (const key of keysA) {
-      if (!hasOwn(<object>b, key)) return false
-      if (!isEqual((<Record<string, unknown>>a)[key], (<Record<string, unknown>>b)[key])) return false
+      if (!hasOwn(b as object, key)) return false
+      if (!isEqual((a as Record<string, unknown>)[key], (b as Record<string, unknown>)[key])) return false
     }
     return true
   }

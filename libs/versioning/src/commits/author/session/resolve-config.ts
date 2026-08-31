@@ -23,7 +23,7 @@ const TYPE_DESCRIPTIONS: Readonly<Record<string, string>> = {
  * supply their own list. Each conventional type is paired with a short hint.
  */
 export const DEFAULT_SESSION_TYPES: readonly SessionType[] = freeze(
-  CONVENTIONAL_TYPES.map((name) => <const>{ name, description: describeType(name) })
+  CONVENTIONAL_TYPES.map((name) => ({ name, description: describeType(name) }) as const)
 )
 
 /**

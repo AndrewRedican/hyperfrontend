@@ -29,7 +29,7 @@ export function createSerializedEncryptedPacketCreator(
     try {
       data = uint8ArrayToBase64(packet.data)
     } catch (e) {
-      throw createError(`Cannot serialize packet encrypted data. ${(<Error>e)?.message}`)
+      throw createError(`Cannot serialize packet encrypted data. ${(e as Error)?.message}`)
     }
     return freeze({ ...packet, data })
   }

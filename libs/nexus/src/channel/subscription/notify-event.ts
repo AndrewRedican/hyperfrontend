@@ -42,7 +42,7 @@ export function notifyEvent(channel: ChannelInternals, event: ChannelEvent, data
       handler(event, data, channelJSON)
     } catch (error) {
       if (state.logger) {
-        state.logger.error(`Error in event handler for '${event}' event:`, <Error>error)
+        state.logger.error(`Error in event handler for '${event}' event:`, error as Error)
       }
     }
   }

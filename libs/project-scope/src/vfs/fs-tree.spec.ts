@@ -129,7 +129,7 @@ describe('vfs/FsTree', () => {
       const tree = createFsTree(TEST_DIR)
       tree.write('new-file.txt', 'new content')
       const changes = tree.listChanges()
-      const first = <FileChange>changes[0]
+      const first = changes[0] as FileChange
       expect(changes).toHaveLength(1)
       expect(first.type).toBe('CREATE')
       expect(first.path).toBe('new-file.txt')
@@ -139,7 +139,7 @@ describe('vfs/FsTree', () => {
       const tree = createFsTree(TEST_DIR)
       tree.write('package.json', '{"updated": true}')
       const changes = tree.listChanges()
-      const first = <FileChange>changes[0]
+      const first = changes[0] as FileChange
       expect(changes).toHaveLength(1)
       expect(first.type).toBe('UPDATE')
       expect(first.originalContent).toBeDefined()
@@ -167,7 +167,7 @@ describe('vfs/FsTree', () => {
       const tree = createFsTree(TEST_DIR)
       tree.write('script.sh', '#!/bin/bash', { permissions: 0o755 })
       const changes = tree.listChanges()
-      const first = <FileChange>changes[0]
+      const first = changes[0] as FileChange
       expect(first.mode).toBe(0o755)
     })
 
@@ -220,7 +220,7 @@ describe('vfs/FsTree', () => {
       const tree = createFsTree(TEST_DIR)
       tree.delete('package.json')
       const changes = tree.listChanges()
-      const first = <FileChange>changes[0]
+      const first = changes[0] as FileChange
       expect(changes).toHaveLength(1)
       expect(first.type).toBe('DELETE')
     })
@@ -244,7 +244,7 @@ describe('vfs/FsTree', () => {
       const tree = createFsTree(TEST_DIR)
       tree.delete('package.json')
       const changes = tree.listChanges()
-      const first = <FileChange>changes[0]
+      const first = changes[0] as FileChange
       expect(first.originalContent).toBeDefined()
       expect(first.originalContent?.toString()).toContain('test')
     })
@@ -370,8 +370,8 @@ describe('vfs/FsTree', () => {
       tree.write('z-file.txt', 'z')
       tree.write('a-file.txt', 'a')
       const changes = tree.listChanges()
-      const first = <FileChange>changes[0]
-      const second = <FileChange>changes[1]
+      const first = changes[0] as FileChange
+      const second = changes[1] as FileChange
       expect(first.path).toBe('a-file.txt')
       expect(second.path).toBe('z-file.txt')
     })
@@ -391,7 +391,7 @@ describe('vfs/FsTree', () => {
       const tree = createFsTree(TEST_DIR)
       tree.changePermissions('package.json', 0o755)
       const changes = tree.listChanges()
-      const first = <FileChange>changes[0]
+      const first = changes[0] as FileChange
       expect(changes).toHaveLength(1)
       expect(first.mode).toBe(0o755)
     })
@@ -406,7 +406,7 @@ describe('vfs/FsTree', () => {
       tree.write('script.sh', '#!/bin/bash')
       tree.changePermissions('script.sh', 0o755)
       const changes = tree.listChanges()
-      const first = <FileChange>changes[0]
+      const first = changes[0] as FileChange
       expect(changes).toHaveLength(1)
       expect(first.mode).toBe(0o755)
     })

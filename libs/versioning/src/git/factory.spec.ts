@@ -3,7 +3,7 @@ import { createGitClient, DEFAULT_GIT_CLIENT_CONFIG } from './factory'
 
 jest.mock('node:child_process')
 
-const mockExecFileSync = <jest.MockedFunction<typeof execFileSync>>execFileSync
+const mockExecFileSync = execFileSync as jest.MockedFunction<typeof execFileSync>
 jest.mock('./operations/commit', () => ({
   ...jest.requireActual('./operations/commit'),
   commit: jest.fn().mockReturnValue({ hash: 'mock-hash', shortHash: 'mock', message: 'test' }),

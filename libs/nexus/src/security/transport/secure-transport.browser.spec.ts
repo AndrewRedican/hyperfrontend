@@ -45,18 +45,18 @@ function createTransportPair(protocol: 'v1' | 'v2', createProvider: () => Securi
   const transports: { a?: SecurityTransport; b?: SecurityTransport } = {}
   const a: Partial<Party> = { received: [], errors: [], wireOutbound: [] }
   const b: Partial<Party> = { received: [], errors: [], wireOutbound: [] }
-  const windowOfB = <Window>(<unknown>{
+  const windowOfB = {
     postMessage: (payload: Uint8Array) => {
       a.wireOutbound?.push(payload)
       transports.b?.receive(payload)
     },
-  })
-  const windowOfA = <Window>(<unknown>{
+  } as unknown as Window
+  const windowOfA = {
     postMessage: (payload: Uint8Array) => {
       b.wireOutbound?.push(payload)
       transports.a?.receive(payload)
     },
-  })
+  } as unknown as Window
   const idA = uuidV4()
   const idB = uuidV4()
   transports.a = createSecureTransport({
@@ -83,7 +83,7 @@ function createTransportPair(protocol: 'v1' | 'v2', createProvider: () => Securi
   })
   a.transport = transports.a
   b.transport = transports.b
-  return { a: <Party>a, b: <Party>b }
+  return { a: a as Party, b: b as Party }
 }
 
 describe('SecureTransport (two-party)', () => {
@@ -279,7 +279,7 @@ describe('SecureTransport (two-party)', () => {
         protocol: 'v2',
         provider: createV2Provider(),
         label: 'no-error-handler',
-        target: <Window>(<unknown>{ postMessage: jest.fn() }),
+        target: { postMessage: jest.fn() } as unknown as Window,
         getOrigin: () => null,
         originId: uuidV4(),
         targetId: uuidV4(),
@@ -297,7 +297,7 @@ describe('SecureTransport (two-party)', () => {
         protocol: 'v2',
         provider: createV2Provider(),
         label: 'origin-capture',
-        target: <Window>(<unknown>{ postMessage }),
+        target: { postMessage } as unknown as Window,
         getOrigin,
         originId: uuidV4(),
         targetId: uuidV4(),

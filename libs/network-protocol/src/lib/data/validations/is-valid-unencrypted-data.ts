@@ -29,7 +29,7 @@ import { isValidSequence } from './is-valid-schema-sequence'
  * ```
  */
 export function isValidUnencryptedData(data: unknown): boolean {
-  const d = <Data>data
+  const d = data as Data
   return (
     getType(d) === 'object' &&
     isValidPid(d.pid) &&

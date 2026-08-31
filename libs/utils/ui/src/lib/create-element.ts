@@ -63,7 +63,7 @@ export type ElementMethods<T extends HTMLElement> = {
  * ```
  */
 export function createElement<T extends HTMLElement>(tagName: HtmlTagName, config?: ElementConfig): ElementMethods<T> {
-  const element = <T>document.createElement(tagName)
+  const element = document.createElement(tagName) as T
   if (config?.inlineStyle) {
     assign(element.style, config.inlineStyle)
   }

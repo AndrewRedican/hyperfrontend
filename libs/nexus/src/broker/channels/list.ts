@@ -25,5 +25,5 @@ type ChannelWithToJSON = {
  */
 export function listChannels(registry: Registry): ChannelJSON[] {
   const channels = getAll(registry)
-  return channels.map((channel) => (<ChannelWithToJSON>(<unknown>channel)).toJSON())
+  return channels.map((channel) => (channel as unknown as ChannelWithToJSON).toJSON())
 }

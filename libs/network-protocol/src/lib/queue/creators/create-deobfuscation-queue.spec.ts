@@ -22,7 +22,7 @@ describe('createDeobfuscationQueue', () => {
     const onSuccess = jest.fn()
     const onFail = jest.fn()
     const queue = createDeobfuscationQueue(label, packetDeobfuscation, logger, onSuccess, onFail)
-    const invalidPacket = <ObfuscatedPacket>(<unknown>{ invalid: 'data' })
+    const invalidPacket = { invalid: 'data' } as unknown as ObfuscatedPacket
     queue.addMessage(invalidPacket)
     await sleep(100)
     expect(onFail).toHaveBeenCalledWith(invalidPacket)

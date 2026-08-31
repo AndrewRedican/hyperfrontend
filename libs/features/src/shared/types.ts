@@ -7,7 +7,7 @@ import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
  * `feature.config.*` `display.modes`, and the generated shell composes exactly
  * those.
  */
-export const DisplayMode = freeze(<const>{
+export const DisplayMode = freeze({
   /** Inline inside a host-provided container element; the iframe fills the container. */
   Embedded: 'embedded',
   /** Full-viewport transparent overlay pane; the feature draws its dialog box (and backdrop) inside it. */
@@ -16,7 +16,7 @@ export const DisplayMode = freeze(<const>{
   Popup: 'popup',
   /** Full browser tab/window opened via `_blank`. */
   Standalone: 'standalone',
-})
+} as const)
 
 /**
  * Union of the supported display-mode values.

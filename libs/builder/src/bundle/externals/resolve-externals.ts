@@ -66,7 +66,7 @@ export const resolveExternals = (options: ResolveExternalsOptions): string[] => 
   const inlineWorkspace = options.bundleWorkspaceDeps === true && options.isWorkspacePackage !== undefined
 
   const filterWorkspace = (names: string[]): string[] =>
-    inlineWorkspace ? names.filter((n) => !(<IsWorkspacePackagePredicate>options.isWorkspacePackage)(n)) : names
+    inlineWorkspace ? names.filter((n) => !(options.isWorkspacePackage as IsWorkspacePackagePredicate)(n)) : names
   const filterBundled = (names: string[]): string[] => (bundledSet.size === 0 ? names : names.filter((n) => !bundledSet.has(n)))
   const filterWorkspaceBundled = (names: string[]): string[] =>
     workspaceBundledSet.size === 0 ? names : names.filter((n) => !workspaceBundledSet.has(n))

@@ -20,8 +20,8 @@ describe('measureContentBox', () => {
 
   function measuredElement(rect: { width: number; height: number }, style: Partial<CSSStyleDeclaration> = {}): HTMLElement {
     const element = document.createElement('div')
-    element.getBoundingClientRect = () => <DOMRect>(<unknown>{ width: rect.width, height: rect.height })
-    jest.spyOn(window, 'getComputedStyle').mockReturnValue(<CSSStyleDeclaration>(<unknown>{
+    element.getBoundingClientRect = () => ({ width: rect.width, height: rect.height }) as unknown as DOMRect
+    jest.spyOn(window, 'getComputedStyle').mockReturnValue({
       borderLeftWidth: '',
       borderRightWidth: '',
       borderTopWidth: '',
@@ -31,7 +31,7 @@ describe('measureContentBox', () => {
       paddingTop: '',
       paddingBottom: '',
       ...style,
-    }))
+    } as unknown as CSSStyleDeclaration)
     return element
   }
 

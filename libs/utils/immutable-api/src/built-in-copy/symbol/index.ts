@@ -96,7 +96,7 @@ export const symbolUnscopables = _Symbol.unscopables
  * (Safe copy) Namespace object containing Symbol utilities and well-known symbols.
  * Note: Importing this imports all symbols in this namespace (no tree-shaking).
  */
-export const Symbol = _freeze(<const>{
+export const Symbol = _freeze({
   create: createSymbol,
   for: symbolFor,
   keyFor: symbolKeyFor,
@@ -113,4 +113,4 @@ export const Symbol = _freeze(<const>{
   species: symbolSpecies,
   toPrimitive: symbolToPrimitive,
   unscopables: symbolUnscopables,
-})
+} as const)

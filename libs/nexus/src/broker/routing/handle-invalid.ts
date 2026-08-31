@@ -31,13 +31,13 @@ export function handleInvalid(context: RoutingContext, message: MessageEvent<IAc
 
   const processId = action.processId
 
-  const channel = <ChannelHandle | undefined>processManager.get(processId)
+  const channel = processManager.get(processId) as ChannelHandle | undefined
 
   if (!channel) {
     return
   }
 
-  const reason = <string | undefined>(<unknown>action)['error']
+  const reason = (action as unknown)['error'] as string | undefined
 
   channel.notifyEvent('invalid', { reason, origin: message.origin })
 }

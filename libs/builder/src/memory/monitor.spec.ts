@@ -44,7 +44,7 @@ const memoryStub = (heapUsedMB: number, rssMB = heapUsedMB + 50): MemoryUsageStu
   arrayBuffers: 1 * BYTES_PER_MB,
 })
 
-const channelLogger = (<MockedLoggingModule>(<unknown>loggingModule)).__mockChannel
+const channelLogger = (loggingModule as unknown as MockedLoggingModule).__mockChannel
 
 describe('createMemoryMonitor', () => {
   let memoryUsageSpy: jest.SpyInstance

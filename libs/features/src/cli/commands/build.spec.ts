@@ -26,12 +26,12 @@ const bundle = (protocol: 'none' | 'v1' | 'v2', protocolExplicit = false): Resol
 
 const sink = (): { stream: NodeJS.WritableStream; text: () => string } => {
   const chunks: string[] = []
-  const stream = <NodeJS.WritableStream>(<unknown>{
+  const stream = {
     write: (chunk: string): boolean => {
       chunks.push(chunk)
       return true
     },
-  })
+  } as unknown as NodeJS.WritableStream
   return { stream, text: () => chunks.join('') }
 }
 
@@ -260,7 +260,7 @@ describe('runBuild', () => {
   })
 
   it('drives the builder and npm pack when no runners are injected', async () => {
-    mockBuild.mockResolvedValue(<Awaited<ReturnType<typeof build>>>{})
+    mockBuild.mockResolvedValue({} as Awaited<ReturnType<typeof build>>)
     mockExecFileSync.mockReturnValue('clock-shell-1.0.0.tgz\n')
     await runBuild({
       flags: mkFlags({}),

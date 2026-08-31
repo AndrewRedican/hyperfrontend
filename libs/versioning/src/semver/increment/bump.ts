@@ -117,7 +117,7 @@ export function incrementPrerelease(version: SemVer, id?: string): SemVer {
   }
 
   const lastIdx = prerelease.length - 1
-  const last = <string>prerelease[lastIdx]
+  const last = prerelease[lastIdx] as string
   const lastNum = parseInt(last, 10)
 
   if (!globalIsNaN(lastNum)) {

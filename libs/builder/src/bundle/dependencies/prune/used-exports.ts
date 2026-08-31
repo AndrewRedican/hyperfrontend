@@ -30,7 +30,7 @@ const collectEsmEdges = (sourceFile: ts.SourceFile, importerDir: string, edges: 
   for (const statement of sourceFile.statements) {
     if (ts.isImportDeclaration(statement)) {
       // why: an `ImportDeclaration`'s module specifier is always a string literal in parseable source.
-      const target = resolveRelativeTarget(importerDir, (<ts.StringLiteral>statement.moduleSpecifier).text)
+      const target = resolveRelativeTarget(importerDir, (statement.moduleSpecifier as ts.StringLiteral).text)
       if (target === null) continue
       const clause = statement.importClause
       if (!clause) {
@@ -43,7 +43,7 @@ const collectEsmEdges = (sourceFile: ts.SourceFile, importerDir: string, edges: 
         continue
       }
       // why: with no default binding, a parseable import always carries named bindings — either `* as ns` or `{ … }`.
-      const bindings = <ts.NamedImportBindings>clause.namedBindings
+      const bindings = clause.namedBindings as ts.NamedImportBindings
       if (ts.isNamespaceImport(bindings)) {
         mergeAll(edges, target)
         continue
@@ -53,7 +53,7 @@ const collectEsmEdges = (sourceFile: ts.SourceFile, importerDir: string, edges: 
     }
     if (ts.isExportDeclaration(statement) && statement.moduleSpecifier) {
       // why: a re-export's module specifier, when present, is always a string literal in parseable source.
-      const target = resolveRelativeTarget(importerDir, (<ts.StringLiteral>statement.moduleSpecifier).text)
+      const target = resolveRelativeTarget(importerDir, (statement.moduleSpecifier as ts.StringLiteral).text)
       if (target === null) continue
       // why: `export * from 'F'` re-exports the entire surface — treat as wholesale demand.
       if (!statement.exportClause || !ts.isNamedExports(statement.exportClause)) {
@@ -138,7 +138,7 @@ const collectCjsEdges = (sourceFile: ts.SourceFile, importerDir: string, edges: 
     const specifier = getRequireSpecifier(node)
     if (specifier !== null) {
       const target = resolveRelativeTarget(importerDir, specifier)
-      if (target !== null) collectCjsBindingEdges(<ts.CallExpression>node, target, edges, namespaceBindings, declNames)
+      if (target !== null) collectCjsBindingEdges(node as ts.CallExpression, target, edges, namespaceBindings, declNames)
     }
     ts.forEachChild(node, findRequires)
   }

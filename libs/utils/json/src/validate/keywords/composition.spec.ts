@@ -3,7 +3,7 @@ import type { ValidationContext } from '../context'
 import { validateAllOf } from './composition'
 
 describe('validateAllOf', () => {
-  const ctx = <ValidationContext>(<unknown>{ errors: [], validate: (v, s) => v === s })
+  const ctx = { errors: [], validate: (v, s) => v === s } as unknown as ValidationContext
 
   it('returns true if no allOf', () => {
     expect(validateAllOf(1, {}, ctx)).toBe(true)
@@ -11,12 +11,12 @@ describe('validateAllOf', () => {
   })
 
   it('returns true if all schemas match', () => {
-    const schema: Schema = { allOf: <Schema[]>[1, 1] }
+    const schema: Schema = { allOf: [1, 1] as Schema[] }
     expect(validateAllOf(1, schema, ctx)).toBe(true)
   })
 
   it('returns false if any schema fails', () => {
-    const schema: Schema = { allOf: <Schema[]>[1, 2] }
+    const schema: Schema = { allOf: [1, 2] as Schema[] }
     expect(validateAllOf(1, schema, ctx)).toBe(false)
   })
 })

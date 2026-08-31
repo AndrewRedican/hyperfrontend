@@ -136,7 +136,7 @@ export function createRequestPeer(origin: PeerOrigin, send: (type: string, data:
   }
 
   const respond = (request: Envelope, outcome: ResponseOutcome) =>
-    send(ControlType.Response, <Envelope>{ correlationId: request.correlationId, from: origin, innerType: request.innerType, ...outcome })
+    send(ControlType.Response, { correlationId: request.correlationId, from: origin, innerType: request.innerType, ...outcome } as Envelope)
 
   const answer = (request: Envelope) => {
     const handler = handlers[request.innerType]
@@ -165,7 +165,7 @@ export function createRequestPeer(origin: PeerOrigin, send: (type: string, data:
   }
 
   const dispatch = (type: string, data: unknown) => {
-    const envelope = <Envelope | null>(typeof data === 'object' ? data : null)
+    const envelope = (typeof data === 'object' ? data : null) as Envelope | null
     // why: The channel echoes each side's outbound messages back to its own subscribers, so a peer must discard envelopes stamped with its own origin or it would answer its own requests.
     if (!envelope || envelope.from === origin) {
       return
@@ -188,7 +188,7 @@ export function createRequestPeer(origin: PeerOrigin, send: (type: string, data:
         reject(createError(`Request '${type}' timed out after ${timeoutMs}ms.`))
       }, timeoutMs)
       pending[correlationId] = { resolve, reject, timer }
-      send(ControlType.Request, <Envelope>{ correlationId, from: origin, innerType: type, payload: data })
+      send(ControlType.Request, { correlationId, from: origin, innerType: type, payload: data } as Envelope)
     })
 
   const handle = (type: string, handler: RequestHandler) => {
@@ -212,5 +212,5 @@ export function createRequestPeer(origin: PeerOrigin, send: (type: string, data:
     }
   }
 
-  return freeze(<RequestPeer>{ request, handle, dispatch, rejectAll })
+  return freeze({ request, handle, dispatch, rejectAll } as RequestPeer)
 }

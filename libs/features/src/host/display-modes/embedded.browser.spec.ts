@@ -13,9 +13,11 @@ function mount(options: Partial<ShellOptions> = {}) {
   const container = document.createElement('div')
   // how: The rect flips to a sentinel once the iframe is inside, so a presentation carrying the pre-append reading proves the measurement ran before insertion.
   container.getBoundingClientRect = () =>
-    container.querySelector('iframe') ? <DOMRect>(<unknown>{ width: 999, height: 999 }) : <DOMRect>(<unknown>{ width: 300, height: 200 })
+    container.querySelector('iframe')
+      ? ({ width: 999, height: 999 } as unknown as DOMRect)
+      : ({ width: 300, height: 200 } as unknown as DOMRect)
   document.body.appendChild(container)
-  const result = mountEmbedded({ options: <ShellOptions>{ container, ...options }, requestClose: jest.fn() })
+  const result = mountEmbedded({ options: { container, ...options } as ShellOptions, requestClose: jest.fn() })
   return { container, result }
 }
 

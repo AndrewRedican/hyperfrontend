@@ -40,7 +40,7 @@ const stylesheetLabels = createWeakMap<HTMLStyleElement, string>()
  */
 export function addStylesheet(css: string | StyleMap, label?: string): [HTMLStyleElement, () => void] {
   if (getType(css) === 'object') {
-    css = cssRules(<StyleMap>css)
+    css = cssRules(css as StyleMap)
   }
 
   if (getType(css) !== 'string' || css.length === 0) {
@@ -52,7 +52,7 @@ export function addStylesheet(css: string | StyleMap, label?: string): [HTMLStyl
   }
 
   const style: HTMLStyleElement = document.createElement('style')
-  style.textContent = <string>css
+  style.textContent = css as string
   document.head.appendChild(style)
 
   stylesheets.add(style)
@@ -90,11 +90,11 @@ export function removeStylesheet(ref: string | HTMLStyleElement): void {
   let style: HTMLStyleElement
   let label: string
   if (isLabel) {
-    label = <string>ref
-    style = <HTMLStyleElement>labeledStylesheets.get(label)
+    label = ref as string
+    style = labeledStylesheets.get(label) as HTMLStyleElement
   } else {
-    style = <HTMLStyleElement>ref
-    label = <string>stylesheetLabels.get(style)
+    style = ref as HTMLStyleElement
+    label = stylesheetLabels.get(style) as string
   }
   try {
     document.head.removeChild(style)

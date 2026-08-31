@@ -62,11 +62,11 @@ const ABSOLUTE_FALLBACK_WIDTH = 530
 const ABSOLUTE_FALLBACK_HEIGHT = 550
 
 // note: Hardcoded knobs the dialog/popup dynamic size derives from — viewport-height coverage, width-to-height aspect ratio, and the max fraction of either axis before shrink-to-fit.
-const SIZE_CONFIG = freeze(<const>{
+const SIZE_CONFIG = freeze({
   coverage: 0.6,
   aspectRatio: ABSOLUTE_FALLBACK_WIDTH / ABSOLUTE_FALLBACK_HEIGHT,
   maxCoverage: 0.9,
-})
+} as const)
 
 /**
  * A resolved width/height pair in pixels.
@@ -122,7 +122,7 @@ export interface ResolvedPosition {
 }
 
 // note: Compound-value lookup; the bare 'center' shorthand resolves before it.
-const POSITION_AXES = freeze(<Record<Exclude<BoxPosition, 'center'>, ResolvedPosition>>{
+const POSITION_AXES = freeze({
   'top-left': { vertical: 'start', horizontal: 'start' },
   'top-center': { vertical: 'start', horizontal: 'center' },
   'top-right': { vertical: 'start', horizontal: 'end' },
@@ -131,7 +131,7 @@ const POSITION_AXES = freeze(<Record<Exclude<BoxPosition, 'center'>, ResolvedPos
   'bottom-left': { vertical: 'end', horizontal: 'start' },
   'bottom-center': { vertical: 'end', horizontal: 'center' },
   'bottom-right': { vertical: 'end', horizontal: 'end' },
-})
+} as Record<Exclude<BoxPosition, 'center'>, ResolvedPosition>)
 
 /**
  * Resolves a box position into its per-axis alignments.

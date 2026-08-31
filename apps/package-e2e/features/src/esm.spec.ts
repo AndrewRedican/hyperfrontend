@@ -38,7 +38,7 @@ describe('@hyperfrontend/features ESM', () => {
 
   describe('server-side import of every exports subpath', () => {
     it.each(SUBPATH_SYMBOLS)('imports %s without a window and exposes %s', async (specifier, symbol) => {
-      const mod = <Record<string, unknown>>await import(specifier)
+      const mod = (await import(specifier)) as Record<string, unknown>
       expect(typeof mod[symbol]).toBe('function')
     })
   })

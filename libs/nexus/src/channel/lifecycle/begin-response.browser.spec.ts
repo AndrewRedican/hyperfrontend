@@ -40,7 +40,7 @@ describe('channel/lifecycle/begin-response', () => {
       removeProcess: jest.fn(),
       notifyEvent: jest.fn(),
       notifyMessage: jest.fn(),
-      actions: <ChannelInternals['actions']>(<unknown>{}),
+      actions: {} as unknown as ChannelInternals['actions'],
     }
   })
 

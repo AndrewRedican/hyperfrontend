@@ -66,7 +66,7 @@ export type StateStatusDeriver = (state: State) => boolean
 
 /** Function that derives full DerivedState from State */
 export type StateDeriver = (state: State) => DerivedState
-export const event = <const>{
+export const event = {
   NotStarted: 'notStarted',
   InProgress: 'inProgress',
   Done: 'done',
@@ -76,7 +76,7 @@ export const event = <const>{
   Restarting: 'restarting',
   Paused: 'paused',
   Cancelled: 'cancelled',
-}
+} as const
 
 /** Event name type derived from the event constant object */
 export type Event = (typeof event)[keyof typeof event]

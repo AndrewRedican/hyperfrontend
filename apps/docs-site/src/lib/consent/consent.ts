@@ -65,7 +65,7 @@ export function parseStoredConsent(raw: string | null): StoredConsent | null {
   if (typeof candidate !== 'object' || candidate === null) {
     return null
   }
-  const record = <Record<string, unknown>>candidate
+  const record = candidate as Record<string, unknown>
   if (
     record['version'] !== 1 ||
     typeof record['analytics'] !== 'boolean' ||

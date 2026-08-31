@@ -235,7 +235,7 @@ describe('Setup Utilities', () => {
         emitted: [{ type: 'result' }],
       }
 
-      const invalidContract = <IChannelContract>(<unknown>null)
+      const invalidContract = null as unknown as IChannelContract
 
       const merged = mergeContracts(validContract, invalidContract)
 
@@ -249,7 +249,7 @@ describe('Setup Utilities', () => {
         emitted: [{ type: 'result' }],
       }
 
-      const partialContract = <IChannelContract>(<unknown>{ accepted: [{ type: 'partial' }] })
+      const partialContract = { accepted: [{ type: 'partial' }] } as unknown as IChannelContract
 
       const merged = mergeContracts(validContract, partialContract)
 

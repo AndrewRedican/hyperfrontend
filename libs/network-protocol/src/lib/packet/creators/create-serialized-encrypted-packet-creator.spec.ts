@@ -19,7 +19,7 @@ describe('createSerializedEncryptedPacketCreator (Node.js)', () => {
     packetSerializationTestCases.forEach(({ description, unserializedPacket, expectedSerializedData }) => {
       it(`serializes ${description}`, () => {
         const createSerializedPacket = createSerializedEncryptedPacketCreator(uint8ArrayToBase64)
-        const result = createSerializedPacket(<UnserializedEncryptedPacket>unserializedPacket)
+        const result = createSerializedPacket(unserializedPacket as UnserializedEncryptedPacket)
 
         expect(result).toBeDefined()
         expect(result.origin).toBe(unserializedPacket.origin)
@@ -60,7 +60,7 @@ describe('createSerializedEncryptedPacketCreator (Node.js)', () => {
       it(`rejects ${description}`, () => {
         const createSerializedPacket = createSerializedEncryptedPacketCreator(uint8ArrayToBase64)
 
-        expect(() => createSerializedPacket(<UnserializedEncryptedPacket>packet)).toThrow('Cannot serialize data of an invalid packet')
+        expect(() => createSerializedPacket(packet as UnserializedEncryptedPacket)).toThrow('Cannot serialize data of an invalid packet')
       })
     })
 
@@ -74,13 +74,13 @@ describe('createSerializedEncryptedPacketCreator (Node.js)', () => {
     })
 
     it('handles null encoding function', () => {
-      const createSerializedPacket = createSerializedEncryptedPacketCreator(<typeof uint8ArrayToBase64>(<unknown>null))
+      const createSerializedPacket = createSerializedEncryptedPacketCreator(null as unknown as typeof uint8ArrayToBase64)
 
       expect(() => createSerializedPacket(sampleUnserializedPacket)).toThrow()
     })
 
     it('handles undefined encoding function', () => {
-      const createSerializedPacket = createSerializedEncryptedPacketCreator(<typeof uint8ArrayToBase64>(<unknown>undefined))
+      const createSerializedPacket = createSerializedEncryptedPacketCreator(undefined as unknown as typeof uint8ArrayToBase64)
 
       expect(() => createSerializedPacket(sampleUnserializedPacket)).toThrow()
     })

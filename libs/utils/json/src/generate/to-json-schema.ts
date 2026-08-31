@@ -94,9 +94,9 @@ function generateSchema(value: unknown, options: Required<GenerateOptions>): Sch
     case 'string':
       return { type: 'string' }
     case 'array':
-      return generateArraySchema(<unknown[]>value, options)
+      return generateArraySchema(value as unknown[], options)
     case 'object':
-      return generateObjectSchema(<Record<string, unknown>>value, options)
+      return generateObjectSchema(value as Record<string, unknown>, options)
     /* istanbul ignore next -- unreachable: getJsonType covers all JSON types */
     default:
       return {}

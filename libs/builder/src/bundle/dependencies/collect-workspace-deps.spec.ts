@@ -11,7 +11,7 @@ const dep = (over: Partial<WorkspaceBundledDep>): WorkspaceBundledDep => ({
   ...over,
 })
 
-const ctx = (deps: WorkspaceBundledDep[]): BuildContext => <BuildContext>{ workspaceBundledDeps: deps }
+const ctx = (deps: WorkspaceBundledDep[]): BuildContext => ({ workspaceBundledDeps: deps }) as BuildContext
 
 describe('collectWorkspacePrefixDeps', () => {
   it('returns the distinct whole-surface package names', () => {

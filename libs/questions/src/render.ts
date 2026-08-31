@@ -9,7 +9,7 @@ import { Ansi } from './terminal'
 /**
  * Unicode symbols for prompt rendering.
  */
-export const Symbol = freeze(<const>{
+export const Symbol = freeze({
   Pointer: '❯',
   Radio: '◯',
   RadioSelected: '◉',
@@ -19,7 +19,7 @@ export const Symbol = freeze(<const>{
   Cross: '✖',
   Question: '?',
   Ellipsis: '…',
-})
+} as const)
 
 /**
  * Style functions for ANSI text formatting.

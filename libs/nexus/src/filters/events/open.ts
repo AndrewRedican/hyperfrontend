@@ -10,5 +10,5 @@ import { create } from './create'
  * @returns Wrapped handler that filters for OPEN events
  */
 export function open(handler: OpenEventHandler): EventHandler {
-  return create('open')(<EventHandler>handler)
+  return create('open')(handler as EventHandler)
 }

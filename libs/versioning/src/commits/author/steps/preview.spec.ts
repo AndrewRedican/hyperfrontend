@@ -60,7 +60,7 @@ describe('previewStep', () => {
   it('surfaces validation errors from an unknown commit type', async () => {
     const term = createMockTerminal()
     const ctx = createSessionContext(createTestConfig({ input: term.input, output: term.output }))
-    ctx.draft = { type: <'feat'>'banana', subject: 'x' }
+    ctx.draft = { type: 'banana' as 'feat', subject: 'x' }
 
     const pending = previewStep.run(ctx)
     term.input.enqueueKeys(['y'])

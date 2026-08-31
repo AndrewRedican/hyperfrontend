@@ -171,7 +171,7 @@ const readReport = (reportPath: string, job: PrePassJob): PrePassResult => {
   if (!existsSync(reportPath)) {
     throw createError(`pre-pass worker for ${job.dep} (${job.kind}/${job.format}) did not write a report at ${reportPath}`)
   }
-  const data = <PrePassReportFile>parse(readFileSync(reportPath, 'utf8'))
+  const data = parse(readFileSync(reportPath, 'utf8')) as PrePassReportFile
   return { job, outputSize: data.outputSize, endHeapMB: data.endHeapMB, endRssMB: data.endRssMB, durationMs: data.durationMs }
 }
 

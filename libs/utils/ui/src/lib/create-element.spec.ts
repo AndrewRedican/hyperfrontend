@@ -121,13 +121,13 @@ describe('createElement', () => {
 
   it('does not add child if child is falsy', () => {
     const initialChildCount = element.ref.children.length
-    element.addChild(<HTMLElement>(<unknown>null))
+    element.addChild(null as unknown as HTMLElement)
     expect(element.ref.children.length).toBe(initialChildCount)
   })
 
   it('does not attach to parent if parent is falsy', () => {
     const initialParent = element.ref.parentElement
-    element.attachTo(<HTMLElement>(<unknown>null))
+    element.attachTo(null as unknown as HTMLElement)
     expect(element.ref.parentElement).toBe(initialParent)
   })
 
@@ -135,7 +135,7 @@ describe('createElement', () => {
     const child = createElement<HTMLDivElement>('div')
     element.addChild(child)
     const initialChildCount = element.ref.children.length
-    element.removeChild(<HTMLElement>(<unknown>null))
+    element.removeChild(null as unknown as HTMLElement)
     expect(element.ref.children.length).toBe(initialChildCount)
   })
 

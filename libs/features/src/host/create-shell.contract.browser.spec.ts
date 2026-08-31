@@ -29,7 +29,7 @@ const mountFeature = (): {
   document.body.appendChild(container)
   const shell = createShell({ modes: { embedded: mountEmbedded }, container: '#shell', url: `${FEATURE_ORIGIN}/`, contract })
   shell.open()
-  const frame = <HTMLIFrameElement>container.querySelector('iframe')
+  const frame = container.querySelector('iframe') as HTMLIFrameElement
   return { send: shell.send, on: shell.on, frame }
 }
 
@@ -48,9 +48,9 @@ const openViaWire = (frame: HTMLIFrameElement): void => {
   // why: The shell holds its handshake until the cross-origin frame reports load — jsdom never fires it for an unfetched URL, so the feature document's load is played explicitly.
   frame.dispatchEvent(new Event('load'))
   jest.advanceTimersByTime(500)
-  const request = <{ processId: string } | undefined>(
-    post.mock.calls.map((call) => <{ type: string }>call[0]).find((action) => action.type === REQUEST_CONNECTION)
-  )
+  const request = post.mock.calls.map((call) => call[0] as { type: string }).find((action) => action.type === REQUEST_CONNECTION) as
+    | { processId: string }
+    | undefined
   if (!request) throw new Error('The shell never sent a connection request.')
   window.dispatchEvent(
     new MessageEvent('message', {
@@ -106,7 +106,7 @@ describe('createShell contract orientation', () => {
 
     openViaWire(frame)
 
-    expect((<jest.Mock>frame.contentWindow?.postMessage).mock.calls.map((call) => (<{ type: string }>call[0]).type)).toEqual(
+    expect((frame.contentWindow?.postMessage as jest.Mock).mock.calls.map((call) => (call[0] as { type: string }).type)).toEqual(
       expect.arrayContaining(['[nexus] connection-opened', NEW_MESSAGE])
     )
   })

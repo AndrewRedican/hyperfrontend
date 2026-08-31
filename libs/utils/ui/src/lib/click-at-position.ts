@@ -30,7 +30,7 @@ export type TMouseEvent = MouseEvent & ClickPageCoordinates
  * ```
  */
 export function clickAtPosition(x: number, y: number): void {
-  const clickEvent = <TMouseEvent>new Event('mousedown')
+  const clickEvent = new Event('mousedown') as TMouseEvent
   clickEvent.pageX = x
   clickEvent.pageY = y
   document.dispatchEvent(clickEvent)

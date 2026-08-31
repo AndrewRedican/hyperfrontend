@@ -3,7 +3,7 @@ import { join } from '@hyperfrontend/project-scope/core'
 import { entryDirOf } from './entry-dir'
 
 const OUT = '/abs/out'
-const context = <BuildContext>{ outputPath: OUT }
+const context = { outputPath: OUT } as BuildContext
 
 const ROOT_ENTRY: EntryPoint = { exportPath: '.', srcPath: '', inputFile: '/p/src/index.ts', isRoot: true }
 const FEATURE_ENTRY: EntryPoint = {

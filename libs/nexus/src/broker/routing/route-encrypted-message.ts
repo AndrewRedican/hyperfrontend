@@ -47,7 +47,7 @@ export function routeEncryptedMessage(context: RoutingContext, router: Map<strin
   }
 
   const source = event.source
-  const channel = source ? <ChannelHandle | undefined>registry.getByWindow(<Window>source) : undefined
+  const channel = source ? (registry.getByWindow(source as Window) as ChannelHandle | undefined) : undefined
 
   if (!channel) {
     logger.info(`${state.name} ignored encrypted message - no channel for the source window`)

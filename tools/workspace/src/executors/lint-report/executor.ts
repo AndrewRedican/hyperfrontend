@@ -66,7 +66,7 @@ export default async function lintReportExecutor(options: LintReportExecutorOpti
       cwd: context.root,
     })
   } catch (err: unknown) {
-    const execError = <ExecError>err
+    const execError = err as ExecError
     raw = (execError.stdout ?? '') + (execError.stderr ?? '')
   }
 

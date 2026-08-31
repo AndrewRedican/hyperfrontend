@@ -13,7 +13,7 @@ import { CL_EXIT_INVALID, CL_EXIT_VALID, formatValidationResult, parseClArgs, ru
 function drain(stream: PassThrough): string {
   const chunks: Buffer[] = []
   let buf: Buffer | null
-  while ((buf = <Buffer | null>stream.read()) !== null) chunks.push(buf)
+  while ((buf = stream.read() as Buffer | null) !== null) chunks.push(buf)
   return Buffer.concat(chunks).toString('utf8')
 }
 
@@ -230,7 +230,7 @@ describe('runCl', () => {
 
   it('forwards --config and --cwd to loadCommitConfig', async () => {
     const stderr = new PassThrough()
-    const capture = { options: <LoadCommitConfigOptions | undefined>undefined }
+    const capture = { options: undefined as LoadCommitConfigOptions | undefined }
 
     await runCl({
       argv: ['/tmp/msg.txt', '--config', './cfg.cjs', '--cwd', '/work'],

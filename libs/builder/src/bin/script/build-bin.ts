@@ -67,7 +67,7 @@ export const buildJsBin = async (bin: BinConfig, ctx: BuildContext): Promise<Bin
       execArgv: worker.execArgv,
       label: `bin:${bin.name}:${format}`,
     })
-    outputs.push({ name: bin.name, kind: format, outputPath: <string>descriptor.bin?.outputFile })
+    outputs.push({ name: bin.name, kind: format, outputPath: descriptor.bin?.outputFile as string })
   }
   return outputs
 }

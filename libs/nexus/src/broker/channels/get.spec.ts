@@ -9,7 +9,7 @@ describe('getChannel', () => {
   const mockBrokerState: BrokerState = {
     id: 'broker-1',
     name: 'test-broker',
-    window: <Window>global.window,
+    window: global.window as Window,
     contract: {
       accepted: [{ type: 'test', description: 'Test action' }],
       emitted: [],
@@ -46,7 +46,7 @@ describe('getChannel', () => {
 
   describe('lookup by window', () => {
     it('find channel by window reference', () => {
-      const mockWindow = <Window>{}
+      const mockWindow = {} as Window
       const channel = addChannel(mockBrokerState, registry, processManager, actions, 'test-channel', mockWindow)
 
       const found = getChannel(registry, mockWindow)
@@ -55,7 +55,7 @@ describe('getChannel', () => {
     })
 
     it('return null for unknown window', () => {
-      const mockWindow = <Window>{}
+      const mockWindow = {} as Window
 
       const found = getChannel(registry, mockWindow)
 
@@ -65,7 +65,7 @@ describe('getChannel', () => {
 
   describe('lookup by ID', () => {
     it('find channel by ID', () => {
-      const mockWindow = <Window>{}
+      const mockWindow = {} as Window
       const channel = addChannel(mockBrokerState, registry, processManager, actions, 'test-channel', mockWindow)
 
       const found = getChannel(registry, channel.id)
@@ -82,7 +82,7 @@ describe('getChannel', () => {
 
   describe('lookup by name', () => {
     it('find channel by name', () => {
-      const mockWindow = <Window>{}
+      const mockWindow = {} as Window
       const channel = addChannel(mockBrokerState, registry, processManager, actions, 'test-channel', mockWindow)
 
       const found = getChannel(registry, 'test-channel')
@@ -97,7 +97,7 @@ describe('getChannel', () => {
     })
 
     it('prioritizes ID lookup over name lookup', () => {
-      const mockWindow1 = <Window>{}
+      const mockWindow1 = {} as Window
 
       const channel1 = addChannel(mockBrokerState, registry, processManager, actions, 'test-channel', mockWindow1)
 
@@ -115,7 +115,7 @@ describe('getChannel', () => {
     })
 
     it('handles multiple channels with same name (returns first)', () => {
-      const window1 = <Window>{}
+      const window1 = {} as Window
 
       addChannel(mockBrokerState, registry, processManager, actions, 'duplicate-name', window1)
 
@@ -125,25 +125,25 @@ describe('getChannel', () => {
     })
 
     it('returns null for undefined reference', () => {
-      const found = getChannel(registry, <string | Window>(<unknown>undefined))
+      const found = getChannel(registry, undefined as unknown as string | Window)
 
       expect(found).toBeNull()
     })
 
     it('returns null for null reference', () => {
-      const found = getChannel(registry, <string | Window>(<unknown>null))
+      const found = getChannel(registry, null as unknown as string | Window)
 
       expect(found).toBeNull()
     })
 
     it('returns null for number reference', () => {
-      const found = getChannel(registry, <string | Window>(<unknown>123))
+      const found = getChannel(registry, 123 as unknown as string | Window)
 
       expect(found).toBeNull()
     })
 
     it('returns null for boolean reference', () => {
-      const found = getChannel(registry, <string | Window>(<unknown>true))
+      const found = getChannel(registry, true as unknown as string | Window)
 
       expect(found).toBeNull()
     })
