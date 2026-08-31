@@ -6,6 +6,7 @@ import type { FlowStep } from '../models/step'
 import { createDate } from '@hyperfrontend/immutable-api-utils/built-in-copy/date'
 import { serializeChangelog, parseChangelog, addEntry, removeEntries } from '../../changelog'
 import { createChangelogEntry, createChangelogItem, createChangelogSection } from '../../changelog/models/entry'
+import { SECTION_HEADINGS } from '../../changelog/models/section'
 import { toChangelogCommit } from '../../commits/classify'
 import { createCompareUrl } from '../../repository/url'
 import { gt } from '../../semver/compare'
@@ -236,16 +237,25 @@ export function createGenerateChangelogStep(): FlowStep {
           ctx.logger.info('Compare URL omitted: published commit not in current history')
         }
 
+        const priorVersion = state.publishedVersion ?? null
+        const isInitial = state.isFirstRelease === true || priorVersion === null
+
+        const section = isInitial
+          ? createChangelogSection('features', SECTION_HEADINGS.features, [createChangelogItem('Initial release')])
+          : createChangelogSection('other', SECTION_HEADINGS.other, [
+              createChangelogItem(`Released with no functional changes since ${priorVersion}.`),
+            ])
+
         const entry = createChangelogEntry(nextVersion, {
           date: createDate().toISOString().split('T')[0],
-          sections: [createChangelogSection('features', 'Features', [createChangelogItem('Initial release')])],
+          sections: [section],
           compareUrl,
         })
 
         return {
           status: 'success',
           stateUpdates: { changelogEntry: entry },
-          message: 'Generated initial release changelog entry',
+          message: isInitial ? 'Generated initial release changelog entry' : 'Generated no-change changelog entry',
         }
       }
 
