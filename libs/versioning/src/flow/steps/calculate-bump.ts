@@ -1,7 +1,7 @@
 import type { BumpType } from '../../semver/models/version'
 import type { FlowStep } from '../models/step'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
-import { gt } from '../../semver/compare'
+import { eq, gt } from '../../semver/compare'
 import { format } from '../../semver/format/to-string'
 import { increment } from '../../semver/increment/bump'
 import { parseVersion } from '../../semver/parse/version'
@@ -125,9 +125,36 @@ export function createCalculateBumpStep(): FlowStep {
           }
         }
 
-        const next = increment(current.version, forcedBumpType)
+        const forcedFrom = state.publishedVersion ?? null
+
+        if (forcedFrom !== null) {
+          const published = parseVersion(forcedFrom)
+
+          if (!published.success || !published.version) {
+            return {
+              status: 'failed',
+              error: createError(`Invalid published version: ${forcedFrom}`),
+              message: `Could not parse published version: ${forcedFrom}`,
+            }
+          }
+
+          if (!eq(current.version, published.version)) {
+            return {
+              status: 'failed',
+              error: createError(
+                `Local version ${currentVersion} does not match published version ${forcedFrom}. ` +
+                  `A forced ${forcedBumpType} bump is calculated from the published version, so it would not produce the version this working tree implies. ` +
+                  `Bring the branch in step with the published release first, then run the forced bump again.`
+              ),
+              message: `Refused forced bump: local ${currentVersion} disagrees with published ${forcedFrom}`,
+            }
+          }
+        }
+
+        const bumpFrom = forcedFrom === null ? current.version : parseVersion(forcedFrom).version
+        const next = increment(bumpFrom ?? current.version, forcedBumpType)
         const nextVersion = format(next)
-        logger.info(`Forced ${forcedBumpType} bump via releaseAs: ${currentVersion} → ${nextVersion}`)
+        logger.info(`Forced ${forcedBumpType} bump via releaseAs: ${forcedFrom ?? currentVersion} → ${nextVersion}`)
 
         return {
           status: 'success',
@@ -135,7 +162,7 @@ export function createCalculateBumpStep(): FlowStep {
             bumpType: forcedBumpType,
             nextVersion,
           },
-          message: `${forcedBumpType} bump (forced): ${currentVersion} → ${nextVersion}`,
+          message: `${forcedBumpType} bump (forced): ${forcedFrom ?? currentVersion} → ${nextVersion}`,
         }
       }
 

@@ -576,6 +576,56 @@ describe('Calculate Bump Step', () => {
       )
     })
 
+    it('forces the bump from the published version rather than the local one', async () => {
+      const step = createCalculateBumpStep()
+      const ctx = createMockContext({ currentVersion: '0.1.1', publishedVersion: '0.1.1', commits: [] }, { releaseAs: 'major' })
+
+      const result = await step.execute(ctx)
+
+      expect(result.status).toBe('success')
+      expect(result.stateUpdates?.nextVersion).toBe('1.0.0')
+    })
+
+    it('refuses when the local version has already run ahead of the published one', async () => {
+      const step = createCalculateBumpStep()
+      const ctx = createMockContext({ currentVersion: '1.0.0', publishedVersion: '0.1.1', commits: [] }, { releaseAs: 'major' })
+
+      const result = await step.execute(ctx)
+
+      expect(result.status).toBe('failed')
+      expect(result.message).toContain('disagrees with published')
+    })
+
+    it('refuses when the local version is behind the published one', async () => {
+      const step = createCalculateBumpStep()
+      const ctx = createMockContext({ currentVersion: '0.0.9', publishedVersion: '0.1.1', commits: [] }, { releaseAs: 'major' })
+
+      const result = await step.execute(ctx)
+
+      expect(result.status).toBe('failed')
+      expect(result.message).toContain('disagrees with published')
+    })
+
+    it('forces the bump from the local version when nothing has been published yet', async () => {
+      const step = createCalculateBumpStep()
+      const ctx = createMockContext({ currentVersion: '0.4.0', publishedVersion: null, commits: [] }, { releaseAs: 'minor' })
+
+      const result = await step.execute(ctx)
+
+      expect(result.status).toBe('success')
+      expect(result.stateUpdates?.nextVersion).toBe('0.5.0')
+    })
+
+    it('fails when the published version cannot be parsed', async () => {
+      const step = createCalculateBumpStep()
+      const ctx = createMockContext({ currentVersion: '1.0.0', publishedVersion: 'not-a-version', commits: [] }, { releaseAs: 'patch' })
+
+      const result = await step.execute(ctx)
+
+      expect(result.status).toBe('failed')
+      expect(result.message).toContain('Could not parse published version')
+    })
+
     it('releaseAs fails with invalid current version', async () => {
       const step = createCalculateBumpStep()
       const ctx = createMockContext({ currentVersion: 'invalid', commits: [] }, { releaseAs: 'patch' })
