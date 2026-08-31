@@ -10,6 +10,18 @@ import { createBatchCommit } from './lib/create-batch-commit'
 import { getAffectedLibraries } from './lib/get-affected-libraries'
 import { rollbackChanges } from './lib/rollback-changes'
 
+/** Options declared on the `version` target. */
+interface VersionTargetOptions {
+  /** Commit scope filtering declared for single-project versioning. */
+  scopeFiltering?: VersionBatchExecutorSchema['scopeFiltering']
+}
+
+/** The `version` target defaults this batch inherits its commit attribution from. */
+interface VersionTargetDefaults {
+  /** Options declared on the target. */
+  options?: VersionTargetOptions
+}
+
 /**
  * Result of version-batch executor.
  */
@@ -43,6 +55,9 @@ export default async function versionBatchExecutor(
 ): Promise<Pick<VersionBatchResult, 'success'>> {
   const workspaceRoot = context.root
   const { base = 'origin/main', head = 'HEAD', dryRun = false, verbose = false } = options
+
+  const versionTargetDefaults = <VersionTargetDefaults | undefined>context.nxJsonConfiguration?.targetDefaults?.['version']
+  const scopeFiltering = options.scopeFiltering ?? versionTargetDefaults?.options?.scopeFiltering
 
   const logger = getLogger()
   logger.setLogLevel({ verbose, quiet: false })
@@ -120,6 +135,7 @@ export default async function versionBatchExecutor(
           dryRun: false,
           verbose,
           quiet: !verbose,
+          scopeFiltering,
         })
 
         if (result.success && result.bumped) {
