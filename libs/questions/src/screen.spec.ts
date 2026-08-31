@@ -1,4 +1,5 @@
 import type { Terminal, TerminalSize } from './terminal'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { createScreen, wrapLine } from './screen'
 
 /**

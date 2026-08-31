@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { matchAnsiSequence, stripAnsi, displayWidth, Esc } from './ansi-text'
 
 describe('Esc', () => {

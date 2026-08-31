@@ -191,7 +191,7 @@ function buildLines<T>(config: MultiselectConfig<T>, state: MultiselectState<T>,
 
   visibleIndices.forEach((actualIndex, i) => {
     const choice = state.choices[actualIndex]
-    /* istanbul ignore if -- @preserve defensive: actualIndex always valid from filteredIndices */
+    // why: actualIndex always comes from filteredIndices, so this guard is defensive and never taken.
     if (!choice) return
 
     const isFocused = startIndex + i === state.cursor
@@ -280,7 +280,7 @@ function processKey<T>(key: string, state: MultiselectState<T>, config: Multisel
     if (actualIndex === undefined) return state
 
     const choice = state.choices[actualIndex]
-    /* istanbul ignore if -- @preserve defensive: actualIndex validated above */
+    // why: actualIndex is validated above, so this guard is defensive and never taken.
     if (!choice || choice.disabled) return state
 
     const isSelected = arrayIncludes(state.selected, actualIndex)

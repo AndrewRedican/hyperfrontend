@@ -163,7 +163,7 @@ function buildLines<T>(config: SelectConfig<T>, state: SelectState<T>, maxVisibl
 
   visibleIndices.forEach((actualIndex, i) => {
     const choice = state.choices[actualIndex]
-    /* istanbul ignore if -- @preserve defensive: actualIndex always valid from filteredIndices */
+    // why: actualIndex always comes from filteredIndices, so this guard is defensive and never taken.
     if (!choice) return
 
     lines.push(renderChoice(choice, startIndex + i === state.cursor))

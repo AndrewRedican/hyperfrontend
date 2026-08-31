@@ -1,5 +1,7 @@
 import type { SelectConfig, Choice } from '../types'
 import { PassThrough } from 'node:stream'
+import { afterEach, beforeEach } from 'node:test'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { Key } from '../terminal'
 import { PromptResult } from '../types'
 import { select } from './select'

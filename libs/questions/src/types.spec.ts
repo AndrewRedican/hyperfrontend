@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { PromptResult } from './types'
 
 describe('PromptResult', () => {

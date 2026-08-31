@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { sanitizePasteText, firstPasteLine } from './paste'
 
 describe('sanitizePasteText', () => {
