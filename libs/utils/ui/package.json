@@ -46,7 +46,7 @@
     "@hyperfrontend/list-utils": "0.1.0",
     "@hyperfrontend/data-utils": "1.0.0",
     "@hyperfrontend/immutable-api-utils": "1.0.0",
-    "@hyperfrontend/logging": "0.1.1"
+    "@hyperfrontend/logging": "1.0.0"
   },
   "funding": {
     "type": "github",

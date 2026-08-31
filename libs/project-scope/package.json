@@ -4,7 +4,7 @@
   "description": "Codebase analysis, project topology detection, and virtual file system utilities for Node.js projects.",
   "dependencies": {
     "@hyperfrontend/immutable-api-utils": "1.0.0",
-    "@hyperfrontend/logging": "0.1.1"
+    "@hyperfrontend/logging": "1.0.0"
   },
   "exports": {
     ".": "./src/index.js",
