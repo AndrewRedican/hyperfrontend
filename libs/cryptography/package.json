@@ -38,7 +38,7 @@
     "@hyperfrontend/data-utils": "1.0.0",
     "@hyperfrontend/random-generator-utils": "0.1.0",
     "@hyperfrontend/string-utils": "0.1.2",
-    "@hyperfrontend/time-utils": "0.0.5",
+    "@hyperfrontend/time-utils": "1.0.0",
     "@hyperfrontend/immutable-api-utils": "1.0.0"
   },
   "funding": {
