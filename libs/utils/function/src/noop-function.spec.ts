@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { noop } from './noop-function'
 
 describe('noop', () => {

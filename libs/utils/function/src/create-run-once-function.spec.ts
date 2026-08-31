@@ -1,3 +1,4 @@
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { createRunOnceFunction } from './create-run-once-function'
 
 describe('createRunOnceFunction', () => {
