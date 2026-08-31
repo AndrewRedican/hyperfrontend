@@ -98,8 +98,24 @@ export function createCalculateBumpStep(): FlowStep {
       const { commits, currentVersion, isFirstRelease } = state
 
       if (isFirstRelease) {
-        const firstVersion = config.firstReleaseVersion ?? '0.1.0'
-        logger.info(`First release: using version ${firstVersion}`)
+        const configuredFirst = config.firstReleaseVersion ?? '0.1.0'
+        const localForFirst = parseVersion(currentVersion ?? '0.0.0')
+        const configured = parseVersion(configuredFirst)
+
+        const keepsLocal =
+          localForFirst.success &&
+          localForFirst.version !== undefined &&
+          configured.success &&
+          configured.version !== undefined &&
+          gt(localForFirst.version, configured.version)
+
+        const firstVersion = keepsLocal && currentVersion !== undefined ? currentVersion : configuredFirst
+
+        if (keepsLocal) {
+          logger.info(`First release: keeping local version ${firstVersion}, which is ahead of ${configuredFirst}`)
+        } else {
+          logger.info(`First release: using version ${firstVersion}`)
+        }
 
         const isPendingPublication = currentVersion === firstVersion
 
@@ -285,6 +301,24 @@ export function createCheckIdempotencyStep(): FlowStep {
             nextVersion: undefined,
           },
           message: `Version ${nextVersion} is already published`,
+        }
+      }
+
+      const { publishedVersion } = state
+
+      if (publishedVersion != null) {
+        const next = parseVersion(nextVersion)
+        const published = parseVersion(publishedVersion)
+
+        if (next.success && next.version && published.success && published.version && !gt(next.version, published.version)) {
+          return {
+            status: 'failed',
+            error: createError(
+              `Version ${nextVersion} does not advance past the published version ${publishedVersion} for ${packageName}. ` +
+                `Publishing it would place a release below the current one.`
+            ),
+            message: `Refused release: ${nextVersion} does not advance past ${publishedVersion}`,
+          }
         }
       }
 

@@ -170,6 +170,16 @@ describe('Calculate Bump Step', () => {
       )
     })
 
+    it('keeps the local version on a first release when it is ahead of the configured one', async () => {
+      const step = createCalculateBumpStep()
+      const ctx = createMockContext({ currentVersion: '1.4.0', isFirstRelease: true, publishedVersion: null })
+
+      const result = await step.execute(ctx)
+
+      expect(result.status).toBe('success')
+      expect(result.stateUpdates?.nextVersion).toBe('1.4.0')
+    })
+
     it('handles first release with custom version', async () => {
       const step = createCalculateBumpStep()
       const ctx = createMockContext({ isFirstRelease: true }, { firstReleaseVersion: '1.0.0' })
@@ -953,6 +963,27 @@ describe('Check Idempotency Step', () => {
     it('succeeds when bumpType is none', async () => {
       const step = createCheckIdempotencyStep()
       const ctx = createMockContext({ bumpType: 'none' })
+
+      const result = await step.execute(ctx)
+
+      expect(result.status).toBe('success')
+    })
+  })
+
+  describe('execute - version ordering', () => {
+    it('refuses a version that does not advance past the published one', async () => {
+      const step = createCheckIdempotencyStep()
+      const ctx = createMockContext({ bumpType: 'patch', nextVersion: '0.1.1', publishedVersion: '0.2.1' })
+
+      const result = await step.execute(ctx)
+
+      expect(result.status).toBe('failed')
+      expect(result.message).toContain('does not advance past')
+    })
+
+    it('accepts a version that advances past the published one', async () => {
+      const step = createCheckIdempotencyStep()
+      const ctx = createMockContext({ bumpType: 'patch', nextVersion: '0.2.2', publishedVersion: '0.2.1' })
 
       const result = await step.execute(ctx)
 
