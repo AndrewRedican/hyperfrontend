@@ -70,10 +70,11 @@ export type MockFn<TArgs extends unknown[] = any[], TReturn = any> = {
 }
 
 /**
- * The spelling specs annotate mocks with. Kept as a short alias of `MockFn` so the
- * migration away from `jest.Mock` is a rename rather than a re-typing.
+ * The spelling specs annotate mocks with. The parameters are ordered return-type first,
+ * matching the `jest.Mock` the suites were written against, so replacing one with the
+ * other is a rename rather than a re-typing.
  */
-export type Mock<TArgs extends unknown[] = any[], TReturn = any> = MockFn<TArgs, TReturn>
+export type Mock<TReturn = any, TArgs extends any[] = any[]> = MockFn<TArgs, TReturn>
 
 /**
  * A mock standing in for an existing function type, preserving its signature.
