@@ -9,7 +9,7 @@
     "@hyperfrontend/list-utils": "0.1.0",
     "@hyperfrontend/logging": "0.1.1",
     "@hyperfrontend/random-generator-utils": "0.1.0",
-    "@hyperfrontend/string-utils": "0.1.2",
+    "@hyperfrontend/string-utils": "1.0.0",
     "@hyperfrontend/time-utils": "1.0.0",
     "@hyperfrontend/immutable-api-utils": "1.0.0"
   },
