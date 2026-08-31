@@ -6,7 +6,7 @@
   "dependencies": {
     "@hyperfrontend/data-utils": "1.0.0",
     "@hyperfrontend/immutable-api-utils": "1.0.0",
-    "@hyperfrontend/json-utils": "0.1.1",
+    "@hyperfrontend/json-utils": "1.0.0",
     "@hyperfrontend/logging": "0.1.1",
     "@hyperfrontend/random-generator-utils": "0.1.0"
   },

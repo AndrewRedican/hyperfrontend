@@ -5,7 +5,7 @@
   "dependencies": {
     "@hyperfrontend/cryptography": "0.2.1",
     "@hyperfrontend/data-utils": "1.0.0",
-    "@hyperfrontend/json-utils": "0.1.1",
+    "@hyperfrontend/json-utils": "1.0.0",
     "@hyperfrontend/list-utils": "0.1.0",
     "@hyperfrontend/logging": "0.1.1",
     "@hyperfrontend/random-generator-utils": "0.1.0",
