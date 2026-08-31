@@ -1,3 +1,5 @@
+import { afterEach } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 type TypedArraysModule = typeof import('./index')
 
 const originalSharedArrayBuffer = globalThis.SharedArrayBuffer

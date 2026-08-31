@@ -1,3 +1,5 @@
+import { beforeEach } from 'node:test'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { lockedProps } from './locked-props'
 
 describe('lockedProps', () => {
