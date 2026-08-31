@@ -1,6 +1,6 @@
 import type { TestConfig } from './config'
 import { spawnSync } from 'node:child_process'
-import { existsSync, mkdirSync } from 'node:fs'
+import { existsSync, mkdirSync, rmSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { findUnmeasuredFiles } from '../coverage/completeness'
 import { buildRunPlan, serialiseModuleMap } from './argv'
@@ -42,6 +42,8 @@ export function runProjectTests(config: TestConfig, context: RunContext): RunOut
   const resolved = withDefaults(config)
   const failures: string[] = []
 
+  // why: the directory is this target's declared Nx output, so it has to hold what this run produced and nothing a previous tool left behind.
+  rmSync(context.coverageDir, { recursive: true, force: true })
   mkdirSync(context.coverageDir, { recursive: true })
 
   const moduleMap = serialiseModuleMap(resolved)
