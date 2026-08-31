@@ -3,15 +3,17 @@ import type { AnchorSplitResult, MarkdownLinkResult, TransformLinkResult, Conten
 import { execFileSync } from 'node:child_process'
 import { existsSync, readFileSync, mkdirSync, writeFileSync } from 'node:fs'
 import { resolve, join, dirname } from 'node:path'
+import { isArray } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
 import { createDate } from '@hyperfrontend/immutable-api-utils/built-in-copy/date'
 import { parse, stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
-import { entries } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
+import { entries, values } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { createURL } from '@hyperfrontend/immutable-api-utils/built-in-copy/url'
 import { logger } from '@hyperfrontend/logging'
 import { generateGuides } from './generate-guides'
 import { generateMachineReadableDocs } from './generate-machine-readable'
 import { generateSearchIndex } from './generate-search-index'
+import { REPO_BLOB_BASE } from './repo'
 
 logger.setLogLevel('log')
 
@@ -467,6 +469,50 @@ function extractArchitecture(lib: LibraryConfig): ContentExtractionResult {
 }
 
 /**
+ * Removes the repository link from every source entry that points outside the
+ * repository.
+ *
+ * A handful of reflections inherit members from TypeScript's own declaration
+ * files, which resolve inside `node_modules` and so exist on disk but not in
+ * version control. Their `sources[].fileName` is kept, since it still names
+ * where the member comes from, while the link that would 404 is dropped. Both
+ * API renderers omit the "View source" anchor when the link is absent.
+ *
+ * @param apiJsonPath - Path to the TypeDoc JSON bundle to rewrite in place
+ */
+function stripExternalSourceUrls(apiJsonPath: string): void {
+  const bundle = <unknown>parse(readFileSync(apiJsonPath, 'utf-8'))
+  let stripped = 0
+
+  const visit = (node: unknown): void => {
+    if (node === null || typeof node !== 'object') return
+
+    if (isArray(node)) {
+      node.forEach(visit)
+      return
+    }
+
+    const record = <Record<string, unknown>>node
+    const fileName = record['fileName']
+
+    if (typeof fileName === 'string' && fileName.includes('node_modules/') && 'url' in record) {
+      delete record['url']
+      stripped += 1
+    }
+
+    for (const value of values(record)) {
+      visit(value)
+    }
+  }
+
+  visit(bundle)
+
+  if (stripped > 0) {
+    writeFileSync(apiJsonPath, stringify(bundle, null, 2))
+  }
+}
+
+/**
  * Run TypeDoc to generate API documentation JSON for a library.
  *
  * Entry points are automatically discovered from the library's package.json
@@ -475,6 +521,12 @@ function extractArchitecture(lib: LibraryConfig): ContentExtractionResult {
  * Git detection is disabled so source links are identical in every build
  * environment: each `sources[].url` points at the file on the main branch of
  * the GitHub repository rather than the local commit.
+ *
+ * Both `--basePath` and `--displayBasePath` are passed. TypeDoc resolves the
+ * source-link `{path}` against `displayBasePath` alone, falling back to the
+ * common directory of the entry points rather than to `basePath`. Passing only
+ * `basePath` roots every link at the library's own source directory, which
+ * strips the `libs/<name>/src/` prefix and makes all of them 404.
  *
  * @param lib - The library configuration
  * @returns True if TypeDoc succeeded, false otherwise
@@ -518,8 +570,10 @@ function generateTypeDoc(lib: LibraryConfig): boolean {
       '--disableGit',
       '--basePath',
       WORKSPACE_ROOT,
+      '--displayBasePath',
+      WORKSPACE_ROOT,
       '--sourceLinkTemplate',
-      'https://github.com/AndrewRedican/hyperfrontend/blob/main/{path}#L{line}',
+      `${REPO_BLOB_BASE}/{path}#L{line}`,
     ]
 
     if (hasTsconfig) {
@@ -530,6 +584,7 @@ function generateTypeDoc(lib: LibraryConfig): boolean {
 
     logger.log(`  → Running TypeDoc for ${lib.name} (${discoveredEntryPoints.length} entry points)`)
     execFileSync(TYPEDOC_BIN, args, { cwd: WORKSPACE_ROOT, stdio: 'pipe' })
+    stripExternalSourceUrls(outputPath)
     return true
   } catch (error) {
     const errorMsg = error instanceof Error ? error.message : String(error)
