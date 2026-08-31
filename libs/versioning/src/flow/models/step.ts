@@ -41,6 +41,15 @@ export interface FlowStep {
 
   /** Steps that must complete before this one */
   readonly dependsOn?: readonly string[]
+
+  /**
+   * Whether pending file writes must reach disk before this step runs.
+   *
+   * Steps that shell out to another tool, such as staging files for a commit,
+   * observe the real filesystem rather than the in-memory tree, so they see
+   * nothing until the tree is flushed.
+   */
+  readonly requiresDiskFlush?: boolean
 }
 
 /**
@@ -58,6 +67,15 @@ export interface CreateStepOptions {
 
   /** Steps that must complete before this one */
   dependsOn?: readonly string[]
+
+  /**
+   * Whether pending file writes must reach disk before this step runs.
+   *
+   * Steps that shell out to another tool, such as staging files for a commit,
+   * observe the real filesystem rather than the in-memory tree, so they see
+   * nothing until the tree is flushed.
+   */
+  requiresDiskFlush?: boolean
 }
 
 /**
@@ -94,6 +112,7 @@ export function createStep(id: string, name: string, execute: StepExecutor, opti
     skipIf: options.skipIf,
     continueOnError: options.continueOnError,
     dependsOn: options.dependsOn,
+    requiresDiskFlush: options.requiresDiskFlush,
   }
 }
 

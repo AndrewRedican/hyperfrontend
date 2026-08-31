@@ -108,6 +108,7 @@ export function createGitCommitStep(): FlowStep {
     },
     {
       dependsOn: ['update-packages', 'write-changelog'],
+      requiresDiskFlush: true,
     }
   )
 }
