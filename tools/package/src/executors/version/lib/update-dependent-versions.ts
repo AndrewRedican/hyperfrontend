@@ -1,4 +1,5 @@
-import { relative, join } from 'node:path'
+import { existsSync } from 'node:fs'
+import { dirname, relative, join } from 'node:path'
 import { entries } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { getDependencies, readPackageJsonIfExists } from '@hyperfrontend/project-scope/project/package'
 import { findFiles } from '@hyperfrontend/project-scope/project/traversal'
@@ -52,6 +53,13 @@ export function updateDependentVersions(
     for (const packageJsonPath of packageJsonFiles) {
       if (packageJsonPath === currentPackageJsonPath) {
         logger.item(`skipping current package "${rel(packageJsonPath)}"`)
+        continue
+      }
+
+      // why: a project with its own lockfile installs from the registry, so pointing it at a
+      // why: version that has not been published yet breaks its install until the release lands.
+      if (existsSync(join(dirname(packageJsonPath), 'package-lock.json'))) {
+        logger.item(`skipping self-contained package "${rel(packageJsonPath)}"`)
         continue
       }
 
