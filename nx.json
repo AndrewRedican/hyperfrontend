@@ -23,6 +23,11 @@
         "codeCoverage": true
       }
     },
+    "@hyperfrontend/package:test": {
+      "cache": true,
+      "inputs": ["default", "^production"],
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"]
+    },
     "version": {
       "executor": "@hyperfrontend/package:version",
       "options": {
