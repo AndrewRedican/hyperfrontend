@@ -102,20 +102,50 @@ function matchingClose(scrubbed: string, from: number): number {
 }
 
 /**
- * Collects the property names an object literal defines at any depth of the factory.
+ * Collects the property names the factory's returned object literal defines.
  *
- * Only names at the top level of a returned literal become exports, and a factory that
- * nests objects would over-report. Every factory in this repository returns a flat literal,
- * and an extra name here costs an export that shadows a passthrough of the same value.
+ * Only the literal's own keys are exports. A nested one contributes nothing: a factory
+ * shaped `{ logger: { error, warn } }` replaces `logger`, and exporting `error` as well
+ * would shadow the real export of that name with undefined.
  *
  * @param factory - Source text of the factory, literals already blanked.
  * @returns The property names, deduplicated.
  */
 function objectKeys(factory: string): string[] {
+  const opening = returnedLiteral(factory)
+  if (opening === -1) return []
+
   const names = new Set<string>()
-  for (const match of factory.matchAll(/(?:^|[{,])\s*([A-Za-z_$][\w$]*)\s*:/g)) {
-    const name = match[1]
-    if (name) names.add(name)
+  let depth = 0
+
+  for (let at = opening; at < factory.length; at += 1) {
+    const char = factory[at]
+    if (char === '{' || char === '(' || char === '[') depth += 1
+    else if (char === '}' || char === ')' || char === ']') {
+      depth -= 1
+      if (depth === 0) break
+    } else if (depth === 1) {
+      const key = /^([A-Za-z_$][\w$]*)\s*:/.exec(factory.slice(at))
+      if (key?.[1] && !/[\w$]/.test(factory[at - 1] ?? '')) {
+        names.add(key[1])
+        at += key[0].length - 1
+      }
+    }
   }
+
   return [...names]
+}
+
+/**
+ * Finds the brace opening the object literal the factory returns.
+ *
+ * @param factory - Source text of the factory, literals already blanked.
+ * @returns Index of the opening brace, or -1 when the factory returns something else.
+ */
+function returnedLiteral(factory: string): number {
+  const returned = /\breturn\s*\{/.exec(factory)
+  if (returned) return returned.index + returned[0].length - 1
+
+  const arrow = /=>\s*\(?\s*\{/.exec(factory)
+  return arrow ? arrow.index + arrow[0].length - 1 : -1
 }

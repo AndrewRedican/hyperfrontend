@@ -1,14 +1,6 @@
 import type { MockDeclaration } from './mock-declarations.ts'
 import { createRequire } from 'node:module'
-import { pathToFileURL } from 'node:url'
 import { readMockDeclarations } from './mock-declarations.ts'
-
-/**
- * Query appended to a specifier to reach the module a mock is standing in for. The loader
- * strips it and loads the real thing, so the actual and its replacement are separate
- * modules rather than one recursive one.
- */
-export const ACTUAL_QUERY = '__hf_actual'
 
 /**
  * Scheme the replacement module is served under. It has to be a URL of its own rather than
@@ -18,9 +10,9 @@ export const ACTUAL_QUERY = '__hf_actual'
 export const MOCK_SCHEME = 'hf-mock:'
 
 /**
- * Where captured built-in namespaces live. A built-in cannot carry a query, so its actual
- * has to be taken with `require` before the hooks are in a position to intercept it, and
- * handed to the replacement through a global.
+ * Where captured namespaces live, so a replacement can reach the module it stands in for
+ * without importing it under a second URL. A second URL would give the same source file two
+ * coverage records, and the one the thresholds are checked against would be the wrong one.
  */
 const ACTUALS = Symbol.for('hyperfrontend.testing.actuals')
 
@@ -30,28 +22,13 @@ const ACTUALS = Symbol.for('hyperfrontend.testing.actuals')
 type Registration = {
   /** The declaration as written in the spec. */
   declaration: MockDeclaration
-  /** True when the target is a Node built-in rather than a file. */
-  builtin: boolean
-  /** Export names to pass through untouched, for built-ins only. */
+  /** Export names to pass through untouched. */
   passthrough: string[]
+  /** Whether the module it stands in for has a default export. */
+  hasDefault: boolean
 }
 
 const registrations = new Map<string, Registration>()
-
-/**
- * Reads a built-in's namespace, caching it where a replacement module can reach it.
- *
- * @param identifier - The built-in's specifier, such as `node:child_process`.
- * @returns The built-in's exports.
- */
-function captureBuiltin(identifier: string): Record<string, unknown> {
-  const store = ((globalThis as Record<symbol, unknown>)[ACTUALS] ??= new Map<string, unknown>()) as Map<string, unknown>
-  const existing = store.get(identifier)
-  if (existing) return existing as Record<string, unknown>
-  const captured = createRequire(import.meta.url)(identifier) as Record<string, unknown>
-  store.set(identifier, captured)
-  return captured
-}
 
 /**
  * Registers every `jest.mock` a spec declares.
@@ -63,61 +40,51 @@ function captureBuiltin(identifier: string): Record<string, unknown> {
  *
  * @param specUrl - URL of the spec file being loaded.
  * @param source - The spec file's text.
- * @param resolveSpecifier - Resolves a specifier the way the rest of the hooks would.
  */
-export function registerSpecMocks(
-  specUrl: string,
-  source: string,
-  resolveSpecifier: (specifier: string, parent: string) => string | undefined
-): void {
+export function registerSpecMocks(specUrl: string, source: string): void {
+  const require = createRequire(specUrl)
+
   for (const declaration of readMockDeclarations(source)) {
-    const target = resolveTarget(declaration.specifier, specUrl, resolveSpecifier)
-    if (!target) continue
+    let actual: Record<string, unknown>
+    let target: string
+    try {
+      // how: resolving and loading before the registration below means this reaches the real module rather than the replacement.
+      target = declaration.specifier.startsWith('node:') ? declaration.specifier : resolvedUrl(require, declaration.specifier)
+      actual = require(declaration.specifier) as Record<string, unknown>
+    } catch {
+      // why: a specifier that resolves nowhere is the spec's problem to report, not the loader's to guess at.
+      continue
+    }
 
-    const builtin = target.startsWith('node:')
-    const actual = builtin ? captureBuiltin(target) : undefined
-    const passthrough = actual ? exportableKeys(actual, declaration) : []
-    registrations.set(target, { declaration, builtin, passthrough })
+    store().set(target, actual)
+    registrations.set(target, {
+      declaration,
+      passthrough: Object.keys(actual).filter(
+        (key) => key !== 'default' && /^[A-Za-z_$][\w$]*$/.test(key) && !declaration.overrides.includes(key)
+      ),
+      hasDefault: 'default' in actual && !declaration.overrides.includes('default'),
+    })
   }
 }
 
 /**
- * Names a built-in replacement should re-export unchanged.
+ * The map replacement modules read their captured namespace from.
  *
- * @param actual - The built-in's namespace.
- * @param declaration - The declaration being registered.
- * @returns The names to pass through.
+ * @returns The map, created on first use.
  */
-function exportableKeys(actual: Record<string, unknown>, declaration: MockDeclaration): string[] {
-  // why: without a factory every export is replaced, and with one only a spread asks for the rest to survive.
-  if (declaration.factory && !declaration.spreads) return []
-  return Object.keys(actual).filter((key) => /^[A-Za-z_$][\w$]*$/.test(key) && !declaration.overrides.includes(key))
+function store(): Map<string, unknown> {
+  return ((globalThis as Record<symbol, unknown>)[ACTUALS] ??= new Map<string, unknown>()) as Map<string, unknown>
 }
 
 /**
- * Resolves a mocked specifier to the identifier the loader will ask for.
+ * Resolves a specifier to the URL the loader will ask for.
  *
- * @param specifier - The specifier as written in the spec.
- * @param specUrl - URL of the spec declaring it.
- * @param resolveSpecifier - Resolves a specifier the way the rest of the hooks would.
- * @returns A file URL or built-in identifier, or undefined when it cannot be resolved.
+ * @param require - A require function bound to the spec declaring the mock.
+ * @param specifier - The specifier as written.
+ * @returns The resolved file URL.
  */
-function resolveTarget(
-  specifier: string,
-  specUrl: string,
-  resolveSpecifier: (specifier: string, parent: string) => string | undefined
-): string | undefined {
-  if (specifier.startsWith('node:')) return specifier
-
-  const viaHooks = resolveSpecifier(specifier, specUrl)
-  if (viaHooks) return viaHooks
-
-  try {
-    return pathToFileURL(createRequire(specUrl).resolve(specifier)).href
-  } catch {
-    // why: a specifier that resolves nowhere is the spec's problem to report, not the loader's to guess at.
-    return undefined
-  }
+function resolvedUrl(require: NodeJS.Require, specifier: string): string {
+  return new URL(`file://${require.resolve(specifier)}`).href
 }
 
 /**
@@ -140,31 +107,26 @@ export function isMocked(url: string): boolean {
 export function mockedSource(url: string, runtimeUrl: string): string {
   const registration = registrations.get(url)
   if (!registration) throw new Error(`no mock registered for ${url}`)
-  const { declaration, builtin, passthrough } = registration
+  const { declaration, passthrough, hasDefault } = registration
 
-  const lines: string[] = [`import { jest as __hfJest } from ${JSON.stringify(runtimeUrl)}`]
+  const lines: string[] = [
+    `import { jest as __hfJest } from ${JSON.stringify(runtimeUrl)}`,
+    `const __hfActual = globalThis[Symbol.for(${JSON.stringify(ACTUALS.description)})].get(${JSON.stringify(url)})`,
+    `const jest = { ...__hfJest, requireActual: () => __hfActual }`,
+  ]
 
-  if (builtin) {
-    lines.push(`const __hfActual = globalThis[Symbol.for(${JSON.stringify(ACTUALS.description)})].get(${JSON.stringify(url)})`)
-  } else {
-    const actualUrl = `${url}${url.includes('?') ? '&' : '?'}${ACTUAL_QUERY}`
-    lines.push(`import * as __hfActual from ${JSON.stringify(actualUrl)}`)
-    // why: a spread in the factory asks for every export it did not name to survive, and an explicit export below wins over a star.
-    if (declaration.spreads) lines.push(`export * from ${JSON.stringify(actualUrl)}`)
-  }
-
-  lines.push(`const jest = { ...__hfJest, requireActual: () => __hfActual }`)
-
-  if (declaration.factory) {
-    lines.push(`const __hfNs = (${declaration.factory})()`)
-    for (const name of declaration.overrides) lines.push(`export const ${name} = __hfNs[${JSON.stringify(name)}]`)
-  } else {
+  if (!declaration.factory) {
     // why: the automock form replaces every export with a fresh mock function, which is what Jest does when no factory is given.
     for (const name of passthrough) lines.push(`export const ${name} = jest.fn()`)
+    if (hasDefault) lines.push(`export default jest.fn()`)
     return lines.join('\n')
   }
 
+  lines.push(`const __hfNs = (${declaration.factory})()`)
+  for (const name of declaration.overrides) lines.push(`export const ${name} = __hfNs[${JSON.stringify(name)}]`)
+  // why: an import of a name the factory did not define is a link error rather than the undefined Jest would hand back, so every other export has to stay reachable.
   for (const name of passthrough) lines.push(`export const ${name} = __hfActual[${JSON.stringify(name)}]`)
+  if (hasDefault) lines.push(`export default __hfActual["default"]`)
 
   return lines.join('\n')
 }
@@ -174,4 +136,5 @@ export function mockedSource(url: string, runtimeUrl: string): string {
  */
 export function clearRegistrations(): void {
   registrations.clear()
+  store().clear()
 }

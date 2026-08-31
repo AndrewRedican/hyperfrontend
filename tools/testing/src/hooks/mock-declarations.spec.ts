@@ -82,3 +82,26 @@ describe('readMockDeclarations', () => {
     assert.equal(readMockDeclarations("// jest.mock('./skipped')\njest.mock('./real')\n")[0]?.specifier, './real')
   })
 })
+
+describe('readMockDeclarations nested factories', () => {
+  it('ignores the keys of a nested object literal', () => {
+    assert.deepEqual(readMockDeclarations("jest.mock('./a', () => ({ logger: { error: 1, warn: 2 } }))")[0]?.overrides, ['logger'])
+  })
+
+  it('ignores the keys of an object inside a returned block body', () => {
+    const source = ["jest.mock('./a', () => {", '  return { logger: { error: 1 } }', '})'].join('\n')
+    assert.deepEqual(readMockDeclarations(source)[0]?.overrides, ['logger'])
+  })
+
+  it('ignores a property of an object passed to a call in the factory', () => {
+    assert.deepEqual(readMockDeclarations("jest.mock('./a', () => ({ read: wrap({ inner: 1 }) }))")[0]?.overrides, ['read'])
+  })
+
+  it('reads no names from a factory that returns something other than a literal', () => {
+    assert.deepEqual(readMockDeclarations("jest.mock('./a', () => jest.fn())")[0]?.overrides, [])
+  })
+
+  it('reads a key whose value is an arrow function', () => {
+    assert.deepEqual(readMockDeclarations("jest.mock('./a', () => ({ read: () => 1, write: () => 2 }))")[0]?.overrides, ['read', 'write'])
+  })
+})
