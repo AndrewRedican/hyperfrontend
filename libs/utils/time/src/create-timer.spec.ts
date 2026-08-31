@@ -1,4 +1,6 @@
 import type { Timer } from './create-timer'
+import { beforeEach } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { createTimer } from './create-timer'
 import { sleep } from './sleep'
 

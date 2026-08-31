@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { sleep } from './sleep'
 
 describe('sleep', () => {
@@ -16,7 +17,6 @@ describe('sleep', () => {
     expect(total).toEqual(0)
   })
 
-  // eslint-disable-next-line jest/no-done-callback
   it('resolves promise once time has passed (concurrent wait times)', (done) => {
     let total = 0
     const increment = () => (total += 1)

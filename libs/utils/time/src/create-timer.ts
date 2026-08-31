@@ -47,7 +47,7 @@ export function createTimer(callback: () => void, delay: number): Timer {
     if (timerId !== null) {
       clearTimeout(timerId)
       const now = dateNow()
-      /* istanbul ignore else - start is always set when timerId is not null */
+      // why: start is always set when timerId is not null, so the guard never falls through.
       if (start !== null) {
         remaining -= now - start
       }

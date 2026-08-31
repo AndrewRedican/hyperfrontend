@@ -116,7 +116,14 @@
       "options": {
         "targetName": "test"
       },
-      "exclude": ["**/*-e2e/**/*", "libs/logging/**/*", "libs/utils/immutable-api/**/*", "libs/utils/function/**/*", "libs/utils/list/**/*"]
+      "exclude": [
+        "**/*-e2e/**/*",
+        "libs/utils/time/**/*",
+        "libs/logging/**/*",
+        "libs/utils/immutable-api/**/*",
+        "libs/utils/function/**/*",
+        "libs/utils/list/**/*"
+      ]
     }
   ],
   "nxCloudId": "6991685ccc04119366337805",
