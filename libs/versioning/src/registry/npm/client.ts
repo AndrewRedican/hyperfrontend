@@ -7,7 +7,9 @@ import { isArray } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
 import { createDate } from '@hyperfrontend/immutable-api-utils/built-in-copy/date'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { parse } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
+import { createRegistryUnavailableError } from '../models/registry-error'
 import { createCache } from './cache'
+import { classifyNpmError } from './classify-error'
 
 /**
  * Optional authentication token used when accessing private registries.
@@ -108,10 +110,37 @@ async function getLatestVersion(state: NpmRegistryState, packageName: string): P
     const version = result || null
     state.cache.set(cacheKey, version)
     return version
-  } catch {
+  } catch (error) {
+    rejectWhenUnavailable(packageName, 'getLatestVersion', error)
     state.cache.set(cacheKey, null)
     return null
   }
+}
+
+/**
+ * Rethrows a lookup failure unless the registry proved the package is absent.
+ *
+ * An absent package is an answer and the caller reports it through its normal
+ * return value. Anything else means the registry did not answer, and no release
+ * decision may rest on a guess, so the run stops.
+ *
+ * @param packageName - Package the lookup was for
+ * @param operation - Client operation that failed
+ * @param error - The error thrown by the invocation
+ * @throws {Error} A {@link RegistryUnavailableError} when the registry did not answer
+ */
+function rejectWhenUnavailable(packageName: string, operation: string, error: unknown): void {
+  const failure = classifyNpmError(error)
+
+  if (failure.kind === 'absent') return
+
+  throw createRegistryUnavailableError({
+    registry: 'npm',
+    packageName,
+    operation,
+    reason: failure.reason,
+    detail: failure.detail,
+  })
 }
 
 /**
@@ -139,7 +168,8 @@ async function isVersionPublished(state: NpmRegistryState, packageName: string, 
     const published = result === version
     state.cache.set(cacheKey, published)
     return published
-  } catch {
+  } catch (error) {
+    rejectWhenUnavailable(packageName, 'isVersionPublished', error)
     state.cache.set(cacheKey, false)
     return false
   }
@@ -188,7 +218,8 @@ async function getPackageInfo(state: NpmRegistryState, packageName: string): Pro
 
     state.cache.set(cacheKey, info)
     return info
-  } catch {
+  } catch (error) {
+    rejectWhenUnavailable(packageName, 'getPackageInfo', error)
     state.cache.set(cacheKey, null)
     return null
   }
@@ -236,7 +267,8 @@ async function getVersionInfo(state: NpmRegistryState, packageName: string, vers
 
     state.cache.set(cacheKey, info)
     return info
-  } catch {
+  } catch (error) {
+    rejectWhenUnavailable(packageName, 'getVersionInfo', error)
     state.cache.set(cacheKey, null)
     return null
   }
@@ -266,7 +298,8 @@ async function listVersions(state: NpmRegistryState, packageName: string): Promi
     const versionList = isArray(versions) ? versions : [versions]
     state.cache.set(cacheKey, versionList)
     return versionList
-  } catch {
+  } catch (error) {
+    rejectWhenUnavailable(packageName, 'listVersions', error)
     state.cache.set(cacheKey, [])
     return []
   }

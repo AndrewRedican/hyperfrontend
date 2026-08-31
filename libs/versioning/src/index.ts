@@ -102,8 +102,10 @@ export type { GitStatusOptions, FileStatus, FileStatusEntry, RepositoryStatus } 
 export type { RegistryType } from './registry/factory'
 export type { PackageInfo } from './registry/models/package-info'
 export type { Registry, RegistryConfig } from './registry/models/registry'
+export type { RegistryFailureReason, RegistryUnavailableError, RegistryUnavailableDetails } from './registry/models/registry-error'
 export type { VersionInfo, Maintainer } from './registry/models/version-info'
 export type { Cache, CacheEntry } from './registry/npm/cache'
+export type { NpmLookupFailure, AbsentLookupFailure, UnavailableLookupFailure } from './registry/npm/classify-error'
 export type {
   CompareUrlFormatter,
   CreateCompareUrlOptions,
@@ -416,8 +418,10 @@ export {
 } from './git/operations/status'
 export { createRegistry } from './registry/factory'
 export { createPackageInfo } from './registry/models/package-info'
+export { REGISTRY_UNAVAILABLE_ERROR, createRegistryUnavailableError, isRegistryUnavailableError } from './registry/models/registry-error'
 export { createVersionInfo } from './registry/models/version-info'
 export { createCache } from './registry/npm/cache'
+export { classifyNpmError } from './registry/npm/classify-error'
 export { createNpmRegistry, escapePackageName, escapeVersion } from './registry/npm/client'
 export {
   createCompareUrl,

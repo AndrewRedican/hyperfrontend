@@ -262,7 +262,7 @@ describe('fetch-registry step', () => {
         expect(result.message).toContain('First release')
       })
 
-      it('handles registry query failure gracefully', async () => {
+      it('surfaces a registry query failure instead of assuming a first release', async () => {
         const tree = createMockTree({
           '/workspace/libs/test/package.json': JSON.stringify({
             name: '@test/pkg',
@@ -274,12 +274,7 @@ describe('fetch-registry step', () => {
         const context = createMockContext({ tree, registry, logger })
         const step = createFetchRegistryStep()
 
-        const result = await step.execute(context)
-
-        expect(result.status).toBe('success')
-        expect(result.stateUpdates?.publishedVersion).toBe(null)
-        expect(result.stateUpdates?.isFirstRelease).toBe(true)
-        expect(logger.debug).toHaveBeenCalledWith(expect.stringContaining('Registry query failed'))
+        await expect(step.execute(context)).rejects.toThrow()
       })
 
       it('returns appropriate message for published package', async () => {
@@ -345,7 +340,7 @@ describe('fetch-registry step', () => {
           expect(logger.debug).toHaveBeenCalledWith(expect.stringContaining('has no gitHead'))
         })
 
-        it('sets publishedCommit to null when getVersionInfo fails', async () => {
+        it('surfaces a version-info failure instead of releasing without a base commit', async () => {
           const tree = createMockTree({
             '/workspace/libs/test/package.json': JSON.stringify({
               name: '@test/pkg',
@@ -360,12 +355,7 @@ describe('fetch-registry step', () => {
           const context = createMockContext({ tree, registry, logger })
           const step = createFetchRegistryStep()
 
-          const result = await step.execute(context)
-
-          expect(result.status).toBe('success')
-          expect(result.stateUpdates?.publishedVersion).toBe('1.0.0')
-          expect(result.stateUpdates?.publishedCommit).toBe(null)
-          expect(logger.debug).toHaveBeenCalledWith(expect.stringContaining('Could not fetch version info'))
+          await expect(step.execute(context)).rejects.toThrow()
         })
 
         it('includes commit hash in message when available', async () => {
