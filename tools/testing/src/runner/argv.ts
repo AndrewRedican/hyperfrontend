@@ -37,6 +37,8 @@ export function buildRunPlan(
   const hookPath = resolve(workspaceRoot, 'tools/testing/src/hooks/register.ts')
 
   const argv = [
+    // why: every file the runner loads is TypeScript, which carries no module type of its own, and Node would warn once per file about inferring one.
+    '--disable-warning=MODULE_TYPELESS_PACKAGE_JSON',
     '--import',
     hookPath,
     ...(environment.setupFiles ?? []).flatMap((setup) => ['--import', resolve(projectRoot, setup)]),

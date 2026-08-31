@@ -49,7 +49,11 @@ describe('withDefaults', () => {
 
 describe('buildRunPlan', () => {
   it('imports the resolution hooks before anything else', () => {
-    assert.deepEqual(planArgs(SINGLE).slice(0, 2), ['--import', `${WORKSPACE}/tools/testing/src/hooks/register.ts`])
+    assert.deepEqual(planArgs(SINGLE).slice(1, 3), ['--import', `${WORKSPACE}/tools/testing/src/hooks/register.ts`])
+  })
+
+  it('silences the warning Node raises for every typeless TypeScript file', () => {
+    assert.equal(planArgs(SINGLE)[0], '--disable-warning=MODULE_TYPELESS_PACKAGE_JSON')
   })
 
   it('always enables coverage', () => {
