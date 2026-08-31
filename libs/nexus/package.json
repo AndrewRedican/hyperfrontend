@@ -4,7 +4,7 @@
   "description": "Cross-window communication library for micro-frontends with secure messaging, state management, and contract validation.",
   "types": "./src/index.ts",
   "dependencies": {
-    "@hyperfrontend/data-utils": "0.0.5",
+    "@hyperfrontend/data-utils": "1.0.0",
     "@hyperfrontend/immutable-api-utils": "1.0.0",
     "@hyperfrontend/json-utils": "0.1.1",
     "@hyperfrontend/logging": "0.1.1",

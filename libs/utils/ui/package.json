@@ -44,7 +44,7 @@
     "@hyperfrontend/function-utils": "1.0.0",
     "@hyperfrontend/random-generator-utils": "0.1.0",
     "@hyperfrontend/list-utils": "0.1.0",
-    "@hyperfrontend/data-utils": "0.0.5",
+    "@hyperfrontend/data-utils": "1.0.0",
     "@hyperfrontend/immutable-api-utils": "1.0.0",
     "@hyperfrontend/logging": "0.1.1"
   },

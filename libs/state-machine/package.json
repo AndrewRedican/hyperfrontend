@@ -41,7 +41,7 @@
     "./package.json": "./package.json"
   },
   "dependencies": {
-    "@hyperfrontend/data-utils": "0.0.5",
+    "@hyperfrontend/data-utils": "1.0.0",
     "@hyperfrontend/immutable-api-utils": "1.0.0"
   },
   "funding": {
