@@ -5,6 +5,7 @@ import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { setTimeout, clearTimeout } from '@hyperfrontend/immutable-api-utils/built-in-copy/timers'
 import { useHashNavigation } from '../hooks/use-hash-navigation'
 import { createHeadingSlugger } from '../lib/slug'
+import { CONTENT_ANCHORS_EVENT } from './document/content-anchors'
 import { MermaidDiagram } from './mermaid-diagram'
 
 /**
@@ -264,6 +265,9 @@ export function ReadmeContent({ html, mermaidDiagrams }: ReadmeContentProps) {
       cleanupFunctions.push(injectCopyButtons(proseContainer as HTMLElement))
       cleanupFunctions.push(injectHeadingAnchors(proseContainer as HTMLElement, slugger))
     })
+
+    // why: the document index resolves its entries by id, and until this effect has run there are none to resolve
+    window.dispatchEvent(new Event(CONTENT_ANCHORS_EVENT))
 
     // why: Scroll after IDs are injected; hook handles delay internally
     scrollToHash()

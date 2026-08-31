@@ -1,14 +1,11 @@
-import type { GuideIndexEntry } from '@/lib/guides'
 import { GuideTypeBadge } from '@/components/guides/guide-badges'
 import { buildGuidesHref } from '@/lib/guide-filters'
 import { getGuideIndex } from '@/lib/guides'
+import { selectFeaturedGuides } from '@/lib/landing-highlights'
 import Link from 'next/link'
 
 /** How many guides the landing page features before sending readers to the index. */
 const FEATURED_COUNT = 4
-
-/** Editorial priority order used to pick which guides the landing page features. */
-const PRIORITY_ORDER: Record<GuideIndexEntry['priority'], number> = { P0: 0, P1: 1, P2: 2 }
 
 /**
  * The four ways into the documentation, kept distinct on purpose: a tutorial
@@ -50,12 +47,10 @@ const LEARNING_PATHS = [
  */
 export function LandingLearnSection() {
   const guides = getGuideIndex()
-  const featured = [...guides]
-    .sort((a, b) => PRIORITY_ORDER[a.priority] - PRIORITY_ORDER[b.priority] || a.title.localeCompare(b.title))
-    .slice(0, FEATURED_COUNT)
+  const featured = selectFeaturedGuides(guides, FEATURED_COUNT)
 
   return (
-    <section id="learn" className="border-t border-slate-200 bg-slate-50 py-16 dark:border-slate-800 dark:bg-slate-900/50 lg:py-24">
+    <section id="learn" className="py-16 lg:py-24">
       <div className="mx-auto max-w-7xl px-6 sm:px-8 lg:px-12">
         <div className="mx-auto max-w-3xl text-center">
           <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-3xl">Start from what you want to do</h2>
@@ -84,7 +79,7 @@ export function LandingLearnSection() {
         {featured.length > 0 ? (
           <div className="mt-12">
             <div className="flex flex-wrap items-baseline justify-between gap-3">
-              <h3 className="text-lg font-bold text-slate-900 dark:text-white">Where people usually start</h3>
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white">Where we would start you</h3>
               <Link
                 href={buildGuidesHref()}
                 className="inline-flex items-center gap-1.5 text-sm font-medium text-primary-600 hover:text-primary-500 dark:text-primary-400 dark:hover:text-primary-300"

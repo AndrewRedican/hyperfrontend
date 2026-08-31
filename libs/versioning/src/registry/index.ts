@@ -4,8 +4,23 @@
  * @module @hyperfrontend/versioning/registry
  */
 export type { RegistryType } from './factory'
-export type { Registry, RegistryConfig, PackageInfo, Maintainer, VersionInfo } from './models'
-export type { Cache, CacheEntry } from './npm'
+export type {
+  Registry,
+  RegistryConfig,
+  PackageInfo,
+  Maintainer,
+  VersionInfo,
+  RegistryFailureReason,
+  RegistryUnavailableError,
+  RegistryUnavailableDetails,
+} from './models'
+export type { Cache, CacheEntry, NpmLookupFailure, AbsentLookupFailure, UnavailableLookupFailure } from './npm'
 export { createRegistry } from './factory'
-export { createPackageInfo, createVersionInfo } from './models'
-export { createCache, createNpmRegistry, escapePackageName, escapeVersion } from './npm'
+export {
+  createPackageInfo,
+  createVersionInfo,
+  REGISTRY_UNAVAILABLE_ERROR,
+  createRegistryUnavailableError,
+  isRegistryUnavailableError,
+} from './models'
+export { createCache, classifyNpmError, createNpmRegistry, escapePackageName, escapeVersion } from './npm'

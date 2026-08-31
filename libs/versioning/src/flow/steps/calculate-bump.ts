@@ -1,7 +1,7 @@
 import type { BumpType } from '../../semver/models/version'
 import type { FlowStep } from '../models/step'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
-import { gt } from '../../semver/compare'
+import { eq, gt } from '../../semver/compare'
 import { format } from '../../semver/format/to-string'
 import { increment } from '../../semver/increment/bump'
 import { parseVersion } from '../../semver/parse/version'
@@ -98,8 +98,24 @@ export function createCalculateBumpStep(): FlowStep {
       const { commits, currentVersion, isFirstRelease } = state
 
       if (isFirstRelease) {
-        const firstVersion = config.firstReleaseVersion ?? '0.1.0'
-        logger.info(`First release: using version ${firstVersion}`)
+        const configuredFirst = config.firstReleaseVersion ?? '0.1.0'
+        const localForFirst = parseVersion(currentVersion ?? '0.0.0')
+        const configured = parseVersion(configuredFirst)
+
+        const keepsLocal =
+          localForFirst.success &&
+          localForFirst.version !== undefined &&
+          configured.success &&
+          configured.version !== undefined &&
+          gt(localForFirst.version, configured.version)
+
+        const firstVersion = keepsLocal && currentVersion !== undefined ? currentVersion : configuredFirst
+
+        if (keepsLocal) {
+          logger.info(`First release: keeping local version ${firstVersion}, which is ahead of ${configuredFirst}`)
+        } else {
+          logger.info(`First release: using version ${firstVersion}`)
+        }
 
         const isPendingPublication = currentVersion === firstVersion
 
@@ -125,9 +141,36 @@ export function createCalculateBumpStep(): FlowStep {
           }
         }
 
-        const next = increment(current.version, forcedBumpType)
+        const forcedFrom = state.publishedVersion ?? null
+
+        if (forcedFrom !== null) {
+          const published = parseVersion(forcedFrom)
+
+          if (!published.success || !published.version) {
+            return {
+              status: 'failed',
+              error: createError(`Invalid published version: ${forcedFrom}`),
+              message: `Could not parse published version: ${forcedFrom}`,
+            }
+          }
+
+          if (!eq(current.version, published.version)) {
+            return {
+              status: 'failed',
+              error: createError(
+                `Local version ${currentVersion} does not match published version ${forcedFrom}. ` +
+                  `A forced ${forcedBumpType} bump is calculated from the published version, so it would not produce the version this working tree implies. ` +
+                  `Bring the branch in step with the published release first, then run the forced bump again.`
+              ),
+              message: `Refused forced bump: local ${currentVersion} disagrees with published ${forcedFrom}`,
+            }
+          }
+        }
+
+        const bumpFrom = forcedFrom === null ? current.version : parseVersion(forcedFrom).version
+        const next = increment(bumpFrom ?? current.version, forcedBumpType)
         const nextVersion = format(next)
-        logger.info(`Forced ${forcedBumpType} bump via releaseAs: ${currentVersion} → ${nextVersion}`)
+        logger.info(`Forced ${forcedBumpType} bump via releaseAs: ${forcedFrom ?? currentVersion} → ${nextVersion}`)
 
         return {
           status: 'success',
@@ -135,7 +178,7 @@ export function createCalculateBumpStep(): FlowStep {
             bumpType: forcedBumpType,
             nextVersion,
           },
-          message: `${forcedBumpType} bump (forced): ${currentVersion} → ${nextVersion}`,
+          message: `${forcedBumpType} bump (forced): ${forcedFrom ?? currentVersion} → ${nextVersion}`,
         }
       }
 
@@ -171,23 +214,25 @@ export function createCalculateBumpStep(): FlowStep {
       const { publishedVersion } = state
       const published = parseVersion(publishedVersion ?? '0.0.0')
 
-      const isPendingPublication =
-        published.success && published.version && publishedVersion != null && gt(current.version, published.version)
+      const hasPublishedVersion = published.success && published.version !== undefined && publishedVersion != null
+      const isOutOfStep = hasPublishedVersion && published.version && !eq(current.version, published.version)
+      const isPendingPublication = hasPublishedVersion && published.version && gt(current.version, published.version)
 
-      if (isPendingPublication && published.version) {
+      if (isOutOfStep && published.version) {
         const next = increment(published.version, bumpType)
         const nextVersion = format(next)
 
-        logger.info(`Pending publication detected: recalculating from ${publishedVersion} → ${nextVersion}`)
+        const drift = isPendingPublication ? 'Pending publication detected' : 'Local version is behind the registry'
+        logger.info(`${drift}: recalculating from ${publishedVersion} → ${nextVersion}`)
 
         return {
           status: 'success',
           stateUpdates: {
             bumpType,
             nextVersion,
-            isPendingPublication: true,
+            isPendingPublication: isPendingPublication === true,
           },
-          message: `${bumpType} bump (pending): ${publishedVersion} → ${nextVersion}`,
+          message: `${bumpType} bump (${isPendingPublication ? 'pending' : 'realigned'}): ${publishedVersion} → ${nextVersion}`,
         }
       }
 
@@ -256,6 +301,24 @@ export function createCheckIdempotencyStep(): FlowStep {
             nextVersion: undefined,
           },
           message: `Version ${nextVersion} is already published`,
+        }
+      }
+
+      const { publishedVersion } = state
+
+      if (publishedVersion != null) {
+        const next = parseVersion(nextVersion)
+        const published = parseVersion(publishedVersion)
+
+        if (next.success && next.version && published.success && published.version && !gt(next.version, published.version)) {
+          return {
+            status: 'failed',
+            error: createError(
+              `Version ${nextVersion} does not advance past the published version ${publishedVersion} for ${packageName}. ` +
+                `Publishing it would place a release below the current one.`
+            ),
+            message: `Refused release: ${nextVersion} does not advance past ${publishedVersion}`,
+          }
         }
       }
 

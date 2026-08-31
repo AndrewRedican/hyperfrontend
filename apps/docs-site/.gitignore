@@ -13,6 +13,11 @@ dist/
 public/guides/
 public/search-index.json
 
+# Machine-readable counterparts published beside every documentation page.
+# No markdown is committed under public/, so the whole extension is generated.
+public/**/*.md
+public/llms.txt
+
 # Copied from the workspace assets/media directory at build time
 public/media/
 

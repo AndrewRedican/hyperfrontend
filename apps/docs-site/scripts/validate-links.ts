@@ -2,7 +2,12 @@
 import { existsSync, readFileSync, readdirSync } from 'node:fs'
 import { resolve, join, dirname, relative } from 'node:path'
 import { glob } from 'glob'
+import { isArray } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
+import { parse } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
+import { values } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
+import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { logger } from '@hyperfrontend/logging'
+import { REPO_URL } from './repo'
 
 logger.setLogLevel('log')
 
@@ -10,8 +15,34 @@ const WORKSPACE_ROOT = resolve(__dirname, '../../..')
 const DOCS_SITE_ROOT = resolve(__dirname, '..')
 const GENERATED_DIR = join(DOCS_SITE_ROOT, '.generated')
 const SRC_DIR = join(DOCS_SITE_ROOT, 'src')
-const GITHUB_BLOB_PATTERN = /^https:\/\/github\.com\/AndrewRedican\/hyperfrontend\/blob\/[^/]+\/(.+)/
-const GITHUB_TREE_PATTERN = /^https:\/\/github\.com\/AndrewRedican\/hyperfrontend\/tree\/[^/]+\/(.+)/
+const GENERATED_API_DIR = join(GENERATED_DIR, 'api')
+
+/**
+ * Extracts the workspace-relative path a repository URL points at.
+ *
+ * Matched by prefix rather than by pattern so the repository coordinates stay
+ * derived from the workspace manifest. Any branch name is accepted, and the
+ * line-number fragment is dropped so the result names a file on disk.
+ *
+ * @param link - The URL to inspect
+ * @param kind - `blob` for a file link, `tree` for a directory link
+ * @returns The workspace-relative path, or undefined if the URL is not one of ours
+ */
+function repoRelativePath(link: string, kind: 'blob' | 'tree'): string | undefined {
+  const prefix = `${REPO_URL}/${kind}/`
+
+  if (!link.startsWith(prefix)) {
+    return undefined
+  }
+
+  const segments = link.slice(prefix.length).split('/')
+
+  if (segments.length < 2) {
+    return undefined
+  }
+
+  return segments.slice(1).join('/').split('#')[0]
+}
 
 /**
  * Result of validating a single link.
@@ -137,29 +168,14 @@ interface TransformResult {
  * @returns Object with transformed flag, original URL, and optional docs site path
  */
 function transformGitHubUrl(link: string): TransformResult {
-  let match = GITHUB_BLOB_PATTERN.exec(link)
-  if (match) {
-    const filePath = match[1]
-    if (filePath.startsWith('libs/')) {
-      const libPath = filePath.replace(/^libs\//, '').split('/')[0]
-      return {
-        transformed: true,
-        url: link,
-        docsSitePath: `/docs/libraries/${libPath}`,
-      }
-    }
-  }
+  const targetPath = repoRelativePath(link, 'blob') ?? repoRelativePath(link, 'tree')
 
-  match = GITHUB_TREE_PATTERN.exec(link)
-  if (match) {
-    const dirPath = match[1]
-    if (dirPath.startsWith('libs/')) {
-      const libPath = dirPath.replace(/^libs\//, '').split('/')[0]
-      return {
-        transformed: true,
-        url: link,
-        docsSitePath: `/docs/libraries/${libPath}`,
-      }
+  if (targetPath !== undefined && targetPath.startsWith('libs/')) {
+    const libPath = targetPath.replace(/^libs\//, '').split('/')[0]
+    return {
+      transformed: true,
+      url: link,
+      docsSitePath: `/docs/libraries/${libPath}`,
     }
   }
 
@@ -363,6 +379,70 @@ function validateFile(filePath: string): LinkValidationResult[] {
 }
 
 /**
+ * Validate the source links TypeDoc stamps into every generated API bundle.
+ *
+ * These are the "View source" targets on library API pages. They are not
+ * reachable from any markdown file, so the markdown sweep never sees them, and
+ * a generator change that reroots them lands silently. Every distinct link is
+ * resolved against the workspace once.
+ *
+ * @returns Array of validation results, one per distinct broken or valid link
+ */
+function validateApiSources(): LinkValidationResult[] {
+  if (!existsSync(GENERATED_API_DIR)) {
+    return []
+  }
+
+  const results: LinkValidationResult[] = []
+
+  for (const slug of readdirSync(GENERATED_API_DIR)) {
+    const bundlePath = join(GENERATED_API_DIR, slug, 'api.json')
+
+    if (!existsSync(bundlePath)) {
+      continue
+    }
+
+    const bundle = <unknown>parse(readFileSync(bundlePath, 'utf-8'))
+    const seen = createSet<string>()
+
+    const visit = (node: unknown): void => {
+      if (node === null || typeof node !== 'object') return
+
+      if (isArray(node)) {
+        node.forEach(visit)
+        return
+      }
+
+      const record = <Record<string, unknown>>node
+      const url = record['url']
+
+      if (typeof url === 'string' && typeof record['fileName'] === 'string' && !seen.has(url)) {
+        seen.add(url)
+        const targetPath = repoRelativePath(url, 'blob')
+
+        if (targetPath !== undefined && !existsSync(join(WORKSPACE_ROOT, targetPath))) {
+          results.push({
+            file: relative(WORKSPACE_ROOT, bundlePath),
+            line: typeof record['line'] === 'number' ? record['line'] : 0,
+            link: url,
+            status: 'broken',
+            message: `Source link target not found: ${targetPath}`,
+          })
+        }
+      }
+
+      for (const value of values(record)) {
+        visit(value)
+      }
+    }
+
+    visit(bundle)
+  }
+
+  return results
+}
+
+/**
  * Main validation function
  *
  * @returns Promise resolving to validation summary with counts and errors
@@ -416,6 +496,16 @@ async function validateLinks(): Promise<ValidationSummary> {
           break
       }
     }
+  }
+
+  const apiSourceResults = validateApiSources()
+
+  logger.log(`🔗 Checked API source links across ${readdirSync(GENERATED_API_DIR).length} generated bundles\n`)
+
+  for (const result of apiSourceResults) {
+    summary.totalLinks++
+    summary.brokenLinks++
+    summary.errors.push(result)
   }
 
   logger.log('📊 Validation Summary')

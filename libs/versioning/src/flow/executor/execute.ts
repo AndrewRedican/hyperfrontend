@@ -1,6 +1,6 @@
 /* eslint-disable @nx/enforce-module-boundaries */
 import type { Logger } from '@hyperfrontend/logging'
-import type { FileDiff, Tree } from '@hyperfrontend/project-scope/vfs'
+import type { Tree } from '@hyperfrontend/project-scope/vfs'
 import type { GitClient } from '../../git/factory'
 import type { Registry } from '../../registry/models/registry'
 import type { VersionFlow } from '../models/flow'
@@ -11,11 +11,12 @@ import { parse } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { logger as defaultLogger } from '@hyperfrontend/logging'
 import { isNxWorkspace, discoverNxProjects } from '@hyperfrontend/project-scope/nx'
-import { commitChanges, createTree, formatUnifiedDiff, generateAllDiffs, rollbackChanges } from '@hyperfrontend/project-scope/vfs'
+import { createTree, generateAllDiffs, rollbackChanges } from '@hyperfrontend/project-scope/vfs'
 import { createGitClient, DEFAULT_GIT_CLIENT_CONFIG } from '../../git/factory'
 import { createRegistry } from '../../registry/factory'
 import { discoverProjectByName } from '../../workspace/discovery'
 import { DEFAULT_FLOW_CONFIG } from '../models/types'
+import { createDiskFlusher, reportChanges } from './flush'
 
 /** Minimal package.json structure with name field. */
 interface PackageJsonWithName {
@@ -312,6 +313,13 @@ export async function executeFlow(
 
   const stepResults: FlowStepResultWithId[] = []
   let failed = false
+  const flusher = createDiskFlusher({
+    tree,
+    dryRun: config.dryRun === true,
+    showDiff: options.showDiff === true,
+    verbose: options.verbose,
+    logger: flowLogger,
+  })
 
   flowLogger.info(`Executing flow: ${flow.name}`)
   flowLogger.info(`Project: ${projectName} (${packageName})`)
@@ -348,6 +356,10 @@ export async function executeFlow(
 
     try {
       flowLogger.info(`Executing step: ${step.name}`)
+
+      if (step.requiresDiskFlush) {
+        flusher.flush()
+      }
 
       const result = await step.execute(context)
 
@@ -406,52 +418,26 @@ export async function executeFlow(
     }
   }
 
-  const pendingChanges = tree.listChanges()
+  const pendingChanges = flusher.changes ?? tree.listChanges()
   const modifiedFiles: readonly FileChangeInfo[] = pendingChanges.map((change) => ({
     path: change.path,
     changeType: change.type,
   }))
 
-  let diffs: readonly FileDiff[] | undefined
-  if (options.showDiff && pendingChanges.length > 0) {
-    diffs = generateAllDiffs(tree)
+  const diffs = flusher.diffs ?? (options.showDiff && pendingChanges.length > 0 ? generateAllDiffs(tree) : undefined)
 
-    flowLogger.info(`\n${'='.repeat(60)}\nPending changes:\n${'='.repeat(60)}`)
-
-    for (const diff of diffs) {
-      if (options.diffFormat === 'summary') {
-        flowLogger.info(`${diff.path}: +${diff.additions} -${diff.deletions}`)
-      } else {
-        flowLogger.info(formatUnifiedDiff(diff))
-      }
-    }
-  } else if (options.showDiff && pendingChanges.length === 0) {
-    flowLogger.info('No file changes to commit')
-  }
-
-  if (options.verbose && !options.showDiff && pendingChanges.length > 0) {
-    flowLogger.info(`Pending changes: ${pendingChanges.length} file(s)`)
-    for (const change of pendingChanges) {
-      flowLogger.info(`  [${change.type}] ${change.path}`)
-    }
-  }
+  reportChanges({
+    changes: pendingChanges,
+    diffs,
+    showDiff: options.showDiff === true,
+    diffFormat: options.diffFormat,
+    verbose: options.verbose === true,
+    dryRun: config.dryRun === true,
+    logger: flowLogger,
+  })
 
   if (!config.dryRun && !failed) {
-    try {
-      commitChanges(tree, { verbose: options.verbose })
-      flowLogger.info('File changes committed to disk')
-    } catch (error) {
-      flowLogger.error(`Failed to commit file changes: ${error}`)
-    }
-  } else if (config.dryRun) {
-    if (pendingChanges.length > 0) {
-      flowLogger.info(`Dry run - would modify ${pendingChanges.length} file(s):`)
-      for (const change of pendingChanges) {
-        flowLogger.info(`  [${change.type}] ${change.path}`)
-      }
-    } else {
-      flowLogger.info('Dry run mode - no changes to write')
-    }
+    flusher.flush()
   }
 
   const duration = dateNow() - startTime

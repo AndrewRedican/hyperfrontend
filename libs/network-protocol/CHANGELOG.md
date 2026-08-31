@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.0](https://github.com/AndrewRedican/hyperfrontend/compare/5f116abb8ba6355dfb283fa03b7481e5eb029480...57e00623ade790f3ae8a2aa4f3b78316bd8b844d) - 2026-08-31
+
+### Features
+
+- Marked stable. No API changes since 0.2.1.
+
 ## [0.2.1](https://github.com/AndrewRedican/hyperfrontend/compare/a0ce00788db9fe1c2b1acf06dd59b2622cb1ed3f...466c0388c4cd516b9c704214140b4df1004098e6) - 2026-06-23
 
 ### Other

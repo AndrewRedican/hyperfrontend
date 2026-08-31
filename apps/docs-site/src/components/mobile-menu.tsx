@@ -7,7 +7,8 @@ import { createContext, useContext, useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
-import { docsNavigation, getNavIconKind, mainNavLinks as sharedMainNavLinks } from '../lib/navigation'
+import { navVisibility } from '../lib/nav-visibility'
+import { docsNavigation, getNavIconKind, getNavLabel, mainNavLinks as sharedMainNavLinks } from '../lib/navigation'
 import { NavItemIcon } from './nav-item-icon'
 import { ThemeToggle } from './theme-toggle'
 
@@ -20,15 +21,16 @@ interface NavItem {
 
 /**
  * Converts shared navigation items to mobile menu-specific format.
- * Uses the slug as the display title (without `@hyperfrontend/` prefix) and
- * bakes in the package/submodule icon kind for each entry.
+ * Titles come from the shared label helper, so the drawer and the desktop
+ * sidebar shorten an entry the same way, and each entry bakes in its
+ * package/submodule icon kind.
  * @param items - The shared navigation items to convert
  * @param insidePackage - Whether the items live inside a package subtree
  * @returns The converted navigation items for mobile menu
  */
 function convertToMobileNav(items: SharedNavItem[], insidePackage = false): NavItem[] {
   return items.map((item) => ({
-    title: item.slug,
+    title: getNavLabel(item),
     href: item.href,
     iconKind: getNavIconKind(item, insidePackage),
     children: item.children ? convertToMobileNav(item.children, insidePackage || Boolean(item.packageName)) : undefined,
@@ -236,7 +238,7 @@ export function MobileMenu() {
       {/* Hamburger Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center justify-center rounded-lg p-2 text-slate-500 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white md:hidden"
+        className={`flex items-center justify-center rounded-lg p-2 text-slate-500 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white ${navVisibility.drawer}`}
         aria-label={isOpen ? 'Close menu' : 'Open menu'}
         aria-expanded={isOpen}
       >
@@ -247,9 +249,9 @@ export function MobileMenu() {
       {mounted &&
         isOpen &&
         createPortal(
-          <div className="fixed inset-0 top-16 z-[60] bg-white dark:bg-slate-900 md:hidden">
+          <div className={`fixed inset-0 top-16 z-[60] bg-white dark:bg-slate-900 ${navVisibility.drawer}`}>
             <div className="h-full overflow-y-auto px-4 pb-6 pt-4">
-              {/* Main Navigation */}
+              {/* why: the drawer only ever renders below the breakpoint, where the header withholds these destinations, so it always carries them */}
               <div className="mb-6 border-b border-slate-200 pb-6 dark:border-slate-700">
                 <ul className="space-y-1">
                   {mainNavLinks.map((link) => (

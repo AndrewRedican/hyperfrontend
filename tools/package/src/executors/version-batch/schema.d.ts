@@ -1,3 +1,5 @@
+import type { FlowConfig } from '@hyperfrontend/versioning/flow/models'
+
 /**
  * Schema for the version-batch executor.
  *
@@ -33,4 +35,13 @@ export interface VersionBatchExecutorSchema {
    * @default false
    */
   verbose?: boolean
+
+  /**
+   * Commit scope filtering applied when attributing commits to a project.
+   *
+   * Defaults to whatever the `version` target declares, so the batch that writes
+   * versions attributes commits exactly as the single-project run and
+   * `version-check` do.
+   */
+  scopeFiltering?: FlowConfig['scopeFiltering']
 }

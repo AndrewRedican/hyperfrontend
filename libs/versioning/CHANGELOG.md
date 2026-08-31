@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.7.0](https://github.com/AndrewRedican/hyperfrontend/compare/b22d3335975d9dc7f70253c08bb39fc0a4b47b16...1ff11b9e4b286fb474ecd85fa96b567e7edb2b74) - 2026-08-31
+
+### Features
+
+- announce a stable promotion in the changelog
+
+### Bug Fixes
+
+- flush pending changes before the commit step
+- bound the analysed commit range with a warning
+- refuse a release that moves the version backwards
+- refuse to release when the registry cannot answer
+- realign a derived bump onto the published version
+- force a release from the published version
+- stop calling a repeat release an initial release
+- read the full commit range since the last release
+
 ## [0.6.3](https://github.com/AndrewRedican/hyperfrontend/compare/74110dd15151bfc8360ef4edcdb1086cb003c909...514941cca7b348b15dbc663174874f6237fc4f06) - 2026-08-20
 
 ### Bug Fixes

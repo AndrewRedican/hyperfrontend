@@ -37,6 +37,10 @@ export function Footer() {
             <a href="/feed.xml" className={FOOTER_LINK_CLASSES}>
               Articles feed
             </a>
+            {/* note: Agents probe /llms.txt directly rather than reading footers; the link is here so a person can find the Markdown corpus too. */}
+            <a href="/llms.txt" className={FOOTER_LINK_CLASSES}>
+              Docs for LLMs
+            </a>
             <Link href="/privacy" className={FOOTER_LINK_CLASSES}>
               Privacy
             </Link>

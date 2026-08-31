@@ -10,6 +10,18 @@ import { createBatchCommit } from './lib/create-batch-commit'
 import { getAffectedLibraries } from './lib/get-affected-libraries'
 import { rollbackChanges } from './lib/rollback-changes'
 
+/** Options declared on the `version` target. */
+interface VersionTargetOptions {
+  /** Commit scope filtering declared for single-project versioning. */
+  scopeFiltering?: VersionBatchExecutorSchema['scopeFiltering']
+}
+
+/** The `version` target defaults this batch inherits its commit attribution from. */
+interface VersionTargetDefaults {
+  /** Options declared on the target. */
+  options?: VersionTargetOptions
+}
+
 /**
  * Result of version-batch executor.
  */
@@ -43,6 +55,9 @@ export default async function versionBatchExecutor(
 ): Promise<Pick<VersionBatchResult, 'success'>> {
   const workspaceRoot = context.root
   const { base = 'origin/main', head = 'HEAD', dryRun = false, verbose = false } = options
+
+  const versionTargetDefaults = <VersionTargetDefaults | undefined>context.nxJsonConfiguration?.targetDefaults?.['version']
+  const scopeFiltering = options.scopeFiltering ?? versionTargetDefaults?.options?.scopeFiltering
 
   const logger = getLogger()
   logger.setLogLevel({ verbose, quiet: false })
@@ -95,6 +110,7 @@ export default async function versionBatchExecutor(
 
     const bumpedLibs: string[] = []
     const allModifiedFiles: string[] = []
+    const failedLibs: string[] = []
 
     for (const lib of affectedLibraries) {
       if (interrupted) {
@@ -120,6 +136,7 @@ export default async function versionBatchExecutor(
           dryRun: false,
           verbose,
           quiet: !verbose,
+          scopeFiltering,
         })
 
         if (result.success && result.bumped) {
@@ -129,9 +146,11 @@ export default async function versionBatchExecutor(
         } else if (result.success) {
           logger.debug(`  - ${lib}: no version bump needed`)
         } else {
+          failedLibs.push(lib)
           logger.error(`  ✗ ${lib}: ${result.error ?? 'unknown error'}`)
         }
       } catch (error) {
+        failedLibs.push(lib)
         logger.error(`  ✗ ${lib}: ${error instanceof Error ? error.message : error}`)
       }
     }
@@ -149,6 +168,14 @@ export default async function versionBatchExecutor(
       logger.log(`Bumped: ${bumpedLibs.join(', ')}`)
     } else {
       logger.log('\nNo version bumps needed')
+    }
+
+    if (failedLibs.length > 0) {
+      logger.error(
+        `\n${failedLibs.length} of ${affectedLibraries.length} librar${failedLibs.length === 1 ? 'y' : 'ies'} failed to version: ${failedLibs.join(', ')}. ` +
+          `Anything that did version is left in place; resolve the failures and run again.`
+      )
+      return { success: false }
     }
 
     return { success: true }

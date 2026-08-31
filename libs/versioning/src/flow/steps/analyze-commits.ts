@@ -3,7 +3,7 @@ import type { ConventionalCommit } from '../../commits/models/conventional'
 import type { GitClient } from '../../git/factory'
 import type { GitCommit } from '../../git/models/commit'
 import type { FlowStep } from '../models/step'
-import type { ScopeFilteringConfig, ScopeFilteringStrategy } from '../models/types'
+import type { FlowContext, ScopeFilteringConfig, ScopeFilteringStrategy } from '../models/types'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 // eslint-disable-next-line @nx/enforce-module-boundaries
@@ -21,6 +21,40 @@ import { createStep } from '../models/step'
 import { DEFAULT_SCOPE_FILTERING_CONFIG } from '../models/types'
 
 export const ANALYZE_COMMITS_STEP_ID = 'analyze-commits'
+
+/**
+ * Reads a commit range under a configured ceiling, and says so when it bites.
+ *
+ * One commit beyond the ceiling is requested so that a truncated range is
+ * detectable rather than merely suspected. Truncation is reported because a
+ * silently shortened range understates the version bump and drops the oldest
+ * entries from the changelog: raise `maxCommitFallback` to take in more.
+ *
+ * @param read - Reads the range, bounded to the given number of commits
+ * @param limit - Greatest number of commits to analyse
+ * @param description - How to name the range in the warning
+ * @param logger - Receives the truncation warning
+ * @returns The commits, at most `limit` of them, newest first
+ */
+function readBoundedRange(
+  read: (limit: number) => readonly GitCommit[],
+  limit: number,
+  description: string,
+  logger: FlowContext['logger']
+): readonly GitCommit[] {
+  const fetched = read(limit + 1)
+
+  if (fetched.length <= limit) {
+    return fetched
+  }
+
+  logger.warn(
+    `More than ${limit} ${description}: analysing the most recent ${limit}. ` +
+      `The version bump and changelog are computed from that window only, so raise maxCommitFallback to widen it.`
+  )
+
+  return fetched.slice(0, limit)
+}
 
 /**
  * Creates the analyze-commits step.
@@ -67,7 +101,12 @@ export function createAnalyzeCommitsStep(): FlowStep {
 
       if (publishedCommit && !isFirstRelease) {
         if (git.commitReachableFromHead(publishedCommit)) {
-          rawCommits = git.getCommitsSince(publishedCommit)
+          rawCommits = readBoundedRange(
+            (limit) => git.getCommitsSince(publishedCommit, { maxCount: limit }),
+            maxFallback,
+            `commits since ${publishedCommit.slice(0, 7)}`,
+            logger
+          )
           effectiveBaseCommit = publishedCommit
           logger.debug(`Found ${rawCommits.length} commits since ${publishedCommit.slice(0, 7)}`)
         } else {
@@ -120,7 +159,12 @@ export function createAnalyzeCommitsStep(): FlowStep {
       if (strategy === 'hybrid' || strategy === 'file-only') {
         const relativePath = getRelativePath(workspaceRoot, projectRoot)
         const pathFilteredCommits = effectiveBaseCommit
-          ? git.getCommitsSince(effectiveBaseCommit, { path: relativePath })
+          ? readBoundedRange(
+              (limit) => git.getCommitsSince(effectiveBaseCommit, { maxCount: limit, path: relativePath }),
+              maxFallback,
+              `commits touching ${relativePath}`,
+              logger
+            )
           : git.getCommitLog({ maxCount: maxFallback, path: relativePath })
 
         fileCommitHashes = createSet(pathFilteredCommits.map((c) => c.hash))

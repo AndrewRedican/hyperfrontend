@@ -55,30 +55,19 @@ export function createFetchRegistryStep(): FlowStep {
       logger.warn(`Could not read package.json: ${error}`)
     }
 
-    let publishedVersion: string | null = null
     let publishedCommit: string | null = null
-    let isFirstRelease: boolean
 
-    try {
-      publishedVersion = await registry.getLatestVersion(packageName)
-      isFirstRelease = publishedVersion === null
+    const publishedVersion = await registry.getLatestVersion(packageName)
+    const isFirstRelease = publishedVersion === null
 
-      if (publishedVersion) {
-        try {
-          const versionInfo = await registry.getVersionInfo(packageName, publishedVersion)
-          publishedCommit = versionInfo?.gitHead ?? null
-          if (publishedCommit) {
-            logger.debug(`Published ${publishedVersion} at commit ${publishedCommit.slice(0, 7)}`)
-          } else {
-            logger.debug(`Published ${publishedVersion} has no gitHead (older package or published without git)`)
-          }
-        } catch (error) {
-          logger.debug(`Could not fetch version info for ${publishedVersion}: ${error}`)
-        }
+    if (publishedVersion) {
+      const versionInfo = await registry.getVersionInfo(packageName, publishedVersion)
+      publishedCommit = versionInfo?.gitHead ?? null
+      if (publishedCommit) {
+        logger.debug(`Published ${publishedVersion} at commit ${publishedCommit.slice(0, 7)}`)
+      } else {
+        logger.debug(`Published ${publishedVersion} has no gitHead (older package or published without git)`)
       }
-    } catch (error) {
-      logger.debug(`Registry query failed (package may not exist): ${error}`)
-      isFirstRelease = true
     }
 
     const message = isFirstRelease

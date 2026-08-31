@@ -6,6 +6,7 @@ import type { FlowStep } from '../models/step'
 import { createDate } from '@hyperfrontend/immutable-api-utils/built-in-copy/date'
 import { serializeChangelog, parseChangelog, addEntry, removeEntries } from '../../changelog'
 import { createChangelogEntry, createChangelogItem, createChangelogSection } from '../../changelog/models/entry'
+import { SECTION_HEADINGS } from '../../changelog/models/section'
 import { toChangelogCommit } from '../../commits/classify'
 import { createCompareUrl } from '../../repository/url'
 import { gt } from '../../semver/compare'
@@ -179,6 +180,71 @@ type ChangelogSectionOrderEntry = {
 }
 
 /**
+ * Reports whether a release is a package's first stable one.
+ *
+ * Crossing from a `0.x` line to exactly `1.0.0` declares an existing API stable
+ * rather than altering it, so such a release reads differently from an ordinary
+ * one that happens to carry no changes.
+ *
+ * @param priorVersion - The version currently published
+ * @param nextVersion - The version about to be released
+ * @returns True when the release moves from `0.x` to `1.0.0`
+ */
+function isFirstStableRelease(priorVersion: string, nextVersion: string): boolean {
+  const prior = parseVersion(priorVersion)
+  const next = parseVersion(nextVersion)
+
+  if (!prior.success || !prior.version || !next.success || !next.version) {
+    return false
+  }
+
+  return prior.version.major === 0 && next.version.major === 1 && next.version.minor === 0 && next.version.patch === 0
+}
+
+/**
+ * Builds the lone section for a release that no commit contributed to.
+ *
+ * @param priorVersion - The version currently published, or null on a first release
+ * @param isInitial - Whether nothing has been published yet
+ * @param isStabilityPromotion - Whether the release declares an existing API stable
+ * @returns The section to place in the entry
+ */
+function buildChangelogFreeSection(priorVersion: string | null, isInitial: boolean, isStabilityPromotion: boolean): ChangelogSection {
+  if (isInitial) {
+    return createChangelogSection('features', SECTION_HEADINGS.features, [createChangelogItem('Initial release')])
+  }
+
+  if (isStabilityPromotion) {
+    return createChangelogSection('features', SECTION_HEADINGS.features, [
+      createChangelogItem(`Marked stable. No API changes since ${priorVersion}.`),
+    ])
+  }
+
+  return createChangelogSection('other', SECTION_HEADINGS.other, [
+    createChangelogItem(`Released with no functional changes since ${priorVersion}.`),
+  ])
+}
+
+/**
+ * Names the kind of release that no commit contributed to.
+ *
+ * @param isInitial - Whether nothing has been published yet
+ * @param isStabilityPromotion - Whether the release declares an existing API stable
+ * @returns A step message describing the entry that was generated
+ */
+function describeChangelogFreeRelease(isInitial: boolean, isStabilityPromotion: boolean): string {
+  if (isInitial) {
+    return 'Generated initial release changelog entry'
+  }
+
+  if (isStabilityPromotion) {
+    return 'Generated stable promotion changelog entry'
+  }
+
+  return 'Generated no-change changelog entry'
+}
+
+/**
  * Creates the generate-changelog step.
  *
  * This step:
@@ -236,16 +302,20 @@ export function createGenerateChangelogStep(): FlowStep {
           ctx.logger.info('Compare URL omitted: published commit not in current history')
         }
 
+        const priorVersion = state.publishedVersion ?? null
+        const isInitial = state.isFirstRelease === true || priorVersion === null
+        const isStabilityPromotion = priorVersion !== null && !isInitial && isFirstStableRelease(priorVersion, nextVersion)
+
         const entry = createChangelogEntry(nextVersion, {
           date: createDate().toISOString().split('T')[0],
-          sections: [createChangelogSection('features', 'Features', [createChangelogItem('Initial release')])],
+          sections: [buildChangelogFreeSection(priorVersion, isInitial, isStabilityPromotion)],
           compareUrl,
         })
 
         return {
           status: 'success',
           stateUpdates: { changelogEntry: entry },
-          message: 'Generated initial release changelog entry',
+          message: describeChangelogFreeRelease(isInitial, isStabilityPromotion),
         }
       }
 

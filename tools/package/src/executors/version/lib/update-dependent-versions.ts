@@ -1,5 +1,7 @@
-import { relative, join } from 'node:path'
-import { getProductionDependencies, getPeerDependencies, readPackageJsonIfExists } from '@hyperfrontend/project-scope/project/package'
+import { existsSync } from 'node:fs'
+import { dirname, relative, join } from 'node:path'
+import { entries } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
+import { getDependencies, readPackageJsonIfExists } from '@hyperfrontend/project-scope/project/package'
 import { findFiles } from '@hyperfrontend/project-scope/project/traversal'
 import { getLogger } from './logger'
 import { replaceDependencyVersion } from './replace-dependency-version'
@@ -54,6 +56,13 @@ export function updateDependentVersions(
         continue
       }
 
+      // why: a project with its own lockfile installs from the registry, so pointing it at a
+      // why: version that has not been published yet breaks its install until the release lands.
+      if (existsSync(join(dirname(packageJsonPath), 'package-lock.json'))) {
+        logger.item(`skipping self-contained package "${rel(packageJsonPath)}"`)
+        continue
+      }
+
       const pkg = readPackageJsonIfExists(packageJsonPath)
       if (!pkg) {
         logger.item(`could not read "${rel(packageJsonPath)}", skipping`)
@@ -61,21 +70,19 @@ export function updateDependentVersions(
       }
 
       logger.item(`"${rel(packageJsonPath)}"`)
-      const currentDepVersion = getProductionDependencies(pkg)[packageName]
-      const currentPeerVersion = getPeerDependencies(pkg)[packageName]
       const relativePath = relative(workspaceRoot, packageJsonPath)
 
-      const needsDepUpdate = currentDepVersion !== undefined && currentDepVersion !== newVersion
-      const needsPeerUpdate = currentPeerVersion !== undefined && currentPeerVersion !== newVersion
+      const sections = getDependencies(pkg)
+      const staleSections = entries(sections).filter(([, deps]) => {
+        const declared = deps[packageName]
+        return declared !== undefined && declared !== newVersion
+      })
 
-      if (needsDepUpdate) {
-        logger.item(`  updating dependency "${packageName}" from "${currentDepVersion}" to "${newVersion}"`)
-      }
-      if (needsPeerUpdate) {
-        logger.item(`  updating peerDependency "${packageName}" from "${currentPeerVersion}" to "${newVersion}"`)
+      for (const [section, deps] of staleSections) {
+        logger.item(`  updating ${section} "${packageName}" from "${deps[packageName]}" to "${newVersion}"`)
       }
 
-      if (needsDepUpdate || needsPeerUpdate) {
+      if (staleSections.length > 0) {
         if (!dryRun) {
           replaceDependencyVersion(packageJsonPath, packageName, newVersion)
           logger.item(`  updated "${relativePath}"`)

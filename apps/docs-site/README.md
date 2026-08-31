@@ -208,6 +208,81 @@ Ctrl/Cmd+K) fetches it lazily and matches with exact substring AND semantics via
 Section anchors reproduce the page's own id algorithm (`src/lib/slug.ts`), so every
 search destination resolves.
 
+### Machine-readable documentation
+
+Every page rendered from a markdown source publishes that source at its own URL: append
+`.md` to the page route (`/docs/libraries/features` becomes `/docs/libraries/features.md`).
+`src/lib/document-sources.ts` collects the corpus from what already exists (the docs
+manifest, the sidebar tree, the compiled guide corpus, the article directory, the
+republished workspace documents), and `scripts/generate-machine-readable.ts` writes the
+files into `public/` during `npm run generate`. Both representations are rendered from the
+same string, so they cannot drift.
+
+`.txt` was rejected as the extension: Next's static export already writes each route's
+React Server Component payload to `<route>.txt`. Files are emitted as static assets rather
+than route handlers because the site deploys as a static export, where an asset is copied
+to the output and served by path with no routing table involved. Nothing is committed:
+`public/**/*.md` and `public/llms.txt` are generated, and the emitter clears them before
+each run so a withdrawn document stops being served.
+
+What a published file carries:
+
+- the document body, after the same badge stripping, link rewriting, and comment removal
+  the HTML page applies, so nothing the page withholds appears in the Markdown;
+- every site link resolved to an absolute URL, pointing at the `.md` counterpart where one
+  exists, so an agent following links stays inside the corpus;
+- a footer naming the canonical page, the file itself, and `/llms.txt`.
+
+Pages written in TSX have no markdown source and get no counterpart. `/docs/contributing`
+is the case worth remembering: the workspace has a CONTRIBUTING.md, but that page is
+hand-written and says something shorter, so publishing the file there would hand a reader
+a different document from the one they were looking at.
+
+`public/llms.txt` follows the [llms.txt convention](https://llmstxt.org): an H1, a summary,
+and link sections pointing at the `.md` files. Secondary entry points are left out of it on
+purpose; there are 172 of them, listing them would blow the context budget the convention
+exists to protect, and each is reachable under the same `.md` rule anyway. `llms-full.txt`
+is deliberately not published: it would be a second, larger copy of the whole corpus with
+nothing in it that the per-document files do not already serve.
+
+Each page advertises its counterpart through `alternates.types` in its metadata, as
+`<link rel="alternate" type="text/markdown">`. The files are served as
+`text/plain; charset=utf-8` (see `next.config.js` and `vercel.json`): browsers download
+`text/markdown` instead of showing it, and plain text reads correctly in every consumer.
+
+### Document companion
+
+`src/components/document/document-shell.tsx` wraps every long-form document: package pages,
+architecture documents, secondary entry points, guides, articles, and the republished
+workspace documents all go through it, and `markdown-doc-page.tsx` composes it with the
+markdown renderer for the pages whose body is one file.
+
+The companion holds the document index and the document-level actions. Sections come from
+`extractMarkdownSections` in `src/lib/slug.ts`, run on the same string the page is rendered
+from, so index entries carry the anchor ids the page assigns. A document with fewer than
+three sections gets the actions without an index. API reference sections are represented by
+one entry rather than by every exported symbol: a package can export hundreds, and the
+reference has its own filter.
+
+It is a floating column from `DOC_INDEX_BREAKPOINT` (1400px, the `rail` screen) up, and a
+disclosure above the document below it. Three columns are not squeezed into a tablet: the
+docs shell is capped at `max-w-7xl`, so a third column comes out of the document's own
+width rather than being added beside it.
+
+The actions all act on the published `.md` file. Copy fetches it rather than reassembling
+the document from the DOM, so the clipboard gets documentation and not chrome. The ChatGPT
+and Claude handoffs pass the file's URL and a one-sentence instruction, never the document
+itself: both destinations pre-fill a composer from a `q` parameter and leave the reader to
+send it (Claude stopped auto-submitting in October 2025 after prompt-injection research),
+long URLs are truncated along the way, and a link the model fetches stays current while a
+pasted copy goes stale. Neither link carries anything about the reader.
+
+The fit assessment's decision record uses the same shell for its index, but offers no
+Markdown counterpart and no handoff: it is composed from answers held in the reader's
+browser, so there is no public address to hand anyone. Its own save control keeps the icons
+and chrome from `src/components/document/document-icons.tsx`, so the two surfaces read as
+one pattern.
+
 ### Articles taxonomy and feed
 
 Article frontmatter stays flat quoted scalars; list-valued fields are comma-separated
@@ -360,6 +435,8 @@ asset links resolve against `public/` as well as `src/app` routes.
 | `/feed.xml`                     | Articles Atom feed            |
 | `/guides/index.json`            | Machine-readable guide corpus |
 | `/search-index.json`            | Serialized search index       |
+| `{any markdown page}.md`        | That page's Markdown source   |
+| `/llms.txt`                     | Agent-facing corpus index     |
 
 ---
 

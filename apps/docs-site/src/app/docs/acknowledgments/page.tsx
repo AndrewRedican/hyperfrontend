@@ -1,13 +1,14 @@
 import type { Contributor } from '@/lib/docs-loader'
 import type { Metadata } from 'next'
 import { Breadcrumb } from '@/components/breadcrumb'
-import { ReadmeContent } from '@/components/readme-content'
+import { MarkdownDocPage } from '@/components/document/markdown-doc-page'
 import { getAcknowledgments, getContributors } from '@/lib/docs-loader'
-import { markdownToHtml } from '@/lib/markdown'
-import { extractMermaidBlocks } from '@/lib/mermaid-utils'
+import { documentSubject } from '@/lib/document-model'
+import { markdownAlternate } from '@/lib/metadata'
 
 export const metadata: Metadata = {
   title: 'Acknowledgments',
+  alternates: { canonical: '/docs/acknowledgments/', types: markdownAlternate('/docs/acknowledgments', 'Acknowledgments') },
   description: 'Credits and gratitude to supporters, contributors, and sources of inspiration for hyperfrontend.',
 }
 
@@ -96,7 +97,7 @@ function ContributorsSection({ contributors }: ContributorsSectionProps) {
   }
 
   return (
-    <section className="mt-12">
+    <section id="contributors" className="mt-12 scroll-mt-20">
       <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Contributors</h2>
       <p className="mt-2 text-slate-600 dark:text-slate-400">Thanks to these wonderful people who have contributed to hyperfrontend:</p>
       <div className="mt-6 grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
@@ -135,14 +136,18 @@ export default async function AcknowledgmentsPage() {
     )
   }
 
-  const { processedContent, diagrams } = extractMermaidBlocks(content)
-  const html = await markdownToHtml(processedContent)
-
   return (
-    <>
-      <Breadcrumb />
-      <ReadmeContent html={html} mermaidDiagrams={diagrams} />
-      <ContributorsSection contributors={contributors} />
-    </>
+    <MarkdownDocPage
+      markdown={content}
+      descriptor={{
+        route: '/docs/acknowledgments',
+        title: 'Acknowledgments',
+        subject: documentSubject('page', 'the people and projects HyperFrontend is built on'),
+        kind: 'page',
+      }}
+      before={<Breadcrumb />}
+      after={<ContributorsSection contributors={contributors} />}
+      extraSections={contributors.length > 0 ? [{ title: 'Contributors', anchor: 'contributors', level: 2 }] : []}
+    />
   )
 }

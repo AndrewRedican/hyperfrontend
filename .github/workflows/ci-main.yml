@@ -278,10 +278,20 @@ jobs:
                 continue
               fi
 
-              # Tag exists but points to old commit - check if published to npm
-              NPM_VERSION=$(npm view "${package_name}@${version}" version 2>/dev/null || echo "")
-              if [ "$NPM_VERSION" = "$version" ]; then
-                echo "Warning: $tag points to old commit but version is published to npm - preserving tag"
+              # Tag exists but points to old commit - check if published to npm.
+              # A failed lookup is not a negative answer: only move the tag when the
+              # registry positively reports the version as absent.
+              if NPM_VERSION=$(npm view "${package_name}@${version}" version 2>/dev/null); then
+                if [ "$NPM_VERSION" = "$version" ]; then
+                  echo "Warning: $tag points to old commit but version is published to npm - preserving tag"
+                  continue
+                fi
+              elif npm view "${package_name}" version >/dev/null 2>&1; then
+                # The package resolves but this version does not, so it is genuinely unpublished.
+                echo "$tag is not published - tag may be updated"
+              else
+                echo "Error: could not determine whether ${package_name}@${version} is published - preserving tag $tag"
+                UNVERIFIED_TAGS="${UNVERIFIED_TAGS} ${tag}"
                 continue
               fi
 
@@ -294,9 +304,15 @@ jobs:
             fi
           done
 
+          if [ -n "${UNVERIFIED_TAGS}" ]; then
+            echo "::error::Could not reach the registry to verify these tags, so they were left untouched:${UNVERIFIED_TAGS}"
+            exit 1
+          fi
+
       - name: Push version tags
         run: |
-          # Force-push tags to ensure remote matches local (safe: only unpublished versions are updated)
+          # Force-push tags to ensure remote matches local. Only tags whose version the
+          # registry positively reported as absent were moved in the previous step.
           git push origin --tags --force 2>/dev/null || echo "No tags to push"
 
   publish:

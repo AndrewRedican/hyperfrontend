@@ -1,11 +1,16 @@
 import type { TypeDocOutput } from '@/components/api-reference'
 import { ApiLinkProvider, CopyButton, ScopedApiReference } from '@/components/api-reference'
+// why: the barrel is a client module, and a predicate re-exported through it cannot be called while rendering on the server
+import { hasScopedApiReference } from '@/components/api-reference/scoped-api-reference'
 import { Breadcrumb } from '@/components/breadcrumb'
+import { DocumentShell } from '@/components/document/document-shell'
 import { ReadmeContent } from '@/components/readme-content'
 import { removeBadges, transformLinks } from '@/lib/content'
 import { getLibraryApi, getSubmoduleReadme, getApiLinkIndex } from '@/lib/docs-loader'
+import { documentSubject } from '@/lib/document-model'
 import { markdownToHtml } from '@/lib/markdown'
 import { extractMermaidBlocks } from '@/lib/mermaid-utils'
+import { extractMarkdownSections } from '@/lib/slug'
 import Link from 'next/link'
 
 interface SubmoduleDocPageProps {
@@ -39,6 +44,7 @@ export async function SubmoduleDocPage({ librarySlug, packageName, submodulePath
 
   let readmeHtml: string | null = null
   let readmeDiagrams: ReturnType<typeof extractMermaidBlocks>['diagrams'] = []
+  let sections: ReturnType<typeof extractMarkdownSections> = []
 
   if (readmeContent) {
     let processed = removeBadges(readmeContent)
@@ -46,10 +52,29 @@ export async function SubmoduleDocPage({ librarySlug, packageName, submodulePath
     const extracted = extractMermaidBlocks(processed)
     readmeDiagrams = extracted.diagrams
     readmeHtml = await markdownToHtml(extracted.processedContent)
+    sections = extractMarkdownSections(extracted.processedContent)
+  }
+
+  if (apiData && hasScopedApiReference(apiData, packageName, submodulePath)) {
+    // why: the reference is a section of this page with a server-rendered anchor, but its symbols are not; the index offers the way in and the reference's own listing takes over from there
+    sections.push({ title: 'API Reference', anchor: 'api-reference', level: 2 })
   }
 
   return (
-    <>
+    <DocumentShell
+      // why: an entrypoint with no README publishes no markdown counterpart, so it must not offer actions that would fetch one
+      descriptor={
+        readmeContent
+          ? {
+              route: `/docs/libraries/${librarySlug}/${submodulePath}`,
+              title: importPath,
+              subject: documentSubject('submodule', importPath),
+              kind: 'submodule',
+            }
+          : undefined
+      }
+      sections={sections}
+    >
       <Breadcrumb />
 
       <div className="mb-6">
@@ -74,6 +99,6 @@ export async function SubmoduleDocPage({ librarySlug, packageName, submodulePath
           <ScopedApiReference data={apiData} packageName={packageName} subpath={submodulePath} />
         </ApiLinkProvider>
       )}
-    </>
+    </DocumentShell>
   )
 }

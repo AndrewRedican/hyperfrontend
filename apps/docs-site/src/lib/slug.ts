@@ -1,4 +1,6 @@
+import { parseInt } from '@hyperfrontend/immutable-api-utils/built-in-copy/number'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
+import { fromCodePoint as fromCodePointOf } from '@hyperfrontend/immutable-api-utils/built-in-copy/string'
 
 /**
  * Generate a URL-safe slug from heading text, GitHub-style.
@@ -64,7 +66,53 @@ export function stripInlineMarkdown(heading: string): string {
     .replace(/\*\*([^*]*)\*\*/g, '$1')
     .replace(/\*([^*]*)\*/g, '$1')
 
-  return stripHtmlTags(withoutMarkdown).trim()
+  return decodeEntities(stripHtmlTags(withoutMarkdown)).trim()
+}
+
+/** Named character references a heading realistically carries. */
+const NAMED_ENTITIES: Record<string, string> = {
+  lt: '<',
+  gt: '>',
+  quot: '"',
+  apos: "'",
+  nbsp: ' ',
+}
+
+/**
+ * Resolve the character references in heading text to the characters the
+ * rendered heading actually shows.
+ *
+ * A heading written `## The &lt;iframe&gt;` displays as `The <iframe>`, and the
+ * anchor id the page assigns is derived from that displayed text. Leaving the
+ * references encoded here produces a different id from the one on the page, so
+ * every link built from this text misses its target.
+ *
+ * Decoding runs after tags are stripped, never before: an escaped `&lt;div&gt;`
+ * turned back into a tag first would then be removed as one.
+ *
+ * @param text - Heading text with tags already removed
+ * @returns The text with character references resolved
+ */
+function decodeEntities(text: string): string {
+  return (
+    text
+      .replace(/&#x([0-9a-f]+);/gi, (_match, hex: string) => fromCodePoint(parseInt(hex, 16)))
+      .replace(/&#(\d+);/g, (_match, digits: string) => fromCodePoint(parseInt(digits, 10)))
+      .replace(/&([a-z]+);/gi, (match, name: string) => NAMED_ENTITIES[name.toLowerCase()] ?? match)
+      // why: `&amp;` resolves last, so `&amp;lt;` becomes the text `&lt;` rather than a `<`
+      .replace(/&amp;/gi, '&')
+  )
+}
+
+/**
+ * Turn a code point into its character, leaving anything outside the Unicode
+ * range as the empty string rather than throwing mid-document.
+ *
+ * @param codePoint - The code point to resolve
+ * @returns The character, or an empty string when the value is not one
+ */
+function fromCodePoint(codePoint: number): string {
+  return codePoint >= 0 && codePoint <= 0x10ffff ? fromCodePointOf(codePoint) : ''
 }
 
 /**

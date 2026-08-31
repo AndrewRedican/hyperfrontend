@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { getLibraryArchitecture, getManifest, getSubmoduleReadme } from './docs-loader'
+import { markdownPathFor } from './document-model'
 import { getGuideIndex } from './guides'
 
 /** Longest description surfaced to search and social snippets before truncation. */
@@ -84,6 +85,37 @@ function extractDescription(markdown: string): string | null {
   return null
 }
 
+/** One `rel="alternate"` entry: where the representation lives, and what to call it. */
+interface AlternateLink {
+  /** Site-relative URL of the alternate representation */
+  url: string
+  /** Human-readable name for the representation */
+  title: string
+}
+
+/**
+ * Advertise a page's machine-readable counterpart from the page itself, as a
+ * `<link rel="alternate">`.
+ *
+ * The type names the format the file is written in. It is served as
+ * `text/plain` so that a browser shows it instead of downloading it, which is
+ * a delivery decision; what the resource contains is Markdown, and that is
+ * what a client choosing between representations needs to be told.
+ *
+ * @param route - Site-relative page route
+ * @param title - Page title, so the alternate is named rather than anonymous
+ * @returns An `alternates.types` fragment, ready to merge
+ *
+ * @example
+ * ```typescript
+ * markdownAlternate('/docs/libraries/features', 'Features')
+ * // { 'text/markdown': [{ url: '/docs/libraries/features.md', title: 'Features as Markdown' }] }
+ * ```
+ */
+export function markdownAlternate(route: string, title: string): Record<string, AlternateLink[]> {
+  return { 'text/markdown': [{ url: markdownPathFor(route), title: `${title} as Markdown` }] }
+}
+
 /**
  * What a page needs to be shared as a piece of writing rather than as a
  * destination.
@@ -100,11 +132,18 @@ interface SocialArticleOptions {
  * @param description - Page description
  * @param path - Site-relative page path with a trailing slash
  * @param article - Present when the page is a piece of writing, so it is shared as an article rather than as a website
+ * @param hasMarkdown - Whether the page is rendered from a markdown source, and so has a counterpart to advertise
  * @returns Metadata slice with alternates, openGraph, and twitter populated
  */
-function buildSocialMetadata(title: string, description: string | undefined, path: string, article?: SocialArticleOptions): Metadata {
+function buildSocialMetadata(
+  title: string,
+  description: string | undefined,
+  path: string,
+  article?: SocialArticleOptions,
+  hasMarkdown = false
+): Metadata {
   return {
-    alternates: { canonical: path },
+    alternates: { canonical: path, types: hasMarkdown ? markdownAlternate(path, title) : undefined },
     openGraph: article
       ? {
           title,
@@ -154,7 +193,7 @@ export function getLibraryMetadata(slug: string): Metadata {
     title: library.name,
     description: library.description,
     keywords: library.keywords,
-    ...buildSocialMetadata(library.name, library.description, path),
+    ...buildSocialMetadata(library.name, library.description, path, undefined, true),
   }
 }
 
@@ -193,7 +232,7 @@ export function getSubmoduleMetadata(options: SubmoduleMetadataOptions): Metadat
   return {
     title,
     description,
-    ...buildSocialMetadata(title, description, path),
+    ...buildSocialMetadata(title, description, path, undefined, readme !== null),
   }
 }
 
@@ -235,9 +274,13 @@ export function getGuideMetadata(slug: string): Metadata {
     title: guide.title,
     description: truncateDescription(guide.problem),
     keywords: [...guide.packages, ...guide.keywords],
-    ...buildSocialMetadata(guide.title, truncateDescription(guide.problem), `/docs/guides/${slug}/`, {
-      modifiedTime: guide.verification.verifiedOn,
-    }),
+    ...buildSocialMetadata(
+      guide.title,
+      truncateDescription(guide.problem),
+      `/docs/guides/${slug}/`,
+      { modifiedTime: guide.verification.verifiedOn },
+      true
+    ),
   }
 }
 
@@ -259,7 +302,7 @@ export function getArchitectureMetadata(librarySlug: string): Metadata {
   return {
     title,
     description,
-    ...buildSocialMetadata(title, description, `/docs/libraries/${librarySlug}/architecture/`),
+    ...buildSocialMetadata(title, description, `/docs/libraries/${librarySlug}/architecture/`, undefined, doc !== null),
   }
 }
 

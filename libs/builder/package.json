@@ -4,10 +4,10 @@
   "description": "Composable, vendor-neutral build toolkit for TypeScript libraries, JS bins, and Node SEA native binaries.",
   "license": "MIT",
   "dependencies": {
-    "@hyperfrontend/logging": "0.1.1",
-    "@hyperfrontend/immutable-api-utils": "0.1.4",
+    "@hyperfrontend/logging": "1.0.0",
+    "@hyperfrontend/immutable-api-utils": "1.0.0",
     "@hyperfrontend/project-scope": "0.2.4",
-    "@hyperfrontend/versioning": "0.6.3",
+    "@hyperfrontend/versioning": "0.7.0",
     "@rollup/plugin-commonjs": "29.0.0",
     "@rollup/plugin-json": "6.1.0",
     "@rollup/plugin-node-resolve": "16.0.3",

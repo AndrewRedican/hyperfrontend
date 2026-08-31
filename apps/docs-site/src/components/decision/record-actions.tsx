@@ -1,9 +1,11 @@
 'use client'
 
+import type { ReactNode } from 'react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { createObjectURL, revokeObjectURL } from '@hyperfrontend/immutable-api-utils/built-in-copy/url'
 import { generateSlug } from '../../lib/markdown'
+import { CaretIcon, DownloadIcon, PrintIcon } from '../document/document-icons'
 
 /** Props for {@link RecordActions}. */
 export interface RecordActionsProps {
@@ -27,12 +29,6 @@ interface NameDialogProps {
   onConfirm: () => void
   /** Dismisses without saving. */
   onCancel: () => void
-}
-
-/** Props for the inline icons. */
-interface IconProps {
-  /** Sizing and rotation classes. */
-  className?: string
 }
 
 /**
@@ -118,8 +114,12 @@ export function RecordActions({ buildRecord, generatedOn, label, onLabel }: Reco
           role="menu"
           className="absolute right-0 z-40 mt-2 w-40 overflow-hidden rounded-lg border border-slate-200 bg-white py-1 shadow-lg dark:border-slate-700 dark:bg-slate-900"
         >
-          <MenuItem onClick={chooseMarkdown}>Markdown</MenuItem>
-          <MenuItem onClick={choosePdf}>PDF</MenuItem>
+          <MenuItem onClick={chooseMarkdown} icon={<DownloadIcon className="h-4 w-4" />}>
+            Markdown
+          </MenuItem>
+          <MenuItem onClick={choosePdf} icon={<PrintIcon className="h-4 w-4" />}>
+            PDF
+          </MenuItem>
         </div>
       ) : null}
 
@@ -134,6 +134,8 @@ export function RecordActions({ buildRecord, generatedOn, label, onLabel }: Reco
 interface MenuItemProps {
   /** What choosing it does. */
   onClick: () => void
+  /** The mark for the format, drawn from the shared document icon set so this menu reads like every other document control on the site. */
+  icon: ReactNode
   /** The format name. */
   children: string
 }
@@ -142,17 +144,19 @@ interface MenuItemProps {
  * One format in the save menu.
  * @param props - See {@link MenuItemProps}.
  * @param props.onClick
+ * @param props.icon
  * @param props.children
  * @returns The menu entry.
  */
-function MenuItem({ onClick, children }: MenuItemProps) {
+function MenuItem({ onClick, icon, children }: MenuItemProps) {
   return (
     <button
       type="button"
       role="menuitem"
       onClick={onClick}
-      className="block w-full px-3 py-2 text-left text-sm text-slate-700 transition-colors hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800"
+      className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm text-slate-700 transition-colors hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800"
     >
+      {icon}
       {children}
     </button>
   )
@@ -231,13 +235,5 @@ function NameDialog({ value, onChange, onConfirm, onCancel }: NameDialogProps) {
         </div>
       </form>
     </div>
-  )
-}
-
-function CaretIcon({ className }: IconProps) {
-  return (
-    <svg className={className} fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" aria-hidden="true">
-      <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
-    </svg>
   )
 }

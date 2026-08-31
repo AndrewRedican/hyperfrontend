@@ -21,6 +21,11 @@ module.exports = {
       '9xl': ['8rem', { lineHeight: '1' }],
     },
     extend: {
+      screens: {
+        // Width at which the left navigation, the document, and the document index all fit side by side.
+        // Sorted between xl and 2xl by min-width; see src/lib/nav-visibility.ts for why it sits here.
+        rail: '1400px',
+      },
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],
         display: ['Lexend', 'system-ui', 'sans-serif'],

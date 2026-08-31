@@ -348,6 +348,23 @@ describe('getCommitsSince', () => {
 
     expect(mockExecFileSync).toHaveBeenCalledWith('git', expect.arrayContaining(['--no-merges']), expect.any(Object))
   })
+
+  it('does not apply the default commit limit, so the range is never truncated', () => {
+    mockExecFileSync.mockReturnValue('')
+
+    getCommitsSince('v1.0.0')
+
+    const args = <string[]>mockExecFileSync.mock.calls[0][1]
+    expect(args.some((arg) => arg.startsWith('-n'))).toBe(false)
+  })
+
+  it('honours an explicit commit limit from the caller', () => {
+    mockExecFileSync.mockReturnValue('')
+
+    getCommitsSince('v1.0.0', { maxCount: 5 })
+
+    expect(mockExecFileSync).toHaveBeenCalledWith('git', expect.arrayContaining(['-n5']), expect.any(Object))
+  })
 })
 
 describe('getCommit', () => {

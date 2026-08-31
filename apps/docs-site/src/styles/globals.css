@@ -128,6 +128,179 @@
   }
 }
 
+@layer components {
+  /* The landing page's lit band, directly under the hero.
+
+     Everything here is one idea: light entering a body of blue water from
+     above. The band itself is the water: a vertical wash that begins and ends
+     on the exact background of the sections either side of it and deepens into
+     blue between them, so the band has no edge anywhere, only a middle. Over
+     it sit two accent layers carrying the staged demo's hue: a broad bloom
+     hugging the top, and a handful of soft shafts leaning off vertical.
+
+     Every accent layer is a flat colour wearing a mask. The mask draws the
+     shape; the colour is a single background-color, which is what makes a demo
+     rotation a slow cross-fade between hues rather than a snap, with no repaint
+     of anything underneath. What moves is only ever a transform or an opacity,
+     so the whole band is composited, and all of it holds still when the visitor
+     has asked for less motion.
+
+     The hue arrives as --demo-accent-light / --demo-accent-dark, set on the
+     band by the component from whichever demo holds the stage. The stylesheet
+     picks between them, so the band is correct in the first painted frame
+     rather than after the theme resolves. */
+  .light-well {
+    --light-well-accent: var(--demo-accent-light, 37 99 235);
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    background-image: linear-gradient(to bottom, theme('colors.white') 0%, #e9f1fd 20%, #edf3fd 58%, theme('colors.white') 100%);
+  }
+
+  .dark .light-well {
+    --light-well-accent: var(--demo-accent-dark, 96 165 250);
+    background-image: linear-gradient(to bottom, theme('colors.slate.900') 0%, #16273f 20%, #121e34 58%, theme('colors.slate.900') 100%);
+  }
+
+  .light-well__bloom,
+  .light-well__rays {
+    position: absolute;
+    pointer-events: none;
+  }
+
+  /* The light itself: one wide bloom pressed against the top edge, gone by the
+     time the reader is past the first row of cards. It grows from that edge
+     rather than from its own middle, so the sway never uncovers the top of the
+     band. */
+  .light-well__bloom {
+    inset: 0;
+    background-color: rgb(var(--light-well-accent) / 0.1);
+    mask-image: radial-gradient(125% 72% at 50% -8%, #000 0%, rgb(0 0 0 / 0.45) 40%, transparent 78%);
+    transform-origin: 50% 0;
+    animation: light-well-sway 41s ease-in-out infinite alternate;
+    transition: background-color 1600ms ease-in-out;
+  }
+
+  .dark .light-well__bloom {
+    background-color: rgb(var(--light-well-accent) / 0.17);
+  }
+
+  /* The shafts are inset past the band's edges so no amount of drift walks an
+     end into view, and the frame's own mask fades them in below the top edge
+     and out long before the band ends. */
+  .light-well__rays {
+    inset: -4% -22% 18%;
+    mask-image: linear-gradient(to bottom, transparent 0%, #000 16%, rgb(0 0 0 / 0.4) 58%, transparent 100%);
+  }
+
+  /* Shafts come in two layers rather than one, and that is the whole trick.
+     Each is a repeating mask at its own period and its own near-but-not-equal
+     angle, and each slides, widens and breathes on its own clock: 34s against
+     53s, 23s against 31s, started mid-cycle so they never set off together.
+     Nothing in that set divides into anything else, so the two patterns cross
+     without ever landing back where they began, and the shafts read as light
+     moving on water instead of one striped sheet being dragged sideways. */
+  .light-well__beams {
+    position: absolute;
+    inset: -20%;
+    will-change: transform, opacity;
+    transition: background-color 1600ms ease-in-out;
+  }
+
+  /* The near layer is the one a reader actually sees as shafts: wide gaps, a
+     bright core, and enough weight to hold its shape at every point in the
+     breath. */
+  .light-well__beams--near {
+    background-color: rgb(var(--light-well-accent) / 0.16);
+    mask-image: repeating-linear-gradient(
+      96deg,
+      transparent 0 6%,
+      rgb(0 0 0 / 0.2) 9%,
+      #000 11.5%,
+      rgb(0 0 0 / 0.2) 14%,
+      transparent 18% 28%
+    );
+    animation:
+      light-well-drift-near 34s ease-in-out infinite alternate,
+      light-well-breathe 23s ease-in-out infinite alternate;
+  }
+
+  .dark .light-well__beams--near {
+    background-color: rgb(var(--light-well-accent) / 0.2);
+  }
+
+  /* The far layer never reads as shafts of its own. It is finer, dimmer, and
+     travelling the other way, so where it crosses the near layer it thickens a
+     shaft or fills a gap for a while, and that is what keeps the pattern from
+     being the same pattern twice. */
+  .light-well__beams--far {
+    background-color: rgb(var(--light-well-accent) / 0.1);
+    mask-image:
+      repeating-linear-gradient(102deg, transparent 0 3%, rgb(0 0 0 / 0.45) 6%, transparent 10% 17%),
+      repeating-linear-gradient(99deg, transparent 0 12%, rgb(0 0 0 / 0.3) 18%, transparent 24% 39%);
+    animation:
+      light-well-drift-far 53s ease-in-out infinite alternate,
+      light-well-breathe 31s ease-in-out infinite alternate;
+    animation-delay:
+      -17s,
+      -13s;
+  }
+
+  .dark .light-well__beams--far {
+    background-color: rgb(var(--light-well-accent) / 0.13);
+  }
+
+  @keyframes light-well-drift-near {
+    from {
+      transform: translate3d(-2.5%, 0, 0) scaleX(1);
+    }
+    to {
+      transform: translate3d(2.5%, 0, 0) scaleX(1.09);
+    }
+  }
+
+  @keyframes light-well-drift-far {
+    from {
+      transform: translate3d(3%, 0, 0) scaleX(1.07);
+    }
+    to {
+      transform: translate3d(-3%, 0, 0) scaleX(0.95);
+    }
+  }
+
+  @keyframes light-well-breathe {
+    from {
+      opacity: 0.72;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes light-well-sway {
+    from {
+      transform: translate3d(-1.5%, 0, 0) scale(1);
+      opacity: 0.82;
+    }
+    to {
+      transform: translate3d(1.5%, 0, 0) scale(1.06);
+      opacity: 1;
+    }
+  }
+
+  /* Colour still crosses over when the stage changes: a hue easing into place
+     is the page keeping up with the demo, not motion the reader has to track. */
+  @media (prefers-reduced-motion: reduce) {
+    .light-well__bloom,
+    .light-well__beams {
+      animation: none;
+      transform: none;
+      opacity: 1;
+      will-change: auto;
+    }
+  }
+}
+
 @layer utilities {
   /* Subtle glow effect */
   .glow-primary {

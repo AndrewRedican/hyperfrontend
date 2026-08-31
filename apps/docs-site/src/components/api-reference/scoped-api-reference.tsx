@@ -1,5 +1,6 @@
 import type { TypeDocNode, TypeDocOutput } from './types'
 import { AnchorLink } from '../anchor-link'
+import { H2 } from '../heading-with-anchor'
 import { FunctionSignature } from './function-signature'
 import { TypeDefinition } from './type-definition'
 import { buildNodeLookup, resolveReference } from './type-utils'
@@ -129,6 +130,42 @@ function Section({ heading, iconClass, icon, anchor, children }: SectionProps) {
 }
 
 /**
+ * Whether a secondary entrypoint has a scoped API reference to show.
+ *
+ * The page that mounts {@link ScopedApiReference} has to know this before it
+ * renders: its document index lists the reference as a section, and an entry
+ * pointing at a heading that never renders is a dead link.
+ * @param data - The TypeDoc output for the parent library
+ * @param packageName - The library's npm package name
+ * @param subpath - The secondary entrypoint subpath
+ * @returns True when the module resolves and exports at least one symbol
+ * @example
+ * ```typescript
+ * hasScopedApiReference(apiData, '@hyperfrontend/features', 'host')  // true
+ * ```
+ */
+export function hasScopedApiReference(data: TypeDocOutput, packageName: string, subpath: string): boolean {
+  const exports = getScopedExports(data, packageName, subpath)
+  return exports !== null && countExports(exports) > 0
+}
+
+/**
+ * Total number of symbols a scoped module exports, across every kind.
+ * @param exports - The grouped exports
+ * @returns The count
+ */
+function countExports(exports: ScopedExports): number {
+  return (
+    exports.functions.length +
+    exports.classes.length +
+    exports.interfaces.length +
+    exports.types.length +
+    exports.variables.length +
+    exports.namespaces.length
+  )
+}
+
+/**
  * Renders the scoped API reference for a single secondary entrypoint.
  *
  * Filters the library's TypeDoc reflection tree to the Module node whose name matches
@@ -154,23 +191,19 @@ export function ScopedApiReference({ data, packageName, subpath }: ScopedApiRefe
     )
   }
 
-  const totalExports =
-    exports.functions.length +
-    exports.classes.length +
-    exports.interfaces.length +
-    exports.types.length +
-    exports.variables.length +
-    exports.namespaces.length
-
-  if (totalExports === 0) {
+  if (countExports(exports) === 0) {
     return <div className="text-sm text-slate-500 dark:text-slate-400 py-4 italic">No exported symbols in this module.</div>
   }
 
   return (
     <div className="scoped-api-reference">
-      <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-4 mt-8 pt-4 border-t border-slate-200 dark:border-slate-700">
+      {/* why: the same id and anchor the package page gives its reference, so one address form reaches it from anywhere it is published */}
+      <H2
+        id="api-reference"
+        className="text-xl font-bold text-slate-900 dark:text-white mb-4 mt-8 pt-4 border-t border-slate-200 dark:border-slate-700"
+      >
         API Reference
-      </h2>
+      </H2>
 
       {exports.functions.length > 0 && (
         <Section heading="Functions" iconClass="text-blue-500" icon="ƒ" anchor="functions">

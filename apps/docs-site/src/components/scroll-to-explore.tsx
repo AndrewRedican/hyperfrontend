@@ -5,7 +5,7 @@ export function ScrollToExplore() {
   return (
     <div className="absolute bottom-6 left-1/2 hidden -translate-x-1/2 lg:block">
       <button
-        onClick={() => document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' })}
+        onClick={() => document.getElementById('learn')?.scrollIntoView({ behavior: 'smooth' })}
         className="flex animate-bounce cursor-pointer flex-col items-center gap-2 border-none bg-transparent"
       >
         <span className="text-xs font-medium text-slate-500 dark:text-slate-400">Scroll to explore</span>
