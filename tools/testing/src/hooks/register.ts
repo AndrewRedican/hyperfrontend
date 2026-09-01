@@ -2,7 +2,15 @@ import { readFileSync } from 'node:fs'
 import { registerHooks } from 'node:module'
 import { fileURLToPath } from 'node:url'
 import { currentGeneration } from './generation.ts'
-import { MOCK_SCHEME, isMocked, mockTarget, mockedSource, registerSetupMocks, registerSpecMocks } from './mock-registry.ts'
+import {
+  MOCK_SCHEME,
+  isMocked,
+  mockTarget,
+  mockedSource,
+  registerSetupMocks,
+  registerSpecMocks,
+  setSpecifierResolver,
+} from './mock-registry.ts'
 import { loadAliases } from './paths.ts'
 import { compileModuleMappings, resolveSpecifier } from './resolver.ts'
 
@@ -44,6 +52,9 @@ export function registerResolutionHooks(): void {
     mappings: compileModuleMappings(process.env[MODULE_MAP_VAR], process.cwd()),
     entryDirectory: process.cwd(),
   }
+
+  // why: the registry has to resolve a specifier exactly as this hook will, or a mock naming a workspace library would register against a url nothing ever asks for.
+  setSpecifierResolver((specifier, parentUrl) => resolveSpecifier(specifier, parentUrl, context))
 
   const runtimeUrl = new URL('../mock/jest-api.ts', import.meta.url).href
 

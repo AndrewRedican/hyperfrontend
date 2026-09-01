@@ -1,7 +1,7 @@
 import type { MockDeclaration } from './mock-declarations.ts'
 import { createRequire } from 'node:module'
 import { pathToFileURL } from 'node:url'
-import { readMockDeclarations } from './mock-declarations.ts'
+import { readMockDeclarations, readUnmockDeclarations } from './mock-declarations.ts'
 
 /**
  * Scheme the replacement module is served under. It has to be a URL of its own rather than
@@ -24,20 +24,50 @@ export function mockTarget(url: string): string {
 }
 
 /**
+ * Resolves a specifier the way the loader's own resolution hook does.
+ */
+type SpecifierResolver = (specifier: string, parentUrl: string) => string | null
+
+let workspaceResolver: SpecifierResolver | undefined
+
+/**
+ * Hands the registry the loader's resolution, so both agree on which URL a specifier names.
+ *
+ * Without it the registry falls back to `require.resolve`, which knows nothing of the
+ * workspace's TypeScript path aliases: a `jest.mock` naming another library in the
+ * workspace would resolve nowhere and register nothing, silently leaving the real module in
+ * place.
+ *
+ * @param resolver - The loader's resolution, already bound to its context.
+ */
+export function setSpecifierResolver(resolver: SpecifierResolver): void {
+  workspaceResolver = resolver
+}
+
+/**
  * Resolves a specifier to the module it names, ignoring any replacement standing in for it.
  *
- * `require.resolve` runs through the same hooks an import does, so a specifier that already
- * has a replacement resolves to the replacement's URL rather than to a path. Reading the
- * mocked URL back out of it is what keeps registration and `jest.requireActual` agreeing on
- * one key, and what stops `jest.requireActual` from handing back the very mock it is meant
- * to see past.
+ * The loader's own resolution is tried first, because it is the one that knows the
+ * workspace's aliases and extensionless TypeScript specifiers, and it never returns a
+ * replacement's URL.
+ *
+ * `require.resolve` covers what is left, and it runs through the same hooks an import does,
+ * so a specifier that already has a replacement resolves to the replacement's URL rather
+ * than to a path. Reading the mocked URL back out of it is what keeps registration and
+ * `jest.requireActual` agreeing on one key, and what stops `jest.requireActual` from handing
+ * back the very mock it is meant to see past.
  *
  * @param require - A require function bound to the file the specifier was written in.
  * @param specifier - The specifier as written.
+ * @param parentUrl - URL of the file the specifier was written in, for the loader's resolution.
  * @returns The URL of the module named, or the built-in's identifier.
  */
-export function resolveActualUrl(require: NodeJS.Require, specifier: string): string {
+export function resolveActualUrl(require: NodeJS.Require, specifier: string, parentUrl?: string): string {
   if (specifier.startsWith('node:')) return specifier
+
+  const workspace = parentUrl ? workspaceResolver?.(specifier, parentUrl) : null
+  if (workspace) return workspace
+
   const resolved = require.resolve(specifier)
   if (resolved.startsWith(MOCK_SCHEME)) return mockTarget(resolved)
   return pathToFileURL(resolved).href
@@ -149,7 +179,7 @@ function registerDeclarations(sourceUrl: string, source: string): void {
   for (const declaration of readMockDeclarations(source)) {
     let target: string
     try {
-      target = resolveActualUrl(require, declaration.specifier)
+      target = resolveActualUrl(require, declaration.specifier, sourceUrl)
     } catch {
       // why: a specifier that resolves nowhere is the spec's problem to report, not the loader's to guess at.
       continue
@@ -159,6 +189,16 @@ function registerDeclarations(sourceUrl: string, source: string): void {
       declaration,
       automocked: declaration.factory ? [] : automockedNames(require, declaration.specifier, target),
     })
+  }
+
+  // why: a spec opts out of a replacement its setup module declared for the whole project, so the removal has to run after the registrations rather than beside them.
+  for (const specifier of readUnmockDeclarations(source)) {
+    try {
+      registrations.delete(resolveActualUrl(require, specifier, sourceUrl))
+    } catch {
+      // why: a specifier that resolves nowhere has no registration to remove either.
+      continue
+    }
   }
 }
 

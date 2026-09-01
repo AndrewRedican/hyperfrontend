@@ -2,6 +2,33 @@ import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
 import { readMockDeclarations } from './mock-declarations'
 
+describe('readMockDeclarations shorthand properties', () => {
+  it('names a shorthand property', () => {
+    const [declaration] = readMockDeclarations("jest.mock('./dep', () => { const read = 1; return { read } })")
+    assert.deepEqual(declaration?.overrides, ['read'])
+  })
+
+  it('names both spellings side by side', () => {
+    const [declaration] = readMockDeclarations("jest.mock('./dep', () => { const read = 1; return { read, write: 2 } })")
+    assert.deepEqual(declaration?.overrides, ['read', 'write'])
+  })
+
+  it('does not mistake a longhand value for a shorthand property', () => {
+    const [declaration] = readMockDeclarations("jest.mock('./dep', () => { const value = 1; return { read: value } })")
+    assert.deepEqual(declaration?.overrides, ['read'])
+  })
+
+  it('does not name a spread', () => {
+    const [declaration] = readMockDeclarations("jest.mock('./dep', () => ({ ...actual, read: 1 }))")
+    assert.deepEqual(declaration?.overrides, ['read'])
+  })
+
+  it('leaves a nested literal keys alone', () => {
+    const [declaration] = readMockDeclarations("jest.mock('./dep', () => ({ logger: { error, warn } }))")
+    assert.deepEqual(declaration?.overrides, ['logger'])
+  })
+})
+
 describe('readMockDeclarations', () => {
   it('finds nothing in a file that declares no mocks', () => {
     assert.deepEqual(readMockDeclarations('const a = 1\n'), [])

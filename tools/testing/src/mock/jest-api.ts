@@ -49,6 +49,8 @@ export type JestApi = {
   resetModules(): JestApi
   /** Declares a module replacement. The loader has already applied it by the time this runs. */
   mock(specifier: string, factory?: () => unknown): JestApi
+  /** Opts out of a replacement a setup module declared. The loader has already applied it by the time this runs. */
+  unmock(specifier: string): JestApi
   /** Declares a replacement while the suite runs. It reaches modules imported after it, not the ones already linked. */
   doMock(specifier: string, factory: () => unknown): JestApi
   /** Reads the module a replacement stands in for. Only meaningful inside a `mock` factory. */
@@ -99,6 +101,8 @@ export const jest: JestApi = {
   },
   // why: the loader read this call out of the source and substituted the module before the spec was linked, so this call has no remaining work.
   mock: () => jest,
+  // why: likewise, the loader dropped the registration before the spec was linked.
+  unmock: () => jest,
   doMock: (specifier, factory) => {
     registerRuntimeMock(specifier, factory)
     return jest
@@ -106,7 +110,7 @@ export const jest: JestApi = {
   requireActual: <TModule>(specifier: string): TModule => {
     const context = mockContext()
     // why: a module with a replacement is reachable only through the namespace that replacement published, since requiring it again would return the replacement.
-    const published = context.actuals.get(resolveActualUrl(createRequire(context.specUrl), specifier))
+    const published = context.actuals.get(resolveActualUrl(createRequire(context.specUrl), specifier, context.specUrl))
     if (published) return published as TModule
     return createRequire(context.specUrl)(specifier) as TModule
   },

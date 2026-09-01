@@ -16,6 +16,8 @@ export type MockDeclaration = {
 
 const CALL = 'jest.mock('
 
+const UNMOCK_CALL = 'jest.unmock('
+
 /**
  * A declaration and where the call that produced it ended.
  */
@@ -48,6 +50,48 @@ export function readMockDeclarations(source: string): MockDeclaration[] {
   }
 
   return found
+}
+
+/**
+ * Finds every `jest.unmock` call in a spec file.
+ *
+ * A spec uses this to opt out of a replacement its project's setup module declared for
+ * every spec. Like `jest.mock`, it is read before the spec's imports are linked, because by
+ * the time the spec body runs the module it names has already been bound.
+ *
+ * @param source - The spec file's text.
+ * @returns The specifier of each call, in source order.
+ */
+export function readUnmockDeclarations(source: string): string[] {
+  const scrubbed = scrubLiterals(source)
+  const found: string[] = []
+  let at = scrubbed.indexOf(UNMOCK_CALL)
+
+  while (at !== -1) {
+    const specifier = readSpecifier(source, at + UNMOCK_CALL.length)
+    if (specifier) found.push(specifier)
+    at = scrubbed.indexOf(UNMOCK_CALL, at + UNMOCK_CALL.length)
+  }
+
+  return found
+}
+
+/**
+ * Reads the quoted specifier a call opens with.
+ *
+ * @param source - The spec file's text.
+ * @param from - Index just past the call's opening parenthesis.
+ * @returns The specifier, or undefined when the call does not open with a string literal.
+ */
+function readSpecifier(source: string, from: number): string | undefined {
+  let index = from
+  while (index < source.length && /\s/.test(source[index] ?? '')) index += 1
+
+  const quote = source[index]
+  if (quote !== "'" && quote !== '"') return undefined
+
+  const closing = source.indexOf(quote, index + 1)
+  return closing === -1 ? undefined : source.slice(index + 1, closing)
 }
 
 /**
@@ -117,20 +161,33 @@ function objectKeys(factory: string): string[] {
 
   const names = new Set<string>()
   let depth = 0
+  // why: only the identifier opening a property is a key. Without tracking that, the `b` in `{ a: b, c }` reads as a shorthand property and exports a name the factory never defined.
+  let atProperty = true
 
   for (let at = opening; at < factory.length; at += 1) {
     const char = factory[at]
-    if (char === '{' || char === '(' || char === '[') depth += 1
-    else if (char === '}' || char === ')' || char === ']') {
+
+    if (char === '{' || char === '(' || char === '[') {
+      depth += 1
+      continue
+    }
+    if (char === '}' || char === ')' || char === ']') {
       depth -= 1
       if (depth === 0) break
-    } else if (depth === 1) {
-      const key = /^([A-Za-z_$][\w$]*)\s*:/.exec(factory.slice(at))
-      if (key?.[1] && !/[\w$]/.test(factory[at - 1] ?? '')) {
-        names.add(key[1])
-        at += key[0].length - 1
-      }
+      continue
     }
+    if (depth !== 1) continue
+    if (char === ',') {
+      atProperty = true
+      continue
+    }
+    if (!atProperty || /\s/.test(char ?? '')) continue
+
+    const key = /^([A-Za-z_$][\w$]*)\s*([:,}])/.exec(factory.slice(at))
+    // why: a shorthand property is followed by the comma or brace that ends it, a longhand one by its colon. Anything else opening a property is a spread or a computed key, and neither names an export.
+    if (key?.[1]) names.add(key[1])
+    atProperty = false
+    if (key?.[2] === ':') at += key[0].length - 1
   }
 
   return [...names]
