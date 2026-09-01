@@ -11,6 +11,39 @@ import { readMockDeclarations } from './mock-declarations.ts'
 export const MOCK_SCHEME = 'hf-mock:'
 
 /**
+ * Reads back the URL a replacement stands in for.
+ *
+ * The mocked URL is carried in the replacement's own URL, encoded so that a path, a query,
+ * or a built-in identifier all survive being nested inside one.
+ *
+ * @param url - A replacement's URL.
+ * @returns The URL of the module it replaces.
+ */
+export function mockTarget(url: string): string {
+  return decodeURIComponent(url.slice(MOCK_SCHEME.length).split('?g=')[0] ?? '')
+}
+
+/**
+ * Resolves a specifier to the module it names, ignoring any replacement standing in for it.
+ *
+ * `require.resolve` runs through the same hooks an import does, so a specifier that already
+ * has a replacement resolves to the replacement's URL rather than to a path. Reading the
+ * mocked URL back out of it is what keeps registration and `jest.requireActual` agreeing on
+ * one key, and what stops `jest.requireActual` from handing back the very mock it is meant
+ * to see past.
+ *
+ * @param require - A require function bound to the file the specifier was written in.
+ * @param specifier - The specifier as written.
+ * @returns The URL of the module named, or the built-in's identifier.
+ */
+export function resolveActualUrl(require: NodeJS.Require, specifier: string): string {
+  if (specifier.startsWith('node:')) return specifier
+  const resolved = require.resolve(specifier)
+  if (resolved.startsWith(MOCK_SCHEME)) return mockTarget(resolved)
+  return pathToFileURL(resolved).href
+}
+
+/**
  * A registered replacement.
  */
 type Registration = {
@@ -86,15 +119,16 @@ export function registerSpecMocks(specUrl: string, source: string): void {
   for (const declaration of readMockDeclarations(source)) {
     let target: string
     try {
-      target = declaration.specifier.startsWith('node:')
-        ? declaration.specifier
-        : pathToFileURL(require.resolve(declaration.specifier)).href
+      target = resolveActualUrl(require, declaration.specifier)
     } catch {
       // why: a specifier that resolves nowhere is the spec's problem to report, not the loader's to guess at.
       continue
     }
 
-    registrations.set(target, { declaration, automocked: declaration.factory ? [] : automockedNames(require, declaration.specifier) })
+    registrations.set(target, {
+      declaration,
+      automocked: declaration.factory ? [] : automockedNames(require, declaration.specifier, target),
+    })
   }
 }
 
@@ -107,10 +141,13 @@ export function registerSpecMocks(specUrl: string, source: string): void {
  *
  * @param require - A require function bound to the spec declaring the mock.
  * @param specifier - The specifier as written.
+ * @param target - URL of the module being replaced.
  * @returns The names to replace with mock functions.
  */
-function automockedNames(require: NodeJS.Require, specifier: string): string[] {
+function automockedNames(require: NodeJS.Require, specifier: string, target: string): string[] {
   const actual = require(specifier) as Record<string, unknown>
+  // why: this form generates its exports rather than importing the module, so publishing here is the only chance `jest.requireActual` gets to see past it.
+  mockContext().actuals.set(target, actual)
   return Object.keys(actual).filter((key) => /^[A-Za-z_$][\w$]*$/.test(key))
 }
 

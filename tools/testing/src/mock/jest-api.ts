@@ -2,9 +2,8 @@ import type { AccessType } from './spy'
 import type { FakeTimerOptions } from './timers'
 import type { MockFn } from './types'
 import { createRequire } from 'node:module'
-import { pathToFileURL } from 'node:url'
 import { advanceGeneration } from '../hooks/generation'
-import { mockContext, registerRuntimeMock } from '../hooks/mock-registry'
+import { mockContext, registerRuntimeMock, resolveActualUrl } from '../hooks/mock-registry'
 import { clearAllMocks, createMockFn, resetAllMocks } from './mock-fn'
 import { createSpy, restoreAllMocks } from './spy'
 import { advanceTimersByTime, clearAllTimers, runAllTimers, setSystemTime, useFakeTimers, useRealTimers } from './timers'
@@ -106,9 +105,8 @@ export const jest: JestApi = {
   },
   requireActual: <TModule>(specifier: string): TModule => {
     const context = mockContext()
-    const url = specifier.startsWith('node:') ? specifier : pathToFileURL(createRequire(context.specUrl).resolve(specifier)).href
     // why: a module with a replacement is reachable only through the namespace that replacement published, since requiring it again would return the replacement.
-    const published = context.actuals.get(url)
+    const published = context.actuals.get(resolveActualUrl(createRequire(context.specUrl), specifier))
     if (published) return published as TModule
     return createRequire(context.specUrl)(specifier) as TModule
   },

@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs'
 import { registerHooks } from 'node:module'
 import { fileURLToPath } from 'node:url'
 import { currentGeneration } from './generation.ts'
-import { MOCK_SCHEME, isMocked, mockedSource, registerSpecMocks } from './mock-registry.ts'
+import { MOCK_SCHEME, isMocked, mockTarget, mockedSource, registerSpecMocks } from './mock-registry.ts'
 import { loadAliases } from './paths.ts'
 import { compileModuleMappings, resolveSpecifier } from './resolver.ts'
 
@@ -56,8 +56,7 @@ export function registerResolutionHooks(): void {
     load(url, loadContext, nextLoad) {
       if (url.startsWith(MOCK_SCHEME)) {
         // why: the factory is carried through verbatim from a TypeScript spec, so the replacement has to be stripped the same way its source file was.
-        const target = decodeURIComponent(url.slice(MOCK_SCHEME.length).split('?g=')[0] ?? '')
-        return { format: 'module-typescript', source: mockedSource(target, runtimeUrl), shortCircuit: true }
+        return { format: 'module-typescript', source: mockedSource(mockTarget(url), runtimeUrl), shortCircuit: true }
       }
 
       const result = nextLoad(url, loadContext)

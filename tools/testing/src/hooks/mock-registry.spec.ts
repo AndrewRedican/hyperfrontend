@@ -2,9 +2,20 @@ import assert from 'node:assert/strict'
 import { mkdtempSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { createRequire } from 'node:module'
 import { afterEach, describe, it } from 'node:test'
 import { pathToFileURL } from 'node:url'
-import { clearRegistrations, isMocked, mockContext, mockedSource, registerRuntimeMock, registerSpecMocks } from './mock-registry'
+import {
+  MOCK_SCHEME,
+  clearRegistrations,
+  isMocked,
+  mockContext,
+  mockTarget,
+  mockedSource,
+  registerRuntimeMock,
+  registerSpecMocks,
+  resolveActualUrl,
+} from './mock-registry'
 
 const RUNTIME_URL = 'file:///workspace/tools/testing/src/mock/jest-api.ts'
 
@@ -124,5 +135,30 @@ describe('registerRuntimeMock', () => {
 describe('mockContext', () => {
   it('records the url of the spec the loader read declarations from', () => {
     assert.match(mockContext().specUrl, /\.spec\.ts$/)
+  })
+})
+
+describe('mockTarget', () => {
+  it('reads the mocked url back out of a replacement url', () => {
+    assert.equal(mockTarget(`${MOCK_SCHEME}${encodeURIComponent(DEP_URL)}?g=3`), DEP_URL)
+  })
+
+  it('reads a built-in identifier back out', () => {
+    assert.equal(mockTarget(`${MOCK_SCHEME}node%3Aos?g=0`), 'node:os')
+  })
+})
+
+describe('resolveActualUrl', () => {
+  it('resolves a relative specifier to the module it names', () => {
+    assert.equal(resolveActualUrl(createRequire(SPEC_URL), './dep.ts'), DEP_URL)
+  })
+
+  it('returns a built-in identifier without resolving it', () => {
+    assert.equal(resolveActualUrl(createRequire(SPEC_URL), 'node:os'), 'node:os')
+  })
+
+  it('sees past a replacement the hooks resolved the specifier to', () => {
+    const resolve = (): string => `${MOCK_SCHEME}${encodeURIComponent(DEP_URL)}?g=1`
+    assert.equal(resolveActualUrl({ resolve } as unknown as NodeJS.Require, './dep.ts'), DEP_URL)
   })
 })
