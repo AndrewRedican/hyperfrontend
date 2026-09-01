@@ -3,6 +3,8 @@ import type { ChannelState } from '../../types'
 import type { EventHandler } from '../../types/channel'
 import type { OpenCallback, CloseCallback, CancelCallback } from '../../types/events'
 import type { ChannelInternals } from '../types'
+import { beforeEach } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { subscribeToEvents } from './events'
 
 describe('channel/subscription/events', () => {

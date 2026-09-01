@@ -1,4 +1,5 @@
 import type { SecurityProtocolVersion, SecurityNegotiationRequest } from '../../types/security'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { negotiateProtocol, createSecurityRequest, createSecurityResponse } from './negotiate'
 jest.unmock('@hyperfrontend/immutable-api-utils/built-in-copy/object')
 

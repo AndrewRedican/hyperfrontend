@@ -1,9 +1,12 @@
 import type { Logger } from '@hyperfrontend/logging'
+import type { Mock } from '@hyperfrontend/testing'
 import type { IAction } from '../../types/action'
 import type { ChannelHandle } from '../../types/channel'
 import type { IChannelContract } from '../../types/contract'
 import type { BrokerState } from '../types'
 import type { RoutingContext } from './types'
+import { afterEach, beforeEach } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { createActionCreators } from '../../core/actions/factory'
 import { createProcessManager } from '../../core/processes/factory'
 import { createRegistry } from '../../core/registry/factory'
@@ -77,7 +80,7 @@ describe('handleCloseAcknowledged', () => {
   const startPoliteClose = (channel: ChannelHandle, target: Window): string => {
     channel.activate('https://example.com', validContract)
     channel.disconnect()
-    const posted = (target.postMessage as jest.Mock).mock.calls.map(([action]) => action as IAction)
+    const posted = (target.postMessage as Mock).mock.calls.map(([action]) => action as IAction)
     const closeAction = posted.find((action) => action.type === '[nexus] connection-closed')
     return (closeAction as unknown as Record<string, unknown>)['processId'] as string
   }

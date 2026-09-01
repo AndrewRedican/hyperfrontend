@@ -1,8 +1,11 @@
 import type { Logger } from '@hyperfrontend/logging'
+import type { Mock } from '@hyperfrontend/testing'
 import type { IAction } from '../../types/action'
 import type { IChannelContract } from '../../types/contract'
 import type { BrokerState } from '../types'
 import type { RoutingContext } from './types'
+import { after as afterAll, afterEach, before as beforeAll, beforeEach } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { createActionCreators } from '../../core/actions/factory'
 import { createProcessManager } from '../../core/processes/factory'
 import { createRegistry } from '../../core/registry/factory'
@@ -106,7 +109,7 @@ describe('handleRequest deny gates', () => {
     // how: connect() marks the channel ready; cancel(false) clears the
     channel.connect()
     channel.cancel(false)
-    ;(mockWindow.postMessage as jest.Mock).mockClear()
+    ;(mockWindow.postMessage as Mock).mockClear()
     return channel
   }
 
@@ -121,9 +124,7 @@ describe('handleRequest deny gates', () => {
   }
 
   function denyFrames() {
-    return (mockWindow.postMessage as jest.Mock).mock.calls.filter(
-      (call) => (call[0] as IAction).type === '[nexus] connection-request-denied'
-    )
+    return (mockWindow.postMessage as Mock).mock.calls.filter((call) => (call[0] as IAction).type === '[nexus] connection-request-denied')
   }
 
   describe('invalid contract gate', () => {

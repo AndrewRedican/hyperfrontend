@@ -1,4 +1,5 @@
 import type { NoneTransportConfig } from './types'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { createNoneTransport } from './none-transport'
 
 describe('NoneTransport', () => {

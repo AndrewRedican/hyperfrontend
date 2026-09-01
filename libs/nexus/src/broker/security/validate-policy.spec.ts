@@ -1,4 +1,5 @@
 import type { SecurityPolicy } from '../types'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { validatePolicy } from './validate-policy'
 
 describe('validatePolicy', () => {

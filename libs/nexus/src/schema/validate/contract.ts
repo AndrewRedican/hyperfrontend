@@ -5,7 +5,7 @@ import type { ValidationResult } from '../../types/validation'
 import contractSchema from '../definitions/contract.json'
 import { createValidator } from './create-validator'
 
-/* istanbul ignore next -- validator initialization happens at module load */
+// why: validator initialization happens at module load
 const validateContractData = createValidator(contractSchema as Schema)
 
 /**

@@ -1,4 +1,7 @@
+import type { Mock } from '@hyperfrontend/testing'
 import type { SecurityErrorEventData } from '../types/events'
+import { beforeEach } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { SecurityError, createSecurityErrorEventData, createDeobfuscationRetry, logSecurityError, DEFAULT_RETRY_CONFIG } from './errors'
 
 describe('security/errors', () => {
@@ -337,13 +340,13 @@ describe('security/errors', () => {
 
   describe('logSecurityError', () => {
     let mockLogger: {
-      error: jest.Mock
-      warn: jest.Mock
-      log: jest.Mock
-      info: jest.Mock
-      debug: jest.Mock
-      setLogLevel: jest.Mock
-      getLogLevel: jest.Mock
+      error: Mock
+      warn: Mock
+      log: Mock
+      info: Mock
+      debug: Mock
+      setLogLevel: Mock
+      getLogLevel: Mock
     }
 
     beforeEach(() => {

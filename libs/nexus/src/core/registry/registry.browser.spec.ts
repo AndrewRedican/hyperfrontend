@@ -1,4 +1,5 @@
 import type { MinimalChannel } from './factory'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { add } from './add'
 import { clear } from './clear'
 import { createRegistry } from './factory'

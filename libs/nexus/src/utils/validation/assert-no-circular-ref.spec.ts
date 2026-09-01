@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { assertNoCircularRef } from './assert-no-circular-ref'
 
 describe('assertNoCircularRef', () => {

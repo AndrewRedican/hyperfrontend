@@ -1,8 +1,11 @@
 import type { Logger } from '@hyperfrontend/logging'
+import type { Mock } from '@hyperfrontend/testing'
 import type { ActionCreators } from '../../core/actions/factory'
 import type { ChannelState } from '../../types'
 import type { IMessage } from '../../types/message'
 import type { ChannelInternals } from '../types'
+import { beforeEach } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import * as clearQueueModule from '../state/clear-queue'
 import { flush } from './flush'
 import * as sendModule from './send'
@@ -13,7 +16,7 @@ jest.mock('../state/clear-queue')
 describe('channel/messaging/flush', () => {
   let mockChannel: ChannelInternals
   let state: ChannelState
-  let mockGetState: jest.Mock<ChannelState, []>
+  let mockGetState: Mock<ChannelState, []>
   let mockLogger: Logger
 
   beforeEach(() => {
@@ -64,7 +67,7 @@ describe('channel/messaging/flush', () => {
       notifyMessage: jest.fn(),
       actions: {} as ActionCreators,
     }
-    ;(clearQueueModule.clearQueue as jest.Mock).mockReturnValue({
+    ;(clearQueueModule.clearQueue as Mock).mockReturnValue({
       ...state,
       queuedMessages: [],
     })
@@ -107,8 +110,8 @@ describe('channel/messaging/flush', () => {
 
     flush(mockChannel)
 
-    expect((mockChannel.updateState as jest.Mock).mock.invocationCallOrder[0]).toBeLessThan(
-      (sendModule.send as jest.Mock).mock.invocationCallOrder[0] ?? 0
+    expect((mockChannel.updateState as Mock).mock.invocationCallOrder[0]).toBeLessThan(
+      (sendModule.send as Mock).mock.invocationCallOrder[0] ?? 0
     )
   })
 
@@ -130,7 +133,7 @@ describe('channel/messaging/flush', () => {
     ]
     state = { ...state, queuedMessages: messages }
     mockGetState.mockReturnValue(state)
-    ;(sendModule.send as jest.Mock).mockImplementation((channel, message) => {
+    ;(sendModule.send as Mock).mockImplementation((channel, message) => {
       if (message.type === 'MESSAGE_2') {
         throw new Error('Send failed')
       }

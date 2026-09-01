@@ -1,5 +1,7 @@
 import type { Logger } from '@hyperfrontend/logging'
 import type { SecurityPolicy } from '../types'
+import { beforeEach } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { applyPolicy } from './apply-policy'
 
 describe('applyPolicy', () => {

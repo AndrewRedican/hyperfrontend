@@ -1,4 +1,6 @@
 import type { IAction } from '../../types/action'
+import { beforeEach } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { createRegistry } from '../../core/registry/factory'
 import { resolveChannel } from './resolve-channel'
 

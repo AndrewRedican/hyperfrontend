@@ -1,6 +1,8 @@
 import type { SecurityPolicy } from '../broker/types'
 import type { IChannelContract } from '../types/contract'
 import type { MockWindow } from './test-utils'
+import { beforeEach } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { createBroker } from '../broker/factory'
 import { createMockWindow } from './test-utils'
 

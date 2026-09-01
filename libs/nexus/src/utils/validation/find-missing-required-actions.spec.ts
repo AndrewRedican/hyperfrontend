@@ -1,4 +1,5 @@
 import type { IChannelContract } from '../../types/contract'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { findMissingRequiredActions } from './find-missing-required-actions'
 
 describe('findMissingRequiredActions', () => {

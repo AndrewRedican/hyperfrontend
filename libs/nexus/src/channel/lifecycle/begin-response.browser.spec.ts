@@ -1,6 +1,8 @@
 import type { IAction } from '../../types/action'
 import type { ChannelState, ScheduledActivation } from '../../types/channel'
 import type { ChannelInternals } from '../types'
+import { after as afterAll, afterEach, before as beforeAll, beforeEach } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { createInitialState } from '../state/initial'
 import { beginResponse } from './begin-response'
 

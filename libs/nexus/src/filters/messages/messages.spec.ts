@@ -1,6 +1,8 @@
 import type { ChannelJSON } from '../../types/channel'
 import type { IMessage } from '../../types/message'
 import type { MessageHandler, MessagePredicate } from './create'
+import { beforeEach } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { byType } from './by-type'
 import { compose } from './compose'
 import { create } from './create'

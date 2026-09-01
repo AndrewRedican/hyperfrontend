@@ -1,4 +1,5 @@
 import type { IChannelContract } from '../types/contract'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { createBroker } from './factory'
 
 describe('createBroker (non-browser environment)', () => {

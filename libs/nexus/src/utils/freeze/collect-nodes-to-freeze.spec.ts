@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { collectNodesToFreeze } from './collect-nodes-to-freeze'
 
 describe('collectNodesToFreeze', () => {

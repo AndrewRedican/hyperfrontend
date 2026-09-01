@@ -1,16 +1,19 @@
 import type { Logger } from '@hyperfrontend/logging'
+import type { Mock } from '@hyperfrontend/testing'
 import type { ChannelHandle } from '../../types/channel'
 import type { SecurityProvider, SecurityProtocolProvider, SecurityReceivePacket, SecurityPacketData } from '../../types/security'
 import type { RoutingContext } from './types'
+import { beforeEach } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { attachSecurityTransport } from './attach-security-transport'
 
 describe('attachSecurityTransport', () => {
   let mockLogger: Logger
-  let routeAction: jest.Mock
+  let routeAction: Mock
   let context: RoutingContext
   let channel: ChannelHandle
   let attachedTransport: unknown
-  let notifyEvent: jest.Mock
+  let notifyEvent: Mock
   let targetWindow: Window
   let origin: string | null
   let wire: { sent: unknown[]; deliver?: SecurityReceivePacket; failSend: boolean }

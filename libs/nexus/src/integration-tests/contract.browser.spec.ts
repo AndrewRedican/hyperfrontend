@@ -1,5 +1,7 @@
 import type { IChannelContract } from '../types/contract'
 import type { MockWindow } from './test-utils'
+import { beforeEach } from 'node:test'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { createBroker } from '../broker/factory'
 import { mergeContracts } from '../setup/merge-contracts'
 import { createMockWindow } from './test-utils'

@@ -1,4 +1,6 @@
 import type { Logger } from '@hyperfrontend/logging'
+import { beforeEach } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { deepFreeze } from './deep-freeze'
 jest.unmock('@hyperfrontend/immutable-api-utils/built-in-copy/object')
 

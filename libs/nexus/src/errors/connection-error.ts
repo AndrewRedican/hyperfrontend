@@ -25,12 +25,16 @@ export type ConnectionErrorJSON = {
 export class ConnectionError extends Error {
   override readonly name = 'ConnectionError'
 
-  constructor(
-    message: string,
-    public readonly channelId?: string,
-    public readonly origin?: string
-  ) {
+  /** Identifier of the channel the failure happened on. */
+  readonly channelId?: string
+
+  /** Origin the channel was talking to. */
+  readonly origin?: string
+
+  constructor(message: string, channelId?: string, origin?: string) {
     super(message)
+    this.channelId = channelId
+    this.origin = origin
     setPrototypeOf(this, ConnectionError.prototype)
   }
 

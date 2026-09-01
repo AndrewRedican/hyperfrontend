@@ -1,5 +1,8 @@
+import type { Mock } from '@hyperfrontend/testing'
 import type { IAction } from '../../types/action'
 import type { Logger } from './create-logger'
+import { beforeEach } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { ACTION_TYPES } from '../../types/action'
 import { createLogger } from './create-logger'
 import { logAction } from './log-action'
@@ -322,7 +325,7 @@ describe('Logging Utilities', () => {
           }
         }
 
-        ;(mockLogger.debug as jest.Mock).mockClear()
+        ;(mockLogger.debug as Mock).mockClear()
         logAction(mockLogger, action, 'sent')
 
         expect(mockLogger.debug).toHaveBeenCalledWith('Action sent:', type, action)
@@ -426,7 +429,7 @@ describe('Logging Utilities', () => {
 
       logAction(mockLogger, action, 'sent')
       expect(mockLogger.debug).toHaveBeenCalledWith('Action sent:', ACTION_TYPES.NEW_MESSAGE, action)
-      ;(mockLogger.debug as jest.Mock).mockClear()
+      ;(mockLogger.debug as Mock).mockClear()
 
       logAction(mockLogger, action, 'received')
       expect(mockLogger.debug).toHaveBeenCalledWith('Action received:', ACTION_TYPES.NEW_MESSAGE, action)

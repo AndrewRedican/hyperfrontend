@@ -8,7 +8,7 @@ module.exports = [
       '@nx/dependency-checks': [
         'error',
         {
-          ignoredDependencies: ['jest', '@hyperfrontend/network-protocol'],
+          ignoredDependencies: ['@hyperfrontend/testing', '@hyperfrontend/network-protocol'],
           ignoredFiles: ['{projectRoot}/eslint.config.{js,cjs,mjs}'],
         },
       ],

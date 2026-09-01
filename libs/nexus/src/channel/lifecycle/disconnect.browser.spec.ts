@@ -1,7 +1,10 @@
+import type { Mock } from '@hyperfrontend/testing'
 import type { ChannelState } from '../../types'
 import type { IAction } from '../../types/action'
 import type { SecurityTransport } from '../../types/security'
 import type { ChannelInternals } from '../types'
+import { afterEach, beforeEach } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { disconnect, finalizeClose } from './disconnect'
 
 type MutableChannelState = { -readonly [K in keyof ChannelState]: ChannelState[K] }
@@ -126,7 +129,7 @@ describe('channel/lifecycle/disconnect', () => {
     expect(state.closeTimer).toBeNull()
     expect(mockChannel.removeProcess).toHaveBeenCalledWith('process-456')
     expect(mockChannel.notifyEvent).toHaveBeenCalledWith('close', { notify: true })
-    const closeCalls = (mockChannel.notifyEvent as jest.Mock).mock.calls.filter(([event]) => event === 'close')
+    const closeCalls = (mockChannel.notifyEvent as Mock).mock.calls.filter(([event]) => event === 'close')
     expect(closeCalls).toHaveLength(1)
   })
 

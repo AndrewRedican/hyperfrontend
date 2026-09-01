@@ -24,11 +24,12 @@ export type ContractErrorJSON = {
 export class ContractError extends Error {
   override readonly name = 'ContractError'
 
-  constructor(
-    message: string,
-    public readonly contract?: IChannelContract
-  ) {
+  /** Contract the failure was measured against. */
+  readonly contract?: IChannelContract
+
+  constructor(message: string, contract?: IChannelContract) {
     super(message)
+    this.contract = contract
     setPrototypeOf(this, ContractError.prototype)
   }
 

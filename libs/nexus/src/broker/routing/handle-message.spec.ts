@@ -1,11 +1,15 @@
 import type { Logger } from '@hyperfrontend/logging'
+import type { Mock } from '@hyperfrontend/testing'
 import type { IAction } from '../../types/action'
 import type { IChannelContract } from '../../types/contract'
 import type { BrokerState } from '../types'
 import type { RoutingContext } from './types'
+import { beforeEach } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { createActionCreators } from '../../core/actions/factory'
 import { createProcessManager } from '../../core/processes/factory'
 import { createRegistry } from '../../core/registry/factory'
+import { createLogger } from '../../utils/logging/create-logger'
 import { addChannel } from '../channels/add'
 import { handleMessage } from './handle-message'
 
@@ -185,7 +189,6 @@ describe('handleMessage', () => {
   it('does not output to console when log level is error', () => {
     const infoSpy = jest.spyOn(console, 'info').mockImplementation()
 
-    const { createLogger } = require('./../../utils/logging/create-logger') as typeof import('./../../utils/logging/create-logger')
     const realLogger = createLogger({ level: 'error' })
 
     const errorLevelContext: RoutingContext = {
@@ -244,7 +247,7 @@ describe('handleMessage', () => {
       source: mockWindow,
     } as MessageEvent<IAction>)
 
-    expect({ notified: notifySpy.mock.calls, logged: (mockLogger.info as jest.Mock).mock.calls.length }).toEqual({
+    expect({ notified: notifySpy.mock.calls, logged: (mockLogger.info as Mock).mock.calls.length }).toEqual({
       notified: [],
       logged: 1,
     })

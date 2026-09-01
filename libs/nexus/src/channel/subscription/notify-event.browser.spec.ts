@@ -1,13 +1,16 @@
 import type { Logger } from '@hyperfrontend/logging'
+import type { Mock } from '@hyperfrontend/testing'
 import type { ChannelInternals } from '../../channel/types'
 import type { ActionCreators } from '../../core/actions/factory'
 import type { EventHandler, ChannelState } from '../../types/channel'
+import { beforeEach } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { notifyEvent } from './notify-event'
 
 describe('channel/subscription/notify-event', () => {
   let mockChannel: ChannelInternals
   let state: ChannelState
-  let mockGetState: jest.Mock<ChannelState, []>
+  let mockGetState: Mock<ChannelState, []>
   let mockLogger: Logger
 
   beforeEach(() => {

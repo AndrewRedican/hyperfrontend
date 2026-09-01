@@ -1,3 +1,4 @@
+import type { Mock } from '@hyperfrontend/testing'
 import type { SecurityProvider, SecurityTransport, SecurityTransportError } from '../../types/security'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { logger } from '@hyperfrontend/logging'
@@ -5,6 +6,7 @@ import { createChannel } from '@hyperfrontend/network-protocol/browser/channel'
 import { createProtocol as createV1Protocol } from '@hyperfrontend/network-protocol/browser/v1'
 import { createProtocol as createV2Protocol } from '@hyperfrontend/network-protocol/browser/v2'
 import { uuidV4 } from '@hyperfrontend/random-generator-utils'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { createSecureTransport } from './secure-transport'
 
 const PSK = 'secure-transport-spec-shared-key'
@@ -291,7 +293,7 @@ describe('SecureTransport (two-party)', () => {
   })
 
   describe('origin pinning', () => {
-    const createCapturingTransport = (getOrigin: () => string | null): { transport: SecurityTransport; postMessage: jest.Mock } => {
+    const createCapturingTransport = (getOrigin: () => string | null): { transport: SecurityTransport; postMessage: Mock } => {
       const postMessage = jest.fn()
       const transport = createSecureTransport({
         protocol: 'v2',

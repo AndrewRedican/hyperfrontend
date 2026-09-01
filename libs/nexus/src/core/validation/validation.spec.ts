@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { validateAction } from './action'
 import { validateContract } from './contract'
 import { validateName } from './name'

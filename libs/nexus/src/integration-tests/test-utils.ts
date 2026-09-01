@@ -1,8 +1,8 @@
-/* istanbul ignore file */
-
+import type { Mock } from '@hyperfrontend/testing'
 import type { IAction } from '../types/action'
 import { createPromise } from '@hyperfrontend/immutable-api-utils/built-in-copy/promise'
 import { setTimeout } from '@hyperfrontend/immutable-api-utils/built-in-copy/timers'
+import { jest } from '@hyperfrontend/testing'
 
 /**
  * Type representing a message listener function
@@ -14,11 +14,11 @@ type MessageListener = (event: MessageEvent) => void
  */
 export interface MockWindow extends Partial<Window> {
   /** Mock postMessage function */
-  postMessage: jest.Mock
+  postMessage: Mock
   /** Mock addEventListener function */
-  addEventListener: jest.Mock
+  addEventListener: Mock
   /** Mock removeEventListener function */
-  removeEventListener: jest.Mock
+  removeEventListener: Mock
   /** Internal: Get all registered message listeners */
   _getMessageListeners: () => MessageListener[]
   /** Internal: Dispatch a message event to all listeners */

@@ -4,6 +4,7 @@ import { createChannel } from '@hyperfrontend/network-protocol/browser/channel'
 import { createProtocol as createV1Protocol } from '@hyperfrontend/network-protocol/browser/v1'
 import { createProtocol as createV2Protocol } from '@hyperfrontend/network-protocol/browser/v2'
 import { uuidV4 } from '@hyperfrontend/random-generator-utils'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { createSecurityTransport } from './factory'
 
 describe('Security Transport Factory', () => {

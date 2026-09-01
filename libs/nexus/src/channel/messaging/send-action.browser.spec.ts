@@ -1,13 +1,16 @@
+import type { Mock } from '@hyperfrontend/testing'
 import type { ChannelState } from '../../types'
 import type { IAction } from '../../types/action'
 import type { ChannelInternals } from '../types'
+import { beforeEach } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { sendAction } from './send-action'
 
 describe('channel/messaging/send-action', () => {
   let mockChannel: ChannelInternals
   let state: ChannelState
-  let mockWindow: { postMessage: jest.Mock }
-  let mockGetState: jest.Mock<ChannelState, []>
+  let mockWindow: { postMessage: Mock }
+  let mockGetState: Mock<ChannelState, []>
 
   beforeEach(() => {
     mockWindow = {
@@ -155,12 +158,12 @@ describe('channel/messaging/send-action', () => {
 
   describe('with security transport', () => {
     let mockSecurityTransport: {
-      isReady: jest.Mock
-      send: jest.Mock
-      receive: jest.Mock
-      stop: jest.Mock
-      resume: jest.Mock
-      getProtocol: jest.Mock
+      isReady: Mock
+      send: Mock
+      receive: Mock
+      stop: Mock
+      resume: Mock
+      getProtocol: Mock
     }
 
     beforeEach(() => {

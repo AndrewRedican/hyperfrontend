@@ -1,25 +1,26 @@
 import type { IChannelContract } from '../types/contract'
 import type { SecurityPolicy } from './types'
+import { afterEach, beforeEach } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { createBroker } from './factory'
 
-let uuidCounter = 0
-jest.mock('@hyperfrontend/random-generator-utils', () => ({
-  uuidV4: () => {
-    uuidCounter++
-    return `12345678-1234-1234-1234-12345678901${uuidCounter}`
-  },
-  isUuidV4: (value: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value),
-}))
+// why: the counter lives in the factory because the replacement stands as a module of its own and cannot reach the spec's scope. Nothing asserts where the sequence starts, only that two brokers differ.
+jest.mock('@hyperfrontend/random-generator-utils', () => {
+  let uuidCounter = 0
+  return {
+    uuidV4: () => {
+      uuidCounter++
+      return `12345678-1234-1234-1234-${String(uuidCounter).padStart(12, '0')}`
+    },
+    isUuidV4: (value: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value),
+  }
+})
 
 describe('createBroker', () => {
   const mockContract: IChannelContract = {
     accepted: [{ type: 'test-action', description: 'Test action' }],
     emitted: [],
   }
-
-  beforeEach(() => {
-    uuidCounter = 0
-  })
 
   afterEach(() => {
     jest.clearAllMocks()

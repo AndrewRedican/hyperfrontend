@@ -1,6 +1,8 @@
 import type { ChannelInternals } from '../../channel/types'
 import type { ActionCreators } from '../../core/actions/factory'
 import type { MessageHandler, ChannelState } from '../../types/channel'
+import { beforeEach } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { subscribeToMessages } from './messages'
 
 describe('channel/subscription/messages', () => {

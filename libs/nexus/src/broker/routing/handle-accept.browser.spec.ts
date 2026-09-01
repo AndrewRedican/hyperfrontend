@@ -1,9 +1,12 @@
 import type { Logger } from '@hyperfrontend/logging'
+import type { Mock } from '@hyperfrontend/testing'
 import type { IAction } from '../../types/action'
 import type { IChannelContract } from '../../types/contract'
 import type { SecurityProvider, SecurityProtocolProvider } from '../../types/security'
 import type { BrokerState } from '../types'
 import type { RoutingContext } from './types'
+import { after as afterAll, afterEach, before as beforeAll, beforeEach } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { createActionCreators } from '../../core/actions/factory'
 import { createProcessManager } from '../../core/processes/factory'
 import { createRegistry } from '../../core/registry/factory'
@@ -108,7 +111,7 @@ describe('handleAccept', () => {
     channel.connect()
     const processId = channel.getPendingProcessId()
     if (processId === null) throw new Error('connect() did not record a pending process')
-    ;(mockWindow.postMessage as jest.Mock).mockClear()
+    ;(mockWindow.postMessage as Mock).mockClear()
     return { channel, processId }
   }
 
@@ -139,7 +142,7 @@ describe('handleAccept', () => {
 
     handleAccept(routingContext, acceptEvent(processId))
 
-    expect({ active: channel.isActive(), open: (mockWindow.postMessage as jest.Mock).mock.calls[0][0] }).toEqual({
+    expect({ active: channel.isActive(), open: (mockWindow.postMessage as Mock).mock.calls[0][0] }).toEqual({
       active: true,
       open: expect.objectContaining({ type: '[nexus] connection-opened', processId }),
     })
@@ -186,7 +189,7 @@ describe('handleAccept', () => {
     const { processId } = addRequestingChannel()
 
     handleAccept(routingContext, acceptEvent(processId))
-    ;(mockWindow.postMessage as jest.Mock).mockClear()
+    ;(mockWindow.postMessage as Mock).mockClear()
     jest.advanceTimersByTime(20_000)
 
     expect(mockWindow.postMessage).not.toHaveBeenCalled()
@@ -195,7 +198,7 @@ describe('handleAccept', () => {
   it('replays OPEN for a duplicate ACCEPT from the connected counterpart', () => {
     const { processId } = addRequestingChannel()
     handleAccept(routingContext, acceptEvent(processId))
-    ;(mockWindow.postMessage as jest.Mock).mockClear()
+    ;(mockWindow.postMessage as Mock).mockClear()
 
     handleAccept(routingContext, acceptEvent(processId))
 
@@ -209,7 +212,7 @@ describe('handleAccept', () => {
     const { context } = contextWithProvider()
     const { processId } = addRequestingChannel()
     handleAccept(context, acceptEvent(processId, { security: { negotiated: 'v2' } }))
-    ;(mockWindow.postMessage as jest.Mock).mockClear()
+    ;(mockWindow.postMessage as Mock).mockClear()
 
     handleAccept(context, acceptEvent(processId, { security: { negotiated: 'v2' } }))
 
@@ -222,7 +225,7 @@ describe('handleAccept', () => {
   it('repeats the plaintext confirmation in the replayed OPEN after a degraded handshake', () => {
     const { processId } = addRequestingChannel()
     handleAccept(routingContext, acceptEvent(processId, { security: { negotiated: 'none' } }))
-    ;(mockWindow.postMessage as jest.Mock).mockClear()
+    ;(mockWindow.postMessage as Mock).mockClear()
 
     handleAccept(routingContext, acceptEvent(processId, { security: { negotiated: 'none' } }))
 
@@ -235,18 +238,18 @@ describe('handleAccept', () => {
   it('omits the security confirmation from the replayed OPEN when the handshake carried none', () => {
     const { processId } = addRequestingChannel()
     handleAccept(routingContext, acceptEvent(processId))
-    ;(mockWindow.postMessage as jest.Mock).mockClear()
+    ;(mockWindow.postMessage as Mock).mockClear()
 
     handleAccept(routingContext, acceptEvent(processId))
 
-    const sent = (mockWindow.postMessage as jest.Mock).mock.calls[0][0] as IAction & { security?: unknown }
+    const sent = (mockWindow.postMessage as Mock).mock.calls[0][0] as IAction & { security?: unknown }
     expect(sent.security).toBeUndefined()
   })
 
   it('ignores an ACCEPT from a different sender when already open', () => {
     const { processId } = addRequestingChannel()
     handleAccept(routingContext, acceptEvent(processId))
-    ;(mockWindow.postMessage as jest.Mock).mockClear()
+    ;(mockWindow.postMessage as Mock).mockClear()
 
     handleAccept(routingContext, acceptEvent(processId, { senderId: 'someone-else' }))
 
@@ -261,7 +264,7 @@ describe('handleAccept', () => {
     channel.connect()
     const processId = channel.getPendingProcessId()
     if (processId === null) throw new Error('connect() did not record a pending process')
-    ;(mockWindow.postMessage as jest.Mock).mockClear()
+    ;(mockWindow.postMessage as Mock).mockClear()
     const invalidHandler = jest.fn()
     channel.on('invalid', invalidHandler)
 
@@ -270,7 +273,7 @@ describe('handleAccept', () => {
     expect({
       active: channel.isActive(),
       invalids: invalidHandler.mock.calls.length,
-      posts: (mockWindow.postMessage as jest.Mock).mock.calls,
+      posts: (mockWindow.postMessage as Mock).mock.calls,
     }).toEqual({
       active: false,
       invalids: 1,
@@ -297,7 +300,7 @@ describe('handleAccept', () => {
 
     handleAccept(contextWithProvider().context, acceptEvent(processId, { security: { negotiated: 'v1' } }))
 
-    expect({ negotiated: channel.getNegotiatedProtocol(), open: (mockWindow.postMessage as jest.Mock).mock.calls[0][0] }).toEqual({
+    expect({ negotiated: channel.getNegotiatedProtocol(), open: (mockWindow.postMessage as Mock).mock.calls[0][0] }).toEqual({
       negotiated: 'v1',
       open: expect.objectContaining({ security: { active: true, protocol: 'v1' } }),
     })
@@ -317,7 +320,7 @@ describe('handleAccept', () => {
       channel.connect()
       const processId = channel.getPendingProcessId()
       if (processId === null) throw new Error('connect() did not record a pending process')
-      ;(mockWindow.postMessage as jest.Mock).mockClear()
+      ;(mockWindow.postMessage as Mock).mockClear()
       return { channel, processId }
     }
 
@@ -328,7 +331,7 @@ describe('handleAccept', () => {
 
       handleAccept(routingContext, acceptEvent(processId))
 
-      expect({ active: channel.isActive(), cancel: (mockWindow.postMessage as jest.Mock).mock.calls[0][0] }).toEqual({
+      expect({ active: channel.isActive(), cancel: (mockWindow.postMessage as Mock).mock.calls[0][0] }).toEqual({
         active: false,
         cancel: expect.objectContaining({ type: '[nexus] connection-request-cancelled', processId }),
       })
@@ -416,7 +419,7 @@ describe('handleAccept', () => {
 
       expect({
         throughTransport: wire.sent,
-        postedTypes: (mockWindow.postMessage as jest.Mock).mock.calls.map((call) => (call[0] as IAction).type),
+        postedTypes: (mockWindow.postMessage as Mock).mock.calls.map((call) => (call[0] as IAction).type),
       }).toEqual({
         throughTransport: [
           expect.objectContaining({
@@ -435,8 +438,8 @@ describe('handleAccept', () => {
       expect({
         negotiated: channel.getNegotiatedProtocol(),
         transport: channel.getSecurityTransport(),
-        open: (mockWindow.postMessage as jest.Mock).mock.calls[0][0],
-        warns: (mockLogger.warn as jest.Mock).mock.calls,
+        open: (mockWindow.postMessage as Mock).mock.calls[0][0],
+        warns: (mockLogger.warn as Mock).mock.calls,
       }).toEqual({
         negotiated: 'none',
         transport: null,
@@ -454,7 +457,7 @@ describe('handleAccept', () => {
       channel.connect()
       const processId = channel.getPendingProcessId()
       if (processId === null) throw new Error('connect() did not record a pending process')
-      ;(mockWindow.postMessage as jest.Mock).mockClear()
+      ;(mockWindow.postMessage as Mock).mockClear()
       return { channel, processId }
     }
 
@@ -467,7 +470,7 @@ describe('handleAccept', () => {
 
       expect({
         active: channel.isActive(),
-        cancel: (mockWindow.postMessage as jest.Mock).mock.calls[0][0],
+        cancel: (mockWindow.postMessage as Mock).mock.calls[0][0],
         deny: denyHandler.mock.calls[0][0],
       }).toEqual({
         active: false,
@@ -514,7 +517,7 @@ describe('handleAccept', () => {
       const { processId } = addFailClosedChannel()
 
       handleAccept(routingContext, acceptEvent(processId, { security: { negotiated: 'none' } }))
-      ;(mockWindow.postMessage as jest.Mock).mockClear()
+      ;(mockWindow.postMessage as Mock).mockClear()
       jest.advanceTimersByTime(20_000)
 
       expect(mockWindow.postMessage).not.toHaveBeenCalled()
@@ -542,7 +545,7 @@ describe('handleAccept', () => {
 
       handleAccept(routingContext, acceptEvent(processId, { security: { negotiated: 'none' } }))
 
-      expect({ active: channel.isActive(), warns: (mockLogger.warn as jest.Mock).mock.calls }).toEqual({
+      expect({ active: channel.isActive(), warns: (mockLogger.warn as Mock).mock.calls }).toEqual({
         active: true,
         warns: [[expect.stringContaining('continuing without encryption')]],
       })
@@ -557,7 +560,7 @@ describe('handleAccept', () => {
 
       handleAccept(routingContext, acceptEvent(processId))
 
-      expect({ active: channel.isActive(), warns: (mockLogger.warn as jest.Mock).mock.calls }).toEqual({
+      expect({ active: channel.isActive(), warns: (mockLogger.warn as Mock).mock.calls }).toEqual({
         active: true,
         warns: [[expect.stringContaining('predates security negotiation')]],
       })

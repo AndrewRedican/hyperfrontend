@@ -1,6 +1,8 @@
 import type { ChannelState } from '../../types'
 import type { IAction } from '../../types/action'
 import type { ChannelInternals } from '../types'
+import { after as afterAll, afterEach, before as beforeAll, beforeEach } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { connect } from './connect'
 
 type MutableChannelState = { -readonly [K in keyof ChannelState]: ChannelState[K] }

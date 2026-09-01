@@ -1,6 +1,7 @@
 import type { IAction } from '../../types/action'
 import type { IChannelContract } from '../../types/contract'
 import type { IMessage } from '../../types/message'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { ACTION_TYPES } from '../../constants/action-types'
 import { validateAction } from './action'
 import { validateContract } from './contract'

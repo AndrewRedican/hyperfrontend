@@ -1,7 +1,9 @@
 import type { IChannelConfig } from '../types/channel'
 import type { SecurityNegotiationRequest, SecurityTransport } from '../types/security'
 import type { ChannelDependencies } from './types'
+import { beforeEach } from 'node:test'
 import { hasOwn } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { createChannel } from './factory'
 
 describe('channel/factory', () => {

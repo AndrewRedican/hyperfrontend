@@ -24,11 +24,12 @@ export type ValidationErrorJSON = {
 export class ValidationError extends Error {
   override readonly name = 'ValidationError'
 
-  constructor(
-    message: string,
-    public readonly errors: IValidationError[] = []
-  ) {
+  /** Every validation failure the check collected. */
+  readonly errors: IValidationError[]
+
+  constructor(message: string, errors: IValidationError[] = []) {
     super(message)
+    this.errors = errors
     setPrototypeOf(this, ValidationError.prototype)
   }
 

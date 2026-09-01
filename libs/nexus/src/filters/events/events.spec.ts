@@ -1,5 +1,7 @@
 import type { ChannelJSON } from '../../types/channel'
 import type { ChannelEvent, OpenEventData, CloseEventData, CancelEventData, DenyEventData, InvalidEventData } from '../../types/events'
+import { beforeEach } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { cancel } from './cancel'
 import { close } from './close'
 import { create } from './create'

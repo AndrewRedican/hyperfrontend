@@ -1,8 +1,11 @@
 import type { Logger } from '@hyperfrontend/logging'
+import type { Mock } from '@hyperfrontend/testing'
 import type { IAction } from '../../types/action'
 import type { IChannelContract } from '../../types/contract'
 import type { BrokerState } from '../types'
 import type { RoutingContext } from './types'
+import { beforeEach } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { createActionCreators } from '../../core/actions/factory'
 import { createProcessManager } from '../../core/processes/factory'
 import { createRegistry } from '../../core/registry/factory'
@@ -117,11 +120,11 @@ describe('handleDestroy', () => {
       source: mockWindow,
     } as MessageEvent<IAction>
 
-    const postMessageCallsBefore = (mockWindow.postMessage as jest.Mock).mock.calls.length
+    const postMessageCallsBefore = (mockWindow.postMessage as Mock).mock.calls.length
 
     handleDestroy(routingContext, message)
 
-    expect((mockWindow.postMessage as jest.Mock).mock.calls.length).toBe(postMessageCallsBefore)
+    expect((mockWindow.postMessage as Mock).mock.calls.length).toBe(postMessageCallsBefore)
   })
 
   it('destroy open channels', () => {

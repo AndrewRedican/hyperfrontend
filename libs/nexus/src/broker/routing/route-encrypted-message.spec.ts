@@ -1,10 +1,13 @@
 import type { Logger } from '@hyperfrontend/logging'
+import type { Mock } from '@hyperfrontend/testing'
 import type { BrokerState } from '../../broker/types'
 import type { ActionCreators } from '../../core/actions/factory'
 import type { ChannelHandle } from '../../types/channel'
 import type { IChannelContract } from '../../types/contract'
 import type { SecurityProtocolVersion, SecurityTransport } from '../../types/security'
 import type { RouteHandler, RoutingContext } from './types'
+import { beforeEach } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { createActionCreators } from '../../core/actions/factory'
 import { createProcessManager } from '../../core/processes/factory'
 import { createRegistry } from '../../core/registry/factory'
@@ -79,7 +82,7 @@ describe('routeEncryptedMessage', () => {
   }
 
   function addMockChannel(
-    overrides: Partial<{ origin: string | null; transport: SecurityTransport | null; notifyEvent: jest.Mock }> = {}
+    overrides: Partial<{ origin: string | null; transport: SecurityTransport | null; notifyEvent: Mock }> = {}
   ): Partial<ChannelHandle> {
     const mockChannel: Partial<ChannelHandle> = {
       id: 'channel-1',
@@ -149,7 +152,7 @@ describe('routeEncryptedMessage', () => {
 
     routeEncryptedMessage(routingContext, router, encryptedEvent({ origin: 'http://evil.example' }))
 
-    expect({ received: (transport.receive as jest.Mock).mock.calls, invalid: notifyEvent.mock.calls }).toEqual({
+    expect({ received: (transport.receive as Mock).mock.calls, invalid: notifyEvent.mock.calls }).toEqual({
       received: [],
       invalid: [['invalid', { error: "Dropped encrypted message from unexpected origin 'http://evil.example'." }]],
     })
@@ -180,7 +183,7 @@ describe('routeEncryptedMessage', () => {
 
     routeEncryptedMessage(routingContext, router, encryptedEvent())
 
-    expect({ warns: (mockLogger.warn as jest.Mock).mock.calls, received: (transport.receive as jest.Mock).mock.calls }).toEqual({
+    expect({ warns: (mockLogger.warn as Mock).mock.calls, received: (transport.receive as Mock).mock.calls }).toEqual({
       warns: [[expect.stringContaining('received encrypted message but security transport not ready')]],
       received: [],
     })
