@@ -11,7 +11,7 @@ import {
   registerSpecMocks,
   setSpecifierResolver,
 } from './mock-registry.ts'
-import { loadAliases } from './paths.ts'
+import { aliasTable, loadAliases } from './paths.ts'
 import { compileModuleMappings, resolveSpecifier } from './resolver.ts'
 
 /**
@@ -35,6 +35,14 @@ const MODULE_MAP_VAR = 'HF_TEST_MODULE_MAP'
 const SETUP_FILES_VAR = 'HF_TEST_SETUP_FILES'
 
 /**
+ * Environment variable holding an explicit alias map, `paths`-style, that replaces the
+ * workspace's `tsconfig.base.json` aliases outright. The e2e runner sets it so a packed
+ * tarball's own name resolves from the test project's `node_modules` instead of being
+ * hijacked to workspace source, while the test runtime stays reachable by alias.
+ */
+const ALIASES_VAR = 'HF_TEST_ALIASES'
+
+/**
  * Installs the synchronous resolution hooks the workspace's tests rely on: workspace path
  * aliases, `moduleNameMapper` redirects, extensionless TypeScript specifiers, and the
  * module generation that backs `jest.resetModules`. Node resolves none of these itself.
@@ -46,9 +54,10 @@ const SETUP_FILES_VAR = 'HF_TEST_SETUP_FILES'
 export function registerResolutionHooks(): void {
   const workspaceRoot = process.env[WORKSPACE_ROOT_VAR] ?? process.cwd()
   const setupFiles = new Set(JSON.parse(process.env[SETUP_FILES_VAR] ?? '[]') as string[])
+  const declaredAliases = process.env[ALIASES_VAR]
   const context = {
     workspaceRoot,
-    aliases: loadAliases(workspaceRoot),
+    aliases: declaredAliases ? aliasTable(JSON.parse(declaredAliases) as Record<string, string[]>) : loadAliases(workspaceRoot),
     mappings: compileModuleMappings(process.env[MODULE_MAP_VAR], process.cwd()),
     entryDirectory: process.cwd(),
   }

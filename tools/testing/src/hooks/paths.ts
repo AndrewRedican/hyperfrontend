@@ -29,18 +29,16 @@ export type AliasTable = {
 const CANDIDATE_SUFFIXES = ['', '.ts', '.tsx', '.mts', '.cts', '/index.ts', '/index.tsx', '.js']
 
 /**
- * Reads the workspace path aliases and pre-splits them into exact and wildcard forms.
+ * Pre-splits declared path aliases into exact and wildcard forms.
  *
- * @param workspaceRoot - Absolute path to the workspace root holding `tsconfig.base.json`.
+ * @param declared - Alias patterns mapped to their target templates, `paths`-style.
  * @returns The alias table used by `resolveAlias`.
  */
-export function loadAliases(workspaceRoot: string): AliasTable {
-  const declared = JSON.parse(readFileSync(resolve(workspaceRoot, 'tsconfig.base.json'), 'utf8')).compilerOptions?.paths ?? {}
-
+export function aliasTable(declared: Record<string, string[]>): AliasTable {
   const exact = new Map<string, string[]>()
   const wildcards: AliasPattern[] = []
 
-  for (const [pattern, targets] of Object.entries(declared) as [string, string[]][]) {
+  for (const [pattern, targets] of Object.entries(declared)) {
     if (pattern.includes('*')) wildcards.push({ prefix: pattern.slice(0, pattern.indexOf('*')), targets })
     else exact.set(pattern, targets)
   }
@@ -49,6 +47,16 @@ export function loadAliases(workspaceRoot: string): AliasTable {
   wildcards.sort((a, b) => b.prefix.length - a.prefix.length)
 
   return { exact, wildcards }
+}
+
+/**
+ * Reads the workspace path aliases and pre-splits them into exact and wildcard forms.
+ *
+ * @param workspaceRoot - Absolute path to the workspace root holding `tsconfig.base.json`.
+ * @returns The alias table used by `resolveAlias`.
+ */
+export function loadAliases(workspaceRoot: string): AliasTable {
+  return aliasTable(JSON.parse(readFileSync(resolve(workspaceRoot, 'tsconfig.base.json'), 'utf8')).compilerOptions?.paths ?? {})
 }
 
 /**
