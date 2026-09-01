@@ -67,7 +67,10 @@ export function registerResolutionHooks(): void {
         return { format: 'module-typescript', source: mockedSource(mockTarget(url), runtimeUrl), shortCircuit: true }
       }
 
-      const result = nextLoad(url, loadContext)
+      // why: the sources import JSON without the attribute native ES modules require, since the bundler inlines it and Jest's CommonJS runtime never asked. Supplying it here keeps that spelling working at test time.
+      const context = url.endsWith('.json') ? { ...loadContext, importAttributes: { type: 'json' } } : loadContext
+
+      const result = nextLoad(url, context)
       // how: a spec's own load runs before Node resolves the spec's imports, so declarations read here are registered before any mocked module is asked for.
       // how: a setup module is preloaded ahead of every spec, so the declarations it makes for the whole project are registered before any of them.
       if (isSpecFile(url)) registerSpecMocks(url, sourceOf(url))
