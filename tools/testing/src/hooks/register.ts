@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { registerHooks } from 'node:module'
 import { fileURLToPath } from 'node:url'
+import { currentGeneration } from './generation.ts'
 import { MOCK_SCHEME, isMocked, mockedSource, registerSpecMocks } from './mock-registry.ts'
 import { loadAliases } from './paths.ts'
 import { compileModuleMappings, resolveSpecifier } from './resolver.ts'
@@ -46,14 +47,17 @@ export function registerResolutionHooks(): void {
       if (resolveContext.parentURL?.startsWith(MOCK_SCHEME)) return { url, shortCircuit: true }
 
       // why: substituting here rather than at load is what lets a built-in be replaced at all, since one this loader has already imported would never be loaded again.
-      if (isMocked(url)) return { url: `${MOCK_SCHEME}${encodeURIComponent(url)}`, shortCircuit: true }
+      // why: `jest.resetModules` must reach replacements too, or a `jest.doMock` declared after the first one would be served the cached replacement.
+      if (isMocked(url)) return { url: `${MOCK_SCHEME}${encodeURIComponent(url)}?g=${currentGeneration()}`, shortCircuit: true }
 
       return { url, shortCircuit: true }
     },
 
     load(url, loadContext, nextLoad) {
       if (url.startsWith(MOCK_SCHEME)) {
-        return { format: 'module', source: mockedSource(decodeURIComponent(url.slice(MOCK_SCHEME.length)), runtimeUrl), shortCircuit: true }
+        // why: the factory is carried through verbatim from a TypeScript spec, so the replacement has to be stripped the same way its source file was.
+        const target = decodeURIComponent(url.slice(MOCK_SCHEME.length).split('?g=')[0] ?? '')
+        return { format: 'module-typescript', source: mockedSource(target, runtimeUrl), shortCircuit: true }
       }
 
       const result = nextLoad(url, loadContext)

@@ -1,7 +1,10 @@
 import type { AccessType } from './spy'
 import type { FakeTimerOptions } from './timers'
 import type { MockFn } from './types'
+import { createRequire } from 'node:module'
+import { pathToFileURL } from 'node:url'
 import { advanceGeneration } from '../hooks/generation'
+import { mockContext, registerRuntimeMock } from '../hooks/mock-registry'
 import { clearAllMocks, createMockFn, resetAllMocks } from './mock-fn'
 import { createSpy, restoreAllMocks } from './spy'
 import { advanceTimersByTime, clearAllTimers, runAllTimers, setSystemTime, useFakeTimers, useRealTimers } from './timers'
@@ -47,6 +50,8 @@ export type JestApi = {
   resetModules(): JestApi
   /** Declares a module replacement. The loader has already applied it by the time this runs. */
   mock(specifier: string, factory?: () => unknown): JestApi
+  /** Declares a replacement while the suite runs. It reaches modules imported after it, not the ones already linked. */
+  doMock(specifier: string, factory: () => unknown): JestApi
   /** Reads the module a replacement stands in for. Only meaningful inside a `mock` factory. */
   requireActual<TModule = unknown>(specifier: string): TModule
 }
@@ -95,7 +100,16 @@ export const jest: JestApi = {
   },
   // why: the loader read this call out of the source and substituted the module before the spec was linked, so this call has no remaining work.
   mock: () => jest,
-  requireActual: (specifier) => {
-    throw new Error(`jest.requireActual('${specifier}') is only available inside a jest.mock factory`)
+  doMock: (specifier, factory) => {
+    registerRuntimeMock(specifier, factory)
+    return jest
+  },
+  requireActual: <TModule>(specifier: string): TModule => {
+    const context = mockContext()
+    const url = specifier.startsWith('node:') ? specifier : pathToFileURL(createRequire(context.specUrl).resolve(specifier)).href
+    // why: a module with a replacement is reachable only through the namespace that replacement published, since requiring it again would return the replacement.
+    const published = context.actuals.get(url)
+    if (published) return published as TModule
+    return createRequire(context.specUrl)(specifier) as TModule
   },
 }

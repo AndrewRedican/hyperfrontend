@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, describe, it } from 'node:test'
 import { pathToFileURL } from 'node:url'
-import { clearRegistrations, isMocked, mockedSource, registerSpecMocks } from './mock-registry'
+import { clearRegistrations, isMocked, mockContext, mockedSource, registerRuntimeMock, registerSpecMocks } from './mock-registry'
 
 const RUNTIME_URL = 'file:///workspace/tools/testing/src/mock/jest-api.ts'
 
@@ -70,9 +70,8 @@ describe('mockedSource for a file module', () => {
     assert.match(sourceFor("jest.mock('./dep.ts', () => ({ read: 1 }))", DEP_URL), /const __hfNs = \(\(\) => \(\{ read: 1 \}\)\)\(\)/)
   })
 
-  it('loads the module it stands in for only when the replacement is evaluated', () => {
-    const source = sourceFor("jest.mock('./dep.ts', () => ({ read: 1 }))", DEP_URL)
-    assert.equal(source.includes('globalThis'), false)
+  it('publishes the real namespace for jest.requireActual to read back', () => {
+    assert.match(sourceFor("jest.mock('./dep.ts', () => ({ read: 1 }))", DEP_URL), /\.actuals\.set\("file:/)
   })
 })
 
@@ -105,5 +104,25 @@ describe('mockedSource for a built-in', () => {
 describe('mockedSource rejection', () => {
   it('refuses to build a replacement for an unregistered module', () => {
     assert.throws(() => mockedSource(DEP_URL, RUNTIME_URL), /no mock registered/)
+  })
+})
+
+describe('registerRuntimeMock', () => {
+  it('registers a replacement declared while the suite runs', () => {
+    mockContext().specUrl = SPEC_URL
+    registerRuntimeMock('./dep.ts', () => ({ read: 2 }))
+    assert.equal(isMocked(DEP_URL), true)
+  })
+
+  it('builds the replacement from the factory it was given', () => {
+    mockContext().specUrl = SPEC_URL
+    registerRuntimeMock('./dep.ts', () => ({ read: 2 }))
+    assert.match(mockedSource(DEP_URL, RUNTIME_URL), /export const read = __hfNs\["read"\]/)
+  })
+})
+
+describe('mockContext', () => {
+  it('records the url of the spec the loader read declarations from', () => {
+    assert.match(mockContext().specUrl, /\.spec\.ts$/)
   })
 })

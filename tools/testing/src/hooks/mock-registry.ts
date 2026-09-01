@@ -20,7 +20,49 @@ type Registration = {
   automocked: string[]
 }
 
+/**
+ * Where a replacement publishes the namespace of the module it stands in for, and where the
+ * URL of the spec under test is recorded. `jest.requireActual` and `jest.doMock` are called
+ * from a spec body with a specifier relative to that spec, and neither has any other way to
+ * know what it is relative to.
+ */
+const CONTEXT = Symbol.for('hyperfrontend.testing.mockContext')
+
+/**
+ * What a spec's replacements publish for the runtime `jest` object to read.
+ */
+export type MockContext = {
+  /** URL of the spec being run. */
+  specUrl: string
+  /** Namespace of each replaced module, keyed by its URL. */
+  actuals: Map<string, unknown>
+}
+
 const registrations = new Map<string, Registration>()
+
+/**
+ * Reads the shared context, creating it on first use.
+ *
+ * @returns The context object.
+ */
+export function mockContext(): MockContext {
+  return ((globalThis as Record<symbol, unknown>)[CONTEXT] ??= { specUrl: '', actuals: new Map<string, unknown>() }) as MockContext
+}
+
+/**
+ * Registers a replacement declared while the suite is running, rather than read out of the
+ * spec's source before it loaded.
+ *
+ * It only takes effect for modules imported after it, which is why the suites that use it
+ * pair it with `jest.resetModules` and a dynamic import.
+ *
+ * @param specifier - The specifier as written.
+ * @param factory - The factory producing the replacement's exports.
+ */
+export function registerRuntimeMock(specifier: string, factory: () => unknown): void {
+  const source = `jest.mock(${JSON.stringify(specifier)}, ${String(factory)})`
+  registerSpecMocks(mockContext().specUrl, source)
+}
 
 /**
  * Registers every `jest.mock` a spec declares.
@@ -39,6 +81,7 @@ const registrations = new Map<string, Registration>()
  */
 export function registerSpecMocks(specUrl: string, source: string): void {
   const require = createRequire(specUrl)
+  if (!mockContext().specUrl) mockContext().specUrl = specUrl
 
   for (const declaration of readMockDeclarations(source)) {
     let target: string
@@ -102,6 +145,8 @@ export function mockedSource(url: string, runtimeUrl: string): string {
   }
 
   lines.push(`import * as __hfActual from ${JSON.stringify(url)}`)
+  // why: `jest.requireActual` is called from the spec body, long after this module linked, and this is where the real namespace is already in hand.
+  lines.push(`globalThis[Symbol.for(${JSON.stringify(CONTEXT.description)})].actuals.set(${JSON.stringify(url)}, __hfActual)`)
   // why: an import of a name the factory did not define is a link error rather than the undefined Jest would hand back, so every other export has to stay reachable. An explicit export below wins over a star.
   lines.push(`export * from ${JSON.stringify(url)}`)
   lines.push(`const jest = { ...__hfJest, requireActual: () => __hfActual }`)
