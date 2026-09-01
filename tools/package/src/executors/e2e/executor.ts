@@ -85,7 +85,80 @@ function installTarball(tarballPath: string, testDir: string): void {
 }
 
 /**
+ * How each format runs on the node test runner: which conventional spec files it selects,
+ * whether it needs a DOM, and how long one test may take.
+ */
+const FORMAT_RUNS: Record<string, { candidates: string[]; dom: boolean; timeoutMs: number }> = {
+  cjs: { candidates: ['src/cjs.spec.ts', 'src/cli.spec.ts'], dom: false, timeoutMs: 30_000 },
+  esm: { candidates: ['src/esm.spec.ts'], dom: false, timeoutMs: 30_000 },
+  browser: { candidates: ['src/iife.spec.ts', 'src/umd.spec.ts'], dom: true, timeoutMs: 30_000 },
+  // why: the nx suites create real consumer workspaces with a network npm install, so a single test legitimately runs for minutes.
+  nx: { candidates: ['src/nx-plugin.spec.ts', 'src/nx-plugin-callbacks.spec.ts'], dom: false, timeoutMs: 900_000 },
+}
+
+/**
+ * Runs one format's suites on the node test runner.
+ *
+ * The specs are selected by convention from the format table and run with the workspace's
+ * resolution hooks installed, but with the workspace path aliases replaced by a single
+ * entry for the test runtime: the packed tarball's own name has to resolve from the test
+ * project's `node_modules`, or the suite would silently exercise workspace source.
+ *
+ * @param testDir - The test project directory
+ * @param format - The module format to test (e.g., 'cjs', 'esm', 'browser')
+ * @param workspaceRoot - The root directory of the workspace
+ * @returns True if tests passed, false otherwise
+ */
+function runNodeTests(testDir: string, format: string, workspaceRoot: string): boolean {
+  const run = FORMAT_RUNS[format]
+  if (!run) {
+    logger.error(`Unknown e2e format "${format}"`)
+    return false
+  }
+
+  const specs = run.candidates.map((candidate) => join(testDir, candidate)).filter((path) => existsSync(path))
+  if (specs.length === 0) {
+    logger.error(`Format "${format}" declares no runnable specs in ${testDir}`)
+    return false
+  }
+
+  logger.info(`Running ${format} tests...`)
+
+  const argv = [
+    '--disable-warning=MODULE_TYPELESS_PACKAGE_JSON',
+    '--import',
+    join(workspaceRoot, 'tools/testing/src/hooks/register.ts'),
+    ...(run.dom ? ['--import', join(workspaceRoot, 'tools/testing/src/environment/dom.ts')] : []),
+    '--test',
+    `--test-timeout=${run.timeoutMs}`,
+    ...specs,
+  ]
+
+  try {
+    execFileSync('node', argv, {
+      cwd: workspaceRoot,
+      encoding: 'utf-8',
+      stdio: 'inherit',
+      env: {
+        ...process.env,
+        HF_TEST_WORKSPACE_ROOT: workspaceRoot,
+        HF_TEST_ALIASES: JSON.stringify({ '@hyperfrontend/testing': ['tools/testing/src/index.ts'] }),
+      },
+    })
+    logger.info(`${format} tests passed`)
+    return true
+  } catch {
+    logger.error(`${format} tests failed`)
+    return false
+  }
+}
+
+/**
  * Runs Jest tests for a specific format.
+ *
+ * This is the legacy path for projects still carrying `jest.config.<format>.ts` files;
+ * a project whose configs are deleted runs on the node test runner instead. It goes away
+ * with the last per-project Jest install.
  *
  * @param testDir - The test project directory
  * @param format - The module format to test (e.g., 'cjs', 'esm', 'browser')
@@ -96,8 +169,7 @@ function runJestTests(testDir: string, format: string, workspaceRoot: string): b
   const configPath = join(testDir, `jest.config.${format}.ts`)
 
   if (!existsSync(configPath)) {
-    logger.warn(`Jest config not found: ${configPath}, skipping ${format} tests`)
-    return true
+    return runNodeTests(testDir, format, workspaceRoot)
   }
 
   logger.info(`Running ${format} tests...`)
