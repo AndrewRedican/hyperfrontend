@@ -3,7 +3,7 @@
  * Tests that the package is importable and exports work correctly.
  */
 
-import { jest } from '@jest/globals'
+import { describe, it, expect, jest } from '@hyperfrontend/testing'
 
 describe('@hyperfrontend/logging ESM', () => {
   it('is importable', async () => {
