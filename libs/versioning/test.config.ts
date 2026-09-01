@@ -18,6 +18,9 @@ const config: TestConfig = {
     'src/**/registry/npm/client.ts',
     'src/**/registry/factory.ts',
     'src/**/__test-utils__/**',
+    // why: declaration-only modules. They hold no runtime code, so no test can load them and V8 has nothing to measure.
+    'src/commits/validate/models/rule.ts',
+    'src/commits/validate/models/ruleset.ts',
   ],
   coverageThresholds: { lines: 97, branches: 92, functions: 98 },
 }
