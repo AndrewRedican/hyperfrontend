@@ -17,21 +17,24 @@ export type SuiteBody = () => void
 /**
  * A parameterised runner produced by `.each`.
  */
-export type EachRunner = (title: string, body: (...args: any[]) => unknown) => void
+export type EachRunner = (title: string, body: (...args: any[]) => unknown, timeoutMs?: number) => void
 
 /**
  * The `it` surface, including the modifiers `node:test` does not provide.
+ *
+ * The optional trailing number is Jest's per-test timeout in milliseconds; it overrides
+ * the runner's `--test-timeout` default for that one test.
  */
 export type ItApi = {
-  (title: string, body: TestBody): void
+  (title: string, body: TestBody, timeoutMs?: number): void
   /** Runs only this test, when the runner is started with `--test-only`. */
-  only(title: string, body: TestBody): void
+  only(title: string, body: TestBody, timeoutMs?: number): void
   /** Skips this test. */
   skip(title: string, body?: TestBody): void
   /** Records the test as pending work. Any body is ignored, as it is under Jest. */
   todo(title: string): void
   /** Runs this test concurrently with its siblings. */
-  concurrent(title: string, body: TestBody): void
+  concurrent(title: string, body: TestBody, timeoutMs?: number): void
   /** Passes only when the body fails, used to pin a known defect. */
   failing(title: string, body: TestBody): void
   /** Runs the test once per row of the table. */
@@ -83,16 +86,26 @@ function adaptBody(body: TestBody): NodeTestBody {
 }
 
 /**
+ * Renders a per-test timeout as `node:test` options.
+ *
+ * @param timeoutMs - Jest's optional trailing timeout argument.
+ * @returns The options to spread into the declaration.
+ */
+function timeoutOptions(timeoutMs?: number): { timeout?: number } {
+  return timeoutMs === undefined ? {} : { timeout: timeoutMs }
+}
+
+/**
  * Builds a parameterised runner over a table.
  *
- * @param declare - How to register one case, given its rendered title and bound body.
+ * @param declare - How to register one case, given its rendered title, bound body, and timeout.
  * @returns A `.each` implementation.
  */
-function buildEach(declare: (title: string, body: () => unknown) => void): (table: readonly unknown[]) => EachRunner {
-  return (table) => (title, body) => {
+function buildEach(declare: (title: string, body: () => unknown, timeoutMs?: number) => void): (table: readonly unknown[]) => EachRunner {
+  return (table) => (title, body, timeoutMs) => {
     table.forEach((row, index) => {
       const args: EachRow = rowArguments(row)
-      declare(formatTitle(title, args, index), () => body(...args))
+      declare(formatTitle(title, args, index), () => body(...args), timeoutMs)
     })
   }
 }
@@ -105,12 +118,12 @@ function buildEach(declare: (title: string, body: () => unknown) => void): (tabl
  * straight from `node:test` keeps the spec closer to the platform.
  */
 export const it: ItApi = Object.assign(
-  (title: string, body: TestBody): void => {
-    nodeIt(title, adaptBody(body))
+  (title: string, body: TestBody, timeoutMs?: number): void => {
+    nodeIt(title, timeoutOptions(timeoutMs), adaptBody(body))
   },
   {
-    only: (title: string, body: TestBody): void => {
-      nodeIt(title, { only: true }, adaptBody(body))
+    only: (title: string, body: TestBody, timeoutMs?: number): void => {
+      nodeIt(title, { only: true, ...timeoutOptions(timeoutMs) }, adaptBody(body))
     },
     skip: (title: string, body?: TestBody): void => {
       nodeIt(title, { skip: true }, body ? adaptBody(body) : () => undefined)
@@ -119,8 +132,8 @@ export const it: ItApi = Object.assign(
     todo: (title: string): void => {
       nodeIt(title, { todo: true }, () => undefined)
     },
-    concurrent: (title: string, body: TestBody): void => {
-      nodeIt(title, { concurrency: true }, adaptBody(body))
+    concurrent: (title: string, body: TestBody, timeoutMs?: number): void => {
+      nodeIt(title, { concurrency: true, ...timeoutOptions(timeoutMs) }, adaptBody(body))
     },
     failing: (title: string, body: TestBody): void => {
       nodeIt(title, async () => {
@@ -134,8 +147,8 @@ export const it: ItApi = Object.assign(
         if (passed) throw new Error(`expected "${title}" to fail, it passed`)
       })
     },
-    each: buildEach((title, body) => {
-      nodeIt(title, adaptBody(body as TestBody))
+    each: buildEach((title, body, timeoutMs) => {
+      nodeIt(title, timeoutOptions(timeoutMs), adaptBody(body as TestBody))
     }),
   }
 )

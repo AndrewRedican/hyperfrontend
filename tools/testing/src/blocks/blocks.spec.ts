@@ -35,6 +35,22 @@ nodeDescribe('it wrapper', () => {
   it.concurrent('runs concurrently with its siblings', () => {
     assert.equal(1, 1)
   })
+
+  it('honours a per-test timeout longer than the body needs', async () => {
+    await new Promise((resolve) => setTimeout(resolve, 20))
+  }, 5000)
+
+  it.only('threads a timeout through the only modifier', async () => {
+    await new Promise((resolve) => setTimeout(resolve, 5))
+  }, 5000)
+
+  it.concurrent(
+    'threads a timeout through the concurrent modifier',
+    async () => {
+      await new Promise((resolve) => setTimeout(resolve, 5))
+    },
+    5000
+  )
 })
 
 nodeDescribe('it.each', () => {
@@ -54,6 +70,15 @@ nodeDescribe('it.each', () => {
   ])('adds %d and %d to make %d', (left: number, right: number, total: number) => {
     assert.equal(left + right, total)
   })
+
+  it.each([10, 20])(
+    'threads a timeout through to row %d',
+    async (value: number) => {
+      await new Promise((resolve) => setTimeout(resolve, 1))
+      assert.equal(value % 10, 0)
+    },
+    5000
+  )
 })
 
 describe('describe wrapper', () => {
