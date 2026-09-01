@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs'
 import { registerHooks } from 'node:module'
 import { fileURLToPath } from 'node:url'
 import { currentGeneration } from './generation.ts'
-import { MOCK_SCHEME, isMocked, mockTarget, mockedSource, registerSpecMocks } from './mock-registry.ts'
+import { MOCK_SCHEME, isMocked, mockTarget, mockedSource, registerSetupMocks, registerSpecMocks } from './mock-registry.ts'
 import { loadAliases } from './paths.ts'
 import { compileModuleMappings, resolveSpecifier } from './resolver.ts'
 
@@ -20,6 +20,13 @@ const WORKSPACE_ROOT_VAR = 'HF_TEST_WORKSPACE_ROOT'
 const MODULE_MAP_VAR = 'HF_TEST_MODULE_MAP'
 
 /**
+ * Environment variable holding a JSON array of absolute paths naming the environment's
+ * setup modules. A setup module is not recognisable from its name the way a spec is, so
+ * the runner has to say which files they are for their `jest.mock` calls to be read.
+ */
+const SETUP_FILES_VAR = 'HF_TEST_SETUP_FILES'
+
+/**
  * Installs the synchronous resolution hooks the workspace's tests rely on: workspace path
  * aliases, `moduleNameMapper` redirects, extensionless TypeScript specifiers, and the
  * module generation that backs `jest.resetModules`. Node resolves none of these itself.
@@ -30,6 +37,7 @@ const MODULE_MAP_VAR = 'HF_TEST_MODULE_MAP'
  */
 export function registerResolutionHooks(): void {
   const workspaceRoot = process.env[WORKSPACE_ROOT_VAR] ?? process.cwd()
+  const setupFiles = new Set(JSON.parse(process.env[SETUP_FILES_VAR] ?? '[]') as string[])
   const context = {
     workspaceRoot,
     aliases: loadAliases(workspaceRoot),
@@ -61,14 +69,26 @@ export function registerResolutionHooks(): void {
 
       const result = nextLoad(url, loadContext)
       // how: a spec's own load runs before Node resolves the spec's imports, so declarations read here are registered before any mocked module is asked for.
-      if (isSpecFile(url)) registerSpecMocks(url, readFileSync(fileURLToPath(url.split('?')[0] ?? url), 'utf8'))
+      // how: a setup module is preloaded ahead of every spec, so the declarations it makes for the whole project are registered before any of them.
+      if (isSpecFile(url)) registerSpecMocks(url, sourceOf(url))
+      else if (isSetupFile(url, setupFiles)) registerSetupMocks(url, sourceOf(url))
       return result
     },
   })
 }
 
 /**
- * Reports whether a URL names a spec file, the only place `jest.mock` is read from.
+ * Reads the text of the file a URL names, ignoring any generation query on it.
+ *
+ * @param url - The URL being loaded.
+ * @returns The file's contents.
+ */
+function sourceOf(url: string): string {
+  return readFileSync(fileURLToPath(url.split('?')[0] ?? url), 'utf8')
+}
+
+/**
+ * Reports whether a URL names a spec file.
  *
  * @param url - The URL being loaded.
  * @returns True when the file is a spec.
@@ -76,6 +96,18 @@ export function registerResolutionHooks(): void {
 function isSpecFile(url: string): boolean {
   const path = url.split('?')[0] ?? url
   return path.endsWith('.spec.ts') || path.endsWith('.spec.tsx')
+}
+
+/**
+ * Reports whether a URL names one of the environment's setup modules.
+ *
+ * @param url - The URL being loaded.
+ * @param setupFiles - Absolute paths of the declared setup modules.
+ * @returns True when the file is a setup module.
+ */
+function isSetupFile(url: string, setupFiles: ReadonlySet<string>): boolean {
+  if (setupFiles.size === 0 || !url.startsWith('file:')) return false
+  return setupFiles.has(fileURLToPath(url.split('?')[0] ?? url))
 }
 
 registerResolutionHooks()

@@ -5,7 +5,7 @@ import { resolve } from 'node:path'
 import { findUnmeasuredFiles } from '../coverage/completeness'
 import { findThresholdShortfalls, renderCoverageTable } from '../coverage/gate'
 import { mergeLcov } from '../coverage/lcov'
-import { buildRunPlan, serialiseModuleMap } from './argv'
+import { buildRunPlan, serialiseModuleMap, serialiseSetupFiles } from './argv'
 import { withDefaults } from './config'
 
 /**
@@ -51,18 +51,20 @@ export function runProjectTests(config: TestConfig, context: RunContext): RunOut
   mkdirSync(context.coverageDir, { recursive: true })
 
   const moduleMap = serialiseModuleMap(resolved)
-  const environment = {
+  const shared = {
     ...process.env,
     HF_TEST_WORKSPACE_ROOT: context.workspaceRoot,
     ...(moduleMap ? { HF_TEST_MODULE_MAP: moduleMap } : {}),
   }
   // why: Node marks its own test children with this, and a child that inherits it refuses to run any files at all.
-  delete environment['NODE_TEST_CONTEXT']
+  delete shared['NODE_TEST_CONTEXT']
 
   const reports: string[] = []
 
   for (const declared of resolved.environments) {
     const plan = buildRunPlan(resolved, declared, context.workspaceRoot, context.projectRoot, context.coverageDir)
+    const setupFiles = serialiseSetupFiles(declared, context.projectRoot)
+    const environment = { ...shared, ...(setupFiles ? { HF_TEST_SETUP_FILES: setupFiles } : {}) }
 
     const stdio = context.silent ? 'pipe' : 'inherit'
     const result = spawnSync(process.execPath, plan.argv, { cwd: context.projectRoot, stdio, env: environment })

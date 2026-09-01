@@ -1,7 +1,7 @@
 import type { TestConfig } from './config'
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
-import { buildRunPlan, serialiseModuleMap } from './argv'
+import { buildRunPlan, serialiseModuleMap, serialiseSetupFiles, setupPaths } from './argv'
 import { BASELINE_COVERAGE_EXCLUDE, withDefaults } from './config'
 
 const WORKSPACE = '/workspace'
@@ -127,6 +127,48 @@ describe('buildRunPlan', () => {
       environments: [{ name: 'node', testMatch: ['src/**/*.spec.ts'], testIgnore: ['src/**/*.browser.spec.ts'] }],
     })
     assert.equal(args.includes('--test-coverage-exclude=src/**/*.browser.spec.ts'), true)
+  })
+
+  it('leaves the DOM out of an environment that did not ask for one', () => {
+    assert.equal(planArgs(SINGLE).includes(`${WORKSPACE}/tools/testing/src/environment/dom.ts`), false)
+  })
+
+  it('installs a DOM after the hooks and before the setup files', () => {
+    const args = planArgs({
+      ...SINGLE,
+      environments: [{ name: 'browser', testMatch: ['src/**/*.spec.ts'], dom: true, setupFiles: ['test.setup.ts'] }],
+    })
+    assert.deepEqual(args.slice(1, 7), [
+      '--import',
+      `${WORKSPACE}/tools/testing/src/hooks/register.ts`,
+      '--import',
+      `${WORKSPACE}/tools/testing/src/environment/dom.ts`,
+      '--import',
+      `${PROJECT}/test.setup.ts`,
+    ])
+  })
+})
+
+describe('setupPaths', () => {
+  it('returns nothing when the environment declares no setup file', () => {
+    assert.deepEqual(setupPaths({ name: 'node', testMatch: [] }, PROJECT), [])
+  })
+
+  it('anchors each setup file to the project root', () => {
+    assert.deepEqual(setupPaths({ name: 'node', testMatch: [], setupFiles: ['test.setup.ts'] }, PROJECT), [`${PROJECT}/test.setup.ts`])
+  })
+})
+
+describe('serialiseSetupFiles', () => {
+  it('returns undefined when the environment declares none', () => {
+    assert.equal(serialiseSetupFiles({ name: 'node', testMatch: [] }, PROJECT), undefined)
+  })
+
+  it('renders the absolute path of each setup file', () => {
+    assert.equal(
+      serialiseSetupFiles({ name: 'node', testMatch: [], setupFiles: ['test.setup.ts'] }, PROJECT),
+      JSON.stringify([`${PROJECT}/test.setup.ts`])
+    )
   })
 })
 

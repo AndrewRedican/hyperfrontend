@@ -259,4 +259,91 @@ it('sees the replacement', () => {
 
     assert.equal(run(fixture, { coverageInclude: ['src/subject.ts'] }).success, true)
   })
+
+  it('applies a jest.mock a setup file declares to every spec in the project', () => {
+    const fixture = createFixture({
+      'src/dep.ts': "export const label = (): string => 'real'\n",
+      'src/subject.ts': "import { label } from './dep'\nexport const describeIt = (): string => label()\n",
+      'src/first.spec.ts': `import assert from 'node:assert/strict'
+import { it } from 'node:test'
+import { describeIt } from './subject'
+
+it('sees the project-wide replacement', () => {
+  assert.equal(describeIt(), 'mocked')
+})
+`,
+      'src/second.spec.ts': `import assert from 'node:assert/strict'
+import { it } from 'node:test'
+import { describeIt } from './subject'
+
+it('sees it too, without declaring anything', () => {
+  assert.equal(describeIt(), 'mocked')
+})
+`,
+      'test.setup.ts': `import { jest } from '@hyperfrontend/testing'
+
+jest.mock('./src/dep', () => ({ label: () => 'mocked' }))
+`,
+    })
+
+    assert.equal(
+      run(fixture, {
+        coverageInclude: ['src/subject.ts'],
+        environments: [{ name: 'node', testMatch: ['src/**/*.spec.ts'], setupFiles: ['test.setup.ts'] }],
+      }).success,
+      true
+    )
+  })
+
+  it('lets a spec override a replacement its setup file declared', () => {
+    const fixture = createFixture({
+      'src/dep.ts': "export const label = (): string => 'real'\n",
+      'src/subject.ts': "import { label } from './dep'\nexport const describeIt = (): string => label()\n",
+      'src/subject.spec.ts': `import assert from 'node:assert/strict'
+import { it } from 'node:test'
+import { jest } from '@hyperfrontend/testing'
+import { describeIt } from './subject'
+
+jest.mock('./dep', () => ({ label: () => 'spec' }))
+
+it('sees its own replacement rather than the project one', () => {
+  assert.equal(describeIt(), 'spec')
+})
+`,
+      'test.setup.ts': `import { jest } from '@hyperfrontend/testing'
+
+jest.mock('./src/dep', () => ({ label: () => 'setup' }))
+`,
+    })
+
+    assert.equal(
+      run(fixture, {
+        coverageInclude: ['src/subject.ts'],
+        environments: [{ name: 'node', testMatch: ['src/**/*.spec.ts'], setupFiles: ['test.setup.ts'] }],
+      }).success,
+      true
+    )
+  })
+
+  it('installs a DOM for an environment that asks for one', () => {
+    const fixture = createFixture({
+      'src/subject.ts': "export const tag = (): string => document.createElement('div').tagName\n",
+      'src/subject.spec.ts': `import assert from 'node:assert/strict'
+import { it } from 'node:test'
+import { tag } from './subject'
+
+it('reaches the document', () => {
+  assert.equal(tag(), 'DIV')
+})
+`,
+    })
+
+    assert.equal(
+      run(fixture, {
+        coverageInclude: ['src/subject.ts'],
+        environments: [{ name: 'browser', testMatch: ['src/**/*.spec.ts'], dom: true }],
+      }).success,
+      true
+    )
+  })
 })

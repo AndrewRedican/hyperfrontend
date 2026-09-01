@@ -41,7 +41,9 @@ export function buildRunPlan(
     '--disable-warning=MODULE_TYPELESS_PACKAGE_JSON',
     '--import',
     hookPath,
-    ...(environment.setupFiles ?? []).flatMap((setup) => ['--import', resolve(projectRoot, setup)]),
+    // why: the DOM lands before the project's own setup files, so a setup file may assume `document` exists, and after the hooks, which it needs to resolve its own imports.
+    ...(environment.dom ? ['--import', resolve(workspaceRoot, 'tools/testing/src/environment/dom.ts')] : []),
+    ...setupPaths(environment, projectRoot).flatMap((setup) => ['--import', setup]),
     '--test',
     `--test-timeout=${config.testTimeout ?? 30_000}`,
     '--experimental-test-coverage',
@@ -60,6 +62,17 @@ export function buildRunPlan(
 }
 
 /**
+ * Resolves an environment's setup modules against the project root.
+ *
+ * @param environment - The environment being run.
+ * @param projectRoot - Absolute path to the project root.
+ * @returns One absolute path per declared setup module.
+ */
+export function setupPaths(environment: TestEnvironment, projectRoot: string): string[] {
+  return (environment.setupFiles ?? []).map((setup) => resolve(projectRoot, setup))
+}
+
+/**
  * Renders a project's `moduleNameMapper` for the resolution hooks, which read it from the
  * environment because they run in a child process.
  *
@@ -69,4 +82,20 @@ export function buildRunPlan(
 export function serialiseModuleMap(config: TestConfig): string | undefined {
   const entries = Object.entries(config.moduleNameMapper ?? {})
   return entries.length === 0 ? undefined : JSON.stringify(entries)
+}
+
+/**
+ * Renders an environment's setup modules for the resolution hooks.
+ *
+ * The hooks read `jest.mock` out of a file's source as it loads, and they only read it from
+ * files they can recognise. A spec is recognisable by its name; a setup module is not, so
+ * the runner has to name them.
+ *
+ * @param environment - The environment being run.
+ * @param projectRoot - Absolute path to the project root.
+ * @returns The serialised paths, or undefined when the environment declares none.
+ */
+export function serialiseSetupFiles(environment: TestEnvironment, projectRoot: string): string | undefined {
+  const paths = setupPaths(environment, projectRoot)
+  return paths.length === 0 ? undefined : JSON.stringify(paths)
 }

@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict'
 import { mkdtempSync, writeFileSync } from 'node:fs'
+import { createRequire } from 'node:module'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { createRequire } from 'node:module'
 import { afterEach, describe, it } from 'node:test'
 import { pathToFileURL } from 'node:url'
 import {
@@ -13,6 +13,7 @@ import {
   mockTarget,
   mockedSource,
   registerRuntimeMock,
+  registerSetupMocks,
   registerSpecMocks,
   resolveActualUrl,
 } from './mock-registry'
@@ -24,6 +25,7 @@ writeFileSync(join(fixtureRoot, 'dep.ts'), 'export const read = (): number => 4\
 
 const SPEC_URL = pathToFileURL(join(fixtureRoot, 'subject.spec.ts')).href
 const DEP_URL = pathToFileURL(join(fixtureRoot, 'dep.ts')).href
+const SETUP_URL = pathToFileURL(join(fixtureRoot, 'test.setup.ts')).href
 
 /**
  * Registers the mocks a source declares and returns the generated replacement.
@@ -57,6 +59,25 @@ describe('registerSpecMocks', () => {
   it('skips a specifier that resolves nowhere', () => {
     registerSpecMocks(SPEC_URL, "jest.mock('nonexistent-package-xyz', () => ({}))")
     assert.equal(isMocked('nonexistent-package-xyz'), false)
+  })
+})
+
+describe('registerSetupMocks', () => {
+  it('registers a declaration a setup module makes for the whole project', () => {
+    registerSetupMocks(SETUP_URL, "jest.mock('./dep.ts', () => ({ read: 1 }))")
+    assert.equal(isMocked(DEP_URL), true)
+  })
+
+  it('leaves the spec context to the spec, so a relative specifier still resolves against it', () => {
+    const before = mockContext().specUrl
+    registerSetupMocks(SETUP_URL, "jest.mock('./dep.ts', () => ({ read: 1 }))")
+    assert.equal(mockContext().specUrl, before)
+  })
+
+  it('is overridden by a spec declaring its own replacement for the same module', () => {
+    registerSetupMocks(SETUP_URL, "jest.mock('./dep.ts', () => ({ read: () => 'setup' }))")
+    registerSpecMocks(SPEC_URL, "jest.mock('./dep.ts', () => ({ read: () => 'spec' }))")
+    assert.match(mockedSource(DEP_URL, RUNTIME_URL), /'spec'/)
   })
 })
 

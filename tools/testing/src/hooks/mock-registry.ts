@@ -113,8 +113,38 @@ export function registerRuntimeMock(specifier: string, factory: () => unknown): 
  * @param source - The spec file's text.
  */
 export function registerSpecMocks(specUrl: string, source: string): void {
-  const require = createRequire(specUrl)
   if (!mockContext().specUrl) mockContext().specUrl = specUrl
+  registerDeclarations(specUrl, source)
+}
+
+/**
+ * Registers every `jest.mock` a project's setup module declares.
+ *
+ * This is what a Jest `setupFilesAfterEach` module did for a whole project. The module is
+ * preloaded ahead of every spec, so its declarations are in the registry before any spec
+ * resolves an import, and they apply to all of them. A spec declaring its own replacement
+ * for the same module is read later and wins.
+ *
+ * The context's spec URL is deliberately not claimed here: `jest.requireActual` and
+ * `jest.doMock` called from a spec body resolve their specifier relative to it, and a
+ * setup module that took the slot would make every relative specifier resolve against the
+ * wrong file.
+ *
+ * @param setupUrl - URL of the setup module being loaded.
+ * @param source - The setup module's text.
+ */
+export function registerSetupMocks(setupUrl: string, source: string): void {
+  registerDeclarations(setupUrl, source)
+}
+
+/**
+ * Reads the declarations out of one file's source and records them.
+ *
+ * @param sourceUrl - URL of the file the declarations were written in.
+ * @param source - That file's text.
+ */
+function registerDeclarations(sourceUrl: string, source: string): void {
+  const require = createRequire(sourceUrl)
 
   for (const declaration of readMockDeclarations(source)) {
     let target: string
