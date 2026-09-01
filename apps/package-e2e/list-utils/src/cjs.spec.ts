@@ -3,6 +3,8 @@
  * Tests that the package is requireable and exports work correctly.
  */
 
+const { describe, expect, it } = require('@hyperfrontend/testing')
+
 describe('@hyperfrontend/list-utils CJS', () => {
   it('is requireable', () => {
     const listUtils = require('@hyperfrontend/list-utils')

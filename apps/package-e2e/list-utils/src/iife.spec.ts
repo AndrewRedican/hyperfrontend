@@ -5,6 +5,8 @@
 
 import { getBundlePath, loadBundleCode, executeBundleInWindow } from '../../shared/helpers'
 
+import { describe, expect, it } from '@hyperfrontend/testing'
+
 describe('@hyperfrontend/list-utils IIFE bundle', () => {
   const bundlePath = getBundlePath('utils/list', 'iife')
   const minBundlePath = getBundlePath('utils/list', 'iife', true)

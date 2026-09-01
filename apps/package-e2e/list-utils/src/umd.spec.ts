@@ -5,6 +5,8 @@
 
 import { getBundlePath, loadBundleCode, executeBundleInWindow, requireUmdBundle } from '../../shared/helpers'
 
+import { describe, expect, it } from '@hyperfrontend/testing'
+
 describe('@hyperfrontend/list-utils UMD bundle', () => {
   const bundlePath = getBundlePath('utils/list', 'umd')
   const minBundlePath = getBundlePath('utils/list', 'umd', true)
