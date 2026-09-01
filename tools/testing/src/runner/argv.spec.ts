@@ -1,7 +1,10 @@
 import type { TestConfig } from './config'
 import assert from 'node:assert/strict'
+import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import { describe, it } from 'node:test'
-import { buildRunPlan, serialiseModuleMap, serialiseSetupFiles, setupPaths } from './argv'
+import { buildRunPlan, selectSpecFiles, serialiseModuleMap, serialiseSetupFiles, setupPaths } from './argv'
 import { BASELINE_COVERAGE_EXCLUDE, withDefaults } from './config'
 
 const WORKSPACE = '/workspace'
@@ -12,6 +15,14 @@ const SINGLE: TestConfig = {
   environments: [{ name: 'node', testMatch: ['src/**/*.spec.ts'] }],
   coverageInclude: ['src/**/*.ts'],
 }
+
+/**
+ * A project root holding real spec files, for the cases that expand a glob rather than
+ * hand it to Node.
+ */
+const FIXTURE_ROOT = mkdtempSync(join(tmpdir(), 'hf-selection-'))
+mkdirSync(join(FIXTURE_ROOT, 'src'), { recursive: true })
+for (const name of ['one.spec.ts', 'two.spec.ts', 'one.browser.spec.ts']) writeFileSync(join(FIXTURE_ROOT, 'src', name), '')
 
 /**
  * Builds a plan for the first environment of a configuration.
@@ -122,11 +133,27 @@ describe('buildRunPlan', () => {
   })
 
   it('excludes an environment ignored files from its coverage', () => {
-    const args = planArgs({
+    const config = withDefaults({
       ...SINGLE,
-      environments: [{ name: 'node', testMatch: ['src/**/*.spec.ts'], testIgnore: ['src/**/*.browser.spec.ts'] }],
+      environments: [{ name: 'node', testMatch: ['src/**/*.spec.ts'], testIgnore: ['**/*.browser.spec.ts'] }],
     })
-    assert.equal(args.includes('--test-coverage-exclude=src/**/*.browser.spec.ts'), true)
+    const environment = config.environments[0]
+    if (!environment) throw new Error('the fixture must declare an environment')
+    const args = buildRunPlan(config, environment, WORKSPACE, FIXTURE_ROOT, COVERAGE).argv
+    assert.equal(args.includes('--test-coverage-exclude=**/*.browser.spec.ts'), true)
+  })
+
+  it('ends with the files an environment selection resolved to', () => {
+    const config = withDefaults({
+      ...SINGLE,
+      environments: [{ name: 'node', testMatch: ['src/**/*.spec.ts'], testIgnore: ['**/*.browser.spec.ts'] }],
+    })
+    const environment = config.environments[0]
+    if (!environment) throw new Error('the fixture must declare an environment')
+    assert.deepEqual(buildRunPlan(config, environment, WORKSPACE, FIXTURE_ROOT, COVERAGE).argv.slice(-2), [
+      'src/one.spec.ts',
+      'src/two.spec.ts',
+    ])
   })
 
   it('leaves the DOM out of an environment that did not ask for one', () => {
@@ -146,6 +173,26 @@ describe('buildRunPlan', () => {
       '--import',
       `${PROJECT}/test.setup.ts`,
     ])
+  })
+})
+
+describe('selectSpecFiles', () => {
+  it('leaves the globs to Node when the environment ignores nothing', () => {
+    assert.deepEqual(selectSpecFiles({ name: 'node', testMatch: ['src/**/*.spec.ts'] }, FIXTURE_ROOT), ['src/**/*.spec.ts'])
+  })
+
+  it('expands the globs when the environment ignores files, since Node cannot exclude any', () => {
+    assert.deepEqual(
+      selectSpecFiles({ name: 'node', testMatch: ['src/**/*.spec.ts'], testIgnore: ['**/*.browser.spec.ts'] }, FIXTURE_ROOT),
+      ['src/one.spec.ts', 'src/two.spec.ts']
+    )
+  })
+
+  it('refuses to run an environment its exclusions emptied', () => {
+    assert.throws(
+      () => selectSpecFiles({ name: 'node', testMatch: ['src/**/*.spec.ts'], testIgnore: ['**/*.spec.ts'] }, FIXTURE_ROOT),
+      /matched no spec files/
+    )
   })
 })
 

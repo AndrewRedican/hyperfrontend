@@ -24,7 +24,7 @@ export type TestEnvironment = {
   name: string
   /** Globs, relative to the project root, selecting this environment's spec files. */
   testMatch: string[]
-  /** Globs excluded from `testMatch`. */
+  /** Globs excluded from `testMatch`, and from this environment's coverage. */
   testIgnore?: string[]
   /** Whether a DOM is installed on the global before the suites run. */
   dom?: boolean

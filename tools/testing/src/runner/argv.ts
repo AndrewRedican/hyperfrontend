@@ -1,4 +1,5 @@
 import type { TestConfig, TestEnvironment } from './config'
+import { globSync } from 'node:fs'
 import { relative, resolve } from 'node:path'
 
 /**
@@ -55,10 +56,33 @@ export function buildRunPlan(
     '--test-reporter-destination=stdout',
     '--test-reporter=lcov',
     `--test-reporter-destination=${lcovPath}`,
-    ...environment.testMatch,
+    ...selectSpecFiles(environment, projectRoot),
   ]
 
   return { environment, argv, lcovPath: relative(projectRoot, lcovPath) }
+}
+
+/**
+ * Names the files one environment runs.
+ *
+ * Node has no way to exclude anything from a `--test` glob, so an environment that ignores
+ * files cannot express its selection as a pattern and has it expanded here instead. An
+ * environment that ignores nothing keeps its globs, which leaves discovery to Node and the
+ * argument list readable.
+ *
+ * @param environment - The environment being run.
+ * @param projectRoot - Absolute path to the project root.
+ * @returns The globs, or the project-relative paths they resolve to.
+ * @throws {Error} When an environment that ignores files is left with nothing to run.
+ */
+export function selectSpecFiles(environment: TestEnvironment, projectRoot: string): string[] {
+  if (!environment.testIgnore?.length) return environment.testMatch
+
+  const selected = globSync(environment.testMatch, { cwd: projectRoot, exclude: environment.testIgnore }).sort()
+  // why: Node given no files at all falls back to discovering them itself, which would silently run the very files the environment excluded.
+  if (selected.length === 0) throw new Error(`environment "${environment.name}" matched no spec files`)
+
+  return selected
 }
 
 /**
