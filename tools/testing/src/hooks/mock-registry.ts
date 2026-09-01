@@ -11,6 +11,13 @@ import { readMockDeclarations, readUnmockDeclarations } from './mock-declaration
 export const MOCK_SCHEME = 'hf-mock:'
 
 /**
+ * Prefix for the local a replacement binds an override to before exporting it under the
+ * real name. The override names come from an object literal's keys, so they are already
+ * legal identifiers and stay legal with this in front.
+ */
+const LOCAL_PREFIX = '__hfExport$'
+
+/**
  * Reads back the URL a replacement stands in for.
  *
  * The mocked URL is carried in the replacement's own URL, encoded so that a path, a query,
@@ -99,6 +106,8 @@ export type MockContext = {
   specUrl: string
   /** Namespace of each replaced module, keyed by its URL. */
   actuals: Map<string, unknown>
+  /** What each replacement's factory produced, keyed by the replaced module's URL. */
+  mocks: Map<string, unknown>
 }
 
 const registrations = new Map<string, Registration>()
@@ -109,7 +118,11 @@ const registrations = new Map<string, Registration>()
  * @returns The context object.
  */
 export function mockContext(): MockContext {
-  return ((globalThis as Record<symbol, unknown>)[CONTEXT] ??= { specUrl: '', actuals: new Map<string, unknown>() }) as MockContext
+  return ((globalThis as Record<symbol, unknown>)[CONTEXT] ??= {
+    specUrl: '',
+    actuals: new Map<string, unknown>(),
+    mocks: new Map<string, unknown>(),
+  }) as MockContext
 }
 
 /**
@@ -248,19 +261,39 @@ export function mockedSource(url: string, runtimeUrl: string): string {
   if (!declaration.factory) {
     // why: the automock form replaces every export with a fresh mock function, which is what Jest does when no factory is given.
     for (const name of automocked) lines.push(`export const ${name} = __hfJest.fn()`)
+    lines.push(publishes('mocks', url, `{ ${automocked.join(', ')} }`))
     return lines.join('\n')
   }
 
   lines.push(`import * as __hfActual from ${JSON.stringify(url)}`)
   // why: `jest.requireActual` is called from the spec body, long after this module linked, and this is where the real namespace is already in hand.
-  lines.push(`globalThis[Symbol.for(${JSON.stringify(CONTEXT.description)})].actuals.set(${JSON.stringify(url)}, __hfActual)`)
+  lines.push(publishes('actuals', url, '__hfActual'))
   // why: an import of a name the factory did not define is a link error rather than the undefined Jest would hand back, so every other export has to stay reachable. An explicit export below wins over a star.
   lines.push(`export * from ${JSON.stringify(url)}`)
   lines.push(`const jest = { ...__hfJest, requireActual: () => __hfActual }`)
   lines.push(`const __hfNs = (${declaration.factory})()`)
-  for (const name of declaration.overrides) lines.push(`export const ${name} = __hfNs[${JSON.stringify(name)}]`)
+  // why: `jest.requireMock` asks for what the factory produced, and this is the only place it exists as a value.
+  lines.push(publishes('mocks', url, '__hfNs'))
+
+  // why: the factory is carried through verbatim, and its body ran in the spec's scope where a bare `setInterval` meant the global. Exporting that name under a local of the same name would rebind it to the export, so a forwarding replacement would call itself until the stack ran out. Aliasing on the way out leaves the bare name resolving to the global, as it did.
+  for (const name of declaration.overrides) {
+    lines.push(`const ${LOCAL_PREFIX}${name} = __hfNs[${JSON.stringify(name)}]`)
+    lines.push(`export { ${LOCAL_PREFIX}${name} as ${name} }`)
+  }
 
   return lines.join('\n')
+}
+
+/**
+ * Renders the statement a replacement uses to publish a namespace for the runtime to read.
+ *
+ * @param map - Which of the context's maps to write into.
+ * @param url - The replaced module's URL, used as the key.
+ * @param expression - Source of the value to publish.
+ * @returns The statement.
+ */
+function publishes(map: 'actuals' | 'mocks', url: string, expression: string): string {
+  return `globalThis[Symbol.for(${JSON.stringify(CONTEXT.description)})].${map}.set(${JSON.stringify(url)}, ${expression})`
 }
 
 /**

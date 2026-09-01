@@ -83,7 +83,7 @@ describe('registerSetupMocks', () => {
 
 describe('mockedSource for a file module', () => {
   it('exports each name the factory defines', () => {
-    assert.match(sourceFor("jest.mock('./dep.ts', () => ({ read: 1 }))", DEP_URL), /export const read = __hfNs\["read"\]/)
+    assert.match(sourceFor("jest.mock('./dep.ts', () => ({ read: 1 }))", DEP_URL), /export \{ __hfExport\$read as read \}/)
   })
 
   it('imports the module it stands in for', () => {
@@ -107,13 +107,30 @@ describe('mockedSource for a file module', () => {
   })
 })
 
+describe('mockedSource export aliasing', () => {
+  it('binds an override to a local of another name, so the factory bare reference still means the global', () => {
+    const source = sourceFor("jest.mock('./dep.ts', () => ({ read: () => read() }))", DEP_URL)
+    assert.equal(source.includes('const read ='), false)
+  })
+})
+
+describe('mockedSource publishing for requireMock', () => {
+  it('publishes what a factory produced', () => {
+    assert.match(sourceFor("jest.mock('./dep.ts', () => ({ read: 1 }))", DEP_URL), /\.mocks\.set\("file:[^)]*__hfNs\)/)
+  })
+
+  it('publishes the generated exports of an automock', () => {
+    assert.match(sourceFor("jest.mock('node:path')", 'node:path'), /\.mocks\.set\("node:path", \{ [a-z]/)
+  })
+})
+
 describe('mockedSource for a built-in', () => {
   it('imports the built-in it stands in for', () => {
     assert.match(sourceFor("jest.mock('node:path', () => ({ join: 1 }))", 'node:path'), /import \* as __hfActual from "node:path"/)
   })
 
   it('exports each name the factory defines', () => {
-    assert.match(sourceFor("jest.mock('node:path', () => ({ join: 1 }))", 'node:path'), /export const join = __hfNs\["join"\]/)
+    assert.match(sourceFor("jest.mock('node:path', () => ({ join: 1 }))", 'node:path'), /export \{ __hfExport\$join as join \}/)
   })
 
   it('keeps every other export reachable', () => {
@@ -149,7 +166,7 @@ describe('registerRuntimeMock', () => {
   it('builds the replacement from the factory it was given', () => {
     mockContext().specUrl = SPEC_URL
     registerRuntimeMock('./dep.ts', () => ({ read: 2 }))
-    assert.match(mockedSource(DEP_URL, RUNTIME_URL), /export const read = __hfNs\["read"\]/)
+    assert.match(mockedSource(DEP_URL, RUNTIME_URL), /export \{ __hfExport\$read as read \}/)
   })
 })
 

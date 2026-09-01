@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import { afterEach, describe, it } from 'node:test'
 import { currentGeneration } from '../hooks/generation'
+import { mockContext } from '../hooks/mock-registry'
 import { jest } from './jest-api'
 import { isMockFunction } from './types'
 
@@ -120,6 +121,20 @@ describe('jest timer helpers', () => {
     jest.useFakeTimers({ now: 0 })
     jest.setSystemTime(999)
     assert.equal(Date.now(), 999)
+  })
+})
+
+describe('jest.requireMock', () => {
+  it('refuses a specifier whose replacement has never been loaded', () => {
+    mockContext().specUrl = import.meta.url
+    assert.throws(() => jest.requireMock('node:path'), /no replacement has been loaded/)
+  })
+
+  it('hands back what a replacement published', () => {
+    mockContext().specUrl = import.meta.url
+    mockContext().mocks.set('node:path', { marker: 1 })
+    assert.deepEqual(jest.requireMock('node:path'), { marker: 1 })
+    mockContext().mocks.delete('node:path')
   })
 })
 

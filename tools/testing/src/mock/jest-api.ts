@@ -55,6 +55,8 @@ export type JestApi = {
   doMock(specifier: string, factory: () => unknown): JestApi
   /** Reads the module a replacement stands in for. Only meaningful inside a `mock` factory. */
   requireActual<TModule = unknown>(specifier: string): TModule
+  /** Reads what a replacement's factory produced, including exports the module itself does not declare. */
+  requireMock<TModule = unknown>(specifier: string): TModule
 }
 
 /**
@@ -106,6 +108,13 @@ export const jest: JestApi = {
   doMock: (specifier, factory) => {
     registerRuntimeMock(specifier, factory)
     return jest
+  },
+  requireMock: <TModule>(specifier: string): TModule => {
+    const context = mockContext()
+    const published = context.mocks.get(resolveActualUrl(createRequire(context.specUrl), specifier, context.specUrl))
+    // why: the replacement publishes itself as it evaluates, so a specifier nothing has imported yet has nothing to hand back.
+    if (!published) throw new Error(`no replacement has been loaded for ${specifier}`)
+    return published as TModule
   },
   requireActual: <TModule>(specifier: string): TModule => {
     const context = mockContext()
