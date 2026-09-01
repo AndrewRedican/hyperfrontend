@@ -3,9 +3,8 @@
  * Tests that the browser bundle loads correctly and attaches to window.
  */
 
-import { getBundlePath, loadBundleCode, executeBundleInWindow } from '../../shared/helpers'
-
 import { describe, expect, it } from '@hyperfrontend/testing'
+import { getBundlePath, loadBundleCode, executeBundleInWindow } from '../../shared/helpers'
 
 describe('@hyperfrontend/list-utils IIFE bundle', () => {
   const bundlePath = getBundlePath('utils/list', 'iife')
