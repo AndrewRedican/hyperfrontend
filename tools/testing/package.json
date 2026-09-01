@@ -3,8 +3,11 @@
   "version": "0.0.0",
   "description": "Node test-runner runtime for the workspace: module resolution hooks, Jest-compatible expect and mock APIs, and coverage completeness enforcement.",
   "private": true,
-  "dependencies": {},
+  "dependencies": {
+    "jsdom": "26.1.0"
+  },
   "devDependencies": {
+    "@types/jsdom": "21.1.7",
     "@types/node": "25.3.3",
     "typescript": "5.9.3"
   }

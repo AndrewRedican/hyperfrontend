@@ -26,6 +26,8 @@ export type TestEnvironment = {
   testMatch: string[]
   /** Globs excluded from `testMatch`. */
   testIgnore?: string[]
+  /** Whether a DOM is installed on the global before the suites run. */
+  dom?: boolean
   /** Modules preloaded before the suites, the equivalent of `setupFilesAfterEach`. */
   setupFiles?: string[]
 }

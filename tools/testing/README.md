@@ -63,16 +63,38 @@ export default config
 
 `nx test <project>` runs it through the `@hyperfrontend/package:test` executor.
 
+### A project that needs a DOM
+
+Node has no environment concept, so a DOM is a preload. An environment declaring `dom`
+gets a jsdom window copied onto the global before its suites run, and before its own setup
+modules, which may therefore assume `document` exists.
+
+```typescript
+environments: [{ name: 'browser', testMatch: ['src/**/*.spec.ts'], dom: true, setupFiles: ['test.setup.ts'] }]
+```
+
+Only what jsdom owns is copied. The realm's own intrinsics stay, so `instanceof` keeps
+agreeing with itself across the process; the timer functions stay Node's, because those are
+what the fake clock replaces; and `crypto`, `URL` and `URLSearchParams` stay Node's, which
+is what gives a browser suite a working `crypto.subtle` without any further override.
+
+### A project that mocks a module for every spec
+
+A module named in `setupFiles` may declare `jest.mock`, and the replacement applies to every
+spec in the environment. This is what a Jest `setupFilesAfterEach` module did. A spec
+declaring its own replacement for the same module is read later and wins.
+
 ## Layout
 
-| Path            | What it holds                                                                                                                                     |
-| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `src/hooks/`    | The `--import` entry, workspace path aliases, extensionless specifiers, `moduleNameMapper`, and the generation counter behind `jest.resetModules` |
-| `src/expect/`   | Structural equality, the matcher table, asymmetric matchers, and the `expect` surface                                                             |
-| `src/mock/`     | `jest.fn`, `jest.spyOn`, the reset registries, and the fake clock                                                                                 |
-| `src/blocks/`   | `describe` and `it` variants carrying the modifiers `node:test` lacks                                                                             |
-| `src/coverage/` | The lcov merge, the threshold gate, and the completeness check                                                                                    |
-| `src/runner/`   | Per-project configuration, argv construction, and the process the executor spawns                                                                 |
+| Path               | What it holds                                                                                                                                     |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/hooks/`       | The `--import` entry, workspace path aliases, extensionless specifiers, `moduleNameMapper`, and the generation counter behind `jest.resetModules` |
+| `src/expect/`      | Structural equality, the matcher table, asymmetric matchers, and the `expect` surface                                                             |
+| `src/mock/`        | `jest.fn`, `jest.spyOn`, the reset registries, and the fake clock                                                                                 |
+| `src/blocks/`      | `describe` and `it` variants carrying the modifiers `node:test` lacks                                                                             |
+| `src/coverage/`    | The lcov merge, the threshold gate, and the completeness check                                                                                    |
+| `src/environment/` | The jsdom preload an environment declaring `dom` loads                                                                                            |
+| `src/runner/`      | Per-project configuration, argv construction, and the process the executor spawns                                                                 |
 
 ## Behavioural differences from Jest
 
@@ -86,6 +108,8 @@ These are the places the runtime cannot be identical, and what it does instead.
 | `statements`       | Node has no such metric. A project's former statements threshold is carried by `lines`.                                                                                                                                                      |
 | `it.todo`          | Any body is ignored, matching Jest. `node:test` would run it.                                                                                                                                                                                |
 | `clearAllTimers`   | Node has no primitive, so the clock is torn down and rebuilt at the same instant.                                                                                                                                                            |
+| `runAllTimers`     | Node's `runAll` drains only the queue as it stood when it was called, so a timer scheduled by a timer stays pending. The queue is re-run until no timeout is outstanding, which is what Jest does, and abandoned after a thousand passes.    |
+| Timer delays       | A delay below one millisecond is raised to one, as the real schedulers do. Node's fake clock keeps the number it was given, and a negative delay then asks the clock to run backwards while a zero-period interval never leaves a tick.      |
 | Partial mocks      | A factory that names only some exports leaves the rest reachable and real. Under Jest they were undefined, but under ES modules importing an undefined name is a link error that stops the whole file.                                       |
 | Namespace spies    | `jest.spyOn(namespace, 'name')` cannot work: an ES module namespace is sealed, and importers bind the name at link time. Declare a replacement whose factory wraps the function instead.                                                     |
 | Counting           | A test that stubs `process.stdout.write` across an `await` makes `node:test` drop the preceding test from its counts. The exit code is unaffected, so the verdict stays correct.                                                             |
