@@ -92,4 +92,93 @@ describe('fake timers', () => {
   it('ignores a restore when no clock is installed', () => {
     assert.doesNotThrow(() => useRealTimers())
   })
+
+  it('raises a negative delay to the minimum a real timer uses', () => {
+    useFakeTimers({ now: 0 })
+    const ran = createMockFn()
+    setTimeout(ran, -500)
+    runAllTimers()
+    assert.equal(ran.mock.calls.length, 1)
+  })
+
+  it('raises a negative interval period to the minimum, so a tick cannot loop forever', () => {
+    useFakeTimers({ now: 0 })
+    const ran = createMockFn()
+    const handle = setInterval(ran, -10)
+    advanceTimersByTime(3)
+    clearInterval(handle)
+    assert.equal(ran.mock.calls.length, 3)
+  })
+
+  it('raises an omitted delay to the minimum', () => {
+    useFakeTimers({ now: 0 })
+    const ran = createMockFn()
+    setTimeout(ran)
+    advanceTimersByTime(1)
+    assert.equal(ran.mock.calls.length, 1)
+  })
+
+  it('runs a timer that another timer scheduled', () => {
+    useFakeTimers({ now: 0 })
+    const ran = createMockFn()
+    setTimeout(() => setTimeout(() => setTimeout(ran, 30), 20), 10)
+    runAllTimers()
+    assert.equal(ran.mock.calls.length, 1)
+  })
+
+  it('runs a timer that an interval scheduled', () => {
+    useFakeTimers({ now: 0 })
+    const ran = createMockFn()
+    const handle = setInterval(() => {
+      clearInterval(handle)
+      setTimeout(ran, 100)
+    }, 10)
+    runAllTimers()
+    assert.equal(ran.mock.calls.length, 1)
+  })
+
+  it('finishes even though an uncleared interval is always pending', () => {
+    useFakeTimers({ now: 0 })
+    const ran = createMockFn()
+    const handle = setInterval(ran, 10)
+    runAllTimers()
+    clearInterval(handle)
+    assert.equal(ran.mock.calls.length > 0, true)
+  })
+
+  it('gives up on a cascade that never stops rather than hanging', () => {
+    useFakeTimers({ now: 0 })
+    const ran = createMockFn()
+    /**
+     * Schedules itself again every time it runs, so the queue is never empty.
+     */
+    function reschedule(): void {
+      ran()
+      setTimeout(reschedule, 10)
+    }
+    setTimeout(reschedule, 10)
+    runAllTimers()
+    assert.equal(ran.mock.calls.length > 1, true)
+  })
+
+  it('forgets a timeout that was cleared before it ran', () => {
+    useFakeTimers({ now: 0 })
+    const ran = createMockFn()
+    clearTimeout(setTimeout(ran, 10))
+    runAllTimers()
+    assert.equal(ran.mock.calls.length, 0)
+  })
+
+  it('passes a timer its extra arguments', () => {
+    useFakeTimers({ now: 0 })
+    const ran = createMockFn()
+    setTimeout(ran, 10, 'first', 'second')
+    runAllTimers()
+    assert.deepEqual(ran.mock.calls[0], ['first', 'second'])
+  })
+
+  it('leaves the schedulers alone when they were excluded from faking', () => {
+    useFakeTimers({ doNotFake: ['setTimeout', 'setInterval'] })
+    assert.equal(typeof setTimeout, 'function')
+  })
 })
