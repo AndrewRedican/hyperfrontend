@@ -2,11 +2,14 @@
  * Tests for config.ts error handling branches.
  * Uses Jest mocks to ensure error branches are covered.
  */
+import type { MockedFunction } from '@hyperfrontend/testing'
 import { resolve } from 'node:path'
+import { afterEach, beforeEach } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import * as configModule from '../../project/config'
 import { configCommand } from './config'
 
-const FIXTURES_DIR = resolve(__dirname, '../../../__fixtures__')
+const FIXTURES_DIR = resolve(import.meta.dirname, '../../../__fixtures__')
 const MINIMAL_PROJECT = resolve(FIXTURES_DIR, 'minimal-project')
 
 jest.mock('../../project/config', () => {
@@ -18,8 +21,8 @@ jest.mock('../../project/config', () => {
   }
 })
 
-const mockParseConfig = configModule.parseConfig as jest.MockedFunction<typeof configModule.parseConfig>
-const mockDetectConfigs = configModule.detectConfigs as jest.MockedFunction<typeof configModule.detectConfigs>
+const mockParseConfig = configModule.parseConfig as MockedFunction<typeof configModule.parseConfig>
+const mockDetectConfigs = configModule.detectConfigs as MockedFunction<typeof configModule.detectConfigs>
 
 describe('configCommand error branches', () => {
   beforeEach(() => {

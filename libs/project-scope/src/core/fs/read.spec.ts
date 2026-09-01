@@ -1,8 +1,19 @@
-import { mkdirSync, writeFileSync, rmSync } from 'node:fs'
+import type { MockedFunction } from '@hyperfrontend/testing'
+import { mkdirSync, writeFileSync, rmSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
+import { after as afterAll, before as beforeAll } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { readFileContent, readFileBuffer, readFileIfExists, readJsonFile, readJsonFileIfExists } from './read'
 
-const TEST_DIR = join(__dirname, '__test_fixtures__')
+// why: the module under test binds `readFileSync` when it links, so no property replacement on the namespace can reach it. Replacing the module is what makes the read failures reachable, and the replacement calls through until a test says otherwise.
+jest.mock('node:fs', () => {
+  const actual = jest.requireActual<typeof import('node:fs')>('node:fs')
+  return { ...actual, readFileSync: jest.fn(actual.readFileSync) }
+})
+
+const mockReadFileSync = readFileSync as MockedFunction<typeof readFileSync>
+
+const TEST_DIR = join(import.meta.dirname, '__test_fixtures__')
 // how: A NUL byte is the one universally-illegal path character the guard rejects.
 const POISONED = `poisoned ${'\u0000'} .txt`
 
@@ -101,7 +112,7 @@ describe('core/fs/read', () => {
       const errorFile = join(TEST_DIR, 'error-test.txt')
       writeFileSync(errorFile, 'content')
 
-      jest.spyOn(require('node:fs'), 'readFileSync').mockImplementationOnce(() => {
+      mockReadFileSync.mockImplementationOnce(() => {
         const error = new Error('EACCES: permission denied')
         ;(error as { code?: string }).code = 'EACCES'
         throw error
@@ -121,7 +132,7 @@ describe('core/fs/read', () => {
       const errorFile = join(TEST_DIR, 'error-buffer.txt')
       writeFileSync(errorFile, 'content')
 
-      jest.spyOn(require('node:fs'), 'readFileSync').mockImplementationOnce(() => {
+      mockReadFileSync.mockImplementationOnce(() => {
         throw new Error('I/O error')
       })
 
@@ -139,7 +150,7 @@ describe('core/fs/read', () => {
       const errorFile = join(TEST_DIR, 'if-exists-error.txt')
       writeFileSync(errorFile, 'content')
 
-      jest.spyOn(require('node:fs'), 'readFileSync').mockImplementationOnce(() => {
+      mockReadFileSync.mockImplementationOnce(() => {
         throw new Error('Read error')
       })
 

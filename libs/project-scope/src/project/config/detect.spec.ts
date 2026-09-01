@@ -1,11 +1,13 @@
 import { mkdirSync, writeFileSync, rmSync } from 'node:fs'
 import { join, resolve } from 'node:path'
+import { after as afterAll, before as beforeAll, beforeEach } from 'node:test'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { detectConfigs, findConfigFile, getConfigPaths, clearConfigDetectionCache } from './detect'
 
-const FIXTURES_DIR = resolve(__dirname, '../../../__fixtures__')
+const FIXTURES_DIR = resolve(import.meta.dirname, '../../../__fixtures__')
 const MINIMAL_PROJECT = resolve(FIXTURES_DIR, 'minimal-project')
 const MONOREPO = resolve(FIXTURES_DIR, 'monorepo')
-const TEST_DIR = join(__dirname, '__test_fixtures_detect__')
+const TEST_DIR = join(import.meta.dirname, '__test_fixtures_detect__')
 
 describe('detectConfigs', () => {
   it('detects package.json in project', () => {

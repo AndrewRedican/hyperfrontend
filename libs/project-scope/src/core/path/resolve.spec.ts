@@ -1,8 +1,10 @@
 import { mkdirSync, writeFileSync, rmSync, symlinkSync } from 'node:fs'
 import { join } from 'node:path'
+import { after as afterAll, before as beforeAll } from 'node:test'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { resolvePath, resolveFromWorkspace, resolveRealPath, relativePath, joinPath, isAbsolute, offsetFromRoot } from './resolve'
 
-const TEST_DIR = join(__dirname, '__test_resolve_fixtures__')
+const TEST_DIR = join(import.meta.dirname, '__test_resolve_fixtures__')
 
 describe('core/path/resolve', () => {
   beforeAll(() => {

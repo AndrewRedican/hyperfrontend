@@ -1,7 +1,8 @@
 import { resolve } from 'node:path'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { parseConfig, parseJsonConfig, parseYamlConfig, readConfigIfExists } from './parse'
 
-const FIXTURES_DIR = resolve(__dirname, '../../../__fixtures__')
+const FIXTURES_DIR = resolve(import.meta.dirname, '../../../__fixtures__')
 const MINIMAL_PROJECT = resolve(FIXTURES_DIR, 'minimal-project')
 const CONFIG_FILES = resolve(FIXTURES_DIR, 'config-files')
 
@@ -25,7 +26,7 @@ describe('parseConfig', () => {
   })
 
   it('returns raw content for JS config files', () => {
-    const result = parseConfig(resolve(__dirname, '../../../jest.config.ts'), 'jest')
+    const result = parseConfig(resolve(import.meta.dirname, '../../../test.config.ts'), 'jest')
 
     expect(result.format).toBe('ts')
     expect(result.raw).toBeDefined()

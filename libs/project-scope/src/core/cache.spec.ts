@@ -1,5 +1,6 @@
 import type { Cache } from './cache'
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals'
+import { beforeEach, afterEach } from 'node:test'
+import { describe, it, expect, jest } from '@hyperfrontend/testing'
 import { createCache, clearAllCaches, getCacheCount, unregisterCache, memoize } from './cache'
 
 jest.mock('@hyperfrontend/immutable-api-utils/built-in-copy/date', () => ({

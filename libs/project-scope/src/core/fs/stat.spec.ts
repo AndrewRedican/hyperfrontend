@@ -1,8 +1,10 @@
 import { mkdirSync, writeFileSync, rmSync, symlinkSync } from 'node:fs'
 import { join } from 'node:path'
+import { after as afterAll, before as beforeAll } from 'node:test'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { getFileStat, isFile, isDirectory, isSymlink, exists } from './stat'
 
-const TEST_DIR = join(__dirname, '__test_stat_fixtures__')
+const TEST_DIR = join(import.meta.dirname, '__test_stat_fixtures__')
 
 describe('core/fs/stat', () => {
   beforeAll(() => {

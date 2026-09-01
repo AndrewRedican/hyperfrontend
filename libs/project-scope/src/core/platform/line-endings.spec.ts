@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { isCaseSensitiveFs } from './detect'
 import { getLineEnding, getPathSeparator, normalizeLineEndings, detectLineEnding, pathsEqual, LF, CRLF } from './line-endings'
 

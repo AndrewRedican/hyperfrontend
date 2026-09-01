@@ -1,10 +1,12 @@
 import type { FileChange } from './types'
 import { mkdirSync, writeFileSync, rmSync, symlinkSync } from 'node:fs'
 import { join } from 'node:path'
+import { after as afterAll, before as beforeAll } from 'node:test'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { createFsTree } from './fs-tree'
 import { Mode } from './types'
 
-const TEST_DIR = join(__dirname, '__test_fixtures_fstree__')
+const TEST_DIR = join(import.meta.dirname, '__test_fixtures_fstree__')
 
 describe('vfs/FsTree', () => {
   beforeAll(() => {

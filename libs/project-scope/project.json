@@ -17,6 +17,10 @@
       }
     },
     "publish": {},
-    "typecheck": {}
+    "typecheck": {},
+    "test": {
+      "executor": "@hyperfrontend/package:test",
+      "options": {}
+    }
   }
 }

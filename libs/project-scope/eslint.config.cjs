@@ -23,7 +23,7 @@ module.exports = [
       '@nx/dependency-checks': [
         'error',
         {
-          ignoredDependencies: ['jest', '@jest/globals'],
+          ignoredDependencies: ['@hyperfrontend/testing', '@jest/globals'],
           ignoredFiles: ['{projectRoot}/eslint.config.{js,cjs,mjs}'],
         },
       ],

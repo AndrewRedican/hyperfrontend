@@ -1,11 +1,13 @@
 import { resolve } from 'node:path'
+import { beforeEach } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { analyzeProject } from './analyze'
 jest.mock('./nx', () => ({
   isNxWorkspace: jest.fn(() => false),
   findNxWorkspaceRoot: jest.fn(() => null),
 }))
 
-const FIXTURES_DIR = resolve(__dirname, '../__fixtures__')
+const FIXTURES_DIR = resolve(import.meta.dirname, '../__fixtures__')
 
 describe('analyzeProject workspace type detection (mocked)', () => {
   beforeEach(() => {

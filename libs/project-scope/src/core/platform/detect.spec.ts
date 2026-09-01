@@ -1,3 +1,5 @@
+import { after as afterAll, beforeEach } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { detectPlatform, getPlatformInfo, detectCaseSensitivity, isCaseSensitiveFs, isWindows, isMac, isLinux } from './detect'
 
 const originalPlatform = process.platform

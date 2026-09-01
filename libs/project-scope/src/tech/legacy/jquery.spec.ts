@@ -1,3 +1,4 @@
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { jqueryDetector } from './jquery'
 
 const mockProjectPath = '/mock/project'

@@ -1,4 +1,6 @@
 import type { PackageJson } from '../../project/package'
+import { beforeEach } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import * as detectorHelpers from '../shared-utils/detector-helpers'
 import { parcelDetector, PARCEL_CONFIG_PATTERNS } from './parcel'
 

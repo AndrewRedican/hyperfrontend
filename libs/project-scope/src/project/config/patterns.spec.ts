@@ -1,4 +1,5 @@
 import type { ConfigType } from './patterns'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { CONFIG_PATTERNS, getConfigPatternsByType } from './patterns'
 
 describe('CONFIG_PATTERNS', () => {

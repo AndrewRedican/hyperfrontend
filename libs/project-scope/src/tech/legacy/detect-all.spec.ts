@@ -1,3 +1,4 @@
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { detectLegacyFrameworks, legacyDetectors } from './detect-all'
 
 const mockProjectPath = '/mock/project'

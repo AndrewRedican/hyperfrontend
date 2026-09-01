@@ -1,3 +1,4 @@
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { backboneDetector } from './backbone'
 
 const mockProjectPath = '/mock/project'

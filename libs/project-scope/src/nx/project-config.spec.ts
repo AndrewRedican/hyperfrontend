@@ -1,7 +1,8 @@
 import { resolve } from 'node:path'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { readProjectJson, getProjectConfig, discoverNxProjects, buildSimpleProjectGraph } from './project-config'
 
-const FIXTURES_DIR = resolve(__dirname, '../../__fixtures__')
+const FIXTURES_DIR = resolve(import.meta.dirname, '../../__fixtures__')
 const MONOREPO = resolve(FIXTURES_DIR, 'monorepo')
 const MINIMAL_PROJECT = resolve(FIXTURES_DIR, 'minimal-project')
 const CORE_PROJECT = resolve(MONOREPO, 'packages/core')

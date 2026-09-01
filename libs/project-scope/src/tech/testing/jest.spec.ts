@@ -1,3 +1,4 @@
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { jestDetector, JEST_CONFIG_PATTERNS } from './jest'
 
 const mockProjectPath = '/mock/project'

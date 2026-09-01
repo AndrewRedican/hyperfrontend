@@ -1,3 +1,6 @@
+import type { MockedFunction } from '@hyperfrontend/testing'
+import { beforeEach } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import * as fs from '../../core/fs'
 import { playwrightDetector, PLAYWRIGHT_CONFIG_PATTERNS } from './playwright'
 
@@ -11,7 +14,7 @@ jest.mock('../../project/package', () => ({
   readPackageJsonIfExists: jest.fn().mockReturnValue(null),
 }))
 
-const mockExists = fs.exists as jest.MockedFunction<typeof fs.exists>
+const mockExists = fs.exists as MockedFunction<typeof fs.exists>
 
 describe('playwrightDetector', () => {
   beforeEach(() => {

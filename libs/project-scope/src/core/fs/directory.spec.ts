@@ -1,8 +1,10 @@
 import { mkdirSync, writeFileSync, rmSync, existsSync } from 'node:fs'
 import { join } from 'node:path'
+import { after as afterAll, before as beforeAll } from 'node:test'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { readDirectory, readDirectoryRecursive, createDirectory, removeDirectory } from './directory'
 
-const TEST_DIR = join(__dirname, '__test_dir_fixtures__')
+const TEST_DIR = join(import.meta.dirname, '__test_dir_fixtures__')
 
 describe('core/fs/directory', () => {
   beforeAll(() => {

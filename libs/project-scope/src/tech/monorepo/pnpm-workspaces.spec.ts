@@ -1,3 +1,6 @@
+import type { MockedFunction } from '@hyperfrontend/testing'
+import { beforeEach } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { exists } from '../../core/fs'
 import { pnpmWorkspacesDetector } from './pnpm-workspaces'
 
@@ -7,7 +10,7 @@ jest.mock('../../core/fs', () => ({
   exists: jest.fn().mockReturnValue(false),
 }))
 
-const mockExists = exists as jest.MockedFunction<typeof exists>
+const mockExists = exists as MockedFunction<typeof exists>
 
 describe('pnpmWorkspacesDetector', () => {
   beforeEach(() => {

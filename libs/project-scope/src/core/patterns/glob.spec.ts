@@ -1,4 +1,4 @@
-import { describe, it, expect } from '@jest/globals'
+import { describe, it, expect } from '@hyperfrontend/testing'
 import { matchGlobPattern, matchesAnyPattern, matchesExact } from './glob'
 
 describe('core/patterns/glob', () => {

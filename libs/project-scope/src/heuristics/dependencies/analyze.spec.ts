@@ -1,8 +1,18 @@
+import type { MockedFunction } from '@hyperfrontend/testing'
 import { mkdirSync, writeFileSync, rmSync } from 'node:fs'
 import { join, resolve } from 'node:path'
+import { after as afterAll, before as beforeAll } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
+import * as fsModule from '../../core/fs'
 import { buildDependencyGraph, findCircularDependencies, getProjectDependencies } from './analyze'
 
-const FIXTURES_DIR = resolve(__dirname, '../../../__fixtures__')
+// why: the module under test binds `exists` when it links, so no property replacement on the namespace can reach it. Replacing the module is what makes the calls observable, and the replacement calls through.
+jest.mock('../../core/fs', () => {
+  const actual = jest.requireActual<typeof fsModule>('../../core/fs')
+  return { ...actual, exists: jest.fn(actual.exists) }
+})
+
+const FIXTURES_DIR = resolve(import.meta.dirname, '../../../__fixtures__')
 const MINIMAL_PROJECT = resolve(FIXTURES_DIR, 'minimal-project')
 const MONOREPO = resolve(FIXTURES_DIR, 'monorepo')
 
@@ -458,7 +468,7 @@ describe('resolveImportPath edge cases', () => {
 })
 
 describe('buildDependencyGraph path confinement', () => {
-  const ESCAPE_PROJECT = resolve(__dirname, '__escape_fixtures__')
+  const ESCAPE_PROJECT = resolve(import.meta.dirname, '__escape_fixtures__')
 
   beforeAll(() => {
     rmSync(ESCAPE_PROJECT, { recursive: true, force: true })
@@ -475,13 +485,13 @@ describe('buildDependencyGraph path confinement', () => {
   })
 
   it('never stats a path outside the project root when an import escapes it', () => {
-    const fsModule = require('../../core/fs')
-    const spy = jest.spyOn(fsModule, 'exists')
+    const spy = fsModule.exists as MockedFunction<typeof fsModule.exists>
+    // why: the replacement stands for the whole file rather than this test, so the calls the earlier suites made have to be dropped before this one measures its own.
+    spy.mockClear()
 
     buildDependencyGraph(ESCAPE_PROJECT)
     const outOfRoot = spy.mock.calls.map((call) => resolve(String(call[0]))).filter((path) => !path.startsWith(ESCAPE_PROJECT))
 
-    spy.mockRestore()
     expect(outOfRoot).toEqual([])
   })
 })

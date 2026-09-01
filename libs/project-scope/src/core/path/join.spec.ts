@@ -1,5 +1,5 @@
 import { sep } from 'node:path'
-import { describe, it, expect } from '@jest/globals'
+import { describe, it, expect } from '@hyperfrontend/testing'
 import { join, joinPosix } from './join'
 
 describe('core/path/join', () => {

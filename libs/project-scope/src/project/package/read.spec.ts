@@ -1,9 +1,11 @@
 import { mkdirSync, writeFileSync, rmSync } from 'node:fs'
 import { join, resolve } from 'node:path'
+import { after as afterAll, before as beforeAll } from 'node:test'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { readPackageJson, readPackageJsonIfExists, findNearestPackageJson } from './read'
 
-const FIXTURES_DIR = resolve(__dirname, '../../../__fixtures__')
-const TEST_DIR = join(__dirname, '__test_fixtures_read__')
+const FIXTURES_DIR = resolve(import.meta.dirname, '../../../__fixtures__')
+const TEST_DIR = join(import.meta.dirname, '__test_fixtures_read__')
 const MINIMAL_PROJECT = resolve(FIXTURES_DIR, 'minimal-project')
 const MONOREPO = resolve(FIXTURES_DIR, 'monorepo')
 

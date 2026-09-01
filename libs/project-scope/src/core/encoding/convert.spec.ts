@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { toUtf8, bufferToString, stripBom, addBom } from './convert'
 import { UTF8_BOM, UTF8_BOM_BYTES } from './detect'
 

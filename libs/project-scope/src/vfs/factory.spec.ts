@@ -1,8 +1,10 @@
 import { mkdirSync, writeFileSync, rmSync } from 'node:fs'
 import { join } from 'node:path'
+import { after as afterAll, before as beforeAll } from 'node:test'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { createTree, createTreeFromDisk } from './factory'
 
-const TEST_DIR = join(__dirname, '__test_fixtures_factory__')
+const TEST_DIR = join(import.meta.dirname, '__test_fixtures_factory__')
 
 describe('vfs/factory', () => {
   beforeAll(() => {

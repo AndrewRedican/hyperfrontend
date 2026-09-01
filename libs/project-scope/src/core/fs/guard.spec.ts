@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { isSafePath } from './guard'
 
 const NUL = '\u0000'

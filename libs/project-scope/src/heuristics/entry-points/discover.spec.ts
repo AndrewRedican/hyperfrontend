@@ -1,7 +1,9 @@
 import { resolve } from 'node:path'
+import { beforeEach } from 'node:test'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { discoverEntryPoints, clearEntryPointCache, ENTRY_POINT_PATTERNS } from './discover'
 
-const FIXTURES_DIR = resolve(__dirname, '../../../__fixtures__')
+const FIXTURES_DIR = resolve(import.meta.dirname, '../../../__fixtures__')
 const MINIMAL_PROJECT = resolve(FIXTURES_DIR, 'minimal-project')
 const LIBRARY_WITH_EXPORTS = resolve(FIXTURES_DIR, 'library-with-exports')
 const LIBRARY_WITH_BIN_STRING = resolve(FIXTURES_DIR, 'library-with-bin-string')
