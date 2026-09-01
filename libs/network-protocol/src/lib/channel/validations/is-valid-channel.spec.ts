@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { channel } from '../creators/mocks'
 import { isValidChannel } from './is-valid-channel'
 

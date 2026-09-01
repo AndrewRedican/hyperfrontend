@@ -1,4 +1,6 @@
 import type { Topic, TopicStore } from '../model'
+import { beforeEach } from 'node:test'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { isValidTopic } from '../validations/is-valid-topic'
 import { createTopicStore } from './create-topic-store'
 

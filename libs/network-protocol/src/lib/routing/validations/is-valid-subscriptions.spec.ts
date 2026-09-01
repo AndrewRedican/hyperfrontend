@@ -1,3 +1,4 @@
+import { describe, expect, it as test } from '@hyperfrontend/testing'
 import { isValidSubscriptions } from './is-valid-subscriptions'
 
 describe('isValidSubscriptions', () => {

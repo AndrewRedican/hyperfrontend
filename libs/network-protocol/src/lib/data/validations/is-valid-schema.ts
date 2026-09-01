@@ -1,7 +1,6 @@
 import type { Schema } from '@hyperfrontend/json-utils'
 import { validate } from '@hyperfrontend/json-utils'
-/* istanbul ignore next - JSON import causes coverage artifact */
-import * as v4Schema from './v4.json'
+import v4Schema from './v4.json'
 
 /**
  * Validates whether the provided value is a valid JSON Schema v4 schema.

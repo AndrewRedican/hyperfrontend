@@ -1,5 +1,6 @@
 import type { SerializedData } from '../model'
 import { encrypt } from '@hyperfrontend/cryptography/node'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { createDataEncrypter } from './create-encrypter'
 import { encryptionTestCases, invalidEncryptionTestCases } from './test-fixtures'
 

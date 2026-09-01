@@ -1,5 +1,6 @@
 import type { SerializedEncryptedPacket } from '../model'
 import { base64ToUint8Array } from '@hyperfrontend/string-utils/node'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { createDeserializedEncryptedPacketCreator } from './create-deserialized-encrypted-packet-creator'
 import { sampleSerializedPacket, sampleEncryptedData, packetSerializationTestCases, invalidPacketTestCases } from './test-fixtures'
 

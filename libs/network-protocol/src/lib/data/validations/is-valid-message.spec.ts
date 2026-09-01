@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { isValidMessage } from './is-valid-message'
 
 describe('isValidMessage', () => {

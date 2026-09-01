@@ -42,7 +42,8 @@ export function createDataFactory(createHash: (data: string, algorithm: string) 
     let serialized: JSONString<T>
     try {
       serialized = stringify(message) as JSONString<T>
-    } /* istanbul ignore next - covered by hasCircularReference check above */ catch {
+      // why: covered by the hasCircularReference check above.
+    } catch {
       throw createError('Cannot create data with unserializable message')
     }
     let schema: Schema
@@ -54,7 +55,8 @@ export function createDataFactory(createHash: (data: string, algorithm: string) 
     let schemaHash: string
     try {
       schemaHash = await createHash(stringify(schema), 'SHA-256')
-    } /* istanbul ignore next - hash failure would indicate system-level crypto issues */ catch {
+      // why: a hash failure would indicate a system-level crypto issue.
+    } catch {
       throw createError('Cannot create data because failed to hash schema')
     }
     const id = uuidV4()

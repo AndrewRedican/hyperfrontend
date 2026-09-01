@@ -1,7 +1,14 @@
 import { createHash } from '@hyperfrontend/cryptography/node'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { createDataFactory } from './create-data-factory'
-import * as getSchemaModule from './get-schema'
+import { getSchema } from './get-schema'
 import { dataCreatorTestCases, invalidDataCreatorTestCases } from './test-fixtures'
+
+// why: `create-data-factory` binds `getSchema` at link time, so nothing written onto the module namespace can reach it. A replacement that calls through is what a spy would have been.
+jest.mock('./get-schema', () => {
+  const actual = jest.requireActual('./get-schema') as { getSchema: unknown }
+  return { ...actual, getSchema: jest.fn(actual.getSchema) }
+})
 
 describe('createDataFactory (Node.js)', () => {
   describe('valid data creation', () => {
@@ -102,7 +109,7 @@ describe('createDataFactory (Node.js)', () => {
     it('handles schema creation failure by using problematic input', async () => {
       const createData = createDataFactory(createHash)
 
-      jest.spyOn(getSchemaModule, 'getSchema').mockImplementationOnce(() => {
+      jest.mocked(getSchema).mockImplementationOnce(() => {
         throw new Error('Schema creation failed')
       })
 

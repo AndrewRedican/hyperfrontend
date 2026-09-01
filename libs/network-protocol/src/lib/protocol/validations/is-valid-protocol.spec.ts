@@ -1,4 +1,5 @@
 import type { Protocol } from '../../channel/model'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { isValidProtocol } from './is-valid-protocol'
 
 describe('isValidProtocol', () => {

@@ -1,4 +1,5 @@
 import type { Schema } from '@hyperfrontend/json-utils'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { isValidSchema } from './is-valid-schema'
 
 describe('isValidSchema', () => {

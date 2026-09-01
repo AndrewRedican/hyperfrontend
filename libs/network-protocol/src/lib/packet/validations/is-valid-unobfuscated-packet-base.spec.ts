@@ -1,5 +1,6 @@
 import type { UnobfuscatedPacket } from '../model'
 import { uuidV4 } from '@hyperfrontend/random-generator-utils'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { isValidUnobfuscatedPacketBase } from './is-valid-unobfuscated-packet-base'
 
 describe('isValidUnobfuscatedPacketBase', () => {

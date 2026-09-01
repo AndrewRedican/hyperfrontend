@@ -1,5 +1,3 @@
-/* istanbul ignore file */
-
 /**
  * Network Protocol V1 - Browser Integration Test
  *
@@ -15,8 +13,8 @@
  * Note: V1 protocol uses dynamic key exchange where the first message contains
  * the encryption key for subsequent communications.
  */
-
 import type { TextMessage, ReceivedPacket } from '../model'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { sleep } from '@hyperfrontend/time-utils'
 import { createClient } from './create-client'
 

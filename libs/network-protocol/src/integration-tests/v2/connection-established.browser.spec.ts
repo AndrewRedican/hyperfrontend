@@ -1,5 +1,3 @@
-/* istanbul ignore file */
-
 /**
  * Network Protocol V2 - Browser Integration Test
  *
@@ -15,8 +13,8 @@
  * Note: V2 protocol uses pre-shared key (PSK) encryption where both parties
  * must share the same secret key beforehand (out-of-band key exchange).
  */
-
 import type { TextMessage, ReceivedPacket } from '../model'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { sleep } from '@hyperfrontend/time-utils'
 import { createClient } from './create-client'
 

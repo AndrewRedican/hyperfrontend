@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { routedObfuscatedPacket } from '../creators/mocks'
 import { isValidRoutedObfuscatedPacket } from './is-valid-routed-obfuscated-packet'
 

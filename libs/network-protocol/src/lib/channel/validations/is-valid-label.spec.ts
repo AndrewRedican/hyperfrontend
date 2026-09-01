@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { isValidLabel } from './is-valid-label'
 
 describe('isValidLabel', () => {

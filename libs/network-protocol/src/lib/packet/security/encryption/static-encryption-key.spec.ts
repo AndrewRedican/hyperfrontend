@@ -1,9 +1,12 @@
+import type { Mock } from '@hyperfrontend/testing'
 import type { UnencryptedPacket, UnserializedEncryptedPacket } from '../../../packet/model'
+import { beforeEach } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { createStaticKeyEncryptionFactory } from './static-encryption-key'
 
 describe('createStaticKeyEncryptionFactory', () => {
-  let mockEncryptPacket: jest.Mock
-  let mockDecryptPacket: jest.Mock
+  let mockEncryptPacket: Mock
+  let mockDecryptPacket: Mock
 
   beforeEach(() => {
     mockEncryptPacket = jest.fn().mockImplementation(async (packet, key) => ({

@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { getFirstInvalidProtocolProperty } from './get-first-invalid-protocol-property'
 
 describe('getFirstInvalidProtocolProperty', () => {

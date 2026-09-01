@@ -1,5 +1,6 @@
 import type { SerializedEncryptedPacket } from '../../model'
 import { encrypt } from '@hyperfrontend/cryptography/node'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { createPacketObfuscator } from './create-obfuscator'
 import {
   invalidPacketObfuscationTestCases,

@@ -1,4 +1,6 @@
 import type { SerializedEncryptedPacket } from '../../model'
+import { beforeEach } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { createTimeIntervalObfuscationFactory } from './time-interval-obfuscation-factory'
 
 describe('createTimeIntervalObfuscationFactory', () => {

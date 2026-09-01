@@ -1,4 +1,5 @@
 import { uuidV4 } from '@hyperfrontend/random-generator-utils'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { isValidTarget } from './is-valid-target'
 
 describe('isValidTarget', () => {
