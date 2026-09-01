@@ -3,6 +3,10 @@
  * Tests that the package is requireable and exports work correctly.
  */
 
+'use strict'
+
+const { describe, it, expect } = require('@hyperfrontend/testing')
+
 describe('@hyperfrontend/random-generator-utils CJS', () => {
   it('is requireable', () => {
     const randomGenerator = require('@hyperfrontend/random-generator-utils')

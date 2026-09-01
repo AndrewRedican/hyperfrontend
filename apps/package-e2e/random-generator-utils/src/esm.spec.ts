@@ -3,6 +3,8 @@
  * Tests that the package is importable and exports work correctly.
  */
 
+import { describe, it, expect } from '@hyperfrontend/testing'
+
 describe('@hyperfrontend/random-generator-utils ESM', () => {
   it('is importable', async () => {
     const randomGenerator = await import('@hyperfrontend/random-generator-utils')
