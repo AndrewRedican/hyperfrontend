@@ -93,6 +93,7 @@ export function createFeatureHandle(
 
   let applier: PresentationApplier | null = null
   let stopWindowWatch: (() => void) | null = null
+  let stopReporting: () => void = () => undefined
 
   if (hostWindow) {
     const activeChannel = broker.addChannel(
@@ -106,6 +107,10 @@ export function createFeatureHandle(
     channel = activeChannel
     const heartbeat = createHeartbeatEmitter((type) => activeChannel.send(type))
     const visibility = createVisibilityReporter((type, data) => activeChannel.send(type, data))
+    stopReporting = () => {
+      heartbeat.stop()
+      visibility.stop()
+    }
     const activeApplier = createPresentationApplier(settings.root, (payload) => activeChannel.send(ControlType.Dismiss, payload))
     applier = activeApplier
 
@@ -190,6 +195,10 @@ export function createFeatureHandle(
         emitter.on('open', () => resolve())
         readyRejects.push(reject)
       }),
-    close: () => channel?.disconnect(),
+    // why: The channel's close event also stops these reporters, but it never fires when the peer's frame is destroyed while the polite close is still delivering, so a feature told to close stops volunteering beats and visibility itself.
+    close: () => {
+      stopReporting()
+      channel?.disconnect()
+    },
   } as FeatureHandle)
 }
