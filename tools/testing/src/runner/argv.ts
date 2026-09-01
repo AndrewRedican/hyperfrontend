@@ -48,8 +48,8 @@ export function buildRunPlan(
     ...config.coverageInclude.map((pattern) => `--test-coverage-include=${pattern}`),
     ...(config.coverageExclude ?? []).map((pattern) => `--test-coverage-exclude=${pattern}`),
     ...(environment.testIgnore ?? []).map((pattern) => `--test-coverage-exclude=${pattern}`),
-    ...thresholdArgs(config),
-    '--test-reporter=spec',
+    // why: the thresholds are checked against the merged report instead, because Node counts a module evaluated twice as two files.
+    `--test-reporter=${resolve(workspaceRoot, 'tools/testing/src/runner/reporter.ts')}`,
     '--test-reporter-destination=stdout',
     '--test-reporter=lcov',
     `--test-reporter-destination=${lcovPath}`,
@@ -57,21 +57,6 @@ export function buildRunPlan(
   ]
 
   return { environment, argv, lcovPath: relative(projectRoot, lcovPath) }
-}
-
-/**
- * Renders the coverage threshold flags a project declares.
- *
- * @param config - The project's configuration.
- * @returns The threshold arguments, empty when none are declared.
- */
-function thresholdArgs(config: TestConfig): string[] {
-  const { lines, branches, functions } = config.coverageThresholds ?? {}
-  return [
-    ...(lines === undefined ? [] : [`--test-coverage-lines=${lines}`]),
-    ...(branches === undefined ? [] : [`--test-coverage-branches=${branches}`]),
-    ...(functions === undefined ? [] : [`--test-coverage-functions=${functions}`]),
-  ]
 }
 
 /**

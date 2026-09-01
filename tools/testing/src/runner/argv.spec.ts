@@ -72,23 +72,17 @@ describe('buildRunPlan', () => {
     assert.equal(planArgs({ ...SINGLE, testTimeout: 1_000 }).includes('--test-timeout=1000'), true)
   })
 
-  it('omits thresholds when none are declared', () => {
+  it('never asks Node to enforce a threshold, since it would judge each module evaluation separately', () => {
     assert.equal(
-      planArgs(SINGLE).some((argument) => argument.startsWith('--test-coverage-lines')),
+      planArgs({ ...SINGLE, coverageThresholds: { lines: 100, branches: 96, functions: 98 } }).some((argument) =>
+        argument.startsWith('--test-coverage-lines=')
+      ),
       false
     )
   })
 
-  it('passes the declared line threshold', () => {
-    assert.equal(planArgs({ ...SINGLE, coverageThresholds: { lines: 100 } }).includes('--test-coverage-lines=100'), true)
-  })
-
-  it('passes the declared branch threshold', () => {
-    assert.equal(planArgs({ ...SINGLE, coverageThresholds: { branches: 96 } }).includes('--test-coverage-branches=96'), true)
-  })
-
-  it('passes the declared function threshold', () => {
-    assert.equal(planArgs({ ...SINGLE, coverageThresholds: { functions: 98 } }).includes('--test-coverage-functions=98'), true)
+  it('reports through the runner own reporter so Node coverage summary is held back', () => {
+    assert.equal(planArgs(SINGLE).includes(`--test-reporter=${WORKSPACE}/tools/testing/src/runner/reporter.ts`), true)
   })
 
   it('imports each setup file', () => {

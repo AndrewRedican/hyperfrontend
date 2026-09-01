@@ -57,6 +57,8 @@ async function main(): Promise<void> {
     coverageDir: args.coverageDir,
   })
 
+  // why: the table is printed here rather than by the runner, so the runner stays free of terminal output and its own suites can call it without noise.
+  for (const row of outcome.coverageTable) process.stdout.write(`${row}\n`)
   for (const failure of outcome.failures) process.stderr.write(`${failure}\n`)
   if (!outcome.success) process.exitCode = 1
 }

@@ -66,7 +66,34 @@ it('doubles', () => {
 describe('runProjectTests', () => {
   it('reports success when the suite passes and coverage is complete', () => {
     const fixture = createFixture({ 'src/double.ts': PASSING_SOURCE, 'src/double.spec.ts': PASSING_SPEC })
-    assert.deepEqual(run(fixture), { success: true, failures: [] })
+    const { success, failures } = run(fixture)
+    assert.deepEqual({ success, failures }, { success: true, failures: [] })
+  })
+
+  it('returns the coverage table for the caller to print', () => {
+    const fixture = createFixture({ 'src/double.ts': PASSING_SOURCE, 'src/double.spec.ts': PASSING_SPEC })
+    assert.equal(
+      run(fixture).coverageTable.some((row) => row.startsWith('src/double.ts')),
+      true
+    )
+  })
+
+  it('counts a module evaluated twice as one file', () => {
+    const fixture = createFixture({
+      'src/double.ts': PASSING_SOURCE,
+      'src/double.spec.ts': `import assert from 'node:assert/strict'
+import { it } from 'node:test'
+import { jest } from '@hyperfrontend/testing'
+import { double } from './double'
+
+it('doubles', async () => {
+  jest.resetModules()
+  const again = await import('./double')
+  assert.equal(again.double(double(2)), 8)
+})
+`,
+    })
+    assert.equal(run(fixture).coverageTable.filter((row) => row.startsWith('src/double.ts')).length, 1)
   })
 
   it('reports failure when a test fails', () => {

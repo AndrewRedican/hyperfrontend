@@ -3,6 +3,8 @@ import { spawnSync } from 'node:child_process'
 import { existsSync, mkdirSync, rmSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { findUnmeasuredFiles } from '../coverage/completeness'
+import { findThresholdShortfalls, renderCoverageTable } from '../coverage/gate'
+import { mergeLcov } from '../coverage/lcov'
 import { buildRunPlan, serialiseModuleMap } from './argv'
 import { withDefaults } from './config'
 
@@ -28,6 +30,8 @@ export type RunOutcome = {
   success: boolean
   /** Human-readable reasons the run failed, empty when it passed. */
   failures: string[]
+  /** The per-file coverage table, one string per line. */
+  coverageTable: string[]
 }
 
 /**
@@ -68,11 +72,14 @@ export function runProjectTests(config: TestConfig, context: RunContext): RunOut
     if (existsSync(lcovPath)) reports.push(lcovPath)
   }
 
+  // why: the reports are merged rather than read one at a time, because a module evaluated again after `jest.resetModules` is a separate file to Node and one file to the gate.
+  const measured = [...mergeLcov(reports).values()]
+  failures.push(...findThresholdShortfalls(measured, resolved.coverageThresholds))
+
   // why: Node omits files no test loaded, so a wholly untested source file would otherwise pass a full-coverage gate.
-  // why: the reports are unioned first, because a file may be exercised by only one of a project's environments.
   // why: a run that produced no report at all lands here too, and every included file is then correctly reported unmeasured.
-  const { missing } = findUnmeasuredFiles(reports, context.projectRoot, resolved.coverageInclude, resolved.coverageExclude)
+  const { missing } = findUnmeasuredFiles(measured, context.projectRoot, resolved.coverageInclude, resolved.coverageExclude)
   if (missing.length > 0) failures.push(`no test loaded these files, so coverage never measured them:\n  ${missing.join('\n  ')}`)
 
-  return { success: failures.length === 0, failures }
+  return { success: failures.length === 0, failures, coverageTable: renderCoverageTable(measured) }
 }
