@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { randomExponential } from './random-exponential'
 
 describe('randomExponential', () => {

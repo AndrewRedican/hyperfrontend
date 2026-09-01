@@ -1,3 +1,4 @@
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { randomUniform } from './random-uniform'
 
 // why: An unseeded source put this mean within three standard errors of its tolerance, so roughly three runs in a thousand failed; a fixed stream makes the sample exactly reproducible.
