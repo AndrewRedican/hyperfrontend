@@ -100,17 +100,21 @@ function mergeRecord(files: Map<string, FileCoverage>, lines: readonly string[])
   const counts = lines.filter((line) => line.startsWith('FNDA:')).map((line) => line.slice(5))
 
   for (const [at, declaration] of declarations.entries()) {
-    if (!measured.has(Number(declaration.slice(0, declaration.indexOf(','))))) continue
+    const separator = declaration.indexOf(',')
+    if (!measured.has(Number(declaration.slice(0, separator)))) continue
     const count = counts[at]
-    add(file.functions, declaration, count === undefined ? 0 : Number(count.slice(0, count.indexOf(','))))
+    // why: the reporter numbers anonymous functions by discovery order, which shifts between runs and environments, so the same function arrives under different names and two records for it would stay two entries. The declaration line is the identity that holds still.
+    const name = declaration.slice(separator + 1).replace(/^anonymous_\d+$/, 'anonymous')
+    add(file.functions, `${declaration.slice(0, separator)},${name}`, count === undefined ? 0 : Number(count.slice(0, count.indexOf(','))))
   }
 
   for (const line of lines) {
     if (!line.startsWith('BRDA:')) continue
     const parts = line.slice(5).split(',')
     if (!measured.has(Number(parts[0]))) continue
+    // why: block numbers shift between runs and environments the same way anonymous function names do, so keying on them splits one branch into several entries at random. The line and the branch index are the parts that hold still; distinct blocks sharing both collapse into one entry, which is a deterministic undercount rather than a drifting total.
     // why: an untaken branch is reported as a dash rather than a zero.
-    add(file.branches, parts.slice(0, 3).join(','), parts[3] === '-' ? 0 : Number(parts[3]))
+    add(file.branches, `${parts[0]},${parts[2]}`, parts[3] === '-' ? 0 : Number(parts[3]))
   }
 }
 

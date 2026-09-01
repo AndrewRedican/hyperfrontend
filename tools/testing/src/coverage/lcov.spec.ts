@@ -62,6 +62,26 @@ describe('mergeLcov', () => {
     assert.deepEqual(totals, { found: 2, hit: 1 })
   })
 
+  it('merges an anonymous function however each record numbered it', () => {
+    const body = 'SF:src/a.ts\nFN:5,anonymous_2\nFNDA:1,anonymous_2\nDA:5,1\nend_of_record\nSF:src/a.ts\nFN:5,anonymous_7\nFNDA:0,anonymous_7\nDA:5,0\nend_of_record\n'
+    assert.deepEqual(fileTotals(onlyFile(body)).functions, { found: 1, hit: 1 })
+  })
+
+  it('keeps anonymous functions on different lines separate', () => {
+    const body = 'SF:src/a.ts\nFN:5,anonymous_0\nFN:9,anonymous_1\nFNDA:1,anonymous_0\nFNDA:0,anonymous_1\nDA:5,1\nDA:9,0\nend_of_record\n'
+    assert.deepEqual(fileTotals(onlyFile(body)).functions, { found: 2, hit: 1 })
+  })
+
+  it('merges a branch however each record numbered its block', () => {
+    const body = 'SF:src/a.ts\nDA:4,1\nBRDA:4,3,0,1\nend_of_record\nSF:src/a.ts\nDA:4,1\nBRDA:4,9,0,0\nend_of_record\n'
+    assert.deepEqual(fileTotals(onlyFile(body)).branches, { found: 1, hit: 1 })
+  })
+
+  it('keeps the branch arms of one line separate', () => {
+    const body = 'SF:src/a.ts\nDA:4,1\nBRDA:4,0,0,2\nBRDA:4,0,1,0\nend_of_record\n'
+    assert.deepEqual(fileTotals(onlyFile(body)).branches, { found: 2, hit: 1 })
+  })
+
   it('credits a branch one evaluation took', () => {
     const body = 'SF:src/a.ts\nDA:4,1\nBRDA:4,0,0,-\nend_of_record\nSF:src/a.ts\nDA:4,1\nBRDA:4,0,0,3\nend_of_record\n'
     assert.deepEqual(fileTotals(onlyFile(body)).branches, { found: 1, hit: 1 })
