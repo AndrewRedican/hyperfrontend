@@ -71,6 +71,16 @@ function copyGlobals(window: JSDOM['window']): void {
       continue
     }
   }
+
+  // why: a window inherits the EventTarget methods rather than owning them, and copying only its own properties would leave the global unable to listen or dispatch. They are bound to the window so a listener registered through the global and an event dispatched at it meet on the same target.
+  for (const name of ['addEventListener', 'removeEventListener', 'dispatchEvent'] as const) {
+    Object.defineProperty(globalThis, name, {
+      value: (window[name] as (...args: unknown[]) => unknown).bind(window),
+      writable: true,
+      configurable: true,
+      enumerable: false,
+    })
+  }
 }
 
 /**
@@ -89,6 +99,11 @@ export function installDom(): void {
   })
 
   copyGlobals(dom.window)
+
+  // why: in a browser `window` is the global object, and the Jest environment this replaces made it so by running the tests inside the window. Here the globals are copies, so pointing `window` at the jsdom object would leave two slots holding one function: a spy installed on `window.getComputedStyle` would be invisible to code calling the bare `getComputedStyle`.
+  for (const name of ['window', 'self', 'globalThis', 'parent', 'top'] as const) {
+    Object.defineProperty(globalThis, name, { value: globalThis, writable: true, configurable: true, enumerable: false })
+  }
 }
 
 installDom()

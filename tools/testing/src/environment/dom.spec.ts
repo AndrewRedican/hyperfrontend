@@ -13,6 +13,18 @@ describe('the DOM environment', () => {
     assert.equal(document.createElement('div') instanceof HTMLElement, true)
   })
 
+  it('is the global object, the way a window is in a browser', () => {
+    assert.equal(window, globalThis)
+    assert.equal(self, globalThis)
+  })
+
+  it('serves the EventTarget methods a window inherits rather than owns', () => {
+    let received = 0
+    addEventListener('probe-global', () => (received += 1))
+    dispatchEvent(new Event('probe-global'))
+    assert.equal(received, 1)
+  })
+
   it('dispatches an event to a listener', () => {
     let received = 0
     document.addEventListener('probe', () => (received += 1))
