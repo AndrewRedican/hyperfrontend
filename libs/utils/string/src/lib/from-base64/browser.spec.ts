@@ -1,4 +1,5 @@
 /** @jest-environment jsdom */
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { BASE_64_ENCODING_SAMPLES } from '../test-fixtures'
 import { fromBase64 } from './browser/from-base64'
 

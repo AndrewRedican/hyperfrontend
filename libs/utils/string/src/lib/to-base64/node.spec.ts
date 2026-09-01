@@ -1,4 +1,5 @@
 /** @jest-environment node */
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { BASE_64_ENCODING_SAMPLES } from '../test-fixtures'
 import { toBase64 } from './node/to-base64'
 

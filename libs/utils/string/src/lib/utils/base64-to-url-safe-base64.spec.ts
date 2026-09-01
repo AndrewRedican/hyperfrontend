@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { base64ToUrlSafeBase64 } from './base64-to-url-safe-base64'
 
 describe('base64ToUrlSafeBase64', () => {

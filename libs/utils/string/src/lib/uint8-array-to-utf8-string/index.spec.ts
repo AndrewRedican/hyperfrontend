@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { UINT8_CONVERTION_SAMPLES } from '../test-fixtures'
 import { uint8ArrayToUtf8String } from './uint8-array-to-utf8-string'
 
