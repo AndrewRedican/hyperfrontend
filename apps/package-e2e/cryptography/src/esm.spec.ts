@@ -5,6 +5,8 @@
  * Note: cryptography has platform-specific entries: ./browser, ./node, ./common
  */
 
+import { describe, it, expect } from '@hyperfrontend/testing'
+
 describe('@hyperfrontend/cryptography ESM', () => {
   describe('node sub-entry', () => {
     it('is importable', async () => {
