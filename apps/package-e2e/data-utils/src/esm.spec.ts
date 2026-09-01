@@ -3,6 +3,8 @@
  * Tests that the package is importable and exports work correctly.
  */
 
+import { describe, it, expect } from '@hyperfrontend/testing'
+
 describe('@hyperfrontend/data-utils ESM', () => {
   it('is importable', async () => {
     const dataUtils = await import('@hyperfrontend/data-utils')
