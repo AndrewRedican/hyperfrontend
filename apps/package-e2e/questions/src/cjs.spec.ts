@@ -3,6 +3,10 @@
  * Tests that the package is requireable and exports work correctly.
  */
 
+'use strict'
+
+const { describe, it, expect } = require('@hyperfrontend/testing')
+
 describe('@hyperfrontend/questions CJS', () => {
   it('is requireable', () => {
     const pkg = require('@hyperfrontend/questions')
