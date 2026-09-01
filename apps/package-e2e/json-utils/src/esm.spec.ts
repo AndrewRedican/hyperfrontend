@@ -3,6 +3,8 @@
  * Tests that the package is importable and exports work correctly.
  */
 
+import { describe, it, expect } from '@hyperfrontend/testing'
+
 import type { Schema } from '@hyperfrontend/json-utils'
 
 describe('@hyperfrontend/json-utils ESM', () => {

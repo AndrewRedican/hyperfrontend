@@ -3,6 +3,8 @@
  * Tests that the browser bundle loads correctly and attaches to window.
  */
 
+import { describe, it, expect } from '@hyperfrontend/testing'
+
 import { getBundlePath, loadBundleCode, executeBundleInWindow } from '../../shared/helpers'
 
 describe('@hyperfrontend/json-utils IIFE bundle', () => {
