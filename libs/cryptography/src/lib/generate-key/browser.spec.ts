@@ -1,4 +1,5 @@
 /** @jest-environment jsdom */
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { encryptionConfig } from '../encryption-config'
 import { getRandomValues } from '../get-random-values/browser'
 import { generateKey } from './browser'

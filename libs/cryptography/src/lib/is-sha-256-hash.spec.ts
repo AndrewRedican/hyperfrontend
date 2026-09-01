@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { isSHA256Hash } from './is-sha-256-hash'
 
 describe('isSHA256Hash', () => {

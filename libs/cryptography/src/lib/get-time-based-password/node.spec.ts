@@ -1,4 +1,5 @@
 /** @jest-environment node */
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { getTimeBasedPassword } from './node'
 
 describe('getTimeBasedPassword (node)', () => {

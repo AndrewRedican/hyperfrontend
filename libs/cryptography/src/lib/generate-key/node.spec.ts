@@ -1,4 +1,5 @@
 /** @jest-environment node */
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { encryptionConfig } from '../encryption-config'
 import { getRandomValues } from '../get-random-values/node'
 import { generateKey } from './node'
