@@ -8,7 +8,8 @@ import { clearHandshakeTimers } from './handshake-timers'
  * - Sets channel to inactive immediately
  * - Optionally notifies the target window
  * - Removes channel from all registries
- * - Fires 'destroy' event to subscribers
+ * - Fires no channel event: unlike a close, destruction is not observable through
+ *   subscriptions, and it cancels a pending polite close's deadline timer
  * - This is irreversible - channel cannot be reconnected
  *
  * @param channel - Channel internals with state and dependencies
