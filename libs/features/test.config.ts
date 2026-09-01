@@ -13,6 +13,10 @@ import type { TestConfig } from '@hyperfrontend/testing'
  * it directly, so the stub is deleted and the real module is measured. The same is true of
  * `cli/config/load-module.ts`, which was exempt because a compiled `await import()` grew
  * helper branches no test could reach.
+ *
+ * The thresholds are set from measurement under the stable-key coverage merge: 99.96
+ * lines, 99.49 branches, 100 functions, identical on repeated runs. The former Jest
+ * gate inherited the preset's flat 100, which was never satisfiable for this project.
  */
 const config: TestConfig = {
   environments: [
@@ -34,7 +38,7 @@ const config: TestConfig = {
     // why: spec-only helpers exist to exercise other files, not to be shipped or gated themselves.
     'src/testing/**',
   ],
-  coverageThresholds: { lines: 99, branches: 98, functions: 99 },
+  coverageThresholds: { lines: 99, branches: 99, functions: 100 },
 }
 
 export default config
