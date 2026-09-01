@@ -2,7 +2,8 @@ import type { ElementConfig, ElementMethods } from './create-element'
 import type { HtmlTagName } from './html.model'
 import { createElement } from './create-element'
 
-/* istanbul ignore next */
+/* node:coverage disable */
+
 /**
  * Creates a span element with optional configuration.
  *
@@ -19,7 +20,6 @@ export function span(config?: ElementConfig | undefined): ElementMethods<HTMLSpa
   return createElement<HTMLSpanElement>('span', config)
 }
 
-/* istanbul ignore next */
 /**
  * Creates a div element with optional configuration.
  *
@@ -36,7 +36,6 @@ export function div(config?: ElementConfig | undefined): ElementMethods<HTMLDivE
   return createElement<HTMLDivElement>('div', config)
 }
 
-/* istanbul ignore next */
 /**
  * Creates a button element with optional configuration.
  *
@@ -53,7 +52,6 @@ export function button(config?: ElementConfig | undefined): ElementMethods<HTMLB
   return createElement<HTMLButtonElement>('button', config)
 }
 
-/* istanbul ignore next */
 /**
  * Creates an anchor (link) element with optional configuration.
  *
@@ -70,7 +68,6 @@ export function anchor(config?: ElementConfig | undefined): ElementMethods<HTMLA
   return createElement<HTMLAnchorElement>('a', config)
 }
 
-/* istanbul ignore next */
 /**
  * Creates an input element with optional configuration.
  *
@@ -87,7 +84,6 @@ export function input(config?: ElementConfig | undefined): ElementMethods<HTMLIn
   return createElement<HTMLInputElement>('input', config)
 }
 
-/* istanbul ignore next */
 /**
  * Creates an image element with optional configuration.
  *
@@ -104,7 +100,6 @@ export function img(config?: ElementConfig | undefined): ElementMethods<HTMLImag
   return createElement<HTMLImageElement>('img', config)
 }
 
-/* istanbul ignore next */
 /**
  * Creates a paragraph element with optional configuration.
  *
@@ -121,7 +116,6 @@ export function paragraph(config?: ElementConfig | undefined): ElementMethods<HT
   return createElement<HTMLParagraphElement>('p', config)
 }
 
-/* istanbul ignore next */
 /**
  * Creates a heading element (h1-h6) with optional configuration.
  *
@@ -139,7 +133,6 @@ export function header(level: number, config?: ElementConfig | undefined): Eleme
   return createElement<HTMLHeadingElement>(`h${level}` as HtmlTagName, config)
 }
 
-/* istanbul ignore next */
 /**
  * Creates an unordered list (ul) element with optional configuration.
  *
@@ -156,7 +149,6 @@ export function unorderedList(config?: ElementConfig | undefined): ElementMethod
   return createElement('ul', config)
 }
 
-/* istanbul ignore next */
 /**
  * Creates an ordered list (ol) element with optional configuration.
  *
@@ -173,7 +165,6 @@ export function orderedList(config?: ElementConfig | undefined): ElementMethods<
   return createElement('ol', config)
 }
 
-/* istanbul ignore next */
 /**
  * Creates a list item (li) element with optional configuration.
  *
@@ -190,7 +181,6 @@ export function listItem(config?: ElementConfig | undefined): ElementMethods<HTM
   return createElement<HTMLLIElement>('li', config)
 }
 
-/* istanbul ignore next */
 /**
  * Creates a table element with optional configuration.
  *
@@ -207,7 +197,6 @@ export function tableHeader(config?: ElementConfig | undefined): ElementMethods<
   return createElement<HTMLTableElement>('table', config)
 }
 
-/* istanbul ignore next */
 /**
  * Creates a table head (thead) element with optional configuration.
  *
@@ -224,7 +213,6 @@ export function tableHead(config?: ElementConfig | undefined): ElementMethods<HT
   return createElement<HTMLTableSectionElement>('thead', config)
 }
 
-/* istanbul ignore next */
 /**
  * Creates a table header cell (th) element with optional configuration.
  *
@@ -241,7 +229,6 @@ export function tableHeaderCell(config?: ElementConfig | undefined): ElementMeth
   return createElement<HTMLTableCellElement>('th', config)
 }
 
-/* istanbul ignore next */
 /**
  * Creates a table body (tbody) element with optional configuration.
  *
@@ -258,7 +245,6 @@ export function tableBody(config?: ElementConfig | undefined): ElementMethods<HT
   return createElement<HTMLTableSectionElement>('tbody', config)
 }
 
-/* istanbul ignore next */
 /**
  * Creates a table row (tr) element with optional configuration.
  *
@@ -275,7 +261,6 @@ export function tableRow(config?: ElementConfig | undefined): ElementMethods<HTM
   return createElement<HTMLTableRowElement>('tr', config)
 }
 
-/* istanbul ignore next */
 /**
  * Creates a table data cell (td) element with optional configuration.
  *
@@ -292,7 +277,6 @@ export function tableCell(config?: ElementConfig | undefined): ElementMethods<HT
   return createElement<HTMLTableCellElement>('td', config)
 }
 
-/* istanbul ignore next */
 /**
  * Creates a table footer (tfoot) element with optional configuration.
  *
@@ -309,7 +293,6 @@ export function tableFooter(config?: ElementConfig | undefined): ElementMethods<
   return createElement<HTMLTableSectionElement>('tfoot', config)
 }
 
-/* istanbul ignore next */
 /**
  * Creates a section element with optional configuration.
  *
@@ -326,7 +309,6 @@ export function section(config?: ElementConfig | undefined): ElementMethods<HTML
   return createElement<HTMLElement>('section', config)
 }
 
-/* istanbul ignore next */
 /**
  * Creates an article element with optional configuration.
  *
@@ -343,7 +325,6 @@ export function article(config?: ElementConfig | undefined): ElementMethods<HTML
   return createElement<HTMLElement>('article', config)
 }
 
-/* istanbul ignore next */
 /**
  * Creates an aside element with optional configuration.
  *
@@ -360,7 +341,6 @@ export function aside(config?: ElementConfig | undefined): ElementMethods<HTMLEl
   return createElement<HTMLElement>('aside', config)
 }
 
-/* istanbul ignore next */
 /**
  * Creates a footer element with optional configuration.
  *
@@ -377,7 +357,6 @@ export function footer(config?: ElementConfig | undefined): ElementMethods<HTMLE
   return createElement<HTMLElement>('footer', config)
 }
 
-/* istanbul ignore next */
 /**
  * Creates a label element with optional configuration.
  *
@@ -394,7 +373,6 @@ export function label(config?: ElementConfig | undefined): ElementMethods<HTMLLa
   return createElement<HTMLLabelElement>('label', config)
 }
 
-/* istanbul ignore next */
 /**
  * Creates a canvas element with optional configuration.
  *
@@ -410,3 +388,5 @@ export function label(config?: ElementConfig | undefined): ElementMethods<HTMLLa
 export function canvas(config?: ElementConfig | undefined): ElementMethods<HTMLCanvasElement> {
   return createElement<HTMLCanvasElement>('canvas', config)
 }
+
+/* node:coverage enable */

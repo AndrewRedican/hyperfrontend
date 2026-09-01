@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { rgbStringToHex } from './rgb-string-to-hex'
 
 describe('rgbStringToHex', () => {

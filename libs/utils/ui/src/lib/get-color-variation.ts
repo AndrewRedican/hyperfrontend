@@ -34,7 +34,7 @@ export function getColorVariation(baseColor: string, intensity: number) {
   }
 
   const baseColorRGB = hexToRgb(baseColor)
-  /* istanbul ignore next */
+  /* node:coverage ignore next 1 */
   if (!baseColorRGB) return ''
   const factor = intensity / 255
   const r = round(baseColorRGB.r * factor)

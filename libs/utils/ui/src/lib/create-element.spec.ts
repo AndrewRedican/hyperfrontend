@@ -1,4 +1,6 @@
 import type { ElementMethods, ElementConfig } from './create-element'
+import { afterEach, beforeEach } from 'node:test'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { createElement } from './create-element'
 
 describe('createElement', () => {

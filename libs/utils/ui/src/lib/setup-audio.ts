@@ -29,7 +29,7 @@ export async function setupAudio(selector: ElementRefOrString): Promise<AudioCon
       const audioContext = new (globalThis.AudioContext || (globalThis as any).webkitAudioContext)()
 
       const target = event.currentTarget
-      /* istanbul ignore next */
+      /* node:coverage ignore next 1 */
       if (!target) return
 
       target.removeEventListener('click', initializeAudioContext)

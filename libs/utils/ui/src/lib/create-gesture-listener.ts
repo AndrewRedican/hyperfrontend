@@ -32,7 +32,6 @@ export function createGestureListener(callback: Callback) {
   }
 
   const handleTouchStart = (event: TouchEvent): void => {
-    /* istanbul ignore else */
     if (event.touches.length >= 2) {
       const touch1 = event.touches[0]
       const touch2 = event.touches[1]

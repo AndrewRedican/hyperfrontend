@@ -1,3 +1,5 @@
+import { afterEach, beforeEach } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { setupResizeObserverMock } from '../../mocks/setup-resize-observer-mock'
 import { syncElementDimensions } from './sync-element-dimensions'
 

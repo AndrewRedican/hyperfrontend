@@ -1,11 +1,14 @@
+import type { Mock } from '@hyperfrontend/testing'
+import { jest } from '@hyperfrontend/testing'
+
 /**
  * Mock implementation of ResizeObserver for testing.
  */
 export interface ResizeObserverMock {
   /** Mock observe function */
-  observe: jest.Mock
+  observe: Mock
   /** Mock unobserve function */
-  unobserve: jest.Mock
+  unobserve: Mock
   /** Captured callback from ResizeObserver constructor */
   callback: ResizeObserverCallback
 }

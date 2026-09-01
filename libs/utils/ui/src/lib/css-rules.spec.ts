@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { cssRules } from './css-rules'
 
 describe('cssRules', () => {

@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { rgbToString } from './rgb-to-string'
 
 describe('rgbToString', () => {

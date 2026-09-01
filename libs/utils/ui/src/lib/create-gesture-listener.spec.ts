@@ -1,7 +1,10 @@
+import type { Mock } from '@hyperfrontend/testing'
+import { afterEach, beforeEach } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { createGestureListener } from './create-gesture-listener'
 
 describe('createGestureListener', () => {
-  let callback: jest.Mock
+  let callback: Mock
 
   beforeEach(() => {
     callback = jest.fn()

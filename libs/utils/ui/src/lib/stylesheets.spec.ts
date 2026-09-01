@@ -1,5 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unused-vars */
+import { afterEach, beforeEach } from 'node:test'
+import { describe, expect, it } from '@hyperfrontend/testing'
 
 import { addStylesheet, removeStylesheet } from './stylesheets'
 

@@ -1,4 +1,5 @@
 import type { Style } from '../style'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { cssRule } from './css-rule'
 
 describe('cssRule', () => {

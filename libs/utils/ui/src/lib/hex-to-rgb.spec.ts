@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { hexToRgb } from './hex-to-rgb'
 
 describe('hexToRgb', () => {

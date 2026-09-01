@@ -1,10 +1,13 @@
+import type { Mock } from '@hyperfrontend/testing'
+import { afterEach, beforeEach } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { setupAudio } from './setup-audio'
 
 describe('setupAudio', () => {
   let mockElement: HTMLElement
   let audioContextInstance: {
-    createBufferSource: jest.Mock
-    createGain: jest.Mock
+    createBufferSource: Mock
+    createGain: Mock
     destination: object
   }
 

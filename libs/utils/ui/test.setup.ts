@@ -1,3 +1,5 @@
+import { jest } from '@hyperfrontend/testing'
+
 jest.useFakeTimers()
 
 /**

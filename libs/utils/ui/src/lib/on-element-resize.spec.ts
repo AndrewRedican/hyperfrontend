@@ -1,4 +1,6 @@
 import type { ResizeObserverMock } from '../../mocks/setup-resize-observer-mock'
+import { before as beforeAll } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { setupResizeObserverMock } from '../../mocks/setup-resize-observer-mock'
 import { onElementResize } from './on-element-resize'
 

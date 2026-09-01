@@ -1,3 +1,5 @@
+import { afterEach } from 'node:test'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { isMobileDevice } from './is-mobile-device'
 
 describe('isMobileDevice', () => {

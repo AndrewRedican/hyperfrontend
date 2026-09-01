@@ -1,3 +1,5 @@
+import { afterEach, beforeEach } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { getElementAsync } from './get-element-async'
 
 describe('getElementAsync', () => {
@@ -13,7 +15,6 @@ describe('getElementAsync', () => {
     mockQuerySelector.mockReset()
   })
 
-  // eslint-disable-next-line jest/no-done-callback
   it('calls onSuccess with the element when the element is found', (done) => {
     const mockElement = document.createElement('div')
     mockQuerySelector.mockReturnValue(mockElement)
@@ -43,7 +44,6 @@ describe('getElementAsync', () => {
     expect(onFail).toHaveBeenCalled()
   })
 
-  // eslint-disable-next-line jest/no-done-callback
   it('uses default parameters when not provided', (done) => {
     const mockElement = document.createElement('div')
     mockQuerySelector.mockReturnValue(mockElement)
@@ -58,7 +58,6 @@ describe('getElementAsync', () => {
     jest.runAllTimers()
   })
 
-  // eslint-disable-next-line jest/no-done-callback
   it('accepts an element reference instead of a query selector', (done) => {
     const mockElement = document.createElement('div')
 

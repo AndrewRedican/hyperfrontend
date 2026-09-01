@@ -106,6 +106,7 @@ export function removeStylesheet(ref: string | HTMLStyleElement): void {
     labels.delete(label)
     labeledStylesheets.delete(label)
     stylesheetLabels.delete(style)
+    /* node:coverage ignore next 3 */
   } catch {
     /** Swallow any errors */
   }
