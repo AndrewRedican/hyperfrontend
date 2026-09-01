@@ -12,14 +12,15 @@ import type { TestConfig } from '@hyperfrontend/testing'
  * timers the library captured at module load. Its `TextEncoder` and `TextDecoder`
  * assignments are gone, since Node 24 supplies both and the DOM preload leaves them alone.
  *
- * Lines and functions are the thresholds the former Jest configuration declared, unchanged;
  * Node has no statements metric, so the former statements threshold is carried by lines.
  *
- * Branches sits at 93 rather than the declared 94 for two reasons. V8 counts more branch
- * points than istanbul did, and this suite does not measure the same twice: repeated runs
- * land anywhere in 93.90 to 94.27, because the handshake and heartbeat paths take different
- * arms depending on how the timers fall. The threshold has to clear the low end of that
- * spread or it fails at random.
+ * The thresholds are set from measurement under the stable-key coverage merge, which keys
+ * functions by declaration line and branches by line and branch index because the
+ * reporter's anonymous-function numbers and block numbers shift between runs. Under that
+ * merge this suite measures identically on repeated runs: 99.80 lines, 98.55 branches,
+ * 99.66 functions. An earlier note here blamed timer-dependent handshake arms for a
+ * drifting branch number; the drift was the merge splitting one branch across unstable
+ * block keys, and it is gone.
  */
 const config: TestConfig = {
   environments: [
@@ -40,7 +41,7 @@ const config: TestConfig = {
     // why: harnesses that wire a broker and its channels together for the integration suites.
     'src/integration-tests/test-utils.ts',
   ],
-  coverageThresholds: { lines: 98, branches: 93, functions: 98 },
+  coverageThresholds: { lines: 99, branches: 98, functions: 99 },
 }
 
 export default config
