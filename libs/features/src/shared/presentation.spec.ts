@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { alignOffset, resolveBoxPosition, resolveDynamicSize, resolveEmbedFallback } from './presentation'
 
 describe('resolveDynamicSize', () => {

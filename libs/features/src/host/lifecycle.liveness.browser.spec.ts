@@ -1,6 +1,8 @@
 import type { BrokerHandle, ChannelHandle } from '@hyperfrontend/nexus'
 import type { ShellOptions } from '../shared/types'
 import type { MountResult } from './types'
+import { afterEach, beforeEach } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { createEventEmitter } from '../shared/event-emitter'
 import { createHeartbeatMonitor } from './heartbeat'
 import { createShellHandle } from './lifecycle'

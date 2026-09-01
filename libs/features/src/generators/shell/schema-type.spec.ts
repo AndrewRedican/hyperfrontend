@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { schemaToType } from './schema-type'
 
 describe('schemaToType', () => {

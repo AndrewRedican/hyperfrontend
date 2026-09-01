@@ -1,9 +1,4 @@
-import { TextEncoder, TextDecoder } from 'node:util'
-
-Object.assign(globalThis, {
-  TextEncoder,
-  TextDecoder,
-})
+import { jest } from '@hyperfrontend/testing'
 
 /**
  * Mock freeze as a passthrough to allow jest.spyOn and Object.defineProperty

@@ -1,3 +1,6 @@
+import type { Mock } from '@hyperfrontend/testing'
+import { afterEach } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { createFeature } from './create-feature'
 
 describe('createFeature', () => {
@@ -6,7 +9,7 @@ describe('createFeature', () => {
     Object.defineProperty(window, 'opener', { value: null, configurable: true, writable: true })
   })
 
-  function stubHostOpener(): { postMessage: jest.Mock } {
+  function stubHostOpener(): { postMessage: Mock } {
     const opener = { postMessage: jest.fn(), addEventListener: jest.fn(), removeEventListener: jest.fn() }
     Object.defineProperty(window, 'opener', { value: opener, configurable: true, writable: true })
     return opener

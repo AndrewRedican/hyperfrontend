@@ -1,8 +1,10 @@
 import type { BrokerHandle, ChannelHandle } from '@hyperfrontend/nexus'
+import type { Mock } from '@hyperfrontend/testing'
 import type { ShellOptions } from '../shared/types'
 import type { MountContext, MountResult } from './types'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { createPromise } from '@hyperfrontend/immutable-api-utils/built-in-copy/promise'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { createEventEmitter } from '../shared/event-emitter'
 import { createShellHandle } from './lifecycle'
 
@@ -11,7 +13,7 @@ import { createShellHandle } from './lifecycle'
 interface MockChannel {
   channel: ChannelHandle
   trigger(event: string, data?: unknown): void
-  destroy: jest.Mock
+  destroy: Mock
 }
 
 function createMockChannel(): MockChannel {

@@ -1,4 +1,5 @@
 import type { ControlsOptions } from './controls'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { DisplayMode } from '../../shared/types'
 import { createControls } from './controls'
 

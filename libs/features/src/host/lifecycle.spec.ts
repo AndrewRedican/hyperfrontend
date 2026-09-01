@@ -1,8 +1,10 @@
 import type { BrokerHandle, ChannelHandle } from '@hyperfrontend/nexus'
+import type { Mock } from '@hyperfrontend/testing'
 import type { PresentPayload, ViewportPayload } from '../shared/presentation'
 import type { ShellOptions } from '../shared/types'
 import type { ViewportReporter } from './sizing'
 import type { MountContext, MountResult } from './types'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { createEventEmitter } from '../shared/event-emitter'
 import { createShellHandle } from './lifecycle'
 
@@ -10,10 +12,10 @@ interface MockChannel {
   channel: ChannelHandle
   trigger(event: string, data?: unknown): void
   triggerMessage(type: string, data?: unknown): void
-  send: jest.Mock
-  disconnect: jest.Mock
-  destroy: jest.Mock
-  connect: jest.Mock
+  send: Mock
+  disconnect: Mock
+  destroy: Mock
+  connect: Mock
 }
 
 function createMockChannel(): MockChannel {
@@ -57,7 +59,7 @@ function setup(
     element?: HTMLElement
     present?: PresentPayload
     viewport?: ViewportReporter
-    reveal?: jest.Mock
+    reveal?: Mock
     whenReady?: (begin: () => void) => () => void
   } = {}
 ) {

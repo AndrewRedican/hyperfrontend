@@ -7,7 +7,9 @@ import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { createServer, get } from 'node:http'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { afterEach, beforeEach } from 'node:test'
 import { gunzipSync } from 'node:zlib'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { createServeListener, startStaticServer } from './static-serve'
 
 interface FakeResponse {

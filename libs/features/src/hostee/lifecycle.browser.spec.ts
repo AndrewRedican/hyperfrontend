@@ -1,8 +1,11 @@
 import type { BrokerHandle, ChannelHandle } from '@hyperfrontend/nexus'
+import type { Mock } from '@hyperfrontend/testing'
 import type { FeatureContract } from '../shared/types'
+import { beforeEach } from 'node:test'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { createPromise } from '@hyperfrontend/immutable-api-utils/built-in-copy/promise'
 import { clearInterval, setInterval } from '@hyperfrontend/immutable-api-utils/built-in-copy/timers'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { ControlType } from '../shared/control'
 import { createEventEmitter } from '../shared/event-emitter'
 import { installResizeObserverStub } from '../testing/resize-observer-stub'
@@ -34,9 +37,9 @@ interface MockChannel {
   channel: ChannelHandle
   trigger(event: string, data?: unknown): void
   triggerMessage(type: string, data?: unknown): void
-  send: jest.Mock
-  disconnect: jest.Mock
-  connect: jest.Mock
+  send: Mock
+  disconnect: Mock
+  connect: Mock
 }
 
 function createMockChannel(): MockChannel {
@@ -68,7 +71,7 @@ function createMockChannel(): MockChannel {
   }
 }
 
-function createMockBroker(channel: ChannelHandle): { broker: BrokerHandle; addChannel: jest.Mock; registerProtocol: jest.Mock } {
+function createMockBroker(channel: ChannelHandle): { broker: BrokerHandle; addChannel: Mock; registerProtocol: Mock } {
   const addChannel = jest.fn(() => channel)
   const registerProtocol = jest.fn()
   return { broker: { addChannel, registerProtocol, logger: { id: 'logger' } } as unknown as BrokerHandle, addChannel, registerProtocol }
@@ -510,7 +513,7 @@ describe('createFeatureHandle', () => {
       })
     }
 
-    function sentEnvelope(send: jest.Mock, index = 0): Record<string, unknown> {
+    function sentEnvelope(send: Mock, index = 0): Record<string, unknown> {
       const call = send.mock.calls[index]
       if (!call) {
         throw createError(`expected a sent envelope at index ${index}`)

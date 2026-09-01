@@ -1,12 +1,14 @@
 import type { BrokerHandle } from '@hyperfrontend/nexus'
+import type { Mock } from '@hyperfrontend/testing'
 import { createProtocol as createV1Protocol } from '@hyperfrontend/network-protocol/browser/v1'
 import { createProtocol as createV2Protocol } from '@hyperfrontend/network-protocol/browser/v2'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { registerSecurity } from './security'
 
 jest.mock('@hyperfrontend/network-protocol/browser/v1', () => ({ createProtocol: jest.fn(() => 'v1-provider') }))
 jest.mock('@hyperfrontend/network-protocol/browser/v2', () => ({ createProtocol: jest.fn(() => 'v2-provider') }))
 
-function createMockBroker(): { broker: BrokerHandle; registerProtocol: jest.Mock } {
+function createMockBroker(): { broker: BrokerHandle; registerProtocol: Mock } {
   const registerProtocol = jest.fn()
   return { broker: { registerProtocol, logger: { id: 'logger' } } as unknown as BrokerHandle, registerProtocol }
 }

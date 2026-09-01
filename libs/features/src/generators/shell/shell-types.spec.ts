@@ -1,4 +1,5 @@
 import type { DisplayMode, FeatureContract } from '../../shared/types'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { buildShellTypes } from './shell-types'
 
 const allModes: DisplayMode[] = ['embedded', 'dialog', 'popup', 'standalone']

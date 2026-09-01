@@ -1,10 +1,13 @@
+import type { Mock } from '@hyperfrontend/testing'
 import type { ShellHandle } from './host/types'
 import type { FeatureHandle } from './hostee/types'
 import type { FeatureContract, ShellOptions } from './shared/types'
+import { afterEach, beforeEach } from 'node:test'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 import { createPromise } from '@hyperfrontend/immutable-api-utils/built-in-copy/promise'
 import { createBroker } from '@hyperfrontend/nexus'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { createHeartbeatMonitor } from './host/heartbeat'
 import { createShellHandle } from './host/lifecycle'
 import { createFeatureHandle } from './hostee/lifecycle'
@@ -29,11 +32,11 @@ type MessageListener = (event: MessageEvent) => void
 
 interface StubWindow extends Partial<Window> {
   /** Records every frame the counterpart posts to this window. */
-  postMessage: jest.Mock
+  postMessage: Mock
   /** Registers broker message listeners. */
-  addEventListener: jest.Mock
+  addEventListener: Mock
   /** Removes broker message listeners. */
-  removeEventListener: jest.Mock
+  removeEventListener: Mock
   /** Dispatches a message event to the registered listeners. */
   _dispatchMessage: (event: MessageEvent) => void
 }
@@ -92,8 +95,9 @@ class ResizeObserverStub {
 describe('Integration: host and hostee across the hardened handshake', () => {
   let hostWindow: StubWindow
   let featureWindow: StubWindow
-  let shell: ShellHandle | null = null
-  let feature: FeatureHandle | null = null
+  // why: a test may open more than one pair, and each handle starts a heartbeat interval. Holding only the last one would leave the earlier timers running, which keeps the process alive after the suite has finished.
+  const shells: ShellHandle[] = []
+  const features: FeatureHandle[] = []
 
   beforeEach(() => {
     Object.defineProperty(globalThis, 'ResizeObserver', { value: ResizeObserverStub, configurable: true, writable: true })
@@ -102,11 +106,10 @@ describe('Integration: host and hostee across the hardened handshake', () => {
     linkStubWindows(hostWindow, featureWindow)
   })
 
+  // why: a test may open more than one pair, and each handle starts a heartbeat and a visibility watcher. Holding only the last one would leave the earlier intervals running.
   afterEach(() => {
-    shell?.destroy()
-    shell = null
-    feature?.close()
-    feature = null
+    for (const handle of features.splice(0)) handle.close()
+    for (const handle of shells.splice(0)) handle.destroy()
   })
 
   interface Party<Handle> {
@@ -139,7 +142,7 @@ describe('Integration: host and hostee across the hardened handshake', () => {
         observeVisibility: () => () => undefined,
       }
     )
-    shell = handle
+    shells.push(handle)
     handle.open()
     return { handle, received, errors }
   }
@@ -162,7 +165,7 @@ describe('Integration: host and hostee across the hardened handshake', () => {
       protocol,
       ...(protocol === 'v2' && { sharedKey: PSK }),
     })
-    feature = handle
+    features.push(handle)
     return { handle, received, errors }
   }
 

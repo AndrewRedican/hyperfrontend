@@ -1,3 +1,4 @@
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { createEventEmitter } from './event-emitter'
 
 describe('createEventEmitter', () => {

@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { validateContract, validateDisplayConfig, validateFeatureConfig, validatePayload } from './contract'
 
 describe('validateContract', () => {

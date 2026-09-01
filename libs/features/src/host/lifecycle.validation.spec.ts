@@ -1,7 +1,9 @@
 import type { BrokerHandle, ChannelHandle } from '@hyperfrontend/nexus'
+import type { Mock } from '@hyperfrontend/testing'
 import type { FeatureContract, ShellOptions } from '../shared/types'
 import type { MountResult } from './types'
 import { createPromise } from '@hyperfrontend/immutable-api-utils/built-in-copy/promise'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { createEventEmitter } from '../shared/event-emitter'
 import { createShellHandle } from './lifecycle'
 
@@ -19,7 +21,7 @@ const HOST_CONTRACT: FeatureContract = {
 interface MockChannel {
   channel: ChannelHandle
   triggerMessage(type: string, data?: unknown): void
-  send: jest.Mock
+  send: Mock
 }
 
 function createMockChannel(): MockChannel {

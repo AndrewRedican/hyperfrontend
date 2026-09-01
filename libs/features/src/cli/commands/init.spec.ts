@@ -5,6 +5,8 @@ import type { RunInitOptions } from './init'
 import { appendFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, unlinkSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { afterEach, beforeEach } from 'node:test'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { runInit } from './init'
 
 const CONTRACT: FeatureContract = { emitted: [{ type: 'tick' }], accepted: [{ type: 'setTz' }] }

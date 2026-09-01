@@ -1,3 +1,4 @@
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { observePageVisibility } from './visibility'
 
 // note: This spec runs in the node project, where no document exists — the observer must be inert instead of throwing.

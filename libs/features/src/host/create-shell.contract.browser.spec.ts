@@ -1,4 +1,7 @@
+import type { Mock } from '@hyperfrontend/testing'
 import type { FeatureContract } from '../shared/types'
+import { after as afterAll, afterEach, before as beforeAll, beforeEach } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { installResizeObserverStub } from '../testing/resize-observer-stub'
 import { createShell } from './create-shell'
 import { mountEmbedded } from './display-modes/embedded'
@@ -106,7 +109,7 @@ describe('createShell contract orientation', () => {
 
     openViaWire(frame)
 
-    expect((frame.contentWindow?.postMessage as jest.Mock).mock.calls.map((call) => (call[0] as { type: string }).type)).toEqual(
+    expect((frame.contentWindow?.postMessage as Mock).mock.calls.map((call) => (call[0] as { type: string }).type)).toEqual(
       expect.arrayContaining(['[nexus] connection-opened', NEW_MESSAGE])
     )
   })

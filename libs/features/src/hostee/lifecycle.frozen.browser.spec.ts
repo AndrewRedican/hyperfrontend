@@ -1,4 +1,5 @@
 import type { BrokerHandle } from '@hyperfrontend/nexus'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { createEventEmitter } from '../shared/event-emitter'
 import { createFeatureHandle } from './lifecycle'
 

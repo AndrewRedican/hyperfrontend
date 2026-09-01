@@ -7,6 +7,7 @@ import type {
 import type { FeatureGeneratorSchema, featureGenerator } from './generators/feature/generator'
 import type { InitGeneratorSchema, initGenerator } from './generators/init/generator'
 import type { ExecutorContext, ExecutorResult, GeneratorCallback, Tree } from './model'
+import { describe, expect, it } from '@hyperfrontend/testing'
 
 // why: The adapter mirrors @nx/devkit's contracts structurally instead of depending on it; these compile-time-only assignments fail the type check if the mirrored subset in model.ts ever drifts from the real devkit shapes.
 

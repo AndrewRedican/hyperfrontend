@@ -1,5 +1,7 @@
 import type { DevManifest } from '../dev-server'
 import type { DebugUiHandle } from './app'
+import { afterEach, beforeEach } from 'node:test'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { mountDebugUi } from './app'
 
 const manifest = (over: Partial<DevManifest> = {}): DevManifest => ({

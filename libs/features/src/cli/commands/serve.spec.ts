@@ -5,6 +5,8 @@ import type { RunServeOptions } from './serve'
 import { mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { afterEach } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { runServe } from './serve'
 
 const mkFlags = (over: Partial<CliFlags>): CliFlags => ({ ci: false, yes: false, dryRun: false, help: false, ...over })

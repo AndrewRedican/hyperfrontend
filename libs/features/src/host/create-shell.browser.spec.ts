@@ -1,5 +1,7 @@
 import type { CreateShellOptions } from './create-shell'
-import type { MountResult } from './types'
+import type { MountResult, ShellHandle } from './types'
+import { afterEach, beforeEach } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { installResizeObserverStub } from '../testing/resize-observer-stub'
 import { createShell, deriveShellName } from './create-shell'
 import { mountEmbedded } from './display-modes/embedded'
@@ -40,7 +42,17 @@ describe('deriveShellName', () => {
 })
 
 describe('createShell', () => {
+  // why: an opened shell keeps connection retry and timeout timers aimed at its iframe, so it has to be destroyed before the body is wiped; a timer surviving the wipe fires after the test has ended and reaches a window jsdom has already detached.
+  const shells: ShellHandle[] = []
+
+  const openShell = (options: CreateShellOptions): ShellHandle => {
+    const shell = createShell(options)
+    shells.push(shell)
+    return shell
+  }
+
   afterEach(() => {
+    for (const shell of shells.splice(0)) shell.destroy()
     document.body.innerHTML = ''
   })
 
@@ -80,12 +92,12 @@ describe('createShell', () => {
     const container = document.createElement('div')
     container.id = 'shell'
     document.body.appendChild(container)
-    createShell({ modes: builtInDisplayModes, container: '#shell', url: 'https://feature.example/' }).open()
+    openShell({ modes: builtInDisplayModes, container: '#shell', url: 'https://feature.example/' }).open()
     expect(container.querySelector('iframe')).not.toBeNull()
   })
 
   it('mounts a dialog pane on open with the dialog display mode', () => {
-    createShell({ modes: builtInDisplayModes, url: 'https://feature.example/' }).open({ displayMode: 'dialog' })
+    openShell({ modes: builtInDisplayModes, url: 'https://feature.example/' }).open({ displayMode: 'dialog' })
     expect((document.body.querySelector('iframe') as HTMLIFrameElement).style.position).toBe('fixed')
   })
 
@@ -98,7 +110,7 @@ describe('createShell', () => {
 
   it('opens through a custom mount map', () => {
     const mount = jest.fn(() => ({ target: null, present: { mode: 'embedded' }, cleanup: jest.fn() }) as MountResult)
-    createShell({ modes: { embedded: mount } }).open()
+    openShell({ modes: { embedded: mount } }).open()
     expect(mount).toHaveBeenCalledTimes(1)
   })
 
@@ -106,7 +118,7 @@ describe('createShell', () => {
     const container = document.createElement('div')
     container.id = 'shell'
     document.body.appendChild(container)
-    createShell({ modes: { embedded: mountEmbedded }, container: '#shell', url: 'https://feature.example/' }).open()
+    openShell({ modes: { embedded: mountEmbedded }, container: '#shell', url: 'https://feature.example/' }).open()
     expect(container.querySelector('iframe')).not.toBeNull()
   })
 })

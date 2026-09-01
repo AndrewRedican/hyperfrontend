@@ -1,8 +1,11 @@
+import type { Mock } from '@hyperfrontend/testing'
 import { join } from 'node:path'
+import { afterEach, beforeEach } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { resolveSdkManifest } from '../../generators/metadata/sdk-version'
 import { warnIfRollupBindingMissing } from './rollup-binding'
 
-const WORKSPACE_ROOT = join(__dirname, '..', '..', '..', '..', '..')
+const WORKSPACE_ROOT = join(import.meta.dirname, '..', '..', '..', '..', '..')
 const PLATFORM_MARKER = `-${process.platform}-${process.arch}`
 const CANDIDATE = `@rollup/rollup${PLATFORM_MARKER}-test`
 
@@ -33,7 +36,7 @@ describe('resolveSdkManifest', () => {
 })
 
 describe('warnIfRollupBindingMissing', () => {
-  let stderrSpy: jest.SpyInstance
+  let stderrSpy: Mock
 
   beforeEach(() => {
     stderrSpy = jest.spyOn(process.stderr, 'write').mockImplementation(() => true)

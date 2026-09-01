@@ -1,4 +1,6 @@
 import type { ShellOptions } from '../../shared/types'
+import { afterEach } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { mountStandalone } from './standalone'
 
 describe('mountStandalone', () => {

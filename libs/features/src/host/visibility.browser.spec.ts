@@ -1,3 +1,5 @@
+import { afterEach } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { observePageVisibility } from './visibility'
 
 function setVisibilityState(value: 'visible' | 'hidden'): void {

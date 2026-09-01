@@ -1,8 +1,10 @@
 import type { BrokerHandle, ChannelHandle } from '@hyperfrontend/nexus'
+import type { Mock } from '@hyperfrontend/testing'
 import type { ShellOptions } from '../shared/types'
 import type { MountResult } from './types'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { createPromise } from '@hyperfrontend/immutable-api-utils/built-in-copy/promise'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { createEventEmitter } from '../shared/event-emitter'
 import { createShellHandle } from './lifecycle'
 
@@ -10,7 +12,7 @@ interface MockChannel {
   channel: ChannelHandle
   trigger(event: string, data?: unknown): void
   triggerMessage(type: string, data?: unknown): void
-  send: jest.Mock
+  send: Mock
 }
 
 function createMockChannel(): MockChannel {
@@ -78,7 +80,7 @@ function setup() {
   return { handle, mock }
 }
 
-function sentEnvelope(send: jest.Mock, index = 0): Record<string, unknown> {
+function sentEnvelope(send: Mock, index = 0): Record<string, unknown> {
   // note: Every open leads with the presentation announcement, which is control traffic rather than an envelope.
   const call = send.mock.calls.filter((entry) => entry[0] !== '__hf:present')[index]
   if (!call) {

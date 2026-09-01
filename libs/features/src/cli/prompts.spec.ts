@@ -1,4 +1,6 @@
+import { beforeEach } from 'node:test'
 import { select, text } from '@hyperfrontend/questions'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { promptContractPath, promptEntryFile, promptFeatureName } from './prompts'
 
 jest.mock('@hyperfrontend/questions', () => ({

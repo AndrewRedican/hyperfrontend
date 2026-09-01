@@ -1,6 +1,7 @@
 import type { FeatureContract, ResolvedFeatureConfig } from '../../shared/types'
 import { parse } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 import { createTree } from '@hyperfrontend/project-scope/vfs'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { generateShell } from './generate-shell'
 
 const config: ResolvedFeatureConfig = {
@@ -26,7 +27,7 @@ const contract: FeatureContract = {
 }
 
 const stage = (over: Partial<ResolvedFeatureConfig> = {}): ReturnType<typeof createTree> => {
-  const tree = createTree(__dirname)
+  const tree = createTree(import.meta.dirname)
   generateShell({ ...config, ...over }, contract, tree)
   return tree
 }
@@ -292,7 +293,7 @@ describe('generateShell', () => {
   })
 
   it('omits the messaging examples when the contract has no actions', () => {
-    const tree = createTree(__dirname)
+    const tree = createTree(import.meta.dirname)
     generateShell(config, { emitted: [], accepted: [] }, tree)
     expect(tree.read('README.md', 'utf-8')).not.toContain('shell.send(')
   })

@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { parseCliArgs } from './args'
 
 describe('parseCliArgs', () => {

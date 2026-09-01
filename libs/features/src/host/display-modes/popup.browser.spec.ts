@@ -1,4 +1,6 @@
 import type { ShellOptions } from '../../shared/types'
+import { afterEach, beforeEach } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { resolvePopupDefaults } from './defaults'
 import { mountPopup } from './popup'
 

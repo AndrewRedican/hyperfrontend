@@ -1,4 +1,7 @@
+import type { Mock } from '@hyperfrontend/testing'
 import type { Tree } from '../model'
+import { beforeEach } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { resolveSdkVersion } from '../../generators/metadata/sdk-version'
 import { ensureSdkDependency } from './dependencies'
 
@@ -9,7 +12,7 @@ const resolveSdkVersionMock = jest.mocked(resolveSdkVersion)
 /** Structural tree fake exposing the staged writes for assertions. */
 interface TreeFake extends Tree {
   /** Spy capturing every staged write. */
-  write: jest.Mock
+  write: Mock
 }
 
 function createTree(packageJson?: string): TreeFake {

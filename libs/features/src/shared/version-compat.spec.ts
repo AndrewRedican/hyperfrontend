@@ -1,4 +1,5 @@
 import type { FeatureContract } from './types'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { createContractCompat } from './version-compat'
 
 const compat = createContractCompat()

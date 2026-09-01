@@ -1,3 +1,5 @@
+import { afterEach, beforeEach } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { watchPageVisibility } from './page-visibility'
 
 // why: The watch reads its timers from the built-in copy, which is captured before fake timers are installed; the copy is redirected at the globals the fake clock replaces so a test can drive both the poll and the probe frame.

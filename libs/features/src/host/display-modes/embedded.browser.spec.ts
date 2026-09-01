@@ -1,5 +1,7 @@
 import type { ShellOptions } from '../../shared/types'
 import type { ResizeObserverStubController } from '../../testing/resize-observer-stub'
+import { afterEach, beforeEach } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { installResizeObserverStub } from '../../testing/resize-observer-stub'
 import { mountEmbedded } from './embedded'
 

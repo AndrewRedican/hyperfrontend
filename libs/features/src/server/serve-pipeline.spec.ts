@@ -1,5 +1,6 @@
 import type { ResolvedServeConfig } from './serve-config'
 import type { ServeStep, ServeStepContext, StaticRequest } from './serve-pipeline'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { headerValue, plainResponse, runSteps } from './serve-pipeline'
 
 const config: ResolvedServeConfig = { root: '/site', port: 4284, headers: [], log: false }

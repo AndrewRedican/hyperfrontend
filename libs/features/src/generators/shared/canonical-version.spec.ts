@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { canonicalVersion } from './canonical-version'
 
 describe('canonicalVersion', () => {

@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { defineServeConfig } from './serve-types'
 
 describe('defineServeConfig', () => {

@@ -1,3 +1,5 @@
+import { afterEach, beforeEach } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { ControlType } from '../shared/control'
 import { createHeartbeatEmitter } from './heartbeat'
 

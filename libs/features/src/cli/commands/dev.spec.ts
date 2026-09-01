@@ -2,6 +2,8 @@ import type { ResolvedDevConfig } from '../../server/config'
 import type { DevServerHandle } from '../../server/dev-server'
 import type { CliFlags } from '../args'
 import type { RunDevOptions } from './dev'
+import { afterEach } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { runDev } from './dev'
 
 const mkFlags = (over: Partial<CliFlags>): CliFlags => ({ ci: false, yes: false, dryRun: false, help: false, ...over })
