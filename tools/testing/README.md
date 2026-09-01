@@ -78,16 +78,18 @@ export default config
 
 These are the places the runtime cannot be identical, and what it does instead.
 
-| Concern           | Difference                                                                                                                                                                                  |
-| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Coverage provider | V8, not istanbul. `/* istanbul ignore */` has no effect; use `/* node:coverage ignore next N */`. Branch percentages read lower because V8 counts default parameters and optional chaining. |
-| Unloaded files    | Node omits them from the report entirely. The completeness check fails the run instead, restoring what a full-coverage threshold is meant to guarantee.                                     |
-| `statements`      | Node has no such metric. A project's former statements threshold is carried by `lines`.                                                                                                     |
-| `it.todo`         | Any body is ignored, matching Jest. `node:test` would run it.                                                                                                                               |
-| `clearAllTimers`  | Node has no primitive, so the clock is torn down and rebuilt at the same instant.                                                                                                           |
-| Module mocking    | Not available here. ES modules evaluate imports before any body runs, so `jest.mock` cannot take effect the way it does under Jest's CommonJS transform.                                    |
-| Decorators        | Neither of Node's TypeScript modes parses them. A decorated class in a spec applies its decorator explicitly, the way the compiler would.                                                   |
-| HTML report       | Node has no HTML coverage reporter. The per-file table on stdout and `lcov.info` are what a run produces.                                                                                   |
+| Concern           | Difference                                                                                                                                                                                             |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Coverage provider | V8, not istanbul. `/* istanbul ignore */` has no effect; use `/* node:coverage ignore next N */`. Branch percentages read lower because V8 counts default parameters and optional chaining.            |
+| Unloaded files    | Node omits them from the report entirely. The completeness check fails the run instead, restoring what a full-coverage threshold is meant to guarantee.                                                |
+| `statements`      | Node has no such metric. A project's former statements threshold is carried by `lines`.                                                                                                                |
+| `it.todo`         | Any body is ignored, matching Jest. `node:test` would run it.                                                                                                                                          |
+| `clearAllTimers`  | Node has no primitive, so the clock is torn down and rebuilt at the same instant.                                                                                                                      |
+| Partial mocks     | A factory that names only some exports leaves the rest reachable and real. Under Jest they were undefined, but under ES modules importing an undefined name is a link error that stops the whole file. |
+| Namespace spies   | `jest.spyOn(namespace, 'name')` cannot work: an ES module namespace is sealed, and importers bind the name at link time. Declare a replacement whose factory wraps the function instead.               |
+| Counting          | A test that stubs `process.stdout.write` across an `await` makes `node:test` drop the preceding test from its counts. The exit code is unaffected, so the verdict stays correct.                       |
+| Decorators        | Neither of Node's TypeScript modes parses them. A decorated class in a spec applies its decorator explicitly, the way the compiler would.                                                              |
+| HTML report       | Node has no HTML coverage reporter. The per-file table on stdout and `lcov.info` are what a run produces.                                                                                              |
 
 ## Testing the runtime
 
