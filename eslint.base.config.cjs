@@ -162,14 +162,14 @@ module.exports = [
   },
   {
     files: ['**/*.ts', '**/*.tsx'],
-    ignores: ['**/jest.config.ts', '**/jest.setup.ts', '**/jest.setup.browser.ts'],
+    ignores: ['**/jest.config.ts', '**/jest.setup.ts', '**/test.setup.ts', '**/jest.setup.browser.ts'],
     rules: {
       'workspace/no-unsafe-builtin-methods': 'error',
     },
   },
   {
     files: ['**/*.ts', '**/*.tsx'],
-    ignores: ['**/jest.config.ts', '**/jest.setup.ts', '**/jest.setup.browser.ts'],
+    ignores: ['**/jest.config.ts', '**/jest.setup.ts', '**/test.setup.ts', '**/jest.setup.browser.ts'],
     rules: {
       'workspace/require-node-protocol': 'error',
       'workspace/no-mixed-type-import': 'error',
@@ -206,14 +206,14 @@ module.exports = [
   },
   {
     files: ['**/*.ts', '**/*.tsx'],
-    ignores: ['**/jest.config.ts', '**/jest.setup.ts', '**/jest.setup.browser.ts', '**/libs/logging/**'],
+    ignores: ['**/jest.config.ts', '**/jest.setup.ts', '**/test.setup.ts', '**/jest.setup.browser.ts', '**/libs/logging/**'],
     rules: {
       'workspace/no-direct-console': 'error',
     },
   },
   {
     files: ['**/*.ts', '**/*.tsx'],
-    ignores: ['**/jest.config.ts', '**/jest.setup.ts', '**/jest.setup.browser.ts', '**/*.spec.ts'],
+    ignores: ['**/jest.config.ts', '**/jest.setup.ts', '**/test.setup.ts', '**/jest.setup.browser.ts', '**/*.spec.ts'],
     rules: {
       'workspace/no-namespace-import': 'error',
     },
@@ -232,7 +232,7 @@ module.exports = [
   },
   {
     files: ['**/*.ts', '**/*.tsx'],
-    ignores: ['**/jest.config.ts', '**/jest.setup.ts', '**/jest.setup.browser.ts', '**/*.spec.ts', '**/*.spec.tsx'],
+    ignores: ['**/jest.config.ts', '**/jest.setup.ts', '**/test.setup.ts', '**/jest.setup.browser.ts', '**/*.spec.ts', '**/*.spec.tsx'],
     rules: {
       'workspace/no-inline-type-literal': 'error',
     },
@@ -246,7 +246,7 @@ module.exports = [
   },
   {
     files: ['**/*.ts'],
-    ignores: ['**/*.spec.ts', '**/jest.config.ts', '**/jest.setup.ts', '**/*.types.ts'],
+    ignores: ['**/*.spec.ts', '**/jest.config.ts', '**/jest.setup.ts', '**/test.setup.ts', '**/*.types.ts'],
     rules: {
       'workspace/lib-require-jsdoc-example': 'error',
       'workspace/lib-require-jsdoc-example-label': 'error',
