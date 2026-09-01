@@ -9,6 +9,13 @@ import { JSDOM } from 'jsdom'
  * WebCrypto, which implements `subtle`; jsdom's supplies only `getRandomValues`. `URL`
  * and `URLSearchParams` stay Node's because `node:url` recognises its own class and not
  * the one whatwg-url exports.
+ *
+ * `atob` and `btoa` are here for a different reason, and it is the one to remember. Their
+ * jsdom implementations delegate to the global of the same name, which is Node's inside
+ * jsdom's own process. Copying one onto the global makes that call resolve to the copy, so
+ * the function recurses until the stack is exhausted and reports the failure as its own
+ * `InvalidCharacterError`. Anything shaped that way has to stay Node's; `clearTimeout` and
+ * `queueMicrotask` are the only others, and both were already listed.
  */
 const RESERVED = new Set([
   'setTimeout',
@@ -20,6 +27,8 @@ const RESERVED = new Set([
   'crypto',
   'URL',
   'URLSearchParams',
+  'atob',
+  'btoa',
 ])
 
 /**

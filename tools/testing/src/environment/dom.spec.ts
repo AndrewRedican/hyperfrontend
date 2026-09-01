@@ -37,6 +37,11 @@ describe('the DOM environment', () => {
     assert.equal(new URL('file:///a/b').protocol, 'file:')
   })
 
+  it('keeps the base64 helpers, whose jsdom versions would call the copy of themselves', () => {
+    assert.equal(btoa('Hello, World!'), 'SGVsbG8sIFdvcmxkIQ==')
+    assert.equal(atob('SGVsbG8sIFdvcmxkIQ=='), 'Hello, World!')
+  })
+
   it('lets a spec redefine a navigator property', () => {
     Object.defineProperty(navigator, 'userAgent', { value: 'probe', configurable: true, writable: true })
     assert.equal(navigator.userAgent, 'probe')
