@@ -3,6 +3,8 @@
  * Tests that the package is importable under plain Node (no window) and exports work correctly.
  */
 
+import { describe, it, expect } from '@hyperfrontend/testing'
+
 describe('@hyperfrontend/nexus ESM', () => {
   it('runs under plain Node with no window global', () => {
     expect(typeof window).toBe('undefined')

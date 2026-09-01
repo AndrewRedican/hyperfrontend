@@ -3,6 +3,10 @@
  * Tests that the package is requireable under plain Node (no window) and exports work correctly.
  */
 
+'use strict'
+
+const { describe, it, expect } = require('@hyperfrontend/testing')
+
 describe('@hyperfrontend/nexus CJS', () => {
   it('runs under plain Node with no window global', () => {
     expect(typeof window).toBe('undefined')
