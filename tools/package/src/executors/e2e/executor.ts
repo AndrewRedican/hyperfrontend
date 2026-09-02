@@ -4,7 +4,7 @@ import { execFileSync } from 'node:child_process'
 import { existsSync, readFileSync, unlinkSync, mkdirSync, renameSync } from 'node:fs'
 import { join } from 'node:path'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
-import { parse } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
+import { parse, stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 import { logger } from '../../lib/logger'
 
 /**
@@ -85,10 +85,21 @@ function installTarball(tarballPath: string, testDir: string): void {
 }
 
 /**
- * How each format runs on the node test runner: which conventional spec files it selects,
- * whether it needs a DOM, and how long one test may take.
+ * How one format runs on the node test runner.
  */
-const FORMAT_RUNS: Record<string, { candidates: string[]; dom: boolean; timeoutMs: number }> = {
+interface FormatRun {
+  /** Conventional spec files the format selects, kept when they exist. */
+  candidates: string[]
+  /** Whether the run needs the DOM preload. */
+  dom: boolean
+  /** Default per-test timeout for the run. */
+  timeoutMs: number
+}
+
+/**
+ * The formats the node path knows how to run, by convention.
+ */
+const FORMAT_RUNS: Record<string, FormatRun> = {
   cjs: { candidates: ['src/cjs.spec.ts', 'src/cli.spec.ts'], dom: false, timeoutMs: 30_000 },
   esm: { candidates: ['src/esm.spec.ts'], dom: false, timeoutMs: 30_000 },
   browser: { candidates: ['src/iife.spec.ts', 'src/umd.spec.ts'], dom: true, timeoutMs: 30_000 },
@@ -142,7 +153,7 @@ function runNodeTests(testDir: string, format: string, workspaceRoot: string): b
       env: {
         ...process.env,
         HF_TEST_WORKSPACE_ROOT: workspaceRoot,
-        HF_TEST_ALIASES: JSON.stringify({ '@hyperfrontend/testing': ['tools/testing/src/index.ts'] }),
+        HF_TEST_ALIASES: stringify({ '@hyperfrontend/testing': ['tools/testing/src/index.ts'] }),
       },
     })
     logger.info(`${format} tests passed`)
