@@ -3,6 +3,8 @@
  * Tests that the package is importable and exports work correctly.
  */
 
+import { describe, it, expect } from '@hyperfrontend/testing'
+
 describe('@hyperfrontend/versioning ESM', () => {
   describe('main entry', () => {
     it('is importable', async () => {
