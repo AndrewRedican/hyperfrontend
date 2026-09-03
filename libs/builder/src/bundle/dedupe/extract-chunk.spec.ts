@@ -68,6 +68,18 @@ describe('resolveModuleRefs', () => {
       unresolved: [],
     })
   })
+
+  it('never fabricates a cross-module edge from parameters shadowing owned names', () => {
+    const owners = ownersOf([
+      ['isValid', 'me'],
+      ['check', 'me'],
+      ['data', 'creators/mocks'],
+      ['message', 'creators/mocks'],
+      ['key', 'creators/mocks'],
+    ])
+    const source = 'function isValid(data) { return !!data }\nconst check = (message, key) => isValid(message + key);'
+    expect(resolve(source, owners, 'me').crossModule).toEqual([])
+  })
 })
 
 describe('renderChunk', () => {

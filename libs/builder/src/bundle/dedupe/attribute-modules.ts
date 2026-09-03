@@ -4,6 +4,7 @@ import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { readDirectory, readFileContent } from '@hyperfrontend/project-scope/core'
 import { getRequireSpecifier, parseChunk } from '../dependencies/prune/ast-utils'
+import { collectReachableSources } from './source-reachability'
 
 /**
  * A first-party module's path under `src/`, without extension and
@@ -331,8 +332,15 @@ const walkTsFiles = (dir: string, acc: string[]): void => {
 }
 
 /**
- * Builds the first-party ownership index by scanning `<srcRoot>/**` for the
- * runtime symbols each module exports.
+ * Builds the first-party ownership index from the runtime symbols each module
+ * declares.
+ *
+ * When `entryFiles` is given, only modules reachable from those entry sources
+ * through the first-party import graph are indexed; a file the entries never
+ * import — a spec-only fixture above all — can then never own a name, so a
+ * bundle declaration merely named like one of its symbols (a tree-shaken JSON
+ * key, say) stays unattributed instead of forming a phantom chunk. Without
+ * `entryFiles` the whole `<srcRoot>/**` tree is scanned.
  *
  * Both exported and private top-level runtime declarations are indexed, so a
  * module's private helpers hoist alongside the exports that use them. Types-only
@@ -341,16 +349,19 @@ const walkTsFiles = (dir: string, acc: string[]): void => {
  * never misattribute it.
  *
  * @param srcRoot - Absolute path to the project's `src/` directory.
+ * @param entryFiles - Absolute entry point source files bounding the scan to
+ * their import-reachable modules.
  * @returns The ownership index.
  *
- * @example Indexing a library's source tree
+ * @example Indexing only what a library's entries reach
  * ```typescript
- * const owners = indexOwners('/abs/libs/foo/src')
+ * const owners = indexOwners('/abs/libs/foo/src', ['/abs/libs/foo/src/index.ts'])
  * ```
  */
-export const indexOwners = (srcRoot: string): OwnerIndex => {
+export const indexOwners = (srcRoot: string, entryFiles?: string[]): OwnerIndex => {
   const files: string[] = []
-  walkTsFiles(srcRoot, files)
+  if (entryFiles === undefined) walkTsFiles(srcRoot, files)
+  else files.push(...collectReachableSources(entryFiles, srcRoot))
   const firstOwner = createMap<string, ModuleKey>()
   const ambiguous = createSet<string>([])
   const ownerOf = createMap<string, ModuleKey>()

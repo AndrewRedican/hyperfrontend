@@ -157,7 +157,11 @@ export const hoistSharedFirstParty = (context: BuildContext, monitor?: MemoryMon
   const report: HoistReport = { chunksWritten: 0, bytesReclaimed: 0 }
   const srcRoot = join(context.projectRoot, 'src')
   if (!exists(srcRoot)) return report
-  const owners = indexOwners(srcRoot)
+  // why: bounding ownership to entry-reachable sources keeps spec-only fixtures from owning names a bundle declaration might coincidentally carry.
+  const owners = indexOwners(
+    srcRoot,
+    context.entryPointDiscovery.entryPoints.map((entry) => entry.inputFile)
+  )
   for (const format of FORMATS) {
     processFormat(context, owners, format, report)
     monitor?.check(`bundle:dedupe:shared-first-party:${format}:end`)

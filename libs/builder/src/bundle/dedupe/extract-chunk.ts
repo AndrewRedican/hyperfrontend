@@ -3,7 +3,7 @@ import type { EntryDecl, ImportBinding, ModuleKey, OwnerIndex } from './attribut
 import { from } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
-import { collectRefs } from '../dependencies/prune/chunk-graph'
+import { collectFreeRefs } from '../dependencies/prune/free-refs'
 import { baseName } from './attribute-modules'
 
 /**
@@ -79,9 +79,13 @@ export interface ChunkPlan {
  * partitioning them into cross-module edges, dependency edges, and hard
  * blockers.
  *
- * Identifiers the module declares itself are intra-chunk and ignored. A name
- * that is neither owned, nor a dependency binding, nor a top-level entry
- * declaration is a runtime global and needs no import. Cross-module references
+ * Reference collection is scope-aware: a name bound inside a declaration
+ * (a function parameter, a hoisted `var`, a block-scoped local) is never a
+ * reference, so a callback parameter that happens to share an owned symbol's
+ * name can never fabricate a cross-module import edge. Identifiers the module
+ * declares itself are intra-chunk and ignored. A name that is neither owned,
+ * nor a dependency binding, nor a top-level entry declaration is a runtime
+ * global and needs no import. Cross-module references
  * are always safe to lift because {@link planHoists} only keeps an acyclic
  * subset, so every dependency chunk is fully evaluated before its dependent.
  *
@@ -106,7 +110,7 @@ export const resolveModuleRefs = (
 ): ModuleResolution => {
   const selfLocals = createSet(decls.map((decl) => decl.localName))
   const allRefs = createSet<string>([])
-  for (const decl of decls) collectRefs(decl.statement, allRefs)
+  for (const decl of decls) collectFreeRefs(decl.statement, allRefs)
   const crossModule: CrossRef[] = []
   const depImports: DepRef[] = []
   const unresolved: string[] = []

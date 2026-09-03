@@ -7,9 +7,6 @@ import { afterEach, beforeEach } from 'node:test'
 import { describe, expect, it } from '@hyperfrontend/testing'
 import { hoistSharedFirstParty } from './hoist-shared'
 
-const ROOT_ENTRY: EntryPoint = { exportPath: '.', srcPath: '', inputFile: '/p/src/index.ts', isRoot: true }
-const GREET_ENTRY: EntryPoint = { exportPath: './greet', srcPath: 'greet', inputFile: '/p/src/greet/index.ts', isRoot: false }
-
 const makeDiscovery = (entries: EntryPoint[]): EntryPointDiscovery => ({
   category: 'feature',
   entryPoints: entries,
@@ -35,7 +32,15 @@ describe('hoistSharedFirstParty', () => {
     writeFileSync(abs, content)
   }
 
-  const context = (entries: EntryPoint[] = [ROOT_ENTRY, GREET_ENTRY]): BuildContext => ({
+  const rootEntry = (): EntryPoint => ({ exportPath: '.', srcPath: '', inputFile: join(projectRoot, 'src', 'index.ts'), isRoot: true })
+  const greetEntry = (): EntryPoint => ({
+    exportPath: './greet',
+    srcPath: 'greet',
+    inputFile: join(projectRoot, 'src', 'greet', 'index.ts'),
+    isRoot: false,
+  })
+
+  const context = (entries: EntryPoint[] = [rootEntry(), greetEntry()]): BuildContext => ({
     projectRoot,
     workspaceRoot: root,
     projectRelativePath: 'project',
@@ -58,6 +63,8 @@ describe('hoistSharedFirstParty', () => {
     mkdirSync(outputPath, { recursive: true })
     writeSrc('base/base.ts', "export const BASE = 'b'\n")
     writeSrc('greet/greet.ts', "export const greet = (): string => 'x'\n")
+    writeSrc('index.ts', "export * from './base/base'\nexport * from './greet/greet'\n")
+    writeSrc('greet/index.ts', "export * from '../base/base'\nexport * from './greet'\n")
     write('_dependencies/dep/index.esm.js', "const tag = (s) => '[' + s + ']';\nexport { tag };\n")
     write('_dependencies/dep/index.cjs.js', "'use strict';\nconst tag = (s) => '[' + s + ']';\nexports.tag = tag;\n")
     write(
@@ -147,7 +154,7 @@ describe('hoistSharedFirstParty', () => {
   })
 
   it('does nothing when fewer than two entries exist', () => {
-    hoistSharedFirstParty(context([ROOT_ENTRY]))
+    hoistSharedFirstParty(context([rootEntry()]))
     expect(existsSync(join(outputPath, '_shared'))).toBe(false)
   })
 
@@ -157,10 +164,16 @@ describe('hoistSharedFirstParty', () => {
   })
 
   describe('with an external dependency and a non-sharing entry', () => {
-    const SOLO: EntryPoint = { exportPath: './solo', srcPath: 'solo', inputFile: '/p/src/solo/index.ts', isRoot: false }
+    const soloEntry = (): EntryPoint => ({
+      exportPath: './solo',
+      srcPath: 'solo',
+      inputFile: join(projectRoot, 'src', 'solo', 'index.ts'),
+      isRoot: false,
+    })
 
     beforeEach(() => {
       writeSrc('solo/solo.ts', "export const solo = (): string => 's'\n")
+      writeSrc('solo/index.ts', "export * from './solo'\n")
       // why: greet now pulls a bare, node-builtin specifier so the chunk's dependency edge passes through verbatim instead of being recomputed.
       write(
         'index.esm.js',
@@ -174,12 +187,12 @@ describe('hoistSharedFirstParty', () => {
     })
 
     it('passes a bare dependency specifier through to the shared chunk unchanged', () => {
-      hoistSharedFirstParty(context([ROOT_ENTRY, GREET_ENTRY, SOLO]))
+      hoistSharedFirstParty(context([rootEntry(), greetEntry(), soloEntry()]))
       expect(readFileSync(join(outputPath, '_shared/greet/greet/index.esm.js'), 'utf8')).toContain("import { sep } from 'node:path';")
     })
 
     it('leaves an entry with no hoistable module untouched', () => {
-      hoistSharedFirstParty(context([ROOT_ENTRY, GREET_ENTRY, SOLO]))
+      hoistSharedFirstParty(context([rootEntry(), greetEntry(), soloEntry()]))
       expect(readFileSync(join(outputPath, 'solo/index.esm.js'), 'utf8')).toBe("const solo = () => 's';\nexport { solo };\n")
     })
   })
@@ -188,6 +201,8 @@ describe('hoistSharedFirstParty', () => {
     // why: rollup numbers CJS dep-namespace locals per-entry (dep_cjs_js$1 vs $2), so two copies of
     beforeEach(() => {
       writeSrc('util/util.ts', 'export const util = (n) => n\n')
+      writeSrc('index.ts', "export * from './util/util'\n")
+      writeSrc('greet/index.ts', "export * from '../util/util'\n")
       write('index.esm.js', "import { tag } from './_dependencies/dep/index.esm.js';\nconst util = (n) => tag(n);\nexport { util };\n")
       write(
         'greet/index.esm.js',
@@ -241,6 +256,8 @@ describe('hoistSharedFirstParty', () => {
       writeSrc('cyc-a/cyc-a.ts', 'export const cycA = () => cycB\n')
       writeSrc('cyc-b/cyc-b.ts', 'export const cycB = () => cycA\n')
       writeSrc('free/free.ts', 'export const freeVal = 41\n')
+      writeSrc('index.ts', "export * from './cyc-a/cyc-a'\nexport * from './cyc-b/cyc-b'\nexport * from './free/free'\n")
+      writeSrc('greet/index.ts', "export * from '../free/free'\n")
       write('index.esm.js', cyclic('', 'export { cycA, freeVal };\n'))
       write('greet/index.esm.js', cyclic('', 'export { freeVal };\n'))
       write('index.cjs.js', cyclic("'use strict';\n", 'exports.cycA = cycA;\nexports.freeVal = freeVal;\n'))

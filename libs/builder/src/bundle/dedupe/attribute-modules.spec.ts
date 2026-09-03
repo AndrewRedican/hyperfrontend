@@ -198,4 +198,17 @@ describe('indexOwners', () => {
     writeSrc('a/a.spec.ts', 'export const fromSpec = 1\n')
     expect(indexOwners(src).ownerOf.size).toBe(0)
   })
+
+  it('indexes an entry-reachable module when entry files are given', () => {
+    writeSrc('index.ts', "export * from './used/used'\n")
+    writeSrc('used/used.ts', 'export const used = 1\n')
+    writeSrc('creators/mocks.ts', 'export const id = 1\n')
+    expect(indexOwners(src, [join(src, 'index.ts')]).ownerOf.get('used')).toBe('used/used')
+  })
+
+  it('keeps a name unowned when its only declarer is unreachable', () => {
+    writeSrc('index.ts', 'export const rooted = 1\n')
+    writeSrc('creators/mocks.ts', 'export const id = 1\n')
+    expect(indexOwners(src, [join(src, 'index.ts')]).ownerOf.has('id')).toBe(false)
+  })
 })
