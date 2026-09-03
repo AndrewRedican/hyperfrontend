@@ -10,7 +10,7 @@ Legitimate JSDoc comments that include proper tags are allowed. The rule disting
 
 - **Decorative headers**: Prose-only multi-line comments describing the file
 - **Legitimate JSDoc**: Comments with `@module`, `@param`, `@returns`, and other standard tags
-- **Tooling directives**: Comments like `@jest-environment jsdom`
+- **Tooling directives**: Comments like `@vitest-environment jsdom`
 
 ## Examples
 
@@ -45,7 +45,7 @@ export function createVfs() {}
 
 ```ts
 /**
- * @jest-environment jsdom
+ * @vitest-environment jsdom
  */
 describe('DOM tests', () => {})
 ```

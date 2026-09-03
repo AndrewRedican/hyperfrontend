@@ -62,7 +62,7 @@ describe('comment-analysis utilities', () => {
     })
 
     it('detects specialized tags', () => {
-      expect(containsJsDocTag('@jest-environment jsdom')).toBe(true)
+      expect(containsJsDocTag('@vitest-environment jsdom')).toBe(true)
       expect(containsJsDocTag('@jsxImportSource react')).toBe(true)
     })
 
