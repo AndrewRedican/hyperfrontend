@@ -86,12 +86,20 @@ function adaptBody(body: TestBody): NodeTestBody {
 }
 
 /**
+ * A per-test timeout rendered as `node:test` options.
+ */
+type TimeoutOptions = {
+  /** Milliseconds the test may run before failing; absent to keep the runner's default. */
+  timeout?: number
+}
+
+/**
  * Renders a per-test timeout as `node:test` options.
  *
  * @param timeoutMs - Jest's optional trailing timeout argument.
  * @returns The options to spread into the declaration.
  */
-function timeoutOptions(timeoutMs?: number): { timeout?: number } {
+function timeoutOptions(timeoutMs?: number): TimeoutOptions {
   return timeoutMs === undefined ? {} : { timeout: timeoutMs }
 }
 
