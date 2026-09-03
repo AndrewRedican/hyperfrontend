@@ -4,6 +4,10 @@
  * every documented exports subpath resolves with its expected symbol.
  */
 
+'use strict'
+
+const { describe, it, expect } = require('@hyperfrontend/testing')
+
 // note: Subpath specifiers are kept in runtime strings so resolution is exercised against the installed tarball, not the compiler's view of it.
 const NAMED_SUBPATH_SYMBOLS: ReadonlyArray<readonly [string, string]> = [
   ['@hyperfrontend/features', 'defineConfig'],

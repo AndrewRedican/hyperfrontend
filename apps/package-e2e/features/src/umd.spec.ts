@@ -5,10 +5,12 @@
  */
 
 import { resolve } from 'node:path'
+import { before as beforeAll, after as afterAll } from 'node:test'
+import { describe, it, expect } from '@hyperfrontend/testing'
 import { executeBundleInWindow, loadBundleCode } from '../../shared/helpers'
 
 const umdBundle = (dir: string, minified = false): string =>
-  resolve(__dirname, `../../../../dist/libs/features/bundle/${dir}/index.umd${minified ? '.min' : ''}.js`)
+  resolve(process.cwd(), `dist/libs/features/bundle/${dir}/index.umd${minified ? '.min' : ''}.js`)
 
 const bundles: ReadonlyArray<readonly [string, string, string]> = [
   ['host', 'HyperfrontendFeaturesHost', 'createShell'],

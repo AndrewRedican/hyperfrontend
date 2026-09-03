@@ -11,9 +11,14 @@ import type { IncomingHttpHeaders, OutgoingHttpHeaders } from 'node:http'
 import { execFileSync, spawn, spawnSync } from 'node:child_process'
 import { mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
 import { get } from 'node:http'
+import { createRequire } from 'node:module'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
+import { before as beforeAll, after as afterAll } from 'node:test'
 import { gunzipSync } from 'node:zlib'
+import { describe, it, expect } from '@hyperfrontend/testing'
+
+const require = createRequire(import.meta.url)
 
 // note: 90s covers the dev-server flow (spawn, poll past 3s, SIGINT, teardown) with slack for slow CI hosts.
 const DEV_SUITE_TIMEOUT = 90000
@@ -144,49 +149,52 @@ describe('@hyperfrontend/features hf CLI', () => {
     let aliveAfterThreeSeconds: { running: boolean; status: number } | undefined
     let exitCode: number | null = null
 
-    beforeAll(async () => {
-      scratchDir = mkdtempSync(join(tmpdir(), 'hf-dev-e2e-'))
-      mkdirSync(join(scratchDir, 'app'))
-      writeFileSync(join(scratchDir, 'app', 'index.html'), '<!doctype html><html><body>dummy-app-ok</body></html>\n')
-      // note: Randomized high ports keep parallel CI jobs from colliding on a fixed port.
-      const appPort = 42000 + Math.floor(Math.random() * 10000)
-      const debugPort = appPort + 10000
-      writeFileSync(
-        join(scratchDir, 'hf-dev.config.json'),
-        `${JSON.stringify({ apps: [{ name: 'dummy-app', outputDir: './app', port: appPort }] }, null, 2)}\n`
-      )
+    beforeAll(
+      async () => {
+        scratchDir = mkdtempSync(join(tmpdir(), 'hf-dev-e2e-'))
+        mkdirSync(join(scratchDir, 'app'))
+        writeFileSync(join(scratchDir, 'app', 'index.html'), '<!doctype html><html><body>dummy-app-ok</body></html>\n')
+        // note: Randomized high ports keep parallel CI jobs from colliding on a fixed port.
+        const appPort = 42000 + Math.floor(Math.random() * 10000)
+        const debugPort = appPort + 10000
+        writeFileSync(
+          join(scratchDir, 'hf-dev.config.json'),
+          `${JSON.stringify({ apps: [{ name: 'dummy-app', outputDir: './app', port: appPort }] }, null, 2)}\n`
+        )
 
-      child = spawn('node', [hfBin, 'dev', '--port', String(debugPort)], {
-        cwd: scratchDir,
-        detached: true,
-        stdio: ['ignore', 'pipe', 'pipe'],
-      })
-      let output = ''
-      child.stdout?.on('data', (chunk: Buffer) => {
-        output += chunk.toString('utf8')
-      })
-      child.stderr?.on('data', (chunk: Buffer) => {
-        output += chunk.toString('utf8')
-      })
+        child = spawn('node', [hfBin, 'dev', '--port', String(debugPort)], {
+          cwd: scratchDir,
+          detached: true,
+          stdio: ['ignore', 'pipe', 'pipe'],
+        })
+        let output = ''
+        child.stdout?.on('data', (chunk: Buffer) => {
+          output += chunk.toString('utf8')
+        })
+        child.stderr?.on('data', (chunk: Buffer) => {
+          output += chunk.toString('utf8')
+        })
 
-      await waitForOutput(
-        () => output,
-        (collected) => collected.includes('dummy-app → ') && collected.includes('Debug UI: '),
-        30000
-      )
-      const match = output.match(/dummy-app → (\S+)/)
-      appUrl = match ? match[1] : ''
-      firstResponse = await waitForUrl(appUrl, 10000)
+        await waitForOutput(
+          () => output,
+          (collected) => collected.includes('dummy-app → ') && collected.includes('Debug UI: '),
+          30000
+        )
+        const match = output.match(/dummy-app → (\S+)/)
+        appUrl = match ? match[1] : ''
+        firstResponse = await waitForUrl(appUrl, 10000)
 
-      // why: The regression being pinned is the dev command exiting right after startup; the server must still answer past the three-second mark.
-      await delay(3200)
-      const probe = await fetchUrl(appUrl)
-      aliveAfterThreeSeconds = { running: child.exitCode === null, status: probe.status }
+        // why: The regression being pinned is the dev command exiting right after startup; the server must still answer past the three-second mark.
+        await delay(3200)
+        const probe = await fetchUrl(appUrl)
+        aliveAfterThreeSeconds = { running: child.exitCode === null, status: probe.status }
 
-      const exitPromise = waitForExit(child)
-      child.kill('SIGINT')
-      exitCode = await exitPromise
-    }, DEV_SUITE_TIMEOUT)
+        const exitPromise = waitForExit(child)
+        child.kill('SIGINT')
+        exitCode = await exitPromise
+      },
+      { timeout: DEV_SUITE_TIMEOUT }
+    )
 
     afterAll(() => {
       if (child !== undefined && child.exitCode === null) {
@@ -218,19 +226,20 @@ describe('@hyperfrontend/features hf CLI', () => {
     let result: { status: number | null; stderr: string; stdout: string } | undefined
     let outFiles: string[] = []
 
-    beforeAll(() => {
-      scratchDir = mkdtempSync(join(tmpdir(), 'hf-build-e2e-'))
-      outDir = join(scratchDir, 'out')
-      // why: The builder resolves the SDK and the tsc binary from the consumer's node_modules; linking this e2e project's install makes the scratch dir a real consumer of the packed tarball.
-      symlinkSync(join(__dirname, '..', 'node_modules'), join(scratchDir, 'node_modules'), 'dir')
-      writeFileSync(
-        join(scratchDir, 'feature.config.json'),
-        // why: A strict subset of the display modes is the case that used to emit a shell its own declaration pass could not compile, so the fixture declares one to keep that path exercised by a real build.
-        `${JSON.stringify({ name: 'e2e-widget', version: '0.0.1', contract: './widget.contract.ts', url: 'http://localhost:4300/', display: { modes: ['embedded', 'dialog'] } }, null, 2)}\n`
-      )
-      writeFileSync(
-        join(scratchDir, 'widget.contract.ts'),
-        `const contract = {
+    beforeAll(
+      () => {
+        scratchDir = mkdtempSync(join(tmpdir(), 'hf-build-e2e-'))
+        outDir = join(scratchDir, 'out')
+        // why: The builder resolves the SDK and the tsc binary from the consumer's node_modules; linking this e2e project's install makes the scratch dir a real consumer of the packed tarball.
+        symlinkSync(join(import.meta.dirname, '..', 'node_modules'), join(scratchDir, 'node_modules'), 'dir')
+        writeFileSync(
+          join(scratchDir, 'feature.config.json'),
+          // why: A strict subset of the display modes is the case that used to emit a shell its own declaration pass could not compile, so the fixture declares one to keep that path exercised by a real build.
+          `${JSON.stringify({ name: 'e2e-widget', version: '0.0.1', contract: './widget.contract.ts', url: 'http://localhost:4300/', display: { modes: ['embedded', 'dialog'] } }, null, 2)}\n`
+        )
+        writeFileSync(
+          join(scratchDir, 'widget.contract.ts'),
+          `const contract = {
   emitted: [
     {
       type: 'tick',
@@ -243,19 +252,21 @@ describe('@hyperfrontend/features hf CLI', () => {
 
 export default contract
 `
-      )
+        )
 
-      const spawned = spawnSync('node', [hfBin, 'build', '--protocol', 'v1', '--out', outDir], {
-        cwd: scratchDir,
-        encoding: 'utf8',
-        timeout: BUILD_SUITE_TIMEOUT - 30000,
-        env: { ...process.env, NODE_OPTIONS: '--max-old-space-size=4096' },
-      })
-      result = { status: spawned.status, stderr: spawned.stderr ?? '', stdout: spawned.stdout ?? '' }
-      if (spawned.status === 0) {
-        outFiles = listFilesRecursively(outDir)
-      }
-    }, BUILD_SUITE_TIMEOUT)
+        const spawned = spawnSync('node', [hfBin, 'build', '--protocol', 'v1', '--out', outDir], {
+          cwd: scratchDir,
+          encoding: 'utf8',
+          timeout: BUILD_SUITE_TIMEOUT - 30000,
+          env: { ...process.env, NODE_OPTIONS: '--max-old-space-size=4096' },
+        })
+        result = { status: spawned.status, stderr: spawned.stderr ?? '', stdout: spawned.stdout ?? '' }
+        if (spawned.status === 0) {
+          outFiles = listFilesRecursively(outDir)
+        }
+      },
+      { timeout: BUILD_SUITE_TIMEOUT }
+    )
 
     afterAll(() => {
       rmSync(scratchDir, { recursive: true, force: true })
@@ -338,60 +349,63 @@ describe('hf serve', () => {
   let aliveAfterThreeSeconds: { running: boolean; status: number } | undefined
   let exitCode: number | null = null
 
-  beforeAll(async () => {
-    scratchDir = mkdtempSync(join(tmpdir(), 'hf-serve-e2e-'))
-    siteDir = join(scratchDir, 'site')
-    mkdirSync(join(siteDir, 'widget'), { recursive: true })
-    writeFileSync(join(siteDir, 'index.html'), '<!doctype html><html><body>serve-root-ok</body></html>\n')
-    writeFileSync(join(siteDir, 'widget', 'index.html'), '<!doctype html><html><body>serve-widget-ok</body></html>\n')
-    writeFileSync(join(siteDir, 'big.js'), BIG_JS_BODY)
-    // why: The config sits at the SITE root (not the cwd) to pin artifact-carried discovery: `--root` alone must find and apply it.
-    writeFileSync(
-      join(siteDir, 'hf-serve.config.json'),
-      `${JSON.stringify({ headers: [{ headers: { 'X-Frame-Test': 'e2e' } }] }, null, 2)}\n`
-    )
-    // why: A randomized 32xxx port keeps parallel CI jobs from colliding while staying clear of the dev suite's 42000+ band.
-    servePort = 32000 + Math.floor(Math.random() * 10000)
+  beforeAll(
+    async () => {
+      scratchDir = mkdtempSync(join(tmpdir(), 'hf-serve-e2e-'))
+      siteDir = join(scratchDir, 'site')
+      mkdirSync(join(siteDir, 'widget'), { recursive: true })
+      writeFileSync(join(siteDir, 'index.html'), '<!doctype html><html><body>serve-root-ok</body></html>\n')
+      writeFileSync(join(siteDir, 'widget', 'index.html'), '<!doctype html><html><body>serve-widget-ok</body></html>\n')
+      writeFileSync(join(siteDir, 'big.js'), BIG_JS_BODY)
+      // why: The config sits at the SITE root (not the cwd) to pin artifact-carried discovery: `--root` alone must find and apply it.
+      writeFileSync(
+        join(siteDir, 'hf-serve.config.json'),
+        `${JSON.stringify({ headers: [{ headers: { 'X-Frame-Test': 'e2e' } }] }, null, 2)}\n`
+      )
+      // why: A randomized 32xxx port keeps parallel CI jobs from colliding while staying clear of the dev suite's 42000+ band.
+      servePort = 32000 + Math.floor(Math.random() * 10000)
 
-    // why: Spawning from the site's parent directory pins that `--root` plus the artifact-carried config works without any cwd-based config discovery.
-    child = spawn('node', [hfBin, 'serve', '--root', siteDir, '--port', String(servePort)], {
-      cwd: scratchDir,
-      detached: true,
-      stdio: ['ignore', 'pipe', 'pipe'],
-    })
-    child.stdout?.on('data', (chunk: Buffer) => {
-      cliOutput += chunk.toString('utf8')
-    })
-    child.stderr?.on('data', (chunk: Buffer) => {
-      cliOutput += chunk.toString('utf8')
-    })
+      // why: Spawning from the site's parent directory pins that `--root` plus the artifact-carried config works without any cwd-based config discovery.
+      child = spawn('node', [hfBin, 'serve', '--root', siteDir, '--port', String(servePort)], {
+        cwd: scratchDir,
+        detached: true,
+        stdio: ['ignore', 'pipe', 'pipe'],
+      })
+      child.stdout?.on('data', (chunk: Buffer) => {
+        cliOutput += chunk.toString('utf8')
+      })
+      child.stderr?.on('data', (chunk: Buffer) => {
+        cliOutput += chunk.toString('utf8')
+      })
 
-    await waitForOutput(
-      () => cliOutput,
-      (collected) => collected.includes('→ http://'),
-      30000
-    )
-    const match = cliOutput.match(/→ (\S+)/)
-    const serveUrl = match ? match[1] : ''
-    firstResponse = await waitForUrl(serveUrl, 10000)
+      await waitForOutput(
+        () => cliOutput,
+        (collected) => collected.includes('→ http://'),
+        30000
+      )
+      const match = cliOutput.match(/→ (\S+)/)
+      const serveUrl = match ? match[1] : ''
+      firstResponse = await waitForUrl(serveUrl, 10000)
 
-    rootHeaders = (await fetchRawUrl(serveUrl)).headers
-    widgetResponse = await fetchUrl(`${serveUrl}widget/`)
-    const unslashed = await fetchRawUrl(`${serveUrl}widget`)
-    unslashedWidget = { status: unslashed.status, location: unslashed.headers['location'] as string | undefined }
-    const bigJs = await fetchRawUrl(`${serveUrl}big.js`, { 'accept-encoding': 'gzip' })
-    bigJsResponse = { status: bigJs.status, encoding: bigJs.headers['content-encoding'] as string | undefined, body: bigJs.body }
-    configResponse = await fetchUrl(`${serveUrl}hf-serve.config.json`)
+      rootHeaders = (await fetchRawUrl(serveUrl)).headers
+      widgetResponse = await fetchUrl(`${serveUrl}widget/`)
+      const unslashed = await fetchRawUrl(`${serveUrl}widget`)
+      unslashedWidget = { status: unslashed.status, location: unslashed.headers['location'] as string | undefined }
+      const bigJs = await fetchRawUrl(`${serveUrl}big.js`, { 'accept-encoding': 'gzip' })
+      bigJsResponse = { status: bigJs.status, encoding: bigJs.headers['content-encoding'] as string | undefined, body: bigJs.body }
+      configResponse = await fetchUrl(`${serveUrl}hf-serve.config.json`)
 
-    // why: The regression being pinned is the serve command exiting right after startup; the server must still answer past the three-second mark.
-    await delay(3200)
-    const probe = await fetchUrl(serveUrl)
-    aliveAfterThreeSeconds = { running: child.exitCode === null, status: probe.status }
+      // why: The regression being pinned is the serve command exiting right after startup; the server must still answer past the three-second mark.
+      await delay(3200)
+      const probe = await fetchUrl(serveUrl)
+      aliveAfterThreeSeconds = { running: child.exitCode === null, status: probe.status }
 
-    const exitPromise = waitForExit(child)
-    child.kill('SIGINT')
-    exitCode = await exitPromise
-  }, SERVE_SUITE_TIMEOUT)
+      const exitPromise = waitForExit(child)
+      child.kill('SIGINT')
+      exitCode = await exitPromise
+    },
+    { timeout: SERVE_SUITE_TIMEOUT }
+  )
 
   afterAll(() => {
     if (child !== undefined && child.exitCode === null) {

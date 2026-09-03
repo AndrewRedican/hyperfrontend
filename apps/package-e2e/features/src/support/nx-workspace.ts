@@ -23,13 +23,13 @@ export const SETUP_TIMEOUT = 600000
 /** 4 minutes covers up to two cold nx invocations (daemon disabled) plus the workspace file copy on slow CI hosts. */
 export const SCENARIO_TIMEOUT = 240000
 
-/** 90s bounds one cold nx process so a hung child fails the suite instead of blocking the jest worker forever. */
+/** 90s bounds one cold nx process so a hung child fails the suite instead of blocking the test runner forever. */
 export const NX_COMMAND_TIMEOUT = 90000
 
 /** 3 minutes bounds an nx run whose generator callback additionally spawns a package-manager reconcile of the workspace tree. */
 export const NX_INSTALL_COMMAND_TIMEOUT = 180000
 
-// note: 8 minutes bounds the create-nx-workspace child itself; the enclosing jest hook uses SETUP_TIMEOUT.
+// note: 8 minutes bounds the create-nx-workspace child itself; the enclosing suite hook uses SETUP_TIMEOUT.
 const WORKSPACE_CREATE_TIMEOUT = 480000
 
 // note: 5 minutes bounds the tarball install into the freshly created workspace.
@@ -66,7 +66,7 @@ export const FEATURE_ARGS: readonly string[] = [
   '--directory=demo',
 ]
 
-const REPO_ROOT = join(__dirname, '..', '..', '..', '..', '..')
+const REPO_ROOT = join(import.meta.dirname, '..', '..', '..', '..', '..')
 const TARBALL_PATTERN = /^hyperfrontend-features-(.+)\.tgz$/
 
 // note: Top-level entries never copied into scenario workspaces — the install is shared via symlink and the caches are per-workspace state.
@@ -113,7 +113,7 @@ export interface ConsumerWorkspace {
  * @returns The parent environment with the Nx daemon disabled, colors off, and agent or dry-run markers removed.
  */
 function scratchEnv(): NodeJS.ProcessEnv {
-  // why: The nx task runner exports FORCE_COLOR=true into the jest process (task-env.js), so without this override chalk colorizes the piped child output and ANSI codes land inside asserted substrings like "UPDATE package.json".
+  // why: The nx task runner exports FORCE_COLOR=true into the test process (task-env.js), so without this override chalk colorizes the piped child output and ANSI codes land inside asserted substrings like "UPDATE package.json".
   const env = { ...process.env, NX_DAEMON: 'false', FORCE_COLOR: 'false', NO_COLOR: '1' }
   // why: create-nx-workspace and nx switch to an AI-agent output mode when these are set; removing them keeps output identical under human and agent runs.
   delete env['CLAUDECODE']
