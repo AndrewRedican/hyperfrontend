@@ -7,9 +7,6 @@
   "tags": ["type:core", "scope:internal"],
   "targets": {
     "typecheck": {},
-    "test": {
-      "executor": "@hyperfrontend/package:test",
-      "options": {}
-    }
+    "test": {}
   }
 }

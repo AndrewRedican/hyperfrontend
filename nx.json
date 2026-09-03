@@ -73,6 +73,10 @@
         "command": "npm audit --audit-level=high",
         "cwd": "{projectRoot}"
       }
+    },
+    "test": {
+      "executor": "@hyperfrontend/package:test",
+      "options": {}
     }
   },
   "namedInputs": {

@@ -43,9 +43,6 @@
     },
     "publish": {},
     "typecheck": {},
-    "test": {
-      "executor": "@hyperfrontend/package:test",
-      "options": {}
-    }
+    "test": {}
   }
 }
