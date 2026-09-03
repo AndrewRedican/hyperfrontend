@@ -16,12 +16,12 @@ const _freeze = globalThis.Object.freeze
  * @param iterable - Optional iterable of values.
  * @returns A new Set instance.
  */
-export const createSet = <T>(iterable?: Iterable<T> | null): Set<T> => <Set<T>>_Reflect.construct(_Set, iterable ? [iterable] : [])
+export const createSet = <T>(iterable?: Iterable<T> | null): Set<T> => _Reflect.construct(_Set, iterable ? [iterable] : []) as Set<T>
 
 /**
  * (Safe copy) Namespace object containing Set factory.
  * Note: Importing this imports all methods in this namespace (no tree-shaking).
  */
-export const Set = _freeze(<const>{
+export const Set = _freeze({
   create: createSet,
-})
+} as const)

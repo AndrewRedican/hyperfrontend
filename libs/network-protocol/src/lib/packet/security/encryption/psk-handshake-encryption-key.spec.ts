@@ -1,4 +1,6 @@
+import { before as beforeAll } from 'node:test'
 import { encrypt, decrypt } from '@hyperfrontend/cryptography/node'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { createDataDecrypter } from '../../../data/security/create-decrypter'
 import { createDataEncrypter } from '../../../data/security/create-encrypter'
 import { createPacketDecrypter } from './create-decrypter'
@@ -35,8 +37,8 @@ describe('createPSKHandshakeEncryptionFactory (Node.js)', () => {
 
     it('throws error for non-string PSK', () => {
       const keyProvider = () => undefined
-      expect(() => createPSKHandshakeEncryption(<string>null, keyProvider)).toThrow('PSK must be a non-empty string')
-      expect(() => createPSKHandshakeEncryption(<string>undefined, keyProvider)).toThrow('PSK must be a non-empty string')
+      expect(() => createPSKHandshakeEncryption(null as string, keyProvider)).toThrow('PSK must be a non-empty string')
+      expect(() => createPSKHandshakeEncryption(undefined as string, keyProvider)).toThrow('PSK must be a non-empty string')
     })
   })
 

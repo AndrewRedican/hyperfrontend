@@ -1,4 +1,5 @@
 import type { ValidationError, ValidationResult, ValidateOptions } from './validation'
+import { describe, expect, it } from '@hyperfrontend/testing'
 
 describe('Validation types', () => {
   it('ValidationError structure', () => {

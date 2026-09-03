@@ -1,12 +1,12 @@
 import type { FileChange, FileDiff } from './types'
-
 import { mkdirSync, writeFileSync, rmSync } from 'node:fs'
 import { join } from 'node:path'
-
+import { after as afterAll, beforeEach } from 'node:test'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { generateDiff, formatUnifiedDiff, generateAllDiffs } from './diff'
 import { createFsTree } from './fs-tree'
 
-const TEST_DIR = join(__dirname, '__test_fixtures_diff__')
+const TEST_DIR = join(import.meta.dirname, '__test_fixtures_diff__')
 
 describe('vfs/diff', () => {
   describe('generateDiff', () => {

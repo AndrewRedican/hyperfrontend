@@ -116,7 +116,7 @@ export const stripDeadExports = (source: string, format: ChunkFormat, keep: Impo
   const edits: Edit[] = removableDecls.map((decl) => ({ start: decl.statement.getFullStart(), end: decl.statement.getEnd(), text: '' }))
   collectExportEdits(model.exports, removedLocals, sourceFile, edits)
   for (const statement of model.importStatements) {
-    if (format === 'esm') narrowEsmImport(<ts.ImportDeclaration>statement, usedNames, sourceFile, edits)
+    if (format === 'esm') narrowEsmImport(statement as ts.ImportDeclaration, usedNames, sourceFile, edits)
     else narrowCjsRequire(statement, usedNames, edits)
   }
   return { code: applyEdits(source, edits, true), removedNames: from(removedNames) }

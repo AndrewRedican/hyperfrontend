@@ -1,16 +1,18 @@
 import { mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { afterEach, beforeEach } from 'node:test'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { runFeaturesCli } from './bin'
 
 const sink = (): { stream: NodeJS.WritableStream; text: () => string } => {
   const chunks: string[] = []
-  const stream = <NodeJS.WritableStream>(<unknown>{
+  const stream = {
     write: (chunk: string): boolean => {
       chunks.push(chunk)
       return true
     },
-  })
+  } as unknown as NodeJS.WritableStream
   return { stream, text: () => chunks.join('') }
 }
 

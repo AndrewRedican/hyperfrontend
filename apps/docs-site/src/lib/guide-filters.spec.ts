@@ -13,7 +13,7 @@ import { buildGuidesHref, filterGuides, GUIDE_FILTER_ALL, GUIDES_ROUTE, readGuid
  * @returns An index entry carrying just enough shape for the filters
  */
 function guide(slug: string, type: GuideIndexEntry['type'], packages: string[]): GuideIndexEntry {
-  return <GuideIndexEntry>{
+  return {
     slug,
     type,
     packages,
@@ -21,9 +21,9 @@ function guide(slug: string, type: GuideIndexEntry['type'], packages: string[]):
     title: slug.split('-').join(' '),
     problem: '',
     outcome: '',
-    keywords: <string[]>[],
-    headings: <string[]>[],
-  }
+    keywords: [] as string[],
+    headings: [] as string[],
+  } as GuideIndexEntry
 }
 
 const CORPUS = [

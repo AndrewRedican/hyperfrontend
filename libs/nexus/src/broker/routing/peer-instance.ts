@@ -41,5 +41,5 @@ import type { ChannelHandle } from '../../types/channel'
  */
 export function isPeerInstance(channel: ChannelHandle, action: IAction): boolean {
   const peerId = channel.getPeerId()
-  return peerId === null || peerId === <string>action.senderId
+  return peerId === null || peerId === (action.senderId as string)
 }

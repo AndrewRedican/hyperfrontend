@@ -90,7 +90,7 @@ export function classifyCommits(commits: readonly CommitWithRaw[], context: Clas
   const included: ClassifiedCommit[] = []
   const excluded: ClassifiedCommit[] = []
   const summary = createEmptyClassificationSummary()
-  const bySource = <Record<CommitSource, number>>{ ...summary.bySource }
+  const bySource = { ...summary.bySource } as Record<CommitSource, number>
 
   for (const input of commits) {
     const result = classifyCommit(input, context)

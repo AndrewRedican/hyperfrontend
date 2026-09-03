@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { buildMarkerBlock, insertFeatureImport } from './insert-marker'
 
 const SPECIFIER = './hyperfrontend.feature'

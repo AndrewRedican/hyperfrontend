@@ -23,16 +23,39 @@
       "type": "object",
       "description": "Commit scope filtering used when attributing commits to a project. Defaults to the version target's declaration.",
       "properties": {
-        "strategy": { "type": "string", "enum": ["scope-only", "file-only", "hybrid"] },
-        "excludeScopes": { "type": "array", "items": { "type": "string" } },
-        "includeScopes": { "type": "array", "items": { "type": "string" } },
-        "projectPrefixes": { "type": "array", "items": { "type": "string" } }
+        "strategy": {
+          "type": "string",
+          "enum": ["scope-only", "file-only", "hybrid"]
+        },
+        "excludeScopes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "includeScopes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "projectPrefixes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
       }
     },
     "verbose": {
       "type": "boolean",
       "description": "Enable verbose logging",
       "default": false
+    },
+    "maxCommitFallback": {
+      "type": "number",
+      "description": "Upper bound on the commit window the flow analyzes for bumps and changelogs.",
+      "default": 500
     }
   },
   "required": []

@@ -22,7 +22,7 @@ const errorMessage = (thing: string, type: string) => `Expected ${thing} to be $
 
 const nextIterationDetails = (path: string[], key: string, value: unknown) => ({
   nextPath: [...path, key],
-  nextValue: (<Record<string, unknown>>value)[key],
+  nextValue: (value as Record<string, unknown>)[key],
 })
 
 const circularDependencyTraversal: TraversalCircular = (
@@ -39,7 +39,7 @@ const circularDependencyTraversal: TraversalCircular = (
 ) => {
   if (stack.exists(value)) return state
   const ok = condition(config, key, value, path, parent)
-  /* istanbul ignore next */
+  /* node:coverage ignore next */
   if (config.exitEarly) return state
   if (ok) callback(key, value, path, state, parent)
   stack.add(value)
@@ -56,7 +56,7 @@ const circularDependencyTraversal: TraversalCircular = (
 
 const nonCircularDependencyTraversal: TraversalNonCircular = (condition, callback, config, key, path, value, parent, state) => {
   const ok = condition(config, key, value, path, parent)
-  /* istanbul ignore next */
+  /* node:coverage ignore next */
   if (config.exitEarly) return state
   if (ok) callback(key, value, path, state, parent)
   const type = getType(value)
@@ -80,11 +80,11 @@ const traversal: Traversal = (target, condition, callback, options, state) => {
     if (!['number', 'string'].includes(maxDepthType)) throw createError(errorMessage('options.depth.1', 'a number or a string'))
     if (maxDepthType === 'string' && maxDepth !== '*') throw createError("Only valid string value in options.depth.1 is '*'.")
   }
-  const config = <TraverseConfig>{
+  const config = {
     depth: freeze([options.depth[0] ?? 0, options.depth[1] ?? '*']),
     exitEarly: false,
-  }
-  const initialArgs = <TraversalArgs>[condition, callback, config, '', [], target, void 0, state]
+  } as TraverseConfig
+  const initialArgs = [condition, callback, config, '', [], target, void 0, state] as TraversalArgs
   if (getConfig().detectCircularReferences) return circularDependencyTraversal(...initialArgs, referenceStack(), true)
   return nonCircularDependencyTraversal(...initialArgs)
 }
@@ -105,7 +105,7 @@ const traversal: Traversal = (target, condition, callback, options, state) => {
 export const createTraversal: TraversalCreator<unknown> = (condition) => (target, callback, options, state) =>
   traversal(target, condition, callback, options ?? { depth: [0, '*'] }, state ?? {})
 
-const condition: Condition = (config, key, value, path) => !(path.length < config.depth[0] || <number>config.depth[1] < path.length)
+const condition: Condition = (config, key, value, path) => !(path.length < config.depth[0] || (config.depth[1] as number) < path.length)
 
 const traverseBetweenDepthRange = createTraversal(condition)
 

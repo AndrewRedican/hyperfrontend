@@ -16,7 +16,7 @@ export function findFreePort(): Promise<number> {
     const probe = createServer()
     probe.on('error', reject)
     probe.listen(0, '127.0.0.1', () => {
-      const port = (<AddressInfo>probe.address()).port
+      const port = (probe.address() as AddressInfo).port
       probe.close(() => {
         resolve(port)
       })

@@ -4,7 +4,7 @@ import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { isFile as isFileOnDisk, readFileBuffer } from '@hyperfrontend/project-scope/core/fs'
 
 // note: Minimal MIME table for the asset types a compiled feature/debug-UI bundle ships; anything else falls back to octet-stream.
-const CONTENT_TYPES: Readonly<Record<string, string>> = freeze(<const>{
+const CONTENT_TYPES: Readonly<Record<string, string>> = freeze({
   '.html': 'text/html; charset=utf-8',
   '.js': 'text/javascript; charset=utf-8',
   '.mjs': 'text/javascript; charset=utf-8',
@@ -26,7 +26,7 @@ const CONTENT_TYPES: Readonly<Record<string, string>> = freeze(<const>{
   '.woff2': 'font/woff2',
   '.ttf': 'font/ttf',
   '.otf': 'font/otf',
-})
+} as const)
 
 const FALLBACK_CONTENT_TYPE = 'application/octet-stream'
 

@@ -26,33 +26,6 @@ export function updateEslintConfig(tree: Tree, options: NormalizedOptions): void
 }
 
 /**
- * Update jest.config.ts with new preset and coverage paths.
- *
- * @param tree - The virtual file system tree
- * @param options - Normalized move generator options
- */
-export function updateJestConfig(tree: Tree, options: NormalizedOptions): void {
-  const jestConfigPath = joinPathFragments(options.newProjectRoot, 'jest.config.ts')
-
-  if (!tree.exists(jestConfigPath)) {
-    return
-  }
-
-  let content = tree.read(jestConfigPath, 'utf-8')
-  if (content) {
-    content = content.replace(/preset:\s*['"](?:\.\.\/)+jest\.preset\.cjs['"]/g, `preset: '${options.newOffsetFromRoot}jest.preset.cjs'`)
-
-    const newCoveragePath = options.newProjectRoot.replace(/^libs\/?/, 'libs/')
-    content = content.replace(
-      /coverageDirectory:\s*['"](?:\.\.\/)+coverage\/[^'"]+['"]/g,
-      `coverageDirectory: '${options.newOffsetFromRoot}coverage/${newCoveragePath}'`
-    )
-
-    tree.write(jestConfigPath, content)
-  }
-}
-
-/**
  * Update tsconfig.json with new extends path.
  *
  * @param tree - The virtual file system tree

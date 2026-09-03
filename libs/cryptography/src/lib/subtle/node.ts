@@ -1,3 +1,3 @@
 import { webcrypto } from 'node:crypto'
 
-export const subtle = <SubtleCrypto>webcrypto.subtle
+export const subtle = webcrypto.subtle as SubtleCrypto

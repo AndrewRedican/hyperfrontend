@@ -1,4 +1,5 @@
 import type { ControlsOptions } from './controls'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { DisplayMode } from '../../shared/types'
 import { createControls } from './controls'
 
@@ -31,34 +32,34 @@ describe('createControls', () => {
 
   it('pre-selects the current display mode', () => {
     const { element } = createControls(options({ displayMode: DisplayMode.Dialog }))
-    expect((<HTMLSelectElement>element.querySelector('select')).value).toBe('dialog')
+    expect((element.querySelector('select') as HTMLSelectElement).value).toBe('dialog')
   })
 
   it('fires onDisplayModeChange with the chosen mode', () => {
     const onDisplayModeChange = jest.fn()
     const { element } = createControls(options({ onDisplayModeChange }))
-    change(<HTMLSelectElement>element.querySelectorAll('select')[0], 'popup')
+    change(element.querySelectorAll('select')[0] as HTMLSelectElement, 'popup')
     expect(onDisplayModeChange).toHaveBeenCalledWith('popup')
   })
 
   it('fires onResize with the new width', () => {
     const onResize = jest.fn()
     const { element } = createControls(options({ onResize }))
-    edit(<HTMLInputElement>element.querySelectorAll('input[type="number"]')[0], '800')
+    edit(element.querySelectorAll('input[type="number"]')[0] as HTMLInputElement, '800')
     expect(onResize).toHaveBeenCalledWith({ width: 800, height: 360 })
   })
 
   it('fires onResize with the new height', () => {
     const onResize = jest.fn()
     const { element } = createControls(options({ onResize }))
-    edit(<HTMLInputElement>element.querySelectorAll('input[type="number"]')[1], '600')
+    edit(element.querySelectorAll('input[type="number"]')[1] as HTMLInputElement, '600')
     expect(onResize).toHaveBeenCalledWith({ width: 480, height: 600 })
   })
 
   it('fires onProtocolChange with the chosen protocol', () => {
     const onProtocolChange = jest.fn()
     const { element } = createControls(options({ onProtocolChange }))
-    change(<HTMLSelectElement>element.querySelectorAll('select')[1], 'v2')
+    change(element.querySelectorAll('select')[1] as HTMLSelectElement, 'v2')
     expect(onProtocolChange).toHaveBeenCalledWith('v2')
   })
 

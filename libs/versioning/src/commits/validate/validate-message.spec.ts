@@ -1,4 +1,5 @@
 import type { Ruleset } from './models/ruleset'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { validateCommitMessage } from './validate-message'
 
 const ruleset: Ruleset = {

@@ -1,6 +1,8 @@
 import type { IChannelContract } from '../types/contract'
 import type { IMessage } from '../types/message'
 import type { MockWindow } from './test-utils'
+import { after as afterAll, afterEach, before as beforeAll } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { createBroker } from '../broker/factory'
 import { createMockWindow, createTestContract, linkMockWindows } from './test-utils'
 
@@ -28,7 +30,7 @@ describe('Integration: Many-to-Many', () => {
       attach(win: MockWindow, origin: string, brokerId: string): void {
         peers.push({ win, origin, brokerId })
         win.postMessage.mockImplementation((data: unknown) => {
-          const sender = peers.find((peer) => peer.brokerId === (<{ senderId?: string }>data)?.senderId)
+          const sender = peers.find((peer) => peer.brokerId === (data as { senderId?: string })?.senderId)
           if (!sender) {
             return
           }
@@ -36,7 +38,7 @@ describe('Integration: Many-to-Many', () => {
             new MessageEvent('message', {
               data,
               origin: sender.origin,
-              source: <Window>(<unknown>sender.win),
+              source: sender.win as unknown as Window,
             })
           )
         })
@@ -48,7 +50,7 @@ describe('Integration: Many-to-Many', () => {
 
   const createNode = (network: Network, name: string, origin: string, contract: IChannelContract) => {
     const win = createMockWindow()
-    const broker = createBroker({ name, contract, window: <Window>(<unknown>win) })
+    const broker = createBroker({ name, contract, window: win as unknown as Window })
     network.attach(win, origin, broker.id)
     return { win, broker }
   }
@@ -56,8 +58,8 @@ describe('Integration: Many-to-Many', () => {
   type TestNode = ReturnType<typeof createNode>
 
   const connectPair = (nodeA: TestNode, nodeB: TestNode, nameAtA: string, nameAtB: string) => {
-    const channelAtA = nodeA.broker.addChannel(nameAtA, <Window>(<unknown>nodeB.win))
-    const channelAtB = nodeB.broker.addChannel(nameAtB, <Window>(<unknown>nodeA.win))
+    const channelAtA = nodeA.broker.addChannel(nameAtA, nodeB.win as unknown as Window)
+    const channelAtB = nodeB.broker.addChannel(nameAtB, nodeA.win as unknown as Window)
     channelAtA.connect()
     channelAtB.connect()
     return { channelAtA, channelAtB }
@@ -116,8 +118,8 @@ describe('Integration: Many-to-Many', () => {
       const nodeA = createNode(network, 'broker-a', 'http://host-a.com', peerContract)
       const nodeB = createNode(network, 'broker-b', 'http://host-b.com', peerContract)
 
-      nodeA.broker.addChannel('channel-a', <Window>(<unknown>nodeB.win))
-      nodeB.broker.addChannel('channel-b', <Window>(<unknown>nodeA.win))
+      nodeA.broker.addChannel('channel-a', nodeB.win as unknown as Window)
+      nodeB.broker.addChannel('channel-b', nodeA.win as unknown as Window)
 
       expect({
         aChannels: nodeA.broker.channels.map((channel) => channel.name),
@@ -232,10 +234,10 @@ describe('Integration: Many-to-Many', () => {
       const windowB = createMockWindow()
       linkMockWindows(windowA, windowB, 'http://peer-1.com', 'http://peer-2.com')
 
-      const peer1Broker = createBroker({ name: 'peer-1', contract: peerContract, window: <Window>(<unknown>windowA) })
-      const peer2Broker = createBroker({ name: 'peer-2', contract: peerContract, window: <Window>(<unknown>windowB) })
-      const peer1ToPeer2 = peer1Broker.addChannel('to-peer-2', <Window>(<unknown>windowB))
-      const peer2ToPeer1 = peer2Broker.addChannel('to-peer-1', <Window>(<unknown>windowA))
+      const peer1Broker = createBroker({ name: 'peer-1', contract: peerContract, window: windowA as unknown as Window })
+      const peer2Broker = createBroker({ name: 'peer-2', contract: peerContract, window: windowB as unknown as Window })
+      const peer1ToPeer2 = peer1Broker.addChannel('to-peer-2', windowB as unknown as Window)
+      const peer2ToPeer1 = peer2Broker.addChannel('to-peer-1', windowA as unknown as Window)
       peer1ToPeer2.connect()
       peer2ToPeer1.connect()
 

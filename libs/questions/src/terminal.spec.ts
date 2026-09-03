@@ -1,5 +1,7 @@
 import type { Terminal } from './terminal'
 import { PassThrough } from 'node:stream'
+import { afterEach, beforeEach } from 'node:test'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { Key, Ansi, createTerminal } from './terminal'
 import { TokenType } from './token-parser'
 

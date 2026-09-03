@@ -1,5 +1,7 @@
 import type { Tree } from '../model'
 import { execFileSync } from 'node:child_process'
+import { beforeEach } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { detectPackageManager, installPackages } from './install'
 
 jest.mock('node:child_process', () => ({ execFileSync: jest.fn() }))

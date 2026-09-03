@@ -20,13 +20,13 @@ import { marker } from './marker'
  */
 export const referenceStack = (): ReferenceStack => {
   const records = createMap<symbol, [UnknownIterableKey, UnknownIterable, number]>()
-  const flag = <UnknownIterableKey>marker()
+  const flag = marker() as UnknownIterableKey
 
   const exists = (ref: UnknownIterable): boolean => (isIterable(ref) ? flag in ref && records.has(ref[flag]) : false)
 
   const add = (ref: UnknownIterable): void => {
     if (!isIterable(ref) || exists(ref)) return
-    ;(<symbol>ref[flag]) = Symbol()
+    ;(ref[flag] as symbol) = Symbol()
     records.set(ref[flag], [flag, ref, records.size])
   }
 
@@ -44,9 +44,9 @@ export const referenceStack = (): ReferenceStack => {
   )
 
   return {
-    add: (ref) => add(<UnknownIterable>ref),
-    exists: (ref) => exists(<UnknownIterable>ref),
-    lastSeen: (ref) => lastSeen(<UnknownIterable>ref),
+    add: (ref) => add(ref as UnknownIterable),
+    exists: (ref) => exists(ref as UnknownIterable),
+    lastSeen: (ref) => lastSeen(ref as UnknownIterable),
     clear: () => clear(),
     get size() {
       return records.size

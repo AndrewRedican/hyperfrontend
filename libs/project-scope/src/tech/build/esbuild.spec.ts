@@ -1,4 +1,5 @@
 import type { PackageJson } from '../../project/package'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { esbuildDetector } from './esbuild'
 
 describe('esbuildDetector', () => {

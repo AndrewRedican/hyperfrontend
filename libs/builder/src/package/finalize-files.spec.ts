@@ -1,5 +1,8 @@
+import type { Mock } from '@hyperfrontend/testing'
 import type { BuildConfig, BuildContext, PackageJson } from '../models'
+import { beforeEach } from 'node:test'
 import { readJsonFile } from '@hyperfrontend/project-scope/core'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { finalizeFilesAllowlist } from './finalize-files'
 import { reflectFilesAllowlist } from './json/reflect-files-allowlist'
 import { writeOutputPackageJson } from './json/write'
@@ -29,9 +32,9 @@ const makeContext = (overrides?: Partial<BuildContext>): BuildContext => ({
 const baseConfig: BuildConfig = { projectRoot: '/abs/libs/foo', workspaceRoot: '/abs/repo' }
 
 beforeEach(() => {
-  ;(<jest.Mock>reflectFilesAllowlist).mockReset().mockReturnValue(['**/index.*', '**/index.d.ts', 'README.md'])
-  ;(<jest.Mock>readJsonFile).mockReset().mockReturnValue(<PackageJson>{ name: 'foo' })
-  ;(<jest.Mock>writeOutputPackageJson).mockReset()
+  ;(reflectFilesAllowlist as Mock).mockReset().mockReturnValue(['**/index.*', '**/index.d.ts', 'README.md'])
+  ;(readJsonFile as Mock).mockReset().mockReturnValue({ name: 'foo' } as PackageJson)
+  ;(writeOutputPackageJson as Mock).mockReset()
 })
 
 describe('finalizeFilesAllowlist', () => {

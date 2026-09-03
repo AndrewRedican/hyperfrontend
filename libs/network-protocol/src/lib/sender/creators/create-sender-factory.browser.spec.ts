@@ -1,5 +1,7 @@
+import { before as beforeAll } from 'node:test'
 import { createHash, encrypt } from '@hyperfrontend/cryptography/browser'
 import { uint8ArrayToBase64 } from '@hyperfrontend/string-utils/browser'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { sleep } from '@hyperfrontend/time-utils'
 import { createDataFactory } from '../../data/creators/create-data-factory'
 import { createDataEncrypter } from '../../data/security/create-encrypter'
@@ -194,7 +196,7 @@ describe('createSenderFactory (Browser)', () => {
       expect(Object.isFrozen(sender)).toBe(true)
       expect(() => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        ;(<any>sender).send = () => void 0
+        ;(sender as any).send = () => void 0
       }).toThrow()
     })
   })

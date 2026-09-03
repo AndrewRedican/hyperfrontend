@@ -94,10 +94,11 @@ function generateSchema(value: unknown, options: Required<GenerateOptions>): Sch
     case 'string':
       return { type: 'string' }
     case 'array':
-      return generateArraySchema(<unknown[]>value, options)
+      return generateArraySchema(value as unknown[], options)
     case 'object':
-      return generateObjectSchema(<Record<string, unknown>>value, options)
-    /* istanbul ignore next -- unreachable: getJsonType covers all JSON types */
+      return generateObjectSchema(value as Record<string, unknown>, options)
+    // why: unreachable: getJsonType covers all JSON types
+    /* node:coverage ignore next 2 */
     default:
       return {}
   }
@@ -113,7 +114,7 @@ function generateSchema(value: unknown, options: Required<GenerateOptions>): Sch
 function generateObjectSchema(obj: Record<string, unknown>, options: Required<GenerateOptions>): Schema {
   const keysList = keys(obj)
 
-  /* istanbul ignore if -- empty object edge case */
+  // why: empty object edge case
   if (keysList.length === 0) {
     return { type: 'object' }
   }
@@ -129,12 +130,12 @@ function generateObjectSchema(obj: Record<string, unknown>, options: Required<Ge
     properties,
   }
 
-  /* istanbul ignore else -- includeRequired defaults to true */
+  // why: includeRequired defaults to true
   if (options.includeRequired && keysList.length > 0) {
     schema.required = keysList
   }
 
-  /* istanbul ignore if -- additionalProperties defaults to true */
+  // why: additionalProperties defaults to true
   if (options.additionalProperties === false) {
     schema.additionalProperties = false
   }
@@ -149,7 +150,6 @@ function generateObjectSchema(obj: Record<string, unknown>, options: Required<Ge
  * @param options - Generation options
  * @returns An array JSON Schema
  */
-// istanbul ignore next
 function generateArraySchema(arr: unknown[], options: Required<GenerateOptions>): Schema {
   if (arr.length === 0) {
     return { type: 'array' }
@@ -168,7 +168,7 @@ function generateArraySchema(arr: unknown[], options: Required<GenerateOptions>)
     const firstType = getJsonType(arr[0])
     const allSameType = arr.every((item) => getJsonType(item) === firstType)
 
-    /* istanbul ignore else -- uniform type is common case */
+    // why: uniform type is common case
     if (allSameType) {
       return {
         type: 'array',
@@ -178,7 +178,8 @@ function generateArraySchema(arr: unknown[], options: Required<GenerateOptions>)
 
     const itemSchemas = arr.map((item) => generateSchema(item, options))
     const uniqueSchemas = deduplicateSchemas(itemSchemas)
-    /* istanbul ignore else -- single unique schema is common */
+    // why: single unique schema is common
+    /* node:coverage ignore next 3 */
     if (uniqueSchemas.length === 1) {
       return { type: 'array', items: uniqueSchemas[0] }
     }

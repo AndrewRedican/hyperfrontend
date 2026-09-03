@@ -1,5 +1,8 @@
+import type { Mock } from '@hyperfrontend/testing'
 import type { IAction } from '../../types/action'
 import type { Logger } from './create-logger'
+import { beforeEach } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { ACTION_TYPES } from '../../types/action'
 import { createLogger } from './create-logger'
 import { logAction } from './log-action'
@@ -274,7 +277,7 @@ describe('Logging Utilities', () => {
     })
 
     it('logs different action types', () => {
-      const actionTypes = <const>[
+      const actionTypes = [
         ACTION_TYPES.REQUEST_CONNECTION,
         ACTION_TYPES.ACCEPT_CONNECTION,
         ACTION_TYPES.DENY_CONNECTION,
@@ -284,7 +287,7 @@ describe('Logging Utilities', () => {
         ACTION_TYPES.DESTROY_CONNECTION,
         ACTION_TYPES.NEW_MESSAGE,
         ACTION_TYPES.INVALID_REQUEST,
-      ]
+      ] as const
 
       actionTypes.forEach((type) => {
         let action: IAction
@@ -322,7 +325,7 @@ describe('Logging Utilities', () => {
           }
         }
 
-        ;(<jest.Mock>mockLogger.debug).mockClear()
+        ;(mockLogger.debug as Mock).mockClear()
         logAction(mockLogger, action, 'sent')
 
         expect(mockLogger.debug).toHaveBeenCalledWith('Action sent:', type, action)
@@ -426,7 +429,7 @@ describe('Logging Utilities', () => {
 
       logAction(mockLogger, action, 'sent')
       expect(mockLogger.debug).toHaveBeenCalledWith('Action sent:', ACTION_TYPES.NEW_MESSAGE, action)
-      ;(<jest.Mock>mockLogger.debug).mockClear()
+      ;(mockLogger.debug as Mock).mockClear()
 
       logAction(mockLogger, action, 'received')
       expect(mockLogger.debug).toHaveBeenCalledWith('Action received:', ACTION_TYPES.NEW_MESSAGE, action)

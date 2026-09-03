@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { OPEN, CLOSE, CANCEL, DENY, INVALID } from './event-types'
 
 describe('constants/event-types', () => {

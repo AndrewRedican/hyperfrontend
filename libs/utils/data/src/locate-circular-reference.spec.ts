@@ -1,3 +1,5 @@
+import { afterEach, beforeEach } from 'node:test'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { deregisterIterableClass } from './deregister-iterable-class'
 import { locateCircularReference } from './locate-circular-reference'
 import { registerIterableClass } from './register-iterable-class'
@@ -51,7 +53,7 @@ describe('locateCircularReference - with extended iterable class types', () => {
   beforeEach(() => {
     registerIterableClass<Map<unknown, unknown>>(
       Map,
-      (map) => <string[]>Array.from(map.keys()),
+      (map) => Array.from(map.keys()) as string[],
       (map, key) => map.get(key),
       (map, value, key) => map.set(key, value),
       (map, key) => map.delete(key)

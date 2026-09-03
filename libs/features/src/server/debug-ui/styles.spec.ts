@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { messageEntryStyle, palette, statusDotStyle } from './styles'
 
 describe('statusDotStyle', () => {

@@ -4,7 +4,7 @@ module.exports = [
   ...baseConfig,
   {
     files: ['**/*.ts'],
-    ignores: ['**/*.spec.ts', '**/jest.config.ts', '**/jest.setup.ts', '**/*.types.ts'],
+    ignores: ['**/*.spec.ts', '**/*.types.ts'],
     rules: {
       'workspace/lib-pkg-main-reexports': ['error', { topology: 'isomorphic' }],
     },
@@ -15,7 +15,7 @@ module.exports = [
       '@nx/dependency-checks': [
         'error',
         {
-          ignoredDependencies: ['jest'],
+          ignoredDependencies: ['@hyperfrontend/testing'],
           ignoredFiles: ['{projectRoot}/eslint.config.{js,cjs,mjs}'],
         },
       ],

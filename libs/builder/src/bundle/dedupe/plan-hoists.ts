@@ -3,7 +3,7 @@ import type { ModuleResolution } from './extract-chunk'
 import { from } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
-import { collectRefs } from '../dependencies/prune/chunk-graph'
+import { collectFreeRefs } from '../dependencies/prune/free-refs'
 import { baseName } from './attribute-modules'
 import { resolveModuleRefs } from './extract-chunk'
 
@@ -52,12 +52,12 @@ const collectAppearances = (entries: EntryInput[]): Map<ModuleKey, number[]> => 
   return appearances
 }
 
-// why: a bare statement (multi-declarator var, enum IIFE, side-effecting init) that names one of the module's symbols cannot be cleanly split out — its symbol would vanish from the chunk; leave the whole module inlined.
+// why: a bare statement (multi-declarator var, enum IIFE, side-effecting init) that genuinely references one of the module's symbols cannot be cleanly split out — its symbol would vanish from the chunk; leave the whole module inlined. Scope-aware collection keeps a parameter merely named like an owned symbol from blocking the hoist.
 const isEntangled = (entries: EntryInput[], indexes: number[], ownedNames: Set<string>): boolean =>
   indexes.some((index) =>
     entries[index].parsed.bareStatements.some((statement) => {
       const refs = createSet<string>([])
-      collectRefs(statement, refs)
+      collectFreeRefs(statement, refs)
       return from(refs).some((ref) => ownedNames.has(baseName(ref)))
     })
   )

@@ -1,4 +1,5 @@
 import type { Terminal, TerminalSize } from './terminal'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { createScreen, wrapLine } from './screen'
 
 /**
@@ -27,7 +28,7 @@ function createStubTerminal(
     getSize: (): TerminalSize => size,
   }
   return {
-    terminal: <Terminal>(<unknown>stub),
+    terminal: stub as unknown as Terminal,
     getWrites: () => written,
     clearWrites: (): void => {
       written = ''

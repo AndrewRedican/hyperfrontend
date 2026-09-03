@@ -1,8 +1,10 @@
 import type { BrokerHandle, ChannelHandle } from '@hyperfrontend/nexus'
+import type { Mock } from '@hyperfrontend/testing'
 import type { ShellOptions } from '../shared/types'
 import type { MountResult } from './types'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { createPromise } from '@hyperfrontend/immutable-api-utils/built-in-copy/promise'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { createEventEmitter } from '../shared/event-emitter'
 import { createShellHandle } from './lifecycle'
 
@@ -10,14 +12,14 @@ interface MockChannel {
   channel: ChannelHandle
   trigger(event: string, data?: unknown): void
   triggerMessage(type: string, data?: unknown): void
-  send: jest.Mock
+  send: Mock
 }
 
 function createMockChannel(): MockChannel {
   const listeners: Record<string, Array<(data?: unknown) => void>> = {}
   const messageHandlers: Array<(message: { type: string; data?: unknown }) => void> = []
   const send = jest.fn()
-  const channel = <ChannelHandle>(<unknown>{
+  const channel = {
     on: (event: string, handler: (data?: unknown) => void) => {
       ;(listeners[event] ?? (listeners[event] = [])).push(handler)
       return () => undefined
@@ -30,7 +32,7 @@ function createMockChannel(): MockChannel {
     disconnect: jest.fn(),
     destroy: jest.fn(),
     connect: jest.fn(),
-  })
+  } as unknown as ChannelHandle
   return {
     channel,
     trigger: (event, data) => listeners[event]?.forEach((handler) => handler(data)),
@@ -39,7 +41,7 @@ function createMockChannel(): MockChannel {
   }
 }
 
-const TARGET = <Window>(<unknown>{ name: 'target' })
+const TARGET = { name: 'target' } as unknown as Window
 
 function flush() {
   return createPromise<void>((resolve) => {
@@ -49,9 +51,9 @@ function flush() {
 
 function setup() {
   const mock = createMockChannel()
-  const broker = <BrokerHandle>(<unknown>{ addChannel: jest.fn(() => mock.channel) })
+  const broker = { addChannel: jest.fn(() => mock.channel) } as unknown as BrokerHandle
   const mount = jest.fn((): MountResult => ({ target: TARGET, present: { mode: 'embedded' }, cleanup: jest.fn() }))
-  const handle = createShellHandle(broker, <ShellOptions>{ container: '#shell' }, createEventEmitter(), {
+  const handle = createShellHandle(broker, { container: '#shell' } as ShellOptions, createEventEmitter(), {
     // why: The '__hf:' envelope types carry schemas no envelope object satisfies, so every flow below fails if request/response traffic is ever routed through send or receive payload validation.
     contract: {
       emitted: [
@@ -78,13 +80,13 @@ function setup() {
   return { handle, mock }
 }
 
-function sentEnvelope(send: jest.Mock, index = 0): Record<string, unknown> {
+function sentEnvelope(send: Mock, index = 0): Record<string, unknown> {
   // note: Every open leads with the presentation announcement, which is control traffic rather than an envelope.
   const call = send.mock.calls.filter((entry) => entry[0] !== '__hf:present')[index]
   if (!call) {
     throw createError(`expected a sent envelope at index ${index}`)
   }
-  return <Record<string, unknown>>call[1]
+  return call[1] as Record<string, unknown>
 }
 
 describe('createShellHandle request/response', () => {

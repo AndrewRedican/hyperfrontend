@@ -23,7 +23,7 @@ export function notifyMessage(channel: ChannelInternals, message: IMessage): voi
       handler(message)
     } catch (error) {
       if (state.logger) {
-        state.logger.error(`Error in message handler for '${message.type}' message:`, <Error>error)
+        state.logger.error(`Error in message handler for '${message.type}' message:`, error as Error)
       }
     }
   }

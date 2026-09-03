@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { isSHA256Hash } from './is-sha-256-hash'
 
 describe('isSHA256Hash', () => {
@@ -24,10 +25,10 @@ describe('isSHA256Hash', () => {
   })
 
   it('returns false for non-string inputs', () => {
-    expect(isSHA256Hash(<any>123)).toBe(false)
-    expect(isSHA256Hash(<any>null)).toBe(false)
-    expect(isSHA256Hash(<any>undefined)).toBe(false)
-    expect(isSHA256Hash(<any>{})).toBe(false)
-    expect(isSHA256Hash(<any>[])).toBe(false)
+    expect(isSHA256Hash(123 as any)).toBe(false)
+    expect(isSHA256Hash(null as any)).toBe(false)
+    expect(isSHA256Hash(undefined as any)).toBe(false)
+    expect(isSHA256Hash({} as any)).toBe(false)
+    expect(isSHA256Hash([] as any)).toBe(false)
   })
 })

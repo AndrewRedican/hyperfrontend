@@ -2,11 +2,14 @@
  * Tests for analyze.ts coverage branches.
  * Uses Jest mocks to ensure specific branches are covered.
  */
+import type { MockedFunction } from '@hyperfrontend/testing'
 import { resolve } from 'node:path'
+import { afterEach, beforeEach } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import * as analyzeModule from '../../analyze'
 import { analyzeCommand } from './analyze'
 
-const FIXTURES_DIR = resolve(__dirname, '../../../__fixtures__')
+const FIXTURES_DIR = resolve(import.meta.dirname, '../../../__fixtures__')
 const MINIMAL_PROJECT = resolve(FIXTURES_DIR, 'minimal-project')
 
 jest.mock('../../analyze', () => {
@@ -17,7 +20,7 @@ jest.mock('../../analyze', () => {
   }
 })
 
-const mockAnalyzeProject = analyzeModule.analyzeProject as jest.MockedFunction<typeof analyzeModule.analyzeProject>
+const mockAnalyzeProject = analyzeModule.analyzeProject as MockedFunction<typeof analyzeModule.analyzeProject>
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function createMockResult(overrides: Record<string, any> = {}): ReturnType<typeof analyzeModule.analyzeProject> {

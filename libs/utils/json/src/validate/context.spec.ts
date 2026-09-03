@@ -1,5 +1,6 @@
 import type { Schema } from '../types/schema'
 import type { SchemaValidator } from './context'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { createValidationContext, pushPath, addError, shouldContinue } from './context'
 
 const mockValidator: SchemaValidator = () => true

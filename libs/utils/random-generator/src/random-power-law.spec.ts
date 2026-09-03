@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { randomPowerLaw } from './random-power-law'
 
 // why: the draws are unseeded, so every assertion here is a distributional property with wide margins rather than an exact value.

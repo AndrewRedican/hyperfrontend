@@ -159,7 +159,7 @@ export async function runCl(options: RunClOptions): Promise<number> {
   try {
     args = parseClArgs(options.argv)
   } catch (error) {
-    stderr.write(`${(<Error>error).message}\n`)
+    stderr.write(`${(error as Error).message}\n`)
     return CL_EXIT_INVALID
   }
 

@@ -1,4 +1,5 @@
 import type { Callback } from './call-stack.model'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { callStack } from './call-stack'
 
 describe('callStack', () => {
@@ -21,7 +22,7 @@ describe('callStack', () => {
 
   it('throws an error if a non-function is added', () => {
     const stack = callStack()
-    expect(() => stack.add(<Callback>(<unknown>'notAFunction'))).toThrow('Cannot add items that are not functions.')
+    expect(() => stack.add('notAFunction' as unknown as Callback)).toThrow('Cannot add items that are not functions.')
   })
 
   it('calls the callbacks with the specified arguments', () => {

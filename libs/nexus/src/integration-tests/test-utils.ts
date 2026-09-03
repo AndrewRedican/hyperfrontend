@@ -1,8 +1,8 @@
-/* istanbul ignore file */
-
+import type { Mock } from '@hyperfrontend/testing'
 import type { IAction } from '../types/action'
 import { createPromise } from '@hyperfrontend/immutable-api-utils/built-in-copy/promise'
 import { setTimeout } from '@hyperfrontend/immutable-api-utils/built-in-copy/timers'
+import { jest } from '@hyperfrontend/testing'
 
 /**
  * Type representing a message listener function
@@ -14,11 +14,11 @@ type MessageListener = (event: MessageEvent) => void
  */
 export interface MockWindow extends Partial<Window> {
   /** Mock postMessage function */
-  postMessage: jest.Mock
+  postMessage: Mock
   /** Mock addEventListener function */
-  addEventListener: jest.Mock
+  addEventListener: Mock
   /** Mock removeEventListener function */
-  removeEventListener: jest.Mock
+  removeEventListener: Mock
   /** Internal: Get all registered message listeners */
   _getMessageListeners: () => MessageListener[]
   /** Internal: Dispatch a message event to all listeners */
@@ -103,7 +103,7 @@ export function linkMockWindows(windowA: MockWindow, windowB: MockWindow, origin
       new MessageEvent('message', {
         data,
         origin: originB,
-        source: <Window>(<unknown>windowB),
+        source: windowB as unknown as Window,
       })
     )
   })
@@ -113,7 +113,7 @@ export function linkMockWindows(windowA: MockWindow, windowB: MockWindow, origin
       new MessageEvent('message', {
         data,
         origin: originA,
-        source: <Window>(<unknown>windowA),
+        source: windowA as unknown as Window,
       })
     )
   })
@@ -139,7 +139,7 @@ export function simulateMessage(targetWindow: MockWindow, message: IAction, orig
   const event = new MessageEvent('message', {
     data: message,
     origin,
-    source: <Window>(<unknown>source) || null,
+    source: (source as unknown as Window) || null,
   })
   targetWindow._dispatchMessage(event)
 }
@@ -164,7 +164,7 @@ export function createMessageEvent<T = IAction>(data: T, origin: string, source?
   return new MessageEvent<T>('message', {
     data,
     origin,
-    source: <Window>(<unknown>source) || null,
+    source: (source as unknown as Window) || null,
   })
 }
 

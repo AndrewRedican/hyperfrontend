@@ -23,7 +23,7 @@ export interface ActionIndex {
  * @returns A map from action type to its description.
  */
 function indexActions(actions: ActionDescription[]): Map<string, ActionDescription> {
-  return createMap(actions.map((action) => <const>[action.type, action]))
+  return createMap(actions.map((action) => [action.type, action] as const))
 }
 
 /**

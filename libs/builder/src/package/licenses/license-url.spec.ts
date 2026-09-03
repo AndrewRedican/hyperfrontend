@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { constructLicenseUrl } from './license-url'
 
 describe('constructLicenseUrl', () => {
@@ -6,7 +7,7 @@ describe('constructLicenseUrl', () => {
   })
 
   it('returns null when the repository field is an empty object', () => {
-    expect(constructLicenseUrl(<never>{ type: 'git' }, 'LICENSE')).toBeNull()
+    expect(constructLicenseUrl({ type: 'git' } as never, 'LICENSE')).toBeNull()
   })
 
   it('extracts the URL from an object-form repository field', () => {

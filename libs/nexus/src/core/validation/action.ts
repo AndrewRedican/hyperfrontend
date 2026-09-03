@@ -26,21 +26,21 @@ export function validateAction(action: unknown): void {
     throw createError('Action must be an object')
   }
 
-  const actionRecord = <Record<string, unknown>>action
+  const actionRecord = action as Record<string, unknown>
 
   if (!actionRecord['type'] || typeof actionRecord['type'] !== 'string') {
     throw createError('Action must have a string type')
   }
 
-  if (!actionRecord['senderId'] || !isUuidV4(<string>actionRecord['senderId'])) {
+  if (!actionRecord['senderId'] || !isUuidV4(actionRecord['senderId'] as string)) {
     throw createError('Action must have a valid UUID senderId')
   }
 
-  if (typeof actionRecord['timestamp'] !== 'number' || <number>actionRecord['timestamp'] <= 0) {
+  if (typeof actionRecord['timestamp'] !== 'number' || (actionRecord['timestamp'] as number) <= 0) {
     throw createError('Action must have a valid positive timestamp')
   }
 
-  if (actionRecord['processId'] !== undefined && actionRecord['processId'] !== null && !isUuidV4(<string>actionRecord['processId'])) {
+  if (actionRecord['processId'] !== undefined && actionRecord['processId'] !== null && !isUuidV4(actionRecord['processId'] as string)) {
     throw createError('Action processId must be a valid UUID when present')
   }
 }

@@ -34,6 +34,11 @@
       "implementation": "./src/executors/e2e/executor",
       "schema": "./src/executors/e2e/schema.json",
       "description": "Test package build outputs via npm pack + tarball install."
+    },
+    "test": {
+      "implementation": "./src/executors/test/executor",
+      "schema": "./src/executors/test/schema.json",
+      "description": "Run a project's suites on Node's built-in test runner."
     }
   }
 }

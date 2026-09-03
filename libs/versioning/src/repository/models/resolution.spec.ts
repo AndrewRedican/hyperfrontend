@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@hyperfrontend/testing'
 import {
   createDisabledResolution,
   createExplicitResolution,
@@ -18,10 +19,10 @@ describe('createDisabledResolution', () => {
 
 describe('createExplicitResolution', () => {
   it('creates an explicit resolution with repository config', () => {
-    const repository = <const>{
+    const repository = {
       platform: 'github',
       baseUrl: 'https://github.com/owner/repo',
-    }
+    } as const
 
     const resolution = createExplicitResolution(repository)
 
@@ -32,11 +33,11 @@ describe('createExplicitResolution', () => {
 
   it('preserves the repository config exactly', () => {
     const formatter = (from: string, to: string) => `${from}-${to}`
-    const repository = <const>{
+    const repository = {
       platform: 'custom',
       baseUrl: 'https://custom.com',
       formatCompareUrl: formatter,
-    }
+    } as const
 
     const resolution = createExplicitResolution(repository)
 

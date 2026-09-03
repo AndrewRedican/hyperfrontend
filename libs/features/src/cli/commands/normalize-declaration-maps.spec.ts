@@ -1,8 +1,11 @@
+import type { Mock } from '@hyperfrontend/testing'
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { afterEach, beforeEach } from 'node:test'
 import { parse, stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 import { keys } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { normalizeDeclarationMaps } from './normalize-declaration-maps'
 
 const stagedMap = (pid: number): string =>
@@ -17,7 +20,7 @@ const stagedMap = (pid: number): string =>
 
 describe('normalizeDeclarationMaps', () => {
   let dir: string
-  let warn: jest.Mock
+  let warn: Mock
 
   beforeEach(() => {
     dir = mkdtempSync(join(tmpdir(), 'hf-normalize-'))

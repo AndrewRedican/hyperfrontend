@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { inferRepositoryFromPackageJson, inferRepositoryFromPackageJsonObject, extractRepositoryUrl } from './package-json'
 
 describe('inferRepositoryFromPackageJson', () => {

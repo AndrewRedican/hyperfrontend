@@ -14,14 +14,10 @@
         "{projectRoot}/eslint.config.cjs"
       ]
     },
-    "test": {
-      "executor": "@nx/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
-      "options": {
-        "jestConfig": "{projectRoot}/jest.config.ts",
-        "passWithNoTests": false,
-        "codeCoverage": true
-      }
+    "@hyperfrontend/package:test": {
+      "cache": true,
+      "inputs": ["default", "^production"],
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"]
     },
     "version": {
       "executor": "@hyperfrontend/package:version",
@@ -29,7 +25,8 @@
         "tagPrefix": "{projectName}@",
         "scopeFiltering": {
           "excludeScopes": ["release", "deps", "workspace", "@hyperfrontend/workspace", "root", "repo", "ci", "build"]
-        }
+        },
+        "maxCommitFallback": 170
       }
     },
     "version-check": {
@@ -37,12 +34,20 @@
       "options": {
         "scopeFiltering": {
           "excludeScopes": ["release", "deps", "workspace", "@hyperfrontend/workspace", "root", "repo", "ci", "build"]
-        }
+        },
+        "maxCommitFallback": 170
       }
     },
     "build": {
       "cache": true,
-      "inputs": ["default", "^default"],
+      "inputs": [
+        "default",
+        "^default",
+        {
+          "projects": ["tool-package", "lib-builder"],
+          "input": "production"
+        }
+      ],
       "executor": "@hyperfrontend/package:build",
       "outputs": ["{options.outputPath}"],
       "options": {
@@ -70,6 +75,10 @@
         "command": "npm audit --audit-level=high",
         "cwd": "{projectRoot}"
       }
+    },
+    "test": {
+      "executor": "@hyperfrontend/package:test",
+      "options": {}
     }
   },
   "namedInputs": {
@@ -87,7 +96,6 @@
       "!{projectRoot}/eslint.config.cjs",
       "!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)",
       "!{projectRoot}/tsconfig.spec.json",
-      "!{projectRoot}/jest.config.[jt]s",
       "!{projectRoot}/src/test-setup.[jt]s",
       "!{projectRoot}/test-setup.[jt]s"
     ],
@@ -105,13 +113,6 @@
         "targetName": "lint"
       },
       "exclude": ["apps/demos/**/*"]
-    },
-    {
-      "plugin": "@nx/jest/plugin",
-      "options": {
-        "targetName": "test"
-      },
-      "exclude": ["**/*-e2e/**/*"]
     }
   ],
   "nxCloudId": "6991685ccc04119366337805",

@@ -1,5 +1,8 @@
+import type { Mock } from '@hyperfrontend/testing'
+import { beforeEach } from 'node:test'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { createPromise, promiseAllSettled, promiseReject, promiseResolve } from '@hyperfrontend/immutable-api-utils/built-in-copy/promise'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { ControlType } from './control'
 import { createRequestPeer } from './request'
 
@@ -28,7 +31,7 @@ jest.mock('@hyperfrontend/immutable-api-utils/built-in-copy/timers', () => {
   }
 })
 
-const timers = <{ __getScheduled(): ScheduledTimer[] }>jest.requireMock('@hyperfrontend/immutable-api-utils/built-in-copy/timers')
+const timers = jest.requireMock('@hyperfrontend/immutable-api-utils/built-in-copy/timers') as { __getScheduled(): ScheduledTimer[] }
 
 function scheduledTimers(): ScheduledTimer[] {
   return timers.__getScheduled()
@@ -48,12 +51,12 @@ function flush() {
   })
 }
 
-function envelopeAt(send: jest.Mock, index: number): Record<string, unknown> {
+function envelopeAt(send: Mock, index: number): Record<string, unknown> {
   const call = send.mock.calls[index]
   if (!call) {
     throw createError(`expected a sent envelope at index ${index}`)
   }
-  return <Record<string, unknown>>call[1]
+  return call[1] as Record<string, unknown>
 }
 
 beforeEach(() => {

@@ -1,18 +1,18 @@
 {
   "name": "@hyperfrontend/features",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "description": "SDK, CLI, and dev server for building, embedding, and orchestrating hyperfrontend micro-frontend features.",
   "license": "MIT",
   "sideEffects": false,
   "dependencies": {
-    "@hyperfrontend/builder": "0.2.0",
+    "@hyperfrontend/builder": "0.2.1",
     "@hyperfrontend/immutable-api-utils": "1.0.0",
     "@hyperfrontend/json-utils": "1.0.0",
     "@hyperfrontend/network-protocol": "1.0.0",
-    "@hyperfrontend/nexus": "2.0.1",
+    "@hyperfrontend/nexus": "2.1.0",
     "@hyperfrontend/project-scope": "0.2.4",
     "@hyperfrontend/questions": "0.3.0",
-    "@hyperfrontend/ui-utils": "0.0.7",
+    "@hyperfrontend/ui-utils": "0.0.8",
     "@hyperfrontend/versioning": "0.7.0",
     "tslib": "2.8.1",
     "typescript": "5.9.3"

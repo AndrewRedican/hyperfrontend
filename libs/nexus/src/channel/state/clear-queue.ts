@@ -15,8 +15,8 @@ import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
  * ```
  */
 export function clearQueue(state: ChannelState): ChannelState {
-  return freeze(<ChannelState>{
+  return freeze({
     ...state,
     queuedMessages: freeze([]),
-  })
+  } as ChannelState)
 }

@@ -114,8 +114,8 @@ export function createValueCreator(
      */
     function close(): void {
       storage.clear()
-      ;(<any>storage) = null
-      ;(<any>password) = null
+      ;(storage as any) = null
+      ;(password as any) = null
       isVaultClosed = true
     }
 

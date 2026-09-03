@@ -1,6 +1,7 @@
 import type { Project } from '../models/project'
 import type { Workspace } from '../models/workspace'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { createProject } from '../models/project'
 import { createWorkspace, DEFAULT_WORKSPACE_CONFIG } from '../models/workspace'
 import { validateWorkspace, validateProject, summarizeValidation } from './validate'

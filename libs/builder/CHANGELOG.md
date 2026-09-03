@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.1](https://github.com/AndrewRedican/hyperfrontend/compare/725db1b4556be686fd460b69424229a7d5ac5a63...7b6cf80e7cfba3085e9d938d6298f5775f3401eb) - 2026-09-03
+
+### Bug Fixes
+
+- give bundled cjs deps' esm chunks their named exports and module-scope globals
+- bound dedupe ownership to entry-reachable modules and classify only free refs
+
 ## [0.2.0](https://github.com/AndrewRedican/hyperfrontend/compare/208793adace114439414819cd1cd8ca9e8b121ca...a1f6e3b4e6b9f0ad51c8908b2fb641deed0078e3) - 2026-08-10
 
 ### Features

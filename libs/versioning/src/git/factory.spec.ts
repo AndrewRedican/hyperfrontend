@@ -1,9 +1,12 @@
+import type { MockedFunction } from '@hyperfrontend/testing'
 import { execFileSync } from 'node:child_process'
+import { beforeEach } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { createGitClient, DEFAULT_GIT_CLIENT_CONFIG } from './factory'
 
 jest.mock('node:child_process')
 
-const mockExecFileSync = <jest.MockedFunction<typeof execFileSync>>execFileSync
+const mockExecFileSync = execFileSync as MockedFunction<typeof execFileSync>
 jest.mock('./operations/commit', () => ({
   ...jest.requireActual('./operations/commit'),
   commit: jest.fn().mockReturnValue({ hash: 'mock-hash', shortHash: 'mock', message: 'test' }),

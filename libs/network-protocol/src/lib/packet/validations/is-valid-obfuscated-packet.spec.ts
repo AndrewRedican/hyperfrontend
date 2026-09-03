@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { isValidObfuscatedPacket } from './is-valid-obfuscated-packet'
 
 describe('isValidObfuscatedPacket', () => {

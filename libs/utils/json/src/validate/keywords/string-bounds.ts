@@ -64,16 +64,16 @@ export function validateStringBounds(instance: string, schema: Schema, ctx: Vali
         if (!shouldContinue(ctx)) return false
       }
     } catch (e) {
-      /* istanbul ignore next -- strictPatterns mode verified in validate.spec.ts */
+      // why: strictPatterns mode verified in validate.spec.ts
       if (ctx.strictPatterns) {
-        /* istanbul ignore next -- error reporting for invalid regex */
+        // why: error reporting for invalid regex
         addError(ctx, `Invalid regex pattern: ${schema.pattern}`, instance, 'pattern', {
           pattern: schema.pattern,
-          /* istanbul ignore next -- error message extraction ternary */
+          // why: error message extraction ternary
           error: e instanceof Error ? e.message : 'Invalid regex',
         })
         valid = false
-        /* istanbul ignore if -- early exit tested in validate.spec.ts */
+        // why: early exit tested in validate.spec.ts
         if (!shouldContinue(ctx)) return false
       }
     }

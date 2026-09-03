@@ -220,7 +220,7 @@ const rule: Rule.RuleModule = {
           return
         }
 
-        const parent = (<NodeWithParent>node).parent
+        const parent = (node as NodeWithParent).parent
         const isExported = parent?.type === 'ExportNamedDeclaration'
 
         if (isContentTs && !isExported) {

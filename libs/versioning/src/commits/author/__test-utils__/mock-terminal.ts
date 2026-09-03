@@ -2,7 +2,7 @@ import { PassThrough } from 'node:stream'
 import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 
 /** Key-code constants mirroring `@hyperfrontend/questions`'s internal `Key` export. */
-export const TestKey = freeze(<const>{
+export const TestKey = freeze({
   /** Enter / carriage return */
   Enter: '\r',
   /** Ctrl-C: drives the prompt's cancellation path */
@@ -17,7 +17,7 @@ export const TestKey = freeze(<const>{
   Space: ' ',
   /** Horizontal tab: triggers completion / focus movement in prompts */
   Tab: '\t',
-})
+} as const)
 
 /** Test-only extensions added to the readable mock stream. */
 export interface MockInputExtensions {
@@ -87,7 +87,7 @@ export function createMockTerminal(): MockTerminal {
  * @returns Readable stream augmented with raw-mode flag and `enqueueKeys`
  */
 function createMockInput(): MockInput {
-  const input = <MockInput>(<unknown>new PassThrough())
+  const input = new PassThrough() as unknown as MockInput
   input.isRaw = false
   input.setRawMode = (mode: boolean): MockInput => {
     input.isRaw = mode
@@ -129,14 +129,14 @@ function createMockInput(): MockInput {
  * @returns Writable stream augmented with `getWrittenData`
  */
 function createMockOutput(): MockOutput {
-  const output = <MockOutput>(<unknown>new PassThrough())
+  const output = new PassThrough() as unknown as MockOutput
   let writtenData = ''
 
   const originalWrite = output.write.bind(output)
-  output.write = <typeof output.write>((chunk: string | Buffer): boolean => {
+  output.write = ((chunk: string | Buffer): boolean => {
     writtenData += chunk.toString()
     return originalWrite(chunk)
-  })
+  }) as typeof output.write
 
   output.getWrittenData = (): string => writtenData
 

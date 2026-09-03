@@ -18,7 +18,7 @@
         "type": "string",
         "enum": ["cjs", "esm", "iife", "umd", "browser", "nx"]
       },
-      "description": "Output formats to test. 'browser' runs combined IIFE/UMD tests in jsdom. Defaults to all formats with existing jest configs.",
+      "description": "Output formats to test. 'browser' runs combined IIFE/UMD tests against the DOM preload. Defaults to cjs, esm, and browser.",
       "default": ["cjs", "esm", "browser"]
     },
     "skipInstall": {

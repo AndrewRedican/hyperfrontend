@@ -1,4 +1,6 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
+import { after as afterAll, beforeEach } from 'node:test'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { deregisterClassTypes } from './deregister-class-types'
 import { registerClassTypes } from './register-class-types'
 import { sameType } from './same-type'

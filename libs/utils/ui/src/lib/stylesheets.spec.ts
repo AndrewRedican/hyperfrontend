@@ -1,5 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unused-vars */
+import { afterEach, beforeEach } from 'node:test'
+import { describe, expect, it } from '@hyperfrontend/testing'
 
 import { addStylesheet, removeStylesheet } from './stylesheets'
 
@@ -29,9 +31,9 @@ describe('addStylesheet function', () => {
 
   it('throws an error when css is not a string or StyleMap or is empty', () => {
     expect(() => addStylesheet('')).toThrow()
-    expect(() => addStylesheet(<any>123)).toThrow()
-    expect(() => addStylesheet(<any>{})).toThrow()
-    expect(() => addStylesheet(<any>null)).toThrow()
+    expect(() => addStylesheet(123 as any)).toThrow()
+    expect(() => addStylesheet({} as any)).toThrow()
+    expect(() => addStylesheet(null as any)).toThrow()
   })
 
   it('throws an error if a stylesheet with the same label already exists', () => {

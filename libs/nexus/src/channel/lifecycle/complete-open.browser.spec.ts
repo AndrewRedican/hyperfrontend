@@ -1,6 +1,9 @@
+import type { Mock } from '@hyperfrontend/testing'
 import type { IAction } from '../../types/action'
 import type { ChannelState, ScheduledActivation } from '../../types/channel'
 import type { ChannelInternals } from '../types'
+import { after as afterAll, afterEach, before as beforeAll, beforeEach } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { createInitialState } from '../state/initial'
 import { completeScheduledOpen } from './complete-open'
 import { startHandshakeTimers } from './handshake-timers'
@@ -26,12 +29,12 @@ describe('channel/lifecycle/complete-open', () => {
     jest.clearAllTimers()
   })
 
-  let targetWindow: { postMessage: jest.Mock }
+  let targetWindow: { postMessage: Mock }
 
   beforeEach(() => {
     sentActions = []
     targetWindow = { postMessage: jest.fn() }
-    state = createInitialState('test-channel', <Window>(<unknown>targetWindow), { contract: ownContract })
+    state = createInitialState('test-channel', targetWindow as unknown as Window, { contract: ownContract })
     mockChannel = {
       getState: () => state,
       updateState: (partial) => {

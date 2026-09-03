@@ -1,11 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
-import { getIterableOperators } from './get-iterable-operators'
-import { getType } from './get-type'
-import { isIterableType } from './is-iterable-type'
-import { ReferenceStack } from './models'
-import { referenceStack } from './reference-stack'
-import {
+import type { ReferenceStack } from './models'
+import type {
   SelectiveCopyOptions,
   SelectiveCopyPredicate,
   DataPointOperation,
@@ -13,6 +8,11 @@ import {
   ReferenceLoop,
   SelectiveCopyResult,
 } from './selective-copy.model'
+import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
+import { getIterableOperators } from './get-iterable-operators'
+import { getType } from './get-type'
+import { isIterableType } from './is-iterable-type'
+import { referenceStack } from './reference-stack'
 import { getConfig } from './shared/consts'
 
 /**
@@ -54,11 +54,11 @@ export const selectiveCopyRecursive = <T extends Record<string, unknown>>(
     }
     write(
       iterableInstance,
-      selectiveCopyRecursive(<Record<string, unknown>>nextTarget, nextPath, includeKey, skipFunctions, recordSkip),
+      selectiveCopyRecursive(nextTarget as Record<string, unknown>, nextPath, includeKey, skipFunctions, recordSkip),
       nextKey
     )
   }
-  return <Partial<T>>iterableInstance
+  return iterableInstance as Partial<T>
 }
 
 /**
@@ -112,7 +112,7 @@ export const selectiveCopyForCircularReferencesRecursive = <T extends Record<str
     if (hasCircularRef) {
       circularRefs.push({
         startPath: nextPath,
-        destinationPath: nextPath.slice(0, <number>stack.lastSeen(nextTarget)),
+        destinationPath: nextPath.slice(0, stack.lastSeen(nextTarget) as number),
       })
       continue
     }
@@ -120,7 +120,7 @@ export const selectiveCopyForCircularReferencesRecursive = <T extends Record<str
     write(
       iterableInstance,
       selectiveCopyForCircularReferencesRecursive(
-        <Record<string, unknown>>nextTarget,
+        nextTarget as Record<string, unknown>,
         nextPath,
         includeKey,
         skipFunctions,
@@ -133,31 +133,29 @@ export const selectiveCopyForCircularReferencesRecursive = <T extends Record<str
   }
   if (root) {
     circularRefs.forEach(({ startPath, destinationPath }) => {
-      let [start, destination] = <[Record<string, unknown>, Record<string, unknown>]>[iterableInstance, iterableInstance]
+      let [start, destination] = [iterableInstance, iterableInstance] as [Record<string, unknown>, Record<string, unknown>]
 
       for (let i = 0; i < startPath.length - 1; i += 1) {
-        /* istanbul ignore else */
         if (startPath[i] !== '__proto__') {
-          start = <Record<string, unknown>>start[startPath[i]]
+          start = start[startPath[i]] as Record<string, unknown>
         }
       }
 
       for (let j = 0; j < destinationPath.length; j += 1) {
-        /* istanbul ignore else */
         if (destinationPath[j] !== '__proto__') {
-          destination = <Record<string, unknown>>destination[destinationPath[j]]
+          destination = destination[destinationPath[j]] as Record<string, unknown>
         }
       }
 
       const lastKey = startPath[startPath.length - 1]
-      /* istanbul ignore else -- __proto__ is already filtered during iteration, this is defensive */
+      // why: __proto__ is already filtered during iteration, so this guard is defensive and never falls through.
       if (lastKey !== '__proto__') {
         start[lastKey] = destination
       }
     })
     stack.clear()
   }
-  return <Partial<T>>iterableInstance
+  return iterableInstance as Partial<T>
 }
 
 /**
@@ -188,14 +186,14 @@ export const selectiveCopy = <T = unknown>(target: T, options?: SelectiveCopyOpt
     if (found && included) throw createError(`Options ${found} and ${keys[i]} are mutually exclusive.`)
     if (included) found = keys[i]
   }
-  const { includeKeys, excludeKeys, include, exclude, skipFunctions } = <Required<SelectiveCopyOptions>>options
+  const { includeKeys, excludeKeys, include, exclude, skipFunctions } = options as Required<SelectiveCopyOptions>
   let includeKey: SelectiveCopyPredicate = (target, path, key, dataType) => true
   switch (found) {
     case 'includeKeys':
-      includeKey = (target, path, key, dataType) => (path.length === 1 ? includeKeys.includes(<string>key) : true)
+      includeKey = (target, path, key, dataType) => (path.length === 1 ? includeKeys.includes(key as string) : true)
       break
     case 'excludeKeys':
-      includeKey = (target, path, key, dataType) => (path.length === 1 ? !excludeKeys.includes(<string>key) : true)
+      includeKey = (target, path, key, dataType) => (path.length === 1 ? !excludeKeys.includes(key as string) : true)
       break
     case 'include':
       includeKey = include
@@ -208,20 +206,18 @@ export const selectiveCopy = <T = unknown>(target: T, options?: SelectiveCopyOpt
   const recordSkip: DataPointOperation = (target, path, key, dataType) => skipped.push({ target, path, key, dataType })
   let clone: T
   if (getConfig().detectCircularReferences) {
-    clone = <T>(
-      selectiveCopyForCircularReferencesRecursive(
-        <Record<string, unknown>>target,
-        [],
-        includeKey,
-        skipFunctions,
-        recordSkip,
-        referenceStack(),
-        [],
-        true
-      )
-    )
+    clone = selectiveCopyForCircularReferencesRecursive(
+      target as Record<string, unknown>,
+      [],
+      includeKey,
+      skipFunctions,
+      recordSkip,
+      referenceStack(),
+      [],
+      true
+    ) as T
   } else {
-    clone = <T>selectiveCopyRecursive(<Record<string, unknown>>target, [], includeKey, skipFunctions, recordSkip)
+    clone = selectiveCopyRecursive(target as Record<string, unknown>, [], includeKey, skipFunctions, recordSkip) as T
   }
   return { clone, skipped }
 }

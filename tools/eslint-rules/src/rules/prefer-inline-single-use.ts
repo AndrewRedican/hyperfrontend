@@ -273,7 +273,7 @@ export default createRule<Options, MessageIds>({
         if (node.declarations.length !== 1) return
 
         const declarator = node.declarations[0]
-        /* istanbul ignore next - defensive */
+        // why: defensive
         if (!declarator) return
 
         if (declarator.id.type !== 'Identifier') return
@@ -294,7 +294,7 @@ export default createRule<Options, MessageIds>({
         if (references.length !== 1) return
 
         const singleRef = references[0]
-        /* istanbul ignore next - defensive */
+        // why: defensive
         if (!singleRef) return
 
         if (isInsideLoopHeader(singleRef.identifier)) return

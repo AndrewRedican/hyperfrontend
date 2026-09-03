@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { detectPlatform } from './platform'
 
 describe('security/platform', () => {

@@ -1,3 +1,4 @@
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { createErrorIgnoringFunction } from './create-error-ignoring-function'
 
 describe('createErrorIgnoringFunction', () => {

@@ -1,6 +1,8 @@
 import type { PackageJson } from './read'
 import { mkdirSync, writeFileSync, rmSync } from 'node:fs'
 import { join } from 'node:path'
+import { after as afterAll, before as beforeAll } from 'node:test'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import {
   getDependencies,
   getProductionDependencies,
@@ -15,7 +17,7 @@ import {
   getInstalledVersion,
 } from './dependencies'
 
-const TEST_DIR = join(__dirname, '__test_fixtures_deps__')
+const TEST_DIR = join(import.meta.dirname, '__test_fixtures_deps__')
 
 describe('getDependencies', () => {
   it('extracts all dependency types', () => {

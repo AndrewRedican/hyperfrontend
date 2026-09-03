@@ -1,5 +1,6 @@
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { analyzeChunkNamespaces, stripDeadProperties } from './property-strip'
 
 const analyze = (

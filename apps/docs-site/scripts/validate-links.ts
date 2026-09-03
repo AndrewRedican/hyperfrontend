@@ -402,7 +402,7 @@ function validateApiSources(): LinkValidationResult[] {
       continue
     }
 
-    const bundle = <unknown>parse(readFileSync(bundlePath, 'utf-8'))
+    const bundle = parse(readFileSync(bundlePath, 'utf-8')) as unknown
     const seen = createSet<string>()
 
     const visit = (node: unknown): void => {
@@ -413,7 +413,7 @@ function validateApiSources(): LinkValidationResult[] {
         return
       }
 
-      const record = <Record<string, unknown>>node
+      const record = node as Record<string, unknown>
       const url = record['url']
 
       if (typeof url === 'string' && typeof record['fileName'] === 'string' && !seen.has(url)) {

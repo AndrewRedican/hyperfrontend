@@ -87,6 +87,8 @@ export interface ValidateVersionStateOptions {
   readonly verbose?: boolean
   /** Scope filtering configuration */
   readonly scopeFiltering?: FlowConfig['scopeFiltering']
+  /** Upper bound on the commit window the flow analyzes */
+  readonly maxCommitFallback?: FlowConfig['maxCommitFallback']
   /** Repository configuration */
   readonly repository?: FlowConfig['repository']
 }
@@ -106,7 +108,7 @@ export interface ValidateVersionStateOptions {
  * @returns Validation result with status and any discrepancies found
  */
 export async function validateVersionState(options: ValidateVersionStateOptions): Promise<VersionValidationResult> {
-  const { workspaceRoot, projectName, projectRoot, verbose, scopeFiltering, repository } = options
+  const { workspaceRoot, projectName, projectRoot, verbose, scopeFiltering, maxCommitFallback, repository } = options
   const packageJsonPath = join(workspaceRoot, projectRoot, 'package.json')
   const changelogPath = join(workspaceRoot, projectRoot, 'CHANGELOG.md')
 
@@ -117,6 +119,7 @@ export async function validateVersionState(options: ValidateVersionStateOptions)
     skipChangelog: false,
     repository: repository ?? 'inferred',
     scopeFiltering,
+    maxCommitFallback,
   }
 
   let flowResult: FlowResult
@@ -167,7 +170,7 @@ export async function validateVersionState(options: ValidateVersionStateOptions)
 
   const expected: ExpectedVersionState = {
     version: state.nextVersion,
-    bumpType: <'major' | 'minor' | 'patch' | 'none'>state.bumpType,
+    bumpType: state.bumpType as 'major' | 'minor' | 'patch' | 'none',
     changelogEntry: state.changelogEntry,
     commitCount: state.commits?.length ?? 0,
   }

@@ -2,6 +2,8 @@ import type { BuildContext, EntryPoint, EntryPointDiscovery } from '../../models
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
+import { afterEach, beforeEach } from 'node:test'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { collectEntryRefs, collectExportedNames, findDanglingEntryRefs, verifyEntryTypeRefs } from './verify-entry-refs'
 
 const entryOf = (srcPath: string): EntryPoint => ({

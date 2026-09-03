@@ -8,7 +8,7 @@ import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
  * The contract is self-oriented: `emitted` lists what this side sends,
  * `accepted` lists what this side accepts.
  */
-export const DEFAULT_CONTRACT: IChannelContract = freeze(<IChannelContract>{
+export const DEFAULT_CONTRACT: IChannelContract = freeze({
   emitted: freeze([
     { type: 'MESSAGE', description: 'Generic message' },
     { type: 'DATA', description: 'Generic data transfer' },
@@ -20,4 +20,4 @@ export const DEFAULT_CONTRACT: IChannelContract = freeze(<IChannelContract>{
     { type: 'EVENT', description: 'Generic event' },
     { type: 'ACK', description: 'Acknowledgment' },
   ]),
-})
+} as IChannelContract)

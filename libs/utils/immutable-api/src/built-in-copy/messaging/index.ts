@@ -36,7 +36,7 @@ export const structuredClone = _structuredClone
  * @returns A new MessageChannel instance or undefined if not available.
  */
 export const createMessageChannel = _MessageChannel
-  ? (): MessageChannel => <MessageChannel>_Reflect.construct(_MessageChannel, [])
+  ? (): MessageChannel => _Reflect.construct(_MessageChannel, []) as MessageChannel
   : undefined
 
 /**
@@ -47,7 +47,7 @@ export const createMessageChannel = _MessageChannel
  * @returns A new BroadcastChannel instance or undefined if not available.
  */
 export const createBroadcastChannel = _BroadcastChannel
-  ? (name: string): BroadcastChannel => <BroadcastChannel>_Reflect.construct(_BroadcastChannel, [name])
+  ? (name: string): BroadcastChannel => _Reflect.construct(_BroadcastChannel, [name]) as BroadcastChannel
   : undefined
 
 /**
@@ -147,7 +147,7 @@ export const postMessageToBroadcast = (channel: BroadcastChannel, message: unkno
  * (Safe copy) Namespace object containing all Messaging functions.
  * Note: Importing this imports all methods in this namespace (no tree-shaking).
  */
-export const Messaging = _freeze(<const>{
+export const Messaging = _freeze({
   structuredClone,
   createMessageChannel,
   createBroadcastChannel,
@@ -155,4 +155,4 @@ export const Messaging = _freeze(<const>{
   postMessageToWorker,
   postMessageToPort,
   postMessageToBroadcast,
-})
+} as const)

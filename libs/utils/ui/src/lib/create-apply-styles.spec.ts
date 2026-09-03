@@ -1,3 +1,5 @@
+import { afterEach } from 'node:test'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { createApplyStyles } from './create-apply-styles'
 
 describe('createApplyStyles', () => {

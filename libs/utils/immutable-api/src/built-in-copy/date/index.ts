@@ -35,7 +35,7 @@ export function createDate(
  * ```
  */
 export function createDate(...args: unknown[]): Date {
-  return <Date>_Reflect.construct(_Date, args)
+  return _Reflect.construct(_Date, args) as Date
 }
 
 /**
@@ -75,9 +75,9 @@ export const dateUTC = _Date.UTC
  * (Safe copy) Namespace object containing Date factory and static methods.
  * Note: Importing this imports all methods in this namespace (no tree-shaking).
  */
-export const Date = _freeze(<const>{
+export const Date = _freeze({
   create: createDate,
   now: dateNow,
   parse: dateParse,
   UTC: dateUTC,
-})
+} as const)

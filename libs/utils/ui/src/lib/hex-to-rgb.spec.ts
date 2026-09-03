@@ -1,15 +1,16 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { hexToRgb } from './hex-to-rgb'
 
 describe('hexToRgb', () => {
   it('throws error for invalid input', () => {
-    expect(() => hexToRgb(<any>null)).toThrow('Input hex must be a string')
+    expect(() => hexToRgb(null as any)).toThrow('Input hex must be a string')
     expect(() => hexToRgb('')).toThrow('Invalid hex input')
     expect(() => hexToRgb('#xyz')).toThrow('Invalid hex input')
   })
 
   it('throws error for invalid opacity', () => {
-    expect(() => hexToRgb('#112233', <any>'0.5')).toThrow('Input opacity must be a number')
+    expect(() => hexToRgb('#112233', '0.5' as any)).toThrow('Input opacity must be a number')
   })
 
   it('throws error when opacity is provided with 8-digit hex code', () => {

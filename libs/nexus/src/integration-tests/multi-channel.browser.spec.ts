@@ -1,4 +1,6 @@
 import type { MockWindow } from './test-utils'
+import { after as afterAll, afterEach, before as beforeAll } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { createBroker } from '../broker/factory'
 import { createMockWindow, createContractPair } from './test-utils'
 
@@ -32,7 +34,7 @@ describe('Integration: Multi-Channel', () => {
         new MessageEvent('message', {
           data,
           origin: MAIN_ORIGIN,
-          source: <Window>(<unknown>mainProxy),
+          source: mainProxy as unknown as Window,
         })
       )
     })
@@ -41,7 +43,7 @@ describe('Integration: Multi-Channel', () => {
         new MessageEvent('message', {
           data,
           origin: counterpartOrigin,
-          source: <Window>(<unknown>counterpartWindow),
+          source: counterpartWindow as unknown as Window,
         })
       )
     })
@@ -54,11 +56,11 @@ describe('Integration: Multi-Channel', () => {
     const counterpartBroker = createBroker({
       name: `counterpart-broker-${index}`,
       contract: counterpartContract,
-      window: <Window>(<unknown>counterpartWindow),
+      window: counterpartWindow as unknown as Window,
       settings: { logLevel: 'error' },
     })
-    const counterpartChannel = counterpartBroker.addChannel('to-main', <Window>(<unknown>mainProxy))
-    const mainChannel = mainBroker.addChannel(`channel-${index}`, <Window>(<unknown>counterpartWindow))
+    const counterpartChannel = counterpartBroker.addChannel('to-main', mainProxy as unknown as Window)
+    const mainChannel = mainBroker.addChannel(`channel-${index}`, counterpartWindow as unknown as Window)
     return { mainChannel, counterpartChannel, counterpartWindow }
   }
 
@@ -67,7 +69,7 @@ describe('Integration: Multi-Channel', () => {
     const mainBroker = createBroker({
       name: 'multi-broker',
       contract: mainContract,
-      window: <Window>(<unknown>mainWindow),
+      window: mainWindow as unknown as Window,
       settings: { logLevel: 'error' },
     })
     const pairs: ReturnType<typeof buildPair>[] = []
@@ -141,7 +143,7 @@ describe('Integration: Multi-Channel', () => {
     it('maintains separate message queues until each handshake completes', () => {
       const { pairs } = setupMultiChannel(2)
 
-      const received = pairs.map(() => <unknown[]>[])
+      const received = pairs.map(() => [] as unknown[])
       pairs.forEach((pair, index) => pair.counterpartChannel.onMessage((message) => received[index].push(message)))
 
       pairs[0].mainChannel.send('BROADCAST', { id: 1 })

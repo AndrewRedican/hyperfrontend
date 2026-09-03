@@ -72,6 +72,7 @@ export default async function versionCheckExecutor(
     projectRoot,
     verbose: options.verbose,
     scopeFiltering: options.scopeFiltering,
+    maxCommitFallback: options.maxCommitFallback,
     repository: options.repository,
   })
 

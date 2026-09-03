@@ -1,12 +1,15 @@
+import type { Mock } from '@hyperfrontend/testing'
 import type { InjectWorkerJob } from './types'
 import { mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { afterEach, beforeEach } from 'node:test'
 import { inject } from 'postject'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { runInjectWorkerJob } from './job-runner'
 jest.mock('postject', () => ({ inject: jest.fn().mockResolvedValue(undefined) }))
 
-const mockInject = inject as jest.Mock
+const mockInject = inject as Mock
 
 describe('runInjectWorkerJob', () => {
   let root: string

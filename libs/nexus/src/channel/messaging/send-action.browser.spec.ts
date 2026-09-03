@@ -1,13 +1,16 @@
+import type { Mock } from '@hyperfrontend/testing'
 import type { ChannelState } from '../../types'
 import type { IAction } from '../../types/action'
 import type { ChannelInternals } from '../types'
+import { beforeEach } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { sendAction } from './send-action'
 
 describe('channel/messaging/send-action', () => {
   let mockChannel: ChannelInternals
   let state: ChannelState
-  let mockWindow: { postMessage: jest.Mock }
-  let mockGetState: jest.Mock<ChannelState, []>
+  let mockWindow: { postMessage: Mock }
+  let mockGetState: Mock<ChannelState, []>
 
   beforeEach(() => {
     mockWindow = {
@@ -17,7 +20,7 @@ describe('channel/messaging/send-action', () => {
     state = {
       id: 'channel-123',
       name: 'test-channel',
-      target: <Window>(<unknown>mockWindow),
+      target: mockWindow as unknown as Window,
       origin: 'https://example.com',
       active: true,
       connectTimestamp: Date.now(),
@@ -114,25 +117,25 @@ describe('channel/messaging/send-action', () => {
   })
 
   it('throws error if action is null', () => {
-    expect(() => sendAction(mockChannel, <IAction>(<unknown>null))).toThrow(
+    expect(() => sendAction(mockChannel, null as unknown as IAction)).toThrow(
       "Action must contain a 'type' property that is a non-empty string."
     )
   })
 
   it('throws error if action is undefined', () => {
-    expect(() => sendAction(mockChannel, <IAction>(<unknown>undefined))).toThrow(
+    expect(() => sendAction(mockChannel, undefined as unknown as IAction)).toThrow(
       "Action must contain a 'type' property that is a non-empty string."
     )
   })
 
   it('throws error if action has no type', () => {
-    const action = <IAction>{}
+    const action = {} as IAction
 
     expect(() => sendAction(mockChannel, action)).toThrow("Action must contain a 'type' property that is a non-empty string.")
   })
 
   it('throws error if action type is not a string', () => {
-    const action = <IAction>(<unknown>{ type: 123 })
+    const action = { type: 123 } as unknown as IAction
 
     expect(() => sendAction(mockChannel, action)).toThrow("Action must contain a 'type' property that is a non-empty string.")
   })
@@ -155,12 +158,12 @@ describe('channel/messaging/send-action', () => {
 
   describe('with security transport', () => {
     let mockSecurityTransport: {
-      isReady: jest.Mock
-      send: jest.Mock
-      receive: jest.Mock
-      stop: jest.Mock
-      resume: jest.Mock
-      getProtocol: jest.Mock
+      isReady: Mock
+      send: Mock
+      receive: Mock
+      stop: Mock
+      resume: Mock
+      getProtocol: Mock
     }
 
     beforeEach(() => {

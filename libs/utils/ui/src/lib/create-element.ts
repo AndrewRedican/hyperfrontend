@@ -63,7 +63,7 @@ export type ElementMethods<T extends HTMLElement> = {
  * ```
  */
 export function createElement<T extends HTMLElement>(tagName: HtmlTagName, config?: ElementConfig): ElementMethods<T> {
-  const element = <T>document.createElement(tagName)
+  const element = document.createElement(tagName) as T
   if (config?.inlineStyle) {
     assign(element.style, config.inlineStyle)
   }
@@ -80,7 +80,7 @@ export function createElement<T extends HTMLElement>(tagName: HtmlTagName, confi
 
   const addChild = (child: HTMLElement | ElementMethods<HTMLElement>) => {
     if (!child) return
-    /* istanbul ignore next */
+    /* node:coverage ignore next 1 */
     const childElement = 'ref' in child ? child.ref : child
     if (!element.contains(childElement)) {
       element.appendChild(childElement)
@@ -89,7 +89,7 @@ export function createElement<T extends HTMLElement>(tagName: HtmlTagName, confi
 
   const attachTo = (parent: HTMLElement | ElementMethods<HTMLElement>) => {
     if (!parent) return
-    /* istanbul ignore next */
+    /* node:coverage ignore next 1 */
     const parentElement = 'ref' in parent ? parent.ref : parent
     if (!parentElement.contains(element)) {
       parentElement.appendChild(element)
@@ -114,7 +114,7 @@ export function createElement<T extends HTMLElement>(tagName: HtmlTagName, confi
 
   const removeChild = (child: HTMLElement | ElementMethods<HTMLElement>) => {
     if (!child) return
-    /* istanbul ignore next */
+    /* node:coverage ignore next 1 */
     const childElement = 'ref' in child ? child.ref : child
     if (element.contains(childElement)) {
       element.removeChild(childElement)

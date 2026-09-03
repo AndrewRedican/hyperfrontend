@@ -43,7 +43,7 @@ const rule: Rule.RuleModule = {
     const filePath = context.filename
     const projectRoot = dirname(filePath)
 
-    /* istanbul ignore next - only publishable libraries are linted via config */
+    // why: only publishable libraries are linted via config
     if (!isPublishableLibrary(projectRoot)) {
       return {}
     }
@@ -54,7 +54,7 @@ const rule: Rule.RuleModule = {
 
     return {
       JSONProperty(node: JSONNode) {
-        /* istanbul ignore if -- type guard for jsonc-eslint-parser */
+        // why: type guard for jsonc-eslint-parser
         if (node.type !== 'JSONProperty') {
           return
         }
@@ -96,9 +96,9 @@ const rule: Rule.RuleModule = {
               const tokenAfter = sourceCode.getTokenAfter(mainNodeCast)
               const tokenBefore = sourceCode.getTokenBefore(mainNodeCast)
               const text = sourceCode.getText()
-              const range = <[number, number]>mainNodeCast.range
+              const range = mainNodeCast.range as [number, number]
 
-              if (tokenAfter && (<TokenWithValue>tokenAfter).value === ',') {
+              if (tokenAfter && (tokenAfter as TokenWithValue).value === ',') {
                 let startPos = range[0]
                 while (startPos > 0 && text[startPos - 1] !== '\n') {
                   startPos--
@@ -109,7 +109,7 @@ const rule: Rule.RuleModule = {
                 return fixer.removeRange([startPos, tokenAfter.range[1]])
               }
 
-              if (tokenBefore && (<TokenWithValue>tokenBefore).value === ',') {
+              if (tokenBefore && (tokenBefore as TokenWithValue).value === ',') {
                 return fixer.removeRange([tokenBefore.range[0], range[1]])
               }
 
@@ -122,7 +122,7 @@ const rule: Rule.RuleModule = {
             messageId: 'noMainField',
             fix(fixer) {
               if (mainValue) {
-                const mainNodeTyped = <NodeWithRange>(<unknown>mainNode)
+                const mainNodeTyped = mainNode as unknown as NodeWithRange
                 const replacement = `"exports": {\n    ".": "${mainValue}"\n  }`
                 return fixer.replaceTextRange(mainNodeTyped.range, replacement)
               }

@@ -1,3 +1,5 @@
+import { afterEach, beforeEach } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { setupResizeObserverMock } from '../../mocks/setup-resize-observer-mock'
 import { syncElementDimensions } from './sync-element-dimensions'
 
@@ -104,13 +106,13 @@ describe('syncElementDimensions', () => {
       [
         {
           target: sourceElement,
-          contentRect: <DOMRectReadOnly>{},
-          borderBoxSize: <ResizeObserverSize[]>(<unknown>[]),
-          contentBoxSize: <ResizeObserverSize[]>(<unknown>[]),
-          devicePixelContentBoxSize: <ResizeObserverSize[]>(<unknown>[]),
+          contentRect: {} as DOMRectReadOnly,
+          borderBoxSize: [] as unknown as ResizeObserverSize[],
+          contentBoxSize: [] as unknown as ResizeObserverSize[],
+          devicePixelContentBoxSize: [] as unknown as ResizeObserverSize[],
         },
       ],
-      <ResizeObserver>{}
+      {} as ResizeObserver
     )
 
     expect(targetElement.style.width).toBe('300px')
@@ -188,13 +190,13 @@ describe('syncElementDimensions', () => {
         [
           {
             target: sourceElement,
-            contentRect: <DOMRectReadOnly>{},
-            borderBoxSize: <ResizeObserverSize[]>(<unknown>[]),
-            contentBoxSize: <ResizeObserverSize[]>(<unknown>[]),
-            devicePixelContentBoxSize: <ResizeObserverSize[]>(<unknown>[]),
+            contentRect: {} as DOMRectReadOnly,
+            borderBoxSize: [] as unknown as ResizeObserverSize[],
+            contentBoxSize: [] as unknown as ResizeObserverSize[],
+            devicePixelContentBoxSize: [] as unknown as ResizeObserverSize[],
           },
         ],
-        <ResizeObserver>{}
+        {} as ResizeObserver
       )
     }
 

@@ -8,6 +8,8 @@
 import type { ConsumerWorkspace, NxRunResult } from './support/nx-workspace'
 import { readFileSync, rmSync } from 'node:fs'
 import { join } from 'node:path'
+import { before as beforeAll, after as afterAll } from 'node:test'
+import { describe, it, expect } from '@hyperfrontend/testing'
 import {
   FEATURE_ARGS,
   PLUGIN_NAME,
@@ -26,9 +28,12 @@ import {
 describe('@hyperfrontend/features Nx plugin', () => {
   let workspace: ConsumerWorkspace
 
-  beforeAll(() => {
-    workspace = createConsumerWorkspace('hf-nx-e2e-')
-  }, SETUP_TIMEOUT)
+  beforeAll(
+    () => {
+      workspace = createConsumerWorkspace('hf-nx-e2e-')
+    },
+    { timeout: SETUP_TIMEOUT }
+  )
 
   afterAll(() => {
     rmSync(workspace.workRoot, { recursive: true, force: true })
@@ -37,9 +42,12 @@ describe('@hyperfrontend/features Nx plugin', () => {
   describe('nx list @hyperfrontend/features', () => {
     let result: NxRunResult
 
-    beforeAll(() => {
-      result = runNx(workspace.pristineDir, ['list', PLUGIN_NAME])
-    }, SCENARIO_TIMEOUT)
+    beforeAll(
+      () => {
+        result = runNx(workspace.pristineDir, ['list', PLUGIN_NAME])
+      },
+      { timeout: SCENARIO_TIMEOUT }
+    )
 
     it('exits 0', () => {
       expect(result.status).toBe(0)
@@ -63,14 +71,17 @@ describe('@hyperfrontend/features Nx plugin', () => {
     let result: NxRunResult
     let after: string
 
-    beforeAll(() => {
-      scenarioDir = join(workspace.workRoot, 'scenario-fresh')
-      copyWorkspace(workspace.pristineDir, scenarioDir)
-      installedDeclaration = sectionOf(readManifest(scenarioDir), 'devDependencies')[PLUGIN_NAME]
-      before = readManifestText(scenarioDir)
-      result = runNx(scenarioDir, ['g', `${PLUGIN_NAME}:init`])
-      after = readManifestText(scenarioDir)
-    }, SCENARIO_TIMEOUT)
+    beforeAll(
+      () => {
+        scenarioDir = join(workspace.workRoot, 'scenario-fresh')
+        copyWorkspace(workspace.pristineDir, scenarioDir)
+        installedDeclaration = sectionOf(readManifest(scenarioDir), 'devDependencies')[PLUGIN_NAME]
+        before = readManifestText(scenarioDir)
+        result = runNx(scenarioDir, ['g', `${PLUGIN_NAME}:init`])
+        after = readManifestText(scenarioDir)
+      },
+      { timeout: SCENARIO_TIMEOUT }
+    )
 
     it('starts from the tarball install declared in devDependencies', () => {
       expect(installedDeclaration).toMatch(/hyperfrontend-features-.+\.tgz$/)
@@ -92,19 +103,22 @@ describe('@hyperfrontend/features Nx plugin', () => {
     let result: NxRunResult
     let after: string
 
-    beforeAll(() => {
-      const scenarioDir = join(workspace.workRoot, 'scenario-declared-in-deps')
-      copyWorkspace(workspace.pristineDir, scenarioDir)
-      const manifest = readManifest(scenarioDir)
-      const devDeps = sectionOf(manifest, 'devDependencies')
-      const installedDeclaration = <string>devDeps[PLUGIN_NAME]
-      delete devDeps[PLUGIN_NAME]
-      manifest['dependencies'] = { [PLUGIN_NAME]: installedDeclaration }
-      writeManifest(scenarioDir, manifest)
-      before = readManifestText(scenarioDir)
-      result = runNx(scenarioDir, ['g', `${PLUGIN_NAME}:init`])
-      after = readManifestText(scenarioDir)
-    }, SCENARIO_TIMEOUT)
+    beforeAll(
+      () => {
+        const scenarioDir = join(workspace.workRoot, 'scenario-declared-in-deps')
+        copyWorkspace(workspace.pristineDir, scenarioDir)
+        const manifest = readManifest(scenarioDir)
+        const devDeps = sectionOf(manifest, 'devDependencies')
+        const installedDeclaration = devDeps[PLUGIN_NAME] as string
+        delete devDeps[PLUGIN_NAME]
+        manifest['dependencies'] = { [PLUGIN_NAME]: installedDeclaration }
+        writeManifest(scenarioDir, manifest)
+        before = readManifestText(scenarioDir)
+        result = runNx(scenarioDir, ['g', `${PLUGIN_NAME}:init`])
+        after = readManifestText(scenarioDir)
+      },
+      { timeout: SCENARIO_TIMEOUT }
+    )
 
     it('exits 0 without staging a manifest change', () => {
       expect(result.status).toBe(0)
@@ -124,24 +138,27 @@ describe('@hyperfrontend/features Nx plugin', () => {
     let secondRun: NxRunResult
     let afterSecondRun: string
 
-    beforeAll(() => {
-      const scenarioDir = join(workspace.workRoot, 'scenario-missing-declaration')
-      copyWorkspace(workspace.pristineDir, scenarioDir)
-      const manifest = readManifest(scenarioDir)
-      const devDeps = sectionOf(manifest, 'devDependencies')
-      delete devDeps[PLUGIN_NAME]
-      // how: prettier moves from devDependencies into a seeded dependencies section so the run exercises insertion into an existing, non-empty section.
-      const prettierRange = <string>devDeps['prettier']
-      delete devDeps['prettier']
-      manifest['dependencies'] = { prettier: prettierRange }
-      writeManifest(scenarioDir, manifest)
-      seededKeys = Object.keys(readManifest(scenarioDir))
-      result = runNx(scenarioDir, ['g', `${PLUGIN_NAME}:init`])
-      afterFirstRun = readManifestText(scenarioDir)
-      afterManifest = readManifest(scenarioDir)
-      secondRun = runNx(scenarioDir, ['g', `${PLUGIN_NAME}:init`])
-      afterSecondRun = readManifestText(scenarioDir)
-    }, SCENARIO_TIMEOUT)
+    beforeAll(
+      () => {
+        const scenarioDir = join(workspace.workRoot, 'scenario-missing-declaration')
+        copyWorkspace(workspace.pristineDir, scenarioDir)
+        const manifest = readManifest(scenarioDir)
+        const devDeps = sectionOf(manifest, 'devDependencies')
+        delete devDeps[PLUGIN_NAME]
+        // how: prettier moves from devDependencies into a seeded dependencies section so the run exercises insertion into an existing, non-empty section.
+        const prettierRange = devDeps['prettier'] as string
+        delete devDeps['prettier']
+        manifest['dependencies'] = { prettier: prettierRange }
+        writeManifest(scenarioDir, manifest)
+        seededKeys = Object.keys(readManifest(scenarioDir))
+        result = runNx(scenarioDir, ['g', `${PLUGIN_NAME}:init`])
+        afterFirstRun = readManifestText(scenarioDir)
+        afterManifest = readManifest(scenarioDir)
+        secondRun = runNx(scenarioDir, ['g', `${PLUGIN_NAME}:init`])
+        afterSecondRun = readManifestText(scenarioDir)
+      },
+      { timeout: SCENARIO_TIMEOUT }
+    )
 
     it('exits 0 and stages the manifest update', () => {
       expect(result.status).toBe(0)
@@ -174,16 +191,19 @@ describe('@hyperfrontend/features Nx plugin', () => {
     let result: NxRunResult
     let afterManifest: Record<string, unknown>
 
-    beforeAll(() => {
-      const scenarioDir = join(workspace.workRoot, 'scenario-no-sections')
-      copyWorkspace(workspace.pristineDir, scenarioDir)
-      const manifest = readManifest(scenarioDir)
-      delete manifest['dependencies']
-      delete manifest['devDependencies']
-      writeManifest(scenarioDir, manifest)
-      result = runNx(scenarioDir, ['g', `${PLUGIN_NAME}:init`])
-      afterManifest = readManifest(scenarioDir)
-    }, SCENARIO_TIMEOUT)
+    beforeAll(
+      () => {
+        const scenarioDir = join(workspace.workRoot, 'scenario-no-sections')
+        copyWorkspace(workspace.pristineDir, scenarioDir)
+        const manifest = readManifest(scenarioDir)
+        delete manifest['dependencies']
+        delete manifest['devDependencies']
+        writeManifest(scenarioDir, manifest)
+        result = runNx(scenarioDir, ['g', `${PLUGIN_NAME}:init`])
+        afterManifest = readManifest(scenarioDir)
+      },
+      { timeout: SCENARIO_TIMEOUT }
+    )
 
     it('exits 0 and stages the manifest update', () => {
       expect(result.status).toBe(0)
@@ -208,20 +228,23 @@ describe('@hyperfrontend/features Nx plugin', () => {
     let repinRun: NxRunResult
     let repinnedManifest: Record<string, unknown>
 
-    beforeAll(() => {
-      scenarioDir = join(workspace.workRoot, 'scenario-conflicting')
-      copyWorkspace(workspace.pristineDir, scenarioDir)
-      const manifest = readManifest(scenarioDir)
-      // how: The devDependencies entry keeps its position with a plain semver range while a second, different range is seeded into dependencies.
-      sectionOf(manifest, 'devDependencies')[PLUGIN_NAME] = '0.2.5'
-      manifest['dependencies'] = { [PLUGIN_NAME]: '~0.3.0' }
-      writeManifest(scenarioDir, manifest)
-      before = readManifestText(scenarioDir)
-      defaultRun = runNx(scenarioDir, ['g', `${PLUGIN_NAME}:init`])
-      afterDefaultRun = readManifestText(scenarioDir)
-      repinRun = runNx(scenarioDir, ['g', `${PLUGIN_NAME}:init`, '--keepExistingVersions=false'])
-      repinnedManifest = readManifest(scenarioDir)
-    }, SCENARIO_TIMEOUT)
+    beforeAll(
+      () => {
+        scenarioDir = join(workspace.workRoot, 'scenario-conflicting')
+        copyWorkspace(workspace.pristineDir, scenarioDir)
+        const manifest = readManifest(scenarioDir)
+        // how: The devDependencies entry keeps its position with a plain semver range while a second, different range is seeded into dependencies.
+        sectionOf(manifest, 'devDependencies')[PLUGIN_NAME] = '0.2.5'
+        manifest['dependencies'] = { [PLUGIN_NAME]: '~0.3.0' }
+        writeManifest(scenarioDir, manifest)
+        before = readManifestText(scenarioDir)
+        defaultRun = runNx(scenarioDir, ['g', `${PLUGIN_NAME}:init`])
+        afterDefaultRun = readManifestText(scenarioDir)
+        repinRun = runNx(scenarioDir, ['g', `${PLUGIN_NAME}:init`, '--keepExistingVersions=false'])
+        repinnedManifest = readManifest(scenarioDir)
+      },
+      { timeout: SCENARIO_TIMEOUT }
+    )
 
     it('treats either declaration as satisfying by default', () => {
       expect(defaultRun.status).toBe(0)
@@ -240,16 +263,19 @@ describe('@hyperfrontend/features Nx plugin', () => {
     let result: NxRunResult
     let after: string
 
-    beforeAll(() => {
-      const scenarioDir = join(workspace.workRoot, 'scenario-dry-run')
-      copyWorkspace(workspace.pristineDir, scenarioDir)
-      const manifest = readManifest(scenarioDir)
-      delete sectionOf(manifest, 'devDependencies')[PLUGIN_NAME]
-      writeManifest(scenarioDir, manifest)
-      before = readManifestText(scenarioDir)
-      result = runNx(scenarioDir, ['g', `${PLUGIN_NAME}:init`, '--dry-run'])
-      after = readManifestText(scenarioDir)
-    }, SCENARIO_TIMEOUT)
+    beforeAll(
+      () => {
+        const scenarioDir = join(workspace.workRoot, 'scenario-dry-run')
+        copyWorkspace(workspace.pristineDir, scenarioDir)
+        const manifest = readManifest(scenarioDir)
+        delete sectionOf(manifest, 'devDependencies')[PLUGIN_NAME]
+        writeManifest(scenarioDir, manifest)
+        before = readManifestText(scenarioDir)
+        result = runNx(scenarioDir, ['g', `${PLUGIN_NAME}:init`, '--dry-run'])
+        after = readManifestText(scenarioDir)
+      },
+      { timeout: SCENARIO_TIMEOUT }
+    )
 
     it('exits 0 and previews the staged update', () => {
       expect(result.status).toBe(0)
@@ -270,16 +296,19 @@ describe('@hyperfrontend/features Nx plugin', () => {
     let entryFile: string
     let showProjects: NxRunResult
 
-    beforeAll(() => {
-      scenarioDir = join(workspace.workRoot, 'scenario-feature')
-      copyWorkspace(workspace.pristineDir, scenarioDir)
-      seedDemo(scenarioDir)
-      result = runNx(scenarioDir, [...FEATURE_ARGS])
-      configJson = <Record<string, unknown>>JSON.parse(readFileSync(join(scenarioDir, 'demo', 'feature.config.json'), 'utf8'))
-      glueModule = readFileSync(join(scenarioDir, 'demo', 'src', 'hyperfrontend.feature.ts'), 'utf8')
-      entryFile = readFileSync(join(scenarioDir, 'demo', 'src', 'main.ts'), 'utf8')
-      showProjects = runNx(scenarioDir, ['show', 'projects'])
-    }, SCENARIO_TIMEOUT)
+    beforeAll(
+      () => {
+        scenarioDir = join(workspace.workRoot, 'scenario-feature')
+        copyWorkspace(workspace.pristineDir, scenarioDir)
+        seedDemo(scenarioDir)
+        result = runNx(scenarioDir, [...FEATURE_ARGS])
+        configJson = JSON.parse(readFileSync(join(scenarioDir, 'demo', 'feature.config.json'), 'utf8')) as Record<string, unknown>
+        glueModule = readFileSync(join(scenarioDir, 'demo', 'src', 'hyperfrontend.feature.ts'), 'utf8')
+        entryFile = readFileSync(join(scenarioDir, 'demo', 'src', 'main.ts'), 'utf8')
+        showProjects = runNx(scenarioDir, ['show', 'projects'])
+      },
+      { timeout: SCENARIO_TIMEOUT }
+    )
 
     it('exits 0 and reports the scaffold summary', () => {
       expect(result.status).toBe(0)

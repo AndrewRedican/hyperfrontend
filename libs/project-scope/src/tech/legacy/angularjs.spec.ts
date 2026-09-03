@@ -1,3 +1,4 @@
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { angularJSDetector } from './angularjs'
 
 const mockProjectPath = '/mock/project'

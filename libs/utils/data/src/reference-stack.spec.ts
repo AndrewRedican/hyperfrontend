@@ -1,4 +1,6 @@
 import type { ReferenceStack } from './models'
+import { beforeEach } from 'node:test'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { isMarker } from './is-marker'
 import { referenceStack } from './reference-stack'
 

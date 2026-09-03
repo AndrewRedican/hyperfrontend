@@ -4,13 +4,13 @@ import { createScopedLogger } from '../logger'
 const encodingLogger = createScopedLogger('project-scope:encoding')
 
 /** UTF-8 BOM bytes */
-export const UTF8_BOM_BYTES = <const>[0xef, 0xbb, 0xbf]
+export const UTF8_BOM_BYTES = [0xef, 0xbb, 0xbf] as const
 
 /** UTF-16 LE BOM bytes */
-export const UTF16_LE_BOM_BYTES = <const>[0xff, 0xfe]
+export const UTF16_LE_BOM_BYTES = [0xff, 0xfe] as const
 
 /** UTF-16 BE BOM bytes */
-export const UTF16_BE_BOM_BYTES = <const>[0xfe, 0xff]
+export const UTF16_BE_BOM_BYTES = [0xfe, 0xff] as const
 
 /** UTF-8 BOM string */
 export const UTF8_BOM = '\uFEFF'
@@ -18,7 +18,7 @@ export const UTF8_BOM = '\uFEFF'
 /**
  * Common binary file signatures.
  */
-export const BINARY_SIGNATURES = <const>[
+export const BINARY_SIGNATURES = [
   { signature: [0x89, 0x50, 0x4e, 0x47], description: 'PNG' },
   { signature: [0xff, 0xd8, 0xff], description: 'JPEG' },
   { signature: [0x47, 0x49, 0x46, 0x38], description: 'GIF' },
@@ -28,7 +28,7 @@ export const BINARY_SIGNATURES = <const>[
   { signature: [0x7f, 0x45, 0x4c, 0x46], description: 'ELF' },
   { signature: [0x4d, 0x5a], description: 'EXE' },
   { signature: [0x25, 0x50, 0x44, 0x46], description: 'PDF' },
-]
+] as const
 
 /**
  * Successful text-encoding detection.

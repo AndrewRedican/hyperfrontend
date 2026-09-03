@@ -4,6 +4,10 @@
  * every documented exports subpath resolves with its expected symbol.
  */
 
+'use strict'
+
+const { describe, it, expect } = require('@hyperfrontend/testing')
+
 // note: Subpath specifiers are kept in runtime strings so resolution is exercised against the installed tarball, not the compiler's view of it.
 const NAMED_SUBPATH_SYMBOLS: ReadonlyArray<readonly [string, string]> = [
   ['@hyperfrontend/features', 'defineConfig'],
@@ -42,12 +46,12 @@ describe('@hyperfrontend/features CJS', () => {
 
   describe('server-side require of every exports subpath', () => {
     it.each(NAMED_SUBPATH_SYMBOLS)('requires %s without a window and exposes %s', (specifier, symbol) => {
-      const mod = <Record<string, unknown>>require(specifier)
+      const mod = require(specifier) as Record<string, unknown>
       expect(typeof mod[symbol]).toBe('function')
     })
 
     it.each(DEFAULT_EXPORT_SUBPATHS)('requires %s without a window and yields a callable default aliased as %s', (specifier, symbol) => {
-      const mod = <Record<string, unknown>>require(specifier)
+      const mod = require(specifier) as Record<string, unknown>
       expect(typeof mod['default']).toBe('function')
       expect(mod[symbol]).toBe(mod['default'])
     })

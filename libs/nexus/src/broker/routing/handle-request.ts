@@ -93,7 +93,7 @@ function denyRequest(context: RoutingContext, channel: ChannelHandle, processId:
 export function handleRequest(context: RoutingContext, message: MessageEvent<IAction>): void {
   const { state, registry, processManager, actions, logger } = context
   const action = message.data
-  const senderId = <string>action.senderId
+  const senderId = action.senderId as string
 
   if (!isActionWithContract(action)) {
     return
@@ -102,12 +102,12 @@ export function handleRequest(context: RoutingContext, message: MessageEvent<IAc
   const processId = action.processId
   const contract = action.contract
 
-  const securityRequest = <SecurityNegotiationRequest | undefined>(<IActionWithContractAndSecurity>action).security
+  const securityRequest = (action as IActionWithContractAndSecurity).security as SecurityNegotiationRequest | undefined
 
-  let channel = <ChannelHandle | undefined>(message.source ? registry.getByWindow(<Window>message.source) : undefined)
+  let channel = (message.source ? registry.getByWindow(message.source as Window) : undefined) as ChannelHandle | undefined
   if (!channel) {
     // why: Named from the requester's origin, not its broker id — the id identifies one incarnation of the counterpart, while the channel outlives every incarnation the window loads.
-    channel = addChannel(state, registry, processManager, actions, `inbound-${message.origin}`, <Window>message.source, {})
+    channel = addChannel(state, registry, processManager, actions, `inbound-${message.origin}`, message.source as Window, {})
   }
 
   const pinnedOrigin = channel.getOrigin()
@@ -151,7 +151,7 @@ export function handleRequest(context: RoutingContext, message: MessageEvent<IAc
   } catch (error) {
     denyRequest(context, channel, processId, message.origin, {
       // why: The validator's verdict is about the requester's own contract, so naming the offending part discloses nothing and is the only actionable detail either side has.
-      error: `Invalid contract: ${(<Error>error).message}.`,
+      error: `Invalid contract: ${(error as Error).message}.`,
       reason: 'invalid-contract',
     })
     return

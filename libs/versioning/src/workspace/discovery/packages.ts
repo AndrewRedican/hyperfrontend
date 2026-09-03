@@ -1,4 +1,3 @@
-/* eslint-disable @nx/enforce-module-boundaries */
 import type { PackageJson, Tree } from '@hyperfrontend/project-scope'
 import type { Project, CreateProjectOptions } from '../models/project'
 import type { WorkspaceConfig } from '../models/workspace'
@@ -246,7 +245,7 @@ function parsePackageJsonFilesFromTree(tree: Tree, workspaceRoot: string, packag
         continue
       }
 
-      const packageJson = <PackageJson>parse(content)
+      const packageJson = parse(content) as PackageJson
 
       if (!packageJson.name) {
         continue

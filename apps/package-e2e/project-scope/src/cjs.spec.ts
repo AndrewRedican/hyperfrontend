@@ -1,3 +1,7 @@
+'use strict'
+
+const { describe, it, expect } = require('@hyperfrontend/testing')
+
 describe('@hyperfrontend/project-scope CJS', () => {
   it('is importable via require', () => {
     const projectScope = require('@hyperfrontend/project-scope')

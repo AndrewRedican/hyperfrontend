@@ -91,11 +91,11 @@ function parseGlobalOptions(args: string[]): GlobalOptions {
   })
 
   return {
-    help: <boolean>values.help,
-    version: <boolean>values.version,
-    verbose: <boolean>values.verbose,
-    json: <boolean>values.json,
-    noColor: <boolean>values['no-color'],
+    help: values.help as boolean,
+    version: values.version as boolean,
+    verbose: values.verbose as boolean,
+    json: values.json as boolean,
+    noColor: values['no-color'] as boolean,
   }
 }
 
@@ -135,7 +135,7 @@ export function run(args: string[]): CommandResult {
 
   cliLogger.debug('CLI invoked', { args, globalOptions })
 
-  const commandName = <string>args[0]
+  const commandName = args[0] as string
 
   if (globalOptions.version) {
     printVersion()

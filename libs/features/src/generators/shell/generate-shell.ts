@@ -13,12 +13,12 @@ const PACKAGE_PATH = 'package.json'
 const README_PATH = 'README.md'
 
 // note: One mount function per display mode; the entry imports only the declared ones so a rollup pass over the side-effect-free host SDK drops the rest from the bundle.
-const MODE_MOUNTS = freeze(<Record<DisplayMode, string>>{
+const MODE_MOUNTS = freeze({
   embedded: 'mountEmbedded',
   dialog: 'mountDialog',
   popup: 'mountPopup',
   standalone: 'mountStandalone',
-})
+} as Record<DisplayMode, string>)
 
 /**
  * Builds the baked-in default shell options from the resolved config.

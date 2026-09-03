@@ -1,9 +1,12 @@
 import type { Logger } from '@hyperfrontend/logging'
+import type { Mock } from '@hyperfrontend/testing'
 import type { IAction } from '../../types/action'
 import type { ChannelHandle } from '../../types/channel'
 import type { IChannelContract } from '../../types/contract'
 import type { BrokerState } from '../types'
 import type { RoutingContext } from './types'
+import { afterEach, beforeEach } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { createActionCreators } from '../../core/actions/factory'
 import { createProcessManager } from '../../core/processes/factory'
 import { createRegistry } from '../../core/registry/factory'
@@ -40,7 +43,7 @@ describe('handleCloseAcknowledged', () => {
     mockBrokerState = {
       id: 'broker-1',
       name: 'test-broker',
-      window: <Window>global.window,
+      window: global.window as Window,
       contract: validContract,
       settings: {
         contract: validContract,
@@ -54,9 +57,9 @@ describe('handleCloseAcknowledged', () => {
       getBrokerId: () => 'broker-1',
       getContract: () => mockBrokerState.contract,
     })
-    mockWindow = <Window>(<unknown>{
+    mockWindow = {
       postMessage: jest.fn(),
-    })
+    } as unknown as Window
 
     routingContext = {
       state: mockBrokerState,
@@ -77,16 +80,16 @@ describe('handleCloseAcknowledged', () => {
   const startPoliteClose = (channel: ChannelHandle, target: Window): string => {
     channel.activate('https://example.com', validContract)
     channel.disconnect()
-    const posted = (<jest.Mock>target.postMessage).mock.calls.map(([action]) => <IAction>action)
+    const posted = (target.postMessage as Mock).mock.calls.map(([action]) => action as IAction)
     const closeAction = posted.find((action) => action.type === '[nexus] connection-closed')
-    return <string>(<Record<string, unknown>>(<unknown>closeAction))['processId']
+    return (closeAction as unknown as Record<string, unknown>)['processId'] as string
   }
 
   const acknowledgement = (processId: string, source: Window, senderId = 'remote-broker-1'): MessageEvent<IAction> =>
-    <MessageEvent<IAction>>{
+    ({
       data: { type: '[nexus] connection-closed-acknowledged', processId, senderId },
       source,
-    }
+    }) as MessageEvent<IAction>
 
   it('completes the close for a channel awaiting acknowledgement', () => {
     const channel = addChannel(mockBrokerState, registry, processManager, actions, 'test-channel', mockWindow)
@@ -139,10 +142,10 @@ describe('handleCloseAcknowledged', () => {
     const channel1 = addChannel(mockBrokerState, registry, processManager, actions, 'channel-1', mockWindow)
     const processId1 = startPoliteClose(channel1, mockWindow)
 
-    const window2 = <Window>(<unknown>{
+    const window2 = {
       postMessage: jest.fn(),
       _uniqueId: 'window-2',
-    })
+    } as unknown as Window
     const channel2 = addChannel(mockBrokerState, registry, processManager, actions, 'channel-2', window2)
     const processId2 = startPoliteClose(channel2, window2)
 

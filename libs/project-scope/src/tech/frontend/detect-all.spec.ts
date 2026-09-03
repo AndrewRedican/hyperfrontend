@@ -1,4 +1,5 @@
 import type { PackageJson } from '../../project/package'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { detectFrontendFrameworks, frameworkDetectors } from './detect-all'
 
 describe('detectFrontendFrameworks', () => {

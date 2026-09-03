@@ -1,3 +1,4 @@
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { conventionalPreset as conventionalRuleset } from '../../validate/presets/conventional'
 import { DEFAULT_IMPERATIVE_WORDLIST } from '../../validate/rules/imperative-mood'
 import { DEFAULT_SESSION_TYPES, resolveSessionConfig } from './resolve-config'

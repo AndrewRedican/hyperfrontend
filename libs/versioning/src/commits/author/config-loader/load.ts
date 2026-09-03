@@ -125,12 +125,12 @@ function isBoundary(directory: string): boolean {
  */
 async function importConfigModule(absolutePath: string): Promise<PartialSessionConfig> {
   const url = pathToFileURL(absolutePath).href
-  const imported = <ImportedConfigModule>await import(url)
+  const imported = (await import(url)) as ImportedConfigModule
   const exported = imported.default ?? imported
   if (exported === null || typeof exported !== 'object') {
     throw createError(`Config at ${absolutePath} must export an object`)
   }
-  return <PartialSessionConfig>exported
+  return exported as PartialSessionConfig
 }
 
 /**
@@ -157,7 +157,7 @@ function validateConfigShape(config: PartialSessionConfig, sourcePath: string): 
  */
 function isTypeArray(value: unknown): value is readonly TypeArrayEntry[] {
   if (!isArray(value)) return false
-  return (<unknown[]>value).every(
-    (entry) => typeof entry === 'object' && entry !== null && 'name' in entry && typeof (<TypeArrayEntry>entry).name === 'string'
+  return (value as unknown[]).every(
+    (entry) => typeof entry === 'object' && entry !== null && 'name' in entry && typeof (entry as TypeArrayEntry).name === 'string'
   )
 }

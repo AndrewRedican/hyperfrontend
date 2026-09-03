@@ -1,3 +1,5 @@
+import { afterEach } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { createFeatureIframe, frameReadiness, resolveContainer } from './iframe'
 
 describe('resolveContainer', () => {

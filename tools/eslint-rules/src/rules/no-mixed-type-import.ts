@@ -56,7 +56,7 @@ export default createRule<[], MessageIds>({
         }
 
         const typeSpecifiers = specifiers.filter(isTypeSpecifier)
-        /* istanbul ignore next - filter callback always executed when specifiers exist */
+        // why: filter callback always executed when specifiers exist
         const valueSpecifiers = specifiers.filter((s) => !isTypeSpecifier(s))
 
         if (typeSpecifiers.length === 0 || valueSpecifiers.length === 0) {
@@ -67,30 +67,30 @@ export default createRule<[], MessageIds>({
           node,
           messageId: 'noMixedTypeImport',
           fix(fixer) {
-            /* istanbul ignore next - raw is always defined for valid imports */
+            // why: raw is always defined for valid imports
             const source = node.source.raw ?? `'${node.source.value}'`
 
             const typeNames = typeSpecifiers.map((s) => {
-              /* istanbul ignore else - always Identifier for standard imports */
+              // why: always Identifier for standard imports
               if (s.imported.type === AST_NODE_TYPES.Identifier) {
                 const imported = s.imported.name
                 const local = s.local.name
-                /* istanbul ignore next - both branches tested but coverage varies */
+                // why: both branches tested but coverage varies
                 return imported === local ? imported : `${imported} as ${local}`
               }
-              /* istanbul ignore next - fallback for non-Identifier imports */
+              // why: fallback for non-Identifier imports
               return sourceCode.getText(s)
             })
 
             const valueNames = valueSpecifiers.map((s) => {
-              /* istanbul ignore else - always Identifier for standard imports */
+              // why: always Identifier for standard imports
               if (s.imported.type === AST_NODE_TYPES.Identifier) {
                 const imported = s.imported.name
                 const local = s.local.name
-                /* istanbul ignore next - both branches tested but coverage varies */
+                // why: both branches tested but coverage varies
                 return imported === local ? imported : `${imported} as ${local}`
               }
-              /* istanbul ignore next - fallback for non-Identifier imports */
+              // why: fallback for non-Identifier imports
               return sourceCode.getText(s)
             })
 

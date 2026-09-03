@@ -3,6 +3,7 @@
  * Tests that the UMD bundle works in browser (global) context.
  */
 
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { getBundlePath, loadBundleCode, executeBundleInWindow, requireUmdBundle } from '../../shared/helpers'
 
 describe('@hyperfrontend/list-utils UMD bundle', () => {

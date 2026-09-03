@@ -27,7 +27,7 @@ function resolveExportValue(exportValue: string | Record<string, string>): strin
     return exportValue['import'] ?? exportValue['require'] ?? exportValue['default'] ?? null
   }
 
-  /* istanbul ignore next -- defensive: unreachable for typed string | Record input */
+  // why: defensive: unreachable for typed string | Record input
   return null
 }
 
@@ -141,7 +141,7 @@ const rule = ESLintUtils.RuleCreator(
 
         const firstComment = comments[0]
 
-        /* istanbul ignore if -- defensive check: unreachable when comments.length > 0 */
+        // why: defensive check: unreachable when comments.length > 0
         if (!firstComment) {
           context.report({
             node,

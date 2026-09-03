@@ -1,12 +1,15 @@
+import type { MockedFunction } from '@hyperfrontend/testing'
 import { execFileSync } from 'node:child_process'
 import { existsSync } from 'node:fs'
+import { beforeEach } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { getOperationState, isOperationInProgress, DEFAULT_OPERATION_STATE_OPTIONS } from './operation-state'
 
 jest.mock('node:child_process')
 jest.mock('node:fs')
 
-const mockExecFileSync = <jest.MockedFunction<typeof execFileSync>>execFileSync
-const mockExistsSync = <jest.MockedFunction<typeof existsSync>>existsSync
+const mockExecFileSync = execFileSync as MockedFunction<typeof execFileSync>
+const mockExistsSync = existsSync as MockedFunction<typeof existsSync>
 
 describe('getOperationState', () => {
   beforeEach(() => {

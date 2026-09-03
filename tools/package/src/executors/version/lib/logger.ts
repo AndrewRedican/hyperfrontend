@@ -127,7 +127,7 @@ export const getLogger = () => {
   }
 
   const createApi = () => {
-    const api = <const>{
+    const api = {
       error: errorFn,
       warn: warnFn,
       log: logFn,
@@ -139,9 +139,9 @@ export const getLogger = () => {
         context.set(label, value)
       },
       channel: createChannelLogger,
-    }
+    } as const
     return freeze(api)
   }
-  loggerInstance = <ExecutorLogger>createApi()
+  loggerInstance = createApi() as ExecutorLogger
   return loggerInstance
 }

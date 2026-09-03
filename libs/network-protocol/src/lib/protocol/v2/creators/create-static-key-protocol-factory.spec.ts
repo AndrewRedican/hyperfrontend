@@ -1,5 +1,7 @@
 import type { PacketEncrypter, PacketDecrypter } from '../../../packet/model'
+import { before as beforeAll } from 'node:test'
 import { encrypt, decrypt, getTimeBasedPassword, getTimeBasedPasswords } from '@hyperfrontend/cryptography/node'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { createDataDecrypter } from '../../../data/security/create-decrypter'
 import { createDataEncrypter } from '../../../data/security/create-encrypter'
 import { createPacketDecrypter } from '../../../packet/security/encryption/create-decrypter'
@@ -55,7 +57,7 @@ describe('createPSKHandshakeProtocolFactory (Node.js)', () => {
     it('throws error for invalid logger', () => {
       const createProtocol = createPSKHandshakeProtocolFactory(encryptPacket, decryptPacket, createTimeIntervalObfuscation)
 
-      expect(() => createProtocol(<ReturnType<typeof createMockLogger>>null, 'my-shared-key', 1)).toThrow(
+      expect(() => createProtocol(null as ReturnType<typeof createMockLogger>, 'my-shared-key', 1)).toThrow(
         'Cannot create protocol provider without a valid logger'
       )
     })
@@ -71,8 +73,8 @@ describe('createPSKHandshakeProtocolFactory (Node.js)', () => {
       const createProtocol = createPSKHandshakeProtocolFactory(encryptPacket, decryptPacket, createTimeIntervalObfuscation)
       const logger = createMockLogger()
 
-      expect(() => createProtocol(logger, <string>null, 1)).toThrow('Cannot create protocol provider without a valid shared key')
-      expect(() => createProtocol(logger, <string>undefined, 1)).toThrow('Cannot create protocol provider without a valid shared key')
+      expect(() => createProtocol(logger, null as string, 1)).toThrow('Cannot create protocol provider without a valid shared key')
+      expect(() => createProtocol(logger, undefined as string, 1)).toThrow('Cannot create protocol provider without a valid shared key')
     })
 
     it('throws error for invalid refresh rate', () => {
@@ -125,7 +127,7 @@ describe('createPSKHandshakeProtocolFactory (Node.js)', () => {
       const logger = createMockLogger()
       const protocolProvider = createProtocol(logger, 'my-shared-key', 1)
 
-      expect(() => protocolProvider(<() => void>null, () => void 0)).toThrow('Cannot create protocol without a valid send function')
+      expect(() => protocolProvider(null as () => void, () => void 0)).toThrow('Cannot create protocol without a valid send function')
     })
 
     it('throws error for invalid receive function', () => {
@@ -133,7 +135,7 @@ describe('createPSKHandshakeProtocolFactory (Node.js)', () => {
       const logger = createMockLogger()
       const protocolProvider = createProtocol(logger, 'my-shared-key', 1)
 
-      expect(() => protocolProvider(() => void 0, <() => void>null)).toThrow('Cannot create protocol without a valid receive function')
+      expect(() => protocolProvider(() => void 0, null as () => void)).toThrow('Cannot create protocol without a valid receive function')
     })
   })
 

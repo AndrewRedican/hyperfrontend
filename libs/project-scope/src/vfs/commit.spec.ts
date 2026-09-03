@@ -1,9 +1,18 @@
+import type { MockedFunction } from '@hyperfrontend/testing'
 import { mkdirSync, writeFileSync, rmSync, existsSync, readFileSync, statSync } from 'node:fs'
 import { join } from 'node:path'
+import { after as afterAll, beforeEach } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { commitChanges, rollbackChanges } from './commit'
 import { createFsTree } from './fs-tree'
 
-const TEST_DIR = join(__dirname, '__test_fixtures_commit__')
+// why: the module under test binds `writeFileSync` when it links, so no property replacement on the namespace can reach it. Replacing the module is what makes the write failure reachable, and the replacement calls through until a test says otherwise.
+jest.mock('node:fs', () => {
+  const actual = jest.requireActual<typeof import('node:fs')>('node:fs')
+  return { ...actual, writeFileSync: jest.fn(actual.writeFileSync) }
+})
+
+const TEST_DIR = join(import.meta.dirname, '__test_fixtures_commit__')
 
 describe('vfs/commit', () => {
   beforeEach(() => {
@@ -244,8 +253,7 @@ describe('vfs/commit', () => {
     })
 
     it('throws contextual error when commit fails with non-Error throwable', () => {
-      const fs = require('node:fs')
-      const mockWriteFileSync = jest.spyOn(fs, 'writeFileSync').mockImplementationOnce(() => {
+      const mockWriteFileSync = (writeFileSync as MockedFunction<typeof writeFileSync>).mockImplementationOnce(() => {
         throw 'string error'
       })
 

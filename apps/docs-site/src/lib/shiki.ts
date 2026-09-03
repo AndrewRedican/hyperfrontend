@@ -6,7 +6,7 @@ import { codeToHtml } from 'shiki'
  * active one is chosen by the `.dark` class (see `pre.shiki` rules in
  * `globals.css`).
  */
-const THEMES = <const>{ light: 'github-light', dark: 'github-dark' }
+const THEMES = { light: 'github-light', dark: 'github-dark' } as const
 
 /**
  * Highlight a snippet to dual-theme Shiki HTML for inline rendering.

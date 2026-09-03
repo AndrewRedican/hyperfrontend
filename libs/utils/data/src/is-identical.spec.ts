@@ -1,6 +1,8 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-empty-function */
 import type { Config } from './models'
+import { afterEach, beforeEach } from 'node:test'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { deregisterIterableClass } from './deregister-iterable-class'
 import { isIdentical } from './is-identical'
 import { registerIterableClass } from './register-iterable-class'
@@ -292,14 +294,14 @@ describe('isIdentical - with extended iterable class types', () => {
   beforeEach(() => {
     registerIterableClass<Map<unknown, unknown>>(
       Map,
-      (map) => <string[]>Array.from(map.keys()),
+      (map) => Array.from(map.keys()) as string[],
       (map, key) => map.get(key),
       (map, value, key) => map.set(key, value),
       (map, key) => map.delete(key)
     )
     registerIterableClass<Set<unknown>>(
       Set,
-      (set) => <string[]>Array.from(set.keys()),
+      (set) => Array.from(set.keys()) as string[],
       (_, key) => key,
       (set, value) => set.add(value),
       (set, key) => set.delete(key)

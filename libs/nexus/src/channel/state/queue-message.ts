@@ -18,8 +18,8 @@ import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
  * ```
  */
 export function queueMessage(state: ChannelState, message: IMessage): ChannelState {
-  return freeze(<ChannelState>{
+  return freeze({
     ...state,
     queuedMessages: freeze([...state.queuedMessages, message]),
-  })
+  } as ChannelState)
 }

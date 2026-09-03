@@ -1,5 +1,6 @@
 import type { Changelog } from './changelog'
 import type { ChangelogEntry } from './entry'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { validateChangelog, checkSchemaCompatibility, changelogSchema } from './schema'
 
 describe('changelogSchema', () => {

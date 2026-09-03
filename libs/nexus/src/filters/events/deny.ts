@@ -10,5 +10,5 @@ import { create } from './create'
  * @returns Wrapped handler that filters for DENY events
  */
 export function deny(handler: DenyEventHandler): EventHandler {
-  return create('deny')(<EventHandler>handler)
+  return create('deny')(handler as EventHandler)
 }

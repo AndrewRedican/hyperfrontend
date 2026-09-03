@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { createGitCommit, getShortHash, isSameCommit, isMergeCommit, isRootCommit, extractScope, extractType } from './commit'
 
 describe('createGitCommit', () => {

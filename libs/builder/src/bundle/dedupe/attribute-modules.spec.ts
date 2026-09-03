@@ -1,8 +1,10 @@
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
+import { afterEach, beforeEach } from 'node:test'
 import ts from 'typescript'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { attribute, baseName, chunkFileName, fingerprintOf, indexOwners, parseEntry, sharedDirFor } from './attribute-modules'
 
 describe('baseName', () => {
@@ -18,7 +20,7 @@ describe('baseName', () => {
 describe('fingerprintOf', () => {
   const fingerprint = (source: string): string => {
     const sourceFile = ts.createSourceFile('chunk.js', source, ts.ScriptTarget.Latest, true, ts.ScriptKind.JS)
-    return fingerprintOf(<ts.Statement>sourceFile.statements[0], sourceFile)
+    return fingerprintOf(sourceFile.statements[0] as ts.Statement, sourceFile)
   }
 
   it('strips $N from a dep-namespace property access', () => {
@@ -195,5 +197,18 @@ describe('indexOwners', () => {
     writeSrc('a/a.d.ts', 'export declare const typed: number\n')
     writeSrc('a/a.spec.ts', 'export const fromSpec = 1\n')
     expect(indexOwners(src).ownerOf.size).toBe(0)
+  })
+
+  it('indexes an entry-reachable module when entry files are given', () => {
+    writeSrc('index.ts', "export * from './used/used'\n")
+    writeSrc('used/used.ts', 'export const used = 1\n')
+    writeSrc('creators/mocks.ts', 'export const id = 1\n')
+    expect(indexOwners(src, [join(src, 'index.ts')]).ownerOf.get('used')).toBe('used/used')
+  })
+
+  it('keeps a name unowned when its only declarer is unreachable', () => {
+    writeSrc('index.ts', 'export const rooted = 1\n')
+    writeSrc('creators/mocks.ts', 'export const id = 1\n')
+    expect(indexOwners(src, [join(src, 'index.ts')]).ownerOf.has('id')).toBe(false)
   })
 })

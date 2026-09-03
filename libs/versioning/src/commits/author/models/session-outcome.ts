@@ -1,12 +1,12 @@
 import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 
 /** Session outcome status constants. */
-export const SessionStatus = freeze(<const>{
+export const SessionStatus = freeze({
   /** Session ran to completion and (when `skipCommit === false`) created a commit */
   Committed: 'committed',
   /** Session terminated early (user Ctrl-C, empty staging refusal, commit failure) */
   Cancelled: 'cancelled',
-})
+} as const)
 
 /** Session outcome status values. */
 export type SessionStatus = (typeof SessionStatus)[keyof typeof SessionStatus]

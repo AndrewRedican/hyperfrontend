@@ -60,7 +60,7 @@ function buildSelect<T extends string>(values: readonly T[], current: T, onChang
     }
     select.appendChild(option)
   })
-  select.addEventListener('change', () => onChange(<T>select.value))
+  select.addEventListener('change', () => onChange(select.value as T))
   return select
 }
 

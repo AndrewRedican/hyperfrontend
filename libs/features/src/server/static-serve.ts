@@ -40,7 +40,7 @@ export interface StaticServerHandle {
 function writeResponse(method: string, response: StaticResponse, res: ServerResponse): void {
   res.statusCode = response.status
   for (const name of keys(response.headers)) {
-    res.setHeader(name, <string>response.headers[name])
+    res.setHeader(name, response.headers[name] as string)
   }
   if (method === 'HEAD' || response.body === null) {
     res.end()

@@ -54,11 +54,11 @@ function deployKind(projectJson: Record<string, unknown>): string | null {
   if (typeof metadata !== 'object' || metadata === null) {
     return null
   }
-  const deploy = (<Record<string, unknown>>metadata)['deploy']
+  const deploy = (metadata as Record<string, unknown>)['deploy']
   if (typeof deploy !== 'object' || deploy === null) {
     return null
   }
-  const kind = (<Record<string, unknown>>deploy)['kind']
+  const kind = (deploy as Record<string, unknown>)['kind']
   return typeof kind === 'string' ? kind : null
 }
 
@@ -122,7 +122,7 @@ const rule: Rule.RuleModule = {
     const projectRoot = dirname(context.filename)
     const projectJson = readProjectJson(projectRoot)
 
-    /* istanbul ignore next - the linted file is the project.json being read */
+    // why: the linted file is the project.json being read
     if (!projectJson) {
       return {}
     }
@@ -134,10 +134,10 @@ const rule: Rule.RuleModule = {
     const configPath = join(PUBLIC_DIRECTORY, SERVE_CONFIG_FILENAME)
     const config = readJsonFileIfExists<ServeConfig>(join(projectRoot, PUBLIC_DIRECTORY, SERVE_CONFIG_FILENAME))
 
-    return <Rule.RuleListener>(<unknown>{
+    return {
       'Program:exit'(node: JSONNode) {
         const report = (messageId: string, data: Record<string, string>): void => {
-          context.report({ node: <Rule.Node>(<unknown>node), messageId, data })
+          context.report({ node: node as unknown as Rule.Node, messageId, data })
         }
 
         if (config === null) {
@@ -158,7 +158,7 @@ const rule: Rule.RuleModule = {
           report('permissiveFrameAncestors', { configPath, directive: FRAME_ANCESTORS })
         }
       },
-    })
+    } as unknown as Rule.RuleListener
   },
 }
 

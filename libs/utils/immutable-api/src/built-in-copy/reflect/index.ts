@@ -80,7 +80,7 @@ export const preventExtensions = _Reflect.preventExtensions
  * (Safe copy) Namespace object containing all Reflect methods.
  * Note: Importing this imports all methods in this namespace (no tree-shaking).
  */
-export const Reflect = _freeze(<const>{
+export const Reflect = _freeze({
   apply,
   construct,
   get,
@@ -94,4 +94,4 @@ export const Reflect = _freeze(<const>{
   setPrototypeOf,
   isExtensible,
   preventExtensions,
-})
+} as const)

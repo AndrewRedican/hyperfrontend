@@ -1,3 +1,5 @@
+import { after as afterAll, beforeEach } from 'node:test'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { deregisterIterableClass } from './deregister-iterable-class'
 import { isIterable } from './is-iterable'
 import { registerIterableClass } from './register-iterable-class'
@@ -28,14 +30,14 @@ describe('isIterable with registered iterable class', () => {
   beforeEach(() => {
     registerIterableClass<Map<unknown, unknown>>(
       Map,
-      (map) => <string[]>Array.from(map.keys()),
+      (map) => Array.from(map.keys()) as string[],
       (map, key) => map.get(key),
       (map, value, key) => map.set(key, value),
       (map, key) => map.delete(key)
     )
     registerIterableClass<Set<unknown>>(
       Set,
-      (set) => <string[]>Array.from(set.keys()),
+      (set) => Array.from(set.keys()) as string[],
       (_, key) => key,
       (set, value) => set.add(value),
       (set, key) => set.delete(key)

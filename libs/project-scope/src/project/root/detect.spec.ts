@@ -1,10 +1,12 @@
 import { mkdirSync, writeFileSync, rmSync, mkdtempSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { resolve, join } from 'node:path'
+import { after as afterAll, before as beforeAll } from 'node:test'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { findNearestPackageJson } from '../package'
 import { findProjectRoot, findWorkspaceRoot, findRootDirectory, findGitRoot, ROOT_MARKERS, WORKSPACE_MARKERS } from './detect'
 
-const FIXTURES_DIR = resolve(__dirname, '../../../__fixtures__')
+const FIXTURES_DIR = resolve(import.meta.dirname, '../../../__fixtures__')
 const MINIMAL_PROJECT = resolve(FIXTURES_DIR, 'minimal-project')
 const MONOREPO = resolve(FIXTURES_DIR, 'monorepo')
 const PROJECT_JSON_ONLY = resolve(FIXTURES_DIR, 'project-json-only')
@@ -14,7 +16,7 @@ const BARE_PACKAGE = resolve(FIXTURES_DIR, 'bare-package')
 const WORKSPACE_ONLY = resolve(FIXTURES_DIR, 'workspace-only')
 const NX_INTEGRATED_APP = resolve(FIXTURES_DIR, 'nx-integrated-workspace/applications/main-app')
 const MONOREPO_UTILS = resolve(FIXTURES_DIR, 'monorepo/packages/utils')
-const GIT_ROOT = resolve(__dirname, '../../../../..')
+const GIT_ROOT = resolve(import.meta.dirname, '../../../../..')
 
 describe('findProjectRoot', () => {
   it('finds project root from project directory', () => {

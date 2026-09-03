@@ -1,9 +1,12 @@
 import type { SpawnSyncReturns } from 'node:child_process'
+import type { Mock } from '@hyperfrontend/testing'
 import { spawnSync } from 'node:child_process'
+import { beforeEach } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { generateSeaBlob } from './sea-blob'
 jest.mock('node:child_process', () => ({ spawnSync: jest.fn() }))
 
-const mockSpawn = spawnSync as jest.Mock
+const mockSpawn = spawnSync as Mock
 
 const okResult = (): SpawnSyncReturns<string> => ({
   pid: 1,

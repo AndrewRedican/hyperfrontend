@@ -17,12 +17,12 @@ const DEPENDENCY_SECTIONS: readonly string[] = ['dependencies', 'devDependencies
  */
 export function replaceDependencyVersion(filePath: string, packageName: string, newVersion: string): boolean {
   const content = readFileSync(filePath, 'utf-8')
-  const pkg = <Record<string, unknown>>parse(content)
+  const pkg = parse(content) as Record<string, unknown>
 
   let changed = false
 
   for (const section of DEPENDENCY_SECTIONS) {
-    const deps = <Record<string, string> | undefined>pkg[section]
+    const deps = pkg[section] as Record<string, string> | undefined
     if (deps && packageName in deps && deps[packageName] !== newVersion) {
       deps[packageName] = newVersion
       changed = true
@@ -77,12 +77,12 @@ function replaceTgzInValue(value: string, tgzPrefix: string, newTgzName: string)
  */
 export function replaceTgzReference(filePath: string, packageName: string, tgzPrefix: string, newTgzName: string): boolean {
   const content = readFileSync(filePath, 'utf-8')
-  const pkg = <Record<string, unknown>>parse(content)
+  const pkg = parse(content) as Record<string, unknown>
 
   let changed = false
 
   for (const section of DEPENDENCY_SECTIONS) {
-    const deps = <Record<string, string> | undefined>pkg[section]
+    const deps = pkg[section] as Record<string, string> | undefined
     if (deps && packageName in deps) {
       const currentValue = deps[packageName]
       if (typeof currentValue === 'string' && isTgzReference(currentValue, tgzPrefix)) {

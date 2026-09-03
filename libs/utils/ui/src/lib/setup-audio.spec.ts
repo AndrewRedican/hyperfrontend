@@ -1,10 +1,13 @@
+import type { Mock } from '@hyperfrontend/testing'
+import { afterEach, beforeEach } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { setupAudio } from './setup-audio'
 
 describe('setupAudio', () => {
   let mockElement: HTMLElement
   let audioContextInstance: {
-    createBufferSource: jest.Mock
-    createGain: jest.Mock
+    createBufferSource: Mock
+    createGain: Mock
     destination: object
   }
 
@@ -18,7 +21,7 @@ describe('setupAudio', () => {
       destination: {},
     }
 
-    globalThis.AudioContext = <typeof AudioContext>(<unknown>jest.fn().mockImplementation(() => audioContextInstance))
+    globalThis.AudioContext = jest.fn().mockImplementation(() => audioContextInstance) as unknown as typeof AudioContext
   })
 
   afterEach(() => {
@@ -45,7 +48,7 @@ describe('setupAudio', () => {
     const touchEvent = new TouchEvent('touchstart', {
       bubbles: true,
       cancelable: true,
-      touches: <Touch[]>(<unknown>[]),
+      touches: [] as unknown as Touch[],
     })
     mockElement.dispatchEvent(touchEvent)
 
@@ -54,8 +57,10 @@ describe('setupAudio', () => {
   })
 
   it('handles webkit AudioContext', async () => {
-    delete (<{ AudioContext?: unknown }>(<unknown>globalThis)).AudioContext
-    ;(<{ webkitAudioContext?: unknown }>(<unknown>globalThis)).webkitAudioContext = jest.fn().mockImplementation(() => audioContextInstance)
+    delete (globalThis as unknown as { AudioContext?: unknown }).AudioContext
+    ;(globalThis as unknown as { webkitAudioContext?: unknown }).webkitAudioContext = jest
+      .fn()
+      .mockImplementation(() => audioContextInstance)
 
     const audioPromise = setupAudio(mockElement)
 
@@ -66,9 +71,9 @@ describe('setupAudio', () => {
     const audioContext = await audioPromise
     expect(audioContext).toBeDefined()
 
-    delete (<{ webkitAudioContext?: unknown }>(<unknown>globalThis)).webkitAudioContext
+    delete (globalThis as unknown as { webkitAudioContext?: unknown }).webkitAudioContext
 
-    globalThis.AudioContext = <typeof AudioContext>(<unknown>jest.fn().mockImplementation(() => audioContextInstance))
+    globalThis.AudioContext = jest.fn().mockImplementation(() => audioContextInstance) as unknown as typeof AudioContext
   })
 
   it('rejects when element is not found', async () => {

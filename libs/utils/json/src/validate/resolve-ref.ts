@@ -48,11 +48,11 @@ export function resolveRef(ref: string, ctx: ValidationContext): Schema | undefi
     if (current === null || typeof current !== 'object') {
       return undefined
     }
-    current = (<Record<string, unknown>>current)[segment]
+    current = (current as Record<string, unknown>)[segment]
   }
 
   if (current && typeof current === 'object') {
-    const resolved = <Schema>current
+    const resolved = current as Schema
     ctx.definitions.set(ref, resolved)
     return resolved
   }

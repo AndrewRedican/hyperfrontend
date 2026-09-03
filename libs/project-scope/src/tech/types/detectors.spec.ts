@@ -1,8 +1,9 @@
 import type { PackageJson } from '../../project/package'
 import { resolve } from 'node:path'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { detectTypeSystems, flowDetector, jsdocDetector, typescriptDetector, typeSystemDetectors } from './detectors'
 
-const FIXTURES_DIR = resolve(__dirname, '../../../__fixtures__')
+const FIXTURES_DIR = resolve(import.meta.dirname, '../../../__fixtures__')
 const TYPESCRIPT_STRICT = resolve(FIXTURES_DIR, 'typescript-strict')
 const FLOW_PROJECT = resolve(FIXTURES_DIR, 'flow-project')
 const JSDOC_PROJECT = resolve(FIXTURES_DIR, 'jsdoc-project')

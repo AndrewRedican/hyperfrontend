@@ -85,7 +85,7 @@ const exportCache = createMap<string, Map<string, ExportMapping>>()
  * @returns Map of path alias to resolved source file path.
  */
 function getTsconfigPaths(workspaceRoot: string, packagePrefix: string): Map<string, string> {
-  /* istanbul ignore if -- cache hit is performance optimization, tested via behavior */
+  // why: cache hit is performance optimization, tested via behavior
   if (cachedPaths !== null && cachedWorkspaceRoot === workspaceRoot) {
     return cachedPaths
   }
@@ -93,7 +93,7 @@ function getTsconfigPaths(workspaceRoot: string, packagePrefix: string): Map<str
   const tsconfigPath = join(workspaceRoot, 'tsconfig.base.json')
   const tsconfig = readJsonFileIfExists<TsConfig>(tsconfigPath)
 
-  /* istanbul ignore if -- defensive for malformed tsconfig */
+  // why: defensive for malformed tsconfig
   if (!tsconfig?.compilerOptions?.paths) {
     cachedPaths = createMap()
     cachedWorkspaceRoot = workspaceRoot
@@ -109,7 +109,7 @@ function getTsconfigPaths(workspaceRoot: string, packagePrefix: string): Map<str
     }
 
     const target = targets[0]
-    /* istanbul ignore if -- defensive for empty paths array */
+    // why: defensive for empty paths array
     if (!target) {
       continue
     }
@@ -172,7 +172,7 @@ function parseExports(filePath: string, visited: Set<string> = createSet()): Set
     let match: RegExpExecArray | null
     while ((match = namedExportRegex.exec(content)) !== null) {
       const names = match[1]
-      /* istanbul ignore if -- defensive for malformed export */
+      // why: defensive for malformed export
       if (!names) continue
       for (const name of names.split(',')) {
         const trimmed = name.trim()
@@ -187,7 +187,7 @@ function parseExports(filePath: string, visited: Set<string> = createSet()): Set
     const declarationExportRegex = /export\s+(?:const|let|var|function|class|type|interface|enum)\s+(\w+)/g
     while ((match = declarationExportRegex.exec(content)) !== null) {
       const name = match[1]
-      /* istanbul ignore else -- match[1] always exists when regex matches */
+      // why: match[1] always exists when regex matches
       if (name) {
         exports.add(name)
       }
@@ -196,7 +196,7 @@ function parseExports(filePath: string, visited: Set<string> = createSet()): Set
     const typeExportRegex = /export\s+type\s*\{([^}]+)\}/g
     while ((match = typeExportRegex.exec(content)) !== null) {
       const names = match[1]
-      /* istanbul ignore if -- defensive for malformed export */
+      // why: defensive for malformed export
       if (!names) continue
       for (const name of names.split(',')) {
         const trimmed = name.trim()
@@ -211,7 +211,7 @@ function parseExports(filePath: string, visited: Set<string> = createSet()): Set
     const barrelExportRegex = /export\s+\*\s+from\s+['"]([^'"]+)['"]/g
     while ((match = barrelExportRegex.exec(content)) !== null) {
       const importPath = match[1]
-      /* istanbul ignore if -- defensive for malformed re-export */
+      // why: defensive for malformed re-export
       if (!importPath) continue
 
       const resolvedPath = resolveImportPath(importPath, filePath)
@@ -225,7 +225,7 @@ function parseExports(filePath: string, visited: Set<string> = createSet()): Set
 
     return exports
   } catch {
-    /* istanbul ignore next -- defensive for read errors */
+    // why: defensive for read errors
     return exports
   }
 }
@@ -294,7 +294,7 @@ function extractImportedSymbols(specifiers: TSESTree.ImportClause[]): string[] {
 
   for (const specifier of specifiers) {
     if (specifier.type === AST_NODE_TYPES.ImportSpecifier) {
-      /* istanbul ignore else -- Literal imports are rare ES2022 syntax */
+      // why: Literal imports are rare ES2022 syntax
       if (specifier.imported.type === AST_NODE_TYPES.Identifier) {
         symbols.push(specifier.imported.name)
       }
@@ -313,12 +313,12 @@ function extractImportedSymbols(specifiers: TSESTree.ImportClause[]): string[] {
 function getBasePackageName(importPath: string): string {
   const parts = importPath.split('/')
 
-  /* istanbul ignore else -- always scoped for @hyperfrontend */
+  // why: always scoped for @hyperfrontend
   if (parts[0]?.startsWith('@') && parts.length >= 2) {
     return `${parts[0]}/${parts[1]}`
   }
 
-  /* istanbul ignore next -- empty path fallback is defensive */
+  // why: empty path fallback is defensive
   return parts[0] ?? importPath
 }
 
@@ -365,14 +365,14 @@ export default createRule<[RuleOptions?], MessageIds>({
     const filename = context.filename
     const workspaceRoot = findTypeScriptWorkspaceRoot(dirname(filename))
 
-    /* istanbul ignore if -- defensive if workspace root not found */
+    // why: defensive if workspace root not found
     if (!workspaceRoot) {
       return {}
     }
 
     const tsconfigPaths = getTsconfigPaths(workspaceRoot, packagePrefix)
 
-    /* istanbul ignore if -- no paths means nothing to check */
+    // why: no paths means nothing to check
     if (tsconfigPaths.size === 0) {
       return {}
     }

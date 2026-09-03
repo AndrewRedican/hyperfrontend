@@ -1,4 +1,5 @@
 import type { Server } from 'node:http'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { addressPort, closeServer, listen } from './listen'
 
 interface FakeServer {
@@ -8,11 +9,11 @@ interface FakeServer {
 }
 
 const fakeServer = (port: number): FakeServer => {
-  const state: FakeServer = { server: <Server>{}, listenCalls: [], closed: false }
-  state.server = <Server>(<unknown>{
+  const state: FakeServer = { server: {} as Server, listenCalls: [], closed: false }
+  state.server = {
     listen: (...args: unknown[]) => {
       state.listenCalls.push(args)
-      const callback = <() => void>args[args.length - 1]
+      const callback = args[args.length - 1] as () => void
       callback()
     },
     address: () => ({ address: '::', family: 'IPv6', port }),
@@ -20,7 +21,7 @@ const fakeServer = (port: number): FakeServer => {
       state.closed = true
       callback()
     },
-  })
+  } as unknown as Server
   return state
 }
 

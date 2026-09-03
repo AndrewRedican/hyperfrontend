@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { type IChannelContract } from '../types/contract'
 import { ConnectionError } from './connection-error'
 import { ContractError } from './contract-error'

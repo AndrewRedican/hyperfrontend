@@ -3,6 +3,8 @@ import type { ChannelState } from '../../types'
 import type { EventHandler } from '../../types/channel'
 import type { OpenCallback, CloseCallback, CancelCallback } from '../../types/events'
 import type { ChannelInternals } from '../types'
+import { beforeEach } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { subscribeToEvents } from './events'
 
 describe('channel/subscription/events', () => {
@@ -43,7 +45,7 @@ describe('channel/subscription/events', () => {
       removeProcess: jest.fn(),
       notifyEvent: jest.fn(),
       notifyMessage: jest.fn(),
-      actions: <ActionCreators>{},
+      actions: {} as ActionCreators,
     }
   })
 
@@ -110,9 +112,9 @@ describe('channel/subscription/events', () => {
   })
 
   it('throws error if handler is not a function', () => {
-    expect(() => subscribeToEvents(mockChannel, <EventHandler>(<unknown>null))).toThrow('Expected callback function.')
-    expect(() => subscribeToEvents(mockChannel, <EventHandler>(<unknown>undefined))).toThrow('Expected callback function.')
-    expect(() => subscribeToEvents(mockChannel, <EventHandler>(<unknown>'not a function'))).toThrow('Expected callback function.')
+    expect(() => subscribeToEvents(mockChannel, null as unknown as EventHandler)).toThrow('Expected callback function.')
+    expect(() => subscribeToEvents(mockChannel, undefined as unknown as EventHandler)).toThrow('Expected callback function.')
+    expect(() => subscribeToEvents(mockChannel, 'not a function' as unknown as EventHandler)).toThrow('Expected callback function.')
   })
 
   it('handles multiple unsubscribe calls gracefully', () => {

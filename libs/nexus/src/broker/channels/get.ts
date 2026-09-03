@@ -1,5 +1,5 @@
+import type { createChannel } from '../../channel/factory'
 import type { Registry } from '../../core/registry/factory'
-import { createChannel } from '../../channel/factory'
 import { getById } from '../../core/registry/get-by-id'
 import { getByName } from '../../core/registry/get-by-name'
 import { getByWindow } from '../../core/registry/get-by-window'
@@ -19,13 +19,13 @@ import { getByWindow } from '../../core/registry/get-by-window'
  */
 export function getChannel(registry: Registry, reference: string | Window): ReturnType<typeof createChannel> | null {
   if (typeof reference === 'object' && reference !== null) {
-    const channel = getByWindow(registry, <Window>reference)
-    return <ReturnType<typeof createChannel>>(<unknown>channel) ?? null
+    const channel = getByWindow(registry, reference as Window)
+    return (channel as unknown as ReturnType<typeof createChannel>) ?? null
   }
 
   if (typeof reference === 'string') {
     const channel = getById(registry, reference) ?? getByName(registry, reference)
-    return <ReturnType<typeof createChannel>>(<unknown>channel) ?? null
+    return (channel as unknown as ReturnType<typeof createChannel>) ?? null
   }
 
   return null

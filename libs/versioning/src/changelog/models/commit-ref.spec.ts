@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { createCommitRef, createIssueRef, getShortHash } from './index'
 
 describe('createCommitRef', () => {

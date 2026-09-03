@@ -1,5 +1,6 @@
 import type { OwnerIndex } from './attribute-modules'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { parseEntry } from './attribute-modules'
 import { renderChunk, resolveModuleRefs } from './extract-chunk'
 
@@ -67,6 +68,18 @@ describe('resolveModuleRefs', () => {
       unresolved: [],
     })
   })
+
+  it('never fabricates a cross-module edge from parameters shadowing owned names', () => {
+    const owners = ownersOf([
+      ['isValid', 'me'],
+      ['check', 'me'],
+      ['data', 'creators/mocks'],
+      ['message', 'creators/mocks'],
+      ['key', 'creators/mocks'],
+    ])
+    const source = 'function isValid(data) { return !!data }\nconst check = (message, key) => isValid(message + key);'
+    expect(resolve(source, owners, 'me').crossModule).toEqual([])
+  })
 })
 
 describe('renderChunk', () => {
@@ -107,7 +120,7 @@ describe('renderChunk', () => {
     const plan = {
       decls: declsOf('const z = 1;'),
       crossImports: [],
-      depImports: [{ ref: 'tag', kind: <const>'named', imported: 'tag', specifier: './d.js' }],
+      depImports: [{ ref: 'tag', kind: 'named' as const, imported: 'tag', specifier: './d.js' }],
     }
     expect(renderChunk(plan, 'esm')).toContain("import { tag } from './d.js';")
   })
@@ -116,7 +129,7 @@ describe('renderChunk', () => {
     const plan = {
       decls: declsOf('const z = 1;'),
       crossImports: [],
-      depImports: [{ ref: 'tag', kind: <const>'named', specifier: './d.js' }],
+      depImports: [{ ref: 'tag', kind: 'named' as const, specifier: './d.js' }],
     }
     expect(renderChunk(plan, 'esm')).toContain("import { tag } from './d.js';")
   })
@@ -125,7 +138,7 @@ describe('renderChunk', () => {
     const plan = {
       decls: declsOf("'use strict';\nconst z = 1;", 'cjs'),
       crossImports: [],
-      depImports: [{ ref: 'tag', kind: <const>'cjs-named', specifier: './d.js' }],
+      depImports: [{ ref: 'tag', kind: 'cjs-named' as const, specifier: './d.js' }],
     }
     expect(renderChunk(plan, 'cjs')).toContain("const { tag } = require('./d.js');")
   })
@@ -143,7 +156,7 @@ describe('renderChunk', () => {
     const plan = {
       decls: declsOf('const z = 1;'),
       crossImports: [],
-      depImports: [{ ref: 'ns', kind: <const>'namespace', specifier: './d.js' }],
+      depImports: [{ ref: 'ns', kind: 'namespace' as const, specifier: './d.js' }],
     }
     expect(renderChunk(plan, 'esm')).toContain("import * as ns from './d.js';")
   })
@@ -152,7 +165,7 @@ describe('renderChunk', () => {
     const plan = {
       decls: declsOf('const z = 1;'),
       crossImports: [],
-      depImports: [{ ref: 'd', kind: <const>'default', specifier: './d.js' }],
+      depImports: [{ ref: 'd', kind: 'default' as const, specifier: './d.js' }],
     }
     expect(renderChunk(plan, 'esm')).toContain("import d from './d.js';")
   })
@@ -161,7 +174,7 @@ describe('renderChunk', () => {
     const plan = {
       decls: declsOf('const z = 1;'),
       crossImports: [],
-      depImports: [{ ref: 'x', kind: <const>'named', imported: 'tag', specifier: './d.js' }],
+      depImports: [{ ref: 'x', kind: 'named' as const, imported: 'tag', specifier: './d.js' }],
     }
     expect(renderChunk(plan, 'esm')).toContain("import { tag as x } from './d.js';")
   })
@@ -185,7 +198,7 @@ describe('renderChunk', () => {
     const plan = {
       decls: declsOf("'use strict';\nconst z = 1;", 'cjs'),
       crossImports: [],
-      depImports: [{ ref: 'dep', kind: <const>'cjs-namespace', specifier: './d.js' }],
+      depImports: [{ ref: 'dep', kind: 'cjs-namespace' as const, specifier: './d.js' }],
     }
     expect(renderChunk(plan, 'cjs')).toContain("const dep = require('./d.js');")
   })
@@ -194,7 +207,7 @@ describe('renderChunk', () => {
     const plan = {
       decls: declsOf("'use strict';\nconst z = 1;", 'cjs'),
       crossImports: [],
-      depImports: [{ ref: 'x', kind: <const>'cjs-named', imported: 'tag', specifier: './d.js' }],
+      depImports: [{ ref: 'x', kind: 'cjs-named' as const, imported: 'tag', specifier: './d.js' }],
     }
     expect(renderChunk(plan, 'cjs')).toContain("const { tag: x } = require('./d.js');")
   })

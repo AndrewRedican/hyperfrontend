@@ -89,7 +89,7 @@ const processFormat = (
     if (chunks.length === 0) return
     const usageMap = buildUsageMap([...entries, ...chunks], chunks, format)
     if (!stripChunks(usageMap, format, result)) return
-    // istanbul ignore next -- why: convergence exits via the early return above; a >50-deep chunk import chain that would exhaust the cap cannot occur in bundled dependency output, so the guard log is unreachable in practice.
+    // why: why: convergence exits via the early return above; a >50-deep chunk import chain that would exhaust the cap cannot occur in bundled dependency output, so the guard log is unreachable in practice.
     if (iteration === MAX_ITERATIONS - 1)
       log.warn(`dead-export strip for ${format} hit the ${MAX_ITERATIONS}-iteration cap before converging`)
   }

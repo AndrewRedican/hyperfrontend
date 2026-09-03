@@ -4,7 +4,7 @@ import { execFileSync } from 'node:child_process'
 import { existsSync, readFileSync, unlinkSync, mkdirSync, renameSync } from 'node:fs'
 import { join } from 'node:path'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
-import { parse } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
+import { parse, stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 import { logger } from '../../lib/logger'
 
 /**
@@ -85,28 +85,76 @@ function installTarball(tarballPath: string, testDir: string): void {
 }
 
 /**
- * Runs Jest tests for a specific format.
+ * How one format runs on the node test runner.
+ */
+interface FormatRun {
+  /** Conventional spec files the format selects, kept when they exist. */
+  candidates: string[]
+  /** Whether the run needs the DOM preload. */
+  dom: boolean
+  /** Default per-test timeout for the run. */
+  timeoutMs: number
+}
+
+/**
+ * The formats the node path knows how to run, by convention.
+ */
+const FORMAT_RUNS: Record<string, FormatRun> = {
+  cjs: { candidates: ['src/cjs.spec.ts', 'src/cli.spec.ts'], dom: false, timeoutMs: 30_000 },
+  esm: { candidates: ['src/esm.spec.ts'], dom: false, timeoutMs: 30_000 },
+  browser: { candidates: ['src/iife.spec.ts', 'src/umd.spec.ts'], dom: true, timeoutMs: 30_000 },
+  // why: the nx suites create real consumer workspaces with a network npm install, so a single test legitimately runs for minutes.
+  nx: { candidates: ['src/nx-plugin.spec.ts', 'src/nx-plugin-callbacks.spec.ts'], dom: false, timeoutMs: 900_000 },
+}
+
+/**
+ * Runs one format's suites on the node test runner.
+ *
+ * The specs are selected by convention from the format table and run with the workspace's
+ * resolution hooks installed, but with the workspace path aliases replaced by a single
+ * entry for the test runtime: the packed tarball's own name has to resolve from the test
+ * project's `node_modules`, or the suite would silently exercise workspace source.
  *
  * @param testDir - The test project directory
  * @param format - The module format to test (e.g., 'cjs', 'esm', 'browser')
  * @param workspaceRoot - The root directory of the workspace
  * @returns True if tests passed, false otherwise
  */
-function runJestTests(testDir: string, format: string, workspaceRoot: string): boolean {
-  const configPath = join(testDir, `jest.config.${format}.ts`)
+function runNodeTests(testDir: string, format: string, workspaceRoot: string): boolean {
+  const run = FORMAT_RUNS[format]
+  if (!run) {
+    logger.error(`Unknown e2e format "${format}"`)
+    return false
+  }
 
-  if (!existsSync(configPath)) {
-    logger.warn(`Jest config not found: ${configPath}, skipping ${format} tests`)
-    return true
+  const specs = run.candidates.map((candidate) => join(testDir, candidate)).filter((path) => existsSync(path))
+  if (specs.length === 0) {
+    logger.error(`Format "${format}" declares no runnable specs in ${testDir}`)
+    return false
   }
 
   logger.info(`Running ${format} tests...`)
 
+  const argv = [
+    '--disable-warning=MODULE_TYPELESS_PACKAGE_JSON',
+    '--import',
+    join(workspaceRoot, 'tools/testing/src/hooks/register.ts'),
+    ...(run.dom ? ['--import', join(workspaceRoot, 'tools/testing/src/environment/dom.ts')] : []),
+    '--test',
+    `--test-timeout=${run.timeoutMs}`,
+    ...specs,
+  ]
+
   try {
-    execFileSync('npx', ['jest', '--config', configPath, '--passWithNoTests'], {
+    execFileSync('node', argv, {
       cwd: workspaceRoot,
       encoding: 'utf-8',
       stdio: 'inherit',
+      env: {
+        ...process.env,
+        HF_TEST_WORKSPACE_ROOT: workspaceRoot,
+        HF_TEST_ALIASES: stringify({ '@hyperfrontend/testing': ['tools/testing/src/index.ts'] }),
+      },
     })
     logger.info(`${format} tests passed`)
     return true
@@ -122,7 +170,7 @@ function runJestTests(testDir: string, format: string, workspaceRoot: string): b
  * Workflow:
  * 1. Run `npm pack` in the dist directory to create a tarball
  * 2. Install the tarball in the E2E test project
- * 3. Run Jest tests for each configured format (cjs, esm, browser)
+ * 3. Run each configured format's suites on the node test runner (cjs, esm, browser, nx)
  * 4. Optionally cleanup the tarball
  *
  * @param options - Configuration for test directory, formats, and cleanup behavior
@@ -181,7 +229,7 @@ export default async function e2eExecutor(options: E2eExecutorOptions, context: 
   const results: boolean[] = []
 
   for (const format of formats) {
-    const success = runJestTests(testDir, format, workspaceRoot)
+    const success = runNodeTests(testDir, format, workspaceRoot)
     results.push(success)
   }
 

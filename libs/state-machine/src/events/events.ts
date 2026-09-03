@@ -53,7 +53,7 @@ export class Events {
   private readonly invokeHandlers = (event: Event): void => {
     for (const [targetEvent, handler] of this.eventHandlers) {
       if (targetEvent === event) {
-        handler(event, <DerivedState>this.change.current, <DerivedState>this.change.previous)
+        handler(event, this.change.current as DerivedState, this.change.previous as DerivedState)
       }
     }
   }

@@ -104,7 +104,7 @@ export const timeLog = _console.timeLog.bind(_console)
  * (Safe copy) Namespace object containing all Console methods.
  * Note: Importing this imports all methods in this namespace (no tree-shaking).
  */
-export const Console = _freeze(<const>{
+export const Console = _freeze({
   log,
   warn,
   error,
@@ -123,4 +123,4 @@ export const Console = _freeze(<const>{
   time,
   timeEnd,
   timeLog,
-})
+} as const)

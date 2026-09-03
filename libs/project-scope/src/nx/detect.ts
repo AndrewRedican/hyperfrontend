@@ -9,7 +9,7 @@ const nxLogger = createScopedLogger('project-scope:nx')
 /**
  * Files indicating NX workspace root.
  */
-export const NX_CONFIG_FILES = <const>['nx.json', 'workspace.json']
+export const NX_CONFIG_FILES = ['nx.json', 'workspace.json'] as const
 
 /**
  * NX-specific project file.

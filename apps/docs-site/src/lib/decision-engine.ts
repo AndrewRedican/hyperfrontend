@@ -201,7 +201,7 @@ export function evaluate(answers: Record<string, string>): EngineResult {
   const surviving = families.filter((family) => !eliminatedBy.has(family.id))
   const eliminated: EliminatedFamily[] = families
     .filter((family) => eliminatedBy.has(family.id))
-    .map((family) => ({ family, by: <Elimination>eliminatedBy.get(family.id) }))
+    .map((family) => ({ family, by: eliminatedBy.get(family.id) as Elimination }))
 
   const next = relevant.find((question) => !answers[question.id]) ?? null
   const survivingMfe = surviving.filter((family) => family.kind === 'microfrontend')
@@ -307,7 +307,7 @@ export function loadAssessment(): StoredAssessment | null {
   try {
     const raw = window.localStorage.getItem(ASSESSMENT_STORAGE_KEY)
     if (!raw) return null
-    const stored = <StoredAssessment>parse(raw)
+    const stored = parse(raw) as StoredAssessment
     if (!stored || typeof stored !== 'object' || !stored.answers) return null
     return stored
   } catch {

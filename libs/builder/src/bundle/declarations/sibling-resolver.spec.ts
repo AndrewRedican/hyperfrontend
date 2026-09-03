@@ -1,5 +1,6 @@
 import type { Plugin } from 'rollup'
 import type { SiblingEntry } from './sibling-resolver'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { computeSiblingSpecifier, createSiblingExternalizePlugin, dtsPathFor, filterSiblings, findOwningSibling } from './sibling-resolver'
 
 type ResolveIdHook = (source: string, importer?: string) => { id: string; external: true } | null

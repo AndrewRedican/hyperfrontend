@@ -34,7 +34,7 @@ export type CreateFn<T extends HTMLElement, Args extends any[]> = (...args: Args
 export const component = <T extends HTMLElement, Args extends any[]>(create: CreateFn<T, Args>, style?: StyleFn) =>
   createRunOnceFunction((...args: Args) => {
     if (getType(style) === 'function') {
-      ;(<StyleFn>style)()
+      ;(style as StyleFn)()
     }
     return create(...args)
   })

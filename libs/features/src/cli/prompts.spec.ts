@@ -1,4 +1,6 @@
+import { beforeEach } from 'node:test'
 import { select, text } from '@hyperfrontend/questions'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { promptContractPath, promptEntryFile, promptFeatureName } from './prompts'
 
 jest.mock('@hyperfrontend/questions', () => ({
@@ -10,7 +12,7 @@ jest.mock('@hyperfrontend/questions', () => ({
 const mockText = jest.mocked(text)
 const mockSelect = jest.mocked(select)
 
-const outcome = (result: string, value?: string): never => <never>{ result, value }
+const outcome = (result: string, value?: string): never => ({ result, value }) as never
 
 const readTextValidate = (): ((value: string) => string | undefined) => {
   const validate = mockText.mock.calls[0]?.[0]?.validate

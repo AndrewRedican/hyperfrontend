@@ -5,6 +5,7 @@ import type { Registry } from '../../registry/models/registry'
 import type { RepositoryConfig } from '../../repository/models/repository-config'
 import type { RepositoryResolution } from '../../repository/models/resolution'
 import type { FlowConfig, FlowContext, FlowState } from '../models/types'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { createResolveRepositoryStep, RESOLVE_REPOSITORY_STEP_ID } from './resolve-repository'
 
 function createMockLogger(): Logger {

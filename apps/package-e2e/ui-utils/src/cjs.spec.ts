@@ -6,6 +6,10 @@
  * Functionality tests are limited as many features require a real DOM.
  */
 
+'use strict'
+
+const { describe, it, expect } = require('@hyperfrontend/testing')
+
 describe('@hyperfrontend/ui-utils CJS', () => {
   describe('color sub-entry', () => {
     it('is requireable', () => {

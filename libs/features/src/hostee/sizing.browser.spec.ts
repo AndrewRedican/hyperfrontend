@@ -1,3 +1,5 @@
+import { afterEach, beforeEach } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { applyBodyReset, createPresentationApplier, watchWindowSize } from './sizing'
 
 function setViewport(width: number, height: number) {

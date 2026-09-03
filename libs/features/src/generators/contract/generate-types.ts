@@ -26,7 +26,7 @@ function toTypeLiteral(value: unknown, indent: string): string {
     return `readonly [\n${value.map((item) => `${inner}${toTypeLiteral(item, inner)}`).join(',\n')}\n${indent}]`
   }
   if (typeof value === 'object') {
-    const props = entries(<Record<string, unknown>>value)
+    const props = entries(value as Record<string, unknown>)
     if (props.length === 0) {
       return 'Record<string, never>'
     }

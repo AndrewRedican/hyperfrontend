@@ -124,12 +124,12 @@ export function sanitize(obj: unknown): unknown {
   }
 
   if (isArray(obj)) {
-    return (<unknown[]>obj).map((item) => sanitize(item))
+    return (obj as unknown[]).map((item) => sanitize(item))
   }
 
   if (typeof obj === 'object') {
     const result: Record<string, unknown> = {}
-    for (const [key, value] of entries(<Record<string, unknown>>obj)) {
+    for (const [key, value] of entries(obj as Record<string, unknown>)) {
       if (isSensitiveKey(key)) {
         result[key] = REDACTED
       } else if (typeof value === 'object' && value !== null) {
@@ -228,7 +228,7 @@ export function createScopedLogger(namespace: string, options: ScopedLoggerOptio
   const createLogFn =
     (baseFn: (...args: unknown[]) => void) =>
     (message: string, meta?: object): void => {
-      const processedMeta = sanitizeSecrets && meta ? <object>sanitize(meta) : meta
+      const processedMeta = sanitizeSecrets && meta ? (sanitize(meta) as object) : meta
       baseFn(formatMessage(namespace, message, processedMeta))
     }
 

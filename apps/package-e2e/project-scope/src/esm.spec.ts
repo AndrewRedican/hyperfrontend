@@ -1,3 +1,5 @@
+import { describe, it, expect } from '@hyperfrontend/testing'
+
 import {
   analyzeProject,
   buildSimpleProjectGraph,

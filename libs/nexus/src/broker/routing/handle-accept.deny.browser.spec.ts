@@ -1,8 +1,11 @@
 import type { Logger } from '@hyperfrontend/logging'
+import type { Mock } from '@hyperfrontend/testing'
 import type { IAction } from '../../types/action'
 import type { IChannelContract } from '../../types/contract'
 import type { BrokerState } from '../types'
 import type { RoutingContext } from './types'
+import { after as afterAll, afterEach, before as beforeAll, beforeEach } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { createActionCreators } from '../../core/actions/factory'
 import { createProcessManager } from '../../core/processes/factory'
 import { createRegistry } from '../../core/registry/factory'
@@ -20,7 +23,7 @@ describe('handleAccept deny gates', () => {
     emitted: [{ type: 'test-message' }],
   }
 
-  const brokenContract = <IChannelContract>(<unknown>{ accepted: null })
+  const brokenContract = { accepted: null } as unknown as IChannelContract
   const silentContract: IChannelContract = { accepted: [{ type: 'response-message' }], emitted: [{ type: 'unrelated-type' }] }
 
   let mockLogger: Logger
@@ -58,7 +61,7 @@ describe('handleAccept deny gates', () => {
     mockBrokerState = {
       id: 'broker-1',
       name: 'test-broker',
-      window: <Window>global.window,
+      window: global.window as Window,
       contract: ownContract,
       settings: {
         contract: ownContract,
@@ -72,9 +75,9 @@ describe('handleAccept deny gates', () => {
       getBrokerId: () => 'broker-1',
       getContract: () => mockBrokerState.contract,
     })
-    mockWindow = <Window>(<unknown>{
+    mockWindow = {
       postMessage: jest.fn(),
-    })
+    } as unknown as Window
 
     routingContext = {
       state: mockBrokerState,
@@ -89,16 +92,16 @@ describe('handleAccept deny gates', () => {
   })
 
   function acceptEvent(processId: string, overrides: Partial<{ senderId: string; contract: IChannelContract; origin: string }> = {}) {
-    return <MessageEvent<IAction>>{
-      data: <IAction>{
+    return {
+      data: {
         type: '[nexus] connection-request-accepted',
         processId,
         senderId: overrides.senderId ?? 'remote-broker-1',
         contract: overrides.contract ?? peerContract,
-      },
+      } as IAction,
       origin: overrides.origin ?? 'http://remote.example',
       source: mockWindow,
-    }
+    } as MessageEvent<IAction>
   }
 
   function addRequestingChannel(context: RoutingContext = routingContext) {
@@ -106,7 +109,7 @@ describe('handleAccept deny gates', () => {
     channel.connect()
     const processId = channel.getPendingProcessId()
     if (processId === null) throw new Error('connect() did not record a pending process')
-    ;(<jest.Mock>mockWindow.postMessage).mockClear()
+    ;(mockWindow.postMessage as Mock).mockClear()
     return { channel, processId }
   }
 
@@ -121,8 +124,8 @@ describe('handleAccept deny gates', () => {
   }
 
   function cancelFrames() {
-    return (<jest.Mock>mockWindow.postMessage).mock.calls.filter(
-      (call) => (<IAction>call[0]).type === '[nexus] connection-request-cancelled'
+    return (mockWindow.postMessage as Mock).mock.calls.filter(
+      (call) => (call[0] as IAction).type === '[nexus] connection-request-cancelled'
     )
   }
 
@@ -132,7 +135,7 @@ describe('handleAccept deny gates', () => {
 
       handleAccept(routingContext, acceptEvent(processId, { contract: brokenContract }))
 
-      expect({ active: channel.isActive(), cancel: (<jest.Mock>mockWindow.postMessage).mock.calls[0][0] }).toEqual({
+      expect({ active: channel.isActive(), cancel: (mockWindow.postMessage as Mock).mock.calls[0][0] }).toEqual({
         active: false,
         cancel: expect.objectContaining({ type: '[nexus] connection-request-cancelled', processId }),
       })
@@ -164,7 +167,7 @@ describe('handleAccept deny gates', () => {
       const { processId } = addRequestingChannel()
 
       handleAccept(routingContext, acceptEvent(processId, { contract: brokenContract }))
-      ;(<jest.Mock>mockWindow.postMessage).mockClear()
+      ;(mockWindow.postMessage as Mock).mockClear()
       jest.advanceTimersByTime(20_000)
 
       expect(mockWindow.postMessage).not.toHaveBeenCalled()
@@ -188,7 +191,7 @@ describe('handleAccept deny gates', () => {
 
       handleAccept(routingContext, acceptEvent(processId, { contract: silentContract }))
 
-      expect({ active: channel.isActive(), cancel: (<jest.Mock>mockWindow.postMessage).mock.calls[0][0] }).toEqual({
+      expect({ active: channel.isActive(), cancel: (mockWindow.postMessage as Mock).mock.calls[0][0] }).toEqual({
         active: false,
         cancel: expect.objectContaining({ type: '[nexus] connection-request-cancelled', processId }),
       })

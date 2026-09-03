@@ -1,11 +1,13 @@
 import type { IChannelSettings } from '../types/channel'
 import type { SecurityProvider } from '../types/security'
 import type { MockWindow } from './test-utils'
+import { beforeEach } from 'node:test'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { logger } from '@hyperfrontend/logging'
 import { createChannel } from '@hyperfrontend/network-protocol/browser/channel'
 import { createProtocol as createV1Protocol } from '@hyperfrontend/network-protocol/browser/v1'
 import { createProtocol as createV2Protocol } from '@hyperfrontend/network-protocol/browser/v2'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { createBroker } from '../broker/factory'
 import { ACTION_TYPES } from '../types/action'
 import { createMockWindow, linkMockWindows, createContractPair } from './test-utils'
@@ -55,19 +57,23 @@ describe('Integration: Security Negotiation and Attachment', () => {
     const broker = createBroker({
       name: `broker-${name}`,
       contract: name === 'a' ? contractA : contractB,
-      window: <Window>(<unknown>ownWindow),
+      window: ownWindow as unknown as Window,
       settings: options.providers ? { security: { protocols: options.providers } } : {},
     })
-    const channel = broker.addChannel(`to-${name === 'a' ? 'b' : 'a'}`, <Window>(<unknown>counterpartWindow), options.channelSettings ?? {})
+    const channel = broker.addChannel(
+      `to-${name === 'a' ? 'b' : 'a'}`,
+      counterpartWindow as unknown as Window,
+      options.channelSettings ?? {}
+    )
     return { broker, channel }
   }
 
-  const framesTo = (target: MockWindow) => target.postMessage.mock.calls.map((call) => <unknown>call[0])
+  const framesTo = (target: MockWindow) => target.postMessage.mock.calls.map((call) => call[0] as unknown)
 
   const plaintextTypesTo = (target: MockWindow) =>
     framesTo(target)
       .filter((frame) => !(frame instanceof Uint8Array))
-      .map((frame) => (<{ type: string }>frame).type)
+      .map((frame) => (frame as { type: string }).type)
 
   describe('v2 pair', () => {
     const v2Settings: Partial<IChannelSettings> = { security: { protocol: 'v2' } }
@@ -132,7 +138,7 @@ describe('Integration: Security Negotiation and Attachment', () => {
       a.channel.send('PING', { secret: 'classified-payload' })
       await waitFor(() => messagesB.length === 1)
 
-      const wireFrame = <Uint8Array>framesTo(windowB)[0]
+      const wireFrame = framesTo(windowB)[0] as Uint8Array
       expect(new TextDecoder().decode(wireFrame)).not.toContain('classified-payload')
     })
 

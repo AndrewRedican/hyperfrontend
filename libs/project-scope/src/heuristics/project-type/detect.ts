@@ -246,21 +246,21 @@ export function detectProjectType(projectPath: string, options?: DetectProjectTy
     .filter(([, score]) => score > 0)
 
   const [primaryType, primaryScore] = sortedTypes[0] ?? ['unknown', 0]
-  const secondaryTypes = sortedTypes.slice(1).map(([type]) => <ProjectType>type)
+  const secondaryTypes = sortedTypes.slice(1).map(([type]) => type as ProjectType)
 
   const totalScore = values(typeScores).reduce((a, b) => a + b, 0)
   const confidence = totalScore > 0 ? min(round((primaryScore / totalScore) * 100), 100) : 0
 
   projectTypeLogger.debug('Project type detection complete', {
     projectPath,
-    detectedType: <ProjectType>primaryType,
+    detectedType: primaryType as ProjectType,
     confidence,
     evidenceCount: evidence.length,
     secondaryTypes,
   })
 
   return {
-    type: <ProjectType>primaryType,
+    type: primaryType as ProjectType,
     secondaryTypes,
     confidence,
     evidence,

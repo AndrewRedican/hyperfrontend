@@ -12,7 +12,7 @@ export const RULE_NAME = 'lib-pkg-fields'
 /**
  * Required fields for publishable library package.json files.
  */
-const REQUIRED_FIELDS = <const>['name', 'description', 'license', 'sideEffects', 'engines', 'keywords']
+const REQUIRED_FIELDS = ['name', 'description', 'license', 'sideEffects', 'engines', 'keywords'] as const
 
 /**
  * Union type of all required field names for publishable libraries.
@@ -56,7 +56,7 @@ const rule: Rule.RuleModule = {
     const filePath = context.filename
     const projectRoot = dirname(filePath)
 
-    /* istanbul ignore next - only publishable libraries are linted via config */
+    // why: only publishable libraries are linted via config
     if (!isPublishableLibrary(projectRoot)) {
       return {}
     }
@@ -64,7 +64,7 @@ const rule: Rule.RuleModule = {
     const foundFields = createSet<string>()
 
     return {
-      /* istanbul ignore next - jsonc-eslint-parser always provides JSONProperty for object keys */
+      // why: jsonc-eslint-parser always provides JSONProperty for object keys
       JSONProperty(node: JSONNode) {
         if (node.type !== 'JSONProperty') {
           return

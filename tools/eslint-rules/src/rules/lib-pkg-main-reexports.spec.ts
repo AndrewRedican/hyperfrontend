@@ -1,4 +1,5 @@
 import { join } from 'node:path'
+import { after as afterAll } from 'node:test'
 import { createTempWorkspaceManager, createTypeScriptRuleTester, PUBLISHABLE_LIBRARY_PROJECT_JSON } from '../testing'
 import rule from './lib-pkg-main-reexports'
 

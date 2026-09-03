@@ -18,7 +18,7 @@ const _freeze = globalThis.Object.freeze
  */
 export const createPromise = <T>(
   executor: (resolve: (value: T | PromiseLike<T>) => void, reject: (reason?: unknown) => void) => void
-): Promise<T> => <Promise<T>>_Reflect.construct(_Promise, [executor])
+): Promise<T> => _Reflect.construct(_Promise, [executor]) as Promise<T>
 
 /**
  * (Safe copy) Returns a Promise that resolves with the given value.
@@ -55,13 +55,13 @@ export const promiseAny = _Promise.any.bind(_Promise)
  * Note: Available only in ES2024+ environments.
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const promiseWithResolvers = (<any>_Promise).withResolvers?.bind(_Promise)
+export const promiseWithResolvers = (_Promise as any).withResolvers?.bind(_Promise)
 
 /**
  * (Safe copy) Namespace object containing all Promise factory functions.
  * Note: Importing this imports all methods in this namespace (no tree-shaking).
  */
-export const Promise = _freeze(<const>{
+export const Promise = _freeze({
   create: createPromise,
   resolve: promiseResolve,
   reject: promiseReject,
@@ -70,4 +70,4 @@ export const Promise = _freeze(<const>{
   allSettled: promiseAllSettled,
   any: promiseAny,
   withResolvers: promiseWithResolvers,
-})
+} as const)

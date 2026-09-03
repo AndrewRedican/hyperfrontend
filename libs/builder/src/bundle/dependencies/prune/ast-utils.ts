@@ -56,7 +56,7 @@ export const resolveRelativeTarget = (importerDir: string, specifier: string): s
 export const getRequireSpecifier = (node: ts.Node): string | null => {
   if (!ts.isCallExpression(node) || !ts.isIdentifier(node.expression) || node.expression.text !== 'require' || node.arguments.length !== 1)
     return null
-  const arg = <ts.Expression>node.arguments[0]
+  const arg = node.arguments[0] as ts.Expression
   return ts.isStringLiteralLike(arg) ? arg.text : null
 }
 

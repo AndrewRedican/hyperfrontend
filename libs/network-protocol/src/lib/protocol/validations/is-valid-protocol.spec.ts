@@ -1,8 +1,9 @@
 import type { Protocol } from '../../channel/model'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { isValidProtocol } from './is-valid-protocol'
 
 describe('isValidProtocol', () => {
-  const baseProtocol = <Protocol>(<unknown>{
+  const baseProtocol = {
     packetEncryption: () => void 0,
     packetDecryption: () => void 0,
     packetObfuscation: () => void 0,
@@ -10,7 +11,7 @@ describe('isValidProtocol', () => {
     send: () => void 0,
     receive: () => void 0,
     getLogger: () => void 0,
-  })
+  } as unknown as Protocol
 
   it('returns true for all keys with a valid protocol object', () => {
     const result = isValidProtocol(baseProtocol)

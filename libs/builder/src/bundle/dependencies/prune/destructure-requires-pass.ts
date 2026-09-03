@@ -70,10 +70,10 @@ const computeSccIds = (nodes: string[], graph: Map<string, Set<string>>): Map<st
   const componentOf = createMap<string, number>()
   const tarjanStack: string[] = []
   // why: invariants guarantee every node read below was opened (written) first, so the cast is total.
-  const idxOf = (node: string): number => <number>index.get(node)
-  const lowOf = (node: string): number => <number>low.get(node)
+  const idxOf = (node: string): number => index.get(node) as number
+  const lowOf = (node: string): number => low.get(node) as number
   // why: the graph holds an entry for every node, so the lookup always resolves.
-  const neighborsOf = (node: string): string[] => [...(<Set<string>>graph.get(node))]
+  const neighborsOf = (node: string): string[] => [...(graph.get(node) as Set<string>)]
   let counter = 0
   let component = 0
   const open = (node: string): void => {
@@ -88,9 +88,9 @@ const computeSccIds = (nodes: string[], graph: Map<string, Set<string>>): Map<st
     open(start)
     const work: TarjanFrame[] = [{ node: start, neighbors: neighborsOf(start), cursor: 0 }]
     while (work.length > 0) {
-      const frame = <TarjanFrame>work[work.length - 1]
+      const frame = work[work.length - 1] as TarjanFrame
       if (frame.cursor < frame.neighbors.length) {
-        const next = <string>frame.neighbors[frame.cursor]
+        const next = frame.neighbors[frame.cursor] as string
         frame.cursor += 1
         if (!index.has(next)) {
           open(next)
@@ -100,7 +100,7 @@ const computeSccIds = (nodes: string[], graph: Map<string, Set<string>>): Map<st
       }
       if (lowOf(frame.node) === idxOf(frame.node)) {
         for (;;) {
-          const popped = <string>tarjanStack.pop()
+          const popped = tarjanStack.pop() as string
           onStack.delete(popped)
           componentOf.set(popped, component)
           if (popped === frame.node) break
@@ -158,7 +158,7 @@ export const destructureRequiresPass = (depsRoot: string): DestructureRequiresRe
   const componentOf = computeSccIds(chunks, graph)
   for (const chunk of chunks) {
     // why: every chunk was just read into `sources` above, so the lookup always resolves.
-    const source = <string>sources.get(chunk)
+    const source = sources.get(chunk) as string
     const myComponent = componentOf.get(chunk)
     const isSafeTarget = (target: string): boolean => chunkSet.has(target) && componentOf.get(target) !== myComponent
     const rewritten = destructureRequires(source, getDirname(chunk), isSafeTarget)

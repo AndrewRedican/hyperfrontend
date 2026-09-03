@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { EXIT_CANCELLED, EXIT_ERROR, EXIT_OK } from './exit-codes'
 
 describe('exit codes', () => {

@@ -1,5 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import type { StyleFn } from './component'
+import { beforeEach } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { component } from './component'
 import { span } from './element-creators'
 
@@ -26,7 +28,7 @@ describe('component', () => {
 
   it('returns an element with correct configuration', () => {
     const testNumber = 5
-    const style = () => <any>[]
+    const style = () => [] as any
     const createComponent = component<HTMLSpanElement, [number]>((number) => {
       const element = span({ className: 'test-class' })
       element.ref.innerText = `${number}`

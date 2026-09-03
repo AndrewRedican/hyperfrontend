@@ -1,9 +1,12 @@
+import type { Mock } from '@hyperfrontend/testing'
 import type { UnencryptedPacket, UnserializedEncryptedPacket } from '../../../packet/model'
+import { beforeEach } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { createStaticKeyEncryptionFactory } from './static-encryption-key'
 
 describe('createStaticKeyEncryptionFactory', () => {
-  let mockEncryptPacket: jest.Mock
-  let mockDecryptPacket: jest.Mock
+  let mockEncryptPacket: Mock
+  let mockDecryptPacket: Mock
 
   beforeEach(() => {
     mockEncryptPacket = jest.fn().mockImplementation(async (packet, key) => ({
@@ -41,9 +44,9 @@ describe('createStaticKeyEncryptionFactory', () => {
 
     it('throws error for non-string key', () => {
       const createEncryption = createStaticKeyEncryptionFactory(mockEncryptPacket, mockDecryptPacket)
-      expect(() => createEncryption(<string>null)).toThrow('Static encryption key must be a non-empty string')
-      expect(() => createEncryption(<string>undefined)).toThrow('Static encryption key must be a non-empty string')
-      expect(() => createEncryption(<string>(<unknown>123))).toThrow('Static encryption key must be a non-empty string')
+      expect(() => createEncryption(null as string)).toThrow('Static encryption key must be a non-empty string')
+      expect(() => createEncryption(undefined as string)).toThrow('Static encryption key must be a non-empty string')
+      expect(() => createEncryption(123 as unknown as string)).toThrow('Static encryption key must be a non-empty string')
     })
 
     it('returns a frozen encryption suite', () => {
@@ -59,7 +62,7 @@ describe('createStaticKeyEncryptionFactory', () => {
       const createEncryption = createStaticKeyEncryptionFactory(mockEncryptPacket, mockDecryptPacket)
       const suite = createEncryption('my-secret-key')
 
-      const packet = <UnencryptedPacket>(<unknown>{ origin: 'a', target: 'b', data: { message: 'hello' } })
+      const packet = { origin: 'a', target: 'b', data: { message: 'hello' } } as unknown as UnencryptedPacket
 
       const result = await suite.packetEncryption(packet)
 
@@ -71,8 +74,8 @@ describe('createStaticKeyEncryptionFactory', () => {
       const createEncryption = createStaticKeyEncryptionFactory(mockEncryptPacket, mockDecryptPacket)
       const suite = createEncryption('static-key')
 
-      const packet1 = <UnencryptedPacket>(<unknown>{ origin: 'a', target: 'b', data: { message: 'first' } })
-      const packet2 = <UnencryptedPacket>(<unknown>{ origin: 'a', target: 'b', data: { message: 'second' } })
+      const packet1 = { origin: 'a', target: 'b', data: { message: 'first' } } as unknown as UnencryptedPacket
+      const packet2 = { origin: 'a', target: 'b', data: { message: 'second' } } as unknown as UnencryptedPacket
 
       await suite.packetEncryption(packet1)
       await suite.packetEncryption(packet2)
@@ -87,7 +90,7 @@ describe('createStaticKeyEncryptionFactory', () => {
       const createEncryption = createStaticKeyEncryptionFactory(mockEncryptPacket, mockDecryptPacket)
       const suite = createEncryption('my-secret-key')
 
-      const packet = <UnserializedEncryptedPacket>(<unknown>{ origin: 'a', target: 'b', data: 'encrypted-data' })
+      const packet = { origin: 'a', target: 'b', data: 'encrypted-data' } as unknown as UnserializedEncryptedPacket
 
       const result = await suite.packetDecryption(packet)
 
@@ -99,8 +102,8 @@ describe('createStaticKeyEncryptionFactory', () => {
       const createEncryption = createStaticKeyEncryptionFactory(mockEncryptPacket, mockDecryptPacket)
       const suite = createEncryption('static-key')
 
-      const packet1 = <UnserializedEncryptedPacket>(<unknown>{ origin: 'a', target: 'b', data: 'data1' })
-      const packet2 = <UnserializedEncryptedPacket>(<unknown>{ origin: 'a', target: 'b', data: 'data2' })
+      const packet1 = { origin: 'a', target: 'b', data: 'data1' } as unknown as UnserializedEncryptedPacket
+      const packet2 = { origin: 'a', target: 'b', data: 'data2' } as unknown as UnserializedEncryptedPacket
 
       await suite.packetDecryption(packet1)
       await suite.packetDecryption(packet2)
@@ -117,7 +120,7 @@ describe('createStaticKeyEncryptionFactory', () => {
       const suite1 = createEncryption('key-1')
       const suite2 = createEncryption('key-2')
 
-      const packet = <UnencryptedPacket>(<unknown>{ origin: 'a', target: 'b', data: { message: 'test' } })
+      const packet = { origin: 'a', target: 'b', data: { message: 'test' } } as unknown as UnencryptedPacket
 
       await suite1.packetEncryption(packet)
       await suite2.packetEncryption(packet)

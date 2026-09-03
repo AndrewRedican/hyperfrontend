@@ -11,7 +11,6 @@ import {
   normalizeOptions,
   updateContentReferences,
   updateEslintConfig,
-  updateJestConfig,
   updatePackageJson,
   updateProjectJson,
   updateProjectReferences,
@@ -68,7 +67,6 @@ export async function moveGenerator(tree: Tree, options: MoveGeneratorSchema): P
   updateProjectJson(tree, normalizedOptions)
   updatePackageJson(tree, normalizedOptions)
   updateEslintConfig(tree, normalizedOptions)
-  updateJestConfig(tree, normalizedOptions)
   updateTsConfigJson(tree, normalizedOptions)
   updateTsConfigLibJson(tree, normalizedOptions)
   updateTsConfigSpecJson(tree, normalizedOptions)

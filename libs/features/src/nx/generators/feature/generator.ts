@@ -62,7 +62,7 @@ function toTreePath(workspaceRoot: string, scaffoldRoot: string, filePath: strin
  * @returns The SDK-facing scaffold tree.
  */
 function createStagingTree(tree: Tree, scaffoldRoot: string, tally: WriteTally): ScaffoldTree {
-  return <ScaffoldTree>{
+  return {
     root: scaffoldRoot,
     read: (filePath: string, encoding: BufferEncoding) => tree.read(toTreePath(tree.root, scaffoldRoot, filePath), encoding),
     exists: (filePath: string) => tree.exists(toTreePath(tree.root, scaffoldRoot, filePath)),
@@ -79,7 +79,7 @@ function createStagingTree(tree: Tree, scaffoldRoot: string, tally: WriteTally):
         tally.created += 1
       }
     },
-  }
+  } as ScaffoldTree
 }
 
 /**

@@ -1,5 +1,5 @@
-export const OPEN = <const>'open'
-export const CLOSE = <const>'close'
-export const CANCEL = <const>'cancel'
-export const DENY = <const>'deny'
-export const INVALID = <const>'invalid'
+export const OPEN = 'open' as const
+export const CLOSE = 'close' as const
+export const CANCEL = 'cancel' as const
+export const DENY = 'deny' as const
+export const INVALID = 'invalid' as const

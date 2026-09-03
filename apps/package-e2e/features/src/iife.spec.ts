@@ -5,10 +5,12 @@
  */
 
 import { resolve } from 'node:path'
+import { before as beforeAll, after as afterAll } from 'node:test'
+import { describe, it, expect } from '@hyperfrontend/testing'
 import { executeBundleInWindow, loadBundleCode } from '../../shared/helpers'
 
 const iifeBundle = (dir: string, minified = false): string =>
-  resolve(__dirname, `../../../../dist/libs/features/bundle/${dir}/index.iife${minified ? '.min' : ''}.js`)
+  resolve(process.cwd(), `dist/libs/features/bundle/${dir}/index.iife${minified ? '.min' : ''}.js`)
 
 const bundles: ReadonlyArray<readonly [string, string, string]> = [
   ['host', 'HyperfrontendFeaturesHost', 'createShell'],
@@ -42,12 +44,12 @@ describe('@hyperfrontend/features IIFE bundles', () => {
   })
 
   it.each(bundles)('%s bundle attaches its API to the window global', (dir, globalName, api) => {
-    const global = <Record<string, unknown>>executeBundleInWindow(loadBundleCode(iifeBundle(dir)), globalName)
+    const global = executeBundleInWindow(loadBundleCode(iifeBundle(dir)), globalName) as Record<string, unknown>
     expect(global[api]).toBeDefined()
   })
 
   describe('on a page without cross-origin isolation', () => {
-    const scope = <{ SharedArrayBuffer?: unknown }>(<unknown>globalThis)
+    const scope = globalThis as unknown as { SharedArrayBuffer?: unknown }
     let originalSharedArrayBuffer: unknown
 
     beforeAll(() => {
@@ -67,7 +69,7 @@ describe('@hyperfrontend/features IIFE bundles', () => {
     })
 
     it('creates a shell from the host bundle at call time', () => {
-      const host = <HostGlobal>executeBundleInWindow(loadBundleCode(iifeBundle('host')), 'HyperfrontendFeaturesHost')
+      const host = executeBundleInWindow(loadBundleCode(iifeBundle('host')), 'HyperfrontendFeaturesHost') as HostGlobal
       expect(() =>
         host.createShell({
           modes: host.builtInDisplayModes,
@@ -83,7 +85,7 @@ describe('@hyperfrontend/features IIFE bundles', () => {
     })
 
     it('creates a feature from the hostee bundle at call time', () => {
-      const hostee = <HosteeGlobal>executeBundleInWindow(loadBundleCode(iifeBundle('hostee')), 'HyperfrontendFeaturesHostee')
+      const hostee = executeBundleInWindow(loadBundleCode(iifeBundle('hostee')), 'HyperfrontendFeaturesHostee') as HosteeGlobal
       expect(() => hostee.createFeature({ name: 'e2e-feature', contract: featureContract })).not.toThrow()
     })
   })

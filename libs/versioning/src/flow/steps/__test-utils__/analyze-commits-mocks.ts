@@ -1,9 +1,9 @@
 import type { Logger } from '@hyperfrontend/logging'
 import type { Tree } from '@hyperfrontend/project-scope/vfs'
-
 import type { GitClient } from '../../../git/factory'
 import type { Registry } from '../../../registry/models/registry'
 import type { FlowConfig, FlowContext, FlowState } from '../../models/types'
+import { jest } from '@hyperfrontend/testing'
 
 /** Raw commit record as the git client hands it to the analyze-commits step. */
 export interface MockCommit {
@@ -69,13 +69,13 @@ export interface MockContextOverrides {
  * ```
  */
 export function createMockLogger(): Logger {
-  return <Logger>(<unknown>{
+  return {
     info: jest.fn(),
     warn: jest.fn(),
     error: jest.fn(),
     debug: jest.fn(),
     setLogLevel: jest.fn(),
-  })
+  } as unknown as Logger
 }
 
 /**
@@ -90,7 +90,7 @@ export function createMockLogger(): Logger {
  * ```
  */
 export function createMockTree(): Tree {
-  return <Tree>(<unknown>{
+  return {
     root: '/workspace',
     read: () => null,
     write: jest.fn(),
@@ -100,7 +100,7 @@ export function createMockTree(): Tree {
     isFile: () => false,
     children: () => [],
     listChanges: () => [],
-  })
+  } as unknown as Tree
 }
 
 /**
@@ -154,7 +154,7 @@ export function createMockRegistry(): Registry {
 export function createMockGitClient(options: MockGitClientOptions = {}): GitClient {
   const { commits = [], packageTags = [], projectTags = [], commitReachable = true } = options
 
-  return <GitClient>(<unknown>{
+  return {
     cwd: '/workspace',
     timeout: 30000,
     getCommitLog: (opts?: CommitLogOptions) => {
@@ -176,9 +176,9 @@ export function createMockGitClient(options: MockGitClientOptions = {}): GitClie
     getLatestTag: () => null,
     getTagsForPackage: (name: string) => {
       if (name.startsWith('@') || name.includes('/')) {
-        return <MockTag[]>packageTags
+        return packageTags as MockTag[]
       }
-      return <MockTag[]>projectTags
+      return projectTags as MockTag[]
     },
     pushTag: () => true,
     createCommit: jest.fn(),
@@ -206,7 +206,7 @@ export function createMockGitClient(options: MockGitClientOptions = {}): GitClie
     getModifiedFiles: () => [],
     getUntrackedFiles: () => [],
     getStagedFiles: () => [],
-  })
+  } as unknown as GitClient
 }
 
 /**

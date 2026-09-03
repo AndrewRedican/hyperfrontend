@@ -1,6 +1,8 @@
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join, relative } from 'node:path'
+import { afterEach, beforeEach } from 'node:test'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { computeReachable } from './reachability'
 
 const write = (root: string, relPath: string, content: string): string => {
@@ -31,14 +33,14 @@ describe('computeReachable', () => {
     write(root, '_dependencies/b/index.esm.js', 'export const b = 1')
     write(root, '_dependencies/c/index.esm.js', 'export const c = 1')
     const result = computeReachable([entry], depsRoot)
-    expect(reachableRel(<Set<string>>result)).toEqual(['_dependencies/a/index.esm.js', '_dependencies/b/index.esm.js', 'index.esm.js'])
+    expect(reachableRel(result as Set<string>)).toEqual(['_dependencies/a/index.esm.js', '_dependencies/b/index.esm.js', 'index.esm.js'])
   })
 
   it('ignores edges that resolve outside the dependencies root', () => {
     const entry = write(root, 'index.esm.js', "import {x} from './sibling.esm.js'")
     write(root, 'sibling.esm.js', 'export const x = 1')
     const result = computeReachable([entry], depsRoot)
-    expect(reachableRel(<Set<string>>result)).toEqual(['index.esm.js'])
+    expect(reachableRel(result as Set<string>)).toEqual(['index.esm.js'])
   })
 
   it('returns null when a reached _dependencies/ chunk contains a dynamic specifier', () => {
@@ -53,12 +55,12 @@ describe('computeReachable', () => {
     write(root, '_dependencies/a/index.esm.js', 'export const a = 1')
     write(root, '_dependencies/dead/index.esm.js', 'export const dead = 1')
     const result = computeReachable([entry], depsRoot)
-    expect(reachableRel(<Set<string>>result)).toEqual(['_dependencies/a/index.esm.js', 'index.esm.js'])
+    expect(reachableRel(result as Set<string>)).toEqual(['_dependencies/a/index.esm.js', 'index.esm.js'])
   })
 
   it('skips root files that do not exist on disk', () => {
     const result = computeReachable([join(root, 'missing.esm.js')], depsRoot)
-    expect(reachableRel(<Set<string>>result)).toEqual([])
+    expect(reachableRel(result as Set<string>)).toEqual([])
   })
 
   it('terminates on cyclic chunk references without revisiting', () => {
@@ -66,12 +68,12 @@ describe('computeReachable', () => {
     write(root, '_dependencies/a/index.esm.js', "import {b} from '../b/index.esm.js'")
     write(root, '_dependencies/b/index.esm.js', "import {a} from '../a/index.esm.js'")
     const result = computeReachable([entry], depsRoot)
-    expect(reachableRel(<Set<string>>result)).toEqual(['_dependencies/a/index.esm.js', '_dependencies/b/index.esm.js', 'index.esm.js'])
+    expect(reachableRel(result as Set<string>)).toEqual(['_dependencies/a/index.esm.js', '_dependencies/b/index.esm.js', 'index.esm.js'])
   })
 
   it('does not enqueue a duplicate root twice', () => {
     const entry = write(root, 'index.esm.js', 'export const x = 1')
     const result = computeReachable([entry, entry], depsRoot)
-    expect(reachableRel(<Set<string>>result)).toEqual(['index.esm.js'])
+    expect(reachableRel(result as Set<string>)).toEqual(['index.esm.js'])
   })
 })

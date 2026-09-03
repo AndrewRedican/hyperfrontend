@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { validateExternalsConfig } from './validate-globals'
 
 describe('validateExternalsConfig', () => {

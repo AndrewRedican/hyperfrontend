@@ -81,7 +81,7 @@ function groupClassifiedCommitsBySection(
     groups[resolvedSection].push(classified)
   }
 
-  return <Record<ChangelogSectionType, ClassifiedCommit[]>>groups
+  return groups as Record<ChangelogSectionType, ClassifiedCommit[]>
 }
 
 /**
@@ -107,7 +107,7 @@ function groupCommitsBySection(
     groups[resolvedSection].push(commit)
   }
 
-  return <Record<ChangelogSectionType, ConventionalCommit[]>>groups
+  return groups as Record<ChangelogSectionType, ConventionalCommit[]>
 }
 
 /**
@@ -513,7 +513,7 @@ export function createWriteChangelogStep(): FlowStep {
           },
           entries: [changelogEntry],
           metadata: {
-            format: <const>'conventional',
+            format: 'conventional' as const,
             isConventional: true,
             warnings: [],
           },

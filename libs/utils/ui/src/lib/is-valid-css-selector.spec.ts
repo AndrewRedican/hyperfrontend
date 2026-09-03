@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { isValidCssSelector } from './is-valid-css-selector'
 
 describe('isValidCssSelector', () => {

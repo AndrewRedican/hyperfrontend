@@ -135,7 +135,7 @@ export function calculateCascadeBumps(
   options: CascadeBumpOptions = {}
 ): CascadeBumpResult {
   const opts = { ...DEFAULT_CASCADE_OPTIONS, ...options }
-  const directBumpMap = createMap(directBumps.map((b) => <[string, DirectBumpInput]>[b.name, b]))
+  const directBumpMap = createMap(directBumps.map((b) => [b.name, b] as [string, DirectBumpInput]))
   const allBumps = createMap<string, PlannedBump>()
 
   for (const input of directBumps) {

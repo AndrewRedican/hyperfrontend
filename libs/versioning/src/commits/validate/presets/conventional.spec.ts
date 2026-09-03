@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { validateCommitMessage } from '../validate-message'
 import { CONVENTIONAL_TYPES, conventionalPreset } from './conventional'
 

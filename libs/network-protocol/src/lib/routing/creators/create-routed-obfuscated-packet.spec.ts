@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { obfuscatedPacket } from '../../packet/creators/mocks'
 import { topicId } from '../../topic/creators/mocks'
 import { isValidRoutedObfuscatedPacket } from '../validations/is-valid-routed-obfuscated-packet'
@@ -12,7 +13,7 @@ describe('createRoutedObfuscatedPacket', () => {
   })
 
   it('throws error when obfuscated packet is not valid', () => {
-    expect(() => createRoutedObfuscatedPacket(topicId, <any>{})).toThrow(
+    expect(() => createRoutedObfuscatedPacket(topicId, {} as any)).toThrow(
       'Cannot create a routed obfuscated packet without a valid obfuscated packet'
     )
   })

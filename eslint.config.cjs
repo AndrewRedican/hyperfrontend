@@ -124,7 +124,6 @@ module.exports = [
       'workspace/no-plain-inline-comments': 'off',
       'workspace/import-order': 'off',
       '@typescript-eslint/no-empty-function': 'off',
-      'jest/no-conditional-expect': 'off',
     },
   },
   {

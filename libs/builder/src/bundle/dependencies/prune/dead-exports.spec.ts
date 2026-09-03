@@ -1,4 +1,5 @@
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { stripDeadExports } from './dead-exports'
 
 const keepOf = (...names: string[]): Set<string> => createSet(names)

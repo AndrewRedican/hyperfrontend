@@ -5,6 +5,8 @@
  * Note: string-utils has platform-specific entries: ./browser, ./node
  */
 
+import { describe, it, expect } from '@hyperfrontend/testing'
+
 describe('@hyperfrontend/string-utils ESM', () => {
   describe('node sub-entry', () => {
     it('is importable', async () => {

@@ -2,9 +2,11 @@ import type { BuildContext } from './models'
 import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { afterEach, beforeEach } from 'node:test'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { cleanOutputPath } from './clean-output'
 
-const ctx = (outputPath: string, workspaceRoot: string): BuildContext => <BuildContext>(<unknown>{ outputPath, workspaceRoot })
+const ctx = (outputPath: string, workspaceRoot: string): BuildContext => ({ outputPath, workspaceRoot }) as unknown as BuildContext
 
 describe('cleanOutputPath', () => {
   let workspaceRoot: string

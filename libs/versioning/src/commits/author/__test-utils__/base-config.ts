@@ -3,10 +3,10 @@ import { conventionalPreset } from '../../validate/presets/conventional'
 import { DEFAULT_IMPERATIVE_WORDLIST } from '../../validate/rules/imperative-mood'
 
 /** Default types used by tests that don't care about the specific type enum. */
-export const TEST_TYPES = <const>[
+export const TEST_TYPES = [
   { name: 'feat', description: 'A new feature' },
   { name: 'fix', description: 'A bug fix' },
-]
+] as const
 
 /**
  * Builds a fully-populated `SessionConfig` with test-friendly defaults. Tests

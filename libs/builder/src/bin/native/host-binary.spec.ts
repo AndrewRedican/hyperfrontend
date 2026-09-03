@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { resolveHostBinary } from './host-binary'
 
 describe('resolveHostBinary', () => {

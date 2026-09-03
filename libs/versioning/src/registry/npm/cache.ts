@@ -77,7 +77,7 @@ export function createCache(ttl = 60000): Cache {
         return undefined
       }
 
-      return <T>entry.data
+      return entry.data as T
     },
 
     set<T>(key: string, value: T): void {

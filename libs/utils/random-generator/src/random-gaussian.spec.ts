@@ -1,3 +1,4 @@
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import randomGaussian from './random-gaussian'
 
 // why: An unseeded source failed about one run in a hundred here, because rejecting out-of-range draws truncates the tail and pulls the sample deviation below sigma before sampling noise is even counted; a fixed stream makes both moments exactly reproducible.

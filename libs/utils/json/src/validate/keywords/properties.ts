@@ -97,10 +97,10 @@ export function validateAdditionalProperties(instance: Record<string, unknown>, 
     return true
   }
 
-  /* istanbul ignore next -- definedKeys initialization */
+  // why: definedKeys initialization
   const definedKeys = createSet<string>()
 
-  /* istanbul ignore next -- schema.properties may not exist */
+  // why: schema.properties may not exist
   if (schema.properties) {
     for (const key of keys(schema.properties)) {
       definedKeys.add(key)
@@ -108,7 +108,7 @@ export function validateAdditionalProperties(instance: Record<string, unknown>, 
   }
 
   const patterns: RegExp[] = []
-  /* istanbul ignore next -- patternProperties may not always be present */
+  // why: patternProperties may not always be present
   if (schema.patternProperties) {
     for (const pattern of keys(schema.patternProperties)) {
       if (ctx.patternSafetyChecker) {
@@ -121,7 +121,7 @@ export function validateAdditionalProperties(instance: Record<string, unknown>, 
       try {
         // eslint-disable-next-line workspace/no-unsafe-regex -- Pattern safety validated above when safePatterns enabled
         patterns.push(createRegExp(pattern))
-        /* istanbul ignore next -- invalid regex patterns handled in patternProperties validator */
+        // why: invalid regex patterns handled in patternProperties validator
       } catch {
         // Invalid regex, skip
       }
@@ -144,13 +144,13 @@ export function validateAdditionalProperties(instance: Record<string, unknown>, 
         property: key,
       })
       valid = false
-      /* istanbul ignore if -- early exit tested in validate.spec.ts */
+      // why: early exit tested in validate.spec.ts
       if (!shouldContinue(ctx)) return false
     } else if (typeof additionalProperties === 'object') {
       const propCtx = pushPath(ctx, key)
       if (!ctx.validate(instance[key], additionalProperties, propCtx)) {
         valid = false
-        /* istanbul ignore if -- early exit tested in validate.spec.ts */
+        // why: early exit tested in validate.spec.ts
         if (!shouldContinue(ctx)) return false
       }
     }

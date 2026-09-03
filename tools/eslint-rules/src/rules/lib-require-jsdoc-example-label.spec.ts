@@ -1,4 +1,5 @@
 import type { InvalidTestCase, ValidTestCase } from '@typescript-eslint/rule-tester'
+import { after as afterAll } from 'node:test'
 import {
   createTempWorkspaceManager,
   createTypeScriptRuleTester,

@@ -280,7 +280,7 @@ export default createRule<[RuleOptions?], MessageIds>({
   },
   defaultOptions: [{ prefixes: DEFAULT_PREFIXES }],
   create(context, [options]) {
-    /* istanbul ignore next - defaultOptions always supplies prefixes, so the fallback is unreachable */
+    // why: defaultOptions always supplies prefixes, so the fallback is unreachable
     const prefixes = options?.prefixes ?? DEFAULT_PREFIXES
     const sourceCode = context.sourceCode
 

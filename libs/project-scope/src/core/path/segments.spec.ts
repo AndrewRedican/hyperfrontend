@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { pathSegments, getBasename, getDirname, getExtension, getFileNameWithoutExtension, parsePath } from './segments'
 
 describe('core/path/segments', () => {

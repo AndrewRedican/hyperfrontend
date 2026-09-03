@@ -78,13 +78,13 @@ function isStringRecord(value: unknown): value is Record<string, string> {
  * @returns Normalized workspace patterns or undefined if invalid
  */
 function parseWorkspaces(value: unknown): string[] | WorkspacesObject | undefined {
-  if (isArray(value) && (<unknown[]>value).every((v) => typeof v === 'string')) {
-    return <string[]>value
+  if (isArray(value) && (value as unknown[]).every((v) => typeof v === 'string')) {
+    return value as string[]
   }
   if (typeof value === 'object' && value !== null) {
-    const obj = <Record<string, unknown>>value
+    const obj = value as Record<string, unknown>
     if (isArray(obj['packages'])) {
-      return { packages: <string[]>obj['packages'] }
+      return { packages: obj['packages'] as string[] }
     }
   }
   return undefined
@@ -101,7 +101,7 @@ function validatePackageJson(data: unknown): PackageJson {
     throw createError('package.json must be an object')
   }
 
-  const pkg = <Record<string, unknown>>data
+  const pkg = data as Record<string, unknown>
 
   return {
     name: typeof pkg['name'] === 'string' ? pkg['name'] : undefined,
@@ -111,14 +111,14 @@ function validatePackageJson(data: unknown): PackageJson {
     module: typeof pkg['module'] === 'string' ? pkg['module'] : undefined,
     browser: typeof pkg['browser'] === 'string' ? pkg['browser'] : undefined,
     types: typeof pkg['types'] === 'string' ? pkg['types'] : undefined,
-    bin: typeof pkg['bin'] === 'string' || isStringRecord(pkg['bin']) ? <string | Record<string, string>>pkg['bin'] : undefined,
+    bin: typeof pkg['bin'] === 'string' || isStringRecord(pkg['bin']) ? (pkg['bin'] as string | Record<string, string>) : undefined,
     scripts: isStringRecord(pkg['scripts']) ? pkg['scripts'] : undefined,
     dependencies: isStringRecord(pkg['dependencies']) ? pkg['dependencies'] : undefined,
     devDependencies: isStringRecord(pkg['devDependencies']) ? pkg['devDependencies'] : undefined,
     peerDependencies: isStringRecord(pkg['peerDependencies']) ? pkg['peerDependencies'] : undefined,
     optionalDependencies: isStringRecord(pkg['optionalDependencies']) ? pkg['optionalDependencies'] : undefined,
     workspaces: parseWorkspaces(pkg['workspaces']),
-    exports: typeof pkg['exports'] === 'object' ? <Record<string, unknown>>pkg['exports'] : undefined,
+    exports: typeof pkg['exports'] === 'object' ? (pkg['exports'] as Record<string, unknown>) : undefined,
     engines: isStringRecord(pkg['engines']) ? pkg['engines'] : undefined,
     ...pkg,
   }

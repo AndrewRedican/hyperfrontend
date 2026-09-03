@@ -1,4 +1,3 @@
-/* eslint-disable @nx/enforce-module-boundaries */
 import type { Logger } from '@hyperfrontend/logging'
 import type { Tree } from '@hyperfrontend/project-scope/vfs'
 import type { GitClient } from '../../git/factory'
@@ -170,7 +169,7 @@ function resolvePackageName(tree: Tree, projectRoot: string, logger: Logger): st
       logger.debug(`package.json is empty or not found at ${packageJsonPath}`)
       return 'unknown'
     }
-    const pkg = <PackageJsonWithName>parse(content)
+    const pkg = parse(content) as PackageJsonWithName
     if (!pkg.name) {
       logger.debug(`package.json at ${packageJsonPath} has no name field`)
     }

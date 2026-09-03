@@ -1,4 +1,6 @@
 import { join } from 'node:path'
+import { after as afterAll } from 'node:test'
+import { describe } from '@hyperfrontend/testing'
 import { createJsonRuleTester, createTempWorkspaceManager } from '../testing'
 import rule from './lib-tsconfig-paths'
 

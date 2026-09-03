@@ -10,5 +10,5 @@ import { create } from './create'
  * @returns Wrapped handler that filters for CLOSE events
  */
 export function close(handler: CloseEventHandler): EventHandler {
-  return create('close')(<EventHandler>handler)
+  return create('close')(handler as EventHandler)
 }

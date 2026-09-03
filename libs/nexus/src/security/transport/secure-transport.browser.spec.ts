@@ -1,3 +1,4 @@
+import type { Mock } from '@hyperfrontend/testing'
 import type { SecurityProvider, SecurityTransport, SecurityTransportError } from '../../types/security'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { logger } from '@hyperfrontend/logging'
@@ -5,6 +6,7 @@ import { createChannel } from '@hyperfrontend/network-protocol/browser/channel'
 import { createProtocol as createV1Protocol } from '@hyperfrontend/network-protocol/browser/v1'
 import { createProtocol as createV2Protocol } from '@hyperfrontend/network-protocol/browser/v2'
 import { uuidV4 } from '@hyperfrontend/random-generator-utils'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { createSecureTransport } from './secure-transport'
 
 const PSK = 'secure-transport-spec-shared-key'
@@ -45,18 +47,18 @@ function createTransportPair(protocol: 'v1' | 'v2', createProvider: () => Securi
   const transports: { a?: SecurityTransport; b?: SecurityTransport } = {}
   const a: Partial<Party> = { received: [], errors: [], wireOutbound: [] }
   const b: Partial<Party> = { received: [], errors: [], wireOutbound: [] }
-  const windowOfB = <Window>(<unknown>{
+  const windowOfB = {
     postMessage: (payload: Uint8Array) => {
       a.wireOutbound?.push(payload)
       transports.b?.receive(payload)
     },
-  })
-  const windowOfA = <Window>(<unknown>{
+  } as unknown as Window
+  const windowOfA = {
     postMessage: (payload: Uint8Array) => {
       b.wireOutbound?.push(payload)
       transports.a?.receive(payload)
     },
-  })
+  } as unknown as Window
   const idA = uuidV4()
   const idB = uuidV4()
   transports.a = createSecureTransport({
@@ -83,7 +85,7 @@ function createTransportPair(protocol: 'v1' | 'v2', createProvider: () => Securi
   })
   a.transport = transports.a
   b.transport = transports.b
-  return { a: <Party>a, b: <Party>b }
+  return { a: a as Party, b: b as Party }
 }
 
 describe('SecureTransport (two-party)', () => {
@@ -279,7 +281,7 @@ describe('SecureTransport (two-party)', () => {
         protocol: 'v2',
         provider: createV2Provider(),
         label: 'no-error-handler',
-        target: <Window>(<unknown>{ postMessage: jest.fn() }),
+        target: { postMessage: jest.fn() } as unknown as Window,
         getOrigin: () => null,
         originId: uuidV4(),
         targetId: uuidV4(),
@@ -291,13 +293,13 @@ describe('SecureTransport (two-party)', () => {
   })
 
   describe('origin pinning', () => {
-    const createCapturingTransport = (getOrigin: () => string | null): { transport: SecurityTransport; postMessage: jest.Mock } => {
+    const createCapturingTransport = (getOrigin: () => string | null): { transport: SecurityTransport; postMessage: Mock } => {
       const postMessage = jest.fn()
       const transport = createSecureTransport({
         protocol: 'v2',
         provider: createV2Provider(),
         label: 'origin-capture',
-        target: <Window>(<unknown>{ postMessage }),
+        target: { postMessage } as unknown as Window,
         getOrigin,
         originId: uuidV4(),
         targetId: uuidV4(),

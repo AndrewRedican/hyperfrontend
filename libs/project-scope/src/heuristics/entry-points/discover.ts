@@ -90,7 +90,7 @@ export interface DiscoverEntryPointsOptions {
  * Common entry point patterns by project type.
  * Used for convention-based entry point discovery.
  */
-export const ENTRY_POINT_PATTERNS = <const>{
+export const ENTRY_POINT_PATTERNS = {
   /** Library entry patterns */
   library: ['src/index.ts', 'src/index.js', 'index.ts', 'index.js', 'lib/index.ts'],
   /** Application entry patterns */
@@ -99,7 +99,7 @@ export const ENTRY_POINT_PATTERNS = <const>{
   server: ['src/server.ts', 'server.ts', 'src/main.ts'],
   /** CLI entry patterns */
   cli: ['src/cli.ts', 'bin/cli.ts', 'cli.ts'],
-}
+} as const
 
 /**
  * Convention-based entry pattern definition.
@@ -154,7 +154,7 @@ function discoverFromExports(exports: Record<string, unknown>, entryPoints: Exte
         })
       }
     } else if (typeof value === 'object' && value !== null) {
-      const conditions = <Record<string, unknown>>value
+      const conditions = value as Record<string, unknown>
       const paths = [conditions['import'], conditions['require'], conditions['default'], conditions['types']].filter(
         (p): p is string => typeof p === 'string'
       )
@@ -254,7 +254,7 @@ export function discoverEntryPoints(projectPath: string, options?: DiscoverEntry
 
     if (packageJson.bin) {
       const bins: Record<string, string> =
-        typeof packageJson.bin === 'string' ? { [packageJson.name ?? 'cli']: packageJson.bin } : <Record<string, string>>packageJson.bin
+        typeof packageJson.bin === 'string' ? { [packageJson.name ?? 'cli']: packageJson.bin } : (packageJson.bin as Record<string, string>)
 
       for (const [name, path] of entries(bins)) {
         if (typeof path === 'string' && !extendedEntryPoints.some((e) => e.path === path)) {
@@ -269,7 +269,7 @@ export function discoverEntryPoints(projectPath: string, options?: DiscoverEntry
     }
 
     if (packageJson.exports && typeof packageJson.exports === 'object') {
-      discoverFromExports(<Record<string, unknown>>packageJson.exports, extendedEntryPoints)
+      discoverFromExports(packageJson.exports as Record<string, unknown>, extendedEntryPoints)
     }
   }
 

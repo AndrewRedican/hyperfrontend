@@ -182,11 +182,11 @@ function formatAnalysisYaml(result: AnalysisResult): string {
       return obj.toISOString()
     }
     if (isArray(obj)) {
-      if ((<unknown[]>obj).length === 0) return '[]'
-      return (<unknown[]>obj).map((item) => `${prefix}- ${toYaml(item, indent + 1).trimStart()}`).join('\n')
+      if ((obj as unknown[]).length === 0) return '[]'
+      return (obj as unknown[]).map((item) => `${prefix}- ${toYaml(item, indent + 1).trimStart()}`).join('\n')
     }
     if (typeof obj === 'object') {
-      const objEntries = entries(<Record<string, unknown>>obj)
+      const objEntries = entries(obj as Record<string, unknown>)
       if (objEntries.length === 0) return '{}'
       return objEntries
         .map(([key, value]) => {
@@ -225,10 +225,10 @@ function parseAnalyzeArgs(args: string[]): AnalyzeCommandOptions {
     strict: false,
   })
 
-  const format = <OutputFormat>values.format
-  const depth = <'basic' | 'full' | 'deep'>values.depth
-  const includeStr = <string | undefined>values.include
-  const excludeStr = <string | undefined>values.exclude
+  const format = values.format as OutputFormat
+  const depth = values.depth as 'basic' | 'full' | 'deep'
+  const includeStr = values.include as string | undefined
+  const excludeStr = values.exclude as string | undefined
 
   return {
     path: positionals[0],
@@ -273,10 +273,10 @@ export function analyzeCommand(options: AnalyzeCommandOptions): CommandResult {
       depth: options.depth,
     }
     if (options.include) {
-      analyzeOpts.include = <AnalyzeOptions['include']>options.include
+      analyzeOpts.include = options.include as AnalyzeOptions['include']
     }
     if (options.exclude) {
-      analyzeOpts.exclude = <AnalyzeOptions['exclude']>options.exclude
+      analyzeOpts.exclude = options.exclude as AnalyzeOptions['exclude']
     }
     const result = analyzeProject(projectPath, analyzeOpts)
 

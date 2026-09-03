@@ -156,11 +156,11 @@ export function validateHeaderRule(value: unknown, index: number, sourcePath: st
     if (typeof headers[name] !== 'string') {
       throw createError(`${sourcePath}: headers[${index}].headers["${name}"] must be a string.`)
     }
-    if (HEADER_VALUE_FORBIDDEN.test(<string>headers[name])) {
+    if (HEADER_VALUE_FORBIDDEN.test(headers[name] as string)) {
       throw createError(`${sourcePath}: headers[${index}].headers["${name}"] must not contain control characters.`)
     }
   }
-  return <ServeHeaderRule>(<unknown>value)
+  return value as unknown as ServeHeaderRule
 }
 
 /**
@@ -199,7 +199,7 @@ export function validateServeConfig(value: unknown, sourcePath: string): ServeCo
   if (isArray(headers)) {
     headers.forEach((rule, index) => validateHeaderRule(rule, index, sourcePath))
   }
-  return <ServeConfig>(<unknown>value)
+  return value as unknown as ServeConfig
 }
 
 /**

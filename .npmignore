@@ -5,7 +5,6 @@
 *.test.js
 **/__tests__/**
 **/__mocks__/**
-jest.config.*
 tsconfig.spec.json
 .eslintrc*
 eslint.config.*

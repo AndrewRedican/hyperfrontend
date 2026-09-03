@@ -67,12 +67,16 @@
         },
         "includeScopes": {
           "type": "array",
-          "items": { "type": "string" },
+          "items": {
+            "type": "string"
+          },
           "description": "Additional scopes to always include."
         },
         "excludeScopes": {
           "type": "array",
-          "items": { "type": "string" },
+          "items": {
+            "type": "string"
+          },
           "description": "Scopes to exclude even if files match."
         },
         "trackDependencyChanges": {
@@ -85,17 +89,26 @@
           "properties": {
             "paths": {
               "type": "array",
-              "items": { "type": "string" },
+              "items": {
+                "type": "string"
+              },
               "description": "File paths to track as infrastructure."
             },
             "scopes": {
               "type": "array",
-              "items": { "type": "string" },
+              "items": {
+                "type": "string"
+              },
               "description": "Scopes to recognize as infrastructure."
             }
           }
         }
       }
+    },
+    "maxCommitFallback": {
+      "type": "number",
+      "description": "Upper bound on the commit window the flow analyzes for bumps and changelogs.",
+      "default": 500
     }
   },
   "required": [],

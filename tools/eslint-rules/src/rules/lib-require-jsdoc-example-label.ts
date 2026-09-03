@@ -52,7 +52,7 @@ function analyzeExampleLabels(comment: string): Array<ExampleLabelInfo> {
     if (exampleIndex !== -1) {
       // note: Check if @example is a complete tag (not part of another word)
       const charAfter = trimmed[exampleIndex + EXAMPLE_TAG.length]
-      // istanbul ignore next -- \n and \r are unreachable since we split by newlines
+      // why: \n and \r are unreachable since we split by newlines
       const isCompleteTag = charAfter === undefined || charAfter === ' ' || charAfter === '\t' || charAfter === '\n' || charAfter === '\r'
 
       if (isCompleteTag) {

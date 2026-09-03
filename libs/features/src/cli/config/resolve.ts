@@ -68,7 +68,7 @@ function parsePermissions(value: unknown): FeaturePermission[] | undefined {
   if (!isArray(value) || value.some((entry) => typeof entry !== 'string' || entry.length === 0)) {
     throw createError('Invalid config: "permissions" must be an array of Permissions-Policy feature names (e.g. ["fullscreen", "camera"]).')
   }
-  return <FeaturePermission[]>value
+  return value as FeaturePermission[]
 }
 
 /**
@@ -138,12 +138,12 @@ export async function resolveBuildConfig(options: ResolveBuildConfigOptions): Pr
     url: flags.url ?? (typeof loaded['url'] === 'string' ? loaded['url'] : '/'),
     ...(display !== undefined && { display }),
     ...(permissions !== undefined && { permissions }),
-    protocol: <SecurityProtocol>protocol,
+    protocol: protocol as SecurityProtocol,
   }
   return {
     config: resolved,
     contract,
-    protocol: <SecurityProtocol>protocol,
+    protocol: protocol as SecurityProtocol,
     protocolExplicit: chosenProtocol !== undefined,
     ...(sourcePath !== null && { sourcePath }),
   }

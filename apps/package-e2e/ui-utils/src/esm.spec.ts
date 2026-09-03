@@ -6,6 +6,8 @@
  * Functionality tests are limited as many features require a real DOM.
  */
 
+import { describe, it, expect } from '@hyperfrontend/testing'
+
 describe('@hyperfrontend/ui-utils ESM', () => {
   describe('color sub-entry', () => {
     it('is importable', async () => {

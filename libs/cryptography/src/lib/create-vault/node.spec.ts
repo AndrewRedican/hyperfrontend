@@ -1,5 +1,6 @@
-/** @jest-environment node */
 import type { Vault } from './model'
+import { beforeEach } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { createVault } from './node'
 
 jest.mock('../encrypt/node', () => ({

@@ -6,9 +6,11 @@
 import { loadBundleCode, executeBundleInWindow } from '../../shared/helpers'
 import { resolve, join } from 'node:path'
 
+import { describe, it, expect } from '@hyperfrontend/testing'
+
 // String-utils is under utils/string in dist
 const getBundlePath = (format: 'iife' | 'umd', minified = false) => {
-  const distRoot = resolve(__dirname, '../../../../dist/libs/utils/string')
+  const distRoot = resolve(import.meta.dirname, '../../../../dist/libs/utils/string')
   const ext = minified ? '.min.js' : '.js'
   return join(distRoot, 'bundle', `index.${format}${ext}`)
 }

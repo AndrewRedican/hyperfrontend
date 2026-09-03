@@ -73,7 +73,7 @@ export function validate(instance: unknown, schema: Schema, options?: ValidateOp
 export function validateSchema(instance: unknown, schema: Schema, ctx: ValidationContext): boolean {
   if (schema.$ref) {
     const resolved = resolveRef(schema.$ref, ctx)
-    /* istanbul ignore if -- $ref resolution failures are tested in resolve-ref.spec.ts */
+    // why: $ref resolution failures are tested in resolve-ref.spec.ts
     if (!resolved) {
       return true
     }
@@ -111,18 +111,18 @@ export function validateSchema(instance: unknown, schema: Schema, ctx: Validatio
   }
 
   if (isArray(instance)) {
-    if (!validateItems(<unknown[]>instance, schema, ctx)) {
+    if (!validateItems(instance as unknown[], schema, ctx)) {
       valid = false
       if (!shouldContinue(ctx)) return false
     }
-    if (!validateArrayBounds(<unknown[]>instance, schema, ctx)) {
+    if (!validateArrayBounds(instance as unknown[], schema, ctx)) {
       valid = false
       if (!shouldContinue(ctx)) return false
     }
   }
 
   if (instance !== null && typeof instance === 'object' && !isArray(instance)) {
-    const obj = <Record<string, unknown>>instance
+    const obj = instance as Record<string, unknown>
 
     if (!validateProperties(obj, schema, ctx)) {
       valid = false
@@ -130,31 +130,31 @@ export function validateSchema(instance: unknown, schema: Schema, ctx: Validatio
     }
     if (!validateRequired(obj, schema, ctx)) {
       valid = false
-      /* istanbul ignore if -- early exit tested elsewhere */
+      // why: early exit tested elsewhere
       if (!shouldContinue(ctx)) return false
     }
-    /* istanbul ignore next -- patternProperties validation */
+    // why: patternProperties validation
     if (!validatePatternProperties(obj, schema, ctx)) {
       valid = false
-      /* istanbul ignore next -- early exit tested elsewhere */
+      // why: early exit tested elsewhere
       if (!shouldContinue(ctx)) return false
     }
-    /* istanbul ignore next -- additionalProperties validation */
+    // why: additionalProperties validation
     if (!validateAdditionalProperties(obj, schema, ctx)) {
       valid = false
-      /* istanbul ignore next -- early exit tested elsewhere */
+      // why: early exit tested elsewhere
       if (!shouldContinue(ctx)) return false
     }
-    /* istanbul ignore next -- objectBounds validation */
+    // why: objectBounds validation
     if (!validateObjectBounds(obj, schema, ctx)) {
       valid = false
-      /* istanbul ignore next -- early exit tested elsewhere */
+      // why: early exit tested elsewhere
       if (!shouldContinue(ctx)) return false
     }
-    /* istanbul ignore next -- dependencies validation */
+    // why: dependencies validation
     if (!validateDependencies(obj, schema, ctx)) {
       valid = false
-      /* istanbul ignore next -- early exit tested elsewhere */
+      // why: early exit tested elsewhere
       if (!shouldContinue(ctx)) return false
     }
   }

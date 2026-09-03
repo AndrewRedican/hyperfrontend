@@ -18,7 +18,7 @@ export const deregisterIterableClass = <T = unknown>(...classRefs: UnknownClass<
   if (classRefs.length === 0) {
     for (let i = registeredIterableClasses.length - 1; i >= 0; i--) {
       const classRef = registeredIterableClasses[i].classRef
-      if (![Array, Object].includes(<ArrayConstructor | ObjectConstructor>(<unknown>classRef))) {
+      if (![Array, Object].includes(classRef as unknown as ArrayConstructor | ObjectConstructor)) {
         registeredIterableClasses.splice(i, 1)
       }
     }

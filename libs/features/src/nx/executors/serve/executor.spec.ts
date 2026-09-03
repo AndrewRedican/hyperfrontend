@@ -1,4 +1,6 @@
 import type { ExecutorContext } from '../../model'
+import { beforeEach } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { runDev } from '../../../cli'
 import { waitForShutdown } from '../../../shared/shutdown'
 import serveExecutor from './executor'
@@ -22,7 +24,7 @@ const context: ExecutorContext = {
  */
 function startsWith(handle: unknown): void {
   runDevMock.mockImplementation(async (options) => {
-    await options.waitForClose?.(<never>handle)
+    await options.waitForClose?.(handle as never)
     return 0
   })
   waitForShutdownMock.mockResolvedValue(undefined)

@@ -1,5 +1,6 @@
 import type { Style } from '../style'
 import { logger } from '@hyperfrontend/logging'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { cssObjectToString } from './css-object-to-string'
 
 describe('cssObjectToString', () => {
@@ -31,7 +32,7 @@ describe('cssObjectToString', () => {
       badProperty: problematicValue,
     }
 
-    const result = cssObjectToString(<Partial<CSSStyleDeclaration>>problematicObject)
+    const result = cssObjectToString(problematicObject as Partial<CSSStyleDeclaration>)
 
     expect(result).toContain('background-color: red;')
     expect(loggerWarnSpy).toHaveBeenCalledWith(expect.stringContaining('Some properties failed to convert'))

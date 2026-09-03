@@ -1,4 +1,6 @@
 import type { Clock } from './create-clock'
+import { beforeEach } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { createClock } from './create-clock'
 import { sleep } from './sleep'
 

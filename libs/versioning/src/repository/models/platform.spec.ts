@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { isKnownPlatform, detectPlatformFromHostname, PLATFORM_HOSTNAMES } from './platform'
 
 describe('isKnownPlatform', () => {

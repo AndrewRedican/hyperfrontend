@@ -60,7 +60,7 @@ export function isNodeBuiltinWithoutPrefix(source: string): boolean {
   }
 
   const moduleName = source.split('/')[0]
-  /* istanbul ignore next - moduleName is always defined from split */
+  // why: moduleName is always defined from split
   return NODE_BUILTIN_MODULES.has(moduleName ?? '')
 }
 

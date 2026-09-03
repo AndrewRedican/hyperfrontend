@@ -205,9 +205,9 @@ const buildJsConfig = (job: PrePassWorkerJob): RollupOptions => {
   const hasExternalize = externalizePlugin !== undefined
   if (externalizePlugin) plugins.push(externalizePlugin)
   plugins.push(
-    <Plugin>json(),
-    <Plugin>nodeResolve({ preferBuiltins: true, extensions: ['.mjs', '.js', '.cjs', '.json'] }),
-    <Plugin>commonjs({ ignoreDynamicRequires: true })
+    json() as Plugin,
+    nodeResolve({ preferBuiltins: true, extensions: ['.mjs', '.js', '.cjs', '.json'] }) as Plugin,
+    commonjs({ ignoreDynamicRequires: true }) as Plugin
   )
   return {
     input: job.inputPath,
@@ -243,7 +243,7 @@ const requireWorkspaceField = (job: PrePassWorkerJob, field: 'tsConfigPath' | 'w
 const buildWorkspaceJsConfig = (job: PrePassWorkerJob): RollupOptions => {
   const tsConfigPath = requireWorkspaceField(job, 'tsConfigPath')
   const workspaceRoot = requireWorkspaceField(job, 'workspaceRoot')
-  const tsPlugin = <Plugin>typescript({
+  const tsPlugin = typescript({
     tsconfig: tsConfigPath,
     declaration: false,
     declarationMap: false,
@@ -257,15 +257,15 @@ const buildWorkspaceJsConfig = (job: PrePassWorkerJob): RollupOptions => {
       noEmit: false,
       module: 'esnext',
     },
-  })
+  }) as Plugin
   const plugins: Plugin[] = []
   const externalizePlugin = maybeExternalizePlugin(job, job.format)
   const hasExternalize = externalizePlugin !== undefined
   if (externalizePlugin) plugins.push(externalizePlugin)
   plugins.push(
-    <Plugin>json(),
-    <Plugin>nodeResolve({ preferBuiltins: true, extensions: ['.ts', '.mjs', '.js', '.cjs', '.json'] }),
-    <Plugin>commonjs({ ignoreDynamicRequires: true }),
+    json() as Plugin,
+    nodeResolve({ preferBuiltins: true, extensions: ['.ts', '.mjs', '.js', '.cjs', '.json'] }) as Plugin,
+    commonjs({ ignoreDynamicRequires: true }) as Plugin,
     tsPlugin
   )
   return {
@@ -351,8 +351,8 @@ interface DtsPluginInvocationOptions {
 
 const loadDtsFactory = async (): Promise<(options?: DtsPluginInvocationOptions) => Plugin> => {
   const dtsModule: DtsModule = await import('rollup-plugin-dts')
-  /* istanbul ignore next -- @preserve fallback path for CJS-style rollup-plugin-dts module shapes */
-  return <(options?: DtsPluginInvocationOptions) => Plugin>(dtsModule.default ?? <DtsFactory>(<unknown>dtsModule))
+  // why: fallback path for CJS-style rollup-plugin-dts module shapes
+  return (dtsModule.default ?? (dtsModule as unknown as DtsFactory)) as (options?: DtsPluginInvocationOptions) => Plugin
 }
 
 const maybeSiblingPlugin = (job: PrePassWorkerJob): Plugin | undefined => {

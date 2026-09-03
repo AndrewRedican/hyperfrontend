@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { getColorVariation } from './get-color-variation'
 
 describe('getColorVariation', () => {
@@ -18,7 +19,7 @@ describe('getColorVariation', () => {
 
   it('throws an error for an invalid base color', () => {
     const intensity = 128
-    expect(() => getColorVariation(<any>null, intensity)).toThrow(
+    expect(() => getColorVariation(null as any, intensity)).toThrow(
       'Invalid input types. Base color must be a string and intensity must be a number.'
     )
     expect(() => getColorVariation('INVALID_COLOR', intensity)).toThrow('Invalid hex input')

@@ -1,3 +1,6 @@
+import type { Mock } from '@hyperfrontend/testing'
+import { beforeEach } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { isValidSerializedData } from '../../data/validations/is-valid-serialized-data'
 import { isValidSerializedEncryptedPacket } from './is-valid-serialized-encrypted-packet'
 import { isValidUnobfuscatedPacketBase } from './is-valid-unobfuscated-packet-base'
@@ -13,11 +16,11 @@ describe('isValidSerializedEncryptedPacket', () => {
   beforeEach(() => jest.clearAllMocks())
 
   it('returns true when packet is valid and data is serialized correctly', () => {
-    ;(<jest.Mock>isValidUnobfuscatedPacketBase).mockImplementation(() => ({
+    ;(isValidUnobfuscatedPacketBase as Mock).mockImplementation(() => ({
       isValid: true,
       pkt: { data: 'some serialized data' },
     }))
-    ;(<jest.Mock>isValidSerializedData).mockImplementation(() => true)
+    ;(isValidSerializedData as Mock).mockImplementation(() => true)
     const packet = 'mocked packet'
     const result = isValidSerializedEncryptedPacket(packet)
     expect(result).toBe(true)
@@ -26,7 +29,7 @@ describe('isValidSerializedEncryptedPacket', () => {
   })
 
   it('returns false when packet is invalid', () => {
-    ;(<jest.Mock>isValidUnobfuscatedPacketBase).mockImplementation(() => ({
+    ;(isValidUnobfuscatedPacketBase as Mock).mockImplementation(() => ({
       isValid: false,
       pkt: { data: '' },
     }))
@@ -37,11 +40,11 @@ describe('isValidSerializedEncryptedPacket', () => {
   })
 
   it('returns false when data is not serialized correctly', () => {
-    ;(<jest.Mock>isValidUnobfuscatedPacketBase).mockImplementation(() => ({
+    ;(isValidUnobfuscatedPacketBase as Mock).mockImplementation(() => ({
       isValid: true,
       pkt: { data: 'invalid serialized data' },
     }))
-    ;(<jest.Mock>isValidSerializedData).mockImplementation(() => false)
+    ;(isValidSerializedData as Mock).mockImplementation(() => false)
     const packet = 'mocked packet with invalid data'
     const result = isValidSerializedEncryptedPacket(packet)
     expect(result).toBe(false)

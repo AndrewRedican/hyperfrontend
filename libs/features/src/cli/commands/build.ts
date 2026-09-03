@@ -90,7 +90,7 @@ async function defaultRunBuilder(input: BuildRunnerInput): Promise<void> {
  */
 function defaultPackTarball(packageDir: string): string {
   const output = execFileSync('npm', ['pack'], { cwd: packageDir, encoding: 'utf-8' })
-  /* istanbul ignore next -- @preserve split always yields at least one element, so pop() is never undefined */
+  // why: split always yields at least one element, so pop() is never undefined
   return output.trim().split('\n').pop() ?? ''
 }
 
@@ -179,7 +179,7 @@ function publishSidecars(tempDir: string, out: string): void {
   const manifestPath = join(out, 'package.json')
   const manifest = readJsonFileIfExists<Record<string, unknown>>(manifestPath)
   if (manifest !== null && isArray(manifest['files'])) {
-    writeJsonFile(manifestPath, { ...manifest, files: [...(<unknown[]>manifest['files']), 'metadata.json'] })
+    writeJsonFile(manifestPath, { ...manifest, files: [...(manifest['files'] as unknown[]), 'metadata.json'] })
   }
 }
 

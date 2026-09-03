@@ -1,3 +1,6 @@
+import { beforeEach } from 'node:test'
+import { describe, expect, it } from '@hyperfrontend/testing'
+import { defineProperty, getOwnPropertyDescriptor } from '../built-in-copy/object'
 import { locked } from './locked'
 
 interface IContextual {
@@ -8,10 +11,18 @@ interface IContextual {
 class MockClass implements IContextual {
   value = 'Hello World'
 
-  @locked() method() {
+  method() {
     return this.value
   }
 }
+
+// why: `@locked() method()` is the authored form, but neither of Node's TypeScript modes parses decorator syntax.
+// how: this is what the compiler emits for it, so the subject under test is the same locked prototype method.
+defineProperty(
+  MockClass.prototype,
+  'method',
+  locked()(MockClass.prototype, 'method', getOwnPropertyDescriptor(MockClass.prototype, 'method') as PropertyDescriptor)
+)
 
 describe('lockeded classic prototype method', () => {
   let instance: MockClass, otherInstance: Partial<IContextual>

@@ -1,9 +1,11 @@
 import { mkdirSync, writeFileSync, rmSync, symlinkSync } from 'node:fs'
 import { join } from 'node:path'
+import { after as afterAll, before as beforeAll } from 'node:test'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { isWithinRoot } from './confine'
 
-const ROOT = join(__dirname, '__confine_fixtures__')
-const OUTSIDE = join(__dirname, '__confine_outside__')
+const ROOT = join(import.meta.dirname, '__confine_fixtures__')
+const OUTSIDE = join(import.meta.dirname, '__confine_outside__')
 
 describe('core/path/confine', () => {
   beforeAll(() => {

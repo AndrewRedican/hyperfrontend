@@ -1,4 +1,6 @@
 import type { Process } from './lifecycle-aware-component.model'
+import { beforeEach } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { LifecycleAwareComponent } from './lifecycle-aware-component'
 
 describe('LifecycleAwareComponent', () => {
@@ -83,7 +85,6 @@ describe('LifecycleAwareComponent', () => {
     expect(await asyncProcess.init()).toBe('success')
   })
 
-  // eslint-disable-next-line jest/no-done-callback
   it(`invokes onInitStatusChange callback function when initializing status changes`, (done) => {
     asyncProcess.onInitializingStatusChange(callback)
     sleep(100).then(() => {
@@ -103,7 +104,6 @@ describe('LifecycleAwareComponent', () => {
     expect(callback).toHaveBeenNthCalledWith(1, true)
   })
 
-  // eslint-disable-next-line jest/no-done-callback
   it(`invokes onStartStatusChange callback function after starting`, (done) => {
     asyncProcess.onStartStatusChange(callback)
     asyncProcess.init().then(() => {
@@ -124,7 +124,6 @@ describe('LifecycleAwareComponent', () => {
     expect(callback).toHaveBeenCalledWith(true)
   })
 
-  // eslint-disable-next-line jest/no-done-callback
   it(`invokes onStopStatusChange callback function after stopping`, (done) => {
     asyncProcess.onStopStatusChange(callback)
     asyncProcess.init().then(() => {

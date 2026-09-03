@@ -3,6 +3,7 @@ import type { ConventionalCommit } from '../commits/models/conventional'
 import type { GitClient } from '../git/factory'
 import type { Registry } from '../registry/models/registry'
 import type { FlowPreset } from './factory'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { executeFlow, dryRun, validateFlow } from './executor/execute'
 import { createVersionFlow, createDryRunFlow, getAvailablePresets, getPresetDescription } from './factory'
 import { addStep, removeStep, hasStep } from './models/flow'
@@ -58,7 +59,7 @@ function createMockTree(files: Record<string, string> = {}): Tree {
       if (content === null) {
         throw new Error(`File not found: ${filePath}`)
       }
-      const buffer = typeof content === 'string' ? Buffer.from(content) : <Buffer>content
+      const buffer = typeof content === 'string' ? Buffer.from(content) : (content as Buffer)
       const result = transform(buffer)
       tree.write(filePath, result)
     },

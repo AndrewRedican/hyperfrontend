@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { isValidName } from './is-valid-name'
 
 describe('isValidName', () => {
@@ -7,11 +8,11 @@ describe('isValidName', () => {
   })
 
   it('returns false for value that is not any non-empty string', () => {
-    expect(isValidName(<any>void 0)).toBe(false)
-    expect(isValidName(<any>null)).toBe(false)
+    expect(isValidName(void 0 as any)).toBe(false)
+    expect(isValidName(null as any)).toBe(false)
     expect(isValidName('')).toBe(false)
-    expect(isValidName(<any>66)).toBe(false)
-    expect(isValidName(<any>(() => void 0))).toBe(false)
-    expect(isValidName(<any>{})).toBe(false)
+    expect(isValidName(66 as any)).toBe(false)
+    expect(isValidName((() => void 0) as any)).toBe(false)
+    expect(isValidName({} as any)).toBe(false)
   })
 })

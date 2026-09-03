@@ -1,7 +1,10 @@
 import type { RollupBuildDescriptor } from './types'
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs'
+import { createRequire } from 'node:module'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { afterEach, beforeEach } from 'node:test'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { runRollupWorkerJob } from './job-runner'
 
 describe('runRollupWorkerJob', () => {
@@ -206,7 +209,7 @@ describe('runRollupWorkerJob', () => {
         bundledDepsPlugin: { deps: ['fake-dep'], depsRoot },
       })
     )
-    expect(require(join(outputDir, 'index.cjs.js'))).toBe(42)
+    expect(createRequire(import.meta.url)(join(outputDir, 'index.cjs.js'))).toBe(42)
   })
 
   it('emits const (not var) require bindings for externalized deps in CJS output', async () => {

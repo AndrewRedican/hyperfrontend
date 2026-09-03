@@ -1,7 +1,8 @@
 import { join } from 'node:path'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { loadDevkit } from './devkit'
 
-const WORKSPACE_ROOT = join(__dirname, '..', '..', '..', '..', '..')
+const WORKSPACE_ROOT = join(import.meta.dirname, '..', '..', '..', '..', '..')
 
 describe('loadDevkit', () => {
   it('resolves the repository-installed @nx/devkit with callable members', () => {

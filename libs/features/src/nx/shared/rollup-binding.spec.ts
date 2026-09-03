@@ -1,8 +1,11 @@
+import type { Mock } from '@hyperfrontend/testing'
 import { join } from 'node:path'
+import { afterEach, beforeEach } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { resolveSdkManifest } from '../../generators/metadata/sdk-version'
 import { warnIfRollupBindingMissing } from './rollup-binding'
 
-const WORKSPACE_ROOT = join(__dirname, '..', '..', '..', '..', '..')
+const WORKSPACE_ROOT = join(import.meta.dirname, '..', '..', '..', '..', '..')
 const PLATFORM_MARKER = `-${process.platform}-${process.arch}`
 const CANDIDATE = `@rollup/rollup${PLATFORM_MARKER}-test`
 
@@ -33,7 +36,7 @@ describe('resolveSdkManifest', () => {
 })
 
 describe('warnIfRollupBindingMissing', () => {
-  let stderrSpy: jest.SpyInstance
+  let stderrSpy: Mock
 
   beforeEach(() => {
     stderrSpy = jest.spyOn(process.stderr, 'write').mockImplementation(() => true)
@@ -54,17 +57,17 @@ describe('warnIfRollupBindingMissing', () => {
       loadManifest: () => {
         throw new Error('no manifest')
       },
-      stderr: <NodeJS.WritableStream>(<unknown>stderr),
+      stderr: stderr as unknown as NodeJS.WritableStream,
     })
     expect(stderr.write).not.toHaveBeenCalled()
   })
 
   it('stays silent when the manifest has no optionalDependencies object', () => {
     const stderr = { write: jest.fn() }
-    warnIfRollupBindingMissing('/ws', { loadManifest: () => ({}), stderr: <NodeJS.WritableStream>(<unknown>stderr) })
+    warnIfRollupBindingMissing('/ws', { loadManifest: () => ({}), stderr: stderr as unknown as NodeJS.WritableStream })
     warnIfRollupBindingMissing('/ws', {
       loadManifest: () => ({ optionalDependencies: 'not an object' }),
-      stderr: <NodeJS.WritableStream>(<unknown>stderr),
+      stderr: stderr as unknown as NodeJS.WritableStream,
     })
     expect(stderr.write).not.toHaveBeenCalled()
   })
@@ -73,7 +76,7 @@ describe('warnIfRollupBindingMissing', () => {
     const stderr = { write: jest.fn() }
     warnIfRollupBindingMissing('/ws', {
       loadManifest: () => ({ optionalDependencies: { '@rollup/rollup-other-platform': '9.9.9' } }),
-      stderr: <NodeJS.WritableStream>(<unknown>stderr),
+      stderr: stderr as unknown as NodeJS.WritableStream,
     })
     expect(stderr.write).not.toHaveBeenCalled()
   })
@@ -91,7 +94,7 @@ describe('warnIfRollupBindingMissing', () => {
         },
       }),
       resolveBinding,
-      stderr: <NodeJS.WritableStream>(<unknown>stderr),
+      stderr: stderr as unknown as NodeJS.WritableStream,
       pathExists: () => false,
     })
     expect(resolveBinding).toHaveBeenCalledTimes(1)
@@ -110,7 +113,7 @@ describe('warnIfRollupBindingMissing', () => {
     warnIfRollupBindingMissing('/ws', {
       loadManifest: () => ({ optionalDependencies: { [CANDIDATE]: '9.9.9', [`${CANDIDATE}-musl`]: '9.9.9' } }),
       resolveBinding,
-      stderr: <NodeJS.WritableStream>(<unknown>stderr),
+      stderr: stderr as unknown as NodeJS.WritableStream,
     })
     expect(stderr.write).not.toHaveBeenCalled()
     expect(resolveBinding).toHaveBeenCalledTimes(2)
@@ -128,7 +131,7 @@ describe('warnIfRollupBindingMissing', () => {
       resolveBinding: () => {
         throw new Error('not installed')
       },
-      stderr: <NodeJS.WritableStream>(<unknown>stderr),
+      stderr: stderr as unknown as NodeJS.WritableStream,
       pathExists: (relativePath) => lockfiles.includes(relativePath),
     })
     expect(stderr.write).toHaveBeenCalledTimes(1)

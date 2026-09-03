@@ -36,7 +36,7 @@ function isValidCondition(data: unknown): boolean {
  * ```
  */
 export function isValidMessage<T = any>(message: T): boolean {
-  /* istanbul ignore next - options always initialized, line reported incorrectly by coverage tool */
+  // why: options always initialized, line reported incorrectly by coverage tool
   const options: DepthConfig = { depth: [0, '*'] }
   const state: State = { valid: true }
   const callback: Callback = (key, value, path, state) => {

@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { createChangelogSection, createChangelogItem, getSectionType, SECTION_HEADINGS } from './index'
 
 describe('createChangelogSection', () => {

@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { getSchema } from './get-schema'
 
 describe('getSchema', () => {

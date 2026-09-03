@@ -1,3 +1,5 @@
+import { afterEach } from 'node:test'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { resolvePopupDefaults } from './defaults'
 
 function setViewport(width: number, height: number) {

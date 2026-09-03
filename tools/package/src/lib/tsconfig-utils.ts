@@ -92,12 +92,12 @@ export function renameTsConfigPaths(tree: Tree, options: RenamePathOptions): voi
 
     for (const [key, value] of entries(paths)) {
       if (key === options.currentPackageName) {
-        updatedPaths[options.newPackageName] = <string[]>value
+        updatedPaths[options.newPackageName] = value as string[]
       } else if (key.startsWith(`${options.currentPackageName}/`)) {
         const suffix = key.slice(options.currentPackageName.length)
-        updatedPaths[`${options.newPackageName}${suffix}`] = <string[]>value
+        updatedPaths[`${options.newPackageName}${suffix}`] = value as string[]
       } else {
-        updatedPaths[key] = <string[]>value
+        updatedPaths[key] = value as string[]
       }
     }
 
@@ -124,7 +124,7 @@ export function moveTsConfigPaths(tree: Tree, options: MovePathOptions): void {
     const updatedPaths: Record<string, string[]> = {}
 
     for (const [key, value] of entries(paths)) {
-      const valuePaths = <string[]>value
+      const valuePaths = value as string[]
 
       const isOldPath = valuePaths.some((p) => p.startsWith(options.currentProjectRoot))
 

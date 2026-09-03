@@ -1,4 +1,5 @@
 import type { SerializedEncryptedPacket } from '../../model'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { createDynamicKeyObfuscationFactory } from './dynamic-obfuscation-key'
 
 describe('createDynamicKeyObfuscationFactory', () => {

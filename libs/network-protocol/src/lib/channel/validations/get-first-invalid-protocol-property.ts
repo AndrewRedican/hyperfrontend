@@ -23,12 +23,12 @@ function isValidProtocol(protocol: unknown): ValidProtocolResult {
     receive: void 0,
     getLogger: void 0,
   }
-  const prt = <Protocol>protocol
+  const prt = protocol as Protocol
   const isValidFunction = (key: keyof ValidProtocolResult) => {
     result[key] = key in prt && getType(prt[key]) === 'function'
     return result[key]
   }
-  const keysList = <(keyof ValidProtocolResult)[]>keys(result)
+  const keysList = keys(result) as (keyof ValidProtocolResult)[]
   for (let i = 0; i < keysList.length; i += 1) {
     if (!isValidFunction(keysList[i])) return result
   }
@@ -53,5 +53,5 @@ function isValidProtocol(protocol: unknown): ValidProtocolResult {
 export function getFirstInvalidProtocolProperty(protocol: unknown): keyof ValidProtocolResult | '' {
   const validations = isValidProtocol(protocol)
   const firstInvalidProperty = entries(validations).find(([, isValid]) => isValid === false)
-  return firstInvalidProperty ? <keyof ValidProtocolResult>firstInvalidProperty[0] : ''
+  return firstInvalidProperty ? (firstInvalidProperty[0] as keyof ValidProtocolResult) : ''
 }

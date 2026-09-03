@@ -1,5 +1,7 @@
 import type { IChannelContract } from '../types/contract'
 import type { MockWindow } from './test-utils'
+import { after as afterAll, afterEach, before as beforeAll, beforeEach } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { createBroker } from '../broker/factory'
 import { ACTION_TYPES } from '../types/action'
 import { createMockWindow, linkMockWindows, createContractPair } from './test-utils'
@@ -29,17 +31,17 @@ describe('Integration: Broker + Channel', () => {
   })
 
   const setupPair = (contractA: IChannelContract, contractB: IChannelContract) => {
-    const brokerA = createBroker({ name: 'broker-a', contract: contractA, window: <Window>(<unknown>windowA) })
-    const brokerB = createBroker({ name: 'broker-b', contract: contractB, window: <Window>(<unknown>windowB) })
+    const brokerA = createBroker({ name: 'broker-a', contract: contractA, window: windowA as unknown as Window })
+    const brokerB = createBroker({ name: 'broker-b', contract: contractB, window: windowB as unknown as Window })
     return {
       brokerA,
       brokerB,
-      channelA: brokerA.addChannel('to-b', <Window>(<unknown>windowB)),
-      channelB: brokerB.addChannel('to-a', <Window>(<unknown>windowA)),
+      channelA: brokerA.addChannel('to-b', windowB as unknown as Window),
+      channelB: brokerB.addChannel('to-a', windowA as unknown as Window),
     }
   }
 
-  const postedTypes = (target: MockWindow) => target.postMessage.mock.calls.map((call) => (<{ type: string }>call[0]).type)
+  const postedTypes = (target: MockWindow) => target.postMessage.mock.calls.map((call) => (call[0] as { type: string }).type)
 
   describe('Basic Communication Flow', () => {
     it('completes the full connection lifecycle across a paired handshake', () => {
@@ -191,12 +193,12 @@ describe('Integration: Broker + Channel', () => {
   describe('Broker Channel Management', () => {
     it('retrieves the same channel by window, name, and id', () => {
       const { contractA } = createContractPair(['PING'], ['PONG'])
-      const broker = createBroker({ name: 'broker-a', contract: contractA, window: <Window>(<unknown>windowA) })
+      const broker = createBroker({ name: 'broker-a', contract: contractA, window: windowA as unknown as Window })
 
-      const channel = broker.addChannel('test-channel', <Window>(<unknown>windowB))
+      const channel = broker.addChannel('test-channel', windowB as unknown as Window)
 
       expect({
-        byWindow: broker.getChannel(<Window>(<unknown>windowB)) === channel,
+        byWindow: broker.getChannel(windowB as unknown as Window) === channel,
         byName: broker.getChannel('test-channel') === channel,
         byId: broker.getChannel(channel.id) === channel,
       }).toEqual({ byWindow: true, byName: true, byId: true })
@@ -204,22 +206,22 @@ describe('Integration: Broker + Channel', () => {
 
     it('lists all channels', () => {
       const { contractA } = createContractPair(['PING'], ['PONG'])
-      const broker = createBroker({ name: 'broker-a', contract: contractA, window: <Window>(<unknown>windowA) })
+      const broker = createBroker({ name: 'broker-a', contract: contractA, window: windowA as unknown as Window })
 
       const windowC = createMockWindow()
 
-      broker.addChannel('channel-1', <Window>(<unknown>windowB))
-      broker.addChannel('channel-2', <Window>(<unknown>windowC))
+      broker.addChannel('channel-1', windowB as unknown as Window)
+      broker.addChannel('channel-2', windowC as unknown as Window)
 
       expect(broker.channels).toHaveLength(2)
     })
 
     it('reuses the existing channel for the same window', () => {
       const { contractA } = createContractPair(['PING'], ['PONG'])
-      const broker = createBroker({ name: 'broker-a', contract: contractA, window: <Window>(<unknown>windowA) })
+      const broker = createBroker({ name: 'broker-a', contract: contractA, window: windowA as unknown as Window })
 
-      const channel1 = broker.addChannel('first', <Window>(<unknown>windowB))
-      const channel2 = broker.addChannel('second', <Window>(<unknown>windowB))
+      const channel1 = broker.addChannel('first', windowB as unknown as Window)
+      const channel2 = broker.addChannel('second', windowB as unknown as Window)
 
       expect(channel1).toBe(channel2)
     })
@@ -232,7 +234,7 @@ describe('Integration: Broker + Channel', () => {
 
       expect(() => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        channelA.send(<any>'INVALID_TYPE', {})
+        channelA.send('INVALID_TYPE' as any, {})
       }).toThrow('not in the emitted actions')
     })
 

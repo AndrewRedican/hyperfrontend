@@ -30,7 +30,7 @@ export interface StructuredError extends Error {
  * ```
  */
 export function createStructuredError(message: string, code: string, context?: Record<string, unknown>): StructuredError {
-  const error = <StructuredError>createError(message)
+  const error = createError(message) as StructuredError
   error.code = code
   error.context = context ?? {}
   return error

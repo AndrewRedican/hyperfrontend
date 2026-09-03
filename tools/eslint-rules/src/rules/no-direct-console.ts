@@ -174,7 +174,7 @@ export default createRule<[], MessageIds>({
       ImportDeclaration(node) {
         const source = node.source.value
 
-        /* istanbul ignore if -- source is always string in valid import declarations */
+        // why: source is always string in valid import declarations
         if (typeof source !== 'string') {
           return
         }

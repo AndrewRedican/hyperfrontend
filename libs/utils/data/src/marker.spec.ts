@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { isMarker } from './is-marker'
 import { marker } from './marker'
 

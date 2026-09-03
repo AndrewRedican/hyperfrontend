@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { normalizePath, normalizeToForwardSlashes, normalizeToNative, removeTrailingSlash, ensureTrailingSlash } from './normalize'
 
 describe('core/path/normalize', () => {

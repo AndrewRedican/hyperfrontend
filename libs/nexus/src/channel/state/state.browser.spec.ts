@@ -1,5 +1,7 @@
 import type { IChannelContract } from '../../types/contract'
 import type { IMessage } from '../../types/message'
+import { beforeEach } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { activate } from './activate'
 import { clearQueue } from './clear-queue'
 import { deactivate } from './deactivate'
@@ -7,18 +9,18 @@ import { createInitialState } from './initial'
 import { queueMessage } from './queue-message'
 import { setOrigin } from './set-origin'
 
-let mockIdCounter = 0
-jest.mock('@hyperfrontend/random-generator-utils', () => ({
-  uuidV4: jest.fn(() => {
-    mockIdCounter++
-    return `test-id-${mockIdCounter}`
-  }),
-  isUuidV4: jest.fn((id: string) => typeof id === 'string' && id.length > 0),
-}))
+// why: the sequence comes from the mock's own call record because the replacement stands as a module of its own and cannot reach the spec's scope. Clearing the mock is what restarts it, which is what the counter reset did.
+jest.mock('@hyperfrontend/random-generator-utils', () => {
+  const uuidV4 = jest.fn(() => `test-id-${uuidV4.mock.calls.length}`)
+  return {
+    uuidV4,
+    isUuidV4: jest.fn((id: string) => typeof id === 'string' && id.length > 0),
+  }
+})
 
 describe('Channel State Management', () => {
   beforeEach(() => {
-    mockIdCounter = 0
+    jest.clearAllMocks()
   })
 
   const defaultSettings = { queueMessages: true }

@@ -1,4 +1,5 @@
 import type { Schema, JsonType } from './schema'
+import { describe, expect, it } from '@hyperfrontend/testing'
 
 describe('Schema type', () => {
   it('allows all JsonType values', () => {
@@ -59,8 +60,8 @@ describe('Schema type', () => {
     expect(schema.minProperties).toBe(1)
     expect(schema.maxProperties).toBe(2)
     expect(Array.isArray(schema.dependencies?.foo)).toBe(true)
-    expect((<Schema>schema.dependencies?.bar).type).toBe('number')
-    expect((<Schema>schema.items).type).toBe('string')
+    expect((schema.dependencies?.bar as Schema).type).toBe('number')
+    expect((schema.items as Schema).type).toBe('string')
     expect(schema.additionalItems).toBe(false)
     expect(schema.minItems).toBe(1)
     expect(schema.maxItems).toBe(2)

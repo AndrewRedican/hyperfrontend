@@ -1,4 +1,7 @@
+import type { Mock } from '@hyperfrontend/testing'
 import type { BinConfig, BuildContext, CjsConfig, EntryPoint, EsmConfig, IifeConfig, UmdConfig } from '../../models'
+import { beforeEach } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { resolveExternals } from '../externals/resolve-externals'
 import { toBinBuildDescriptor, toCjsBuildDescriptor, toEsmBuildDescriptor, toIifeBuildDescriptor, toUmdBuildDescriptor } from './descriptor'
 jest.mock('../externals/resolve-externals', () => ({
@@ -30,7 +33,7 @@ const makeContext = (overrides: Partial<BuildContext> = {}): BuildContext => ({
 })
 
 beforeEach(() => {
-  ;(<jest.Mock>resolveExternals).mockReset().mockReturnValue(['react'])
+  ;(resolveExternals as Mock).mockReset().mockReturnValue(['react'])
 })
 
 describe('toEsmBuildDescriptor', () => {

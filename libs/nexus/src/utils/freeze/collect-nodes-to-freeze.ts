@@ -37,7 +37,7 @@ export function collectNodesToFreeze(value: unknown, config: DeepFreezeConfig = 
   function visit(val: unknown, depth: number): void {
     if (!isIterable(val)) return
 
-    const obj = <object>val
+    const obj = val as object
 
     if (visited.has(obj)) return
 
@@ -52,7 +52,7 @@ export function collectNodesToFreeze(value: unknown, config: DeepFreezeConfig = 
     const type = getType(val)
     const keys = getKeysFromIterable(val, type)
     for (const key of keys) {
-      visit((<Record<string, unknown>>val)[key], depth + 1)
+      visit((val as Record<string, unknown>)[key], depth + 1)
     }
   }
 

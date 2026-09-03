@@ -1,7 +1,6 @@
 import type { Schema } from '@hyperfrontend/json-utils'
 import { validate } from '@hyperfrontend/json-utils'
-/* istanbul ignore next - JSON import causes coverage artifact */
-import * as v4Schema from './v4.json'
+import v4Schema from './v4.json'
 
 /**
  * Validates whether the provided value is a valid JSON Schema v4 schema.
@@ -20,5 +19,5 @@ import * as v4Schema from './v4.json'
  * ```
  */
 export function isValidSchema(schema: unknown): boolean {
-  return validate(schema, <Schema>v4Schema).valid
+  return validate(schema, v4Schema as Schema).valid
 }

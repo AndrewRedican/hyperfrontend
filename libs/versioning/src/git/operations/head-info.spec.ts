@@ -1,9 +1,12 @@
+import type { MockedFunction } from '@hyperfrontend/testing'
 import { execFileSync } from 'node:child_process'
+import { beforeEach } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { getHead, getCurrentBranch, hasUntrackedFiles } from './head-info'
 
 jest.mock('node:child_process')
 
-const mockExecFileSync = execFileSync as jest.MockedFunction<typeof execFileSync>
+const mockExecFileSync = execFileSync as MockedFunction<typeof execFileSync>
 
 describe('getHead', () => {
   beforeEach(() => {

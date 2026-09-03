@@ -58,7 +58,7 @@ export async function runShot(config: ResolvedMediaConfig, args: ParsedArgs): Pr
       fullPage: args.flags.has('full-page'),
     })
     const bytes = await writeStill(png, outputPath, {
-      format: <'png' | 'webp' | 'jpeg'>format,
+      format: format as 'png' | 'webp' | 'jpeg',
       quality: readNumber(args, 'quality', 90),
       width: readNumber(args, 'width', 0),
     })

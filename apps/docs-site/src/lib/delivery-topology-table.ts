@@ -246,7 +246,7 @@ export const DELIVERY_TOPOLOGY_TABLE: readonly TopologyRule[] = [
   },
 ]
 
-const RULE_INDEX = createMap(DELIVERY_TOPOLOGY_TABLE.map((rule) => <readonly [string, TopologyRule]>[rule.answerId, rule]))
+const RULE_INDEX = createMap(DELIVERY_TOPOLOGY_TABLE.map((rule) => [rule.answerId, rule] as readonly [string, TopologyRule]))
 
 /**
  * Looks up the row that licenses an answer to draw something.

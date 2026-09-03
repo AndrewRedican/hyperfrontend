@@ -28,7 +28,7 @@ const _freeze = globalThis.Object.freeze
  * // => URL { href: 'https://example.com/api/users' }
  * ```
  */
-export const createURL = (url: string | URL, base?: string | URL): URL => <URL>_Reflect.construct(_URL, [url, base])
+export const createURL = (url: string | URL, base?: string | URL): URL => _Reflect.construct(_URL, [url, base]) as URL
 
 /**
  * (Safe copy) Returns whether the provided string is a valid URL.
@@ -92,17 +92,17 @@ export const parseURL = _URL.parse
  */
 export const createURLSearchParams = (
   init?: string | URLSearchParams | Record<string, string> | Iterable<[string, string]>
-): URLSearchParams => <URLSearchParams>_Reflect.construct(_URLSearchParams, [init])
+): URLSearchParams => _Reflect.construct(_URLSearchParams, [init]) as URLSearchParams
 
 /**
  * (Safe copy) Namespace object containing all URL utilities.
  * Note: Importing this imports all methods in this namespace (no tree-shaking).
  */
-export const URL = _freeze(<const>{
+export const URL = _freeze({
   createURL,
   canParse,
   createObjectURL,
   revokeObjectURL,
   parseURL,
   createURLSearchParams,
-})
+} as const)

@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { tokenize, isLetter, isDigit, isAlphanumeric } from './tokenizer'
 
 describe('tokenize', () => {

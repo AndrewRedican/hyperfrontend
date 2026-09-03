@@ -1,5 +1,7 @@
 import type { ShellOptions } from '../../shared/types'
 import type { ResizeObserverStubController } from '../../testing/resize-observer-stub'
+import { afterEach, beforeEach } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { installResizeObserverStub } from '../../testing/resize-observer-stub'
 import { mountDialog } from './dialog'
 
@@ -11,8 +13,8 @@ beforeEach(() => {
 
 function mount(options: Partial<ShellOptions> = {}) {
   const requestClose = jest.fn()
-  const result = mountDialog({ options: <ShellOptions>{ url: 'https://feature.example/', ...options }, requestClose })
-  const iframe = <HTMLIFrameElement>document.body.querySelector('iframe')
+  const result = mountDialog({ options: { url: 'https://feature.example/', ...options } as ShellOptions, requestClose })
+  const iframe = document.body.querySelector('iframe') as HTMLIFrameElement
   return { result, iframe, requestClose }
 }
 

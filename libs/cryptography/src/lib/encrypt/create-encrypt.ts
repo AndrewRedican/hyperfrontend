@@ -35,9 +35,9 @@ export function createEncrypt(
     const iv = getRandomValues(12)
     const key = await generateKey(password, salt)
     const encryptedContent = await subtle.encrypt(
-      { ...encryptionConfig, iv: <ArrayBuffer>(<unknown>iv) },
+      { ...encryptionConfig, iv: iv as unknown as ArrayBuffer },
       key,
-      <BufferSource>utf8StringToUint8Array(message)
+      utf8StringToUint8Array(message) as BufferSource
     )
     const buffer = createUint8Array(encryptedContent)
     const result = createUint8Array(salt.byteLength + iv.byteLength + buffer.byteLength)

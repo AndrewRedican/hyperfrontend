@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { checkPatternSafety } from './pattern-safety'
 
 describe('checkPatternSafety', () => {

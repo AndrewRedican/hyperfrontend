@@ -31,14 +31,14 @@ export function createKeyGenerator(
     if (!salt) {
       throw createError('Cannot generate key without a salt')
     }
-    const keyMaterial = await subtle.importKey('raw', <BufferSource>utf8StringToUint8Array(password), { name: 'PBKDF2' }, false, [
+    const keyMaterial = await subtle.importKey('raw', utf8StringToUint8Array(password) as BufferSource, { name: 'PBKDF2' }, false, [
       'deriveKey',
     ])
     return subtle.deriveKey(
       {
         name: 'PBKDF2',
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        salt: <any>salt,
+        salt: salt as any,
         iterations: 100_000,
         hash: 'SHA-256',
       },

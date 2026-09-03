@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { sdkInfo } from './sdk-info'
 
 describe('sdkInfo', () => {

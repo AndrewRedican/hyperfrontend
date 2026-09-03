@@ -48,6 +48,6 @@ export function detectPlatform(): Platform {
     return 'node'
   }
 
-  /* istanbul ignore next -- fallback for unknown environments */
+  // why: fallback for unknown environments
   return 'browser'
 }

@@ -1,8 +1,10 @@
 import { readFileSync, existsSync, rmSync, mkdirSync } from 'node:fs'
 import { join } from 'node:path'
+import { after as afterAll, beforeEach } from 'node:test'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { writeFileContent, writeFileBuffer, writeJsonFile, ensureDir } from './write'
 
-const TEST_DIR = join(__dirname, '__test_write_fixtures__')
+const TEST_DIR = join(import.meta.dirname, '__test_write_fixtures__')
 
 describe('core/fs/write', () => {
   beforeEach(() => {

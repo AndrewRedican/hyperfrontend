@@ -36,7 +36,7 @@ export const locateCircularReferenceRecursive = (
 ): CircularReference[] => {
   if (result.length === maxResults) return result
   if (stack.exists(target)) {
-    result.push(new CircularReference(<[string, ...string[]]>path, path.slice(0, <number>stack.lastSeen(target))))
+    result.push(new CircularReference(path as [string, ...string[]], path.slice(0, stack.lastSeen(target) as number)))
     return result
   }
   const type = getType(target)
@@ -68,7 +68,7 @@ export const locateCircularReference = (target: unknown, maxResults: '*' | numbe
   const resultsType = typeof maxResults
   if (!['string', 'number'].includes(resultsType)) throw createError(invalidmaxResults)
   if (resultsType === 'string' && maxResults !== '*') throw createError(invalidmaxResults)
-  if (resultsType === 'number' && (<number>maxResults < 1 || [NaN, Infinity].includes(<number>maxResults)))
+  if (resultsType === 'number' && ((maxResults as number) < 1 || [NaN, Infinity].includes(maxResults as number)))
     throw createError(invalidmaxResults)
   const originalSupportStatus = getConfig().detectCircularReferences
   if (!originalSupportStatus) {

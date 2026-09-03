@@ -1,5 +1,3 @@
-/* istanbul ignore file */
-
 import type { Channel, MessagePayload, MessageCallback, Client, SendPacketFn, ReceivePacketFn, ReceivedPacket } from '../model'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
@@ -41,7 +39,7 @@ export function createClient<T = MessagePayload>(label: string, sharedKey: strin
   }
 
   const receivePacket: ReceivePacketFn = (packet) => {
-    const typedPacket = <ReceivedPacket<T>>packet
+    const typedPacket = packet as ReceivedPacket<T>
     listeners.forEach((callback) => callback(typedPacket))
   }
 

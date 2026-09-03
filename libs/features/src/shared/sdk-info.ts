@@ -3,7 +3,7 @@
 /**
  * Package identity for the hyperfrontend features SDK.
  */
-export const sdkInfo = <const>{
+export const sdkInfo = {
   /** The published npm package name. */
   packageName: '@hyperfrontend/features',
-}
+} as const

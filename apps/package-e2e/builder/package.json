@@ -7,16 +7,10 @@
     "pack-install": "cd ../../../dist/libs/builder && npm pack && cd - && npm install ../../../dist/libs/builder/*.tgz"
   },
   "dependencies": {
-    "@hyperfrontend/builder": "file:../../../tmp/e2e-packs/hyperfrontend-builder-0.2.0.tgz"
+    "@hyperfrontend/builder": "file:../../../tmp/e2e-packs/hyperfrontend-builder-0.2.1.tgz"
   },
   "devDependencies": {
-    "@types/jest": "29.5.14",
     "@types/node": "25.3.3",
-    "jest": "29.7.0",
-    "ts-jest": "29.4.11",
     "typescript": "5.7.3"
-  },
-  "overrides": {
-    "picomatch": "4.0.4"
   }
 }

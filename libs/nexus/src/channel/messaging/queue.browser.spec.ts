@@ -1,7 +1,10 @@
+import type { Mock } from '@hyperfrontend/testing'
 import type { ActionCreators } from '../../core/actions/factory'
 import type { ChannelState } from '../../types'
 import type { IMessage } from '../../types/message'
 import type { ChannelInternals } from '../types'
+import { beforeEach } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import * as queueMessageModule from '../state/queue-message'
 import { queue } from './queue'
 
@@ -45,9 +48,9 @@ describe('channel/messaging/queue', () => {
       removeProcess: jest.fn(),
       notifyEvent: jest.fn(),
       notifyMessage: jest.fn(),
-      actions: <ActionCreators>{},
+      actions: {} as ActionCreators,
     }
-    ;(<jest.Mock>queueMessageModule.queueMessage).mockReturnValue({
+    ;(queueMessageModule.queueMessage as Mock).mockReturnValue({
       ...state,
       queuedMessages: [{ type: 'TEST', data: {} }],
     })

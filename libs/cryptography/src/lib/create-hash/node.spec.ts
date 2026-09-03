@@ -1,5 +1,5 @@
-/** @jest-environment node */
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { createHash } from './node'
 
 describe('createHash (node)', () => {
@@ -12,6 +12,6 @@ describe('createHash (node)', () => {
   })
 
   it('throws error for unsupported algorithm', async () => {
-    await expect(createHash(testData, <any>'unsupported-algorithm')).rejects.toThrow('Error creating hash')
+    await expect(createHash(testData, 'unsupported-algorithm' as any)).rejects.toThrow('Error creating hash')
   })
 })

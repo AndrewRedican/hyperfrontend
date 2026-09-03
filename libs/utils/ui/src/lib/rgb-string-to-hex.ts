@@ -40,7 +40,6 @@ export function rgbStringToHex(rgbString: string): string {
   }
 
   if (a !== undefined) {
-    /* istanbul ignore next */
     if (a < 0 || a > 1) {
       throw createError('Invalid RGB or RGBA string')
     }

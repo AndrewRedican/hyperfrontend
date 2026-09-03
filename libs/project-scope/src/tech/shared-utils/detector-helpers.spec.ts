@@ -2,7 +2,8 @@ import type { PackageJson } from '../../project/package/types'
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { describe, it, expect, beforeEach, afterEach } from '@jest/globals'
+import { beforeEach, afterEach } from 'node:test'
+import { describe, it, expect } from '@hyperfrontend/testing'
 import {
   collectAllDependencies,
   parseVersionString,

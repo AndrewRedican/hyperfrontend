@@ -181,7 +181,7 @@ export function readJsonFile<T>(filePath: string, options?: ReadJsonFileOptions<
   if (!existsSync(filePath)) {
     if (options && 'default' in options) {
       fsLogger.debug('JSON file not found, using default', { path: filePath })
-      return <T>options.default
+      return options.default as T
     }
     fsLogger.debug('JSON file not found', { path: filePath })
     throw createFileSystemError(`File not found: ${filePath}`, 'FS_NOT_FOUND', { path: filePath, operation: 'read' })
@@ -189,9 +189,9 @@ export function readJsonFile<T>(filePath: string, options?: ReadJsonFileOptions<
 
   try {
     const content = readFileSync(filePath, { encoding: 'utf-8' })
-    return <T>parse(content)
+    return parse(content) as T
   } catch (error) {
-    if ((<ErrorWithCode>error)?.code === 'ENOENT') {
+    if ((error as ErrorWithCode)?.code === 'ENOENT') {
       fsLogger.debug('JSON file not found (ENOENT)', { path: filePath })
       throw createFileSystemError(`File not found: ${filePath}`, 'FS_NOT_FOUND', { path: filePath, operation: 'read', cause: error })
     }
@@ -223,7 +223,7 @@ export function readJsonFileIfExists<T>(filePath: string): T | null {
   }
   try {
     const content = readFileSync(filePath, { encoding: 'utf-8' })
-    return <T>parse(content)
+    return parse(content) as T
   } catch {
     return null
   }

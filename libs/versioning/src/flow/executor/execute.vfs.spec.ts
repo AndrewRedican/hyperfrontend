@@ -1,4 +1,9 @@
 import type { MockFileChange } from './__test-utils__/mocks'
+import { beforeEach } from 'node:test'
+import * as projectScopeNx from '@hyperfrontend/project-scope/nx'
+import * as projectScopeVfs from '@hyperfrontend/project-scope/vfs'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
+import * as workspaceDiscovery from '../../workspace/discovery'
 import { createStep, createSuccessResult } from '../models/step'
 import { createMockGitClient, createMockLogger, createMockRegistry, createMockTree } from './__test-utils__/mocks'
 import { executeFlow } from './execute'
@@ -19,10 +24,6 @@ jest.mock('@hyperfrontend/project-scope/vfs', () => ({
   generateAllDiffs: jest.fn(),
   formatUnifiedDiff: jest.fn(),
 }))
-
-const projectScopeNx = require('@hyperfrontend/project-scope/nx')
-const workspaceDiscovery = require('../../workspace/discovery')
-const projectScopeVfs = require('@hyperfrontend/project-scope/vfs')
 
 beforeEach(() => {
   jest.clearAllMocks()

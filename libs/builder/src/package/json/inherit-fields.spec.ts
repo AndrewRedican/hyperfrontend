@@ -2,6 +2,8 @@ import type { PackageJson } from '../../models'
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { afterEach, beforeEach } from 'node:test'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { inheritFields } from './inherit-fields'
 
 describe('inheritFields', () => {

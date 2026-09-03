@@ -1,5 +1,7 @@
 import type { ChannelStore } from '../model'
+import { beforeEach } from 'node:test'
 import { isUuidV4 } from '@hyperfrontend/random-generator-utils'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { protocolProvider, send, receive } from '../mocks'
 import { mockCreateChannelStore as createChannelStore, label } from './mocks'
 

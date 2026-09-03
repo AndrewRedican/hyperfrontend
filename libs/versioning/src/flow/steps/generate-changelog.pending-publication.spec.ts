@@ -1,4 +1,6 @@
+import type { Mock } from '@hyperfrontend/testing'
 import type { FlowContext } from '../models/types'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import {
   createMockChangelogEntry,
   createMockChangelogItem,
@@ -46,7 +48,7 @@ describe('Write Changelog Step', () => {
       const result = await step.execute(ctx)
 
       expect(result.status).toBe('success')
-      const writtenContent = (tree.write as jest.Mock).mock.calls[0][1] as string
+      const writtenContent = (tree.write as Mock).mock.calls[0][1] as string
       expect(writtenContent).toContain('Updated feature')
       expect(writtenContent).not.toContain('Unpublished feature')
       expect(writtenContent).toContain('0.1.0')
@@ -96,7 +98,7 @@ describe('Write Changelog Step', () => {
       const result = await step.execute(ctx)
 
       expect(result.status).toBe('success')
-      const writtenContent = (tree.write as jest.Mock).mock.calls[0][1] as string
+      const writtenContent = (tree.write as Mock).mock.calls[0][1] as string
       expect(writtenContent).toContain('Correct feature')
       expect(writtenContent).not.toContain('Feature 0.3.0')
       expect(writtenContent).not.toContain('Feature 0.2.0')
@@ -146,7 +148,7 @@ describe('Write Changelog Step', () => {
       const result = await step.execute(ctx)
 
       expect(result.status).toBe('success')
-      const writtenContent = (tree.write as jest.Mock).mock.calls[0][1] as string
+      const writtenContent = (tree.write as Mock).mock.calls[0][1] as string
       expect(writtenContent).toContain('Unreleased')
       expect(writtenContent).toContain('Work in progress')
     })
@@ -181,7 +183,7 @@ describe('Write Changelog Step', () => {
       const result = await step.execute(ctx)
 
       expect(result.status).toBe('success')
-      const writtenContent = (tree.write as jest.Mock).mock.calls[0][1] as string
+      const writtenContent = (tree.write as Mock).mock.calls[0][1] as string
       expect(writtenContent).toContain('0.2.0')
       expect(writtenContent).toContain('0.1.0')
       expect(writtenContent).toContain('New feature')
@@ -216,7 +218,7 @@ describe('Write Changelog Step', () => {
       const result = await step.execute(ctx)
 
       expect(result.status).toBe('success')
-      const writtenContent = (tree.write as jest.Mock).mock.calls[0][1] as string
+      const writtenContent = (tree.write as Mock).mock.calls[0][1] as string
       expect(writtenContent).toContain('0.2.0')
       expect(writtenContent).toContain('0.1.0')
     })
@@ -257,7 +259,7 @@ describe('Write Changelog Step', () => {
       const result = await step.execute(ctx)
 
       expect(result.status).toBe('success')
-      const writtenContent = (tree.write as jest.Mock).mock.calls[0][1] as string
+      const writtenContent = (tree.write as Mock).mock.calls[0][1] as string
       expect(writtenContent).toContain('0.1.1')
       expect(writtenContent).not.toContain('0.2.0')
       expect(writtenContent).toContain('Bug fix')
@@ -300,7 +302,7 @@ describe('Write Changelog Step', () => {
       const result = await step.execute(ctx)
 
       expect(result.status).toBe('success')
-      const writtenContent = (tree.write as jest.Mock).mock.calls[0][1] as string
+      const writtenContent = (tree.write as Mock).mock.calls[0][1] as string
       expect(writtenContent).toContain('0.2.0')
       expect(writtenContent).not.toContain('0.1.1')
       expect(writtenContent).toContain('New feature')
@@ -380,7 +382,7 @@ describe('Write Changelog Step', () => {
       const result = await step.execute(ctx)
 
       expect(result.status).toBe('success')
-      const writtenContent = (tree.write as jest.Mock).mock.calls[0][1] as string
+      const writtenContent = (tree.write as Mock).mock.calls[0][1] as string
       expect(writtenContent).toContain('New content')
       expect(writtenContent).not.toContain('Old content')
       const matches = writtenContent.match(/##\s+\[?0\.2\.0\]?/g)

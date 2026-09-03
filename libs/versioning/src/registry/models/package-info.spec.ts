@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { createPackageInfo } from './package-info'
 
 describe('createPackageInfo', () => {

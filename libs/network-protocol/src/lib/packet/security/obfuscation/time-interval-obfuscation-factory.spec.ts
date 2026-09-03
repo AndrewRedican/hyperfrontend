@@ -1,4 +1,6 @@
 import type { SerializedEncryptedPacket } from '../../model'
+import { beforeEach } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { createTimeIntervalObfuscationFactory } from './time-interval-obfuscation-factory'
 
 describe('createTimeIntervalObfuscationFactory', () => {
@@ -206,7 +208,7 @@ describe('createTimeIntervalObfuscationFactory', () => {
 
       const mockDeobfuscateFn = jest
         .fn()
-        .mockResolvedValueOnce(<unknown>invalidPacket)
+        .mockResolvedValueOnce(invalidPacket as unknown)
         .mockResolvedValueOnce(mockPacket)
 
       const factory = createTimeIntervalObfuscationFactory(mockObfuscate, mockDeobfuscateFn, mockGetTimeBasedPassword, mockGetPasswords)

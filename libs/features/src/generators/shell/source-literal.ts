@@ -121,7 +121,7 @@ export function toSourceLiteral(value: unknown, indent = ''): string {
     return `[\n${value.map((item) => `${inner}${toSourceLiteral(item, inner)}`).join(',\n')},\n${indent}]`
   }
   if (typeof value === 'object') {
-    const props = entries(<Record<string, unknown>>value).filter(([, member]) => member !== undefined)
+    const props = entries(value as Record<string, unknown>).filter(([, member]) => member !== undefined)
     if (props.length === 0) {
       return '{}'
     }

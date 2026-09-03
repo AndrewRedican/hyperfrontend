@@ -1,4 +1,7 @@
+import type { Mock } from '@hyperfrontend/testing'
+import { afterEach, beforeEach } from 'node:test'
 import * as loggingModule from '@hyperfrontend/logging'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { createMemoryMonitor } from './monitor'
 jest.mock('@hyperfrontend/logging', () => {
   const mockChannel = {
@@ -26,11 +29,11 @@ interface MemoryUsageStub {
 
 interface MockedLoggingModule {
   __mockChannel: {
-    error: jest.Mock
-    warn: jest.Mock
-    info: jest.Mock
-    debug: jest.Mock
-    log: jest.Mock
+    error: Mock
+    warn: Mock
+    info: Mock
+    debug: Mock
+    log: Mock
   }
 }
 
@@ -44,10 +47,10 @@ const memoryStub = (heapUsedMB: number, rssMB = heapUsedMB + 50): MemoryUsageStu
   arrayBuffers: 1 * BYTES_PER_MB,
 })
 
-const channelLogger = (<MockedLoggingModule>(<unknown>loggingModule)).__mockChannel
+const channelLogger = (loggingModule as unknown as MockedLoggingModule).__mockChannel
 
 describe('createMemoryMonitor', () => {
-  let memoryUsageSpy: jest.SpyInstance
+  let memoryUsageSpy: Mock
 
   beforeEach(() => {
     channelLogger.error.mockClear()

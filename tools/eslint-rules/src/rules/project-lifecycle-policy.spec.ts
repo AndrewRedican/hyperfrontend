@@ -1,4 +1,6 @@
 import { join } from 'node:path'
+import { after as afterAll } from 'node:test'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { createJsonRuleTester, createTempWorkspaceManager } from '../testing'
 import rule, { matchesGlob, matchesWildcard } from './project-lifecycle-policy'
 

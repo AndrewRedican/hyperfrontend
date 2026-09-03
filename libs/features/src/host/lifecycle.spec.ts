@@ -1,8 +1,10 @@
 import type { BrokerHandle, ChannelHandle } from '@hyperfrontend/nexus'
+import type { Mock } from '@hyperfrontend/testing'
 import type { PresentPayload, ViewportPayload } from '../shared/presentation'
 import type { ShellOptions } from '../shared/types'
 import type { ViewportReporter } from './sizing'
 import type { MountContext, MountResult } from './types'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { createEventEmitter } from '../shared/event-emitter'
 import { createShellHandle } from './lifecycle'
 
@@ -10,10 +12,10 @@ interface MockChannel {
   channel: ChannelHandle
   trigger(event: string, data?: unknown): void
   triggerMessage(type: string, data?: unknown): void
-  send: jest.Mock
-  disconnect: jest.Mock
-  destroy: jest.Mock
-  connect: jest.Mock
+  send: Mock
+  disconnect: Mock
+  destroy: Mock
+  connect: Mock
 }
 
 function createMockChannel(): MockChannel {
@@ -23,7 +25,7 @@ function createMockChannel(): MockChannel {
   const disconnect = jest.fn()
   const destroy = jest.fn()
   const connect = jest.fn()
-  const channel = <ChannelHandle>(<unknown>{
+  const channel = {
     on: (event: string, handler: (data?: unknown) => void) => {
       ;(listeners[event] ?? (listeners[event] = [])).push(handler)
       return () => undefined
@@ -36,7 +38,7 @@ function createMockChannel(): MockChannel {
     disconnect,
     destroy,
     connect,
-  })
+  } as unknown as ChannelHandle
   return {
     channel,
     trigger: (event, data) => listeners[event]?.forEach((handler) => handler(data)),
@@ -48,7 +50,7 @@ function createMockChannel(): MockChannel {
   }
 }
 
-const TARGET = <Window>(<unknown>{ name: 'target' })
+const TARGET = { name: 'target' } as unknown as Window
 
 function setup(
   config: {
@@ -57,20 +59,20 @@ function setup(
     element?: HTMLElement
     present?: PresentPayload
     viewport?: ViewportReporter
-    reveal?: jest.Mock
+    reveal?: Mock
     whenReady?: (begin: () => void) => () => void
   } = {}
 ) {
   const mock = createMockChannel()
   const addChannel = jest.fn(() => mock.channel)
-  const broker = <BrokerHandle>(<unknown>{ addChannel })
+  const broker = { addChannel } as unknown as BrokerHandle
   const cleanup = jest.fn()
   let context: MountContext | undefined
   const present = config.present ?? { mode: 'embedded' }
   const mount = jest.fn((ctx: MountContext): MountResult => {
     context = ctx
     return {
-      target: 'target' in config ? <Window | null>config.target : TARGET,
+      target: 'target' in config ? (config.target as Window | null) : TARGET,
       element: config.element,
       present,
       viewport: config.viewport,
@@ -88,7 +90,7 @@ function setup(
     return monitor
   })
   const emitter = createEventEmitter()
-  const base = <ShellOptions>{ container: '#shell' }
+  const base = { container: '#shell' } as ShellOptions
   // note: A schema-free contract keeps payload validation inert here; that path is covered by lifecycle.validation.spec.ts. Liveness, visibility, closing, and dirty-state wiring are covered by lifecycle.liveness.spec.ts; experience-plugin wiring by lifecycle.plugins.spec.ts.
   const handle = createShellHandle(broker, base, emitter, {
     contract: { emitted: [], accepted: [] },

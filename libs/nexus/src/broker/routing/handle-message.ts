@@ -38,9 +38,9 @@ export function handleMessage(context: RoutingContext, message: MessageEvent<IAc
     return
   }
 
-  const messageData = <IMessage>action.data
+  const messageData = action.data as IMessage
 
-  const channel = <ChannelHandle | undefined>resolveChannel(registry, message)
+  const channel = resolveChannel(registry, message) as ChannelHandle | undefined
 
   if (!channel || !channel.isActive()) {
     return

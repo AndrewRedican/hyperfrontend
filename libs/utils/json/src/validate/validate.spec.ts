@@ -1,4 +1,5 @@
 import type { Schema } from '../types/schema'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { validate } from './validate'
 
 describe('validate', () => {

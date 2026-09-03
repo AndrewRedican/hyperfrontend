@@ -3,7 +3,7 @@ import { createUint8Array } from '@hyperfrontend/immutable-api-utils/built-in-co
 /**
  * Sample base64 strings paired with their decoded values for testing encoding round-trips.
  */
-export const BASE_64_ENCODING_SAMPLES = <const>{
+export const BASE_64_ENCODING_SAMPLES = {
   SIMPLE: {
     DECODED: 'Hello, World!',
     ENCODED: 'SGVsbG8sIFdvcmxkIQ==',
@@ -17,12 +17,12 @@ export const BASE_64_ENCODING_SAMPLES = <const>{
     DECODED: '',
     ENCODED: '',
   },
-}
+} as const
 
 /**
  * Sample strings paired with their UTF-8 byte representations for testing Uint8Array conversions.
  */
-export const UINT8_CONVERTION_SAMPLES = <const>{
+export const UINT8_CONVERTION_SAMPLES = {
   SIMPLE: {
     STRING: 'hello',
     ARRAY: createUint8Array([104, 101, 108, 108, 111]),
@@ -35,4 +35,4 @@ export const UINT8_CONVERTION_SAMPLES = <const>{
     STRING: '',
     ARRAY: createUint8Array([]),
   },
-}
+} as const

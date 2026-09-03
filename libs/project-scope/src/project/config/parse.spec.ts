@@ -1,7 +1,8 @@
 import { resolve } from 'node:path'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { parseConfig, parseJsonConfig, parseYamlConfig, readConfigIfExists } from './parse'
 
-const FIXTURES_DIR = resolve(__dirname, '../../../__fixtures__')
+const FIXTURES_DIR = resolve(import.meta.dirname, '../../../__fixtures__')
 const MINIMAL_PROJECT = resolve(FIXTURES_DIR, 'minimal-project')
 const CONFIG_FILES = resolve(FIXTURES_DIR, 'config-files')
 
@@ -12,7 +13,7 @@ describe('parseConfig', () => {
     expect(result.format).toBe('json')
     expect(result.type).toBe('package.json')
     expect(result.data).toBeDefined()
-    expect((<Record<string, unknown>>result.data)['name']).toBe('minimal-test-project')
+    expect((result.data as Record<string, unknown>)['name']).toBe('minimal-test-project')
   })
 
   it('parses tsconfig.json as JSONC', () => {
@@ -21,11 +22,11 @@ describe('parseConfig', () => {
     expect(result.format).toBe('jsonc')
     expect(result.type).toBe('tsconfig')
     expect(result.data).toBeDefined()
-    expect((<Record<string, unknown>>result.data)['compilerOptions']).toBeDefined()
+    expect((result.data as Record<string, unknown>)['compilerOptions']).toBeDefined()
   })
 
   it('returns raw content for JS config files', () => {
-    const result = parseConfig(resolve(__dirname, '../../../jest.config.ts'), 'jest')
+    const result = parseConfig(resolve(import.meta.dirname, '../../../test.config.ts'), 'jest')
 
     expect(result.format).toBe('ts')
     expect(result.raw).toBeDefined()
@@ -41,7 +42,7 @@ describe('parseConfig', () => {
 
     expect(result.format).toBe('ini')
     expect(result.data).toBeDefined()
-    expect((<Record<string, unknown>>(result.data as Record<string, unknown>)['section1'])['key1']).toBe('value1')
+    expect(((result.data as Record<string, unknown>)['section1'] as Record<string, unknown>)['key1']).toBe('value1')
   })
 
   it('parses dotenv format config files', () => {

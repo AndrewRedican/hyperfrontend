@@ -2,12 +2,16 @@ import { existsSync, readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 
 /**
- * Resolves the path to a bundle file relative to dist/libs/{package}/bundle/
+ * Resolves the path to a bundle file relative to dist/libs/{package}/bundle/.
+ *
+ * The path is anchored on the working directory rather than this module's own location,
+ * because the e2e executor always launches the suites from the workspace root and the
+ * module has to say the same thing under a CommonJS transform and as a native ES module.
  */
 export function getBundlePath(packageName: string, bundleType: 'iife' | 'umd', minified = false): string {
   const suffix = minified ? '.min.js' : '.js'
   const filename = `index.${bundleType}${suffix}`
-  return resolve(__dirname, `../../../dist/libs/${packageName}/bundle/${filename}`)
+  return resolve(process.cwd(), `dist/libs/${packageName}/bundle/${filename}`)
 }
 
 /**
@@ -21,20 +25,29 @@ export function loadBundleCode(bundlePath: string): string {
 }
 
 /**
- * Executes bundle code in the current jsdom window context.
- * Returns the global object that was attached by the IIFE/UMD bundle.
+ * Executes bundle code against the window and returns the global it attached.
+ *
+ * The code runs through indirect eval, whose top-level `var` declarations land on the
+ * global object exactly as a classic script's would; the previous script-element approach
+ * only executed under a DOM configured to run scripts. The target global is cleared first,
+ * so a bundle that fails to attach cannot pass on a value left by an earlier test.
  */
 export function executeBundleInWindow(bundleCode: string, globalName: string): unknown {
-  const script = document.createElement('script')
-  script.textContent = bundleCode
-  document.head.appendChild(script)
+  const target = window as unknown as Record<string, unknown>
+  try {
+    target[globalName] = undefined
+  } catch {
+    // why: the property may be non-writable, in which case the freshness guard simply does not apply.
+  }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const global = (window as any)[globalName]
-  if (!global) {
+  // eslint-disable-next-line no-eval
+  ;(0, eval)(bundleCode)
+
+  const attached = target[globalName]
+  if (!attached) {
     throw new Error(`Global "${globalName}" not found after executing bundle`)
   }
-  return global
+  return attached
 }
 
 /**
@@ -42,19 +55,15 @@ export function executeBundleInWindow(bundleCode: string, globalName: string): u
  */
 export function requireUmdBundle(bundleCode: string): unknown {
   const mockModule: { exports: unknown } = { exports: {} }
-  const mockRequire = jest.fn()
+  const requireCalls: unknown[][] = []
+  const mockRequire = (...args: unknown[]) => {
+    requireCalls.push(args)
+    return undefined
+  }
 
   // UMD bundles typically wrap in a function that detects the environment
   const wrapper = new Function('module', 'exports', 'require', bundleCode)
   wrapper(mockModule, mockModule.exports, mockRequire)
 
   return mockModule.exports
-}
-
-/**
- * Cleans up globals attached to window after bundle tests.
- */
-export function cleanupWindowGlobal(globalName: string): void {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  delete (window as any)[globalName]
 }

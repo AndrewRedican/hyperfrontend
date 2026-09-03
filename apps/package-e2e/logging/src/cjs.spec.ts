@@ -3,6 +3,10 @@
  * Tests that the package is requireable and exports work correctly.
  */
 
+'use strict'
+
+const { describe, it, expect, jest } = require('@hyperfrontend/testing')
+
 describe('@hyperfrontend/logging CJS', () => {
   it('is requireable', () => {
     const logging = require('@hyperfrontend/logging')

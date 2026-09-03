@@ -8,12 +8,12 @@ import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 /**
  * Result state of a prompt interaction.
  */
-export const PromptResult = freeze(<const>{
+export const PromptResult = freeze({
   /** User submitted a value */
   Submitted: 'submitted',
   /** User cancelled the prompt (Ctrl+C) */
   Cancelled: 'cancelled',
-})
+} as const)
 
 /** Result state of a prompt interaction. */
 export type PromptResult = (typeof PromptResult)[keyof typeof PromptResult]

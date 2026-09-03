@@ -122,7 +122,7 @@ export function createCalculateBumpStep(): FlowStep {
         return {
           status: 'success',
           stateUpdates: {
-            bumpType: <BumpType>'minor',
+            bumpType: 'minor' as BumpType,
             nextVersion: firstVersion,
             isPendingPublication,
           },
@@ -131,7 +131,7 @@ export function createCalculateBumpStep(): FlowStep {
       }
 
       if (config.releaseAs) {
-        const forcedBumpType = <BumpType>config.releaseAs
+        const forcedBumpType = config.releaseAs as BumpType
         const current = parseVersion(currentVersion ?? '0.0.0')
         if (!current.success || !current.version) {
           return {

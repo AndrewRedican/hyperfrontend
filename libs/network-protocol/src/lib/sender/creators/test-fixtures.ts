@@ -46,7 +46,7 @@ export const createMockLogger = (): Logger => {
     error: () => void 0,
     log: () => void 0,
     setLogLevel: () => void 0,
-    getLogLevel: () => <const>'info',
+    getLogLevel: () => 'info' as const,
     channel: () => logger,
     timed: <T>(_label: string, fn: () => T): T => fn(),
     timedAsync: <T>(_label: string, fn: () => Promise<T>): Promise<T> => fn(),

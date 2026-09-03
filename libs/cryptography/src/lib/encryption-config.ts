@@ -13,6 +13,6 @@ interface EncryptionConfigShape {
  * Frozen encryption configuration to prevent runtime tampering.
  * Using AES-GCM as the default algorithm for authenticated encryption.
  */
-export const encryptionConfig: Readonly<EncryptionConfigShape> = freeze(<const>{
-  name: <EncryptionConfig['name']>'AES-GCM',
-})
+export const encryptionConfig: Readonly<EncryptionConfigShape> = freeze({
+  name: 'AES-GCM' as EncryptionConfig['name'],
+} as const)

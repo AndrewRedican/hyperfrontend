@@ -1,11 +1,10 @@
 import type { Logger } from '@hyperfrontend/logging'
 import type { Tree } from '@hyperfrontend/project-scope/vfs'
-
 import type { ConventionalCommit } from '../../commits/models/conventional'
 import type { GitClient } from '../../git/factory'
 import type { Registry } from '../../registry/models/registry'
 import type { FlowConfig, FlowContext, FlowState } from '../models/types'
-
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { createCalculateBumpStep, createCheckIdempotencyStep, CALCULATE_BUMP_STEP_ID } from './calculate-bump'
 
 function createMockLogger(): Logger {
@@ -43,7 +42,7 @@ function createMockRegistry(options: MockRegistryOptions = {}): Registry {
     name: 'mock',
     url: 'https://mock.registry.com',
     async getLatestVersion() {
-      return publishedVersions.length > 0 ? <string>publishedVersions[publishedVersions.length - 1] : null
+      return publishedVersions.length > 0 ? (publishedVersions[publishedVersions.length - 1] as string) : null
     },
     async isVersionPublished(_packageName: string, version: string) {
       return publishedVersions.includes(version)

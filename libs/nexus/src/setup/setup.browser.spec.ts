@@ -1,4 +1,5 @@
 import type { IChannelContract } from '../types/contract'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { setupBroker } from './broker'
 import { mergeContracts } from './merge-contracts'
 
@@ -235,7 +236,7 @@ describe('Setup Utilities', () => {
         emitted: [{ type: 'result' }],
       }
 
-      const invalidContract = <IChannelContract>(<unknown>null)
+      const invalidContract = null as unknown as IChannelContract
 
       const merged = mergeContracts(validContract, invalidContract)
 
@@ -249,7 +250,7 @@ describe('Setup Utilities', () => {
         emitted: [{ type: 'result' }],
       }
 
-      const partialContract = <IChannelContract>(<unknown>{ accepted: [{ type: 'partial' }] })
+      const partialContract = { accepted: [{ type: 'partial' }] } as unknown as IChannelContract
 
       const merged = mergeContracts(validContract, partialContract)
 

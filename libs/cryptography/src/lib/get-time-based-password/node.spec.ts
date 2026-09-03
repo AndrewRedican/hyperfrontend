@@ -1,4 +1,4 @@
-/** @jest-environment node */
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { getTimeBasedPassword } from './node'
 
 describe('getTimeBasedPassword (node)', () => {
@@ -28,7 +28,7 @@ describe('getTimeBasedPassword (node)', () => {
 
   it('throws error for invalid number range', async () => {
     const getPassword = (windowOffset: number) =>
-      getTimeBasedPassword(new Date(referenceTime.getTime()), baseTimeWindow, <-1 | 0 | 1>(<unknown>windowOffset))
+      getTimeBasedPassword(new Date(referenceTime.getTime()), baseTimeWindow, windowOffset as unknown as -1 | 0 | 1)
 
     await expect(getPassword(-2)).rejects.toThrow('Window offset must be -1, 0, or 1.')
     await expect(getPassword(2)).rejects.toThrow('Window offset must be -1, 0, or 1.')

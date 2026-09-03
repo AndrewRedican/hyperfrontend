@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { isValidProtocolProvider } from './is-valid-protocol-provider'
 
 describe('isValidProtocolProvider', () => {

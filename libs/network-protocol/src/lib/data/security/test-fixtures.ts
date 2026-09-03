@@ -18,7 +18,7 @@ const createMockSerializedData = <T>(message: T, suffix = ''): SerializedData<T>
   id: `test-id-${suffix}`,
   sequence: 1,
   key: `test-key-${suffix}`,
-  message: <JSONString<T>>stringify(message),
+  message: stringify(message) as JSONString<T>,
   schema: { type: 'object' },
   schemaHash: `test-hash-${suffix}`,
 })
@@ -108,6 +108,6 @@ export const invalidEncryptionTestCases = [
   {
     description: 'non-string password',
     data: { test: 'data' },
-    password: <string>(<unknown>123),
+    password: 123 as unknown as string,
   },
 ]

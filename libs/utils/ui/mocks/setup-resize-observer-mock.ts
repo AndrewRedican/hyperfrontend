@@ -1,11 +1,14 @@
+import type { Mock } from '@hyperfrontend/testing'
+import { jest } from '@hyperfrontend/testing'
+
 /**
  * Mock implementation of ResizeObserver for testing.
  */
 export interface ResizeObserverMock {
   /** Mock observe function */
-  observe: jest.Mock
+  observe: Mock
   /** Mock unobserve function */
-  unobserve: jest.Mock
+  unobserve: Mock
   /** Captured callback from ResizeObserver constructor */
   callback: ResizeObserverCallback
 }
@@ -33,12 +36,12 @@ export interface ResizeObserverMock {
  */
 export function setupResizeObserverMock() {
   const mockDisconnect = jest.fn()
-  const mock = <ResizeObserverMock>{}
+  const mock = {} as ResizeObserverMock
   mock.observe = jest.fn()
   mock.unobserve = jest.fn()
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  ;(<any>globalThis).ResizeObserver = jest.fn((callback: ResizeObserverCallback) => {
+  ;(globalThis as any).ResizeObserver = jest.fn((callback: ResizeObserverCallback) => {
     mock.callback = callback
     return {
       observe: mock.observe,

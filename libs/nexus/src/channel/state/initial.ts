@@ -19,7 +19,7 @@ import { DEFAULT_CLOSE_TIMEOUT_MS, DEFAULT_CONNECT_TIMEOUT_MS, DEFAULT_REQUEST_R
  * ```
  */
 export function createInitialState(name: string, target: Window, settings: Partial<IChannelSettings>): ChannelState {
-  return freeze(<ChannelState>{
+  return freeze({
     id: uuidV4(),
     name,
     target,
@@ -46,7 +46,7 @@ export function createInitialState(name: string, target: Window, settings: Parti
     closeTimeoutMs: settings.closeTimeoutMs ?? DEFAULT_CLOSE_TIMEOUT_MS,
     queueMessages: settings.queueMessages ?? true,
     logger: settings.logger ?? null,
-    brokerManaged: <boolean>(<Record<string, unknown>>settings)['brokerManaged'] ?? false,
+    brokerManaged: ((settings as Record<string, unknown>)['brokerManaged'] as boolean) ?? false,
     security: settings.security ?? null,
     contractCompat: settings.contractCompat ?? null,
     readyToConnect: false,
@@ -55,5 +55,5 @@ export function createInitialState(name: string, target: Window, settings: Parti
     securityTransport: null,
     pendingSecurityRequest: null,
     notifiedDenyProcessId: null,
-  })
+  } as ChannelState)
 }

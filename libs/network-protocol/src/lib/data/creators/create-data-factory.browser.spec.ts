@@ -1,4 +1,5 @@
 import { createHash } from '@hyperfrontend/cryptography/browser'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { createDataFactory } from './create-data-factory'
 import { dataCreatorTestCases, invalidDataCreatorTestCases } from './test-fixtures'
 
@@ -70,7 +71,7 @@ describe('createDataFactory (Browser)', () => {
       it(`handles ${description}`, async () => {
         const createData = createDataFactory(createHash)
 
-        await expect(createData(<string>pid, sequence, message)).rejects.toThrow()
+        await expect(createData(pid as string, sequence, message)).rejects.toThrow()
       })
     })
 

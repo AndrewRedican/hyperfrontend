@@ -78,14 +78,14 @@ export function updateProjectReferences(tree: Tree, options: UpdateReferencesOpt
 
       if (json.targets) {
         for (const target of values(json.targets)) {
-          const targetConfig = <TargetWithDependsOn>target
+          const targetConfig = target as TargetWithDependsOn
           if (isArray(targetConfig.dependsOn)) {
             targetConfig.dependsOn = targetConfig.dependsOn.map((dep) => {
               if (typeof dep === 'string' && dep === options.currentProjectName) {
                 return options.newProjectName
               }
               if (typeof dep === 'object' && dep !== null) {
-                const depObj = <DependsOnObject>dep
+                const depObj = dep as DependsOnObject
                 if (depObj.projects === options.currentProjectName) {
                   depObj.projects = options.newProjectName
                 } else if (isArray(depObj.projects)) {

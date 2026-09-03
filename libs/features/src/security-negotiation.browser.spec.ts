@@ -1,10 +1,13 @@
+import type { Mock } from '@hyperfrontend/testing'
 import type { ShellHandle } from './host/types'
 import type { FeatureHandle } from './hostee/types'
 import type { FeatureContract, ShellOptions } from './shared/types'
+import { afterEach, beforeEach } from 'node:test'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 import { createPromise } from '@hyperfrontend/immutable-api-utils/built-in-copy/promise'
 import { createBroker } from '@hyperfrontend/nexus'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { createHeartbeatMonitor } from './host/heartbeat'
 import { createShellHandle } from './host/lifecycle'
 import { createFeatureHandle } from './hostee/lifecycle'
@@ -29,11 +32,11 @@ type MessageListener = (event: MessageEvent) => void
 
 interface StubWindow extends Partial<Window> {
   /** Records every frame the counterpart posts to this window. */
-  postMessage: jest.Mock
+  postMessage: Mock
   /** Registers broker message listeners. */
-  addEventListener: jest.Mock
+  addEventListener: Mock
   /** Removes broker message listeners. */
-  removeEventListener: jest.Mock
+  removeEventListener: Mock
   /** Dispatches a message event to the registered listeners. */
   _dispatchMessage: (event: MessageEvent) => void
 }
@@ -60,10 +63,10 @@ function createStubWindow(): StubWindow {
 // how: Mirrors real postMessage semantics — posting to a window dispatches to that window's own listeners with the counterpart as the source.
 function linkStubWindows(hostWindow: StubWindow, featureWindow: StubWindow): void {
   hostWindow.postMessage.mockImplementation((data: unknown) => {
-    hostWindow._dispatchMessage(new MessageEvent('message', { data, origin: FEATURE_ORIGIN, source: <Window>(<unknown>featureWindow) }))
+    hostWindow._dispatchMessage(new MessageEvent('message', { data, origin: FEATURE_ORIGIN, source: featureWindow as unknown as Window }))
   })
   featureWindow.postMessage.mockImplementation((data: unknown) => {
-    featureWindow._dispatchMessage(new MessageEvent('message', { data, origin: HOST_ORIGIN, source: <Window>(<unknown>hostWindow) }))
+    featureWindow._dispatchMessage(new MessageEvent('message', { data, origin: HOST_ORIGIN, source: hostWindow as unknown as Window }))
   })
 }
 
@@ -92,8 +95,9 @@ class ResizeObserverStub {
 describe('Integration: host and hostee across the hardened handshake', () => {
   let hostWindow: StubWindow
   let featureWindow: StubWindow
-  let shell: ShellHandle | null = null
-  let feature: FeatureHandle | null = null
+  // why: a test may open more than one pair, and each handle starts a heartbeat interval. Holding only the last one would leave the earlier timers running, which keeps the process alive after the suite has finished.
+  const shells: ShellHandle[] = []
+  const features: FeatureHandle[] = []
 
   beforeEach(() => {
     Object.defineProperty(globalThis, 'ResizeObserver', { value: ResizeObserverStub, configurable: true, writable: true })
@@ -102,11 +106,10 @@ describe('Integration: host and hostee across the hardened handshake', () => {
     linkStubWindows(hostWindow, featureWindow)
   })
 
+  // why: a test may open more than one pair, and each handle starts a heartbeat and a visibility watcher. Holding only the last one would leave the earlier intervals running.
   afterEach(() => {
-    shell?.destroy()
-    shell = null
-    feature?.close()
-    feature = null
+    for (const handle of features.splice(0)) handle.close()
+    for (const handle of shells.splice(0)) handle.destroy()
   })
 
   interface Party<Handle> {
@@ -120,7 +123,7 @@ describe('Integration: host and hostee across the hardened handshake', () => {
     const broker = createBroker({
       name: 'shell-host',
       contract,
-      window: <Window>(<unknown>hostWindow),
+      window: hostWindow as unknown as Window,
     })
     const emitter = createEventEmitter()
     const received: unknown[] = []
@@ -129,17 +132,17 @@ describe('Integration: host and hostee across the hardened handshake', () => {
     emitter.on('error', (data) => errors.push(data))
     const handle = createShellHandle(
       broker,
-      <ShellOptions>{ container: '#shell', url: `${FEATURE_ORIGIN}/`, protocol, ...(protocol === 'v2' && { sharedKey: PSK }) },
+      { container: '#shell', url: `${FEATURE_ORIGIN}/`, protocol, ...(protocol === 'v2' && { sharedKey: PSK }) } as ShellOptions,
       emitter,
       {
         contract,
-        selectMount: () => () => ({ target: <Window>(<unknown>featureWindow), present: { mode: 'embedded' }, cleanup: () => undefined }),
+        selectMount: () => () => ({ target: featureWindow as unknown as Window, present: { mode: 'embedded' }, cleanup: () => undefined }),
         registerSecurity,
         createHeartbeatMonitor,
         observeVisibility: () => () => undefined,
       }
     )
-    shell = handle
+    shells.push(handle)
     handle.open()
     return { handle, received, errors }
   }
@@ -150,23 +153,23 @@ describe('Integration: host and hostee across the hardened handshake', () => {
     const broker = createBroker({
       name: 'clock-feature',
       contract,
-      window: <Window>(<unknown>featureWindow),
+      window: featureWindow as unknown as Window,
     })
     const emitter = createEventEmitter()
     const received: unknown[] = []
     const errors: unknown[] = []
     emitter.on('setTimezone', (data) => received.push(data))
     emitter.on('error', (data) => errors.push(data))
-    const handle = createFeatureHandle(broker, <Window>(<unknown>hostWindow), emitter, {
+    const handle = createFeatureHandle(broker, hostWindow as unknown as Window, emitter, {
       contract,
       protocol,
       ...(protocol === 'v2' && { sharedKey: PSK }),
     })
-    feature = handle
+    features.push(handle)
     return { handle, received, errors }
   }
 
-  const framesTo = (target: StubWindow) => target.postMessage.mock.calls.map((call) => <unknown>call[0])
+  const framesTo = (target: StubWindow) => target.postMessage.mock.calls.map((call) => call[0] as unknown)
 
   const plaintextFrames = (target: StubWindow) => framesTo(target).filter((frame) => !(frame instanceof Uint8Array))
 
@@ -183,7 +186,7 @@ describe('Integration: host and hostee across the hardened handshake', () => {
         encrypted: framesTo(featureWindow).some((frame) => frame instanceof Uint8Array),
         plaintextLeaks: plaintextFrames(featureWindow).filter((frame) => stringify(frame).includes('classified-payload')),
         nonHandshakePlaintext: plaintextFrames(featureWindow).filter(
-          (frame) => !(<{ type: string }>frame).type.startsWith('[nexus] connection-')
+          (frame) => !(frame as { type: string }).type.startsWith('[nexus] connection-')
         ),
       }).toEqual({
         delivered: [{ timezone: 'UTC', marker: 'classified-payload' }],
@@ -218,7 +221,7 @@ describe('Integration: host and hostee across the hardened handshake', () => {
     it('keeps the watchdog healthy past the miss threshold under the v1 envelope', async () => {
       const host = openHostShell(featureContract, 'v1')
       const states: string[] = []
-      host.handle.on('status', (data) => states.push((<{ state: string }>data).state))
+      host.handle.on('status', (data) => states.push((data as { state: string }).state))
       const featureParty = connectFeature(featureContract, 'v1')
       await featureParty.handle.ready()
       await waitFor(() => host.handle.isOpen)

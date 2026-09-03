@@ -1,6 +1,7 @@
 import type { OwnerIndex } from './attribute-modules'
 import type { EntryInput } from './plan-hoists'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { attribute, parseEntry } from './attribute-modules'
 import { planHoists } from './plan-hoists'
 

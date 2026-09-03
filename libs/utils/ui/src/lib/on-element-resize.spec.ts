@@ -1,4 +1,6 @@
 import type { ResizeObserverMock } from '../../mocks/setup-resize-observer-mock'
+import { before as beforeAll } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { setupResizeObserverMock } from '../../mocks/setup-resize-observer-mock'
 import { onElementResize } from './on-element-resize'
 
@@ -28,7 +30,7 @@ describe('onElementResize', () => {
     }
 
     const entry = { contentRect, target: element }
-    mock.callback(<ResizeObserverEntry[]>(<unknown>[entry]), <ResizeObserver>{})
+    mock.callback([entry] as unknown as ResizeObserverEntry[], {} as ResizeObserver)
 
     expect(callback).toHaveBeenCalledWith(contentRect)
     expect(mock.observe).toHaveBeenCalledWith(element)
@@ -56,7 +58,7 @@ describe('onElementResize', () => {
     }
 
     const entry = { contentRect, target: element }
-    mock.callback(<ResizeObserverEntry[]>(<unknown>[entry]), <ResizeObserver>{})
+    mock.callback([entry] as unknown as ResizeObserverEntry[], {} as ResizeObserver)
 
     expect(callback).not.toHaveBeenCalled()
     expect(mock.unobserve).toHaveBeenCalledWith(element)

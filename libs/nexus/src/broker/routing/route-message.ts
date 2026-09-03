@@ -38,6 +38,6 @@ export function routeMessage(router: Map<string, RouteHandler>, context: Routing
 
     handler(context, message)
   } catch (error) {
-    logger.error('Error routing message:', <Error>error)
+    logger.error('Error routing message:', error as Error)
   }
 }

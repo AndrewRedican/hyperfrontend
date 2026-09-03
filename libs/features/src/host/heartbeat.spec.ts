@@ -1,3 +1,5 @@
+import { afterEach, beforeEach } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { createHeartbeatMonitor } from './heartbeat'
 
 jest.mock('@hyperfrontend/immutable-api-utils/built-in-copy/timers', () => ({

@@ -90,7 +90,7 @@ function buildHeaderRulesStep(config: ResolvedServeConfig): ServeStep {
         if (existing !== undefined && existing !== name) {
           delete merged[existing]
         }
-        merged[name] = <string>rule.headers[name]
+        merged[name] = rule.headers[name] as string
       }
     }
     return { ...response, headers: merged }
@@ -184,7 +184,7 @@ function buildServeFileStep(config: ResolvedServeConfig, deps: ServeStepDeps): S
     }
     context.filePath = filePath
     const etag = weakEtag(stats)
-    if (etagMatches(<string | undefined>request.headers['if-none-match'], etag)) {
+    if (etagMatches(request.headers['if-none-match'] as string | undefined, etag)) {
       return { status: 304, headers: { ETag: etag }, body: null }
     }
     const body = readFile(filePath)

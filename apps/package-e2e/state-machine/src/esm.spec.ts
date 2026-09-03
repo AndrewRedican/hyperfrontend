@@ -5,6 +5,8 @@
  * Note: state-machine uses multiple sub-entry exports, not a single main entry.
  */
 
+import { describe, it, expect } from '@hyperfrontend/testing'
+
 describe('@hyperfrontend/state-machine ESM', () => {
   describe('actions sub-entry', () => {
     it('is importable', async () => {

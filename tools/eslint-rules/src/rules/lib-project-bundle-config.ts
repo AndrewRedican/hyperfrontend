@@ -31,11 +31,11 @@ interface BundleIssue {
  */
 function getPropertyStringValue(prop: JSONProperty): string | null {
   const value = prop.value
-  /* istanbul ignore next - only string literals are checked */
+  // why: only string literals are checked
   if (value.type === 'JSONLiteral' && typeof value.value === 'string') {
     return value.value
   }
-  /* istanbul ignore next - fallback for non-string values */
+  // why: fallback for non-string values
   return null
 }
 
@@ -46,9 +46,9 @@ function getPropertyStringValue(prop: JSONProperty): string | null {
  * @param name - The name of the property to find.
  * @returns The found property or undefined.
  */
-// istanbul ignore next - utility function
+// why: utility function
 function findProperty(obj: JSONObjectExpression, name: string): JSONProperty | undefined {
-  return <JSONProperty | undefined>(<unknown>obj.properties.find((prop) => {
+  return obj.properties.find((prop) => {
     if (prop.type !== 'JSONProperty') {
       return false
     }
@@ -60,7 +60,7 @@ function findProperty(obj: JSONObjectExpression, name: string): JSONProperty | u
       return key.value === name
     }
     return false
-  }))
+  }) as unknown as JSONProperty | undefined
 }
 
 const rule: Rule.RuleModule = {
@@ -82,7 +82,7 @@ const rule: Rule.RuleModule = {
     const filePath = context.filename
     const projectRoot = dirname(filePath)
 
-    /* istanbul ignore next - only publishable libraries are linted via config */
+    // why: only publishable libraries are linted via config
     if (!isPublishableLibrary(projectRoot)) {
       return {}
     }
@@ -91,7 +91,7 @@ const rule: Rule.RuleModule = {
 
     return {
       JSONProperty(node: JSONNode) {
-        // istanbul ignore next -- type guard for jsonc-eslint-parser
+        // why: type guard for jsonc-eslint-parser
         if (node.type !== 'JSONProperty') {
           return
         }

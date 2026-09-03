@@ -6,6 +6,8 @@
 import { loadBundleCode, executeBundleInWindow } from '../../shared/helpers'
 import { resolve, join } from 'node:path'
 
+import { describe, it, expect } from '@hyperfrontend/testing'
+
 // ui-utils is under utils/ui in dist
 const getBundlePath = (format: 'iife' | 'umd', minified = false) => {
   const distRoot = resolve(__dirname, '../../../../dist/libs/utils/ui')

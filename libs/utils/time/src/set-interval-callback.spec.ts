@@ -1,3 +1,4 @@
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { setIntervalCallback } from './set-interval-callback'
 import { sleep } from './sleep'
 

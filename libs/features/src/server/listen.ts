@@ -15,7 +15,7 @@ import { createPromise } from '@hyperfrontend/immutable-api-utils/built-in-copy/
  */
 export function addressPort(server: Server): number {
   const address = server.address()
-  /* istanbul ignore next -- @preserve a fired listen() callback always yields an AddressInfo for a numeric port */
+  // why: a fired listen() callback always yields an AddressInfo for a numeric port
   if (address === null || typeof address === 'string') {
     throw createError('Server failed to report a listening port.')
   }

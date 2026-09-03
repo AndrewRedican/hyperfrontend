@@ -36,7 +36,7 @@ export function removeSection(changelog: Changelog, version: string, sectionType
     return changelog
   }
 
-  const entry = <ChangelogEntry>changelog.entries[entryIndex]
+  const entry = changelog.entries[entryIndex] as ChangelogEntry
   const sectionIndex = entry.sections.findIndex((s) => s.type === sectionType)
 
   if (sectionIndex === -1) {
@@ -96,7 +96,7 @@ export function removeItem(
     return changelog
   }
 
-  const entry = <ChangelogEntry>changelog.entries[entryIndex]
+  const entry = changelog.entries[entryIndex] as ChangelogEntry
   const sectionIndex = entry.sections.findIndex((s) => s.type === sectionType)
 
   if (sectionIndex === -1) {
@@ -106,7 +106,7 @@ export function removeItem(
     return changelog
   }
 
-  const section = <ChangelogSection>entry.sections[sectionIndex]
+  const section = entry.sections[sectionIndex] as ChangelogSection
   const itemIndex = section.items.findIndex((i) => i.description === itemDescription)
 
   if (itemIndex === -1) {

@@ -1,5 +1,7 @@
 import { existsSync, readFileSync, statSync } from 'node:fs'
 import { join } from 'node:path'
+import { after as afterAll } from 'node:test'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { createTempWorkspace, createTempWorkspaceManager } from './temp-workspace'
 
 describe('createTempWorkspace', () => {

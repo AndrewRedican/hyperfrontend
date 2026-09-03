@@ -1,4 +1,6 @@
 import type { ShellOptions } from '../../shared/types'
+import { afterEach, beforeEach } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { resolvePopupDefaults } from './defaults'
 import { mountPopup } from './popup'
 
@@ -24,13 +26,13 @@ describe('mountPopup', () => {
   })
 
   function spyOpen() {
-    return jest.spyOn(window, 'open').mockReturnValue(<Window>(<unknown>{ closed: false, close: jest.fn() }))
+    return jest.spyOn(window, 'open').mockReturnValue({ closed: false, close: jest.fn() } as unknown as Window)
   }
 
   it('opens a popup sized from the popup options', () => {
     const open = spyOpen()
     mountPopup({
-      options: <ShellOptions>{ url: 'https://feature.example/', popupWidth: 400, popupHeight: 300 },
+      options: { url: 'https://feature.example/', popupWidth: 400, popupHeight: 300 } as ShellOptions,
       requestClose: jest.fn(),
     })
     expect(open).toHaveBeenCalledWith('https://feature.example/', '_blank', 'width=400,height=300,scrollbars=no')
@@ -39,7 +41,7 @@ describe('mountPopup', () => {
   it('falls back to the dynamic default popup footprint', () => {
     const open = spyOpen()
     const defaults = resolvePopupDefaults()
-    mountPopup({ options: <ShellOptions>{ url: 'https://feature.example/' }, requestClose: jest.fn() })
+    mountPopup({ options: { url: 'https://feature.example/' } as ShellOptions, requestClose: jest.fn() })
     expect(open).toHaveBeenCalledWith(
       'https://feature.example/',
       '_blank',
@@ -50,14 +52,14 @@ describe('mountPopup', () => {
   it('fills only the missing axis from the defaults', () => {
     const open = spyOpen()
     const defaults = resolvePopupDefaults()
-    mountPopup({ options: <ShellOptions>{ url: 'https://feature.example/', popupWidth: 400 }, requestClose: jest.fn() })
+    mountPopup({ options: { url: 'https://feature.example/', popupWidth: 400 } as ShellOptions, requestClose: jest.fn() })
     expect(open).toHaveBeenCalledWith('https://feature.example/', '_blank', `width=400,height=${defaults.height},scrollbars=no`)
   })
 
   it('defaults the url to an empty string', () => {
     const open = spyOpen()
     const defaults = resolvePopupDefaults()
-    mountPopup({ options: <ShellOptions>{}, requestClose: jest.fn() })
+    mountPopup({ options: {} as ShellOptions, requestClose: jest.fn() })
     expect(open).toHaveBeenCalledWith('', '_blank', `width=${defaults.width},height=${defaults.height},scrollbars=no`)
   })
 
@@ -65,7 +67,7 @@ describe('mountPopup', () => {
     const open = spyOpen()
     stubScreen({ availWidth: 1024, availHeight: 768 })
     mountPopup({
-      options: <ShellOptions>{ url: 'https://feature.example/', popupWidth: 400, popupHeight: 300 },
+      options: { url: 'https://feature.example/', popupWidth: 400, popupHeight: 300 } as ShellOptions,
       requestClose: jest.fn(),
     })
     expect(open).toHaveBeenCalledWith('https://feature.example/', '_blank', 'width=400,height=300,scrollbars=no,left=312,top=234')
@@ -75,7 +77,7 @@ describe('mountPopup', () => {
     const open = spyOpen()
     stubScreen({ availWidth: 1024, availHeight: 768 })
     mountPopup({
-      options: <ShellOptions>{ url: 'https://feature.example/', popupWidth: 400, popupHeight: 300, popupPosition: 'top-left' },
+      options: { url: 'https://feature.example/', popupWidth: 400, popupHeight: 300, popupPosition: 'top-left' } as ShellOptions,
       requestClose: jest.fn(),
     })
     expect(open).toHaveBeenCalledWith('https://feature.example/', '_blank', 'width=400,height=300,scrollbars=no,left=0,top=0')
@@ -85,7 +87,7 @@ describe('mountPopup', () => {
     const open = spyOpen()
     stubScreen({ availWidth: 1024, availHeight: 768 })
     mountPopup({
-      options: <ShellOptions>{ url: 'https://feature.example/', popupWidth: 400, popupHeight: 300, popupPosition: 'bottom-right' },
+      options: { url: 'https://feature.example/', popupWidth: 400, popupHeight: 300, popupPosition: 'bottom-right' } as ShellOptions,
       requestClose: jest.fn(),
     })
     expect(open).toHaveBeenCalledWith('https://feature.example/', '_blank', 'width=400,height=300,scrollbars=no,left=624,top=468')
@@ -95,7 +97,7 @@ describe('mountPopup', () => {
     const open = spyOpen()
     stubScreen(undefined)
     mountPopup({
-      options: <ShellOptions>{ url: 'https://feature.example/', popupWidth: 400, popupHeight: 300, popupPosition: 'top-left' },
+      options: { url: 'https://feature.example/', popupWidth: 400, popupHeight: 300, popupPosition: 'top-left' } as ShellOptions,
       requestClose: jest.fn(),
     })
     expect(open).toHaveBeenCalledWith('https://feature.example/', '_blank', 'width=400,height=300,scrollbars=no')
@@ -105,7 +107,7 @@ describe('mountPopup', () => {
     const open = spyOpen()
     stubScreen({ availWidth: 0, availHeight: 768 })
     mountPopup({
-      options: <ShellOptions>{ url: 'https://feature.example/', popupWidth: 400, popupHeight: 300 },
+      options: { url: 'https://feature.example/', popupWidth: 400, popupHeight: 300 } as ShellOptions,
       requestClose: jest.fn(),
     })
     expect(open).toHaveBeenCalledWith('https://feature.example/', '_blank', 'width=400,height=300,scrollbars=no')
@@ -115,7 +117,7 @@ describe('mountPopup', () => {
     const open = spyOpen()
     stubScreen({ availWidth: 1024, availHeight: 0 })
     mountPopup({
-      options: <ShellOptions>{ url: 'https://feature.example/', popupWidth: 400, popupHeight: 300 },
+      options: { url: 'https://feature.example/', popupWidth: 400, popupHeight: 300 } as ShellOptions,
       requestClose: jest.fn(),
     })
     expect(open).toHaveBeenCalledWith('https://feature.example/', '_blank', 'width=400,height=300,scrollbars=no')
@@ -123,17 +125,17 @@ describe('mountPopup', () => {
 
   it('announces the popup display mode', () => {
     spyOpen()
-    const result = mountPopup({ options: <ShellOptions>{ url: 'https://feature.example/' }, requestClose: jest.fn() })
+    const result = mountPopup({ options: { url: 'https://feature.example/' } as ShellOptions, requestClose: jest.fn() })
     expect(result.present).toEqual({ mode: 'popup' })
   })
 
   it('throws when a sandbox is requested for a popup window', () => {
-    expect(() => mountPopup({ options: <ShellOptions>{ sandbox: true }, requestClose: jest.fn() })).toThrow('cannot be sandboxed')
+    expect(() => mountPopup({ options: { sandbox: true } as ShellOptions, requestClose: jest.fn() })).toThrow('cannot be sandboxed')
   })
 
   it('accepts an explicitly disabled sandbox', () => {
     const open = spyOpen()
-    mountPopup({ options: <ShellOptions>{ sandbox: false }, requestClose: jest.fn() })
+    mountPopup({ options: { sandbox: false } as ShellOptions, requestClose: jest.fn() })
     expect(open).toHaveBeenCalledTimes(1)
   })
 })

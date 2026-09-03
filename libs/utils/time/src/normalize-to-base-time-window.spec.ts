@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { normalizeToBaseTimeWindow } from './normalize-to-base-time-window'
 
 describe('normalizeToBaseTimeWindow', () => {
@@ -23,7 +24,7 @@ describe('normalizeToBaseTimeWindow', () => {
   })
 
   it('handles null or invalid time input', () => {
-    expect(() => normalizeToBaseTimeWindow(<any>null, 30)).toThrow()
+    expect(() => normalizeToBaseTimeWindow(null as any, 30)).toThrow()
     expect(() => normalizeToBaseTimeWindow(new Date('invalid-date'), 30)).toThrow()
   })
 

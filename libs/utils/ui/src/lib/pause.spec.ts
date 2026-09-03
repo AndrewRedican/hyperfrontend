@@ -1,7 +1,10 @@
+import type { Mock } from '@hyperfrontend/testing'
+import { afterEach, beforeEach } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { pause } from './pause'
 
 describe('pause', () => {
-  let setTimeoutSpy: jest.SpyInstance
+  let setTimeoutSpy: Mock
 
   beforeEach(() => {
     setTimeoutSpy = jest.spyOn(global, 'setTimeout')

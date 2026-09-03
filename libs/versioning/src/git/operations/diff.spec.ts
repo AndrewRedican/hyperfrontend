@@ -1,4 +1,7 @@
+import type { MockedFunction } from '@hyperfrontend/testing'
 import { execFileSync } from 'node:child_process'
+import { beforeEach } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { getChangedFilesBetween, getChangedFilesBetweenWithStatus, getCommitWithFiles, DEFAULT_DIFF_OPTIONS } from './diff'
 import { getCommit } from './log'
 
@@ -8,8 +11,8 @@ jest.mock('./log', () => ({
   getCommit: jest.fn(),
 }))
 
-const mockExecFileSync = execFileSync as jest.MockedFunction<typeof execFileSync>
-const mockGetCommit = getCommit as jest.MockedFunction<typeof getCommit>
+const mockExecFileSync = execFileSync as MockedFunction<typeof execFileSync>
+const mockGetCommit = getCommit as MockedFunction<typeof getCommit>
 
 describe('DEFAULT_DIFF_OPTIONS', () => {
   it('has expected default values', () => {

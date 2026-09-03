@@ -1,5 +1,7 @@
 import type { TextConfig } from '../types'
 import { PassThrough } from 'node:stream'
+import { afterEach, beforeEach } from 'node:test'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { Key } from '../terminal'
 import { PromptResult } from '../types'
 import { text } from './text'

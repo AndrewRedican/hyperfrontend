@@ -31,10 +31,6 @@ interface NormalizedOptions {
   offsetFromRoot: string
   /** Pascal case name for globalName (e.g., 'HyperfrontendMyUtils') */
   globalName: string
-  /** Jest coverage path (e.g., 'libs/utils/my') */
-  coveragePath: string
-  /** Display name for jest (e.g., 'my-utils') */
-  displayName: string
 }
 
 /**
@@ -53,7 +49,6 @@ function normalizeOptions(options: LibraryGeneratorSchema): NormalizedOptions {
   const packageName = derivePackageName(projectName)
 
   const offset = offsetFromRoot(projectRoot)
-  const displayName = name
   const globalName = `Hyperfrontend${names(name).className}`
 
   return {
@@ -68,8 +63,6 @@ function normalizeOptions(options: LibraryGeneratorSchema): NormalizedOptions {
     skipFormat: options.skipFormat ?? false,
     offsetFromRoot: offset,
     globalName,
-    coveragePath: projectRoot.replace(/^libs\/?/, 'libs/'),
-    displayName,
   }
 }
 
@@ -110,7 +103,7 @@ function addFiles(tree: Tree, options: NormalizedOptions): void {
  * - package.json with required fields
  * - TypeScript configuration files
  * - ESLint configuration
- * - Jest configuration
+ * - Test configuration for the node test runner
  * - Source entry point with `@module` JSDoc header
  * - README.md template
  *

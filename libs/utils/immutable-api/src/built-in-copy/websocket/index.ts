@@ -27,7 +27,7 @@ const _freeze = globalThis.Object.freeze
  * ```
  */
 export const createWebSocket = (url: string | URL, protocols?: string | string[]): WebSocket =>
-  <WebSocket>_Reflect.construct(_WebSocket, [url, protocols])
+  _Reflect.construct(_WebSocket, [url, protocols]) as WebSocket
 
 /**
  * WebSocket ready state constants (safe copies).
@@ -41,10 +41,10 @@ export const CLOSED = _WebSocket.CLOSED
  * (Safe copy) Namespace object containing all WebSocket utilities.
  * Note: Importing this imports all methods in this namespace (no tree-shaking).
  */
-export const WebSocket = _freeze(<const>{
+export const WebSocket = _freeze({
   createWebSocket,
   CONNECTING,
   OPEN,
   CLOSING,
   CLOSED,
-})
+} as const)

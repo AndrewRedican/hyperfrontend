@@ -117,7 +117,7 @@ const readReport = (reportPath: string, label: string): InjectWorkerReport => {
   if (!existsSync(reportPath)) {
     throw createError(`inject worker for ${label} did not write a report at ${reportPath}`)
   }
-  const data = <InjectWorkerReport>parse(readFileSync(reportPath, 'utf8'))
+  const data = parse(readFileSync(reportPath, 'utf8')) as InjectWorkerReport
   return data
 }
 

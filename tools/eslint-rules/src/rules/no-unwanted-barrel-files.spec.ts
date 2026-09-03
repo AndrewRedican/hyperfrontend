@@ -1,5 +1,7 @@
 import type { InvalidTestCase, ValidTestCase } from '@typescript-eslint/rule-tester'
 import { join } from 'node:path'
+import { after as afterAll } from 'node:test'
+import { describe } from '@hyperfrontend/testing'
 import { createTempWorkspaceManager, createTypeScriptRuleTester } from '../testing'
 import rule from './no-unwanted-barrel-files'
 

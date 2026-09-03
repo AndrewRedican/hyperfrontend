@@ -1,3 +1,5 @@
+import { beforeEach } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { createProcessManager } from './factory'
 jest.unmock('@hyperfrontend/immutable-api-utils/built-in-copy/object')
 

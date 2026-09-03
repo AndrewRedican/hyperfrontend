@@ -21,7 +21,7 @@ const _freeze = globalThis.Object.freeze
  * @returns A new Function.
  */
 export const createFunction = (...args: string[]): ((...args: unknown[]) => unknown) =>
-  <(...args: unknown[]) => unknown>_Reflect.construct(_Function, args)
+  _Reflect.construct(_Function, args) as (...args: unknown[]) => unknown
 
 /**
  * (Safe copy) Reference to the captured Function.prototype.
@@ -47,10 +47,10 @@ export const functionBind = _FunctionPrototype.bind
  * (Safe copy) Namespace object containing Function utilities.
  * Note: Importing this imports all methods in this namespace (no tree-shaking).
  */
-export const Function = _freeze(<const>{
+export const Function = _freeze({
   create: createFunction,
   prototype: functionPrototype,
   call: functionCall,
   apply: functionApply,
   bind: functionBind,
-})
+} as const)

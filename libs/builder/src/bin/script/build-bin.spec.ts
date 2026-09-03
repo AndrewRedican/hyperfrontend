@@ -1,6 +1,9 @@
+import type { Mock } from '@hyperfrontend/testing'
 import type { RollupBuildDescriptor } from '../../bundle/rollup/worker/types'
 import type { BinConfig, BuildContext } from '../../models'
+import { beforeEach } from 'node:test'
 import { ensureDir } from '@hyperfrontend/project-scope/core'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { dispatchRollupWorker, resolveDefaultRollupWorkerPath } from '../../bundle/rollup/dispatch'
 import { buildJsBin } from './build-bin'
 jest.mock('../../bundle/rollup/dispatch', () => ({
@@ -29,35 +32,35 @@ const makeContext = (overrides: Partial<BuildContext> = {}): BuildContext => ({
 })
 
 beforeEach(() => {
-  ;(<jest.Mock>dispatchRollupWorker).mockClear()
-  ;(<jest.Mock>resolveDefaultRollupWorkerPath).mockClear().mockReturnValue({
+  ;(dispatchRollupWorker as Mock).mockClear()
+  ;(resolveDefaultRollupWorkerPath as Mock).mockClear().mockReturnValue({
     path: '/abs/repo/dist/libs/builder/bundle/rollup/worker/index.cjs.js',
     execArgv: [],
   })
-  ;(<jest.Mock>ensureDir).mockClear()
+  ;(ensureDir as Mock).mockClear()
 })
 
 const dispatchedDescriptor = (callIndex: number): RollupBuildDescriptor =>
-  <RollupBuildDescriptor>(<jest.Mock>dispatchRollupWorker).mock.calls[callIndex][0]
+  (dispatchRollupWorker as Mock).mock.calls[callIndex][0] as RollupBuildDescriptor
 
 describe('buildJsBin', () => {
   it('ensures the bin output directory exists before dispatching', async () => {
-    await buildJsBin(<BinConfig>{ name: 'cz', format: 'cjs' }, makeContext())
+    await buildJsBin({ name: 'cz', format: 'cjs' } as BinConfig, makeContext())
     expect(ensureDir).toHaveBeenCalledWith('/abs/dist/libs/foo/bin')
   })
 
   it('emits a single CJS output as `<name>.js` when only CJS is declared', async () => {
-    const result = await buildJsBin(<BinConfig>{ name: 'cz', format: 'cjs', runner: 'runCz' }, makeContext())
+    const result = await buildJsBin({ name: 'cz', format: 'cjs', runner: 'runCz' } as BinConfig, makeContext())
     expect(result).toEqual([{ name: 'cz', kind: 'cjs', outputPath: '/abs/dist/libs/foo/bin/cz.js' }])
   })
 
   it('emits an ESM output as `<name>.mjs`', async () => {
-    const result = await buildJsBin(<BinConfig>{ name: 'cz', format: 'esm', runner: 'runCz' }, makeContext())
+    const result = await buildJsBin({ name: 'cz', format: 'esm', runner: 'runCz' } as BinConfig, makeContext())
     expect(result).toEqual([{ name: 'cz', kind: 'esm', outputPath: '/abs/dist/libs/foo/bin/cz.mjs' }])
   })
 
   it('emits both CJS (`<name>.cjs.js`) and ESM (`<name>.mjs`) when an array of formats is declared', async () => {
-    const result = await buildJsBin(<BinConfig>{ name: 'hf-build', format: ['cjs', 'esm'] }, makeContext())
+    const result = await buildJsBin({ name: 'hf-build', format: ['cjs', 'esm'] } as BinConfig, makeContext())
     expect(result).toEqual([
       { name: 'hf-build', kind: 'cjs', outputPath: '/abs/dist/libs/foo/bin/hf-build.cjs.js' },
       { name: 'hf-build', kind: 'esm', outputPath: '/abs/dist/libs/foo/bin/hf-build.mjs' },
@@ -65,7 +68,7 @@ describe('buildJsBin', () => {
   })
 
   it('dispatches one worker per format with the correct descriptor shape', async () => {
-    await buildJsBin(<BinConfig>{ name: 'hf-build', format: ['cjs', 'esm'] }, makeContext())
+    await buildJsBin({ name: 'hf-build', format: ['cjs', 'esm'] } as BinConfig, makeContext())
     expect(dispatchRollupWorker).toHaveBeenCalledTimes(2)
     const cjs = dispatchedDescriptor(0)
     const esm = dispatchedDescriptor(1)
@@ -79,17 +82,17 @@ describe('buildJsBin', () => {
   })
 
   it('labels the dispatch invocation with `bin:<name>:<format>` for traceability', async () => {
-    await buildJsBin(<BinConfig>{ name: 'cz', format: ['cjs', 'esm'] }, makeContext())
+    await buildJsBin({ name: 'cz', format: ['cjs', 'esm'] } as BinConfig, makeContext())
     expect(dispatchRollupWorker).toHaveBeenNthCalledWith(1, expect.any(Object), expect.objectContaining({ label: 'bin:cz:cjs' }))
     expect(dispatchRollupWorker).toHaveBeenNthCalledWith(2, expect.any(Object), expect.objectContaining({ label: 'bin:cz:esm' }))
   })
 
   it('threads the resolved worker path + execArgv into the dispatch options', async () => {
-    ;(<jest.Mock>resolveDefaultRollupWorkerPath).mockReturnValue({
+    ;(resolveDefaultRollupWorkerPath as Mock).mockReturnValue({
       path: '/abs/repo/libs/builder/src/bundle/rollup/worker/index.ts',
       execArgv: ['--require', '@swc-node/register'],
     })
-    await buildJsBin(<BinConfig>{ name: 'cz', format: 'cjs' }, makeContext())
+    await buildJsBin({ name: 'cz', format: 'cjs' } as BinConfig, makeContext())
     expect(dispatchRollupWorker).toHaveBeenCalledWith(
       expect.any(Object),
       expect.objectContaining({
@@ -100,24 +103,24 @@ describe('buildJsBin', () => {
   })
 
   it('throws when the rollup worker cannot be resolved', async () => {
-    ;(<jest.Mock>resolveDefaultRollupWorkerPath).mockReturnValue(undefined)
-    await expect(buildJsBin(<BinConfig>{ name: 'cz', format: 'cjs' }, makeContext())).rejects.toThrow(/rollup worker/)
+    ;(resolveDefaultRollupWorkerPath as Mock).mockReturnValue(undefined)
+    await expect(buildJsBin({ name: 'cz', format: 'cjs' } as BinConfig, makeContext())).rejects.toThrow(/rollup worker/)
   })
 
   it('configures the descriptor with the bootstrap footer for the runner export', async () => {
-    await buildJsBin(<BinConfig>{ name: 'cz', format: 'cjs', runner: 'runCz' }, makeContext())
+    await buildJsBin({ name: 'cz', format: 'cjs', runner: 'runCz' } as BinConfig, makeContext())
     const descriptor = dispatchedDescriptor(0)
     expect(descriptor.bin?.footer).toContain('runCz(')
   })
 
   it('configures the ESM descriptor with the ESM-flavored bootstrap footer', async () => {
-    await buildJsBin(<BinConfig>{ name: 'cz', format: 'esm' }, makeContext())
+    await buildJsBin({ name: 'cz', format: 'esm' } as BinConfig, makeContext())
     const descriptor = dispatchedDescriptor(0)
     expect(descriptor.bin?.footer).toContain('await import(import.meta.url)')
   })
 
   it('honors a per-bin bootstrap override on the descriptor footer', async () => {
-    await buildJsBin(<BinConfig>{ name: 'cz', format: 'cjs', bootstrap: '// custom-footer' }, makeContext())
+    await buildJsBin({ name: 'cz', format: 'cjs', bootstrap: '// custom-footer' } as BinConfig, makeContext())
     const descriptor = dispatchedDescriptor(0)
     expect(descriptor.bin?.footer).toBe('// custom-footer')
   })

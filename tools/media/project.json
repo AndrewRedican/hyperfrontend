@@ -6,13 +6,8 @@
   "projectType": "library",
   "tags": ["type:util", "scope:internal"],
   "targets": {
-    "install": {
-      "executor": "@hyperfrontend/app:install",
-      "options": {}
-    },
     "media": {
       "executor": "nx:run-commands",
-      "dependsOn": ["install"],
       "cache": false,
       "options": {
         "command": "npx tsx src/cli/main.ts record",
@@ -21,7 +16,6 @@
     },
     "shot": {
       "executor": "nx:run-commands",
-      "dependsOn": ["install"],
       "cache": false,
       "options": {
         "command": "npx tsx src/cli/main.ts shot",
@@ -30,7 +24,6 @@
     },
     "check": {
       "executor": "nx:run-commands",
-      "dependsOn": ["install"],
       "cache": false,
       "options": {
         "command": "npx tsx src/cli/main.ts check",
@@ -39,16 +32,12 @@
     },
     "doctor": {
       "executor": "nx:run-commands",
-      "dependsOn": ["install"],
       "cache": false,
       "options": {
         "command": "npx tsx src/cli/main.ts doctor",
         "cwd": "tools/media"
       }
     },
-    "typecheck": {
-      "dependsOn": ["install"]
-    },
-    "audit": {}
+    "typecheck": {}
   }
 }

@@ -70,7 +70,7 @@ export function deriveProjectScopes(options: DeriveProjectScopesOptions): readon
 /**
  * Default project name prefixes that can be stripped for scope matching.
  */
-export const DEFAULT_PROJECT_PREFIXES = <const>['lib-', 'app-', 'e2e-', 'tool-', 'plugin-', 'feature-', 'package-']
+export const DEFAULT_PROJECT_PREFIXES = ['lib-', 'app-', 'e2e-', 'tool-', 'plugin-', 'feature-', 'package-'] as const
 
 /**
  * Generates scope variations by stripping recognized project prefixes.

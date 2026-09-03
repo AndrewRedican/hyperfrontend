@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { parseRepositoryUrl, createRepositoryConfigFromUrl } from './url'
 
 describe('parseRepositoryUrl', () => {

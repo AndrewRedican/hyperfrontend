@@ -1,7 +1,8 @@
-import { mkdtempSync, rmSync, writeFileSync, mkdirSync } from 'node:fs'
+import { mkdtempSync, rmSync, writeFileSync, mkdirSync, existsSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { join } from 'node:path'
-import { describe, it, expect, beforeEach, afterEach } from '@jest/globals'
+import { join, parse } from 'node:path'
+import { beforeEach, afterEach } from 'node:test'
+import { describe, it, expect } from '@hyperfrontend/testing'
 import { traverseUpward, locateByMarkers, findUpwardWhere } from './traversal'
 
 describe('core/fs/traversal', () => {
@@ -29,8 +30,7 @@ describe('core/fs/traversal', () => {
 
       const result = traverseUpward(deepDir, (dir) => {
         try {
-          const fs = require('node:fs')
-          return fs.existsSync(join(dir, 'marker.txt'))
+          return existsSync(join(dir, 'marker.txt'))
         } catch {
           return false
         }
@@ -55,8 +55,7 @@ describe('core/fs/traversal', () => {
 
       const result = traverseUpward(deepDir, (dir) => {
         try {
-          const fs = require('node:fs')
-          return fs.existsSync(join(dir, 'marker.txt'))
+          return existsSync(join(dir, 'marker.txt'))
         } catch {
           return false
         }
@@ -100,8 +99,7 @@ describe('core/fs/traversal', () => {
 
       const result = findUpwardWhere(deepDir, (dir) => {
         try {
-          const fs = require('node:fs')
-          return fs.existsSync(join(dir, 'test.txt'))
+          return existsSync(join(dir, 'test.txt'))
         } catch {
           return false
         }
@@ -127,7 +125,7 @@ describe('core/fs/traversal', () => {
 
   describe('traverseUpward - root directory edge case', () => {
     it('checks root directory when no other match found', () => {
-      const { root } = require('node:path').parse(deepDir)
+      const { root } = parse(deepDir)
 
       const result = traverseUpward(deepDir, (dir) => dir === root)
       expect(result).toBe(root)

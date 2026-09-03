@@ -26,7 +26,7 @@ const extractOutputDirFromSourcePath = (srcPath: ExportValue): string => {
   const path =
     typeof srcPath === 'string'
       ? srcPath
-      : ((<ConditionalExport>srcPath).import ?? (<ConditionalExport>srcPath).require ?? (<ConditionalExport>srcPath).default ?? '')
+      : ((srcPath as ConditionalExport).import ?? (srcPath as ConditionalExport).require ?? (srcPath as ConditionalExport).default ?? '')
 
   const subDirMatch = path.match(/^\.\/src\/(.+?)\/index\.[jt]s$/)
   if (subDirMatch && subDirMatch[1]) return subDirMatch[1]

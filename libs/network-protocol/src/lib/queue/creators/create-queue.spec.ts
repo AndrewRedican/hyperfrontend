@@ -1,5 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import type { MessageHandler } from '../model'
+import { beforeEach } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { sleep } from '@hyperfrontend/time-utils'
 import { createQueue } from './create-queue'
 
@@ -51,19 +53,19 @@ describe('createQueue', () => {
   })
 
   it('throws error for invalid processMessage function', () => {
-    expect(() => createQueue(<any>null)).toThrow('processMessage must be a function')
+    expect(() => createQueue(null as any)).toThrow('processMessage must be a function')
   })
 
   it('handles invalid autoStart argument', () => {
-    expect(() => createQueue(messageProcessor, <any>null)).toThrow('autoStart must be a boolean')
+    expect(() => createQueue(messageProcessor, null as any)).toThrow('autoStart must be a boolean')
   })
 
   it('throws error for invalid message type', () => {
     const messageHandler = createQueue(messageProcessor, false)
 
-    expect(() => messageHandler.addMessage(<any>null)).toThrow('Message must be a non-null object')
-    expect(() => messageHandler.addMessage(<any>'string')).toThrow('Message must be a non-null object')
-    expect(() => messageHandler.addMessage(<any>123)).toThrow('Message must be a non-null object')
+    expect(() => messageHandler.addMessage(null as any)).toThrow('Message must be a non-null object')
+    expect(() => messageHandler.addMessage('string' as any)).toThrow('Message must be a non-null object')
+    expect(() => messageHandler.addMessage(123 as any)).toThrow('Message must be a non-null object')
   })
 
   it('stops and resumes processing correctly', async () => {

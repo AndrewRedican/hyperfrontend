@@ -1,6 +1,8 @@
 import type { UnencryptedPacket } from '../../packet/model'
+import { before as beforeAll } from 'node:test'
 import { createHash, encrypt, decrypt } from '@hyperfrontend/cryptography/node'
 import { uint8ArrayToBase64, base64ToUint8Array } from '@hyperfrontend/string-utils/node'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { createDataFactory } from '../../data/creators/create-data-factory'
 import { createDataDecrypter } from '../../data/security/create-decrypter'
 import { createDataEncrypter } from '../../data/security/create-encrypter'
@@ -56,7 +58,7 @@ describe('createReceiverFactory (Node.js)', () => {
       const logger = createMockLogger()
       const packetDeobfuscation = async () => ({ origin: testUUIDs.origin1, target: testUUIDs.target1, data: 'encrypted' })
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const packetDecryption = async () => ({ origin: testUUIDs.origin1, target: testUUIDs.target1, data: <any>{} })
+      const packetDecryption = async () => ({ origin: testUUIDs.origin1, target: testUUIDs.target1, data: {} as any })
 
       const receiver = createReceiver(testLabels.receiver1, receivePacket, logger, packetDeobfuscation, packetDecryption)
 
@@ -166,7 +168,7 @@ describe('createReceiverFactory (Node.js)', () => {
         return { origin: testUUIDs.origin1, target: testUUIDs.target1, data: 'encrypted' }
       }
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const packetDecryption = async () => ({ origin: testUUIDs.origin1, target: testUUIDs.target1, data: <any>{} })
+      const packetDecryption = async () => ({ origin: testUUIDs.origin1, target: testUUIDs.target1, data: {} as any })
 
       const receiver = createReceiver(testLabels.receiver1, receivePacket, logger, packetDeobfuscation, packetDecryption)
 
@@ -229,14 +231,14 @@ describe('createReceiverFactory (Node.js)', () => {
       const logger = createMockLogger()
       const packetDeobfuscation = async () => ({ origin: testUUIDs.origin1, target: testUUIDs.target1, data: 'encrypted' })
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const packetDecryption = async () => ({ origin: testUUIDs.origin1, target: testUUIDs.target1, data: <any>{} })
+      const packetDecryption = async () => ({ origin: testUUIDs.origin1, target: testUUIDs.target1, data: {} as any })
 
       const receiver = createReceiver(testLabels.receiver1, receivePacket, logger, packetDeobfuscation, packetDecryption)
 
       expect(Object.isFrozen(receiver)).toBe(true)
       expect(() => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        ;(<any>receiver).receive = () => void 0
+        ;(receiver as any).receive = () => void 0
       }).toThrow()
     })
   })

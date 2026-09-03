@@ -1,4 +1,6 @@
 import type { Logger } from '@hyperfrontend/logging'
+import { beforeEach } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { deepFreeze } from './deep-freeze'
 jest.unmock('@hyperfrontend/immutable-api-utils/built-in-copy/object')
 
@@ -588,17 +590,17 @@ describe('deepFreeze', () => {
       const root = current
       for (let i = 0; i < 50; i++) {
         current['child'] = {}
-        current = <Record<string, unknown>>current['child']
+        current = current['child'] as Record<string, unknown>
       }
 
       const result = deepFreeze(root, mockLogger)
 
       expect(Object.isFrozen(result)).toBe(true)
 
-      let check = <Record<string, Record<string, unknown>>>result
+      let check = result as Record<string, Record<string, unknown>>
       for (let i = 0; i < 10; i++) {
         expect(Object.isFrozen(check)).toBe(true)
-        check = <Record<string, Record<string, unknown>>>check['child']
+        check = check['child'] as Record<string, Record<string, unknown>>
       }
     })
   })

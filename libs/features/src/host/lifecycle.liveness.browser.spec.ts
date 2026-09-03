@@ -1,6 +1,8 @@
 import type { BrokerHandle, ChannelHandle } from '@hyperfrontend/nexus'
 import type { ShellOptions } from '../shared/types'
 import type { MountResult } from './types'
+import { afterEach, beforeEach } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { createEventEmitter } from '../shared/event-emitter'
 import { createHeartbeatMonitor } from './heartbeat'
 import { createShellHandle } from './lifecycle'
@@ -15,7 +17,7 @@ interface MockChannel {
 function createMockChannel(): MockChannel {
   const listeners: Record<string, Array<(data?: unknown) => void>> = {}
   const messageHandlers: Array<(message: { type: string; data?: unknown }) => void> = []
-  const channel = <ChannelHandle>(<unknown>{
+  const channel = {
     on: (event: string, handler: (data?: unknown) => void) => {
       ;(listeners[event] ?? (listeners[event] = [])).push(handler)
       return () => undefined
@@ -28,7 +30,7 @@ function createMockChannel(): MockChannel {
     disconnect: jest.fn(),
     destroy: jest.fn(),
     connect: jest.fn(),
-  })
+  } as unknown as ChannelHandle
   return {
     channel,
     trigger: (event, data) => listeners[event]?.forEach((handler) => handler(data)),
@@ -36,7 +38,7 @@ function createMockChannel(): MockChannel {
   }
 }
 
-const TARGET = <Window>(<unknown>{ name: 'target' })
+const TARGET = { name: 'target' } as unknown as Window
 
 /**
  * Drives this page's reported visibility, the way a phone backgrounding the tab does.
@@ -56,15 +58,15 @@ function setPageVisibility(value: 'visible' | 'hidden'): void {
  */
 function setup() {
   const mock = createMockChannel()
-  const broker = <BrokerHandle>(<unknown>{ addChannel: jest.fn(() => mock.channel) })
+  const broker = { addChannel: jest.fn(() => mock.channel) } as unknown as BrokerHandle
   const frame = document.createElement('iframe')
   const mount = jest.fn((): MountResult => ({ target: TARGET, element: frame, present: { mode: 'embedded' }, cleanup: jest.fn() }))
   const emitter = createEventEmitter()
   const errors: unknown[] = []
   emitter.on('error', (error) => errors.push(error))
   const states: string[] = []
-  emitter.on('status', (status) => states.push((<{ state: string }>status).state))
-  const handle = createShellHandle(broker, <ShellOptions>{ container: '#shell' }, emitter, {
+  emitter.on('status', (status) => states.push((status as { state: string }).state))
+  const handle = createShellHandle(broker, { container: '#shell' } as ShellOptions, emitter, {
     contract: { emitted: [], accepted: [] },
     selectMount: jest.fn(() => mount),
     registerSecurity: jest.fn(() => undefined),

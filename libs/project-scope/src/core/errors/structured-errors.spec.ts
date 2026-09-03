@@ -1,4 +1,4 @@
-import { describe, it, expect } from '@jest/globals'
+import { describe, it, expect } from '@hyperfrontend/testing'
 import { createStructuredError, createConfigError, createFsError, createParseError, createValidationError } from './structured-errors'
 
 describe('core/errors', () => {

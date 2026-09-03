@@ -5,6 +5,10 @@
  * Note: state-machine uses multiple sub-entry exports, not a single main entry.
  */
 
+'use strict'
+
+const { describe, it, expect } = require('@hyperfrontend/testing')
+
 describe('@hyperfrontend/state-machine CJS', () => {
   describe('actions sub-entry', () => {
     it('is requireable', () => {

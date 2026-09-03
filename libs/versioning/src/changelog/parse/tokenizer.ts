@@ -172,7 +172,7 @@ function consumeHeading(state: TokenizerState): void {
   }
 
   const content = state.input.slice(contentStart, state.pos)
-  const type = <TokenType>`heading-${level}`
+  const type = `heading-${level}` as TokenType
 
   state.tokens.push({
     type,

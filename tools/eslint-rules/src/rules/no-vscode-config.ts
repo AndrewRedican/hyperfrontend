@@ -106,11 +106,11 @@ const rule: Rule.RuleModule = {
       return {}
     }
 
-    const options = <RuleOptions>(context.options[0] ?? {})
+    const options = (context.options[0] ?? {}) as RuleOptions
     const allowed = options.allowedDirectories ?? []
     const configFile = options.configFile ?? DEFAULT_CONFIG_FILE
 
-    return <Rule.RuleListener>(<unknown>{
+    return {
       'Program:exit'(node: JSONNode) {
         for (const path of findVscodeDirectories(workspaceRoot)) {
           const owner = path === VSCODE_DIRECTORY ? '.' : dirname(path)
@@ -118,13 +118,13 @@ const rule: Rule.RuleModule = {
             continue
           }
           context.report({
-            node: <Rule.Node>(<unknown>node),
+            node: node as unknown as Rule.Node,
             messageId: 'vscodeDirectory',
             data: { path, configFile },
           })
         }
       },
-    })
+    } as unknown as Rule.RuleListener
   },
 }
 

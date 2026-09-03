@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { createSemVer, createInitialVersion, createFirstRelease, isPrerelease, isStable, stripBuild, stripPrerelease } from './version'
 
 describe('createSemVer', () => {

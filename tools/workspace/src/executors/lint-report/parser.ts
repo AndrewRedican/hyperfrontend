@@ -64,7 +64,7 @@ export function parseLintOutput(raw: string, workspaceRoot: string): LintEntry[]
     entries.push({
       file: currentFile,
       line: parseInt(lineNum, 10),
-      severity: <'error' | 'warning'>severity,
+      severity: severity as 'error' | 'warning',
       message,
       rule,
     })

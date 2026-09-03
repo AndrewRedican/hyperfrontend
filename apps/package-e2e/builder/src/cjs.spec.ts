@@ -3,6 +3,10 @@
  * Tests that the package is requireable, its subpaths resolve, and the bin is wired.
  */
 
+'use strict'
+
+const { describe, it, expect } = require('@hyperfrontend/testing')
+
 describe('@hyperfrontend/builder CJS', () => {
   it('is requireable', () => {
     const pkg = require('@hyperfrontend/builder')

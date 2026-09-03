@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { isEqual } from './deep-equal'
 
 describe('isEqual', () => {

@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { isValidSequence } from './is-valid-schema-sequence'
 
 describe('isValidSequence', () => {

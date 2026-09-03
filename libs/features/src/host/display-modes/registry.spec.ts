@@ -1,3 +1,4 @@
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { mountDialog } from './dialog'
 import { mountEmbedded } from './embedded'
 import { mountPopup } from './popup'

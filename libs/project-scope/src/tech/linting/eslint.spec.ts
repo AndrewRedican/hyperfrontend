@@ -1,3 +1,4 @@
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { eslintDetector, ESLINT_CONFIG_PATTERNS } from './eslint'
 
 const mockProjectPath = '/mock/project'

@@ -1,9 +1,10 @@
 import type { Schema } from '../../types/schema'
 import type { ValidationContext } from '../context'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { validateEnum } from './enum'
 
 describe('validateEnum', () => {
-  const ctx = <ValidationContext>{ errors: [] }
+  const ctx = { errors: [] } as ValidationContext
 
   it('returns true if no enum', () => {
     expect(validateEnum(1, {}, ctx)).toBe(true)

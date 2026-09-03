@@ -1,7 +1,9 @@
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { afterEach, beforeEach } from 'node:test'
 import { readJsonFileIfExists } from '@hyperfrontend/project-scope/core/fs'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { resolveSdkVersion } from './sdk-version'
 
 describe('resolveSdkVersion', () => {
@@ -16,7 +18,7 @@ describe('resolveSdkVersion', () => {
   })
 
   it('resolves the version of the running SDK package by default', () => {
-    const manifest = readJsonFileIfExists<{ version: string }>(join(__dirname, '../../../package.json'))
+    const manifest = readJsonFileIfExists<{ version: string }>(join(import.meta.dirname, '../../../package.json'))
     expect(resolveSdkVersion()).toBe(manifest?.version)
   })
 

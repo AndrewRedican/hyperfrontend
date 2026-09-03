@@ -1,4 +1,6 @@
 import type { BrokerState } from '../types'
+import { beforeEach } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { createActionCreators } from '../../core/actions/factory'
 import { createProcessManager } from '../../core/processes/factory'
 import { createRegistry } from '../../core/registry/factory'
@@ -10,7 +12,7 @@ describe('removeChannel', () => {
   const mockBrokerState: BrokerState = {
     id: 'broker-1',
     name: 'test-broker',
-    window: <Window>global.window,
+    window: global.window as Window,
     contract: {
       accepted: [{ type: 'test', description: 'Test action' }],
       emitted: [],
@@ -46,7 +48,7 @@ describe('removeChannel', () => {
   })
 
   it('removes channel from registry', () => {
-    const mockWindow = <Window>{}
+    const mockWindow = {} as Window
     const channel = addChannel(mockBrokerState, registry, processManager, actions, 'test-channel', mockWindow)
 
     removeChannel(registry, channel)
@@ -56,7 +58,7 @@ describe('removeChannel', () => {
   })
 
   it('destroy channel before removing', () => {
-    const mockWindow = <Window>{}
+    const mockWindow = {} as Window
     const channel = addChannel(mockBrokerState, registry, processManager, actions, 'test-channel', mockWindow)
 
     const destroySpy = jest.spyOn(channel, 'destroy')
@@ -67,7 +69,7 @@ describe('removeChannel', () => {
   })
 
   it('removes channel by window lookup', () => {
-    const mockWindow = <Window>{}
+    const mockWindow = {} as Window
     const channel = addChannel(mockBrokerState, registry, processManager, actions, 'test-channel', mockWindow)
 
     removeChannel(registry, channel)
@@ -77,7 +79,7 @@ describe('removeChannel', () => {
   })
 
   it('removes channel by name lookup', () => {
-    const mockWindow = <Window>{}
+    const mockWindow = {} as Window
     const channel = addChannel(mockBrokerState, registry, processManager, actions, 'test-channel', mockWindow)
 
     removeChannel(registry, channel)
@@ -87,8 +89,8 @@ describe('removeChannel', () => {
   })
 
   it('does not affect other channels', () => {
-    const window1 = <Window>{}
-    const window2 = <Window>{}
+    const window1 = {} as Window
+    const window2 = {} as Window
 
     const channel1 = addChannel(mockBrokerState, registry, processManager, actions, 'channel-1', window1)
     const channel2 = addChannel(mockBrokerState, registry, processManager, actions, 'channel-2', window2)
@@ -100,7 +102,7 @@ describe('removeChannel', () => {
   })
 
   it('handles removing already removed channel gracefully', () => {
-    const mockWindow = <Window>{}
+    const mockWindow = {} as Window
     const channel = addChannel(mockBrokerState, registry, processManager, actions, 'test-channel', mockWindow)
 
     removeChannel(registry, channel)

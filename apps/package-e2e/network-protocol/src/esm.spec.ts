@@ -6,6 +6,8 @@
  * In Node.js environment, we test the node-specific entries.
  */
 
+import { describe, expect, it } from '@hyperfrontend/testing'
+
 describe('@hyperfrontend/network-protocol ESM', () => {
   describe('node/v1 sub-entry', () => {
     it('is importable', async () => {

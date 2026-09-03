@@ -19,7 +19,7 @@ interface SceneModule {
  * @throws {Error} When the file exports no scene, or one built by hand.
  */
 async function loadScene(filePath: string): Promise<LoadedScene> {
-  const loaded = <SceneModule>await import(pathToFileURL(filePath).href)
+  const loaded = (await import(pathToFileURL(filePath).href)) as SceneModule
   const scene = loaded.default
   if (scene === undefined || scene.kind !== 'browser') {
     throw createError(`${filePath} must default-export defineBrowserScene({ ... })`)

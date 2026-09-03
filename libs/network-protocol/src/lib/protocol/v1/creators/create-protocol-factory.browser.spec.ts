@@ -1,5 +1,7 @@
+import { before as beforeAll } from 'node:test'
 import { encrypt, decrypt, createHash, getTimeBasedPassword, getTimeBasedPasswords } from '@hyperfrontend/cryptography/browser'
 import { uint8ArrayToBase64, base64ToUint8Array } from '@hyperfrontend/string-utils/browser'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { createDataFactory } from '../../../data/creators/create-data-factory'
 import { createDataDecrypter } from '../../../data/security/create-decrypter'
 import { createDataEncrypter } from '../../../data/security/create-encrypter'
@@ -294,7 +296,7 @@ describe('createProtocolFactory (Browser)', () => {
 
       const createProtocol = createProtocolFactory(createDynamicKeyEncryption, createTimeIntervalObfuscation)
 
-      expect(() => createProtocol(<never>null)).toThrow('Cannot create protocol provider without a valid logger')
+      expect(() => createProtocol(null as never)).toThrow('Cannot create protocol provider without a valid logger')
     })
 
     it('triggers error when creating protocol provider without valid refresh rate', () => {
@@ -347,7 +349,7 @@ describe('createProtocolFactory (Browser)', () => {
 
       const receivePacket = () => void 0
 
-      expect(() => protocolProvider(<never>null, receivePacket)).toThrow('Cannot create protocol without a valid send function')
+      expect(() => protocolProvider(null as never, receivePacket)).toThrow('Cannot create protocol without a valid send function')
     })
 
     it('triggers error when creating protocol without valid receive function', () => {
@@ -375,7 +377,7 @@ describe('createProtocolFactory (Browser)', () => {
 
       const sendPacket = () => void 0
 
-      expect(() => protocolProvider(sendPacket, <never>null)).toThrow('Cannot create protocol without a valid receive function')
+      expect(() => protocolProvider(sendPacket, null as never)).toThrow('Cannot create protocol without a valid receive function')
     })
   })
 })

@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { isValidReceiveFn } from './is-valid-receive-fn'
 
 describe('isValidReceiveFn', () => {

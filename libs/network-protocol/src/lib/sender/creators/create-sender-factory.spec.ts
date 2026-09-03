@@ -1,5 +1,7 @@
+import { before as beforeAll } from 'node:test'
 import { createHash, encrypt } from '@hyperfrontend/cryptography/node'
 import { uint8ArrayToBase64 } from '@hyperfrontend/string-utils/node'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { createDataFactory } from '../../data/creators/create-data-factory'
 import { createDataEncrypter } from '../../data/security/create-encrypter'
 import { createSerializedEncryptedPacketCreator } from '../../packet/creators/create-serialized-encrypted-packet-creator'
@@ -193,7 +195,7 @@ describe('createSenderFactory (Node.js)', () => {
       expect(Object.isFrozen(sender)).toBe(true)
       expect(() => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        ;(<any>sender).send = () => void 0
+        ;(sender as any).send = () => void 0
       }).toThrow()
     })
   })

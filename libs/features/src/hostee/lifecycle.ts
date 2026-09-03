@@ -33,7 +33,7 @@ export function resolveHostWindow(win: Window): Window | null {
     return win.parent
   }
   if (win.opener) {
-    return <Window>win.opener
+    return win.opener as Window
   }
   return null
 }
@@ -93,6 +93,7 @@ export function createFeatureHandle(
 
   let applier: PresentationApplier | null = null
   let stopWindowWatch: (() => void) | null = null
+  let stopReporting: () => void = () => undefined
 
   if (hostWindow) {
     const activeChannel = broker.addChannel(
@@ -106,6 +107,10 @@ export function createFeatureHandle(
     channel = activeChannel
     const heartbeat = createHeartbeatEmitter((type) => activeChannel.send(type))
     const visibility = createVisibilityReporter((type, data) => activeChannel.send(type, data))
+    stopReporting = () => {
+      heartbeat.stop()
+      visibility.stop()
+    }
     const activeApplier = createPresentationApplier(settings.root, (payload) => activeChannel.send(ControlType.Dismiss, payload))
     applier = activeApplier
 
@@ -156,11 +161,11 @@ export function createFeatureHandle(
     activeChannel.onMessage(
       messaging.createRouter((type, data) => {
         if (type === ControlType.Present) {
-          applyPresent(<PresentPayload>data)
+          applyPresent(data as PresentPayload)
           return true
         }
         if (type === ControlType.Viewport) {
-          applyViewport(<ViewportPayload>data)
+          applyViewport(data as ViewportPayload)
           return true
         }
         return false
@@ -169,7 +174,7 @@ export function createFeatureHandle(
     activeChannel.connect()
   }
 
-  return freeze(<FeatureHandle>{
+  return freeze({
     send: messaging.send,
     request: messaging.request,
     handle: messaging.requests.handle,
@@ -190,6 +195,10 @@ export function createFeatureHandle(
         emitter.on('open', () => resolve())
         readyRejects.push(reject)
       }),
-    close: () => channel?.disconnect(),
-  })
+    // why: The channel's close event also stops these reporters, but it never fires when the peer's frame is destroyed while the polite close is still delivering, so a feature told to close stops volunteering beats and visibility itself.
+    close: () => {
+      stopReporting()
+      channel?.disconnect()
+    },
+  } as FeatureHandle)
 }

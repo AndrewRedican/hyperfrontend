@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { randomPseudoTimeBased } from './random-pseudo-time-based'
 
 describe('randomPseudoTimeBased', () => {

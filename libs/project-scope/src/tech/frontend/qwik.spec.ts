@@ -1,4 +1,7 @@
+import type { MockedFunction } from '@hyperfrontend/testing'
 import type { PackageJson } from '../../project/package'
+import { beforeEach } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import * as fs from '../../core/fs'
 import { qwikDetector } from './qwik'
 
@@ -6,7 +9,7 @@ jest.mock('../../core/fs', () => ({
   exists: jest.fn().mockReturnValue(false),
 }))
 
-const mockExists = fs.exists as jest.MockedFunction<typeof fs.exists>
+const mockExists = fs.exists as MockedFunction<typeof fs.exists>
 
 describe('qwikDetector', () => {
   beforeEach(() => {

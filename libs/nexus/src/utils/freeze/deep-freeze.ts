@@ -42,7 +42,7 @@ import { collectNodesToFreeze } from './collect-nodes-to-freeze'
  * ```
  */
 export function deepFreeze<T>(value: T, logger: Logger, config?: DeepFreezeConfig): DeepReadonly<T> {
-  if (!isIterable(value)) return <DeepReadonly<T>>value
+  if (!isIterable(value)) return value as DeepReadonly<T>
 
   try {
     const nodesToFreeze = collectNodesToFreeze(value, config)
@@ -57,5 +57,5 @@ export function deepFreeze<T>(value: T, logger: Logger, config?: DeepFreezeConfi
     logger.debug('Failed to traverse object for deep freeze', error)
   }
 
-  return <DeepReadonly<T>>value
+  return value as DeepReadonly<T>
 }

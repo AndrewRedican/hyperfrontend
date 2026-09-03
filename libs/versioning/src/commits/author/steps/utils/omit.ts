@@ -22,5 +22,5 @@ import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
  */
 export function omitKeys<T extends object, K extends keyof T>(source: T, keys: readonly K[]): Omit<T, K> {
   const dropSet = createSet<PropertyKey>(keys)
-  return <Omit<T, K>>fromEntries(entries(source).filter(([key]) => !dropSet.has(key)))
+  return fromEntries(entries(source).filter(([key]) => !dropSet.has(key))) as Omit<T, K>
 }

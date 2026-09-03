@@ -1,3 +1,5 @@
+import { after as afterAll, before as beforeAll } from 'node:test'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { timestampToDateTime } from './timestamp-to-date-time'
 
 describe('Timestamp Converter', () => {
@@ -36,7 +38,7 @@ describe('Timestamp Converter', () => {
       Object.defineProperty(navigator, 'language', originalLanguage)
     }
 
-    delete (<{ userLanguage?: unknown }>(<unknown>navigator)).userLanguage
+    delete (navigator as unknown as { userLanguage?: unknown }).userLanguage
   })
 
   afterAll(() => {

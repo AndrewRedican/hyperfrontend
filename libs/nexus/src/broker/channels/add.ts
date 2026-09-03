@@ -53,8 +53,8 @@ export function addChannel(
   const existing = getByWindow(registry, target)
 
   if (existing) {
-    const existingChannel = <ReturnType<typeof createChannel>>(<unknown>existing)
-    const security = <ChannelSecuritySettings | undefined>settings['security']
+    const existingChannel = existing as unknown as ReturnType<typeof createChannel>
+    const security = settings['security'] as ChannelSecuritySettings | undefined
     // why: An inbound request may auto-create the channel before the app registers it; the app's security settings (fail-closed included) must still take effect.
     if (security) {
       existingChannel.applySecuritySettings(security)

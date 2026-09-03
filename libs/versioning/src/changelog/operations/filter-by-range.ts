@@ -27,7 +27,7 @@ export function filterByVersionRange(changelog: Changelog, range: string): Chang
     throw createError(`Invalid version range: ${range}`)
   }
 
-  const parsedRange = <Range>rangeResult.range
+  const parsedRange = rangeResult.range as Range
 
   return filterEntries(changelog, (entry) => {
     if (entry.unreleased) return false
@@ -58,7 +58,7 @@ export function filterFromVersion(changelog: Changelog, startVersion: string): C
     throw createError(`Invalid start version: ${startVersion}`)
   }
 
-  const parsedStart = <SemVer>startResult.version
+  const parsedStart = startResult.version as SemVer
 
   return filterEntries(changelog, (entry) => {
     if (entry.unreleased) return true
@@ -89,7 +89,7 @@ export function filterToVersion(changelog: Changelog, endVersion: string): Chang
     throw createError(`Invalid end version: ${endVersion}`)
   }
 
-  const parsedEnd = <SemVer>endResult.version
+  const parsedEnd = endResult.version as SemVer
 
   return filterEntries(changelog, (entry) => {
     if (entry.unreleased) return false
@@ -126,8 +126,8 @@ export function filterVersionRange(changelog: Changelog, startVersion: string, e
     throw createError(`Invalid end version: ${endVersion}`)
   }
 
-  const parsedStart = <SemVer>startResult.version
-  const parsedEnd = <SemVer>endResult.version
+  const parsedStart = startResult.version as SemVer
+  const parsedEnd = endResult.version as SemVer
 
   return filterEntries(changelog, (entry) => {
     if (entry.unreleased) return false

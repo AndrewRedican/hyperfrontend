@@ -1,3 +1,5 @@
+import { afterEach, beforeEach } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { clickAtPosition } from './click-at-position'
 
 describe('clickAtPosition', () => {

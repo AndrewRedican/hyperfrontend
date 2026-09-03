@@ -1,4 +1,5 @@
 import type { EntryPoint, EntryPointDiscovery } from '../../models'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { getEntriesByPlatform, getSharedEntries } from './by-platform'
 
 const entry = (exportPath: string, platform?: 'browser' | 'node'): EntryPoint => ({

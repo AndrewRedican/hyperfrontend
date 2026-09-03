@@ -1,4 +1,4 @@
-/** @jest-environment jsdom */
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { UINT8_CONVERTION_SAMPLES } from '../test-fixtures'
 import { utf8StringToUint8Array } from './browser/utf8-string-to-uint8-array'
 

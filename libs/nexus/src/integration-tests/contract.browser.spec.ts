@@ -1,5 +1,7 @@
 import type { IChannelContract } from '../types/contract'
 import type { MockWindow } from './test-utils'
+import { beforeEach } from 'node:test'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { createBroker } from '../broker/factory'
 import { mergeContracts } from '../setup/merge-contracts'
 import { createMockWindow } from './test-utils'
@@ -222,7 +224,7 @@ describe('Integration: Contract Validation', () => {
         settings: { logLevel: 'error' },
       })
 
-      const channel = broker.addChannel('test-channel', <Window>(<unknown>mockWindow))
+      const channel = broker.addChannel('test-channel', mockWindow as unknown as Window)
       channel.connect()
 
       expect(() => {
@@ -231,7 +233,7 @@ describe('Integration: Contract Validation', () => {
 
       expect(() => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        channel.send(<any>'NOT_IN_CONTRACT', {})
+        channel.send('NOT_IN_CONTRACT' as any, {})
       }).toThrow('not in the emitted actions')
     })
 
@@ -249,8 +251,8 @@ describe('Integration: Contract Validation', () => {
 
       const mockWindow2 = createMockWindow()
 
-      const channel1 = broker.addChannel('channel-1', <Window>(<unknown>mockWindow))
-      const channel2 = broker.addChannel('channel-2', <Window>(<unknown>mockWindow2))
+      const channel1 = broker.addChannel('channel-1', mockWindow as unknown as Window)
+      const channel2 = broker.addChannel('channel-2', mockWindow2 as unknown as Window)
 
       channel1.connect()
       channel2.connect()
@@ -300,7 +302,7 @@ describe('Integration: Contract Validation', () => {
         settings: { logLevel: 'error' },
       })
 
-      const channel = broker.addChannel('bidirectional-channel', <Window>(<unknown>mockWindow))
+      const channel = broker.addChannel('bidirectional-channel', mockWindow as unknown as Window)
       channel.connect()
 
       expect(() => {
@@ -339,7 +341,7 @@ describe('Integration: Contract Validation', () => {
         createBroker({
           name: 'test-broker',
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          contract: <any>{},
+          contract: {} as any,
           settings: { logLevel: 'error' },
         })
       }).toThrow()
@@ -363,7 +365,7 @@ describe('Integration: Contract Validation', () => {
         createBroker({
           name: 'test-broker',
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          contract: <any>null,
+          contract: null as any,
           settings: { logLevel: 'error' },
         })
       }).toThrow()

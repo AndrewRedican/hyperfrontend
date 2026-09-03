@@ -1,4 +1,5 @@
 import type { PackageJson } from '@hyperfrontend/project-scope/project/package'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import {
   createProject,
   isPublishable,

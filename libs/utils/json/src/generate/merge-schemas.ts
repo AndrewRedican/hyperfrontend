@@ -33,41 +33,43 @@ export function mergeSchemas(schemas: Schema[]): Schema {
   const typeGroups = createMap<JsonType | 'mixed', Schema[]>()
 
   for (const schema of schemas) {
-    const type = <JsonType | undefined>schema.type
+    const type = schema.type as JsonType | undefined
     const key: JsonType | 'mixed' = type ?? 'mixed'
     const group = typeGroups.get(key) ?? []
     group.push(schema)
     typeGroups.set(key, group)
   }
 
-  /* istanbul ignore else -- multiple type groups tested separately */
+  // why: multiple type groups tested separately
   if (typeGroups.size === 1) {
     const [[type, group]] = [...typeGroups.entries()]
-    /* istanbul ignore else -- defensive checks for type and group */
+    // why: defensive checks for type and group
     if (type && type !== 'mixed' && group) {
       return mergeSchemasByType(type, group)
     }
   }
 
-  /* istanbul ignore next -- multiple type groups is an edge case */
+  // why: multiple type groups is an edge case
   const uniqueTypes = createSet<JsonType>()
   for (const schema of schemas) {
-    /* istanbul ignore else -- schema.type always exists in common case */
+    // why: schema.type always exists in common case
     if (schema.type) {
-      /* istanbul ignore next -- array types are rare */
+      // why: array types are rare
+      /* node:coverage ignore next 5 */
       if (isArray(schema.type)) {
-        ;(<JsonType[]>schema.type).forEach((t) => uniqueTypes.add(t))
+        ;(schema.type as JsonType[]).forEach((t) => uniqueTypes.add(t))
       } else {
         uniqueTypes.add(schema.type)
       }
     }
   }
 
-  /* istanbul ignore next -- simple types optimization */
+  // why: simple types optimization
   if (uniqueTypes.size > 0 && uniqueTypes.size <= schemas.length) {
     const allSimpleTypes = schemas.every((s) => keys(s).length === 1 && s.type)
     if (allSimpleTypes) {
       const types = [...uniqueTypes]
+      /* node:coverage ignore next 1 */
       return types.length === 1 ? { type: types[0] } : { type: types }
     }
   }
@@ -83,10 +85,11 @@ export function mergeSchemas(schemas: Schema[]): Schema {
  * @returns A merged schema
  */
 function mergeSchemasByType(type: JsonType, schemas: Schema[]): Schema {
-  /* istanbul ignore if -- single schema case is optimized */
+  // why: single schema case is optimized
+  /* node:coverage ignore next 5 */
   if (schemas.length === 1) {
     const [first] = schemas
-    /* istanbul ignore next -- defensive null check */
+    // why: defensive null check
     return first ?? {}
   }
 
@@ -95,7 +98,7 @@ function mergeSchemasByType(type: JsonType, schemas: Schema[]): Schema {
       return mergeObjectSchemas(schemas)
     case 'array':
       return mergeArraySchemas(schemas)
-    /* istanbul ignore next -- primitive types go here */
+    // why: primitive types go here
     default:
       return { type }
   }
@@ -108,14 +111,10 @@ function mergeSchemasByType(type: JsonType, schemas: Schema[]): Schema {
  * @returns A merged object schema
  */
 function mergeObjectSchemas(schemas: Schema[]): Schema {
-  /* istanbul ignore next */
   const mergedProperties: Record<string, Schema[]> = {}
-  /* istanbul ignore next */
   const requiredCounts: Record<string, number> = {}
 
-  /* istanbul ignore next */
   for (const schema of schemas) {
-    /* istanbul ignore next */
     if (schema.properties) {
       for (const [key, propSchema] of entries(schema.properties)) {
         const existing = mergedProperties[key] ?? []
@@ -157,9 +156,9 @@ function mergeArraySchemas(schemas: Schema[]): Schema {
   for (const schema of schemas) {
     if (schema.items) {
       if (isArray(schema.items)) {
-        itemSchemas.push(...(<Schema[]>schema.items))
+        itemSchemas.push(...(schema.items as Schema[]))
       } else {
-        itemSchemas.push(<Schema>schema.items)
+        itemSchemas.push(schema.items as Schema)
       }
     }
   }

@@ -1,4 +1,5 @@
 import type { IChannelContract } from '../types/contract'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { createBroker } from './factory'
 
 describe('createBroker (non-browser environment)', () => {
@@ -14,10 +15,10 @@ describe('createBroker (non-browser environment)', () => {
   })
 
   it('registers its message listener on an explicitly provided window', () => {
-    const mockWindow = <Window>(<unknown>{
+    const mockWindow = {
       postMessage: jest.fn(),
       addEventListener: jest.fn(),
-    })
+    } as unknown as Window
 
     createBroker({ name: 'test-broker', contract, window: mockWindow })
 
@@ -25,10 +26,10 @@ describe('createBroker (non-browser environment)', () => {
   })
 
   it('creates a working broker handle with an explicitly provided window', () => {
-    const mockWindow = <Window>(<unknown>{
+    const mockWindow = {
       postMessage: jest.fn(),
       addEventListener: jest.fn(),
-    })
+    } as unknown as Window
 
     const broker = createBroker({ name: 'test-broker', contract, window: mockWindow })
 

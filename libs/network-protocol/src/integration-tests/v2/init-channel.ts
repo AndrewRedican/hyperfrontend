@@ -1,4 +1,3 @@
-/* istanbul ignore file */
 import type { Channel } from '../../lib/channel/model'
 import type { ReceivePacketFn } from '../../lib/receiver/model'
 import type { SendPacketFn } from '../../lib/sender/model'

@@ -55,7 +55,7 @@ const x = 1`,
   },
   {
     code: `/**
- * @jest-environment jsdom
+ * @vitest-environment jsdom
  */
 describe('test', () => {})`,
   },

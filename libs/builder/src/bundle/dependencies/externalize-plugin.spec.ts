@@ -1,4 +1,5 @@
 import type { Plugin } from 'rollup'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { createExternalizeBundledDepsPlugin, relativeImport } from './externalize-plugin'
 
 type ResolveIdHook = (source: string) => { id: string; external: true } | null

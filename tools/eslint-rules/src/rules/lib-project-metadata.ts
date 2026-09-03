@@ -55,17 +55,17 @@ const rule: Rule.RuleModule = {
     const filePath = context.filename
     const projectRoot = dirname(filePath)
 
-    /* istanbul ignore next - only publishable libraries are linted via config */
+    // why: only publishable libraries are linted via config
     if (!isPublishableLibrary(projectRoot)) {
       return {}
     }
 
-    // istanbul ignore next -- fields initialization
+    // why: fields initialization
     const fields: ProjectMetadataFields = {}
 
     return {
       JSONProperty(node: JSONNode) {
-        // istanbul ignore next -- type guard for jsonc-eslint-parser
+        // why: type guard for jsonc-eslint-parser
         if (node.type !== 'JSONProperty') {
           return
         }
@@ -95,7 +95,7 @@ const rule: Rule.RuleModule = {
           let tagsValue: unknown[] | null = null
           if (value.type === 'JSONArrayExpression') {
             tagsValue = value.elements.map((el) => {
-              /* istanbul ignore next - jsonc-eslint-parser always provides elements */
+              // why: jsonc-eslint-parser always provides elements
               if (!el) {
                 return null
               }

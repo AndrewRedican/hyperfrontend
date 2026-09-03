@@ -177,7 +177,7 @@ export function parseMarkdownSections(content: string): ParsedSection[] {
   const sections: ParsedSection[] = []
 
   for (let i = 0; i < lines.length; i++) {
-    const line = <string>lines[i]
+    const line = lines[i] as string
     if (line.startsWith('#')) {
       let level = 0
       while (level < line.length && level < 6 && line[level] === '#') {
@@ -197,14 +197,14 @@ export function parseMarkdownSections(content: string): ParsedSection[] {
   }
 
   for (let i = 0; i < sections.length; i++) {
-    const section = <ParsedSection>sections[i]
+    const section = sections[i] as ParsedSection
     const currentLevel = section.level
     const startLine = section.startLine
 
     let endLine = lines.length
     for (let j = i + 1; j < sections.length; j++) {
-      if ((<ParsedSection>sections[j]).level <= currentLevel) {
-        endLine = (<ParsedSection>sections[j]).startLine - 1
+      if ((sections[j] as ParsedSection).level <= currentLevel) {
+        endLine = (sections[j] as ParsedSection).startLine - 1
         break
       }
     }
@@ -240,7 +240,7 @@ export function collectCenteredBlocks(content: string): BadgesBlockInfo[] {
   let blockLines: string[] = []
 
   for (let i = 0; i < lines.length; i++) {
-    const line = <string>lines[i]
+    const line = lines[i] as string
 
     const trimmedLine = line.trim().toLowerCase()
     if (!inBlock && trimmedLine.startsWith('<p') && trimmedLine.includes('align="center"')) {
@@ -253,7 +253,7 @@ export function collectCenteredBlocks(content: string): BadgesBlockInfo[] {
       blockLines.push(line)
       if (trimmedLine.includes('</p>')) {
         if (i + 1 < lines.length) {
-          const nextLine = (<string>lines[i + 1]).trim().toLowerCase()
+          const nextLine = (lines[i + 1] as string).trim().toLowerCase()
           if (nextLine.startsWith('<p') && nextLine.includes('align="center"')) {
             continue
           }
@@ -305,7 +305,7 @@ export function extractTitle(content: string): TitleInfo | null {
   const lines = content.split('\n')
 
   for (let i = 0; i < lines.length; i++) {
-    const line = <string>lines[i]
+    const line = lines[i] as string
     if (line.startsWith('# ') && !line.startsWith('## ')) {
       return { title: line.slice(2).trim(), line: i + 1 }
     }
@@ -339,7 +339,7 @@ export function extractShortDescription(content: string, badgesEndLine: number):
   const lines = content.split('\n')
 
   for (let i = badgesEndLine; i < lines.length; i++) {
-    const line = (<string>lines[i]).trim()
+    const line = (lines[i] as string).trim()
 
     if (!line) {
       continue
@@ -391,7 +391,7 @@ export function extractDocumentationLink(content: string): DocLinkInfo | null {
   const lines = content.split('\n')
 
   for (let i = 0; i < lines.length; i++) {
-    const line = <string>lines[i]
+    const line = lines[i] as string
     if (line.includes('•') && line.includes('👉') && line.includes('**documentation**') && containsValidDocumentationUrl(line)) {
       return { line: i + 1 }
     }
@@ -415,7 +415,7 @@ export function extractGuidesLink(content: string, packageName: string): DocLink
   const lines = content.split('\n')
 
   for (let i = 0; i < lines.length; i++) {
-    const line = <string>lines[i]
+    const line = lines[i] as string
     if (line.includes('•') && line.includes('👉') && containsPackageGuidesUrl(line, packageName)) {
       return { line: i + 1 }
     }
@@ -564,8 +564,8 @@ const rule: Rule.RuleModule = {
         }
 
         for (let i = 0; i < foundSections.length - 1; i++) {
-          const current = <FoundSectionEntry>foundSections[i]
-          const next = <FoundSectionEntry>foundSections[i + 1]
+          const current = foundSections[i] as FoundSectionEntry
+          const next = foundSections[i + 1] as FoundSectionEntry
 
           if (current.index > next.index) {
             context.report({

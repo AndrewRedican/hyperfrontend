@@ -1,5 +1,6 @@
 import type { CliFlags } from '../cli/args'
 import type { ResolveDevConfigOptions } from './config'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { resolveDevConfig, validateApps, validateDevApp, validateDevConfig } from './config'
 
 const mkFlags = (over: Partial<CliFlags>): CliFlags => ({ ci: false, yes: false, dryRun: false, help: false, ...over })

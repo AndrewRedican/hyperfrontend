@@ -1,5 +1,7 @@
 import type { Tree } from '../../model'
+import { beforeEach } from 'node:test'
 import { Mode } from '@hyperfrontend/project-scope/vfs'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { runInit } from '../../../cli'
 import { ensureSdkDependency } from '../../shared/dependencies'
 import { loadDevkit } from '../../shared/devkit'
@@ -54,7 +56,7 @@ describe('featureGenerator', () => {
     expect(ensureSdkDependencyMock).toHaveBeenCalledWith(tree, { keepExistingVersions: true })
     const ensureOrder = ensureSdkDependencyMock.mock.invocationCallOrder[0]
     const runOrder = runInitMock.mock.invocationCallOrder[0]
-    expect(ensureOrder).toBeLessThan(<number>runOrder)
+    expect(ensureOrder).toBeLessThan(runOrder as number)
   })
 
   it('delegates to runInit with mapped headless flags and resolved cwd', async () => {

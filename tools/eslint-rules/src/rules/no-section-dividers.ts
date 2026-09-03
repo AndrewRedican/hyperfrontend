@@ -43,7 +43,7 @@ export default createRule<[], MessageIds>({
           const firstComment = block.comments[0]
           const lastComment = block.comments[block.comments.length - 1]
 
-          /* istanbul ignore next - defensive check */
+          // why: defensive check
           if (!firstComment || !lastComment) continue
 
           context.report({

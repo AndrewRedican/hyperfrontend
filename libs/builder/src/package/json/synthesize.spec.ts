@@ -2,6 +2,8 @@ import type { BuildContext, EntryPoint, EntryPointDiscovery, FormatOutputs, Pack
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { afterEach, beforeEach } from 'node:test'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { synthesizePackageJson } from './synthesize'
 
 const ROOT: EntryPoint = { exportPath: '.', srcPath: '', inputFile: '/abs/src/index.ts', isRoot: true }

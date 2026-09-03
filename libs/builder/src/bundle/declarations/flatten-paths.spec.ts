@@ -2,6 +2,8 @@ import type { BuildContext, EntryPointDiscovery } from '../../models'
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { afterEach, beforeEach } from 'node:test'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { flattenDeclarationPaths } from './flatten-paths'
 
 const writeFile = (path: string, content = ''): void => {

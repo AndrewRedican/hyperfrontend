@@ -71,7 +71,7 @@ const computeReachableDeclarations = (roots: string[], depsRoot: string): Set<st
   }
   let head = 0
   while (head < queue.length) {
-    const file = <string>queue[head]
+    const file = queue[head] as string
     head += 1
     // why: every queued path was `exists`-checked before enqueue (roots and `toDtsTarget` targets), so a direct read is safe.
     const source = readFileContent(file)

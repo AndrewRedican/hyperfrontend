@@ -1,9 +1,10 @@
 import type { Schema } from '../../types/schema'
 import type { ValidationContext } from '../context'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { validateFormat } from './format'
 
 describe('validateFormat', () => {
-  const ctx = <ValidationContext>{ errors: [] }
+  const ctx = { errors: [] } as ValidationContext
 
   it('returns true if no format', () => {
     expect(validateFormat('abc', {}, ctx)).toBe(true)

@@ -27,7 +27,7 @@ import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 export function activate(state: ChannelState, origin: string, peerContract: IChannelContract, peerId: string | null): ChannelState {
   const acceptedActions = (state.contract?.accepted || []).map((action) => action.type)
 
-  return freeze(<ChannelState>{
+  return freeze({
     ...state,
     origin,
     active: true,
@@ -40,5 +40,5 @@ export function activate(state: ChannelState, origin: string, peerContract: ICha
     pendingProcessId: null,
     retryTimer: null,
     deadlineTimer: null,
-  })
+  } as ChannelState)
 }

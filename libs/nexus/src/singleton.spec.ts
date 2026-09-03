@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { broker, DEFAULT_CONTRACT } from './singleton'
 
 describe('singleton (non-browser environment)', () => {

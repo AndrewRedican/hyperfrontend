@@ -1,6 +1,9 @@
+import type { Mock } from '@hyperfrontend/testing'
 import type { Tree } from '../../model'
 import type { DevkitApi } from '../../shared/devkit'
 import { execFileSync } from 'node:child_process'
+import { afterEach, beforeEach } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { resolveSdkManifest, resolveSdkVersion } from '../../../generators/metadata/sdk-version'
 import { loadDevkit } from '../../shared/devkit'
 import { initGenerator } from './generator'
@@ -38,7 +41,7 @@ function createDevkit(): DevkitApi {
 }
 
 describe('initGenerator', () => {
-  let stderrSpy: jest.SpyInstance
+  let stderrSpy: Mock
 
   beforeEach(() => {
     execFileSyncMock.mockReset()

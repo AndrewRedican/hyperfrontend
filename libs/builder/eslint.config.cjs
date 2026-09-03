@@ -4,7 +4,7 @@ module.exports = [
   ...baseConfig,
   {
     files: ['**/*.ts'],
-    ignores: ['**/*.spec.ts', '**/jest.config.ts', '**/jest.setup.ts', '**/*.types.ts'],
+    ignores: ['**/*.spec.ts', '**/*.types.ts'],
     rules: {
       'workspace/lib-pkg-main-reexports': ['error', { topology: 'fragmented' }],
     },
@@ -16,7 +16,6 @@ module.exports = [
         'error',
         {
           ignoredDependencies: [
-            'jest',
             // why: the bundled TypeScript plugin resolves tslib from the consumer's node_modules at build time; it is never imported here, so the graph cannot see it.
             'tslib',
             // why: rollup platform bindings are optionalDependencies so the bundled rollup worker resolves its native binding on a cold install; they are never imported, so the graph cannot see them.

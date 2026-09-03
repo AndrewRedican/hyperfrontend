@@ -14,6 +14,8 @@ import { rollbackChanges } from './lib/rollback-changes'
 interface VersionTargetOptions {
   /** Commit scope filtering declared for single-project versioning. */
   scopeFiltering?: VersionBatchExecutorSchema['scopeFiltering']
+  /** Commit-window bound declared for single-project versioning. */
+  maxCommitFallback?: VersionBatchExecutorSchema['maxCommitFallback']
 }
 
 /** The `version` target defaults this batch inherits its commit attribution from. */
@@ -56,8 +58,9 @@ export default async function versionBatchExecutor(
   const workspaceRoot = context.root
   const { base = 'origin/main', head = 'HEAD', dryRun = false, verbose = false } = options
 
-  const versionTargetDefaults = <VersionTargetDefaults | undefined>context.nxJsonConfiguration?.targetDefaults?.['version']
+  const versionTargetDefaults = context.nxJsonConfiguration?.targetDefaults?.['version'] as VersionTargetDefaults | undefined
   const scopeFiltering = options.scopeFiltering ?? versionTargetDefaults?.options?.scopeFiltering
+  const maxCommitFallback = options.maxCommitFallback ?? versionTargetDefaults?.options?.maxCommitFallback
 
   const logger = getLogger()
   logger.setLogLevel({ verbose, quiet: false })
@@ -137,6 +140,7 @@ export default async function versionBatchExecutor(
           verbose,
           quiet: !verbose,
           scopeFiltering,
+          maxCommitFallback,
         })
 
         if (result.success && result.bumped) {

@@ -1,6 +1,8 @@
 import type { ChannelState } from '../../types'
 import type { IAction } from '../../types/action'
 import type { ChannelInternals } from '../types'
+import { after as afterAll, afterEach, before as beforeAll, beforeEach } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { createInitialState } from '../state/initial'
 import { clearHandshakeTimers, expireHandshake, startHandshakeTimers } from './handshake-timers'
 
@@ -38,7 +40,7 @@ describe('channel/lifecycle/handshake-timers', () => {
       removeProcess: jest.fn(),
       notifyEvent: jest.fn(),
       notifyMessage: jest.fn(),
-      actions: <ChannelInternals['actions']>(<unknown>{}),
+      actions: {} as unknown as ChannelInternals['actions'],
     }
   })
 

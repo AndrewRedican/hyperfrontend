@@ -153,8 +153,8 @@ export function validateContract(contract: unknown): FeatureContract {
   collectActionListIssues(contract['accepted'], 'accepted', issues)
   collectVersionIssues(contract['version'], issues)
   if (issues.length === 0) {
-    const emitted = <ActionDescription[]>contract['emitted']
-    const accepted = <ActionDescription[]>contract['accepted']
+    const emitted = contract['emitted'] as ActionDescription[]
+    const accepted = contract['accepted'] as ActionDescription[]
     collectRespondsWithIssues(emitted, 'emitted', accepted, 'accepted', issues)
     collectRespondsWithIssues(accepted, 'accepted', emitted, 'emitted', issues)
   }
@@ -162,9 +162,9 @@ export function validateContract(contract: unknown): FeatureContract {
     throw createError(`Invalid contract:\n${issues.map((issue) => `  - ${issue}`).join('\n')}`)
   }
   return {
-    emitted: <ActionDescription[]>contract['emitted'],
-    accepted: <ActionDescription[]>contract['accepted'],
-    ...(contract['version'] !== undefined && { version: <string>contract['version'] }),
+    emitted: contract['emitted'] as ActionDescription[],
+    accepted: contract['accepted'] as ActionDescription[],
+    ...(contract['version'] !== undefined && { version: contract['version'] as string }),
   }
 }
 
@@ -184,13 +184,13 @@ export function validateFeatureConfig(config: unknown): FeatureConfig {
   if (!isRecord(config)) {
     throw createError('Invalid config: expected an object.')
   }
-  const fields = <const>['name', 'version', 'contract']
+  const fields = ['name', 'version', 'contract'] as const
   fields.forEach((field) => {
-    if (typeof config[field] !== 'string' || (<string>config[field]).length === 0) {
+    if (typeof config[field] !== 'string' || (config[field] as string).length === 0) {
       throw createError(`Invalid config: "${field}" must be a non-empty string.`)
     }
   })
-  return <FeatureConfig>(<unknown>config)
+  return config as unknown as FeatureConfig
 }
 
 /**
@@ -202,7 +202,7 @@ export function validateFeatureConfig(config: unknown): FeatureConfig {
  * @param issues - The running list of human-readable problems, appended to in place.
  */
 function collectDimensionIssues(section: Record<string, unknown>, field: string, bothRequired: boolean, issues: string[]): void {
-  const axes = <const>['width', 'height']
+  const axes = ['width', 'height'] as const
   if (bothRequired && axes.some((axis) => section[axis] === undefined)) {
     issues.push(`"${field}" must declare both "width" and "height" — fixed dimensions are exact, so a partial pair is meaningless.`)
   }
@@ -233,7 +233,7 @@ function collectModesIssues(modes: unknown, issues: string[]): DisplayMode[] | u
     issues.push(`"display.modes" must be a non-empty array of display modes (${known.join(', ')}).`)
     return undefined
   }
-  const unknown = modes.filter((mode) => !known.includes(<DisplayMode>mode))
+  const unknown = modes.filter((mode) => !known.includes(mode as DisplayMode))
   if (unknown.length > 0) {
     issues.push(
       `"display.modes" contains unknown modes: ${unknown.map((mode) => `"${String(mode)}"`).join(', ')} (expected ${known.join(', ')}).`
@@ -244,7 +244,7 @@ function collectModesIssues(modes: unknown, issues: string[]): DisplayMode[] | u
     issues.push('"display.modes" must not repeat a mode.')
     return undefined
   }
-  return <DisplayMode[]>modes
+  return modes as DisplayMode[]
 }
 
 /**
@@ -271,7 +271,7 @@ export function validateDisplayConfig(display: unknown): DisplayConfig {
   }
   const issues: string[] = []
   const modes = collectModesIssues(display['modes'], issues)
-  const sections = <const>['embedded', 'dialog', 'popup']
+  const sections = ['embedded', 'dialog', 'popup'] as const
   sections.forEach((section) => {
     const value = display[section]
     if (value === undefined) {
@@ -308,7 +308,7 @@ export function validateDisplayConfig(display: unknown): DisplayConfig {
   if (issues.length > 0) {
     throw createError(`Invalid config:\n${issues.map((issue) => `  - ${issue}`).join('\n')}`)
   }
-  return <DisplayConfig>display
+  return display as DisplayConfig
 }
 
 /**
@@ -338,5 +338,5 @@ export function validatePayload(action: ActionDescription, payload: unknown): Va
   if (action.schema === undefined) {
     return { valid: true, errors: [] }
   }
-  return validate(payload, <Schema>action.schema)
+  return validate(payload, action.schema as Schema)
 }

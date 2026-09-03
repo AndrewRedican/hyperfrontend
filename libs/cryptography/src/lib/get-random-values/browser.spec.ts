@@ -1,5 +1,5 @@
-/** @jest-environment jsdom */
 import { getType } from '@hyperfrontend/data-utils'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { getRandomValues } from './browser'
 
 describe('getRandomValues (browser)', () => {
@@ -15,6 +15,6 @@ describe('getRandomValues (browser)', () => {
 
   it('throws error with 0 or empty byte length', () => {
     expect(() => getRandomValues(0)).toThrow('Cannot generate random values without a byte length.')
-    expect(() => getRandomValues(<number>(<unknown>null))).toThrow('Cannot generate random values without a byte length.')
+    expect(() => getRandomValues(null as unknown as number)).toThrow('Cannot generate random values without a byte length.')
   })
 })

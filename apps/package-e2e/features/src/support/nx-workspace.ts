@@ -23,13 +23,13 @@ export const SETUP_TIMEOUT = 600000
 /** 4 minutes covers up to two cold nx invocations (daemon disabled) plus the workspace file copy on slow CI hosts. */
 export const SCENARIO_TIMEOUT = 240000
 
-/** 90s bounds one cold nx process so a hung child fails the suite instead of blocking the jest worker forever. */
+/** 90s bounds one cold nx process so a hung child fails the suite instead of blocking the test runner forever. */
 export const NX_COMMAND_TIMEOUT = 90000
 
 /** 3 minutes bounds an nx run whose generator callback additionally spawns a package-manager reconcile of the workspace tree. */
 export const NX_INSTALL_COMMAND_TIMEOUT = 180000
 
-// note: 8 minutes bounds the create-nx-workspace child itself; the enclosing jest hook uses SETUP_TIMEOUT.
+// note: 8 minutes bounds the create-nx-workspace child itself; the enclosing suite hook uses SETUP_TIMEOUT.
 const WORKSPACE_CREATE_TIMEOUT = 480000
 
 // note: 5 minutes bounds the tarball install into the freshly created workspace.
@@ -66,7 +66,7 @@ export const FEATURE_ARGS: readonly string[] = [
   '--directory=demo',
 ]
 
-const REPO_ROOT = join(__dirname, '..', '..', '..', '..', '..')
+const REPO_ROOT = join(import.meta.dirname, '..', '..', '..', '..', '..')
 const TARBALL_PATTERN = /^hyperfrontend-features-(.+)\.tgz$/
 
 // note: Top-level entries never copied into scenario workspaces — the install is shared via symlink and the caches are per-workspace state.
@@ -113,7 +113,7 @@ export interface ConsumerWorkspace {
  * @returns The parent environment with the Nx daemon disabled, colors off, and agent or dry-run markers removed.
  */
 function scratchEnv(): NodeJS.ProcessEnv {
-  // why: The nx task runner exports FORCE_COLOR=true into the jest process (task-env.js), so without this override chalk colorizes the piped child output and ANSI codes land inside asserted substrings like "UPDATE package.json".
+  // why: The nx task runner exports FORCE_COLOR=true into the test process (task-env.js), so without this override chalk colorizes the piped child output and ANSI codes land inside asserted substrings like "UPDATE package.json".
   const env = { ...process.env, NX_DAEMON: 'false', FORCE_COLOR: 'false', NO_COLOR: '1' }
   // why: create-nx-workspace and nx switch to an AI-agent output mode when these are set; removing them keeps output identical under human and agent runs.
   delete env['CLAUDECODE']
@@ -154,7 +154,7 @@ function resolveTarball(): PackedTarball {
   // note: Sorting makes the pick deterministic in the abnormal case of several staged versions.
   const newest = staged.sort()[staged.length - 1]
   if (newest !== undefined) {
-    return { tarballPath: join(packsDir, newest), version: (<RegExpMatchArray>newest.match(TARBALL_PATTERN))[1] }
+    return { tarballPath: join(packsDir, newest), version: (newest.match(TARBALL_PATTERN) as RegExpMatchArray)[1] }
   }
   const distDir = join(REPO_ROOT, 'dist', 'libs', 'features')
   if (!existsSync(join(distDir, 'package.json'))) {
@@ -162,7 +162,7 @@ function resolveTarball(): PackedTarball {
   }
   // how: Mirrors the @hyperfrontend/package:e2e executor — npm pack inside dist, then stage the tarball under tmp/e2e-packs.
   const packed = execFileSync('npm', ['pack', '--json'], { cwd: distDir, encoding: 'utf8', timeout: 120000 })
-  const filename = <string>(<NpmPackReport[]>JSON.parse(packed))[0].filename
+  const filename = (JSON.parse(packed) as NpmPackReport[])[0].filename as string
   const match = filename.match(TARBALL_PATTERN)
   if (match === null) {
     throw new Error(`npm pack produced an unexpected tarball name: ${filename}`)
@@ -246,7 +246,7 @@ export function copyWorkspace(pristineWorkspace: string, scenarioDir: string): v
     recursive: true,
     filter: (source) => {
       const rel = relative(pristineWorkspace, source)
-      return rel === '' || !SHARED_OR_CACHE_ENTRIES.has(<string>rel.split(sep)[0])
+      return rel === '' || !SHARED_OR_CACHE_ENTRIES.has(rel.split(sep)[0] as string)
     },
   })
   // why: The plugin resolves from the workspace root's node_modules; linking the pristine install makes each copy a real consumer of the packed tarball, per the cli.spec.ts symlink precedent.
@@ -281,7 +281,7 @@ export function readManifestText(workspaceDir: string): string {
  * @returns The parsed manifest.
  */
 export function readManifest(workspaceDir: string): Record<string, unknown> {
-  return <Record<string, unknown>>JSON.parse(readManifestText(workspaceDir))
+  return JSON.parse(readManifestText(workspaceDir)) as Record<string, unknown>
 }
 
 /**
@@ -303,7 +303,7 @@ export function writeManifest(workspaceDir: string, manifest: Record<string, unk
  * @returns The section object, or an empty map when absent.
  */
 export function sectionOf(manifest: Record<string, unknown>, section: string): Record<string, string> {
-  return <Record<string, string>>(manifest[section] ?? {})
+  return (manifest[section] ?? {}) as Record<string, string>
 }
 
 /**
@@ -323,7 +323,7 @@ export function readLockText(workspaceDir: string): string {
  * @returns The root entry's dependencies, or an empty map when absent.
  */
 export function lockRootDependencies(workspaceDir: string): Record<string, string> {
-  const lock = <Record<string, unknown>>JSON.parse(readLockText(workspaceDir))
-  const packages = <Record<string, Record<string, unknown>>>(lock['packages'] ?? {})
-  return <Record<string, string>>(packages['']?.['dependencies'] ?? {})
+  const lock = JSON.parse(readLockText(workspaceDir)) as Record<string, unknown>
+  const packages = (lock['packages'] ?? {}) as Record<string, Record<string, unknown>>
+  return (packages['']?.['dependencies'] ?? {}) as Record<string, string>
 }

@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { isUnderDir } from './under-dir'
 
 const DIR = '/abs/out/_dependencies'

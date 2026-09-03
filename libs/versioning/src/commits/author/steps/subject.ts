@@ -68,7 +68,7 @@ export function normalizeSubject(raw: string): string {
 function renderSubjectMessage(ctx: SessionContext, subject: string): string {
   const budget = ctx.config.headerMaxLength
   if (budget === null) return 'Subject:'
-  const used = countHeaderLength(<CommitDraft>{ type: ctx.draft.type, scope: ctx.draft.scope }, subject)
+  const used = countHeaderLength({ type: ctx.draft.type, scope: ctx.draft.scope } as CommitDraft, subject)
   const remaining = budget - used
   const countText = remaining < 0 ? `${-remaining} over ${budget}-char header` : `${remaining} chars left in ${budget}-char header`
   return `Subject (${colorize(remaining, countText)}):`

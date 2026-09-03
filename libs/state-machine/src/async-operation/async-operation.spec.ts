@@ -1,3 +1,4 @@
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { event } from '../models'
 import { AsyncOperation } from './async-operation'
 

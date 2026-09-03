@@ -1,6 +1,8 @@
 import type { ChannelJSON } from '../../types/channel'
 import type { IMessage } from '../../types/message'
 import type { MessageHandler, MessagePredicate } from './create'
+import { beforeEach } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { byType } from './by-type'
 import { compose } from './compose'
 import { create } from './create'
@@ -107,7 +109,7 @@ describe('Message Filters', () => {
 
       const userFilter = byType('user')
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const adminFilter = create<IMessage>((msg) => (<any>msg.data)?.admin === true)
+      const adminFilter = create<IMessage>((msg) => (msg.data as any)?.admin === true)
 
       const composedHandler = compose(adminFilter, userFilter)(handler)
 
@@ -174,7 +176,7 @@ describe('Message Filters', () => {
 
       const typeFilter = byType('data-update')
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const priorityFilter = create<IMessage>((msg) => (<any>msg.data)?.priority === 'high')
+      const priorityFilter = create<IMessage>((msg) => (msg.data as any)?.priority === 'high')
       const validDataFilter = create<IMessage>((msg) => msg.data !== undefined)
 
       const composedHandler = compose(typeFilter, priorityFilter, validDataFilter)(handler)
@@ -243,9 +245,9 @@ describe('Message Filters', () => {
       const userHandler = jest.fn()
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const adminFilter = create<IMessage>((msg) => (<any>msg.data)?.role === 'admin')
+      const adminFilter = create<IMessage>((msg) => (msg.data as any)?.role === 'admin')
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const userFilter = create<IMessage>((msg) => (<any>msg.data)?.role === 'user')
+      const userFilter = create<IMessage>((msg) => (msg.data as any)?.role === 'user')
 
       const filteredAdmin = adminFilter(adminHandler)
       const filteredUser = userFilter(userHandler)

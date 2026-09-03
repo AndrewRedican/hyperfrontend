@@ -1,3 +1,6 @@
+import { rmSync } from 'node:fs'
+import { after as afterAll } from 'node:test'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { createTempWorkspaceManager, PUBLISHABLE_LIBRARY_PROJECT_JSON } from '../testing'
 import {
   findLibraryDirectories,
@@ -120,7 +123,6 @@ describe('looksLikeLibraryDir', () => {
       },
     })
 
-    const { rmSync } = require('node:fs')
     rmSync(workspace.getPath('src'), { recursive: true, force: true })
 
     expect(looksLikeLibraryDir(workspace.root)).toBe(false)

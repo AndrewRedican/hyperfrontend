@@ -1,14 +1,17 @@
 import type { Logger } from '@hyperfrontend/logging'
+import type { Mock } from '@hyperfrontend/testing'
 import type { ChannelInternals } from '../../channel/types'
 import type { ActionCreators } from '../../core/actions/factory'
 import type { MessageHandler, ChannelState } from '../../types/channel'
 import type { IMessage } from '../../types/message'
+import { beforeEach } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { notifyMessage } from './notify-message'
 
 describe('channel/subscription/notify-message', () => {
   let mockChannel: ChannelInternals
   let state: ChannelState
-  let mockGetState: jest.Mock<ChannelState, []>
+  let mockGetState: Mock<ChannelState, []>
   let mockLogger: Logger
 
   beforeEach(() => {
@@ -55,7 +58,7 @@ describe('channel/subscription/notify-message', () => {
       removeProcess: jest.fn(),
       notifyEvent: jest.fn(),
       notifyMessage: jest.fn(),
-      actions: <ActionCreators>{},
+      actions: {} as ActionCreators,
     }
   })
 

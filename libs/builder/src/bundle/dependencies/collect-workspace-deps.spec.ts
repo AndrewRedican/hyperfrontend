@@ -1,4 +1,5 @@
 import type { BuildContext, WorkspaceBundledDep } from '../../models'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { collectWorkspaceExactSpecifiers, collectWorkspacePrefixDeps } from './collect-workspace-deps'
 
 const dep = (over: Partial<WorkspaceBundledDep>): WorkspaceBundledDep => ({
@@ -11,7 +12,7 @@ const dep = (over: Partial<WorkspaceBundledDep>): WorkspaceBundledDep => ({
   ...over,
 })
 
-const ctx = (deps: WorkspaceBundledDep[]): BuildContext => <BuildContext>{ workspaceBundledDeps: deps }
+const ctx = (deps: WorkspaceBundledDep[]): BuildContext => ({ workspaceBundledDeps: deps }) as BuildContext
 
 describe('collectWorkspacePrefixDeps', () => {
   it('returns the distinct whole-surface package names', () => {

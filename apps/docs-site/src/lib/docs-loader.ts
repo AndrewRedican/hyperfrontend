@@ -384,7 +384,7 @@ export function getContributors(): Contributor[] {
 
   const data = parse(readFileSync(contributorsPath, 'utf-8'))
   if (data && typeof data === 'object' && 'contributors' in data && isArray(data.contributors)) {
-    return <Contributor[]>data.contributors
+    return data.contributors as Contributor[]
   }
 
   return []
@@ -455,7 +455,7 @@ function collectPackageSymbolLinks(): Map<string, PackageSymbolLinks> {
 
   for (const lib of manifest?.libraries ?? []) {
     if (!lib.hasApi) continue
-    const api = <RawApiNode | null>getLibraryApi(lib.slug)
+    const api = getLibraryApi(lib.slug) as RawApiNode | null
     if (!api?.children) continue
 
     const symbols: Record<string, true> = {}
@@ -503,7 +503,7 @@ export function getApiLinkIndex(slug: string, packageName: string): ApiLinkIndex
       return
     }
     if (!node || typeof node !== 'object') return
-    const record = <Record<string, unknown>>node
+    const record = node as Record<string, unknown>
     const refPackage = record['package']
     const refName = record['name']
     if (record['type'] === 'reference' && typeof refPackage === 'string' && typeof refName === 'string') {

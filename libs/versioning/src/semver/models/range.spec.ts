@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { createComparator, createComparatorSet, createRange, createAnyRange, createExactRange, isWildcard } from './range'
 import { createSemVer } from './version'
 

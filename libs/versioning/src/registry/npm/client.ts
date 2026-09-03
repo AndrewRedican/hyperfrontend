@@ -349,7 +349,7 @@ export function escapePackageName(name: string): string {
       code === 95 ||
       code === 46
     ) {
-      safe.push(<string>name[i])
+      safe.push(name[i] as string)
     } else {
       throw createError(`Invalid character in package name at position ${i}: "${name[i]}"`)
     }
@@ -399,7 +399,7 @@ export function escapeVersion(version: string): string {
       code === 45 ||
       code === 43
     ) {
-      safe.push(<string>version[i])
+      safe.push(version[i] as string)
     } else {
       throw createError(`Invalid character in version at position ${i}: "${version[i]}"`)
     }
@@ -418,7 +418,7 @@ function extractRepoUrl(repository: unknown): string | undefined {
   if (typeof repository === 'string') return repository
 
   if (repository && typeof repository === 'object') {
-    const repo = <RawRepository>repository
+    const repo = repository as RawRepository
     if (repo.url) {
       let url = repo.url
       if (url.startsWith('git+')) {

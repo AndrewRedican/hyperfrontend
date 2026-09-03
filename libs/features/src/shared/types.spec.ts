@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { DisplayMode, defineConfig, defineDevConfig } from './types'
 
 describe('DisplayMode', () => {

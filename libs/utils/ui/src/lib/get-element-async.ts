@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable prefer-const */
-/* istanbul ignore file - comprehensive tests exist; defensive type guards are tested via integration */
 import { getType } from '@hyperfrontend/data-utils'
 import { setTimeout, setInterval, clearTimeout, clearInterval } from '@hyperfrontend/immutable-api-utils/built-in-copy/timers'
 
@@ -53,11 +52,11 @@ export interface GetElementAsyncOptions {
  * ```
  */
 export function getElementAsync(elementRefOrString: ElementRefOrString, options?: GetElementAsyncOptions): () => void {
-  const { duration, interval, onSuccess, onFail } = <GetElementAsyncOptions>{
+  const { duration, interval, onSuccess, onFail } = {
     duration: 10000,
     interval: 100,
     ...options,
-  }
+  } as GetElementAsyncOptions
 
   let timer: ReturnType<typeof setInterval> | undefined
   let timeout: ReturnType<typeof setTimeout> | undefined
@@ -70,11 +69,10 @@ export function getElementAsync(elementRefOrString: ElementRefOrString, options?
    * @param element - The element to pass to the callback
    */
   function invoke(callback: OnSuccess | OnFail | undefined, element: any) {
-    /* istanbul ignore next */
+    /* node:coverage ignore next 1 */
     if (isCancelled) return
-    /* istanbul ignore next */
     if (getType(callback) !== 'function') return
-    ;(<OnSuccess | OnFail>callback)(element)
+    ;(callback as OnSuccess | OnFail)(element)
   }
 
   /**
@@ -92,7 +90,9 @@ export function getElementAsync(elementRefOrString: ElementRefOrString, options?
    */
   function getElement(): HTMLElement | null {
     try {
-      return getType(elementRefOrString) === 'string' ? document.querySelector(<string>elementRefOrString) : <HTMLElement>elementRefOrString
+      return getType(elementRefOrString) === 'string'
+        ? document.querySelector(elementRefOrString as string)
+        : (elementRefOrString as HTMLElement)
     } catch {
       return null
     }
@@ -114,7 +114,7 @@ export function getElementAsync(elementRefOrString: ElementRefOrString, options?
   timeout = setTimeout(() => {
     cleanup()
     const element = getElement()
-    /* istanbul ignore next */
+    /* node:coverage ignore next 1 */
     invoke(element ? onSuccess : onFail, element)
   }, duration)
 

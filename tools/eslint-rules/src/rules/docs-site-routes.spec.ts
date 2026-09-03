@@ -1,5 +1,7 @@
 import type { ArrayExpression, Identifier, Literal, ObjectExpression, Property, SpreadElement } from 'estree'
+import { after as afterAll } from 'node:test'
 import { RuleTester } from 'eslint'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { createTempWorkspaceManager } from '../testing'
 import rule, { RULE_NAME, extractLibraryEntries, getExpectedRouteDir, getExpectedNavHref } from './docs-site-routes'
 

@@ -1,5 +1,7 @@
 import type { HandlerMap } from './create-router'
 import type { RouteHandler } from './types'
+import { beforeEach } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { createRouter } from './create-router'
 
 describe('createRouter', () => {

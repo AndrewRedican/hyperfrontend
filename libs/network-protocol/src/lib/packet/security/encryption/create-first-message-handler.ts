@@ -33,7 +33,7 @@ export function createFirstMessageHandler<T = any>(
   const serializeWithoutEncryption = async (packet: UnencryptedPacket<T>): Promise<UnserializedEncryptedPacket> => {
     const serializedData: SerializedData<T> = {
       ...packet.data,
-      message: <SerializedData<T>['message']>stringify(packet.data.message),
+      message: stringify(packet.data.message) as SerializedData<T>['message'],
     }
     const jsonString = stringify(serializedData)
     const binaryData = textEncoder(jsonString)

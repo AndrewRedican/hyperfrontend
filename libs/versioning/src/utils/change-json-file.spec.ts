@@ -1,4 +1,5 @@
 import type { Tree } from '@hyperfrontend/project-scope/vfs'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { changeJsonFile, DEFAULT_CHANGE_JSON_FILE_OPTIONS } from './change-json-file'
 
 /**
@@ -28,7 +29,7 @@ function createMockTree(files: Record<string, string>): Tree & { _getWrittenFile
       if (content === null) {
         throw new Error(`File not found: ${path}`)
       }
-      const buffer = typeof content === 'string' ? Buffer.from(content) : <Buffer>content
+      const buffer = typeof content === 'string' ? Buffer.from(content) : (content as Buffer)
       const result = transform(buffer)
       tree.write(path, result)
     },

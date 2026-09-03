@@ -153,7 +153,7 @@ export const isPureFreezeCall = (call: ts.CallExpression, resolution: BindingRes
   if (callee === null || !PURE_GLOBAL_CALLEES.has(callee)) return false
   if (call.arguments.length < 1) return false
   const first = call.arguments[0]
-  return ts.isObjectLiteralExpression(<ts.Node>first) || ts.isArrayLiteralExpression(<ts.Node>first)
+  return ts.isObjectLiteralExpression(first as ts.Node) || ts.isArrayLiteralExpression(first as ts.Node)
 }
 
 /**
@@ -414,7 +414,7 @@ export const computeKeepClosure = (sourceFile: ts.SourceFile, model: ChunkModel,
   const keepClosure = createSet<string>([])
   const stack = from(collectRoots(sourceFile, model, keep, declStatements))
   while (stack.length > 0) {
-    const name = <string>stack.pop()
+    const name = stack.pop() as string
     if (keepClosure.has(name)) continue
     keepClosure.add(name)
     const decl = model.nameToDecl.get(name)

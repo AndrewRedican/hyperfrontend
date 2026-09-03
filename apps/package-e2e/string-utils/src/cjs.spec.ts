@@ -5,6 +5,10 @@
  * Note: string-utils has platform-specific entries: ./browser, ./node
  */
 
+'use strict'
+
+const { describe, it, expect } = require('@hyperfrontend/testing')
+
 describe('@hyperfrontend/string-utils CJS', () => {
   describe('node sub-entry', () => {
     it('is requireable', () => {

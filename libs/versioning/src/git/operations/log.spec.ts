@@ -1,4 +1,7 @@
+import type { MockedFunction } from '@hyperfrontend/testing'
 import { execFileSync } from 'node:child_process'
+import { beforeEach } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import {
   getCommitLog,
   getCommitsBetween,
@@ -14,7 +17,7 @@ import {
 
 jest.mock('node:child_process')
 
-const mockExecFileSync = <jest.MockedFunction<typeof execFileSync>>execFileSync
+const mockExecFileSync = execFileSync as MockedFunction<typeof execFileSync>
 
 const RECORD_SEPARATOR = '\x1e'
 const FIELD_SEPARATOR = '\x00'
@@ -354,7 +357,7 @@ describe('getCommitsSince', () => {
 
     getCommitsSince('v1.0.0')
 
-    const args = <string[]>mockExecFileSync.mock.calls[0][1]
+    const args = mockExecFileSync.mock.calls[0][1] as string[]
     expect(args.some((arg) => arg.startsWith('-n'))).toBe(false)
   })
 

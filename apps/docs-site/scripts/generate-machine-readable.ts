@@ -72,6 +72,54 @@ function resolveTarget(target: string, markdownRoutes: Set<string>): string {
   return hash ? `${absoluteUrl(canonical)}#${hash}` : absoluteUrl(canonical)
 }
 
+/** What a line looks like once its HTML comments are gone. */
+interface CommentScan {
+  /** The line with every comment span removed */
+  text: string
+  /** Whether a comment is still open when the line ends */
+  inComment: boolean
+}
+
+/**
+ * Remove HTML comment spans from one line.
+ *
+ * The scan walks the line instead of matching whole comments in one pass,
+ * because a comment can open on one line and close on another, and the text
+ * after a close can open a comment of its own. Whatever a single pass left
+ * behind would be published as document text.
+ *
+ * @param line - The line as authored
+ * @param inComment - Whether a comment was already open when the line began
+ * @returns The surviving text, and whether a comment is open at the end of it
+ */
+function stripComments(line: string, inComment: boolean): CommentScan {
+  let rest = line
+  let text = ''
+  let open = inComment
+
+  while (rest !== '') {
+    if (open) {
+      const end = rest.indexOf('-->')
+      if (end === -1) return { text, inComment: true }
+      rest = rest.slice(end + 3)
+      open = false
+      continue
+    }
+
+    const start = rest.indexOf('<!--')
+    if (start === -1) {
+      text += rest
+      break
+    }
+
+    text += rest.slice(0, start)
+    rest = rest.slice(start + 4)
+    open = true
+  }
+
+  return { text, inComment: open }
+}
+
 /**
  * Turn a document body into the file that gets published.
  *
@@ -96,15 +144,8 @@ function publishBody(markdown: string, markdownRoutes: Set<string>): string {
   let inComment = false
 
   for (const line of markdown.split('\n')) {
-    if (inComment) {
-      const end = line.indexOf('-->')
-      if (end === -1) continue
-      inComment = false
-      lines.push(line.slice(end + 3))
-      continue
-    }
-
-    if (line.trimStart().startsWith('```')) {
+    // why: a fence marker reached inside a comment is commented-out text, not the start of a code block
+    if (!inComment && line.trimStart().startsWith('```')) {
       inFence = !inFence
       lines.push(line)
       continue
@@ -115,14 +156,14 @@ function publishBody(markdown: string, markdownRoutes: Set<string>): string {
       continue
     }
 
-    let stripped = line.replace(/<!--[\s\S]*?-->/g, '')
-    const opening = stripped.indexOf('<!--')
-    if (opening !== -1) {
-      inComment = true
-      stripped = stripped.slice(0, opening)
-    }
+    const openedInComment = inComment
+    const scan = stripComments(line, inComment)
+    inComment = scan.inComment
 
-    const resolved = stripped
+    // why: a line that is nothing but comment body leaves no gap behind, so it is dropped rather than published blank
+    if (openedInComment && inComment && scan.text === '') continue
+
+    const resolved = scan.text
       .replace(
         /\]\(([^)\s]+)([^)]*)\)/g,
         (_match, target: string, suffix: string) => `](${resolveTarget(target, markdownRoutes)}${suffix})`

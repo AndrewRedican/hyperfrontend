@@ -144,7 +144,7 @@ const rule: Rule.RuleModule = {
 
     return {
       JSONProperty(node: JSONNode) {
-        /* istanbul ignore if -- type guard for jsonc-eslint-parser */
+        // why: type guard for jsonc-eslint-parser
         if (node.type !== 'JSONProperty') {
           return
         }
@@ -160,7 +160,7 @@ const rule: Rule.RuleModule = {
         }
 
         for (const prop of value.properties) {
-          /* istanbul ignore if -- type guard for jsonc-eslint-parser */
+          // why: type guard for jsonc-eslint-parser
           if (prop.type !== 'JSONProperty') {
             continue
           }
@@ -184,7 +184,7 @@ const rule: Rule.RuleModule = {
             continue
           }
 
-          /* istanbul ignore next -- exists() above guarantees the file is readable */
+          // why: exists() above guarantees the file is readable
           const content = readFileIfExists(absoluteReadmePath) ?? ''
           const { hasMatchingHeading, hasDescription } = inspectReadmeContent(content, moduleName)
 

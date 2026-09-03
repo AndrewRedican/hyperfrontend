@@ -25,7 +25,7 @@ import type { Project } from './models/project'
 import type { Workspace, WorkspaceType } from './models/workspace'
 import { join } from 'node:path'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
-// eslint-disable-next-line @nx/enforce-module-boundaries
+
 import { exists, readPackageJsonIfExists } from '@hyperfrontend/project-scope'
 import { buildDependencyGraph } from './discovery/dependencies'
 import { discoverPackages } from './discovery/packages'

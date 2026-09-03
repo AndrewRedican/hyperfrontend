@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { createConventionalCommit } from '../../models/conventional'
 import { headerMaxLengthRule } from './header-max-length'
 

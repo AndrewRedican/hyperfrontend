@@ -1,4 +1,3 @@
-/* eslint-disable @nx/enforce-module-boundaries */
 import type { ScopeFilterContext } from '../models/session-config'
 import { isAbsolute, join } from 'node:path'
 import { parse } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
@@ -30,7 +29,7 @@ interface ProjectManifest {
   readonly name?: string
 }
 
-const EXCLUDED_PATH_SEGMENTS = <const>['/node_modules/', '/.git/']
+const EXCLUDED_PATH_SEGMENTS = ['/node_modules/', '/.git/'] as const
 
 /**
  * Resolves each staged path to its owning project by walking upward to the
@@ -99,7 +98,7 @@ function readManifestName(manifestPath: string): string | null {
   const content = readFileIfExists(manifestPath)
   if (content === null) return null
   try {
-    const manifest = <ProjectManifest>parse(content)
+    const manifest = parse(content) as ProjectManifest
     return manifest.name ?? null
   } catch {
     return null

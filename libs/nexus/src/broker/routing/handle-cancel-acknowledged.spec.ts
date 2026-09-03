@@ -3,6 +3,8 @@ import type { IAction } from '../../types/action'
 import type { IChannelContract } from '../../types/contract'
 import type { BrokerState } from '../types'
 import type { RoutingContext } from './types'
+import { beforeEach } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { createActionCreators } from '../../core/actions/factory'
 import { createProcessManager } from '../../core/processes/factory'
 import { createRegistry } from '../../core/registry/factory'
@@ -38,7 +40,7 @@ describe('handleCancelAcknowledged', () => {
     mockBrokerState = {
       id: 'broker-1',
       name: 'test-broker',
-      window: <Window>global.window,
+      window: global.window as Window,
       contract: validContract,
       settings: {
         contract: validContract,
@@ -52,9 +54,9 @@ describe('handleCancelAcknowledged', () => {
       getBrokerId: () => 'broker-1',
       getContract: () => mockBrokerState.contract,
     })
-    mockWindow = <Window>(<unknown>{
+    mockWindow = {
       postMessage: jest.fn(),
-    })
+    } as unknown as Window
 
     routingContext = {
       state: mockBrokerState,
@@ -78,10 +80,10 @@ describe('handleCancelAcknowledged', () => {
       senderId: 'remote-broker-1',
     }
 
-    const message = <MessageEvent<IAction>>{
+    const message = {
       data: action,
       source: mockWindow,
-    }
+    } as MessageEvent<IAction>
 
     expect(() => {
       handleCancelAcknowledged(routingContext, message)
@@ -97,10 +99,10 @@ describe('handleCancelAcknowledged', () => {
       senderId: 'remote-broker-1',
     }
 
-    const message = <MessageEvent<IAction>>{
+    const message = {
       data: action,
       source: mockWindow,
-    }
+    } as MessageEvent<IAction>
 
     expect(() => {
       handleCancelAcknowledged(routingContext, message)
@@ -123,10 +125,10 @@ describe('handleCancelAcknowledged', () => {
       senderId: 'remote-broker-1',
     }
 
-    const message = <MessageEvent<IAction>>{
+    const message = {
       data: action,
       source: mockWindow,
-    }
+    } as MessageEvent<IAction>
 
     handleCancelAcknowledged(routingContext, message)
 
@@ -137,10 +139,10 @@ describe('handleCancelAcknowledged', () => {
     const channel1 = addChannel(mockBrokerState, registry, processManager, actions, 'channel-1', mockWindow)
     const processId1 = processManager.create(channel1)
 
-    const window2 = <Window>(<unknown>{
+    const window2 = {
       postMessage: jest.fn(),
       _uniqueId: 'window-2',
-    })
+    } as unknown as Window
     const channel2 = addChannel(mockBrokerState, registry, processManager, actions, 'channel-2', window2)
     const processId2 = processManager.create(channel2)
 
@@ -156,15 +158,15 @@ describe('handleCancelAcknowledged', () => {
       senderId: 'remote-2',
     }
 
-    handleCancelAcknowledged(routingContext, <MessageEvent<IAction>>{
+    handleCancelAcknowledged(routingContext, {
       data: action1,
       source: mockWindow,
-    })
+    } as MessageEvent<IAction>)
 
-    handleCancelAcknowledged(routingContext, <MessageEvent<IAction>>{
+    handleCancelAcknowledged(routingContext, {
       data: action2,
       source: window2,
-    })
+    } as MessageEvent<IAction>)
 
     expect(processManager.get(processId1)).toBeUndefined()
     expect(processManager.get(processId2)).toBeUndefined()

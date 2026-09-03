@@ -1,4 +1,5 @@
 import type { Schema } from '../types/schema'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { createValidationContext } from './context'
 import { resolveRef } from './resolve-ref'
 
@@ -124,7 +125,7 @@ describe('resolveRef', () => {
     it('returns undefined when path leads to null', () => {
       const schema: Schema = {
         definitions: {
-          nullDef: <Schema>(<unknown>null),
+          nullDef: null as unknown as Schema,
         },
       }
       const ctx = createValidationContext(schema)

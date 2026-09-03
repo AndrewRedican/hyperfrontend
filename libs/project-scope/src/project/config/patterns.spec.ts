@@ -1,4 +1,5 @@
 import type { ConfigType } from './patterns'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { CONFIG_PATTERNS, getConfigPatternsByType } from './patterns'
 
 describe('CONFIG_PATTERNS', () => {
@@ -46,7 +47,7 @@ describe('getConfigPatternsByType', () => {
   })
 
   it('returns empty array for unknown type', () => {
-    const patterns = getConfigPatternsByType(<ConfigType[]>(<unknown>['unknown']))
+    const patterns = getConfigPatternsByType(['unknown'] as unknown as ConfigType[])
 
     expect(patterns).toEqual([])
   })

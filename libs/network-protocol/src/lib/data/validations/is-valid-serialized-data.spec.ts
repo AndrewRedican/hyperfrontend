@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { isValidSerializedData } from './is-valid-serialized-data'
 
 describe('isValidSerializedData', () => {

@@ -18,13 +18,13 @@ import { registeredClasses } from './shared/consts'
  * ```
  */
 export const getType = <T extends string = DataType>(target: unknown): T => {
-  if (target === null) return <T>'null'
+  if (target === null) return 'null' as T
   const nativeDataType = typeof target
   if (nativeDataType === 'object') {
-    if (isArray(target)) return <T>'array'
+    if (isArray(target)) return 'array' as T
     for (const registeredClass of registeredClasses) {
-      if (target instanceof registeredClass) return <T>registeredClass.name
+      if (target instanceof registeredClass) return registeredClass.name as T
     }
   }
-  return <T>nativeDataType
+  return nativeDataType as T
 }

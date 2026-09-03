@@ -1,4 +1,5 @@
 import type { PackageJson } from '../../models'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { filterBundledDepsFromOutput, filterWorkspaceDepsFromOutput } from './filter-deps'
 
 const isHyperfrontend = (name: string): boolean => name.startsWith('@hyperfrontend/')

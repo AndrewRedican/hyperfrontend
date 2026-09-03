@@ -209,7 +209,7 @@ export default async function publishExecutor(options: PublishExecutorOptions, c
     if (error instanceof Error) {
       logger.error(error.message)
       if ('stderr' in error) {
-        logger.error(String((<ErrorWithStderr>error).stderr))
+        logger.error(String((error as ErrorWithStderr).stderr))
       }
     }
     return { success: false }

@@ -179,8 +179,8 @@ function parseDepsArgs(args: string[]): DepsCommandOptions {
 
   return {
     path: positionals[0],
-    type: <DepsCommandOptions['type']>values.type,
-    format: <OutputFormat>values.format,
+    type: values.type as DepsCommandOptions['type'],
+    format: values.format as OutputFormat,
   }
 }
 

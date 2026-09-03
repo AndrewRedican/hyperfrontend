@@ -19,7 +19,7 @@ export interface MediaError extends Error {
  * @returns The error, ready to throw.
  */
 export function mediaError(exitCode: ExitCode, message: string): MediaError {
-  const error = <MediaError>createError(message)
+  const error = createError(message) as MediaError
   error.exitCode = exitCode
   return error
 }
@@ -31,5 +31,5 @@ export function mediaError(exitCode: ExitCode, message: string): MediaError {
  * @returns True when it is an error this module raised.
  */
 export function isMediaError(value: unknown): value is MediaError {
-  return value instanceof Error && typeof (<MediaError>value).exitCode === 'number'
+  return value instanceof Error && typeof (value as MediaError).exitCode === 'number'
 }

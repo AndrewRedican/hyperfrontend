@@ -1,4 +1,5 @@
 import type { SessionConfig } from './session-config'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { conventionalPreset } from '../../validate/presets/conventional'
 import { DEFAULT_IMPERATIVE_WORDLIST } from '../../validate/rules/imperative-mood'
 import { createSessionContext } from './session-context'

@@ -1,4 +1,6 @@
 import type { BrokerState } from '../types'
+import { beforeEach } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { createActionCreators } from '../../core/actions/factory'
 import { createProcessManager } from '../../core/processes/factory'
 import { createRegistry } from '../../core/registry/factory'
@@ -9,7 +11,7 @@ describe('listChannels', () => {
   const mockBrokerState: BrokerState = {
     id: 'broker-1',
     name: 'test-broker',
-    window: <Window>global.window,
+    window: global.window as Window,
     contract: {
       accepted: [{ type: 'test', description: 'Test action' }],
       emitted: [],
@@ -51,8 +53,8 @@ describe('listChannels', () => {
   })
 
   it('return array of channel JSON representations', () => {
-    const window1 = <Window>{}
-    const window2 = <Window>{}
+    const window1 = {} as Window
+    const window2 = {} as Window
 
     addChannel(mockBrokerState, registry, processManager, actions, 'channel-1', window1)
     addChannel(mockBrokerState, registry, processManager, actions, 'channel-2', window2)
@@ -67,7 +69,7 @@ describe('listChannels', () => {
   })
 
   it('includes channel names in JSON', () => {
-    const window1 = <Window>{}
+    const window1 = {} as Window
 
     addChannel(mockBrokerState, registry, processManager, actions, 'test-channel', window1)
 
@@ -77,7 +79,7 @@ describe('listChannels', () => {
   })
 
   it('return fresh array on each call', () => {
-    const window1 = <Window>{}
+    const window1 = {} as Window
     addChannel(mockBrokerState, registry, processManager, actions, 'channel-1', window1)
 
     const list1 = listChannels(registry)
@@ -88,8 +90,8 @@ describe('listChannels', () => {
   })
 
   it('updates when channels are added', () => {
-    const window1 = <Window>{}
-    const window2 = <Window>{}
+    const window1 = {} as Window
+    const window2 = {} as Window
 
     addChannel(mockBrokerState, registry, processManager, actions, 'channel-1', window1)
     const list1 = listChannels(registry)

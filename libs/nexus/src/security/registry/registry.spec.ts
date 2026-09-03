@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { createProtocolRegistry } from './factory'
 
 describe('Protocol Registry', () => {

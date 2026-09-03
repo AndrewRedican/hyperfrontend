@@ -481,7 +481,7 @@ function extractArchitecture(lib: LibraryConfig): ContentExtractionResult {
  * @param apiJsonPath - Path to the TypeDoc JSON bundle to rewrite in place
  */
 function stripExternalSourceUrls(apiJsonPath: string): void {
-  const bundle = <unknown>parse(readFileSync(apiJsonPath, 'utf-8'))
+  const bundle = parse(readFileSync(apiJsonPath, 'utf-8')) as unknown
   let stripped = 0
 
   const visit = (node: unknown): void => {
@@ -492,7 +492,7 @@ function stripExternalSourceUrls(apiJsonPath: string): void {
       return
     }
 
-    const record = <Record<string, unknown>>node
+    const record = node as Record<string, unknown>
     const fileName = record['fileName']
 
     if (typeof fileName === 'string' && fileName.includes('node_modules/') && 'url' in record) {

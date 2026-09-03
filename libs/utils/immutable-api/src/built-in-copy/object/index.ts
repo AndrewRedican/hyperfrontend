@@ -137,7 +137,7 @@ export const getOwnPropertyDescriptors = _Object.getOwnPropertyDescriptors
  * hasOwn(user, 'toString') // => false (inherited from prototype)
  * ```
  */
-export const hasOwn = (obj: object, key: PropertyKey): boolean => <boolean>_Reflect.apply(_hasOwnProperty, obj, [key])
+export const hasOwn = (obj: object, key: PropertyKey): boolean => _Reflect.apply(_hasOwnProperty, obj, [key]) as boolean
 
 /**
  * (Safe copy) Safe wrapper for Object.prototype.toString.call().
@@ -153,14 +153,14 @@ export const hasOwn = (obj: object, key: PropertyKey): boolean => <boolean>_Refl
  * typeTag(Promise.resolve()) // => '[object Promise]'
  * ```
  */
-export const typeTag = (value: unknown): string => <string>_Reflect.apply(_toString, value, [])
+export const typeTag = (value: unknown): string => _Reflect.apply(_toString, value, []) as string
 
 /**
  * (Safe copy) Namespace object containing all Object static methods.
  * Note: Importing this imports all methods in this namespace (no tree-shaking).
  * Named SafeObject instead of Object to avoid shadowing global Object during CJS module initialization.
  */
-export const SafeObject = _Object.freeze(<const>{
+export const SafeObject = _Object.freeze({
   freeze,
   create,
   keys,
@@ -182,4 +182,4 @@ export const SafeObject = _Object.freeze(<const>{
   getOwnPropertyNames,
   getOwnPropertySymbols,
   getOwnPropertyDescriptors,
-})
+} as const)

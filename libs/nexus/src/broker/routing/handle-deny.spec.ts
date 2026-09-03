@@ -3,6 +3,8 @@ import type { IAction } from '../../types/action'
 import type { IChannelContract } from '../../types/contract'
 import type { BrokerState } from '../types'
 import type { RoutingContext } from './types'
+import { beforeEach } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { createActionCreators } from '../../core/actions/factory'
 import { createProcessManager } from '../../core/processes/factory'
 import { createRegistry } from '../../core/registry/factory'
@@ -38,7 +40,7 @@ describe('handleDeny', () => {
     mockBrokerState = {
       id: 'broker-1',
       name: 'test-broker',
-      window: <Window>global.window,
+      window: global.window as Window,
       contract: validContract,
       settings: {
         contract: validContract,
@@ -52,9 +54,9 @@ describe('handleDeny', () => {
       getBrokerId: () => 'broker-1',
       getContract: () => mockBrokerState.contract,
     })
-    mockWindow = <Window>(<unknown>{
+    mockWindow = {
       postMessage: jest.fn(),
-    })
+    } as unknown as Window
 
     routingContext = {
       state: mockBrokerState,
@@ -79,10 +81,10 @@ describe('handleDeny', () => {
       error: 'Connection denied',
     }
 
-    const message = <MessageEvent<IAction>>{
+    const message = {
       data: action,
       source: mockWindow,
-    }
+    } as MessageEvent<IAction>
 
     expect(() => {
       handleDeny(routingContext, message)
@@ -97,10 +99,10 @@ describe('handleDeny', () => {
       error: 'Connection denied',
     }
 
-    const message = <MessageEvent<IAction>>{
+    const message = {
       data: action,
       source: mockWindow,
-    }
+    } as MessageEvent<IAction>
 
     expect(() => {
       handleDeny(routingContext, message)
@@ -113,17 +115,17 @@ describe('handleDeny', () => {
     const denyHandler = jest.fn()
     channel.on('deny', denyHandler)
 
-    handleDeny(routingContext, <MessageEvent<IAction>>{
-      data: <IAction>{
+    handleDeny(routingContext, {
+      data: {
         type: '[nexus] connection-request-denied',
         processId,
         senderId: 'remote-broker-1',
         error: 'Security is required.',
         reason: 'security-unavailable',
-      },
+      } as IAction,
       origin: 'http://remote.example',
       source: mockWindow,
-    })
+    } as MessageEvent<IAction>)
 
     expect(denyHandler).toHaveBeenCalledWith(
       { error: 'Security is required.', reason: 'security-unavailable', origin: 'http://remote.example' },
@@ -137,16 +139,16 @@ describe('handleDeny', () => {
     const denyHandler = jest.fn()
     channel.on('deny', denyHandler)
 
-    handleDeny(routingContext, <MessageEvent<IAction>>{
-      data: <IAction>{
+    handleDeny(routingContext, {
+      data: {
         type: '[nexus] connection-request-denied',
         processId,
         senderId: 'remote-broker-1',
         error: 'Connection denied',
-      },
+      } as IAction,
       origin: 'http://remote.example',
       source: mockWindow,
-    })
+    } as MessageEvent<IAction>)
 
     expect(denyHandler).toHaveBeenCalledWith({ error: 'Connection denied', origin: 'http://remote.example' }, expect.anything())
   })
@@ -162,10 +164,10 @@ describe('handleDeny', () => {
       error: 'Security policy violation',
     }
 
-    const message = <MessageEvent<IAction>>{
+    const message = {
       data: action,
       source: mockWindow,
-    }
+    } as MessageEvent<IAction>
 
     expect(() => {
       handleDeny(routingContext, message)
@@ -182,10 +184,10 @@ describe('handleDeny', () => {
       senderId: 'remote-broker-1',
     }
 
-    const message = <MessageEvent<IAction>>{
+    const message = {
       data: action,
       source: mockWindow,
-    }
+    } as MessageEvent<IAction>
 
     expect(() => {
       handleDeny(routingContext, message)
@@ -196,10 +198,10 @@ describe('handleDeny', () => {
     const channel1 = addChannel(mockBrokerState, registry, processManager, actions, 'channel-1', mockWindow)
     const processId1 = processManager.create(channel1)
 
-    const window2 = <Window>(<unknown>{
+    const window2 = {
       postMessage: jest.fn(),
       _uniqueId: 'window-2',
-    })
+    } as unknown as Window
     const channel2 = addChannel(mockBrokerState, registry, processManager, actions, 'channel-2', window2)
     expect(channel2).toBeDefined()
     const processId2 = processManager.create(channel2)
@@ -218,15 +220,15 @@ describe('handleDeny', () => {
       error: 'Denied 2',
     }
 
-    handleDeny(routingContext, <MessageEvent<IAction>>{
+    handleDeny(routingContext, {
       data: action1,
       source: mockWindow,
-    })
+    } as MessageEvent<IAction>)
 
-    handleDeny(routingContext, <MessageEvent<IAction>>{
+    handleDeny(routingContext, {
       data: action2,
       source: window2,
-    })
+    } as MessageEvent<IAction>)
 
     expect(processManager.get(processId1)).toBeUndefined()
     expect(processManager.get(processId2)).toBeUndefined()

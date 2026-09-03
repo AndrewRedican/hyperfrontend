@@ -69,7 +69,7 @@ export function createSecurityRequest(
   supported: readonly SecurityProtocolVersion[],
   preferred?: SecurityProtocolVersion
 ): SecurityNegotiationRequest {
-  const effectiveSupported = supported.length > 0 ? supported : <readonly SecurityProtocolVersion[]>['none']
+  const effectiveSupported = supported.length > 0 ? supported : (['none'] as readonly SecurityProtocolVersion[])
   const effectivePreferred = preferred ?? effectiveSupported[0]
 
   return freeze({

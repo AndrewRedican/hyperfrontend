@@ -1,5 +1,8 @@
 import type { BrokerHandle, ChannelHandle } from '@hyperfrontend/nexus'
+import type { Mock } from '@hyperfrontend/testing'
 import type { FeatureContract } from '../shared/types'
+import { afterEach, beforeEach } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { ControlType } from '../shared/control'
 import { createEventEmitter } from '../shared/event-emitter'
 import { installResizeObserverStub } from '../testing/resize-observer-stub'
@@ -17,9 +20,9 @@ interface MockChannel {
   channel: ChannelHandle
   trigger(event: string, data?: unknown): void
   triggerMessage(type: string, data?: unknown): void
-  send: jest.Mock
-  disconnect: jest.Mock
-  connect: jest.Mock
+  send: Mock
+  disconnect: Mock
+  connect: Mock
 }
 
 function createMockChannel(): MockChannel {
@@ -28,7 +31,7 @@ function createMockChannel(): MockChannel {
   const send = jest.fn()
   const disconnect = jest.fn()
   const connect = jest.fn()
-  const channel = <ChannelHandle>(<unknown>{
+  const channel = {
     on: (event: string, handler: (data?: unknown) => void) => {
       ;(listeners[event] ?? (listeners[event] = [])).push(handler)
       return () => undefined
@@ -40,7 +43,7 @@ function createMockChannel(): MockChannel {
     send,
     disconnect,
     connect,
-  })
+  } as unknown as ChannelHandle
   return {
     channel,
     trigger: (event, data) => listeners[event]?.forEach((handler) => handler(data)),
@@ -51,13 +54,13 @@ function createMockChannel(): MockChannel {
   }
 }
 
-function createMockBroker(channel: ChannelHandle): { broker: BrokerHandle; addChannel: jest.Mock } {
+function createMockBroker(channel: ChannelHandle): { broker: BrokerHandle; addChannel: Mock } {
   const addChannel = jest.fn(() => channel)
-  return { broker: <BrokerHandle>(<unknown>{ addChannel, registerProtocol: jest.fn(), logger: { id: 'logger' } }), addChannel }
+  return { broker: { addChannel, registerProtocol: jest.fn(), logger: { id: 'logger' } } as unknown as BrokerHandle, addChannel }
 }
 
 describe('createFeatureHandle presentation', () => {
-  const hostWindow = <Window>(<unknown>{ name: 'host' })
+  const hostWindow = { name: 'host' } as unknown as Window
   const emptyContract: FeatureContract = { emitted: [], accepted: [] }
 
   function styleTexts(): string[] {

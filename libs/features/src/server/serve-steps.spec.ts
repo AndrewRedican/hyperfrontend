@@ -5,7 +5,9 @@ import type { ServeStepDeps } from './serve-steps'
 import { mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { afterEach, beforeEach } from 'node:test'
 import { brotliDecompressSync, gunzipSync } from 'node:zlib'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { negotiateEncoding } from './serve-compression'
 import { runSteps } from './serve-pipeline'
 import { buildServeSteps } from './serve-steps'
@@ -66,7 +68,7 @@ const serve = (config: ResolvedServeConfig, deps: ServeStepDeps, request: Static
   runSteps(buildServeSteps(config, deps), request, { config })
 
 // how: The compression step sits at index 1 of the built-ins, just inside the method guard; pairing it with a custom terminal step exercises responses the file step never produces.
-const compressionAnd = (terminal: ServeStep): ServeStep[] => [<ServeStep>buildServeSteps(makeConfig(), {})[1], terminal]
+const compressionAnd = (terminal: ServeStep): ServeStep[] => [buildServeSteps(makeConfig(), {})[1] as ServeStep, terminal]
 
 const dispatch = (steps: readonly ServeStep[], request: StaticRequest): StaticResponse => runSteps(steps, request, { config: makeConfig() })
 
@@ -315,7 +317,7 @@ describe('compression', () => {
 
   it('brotli-encodes a large text response and rewrites its length', () => {
     const response = serve(makeConfig(), fileDeps(siteFiles()), get('/big.txt', acceptAll))
-    const body = <Buffer>response.body
+    const body = response.body as Buffer
     expect({
       encoding: response.headers['Content-Encoding'],
       vary: response.headers['Vary'],
@@ -326,7 +328,7 @@ describe('compression', () => {
 
   it('gzip-encodes when brotli is not accepted', () => {
     const response = serve(makeConfig(), fileDeps(siteFiles()), get('/big.txt', { 'accept-encoding': 'gzip' }))
-    const body = <Buffer>response.body
+    const body = response.body as Buffer
     expect({
       encoding: response.headers['Content-Encoding'],
       length: response.headers['Content-Length'],
@@ -346,7 +348,7 @@ describe('compression', () => {
       body: Buffer.from(BIG),
     })
     const response = dispatch(compressionAnd(terminal), get('/', { 'accept-encoding': 'gzip' }))
-    expect({ encoding: response.headers['Content-Encoding'], inflated: gunzipSync(<Buffer>response.body).toString() }).toEqual({
+    expect({ encoding: response.headers['Content-Encoding'], inflated: gunzipSync(response.body as Buffer).toString() }).toEqual({
       encoding: 'gzip',
       inflated: BIG,
     })
@@ -370,7 +372,7 @@ describe('compression', () => {
     const first = runSteps(steps, get('/big.txt', acceptAll), { config })
     files[`${ROOT}/big.txt`] = { body: 'y'.repeat(2048), mtime: 8192 }
     const second = runSteps(steps, get('/big.txt', acceptAll), { config })
-    expect({ sameBuffer: first.body === second.body, inflated: brotliDecompressSync(<Buffer>second.body).toString() }).toEqual({
+    expect({ sameBuffer: first.body === second.body, inflated: brotliDecompressSync(second.body as Buffer).toString() }).toEqual({
       sameBuffer: false,
       inflated: 'y'.repeat(2048),
     })
@@ -384,7 +386,7 @@ describe('compression', () => {
     const steps = compressionAnd(terminal)
     const first = dispatch(steps, get('/', acceptAll))
     const second = dispatch(steps, get('/', acceptAll))
-    expect({ sameBuffer: first.body === second.body, equalBytes: (<Buffer>first.body).equals(<Buffer>second.body) }).toEqual({
+    expect({ sameBuffer: first.body === second.body, equalBytes: (first.body as Buffer).equals(second.body as Buffer) }).toEqual({
       sameBuffer: false,
       equalBytes: true,
     })
@@ -618,7 +620,7 @@ describe('default file system', () => {
     const config = makeConfig({ root: dir })
     const steps = buildServeSteps(config)
     const first = runSteps(steps, get('/'), { config })
-    const etag = <string>first.headers['ETag']
+    const etag = first.headers['ETag'] as string
     const second = runSteps(steps, get('/', { 'if-none-match': etag }), { config })
     expect({ status: second.status, etag: second.headers['ETag'], body: second.body }).toEqual({ status: 304, etag, body: null })
   })

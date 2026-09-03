@@ -5,6 +5,10 @@
  * Note: cryptography has platform-specific entries: ./browser, ./node, ./common
  */
 
+'use strict'
+
+const { describe, it, expect } = require('@hyperfrontend/testing')
+
 describe('@hyperfrontend/cryptography CJS', () => {
   describe('node sub-entry', () => {
     it('is requireable', () => {

@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { createConventionalCommit, createCommitFooter } from './conventional'
 
 describe('createConventionalCommit', () => {

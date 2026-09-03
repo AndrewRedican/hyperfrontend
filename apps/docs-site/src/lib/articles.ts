@@ -141,7 +141,7 @@ export function getArticle(slug: string): Article | null {
   }
 
   const { data, content } = parseArticleFile(readFileSync(filePath, 'utf-8'))
-  const frontmatter = <ArticleFrontmatter>data
+  const frontmatter = data as ArticleFrontmatter
 
   return {
     slug,

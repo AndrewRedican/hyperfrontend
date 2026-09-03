@@ -1,6 +1,9 @@
+import type { Mock } from '@hyperfrontend/testing'
 import type { ChannelState } from '../../types/channel'
 import type { IMessage } from '../../types/message'
 import type { ChannelInternals } from '../types'
+import { beforeEach } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import * as queueModule from './queue'
 import { send } from './send'
 import * as sendActionModule from './send-action'
@@ -11,8 +14,8 @@ jest.mock('./send-action')
 describe('channel/messaging/send', () => {
   let mockChannel: ChannelInternals
   let state: ChannelState
-  let mockWindow: { postMessage: jest.Mock }
-  let mockGetState: jest.Mock<ChannelState, []>
+  let mockWindow: { postMessage: Mock }
+  let mockGetState: Mock<ChannelState, []>
 
   beforeEach(() => {
     jest.clearAllMocks()
@@ -24,7 +27,7 @@ describe('channel/messaging/send', () => {
     state = {
       id: 'channel-123',
       name: 'test-channel',
-      target: <Window>(<unknown>mockWindow),
+      target: mockWindow as unknown as Window,
       origin: 'https://example.com',
       active: true,
       connectTimestamp: Date.now(),

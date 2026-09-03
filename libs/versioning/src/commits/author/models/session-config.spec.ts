@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { typeToChoice } from './session-config'
 
 describe('typeToChoice', () => {

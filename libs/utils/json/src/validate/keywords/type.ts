@@ -28,8 +28,9 @@ function getActualType(value: unknown): string {
   if (isArray(value)) return 'array'
   const t = typeof value
   if (t === 'number') {
-    const num = <number>value
-    /* istanbul ignore next -- NaN/Infinity edge case */
+    const num = value as number
+    // why: NaN/Infinity edge case
+    /* node:coverage ignore next 1 */
     if (!globalIsFinite(num)) return 'number'
     return isInteger(num) ? 'integer' : 'number'
   }
@@ -60,19 +61,20 @@ export function validateType(instance: unknown, schema: Schema, ctx: ValidationC
   const types = isArray(schemaType) ? schemaType : [schemaType]
 
   for (const type of types) {
-    const checker = typeCheckers[<JsonType>type]
-    /* istanbul ignore if -- defensive check for unknown type */
+    const checker = typeCheckers[type as JsonType]
+    // why: defensive check for unknown type
     if (checker && checker(instance)) {
       return true
     }
-    /* istanbul ignore if -- defensive fallback for integer/number coercion */
+    // why: defensive fallback for integer/number coercion
+    /* node:coverage ignore next 3 */
     if (type === 'number' && typeCheckers['integer']?.(instance)) {
       return true
     }
   }
 
   const actualType = getActualType(instance)
-  const expectedTypes = (<JsonType[]>types).join(' or ')
+  const expectedTypes = (types as JsonType[]).join(' or ')
   addError(ctx, `Expected type ${expectedTypes} but got ${actualType}`, instance, 'type', {
     expected: types,
     actual: actualType,

@@ -1,7 +1,7 @@
 import type { Event, DerivedState } from '../models'
+import type { AsyncProcess } from './async-operation.model'
 import { start, cancel, pause, success, fail } from '../actions/actions'
 import { Events } from '../events/events'
-import { AsyncProcess } from './async-operation.model'
 
 /**
  * Manages the lifecycle of an asynchronous operation with start, cancel, and pause capabilities.

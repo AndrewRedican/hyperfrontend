@@ -1,9 +1,12 @@
 import type { Logger } from '@hyperfrontend/logging'
+import type { Mock } from '@hyperfrontend/testing'
 import type { IAction } from '../../types/action'
 import type { IChannelContract } from '../../types/contract'
 import type { SecurityProvider, SecurityProtocolProvider } from '../../types/security'
 import type { BrokerState } from '../types'
 import type { RoutingContext } from './types'
+import { after as afterAll, afterEach, before as beforeAll, beforeEach } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { createActionCreators } from '../../core/actions/factory'
 import { createProcessManager } from '../../core/processes/factory'
 import { createRegistry } from '../../core/registry/factory'
@@ -56,7 +59,7 @@ describe('handleOpen', () => {
     mockBrokerState = {
       id: 'broker-1',
       name: 'test-broker',
-      window: <Window>global.window,
+      window: global.window as Window,
       contract: ownContract,
       settings: {
         contract: ownContract,
@@ -70,9 +73,9 @@ describe('handleOpen', () => {
       getBrokerId: () => 'broker-1',
       getContract: () => mockBrokerState.contract,
     })
-    mockWindow = <Window>(<unknown>{
+    mockWindow = {
       postMessage: jest.fn(),
-    })
+    } as unknown as Window
 
     routingContext = {
       state: mockBrokerState,
@@ -99,7 +102,7 @@ describe('handleOpen', () => {
       senderId: 'broker-1',
     })
     processManager.track(processId, channel)
-    ;(<jest.Mock>target.postMessage).mockClear()
+    ;(target.postMessage as Mock).mockClear()
     return channel
   }
 
@@ -115,23 +118,23 @@ describe('handleOpen', () => {
         stop: () => undefined,
         resume: () => undefined,
       }),
-      protocolProvider: <SecurityProtocolProvider>(<unknown>(() => undefined)),
+      protocolProvider: (() => undefined) as unknown as SecurityProtocolProvider,
     }
     const context: RoutingContext = { ...routingContext, getProtocol: () => provider }
     return { context, sent }
   }
 
   function openEvent(processId = 'process-1', security?: unknown) {
-    return <MessageEvent<IAction>>{
-      data: <IAction>{
+    return {
+      data: {
         type: '[nexus] connection-opened',
         processId,
         senderId: 'remote-broker-1',
         ...(security ? { security } : {}),
-      },
+      } as IAction,
       origin: 'http://example.com',
       source: mockWindow,
-    }
+    } as MessageEvent<IAction>
   }
 
   it('activates the responder and removes the process', () => {
@@ -195,10 +198,10 @@ describe('handleOpen', () => {
 
   it('ignores an OPEN from another instance and keeps the process the answered one needs', () => {
     const channel = addRespondingChannel()
-    const foreign = <MessageEvent<IAction>>{
+    const foreign = {
       ...openEvent(),
-      data: <IAction>{ type: '[nexus] connection-opened', processId: 'process-1', senderId: 'remote-broker-2' },
-    }
+      data: { type: '[nexus] connection-opened', processId: 'process-1', senderId: 'remote-broker-2' } as IAction,
+    } as MessageEvent<IAction>
 
     handleOpen(routingContext, foreign)
     handleOpen(routingContext, openEvent())
@@ -285,7 +288,7 @@ describe('handleOpen', () => {
 
       expect({
         throughTransport: wire.sent,
-        posts: (<jest.Mock>mockWindow.postMessage).mock.calls,
+        posts: (mockWindow.postMessage as Mock).mock.calls,
       }).toEqual({
         throughTransport: [
           expect.objectContaining({
@@ -304,7 +307,7 @@ describe('handleOpen', () => {
       expect({
         negotiated: channel.getNegotiatedProtocol(),
         transport: channel.getSecurityTransport(),
-        warns: (<jest.Mock>mockLogger.warn).mock.calls,
+        warns: (mockLogger.warn as Mock).mock.calls,
       }).toEqual({
         negotiated: 'none',
         transport: null,
@@ -347,7 +350,7 @@ describe('handleOpen', () => {
 
       expect({
         active: channel.isActive(),
-        cancel: (<jest.Mock>mockWindow.postMessage).mock.calls[0][0],
+        cancel: (mockWindow.postMessage as Mock).mock.calls[0][0],
         deny: denyHandler.mock.calls[0][0],
       }).toEqual({
         active: false,
@@ -382,7 +385,7 @@ describe('handleOpen', () => {
       addFailClosedChannel()
 
       handleOpen(routingContext, openEvent('process-1', { protocol: 'none', active: false }))
-      ;(<jest.Mock>mockWindow.postMessage).mockClear()
+      ;(mockWindow.postMessage as Mock).mockClear()
       jest.advanceTimersByTime(20_000)
 
       expect(mockWindow.postMessage).not.toHaveBeenCalled()
@@ -406,7 +409,7 @@ describe('handleOpen', () => {
 
       handleOpen(routingContext, openEvent('process-1', { protocol: 'none', active: false }))
 
-      expect({ active: channel.isActive(), warns: (<jest.Mock>mockLogger.warn).mock.calls }).toEqual({
+      expect({ active: channel.isActive(), warns: (mockLogger.warn as Mock).mock.calls }).toEqual({
         active: true,
         warns: [[expect.stringContaining('continuing without encryption')]],
       })
@@ -415,7 +418,7 @@ describe('handleOpen', () => {
 
   it('handles multiple open events for different channels', () => {
     const channel1 = addRespondingChannel('channel-1', mockWindow, 'process-1')
-    const window2 = <Window>(<unknown>{ postMessage: jest.fn() })
+    const window2 = { postMessage: jest.fn() } as unknown as Window
     const channel2 = addRespondingChannel('channel-2', window2, 'process-2')
 
     handleOpen(routingContext, openEvent('process-1'))

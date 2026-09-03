@@ -51,7 +51,7 @@ export function changeJsonFile<T>(tree: Tree, path: string, transform: (data: T)
   const opts = { ...DEFAULT_CHANGE_JSON_FILE_OPTIONS, ...options }
 
   tree.changeFile(path, (content) => {
-    const data = <T>parse(content.toString())
+    const data = parse(content.toString()) as T
     const updated = transform(data)
     const serialized = stringify(updated, null, opts.indent)
     const result = opts.trailingNewline ? serialized + '\n' : serialized

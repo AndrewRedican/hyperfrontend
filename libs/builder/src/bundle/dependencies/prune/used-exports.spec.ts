@@ -1,5 +1,6 @@
 import type { ChunkFormat } from './used-exports'
 import { join } from '@hyperfrontend/project-scope/core'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { collectImportEdges } from './used-exports'
 
 const IMPORTER_DIR = '/imp'

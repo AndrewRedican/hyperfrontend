@@ -1,7 +1,8 @@
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { getFirstInvalidProtocolProperty } from './get-first-invalid-protocol-property'
 
 describe('getFirstInvalidProtocolProperty', () => {
-  const baseProtocol = <const>{
+  const baseProtocol = {
     packetEncryption: () => void 0,
     packetDecryption: () => void 0,
     packetObfuscation: () => void 0,
@@ -9,7 +10,7 @@ describe('getFirstInvalidProtocolProperty', () => {
     send: () => void 0,
     receive: () => void 0,
     getLogger: () => void 0,
-  }
+  } as const
 
   it('returns empty when all pass', () => {
     expect(getFirstInvalidProtocolProperty(baseProtocol)).toEqual('')

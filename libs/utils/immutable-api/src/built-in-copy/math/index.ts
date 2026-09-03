@@ -231,7 +231,7 @@ export const random = _Math.random
  * (Safe copy) Namespace object containing all Math utilities.
  * Note: Importing this imports all methods in this namespace (no tree-shaking).
  */
-export const Math = _freeze(<const>{
+export const Math = _freeze({
   E,
   LN2,
   LN10,
@@ -275,4 +275,4 @@ export const Math = _freeze(<const>{
   fround,
   clz32,
   random,
-})
+} as const)

@@ -1,4 +1,3 @@
-/* istanbul ignore file */
 /** Partial CSS style declaration for inline styling */
 export type Style = Partial<CSSStyleDeclaration>
 

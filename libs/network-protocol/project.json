@@ -42,6 +42,7 @@
       }
     },
     "publish": {},
-    "typecheck": {}
+    "typecheck": {},
+    "test": {}
   }
 }

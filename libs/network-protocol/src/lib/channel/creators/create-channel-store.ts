@@ -54,7 +54,7 @@ export function createChannelStoreFactory(createChannel: ChannelCreater) {
       if (existsByName(channel.label)) {
         throw createError(`Cannot add a channel with name '${channel.label}' as it already exists`)
       }
-      /* istanbul ignore next - defensive check: if instance exists, name will exist (checked above) */
+      // why: defensive check: if instance exists, name will exist (checked above)
       if (channelExists(channel)) {
         throw createError(`Cannot add a channel named '${channel.label}'. It is already registered`)
       }

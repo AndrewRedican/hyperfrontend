@@ -219,7 +219,7 @@ export function createCache<K, V>(options?: CacheOptions): Cache<K, V> {
     },
   }
 
-  cacheRegistry.add(<Cache<unknown, unknown>>cache)
+  cacheRegistry.add(cache as Cache<unknown, unknown>)
 
   return freeze(cache)
 }
@@ -277,7 +277,7 @@ export function getCacheCount(): number {
  * ```
  */
 export function unregisterCache<K, V>(cache: Cache<K, V>): boolean {
-  return cacheRegistry.delete(<Cache<unknown, unknown>>cache)
+  return cacheRegistry.delete(cache as Cache<unknown, unknown>)
 }
 
 /**
@@ -346,5 +346,5 @@ export function memoize<K, V>(fn: (key: K) => V, options?: CacheOptions): Memoiz
     enumerable: true,
   })
 
-  return <MemoizedFunction<K, V>>memoized
+  return memoized as MemoizedFunction<K, V>
 }

@@ -1,7 +1,7 @@
 import type { ExecutorContext, PromiseExecutor } from '@nx/devkit'
+import type { VersionExecutorSchema } from './schema'
 import { getLogger } from './lib/logger'
 import { runVersionForProject } from './lib/run-version-for-project'
-import { VersionExecutorSchema } from './schema'
 
 /**
  * Nx executor that versions a project using `@hyperfrontend/versioning`.
@@ -65,6 +65,7 @@ export default async function versionExecutor(options: VersionExecutorSchema, co
     rollbackOnFailure: options.rollbackOnFailure,
     repository: options.repository,
     scopeFiltering: options.scopeFiltering,
+    maxCommitFallback: options.maxCommitFallback,
     backupChangelog: options.backupChangelog,
   })
 

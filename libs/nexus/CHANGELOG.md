@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.1.0](https://github.com/AndrewRedican/hyperfrontend/compare/641f582281b0d20f2953e47aa7a815c210d916f2...7b6cf80e7cfba3085e9d938d6298f5775f3401eb) - 2026-09-03
+
+### Features
+
+- **tool-testing:** read a shorthand property, an unmock, and a workspace alias in a mock declaration
+
 ## [2.0.1](https://github.com/AndrewRedican/hyperfrontend/compare/d07b3add2620b9c6e9ddcf48e01571b8788a3bc7...bd296466c3f2a5e25643e7eeff8b1c4bf040e4fc) - 2026-08-04
 
 ### Bug Fixes

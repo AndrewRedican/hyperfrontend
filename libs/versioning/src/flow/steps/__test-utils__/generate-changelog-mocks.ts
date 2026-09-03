@@ -1,6 +1,5 @@
 import type { Logger } from '@hyperfrontend/logging'
 import type { Tree } from '@hyperfrontend/project-scope/vfs'
-
 import type { ChangelogEntry, ChangelogItem } from '../../../changelog/models/entry'
 import type { ConventionalCommit } from '../../../commits/models/conventional'
 import type { GitClient } from '../../../git/factory'
@@ -8,6 +7,7 @@ import type { Registry } from '../../../registry/models/registry'
 import type { FlowConfig, FlowContext, FlowState } from '../../models/types'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { entries } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
+import { jest } from '@hyperfrontend/testing'
 
 /** Seed files for the in-memory tree the changelog steps read and write. */
 export interface MockTreeOptions {
@@ -29,13 +29,13 @@ export interface MockTreeOptions {
  * ```
  */
 export function createMockLogger(): Logger {
-  return <Logger>(<unknown>{
+  return {
     info: jest.fn(),
     warn: jest.fn(),
     error: jest.fn(),
     debug: jest.fn(),
     setLogLevel: jest.fn(),
-  })
+  } as unknown as Logger
 }
 
 /**
@@ -55,7 +55,7 @@ export function createMockLogger(): Logger {
 export function createMockTree(options: MockTreeOptions = {}): Tree {
   const files = createMap<string, string>(entries(options.files ?? {}))
 
-  return <Tree>(<unknown>{
+  return {
     root: '/workspace',
     read(path: string, encoding?: string) {
       const content = files.get(path)
@@ -73,7 +73,7 @@ export function createMockTree(options: MockTreeOptions = {}): Tree {
     isFile: (path: string) => files.has(path),
     children: () => [],
     listChanges: () => [],
-  })
+  } as unknown as Tree
 }
 
 /**
@@ -121,7 +121,7 @@ export function createMockRegistry(): Registry {
  * ```
  */
 export function createMockGitClient(): GitClient {
-  return <GitClient>(<unknown>{
+  return {
     cwd: '/workspace',
     timeout: 30000,
     getCommitLog: () => [],
@@ -162,7 +162,7 @@ export function createMockGitClient(): GitClient {
     getModifiedFiles: () => [],
     getUntrackedFiles: () => [],
     getStagedFiles: () => [],
-  })
+  } as unknown as GitClient
 }
 
 /**
@@ -226,7 +226,7 @@ export function createMockChangelogEntry(overrides: Partial<ChangelogEntry> = {}
     unreleased: false,
     sections: [
       {
-        type: <const>'features',
+        type: 'features' as const,
         heading: 'Features',
         items: [createMockChangelogItem('Feature 1')],
       },

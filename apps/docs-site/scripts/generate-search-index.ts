@@ -259,8 +259,8 @@ function generateSearchIndex(): void {
     ],
   })
 
-  collectNavDocuments(<NavNode[]>docsNavigation, seen, undefined, documents)
-  collectNavDocuments(<NavNode[]>mainNavLinks, seen, undefined, documents)
+  collectNavDocuments(docsNavigation as NavNode[], seen, undefined, documents)
+  collectNavDocuments(mainNavLinks as NavNode[], seen, undefined, documents)
 
   documents.sort((a, b) => a.url.localeCompare(b.url) || (a.anchor ?? '').localeCompare(b.anchor ?? '') || a.title.localeCompare(b.title))
 

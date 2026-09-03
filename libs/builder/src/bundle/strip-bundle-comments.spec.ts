@@ -2,6 +2,8 @@ import type { FormatOutputs, IifeConfig, IifeOutput, UmdConfig, UmdOutput } from
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
+import { afterEach, beforeEach } from 'node:test'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { stripBundleCommentsPass } from './strip-bundle-comments'
 
 const PRAGMA = '// eslint-disable-next-line workspace/no-unsafe-builtin-methods'
@@ -27,12 +29,12 @@ describe('stripBundleCommentsPass', () => {
   const read = (relPath: string): string => readFileSync(join(outputPath, relPath), 'utf8')
 
   const iifeOutput = (config: Partial<IifeConfig> = {}): IifeOutput => ({
-    config: <IifeConfig>{ globalName: 'MyLib', ...config },
+    config: { globalName: 'MyLib', ...config } as IifeConfig,
     entries: [],
   })
 
   const umdOutput = (config: Partial<UmdConfig> = {}): UmdOutput => ({
-    config: <UmdConfig>{ globalName: 'MyLib', ...config },
+    config: { globalName: 'MyLib', ...config } as UmdConfig,
     entries: [],
   })
 

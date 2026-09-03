@@ -16,8 +16,8 @@ import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
  * ```
  */
 export function setOrigin(state: ChannelState, origin: string): ChannelState {
-  return freeze(<ChannelState>{
+  return freeze({
     ...state,
     origin,
-  })
+  } as ChannelState)
 }

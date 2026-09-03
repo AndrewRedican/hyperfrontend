@@ -342,7 +342,7 @@ function sortEntriesByVersion(entries: readonly ChangelogEntry[]): ChangelogEntr
       return b.version.localeCompare(a.version)
     }
 
-    return compare(<SemVer>bResult.version, <SemVer>aResult.version)
+    return compare(bResult.version as SemVer, aResult.version as SemVer)
   })
 }
 
@@ -390,10 +390,10 @@ export function combineChangelogs(changelogs: readonly Changelog[], options?: Me
   }
 
   if (changelogs.length === 1) {
-    return <Changelog>changelogs[0]
+    return changelogs[0] as Changelog
   }
 
-  let result = <Changelog>changelogs[0]
+  let result = changelogs[0] as Changelog
   for (const changelog of changelogs.slice(1)) {
     const mergeResult = mergeChangelogs(result, changelog, options)
     result = mergeResult.changelog

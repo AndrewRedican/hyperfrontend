@@ -1,6 +1,7 @@
 import type { BrokerHandle, ChannelHandle } from '@hyperfrontend/nexus'
 import type { ShellOptions } from '../shared/types'
 import type { MountResult } from './types'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { createEventEmitter } from '../shared/event-emitter'
 import { createShellHandle } from './lifecycle'
 
@@ -13,7 +14,7 @@ interface MockChannel {
 function createMockChannel(): MockChannel {
   const listeners: Record<string, Array<(data?: unknown) => void>> = {}
   const messageHandlers: Array<(message: { type: string; data?: unknown }) => void> = []
-  const channel = <ChannelHandle>(<unknown>{
+  const channel = {
     on: (event: string, handler: (data?: unknown) => void) => {
       ;(listeners[event] ?? (listeners[event] = [])).push(handler)
       return () => undefined
@@ -26,7 +27,7 @@ function createMockChannel(): MockChannel {
     disconnect: jest.fn(),
     destroy: jest.fn(),
     connect: jest.fn(),
-  })
+  } as unknown as ChannelHandle
   return {
     channel,
     trigger: (event, data) => listeners[event]?.forEach((handler) => handler(data)),
@@ -34,10 +35,10 @@ function createMockChannel(): MockChannel {
   }
 }
 
-const TARGET = <Window>(<unknown>{ name: 'target' })
+const TARGET = { name: 'target' } as unknown as Window
 
 /** Stands in for the iframe an in-document mount reports back, whose visibility the browser slaves to this page's. */
-const FRAME = <HTMLElement>(<unknown>{ tagName: 'IFRAME' })
+const FRAME = { tagName: 'IFRAME' } as unknown as HTMLElement
 
 /** Options for {@link setup}. */
 interface LivenessSetupOptions {
@@ -47,7 +48,7 @@ interface LivenessSetupOptions {
 
 function setup(options: LivenessSetupOptions = {}) {
   const mock = createMockChannel()
-  const broker = <BrokerHandle>(<unknown>{ addChannel: jest.fn(() => mock.channel) })
+  const broker = { addChannel: jest.fn(() => mock.channel) } as unknown as BrokerHandle
   const mount = jest.fn(
     (): MountResult => ({
       target: TARGET,
@@ -71,7 +72,7 @@ function setup(options: LivenessSetupOptions = {}) {
     return visibilityStop
   })
   const emitter = createEventEmitter()
-  const handle = createShellHandle(broker, <ShellOptions>{ container: '#shell' }, emitter, {
+  const handle = createShellHandle(broker, { container: '#shell' } as ShellOptions, emitter, {
     contract: { emitted: [], accepted: [] },
     selectMount: jest.fn(() => mount),
     registerSecurity: jest.fn(() => undefined),

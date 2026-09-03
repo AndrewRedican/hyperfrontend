@@ -1,6 +1,7 @@
 /**
  * Tests for prompt rendering utilities.
  */
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { Symbol, style, renderMessage, renderSubmitted, renderCancelled, renderHint } from './render'
 import { Ansi } from './terminal'
 

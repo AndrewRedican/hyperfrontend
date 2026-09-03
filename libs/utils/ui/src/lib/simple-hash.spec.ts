@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { simpleHash } from './simple-hash'
 
 describe('simpleHash function', () => {

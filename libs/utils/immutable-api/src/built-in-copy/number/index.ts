@@ -98,7 +98,7 @@ export const globalIsFinite = _isFinite
  * (Safe copy) Namespace object containing all Number utilities.
  * Note: Importing this imports all methods in this namespace (no tree-shaking).
  */
-export const Number = _freeze(<const>{
+export const Number = _freeze({
   MAX_VALUE,
   MIN_VALUE,
   MAX_SAFE_INTEGER,
@@ -115,4 +115,4 @@ export const Number = _freeze(<const>{
   parseFloat,
   globalIsNaN,
   globalIsFinite,
-})
+} as const)

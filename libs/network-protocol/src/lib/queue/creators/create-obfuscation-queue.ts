@@ -54,7 +54,7 @@ export const createObfuscationQueue: ObfuscationQueueCreater = (label, packetObf
       try {
         processed = await packetObfuscation(raw)
       } catch (e) {
-        error(`${label}: ${(<Error>e)?.message}`)
+        error(`${label}: ${(e as Error)?.message}`)
         onFail(raw)
         return
       }

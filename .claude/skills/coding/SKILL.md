@@ -114,17 +114,20 @@ enum Status {
 
 // ✅
 import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
-const Status = freeze(<const>{ Active: 'active', Inactive: 'inactive' })
+const Status = freeze({ Active: 'active', Inactive: 'inactive' } as const)
 type Status = (typeof Status)[keyof typeof Status]
 ```
 
-### Type Assertions — `.ts` files only (not `.tsx`)
+### Type Assertions — always `as`
+
+Node's TypeScript type stripping rejects `<T>expr`, and the test runner loads `.ts`
+sources directly, so angle-bracket assertions are not parseable anywhere.
 
 ```typescript
 // ❌
-const el = document.getElementById('app') as HTMLDivElement
-// ✅
 const el = <HTMLDivElement>document.getElementById('app')
+// ✅
+const el = document.getElementById('app') as HTMLDivElement
 ```
 
 ### Inline Single-Use Consts
@@ -336,7 +339,7 @@ Do not add branches that cannot be reached, and avoid defensive branching that a
 
 - [ ] Imports ordered: type → node: → external → @hyperfrontend/ → relative → ./
 - [ ] Named imports only (no `* as`)
-- [ ] No enums — use `freeze(<const>{...})` + type derivation
+- [ ] No enums — use `freeze({...} as const)` + type derivation
 - [ ] No direct built-in calls — use `@hyperfrontend/immutable-api-utils`
 - [ ] No `execSync` — use `execFileSync`
 - [ ] Sync fs only — reuse `tools/eslint-rules/src/utils/fs.ts`
@@ -344,7 +347,7 @@ Do not add branches that cannot be reached, and avoid defensive branching that a
 - [ ] Member docs as JSDoc above, not trailing `//`
 - [ ] Comments use categorized prefixes; no plain `//`, no `TODO`, no `====` blocks
 - [ ] Single-use consts inlined (non-exported, non-complex)
-- [ ] Angle-bracket assertions in `.ts` (not `as`)
+- [ ] Type assertions use `as` (never angle brackets — Node's type stripping rejects them)
 - [ ] No non-null assertion (`!`) — use narrowing, optional chaining, or explicit checks
 - [ ] Type imports separated from value imports
 - [ ] File ≤400 lines (≤700 for tests) when multi-function; split if needed, colocate helpers

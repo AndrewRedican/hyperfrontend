@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { createBreakingFromSubject, createBreakingFromFooter, createNonBreaking, isBreakingFooterKey } from './breaking'
 
 describe('createBreakingFromSubject', () => {

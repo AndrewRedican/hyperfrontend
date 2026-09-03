@@ -29,8 +29,8 @@ export const raw = _String.raw
  * (Safe copy) Namespace object containing all String static methods.
  * Note: Importing this imports all methods in this namespace (no tree-shaking).
  */
-export const String = _freeze(<const>{
+export const String = _freeze({
   fromCharCode,
   fromCodePoint,
   raw,
-})
+} as const)

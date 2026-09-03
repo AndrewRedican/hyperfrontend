@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { isValidLogger } from './is-valid-logger'
 import { logger } from './logger'
 

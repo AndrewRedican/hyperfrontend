@@ -8,6 +8,8 @@
 import type { ConsumerWorkspace, NxRunResult } from './support/nx-workspace'
 import { existsSync, readFileSync, rmSync } from 'node:fs'
 import { join } from 'node:path'
+import { before as beforeAll, after as afterAll } from 'node:test'
+import { describe, it, expect } from '@hyperfrontend/testing'
 import {
   FEATURE_ARGS,
   INSTALL_OUTPUT_PATTERN,
@@ -30,9 +32,12 @@ import {
 describe('@hyperfrontend/features Nx plugin callbacks and tree staging', () => {
   let workspace: ConsumerWorkspace
 
-  beforeAll(() => {
-    workspace = createConsumerWorkspace('hf-nx-cb-e2e-')
-  }, SETUP_TIMEOUT)
+  beforeAll(
+    () => {
+      workspace = createConsumerWorkspace('hf-nx-cb-e2e-')
+    },
+    { timeout: SETUP_TIMEOUT }
+  )
 
   afterAll(() => {
     rmSync(workspace.workRoot, { recursive: true, force: true })
@@ -45,19 +50,22 @@ describe('@hyperfrontend/features Nx plugin callbacks and tree staging', () => {
     let lockAfter: string
     let lockDepsAfter: Record<string, string>
 
-    beforeAll(() => {
-      const scenarioDir = join(workspace.workRoot, 'scenario-init-installs')
-      copyWorkspace(workspace.pristineDir, scenarioDir)
-      const manifest = readManifest(scenarioDir)
-      delete sectionOf(manifest, 'devDependencies')[PLUGIN_NAME]
-      writeManifest(scenarioDir, manifest)
-      lockBefore = readLockText(scenarioDir)
-      // note: The pristine lock already resolves the plugin at the packed version from the local tarball, so the ^-range the generator writes re-validates offline against the existing node instead of hitting the registry.
-      result = runNx(scenarioDir, ['g', `${PLUGIN_NAME}:init`], NX_INSTALL_COMMAND_TIMEOUT)
-      afterManifest = readManifest(scenarioDir)
-      lockAfter = readLockText(scenarioDir)
-      lockDepsAfter = lockRootDependencies(scenarioDir)
-    }, SCENARIO_TIMEOUT)
+    beforeAll(
+      () => {
+        const scenarioDir = join(workspace.workRoot, 'scenario-init-installs')
+        copyWorkspace(workspace.pristineDir, scenarioDir)
+        const manifest = readManifest(scenarioDir)
+        delete sectionOf(manifest, 'devDependencies')[PLUGIN_NAME]
+        writeManifest(scenarioDir, manifest)
+        lockBefore = readLockText(scenarioDir)
+        // note: The pristine lock already resolves the plugin at the packed version from the local tarball, so the ^-range the generator writes re-validates offline against the existing node instead of hitting the registry.
+        result = runNx(scenarioDir, ['g', `${PLUGIN_NAME}:init`], NX_INSTALL_COMMAND_TIMEOUT)
+        afterManifest = readManifest(scenarioDir)
+        lockAfter = readLockText(scenarioDir)
+        lockDepsAfter = lockRootDependencies(scenarioDir)
+      },
+      { timeout: SCENARIO_TIMEOUT }
+    )
 
     it('exits 0 and stages the manifest update', () => {
       expect(result.status).toBe(0)
@@ -83,15 +91,18 @@ describe('@hyperfrontend/features Nx plugin callbacks and tree staging', () => {
     let after: string
     let lockAfter: string
 
-    beforeAll(() => {
-      const scenarioDir = join(workspace.workRoot, 'scenario-init-satisfied')
-      copyWorkspace(workspace.pristineDir, scenarioDir)
-      before = readManifestText(scenarioDir)
-      lockBefore = readLockText(scenarioDir)
-      result = runNx(scenarioDir, ['g', `${PLUGIN_NAME}:init`])
-      after = readManifestText(scenarioDir)
-      lockAfter = readLockText(scenarioDir)
-    }, SCENARIO_TIMEOUT)
+    beforeAll(
+      () => {
+        const scenarioDir = join(workspace.workRoot, 'scenario-init-satisfied')
+        copyWorkspace(workspace.pristineDir, scenarioDir)
+        before = readManifestText(scenarioDir)
+        lockBefore = readLockText(scenarioDir)
+        result = runNx(scenarioDir, ['g', `${PLUGIN_NAME}:init`])
+        after = readManifestText(scenarioDir)
+        lockAfter = readLockText(scenarioDir)
+      },
+      { timeout: SCENARIO_TIMEOUT }
+    )
 
     it('exits 0 without staging a manifest change', () => {
       expect(result.status).toBe(0)
@@ -116,18 +127,21 @@ describe('@hyperfrontend/features Nx plugin callbacks and tree staging', () => {
     let after: string
     let lockAfter: string
 
-    beforeAll(() => {
-      const scenarioDir = join(workspace.workRoot, 'scenario-init-dry-run')
-      copyWorkspace(workspace.pristineDir, scenarioDir)
-      const manifest = readManifest(scenarioDir)
-      delete sectionOf(manifest, 'devDependencies')[PLUGIN_NAME]
-      writeManifest(scenarioDir, manifest)
-      before = readManifestText(scenarioDir)
-      lockBefore = readLockText(scenarioDir)
-      result = runNx(scenarioDir, ['g', `${PLUGIN_NAME}:init`, '--dry-run'])
-      after = readManifestText(scenarioDir)
-      lockAfter = readLockText(scenarioDir)
-    }, SCENARIO_TIMEOUT)
+    beforeAll(
+      () => {
+        const scenarioDir = join(workspace.workRoot, 'scenario-init-dry-run')
+        copyWorkspace(workspace.pristineDir, scenarioDir)
+        const manifest = readManifest(scenarioDir)
+        delete sectionOf(manifest, 'devDependencies')[PLUGIN_NAME]
+        writeManifest(scenarioDir, manifest)
+        before = readManifestText(scenarioDir)
+        lockBefore = readLockText(scenarioDir)
+        result = runNx(scenarioDir, ['g', `${PLUGIN_NAME}:init`, '--dry-run'])
+        after = readManifestText(scenarioDir)
+        lockAfter = readLockText(scenarioDir)
+      },
+      { timeout: SCENARIO_TIMEOUT }
+    )
 
     it('exits 0 and previews the staged update', () => {
       expect(result.status).toBe(0)
@@ -150,16 +164,19 @@ describe('@hyperfrontend/features Nx plugin callbacks and tree staging', () => {
     let result: NxRunResult
     let afterManifest: Record<string, unknown>
 
-    beforeAll(() => {
-      scenarioDir = join(workspace.workRoot, 'scenario-feature-heals-dep')
-      copyWorkspace(workspace.pristineDir, scenarioDir)
-      const manifest = readManifest(scenarioDir)
-      delete sectionOf(manifest, 'devDependencies')[PLUGIN_NAME]
-      writeManifest(scenarioDir, manifest)
-      seedDemo(scenarioDir)
-      result = runNx(scenarioDir, [...FEATURE_ARGS], NX_INSTALL_COMMAND_TIMEOUT)
-      afterManifest = readManifest(scenarioDir)
-    }, SCENARIO_TIMEOUT)
+    beforeAll(
+      () => {
+        scenarioDir = join(workspace.workRoot, 'scenario-feature-heals-dep')
+        copyWorkspace(workspace.pristineDir, scenarioDir)
+        const manifest = readManifest(scenarioDir)
+        delete sectionOf(manifest, 'devDependencies')[PLUGIN_NAME]
+        writeManifest(scenarioDir, manifest)
+        seedDemo(scenarioDir)
+        result = runNx(scenarioDir, [...FEATURE_ARGS], NX_INSTALL_COMMAND_TIMEOUT)
+        afterManifest = readManifest(scenarioDir)
+      },
+      { timeout: SCENARIO_TIMEOUT }
+    )
 
     it('exits 0', () => {
       expect(result.status).toBe(0)
@@ -181,14 +198,17 @@ describe('@hyperfrontend/features Nx plugin callbacks and tree staging', () => {
     let entryBefore: string
     let result: NxRunResult
 
-    beforeAll(() => {
-      scenarioDir = join(workspace.workRoot, 'scenario-feature-dry-run')
-      copyWorkspace(workspace.pristineDir, scenarioDir)
-      seedDemo(scenarioDir)
-      manifestBefore = readManifestText(scenarioDir)
-      entryBefore = readFileSync(join(scenarioDir, 'demo', 'src', 'main.ts'), 'utf8')
-      result = runNx(scenarioDir, [...FEATURE_ARGS, '--dry-run'])
-    }, SCENARIO_TIMEOUT)
+    beforeAll(
+      () => {
+        scenarioDir = join(workspace.workRoot, 'scenario-feature-dry-run')
+        copyWorkspace(workspace.pristineDir, scenarioDir)
+        seedDemo(scenarioDir)
+        manifestBefore = readManifestText(scenarioDir)
+        entryBefore = readFileSync(join(scenarioDir, 'demo', 'src', 'main.ts'), 'utf8')
+        result = runNx(scenarioDir, [...FEATURE_ARGS, '--dry-run'])
+      },
+      { timeout: SCENARIO_TIMEOUT }
+    )
 
     it('exits 0 and previews the staged scaffold', () => {
       expect(result.status).toBe(0)
@@ -218,19 +238,22 @@ describe('@hyperfrontend/features Nx plugin callbacks and tree staging', () => {
     let glueAfterSecond: string
     let entryAfterSecond: string
 
-    beforeAll(() => {
-      scenarioDir = join(workspace.workRoot, 'scenario-feature-rerun')
-      copyWorkspace(workspace.pristineDir, scenarioDir)
-      seedDemo(scenarioDir)
-      firstRun = runNx(scenarioDir, [...FEATURE_ARGS])
-      configAfterFirst = readFileSync(join(scenarioDir, 'demo', 'feature.config.json'), 'utf8')
-      glueAfterFirst = readFileSync(join(scenarioDir, 'demo', 'src', 'hyperfrontend.feature.ts'), 'utf8')
-      entryAfterFirst = readFileSync(join(scenarioDir, 'demo', 'src', 'main.ts'), 'utf8')
-      secondRun = runNx(scenarioDir, [...FEATURE_ARGS])
-      configAfterSecond = readFileSync(join(scenarioDir, 'demo', 'feature.config.json'), 'utf8')
-      glueAfterSecond = readFileSync(join(scenarioDir, 'demo', 'src', 'hyperfrontend.feature.ts'), 'utf8')
-      entryAfterSecond = readFileSync(join(scenarioDir, 'demo', 'src', 'main.ts'), 'utf8')
-    }, SCENARIO_TIMEOUT)
+    beforeAll(
+      () => {
+        scenarioDir = join(workspace.workRoot, 'scenario-feature-rerun')
+        copyWorkspace(workspace.pristineDir, scenarioDir)
+        seedDemo(scenarioDir)
+        firstRun = runNx(scenarioDir, [...FEATURE_ARGS])
+        configAfterFirst = readFileSync(join(scenarioDir, 'demo', 'feature.config.json'), 'utf8')
+        glueAfterFirst = readFileSync(join(scenarioDir, 'demo', 'src', 'hyperfrontend.feature.ts'), 'utf8')
+        entryAfterFirst = readFileSync(join(scenarioDir, 'demo', 'src', 'main.ts'), 'utf8')
+        secondRun = runNx(scenarioDir, [...FEATURE_ARGS])
+        configAfterSecond = readFileSync(join(scenarioDir, 'demo', 'feature.config.json'), 'utf8')
+        glueAfterSecond = readFileSync(join(scenarioDir, 'demo', 'src', 'hyperfrontend.feature.ts'), 'utf8')
+        entryAfterSecond = readFileSync(join(scenarioDir, 'demo', 'src', 'main.ts'), 'utf8')
+      },
+      { timeout: SCENARIO_TIMEOUT }
+    )
 
     it('exits 0 on both runs', () => {
       expect(firstRun.status).toBe(0)
@@ -262,20 +285,23 @@ describe('@hyperfrontend/features Nx plugin callbacks and tree staging', () => {
     let secondRun: NxRunResult
     let configJson: Record<string, unknown>
 
-    beforeAll(() => {
-      scenarioDir = join(workspace.workRoot, 'scenario-feature-partial')
-      copyWorkspace(workspace.pristineDir, scenarioDir)
-      seedDemo(scenarioDir)
-      const firstRun = runNx(scenarioDir, [...FEATURE_ARGS])
-      if (firstRun.status !== 0) {
-        throw new Error(`initial scaffold failed:\n${firstRun.output}`)
-      }
-      glueBefore = readFileSync(join(scenarioDir, 'demo', 'src', 'hyperfrontend.feature.ts'), 'utf8')
-      entryBefore = readFileSync(join(scenarioDir, 'demo', 'src', 'main.ts'), 'utf8')
-      rmSync(join(scenarioDir, 'demo', 'feature.config.json'))
-      secondRun = runNx(scenarioDir, [...FEATURE_ARGS])
-      configJson = <Record<string, unknown>>JSON.parse(readFileSync(join(scenarioDir, 'demo', 'feature.config.json'), 'utf8'))
-    }, SCENARIO_TIMEOUT)
+    beforeAll(
+      () => {
+        scenarioDir = join(workspace.workRoot, 'scenario-feature-partial')
+        copyWorkspace(workspace.pristineDir, scenarioDir)
+        seedDemo(scenarioDir)
+        const firstRun = runNx(scenarioDir, [...FEATURE_ARGS])
+        if (firstRun.status !== 0) {
+          throw new Error(`initial scaffold failed:\n${firstRun.output}`)
+        }
+        glueBefore = readFileSync(join(scenarioDir, 'demo', 'src', 'hyperfrontend.feature.ts'), 'utf8')
+        entryBefore = readFileSync(join(scenarioDir, 'demo', 'src', 'main.ts'), 'utf8')
+        rmSync(join(scenarioDir, 'demo', 'feature.config.json'))
+        secondRun = runNx(scenarioDir, [...FEATURE_ARGS])
+        configJson = JSON.parse(readFileSync(join(scenarioDir, 'demo', 'feature.config.json'), 'utf8')) as Record<string, unknown>
+      },
+      { timeout: SCENARIO_TIMEOUT }
+    )
 
     it('exits 0 and recreates the deleted config file', () => {
       expect(secondRun.status).toBe(0)

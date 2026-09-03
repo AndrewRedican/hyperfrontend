@@ -77,7 +77,7 @@ export function detectMediaReferences(content: string): MediaReference[] {
   let inCodeBlock = false
 
   for (let i = 0; i < lines.length; i++) {
-    const line = <string>lines[i]
+    const line = lines[i] as string
 
     if (line.trimStart().startsWith('```')) {
       inCodeBlock = !inCodeBlock
@@ -155,7 +155,7 @@ const rule: Rule.RuleModule = {
   },
 
   create(context) {
-    const options = <ReadmeMediaAssetOptions>(context.options[0] ?? {})
+    const options = (context.options[0] ?? {}) as ReadmeMediaAssetOptions
     const baseUrl = options.baseUrl ?? ''
     const assetRoot = options.assetRoot ?? ''
 

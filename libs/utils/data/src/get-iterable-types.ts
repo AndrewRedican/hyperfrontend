@@ -15,7 +15,7 @@ import { registeredIterableClasses } from './shared/consts'
 export const getIterableTypes = <T extends string = DataType>(): T[] =>
   registeredIterableClasses.map(({ classRef }) => {
     const name = classRef.name
-    if (name === Object.name) return <T>'object'
-    if (name === Array.name) return <T>'array'
-    return <T>name
+    if (name === Object.name) return 'object' as T
+    if (name === Array.name) return 'array' as T
+    return name as T
   })

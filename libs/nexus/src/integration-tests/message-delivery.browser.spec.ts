@@ -1,6 +1,8 @@
 import type { IChannelContract } from '../types/contract'
 import type { IMessage } from '../types/message'
 import type { MockWindow } from './test-utils'
+import { afterEach, beforeEach } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { createBroker } from '../broker/factory'
 import { createMockWindow, linkMockWindows, createContractPair, createTestContract } from './test-utils'
 
@@ -20,11 +22,11 @@ describe('Message Delivery Integration', () => {
   })
 
   function createConnectedPair(contractA: IChannelContract, contractB: IChannelContract) {
-    const brokerA = createBroker({ name: 'broker-a', contract: contractA, window: <Window>(<unknown>windowA) })
-    const channelA = brokerA.addChannel('to-b', <Window>(<unknown>windowB))
+    const brokerA = createBroker({ name: 'broker-a', contract: contractA, window: windowA as unknown as Window })
+    const channelA = brokerA.addChannel('to-b', windowB as unknown as Window)
 
-    const brokerB = createBroker({ name: 'broker-b', contract: contractB, window: <Window>(<unknown>windowB) })
-    const channelB = brokerB.addChannel('to-a', <Window>(<unknown>windowA))
+    const brokerB = createBroker({ name: 'broker-b', contract: contractB, window: windowB as unknown as Window })
+    const channelB = brokerB.addChannel('to-a', windowA as unknown as Window)
 
     channelA.connect()
     channelB.connect()

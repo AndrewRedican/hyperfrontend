@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { isValidReceiver } from './is-valid-receiver'
 
 describe('isValidReceiver', () => {

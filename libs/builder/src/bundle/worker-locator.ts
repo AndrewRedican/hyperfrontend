@@ -1,6 +1,6 @@
 import { existsSync } from 'node:fs'
 import { dirname, join } from 'node:path'
-import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
+import { fileURLToPath } from 'node:url'
 
 const SWC_NODE_REGISTER = '@swc-node/register'
 
@@ -25,10 +25,12 @@ const probeDir = (dir: string, offset: readonly string[]): WorkerInvocation | un
 }
 
 /**
- * Directory of the currently-executing builder module, read from `__dirname`.
- * It is present in the shipped CommonJS build, in the `@swc-node/register` source
- * bootstrap, and under the test runner, so callers get their own on-disk location
- * and can find the worker beside them however the builder was packaged.
+ * Directory of the currently-executing builder module, under either module system.
+ *
+ * The shipped CommonJS build and the `@swc-node/register` source bootstrap expose
+ * `__dirname`; the ES-module build derives the same directory from `import.meta.url`.
+ * Callers get their own on-disk location either way, and can find the worker beside them
+ * however the builder was packaged.
  *
  * @returns Absolute directory path of the running module.
  *
@@ -38,11 +40,11 @@ const probeDir = (dir: string, offset: readonly string[]): WorkerInvocation | un
  * ```
  */
 export const currentModuleDir = (): string => {
-  /* istanbul ignore if -- @preserve the ESM build has no __dirname; the shipped CommonJS build and the test runner always define it, so this guard is unreachable under test */
-  if (typeof __dirname === 'undefined') {
-    throw createError('@hyperfrontend/builder self-location requires the CommonJS build; drive build() from the CommonJS entry point')
+  // why: `typeof` guards the CommonJS-only global so the ES-module build falls through to `import.meta.url` instead of crashing on an undefined identifier.
+  if (typeof __dirname !== 'undefined') {
+    return __dirname
   }
-  return __dirname
+  return dirname(fileURLToPath(import.meta.url))
 }
 
 /**

@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { collectNodesToFreeze } from './collect-nodes-to-freeze'
 
 describe('collectNodesToFreeze', () => {
@@ -381,7 +382,7 @@ describe('collectNodesToFreeze', () => {
       const root = current
       for (let i = 0; i < 50; i++) {
         current['child'] = {}
-        current = <Record<string, unknown>>current['child']
+        current = current['child'] as Record<string, unknown>
       }
 
       const result = collectNodesToFreeze(root)

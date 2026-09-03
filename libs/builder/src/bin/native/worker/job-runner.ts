@@ -11,7 +11,7 @@ const ensureDir = (path: string): void => {
 }
 
 const safeStatSize = (filePath: string): number => {
-  /* istanbul ignore next -- @preserve defensive: postject always produces the declared output file */
+  // why: defensive: postject always produces the declared output file
   try {
     return statSync(filePath).size
   } catch {

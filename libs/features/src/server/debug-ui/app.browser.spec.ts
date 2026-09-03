@@ -1,5 +1,7 @@
 import type { DevManifest } from '../dev-server'
 import type { DebugUiHandle } from './app'
+import { afterEach, beforeEach } from 'node:test'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { mountDebugUi } from './app'
 
 const manifest = (over: Partial<DevManifest> = {}): DevManifest => ({
@@ -23,7 +25,7 @@ describe('mountDebugUi', () => {
     document.body.innerHTML = ''
   })
 
-  const iframe = (): HTMLIFrameElement => <HTMLIFrameElement>root.querySelector('iframe')
+  const iframe = (): HTMLIFrameElement => root.querySelector('iframe') as HTMLIFrameElement
   const selects = (): NodeListOf<HTMLSelectElement> => root.querySelectorAll('select')
   const change = (element: HTMLSelectElement, value: string): void => {
     element.value = value
@@ -62,13 +64,13 @@ describe('mountDebugUi', () => {
 
   it('reflects the chosen display mode on the iframe', () => {
     handle = mountDebugUi(root, manifest())
-    change(<HTMLSelectElement>selects()[0], 'dialog')
+    change(selects()[0] as HTMLSelectElement, 'dialog')
     expect(iframe().getAttribute('data-display-mode')).toBe('dialog')
   })
 
   it('resizes the iframe from the width control', () => {
     handle = mountDebugUi(root, manifest())
-    const width = <HTMLInputElement>root.querySelectorAll('input[type="number"]')[0]
+    const width = root.querySelectorAll('input[type="number"]')[0] as HTMLInputElement
     width.value = '900'
     width.dispatchEvent(new Event('input'))
     expect(iframe().style.width).toBe('900px')
@@ -76,13 +78,13 @@ describe('mountDebugUi', () => {
 
   it('updates the security readout when the protocol changes', () => {
     handle = mountDebugUi(root, manifest())
-    change(<HTMLSelectElement>selects()[1], 'v2')
+    change(selects()[1] as HTMLSelectElement, 'v2')
     expect(root.textContent).toEqual(expect.stringContaining('protocol: v2'))
   })
 
   it('ignores protocol changes when the security readout is hidden', () => {
     handle = mountDebugUi(root, manifest({ debug: { enabled: true, messageLog: true, securityView: false } }))
-    change(<HTMLSelectElement>selects()[1], 'v2')
+    change(selects()[1] as HTMLSelectElement, 'v2')
     expect(root.textContent).not.toEqual(expect.stringContaining('protocol:'))
   })
 

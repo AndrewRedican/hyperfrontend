@@ -1,25 +1,26 @@
 import type { IChannelContract } from '../types/contract'
 import type { SecurityPolicy } from './types'
+import { afterEach } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { createBroker } from './factory'
 
-let uuidCounter = 0
-jest.mock('@hyperfrontend/random-generator-utils', () => ({
-  uuidV4: () => {
-    uuidCounter++
-    return `12345678-1234-1234-1234-12345678901${uuidCounter}`
-  },
-  isUuidV4: (value: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value),
-}))
+// why: the counter lives in the factory because the replacement stands as a module of its own and cannot reach the spec's scope. Nothing asserts where the sequence starts, only that two brokers differ.
+jest.mock('@hyperfrontend/random-generator-utils', () => {
+  let uuidCounter = 0
+  return {
+    uuidV4: () => {
+      uuidCounter++
+      return `12345678-1234-1234-1234-${String(uuidCounter).padStart(12, '0')}`
+    },
+    isUuidV4: (value: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value),
+  }
+})
 
 describe('createBroker', () => {
   const mockContract: IChannelContract = {
     accepted: [{ type: 'test-action', description: 'Test action' }],
     emitted: [],
   }
-
-  beforeEach(() => {
-    uuidCounter = 0
-  })
 
   afterEach(() => {
     jest.clearAllMocks()
@@ -87,7 +88,7 @@ describe('createBroker', () => {
       expect(() =>
         createBroker({
           name: 'test-broker',
-          contract: <IChannelContract>(<unknown>{}),
+          contract: {} as unknown as IChannelContract,
         })
       ).toThrow()
     })
@@ -151,7 +152,7 @@ describe('createBroker', () => {
         contract: mockContract,
       })
 
-      const mockWindow = <Window>{}
+      const mockWindow = {} as Window
       const channel = broker.addChannel('test-channel', mockWindow)
       const found = broker.getChannel(mockWindow)
 
@@ -165,7 +166,7 @@ describe('createBroker', () => {
         contract: mockContract,
       })
 
-      const mockWindow = <Window>{}
+      const mockWindow = {} as Window
       const channel = broker.addChannel('test-channel', mockWindow)
       const found = broker.getChannel(channel.id)
 
@@ -178,7 +179,7 @@ describe('createBroker', () => {
         contract: mockContract,
       })
 
-      const mockWindow = <Window>{}
+      const mockWindow = {} as Window
       const channel = broker.addChannel('test-channel', mockWindow)
       const found = broker.getChannel('test-channel')
 
@@ -191,7 +192,7 @@ describe('createBroker', () => {
         contract: mockContract,
       })
 
-      const mockWindow = <Window>{}
+      const mockWindow = {} as Window
       const channel = broker.addChannel('test-channel', mockWindow)
       const found = broker.getChannel(mockWindow)
 
@@ -215,7 +216,7 @@ describe('createBroker', () => {
         contract: mockContract,
       })
 
-      const mockWindow = <Window>{}
+      const mockWindow = {} as Window
       const channel = broker.addChannel('test-channel', mockWindow)
 
       broker.removeChannel(channel.id)
@@ -231,7 +232,7 @@ describe('createBroker', () => {
       })
 
       expect(() => broker.removeChannel('non-existent-id')).not.toThrow()
-      expect(() => broker.removeChannel(<Window>{})).not.toThrow()
+      expect(() => broker.removeChannel({} as Window)).not.toThrow()
     })
   })
 
@@ -253,7 +254,7 @@ describe('createBroker', () => {
         contract: mockContract,
       })
 
-      expect(() => broker.setSecurityPolicy(<SecurityPolicy>(<unknown>'not-a-function'))).toThrow()
+      expect(() => broker.setSecurityPolicy('not-a-function' as unknown as SecurityPolicy)).toThrow()
     })
 
     it('updates security policy', () => {
@@ -317,7 +318,7 @@ describe('createBroker', () => {
         },
       })
 
-      expect(() => broker.extendContract(<IChannelContract>(<unknown>{}))).toThrow()
+      expect(() => broker.extendContract({} as unknown as IChannelContract)).toThrow()
     })
   })
 
@@ -356,13 +357,13 @@ describe('createBroker', () => {
         contract: mockContract,
       })
 
-      const mockWindow = <Window>{}
+      const mockWindow = {} as Window
       broker.addChannel('test-channel', mockWindow)
 
       const json = broker.toJSON()
 
       expect(Array.isArray(json['channels'])).toBe(true)
-      expect((<unknown[]>json['channels']).length).toBeGreaterThan(0)
+      expect((json['channels'] as unknown[]).length).toBeGreaterThan(0)
     })
   })
 

@@ -37,7 +37,7 @@ const _TypeError = globalThis.TypeError
  * // => ArrayBuffer { byteLength: 16 }
  * ```
  */
-export const createArrayBuffer = (byteLength: number): ArrayBuffer => <ArrayBuffer>_Reflect.construct(_ArrayBuffer, [byteLength])
+export const createArrayBuffer = (byteLength: number): ArrayBuffer => _Reflect.construct(_ArrayBuffer, [byteLength]) as ArrayBuffer
 
 /**
  * (Safe copy) Returns true if arg is an ArrayBuffer or SharedArrayBuffer.
@@ -62,7 +62,7 @@ export const createSharedArrayBuffer = (byteLength: number): SharedArrayBuffer =
   if (_SharedArrayBuffer === undefined) {
     throw new _TypeError('SharedArrayBuffer is not available in this environment')
   }
-  return <SharedArrayBuffer>_Reflect.construct(_SharedArrayBuffer, [byteLength])
+  return _Reflect.construct(_SharedArrayBuffer, [byteLength]) as SharedArrayBuffer
 }
 
 /**
@@ -83,7 +83,7 @@ export const createSharedArrayBuffer = (byteLength: number): SharedArrayBuffer =
  * ```
  */
 export const createDataView = (buffer: ArrayBuffer | SharedArrayBuffer, byteOffset?: number, byteLength?: number): DataView =>
-  <DataView>_Reflect.construct(_DataView, [buffer, byteOffset, byteLength])
+  _Reflect.construct(_DataView, [buffer, byteOffset, byteLength]) as DataView
 
 /**
  * (Safe copy) Creates a new Uint8Array using the captured Uint8Array constructor.
@@ -114,23 +114,23 @@ export function createUint8Array(
   length?: number
 ): Uint8Array {
   if (typeof arg === 'number') {
-    return <Uint8Array>_Reflect.construct(_Uint8Array, [arg])
+    return _Reflect.construct(_Uint8Array, [arg]) as Uint8Array
   }
   if (arg instanceof _ArrayBuffer || (_SharedArrayBuffer !== undefined && arg instanceof _SharedArrayBuffer)) {
-    return <Uint8Array>_Reflect.construct(_Uint8Array, [arg, byteOffset, length])
+    return _Reflect.construct(_Uint8Array, [arg, byteOffset, length]) as Uint8Array
   }
-  return <Uint8Array>_Reflect.construct(_Uint8Array, [arg])
+  return _Reflect.construct(_Uint8Array, [arg]) as Uint8Array
 }
 
 /**
  * (Safe copy) Creates a new Uint8Array from an array-like or iterable object.
  */
-export const uint8ArrayFrom = <typeof Uint8Array.from>_Uint8Array.from.bind(_Uint8Array)
+export const uint8ArrayFrom = _Uint8Array.from.bind(_Uint8Array) as typeof Uint8Array.from
 
 /**
  * (Safe copy) Creates a new Uint8Array from a variable number of arguments.
  */
-export const uint8ArrayOf = <typeof Uint8Array.of>_Uint8Array.of.bind(_Uint8Array)
+export const uint8ArrayOf = _Uint8Array.of.bind(_Uint8Array) as typeof Uint8Array.of
 
 /**
  * (Safe copy) Creates a new Uint8ClampedArray using the captured Uint8ClampedArray constructor.
@@ -147,17 +147,17 @@ export const uint8ArrayOf = <typeof Uint8Array.of>_Uint8Array.of.bind(_Uint8Arra
  * ```
  */
 export const createUint8ClampedArray = (length: number): Uint8ClampedArray =>
-  <Uint8ClampedArray>_Reflect.construct(_Uint8ClampedArray, [length])
+  _Reflect.construct(_Uint8ClampedArray, [length]) as Uint8ClampedArray
 
 /**
  * (Safe copy) Creates a new Uint8ClampedArray from an array-like or iterable object.
  */
-export const uint8ClampedArrayFrom = <typeof Uint8ClampedArray.from>_Uint8ClampedArray.from.bind(_Uint8ClampedArray)
+export const uint8ClampedArrayFrom = _Uint8ClampedArray.from.bind(_Uint8ClampedArray) as typeof Uint8ClampedArray.from
 
 /**
  * (Safe copy) Creates a new Uint8ClampedArray from a variable number of arguments.
  */
-export const uint8ClampedArrayOf = <typeof Uint8ClampedArray.of>_Uint8ClampedArray.of.bind(_Uint8ClampedArray)
+export const uint8ClampedArrayOf = _Uint8ClampedArray.of.bind(_Uint8ClampedArray) as typeof Uint8ClampedArray.of
 
 /**
  * (Safe copy) Creates a new Uint16Array using the captured Uint16Array constructor.
@@ -172,17 +172,17 @@ export const uint8ClampedArrayOf = <typeof Uint8ClampedArray.of>_Uint8ClampedArr
  * shorts[0] = 65535 // Max value for 16-bit unsigned
  * ```
  */
-export const createUint16Array = (length: number): Uint16Array => <Uint16Array>_Reflect.construct(_Uint16Array, [length])
+export const createUint16Array = (length: number): Uint16Array => _Reflect.construct(_Uint16Array, [length]) as Uint16Array
 
 /**
  * (Safe copy) Creates a new Uint16Array from an array-like or iterable object.
  */
-export const uint16ArrayFrom = <typeof Uint16Array.from>_Uint16Array.from.bind(_Uint16Array)
+export const uint16ArrayFrom = _Uint16Array.from.bind(_Uint16Array) as typeof Uint16Array.from
 
 /**
  * (Safe copy) Creates a new Uint16Array from a variable number of arguments.
  */
-export const uint16ArrayOf = <typeof Uint16Array.of>_Uint16Array.of.bind(_Uint16Array)
+export const uint16ArrayOf = _Uint16Array.of.bind(_Uint16Array) as typeof Uint16Array.of
 
 /**
  * (Safe copy) Creates a new Uint32Array using the captured Uint32Array constructor.
@@ -197,17 +197,17 @@ export const uint16ArrayOf = <typeof Uint16Array.of>_Uint16Array.of.bind(_Uint16
  * ints[0] = 0xFFFFFFFF // Max 32-bit unsigned value
  * ```
  */
-export const createUint32Array = (length: number): Uint32Array => <Uint32Array>_Reflect.construct(_Uint32Array, [length])
+export const createUint32Array = (length: number): Uint32Array => _Reflect.construct(_Uint32Array, [length]) as Uint32Array
 
 /**
  * (Safe copy) Creates a new Uint32Array from an array-like or iterable object.
  */
-export const uint32ArrayFrom = <typeof Uint32Array.from>_Uint32Array.from.bind(_Uint32Array)
+export const uint32ArrayFrom = _Uint32Array.from.bind(_Uint32Array) as typeof Uint32Array.from
 
 /**
  * (Safe copy) Creates a new Uint32Array from a variable number of arguments.
  */
-export const uint32ArrayOf = <typeof Uint32Array.of>_Uint32Array.of.bind(_Uint32Array)
+export const uint32ArrayOf = _Uint32Array.of.bind(_Uint32Array) as typeof Uint32Array.of
 
 /**
  * (Safe copy) Creates a new Int8Array using the captured Int8Array constructor.
@@ -223,17 +223,17 @@ export const uint32ArrayOf = <typeof Uint32Array.of>_Uint32Array.of.bind(_Uint32
  * signed[1] = 127  // Max value
  * ```
  */
-export const createInt8Array = (length: number): Int8Array => <Int8Array>_Reflect.construct(_Int8Array, [length])
+export const createInt8Array = (length: number): Int8Array => _Reflect.construct(_Int8Array, [length]) as Int8Array
 
 /**
  * (Safe copy) Creates a new Int8Array from an array-like or iterable object.
  */
-export const int8ArrayFrom = <typeof Int8Array.from>_Int8Array.from.bind(_Int8Array)
+export const int8ArrayFrom = _Int8Array.from.bind(_Int8Array) as typeof Int8Array.from
 
 /**
  * (Safe copy) Creates a new Int8Array from a variable number of arguments.
  */
-export const int8ArrayOf = <typeof Int8Array.of>_Int8Array.of.bind(_Int8Array)
+export const int8ArrayOf = _Int8Array.of.bind(_Int8Array) as typeof Int8Array.of
 
 /**
  * (Safe copy) Creates a new Int16Array using the captured Int16Array constructor.
@@ -249,17 +249,17 @@ export const int8ArrayOf = <typeof Int8Array.of>_Int8Array.of.bind(_Int8Array)
  * shorts[1] = 32767  // Max value
  * ```
  */
-export const createInt16Array = (length: number): Int16Array => <Int16Array>_Reflect.construct(_Int16Array, [length])
+export const createInt16Array = (length: number): Int16Array => _Reflect.construct(_Int16Array, [length]) as Int16Array
 
 /**
  * (Safe copy) Creates a new Int16Array from an array-like or iterable object.
  */
-export const int16ArrayFrom = <typeof Int16Array.from>_Int16Array.from.bind(_Int16Array)
+export const int16ArrayFrom = _Int16Array.from.bind(_Int16Array) as typeof Int16Array.from
 
 /**
  * (Safe copy) Creates a new Int16Array from a variable number of arguments.
  */
-export const int16ArrayOf = <typeof Int16Array.of>_Int16Array.of.bind(_Int16Array)
+export const int16ArrayOf = _Int16Array.of.bind(_Int16Array) as typeof Int16Array.of
 
 /**
  * (Safe copy) Creates a new Int32Array using the captured Int32Array constructor.
@@ -275,17 +275,17 @@ export const int16ArrayOf = <typeof Int16Array.of>_Int16Array.of.bind(_Int16Arra
  * ints[1] = 2147483647  // Max value
  * ```
  */
-export const createInt32Array = (length: number): Int32Array => <Int32Array>_Reflect.construct(_Int32Array, [length])
+export const createInt32Array = (length: number): Int32Array => _Reflect.construct(_Int32Array, [length]) as Int32Array
 
 /**
  * (Safe copy) Creates a new Int32Array from an array-like or iterable object.
  */
-export const int32ArrayFrom = <typeof Int32Array.from>_Int32Array.from.bind(_Int32Array)
+export const int32ArrayFrom = _Int32Array.from.bind(_Int32Array) as typeof Int32Array.from
 
 /**
  * (Safe copy) Creates a new Int32Array from a variable number of arguments.
  */
-export const int32ArrayOf = <typeof Int32Array.of>_Int32Array.of.bind(_Int32Array)
+export const int32ArrayOf = _Int32Array.of.bind(_Int32Array) as typeof Int32Array.of
 
 /**
  * (Safe copy) Creates a new Float32Array using the captured Float32Array constructor.
@@ -301,17 +301,17 @@ export const int32ArrayOf = <typeof Int32Array.of>_Int32Array.of.bind(_Int32Arra
  * floats[1] = -273.15
  * ```
  */
-export const createFloat32Array = (length: number): Float32Array => <Float32Array>_Reflect.construct(_Float32Array, [length])
+export const createFloat32Array = (length: number): Float32Array => _Reflect.construct(_Float32Array, [length]) as Float32Array
 
 /**
  * (Safe copy) Creates a new Float32Array from an array-like or iterable object.
  */
-export const float32ArrayFrom = <typeof Float32Array.from>_Float32Array.from.bind(_Float32Array)
+export const float32ArrayFrom = _Float32Array.from.bind(_Float32Array) as typeof Float32Array.from
 
 /**
  * (Safe copy) Creates a new Float32Array from a variable number of arguments.
  */
-export const float32ArrayOf = <typeof Float32Array.of>_Float32Array.of.bind(_Float32Array)
+export const float32ArrayOf = _Float32Array.of.bind(_Float32Array) as typeof Float32Array.of
 
 /**
  * (Safe copy) Creates a new Float64Array using the captured Float64Array constructor.
@@ -327,17 +327,17 @@ export const float32ArrayOf = <typeof Float32Array.of>_Float32Array.of.bind(_Flo
  * doubles[1] = Number.MAX_VALUE
  * ```
  */
-export const createFloat64Array = (length: number): Float64Array => <Float64Array>_Reflect.construct(_Float64Array, [length])
+export const createFloat64Array = (length: number): Float64Array => _Reflect.construct(_Float64Array, [length]) as Float64Array
 
 /**
  * (Safe copy) Creates a new Float64Array from an array-like or iterable object.
  */
-export const float64ArrayFrom = <typeof Float64Array.from>_Float64Array.from.bind(_Float64Array)
+export const float64ArrayFrom = _Float64Array.from.bind(_Float64Array) as typeof Float64Array.from
 
 /**
  * (Safe copy) Creates a new Float64Array from a variable number of arguments.
  */
-export const float64ArrayOf = <typeof Float64Array.of>_Float64Array.of.bind(_Float64Array)
+export const float64ArrayOf = _Float64Array.of.bind(_Float64Array) as typeof Float64Array.of
 
 /**
  * (Safe copy) Creates a new BigInt64Array using the captured BigInt64Array constructor.
@@ -353,17 +353,17 @@ export const float64ArrayOf = <typeof Float64Array.of>_Float64Array.of.bind(_Flo
  * bigInts[1] = 9223372036854775807n  // Max value
  * ```
  */
-export const createBigInt64Array = (length: number): BigInt64Array => <BigInt64Array>_Reflect.construct(_BigInt64Array, [length])
+export const createBigInt64Array = (length: number): BigInt64Array => _Reflect.construct(_BigInt64Array, [length]) as BigInt64Array
 
 /**
  * (Safe copy) Creates a new BigInt64Array from an array-like or iterable object.
  */
-export const bigInt64ArrayFrom = <typeof BigInt64Array.from>_BigInt64Array.from.bind(_BigInt64Array)
+export const bigInt64ArrayFrom = _BigInt64Array.from.bind(_BigInt64Array) as typeof BigInt64Array.from
 
 /**
  * (Safe copy) Creates a new BigInt64Array from a variable number of arguments.
  */
-export const bigInt64ArrayOf = <typeof BigInt64Array.of>_BigInt64Array.of.bind(_BigInt64Array)
+export const bigInt64ArrayOf = _BigInt64Array.of.bind(_BigInt64Array) as typeof BigInt64Array.of
 
 /**
  * (Safe copy) Creates a new BigUint64Array using the captured BigUint64Array constructor.
@@ -379,23 +379,23 @@ export const bigInt64ArrayOf = <typeof BigInt64Array.of>_BigInt64Array.of.bind(_
  * bigUints[1] = 18446744073709551615n // Max value
  * ```
  */
-export const createBigUint64Array = (length: number): BigUint64Array => <BigUint64Array>_Reflect.construct(_BigUint64Array, [length])
+export const createBigUint64Array = (length: number): BigUint64Array => _Reflect.construct(_BigUint64Array, [length]) as BigUint64Array
 
 /**
  * (Safe copy) Creates a new BigUint64Array from an array-like or iterable object.
  */
-export const bigUint64ArrayFrom = <typeof BigUint64Array.from>_BigUint64Array.from.bind(_BigUint64Array)
+export const bigUint64ArrayFrom = _BigUint64Array.from.bind(_BigUint64Array) as typeof BigUint64Array.from
 
 /**
  * (Safe copy) Creates a new BigUint64Array from a variable number of arguments.
  */
-export const bigUint64ArrayOf = <typeof BigUint64Array.of>_BigUint64Array.of.bind(_BigUint64Array)
+export const bigUint64ArrayOf = _BigUint64Array.of.bind(_BigUint64Array) as typeof BigUint64Array.of
 
 /**
  * (Safe copy) Namespace object containing all TypedArray utilities.
  * Note: Importing this imports all methods in this namespace (no tree-shaking).
  */
-export const TypedArrays = _freeze(<const>{
+export const TypedArrays = _freeze({
   createArrayBuffer,
   isView,
   createSharedArrayBuffer,
@@ -433,4 +433,4 @@ export const TypedArrays = _freeze(<const>{
   createBigUint64Array,
   bigUint64ArrayFrom,
   bigUint64ArrayOf,
-})
+} as const)
