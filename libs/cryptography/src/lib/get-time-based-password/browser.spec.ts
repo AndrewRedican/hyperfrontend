@@ -1,4 +1,3 @@
-/** @jest-environment jsdom */
 import { describe, expect, it } from '@hyperfrontend/testing'
 import { getTimeBasedPassword } from './browser'
 

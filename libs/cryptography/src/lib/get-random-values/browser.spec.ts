@@ -1,4 +1,3 @@
-/** @jest-environment jsdom */
 import { getType } from '@hyperfrontend/data-utils'
 import { describe, expect, it } from '@hyperfrontend/testing'
 import { getRandomValues } from './browser'

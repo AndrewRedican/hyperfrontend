@@ -1,4 +1,3 @@
-/** @jest-environment jsdom */
 import type { Vault } from './model'
 import { beforeEach } from 'node:test'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'

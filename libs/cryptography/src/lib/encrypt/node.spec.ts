@@ -1,4 +1,3 @@
-/** @jest-environment node */
 import { describe, expect, it } from '@hyperfrontend/testing'
 import { decrypt } from '../decrypt/node'
 import { encrypt } from './node'

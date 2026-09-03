@@ -1,4 +1,3 @@
-/** @jest-environment jsdom */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, expect, it } from '@hyperfrontend/testing'
 import { createHash } from './browser'

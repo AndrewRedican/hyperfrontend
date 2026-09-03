@@ -1,4 +1,3 @@
-/** @jest-environment node */
 import { getType } from '@hyperfrontend/data-utils'
 import { describe, expect, it } from '@hyperfrontend/testing'
 import { getRandomValues } from './node'

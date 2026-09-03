@@ -1,4 +1,3 @@
-/** @jest-environment jsdom */
 import { describe, expect, it } from '@hyperfrontend/testing'
 import { decrypt } from '../decrypt/browser'
 import { encrypt } from './browser'
