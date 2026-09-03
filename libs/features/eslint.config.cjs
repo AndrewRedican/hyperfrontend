@@ -4,7 +4,7 @@ module.exports = [
   ...baseConfig,
   {
     files: ['**/*.ts'],
-    ignores: ['**/*.spec.ts', '**/jest.config.ts', '**/jest.setup.ts', '**/*.types.ts'],
+    ignores: ['**/*.spec.ts', '**/*.types.ts'],
     rules: {
       'workspace/lib-pkg-main-reexports': ['error', { topology: 'fragmented' }],
     },
@@ -16,7 +16,6 @@ module.exports = [
         'error',
         {
           ignoredDependencies: [
-            'jest',
             'typescript',
             // why: the compile-time parity spec (src/nx/model.compat.spec.ts) type-imports @nx/devkit to pin the structural mirror in src/nx/model.ts, and the nx adapter optionally loads it at RUNTIME from the consumer workspace via createRequire; it is never a declared dependency.
             '@nx/devkit',
