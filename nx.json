@@ -14,15 +14,6 @@
         "{projectRoot}/eslint.config.cjs"
       ]
     },
-    "test": {
-      "executor": "@nx/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
-      "options": {
-        "jestConfig": "{projectRoot}/jest.config.ts",
-        "passWithNoTests": false,
-        "codeCoverage": true
-      }
-    },
     "@hyperfrontend/package:test": {
       "cache": true,
       "inputs": ["default", "^production"],
@@ -99,7 +90,6 @@
       "!{projectRoot}/eslint.config.cjs",
       "!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)",
       "!{projectRoot}/tsconfig.spec.json",
-      "!{projectRoot}/jest.config.[jt]s",
       "!{projectRoot}/src/test-setup.[jt]s",
       "!{projectRoot}/test-setup.[jt]s"
     ],
@@ -117,13 +107,6 @@
         "targetName": "lint"
       },
       "exclude": ["apps/demos/**/*"]
-    },
-    {
-      "plugin": "@nx/jest/plugin",
-      "options": {
-        "targetName": "test"
-      },
-      "exclude": ["**/*-e2e/**/*"]
     }
   ],
   "nxCloudId": "6991685ccc04119366337805",

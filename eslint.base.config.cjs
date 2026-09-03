@@ -1,5 +1,4 @@
 const nx = require('@nx/eslint-plugin')
-const pluginJest = require('eslint-plugin-jest')
 const eslintRules = require('./tools/eslint-rules/src/index.ts')
 
 /**
@@ -138,18 +137,7 @@ module.exports = [
   },
   {
     files: ['**/*.spec.{ts,tsx,js,jsx}'],
-    plugins: { jest: pluginJest },
-    languageOptions: {
-      globals: { ...pluginJest.environments.globals.globals },
-    },
     rules: {
-      ...pluginJest.configs.recommended.rules,
-      'jsdoc/check-tag-names': [
-        'error',
-        {
-          definedTags: ['jest-environment'],
-        },
-      ],
       'jsdoc/require-jsdoc': 'off',
     },
   },
@@ -162,14 +150,14 @@ module.exports = [
   },
   {
     files: ['**/*.ts', '**/*.tsx'],
-    ignores: ['**/jest.config.ts', '**/jest.setup.ts', '**/test.setup.ts', '**/jest.setup.browser.ts'],
+    ignores: ['**/test.setup.ts'],
     rules: {
       'workspace/no-unsafe-builtin-methods': 'error',
     },
   },
   {
     files: ['**/*.ts', '**/*.tsx'],
-    ignores: ['**/jest.config.ts', '**/jest.setup.ts', '**/test.setup.ts', '**/jest.setup.browser.ts'],
+    ignores: ['**/test.setup.ts'],
     rules: {
       'workspace/require-node-protocol': 'error',
       'workspace/no-mixed-type-import': 'error',
@@ -206,14 +194,14 @@ module.exports = [
   },
   {
     files: ['**/*.ts', '**/*.tsx'],
-    ignores: ['**/jest.config.ts', '**/jest.setup.ts', '**/test.setup.ts', '**/jest.setup.browser.ts', '**/libs/logging/**'],
+    ignores: ['**/test.setup.ts', '**/libs/logging/**'],
     rules: {
       'workspace/no-direct-console': 'error',
     },
   },
   {
     files: ['**/*.ts', '**/*.tsx'],
-    ignores: ['**/jest.config.ts', '**/jest.setup.ts', '**/test.setup.ts', '**/jest.setup.browser.ts', '**/*.spec.ts'],
+    ignores: ['**/test.setup.ts', '**/*.spec.ts'],
     rules: {
       'workspace/no-namespace-import': 'error',
     },
@@ -232,7 +220,7 @@ module.exports = [
   },
   {
     files: ['**/*.ts', '**/*.tsx'],
-    ignores: ['**/jest.config.ts', '**/jest.setup.ts', '**/test.setup.ts', '**/jest.setup.browser.ts', '**/*.spec.ts', '**/*.spec.tsx'],
+    ignores: ['**/test.setup.ts', '**/*.spec.ts', '**/*.spec.tsx'],
     rules: {
       'workspace/no-inline-type-literal': 'error',
     },
@@ -246,7 +234,7 @@ module.exports = [
   },
   {
     files: ['**/*.ts'],
-    ignores: ['**/*.spec.ts', '**/jest.config.ts', '**/jest.setup.ts', '**/test.setup.ts', '**/*.types.ts'],
+    ignores: ['**/*.spec.ts', '**/test.setup.ts', '**/*.types.ts'],
     rules: {
       'workspace/lib-require-jsdoc-example': 'error',
       'workspace/lib-require-jsdoc-example-label': 'error',
