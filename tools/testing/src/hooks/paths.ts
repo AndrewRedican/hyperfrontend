@@ -96,7 +96,7 @@ export function resolveAlias(specifier: string, aliases: AliasTable, workspaceRo
     if (!specifier.startsWith(pattern.prefix)) continue
     const tail = specifier.slice(pattern.prefix.length)
     for (const target of pattern.targets) {
-      const hit = firstExistingFile(resolve(workspaceRoot, target.replace('*', tail)))
+      const hit = firstExistingFile(resolve(workspaceRoot, target.replaceAll('*', tail)))
       if (hit) return hit
     }
   }
