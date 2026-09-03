@@ -154,6 +154,8 @@ module.exports = [
             '@types/react',
             '@types/react-dom',
             'autoprefixer',
+            // glob is imported only by scripts/, which dependency-checks does not scan
+            'glob',
             'postcss',
             'tailwindcss',
             'typescript',
