@@ -165,47 +165,12 @@ function runNodeTests(testDir: string, format: string, workspaceRoot: string): b
 }
 
 /**
- * Runs Jest tests for a specific format.
- *
- * This is the legacy path for projects still carrying `jest.config.<format>.ts` files;
- * a project whose configs are deleted runs on the node test runner instead. It goes away
- * with the last per-project Jest install.
- *
- * @param testDir - The test project directory
- * @param format - The module format to test (e.g., 'cjs', 'esm', 'browser')
- * @param workspaceRoot - The root directory of the workspace
- * @returns True if tests passed, false otherwise
- */
-function runJestTests(testDir: string, format: string, workspaceRoot: string): boolean {
-  const configPath = join(testDir, `jest.config.${format}.ts`)
-
-  if (!existsSync(configPath)) {
-    return runNodeTests(testDir, format, workspaceRoot)
-  }
-
-  logger.info(`Running ${format} tests...`)
-
-  try {
-    execFileSync('npx', ['jest', '--config', configPath, '--passWithNoTests'], {
-      cwd: workspaceRoot,
-      encoding: 'utf-8',
-      stdio: 'inherit',
-    })
-    logger.info(`${format} tests passed`)
-    return true
-  } catch {
-    logger.error(`${format} tests failed`)
-    return false
-  }
-}
-
-/**
  * E2E executor for testing package build outputs.
  *
  * Workflow:
  * 1. Run `npm pack` in the dist directory to create a tarball
  * 2. Install the tarball in the E2E test project
- * 3. Run Jest tests for each configured format (cjs, esm, browser)
+ * 3. Run each configured format's suites on the node test runner (cjs, esm, browser, nx)
  * 4. Optionally cleanup the tarball
  *
  * @param options - Configuration for test directory, formats, and cleanup behavior
@@ -264,7 +229,7 @@ export default async function e2eExecutor(options: E2eExecutorOptions, context: 
   const results: boolean[] = []
 
   for (const format of formats) {
-    const success = runJestTests(testDir, format, workspaceRoot)
+    const success = runNodeTests(testDir, format, workspaceRoot)
     results.push(success)
   }
 

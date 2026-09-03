@@ -108,7 +108,7 @@ End-to-end testing for package build outputs. Validates that built packages inst
 
 1. Runs `npm pack` in the dist directory to create a tarball
 2. Installs the tarball in the E2E test project
-3. Runs Jest tests for each configured format (cjs, esm, browser)
+3. Runs each configured format on the node test runner (cjs, esm, browser, nx)
 4. Cleans up tarball after testing
 
 **Options:**
