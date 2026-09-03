@@ -23,7 +23,7 @@ const config: TestConfig = {
     'src/bundle/rollup/worker/job-runner.ts',
     'src/bin/native/worker/job-runner.ts',
   ],
-  coverageThresholds: { lines: 99, branches: 96, functions: 98 },
+  coverageThresholds: { lines: 99, branches: 97, functions: 98 },
 }
 
 export default config
