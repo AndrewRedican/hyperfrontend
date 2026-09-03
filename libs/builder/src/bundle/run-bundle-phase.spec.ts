@@ -66,6 +66,9 @@ const DISCOVERY: EntryPointDiscovery = {
 
 const ROLLUP_WORKER_PATH = '/abs/dist/libs/builder/bundle/rollup/worker/index.cjs.js'
 
+// why: casting in statement position needs a leading semicolon, an ASI hazard static analysis rejects.
+const asMock = (fn: unknown): Mock => fn as Mock
+
 const makeContext = (): BuildContext => ({
   projectRoot: '/abs/libs/foo',
   workspaceRoot: '/abs/repo',
@@ -82,20 +85,20 @@ const makeContext = (): BuildContext => ({
 })
 
 beforeEach(() => {
-  ;(dispatchRollupWorker as Mock).mockClear()
-  ;(generateDeclarations as Mock).mockClear()
-  ;(ensureDir as Mock).mockClear()
-  ;(runPrePass as Mock).mockClear()
-  ;(runDtsPrePass as Mock).mockClear()
-  ;(runDtsPerEntry as Mock).mockClear()
-  ;(pruneOrphanDeclarations as Mock).mockClear()
-  ;(verifyEntryTypeRefs as Mock).mockClear()
-  ;(pruneDependencies as Mock).mockClear()
-  ;(stripBundleCommentsPass as Mock).mockClear()
-  ;(resolveDefaultWorkerPath as Mock)
+  asMock(dispatchRollupWorker).mockClear()
+  asMock(generateDeclarations).mockClear()
+  asMock(ensureDir).mockClear()
+  asMock(runPrePass).mockClear()
+  asMock(runDtsPrePass).mockClear()
+  asMock(runDtsPerEntry).mockClear()
+  asMock(pruneOrphanDeclarations).mockClear()
+  asMock(verifyEntryTypeRefs).mockClear()
+  asMock(pruneDependencies).mockClear()
+  asMock(stripBundleCommentsPass).mockClear()
+  asMock(resolveDefaultWorkerPath)
     .mockReset()
     .mockReturnValue({ path: '/abs/dist/libs/builder/bundle/dependencies/worker/index.cjs.js', execArgv: [] })
-  ;(resolveDefaultRollupWorkerPath as Mock).mockReset().mockReturnValue({ path: ROLLUP_WORKER_PATH, execArgv: [] })
+  asMock(resolveDefaultRollupWorkerPath).mockReset().mockReturnValue({ path: ROLLUP_WORKER_PATH, execArgv: [] })
 })
 
 describe('runBundlePhase', () => {
@@ -340,7 +343,7 @@ describe('runBundlePhase', () => {
   })
 
   it('throws a context-rich error when the pre-pass worker cannot be located', async () => {
-    ;(resolveDefaultWorkerPath as Mock).mockReturnValueOnce(undefined)
+    asMock(resolveDefaultWorkerPath).mockReturnValueOnce(undefined)
     const config = {
       projectRoot: '',
       workspaceRoot: '',
@@ -352,7 +355,7 @@ describe('runBundlePhase', () => {
   })
 
   it('throws a context-rich error when the rollup worker cannot be located', async () => {
-    ;(resolveDefaultRollupWorkerPath as Mock).mockReturnValueOnce(undefined)
+    asMock(resolveDefaultRollupWorkerPath).mockReturnValueOnce(undefined)
     const config = {
       projectRoot: '',
       workspaceRoot: '',
@@ -362,7 +365,7 @@ describe('runBundlePhase', () => {
   })
 
   it('does not require the rollup worker when no format resolves any entry', async () => {
-    ;(resolveDefaultRollupWorkerPath as Mock).mockReturnValueOnce(undefined)
+    asMock(resolveDefaultRollupWorkerPath).mockReturnValueOnce(undefined)
     await runBundlePhase(makeContext(), { projectRoot: '', workspaceRoot: '' } as BuildConfig)
     expect(dispatchRollupWorker).not.toHaveBeenCalled()
   })
