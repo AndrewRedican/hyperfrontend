@@ -1,4 +1,3 @@
-/** @jest-environment jsdom */
 import { describe, expect, it } from '@hyperfrontend/testing'
 import { utf8StringToUint8Array, base64ToUint8Array, uint8ArrayToUtf8String } from '../../browser'
 import { uint8ArrayToBase64 } from './browser/uint8-array-to-base64'
