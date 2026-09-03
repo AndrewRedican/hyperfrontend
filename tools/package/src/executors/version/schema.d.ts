@@ -15,6 +15,8 @@ export interface VersionExecutorSchema {
    * - `infrastructure`: Infrastructure path and scope tracking
    */
   scopeFiltering?: FlowConfig['scopeFiltering']
+  /** Upper bound on the commit window the flow analyzes for bumps and changelogs. */
+  maxCommitFallback?: FlowConfig['maxCommitFallback']
   /** Manually increment the version by that keyword (major, minor, patch). */
   releaseAs?: 'major' | 'minor' | 'patch'
   /** Version tag prefix. Default is '{projectName}@' in independent mode. */

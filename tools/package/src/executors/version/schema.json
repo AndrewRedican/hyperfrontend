@@ -116,6 +116,11 @@
       "description": "Create a backup of existing changelog before modification. Useful for safety during changelog regeneration.",
       "default": false
     },
+    "maxCommitFallback": {
+      "type": "number",
+      "description": "Upper bound on the commit window the flow analyzes for bumps and changelogs.",
+      "default": 500
+    },
     "scopeFiltering": {
       "type": "object",
       "description": "Scope filtering configuration for commit classification and changelog generation.",

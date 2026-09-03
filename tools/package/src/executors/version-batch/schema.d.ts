@@ -44,4 +44,6 @@ export interface VersionBatchExecutorSchema {
    * `version-check` do.
    */
   scopeFiltering?: FlowConfig['scopeFiltering']
+  /** Upper bound on the commit window the flow analyzes for bumps and changelogs. */
+  maxCommitFallback?: FlowConfig['maxCommitFallback']
 }

@@ -13,6 +13,8 @@ export interface VersionCheckExecutorSchema {
    * - `infrastructure`: Infrastructure path and scope tracking
    */
   scopeFiltering?: FlowConfig['scopeFiltering']
+  /** Upper bound on the commit window the flow analyzes for bumps and changelogs. */
+  maxCommitFallback?: FlowConfig['maxCommitFallback']
   /** Skip validation if the current commit is a version/release commit. */
   skipIfVersionCommit?: boolean
   /** Enable verbose output for debugging. Shows additional details about validation. */

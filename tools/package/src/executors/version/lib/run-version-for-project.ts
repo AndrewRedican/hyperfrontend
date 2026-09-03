@@ -56,6 +56,8 @@ export interface RunVersionOptions {
   repository?: FlowConfig['repository']
   /** Scope filtering configuration */
   scopeFiltering?: FlowConfig['scopeFiltering']
+  /** Upper bound on the commit window the flow analyzes for bumps and changelogs */
+  maxCommitFallback?: FlowConfig['maxCommitFallback']
   /** Backup changelog before modification */
   backupChangelog?: boolean
 }
@@ -135,6 +137,7 @@ export async function runVersionForProject(options: RunVersionOptions): Promise<
     rollbackOnFailure,
     repository = 'inferred',
     scopeFiltering,
+    maxCommitFallback,
     backupChangelog = false,
   } = options
 
@@ -192,6 +195,7 @@ export async function runVersionForProject(options: RunVersionOptions): Promise<
     releaseAs,
     repository,
     scopeFiltering,
+    maxCommitFallback,
     backupChangelog,
   }
 

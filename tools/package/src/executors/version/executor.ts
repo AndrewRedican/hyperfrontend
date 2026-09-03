@@ -65,6 +65,7 @@ export default async function versionExecutor(options: VersionExecutorSchema, co
     rollbackOnFailure: options.rollbackOnFailure,
     repository: options.repository,
     scopeFiltering: options.scopeFiltering,
+    maxCommitFallback: options.maxCommitFallback,
     backupChangelog: options.backupChangelog,
   })
 
