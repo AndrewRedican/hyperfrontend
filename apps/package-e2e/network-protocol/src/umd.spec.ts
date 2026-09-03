@@ -7,12 +7,14 @@
  * - HyperfrontendNetworkProtocolV2 (v2 protocol)
  */
 
+import { describe, expect, it } from '@hyperfrontend/testing'
+
 import { loadBundleCode, executeBundleInWindow, requireUmdBundle } from '../../shared/helpers'
 import { resolve, join } from 'node:path'
 
 // Bundle paths for network-protocol are different - it has v1 and v2 subdirectories
 const getBundlePath = (version: 'v1' | 'v2', format: 'iife' | 'umd', minified = false) => {
-  const distRoot = resolve(__dirname, '../../../../dist/libs/network-protocol')
+  const distRoot = resolve(process.cwd(), 'dist/libs/network-protocol')
   const ext = minified ? '.min.js' : '.js'
   return join(distRoot, 'bundle', version, `index.${format}${ext}`)
 }

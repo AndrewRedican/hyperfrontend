@@ -6,6 +6,10 @@
  * In Node.js environment, we test the node-specific entries.
  */
 
+'use strict'
+
+const { describe, it, expect } = require('@hyperfrontend/testing')
+
 describe('@hyperfrontend/network-protocol CJS', () => {
   describe('node/v1 sub-entry', () => {
     it('is requireable', () => {
