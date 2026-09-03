@@ -53,6 +53,8 @@ describe('pruneDependencies', () => {
     write('_dependencies/orphan/index.esm.js', 'export const b = 1')
     expect(pruneDependencies(makeContext(outputPath))).toEqual({
       orphanFilesRemoved: 1,
+      chunksShimmed: 0,
+      namedExportsSynthesized: 0,
       deadExportsRemoved: 0,
       deadPropertiesRemoved: 0,
       requireBindingsDestructured: 0,
@@ -65,6 +67,8 @@ describe('pruneDependencies', () => {
     write('index.esm.js', 'export const a = 1')
     expect(pruneDependencies(makeContext(outputPath))).toEqual({
       orphanFilesRemoved: 0,
+      chunksShimmed: 0,
+      namedExportsSynthesized: 0,
       deadExportsRemoved: 0,
       deadPropertiesRemoved: 0,
       requireBindingsDestructured: 0,
@@ -73,13 +77,15 @@ describe('pruneDependencies', () => {
     })
   })
 
-  it('captures the orphan-sweep, dead-export, property-strip, destructure, and comment-strip checkpoints on the supplied monitor', () => {
+  it('captures the orphan-sweep, shim, synthesis, dead-export, property-strip, destructure, and comment-strip checkpoints on the supplied monitor', () => {
     write('index.esm.js', 'export const a = 1')
     const labels: string[] = []
     const monitor = { check: (label: string) => void labels.push(label) } as unknown as Parameters<typeof pruneDependencies>[1]
     pruneDependencies(makeContext(outputPath), monitor)
     expect(labels).toEqual([
       'bundle:dependencies:prune:orphans:end',
+      'bundle:dependencies:prune:cjs-globals:end',
+      'bundle:dependencies:prune:missing-exports:end',
       'bundle:dependencies:prune:dead-exports:end',
       'bundle:dependencies:prune:property-strip:end',
       'bundle:dependencies:prune:destructure-requires:end',
@@ -158,5 +164,39 @@ describe('pruneDependencies', () => {
     write('_dependencies/b/index.esm.js', 'const x = 1;\nexport { x };')
     pruneDependencies(makeContext(outputPath))
     expect(existsSync(join(outputPath, '_dependencies/b/index.esm.js'))).toBe(false)
+  })
+
+  it('synthesizes a demanded named export and keeps its interop default alive through the strip', () => {
+    write('index.esm.js', "import { inject } from './_dependencies/postject/index.esm.js';\nexport const run = () => inject();")
+    write(
+      '_dependencies/postject/index.esm.js',
+      [
+        'function requireApi() {',
+        '  return { inject: () => 1 };',
+        '}',
+        'var apiExports = requireApi();',
+        'const api = /*@__PURE__*/getDefaultExportFromCjs(apiExports);',
+        'export { api as default };',
+        '',
+      ].join('\n')
+    )
+    const report = pruneDependencies(makeContext(outputPath))
+    const chunk = readFileSync(join(outputPath, '_dependencies/postject/index.esm.js'), 'utf8')
+    expect([report.namedExportsSynthesized, chunk.includes('export { inject$1 as inject };'), chunk.includes('const api = ')]).toEqual([
+      1,
+      true,
+      true,
+    ])
+  })
+
+  it('shims a chunk that still reads CJS module-scope globals', () => {
+    write('index.esm.js', "import { where } from './_dependencies/native/index.esm.js';\nexport const dir = where;")
+    write('_dependencies/native/index.esm.js', 'function locate() { return __dirname; }\nconst where = locate();\nexport { where };')
+    const report = pruneDependencies(makeContext(outputPath))
+    const chunk = readFileSync(join(outputPath, '_dependencies/native/index.esm.js'), 'utf8')
+    expect([report.chunksShimmed, chunk.includes('const __dirname = __cjsPathDirname(__cjsFileURLToPath(import.meta.url));')]).toEqual([
+      1,
+      true,
+    ])
   })
 })

@@ -2,8 +2,10 @@ import type { MemoryMonitor } from '../../../memory/monitor'
 import type { BuildContext } from '../../../models'
 import { logger } from '@hyperfrontend/logging'
 import { depsRootOf } from '../../fs/deps-root'
+import { shimCjsGlobalsPass } from './cjs-globals-pass'
 import { stripDeadExportsPass } from './dead-export-pass'
 import { destructureRequiresPass } from './destructure-requires-pass'
+import { synthesizeMissingExportsPass } from './missing-exports-pass'
 import { pruneOrphanChunks } from './orphan-chunks'
 import { stripDeadPropertiesPass } from './property-strip-pass'
 import { stripCommentsPass } from './strip-comments'
@@ -16,6 +18,10 @@ const log = logger.channel('builder:bundle:dependencies:prune')
 export interface PruneReport {
   /** Whole chunk files (and `.map`/`.d.ts.map` siblings) unlinked as orphans. */
   orphanFilesRemoved: number
+  /** ESM chunks given a `require` / `__filename` / `__dirname` shim by the CJS-globals pass. */
+  chunksShimmed: number
+  /** Named exports appended onto CJS-interop ESM wrappers by the Missing-Export Synthesis. */
+  namedExportsSynthesized: number
   /** Exported declarations spliced out of surviving chunks by the Export Strip. */
   deadExportsRemoved: number
   /** Namespace slots spliced out of kept frozen-namespace literals by the Property Strip. */
@@ -35,8 +41,13 @@ export interface PruneReport {
  * The pre-pass emits every hoisted dep at its full public-API surface; this
  * step trims what the consuming package provably never reaches. The Orphan
  * Sweep deletes whole orphan chunk files (JS + co-located d.ts) whose runtime is
- * unreachable from the package's entry chunks. The Export Strip then strips dead
- * exported declarations out of the surviving chunks. The Property Strip next
+ * unreachable from the package's entry chunks. The CJS-Globals Shim then gives
+ * every surviving ESM chunk that still reads `require` / `__filename` /
+ * `__dirname` a `createRequire` / `fileURLToPath` preamble, and the
+ * Missing-Export Synthesis appends interop-backed named exports where a
+ * CJS-wrapped dep only emitted a default that importers address by name. The
+ * Export Strip then strips dead exported declarations out of the surviving
+ * chunks. The Property Strip next
  * drops the unread slots of any kept, live frozen-namespace object and a second
  * Export Strip collapses the factories those slots held alive. A final sweep
  * reclaims chunks left with no importer, since narrowing a chunk's imports can
@@ -63,6 +74,11 @@ export const pruneDependencies = (context: BuildContext, monitor?: MemoryMonitor
   const depsRoot = depsRootOf(context)
   const orphans = pruneOrphanChunks(context, depsRoot)
   monitor?.check('bundle:dependencies:prune:orphans:end')
+  // why: shim and synthesis must precede the Export Strip — the strip's keep-closure is what holds the interop default and the shim imports alive once their original exports go dead.
+  const shims = shimCjsGlobalsPass(depsRoot)
+  monitor?.check('bundle:dependencies:prune:cjs-globals:end')
+  const synthesized = synthesizeMissingExportsPass(context, depsRoot)
+  monitor?.check('bundle:dependencies:prune:missing-exports:end')
   const deadExports = stripDeadExportsPass(context, depsRoot)
   monitor?.check('bundle:dependencies:prune:dead-exports:end')
   const properties = stripDeadPropertiesPass(context, depsRoot)
@@ -80,6 +96,8 @@ export const pruneDependencies = (context: BuildContext, monitor?: MemoryMonitor
   monitor?.check('bundle:dependencies:prune:comment-strip:end')
   const report: PruneReport = {
     orphanFilesRemoved: orphans.orphanFilesRemoved + resweep.orphanFilesRemoved,
+    chunksShimmed: shims.chunksShimmed,
+    namedExportsSynthesized: synthesized.namedExportsSynthesized,
     deadExportsRemoved: deadExports.deadExportsRemoved + cascade.deadExportsRemoved,
     deadPropertiesRemoved: properties.deadPropertiesRemoved,
     requireBindingsDestructured: destructured.requireBindingsDestructured,
@@ -94,13 +112,15 @@ export const pruneDependencies = (context: BuildContext, monitor?: MemoryMonitor
   }
   if (
     report.orphanFilesRemoved > 0 ||
+    report.chunksShimmed > 0 ||
+    report.namedExportsSynthesized > 0 ||
     report.deadExportsRemoved > 0 ||
     report.deadPropertiesRemoved > 0 ||
     report.requireBindingsDestructured > 0 ||
     report.commentBytesRemoved > 0
   ) {
     log.info(
-      `pruned ${report.orphanFilesRemoved} orphan dependency file(s), ${report.deadExportsRemoved} dead export(s), and ${report.deadPropertiesRemoved} dead namespace slot(s), destructured ${report.requireBindingsDestructured} require binding(s), stripped ${report.commentBytesRemoved} comment byte(s), reclaimed ${report.bytesRemoved} byte(s)`
+      `pruned ${report.orphanFilesRemoved} orphan dependency file(s), ${report.deadExportsRemoved} dead export(s), and ${report.deadPropertiesRemoved} dead namespace slot(s), shimmed ${report.chunksShimmed} CJS-globals chunk(s), synthesized ${report.namedExportsSynthesized} named export(s), destructured ${report.requireBindingsDestructured} require binding(s), stripped ${report.commentBytesRemoved} comment byte(s), reclaimed ${report.bytesRemoved} byte(s)`
     )
   }
   return report
