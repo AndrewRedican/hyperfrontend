@@ -1,6 +1,6 @@
 import type { IChannelContract } from '../types/contract'
 import type { SecurityPolicy } from './types'
-import { afterEach, beforeEach } from 'node:test'
+import { afterEach } from 'node:test'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { createBroker } from './factory'
 
