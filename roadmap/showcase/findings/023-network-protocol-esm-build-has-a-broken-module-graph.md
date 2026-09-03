@@ -33,9 +33,24 @@ pass (`libs/builder/src/bundle/dedupe/`):
 Reproduced deterministically: `rm -rf dist/libs/network-protocol && nx build
 lib-network-protocol --skip-nx-cache` on a quiet machine emits the same graph. This is not the
 overlapping-builds race that was ruled out earlier; a solo, uncached, wiped build produces it.
-The workspace has several `creators/mocks` modules at different depths, which suggests the
-pass is misattributing declarations across modules that share a path suffix, but that is a lead,
-not a diagnosis.
+
+**Diagnosis (2026-09-03, re-derived from the emitted artifact).** The original path-suffix lead
+was wrong. Two dedupe-pass defects compound:
+
+1. **Fixture-name misattribution.** `v4.json`'s top-level `"id": "/v4"` is inlined by the JSON
+   plugin as a top-level `var id = "/v4"` in every entry reaching `is-valid-schema`. The
+   ownership index scans all of `src/**`, so the spec-only fixture
+   `lib/data/creators/mocks.ts` — never imported by any entry — uniquely owns `id` (and `key`,
+   `message`, `data`, …). The JSON-derived declaration is attributed to the fixture's module
+   key, every copy is byte-identical, and the pass emits the phantom
+   `_shared/lib/data/creators/mocks/` chunk exporting only `id`.
+2. **Scope-naive reference collection.** Cross-chunk import edges were computed with the prune
+   pass's over-approximating `collectRefs`, which counts function parameters as references.
+   `is-valid-message`'s callback parameters `key`, `value`, and the parameters `data` /
+   `message` collide with fixture-owned names, fabricating the
+   `import { data, message, key }` edge into the phantom chunk — names it never exports, which
+   is the link error native ESM reports. CJS destructures the same names to `undefined`,
+   parameters shadow them, and nothing notices.
 
 ## Why nobody saw it
 

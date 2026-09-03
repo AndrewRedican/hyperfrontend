@@ -29,8 +29,17 @@ imports the named binding `inject` from the wrapper, so every ESM graph that rea
 SEA inject module refuses to instantiate.
 
 Unlike F-023 this is not the first-party dedupe pass misattributing modules; the broken file is
-the third-party `_dependencies` emission itself losing its export tail during the CJS-to-ESM
-interop wrap.
+the third-party `_dependencies` emission itself.
+
+**Diagnosis (2026-09-03, pre-pass reproduced in isolation).** The wrap never emitted `inject`
+in the first place: postject's `module.exports` is assembled inside the lazy `require` closure,
+so the commonjs plugin can only emit `export { api as default }`. The dead-export prune then
+correctly removed that default (no importer uses it) together with its now-dead interop
+declaration, which is why the file ends at `var apiExports = requireApi();`. The defect is that
+named imports against a default-only CJS wrap are never satisfiable in ESM, while the CJS twin
+resolves the same names at runtime. The published `@hyperfrontend/builder@0.2.0` tarball was
+pulled from the registry and carries the broken wrapper verbatim, so the breakage is public,
+not just local.
 
 ## Why nobody saw it
 
