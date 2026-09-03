@@ -189,7 +189,7 @@ export function updatePackageJson(tree: Tree, options: NormalizedOptions): void 
   })
 }
 
-export { updateEslintConfig, updateJestConfig, updateTsConfigJson, updateTsConfigLibJson, updateTsConfigSpecJson } from './config-updaters'
+export { updateEslintConfig, updateTsConfigJson, updateTsConfigLibJson, updateTsConfigSpecJson } from './config-updaters'
 
 /**
  * Update TypeScript path mappings in tsconfig.base.json.

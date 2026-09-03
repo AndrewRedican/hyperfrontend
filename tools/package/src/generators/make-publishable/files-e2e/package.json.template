@@ -10,14 +10,7 @@
     "<%= packageName %>": "file:<%= e2eOffsetFromRoot %>tmp/e2e-packs/hyperfrontend-<%= libName %>-0.0.0.tgz"
   },
   "devDependencies": {
-    "@types/jest": "29.5.14",
     "@types/node": "25.3.3",
-    "jest": "29.7.0",
-    "jest-environment-jsdom": "29.7.0",
-    "ts-jest": "29.2.6",
     "typescript": "5.7.3"
-  },
-  "overrides": {
-    "picomatch": "4.0.4"
   }
 }

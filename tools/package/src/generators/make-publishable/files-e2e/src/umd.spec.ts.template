@@ -3,6 +3,7 @@
  * Tests that the UMD bundle loads correctly in browser context.
  */
 
+import { describe, expect, it } from '@hyperfrontend/testing'
 import { getBundlePath, loadBundleCode, executeBundleInWindow } from '../../shared/helpers'
 
 describe('<%= packageName %> UMD bundle', () => {
