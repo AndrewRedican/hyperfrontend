@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.8.1](https://github.com/AndrewRedican/hyperfrontend/compare/ae4f6a6d3eaea1b3382ff6d84049fe2cb5474d4e...cbbfa57ecbc4fd1edb5f76b16083a36e1671488a) - 2026-09-03
+
+### Bug Fixes
+
+- stop the hostee heartbeat and visibility reporters when the handle is told to close
+- **tool-testing:** make the DOM global the window, and serve the EventTarget methods it inherits
+
 ## [0.8.0](https://github.com/AndrewRedican/hyperfrontend/compare/b22d3335975d9dc7f70253c08bb39fc0a4b47b16...999f0dbfbe2e5e700ec06899bc2467b5e17539de) - 2026-08-23
 
 ### Features
