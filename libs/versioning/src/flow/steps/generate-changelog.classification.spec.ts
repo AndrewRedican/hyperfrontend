@@ -135,8 +135,7 @@ describe('Write Changelog Step', () => {
       const entry = result.stateUpdates?.changelogEntry
       const featuresSection = entry.sections.find((s: { type: string }) => s.type === 'features')
       expect(featuresSection).toBeDefined()
-      expect(featuresSection.items[0].description).not.toContain('**lib-test:**')
-      expect(featuresSection.items[0].description).toBe('add feature')
+      expect(featuresSection.items[0]).toEqual(expect.objectContaining({ scope: undefined, description: 'add feature' }))
     })
 
     it('preserves scope for direct-file commits (informative)', async () => {
@@ -166,7 +165,7 @@ describe('Write Changelog Step', () => {
       const entry = result.stateUpdates?.changelogEntry
       const featuresSection = entry.sections.find((s: { type: string }) => s.type === 'features')
       expect(featuresSection).toBeDefined()
-      expect(featuresSection.items[0].description).toContain('**lib-other:**')
+      expect(featuresSection.items[0].scope).toBe('lib-other')
     })
 
     it('preserves scope for indirect-dependency commits', async () => {
@@ -196,7 +195,7 @@ describe('Write Changelog Step', () => {
       const entry = result.stateUpdates?.changelogEntry
       const depSection = entry.sections.find((s: { heading: string }) => s.heading === 'Dependency Updates')
       expect(depSection).toBeDefined()
-      expect(depSection.items[0].description).toContain('**lib-utils:**')
+      expect(depSection.items[0].scope).toBe('lib-utils')
     })
 
     it('creates Dependency Updates section for indirect commits', async () => {
@@ -237,7 +236,7 @@ describe('Write Changelog Step', () => {
 
       expect(featuresSection).toBeDefined()
       expect(depSection).toBeDefined()
-      expect(depSection.items[0].description).toContain('**lib-dep:**')
+      expect(depSection.items[0].scope).toBe('lib-dep')
     })
 
     it('sets indirect flag on ChangelogItem for indirect commits', async () => {
@@ -325,7 +324,7 @@ describe('Write Changelog Step', () => {
       const entry = result.stateUpdates?.changelogEntry
       const featuresSection = entry.sections.find((s: { type: string }) => s.type === 'features')
       expect(featuresSection).toBeDefined()
-      expect(featuresSection.items[0].description).toContain('**other:**')
+      expect(featuresSection.items[0].scope).toBe('other')
     })
   })
 })
