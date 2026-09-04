@@ -37,7 +37,7 @@ jobs:
         run: CI=1 npx nx build ${{ inputs.project-name }} --parallel=1
 
       - name: Test
-        run: CI=1 npx nx test ${{ inputs.project-name }} --coverage --parallel=1
+        run: CI=1 npx nx test ${{ inputs.project-name }} --parallel=1
 
       - name: Upload coverage to Codecov
         if: always()
