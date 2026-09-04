@@ -108,14 +108,14 @@ describe('buildRunPlan', () => {
     assert.equal(planArgs(SINGLE).at(-1), 'src/**/*.spec.ts')
   })
 
-  it('writes a single environment to the plain report name', () => {
+  it('names a single environment raw report after the environment', () => {
     const resolved = withDefaults(SINGLE)
     const environment = resolved.environments[0]
     if (!environment) throw new Error('the fixture must declare an environment')
-    assert.equal(buildRunPlan(resolved, environment, WORKSPACE, PROJECT, COVERAGE).lcovPath, '../../coverage/libs/example/lcov.info')
+    assert.equal(buildRunPlan(resolved, environment, WORKSPACE, PROJECT, COVERAGE).lcovPath, '../../coverage/libs/example/lcov.node.info')
   })
 
-  it('names the report after the environment when there are several', () => {
+  it('names each raw report after its environment when there are several', () => {
     const config: TestConfig = {
       ...SINGLE,
       environments: [

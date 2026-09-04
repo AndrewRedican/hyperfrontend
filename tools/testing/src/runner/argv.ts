@@ -10,7 +10,7 @@ export type RunPlan = {
   environment: TestEnvironment
   /** Arguments to pass to `node`, in order. */
   argv: string[]
-  /** Where the lcov report will be written, relative to the project root. */
+  /** Where the environment's raw lcov report will be written, relative to the project root. */
   lcovPath: string
 }
 
@@ -34,7 +34,8 @@ export function buildRunPlan(
   projectRoot: string,
   coverageDir: string
 ): RunPlan {
-  const lcovPath = resolve(coverageDir, config.environments.length > 1 ? `lcov.${environment.name}.info` : 'lcov.info')
+  // why: `lcov.info` is reserved for the merged report the runner writes afterwards, so the raw report an environment produces is always named after it.
+  const lcovPath = resolve(coverageDir, `lcov.${environment.name}.info`)
   const hookPath = resolve(workspaceRoot, 'tools/testing/src/hooks/register.ts')
 
   const argv = [

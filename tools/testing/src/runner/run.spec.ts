@@ -1,8 +1,8 @@
 import type { TestConfig } from './config'
 import assert from 'node:assert/strict'
-import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { join } from 'node:path'
+import { join, relative } from 'node:path'
 import { describe, it } from 'node:test'
 import { runProjectTests } from './run'
 
@@ -74,6 +74,17 @@ describe('runProjectTests', () => {
     const fixture = createFixture({ 'src/double.ts': PASSING_SOURCE, 'src/double.spec.ts': PASSING_SPEC })
     assert.equal(
       run(fixture).coverageTable.some((row) => row.startsWith('src/double.ts')),
+      true
+    )
+  })
+
+  it('writes the merged report to lcov.info with paths from the workspace root', () => {
+    const fixture = createFixture({ 'src/double.ts': PASSING_SOURCE, 'src/double.spec.ts': PASSING_SPEC })
+    run(fixture)
+    assert.equal(
+      readFileSync(join(fixture.coverageDir, 'lcov.info'), 'utf8').includes(
+        `SF:${relative(WORKSPACE_ROOT, join(fixture.projectRoot, 'src/double.ts'))}\n`
+      ),
       true
     )
   })
@@ -162,6 +173,39 @@ it('triples', () => {
     )
 
     assert.equal(outcome.success, true)
+  })
+
+  it('merges every environment into the one lcov.info', () => {
+    const fixture = createFixture({
+      'src/double.ts': PASSING_SOURCE,
+      'src/double.spec.ts': PASSING_SPEC,
+      'src/other.ts': 'export const triple = (value: number): number => value * 3\n',
+      'src/other.browser.spec.ts': `import assert from 'node:assert/strict'
+import { it } from 'node:test'
+import { triple } from './other'
+
+it('triples', () => {
+  assert.equal(triple(2), 6)
+})
+`,
+    })
+
+    runProjectTests(
+      {
+        environments: [
+          { name: 'node', testMatch: ['src/**/*.spec.ts'], testIgnore: ['src/**/*.browser.spec.ts'] },
+          { name: 'browser', testMatch: ['src/**/*.browser.spec.ts'] },
+        ],
+        coverageInclude: ['src/**/*.ts'],
+      },
+      { workspaceRoot: WORKSPACE_ROOT, projectRoot: fixture.projectRoot, coverageDir: fixture.coverageDir, silent: true }
+    )
+
+    const named = readFileSync(join(fixture.coverageDir, 'lcov.info'), 'utf8')
+      .split('\n')
+      .filter((line) => line.startsWith('SF:'))
+      .map((line) => line.slice(line.lastIndexOf('/') + 1))
+    assert.deepEqual(named, ['double.ts', 'other.ts'])
   })
 
   it('reports every included file as unmeasured when the runner dies before covering anything', () => {
