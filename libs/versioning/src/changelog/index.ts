@@ -44,6 +44,7 @@ export {
   haveSameVersions,
   isChangelogEqual,
   isCommitRefEqual,
+  isEntryContentEqual,
   isEntryEqual,
   isHeaderEqual,
   isIssueRefEqual,

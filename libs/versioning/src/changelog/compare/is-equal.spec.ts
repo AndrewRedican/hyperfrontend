@@ -11,6 +11,7 @@ import {
 import {
   isChangelogEqual,
   isEntryEqual,
+  isEntryContentEqual,
   isSectionEqual,
   isItemEqual,
   isHeaderEqual,
@@ -307,6 +308,73 @@ describe('isLinkEqual', () => {
 
   it('returns false when urls differ', () => {
     expect(isLinkEqual({ label: 'test', url: 'http://a' }, { label: 'test', url: 'http://b' })).toBe(false)
+  })
+})
+
+describe('isEntryContentEqual', () => {
+  const sections = () => [createChangelogSection('fixes', 'Bug Fixes', [createChangelogItem('close the handle on teardown')])]
+
+  it('returns true when only the dates differ', () => {
+    const a = createChangelogEntry('0.2.1', { date: '2026-09-03', sections: sections() })
+    const b = createChangelogEntry('0.2.1', { date: '2026-09-04', sections: sections() })
+
+    expect(isEntryContentEqual(a, b)).toBe(true)
+  })
+
+  it('returns true when only the compare URLs differ', () => {
+    const a = createChangelogEntry('0.2.1', { compareUrl: 'https://github.com/a/compare/725db1b...7b6cf80', sections: sections() })
+    const b = createChangelogEntry('0.2.1', { compareUrl: 'https://github.com/a/compare/725db1b...a3de11a', sections: sections() })
+
+    expect(isEntryContentEqual(a, b)).toBe(true)
+  })
+
+  it('returns true when one entry carries no compare URL', () => {
+    const a = createChangelogEntry('0.2.1', { compareUrl: 'https://github.com/a/compare/725db1b...7b6cf80', sections: sections() })
+    const b = createChangelogEntry('0.2.1', { sections: sections() })
+
+    expect(isEntryContentEqual(a, b)).toBe(true)
+  })
+
+  it('returns false when the versions differ', () => {
+    const a = createChangelogEntry('0.2.1', { sections: sections() })
+    const b = createChangelogEntry('0.3.0', { sections: sections() })
+
+    expect(isEntryContentEqual(a, b)).toBe(false)
+  })
+
+  it('returns false when the unreleased flags differ', () => {
+    const a = createChangelogEntry('0.2.1', { unreleased: true, sections: sections() })
+    const b = createChangelogEntry('0.2.1', { unreleased: false, sections: sections() })
+
+    expect(isEntryContentEqual(a, b)).toBe(false)
+  })
+
+  it('returns false when the raw content differs', () => {
+    const a = createChangelogEntry('0.2.1', { rawContent: 'Some raw content', sections: [] })
+    const b = createChangelogEntry('0.2.1', { rawContent: 'Different content', sections: [] })
+
+    expect(isEntryContentEqual(a, b)).toBe(false)
+  })
+
+  it('returns false when a section gained an item', () => {
+    const a = createChangelogEntry('0.2.1', { sections: sections() })
+    const b = createChangelogEntry('0.2.1', {
+      sections: [
+        createChangelogSection('fixes', 'Bug Fixes', [
+          createChangelogItem('close the handle on teardown'),
+          createChangelogItem('stop the reporter when the frame is hidden'),
+        ]),
+      ],
+    })
+
+    expect(isEntryContentEqual(a, b)).toBe(false)
+  })
+
+  it('returns false when the section counts differ', () => {
+    const a = createChangelogEntry('0.2.1', { sections: sections() })
+    const b = createChangelogEntry('0.2.1', { sections: [...sections(), createChangelogSection('features', 'Features', [])] })
+
+    expect(isEntryContentEqual(a, b)).toBe(false)
   })
 })
 

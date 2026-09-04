@@ -141,6 +141,7 @@ export {
   isHeaderEqual,
   isLinkEqual,
   isEntryEqual,
+  isEntryContentEqual,
   isSectionEqual,
   isItemEqual,
   isCommitRefEqual,
