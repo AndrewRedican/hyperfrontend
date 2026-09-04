@@ -85,7 +85,7 @@ Or push without --no-verify to let lefthook handle versioning automatically.
 1. **Calculate expected state** — Run version flow in dry-run mode
 2. **Read actual state** — Parse package.json and CHANGELOG.md from disk
 3. **Compare versions** — Check if `actual.version === expected.nextVersion`
-4. **Compare changelog** — Verify entry exists and content matches using `@hyperfrontend/versioning` comparison utilities
+4. **Compare changelog** — Verify entry exists and its content (version and sections) matches using `@hyperfrontend/versioning` comparison utilities. The entry's date and compare URL are stamped at generation time and are not compared, so a version commit that is still waiting to be published keeps validating as commits land on top of it
 5. **Return result** — Pass if all match, fail with discrepancy details otherwise
 
 ## CI Integration

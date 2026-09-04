@@ -2,7 +2,7 @@ import type { ChangelogEntry, FlowConfig, FlowResult } from '@hyperfrontend/vers
 import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { readPackageJsonIfExists } from '@hyperfrontend/project-scope/project/package'
-import { parseChangelog, isEntryEqual, hasVersion, getEntryByVersion } from '@hyperfrontend/versioning/changelog'
+import { parseChangelog, isEntryContentEqual, hasVersion, getEntryByVersion } from '@hyperfrontend/versioning/changelog'
 import { createVersionFlow } from '@hyperfrontend/versioning/flow'
 import { executeFlow } from '@hyperfrontend/versioning/flow/executor'
 
@@ -103,6 +103,11 @@ export interface ValidateVersionStateOptions {
  * 2. Reads actual state from disk (package.json, CHANGELOG.md)
  * 3. Compares expected vs actual versions and changelog entries
  * 4. Returns detailed discrepancies if mismatches found
+ *
+ * A changelog entry is compared by its content: the version and the sections. The date
+ * and the compare URL are stamped at generation time, so a version commit that has not
+ * been published yet keeps validating as later commits land on top of it and as the days
+ * pass, right up until its content no longer describes the commits since the last release.
  *
  * @param options - Validation options including paths and configuration
  * @returns Validation result with status and any discrepancies found
@@ -225,7 +230,8 @@ export async function validateVersionState(options: ValidateVersionStateOptions)
       remedy: `Run: npx nx version ${projectName}\nThis will generate the changelog entry`,
     })
   } else if (expected.changelogEntry && actual.changelogEntry) {
-    if (!isEntryEqual(expected.changelogEntry, actual.changelogEntry)) {
+    // why: the date and compare URL are stamped when an entry is generated, so a committed entry that is still waiting to be published legitimately carries an older stamp than the one regenerated here.
+    if (!isEntryContentEqual(expected.changelogEntry, actual.changelogEntry)) {
       discrepancies.push({
         file: 'CHANGELOG.md',
         type: 'changelog-mismatch',
