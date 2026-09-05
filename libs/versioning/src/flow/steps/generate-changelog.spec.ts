@@ -165,7 +165,7 @@ describe('Generate Changelog Step', () => {
       expect(fixesSection?.items).toHaveLength(1)
     })
 
-    it('includes commit scope in changelog item', async () => {
+    it('carries the commit scope on the changelog item', async () => {
       const step = createGenerateChangelogStep()
       const ctx = createMockContext({
         nextVersion: '1.0.0',
@@ -177,7 +177,7 @@ describe('Generate Changelog Step', () => {
 
       const entry = result.stateUpdates?.changelogEntry
       const featSection = entry.sections.find((s: { type: string }) => s.type === 'features')
-      expect(featSection?.items[0].description).toContain('**api:**')
+      expect(featSection?.items[0]).toEqual(expect.objectContaining({ scope: 'api', description: 'new endpoint' }))
     })
   })
 
@@ -241,7 +241,7 @@ describe('Generate Changelog Step', () => {
 
       const entry = result.stateUpdates?.changelogEntry
       const breakingSection = entry.sections.find((s: { type: string }) => s.type === 'breaking')
-      expect(breakingSection?.items[0].description).toContain('**core:**')
+      expect(breakingSection?.items[0]).toEqual(expect.objectContaining({ scope: 'core', description: 'breaking change', breaking: true }))
     })
 
     it('flags breaking feature items', async () => {

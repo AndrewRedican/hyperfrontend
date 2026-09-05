@@ -203,3 +203,42 @@ export function uncoveredRanges(file: FileCoverage): string[] {
 
   return ranges
 }
+
+/**
+ * Renders merged files back out as one lcov report.
+ *
+ * The raw reports are what Node measured, one per environment and one record per
+ * evaluation. A consumer reading coverage off disk wants what the gate judged instead:
+ * one record per file, with the counts combined. Paths are written as given, so a caller
+ * that needs them anchored somewhere other than the project root rebases them first.
+ *
+ * @param files - The merged files, in any order.
+ * @returns The report's text, ending in a newline.
+ */
+export function renderLcov(files: Iterable<FileCoverage>): string {
+  const records: string[] = []
+
+  for (const file of [...files].sort((left, right) => (left.path < right.path ? -1 : 1))) {
+    const totals = fileTotals(file)
+    const functions = [...file.functions.entries()].map(([key, count]) => ({ at: key.slice(0, key.indexOf(',')), name: key.slice(key.indexOf(',') + 1), count }))
+    const lines = [
+      'TN:',
+      `SF:${file.path}`,
+      ...functions.map(({ at, name }) => `FN:${at},${name}`),
+      ...functions.map(({ name, count }) => `FNDA:${count},${name}`),
+      `FNF:${totals.functions.found}`,
+      `FNH:${totals.functions.hit}`,
+      // how: the merge keys a branch by line and branch index only, so every branch is written back into block zero.
+      ...[...file.branches.entries()].map(([key, count]) => `BRDA:${key.slice(0, key.indexOf(','))},0,${key.slice(key.indexOf(',') + 1)},${count}`),
+      `BRF:${totals.branches.found}`,
+      `BRH:${totals.branches.hit}`,
+      ...[...file.lines.entries()].sort(([left], [right]) => left - right).map(([at, count]) => `DA:${at},${count}`),
+      `LF:${totals.lines.found}`,
+      `LH:${totals.lines.hit}`,
+      'end_of_record',
+    ]
+    records.push(lines.join('\n'))
+  }
+
+  return records.length === 0 ? '' : `${records.join('\n')}\n`
+}

@@ -124,14 +124,8 @@ function classifiedCommitToItem(classified: ClassifiedCommit): ChangelogItem {
   const commit = toChangelogCommit(classified)
   const indirect = isIndirectSource(classified.source)
 
-  let text = commit.subject
-
-  const scopePrefix = formatScopePrefix(commit.scope)
-  if (scopePrefix) {
-    text = `${scopePrefix}${text}`
-  }
-
-  return createChangelogItem(text, {
+  return createChangelogItem(commit.subject, {
+    scope: formatScope(commit.scope),
     source: classified.source,
     indirect,
     breaking: commit.breaking,
@@ -145,28 +139,21 @@ function classifiedCommitToItem(classified: ClassifiedCommit): ChangelogItem {
  * @returns A changelog item
  */
 function commitToItem(commit: ConventionalCommit): ChangelogItem {
-  let text = commit.subject
-
-  const scopePrefix = formatScopePrefix(commit.scope)
-  if (scopePrefix) {
-    text = `${scopePrefix}${text}`
-  }
-
-  return createChangelogItem(text, { breaking: commit.breaking })
+  return createChangelogItem(commit.subject, { scope: formatScope(commit.scope), breaking: commit.breaking })
 }
 
 /**
- * Renders a scope array into the changelog markdown prefix (e.g. `**a, b:** `).
- * Empty scope arrays produce an empty string.
+ * Names the scope a changelog item carries, joining several into one label.
  *
- * @param scope - The scope array from a conventional commit
- * @returns A prefix string to prepend to the item text (possibly empty)
+ * The scope is kept on the item rather than written into its text: the serializer
+ * renders it as a bold prefix and the parser lifts that prefix back onto the field, so
+ * an item generated here equals the same item read back from the file.
+ *
+ * @param scope - The commit's scopes, possibly empty
+ * @returns The joined scope label, or undefined when the commit has none
  */
-function formatScopePrefix(scope: readonly string[]): string {
-  if (scope.length === 0) {
-    return ''
-  }
-  return `**${scope.join(', ')}:** `
+function formatScope(scope: readonly string[]): string | undefined {
+  return scope.length === 0 ? undefined : scope.join(', ')
 }
 
 /**
@@ -336,12 +323,10 @@ export function createGenerateChangelogStep(): FlowStep {
               'Breaking Changes',
               breakingCommits.map((c) => {
                 const commit = toChangelogCommit(c)
-                const text = commit.breakingDescription ?? commit.subject
-                const indirect = isIndirectSource(c.source)
-                const prefix = formatScopePrefix(commit.scope)
-                return createChangelogItem(prefix ? `${prefix}${text}` : text, {
+                return createChangelogItem(commit.breakingDescription ?? commit.subject, {
+                  scope: formatScope(commit.scope),
                   source: c.source,
-                  indirect,
+                  indirect: isIndirectSource(c.source),
                   breaking: true,
                 })
               })
@@ -389,11 +374,9 @@ export function createGenerateChangelogStep(): FlowStep {
             createChangelogSection(
               'breaking',
               'Breaking Changes',
-              breakingCommits.map((c) => {
-                const text = c.breakingDescription ?? c.subject
-                const prefix = formatScopePrefix(c.scope)
-                return createChangelogItem(prefix ? `${prefix}${text}` : text, { breaking: true })
-              })
+              breakingCommits.map((c) =>
+                createChangelogItem(c.breakingDescription ?? c.subject, { scope: formatScope(c.scope), breaking: true })
+              )
             )
           )
         }

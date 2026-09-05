@@ -113,6 +113,41 @@ export function isEntryEqual(a: ChangelogEntry, b: ChangelogEntry): boolean {
 }
 
 /**
+ * Checks if two changelog entries describe the same release.
+ *
+ * The date and the compare URL are stamped when an entry is generated: the date is the
+ * day of generation and the compare URL ends at whatever commit was HEAD. Neither is
+ * derived from the commits the entry describes, so an entry regenerated later for the
+ * same release differs in both while saying exactly the same thing. This comparison
+ * reads the version, the unreleased flag, the raw content, and the sections, which is
+ * what a release's changelog entry asserts about the commits behind it.
+ *
+ * @param a - First entry
+ * @param b - Second entry
+ * @returns True if both entries carry the same version and sections
+ *
+ * @example Validating a committed entry against one regenerated today
+ * ```typescript
+ * isEntryContentEqual(committedEntry, regeneratedEntry)
+ * // => true even though the dates and compare URLs differ
+ * ```
+ */
+export function isEntryContentEqual(a: ChangelogEntry, b: ChangelogEntry): boolean {
+  if (a.version !== b.version) return false
+  if (a.unreleased !== b.unreleased) return false
+  if (a.rawContent !== b.rawContent) return false
+
+  if (a.sections.length !== b.sections.length) return false
+  for (let i = 0; i < a.sections.length; i++) {
+    const aSection = a.sections[i]
+    const bSection = b.sections[i]
+    if (aSection === undefined || bSection === undefined || !isSectionEqual(aSection, bSection)) return false
+  }
+
+  return true
+}
+
+/**
  * Checks if two changelog sections are equal.
  *
  * @param a - First section

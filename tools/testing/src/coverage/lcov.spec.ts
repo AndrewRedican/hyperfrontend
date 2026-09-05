@@ -3,7 +3,7 @@ import { mkdtempSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { describe, it } from 'node:test'
-import { fileTotals, mergeLcov, overallTotals, percentOf, uncoveredRanges } from './lcov'
+import { fileTotals, mergeLcov, overallTotals, percentOf, renderLcov, uncoveredRanges } from './lcov'
 
 /**
  * Writes an lcov report to a throwaway file.
@@ -144,5 +144,32 @@ describe('uncoveredRanges', () => {
 
   it('reports nothing when every line ran', () => {
     assert.deepEqual(uncoveredRanges(onlyFile('SF:src/a.ts\nDA:1,1\nend_of_record\n')), [])
+  })
+})
+
+describe('renderLcov', () => {
+  it('writes one record per merged file with combined counts', () => {
+    const body = 'SF:src/a.ts\nFN:3,run\nFNDA:0,run\nBRDA:3,0,0,-\nDA:3,0\nend_of_record\nSF:src/a.ts\nFN:3,run\nFNDA:2,run\nBRDA:3,1,0,1\nDA:3,1\nend_of_record\n'
+    assert.equal(
+      renderLcov(mergeLcov([writeReport(body)]).values()),
+      'TN:\nSF:src/a.ts\nFN:3,run\nFNDA:2,run\nFNF:1\nFNH:1\nBRDA:3,0,0,1\nBRF:1\nBRH:1\nDA:3,1\nLF:1\nLH:1\nend_of_record\n'
+    )
+  })
+
+  it('orders records by path and lines by number', () => {
+    const rendered = renderLcov(mergeLcov([writeReport('SF:src/b.ts\nDA:9,1\nDA:2,1\nend_of_record\nSF:src/a.ts\nDA:1,1\nend_of_record\n')]).values())
+    assert.deepEqual(
+      rendered.split('\n').filter((line) => line.startsWith('SF:') || line.startsWith('DA:')),
+      ['SF:src/a.ts', 'DA:1,1', 'SF:src/b.ts', 'DA:2,1', 'DA:9,1']
+    )
+  })
+
+  it('renders nothing for an empty report', () => {
+    assert.equal(renderLcov([]), '')
+  })
+
+  it('round-trips through the merge unchanged', () => {
+    const body = 'TN:\nSF:src/a.ts\nFN:1,run\nFNDA:4,run\nFNF:1\nFNH:1\nBRDA:1,0,0,4\nBRDA:1,0,1,0\nBRF:2\nBRH:1\nDA:1,4\nDA:2,0\nLF:2\nLH:1\nend_of_record\n'
+    assert.equal(renderLcov(mergeLcov([writeReport(body)]).values()), body)
   })
 })

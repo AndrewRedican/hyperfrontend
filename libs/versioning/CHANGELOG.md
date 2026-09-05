@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.8.0](https://github.com/AndrewRedican/hyperfrontend/compare/106ce4517092cdfa9f222b73d938d272c333d69b...9f04133dbc8059c2238bd36f0662fd734619bf75) - 2026-09-04
+
+### Features
+
+- add a content-only changelog entry comparison
+
+### Bug Fixes
+
+- carry an item's scope on the item, not in its text
+
 ## [0.7.0](https://github.com/AndrewRedican/hyperfrontend/compare/b22d3335975d9dc7f70253c08bb39fc0a4b47b16...1ff11b9e4b286fb474ecd85fa96b567e7edb2b74) - 2026-08-31
 
 ### Features

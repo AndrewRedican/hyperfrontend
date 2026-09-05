@@ -1,10 +1,10 @@
 import type { TestConfig } from './config'
 import { spawnSync } from 'node:child_process'
-import { existsSync, mkdirSync, rmSync } from 'node:fs'
-import { resolve } from 'node:path'
+import { existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs'
+import { relative, resolve } from 'node:path'
 import { findUnmeasuredFiles } from '../coverage/completeness'
 import { findThresholdShortfalls, renderCoverageTable } from '../coverage/gate'
-import { mergeLcov } from '../coverage/lcov'
+import { mergeLcov, renderLcov } from '../coverage/lcov'
 import { buildRunPlan, serialiseModuleMap, serialiseSetupFiles } from './argv'
 import { withDefaults } from './config'
 
@@ -76,6 +76,12 @@ export function runProjectTests(config: TestConfig, context: RunContext): RunOut
 
   // why: the reports are merged rather than read one at a time, because a module evaluated again after `jest.resetModules` is a separate file to Node and one file to the gate.
   const measured = [...mergeLcov(reports).values()]
+
+  // why: coverage services match a report's paths against the repository tree, so the merged report names files from the workspace root rather than the project.
+  writeFileSync(
+    resolve(context.coverageDir, 'lcov.info'),
+    renderLcov(measured.map((file) => ({ ...file, path: relative(context.workspaceRoot, resolve(context.projectRoot, file.path)) })))
+  )
   failures.push(...findThresholdShortfalls(measured, resolved.coverageThresholds))
 
   // why: Node omits files no test loaded, so a wholly untested source file would otherwise pass a full-coverage gate.
