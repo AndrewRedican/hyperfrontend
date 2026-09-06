@@ -3,7 +3,6 @@ import type { ChannelHandle } from '../../types/channel'
 import type { SecurityConfirmation } from '../../types/security'
 import type { RoutingContext } from './types'
 import { requestsSecurity, requiresSecurity } from '../../security/settings'
-import { attachSecurityTransport } from './attach-security-transport'
 import { isPeerInstance } from './peer-instance'
 
 /**
@@ -51,20 +50,18 @@ function refuseSecurityUnavailable(context: RoutingContext, channel: ChannelHand
  *   leaving the tracked process intact so the awaited confirmation can still
  *   complete the handshake
  * - Terminates the connection process (duplicate OPENs no-op on the bail)
- * - Stores the security outcome the initiator confirmed, downgrading the
- *   recorded protocol to plaintext when the confirmation is inactive or the
- *   local provider is missing
- * - Attaches the security transport for an active confirmation before the
- *   queue flushes so queued product traffic leaves encrypted
+ * - Ignores an OPEN whose process id is not the one this side accepted
+ * - Keeps the security transport attached at ACCEPT time only when the
+ *   initiator confirms the protocol this side negotiated; an absent,
+ *   inactive, or mismatching confirmation releases the transport and
+ *   records a plaintext outcome
  * - Refuses activation with a deny event, reason 'security-unavailable',
- *   when the channel is fail-closed and the confirmed outcome is plaintext
- *   (or the confirmation is absent); falls back to plaintext with a warning
- *   otherwise
- * - Marks security as ready and fires 'security-ready' when an encrypted
- *   transport is active
+ *   when the channel is fail-closed and the outcome is plaintext; falls
+ *   back to plaintext with a warning otherwise
  * - Activates the channel from the pending activation recorded at ACCEPT
  *   time, clears the handshake timers, and flushes the outbound queue
- * - Fires 'open' lifecycle event on responder's side
+ * - Fires 'open' lifecycle event on responder's side; 'security-ready'
+ *   follows once the initiator's first sealed frame authenticates
  *
  * @example Completing the three-way handshake
  * Final step of three-way handshake:
@@ -91,48 +88,31 @@ export function handleOpen(context: RoutingContext, message: MessageEvent<IActio
 
   processManager.remove(processId)
 
-  if (!channel.isAwaitingOpen()) {
+  if (!channel.isAwaitingOpen(processId)) {
     return
   }
 
   const securitySettings = channel.getSecuritySettings()
+  const negotiated = channel.getNegotiatedProtocol() ?? 'none'
+  const confirmedActive = negotiated !== 'none' && securityConfirmation?.active === true && securityConfirmation.protocol === negotiated
 
-  if (securityConfirmation) {
-    // why: The initiator's confirmation is the authority on the handshake's final security outcome; an inactive confirmation means it fell back to plaintext.
-    let confirmedProtocol = securityConfirmation.active ? securityConfirmation.protocol : 'none'
-    channel.setNegotiatedProtocol(confirmedProtocol)
+  if (!confirmedActive) {
+    // why: The initiator's confirmation is the authority on the outcome; anything short of confirming the negotiated protocol means the session cannot run on it.
+    channel.dropSecurityTransport()
+    channel.setNegotiatedProtocol('none')
 
-    if (confirmedProtocol !== 'none' && !attachSecurityTransport(context, channel, confirmedProtocol, channel.getPeerId() as string)) {
-      // why: The counterpart confirmed encryption but no local provider is registered for the protocol, so the outcome degrades to plaintext.
-      logger.warn(`${state.name} has no provider registered for the negotiated '${confirmedProtocol}' protocol.`)
-      confirmedProtocol = 'none'
-      channel.setNegotiatedProtocol('none')
+    if (requiresSecurity(securitySettings)) {
+      refuseSecurityUnavailable(context, channel, processId, message.origin)
+      return
     }
-
-    if (confirmedProtocol === 'none') {
-      if (requiresSecurity(securitySettings)) {
-        refuseSecurityUnavailable(context, channel, processId, message.origin)
-        return
-      }
-      if (requestsSecurity(securitySettings)) {
-        logger.warn(
-          `${state.name} requested security for channel ${channel.getName()} but the counterpart confirmed a plaintext outcome; continuing without encryption.`
-        )
-      }
-      channel.setSecurityReady(true)
-    } else {
-      channel.setSecurityReady(true)
-      channel.notifyEvent('security-ready', { protocol: confirmedProtocol, active: true })
+    if (requestsSecurity(securitySettings)) {
+      logger.warn(
+        `${state.name} requested security for channel ${channel.getName()} but the counterpart confirmed a plaintext outcome; continuing without encryption.`
+      )
     }
-
-    logger.info(`${state.name} security ready: protocol=${confirmedProtocol}, active=${confirmedProtocol !== 'none'}`)
-  } else if (requiresSecurity(securitySettings)) {
-    // why: A counterpart that predates security sends OPEN without a confirmation; fail-closed channels must refuse that plaintext outcome.
-    refuseSecurityUnavailable(context, channel, processId, message.origin)
-    return
-  } else {
-    channel.setSecurityReady(true)
   }
+
+  logger.info(`${state.name} opened channel ${channel.getName()}: protocol=${confirmedActive ? negotiated : 'none'}`)
 
   channel.completeScheduledOpen()
 

@@ -1,149 +1,108 @@
 import type { Logger } from '@hyperfrontend/logging'
 import type { Mock } from '@hyperfrontend/testing'
-import type { ChannelInternals } from '../../channel/types'
-import type { ActionCreators } from '../../core/actions/factory'
 import type { MessageHandler, ChannelState } from '../../types/channel'
 import type { IMessage } from '../../types/message'
+import type { ChannelInternals } from '../types'
 import { beforeEach } from 'node:test'
+import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
+import { createInitialState } from '../state/initial'
 import { notifyMessage } from './notify-message'
 
 describe('channel/subscription/notify-message', () => {
-  let mockChannel: ChannelInternals
+  const message: IMessage = { type: 'USER_ACTION', data: { userId: 123 } }
+  const payloads: readonly IMessage[] = [
+    { type: 'STRING_DATA', data: 'hello' },
+    { type: 'NUMBER_DATA', data: 42 },
+    { type: 'OBJECT_DATA', data: { key: 'value' } },
+    { type: 'ARRAY_DATA', data: [1, 2, 3] },
+    { type: 'NO_DATA' },
+  ]
+
   let state: ChannelState
-  let mockGetState: Mock<ChannelState, []>
-  let mockLogger: Logger
+  let channel: ChannelInternals
+  let logger: Logger
 
   beforeEach(() => {
-    mockLogger = {
-      error: jest.fn(),
-      warn: jest.fn(),
-      log: jest.fn(),
-      info: jest.fn(),
-      debug: jest.fn(),
-      setLogLevel: jest.fn(),
-      getLogLevel: jest.fn(() => 'debug'),
-    }
+    logger = { error: jest.fn() } as unknown as Logger
 
-    state = {
-      id: 'channel-123',
-      name: 'test-channel',
-      target: window,
-      origin: null,
-      active: false,
-      connectTimestamp: null,
-      contract: null,
-      acceptedActions: [],
-      queuedMessages: [],
-      queueMessages: true,
-      eventSubscriptions: [],
-      messageSubscriptions: [],
-      scheduledActivation: null,
+    state = createInitialState('test-channel', window, { logger })
 
-      brokerManaged: false,
-      readyToConnect: false,
-      negotiatedProtocol: null,
-      securityReady: false,
-      securityTransport: null,
-      pendingSecurityRequest: null,
-      logger: mockLogger,
-    }
-
-    mockGetState = jest.fn(() => state)
-    mockChannel = {
-      getState: mockGetState,
+    channel = {
+      getState: () => state,
       updateState: jest.fn(),
       sendAction: jest.fn(),
       createProcess: jest.fn(),
       removeProcess: jest.fn(),
       notifyEvent: jest.fn(),
       notifyMessage: jest.fn(),
-      actions: {} as ActionCreators,
+      actions: {} as unknown as ChannelInternals['actions'],
     }
   })
 
-  it('calls all message handlers with message', () => {
-    const handler1: MessageHandler = jest.fn()
-    const handler2: MessageHandler = jest.fn()
-    const handler3: MessageHandler = jest.fn()
+  it('calls every subscriber with the message', () => {
+    const handlers: Mock[] = [jest.fn(), jest.fn(), jest.fn()]
+    state = { ...state, messageSubscriptions: handlers }
 
-    state = { ...state, messageSubscriptions: [handler1, handler2, handler3] }
-    mockGetState.mockReturnValue(state)
+    notifyMessage(channel, message)
 
-    const message: IMessage = {
-      type: 'USER_ACTION',
-      data: { userId: 123 },
-    }
-
-    notifyMessage(mockChannel, message)
-
-    expect(handler1).toHaveBeenCalledWith(message)
-    expect(handler2).toHaveBeenCalledWith(message)
-    expect(handler3).toHaveBeenCalledWith(message)
+    expect(handlers.map((handler) => handler.mock.calls)).toEqual([[[message]], [[message]], [[message]]])
   })
 
-  it('does nothing if no subscribers', () => {
-    state = { ...state, messageSubscriptions: [] }
-    mockGetState.mockReturnValue(state)
-
-    const message: IMessage = {
-      type: 'USER_ACTION',
-      data: {},
-    }
-
-    expect(() => notifyMessage(mockChannel, message)).not.toThrow()
+  it('does nothing without subscribers', () => {
+    expect(() => notifyMessage(channel, message)).not.toThrow()
   })
 
-  it('continue notifying even if a handler throws', () => {
-    const handler1: MessageHandler = jest.fn()
-    const handler2: MessageHandler = jest.fn(() => {
-      throw new Error('Handler 2 failed')
-    })
-    const handler3: MessageHandler = jest.fn()
+  it('leaves event subscribers alone', () => {
+    const eventHandler = jest.fn()
+    state = { ...state, eventSubscriptions: [eventHandler] }
 
-    state = { ...state, messageSubscriptions: [handler1, handler2, handler3] }
-    mockGetState.mockReturnValue(state)
+    notifyMessage(channel, message)
 
-    const message: IMessage = {
-      type: 'USER_ACTION',
-      data: {},
-    }
-
-    notifyMessage(mockChannel, message)
-
-    expect(handler1).toHaveBeenCalled()
-    expect(handler2).toHaveBeenCalled()
-    expect(handler3).toHaveBeenCalled()
-    expect(mockLogger.error).toHaveBeenCalledWith("Error in message handler for 'USER_ACTION' message:", expect.any(Error))
+    expect(eventHandler).not.toHaveBeenCalled()
   })
 
-  it('handles messages with different data types', () => {
+  it.each(payloads)('delivers %p unchanged', (payload: IMessage) => {
     const handler: MessageHandler = jest.fn()
     state = { ...state, messageSubscriptions: [handler] }
-    mockGetState.mockReturnValue(state)
 
-    const message1: IMessage = {
-      type: 'STRING_DATA',
-      data: 'hello',
-    }
-    const message2: IMessage = {
-      type: 'NUMBER_DATA',
-      data: 42,
-    }
-    const message3: IMessage = {
-      type: 'OBJECT_DATA',
-      data: { key: 'value' },
-    }
-    const message4: IMessage = {
-      type: 'ARRAY_DATA',
-      data: [1, 2, 3],
-    }
+    notifyMessage(channel, payload)
 
-    notifyMessage(mockChannel, message1)
-    notifyMessage(mockChannel, message2)
-    notifyMessage(mockChannel, message3)
-    notifyMessage(mockChannel, message4)
+    expect(handler).toHaveBeenCalledWith(payload)
+  })
 
-    expect(handler).toHaveBeenCalledTimes(4)
+  describe('when a subscriber throws', () => {
+    let after: MessageHandler
+
+    beforeEach(() => {
+      after = jest.fn()
+      const failing: MessageHandler = () => {
+        throw createError('Handler failed')
+      }
+      state = { ...state, messageSubscriptions: [jest.fn(), failing, after] }
+    })
+
+    it('keeps notifying the remaining subscribers', () => {
+      notifyMessage(channel, message)
+
+      expect(after).toHaveBeenCalledWith(message)
+    })
+
+    it('logs the failure', () => {
+      notifyMessage(channel, message)
+
+      expect(logger.error).toHaveBeenCalledWith(
+        "Error in message handler for 'USER_ACTION' message:",
+        expect.objectContaining({ message: 'Handler failed' })
+      )
+    })
+
+    it('keeps notifying the remaining subscribers when the channel has no logger', () => {
+      state = { ...state, logger: null }
+
+      notifyMessage(channel, message)
+
+      expect(after).toHaveBeenCalledWith(message)
+    })
   })
 })

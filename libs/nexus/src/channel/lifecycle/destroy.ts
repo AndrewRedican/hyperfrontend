@@ -1,4 +1,5 @@
 import type { ChannelInternals } from '../types'
+import { dropSecurityTransport } from '../security/drop'
 import { clearCloseTimer } from './disconnect'
 import { clearHandshakeTimers } from './handshake-timers'
 
@@ -30,6 +31,8 @@ export function destroy(channel: ChannelInternals, notify = true): void {
     const destroyAction = channel.actions.destroyConnection()
     channel.sendAction(destroyAction)
   }
+  // why: Released after the destroy frame is handed to it, so a secured channel's last frame is sealed by the transport that the counterpart can still open.
+  dropSecurityTransport(channel)
 
   if (channel.cleanup) {
     channel.cleanup()

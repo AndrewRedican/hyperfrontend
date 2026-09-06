@@ -1,227 +1,192 @@
 import type { Mock } from '@hyperfrontend/testing'
-import type { ChannelState } from '../../types'
 import type { IAction } from '../../types/action'
+import type { ChannelState } from '../../types/channel'
+import type { SecurityTransport } from '../../types/security'
 import type { ChannelInternals } from '../types'
 import { beforeEach } from 'node:test'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
+import { HANDSHAKE_ACTION_TYPES } from '../../constants/handshake-actions'
+import { ACTION_TYPES } from '../../types/action'
+import { createInitialState } from '../state/initial'
 import { sendAction } from './send-action'
 
 describe('channel/messaging/send-action', () => {
-  let mockChannel: ChannelInternals
+  const handshakeTypes = [
+    ACTION_TYPES.REQUEST_CONNECTION,
+    ACTION_TYPES.ACCEPT_CONNECTION,
+    ACTION_TYPES.DENY_CONNECTION,
+    ACTION_TYPES.CANCEL_CONNECTION,
+    ACTION_TYPES.CANCEL_CONNECTION_ACKNOWLEDGED,
+    ACTION_TYPES.OPEN_CONNECTION,
+  ]
+  const sealedTypes = [
+    ACTION_TYPES.NEW_MESSAGE,
+    ACTION_TYPES.CLOSE_CONNECTION,
+    ACTION_TYPES.CLOSE_CONNECTION_ACKNOWLEDGED,
+    ACTION_TYPES.DESTROY_CONNECTION,
+    ACTION_TYPES.INVALID_REQUEST,
+    ACTION_TYPES.SECURITY_CONFIRMED,
+  ]
+  const actionOf = (type: string): IAction => ({ type, senderId: 'broker-id', processId: 'process-123' }) as IAction
+  const request = actionOf(ACTION_TYPES.REQUEST_CONNECTION)
+  const invalidActions: readonly [string, unknown][] = [
+    ['null', null],
+    ['undefined', undefined],
+    ['an action without a type', {}],
+    ['an action whose type is not a string', { type: 123 }],
+  ]
+
+  let postMessage: Mock
   let state: ChannelState
-  let mockWindow: { postMessage: Mock }
-  let mockGetState: Mock<ChannelState, []>
+  let channel: ChannelInternals
+  let transport: SecurityTransport
 
   beforeEach(() => {
-    mockWindow = {
-      postMessage: jest.fn(),
+    postMessage = jest.fn()
+    transport = {
+      send: jest.fn(),
+      receive: jest.fn(),
+      start: jest.fn(),
+      stop: jest.fn(),
+      resume: jest.fn(),
+      dispose: jest.fn(),
+      getProtocol: jest.fn(() => 'v4'),
     }
 
     state = {
-      id: 'channel-123',
-      name: 'test-channel',
-      target: mockWindow as unknown as Window,
-      origin: 'https://example.com',
+      ...createInitialState('test-channel', { postMessage } as unknown as Window, { origin: 'https://example.com' }),
       active: true,
-      connectTimestamp: Date.now(),
-      contract: { accepted: [], emitted: [] },
-      acceptedActions: [],
-      queuedMessages: [],
-      queueMessages: true,
-      eventSubscriptions: [],
-      messageSubscriptions: [],
-      scheduledActivation: null,
-      peerContract: null,
-      peerId: null,
-      pendingProcessId: null,
-      pendingAccept: null,
-      retryTimer: null,
-      deadlineTimer: null,
-      connectTimeoutMs: 10_000,
-      requestRetryMs: 500,
-
-      brokerManaged: false,
-      readyToConnect: true,
-      negotiatedProtocol: null,
-      securityReady: false,
-      securityTransport: null,
-      pendingSecurityRequest: null,
     }
 
-    mockGetState = jest.fn(() => state)
-    mockChannel = {
-      getState: mockGetState,
+    channel = {
+      getState: () => state,
       updateState: jest.fn(),
       sendAction: jest.fn(),
       createProcess: jest.fn(),
       removeProcess: jest.fn(),
       notifyEvent: jest.fn(),
       notifyMessage: jest.fn(),
-      actions: {
-        requestConnection: jest.fn(),
-        acceptConnection: jest.fn(),
-        denyConnection: jest.fn(),
-        cancelConnection: jest.fn(),
-        openConnection: jest.fn(),
-        closeConnection: jest.fn(),
-        destroyConnection: jest.fn(),
-        newMessage: jest.fn(),
-        invalidRequest: jest.fn(),
-      },
+      actions: {} as unknown as ChannelInternals['actions'],
     }
   })
 
-  it('sends action via postMessage targeting the pinned origin', () => {
-    const action: IAction = {
-      type: '[nexus] connection-request',
-      senderId: 'broker-id',
-      processId: 'process-123',
-      contract: { accepted: [], emitted: [] },
-    }
-
-    sendAction(mockChannel, action)
-
-    expect(mockWindow.postMessage).toHaveBeenCalledWith(action, 'https://example.com')
+  it('lists exactly the six handshake actions as plaintext-only', () => {
+    expect([...HANDSHAKE_ACTION_TYPES]).toEqual(handshakeTypes)
   })
 
-  it('targets any origin when no origin is pinned', () => {
-    state = { ...state, origin: null }
-    mockGetState.mockReturnValue(state)
+  describe('validation', () => {
+    it.each(invalidActions)('throws for %s', (_label: string, action: unknown) => {
+      expect(() => sendAction(channel, action as IAction)).toThrow("Action must contain a 'type' property that is a non-empty string.")
+    })
 
-    const action: IAction = {
-      type: '[nexus] connection-request',
-      senderId: 'broker-id',
-      processId: 'process-123',
-      contract: { accepted: [], emitted: [] },
-    }
-
-    sendAction(mockChannel, action)
-
-    expect(mockWindow.postMessage).toHaveBeenCalledWith(action, '*')
+    it('posts nothing for an invalid action', () => {
+      expect(() => sendAction(channel, {} as IAction)).toThrow()
+      expect(postMessage).not.toHaveBeenCalled()
+    })
   })
 
-  it('targets any origin when the pinned origin is opaque', () => {
-    state = { ...state, origin: 'null' }
-    mockGetState.mockReturnValue(state)
+  describe('without a security transport', () => {
+    it('posts the action to the pinned origin', () => {
+      sendAction(channel, request)
 
-    const action: IAction = {
-      type: '[nexus] connection-request',
-      senderId: 'broker-id',
-      processId: 'process-123',
-      contract: { accepted: [], emitted: [] },
-    }
+      expect(postMessage).toHaveBeenCalledWith(request, 'https://example.com')
+    })
 
-    sendAction(mockChannel, action)
+    it('posts to any origin before one is pinned', () => {
+      state = { ...state, origin: null }
 
-    expect(mockWindow.postMessage).toHaveBeenCalledWith(action, '*')
+      sendAction(channel, request)
+
+      expect(postMessage).toHaveBeenCalledWith(request, '*')
+    })
+
+    it('posts to any origin when the pinned origin is opaque', () => {
+      state = { ...state, origin: 'null' }
+
+      sendAction(channel, request)
+
+      expect(postMessage).toHaveBeenCalledWith(request, '*')
+    })
+
+    it('posts even while the channel is closed', () => {
+      state = { ...state, active: false }
+
+      sendAction(channel, request)
+
+      expect(postMessage).toHaveBeenCalledWith(request, 'https://example.com')
+    })
+
+    it.each(sealedTypes)('posts %s in plaintext', (type: string) => {
+      const action = actionOf(type)
+
+      sendAction(channel, action)
+
+      expect(postMessage).toHaveBeenCalledWith(action, 'https://example.com')
+    })
   })
 
-  it('throws error if action is null', () => {
-    expect(() => sendAction(mockChannel, null as unknown as IAction)).toThrow(
-      "Action must contain a 'type' property that is a non-empty string."
-    )
-  })
-
-  it('throws error if action is undefined', () => {
-    expect(() => sendAction(mockChannel, undefined as unknown as IAction)).toThrow(
-      "Action must contain a 'type' property that is a non-empty string."
-    )
-  })
-
-  it('throws error if action has no type', () => {
-    const action = {} as IAction
-
-    expect(() => sendAction(mockChannel, action)).toThrow("Action must contain a 'type' property that is a non-empty string.")
-  })
-
-  it('throws error if action type is not a string', () => {
-    const action = { type: 123 } as unknown as IAction
-
-    expect(() => sendAction(mockChannel, action)).toThrow("Action must contain a 'type' property that is a non-empty string.")
-  })
-
-  it('sends action even if channel is closed', () => {
-    state = { ...state, active: false }
-    mockGetState.mockReturnValue(state)
-
-    const action: IAction = {
-      type: '[nexus] connection-request',
-      senderId: 'broker-id',
-      processId: 'process-123',
-      contract: { accepted: [], emitted: [] },
-    }
-
-    sendAction(mockChannel, action)
-
-    expect(mockWindow.postMessage).toHaveBeenCalledWith(action, 'https://example.com')
-  })
-
-  describe('with security transport', () => {
-    let mockSecurityTransport: {
-      isReady: Mock
-      send: Mock
-      receive: Mock
-      stop: Mock
-      resume: Mock
-      getProtocol: Mock
-    }
-
+  describe('with a security transport', () => {
     beforeEach(() => {
-      mockSecurityTransport = {
-        isReady: jest.fn(() => true),
-        send: jest.fn(),
-        receive: jest.fn(),
-        stop: jest.fn(),
-        resume: jest.fn(),
-        getProtocol: jest.fn(() => 'v2'),
-      }
-      state = {
-        ...state,
-        securityTransport: mockSecurityTransport,
-      }
-      mockGetState.mockReturnValue(state)
+      state = { ...state, securityTransport: transport }
     })
 
-    it('sends non-handshake action through security transport when ready', () => {
-      const action: IAction = {
-        type: '[nexus] new-message',
-        senderId: 'broker-id',
-        data: { test: 'data' },
-      }
+    it.each(handshakeTypes)('posts %s in plaintext', (type: string) => {
+      const action = actionOf(type)
 
-      sendAction(mockChannel, action)
+      sendAction(channel, action)
 
-      expect(mockSecurityTransport.send).toHaveBeenCalledWith(action)
-      expect(mockWindow.postMessage).not.toHaveBeenCalled()
+      expect(postMessage).toHaveBeenCalledWith(action, 'https://example.com')
     })
 
-    it('sends handshake actions via plaintext postMessage', () => {
-      const action: IAction = {
-        type: '[nexus] connection-request',
-        senderId: 'broker-id',
-        processId: 'process-123',
-        contract: { accepted: [], emitted: [] },
-      }
+    it.each(handshakeTypes)('keeps %s away from the transport', (type: string) => {
+      sendAction(channel, actionOf(type))
 
-      sendAction(mockChannel, action)
-
-      expect(mockWindow.postMessage).toHaveBeenCalledWith(action, 'https://example.com')
-      expect(mockSecurityTransport.send).not.toHaveBeenCalled()
+      expect(transport.send).not.toHaveBeenCalled()
     })
 
-    it('sends via postMessage when security transport is not ready', () => {
-      mockSecurityTransport.isReady.mockReturnValue(false)
+    it.each(sealedTypes)('routes %s through the transport', (type: string) => {
+      const action = actionOf(type)
 
-      const action: IAction = {
-        type: '[nexus] new-message',
-        senderId: 'broker-id',
-        data: { test: 'data' },
-      }
+      sendAction(channel, action)
 
-      sendAction(mockChannel, action)
+      expect(transport.send).toHaveBeenCalledWith(action)
+    })
 
-      expect(mockWindow.postMessage).toHaveBeenCalledWith(action, 'https://example.com')
-      expect(mockSecurityTransport.send).not.toHaveBeenCalled()
+    it.each(sealedTypes)('never posts %s in plaintext', (type: string) => {
+      sendAction(channel, actionOf(type))
+
+      expect(postMessage).not.toHaveBeenCalled()
+    })
+
+    it('routes through the transport while the channel is still closed', () => {
+      state = { ...state, active: false }
+      const action = actionOf(ACTION_TYPES.NEW_MESSAGE)
+
+      sendAction(channel, action)
+
+      expect(transport.send).toHaveBeenCalledWith(action)
+    })
+
+    it('routes through the transport before an origin is pinned', () => {
+      state = { ...state, origin: null }
+      const action = actionOf(ACTION_TYPES.NEW_MESSAGE)
+
+      sendAction(channel, action)
+
+      expect(transport.send).toHaveBeenCalledWith(action)
+    })
+
+    it('posts handshake actions to any origin before one is pinned', () => {
+      state = { ...state, origin: null }
+
+      sendAction(channel, request)
+
+      expect(postMessage).toHaveBeenCalledWith(request, '*')
+    })
+
+    it('validates the action before consulting the transport', () => {
+      expect(() => sendAction(channel, { type: 123 } as unknown as IAction)).toThrow()
+      expect(transport.send).not.toHaveBeenCalled()
     })
   })
 })

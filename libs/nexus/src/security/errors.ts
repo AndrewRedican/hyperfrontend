@@ -1,48 +1,57 @@
 /**
  * Security error handling utilities.
  *
- * Provides functions for handling, categorizing, and emitting security-related
- * errors during message encryption/decryption operations.
+ * Reads the machine-readable code off errors raised by the wire protocol,
+ * shapes them into `security-error` event payloads, and logs them.
  *
  * @module security/errors
  */
 
 import type { Logger } from '@hyperfrontend/logging'
 import type { SecurityErrorEventData } from '../types/events'
-import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
-import { setPrototypeOf } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
+import type { SecurityErrorCode } from '../types/security'
+import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
+
+// why: The wire protocol's verdicts are the only codes read off a foreign error; anything else is reported as unknown rather than guessed from its message.
+const PROTOCOL_ERROR_CODES: ReadonlySet<string> = createSet<string>([
+  'unsupported-version',
+  'replayed',
+  'authentication-failed',
+  'malformed',
+  'counter-exhausted',
+  'invalid-session',
+])
+
+/** An error that may carry a machine-readable code */
+interface CodedError {
+  /** The error's code, when it has one */
+  readonly code?: unknown
+}
 
 /**
- * Error codes for security-related failures.
- */
-export type SecurityErrorCode = 'decryption_failed' | 'deobfuscation_failed' | 'transport_error' | 'unknown'
-
-/**
- * Security error class with additional metadata for programmatic handling.
+ * Reads the wire protocol's verdict off an error it raised.
  *
- * @example Creating security error
+ * @param error - The error a pipeline stage raised
+ * @returns The protocol's error code, or undefined when the error carries none
+ *
+ * @example Mapping a dropped frame to its verdict
  * ```typescript
- * throw new SecurityError('Decryption failed', 'decryption_failed', originalError)
+ * const code = readProtocolErrorCode(drop.cause) ?? 'transport-error'
  * ```
  */
-export class SecurityError extends Error {
-  readonly code: SecurityErrorCode
-  readonly originalCause?: Error
-
-  constructor(message: string, code: SecurityErrorCode, cause?: Error) {
-    super(message)
-    this.name = 'SecurityError'
-    this.code = code
-    this.originalCause = cause
-    setPrototypeOf(this, SecurityError.prototype)
+export function readProtocolErrorCode(error: unknown): SecurityErrorCode | undefined {
+  if (typeof error !== 'object' || error === null) {
+    return undefined
   }
+  const code = (error as CodedError).code
+  return typeof code === 'string' && PROTOCOL_ERROR_CODES.has(code) ? (code as SecurityErrorCode) : undefined
 }
 
 /**
  * Creates security error event data from an error.
  *
- * Converts various error types into a standardized SecurityErrorEventData
- * structure for emitting via channel events.
+ * Errors raised by the wire protocol keep their code; any other error is
+ * reported with the `'unknown'` code and its message.
  *
  * @param error - The error to convert
  * @returns Standardized security error event data
@@ -50,27 +59,17 @@ export class SecurityError extends Error {
  * @example Converting errors to event data
  * ```typescript
  * try {
- *   decrypt(payload)
+ *   transport.receive(frame)
  * } catch (error) {
- *   const eventData = createSecurityErrorEventData(error)
- *   channel.notifyEvent('security-error', eventData)
+ *   channel.notifyEvent('security-error', createSecurityErrorEventData(error))
  * }
  * ```
  */
 export function createSecurityErrorEventData(error: unknown): SecurityErrorEventData {
-  if (error instanceof SecurityError) {
-    return {
-      message: error.message,
-      code: error.code,
-      cause: error.originalCause,
-    }
-  }
-
   if (error instanceof Error) {
-    const code = categorizeError(error)
     return {
       message: error.message,
-      code,
+      code: readProtocolErrorCode(error) ?? 'unknown',
       cause: error,
     }
   }
@@ -82,110 +81,10 @@ export function createSecurityErrorEventData(error: unknown): SecurityErrorEvent
 }
 
 /**
- * Categorizes an error into a security error code.
- *
- * Analyzes the error message to determine the appropriate category.
- * This is used when errors from network-protocol are caught.
- *
- * @param error - The error to categorize
- * @returns The appropriate security error code
- *
- * @internal
- */
-function categorizeError(error: Error): SecurityErrorCode {
-  const message = error.message.toLowerCase()
-
-  if (message.includes('decrypt') || message.includes('invalid key') || message.includes('corrupted') || message.includes('cipher')) {
-    return 'decryption_failed'
-  }
-
-  if (
-    message.includes('deobfuscat') ||
-    message.includes('time window') ||
-    message.includes('clock skew') ||
-    message.includes('timestamp')
-  ) {
-    return 'deobfuscation_failed'
-  }
-
-  if (message.includes('transport') || message.includes('connection') || message.includes('network')) {
-    return 'transport_error'
-  }
-
-  return 'unknown'
-}
-
-/**
- * Configuration for retry logic on time-window deobfuscation.
- */
-export interface RetryConfig {
-  /** Maximum number of retry attempts */
-  maxAttempts: number
-  /** Time offsets to try (in milliseconds) */
-  timeOffsets: readonly number[]
-}
-
-/**
- * Default retry configuration for deobfuscation failures.
- *
- * Attempts deobfuscation with different time offsets to handle
- * minor clock skew between sender and receiver.
- */
-export const DEFAULT_RETRY_CONFIG: RetryConfig = {
-  maxAttempts: 3,
-  timeOffsets: [0, -1000, 1000],
-}
-
-/**
- * Creates a retry wrapper for deobfuscation functions.
- *
- * Wraps a deobfuscation function with retry logic that attempts
- * different time offsets to handle clock skew.
- *
- * @param deobfuscateFn - The deobfuscation function to wrap
- * @param config - Retry configuration
- * @returns A wrapped function that retries on failure
- *
- * @example Handling clock skew with retries
- * ```typescript
- * const robustDeobfuscate = createDeobfuscationRetry(
- *   (data, offset) => deobfuscate(data, offset),
- *   { maxAttempts: 3, timeOffsets: [0, -1000, 1000] }
- * )
- *
- * const result = robustDeobfuscate(encryptedData)
- * ```
- */
-export function createDeobfuscationRetry<T>(
-  deobfuscateFn: (data: Uint8Array, timeOffset: number) => T,
-  config: RetryConfig = DEFAULT_RETRY_CONFIG
-): (data: Uint8Array) => T {
-  return (data: Uint8Array): T => {
-    let lastError: Error | null = null
-
-    for (let attempt = 0; attempt < config.maxAttempts && attempt < config.timeOffsets.length; attempt++) {
-      const timeOffset = config.timeOffsets[attempt]
-
-      try {
-        return deobfuscateFn(data, timeOffset)
-      } catch (error) {
-        lastError = error instanceof Error ? error : createError(String(error))
-      }
-    }
-
-    throw new SecurityError(
-      `Deobfuscation failed after ${config.maxAttempts} attempts: ${lastError?.message || 'unknown error'}`,
-      'deobfuscation_failed',
-      lastError ?? undefined
-    )
-  }
-}
-
-/**
  * Logs a security error with appropriate formatting.
  *
- * Uses logger.error for actual errors and logger.warn for
- * retryable/expected failures.
+ * Uses logger.error for errors without a recognised code and logger.warn
+ * for the expected failures the codes name.
  *
  * @param logger - Logger instance to use for output
  * @param channelName - Name of the channel where error occurred
@@ -200,7 +99,7 @@ export function logSecurityError(logger: Logger, channelName: string, error: Sec
   const prefix = `${channelName} security error:`
 
   if (error.code === 'unknown') {
-    logger.error(prefix, error.message, error.cause)
+    logger.error(prefix, error.message, error.cause as Error | undefined)
   } else {
     logger.warn(prefix, `[${error.code}]`, error.message)
   }

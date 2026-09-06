@@ -1,3 +1,4 @@
+import type { ChannelSecurityDependencies } from '../../channel/types'
 import type { ActionCreators } from '../../core/actions/factory'
 import type { ProcessManager } from '../../core/processes/factory'
 import type { Registry } from '../../core/registry/factory'
@@ -19,6 +20,7 @@ import { assertNoCircularRef } from '../../utils/validation/assert-no-circular-r
  * @param name - Unique identifier for the channel
  * @param target - Target window to communicate with
  * @param settings - Optional configuration settings for the channel
+ * @param security - What the channel needs from the broker to run an encrypted transport
  * @returns The created or existing channel
  *
  * @remarks
@@ -46,7 +48,8 @@ export function addChannel(
   actions: ActionCreators,
   name: string,
   target: Window,
-  settings: Record<string, unknown> = {}
+  settings: Record<string, unknown> = {},
+  security?: ChannelSecurityDependencies
 ): ReturnType<typeof createChannel> {
   assertNoCircularRef(settings, 'settings')
 
@@ -79,6 +82,7 @@ export function addChannel(
       cleanup: () => {
         removeFromRegistry(registry, channel)
       },
+      security,
     }
   )
 

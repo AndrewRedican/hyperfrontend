@@ -7,7 +7,7 @@ import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/er
  * Subscribes to channel lifecycle events.
  *
  * Events include: 'open', 'close', 'cancel', 'deny', 'invalid', 'destroy',
- * 'security-negotiated', 'security-ready', 'security-error'
+ * 'security-ready', 'security-error'
  *
  * @param channel - Channel internals with state and dependencies
  * @param handler - Event handler function

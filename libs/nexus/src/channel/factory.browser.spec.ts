@@ -1,6 +1,8 @@
+import type { Mock } from '@hyperfrontend/testing'
+import type { IAction } from '../types/action'
 import type { IChannelConfig } from '../types/channel'
-import type { SecurityNegotiationRequest, SecurityTransport } from '../types/security'
-import type { ChannelDependencies } from './types'
+import type { SecurityProvider, SecurityTransport, SecurityWireChannel } from '../types/security'
+import type { ChannelDependencies, ChannelSecurityDependencies } from './types'
 import { beforeEach } from 'node:test'
 import { hasOwn } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
@@ -10,6 +12,29 @@ describe('channel/factory', () => {
   let config: IChannelConfig
   let deps: ChannelDependencies
   let createdProcesses: string[]
+  let provider: SecurityProvider
+  let security: ChannelSecurityDependencies
+
+  const createMockTransport = (): SecurityTransport => ({
+    send: jest.fn(),
+    receive: jest.fn(),
+    start: jest.fn(),
+    stop: jest.fn(),
+    resume: jest.fn(),
+    dispose: jest.fn(),
+    getProtocol: jest.fn(() => 'v4'),
+  })
+
+  const createWireChannel = (label: string): SecurityWireChannel => ({
+    label,
+    send: jest.fn(),
+    receive: jest.fn(),
+    stop: jest.fn(),
+    resume: jest.fn(),
+    hello: jest.fn(async () => new Uint8Array([1])),
+    isHello: jest.fn(() => false),
+    acceptHello: jest.fn(() => 'accepted'),
+  })
 
   beforeEach(() => {
     createdProcesses = []
@@ -18,6 +43,9 @@ describe('channel/factory', () => {
       name: 'test-channel',
       target: window,
     }
+
+    provider = { createChannel: jest.fn((label: string) => createWireChannel(label)), protocolProvider: jest.fn() }
+    security = { localId: 'local-1', getProvider: jest.fn(() => provider), dispatch: jest.fn() }
 
     deps = {
       actions: {
@@ -72,7 +100,7 @@ describe('channel/factory', () => {
       },
       processManager: {
         create: jest.fn(() => {
-          const processId = `process-${Date.now()}`
+          const processId = `process-${createdProcesses.length + 1}`
           createdProcesses.push(processId)
           return processId
         }),
@@ -90,95 +118,114 @@ describe('channel/factory', () => {
   })
 
   describe('createChannel', () => {
-    it('creates channel with correct ID and name', () => {
+    it('creates a channel with a uuid, its name, and its target', () => {
       const channel = createChannel(config, deps)
 
-      expect(channel.getId()).toMatch(/^[a-f0-9-]{36}$/)
-      expect(channel.getName()).toBe('test-channel')
-      expect(channel.getTarget()).toBe(window)
-      expect(channel.isActive()).toBe(false)
+      expect({ id: channel.getId(), name: channel.getName(), target: channel.getTarget(), active: channel.isActive() }).toEqual({
+        id: expect.stringMatching(/^[a-f0-9-]{36}$/),
+        name: 'test-channel',
+        target: window,
+        active: false,
+      })
     })
 
-    it('creates channel with default settings', () => {
-      const channel = createChannel(config, deps)
-      const json = channel.toJSON()
-
-      expect(json.active).toBe(false)
-      expect(json.origin).toBeNull()
-      expect(json.connectTimestamp).toBeNull()
-      expect(json.contract).toBeNull()
-      expect(json.queuedMessagesCount).toBe(0)
-    })
-
-    it('creates channel with custom settings', () => {
-      const customConfig = {
-        ...config,
-        settings: {
-          origin: 'https://example.com',
-          queueMessages: false,
-          logLevel: 'debug',
-        },
-      }
-
-      const channel = createChannel(customConfig, deps)
-
-      expect(channel.getName()).toBe('test-channel')
-      expect(channel.isActive()).toBe(false)
-    })
-
-    it('exposes lifecycle methods', () => {
+    it('creates a channel with default settings', () => {
       const channel = createChannel(config, deps)
 
-      expect(typeof channel.connect).toBe('function')
-      expect(typeof channel.disconnect).toBe('function')
-      expect(typeof channel.cancel).toBe('function')
-      expect(typeof channel.destroy).toBe('function')
+      expect(channel.toJSON()).toEqual(
+        expect.objectContaining({ active: false, origin: null, connectTimestamp: null, contract: null, queuedMessagesCount: 0 })
+      )
     })
 
-    it('exposes messaging methods', () => {
-      const channel = createChannel(config, deps)
+    it('pins a concrete origin from the settings', () => {
+      const channel = createChannel({ ...config, settings: { origin: 'https://example.com', queueMessages: false } }, deps)
 
-      expect(typeof channel.send).toBe('function')
-      expect(typeof channel.sendAction).toBe('function')
+      expect(channel.getOrigin()).toBe('https://example.com')
     })
 
-    it('exposes subscription methods', () => {
+    it('exposes lifecycle, messaging, and subscription methods', () => {
       const channel = createChannel(config, deps)
 
-      expect(typeof channel.on).toBe('function')
-      expect(typeof channel.onMessage).toBe('function')
+      const methods = [
+        channel.connect,
+        channel.disconnect,
+        channel.cancel,
+        channel.destroy,
+        channel.send,
+        channel.sendAction,
+        channel.on,
+        channel.onMessage,
+      ]
+
+      expect(methods).toEqual(methods.map(() => expect.any(Function)))
     })
   })
 
   describe('integration: lifecycle', () => {
-    it('connect channel', () => {
+    it('connect sends a connection request through a tracked process', () => {
       const channel = createChannel(config, deps)
 
       channel.connect()
 
-      expect(deps.processManager.create).toHaveBeenCalled()
-      expect(deps.actions.requestConnection).toHaveBeenCalled()
+      expect(deps.actions.requestConnection).toHaveBeenCalledWith('process-1', undefined)
     })
 
-    it('disconnect active channel', () => {
+    it('disconnect does nothing while the handshake is pending', () => {
       const channel = createChannel(config, deps)
-
       channel.connect()
 
       channel.disconnect()
 
       expect(deps.actions.closeConnection).not.toHaveBeenCalled()
     })
+
+    it('endStaleSession closes an active channel with reason peer-reload', () => {
+      const channel = createChannel(config, deps)
+      const handler = jest.fn()
+      channel.activate('https://example.com', { accepted: [], emitted: [] }, 'peer-1')
+      channel.on('close', handler)
+
+      channel.endStaleSession()
+
+      expect(handler).toHaveBeenCalledWith({ notify: false, reason: 'peer-reload' }, expect.objectContaining({ active: false }))
+    })
   })
 
   describe('integration: messaging', () => {
-    it('queue messages when channel is inactive', () => {
+    it('queues messages when the channel is inactive', () => {
       const channel = createChannel(config, deps)
 
       channel.send('test-type', { foo: 'bar' })
 
-      const json = channel.toJSON()
-      expect(json.queuedMessagesCount).toBe(1)
+      expect(channel.toJSON().queuedMessagesCount).toBe(1)
+    })
+
+    it('sends through the attached transport as soon as the channel is active', () => {
+      const transport = createMockTransport()
+      const channel = createChannel({ ...config, settings: { contract: { accepted: [], emitted: [{ type: 'msg1' }] } } }, deps)
+      channel.activate('https://example.com', { accepted: [{ type: 'msg1' }], emitted: [] }, 'peer-1')
+      channel.setSecurityTransport(transport)
+
+      channel.send('msg1', { seq: 1 })
+
+      expect(transport.send).toHaveBeenCalledWith(
+        expect.objectContaining({ type: '[nexus] new-message', data: expect.objectContaining({ data: { seq: 1 } }) })
+      )
+    })
+
+    it('sends a payload-less message without a data key so envelope serializability validation passes', () => {
+      const transport = createMockTransport()
+      const channel = createChannel({ ...config, settings: { contract: { accepted: [], emitted: [{ type: 'msg1' }] } } }, deps)
+      channel.activate('https://example.com', { accepted: [{ type: 'msg1' }], emitted: [] }, 'peer-1')
+      channel.setSecurityTransport(transport)
+
+      channel.send('msg1')
+
+      const sent = (transport.send as Mock).mock.calls[0][0] as { data: object }
+      expect({ sent, hasDataKey: hasOwn(sent.data, 'data') }).toEqual({
+        sent: { type: '[nexus] new-message', senderId: 'test-broker-id', data: { type: 'msg1' } },
+        hasDataKey: false,
+      })
     })
   })
 
@@ -198,11 +245,7 @@ describe('channel/factory', () => {
     })
 
     it('isReadyToConnect returns false for broker-managed channels before connect() is called', () => {
-      const brokerManagedConfig = {
-        ...config,
-        settings: { brokerManaged: true },
-      }
-      const channel = createChannel(brokerManagedConfig, deps)
+      const channel = createChannel({ ...config, settings: { brokerManaged: true } }, deps)
 
       expect(channel.isReadyToConnect()).toBe(false)
     })
@@ -215,49 +258,10 @@ describe('channel/factory', () => {
       expect(deps.processManager.create).toHaveBeenCalledWith(channel)
     })
 
-    it('scheduleActivation stores activation data', () => {
-      const channel = createChannel(config, deps)
-      const contract = { accepted: [{ type: 'test' }], emitted: [] }
-
-      channel.scheduleActivation('sender-id', 'https://example.com', contract, 'process-123')
-
-      channel.connect()
-
-      expect(deps.actions.acceptConnection).toHaveBeenCalledWith('process-123', undefined)
-      expect(deps.actions.requestConnection).not.toHaveBeenCalled()
-    })
-
-    it('scheduleActivation carries the security response into the ACCEPT', () => {
-      const channel = createChannel(config, deps)
-      const contract = { accepted: [{ type: 'test' }], emitted: [] }
-
-      channel.scheduleActivation('sender-id', 'https://example.com', contract, 'process-123', { negotiated: 'v2' })
-
-      channel.connect()
-
-      expect(deps.actions.acceptConnection).toHaveBeenCalledWith('process-123', { negotiated: 'v2' })
-    })
-
-    it('isAwaitingOpen reports the window between ACCEPT and OPEN', () => {
-      const channel = createChannel(config, deps)
-      const contract = { accepted: [{ type: 'test' }], emitted: [] }
-      const awaitingBefore = channel.isAwaitingOpen()
-
-      channel.beginResponse('sender-id', 'https://example.com', contract, 'process-123', {
-        type: '[nexus] connection-request-accepted',
-        senderId: 'test-broker-id',
-      })
-      const awaitingDuring = channel.isAwaitingOpen()
-      channel.completeScheduledOpen()
-
-      expect([awaitingBefore, awaitingDuring, channel.isAwaitingOpen()]).toEqual([false, true, false])
-    })
-
     it('activate updates channel state', () => {
       const channel = createChannel(config, deps)
-      const contract = { accepted: [{ type: 'msg1' }], emitted: [] }
 
-      channel.activate('https://example.com', contract)
+      channel.activate('https://example.com', { accepted: [{ type: 'msg1' }], emitted: [] })
 
       expect(channel.isActive()).toBe(true)
     })
@@ -269,71 +273,190 @@ describe('channel/factory', () => {
     })
 
     it('getAcceptedTypes returns the own accepted types after activation', () => {
-      const configWithContract = {
-        ...config,
-        settings: { contract: { accepted: [{ type: 'msg1' }, { type: 'msg2' }], emitted: [] } },
-      }
-      const channel = createChannel(configWithContract, deps)
+      const channel = createChannel(
+        { ...config, settings: { contract: { accepted: [{ type: 'msg1' }, { type: 'msg2' }], emitted: [] } } },
+        deps
+      )
 
       channel.activate('https://example.com', { accepted: [{ type: 'other' }], emitted: [] }, 'peer-1')
 
       expect(channel.getAcceptedTypes()).toEqual(['msg1', 'msg2'])
     })
+
+    it('markDenyNotified records the first denial of a process', () => {
+      const channel = createChannel(config, deps)
+
+      expect(channel.markDenyNotified('process-1')).toBe(true)
+    })
+
+    it('markDenyNotified rejects a repeated denial of the same process', () => {
+      const channel = createChannel(config, deps)
+      channel.markDenyNotified('process-1')
+
+      expect(channel.markDenyNotified('process-1')).toBe(false)
+    })
+  })
+
+  describe('isAwaitingOpen', () => {
+    const contract = { accepted: [{ type: 'test' }], emitted: [] }
+    const acceptAction: IAction = { type: '[nexus] connection-request-accepted', senderId: 'test-broker-id' }
+
+    it('reports the window between ACCEPT and OPEN', () => {
+      const channel = createChannel(config, deps)
+      const awaitingBefore = channel.isAwaitingOpen()
+
+      channel.beginResponse('sender-id', 'https://example.com', contract, 'process-123', acceptAction)
+      const awaitingDuring = channel.isAwaitingOpen()
+      channel.completeScheduledOpen()
+
+      expect([awaitingBefore, awaitingDuring, channel.isAwaitingOpen()]).toEqual([false, true, false])
+    })
+
+    it('reports true for the process id of the pending accept', () => {
+      const channel = createChannel(config, deps)
+      channel.beginResponse('sender-id', 'https://example.com', contract, 'process-123', acceptAction)
+
+      expect(channel.isAwaitingOpen('process-123')).toBe(true)
+    })
+
+    it('reports false for another process id', () => {
+      const channel = createChannel(config, deps)
+      channel.beginResponse('sender-id', 'https://example.com', contract, 'process-123', acceptAction)
+
+      expect(channel.isAwaitingOpen('process-other')).toBe(false)
+    })
+
+    it('reports false for a process id when nothing is pending', () => {
+      const channel = createChannel(config, deps)
+
+      expect(channel.isAwaitingOpen('process-123')).toBe(false)
+    })
+  })
+
+  describe('scheduleActivation', () => {
+    const contract = { accepted: [{ type: 'test' }], emitted: [] }
+
+    it('answers the scheduled request when connect() is called', () => {
+      const channel = createChannel(config, deps)
+      channel.scheduleActivation('sender-id', 'https://example.com', contract, 'process-123')
+
+      channel.connect()
+
+      expect(deps.actions.acceptConnection).toHaveBeenCalledWith('process-123', undefined)
+    })
+
+    it('sends no connection request when a scheduled request is answered', () => {
+      const channel = createChannel(config, deps)
+      channel.scheduleActivation('sender-id', 'https://example.com', contract, 'process-123')
+
+      channel.connect()
+
+      expect(deps.actions.requestConnection).not.toHaveBeenCalled()
+    })
+
+    it('carries the security response into the ACCEPT when the broker serves the protocol', () => {
+      const channel = createChannel(config, { ...deps, security })
+      channel.scheduleActivation('sender-id', 'https://example.com', contract, 'process-123', { negotiated: 'v4' })
+
+      channel.connect()
+
+      expect(deps.actions.acceptConnection).toHaveBeenCalledWith('process-123', { negotiated: 'v4' })
+    })
+
+    it('answers with plaintext when no broker provider serves the protocol', () => {
+      const channel = createChannel(config, deps)
+      channel.scheduleActivation('sender-id', 'https://example.com', contract, 'process-123', { negotiated: 'v4' })
+
+      channel.connect()
+
+      expect(deps.actions.acceptConnection).toHaveBeenCalledWith('process-123', { negotiated: 'none' })
+    })
+
+    it('tracks the first scheduled request without removing anything', () => {
+      const channel = createChannel(config, deps)
+
+      channel.scheduleActivation('sender-id', 'https://example.com', contract, 'process-1')
+
+      expect(deps.processManager.remove).not.toHaveBeenCalled()
+    })
+
+    it('removes the process a superseded request tracked', () => {
+      const channel = createChannel(config, deps)
+      channel.scheduleActivation('sender-id', 'https://example.com', contract, 'process-1')
+
+      channel.scheduleActivation('sender-id', 'https://example.com', contract, 'process-2')
+
+      expect(deps.processManager.remove).toHaveBeenCalledWith('process-1')
+    })
+
+    it('keeps the process when the same request is scheduled again', () => {
+      const channel = createChannel(config, deps)
+      channel.scheduleActivation('sender-id', 'https://example.com', contract, 'process-1')
+
+      channel.scheduleActivation('sender-id', 'https://example.com', contract, 'process-1')
+
+      expect(deps.processManager.remove).not.toHaveBeenCalled()
+    })
+
+    it('answers the latest scheduled request', () => {
+      const channel = createChannel(config, deps)
+      channel.scheduleActivation('sender-id', 'https://example.com', contract, 'process-1')
+      channel.scheduleActivation('sender-id', 'https://example.com', contract, 'process-2')
+
+      channel.connect()
+
+      expect(deps.actions.acceptConnection).toHaveBeenCalledWith('process-2', undefined)
+    })
   })
 
   describe('integration: subscription', () => {
-    it('subscribe to events', () => {
+    it('subscribe to events returns an unsubscribe function', () => {
       const channel = createChannel(config, deps)
-      const handler = jest.fn()
 
-      const unsubscribe = channel.on(handler)
-
-      expect(typeof unsubscribe).toBe('function')
+      expect(typeof channel.on(jest.fn())).toBe('function')
     })
 
-    it('subscribe to events with event-specific handler', () => {
+    it('subscribe to a specific event returns an unsubscribe function', () => {
       const channel = createChannel(config, deps)
-      const handler = jest.fn()
 
-      const unsubscribe = channel.on('open', handler)
-
-      expect(typeof unsubscribe).toBe('function')
+      expect(typeof channel.on('open', jest.fn())).toBe('function')
     })
 
-    it('event-specific handler receives correct arguments', () => {
+    it('event-specific handler receives the event data and the channel snapshot', () => {
       const channel = createChannel(config, deps)
       const openHandler = jest.fn()
-      const closeHandler = jest.fn()
-
       channel.on('open', openHandler)
-      channel.on('close', closeHandler)
 
       channel.notifyEvent('open', { origin: 'http://test.com', contract: { emitted: [], accepted: [] } })
 
-      expect(openHandler).toHaveBeenCalledTimes(1)
       expect(openHandler).toHaveBeenCalledWith(
         { origin: 'http://test.com', contract: { emitted: [], accepted: [] } },
         expect.objectContaining({ name: 'test-channel' })
       )
+    })
+
+    it('event-specific handler ignores other events', () => {
+      const channel = createChannel(config, deps)
+      const closeHandler = jest.fn()
+      channel.on('close', closeHandler)
+
+      channel.notifyEvent('open', { origin: 'http://test.com', contract: { emitted: [], accepted: [] } })
+
       expect(closeHandler).not.toHaveBeenCalled()
     })
 
-    it('subscribe to messages', () => {
+    it('subscribe to messages returns an unsubscribe function', () => {
       const channel = createChannel(config, deps)
-      const handler = jest.fn()
 
-      const unsubscribe = channel.onMessage(handler)
-
-      expect(typeof unsubscribe).toBe('function')
+      expect(typeof channel.onMessage(jest.fn())).toBe('function')
     })
   })
 
   describe('toJSON', () => {
     it('serializes channel to JSON', () => {
       const channel = createChannel(config, deps)
-      const json = channel.toJSON()
 
-      expect(json).toEqual({
+      expect(channel.toJSON()).toEqual({
         id: expect.any(String),
         name: 'test-channel',
         active: false,
@@ -352,8 +475,7 @@ describe('channel/factory', () => {
       channel.send('msg1', {})
       channel.send('msg2', {})
 
-      const json = channel.toJSON()
-      expect(json.queuedMessagesCount).toBe(2)
+      expect(channel.toJSON().queuedMessagesCount).toBe(2)
     })
   })
 
@@ -367,233 +489,105 @@ describe('channel/factory', () => {
     })
 
     it('works without cleanup callback', () => {
-      const depsWithoutCleanup = { ...deps, cleanup: undefined }
-      const channel = createChannel(config, depsWithoutCleanup)
+      const channel = createChannel(config, { ...deps, cleanup: undefined })
 
       expect(() => channel.destroy()).not.toThrow()
     })
   })
 
-  describe('security methods', () => {
-    it('sets and gets pending security request', () => {
-      const channel = createChannel(config, deps)
-      const securityRequest: SecurityNegotiationRequest = { supported: ['v1', 'v2'], preferred: 'v2' }
+  describe('handle accessors', () => {
+    const peerContract = { accepted: [{ type: 'msg1' }], emitted: [] }
 
-      expect(channel.getPendingSecurityRequest()).toBeNull()
-
-      channel.setPendingSecurityRequest(securityRequest)
-
-      expect(channel.getPendingSecurityRequest()).toEqual(securityRequest)
-
-      channel.setPendingSecurityRequest(null)
-
-      expect(channel.getPendingSecurityRequest()).toBeNull()
-    })
-
-    it('sets and gets negotiated protocol', () => {
+    it('isClosing reports false while no polite close is in flight', () => {
       const channel = createChannel(config, deps)
 
-      expect(channel.getNegotiatedProtocol()).toBeNull()
-
-      channel.setNegotiatedProtocol('v2')
-
-      expect(channel.getNegotiatedProtocol()).toBe('v2')
+      expect(channel.isClosing()).toBe(false)
     })
 
-    it('sets and gets security transport', () => {
+    it('isClosing reports true while a polite close awaits acknowledgement', () => {
       const channel = createChannel(config, deps)
-      const mockTransport: SecurityTransport = {
-        send: jest.fn(),
-        receive: jest.fn(),
-        stop: jest.fn(),
-        resume: jest.fn(),
-        isReady: jest.fn(() => true),
-        getProtocol: jest.fn(() => 'v1'),
-      }
+      channel.activate('https://example.com', peerContract, 'peer-1')
 
-      expect(channel.getSecurityTransport()).toBeNull()
+      channel.disconnect()
 
-      channel.setSecurityTransport(mockTransport)
-
-      expect(channel.getSecurityTransport()).toBe(mockTransport)
-
-      channel.setSecurityTransport(null)
-
-      expect(channel.getSecurityTransport()).toBeNull()
+      expect(channel.isClosing()).toBe(true)
     })
 
-    it('sets and checks security ready state', () => {
+    it('reports no peer before activation', () => {
       const channel = createChannel(config, deps)
 
-      expect(channel.isSecurityReady()).toBe(false)
-
-      channel.setSecurityReady(true)
-
-      expect(channel.isSecurityReady()).toBe(true)
-
-      channel.setSecurityReady(false)
-
-      expect(channel.isSecurityReady()).toBe(false)
+      expect({ peerId: channel.getPeerId(), peerContract: channel.getPeerContract() }).toEqual({ peerId: null, peerContract: null })
     })
 
-    it('getSecuritySettings returns null when no security settings were provided', () => {
+    it('reports the peer details after activation', () => {
       const channel = createChannel(config, deps)
 
-      expect(channel.getSecuritySettings()).toBeNull()
+      channel.activate('https://example.com', peerContract, 'peer-1')
+
+      expect({ peerId: channel.getPeerId(), peerContract: channel.getPeerContract() }).toEqual({ peerId: 'peer-1', peerContract })
     })
 
-    it('getSecuritySettings returns the configured security settings', () => {
-      const channel = createChannel({ ...config, settings: { security: { protocol: 'v2', mode: 'fail-closed' } } }, deps)
-
-      expect(channel.getSecuritySettings()).toEqual({ protocol: 'v2', mode: 'fail-closed' })
-    })
-
-    it('applySecuritySettings sets the settings on a channel created without any', () => {
+    it('reports the pending process id while a connection request is outstanding', () => {
       const channel = createChannel(config, deps)
-
-      channel.applySecuritySettings({ protocol: 'v2', mode: 'fail-closed' })
-
-      expect(channel.getSecuritySettings()).toEqual({ protocol: 'v2', mode: 'fail-closed' })
-    })
-
-    it('applySecuritySettings keeps the settings the channel was created with', () => {
-      const channel = createChannel({ ...config, settings: { security: { protocol: 'v2' } } }, deps)
-
-      channel.applySecuritySettings({ protocol: 'v1' })
-
-      expect(channel.getSecuritySettings()).toEqual({ protocol: 'v2' })
-    })
-
-    it('getContractCompat returns null when no compatibility rule was provided', () => {
-      const channel = createChannel(config, deps)
-
-      expect(channel.getContractCompat()).toBeNull()
-    })
-
-    it('getContractCompat returns the configured compatibility rule', () => {
-      const contractCompat = () => ({ compatible: true }) as const
-      const channel = createChannel({ ...config, settings: { contractCompat } }, deps)
-
-      expect(channel.getContractCompat()).toBe(contractCompat)
-    })
-  })
-
-  describe('queue-while-transport-not-ready', () => {
-    function createTogglingTransport(): { transport: SecurityTransport; setReady: (ready: boolean) => void; sent: unknown[] } {
-      const sent: unknown[] = []
-      let ready = false
-      return {
-        transport: {
-          send: (action) => {
-            sent.push(action)
-          },
-          receive: jest.fn(),
-          stop: jest.fn(),
-          resume: jest.fn(),
-          isReady: () => ready,
-          getProtocol: () => 'x-external',
-        },
-        setReady: (value: boolean) => {
-          ready = value
-        },
-        sent,
-      }
-    }
-
-    function createActiveSecureChannel(transport: SecurityTransport) {
-      const channel = createChannel({ ...config, settings: { contract: { accepted: [], emitted: [{ type: 'msg1' }] } } }, deps)
-      channel.activate('https://example.com', { accepted: [{ type: 'msg1' }], emitted: [] }, 'peer-1')
-      channel.setNegotiatedProtocol('x-external')
-      channel.setSecurityTransport(transport)
-      return channel
-    }
-
-    it('queues product messages while the transport reports not ready', () => {
-      const { transport, sent } = createTogglingTransport()
-      const channel = createActiveSecureChannel(transport)
-
-      channel.send('msg1', { seq: 1 })
-
-      expect({ queued: channel.toJSON().queuedMessagesCount, sent }).toEqual({ queued: 1, sent: [] })
-    })
-
-    it('flushes queued messages through the transport once readiness is signalled', () => {
-      const { transport, setReady, sent } = createTogglingTransport()
-      const channel = createActiveSecureChannel(transport)
-      channel.send('msg1', { seq: 1 })
-      channel.send('msg1', { seq: 2 })
-
-      setReady(true)
-      channel.setSecurityReady(true)
-
-      expect({ queued: channel.toJSON().queuedMessagesCount, sent }).toEqual({
-        queued: 0,
-        sent: [
-          expect.objectContaining({ type: '[nexus] new-message', data: expect.objectContaining({ data: { seq: 1 } }) }),
-          expect.objectContaining({ type: '[nexus] new-message', data: expect.objectContaining({ data: { seq: 2 } }) }),
-        ],
-      })
-    })
-
-    it('keeps messages queued when readiness is signalled but the transport still reports not ready', () => {
-      const { transport, sent } = createTogglingTransport()
-      const channel = createActiveSecureChannel(transport)
-      channel.send('msg1', { seq: 1 })
-
-      channel.setSecurityReady(true)
-
-      expect({ queued: channel.toJSON().queuedMessagesCount, sent }).toEqual({ queued: 1, sent: [] })
-    })
-
-    it('sends a payload-less message without a data key so envelope serializability validation passes', () => {
-      const { transport, setReady, sent } = createTogglingTransport()
-      const channel = createActiveSecureChannel(transport)
-      setReady(true)
-
-      channel.send('msg1')
-
-      expect(sent).toEqual([{ type: '[nexus] new-message', senderId: 'test-broker-id', data: { type: 'msg1' } }])
-      expect(hasOwn((sent[0] as { data: unknown }).data as object, 'data')).toBe(false)
-    })
-
-    it('does not flush when the channel is not active', () => {
-      const { transport, setReady, sent } = createTogglingTransport()
-      const channel = createChannel({ ...config, settings: { contract: { accepted: [], emitted: [{ type: 'msg1' }] } } }, deps)
-      channel.setNegotiatedProtocol('x-external')
-      channel.setSecurityTransport(transport)
-      channel.send('msg1', { seq: 1 })
-
-      setReady(true)
-      channel.setSecurityReady(true)
-
-      expect({ queued: channel.toJSON().queuedMessagesCount, sent }).toEqual({ queued: 1, sent: [] })
-    })
-  })
-
-  describe('scheduleActivation', () => {
-    it('schedules activation with provided details', () => {
-      const channel = createChannel(config, deps)
-      const contract = { accepted: [{ type: 'msg1' }], emitted: [] }
-
-      channel.scheduleActivation('sender-id', 'https://example.com', contract, 'process-123')
-
-      expect(channel.toJSON()).toBeDefined()
-    })
-  })
-
-  describe('isReadyToConnect', () => {
-    it('returns false by default for non-broker-managed channels', () => {
-      const channel = createChannel(config, deps)
-
-      expect(channel.isReadyToConnect()).toBe(false)
-    })
-
-    it('returns true after connect is called', () => {
-      const channel = createChannel(config, deps)
+      const before = channel.getPendingProcessId()
 
       channel.connect()
 
-      expect(channel.isReadyToConnect()).toBe(true)
+      expect([before, channel.getPendingProcessId()]).toEqual([null, 'process-1'])
+    })
+
+    it('abandonRequest removes the outstanding request process', () => {
+      const channel = createChannel(config, deps)
+      channel.connect()
+
+      channel.abandonRequest()
+
+      expect({ removed: (deps.processManager.remove as Mock).mock.calls, pending: channel.getPendingProcessId() }).toEqual({
+        removed: [['process-1']],
+        pending: null,
+      })
+    })
+
+    it('cancel fires the cancel event', () => {
+      const channel = createChannel(config, deps)
+      const handler = jest.fn()
+      channel.on('cancel', handler)
+
+      channel.cancel(false)
+
+      expect(handler).toHaveBeenCalledTimes(1)
+    })
+
+    it('sendAction posts a raw action to the target window', () => {
+      const channel = createChannel(config, deps)
+      const action: IAction = { type: '[nexus] connection-request', senderId: 'test-broker-id' }
+
+      channel.sendAction(action)
+
+      expect(window.postMessage).toHaveBeenCalledWith(action, '*')
+    })
+
+    it('completeConnection activates the channel and posts the reply action', () => {
+      const channel = createChannel(config, deps)
+      const openAction: IAction = { type: '[nexus] connection-opened', senderId: 'test-broker-id', processId: 'process-1' }
+
+      channel.completeConnection('https://example.com', peerContract, 'peer-1', openAction)
+
+      expect({ active: channel.isActive(), peerId: channel.getPeerId(), posted: (window.postMessage as Mock).mock.calls }).toEqual({
+        active: true,
+        peerId: 'peer-1',
+        posted: [[openAction, 'https://example.com']],
+      })
+    })
+
+    it('notifyMessage delivers the message to subscribers', () => {
+      const channel = createChannel(config, deps)
+      const handler = jest.fn()
+      channel.onMessage(handler)
+
+      channel.notifyMessage({ type: 'msg1', data: { seq: 1 } })
+
+      expect(handler).toHaveBeenCalledWith({ type: 'msg1', data: { seq: 1 } })
     })
   })
 })

@@ -104,11 +104,35 @@ describe('NoneTransport', () => {
     })
   })
 
-  describe('state', () => {
-    it('is always ready', () => {
-      const transport = createNoneTransport(createConfig())
+  describe('lifecycle', () => {
+    it('posts nothing on start', () => {
+      const postMessage = jest.fn()
+      const transport = createNoneTransport(createConfig({ target: { postMessage } as unknown as Window }))
 
-      expect(transport.isReady()).toBe(true)
+      transport.start()
+
+      expect(postMessage).not.toHaveBeenCalled()
+    })
+
+    it('keeps sending after dispose', () => {
+      const postMessage = jest.fn()
+      const transport = createNoneTransport(createConfig({ target: { postMessage } as unknown as Window }))
+
+      transport.dispose()
+      transport.send({ type: 'TEST' })
+
+      expect(postMessage).toHaveBeenCalledWith({ type: 'TEST' }, '*')
+    })
+
+    it('keeps delivering after dispose', () => {
+      const onAction = jest.fn()
+      const transport = createNoneTransport(createConfig({ onAction }))
+      const payload = new Uint8Array([7, 8, 9])
+
+      transport.dispose()
+      transport.receive(payload)
+
+      expect(onAction).toHaveBeenCalledWith(payload)
     })
 
     it('reports the none protocol', () => {

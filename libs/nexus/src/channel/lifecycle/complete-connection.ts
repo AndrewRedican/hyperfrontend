@@ -34,4 +34,6 @@ export function completeConnection(
   channel.updateState(activate(channel.getState(), origin, peerContract, peerId))
   channel.sendAction(replyAction)
   flush(channel)
+  // why: Started after OPEN leaves so the hello follows it on the wire; the flushed traffic waits inside the transport until the session is keyed.
+  channel.getState().securityTransport?.start()
 }

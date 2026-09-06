@@ -1,39 +1,24 @@
-import type { ChannelInternals } from '../../channel/types'
-import type { ActionCreators } from '../../core/actions/factory'
 import type { MessageHandler, ChannelState } from '../../types/channel'
+import type { ChannelInternals } from '../types'
 import { beforeEach } from 'node:test'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
+import { createInitialState } from '../state/initial'
 import { subscribeToMessages } from './messages'
 
 describe('channel/subscription/messages', () => {
-  let mockChannel: ChannelInternals
+  const nonFunctions: readonly [string, unknown][] = [
+    ['null', null],
+    ['undefined', undefined],
+    ['a string', 'not a function'],
+  ]
+
   let state: ChannelState
+  let channel: ChannelInternals
 
   beforeEach(() => {
-    state = {
-      id: 'channel-123',
-      name: 'test-channel',
-      target: window,
-      origin: null,
-      active: false,
-      connectTimestamp: null,
-      contract: null,
-      acceptedActions: [],
-      queuedMessages: [],
-      queueMessages: true,
-      eventSubscriptions: [],
-      messageSubscriptions: [],
-      scheduledActivation: null,
+    state = createInitialState('test-channel', window, {})
 
-      brokerManaged: false,
-      readyToConnect: false,
-      negotiatedProtocol: null,
-      securityReady: false,
-      securityTransport: null,
-      pendingSecurityRequest: null,
-    }
-
-    mockChannel = {
+    channel = {
       getState: () => state,
       updateState: (partial) => {
         state = { ...state, ...partial }
@@ -43,87 +28,87 @@ describe('channel/subscription/messages', () => {
       removeProcess: jest.fn(),
       notifyEvent: jest.fn(),
       notifyMessage: jest.fn(),
-      actions: {} as ActionCreators,
+      actions: {} as unknown as ChannelInternals['actions'],
     }
   })
 
-  it('adds handler to messageSubscriptions', () => {
+  it('registers the handler as-is', () => {
     const handler: MessageHandler = jest.fn()
 
-    subscribeToMessages(mockChannel, handler)
+    subscribeToMessages(channel, handler)
 
-    expect(state.messageSubscriptions).toContain(handler)
-    expect(state.messageSubscriptions).toHaveLength(1)
+    expect(state.messageSubscriptions).toEqual([handler])
   })
 
-  it('allows multiple handlers', () => {
-    const handler1: MessageHandler = jest.fn()
-    const handler2: MessageHandler = jest.fn()
-    const handler3: MessageHandler = jest.fn()
+  it('keeps handlers in subscription order', () => {
+    const first: MessageHandler = jest.fn()
+    const second: MessageHandler = jest.fn()
+    const third: MessageHandler = jest.fn()
 
-    subscribeToMessages(mockChannel, handler1)
-    subscribeToMessages(mockChannel, handler2)
-    subscribeToMessages(mockChannel, handler3)
+    subscribeToMessages(channel, first)
+    subscribeToMessages(channel, second)
+    subscribeToMessages(channel, third)
 
-    expect(state.messageSubscriptions).toHaveLength(3)
-    expect(state.messageSubscriptions).toContain(handler1)
-    expect(state.messageSubscriptions).toContain(handler2)
-    expect(state.messageSubscriptions).toContain(handler3)
+    expect(state.messageSubscriptions).toEqual([first, second, third])
   })
 
-  it('return unsubscribe function', () => {
-    const handler: MessageHandler = jest.fn()
+  it('leaves event subscriptions untouched', () => {
+    subscribeToMessages(channel, jest.fn())
 
-    const unsubscribe = subscribeToMessages(mockChannel, handler)
-
-    expect(typeof unsubscribe).toBe('function')
+    expect(state.eventSubscriptions).toEqual([])
   })
 
-  it('removes handler when unsubscribe is called', () => {
-    const handler: MessageHandler = jest.fn()
+  it('returns an unsubscribe function', () => {
+    expect(subscribeToMessages(channel, jest.fn())).toEqual(expect.any(Function))
+  })
 
-    const unsubscribe = subscribeToMessages(mockChannel, handler)
-    expect(state.messageSubscriptions).toContain(handler)
+  it('removes the handler on unsubscribe', () => {
+    const unsubscribe = subscribeToMessages(channel, jest.fn())
 
     unsubscribe()
-    expect(state.messageSubscriptions).not.toContain(handler)
-    expect(state.messageSubscriptions).toHaveLength(0)
+
+    expect(state.messageSubscriptions).toEqual([])
   })
 
-  it('only remove the specific handler', () => {
-    const handler1: MessageHandler = jest.fn()
-    const handler2: MessageHandler = jest.fn()
-    const handler3: MessageHandler = jest.fn()
+  it('removes only the unsubscribed handler', () => {
+    const first: MessageHandler = jest.fn()
+    const second: MessageHandler = jest.fn()
+    const third: MessageHandler = jest.fn()
+    subscribeToMessages(channel, first)
+    const unsubscribeSecond = subscribeToMessages(channel, second)
+    subscribeToMessages(channel, third)
 
-    subscribeToMessages(mockChannel, handler1)
-    const unsubscribe2 = subscribeToMessages(mockChannel, handler2)
-    subscribeToMessages(mockChannel, handler3)
+    unsubscribeSecond()
 
-    expect(state.messageSubscriptions).toHaveLength(3)
-
-    unsubscribe2()
-
-    expect(state.messageSubscriptions).toHaveLength(2)
-    expect(state.messageSubscriptions).toContain(handler1)
-    expect(state.messageSubscriptions).not.toContain(handler2)
-    expect(state.messageSubscriptions).toContain(handler3)
+    expect(state.messageSubscriptions).toEqual([first, third])
   })
 
-  it('throws error if handler is not a function', () => {
-    expect(() => subscribeToMessages(mockChannel, null as unknown as MessageHandler)).toThrow('Expected callback function.')
-    expect(() => subscribeToMessages(mockChannel, undefined as unknown as MessageHandler)).toThrow('Expected callback function.')
-    expect(() => subscribeToMessages(mockChannel, 'not a function' as unknown as MessageHandler)).toThrow('Expected callback function.')
-  })
-
-  it('handles multiple unsubscribe calls gracefully', () => {
-    const handler: MessageHandler = jest.fn()
-
-    const unsubscribe = subscribeToMessages(mockChannel, handler)
+  it('tolerates a second unsubscribe', () => {
+    const unsubscribe = subscribeToMessages(channel, jest.fn())
+    unsubscribe()
 
     unsubscribe()
-    expect(state.messageSubscriptions).toHaveLength(0)
+
+    expect(state.messageSubscriptions).toEqual([])
+  })
+
+  it('keeps other handlers across a second unsubscribe', () => {
+    const survivor: MessageHandler = jest.fn()
+    const unsubscribe = subscribeToMessages(channel, jest.fn())
+    unsubscribe()
+    subscribeToMessages(channel, survivor)
 
     unsubscribe()
-    expect(state.messageSubscriptions).toHaveLength(0)
+
+    expect(state.messageSubscriptions).toEqual([survivor])
+  })
+
+  it.each(nonFunctions)('throws when the handler is %s', (_label: string, handler: unknown) => {
+    expect(() => subscribeToMessages(channel, handler as MessageHandler)).toThrow('Expected callback function.')
+  })
+
+  it('registers nothing when the handler is invalid', () => {
+    expect(() => subscribeToMessages(channel, null as unknown as MessageHandler)).toThrow()
+    expect(state.messageSubscriptions).toEqual([])
   })
 })

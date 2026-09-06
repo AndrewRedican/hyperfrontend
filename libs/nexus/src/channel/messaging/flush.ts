@@ -19,7 +19,7 @@ export function flush(channel: ChannelInternals): void {
   const state = channel.getState()
   const pending = state.queuedMessages
 
-  // why: The queue is cleared before re-sending so messages a not-ready security transport re-queues during this pass survive for the next flush.
+  // why: The queue is cleared before re-sending so a message that send() re-queues during this pass (a polite close is in flight) survives for the next flush.
   channel.updateState(clearQueue(state))
 
   for (const message of pending) {

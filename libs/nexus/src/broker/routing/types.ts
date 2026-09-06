@@ -1,4 +1,5 @@
 import type { Logger } from '@hyperfrontend/logging'
+import type { ChannelSecurityDependencies } from '../../channel/types'
 import type { ActionCreators } from '../../core/actions/factory'
 import type { ProcessManager } from '../../core/processes/factory'
 import type { Registry } from '../../core/registry/factory'
@@ -7,30 +8,26 @@ import type { SecurityProtocolVersion } from '../../types/security'
 import type { BrokerState } from '../types'
 
 /**
- * Context object passed to routing handlers.
- * Provides access to broker state, infrastructure, and logger.
+ * Everything a routing handler needs from the broker.
  */
 export interface RoutingContext {
-  /** Current broker state snapshot */
+  /** Broker state (id, name, contract, settings, logger) */
   readonly state: BrokerState
-  /** Process registry for window/process lookup */
+  /** Channel registry keyed by window, id, and name */
   readonly registry: Registry
-  /** Manager for process lifecycle operations */
+  /** Tracks handshake processes back to their channels */
   readonly processManager: ProcessManager
-  /** Factory for creating broker actions */
+  /** Action creators stamped with the broker's identity */
   readonly actions: ActionCreators
-  /** Scoped logger for routing operations */
+  /** Broker logger */
   readonly logger: Logger
-  /** Returns the security protocols the broker can negotiate, sourced from its protocol registry */
+  /** Returns the protocols the broker can negotiate, most preferred first and 'none' last */
   readonly getSupportedProtocols: () => readonly SecurityProtocolVersion[]
-  /** Looks up the provider registered for a protocol (undefined for 'none' or unregistered identifiers) */
-  readonly getProtocol: (id: SecurityProtocolVersion) => unknown
-  /** Routes an action through the broker's handler map, exactly as one arriving over the wire */
-  readonly routeAction: (event: MessageEvent<IAction>) => void
+  /** What channels need from the broker to run an encrypted transport */
+  readonly security: ChannelSecurityDependencies
 }
 
 /**
- * Handler function signature for routing messages.
- * Receives routing context and message event.
+ * Handler for one action type.
  */
 export type RouteHandler = (context: RoutingContext, message: MessageEvent<IAction>) => void

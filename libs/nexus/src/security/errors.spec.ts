@@ -1,412 +1,184 @@
+import type { Logger } from '@hyperfrontend/logging'
 import type { Mock } from '@hyperfrontend/testing'
 import type { SecurityErrorEventData } from '../types/events'
-import { beforeEach } from 'node:test'
+import type { SecurityErrorCode } from '../types/security'
+import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
-import { SecurityError, createSecurityErrorEventData, createDeobfuscationRetry, logSecurityError, DEFAULT_RETRY_CONFIG } from './errors'
+import { createSecurityErrorEventData, logSecurityError, readProtocolErrorCode } from './errors'
+
+const FRAME_VERDICTS: readonly SecurityErrorCode[] = [
+  'unsupported-version',
+  'replayed',
+  'authentication-failed',
+  'malformed',
+  'counter-exhausted',
+  'invalid-session',
+]
+
+interface CodedError extends Error {
+  code?: unknown
+}
+
+interface LoggerHarness {
+  logger: Logger
+  error: Mock
+  warn: Mock
+}
+
+function createCodedError(code: unknown, message = 'verdict'): CodedError {
+  const error: CodedError = createError(message)
+  error.code = code
+  return error
+}
+
+function createLoggerHarness(): LoggerHarness {
+  const error = jest.fn()
+  const warn = jest.fn()
+  const logger: Logger = {
+    error,
+    warn,
+    log: jest.fn(),
+    info: jest.fn(),
+    debug: jest.fn(),
+    setLogLevel: jest.fn(),
+    getLogLevel: jest.fn(),
+    channel: jest.fn(),
+    timed: jest.fn(),
+    timedAsync: jest.fn(),
+  }
+  return { logger, error, warn }
+}
 
 describe('security/errors', () => {
-  describe('SecurityError', () => {
-    it('creates error with message and code', () => {
-      const error = new SecurityError('Test error', 'decryption_failed')
+  describe('readProtocolErrorCode', () => {
+    for (const code of FRAME_VERDICTS) {
+      it(`reads the '${code}' verdict off a coded error`, () => {
+        expect(readProtocolErrorCode(createCodedError(code))).toBe(code)
+      })
+    }
 
-      expect(error.message).toBe('Test error')
-      expect(error.code).toBe('decryption_failed')
-      expect(error.name).toBe('SecurityError')
-      expect(error.originalCause).toBeUndefined()
+    it('reads the verdict off a plain coded object', () => {
+      expect(readProtocolErrorCode({ code: 'replayed' })).toBe('replayed')
     })
 
-    it('creates error with original cause', () => {
-      const cause = new Error('Original error')
-      const error = new SecurityError('Wrapped error', 'transport_error', cause)
-
-      expect(error.message).toBe('Wrapped error')
-      expect(error.code).toBe('transport_error')
-      expect(error.originalCause).toBe(cause)
+    it('returns undefined for an error without a code', () => {
+      expect(readProtocolErrorCode(createError('boom'))).toBeUndefined()
     })
 
-    it('is instanceof Error and SecurityError', () => {
-      const error = new SecurityError('Test', 'unknown')
+    it('returns undefined for a transport code', () => {
+      expect(readProtocolErrorCode(createCodedError('hello-rejected'))).toBeUndefined()
+    })
 
-      expect(error instanceof Error).toBe(true)
-      expect(error instanceof SecurityError).toBe(true)
+    it('returns undefined for an unrecognised code', () => {
+      expect(readProtocolErrorCode(createCodedError('decryption_failed'))).toBeUndefined()
+    })
+
+    it('returns undefined for a non-string code', () => {
+      expect(readProtocolErrorCode(createCodedError(42))).toBeUndefined()
+    })
+
+    it('returns undefined for null', () => {
+      expect(readProtocolErrorCode(null)).toBeUndefined()
+    })
+
+    it('returns undefined for undefined', () => {
+      expect(readProtocolErrorCode(undefined)).toBeUndefined()
+    })
+
+    it('returns undefined for a string', () => {
+      expect(readProtocolErrorCode('replayed')).toBeUndefined()
     })
   })
 
   describe('createSecurityErrorEventData', () => {
-    it('converts SecurityError to event data', () => {
-      const cause = new Error('Cause')
-      const secError = new SecurityError('Security issue', 'deobfuscation_failed', cause)
+    it("keeps a coded error's verdict", () => {
+      const error = createCodedError('malformed', 'Frame too short')
 
-      const eventData = createSecurityErrorEventData(secError)
-
-      expect(eventData.message).toBe('Security issue')
-      expect(eventData.code).toBe('deobfuscation_failed')
-      expect(eventData.cause).toBe(cause)
+      expect(createSecurityErrorEventData(error)).toEqual({ message: 'Frame too short', code: 'malformed', cause: error })
     })
 
-    it('categorizes standard Error with decryption keywords', () => {
-      const error = new Error('Failed to decrypt payload')
+    it('reports an uncoded error as unknown', () => {
+      const error = createError('Something unexpected')
 
-      const eventData = createSecurityErrorEventData(error)
-
-      expect(eventData.message).toBe('Failed to decrypt payload')
-      expect(eventData.code).toBe('decryption_failed')
-      expect(eventData.cause).toBe(error)
+      expect(createSecurityErrorEventData(error)).toEqual({ message: 'Something unexpected', code: 'unknown', cause: error })
     })
 
-    it('categorizes error with invalid key keyword', () => {
-      const error = new Error('Invalid key provided')
+    it('reports an error with an unrecognised code as unknown', () => {
+      const error = createCodedError('ECONNRESET', 'Connection reset')
 
-      const eventData = createSecurityErrorEventData(error)
-
-      expect(eventData.code).toBe('decryption_failed')
+      expect(createSecurityErrorEventData(error)).toEqual({ message: 'Connection reset', code: 'unknown', cause: error })
     })
 
-    it('categorizes error with corrupted keyword', () => {
-      const error = new Error('Data corrupted')
-
-      const eventData = createSecurityErrorEventData(error)
-
-      expect(eventData.code).toBe('decryption_failed')
+    it('reports a string as unknown without a cause', () => {
+      expect(createSecurityErrorEventData('string error')).toStrictEqual({ message: 'string error', code: 'unknown' })
     })
 
-    it('categorizes error with cipher keyword', () => {
-      const error = new Error('Cipher operation failed')
-
-      const eventData = createSecurityErrorEventData(error)
-
-      expect(eventData.code).toBe('decryption_failed')
+    it('reports a number as unknown', () => {
+      expect(createSecurityErrorEventData(42)).toStrictEqual({ message: '42', code: 'unknown' })
     })
 
-    it('categorizes error with deobfuscation keyword', () => {
-      const error = new Error('Deobfuscation error occurred')
-
-      const eventData = createSecurityErrorEventData(error)
-
-      expect(eventData.code).toBe('deobfuscation_failed')
+    it('reports null as unknown', () => {
+      expect(createSecurityErrorEventData(null)).toStrictEqual({ message: 'null', code: 'unknown' })
     })
 
-    it('categorizes error with time window keyword', () => {
-      const error = new Error('Time window expired')
-
-      const eventData = createSecurityErrorEventData(error)
-
-      expect(eventData.code).toBe('deobfuscation_failed')
+    it('reports undefined as unknown', () => {
+      expect(createSecurityErrorEventData(undefined)).toStrictEqual({ message: 'undefined', code: 'unknown' })
     })
 
-    it('categorizes error with clock skew keyword', () => {
-      const error = new Error('Clock skew too large')
-
-      const eventData = createSecurityErrorEventData(error)
-
-      expect(eventData.code).toBe('deobfuscation_failed')
-    })
-
-    it('categorizes error with timestamp keyword', () => {
-      const error = new Error('Timestamp validation failed')
-
-      const eventData = createSecurityErrorEventData(error)
-
-      expect(eventData.code).toBe('deobfuscation_failed')
-    })
-
-    it('categorizes error with transport keyword', () => {
-      const error = new Error('Transport layer error')
-
-      const eventData = createSecurityErrorEventData(error)
-
-      expect(eventData.code).toBe('transport_error')
-    })
-
-    it('categorizes error with connection keyword', () => {
-      const error = new Error('Connection reset')
-
-      const eventData = createSecurityErrorEventData(error)
-
-      expect(eventData.code).toBe('transport_error')
-    })
-
-    it('categorizes error with network keyword', () => {
-      const error = new Error('Network unavailable')
-
-      const eventData = createSecurityErrorEventData(error)
-
-      expect(eventData.code).toBe('transport_error')
-    })
-
-    it('categorizes unknown errors as unknown', () => {
-      const error = new Error('Something unexpected')
-
-      const eventData = createSecurityErrorEventData(error)
-
-      expect(eventData.code).toBe('unknown')
-    })
-
-    it('handles non-Error values', () => {
-      const eventData = createSecurityErrorEventData('string error')
-
-      expect(eventData.message).toBe('string error')
-      expect(eventData.code).toBe('unknown')
-      expect(eventData.cause).toBeUndefined()
-    })
-
-    it('handles number values', () => {
-      const eventData = createSecurityErrorEventData(42)
-
-      expect(eventData.message).toBe('42')
-      expect(eventData.code).toBe('unknown')
-    })
-
-    it('handles null values', () => {
-      const eventData = createSecurityErrorEventData(null)
-
-      expect(eventData.message).toBe('null')
-      expect(eventData.code).toBe('unknown')
-    })
-
-    it('handles undefined values', () => {
-      const eventData = createSecurityErrorEventData(undefined)
-
-      expect(eventData.message).toBe('undefined')
-      expect(eventData.code).toBe('unknown')
-    })
-
-    it('handles object values', () => {
-      const eventData = createSecurityErrorEventData({ custom: 'error' })
-
-      expect(eventData.message).toBe('[object Object]')
-      expect(eventData.code).toBe('unknown')
-    })
-  })
-
-  describe('DEFAULT_RETRY_CONFIG', () => {
-    it('has expected defaults', () => {
-      expect(DEFAULT_RETRY_CONFIG.maxAttempts).toBe(3)
-      expect(DEFAULT_RETRY_CONFIG.timeOffsets).toEqual([0, -1000, 1000])
-    })
-  })
-
-  describe('createDeobfuscationRetry', () => {
-    it('returns value on first successful attempt', () => {
-      const deobfuscateFn = jest.fn().mockReturnValue('decrypted')
-
-      const retryFn = createDeobfuscationRetry(deobfuscateFn)
-      const result = retryFn(new Uint8Array([1, 2, 3]))
-
-      expect(result).toBe('decrypted')
-      expect(deobfuscateFn).toHaveBeenCalledTimes(1)
-      expect(deobfuscateFn).toHaveBeenCalledWith(new Uint8Array([1, 2, 3]), 0)
-    })
-
-    it('retries with different time offsets on failure', () => {
-      const deobfuscateFn = jest
-        .fn()
-        .mockImplementationOnce(() => {
-          throw new Error('First attempt failed')
-        })
-        .mockReturnValue('success')
-
-      const retryFn = createDeobfuscationRetry(deobfuscateFn)
-      const result = retryFn(new Uint8Array([1, 2, 3]))
-
-      expect(result).toBe('success')
-      expect(deobfuscateFn).toHaveBeenCalledTimes(2)
-      expect(deobfuscateFn).toHaveBeenNthCalledWith(1, new Uint8Array([1, 2, 3]), 0)
-      expect(deobfuscateFn).toHaveBeenNthCalledWith(2, new Uint8Array([1, 2, 3]), -1000)
-    })
-
-    it('uses all retry attempts before throwing', () => {
-      const deobfuscateFn = jest.fn().mockImplementation(() => {
-        throw new Error('Always fails')
-      })
-
-      const retryFn = createDeobfuscationRetry(deobfuscateFn)
-
-      expect(() => retryFn(new Uint8Array([1, 2, 3]))).toThrow(SecurityError)
-      expect(deobfuscateFn).toHaveBeenCalledTimes(3)
-    })
-
-    it('throws SecurityError with deobfuscation_failed code after all attempts', () => {
-      const deobfuscateFn = jest.fn().mockImplementation(() => {
-        throw new Error('Deob failed')
-      })
-
-      const retryFn = createDeobfuscationRetry(deobfuscateFn)
-
-      let thrownError: SecurityError | null = null
-      try {
-        retryFn(new Uint8Array([1, 2, 3]))
-      } catch (error) {
-        thrownError = error as SecurityError
-      }
-
-      expect(thrownError).not.toBeNull()
-      expect(thrownError).toBeInstanceOf(SecurityError)
-      expect(thrownError?.code).toBe('deobfuscation_failed')
-      expect(thrownError?.message).toContain('Deobfuscation failed after 3 attempts')
-      expect(thrownError?.originalCause?.message).toBe('Deob failed')
-    })
-
-    it('succeeds on third attempt', () => {
-      const deobfuscateFn = jest
-        .fn()
-        .mockImplementationOnce(() => {
-          throw new Error('Failed 1')
-        })
-        .mockImplementationOnce(() => {
-          throw new Error('Failed 2')
-        })
-        .mockReturnValue('finally!')
-
-      const retryFn = createDeobfuscationRetry(deobfuscateFn)
-      const result = retryFn(new Uint8Array([1, 2, 3]))
-
-      expect(result).toBe('finally!')
-      expect(deobfuscateFn).toHaveBeenCalledTimes(3)
-      expect(deobfuscateFn).toHaveBeenNthCalledWith(3, new Uint8Array([1, 2, 3]), 1000)
-    })
-
-    it('uses custom retry config', () => {
-      const deobfuscateFn = jest.fn().mockImplementation(() => {
-        throw new Error('Fail')
-      })
-
-      const customConfig = {
-        maxAttempts: 2,
-        timeOffsets: [100, 200],
-      }
-
-      const retryFn = createDeobfuscationRetry(deobfuscateFn, customConfig)
-
-      expect(() => retryFn(new Uint8Array([1]))).toThrow()
-      expect(deobfuscateFn).toHaveBeenCalledTimes(2)
-      expect(deobfuscateFn).toHaveBeenNthCalledWith(1, new Uint8Array([1]), 100)
-      expect(deobfuscateFn).toHaveBeenNthCalledWith(2, new Uint8Array([1]), 200)
-    })
-
-    it('handles non-Error thrown values', () => {
-      const deobfuscateFn = jest.fn().mockImplementation(() => {
-        throw 'string error'
-      })
-
-      const retryFn = createDeobfuscationRetry(deobfuscateFn)
-
-      let thrownError: SecurityError | null = null
-      try {
-        retryFn(new Uint8Array([1]))
-      } catch (error) {
-        thrownError = error as SecurityError
-      }
-
-      expect(thrownError).not.toBeNull()
-      expect(thrownError?.originalCause?.message).toBe('string error')
-    })
-
-    it('handles Error with empty message', () => {
-      const emptyMessageError = new Error('')
-      const deobfuscateFn = jest.fn().mockImplementation(() => {
-        throw emptyMessageError
-      })
-
-      const retryFn = createDeobfuscationRetry(deobfuscateFn)
-
-      let thrownError: SecurityError | null = null
-      try {
-        retryFn(new Uint8Array([1]))
-      } catch (error) {
-        thrownError = error as SecurityError
-      }
-
-      expect(thrownError).not.toBeNull()
-      expect(thrownError?.message).toContain('unknown error')
-    })
-
-    it('limits attempts by timeOffsets length when shorter than maxAttempts', () => {
-      const deobfuscateFn = jest.fn().mockImplementation(() => {
-        throw new Error('Fail')
-      })
-
-      const customConfig = {
-        maxAttempts: 10,
-        timeOffsets: [0, 100],
-      }
-
-      const retryFn = createDeobfuscationRetry(deobfuscateFn, customConfig)
-
-      expect(() => retryFn(new Uint8Array([1]))).toThrow()
-      expect(deobfuscateFn).toHaveBeenCalledTimes(2)
+    it('reports a plain object as unknown', () => {
+      expect(createSecurityErrorEventData({ custom: 'error' })).toStrictEqual({ message: '[object Object]', code: 'unknown' })
     })
   })
 
   describe('logSecurityError', () => {
-    let mockLogger: {
-      error: Mock
-      warn: Mock
-      log: Mock
-      info: Mock
-      debug: Mock
-      setLogLevel: Mock
-      getLogLevel: Mock
-    }
+    it('logs an unknown error with its cause through logger.error', () => {
+      const { logger, error } = createLoggerHarness()
+      const cause = createError('Original')
+      const errorData: SecurityErrorEventData = { message: 'Unknown error occurred', code: 'unknown', cause }
 
-    beforeEach(() => {
-      mockLogger = {
-        error: jest.fn(),
-        warn: jest.fn(),
-        log: jest.fn(),
-        info: jest.fn(),
-        debug: jest.fn(),
-        setLogLevel: jest.fn(),
-        getLogLevel: jest.fn(() => 'debug'),
-      }
+      logSecurityError(logger, 'my-channel', errorData)
+
+      expect(error).toHaveBeenCalledWith('my-channel security error:', 'Unknown error occurred', cause)
     })
 
-    it('logs unknown errors with logger.error', () => {
-      const cause = new Error('Original')
-      const errorData: SecurityErrorEventData = {
-        message: 'Unknown error occurred',
-        code: 'unknown',
-        cause,
-      }
+    it('logs an unknown error without a cause through logger.error', () => {
+      const { logger, error } = createLoggerHarness()
 
-      logSecurityError(mockLogger, 'my-channel', errorData)
+      logSecurityError(logger, 'my-channel', { message: 'Unknown error occurred', code: 'unknown' })
 
-      expect(mockLogger.error).toHaveBeenCalledWith('my-channel security error:', 'Unknown error occurred', cause)
-      expect(mockLogger.warn).not.toHaveBeenCalled()
+      expect(error).toHaveBeenCalledWith('my-channel security error:', 'Unknown error occurred', undefined)
     })
 
-    it('logs known errors with logger.warn', () => {
-      const errorData: SecurityErrorEventData = {
-        message: 'Decryption issue',
-        code: 'decryption_failed',
-      }
+    it('does not warn for an unknown error', () => {
+      const { logger, warn } = createLoggerHarness()
 
-      logSecurityError(mockLogger, 'secure-channel', errorData)
+      logSecurityError(logger, 'my-channel', { message: 'Unknown error occurred', code: 'unknown' })
 
-      expect(mockLogger.warn).toHaveBeenCalledWith('secure-channel security error:', '[decryption_failed]', 'Decryption issue')
-      expect(mockLogger.error).not.toHaveBeenCalled()
+      expect(warn).not.toHaveBeenCalled()
     })
 
-    it('logs deobfuscation_failed with logger.warn', () => {
-      const errorData: SecurityErrorEventData = {
-        message: 'Time window issue',
-        code: 'deobfuscation_failed',
-      }
+    it('logs a protocol verdict through logger.warn', () => {
+      const { logger, warn } = createLoggerHarness()
 
-      logSecurityError(mockLogger, 'channel', errorData)
+      logSecurityError(logger, 'secure-channel', { message: 'Frame counter went backwards', code: 'replayed' })
 
-      expect(mockLogger.warn).toHaveBeenCalledWith('channel security error:', '[deobfuscation_failed]', 'Time window issue')
+      expect(warn).toHaveBeenCalledWith('secure-channel security error:', '[replayed]', 'Frame counter went backwards')
     })
 
-    it('logs transport_error with logger.warn', () => {
-      const errorData: SecurityErrorEventData = {
-        message: 'Connection lost',
-        code: 'transport_error',
-      }
+    it('logs a transport code through logger.warn', () => {
+      const { logger, warn } = createLoggerHarness()
 
-      logSecurityError(mockLogger, 'channel', errorData)
+      logSecurityError(logger, 'secure-channel', { message: 'No confirmation arrived', code: 'security-unconfirmed' })
 
-      expect(mockLogger.warn).toHaveBeenCalledWith('channel security error:', '[transport_error]', 'Connection lost')
+      expect(warn).toHaveBeenCalledWith('secure-channel security error:', '[security-unconfirmed]', 'No confirmation arrived')
+    })
+
+    it('does not log a coded error through logger.error', () => {
+      const { logger, error } = createLoggerHarness()
+
+      logSecurityError(logger, 'secure-channel', { message: 'Frame counter went backwards', code: 'replayed' })
+
+      expect(error).not.toHaveBeenCalled()
     })
   })
 })

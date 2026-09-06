@@ -1,35 +1,15 @@
 import type { IAction } from '../../types/action'
 import type { ChannelInternals } from '../types'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
-import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
-import { ACTION_TYPES } from '../../constants/action-types'
-
-/**
- * Action types that should always be sent in plaintext.
- *
- * Handshake actions must remain unencrypted because:
- * - Security negotiation happens during handshake
- * - Both parties need to read handshake messages before security is established
- */
-const PLAINTEXT_ACTION_TYPES: Set<string> = createSet([
-  ACTION_TYPES.REQUEST_CONNECTION,
-  ACTION_TYPES.ACCEPT_CONNECTION,
-  ACTION_TYPES.DENY_CONNECTION,
-  ACTION_TYPES.CANCEL_CONNECTION,
-  ACTION_TYPES.CANCEL_CONNECTION_ACKNOWLEDGED,
-  ACTION_TYPES.OPEN_CONNECTION,
-])
+import { HANDSHAKE_ACTION_TYPES } from '../../constants/handshake-actions'
 
 /**
  * Sends a raw action to the channel's target window.
  *
- * This function routes actions through the security transport when:
- * - The channel has a security transport configured
- * - The security transport is ready
- * - The action type is not a handshake action (handshakes are always plaintext)
- *
- * For secure protocols (v1/v2), the action is encrypted and sent as Uint8Array.
- * For 'none' protocol or handshake actions, the action is sent as plain object.
+ * Handshake actions are always posted in plaintext. Every other action is
+ * routed through the channel's security transport when one is attached,
+ * leaving the window as a sealed `Uint8Array` frame once the session is
+ * keyed; without a transport it is posted as a plain object.
  *
  * @param channel - Channel internals with state and dependencies
  * @param action - Action to send
@@ -48,9 +28,8 @@ export function sendAction(channel: ChannelInternals, action: IAction): void {
   }
 
   const securityTransport = state.securityTransport
-  const isHandshakeAction = PLAINTEXT_ACTION_TYPES.has(action.type)
 
-  if (securityTransport && securityTransport.isReady() && !isHandshakeAction) {
+  if (securityTransport && !HANDSHAKE_ACTION_TYPES.has(action.type)) {
     securityTransport.send(action)
     return
   }

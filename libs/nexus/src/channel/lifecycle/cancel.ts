@@ -1,4 +1,5 @@
 import type { ChannelInternals } from '../types'
+import { dropSecurityTransport } from '../security/drop'
 import { disconnect } from './disconnect'
 import { clearHandshakeTimers } from './handshake-timers'
 
@@ -27,7 +28,8 @@ export function cancel(channel: ChannelInternals, notify = true): void {
   }
 
   clearHandshakeTimers(channel)
-  channel.updateState({ pendingProcessId: null, pendingAccept: null, scheduledActivation: null })
+  dropSecurityTransport(channel)
+  channel.updateState({ pendingProcessId: null, pendingAccept: null, scheduledActivation: null, negotiatedProtocol: null })
 
   if (notify) {
     const processId = channel.createProcess()

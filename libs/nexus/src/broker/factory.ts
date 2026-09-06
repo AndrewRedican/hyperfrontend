@@ -1,7 +1,8 @@
+import type { ChannelSecurityDependencies } from '../channel/types'
 import type { IAction } from '../types/action'
 import type { IChannelSettings } from '../types/channel'
 import type { IChannelContract } from '../types/contract'
-import type { SecurityProtocolVersion } from '../types/security'
+import type { SecurityProtocolVersion, SecurityProvider } from '../types/security'
 import type { RoutingContext } from './routing/types'
 import type { BrokerConfig, BrokerState, BrokerHandle, SecurityPolicy } from './types'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
@@ -23,6 +24,7 @@ import { listChannels } from './channels/list'
 import { removeChannel } from './channels/remove'
 import { defaultBrokerSettings } from './defaults'
 import { createRouter } from './routing/create-router'
+import { isPlaintextAllowed } from './routing/guard-plaintext'
 import { handleAccept } from './routing/handle-accept'
 import { handleCancel } from './routing/handle-cancel'
 import { handleCancelAcknowledged } from './routing/handle-cancel-acknowledged'
@@ -124,12 +126,12 @@ export function createBroker(config: CreateBrokerConfig): BrokerHandle {
   if (config.settings?.security?.protocols) {
     const protocols = config.settings.security.protocols
 
-    if (protocols.v1) {
-      protocolRegistry.register('v1', protocols.v1)
+    if (protocols.v4) {
+      protocolRegistry.register('v4', protocols.v4)
     }
 
-    if (protocols.v2) {
-      protocolRegistry.register('v2', protocols.v2)
+    if (protocols.v3) {
+      protocolRegistry.register('v3', protocols.v3)
     }
   }
 
@@ -152,6 +154,13 @@ export function createBroker(config: CreateBrokerConfig): BrokerHandle {
     [ACTION_TYPES.INVALID_REQUEST]: handleInvalid,
   })
 
+  const security: ChannelSecurityDependencies = {
+    localId: state.id,
+    getProvider: (protocol: SecurityProtocolVersion) => protocolRegistry.get(protocol),
+    // why: Opened actions enter the handler map directly, past the plaintext gate that guards the wire entry.
+    dispatch: (event: MessageEvent<IAction>) => routeMessage(router, routingContext, event),
+  }
+
   const routingContext: RoutingContext = {
     state,
     registry,
@@ -159,8 +168,7 @@ export function createBroker(config: CreateBrokerConfig): BrokerHandle {
     actions,
     logger,
     getSupportedProtocols: () => protocolRegistry.getSupportedVersions(),
-    getProtocol: (id: SecurityProtocolVersion) => protocolRegistry.get(id),
-    routeAction: (event: MessageEvent<IAction>) => routeMessage(router, routingContext, event),
+    security,
   }
 
   const onMessage = (event: MessageEvent<IAction | Uint8Array>) => {
@@ -176,7 +184,9 @@ export function createBroker(config: CreateBrokerConfig): BrokerHandle {
       return
     }
 
-    routeMessage(router, routingContext, event as MessageEvent<IAction>)
+    if (isPlaintextAllowed(routingContext, event as MessageEvent<IAction>)) {
+      routeMessage(router, routingContext, event as MessageEvent<IAction>)
+    }
   }
 
   brokerWindow.addEventListener('message', onMessage as EventListener)
@@ -199,7 +209,7 @@ export function createBroker(config: CreateBrokerConfig): BrokerHandle {
     },
 
     addChannel(name: string, target: Window, settings?: Partial<IChannelSettings>) {
-      return addChannel(state, registry, processManager, actions, name, target, settings ?? {})
+      return addChannel(state, registry, processManager, actions, name, target, settings ?? {}, security)
     },
 
     getChannel(reference: string | Window) {
@@ -238,7 +248,7 @@ export function createBroker(config: CreateBrokerConfig): BrokerHandle {
       }
     },
 
-    registerProtocol(version: SecurityProtocolVersion, provider: unknown) {
+    registerProtocol(version: SecurityProtocolVersion, provider: SecurityProvider) {
       protocolRegistry.register(version, provider)
       return broker
     },

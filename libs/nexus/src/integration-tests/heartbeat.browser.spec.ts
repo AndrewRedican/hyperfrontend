@@ -71,7 +71,7 @@ describe('Integration: Heartbeat', () => {
         }
       })
 
-      // note: send() also notifies the sender's own subscribers, so filter to
+      // note: send() also notifies the sender's own subscribers, so the collector keeps only the counterpart's PONGs.
       const pongs: unknown[] = []
       channelA.onMessage((message) => {
         if (message.type === 'PONG') {

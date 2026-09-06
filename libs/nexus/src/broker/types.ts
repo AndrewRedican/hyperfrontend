@@ -1,7 +1,7 @@
 import type { Logger, LogLevel } from '@hyperfrontend/logging'
 import type { ChannelHandle, ChannelJSON } from '../types/channel'
 import type { IChannelContract } from '../types/contract'
-import type { BrokerSecurityConfig, SecurityProtocolVersion } from '../types/security'
+import type { BrokerSecurityConfig, SecurityProtocolVersion, SecurityProvider } from '../types/security'
 
 /**
  * Security policy function type
@@ -127,11 +127,11 @@ export interface BrokerHandle {
    * The 'none' protocol requires no provider and cannot be registered.
    * Providers are expected to satisfy the `SecurityProvider` shape.
    *
-   * @param version - The protocol version (e.g. 'v1' or 'v2')
+   * @param version - The protocol version (e.g. 'v3' or 'v4')
    * @param provider - The protocol provider instance
    * @returns The broker handle for chaining
    */
-  registerProtocol(version: SecurityProtocolVersion, provider: unknown): BrokerHandle
+  registerProtocol(version: SecurityProtocolVersion, provider: SecurityProvider): BrokerHandle
 
   /**
    * Unregister a security protocol provider.

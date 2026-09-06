@@ -1,13 +1,9 @@
 /**
  * None transport implementation.
  *
- * A passthrough transport that performs no encryption or obfuscation.
- * Actions are sent and received unchanged via postMessage.
- *
- * This transport is used when:
- * - Security is explicitly disabled
- * - No security protocols are available
- * - Backward compatibility with non-security-aware channels
+ * A passthrough transport for the `'none'` protocol: actions are posted
+ * to the counterpart window as they are, and inbound payloads are handed
+ * to the action handler unchanged.
  *
  * @module security/transport/none-transport
  */
@@ -17,24 +13,20 @@ import type { NoneTransportConfig, TransportState } from './types'
 import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 
 /**
- * Creates a passthrough (no security) transport adapter.
- *
- * The none transport provides the same interface as secure transports
- * but performs no transformation on messages. This enables consistent
- * handling in channel code regardless of security configuration.
+ * Creates a passthrough transport for the `'none'` protocol.
  *
  * @param config - Configuration for the transport
  * @param config.target - Counterpart window that receives outbound traffic
  * @param config.getOrigin - Returns the origin currently pinned to the channel, or null before pinning
  * @param config.onAction - Receives each action delivered by the transport
- * @returns A security transport that passes through actions unchanged
+ * @returns A security transport that passes actions through unchanged
  *
- * @example Using passthrough transport
+ * @example Creating a plaintext transport
  * ```typescript
  * const transport = createNoneTransport({
  *   target: iframe.contentWindow,
  *   getOrigin: () => 'https://feature.example.com',
- *   onAction: (action) => console.log('Received:', action),
+ *   onAction: (action) => handleAction(action),
  * })
  *
  * transport.send({ type: 'test', data: 123 })
@@ -48,9 +40,7 @@ export function createNoneTransport(config: NoneTransportConfig): SecurityTransp
   }
 
   /**
-   * Send an action through the transport (passthrough).
-   *
-   * For the none transport, the action is sent unchanged via postMessage.
+   * Post an action to the counterpart window unchanged.
    *
    * @param action - The action to send
    */
@@ -58,17 +48,13 @@ export function createNoneTransport(config: NoneTransportConfig): SecurityTransp
     if (state.stopped) {
       return
     }
-
     const origin = getOrigin()
     // why: Sends target the pinned origin once learned; '*' covers the pre-pin window and opaque ('null') origins, which postMessage cannot target.
     target.postMessage(action, origin === null || origin === 'null' ? '*' : origin)
   }
 
   /**
-   * Process a received payload.
-   *
-   * The payload is delivered to the `onAction` handler unchanged
-   * (no decryption).
+   * Hand an inbound payload to the action handler unchanged.
    *
    * @param packet - The received payload
    */
@@ -76,42 +62,41 @@ export function createNoneTransport(config: NoneTransportConfig): SecurityTransp
     if (state.stopped) {
       return
     }
-
     onAction(packet)
   }
 
   /**
-   * Stop processing messages (backpressure control).
-   *
-   * For the none transport, this is a no-op since there is no
-   * internal queue. Messages are silently dropped when stopped.
+   * Nothing to start: the plaintext transport has no session.
+   */
+  const start = (): void => {
+    // why: The plaintext transport has no session to start.
+  }
+
+  /**
+   * Stop processing (backpressure control).
    */
   const stop = (): void => {
     state.stopped = true
   }
 
   /**
-   * Resume processing messages.
+   * Resume processing after stop.
    */
   const resume = (): void => {
     state.stopped = false
   }
 
   /**
-   * Check if the transport is ready for message exchange.
-   *
-   * The none transport is always ready since it requires no initialization.
-   *
-   * @returns Always returns true
+   * Nothing to release: the plaintext transport holds no timers or pipeline.
    */
-  const isReady = (): boolean => {
-    return true
+  const dispose = (): void => {
+    // why: The plaintext transport holds no timers or pipeline to release.
   }
 
   /**
    * Get the transport's protocol version.
    *
-   * @returns Always returns 'none'
+   * @returns Always `'none'`
    */
   const getProtocol = (): SecurityProtocolVersion => {
     return 'none'
@@ -120,9 +105,10 @@ export function createNoneTransport(config: NoneTransportConfig): SecurityTransp
   return freeze({
     send,
     receive,
+    start,
     stop,
     resume,
-    isReady,
+    dispose,
     getProtocol,
   })
 }

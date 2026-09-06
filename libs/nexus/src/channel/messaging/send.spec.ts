@@ -1,9 +1,9 @@
-import type { Mock } from '@hyperfrontend/testing'
 import type { ChannelState } from '../../types/channel'
 import type { IMessage } from '../../types/message'
 import type { ChannelInternals } from '../types'
 import { beforeEach } from 'node:test'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
+import { createInitialState } from '../state/initial'
 import * as queueModule from './queue'
 import { send } from './send'
 import * as sendActionModule from './send-action'
@@ -12,53 +12,27 @@ jest.mock('./queue')
 jest.mock('./send-action')
 
 describe('channel/messaging/send', () => {
-  let mockChannel: ChannelInternals
+  const message: IMessage = { type: 'USER_ACTION', data: { userId: 123 } }
+  const foreign: IMessage = { type: 'UNAUTHORIZED_ACTION', data: {} }
+  const notEmitted = (type: string): string =>
+    `Cannot send message to test-channel channel. Message type '${type}' is not in the emitted actions of channel contract.`
+
   let state: ChannelState
-  let mockWindow: { postMessage: Mock }
-  let mockGetState: Mock<ChannelState, []>
+  let channel: ChannelInternals
 
   beforeEach(() => {
     jest.clearAllMocks()
 
-    mockWindow = {
-      postMessage: jest.fn(),
-    }
-
     state = {
-      id: 'channel-123',
-      name: 'test-channel',
-      target: mockWindow as unknown as Window,
-      origin: 'https://example.com',
+      ...createInitialState('test-channel', { postMessage: jest.fn() } as unknown as Window, {
+        contract: { accepted: [{ type: 'SYSTEM_MESSAGE' }], emitted: [{ type: 'USER_ACTION' }] },
+      }),
       active: true,
-      connectTimestamp: Date.now(),
-      contract: { accepted: [{ type: 'SYSTEM_MESSAGE' }], emitted: [{ type: 'USER_ACTION' }] },
-      acceptedActions: ['SYSTEM_MESSAGE'],
-      queuedMessages: [],
-      queueMessages: true,
-      eventSubscriptions: [],
-      messageSubscriptions: [],
-      scheduledActivation: null,
-
-      brokerManaged: false,
-      readyToConnect: true,
-      negotiatedProtocol: null,
-      securityReady: false,
-      securityTransport: null,
-      pendingSecurityRequest: null,
-      logger: {
-        log: jest.fn(),
-        debug: jest.fn(),
-        info: jest.fn(),
-        warn: jest.fn(),
-        error: jest.fn(),
-        setLogLevel: jest.fn(),
-        getLogLevel: jest.fn(),
-      },
+      origin: 'https://example.com',
     }
 
-    mockGetState = jest.fn(() => state)
-    mockChannel = {
-      getState: mockGetState,
+    channel = {
+      getState: () => state,
       updateState: jest.fn(),
       sendAction: jest.fn(),
       createProcess: jest.fn(),
@@ -66,127 +40,104 @@ describe('channel/messaging/send', () => {
       notifyEvent: jest.fn(),
       notifyMessage: jest.fn(),
       actions: {
-        requestConnection: jest.fn(),
-        acceptConnection: jest.fn(),
-        denyConnection: jest.fn(),
-        cancelConnection: jest.fn(),
-        openConnection: jest.fn(),
-        closeConnection: jest.fn(),
-        destroyConnection: jest.fn(),
-        newMessage: jest.fn((data) => ({
-          type: '[nexus] new-message',
-          senderId: 'broker-id',
-          data,
-        })),
-        invalidRequest: jest.fn(),
-      },
+        newMessage: jest.fn((data: IMessage) => ({ type: '[nexus] new-message', senderId: 'broker-id', data })),
+      } as unknown as ChannelInternals['actions'],
     }
   })
 
-  describe('when channel is active', () => {
-    it('sends message if type is accepted', () => {
-      const message: IMessage = {
-        type: 'USER_ACTION',
-        data: { userId: 123 },
-      }
+  describe('on an active channel', () => {
+    it('wraps the message in a new-message action', () => {
+      send(channel, message)
 
-      send(mockChannel, message)
-
-      expect(mockChannel.actions.newMessage).toHaveBeenCalledWith(message)
-      expect(sendActionModule.sendAction).toHaveBeenCalledWith(
-        mockChannel,
-        expect.objectContaining({
-          type: '[nexus] new-message',
-          senderId: 'broker-id',
-          data: message,
-        })
-      )
-      expect(mockChannel.notifyMessage).toHaveBeenCalledWith(message)
+      expect(channel.actions.newMessage).toHaveBeenCalledWith(message)
     })
 
-    it('throws error if message type not accepted', () => {
-      const message: IMessage = {
-        type: 'UNAUTHORIZED_ACTION',
-        data: {},
-      }
+    it('sends the wrapped action', () => {
+      send(channel, message)
 
-      expect(() => send(mockChannel, message)).toThrow(
-        "Cannot send message to test-channel channel. Message type 'UNAUTHORIZED_ACTION' is not in the emitted actions of channel contract."
+      expect(sendActionModule.sendAction).toHaveBeenCalledWith(
+        channel,
+        expect.objectContaining({ type: '[nexus] new-message', senderId: 'broker-id', data: message })
       )
+    })
+
+    it('notifies the local message subscribers', () => {
+      send(channel, message)
+
+      expect(channel.notifyMessage).toHaveBeenCalledWith(message)
+    })
+
+    it('queues nothing', () => {
+      send(channel, message)
+
+      expect(queueModule.queue).not.toHaveBeenCalled()
+    })
+
+    it('throws when the message type is outside the emitted actions', () => {
+      expect(() => send(channel, foreign)).toThrow(notEmitted('UNAUTHORIZED_ACTION'))
+    })
+
+    it('throws when the channel has no contract', () => {
+      state = { ...state, contract: null }
+
+      expect(() => send(channel, message)).toThrow(notEmitted('USER_ACTION'))
     })
   })
 
-  describe('when channel is closed', () => {
+  describe('on a closed channel', () => {
     beforeEach(() => {
       state = { ...state, active: false }
-      mockGetState.mockReturnValue(state)
     })
 
-    it('queue message if queueMessages is enabled', () => {
-      const message: IMessage = {
-        type: 'USER_ACTION',
-        data: { userId: 123 },
-      }
+    it('queues the message when queueing is enabled', () => {
+      send(channel, message)
 
-      send(mockChannel, message)
+      expect(queueModule.queue).toHaveBeenCalledWith(channel, message)
+    })
 
-      expect(queueModule.queue).toHaveBeenCalledWith(mockChannel, message)
+    it('sends nothing when queueing is enabled', () => {
+      send(channel, message)
+
       expect(sendActionModule.sendAction).not.toHaveBeenCalled()
     })
 
-    it('throws error if queueMessages is disabled', () => {
+    it('throws when queueing is disabled', () => {
       state = { ...state, queueMessages: false }
-      mockGetState.mockReturnValue(state)
 
-      const message: IMessage = {
-        type: 'USER_ACTION',
-        data: {},
-      }
+      expect(() => send(channel, message)).toThrow('Cannot send message. Channel test-channel is not open.')
+    })
 
-      expect(() => send(mockChannel, message)).toThrow('Cannot send message. Channel test-channel is not open.')
+    it('validates the message type before queueing', () => {
+      expect(() => send(channel, foreign)).toThrow(notEmitted('UNAUTHORIZED_ACTION'))
+    })
+
+    it('queues nothing for a message type outside the emitted actions', () => {
+      expect(() => send(channel, foreign)).toThrow()
+      expect(queueModule.queue).not.toHaveBeenCalled()
     })
   })
 
-  describe('when security transport is not ready', () => {
+  describe('while a polite close is in flight', () => {
     beforeEach(() => {
-      state = {
-        ...state,
-        active: true,
-        negotiatedProtocol: 'v2',
-        securityTransport: {
-          isReady: jest.fn(() => false),
-          send: jest.fn(),
-          receive: jest.fn(),
-          stop: jest.fn(),
-          resume: jest.fn(),
-          getProtocol: jest.fn(() => 'v2'),
-        },
-      }
-      mockGetState.mockReturnValue(state)
+      state = { ...state, closingProcessId: 'close-1' }
     })
 
-    it('queues message if queueMessages is enabled', () => {
-      const message: IMessage = {
-        type: 'USER_ACTION',
-        data: { userId: 123 },
-      }
+    it('queues the message when queueing is enabled', () => {
+      send(channel, message)
 
-      send(mockChannel, message)
+      expect(queueModule.queue).toHaveBeenCalledWith(channel, message)
+    })
 
-      expect(queueModule.queue).toHaveBeenCalledWith(mockChannel, message)
+    it('sends nothing until the close settles', () => {
+      send(channel, message)
+
       expect(sendActionModule.sendAction).not.toHaveBeenCalled()
     })
 
-    it('throws error if queueMessages is disabled', () => {
+    it('throws when queueing is disabled', () => {
       state = { ...state, queueMessages: false }
-      mockGetState.mockReturnValue(state)
 
-      const message: IMessage = {
-        type: 'USER_ACTION',
-        data: {},
-      }
-
-      expect(() => send(mockChannel, message)).toThrow('Cannot send message. Security transport for channel test-channel is not ready.')
+      expect(() => send(channel, message)).toThrow('Cannot send message. Channel test-channel is not open.')
     })
   })
 })

@@ -20,13 +20,13 @@ describe('Integration: Multi-Channel', () => {
     jest.clearAllMocks()
   })
 
-  // note: the main broker has ONE contract shared by all of its channels, so
+  // note: the main broker has ONE contract shared by all of its channels, so every counterpart speaks the complementary one.
   const { contractA: mainContract, contractB: counterpartContract } = createContractPair(
     ['BROADCAST', 'DIRECT_MESSAGE'],
     ['ACK', 'RESPONSE']
   )
 
-  // how: the main broker listens on one shared window while each of its
+  // how: the main broker listens on one shared window while each counterpart gets a proxy that posts back into it with the counterpart's own origin and source.
   const wireCounterpart = (mainWindow: MockWindow, counterpartWindow: MockWindow, counterpartOrigin: string): MockWindow => {
     const mainProxy = createMockWindow()
     counterpartWindow.postMessage.mockImplementation((data: unknown) => {
@@ -79,7 +79,7 @@ describe('Integration: Multi-Channel', () => {
     return { mainBroker, pairs }
   }
 
-  // how: activation requires the wire handshake between BOTH brokers; the main
+  // how: activation requires the wire handshake between BOTH brokers; the main side requests and the counterpart answers.
   const activatePair = (pair: ReturnType<typeof buildPair>): void => {
     pair.mainChannel.connect()
     pair.counterpartChannel.connect()
@@ -215,7 +215,7 @@ describe('Integration: Multi-Channel', () => {
     it('activates every pair when all handshakes run back to back', () => {
       const { pairs } = setupMultiChannel(3)
 
-      // how: all main-side connects fire first so each counterpart holds a
+      // how: all main-side connects fire first so each counterpart holds a scheduled activation it answers on its own connect().
       pairs.forEach((pair) => pair.mainChannel.connect())
       pairs.forEach((pair) => pair.counterpartChannel.connect())
 
@@ -279,7 +279,7 @@ describe('Integration: Multi-Channel', () => {
       pairs.forEach(activatePair)
       pairs[0].mainChannel.disconnect()
 
-      // note: after a graceful close both sides stay ready, so a single
+      // note: after a graceful close both sides stay ready, so a single connect() re-handshakes the pair.
       pairs[0].mainChannel.connect()
 
       expect(pairs.map((pair) => [pair.mainChannel.isActive(), pair.counterpartChannel.isActive()])).toEqual([
@@ -291,7 +291,7 @@ describe('Integration: Multi-Channel', () => {
 
   describe('Performance', () => {
     it('handles many channels efficiently', () => {
-      // note: each channel needs a full counterpart window+broker pair for the
+      // note: each channel needs a full counterpart window+broker pair for the handshake, so the count stays modest.
       const channelCount = 20
       const { mainBroker, pairs } = setupMultiChannel(channelCount)
 

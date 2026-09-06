@@ -1,229 +1,111 @@
-import type { SecurityProtocolVersion, SecurityNegotiationRequest } from '../../types/security'
+import type { SecurityNegotiationRequest, SecurityProtocolVersion } from '../../types/security'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
-import { negotiateProtocol, createSecurityRequest, createSecurityResponse } from './negotiate'
+import { createSecurityRequest, createSecurityResponse, negotiateProtocol } from './negotiate'
 jest.unmock('@hyperfrontend/immutable-api-utils/built-in-copy/object')
 
 describe('Protocol Negotiation', () => {
   describe('negotiateProtocol', () => {
-    it('selects best matching protocol from preference list', () => {
-      const request: SecurityNegotiationRequest = {
-        supported: ['v2', 'v1', 'none'],
-        preferred: 'v2',
-      }
-      const responderSupported: SecurityProtocolVersion[] = ['v2', 'v1', 'none']
+    it('selects the first protocol both sides support', () => {
+      const request: SecurityNegotiationRequest = { supported: ['v4', 'v3', 'none'], preferred: 'v4' }
+      const responderSupported: SecurityProtocolVersion[] = ['v4', 'v3', 'none']
 
-      const result = negotiateProtocol(request, responderSupported)
-
-      expect(result.negotiated).toBe('v2')
-      expect(result.isPreferred).toBe(true)
+      expect(negotiateProtocol(request, responderSupported)).toEqual({ negotiated: 'v4', isPreferred: true })
     })
 
-    it('falls back to second choice when preferred not available', () => {
-      const request: SecurityNegotiationRequest = {
-        supported: ['v2', 'v1', 'none'],
-        preferred: 'v2',
-      }
-      const responderSupported: SecurityProtocolVersion[] = ['v1', 'none']
+    it('falls back to the next choice when the preferred protocol is unsupported', () => {
+      const request: SecurityNegotiationRequest = { supported: ['v4', 'v3', 'none'], preferred: 'v4' }
+      const responderSupported: SecurityProtocolVersion[] = ['v3', 'none']
 
-      const result = negotiateProtocol(request, responderSupported)
-
-      expect(result.negotiated).toBe('v1')
-      expect(result.isPreferred).toBe(false)
+      expect(negotiateProtocol(request, responderSupported)).toEqual({ negotiated: 'v3', isPreferred: false })
     })
 
-    it('falls back to "none" when no overlap', () => {
-      const request: SecurityNegotiationRequest = {
-        supported: ['v2'],
-        preferred: 'v2',
-      }
-      const responderSupported: SecurityProtocolVersion[] = ['v1']
+    it('falls back to none when nothing overlaps', () => {
+      const request: SecurityNegotiationRequest = { supported: ['v4'], preferred: 'v4' }
+      const responderSupported: SecurityProtocolVersion[] = ['v3']
 
-      const result = negotiateProtocol(request, responderSupported)
-
-      expect(result.negotiated).toBe('none')
-      expect(result.isPreferred).toBe(false)
+      expect(negotiateProtocol(request, responderSupported)).toEqual({ negotiated: 'none', isPreferred: false })
     })
 
-    it('honors initiator preference order', () => {
-      const request: SecurityNegotiationRequest = {
-        supported: ['v1', 'v2', 'none'],
-        preferred: 'v1',
-      }
-      const responderSupported: SecurityProtocolVersion[] = ['v2', 'v1', 'none']
+    it("honours the initiator's order over the responder's", () => {
+      const request: SecurityNegotiationRequest = { supported: ['v3', 'v4', 'none'], preferred: 'v3' }
+      const responderSupported: SecurityProtocolVersion[] = ['v4', 'v3', 'none']
 
-      const result = negotiateProtocol(request, responderSupported)
-
-      expect(result.negotiated).toBe('v1')
-      expect(result.isPreferred).toBe(true)
+      expect(negotiateProtocol(request, responderSupported)).toEqual({ negotiated: 'v3', isPreferred: true })
     })
 
-    it('requires v2 support on both sides for v2 selection', () => {
-      const request: SecurityNegotiationRequest = {
-        supported: ['v2', 'none'],
-        preferred: 'v2',
-      }
-      const responderSupported: SecurityProtocolVersion[] = ['v1', 'none']
+    it('requires v4 support on both sides', () => {
+      const request: SecurityNegotiationRequest = { supported: ['v4', 'none'], preferred: 'v4' }
+      const responderSupported: SecurityProtocolVersion[] = ['v3', 'none']
 
-      const result = negotiateProtocol(request, responderSupported)
-
-      expect(result.negotiated).toBe('none')
+      expect(negotiateProtocol(request, responderSupported).negotiated).toBe('none')
     })
 
-    it('selects v1 when both support v1 but not v2', () => {
-      const request: SecurityNegotiationRequest = {
-        supported: ['v2', 'v1', 'none'],
-        preferred: 'v2',
-      }
-      const responderSupported: SecurityProtocolVersion[] = ['v1', 'none']
+    it('accepts an external protocol identifier', () => {
+      const request: SecurityNegotiationRequest = { supported: ['acme-x25519', 'none'], preferred: 'acme-x25519' }
+      const responderSupported: SecurityProtocolVersion[] = ['acme-x25519', 'none']
 
-      const result = negotiateProtocol(request, responderSupported)
-
-      expect(result.negotiated).toBe('v1')
+      expect(negotiateProtocol(request, responderSupported)).toEqual({ negotiated: 'acme-x25519', isPreferred: true })
     })
 
-    it('handles empty initiator supported list', () => {
-      const request: SecurityNegotiationRequest = {
-        supported: [],
-        preferred: 'none',
-      }
-      const responderSupported: SecurityProtocolVersion[] = ['v2', 'v1', 'none']
+    it('falls back to none for an empty initiator list', () => {
+      const request: SecurityNegotiationRequest = { supported: [], preferred: 'none' }
+      const responderSupported: SecurityProtocolVersion[] = ['v4', 'v3', 'none']
 
-      const result = negotiateProtocol(request, responderSupported)
-
-      expect(result.negotiated).toBe('none')
+      expect(negotiateProtocol(request, responderSupported)).toEqual({ negotiated: 'none', isPreferred: true })
     })
 
-    it('handles empty responder supported list', () => {
-      const request: SecurityNegotiationRequest = {
-        supported: ['v2', 'v1', 'none'],
-        preferred: 'v2',
-      }
+    it('falls back to none for an empty responder list', () => {
+      const request: SecurityNegotiationRequest = { supported: ['v4', 'v3', 'none'], preferred: 'v4' }
       const responderSupported: SecurityProtocolVersion[] = []
 
-      const result = negotiateProtocol(request, responderSupported)
-
-      expect(result.negotiated).toBe('none')
+      expect(negotiateProtocol(request, responderSupported)).toEqual({ negotiated: 'none', isPreferred: false })
     })
 
-    it('returns isPreferred true when preferred protocol is negotiated', () => {
-      const request: SecurityNegotiationRequest = {
-        supported: ['v1', 'none'],
-        preferred: 'v1',
-      }
-      const responderSupported: SecurityProtocolVersion[] = ['v1', 'none']
-
-      const result = negotiateProtocol(request, responderSupported)
-
-      expect(result.isPreferred).toBe(true)
-    })
-
-    it('returns isPreferred false when non-preferred protocol is negotiated', () => {
-      const request: SecurityNegotiationRequest = {
-        supported: ['v2', 'v1', 'none'],
-        preferred: 'v2',
-      }
-      const responderSupported: SecurityProtocolVersion[] = ['v1', 'none']
-
-      const result = negotiateProtocol(request, responderSupported)
-
-      expect(result.isPreferred).toBe(false)
-    })
-
-    it('returns isPreferred true when none is both negotiated and preferred', () => {
-      const request: SecurityNegotiationRequest = {
-        supported: ['none'],
-        preferred: 'none',
-      }
+    it('reports none as preferred when it is both negotiated and preferred', () => {
+      const request: SecurityNegotiationRequest = { supported: ['none'], preferred: 'none' }
       const responderSupported: SecurityProtocolVersion[] = ['none']
 
-      const result = negotiateProtocol(request, responderSupported)
-
-      expect(result.negotiated).toBe('none')
-      expect(result.isPreferred).toBe(true)
+      expect(negotiateProtocol(request, responderSupported)).toEqual({ negotiated: 'none', isPreferred: true })
     })
   })
 
   describe('createSecurityRequest', () => {
-    it('creates request with supported protocols and first as preferred', () => {
-      const request = createSecurityRequest(['v2', 'v1', 'none'])
-
-      expect(request.supported).toEqual(['v2', 'v1', 'none'])
-      expect(request.preferred).toBe('v2')
+    it('prefers the first supported protocol', () => {
+      expect(createSecurityRequest(['v4', 'v3', 'none'])).toEqual({ supported: ['v4', 'v3', 'none'], preferred: 'v4' })
     })
 
-    it('uses explicit preferred when provided', () => {
-      const request = createSecurityRequest(['v2', 'v1', 'none'], 'v1')
-
-      expect(request.supported).toEqual(['v2', 'v1', 'none'])
-      expect(request.preferred).toBe('v1')
+    it('uses the explicit preference', () => {
+      expect(createSecurityRequest(['v4', 'v3', 'none'], 'v3')).toEqual({ supported: ['v4', 'v3', 'none'], preferred: 'v3' })
     })
 
-    it('defaults to "none" for empty supported list', () => {
-      const request = createSecurityRequest([])
-
-      expect(request.supported).toEqual(['none'])
-      expect(request.preferred).toBe('none')
+    it('defaults to none for an empty supported list', () => {
+      expect(createSecurityRequest([])).toEqual({ supported: ['none'], preferred: 'none' })
     })
 
-    it('creates frozen request object', () => {
-      const request = createSecurityRequest(['v2', 'v1'])
-
-      expect(Object.isFrozen(request)).toBe(true)
+    it('handles a single supported protocol', () => {
+      expect(createSecurityRequest(['v3'])).toEqual({ supported: ['v3'], preferred: 'v3' })
     })
 
-    it('handles single protocol in supported list', () => {
-      const request = createSecurityRequest(['v1'])
-
-      expect(request.supported).toEqual(['v1'])
-      expect(request.preferred).toBe('v1')
+    it('freezes the request', () => {
+      expect(Object.isFrozen(createSecurityRequest(['v4', 'v3']))).toBe(true)
     })
   })
 
   describe('createSecurityResponse', () => {
-    it('creates response with negotiated protocol', () => {
-      const response = createSecurityResponse('v2')
-
-      expect(response.negotiated).toBe('v2')
-      expect(response.publicParams).toBeUndefined()
+    it('carries only the negotiated protocol', () => {
+      expect(createSecurityResponse('v4')).toStrictEqual({ negotiated: 'v4' })
     })
 
-    it('includes public params when provided', () => {
-      const params = { hint: 'test-value', nonce: 12345 }
-      const response = createSecurityResponse('v2', params)
-
-      expect(response.negotiated).toBe('v2')
-      expect(response.publicParams).toEqual(params)
+    it('carries none', () => {
+      expect(createSecurityResponse('none')).toStrictEqual({ negotiated: 'none' })
     })
 
-    it('creates frozen response object', () => {
-      const response = createSecurityResponse('v1')
-
-      expect(Object.isFrozen(response)).toBe(true)
+    it('carries an external protocol identifier', () => {
+      expect(createSecurityResponse('acme-x25519')).toStrictEqual({ negotiated: 'acme-x25519' })
     })
 
-    it('handles "none" as negotiated protocol', () => {
-      const response = createSecurityResponse('none')
-
-      expect(response.negotiated).toBe('none')
-    })
-
-    it('handles empty public params object', () => {
-      const response = createSecurityResponse('v2', {})
-
-      expect(response.publicParams).toEqual({})
-    })
-
-    it('handles complex nested public params', () => {
-      const params = {
-        keyExchange: {
-          algorithm: 'ECDH',
-          curve: 'P-256',
-        },
-        nonce: new Uint8Array([1, 2, 3, 4]).toString(),
-      }
-      const response = createSecurityResponse('v2', params)
-
-      expect(response.publicParams).toEqual(params)
+    it('freezes the response', () => {
+      expect(Object.isFrozen(createSecurityResponse('v3'))).toBe(true)
     })
   })
 })

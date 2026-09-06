@@ -43,8 +43,8 @@ describe('createActionCreators', () => {
     it('creates REQUEST_CONNECTION action with security negotiation request', () => {
       const processId = 'process-secure'
       const security = {
-        supported: ['v2', 'v1', 'none'] as const,
-        preferred: 'v2' as const,
+        supported: ['v4', 'v3', 'none'] as const,
+        preferred: 'v4' as const,
       }
       const action = actions.requestConnection(processId, security)
 
@@ -60,8 +60,8 @@ describe('createActionCreators', () => {
     it('includes security field only when provided', () => {
       const actionWithoutSecurity = actions.requestConnection('process-1')
       const actionWithSecurity = actions.requestConnection('process-2', {
-        supported: ['v1', 'none'],
-        preferred: 'v1',
+        supported: ['v3', 'none'],
+        preferred: 'v3',
       })
 
       expect('security' in actionWithoutSecurity).toBe(false)
@@ -97,7 +97,7 @@ describe('createActionCreators', () => {
 
     it('creates ACCEPT_CONNECTION action with security negotiation response', () => {
       const processId = 'process-secure'
-      const security = { negotiated: 'v2' as const }
+      const security = { negotiated: 'v4' as const }
       const action = actions.acceptConnection(processId, security)
 
       expect(action).toEqual({
@@ -111,7 +111,7 @@ describe('createActionCreators', () => {
 
     it('includes security field only when provided', () => {
       const actionWithoutSecurity = actions.acceptConnection('process-1')
-      const actionWithSecurity = actions.acceptConnection('process-2', { negotiated: 'v1' })
+      const actionWithSecurity = actions.acceptConnection('process-2', { negotiated: 'v3' })
 
       expect('security' in actionWithoutSecurity).toBe(false)
       expect('security' in actionWithSecurity).toBe(true)
@@ -177,7 +177,7 @@ describe('createActionCreators', () => {
       const processId = 'process-secure'
       const security = {
         active: true,
-        protocol: 'v2' as const,
+        protocol: 'v4' as const,
       }
       const action = actions.openConnection(processId, security)
 
@@ -191,7 +191,7 @@ describe('createActionCreators', () => {
 
     it('includes security field only when provided', () => {
       const actionWithoutSecurity = actions.openConnection('process-1')
-      const actionWithSecurity = actions.openConnection('process-2', { active: true, protocol: 'v1' })
+      const actionWithSecurity = actions.openConnection('process-2', { active: true, protocol: 'v3' })
 
       expect('security' in actionWithoutSecurity).toBe(false)
       expect('security' in actionWithSecurity).toBe(true)

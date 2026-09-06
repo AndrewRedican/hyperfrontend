@@ -34,4 +34,6 @@ export function beginResponse(channel: ChannelInternals, activation: ScheduledAc
   // why: Timers start before the send so a synchronously delivered OPEN finds them registered and clears them.
   startHandshakeTimers(channel, acceptAction, () => expireHandshake(channel, processId))
   channel.sendAction(acceptAction)
+  // why: Started after ACCEPT leaves so the hello follows it on the wire and the confirmation deadline covers the counterpart's whole reply.
+  channel.getState().securityTransport?.start()
 }

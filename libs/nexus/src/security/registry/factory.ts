@@ -6,7 +6,7 @@
  * @module security/registry/factory
  */
 
-import type { SecurityProtocolVersion } from '../../types/security'
+import type { SecurityProtocolVersion, SecurityProvider } from '../../types/security'
 import type { ProtocolRegistry } from './types'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
@@ -30,28 +30,28 @@ import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
  * ```typescript
  * const registry = createProtocolRegistry()
  *
- * // Register v1 protocol
- * registry.register('v1', provider)
+ * // Register the v4 protocol
+ * registry.register('v4', provider)
  *
  * // Check availability
- * registry.has('v1') // true
- * registry.has('v2') // false
+ * registry.has('v4') // true
+ * registry.has('v3') // false
  * registry.has('none') // always true
  *
  * // Get supported versions
- * registry.getSupportedVersions() // ['v1', 'none']
+ * registry.getSupportedVersions() // ['v4', 'none']
  * ```
  */
 export function createProtocolRegistry(): ProtocolRegistry {
-  const providers = createMap<string, unknown>()
+  const providers = createMap<string, SecurityProvider>()
 
   /**
    * Register a protocol provider.
    *
-   * @param version - The protocol version (e.g. 'v1' or 'v2')
+   * @param version - The protocol version (e.g. 'v3' or 'v4')
    * @param provider - The protocol provider instance
    */
-  const register = (version: SecurityProtocolVersion, provider: unknown): void => {
+  const register = (version: SecurityProtocolVersion, provider: SecurityProvider): void => {
     if (version === 'none') {
       throw createError(`Cannot register a provider for 'none': the plaintext protocol needs no provider`)
     }
@@ -84,7 +84,7 @@ export function createProtocolRegistry(): ProtocolRegistry {
    * @param version - The protocol version to retrieve
    * @returns The provider if registered, otherwise undefined
    */
-  const get = (version: SecurityProtocolVersion): unknown | undefined => {
+  const get = (version: SecurityProtocolVersion): SecurityProvider | undefined => {
     if (version === 'none') {
       return undefined
     }
@@ -112,7 +112,7 @@ export function createProtocolRegistry(): ProtocolRegistry {
    * Get all supported protocol versions.
    *
    * Returns versions that have registered providers plus 'none'.
-   * Built-in versions lead the list ('v2' before 'v1'), followed by any
+   * Built-in versions lead the list ('v4' before 'v3'), followed by any
    * registered external identifiers in registration order, with 'none' last.
    *
    * @returns Array of supported protocol versions
@@ -120,16 +120,16 @@ export function createProtocolRegistry(): ProtocolRegistry {
   const getSupportedVersions = (): SecurityProtocolVersion[] => {
     const versions: SecurityProtocolVersion[] = []
 
-    if (providers.has('v2')) {
-      versions.push('v2')
+    if (providers.has('v4')) {
+      versions.push('v4')
     }
 
-    if (providers.has('v1')) {
-      versions.push('v1')
+    if (providers.has('v3')) {
+      versions.push('v3')
     }
 
     for (const version of providers.keys()) {
-      if (version !== 'v1' && version !== 'v2') {
+      if (version !== 'v3' && version !== 'v4') {
         versions.push(version)
       }
     }

@@ -5,6 +5,7 @@ import type { ChannelEvent, EventCallbackMap } from './events'
 import type { IMessage } from './message'
 import type {
   SecurityProtocolVersion,
+  SecuritySessionRole,
   SecurityTransport,
   SecurityNegotiationRequest,
   SecurityNegotiationResponse,
@@ -142,8 +143,6 @@ export interface ChannelState {
   readonly readyToConnect: boolean
   /** Negotiated security protocol (null before negotiation) */
   readonly negotiatedProtocol: SecurityProtocolVersion | null
-  /** Whether security transport is ready for secure messages */
-  readonly securityReady: boolean
   /** Security transport adapter (null if protocol is 'none' or not negotiated) */
   readonly securityTransport: SecurityTransport | null
   /** Pending security negotiation request from initiator (for responder to use) */
@@ -296,7 +295,7 @@ export interface ChannelHandle {
    * Checks whether the responder side sent ACCEPT and is waiting for the
    * counterpart's OPEN to activate.
    */
-  isAwaitingOpen(): boolean
+  isAwaitingOpen(processId?: string): boolean
 
   /**
    * Gets the security settings configured for this channel
@@ -386,13 +385,21 @@ export interface ChannelHandle {
   getSecurityTransport(): SecurityTransport | null
 
   /**
-   * Marks security as ready for message exchange.
-   * Called when security transport is fully initialized.
+   * Attaches an encrypted transport for the negotiated protocol.
+   *
+   * The transport is created from the provider the broker registered for
+   * the protocol and starts its hello exchange with the next handshake
+   * frame this side sends.
+   *
+   * @param protocol - Negotiated security protocol
+   * @param peerId - Broker id of the counterpart
+   * @param role - This side's handshake role
+   * @returns True when the transport was attached; false when no provider can serve the protocol
    */
-  setSecurityReady(ready: boolean): void
+  attachSecurityTransport(protocol: SecurityProtocolVersion, peerId: string, role: SecuritySessionRole): boolean
 
   /**
-   * Checks if security transport is ready.
+   * Releases the channel's security transport, if it has one.
    */
-  isSecurityReady(): boolean
+  dropSecurityTransport(): void
 }

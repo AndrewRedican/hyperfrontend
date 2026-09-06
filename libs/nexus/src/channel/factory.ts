@@ -3,7 +3,13 @@ import type { IChannelConfig, ChannelHandle, ChannelJSON, EventHandler } from '.
 import type { IChannelContract } from '../types/contract'
 import type { ChannelEvent, EventCallbackMap } from '../types/events'
 import type { IMessage } from '../types/message'
-import type { SecurityProtocolVersion, SecurityTransport, SecurityNegotiationRequest, SecurityNegotiationResponse } from '../types/security'
+import type {
+  SecurityProtocolVersion,
+  SecuritySessionRole,
+  SecurityTransport,
+  SecurityNegotiationRequest,
+  SecurityNegotiationResponse,
+} from '../types/security'
 import type { ChannelInternals, ChannelDependencies } from './types'
 import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { assertNoCircularRef } from '../utils/validation/assert-no-circular-ref'
@@ -16,9 +22,10 @@ import { completeScheduledOpen } from './lifecycle/complete-open'
 import { connect } from './lifecycle/connect'
 import { destroy } from './lifecycle/destroy'
 import { disconnect } from './lifecycle/disconnect'
-import { flush } from './messaging/flush'
 import { send } from './messaging/send'
 import { sendAction as sendActionImpl } from './messaging/send-action'
+import { attachSecurityTransport } from './security/attach'
+import { dropSecurityTransport } from './security/drop'
 import { activate as activateState } from './state/activate'
 import { createInitialState } from './state/initial'
 import { subscribeToEvents } from './subscription/events'
@@ -84,6 +91,8 @@ export function createChannel(config: IChannelConfig, deps: ChannelDependencies)
     actions: deps.actions,
 
     cleanup: deps.cleanup,
+
+    security: deps.security,
   }
 
   const handle: ChannelHandle = {
@@ -156,8 +165,8 @@ export function createChannel(config: IChannelConfig, deps: ChannelDependencies)
       return state.readyToConnect
     },
 
-    isAwaitingOpen: () => {
-      return state.pendingAccept !== null
+    isAwaitingOpen: (processId?: string) => {
+      return state.pendingAccept !== null && (processId === undefined || state.pendingAccept[3] === processId)
     },
 
     getSecuritySettings: () => {
@@ -182,6 +191,11 @@ export function createChannel(config: IChannelConfig, deps: ChannelDependencies)
       processId: string,
       security?: SecurityNegotiationResponse
     ) => {
+      // why: A channel holds one scheduled handshake; the process a superseded request tracked would otherwise stay tracked until the broker is torn down.
+      const previous = state.scheduledActivation
+      if (previous !== null && previous[3] !== processId) {
+        internals.removeProcess(previous[3])
+      }
       internals.updateState({
         scheduledActivation: [senderId, origin, contract, processId, security] as const,
       })
@@ -227,16 +241,12 @@ export function createChannel(config: IChannelConfig, deps: ChannelDependencies)
       return state.securityTransport
     },
 
-    setSecurityReady: (ready: boolean) => {
-      internals.updateState({ securityReady: ready })
-      // why: Messages queued while an external transport reported not-ready must flush through it as soon as readiness is signalled.
-      if (ready && state.active && state.queuedMessages.length > 0) {
-        flush(internals)
-      }
+    attachSecurityTransport: (protocol: SecurityProtocolVersion, peerId: string, role: SecuritySessionRole) => {
+      return attachSecurityTransport(internals, protocol, peerId, role)
     },
 
-    isSecurityReady: () => {
-      return state.securityReady
+    dropSecurityTransport: () => {
+      dropSecurityTransport(internals)
     },
   }
 

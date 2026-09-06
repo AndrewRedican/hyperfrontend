@@ -1,7 +1,7 @@
 import type { IAction } from './action'
 import type { ChannelJSON } from './channel'
 import type { IChannelContract } from './contract'
-import type { SecurityProtocolVersion } from './security'
+import type { SecurityErrorCode, SecurityProtocolVersion } from './security'
 
 /**
  * Channel lifecycle event types
@@ -14,7 +14,6 @@ export type ChannelEvent =
   | 'deny'
   | 'invalid'
   | 'connect-timeout'
-  | 'security-negotiated'
   | 'security-ready'
   | 'security-error'
 
@@ -44,8 +43,12 @@ export interface ClosingEventData {
  *   (a reload or in-frame navigation), so the session it belonged to is over.
  *   The channel stays reconnectable and the new instance's handshake is
  *   already in flight.
+ * - `security-unconfirmed`: the counterpart never confirmed the session keys
+ *   before the connect timeout (or its session material could not key the
+ *   session), so the connection closed silently rather than exchange anything
+ *   under unconfirmed keys. The channel stays reconnectable.
  */
-export type CloseReason = 'peer-reload'
+export type CloseReason = 'peer-reload' | 'security-unconfirmed'
 
 /**
  * Data payload for CLOSE event
@@ -122,23 +125,11 @@ export interface ConnectTimeoutEventData {
 }
 
 /**
- * Data payload for SECURITY_NEGOTIATED event
- */
-export interface SecurityNegotiatedEventData {
-  /** Negotiated security protocol */
-  protocol: SecurityProtocolVersion
-  /** Whether this was the preferred protocol */
-  isPreferred: boolean
-}
-
-/**
  * Data payload for SECURITY_READY event
  */
 export interface SecurityReadyEventData {
-  /** Active security protocol */
+  /** The protocol the confirmed session runs on */
   protocol: SecurityProtocolVersion
-  /** Whether security is active (true for v1/v2, false for 'none') */
-  active: boolean
 }
 
 /**
@@ -148,9 +139,9 @@ export interface SecurityErrorEventData {
   /** Error message */
   message: string
   /** Error code for programmatic handling */
-  code: 'decryption_failed' | 'deobfuscation_failed' | 'transport_error' | 'unknown'
+  code: SecurityErrorCode
   /** Original error (if available) */
-  cause?: Error
+  cause?: unknown
 }
 
 /**
@@ -178,7 +169,6 @@ export type EventData =
   | EventEnvelope<'deny', DenyEventData>
   | EventEnvelope<'invalid', InvalidEventData>
   | EventEnvelope<'connect-timeout', ConnectTimeoutEventData>
-  | EventEnvelope<'security-negotiated', SecurityNegotiatedEventData>
   | EventEnvelope<'security-ready', SecurityReadyEventData>
   | EventEnvelope<'security-error', SecurityErrorEventData>
 
@@ -218,11 +208,6 @@ export type InvalidEventHandler = (event: 'invalid', data: InvalidEventData, cha
 export type ConnectTimeoutEventHandler = (event: 'connect-timeout', data: ConnectTimeoutEventData, channel: ChannelJSON) => void
 
 /**
- * Type-safe event handler for SECURITY_NEGOTIATED events
- */
-export type SecurityNegotiatedEventHandler = (event: 'security-negotiated', data: SecurityNegotiatedEventData, channel: ChannelJSON) => void
-
-/**
  * Type-safe event handler for SECURITY_READY events
  */
 export type SecurityReadyEventHandler = (event: 'security-ready', data: SecurityReadyEventData, channel: ChannelJSON) => void
@@ -243,7 +228,6 @@ export type TypedEventHandler =
   | DenyEventHandler
   | InvalidEventHandler
   | ConnectTimeoutEventHandler
-  | SecurityNegotiatedEventHandler
   | SecurityReadyEventHandler
   | SecurityErrorEventHandler
 
@@ -283,11 +267,6 @@ export type InvalidCallback = (data: InvalidEventData, channel: ChannelJSON) => 
 export type ConnectTimeoutCallback = (data: ConnectTimeoutEventData, channel: ChannelJSON) => void
 
 /**
- * Simplified callback for SECURITY_NEGOTIATED events (event name omitted)
- */
-export type SecurityNegotiatedCallback = (data: SecurityNegotiatedEventData, channel: ChannelJSON) => void
-
-/**
  * Simplified callback for SECURITY_READY events (event name omitted)
  */
 export type SecurityReadyCallback = (data: SecurityReadyEventData, channel: ChannelJSON) => void
@@ -316,8 +295,6 @@ export interface EventCallbackMap {
   invalid: InvalidCallback
   /** Callback for connect-timeout events */
   'connect-timeout': ConnectTimeoutCallback
-  /** Callback for security-negotiated events */
-  'security-negotiated': SecurityNegotiatedCallback
   /** Callback for security-ready events */
   'security-ready': SecurityReadyCallback
   /** Callback for security-error events */

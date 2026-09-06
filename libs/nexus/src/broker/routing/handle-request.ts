@@ -1,7 +1,7 @@
 import type { IAction, IActionWithContractAndSecurity } from '../../types/action'
 import type { ChannelHandle } from '../../types/channel'
 import type { DenyReason } from '../../types/events'
-import type { SecurityNegotiationRequest, SecurityNegotiationResponse } from '../../types/security'
+import type { SecurityNegotiationRequest, SecurityNegotiationResponse, SecurityProtocolVersion } from '../../types/security'
 import type { RoutingContext } from './types'
 import { validateContract as validateContractFn } from '../../core/validation/contract'
 import { negotiateProtocol, createSecurityResponse } from '../../security/negotiation/negotiate'
@@ -50,6 +50,63 @@ function denyRequest(context: RoutingContext, channel: ChannelHandle, processId:
 }
 
 /**
+ * Selects the protocols this side offers the negotiation for a channel.
+ *
+ * A channel that asked for a protocol negotiates that protocol or nothing,
+ * so a counterpart cannot steer it onto another provider the broker happens
+ * to hold. A channel without a selection offers every registered protocol.
+ *
+ * @param context - Routing context with state, registry, actions, and logger
+ * @param channel - Channel the request arrived on
+ * @returns The protocols to negotiate against, 'none' last
+ */
+function protocolsOfferedBy(context: RoutingContext, channel: ChannelHandle): readonly SecurityProtocolVersion[] {
+  const settings = channel.getSecuritySettings()
+  const supported = context.getSupportedProtocols()
+  return requestsSecurity(settings) ? supported.filter((protocol) => protocol === settings.protocol || protocol === 'none') : supported
+}
+
+/**
+ * Negotiates the security outcome of a request and, when this side answers
+ * now, attaches its transport.
+ *
+ * The transport is attached before ACCEPT leaves, so a provider that cannot
+ * serve the session degrades the outcome to plaintext in the answer itself
+ * instead of after the counterpart has already keyed. A request this side
+ * has not called connect() for is only negotiated; the scheduled answer
+ * attaches the transport when it composes ACCEPT.
+ *
+ * @param context - Routing context with state, registry, actions, and logger
+ * @param channel - Channel the request arrived on
+ * @param request - The counterpart's security negotiation request
+ * @param senderId - Broker id of the counterpart
+ * @returns The negotiated protocol, 'none' when no encrypted transport could be attached
+ */
+function negotiateSecurity(
+  context: RoutingContext,
+  channel: ChannelHandle,
+  request: SecurityNegotiationRequest,
+  senderId: string
+): SecurityProtocolVersion {
+  const { state, logger } = context
+
+  channel.setPendingSecurityRequest(request)
+
+  let negotiated = negotiateProtocol(request, protocolsOfferedBy(context, channel)).negotiated
+
+  // why: A request nobody has called connect() for costs no session material; the scheduled answer attaches the transport when it composes ACCEPT.
+  if (negotiated !== 'none' && channel.isReadyToConnect() && !channel.attachSecurityTransport(negotiated, senderId, 'responder')) {
+    // why: The negotiation chose a protocol this broker registered, but the provider could not serve the session, so the outcome degrades to plaintext.
+    logger.warn(`${state.name} has no working provider for the negotiated '${negotiated}' protocol.`)
+    negotiated = 'none'
+  }
+
+  channel.setNegotiatedProtocol(negotiated)
+  logger.info(`${state.name} negotiated security protocol: ${negotiated}`)
+  return negotiated
+}
+
+/**
  * Handles REQUEST_CONNECTION action.
  * Answers the connection request as the responder side of the handshake.
  *
@@ -60,7 +117,8 @@ function denyRequest(context: RoutingContext, channel: ChannelHandle, processId:
  * Side Effects:
  * - Creates a new channel when the source window is unknown
  * - Drops requests whose origin does not match an already pinned origin
- * - Replays ACCEPT for duplicate requests from the connected counterpart
+ * - Replays ACCEPT, repeating the recorded security outcome, for duplicate
+ *   requests from the connected counterpart
  * - Ends the session and re-handshakes on the same channel when the request
  *   comes from a different instance in the connected window (a reload or
  *   in-frame navigation), firing 'close' with `reason: 'peer-reload'`
@@ -75,7 +133,12 @@ function denyRequest(context: RoutingContext, channel: ChannelHandle, processId:
  *   denying side's consumer is never left waiting on a channel it refused
  * - Withholds the reason from the DENY frame for a policy rejection: the
  *   refused requester is told only that it was not accepted
- * - Negotiates the security protocol against the broker's protocol registry
+ * - Negotiates the security protocol: a channel that selected a protocol
+ *   offers only that protocol, any other channel offers every protocol the
+ *   broker registered
+ * - Attaches the security transport for the negotiated protocol before
+ *   ACCEPT leaves; the transport starts its hello exchange with the ACCEPT.
+ *   A scheduled answer attaches it when connect() composes the ACCEPT
  * - Fires each local 'deny' event once per handshake process: a retried
  *   REQUEST re-using the process id is answered with another DENY frame
  *   but does not notify local subscribers again
@@ -107,7 +170,16 @@ export function handleRequest(context: RoutingContext, message: MessageEvent<IAc
   let channel = (message.source ? registry.getByWindow(message.source as Window) : undefined) as ChannelHandle | undefined
   if (!channel) {
     // why: Named from the requester's origin, not its broker id — the id identifies one incarnation of the counterpart, while the channel outlives every incarnation the window loads.
-    channel = addChannel(state, registry, processManager, actions, `inbound-${message.origin}`, message.source as Window, {})
+    channel = addChannel(
+      state,
+      registry,
+      processManager,
+      actions,
+      `inbound-${message.origin}`,
+      message.source as Window,
+      {},
+      context.security
+    )
   }
 
   const pinnedOrigin = channel.getOrigin()
@@ -118,16 +190,14 @@ export function handleRequest(context: RoutingContext, message: MessageEvent<IAc
 
   if (channel.isActive()) {
     if (channel.getPeerId() === senderId) {
-      const securityResponse = securityRequest
-        ? createSecurityResponse(negotiateProtocol(securityRequest, context.getSupportedProtocols()).negotiated)
-        : undefined
-
+      // why: The replayed ACCEPT repeats the outcome the session runs on; renegotiating could answer a lost OPEN with a different protocol than the one attached.
+      const negotiated = channel.getNegotiatedProtocol()
       channel.sendAction({
         type: '[nexus] connection-request-accepted',
         processId,
         senderId: state.id,
         contract: state.contract,
-        ...(securityResponse && { security: securityResponse }),
+        ...(securityRequest && negotiated !== null && { security: createSecurityResponse(negotiated) }),
       })
       return
     }
@@ -186,17 +256,13 @@ export function handleRequest(context: RoutingContext, message: MessageEvent<IAc
   }
 
   let securityResponse: SecurityNegotiationResponse | undefined = undefined
+  let negotiated: SecurityProtocolVersion = 'none'
   if (securityRequest) {
-    channel.setPendingSecurityRequest(securityRequest)
-
-    const result = negotiateProtocol(securityRequest, context.getSupportedProtocols())
-    channel.setNegotiatedProtocol(result.negotiated)
-    securityResponse = createSecurityResponse(result.negotiated)
-
-    logger.info(`${state.name} negotiated security protocol: ${result.negotiated}`)
+    negotiated = negotiateSecurity(context, channel, securityRequest, senderId)
+    securityResponse = createSecurityResponse(negotiated)
   }
 
-  if ((securityResponse?.negotiated ?? 'none') === 'none') {
+  if (negotiated === 'none') {
     const securitySettings = channel.getSecuritySettings()
     if (requiresSecurity(securitySettings)) {
       denyRequest(context, channel, processId, message.origin, {
