@@ -21,8 +21,8 @@ flowchart TB
         end
 
         Nexus["<b>@hyperfrontend/nexus</b><br/>Communication Protocol<br/>(Broker-Channel Architecture)"]
-        Protocol["<b>@hyperfrontend/network-protocol</b><br/>Security Layer<br/>(Encryption + Obfuscation)"]
-        Crypto["<b>@hyperfrontend/cryptography</b><br/>AES-GCM + PBKDF2"]
+        Protocol["<b>@hyperfrontend/network-protocol</b><br/>Security Layer<br/>(Sealed Session Envelope)"]
+        Crypto["<b>@hyperfrontend/cryptography</b><br/>AES-GCM + ECDH + HKDF + PBKDF2"]
 
         Host --> Nexus
         Feature1 --> Nexus
@@ -40,16 +40,16 @@ flowchart TB
 
 The architecture is composed of specialized libraries that layer on top of each other:
 
-| Layer             | Package                           | Responsibility                                     |
-| ----------------- | --------------------------------- | -------------------------------------------------- |
-| **SDK**           | `@hyperfrontend/features`         | Host/hostee runtime SDK, shell generation, CLI     |
-| **Communication** | `@hyperfrontend/nexus`            | Broker-channel messaging with contracts            |
-| **Security**      | `@hyperfrontend/network-protocol` | Encryption pipelines and obfuscation               |
-| **Crypto**        | `@hyperfrontend/cryptography`     | AES-GCM encryption, PBKDF2 key derivation, hashing |
-| **Foundation**    | `@hyperfrontend/state-machine`    | State management patterns                          |
-|                   | `@hyperfrontend/logging`          | Structured logging                                 |
-|                   | `@hyperfrontend/web-worker`       | Web Worker utilities                               |
-|                   | `@hyperfrontend/utils/*`          | Data, string, list, time, function utilities       |
+| Layer             | Package                           | Responsibility                                    |
+| ----------------- | --------------------------------- | ------------------------------------------------- |
+| **SDK**           | `@hyperfrontend/features`         | Host/hostee runtime SDK, shell generation, CLI    |
+| **Communication** | `@hyperfrontend/nexus`            | Broker-channel messaging with contracts           |
+| **Security**      | `@hyperfrontend/network-protocol` | Per-session sealed envelope over the wire         |
+| **Crypto**        | `@hyperfrontend/cryptography`     | AES-GCM, ECDH agreement, HKDF and PBKDF2, hashing |
+| **Foundation**    | `@hyperfrontend/state-machine`    | State management patterns                         |
+|                   | `@hyperfrontend/logging`          | Structured logging                                |
+|                   | `@hyperfrontend/web-worker`       | Web Worker utilities                              |
+|                   | `@hyperfrontend/utils/*`          | Data, string, list, time, function utilities      |
 
 ---
 
@@ -221,14 +221,20 @@ const contract = {
 
 ### Protocol Versions
 
-| Version | Security Level  | Use Case                                   |
-| ------- | --------------- | ------------------------------------------ |
-| **v1**  | Obfuscation     | Trusted environments, same-origin features |
-| **v2**  | Full Encryption | Cross-origin features, sensitive data      |
+| Version | Key Material                                    | Defeats                                                        |
+| ------- | ----------------------------------------------- | -------------------------------------------------------------- |
+| **v3**  | Ephemeral ECDH P-256 session keys               | Scripts that can only listen (passive observers of `message`)  |
+| **v4**  | The same session keys bound to a pre-shared key | Any script without the key, including one that can post frames |
+
+Neither protocol hides the hello: public keys and nonces are public by design. A v3 session does not authenticate who the counterpart is, because a script that can post to a peer's window with a genuine source can complete the handshake as that peer. Under v4 a key mismatch is detected because no frame ever authenticates. The pre-shared key must be at least 16 characters; `createProtocol` throws on a shorter one.
+
+### Session Key Schedule
+
+Each endpoint mints a 32-byte nonce and an ephemeral P-256 key pair when the session is created and exchanges them in a plaintext hello frame. The salt is the initiator nonce followed by the responder nonce. The input key material is the ECDH shared secret (v3), or that secret followed by PBKDF2-SHA256 of the shared key over the salt at 600,000 iterations (v4). HKDF-SHA256 expands two AES-GCM-256 keys, one per direction (`i2r` and `r2i`), with info bound to the protocol and both endpoint ids; each side seals with its own direction's key and opens with the other's. Raw material is zeroed after derivation, and the stretch is paid once per session, never per message.
 
 ### Message Pipeline
 
-Messages pass through staged queues for transformation:
+A channel runs one seal stage outbound and one open stage inbound, both array-backed FIFOs. A packet either stage rejects is reported through the channel's `onDrop` callback with its direction, stage, reason, cause, and the packet itself.
 
 **Outbound Pipeline**
 
@@ -240,10 +246,8 @@ config:
     fontSize: 12px
 ---
 flowchart LR
-    A1["Plaintext Message"] --> B1["Encryption Queue"]
-    B1 --> C1["Serialization Queue"]
-    C1 --> D1["Obfuscation Queue"]
-    D1 --> E1["Wire Format"]
+    A1["Packet"] --> B1["Seal Stage<br/>(counter, AES-GCM)"]
+    B1 --> C1["Wire Frame"]
 ```
 
 **Inbound Pipeline**
@@ -256,20 +260,27 @@ config:
     fontSize: 12px
 ---
 flowchart LR
-    A2["Wire Format"] --> B2["Deobfuscation Queue"]
-    B2 --> C2["Deserialization Queue"]
-    C2 --> D2["Decryption Queue"]
-    D2 --> E2["Plaintext Message"]
+    A2["Wire Frame"] --> B2["Open Stage<br/>(replay check, AES-GCM)"]
+    B2 --> C2["Packet"]
 ```
+
+### Wire Format
+
+| Frame     | Layout                                                                                         |
+| --------- | ---------------------------------------------------------------------------------------------- |
+| **Hello** | `[version][type=1][nonce 32][public key 65]`: 99 bytes, plaintext                              |
+| **Data**  | `[version][type=0][counter u64 big-endian]` followed by the AES-GCM ciphertext and 16-byte tag |
+
+The ten-byte data header is the additional authenticated data, and the nonce is derived from it. Version bytes are 3 and 4. A frame shorter than 27 bytes is malformed.
 
 ### Security Features
 
-| Feature                          | Description                                                                 |
-| -------------------------------- | --------------------------------------------------------------------------- |
-| **Dynamic Key Encryption**       | Keys are exchanged per-message via the packet's `key` field                 |
-| **Time-Based Password Rotation** | Passwords rotate based on UTC time intervals, synchronized across endpoints |
-| **Clock Skew Handling**          | Automatically attempts ±1 time windows for deobfuscation                    |
-| **Packet Obfuscation**           | Makes ciphertext unrecognizable as encrypted data                           |
+| Feature                    | Description                                                                                                           |
+| -------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| **Ephemeral session keys** | Fresh ECDH keys per session, expanded per direction and bound to both endpoint ids                                    |
+| **Replay rejection**       | Counters start at 1 and increase; a frame whose counter is not above the last accepted one is rejected unopened       |
+| **One-shot sessions**      | The first hello keys the session, a repeat is a duplicate, anything else is rejected; a live session is never rekeyed |
+| **Typed failures**         | `unsupported-version`, `replayed`, `authentication-failed`, `malformed`, `counter-exhausted`, `invalid-session`       |
 
 ---
 
@@ -279,13 +290,17 @@ flowchart LR
 
 ### Capabilities
 
-| Capability         | Implementation      | Details                                                    |
-| ------------------ | ------------------- | ---------------------------------------------------------- |
-| **Encryption**     | AES-256-GCM         | Authenticated encryption with password-derived keys        |
-| **Key Derivation** | PBKDF2              | 100,000 iterations, unique salt per operation              |
-| **Hashing**        | SHA-256             | Hexadecimal output                                         |
-| **Time Passwords** | UTC-synchronized    | Generates passwords for current/previous/next time windows |
-| **Vault Storage**  | In-memory encrypted | Password-protected storage with optional single-use mode   |
+| Capability         | Implementation      | Details                                                                            |
+| ------------------ | ------------------- | ---------------------------------------------------------------------------------- |
+| **Encryption**     | AES-256-GCM         | Authenticated encryption with password-derived keys                                |
+| **Key Derivation** | PBKDF2              | 100,000 iterations, unique salt per operation                                      |
+| **Hashing**        | SHA-256             | Hexadecimal output                                                                 |
+| **Time Passwords** | UTC-synchronized    | Generates passwords for current/previous/next time windows                         |
+| **Vault Storage**  | In-memory encrypted | Password-protected storage with optional single-use mode                           |
+| **Key Agreement**  | ECDH P-256          | Ephemeral key pairs; `deriveSecret` rejects a point off the curve                  |
+| **Key Expansion**  | HKDF-SHA256         | Non-extractable AES-GCM-256 keys with encrypt-only or decrypt-only usages          |
+| **AEAD**           | AES-GCM             | `seal`/`open` with a 12-byte nonce, 16-byte tag, and additional authenticated data |
+| **Key Stretching** | PBKDF2-SHA256       | `stretchPassword` with caller-chosen iterations and output length                  |
 
 ### Platform Parity
 
@@ -438,7 +453,7 @@ the handshake, the pinning, the geometry, the watchdog, and the teardown exchang
 
 ## Security Integration
 
-When security is enabled, the communication flow adds encryption layers:
+When a channel has selected a protocol, every product message crosses the wire as a sealed frame:
 
 ```mermaid
 ---
@@ -457,9 +472,9 @@ sequenceDiagram
 
     Host->>Host: channel.send('DATA', payload)
     Host->>HostSec: Send payload
-    Note over HostSec: Encrypt payload<br/>Obfuscate packet
-    HostSec->>FeatureSec: postMessage (obfuscated ciphertext)
-    Note over FeatureSec: Deobfuscate packet<br/>Decrypt payload
+    Note over HostSec: Seal packet<br/>(counter, AES-GCM)
+    HostSec->>FeatureSec: postMessage (sealed frame)
+    Note over FeatureSec: Check counter<br/>Open packet
     FeatureSec->>Feature: onMessage('DATA', payload)
 ```
 
@@ -483,10 +498,10 @@ Entry points follow a consistent pattern:
 └── /common      # Platform-agnostic utilities
 
 @hyperfrontend/network-protocol
-├── /browser/v1  # Browser obfuscation protocol
-├── /browser/v2  # Browser encryption protocol
-├── /node/v1     # Node obfuscation protocol
-└── /node/v2     # Node encryption protocol
+├── /browser/v3  # Browser ephemeral-key protocol
+├── /browser/v4  # Browser pre-shared-key protocol
+├── /node/v3     # Node ephemeral-key protocol
+└── /node/v4     # Node pre-shared-key protocol
 ```
 
 This enables server-side features (SSR, API routes) to use the same security protocols as browser features.
@@ -514,15 +529,15 @@ Two cross-cutting documents sit beside them:
 
 ## Design Principles
 
-| Principle                  | Implementation                                                         |
-| -------------------------- | ---------------------------------------------------------------------- |
-| **Runtime Integration**    | Features load at runtime, not build-time. No coordination required.    |
-| **Contract-First**         | Communication interfaces are declared, validated, and type-safe.       |
-| **Framework Agnostic**     | The protocol is the common language. Any framework works.              |
-| **Zero-Dependency Shells** | All dependencies bundled. A host installs one package.                 |
-| **Defense in Depth**       | Optional layered security: encryption, obfuscation, origin validation. |
-| **Functional Core**        | Pure functions with dependency injection. Side effects at boundaries.  |
-| **Isomorphic APIs**        | Same code runs in browser and Node.js.                                 |
+| Principle                  | Implementation                                                                   |
+| -------------------------- | -------------------------------------------------------------------------------- |
+| **Runtime Integration**    | Features load at runtime, not build-time. No coordination required.              |
+| **Contract-First**         | Communication interfaces are declared, validated, and type-safe.                 |
+| **Framework Agnostic**     | The protocol is the common language. Any framework works.                        |
+| **Zero-Dependency Shells** | All dependencies bundled. A host installs one package.                           |
+| **Defense in Depth**       | Optional layered security: sealed sessions, replay rejection, origin validation. |
+| **Functional Core**        | Pure functions with dependency injection. Side effects at boundaries.            |
+| **Isomorphic APIs**        | Same code runs in browser and Node.js.                                           |
 
 ---
 

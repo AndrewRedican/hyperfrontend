@@ -224,10 +224,10 @@ This scaffolds the hostee glue module into your app and wires it into the entry 
 Generate and bundle a self-contained shell package that any host can install:
 
 ```bash
-npx @hyperfrontend/features build --protocol v2
+npx @hyperfrontend/features build --protocol v4
 ```
 
-The CLI generates the shell package, inlines the contract, bundles every dependency into it, and packs a publishable tarball with typed bindings. The host installs one package and takes on no transitive dependencies. The security envelope is an explicit choice: pass `--protocol v1` or `--protocol v2` (or declare `protocol` in the feature config) and the build bakes it in as the shell's default.
+The CLI generates the shell package, inlines the contract, bundles every dependency into it, and packs a publishable tarball with typed bindings. The host installs one package and takes on no transitive dependencies. The security envelope is an explicit choice: pass `--protocol v3` (ephemeral session keys) or `--protocol v4` (session keys bound to a pre-shared key of at least 16 characters, supplied at runtime as `sharedKey`), or declare `protocol` in the feature config, and the build bakes it in as the shell's default.
 
 ### Testing Your Feature
 
