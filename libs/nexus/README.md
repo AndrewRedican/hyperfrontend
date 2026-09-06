@@ -128,7 +128,7 @@ Contracts are exchanged during the handshake, but vocabulary differences never g
 
 ### Security Negotiation
 
-Channels can negotiate an encrypted envelope during the handshake: register a security provider on the broker (via `broker.registerProtocol(version, provider)` or the `settings.security.protocols` bag) and opt the channel in with `security: { protocol: ... }`. Both ends attach the security transport before queued messages flush, so product traffic (including sends queued before the handshake) leaves as `Uint8Array` ciphertext while the handshake actions themselves stay plaintext. Negotiation fails open by default, falling back to plaintext with a warning; `mode: 'fail-closed'` denies the connection instead with `reason: 'security-unavailable'`. The transport seam is public: `createSecurityTransport` plus the `SecurityTransport` and `SecurityProvider` types define the boundary a security package implements, and `@hyperfrontend/network-protocol` satisfies it directly. See [Security Model](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/nexus/ARCHITECTURE.md#security-model).
+Channels can negotiate a sealed envelope during the handshake: register a security provider on the broker (via `broker.registerProtocol(version, provider)` or the `settings.security.protocols` bag) and opt the channel in with `security: { protocol: 'v3' }` or `security: { protocol: 'v4' }`. The initiator's REQUEST advertises that protocol with plaintext as the fallback, the responder's ACCEPT answers with the outcome, and the initiator's OPEN confirms it; a channel that selected a protocol accepts that protocol or plaintext and nothing else. Each side attaches its transport as it sends its own handshake answer (the responder with ACCEPT, the initiator with OPEN) and posts the session hello right behind that frame, retrying it every `requestRetryMs` until the counterpart confirms. Product traffic, including sends queued before the handshake, leaves as `Uint8Array` frames sealed under the session keys while the handshake actions themselves stay plaintext; once a transport is attached, any other plaintext action is dropped. The first inbound frame that authenticates confirms the counterpart and fires `security-ready`; a session nothing confirms within `connectTimeoutMs` fires `security-error` with code `security-unconfirmed` and closes with `reason: 'security-unconfirmed'`. Negotiation fails open by default, falling back to plaintext with a warning when the counterpart cannot provide the protocol; `mode: 'fail-closed'` denies the connection instead with `reason: 'security-unavailable'`. The transport seam is public: `createSecurityTransport` plus the `SecurityTransport` and `SecurityProvider` types define the boundary a security package implements, and `@hyperfrontend/network-protocol` (`v3`: ephemeral session keys agreed over the wire, defeating scripts that can only listen; `v4`: the same keys bound to a pre-shared key, defeating any script without the key) satisfies it directly. See [Security Model](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/nexus/ARCHITECTURE.md#security-model).
 
 ### Disconnection & Cancellation
 
@@ -241,16 +241,19 @@ channel.send('MESSAGE', { hello: 'world' })
 
 Events delivered to `channel.on(...)` subscribers:
 
-| Event             | Fired when                                        | Payload                        |
-| ----------------- | ------------------------------------------------- | ------------------------------ |
-| `open`            | Connection successfully established (both sides)  | `{ origin, contract }`         |
-| `close`           | Graceful disconnection completed                  | `{ notify }`                   |
-| `cancel`          | Connection attempt cancelled before completion    | `{ notify }`                   |
-| `deny`            | Connection request denied by a handshake gate     | `{ error?, reason?, origin? }` |
-| `invalid`         | Protocol violation or unexpected-origin drop      | `{ error, action? }`           |
-| `connect-timeout` | Handshake deadline expired with no answer         | `{ elapsedMs }`                |
-| `security-ready`  | Encrypted security transport attached & confirmed | `{ protocol, active }`         |
-| `security-error`  | Security transport operation failed               | `{ message, code, cause? }`    |
+| Event             | Fired when                                                             | Payload                        |
+| ----------------- | ---------------------------------------------------------------------- | ------------------------------ |
+| `open`            | Connection successfully established (both sides)                       | `{ origin, contract }`         |
+| `closing`         | Polite close proposed; the channel still delivers                      | `{ initiatedLocally }`         |
+| `close`           | Close completed, or the session ended without either side asking       | `{ notify, reason? }`          |
+| `cancel`          | Connection attempt cancelled before completion                         | `{ notify }`                   |
+| `deny`            | Connection request denied by a handshake gate                          | `{ error?, reason?, origin? }` |
+| `invalid`         | Protocol violation, unexpected-origin drop, or plaintext bypass        | `{ error, action? }`           |
+| `connect-timeout` | Handshake deadline expired with no answer                              | `{ elapsedMs }`                |
+| `security-ready`  | The counterpart's first sealed frame authenticated (session confirmed) | `{ protocol }`                 |
+| `security-error`  | A frame was dropped in either direction, or the session failed         | `{ message, code, cause? }`    |
+
+The `close` payload's `reason` (`CloseReason`) is set only when neither side asked for the close: `'peer-reload'` when the counterpart window now hosts a different instance (the channel re-handshakes with it), and `'security-unconfirmed'` when a sealed session was never confirmed within `connectTimeoutMs` (the close is silent: no CLOSE frame travels). The `security-error` payload's `code` (`SecurityErrorCode`) is one of the wire protocol's verdicts on a single frame (`'unsupported-version'`, `'replayed'`, `'authentication-failed'`, `'malformed'`, `'counter-exhausted'`, `'invalid-session'`) or a transport-level code: `'hello-rejected'` (a hello arrived that differs from the one keying the session), `'security-unconfirmed'` (the confirmation deadline expired), `'transport-error'` (a packet could not be sealed or handed to the wire), or `'unknown'`.
 
 ### Deny Reasons
 
@@ -263,11 +266,14 @@ newer protocol can report a reason this build does not know yet):
 | `'missing-required-actions'` | The counterpart does not emit an action this side accepts as `required: true` |
 | `'policy-rejected'`          | The broker's `securityPolicy` refused the exchange                            |
 | `'incompatible-contract'`    | A `contractCompat` rule rejected the contract pair                            |
-| `'security-unavailable'`     | A fail-closed channel could not obtain an encrypted transport                 |
+| `'security-unavailable'`     | A fail-closed channel could not obtain a sealed transport                     |
 
 Every gate fires `deny` on the side that decided, so a denying host is never left waiting on a
 channel it refused. The DENY frame the counterpart receives carries the same `error` and `reason`,
 except for a policy rejection: the refused requester is told only `'Not accepted.'`, with no reason.
+A fail-closed refusal fires on whichever side detects the plaintext outcome: the responder denies at
+REQUEST time; the initiator aborts at ACCEPT time by sending CANCEL, so its counterpart observes a
+`cancel` rather than a `deny`; the responder refuses a plaintext OPEN confirmation the same way.
 
 ### Filter Utilities
 
@@ -287,10 +293,43 @@ except for a policy rejection: the refused requester is told only `'Not accepted
 | `BrokerHandle`       | Broker instance interface                                               |
 | `ChannelHandle`      | Channel instance interface                                              |
 | `ChannelEvent`       | Lifecycle and security event types (see Lifecycle Events above)         |
+| `CloseReason`        | Why a session ended when neither side asked (`close` payload)           |
 | `DenyReason`         | Machine-readable denial reason on the `deny` payload (open union)       |
 | `IMessage`           | User message with type and optional data                                |
-| `SecurityProvider`   | Security implementation a broker registers for negotiation              |
-| `SecurityTransport`  | Per-channel encrypted transport attached after negotiation              |
+
+#### Security Types
+
+The security seam is typed end to end, so a security package other than `@hyperfrontend/network-protocol` can implement it:
+
+| Type                          | Description                                                                                      |
+| ----------------------------- | ------------------------------------------------------------------------------------------------ |
+| `SecurityProtocolVersion`     | `'none' \| 'v3' \| 'v4'`, open to other identifiers a security package registers                 |
+| `SecurityNegotiationRequest`  | The initiator's REQUEST slot: `{ supported, preferred }`                                         |
+| `SecurityNegotiationResponse` | The responder's ACCEPT slot: `{ negotiated }`                                                    |
+| `SecurityConfirmation`        | The initiator's OPEN slot: `{ active, protocol }`                                                |
+| `SecurityErrorCode`           | The `code` on `security-error` payloads and transport errors                                     |
+| `SecurityTransportError`      | `{ message, code, cause? }` delivered to a transport's `onError`/`onFailed`                      |
+| `SecurityReadyEventData`      | `security-ready` payload: `{ protocol }`                                                         |
+| `SecurityErrorEventData`      | `security-error` payload: `{ message, code, cause? }`                                            |
+| `SecurityPacketData`          | Data envelope sealed inside each frame; the transported action lives at `message`                |
+| `SecurityPacket`              | An opened packet: `{ origin, target, data }`                                                     |
+| `SecurityPacketDrop`          | A packet the pipeline discarded: `{ direction, stage, reason, cause?, packet }`                  |
+| `SecuritySendPacket`          | Callback transmitting a sealed frame                                                             |
+| `SecurityReceivePacket`       | Callback receiving an opened packet                                                              |
+| `SecuritySessionRole`         | `'initiator' \| 'responder'`                                                                     |
+| `SecuritySession`             | The session a protocol instance protects: `{ protocol, role, localId, peerId }`                  |
+| `SecurityHelloOutcome`        | `'accepted' \| 'duplicate' \| 'rejected'`, what a protocol made of a counterpart's hello         |
+| `SecurityWireProtocol`        | Protocol instance: `seal`, `open`, `hello`, `isHello`, `acceptHello`, `send`, `receive`          |
+| `SecurityProtocolProvider`    | `(send, receive, session) => SecurityWireProtocol`                                               |
+| `SecurityWireChannel`         | The per-channel pipeline: `send`, `receive`, `stop`, `resume`, `hello`, `isHello`, `acceptHello` |
+| `SecurityChannelOptions`      | What the channel factory needs: `{ send, receive, protocolProvider, session, onDrop? }`          |
+| `SecurityChannelFactory`      | `(label, options) => SecurityWireChannel`                                                        |
+| `SecurityProvider`            | What a broker registers: `{ createChannel, protocolProvider }`                                   |
+| `SecurityTransport`           | Per-channel transport: `send`, `receive`, `start`, `stop`, `resume`, `dispose`, `getProtocol`    |
+| `SecurityTransportConfig`     | `createSecurityTransport` input (protocol, provider, endpoints, role, deadlines, callbacks)      |
+| `SecurityProtocolProviders`   | The `settings.security.protocols` bag: `{ v3?, v4? }`                                            |
+| `BrokerSecurityConfig`        | Broker-level security settings: `{ protocols? }`                                                 |
+| `ChannelSecuritySettings`     | Channel-level security settings: `{ protocol?, disabled?, mode? }`                               |
 
 ## Compatibility
 
@@ -326,9 +365,9 @@ except for a policy rejection: the refused requester is told only `'Not accepted
 
 ### Peer Dependencies
 
-| Package                         | Type     |
-| ------------------------------- | -------- |
-| @hyperfrontend/network-protocol | Optional |
+| Package                         | Version | Type     |
+| ------------------------------- | ------- | -------- |
+| @hyperfrontend/network-protocol | 2.0.0   | Optional |
 
 ## Part of hyperfrontend
 
@@ -336,7 +375,7 @@ This library is part of the [hyperfrontend](https://github.com/AndrewRedican/hyp
 
 **📖 [Full documentation](https://www.hyperfrontend.dev/docs/libraries/nexus)**
 
-- Optionally uses [@hyperfrontend/network-protocol](https://github.com/AndrewRedican/hyperfrontend/tree/main/libs/network-protocol) for encrypted messaging
+- Optionally uses [@hyperfrontend/network-protocol](https://github.com/AndrewRedican/hyperfrontend/tree/main/libs/network-protocol) for the sealed `v3`/`v4` session envelope
 
 ## License
 
