@@ -43,8 +43,6 @@ export interface SerializedData<T = unknown> {
   readonly id: string
   /** A counter that increments by 1, representing steps of a process */
   readonly sequence: number
-  /** A key used to encrypt a reply with */
-  readonly key: string
   /** Contents of a message as JSON string */
   readonly message: JSONString<T>
   /** Schema of a message */
@@ -67,8 +65,6 @@ export interface Data<T = unknown> {
   readonly id: string
   /** A counter that increments by 1, representing steps of a process */
   readonly sequence: number
-  /** A key used to encrypt a reply with */
-  readonly key: string
   /** Contents of a message (deserialized) */
   readonly message: T
   /** Schema of a message */
@@ -87,18 +83,6 @@ export type DataCreater = <T = unknown>(pid: string, sequence: number, message: 
  * Creates a schema from input data.
  */
 export type SchemaCreater = (data: unknown) => Schema
-
-/**
- * Encrypts SerializedData to binary format.
- * Takes the wire format (with JSON string message) and encrypts it.
- */
-export type DataEncrypter = <T = unknown>(data: SerializedData<T>, password: string) => Promise<Uint8Array>
-
-/**
- * Decrypts binary data back to SerializedData.
- * Returns the wire format with JSON string message.
- */
-export type DataDecrypter = <T = unknown>(data: Uint8Array, password: string) => Promise<SerializedData<T>>
 
 /**
  * Type guard to check if a value is a JSONString.

@@ -19,12 +19,8 @@ import { createPacketBase } from './create-packet-base'
  *
  * @example Creating an unencrypted packet
  * ```typescript
- * const packet = createUnencryptedPacket(
- *   '550e8400-e29b-41d4-a716-446655440000',
- *   '6ba7b810-9dad-11d1-80b4-00c04fd430c8',
- *   { key: 'session-abc', message: { action: 'ping' } }
- * )
- * // => { origin, target, data: { key, message } }
+ * const packet = createUnencryptedPacket(originId, targetId, await createData(pid, 1, { action: 'ping' }))
+ * // => { origin, target, data: { pid, id, sequence, message, schema, schemaHash } }
  * ```
  */
 export function createUnencryptedPacket<T = any>(origin: string, target: string, data: Data<T>): UnencryptedPacket<T> {

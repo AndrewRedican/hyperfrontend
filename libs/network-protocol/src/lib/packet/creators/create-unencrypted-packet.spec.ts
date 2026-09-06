@@ -8,7 +8,6 @@ describe('createUnencryptedPacket', () => {
     pid: '5815e1c3-4083-4d3c-8795-96c4c2965f2d',
     id: '8b115bcd-d59b-4834-9290-b9a3a46df988',
     sequence: 1,
-    key: '19af5c5b-b0ac-45dc-a140-fa310a84b136',
     message: '{"content":"test message"}',
     schema: {
       type: 'object',

@@ -3,6 +3,6 @@
  *
  * @module @hyperfrontend/network-protocol/routing
  */
-export type { RoutedPacket, RoutedObfuscatedPacket, RoutedUnencryptedPacket, Subscriptions, RoutingOptions, Router } from './model'
-export { createRoutedObfuscatedPacket } from './creators/create-routed-obfuscated-packet'
+export type { RoutedPacket, RoutedWirePacket, RoutedUnencryptedPacket, Subscriptions, RoutingOptions, Router } from './model'
 export { createRoutedUnencryptedPacket } from './creators/create-routed-unencrypted-packet'
+export { createRoutedWirePacket } from './creators/create-routed-wire-packet'

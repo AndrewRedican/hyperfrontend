@@ -2,15 +2,17 @@ import type { Channel } from '../model'
 import { getType } from '@hyperfrontend/data-utils'
 
 /**
- * Validates whether a channel meets the required structure with send/receive methods and inbound/outbound queues.
+ * Checks that a value has the shape of a channel: send, receive, and hello-exchange functions
+ * and an outbound and inbound pipeline each exposing a queue with a size and stop/resume
+ * controls.
  *
- * @param channel - The channel object to validate
- * @returns True if the channel is valid, false otherwise
+ * @param channel - The value to check
+ * @returns True when the value has the shape of a `Channel`
  *
- * @example Validating channel structure
+ * @example Guarding a channel before storing it
  * ```typescript
- * isValidChannel(channel) // => true
- * isValidChannel({}) // => false
+ * isValidChannel(createChannel('comms', options))
+ * // => true
  * ```
  */
 export function isValidChannel(channel: unknown): boolean {
@@ -23,20 +25,15 @@ export function isValidChannel(channel: unknown): boolean {
     'inbound' in ch &&
     getType(ch.send) === 'function' &&
     getType(ch.receive) === 'function' &&
+    getType(ch.hello) === 'function' &&
+    getType(ch.isHello) === 'function' &&
+    getType(ch.acceptHello) === 'function' &&
     getType(ch.outbound) === 'object' &&
     getType(ch.inbound) === 'object' &&
-    getType(ch.outbound.encryptionQueue) === 'object' &&
-    getType(ch.outbound.serializationQueue) === 'object' &&
-    getType(ch.outbound.obfuscationQueue) === 'object' &&
-    getType(ch.inbound.deobfuscationQueue) === 'object' &&
-    getType(ch.inbound.deserializationQueue) === 'object' &&
-    getType(ch.inbound.decryptionQueue) === 'object' &&
-    getType(ch.outbound.encryptionQueue.size) === 'number' &&
-    getType(ch.outbound.serializationQueue.size) === 'number' &&
-    getType(ch.outbound.obfuscationQueue.size) === 'number' &&
-    getType(ch.inbound.deobfuscationQueue.size) === 'number' &&
-    getType(ch.inbound.deserializationQueue.size) === 'number' &&
-    getType(ch.inbound.decryptionQueue.size) === 'number' &&
+    getType(ch.outbound.queue) === 'object' &&
+    getType(ch.inbound.queue) === 'object' &&
+    getType(ch.outbound.queue.size) === 'number' &&
+    getType(ch.inbound.queue.size) === 'number' &&
     getType(ch.outbound.stop) === 'function' &&
     getType(ch.outbound.resume) === 'function' &&
     getType(ch.inbound.stop) === 'function' &&

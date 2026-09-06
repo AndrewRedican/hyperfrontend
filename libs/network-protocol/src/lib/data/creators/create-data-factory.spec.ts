@@ -22,8 +22,6 @@ describe('createDataFactory (Node.js)', () => {
         expect(result.sequence).toBe(sequence)
         expect(result.id).toBeDefined()
         expect(typeof result.id).toBe('string')
-        expect(result.key).toBeDefined()
-        expect(typeof result.key).toBe('string')
         expect(result.message).toBe(JSON.stringify(message))
         expect(result.schema).toBeDefined()
         expect(result.schemaHash).toBeDefined()
@@ -37,7 +35,6 @@ describe('createDataFactory (Node.js)', () => {
       const data2 = await createData('550e8400-e29b-41d4-a716-446655440000', 1, { test: 'data' })
 
       expect(data1.id).not.toBe(data2.id)
-      expect(data1.key).not.toBe(data2.key)
     })
 
     it('generates consistent schema hash for same message structure', async () => {

@@ -1,18 +1,7 @@
 /**
- * Node.js-side inbound packet receiver with deserialization and decryption.
+ * Node.js-side inbound pipeline: frames in, opened packets out.
  *
  * @module @hyperfrontend/network-protocol/node/receiver
  */
-import { createReceiverFactory } from '../../lib/receiver/creators/create-receiver-factory'
-import { createDeserializedEncryptedPacket } from '../packet'
-
-export const createReceiver = createReceiverFactory(createDeserializedEncryptedPacket)
-export type {
-  ReceivePacketFn,
-  ReceiveFn,
-  InboundQueue,
-  InboundQueues,
-  Receiver,
-  CreateReceiver,
-  ReceiverFactory,
-} from '../../lib/receiver/model'
+export type { ReceivePacketFn, ReceiveFn, InboundQueue, Receiver, CreateReceiver, ReceiverFactory } from '../../lib/receiver/model'
+export { createReceiver } from '../../lib/receiver/creators/create-receiver'

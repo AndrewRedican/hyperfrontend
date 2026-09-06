@@ -1,10 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import type { Data } from '../data/model'
 
-/** Obfuscated packet represented as raw bytes */
-export type ObfuscatedPacket = Uint8Array
+/** Bytes as they travel: a sealed frame carrying one packet */
+export type WirePacket = Uint8Array
 
-/** Base interface for all packet types */
+/** Routing fields every plaintext packet carries */
 export interface PacketBase {
   /** Identifies the origin of the packet */
   readonly origin: string
@@ -12,59 +12,37 @@ export interface PacketBase {
   readonly target: string
 }
 
-/** Packet containing unencrypted data */
+/** A packet in the clear: routing fields plus the data envelope */
 export interface UnencryptedPacket<T = any> extends PacketBase {
-  /** Unencrypted data */
+  /** The data envelope */
   readonly data: Data<T>
 }
 
-/** Packet with binary encrypted data before serialization */
-export interface UnserializedEncryptedPacket extends PacketBase {
-  /** Unserialized (binary form) encrypted data */
-  readonly data: Uint8Array
+/** A packet at either end of the pipeline */
+export type Packet<T = any> = UnencryptedPacket<T> | WirePacket
+
+/** Seals a plaintext packet into wire bytes under the session's sending key */
+export type PacketSealer<T = any> = (packet: UnencryptedPacket<T>) => Promise<WirePacket>
+
+/** Opens wire bytes into a plaintext packet under the session's receiving key */
+export type PacketOpener<T = any> = (packet: WirePacket) => Promise<UnencryptedPacket<T>>
+
+/** The pipeline stage that rejected a packet */
+export type PacketDropStage = 'seal' | 'open'
+
+/** A packet a pipeline stage rejected and the pipeline discarded */
+export interface PacketDrop {
+  /** Whether the packet was leaving (`outbound`) or arriving (`inbound`) */
+  readonly direction: 'inbound' | 'outbound'
+  /** The stage that rejected the packet */
+  readonly stage: PacketDropStage
+  /** Why the stage rejected it */
+  readonly reason: string
+  /** The error the stage threw, when it threw one */
+  readonly cause?: unknown
+  /** The packet as the stage received it */
+  readonly packet: unknown
 }
 
-/** Packet with serialized encrypted data as string */
-export interface SerializedEncryptedPacket extends PacketBase {
-  /** Serialized and encrypted data message */
-  readonly data: string
-}
-
-/** Packet before obfuscation, with data in any encryption state */
-export interface UnobfuscatedPacket<T = any> extends PacketBase {
-  /** Nondescrypt formatted data */
-  readonly data: UnencryptedPacket<T>['data'] | UnserializedEncryptedPacket['data'] | SerializedEncryptedPacket['data']
-}
-
-/** Union type representing any packet state */
-export type Packet<T = any> = ObfuscatedPacket | UnobfuscatedPacket<T>
-
-/** Encrypts an unencrypted packet using a password */
-export type PacketEncrypter = <T = any>(packet: UnencryptedPacket<T>, password: string) => Promise<UnserializedEncryptedPacket>
-
-/** Decrypts a packet using a password */
-export type PacketDecrypter = <T = any>(packet: UnserializedEncryptedPacket, password: string) => Promise<UnencryptedPacket<T>>
-
-/** Obfuscates a serialized encrypted packet */
-export type PacketObfuscater = (packet: SerializedEncryptedPacket, password: string) => Promise<ObfuscatedPacket>
-
-/** Deobfuscates an obfuscated packet */
-export type PacketDeobfuscater = (packet: ObfuscatedPacket, password: string) => Promise<SerializedEncryptedPacket>
-
-/** Password-bound packet encryption function */
-export type PacketEncryption<T = any> = (packet: UnencryptedPacket<T>) => Promise<UnserializedEncryptedPacket>
-
-/** Password-bound packet decryption function */
-export type PacketDecryption<T = any> = (packet: UnserializedEncryptedPacket) => Promise<UnencryptedPacket<T>>
-
-/** Serializes an encrypted packet to string format */
-export type PacketSerialization = (packet: UnserializedEncryptedPacket) => SerializedEncryptedPacket
-
-/** Deserializes a string packet to binary format */
-export type PacketDeserialization = (packet: SerializedEncryptedPacket) => UnserializedEncryptedPacket
-
-/** Password-bound packet obfuscation function */
-export type PacketObfuscation = (packet: SerializedEncryptedPacket) => Promise<ObfuscatedPacket>
-
-/** Password-bound packet deobfuscation function */
-export type PacketDeobfuscation = (packet: ObfuscatedPacket) => Promise<SerializedEncryptedPacket>
+/** Receives each packet a pipeline discards */
+export type PacketDropHandler = (drop: PacketDrop) => void

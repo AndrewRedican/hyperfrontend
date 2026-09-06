@@ -1,11 +1,11 @@
 import type { Protocol } from '../model'
 import { getType } from '@hyperfrontend/data-utils'
-import { keys, entries } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
+import { keys } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 
-/**
- * Result object mapping each protocol property to its validation status.
- */
-type ValidProtocolResult = Record<keyof Protocol, boolean | undefined>
+/** Per-property validity of a protocol object */
+type ValidProtocolResult = {
+  [Property in keyof Protocol]: boolean | void
+}
 
 /**
  * Validates whether a protocol object contains all required function properties.
@@ -15,10 +15,11 @@ type ValidProtocolResult = Record<keyof Protocol, boolean | undefined>
  */
 function isValidProtocol(protocol: unknown): ValidProtocolResult {
   const result: ValidProtocolResult = {
-    packetEncryption: void 0,
-    packetDecryption: void 0,
-    packetObfuscation: void 0,
-    packetDeobfuscation: void 0,
+    seal: void 0,
+    open: void 0,
+    hello: void 0,
+    isHello: void 0,
+    acceptHello: void 0,
     send: void 0,
     receive: void 0,
     getLogger: void 0,
@@ -38,20 +39,17 @@ function isValidProtocol(protocol: unknown): ValidProtocolResult {
 /**
  * Identifies the first invalid property in a protocol object.
  *
- * @param protocol - The protocol object to validate
- * @returns The name of the first invalid protocol property, or an empty string if all properties are valid
+ * @param protocol - The protocol object to inspect
+ * @returns The name of the first property that is not a function, or an empty string when every property is valid
  *
- * @example Detecting invalid protocol properties
+ * @example Reporting a protocol missing its opener
  * ```typescript
- * getFirstInvalidProtocolProperty({ send: () => {}, receive: null })
- * // => 'receive'
- *
- * getFirstInvalidProtocolProperty(validProtocol)
- * // => ''
+ * getFirstInvalidProtocolProperty({ seal, send, receive, getLogger })
+ * // => 'open'
  * ```
  */
-export function getFirstInvalidProtocolProperty(protocol: unknown): keyof ValidProtocolResult | '' {
-  const validations = isValidProtocol(protocol)
-  const firstInvalidProperty = entries(validations).find(([, isValid]) => isValid === false)
-  return firstInvalidProperty ? (firstInvalidProperty[0] as keyof ValidProtocolResult) : ''
+export function getFirstInvalidProtocolProperty(protocol: unknown): string {
+  const validity = isValidProtocol(protocol)
+  const invalid = (keys(validity) as (keyof ValidProtocolResult)[]).find((key) => validity[key] === false)
+  return invalid ?? ''
 }

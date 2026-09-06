@@ -4,45 +4,52 @@ import { isValidProtocol } from './is-valid-protocol'
 
 describe('isValidProtocol', () => {
   const baseProtocol = {
-    packetEncryption: () => void 0,
-    packetDecryption: () => void 0,
-    packetObfuscation: () => void 0,
-    packetDeobfuscation: () => void 0,
+    seal: () => void 0,
+    open: () => void 0,
+    hello: () => void 0,
+    isHello: () => void 0,
+    acceptHello: () => void 0,
     send: () => void 0,
     receive: () => void 0,
     getLogger: () => void 0,
   } as unknown as Protocol
 
-  it('returns true for all keys with a valid protocol object', () => {
-    const result = isValidProtocol(baseProtocol)
-    Object.values(result).forEach((value) => expect(value).toBe(true))
+  it('returns true for every key of a valid protocol object', () => {
+    expect(isValidProtocol(baseProtocol)).toEqual({
+      seal: true,
+      open: true,
+      hello: true,
+      isHello: true,
+      acceptHello: true,
+      send: true,
+      receive: true,
+      getLogger: true,
+    })
   })
 
-  it('identifies the first non-function property (packetEncryption) and leaves others as undefined', () => {
-    const protocolWithFirstNonFunction = {
-      ...baseProtocol,
-      packetEncryption: 'not a function',
-    }
-    const result = isValidProtocol(protocolWithFirstNonFunction)
-    expect(result.packetEncryption).toBe(false)
-    expect(result.packetDecryption).toBeUndefined()
-    expect(result.packetObfuscation).toBeUndefined()
-    expect(result.packetDeobfuscation).toBeUndefined()
-    expect(result.send).toBeUndefined()
-    expect(result.receive).toBeUndefined()
+  it('stops at the first non-function property', () => {
+    expect(isValidProtocol({ ...baseProtocol, seal: 'not a function' })).toEqual({
+      seal: false,
+      open: undefined,
+      hello: undefined,
+      isHello: undefined,
+      acceptHello: undefined,
+      send: undefined,
+      receive: undefined,
+      getLogger: undefined,
+    })
   })
 
-  it('identifies the first non-function property (packetDecryption) when previous is valid', () => {
-    const protocolWithNonFunction = {
-      ...baseProtocol,
-      packetDecryption: 123,
-    }
-    const result = isValidProtocol(protocolWithNonFunction)
-    expect(result.packetEncryption).toBe(true)
-    expect(result.packetDecryption).toBe(false)
-    expect(result.packetObfuscation).toBeUndefined()
-    expect(result.packetDeobfuscation).toBeUndefined()
-    expect(result.send).toBeUndefined()
-    expect(result.receive).toBeUndefined()
+  it('marks the properties before the first invalid one as valid', () => {
+    expect(isValidProtocol({ ...baseProtocol, open: 123 })).toEqual({
+      seal: true,
+      open: false,
+      hello: undefined,
+      isHello: undefined,
+      acceptHello: undefined,
+      send: undefined,
+      receive: undefined,
+      getLogger: undefined,
+    })
   })
 })

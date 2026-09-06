@@ -4,27 +4,28 @@ import { getType } from '@hyperfrontend/data-utils'
 import { keys } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 
 /**
- * Validates whether the provided value is a valid protocol object.
- * Checks that all required protocol methods (encryption, obfuscation, send, receive) are present.
+ * Validates whether a protocol object contains all required function properties,
+ * stopping at the first that is missing or not a function.
  *
- * @param protocol - The value to validate as a protocol
- * @returns A ValidProtocolResult object containing validation details for each protocol component
+ * @param protocol - The protocol object to validate
+ * @returns An object mapping each protocol property to its validation status (true if valid, false if invalid, undefined if not yet checked)
  *
  * @example Validating a protocol object
  * ```typescript
  * const result = isValidProtocol(myProtocol)
- * // => { packetEncryption: true, packetDecryption: true, ... }
+ * // => { seal: true, open: true, hello: true, isHello: true, acceptHello: true, send: true, receive: true, getLogger: true }
  *
  * const invalid = isValidProtocol({})
- * // => { packetEncryption: false, packetDecryption: undefined, ... }
+ * // => { seal: false, open: undefined, ... }
  * ```
  */
 export function isValidProtocol(protocol: unknown): ValidProtocolResult {
   const result: ValidProtocolResult = {
-    packetEncryption: void 0,
-    packetDecryption: void 0,
-    packetObfuscation: void 0,
-    packetDeobfuscation: void 0,
+    seal: void 0,
+    open: void 0,
+    hello: void 0,
+    isHello: void 0,
+    acceptHello: void 0,
     send: void 0,
     receive: void 0,
     getLogger: void 0,

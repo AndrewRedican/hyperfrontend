@@ -8,8 +8,6 @@ export const id = '8b115bcd-d59b-4834-9290-b9a3a46df988'
 
 export const sequence = 1
 
-export const key = '19af5c5b-b0ac-45dc-a140-fa310a84b136'
-
 export const message = {
   content: 'test message',
 }
@@ -27,7 +25,6 @@ export const data: SerializedData<typeof message> = {
   pid,
   id,
   sequence,
-  key,
   message: stringify(message) as JSONString<typeof message>,
   schema,
   schemaHash,

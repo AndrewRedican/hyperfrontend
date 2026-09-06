@@ -14,10 +14,10 @@ export interface RoutedPacket {
 }
 
 /**
- * A routed packet with obfuscated (binary) payload.
+ * A routed packet carrying sealed wire bytes.
  */
-export interface RoutedObfuscatedPacket extends RoutedPacket {
-  /** Binary obfuscated packet data */
+export interface RoutedWirePacket extends RoutedPacket {
+  /** The sealed frame */
   packet: Uint8Array
 }
 

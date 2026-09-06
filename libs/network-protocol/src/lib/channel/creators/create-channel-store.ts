@@ -14,7 +14,7 @@ import { isValidLabel } from '../validations/is-valid-label'
  * ```typescript
  * const createStore = createChannelStoreFactory(channelCreator)
  * const store = createStore()
- * const channel = store.create('main', sendFn, receiveFn, protocol)
+ * const channel = store.create('main', { send, receive, protocolProvider, session })
  * ```
  */
 export function createChannelStoreFactory(createChannel: ChannelCreater) {
@@ -38,14 +38,14 @@ export function createChannelStoreFactory(createChannel: ChannelCreater) {
     const existsById = (id: string) => getIndexById(id) > -1
     const channelExists = (channel: Channel) => getByChannel(channel) !== null
 
-    const create: ChannelStore['create'] = (label, send, receive, protocol) => {
+    const create: ChannelStore['create'] = (label, options) => {
       if (!isValidLabel(label)) {
         throw createError(`Cannot add a channel with invalid name`)
       }
       if (existsByName(label)) {
         throw createError(`Cannot create a channel with name '${label}' as a channel with that name already exists`)
       }
-      const channel = createChannel(label, send, receive, protocol)
+      const channel = createChannel(label, options)
       addEntry(channel)
       return channel
     }
