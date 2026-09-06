@@ -254,7 +254,7 @@ export default contract
 `
         )
 
-        const spawned = spawnSync('node', [hfBin, 'build', '--protocol', 'v1', '--out', outDir], {
+        const spawned = spawnSync('node', [hfBin, 'build', '--protocol', 'v3', '--out', outDir], {
           cwd: scratchDir,
           encoding: 'utf8',
           timeout: BUILD_SUITE_TIMEOUT - 30000,
