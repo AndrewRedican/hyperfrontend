@@ -1,10 +1,11 @@
 import { getType } from '@hyperfrontend/data-utils'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { encryptionConfig } from '../encryption-config'
+import { keyStretchingConfig } from '../key-stretching-config'
 
 /**
  * Creates a key generator function that derives encryption keys from passwords using PBKDF2.
- * Uses 100,000 iterations with SHA-256 hashing for secure key derivation.
+ * Uses the library-wide stretching parameters (100,000 SHA-256 iterations).
  *
  * @param subtle - The SubtleCrypto interface for cryptographic operations
  * @param utf8StringToUint8Array - Function to convert UTF-8 strings to byte arrays
@@ -31,16 +32,20 @@ export function createKeyGenerator(
     if (!salt) {
       throw createError('Cannot generate key without a salt')
     }
-    const keyMaterial = await subtle.importKey('raw', utf8StringToUint8Array(password) as BufferSource, { name: 'PBKDF2' }, false, [
-      'deriveKey',
-    ])
+    const keyMaterial = await subtle.importKey(
+      'raw',
+      utf8StringToUint8Array(password) as BufferSource,
+      { name: keyStretchingConfig.name },
+      false,
+      ['deriveKey']
+    )
     return subtle.deriveKey(
       {
-        name: 'PBKDF2',
+        name: keyStretchingConfig.name,
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         salt: salt as any,
-        iterations: 100_000,
-        hash: 'SHA-256',
+        iterations: keyStretchingConfig.iterations,
+        hash: keyStretchingConfig.hash,
       },
       keyMaterial,
       { ...encryptionConfig, length: 256 },
