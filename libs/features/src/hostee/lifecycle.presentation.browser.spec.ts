@@ -8,9 +8,6 @@ import { createEventEmitter } from '../shared/event-emitter'
 import { installResizeObserverStub } from '../testing/resize-observer-stub'
 import { createFeatureHandle } from './lifecycle'
 
-jest.mock('@hyperfrontend/network-protocol/browser/v1', () => ({ createProtocol: jest.fn(() => 'v1-provider') }))
-jest.mock('@hyperfrontend/network-protocol/browser/v2', () => ({ createProtocol: jest.fn(() => 'v2-provider') }))
-
 beforeEach(() => {
   jest.clearAllMocks()
   installResizeObserverStub()

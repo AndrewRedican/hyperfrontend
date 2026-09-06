@@ -46,7 +46,7 @@ export interface FeatureHandleSettings {
   readyTimeoutMs?: number
   /** Security envelope to negotiate with the host; defaults to `none`. */
   protocol?: SecurityProtocol
-  /** Pre-shared key used by the `v2` protocol. */
+  /** Pre-shared key the `v4` protocol binds the session to; at least 16 characters. */
   sharedKey?: string
   /** The feature's root layout element (or CSS selector), sized as the inner dialog box in dialog mode. */
   root?: string | HTMLElement
@@ -82,7 +82,15 @@ export function createFeatureHandle(
 ): FeatureHandle {
   let channel: ChannelHandle | null = null
   let opened = false
+  let handshakeFailure: Error | null = null
   const readyRejects: Array<(error: Error) => void> = []
+  // why: A handshake outcome that lands before ready() is called must still settle it; the timers that would otherwise time it out are cleared by then.
+  const failHandshake = (error: Error) => {
+    handshakeFailure = error
+    for (const reject of readyRejects.splice(0)) {
+      reject(error)
+    }
+  }
   const messaging = createMessagingCore({
     origin: 'feature',
     contract: settings.contract,
@@ -132,6 +140,7 @@ export function createFeatureHandle(
 
     activeChannel.on('open', () => {
       opened = true
+      handshakeFailure = null
       // why: Settled ready() promises hold dead reject refs once open fires.
       readyRejects.splice(0)
       emitter.emit('open')
@@ -153,10 +162,19 @@ export function createFeatureHandle(
     })
     activeChannel.on('connect-timeout', (data) => {
       emitter.emit('error', { reason: 'ready-timeout', elapsedMs: data.elapsedMs })
-      const error = createError(`The host did not open the connection within ${data.elapsedMs}ms.`)
-      for (const reject of readyRejects.splice(0)) {
-        reject(error)
+      failHandshake(createError(`The host did not open the connection within ${data.elapsedMs}ms.`))
+    })
+    activeChannel.on('deny', (data) => {
+      // why: A denied handshake never opens, so a pending ready() would otherwise wait out the full timeout for an answer that already arrived.
+      const detail = (data.error ?? 'no reason given').replace(/\.$/, '')
+      failHandshake(createError(`The host refused the connection${data.reason ? ` (${data.reason})` : ''}: ${detail}.`))
+    })
+    activeChannel.on('cancel', (data) => {
+      // why: A cancel the host sent means it abandoned the handshake at its own gates; a pending ready() would otherwise wait out the full timeout.
+      if (data?.notify !== true) {
+        return
       }
+      failHandshake(createError('The host cancelled the connection before it opened.'))
     })
     activeChannel.onMessage(
       messaging.createRouter((type, data) => {
@@ -190,6 +208,10 @@ export function createFeatureHandle(
       createPromise<void>((resolve, reject) => {
         if (opened) {
           resolve()
+          return
+        }
+        if (handshakeFailure !== null) {
+          reject(handshakeFailure)
           return
         }
         emitter.on('open', () => resolve())

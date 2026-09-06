@@ -97,7 +97,7 @@ function defaultPackTarball(packageDir: string): string {
 /**
  * Builds the shell: resolve config → generate the shell package into a
  * hidden staging dir inside the project → bundle via the builder → pack a
- * tarball into `--out`. A `v1`/`v2` security protocol is required for production
+ * tarball into `--out`. A `v3`/`v4` security protocol is required for production
  * output; an explicit `--protocol none` builds only when paired with
  * `--allow-open`, acknowledging the open channel. The staging dir is always
  * removed.
@@ -122,12 +122,12 @@ export async function runBuild(options: RunBuildOptions): Promise<number> {
     const { config, contract, protocol, protocolExplicit } = await resolveConfig({ cwd, flags })
     if (protocol === 'none') {
       if (!protocolExplicit) {
-        stderr.write('Build requires a security protocol: pass --protocol v1 or --protocol v2.\n')
+        stderr.write('Build requires a security protocol: pass --protocol v3 or --protocol v4.\n')
         return EXIT_ERROR
       }
       if (flags.allowOpen !== true) {
         stderr.write(
-          "Building with an explicit protocol 'none' produces an open shell: the channel is unauthenticated and any page can embed and message the feature. Pass --allow-open to acknowledge the risk, or pick --protocol v1 / --protocol v2.\n"
+          "Building with an explicit protocol 'none' produces an open shell: the channel is unauthenticated and any page can embed and message the feature. Pass --allow-open to acknowledge the risk, or pick --protocol v3 / --protocol v4.\n"
         )
         return EXIT_ERROR
       }

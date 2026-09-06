@@ -33,8 +33,8 @@ describe('generateMetadata', () => {
 
   it('stamps the baked security protocol when the config carries one', () => {
     const tree = createTree(import.meta.dirname)
-    generateMetadata({ ...config, protocol: 'v2' }, contract, tree)
-    expect(parse(tree.read('metadata.json', 'utf-8') ?? '')).toEqual(expect.objectContaining({ protocol: 'v2' }))
+    generateMetadata({ ...config, protocol: 'v4' }, contract, tree)
+    expect(parse(tree.read('metadata.json', 'utf-8') ?? '')).toEqual(expect.objectContaining({ protocol: 'v4' }))
   })
 
   it('omits the protocol field when the config carries none', () => {
@@ -57,8 +57,8 @@ describe('generateMetadata', () => {
 
   it('canonicalizes the stamped feature version', () => {
     const tree = createTree(import.meta.dirname)
-    generateMetadata({ ...config, version: 'v1.2.3' }, contract, tree)
-    expect(parse(tree.read('metadata.json', 'utf-8') ?? '')).toEqual(expect.objectContaining({ version: '1.2.3' }))
+    generateMetadata({ ...config, version: 'v5.2.3' }, contract, tree)
+    expect(parse(tree.read('metadata.json', 'utf-8') ?? '')).toEqual(expect.objectContaining({ version: '5.2.3' }))
   })
 
   it('stamps the running SDK version into the sdk field', () => {

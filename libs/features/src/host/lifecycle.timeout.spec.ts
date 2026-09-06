@@ -85,7 +85,7 @@ describe('createShellHandle origin pin and open deadline', () => {
   it('applies the contract-version compatibility rule to the channel', () => {
     const ctx = setup()
     ctx.handle.open()
-    const settings = ctx.addChannel.mock.calls[0][2] as { contractCompat: (own: unknown, peer: unknown) => unknown }
+    const settings = (ctx.addChannel.mock.calls[0] as unknown[])[2] as { contractCompat: (own: unknown, peer: unknown) => unknown }
     expect(settings.contractCompat({ version: '1.0.0' }, { version: '2.0.0' })).toEqual({ compatible: false, reason: expect.any(String) })
   })
 

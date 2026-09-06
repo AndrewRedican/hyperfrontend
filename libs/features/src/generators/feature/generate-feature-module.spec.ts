@@ -17,8 +17,8 @@ describe('generateFeatureModule', () => {
 
   it('canonicalizes the scaffolded version from the config spelling', () => {
     const tree = createTree(import.meta.dirname)
-    generateFeatureModule({ ...config, version: 'v2.1.0' }, contract, tree)
-    expect(tree.read(MODULE_PATH, 'utf-8')).toContain("version: '2.1.0'")
+    generateFeatureModule({ ...config, version: 'v5.1.0' }, contract, tree)
+    expect(tree.read(MODULE_PATH, 'utf-8')).toContain("version: '5.1.0'")
   })
 
   it('scaffolds a typed on-handler stub per accepted action', () => {

@@ -29,7 +29,7 @@ export interface RunFeaturesCliOptions {
  *
  * @example Running the build command programmatically
  * ```typescript
- * const code = await runFeaturesCli({ argv: ['build', '--protocol', 'v2'], cwd: process.cwd(), stdout: process.stdout, stderr: process.stderr })
+ * const code = await runFeaturesCli({ argv: ['build', '--protocol', 'v4'], cwd: process.cwd(), stdout: process.stdout, stderr: process.stderr })
  * ```
  */
 export async function runFeaturesCli(options: RunFeaturesCliOptions): Promise<number> {

@@ -39,17 +39,17 @@ describe('resolveBuildConfig', () => {
   })
 
   it('threads the resolved protocol into the config for the generators', async () => {
-    writeConfig('{ "name": "clock", "version": "1.0.0", "contract": "./clock.contract.json", "protocol": "v2" }')
+    writeConfig('{ "name": "clock", "version": "1.0.0", "contract": "./clock.contract.json", "protocol": "v4" }')
     await expect(resolveBuildConfig({ cwd: dir, flags: baseFlags })).resolves.toEqual(
-      expect.objectContaining({ config: expect.objectContaining({ protocol: 'v2' }) })
+      expect.objectContaining({ config: expect.objectContaining({ protocol: 'v4' }) })
     )
   })
 
   it('lets flags replace config keys', async () => {
     writeConfig('{ "name": "a", "version": "1.0.0", "contract": "./clock.contract.json" }')
-    const flags: CliFlags = { ...baseFlags, name: 'b', url: '/x', protocol: 'v2' }
+    const flags: CliFlags = { ...baseFlags, name: 'b', url: '/x', protocol: 'v4' }
     await expect(resolveBuildConfig({ cwd: dir, flags })).resolves.toEqual(
-      expect.objectContaining({ config: expect.objectContaining({ name: 'b', url: '/x' }), protocol: 'v2' })
+      expect.objectContaining({ config: expect.objectContaining({ name: 'b', url: '/x' }), protocol: 'v4' })
     )
   })
 
@@ -69,17 +69,17 @@ describe('resolveBuildConfig', () => {
   })
 
   it('omits sourcePath when only flags supply the config', async () => {
-    const flags: CliFlags = { ...baseFlags, name: 'd', version: '1.0.0', contract: './clock.contract.json', protocol: 'v1' }
+    const flags: CliFlags = { ...baseFlags, name: 'd', version: '1.0.0', contract: './clock.contract.json', protocol: 'v3' }
     await expect(resolveBuildConfig({ cwd: dir, flags })).resolves.toEqual(expect.not.objectContaining({ sourcePath: expect.anything() }))
   })
 
   it('reads protocol and display from the config file', async () => {
     writeConfig(
-      '{ "name": "clock", "version": "1.0.0", "contract": "./clock.contract.json", "protocol": "v1", "display": { "modes": ["dialog"], "dialog": { "width": 480 } }, "url": "/u" }'
+      '{ "name": "clock", "version": "1.0.0", "contract": "./clock.contract.json", "protocol": "v3", "display": { "modes": ["dialog"], "dialog": { "width": 480 } }, "url": "/u" }'
     )
     await expect(resolveBuildConfig({ cwd: dir, flags: baseFlags })).resolves.toEqual(
       expect.objectContaining({
-        protocol: 'v1',
+        protocol: 'v3',
         protocolExplicit: true,
         config: expect.objectContaining({ url: '/u', display: { modes: ['dialog'], dialog: { width: 480 } } }),
       })
@@ -123,12 +123,12 @@ describe('resolveBuildConfig', () => {
 
   it('rejects an invalid protocol value', async () => {
     writeConfig('{ "name": "clock", "version": "1.0.0", "contract": "./clock.contract.json", "protocol": "v9" }')
-    await expect(resolveBuildConfig({ cwd: dir, flags: baseFlags })).rejects.toThrow('Invalid protocol')
+    await expect(resolveBuildConfig({ cwd: dir, flags: baseFlags })).rejects.toThrow('Invalid protocol: "v9" (expected none, v3, or v4).')
   })
 
   it('rejects a non-string protocol value', async () => {
     writeConfig('{ "name": "clock", "version": "1.0.0", "contract": "./clock.contract.json", "protocol": 5 }')
-    await expect(resolveBuildConfig({ cwd: dir, flags: baseFlags })).rejects.toThrow('Invalid protocol')
+    await expect(resolveBuildConfig({ cwd: dir, flags: baseFlags })).rejects.toThrow('Invalid protocol: "5" (expected none, v3, or v4).')
   })
 
   it('retains a contract version matching the config version', async () => {
@@ -140,10 +140,10 @@ describe('resolveBuildConfig', () => {
   })
 
   it('accepts a contract version that canonicalizes to the config version', async () => {
-    writeFileSync(join(dir, 'clock.contract.json'), '{ "emitted": [], "accepted": [], "version": "v1.0.0" }')
-    writeConfig('{ "name": "clock", "version": "1.0.0", "contract": "./clock.contract.json" }')
+    writeFileSync(join(dir, 'clock.contract.json'), '{ "emitted": [], "accepted": [], "version": "v5.0.0" }')
+    writeConfig('{ "name": "clock", "version": "5.0.0", "contract": "./clock.contract.json" }')
     await expect(resolveBuildConfig({ cwd: dir, flags: baseFlags })).resolves.toEqual(
-      expect.objectContaining({ contract: expect.objectContaining({ version: 'v1.0.0' }) })
+      expect.objectContaining({ contract: expect.objectContaining({ version: 'v5.0.0' }) })
     )
   })
 

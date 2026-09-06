@@ -124,7 +124,7 @@ function buildReadmeWarning(config: ResolvedFeatureConfig): string {
   if (config.protocol !== 'none') {
     return ''
   }
-  return `> **Warning: open shell.** This build uses protocol \`none\`: messages between host and feature travel with no security envelope, so any page that can reach the feature URL can embed and drive it. For production, rebuild the feature with \`--protocol v1\` or \`--protocol v2\`.
+  return `> **Warning: open shell.** This build uses protocol \`none\`: messages between host and feature travel with no security envelope, so any page that can reach the feature URL can embed and drive it. For production, rebuild the feature with \`--protocol v3\` or \`--protocol v4\`.
 
 `
 }
@@ -136,16 +136,16 @@ function buildReadmeWarning(config: ResolvedFeatureConfig): string {
  * @returns The security guidance paragraph.
  */
 function buildReadmeSecurity(config: ResolvedFeatureConfig): string {
-  if (config.protocol === 'v2') {
-    return "The `v2` security envelope is baked in from the feature's build — do not pass `protocol` yourself. Supply your own pre-shared key via `sharedKey`; a key is never baked into the artifact."
+  if (config.protocol === 'v4') {
+    return "The `v4` security envelope is baked in from the feature's build; do not pass `protocol` yourself. Supply your own pre-shared key (at least 16 characters) via `sharedKey`; a key is never baked into the artifact."
   }
-  if (config.protocol === 'v1') {
-    return "The `v1` security envelope is baked in from the feature's build — do not pass `protocol` yourself."
+  if (config.protocol === 'v3') {
+    return "The `v3` security envelope is baked in from the feature's build; do not pass `protocol` yourself."
   }
   if (config.protocol === 'none') {
     return 'This shell was deliberately built open (see the warning above); harden it by rebuilding the feature with a security protocol.'
   }
-  return "No security envelope is baked into this shell; pass `protocol: 'v1'` or `protocol: 'v2'` (with your own `sharedKey` for `v2`) when creating the shell."
+  return "No security envelope is baked into this shell; pass `protocol: 'v3'` or `protocol: 'v4'` (with your own `sharedKey` for `v4`) when creating the shell."
 }
 
 /**
@@ -155,11 +155,11 @@ function buildReadmeSecurity(config: ResolvedFeatureConfig): string {
  * @returns Extra option lines, each newline-prefixed, or an empty string.
  */
 function buildReadmeOptions(config: ResolvedFeatureConfig): string {
-  if (config.protocol === 'v2') {
-    return "\n  sharedKey: 'your-pre-shared-key',"
+  if (config.protocol === 'v4') {
+    return "\n  sharedKey: 'your-pre-shared-key-of-sixteen-or-more',"
   }
   if (config.protocol === undefined) {
-    return "\n  protocol: 'v2',\n  sharedKey: 'your-pre-shared-key',"
+    return "\n  protocol: 'v4',\n  sharedKey: 'your-pre-shared-key-of-sixteen-or-more',"
   }
   return ''
 }
@@ -283,7 +283,7 @@ ${buildReadmeModes(modes)}${buildReadmePermissions(config)}${buildReadmeSecurity
  *
  * @example Staging a shell for the clock feature
  * ```typescript
- * generateShell({ name: 'clock', version: '1.0.0', contract: './clock.contract.json', url: '/clock', protocol: 'v2' }, contract, tree)
+ * generateShell({ name: 'clock', version: '1.0.0', contract: './clock.contract.json', url: '/clock', protocol: 'v4' }, contract, tree)
  * ```
  */
 export function generateShell(config: ResolvedFeatureConfig, contract: FeatureContract, tree: Tree): void {

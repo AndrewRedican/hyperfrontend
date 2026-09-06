@@ -59,8 +59,20 @@ describe('createControls', () => {
   it('fires onProtocolChange with the chosen protocol', () => {
     const onProtocolChange = jest.fn()
     const { element } = createControls(options({ onProtocolChange }))
-    change(element.querySelectorAll('select')[1] as HTMLSelectElement, 'v2')
-    expect(onProtocolChange).toHaveBeenCalledWith('v2')
+    change(element.querySelectorAll('select')[1] as HTMLSelectElement, 'v4')
+    expect(onProtocolChange).toHaveBeenCalledWith('v4')
+  })
+
+  it('offers the security envelopes as none, v3, v4 in that order', () => {
+    const { element } = createControls(options())
+    const values: string[] = []
+    ;(element.querySelectorAll('select')[1] as HTMLSelectElement).querySelectorAll('option').forEach((option) => values.push(option.value))
+    expect(values).toEqual(['none', 'v3', 'v4'])
+  })
+
+  it('pre-selects the current security protocol', () => {
+    const { element } = createControls(options({ protocol: 'v3' }))
+    expect((element.querySelectorAll('select')[1] as HTMLSelectElement).value).toBe('v3')
   })
 
   it('reports a connected feature', () => {

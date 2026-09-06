@@ -78,13 +78,13 @@ describe('mountDebugUi', () => {
 
   it('updates the security readout when the protocol changes', () => {
     handle = mountDebugUi(root, manifest())
-    change(selects()[1] as HTMLSelectElement, 'v2')
-    expect(root.textContent).toEqual(expect.stringContaining('protocol: v2'))
+    change(selects()[1] as HTMLSelectElement, 'v4')
+    expect(root.textContent).toEqual(expect.stringContaining('protocol: v4'))
   })
 
   it('ignores protocol changes when the security readout is hidden', () => {
     handle = mountDebugUi(root, manifest({ debug: { enabled: true, messageLog: true, securityView: false } }))
-    change(selects()[1] as HTMLSelectElement, 'v2')
+    change(selects()[1] as HTMLSelectElement, 'v4')
     expect(root.textContent).not.toEqual(expect.stringContaining('protocol:'))
   })
 

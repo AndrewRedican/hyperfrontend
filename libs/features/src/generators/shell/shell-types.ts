@@ -169,7 +169,7 @@ function buildOptionMembers(flags: ModeFlags): string[] {
   onUnresponsive?: 'emit' | 'unmount' | ((info: FeatureUnresponsiveInfo) => void)`,
     `  /** Security envelope to negotiate; defaults to the protocol baked in from the feature's build. */
   protocol?: FeatureSecurityProtocol`,
-    `  /** Pre-shared key used by the \`v2\` protocol; always supplied by the host, never baked into the shell. */
+    `  /** Pre-shared key the \`v4\` protocol binds the session to; at least 16 characters, always supplied by the host, never baked into the shell. */
   sharedKey?: string`,
     `  /** Experience plugins wrapped around each mount/unmount. */
   plugins?: readonly FeatureExperiencePlugin[]`,
@@ -212,7 +212,7 @@ export type FeatureBoxPosition =
 export type FeatureDisplayMode = ${flags.modes.map((mode) => `'${mode}'`).join(' | ')}
 
 /** Security envelope selector negotiated between host and feature. */
-export type FeatureSecurityProtocol = 'none' | 'v1' | 'v2'
+export type FeatureSecurityProtocol = 'none' | 'v3' | 'v4'
 
 ${flags.dialog || flags.popup ? positionType : ''}${flags.framed ? `${SANDBOX_TYPES}\n\n` : ''}${PLUGIN_TYPES}
 

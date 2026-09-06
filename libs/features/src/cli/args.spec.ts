@@ -15,7 +15,7 @@ describe('parseCliArgs', () => {
         '--version',
         '1.0.0',
         '--protocol',
-        'v2',
+        'v4',
         '--out',
         'd',
         '--url',
@@ -37,7 +37,7 @@ describe('parseCliArgs', () => {
       expect.objectContaining({
         name: 'clock',
         version: '1.0.0',
-        protocol: 'v2',
+        protocol: 'v4',
         out: 'd',
         url: '/u',
         contract: 'c.json',

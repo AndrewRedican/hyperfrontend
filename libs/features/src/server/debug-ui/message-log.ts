@@ -2,7 +2,7 @@ import { stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json
 import { button, div } from '@hyperfrontend/ui-utils/element'
 import { controlStyle, labelStyle, logStyle, messageEntryStyle, palette, panelStyle, toolbarStyle } from './styles'
 
-// note: The three views surface the security envelope from the core SDK: `raw` is the on-wire payload, `decrypted` the v1/v2 plaintext, `pretty` an indented decrypted (or raw) payload.
+// note: The three views surface the security envelope from the core SDK: `raw` is the on-wire payload, `decrypted` the v3/v4 plaintext, `pretty` an indented decrypted (or raw) payload.
 const VIEWS: readonly LogView[] = ['raw', 'decrypted', 'pretty']
 
 /** Which projection of a logged message is shown. */

@@ -264,7 +264,7 @@ describe('runInit', () => {
   })
 
   describe('config merge', () => {
-    const staleConfig = '{"$schema":"s","name":"old","version":"2.0.0","contract":"c.json","protocol":"v2"}\n'
+    const staleConfig = '{"$schema":"s","name":"old","version":"2.0.0","contract":"c.json","protocol":"v4"}\n'
 
     it('overwrites a stale name from the flags', async () => {
       const { tree, files } = fakeTree({ 'src/main.ts': 'const x = 1\n', 'feature.config.json': staleConfig })
@@ -298,7 +298,7 @@ describe('runInit', () => {
       await runInit(
         baseDeps({ flags: mkFlags({ name: 'clock', contract: 'c.json', entry: 'src/main.ts', ci: true }), createTreeFn: () => tree })
       )
-      expect(files['feature.config.json']).toEqual(expect.stringContaining('"protocol": "v2"'))
+      expect(files['feature.config.json']).toEqual(expect.stringContaining('"protocol": "v4"'))
     })
 
     it('persists a url flag into the config', async () => {

@@ -23,7 +23,7 @@ const METADATA_PATH = 'metadata.json'
  *
  * @example Staging metadata for the clock feature
  * ```typescript
- * generateMetadata({ name: 'clock', version: '1.0.0', contract: './clock.contract.json', url: '/clock', protocol: 'v2' }, contract, tree)
+ * generateMetadata({ name: 'clock', version: '1.0.0', contract: './clock.contract.json', url: '/clock', protocol: 'v4' }, contract, tree)
  * ```
  */
 export function generateMetadata(config: ResolvedFeatureConfig, contract: FeatureContract, tree: Tree): void {

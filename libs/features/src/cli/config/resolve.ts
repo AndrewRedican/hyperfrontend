@@ -8,8 +8,8 @@ import { validateContract, validateDisplayConfig, validateFeatureConfig } from '
 import { discoverConfigFile, FEATURE_CONFIG_BASENAME } from './discover'
 import { loadModuleFile } from './load-module'
 
-// note: Accepted security envelopes; the build command requires v1 or v2 for production output.
-const VALID_PROTOCOLS: readonly string[] = ['none', 'v1', 'v2']
+// note: Accepted security envelopes; the build command requires v3 or v4 for production output.
+const VALID_PROTOCOLS: readonly string[] = ['none', 'v3', 'v4']
 
 /** Inputs for {@link resolveBuildConfig}. */
 export interface ResolveBuildConfigOptions {
@@ -119,7 +119,7 @@ export async function resolveBuildConfig(options: ResolveBuildConfigOptions): Pr
   const chosenProtocol = flags.protocol ?? loaded['protocol']
   const protocol = chosenProtocol ?? 'none'
   if (typeof protocol !== 'string' || !VALID_PROTOCOLS.includes(protocol)) {
-    throw createError(`Invalid protocol: "${String(protocol)}" (expected none, v1, or v2).`)
+    throw createError(`Invalid protocol: "${String(protocol)}" (expected none, v3, or v4).`)
   }
 
   const baseDir = sourcePath ? dirname(sourcePath) : cwd
