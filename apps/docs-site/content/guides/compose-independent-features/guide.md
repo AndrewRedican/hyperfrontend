@@ -48,15 +48,15 @@ On the receiving side of a schema-less hot path, narrow the payload yourself. Ke
 
 ## 6. Choose security per boundary
 
-Spend [protocol v1](/docs/core-concepts/security), the per-message security envelope, on boundaries that cross trust: separately deployed sites, product meaning in every message.
+Pin a [session envelope](/docs/core-concepts/security) on boundaries that cross trust: separately deployed sites, product meaning in every message. [`v3`](/docs/libraries/features/host#api-SecurityProtocol) keys each session with ephemeral keys agreed over the wire, so a script that can only listen reads nothing; `v4` binds those keys to a [`sharedKey`](/docs/libraries/features/host#api-ShellOptions-prop-sharedKey) of at least 16 characters that both sides hold, so a script without the key can neither read frames nor forge them. Either costs one key agreement per session (plus one password stretch for `v4`) and one authenticated-encryption operation per message in each direction. Pin `v3` or `v4` in your config; the pond's pin names the protocol its own features release offers.
 
 <!-- snippet: outer-boundary -->
 
-Keep it off high-cadence channels. Under v1 every enveloped message pays a fresh key derivation, and many concurrent chatty channels collapse, dropping messages silently instead of erroring. Where that is your traffic, declare the [`protocol`](/docs/libraries/features#api-FeatureConfig-prop-protocol) away and pack the shell with [`hf build --ci --allow-open`](/docs/libraries/features/cli#commands), which keeps an open channel a decision someone acknowledged rather than a default.
+Where a boundary is yours end to end, an open channel is a legitimate choice. Declare the [`protocol`](/docs/libraries/features#api-FeatureConfig-prop-protocol) away and pack the shell with [`hf build --ci --allow-open`](/docs/libraries/features/cli#commands), which keeps an open channel a decision someone acknowledged rather than a default.
 
 <!-- snippet: fish-config -->
 
-An open channel still pins messages to the configured origin and still runs as a separate document. Compare the pin on both sides at build time: a counterpart that omits the protocol downgrades the session to plaintext, and no runtime signal reports it.
+An open channel still pins messages to the configured origin and still runs as a separate document. Pin the same protocol on both sides: a session is fail-closed, so a counterpart that cannot run the selected protocol is denied, each side receives [`error`](/docs/libraries/features/host#api) with `reason: 'security-unavailable'`, and the host tears the mount down.
 
 ## 7. Allow the whole ancestor chain
 

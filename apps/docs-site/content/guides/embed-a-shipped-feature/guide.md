@@ -56,7 +56,7 @@ Render your fallback under the iframe and swap to the frame on the first proof e
 
 ## 8. Compare the protocol pin on both sides
 
-A shell bakes the [protocol](/docs/libraries/features/host#api-SecurityProtocol) the feature declared in its [`feature.config.ts`](/docs/libraries/features/cli#config-resolution). Compare the two in your build or deploy step: a counterpart that omits the protocol falls back to plaintext, and no runtime signal reports it.
+A shell bakes the [protocol](/docs/libraries/features/host#api-SecurityProtocol) the feature declared in its [`feature.config.ts`](/docs/libraries/features/cli#config-resolution), and the session is fail-closed: a counterpart that cannot run that protocol is denied, [`error`](/docs/libraries/features/host#api) fires with `reason: 'security-unavailable'`, and the host tears the mount down. Compare the two pins in your build or deploy step so the mismatch never reaches a user. For `v4`, give both sides the same [`sharedKey`](/docs/libraries/features/host#api-ShellOptions-prop-sharedKey) of at least 16 characters: with different keys no frame ever authenticates, and the session closes with `reason: 'security-unconfirmed'`.
 
 ## Check it worked
 

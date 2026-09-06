@@ -6,11 +6,11 @@ export function generateMetadata(): Metadata {
   return getSubmoduleMetadata({
     librarySlug: 'network-protocol',
     packageName: '@hyperfrontend/network-protocol',
-    submodulePath: 'browser/v2',
-    path: '/docs/libraries/network-protocol/browser/v2/',
+    submodulePath: 'browser/v3',
+    path: '/docs/libraries/network-protocol/browser/v3/',
   })
 }
 
-export default function V2Page() {
-  return <SubmoduleDocPage librarySlug="network-protocol" packageName="@hyperfrontend/network-protocol" submodulePath="browser/v2" />
+export default function V3Page() {
+  return <SubmoduleDocPage librarySlug="network-protocol" packageName="@hyperfrontend/network-protocol" submodulePath="browser/v3" />
 }

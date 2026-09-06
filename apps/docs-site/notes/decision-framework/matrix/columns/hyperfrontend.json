@@ -762,7 +762,7 @@
     {
       "id": "security.channel-confidentiality",
       "value": "conditional",
-      "condition": "opt-in v2 plus sharedKey is real PSK protection; v1 is deterrence-grade; handshake frames stay plaintext; silent runtime plaintext downgrade, gated only at build (--allow-open)",
+      "condition": "opt-in v4 plus sharedKey is key-bound protection; v3 defeats listeners only; handshake frames stay plaintext; negotiation is fail-closed (a counterpart that cannot run the pinned protocol is denied); an open channel requires --allow-open at build",
       "claimType": "framework-guarantee",
       "confidence": "high",
       "evidence": [
@@ -1564,7 +1564,7 @@
     {
       "id": "performance.per-message-serialization-cost",
       "value": "yes",
-      "note": "structured clone plus schema validation; v1 crypto envelope silently drops messages under chatty concurrent channels",
+      "note": "structured clone plus schema validation; a sealed channel adds one authenticated-encryption operation per message, key agreement once per session",
       "claimType": "framework-guarantee",
       "confidence": "high",
       "evidence": [

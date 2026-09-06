@@ -420,7 +420,7 @@
         {
           "id": "security.channel-confidentiality",
           "question": "Can inter-party message payloads be encrypted against co-resident in-page scripts?",
-          "notes": "Conditional: hyperfrontend only (opt-in v2 plus sharedKey is real PSK protection, v1 deterrence; handshake frames plaintext; silent runtime plaintext downgrade, gated only at build via --allow-open). No or NA: all others. Mandated split; never credit as generic secure."
+          "notes": "Conditional: hyperfrontend only (opt-in v4 plus sharedKey is key-bound protection, v3 defeats listeners only; handshake frames plaintext; fail-closed negotiation, open channels only via --allow-open at build). No or NA: all others. Mandated split; never credit as generic secure."
         },
         {
           "id": "security.embedding-authorization",
@@ -855,7 +855,7 @@
         {
           "id": "performance.per-message-serialization-cost",
           "question": "Does cross-unit communication pay per-message overhead (structured clone, schema validation, crypto envelope) rather than passing in-realm references?",
-          "notes": "Yes: iframe family (structured clone; transferables mitigate). Hyperfrontend adds per-message schema validation plus a v1 crypto envelope that drops messages silently under chatty concurrent channels (documented, thresholds unpublished). No: in-realm props and exports (MF, single-spa, piral)."
+          "notes": "Yes: iframe family (structured clone; transferables mitigate). Hyperfrontend adds per-message schema validation plus, on a sealed channel, one authenticated-encryption operation per message (key agreement once per session). No: in-realm props and exports (MF, single-spa, piral)."
         },
         {
           "id": "performance.hydration-deferrable-per-unit",

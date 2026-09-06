@@ -127,7 +127,7 @@ import contract from '../clock.contract'
 export const feature = createFeature({
   name: '@hyperfrontend/demo-clock',
   contract,
-  protocol: 'v1',
+  protocol: 'v3',
 })
 
 await feature.ready()
