@@ -2,7 +2,7 @@
 
 ## Purpose
 
-The Routing module provides topic-based message routing across channels, enabling publish-subscribe patterns where channels subscribe to topics and receive messages routed to those topics.
+The Routing module provides topic-based message routing across channels: routed-packet envelopes that pair a packet with a topic, and the subscription types a router uses to decide which channels receive a topic's messages.
 
 ---
 
@@ -10,54 +10,43 @@ The Routing module provides topic-based message routing across channels, enablin
 
 ### `RoutedPacket`
 
-Base interface for routed packets with topic association.
-
 ```typescript
 interface RoutedPacket {
-  topicId: string // Topic this packet is routed to
+  topicId: string // Topic this packet is routed to (UUID v4)
   packet: unknown // The packet content
 }
 ```
 
-### `RoutedObfuscatedPacket`
+### `RoutedWirePacket`
 
-Routed packet containing obfuscated data (wire format).
+A routed packet carrying a sealed frame.
 
 ```typescript
-interface RoutedObfuscatedPacket extends RoutedPacket {
-  packet: Uint8Array // Obfuscated packet bytes
+interface RoutedWirePacket extends RoutedPacket {
+  packet: Uint8Array // The sealed frame
 }
 ```
 
 ### `RoutedUnencryptedPacket<T>`
 
-Routed packet containing decrypted data (application format).
+A routed packet carrying a plaintext packet.
 
 ```typescript
 interface RoutedUnencryptedPacket<T = any> extends RoutedPacket {
-  packet: UnencryptedPacket<T> // Decrypted packet
+  packet: UnencryptedPacket<T>
 }
 ```
 
 ### `RoutingOptions`
 
-Configuration for routing behavior.
-
 ```typescript
 interface RoutingOptions {
-  isDynamic: boolean // Subscription fetching mode
-  subscriptions: Subscriptions // Channel-to-topic mappings
+  isDynamic: boolean // true: fetch subscriptions anew for each message; false: fetch once and cache
+  subscriptions: Subscriptions // Maps channels to their subscribed topics
 }
 ```
 
-**`isDynamic` Options**:
-
-- `true`: Fetches subscriptions anew for each message (dynamic subscriptions)
-- `false`: Fetches subscriptions once and caches them (static subscriptions)
-
 ### `Subscriptions`
-
-WeakMap linking channels to their subscribed topics.
 
 ```typescript
 type Subscriptions = WeakMap<Channel, Topic[]>
@@ -65,7 +54,7 @@ type Subscriptions = WeakMap<Channel, Topic[]>
 
 ### `Router`
 
-Function type that configures routing based on available channels and topics.
+Configures routing from the available channels and topics.
 
 ```typescript
 type Router = (channels: Channel[], topics: Topic[]) => RoutingOptions
@@ -83,77 +72,63 @@ config:
     fontSize: 12px
 ---
 flowchart TB
-    subgraph MessageRouting["MESSAGE ROUTING"]
-        Incoming["Incoming Message with topicId"]
+    Incoming["Routed packet with topicId"] --> RouterCall["router(channels, topics)<br/>{ isDynamic, subscriptions }"]
+    RouterCall --> Lookup["For each channel:<br/>subscriptions.get(channel) includes topic?"]
+    Lookup --> A["Channel A (subscribed): receives"]
+    Lookup --> B["Channel B (subscribed): receives"]
+    Lookup --> C["Channel C (not subscribed): skipped"]
+```
 
-        subgraph RouterFunc["Router Function"]
-            RouterCall["router(channels, topics) →<br/>{ isDynamic, subscriptions }"]
-        end
+---
 
-        subgraph SubLookup["Subscription Lookup"]
-            Lookup["For each channel:<br/>topics = subscriptions.get(ch)<br/>if topicId in topics → route"]
-        end
+## Factory Functions
 
-        subgraph Channels["Channels"]
-            direction LR
-            ChannelA["Channel A<br/>(subscribed)<br/>✓ receives"]
-            ChannelB["Channel B<br/>(subscribed)<br/>✓ receives"]
-            ChannelC["Channel C<br/>(not sub'd)<br/>✗ skip"]
-        end
+### `createRoutedUnencryptedPacket`
 
-        Incoming --> RouterFunc
-        RouterFunc --> SubLookup
-        SubLookup --> ChannelA
-        SubLookup --> ChannelB
-        SubLookup --> ChannelC
-    end
+Builds the plaintext packet with `createUnencryptedPacket` and pairs it with a topic; the result is frozen.
+
+```typescript
+function createRoutedUnencryptedPacket<T = any>(topicId: string, origin: string, target: string, data: Data<T>): RoutedUnencryptedPacket
+```
+
+```typescript
+import { createRoutedUnencryptedPacket } from '@hyperfrontend/network-protocol/routing'
+
+const routed = createRoutedUnencryptedPacket(topic.id, originId, targetId, data)
+// => { topicId, packet: { origin, target, data } }
+```
+
+### `createRoutedWirePacket`
+
+Pairs an already sealed frame with a topic; the result is frozen.
+
+```typescript
+function createRoutedWirePacket(topicId: string, packet: WirePacket): RoutedWirePacket
 ```
 
 ---
 
 ## Dynamic vs Static Routing
 
-### Static Routing (`isDynamic: false`)
+### Static (`isDynamic: false`)
 
-- Subscriptions are resolved once when routing is configured
-- More efficient for stable subscription patterns
-- Use when channels don't change subscriptions at runtime
+Subscriptions are resolved once; use when channels do not change subscriptions at runtime.
 
 ```typescript
 const router: Router = (channels, topics) => {
   const subscriptions = new WeakMap<Channel, Topic[]>()
-
-  // Set up subscriptions once
-  const userTopic = topics.find((t) => t.name === 'user-events')
-  channels.forEach((channel) => {
-    subscriptions.set(channel, [userTopic])
-  })
-
-  return {
-    isDynamic: false, // Cached subscriptions
-    subscriptions,
-  }
+  const userEvents = topics.find((t) => t.name === 'user-events')
+  channels.forEach((channel) => subscriptions.set(channel, userEvents ? [userEvents] : []))
+  return { isDynamic: false, subscriptions }
 }
 ```
 
-### Dynamic Routing (`isDynamic: true`)
+### Dynamic (`isDynamic: true`)
 
-- Subscriptions are re-evaluated for each message
-- Enables runtime subscription changes
-- Use when channels need to subscribe/unsubscribe dynamically
+Subscriptions are re-evaluated for each message; use when channels subscribe and unsubscribe at runtime.
 
 ```typescript
-const router: Router = (channels, topics) => {
-  const subscriptions = new WeakMap<Channel, Topic[]>()
-
-  // Subscriptions are evaluated per-message
-  // External state can modify subscription patterns
-
-  return {
-    isDynamic: true, // Fresh lookup each time
-    subscriptions,
-  }
-}
+const router: Router = (channels, topics) => ({ isDynamic: true, subscriptions: currentSubscriptions() })
 ```
 
 ---
@@ -161,42 +136,54 @@ const router: Router = (channels, topics) => {
 ## Usage Example
 
 ```typescript
-import { createTopicStore } from '@hyperfrontend/network-protocol/lib/topic'
-import { createChannelStore } from '@hyperfrontend/network-protocol/lib/channel'
+import { createTopicStore } from '@hyperfrontend/network-protocol/topic'
+import { createChannelStore } from '@hyperfrontend/network-protocol/browser/channel'
 
-// Create stores
 const topicStore = createTopicStore()
 const channelStore = createChannelStore()
 
-// Create topics
 topicStore.create('user-events', 'system-events', 'notifications')
 
-// Create channels
-const channel1 = channelStore.create('client-1', sendFn, receiveFn, protocolProvider)
-const channel2 = channelStore.create('client-2', sendFn, receiveFn, protocolProvider)
+const first = channelStore.create('client-1', { send, receive, protocolProvider, session: firstSession })
+const second = channelStore.create('client-2', { send, receive, protocolProvider, session: secondSession })
 
-// Define router
 const router: Router = (channels, topics) => {
   const subscriptions = new WeakMap<Channel, Topic[]>()
-
   const userEvents = topics.find((t) => t.name === 'user-events')
   const notifications = topics.find((t) => t.name === 'notifications')
-
-  // Channel 1 subscribes to user events and notifications
-  subscriptions.set(channel1, [userEvents, notifications])
-
-  // Channel 2 subscribes only to notifications
-  subscriptions.set(channel2, [notifications])
-
+  subscriptions.set(first, [userEvents, notifications].filter(Boolean) as Topic[])
+  subscriptions.set(second, notifications ? [notifications] : [])
   return { isDynamic: false, subscriptions }
 }
 
-// Get routing configuration
 const routingOptions = router(
-  channelStore.list.map((e) => e.channel),
+  channelStore.list.map((entry) => entry.channel),
   topicStore.list
 )
 ```
+
+---
+
+## Error Handling
+
+```typescript
+createRoutedUnencryptedPacket('not-a-uuid', originId, targetId, data)
+// Error: 'Cannot create a routed unencrypted packet without a valid topic'
+
+createRoutedWirePacket('not-a-uuid', frame)
+// Error: 'Cannot create a routed wire packet without a valid topic'
+
+createRoutedWirePacket(topic.id, new Uint8Array(0))
+// Error: 'Cannot create a routed wire packet without a valid wire packet'
+```
+
+`createRoutedUnencryptedPacket` also throws the packet creator's errors for an invalid origin, target, or data envelope.
+
+---
+
+## Validation Helpers
+
+`validations/` holds `isValidRoutedUnencryptedPacket`, `isValidRoutedWirePacket`, `isValidRoutingOptions`, `isValidSubscriptions` (a `WeakMap`), and `isValidRouter` (a function whose result for empty inputs is valid routing options). They are internal to the module.
 
 ---
 
@@ -211,11 +198,12 @@ const routingOptions = router(
 
 - **[Library Index](../README.md)** - All modules
 - **[Architecture Guide](../../../ARCHITECTURE.md#routing)** - Routing architecture
+- **[Routing Entry](../../routing/README.md)** - The `@hyperfrontend/network-protocol/routing` entry
 
 ### Related Modules
 
-| Module                           | Relationship                          |
-| -------------------------------- | ------------------------------------- |
-| [topic/](../topic/README.md)     | Topics used for subscription          |
-| [channel/](../channel/README.md) | Channels that receive routed messages |
-| [packet/](../packet/README.md)   | RoutedPacket types                    |
+| Module                           | Relationship                              |
+| -------------------------------- | ----------------------------------------- |
+| [topic/](../topic/README.md)     | Topics used for subscription              |
+| [channel/](../channel/README.md) | Channels that receive routed messages     |
+| [packet/](../packet/README.md)   | The packet shapes a routed packet carries |

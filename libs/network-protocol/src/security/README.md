@@ -1,5 +1,5 @@
 # security
 
-Type definitions for the encryption and obfuscation suites that the protocol pipelines plug into.
+Types and errors a security protocol implements: the per-session seal and open operations, the session, the hello exchange outcome, and the rejection codes.
 
-`PacketEncryption`, `PacketDecryption`, `PacketObfuscation`, and `PacketDeobfuscation` describe the per-step transform shapes. `EncryptionSuite`, `ObfuscationSuite`, and `SecuritySuite` are the bundled configurations that runtime-specific protocol factories (`/browser/v1`, `/node/v2`, etc.) supply. `FirstMessageHandler` is the dynamic-key handshake hook, used by V1 protocols to negotiate per-channel encryption keys without a pre-shared secret.
+`SecuritySuite` pairs a `PacketSealer` with a `PacketOpener`. `ProtocolSession` (`{ protocol, role, localId, peerId }`, with `SessionRole` as `'initiator' | 'responder'`) is what a `ProtocolProvider` binds a protocol instance to, and `HelloOutcome` (`'accepted' | 'duplicate' | 'rejected'`) is what accepting a peer's hello frame returns. `ProtocolErrorCode` lists why a protocol rejects a frame or a session (`unsupported-version`, `replayed`, `authentication-failed`, `malformed`, `counter-exhausted`, `invalid-session`); `createProtocolError` builds a `ProtocolError` carrying one, and `getProtocolErrorCode` reads the code off a drop's `cause`.

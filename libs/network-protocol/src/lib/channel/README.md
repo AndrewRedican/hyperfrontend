@@ -2,7 +2,7 @@
 
 ## Purpose
 
-The Channel module provides a named, bidirectional communication pipe that combines a Sender and Receiver with coordinated lifecycle controls. Channels provide a high-level abstraction for managing message flow between two endpoints.
+The Channel module provides a named, bidirectional pipe that binds one protocol instance to one session and wraps it in a Sender and a Receiver with coordinated lifecycle controls. A channel seals what it sends, opens what it receives, and exposes the protocol's hello exchange unchanged so the owner can run it over the same transport.
 
 ---
 
@@ -10,68 +10,47 @@ The Channel module provides a named, bidirectional communication pipe that combi
 
 ### `Channel<T>`
 
-The main channel interface that extends `StopResumeControl`.
-
 ```typescript
-interface Channel<T = any> extends StopResumeControl {
-  label: string // Unique channel identifier
-  send: SendFn<T> // Send messages through outbound pipeline
-  receive: ReceiveFn // Process incoming packets
-  outbound: OutboundQueues & StopResumeControl // Access to outbound queue chain
-  inbound: InboundQueues & StopResumeControl // Access to inbound queue chain
+interface Channel<T = any> extends StopResumeControl, HelloExchange {
+  readonly label: string // Channel identifier
+  readonly send: SendFn<T> // (origin, target, data) => void
+  readonly receive: ReceiveFn // (frame: Uint8Array) => void; hello frames go to acceptHello instead
+  readonly outbound: OutboundPipeline // { queue: { size }, stop, resume }
+  readonly inbound: InboundPipeline // { queue: { size }, stop, resume }
 }
 ```
 
-### `StopResumeControl`
+`HelloExchange` contributes `hello()`, `isHello(frame)`, and `acceptHello(frame)`; `StopResumeControl` contributes `stop()` and `resume()`.
 
-Lifecycle control interface for pausing/resuming message processing.
+### `ChannelOptions<T>`
+
+Everything a channel needs beyond its label.
 
 ```typescript
-interface StopResumeControl {
-  stop: () => void // Pause processing (messages accumulate)
-  resume: () => void // Resume processing accumulated messages
+interface ChannelOptions<T = any> {
+  readonly send: SendPacketFn // Transmits each sealed frame to the peer
+  readonly receive: ReceivePacketFn<T> // Receives each opened packet
+  readonly protocolProvider: ProtocolProvider<T> // Creates the protocol instance for the session
+  readonly session: ProtocolSession // { protocol, role, localId, peerId }
+  readonly onDrop?: PacketDropHandler // Receives every packet either pipeline discards
 }
-```
-
-### `Protocol<T>`
-
-The protocol object providing security operations.
-
-```typescript
-interface Protocol<T = any> {
-  packetEncryption: PacketEncryption<T> // Encrypt outbound packets
-  packetDecryption: PacketDecryption<T> // Decrypt inbound packets
-  packetObfuscation: PacketObfuscation // Obfuscate outbound packets
-  packetDeobfuscation: PacketDeobfuscation // Deobfuscate inbound packets
-  send: SendPacketFn // Transport send function
-  receive: ReceivePacketFn<T> // Receive callback
-  getLogger: () => Logger // Logger accessor
-}
-```
-
-### `ProtocolProvider<T>`
-
-Factory function that creates a Protocol from transport functions.
-
-```typescript
-type ProtocolProvider<T = any> = (send: SendPacketFn, receive: ReceivePacketFn<T>) => Protocol<T>
 ```
 
 ### `ChannelCreater<T>`
 
-Factory function type that creates Channel instances.
-
 ```typescript
-type ChannelCreater<T = any> = (label: string, send: SendPacketFn, receive: ReceivePacketFn, protocol: ProtocolProvider<T>) => Channel<T>
+type ChannelCreater<T = any> = (label: string, options: ChannelOptions<T>) => Channel<T>
 ```
+
+### `Protocol<T>` and `ProtocolProvider<T>`
+
+Declared here and documented in [`protocol/`](../protocol/README.md): a protocol carries `seal`, `open`, the hello exchange, `send`, `receive`, and `getLogger`; a provider is `(send, receive, session) => Protocol`.
 
 ### `ChannelStore<T>`
 
-Store for managing multiple channels.
-
 ```typescript
 interface ChannelStore<T = any> {
-  readonly create: (label, send, receive, protocol) => Channel<T>
+  readonly create: (label: string, options: ChannelOptions<T>) => Channel<T>
   readonly add: (...channels: Channel<T>[]) => void
   readonly existsByName: (name: string) => boolean
   readonly existsById: (id: string) => boolean
@@ -80,7 +59,7 @@ interface ChannelStore<T = any> {
   readonly clear: () => void
   readonly getByName: (name: string) => Channel<T> | null
   readonly getById: (id: string) => Channel<T> | null
-  readonly list: readonly ChannelEntry<T>[]
+  readonly list: readonly ChannelEntry<T>[] // { id, name, channel }
 }
 ```
 
@@ -90,96 +69,69 @@ interface ChannelStore<T = any> {
 
 ### `createChannelFactory`
 
-Creates a channel factory with injected sender and receiver factories.
-
-**Signature**:
+Creates a channel creator with injected sender and receiver factories. The `/browser/channel` and `/node/channel` entries call it with their platform's `createSender` and `createReceiver` and export the result as `createChannel`.
 
 ```typescript
 function createChannelFactory(createSender: SenderFactory, createReceiver: ReceiverFactory): ChannelCreater
 ```
 
-**Parameters**:
-
-| Parameter        | Type              | Description                          |
-| ---------------- | ----------------- | ------------------------------------ |
-| `createSender`   | `SenderFactory`   | Factory to create outbound pipelines |
-| `createReceiver` | `ReceiverFactory` | Factory to create inbound pipelines  |
-
-**Returns**: A `ChannelCreater` function.
-
-**Example**:
+The creator validates the label, the options object, both callbacks, the provider, and the session, then calls the provider once. A provider that throws (a session it cannot key) throws out of `createChannel` in the caller's frame. The protocol's `seal` feeds the sender and its `open` feeds the receiver; `onDrop` is passed to both.
 
 ```typescript
-import { createChannelFactory } from '@hyperfrontend/network-protocol/lib/channel'
-import { createSenderFactory } from '@hyperfrontend/network-protocol/lib/sender'
-import { createReceiverFactory } from '@hyperfrontend/network-protocol/lib/receiver'
+import { createChannel } from '@hyperfrontend/network-protocol/browser/channel'
+import { createProtocol } from '@hyperfrontend/network-protocol/browser/v3'
+import { createLogger } from '@hyperfrontend/logging'
 
-// Step 1: Create sender and receiver factories (platform-specific)
-const createSender = createSenderFactory(/* platform dependencies */)
-const createReceiver = createReceiverFactory(/* platform dependencies */)
-
-// Step 2: Create channel factory
-const createChannel = createChannelFactory(createSender, createReceiver)
-
-// Step 3: Create a channel
-const channel = createChannel(
-  'my-channel',
-  (packet) => transport.send(packet), // Send transport function
-  (packet) => handleMessage(packet.data), // Receive callback
-  protocolProvider // Security provider
-)
+const channel = createChannel('app-to-widget', {
+  send: (frame) => otherWindow.postMessage(frame, origin, [frame.buffer]),
+  receive: (packet) => handle(packet.data.message),
+  protocolProvider: createProtocol(createLogger({ level: 'info' })),
+  session: { protocol: 'v3', role: 'initiator', localId, peerId },
+  onDrop: (drop) => report(drop),
+})
 ```
 
----
-
 ### `createChannelStoreFactory`
-
-Creates a channel store factory for managing multiple channels.
-
-**Signature**:
 
 ```typescript
 function createChannelStoreFactory(createChannel: ChannelCreater): () => ChannelStore
 ```
 
-**Example**:
+```typescript
+import { createChannel, createChannelStore } from '@hyperfrontend/network-protocol/browser/channel'
+
+const store = createChannelStore()
+
+const first = store.create('channel-1', options) // creates and registers
+store.add(createChannel('channel-2', options)) // registers an existing channel
+
+store.getByName('channel-1')
+store.existsByName('channel-1') // true
+store.list.forEach((entry) => track(entry.id, entry.name))
+store.removeByName('channel-1')
+store.clear()
+```
+
+`create` and `add` throw for a name already in the store; `removeByName` and `removeById` throw when nothing matches.
+
+---
+
+## Hello Exchange
+
+The channel exposes the protocol's `hello`, `isHello`, and `acceptHello` so the owner can key the session over the same transport that carries frames:
 
 ```typescript
-import { createChannelStoreFactory } from '@hyperfrontend/network-protocol/lib/channel'
-
-const createChannelStore = createChannelStoreFactory(createChannel)
-const channelStore = createChannelStore()
-
-// Create and automatically register a channel
-const channel1 = channelStore.create('channel-1', sendFn, receiveFn, protocolProvider)
-
-// Or add an externally created channel
-const channel2 = createChannel('channel-2', sendFn, receiveFn, protocolProvider)
-channelStore.add(channel2)
-
-// Look up channels
-const found = channelStore.getByName('channel-1')
-console.log(channelStore.existsByName('channel-1')) // true
-
-// List all channels
-channelStore.list.forEach((entry) => {
-  console.log(`${entry.id}: ${entry.name}`)
-})
-
-// Remove channels
-channelStore.removeByName('channel-1')
-channelStore.clear() // Remove all
+otherWindow.postMessage(await channel.hello(), origin)
+window.addEventListener('message', ({ data }) => (channel.isHello(data) ? channel.acceptHello(data) : channel.receive(data)))
 ```
+
+`hello()` returns the same bytes on every call, so it can be retried until the peer confirms. `acceptHello` returns `'accepted'` for the first hello, `'duplicate'` for the same bytes again, and `'rejected'` for anything else. Frames sent or received before the peer's hello is accepted wait inside the pipelines.
 
 ---
 
 ## Pipeline Architecture
 
-When a channel is created, it internally constructs two pipelines:
-
-### Outbound Pipeline (Sender)
-
-When you call `channel.send(origin, target, data)`:
+Each direction is one stage over one FIFO queue.
 
 ```mermaid
 ---
@@ -189,191 +141,43 @@ config:
     fontSize: 12px
 ---
 flowchart LR
-    subgraph OutboundPipeline["OUTBOUND PIPELINE"]
-        Send["channel.send(origin, target, data)"]
+    Send["channel.send(origin, target, data)"] --> Build["createUnencryptedPacket"]
+    Build --> SealQ["Seal queue<br/>protocol.seal"]
+    SealQ --> Transport["options.send(frame)"]
 
-        subgraph EncQueue["Encryption Queue"]
-            Enc1["UnencryptedPkt"]
-            Enc2["UnserializedEnc"]
-            Enc1 --> Enc2
-        end
-
-        subgraph SerQueue["Serialization Queue"]
-            Ser1["UnserializedEncr"]
-            Ser2["SerializedEncr"]
-            Ser1 --> Ser2
-        end
-
-        subgraph ObfQueue["Obfuscation Queue"]
-            Obf1["SerializedEncrypted"]
-            Obf2["ObfuscatedPacket"]
-            Obf1 --> Obf2
-        end
-
-        Transport["transport.send()"]
-
-        Send --> EncQueue
-        EncQueue --> SerQueue
-        SerQueue --> ObfQueue
-        ObfQueue --> Transport
-    end
+    Wire["channel.receive(frame)"] --> OpenQ["Open queue<br/>protocol.open"]
+    OpenQ --> Deliver["options.receive(packet)"]
 ```
 
-### Inbound Pipeline (Receiver)
-
-When a packet arrives via `channel.receive(packet)`:
-
-```mermaid
----
-config:
-  theme: base
-  themeVariables:
-    fontSize: 12px
----
-flowchart LR
-    subgraph InboundPipeline["INBOUND PIPELINE"]
-        Receive["channel.receive(packet)"]
-
-        subgraph DeobfQueue["Deobfuscation Queue"]
-            Deobf1["ObfuscatedPkt"]
-            Deobf2["SerializedEncr"]
-            Deobf1 --> Deobf2
-        end
-
-        subgraph DeserQueue["Deserialization Queue"]
-            Deser1["SerializedEncrypted"]
-            Deser2["UnserializedEncr"]
-            Deser1 --> Deser2
-        end
-
-        subgraph DecQueue["Decryption Queue"]
-            Dec1["UnserializedEncr"]
-            Dec2["UnencryptedPacket"]
-            Dec1 --> Dec2
-        end
-
-        Callback["receiveCallback()"]
-
-        Receive --> DeobfQueue
-        DeobfQueue --> DeserQueue
-        DeserQueue --> DecQueue
-        DecQueue --> Callback
-    end
-```
+- **Outbound**: `send` builds and validates the plaintext packet synchronously, then queues it; the seal stage produces the wire frame and hands it to `options.send`.
+- **Inbound**: `receive` queues the frame; the open stage produces the plaintext packet and hands it to `options.receive`.
 
 ---
 
 ## Lifecycle Management
 
-### Stop/Resume Controls
-
-Channels provide granular control over message processing:
-
 ```typescript
-// Stop all processing (both directions)
-channel.stop()
+channel.stop() // Pauses both directions
+channel.resume() // Resumes both directions
 
-// Or stop just one direction
-channel.outbound.stop() // Pause outbound only
-channel.inbound.stop() // Pause inbound only
-
-// Resume processing
-channel.resume()
-
-// Or resume just one direction
+channel.outbound.stop() // Pauses sealing only
+channel.inbound.stop() // Pauses opening only
 channel.outbound.resume()
 channel.inbound.resume()
 ```
 
-### What Happens When Stopped
-
-1. **Messages Continue to Accumulate**: `addMessage()` still adds to queues
-2. **Processing Pauses**: No messages are transformed or sent
-3. **Queue Sizes Grow**: Monitor with `queue.size()` for backpressure
-
-### What Happens When Resumed
-
-1. **FIFO Processing Resumes**: Accumulated messages process in order
-2. **Pipeline Continues**: Each queue feeds the next in sequence
+While stopped, `send` and `receive` still enqueue; nothing is sealed or opened, and `queue.size` grows. On resume, accumulated items process in FIFO order.
 
 ---
 
-## Queue Visibility & Monitoring
-
-Access individual queues for monitoring and metrics:
+## Queue Visibility
 
 ```typescript
-// Outbound queue access
-const encryptQueueSize = channel.outbound.encryptionQueue.size()
-const serializeQueueSize = channel.outbound.serializationQueue.size()
-const obfuscateQueueSize = channel.outbound.obfuscationQueue.size()
+const pendingOut = channel.outbound.queue.size
+const pendingIn = channel.inbound.queue.size
 
-// Inbound queue access
-const deobfuscateQueueSize = channel.inbound.deobfuscationQueue.size()
-const deserializeQueueSize = channel.inbound.deserializationQueue.size()
-const decryptQueueSize = channel.inbound.decryptionQueue.size()
-
-// Total pending outbound messages
-const totalOutbound = encryptQueueSize + serializeQueueSize + obfuscateQueueSize
-
-// Backpressure detection example
-if (totalOutbound > 100) {
-  console.warn('Outbound backpressure detected!')
-  // Optionally slow down or pause upstream
-}
-```
-
----
-
-## Backpressure Management
-
-### Pattern: Pause on High Queue Depth
-
-```typescript
-const BACKPRESSURE_THRESHOLD = 50
-
-function checkBackpressure(channel: Channel) {
-  const depth = channel.outbound.encryptionQueue.size()
-  if (depth > BACKPRESSURE_THRESHOLD) {
-    channel.outbound.stop()
-    console.warn(`Pausing channel ${channel.label}: queue depth ${depth}`)
-    return true
-  }
-  return false
-}
-
-// Resume when queue drains
-function maybeResume(channel: Channel) {
-  const depth = channel.outbound.encryptionQueue.size()
-  if (depth < BACKPRESSURE_THRESHOLD / 2) {
-    channel.outbound.resume()
-    console.log(`Resuming channel ${channel.label}`)
-  }
-}
-```
-
-### Pattern: Graceful Shutdown
-
-```typescript
-async function gracefulShutdown(channel: Channel, timeoutMs = 5000) {
-  // Stop accepting new messages
-  channel.stop()
-
-  // Wait for queues to drain
-  const start = Date.now()
-  while (Date.now() - start < timeoutMs) {
-    const outboundEmpty =
-      channel.outbound.encryptionQueue.size() === 0 &&
-      channel.outbound.serializationQueue.size() === 0 &&
-      channel.outbound.obfuscationQueue.size() === 0
-
-    if (outboundEmpty) {
-      console.log(`Channel ${channel.label} drained successfully`)
-      return
-    }
-    await new Promise((r) => setTimeout(r, 100))
-  }
-  console.warn(`Channel ${channel.label} shutdown timeout - some messages may be lost`)
+if (pendingOut > 100) {
+  channel.outbound.stop()
 }
 ```
 
@@ -381,58 +185,47 @@ async function gracefulShutdown(channel: Channel, timeoutMs = 5000) {
 
 ## Error Handling
 
-Errors in queues are handled via the `onFail` callback pattern:
+`createChannel` throws in the caller's frame for invalid input:
 
 ```typescript
-// Errors are logged and passed to fail callbacks
-// The channel continues processing subsequent messages
+createChannel('', options) // 'Cannot create a channel without a valid label'
+createChannel('comms', null) // 'Cannot create a channel without a valid options object'
+createChannel('comms', { ...options, send: null }) // 'Cannot create a channel without a valid send function'
+createChannel('comms', { ...options, receive: null }) // 'Cannot create a channel without a valid receive function'
+createChannel('comms', { ...options, protocolProvider: null }) // 'Cannot create a channel without a valid protocol provider function'
+createChannel('comms', { ...options, session: null }) // 'Cannot create a channel without a valid session'
+```
 
-// Access error handling through sender/receiver creation
-// See sender/ and receiver/ modules for error callback patterns
+A provider that returns an object missing a protocol function throws `Cannot create a channel without a valid <name> function`, where `<name>` is the first invalid property (`getFirstInvalidProtocolProperty`).
+
+`send` throws synchronously for a malformed origin, target, or data envelope (see [`packet/`](../packet/README.md)). Everything after that is asynchronous: a packet a stage rejects is logged and discarded, the channel continues with the next one, and `onDrop` (when given) receives a `PacketDrop`:
+
+```typescript
+const channel = createChannel('comms', {
+  ...options,
+  onDrop: (drop) => {
+    // drop.direction: 'inbound' | 'outbound'
+    // drop.stage: 'seal' | 'open'
+    // drop.reason: the stage's message, e.g. 'Frame counter 7 is not above the last accepted counter 9'
+    // drop.cause: the error the stage threw, when it threw one (a ProtocolError carries a code)
+    // drop.packet: the packet or frame as the stage received it
+    metrics.increment(`dropped.${drop.direction}.${drop.stage}`)
+  },
+})
 ```
 
 ---
 
-## Complete Example
+## Validation Helpers
 
-```typescript
-import { createProtocol } from '@hyperfrontend/network-protocol/browser/v1'
-import { createLogger } from '@hyperfrontend/logging'
-
-// Setup
-const logger = createLogger({ level: 'info' })
-const protocolProvider = createProtocol(logger, 60) // 60-min refresh
-
-// Create channel
-const channel = createChannel(
-  'iframe-communication',
-  (packet) => iframe.contentWindow.postMessage(packet, '*'),
-  (packet) => handleIncomingMessage(packet.data.message),
-  protocolProvider
-)
-
-// Listen for incoming messages
-window.addEventListener('message', (event) => {
-  if (event.data instanceof Uint8Array) {
-    channel.receive(event.data)
-  }
-})
-
-// Send messages
-channel.send('https://parent.example.com', 'https://iframe.example.com', createData(messagePayload))
-
-// Monitor health
-setInterval(() => {
-  console.log(`Outbound queue depth: ${channel.outbound.encryptionQueue.size()}`)
-}, 1000)
-```
+Exported from the channel entries for upstream guards: `isValidChannel`, `isValidLabel`, `isValidSender`, `isValidReceiver`, `isValidSession`, and `getFirstInvalidProtocolProperty`.
 
 ---
 
 ## Relationship to Other Modules
 
-- **Depends on**: [`sender/`](../sender/README.md), [`receiver/`](../receiver/README.md), [`protocol/`](../protocol/README.md), [`packet/`](../packet/README.md)
-- **Used by**: [`routing/`](../routing/README.md) (for topic-based message routing)
+- **Depends on**: [`sender/`](../sender/README.md), [`receiver/`](../receiver/README.md), [`protocol/`](../protocol/README.md), [`packet/`](../packet/README.md), [`security/`](../security/README.md)
+- **Used by**: [`routing/`](../routing/README.md) (channels are the subscription keys)
 
 ---
 
@@ -440,15 +233,15 @@ setInterval(() => {
 
 - **[Library Index](../README.md)** - All modules
 - **[Architecture Guide](../../../ARCHITECTURE.md#channel)** - Channel architecture
-- **[Browser Entry](../../browser/README.md)** - Browser-specific channel
-- **[Node Entry](../../node/README.md)** - Node.js-specific channel
+- **[Browser Entry](../../browser/channel/README.md)** - Browser-specific channel
+- **[Node Entry](../../node/channel/README.md)** - Node.js-specific channel
 
 ### Related Modules
 
-| Module                             | Relationship                           |
-| ---------------------------------- | -------------------------------------- |
-| [sender/](../sender/README.md)     | Outbound pipeline component            |
-| [receiver/](../receiver/README.md) | Inbound pipeline component             |
-| [protocol/](../protocol/README.md) | Provides security operations           |
-| [queue/](../queue/README.md)       | Underlying queue implementation        |
-| [routing/](../routing/README.md)   | Uses channels for message distribution |
+| Module                             | Relationship                                |
+| ---------------------------------- | ------------------------------------------- |
+| [sender/](../sender/README.md)     | Outbound pipeline component                 |
+| [receiver/](../receiver/README.md) | Inbound pipeline component                  |
+| [protocol/](../protocol/README.md) | Provides seal, open, and the hello exchange |
+| [queue/](../queue/README.md)       | Underlying queue implementation             |
+| [routing/](../routing/README.md)   | Uses channels for message distribution      |

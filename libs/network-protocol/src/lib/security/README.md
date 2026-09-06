@@ -2,50 +2,129 @@
 
 ## Purpose
 
-The Security module defines the security suite interfaces that combine encryption and obfuscation capabilities. It provides a unified interface for the complete security pipeline used by the protocol.
+The Security module defines what a security protocol implements: the per-session seal and open operations, the session a protocol is bound to, the outcome of accepting a hello frame, and the machine-readable error a protocol raises when it rejects a frame or a session.
 
 ---
 
 ## Key Interfaces
 
-### `EncryptionSuite<T>`
-
-Provides packet encryption and decryption operations with dynamic key support.
-
-```typescript
-interface EncryptionSuite<T = any> {
-  packetEncryption: PacketEncryption<T> // (packet: UnencryptedPacket<T>) => Promise<UnserializedEncryptedPacket>
-  packetDecryption: PacketDecryption<T> // (packet: UnserializedEncryptedPacket) => Promise<UnencryptedPacket<T>>
-}
-```
-
-### `ObfuscationSuite`
-
-Provides packet obfuscation and deobfuscation operations with time-based passwords.
-
-```typescript
-interface ObfuscationSuite {
-  packetObfuscation: PacketObfuscation // (packet: SerializedEncryptedPacket) => Promise<ObfuscatedPacket>
-  packetDeobfuscation: PacketDeobfuscation // (packet: ObfuscatedPacket) => Promise<SerializedEncryptedPacket>
-}
-```
-
 ### `SecuritySuite<T>`
 
-Combined interface for complete security operations (encryption + obfuscation).
+The two per-session packet operations.
 
 ```typescript
-interface SecuritySuite<T = any> extends EncryptionSuite<T>, ObfuscationSuite {
-  // Inherits all four operations:
-  // packetEncryption, packetDecryption, packetObfuscation, packetDeobfuscation
+interface SecuritySuite<T = any> {
+  readonly seal: PacketSealer<T> // (packet: UnencryptedPacket<T>) => Promise<WirePacket>
+  readonly open: PacketOpener<T> // (frame: WirePacket) => Promise<UnencryptedPacket<T>>
 }
+```
+
+`PacketSealer` and `PacketOpener` are re-exported from [`packet/`](../packet/README.md).
+
+### `ProtocolSession` and `SessionRole`
+
+What a protocol needs to key one session. The key material itself is minted by the protocol and exchanged through hello frames once the session exists.
+
+```typescript
+type SessionRole = 'initiator' | 'responder'
+
+interface ProtocolSession {
+  readonly protocol: string // The negotiated protocol identifier, e.g. 'v3'
+  readonly role: SessionRole // Which side of the handshake this endpoint played
+  readonly localId: string // This endpoint's identity as stamped on packets
+  readonly peerId: string // The peer's identity as stamped on packets
+}
+```
+
+### `HelloOutcome`
+
+```typescript
+type HelloOutcome = 'accepted' | 'duplicate' | 'rejected'
+```
+
+| Outcome     | Meaning                                                       |
+| ----------- | ------------------------------------------------------------- |
+| `accepted`  | The peer's material is now known and the session can be keyed |
+| `duplicate` | The same material was already accepted; a retry, ignored      |
+| `rejected`  | The frame is not a hello this session can use                 |
+
+### `ProtocolError`
+
+```typescript
+interface ProtocolError extends Error {
+  readonly code: ProtocolErrorCode // Why the protocol rejected the input
+}
+```
+
+The error's `name` is `'ProtocolError'`.
+
+---
+
+## Error Codes
+
+```typescript
+const ProtocolErrorCode = {
+  UnsupportedVersion: 'unsupported-version',
+  Replayed: 'replayed',
+  AuthenticationFailed: 'authentication-failed',
+  Malformed: 'malformed',
+  CounterExhausted: 'counter-exhausted',
+  InvalidSession: 'invalid-session',
+} as const
+
+type ProtocolErrorCode = (typeof ProtocolErrorCode)[keyof typeof ProtocolErrorCode]
+```
+
+| Code                    | Meaning                                                              |
+| ----------------------- | -------------------------------------------------------------------- |
+| `unsupported-version`   | The frame's version byte is not this protocol's                      |
+| `replayed`              | The frame's counter is not above the last accepted one               |
+| `authentication-failed` | The frame's tag does not verify under the session's keys             |
+| `malformed`             | The frame is too short, or authenticated but does not carry a packet |
+| `counter-exhausted`     | The session has sealed every counter value it can represent          |
+| `invalid-session`       | The session cannot be keyed from the material it holds               |
+
+---
+
+## Functions
+
+### `createProtocolError`
+
+```typescript
+function createProtocolError(code: ProtocolErrorCode, message: string): ProtocolError
+```
+
+```typescript
+import { createProtocolError, ProtocolErrorCode } from '@hyperfrontend/network-protocol/security'
+
+throw createProtocolError(ProtocolErrorCode.Replayed, 'Frame counter 7 is not above the last accepted counter 9')
+```
+
+### `getProtocolErrorCode`
+
+Reads the code off any thrown value, or returns `null` when the value is not a protocol error.
+
+```typescript
+function getProtocolErrorCode(error: unknown): ProtocolErrorCode | null
+```
+
+```typescript
+import { getProtocolErrorCode } from '@hyperfrontend/network-protocol/security'
+
+const channel = createChannel('comms', {
+  ...options,
+  onDrop: (drop) => {
+    const code = getProtocolErrorCode(drop.cause)
+    if (code === 'authentication-failed' || code === 'replayed') {
+      alarm(drop)
+    }
+  },
+})
 ```
 
 ---
 
-## Security Suite Composition
-
-The security suite is composed from separate encryption and obfuscation components:
+## Where the Pieces Meet
 
 ```mermaid
 ---
@@ -54,298 +133,21 @@ config:
   themeVariables:
     fontSize: 12px
 ---
-flowchart TB
-    subgraph SecuritySuite["SECURITY SUITE"]
-        subgraph EncSuite["EncryptionSuite"]
-            subgraph PacketEnc["packetEncryption"]
-                direction TB
-                PE1["UnencryptedPacket&lt;T&gt;"]
-                PE2["UnserializedEncryptedPacket"]
-                PE1 --> PE2
-            end
-
-            subgraph PacketDec["packetDecryption"]
-                direction TB
-                PD1["UnserializedEncryptedPacket"]
-                PD2["UnencryptedPacket&lt;T&gt;"]
-                PD1 --> PD2
-            end
-        end
-
-        subgraph ObfSuite["ObfuscationSuite"]
-            subgraph PacketObf["packetObfuscation"]
-                direction TB
-                PO1["SerializedEncryptedPacket"]
-                PO2["ObfuscatedPacket"]
-                PO1 --> PO2
-            end
-
-            subgraph PacketDeobf["packetDeobfuscation"]
-                direction TB
-                PDO1["ObfuscatedPacket"]
-                PDO2["SerializedEncryptedPacket"]
-                PDO1 --> PDO2
-            end
-        end
-    end
-```
-
----
-
-## Factory Functions
-
-### Dynamic Key Encryption Suite
-
-Created by `createDynamicKeyEncryptionFactory`, this suite uses a key provider function evaluated at each operation.
-
-**Location**: `packet/security/encryption/dynamic-encryption-key.ts`
-
-```typescript
-import { createDynamicKeyEncryptionFactory } from '@hyperfrontend/network-protocol/lib/packet/security/encryption'
-
-// Create the factory with platform-specific encryption
-const createDynamicKeyEncryption = createDynamicKeyEncryptionFactory(
-  encryptPacket, // Platform-specific encrypt
-  decryptPacket // Platform-specific decrypt
-)
-
-// Create a suite with a key provider
-let currentKey = 'initial-key'
-const getKey = () => currentKey
-
-const encryptionSuite = createDynamicKeyEncryption(getKey)
-
-// Key is evaluated at each operation
-await encryptionSuite.packetEncryption(packet) // Uses current key
-currentKey = 'rotated-key'
-await encryptionSuite.packetEncryption(packet) // Uses rotated key
-```
-
-### Time-Interval Obfuscation Suite
-
-Created by `createTimeIntervalObfuscationFactory`, this suite uses time-based passwords with automatic clock-skew handling.
-
-**Location**: `packet/security/obfuscation/time-interval-obfuscation-factory.ts`
-
-```typescript
-import { createTimeIntervalObfuscationFactory } from '@hyperfrontend/network-protocol/lib/packet/security/obfuscation'
-
-// Create the factory with platform-specific obfuscation
-const createTimeIntervalObfuscation = createTimeIntervalObfuscationFactory(
-  obfuscatePacket, // Platform-specific obfuscate
-  deobfuscatePacket, // Platform-specific deobfuscate
-  getTimeBasedPassword, // Password from time window
-  getTimeBasedPasswords // Current, previous, next passwords
-)
-
-// Create a suite with 60-minute refresh
-const obfuscationSuite = createTimeIntervalObfuscation(60)
-
-// Obfuscate with current time window password
-await obfuscationSuite.packetObfuscation(serializedPacket)
-
-// Deobfuscate tries current, previous, and next windows
-await obfuscationSuite.packetDeobfuscation(obfuscatedPacket)
-```
-
----
-
-## Platform-Specific Creation
-
-### Browser
-
-```typescript
-import { createProtocol } from '@hyperfrontend/network-protocol/browser/v1'
-import { createLogger } from '@hyperfrontend/logging'
-
-const logger = createLogger({ level: 'info' })
-const protocolProvider = createProtocol(logger, 60)
-
-// The protocol includes:
-// - Web Crypto API-based encryption (AES-GCM)
-// - Web Crypto API-based obfuscation
-// - Time-based password generation
-```
-
-### Node.js
-
-```typescript
-import { createProtocol } from '@hyperfrontend/network-protocol/node/v1'
-import { createLogger } from '@hyperfrontend/logging'
-
-const logger = createLogger({ level: 'info' })
-const protocolProvider = createProtocol(logger, 60)
-
-// The protocol includes:
-// - Node.js crypto module-based encryption (AES-256-GCM)
-// - Node.js crypto module-based obfuscation
-// - Time-based password generation
-```
-
----
-
-## Encryption Key Management
-
-### Dynamic Key Pattern
-
-The encryption suite uses a **key provider function** that is evaluated at each operation:
-
-```typescript
-// Key captured from incoming packets
-let capturedKey: string
-
-const receive = (packet: UnencryptedPacket) => {
-  capturedKey = packet.data.key // Capture key from peer
-  handlePacket(packet)
-}
-
-const getKey = () => capturedKey
-
-// Encryption suite uses the latest key
-const suite = createDynamicKeyEncryption(getKey)
-```
-
-### Key Exchange Flow
-
-```mermaid
-sequenceDiagram
-    participant A as Client A
-    participant B as Client B
-
-    Note over A: Generate key
-    A->>B: packet.data.key = keyA
-    Note over B: Capture keyA<br/>Use keyA to<br/>encrypt reply
-    B->>A: packet.data.key = keyB
-    Note over A: Capture keyB<br/>Use keyB to<br/>encrypt next
-```
-
----
-
-## Obfuscation Password Management
-
-### Time-Based Password Generation
-
-Passwords are derived from the current time window:
-
-```typescript
-// Password changes every refreshRate minutes
-const password = await getTimeBasedPassword(new Date(), refreshRate, 0)
-```
-
-### Clock Skew Tolerance
-
-During deobfuscation, the suite tries multiple time windows:
-
-```typescript
-const { current, previous, next } = getTimeBasedPasswords(new Date(), refreshRate)
-
-// Try in order:
-// 1. Current time window password
-// 2. Previous time window password (sender clock behind)
-// 3. Next time window password (sender clock ahead)
-```
-
-### Window Tolerance Example
-
-With `refreshRate = 60` (60-minute windows):
-
-```mermaid
-%%{init: {'theme':'base', 'themeVariables': {'fontSize':'14px'}}}%%
 flowchart LR
-    subgraph Tolerance["Tolerance: ±60 minutes"]
-        direction LR
-        PREV["<div style='text-align: center; padding: 12px;'><b>Previous Window</b><br/>60 minutes<br/>(sender clock behind)</div>"]
-        CURR["<div style='text-align: center; padding: 12px;'><b>Current Window</b><br/>60 minutes<br/>⬇️ Receiver's time<br/>(now)</div>"]
-        NEXT["<div style='text-align: center; padding: 12px;'><b>Next Window</b><br/>60 minutes<br/>(sender clock ahead)</div>"]
-
-        PREV -.-> CURR
-        CURR -.-> NEXT
-    end
+    Session["ProtocolSession"] --> Provider["ProtocolProvider(send, receive, session)"]
+    Provider --> Protocol["Protocol<br/>seal / open / hello / isHello / acceptHello"]
+    Protocol -->|"rejects with"| Error["ProtocolError { code }"]
+    Error -->|"onDrop cause"| Owner["Channel owner"]
 ```
 
----
-
-## Security Pipeline Flow
-
-### Outbound (Sending)
-
-```mermaid
-%%{init: {'theme':'base', 'themeVariables': {'fontSize':'12px'}, 'flowchart':{'htmlLabels':true}}}%%
-flowchart TB
-    UP["<div style='text-align: left; padding: 8px;'><b>UnencryptedPacket&lt;T&gt;</b><br/>origin: string<br/>target: string<br/>data: Data&lt;T&gt;</div>"]
-
-    UEP["<div style='text-align: left; padding: 8px;'><b>UnserializedEncryptedPacket</b><br/>origin: string<br/>target: string<br/>data: Uint8Array (encrypted)</div>"]
-
-    SEP["<div style='text-align: left; padding: 8px;'><b>SerializedEncryptedPacket</b><br/>origin: string<br/>target: string<br/>data: string (base64)</div>"]
-
-    OP["<div style='text-align: left; padding: 8px;'><b>ObfuscatedPacket</b><br/>Uint8Array (opaque binary)</div>"]
-
-    WIRE["Transport Layer (wire)"]
-
-    UP -->|"packetEncryption (dynamic key)"| UEP
-    UEP -->|"serialize (base64 encode)"| SEP
-    SEP -->|"packetObfuscation (time-based password)"| OP
-    OP --> WIRE
-```
-
-### Inbound (Receiving)
-
-```mermaid
-%%{init: {'theme':'base', 'themeVariables': {'fontSize':'12px'}, 'flowchart':{'htmlLabels':true}}}%%
-flowchart TB
-    WIRE["Transport Layer (wire)"]
-
-    OP["<div style='text-align: left; padding: 8px;'><b>ObfuscatedPacket</b><br/>Uint8Array (opaque binary)</div>"]
-
-    SEP["<div style='text-align: left; padding: 8px;'><b>SerializedEncryptedPacket</b><br/>origin: string<br/>target: string<br/>data: string (base64)</div>"]
-
-    UEP["<div style='text-align: left; padding: 8px;'><b>UnserializedEncryptedPacket</b><br/>origin: string<br/>target: string<br/>data: Uint8Array (encrypted)</div>"]
-
-    UP["<div style='text-align: left; padding: 8px;'><b>UnencryptedPacket&lt;T&gt;</b><br/>origin: string<br/>target: string<br/>data: Data&lt;T&gt;</div>"]
-
-    WIRE --> OP
-    OP -->|"packetDeobfuscation (tries 3 time windows)"| SEP
-    SEP -->|"deserialize (base64 decode)"| UEP
-    UEP -->|"packetDecryption (captured key)"| UP
-```
-
----
-
-## Security Considerations
-
-### Key Rotation
-
-- Dynamic key encryption allows key rotation without protocol reconfiguration
-- Keys are exchanged via the `packet.data.key` field
-- Consider implementing periodic key rotation for long-lived sessions
-
-### Time Synchronization
-
-- Obfuscation depends on synchronized clocks between endpoints
-- Built-in tolerance handles up to ±refreshRate minutes of drift
-- Monitor for repeated deobfuscation failures (may indicate clock issues)
-
-### Refresh Rate Selection
-
-| Refresh Rate | Clock Tolerance | Security Tradeoff              |
-| ------------ | --------------- | ------------------------------ |
-| 1 minute     | ±1 minute       | Higher security, strict timing |
-| 5 minutes    | ±5 minutes      | Balanced                       |
-| 60 minutes   | ±60 minutes     | More tolerant, larger windows  |
-
-### Best Practices
-
-1. **Use NTP**: Ensure all endpoints sync with reliable time servers
-2. **Monitor Failures**: Log deobfuscation failures to detect clock drift
-3. **Key Management**: Implement secure key generation and exchange
-4. **Logging**: Use debug-level logging in development, info in production
+A protocol (see [`protocol/`](../protocol/README.md)) implements the suite for one session; a channel (see [`channel/`](../channel/README.md)) runs it; every rejection reaches the owner as the `cause` of a `PacketDrop`.
 
 ---
 
 ## Relationship to Other Modules
 
-- **Depends on**: [`packet/`](../packet/README.md) (for packet transformation types), `@hyperfrontend/cryptography`
-- **Used by**: [`protocol/`](../protocol/README.md) (composes the security suite)
+- **Depends on**: [`packet/`](../packet/README.md) (the seal and open types)
+- **Used by**: [`protocol/`](../protocol/README.md), [`channel/`](../channel/README.md), [`queue/`](../queue/README.md)
 
 ---
 
@@ -353,12 +155,12 @@ flowchart TB
 
 - **[Library Index](../README.md)** - All modules
 - **[Architecture Guide](../../../ARCHITECTURE.md#security-suite)** - Security architecture
+- **[Security Entry](../../security/README.md)** - The `@hyperfrontend/network-protocol/security` entry
 
 ### Related Modules
 
-| Module                                                          | Relationship                          |
-| --------------------------------------------------------------- | ------------------------------------- |
-| [protocol/](../protocol/README.md)                              | Composes security suite               |
-| [packet/](../packet/README.md)                                  | Packet transformations using security |
-| [packet/security/encryption/](../packet/security/encryption/)   | Encryption implementations            |
-| [packet/security/obfuscation/](../packet/security/obfuscation/) | Obfuscation implementations           |
+| Module                             | Relationship                               |
+| ---------------------------------- | ------------------------------------------ |
+| [protocol/](../protocol/README.md) | Implements the suite and raises the errors |
+| [channel/](../channel/README.md)   | Binds a session and surfaces drops         |
+| [packet/](../packet/README.md)     | The packet shapes the operations convert   |

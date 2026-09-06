@@ -7,43 +7,48 @@
 The `node/` directory provides Node.js-specific implementations that:
 
 1. Import shared logic from `lib/`
-2. Inject Node.js-native dependencies (Node crypto module)
+2. Inject Node.js-native primitives: the Node.js crypto module through `@hyperfrontend/cryptography/node` and the UTF-8 codec from `@hyperfrontend/string-utils/node`
 3. Export ready-to-use factories for Node.js environments
 
 ## Entry Points
 
-| Path            | Description                                         |
-| --------------- | --------------------------------------------------- |
-| `node/v1`       | v1 protocol with Node crypto encryption             |
-| `node/channel`  | Channel factory pre-wired with node sender/receiver |
-| `node/data`     | Data factory with node crypto                       |
-| `node/packet`   | Packet encryption/decryption with Node crypto       |
-| `node/sender`   | Sender factory with node packet processing          |
-| `node/receiver` | Receiver factory with node packet processing        |
+| Path            | Description                                                                            |
+| --------------- | -------------------------------------------------------------------------------------- |
+| `node/v3`       | `createProtocol(logger)`: a session keyed from an ephemeral P-256 agreement alone      |
+| `node/v4`       | `createProtocol(logger, sharedKey)`: the same agreement with a pre-shared key mixed in |
+| `node/channel`  | Channel factory and store pre-wired with the Node.js sender and receiver               |
+| `node/data`     | Data factory whose schema hash comes from the Node.js crypto module                    |
+| `node/packet`   | Packet types, creators, and validators                                                 |
+| `node/sender`   | Outbound pipeline: packets in, sealed frames out                                       |
+| `node/receiver` | Inbound pipeline: frames in, opened packets out                                        |
 
 ## Usage
 
 ```typescript
 // Import from node-specific entry points
-import { createProtocol } from '@hyperfrontend/network-protocol/node/v1'
+import { parentPort } from 'node:worker_threads'
+import { createProtocol } from '@hyperfrontend/network-protocol/node/v3'
 import { createChannel } from '@hyperfrontend/network-protocol/node/channel'
 import { createLogger } from '@hyperfrontend/logging'
 
 const logger = createLogger({ level: 'info' })
-const protocolProvider = createProtocol(logger, 60)
 
-// Use IPC for transport (e.g., child_process)
-const channel = createChannel(
-  'ipc-channel',
-  (packet) => process.send?.(packet),
-  (packet) => handleMessage(packet),
-  protocolProvider
-)
+// Use a worker_threads port for transport
+const channel = createChannel('worker-channel', {
+  send: (frame) => parentPort.postMessage(frame, [frame.buffer]),
+  receive: (packet) => handleMessage(packet),
+  protocolProvider: createProtocol(logger),
+  session: { protocol: 'v3', role: 'responder', localId, peerId },
+})
+
+// The hello exchange keys the session: hello frames go to acceptHello, sealed frames to receive
+parentPort.on('message', (frame: Uint8Array) => (channel.isHello(frame) ? channel.acceptHello(frame) : channel.receive(frame)))
+parentPort.postMessage(await channel.hello())
 ```
 
 ## Integration Tests
 
-Node.js integration tests use Jest with native Node.js crypto.
+Node.js unit suites (`*.spec.ts`) run under the `node` test environment. The Node.js protocol entries are also exercised end to end by `src/integration-tests/session-envelope.browser.spec.ts`, whose cross-platform cases pair a Node-composed initiator with a browser-composed responder over `v4` and a browser-composed initiator with a Node-composed responder over `v3`.
 
 ## Documentation
 
@@ -57,12 +62,15 @@ For detailed documentation on each module, see the library core:
 
 ## Differences from Browser
 
-| Aspect      | Node.js                      | Browser                           |
-| ----------- | ---------------------------- | --------------------------------- |
-| Crypto      | Node.js `crypto` module      | Web Crypto API (`crypto.subtle`)  |
-| Transport   | IPC, sockets, `process.send` | `postMessage`, `MessageChannel`   |
-| Test Runner | Jest with `jest.setup.ts`    | Jest with `jest.setup.browser.ts` |
-| Test Suffix | `*.spec.ts`                  | `*.browser.spec.ts`               |
+| Aspect           | Node.js                                      | Browser                                      |
+| ---------------- | -------------------------------------------- | -------------------------------------------- |
+| Crypto           | Node.js `crypto` module (`webcrypto.subtle`) | Web Crypto API (`crypto.subtle`)             |
+| Text codec       | `@hyperfrontend/string-utils/node`           | `@hyperfrontend/string-utils/browser`        |
+| Transport        | `worker_threads`, IPC, `process.send`        | `postMessage`, `MessageChannel`              |
+| Test environment | `node` in `test.config.ts`                   | `browser` in `test.config.ts`, DOM preloaded |
+| Test suffix      | `*.spec.ts`                                  | `*.browser.spec.ts`                          |
+
+Frames are identical across platforms: a session keyed by a Node-composed side and a browser-composed side interoperates.
 
 ## See Also
 

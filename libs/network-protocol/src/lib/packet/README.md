@@ -2,13 +2,11 @@
 
 ## Purpose
 
-The Packet module defines the core data structures and transformations for message packaging in the network protocol. It provides a type hierarchy representing packets at different stages of the security pipeline (unencrypted, encrypted, serialized, obfuscated).
+The Packet module defines the two shapes a message takes on either side of the security pipeline: a plaintext packet (routing fields plus the data envelope) and the sealed wire frame that carries it. It also defines the seal and open operation types and the drop report a pipeline emits when it discards a packet.
 
 ---
 
-## Packet Type Hierarchy
-
-Packets transform through four distinct stages as they flow through the security pipeline:
+## Packet Types
 
 ```mermaid
 ---
@@ -17,283 +15,120 @@ config:
   themeVariables:
     fontSize: 12px
 ---
-flowchart TB
-    subgraph PacketFlow["PACKET TRANSFORMATION FLOW"]
-        subgraph Outbound["OUTBOUND (Sender)"]
-            direction TB
-            UE1["UnencryptedPacket&lt;T&gt;<br/>├─ origin: string<br/>├─ target: string<br/>└─ data: Data&lt;T&gt;"]
-            USE1["UnserializedEncryptedPacket<br/>├─ origin: string<br/>├─ target: string<br/>└─ data: Uint8Array"]
-            SE1["SerializedEncryptedPacket<br/>├─ origin: string<br/>├─ target: string<br/>└─ data: string (base64)"]
-            OP1["ObfuscatedPacket<br/>└─ Uint8Array (raw bytes)"]
+flowchart LR
+    UP["UnencryptedPacket&lt;T&gt;<br/>origin: string<br/>target: string<br/>data: Data&lt;T&gt;"]
+    WP["WirePacket<br/>Uint8Array (sealed frame)"]
 
-            UE1 -->|"encrypt"| USE1
-            USE1 -->|"serialize"| SE1
-            SE1 -->|"obfuscate"| OP1
-        end
-
-        subgraph Inbound["INBOUND (Receiver)"]
-            direction BT
-            OP2["ObfuscatedPacket"]
-            SE2["SerializedEncryptedPacket"]
-            USE2["UnserializedEncryptedPacket"]
-            UE2["UnencryptedPacket&lt;T&gt;"]
-
-            OP2 -->|"deobfuscate"| SE2
-            SE2 -->|"deserialize"| USE2
-            USE2 -->|"decrypt"| UE2
-        end
-
-        OP1 <-->|"Transport Layer"| OP2
-    end
+    UP -->|"seal"| WP
+    WP -->|"open"| UP
 ```
-
----
-
-## Key Interfaces
 
 ### `PacketBase`
 
-Base interface for all packet types with routing information.
+Routing fields every plaintext packet carries. Both identifiers are UUID v4 strings.
 
 ```typescript
 interface PacketBase {
-  origin: string // Identifies the sender (e.g., 'https://app.example.com')
-  target: string // Identifies the recipient (e.g., 'https://widget.example.com')
+  readonly origin: string // The sender's identity
+  readonly target: string // The recipient's identity
 }
 ```
 
 ### `UnencryptedPacket<T>`
 
-Packet with plaintext data - the entry point for outbound messages.
-
 ```typescript
 interface UnencryptedPacket<T = any> extends PacketBase {
-  data: Data<T> // Structured message payload
+  readonly data: Data<T> // The data envelope
 }
 ```
 
-### `UnserializedEncryptedPacket`
-
-Packet with encrypted binary data (after encryption, before serialization).
+### `WirePacket`
 
 ```typescript
-interface UnserializedEncryptedPacket extends PacketBase {
-  data: Uint8Array // Encrypted binary data
-}
+type WirePacket = Uint8Array // A sealed frame carrying one packet
 ```
 
-### `SerializedEncryptedPacket`
-
-Packet with encrypted data as a base64 string (after serialization, before obfuscation).
+### `Packet<T>`
 
 ```typescript
-interface SerializedEncryptedPacket extends PacketBase {
-  data: string // Base64-encoded encrypted data
-}
-```
-
-### `ObfuscatedPacket`
-
-Final wire format - fully obfuscated binary with no visible structure.
-
-```typescript
-type ObfuscatedPacket = Uint8Array // Opaque binary blob
+type Packet<T = any> = UnencryptedPacket<T> | WirePacket
 ```
 
 ---
 
-## Transformation Function Types
-
-### Low-Level Transformers (with password)
-
-These require explicit password parameters and are the building blocks:
+## Operation Types
 
 ```typescript
-// Encryption/Decryption (password-based)
-type PacketEncrypter = <T>(packet: UnencryptedPacket<T>, password: string) => Promise<UnserializedEncryptedPacket>
-type PacketDecrypter = <T>(packet: UnserializedEncryptedPacket, password: string) => Promise<UnencryptedPacket<T>>
-
-// Obfuscation/Deobfuscation (password-based)
-type PacketObfuscater = (packet: SerializedEncryptedPacket, password: string) => Promise<ObfuscatedPacket>
-type PacketDeobfuscater = (packet: ObfuscatedPacket, password: string) => Promise<SerializedEncryptedPacket>
+type PacketSealer<T = any> = (packet: UnencryptedPacket<T>) => Promise<WirePacket>
+type PacketOpener<T = any> = (packet: WirePacket) => Promise<UnencryptedPacket<T>>
 ```
 
-### High-Level Transformers (password captured)
+A session protocol supplies both (see [`protocol/`](../protocol/README.md)); the seal queue runs the sealer and the open queue runs the opener.
 
-These have the password/key provider already bound and are used by queues:
+---
+
+## Drop Reports
 
 ```typescript
-// Encryption/Decryption (key-captured)
-type PacketEncryption<T = any> = (packet: UnencryptedPacket<T>) => Promise<UnserializedEncryptedPacket>
-type PacketDecryption<T = any> = (packet: UnserializedEncryptedPacket) => Promise<UnencryptedPacket<T>>
+type PacketDropStage = 'seal' | 'open'
 
-// Serialization/Deserialization (synchronous)
-type PacketSerialization = (packet: UnserializedEncryptedPacket) => SerializedEncryptedPacket
-type PacketDeserialization = (packet: SerializedEncryptedPacket) => UnserializedEncryptedPacket
+interface PacketDrop {
+  readonly direction: 'inbound' | 'outbound'
+  readonly stage: PacketDropStage
+  readonly reason: string // Why the stage rejected it
+  readonly cause?: unknown // The error the stage threw, when it threw one
+  readonly packet: unknown // The packet as the stage received it
+}
 
-// Obfuscation/Deobfuscation (time-based password)
-type PacketObfuscation = (packet: SerializedEncryptedPacket) => Promise<ObfuscatedPacket>
-type PacketDeobfuscation = (packet: ObfuscatedPacket) => Promise<SerializedEncryptedPacket>
+type PacketDropHandler = (drop: PacketDrop) => void
 ```
+
+When `cause` is a `ProtocolError`, `getProtocolErrorCode(drop.cause)` from [`security/`](../security/README.md) yields the rejection code.
 
 ---
 
 ## Factory Functions
 
-### Packet Creators
+### `createUnencryptedPacket`
 
-#### `createUnencryptedPacket`
-
-Creates a validated, frozen unencrypted packet.
+Creates a validated, frozen plaintext packet.
 
 ```typescript
-import { createUnencryptedPacket } from '@hyperfrontend/network-protocol/lib/packet'
-
-const packet = createUnencryptedPacket(
-  'https://sender.example.com', // origin
-  'https://receiver.example.com', // target
-  data // Data<T> object
-)
-// Returns frozen UnencryptedPacket<T>
+function createUnencryptedPacket<T = any>(origin: string, target: string, data: Data<T>): UnencryptedPacket<T>
 ```
-
-#### `createPacketBase`
-
-Creates the base routing structure for packets.
 
 ```typescript
-import { createPacketBase } from '@hyperfrontend/network-protocol/lib/packet'
+import { createUnencryptedPacket } from '@hyperfrontend/network-protocol/browser/packet'
+import { createData } from '@hyperfrontend/network-protocol/browser/data'
 
-const base = createPacketBase(origin, target)
-// Returns { origin, target }
+const packet = createUnencryptedPacket(originId, targetId, await createData(pid, 1, { action: 'ping' }))
+// => { origin, target, data: { pid, id, sequence, message, schema, schemaHash } }
 ```
 
-### Serialization Factories
+### `createPacketBase`
 
-#### `createSerializedEncryptedPacketCreator`
-
-Creates a serialization function with injected base64 encoder.
+Creates the frozen routing structure alone.
 
 ```typescript
-import { uint8ArrayToBase64 } from '@hyperfrontend/string-utils/browser'
-import { createSerializedEncryptedPacketCreator } from '@hyperfrontend/network-protocol/lib/packet'
-
-const serialize = createSerializedEncryptedPacketCreator(uint8ArrayToBase64)
-const serialized = serialize(unserializedEncryptedPacket)
-// Returns SerializedEncryptedPacket with base64 data
+function createPacketBase(origin: string, target: string): PacketBase
 ```
-
-#### `createDeserializedEncryptedPacketCreator`
-
-Creates a deserialization function with injected base64 decoder.
-
-```typescript
-import { base64ToUint8Array } from '@hyperfrontend/string-utils/browser'
-import { createDeserializedEncryptedPacketCreator } from '@hyperfrontend/network-protocol/lib/packet'
-
-const deserialize = createDeserializedEncryptedPacketCreator(base64ToUint8Array)
-const deserialized = deserialize(serializedEncryptedPacket)
-// Returns UnserializedEncryptedPacket with Uint8Array data
-```
-
-### Encryption Factories
-
-Located in `packet/security/encryption/`:
-
-#### `createPacketEncrypter`
-
-Creates a packet encrypter with injected data encryption.
-
-```typescript
-import { createDataEncrypter } from '@hyperfrontend/network-protocol/lib/data/security'
-import { encrypt } from '@hyperfrontend/cryptography/browser'
-import { createPacketEncrypter } from '@hyperfrontend/network-protocol/lib/packet/security/encryption'
-
-const encryptData = createDataEncrypter(encrypt)
-const encryptPacket = createPacketEncrypter(encryptData)
-const encrypted = await encryptPacket(unencryptedPacket, 'password')
-```
-
-#### `createPacketDecrypter`
-
-Creates a packet decrypter with injected data decryption.
-
-```typescript
-import { createDataDecrypter } from '@hyperfrontend/network-protocol/lib/data/security'
-import { decrypt } from '@hyperfrontend/cryptography/browser'
-import { createPacketDecrypter } from '@hyperfrontend/network-protocol/lib/packet/security/encryption'
-
-const decryptData = createDataDecrypter(decrypt)
-const decryptPacket = createPacketDecrypter(decryptData)
-const decrypted = await decryptPacket(encryptedPacket, 'password')
-```
-
-### Obfuscation Factories
-
-Located in `packet/security/obfuscation/`:
-
-#### `createPacketObfuscator`
-
-Creates an obfuscator with injected obfuscation implementation.
-
-```typescript
-import { obfuscate } from '@hyperfrontend/cryptography/browser'
-import { createPacketObfuscator } from '@hyperfrontend/network-protocol/lib/packet/security/obfuscation'
-
-const obfuscatePacket = createPacketObfuscator(obfuscate)
-const obfuscated = await obfuscatePacket(serializedPacket, 'time-password')
-```
-
-#### `createPacketDeobfuscator`
-
-Creates a deobfuscator with injected deobfuscation implementation.
-
-```typescript
-import { deobfuscate } from '@hyperfrontend/cryptography/browser'
-import { createPacketDeobfuscator } from '@hyperfrontend/network-protocol/lib/packet/security/obfuscation'
-
-const deobfuscatePacket = createPacketDeobfuscator(deobfuscate)
-const deobfuscated = await deobfuscatePacket(obfuscatedPacket, 'time-password')
-```
-
----
-
-## Password Strategy
-
-### Encryption Password
-
-Encryption uses a **dynamic key** that can change between messages:
-
-- Captured from incoming packets via `packet.data.key`
-- Allows key exchange/rotation during communication
-- Managed by the Protocol's `PacketEncryption` wrapper
-
-### Obfuscation Password
-
-Obfuscation uses a **time-based password**:
-
-- Generated from current time window (e.g., 60-minute intervals)
-- During deobfuscation, tries current, previous, and next windows
-- Handles clock skew between endpoints
 
 ---
 
 ## Validation Functions
 
-Each packet type has a validation function:
+| Function                          | Accepts                                                   |
+| --------------------------------- | --------------------------------------------------------- |
+| `isValidOrigin(value)`            | A 36-character UUID v4 string                             |
+| `isValidTarget(value)`            | A 36-character UUID v4 string                             |
+| `isValidUnencryptedPacket(value)` | A valid origin, a valid target, and a valid data envelope |
+| `isValidWirePacket(value)`        | A `Uint8Array` with at least one byte                     |
 
 ```typescript
-import {
-  isValidPacketBase,
-  isValidUnencryptedPacket,
-  isValidUnserializedEncryptedPacket,
-  isValidSerializedEncryptedPacket,
-  isValidObfuscatedPacket,
-} from '@hyperfrontend/network-protocol/lib/packet/validations'
+import { isValidUnencryptedPacket, isValidWirePacket } from '@hyperfrontend/network-protocol/browser/packet'
 
-// Validates structure and types
-if (isValidUnencryptedPacket(packet)) {
-  // packet is UnencryptedPacket
+if (isValidWirePacket(event.data)) {
+  channel.receive(event.data)
 }
 ```
 
@@ -301,78 +136,27 @@ if (isValidUnencryptedPacket(packet)) {
 
 ## Error Handling
 
-Each transformation validates inputs and provides descriptive errors:
+The creators throw in the caller's frame:
 
 ```typescript
-try {
-  const encrypted = await encryptPacket(invalidPacket, password)
-} catch (error) {
-  // Error: 'Cannot encrypt invalid packet'
-}
+createUnencryptedPacket('not-a-uuid', targetId, data)
+// Error: 'Cannot create a packet without a valid origin value'
 
-try {
-  const serialized = serialize(invalidPacket)
-} catch (error) {
-  // Error: 'Cannot serialize data of an invalid packet'
-}
+createUnencryptedPacket(originId, 'not-a-uuid', data)
+// Error: 'Cannot create a packet without a valid target value'
+
+createUnencryptedPacket(originId, targetId, {})
+// Error: 'Cannot create a packet without a valid data value'
 ```
 
-Errors in queue processing are handled via `onFail` callbacks:
-
-```typescript
-const encryptionQueue = createEncryptionQueue(
-  'channel:encrypt',
-  packetEncryption,
-  logger,
-  (encrypted) => {
-    /* success */
-  },
-  (failed) => {
-    logger.error('Encryption failed', failed)
-    // Handle: retry, dead-letter, or discard
-  }
-)
-```
-
----
-
-## Complete Example
-
-```typescript
-import { createUnencryptedPacket } from '@hyperfrontend/network-protocol/lib/packet'
-import { createData } from '@hyperfrontend/network-protocol/lib/data'
-
-// Create the data payload
-const data = createData({
-  type: 'greeting',
-  content: 'Hello, World!',
-})
-
-// Create an unencrypted packet
-const packet = createUnencryptedPacket('https://app.example.com', 'https://widget.example.com', data)
-
-console.log(packet)
-// {
-//   origin: 'https://app.example.com',
-//   target: 'https://widget.example.com',
-//   data: {
-//     pid: 'abc123',
-//     id: 'msg-001',
-//     sequence: 1,
-//     key: null,
-//     message: { type: 'greeting', content: 'Hello, World!' },
-//     schema: null,
-//     schemaHash: null
-//   }
-// }
-```
+The pipelines never throw for a packet they reject; they report it through `onDrop` (see [`queue/`](../queue/README.md)).
 
 ---
 
 ## Relationship to Other Modules
 
-- **Depends on**: [`data/`](../data/README.md) (for the Data interface)
-- **Used by**: [`sender/`](../sender/README.md), [`receiver/`](../receiver/README.md), [`queue/`](../queue/README.md), [`security/`](../security/README.md)
+- **Depends on**: [`data/`](../data/README.md) (for the `Data` envelope)
+- **Used by**: [`sender/`](../sender/README.md), [`receiver/`](../receiver/README.md), [`queue/`](../queue/README.md), [`protocol/`](../protocol/README.md), [`routing/`](../routing/README.md)
 
 ---
 
@@ -380,15 +164,16 @@ console.log(packet)
 
 - **[Library Index](../README.md)** - All modules
 - **[Architecture Guide](../../../ARCHITECTURE.md#packet-types)** - Packet architecture
+- **[Browser Entry](../../browser/packet/README.md)** - Browser packet entry
+- **[Node Entry](../../node/packet/README.md)** - Node.js packet entry
 
 ### Related Modules
 
-| Module                             | Relationship                               |
-| ---------------------------------- | ------------------------------------------ |
-| [data/](../data/README.md)         | Provides Data interface for packet payload |
-| [security/](../security/README.md) | Encryption/obfuscation suites              |
-| [sender/](../sender/README.md)     | Uses packets in outbound pipeline          |
-| [receiver/](../receiver/README.md) | Uses packets in inbound pipeline           |
-| [queue/](../queue/README.md)       | Processes packets through transformations  |
-| [receiver/](../receiver/README.md) | Uses packets in inbound pipeline           |
-| [queue/](../queue/README.md)       | Processes packets in queues                |
+| Module                             | Relationship                                  |
+| ---------------------------------- | --------------------------------------------- |
+| [data/](../data/README.md)         | Provides the `Data` envelope a packet carries |
+| [protocol/](../protocol/README.md) | Supplies the sealer and opener                |
+| [security/](../security/README.md) | Error codes carried in a drop's `cause`       |
+| [sender/](../sender/README.md)     | Builds and seals packets                      |
+| [receiver/](../receiver/README.md) | Opens frames into packets                     |
+| [queue/](../queue/README.md)       | Runs the seal and open operations             |

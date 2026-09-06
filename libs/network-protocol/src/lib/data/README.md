@@ -2,7 +2,7 @@
 
 ## Purpose
 
-The Data module defines the message payload structure with automatic schema generation, unique identification, and encryption key management. Data objects are the content carried within packets.
+The Data module defines the message envelope a packet carries: a process identifier, a unique message identifier, a sequence number, the message itself, and a JSON Schema of the message with its SHA-256 hash. Data objects are the content inside every `UnencryptedPacket`.
 
 ---
 
@@ -10,39 +10,37 @@ The Data module defines the message payload structure with automatic schema gene
 
 ### `Data<T>`
 
-Logical view of data with deserialized message (used after parsing).
+Logical view with the message deserialised; what `channel.send` takes and what a receiver delivers.
 
 ```typescript
 interface Data<T = unknown> {
-  pid: string // Process identifier
-  id: string // Unique message identifier (UUID)
-  sequence: number // Sequential counter within process
-  key: string // Encryption key for replies (UUID)
-  message: T // Deserialized message content
-  schema: Schema // JSON Schema describing message structure
-  schemaHash: string // SHA-256 hash of the schema
+  readonly pid: string // Process identifier (UUID v4)
+  readonly id: string // Message identifier (UUID v4, generated)
+  readonly sequence: number // Counter that increments by 1 within a process; must be > 0
+  readonly message: T // The message
+  readonly schema: Schema // JSON Schema describing the message
+  readonly schemaHash: string // SHA-256 hash of the schema
 }
 ```
 
 ### `SerializedData<T>`
 
-Wire format with JSON-serialized message (used for transmission/encryption).
+The same envelope with `message` as a JSON string; what `createData` returns and what travels inside a sealed frame.
 
 ```typescript
 interface SerializedData<T = unknown> {
-  pid: string
-  id: string
-  sequence: number
-  key: string
-  message: JSONString<T> // JSON string representation
-  schema: Schema
-  schemaHash: string
+  readonly pid: string
+  readonly id: string
+  readonly sequence: number
+  readonly message: JSONString<T>
+  readonly schema: Schema
+  readonly schemaHash: string
 }
 ```
 
 ### `JSONString<T>`
 
-Branded type for type-safe JSON strings.
+Branded string type for a JSON-serialised `T`.
 
 ```typescript
 type JSONString<T = unknown> = string & {
@@ -51,144 +49,94 @@ type JSONString<T = unknown> = string & {
 }
 ```
 
+### `DataCreater` and `SchemaCreater`
+
+```typescript
+type DataCreater = <T = unknown>(pid: string, sequence: number, message: T) => Promise<SerializedData<T>>
+type SchemaCreater = (data: unknown) => Schema
+```
+
 ---
 
 ## Data Flow
 
 ```mermaid
-%%{init: {'theme':'base', 'themeVariables': {'fontSize':'12px'}, 'flowchart':{'htmlLabels':true}}}%%
-flowchart TB
-    MessageObj["Your Message Object (T)"]
-
-    SerializedData["<div style='text-align: left; padding: 8px;'><b>SerializedData&lt;T&gt; - Wire format</b><br/>pid: string<br/>id: string (generated UUID)<br/>sequence: number<br/>key: string (encryption key)<br/>message: JSONString<br/>schema: Schema (auto-generated)<br/>schemaHash: string (SHA-256)</div>"]
-
-    DataT["<div style='text-align: left; padding: 8px;'><b>Data&lt;T&gt; - Logical format</b><br/>pid: string<br/>id: string<br/>sequence: number<br/>key: string<br/>message: T (parsed object)<br/>schema: Schema<br/>schemaHash: string</div>"]
-
-    MessageObj -->|"createData()"| SerializedData
-    SerializedData -->|"deserializeData()"| DataT
+---
+config:
+  theme: base
+  themeVariables:
+    fontSize: 12px
+---
+flowchart LR
+    Message["Your message (T)"] -->|"createData(pid, sequence, message)"| Serialized["SerializedData&lt;T&gt;<br/>message: JSONString"]
+    Serialized -->|"deserializeData"| Data["Data&lt;T&gt;<br/>message: T"]
+    Data -->|"serializeData"| Serialized
 ```
 
 ---
 
 ## Factory Functions
 
+### `createData`
+
+**Location**: `@hyperfrontend/network-protocol/browser/data`, `@hyperfrontend/network-protocol/node/data`
+
+```typescript
+const createData: DataCreater
+```
+
+```typescript
+import { createData } from '@hyperfrontend/network-protocol/browser/data'
+
+const data = await createData(pid, 1, { type: 'greeting', content: 'Hello!' })
+// {
+//   pid,
+//   id: '<generated uuid>',
+//   sequence: 1,
+//   message: '{"type":"greeting","content":"Hello!"}',
+//   schema: { type: 'object', properties: { type: { type: 'string' }, content: { type: 'string' } }, ... },
+//   schemaHash: '<sha-256 of the schema>'
+// }
+```
+
 ### `createDataFactory`
 
-Creates a data factory with injected hashing.
-
-**Signature**:
+The composition point the platform entries use; it injects the hash function and is not itself exported from a package entry.
 
 ```typescript
 function createDataFactory(createHash: (data: string, algorithm: string) => Promise<string>): DataCreater
 ```
 
-**Parameters**:
+The browser entry passes `createHash` from `@hyperfrontend/cryptography/browser` (Web Crypto); the Node.js entry passes the one from `@hyperfrontend/cryptography/node`.
 
-| Parameter    | Type                                                   | Description                      |
-| ------------ | ------------------------------------------------------ | -------------------------------- |
-| `createHash` | `(data: string, algorithm: string) => Promise<string>` | Hash function for schema hashing |
-
-**Returns**: `DataCreater` - An async function that creates `SerializedData<T>` objects.
-
-**Example**:
+### `getSchema`
 
 ```typescript
-import { createHash } from '@hyperfrontend/cryptography/browser'
-import { createDataFactory } from '@hyperfrontend/network-protocol/lib/data/creators'
-
-const createData = createDataFactory(createHash)
-
-const data = await createData(
-  'process-123', // pid
-  1, // sequence
-  { type: 'greeting', content: 'Hello!' } // message
-)
-
-// data = {
-//   pid: 'process-123',
-//   id: 'generated-uuid',
-//   sequence: 1,
-//   key: 'generated-key-uuid',
-//   message: '{"type":"greeting","content":"Hello!"}',
-//   schema: { type: 'object', properties: { ... } },
-//   schemaHash: 'sha256-hash-of-schema'
-// }
+const getSchema: SchemaCreater // toJsonSchema(data, { arrays: { mode: 'all' } })
 ```
 
 ---
 
 ## Helper Functions
 
-### `deserializeData<T>`
+| Function                         | Effect                                                     |
+| -------------------------------- | ---------------------------------------------------------- |
+| `serializeData(data)`            | `Data<T>` to `SerializedData<T>` by stringifying `message` |
+| `deserializeData(serialized)`    | `SerializedData<T>` to `Data<T>` by parsing `message`      |
+| `asJSONString<T>(value)`         | Casts a string to `JSONString<T>`                          |
+| `parseJSONString<T>(jsonString)` | Parses a `JSONString<T>` back to `T`                       |
+| `isJSONString<T>(value)`         | Type guard: true for any string                            |
 
-Converts `SerializedData<T>` to `Data<T>` by parsing the JSON message.
-
-```typescript
-import { deserializeData } from '@hyperfrontend/network-protocol/lib/data'
-
-const data = deserializeData(serializedData)
-// data.message is now the parsed object
-```
-
-### `serializeData<T>`
-
-Converts `Data<T>` to `SerializedData<T>` by stringifying the message.
-
-```typescript
-import { serializeData } from '@hyperfrontend/network-protocol/lib/data'
-
-const serialized = serializeData(data)
-// serialized.message is now a JSON string
-```
-
-### `asJSONString<T>`
-
-Safely casts a string to `JSONString<T>` for type safety.
-
-```typescript
-import { asJSONString } from '@hyperfrontend/network-protocol/lib/data'
-
-const jsonStr = asJSONString<MyType>('{"field":"value"}')
-```
-
-### `parseJSONString<T>`
-
-Parses a `JSONString<T>` back to its original type.
-
-```typescript
-import { parseJSONString } from '@hyperfrontend/network-protocol/lib/data'
-
-const obj = parseJSONString(jsonString)
-// obj is typed as T
-```
-
-### `isJSONString<T>`
-
-Type guard to check if a value is a `JSONString`.
-
-```typescript
-import { isJSONString } from '@hyperfrontend/network-protocol/lib/data'
-
-if (isJSONString(value)) {
-  // value is JSONString<unknown>
-}
-```
+Both conversions return frozen objects.
 
 ---
 
 ## Schema Generation
 
-Schemas are automatically generated from your message structure:
+Schemas are generated from the message shape, and `schemaHash` is the SHA-256 of the schema's JSON:
 
 ```typescript
-const message = {
-  type: 'greeting',
-  count: 42,
-  active: true,
-  items: ['a', 'b'],
-}
-
-const data = await createData('pid', 1, message)
+const data = await createData(pid, 1, { type: 'greeting', count: 42, active: true, items: ['a', 'b'] })
 
 // data.schema = {
 //   type: 'object',
@@ -201,86 +149,50 @@ const data = await createData('pid', 1, message)
 // }
 ```
 
-The schema hash provides a fingerprint for message structure validation.
-
----
-
-## Encryption Key Management
-
-Each data object includes a `key` field (auto-generated UUID):
-
-```typescript
-const data = await createData('pid', 1, message)
-console.log(data.key) // e.g., 'a1b2c3d4-e5f6-...'
-```
-
-This key is used for **reply encryption**:
-
-- Sender generates a key and includes it in the message
-- Receiver captures this key and uses it to encrypt responses
-- This enables dynamic key exchange per message
-
----
-
-## Encryption/Decryption
-
-### `createDataEncrypter`
-
-Creates an encrypter for `SerializedData`.
-
-```typescript
-import { createDataEncrypter } from '@hyperfrontend/network-protocol/lib/data/security'
-import { encrypt } from '@hyperfrontend/cryptography/browser'
-
-const encryptData = createDataEncrypter(encrypt)
-const encrypted = await encryptData(serializedData, 'password')
-// encrypted is Uint8Array
-```
-
-### `createDataDecrypter`
-
-Creates a decrypter for encrypted data.
-
-```typescript
-import { createDataDecrypter } from '@hyperfrontend/network-protocol/lib/data/security'
-import { decrypt } from '@hyperfrontend/cryptography/browser'
-
-const decryptData = createDataDecrypter(decrypt)
-const serializedData = await decryptData(encryptedBytes, 'password')
-```
+Receivers can compare `schemaHash` values to detect a change in message shape.
 
 ---
 
 ## Validation
 
-Data creation validates all inputs:
+`createData` validates its inputs and throws:
 
 ```typescript
-// Invalid pid
-await createData('', 1, message)
+await createData('not-a-uuid', 1, message)
 // Error: 'Cannot create data without a valid pid'
 
-// Invalid sequence
-await createData('pid', -1, message)
+await createData(pid, 0, message)
 // Error: 'Cannot create data without a valid sequence'
 
-// Circular references
 const circular = { self: null }
 circular.self = circular
-await createData('pid', 1, circular)
+await createData(pid, 1, circular)
 // Error: 'Cannot create data with a message with circular references'
 
-// Invalid message
-await createData('pid', 1, undefined)
+await createData(pid, 1, { callback: () => {} })
 // Error: 'Cannot create data without a valid message'
 ```
+
+A message is valid when every value in it is serialisable: no `null`, `undefined`, functions, symbols, or bigints anywhere in the structure.
+
+The validators are exported from the data entries:
+
+| Function                        | Accepts                                              |
+| ------------------------------- | ---------------------------------------------------- |
+| `isValidPid(value)`             | A 36-character UUID v4 string                        |
+| `isValidId(value)`              | A 36-character UUID v4 string                        |
+| `isValidSequence(value)`        | A number greater than zero                           |
+| `isValidMessage(value)`         | A structure containing only serialisable values      |
+| `isValidSchema(value)`          | A JSON Schema draft 4 document                       |
+| `isValidSchemaHash(value)`      | A SHA-256 hash string                                |
+| `isValidUnencryptedData(value)` | An object whose six fields all pass the checks above |
 
 ---
 
 ## Relationship to Other Modules
 
-- **Depends on**: `@hyperfrontend/cryptography`, `jsonschema`
-- **Used by**: [`packet/`](../packet/README.md), [`sender/`](../sender/README.md), [`receiver/`](../receiver/README.md)
+- **Depends on**: `@hyperfrontend/cryptography` (hashing), `@hyperfrontend/json-utils` (schema generation and validation), `@hyperfrontend/data-utils`
+- **Used by**: [`packet/`](../packet/README.md), [`protocol/`](../protocol/README.md) (serialises the envelope into the frame plaintext), [`sender/`](../sender/README.md), [`receiver/`](../receiver/README.md)
 
 ---
 
@@ -288,11 +200,12 @@ await createData('pid', 1, undefined)
 
 - **[Library Index](../README.md)** - All modules
 - **[Architecture Guide](../../../ARCHITECTURE.md#data)** - Data architecture
-- **[Browser Entry](../../browser/data/)** - Browser-specific data
-- **[Node Entry](../../node/data/)** - Node.js-specific data
+- **[Browser Entry](../../browser/data/README.md)** - Browser-specific data
+- **[Node Entry](../../node/data/README.md)** - Node.js-specific data
 
 ### Related Modules
 
-| Module                         | Relationship                         |
-| ------------------------------ | ------------------------------------ |
-| [packet/](../packet/README.md) | Data is payload of UnencryptedPacket |
+| Module                             | Relationship                               |
+| ---------------------------------- | ------------------------------------------ |
+| [packet/](../packet/README.md)     | Data is the payload of `UnencryptedPacket` |
+| [protocol/](../protocol/README.md) | Serialises and deserialises the envelope   |

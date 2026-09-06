@@ -2,7 +2,7 @@
 
 ## Purpose
 
-The Queue module provides FIFO (First-In-First-Out) message processing queues with async operation support, backpressure management, and stop/resume lifecycle controls. Queues are the fundamental building blocks for the sender and receiver pipelines.
+The Queue module provides the FIFO processing queue behind each pipeline stage, and the two specialised queues built on it: the seal queue (plaintext packets in, sealed frames out) and the open queue (frames in, plaintext packets out). Strict one-at-a-time processing is what lets a protocol assign a monotonically increasing counter to every frame.
 
 ---
 
@@ -10,118 +10,81 @@ The Queue module provides FIFO (First-In-First-Out) message processing queues wi
 
 ### `Queue<T>`
 
-The main queue interface for processing messages.
-
 ```typescript
 interface Queue<T extends object> {
-  addMessage: (message: T) => void // Add a message to the queue
-  isRunning: () => boolean // Check if the queue is processing
-  stop: () => void // Pause processing (messages accumulate)
-  resume: () => void // Resume processing accumulated messages
-  size: () => number // Get current queue depth
-  currentMessage: () => T | null // Get the message currently being processed
+  readonly addMessage: (message: T) => void // Enqueue; starts processing when autoStart is on
+  readonly isRunning: () => boolean // Whether the queue is processing
+  readonly stop: () => void // Pause processing (messages accumulate)
+  readonly resume: () => void // Resume processing accumulated messages
+  readonly size: () => number // Number of messages waiting
+  readonly currentMessage: () => T | null // The message being processed
 }
 ```
 
 ### `MessageHandler<T>`
 
-The async processing function type used internally by queues.
-
 ```typescript
 type MessageHandler<T extends object> = (message: T) => Promise<void> | void
+```
+
+### `QueueFailureHandler`
+
+Called with the rejected input, why it was rejected, and the error the operation threw when it threw one.
+
+```typescript
+type QueueFailureHandler = (raw: unknown, reason: string, cause?: unknown) => void
+```
+
+### `QueueOperation`, `QueueCreatorArguments`, `QueueCreatorValidity`
+
+```typescript
+type QueueOperation = PacketSealer | PacketOpener
+
+interface QueueCreatorArguments<T = any> {
+  label: string
+  operation: QueueOperation
+  logger: Logger
+  onSuccess: (packet: T) => void
+  onFail: QueueFailureHandler
+}
+
+interface QueueCreatorValidity {
+  label: boolean
+  operation: boolean
+  logger: boolean
+  onSuccess: boolean
+  onFail: boolean
+}
+```
+
+### `SealQueueCreater` and `OpenQueueCreater`
+
+```typescript
+type SealQueueCreater = (
+  label: string,
+  seal: PacketSealer,
+  logger: Logger,
+  onSuccess: (packet: WirePacket) => void,
+  onFail: QueueFailureHandler
+) => Queue<UnencryptedPacket>
+
+type OpenQueueCreater = (
+  label: string,
+  open: PacketOpener,
+  logger: Logger,
+  onSuccess: (packet: UnencryptedPacket) => void,
+  onFail: QueueFailureHandler
+) => Queue<WirePacket>
 ```
 
 ---
 
 ## Queue Types
 
-Each queue type is specialized for a specific transformation step in the packet pipeline:
-
-### Outbound Queues (Sender)
-
-| Queue Creator              | Input Type                    | Output Type                   | Purpose                |
-| -------------------------- | ----------------------------- | ----------------------------- | ---------------------- |
-| `createEncryptionQueue`    | `UnencryptedPacket`           | `UnserializedEncryptedPacket` | Encrypt plaintext data |
-| `createSerializationQueue` | `UnserializedEncryptedPacket` | `SerializedEncryptedPacket`   | Binary → Base64 string |
-| `createObfuscationQueue`   | `SerializedEncryptedPacket`   | `ObfuscatedPacket`            | Time-based obfuscation |
-
-### Inbound Queues (Receiver)
-
-| Queue Creator                | Input Type                    | Output Type                   | Purpose                |
-| ---------------------------- | ----------------------------- | ----------------------------- | ---------------------- |
-| `createDeobfuscationQueue`   | `ObfuscatedPacket`            | `SerializedEncryptedPacket`   | Remove obfuscation     |
-| `createDeserializationQueue` | `SerializedEncryptedPacket`   | `UnserializedEncryptedPacket` | Base64 string → Binary |
-| `createDecryptionQueue`      | `UnserializedEncryptedPacket` | `UnencryptedPacket`           | Decrypt to plaintext   |
-
----
-
-## Queue Pipeline
-
-Queues are chained together to form processing pipelines where the `onSuccess` callback of one queue feeds the `addMessage` of the next:
-
-### Outbound Pipeline (Sender)
-
-```mermaid
----
-config:
-  theme: base
-  themeVariables:
-    fontSize: 12px
----
-flowchart LR
-    subgraph EncQueue["Encryption Queue"]
-        E1["UnencryptedPacket"]
-        E2["UnserializedEncrypt"]
-        E1 --> E2
-    end
-
-    subgraph SerQueue["Serialization Queue"]
-        S1["UnserializedEncrypted"]
-        S2["SerializedEncrypted"]
-        S1 --> S2
-    end
-
-    subgraph ObfQueue["Obfuscation Queue"]
-        O1["SerializedEncrypted"]
-        O2["ObfuscatedPacket"]
-        O1 --> O2
-    end
-
-    EncQueue --> SerQueue --> ObfQueue --> Transport["Transport"]
-```
-
-### Inbound Pipeline (Receiver)
-
-```mermaid
----
-config:
-  theme: base
-  themeVariables:
-    fontSize: 12px
----
-flowchart LR
-    Transport["Transport"] --> DeobfQueue
-
-    subgraph DeobfQueue["Deobfuscation Queue"]
-        D1["ObfuscatedPacket"]
-        D2["SerializedEncrypted"]
-        D1 --> D2
-    end
-
-    subgraph DeserQueue["Deserialization Queue"]
-        DS1["SerializedEncrypted"]
-        DS2["UnserializedEncrypted"]
-        DS1 --> DS2
-    end
-
-    subgraph DecQueue["Decryption Queue"]
-        DC1["UnserializedEncr."]
-        DC2["UnencryptedPacket"]
-        DC1 --> DC2
-    end
-
-    DeobfQueue --> DeserQueue --> DecQueue
-```
+| Queue Creator     | Input               | Output              | Used by                              |
+| ----------------- | ------------------- | ------------------- | ------------------------------------ |
+| `createSealQueue` | `UnencryptedPacket` | `WirePacket`        | [`sender/`](../sender/README.md)     |
+| `createOpenQueue` | `WirePacket`        | `UnencryptedPacket` | [`receiver/`](../receiver/README.md) |
 
 ---
 
@@ -129,315 +92,103 @@ flowchart LR
 
 ### `createQueue<T>`
 
-The base queue factory that all specialized queues use internally.
-
-**Signature**:
+**Location**: `@hyperfrontend/network-protocol/queue`
 
 ```typescript
-function createQueue<T extends Record<string, any>>(
-  processMessage: MessageHandler<T>,
-  autoStart?: boolean // default: true
-): Queue<T>
+function createQueue<T extends Record<string, any>>(processMessage: MessageHandler<T>, autoStart = true): Queue<T>
 ```
 
-**Example**:
+Messages are processed strictly one at a time in arrival order; the next one starts only after the handler's promise settles. The backing store is an array with a moving head, so a pull is constant time; once 1024 pulled slots sit at the front the array is compacted.
 
 ```typescript
-import { createQueue } from '@hyperfrontend/network-protocol/lib/queue'
+import { createQueue } from '@hyperfrontend/network-protocol/queue'
 
-// Create a simple message queue
-const queue = createQueue<{ id: string; payload: string }>(
-  async (message) => {
-    console.log(`Processing: ${message.id}`)
-    await someAsyncOperation(message)
-  },
-  true // autoStart
-)
-
-queue.addMessage({ id: '1', payload: 'hello' }) // Immediately starts processing
-```
-
----
-
-### `createEncryptionQueue`
-
-Creates a queue that encrypts plaintext packets.
-
-**Signature**:
-
-```typescript
-type EncryptionQueueCreater = (
-  label: string,
-  packetEncryption: PacketEncryption,
-  logger: Logger,
-  onSuccess: (packet: UnserializedEncryptedPacket) => void,
-  onFail: (raw: unknown) => void
-) => Queue<UnencryptedPacket>
-```
-
-**Parameters**:
-
-| Parameter          | Type               | Description                                          |
-| ------------------ | ------------------ | ---------------------------------------------------- |
-| `label`            | `string`           | Identifier for logging (e.g., `'channel-1:encrypt'`) |
-| `packetEncryption` | `PacketEncryption` | Async function that encrypts packets                 |
-| `logger`           | `Logger`           | Logger instance from `@hyperfrontend/logging`        |
-| `onSuccess`        | `function`         | Called with encrypted packet on success              |
-| `onFail`           | `function`         | Called with raw input on failure                     |
-
-**Example**:
-
-```typescript
-import { createEncryptionQueue } from '@hyperfrontend/network-protocol/lib/queue'
-import { createLogger } from '@hyperfrontend/logging'
-
-const logger = createLogger({ level: 'debug' })
-const successes: UnserializedEncryptedPacket[] = []
-const failures: unknown[] = []
-
-const encryptionQueue = createEncryptionQueue(
-  'my-channel:encryption',
-  async (packet) => {
-    // Platform-specific encryption (injected)
-    return await encryptPacket(packet)
-  },
-  logger,
-  (encrypted) => successes.push(encrypted),
-  (failed) => failures.push(failed)
-)
-
-// Add a packet to encrypt
-encryptionQueue.addMessage({
-  origin: 'window-a',
-  target: 'window-b',
-  data: { pid: '...', id: '...', sequence: 1, key: null, message: {...}, schema: null, schemaHash: null }
+const queue = createQueue<{ id: string }>(async (message) => {
+  await handle(message)
 })
+queue.addMessage({ id: '1' }) // starts processing at once
 ```
 
----
+Throws `processMessage must be a function` and `autoStart must be a boolean` at creation; `addMessage` throws a `TypeError` (`Message must be a non-null object`) for anything that is not an object.
 
-### `createSerializationQueue`
-
-Creates a queue that serializes binary encrypted data to Base64 strings.
-
-**Signature**:
+### `createSealQueue`
 
 ```typescript
-type SerializationQueueCreater = (
-  label: string,
-  packetSerialization: PacketSerialization,
-  logger: Logger,
-  onSuccess: (packet: SerializedEncryptedPacket) => void,
-  onFail: (raw: unknown) => void
-) => Queue<UnserializedEncryptedPacket>
-```
+import { createSealQueue } from '@hyperfrontend/network-protocol/queue'
 
----
-
-### `createObfuscationQueue`
-
-Creates a queue that applies time-based obfuscation to serialized packets.
-
-**Signature**:
-
-```typescript
-type ObfuscationQueueCreater = (
-  label: string,
-  packetObfuscation: PacketObfuscation,
-  logger: Logger,
-  onSuccess: (packet: ObfuscatedPacket) => void,
-  onFail: (raw: unknown) => void
-) => Queue<SerializedEncryptedPacket>
-```
-
----
-
-### `createDeobfuscationQueue`
-
-Creates a queue that removes time-based obfuscation from incoming packets.
-
-**Signature**:
-
-```typescript
-type DeobfuscationQueueCreater = (
-  label: string,
-  packetDeobfuscation: PacketDeobfuscation,
-  logger: Logger,
-  onSuccess: (packet: SerializedEncryptedPacket) => void,
-  onFail: (raw: unknown) => void
-) => Queue<ObfuscatedPacket>
-```
-
----
-
-### `createDeserializationQueue`
-
-Creates a queue that deserializes Base64 strings back to binary data.
-
-**Signature**:
-
-```typescript
-type DeserializationQueueCreater = (
-  label: string,
-  packetDeserialization: PacketDeserialization,
-  logger: Logger,
-  onSuccess: (packet: UnserializedEncryptedPacket) => void,
-  onFail: (raw: unknown) => void
-) => Queue<SerializedEncryptedPacket>
-```
-
----
-
-### `createDecryptionQueue`
-
-Creates a queue that decrypts binary encrypted packets back to plaintext.
-
-**Signature**:
-
-```typescript
-type DecryptionQueueCreater = (
-  label: string,
-  packetDecryption: PacketDecryption,
-  logger: Logger,
-  onSuccess: (packet: UnencryptedPacket) => void,
-  onFail: (raw: unknown) => void
-) => Queue<UnserializedEncryptedPacket>
-```
-
----
-
-## Queue Chaining Example
-
-This example demonstrates how to chain outbound queues together:
-
-```typescript
-import { createEncryptionQueue, createSerializationQueue, createObfuscationQueue } from '@hyperfrontend/network-protocol/lib/queue'
-import { createLogger } from '@hyperfrontend/logging'
-
-const logger = createLogger({ level: 'info' })
-const failures: unknown[] = []
-
-// Create the chain backwards (from transport to source)
-
-// 3. Obfuscation queue (final step, sends to transport)
-const obfuscationQueue = createObfuscationQueue(
-  'channel:obfuscate',
-  packetObfuscation,
+const sealing = createSealQueue(
+  'comms sender',
+  protocol.seal,
   logger,
-  (obfuscated) => transport.send(obfuscated), // Final destination
-  (raw) => failures.push(raw)
+  (frame) => transport.post(frame),
+  (packet, reason, cause) => report(reason, cause)
 )
-
-// 2. Serialization queue (feeds obfuscation)
-const serializationQueue = createSerializationQueue(
-  'channel:serialize',
-  packetSerialization,
-  logger,
-  (serialized) => obfuscationQueue.addMessage(serialized), // Chain to next queue
-  (raw) => failures.push(raw)
-)
-
-// 1. Encryption queue (entry point)
-const encryptionQueue = createEncryptionQueue(
-  'channel:encrypt',
-  packetEncryption,
-  logger,
-  (encrypted) => serializationQueue.addMessage(encrypted), // Chain to next queue
-  (raw) => failures.push(raw)
-)
-
-// Use the chain: add messages to encryption queue
-encryptionQueue.addMessage(unencryptedPacket)
+sealing.addMessage(unencryptedPacket)
 ```
+
+Each packet is checked with `isValidUnencryptedPacket`, sealed, and the result checked with `isValidWirePacket` before `onSuccess`.
+
+### `createOpenQueue`
+
+```typescript
+import { createOpenQueue } from '@hyperfrontend/network-protocol/queue'
+
+const opening = createOpenQueue(
+  'comms receiver',
+  protocol.open,
+  logger,
+  (packet) => deliver(packet),
+  (frame, reason, cause) => report(reason, cause)
+)
+opening.addMessage(frame)
+```
+
+Each frame is checked with `isValidWirePacket`, opened, and the result checked with `isValidUnencryptedPacket` before `onSuccess`.
 
 ---
 
 ## Lifecycle Management
 
-### Stop/Resume for Backpressure
-
-Queues can be paused to handle backpressure scenarios:
-
 ```typescript
-const queue = createEncryptionQueue(/* ... */)
-
-// Check queue depth for backpressure
-if (queue.size() > 100) {
-  console.warn('Queue backpressure detected, pausing upstream')
-  upstreamSource.pause()
-}
-
-// Pause processing (messages still accumulate)
 queue.stop()
-console.log(queue.isRunning()) // false
+queue.isRunning() // false once the current message settles
 
-// Messages added while stopped will queue up
-queue.addMessage(packet1)
-queue.addMessage(packet2)
-console.log(queue.size()) // 2
+queue.addMessage(a) // accumulates while stopped
+queue.addMessage(b)
+queue.size() // 2
 
-// Resume processing
-queue.resume()
-// → Processes packet1, then packet2 in FIFO order
+queue.resume() // processes a, then b
 ```
 
-### Monitoring Queue State
-
-```typescript
-// Get current queue depth
-const depth = queue.size()
-
-// Check if actively processing
-const active = queue.isRunning()
-
-// Get the message currently being processed
-const current = queue.currentMessage()
-if (current) {
-  console.log(`Currently processing: ${current.origin} → ${current.target}`)
-}
-```
+`currentMessage()` returns the message in flight, or `null` between messages.
 
 ---
 
 ## Error Handling
 
-Each specialized queue validates inputs and handles errors gracefully:
+A rejected input never blocks the queue: the stage logs it, calls `onFail`, and moves on to the next message.
 
-1. **Input Validation**: Invalid packets are rejected via `onFail`
-2. **Operation Errors**: Encryption/serialization failures call `onFail`
-3. **Pipeline Continuity**: Failed messages don't block subsequent messages
+| Queue | `reason`                                                                 | `cause`                    |
+| ----- | ------------------------------------------------------------------------ | -------------------------- |
+| seal  | `Invalid packet ignored`                                                 | none                       |
+| seal  | the message of the error `seal` threw (a `ProtocolError`)                | the thrown error           |
+| seal  | `Sealed packet is not valid`                                             | none                       |
+| open  | `Invalid frame ignored`                                                  | none                       |
+| open  | the message of the error `open` threw (replay, forgery, malformed frame) | the thrown `ProtocolError` |
+| open  | `Opened packet is not valid`                                             | none                       |
+| both  | `An unexpected error occurred. <error>`                                  | the thrown error           |
 
-```typescript
-const encryptionQueue = createEncryptionQueue(
-  'my-channel:encrypt',
-  packetEncryption,
-  logger,
-  (encrypted) => nextQueue.addMessage(encrypted),
-  (failed) => {
-    // Handle failed encryption
-    logger.error('Encryption failed for packet', failed)
-    metrics.incrementFailureCount()
-    // Optionally: retry, dead-letter, or discard
-  }
-)
-```
+The sender and receiver translate these calls into `PacketDrop` reports for the channel's `onDrop`.
 
 ### Validation Errors
 
-Queue creators validate all parameters at creation time:
-
-```typescript
-// These will throw Error:
-createEncryptionQueue('', ...)           // Empty label
-createEncryptionQueue(label, null, ...)  // Missing operation
-createEncryptionQueue(label, op, null, ...) // Missing logger
-```
+The specialised creators validate their arguments and throw `Cannot create seal queue without ...` or `Cannot create open queue without ...` followed by `a label`, `seal function` / `open function`, `a logger`, `a success callback function`, or `a failed callback function`.
 
 ---
 
 ## Relationship to Other Modules
 
-- **Depends on**: [`packet/`](../packet/README.md) (for packet types and validations)
+- **Depends on**: [`packet/`](../packet/README.md) (packet types and validations), `@hyperfrontend/logging`
 - **Used by**: [`sender/`](../sender/README.md), [`receiver/`](../receiver/README.md)
 
 ---
@@ -446,11 +197,13 @@ createEncryptionQueue(label, op, null, ...) // Missing logger
 
 - **[Library Index](../README.md)** - All modules
 - **[Architecture Guide](../../../ARCHITECTURE.md#queue)** - Queue architecture
+- **[Queue Entry](../../queue/README.md)** - The `@hyperfrontend/network-protocol/queue` entry
 
 ### Related Modules
 
-| Module                             | Relationship                      |
-| ---------------------------------- | --------------------------------- |
-| [sender/](../sender/README.md)     | Uses queues for outbound pipeline |
-| [receiver/](../receiver/README.md) | Uses queues for inbound pipeline  |
-| [packet/](../packet/README.md)     | Packet types processed in queues  |
+| Module                             | Relationship                          |
+| ---------------------------------- | ------------------------------------- |
+| [sender/](../sender/README.md)     | Wraps the seal queue                  |
+| [receiver/](../receiver/README.md) | Wraps the open queue                  |
+| [packet/](../packet/README.md)     | Packet types processed in queues      |
+| [protocol/](../protocol/README.md) | Supplies the seal and open operations |
