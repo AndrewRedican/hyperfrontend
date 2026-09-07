@@ -1,0 +1,83 @@
+{
+  "schemaVersion": 1,
+  "type": "how-to",
+  "title": "How to migrate from v1 and v2 to v3 and v4",
+  "problem": "My host and feature pin protocol v1 or v2, and the current releases only build and negotiate v3 and v4. I need to move both sides without losing the mode I had, and know what the app will observe once the channel is keyed per session.",
+  "outcome": "A host and a feature that open on v3 or v4 with the same keyless or keyed mode they had before, a generated shared key where v4 needs one, and an error handler that recognises a refused handshake, a dropped frame, and a session that did not confirm.",
+  "priority": "P0",
+  "packages": ["@hyperfrontend/features", "@hyperfrontend/nexus", "@hyperfrontend/network-protocol"],
+  "verification": {
+    "kind": "authored",
+    "verifiedAgainst": "@hyperfrontend/features@0.9.0",
+    "verifiedOn": "2026-09-07"
+  },
+  "complexity": "intermediate",
+  "estMinutes": 20,
+  "apis": [
+    {
+      "package": "@hyperfrontend/features",
+      "symbol": "SecurityProtocol"
+    },
+    {
+      "package": "@hyperfrontend/features",
+      "symbol": "createShell"
+    },
+    {
+      "package": "@hyperfrontend/features",
+      "symbol": "createFeature"
+    },
+    {
+      "package": "@hyperfrontend/nexus",
+      "symbol": "BrokerSecurityConfig"
+    },
+    {
+      "package": "@hyperfrontend/nexus",
+      "symbol": "ChannelSecuritySettings"
+    },
+    {
+      "package": "@hyperfrontend/network-protocol",
+      "symbol": "createProtocol"
+    },
+    {
+      "package": "@hyperfrontend/network-protocol",
+      "symbol": "createChannel"
+    }
+  ],
+  "prerequisites": {
+    "guides": ["embed-a-shipped-feature"],
+    "knowledge": [
+      "A feature that builds with hf build and a host that embeds its shell, both currently pinned to protocol v1 or v2",
+      "Somewhere both sides already read secrets from, such as environment variables or a config service, if you use the keyed mode"
+    ]
+  },
+  "related": {
+    "guides": ["troubleshoot-a-secured-channel", "compose-independent-features", "embed-a-shipped-feature"],
+    "reference": [
+      "/docs/libraries/features/host",
+      "/docs/libraries/features/hostee",
+      "/docs/libraries/features/cli",
+      "/docs/libraries/nexus",
+      "/docs/libraries/network-protocol/browser/v3",
+      "/docs/libraries/network-protocol/browser/v4"
+    ],
+    "explanation": ["/docs/core-concepts/security", "/docs/libraries/nexus/architecture", "/docs/libraries/network-protocol/architecture"]
+  },
+  "keywords": [
+    "migrate",
+    "upgrade",
+    "v1",
+    "v2",
+    "v3",
+    "v4",
+    "protocol",
+    "sharedKey",
+    "shared key",
+    "session envelope",
+    "fail-closed",
+    "security-unavailable",
+    "security-error",
+    "security-unconfirmed",
+    "hf build",
+    "breaking change"
+  ]
+}
