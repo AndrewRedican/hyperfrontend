@@ -6,7 +6,7 @@ export default defineConfig({
   version: '0.8.0',
   contract: './koi-fish.contract.ts',
   url: 'https://demo-koi-fish-react-production.up.railway.app/',
-  // why: An open shell, acknowledged at pack time - eight koi share one page reporting outlines at high cadence, and a per-message security envelope across eight channels collapses delivery. Messages still pin to the configured origin.
+  // why: An open shell, acknowledged at pack time: the eight koi are same-origin sub-paths of one deploy, so the boundary is the pond's own. Messages still pin to the configured origin.
   protocol: 'none',
   display: {
     // note: Embedded is the koi's only presentation - a host-owned transparent layer the pond composites into its scene.
