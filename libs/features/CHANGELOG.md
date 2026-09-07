@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.9.0](https://github.com/AndrewRedican/hyperfrontend/compare/a638efc58ce78e9a84dd21992e7f5c675bd5e7f6...c2798e1479f78d5909adb098595846152a6f9350) - 2026-09-07
+
+### Breaking Changes
+
+- **BREAKING** SecurityProtocol is 'none' | 'v3' | 'v4' across createShell, createFeature, feature.config, hf build --protocol, and the build executor schema; v1 and v2 no longer build, negotiation is fail-closed, and v4 rejects a shared key shorter than 16 characters.
+
+### Features
+
+- **BREAKING** negotiate v3/v4 fail-closed and enforce the v4 shared-key rules
+
 ## [0.8.1](https://github.com/AndrewRedican/hyperfrontend/compare/ae4f6a6d3eaea1b3382ff6d84049fe2cb5474d4e...7b6cf80e7cfba3085e9d938d6298f5775f3401eb) - 2026-09-03
 
 ### Bug Fixes

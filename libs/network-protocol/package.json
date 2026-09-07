@@ -1,9 +1,9 @@
 {
   "name": "@hyperfrontend/network-protocol",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "Production-grade network protocol for secure, real-time cross-window and cross-process communication with a session-keyed authenticated envelope, routing, and message queueing.",
   "dependencies": {
-    "@hyperfrontend/cryptography": "1.0.0",
+    "@hyperfrontend/cryptography": "1.1.0",
     "@hyperfrontend/data-utils": "1.0.0",
     "@hyperfrontend/json-utils": "1.0.0",
     "@hyperfrontend/logging": "1.0.0",

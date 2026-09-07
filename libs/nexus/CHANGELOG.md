@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.0.0](https://github.com/AndrewRedican/hyperfrontend/compare/a638efc58ce78e9a84dd21992e7f5c675bd5e7f6...c2798e1479f78d5909adb098595846152a6f9350) - 2026-09-07
+
+### Breaking Changes
+
+- **BREAKING** SecurityProtocolVersion is 'none' | 'v3' | 'v4'; the protocol loader, the default protocol, shared key, and refresh-rate settings, the per-channel sharedKey and refreshRate, the security-negotiated event, SecurityTransport.isReady, and the securityReady channel state are removed; security-ready carries { protocol } and fires only after the counterpart's first sealed frame authenticates; security-error codes are the protocol's kebab-case verdicts; the peer dependency is @hyperfrontend/network-protocol 2.0.0.
+
+### Features
+
+- **BREAKING** confirm session keys inside the secure transport before security-ready
+
 ## [2.1.0](https://github.com/AndrewRedican/hyperfrontend/compare/641f582281b0d20f2953e47aa7a815c210d916f2...7b6cf80e7cfba3085e9d938d6298f5775f3401eb) - 2026-09-03
 
 ### Features
