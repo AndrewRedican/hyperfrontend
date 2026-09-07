@@ -7,11 +7,11 @@
  * What moves — the caustic light, the ripples — lives on the surface canvas
  * above the koi.
  *
- * Every stone is placed from `randomPseudo` against a fixed seed, so the bed a
- * visitor sees is the same bed after a resize, and the same bed on every
+ * Every stone is laid from one seeded stream against a fixed seed, so the bed
+ * a visitor sees is the same bed after a resize, and the same bed on every
  * machine.
  */
-import { randomPseudo } from '@hyperfrontend/random-generator-utils'
+import { createRandomGenerator } from '@hyperfrontend/random-generator-utils'
 import { canvasPixelRatio } from './pixel-ratio'
 
 /** Seed the bed is laid out from; changing it lays a different pond. */
@@ -50,18 +50,17 @@ export function layStones(width: number, height: number): Stone[] {
   const area = (width * height) / 1_000_000
   const count = Math.min(MAX_STONES, Math.round(area * STONE_DENSITY))
   const shorter = Math.min(width, height)
-  return Array.from({ length: count }, (_unused, index) => {
-    const seed = BED_SEED + index * 13
-    return {
-      x: randomPseudo(seed) * width,
-      y: randomPseudo(seed + 1) * height,
-      // magic: Stones between 0.35% and 1.25% of the shorter axis read as bed gravel; anything larger starts reading as a boulder floating in the water.
-      radius: shorter * (0.0035 + randomPseudo(seed + 2) * 0.009),
-      stretch: 1 + randomPseudo(seed + 3) * 0.8,
-      angle: randomPseudo(seed + 4) * Math.PI,
-      tone: randomPseudo(seed + 5),
-    }
-  })
+  // why: One stream lays the whole bed in order, so the first stones are the same stones however many the viewport asks for, and a resize only adds or drops the last of them.
+  const bed = createRandomGenerator(BED_SEED)
+  return Array.from({ length: count }, () => ({
+    x: bed.uniform(0, width),
+    y: bed.uniform(0, height),
+    // magic: Stones between 0.35% and 1.25% of the shorter axis read as bed gravel; anything larger starts reading as a boulder floating in the water.
+    radius: shorter * bed.uniform(0.0035, 0.0125),
+    stretch: bed.uniform(1, 1.8),
+    angle: bed.uniform(0, Math.PI),
+    tone: bed.next(),
+  }))
 }
 
 /** How wide the card scene's edge fade runs, in CSS pixels. */

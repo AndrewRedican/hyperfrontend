@@ -24,7 +24,7 @@
     "@hyperfrontend/demo-koi-fish-vue-shell": "file:vendor/hyperfrontend-demo-koi-fish-vue-shell-0.8.0.tgz",
     "@hyperfrontend/demo-koi-lib": "file:../vendor/hyperfrontend-demo-koi-lib-0.1.0.tgz",
     "@hyperfrontend/features": "0.9.0",
-    "@hyperfrontend/random-generator-utils": "0.0.5"
+    "@hyperfrontend/random-generator-utils": "0.2.0"
   },
   "devDependencies": {
     "@tsconfig/node24": "24.0.5",
