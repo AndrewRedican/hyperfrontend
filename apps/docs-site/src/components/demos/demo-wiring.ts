@@ -146,7 +146,7 @@ const WIRINGS: Record<string, DemoWiring | undefined> = {
   // ref: [guide:embed-a-shipped-feature/clock-wiring] start
   clock: {
     createShell: (options) => createClockShell(options),
-    contractLabel: 'contract 0.3.0 · protocol v1',
+    contractLabel: 'contract 0.3.0 · protocol v3',
     // why: The clock streams a tick at 1 Hz from open, so the first tick proves the app renders.
     proofEvents: ['tick'],
     silenceTimeoutMs: 6000,
@@ -154,7 +154,7 @@ const WIRINGS: Record<string, DemoWiring | undefined> = {
   // ref: [guide:embed-a-shipped-feature/clock-wiring] end
   'koi-pond': {
     createShell: (options) => createKoiPondShell(options),
-    contractLabel: 'contract 0.2.0 · protocol v1',
+    contractLabel: 'contract 0.2.0 · protocol v3',
     // why: The pond reports its connected shoal as each koi lands, so the first `shoal` proves the scene is assembling behind the frame.
     proofEvents: ['shoal'],
     // why: An undisturbed pond is silent by design — it only speaks when the shoal changes or a scatter unwinds, so the budget must outlast a long calm.
@@ -162,7 +162,7 @@ const WIRINGS: Record<string, DemoWiring | undefined> = {
   },
   heartbeat: {
     createShell: (options) => createHeartbeatShell(options),
-    contractLabel: 'contract 0.2.0 · protocol v1',
+    contractLabel: 'contract 0.2.0 · protocol v3',
     // why: Every contraction crosses as a beat and every state change as a rhythm — either one proves the heart renders.
     proofEvents: ['beat', 'rhythm'],
     // why: A visitor holding the heart to flatline silences product traffic on purpose; the budget must outlast any plausible hold.
