@@ -26,7 +26,7 @@
  * the ladder that produced it. A koi built without options swims the shared
  * default.
  */
-import { randomPseudo } from '@hyperfrontend/random-generator-utils'
+import { createRandomGenerator } from '@hyperfrontend/random-generator-utils'
 import type {
   Disturbance,
   KoiIntent,
@@ -63,7 +63,7 @@ import { chooseTurnTier, flankCrowding } from './manoeuvre.js'
 /** How many spine samples travel in a reported outline. */
 const OUTLINE_SAMPLES = 5
 
-/** Where the avoidance side's draw band starts on the koi's seed. */
+/** Band offset opening the avoidance side's stream on the koi's seed. */
 const BREAK_DRAWS = 640
 
 /** The waviness an ordinary turn rides on: none, because a turn is a manoeuvre rather than a drift. */
@@ -544,7 +544,7 @@ export function createKoiMotion(init: KoiMotionInit, options: KoiMotionOptions =
 
   // why: A side chosen mid-crossing and then re-chosen is the vibration the whole encounter memory exists to stop, so the flank the koi broke toward is held until it has nothing left to avoid.
   let breakSide: -1 | 1 | null = null
-  let breakDraws = 0
+  const breakDraws = createRandomGenerator(seed + BREAK_DRAWS)
 
   // why: The intent report replays decisions the steering ladder otherwise discards: the waypoint behind `course`, the decided side of a depth pass, and which family the current desire came from.
   let travelTarget: Vec2 | null = null
@@ -613,8 +613,7 @@ export function createKoiMotion(init: KoiMotionInit, options: KoiMotionOptions =
       breakSide = crowding > 0 ? -1 : 1
       return breakSide
     }
-    breakDraws += 1
-    breakSide = randomPseudo(seed + BREAK_DRAWS + breakDraws) < trim.rightBias ? 1 : -1
+    breakSide = breakDraws.next() < trim.rightBias ? 1 : -1
     return breakSide
   }
 

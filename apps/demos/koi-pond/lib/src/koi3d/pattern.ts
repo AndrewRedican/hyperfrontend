@@ -12,7 +12,7 @@
  * fish, and a framework's brand colour can be dropped into a recipe without
  * changing where its markings fall.
  */
-import { randomPseudo } from '@hyperfrontend/random-generator-utils'
+import { createRandomGenerator } from '@hyperfrontend/random-generator-utils'
 
 /** The pattern families a koi can be written in. */
 export type KoiPatternName = 'kohaku' | 'sanke' | 'showa' | 'ogon' | 'asagi' | 'karasu' | 'brand'
@@ -146,6 +146,9 @@ const RECIPES: Readonly<Record<KoiPatternName, PatternRecipe>> = {
   },
 }
 
+/** Band offset opening a koi's markings stream on its seed. */
+const PATTERN_DRAWS = 80
+
 /**
  * Maps a `[0, 1)` draw onto a band.
  *
@@ -172,8 +175,7 @@ function within(draw: number, band: readonly [number, number]): number {
 export function buildPattern(pattern: KoiPatternName, seed: number): KoiPatternData {
   const recipe = RECIPES[pattern]
   const patches: KoiPatch[] = []
-  let draw = 0
-  const next = (): number => randomPseudo(seed + (draw += 1) * 31)
+  const { next } = createRandomGenerator(seed + PATTERN_DRAWS)
 
   for (const band of recipe.bands) {
     for (let index = 0; index < band.count && patches.length < MAX_PATCHES; index += 1) {

@@ -1,42 +1,42 @@
 /**
  * Deterministic per-koi traits, build, phenotype, and swimming trim.
  *
- * Every reproducible property derives from one integer seed through
- * `randomPseudo`, the only generator in `@hyperfrontend/random-generator-utils`
- * that is deterministic — the distributions (`randomGaussian`, `randomUniform`)
- * draw from an unseeded source and belong on per-frame jitter, not on identity.
- * Deriving here means a koi is the same animal on every reload, and the host and
- * the fish agree on its size without exchanging a message about it.
+ * Every reproducible property derives from one integer seed through a seeded
+ * stream from `@hyperfrontend/random-generator-utils`, so a koi is the same
+ * animal on every reload, and the host and the fish agree on its size without
+ * exchanging a message about it.
  *
- * Draw offsets are allocated in bands so adding a band never shifts another:
- * traits take 0–7, the body takes 8–23, the swimming trim takes 24–29, and the
- * pond's entry takes 40 upward, an open tail for its jitter and probe draws.
- * Duplicates of a framework's koi step their whole allocation clear of it, so
- * no ordinal ever reads another koi's draws.
+ * Each property band opens its own stream on the seed plus a band offset, so
+ * adding a draw to one band never shifts another: the traits sit at 0, the
+ * body at 8, the swimming trim at 24, the pond's entry at 40, the markings at
+ * 80, and the avoidance side at 640. Within a band the draws are sequential,
+ * so a new draw is appended after the existing ones, never inserted between
+ * them. Duplicates of a framework's koi step their seed clear of it, so no
+ * ordinal ever reads another koi's streams.
  */
-import { randomPseudo } from '@hyperfrontend/random-generator-utils'
+import { createRandomGenerator } from '@hyperfrontend/random-generator-utils'
 import type { KoiSwimTrim } from '../koi3d/config.js'
 import type { KoiBuild, KoiFramework, KoiPhenotype, KoiProfile, KoiTraits } from './types.js'
 import { koiLabel, koiPalette } from './palette.js'
 import { KOI_FRAMEWORKS } from './types.js'
 
-/** Spacing between a fish's seed and its neighbour's, so their draws never correlate. */
+/** Spacing between a fish's seed and its neighbour's, so their streams never coincide. */
 const SEED_STRIDE = 977
 
 /**
  * Spacing between a framework's canonical koi and each duplicate of it.
  *
- * Wide enough to clear every seed in the shoal and every draw either koi
- * makes, so no ordinal a pond can hold lands on another koi's numbers. The
- * pond's entry jitter applies the same stride to any seed, so a duplicate's
- * entry draws step clear of its siblings' exactly as its trait draws do.
+ * Wide enough to clear every seed in the shoal, so no ordinal a pond can hold
+ * lands on another koi's seed. The pond's entry applies the same stride to
+ * any seed, so a duplicate's entry stream steps clear of its siblings' exactly
+ * as its trait streams do.
  */
 export const VARIANT_STRIDE = 10_007
 
-/** Where the body's draw band starts, after the eight trait draws. */
+/** Band offset opening the body's stream, after the traits' band. */
 const BODY_DRAWS = 8
 
-/** Where the swimming trim's draw band starts. */
+/** Band offset opening the swimming trim's stream. */
 const TRIM_DRAWS = 24
 
 /**
@@ -60,18 +60,6 @@ const HEFT: Readonly<Record<KoiFramework, number>> = {
 
 /** The sculpted anatomy's widest half-width as a fraction of body length, at width multiplier 1. */
 const ANATOMY_GIRTH_RATIO = 0.115
-
-/**
- * Maps a `[0, 1)` draw onto an inclusive band.
- *
- * @param draw - The unit draw.
- * @param min - Band floor.
- * @param max - Band ceiling.
- * @returns The mapped value.
- */
-function band(draw: number, min: number, max: number): number {
-  return min + draw * (max - min)
-}
 
 /**
  * Derives the stable seed for one framework's koi.
@@ -119,22 +107,23 @@ export function koiVariantSeed(framework: KoiFramework, instance: number): numbe
 /**
  * Derives the eight normalised behavioural traits from a seed.
  *
- * Each trait takes its own draw, so changing one band never shifts another.
+ * Each trait takes the next draw of the traits' stream in a fixed order, so a
+ * trait added later goes on the end and never re-rolls an earlier one.
  *
  * @param seed - The koi's stable integer seed.
  * @returns The trait vector, every field in `[0, 1]`.
  */
 export function koiTraits(seed: number): KoiTraits {
-  const draw = (index: number): number => randomPseudo(seed + index)
+  const stream = createRandomGenerator(seed)
   return {
-    cruiseSpeed: draw(0),
-    shyness: draw(1),
-    socialAffinity: draw(2),
-    awareness: draw(3),
-    directionalCaution: draw(4),
-    depthWillingness: draw(5),
-    reactionIntensity: draw(6),
-    turnResponsiveness: draw(7),
+    cruiseSpeed: stream.next(),
+    shyness: stream.next(),
+    socialAffinity: stream.next(),
+    awareness: stream.next(),
+    directionalCaution: stream.next(),
+    depthWillingness: stream.next(),
+    reactionIntensity: stream.next(),
+    turnResponsiveness: stream.next(),
   }
 }
 
@@ -175,7 +164,9 @@ interface KoiBody {
  *
  * The framework's notional heft sets the centre of each band and the seed
  * jitters around it, so a heavier framework reads as a broader, deeper koi
- * while two koi of similar heft still differ fish to fish.
+ * while two koi of similar heft still differ fish to fish. The jitters around
+ * a heft-set centre are bell-shaped rather than flat, so the heft dependably
+ * reads through and the seed adds individuality without masking it.
  *
  * @param framework - The framework slug, which sets the heft.
  * @param seed - The koi's stable integer seed.
@@ -183,25 +174,26 @@ interface KoiBody {
  */
 function koiBody(framework: KoiFramework, seed: number): KoiBody {
   const heft = HEFT[framework]
-  const draw = (index: number): number => randomPseudo(seed + BODY_DRAWS + index)
+  const stream = createRandomGenerator(seed + BODY_DRAWS)
+  // why: The body reads its stream in the order below, and a number added later is drawn after the caudal spread: reordering the draws re-rolls every koi.
   return {
     // magic: A shoal spanning roughly 0.85x to 1.2x reads as varied without any one koi looking like a different species; heft carries a third of the spread so the heavyweight is visibly the larger animal.
-    lengthScale: band(draw(0), 0.85, 1.08) + heft * 0.1,
-    widthScale: 0.86 + heft * 0.24 + band(draw(1), -0.04, 0.04),
-    heightScale: 0.9 + heft * 0.18 + band(draw(2), -0.04, 0.04),
-    shoulder: 0.94 + heft * 0.14 + band(draw(3), -0.03, 0.03),
-    belly: 0.3 + heft * 0.28 + band(draw(4), 0, 0.1),
-    dorsalRidge: band(draw(5), 0.08, 0.22),
-    tailSpan: band(draw(6), 0.22, 0.3),
-    caudalFork: band(draw(7), 0.24, 0.44),
-    // why: The pond is watched from above, where a purely vertical tail blade reads as a sliver — every koi fans its lobes a little sideways so the tail keeps its silhouette straight overhead. Draw 13 was the body band's next free slot; earlier draws must never shift.
+    lengthScale: stream.uniform(0.85, 1.08) + heft * 0.1,
+    widthScale: 0.86 + heft * 0.24 + stream.gaussian(-0.04, 0.04),
+    heightScale: 0.9 + heft * 0.18 + stream.gaussian(-0.04, 0.04),
+    shoulder: 0.94 + heft * 0.14 + stream.gaussian(-0.03, 0.03),
+    belly: 0.3 + heft * 0.28 + stream.uniform(0, 0.1),
+    dorsalRidge: stream.uniform(0.08, 0.22),
+    tailSpan: stream.uniform(0.22, 0.3),
+    caudalFork: stream.uniform(0.24, 0.44),
+    finSpan: stream.uniform(0.15, 0.21),
+    headWidth: 0.96 + heft * 0.09 + stream.gaussian(-0.02, 0.02),
+    snout: stream.uniform(0.6, 0.95),
+    forehead: 0.28 + heft * 0.22 + stream.uniform(0, 0.1),
+    peduncle: 0.92 + heft * 0.12 + stream.gaussian(-0.03, 0.03),
+    // why: The pond is watched from above, where a purely vertical tail blade reads as a sliver — every koi fans its lobes a little sideways so the tail keeps its silhouette straight overhead.
     // why: The band has to clear the bank as well as the level view: a koi leaning into a turn rolls its blade back toward the vertical, and a fan that only survives level flight is the tail that disappears mid-manoeuvre.
-    caudalSpread: band(draw(13), 0.2, 0.28),
-    finSpan: band(draw(8), 0.15, 0.21),
-    headWidth: 0.96 + heft * 0.09 + band(draw(9), -0.02, 0.02),
-    snout: band(draw(10), 0.6, 0.95),
-    forehead: 0.28 + heft * 0.22 + band(draw(11), 0, 0.1),
-    peduncle: 0.92 + heft * 0.12 + band(draw(12), -0.03, 0.03),
+    caudalSpread: stream.uniform(0.2, 0.28),
   }
 }
 
@@ -271,13 +263,13 @@ export function koiPhenotype(framework: KoiFramework, seed: number): KoiPhenotyp
  * @returns Its trim on the swimming model.
  */
 export function koiTrim(seed: number, traits: KoiTraits): KoiSwimTrim {
-  const draw = (index: number): number => randomPseudo(seed + TRIM_DRAWS + index)
+  const stream = createRandomGenerator(seed + TRIM_DRAWS)
   return {
-    amplitude: band(draw(0), 0.95, 1.15),
-    frequency: band(draw(1), 0.92, 1.08),
-    waveReach: band(draw(2), 0.08, 0.18),
-    wavesPerBody: band(draw(3), 0.95, 1.05),
-    turn: band(draw(4), 0.9, 1.15),
+    amplitude: stream.uniform(0.95, 1.15),
+    frequency: stream.uniform(0.92, 1.08),
+    waveReach: stream.uniform(0.08, 0.18),
+    wavesPerBody: stream.uniform(0.95, 1.05),
+    turn: stream.uniform(0.9, 1.15),
     responsiveness: traits.turnResponsiveness,
   }
 }
