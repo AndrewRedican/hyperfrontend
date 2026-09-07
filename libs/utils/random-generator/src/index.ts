@@ -3,6 +3,8 @@
  *
  * @module @hyperfrontend/random-generator-utils
  */
+export type { RandomGenerator, RandomSource } from './types'
+export { createRandomGenerator } from './create-random-generator'
 export { randomExponential } from './random-exponential'
 export { randomGaussian } from './random-gaussian'
 export { randomLogarithmic } from './random-logarithmic'

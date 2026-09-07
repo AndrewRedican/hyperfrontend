@@ -18,4 +18,8 @@ describe('UUID generation and validation', () => {
     const badUUID = '123e4567-e89b-12d3-a456-426614174000'
     expect(isUuidV4(badUUID)).toBeFalsy()
   })
+
+  it('draws the UUID from the given source', () => {
+    expect(uuidV4(() => 0)).toBe('00000000-0000-4000-8000-000000000000')
+  })
 })

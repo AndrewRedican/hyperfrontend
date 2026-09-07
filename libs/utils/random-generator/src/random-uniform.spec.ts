@@ -30,4 +30,8 @@ describe('randomUniform', () => {
 
     expect(calculatedMean).toBeCloseTo((min + max) / 2, 1)
   })
+
+  it('draws from the given source instead of the default', () => {
+    expect(randomUniform(2, 8, () => 0.5)).toBe(5)
+  })
 })

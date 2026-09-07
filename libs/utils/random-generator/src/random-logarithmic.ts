@@ -1,9 +1,11 @@
+import type { RandomSource } from './types'
 import { exp, random } from '@hyperfrontend/immutable-api-utils/built-in-copy/math'
 
 /**
  * Generates a random number following a logarithmic distribution.
  *
  * @param scale - The scale parameter controlling the distribution spread
+ * @param source - Where the unit draw comes from; defaults to the built-in `Math.random`
  * @returns A random number from the logarithmic distribution
  *
  * @example Generating values with exponential growth characteristics
@@ -16,8 +18,15 @@ import { exp, random } from '@hyperfrontend/immutable-api-utils/built-in-copy/ma
  * const largeScale = randomLogarithmic(5)
  * // => 42.3 (wider range, skewed toward lower values)
  * ```
+ *
+ * @example Drawing from a seeded stream instead of `Math.random`
+ * ```typescript
+ * const { next } = createRandomGenerator(7)
+ * const growth = randomLogarithmic(5, next)
+ * // => the same value on every run that seeds 7
+ * ```
  */
-export function randomLogarithmic(scale: number): number {
-  const u = random()
+export function randomLogarithmic(scale: number, source: RandomSource = random): number {
+  const u = source()
   return exp(scale * u)
 }
