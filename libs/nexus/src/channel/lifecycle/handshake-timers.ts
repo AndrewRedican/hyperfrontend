@@ -1,6 +1,7 @@
 import type { IAction } from '../../types/action'
 import type { ChannelInternals } from '../types'
 import { clearInterval, clearTimeout, setInterval, setTimeout } from '@hyperfrontend/immutable-api-utils/built-in-copy/timers'
+import { dropSecurityTransport } from '../security/drop'
 
 /**
  * Starts the handshake retry and deadline timers for a pending connection.
@@ -73,7 +74,8 @@ export function clearHandshakeTimers(channel: ChannelInternals): void {
  */
 export function expireHandshake(channel: ChannelInternals, processId: string): void {
   clearHandshakeTimers(channel)
+  dropSecurityTransport(channel)
   channel.removeProcess(processId)
-  channel.updateState({ pendingProcessId: null, pendingAccept: null })
+  channel.updateState({ pendingProcessId: null, pendingAccept: null, negotiatedProtocol: null })
   channel.notifyEvent('connect-timeout', { elapsedMs: channel.getState().connectTimeoutMs })
 }

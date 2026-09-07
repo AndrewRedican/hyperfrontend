@@ -16,7 +16,7 @@
     "protocol": {
       "type": "string",
       "description": "Security envelope to enforce at build time.",
-      "enum": ["none", "v1", "v2"]
+      "enum": ["none", "v3", "v4"]
     },
     "name": {
       "type": "string",

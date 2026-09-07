@@ -1,51 +1,52 @@
-import type { ChannelState } from '../../types'
 import type { IAction } from '../../types/action'
+import type { ChannelState } from '../../types/channel'
+import type { SecurityTransport } from '../../types/security'
 import type { ChannelInternals } from '../types'
-import { beforeEach } from 'node:test'
+import { after as afterAll, afterEach, before as beforeAll, beforeEach } from 'node:test'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
+import { createInitialState } from '../state/initial'
 import { destroy } from './destroy'
-
-type MutableChannelState = { -readonly [K in keyof ChannelState]: ChannelState[K] }
+import { disconnect } from './disconnect'
+import { startHandshakeTimers } from './handshake-timers'
 
 describe('channel/lifecycle/destroy', () => {
+  const contract = { accepted: [], emitted: [] }
+
   let mockChannel: ChannelInternals
-  let state: MutableChannelState
+  let state: ChannelState
   let sentActions: IAction[]
-  let cleanupCalled: boolean
+  let transport: SecurityTransport
+
+  beforeAll(() => {
+    jest.useFakeTimers()
+  })
+
+  afterAll(() => {
+    jest.useRealTimers()
+  })
+
+  afterEach(() => {
+    jest.clearAllTimers()
+  })
 
   beforeEach(() => {
     sentActions = []
-    cleanupCalled = false
+    transport = {
+      send: jest.fn(),
+      receive: jest.fn(),
+      start: jest.fn(),
+      stop: jest.fn(),
+      resume: jest.fn(),
+      dispose: jest.fn(),
+      getProtocol: jest.fn(() => 'v4'),
+    }
 
     state = {
-      id: 'channel-123',
-      name: 'test-channel',
-      target: window,
+      ...createInitialState('test-channel', window, { contract }),
       origin: 'https://example.com',
       active: true,
-      connectTimestamp: Date.now(),
-      contract: { accepted: [], emitted: [] },
-      acceptedActions: [],
-      queuedMessages: [],
-      eventSubscriptions: [],
-      messageSubscriptions: [],
-      scheduledActivation: null,
-      peerContract: null,
-      peerId: null,
-      pendingProcessId: null,
-      pendingAccept: null,
-      retryTimer: null,
-      deadlineTimer: null,
-      connectTimeoutMs: 10_000,
-      requestRetryMs: 500,
-      queueMessages: true,
-
-      brokerManaged: false,
       readyToConnect: true,
-      negotiatedProtocol: null,
-      securityReady: false,
-      securityTransport: null,
-      pendingSecurityRequest: null,
+      securityTransport: transport,
     }
 
     mockChannel = {
@@ -66,7 +67,11 @@ describe('channel/lifecycle/destroy', () => {
         denyConnection: jest.fn(),
         cancelConnection: jest.fn(),
         openConnection: jest.fn(),
-        closeConnection: jest.fn(),
+        closeConnection: jest.fn((processId) => ({
+          type: '[nexus] connection-closed',
+          senderId: 'broker-id',
+          processId,
+        })),
         destroyConnection: jest.fn(() => ({
           type: '[nexus] connection-destroyed',
           senderId: 'broker-id',
@@ -74,9 +79,7 @@ describe('channel/lifecycle/destroy', () => {
         newMessage: jest.fn(),
         invalidRequest: jest.fn(),
       },
-      cleanup: jest.fn(() => {
-        cleanupCalled = true
-      }),
+      cleanup: jest.fn(),
     }
   })
 
@@ -89,30 +92,25 @@ describe('channel/lifecycle/destroy', () => {
   it('sends DESTROY_CONNECTION when notify is true (default)', () => {
     destroy(mockChannel)
 
-    expect(mockChannel.actions.destroyConnection).toHaveBeenCalled()
-    expect(sentActions).toHaveLength(1)
-    expect(sentActions[0].type).toBe('[nexus] connection-destroyed')
+    expect(sentActions).toEqual([{ type: '[nexus] connection-destroyed', senderId: 'broker-id' }])
   })
 
   it('sends DESTROY_CONNECTION when notify is explicitly true', () => {
     destroy(mockChannel, true)
 
-    expect(sentActions).toHaveLength(1)
-    expect(sentActions[0].type).toBe('[nexus] connection-destroyed')
+    expect(sentActions).toEqual([expect.objectContaining({ type: '[nexus] connection-destroyed' })])
   })
 
-  it('does not send action when notify is false', () => {
+  it('does not send an action when notify is false', () => {
     destroy(mockChannel, false)
 
-    expect(mockChannel.actions.destroyConnection).not.toHaveBeenCalled()
-    expect(sentActions).toHaveLength(0)
+    expect(sentActions).toEqual([])
   })
 
-  it('calls cleanup callback if provided', () => {
+  it('calls the cleanup callback', () => {
     destroy(mockChannel)
 
-    expect(mockChannel.cleanup).toHaveBeenCalled()
-    expect(cleanupCalled).toBe(true)
+    expect(mockChannel.cleanup).toHaveBeenCalledTimes(1)
   })
 
   it('does not throw if cleanup callback is not provided', () => {
@@ -122,16 +120,82 @@ describe('channel/lifecycle/destroy', () => {
   })
 
   it('works even when channel is already inactive', () => {
-    state.active = false
+    state = { ...state, active: false }
 
     destroy(mockChannel)
 
-    expect(state.active).toBe(false)
-    expect(cleanupCalled).toBe(true)
+    expect({ active: state.active, cleanups: (mockChannel.cleanup as ReturnType<typeof jest.fn>).mock.calls.length }).toEqual({
+      active: false,
+      cleanups: 1,
+    })
+  })
+
+  it('fires no channel event', () => {
+    destroy(mockChannel)
+
+    expect(mockChannel.notifyEvent).not.toHaveBeenCalled()
+  })
+
+  it('disposes the security transport', () => {
+    destroy(mockChannel)
+
+    expect(transport.dispose).toHaveBeenCalledTimes(1)
+  })
+
+  it('forgets the security transport', () => {
+    destroy(mockChannel)
+
+    expect(state.securityTransport).toBeNull()
+  })
+
+  it('tolerates a channel without a transport', () => {
+    state = { ...state, securityTransport: null }
+
+    expect(() => destroy(mockChannel)).not.toThrow()
+  })
+
+  it('resets the handshake and close state', () => {
+    state = {
+      ...state,
+      pendingProcessId: 'process-1',
+      pendingAccept: ['sender-1', 'https://example.com', contract, 'process-1'],
+      scheduledActivation: ['sender-2', 'https://example.com', contract, 'process-2'],
+      closingProcessId: 'process-3',
+    }
+
+    destroy(mockChannel)
+
+    expect(state).toEqual(
+      expect.objectContaining({ pendingProcessId: null, pendingAccept: null, scheduledActivation: null, closingProcessId: null })
+    )
+  })
+
+  it('cancels the deadline of a polite close in flight', () => {
+    disconnect(mockChannel)
+    ;(mockChannel.notifyEvent as ReturnType<typeof jest.fn>).mockClear()
+
+    destroy(mockChannel, false)
+    jest.advanceTimersByTime(state.closeTimeoutMs)
+
+    expect({ closeTimer: state.closeTimer, events: (mockChannel.notifyEvent as ReturnType<typeof jest.fn>).mock.calls }).toEqual({
+      closeTimer: null,
+      events: [],
+    })
+  })
+
+  it('clears running handshake timers', () => {
+    const onDeadline = jest.fn()
+    startHandshakeTimers(mockChannel, { type: '[nexus] connection-request', senderId: 'broker-id' }, onDeadline)
+
+    destroy(mockChannel, false)
+    jest.advanceTimersByTime(20_000)
+
+    expect({ retried: sentActions, deadline: onDeadline.mock.calls.length }).toEqual({ retried: [], deadline: 0 })
   })
 
   it('executes operations in correct order', () => {
     const operations: string[] = []
+    state = { ...state, securityTransport: null }
 
     mockChannel.updateState = (partial) => {
       state = { ...state, ...partial }
@@ -144,16 +208,26 @@ describe('channel/lifecycle/destroy', () => {
     }
 
     mockChannel.cleanup = () => {
-      cleanupCalled = true
       operations.push('cleanup')
     }
-
-    mockChannel.notifyEvent = jest.fn(() => {
-      operations.push('notifyEvent')
-    })
 
     destroy(mockChannel)
 
     expect(operations).toEqual(['updateState', 'sendAction', 'cleanup'])
+  })
+
+  it('releases the transport after handing it the destroy frame', () => {
+    const operations: string[] = []
+    ;(transport.dispose as ReturnType<typeof jest.fn>).mockImplementation(() => {
+      operations.push('dispose')
+    })
+    mockChannel.sendAction = (action) => {
+      sentActions.push(action)
+      operations.push('sendAction')
+    }
+
+    destroy(mockChannel)
+
+    expect(operations).toEqual(['sendAction', 'dispose'])
   })
 })

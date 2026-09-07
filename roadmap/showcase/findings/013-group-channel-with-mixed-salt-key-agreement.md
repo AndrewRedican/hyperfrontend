@@ -19,7 +19,7 @@ only shape available is hub-and-spoke: seven fish each report state to the host,
 aggregates, filters, and re-sends each fish a personalised neighbourhood view. That casts the
 host as a mandatory orchestrator-mediator for traffic that is semantically a broadcast, doubles
 every payload's trip, and puts the host's relay cadence in the middle of everyone's latency. It
-also multiplies exactly the per-message channel traffic that F-011 collapses under.
+also multiplies the per-message channel traffic.
 
 ## The use case
 

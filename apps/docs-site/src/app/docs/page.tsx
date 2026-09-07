@@ -81,11 +81,11 @@ export default function DocsPage() {
       <section className="mt-12">
         <H2 className="text-2xl font-bold text-slate-900 dark:text-white">Building a Shell</H2>
         <p className="mt-3 text-slate-600 dark:text-slate-400">Generate a self-contained shell package that any host can install:</p>
-        <CodeBlock language="bash" code="npx @hyperfrontend/features build --protocol v2" />
+        <CodeBlock language="bash" code="npx @hyperfrontend/features build --protocol v4" />
         <p className="mt-4 text-slate-600 dark:text-slate-400">
           The CLI generates the shell package, inlines the contract, bundles every dependency into it, and packs a publishable tarball with
           typed bindings. The host installs one package and takes on no transitive deps. The security envelope is an explicit choice (
-          <code>--protocol v1</code> or <code>--protocol v2</code>, or a <code>protocol</code> entry in the feature config), and the build
+          <code>--protocol v3</code> or <code>--protocol v4</code>, or a <code>protocol</code> entry in the feature config), and the build
           bakes it in as the shell&apos;s default.
         </p>
       </section>

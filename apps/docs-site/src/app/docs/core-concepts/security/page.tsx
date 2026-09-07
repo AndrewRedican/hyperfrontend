@@ -101,8 +101,8 @@ export default function SecurityModelPage() {
           </li>
           <li>
             <strong className="text-slate-900 dark:text-white">A gated handshake.</strong> Nothing opens without REQUEST → ACCEPT → OPEN.
-            Five gates can refuse — invalid contract, missing required actions, security policy, contract incompatibility, and unavailable
-            security under a fail-closed channel — and each fires a machine-readable denial on the side that decided.
+            Five gates can refuse (invalid contract, missing required actions, security policy, contract incompatibility, and unavailable
+            security under a fail-closed channel), and each fires a machine-readable denial on the side that decided.
           </li>
           <li>
             <strong className="text-slate-900 dark:text-white">Validation on both ends.</strong> A send is validated against the
@@ -116,7 +116,10 @@ export default function SecurityModelPage() {
           </li>
           <li>
             <strong className="text-slate-900 dark:text-white">An optional encrypted envelope.</strong> Product traffic can travel inside a
-            negotiated envelope; handshake frames stay plaintext. See the status table for what each version actually buys.
+            session-keyed envelope negotiated during the handshake. Each session is keyed once from an ephemeral key agreement, every frame
+            is authenticated and counted, and a replayed, forged, or malformed frame is dropped and reported as a{' '}
+            <code>security-error</code>. A session that nothing authenticates within the connect timeout closes with reason{' '}
+            <code>security-unconfirmed</code>. Handshake frames stay plaintext. See the status table for what each protocol actually buys.
           </li>
         </ul>
 
@@ -137,8 +140,8 @@ export default function SecurityModelPage() {
             checks on the feature&apos;s own backend. A message that crossed the boundary is not an authorised operation.
           </li>
           <li>
-            • <strong className="text-slate-900 dark:text-white">Whether traffic is encrypted at all</strong>: choosing a protocol version
-            and, for <code>v2</code>, provisioning and rotating the pre-shared key. The SDK never bakes a key into an artifact.
+            • <strong className="text-slate-900 dark:text-white">Whether traffic is encrypted at all</strong>: choosing a protocol and, for{' '}
+            <code>v4</code>, provisioning the same pre-shared key on both sides. The SDK never bakes a key into an artifact.
           </li>
           <li>
             • <strong className="text-slate-900 dark:text-white">The containment posture</strong>: the sandbox tokens the frame runs under,
@@ -235,7 +238,8 @@ export default function SecurityModelPage() {
                 <td className="py-2 pr-4">On by default</td>
                 <td className="py-2">
                   Keeps stale traffic out of a fresh session. Cooperative in plaintext (forgeable by anything that can post to the window)
-                  and authenticated inside a <code>v2</code> envelope.
+                  and authenticated inside a <code>v3</code> or <code>v4</code> envelope, where a frame that does not open under the session
+                  key is dropped.
                 </td>
               </tr>
               <tr className="border-b border-slate-100 dark:border-slate-800">
@@ -258,31 +262,36 @@ export default function SecurityModelPage() {
               </tr>
               <tr className="border-b border-slate-100 dark:border-slate-800">
                 <td className="py-2 pr-4">
-                  Envelope <code>v1</code>
+                  Envelope <code>v3</code>
                 </td>
-                <td className="py-2 pr-4">Opt-in</td>
+                <td className="py-2 pr-4">Opt-in, no key</td>
                 <td className="py-2">
-                  Time-window obfuscation with a clock-derived password: no secret is involved, so anything that can read the frames can
-                  reverse it. Deterrence against casual inspection, not a confidentiality control.
+                  Session keys from an ephemeral ECDH agreement carried in the handshake. Defeats scripts that can only listen: a passive
+                  observer of <code>message</code> events cannot read or forge frames. Any script that can post to a peer&apos;s window with
+                  a genuine source can complete the handshake as that peer, so <code>v3</code> does not authenticate who the counterpart is.
                 </td>
               </tr>
               <tr className="border-b border-slate-100 dark:border-slate-800">
                 <td className="py-2 pr-4">
-                  Envelope <code>v2</code>
+                  Envelope <code>v4</code>
                 </td>
-                <td className="py-2 pr-4">Opt-in, requires a pre-shared key</td>
+                <td className="py-2 pr-4">Opt-in, requires a pre-shared key of at least 16 characters</td>
                 <td className="py-2">
-                  The real control: authenticated encryption of product traffic end to end. Handshake frames stay plaintext.
+                  The real control: the session key is bound to the pre-shared key, so without the key a script can neither read frames nor
+                  produce frames the counterpart accepts, and a key mismatch is detected because no frame ever authenticates. Neither
+                  protocol hides the hello; its public keys and nonces are public by design.
                 </td>
               </tr>
               <tr className="border-b border-slate-100 dark:border-slate-800">
                 <td className="py-2 pr-4">Fail-closed security</td>
                 <td className="py-2 pr-4">
-                  Opt-in, on a <code>nexus</code> channel
+                  On whenever a shell or feature selects a protocol; opt-in on a bare <code>nexus</code> channel
                 </td>
                 <td className="py-2">
-                  Turns a failed negotiation into a denial instead of a plaintext fallback. Negotiation fails open by default, and the shell
-                  surface does not expose the switch; set it when driving the broker directly.
+                  Turns a counterpart that cannot run the selected protocol into a denial (<code>security-unavailable</code>) instead of a
+                  plaintext fallback. The features SDK registers every <code>v3</code> and <code>v4</code> channel as fail-closed; a channel
+                  driven through the broker directly falls back to plaintext unless its settings carry{' '}
+                  <code>mode: &apos;fail-closed&apos;</code>.
                 </td>
               </tr>
               <tr className="border-b border-slate-100 dark:border-slate-800">
@@ -320,6 +329,11 @@ export default function SecurityModelPage() {
             </tbody>
           </table>
         </div>
+        <p className="mt-4 text-sm text-slate-500 dark:text-slate-400">
+          What the envelope costs: one ECDH agreement plus one HKDF expansion per session (and, for <code>v4</code>, one PBKDF2 stretch of
+          the pre-shared key at 600,000 iterations, paid once per session rather than per message), then one AES-GCM operation per message
+          in each direction.
+        </p>
       </section>
 
       {/* Deeper */}
@@ -347,12 +361,12 @@ export default function SecurityModelPage() {
           <DeeperLink
             href="/docs/libraries/network-protocol"
             title="@hyperfrontend/network-protocol"
-            description="The envelope: queue composition, packet format, and the v1/v2 pipelines."
+            description="The envelope: queue composition, packet format, and the v3/v4 session pipelines."
           />
           <DeeperLink
             href="/docs/libraries/cryptography"
             title="@hyperfrontend/cryptography"
-            description="AES-GCM, PBKDF2 key derivation, and time-window password generation."
+            description="AES-GCM sealing, ECDH key agreement, HKDF expansion, and PBKDF2 key stretching: the primitives the envelope is keyed from."
           />
           <DeeperLink
             href="/docs/libraries/utils/immutable-api"

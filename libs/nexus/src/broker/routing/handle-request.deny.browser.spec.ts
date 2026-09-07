@@ -1,10 +1,13 @@
 import type { Logger } from '@hyperfrontend/logging'
 import type { Mock } from '@hyperfrontend/testing'
+import type { ChannelSecurityDependencies } from '../../channel/types'
 import type { IAction } from '../../types/action'
 import type { IChannelContract } from '../../types/contract'
+import type { SecurityProtocolVersion, SecurityProvider, SecurityWireChannel } from '../../types/security'
 import type { BrokerState } from '../types'
 import type { RoutingContext } from './types'
 import { after as afterAll, afterEach, before as beforeAll, beforeEach } from 'node:test'
+import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { createActionCreators } from '../../core/actions/factory'
 import { createProcessManager } from '../../core/processes/factory'
@@ -23,6 +26,9 @@ describe('handleRequest deny gates', () => {
     emitted: [{ type: 'test-message' }],
   }
 
+  const offerV4 = { supported: ['v4', 'none'], preferred: 'v4' }
+  const offerV3 = { supported: ['v3', 'none'], preferred: 'v3' }
+
   let mockLogger: Logger
   let mockBrokerState: BrokerState
 
@@ -30,6 +36,9 @@ describe('handleRequest deny gates', () => {
   let processManager: ReturnType<typeof createProcessManager>
   let mockActions: ReturnType<typeof createActionCreators>
   let mockWindow: Window
+  let wire: SecurityWireChannel
+  let provider: SecurityProvider
+  let security: ChannelSecurityDependencies
   let routingContext: RoutingContext
 
   beforeAll(() => {
@@ -53,7 +62,7 @@ describe('handleRequest deny gates', () => {
       debug: jest.fn(),
       setLogLevel: jest.fn(),
       getLogLevel: jest.fn(() => 'debug'),
-    }
+    } as unknown as Logger
 
     mockBrokerState = {
       id: 'broker-1',
@@ -76,15 +85,31 @@ describe('handleRequest deny gates', () => {
       postMessage: jest.fn(),
     } as unknown as Window
 
+    wire = {
+      label: 'wire',
+      send: jest.fn(),
+      receive: jest.fn(),
+      stop: jest.fn(),
+      resume: jest.fn(),
+      hello: jest.fn(async () => new Uint8Array([1])),
+      isHello: jest.fn(() => false),
+      acceptHello: jest.fn(() => 'accepted'),
+    }
+    provider = { createChannel: jest.fn(() => wire), protocolProvider: jest.fn() }
+    security = {
+      localId: 'broker-1',
+      getProvider: jest.fn((protocol: SecurityProtocolVersion) => (protocol === 'v4' ? provider : undefined)),
+      dispatch: jest.fn(),
+    }
+
     routingContext = {
       state: mockBrokerState,
       registry,
       processManager,
       actions: mockActions,
       logger: mockLogger,
-      getSupportedProtocols: () => ['none'],
-      getProtocol: () => undefined,
-      routeAction: () => undefined,
+      getSupportedProtocols: () => ['v4', 'none'],
+      security,
     }
   })
 
@@ -105,8 +130,8 @@ describe('handleRequest deny gates', () => {
   }
 
   function addReadyChannel(settings: Record<string, unknown> = {}) {
-    const channel = addChannel(mockBrokerState, registry, processManager, mockActions, 'local-channel', mockWindow, settings)
-    // how: connect() marks the channel ready; cancel(false) clears the
+    const channel = addChannel(mockBrokerState, registry, processManager, mockActions, 'local-channel', mockWindow, settings, security)
+    // how: connect() marks the channel ready; cancel(false) clears the request it sent so the channel idles as a ready responder.
     channel.connect()
     channel.cancel(false)
     ;(mockWindow.postMessage as Mock).mockClear()
@@ -237,6 +262,16 @@ describe('handleRequest deny gates', () => {
       })
     })
 
+    it('hands the policy the request event', () => {
+      const context = contextWithPolicy(true)
+      addReadyChannel()
+      const message = requestEvent()
+
+      handleRequest(context, message)
+
+      expect(context.state.settings.securityPolicy).toHaveBeenCalledWith(message)
+    })
+
     it('accepts connection when security policy allows', () => {
       addReadyChannel()
 
@@ -328,35 +363,74 @@ describe('handleRequest deny gates', () => {
   })
 
   describe('fail-closed responder', () => {
-    const failClosedSettings = { security: { protocol: 'v2', mode: 'fail-closed' } }
+    const failClosedSettings = { security: { protocol: 'v4', mode: 'fail-closed' } }
+    const securityDeny = expect.objectContaining({
+      type: '[nexus] connection-request-denied',
+      reason: 'security-unavailable',
+      error: 'Security is required for this channel but the counterpart cannot negotiate an encrypted protocol.',
+    })
 
     it('denies with reason security-unavailable when the request carries no security slot', () => {
       addReadyChannel(failClosedSettings)
 
       handleRequest(routingContext, requestEvent())
 
-      expect(mockWindow.postMessage).toHaveBeenCalledWith(
-        expect.objectContaining({
-          type: '[nexus] connection-request-denied',
-          reason: 'security-unavailable',
-          error: expect.stringContaining('Security is required'),
-        }),
-        expect.any(String)
-      )
+      expect(mockWindow.postMessage).toHaveBeenCalledWith(securityDeny, expect.any(String))
     })
 
     it('denies with reason security-unavailable when negotiation ends in plaintext', () => {
       addReadyChannel(failClosedSettings)
 
-      handleRequest(routingContext, requestEvent({ security: { supported: ['v1', 'none'], preferred: 'v1' } }))
+      handleRequest(routingContext, requestEvent({ security: offerV3 }))
 
-      expect(mockWindow.postMessage).toHaveBeenCalledWith(
-        expect.objectContaining({
-          type: '[nexus] connection-request-denied',
-          reason: 'security-unavailable',
-        }),
-        expect.any(String)
-      )
+      expect(mockWindow.postMessage).toHaveBeenCalledWith(securityDeny, expect.any(String))
+    })
+
+    it('denies with reason security-unavailable when no provider can serve the negotiated protocol', () => {
+      addReadyChannel(failClosedSettings)
+      ;(security.getProvider as Mock).mockReturnValue(undefined)
+
+      handleRequest(routingContext, requestEvent({ security: offerV4 }))
+
+      expect(mockWindow.postMessage).toHaveBeenCalledWith(securityDeny, expect.any(String))
+    })
+
+    it('denies with reason security-unavailable when the provider refuses the session', () => {
+      addReadyChannel(failClosedSettings)
+      ;(provider.createChannel as Mock).mockImplementation(() => {
+        throw createError('session refused')
+      })
+
+      handleRequest(routingContext, requestEvent({ security: offerV4 }))
+
+      expect(mockWindow.postMessage).toHaveBeenCalledWith(securityDeny, expect.any(String))
+    })
+
+    it('leaves no transport on the channel after denying for a missing provider', () => {
+      const channel = addReadyChannel(failClosedSettings)
+      ;(security.getProvider as Mock).mockReturnValue(undefined)
+
+      handleRequest(routingContext, requestEvent({ security: offerV4 }))
+
+      expect({
+        transport: channel.getSecurityTransport(),
+        negotiated: channel.getNegotiatedProtocol(),
+        awaiting: channel.isAwaitingOpen(),
+      }).toEqual({
+        transport: null,
+        negotiated: 'none',
+        awaiting: false,
+      })
+    })
+
+    it('sends no ACCEPT after denying', () => {
+      addReadyChannel(failClosedSettings)
+
+      handleRequest(routingContext, requestEvent({ security: offerV3 }))
+
+      expect((mockWindow.postMessage as Mock).mock.calls.map((call) => (call[0] as IAction).type)).toEqual([
+        '[nexus] connection-request-denied',
+      ])
     })
 
     it('fires the denial locally as a deny event on the responding channel', () => {
@@ -364,11 +438,13 @@ describe('handleRequest deny gates', () => {
       const denyHandler = jest.fn()
       channel.on('deny', denyHandler)
 
-      handleRequest(routingContext, requestEvent({ security: { supported: ['v1', 'none'], preferred: 'v1' } }))
+      handleRequest(routingContext, requestEvent({ security: offerV3 }))
 
-      expect(denyHandler.mock.calls[0][0]).toEqual(
-        expect.objectContaining({ reason: 'security-unavailable', error: expect.stringContaining('Security is required') })
-      )
+      expect(denyHandler.mock.calls[0][0]).toEqual({
+        error: 'Security is required for this channel but the counterpart cannot negotiate an encrypted protocol.',
+        reason: 'security-unavailable',
+        origin: 'https://example.com',
+      })
     })
 
     it('fires the local deny once when the counterpart retries REQUEST with the same process id', () => {
@@ -376,24 +452,29 @@ describe('handleRequest deny gates', () => {
       const denyHandler = jest.fn()
       channel.on('deny', denyHandler)
 
-      handleRequest(routingContext, requestEvent({ security: { supported: ['v1', 'none'], preferred: 'v1' } }))
-      handleRequest(routingContext, requestEvent({ security: { supported: ['v1', 'none'], preferred: 'v1' } }))
+      handleRequest(routingContext, requestEvent({ security: offerV3 }))
+      handleRequest(routingContext, requestEvent({ security: offerV3 }))
 
       expect({ localDenies: denyHandler.mock.calls.length, deniedFrames: denyFrames().length }).toEqual({ localDenies: 1, deniedFrames: 2 })
     })
 
-    it('accepts when the registry satisfies the requested protocol', () => {
+    it('does not warn about continuing without encryption when it denies', () => {
       addReadyChannel(failClosedSettings)
 
-      handleRequest(
-        { ...routingContext, getSupportedProtocols: () => ['v2', 'none'] },
-        requestEvent({ security: { supported: ['v2', 'none'], preferred: 'v2' } })
-      )
+      handleRequest(routingContext, requestEvent({ security: offerV3 }))
+
+      expect(mockLogger.warn).not.toHaveBeenCalled()
+    })
+
+    it('accepts when the registry and a working provider satisfy the requested protocol', () => {
+      addReadyChannel(failClosedSettings)
+
+      handleRequest(routingContext, requestEvent({ security: offerV4 }))
 
       expect(mockWindow.postMessage).toHaveBeenCalledWith(
         expect.objectContaining({
           type: '[nexus] connection-request-accepted',
-          security: { negotiated: 'v2' },
+          security: { negotiated: 'v4' },
         }),
         expect.any(String)
       )
@@ -401,7 +482,7 @@ describe('handleRequest deny gates', () => {
   })
 
   it('fires the denial locally after yielding the glare tie-break, when no handshake timer is left to expire', () => {
-    const channel = addChannel(mockBrokerState, registry, processManager, mockActions, 'local-channel', mockWindow)
+    const channel = addChannel(mockBrokerState, registry, processManager, mockActions, 'local-channel', mockWindow, {}, security)
     channel.connect()
     const denyHandler = jest.fn()
     channel.on('deny', denyHandler)

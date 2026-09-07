@@ -1,6 +1,6 @@
 import type { Mock } from '@hyperfrontend/testing'
 import type { FlowContext } from '../models/types'
-import { describe, expect, it, jest } from '@hyperfrontend/testing'
+import { describe, expect, it } from '@hyperfrontend/testing'
 import {
   createMockChangelogEntry,
   createMockChangelogItem,

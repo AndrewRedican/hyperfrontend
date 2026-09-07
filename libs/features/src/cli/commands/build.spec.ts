@@ -19,7 +19,7 @@ const mockBuild = jest.mocked(build)
 
 const mkFlags = (over: Partial<CliFlags>): CliFlags => ({ ci: false, yes: false, dryRun: false, help: false, ...over })
 
-const bundle = (protocol: 'none' | 'v1' | 'v2', protocolExplicit = false): ResolvedBuildBundle => ({
+const bundle = (protocol: 'none' | 'v3' | 'v4', protocolExplicit = false): ResolvedBuildBundle => ({
   config: { name: 'clock', version: '1.0.0', contract: './c.json', url: '/', protocol },
   contract: { emitted: [], accepted: [] },
   protocol,
@@ -56,7 +56,7 @@ describe('runBuild', () => {
       cwd: dir,
       stdout: stdout.stream,
       stderr: stderr.stream,
-      resolveConfig: () => Promise.resolve(bundle('v2')),
+      resolveConfig: () => Promise.resolve(bundle('v4')),
       runBuilder: jest.fn(),
       packTarball: () => 'clock-shell-1.0.0.tgz',
       ...over,
@@ -110,10 +110,15 @@ describe('runBuild', () => {
     expect(code).toBe(1)
   })
 
-  it('explains the missing protocol', async () => {
+  it('names the v3 and v4 protocols when the build has none', async () => {
     const err = sink()
     await runBuild(deps({ resolveConfig: () => Promise.resolve(bundle('none')), stderr: err.stream }))
-    expect(err.text()).toEqual(expect.stringContaining('security protocol'))
+    expect(err.text()).toBe('Build requires a security protocol: pass --protocol v3 or --protocol v4.\n')
+  })
+
+  it('builds a v3 shell without a shared key', async () => {
+    const code = await runBuild(deps({ resolveConfig: () => Promise.resolve(bundle('v3', true)) }))
+    expect(code).toBe(0)
   })
 
   it('rejects an explicit protocol none without the acknowledgment flag', async () => {
@@ -121,10 +126,12 @@ describe('runBuild', () => {
     expect(code).toBe(1)
   })
 
-  it('names --allow-open and the risk when an explicit none is unacknowledged', async () => {
+  it('names --allow-open, the risk, and the v3/v4 alternatives when an explicit none is unacknowledged', async () => {
     const err = sink()
     await runBuild(deps({ resolveConfig: () => Promise.resolve(bundle('none', true)), stderr: err.stream }))
-    expect(err.text()).toEqual(expect.stringContaining('--allow-open'))
+    expect(err.text()).toBe(
+      "Building with an explicit protocol 'none' produces an open shell: the channel is unauthenticated and any page can embed and message the feature. Pass --allow-open to acknowledge the risk, or pick --protocol v3 / --protocol v4.\n"
+    )
   })
 
   it('builds an explicit protocol none when --allow-open acknowledges it', async () => {
@@ -171,7 +178,7 @@ describe('runBuild', () => {
 
   it('publishes the staged metadata beside the built package', async () => {
     await runBuild(deps({}))
-    expect(readFileSync(join(dir, 'dist', 'clock-shell', 'metadata.json'), 'utf-8')).toContain('"protocol": "v2"')
+    expect(readFileSync(join(dir, 'dist', 'clock-shell', 'metadata.json'), 'utf-8')).toContain('"protocol": "v4"')
   })
 
   it('lists metadata.json in the built manifest files array so npm pack ships it', async () => {
@@ -248,7 +255,7 @@ describe('runBuild', () => {
     writeFileSync(join(dir, 'clock.contract.json'), '{ "emitted": [], "accepted": [] }')
     writeFileSync(
       join(dir, 'feature.config.json'),
-      '{ "name": "clock", "version": "1.0.0", "contract": "./clock.contract.json", "protocol": "v2" }'
+      '{ "name": "clock", "version": "1.0.0", "contract": "./clock.contract.json", "protocol": "v4" }'
     )
     const code = await runBuild({
       flags: mkFlags({}),
@@ -269,7 +276,7 @@ describe('runBuild', () => {
       cwd: dir,
       stdout: sink().stream,
       stderr: sink().stream,
-      resolveConfig: () => Promise.resolve(bundle('v2')),
+      resolveConfig: () => Promise.resolve(bundle('v4')),
     })
     expect(mockBuild).toHaveBeenCalledWith(expect.objectContaining({ esm: {}, cjs: {}, outputPath: expect.stringContaining('dist') }))
     expect(mockExecFileSync).toHaveBeenCalledWith('npm', ['pack'], expect.objectContaining({ cwd: expect.stringContaining('dist') }))

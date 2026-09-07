@@ -24,10 +24,10 @@ import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
  *
  * @example Negotiating security protocol
  * ```typescript
- * const request = { supported: ['v2', 'v1', 'none'], preferred: 'v2' }
- * const responderSupported = ['v1', 'none']
+ * const request = { supported: ['v4', 'none'], preferred: 'v4' }
+ * const responderSupported = ['v4', 'v3', 'none']
  * const result = negotiateProtocol(request, responderSupported)
- * // result.negotiated === 'v1' (first match from initiator's list)
+ * // result.negotiated === 'v4' (first match from initiator's list)
  * ```
  */
 export function negotiateProtocol(
@@ -61,8 +61,8 @@ export function negotiateProtocol(
  *
  * @example Creating initiator request
  * ```typescript
- * const request = createSecurityRequest(['v2', 'v1', 'none'])
- * // { supported: ['v2', 'v1', 'none'], preferred: 'v2' }
+ * const request = createSecurityRequest(['v4', 'none'])
+ * // { supported: ['v4', 'none'], preferred: 'v4' }
  * ```
  */
 export function createSecurityRequest(
@@ -81,24 +81,15 @@ export function createSecurityRequest(
 /**
  * Creates a security negotiation response for the responder.
  *
- * Builds a response object containing the negotiated protocol
- * and optional public parameters for protocol initialization.
- *
  * @param negotiated - The negotiated protocol version
- * @param publicParams - Optional public parameters (e.g., key exchange hints)
  * @returns A security negotiation response object
  *
  * @example Creating responder response
  * ```typescript
- * const response = createSecurityResponse('v2', { hint: 'value' })
- * // { negotiated: 'v2', publicParams: { hint: 'value' } }
+ * const response = createSecurityResponse('v4')
+ * // { negotiated: 'v4' }
  * ```
  */
-export function createSecurityResponse(
-  negotiated: SecurityProtocolVersion,
-  publicParams?: Readonly<Record<string, unknown>>
-): SecurityNegotiationResponse {
-  const response: SecurityNegotiationResponse = publicParams ? { negotiated, publicParams } : { negotiated }
-
-  return freeze(response)
+export function createSecurityResponse(negotiated: SecurityProtocolVersion): SecurityNegotiationResponse {
+  return freeze({ negotiated })
 }

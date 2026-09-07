@@ -25,8 +25,12 @@ jest.mock('@hyperfrontend/immutable-api-utils/built-in-copy/timers', () => ({
   cancelAnimationFrame: jest.fn(),
 }))
 
-jest.mock('@hyperfrontend/network-protocol/browser/v1', () => ({ createProtocol: jest.fn(() => 'v1-provider') }))
-jest.mock('@hyperfrontend/network-protocol/browser/v2', () => ({ createProtocol: jest.fn(() => 'v2-provider') }))
+jest.mock('@hyperfrontend/network-protocol/browser/v3', () => ({ createProtocol: jest.fn(() => 'v3-provider') }))
+// note: The key validator stays real so the v4 length gate is exercised; only the protocol factory is stubbed.
+jest.mock('@hyperfrontend/network-protocol/browser/v4', () => ({
+  ...jest.requireActual<object>('@hyperfrontend/network-protocol/browser/v4'),
+  createProtocol: jest.fn(() => 'v4-provider'),
+}))
 
 beforeEach(() => {
   jest.clearAllMocks()
@@ -101,6 +105,7 @@ describe('createFeatureHandle', () => {
   const hostWindow = { name: 'host' } as unknown as Window
   // note: A schema-free contract keeps payload validation inert here; the schema paths are covered by the payload validation block below.
   const emptyContract: FeatureContract = { emitted: [], accepted: [] }
+  const sharedKey = 'a-key-of-sixteen-or-more'
 
   it('adds a host channel against the resolved host window', () => {
     const mock = createMockChannel()
@@ -132,46 +137,49 @@ describe('createFeatureHandle', () => {
     expect(addChannel).toHaveBeenCalledWith('host', hostWindow, { contractCompat: expect.any(Function), connectTimeoutMs: 4000 })
   })
 
-  it('passes the v1 security settings into the host channel', () => {
+  it('passes the v3 fail-closed security settings into the host channel', () => {
     const mock = createMockChannel()
     const { broker, addChannel } = createMockBroker(mock.channel)
-    createFeatureHandle(broker, hostWindow, createEventEmitter(), { contract: emptyContract, protocol: 'v1' })
-    expect(addChannel).toHaveBeenCalledWith('host', hostWindow, { contractCompat: expect.any(Function), security: { protocol: 'v1' } })
-  })
-
-  it('registers the v2 provider pairing the wire pipeline with the protocol', () => {
-    const mock = createMockChannel()
-    const { broker, registerProtocol } = createMockBroker(mock.channel)
-    createFeatureHandle(broker, hostWindow, createEventEmitter(), { contract: emptyContract, protocol: 'v2', sharedKey: 'secret' })
-    expect(registerProtocol).toHaveBeenCalledWith('v2', { createChannel: expect.any(Function), protocolProvider: 'v2-provider' })
-  })
-
-  it('passes the v2 security settings carrying the shared key into the host channel', () => {
-    const mock = createMockChannel()
-    const { broker, addChannel } = createMockBroker(mock.channel)
-    createFeatureHandle(broker, hostWindow, createEventEmitter(), { contract: emptyContract, protocol: 'v2', sharedKey: 'secret' })
+    createFeatureHandle(broker, hostWindow, createEventEmitter(), { contract: emptyContract, protocol: 'v3' })
     expect(addChannel).toHaveBeenCalledWith('host', hostWindow, {
       contractCompat: expect.any(Function),
-      security: { protocol: 'v2', sharedKey: 'secret' },
+      security: { protocol: 'v3', mode: 'fail-closed' },
+    })
+  })
+
+  it('registers the v4 provider pairing the wire pipeline with the keyed protocol', () => {
+    const mock = createMockChannel()
+    const { broker, registerProtocol } = createMockBroker(mock.channel)
+    createFeatureHandle(broker, hostWindow, createEventEmitter(), { contract: emptyContract, protocol: 'v4', sharedKey })
+    expect(registerProtocol).toHaveBeenCalledWith('v4', { createChannel: expect.any(Function), protocolProvider: 'v4-provider' })
+  })
+
+  it('passes the v4 fail-closed security settings into the host channel without the shared key', () => {
+    const mock = createMockChannel()
+    const { broker, addChannel } = createMockBroker(mock.channel)
+    createFeatureHandle(broker, hostWindow, createEventEmitter(), { contract: emptyContract, protocol: 'v4', sharedKey })
+    expect(addChannel).toHaveBeenCalledWith('host', hostWindow, {
+      contractCompat: expect.any(Function),
+      security: { protocol: 'v4', mode: 'fail-closed' },
     })
   })
 
   it('combines security settings with the connect deadline', () => {
     const mock = createMockChannel()
     const { broker, addChannel } = createMockBroker(mock.channel)
-    createFeatureHandle(broker, hostWindow, createEventEmitter(), { contract: emptyContract, protocol: 'v1', readyTimeoutMs: 4000 })
+    createFeatureHandle(broker, hostWindow, createEventEmitter(), { contract: emptyContract, protocol: 'v3', readyTimeoutMs: 4000 })
     expect(addChannel).toHaveBeenCalledWith('host', hostWindow, {
       contractCompat: expect.any(Function),
-      security: { protocol: 'v1' },
+      security: { protocol: 'v3', mode: 'fail-closed' },
       connectTimeoutMs: 4000,
     })
   })
 
-  it('throws before adding the channel when the v2 protocol has no shared key', () => {
+  it('throws before adding the channel when the v4 protocol has no shared key', () => {
     const mock = createMockChannel()
     const { broker } = createMockBroker(mock.channel)
-    expect(() => createFeatureHandle(broker, hostWindow, createEventEmitter(), { contract: emptyContract, protocol: 'v2' })).toThrow(
-      'Security protocol \'v2\' requires a pre-shared key: set the "sharedKey" option to a non-empty string.'
+    expect(() => createFeatureHandle(broker, hostWindow, createEventEmitter(), { contract: emptyContract, protocol: 'v4' })).toThrow(
+      'Security protocol \'v4\' requires a pre-shared key of at least 16 characters: set the "sharedKey" option.'
     )
   })
 
@@ -238,6 +246,20 @@ describe('createFeatureHandle', () => {
     createFeatureHandle(createMockBroker(mock.channel).broker, hostWindow, emitter, { contract: emptyContract })
     mock.trigger('invalid', { reason: 'schema' })
     expect(handler).toHaveBeenCalledWith({ reason: 'schema' })
+  })
+
+  it('emits error with a security-error reason when the envelope drops a packet', () => {
+    const mock = createMockChannel()
+    const emitter = createEventEmitter()
+    const handler = jest.fn()
+    emitter.on('error', handler)
+    createFeatureHandle(createMockBroker(mock.channel).broker, hostWindow, emitter, { contract: emptyContract })
+    mock.trigger('security-error', { message: 'Dropped outbound packet at seal: no session', code: 'transport-error' })
+    expect(handler).toHaveBeenCalledWith({
+      reason: 'security-error',
+      message: 'Dropped outbound packet at seal: no session',
+      code: 'transport-error',
+    })
   })
 
   it('re-emits host messages keyed by action type', () => {

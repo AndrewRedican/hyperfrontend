@@ -1,47 +1,39 @@
 import type { Mock } from '@hyperfrontend/testing'
-import type { ChannelState } from '../../types'
 import type { IAction } from '../../types/action'
+import type { ChannelState } from '../../types/channel'
 import type { SecurityTransport } from '../../types/security'
 import type { ChannelInternals } from '../types'
 import { afterEach, beforeEach } from 'node:test'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
+import { createInitialState } from '../state/initial'
 import { disconnect, finalizeClose } from './disconnect'
-
-type MutableChannelState = { -readonly [K in keyof ChannelState]: ChannelState[K] }
 
 describe('channel/lifecycle/disconnect', () => {
   let mockChannel: ChannelInternals
-  let state: MutableChannelState
+  let state: ChannelState
   let sentActions: IAction[]
+  let transport: SecurityTransport
+
+  const closeEvents = (): unknown[][] => (mockChannel.notifyEvent as Mock).mock.calls.filter(([event]) => event === 'close')
 
   beforeEach(() => {
     jest.useFakeTimers()
     sentActions = []
+    transport = {
+      send: jest.fn(),
+      receive: jest.fn(),
+      start: jest.fn(),
+      stop: jest.fn(),
+      resume: jest.fn(),
+      dispose: jest.fn(),
+      getProtocol: jest.fn(() => 'v4'),
+    }
 
     state = {
-      id: 'channel-123',
-      name: 'test-channel',
-      target: window,
+      ...createInitialState('test-channel', window, { contract: { accepted: [], emitted: [] } }),
       origin: 'https://example.com',
       active: true,
-      connectTimestamp: Date.now(),
-      contract: { accepted: [], emitted: [] },
-      acceptedActions: [],
-      queuedMessages: [],
-      eventSubscriptions: [],
-      messageSubscriptions: [],
-      scheduledActivation: null,
-      queueMessages: true,
-
-      brokerManaged: false,
       readyToConnect: true,
-      negotiatedProtocol: null,
-      securityReady: false,
-      securityTransport: null,
-      pendingSecurityRequest: null,
-      closingProcessId: null,
-      closeTimer: null,
-      closeTimeoutMs: 2000,
     }
 
     mockChannel = {
@@ -79,58 +71,60 @@ describe('channel/lifecycle/disconnect', () => {
   })
 
   it('does nothing if channel is not active', () => {
-    state.active = false
+    state = { ...state, active: false }
 
     disconnect(mockChannel)
 
-    expect(sentActions).toHaveLength(0)
-    expect(mockChannel.notifyEvent).not.toHaveBeenCalled()
+    expect({ sent: sentActions, events: (mockChannel.notifyEvent as Mock).mock.calls }).toEqual({ sent: [], events: [] })
   })
 
   it('keeps the channel active while the polite close awaits acknowledgement', () => {
     disconnect(mockChannel)
 
-    expect(state.active).toBe(true)
-    expect(state.closingProcessId).toBe('process-456')
-    expect(state.closeTimer).not.toBeNull()
+    expect(state).toEqual(expect.objectContaining({ active: true, closingProcessId: 'process-456', closeTimer: expect.anything() }))
   })
 
-  it('sends CLOSE_CONNECTION when notify is true (default)', () => {
+  it('sends CLOSE_CONNECTION through a new process when notify is true (default)', () => {
     disconnect(mockChannel)
 
-    expect(mockChannel.createProcess).toHaveBeenCalled()
-    expect(mockChannel.actions.closeConnection).toHaveBeenCalledWith('process-456')
-    expect(sentActions).toHaveLength(1)
-    expect(sentActions[0].type).toBe('[nexus] connection-closed')
+    expect(sentActions).toEqual([{ type: '[nexus] connection-closed', senderId: 'broker-id', processId: 'process-456' }])
   })
 
   it('fires closing (not close) when the polite close is proposed', () => {
     disconnect(mockChannel)
 
-    expect(mockChannel.notifyEvent).toHaveBeenCalledWith('closing', { initiatedLocally: true })
-    expect(mockChannel.notifyEvent).not.toHaveBeenCalledWith('close', expect.anything())
+    expect((mockChannel.notifyEvent as Mock).mock.calls).toEqual([['closing', { initiatedLocally: true }]])
   })
 
   it('does not send a second CLOSE_CONNECTION while one is in flight', () => {
     disconnect(mockChannel)
     disconnect(mockChannel)
 
-    expect(sentActions).toHaveLength(1)
-    expect(mockChannel.notifyEvent).toHaveBeenCalledTimes(1)
+    expect({ sent: sentActions.length, events: (mockChannel.notifyEvent as Mock).mock.calls.length }).toEqual({ sent: 1, events: 1 })
   })
 
-  it('completes the close once acknowledged, firing a single close event', () => {
+  it('completes the close once acknowledged', () => {
     disconnect(mockChannel)
 
     disconnect(mockChannel, false)
 
-    expect(state.active).toBe(false)
-    expect(state.closingProcessId).toBeNull()
-    expect(state.closeTimer).toBeNull()
+    expect(state).toEqual(expect.objectContaining({ active: false, closingProcessId: null, closeTimer: null }))
+  })
+
+  it('removes the close process once acknowledged', () => {
+    disconnect(mockChannel)
+
+    disconnect(mockChannel, false)
+
     expect(mockChannel.removeProcess).toHaveBeenCalledWith('process-456')
-    expect(mockChannel.notifyEvent).toHaveBeenCalledWith('close', { notify: true })
-    const closeCalls = (mockChannel.notifyEvent as Mock).mock.calls.filter(([event]) => event === 'close')
-    expect(closeCalls).toHaveLength(1)
+  })
+
+  it('fires a single close event reporting the counterpart was told', () => {
+    disconnect(mockChannel)
+
+    disconnect(mockChannel, false)
+
+    expect(closeEvents()).toEqual([['close', { notify: true }]])
   })
 
   it('completes the close when the acknowledgement deadline expires', () => {
@@ -138,55 +132,74 @@ describe('channel/lifecycle/disconnect', () => {
 
     jest.advanceTimersByTime(2000)
 
-    expect(state.active).toBe(false)
-    expect(state.closingProcessId).toBeNull()
-    expect(mockChannel.notifyEvent).toHaveBeenCalledWith('close', { notify: true })
+    expect({ active: state.active, closingProcessId: state.closingProcessId, closes: closeEvents() }).toEqual({
+      active: false,
+      closingProcessId: null,
+      closes: [['close', { notify: true }]],
+    })
   })
 
-  it('does not send action when notify is false', () => {
+  it('does not send an action when notify is false', () => {
     disconnect(mockChannel, false)
 
-    expect(mockChannel.createProcess).not.toHaveBeenCalled()
-    expect(mockChannel.actions.closeConnection).not.toHaveBeenCalled()
-    expect(sentActions).toHaveLength(0)
+    expect({ created: (mockChannel.createProcess as Mock).mock.calls.length, sent: sentActions }).toEqual({ created: 0, sent: [] })
   })
 
   it('closes immediately with a close event when notify is false', () => {
     disconnect(mockChannel, false)
 
-    expect(state.active).toBe(false)
-    expect(mockChannel.notifyEvent).toHaveBeenCalledWith('close', { notify: false })
-    expect(mockChannel.notifyEvent).not.toHaveBeenCalledWith('closing', expect.anything())
+    expect({ active: state.active, events: (mockChannel.notifyEvent as Mock).mock.calls }).toEqual({
+      active: false,
+      events: [['close', { notify: false }]],
+    })
   })
 
   it('clears the security state so a later handshake renegotiates from scratch', () => {
-    state.negotiatedProtocol = 'v2'
-    state.securityReady = true
-    state.securityTransport = { send: jest.fn(), isReady: () => true } as unknown as SecurityTransport
-    state.pendingSecurityRequest = { supported: ['v2', 'none'], preferred: 'v2' }
+    state = {
+      ...state,
+      negotiatedProtocol: 'v4',
+      securityTransport: transport,
+      pendingSecurityRequest: { supported: ['v4', 'none'], preferred: 'v4' },
+    }
 
     disconnect(mockChannel, false)
 
-    expect(state).toEqual(
-      expect.objectContaining({
-        negotiatedProtocol: null,
-        securityReady: false,
-        securityTransport: null,
-        pendingSecurityRequest: null,
-      })
-    )
+    expect(state).toEqual(expect.objectContaining({ negotiatedProtocol: null, securityTransport: null, pendingSecurityRequest: null }))
   })
 
-  it('keeps the negotiated security state until the polite close completes', () => {
-    state.negotiatedProtocol = 'v2'
+  it('disposes the transport when a silent close completes', () => {
+    state = { ...state, securityTransport: transport }
+
+    disconnect(mockChannel, false)
+
+    expect(transport.dispose).toHaveBeenCalledTimes(1)
+  })
+
+  it('keeps the transport while the polite close awaits acknowledgement', () => {
+    state = { ...state, securityTransport: transport }
 
     disconnect(mockChannel)
 
-    expect(state.negotiatedProtocol).toBe('v2')
+    expect(transport.dispose).not.toHaveBeenCalled()
+  })
+
+  it('disposes the transport once the polite close completes', () => {
+    state = { ...state, securityTransport: transport }
+    disconnect(mockChannel)
 
     jest.advanceTimersByTime(2000)
 
-    expect(state.negotiatedProtocol).toBeNull()
+    expect(transport.dispose).toHaveBeenCalledTimes(1)
+  })
+
+  it('keeps the negotiated security state until the polite close completes', () => {
+    state = { ...state, negotiatedProtocol: 'v4' }
+
+    disconnect(mockChannel)
+    const duringClose = state.negotiatedProtocol
+    jest.advanceTimersByTime(2000)
+
+    expect([duringClose, state.negotiatedProtocol]).toEqual(['v4', null])
   })
 
   it('carries the reason on the close event when neither side asked for it', () => {
@@ -195,8 +208,14 @@ describe('channel/lifecycle/disconnect', () => {
     expect(mockChannel.notifyEvent).toHaveBeenCalledWith('close', { notify: false, reason: 'peer-reload' })
   })
 
+  it('carries the security-unconfirmed reason on a silent close', () => {
+    disconnect(mockChannel, false, 'security-unconfirmed')
+
+    expect(mockChannel.notifyEvent).toHaveBeenCalledWith('close', { notify: false, reason: 'security-unconfirmed' })
+  })
+
   it('carries the reason when a silent close completes a polite one already in flight', () => {
-    state.closingProcessId = 'process-456'
+    state = { ...state, closingProcessId: 'process-456' }
 
     disconnect(mockChannel, false, 'peer-reload')
 
@@ -205,7 +224,7 @@ describe('channel/lifecycle/disconnect', () => {
 
   describe('finalizeClose', () => {
     it('does nothing when the channel is already inactive', () => {
-      state.active = false
+      state = { ...state, active: false }
 
       finalizeClose(mockChannel)
 
@@ -215,9 +234,25 @@ describe('channel/lifecycle/disconnect', () => {
     it('reports notify false when this side never sent CLOSE', () => {
       finalizeClose(mockChannel)
 
-      expect(state.active).toBe(false)
-      expect(mockChannel.removeProcess).not.toHaveBeenCalled()
-      expect(mockChannel.notifyEvent).toHaveBeenCalledWith('close', { notify: false })
+      expect({ active: state.active, removed: (mockChannel.removeProcess as Mock).mock.calls, closes: closeEvents() }).toEqual({
+        active: false,
+        removed: [],
+        closes: [['close', { notify: false }]],
+      })
+    })
+
+    it('carries the reason it was given', () => {
+      finalizeClose(mockChannel, 'security-unconfirmed')
+
+      expect(mockChannel.notifyEvent).toHaveBeenCalledWith('close', { notify: false, reason: 'security-unconfirmed' })
+    })
+
+    it('disposes the transport', () => {
+      state = { ...state, securityTransport: transport }
+
+      finalizeClose(mockChannel)
+
+      expect(transport.dispose).toHaveBeenCalledTimes(1)
     })
   })
 })

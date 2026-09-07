@@ -10,7 +10,7 @@ const config: ResolvedFeatureConfig = {
   contract: './clock.contract.json',
   url: '/clock',
   display: { dialog: { width: 530 } },
-  protocol: 'v2',
+  protocol: 'v4',
 }
 const contract: FeatureContract = {
   emitted: [
@@ -175,11 +175,21 @@ describe('generateShell', () => {
   })
 
   it('canonicalizes the stamped contract version from the config spelling', () => {
-    expect(stage({ version: 'v1.2.0' }).read('src/index.ts', 'utf-8')).toContain("version: '1.2.0'")
+    expect(stage({ version: 'v5.2.0' }).read('src/index.ts', 'utf-8')).toContain("version: '5.2.0'")
   })
 
   it('bakes the resolved protocol into the shell defaults', () => {
-    expect(stage().read('src/index.ts', 'utf-8')).toContain("protocol: 'v2'")
+    expect(stage().read('src/index.ts', 'utf-8')).toContain("protocol: 'v4'")
+  })
+
+  it('narrows the generated security-protocol union to none, v3, and v4', () => {
+    expect(stage().read('src/index.ts', 'utf-8')).toContain("export type FeatureSecurityProtocol = 'none' | 'v3' | 'v4'")
+  })
+
+  it('documents the sharedKey option as the v4 key of at least 16 characters', () => {
+    expect(stage().read('src/index.ts', 'utf-8')).toContain(
+      'Pre-shared key the `v4` protocol binds the session to; at least 16 characters, always supplied by the host, never baked into the shell.'
+    )
   })
 
   it('bakes only the url and default display mode when nothing else is configured', () => {
@@ -253,23 +263,41 @@ describe('generateShell', () => {
   })
 
   it('stops instructing consumers to pass the protocol manually', () => {
-    expect(stage().read('README.md', 'utf-8')).not.toContain("protocol: 'v2'")
+    expect(stage().read('README.md', 'utf-8')).not.toContain("protocol: 'v4'")
   })
 
-  it('keeps the host-supplied sharedKey instruction for a v2 build', () => {
-    expect(stage().read('README.md', 'utf-8')).toContain("sharedKey: 'your-pre-shared-key'")
+  it('shows a sixteen-plus character sharedKey placeholder in the quick start for a v4 build', () => {
+    expect(stage().read('README.md', 'utf-8')).toContain("\n  sharedKey: 'your-pre-shared-key-of-sixteen-or-more',\n})")
   })
 
-  it('notes in the README that the v2 envelope is baked in', () => {
-    expect(stage().read('README.md', 'utf-8')).toContain("The `v2` security envelope is baked in from the feature's build")
+  it('notes in the README that the v4 envelope is baked in and the key is host-supplied', () => {
+    expect(stage().read('README.md', 'utf-8')).toContain(
+      "The `v4` security envelope is baked in from the feature's build; do not pass `protocol` yourself. Supply your own pre-shared key (at least 16 characters) via `sharedKey`; a key is never baked into the artifact."
+    )
   })
 
-  it('documents a v1 build without any sharedKey instruction', () => {
-    expect(stage({ protocol: 'v1' }).read('README.md', 'utf-8')).not.toContain('sharedKey')
+  it('notes in the README that the v3 envelope is baked in', () => {
+    expect(stage({ protocol: 'v3' }).read('README.md', 'utf-8')).toContain(
+      "The `v3` security envelope is baked in from the feature's build; do not pass `protocol` yourself."
+    )
+  })
+
+  it('documents a v3 build without any sharedKey instruction', () => {
+    expect(stage({ protocol: 'v3' }).read('README.md', 'utf-8')).not.toContain('sharedKey')
   })
 
   it('writes a labeled open-shell warning into the README for a protocol-none build', () => {
     expect(stage({ protocol: 'none' }).read('README.md', 'utf-8')).toContain('**Warning: open shell.**')
+  })
+
+  it('points the open-shell warning at rebuilding with v3 or v4', () => {
+    expect(stage({ protocol: 'none' }).read('README.md', 'utf-8')).toContain(
+      'For production, rebuild the feature with `--protocol v3` or `--protocol v4`.'
+    )
+  })
+
+  it('omits the sharedKey quick-start line for a protocol-none build', () => {
+    expect(stage({ protocol: 'none' }).read('README.md', 'utf-8')).not.toContain('sharedKey')
   })
 
   it('omits the open-shell warning for a secured build', () => {
@@ -280,8 +308,16 @@ describe('generateShell', () => {
     expect(stage({ protocol: 'none' }).read('README.md', 'utf-8')).toContain('deliberately built open')
   })
 
-  it('instructs manual protocol selection when no protocol was resolved', () => {
-    expect(stage({ protocol: undefined }).read('README.md', 'utf-8')).toContain('No security envelope is baked into this shell')
+  it('instructs manual v3 or v4 selection when no protocol was resolved', () => {
+    expect(stage({ protocol: undefined }).read('README.md', 'utf-8')).toContain(
+      "No security envelope is baked into this shell; pass `protocol: 'v3'` or `protocol: 'v4'` (with your own `sharedKey` for `v4`) when creating the shell."
+    )
+  })
+
+  it('shows a v4 protocol with a sharedKey in the quick start when no protocol was resolved', () => {
+    expect(stage({ protocol: undefined }).read('README.md', 'utf-8')).toContain(
+      "\n  protocol: 'v4',\n  sharedKey: 'your-pre-shared-key-of-sixteen-or-more',\n})"
+    )
   })
 
   it('shows a typed send example drawn from the first accepted action', () => {
@@ -303,6 +339,6 @@ describe('generateShell', () => {
   })
 
   it('stamps the baked protocol into the delegated metadata', () => {
-    expect(parse(stage().read('metadata.json', 'utf-8') ?? '')).toEqual(expect.objectContaining({ protocol: 'v2' }))
+    expect(parse(stage().read('metadata.json', 'utf-8') ?? '')).toEqual(expect.objectContaining({ protocol: 'v4' }))
   })
 })

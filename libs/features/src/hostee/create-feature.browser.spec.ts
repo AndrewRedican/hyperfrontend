@@ -1,5 +1,6 @@
 import type { Mock } from '@hyperfrontend/testing'
 import { afterEach } from 'node:test'
+import { stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { createFeature } from './create-feature'
 
@@ -51,20 +52,42 @@ describe('createFeature', () => {
     expect(document.head.querySelector('style')).toBeNull()
   })
 
-  it('throws when the v2 protocol is selected without a shared key', () => {
+  it('throws when the v4 protocol is selected without a shared key', () => {
     stubHostOpener()
-    expect(() => createFeature({ name: 'clock', contract: { emitted: [], accepted: [] }, protocol: 'v2' })).toThrow(
-      'Security protocol \'v2\' requires a pre-shared key: set the "sharedKey" option to a non-empty string.'
+    expect(() => createFeature({ name: 'clock', contract: { emitted: [], accepted: [] }, protocol: 'v4' })).toThrow(
+      'Security protocol \'v4\' requires a pre-shared key of at least 16 characters: set the "sharedKey" option.'
     )
+  })
+
+  it('hands the shared key to the v4 key gate', () => {
+    stubHostOpener()
+    expect(() =>
+      createFeature({ name: 'clock', contract: { emitted: [], accepted: [] }, protocol: 'v4', sharedKey: 'fifteen-chars-x' })
+    ).toThrow('requires a pre-shared key of at least 16 characters')
   })
 
   it('advertises the selected protocol to the host in the connection request', () => {
     const opener = stubHostOpener()
-    createFeature({ name: 'clock', contract: { emitted: [], accepted: [] }, protocol: 'v2', sharedKey: 'pre-shared-key' })
+    createFeature({ name: 'clock', contract: { emitted: [], accepted: [] }, protocol: 'v4', sharedKey: 'a-key-of-sixteen-or-more' })
     expect(opener.postMessage).toHaveBeenCalledWith(
-      expect.objectContaining({ security: { supported: ['v2', 'none'], preferred: 'v2' } }),
+      expect.objectContaining({ security: { supported: ['v4', 'none'], preferred: 'v4' } }),
       expect.any(String)
     )
+  })
+
+  it('advertises the keyless v3 protocol to the host in the connection request', () => {
+    const opener = stubHostOpener()
+    createFeature({ name: 'clock', contract: { emitted: [], accepted: [] }, protocol: 'v3' })
+    expect(opener.postMessage).toHaveBeenCalledWith(
+      expect.objectContaining({ security: { supported: ['v3', 'none'], preferred: 'v3' } }),
+      expect.any(String)
+    )
+  })
+
+  it('keeps the shared key out of the connection request', () => {
+    const opener = stubHostOpener()
+    createFeature({ name: 'clock', contract: { emitted: [], accepted: [] }, protocol: 'v4', sharedKey: 'a-key-of-sixteen-or-more' })
+    expect(stringify(opener.postMessage.mock.calls[0]?.[0])).not.toContain('a-key-of-sixteen-or-more')
   })
 
   it('keeps the connection request plain when no protocol is selected', () => {

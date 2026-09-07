@@ -1,51 +1,40 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import type {
-  PacketEncryption,
-  PacketDecryption,
-  PacketObfuscation,
-  PacketDeobfuscation,
-  UnencryptedPacket,
-  UnserializedEncryptedPacket,
-} from '../packet/model'
+import type { PacketOpener, PacketSealer } from '../packet/model'
 
-export type { PacketObfuscation, PacketDeobfuscation, PacketEncryption, PacketDecryption }
+export type { PacketSealer, PacketOpener }
 
-/** Suite of encryption operations for packets */
-export interface EncryptionSuite<T = any> {
-  /** Function to encrypt outgoing packets */
-  readonly packetEncryption: PacketEncryption<T>
-  /** Function to decrypt incoming packets */
-  readonly packetDecryption: PacketDecryption<T>
-}
-
-/** Suite of obfuscation operations for packets */
-export interface ObfuscationSuite {
-  /** Function to obfuscate outgoing packets */
-  readonly packetObfuscation: PacketObfuscation
-  /** Function to deobfuscate incoming packets */
-  readonly packetDeobfuscation: PacketDeobfuscation
-}
-
-/** Combined encryption and obfuscation security suite */
-export interface SecuritySuite<T = any> extends EncryptionSuite<T>, ObfuscationSuite {}
+/** Which side of the handshake this endpoint played */
+export type SessionRole = 'initiator' | 'responder'
 
 /**
- * Handler for first message scenarios where no encryption key exists yet.
- *
- * In the dynamic key exchange protocol, the first message is sent without encryption
- * (only obfuscation) because no shared key has been established yet. This handler
- * provides methods to serialize/deserialize packets without the encryption step.
+ * What a protocol needs to key one session: the negotiated protocol, this side's role,
+ * and both identities. The key material itself is minted by the protocol and exchanged
+ * through hello frames once the session exists.
  */
-export interface FirstMessageHandler<T = any> {
-  /**
-   * Serializes an unencrypted packet for transmission without encryption.
-   * Used when sending the first message before key exchange.
-   */
-  readonly serializeWithoutEncryption: (packet: UnencryptedPacket<T>) => Promise<UnserializedEncryptedPacket>
+export interface ProtocolSession {
+  /** The negotiated protocol identifier */
+  readonly protocol: string
+  /** Whether this endpoint initiated or answered the handshake */
+  readonly role: SessionRole
+  /** This endpoint's identity as stamped on packets */
+  readonly localId: string
+  /** The peer's identity as stamped on packets */
+  readonly peerId: string
+}
 
-  /**
-   * Deserializes a packet that was sent without encryption.
-   * Used when receiving the first message before key exchange.
-   */
-  readonly deserializeWithoutDecryption: (packet: UnserializedEncryptedPacket) => Promise<UnencryptedPacket<T>>
+/**
+ * What accepting a hello frame did.
+ *
+ * - `accepted`: the peer's material is now known and the session can be keyed
+ * - `duplicate`: the same material was already accepted; a retry, ignored
+ * - `rejected`: the frame is not a hello this session can use
+ */
+export type HelloOutcome = 'accepted' | 'duplicate' | 'rejected'
+
+/** Suite of the two per-session packet operations */
+export interface SecuritySuite<T = any> {
+  /** Seals outgoing packets */
+  readonly seal: PacketSealer<T>
+  /** Opens incoming frames */
+  readonly open: PacketOpener<T>
 }

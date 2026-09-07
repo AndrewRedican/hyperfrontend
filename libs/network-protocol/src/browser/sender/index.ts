@@ -1,10 +1,7 @@
 /**
- * Browser-side outbound packet sender with serialization and encryption.
+ * Browser-side outbound pipeline: packets in, sealed frames out.
  *
  * @module @hyperfrontend/network-protocol/browser/sender
  */
-import { createSenderFactory } from '../../lib/sender/creators/create-sender-factory'
-import { createSerializedEncryptedPacket } from '../packet'
-
-export const createSender = createSenderFactory(createSerializedEncryptedPacket)
-export type { SendPacketFn, SendFn, OutboundQueue, OutboundQueues, Sender, CreateSender, SenderFactory } from '../../lib/sender/model'
+export type { SendPacketFn, SendFn, OutboundQueue, Sender, CreateSender, SenderFactory } from '../../lib/sender/model'
+export { createSender } from '../../lib/sender/creators/create-sender'

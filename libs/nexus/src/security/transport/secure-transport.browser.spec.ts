@@ -1,338 +1,503 @@
 import type { Mock } from '@hyperfrontend/testing'
-import type { SecurityProvider, SecurityTransport, SecurityTransportError } from '../../types/security'
+import type { SecurityChannelOptions, SecurityPacket, SecurityProvider, SecurityTransport, SecurityWireChannel } from '../../types/security'
+import type { SecureTransportConfig } from './types'
+import { after as afterAll, afterEach, before as beforeAll } from 'node:test'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
-import { logger } from '@hyperfrontend/logging'
-import { createChannel } from '@hyperfrontend/network-protocol/browser/channel'
-import { createProtocol as createV1Protocol } from '@hyperfrontend/network-protocol/browser/v1'
-import { createProtocol as createV2Protocol } from '@hyperfrontend/network-protocol/browser/v2'
-import { uuidV4 } from '@hyperfrontend/random-generator-utils'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
+import { ACTION_TYPES } from '../../constants/action-types'
 import { createSecureTransport } from './secure-transport'
 
-const PSK = 'secure-transport-spec-shared-key'
+// magic: First byte the scripted protocol stamps on its hello frame.
+const HELLO_MARKER = 0x48
+const HELLO_FRAME = new Uint8Array([HELLO_MARKER, 1, 2, 3])
+const SEALED_FRAME = new Uint8Array([0x53, 4, 5, 6])
+const ORIGIN_ID = 'origin-endpoint'
+const TARGET_ID = 'target-endpoint'
+const PINNED_ORIGIN = 'https://feature.example.com'
+const RETRY_MS = 100
+// magic: Not a multiple of the retry interval, so the deadline never fires in the same tick as a retry.
+const CONFIRM_MS = 250
+// magic: SHA-256 hash of the serialized empty schema ('{}').
+const EMPTY_SCHEMA_HASH = '44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a'
 
-const createV2Provider = (): SecurityProvider => ({
-  createChannel,
-  protocolProvider: createV2Protocol(logger, PSK, 1),
-})
-
-const createV1Provider = (): SecurityProvider => ({
-  createChannel,
-  protocolProvider: createV1Protocol(logger, 1),
-})
-
-async function waitFor(condition: () => boolean, attempts = 160): Promise<void> {
-  for (let attempt = 0; attempt < attempts; attempt++) {
-    if (condition()) {
-      return
-    }
-    await new Promise((resolve) => setTimeout(resolve, 25))
-  }
-  throw createError('Timed out waiting for condition')
+interface ScriptedChannel {
+  hello: Mock
+  isHello: Mock
+  acceptHello: Mock
+  send: Mock
+  receive: Mock
+  stop: Mock
+  resume: Mock
 }
 
-interface Party {
+interface Harness {
   transport: SecurityTransport
-  received: unknown[]
-  errors: SecurityTransportError[]
-  wireOutbound: Uint8Array[]
+  channel: ScriptedChannel
+  options: SecurityChannelOptions
+  createChannel: Mock
+  provider: SecurityProvider
+  postMessage: Mock
+  onAction: Mock
+  onError: Mock
+  onConfirmed: Mock
+  onFailed: Mock
 }
 
-interface TransportPair {
-  a: Party
-  b: Party
+interface Deferred {
+  promise: Promise<Uint8Array>
+  resolve: (frame: Uint8Array) => void
 }
 
-function createTransportPair(protocol: 'v1' | 'v2', createProvider: () => SecurityProvider): TransportPair {
-  const transports: { a?: SecurityTransport; b?: SecurityTransport } = {}
-  const a: Partial<Party> = { received: [], errors: [], wireOutbound: [] }
-  const b: Partial<Party> = { received: [], errors: [], wireOutbound: [] }
-  const windowOfB = {
-    postMessage: (payload: Uint8Array) => {
-      a.wireOutbound?.push(payload)
-      transports.b?.receive(payload)
-    },
-  } as unknown as Window
-  const windowOfA = {
-    postMessage: (payload: Uint8Array) => {
-      b.wireOutbound?.push(payload)
-      transports.a?.receive(payload)
-    },
-  } as unknown as Window
-  const idA = uuidV4()
-  const idB = uuidV4()
-  transports.a = createSecureTransport({
-    protocol,
-    provider: createProvider(),
-    label: 'party-a',
-    target: windowOfB,
-    getOrigin: () => 'https://b.example.com',
-    originId: idA,
-    targetId: idB,
-    onAction: (action) => a.received?.push(action),
-    onError: (error) => a.errors?.push(error),
-  })
-  transports.b = createSecureTransport({
-    protocol,
-    provider: createProvider(),
-    label: 'party-b',
-    target: windowOfA,
-    getOrigin: () => 'https://a.example.com',
-    originId: idB,
-    targetId: idA,
-    onAction: (action) => b.received?.push(action),
-    onError: (error) => b.errors?.push(error),
-  })
-  a.transport = transports.a
-  b.transport = transports.b
-  return { a: a as Party, b: b as Party }
+function createScriptedChannel(): ScriptedChannel {
+  return {
+    hello: jest.fn().mockResolvedValue(HELLO_FRAME),
+    isHello: jest.fn((frame: Uint8Array) => frame[0] === HELLO_MARKER),
+    acceptHello: jest.fn().mockReturnValue('accepted'),
+    send: jest.fn(),
+    receive: jest.fn(),
+    stop: jest.fn(),
+    resume: jest.fn(),
+  }
 }
 
-describe('SecureTransport (two-party)', () => {
-  describe('v2 (pre-shared key)', () => {
-    it('delivers the identical action from initiator to responder', async () => {
-      const { a, b } = createTransportPair('v2', createV2Provider)
-      const action = { type: 'PING', data: { value: 42 } }
+function createDeferred(): Deferred {
+  const deferred: Partial<Deferred> = {}
+  deferred.promise = new Promise<Uint8Array>((resolve) => {
+    deferred.resolve = resolve
+  })
+  return deferred as Deferred
+}
 
-      a.transport.send(action)
-      await waitFor(() => b.received.length === 1)
+function createHarness(overrides: Partial<SecureTransportConfig> = {}, channel: ScriptedChannel = createScriptedChannel()): Harness {
+  const captured: { options?: SecurityChannelOptions } = {}
+  const createChannel = jest.fn((label: string, options: SecurityChannelOptions): SecurityWireChannel => {
+    captured.options = options
+    return { label, ...channel }
+  })
+  const provider: SecurityProvider = { createChannel, protocolProvider: jest.fn() }
+  const postMessage = jest.fn()
+  const onAction = jest.fn()
+  const onError = jest.fn()
+  const onConfirmed = jest.fn()
+  const onFailed = jest.fn()
+  const transport = createSecureTransport({
+    protocol: 'v4',
+    provider,
+    label: 'spec-channel',
+    target: { postMessage } as unknown as Window,
+    getOrigin: () => null,
+    originId: ORIGIN_ID,
+    targetId: TARGET_ID,
+    role: 'initiator',
+    helloRetryMs: RETRY_MS,
+    confirmTimeoutMs: CONFIRM_MS,
+    onAction,
+    onError,
+    onConfirmed,
+    onFailed,
+    ...overrides,
+  })
+  if (!captured.options) {
+    throw createError('The provider did not build a wire channel')
+  }
+  return { transport, channel, options: captured.options, createChannel, provider, postMessage, onAction, onError, onConfirmed, onFailed }
+}
 
-      expect(b.received).toEqual([action])
+function createPacket(message: unknown): SecurityPacket {
+  return {
+    origin: TARGET_ID,
+    target: ORIGIN_ID,
+    data: { pid: 'peer-process', id: 'packet-1', sequence: 1, message, schema: {}, schemaHash: EMPTY_SCHEMA_HASH },
+  }
+}
+
+async function flush(): Promise<void> {
+  // why: A resolved hello reaches postMessage through a promise reaction; a few microtask turns let every queued reaction run.
+  for (let turn = 0; turn < 4; turn += 1) {
+    await Promise.resolve()
+  }
+}
+
+describe('createSecureTransport', () => {
+  beforeAll(() => {
+    jest.useFakeTimers()
+  })
+
+  afterAll(() => {
+    jest.useRealTimers()
+  })
+
+  afterEach(() => {
+    jest.clearAllTimers()
+  })
+
+  describe('construction', () => {
+    it('builds the wire channel under the configured label', () => {
+      const { createChannel } = createHarness()
+
+      expect(createChannel).toHaveBeenCalledWith('spec-channel', expect.any(Object))
     })
 
-    it('delivers the identical action from responder to initiator', async () => {
-      const { a, b } = createTransportPair('v2', createV2Provider)
-      const action = { type: 'PONG', data: { value: 7 } }
+    it('builds the wire channel from the session and the pipeline callbacks', () => {
+      const { options, provider } = createHarness({ role: 'responder' })
 
-      b.transport.send(action)
-      await waitFor(() => a.received.length === 1)
-
-      expect(a.received).toEqual([action])
-    })
-
-    it('delivers an interleaved bidirectional conversation', async () => {
-      const { a, b } = createTransportPair('v2', createV2Provider)
-
-      a.transport.send({ type: 'PING', data: 1 })
-      await waitFor(() => b.received.length === 1)
-      b.transport.send({ type: 'PONG', data: 2 })
-      await waitFor(() => a.received.length === 1)
-      a.transport.send({ type: 'PING', data: 3 })
-      await waitFor(() => b.received.length === 2)
-
-      expect({ atA: a.received, atB: b.received }).toEqual({
-        atA: [{ type: 'PONG', data: 2 }],
-        atB: [
-          { type: 'PING', data: 1 },
-          { type: 'PING', data: 3 },
-        ],
+      expect(options).toEqual({
+        send: expect.any(Function),
+        receive: expect.any(Function),
+        protocolProvider: provider.protocolProvider,
+        session: { protocol: 'v4', role: 'responder', localId: ORIGIN_ID, peerId: TARGET_ID },
+        onDrop: expect.any(Function),
       })
     })
 
-    it('transmits only Uint8Array payloads on the wire', async () => {
-      const { a, b } = createTransportPair('v2', createV2Provider)
+    it('reports the configured protocol', () => {
+      const { transport } = createHarness({ protocol: 'v3' })
 
-      a.transport.send({ type: 'SECRET_ACTION', data: 'classified' })
-      await waitFor(() => b.received.length === 1)
-
-      expect(a.wireOutbound).toEqual([expect.any(Uint8Array)])
-    })
-
-    it('does not expose the action plaintext on the wire', async () => {
-      const { a, b } = createTransportPair('v2', createV2Provider)
-
-      a.transport.send({ type: 'SECRET_ACTION', data: 'classified' })
-      await waitFor(() => b.received.length === 1)
-
-      expect(new TextDecoder().decode(a.wireOutbound[0])).not.toContain('SECRET_ACTION')
-    })
-
-    it('reports ready from construction', () => {
-      const { a } = createTransportPair('v2', createV2Provider)
-
-      expect(a.transport.isReady()).toBe(true)
-    })
-
-    it('reports the v2 protocol', () => {
-      const { a } = createTransportPair('v2', createV2Provider)
-
-      expect(a.transport.getProtocol()).toBe('v2')
+      expect(transport.getProtocol()).toBe('v3')
     })
   })
 
-  describe('v1 (obfuscation on the base key)', () => {
-    it('delivers the identical action from initiator to responder', async () => {
-      const { a, b } = createTransportPair('v1', createV1Provider)
-      const action = { type: 'PING', data: { value: 42 } }
+  describe('start', () => {
+    it('posts the hello to the target without a transfer list', async () => {
+      const { transport, postMessage } = createHarness()
 
-      a.transport.send(action)
-      await waitFor(() => b.received.length === 1)
+      transport.start()
+      await flush()
 
-      expect(b.received).toEqual([action])
+      expect(postMessage.mock.calls).toEqual([[HELLO_FRAME, '*']])
     })
 
-    it('delivers the identical action from responder to initiator', async () => {
-      const { a, b } = createTransportPair('v1', createV1Provider)
-      const action = { type: 'PONG', data: { value: 7 } }
+    it('posts the hello to the pinned origin', async () => {
+      const { transport, postMessage } = createHarness({ getOrigin: () => PINNED_ORIGIN })
 
-      b.transport.send(action)
-      await waitFor(() => a.received.length === 1)
+      transport.start()
+      await flush()
 
-      expect(a.received).toEqual([action])
+      expect(postMessage).toHaveBeenCalledWith(HELLO_FRAME, PINNED_ORIGIN)
     })
 
-    it('delivers an interleaved bidirectional conversation', async () => {
-      const { a, b } = createTransportPair('v1', createV1Provider)
+    it('posts the hello with a wildcard target for opaque origins', async () => {
+      const { transport, postMessage } = createHarness({ getOrigin: () => 'null' })
 
-      a.transport.send({ type: 'PING', data: 1 })
-      await waitFor(() => b.received.length === 1)
-      b.transport.send({ type: 'PONG', data: 2 })
-      await waitFor(() => a.received.length === 1)
-      a.transport.send({ type: 'PING', data: 3 })
-      await waitFor(() => b.received.length === 2)
+      transport.start()
+      await flush()
 
-      expect({ atA: a.received, atB: b.received }).toEqual({
-        atA: [{ type: 'PONG', data: 2 }],
-        atB: [
-          { type: 'PING', data: 1 },
-          { type: 'PING', data: 3 },
-        ],
+      expect(postMessage).toHaveBeenCalledWith(HELLO_FRAME, '*')
+    })
+
+    it('re-posts the hello at every retry interval', async () => {
+      const { transport, postMessage } = createHarness()
+
+      transport.start()
+      jest.advanceTimersByTime(RETRY_MS * 2)
+      await flush()
+
+      expect(postMessage).toHaveBeenCalledTimes(3)
+    })
+
+    it('ignores a second start', () => {
+      const { transport, channel } = createHarness()
+
+      transport.start()
+      transport.start()
+
+      expect(channel.hello).toHaveBeenCalledTimes(1)
+    })
+
+    it('ignores start after dispose', () => {
+      const { transport, channel } = createHarness()
+
+      transport.dispose()
+      transport.start()
+
+      expect(channel.hello).not.toHaveBeenCalled()
+    })
+
+    it('stops re-posting the hello once the counterpart confirms', async () => {
+      const { transport, options, postMessage } = createHarness()
+
+      transport.start()
+      await flush()
+      options.receive(createPacket({ type: 'PING' }))
+      jest.advanceTimersByTime(RETRY_MS * 3)
+      await flush()
+
+      expect(postMessage).toHaveBeenCalledTimes(1)
+    })
+
+    it('discards a hello that resolves after the counterpart confirmed', async () => {
+      const deferred = createDeferred()
+      const channel = createScriptedChannel()
+      channel.hello.mockReturnValue(deferred.promise)
+      const { transport, options, postMessage } = createHarness({}, channel)
+
+      transport.start()
+      options.receive(createPacket({ type: 'PING' }))
+      deferred.resolve(HELLO_FRAME)
+      await flush()
+
+      expect(postMessage).not.toHaveBeenCalled()
+    })
+
+    it('discards a hello that resolves after dispose', async () => {
+      const deferred = createDeferred()
+      const channel = createScriptedChannel()
+      channel.hello.mockReturnValue(deferred.promise)
+      const { transport, postMessage } = createHarness({}, channel)
+
+      transport.start()
+      transport.dispose()
+      deferred.resolve(HELLO_FRAME)
+      await flush()
+
+      expect(postMessage).not.toHaveBeenCalled()
+    })
+
+    it('reports security-unconfirmed when the deadline passes', () => {
+      const { transport, onError } = createHarness()
+
+      transport.start()
+      jest.advanceTimersByTime(CONFIRM_MS)
+
+      expect(onError).toHaveBeenCalledWith({
+        message: "The counterpart did not confirm the 'v4' session within 250ms.",
+        code: 'security-unconfirmed',
       })
     })
 
-    it('transmits only Uint8Array payloads on the wire', async () => {
-      const { a, b } = createTransportPair('v1', createV1Provider)
+    it('fails the session when the deadline passes', () => {
+      const { transport, onFailed } = createHarness()
 
-      a.transport.send({ type: 'SECRET_ACTION', data: 'classified' })
-      await waitFor(() => b.received.length === 1)
+      transport.start()
+      jest.advanceTimersByTime(CONFIRM_MS)
 
-      expect(a.wireOutbound).toEqual([expect.any(Uint8Array)])
-    })
-
-    it('does not expose the action plaintext on the wire', async () => {
-      const { a, b } = createTransportPair('v1', createV1Provider)
-
-      a.transport.send({ type: 'SECRET_ACTION', data: 'classified' })
-      await waitFor(() => b.received.length === 1)
-
-      expect(new TextDecoder().decode(a.wireOutbound[0])).not.toContain('SECRET_ACTION')
-    })
-
-    it('reports ready from construction', () => {
-      const { a } = createTransportPair('v1', createV1Provider)
-
-      expect(a.transport.isReady()).toBe(true)
-    })
-
-    it('delivers crossing first sends made before any inbound packet', async () => {
-      const { a, b } = createTransportPair('v1', createV1Provider)
-
-      a.transport.send({ type: 'PING', data: 1 })
-      b.transport.send({ type: 'PONG', data: 2 })
-      await waitFor(() => a.received.length === 1 && b.received.length === 1)
-
-      expect({ atA: a.received, atB: b.received }).toEqual({
-        atA: [{ type: 'PONG', data: 2 }],
-        atB: [{ type: 'PING', data: 1 }],
+      expect(onFailed).toHaveBeenCalledWith({
+        message: "The counterpart did not confirm the 'v4' session within 250ms.",
+        code: 'security-unconfirmed',
       })
     })
 
-    it('reports the v1 protocol', () => {
-      const { a } = createTransportPair('v1', createV1Provider)
+    it('reports the deadline error before failing the session', () => {
+      const order: string[] = []
+      const { transport } = createHarness({ onError: () => order.push('error'), onFailed: () => order.push('failed') })
 
-      expect(a.transport.getProtocol()).toBe('v1')
+      transport.start()
+      jest.advanceTimersByTime(CONFIRM_MS)
+
+      expect(order).toEqual(['error', 'failed'])
+    })
+
+    it('stops re-posting the hello once the deadline passes', () => {
+      const { transport, channel } = createHarness()
+
+      transport.start()
+      jest.advanceTimersByTime(CONFIRM_MS + RETRY_MS * 3)
+
+      expect(channel.hello).toHaveBeenCalledTimes(3)
+    })
+
+    it('survives the deadline without failure handlers', () => {
+      const { transport } = createHarness({ onError: undefined, onFailed: undefined })
+
+      transport.start()
+
+      expect(() => jest.advanceTimersByTime(CONFIRM_MS)).not.toThrow()
+    })
+
+    it('fails with transport-error when the hello cannot be produced', async () => {
+      const cause = createError('no key material')
+      const channel = createScriptedChannel()
+      channel.hello.mockRejectedValue(cause)
+      const { transport, onFailed } = createHarness({}, channel)
+
+      transport.start()
+      await flush()
+
+      expect(onFailed).toHaveBeenCalledWith({
+        message: "Cannot produce the 'v4' session hello: no key material",
+        code: 'transport-error',
+        cause,
+      })
+    })
+
+    it('stops retrying the hello once it cannot be produced', async () => {
+      const channel = createScriptedChannel()
+      channel.hello.mockRejectedValue(createError('no key material'))
+      const { transport } = createHarness({}, channel)
+
+      transport.start()
+      await flush()
+      jest.advanceTimersByTime(RETRY_MS * 3)
+
+      expect(channel.hello).toHaveBeenCalledTimes(1)
     })
   })
 
-  describe('backpressure', () => {
-    it('holds actions while stopped', async () => {
-      const { a } = createTransportPair('v2', createV2Provider)
+  describe('receive', () => {
+    it('feeds a sealed frame to the opening pipeline', () => {
+      const { transport, channel } = createHarness()
 
-      a.transport.stop()
-      a.transport.send({ type: 'HELD' })
-      await new Promise((resolve) => setTimeout(resolve, 100))
+      transport.receive(SEALED_FRAME)
 
-      expect(a.wireOutbound).toEqual([])
+      expect(channel.receive).toHaveBeenCalledWith(SEALED_FRAME)
     })
 
-    it('flushes held actions on resume', async () => {
-      const { a, b } = createTransportPair('v2', createV2Provider)
+    it('keeps a hello out of the opening pipeline', () => {
+      const { transport, channel } = createHarness()
 
-      a.transport.stop()
-      a.transport.send({ type: 'HELD' })
-      a.transport.resume()
-      await waitFor(() => b.received.length === 1)
+      transport.receive(HELLO_FRAME)
 
-      expect(b.received).toEqual([{ type: 'HELD' }])
+      expect(channel.receive).not.toHaveBeenCalled()
+    })
+
+    it("feeds the counterpart's hello to the session", () => {
+      const { transport, channel } = createHarness()
+
+      transport.receive(HELLO_FRAME)
+
+      expect(channel.acceptHello).toHaveBeenCalledWith(HELLO_FRAME)
+    })
+
+    it('answers an accepted hello with a sealed confirmation', () => {
+      const { transport, channel } = createHarness()
+
+      transport.receive(HELLO_FRAME)
+
+      expect(channel.send).toHaveBeenCalledWith(
+        ORIGIN_ID,
+        TARGET_ID,
+        expect.objectContaining({ message: { type: ACTION_TYPES.SECURITY_CONFIRMED, senderId: ORIGIN_ID } })
+      )
+    })
+
+    it('sends nothing for a duplicate hello', () => {
+      const channel = createScriptedChannel()
+      channel.acceptHello.mockReturnValue('duplicate')
+      const { transport } = createHarness({}, channel)
+
+      transport.receive(HELLO_FRAME)
+
+      expect(channel.send).not.toHaveBeenCalled()
+    })
+
+    it('reports nothing for a duplicate hello', () => {
+      const channel = createScriptedChannel()
+      channel.acceptHello.mockReturnValue('duplicate')
+      const { transport, onError } = createHarness({}, channel)
+
+      transport.receive(HELLO_FRAME)
+
+      expect(onError).not.toHaveBeenCalled()
+    })
+
+    it('reports hello-rejected for a hello that differs from the keying one', () => {
+      const channel = createScriptedChannel()
+      channel.acceptHello.mockReturnValue('rejected')
+      const { transport, onError } = createHarness({}, channel)
+
+      transport.receive(HELLO_FRAME)
+
+      expect(onError).toHaveBeenCalledWith({
+        message: "Rejected a hello that differs from the one keying the 'v4' session.",
+        code: 'hello-rejected',
+      })
+    })
+
+    it('sends nothing for a rejected hello', () => {
+      const channel = createScriptedChannel()
+      channel.acceptHello.mockReturnValue('rejected')
+      const { transport } = createHarness({}, channel)
+
+      transport.receive(HELLO_FRAME)
+
+      expect(channel.send).not.toHaveBeenCalled()
+    })
+
+    it('ignores frames after dispose', () => {
+      const { transport, channel } = createHarness()
+
+      transport.dispose()
+      transport.receive(SEALED_FRAME)
+
+      expect(channel.receive).not.toHaveBeenCalled()
     })
   })
 
-  describe('error handling', () => {
-    it('reports unencryptable payloads to the error handler', () => {
-      const { a } = createTransportPair('v2', createV2Provider)
+  describe('opened packets', () => {
+    it('delivers the opened action', () => {
+      const { options, onAction } = createHarness()
 
-      a.transport.send(() => void 0)
+      options.receive(createPacket({ type: 'PING', data: 1 }))
 
-      expect(a.errors).toEqual([expect.objectContaining({ message: expect.stringContaining('valid data') })])
+      expect(onAction).toHaveBeenCalledWith({ type: 'PING', data: 1 })
     })
 
-    it('does not throw when no error handler is registered', () => {
-      const transport = createSecureTransport({
-        protocol: 'v2',
-        provider: createV2Provider(),
-        label: 'no-error-handler',
-        target: { postMessage: jest.fn() } as unknown as Window,
-        getOrigin: () => null,
-        originId: uuidV4(),
-        targetId: uuidV4(),
-        onAction: jest.fn(),
-      })
+    it('confirms the session on the first opened packet', () => {
+      const { options, onConfirmed } = createHarness()
 
-      expect(() => transport.send(() => void 0)).not.toThrow()
-    })
-  })
+      options.receive(createPacket({ type: 'PING' }))
 
-  describe('origin pinning', () => {
-    const createCapturingTransport = (getOrigin: () => string | null): { transport: SecurityTransport; postMessage: Mock } => {
-      const postMessage = jest.fn()
-      const transport = createSecureTransport({
-        protocol: 'v2',
-        provider: createV2Provider(),
-        label: 'origin-capture',
-        target: { postMessage } as unknown as Window,
-        getOrigin,
-        originId: uuidV4(),
-        targetId: uuidV4(),
-        onAction: jest.fn(),
-      })
-      return { transport, postMessage }
-    }
-
-    it('posts with a wildcard target before the origin is pinned', async () => {
-      const { transport, postMessage } = createCapturingTransport(() => null)
-
-      transport.send({ type: 'PING' })
-      await waitFor(() => postMessage.mock.calls.length === 1)
-
-      expect(postMessage).toHaveBeenCalledWith(expect.any(Uint8Array), '*', expect.any(Array))
+      expect(onConfirmed).toHaveBeenCalledTimes(1)
     })
 
-    it('posts with a wildcard target for opaque origins', async () => {
-      const { transport, postMessage } = createCapturingTransport(() => 'null')
+    it('confirms the session once', () => {
+      const { options, onConfirmed } = createHarness()
 
-      transport.send({ type: 'PING' })
-      await waitFor(() => postMessage.mock.calls.length === 1)
+      options.receive(createPacket({ type: 'PING' }))
+      options.receive(createPacket({ type: 'PONG' }))
 
-      expect(postMessage).toHaveBeenCalledWith(expect.any(Uint8Array), '*', expect.any(Array))
+      expect(onConfirmed).toHaveBeenCalledTimes(1)
     })
 
-    it('posts to the pinned origin once learned', async () => {
-      const { transport, postMessage } = createCapturingTransport(() => 'https://feature.example.com')
+    it('swallows the security confirmation action', () => {
+      const { options, onAction } = createHarness()
 
-      transport.send({ type: 'PING' })
-      await waitFor(() => postMessage.mock.calls.length === 1)
+      options.receive(createPacket({ type: ACTION_TYPES.SECURITY_CONFIRMED, senderId: TARGET_ID }))
 
-      expect(postMessage).toHaveBeenCalledWith(expect.any(Uint8Array), 'https://feature.example.com', expect.any(Array))
+      expect(onAction).not.toHaveBeenCalled()
+    })
+
+    it('confirms the session on a swallowed confirmation', () => {
+      const { options, onConfirmed } = createHarness()
+
+      options.receive(createPacket({ type: ACTION_TYPES.SECURITY_CONFIRMED, senderId: TARGET_ID }))
+
+      expect(onConfirmed).toHaveBeenCalledTimes(1)
+    })
+
+    it('delivers a null message', () => {
+      const { options, onAction } = createHarness()
+
+      options.receive(createPacket(null))
+
+      expect(onAction).toHaveBeenCalledWith(null)
+    })
+
+    it('delivers without a confirmation handler', () => {
+      const { options, onAction } = createHarness({ onConfirmed: undefined })
+
+      options.receive(createPacket({ type: 'PING' }))
+
+      expect(onAction).toHaveBeenCalledWith({ type: 'PING' })
+    })
+
+    it('clears the confirmation deadline once confirmed', () => {
+      const { transport, options, onFailed } = createHarness()
+
+      transport.start()
+      options.receive(createPacket({ type: 'PING' }))
+      jest.advanceTimersByTime(CONFIRM_MS * 2)
+
+      expect(onFailed).not.toHaveBeenCalled()
+    })
+
+    it('ignores opened packets after dispose', () => {
+      const { transport, options, onAction } = createHarness()
+
+      transport.dispose()
+      options.receive(createPacket({ type: 'PING' }))
+
+      expect(onAction).not.toHaveBeenCalled()
     })
   })
 })

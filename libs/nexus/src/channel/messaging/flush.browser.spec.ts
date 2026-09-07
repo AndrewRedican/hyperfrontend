@@ -1,12 +1,13 @@
 import type { Logger } from '@hyperfrontend/logging'
 import type { Mock } from '@hyperfrontend/testing'
-import type { ActionCreators } from '../../core/actions/factory'
-import type { ChannelState } from '../../types'
+import type { ChannelState } from '../../types/channel'
 import type { IMessage } from '../../types/message'
 import type { ChannelInternals } from '../types'
 import { beforeEach } from 'node:test'
+import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import * as clearQueueModule from '../state/clear-queue'
+import { createInitialState } from '../state/initial'
 import { flush } from './flush'
 import * as sendModule from './send'
 
@@ -14,135 +15,113 @@ jest.mock('./send')
 jest.mock('../state/clear-queue')
 
 describe('channel/messaging/flush', () => {
-  let mockChannel: ChannelInternals
+  const clearQueue = clearQueueModule.clearQueue as Mock
+  const send = sendModule.send as Mock
+  const messages: IMessage[] = [
+    { type: 'MESSAGE_1', data: { id: 1 } },
+    { type: 'MESSAGE_2', data: { id: 2 } },
+    { type: 'MESSAGE_3', data: { id: 3 } },
+  ]
+
   let state: ChannelState
-  let mockGetState: Mock<ChannelState, []>
-  let mockLogger: Logger
+  let channel: ChannelInternals
+  let logger: Logger
 
   beforeEach(() => {
     jest.clearAllMocks()
 
-    mockLogger = {
-      error: jest.fn(),
-      warn: jest.fn(),
-      log: jest.fn(),
-      info: jest.fn(),
-      debug: jest.fn(),
-      setLogLevel: jest.fn(),
-      getLogLevel: jest.fn(() => 'debug'),
-    }
+    logger = { error: jest.fn() } as unknown as Logger
 
     state = {
-      id: 'channel-123',
-      name: 'test-channel',
-      target: window,
-      origin: 'https://example.com',
+      ...createInitialState('test-channel', window, { logger }),
       active: true,
-      connectTimestamp: Date.now(),
-      contract: { accepted: [], emitted: [] },
-      acceptedActions: [],
-      queuedMessages: [],
-      queueMessages: true,
-      eventSubscriptions: [],
-      messageSubscriptions: [],
-      scheduledActivation: null,
-
-      brokerManaged: false,
-      readyToConnect: true,
-      negotiatedProtocol: null,
-      securityReady: false,
-      securityTransport: null,
-      pendingSecurityRequest: null,
-      logger: mockLogger,
+      queuedMessages: messages,
     }
 
-    mockGetState = jest.fn(() => state)
-    mockChannel = {
-      getState: mockGetState,
+    channel = {
+      getState: () => state,
       updateState: jest.fn(),
       sendAction: jest.fn(),
       createProcess: jest.fn(),
       removeProcess: jest.fn(),
       notifyEvent: jest.fn(),
       notifyMessage: jest.fn(),
-      actions: {} as ActionCreators,
+      actions: {} as unknown as ChannelInternals['actions'],
     }
-    ;(clearQueueModule.clearQueue as Mock).mockReturnValue({
-      ...state,
-      queuedMessages: [],
-    })
+    clearQueue.mockImplementation((current: ChannelState) => ({ ...current, queuedMessages: [] }))
   })
 
-  it('sends all queued messages', () => {
-    const messages: IMessage[] = [
-      { type: 'MESSAGE_1', data: { id: 1 } },
-      { type: 'MESSAGE_2', data: { id: 2 } },
-      { type: 'MESSAGE_3', data: { id: 3 } },
-    ]
-    state = { ...state, queuedMessages: messages }
-    mockGetState.mockReturnValue(state)
+  it('sends every queued message in FIFO order', () => {
+    flush(channel)
 
-    flush(mockChannel)
-
-    expect(sendModule.send).toHaveBeenCalledTimes(3)
-    expect(sendModule.send).toHaveBeenCalledWith(mockChannel, messages[0])
-    expect(sendModule.send).toHaveBeenCalledWith(mockChannel, messages[1])
-    expect(sendModule.send).toHaveBeenCalledWith(mockChannel, messages[2])
+    expect(send.mock.calls).toEqual([
+      [channel, messages[0]],
+      [channel, messages[1]],
+      [channel, messages[2]],
+    ])
   })
 
-  it('clears queue after sending', () => {
-    const messages: IMessage[] = [{ type: 'MESSAGE_1', data: { id: 1 } }]
-    state = { ...state, queuedMessages: messages }
-    mockGetState.mockReturnValue(state)
+  it('derives the cleared state from the current state', () => {
+    flush(channel)
 
-    flush(mockChannel)
-
-    expect(clearQueueModule.clearQueue).toHaveBeenCalledWith(state)
-    expect(mockChannel.updateState).toHaveBeenCalledWith({
-      ...state,
-      queuedMessages: [],
-    })
+    expect(clearQueue).toHaveBeenCalledWith(state)
   })
 
-  it('clears the queue before re-sending so a not-ready transport can re-queue survivors', () => {
-    state = { ...state, queuedMessages: [{ type: 'MESSAGE_1', data: { id: 1 } }] }
-    mockGetState.mockReturnValue(state)
+  it('stores the cleared queue on the channel', () => {
+    flush(channel)
 
-    flush(mockChannel)
-
-    expect((mockChannel.updateState as Mock).mock.invocationCallOrder[0]).toBeLessThan(
-      (sendModule.send as Mock).mock.invocationCallOrder[0] ?? 0
-    )
+    expect(channel.updateState).toHaveBeenCalledWith({ ...state, queuedMessages: [] })
   })
 
-  it('does nothing if queue is empty', () => {
+  it('clears the queue before re-sending so a message re-queued during the pass survives', () => {
+    flush(channel)
+
+    expect((channel.updateState as Mock).mock.invocationCallOrder[0]).toBeLessThan(send.mock.invocationCallOrder[0] ?? 0)
+  })
+
+  it('sends nothing when the queue is empty', () => {
     state = { ...state, queuedMessages: [] }
-    mockGetState.mockReturnValue(state)
 
-    flush(mockChannel)
+    flush(channel)
 
-    expect(sendModule.send).not.toHaveBeenCalled()
-    expect(clearQueueModule.clearQueue).toHaveBeenCalled()
+    expect(send).not.toHaveBeenCalled()
   })
 
-  it('continue flushing even if one message fails', () => {
-    const messages: IMessage[] = [
-      { type: 'MESSAGE_1', data: { id: 1 } },
-      { type: 'MESSAGE_2', data: { id: 2 } },
-      { type: 'MESSAGE_3', data: { id: 3 } },
-    ]
-    state = { ...state, queuedMessages: messages }
-    mockGetState.mockReturnValue(state)
-    ;(sendModule.send as Mock).mockImplementation((channel, message) => {
-      if (message.type === 'MESSAGE_2') {
-        throw new Error('Send failed')
-      }
+  it('still clears the queue when it is empty', () => {
+    state = { ...state, queuedMessages: [] }
+
+    flush(channel)
+
+    expect(clearQueue).toHaveBeenCalledWith(state)
+  })
+
+  describe('when a message fails to send', () => {
+    beforeEach(() => {
+      send.mockImplementation((_channel: ChannelInternals, message: IMessage) => {
+        if (message.type === 'MESSAGE_2') {
+          throw createError('Send failed')
+        }
+      })
     })
 
-    flush(mockChannel)
+    it('keeps sending the remaining messages', () => {
+      flush(channel)
 
-    expect(sendModule.send).toHaveBeenCalledTimes(3)
-    expect(mockLogger.error).toHaveBeenCalledWith('Failed to send queued message:', expect.any(Error))
-    expect(clearQueueModule.clearQueue).toHaveBeenCalled()
+      expect(send).toHaveBeenCalledTimes(3)
+    })
+
+    it('logs the failure', () => {
+      flush(channel)
+
+      expect(logger.error).toHaveBeenCalledWith('Failed to send queued message:', expect.objectContaining({ message: 'Send failed' }))
+    })
+
+    it('keeps sending the remaining messages when the channel has no logger', () => {
+      state = { ...state, logger: null }
+
+      flush(channel)
+
+      expect(send).toHaveBeenCalledTimes(3)
+    })
   })
 })

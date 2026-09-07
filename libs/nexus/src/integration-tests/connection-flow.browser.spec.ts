@@ -1,10 +1,11 @@
+import type { IAction } from '../types/action'
 import type { IChannelContract } from '../types/contract'
 import type { MockWindow } from './test-utils'
 import { after as afterAll, afterEach, before as beforeAll, beforeEach } from 'node:test'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { createBroker } from '../broker/factory'
 import { ACTION_TYPES } from '../types/action'
-import { createMockWindow, linkMockWindows, simulateMessage, createContractPair } from './test-utils'
+import { createContractPair, createMockWindow, linkMockWindows, plaintextFramesTo, simulateMessage } from './test-utils'
 
 describe('Connection Flow Integration', () => {
   let windowA: MockWindow
@@ -130,7 +131,7 @@ describe('Connection Flow Integration', () => {
     it('converges to a single connection when both sides request simultaneously', () => {
       const { contractA, contractB } = createContractPair(['PING'], ['PONG'])
 
-      // how: Windows start unlinked so both REQUESTs drop and both sides are
+      // how: Windows start unlinked so both REQUESTs drop and both sides are left retrying; linking them lets the retries collide and the tie-break resolve the glare.
       windowA.postMessage.mockImplementation(() => undefined)
       windowB.postMessage.mockImplementation(() => undefined)
 
@@ -286,7 +287,7 @@ describe('Connection Flow Integration', () => {
       channelB.connect()
       channelA.connect()
 
-      const requestFrame = windowA.postMessage.mock.calls[0][0] as { type: string }
+      const requestFrame = plaintextFramesTo(windowA)[0]
       expect(requestFrame.type).toBe(ACTION_TYPES.REQUEST_CONNECTION)
 
       windowA.postMessage.mockClear()
@@ -308,13 +309,11 @@ describe('Connection Flow Integration', () => {
       channelB.connect()
       channelA.connect()
 
-      const acceptFrame = windowB.postMessage.mock.calls
-        .map((call) => call[0] as { type: string })
-        .find((a) => a.type === ACTION_TYPES.ACCEPT_CONNECTION) as { type: string }
+      const acceptFrame = plaintextFramesTo(windowB).find((frame) => frame.type === ACTION_TYPES.ACCEPT_CONNECTION)
       expect(acceptFrame).toBeDefined()
 
       windowB.postMessage.mockClear()
-      simulateMessage(windowB, acceptFrame, 'http://host-a.com', windowA)
+      simulateMessage(windowB, acceptFrame as IAction, 'http://host-a.com', windowA)
 
       expect({ replayed: postedTypes(windowA).includes(ACTION_TYPES.OPEN_CONNECTION), opens: openA.mock.calls.length }).toEqual({
         replayed: true,
@@ -332,12 +331,10 @@ describe('Connection Flow Integration', () => {
       channelB.connect()
       channelA.connect()
 
-      const openFrame = windowA.postMessage.mock.calls
-        .map((call) => call[0] as { type: string })
-        .find((a) => a.type === ACTION_TYPES.OPEN_CONNECTION)
+      const openFrame = plaintextFramesTo(windowA).find((frame) => frame.type === ACTION_TYPES.OPEN_CONNECTION)
       expect(openFrame).toBeDefined()
 
-      simulateMessage(windowA, openFrame, 'http://host-b.com', windowB)
+      simulateMessage(windowA, openFrame as IAction, 'http://host-b.com', windowB)
 
       expect(openB).toHaveBeenCalledTimes(1)
     })
@@ -594,7 +591,7 @@ describe('Connection Flow Integration', () => {
       channelB.connect()
       expect([channelA.isActive(), channelB.isActive()]).toEqual([true, true])
 
-      // how: A reloaded page re-creates its broker in the same window; the
+      // how: A reloaded page re-creates its broker in the same window, so the counterpart sees a REQUEST from a new sender id.
       const brokerA2 = createBroker({ name: 'broker-a-reloaded', contract: contractA, window: windowA as unknown as Window })
       const channelA2 = brokerA2.addChannel('to-b', windowB as unknown as Window)
       channelA2.connect()

@@ -48,6 +48,7 @@ The library features three modular entry points: platform-specific implementatio
 
 - **Isomorphic API Design** - Write once, run everywhere with identical function signatures for browser Web Crypto API and Node.js crypto module
 - **AES-GCM Encryption** - Industry-standard authenticated encryption with password-derived keys using PBKDF2 (100,000 iterations)
+- **Session Key Agreement** - Ephemeral P-256 ECDH, HKDF key expansion with usage-restricted keys, and raw AEAD sealing for many messages under one agreed key
 - **Secure Vault Storage** - Password-protected in-memory storage with optional single-use mode for sensitive data
 - **Time-Based Passwords** - Generate rotating credentials synchronized to UTC time windows for short-lived authentication
 - **Cryptographic Hashing** - SHA-256 hash generation with hexadecimal output and validation utilities
@@ -57,7 +58,7 @@ The library features three modular entry points: platform-specific implementatio
 
 ### Architecture Highlights
 
-Built on functional composition with dependency injection, allowing complete mocking in tests without module patching. All cryptographic operations use platform-native APIs (Web Crypto API in browsers, Node.js crypto module) wrapped in consistent interfaces. Encryption operations automatically generate unique salt and initialization vectors per operation, eliminating key reuse vulnerabilities.
+Built on functional composition with dependency injection, allowing complete mocking in tests without module patching. All cryptographic operations use platform-native APIs (Web Crypto API in browsers, Node.js crypto module) wrapped in consistent interfaces. `encrypt` generates a unique salt and initialization vector per operation, so a secret at rest never reuses a key; the session primitives (`createKeyAgreement`, `expandKey`, `seal`, `open`) hand the key and nonce lifecycle to the caller, which is what a message stream needs.
 
 ## Why Use @hyperfrontend/cryptography?
 
@@ -172,6 +173,19 @@ isSHA256Hash('e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855')
 
 - **`generateKey(password: string, salt: Uint8Array): Promise<CryptoKey>`** - Derive encryption key using PBKDF2
 - **`getRandomValues(byteLength: number): Uint8Array`** - Generate cryptographically-secure random bytes
+
+### Session Keys & Authenticated Framing
+
+The building blocks of a keyed session: agree or stretch a secret once, expand it into per-purpose keys, then seal many messages under those keys with caller-managed nonces. This is the layer `@hyperfrontend/network-protocol` builds its envelope on.
+
+- **`createKeyAgreement(): Promise<KeyAgreement>`** - Ephemeral P-256 ECDH: exposes `publicKey` (65-byte uncompressed point) and `deriveSecret(peerPublicKey)` (32 bytes); the private key is non-extractable and never leaves the agreement
+- **`stretchPassword(password: string, salt: Uint8Array, options?: StretchPasswordOptions): Promise<Uint8Array>`** - PBKDF2-HMAC-SHA256 into raw key material (default 100,000 iterations, 256 bits), for use once per session or storage boundary
+- **`expandKey(ikm: Uint8Array, salt: Uint8Array, info: Uint8Array, usages: KeyUsage[]): Promise<CryptoKey>`** - HKDF-SHA256 into a non-extractable AES-GCM-256 key restricted to `'encrypt'`, `'decrypt'`, or both
+- **`seal(key: CryptoKey, nonce: Uint8Array, additionalData: Uint8Array, plaintext: Uint8Array): Promise<Uint8Array>`** - AES-GCM under a caller-supplied key and 12-byte nonce; the additional data is authenticated, not encrypted
+- **`open(key: CryptoKey, nonce: Uint8Array, additionalData: Uint8Array, sealed: Uint8Array): Promise<Uint8Array>`** - The inverse of `seal`; any mismatch rejects with one error
+- **`keyStretchingConfig`** - The PBKDF2 parameters `generateKey` and `stretchPassword` share
+
+The caller owns nonce uniqueness: a nonce must never repeat under one key. A per-message counter under a per-session key satisfies that by construction.
 
 ## Compatibility
 

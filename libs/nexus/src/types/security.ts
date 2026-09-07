@@ -1,5 +1,5 @@
 /**
- * Security types for Nexus protocol security layer integration.
+ * Security types for the nexus protocol security layer.
  *
  * These types define the security negotiation, transport, and configuration
  * interfaces used during the connection handshake and message flow. The
@@ -16,14 +16,14 @@ import type { Logger } from '@hyperfrontend/logging'
 /**
  * Security protocol identifiers.
  *
- * - `'v1'`: Time-interval obfuscation; peers remain on the protocol's base key
- * - `'v2'`: Pre-shared key (PSK) handshake; encrypted from the first message
+ * - `'v3'`: Ephemeral session keys agreed over the wire; defeats passive listeners
+ * - `'v4'`: Ephemeral session keys bound to a pre-shared key; defeats any script without the key
  * - `'none'`: No security, plaintext passthrough
  *
  * Any other string is accepted so external protocol packages can introduce
  * their own identifiers.
  */
-export type SecurityProtocolVersion = 'none' | 'v1' | 'v2' | (string & {})
+export type SecurityProtocolVersion = 'none' | 'v3' | 'v4' | (string & {})
 
 /**
  * Security negotiation request sent by the initiator during handshake.
@@ -48,38 +48,64 @@ export interface SecurityNegotiationRequest {
 export interface SecurityNegotiationResponse {
   /** Negotiated protocol (best match between initiator and responder) */
   readonly negotiated: SecurityProtocolVersion
-
-  /** Optional public parameters for protocol initialization (e.g., key exchange hints) */
-  readonly publicParams?: Readonly<Record<string, unknown>>
 }
 
 /**
  * Security confirmation sent in the `OPEN_CONNECTION` action.
  *
- * Confirms that the security transport is active and ready.
+ * Confirms which protocol the initiator attached, or that it attached none.
  */
 export interface SecurityConfirmation {
-  /** Whether security transport is active */
+  /** Whether an encrypted transport is attached */
   readonly active: boolean
 
-  /** The active security protocol */
+  /** The protocol the transport runs, or `'none'` */
   readonly protocol: SecurityProtocolVersion
 }
+
+/**
+ * Codes carried by `security-error` events and transport error handlers.
+ *
+ * The first six are the wire protocol's verdicts on a single frame; the
+ * remaining codes describe the transport around the protocol.
+ *
+ * - `'unsupported-version'`: the frame carries another protocol's version byte
+ * - `'replayed'`: the frame's counter is not newer than the last accepted one
+ * - `'authentication-failed'`: the frame was not sealed under the session keys
+ * - `'malformed'`: the frame or the envelope it carried is not well-formed
+ * - `'counter-exhausted'`: the session sealed its last frame
+ * - `'invalid-session'`: the session keys cannot be derived
+ * - `'hello-rejected'`: a hello arrived that differs from the one keying the session
+ * - `'security-unconfirmed'`: the counterpart did not confirm the session before the deadline
+ * - `'transport-error'`: a packet could not be sealed or handed to the wire
+ * - `'unknown'`: an error without a recognised code
+ */
+export type SecurityErrorCode =
+  | 'unsupported-version'
+  | 'replayed'
+  | 'authentication-failed'
+  | 'malformed'
+  | 'counter-exhausted'
+  | 'invalid-session'
+  | 'hello-rejected'
+  | 'security-unconfirmed'
+  | 'transport-error'
+  | 'unknown'
 
 /**
  * Error payload delivered to a security transport's `onError` handler.
  */
 export interface SecurityTransportError {
   /** Human-readable error message */
-  message: string
+  readonly message: string
   /** Machine-readable error code */
-  code: string
+  readonly code: SecurityErrorCode
   /** Optional underlying cause */
-  cause?: Error
+  readonly cause?: unknown
 }
 
 /**
- * Data envelope carried inside each wire packet.
+ * Data envelope carried inside each sealed frame.
  *
  * The transported nexus action lives at {@link SecurityPacketData.message};
  * the remaining fields are wire-protocol bookkeeping.
@@ -91,8 +117,6 @@ export interface SecurityPacketData {
   readonly id: string
   /** Counter incremented for each message of the sending process */
   readonly sequence: number
-  /** Key offered for encrypting subsequent traffic (empty to keep the base key) */
-  readonly key: string
   /** The transported message payload */
   readonly message: unknown
   /** JSON schema describing the message */
@@ -102,79 +126,94 @@ export interface SecurityPacketData {
 }
 
 /**
- * A decrypted packet delivered by the wire pipeline.
+ * A packet the wire pipeline opened and delivered.
  */
 export interface SecurityPacket {
   /** UUID of the packet sender */
   readonly origin: string
   /** UUID of the intended recipient */
   readonly target: string
-  /** Decrypted data envelope; the transported action lives at `data.message` */
+  /** Opened data envelope; the transported action lives at `data.message` */
   readonly data: SecurityPacketData
 }
 
 /**
- * A packet whose data has been encrypted to binary form.
+ * Callback that transmits a sealed frame over the wire.
  */
-export interface SecurityEncryptedPacket {
-  /** UUID of the packet sender */
-  readonly origin: string
-  /** UUID of the intended recipient */
-  readonly target: string
-  /** Encrypted data bytes */
-  readonly data: Uint8Array
-}
+export type SecuritySendPacket = (frame: Uint8Array) => void
 
 /**
- * A packet whose encrypted data has been serialized to a string.
- */
-export interface SecuritySerializedPacket {
-  /** UUID of the packet sender */
-  readonly origin: string
-  /** UUID of the intended recipient */
-  readonly target: string
-  /** Serialized encrypted data */
-  readonly data: string
-}
-
-/**
- * Callback that transmits obfuscated ciphertext bytes over the wire.
- */
-export type SecuritySendPacket = (packet: Uint8Array) => void
-
-/**
- * Callback invoked with each decrypted inbound packet.
+ * Callback invoked with each opened inbound packet.
  */
 export type SecurityReceivePacket = (packet: SecurityPacket) => void
 
 /**
- * Wire-protocol instance driving one channel's encryption pipeline.
+ * Which side of the handshake a session endpoint is.
+ *
+ * The initiator sent the connection request; the responder accepted it. The
+ * roles order the session's key material, so both endpoints must agree.
+ */
+export type SecuritySessionRole = 'initiator' | 'responder'
+
+/**
+ * The session a wire protocol instance protects.
+ *
+ * Structural mirror of network-protocol's `ProtocolSession` shape.
+ */
+export interface SecuritySession {
+  /** Identifier of the negotiated protocol */
+  readonly protocol: SecurityProtocolVersion
+  /** This endpoint's handshake role */
+  readonly role: SecuritySessionRole
+  /** Broker id of this endpoint */
+  readonly localId: string
+  /** Broker id of the counterpart */
+  readonly peerId: string
+}
+
+/**
+ * What a protocol instance made of a counterpart's hello.
+ *
+ * - `'accepted'`: the hello keyed the session
+ * - `'duplicate'`: the hello repeats the one that keyed the session
+ * - `'rejected'`: the hello differs from the one that keyed the session
+ */
+export type SecurityHelloOutcome = 'accepted' | 'duplicate' | 'rejected'
+
+/**
+ * Wire-protocol instance driving one channel's session.
  *
  * Structural mirror of network-protocol's `Protocol` shape.
  */
 export interface SecurityWireProtocol {
-  /** Encrypts a packet's data envelope */
-  readonly packetEncryption: (packet: SecurityPacket) => Promise<SecurityEncryptedPacket>
-  /** Decrypts a packet's data envelope */
-  readonly packetDecryption: (packet: SecurityEncryptedPacket) => Promise<SecurityPacket>
-  /** Obfuscates a serialized packet into wire bytes */
-  readonly packetObfuscation: (packet: SecuritySerializedPacket) => Promise<Uint8Array>
-  /** Deobfuscates wire bytes into a serialized packet */
-  readonly packetDeobfuscation: (packet: Uint8Array) => Promise<SecuritySerializedPacket>
-  /** Transmits fully processed wire bytes */
+  /** Seals a packet into a frame under the session's sending key */
+  readonly seal: (packet: SecurityPacket) => Promise<Uint8Array>
+  /** Opens a frame into a packet under the session's receiving key */
+  readonly open: (frame: Uint8Array) => Promise<SecurityPacket>
+  /** Produces this endpoint's hello frame */
+  readonly hello: () => Promise<Uint8Array>
+  /** Whether a frame is a hello of this protocol */
+  readonly isHello: (frame: Uint8Array) => boolean
+  /** Feeds the counterpart's hello to the session */
+  readonly acceptHello: (frame: Uint8Array) => SecurityHelloOutcome
+  /** Transmits sealed frames */
   readonly send: SecuritySendPacket
-  /** Receives fully decrypted packets */
+  /** Receives opened packets */
   readonly receive: SecurityReceivePacket
   /** Returns the logger used by the protocol */
   readonly getLogger: () => Logger
 }
 
 /**
- * Creates a {@link SecurityWireProtocol} bound to the given packet callbacks.
+ * Creates a {@link SecurityWireProtocol} for one session.
  *
  * Structural mirror of network-protocol's `ProtocolProvider` shape.
  */
-export type SecurityProtocolProvider = (sendPacket: SecuritySendPacket, receivePacket: SecurityReceivePacket) => SecurityWireProtocol
+export type SecurityProtocolProvider = (
+  send: SecuritySendPacket,
+  receive: SecurityReceivePacket,
+  session: SecuritySession
+) => SecurityWireProtocol
 
 /**
  * The per-channel wire pipeline created by a {@link SecurityChannelFactory}.
@@ -184,14 +223,56 @@ export type SecurityProtocolProvider = (sendPacket: SecuritySendPacket, receiveP
 export interface SecurityWireChannel {
   /** Human-readable pipeline label */
   readonly label: string
-  /** Encrypts and transmits a data envelope from origin to target */
+  /** Seals and transmits a data envelope from origin to target */
   readonly send: (origin: string, target: string, data: SecurityPacketData) => void
-  /** Feeds raw wire bytes into the decryption pipeline */
-  readonly receive: (packet: Uint8Array) => void
+  /** Feeds a sealed frame into the opening pipeline */
+  readonly receive: (frame: Uint8Array) => void
   /** Pauses packet processing */
   readonly stop: () => void
   /** Resumes packet processing */
   readonly resume: () => void
+  /** Produces this endpoint's hello frame */
+  readonly hello: () => Promise<Uint8Array>
+  /** Whether a frame is a hello of the channel's protocol */
+  readonly isHello: (frame: Uint8Array) => boolean
+  /** Feeds the counterpart's hello to the session */
+  readonly acceptHello: (frame: Uint8Array) => SecurityHelloOutcome
+}
+
+/**
+ * A packet the wire pipeline rejected and discarded.
+ *
+ * Structural mirror of network-protocol's `PacketDrop` shape.
+ */
+export interface SecurityPacketDrop {
+  /** Whether the packet was leaving (`outbound`) or arriving (`inbound`) */
+  readonly direction: 'inbound' | 'outbound'
+  /** The pipeline stage that rejected the packet */
+  readonly stage: 'seal' | 'open'
+  /** Why the stage rejected it */
+  readonly reason: string
+  /** The error the stage raised, when it raised one */
+  readonly cause?: unknown
+  /** The packet as the stage received it */
+  readonly packet: unknown
+}
+
+/**
+ * What a {@link SecurityChannelFactory} needs to build one channel's pipeline.
+ *
+ * Structural mirror of network-protocol's `ChannelOptions` shape.
+ */
+export interface SecurityChannelOptions {
+  /** Transmits each sealed frame */
+  readonly send: SecuritySendPacket
+  /** Receives each opened packet */
+  readonly receive: SecurityReceivePacket
+  /** Creates the protocol instance for the session */
+  readonly protocolProvider: SecurityProtocolProvider
+  /** The session the pipeline protects */
+  readonly session: SecuritySession
+  /** Receives every packet either direction of the pipeline discards */
+  readonly onDrop?: (drop: SecurityPacketDrop) => void
 }
 
 /**
@@ -199,16 +280,11 @@ export interface SecurityWireChannel {
  *
  * Structural mirror of network-protocol's `createChannel` signature.
  */
-export type SecurityChannelFactory = (
-  label: string,
-  sendPacket: SecuritySendPacket,
-  receivePacket: SecurityReceivePacket,
-  protocolProvider: SecurityProtocolProvider
-) => SecurityWireChannel
+export type SecurityChannelFactory = (label: string, options: SecurityChannelOptions) => SecurityWireChannel
 
 /**
  * Everything nexus needs from a security implementation to run one
- * channel's envelope. This is the boundary a security package implements:
+ * channel's session. This is the boundary a security package implements:
  * network-protocol's `createChannel` and a protocol provider satisfy it
  * directly.
  */
@@ -244,11 +320,26 @@ export interface SecurityTransportConfig {
   /** UUID identifying the counterpart endpoint, stamped as each packet's target */
   readonly targetId: string
 
+  /** This endpoint's handshake role */
+  readonly role: SecuritySessionRole
+
+  /** Interval between hello retries until the counterpart confirms the session */
+  readonly helloRetryMs?: number
+
+  /** How long the counterpart has to confirm the session after the transport starts */
+  readonly confirmTimeoutMs?: number
+
   /** Receives each action delivered by the transport */
   readonly onAction: (action: unknown) => void
 
-  /** Optional handler for transport failures (e.g., unencryptable payloads) */
+  /** Optional handler for security failures */
   readonly onError?: (error: SecurityTransportError) => void
+
+  /** Optional handler invoked once, when the counterpart's first frame authenticates */
+  readonly onConfirmed?: () => void
+
+  /** Optional handler invoked when the session can no longer be confirmed */
+  readonly onFailed?: (error: SecurityTransportError) => void
 }
 
 /**
@@ -261,23 +352,31 @@ export interface SecurityTransport {
   /**
    * Send an action through the security pipeline.
    *
-   * For `'none'` protocol, the action passes through unchanged.
-   * For `'v1'`/`'v2'`, the action is encrypted and obfuscated, then posted
-   * to the counterpart window as a `Uint8Array`.
+   * For `'none'` protocol, the action passes through unchanged. For any
+   * other protocol the action is sealed and posted to the counterpart
+   * window as a `Uint8Array`; until the session is keyed it waits inside
+   * the pipeline.
    *
    * @param action - The action to send
    */
   send(action: unknown): void
 
   /**
-   * Feed a received wire payload into the decryption pipeline.
+   * Feed a received wire frame into the pipeline.
    *
-   * Decrypted actions surface through the `onAction` handler supplied at
-   * construction.
+   * Hello frames key the session; sealed frames are opened and their
+   * actions surface through the `onAction` handler supplied at construction.
    *
-   * @param packet - The raw wire payload to process
+   * @param frame - The raw wire frame to process
    */
-  receive(packet: Uint8Array): void
+  receive(frame: Uint8Array): void
+
+  /**
+   * Start the session's hello exchange and the confirmation deadline.
+   *
+   * Idempotent; the plaintext transport has nothing to start.
+   */
+  start(): void
 
   /**
    * Stop processing for backpressure control.
@@ -290,16 +389,12 @@ export interface SecurityTransport {
   resume(): void
 
   /**
-   * Check if the transport can protect product traffic right now.
+   * Release the transport: clears its timers and refuses further work.
    *
-   * The bundled protocols (`'none'`, `'v1'`, `'v2'`) hold their full
-   * protection capability from construction and always report ready.
-   * External transports with their own wire handshake may report false
-   * until it completes; senders queue product traffic in the meantime.
-   *
-   * @returns True if the transport is ready for secure message exchange
+   * Frames already inside the seal stage still leave once sealed, so a
+   * channel's last words reach the counterpart; every later call is ignored.
    */
-  isReady(): boolean
+  dispose(): void
 
   /**
    * Get the active security protocol version.
@@ -310,74 +405,39 @@ export interface SecurityTransport {
 }
 
 /**
- * Function signature for lazily loading protocol providers.
- *
- * Consumers can provide this function to enable on-demand loading
- * of security protocols from bundles, CDNs, or dynamic imports.
- *
- * @param version - The protocol version to load ('v1' or 'v2')
- * @param platform - The target platform ('browser' or 'node')
- * @returns Promise resolving to the protocol provider
- */
-export type ProtocolLoader = (version: 'v1' | 'v2', platform: 'browser' | 'node') => Promise<unknown>
-
-/**
  * Bag of pre-registered security protocol providers indexed by protocol version.
- *
- * Providers are expected to satisfy the {@link SecurityProvider} shape.
  */
 export interface SecurityProtocolProviders {
-  /** Protocol v1 provider */
-  v1?: unknown
-  /** Protocol v2 provider */
-  v2?: unknown
+  /** Protocol v3 provider */
+  readonly v3?: SecurityProvider
+  /** Protocol v4 provider */
+  readonly v4?: SecurityProvider
 }
 
 /**
  * Broker-level security configuration.
  *
- * Configures security defaults and protocol availability for all
- * channels managed by the broker.
+ * Registers protocol providers for all channels managed by the broker.
  */
 export interface BrokerSecurityConfig {
   /** Pre-registered protocol providers keyed by version */
-  readonly protocols?: Readonly<SecurityProtocolProviders>
-
-  /** Protocol loader for lazy loading */
-  readonly protocolLoader?: ProtocolLoader
-
-  /** Default security protocol for new channels */
-  readonly defaultProtocol?: SecurityProtocolVersion
-
-  /** Default shared key for v2 protocol (can be overridden per-channel) */
-  readonly defaultSharedKey?: string
-
-  /** Default key rotation interval in minutes */
-  readonly defaultRefreshRate?: number
+  readonly protocols?: SecurityProtocolProviders
 }
 
 /**
  * Channel-level security settings.
- *
- * Allows per-channel override of broker security defaults.
  */
 export interface ChannelSecuritySettings {
-  /** Protocol override for this channel */
+  /** Protocol the channel negotiates; the handshake accepts no other encrypted outcome */
   readonly protocol?: SecurityProtocolVersion
 
-  /** Channel-specific shared key for v2 */
-  readonly sharedKey?: string
-
-  /** Channel-specific key rotation interval in minutes */
-  readonly refreshRate?: number
-
-  /** Disable security even if broker has a default protocol */
+  /** Disable security even if the broker registered providers */
   readonly disabled?: boolean
 
   /**
-   * How the channel behaves when it selects v1/v2 but the handshake cannot
-   * deliver an encrypted transport (the counterpart predates security,
-   * offers no common protocol, or the negotiated provider is missing).
+   * How the channel behaves when it selects a protocol but the handshake
+   * cannot deliver it (the counterpart predates security, offers no common
+   * protocol, selects another one, or the negotiated provider is missing).
    *
    * - `'fail-open'` (default): fall back to plaintext with a warning
    * - `'fail-closed'`: refuse the connection with reason `'security-unavailable'`

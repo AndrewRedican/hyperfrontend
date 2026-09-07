@@ -12,9 +12,9 @@ import { applyBodyReset } from './sizing'
  *
  * Creates a nexus broker for the feature, resolves the host window, and returns
  * a handle for messaging and lifecycle whose `hosted` flag reports synchronously
- * whether a host window exists at all. When `protocol` selects the `v1` or
- * `v2` envelope, the feature negotiates it with the host during the connection
- * handshake and messages travel encrypted once it opens. A `version` announces
+ * whether a host window exists at all. When `protocol` selects the `v3` or
+ * `v4` envelope, the feature negotiates it with the host during the connection
+ * handshake and messages travel sealed once the session is keyed. A `version` announces
  * the contract cut this feature holds (overriding any `contract.version`), so
  * the handshake can deny hosts built against an incompatible cut.
  *
@@ -23,7 +23,7 @@ import { applyBodyReset } from './sizing'
  *
  * @example Initializing a clock feature
  * ```typescript
- * const feature = createFeature({ name: 'clock', contract, version: '1.2.0', protocol: 'v2', sharedKey: 'pre-shared-key' })
+ * const feature = createFeature({ name: 'clock', contract, version: '1.2.0', protocol: 'v4', sharedKey: 'a-key-of-sixteen-or-more' })
  * feature.ready().then(() => feature.send('timeUpdated', { time: Date.now() }))
  * feature.on('setTimezone', (data) => console.log(data))
  * ```

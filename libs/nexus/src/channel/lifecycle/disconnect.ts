@@ -1,6 +1,7 @@
 import type { CloseReason } from '../../types/events'
 import type { ChannelInternals } from '../types'
 import { clearTimeout, setTimeout } from '@hyperfrontend/immutable-api-utils/built-in-copy/timers'
+import { dropSecurityTransport } from '../security/drop'
 import { clearHandshakeTimers } from './handshake-timers'
 
 /**
@@ -35,14 +36,14 @@ export function finalizeClose(channel: ChannelInternals, reason?: CloseReason): 
     channel.removeProcess(state.closingProcessId)
   }
 
-  // why: The next handshake renegotiates security from scratch; a transport kept across connections would encrypt to a peer that may no longer decrypt.
+  // why: The next handshake renegotiates security from scratch; a transport kept across connections would seal to a peer that may no longer open.
+  dropSecurityTransport(channel)
   channel.updateState({
     active: false,
     pendingProcessId: null,
     pendingAccept: null,
     closingProcessId: null,
     negotiatedProtocol: null,
-    securityReady: false,
     securityTransport: null,
     pendingSecurityRequest: null,
   })

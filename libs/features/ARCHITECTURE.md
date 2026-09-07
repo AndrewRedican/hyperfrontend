@@ -1,6 +1,6 @@
 # Architecture
 
-`@hyperfrontend/features` is the batteries-included layer on top of [`@hyperfrontend/nexus`](https://www.hyperfrontend.dev/docs/libraries/nexus/). Nexus owns the cross-window messaging protocol; this package owns the frontend glue around it — iframe management, display modes, lifecycle orchestration, shell generation, a CLI, and a dev server — so a feature app and a host app can be developed independently and composed at runtime.
+`@hyperfrontend/features` is the batteries-included layer on top of [`@hyperfrontend/nexus`](https://www.hyperfrontend.dev/docs/libraries/nexus/). Nexus owns the cross-window messaging protocol; this package owns the frontend glue around it (iframe management, display modes, lifecycle orchestration, shell generation, a CLI, and a dev server) so a feature app and a host app can be developed independently and composed at runtime.
 
 ---
 
@@ -16,19 +16,19 @@ config:
     fontSize: 12px
 ---
 flowchart TB
-    subgraph Host["HOST APP — /host"]
+    subgraph Host["HOST APP: /host"]
         Shell["createShell()<br/>• display-mode mount<br/>• open/close/destroy<br/>• send / on"]
     end
-    subgraph Hostee["FEATURE APP — /hostee"]
+    subgraph Hostee["FEATURE APP: /hostee"]
         Feature["createFeature()<br/>• declare contract<br/>• ready / close<br/>• send / on"]
     end
-    subgraph Shared["SHARED CORE — /"]
+    subgraph Shared["SHARED CORE: /"]
         Core["• contract types + validation<br/>• DisplayMode / SecurityProtocol<br/>• control messages + event emitter"]
     end
     subgraph Tooling["TOOLING"]
-        Cli["CLI — /cli<br/>init · build · dev · serve"]
+        Cli["CLI: /cli<br/>init · build · dev · serve"]
         Gen["generators<br/>shell · metadata · types"]
-        Server["servers — /server<br/>dev static hosting + debug UI<br/>hf serve production pipeline"]
+        Server["servers: /server<br/>dev static hosting + debug UI<br/>hf serve production pipeline"]
     end
 
     Shell <-->|"Nexus channel<br/>(postMessage + security envelope)"| Feature
@@ -67,11 +67,11 @@ The host never needs `@hyperfrontend/features` as a direct dependency: it instal
 
 4. **Self-contained generated shells.** `build` emits a shell package with **zero runtime dependencies** (the contract is inlined and direct deps are bundled), so a host installs one package and inherits no transitive install burden.
 
-5. **Security is explicit.** The envelope defaults to `protocol: 'none'` for local development; production builds must opt into `v1` or `v2` (`@hyperfrontend/network-protocol`).
+5. **Security is explicit.** The envelope defaults to `protocol: 'none'` for local development; production builds must opt into `v3` or `v4` (`@hyperfrontend/network-protocol`), and `hf build` refuses an implicit `none`, accepting an explicit one only together with `--allow-open`. Both sides register the selected protocol fail-closed, so a counterpart that cannot run it is denied rather than downgraded to plaintext.
 
    ```typescript
    // ✅ production picks an envelope explicitly
-   createShell({ url, container, protocol: 'v2', sharedKey })
+   createShell({ url, container, protocol: 'v4', sharedKey })
    // ⚠️ 'none' is a local-only default
    ```
 
@@ -80,7 +80,7 @@ The host never needs `@hyperfrontend/features` as a direct dependency: it instal
    ```typescript
    // ✅ delegation is reviewable, containment is the host's call
    shell.open({ permissions: ['fullscreen'], sandbox: { downloads: true } })
-   // ❌ no raw token strings — the SDK owns the hazardous tokens
+   // ❌ no raw token strings: the SDK owns the hazardous tokens
    ```
 
 7. **Presentation is coordinated control: host-owned, contract-preconfigured.** The feature declares which display modes it supports and their per-mode defaults (`display` in `feature.config.*`); the build bakes the declaration into the generated shell, which is built from only the declared mounts (`createShell`'s explicit `modes` map) and narrows the generated types to the declared union: an undeclared mode is a compile error, a runtime throw, and absent from the bundle. At runtime the host picks the mode and is the single geometry authority: it announces the mode with the frame's initial dimensions over `__hf:present`, keeps the frame hidden until the session opens, and reports later size changes as exact pixels over `__hf:viewport`; the hostee SDK sizes its document to match and never announces geometry of its own. Dialog mode inverts the visuals, not the control: the host provides a full-viewport transparent pane, the feature draws the inner box (sized and positioned per the agreement) and backdrop, and dismiss interactions cross as `__hf:dismiss` for the host to apply its configured policy.
@@ -135,9 +135,9 @@ sequenceDiagram
     N-->>F: channel open
     N-->>H: channel open
     F-->>H: "open" event · ready() resolves
-    Note over H: frame revealed — hidden until now
-    H->>F: __hf:present — display mode + initial size + dialog box geometry
-    H->>F: __hf:viewport — size changes in exact px
+    Note over H: frame revealed (hidden until now)
+    H->>F: __hf:present (display mode + initial size + dialog box geometry)
+    H->>F: __hf:viewport (size changes in exact px)
     Note over F: SDK sizes html/body to match<br/>app author handles "resize"
     H->>F: send(action, data)  ·  validated against contract
     F->>H: send(action, data)  ·  validated against contract
@@ -149,7 +149,7 @@ sequenceDiagram
     Note over H,F: each side fires a single "close"
 ```
 
-Opening is asynchronous and deadline-bounded: the channel activates only when the Nexus wire handshake completes, and sends issued before then queue and flush on open. If the counterpart never completes the handshake within the deadline (`openTimeoutMs` / `readyTimeoutMs`, default 10 s), the shell tears the mount down and emits `error` with `reason: 'open-timeout'`, and the feature's `ready()` rejects after emitting `error` with `reason: 'ready-timeout'`.
+Opening is asynchronous and deadline-bounded: the channel activates only when the Nexus wire handshake completes, and sends issued before then queue and flush on open. If the counterpart never completes the handshake within the deadline (`openTimeoutMs` / `readyTimeoutMs`, default 10 s), the shell tears the mount down and emits `error` with `reason: 'open-timeout'`, and the feature's `ready()` rejects after emitting `error` with `reason: 'ready-timeout'`. A handshake the counterpart refuses ends sooner: a `deny` (an incompatible contract, a rejected policy, or fail-closed security the counterpart cannot provide) tears the mount down on the host and rejects `ready()` on the feature, and a `cancel` the counterpart sent after aborting at its own gates does the same, the host emitting `error` with `reason: 'handshake-cancelled'`. Once a sealed session is negotiated, a frame the envelope cannot seal or open is dropped and forwarded on that side as `error` with `reason: 'security-error'`, `message` and `code`; a session the counterpart never confirms within the deadline (a mismatched `v4` key, for instance) closes with `reason: 'security-unconfirmed'`, which surfaces as the normal `close`.
 
 ### The opening handshake
 
@@ -166,15 +166,20 @@ sequenceDiagram
     participant H as Host (createShell)
     participant F as Feature (createFeature)
 
-    Note over H,F: Symmetric — either side may send REQUEST first.<br/>Simultaneous attempts resolve by a broker-id tie-break (lower id yields)
-    H->>F: REQUEST — contract + version, security offer
+    Note over H,F: Symmetric: either side may send REQUEST first.<br/>Simultaneous attempts resolve by a broker-id tie-break (lower id yields)
+    H->>F: REQUEST: contract + version, security offer
     Note over F: Gates: contract validity · required actions ·<br/>security policy · version compatibility · fail-closed security
-    F->>H: ACCEPT — contract + version, security answer
-    Note over H: The same gates run on this side
-    H->>F: OPEN
-    Note over H,F: Security transports attach before the send queues flush,<br/>so pre-open sends leave encrypted
+    Note over F: security transport attached (responder)
+    F->>H: ACCEPT: contract + version, security answer
+    F-->>H: session hello (retried until confirmed)
+    Note over H: The same gates run on this side<br/>security transport attached (initiator)
+    H->>F: OPEN: security confirmation
+    H-->>F: session hello (retried until confirmed)
     F-->>F: "open" · ready() resolves
-    H-->>H: "open" · frame revealed · queued sends flush
+    H-->>H: "open" · frame revealed · queued sends flush into the seal stage
+    H-->>F: sealed confirmation
+    F-->>H: sealed confirmation
+    Note over H,F: The first frame that authenticates confirms the session on each side.<br/>Nothing within the deadline: "close" { reason: 'security-unconfirmed' }
     Note over H,F: A refused gate emits a local "error" carrying the reason<br/>and sends DENY (or CANCEL) on to the counterpart
 ```
 
@@ -202,9 +207,9 @@ config:
     fontSize: 12px
 ---
 flowchart TB
-    Cfg["<b>feature.config.*</b> — display.modes<br/>first entry is the default mode"] --> Modes
+    Cfg["<b>feature.config.*</b> display.modes<br/>first entry is the default mode"] --> Modes
 
-    subgraph Modes["createShell({ modes }) — only these mounts ship"]
+    subgraph Modes["createShell({ modes }): only these mounts ship"]
         direction LR
         E["<b>embedded</b><br/>frame inline in the host's container"]
         D["<b>dialog</b><br/>full-viewport transparent pane"]
@@ -241,7 +246,7 @@ flowchart LR
         Con["*.contract.{json,ts,js}"]
     end
 
-    subgraph Gen["hf build — pure generators"]
+    subgraph Gen["hf build: pure generators"]
         direction TB
         G1["entry source<br/>contract inlined · types narrowed<br/>to the declared modes"]
         G2["package.json<br/>no declared dependencies"]
@@ -334,7 +339,7 @@ interface FeatureContract {
 }
 
 type DisplayMode = 'embedded' | 'dialog' | 'popup' | 'standalone'
-type SecurityProtocol = 'none' | 'v1' | 'v2'
+type SecurityProtocol = 'none' | 'v3' | 'v4'
 ```
 
 ---

@@ -36,7 +36,7 @@ describe('handleDestroy', () => {
       debug: jest.fn(),
       setLogLevel: jest.fn(),
       getLogLevel: jest.fn(() => 'debug'),
-    }
+    } as unknown as Logger
 
     mockBrokerState = {
       id: 'broker-1',
@@ -66,8 +66,7 @@ describe('handleDestroy', () => {
       actions,
       logger: mockLogger,
       getSupportedProtocols: () => ['none'],
-      getProtocol: () => undefined,
-      routeAction: () => undefined,
+      security: { localId: 'broker-1', getProvider: () => undefined, dispatch: () => undefined },
     }
   })
 

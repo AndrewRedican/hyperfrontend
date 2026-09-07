@@ -1,7 +1,7 @@
 import type { IChannelContract } from '../types/contract'
 import type { MockWindow } from './test-utils'
-import { beforeEach } from 'node:test'
-import { describe, expect, it } from '@hyperfrontend/testing'
+import { after as afterAll, afterEach, before as beforeAll, beforeEach } from 'node:test'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { createBroker } from '../broker/factory'
 import { mergeContracts } from '../setup/merge-contracts'
 import { createMockWindow } from './test-utils'
@@ -9,8 +9,21 @@ import { createMockWindow } from './test-utils'
 describe('Integration: Contract Validation', () => {
   let mockWindow: MockWindow
 
+  // why: the channels here connect towards windows nobody answers from, so the connect deadline must run on the fake clock or each run waits it out.
+  beforeAll(() => {
+    jest.useFakeTimers()
+  })
+
+  afterAll(() => {
+    jest.useRealTimers()
+  })
+
   beforeEach(() => {
     mockWindow = createMockWindow()
+  })
+
+  afterEach(() => {
+    jest.clearAllTimers()
   })
 
   const baseContract: IChannelContract = {

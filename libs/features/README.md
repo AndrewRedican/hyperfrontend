@@ -130,11 +130,13 @@ Presentation is host-controlled and contract-preconfigured: a feature declares t
 
 Contract actions may carry a `required: true` flag on `accepted` entries, which denies the connection unless the counterpart emits that type. Unflagged actions never gate the connection, so adding actions to a contract stays backward compatible.
 
-The SDK's own traffic — the heartbeat, the presentation announcements, dismiss signals, dirty state, and the request/response envelopes — rides the same channel under a reserved `__hf:` prefix and is filtered out before your handlers run. Your contract must not declare action types beginning with `__hf:`; everything the plane carries is listed in the [architecture guide](https://www.hyperfrontend.dev/docs/libraries/features/architecture/).
+The SDK's own traffic (the heartbeat, the presentation announcements, dismiss signals, dirty state, and the request/response envelopes) rides the same channel under a reserved `__hf:` prefix and is filtered out before your handlers run. Your contract must not declare action types beginning with `__hf:`; everything the plane carries is listed in the [architecture guide](https://www.hyperfrontend.dev/docs/libraries/features/architecture/).
 
-Both sides can opt into an encrypted envelope: pass `protocol: 'v1'`, or `protocol: 'v2'` together with a `sharedKey`, to `createShell` and `createFeature`, and the two sides negotiate it during the connection handshake. Handshake frames stay plaintext while product messages (including sends queued before the handshake) travel encrypted. The `sharedKey` belongs to `v2` alone: selecting `v2` without a non-empty key throws immediately, while `v1` takes no key.
+Both sides can opt into a sealed envelope: pass `protocol: 'v3'`, or `protocol: 'v4'` together with a `sharedKey`, to `createShell` and `createFeature`, and the two sides negotiate it during the connection handshake. Each session agrees fresh keys over the wire (`v3`), or fresh keys bound to the pre-shared key (`v4`), so `v4` is the choice when any other script on either page could speak to the counterpart; `v3` only defeats scripts that listen. The `sharedKey` belongs to `v4` alone and must be at least 16 characters: selecting `v4` without one throws immediately, and giving one with `v3` or `none` throws as well. Handshake frames stay plaintext while product messages (including sends queued before the handshake) leave sealed, and a plaintext product message arriving on a secured channel is dropped. Security is fail-closed: a counterpart that cannot run the selected protocol is denied, and a session the counterpart never confirms (a mismatched `v4` key, for instance) closes with `reason: 'security-unconfirmed'` after the connect timeout. A packet the envelope cannot protect or unwrap is discarded and surfaced on that side as an `error` event shaped `{ reason: 'security-error', message, code }`, so a message one side sent and the other never received is never silent. Key agreement is paid once per session; each message then costs one AES-GCM operation, so many secured channels can run at once on one page.
 
 A contract may carry a semver `version`, or `createFeature` can receive a `version` option that takes precedence over `contract.version`. Each side presents its version during the handshake, and incompatible cuts (a different major, or a different minor below `1.0.0`) are denied before the channel opens, surfacing as an `error` on both handles. A side without a version always passes the check, so unversioned peers keep connecting.
+
+A refused handshake ends at once. Whichever gate refuses (contract, policy, version, or fail-closed security), the host destroys the mount and the feature's pending `ready()` rejects: a `deny` surfaces as an `error` carrying the gate's `reason`, and a `cancel` the counterpart sent after aborting at its own gates surfaces on the host as `error` with `reason: 'handshake-cancelled'`.
 
 Contract entries with a `schema` are enforced on both ends: `send` validates the payload against the sender's own `emitted` schema and throws in the sender's frame before anything crosses the wire, while incoming messages are validated against the receiver's own `accepted` schema. An invalid payload is dropped and surfaced as an `error` event shaped `{ reason: 'invalid-payload', type, errors }`. Schema-less actions pass through unchanged.
 
@@ -144,10 +146,12 @@ What each of these controls is actually worth, and which parts of an integration
 
 ```bash
 npx @hyperfrontend/features init                # scaffold the hostee glue into an app
-npx @hyperfrontend/features build --protocol v2 # generate + bundle a publishable shell package
+npx @hyperfrontend/features build --protocol v4 # generate + bundle a publishable shell package
 npx @hyperfrontend/features dev                 # serve apps with the debug UI
 npx @hyperfrontend/features serve --root dist   # serve a built site for production
 ```
+
+`build` requires `--protocol v3` or `--protocol v4`; an explicit `--protocol none` produces an open, unauthenticated shell and builds only together with `--allow-open`.
 
 ## API Overview
 

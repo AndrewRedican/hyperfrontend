@@ -2,7 +2,13 @@ import type { IAction } from '../types/action'
 import type { ChannelState } from '../types/channel'
 import type { ChannelEvent } from '../types/events'
 import type { IMessage } from '../types/message'
-import type { SecurityNegotiationRequest, SecurityNegotiationResponse, SecurityConfirmation } from '../types/security'
+import type {
+  SecurityConfirmation,
+  SecurityNegotiationRequest,
+  SecurityNegotiationResponse,
+  SecurityProtocolVersion,
+  SecurityProvider,
+} from '../types/security'
 
 /**
  * Action creators a channel uses to talk to its broker. Each method returns the
@@ -72,6 +78,8 @@ export interface ChannelInternals {
 
   /** Optional cleanup callback to remove channel from broker */
   cleanup?: () => void
+  /** What the broker supplies for running an encrypted transport; absent on channels without a broker */
+  security?: ChannelSecurityDependencies
 }
 
 /**
@@ -86,4 +94,18 @@ export interface ChannelDependencies {
 
   /** Optional cleanup callback */
   cleanup?: () => void
+  /** What the broker supplies for running an encrypted transport; absent on channels without a broker */
+  security?: ChannelSecurityDependencies
+}
+
+/**
+ * What a channel needs from its broker to run an encrypted transport.
+ */
+export interface ChannelSecurityDependencies {
+  /** Broker id of this endpoint, stamped as each packet's origin */
+  readonly localId: string
+  /** Returns the provider registered for a protocol, or undefined when there is none */
+  getProvider(protocol: SecurityProtocolVersion): SecurityProvider | undefined
+  /** Routes an action the transport opened as if it had arrived from the counterpart window */
+  dispatch(event: MessageEvent<IAction>): void
 }

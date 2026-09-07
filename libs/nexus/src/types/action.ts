@@ -25,6 +25,7 @@ export const ACTION_TYPES = {
   DESTROY_CONNECTION: `[${PROTOCOL}] connection-destroyed`,
   OPEN_CONNECTION: `[${PROTOCOL}] connection-opened`,
   NEW_MESSAGE: `[${PROTOCOL}] new-message`,
+  SECURITY_CONFIRMED: `[${PROTOCOL}] security-confirmed`,
 } as const
 
 /**

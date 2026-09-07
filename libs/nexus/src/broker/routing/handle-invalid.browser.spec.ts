@@ -1,5 +1,4 @@
 import type { Logger } from '@hyperfrontend/logging'
-import type { Mock } from '@hyperfrontend/testing'
 import type { IAction } from '../../types/action'
 import type { IChannelContract } from '../../types/contract'
 import type { BrokerState } from '../types'
@@ -18,24 +17,36 @@ describe('handleInvalid', () => {
     emitted: [{ type: 'response-message', description: 'Response message' }],
   }
 
-  const mockBrokerState: BrokerState = {
-    id: 'broker-1',
-    name: 'test-broker',
-    window: global.window as Window,
-    contract: validContract,
-    settings: {
-      contract: validContract,
-    },
-  }
-
+  let mockLogger: Logger
+  let mockBrokerState: BrokerState
   let registry: ReturnType<typeof createRegistry>
   let processManager: ReturnType<typeof createProcessManager>
   let actions: ReturnType<typeof createActionCreators>
   let mockWindow: Window
-  let mockLogger: Logger
   let routingContext: RoutingContext
 
   beforeEach(() => {
+    mockLogger = {
+      error: jest.fn(),
+      warn: jest.fn(),
+      log: jest.fn(),
+      info: jest.fn(),
+      debug: jest.fn(),
+      setLogLevel: jest.fn(),
+      getLogLevel: jest.fn(() => 'debug'),
+    } as unknown as Logger
+
+    mockBrokerState = {
+      id: 'broker-1',
+      name: 'test-broker',
+      window: global.window as Window,
+      contract: validContract,
+      settings: {
+        contract: validContract,
+      },
+      logger: mockLogger,
+    }
+
     registry = createRegistry()
     processManager = createProcessManager()
     actions = createActionCreators({
@@ -45,15 +56,7 @@ describe('handleInvalid', () => {
     mockWindow = {
       postMessage: jest.fn(),
     } as unknown as Window
-    mockLogger = {
-      error: jest.fn(),
-      warn: jest.fn(),
-      log: jest.fn(),
-      info: jest.fn(),
-      debug: jest.fn(),
-      setLogLevel: jest.fn(),
-      getLogLevel: jest.fn(() => 'debug'),
-    }
+
     routingContext = {
       state: mockBrokerState,
       registry,
@@ -61,190 +64,104 @@ describe('handleInvalid', () => {
       actions,
       logger: mockLogger,
       getSupportedProtocols: () => ['none'],
-      getProtocol: () => undefined,
-      routeAction: () => undefined,
+      security: { localId: 'broker-1', getProvider: () => undefined, dispatch: () => undefined },
     }
   })
 
-  it('process invalid request for existing channel', () => {
-    const channel = addChannel(mockBrokerState, registry, processManager, actions, 'test-channel', mockWindow)
+  function invalidEvent(action: Record<string, unknown>, source: Window = mockWindow): MessageEvent<IAction> {
+    return {
+      data: { type: '[nexus] invalid-request', senderId: 'remote-broker-1', ...action } as IAction,
+      origin: 'http://remote.example',
+      source,
+    } as MessageEvent<IAction>
+  }
+
+  function addTrackedChannel(name: string, target: Window) {
+    const channel = addChannel(mockBrokerState, registry, processManager, actions, name, target)
     const processId = processManager.create(channel)
+    const invalidHandler = jest.fn()
+    channel.on('invalid', invalidHandler)
+    return { channel, processId, invalidHandler }
+  }
 
-    const action: IAction = {
-      type: '[nexus] invalid-request',
-      processId,
-      senderId: 'remote-broker-1',
-      error: 'Invalid action format',
-    }
+  it('fires the invalid event with the reason and the origin', () => {
+    const { processId, invalidHandler } = addTrackedChannel('test-channel', mockWindow)
 
-    const message = {
-      data: action,
-      source: mockWindow,
-    } as MessageEvent<IAction>
+    handleInvalid(routingContext, invalidEvent({ processId, error: 'Invalid action format' }))
 
-    expect(() => {
-      handleInvalid(routingContext, message)
-    }).not.toThrow()
+    expect(invalidHandler).toHaveBeenCalledWith({ reason: 'Invalid action format', origin: 'http://remote.example' }, expect.anything())
   })
 
-  it('ignore if channel not found', () => {
-    const action: IAction = {
-      type: '[nexus] invalid-request',
-      processId: 'non-existent-process',
-      senderId: 'remote-broker-1',
-      error: 'Invalid action format',
-    }
+  it('fires the invalid event without a reason when the action carries no error', () => {
+    const { processId, invalidHandler } = addTrackedChannel('test-channel', mockWindow)
 
-    const message = {
-      data: action,
-      source: mockWindow,
-    } as MessageEvent<IAction>
+    handleInvalid(routingContext, invalidEvent({ processId }))
 
-    expect(() => {
-      handleInvalid(routingContext, message)
-    }).not.toThrow()
+    expect(invalidHandler.mock.calls[0]?.[0]).toEqual({ reason: undefined, origin: 'http://remote.example' })
   })
 
-  it('handles invalid request with error details', () => {
-    const channel = addChannel(mockBrokerState, registry, processManager, actions, 'test-channel', mockWindow)
-    const processId = processManager.create(channel)
+  it('keeps the process tracked', () => {
+    const { channel, processId } = addTrackedChannel('test-channel', mockWindow)
 
-    const action: IAction = {
-      type: '[nexus] invalid-request',
-      processId,
-      senderId: 'remote-broker-1',
-      error: 'Detailed error message',
-    }
+    handleInvalid(routingContext, invalidEvent({ processId, error: 'Invalid action format' }))
 
-    const message = {
-      data: action,
-      source: mockWindow,
-    } as MessageEvent<IAction>
-
-    expect(() => {
-      handleInvalid(routingContext, message)
-    }).not.toThrow()
+    expect(processManager.get(processId)).toBe(channel)
   })
 
-  it('handles invalid request without error details', () => {
-    const channel = addChannel(mockBrokerState, registry, processManager, actions, 'test-channel', mockWindow)
-    const processId = processManager.create(channel)
+  it('ignores an action whose process is unknown', () => {
+    const { invalidHandler } = addTrackedChannel('test-channel', mockWindow)
 
-    const action: IAction = {
-      type: '[nexus] invalid-request',
-      processId,
-      senderId: 'remote-broker-1',
-    }
+    handleInvalid(routingContext, invalidEvent({ processId: 'non-existent-process', error: 'Invalid action format' }))
 
-    const message = {
-      data: action,
-      source: mockWindow,
-    } as MessageEvent<IAction>
-
-    expect(() => {
-      handleInvalid(routingContext, message)
-    }).not.toThrow()
+    expect(invalidHandler).not.toHaveBeenCalled()
   })
 
-  it('handles multiple invalid requests for different channels', () => {
-    const channel1 = addChannel(mockBrokerState, registry, processManager, actions, 'channel-1', mockWindow)
-    const processId1 = processManager.create(channel1)
+  it('ignores an action without a process id', () => {
+    const { invalidHandler } = addTrackedChannel('test-channel', mockWindow)
 
-    const window2 = { postMessage: jest.fn() } as unknown as Window
-    const channel2 = addChannel(mockBrokerState, registry, processManager, actions, 'channel-2', window2)
-    const processId2 = processManager.create(channel2)
+    handleInvalid(routingContext, invalidEvent({ error: 'Test error' }))
 
-    const action1: IAction = {
-      type: '[nexus] invalid-request',
-      processId: processId1,
-      senderId: 'remote-1',
-      error: 'Error 1',
-    }
-
-    const action2: IAction = {
-      type: '[nexus] invalid-request',
-      processId: processId2,
-      senderId: 'remote-2',
-      error: 'Error 2',
-    }
-
-    handleInvalid(routingContext, {
-      data: action1,
-      source: mockWindow,
-    } as MessageEvent<IAction>)
-
-    handleInvalid(routingContext, {
-      data: action2,
-      source: window2,
-    } as MessageEvent<IAction>)
-
-    expect(true).toBe(true)
+    expect(invalidHandler).not.toHaveBeenCalled()
   })
 
-  it('handles different error types', () => {
-    const channel = addChannel(mockBrokerState, registry, processManager, actions, 'test-channel', mockWindow)
-    const processId = processManager.create(channel)
+  it('sends nothing back to the counterpart', () => {
+    const { processId } = addTrackedChannel('test-channel', mockWindow)
 
-    const errorTypes = ['Invalid action format', 'Contract mismatch', 'Security violation', 'Timeout', 'Unknown error']
-
-    errorTypes.forEach((errorMessage) => {
-      const action: IAction = {
-        type: '[nexus] invalid-request',
-        processId,
-        senderId: 'remote-broker-1',
-        error: errorMessage,
-      }
-
-      const message = {
-        data: action,
-        source: mockWindow,
-      } as MessageEvent<IAction>
-
-      expect(() => {
-        handleInvalid(routingContext, message)
-      }).not.toThrow()
-    })
-  })
-
-  it('does not send any response messages', () => {
-    const channel = addChannel(mockBrokerState, registry, processManager, actions, 'test-channel', mockWindow)
-    const processId = processManager.create(channel)
-
-    const action: IAction = {
-      type: '[nexus] invalid-request',
-      processId,
-      senderId: 'remote-broker-1',
-      error: 'Test error',
-    }
-
-    const message = {
-      data: action,
-      source: mockWindow,
-    } as MessageEvent<IAction>
-
-    const postMessageCallsBefore = (mockWindow.postMessage as Mock).mock.calls.length
-
-    handleInvalid(routingContext, message)
-
-    expect((mockWindow.postMessage as Mock).mock.calls.length).toBe(postMessageCallsBefore)
-  })
-
-  it('returns early when action does not have processId', () => {
-    const action = {
-      type: '[nexus] invalid-request',
-      senderId: 'remote-broker-1',
-      error: 'Test error',
-    }
-
-    const message = {
-      data: action as IAction,
-      source: mockWindow,
-    } as MessageEvent<IAction>
-
-    expect(() => {
-      handleInvalid(routingContext, message)
-    }).not.toThrow()
+    handleInvalid(routingContext, invalidEvent({ processId, error: 'Test error' }))
 
     expect(mockWindow.postMessage).not.toHaveBeenCalled()
+  })
+
+  it('resolves the channel by process id rather than by source window', () => {
+    const { processId, invalidHandler } = addTrackedChannel('test-channel', mockWindow)
+    const otherWindow = { postMessage: jest.fn() } as unknown as Window
+
+    handleInvalid(routingContext, invalidEvent({ processId, error: 'Stale frame' }, otherWindow))
+
+    expect(invalidHandler).toHaveBeenCalledWith({ reason: 'Stale frame', origin: 'http://remote.example' }, expect.anything())
+  })
+
+  it('routes each report to the channel that owns the process', () => {
+    const first = addTrackedChannel('channel-1', mockWindow)
+    const second = addTrackedChannel('channel-2', { postMessage: jest.fn() } as unknown as Window)
+
+    handleInvalid(routingContext, invalidEvent({ processId: first.processId, error: 'Error 1' }))
+    handleInvalid(routingContext, invalidEvent({ processId: second.processId, error: 'Error 2' }))
+
+    expect([first.invalidHandler.mock.calls, second.invalidHandler.mock.calls]).toEqual([
+      [[{ reason: 'Error 1', origin: 'http://remote.example' }, expect.anything()]],
+      [[{ reason: 'Error 2', origin: 'http://remote.example' }, expect.anything()]],
+    ])
+  })
+
+  it('fires one event per report on the same channel', () => {
+    const { processId, invalidHandler } = addTrackedChannel('test-channel', mockWindow)
+    const reasons = ['Invalid action format', 'Contract mismatch', 'Security violation', 'Timeout', 'Unknown error']
+
+    for (const error of reasons) {
+      handleInvalid(routingContext, invalidEvent({ processId, error }))
+    }
+
+    expect(invalidHandler.mock.calls.map(([data]) => (data as { reason: string }).reason)).toEqual(reasons)
   })
 })

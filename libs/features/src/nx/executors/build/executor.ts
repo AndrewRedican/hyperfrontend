@@ -10,7 +10,7 @@ export interface BuildExecutorSchema {
   config?: string
   /** Output directory for the built shell. */
   out?: string
-  /** Security envelope to enforce at build time: `none`, `v1`, or `v2`. */
+  /** Security envelope to enforce at build time: `none`, `v3`, or `v4`. */
   protocol?: string
   /** Feature name override. */
   name?: string

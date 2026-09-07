@@ -144,9 +144,10 @@ describe('createShellHandle', () => {
   })
 
   it('passes registered security settings to the channel', () => {
-    const ctx = setup({ settings: { security: { protocol: 'v2' } } })
-    ctx.handle.open({ protocol: 'v2' })
-    expect(ctx.addChannel).toHaveBeenCalledWith('feature-1', TARGET, expect.objectContaining({ security: { protocol: 'v2' } }))
+    const security = { protocol: 'v4', mode: 'fail-closed' }
+    const ctx = setup({ settings: { security } })
+    ctx.handle.open({ protocol: 'v4', sharedKey: 'a-key-of-sixteen-or-more' })
+    expect(ctx.addChannel).toHaveBeenCalledWith('feature-1', TARGET, expect.objectContaining({ security }))
   })
 
   it('connects the channel after mounting', () => {
@@ -235,6 +236,16 @@ describe('createShellHandle', () => {
     ctx.handle.open()
     ctx.mock.trigger('invalid', { reason: 'schema' })
     expect(handler).toHaveBeenCalledWith({ reason: 'schema' })
+  })
+
+  it('emits error with a security-error reason when the envelope drops a packet', () => {
+    const ctx = setup()
+    const handler = jest.fn()
+    ctx.handle.on('error', handler)
+    ctx.handle.open()
+    const drop = { message: 'Dropped inbound packet at open', code: 'authentication-failed' }
+    ctx.mock.trigger('security-error', drop)
+    expect(handler).toHaveBeenCalledWith({ reason: 'security-error', ...drop })
   })
 
   it('re-emits feature messages keyed by action type', () => {

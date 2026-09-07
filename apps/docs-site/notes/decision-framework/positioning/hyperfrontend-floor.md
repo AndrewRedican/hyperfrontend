@@ -347,15 +347,14 @@ medium confidence is about.
 - **Technical detail**: no synchronous call, no shared object, no shared store. Requests are
   correlated envelopes with deadlines (30 s default), and pending requests reject when the
   session ends, including across a peer reload. Every message pays structured-clone plus
-  (where a schema is declared) validation cost, and the v1 crypto envelope additionally pays
-  per-message key derivation and has been observed to drop messages silently under many
-  concurrent chatty channels. Host code that assumes a return value in the same tick has to
+  (where a schema is declared) validation cost, and a sealed channel additionally pays one
+  authenticated-encryption operation per message in each direction, with key agreement paid
+  once per session. Host code that assumes a return value in the same tick has to
   be restructured.
 - **Evidence**: `contracts.sync-calls`=no; `contracts.serialized-boundary`=yes;
   `contracts.builtin-messaging`=yes; `contracts.host-push-updates`=yes;
   `performance.per-message-serialization-cost`=yes ("structured clone plus schema
-  validation; v1 crypto envelope silently drops messages under chatty concurrent
-  channels"); `contracts.builtin-shared-state`=no.
+  validation; a sealed channel adds one authenticated-encryption operation per message"); `contracts.builtin-shared-state`=no.
 
 ### `floor.host.author-its-own-failure-and-loading-ui`
 
@@ -487,18 +486,18 @@ possible in principle but requires a decision inside someone else's organization
   cannot distinguish the host application from analytics, a tag manager, or a compromised
   transitive dependency running in the same page. The project states this explicitly:
   co-resident in-page scripts are outside the core trust model. The crypto envelope is defence-in-depth over that gap, not a fix: handshake
-  frames stay plaintext, v1 is characterized as deterrence-grade, v2 requires a pre-shared
-  key, and a counterpart that simply omits the protocol downgrades the channel to plaintext
-  with no runtime signal (the only gate is a build-time pin comparison). Real defences
+  frames stay plaintext, the ephemeral-key protocol (v3) defeats only a script that can
+  listen, the pre-shared-key protocol (v4) defeats a script that lacks the key, and nothing
+  in the mechanism keeps that key from a script sharing the host realm. Real defences
   against in-page adversaries live outside this mechanism: CSP, Trusted Types, SRI, or
   moving the authority to a separate origin.
 - **Evidence**: `security.channel-origin-pinning`=yes ("pins window-at-origin; authenticates
   rooms, not speakers within a page"); `isolation.security.malicious-participant`=conditional
   ("in-page co-resident scripts are outside the trust model");
   `security.untrusted-third-party-viable`=conditional (same condition);
-  `security.channel-confidentiality`=conditional ("v1 is deterrence-grade; handshake frames
-  stay plaintext; silent runtime plaintext downgrade, gated only at build (--allow-open)");
-  thesis P13 and claim 12; positioning `pos.weakness.silent-plaintext-downgrade`.
+  `security.channel-confidentiality`=conditional ("v4 with a shared key is key-bound protection;
+  v3 defeats listeners only; handshake frames stay plaintext; fail-closed negotiation");
+  thesis P13 and claim 12.
 - **Related but different**: a malicious *participant* is a different question, and there
   the answer is Conditional rather than No: cross-origin plus host-decreed sandbox contains
   it, with Spectre-class attacks needing cross-site process isolation.
@@ -607,7 +606,7 @@ because a reader asking "what would have to change" is often really asking one o
 |---|---|---|---|
 | `floor.change.posture.cross-origin` | Serve features from a different origin than the host | Flips the whole trust cluster from "containment against accidents" to a real security boundary: host DOM and JS state become unreachable, storage partitions, per-participant CSP applies, the main thread and (engine-dependent) the process separate | `security.host-dom-reach`, `security.host-js-state-reach`, `isolation.origin.host-authority`, `isolation.storage.partition`, `isolation.resource.main-thread`, `isolation.process.crash`, all Conditional on exactly this |
 | `floor.change.posture.sandbox` | Apply the host-decreed `sandbox` (and narrow `allow`) rather than leaving the frame unsandboxed | Adds the top-level navigation guard and completes the untrusted-participant posture; the SDK prevents the self-unsandboxing token combination | `isolation.navigation.top-level-guard`=conditional ("only when the host applies its decreed sandbox"); `security.untrusted-third-party-viable`=conditional; `security.sandbox-attribute-applicable`=yes |
-| `floor.change.posture.crypto` | Choose the channel protocol deliberately (`none`, `v1`, `v2` with a shared key) and compare pins at build time | v2 with a pre-shared key is real protection; v1 is deterrence-grade and can drop messages under many concurrent chatty channels; omitting the protocol on either side downgrades to plaintext with no runtime signal | `security.channel-confidentiality`=conditional; `performance.per-message-serialization-cost`=yes; `pos.weakness.silent-plaintext-downgrade`, `pos.weakness.v1-envelope-collapse` |
+| `floor.change.posture.crypto` | Choose the channel protocol deliberately (`none`, `v3`, `v4` with a shared key of 16 characters or more) and pin the same protocol on both sides | v4 with a pre-shared key is key-bound protection; v3 defeats only a script that can listen; negotiation is fail-closed, so a counterpart that cannot run the pinned protocol is denied with a runtime `error` on both sides; an open channel requires `--allow-open` at build | `security.channel-confidentiality`=conditional; `performance.per-message-serialization-cost`=yes |
 | `floor.change.posture.schemas` | Declare a schema on every action that matters | Validation applies only to actions that declare one; schema-less actions pass through unchecked, and hot paths may skip schemas deliberately for cost | `contracts.schema-validated-payloads`=conditional |
 
 ### 5.4 The short answer

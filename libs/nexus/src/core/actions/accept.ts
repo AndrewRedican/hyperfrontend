@@ -17,7 +17,7 @@ import { ACTION_TYPES } from '../../types/action'
  *
  * // With security negotiation response
  * const secureAction = acceptConnection(deps)('process-123', {
- *   negotiated: 'v2'
+ *   negotiated: 'v4'
  * })
  * ```
  */

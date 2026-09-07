@@ -20,7 +20,7 @@ Options:
   --contract <path>     Path to the *.contract.{json,ts,js} file
   --entry <path>        Entry file to wire the glue import into (init)
   --url <url>           URL the shell loads the feature from (build)
-  --protocol <none|v1|v2>  Security envelope enforced at build time
+  --protocol <none|v3|v4>  Security envelope enforced at build time
   --allow-open          Acknowledge an explicit '--protocol none' and build an open, unauthenticated shell (build)
   --out <dir>           Output directory for the built shell (build)
   --apps <path>         Path to the dev-server apps array (dev)

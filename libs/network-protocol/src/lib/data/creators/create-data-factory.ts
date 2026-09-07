@@ -60,12 +60,10 @@ export function createDataFactory(createHash: (data: string, algorithm: string) 
       throw createError('Cannot create data because failed to hash schema')
     }
     const id = uuidV4()
-    const key = uuidV4()
     const data: SerializedData<T> = {
       pid,
       id,
       sequence,
-      key,
       message: serialized as JSONString<T>,
       schema,
       schemaHash,

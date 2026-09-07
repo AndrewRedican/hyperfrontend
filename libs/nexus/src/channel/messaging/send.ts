@@ -12,11 +12,11 @@ import { sendAction } from './send-action'
  *   even while the channel is still opening (enqueue-time validation)
  * - If channel is closed and queueMessages is enabled, queues the message
  * - If channel is closed and queueMessages is disabled, throws error
- * - If security transport exists but is not ready, queues the message
- * - If channel is open and security is ready (or protocol is 'none'), sends message
+ * - If channel is open, sends the message
  *
- * For secure protocols (v1/v2), the message is routed through the security
- * transport which encrypts and sends as Uint8Array via postMessage.
+ * On a channel with a security transport the message is sealed by the
+ * transport and posted as a Uint8Array; until the session is keyed it waits
+ * inside the transport.
  *
  * @param channel - Channel internals with state and dependencies
  * @param message - Message to send with type and data
@@ -46,17 +46,6 @@ export function send(channel: ChannelInternals, message: IMessage): void {
       return
     }
     throw createError(`Cannot send message. Channel ${state.name} is not open.`)
-  }
-
-  const securityTransport = state.securityTransport
-  const negotiatedProtocol = state.negotiatedProtocol
-
-  if (securityTransport && negotiatedProtocol !== 'none' && !securityTransport.isReady()) {
-    if (state.queueMessages) {
-      queue(channel, message)
-      return
-    }
-    throw createError(`Cannot send message. Security transport for channel ${state.name} is not ready.`)
   }
 
   if (!state.contract) {

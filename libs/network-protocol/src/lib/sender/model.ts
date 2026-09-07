@@ -1,9 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import type { Logger } from '@hyperfrontend/logging'
 import type { Data } from '../data/model'
-import type { PacketEncryption, PacketObfuscation } from '../packet/model'
+import type { PacketDropHandler, PacketSealer } from '../packet/model'
 
-/** Callback invoked to transmit raw packet bytes */
+/** Callback invoked to transmit sealed wire bytes */
 export type SendPacketFn = (packet: Uint8Array) => void
 
 /** Function to send data from an origin to a target */
@@ -15,33 +15,25 @@ export interface OutboundQueue {
   readonly size: number
 }
 
-/** Collection of outbound processing queues */
-export interface OutboundQueues {
-  /** Queue for packets awaiting encryption */
-  readonly encryptionQueue: OutboundQueue
-  /** Queue for packets awaiting serialization */
-  readonly serializationQueue: OutboundQueue
-  /** Queue for packets awaiting obfuscation */
-  readonly obfuscationQueue: OutboundQueue
-}
-
 /** Sender interface for processing outbound packets */
-export interface Sender<T = any> extends OutboundQueues {
+export interface Sender<T = any> {
   /** Sends data from origin to target */
   readonly send: SendFn<T>
   /** Pauses packet processing */
   readonly stop: () => void
   /** Resumes packet processing */
   readonly resume: () => void
+  /** The packets waiting to be sealed */
+  readonly queue: OutboundQueue
 }
 
-/** Factory function type for creating a Sender instance */
+/** Factory function type for creating a Sender instance; `onDrop` receives each packet the sealer rejects */
 export type CreateSender<T = any> = (
   label: string,
   sender: SendPacketFn,
   logger: Logger,
-  packetEncryption: PacketEncryption<T>,
-  packetObfuscation: PacketObfuscation
+  seal: PacketSealer<T>,
+  onDrop?: PacketDropHandler
 ) => Sender<T>
 
 /** Alias for CreateSender factory type */

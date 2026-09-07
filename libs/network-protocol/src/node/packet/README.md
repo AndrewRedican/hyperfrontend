@@ -1,5 +1,5 @@
 # packet
 
-Node.js-side packet encryption, serialization, and obfuscation pipeline with dynamic-key support.
+Node.js-side packet types, builders, and validators.
 
-A packet is the on-the-wire unit produced from a `Data<T>` envelope after encryption, serialization, and obfuscation. This entry point binds the runtime-agnostic `lib/packet` factories to `@hyperfrontend/cryptography/node` (Node `webcrypto` AES-GCM) and `@hyperfrontend/string-utils/node` (`Buffer`-based base64), exposing `encryptPacket`, `decryptPacket`, `obfuscatePacket`, `deobfuscatePacket`, and the high-level `createSerializedEncryptedPacket` / `createDeserializedEncryptedPacket` builders. Used by the `/node/v1` and `/node/v2` protocols to assemble outgoing wire packets and parse incoming ones. Function signatures match `/browser/packet` so encoded packets cross runtime boundaries cleanly.
+A packet is either a plaintext `UnencryptedPacket<T>` (`origin`, `target`, and a `Data<T>` envelope) or the sealed `WirePacket` bytes that carry it. This entry point exposes `createPacketBase` and `createUnencryptedPacket`, the validators `isValidOrigin`, `isValidTarget`, `isValidUnencryptedPacket`, and `isValidWirePacket`, and the operation and drop types (`PacketSealer`, `PacketOpener`, `PacketDrop`, `PacketDropHandler`, `PacketDropStage`) that a session protocol and a channel's `onDrop` handler share. Origins and targets are UUID v4 strings. The `/node/v3` and `/node/v4` protocols convert between the two shapes; `/browser/packet` exports the same code, so packets cross runtime boundaries cleanly.

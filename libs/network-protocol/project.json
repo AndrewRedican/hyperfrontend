@@ -15,30 +15,30 @@
         "cjs": { "bundleWorkspaceDeps": true, "bundleAllDeps": true },
         "iife": [
           {
-            "entry": "./browser/v1",
-            "globalName": "HyperfrontendNetworkProtocolV1",
-            "output": "bundle/v1"
+            "entry": "./browser/v3",
+            "globalName": "HyperfrontendNetworkProtocolV3",
+            "output": "bundle/v3"
           },
           {
-            "entry": "./browser/v2",
-            "globalName": "HyperfrontendNetworkProtocolV2",
-            "output": "bundle/v2"
+            "entry": "./browser/v4",
+            "globalName": "HyperfrontendNetworkProtocolV4",
+            "output": "bundle/v4"
           }
         ],
         "umd": [
           {
-            "entry": "./browser/v1",
-            "globalName": "HyperfrontendNetworkProtocolV1",
-            "output": "bundle/v1"
+            "entry": "./browser/v3",
+            "globalName": "HyperfrontendNetworkProtocolV3",
+            "output": "bundle/v3"
           },
           {
-            "entry": "./browser/v2",
-            "globalName": "HyperfrontendNetworkProtocolV2",
-            "output": "bundle/v2"
+            "entry": "./browser/v4",
+            "globalName": "HyperfrontendNetworkProtocolV4",
+            "output": "bundle/v4"
           }
         ],
-        "unpkg": "./bundle/v1/index.umd.min.js",
-        "jsdelivr": "./bundle/v1/index.umd.min.js"
+        "unpkg": "./bundle/v4/index.umd.min.js",
+        "jsdelivr": "./bundle/v4/index.umd.min.js"
       }
     },
     "publish": {},

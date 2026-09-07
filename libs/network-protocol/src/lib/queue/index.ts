@@ -1,25 +1,18 @@
 /**
- * Message queue factories for encryption, serialization, and obfuscation pipelines.
+ * FIFO message processing queues for the seal and open pipeline stages.
  *
  * @module @hyperfrontend/network-protocol/queue
  */
 export type {
   Queue,
   MessageHandler,
+  QueueFailureHandler,
   QueueOperation,
   QueueCreatorArguments,
   QueueCreatorValidity,
-  EncryptionQueueCreater,
-  SerializationQueueCreater,
-  ObfuscationQueueCreater,
-  DeobfuscationQueueCreater,
-  DeserializationQueueCreater,
-  DecryptionQueueCreater,
+  SealQueueCreater,
+  OpenQueueCreater,
 } from './model'
-export { createDecryptionQueue } from './creators/create-decryption-queue'
-export { createDeobfuscationQueue } from './creators/create-deobfuscation-queue'
-export { createDeserializationQueue } from './creators/create-deserialization-queue'
-export { createEncryptionQueue } from './creators/create-encryption-queue'
-export { createObfuscationQueue } from './creators/create-obfuscation-queue'
+export { createOpenQueue } from './creators/create-open-queue'
 export { createQueue } from './creators/create-queue'
-export { createSerializationQueue } from './creators/create-serialization-queue'
+export { createSealQueue } from './creators/create-seal-queue'

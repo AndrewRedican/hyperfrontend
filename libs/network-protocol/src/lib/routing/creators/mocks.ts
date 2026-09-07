@@ -1,8 +1,8 @@
 import type { Channel } from '../../channel/model'
 import type { Topic } from '../../topic/model'
-import type { RoutedUnencryptedPacket, RoutedObfuscatedPacket, Subscriptions, Router, RoutingOptions } from '../model'
+import type { RoutedUnencryptedPacket, RoutedWirePacket, Subscriptions, Router, RoutingOptions } from '../model'
 import { createWeakMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/weak-map'
-import { unencryptedPacket, obfuscatedPacket } from '../../packet/creators/mocks'
+import { unencryptedPacket, wirePacket } from '../../packet/creators/mocks'
 import { topicId } from '../../topic/creators/mocks'
 
 export const routedUnencryptedPacket: RoutedUnencryptedPacket = {
@@ -10,9 +10,9 @@ export const routedUnencryptedPacket: RoutedUnencryptedPacket = {
   packet: unencryptedPacket,
 }
 
-export const routedObfuscatedPacket: RoutedObfuscatedPacket = {
+export const routedWirePacket: RoutedWirePacket = {
   topicId,
-  packet: obfuscatedPacket,
+  packet: wirePacket,
 }
 
 export const subscriptions: Subscriptions = createWeakMap<Channel, Topic[]>()

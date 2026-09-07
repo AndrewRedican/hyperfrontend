@@ -10,7 +10,7 @@ export interface CliFlags {
   readonly name?: string
   /** Feature version (`--version`). */
   readonly version?: string
-  /** Security envelope to enforce at build time (`--protocol`): `none`, `v1`, or `v2`. */
+  /** Security envelope to enforce at build time (`--protocol`): `none`, `v3`, or `v4`. */
   readonly protocol?: string
   /** Output directory for the built shell (`--out`). */
   readonly out?: string
@@ -90,8 +90,8 @@ const BOOLEAN_FLAGS: Record<string, keyof CliFlags> = {
  *
  * @example Parsing a build invocation
  * ```typescript
- * parseCliArgs(['build', '--protocol', 'v2', '--out', './dist'])
- * // => { command: 'build', flags: { protocol: 'v2', out: './dist', ci: false, ... } }
+ * parseCliArgs(['build', '--protocol', 'v4', '--out', './dist'])
+ * // => { command: 'build', flags: { protocol: 'v4', out: './dist', ci: false, ... } }
  * ```
  */
 export function parseCliArgs(argv: readonly string[]): ParsedArgs {

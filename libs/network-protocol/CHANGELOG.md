@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.0.0](https://github.com/AndrewRedican/hyperfrontend/compare/106ce4517092cdfa9f222b73d938d272c333d69b...c2798e1479f78d5909adb098595846152a6f9350) - 2026-09-07
+
+### Breaking Changes
+
+- **BREAKING** the browser/v1, browser/v2, node/v1, and node/v2 entries, the bundle/v1 and bundle/v2 builds, the password-keyed packet and data exports, and the six staged queues are removed; createChannel takes an options object with a session, ProtocolProvider receives the session, and Data no longer carries a key.
+
+### Features
+
+- **BREAKING** replace v1/v2 with the v3/v4 session
+
 ## [1.0.0](https://github.com/AndrewRedican/hyperfrontend/compare/5f116abb8ba6355dfb283fa03b7481e5eb029480...57e00623ade790f3ae8a2aa4f3b78316bd8b844d) - 2026-08-31
 
 ### Features

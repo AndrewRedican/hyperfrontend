@@ -61,9 +61,9 @@ export type BoxPosition =
  * Union of the supported security envelope selectors.
  *
  * `none` is the local default (opt-in security); production builds must pick
- * `v1` or `v2`.
+ * `v3` (ephemeral session keys) or `v4` (session keys bound to a pre-shared key).
  */
-export type SecurityProtocol = 'none' | 'v1' | 'v2'
+export type SecurityProtocol = 'none' | 'v3' | 'v4'
 
 /**
  * A Permissions-Policy feature name the host can delegate to the feature frame.
@@ -348,7 +348,7 @@ export interface ShellOptions {
   popupPosition?: BoxPosition
   /** Security envelope to negotiate; defaults to `none`. */
   protocol?: SecurityProtocol
-  /** Pre-shared key used by the `v2` protocol. */
+  /** Pre-shared key the `v4` protocol binds the session to; at least 16 characters, never given with another protocol. */
   sharedKey?: string
   /** Experience plugins wrapped around each mount/unmount; `onMount` runs in registration order, `onUnmount` in reverse. */
   plugins?: readonly ExperiencePlugin[]
@@ -389,7 +389,7 @@ export interface FeatureOptions {
   root?: string | HTMLElement
   /** Security envelope to negotiate with the host; defaults to `none`. */
   protocol?: SecurityProtocol
-  /** Pre-shared key used by the `v2` protocol. */
+  /** Pre-shared key the `v4` protocol binds the session to; at least 16 characters, never given with another protocol. */
   sharedKey?: string
   /**
    * Milliseconds the feature waits for the host to complete the connection

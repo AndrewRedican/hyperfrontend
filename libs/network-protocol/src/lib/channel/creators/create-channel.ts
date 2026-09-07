@@ -1,6 +1,6 @@
 import type { ReceiverFactory } from '../../receiver/model'
 import type { SenderFactory } from '../../sender/model'
-import type { ChannelCreater, Channel } from '../model'
+import type { ChannelCreater, Channel, InboundPipeline, OutboundPipeline } from '../model'
 import { getType } from '@hyperfrontend/data-utils'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
@@ -9,26 +9,37 @@ import { getFirstInvalidProtocolProperty } from '../validations/get-first-invali
 import { isValidLabel } from '../validations/is-valid-label'
 import { isValidReceiver } from '../validations/is-valid-receiver'
 import { isValidSender } from '../validations/is-valid-sender'
+import { isValidSession } from '../validations/is-valid-session'
 
 /**
- * Creates a channel creator factory with injected sender and receiver factories.
+ * Creates a channel creator with injected sender and receiver factories.
+ *
+ * A channel binds one protocol instance to one session: the provider is called once with
+ * the transport callbacks and the session, the resulting seal and open operations feed the
+ * outbound and inbound pipelines, and the protocol's hello exchange is exposed unchanged so
+ * the owner can run it over the same transport. A provider that throws (a session it cannot
+ * key) throws out of `createChannel` in the caller's frame.
  *
  * @param createSender - Factory function to create senders
  * @param createReceiver - Factory function to create receivers
  * @returns A channel creator function
  *
- * @example Creating a channel with send capability
+ * @example Creating a channel for a negotiated session
  * ```typescript
- * const createChannel = createChannelFactory(senderFactory, receiverFactory)
- * const channel = createChannel('comms', sendFn, receiveFn, protocolProvider)
- * channel.send(message)
+ * const createChannel = createChannelFactory(createSender, createReceiver)
+ * const channel = createChannel('comms', { send: sendFn, receive: receiveFn, protocolProvider: suite.protocolProvider, session, onDrop: (drop) => report(drop) })
+ * channel.send(originId, targetId, data)
  * ```
  */
 export function createChannelFactory(createSender: SenderFactory, createReceiver: ReceiverFactory): ChannelCreater {
-  return (label, sendPacket, receivePacket, protocolProvider) => {
+  return (label, options) => {
     if (!isValidLabel(label)) {
       throw createError(withoutValidErrorMessage('label'))
     }
+    if (getType(options) !== 'object') {
+      throw createError(withoutValidErrorMessage('options object'))
+    }
+    const { send: sendPacket, receive: receivePacket, protocolProvider, session, onDrop } = options
     if (!isValidSender(sendPacket)) {
       throw createError(withoutValidErrorMessage('send function'))
     }
@@ -38,29 +49,20 @@ export function createChannelFactory(createSender: SenderFactory, createReceiver
     if (getType(protocolProvider) !== 'function') {
       throw createError(withoutValidErrorMessage('protocol provider function'))
     }
-    const protocol = protocolProvider(sendPacket, receivePacket)
+    if (!isValidSession(session)) {
+      throw createError(withoutValidErrorMessage('session'))
+    }
+    const protocol = protocolProvider(sendPacket, receivePacket, session)
     const propName = getFirstInvalidProtocolProperty(protocol)
     if (propName) {
       throw createError(withoutValidErrorMessage(`${propName} function`))
     }
-    const { send, receive, getLogger, packetEncryption, packetDecryption, packetObfuscation, packetDeobfuscation } = protocol
+    const { send, receive, getLogger, seal, open, hello, isHello, acceptHello } = protocol
     const logger = getLogger()
-    const sender = createSender(`${label} sender`, send, logger, packetEncryption, packetObfuscation)
-    const receiver = createReceiver(`${label} receiver`, receive, logger, packetDeobfuscation, packetDecryption)
-    const outbound: Channel['outbound'] = freeze({
-      encryptionQueue: sender.encryptionQueue,
-      serializationQueue: sender.serializationQueue,
-      obfuscationQueue: sender.obfuscationQueue,
-      stop: sender.stop,
-      resume: sender.resume,
-    })
-    const inbound: Channel['inbound'] = freeze({
-      deobfuscationQueue: receiver.deobfuscationQueue,
-      deserializationQueue: receiver.deserializationQueue,
-      decryptionQueue: receiver.decryptionQueue,
-      stop: receiver.stop,
-      resume: receiver.resume,
-    })
+    const sender = createSender(`${label} sender`, send, logger, seal, onDrop)
+    const receiver = createReceiver(`${label} receiver`, receive, logger, open, onDrop)
+    const outbound: OutboundPipeline = freeze({ queue: sender.queue, stop: sender.stop, resume: sender.resume })
+    const inbound: InboundPipeline = freeze({ queue: receiver.queue, stop: receiver.stop, resume: receiver.resume })
     const stop = () => {
       inbound.stop()
       outbound.stop()
@@ -73,6 +75,9 @@ export function createChannelFactory(createSender: SenderFactory, createReceiver
       label,
       send: sender.send,
       receive: receiver.receive,
+      hello,
+      isHello,
+      acceptHello,
       stop,
       resume,
       outbound,

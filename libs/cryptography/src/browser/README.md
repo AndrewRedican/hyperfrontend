@@ -4,7 +4,7 @@ Browser-targeted bindings of the cryptography primitives, wired to the Web Crypt
 
 ## Overview
 
-This entry point composes the runtime-agnostic core (`createEncrypt`, `createValueCreator`, hashing, key derivation, time-based passwords) with browser implementations of `subtle`, `getRandomValues`, and UTF-8 encoding. The exported function signatures are identical to `/node`, so application code that imports from `@hyperfrontend/cryptography/browser` can be ported between runtimes without changes.
+This entry point composes the runtime-agnostic core (`createEncrypt`, `createValueCreator`, hashing, key derivation, key agreement, HKDF expansion, AEAD sealing, time-based passwords) with browser implementations of `subtle`, `getRandomValues`, and UTF-8 encoding. The exported function signatures are identical to `/node`, so application code that imports from `@hyperfrontend/cryptography/browser` can be ported between runtimes without changes.
 
 ## Usage
 

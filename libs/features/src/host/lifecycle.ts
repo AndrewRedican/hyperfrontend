@@ -57,7 +57,7 @@ export interface ShellWiring {
    *
    * @param broker - The shell's nexus broker.
    * @param protocol - The selected protocol, or `undefined` for none.
-   * @param sharedKey - The pre-shared key for `v2`.
+   * @param sharedKey - The pre-shared key for `v4`.
    * @returns The channel settings to apply, or `undefined` for no security.
    */
   registerSecurity(
@@ -335,6 +335,17 @@ export function createShellHandle(
       result.viewport?.start((size) => activeChannel.send(ControlType.Viewport, size))
     })
     wireChannelEvents(activeChannel, emitter)
+    activeChannel.on('deny', () => {
+      // why: A denied handshake never opens; without this the mount sits dark until the open timeout for an answer that already arrived.
+      destroy()
+    })
+    activeChannel.on('cancel', (data) => {
+      // why: A cancel the feature sent means it abandoned the handshake at its own gates; the mount would otherwise wait out the open timeout.
+      if (data?.notify === true) {
+        destroy()
+        emitter.emit('error', { reason: 'handshake-cancelled', displayMode })
+      }
+    })
     activeChannel.on('close', (data) => {
       opened = false
       dirty = false

@@ -70,10 +70,12 @@ export default function QuickStartPage() {
         </div>
         <div className="mt-4 pl-11">
           <p className="text-slate-600 dark:text-slate-400">Generate a self-contained shell package that any host can install:</p>
-          <CodeBlock code="npx @hyperfrontend/features build --protocol v2" />
+          <CodeBlock code="npx @hyperfrontend/features build --protocol v4" />
           <p className="mt-4 text-sm text-slate-500 dark:text-slate-400">
             The shell inlines the contract and bundles its dependencies, so the host installs one package and takes on no transitive deps.
-            The security envelope is an explicit choice: the build bakes in whichever protocol you pass.
+            The security envelope is an explicit choice: the build bakes in whichever protocol you pass, <code>v3</code> or <code>v4</code>.
+            With <code>v4</code> the host and the feature each supply the same <code>sharedKey</code> of at least 16 characters when they
+            open the channel.
           </p>
         </div>
       </section>

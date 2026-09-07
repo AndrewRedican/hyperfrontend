@@ -1,5 +1,8 @@
 import type { ExecutorContext } from '../../model'
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { beforeEach } from 'node:test'
+import { parse } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { runBuild } from '../../../cli'
 import { warnIfRollupBindingMissing } from '../../shared/rollup-binding'
@@ -43,6 +46,18 @@ describe('runBuildExecutor', () => {
     await runBuildExecutor({ protocol: 'none', allowOpen: true }, context)
     expect(runBuildMock).toHaveBeenCalledWith(
       expect.objectContaining({ flags: expect.objectContaining({ protocol: 'none', allowOpen: true }) })
+    )
+  })
+
+  it('forwards a v4 protocol to the SDK build', async () => {
+    runBuildMock.mockResolvedValue(0)
+    await runBuildExecutor({ protocol: 'v4' }, context)
+    expect(runBuildMock).toHaveBeenCalledWith(expect.objectContaining({ flags: expect.objectContaining({ protocol: 'v4' }) }))
+  })
+
+  it('offers exactly the none, v3, and v4 protocols in the executor schema', () => {
+    expect(parse(readFileSync(join(import.meta.dirname, 'schema.json'), 'utf-8'))).toEqual(
+      expect.objectContaining({ properties: expect.objectContaining({ protocol: expect.objectContaining({ enum: ['none', 'v3', 'v4'] }) }) })
     )
   })
 

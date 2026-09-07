@@ -66,7 +66,7 @@ All libraries ship with multiple output formats:
 <script src="https://unpkg.com/@hyperfrontend/data-utils@0.0.1"></script>
 
 <!-- Explicit bundle path (required for multi-bundle packages) -->
-<script src="https://unpkg.com/@hyperfrontend/network-protocol/bundle/v2/index.umd.min.js"></script>
+<script src="https://unpkg.com/@hyperfrontend/network-protocol/bundle/v4/index.umd.min.js"></script>
 ```
 
 ### jsDelivr
@@ -79,7 +79,7 @@ All libraries ship with multiple output formats:
 <script src="https://cdn.jsdelivr.net/npm/@hyperfrontend/data-utils@0.0.1"></script>
 
 <!-- Explicit bundle path -->
-<script src="https://cdn.jsdelivr.net/npm/@hyperfrontend/network-protocol/bundle/v2/index.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@hyperfrontend/network-protocol/bundle/v4/index.umd.min.js"></script>
 ```
 
 ### Global Variable Names
@@ -98,8 +98,8 @@ All libraries ship with multiple output formats:
 | `logging`                | `HyperfrontendLogging`           |
 | `state-machine`          | `HyperfrontendStateMachine`      |
 | `cryptography`           | `HyperfrontendCryptography`      |
-| `network-protocol` (v1)  | `HyperfrontendNetworkProtocolV1` |
-| `network-protocol` (v2)  | `HyperfrontendNetworkProtocolV2` |
+| `network-protocol` (v3)  | `HyperfrontendNetworkProtocolV3` |
+| `network-protocol` (v4)  | `HyperfrontendNetworkProtocolV4` |
 | `nexus`                  | `HyperfrontendNexus`             |
 | `features` (`/host`)     | `HyperfrontendFeaturesHost`      |
 | `features` (`/hostee`)   | `HyperfrontendFeaturesHostee`    |
@@ -135,14 +135,14 @@ import { utf8StringToUint8Array } from '@hyperfrontend/string-utils/node'
 ### `@hyperfrontend/network-protocol`
 
 ```typescript
-// Browser — choose protocol version explicitly
-import { createProtocol } from '@hyperfrontend/network-protocol/browser/v2'
+// Browser: choose the protocol explicitly (v3: ephemeral session keys; v4: session keys bound to a pre-shared key)
+import { createProtocol } from '@hyperfrontend/network-protocol/browser/v4'
 
 // Node.js
-import { createProtocol } from '@hyperfrontend/network-protocol/node/v2'
+import { createProtocol } from '@hyperfrontend/network-protocol/node/v4'
 
-// Shared types and utilities (isomorphic)
-import type { Message } from '@hyperfrontend/network-protocol/lib/types'
+// Shared error codes and types (isomorphic)
+import { ProtocolErrorCode } from '@hyperfrontend/network-protocol/security'
 ```
 
 ### `@hyperfrontend/features`

@@ -2,7 +2,7 @@
 
 ## Purpose
 
-The Protocol module provides the central coordination object that encapsulates all cryptographic operations (encryption, decryption, obfuscation, deobfuscation) along with send/receive transport functions. It serves as a unified interface for secure message passing between endpoints.
+The Protocol module produces the object a channel drives: one `Protocol` instance per session, holding the session's `seal` and `open` operations, its hello exchange, and the transport callbacks. Two protocols are built here, `v3` and `v4`. Both key a session from an ephemeral P-256 agreement carried in plaintext hello frames; v4 also mixes a stretched pre-shared key into the schedule. The module also provides a store for named protocol providers.
 
 ---
 
@@ -10,237 +10,175 @@ The Protocol module provides the central coordination object that encapsulates a
 
 ### `Protocol<T>`
 
-The main protocol interface combining security operations with transport.
+Declared in `channel/model.ts`; every provider returns one.
 
 ```typescript
-interface Protocol<T = any> {
-  packetEncryption: PacketEncryption<T> // Encrypt outbound packets
-  packetDecryption: PacketDecryption<T> // Decrypt inbound packets
-  packetObfuscation: PacketObfuscation // Obfuscate for wire transmission
-  packetDeobfuscation: PacketDeobfuscation // Deobfuscate received data
-  send: SendPacketFn // Transport send function
-  receive: ReceivePacketFn<T> // Wrapped receive callback
-  getLogger: () => Logger // Logger accessor
+interface Protocol<T = any> extends HelloExchange {
+  seal: PacketSealer<T> // (packet: UnencryptedPacket<T>) => Promise<WirePacket>
+  open: PacketOpener<T> // (frame: WirePacket) => Promise<UnencryptedPacket<T>>
+  send: SendPacketFn // Transmits a sealed frame
+  receive: ReceivePacketFn<T> // Receives an opened packet
+  getLogger: () => Logger
+}
+
+interface HelloExchange {
+  hello(): Promise<WirePacket> // This side's hello frame; the same bytes on every call
+  isHello(frame: WirePacket): boolean // True for a hello frame of this protocol's version
+  acceptHello(frame: WirePacket): HelloOutcome // 'accepted' | 'duplicate' | 'rejected'
 }
 ```
 
 ### `ProtocolProvider<T>`
 
-Factory function type that binds transport functions to create a protocol.
+Binds a protocol instance to one negotiated session.
 
 ```typescript
-type ProtocolProvider<T = any> = (send: SendPacketFn, receive: ReceivePacketFn<T>) => Protocol<T>
+type ProtocolProvider<T = any> = (send: SendPacketFn, receive: ReceivePacketFn<T>, session: ProtocolSession) => Protocol<T>
 ```
+
+`ProtocolSession` is `{ protocol, role: 'initiator' | 'responder', localId, peerId }`; see [`security/`](../security/README.md).
 
 ### `ProtocolProviderStore<T>`
 
-Store for managing multiple named protocol providers.
+Store for named protocol providers.
 
 ```typescript
 interface ProtocolProviderStore<T = unknown> {
-  readonly add: (name: string, provider: ProtocolProvider<T>) => void
+  readonly add: (name: string, protocolProvider: ProtocolProvider<T>) => void
   readonly existsByName: (name: string) => boolean
   readonly existsById: (id: string) => boolean
-  readonly removeByName: (...names: string[]) => void
-  readonly removeById: (...ids: string[]) => void
+  readonly removeByName: (...name: string[]) => void
+  readonly removeById: (...id: string[]) => void
   readonly clear: () => void
   readonly getByName: (name: string) => ProtocolProvider<T> | null
   readonly getById: (id: string) => ProtocolProvider<T> | null
-  readonly list: readonly ProtocolProviderEntry<T>[]
+  readonly list: readonly ProtocolProviderEntry<T>[] // { id, name, provider }
 }
 ```
+
+### `SessionCrypto`
+
+The platform primitives a session protocol is composed from. The `/browser/v3` and `/browser/v4` entries fill it from `@hyperfrontend/cryptography/browser` and `@hyperfrontend/string-utils/browser`; the `/node/*` entries use the Node.js counterparts.
+
+```typescript
+interface SessionCrypto {
+  getRandomValues: (byteLength: number) => Uint8Array
+  createKeyAgreement: () => Promise<KeyAgreementLike> // Ephemeral P-256; publicKey is the 65-byte uncompressed point
+  stretchPassword: (password: string, salt: Uint8Array, options?: StretchOptions) => Promise<Uint8Array> // PBKDF2-SHA256
+  expandKey: (ikm: Uint8Array, salt: Uint8Array, info: Uint8Array, usages: readonly KeyUsage[]) => Promise<CryptoKey> // HKDF-SHA256
+  seal: (key: CryptoKey, nonce: Uint8Array, additionalData: Uint8Array, plaintext: Uint8Array) => Promise<Uint8Array> // AES-GCM
+  open: (key: CryptoKey, nonce: Uint8Array, additionalData: Uint8Array, sealed: Uint8Array) => Promise<Uint8Array>
+  utf8Encode: (text: string) => Uint8Array
+  utf8Decode: (bytes: Uint8Array) => string
+}
+```
+
+### `SessionProtocolDefinition`
+
+What distinguishes one protocol from another.
+
+```typescript
+interface SessionProtocolDefinition {
+  readonly id: string // 'v3' or 'v4'
+  readonly version: number // The version byte every frame starts with: 3 or 4
+  readonly sharedKey?: string // Mixed into the key schedule when present (v4)
+}
+```
+
+`V3` is `{ id: 'v3', version: 3 }` and `V4` is `{ id: 'v4', version: 4 }`.
 
 ---
 
 ## Protocol Versions
 
-The protocol module supports two versions with distinct handshake security:
+| Protocol | Factory                           | `createProtocol` signature          | Input keying material                          | Entry points              |
+| -------- | --------------------------------- | ----------------------------------- | ---------------------------------------------- | ------------------------- |
+| **v3**   | `createV3ProtocolFactory(crypto)` | `createProtocol(logger)`            | ECDH shared secret                             | `/browser/v3`, `/node/v3` |
+| **v4**   | `createV4ProtocolFactory(crypto)` | `createProtocol(logger, sharedKey)` | ECDH shared secret, then PBKDF2 of `sharedKey` | `/browser/v4`, `/node/v4` |
 
-| Version | Factory Name                               | Handshake Security | Import Path                                  |
-| ------- | ------------------------------------------ | ------------------ | -------------------------------------------- |
-| **V1**  | `createObfuscatedHandshakeProtocolFactory` | Obfuscation only   | `@hyperfrontend/network-protocol/browser/v1` |
-| **V2**  | `createPSKHandshakeProtocolFactory`        | PSK-encrypted      | `@hyperfrontend/network-protocol/browser/v2` |
-
-> **Important**: Both protocols use dynamic key encryption for all messages **after** the handshake.
-> The only difference is how the first message (containing the encryption key) is protected.
-
-### V1 - Obfuscation-Only Handshake
-
-The first message is sent with **obfuscation only** (no encryption), since no shared key exists yet.
-The encryption key is transmitted in the first message's payload. Subsequent messages use the
-captured dynamic key for encryption, plus time-based obfuscation.
-
-**Security Model**:
-
-1. **First message**: Time-based obfuscation only
-2. **Subsequent messages**: Dynamic key encryption + time-based obfuscation
-
-### V2 - PSK-Encrypted Handshake
-
-Both endpoints share a secret key beforehand (out-of-band). The first message is encrypted
-with the pre-shared key, protecting the dynamic key exchange from eavesdropping.
-Subsequent messages use the captured dynamic key for encryption, plus time-based obfuscation.
-
-**Security Model**:
-
-1. **First message**: PSK encryption + time-based obfuscation
-2. **Subsequent messages**: Dynamic key encryption + time-based obfuscation
+The two protocols share every mechanism below; only the input keying material differs.
 
 ---
 
 ## Factory Functions
 
-### `createProtocol` (v1) - Dynamic Key
+### `createProtocol` (v3)
 
-The primary protocol factory, available at platform entry points.
-
-**Location**:
-
-- `@hyperfrontend/network-protocol/browser/v1`
-- `@hyperfrontend/network-protocol/node/v1`
-
-**Signature**:
+**Location**: `@hyperfrontend/network-protocol/browser/v3`, `@hyperfrontend/network-protocol/node/v3`
 
 ```typescript
-function createProtocol<T>(
-  logger: Logger,
-  refreshRate?: number // default: 1 (minute)
-): ProtocolProvider<T>
+function createProtocol(logger: Logger): ProtocolProvider
 ```
 
-**Parameters**:
-
-| Parameter     | Type     | Default | Description                                         |
-| ------------- | -------- | ------- | --------------------------------------------------- |
-| `logger`      | `Logger` | —       | Logger instance from `@hyperfrontend/logging`       |
-| `refreshRate` | `number` | `1`     | Time-based password rotation interval (minutes, ≥1) |
-
-**Returns**: `ProtocolProvider<T>` - A factory that creates Protocol instances.
-
-**Example**:
+Throws `Cannot create protocol provider without a valid logger` for an invalid logger.
 
 ```typescript
-import { createProtocol } from '@hyperfrontend/network-protocol/browser/v1'
+import { createProtocol } from '@hyperfrontend/network-protocol/browser/v3'
+import { createChannel } from '@hyperfrontend/network-protocol/browser/channel'
 import { createLogger } from '@hyperfrontend/logging'
 
-const logger = createLogger({ level: 'info' })
-
-// Create a protocol provider with 60-minute key rotation
-const protocolProvider = createProtocol(logger, 60)
-
-// Instantiate with transport functions
-const protocol = protocolProvider(
-  (packet) => otherWindow.postMessage(packet, '*'), // send
-  (packet) => handleReceivedMessage(packet.data) // receive
-)
-```
-
----
-
-### `createProtocol` (v2) - PSK Handshake
-
-The PSK handshake protocol factory, available at platform entry points.
-Uses PSK for the initial handshake, then dynamic keys for subsequent messages.
-
-**Location**:
-
-- `@hyperfrontend/network-protocol/browser/v2`
-- `@hyperfrontend/network-protocol/node/v2`
-
-**Signature**:
-
-```typescript
-function createProtocol<T>(
-  logger: Logger,
-  sharedKey: string,
-  refreshRate?: number // default: 1 (minute)
-): ProtocolProvider<T>
-```
-
-**Parameters**:
-
-| Parameter     | Type     | Default | Description                                                       |
-| ------------- | -------- | ------- | ----------------------------------------------------------------- |
-| `logger`      | `Logger` | —       | Logger instance from `@hyperfrontend/logging`                     |
-| `sharedKey`   | `string` | —       | Pre-shared key for handshake encryption (must match on both ends) |
-| `refreshRate` | `number` | `1`     | Time-based password rotation interval (minutes, ≥1)               |
-
-**Returns**: `ProtocolProvider<T>` - A factory that creates Protocol instances.
-
-**Example**:
-
-```typescript
-import { createProtocol } from '@hyperfrontend/network-protocol/browser/v2'
-import { createLogger } from '@hyperfrontend/logging'
-
-const logger = createLogger({ level: 'info' })
-
-// Both endpoints must use the same shared key for handshake
-const SHARED_KEY = 'your-pre-shared-secret-key'
-
-// Create a protocol provider with PSK handshake and 60-minute obfuscation rotation
-// Note: PSK protects the first message; dynamic keys are used for subsequent messages
-const protocolProvider = createProtocol(logger, SHARED_KEY, 60)
-
-// Instantiate with transport functions
-const protocol = protocolProvider(
-  (packet) => otherWindow.postMessage(packet, '*'), // send
-  (packet) => handleReceivedMessage(packet.data) // receive
-)
-```
-
----
-
-### `createProtocolProviderStore`
-
-Creates a store for managing multiple protocol providers.
-
-**Location**: Same as `createProtocol`
-
-**Example**:
-
-```typescript
-import { createProtocolProviderStore } from '@hyperfrontend/network-protocol/browser/v1'
-
-const store = createProtocolProviderStore()
-
-// Add protocol providers
-store.add('secure-60min', createProtocol(logger, 60))
-store.add('secure-5min', createProtocol(logger, 5))
-
-// Retrieve by name
-const provider = store.getByName('secure-60min')
-if (provider) {
-  const protocol = provider(sendFn, receiveFn)
-}
-
-// List all providers
-store.list.forEach((entry) => {
-  console.log(`${entry.id}: ${entry.name}`)
+const channel = createChannel('app-to-widget', {
+  send: (frame) => otherWindow.postMessage(frame, origin, [frame.buffer]),
+  receive: (packet) => handle(packet.data.message),
+  protocolProvider: createProtocol(createLogger({ level: 'info' })),
+  session: { protocol: 'v3', role: 'initiator', localId, peerId },
 })
 ```
 
+### `createProtocol` (v4)
+
+**Location**: `@hyperfrontend/network-protocol/browser/v4`, `@hyperfrontend/network-protocol/node/v4`
+
+```typescript
+function createProtocol(logger: Logger, sharedKey: string): ProtocolProvider
+```
+
+Throws `Cannot create the v4 protocol without a shared key of at least 16 characters` when `isValidSharedKey(sharedKey)` is false. `MIN_SHARED_KEY_LENGTH` is `16`. The guarantee needs a generated key of 128 bits or more: a party that can run a hello exchange against this side can test key guesses offline afterwards, so a human-chosen passphrase is not a substitute.
+
+```typescript
+import { createProtocol } from '@hyperfrontend/network-protocol/browser/v4'
+
+const protocolProvider = createProtocol(createLogger({ level: 'info' }), sharedKey)
+```
+
+### `createProtocolProviderStore`
+
+**Location**: every `v3` and `v4` entry
+
+```typescript
+import { createProtocolProviderStore } from '@hyperfrontend/network-protocol/browser/v4'
+import { createProtocol as createV3 } from '@hyperfrontend/network-protocol/browser/v3'
+import { createProtocol as createV4 } from '@hyperfrontend/network-protocol/browser/v4'
+
+const store = createProtocolProviderStore()
+store.add('v3', createV3(logger))
+store.add('v4', createV4(logger, sharedKey))
+
+const provider = store.getByName('v4')
+store.list.forEach((entry) => register(entry.id, entry.name, entry.provider))
+```
+
+`add` throws for an empty name (`Cannot add a provider with invalid name`), a name already in the store, or a provider already registered under another name; `removeByName` and `removeById` throw when nothing matches.
+
+### Composition
+
+The platform entries compose the factories in `session/`. Of these, only `createV3ProtocolFactory`, `createV4ProtocolFactory`, `V3`, and `V4` are exported from the package entries; the rest are internal.
+
+| Function                                                    | Role                                                                                                                            |
+| ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| `createV3ProtocolFactory(crypto)`                           | `(logger) => ProtocolProvider` for definition `V3`                                                                              |
+| `createV4ProtocolFactory(crypto)`                           | `(logger, sharedKey) => ProtocolProvider` for definition `{ ...V4, sharedKey }`                                                 |
+| `createSessionProtocolProvider(crypto, definition, logger)` | The provider: validates the transport callbacks and that `session.protocol === definition.id`, then creates the instance        |
+| `createSessionProtocol(input)`                              | One session's instance; `input` adds an optional `counterLimit` (defaults to the largest safe integer)                          |
+| `mintLocalMaterial(crypto)`                                 | A 32-byte nonce and an ephemeral key agreement                                                                                  |
+| `deriveSessionKeys(crypto, definition, session, own, peer)` | The two directional AES-GCM keys                                                                                                |
+| `frame.ts`                                                  | `encodeHeader`, `decodeHeader`, `nonceFor`, `assembleFrame`, `encodeHello`, `decodeHello`, `isHelloFrame`, the length constants |
+
+Because the two factories are exported, a custom `SessionCrypto` can be wired without touching the rest.
+
 ---
 
-## Protocol V1 Architecture
-
-Protocol V1 uses **dynamic key exchange** where keys are exchanged in-band during the
-connection handshake.
-
-### Security Layers
-
-All packets in Protocol V1 are protected by two independent security layers:
-
-| Layer           | Mechanism           | Purpose                                              |
-| --------------- | ------------------- | ---------------------------------------------------- |
-| **Obfuscation** | Time-Based Password | Baseline protection without prior key exchange       |
-| **Encryption**  | AES-256-GCM         | Strong encryption with negotiated or pre-shared keys |
-
-### Connection Handshake (Dynamic Key Mode)
-
-When using dynamic key encryption, the protocol performs an in-band key exchange.
-The first message uses **only time-based obfuscation** (no encryption) since no shared
-key exists yet. This pattern is similar to TLS/DTLS handshakes.
+## Session Lifecycle
 
 ```mermaid
 ---
@@ -250,347 +188,130 @@ config:
     fontSize: 12px
 ---
 sequenceDiagram
-    participant A as Client A<br/>(Initiator)
-    participant B as Client B<br/>(Responder)
+    participant I as Initiator
+    participant R as Responder
 
-    rect rgb(240, 248, 255)
-        Note over A,B: 1. CONNECT
-        A->>B: ░░░ Time-Based Obfuscation ░░░
-        Note right of A: Payload (readable after deobf)<br/>• keyA (for B to encrypt reply)
-        Note right of B: Deobfuscates (time-based)<br/>Extracts & stores keyA
-    end
-
-    rect rgb(255, 250, 240)
-        Note over A,B: 2. CONNECT_ACK
-        B->>A: ░░░ Time-Based Obfuscation ░░░<br/>🔐 Encrypted with keyA
-        Note left of B: • keyB (for A to encrypt)<br/>• ack data
-        Note left of A: Deobfuscates (time-based)<br/>Decrypts with keyA<br/>Extracts & stores keyB
-    end
-
-    rect rgb(240, 255, 240)
-        Note over A,B: 3. Subsequent Messages
-        A<<->>B: ░░░ Time-Based Obfuscation ░░░<br/>🔐 Encrypted with keyB
-        Note over A,B: • actual message payload
-    end
+    Note over I,R: Each side mints a 32-byte nonce and an ephemeral P-256 key pair at construction
+    I->>R: hello() [3|1|nonce|public key] (plaintext, 99 bytes)
+    R->>I: hello() [3|1|nonce|public key] (plaintext, 99 bytes)
+    Note over I,R: acceptHello(frame) returns 'accepted' once per session
+    Note over I,R: Keys derive on the first seal or open after both materials exist
+    I->>R: seal(packet) [3|0|counter=1] + AES-GCM ciphertext and tag
+    R->>I: seal(packet) [3|0|counter=1] + AES-GCM ciphertext and tag
+    I->>R: [3|0|counter=2] ...
 ```
 
-#### Protection Layers by Message
-
-| Message        | Time-Based Obfuscation | Key-Based Encryption      |
-| -------------- | :--------------------: | :------------------------ |
-| 1. CONNECT     |           ✅           | ❌ (no shared key yet)    |
-| 2. CONNECT_ACK |           ✅           | ✅ (using keyA)           |
-| 3+ Messages    |           ✅           | ✅ (using exchanged keys) |
+1. **Construction**: the provider is called with `send`, `receive`, and the session; the instance mints its material at once.
+2. **Hello**: `hello()` returns this side's frame. The owner transmits it and retries until the peer confirms; the bytes never change.
+3. **Accept**: the peer's frame goes to `acceptHello`. The first hello keys the session (`'accepted'`); the same bytes again are `'duplicate'`; any other frame, including a different hello, is `'rejected'`. A live session is never rekeyed.
+4. **Traffic**: `seal` and `open` wait until both materials exist, so frames queued before the peer's hello simply hold. Keys derive once; a derivation that fails rejects every later operation with `invalid-session`.
 
 ---
 
-## Protocol V2 Architecture
+## Wire Format
 
-Protocol V2 uses **pre-shared key (PSK)** encryption where both endpoints share the same
-secret key beforehand (out-of-band key exchange).
+| Frame | Layout                                                         | Length            |
+| ----- | -------------------------------------------------------------- | ----------------- |
+| Hello | `[version][type=1][nonce 32][public key 65]`                   | 99 bytes          |
+| Data  | `[version][type=0][counter u64 big-endian]` + ciphertext + tag | at least 27 bytes |
 
-### When to Use V2
-
-- Both parties can securely share a key out-of-band
-- Simpler setup without in-band key negotiation
-- Testing and integration scenarios
-- Environments where key exchange overhead should be avoided
-
-### V2 Security Model
-
-In PSK mode, **all messages** are both obfuscated and encrypted from the start:
-
-```mermaid
----
-config:
-  theme: base
-  themeVariables:
-    fontSize: 12px
----
-sequenceDiagram
-    participant A as Client A<br/>(has PSK)
-    participant B as Client B<br/>(has PSK)
-
-    rect rgb(255, 250, 250)
-        Note over A,B: All Messages (from the start)
-        A<<->>B: ░░░ Time-Based Obfuscation ░░░<br/>🔐 Encrypted with PSK
-        Note over A,B: • message payload
-    end
-```
-
-### V2 Example
-
-```typescript
-import { createProtocol } from '@hyperfrontend/network-protocol/browser/v2'
-import { createLogger } from '@hyperfrontend/logging'
-
-const logger = createLogger({ level: 'info' })
-
-// Both endpoints must use the same shared key
-const SHARED_KEY = 'your-pre-shared-secret-key'
-
-const protocolProvider = createProtocol(logger, SHARED_KEY, 60)
-const protocol = protocolProvider(sendFn, receiveFn)
-```
+- Version bytes are `3` and `4`; `isHello` accepts only this protocol's version.
+- The ten-byte data header is the additional authenticated data. The AES-GCM nonce is four zero bytes followed by the eight counter bytes, so it is unique per direction by construction.
+- The plaintext is the UTF-8 JSON of `{ origin, target, data }` with `data` serialised (`serializeData`).
+- The tag is 16 bytes; a data frame shorter than 27 bytes (header, tag, one ciphertext byte) is malformed.
+- `decodeHello` also requires the public key to start with the uncompressed-point tag; whether the point lies on the curve is decided by the key agreement when keys derive.
 
 ---
 
-### Composition Tree
+## Key Schedule
 
-#### Protocol V1 Composition (Dynamic Key Mode)
+Both sides order the material by role, compute the same two keys, and each picks the sending one for its own role.
 
-```mermaid
----
-config:
-  theme: base
-  themeVariables:
-    fontSize: 12px
----
-flowchart TB
-    V1_Create["createProtocol(logger, refreshRate)"]
+| Step   | Value                                                                                                                  |
+| ------ | ---------------------------------------------------------------------------------------------------------------------- |
+| `salt` | `initiatorNonce \|\| responderNonce`                                                                                   |
+| `dh`   | ECDH(own private key, peer public key), 32 bytes                                                                       |
+| `ikm`  | `dh` (v3), or `dh \|\| PBKDF2-SHA256(sharedKey, salt, 600000 iterations)` (v4)                                         |
+| `i2r`  | HKDF-SHA256(`ikm`, `salt`, `hyperfrontend/network-protocol/<protocol>/<initiatorId>/<responderId>/i2r`) as AES-GCM-256 |
+| `r2i`  | the same with `.../r2i`                                                                                                |
 
-    subgraph V1_Enc["Encryption Suite"]
-        direction TB
-        V1_EncCreate["createDynamicKeyEncryption(getKey)"]
-        V1_Encrypt["encryptPacket(packet, key)<br/><em>platform-specific</em>"]
-        V1_Decrypt["decryptPacket(packet, key)<br/><em>platform-specific</em>"]
-        V1_EncCreate --> V1_Encrypt
-        V1_EncCreate --> V1_Decrypt
-    end
-
-    subgraph V1_Obf["Obfuscation Suite"]
-        direction TB
-        V1_ObfCreate["createTimeIntervalObfuscation(refreshRate)"]
-        V1_Obfuscate["obfuscatePacket(packet, password)"]
-        V1_Deobfuscate["deobfuscatePacket(data, password)"]
-        V1_Pass1["getTimeBasedPassword(date, rate, offset)"]
-        V1_Pass2["getTimeBasedPasswords(date, rate)<br/>→ {current, previous, next}"]
-        V1_ObfCreate --> V1_Obfuscate
-        V1_ObfCreate --> V1_Deobfuscate
-        V1_ObfCreate --> V1_Pass1
-        V1_ObfCreate --> V1_Pass2
-    end
-
-    V1_Create --> V1_Enc
-    V1_Create --> V1_Obf
-```
-
-#### Protocol V2 Composition (PSK Mode)
-
-```mermaid
----
-config:
-  theme: base
-  themeVariables:
-    fontSize: 12px
----
-flowchart TB
-    V2_Create["createProtocol(logger, sharedKey, refreshRate)"]
-
-    subgraph V2_Enc["Encryption Suite"]
-        direction TB
-        V2_EncCreate["createStaticKeyEncryption(sharedKey)"]
-        V2_Encrypt["encryptPacket(packet, key)<br/><em>platform-specific</em>"]
-        V2_Decrypt["decryptPacket(packet, key)<br/><em>platform-specific</em>"]
-        V2_EncCreate --> V2_Encrypt
-        V2_EncCreate --> V2_Decrypt
-    end
-
-    subgraph V2_Obf["Obfuscation Suite"]
-        direction TB
-        V2_ObfCreate["createTimeIntervalObfuscation(refreshRate)<br/><em>(same as V1)</em>"]
-    end
-
-    V2_Create --> V2_Enc
-    V2_Create --> V2_Obf
-```
+The initiator seals with `i2r` and opens with `r2i`; the responder does the reverse. Each key is non-extractable and restricted to one usage. Binding the protocol id and both identities into the info ties the keys to the negotiated session. `dh`, `ikm`, and the stretched key are zeroed once the keys exist. The stretch runs once per session, so its cost lands on the handshake, not on traffic.
 
 ---
 
-## Dynamic Key Encryption
+## Replay and Ordering
 
-The dynamic key protocol uses **in-band key exchange** where the encryption key is transmitted
-within the first message and can change during the session.
-
-### How It Works
-
-1. **Key Capture**: When a packet is received, the protocol extracts the key from `packet.data.key`
-2. **Key Provider**: A closure (`getKey()`) always returns the most recently captured key
-3. **Per-Operation**: Each encryption/decryption call evaluates the key provider at call time
-
-```typescript
-// Inside protocol creation
-let key: string
-const receive: ReceivePacketFn<T> = (packet) => {
-  key = packet.data.key // Capture key from incoming packet
-  originalReceive(packet)
-}
-const getKey = () => key
-
-// Encryption uses current key
-const { packetEncryption, packetDecryption } = createDynamicKeyEncryption(getKey)
-```
-
----
-
-## Time-Interval Obfuscation
-
-The protocol uses **time-based passwords** for the obfuscation layer.
-
-### How It Works
-
-1. **Password Generation**: Passwords are derived from the current time window
-2. **Refresh Rate**: Defines the interval (in minutes) for password rotation
-3. **Clock Skew Handling**: Deobfuscation tries current, previous, and next windows
-
-### Obfuscation (Outbound)
-
-```typescript
-const packetObfuscation = async (packet) => {
-  const password = await getTimeBasedPassword(new Date(), refreshRate, 0)
-  return await obfuscatePacket(packet, password)
-}
-```
-
-### Deobfuscation (Inbound)
-
-```typescript
-const packetDeobfuscation = async (data) => {
-  const { current, previous, next } = getTimeBasedPasswords(new Date(), refreshRate)
-
-  // Try current time window first
-  const result = await tryDeobfuscate(data, current)
-  if (result) return result
-
-  // Try previous window (clock behind)
-  const result2 = await tryDeobfuscate(data, previous)
-  if (result2) return result2
-
-  // Try next window (clock ahead)
-  const result3 = await tryDeobfuscate(data, next)
-  if (result3) return result3
-
-  throw new Error('Could not deobfuscate data')
-}
-```
-
-### Clock Skew Tolerance
-
-With a 60-minute refresh rate, the protocol tolerates up to ±60 minutes of clock drift:
-
-```
-      ← 60 min →   ← 60 min →   ← 60 min →
-    ─────────────────────────────────────────
-    │  previous  │  current   │    next    │
-    ─────────────────────────────────────────
-                      ↑
-              Sender's time
-
-    ←────────── Receiver tolerance ──────────→
-```
-
----
-
-## Platform Differences
-
-### Browser
-
-Uses Web Crypto API:
-
-- `encrypt`/`decrypt` from `@hyperfrontend/cryptography/browser`
-- `getTimeBasedPassword`/`getTimeBasedPasswords` from `@hyperfrontend/cryptography/browser`
-
-```typescript
-// V1 - Dynamic Key
-import { createProtocol } from '@hyperfrontend/network-protocol/browser/v1'
-
-// V2 - Pre-Shared Key
-import { createProtocol } from '@hyperfrontend/network-protocol/browser/v2'
-```
-
-### Node.js
-
-Uses Node.js crypto module:
-
-- `encrypt`/`decrypt` from `@hyperfrontend/cryptography/node`
-- `getTimeBasedPassword`/`getTimeBasedPasswords` from `@hyperfrontend/cryptography/node`
-
-```typescript
-// V1 - Dynamic Key
-import { createProtocol } from '@hyperfrontend/network-protocol/node/v1'
-
-// V2 - Pre-Shared Key
-import { createProtocol } from '@hyperfrontend/network-protocol/node/v2'
-```
-
----
-
-## Complete Example
-
-```typescript
-import { createProtocol } from '@hyperfrontend/network-protocol/browser/v1'
-import { createLogger } from '@hyperfrontend/logging'
-import { createChannelFactory } from '@hyperfrontend/network-protocol/lib/channel'
-
-// Setup
-const logger = createLogger({ level: 'info' })
-const protocolProvider = createProtocol(logger, 60)
-
-// Create channel with protocol
-const channel = createChannel(
-  'secure-iframe',
-  (packet) => iframe.contentWindow.postMessage(packet, '*'),
-  (packet) => handleMessage(packet.data.message),
-  protocolProvider
-)
-
-// The protocol handles:
-// - Dynamic key encryption (keys captured from incoming packets)
-// - Time-based obfuscation (60-minute rotation)
-// - Clock skew tolerance (±60 minutes)
-```
+- Counters start at `1` and increase by one per sealed frame in each direction.
+- `open` rejects a frame whose counter is not above the last accepted counter before any decryption, so a replayed or forged frame costs nothing.
+- A session that has sealed `counterLimit` frames rejects the next `seal` with `counter-exhausted`; open a new session.
+- The pipelines process one frame at a time (see [`queue/`](../queue/README.md)), which keeps the counter exact.
 
 ---
 
 ## Error Handling
 
-The protocol validates inputs at creation time:
+### At construction
 
 ```typescript
-// Invalid logger
-createProtocol(null, 60)
+createProtocol(null)
 // Error: 'Cannot create protocol provider without a valid logger'
 
-// Invalid refresh rate
-createProtocol(logger, 0)
-// Error: 'Cannot create protocol provider without a valid refresh rate'
+createProtocol(logger, 'short')
+// Error: 'Cannot create the v4 protocol without a shared key of at least 16 characters'
 
-// Invalid send function
-protocolProvider(null, receiveFn)
+protocolProvider(null, receiveFn, session)
 // Error: 'Cannot create protocol without a valid send function'
 
-// Invalid receive function
-protocolProvider(sendFn, null)
+protocolProvider(sendFn, null, session)
 // Error: 'Cannot create protocol without a valid receive function'
+
+protocolProvider(sendFn, receiveFn, { ...session, protocol: 'v4' }) // on a v3 provider
+// ProtocolError (code 'invalid-session'): "The session was negotiated for 'v4', not 'v3'"
 ```
 
-Deobfuscation can fail if clock drift exceeds tolerance:
+### At seal and open
 
-```typescript
-try {
-  await protocol.packetDeobfuscation(obfuscatedData)
-} catch (error) {
-  // Error: 'Could not deobfuscate data'
-  // Check clock synchronization between endpoints
-}
-```
+Every rejection is a `ProtocolError` whose `code` is one of `ProtocolErrorCode` (see [`security/`](../security/README.md)); the pipelines report it through `onDrop` with the error as `cause`.
+
+| Code                    | Raised by      | When                                                                |
+| ----------------------- | -------------- | ------------------------------------------------------------------- |
+| `malformed`             | `open`         | Fewer than 27 bytes, or the plaintext is not a valid packet         |
+| `unsupported-version`   | `open`         | The version byte is not this protocol's                             |
+| `replayed`              | `open`         | The counter is not above the last accepted one                      |
+| `authentication-failed` | `open`         | The tag does not verify under the session's receiving key           |
+| `counter-exhausted`     | `seal`         | The session has sealed every frame it can number                    |
+| `invalid-session`       | `seal`, `open` | The keys could not be derived (for example an off-curve public key) |
+
+---
+
+## Security Claims
+
+- **v3** defeats scripts that can only listen: a passive observer of the hello exchange and the traffic cannot read or forge frames. Any script that can post to a peer's window with a genuine source can complete a v3 handshake as that peer, so v3 does not authenticate who the counterpart is.
+- **v4** binds the session to the pre-shared key: without the key a script can neither read frames nor produce frames the counterpart accepts, and a key mismatch is detected because no frame ever authenticates. A key that leaks later does not expose earlier sessions.
+- Neither protocol hides the hello; public keys and nonces are public by design.
+- Cost: one ECDH agreement plus one HKDF per session (plus one 600k-iteration PBKDF2 for v4), then one AES-GCM operation per frame in each direction.
+
+---
+
+## Validation Helpers
+
+Exported from every `v3` and `v4` entry for upstream guards:
+
+| Function                         | Result                                                                                                                                                                                                         |
+| -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `isValidProtocolProvider(value)` | `true` when the value is a function                                                                                                                                                                            |
+| `isValidProtocol(value)`         | A `ValidProtocolResult`: `seal`, `open`, `hello`, `isHello`, `acceptHello`, `send`, `receive`, and `getLogger` each mapped to `true`, `false`, or `undefined` (not reached because an earlier property failed) |
+| `isValidSendFn(value)`           | `true` when the value is a function                                                                                                                                                                            |
+| `isValidReceiveFn(value)`        | `true` when the value is a function                                                                                                                                                                            |
+| `isValidName(value)`             | `true` for a non-empty string                                                                                                                                                                                  |
+| `isValidSharedKey(value)`        | `true` for a string of at least `MIN_SHARED_KEY_LENGTH` characters; `v4` entries only                                                                                                                          |
 
 ---
 
 ## Relationship to Other Modules
 
-- **Depends on**: [`security/`](../security/README.md), [`packet/`](../packet/README.md), `@hyperfrontend/logging`
-- **Used by**: [`channel/`](../channel/README.md) (creates channels with a protocol provider)
+- **Depends on**: [`security/`](../security/README.md), [`packet/`](../packet/README.md), [`data/`](../data/README.md), `@hyperfrontend/cryptography`, `@hyperfrontend/logging`
+- **Used by**: [`channel/`](../channel/README.md) (binds a provider to a session)
 
 ---
 
@@ -598,15 +319,15 @@ try {
 
 - **[Library Index](../README.md)** - All modules
 - **[Architecture Guide](../../../ARCHITECTURE.md#protocol)** - Protocol architecture
-- **[Browser v1](../../browser/v1/)** - Browser-specific v1 protocol (dynamic key)
-- **[Browser v2](../../browser/v2/)** - Browser-specific v2 protocol (PSK)
-- **[Node v1](../../node/v1/)** - Node.js-specific v1 protocol (dynamic key)
-- **[Node v2](../../node/v2/)** - Node.js-specific v2 protocol (PSK)
+- **[Browser v3](../../browser/v3/README.md)** - Browser-specific v3 protocol
+- **[Browser v4](../../browser/v4/README.md)** - Browser-specific v4 protocol
+- **[Node v3](../../node/v3/README.md)** - Node.js-specific v3 protocol
+- **[Node v4](../../node/v4/README.md)** - Node.js-specific v4 protocol
 
 ### Related Modules
 
-| Module                             | Relationship                      |
-| ---------------------------------- | --------------------------------- |
-| [channel/](../channel/README.md)   | Uses protocol for secure channels |
-| [security/](../security/README.md) | Provides security suites          |
-| [packet/](../packet/README.md)     | Packet transformations            |
+| Module                             | Relationship                                |
+| ---------------------------------- | ------------------------------------------- |
+| [channel/](../channel/README.md)   | Binds a protocol instance to a session      |
+| [security/](../security/README.md) | Session, hello outcome, and error codes     |
+| [packet/](../packet/README.md)     | The packet shapes `seal` and `open` convert |

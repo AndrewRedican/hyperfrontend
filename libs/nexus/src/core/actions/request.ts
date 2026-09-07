@@ -17,8 +17,8 @@ import { ACTION_TYPES } from '../../types/action'
  *
  * // With security negotiation
  * const secureAction = requestConnection(deps)('process-123', {
- *   supported: ['v2', 'v1', 'none'],
- *   preferred: 'v2'
+ *   supported: ['v4', 'none'],
+ *   preferred: 'v4'
  * })
  * ```
  */

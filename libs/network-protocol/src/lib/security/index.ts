@@ -1,15 +1,9 @@
 /**
- * Security type definitions for encryption and obfuscation suites.
+ * The types and errors a security protocol implements: the per-session seal and open
+ * operations, the session, the hello exchange outcome, and the rejection codes.
  *
  * @module @hyperfrontend/network-protocol/security
  */
-export type {
-  PacketObfuscation,
-  PacketDeobfuscation,
-  PacketEncryption,
-  PacketDecryption,
-  EncryptionSuite,
-  ObfuscationSuite,
-  SecuritySuite,
-  FirstMessageHandler,
-} from './model'
+export type { ProtocolError } from './errors'
+export type { PacketSealer, PacketOpener, SessionRole, ProtocolSession, HelloOutcome, SecuritySuite } from './model'
+export { createProtocolError, getProtocolErrorCode, ProtocolErrorCode } from './errors'

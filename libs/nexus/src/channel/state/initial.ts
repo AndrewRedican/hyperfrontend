@@ -51,7 +51,6 @@ export function createInitialState(name: string, target: Window, settings: Parti
     contractCompat: settings.contractCompat ?? null,
     readyToConnect: false,
     negotiatedProtocol: null,
-    securityReady: false,
     securityTransport: null,
     pendingSecurityRequest: null,
     notifiedDenyProcessId: null,

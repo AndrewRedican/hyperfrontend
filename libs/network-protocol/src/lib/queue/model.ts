@@ -1,17 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import type { Logger } from '@hyperfrontend/logging'
-import type {
-  UnencryptedPacket,
-  UnserializedEncryptedPacket,
-  SerializedEncryptedPacket,
-  ObfuscatedPacket,
-  PacketEncryption,
-  PacketDecryption,
-  PacketSerialization,
-  PacketDeserialization,
-  PacketObfuscation,
-  PacketDeobfuscation,
-} from '../packet/model'
+import type { PacketOpener, PacketSealer, UnencryptedPacket, WirePacket } from '../packet/model'
 
 /** Message processing queue interface */
 export interface Queue<T extends object> {
@@ -32,14 +21,11 @@ export interface Queue<T extends object> {
 /** Function that handles messages from a queue */
 export type MessageHandler<T extends object> = (message: T) => Promise<void> | void
 
-/** Union of all packet operation types for queue processing */
-export type QueueOperation =
-  | PacketEncryption
-  | PacketSerialization
-  | PacketObfuscation
-  | PacketDeobfuscation
-  | PacketDeserialization
-  | PacketDecryption
+/** Called with the rejected input, why it was rejected, and the error the operation threw when it threw one */
+export type QueueFailureHandler = (raw: unknown, reason: string, cause?: unknown) => void
+
+/** The packet operation a specialised queue runs */
+export type QueueOperation = PacketSealer | PacketOpener
 
 /** Arguments for creating a queue instance */
 export interface QueueCreatorArguments<T = any> {
@@ -52,7 +38,7 @@ export interface QueueCreatorArguments<T = any> {
   /** Callback on successful packet processing */
   onSuccess: (packet: T) => void
   /** Callback on packet processing failure */
-  onFail: (raw: unknown) => void
+  onFail: QueueFailureHandler
 }
 
 /** Validation result for queue creator arguments */
@@ -69,56 +55,20 @@ export interface QueueCreatorValidity {
   onFail: boolean
 }
 
-/** Factory function for creating encryption queues */
-export type EncryptionQueueCreater = (
+/** Factory function for creating seal queues */
+export type SealQueueCreater = (
   label: string,
-  packetEncryption: PacketEncryption,
+  seal: PacketSealer,
   logger: Logger,
-  onSuccess: (packet: UnserializedEncryptedPacket) => void,
-  onFail: (raw: unknown) => void
+  onSuccess: (packet: WirePacket) => void,
+  onFail: QueueFailureHandler
 ) => Queue<UnencryptedPacket>
 
-/** Factory function for creating serialization queues */
-export type SerializationQueueCreater = (
+/** Factory function for creating open queues */
+export type OpenQueueCreater = (
   label: string,
-  packetSerialization: PacketSerialization,
-  logger: Logger,
-  onSuccess: (packet: SerializedEncryptedPacket) => void,
-  onFail: (raw: unknown) => void
-) => Queue<UnserializedEncryptedPacket>
-
-/** Factory function for creating obfuscation queues */
-export type ObfuscationQueueCreater = (
-  label: string,
-  packetObfuscation: PacketObfuscation,
-  logger: Logger,
-  onSuccess: (packet: ObfuscatedPacket) => void,
-  onFail: (raw: unknown) => void
-) => Queue<SerializedEncryptedPacket>
-
-/** Factory function for creating deobfuscation queues */
-export type DeobfuscationQueueCreater = (
-  label: string,
-  packetDeobfuscation: PacketDeobfuscation,
-  logger: Logger,
-  onSuccess: (packet: SerializedEncryptedPacket) => void,
-  onFail: (raw: unknown) => void
-) => Queue<ObfuscatedPacket>
-
-/** Factory function for creating deserialization queues */
-export type DeserializationQueueCreater = (
-  label: string,
-  packetDeserialization: PacketDeserialization,
-  logger: Logger,
-  onSuccess: (packet: UnserializedEncryptedPacket) => void,
-  onFail: (raw: unknown) => void
-) => Queue<SerializedEncryptedPacket>
-
-/** Factory function for creating decryption queues */
-export type DecryptionQueueCreater = (
-  label: string,
-  packetDecryption: PacketDecryption,
+  open: PacketOpener,
   logger: Logger,
   onSuccess: (packet: UnencryptedPacket) => void,
-  onFail: (raw: unknown) => void
-) => Queue<UnserializedEncryptedPacket>
+  onFail: QueueFailureHandler
+) => Queue<WirePacket>

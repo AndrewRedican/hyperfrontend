@@ -52,6 +52,8 @@ export function buildChannelSettings(input: ChannelSettingsInput): Record<string
  *
  * `open`, `close`, and `connect-timeout` stay with each side, which resets
  * different state and (host-side) may keep the mount alive across a reload.
+ * A `security-error` (a packet the envelope could not protect or unwrap, and
+ * so discarded) is forwarded as an `error` with `reason: 'security-error'`.
  *
  * @param channel - The channel to subscribe to.
  * @param emitter - The subscription registry backing the side's `on`.
@@ -66,6 +68,8 @@ export function wireChannelEvents(channel: ChannelHandle, emitter: EventEmitter)
   channel.on('closing', (data) => emitter.emit('closing', data))
   channel.on('deny', (data) => emitter.emit('error', data))
   channel.on('invalid', (data) => emitter.emit('error', data))
+  // why: A packet the security envelope drops is a message one side successfully sent and the other never sees; without this the loss is invisible to both apps.
+  channel.on('security-error', (data) => emitter.emit('error', { reason: 'security-error', ...data }))
 }
 
 /**

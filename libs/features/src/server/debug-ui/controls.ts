@@ -3,9 +3,9 @@ import { createElement, div, input, label, span } from '@hyperfrontend/ui-utils/
 import { DisplayMode } from '../../shared/types'
 import { controlStyle, labelStyle, palette, panelStyle, statusDotStyle, toolbarStyle } from './styles'
 
-// note: Mirrors the four built-in display modes and the none/v1/v2 security envelopes the host/hostee negotiate.
+// note: Mirrors the four built-in display modes and the none/v3/v4 security envelopes the host/hostee negotiate.
 const DISPLAY_MODES: readonly DisplayMode[] = [DisplayMode.Embedded, DisplayMode.Dialog, DisplayMode.Popup, DisplayMode.Standalone]
-const PROTOCOLS: readonly SecurityProtocol[] = ['none', 'v1', 'v2']
+const PROTOCOLS: readonly SecurityProtocol[] = ['none', 'v3', 'v4']
 
 /** The iframe footprint reported by the resize controls. */
 export interface ResizeSize {

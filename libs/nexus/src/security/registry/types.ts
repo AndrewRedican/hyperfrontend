@@ -6,7 +6,7 @@
  * @module security/registry/types
  */
 
-import type { SecurityProtocolVersion } from '../../types/security'
+import type { SecurityProtocolVersion, SecurityProvider } from '../../types/security'
 
 /**
  * Protocol registry for managing available protocol providers.
@@ -21,10 +21,10 @@ export interface ProtocolRegistry {
    *
    * The 'none' protocol requires no provider and cannot be registered.
    *
-   * @param version - The protocol version (e.g. 'v1' or 'v2')
+   * @param version - The protocol version (e.g. 'v3' or 'v4')
    * @param provider - The protocol provider instance
    */
-  register(version: SecurityProtocolVersion, provider: unknown): void
+  register(version: SecurityProtocolVersion, provider: SecurityProvider): void
 
   /**
    * Unregister a protocol provider.
@@ -41,7 +41,7 @@ export interface ProtocolRegistry {
    * @param version - The protocol version to retrieve
    * @returns The provider if registered, otherwise undefined
    */
-  get(version: SecurityProtocolVersion): unknown | undefined
+  get(version: SecurityProtocolVersion): SecurityProvider | undefined
 
   /**
    * Check if a protocol provider is registered.

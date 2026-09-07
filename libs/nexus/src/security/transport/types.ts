@@ -7,7 +7,7 @@
  * @module security/transport/types
  */
 
-import type { SecurityProtocolVersion, SecurityProvider, SecurityTransportError } from '../../types/security'
+import type { SecurityProtocolVersion, SecurityProvider, SecuritySessionRole, SecurityTransportError } from '../../types/security'
 
 /**
  * Internal state for tracking transport processing.
@@ -54,7 +54,7 @@ export interface SecureTransportConfig {
   /** Human-readable label for the wire pipeline */
   readonly label: string
 
-  /** Counterpart window that receives outbound ciphertext */
+  /** Counterpart window that receives outbound frames */
   readonly target: Window
 
   /** Returns the origin currently pinned to the channel, or null before pinning */
@@ -66,9 +66,24 @@ export interface SecureTransportConfig {
   /** UUID identifying the counterpart endpoint, stamped as each packet's target */
   readonly targetId: string
 
-  /** Receives each decrypted action delivered by the transport */
+  /** This endpoint's handshake role */
+  readonly role: SecuritySessionRole
+
+  /** Interval between hello retries until the counterpart confirms the session */
+  readonly helloRetryMs: number
+
+  /** How long the counterpart has to confirm the session after the transport starts */
+  readonly confirmTimeoutMs: number
+
+  /** Receives each opened action delivered by the transport */
   readonly onAction: ActionHandler
 
   /** Optional error handler for security failures */
   readonly onError?: ErrorHandler
+
+  /** Optional handler invoked once, when the counterpart's first frame authenticates */
+  readonly onConfirmed?: () => void
+
+  /** Optional handler invoked when the session can no longer be confirmed */
+  readonly onFailed?: ErrorHandler
 }

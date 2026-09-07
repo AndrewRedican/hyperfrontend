@@ -57,7 +57,7 @@ with a debug UI. An optional Nx adapter ships a `feature` generator and `build`/
 
 ```bash
 npx @hyperfrontend/features init                # scaffold the feature glue into an app
-npx @hyperfrontend/features build --protocol v2 # generate + bundle a publishable shell package
+npx @hyperfrontend/features build --protocol v4 # generate + bundle a publishable shell package
 npx @hyperfrontend/features dev                 # serve apps with the debug UI
 ```
 
@@ -71,30 +71,34 @@ validation on both ends, four-state liveness, and flush-then-confirm teardown �
 
 ### Security Layer
 
-End-to-end encryption is integrated directly into the broker. See the [Architecture Guide](ARCHITECTURE.md#security-layer-network-protocol) for details, and the
+A sealed session envelope is integrated directly into the broker. See the [Architecture Guide](ARCHITECTURE.md#security-layer-network-protocol) for details, and the
 [Security Model](https://www.hyperfrontend.dev/docs/core-concepts/security) for what it is worth
 against which adversary.
 
 ```typescript
 import { createBroker } from '@hyperfrontend/nexus'
-import { createProtocol } from '@hyperfrontend/network-protocol/browser/v2'
+import { createChannel } from '@hyperfrontend/network-protocol/browser/channel'
+import { createProtocol } from '@hyperfrontend/network-protocol/browser/v4'
 
 const broker = createBroker({
   name: 'secure-host',
   contract,
-  security: {
-    protocol: createProtocol(logger, 60),
-    required: true,
+  settings: {
+    security: {
+      protocols: { v4: { createChannel, protocolProvider: createProtocol(logger, 'a-key-of-sixteen-or-more') } },
+    },
   },
 })
+
+broker.addChannel('feature', featureWindow, { security: { protocol: 'v4', mode: 'fail-closed' } })
 ```
 
 **What this gives you:**
 
-- Protocol negotiation during handshake (v1 obfuscation, v2 encryption, or none)
-- Configurable fallback behavior
-- All messages pass through the encryption pipeline automatically
-- Time-based key rotation with clock skew tolerance
+- Protocol negotiation during the handshake (`v4`: session keys bound to a pre-shared key; `v3`: ephemeral session keys; or none)
+- Fail-open or fail-closed when the counterpart cannot provide the protocol
+- Every product message sealed under per-session, per-direction AES-GCM keys, with replay rejection
+- One key agreement per session; the pre-shared key is stretched once, never per message
 
 ---
 
@@ -143,8 +147,8 @@ flowchart TB
 
     subgraph WorkerPool["WORKER POOL"]
         direction LR
-        Worker1["Worker 1<br/>───────────<br/>Encryption<br/>Obfuscation"]
-        Worker2["Worker 2<br/>───────────<br/>Decryption<br/>Deobfuscation"]
+        Worker1["Worker 1<br/>───────────<br/>Seal<br/>Encrypt + Tag"]
+        Worker2["Worker 2<br/>───────────<br/>Open<br/>Verify + Decrypt"]
         Worker3["Worker 3<br/>───────────<br/>Validation<br/>Schema Check"]
     end
 

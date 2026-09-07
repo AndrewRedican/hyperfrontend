@@ -1,41 +1,47 @@
-import type { ActionCreators } from '../../core/actions/factory'
-import type { ChannelState } from '../../types'
-import type { EventHandler } from '../../types/channel'
-import type { OpenCallback, CloseCallback, CancelCallback } from '../../types/events'
+import type { Mock } from '@hyperfrontend/testing'
+import type { EventHandler, ChannelJSON, ChannelState } from '../../types/channel'
+import type { CancelCallback, CloseCallback, OpenCallback, OpenEventData } from '../../types/events'
 import type { ChannelInternals } from '../types'
 import { beforeEach } from 'node:test'
+import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
+import { createInitialState } from '../state/initial'
 import { subscribeToEvents } from './events'
 
 describe('channel/subscription/events', () => {
-  let mockChannel: ChannelInternals
+  const channelJSON: ChannelJSON = {
+    id: 'channel-123',
+    name: 'test-channel',
+    active: false,
+    origin: null,
+    connectTimestamp: null,
+    contract: null,
+    peerContract: null,
+    peerId: null,
+    queuedMessagesCount: 0,
+  }
+  const openData: OpenEventData = { origin: 'http://test.com', contract: { emitted: [], accepted: [] } }
+  const nonFunctions: readonly [string, unknown][] = [
+    ['null', null],
+    ['undefined', undefined],
+    ['a string', 'not a function'],
+  ]
+
   let state: ChannelState
+  let channel: ChannelInternals
+
+  const subscription = (index: number): EventHandler => {
+    const handler = state.eventSubscriptions[index]
+    if (handler === undefined) {
+      throw createError(`no subscription at index ${index}`)
+    }
+    return handler
+  }
 
   beforeEach(() => {
-    state = {
-      id: 'channel-123',
-      name: 'test-channel',
-      target: window,
-      origin: null,
-      active: false,
-      connectTimestamp: null,
-      contract: null,
-      acceptedActions: [],
-      queuedMessages: [],
-      queueMessages: true,
-      eventSubscriptions: [],
-      messageSubscriptions: [],
-      scheduledActivation: null,
+    state = createInitialState('test-channel', window, {})
 
-      brokerManaged: false,
-      readyToConnect: false,
-      negotiatedProtocol: null,
-      securityReady: false,
-      securityTransport: null,
-      pendingSecurityRequest: null,
-    }
-
-    mockChannel = {
+    channel = {
       getState: () => state,
       updateState: (partial) => {
         state = { ...state, ...partial }
@@ -45,237 +51,172 @@ describe('channel/subscription/events', () => {
       removeProcess: jest.fn(),
       notifyEvent: jest.fn(),
       notifyMessage: jest.fn(),
-      actions: {} as ActionCreators,
+      actions: {} as unknown as ChannelInternals['actions'],
     }
   })
 
-  it('adds handler to eventSubscriptions', () => {
-    const handler: EventHandler = jest.fn()
+  describe('generic subscriptions', () => {
+    it('registers the handler as-is', () => {
+      const handler: EventHandler = jest.fn()
 
-    subscribeToEvents(mockChannel, handler)
+      subscribeToEvents(channel, handler)
 
-    expect(state.eventSubscriptions).toContain(handler)
-    expect(state.eventSubscriptions).toHaveLength(1)
-  })
-
-  it('allows multiple handlers', () => {
-    const handler1: EventHandler = jest.fn()
-    const handler2: EventHandler = jest.fn()
-    const handler3: EventHandler = jest.fn()
-
-    subscribeToEvents(mockChannel, handler1)
-    subscribeToEvents(mockChannel, handler2)
-    subscribeToEvents(mockChannel, handler3)
-
-    expect(state.eventSubscriptions).toHaveLength(3)
-    expect(state.eventSubscriptions).toContain(handler1)
-    expect(state.eventSubscriptions).toContain(handler2)
-    expect(state.eventSubscriptions).toContain(handler3)
-  })
-
-  it('return unsubscribe function', () => {
-    const handler: EventHandler = jest.fn()
-
-    const unsubscribe = subscribeToEvents(mockChannel, handler)
-
-    expect(typeof unsubscribe).toBe('function')
-  })
-
-  it('removes handler when unsubscribe is called', () => {
-    const handler: EventHandler = jest.fn()
-
-    const unsubscribe = subscribeToEvents(mockChannel, handler)
-    expect(state.eventSubscriptions).toContain(handler)
-
-    unsubscribe()
-    expect(state.eventSubscriptions).not.toContain(handler)
-    expect(state.eventSubscriptions).toHaveLength(0)
-  })
-
-  it('only remove the specific handler', () => {
-    const handler1: EventHandler = jest.fn()
-    const handler2: EventHandler = jest.fn()
-    const handler3: EventHandler = jest.fn()
-
-    subscribeToEvents(mockChannel, handler1)
-    const unsubscribe2 = subscribeToEvents(mockChannel, handler2)
-    subscribeToEvents(mockChannel, handler3)
-
-    expect(state.eventSubscriptions).toHaveLength(3)
-
-    unsubscribe2()
-
-    expect(state.eventSubscriptions).toHaveLength(2)
-    expect(state.eventSubscriptions).toContain(handler1)
-    expect(state.eventSubscriptions).not.toContain(handler2)
-    expect(state.eventSubscriptions).toContain(handler3)
-  })
-
-  it('throws error if handler is not a function', () => {
-    expect(() => subscribeToEvents(mockChannel, null as unknown as EventHandler)).toThrow('Expected callback function.')
-    expect(() => subscribeToEvents(mockChannel, undefined as unknown as EventHandler)).toThrow('Expected callback function.')
-    expect(() => subscribeToEvents(mockChannel, 'not a function' as unknown as EventHandler)).toThrow('Expected callback function.')
-  })
-
-  it('handles multiple unsubscribe calls gracefully', () => {
-    const handler: EventHandler = jest.fn()
-
-    const unsubscribe = subscribeToEvents(mockChannel, handler)
-
-    unsubscribe()
-    expect(state.eventSubscriptions).toHaveLength(0)
-
-    unsubscribe()
-    expect(state.eventSubscriptions).toHaveLength(0)
-  })
-
-  describe('event-specific subscriptions', () => {
-    it('subscribes to a specific event type', () => {
-      const handler: OpenCallback = jest.fn()
-
-      subscribeToEvents(mockChannel, 'open', handler)
-
-      expect(state.eventSubscriptions).toHaveLength(1)
+      expect(state.eventSubscriptions).toEqual([handler])
     })
 
-    it('only calls handler for matching event type', () => {
-      const openHandler: OpenCallback = jest.fn()
-      const closeHandler: CloseCallback = jest.fn()
+    it('keeps handlers in subscription order', () => {
+      const first: EventHandler = jest.fn()
+      const second: EventHandler = jest.fn()
+      const third: EventHandler = jest.fn()
 
-      subscribeToEvents(mockChannel, 'open', openHandler)
-      subscribeToEvents(mockChannel, 'close', closeHandler)
+      subscribeToEvents(channel, first)
+      subscribeToEvents(channel, second)
+      subscribeToEvents(channel, third)
 
-      const mockChannelJSON = {
-        id: 'channel-123',
-        name: 'test-channel',
-        active: false,
-        origin: null,
-        connectTimestamp: null,
-        contract: null,
-        queuedMessagesCount: 0,
-      }
-
-      const wrappedOpenHandler = state.eventSubscriptions[0]
-      wrappedOpenHandler('open', { origin: 'http://test.com', contract: { emitted: [], accepted: [] } }, mockChannelJSON)
-
-      expect(openHandler).toHaveBeenCalledWith({ origin: 'http://test.com', contract: { emitted: [], accepted: [] } }, mockChannelJSON)
-      expect(closeHandler).not.toHaveBeenCalled()
-
-      const wrappedCloseHandler = state.eventSubscriptions[1]
-      wrappedCloseHandler('close', { notify: true }, mockChannelJSON)
-
-      expect(closeHandler).toHaveBeenCalledWith({ notify: true }, mockChannelJSON)
-      expect(openHandler).toHaveBeenCalledTimes(1)
+      expect(state.eventSubscriptions).toEqual([first, second, third])
     })
 
-    it('does not call handler for non-matching event type', () => {
-      const openHandler: OpenCallback = jest.fn()
-
-      subscribeToEvents(mockChannel, 'open', openHandler)
-
-      const mockChannelJSON = {
-        id: 'channel-123',
-        name: 'test-channel',
-        active: false,
-        origin: null,
-        connectTimestamp: null,
-        contract: null,
-        queuedMessagesCount: 0,
-      }
-
-      const wrappedHandler = state.eventSubscriptions[0]
-      wrappedHandler('close', { notify: true }, mockChannelJSON)
-
-      expect(openHandler).not.toHaveBeenCalled()
+    it('returns an unsubscribe function', () => {
+      expect(subscribeToEvents(channel, jest.fn())).toEqual(expect.any(Function))
     })
 
-    it('returns unsubscribe function for event-specific subscription', () => {
-      const handler: OpenCallback = jest.fn()
-
-      const unsubscribe = subscribeToEvents(mockChannel, 'open', handler)
-
-      expect(typeof unsubscribe).toBe('function')
-      expect(state.eventSubscriptions).toHaveLength(1)
+    it('removes the handler on unsubscribe', () => {
+      const unsubscribe = subscribeToEvents(channel, jest.fn())
 
       unsubscribe()
 
-      expect(state.eventSubscriptions).toHaveLength(0)
+      expect(state.eventSubscriptions).toEqual([])
+    })
+
+    it('removes only the unsubscribed handler', () => {
+      const first: EventHandler = jest.fn()
+      const second: EventHandler = jest.fn()
+      const third: EventHandler = jest.fn()
+      subscribeToEvents(channel, first)
+      const unsubscribeSecond = subscribeToEvents(channel, second)
+      subscribeToEvents(channel, third)
+
+      unsubscribeSecond()
+
+      expect(state.eventSubscriptions).toEqual([first, third])
+    })
+
+    it('tolerates a second unsubscribe', () => {
+      const unsubscribe = subscribeToEvents(channel, jest.fn())
+      unsubscribe()
+
+      unsubscribe()
+
+      expect(state.eventSubscriptions).toEqual([])
+    })
+
+    it('keeps other handlers across a second unsubscribe', () => {
+      const survivor: EventHandler = jest.fn()
+      const unsubscribe = subscribeToEvents(channel, jest.fn())
+      unsubscribe()
+      subscribeToEvents(channel, survivor)
+
+      unsubscribe()
+
+      expect(state.eventSubscriptions).toEqual([survivor])
+    })
+
+    it.each(nonFunctions)('throws when the handler is %s', (_label: string, handler: unknown) => {
+      expect(() => subscribeToEvents(channel, handler as EventHandler)).toThrow('Expected callback function.')
+    })
+  })
+
+  describe('event-specific subscriptions', () => {
+    it('registers a wrapper rather than the callback itself', () => {
+      const handler: OpenCallback = jest.fn()
+
+      subscribeToEvents(channel, 'open', handler)
+
+      expect(state.eventSubscriptions).toEqual([expect.any(Function)])
+    })
+
+    it('forwards the matching event data and channel snapshot', () => {
+      const handler: OpenCallback = jest.fn()
+      subscribeToEvents(channel, 'open', handler)
+
+      subscription(0)('open', openData, channelJSON)
+
+      expect(handler).toHaveBeenCalledWith(openData, channelJSON)
+    })
+
+    it('ignores other events', () => {
+      const handler: OpenCallback = jest.fn()
+      subscribeToEvents(channel, 'open', handler)
+
+      subscription(0)('close', { notify: true }, channelJSON)
+
+      expect(handler).not.toHaveBeenCalled()
+    })
+
+    it('routes each event to its own subscriber', () => {
+      const onOpen: OpenCallback = jest.fn()
+      const onClose: CloseCallback = jest.fn()
+      subscribeToEvents(channel, 'open', onOpen)
+      subscribeToEvents(channel, 'close', onClose)
+
+      subscription(0)('close', { notify: true }, channelJSON)
+      subscription(1)('close', { notify: true }, channelJSON)
+
+      expect([(onOpen as unknown as Mock).mock.calls, (onClose as unknown as Mock).mock.calls]).toEqual([
+        [],
+        [[{ notify: true }, channelJSON]],
+      ])
     })
 
     it('works with cancel events', () => {
-      const cancelHandler: CancelCallback = jest.fn()
+      const handler: CancelCallback = jest.fn()
+      subscribeToEvents(channel, 'cancel', handler)
 
-      subscribeToEvents(mockChannel, 'cancel', cancelHandler)
+      subscription(0)('cancel', { notify: false }, channelJSON)
 
-      const mockChannelJSON = {
-        id: 'channel-123',
-        name: 'test-channel',
-        active: false,
-        origin: null,
-        connectTimestamp: null,
-        contract: null,
-        queuedMessagesCount: 0,
-      }
-
-      const wrappedHandler = state.eventSubscriptions[0]
-      wrappedHandler('cancel', { notify: false }, mockChannelJSON)
-
-      expect(cancelHandler).toHaveBeenCalledWith({ notify: false }, mockChannelJSON)
+      expect(handler).toHaveBeenCalledWith({ notify: false }, channelJSON)
     })
 
-    it('supports multiple event-specific subscriptions for same event', () => {
-      const handler1: OpenCallback = jest.fn()
-      const handler2: OpenCallback = jest.fn()
+    it('supports several subscribers to the same event', () => {
+      const first: OpenCallback = jest.fn()
+      const second: OpenCallback = jest.fn()
+      subscribeToEvents(channel, 'open', first)
+      subscribeToEvents(channel, 'open', second)
 
-      subscribeToEvents(mockChannel, 'open', handler1)
-      subscribeToEvents(mockChannel, 'open', handler2)
+      subscription(0)('open', openData, channelJSON)
+      subscription(1)('open', openData, channelJSON)
 
-      expect(state.eventSubscriptions).toHaveLength(2)
-
-      const mockChannelJSON = {
-        id: 'channel-123',
-        name: 'test-channel',
-        active: false,
-        origin: null,
-        connectTimestamp: null,
-        contract: null,
-        queuedMessagesCount: 0,
-      }
-
-      const openData = { origin: 'http://test.com', contract: { emitted: [], accepted: [] } }
-      state.eventSubscriptions[0]('open', openData, mockChannelJSON)
-      state.eventSubscriptions[1]('open', openData, mockChannelJSON)
-
-      expect(handler1).toHaveBeenCalledWith(openData, mockChannelJSON)
-      expect(handler2).toHaveBeenCalledWith(openData, mockChannelJSON)
+      expect([(first as unknown as Mock).mock.calls, (second as unknown as Mock).mock.calls]).toEqual([
+        [[openData, channelJSON]],
+        [[openData, channelJSON]],
+      ])
     })
 
-    it('can mix generic and event-specific subscriptions', () => {
-      const genericHandler: EventHandler = jest.fn()
-      const openHandler: OpenCallback = jest.fn()
+    it('mixes with generic subscriptions', () => {
+      const generic: EventHandler = jest.fn()
+      const onOpen: OpenCallback = jest.fn()
+      subscribeToEvents(channel, generic)
+      subscribeToEvents(channel, 'open', onOpen)
 
-      subscribeToEvents(mockChannel, genericHandler)
-      subscribeToEvents(mockChannel, 'open', openHandler)
+      subscription(0)('open', openData, channelJSON)
+      subscription(1)('open', openData, channelJSON)
 
-      expect(state.eventSubscriptions).toHaveLength(2)
+      expect([(generic as unknown as Mock).mock.calls, (onOpen as unknown as Mock).mock.calls]).toEqual([
+        [['open', openData, channelJSON]],
+        [[openData, channelJSON]],
+      ])
+    })
 
-      const mockChannelJSON = {
-        id: 'channel-123',
-        name: 'test-channel',
-        active: false,
-        origin: null,
-        connectTimestamp: null,
-        contract: null,
-        queuedMessagesCount: 0,
-      }
+    it('removes the wrapper on unsubscribe', () => {
+      const unsubscribe = subscribeToEvents(channel, 'open', jest.fn())
 
-      const openData = { origin: 'http://test.com', contract: { emitted: [], accepted: [] } }
+      unsubscribe()
 
-      state.eventSubscriptions[0]('open', openData, mockChannelJSON)
-      state.eventSubscriptions[1]('open', openData, mockChannelJSON)
+      expect(state.eventSubscriptions).toEqual([])
+    })
 
-      expect(genericHandler).toHaveBeenCalledWith('open', openData, mockChannelJSON)
-      expect(openHandler).toHaveBeenCalledWith(openData, mockChannelJSON)
+    it.each(nonFunctions)('throws when the callback for an event is %s', (_label: string, handler: unknown) => {
+      expect(() => subscribeToEvents(channel, 'open', handler as OpenCallback)).toThrow('Expected callback function.')
     })
   })
 })

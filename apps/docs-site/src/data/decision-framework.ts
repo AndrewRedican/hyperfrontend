@@ -1714,7 +1714,7 @@ export const decisionFramework: DecisionFramework = {
       side: 'blocker',
       summary: 'A malicious script already running inside the host page cannot be defended against.',
       detail:
-        'The channel is pinned to a window at an origin, which is the right protection against a wrong-frame or wrong-origin speaker but cannot tell the host application from analytics, a tag manager, or a compromised transitive dependency in the same page. The crypto envelope is defence in depth over that gap rather than a fix: handshake frames stay plaintext, and a counterpart that omits the protocol downgrades the channel with no runtime signal.',
+        'The channel is pinned to a window at an origin, which is the right protection against a wrong-frame or wrong-origin speaker but cannot tell the host application from analytics, a tag manager, or a compromised transitive dependency in the same page. The crypto envelope is defence in depth over that gap rather than a fix: handshake frames stay plaintext, the ephemeral-key protocol defeats only a script that can listen, and the pre-shared-key protocol defeats a script that lacks the key, while nothing in the mechanism keeps that key from a script sharing the host realm.',
       whatWouldHaveToChange:
         'Nothing inside this mechanism. Defences against in-page adversaries are content-security policy, Trusted Types, subresource integrity, or moving the authority to a separate origin. A malicious participant is the different, answerable question: cross-origin serving plus a host-decreed sandbox does contain that one.',
       conflictsWith: ['question.trust.malicious-participant#contain-malice'],

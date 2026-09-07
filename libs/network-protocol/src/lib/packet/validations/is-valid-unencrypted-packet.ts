@@ -1,24 +1,26 @@
+import type { UnencryptedPacket } from '../model'
+import { getType } from '@hyperfrontend/data-utils'
 import { isValidUnencryptedData } from '../../data/validations/is-valid-unencrypted-data'
-import { isValidUnobfuscatedPacketBase } from './is-valid-unobfuscated-packet-base'
+import { isValidOrigin } from './is-valid-origin'
+import { isValidTarget } from './is-valid-target'
 
 /**
- * Validates whether the provided value is a valid unencrypted packet.
- * Checks both the packet structure and that the data payload is unencrypted.
+ * Checks that a value is a plaintext packet: a valid origin, a valid target, and a valid
+ * data envelope.
  *
- * @param packet - The value to validate as an unencrypted packet
- * @returns True if the value is a valid unencrypted packet, false otherwise
+ * @param packet - The value to check
+ * @returns True when the value has the shape of an `UnencryptedPacket`
  *
- * @example Validating unencrypted packets
+ * @example Validating a packet before sealing
  * ```typescript
- * isValidUnencryptedPacket({
- *   origin: '550e8400-e29b-41d4-a716-446655440000',
- *   target: '6ba7b810-9dad-11d1-80b4-00c04fd430c8',
- *   data: { key: 'session-abc', message: { action: 'ping' } }
- * })
+ * isValidUnencryptedPacket({ origin, target, data: { pid, id, sequence: 1, message: { action: 'ping' }, schema, schemaHash } })
  * // => true
  * ```
  */
-export function isValidUnencryptedPacket(packet: unknown): boolean {
-  const { isValid, pkt } = isValidUnobfuscatedPacketBase(packet)
-  return isValid && isValidUnencryptedData(pkt.data)
+export function isValidUnencryptedPacket(packet: unknown): packet is UnencryptedPacket {
+  if (getType(packet) !== 'object') {
+    return false
+  }
+  const candidate = packet as UnencryptedPacket
+  return isValidOrigin(candidate.origin) && isValidTarget(candidate.target) && isValidUnencryptedData(candidate.data)
 }

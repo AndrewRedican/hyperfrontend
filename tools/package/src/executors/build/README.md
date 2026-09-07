@@ -103,7 +103,7 @@ Entry points support exact paths, globs, and arrays:
 "entry": "./browser/*"
 
 // Multiple entries
-"entry": ["./browser/v1", "./browser/v2"]
+"entry": ["./browser/v3", "./browser/v4"]
 ```
 
 ## IIFE/UMD Dependency Handling
@@ -159,12 +159,12 @@ Build **fails** if `external` has entries without corresponding `globals`.
   "esm": { "bundleWorkspaceDeps": false },
   "cjs": { "bundleWorkspaceDeps": false },
   "iife": [
-    { "entry": "./browser/v1", "globalName": "HyperfrontendProtocolV1", "output": "bundle/v1" },
-    { "entry": "./browser/v2", "globalName": "HyperfrontendProtocolV2", "output": "bundle/v2" }
+    { "entry": "./browser/v3", "globalName": "HyperfrontendNetworkProtocolV3", "output": "bundle/v3" },
+    { "entry": "./browser/v4", "globalName": "HyperfrontendNetworkProtocolV4", "output": "bundle/v4" }
   ],
   "umd": [
-    { "entry": "./browser/v1", "globalName": "HyperfrontendProtocolV1", "output": "bundle/v1" },
-    { "entry": "./browser/v2", "globalName": "HyperfrontendProtocolV2", "output": "bundle/v2" }
+    { "entry": "./browser/v3", "globalName": "HyperfrontendNetworkProtocolV3", "output": "bundle/v3" },
+    { "entry": "./browser/v4", "globalName": "HyperfrontendNetworkProtocolV4", "output": "bundle/v4" }
   ]
 }
 ```

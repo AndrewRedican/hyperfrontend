@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "type": "troubleshooting",
+  "title": "Troubleshooting a secured channel",
+  "problem": "A channel that pins a security envelope is not behaving as I expect: messages go missing, a handshake is refused, the session closes on its own, a call throws about the shared key, or an error carries a code I do not recognise.",
+  "outcome": "Each symptom matched to what the envelope is doing and the one change that resolves it, with the migration guide as the fix for everything that traces back to v1 or v2.",
+  "priority": "P0",
+  "packages": ["@hyperfrontend/features", "@hyperfrontend/nexus", "@hyperfrontend/network-protocol"],
+  "verification": {
+    "kind": "authored",
+    "verifiedAgainst": "@hyperfrontend/features@0.9.0",
+    "verifiedOn": "2026-09-07"
+  },
+  "complexity": "intermediate",
+  "estMinutes": 10,
+  "apis": [
+    {
+      "package": "@hyperfrontend/features",
+      "symbol": "SecurityProtocol"
+    },
+    {
+      "package": "@hyperfrontend/nexus",
+      "symbol": "SecurityErrorCode"
+    },
+    {
+      "package": "@hyperfrontend/nexus",
+      "symbol": "DenyReason"
+    },
+    {
+      "package": "@hyperfrontend/nexus",
+      "symbol": "CloseReason"
+    },
+    {
+      "package": "@hyperfrontend/network-protocol",
+      "symbol": "isValidSharedKey"
+    }
+  ],
+  "prerequisites": {
+    "knowledge": [
+      "A host and a feature, or two brokers, that pin a protocol on their channel",
+      "Access to the error events on both sides, for example a shell.on('error') handler and the feature's equivalent"
+    ]
+  },
+  "related": {
+    "guides": [
+      "migrate-from-v1-and-v2-to-v3-and-v4",
+      "embed-a-shipped-feature",
+      "compose-independent-features",
+      "detect-unresponsive-feature"
+    ],
+    "reference": [
+      "/docs/libraries/features/host",
+      "/docs/libraries/nexus",
+      "/docs/libraries/network-protocol/security",
+      "/docs/libraries/network-protocol/browser/v4"
+    ],
+    "explanation": ["/docs/core-concepts/security", "/docs/libraries/nexus/architecture"]
+  },
+  "keywords": [
+    "troubleshoot",
+    "messages dropped",
+    "silent drop",
+    "security-unavailable",
+    "security-error",
+    "authentication-failed",
+    "security-unconfirmed",
+    "replayed",
+    "hello-rejected",
+    "counter-exhausted",
+    "sharedKey",
+    "Invalid protocol",
+    "bundle/v1",
+    "handshake-cancelled",
+    "clock skew"
+  ]
+}

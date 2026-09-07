@@ -18,7 +18,7 @@ import { ACTION_TYPES } from '../../types/action'
  * // With security confirmation
  * const secureAction = openConnection(deps)('process-123', {
  *   active: true,
- *   protocol: 'v2'
+ *   protocol: 'v4'
  * })
  * ```
  */

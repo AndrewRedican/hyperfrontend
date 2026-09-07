@@ -18,227 +18,140 @@ describe('Integration: Security', () => {
     accepted: [{ type: 'TEST_RESPONSE' }],
   }
 
-  describe('Origin Whitelist', () => {
-    it('accepts messages from whitelisted origins', () => {
-      const broker = createBroker({
-        name: 'secure-broker',
-        contract: testContract,
-        settings: {
-          whitelist: ['https://example.com', 'https://trusted.com'],
-        },
-      })
+  const createSecureBroker = (settings: Record<string, unknown> = {}) =>
+    createBroker({ name: 'secure-broker', contract: testContract, window: mockWindow as unknown as Window, settings })
 
-      expect(broker.settings.whitelist).toContain('https://example.com')
+  describe('Origin Whitelist', () => {
+    it('records the whitelisted origins', () => {
+      const broker = createSecureBroker({ whitelist: ['https://example.com', 'https://trusted.com'] })
+
+      expect(broker.settings.whitelist).toEqual(['https://example.com', 'https://trusted.com'])
     })
 
-    it('rejects messages from non-whitelisted origins', () => {
-      const broker = createBroker({
-        name: 'secure-broker',
-        contract: testContract,
-        settings: {
-          whitelist: ['https://example.com'],
-        },
-      })
+    it('leaves origins outside the whitelist unlisted', () => {
+      const broker = createSecureBroker({ whitelist: ['https://example.com'] })
 
       expect(broker.settings.whitelist).not.toContain('https://evil.com')
     })
 
-    it('works with multiple whitelisted origins', () => {
-      const broker = createBroker({
-        name: 'secure-broker',
-        contract: testContract,
-        settings: {
-          whitelist: ['https://app1.com', 'https://app2.com', 'https://app3.com'],
-        },
-      })
+    it('keeps every whitelisted origin when several are given', () => {
+      const broker = createSecureBroker({ whitelist: ['https://app1.com', 'https://app2.com', 'https://app3.com'] })
 
-      expect(broker.settings.whitelist).toHaveLength(3)
-      expect(broker.settings.whitelist).toContain('https://app1.com')
-      expect(broker.settings.whitelist).toContain('https://app2.com')
-      expect(broker.settings.whitelist).toContain('https://app3.com')
+      expect(broker.settings.whitelist).toEqual(['https://app1.com', 'https://app2.com', 'https://app3.com'])
     })
   })
 
   describe('Origin Blacklist', () => {
-    it('rejects messages from blacklisted origins', () => {
-      const broker = createBroker({
-        name: 'secure-broker',
-        contract: testContract,
-        settings: {
-          blacklist: ['https://malicious.com', 'https://spam.com'],
-        },
-      })
+    it('records the blacklisted origins', () => {
+      const broker = createSecureBroker({ blacklist: ['https://malicious.com', 'https://spam.com'] })
 
-      expect(broker.settings.blacklist).toContain('https://malicious.com')
-      expect(broker.settings.blacklist).toContain('https://spam.com')
+      expect(broker.settings.blacklist).toEqual(['https://malicious.com', 'https://spam.com'])
     })
 
-    it('accepts messages from non-blacklisted origins', () => {
-      const broker = createBroker({
-        name: 'secure-broker',
-        contract: testContract,
-        settings: {
-          blacklist: ['https://evil.com'],
-        },
-      })
+    it('leaves origins outside the blacklist unlisted', () => {
+      const broker = createSecureBroker({ blacklist: ['https://evil.com'] })
 
       expect(broker.settings.blacklist).not.toContain('https://good.com')
     })
   })
 
   describe('Custom Security Policies', () => {
-    it('accepts custom security policy', () => {
-      const broker = createBroker({
-        name: 'secure-broker',
-        contract: testContract,
-      })
-
+    it('stores a custom security policy on the broker settings', () => {
+      const broker = createSecureBroker()
       const customPolicy = jest.fn(() => true)
 
       broker.setSecurityPolicy(customPolicy)
 
-      expect(customPolicy).toBeDefined()
+      expect(broker.settings.securityPolicy).toBe(customPolicy)
     })
 
-    it('allows policy to reject connections', () => {
-      const broker = createBroker({
-        name: 'secure-broker',
-        contract: testContract,
-      })
-
+    it('replaces the policy when set again', () => {
+      const broker = createSecureBroker()
       const rejectAllPolicy = () => false
 
+      broker.setSecurityPolicy(() => true)
       broker.setSecurityPolicy(rejectAllPolicy)
 
-      expect(rejectAllPolicy()).toBe(false)
+      expect(broker.settings.securityPolicy).toBe(rejectAllPolicy)
     })
 
-    it('allows policy with custom logic', () => {
-      const broker = createBroker({
-        name: 'secure-broker',
-        contract: testContract,
-      })
-
-      const conditionalPolicy = (event: MessageEvent) => {
-        return event.origin.startsWith('https://')
-      }
+    it('accepts a policy with custom logic over the message event', () => {
+      const broker = createSecureBroker()
+      const conditionalPolicy = (event: MessageEvent) => event.origin.startsWith('https://')
 
       broker.setSecurityPolicy(conditionalPolicy)
 
       const httpsEvent = { origin: 'https://test.com' } as MessageEvent
       const httpEvent = { origin: 'http://test.com' } as MessageEvent
-      expect(conditionalPolicy(httpsEvent)).toBe(true)
-      expect(conditionalPolicy(httpEvent)).toBe(false)
+      expect([conditionalPolicy(httpsEvent), conditionalPolicy(httpEvent)]).toEqual([true, false])
     })
 
     it('chains security policy calls', () => {
-      const broker = createBroker({
-        name: 'secure-broker',
-        contract: testContract,
-      })
+      const broker = createSecureBroker()
 
-      const policy1 = () => true
-      const policy2 = () => true
-
-      const result = broker.setSecurityPolicy(policy1).setSecurityPolicy(policy2)
+      const result = broker.setSecurityPolicy(() => true).setSecurityPolicy(() => true)
 
       expect(result).toBe(broker)
     })
   })
 
   describe('Combined Security', () => {
-    it('uses whitelist when both whitelist and blacklist are provided', () => {
-      const broker = createBroker({
-        name: 'secure-broker',
-        contract: testContract,
-        settings: {
-          whitelist: ['https://trusted.com'],
-          blacklist: ['https://evil.com'],
-        },
-      })
+    it('keeps both lists when whitelist and blacklist are provided', () => {
+      const broker = createSecureBroker({ whitelist: ['https://trusted.com'], blacklist: ['https://evil.com'] })
 
-      expect(broker.settings.whitelist).toContain('https://trusted.com')
-      expect(broker.settings.blacklist).toContain('https://evil.com')
+      expect(broker.settings).toEqual(expect.objectContaining({ whitelist: ['https://trusted.com'], blacklist: ['https://evil.com'] }))
     })
 
-    it('handles empty security settings', () => {
-      const broker = createBroker({
-        name: 'secure-broker',
-        contract: testContract,
-        settings: { logLevel: 'error' },
-      })
+    it('defaults both lists to empty', () => {
+      const broker = createSecureBroker({ logLevel: 'error' })
 
-      expect(broker.settings.whitelist).toEqual([])
-      expect(broker.settings.blacklist).toEqual([])
+      expect(broker.settings).toEqual(expect.objectContaining({ whitelist: [], blacklist: [] }))
     })
   })
 
   describe('Channel-Level Security', () => {
-    it('respects broker security when creating channels', () => {
-      const broker = createBroker({
-        name: 'secure-broker',
-        contract: testContract,
-        settings: {
-          whitelist: ['https://trusted.com'],
-        },
-      })
+    it('creates channels under the broker security settings', () => {
+      const broker = createSecureBroker({ whitelist: ['https://trusted.com'] })
 
-      const channel = broker.addChannel('test-channel', mockWindow as unknown as Window)
+      const channel = broker.addChannel('test-channel', createMockWindow() as unknown as Window)
 
-      expect(channel).toBeDefined()
+      expect(channel.name).toBe('test-channel')
     })
 
-    it('handles multiple channels with same security policy', () => {
-      const broker = createBroker({
-        name: 'secure-broker',
-        contract: testContract,
-        settings: {
-          whitelist: ['https://trusted.com'],
-        },
-      })
+    it('registers multiple channels under the same security policy', () => {
+      const broker = createSecureBroker({ whitelist: ['https://trusted.com'] })
 
-      const mockWindow2 = createMockWindow()
+      broker.addChannel('channel-1', createMockWindow() as unknown as Window)
+      broker.addChannel('channel-2', createMockWindow() as unknown as Window)
 
-      const channel1 = broker.addChannel('channel-1', mockWindow as unknown as Window)
-      const channel2 = broker.addChannel('channel-2', mockWindow2 as unknown as Window)
-
-      expect(channel1).toBeDefined()
-      expect(channel2).toBeDefined()
+      expect(broker.channels.map((channel) => channel.name)).toEqual(['channel-1', 'channel-2'])
     })
   })
 
   describe('Security Policy Errors', () => {
-    it('throws error for invalid security policy', () => {
-      const broker = createBroker({
-        name: 'secure-broker',
-        contract: testContract,
+    it('throws for every security policy that is not a function', () => {
+      const broker = createSecureBroker()
+      const invalidPolicies = ['not a function', null, undefined]
+
+      const outcomes = invalidPolicies.map((policy) => {
+        try {
+          broker.setSecurityPolicy(policy as unknown as SecurityPolicy)
+          return 'accepted'
+        } catch {
+          return 'thrown'
+        }
       })
 
-      expect(() => {
-        broker.setSecurityPolicy('not a function' as unknown as SecurityPolicy)
-      }).toThrow()
-
-      expect(() => {
-        broker.setSecurityPolicy(null as unknown as SecurityPolicy)
-      }).toThrow()
-
-      expect(() => {
-        broker.setSecurityPolicy(undefined as unknown as SecurityPolicy)
-      }).toThrow()
+      expect(outcomes).toEqual(['thrown', 'thrown', 'thrown'])
     })
   })
 
   describe('Real-World Security Scenarios', () => {
     it('handles multi-tenant security', () => {
-      const broker = createBroker({
-        name: 'multi-tenant-broker',
-        contract: testContract,
-      })
-
+      const broker = createSecureBroker()
       const tenantIds = ['tenant-1', 'tenant-2', 'tenant-3']
-
       const tenantPolicy = (event: MessageEvent) => {
-        const processId = event.data?.processId || ''
+        const processId = (event.data?.processId as string | undefined) ?? ''
         return tenantIds.some((id) => processId.startsWith(id))
       }
 
@@ -246,53 +159,38 @@ describe('Integration: Security', () => {
 
       const event1 = { data: { processId: 'tenant-1-abc' } } as MessageEvent
       const event2 = { data: { processId: 'tenant-5-abc' } } as MessageEvent
-      expect(tenantPolicy(event1)).toBe(true)
-      expect(tenantPolicy(event2)).toBe(false)
+      expect([tenantPolicy(event1), tenantPolicy(event2)]).toEqual([true, false])
     })
 
     it('handles rate limiting in security policy', () => {
-      const broker = createBroker({
-        name: 'rate-limited-broker',
-        contract: testContract,
-      })
-
+      const broker = createSecureBroker()
       const connectionAttempts = new Map<string, number>()
-      const maxAttempts = 5
-
       const rateLimitPolicy = (event: MessageEvent) => {
-        const origin = event.origin
-        const count = connectionAttempts.get(origin) || 0
-        connectionAttempts.set(origin, count + 1)
-        return count < maxAttempts
+        const count = connectionAttempts.get(event.origin) ?? 0
+        connectionAttempts.set(event.origin, count + 1)
+        // magic: five attempts per origin before the policy starts refusing.
+        return count < 5
       }
 
       broker.setSecurityPolicy(rateLimitPolicy)
 
       const mockEvent = { origin: 'https://test.com' } as MessageEvent
-      for (let i = 0; i < 7; i++) {
-        rateLimitPolicy(mockEvent)
-      }
-
-      expect(rateLimitPolicy(mockEvent)).toBe(false)
+      const verdicts = Array.from({ length: 7 }, () => rateLimitPolicy(mockEvent))
+      expect(verdicts).toEqual([true, true, true, true, true, false, false])
     })
 
     it('handles time-based security', () => {
-      const broker = createBroker({
-        name: 'time-restricted-broker',
-        contract: testContract,
-      })
-
+      const broker = createSecureBroker()
       const allowedHours = { start: 9, end: 17 }
-
-      const timePolicy = () => {
-        const hour = new Date().getHours()
+      const timePolicy = (event: MessageEvent) => {
+        const hour = (event.data as { hour: number }).hour
         return hour >= allowedHours.start && hour < allowedHours.end
       }
 
       broker.setSecurityPolicy(timePolicy)
 
-      const result = timePolicy()
-      expect(typeof result).toBe('boolean')
+      const atHour = (hour: number) => ({ data: { hour } }) as MessageEvent
+      expect([timePolicy(atHour(8)), timePolicy(atHour(12)), timePolicy(atHour(17))]).toEqual([false, true, false])
     })
   })
 })

@@ -1,9 +1,9 @@
 import type { Logger } from '@hyperfrontend/logging'
-import type { ActionCreators } from '../../core/actions/factory'
+import type { Mock } from '@hyperfrontend/testing'
 import type { IAction } from '../../types/action'
+import type { IChannelContract } from '../../types/contract'
 import type { BrokerState } from '../types'
-import type { RouteHandler } from './create-router'
-import type { RoutingContext } from './types'
+import type { RouteHandler, RoutingContext } from './types'
 import { beforeEach } from 'node:test'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { createActionCreators } from '../../core/actions/factory'
@@ -13,36 +13,16 @@ import { createRouter } from './create-router'
 import { routeMessage } from './route-message'
 
 describe('routeMessage', () => {
-  const mockBrokerState: BrokerState = {
-    id: 'broker-1',
-    name: 'test-broker',
-    window: global.window as Window,
-    contract: {
-      accepted: [{ type: 'test', description: 'Test action' }],
-      emitted: [],
-    },
-    settings: {
-      contract: {
-        accepted: [{ type: 'test', description: 'Test action' }],
-        emitted: [],
-      },
-    },
+  const contract: IChannelContract = {
+    accepted: [{ type: 'test', description: 'Test action' }],
+    emitted: [],
   }
 
-  let registry: ReturnType<typeof createRegistry>
-  let processManager: ReturnType<typeof createProcessManager>
-  let mockActions: ActionCreators
   let mockHandler: RouteHandler
   let mockLogger: Logger
   let routingContext: RoutingContext
 
   beforeEach(() => {
-    registry = createRegistry()
-    processManager = createProcessManager()
-    mockActions = createActionCreators({
-      getBrokerId: () => 'broker-1',
-      getContract: () => mockBrokerState.contract,
-    })
     mockHandler = jest.fn()
     mockLogger = {
       error: jest.fn(),
@@ -52,210 +32,127 @@ describe('routeMessage', () => {
       debug: jest.fn(),
       setLogLevel: jest.fn(),
       getLogLevel: jest.fn(() => 'debug'),
+    } as unknown as Logger
+    const state: BrokerState = {
+      id: 'broker-1',
+      name: 'test-broker',
+      window: global.window as Window,
+      contract,
+      settings: { contract },
+      logger: mockLogger,
     }
     routingContext = {
-      state: mockBrokerState,
-      registry,
-      processManager,
-      actions: mockActions,
+      state,
+      registry: createRegistry(),
+      processManager: createProcessManager(),
+      actions: createActionCreators({ getBrokerId: () => 'broker-1', getContract: () => contract }),
       logger: mockLogger,
       getSupportedProtocols: () => ['none'],
-      getProtocol: () => undefined,
-      routeAction: () => undefined,
+      security: { localId: 'broker-1', getProvider: () => undefined, dispatch: () => undefined },
     }
   })
 
-  it('routes message to correct handler', () => {
-    const router = createRouter({
-      'test-action': mockHandler,
-    })
+  function messageEvent(data: unknown): MessageEvent<IAction> {
+    return { data, source: {} as Window } as unknown as MessageEvent<IAction>
+  }
 
-    const message = {
-      data: {
-        type: 'test-action',
-        senderId: 'sender-1',
-        data: {},
-      } as unknown as IAction,
-      source: {} as Window,
-    } as MessageEvent<IAction>
+  function actionOfType(type: string): IAction {
+    return { type, senderId: 'sender-1', data: {} } as unknown as IAction
+  }
+
+  it('routes the message to the handler registered for its action type', () => {
+    const router = createRouter({ 'test-action': mockHandler })
+    const message = messageEvent(actionOfType('test-action'))
 
     routeMessage(router, routingContext, message)
 
-    expect(mockHandler).toHaveBeenCalledTimes(1)
     expect(mockHandler).toHaveBeenCalledWith(routingContext, message)
   })
 
-  it('handles message without action type gracefully', () => {
-    const router = createRouter({
-      'test-action': mockHandler,
-    })
+  it('calls the handler once per message', () => {
+    const router = createRouter({ 'test-action': mockHandler })
 
-    const message = {
-      data: {} as IAction,
-      source: {} as Window,
-    } as MessageEvent<IAction>
+    routeMessage(router, routingContext, messageEvent(actionOfType('test-action')))
 
-    routeMessage(router, routingContext, message)
+    expect(mockHandler).toHaveBeenCalledTimes(1)
+  })
+
+  it('skips the handlers when the action has no type', () => {
+    const router = createRouter({ 'test-action': mockHandler })
+
+    routeMessage(router, routingContext, messageEvent({}))
 
     expect(mockHandler).not.toHaveBeenCalled()
   })
 
-  it('logs warning when action type is missing', () => {
-    const router = createRouter({})
-
-    const message = {
-      data: {} as IAction,
-      source: {} as Window,
-    } as MessageEvent<IAction>
-
-    routeMessage(router, routingContext, message)
+  it('warns when the action has no type', () => {
+    routeMessage(createRouter({}), routingContext, messageEvent({}))
 
     expect(mockLogger.warn).toHaveBeenCalledWith('Received message without action type')
   })
 
-  it('handles unregistered action type gracefully', () => {
-    const router = createRouter({
-      'registered-action': mockHandler,
-    })
+  it('skips the handlers for an unregistered action type', () => {
+    const router = createRouter({ 'registered-action': mockHandler })
 
-    const message = {
-      data: {
-        type: 'unregistered-action',
-        senderId: 'sender-1',
-        data: {},
-      } as unknown as IAction,
-      source: {} as Window,
-    } as MessageEvent<IAction>
-
-    routeMessage(router, routingContext, message)
+    routeMessage(router, routingContext, messageEvent(actionOfType('unregistered-action')))
 
     expect(mockHandler).not.toHaveBeenCalled()
   })
 
-  it('logs warning for unregistered action type', () => {
-    const router = createRouter({})
-
-    const message = {
-      data: {
-        type: 'unknown-action',
-        senderId: 'sender-1',
-        data: {},
-      } as unknown as IAction,
-      source: {} as Window,
-    } as MessageEvent<IAction>
-
-    routeMessage(router, routingContext, message)
+  it('warns for an unregistered action type', () => {
+    routeMessage(createRouter({}), routingContext, messageEvent(actionOfType('unknown-action')))
 
     expect(mockLogger.warn).toHaveBeenCalledWith('No handler for action type: unknown-action')
   })
 
-  it('catchs and handle errors from handlers', () => {
-    const errorHandler: RouteHandler = jest.fn(() => {
-      throw new Error('Handler error')
-    })
-
+  it('swallows errors thrown by a handler', () => {
     const router = createRouter({
-      'error-action': errorHandler,
+      'error-action': () => {
+        throw new Error('Handler error')
+      },
     })
 
-    const message = {
-      data: {
-        type: 'error-action',
-        senderId: 'sender-1',
-        data: {},
-      } as unknown as IAction,
-      source: {} as Window,
-    } as MessageEvent<IAction>
-
-    expect(() => {
-      routeMessage(router, routingContext, message)
-    }).not.toThrow()
-
-    expect(errorHandler).toHaveBeenCalled()
+    expect(() => routeMessage(router, routingContext, messageEvent(actionOfType('error-action')))).not.toThrow()
   })
 
-  it('logs error when handler throws', () => {
-    const errorHandler: RouteHandler = jest.fn(() => {
-      throw new Error('Handler error')
-    })
-
+  it('logs errors thrown by a handler', () => {
+    const error = new Error('Handler error')
     const router = createRouter({
-      'error-action': errorHandler,
+      'error-action': () => {
+        throw error
+      },
     })
 
-    const message = {
-      data: {
-        type: 'error-action',
-        senderId: 'sender-1',
-        data: {},
-      } as unknown as IAction,
-      source: {} as Window,
-    } as MessageEvent<IAction>
+    routeMessage(router, routingContext, messageEvent(actionOfType('error-action')))
 
-    routeMessage(router, routingContext, message)
-
-    expect(mockLogger.error).toHaveBeenCalledWith('Error routing message:', expect.any(Error))
+    expect(mockLogger.error).toHaveBeenCalledWith('Error routing message:', error)
   })
 
-  it('handles null/undefined message data', () => {
-    const router = createRouter({
-      'test-action': mockHandler,
-    })
+  it('tolerates a message without a payload', () => {
+    const router = createRouter({ 'test-action': mockHandler })
 
-    const message = {
-      data: null,
-      source: {} as Window,
-    } as unknown as MessageEvent<IAction>
-
-    expect(() => {
-      routeMessage(router, routingContext, message)
-    }).not.toThrow()
+    routeMessage(router, routingContext, messageEvent(null))
 
     expect(mockHandler).not.toHaveBeenCalled()
   })
 
-  it('routes different action types to different handlers', () => {
+  it('routes different action types to their own handlers', () => {
     const handler1: RouteHandler = jest.fn()
     const handler2: RouteHandler = jest.fn()
+    const router = createRouter({ 'action-1': handler1, 'action-2': handler2 })
 
-    const router = createRouter({
-      'action-1': handler1,
-      'action-2': handler2,
-    })
+    routeMessage(router, routingContext, messageEvent(actionOfType('action-1')))
+    routeMessage(router, routingContext, messageEvent(actionOfType('action-2')))
 
-    const message1 = {
-      data: { type: 'action-1', senderId: 'sender-1', data: {} } as unknown as IAction,
-      source: {} as Window,
-    } as MessageEvent<IAction>
-
-    const message2 = {
-      data: { type: 'action-2', senderId: 'sender-1', data: {} } as unknown as IAction,
-      source: {} as Window,
-    } as MessageEvent<IAction>
-
-    routeMessage(router, routingContext, message1)
-    routeMessage(router, routingContext, message2)
-
-    expect(handler1).toHaveBeenCalledTimes(1)
-    expect(handler2).toHaveBeenCalledTimes(1)
+    expect([(handler1 as Mock).mock.calls.length, (handler2 as Mock).mock.calls.length]).toEqual([1, 1])
   })
 
-  it('logs debug message for received actions via logAction', () => {
-    const router = createRouter({
-      'test-action': mockHandler,
-    })
+  it('logs each received action at debug level', () => {
+    const router = createRouter({ 'test-action': mockHandler })
+    const action = actionOfType('test-action')
 
-    const message = {
-      data: {
-        type: 'test-action',
-        senderId: 'sender-1',
-        data: {},
-      } as unknown as IAction,
-      source: {} as Window,
-    } as MessageEvent<IAction>
+    routeMessage(router, routingContext, messageEvent(action))
 
-    routeMessage(router, routingContext, message)
-
-    expect(mockLogger.debug).toHaveBeenCalledWith('Action received:', 'test-action', expect.any(Object))
+    expect(mockLogger.debug).toHaveBeenCalledWith('Action received:', 'test-action', action)
   })
 })

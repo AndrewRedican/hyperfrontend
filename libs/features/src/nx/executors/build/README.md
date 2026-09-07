@@ -24,7 +24,7 @@ via the package's `executors.json`.
 | ----------- | -------- | --------------------------------------------------------------------------------- |
 | `config`    | no       | Path to the feature config object.                                                |
 | `out`       | no       | Output directory for the built shell.                                             |
-| `protocol`  | no       | Security envelope: `none`, `v1`, or `v2`.                                         |
+| `protocol`  | no       | Security envelope: `none`, `v3`, or `v4`.                                         |
 | `name`      | no       | Feature name override.                                                            |
 | `version`   | no       | Feature version override.                                                         |
 | `url`       | no       | URL the generated shell loads the feature from.                                   |
