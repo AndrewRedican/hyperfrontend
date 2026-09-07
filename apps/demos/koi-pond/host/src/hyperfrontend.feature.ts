@@ -42,7 +42,7 @@ function el<T extends Element>(selector: string): T {
 export const feature = createFeature({
   name: '@hyperfrontend/demo-koi-pond',
   contract,
-  protocol: 'v1',
+  protocol: 'v3',
 })
 // ref: [guide:compose-independent-features/outer-boundary] end
 

@@ -5,7 +5,7 @@ export default defineConfig({
   version: '0.2.0',
   contract: './koi-pond.contract.ts',
   url: 'https://demo-koi-pond-production.up.railway.app/',
-  protocol: 'v1',
+  protocol: 'v3',
   display: {
     // note: Embedded first — an open() without an explicit displayMode embeds; no fixed embedded dimensions, so the iframe fills the host's container.
     // why: Nothing opens the pond as a full-page takeover, so standalone is not offered.
