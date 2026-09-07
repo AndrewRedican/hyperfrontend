@@ -62,4 +62,13 @@ describe('@hyperfrontend/random-generator-utils CJS', () => {
     const { randomPowerLaw } = require('@hyperfrontend/random-generator-utils')
     expect(typeof randomPowerLaw).toBe('function')
   })
+
+  it('exports createRandomGenerator and replays one seed exactly', () => {
+    const { createRandomGenerator } = require('@hyperfrontend/random-generator-utils')
+    expect(typeof createRandomGenerator).toBe('function')
+
+    const first = createRandomGenerator(42)
+    const second = createRandomGenerator(42)
+    expect([first.next(), first.gaussian(0, 10), first.uuidV4()]).toEqual([second.next(), second.gaussian(0, 10), second.uuidV4()])
+  })
 })
