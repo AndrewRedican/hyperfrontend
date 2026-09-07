@@ -23,7 +23,7 @@ const versionOverride = new URLSearchParams(window.location.search).get('contrac
 export const feature = createFeature({
   name: '@hyperfrontend/demo-clock',
   contract,
-  protocol: 'v1',
+  protocol: 'v3',
   ...(versionOverride !== null && { version: versionOverride }),
 })
 
