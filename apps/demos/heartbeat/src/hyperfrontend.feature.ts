@@ -18,7 +18,7 @@ import { heartRhythm } from './state/heart-rhythm'
 export const feature = createFeature({
   name: '@hyperfrontend/demo-heartbeat',
   contract,
-  protocol: 'v1',
+  protocol: 'v3',
 })
 
 wireHeartbeatContract(feature, heartRhythm)

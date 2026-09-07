@@ -101,8 +101,8 @@ const shell = createShell({
   // why: Resolved against this page, so the same markup works under `hf dev`, `vite preview`, and any static origin serving the pair.
   url: new URL('/', window.location.href).toString(),
   contract,
-  // why: Matches the feature's declared protocol, so the pairing negotiates the v1 security envelope.
-  protocol: 'v1',
+  // why: Matches the feature's declared protocol, so the pairing negotiates the v3 security envelope.
+  protocol: 'v3',
 })
 // ref: [guide:detect-unresponsive-feature/create-shell] end
 

@@ -87,4 +87,4 @@ To drive the full pair locally: `npx nx run demo-heartbeat:build`, then `npm run
 
 ## SDK workarounds
 
-None. The pairing runs the v1 security envelope on `features@0.7.x`: the packet-layer rejection of the SDK's payload-less `__hf:beat` that once forced this demo to `protocol: 'none'` was fixed in the nexus transport, so the four-state watchdog reads `healthy` under v1 and `pack-shell` no longer needs `--allow-open`.
+None. The pairing runs the v3 security envelope on `features@0.9.0`: the four-state watchdog reads `healthy` under it and `pack-shell` needs no `--allow-open`.

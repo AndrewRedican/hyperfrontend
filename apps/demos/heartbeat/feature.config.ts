@@ -5,7 +5,7 @@ export default defineConfig({
   version: '0.2.0',
   contract: './heartbeat.contract.ts',
   url: 'https://demo-heartbeat-production.up.railway.app/',
-  protocol: 'v1',
+  protocol: 'v3',
   // why: The feature's declared capability request — heartbeat audio wants autoplay delegated to its frame. A host bakes this into the iframe allow list; whether sound actually plays stays behind the host's own explicit user approval.
   permissions: ['autoplay'],
   display: {
