@@ -68,7 +68,7 @@ export function buildControlGroups(viewport: Viewport, state: WorkbenchState, on
    * @returns The control.
    */
   const slider = (label: string, min: number, max: number, step: number, get: () => number, set: (value: number) => void) =>
-    <const>{ kind: 'slider', label, min, max, step, get, set }
+    ({ kind: 'slider', label, min, max, step, get, set }) as const
 
   /**
    * A toggle bound to one debug overlay.
@@ -78,7 +78,7 @@ export function buildControlGroups(viewport: Viewport, state: WorkbenchState, on
    * @returns The control.
    */
   const overlay = (label: string, key: keyof KoiDebugFlags) =>
-    <const>{
+    ({
       kind: 'toggle',
       label,
       get: () => state.debug[key],
@@ -86,7 +86,7 @@ export function buildControlGroups(viewport: Viewport, state: WorkbenchState, on
         state.debug[key] = value
         viewport.setDebug({ [key]: value })
       },
-    }
+    }) as const
 
   return [
     {
@@ -151,7 +151,7 @@ export function buildControlGroups(viewport: Viewport, state: WorkbenchState, on
           options: BACKDROPS,
           get: () => state.backdrop,
           set: (value) => {
-            state.backdrop = <BackdropName>value
+            state.backdrop = value as BackdropName
             viewport.setBackdrop(state.backdrop)
           },
         },
@@ -161,7 +161,7 @@ export function buildControlGroups(viewport: Viewport, state: WorkbenchState, on
           options: KOI_LIGHTING_PRESETS,
           get: () => state.lighting,
           set: (value) => {
-            state.lighting = <KoiLightingPreset>value
+            state.lighting = value as KoiLightingPreset
             viewport.setLighting(state.lighting)
           },
         },
@@ -553,7 +553,7 @@ export function buildControlGroups(viewport: Viewport, state: WorkbenchState, on
           label: 'Pattern',
           options: KOI_PATTERNS,
           get: () => appearance.pattern,
-          set: (value) => koi.setAppearance({ pattern: <(typeof KOI_PATTERNS)[number]>value }),
+          set: (value) => koi.setAppearance({ pattern: value as (typeof KOI_PATTERNS)[number] }),
         },
         slider(
           'Seed',
