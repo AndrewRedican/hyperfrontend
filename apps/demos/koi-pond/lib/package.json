@@ -32,7 +32,7 @@
     "type-check": "tsc -p tsconfig.build.json --noEmit"
   },
   "dependencies": {
-    "@hyperfrontend/random-generator-utils": "0.2.0"
+    "@hyperfrontend/random-generator-utils": "0.0.5"
   },
   "devDependencies": {
     "@tsconfig/node24": "24.0.5",

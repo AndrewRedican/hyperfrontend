@@ -19,9 +19,8 @@
  * long, lazy curve a koi actually swims; steering on distance alone produces a
  * fish that bounces.
  */
-import type { RandomGenerator } from '@hyperfrontend/random-generator-utils'
 import type { PondEnvironment, PondWindow, Vec2 } from '../model/types.js'
-import { createRandomGenerator } from '@hyperfrontend/random-generator-utils'
+import { randomPseudo } from '@hyperfrontend/random-generator-utils'
 import { VARIANT_STRIDE, koiSeed } from '../model/traits.js'
 import { DEPTH_LEVELS, KOI_FRAMEWORKS } from '../model/types.js'
 
@@ -213,7 +212,7 @@ const ENTRY_RADIUS_BAND = { min: 0.55, max: 1.35 }
 /** How far a koi's entry heading wanders off the tangent, in radians. */
 const ENTRY_HEADING_JITTER = 0.85
 
-/** Band offset opening a koi's entry stream on its seed. */
+/** Where the entry jitter's draw band starts on the koi's seed. */
 const ENTRY_DRAWS = 40
 
 /** The closest two koi may open, in nominal fish lengths. */
@@ -230,50 +229,30 @@ const ENTRY_RELAX_PASSES = 24
 const LATE_ENTRY_CROWDING = 0.55
 
 /** How many seeded spots a late entry may probe for open water before settling among the crowd. */
-// why: Each probe spends the next draws of the koi's own entry stream, so however many it spends, no probe ever reads a neighbouring koi's numbers.
+// why: Each probe spends two draws, and the whole entry band has to stay well inside one seed stride so no probe ever reads a neighbouring koi's numbers.
 const LATE_ENTRY_PROBES = 24
-
-/** One koi's raw jittered entry, with the heading jitter drawn alongside it. */
-interface EntryDraw {
-  /** Its unrelaxed entry position. */
-  position: Vec2
-  /** How far its opening heading wanders off the tangent, in radians. */
-  headingJitter: number
-}
-
-/**
- * Opens a koi's entry stream.
- *
- * @param seed - The koi's stable seed.
- * @returns A fresh stream whose first draws are the koi's canonical entry.
- */
-function entryDraws(seed: number): RandomGenerator {
-  return createRandomGenerator(seed + ENTRY_DRAWS)
-}
 
 /**
  * One koi's raw jittered entry, before the shoal is relaxed apart.
  *
  * @param pond - The announced environment.
  * @param seed - The koi's stable seed.
- * @param draws - Its entry stream; a fresh one reads the canonical entry, and a shared one reads the next probe.
- * @returns Its unrelaxed entry position and heading jitter.
+ * @param probe - Which of the seed's entry draws to read; 0 is the canonical pair.
+ * @returns Its unrelaxed entry position.
  */
-function rawEntry(pond: PondEnvironment, seed: number, draws: RandomGenerator = entryDraws(seed)): EntryDraw {
-  // why: Angle, radius, then heading, in that order: every probe spends the same three draws, so a probe never re-reads a number another probe already spent.
-  const draw = (): number => draws.next()
+function rawEntry(pond: PondEnvironment, seed: number, probe = 0): Vec2 {
+  // why: Probe 0 must read the canonical draw pair, and every later probe steps past the heading draw two above it, so probing never re-reads a number another purpose already spent.
+  const shift = probe === 0 ? 0 : probe * 2 + 2
+  const draw = (index: number): number => randomPseudo(seed + ENTRY_DRAWS + shift + index)
   // magic: The seeds are multiples of 977, and 977 mod 360 is coprime with 360 — so taking the residue fans the koi out on an almost even 51-degree spacing. The eighth seed wraps back to within a degree of the first, so the base stations alone no longer guarantee separation; the relaxation passes below are what do.
-  const angle = (seed % 360) * (Math.PI / 180) + (draw() - 0.5) * 2 * ENTRY_ANGLE_JITTER
+  const angle = (seed % 360) * (Math.PI / 180) + (draw(0) - 0.5) * 2 * ENTRY_ANGLE_JITTER
   const centre = pondCentre(pond)
   // why: Measured on the shorter axis so every koi enters inside the pond proper rather than out in the margin.
   const radius =
     Math.min(pond.width, pond.height) *
     ENTRY_RADIUS_RATIO *
-    (ENTRY_RADIUS_BAND.min + draw() * (ENTRY_RADIUS_BAND.max - ENTRY_RADIUS_BAND.min))
-  return {
-    position: { x: centre.x + Math.cos(angle) * radius, y: centre.y + Math.sin(angle) * radius },
-    headingJitter: (draw() - 0.5) * 2 * ENTRY_HEADING_JITTER,
-  }
+    (ENTRY_RADIUS_BAND.min + draw(1) * (ENTRY_RADIUS_BAND.max - ENTRY_RADIUS_BAND.min))
+  return { x: centre.x + Math.cos(angle) * radius, y: centre.y + Math.sin(angle) * radius }
 }
 
 /** Where a koi is put into the water at boot, and which way it is pointed once it is there. */
@@ -328,7 +307,7 @@ export function entryStation(pond: PondEnvironment, seed: number, instance = 0):
   const duplicates = Number.isFinite(instance) && instance > 0 ? Math.floor(instance) : 0
   // why: A duplicate draws every entry number from its variant seed, the same stride its trait draws step by, so twins never share a jitter; ordinal 0 reads exactly the base seed.
   const entrySeed = seed + duplicates * VARIANT_STRIDE
-  const positions = (slot === -1 ? [entrySeed] : seeds).map((each) => rawEntry(pond, each).position)
+  const positions = (slot === -1 ? [entrySeed] : seeds).map((each) => rawEntry(pond, each))
 
   relaxShoal(pond, positions)
 
@@ -355,8 +334,7 @@ export function entryStation(pond: PondEnvironment, seed: number, instance = 0):
   }
   const settled = Math.atan2(position.y - centre.y, position.x - centre.x)
   // why: A tangential heading starts the shoal circulating instead of converging — eight fish all pointed at the centre meet there, and the opening seconds read as a collapse.
-  // why: The heading jitter is the entry stream's third draw, read afresh so it stays the same whichever probe the koi settled on.
-  const tangent = settled + Math.PI / 2 + rawEntry(pond, entrySeed).headingJitter
+  const tangent = settled + Math.PI / 2 + (randomPseudo(entrySeed + ENTRY_DRAWS + 2) - 0.5) * 2 * ENTRY_HEADING_JITTER
   return { position, heading: Math.atan2(Math.sin(tangent), Math.cos(tangent)) }
 }
 
@@ -407,7 +385,7 @@ function relaxShoal(pond: PondEnvironment, positions: Vec2[]): void {
  * Draws seeded entry spots for a late entry until one lies in open water.
  *
  * The first probe is the seed's canonical entry jitter; each later probe
- * redraws the angle and radius from the next draws of its entry stream. The
+ * redraws the angle and radius from the next pair of its entry draws. The
  * first spot clear of the whole crowd is taken; when every probe lands in
  * crowded water, the probe with the most room around it comes back for
  * {@link settleClearOfSiblings} to enforce the floor. Either way the chosen
@@ -427,9 +405,8 @@ function probeEntry(pond: PondEnvironment, seed: number, shoal: readonly Vec2[],
   const crowding = separation * LATE_ENTRY_CROWDING
   let best: Vec2 | undefined
   let bestRoom = -Infinity
-  const draws = entryDraws(seed)
   for (let probe = 0; probe < LATE_ENTRY_PROBES; probe += 1) {
-    const candidate = rawEntry(pond, seed, draws).position
+    const candidate = rawEntry(pond, seed, probe)
     // how: Room is the worst clearance ratio against everyone owed one; 1 or better means the spot is honestly open water.
     let room = Infinity
     for (const station of shoal) {
@@ -446,7 +423,7 @@ function probeEntry(pond: PondEnvironment, seed: number, shoal: readonly Vec2[],
       best = candidate
     }
   }
-  return best ?? rawEntry(pond, seed).position
+  return best ?? rawEntry(pond, seed)
 }
 
 /**
