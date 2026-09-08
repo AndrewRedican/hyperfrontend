@@ -84,16 +84,14 @@ export function wireClockContract(feature: FeatureLink, store: ClockStore, optio
   const now = options.now ?? (() => Date.now())
   const snapshot = () => buildSnapshot(now(), store.timezone.value, store.locale.value, store.format.value)
 
-  // how: A correlated request gets the snapshot back directly; the `time` echo
-  // still fires so plain event listeners observe the answer too.
+  // how: A correlated request gets the snapshot back directly; the `time` echo still fires so plain event listeners observe the answer too.
   feature.handle('get-time', () => {
     const current = snapshot()
     feature.send('time', current)
     return current
   })
 
-  // why: Armed alarms are the clock's unsaved state — a host proposing a close
-  // sees `dirty` until every alarm has fired or been cleared.
+  // why: Armed alarms are the clock's unsaved state, so a host proposing a close sees `dirty` until every alarm has fired or been cleared.
   // ref: [guide:close-a-feature-without-losing-work/report-dirty] start
   const reportAlarmDirty = () => {
     feature.setDirty(store.alarms.value.length > 0)
@@ -102,8 +100,7 @@ export function wireClockContract(feature: FeatureLink, store: ClockStore, optio
 
   feature.on('set-format', (data) => {
     if (isRecord(data) && (data['format'] === 'analog' || data['format'] === 'digital')) {
-      // note: The store mutation plays out as a physics flip; the echo event is
-      // emitted when the coin settles (see onFormatSettled below).
+      // note: The store mutation plays out as a physics flip; the echo event is emitted when the coin settles (see onFormatSettled below).
       store.format.value = data['format']
     }
   })

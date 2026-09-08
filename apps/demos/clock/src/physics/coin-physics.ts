@@ -1,13 +1,6 @@
-/**
- * Physics for the clock coin's Y-axis spin.
- *
- * Framework-agnostic and dependency-free. The caller owns the clock: every entry
- * point takes a timestamp in milliseconds, and `step(nowMs)` advances the
- * simulation, so tests can drive time deterministically.
- *
- * Faces live at multiples of 180°: even multiples show the analog face, odd
- * multiples the digital face. The angle is unbounded (spins accumulate).
- */
+// context: Physics for the clock coin's Y-axis spin.
+// context: Framework-agnostic and dependency-free. The caller owns the clock: every entry point takes a timestamp in milliseconds, and `step(nowMs)` advances the simulation, so tests can drive time deterministically.
+// context: Faces live at multiples of 180 degrees: even multiples show the analog face, odd multiples the digital face. The angle is unbounded, so spins accumulate.
 
 /** The two coin faces. */
 export type CoinFace = 'analog' | 'digital'
@@ -113,6 +106,8 @@ export function createCoinPhysics(options: CoinPhysicsOptions = {}): CoinPhysics
   /**
    * Picks the half-turn the coin should land on, biased by momentum: the coin
    * aims for the rest angle its current velocity would carry it to.
+   *
+   * @returns The absolute angle (degrees) of that half-turn, a multiple of 180 the settle then eases into.
    */
   const chooseTarget = () => {
     const projected = angle + velocity / friction
@@ -198,8 +193,7 @@ export function createCoinPhysics(options: CoinPhysicsOptions = {}): CoinPhysics
         return
       }
       lastTime = nowMs
-      // how: An impulse whose momentum travel (v/friction) overshoots the next face
-      // slightly, so the biased snap always selects one face forward.
+      // how: An impulse whose momentum travel (v/friction) overshoots the next face slightly, so the biased snap always selects one face forward.
       const direction = velocity < 0 ? -1 : 1
       const base = mode === 'resting' ? Math.round(angle / HALF_TURN) * HALF_TURN : angle
       angle = base
@@ -228,8 +222,7 @@ export function createCoinPhysics(options: CoinPhysicsOptions = {}): CoinPhysics
       }
       let remaining = nowMs - lastTime
       lastTime = nowMs
-      // how: Clamp long gaps (tab hidden) into fixed sub-steps to keep the
-      // integration stable.
+      // how: Clamp long gaps (tab hidden) into fixed sub-steps to keep the integration stable.
       while (remaining > 0 && (mode === 'momentum' || mode === 'settling')) {
         advance(Math.min(remaining, MAX_STEP_MS))
         remaining -= MAX_STEP_MS
