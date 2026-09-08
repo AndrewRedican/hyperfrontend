@@ -16,6 +16,7 @@ import {
 import { commitChanges, createTree } from '@hyperfrontend/project-scope/vfs'
 import { generateShell } from '../../generators/shell/generate-shell'
 import { resolveBuildConfig } from '../config/resolve'
+import { reconcileServeIsolation } from '../config/serve-reconciliation'
 import { EXIT_ERROR, EXIT_OK } from '../exit-codes'
 import { normalizeDeclarationMaps } from './normalize-declaration-maps'
 
@@ -119,7 +120,12 @@ export async function runBuild(options: RunBuildOptions): Promise<number> {
 
   let tempDir: string | null = null
   try {
-    const { config, contract, protocol, protocolExplicit } = await resolveConfig({ cwd, flags })
+    const { config, contract, protocol, protocolExplicit, sourcePath } = await resolveConfig({ cwd, flags })
+    // why: The feature config and the serve config are separate artifacts deployed separately, and only at build time are they both in reach; a disagreement between them surfaces here or not until a session hangs in a visitor's browser.
+    const isolationWarning = reconcileServeIsolation(config, sourcePath ?? null)
+    if (isolationWarning !== null) {
+      stderr.write(isolationWarning)
+    }
     if (protocol === 'none') {
       if (!protocolExplicit) {
         stderr.write('Build requires a security protocol: pass --protocol v3 or --protocol v4.\n')
