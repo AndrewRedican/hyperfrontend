@@ -13,8 +13,8 @@
  */
 import type { KoiProfile, KoiRenderer, PondEnvironment } from '@hyperfrontend/demo-koi-lib'
 import type { GlRenderer } from '@hyperfrontend/demo-koi-lib/three'
-import { createPondRenderer } from '@hyperfrontend/demo-koi-lib/three'
 import { flushSync, mount, unmount } from 'svelte'
+import { createPondRenderer } from '@hyperfrontend/demo-koi-lib/three'
 import KoiStage from './KoiStage.svelte'
 
 /**
@@ -25,7 +25,7 @@ import KoiStage from './KoiStage.svelte'
  * @param url - The URL of the app rendering it, revealed on hover.
  * @param pond - The world at build time; later announcements arrive via `setPond`.
  * @param createGl - The GL factory, replaceable so specs can run headless.
- * @returns The renderer.
+ * @returns The renderer the runtime loop drives: it draws this koi into the frame's own box, re-sizes to every pond the host announces, and on disposal unmounts the stage component, so a stood-down koi can be built again on wake.
  *
  * @example Drawing a koi each frame
  * ```typescript
