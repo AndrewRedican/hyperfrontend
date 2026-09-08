@@ -16,8 +16,8 @@
  */
 import type { KoiProfile, KoiRenderer, PondEnvironment } from '@hyperfrontend/demo-koi-lib'
 import type { GlRenderer } from '@hyperfrontend/demo-koi-lib/three'
-import { createPondRenderer } from '@hyperfrontend/demo-koi-lib/three'
 import { createApp } from 'vue'
+import { createPondRenderer } from '@hyperfrontend/demo-koi-lib/three'
 import KoiFish from './KoiFish.vue'
 
 /** The slice of the renderer the mounted component hands up; disposal stays with the Vue app that owns the component. */
@@ -31,7 +31,7 @@ export type KoiSceneHandle = Omit<KoiRenderer, 'dispose'>
  * @param url - The URL of the app rendering it, revealed on hover.
  * @param pond - The world at mount time; later announcements arrive via `setPond`.
  * @param createGl - The GL factory, replaceable so specs can run headless.
- * @returns The renderer.
+ * @returns The renderer the runtime loop drives: it draws this koi into the frame's own box, re-sizes to every pond the host announces, and on disposal unmounts the Vue app that owns the scene, so a stood-down koi can be built again on wake.
  *
  * @example Drawing a koi each frame
  * ```typescript

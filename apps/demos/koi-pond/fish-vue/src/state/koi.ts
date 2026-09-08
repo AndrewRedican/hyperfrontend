@@ -1,6 +1,6 @@
 import { createKoiRuntime } from '@hyperfrontend/demo-koi-lib'
-import { createKoiRenderer } from '../koi/koi-render'
 import { feature } from '../hyperfrontend.feature'
+import { createKoiRenderer } from '../koi/koi-render'
 
 /**
  * Looks up the app root, failing loudly when the markup drifts.
