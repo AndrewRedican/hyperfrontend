@@ -1,0 +1,125 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://hyperfrontend.dev/schemas/feature.config.json",
+  "title": "hyperfrontend feature config",
+  "description": "Authoring shape for a feature.config.json file read by the hf CLI.",
+  "type": "object",
+  "required": ["name", "version", "contract"],
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "URL of this schema."
+    },
+    "name": {
+      "type": "string",
+      "description": "Published feature name."
+    },
+    "version": {
+      "type": "string",
+      "description": "Feature version string."
+    },
+    "contract": {
+      "type": "string",
+      "description": "Path to the *.contract.{json,ts,js} file."
+    },
+    "url": {
+      "type": "string",
+      "description": "URL of the feature app the generated shell loads by default."
+    },
+    "protocol": {
+      "enum": ["none", "v3", "v4"],
+      "description": "Security envelope baked into the generated shell."
+    },
+    "isolation": {
+      "description": "Cross-origin isolation this feature's origin needs. The bare COEP value also declares that the feature is served to hosts on other origins, which withdraws the popup and standalone display modes because an isolated origin severs their opener. The object form declares that the feature is served only to same-origin isolated hosts, the one pairing that keeps its opener, and leaves those modes available.",
+      "oneOf": [
+        {
+          "enum": ["require-corp", "credentialless"],
+          "description": "COEP value, served to hosts on other origins."
+        },
+        {
+          "type": "object",
+          "required": ["coep", "hosts"],
+          "additionalProperties": false,
+          "properties": {
+            "coep": {
+              "enum": ["require-corp", "credentialless"],
+              "description": "COEP value the origin sends alongside the opener policy."
+            },
+            "hosts": {
+              "const": "same-origin",
+              "description": "The only reach an isolated origin keeps an opener for."
+            }
+          }
+        }
+      ]
+    },
+    "permissions": {
+      "type": "array",
+      "description": "Permissions-Policy features the shell delegates to the feature frame.",
+      "items": { "type": "string" }
+    },
+    "display": {
+      "type": "object",
+      "description": "Display modes the feature supports and their per-mode defaults.",
+      "properties": {
+        "modes": {
+          "type": "array",
+          "description": "Display modes the feature supports; the first is its default presentation.",
+          "items": { "enum": ["embedded", "dialog", "popup", "standalone"] }
+        },
+        "embedded": {
+          "type": "object",
+          "description": "Fixed embedded dimensions; when absent the iframe fills its container.",
+          "properties": {
+            "width": { "type": "number" },
+            "height": { "type": "number" }
+          },
+          "required": ["width", "height"]
+        },
+        "dialog": {
+          "type": "object",
+          "description": "Inner dialog box defaults for dialog mode.",
+          "properties": {
+            "width": { "type": "number" },
+            "height": { "type": "number" },
+            "position": { "type": "string" },
+            "backdrop": { "enum": ["close", "event", "none"] }
+          }
+        },
+        "popup": {
+          "type": "object",
+          "description": "Popup window defaults for popup mode.",
+          "properties": {
+            "width": { "type": "number" },
+            "height": { "type": "number" },
+            "position": { "type": "string" }
+          }
+        },
+        "closeOnEscape": {
+          "type": "boolean",
+          "description": "Whether Escape closes the dialog."
+        }
+      }
+    }
+  },
+  "if": {
+    "required": ["isolation"],
+    "properties": { "isolation": { "type": "string" } }
+  },
+  "then": {
+    "properties": {
+      "display": {
+        "properties": {
+          "modes": {
+            "items": {
+              "enum": ["embedded", "dialog"],
+              "description": "An isolated origin serving cross-origin hosts severs a popup's or standalone window's opener, so only the framed modes can complete a handshake."
+            }
+          },
+          "popup": false
+        }
+      }
+    }
+  }
+}
