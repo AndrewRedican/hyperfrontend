@@ -9,14 +9,14 @@
  *
  * @module @hyperfrontend/demo-koi-fish-vanilla.feature
  */
+import type { FeatureContract } from '@hyperfrontend/features/hostee'
 import { koiFishContract } from '@hyperfrontend/demo-koi-lib/contract'
 import { createFeature } from '@hyperfrontend/features/hostee'
-import type { FeatureContract } from '@hyperfrontend/features/hostee'
 
 /** The koi feature handle; use it to send and receive contract actions. */
 export const feature = createFeature({
   name: '@hyperfrontend/demo-koi-fish-vanilla',
   // why: The shared lib declares the contract structurally so it stays SDK-free; this is where the nine consumers each check it against the real type.
-  contract: <FeatureContract>koiFishContract,
+  contract: koiFishContract as FeatureContract,
   // why: No security protocol on purpose, matching the shell this koi packs as: the eight koi are same-origin sub-paths of one deploy, so the boundary is the pond's own. Messages still pin to the host's origin.
 })
