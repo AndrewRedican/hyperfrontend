@@ -1,8 +1,8 @@
 # How to generate values that look natural instead of random
 
-You will give sizes, speeds, offsets, and spawn timings a believable spread, so a screen full of generated things reads as a crowd rather than as output from a loop.
+You will give sizes, speeds, offsets, and spawn timings a believable spread, so a screen full of generated things reads as a crowd rather than as output from a loop, and you will be able to get the exact same crowd back on the next run.
 
-[`Math.random`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/random) is uniform, and uniform is the one distribution nature almost never produces. Scatter fifty elements with it and every size is equally likely, which is why the result looks sorted rather than grown: too many extremes, no typical value for the eye to settle on. [`@hyperfrontend/random-generator-utils`](/docs/libraries/utils/random-generator) provides the shapes that do occur, bounded so they stay inside a layout.
+[`Math.random`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/random) is uniform, and uniform is the one distribution nature almost never produces. Scatter fifty elements with it and every size is equally likely, which is why the result looks sorted rather than grown: too many extremes, no typical value for the eye to settle on. [`@hyperfrontend/random-generator-utils`](/docs/libraries/utils/random-generator) provides the shapes that do occur, bounded so they stay inside a layout, and a seeded stream that replays them.
 
 ## 1. Install it
 
@@ -56,26 +56,25 @@ The rate is per unit of time and the average gap is its reciprocal, so `schedule
 
 ## 5. Get the same arrangement back tomorrow
 
-A generated layout you cannot reproduce is one you cannot debug or screenshot-test. [`randomPseudo`](/docs/libraries/utils/random-generator#api-randomPseudo) turns a number into a value between 0 and 1 and always returns the same one for the same number, so deriving a seed per item makes the whole arrangement a function of one input:
+A generated layout you cannot reproduce is one you cannot debug or screenshot-test. [`createRandomGenerator`](/docs/libraries/utils/random-generator#api-createRandomGenerator) turns one number into a [`RandomGenerator`](/docs/libraries/utils/random-generator#api-RandomGenerator): a stream that hands out every distribution above in a fixed order, so the whole arrangement becomes a function of one seed:
 
 ```js
-import { randomPseudo } from '@hyperfrontend/random-generator-utils'
-
-const STRIDE = 1000
+import { createRandomGenerator } from '@hyperfrontend/random-generator-utils'
 
 function layout(seed, count, width) {
-  const base = seed * STRIDE
-  return Array.from({ length: count }, (_, index) => ({
-    x: randomPseudo(base + index) * width,
-    depth: randomPseudo(base + count + index),
+  const stream = createRandomGenerator(seed)
+  return Array.from({ length: count }, () => ({
+    x: stream.uniform(0, width),
+    size: stream.gaussian(24, 96),
+    depth: stream.next(),
   }))
 }
 ```
 
-Two values drawn from the same number are the same value, so every independent property needs its own stretch of the seed space: `base + index` for one, `base + count + index` for the next. The `STRIDE` multiplier is what keeps one seed's stretch clear of the next seed's, and it has to exceed the total number of draws per seed. Without it, seed 5 and seed 6 share all but one of their values and the "different" arrangement is the same one shifted along by a slot.
+The order of the draws is part of what the seed reproduces, so keep them together and add a new property after the existing ones rather than between them. Anything that should stay live from one run to the next, such as the spawner above, keeps drawing from the plain functions; when a whole run has to replay, pass the stream's [`next`](/docs/libraries/utils/random-generator#api-RandomGenerator-prop-next) as the last argument to any of them, as in `randomExponential(perSecond, stream.next)`, and it draws from the seed too.
 
 Give the seed a meaning from your own data, such as a record id or the day's date, and every visitor sees the same arrangement while it still differs between records.
 
 ## Check it worked
 
-Generate a few hundred values with `randomGaussian(24, 96)` and bucket them into a rough histogram: the counts rise toward the middle and thin out at both ends, against the flat line the same count of `randomUniform` calls gives you. Check the extremes: no value is below 24 or above 96, however many you draw. Then run your spawner for a minute and count the arrivals, which land near the rate you asked for while the gaps between them visibly vary. Finally, render a seeded layout twice and compare: identical for the same seed. Then render the neighbouring seed and check that none of its values repeats one of the first layout's, which is the `STRIDE` doing its job.
+Generate a few hundred values with `randomGaussian(24, 96)` and bucket them into a rough histogram: the counts rise toward the middle and thin out at both ends, against the flat line the same count of `randomUniform` calls gives you. Check the extremes: no value is below 24 or above 96, however many you draw. Then run your spawner for a minute and count the arrivals, which land near the rate you asked for while the gaps between them visibly vary. Finally, render a seeded layout twice and compare: identical for the same seed. Then render the neighbouring seed and check that none of its values repeats one of the first layout's.

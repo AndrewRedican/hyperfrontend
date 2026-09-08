@@ -9,7 +9,6 @@
  * additionally extends past every pond edge by a margin, so a koi that has
  * swum out of the pond proper still has an honest coordinate.
  */
-
 import type { KoiPhysical, KoiSwimTrim } from '../koi3d/config.js'
 
 /** A point in pond space, in CSS pixels. */

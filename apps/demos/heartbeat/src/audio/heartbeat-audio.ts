@@ -1,10 +1,5 @@
-/**
- * Web-Audio "lub-dub" for the heartbeat: two soft low-frequency thumps per
- * beat, synthesized on demand — no audio asset, no dependency. A master
- * compressor keeps rapid or stacked beats audible without clipping, and the
- * whole module stays silent until it is explicitly enabled by a user action,
- * so nothing ever autoplays.
- */
+// context: Web-Audio "lub-dub" for the heartbeat: two soft low-frequency thumps per beat, synthesized on demand, with no audio asset and no dependency.
+// context: A master compressor keeps rapid or stacked beats audible without clipping, and the whole module stays silent until it is explicitly enabled by a user action, so nothing ever autoplays.
 
 /** Voices allowed to overlap before further beats are skipped — a safety valve against runaway stacking. */
 const MAX_ACTIVE_VOICES = 12

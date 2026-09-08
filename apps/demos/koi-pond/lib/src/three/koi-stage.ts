@@ -91,7 +91,7 @@ export interface KoiStage {
  * @param profile - Everything about this koi that never changes.
  * @param pond - The world at build time; later announcements arrive via `setPond`.
  * @param createGl - The GL factory, replaceable so specs can run headless; the shared pond renderer when omitted.
- * @returns The stage.
+ * @returns The stage, lit and framed, ready for its first draw.
  *
  * @example Drawing a koi each frame
  * ```typescript

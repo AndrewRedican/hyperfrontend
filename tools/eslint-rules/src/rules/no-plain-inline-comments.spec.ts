@@ -153,6 +153,14 @@ module.exports = {}`,
     code: `// sourceMappingURL=app.js.map`,
   },
   {
+    code: `/// <reference types="vite/client" />`,
+  },
+  {
+    code: `// <hf:feature> — managed by @hyperfrontend/features; safe to keep
+import './hyperfrontend.feature'
+// </hf:feature>`,
+  },
+  {
     code: ``,
   },
   {

@@ -1,25 +1,7 @@
-/**
- * The pond's visibility authority.
- *
- * The browser announces visibility as an edge, and an edge is a notification:
- * something that has to be delivered to be heard. A page that never hears the
- * return to visible holds whatever it decided on the way out, and for the pond
- * that decision is a stopped clock and eight sleeping koi in front of a visitor
- * who is looking right at them. Waking is an action only the host can take, so
- * nothing recovers on its own.
- *
- * So the announcement is treated as the fast path rather than the only one, and
- * two readings that do not depend on delivery stand behind it. A coarse poll
- * re-reads the state the browser reports. A probe animation frame, armed only
- * while the pond believes itself hidden, turns a visitor's return into a waking
- * scene on the first frame the document is painted rather than on the next poll;
- * a genuinely hidden document is served no frames, so the probe costs nothing
- * exactly where the battery is worth protecting.
- *
- * The reverse direction is deliberately quieter. Frames stopping is not proof of
- * anything, since a blocked main thread looks identical, so silence never puts
- * the pond to sleep: only the announcement or a poll that reads hidden does.
- */
+// context: The pond's visibility authority.
+// context: The browser announces visibility as an edge, and an edge is a notification: something that has to be delivered to be heard. A page that never hears the return to visible holds whatever it decided on the way out, and for the pond that decision is a stopped clock and eight sleeping koi in front of a visitor who is looking right at them. Waking is an action only the host can take, so nothing recovers on its own.
+// context: So the announcement is treated as the fast path rather than the only one, and two readings that do not depend on delivery stand behind it. A coarse poll re-reads the state the browser reports. A probe animation frame, armed only while the pond believes itself hidden, turns a visitor's return into a waking scene on the first frame the document is painted rather than on the next poll; a genuinely hidden document is served no frames, so the probe costs nothing exactly where the battery is worth protecting.
+// context: The reverse direction is deliberately quieter. Frames stopping is not proof of anything, since a blocked main thread looks identical, so silence never puts the pond to sleep: only the announcement or a poll that reads hidden does.
 
 /** How often the watch re-reads the browser's own visibility, in milliseconds. */
 const POLL_INTERVAL_MS = 2000

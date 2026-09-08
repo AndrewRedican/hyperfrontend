@@ -19,7 +19,7 @@ import { CAUDAL_BLEND, CAUDAL_BLEND_HEIGHT, CAUDAL_ROOT, PIVOT_STATION } from '.
 import { createMeshBuilder, finishMesh, mergeMeshes, pushQuad, pushVertex } from './mesh-data.js'
 
 /** Which fin a membrane vertex belongs to, so one material can flex them differently. */
-export const FIN_PART = <const>{
+export const FIN_PART = {
   /** The body itself, which has no membrane to flex; every body vertex reads zero. */
   none: 0,
   /** The paired fins behind the gills. */
@@ -34,7 +34,7 @@ export const FIN_PART = <const>{
   caudal: 5,
   /** The eyeballs, which are not membranes but share the attribute. */
   eye: 6,
-}
+} as const
 
 /** One of the koi's fins, identified for the renderer's flex uniforms. */
 export type FinPart = (typeof FIN_PART)[keyof typeof FIN_PART]

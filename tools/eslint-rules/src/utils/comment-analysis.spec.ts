@@ -97,6 +97,18 @@ describe('comment-analysis utilities', () => {
       expect(isToolingDirective('@vite-ignore')).toBe(true)
     })
 
+    it('detects TypeScript triple-slash references', () => {
+      expect(isToolingDirective('/ <reference types="vite/client" />')).toBe(true)
+    })
+
+    it('detects the managed-block markers the features CLI writes', () => {
+      expect(isToolingDirective(' <hf:feature> — managed by @hyperfrontend/features; safe to keep')).toBe(true)
+    })
+
+    it('detects the closing managed-block marker', () => {
+      expect(isToolingDirective(' </hf:feature>')).toBe(true)
+    })
+
     it('handles leading whitespace', () => {
       expect(isToolingDirective('  @ts-ignore')).toBe(true)
       expect(isToolingDirective('\t@ts-expect-error')).toBe(true)

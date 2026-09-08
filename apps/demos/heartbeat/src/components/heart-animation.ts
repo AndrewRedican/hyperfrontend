@@ -1,10 +1,5 @@
-/**
- * Per-beat animation driver for the anatomical heart.
- *
- * Each beat is played from JavaScript (not an infinite CSS loop) because the
- * rhythm's timing varies — jitter, user extras, compensatory pauses, and the
- * recovery ramp all move the next beat.
- */
+// context: Per-beat animation driver for the anatomical heart.
+// context: Each beat is played from JavaScript, not an infinite CSS loop, because the rhythm's timing varies: jitter, user extras, compensatory pauses, and the recovery ramp all move the next beat.
 
 /**
  * Plays one multi-stage contraction across the heart's layers.

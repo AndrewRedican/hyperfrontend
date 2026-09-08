@@ -1,11 +1,15 @@
 import type { Schema, ValidationResult } from '@hyperfrontend/json-utils'
-import type { ActionDescription, DisplayConfig, FeatureConfig, FeatureContract } from './types'
+import type { ActionDescription, DisplayConfig, FeatureCoep, FeatureConfig, FeatureContract, FeatureIsolation } from './types'
 import { isArray } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { values } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { validate } from '@hyperfrontend/json-utils'
 import { parseVersion } from '@hyperfrontend/versioning/semver/parse'
+import { keepsWindowedModes, WINDOWED_DISPLAY_MODES } from './isolation'
 import { DisplayMode } from './types'
+
+// note: Mirrors the FeatureCoep union; validation reports the allowed values by listing this.
+const COEP_VALUES: readonly string[] = ['require-corp', 'credentialless']
 
 // note: Mirrors the BoxPosition union; validation reports the allowed values by listing this.
 const BOX_POSITIONS: readonly string[] = [
@@ -248,29 +252,77 @@ function collectModesIssues(modes: unknown, issues: string[]): DisplayMode[] | u
 }
 
 /**
+ * Validates an unknown value as a {@link FeatureIsolation}.
+ *
+ * Accepts either the bare COEP value, which declares that the feature is served
+ * to hosts on other origins, or the object form naming same-origin reach.
+ *
+ * @param isolation - The candidate `isolation` value from a feature config.
+ * @returns The validated isolation declaration, typed.
+ * @throws {Error} When the declaration is neither a known COEP value nor a well-formed same-origin form.
+ *
+ * @example Validating an isolation declaration
+ * ```typescript
+ * const isolation = validateIsolationConfig({ coep: 'require-corp', hosts: 'same-origin' })
+ * ```
+ */
+export function validateIsolationConfig(isolation: unknown): FeatureIsolation {
+  if (typeof isolation === 'string') {
+    if (!COEP_VALUES.includes(isolation)) {
+      throw createError(`Invalid config: "isolation" must be one of ${COEP_VALUES.join(', ')}, but got "${isolation}".`)
+    }
+    return isolation as FeatureCoep
+  }
+  if (!isRecord(isolation)) {
+    throw createError(`Invalid config: "isolation" must be a string or an object, but got ${describeType(isolation)}.`)
+  }
+  const coep = isolation['coep']
+  if (typeof coep !== 'string' || !COEP_VALUES.includes(coep)) {
+    throw createError(
+      `Invalid config: "isolation.coep" must be one of ${COEP_VALUES.join(', ')}, but got ${typeof coep === 'string' ? `"${coep}"` : describeType(coep)}.`
+    )
+  }
+  if (isolation['hosts'] !== 'same-origin') {
+    throw createError(
+      `Invalid config: "isolation.hosts" must be "same-origin" — it is the only reach an isolated origin keeps an opener for. Drop the object form to declare cross-origin reach.`
+    )
+  }
+  return { coep: coep as FeatureCoep, hosts: 'same-origin' }
+}
+
+/**
  * Validates an unknown value as a {@link DisplayConfig}.
  *
  * Enforces the presentation agreement a feature declares: a well-formed
  * (deduplicated, known) `modes` list, complete positive fixed embedded
- * dimensions, positive dialog/popup dimensions, a known backdrop behavior, and
- * per-mode sections that only configure declared modes. Reports every problem
- * at once.
+ * dimensions, positive dialog/popup dimensions, a known backdrop behavior,
+ * per-mode sections that only configure declared modes, and modes the declared
+ * isolation can actually serve. Reports every problem at once.
  *
  * @param display - The candidate `display` value from a feature config.
+ * @param isolation - The feature's validated isolation declaration, when it made one.
  * @returns The validated display config, typed.
- * @throws {Error} When any part of the display config is malformed.
+ * @throws {Error} When any part of the display config is malformed, or declares a mode the isolation cannot serve.
  *
  * @example Validating a display declaration
  * ```typescript
  * const display = validateDisplayConfig({ modes: ['embedded', 'dialog'], dialog: { width: 480, backdrop: 'event' } })
  * ```
  */
-export function validateDisplayConfig(display: unknown): DisplayConfig {
+export function validateDisplayConfig(display: unknown, isolation?: FeatureIsolation): DisplayConfig {
   if (!isRecord(display)) {
     throw createError(`Invalid config: "display" must be an object, but got ${describeType(display)}.`)
   }
   const issues: string[] = []
   const modes = collectModesIssues(display['modes'], issues)
+  if (modes !== undefined && !keepsWindowedModes(isolation)) {
+    const unreachable = modes.filter((mode) => WINDOWED_DISPLAY_MODES.includes(mode))
+    if (unreachable.length > 0) {
+      issues.push(
+        `"display.modes" declares ${unreachable.map((mode) => `"${mode}"`).join(' and ')}, which an isolated origin cannot serve to a cross-origin host — its opener is severed before the handshake. Drop the mode, or declare same-origin reach with "isolation": { "coep": "...", "hosts": "same-origin" }.`
+      )
+    }
+  }
   const sections = ['embedded', 'dialog', 'popup'] as const
   sections.forEach((section) => {
     const value = display[section]

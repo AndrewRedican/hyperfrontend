@@ -97,7 +97,7 @@ function fadeEdges(context: CanvasRenderingContext2D, width: number, height: num
 /**
  * Paints the pond bed onto a canvas.
  *
- * @param canvas - The floor canvas.
+ * @param canvas - The bed under every koi layer; it is resized to the given dimensions before anything is drawn.
  * @param width - Bed width in CSS pixels.
  * @param height - Bed height in CSS pixels.
  * @param pixelRatio - Device pixel ratio to render at; a ratio past the canvas ceiling paints at the ceiling.

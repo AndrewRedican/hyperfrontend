@@ -127,6 +127,17 @@ export interface MountResult {
    * readiness. When unset, the shell begins the handshake immediately.
    */
   whenReady?(begin: () => void): () => void
+  /**
+   * Reports that the window this mount opened became unreachable from this
+   * page, invoking `onLost` with the milliseconds since it opened; returns a
+   * cancel hook. Unset for modes that mount in the host's own document, whose
+   * frame cannot be lost this way.
+   *
+   * The elapsed time is the only thing separating the two causes: a browser
+   * that severed the opener does so as the feature document commits, while a
+   * person closing the window takes far longer.
+   */
+  whenLost?(onLost: (elapsedMs: number) => void): () => void
   /** Removes any DOM or closes any window created by the mount, stopping any observation it started. */
   cleanup(): void
 }

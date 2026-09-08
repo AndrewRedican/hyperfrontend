@@ -1,11 +1,5 @@
-/**
- * Presentation-aware UI state for the feature, fed exclusively by the host
- * protocol: the SDK's `presentation` announcement carries the display mode,
- * and the session's `close` clears it. The app therefore never guesses its
- * runtime from URLs, query params, or `window.parent` — opened directly in a
- * tab nothing ever announces, the mode stays `null`, and dialog-only chrome
- * simply never renders.
- */
+// context: Presentation-aware UI state for the feature, fed exclusively by the host protocol: the SDK's `presentation` announcement carries the display mode, and the session's `close` clears it.
+// context: The app therefore never guesses its runtime from URLs, query params, or `window.parent`. Opened directly in a tab nothing ever announces, the mode stays `null`, and dialog-only chrome simply never renders.
 
 /** Display modes a host can announce; `null` means no host has presented the feature. */
 export type FeatureDisplayMode = 'embedded' | 'dialog' | 'popup' | 'standalone'
@@ -53,8 +47,8 @@ function readMode(data: unknown): FeatureDisplayMode | null {
   if (typeof data !== 'object' || data === null) {
     return null
   }
-  const mode = (<Record<string, unknown>>data)['mode']
-  return typeof mode === 'string' && (<readonly string[]>MODES).includes(mode) ? <FeatureDisplayMode>mode : null
+  const mode = (data as Record<string, unknown>)['mode']
+  return typeof mode === 'string' && (MODES as readonly string[]).includes(mode) ? (mode as FeatureDisplayMode) : null
 }
 
 /**

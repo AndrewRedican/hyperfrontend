@@ -13,29 +13,37 @@ import { createShell, mountEmbedded } from '@hyperfrontend/features/host'
 import contract from '../../heartbeat.contract'
 import { createHeartbeatAudio } from '../audio/heartbeat-audio'
 import { createRollingBpm } from './bpm'
+import { isFlatline } from './ecg'
 import { createEcgRenderer } from './ecg-canvas'
 import { createFlatlineEdge } from './fx'
 import { createStageFx } from './fx-dom'
-import { isFlatline } from './ecg'
 import './host.css'
 
 /** A `beat` event as declared by the feature contract. */
 interface BeatPayload {
+  /** Timestamp (ms, feature clock) the beat fired. */
   at: number
+  /** Monotonic beat counter the feature keeps across both sources, from 1 upward. */
   seq: number
+  /** Pacing rate (bpm, rounded) the feature was aiming at when the beat fired, which is the announced target rather than the rate this page measures. */
   bpm: number
+  /** Whether the rhythm scheduled the beat or a visitor triggered an extra one. */
   source: 'rhythm' | 'user'
 }
 
 /** A `rhythm` event as declared by the feature contract. */
 interface RhythmPayload {
+  /** The stage the rhythm has moved into: pacing normally, held down, stopped, or ramping back to baseline. */
   state: 'beating' | 'suppressed' | 'flatline' | 'recovering'
+  /** Pacing rate (bpm, rounded) in that stage; 0 while suppressed or flatlined. */
   bpm: number
 }
 
 /** A `pong` reply as declared by the feature contract. */
 interface PongPayload {
+  /** The sequence number of the `ping` this reply answers. */
   seq: number
+  /** Timestamp (ms, host clock) the matching `ping` left this page, subtracted from now for the round trip. */
   sentAt: number
 }
 
@@ -101,15 +109,15 @@ const shell = createShell({
   // why: Resolved against this page, so the same markup works under `hf dev`, `vite preview`, and any static origin serving the pair.
   url: new URL('/', window.location.href).toString(),
   contract,
-  // why: Matches the feature's declared protocol, so the pairing negotiates the v1 security envelope.
-  protocol: 'v1',
+  // why: Matches the feature's declared protocol, so the pairing negotiates the v3 security envelope.
+  protocol: 'v3',
 })
 // ref: [guide:detect-unresponsive-feature/create-shell] end
 
 // ref: [guide:detect-unresponsive-feature/product-beats] start
 shell.on('beat', (data: unknown) => {
   // note: Receive payloads are schema-validated by the SDK before consumer handlers run.
-  const beat = <BeatPayload>data
+  const beat = data as BeatPayload
   const receivedAt = Date.now()
   totalBeats += 1
   if (beat.source === 'user') {
@@ -131,7 +139,7 @@ shell.on('beat', (data: unknown) => {
 // ref: [guide:detect-unresponsive-feature/product-beats] end
 
 shell.on('rhythm', (data: unknown) => {
-  const rhythm = <RhythmPayload>data
+  const rhythm = data as RhythmPayload
   rhythmState = rhythm.state
   if (rhythm.bpm > 0) {
     // why: The flatline judgement needs the last real pacing rate — a 0 would make the silence budget infinite.
@@ -148,7 +156,7 @@ shell.on('rhythm', (data: unknown) => {
 // ref: [guide:detect-unresponsive-feature/sdk-status] start
 shell.on('status', (data: unknown) => {
   // note: The SDK watchdog reports a snapshot object, not a bare state string.
-  const status = <HeartbeatStatus>data
+  const status = data as HeartbeatStatus
   sdkStateEl.textContent = status.state
   sdkStateEl.dataset['state'] = status.state
   sdkMissedEl.textContent = String(status.missedBeats)
@@ -173,12 +181,12 @@ shell.on('close', () => {
 // ref: [guide:detect-unresponsive-feature/reset-on-close] end
 
 shell.on('error', (data: unknown) => {
-  const record = <Record<string, unknown>>data
+  const record = data as Record<string, unknown>
   log(`error: ${typeof record['reason'] === 'string' ? record['reason'] : 'unknown'}`)
 })
 
 shell.on('dirty-state', (data: unknown) => {
-  const record = <Record<string, unknown>>data
+  const record = data as Record<string, unknown>
   log(`dirty state: ${record['dirty'] === true ? 'disturbed rhythm' : 'steady'}`)
 })
 
@@ -192,7 +200,7 @@ setInterval(() => {
   void shell
     .request('ping', { seq: pingSeq, sentAt: Date.now() })
     .then((reply) => {
-      latencyEl.textContent = String(Date.now() - (<PongPayload>reply).sentAt)
+      latencyEl.textContent = String(Date.now() - (reply as PongPayload).sentAt)
     })
     .catch(() => {
       latencyEl.textContent = '—'

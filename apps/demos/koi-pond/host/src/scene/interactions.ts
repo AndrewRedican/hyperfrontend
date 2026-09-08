@@ -283,6 +283,14 @@ function paintTrace(context: CanvasRenderingContext2D, chain: readonly Vec2[], n
   }
 }
 
+/** Where the visible window sits in pond space, in pond pixels. */
+export interface ViewOrigin {
+  /** Pond-space x of the window's left edge, taken off every pond-space point before it is drawn. */
+  x: number
+  /** Pond-space y of the window's top edge, taken off every pond-space point before it is drawn. */
+  y: number
+}
+
 /** What the overlay needs to paint one frame. */
 export interface InteractionsFrame {
   /** Overlay width in CSS pixels. */
@@ -290,7 +298,7 @@ export interface InteractionsFrame {
   /** Overlay height in CSS pixels. */
   height: number
   /** Pond-space origin of the visible window, so pond-space traces land on the right frame pixels. */
-  view: { x: number; y: number }
+  view: ViewOrigin
   /** Device pixel ratio to render at; a ratio past the canvas ceiling paints at the ceiling. */
   pixelRatio: number
   /** Seconds since the previous painted frame, which is what holds each caret to a slide. */
@@ -315,7 +323,7 @@ export interface InteractionsPainter {
  * Binds a painter to the interactions canvas.
  *
  * @param canvas - The overlay canvas, sitting above the water.
- * @returns The painter.
+ * @returns A painter owning that canvas, carrying each koi's pearl chain and caret angle from one frame to the next.
  *
  * @example Drawing the overlay while it is enabled
  * ```typescript

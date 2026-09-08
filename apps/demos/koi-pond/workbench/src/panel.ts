@@ -1,75 +1,75 @@
-/**
- * A minimal control panel, built here rather than pulled in.
- *
- * The workbench needs perhaps sixty live controls in eight groups, all reading
- * and writing straight through to the koi. That is a couple of hundred lines of
- * DOM against a dependency, a bundle and a styling fight — and this way every
- * control is a plain accessor pair, so adding one when the koi grows a new knob
- * is a single line.
- *
- * Nothing here reaches into the koi library. Controls are handed getters and
- * setters by the caller, which is what keeps the panel from leaking into
- * production code.
- */
+// context: A minimal control panel, built here rather than pulled in.
+// context: The workbench needs perhaps sixty live controls in eight groups, all reading and writing straight through to the koi. That is a couple of hundred lines of DOM against a dependency, a bundle and a styling fight; this way every control is a plain accessor pair, so adding one when the koi grows a new knob is a single line.
+// context: Nothing here reaches into the koi library. Controls are handed getters and setters by the caller, which is what keeps the panel from leaking into production code.
+
+/** A control that drags a number between two bounds. */
+export interface SliderControl {
+  /** A number dragged on a range input. */
+  kind: 'slider'
+  /** What the control is called. */
+  label: string
+  /** Lowest value it offers. */
+  min: number
+  /** Highest value it offers. */
+  max: number
+  /** How finely it moves. */
+  step: number
+  /** Reads the current value. */
+  get: () => number
+  /** Writes a new value. */
+  set: (value: number) => void
+}
+
+/** A control that picks a colour out of a swatch. */
+export interface ColourControl {
+  /** A colour picked from a swatch. */
+  kind: 'colour'
+  /** What the control is called. */
+  label: string
+  /** Reads the current `#rrggbb`. */
+  get: () => string
+  /** Writes a new `#rrggbb`. */
+  set: (value: string) => void
+}
+
+/** A control that picks one option out of a fixed list. */
+export interface SelectControl {
+  /** One choice from a fixed list. */
+  kind: 'select'
+  /** What the control is called. */
+  label: string
+  /** The choices on offer. */
+  options: readonly string[]
+  /** Reads the current choice. */
+  get: () => string
+  /** Writes a new choice. */
+  set: (value: string) => void
+}
+
+/** A control that flips a boolean on or off. */
+export interface ToggleControl {
+  /** An on-off switch. */
+  kind: 'toggle'
+  /** What the control is called. */
+  label: string
+  /** Reads whether it is on. */
+  get: () => boolean
+  /** Turns it on or off. */
+  set: (value: boolean) => void
+}
+
+/** A control that runs one action when pressed, with nothing to read back. */
+export interface ButtonControl {
+  /** A one-shot action. */
+  kind: 'button'
+  /** What the control is called. */
+  label: string
+  /** What pressing it does. */
+  run: () => void
+}
 
 /** One live control in the panel. */
-export type Control =
-  | {
-      /** A number dragged on a range input. */
-      kind: 'slider'
-      /** What the control is called. */
-      label: string
-      /** Lowest value it offers. */
-      min: number
-      /** Highest value it offers. */
-      max: number
-      /** How finely it moves. */
-      step: number
-      /** Reads the current value. */
-      get: () => number
-      /** Writes a new value. */
-      set: (value: number) => void
-    }
-  | {
-      /** A colour picked from a swatch. */
-      kind: 'colour'
-      /** What the control is called. */
-      label: string
-      /** Reads the current `#rrggbb`. */
-      get: () => string
-      /** Writes a new `#rrggbb`. */
-      set: (value: string) => void
-    }
-  | {
-      /** One choice from a fixed list. */
-      kind: 'select'
-      /** What the control is called. */
-      label: string
-      /** The choices on offer. */
-      options: readonly string[]
-      /** Reads the current choice. */
-      get: () => string
-      /** Writes a new choice. */
-      set: (value: string) => void
-    }
-  | {
-      /** An on-off switch. */
-      kind: 'toggle'
-      /** What the control is called. */
-      label: string
-      /** Reads whether it is on. */
-      get: () => boolean
-      /** Turns it on or off. */
-      set: (value: boolean) => void
-    }
-  | {
-      /** A one-shot action. */
-      kind: 'button'
-      /** What the control is called. */
-      label: string
-      /** What pressing it does. */
-      run: () => void
-    }
+export type Control = SliderControl | ColourControl | SelectControl | ToggleControl | ButtonControl
 
 /** A named group of controls. */
 export interface ControlGroup {

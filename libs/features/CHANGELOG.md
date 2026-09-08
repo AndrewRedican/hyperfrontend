@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.10.0](https://github.com/AndrewRedican/hyperfrontend/compare/e25d9f8086e811f1bef3e27faa26c5154b35956d...f023a31421faf134805953fc5e3d74d291dd37c7) - 2026-09-08
+
+### Features
+
+- warn when declared modes outlive the origin's opener policy
+- fail a windowed mount fast when its window stops being reachable
+- expand a declared isolation into the served origin's headers
+- declare cross-origin isolation and withdraw the modes it cannot serve
+
 ## [0.9.0](https://github.com/AndrewRedican/hyperfrontend/compare/a638efc58ce78e9a84dd21992e7f5c675bd5e7f6...c2798e1479f78d5909adb098595846152a6f9350) - 2026-09-07
 
 ### Breaking Changes

@@ -14,9 +14,9 @@
  * Duplicates of a framework's koi step their whole allocation clear of it, so
  * no ordinal ever reads another koi's draws.
  */
-import { randomPseudo } from '@hyperfrontend/random-generator-utils'
 import type { KoiSwimTrim } from '../koi3d/config.js'
 import type { KoiBuild, KoiFramework, KoiPhenotype, KoiProfile, KoiTraits } from './types.js'
+import { randomPseudo } from '@hyperfrontend/random-generator-utils'
 import { koiLabel, koiPalette } from './palette.js'
 import { KOI_FRAMEWORKS } from './types.js'
 

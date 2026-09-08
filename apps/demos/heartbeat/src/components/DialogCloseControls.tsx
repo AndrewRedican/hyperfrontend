@@ -10,8 +10,8 @@ export interface DialogCloseControlsProps {
  * emits a `close-request` through the contract — the host owns the dialog and
  * performs the actual close. Escape needs no listener here: the SDK already
  * turns an in-frame Escape into its dismiss signal for the host.
- *
  * @param props - The {@link DialogCloseControlsProps}.
+ * @param props.onCloseRequest - Sends the `close-request` through the contract when the visitor activates the button.
  * @returns The close controls.
  */
 export function DialogCloseControls({ onCloseRequest }: DialogCloseControlsProps) {

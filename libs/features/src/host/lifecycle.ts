@@ -325,9 +325,14 @@ export function createShellHandle(
       }
       applyObservability()
     })
+    // why: Assigned once the mount's watch is installed below; the open handler is registered first but only ever runs later.
+    let stopTargetWatch: (() => void) | null = null
     channel.on('open', () => {
       opened = true
       emitter.emit('open')
+      // why: The watch exists to cut short a handshake that can never complete; once the session is open the window's fate is the heartbeat's business, and a user closing a popup is not an error.
+      stopTargetWatch?.()
+      stopTargetWatch = null
       activeMonitor.start()
       // why: A mounted frame is not a displayed one — it stays hidden until the session opens, so the user never sees (or clicks into) a frame whose feature is not ready.
       result.reveal?.()
@@ -400,6 +405,19 @@ export function createShellHandle(
         return false
       })
     )
+    // why: A window the host can no longer reach will never answer the handshake, so failing on that observation beats waiting out the whole open timeout for an answer that cannot arrive. The reason names what was seen rather than why, because a severed opener and a window the user closed are indistinguishable from this side; the elapsed time is what tells them apart.
+    if (result.whenLost) {
+      const cancelWatch = result.whenLost((elapsedMs) => {
+        destroy()
+        emitter.emit('error', { reason: 'target-lost', elapsedMs, displayMode })
+      })
+      stopTargetWatch = cancelWatch
+      const watchedCleanup = cleanup
+      cleanup = () => {
+        cancelWatch()
+        watchedCleanup?.()
+      }
+    }
     // why: The mount may hold the handshake until its frame can actually receive origin-pinned messages; a cancelled hold must never connect a torn-down channel, so the cancel joins the mount cleanup.
     if (result.whenReady) {
       const cancelHold = result.whenReady(() => activeChannel.connect())

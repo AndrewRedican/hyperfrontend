@@ -212,7 +212,7 @@ export function evaluateSpine(length: number, parameters: SwimParameters, phase:
 
   const stations: SpineStation[] = Array.from({ length: SPINE_SAMPLES }, (_unused, index) => ({
     station: index * step,
-    position: <[number, number, number]>[0, 0, 0],
+    position: [0, 0, 0] as [number, number, number],
     yaw: (yaws[index] ?? 0) - yawMean,
     roll:
       parameters.bank +

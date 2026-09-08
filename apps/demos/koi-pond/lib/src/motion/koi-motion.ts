@@ -26,7 +26,7 @@
  * the ladder that produced it. A koi built without options swims the shared
  * default.
  */
-import { randomPseudo } from '@hyperfrontend/random-generator-utils'
+import type { SpineState } from '../geometry/spine.js'
 import type {
   Disturbance,
   KoiIntent,
@@ -37,8 +37,9 @@ import type {
   PondEnvironment,
   Vec2,
 } from '../model/types.js'
-import type { SpineState } from '../geometry/spine.js'
 import type { KoiTurnTierName, KoiTurnTiers, KoiTurnTierWindows } from './manoeuvre.js'
+import type { KoiFlightAim, KoiFlightTerms } from './predict.js'
+import { randomPseudo } from '@hyperfrontend/random-generator-utils'
 import { SHORE_ABSENT_S, createItinerary, createPaceSchedule, slipsAway, wrapAcross } from '../geometry/behaviour.js'
 import { advanceSpine, createSpine, sampleSpine, spineGirth } from '../geometry/spine.js'
 import {
@@ -56,9 +57,8 @@ import {
 import { boundaryPressure, pondBounds, pondCentre } from '../geometry/virtual-pond.js'
 import { depthScale } from '../model/depth.js'
 import { koiSeed } from '../model/traits.js'
-import type { KoiFlightAim, KoiFlightTerms } from './predict.js'
-import { predictFlight, stepFlight } from './predict.js'
 import { chooseTurnTier, flankCrowding } from './manoeuvre.js'
+import { predictFlight, stepFlight } from './predict.js'
 
 /** How many spine samples travel in a reported outline. */
 const OUTLINE_SAMPLES = 5
@@ -66,7 +66,11 @@ const OUTLINE_SAMPLES = 5
 /** Where the avoidance side's draw band starts on the koi's seed. */
 const BREAK_DRAWS = 640
 
-/** The waviness an ordinary turn rides on: none, because a turn is a manoeuvre rather than a drift. */
+/**
+ * The waviness an ordinary turn rides on: none, because a turn is a manoeuvre rather than a drift.
+ *
+ * @returns Zero at every moment, so a scheduled turn arrives on its course instead of weaving onto it.
+ */
 const NO_WANDER = (): number => 0
 
 /** How the three avoidance tiers rank against each other, so a standing break can be told a heavier one from a lighter. */
@@ -233,6 +237,26 @@ function lerp(trait: number, band: KoiMotionBand): number {
 /** Where this koi stands with the shoreline. */
 type ShoreState = 'in' | 'leaving' | 'away' | 'returning'
 
+/** An avoidance arc the koi is already committed to, held until the crossing asks for a heavier one. */
+interface KoiStandingEvasion {
+  /** The absolute bearing the break was anchored on, in radians. */
+  heading: number
+  /** The multiplier on this koi's turn rate while it swings onto that bearing. */
+  gain: number
+  /** How much effort the arc bought, so an escalation can be told from the same intention persisting. */
+  tier: KoiTurnTierName
+  /** The flank the koi broke toward, held for the rest of the crossing: -1 to its left, 1 to its right. */
+  side: -1 | 1
+}
+
+/** A depth pass the koi has decided on, kept long enough for the report to name it. */
+interface KoiDepthIntent {
+  /** Which way past the neighbour the koi settled on. */
+  direction: 'above' | 'below'
+  /** The koi's own clock reading after which the pass stops being reported, in seconds. */
+  untilS: number
+}
+
 /** What the koi is doing right now. */
 export interface KoiState {
   /** Its nose in pond space. */
@@ -299,6 +323,23 @@ export interface KoiDesire {
  * read.
  */
 type KoiMotionAim = (position: Vec2, heading: number, atS: number) => KoiFlightAim
+
+/**
+ * What the steering ladder knows about a desire beyond the pull itself.
+ *
+ * One branch settles a heading and, in the same answer, says what prompted it,
+ * what an avoidance arc paid for it, and the rule that re-forms it elsewhere, so
+ * the decision observer, the tier bookkeeping, and the horizon each take their
+ * own part of a single reading.
+ */
+interface KoiDesireProvenance {
+  /** What prompted the pull the branch settled on. */
+  cause: KoiDecisionCause
+  /** The effort an avoidance arc commits, or `null` when the pull is not one. */
+  tier: KoiTurnTierName | null
+  /** The rule that re-takes this same pull from any position a prediction integrates through. */
+  aim: KoiMotionAim
+}
 
 /** What the koi knows about itself as it forms a desire. */
 export interface KoiSteerContext {
@@ -535,7 +576,7 @@ export function createKoiMotion(init: KoiMotionInit, options: KoiMotionOptions =
   let lastDecisionS = -trim.decisionIntervalS
   let course = init.heading
   // why: An avoidance is a heading the koi commits to, not an arc it re-takes off its own nose every beat: re-anchoring each decision runs the target away from the koi at exactly the rate the koi turns onto it, so the gap never closes and the break becomes an unbounded spiral instead of the costed arc it was chosen as.
-  let evasion: { heading: number; gain: number; tier: KoiTurnTierName; side: -1 | 1 } | null = null
+  let evasion: KoiStandingEvasion | null = null
   let paceScale = 1
   let turnUntilS = 0
   let cooldownUntilS = 0
@@ -548,8 +589,8 @@ export function createKoiMotion(init: KoiMotionInit, options: KoiMotionOptions =
 
   // why: The intent report replays decisions the steering ladder otherwise discards: the waypoint behind `course`, the decided side of a depth pass, and which family the current desire came from.
   let travelTarget: Vec2 | null = null
-  let depthIntent: { direction: 'above' | 'below'; untilS: number } | null = null
-  let committed: { heading: number; gain: number; kind: 'travel' | 'avoid' } = {
+  let depthIntent: KoiDepthIntent | null = null
+  let committed: KoiDesire = {
     heading: init.heading,
     gain: trim.glideGain,
     kind: 'travel',
@@ -708,7 +749,7 @@ export function createKoiMotion(init: KoiMotionInit, options: KoiMotionOptions =
    *
    * @returns The desired heading, the turn gain to reach it with, its family, its cause, the effort an avoidance arc commits, and the rule behind it.
    */
-  const wanted = (): KoiDesire & { cause: KoiDecisionCause; tier: KoiTurnTierName | null; aim: KoiMotionAim } => {
+  const wanted = (): KoiDesire & KoiDesireProvenance => {
     if (threat !== null && elapsed < fleeingUntilS) {
       const from = threat
       // why: What a bolting koi steers by is the water between it and whatever broke it, and that bearing swings hard while the two are close, so it is re-read rather than fixed at the strike.
@@ -814,7 +855,7 @@ export function createKoiMotion(init: KoiMotionInit, options: KoiMotionOptions =
    * The speed this koi is aiming for right now, in pixels per second.
    *
    * @param helmLoad - How much of its helm the koi currently has wound on, 0 to 1.
-   * @returns The target speed.
+   * @returns The pace to swim at this frame, in pixels per second, once the pond's ceiling, its reduced-motion damping, and the brake the helm charges have all been taken off it.
    */
   const targetSpeed = (helmLoad: number): number => {
     if (shore === 'away') {
@@ -973,7 +1014,7 @@ export function createKoiMotion(init: KoiMotionInit, options: KoiMotionOptions =
       const held: KoiMotionAim = () => ({ heading: wants.heading, gain: wants.gain })
       // why: A biased desire is taken as read: the consumer's pull replaces the ladder's, so the rule behind it no longer describes what the koi is doing and a horizon holds the biased pull instead of re-forming it.
       committedAim = wants === formed ? formed.aim : held
-      // why: The frame and the prediction step through one integrator, so what a koi tells the pond it is about to do cannot drift from what it then does.
+      // why: The frame and the prediction step through one integrator, so what a koi tells the pond it is about to swim cannot drift from the line it then swims.
       const flown = stepFlight({ position, heading, speed, turnVelocity, atS: startedAtS }, flightTerms(held), dt)
       position = flown.position
       heading = flown.heading

@@ -68,4 +68,12 @@ describe('randomPowerLaw', () => {
     expect(mid).toBeLessThan(low)
     expect(high).toBeLessThan(mid)
   })
+
+  it('draws from the given source instead of the default', () => {
+    expect(randomPowerLaw(0, 1, 1000000, () => 0.5)).toBe(500000.5)
+  })
+
+  it('draws the log-uniform fallback from the given source', () => {
+    expect(randomPowerLaw(1, 1, 1000000, () => 0.5)).toBeCloseTo(1000, 6)
+  })
 })

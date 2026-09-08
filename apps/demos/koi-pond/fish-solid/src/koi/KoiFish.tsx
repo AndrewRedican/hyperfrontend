@@ -18,10 +18,10 @@
  * This is the one browser-facing part of the app. The other seven koi replace it
  * with their own framework's idiom, and share everything else.
  */
-import type { KoiCardText, KoiProfile } from '@hyperfrontend/demo-koi-lib'
 import type { Accessor, JSX } from 'solid-js'
-import { FRAMEWORK_SITES, koiSourceUrl } from '@hyperfrontend/demo-koi-lib'
+import type { KoiCardText, KoiProfile } from '@hyperfrontend/demo-koi-lib'
 import { onCleanup, onMount } from 'solid-js'
+import { FRAMEWORK_SITES, koiSourceUrl } from '@hyperfrontend/demo-koi-lib'
 
 /** The card's mounted nodes, handed to the imperative renderer as one piece. */
 export interface KoiCardHandles {
@@ -47,7 +47,6 @@ export interface KoiFishProps {
   rows: Accessor<KoiCardText | null>
   /**
    * Hands the mounted nodes to the imperative renderer.
-   *
    * @param canvas - The canvas the koi's body renders into.
    * @param handles - The identity card's nodes the renderer parks and measures.
    * @returns The teardown that releases whatever the renderer built on them.
@@ -57,7 +56,6 @@ export interface KoiFishProps {
 
 /**
  * One koi's canvas and identity card.
- *
  * @param props - The {@link KoiFishProps}.
  * @returns The canvas the 3D koi renders into and, hidden until a visitor holds the fish, its identity card.
  */

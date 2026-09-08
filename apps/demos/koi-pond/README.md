@@ -155,10 +155,10 @@ Two more claims run alongside it:
 - **Coordination is relayed, never broadcast.** Fish report compact spine outlines at a low
   cadence; the host broad-phase filters and relays each fish only its nearby neighbours,
   dead-reckoning stale reports forward along their own headings. The inner channels run as
-  explicitly **open shells**: a per-message security envelope across many high-cadence
-  channels collapses delivery, so each koi's feature config declares `protocol: 'none'` and
-  its shell is packed with that acknowledged. The single gallery to pond channel keeps
-  protocol `v1`; that is the real cross-site boundary today.
+  explicitly **open shells**: the eight koi are same-origin sub-paths of one deploy, so each
+  koi's feature config declares `protocol: 'none'` and its shell is packed with that
+  acknowledged; messages still pin to the host's origin. The single gallery to pond channel
+  pins protocol `v3`; that is the real cross-site boundary.
 - **Identity is seeded.** Every reproducible trait (behaviour, build, phenotype, swim trim,
   markings, entry station) derives from one integer seed per instance through
   `randomPseudo`, so the same fish appears on every reload and the host and fish agree on

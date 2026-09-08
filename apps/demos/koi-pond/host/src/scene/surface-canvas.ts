@@ -19,6 +19,14 @@ const CAUSTIC_BANDS = 3
 /** How much reduced motion damps the caustic drift and ring brightness. */
 const REDUCED_MOTION_DAMPING = 0.35
 
+/** Where the visible window sits in pond space, in pond pixels. */
+export interface ViewOrigin {
+  /** Pond-space x of the window's left edge, taken off every pond-space point before it is drawn. */
+  x: number
+  /** Pond-space y of the window's top edge, taken off every pond-space point before it is drawn. */
+  y: number
+}
+
 /** What the surface needs to paint one frame. */
 export interface SurfaceFrame {
   /** Surface width in CSS pixels. */
@@ -26,7 +34,7 @@ export interface SurfaceFrame {
   /** Surface height in CSS pixels. */
   height: number
   /** Pond-space origin of the visible window, so pond-space rings land on the right frame pixels. */
-  view: { x: number; y: number }
+  view: ViewOrigin
   /** Device pixel ratio to render at; a ratio past the canvas ceiling paints at the ceiling. */
   pixelRatio: number
   /** The pond's nominal fish length, which sets how far rings spread. */
@@ -66,7 +74,7 @@ export interface SurfacePainter {
  * Binds a painter to the surface canvas.
  *
  * @param canvas - The surface canvas, sitting above every koi layer.
- * @returns The painter.
+ * @returns A 2D painter that resizes the canvas to each frame it is handed, then lays the caustics and rings over it.
  *
  * @example Painting the water each frame
  * ```typescript

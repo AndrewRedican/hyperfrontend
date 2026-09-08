@@ -34,6 +34,14 @@ export interface AlarmEngine {
   dispose(): void
 }
 
+/** An armed alarm together with the timer that will fire it. */
+interface ArmedAlarm {
+  /** The alarm as it was handed back when it was armed. */
+  alarm: Alarm
+  /** The pending timeout that fires it, cancelled when the alarm is cleared or the engine is disposed. */
+  timer: ReturnType<typeof setTimeout>
+}
+
 /**
  * Creates an alarm engine.
  *
@@ -48,7 +56,7 @@ export interface AlarmEngine {
  * ```
  */
 export function createAlarmEngine(onFire: AlarmFireHandler, now: () => number = () => Date.now()): AlarmEngine {
-  const armed = new Map<string, { alarm: Alarm; timer: ReturnType<typeof setTimeout> }>()
+  const armed = new Map<string, ArmedAlarm>()
   let counter = 0
 
   return {

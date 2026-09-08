@@ -1,8 +1,10 @@
+import type { RandomSource } from './types'
 import { random } from '@hyperfrontend/immutable-api-utils/built-in-copy/math'
 
 /**
  * Generates a version 4 UUID.
  *
+ * @param source - Where the unit draws come from; defaults to the built-in `Math.random`
  * @returns a version 4 UUID.
  *
  * @example Creating unique identifiers for entities
@@ -13,10 +15,17 @@ import { random } from '@hyperfrontend/immutable-api-utils/built-in-copy/math'
  * const sessionId = uuidV4()
  * // => '9f8e7d6c-5b4a-4321-8765-4321fedcba98'
  * ```
+ *
+ * @example Stable ids for snapshot fixtures
+ * ```typescript
+ * const { next } = createRandomGenerator(7)
+ * const fixtureId = uuidV4(next)
+ * // => the same id on every run that seeds 7
+ * ```
  */
-export function uuidV4(): string {
+export function uuidV4(source: RandomSource = random): string {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (char) => {
-    const randomHex = (random() * 16) | 0
+    const randomHex = (source() * 16) | 0
 
     const finalHex = char === 'x' ? randomHex : (randomHex & 0x3) | 0x8
 

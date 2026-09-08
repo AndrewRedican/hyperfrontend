@@ -1,19 +1,6 @@
-/**
- * How many koi a device can hold, from what it reports about itself.
- *
- * Every koi is an independent app in its own frame with its own WebGL context,
- * so the size of the shoal is the single number that decides whether a device
- * carries the whole scene or the browser starts reclaiming frames underneath
- * it. That number comes from capability signals only: nothing here reads a
- * user-agent string, and no browser is named or special-cased.
- *
- * Two signals carry it. `navigator.deviceMemory` is a coarse figure in
- * gigabytes, rounded down by the browser and exposed only by Chromium;
- * `navigator.hardwareConcurrency` is the count of logical processors and is
- * available almost everywhere. A withheld signal is never read as evidence of
- * a weak device: unknown means middle, so a browser that says nothing about
- * its memory still seats a middle shoal rather than the smallest one.
- */
+// context: How many koi a device can hold, from what it reports about itself.
+// context: Every koi is an independent app in its own frame with its own WebGL context, so the size of the shoal is the single number that decides whether a device carries the whole scene or the browser starts reclaiming frames underneath it. That number comes from capability signals only: nothing here reads a user-agent string, and no browser is named or special-cased.
+// context: Two signals carry it. `navigator.deviceMemory` is a coarse figure in gigabytes, rounded down by the browser and exposed only by Chromium; `navigator.hardwareConcurrency` is the count of logical processors and is available almost everywhere. A withheld signal is never read as evidence of a weak device: unknown means middle, so a browser that says nothing about its memory still seats a middle shoal rather than the smallest one.
 
 /** How capable a device is, by the hardware it reports. */
 export type DeviceTier = 'low' | 'middle' | 'high'
@@ -84,6 +71,14 @@ function classifyTier(signals: DeviceSignals): DeviceTier {
   return deviceMemory >= 8 && hardwareConcurrency >= 8 ? 'high' : 'middle'
 }
 
+/** One rung of the opening ladder: a frame size, and the shoal a frame that big opens with. */
+interface OpeningBand {
+  /** Smallest frame, measured as its geometric mean in CSS pixels, that still opens in this band. */
+  readonly atPx: number
+  /** How many koi a frame in this band opens with, before the device cap has its say. */
+  readonly koi: number
+}
+
 /**
  * The shoal each band of frame size opens with, and the size it opens there.
  *
@@ -97,7 +92,7 @@ function classifyTier(signals: DeviceSignals): DeviceTier {
  * changes with the frame is how much of a crowd a visitor can take in at once,
  * and how much of a device's frame budget a demo may reasonably ask for.
  */
-const OPENING_SHOAL: readonly { readonly atPx: number; readonly koi: number }[] = [
+const OPENING_SHOAL: readonly OpeningBand[] = [
   { atPx: 1000, koi: 8 },
   { atPx: 640, koi: 5 },
   { atPx: 320, koi: 3 },

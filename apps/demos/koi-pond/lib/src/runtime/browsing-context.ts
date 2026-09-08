@@ -10,6 +10,26 @@
  */
 import type { KoiMemoryState } from '../model/card.js'
 
+/** One thing the browser charged a slice of memory to. */
+interface MemoryAttribution {
+  /** The URL of the browsing context the slice was charged to, absent when the browser will not name one. */
+  url?: string
+}
+
+/** One slice of the browser's memory breakdown. */
+interface MemoryBreakdownEntry {
+  /** How much memory this slice accounts for, in bytes. */
+  bytes: number
+  /** Everything the browser charged those bytes to, which is what a frame matches its own URL against. */
+  attribution: MemoryAttribution[]
+}
+
+/** What the memory-measurement API hands back once the browser has taken its sample. */
+interface MemorySample {
+  /** Every slice the browser was willing to attribute, this frame's own among them. */
+  breakdown: MemoryBreakdownEntry[]
+}
+
 /** The slice of the memory-measurement API a koi feels for. */
 interface MemoryMeasurer {
   /**
@@ -17,9 +37,7 @@ interface MemoryMeasurer {
    *
    * @returns The breakdown, once the browser has taken its sample.
    */
-  measureUserAgentSpecificMemory?: () => Promise<{
-    breakdown: { bytes: number; attribution: { url?: string }[] }[]
-  }>
+  measureUserAgentSpecificMemory?: () => Promise<MemorySample>
 }
 
 /** What a frame's own memory reading found. */
@@ -72,7 +90,7 @@ export function originRelation(hosted: boolean): 'same-origin' | 'cross-origin' 
  */
 export async function measureOwnMemory(url: string): Promise<KoiMemoryReading> {
   try {
-    const measurer = (<MemoryMeasurer>performance).measureUserAgentSpecificMemory
+    const measurer = (performance as MemoryMeasurer).measureUserAgentSpecificMemory
     if (measurer === undefined || !window.crossOriginIsolated) {
       return { bytes: null, state: 'unavailable' }
     }

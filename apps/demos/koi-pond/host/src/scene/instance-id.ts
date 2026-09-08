@@ -19,7 +19,7 @@ export type KoiInstanceId = `${KoiFramework}:${number}`
  *
  * @param framework - The framework rendering the koi.
  * @param ordinal - Which of that framework's koi it is; 0 is the canonical fish.
- * @returns The instance id.
+ * @returns The key every host-side map, layer, and `data-` attribute stores that fish under.
  *
  * @example Keying a session map
  * ```typescript
@@ -33,17 +33,17 @@ export function koiInstanceId(framework: KoiFramework, ordinal: number): KoiInst
 /**
  * Reads the framework half of an instance id.
  *
- * @param id - The instance id.
+ * @param id - A koi's host-side key, framework and ordinal joined.
  * @returns The framework slug.
  */
 export function instanceFramework(id: KoiInstanceId): KoiFramework {
-  return <KoiFramework>id.slice(0, id.indexOf(':'))
+  return id.slice(0, id.indexOf(':')) as KoiFramework
 }
 
 /**
  * Reads the ordinal half of an instance id.
  *
- * @param id - The instance id.
+ * @param id - A koi's host-side key, framework and ordinal joined.
  * @returns The ordinal; 0 is the framework's canonical fish.
  */
 export function instanceOrdinal(id: KoiInstanceId): number {

@@ -1,18 +1,9 @@
-/**
- * The engine-neutral mesh the generators emit.
- *
- * Nothing here knows what a renderer is. A mesh is four parallel vertex streams
- * and an index list, which any WebGL layer can upload without translation — the
- * three.js adapter wraps them in buffer attributes, and a future adapter for
- * something else would not have to regenerate a single vertex.
- *
- * The two extra streams beside position and normal are what make the koi
- * deformable and paintable without a texture. `body` gives every vertex its
- * place on the animal — how far along the spine it sits, and where around the
- * body it is — which the vertex shader uses to bend it and the fragment shader
- * uses to paint it. `fin` gives membrane vertices their distance from the fin's
- * root, which is what lets a fin flex instead of hinging.
- */
+// context: The engine-neutral mesh the generators emit.
+// context: Nothing here knows what a renderer is. A mesh is four parallel vertex streams and an index list, which any WebGL layer can upload without translation.
+// context: The three.js adapter wraps the streams in buffer attributes, and a future adapter for something else would not have to regenerate a single vertex.
+// context: The two extra streams beside position and normal are what make the koi deformable and paintable without a texture.
+// context: `body` gives every vertex its place on the animal (how far along the spine it sits, and where around the body it is), which the vertex shader uses to bend it and the fragment shader uses to paint it.
+// context: `fin` gives membrane vertices their distance from the fin's root, which is what lets a fin flex instead of hinging.
 
 /** One generated mesh, ready for a renderer to upload. */
 export interface MeshData {
@@ -45,7 +36,7 @@ export interface MeshBuilder {
 /**
  * Opens an empty mesh builder.
  *
- * @returns The builder.
+ * @returns Empty streams, ready to take vertices and quads.
  */
 export function createMeshBuilder(): MeshBuilder {
   return { positions: [], normals: [], body: [], fin: [], indices: [] }

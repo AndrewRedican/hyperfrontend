@@ -16,9 +16,13 @@ import { FRAMEWORK_SITES, koiSourceUrl } from '@hyperfrontend/demo-koi-lib'
 
 /** The pieces floated over one held koi's card. */
 interface CardChrome {
+  /** The inert cover over the rest of the card, so a press there reads the card rather than striking the water. */
   shield: HTMLElement
+  /** The anchor over the card's app line, opening the koi's own application. */
   app: HTMLAnchorElement
+  /** The anchor over the card's framework line, opening the framework's website. */
   site: HTMLAnchorElement
+  /** The anchor over the card's source line, opening the app's code. */
   source: HTMLAnchorElement
 }
 
@@ -78,7 +82,7 @@ function contain(event: Event): void {
  * Creates the selection chrome.
  *
  * @param root - The pond root the chrome floats in.
- * @returns The chrome.
+ * @returns The chrome, holding nothing until a koi is held.
  *
  * @example Following a held koi's card from the frame loop
  * ```typescript

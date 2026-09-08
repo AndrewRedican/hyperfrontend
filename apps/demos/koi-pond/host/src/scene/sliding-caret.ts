@@ -80,6 +80,14 @@ export interface CaretMark {
   intent: KoiIntent
 }
 
+/** A closed range a measure is kept inside, in whatever unit the measure is in. */
+interface Band {
+  /** The least the measure may be. */
+  min: number
+  /** The most the measure may be. */
+  max: number
+}
+
 /**
  * Clamps a value into a band.
  *
@@ -87,7 +95,7 @@ export interface CaretMark {
  * @param band - The band to clamp into.
  * @returns The clamped value.
  */
-function within(value: number, band: { min: number; max: number }): number {
+function within(value: number, band: Band): number {
   return value < band.min ? band.min : value > band.max ? band.max : value
 }
 

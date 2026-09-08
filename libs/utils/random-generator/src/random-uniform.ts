@@ -1,3 +1,4 @@
+import type { RandomSource } from './types'
 import { random } from '@hyperfrontend/immutable-api-utils/built-in-copy/math'
 
 /**
@@ -5,6 +6,7 @@ import { random } from '@hyperfrontend/immutable-api-utils/built-in-copy/math'
  *
  * @param min - The minimum value of the range (inclusive)
  * @param max - The maximum value of the range (exclusive)
+ * @param source - Where the unit draw comes from; defaults to the built-in `Math.random`
  * @returns A random number between min (inclusive) and max (exclusive)
  *
  * @example Generating a random price within a budget range
@@ -19,7 +21,14 @@ import { random } from '@hyperfrontend/immutable-api-utils/built-in-copy/math'
  * const yPosition = randomUniform(0, 600)
  * // => x: 342.7, y: 198.2
  * ```
+ *
+ * @example Drawing from a seeded stream instead of `Math.random`
+ * ```typescript
+ * const { next } = createRandomGenerator(7)
+ * const startAngle = randomUniform(0, 360, next)
+ * // => the same angle on every run that seeds 7
+ * ```
  */
-export function randomUniform(min: number, max: number): number {
-  return random() * (max - min) + min
+export function randomUniform(min: number, max: number, source: RandomSource = random): number {
+  return source() * (max - min) + min
 }

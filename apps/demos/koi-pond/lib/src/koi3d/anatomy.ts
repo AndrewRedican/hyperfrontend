@@ -229,6 +229,14 @@ export function sampleSection(physical: KoiPhysical, s: number): KoiSection {
   }
 }
 
+/** One point on a cross-section's outline, as an offset from the model axis in body-length units. */
+export interface SectionPoint {
+  /** Dorsal offset; positive rises toward the back, negative drops toward the belly. */
+  y: number
+  /** Lateral offset; positive reaches toward the left flank. */
+  z: number
+}
+
 /**
  * Walks the outline of one cross-section.
  *
@@ -247,7 +255,7 @@ export function sampleSection(physical: KoiPhysical, s: number): KoiSection {
  * const ring = Array.from({ length: 24 }, (_unused, j) => sectionPoint(section, j / 24))
  * ```
  */
-export function sectionPoint(section: KoiSection, theta: number): { y: number; z: number } {
+export function sectionPoint(section: KoiSection, theta: number): SectionPoint {
   const angle = theta * Math.PI * 2
   const cy = Math.cos(angle)
   const cz = Math.sin(angle)

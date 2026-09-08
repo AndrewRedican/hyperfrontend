@@ -16,10 +16,10 @@
  */
 import { createFeature } from '@hyperfrontend/features/hostee'
 import contract from '../koi-pond.contract'
-import { createPondReporter, wirePondContract, wireSceneBoot } from './feature/wire-contract'
 import { mountDialogCloseControls } from './components/dialog-close-controls'
-import { mountVitals, vitalsRequested } from './components/vitals'
 import { wireEscapeClose } from './components/escape-close'
+import { mountVitals, vitalsRequested } from './components/vitals'
+import { createPondReporter, wirePondContract, wireSceneBoot } from './feature/wire-contract'
 import { createPond } from './scene/pond'
 import { featureUi } from './state/feature-ui'
 
@@ -38,11 +38,11 @@ function el<T extends Element>(selector: string): T {
 }
 
 // ref: [guide:compose-independent-features/outer-boundary] start
-/** The @hyperfrontend/demo-koi-pond feature handle; use it to send and receive contract actions. */
+/** The `@hyperfrontend/demo-koi-pond` feature handle; use it to send and receive contract actions. */
 export const feature = createFeature({
   name: '@hyperfrontend/demo-koi-pond',
   contract,
-  protocol: 'v1',
+  protocol: 'v3',
 })
 // ref: [guide:compose-independent-features/outer-boundary] end
 
@@ -63,9 +63,15 @@ wirePondContract(feature, scene)
 // why: The pond decides its scene before opening anything: a direct visit opens the full profile in this same tick, a hosted pond holds its water until the host says what it mounted.
 wireSceneBoot(feature, scene, { hosted: feature.hosted })
 
+/** The page global as a console driving the pond, which is a shape `Window` itself never carries. */
+interface PondConsoleWindow {
+  /** The running scene, hung here for a device session to drive by hand; absent unless the overlay is armed. */
+  koiPond?: typeof scene
+}
+
 if (vitals !== null) {
   // why: A pond under diagnosis is driven from the console — growing, shrinking, and reading the shoal on the very device whose evidence is being taken — so the armed overlay hands the session the scene handle.
-  ;(<{ koiPond?: typeof scene }>(<unknown>window)).koiPond = scene
+  ;(window as unknown as PondConsoleWindow).koiPond = scene
 }
 
 // why: The dialog chrome keys off the host's presentation announcements — never off URLs or frame ancestry.

@@ -206,7 +206,7 @@ function graftKoiShader(material: Material, uniforms: KoiUniforms, graft: Graft)
  *
  * @param uniforms - The shared uniform block.
  * @param appearance - The koi's skin.
- * @returns The material.
+ * @returns A wet-skin physical material with the deformation and pattern programs grafted in.
  */
 export function createSkinMaterial(uniforms: KoiUniforms, appearance: KoiAppearance): MeshPhysicalMaterial {
   const material = new MeshPhysicalMaterial({
@@ -239,7 +239,7 @@ export function createSkinMaterial(uniforms: KoiUniforms, appearance: KoiAppeara
  *
  * @param uniforms - The shared uniform block.
  * @param appearance - The koi's skin.
- * @returns The material.
+ * @returns A translucent, double-sided material carrying the fin programs.
  */
 export function createFinMaterial(uniforms: KoiUniforms, appearance: KoiAppearance): MeshPhysicalMaterial {
   const material = new MeshPhysicalMaterial({
@@ -266,7 +266,7 @@ export function createFinMaterial(uniforms: KoiUniforms, appearance: KoiAppearan
  * Builds the koi's eye material.
  *
  * @param uniforms - The shared uniform block.
- * @returns The material.
+ * @returns A glossy material that paints iris and pupil from the eyeball's own normals.
  */
 export function createEyeMaterial(uniforms: KoiUniforms): MeshPhysicalMaterial {
   const material = new MeshPhysicalMaterial({

@@ -73,7 +73,7 @@ export interface DepthDirector {
  * Creates the depth director with an empty water column; koi are dealt in as
  * their sessions are raised.
  *
- * @returns The director.
+ * @returns The single authority over the water column: it seats joiners, grants or refuses level requests, and reports where each koi renders while a change glides through.
  *
  * @example Granting a depth request
  * ```typescript

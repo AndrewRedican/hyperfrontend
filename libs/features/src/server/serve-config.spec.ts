@@ -286,3 +286,50 @@ describe('default file system', () => {
     expect(resolved.port).toBe(6060)
   })
 })
+
+describe('serve config isolation', () => {
+  it('rejects an unknown isolation value', () => {
+    expect(() => validateServeConfig({ isolation: 'require-cors' }, '/p')).toThrow(
+      '"isolation" must be one of require-corp, credentialless'
+    )
+  })
+
+  it('rejects a non-string isolation value', () => {
+    expect(() => validateServeConfig({ isolation: true }, '/p')).toThrow('"isolation" must be one of require-corp, credentialless')
+  })
+
+  it('accepts a declared isolation value', () => {
+    expect(validateServeConfig({ isolation: 'credentialless' }, '/p')).toEqual({ isolation: 'credentialless' })
+  })
+
+  it('expands a declared isolation into the three headers that produce it', async () => {
+    const resolved = await resolveServeConfig(opts({ loadConfig: () => Promise.resolve({ isolation: 'require-corp' }) }))
+    expect(resolved.headers).toEqual([
+      {
+        headers: {
+          'Cross-Origin-Opener-Policy': 'same-origin',
+          'Cross-Origin-Embedder-Policy': 'require-corp',
+          'Cross-Origin-Resource-Policy': 'cross-origin',
+        },
+      },
+    ])
+  })
+
+  it('places the expansion before the authored rules so an explicit rule still overrides', async () => {
+    const resolved = await resolveServeConfig(
+      opts({
+        loadConfig: () =>
+          Promise.resolve({ isolation: 'require-corp', headers: [{ headers: { 'Cross-Origin-Embedder-Policy': 'credentialless' } }] }),
+      })
+    )
+    expect(resolved.headers).toEqual([
+      expect.objectContaining({ headers: expect.objectContaining({ 'Cross-Origin-Opener-Policy': 'same-origin' }) }),
+      { headers: { 'Cross-Origin-Embedder-Policy': 'credentialless' } },
+    ])
+  })
+
+  it('leaves the header rules untouched when no isolation is declared', async () => {
+    const resolved = await resolveServeConfig(opts({ loadConfig: () => Promise.resolve({ headers: [{ headers: { 'X-Test': 'on' } }] }) }))
+    expect(resolved.headers).toEqual([{ headers: { 'X-Test': 'on' } }])
+  })
+})

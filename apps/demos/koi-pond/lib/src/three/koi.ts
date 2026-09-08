@@ -130,7 +130,7 @@ export interface Koi {
    * @param input - The trim to take on; anything left out keeps its current value.
    */
   setTrim(input: Partial<KoiSwimTrim>): void
-  /** What the koi was last told to do, and how it is trimmed. */
+  /** The koi's last orders, and how it is trimmed. */
   readonly swim: KoiSwimState
   /**
    * Advances the koi by one frame.

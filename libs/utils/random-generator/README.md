@@ -40,22 +40,24 @@ Statistical random distributions and UUID generation for simulations, testing, a
 
 ## What is @hyperfrontend/random-generator-utils?
 
-@hyperfrontend/random-generator-utils provides random number generators beyond JavaScript's basic `Math.random()`, focusing on statistical distributions used in simulations, load testing, and procedural generation. It includes Gaussian (normal), exponential, power law, and logarithmic distributions, plus UUID v4 generation and seeded pseudo-random functions.
+@hyperfrontend/random-generator-utils provides random number generators beyond JavaScript's basic `Math.random()`, focusing on statistical distributions used in simulations, load testing, and procedural generation. It includes Gaussian (normal), exponential, power law, and logarithmic distributions, plus UUID v4 generation and a seeded generator that replays every one of them from a single number.
 
-Unlike cryptographic random generators (like Web Crypto API), these utilities prioritize reproducibility and distribution shapes over security. The seeded pseudo-random generator allows deterministic sequences for testing, while statistical distributions model real-world phenomena like response times, user behavior, and natural variation.
+Unlike cryptographic random generators (like Web Crypto API), these utilities prioritize reproducibility and distribution shapes over security. `createRandomGenerator(seed)` turns one number into a deterministic stream of every distribution for tests and procedural scenes, while the same distributions model real-world phenomena like response times, user behavior, and natural variation.
 
 ### Key Features
 
 - **Statistical distributions**: Gaussian, exponential, power law, logarithmic, uniform
+- **Seeded streams**: `createRandomGenerator(seed)` replays every distribution and UUID from one seed
+- **Pluggable source**: every distribution accepts a `() => number` source, so any generator can drive it
 - **UUID v4 generation** with validation (`uuidV4()`, `isUuidV4()`)
-- **Seeded pseudo-random** for reproducible sequences in tests
+- **Stateless seeded hash** (`randomPseudo()`) for one-off reproducible values
 - **Time-based seeding** for pseudo-random variations
 - **Zero dependencies** - Self-contained implementation with no third-party runtime dependencies
 - **Pure functions** for functional composition
 
 ### Architecture Highlights
 
-All generators use `Math.random()` as the entropy source, transformed mathematically to match target distributions. Gaussian uses Box-Muller transform, exponential uses inverse transform sampling. Seeded generator uses sine function for deterministic output.
+Every distribution is a mathematical transform over a unit draw. The draw comes from a source that defaults to `Math.random()` and can be any `() => number`; `createRandomGenerator` supplies a mulberry32 stream, a 32-bit generator with a period of 2^32 draws. Gaussian uses the polar form of the Box-Muller transform, exponential uses inverse transform sampling, and `randomPseudo` is a stateless sine hash.
 
 ## Why Use @hyperfrontend/random-generator-utils?
 
@@ -65,7 +67,7 @@ All generators use `Math.random()` as the entropy source, transformed mathematic
 
 ### Reproducible Pseudo-Random Sequences for Testing
 
-The seeded pseudo-random generator (`randomPseudo()`) produces deterministic output from a numeric seed. This enables reproducible test scenarios, snapshot testing with "random" data, and debugging flaky tests caused by true randomness. Time-based seeding (`randomPseudoTimeBased()`) provides daily or hourly variations while maintaining reproducibility within those windows.
+`createRandomGenerator(seed)` returns a stream whose every method (`uniform`, `gaussian`, `exponential`, `powerLaw`, `logarithmic`, `uuidV4`) replays exactly for the same seed. Log the seed when a property test fails and pass it back in to reproduce the input, or derive it from a record id so every visitor sees the same procedural scene. For a single reproducible value with no stream to carry, `randomPseudo(seed)` hashes a number straight to a result, and `randomPseudoTimeBased()` does the same for a date, which gives daily or hourly variations that stay stable within their window.
 
 ### UUID Generation Without External Dependencies
 
@@ -85,6 +87,7 @@ npm install @hyperfrontend/random-generator-utils
 
 ```typescript
 import {
+  createRandomGenerator,
   randomGaussian,
   randomExponential,
   randomPowerLaw,
@@ -109,7 +112,16 @@ const citySize = randomPowerLaw(1.1, 100, 1000000) // Zipf's law for cities
 // Uniform distribution - flat probability across range
 const randomDelay = randomUniform(0, 1000) // Any value 0-1000ms equally likely
 
-// Seeded pseudo-random for reproducible tests
+// Seeded stream - every distribution replays from one number
+const stream = createRandomGenerator(2026)
+const size = stream.gaussian(24, 96) // Same value on every run that seeds 2026
+const gap = stream.exponential(0.5) // ...and the next draw, and the next
+const fixtureId = stream.uuidV4() // Stable ids for snapshot fixtures
+
+// Any distribution can draw from the stream directly
+const angle = randomUniform(0, 360, stream.next)
+
+// Stateless seeded hash for a one-off reproducible value
 const seed = 42
 const value1 = randomPseudo(seed) // Always same output for seed=42
 const value2 = randomPseudo(seed) // Identical to value1
@@ -130,14 +142,17 @@ console.log(isUuidV4('not-a-uuid')) // false
 - **`randomPowerLaw(alpha, min, max)`** - Power law distribution (long tail; alpha is the standard Pareto exponent, so a higher alpha concentrates more mass near min)
 - **`randomLogarithmic(scale)`** - Logarithmic distribution
 
-### Pseudo-Random Generators
+Every distribution takes an optional trailing `source: () => number` and defaults to `Math.random`.
 
-- **`randomPseudo(seed)`** - Seeded pseudo-random (reproducible)
+### Seeded Generation
+
+- **`createRandomGenerator(seed)`** - A seeded stream with `next()`, `uniform`, `gaussian`, `exponential`, `powerLaw`, `logarithmic`, and `uuidV4` that replays exactly for the same seed
+- **`randomPseudo(seed)`** - Stateless seeded hash (one value per seed, reproducible)
 - **`randomPseudoTimeBased(seedTime)`** - Time-based seeding for date/time variations
 
 ### UUID Utilities
 
-- **`uuidV4()`** - Generate RFC 4122 version 4 UUID
+- **`uuidV4(source?)`** - Generate RFC 4122 version 4 UUID, from a seeded source when given one
 - **`isUuidV4(str)`** - Validate UUID v4 format
 
 ## Use Cases
@@ -156,12 +171,12 @@ const users = Array.from({ length: 1000 }, () => ({
 ### Test Data Generation
 
 ```typescript
-// Generate reproducible test datasets
-const seed = Date.now()
-const testData = Array.from({ length: 50 }, (_, i) => ({
-  id: uuidV4(),
-  score: randomPseudo(seed + i) * 100, // Reproducible but varied
-  timestamp: new Date(Date.now() + randomUniform(0, 86400000)),
+// Generate reproducible test datasets: log stream.seed, replay the run
+const stream = createRandomGenerator(Date.now())
+const testData = Array.from({ length: 50 }, () => ({
+  id: stream.uuidV4(),
+  score: stream.gaussian(0, 100),
+  timestamp: new Date(Date.now() + stream.uniform(0, 86400000)),
 }))
 ```
 

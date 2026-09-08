@@ -46,7 +46,7 @@ export interface SequenceTracker {
 /**
  * Creates the disturbance-sequence tracker.
  *
- * @returns The tracker.
+ * @returns A tracker holding one disturbance at a time, which reports the count once the last koi settles or the deadline takes the sequence.
  *
  * @example Reporting a completed scatter to the gallery
  * ```typescript

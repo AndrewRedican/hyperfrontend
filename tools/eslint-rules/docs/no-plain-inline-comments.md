@@ -26,10 +26,11 @@ The goal is to encourage intentional, categorized comments that provide genuine 
 
 ### Recognized Tooling Directives
 
-- TypeScript: `@ts-ignore`, `@ts-expect-error`, `@ts-nocheck`, `@ts-check`
+- TypeScript: `@ts-ignore`, `@ts-expect-error`, `@ts-nocheck`, `@ts-check`, and `/// <reference ... />`
 - ESLint: `eslint-disable`, `eslint-enable`, `eslint-disable-line`, `eslint-disable-next-line`
 - Coverage: `istanbul ignore`, `c8 ignore`
 - Bundlers: `webpackChunkName`, `@vite-ignore`
+- hyperfrontend: the `<hf:feature>` and `</hf:feature>` markers the features CLI manages
 - Other: `prettier-ignore`, `sourceMappingURL`, `falls through`
 
 ### Excluded Files

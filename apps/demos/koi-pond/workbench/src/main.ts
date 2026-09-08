@@ -13,8 +13,8 @@ import type { WorkbenchState } from './controls'
 import { NO_DEBUG } from '@hyperfrontend/demo-koi-lib/three'
 import { buildControlGroups } from './controls'
 import { createControlPanel } from './panel'
-import { createViewport } from './viewport'
 import './styles/workbench.css'
+import { createViewport } from './viewport'
 
 const root = document.querySelector<HTMLElement>('#app')
 if (root === null) {

@@ -39,7 +39,7 @@ const OPEN_TIMEOUT_MS = 20_000
  * Flip to `false` once the koi apps are provisioned on their own origins and
  * the shells' baked URLs take over.
  */
-const COMPOSED_DEPLOYMENT: boolean = true
+const COMPOSED_DEPLOYMENT = true
 
 /**
  * The shell surface the pond drives, identical across the eight generated

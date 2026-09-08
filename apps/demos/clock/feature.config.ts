@@ -5,7 +5,7 @@ export default defineConfig({
   version: '0.3.0',
   contract: './clock.contract.ts',
   url: 'https://demo-clock-production.up.railway.app/',
-  protocol: 'v1',
+  protocol: 'v3',
   display: {
     // note: embedded first — an open() without an explicit displayMode embeds; no fixed embedded dimensions, so the iframe fills the host's container.
     modes: ['embedded', 'dialog', 'popup', 'standalone'],

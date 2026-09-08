@@ -16,4 +16,8 @@ describe('randomLogarithmic', () => {
 
     expect(calculatedMean).toBeGreaterThan(1)
   })
+
+  it('draws from the given source instead of the default', () => {
+    expect(randomLogarithmic(2, () => 0.5)).toBeCloseTo(Math.E, 10)
+  })
 })

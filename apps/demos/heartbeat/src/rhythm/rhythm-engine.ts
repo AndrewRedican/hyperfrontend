@@ -198,6 +198,11 @@ export function createRhythmEngine(options: RhythmEngineOptions = {}): RhythmEng
     schedule(jitteredInterval(pacingBpm()))
   }
 
+  /**
+   * Arms the next rhythm beat, replacing whatever beat was already pending.
+   *
+   * @param delayMs - How long to wait (ms) before that beat fires.
+   */
   function schedule(delayMs: number): void {
     clearBeatTimer()
     beatTimer = setTimeout(fireRhythmBeat, delayMs)

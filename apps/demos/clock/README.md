@@ -12,7 +12,7 @@ This app is a **self-contained hyperfrontend feature**: it consumes the publishe
 | Host: docs-site    | Vercel (landing hero + demos-page carousel)                                        | **cross-site**  |
 | Host: dev host     | `hf dev` debug UI, local                                                           | cross-origin    |
 
-The docs-site consumes this feature through the **vendored shell tarball** (`@hyperfrontend/demo-clock-shell`, committed under `apps/docs-site/vendor/`), a real install step simulating "the feature team shipped us a shell". The shell is self-contained (`hf build` bundles the SDK; zero install-time dependencies) and carries the feature's declared display modes, its contract version, and the **v1 security envelope**: [feature.config.ts](feature.config.ts) declares `protocol: 'v1'`, so product traffic crosses the boundary enveloped without a key-provisioning story (v2's pre-shared key is the security demo's territory).
+The docs-site consumes this feature through the **vendored shell tarball** (`@hyperfrontend/demo-clock-shell`, committed under `apps/docs-site/vendor/`), a real install step simulating "the feature team shipped us a shell". The shell is self-contained (`hf build` bundles the SDK; zero install-time dependencies) and carries the feature's declared display modes, its contract version, and the **v3 security envelope**: [feature.config.ts](feature.config.ts) declares `protocol: 'v3'`, so product traffic crosses the boundary on session keys agreed over the wire, with no key-provisioning story (v4's pre-shared key is the security demo's territory).
 
 ## Contract
 

@@ -25,6 +25,22 @@ export interface ServeConfig {
   port?: number
   /** Interface the server binds; every interface when omitted. */
   host?: string
+  /**
+   * Cross-origin isolation applied to every response, expanded into
+   * `Cross-Origin-Opener-Policy: same-origin`, the matching
+   * `Cross-Origin-Embedder-Policy`, and
+   * `Cross-Origin-Resource-Policy: cross-origin`.
+   *
+   * Declaring it here rather than spelling the headers by hand keeps the intent
+   * legible and reviewable. The expansion is placed before the `headers` rules,
+   * so an explicit rule still overrides any of the three.
+   *
+   * An isolated origin severs the opener of any window opened onto it unless
+   * that opener is both same-origin and itself isolated, so a feature served
+   * this way reaches the `popup` and `standalone` display modes from
+   * same-origin isolated hosts only.
+   */
+  isolation?: 'require-corp' | 'credentialless'
   /** Ordered header rules, later rules overriding earlier ones per header. */
   headers?: ServeHeaderRule[]
   /** Whether each request is access-logged to stdout. */

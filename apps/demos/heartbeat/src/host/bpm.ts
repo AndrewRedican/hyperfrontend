@@ -1,10 +1,5 @@
-/**
- * Rolling BPM derived from received beat timestamps.
- *
- * The host measures the rate it actually observes — user extras shorten the
- * mean interval and visibly bump the readout — rather than trusting the
- * feature's announced target.
- */
+// context: Rolling BPM derived from received beat timestamps.
+// context: The host measures the rate it actually observes rather than trusting the feature's announced target: user extras shorten the mean interval and visibly bump the readout.
 
 /** How far back received beats count toward the rolling rate. */
 export const DEFAULT_WINDOW_MS = 10000

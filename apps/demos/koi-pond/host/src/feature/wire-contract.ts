@@ -1,16 +1,6 @@
-/**
- * The wiring between the pond's own contract and the scene.
- *
- * This is the pond's *outer* relationship — the one it has with whatever
- * gallery mounted it. Nothing about an individual koi crosses here: the gallery
- * is told how many fish are swimming and when a disturbance sequence has
- * finished unwinding, and it can strike the water without a pointer. It is not
- * told that there are eight separate applications behind the scene, because it
- * does not need to be.
- *
- * It depends on a hand-written structural port rather than the SDK's concrete
- * handle type, so the whole binding is testable against a plain object.
- */
+// context: The wiring between the pond's own contract and the scene.
+// context: This is the pond's *outer* relationship — the one it has with whatever gallery mounted it. Nothing about an individual koi crosses here: the gallery is told how many fish are swimming and when a disturbance sequence has finished unwinding, and it can strike the water without a pointer. It is not told that there are eight separate applications behind the scene, because it does not need to be.
+// context: It depends on a hand-written structural port rather than the SDK's concrete handle type, so the whole binding is testable against a plain object.
 
 /** The slice of the feature handle this wiring needs. */
 export interface PondLink {
@@ -45,6 +35,20 @@ export interface PondScene {
   disturbAt(fx: number, fy: number): void
 }
 
+/** A `set-scene` payload as it arrives, before anything about it is believed. */
+interface SetSceneMessage {
+  /** The scale the gallery is asking for, left unnarrowed because any value at all can cross the wire. */
+  scene?: unknown
+}
+
+/** A `disturb` payload: where on the water the gallery struck, with no pointer involved. */
+interface DisturbMessage {
+  /** Fraction across the pond's width, 0 to 1. */
+  fx: number
+  /** Fraction down the pond's height, 0 to 1. */
+  fy: number
+}
+
 /**
  * Binds the pond's own contract to the scene.
  *
@@ -58,13 +62,13 @@ export interface PondScene {
  */
 export function wirePondContract(link: PondLink, scene: PondScene): void {
   link.on('set-scene', (data) => {
-    const requested = (<{ scene?: unknown }>data).scene
+    const requested = (data as SetSceneMessage).scene
     // why: An unrecognised scale reads as the full scene rather than being refused — a pond that stops animating is a worse answer than one presented slightly too large.
     scene.setScale(requested === 'card' ? 'card' : 'full')
   })
 
   link.on('disturb', (data) => {
-    const request = <{ fx: number; fy: number }>data
+    const request = data as DisturbMessage
     scene.disturbAt(request.fx, request.fy)
   })
 }
@@ -78,6 +82,12 @@ export interface SceneBootOptions {
   hosted: boolean
   /** Schedules the fallback deadline; `window.setTimeout` unless a spec drives time by hand. */
   schedule?(callback: () => void, afterMs: number): void
+}
+
+/** The SDK's `presentation` announcement, read here for the one field the boot decision turns on. */
+interface PresentationMessage {
+  /** The display mode the host mounted the pond in, left unnarrowed until it is checked. */
+  mode?: unknown
 }
 
 /**
@@ -117,7 +127,7 @@ export function wireSceneBoot(link: PondLink, scene: PondScene, options: SceneBo
     decided = true
   })
   link.on('presentation', (data) => {
-    const mode = (<{ mode?: unknown }>data).mode
+    const mode = (data as PresentationMessage).mode
     // why: Only the gallery's embedded mounts ever send scene semantics — a dialog, popup, or host-opened tab says everything it will ever say with its presentation, so the full profile opens now rather than after a silent second.
     if (!decided && typeof mode === 'string' && mode !== 'embedded') {
       decided = true
@@ -154,7 +164,7 @@ export interface PondReporter {
  * Builds the reporter the scene uses to talk back to the gallery.
  *
  * @param link - The feature handle, or a test double of it.
- * @returns The reporter.
+ * @returns A reporter the scene can hold and speak through, with the handle already bound.
  */
 export function createPondReporter(link: PondLink): PondReporter {
   return {

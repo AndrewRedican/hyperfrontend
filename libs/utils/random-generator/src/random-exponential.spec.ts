@@ -16,4 +16,8 @@ describe('randomExponential', () => {
 
     expect(calculatedMean).toBeCloseTo(1 / lambda, 1)
   })
+
+  it('draws from the given source instead of the default', () => {
+    expect(randomExponential(2, () => 0.5)).toBeCloseTo(Math.log(2) / 2, 10)
+  })
 })

@@ -47,4 +47,13 @@ describe('randomGaussian', () => {
     const max = 10
     expect(() => randomGaussian(min, max)).toThrow('Min value should be less than or equal to max value.')
   })
+
+  it('draws from the given source instead of the default', () => {
+    // how: the source alternates 0.75 and 0.5, so the polar method sees u = 0.5, v = 0, s = 0.25 on its first pass and the value is mu + 0.5 * sqrt(-2 ln(0.25) / 0.25) * sigma.
+    let calls = 0
+    expect(randomGaussian(10, 20, () => (calls++ % 2 === 0 ? 0.75 : 0.5))).toBeCloseTo(
+      15 + 0.5 * Math.sqrt((-2 * Math.log(0.25)) / 0.25) * (10 / 6),
+      10
+    )
+  })
 })

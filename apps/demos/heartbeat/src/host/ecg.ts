@@ -1,9 +1,5 @@
-/**
- * Pure ECG geometry: the mostly-flat, single-sharp-spike waveform each
- * received beat contributes, the composed trace value at any point in time,
- * and the flatline judgement. The canvas painter stays thin; everything
- * measurable lives here.
- */
+// context: Pure ECG geometry: the mostly-flat, single-sharp-spike waveform each received beat contributes, the composed trace value at any point in time, and the flatline judgement.
+// context: The canvas painter stays thin; everything measurable lives here.
 
 /** A received beat positioned on the trace timeline. */
 export interface EcgBeatMark {
