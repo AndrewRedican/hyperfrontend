@@ -126,10 +126,26 @@ function reckoned(outline: KoiOutline, ageS: number): KoiOutline {
   return { ...outline, spine: outline.spine.map((point) => ({ x: point.x + dx, y: point.y + dy })) }
 }
 
+/** One koi's latest outline and the moment it arrived, which every read reckons forward from. */
+interface KoiReport {
+  /** The outline as the koi reported it. */
+  outline: KoiOutline
+  /** When it arrived, in milliseconds on the caller's clock. */
+  at: number
+}
+
+/** One neighbour within reach and how far off it stands, which is what orders the relay. */
+interface NearNeighbor {
+  /** Nose to nose from the reporter, in CSS pixels. */
+  distance: number
+  /** What the reporter is told about it. */
+  observation: NeighborObservation
+}
+
 /**
  * Creates the host's picture of the shoal.
  *
- * @returns The relay.
+ * @returns A relay holding no reports yet; the pond fills it as outlines arrive.
  *
  * @example Relaying each koi its own view
  * ```typescript
@@ -138,15 +154,15 @@ function reckoned(outline: KoiOutline, ageS: number): KoiOutline {
  * ```
  */
 export function createRelay(): Relay {
-  const reported = new Map<KoiInstanceId, { outline: KoiOutline; at: number }>()
+  const reported = new Map<KoiInstanceId, KoiReport>()
 
-  const current = (entry: { outline: KoiOutline; at: number }, now: number): KoiOutline => {
+  const current = (entry: KoiReport, now: number): KoiOutline => {
     const ageS = Math.min(Math.max(0, (now - entry.at) / 1000), DEAD_RECKON_MAX_S)
     return reckoned(entry.outline, ageS)
   }
 
   // why: A koi whose reports stopped is a ghost — hovering it or steering the shoal around its frozen outline would coordinate the living against the dead.
-  const stale = (entry: { outline: KoiOutline; at: number }, now: number): boolean => now - entry.at > STALE_REPORT_S * 1000
+  const stale = (entry: KoiReport, now: number): boolean => now - entry.at > STALE_REPORT_S * 1000
 
   return {
     record(reporter, outline, at) {
@@ -167,7 +183,7 @@ export function createRelay(): Relay {
       const selfBounds = chainBounds(self.spine, self.girth)
       const selfNose = noseOf(self)
 
-      const near: Array<{ distance: number; observation: NeighborObservation }> = []
+      const near: NearNeighbor[] = []
       // why: Self is excluded by instance, never by framework — that is exactly what lets two koi of one framework see each other as neighbours and steer apart.
       for (const [other, otherEntry] of reported) {
         if (other === reporter || stale(otherEntry, now)) {

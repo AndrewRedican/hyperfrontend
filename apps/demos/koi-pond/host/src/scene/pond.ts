@@ -18,21 +18,21 @@ import type { KoiSession } from './koi-sessions'
 import { KOI_FRAMEWORKS, describePond, describePondForFrame, mayRipple, pondPoint, pondWindow } from '@hyperfrontend/demo-koi-lib'
 import { openingShoal, readDeviceProfile } from '../runtime/device-tier'
 import { createDepthDirector } from './depth-director'
-import { createFrameLoop } from './raf-loop'
+import { paintFloor } from './floor'
+import { instanceFramework, nextOrdinal } from './instance-id'
 import { createInteractionsPainter } from './interactions'
+import { fishHomeUrl, identityFor, openInstance } from './koi-sessions'
+import { createFrameLoop } from './raf-loop'
 import { createRelay } from './relay'
 import { createResurrection } from './resurrection'
-import { createSelectionChrome } from './selection'
+import { acceptsRipple, addRipple, advanceRipples, createRippleField } from './ripples'
 import { createShoalPanel } from './roster'
+import { createSelectionChrome } from './selection'
 import { createSequenceTracker } from './sequence'
 import { createStage, removeLayer, reseatSurface, setCurtain, setLayerDepth, setLayerPresent } from './stage'
 import { createSurfacePainter } from './surface-canvas'
 import { createVisibilityWatch } from './visibility'
 import { createWaterPainter } from './water-gl'
-import { acceptsRipple, addRipple, advanceRipples, createRippleField } from './ripples'
-import { fishHomeUrl, identityFor, openInstance } from './koi-sessions'
-import { instanceFramework, nextOrdinal } from './instance-id'
-import { paintFloor } from './floor'
 
 /** How often the host relays each koi its neighbours, in milliseconds. */
 const RELAY_INTERVAL_MS = 120
@@ -47,7 +47,7 @@ const CURTAIN_DEADLINE_MS = 5000
 const OVERLAY_FLOOR_ALPHA = 0.7
 
 /** How long the water waits for a browser to give its context back before hanging a new canvas, in milliseconds. */
-// why: Restoring the context the page already has is much the better outcome — the canvas stays, nothing is rebuilt twice — and a browser that means to do it does so promptly. This is long enough to let it, and short enough that a visitor who came back to a still pond sees the water return rather than wonders where it went.
+// why: Restoring the context the page already has is much the better outcome — the canvas stays, nothing is rebuilt twice — and a browser that means to restore it does so promptly. This is long enough to let it, and short enough that a visitor who came back to a still pond sees the water return rather than wonders where it went.
 const WATER_RESTORE_GRACE_MS = 1500
 
 /**
@@ -168,6 +168,64 @@ export interface PondSceneHandle extends PondScene {
   shoalState(): ShoalState
 }
 
+/** A press that began on a koi, tracked from pointerdown until it resolves as a tap or a drag. */
+interface TrackedPress {
+  /** The koi the press landed on. */
+  id: KoiInstanceId
+  /** The pointer that pressed, so a second finger's moves and releases are ignored. */
+  pointerId: number
+  /** Where the press began, as client x; the drag slop is measured from here. */
+  startX: number
+  /** Where the press began, as client y; the drag slop is measured from here. */
+  startY: number
+  /** From the pointer to the koi's nose at pickup, so a carry keeps the body under the hand rather than snapping the nose to it. */
+  offset: Vec2
+  /** Whether a fingertip pressed, which earns the wider slop. */
+  touch: boolean
+  /** Whether the koi was already held before this press, which is what lets a plain tap free it. */
+  wasHeld: boolean
+  /** Whether the press has wandered past the slop and become a carry. */
+  dragging: boolean
+  /** The placement the carry has reached and the frame loop has not yet streamed, in pond space. */
+  pending: Vec2 | null
+  /** The placement last streamed to the koi, in pond space. */
+  lastSent: Vec2 | null
+}
+
+/** What a session's `status` event carries, read loosely because the wire owes the pond no schema. */
+interface StatusReport {
+  /** The watchdog's verdict on the frame, such as `healthy`, `suspect`, or `gone`. */
+  state?: string
+  /** How many heartbeats in a row the frame has missed, while the watchdog is counting. */
+  missedBeats?: number
+}
+
+/** What a session's `error` event carries, read loosely because the wire owes the pond no schema. */
+interface ErrorReport {
+  /** What went wrong, as a slug such as `open-timeout` or `unresponsive`. */
+  reason?: string
+  /** How many heartbeats in a row were missed before the frame was given up on. */
+  missedBeats?: number
+  /** How long the handshake was waited for before it was given up, in milliseconds. */
+  elapsedMs?: number
+}
+
+/** A koi asking for a place in the depth spread. */
+interface DepthRequest {
+  /** The level the koi wants; the director decides what it settles at. */
+  level: number
+}
+
+/** A koi asking to break the surface. */
+interface RippleRequest {
+  /** Where the ring starts, as pond-space x. */
+  x: number
+  /** Where the ring starts, as pond-space y. */
+  y: number
+  /** How hard the ring strikes the water. */
+  strength: number
+}
+
 /**
  * Raises the pond inside a root element and starts it.
  *
@@ -190,7 +248,7 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondSceneHandle
    * Hangs new water where the browser took the last.
    *
    * The painter asks for its context back on the way out, and a browser that
-   * obliges leaves nothing to do here, which is why this waits before looking.
+   * obliges leaves nothing here to replace, which is why this waits before looking.
    * What it cannot do is wait forever: a context that is lost and not restored
    * can never be replaced on the canvas that held it, so the element goes and
    * the water is built again on a fresh one.
@@ -236,18 +294,7 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondSceneHandle
   const present = new Set<KoiInstanceId>()
 
   /** The press being tracked from a fish, from pointerdown until it resolves as a tap or a drag. */
-  let drag: {
-    id: KoiInstanceId
-    pointerId: number
-    startX: number
-    startY: number
-    offset: Vec2
-    touch: boolean
-    wasHeld: boolean
-    dragging: boolean
-    pending: Vec2 | null
-    lastSent: Vec2 | null
-  } | null = null
+  let drag: TrackedPress | null = null
 
   const sessions = new Map<KoiInstanceId, KoiSession>()
   // why: A removed koi's layer lives on until its polite close lands, so its ordinal is not free yet — a twin re-added into that window would inherit a layer still holding the dying frame.
@@ -502,7 +549,7 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondSceneHandle
    *
    * @param origin - Where the water broke, in pond space.
    */
-  const strike = (origin: { x: number; y: number }): void => {
+  const strike = (origin: Vec2): void => {
     const now = Date.now()
     if (acceptsRipple(field, 'pointer', now)) {
       field = addRipple(field, 'pointer', origin, POINTER_STRENGTH, now)
@@ -545,7 +592,7 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondSceneHandle
 
     // why: Status is the road back into the scene — only a real beat earns `healthy`, so this is what re-admits a koi the watchdog stood down once its frame proves alive again. The dead-frame verdict itself never lands here: it arrives on `error` below as `unresponsive`, and `gone` only follows an explicit close the close handler already covers.
     shell.on('status', (data: unknown) => {
-      const status = <{ state?: string; missedBeats?: number }>data
+      const status = data as StatusReport
       const state = status?.state
       hooks.onDiagnostic?.(
         id,
@@ -567,7 +614,7 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondSceneHandle
 
     // why: The reopen policies listen separately: the guide-marked retry below answers a handshake that never landed, while the resurrection answers a frame that died mid-run and owes a live one the grace to speak again first. Subscribed ahead of the retry so the budget it reads is the one the retry is about to decide with.
     shell.on('error', (data: unknown) => {
-      const error = <{ reason?: string; missedBeats?: number; elapsedMs?: number }>data
+      const error = data as ErrorReport
       const detail =
         error?.missedBeats !== undefined
           ? `missed ${error.missedBeats}`
@@ -595,7 +642,7 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondSceneHandle
       // why: Whatever went wrong, the frame is no longer showing a koi — it waits for a handshake to earn its place back.
       setPresent(id, false)
       // why: A timed-out handshake leaves a destroyed mount and the SDK never retries — on a slow device the heavy apps race one deadline, and without this a loser is simply a fish that never existed. Only the timeout is retried; an unresponsive session may still be alive, and must not be torn down under its visitor.
-      if ((<{ reason?: string }>data)?.reason === 'open-timeout' && (retries.get(id) ?? 0) < OPEN_RETRIES) {
+      if ((data as ErrorReport)?.reason === 'open-timeout' && (retries.get(id) ?? 0) < OPEN_RETRIES) {
         retries.set(id, (retries.get(id) ?? 0) + 1)
         window.setTimeout(() => {
           // why: The roster may have let this koi go while the retry waited; reopening a removed session would mount a frame into a layer the pond already tore down.
@@ -608,11 +655,11 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondSceneHandle
     // ref: [guide:compose-independent-features/retry-open] end
 
     shell.on('outline', (data: unknown) => {
-      relay.record(id, <KoiOutline>data, Date.now())
+      relay.record(id, data as KoiOutline, Date.now())
     })
 
     shell.on('depth-request', (data: unknown) => {
-      const level = (<{ level: number }>data).level
+      const level = (data as DepthRequest).level
       if (director.request(id, level, Date.now())) {
         shell.send('depth', { level: director.settledLevel(id) })
         setLayerDepth(stage, id, director.settledLevel(id))
@@ -620,7 +667,7 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondSceneHandle
     })
 
     shell.on('ripple-request', (data: unknown) => {
-      const request = <{ x: number; y: number; strength: number }>data
+      const request = data as RippleRequest
       const now = Date.now()
       // why: Only the koi just under the surface may break it, and the host is what enforces that — a fish asking from the pond floor is simply refused.
       if (!mayRipple(director.settledLevel(id)) || !acceptsRipple(field, id, now)) {
@@ -885,7 +932,7 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondSceneHandle
     view: { x: 0, y: 0 },
     pixelRatio: 1,
     dt: 0,
-    shoal: <KoiSighting[]>[],
+    shoal: [] as KoiSighting[],
   }
 
   const loop = createFrameLoop(({ dt, elapsedMs }) => {

@@ -50,7 +50,7 @@ const CONE_GLYPH =
 const CHEVRON_GLYPH =
   '<svg viewBox="0 0 12 12" aria-hidden="true" focusable="false" width="10" height="10"><path d="M2.6 4.4 6 7.8l3.4-3.4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>'
 
-/** What the panel asks the pond to do on a visitor's behalf. */
+/** What the panel asks of the pond on a visitor's behalf. */
 export interface ShoalPanelHooks {
   /**
    * Resolves a koi's app URL, which its row links to.
@@ -122,6 +122,14 @@ export interface ShoalPanel {
   setFrameWidth(width: number): void
 }
 
+/** One living koi's entry in its framework's row: the item and the control it carries. */
+interface KoiEntry {
+  /** The list entry, carrying the koi's presence and hover state. */
+  item: HTMLLIElement
+  /** The control that lights the koi on focus and sends it away on press. */
+  button: HTMLButtonElement
+}
+
 /** One framework's row, and the handles the panel rewrites as that framework's koi come and go. */
 interface FrameworkRow {
   /** The row itself, carrying the framework's presence and hover state. */
@@ -137,7 +145,7 @@ interface FrameworkRow {
   /** The list of this framework's living koi. */
   instances: HTMLUListElement
   /** One entry per living koi, keyed by instance so a rewrite keeps the elements it already has. */
-  koi: Map<KoiInstanceId, { item: HTMLLIElement; button: HTMLButtonElement }>
+  koi: Map<KoiInstanceId, KoiEntry>
 }
 
 /**
@@ -145,8 +153,8 @@ interface FrameworkRow {
  *
  * @param root - The pond root the panel is placed over.
  * @param shoal - The shoal as it stands when the panel opens.
- * @param hooks - What the panel asks the pond to do.
- * @returns The panel.
+ * @param hooks - What the panel asks of the pond on a visitor's behalf.
+ * @returns The panel, already in the document and showing the shoal it was handed.
  *
  * @example Giving the shoal a control surface
  * ```typescript
@@ -326,7 +334,7 @@ export function createShoalPanel(root: HTMLElement, shoal: ShoalState, hooks: Sh
    * @param ordinal - Which of its framework's koi it is.
    * @returns The list entry and the control inside it.
    */
-  const buildKoi = (framework: KoiFramework, id: KoiInstanceId, ordinal: number): { item: HTMLLIElement; button: HTMLButtonElement } => {
+  const buildKoi = (framework: KoiFramework, id: KoiInstanceId, ordinal: number): KoiEntry => {
     const item = document.createElement('li')
     item.dataset['instance'] = id
     item.dataset['connected'] = 'false'
@@ -402,11 +410,11 @@ export function createShoalPanel(root: HTMLElement, shoal: ShoalState, hooks: Sh
     const stranded = !lost.isConnected || (lost instanceof HTMLButtonElement && lost.disabled)
     // why: Only this panel's own controls carry a framework, so nothing else that lost the document can have focus pulled into the panel.
     const framework = stranded ? lost.dataset['fish'] : undefined
-    const row = framework === undefined ? undefined : rows.get(<KoiFramework>framework)
+    const row = framework === undefined ? undefined : rows.get(framework as KoiFramework)
     if (row === undefined) {
       return
     }
-    const newest = membersOf(<KoiFramework>framework).at(-1)
+    const newest = membersOf(framework as KoiFramework).at(-1)
     const koi = newest === undefined ? undefined : row.koi.get(newest.id)
     // why: The row the gesture happened in is the nearest place to carry on from: its add control while it still answers, and otherwise the koi that press just brought into the pond, which is also how that koi is sent back out.
     const next = !row.add.disabled ? row.add : koi !== undefined && !koi.button.disabled ? koi.button : row.link

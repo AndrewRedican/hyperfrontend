@@ -68,9 +68,13 @@ export interface Resurrection {
 
 /** What the policy tracks for one koi. */
 interface FishRecord {
+  /** Reopens spent in the current episode; at the cap the pond stops insisting. */
   attempts: number
+  /** The pending grace timer, or `null` when no reopen is waiting to fire. */
   timer: number | null
+  /** The timer that hands the budget back once the koi has stayed, or `null` when nothing is counting. */
   stability: number | null
+  /** Whether a reopen is held back until the visitor returns to the page. */
   waitingForVisible: boolean
 }
 

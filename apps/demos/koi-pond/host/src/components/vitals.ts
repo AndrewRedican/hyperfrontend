@@ -145,30 +145,61 @@ export function classifyFrame(layer: Element): FrameHealth {
   }
 }
 
+/** The heap figures Chrome hangs off a window's `performance`. */
+interface HeapMeasurement {
+  /** Bytes of JS heap the frame's live objects occupy, coarsened by the browser. */
+  usedJSHeapSize?: number
+}
+
 /** The non-standard Chrome heap report, absent everywhere else. */
 interface HeapReport {
-  memory?: { usedJSHeapSize?: number }
+  /** Present only on browsers that volunteer a heap figure at all. */
+  memory?: HeapMeasurement
 }
 
 /** What the probe remembers about one koi between passes. */
 interface FishProbe {
+  /** The verdict the previous pass reached, so only a change is worth a line; `null` until the first pass. */
   health: FrameHealth | null
+  /** The canvas backing size the previous pass read, as `WxH`, or `null` when the koi had no canvas. */
   buffer: string | null
+  /** The koi's row in the panel, pulled out when the fish leaves the scene. */
   row: HTMLElement
+  /** The cell carrying the last session event recorded against this koi. */
   state: HTMLElement
+  /** The cell carrying the latest probe reading: backing size, heap, health. */
   reading: HTMLElement
 }
 
-/** Reads which instances currently hold a layer in the scene. */
+/**
+ * Reads which instances currently hold a layer in the scene.
+ *
+ * @param root - The `#pond` element the host appends koi layers to.
+ * @returns One id per koi the scene is holding at this instant, in document order.
+ */
 function livingInstances(root: HTMLElement): KoiInstanceId[] {
   const ids: KoiInstanceId[] = []
   for (const layer of root.querySelectorAll('.koi-layer[data-instance]')) {
-    const id = (<HTMLElement>layer).dataset['instance']
+    const id = (layer as HTMLElement).dataset['instance']
     if (id !== undefined) {
-      ids.push(<KoiInstanceId>id)
+      ids.push(id as KoiInstanceId)
     }
   }
   return ids
+}
+
+/** What a watched canvas's own listeners have seen, read back without touching the canvas. */
+interface CanvasWatchState {
+  /** `true` between a `webglcontextlost` and the restore that answers it. */
+  lost: boolean
+}
+
+/** A log read back out of storage, as the previous page left it. */
+interface KeptLog {
+  /** When the log was last written, ISO-8601, so a reader can date the incident. */
+  savedAt?: string
+  /** The lines the earlier session accumulated before it died. */
+  lines?: string[]
 }
 
 /**
@@ -191,7 +222,7 @@ export function mountVitals(root: HTMLElement): PondVitals {
   let disposed = false
   // why: The watched canvases live inside frames the panel does not own, so their listeners are cut by one abort rather than enumerated.
   const canvasWatch = new AbortController()
-  const watchedCanvases = new WeakMap<HTMLCanvasElement, { lost: boolean }>()
+  const watchedCanvases = new WeakMap<HTMLCanvasElement, CanvasWatchState>()
   const probes = new Map<KoiInstanceId, FishProbe>()
 
   const panel = document.createElement('section')
@@ -312,7 +343,7 @@ export function mountVitals(root: HTMLElement): PondVitals {
   try {
     const kept = window.localStorage.getItem(VITALS_LOG_KEY)
     if (kept !== null) {
-      const parsed = <{ savedAt?: string; lines?: string[] }>JSON.parse(kept)
+      const parsed = JSON.parse(kept) as KeptLog
       if (Array.isArray(parsed.lines) && parsed.lines.length > 0) {
         previous = parsed.lines
         record(null, 'previous-session', `${previous.length} lines kept from ${parsed.savedAt ?? 'an earlier run'}`)
@@ -325,7 +356,7 @@ export function mountVitals(root: HTMLElement): PondVitals {
   const screenLine = `dpr=${window.devicePixelRatio} screen=${window.screen.width}x${window.screen.height} view=${Math.round(window.visualViewport?.width ?? window.innerWidth)}x${Math.round(window.visualViewport?.height ?? window.innerHeight)}`
   const device = readDeviceProfile()
   // why: The tier is a verdict about the machine, and a verdict read back off a device weeks later is worth little without the signals behind it — `middle` alone cannot tell a middling device from one that withheld its memory.
-  const reported = (<DeviceSignals>navigator).deviceMemory
+  const reported = (navigator as DeviceSignals).deviceMemory
   const deviceLine = `cores=${navigator.hardwareConcurrency} memory=${reported === undefined ? 'unreported' : `${reported}GB`} tier=${device.tier} cap=${device.cap}`
   record(null, 'boot', `${screenLine} isolated=${window.crossOriginIsolated} ${deviceLine}`)
   record(null, 'agent', navigator.userAgent)
@@ -378,7 +409,7 @@ export function mountVitals(root: HTMLElement): PondVitals {
           reading = 'context lost'
         }
       }
-      const heap = (<HeapReport>(<unknown>frame?.contentWindow?.performance))?.memory?.usedJSHeapSize
+      const heap = (frame?.contentWindow?.performance as unknown as HeapReport)?.memory?.usedJSHeapSize
       probe.reading.textContent = [buffer ?? '·', heap === undefined ? '·' : `${(heap / 1048576).toFixed(1)}MB`, reading].join(' ')
     } catch {
       probe.reading.textContent = reading
