@@ -60,6 +60,78 @@ function setup() {
   return { handle, mock, addChannel, cleanup, emitter }
 }
 
+function setupWatched() {
+  const mock = createMockChannel()
+  const cleanup = jest.fn()
+  const cancelWatch = jest.fn()
+  let report: ((elapsedMs: number) => void) | undefined
+  const mount = jest.fn(
+    (): MountResult => ({
+      target: TARGET,
+      present: { mode: 'popup' },
+      cleanup,
+      whenLost: (onLost) => {
+        report = onLost
+        return cancelWatch
+      },
+    })
+  )
+  const emitter = createEventEmitter()
+  const handle = createShellHandle(broker(mock), { container: '#shell' } as ShellOptions, emitter, {
+    contract: { emitted: [], accepted: [] },
+    selectMount: jest.fn(() => mount),
+    registerSecurity: jest.fn(() => undefined),
+    createHeartbeatMonitor: jest.fn(() => ({
+      beat: jest.fn(),
+      start: jest.fn(),
+      stop: jest.fn(),
+      setObservable: jest.fn(),
+      getStatus: jest.fn(),
+    })),
+    observeVisibility: jest.fn(() => () => undefined),
+  })
+  return { handle, mock, cleanup, cancelWatch, emitter, lose: (elapsedMs: number) => report?.(elapsedMs) }
+}
+
+function broker(mock: MockChannel): BrokerHandle {
+  return { addChannel: jest.fn(() => mock.channel) } as unknown as BrokerHandle
+}
+
+describe('createShellHandle windowed-target watch', () => {
+  it('emits a distinguishable error when the opened window stops being reachable', () => {
+    const ctx = setupWatched()
+    const errors: unknown[] = []
+    ctx.emitter.on('error', (data) => errors.push(data))
+    ctx.handle.open({ displayMode: 'popup' })
+    ctx.lose(320)
+    expect(errors).toEqual([{ reason: 'target-lost', elapsedMs: 320, displayMode: 'popup' }])
+  })
+
+  it('tears the mount down instead of waiting out the open timeout', () => {
+    const ctx = setupWatched()
+    ctx.handle.open({ displayMode: 'popup' })
+    ctx.lose(320)
+    expect({ destroyed: ctx.mock.destroy.mock.calls.length, cleaned: ctx.cleanup.mock.calls.length }).toEqual({
+      destroyed: 1,
+      cleaned: 1,
+    })
+  })
+
+  it('stops watching once the session is open, leaving the window to the heartbeat', () => {
+    const ctx = setupWatched()
+    ctx.handle.open({ displayMode: 'popup' })
+    ctx.mock.trigger('open')
+    expect(ctx.cancelWatch).toHaveBeenCalledTimes(1)
+  })
+
+  it('cancels the watch when the shell is destroyed before the handshake', () => {
+    const ctx = setupWatched()
+    ctx.handle.open({ displayMode: 'popup' })
+    ctx.handle.destroy()
+    expect(ctx.cancelWatch).toHaveBeenCalledTimes(1)
+  })
+})
+
 describe('createShellHandle origin pin and open deadline', () => {
   it('pins the channel to the origin derived from the feature url', () => {
     const ctx = setup()
