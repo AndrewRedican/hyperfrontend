@@ -25,10 +25,10 @@ import type {
 } from '@hyperfrontend/demo-koi-lib'
 import type { GlRenderer, KoiStage } from '@hyperfrontend/demo-koi-lib/three'
 import type { KoiCardHandles } from './KoiFish'
-import { cardAnchor, cardTransform, describeKoiCard } from '@hyperfrontend/demo-koi-lib'
-import { createKoiStage, createPondRenderer } from '@hyperfrontend/demo-koi-lib/three'
 import { createSignal } from 'solid-js'
 import { render } from 'solid-js/web'
+import { cardAnchor, cardTransform, describeKoiCard } from '@hyperfrontend/demo-koi-lib'
+import { createKoiStage, createPondRenderer } from '@hyperfrontend/demo-koi-lib/three'
 import { KoiFish } from './KoiFish'
 
 /** How firmly the silhouette reads when the pointer is merely over the koi. */
@@ -39,14 +39,12 @@ const HELD_OUTLINE = 1
 
 /**
  * Mounts the koi's canvas and scene into a root element.
- *
  * @param root - The app root the koi is drawn into.
  * @param profile - Everything about this koi that never changes.
  * @param url - The URL of the app rendering it, shown on the card.
  * @param pond - The world at build time; later announcements arrive via `setPond`.
  * @param createGl - The GL factory, replaceable so specs can run headless.
  * @returns The renderer.
- *
  * @example Drawing a koi each frame
  * ```typescript
  * const renderer = createKoiRenderer(root, profile, window.location.href, pond)
@@ -75,7 +73,6 @@ export function createKoiRenderer(
 
   /**
    * A card element's rectangle lifted into pond space.
-   *
    * @param element - The element to measure.
    * @returns The pond-space rectangle.
    */
