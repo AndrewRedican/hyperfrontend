@@ -86,6 +86,18 @@ const SECTION_STEPS = 28
 /** How wide the awareness cone opens, in radians either side of the heading. */
 const AWARENESS_HALF_ANGLE = 1.05
 
+/** One line overlay and the handles the layer needs to redraw it in place. */
+interface LineOverlay {
+  /** The drawable added to the layer's group: one strip, or independent segments. */
+  object: Line | LineSegments
+  /** The line's material, kept so the layer can release it on dispose. */
+  material: LineBasicMaterial
+  /** The vertex buffer an update writes positions into, three floats per vertex. */
+  positions: Float32Array
+  /** The attribute wrapping `positions`; flag it `needsUpdate` after every write. */
+  attribute: BufferAttribute
+}
+
 /**
  * Builds a line overlay with a fixed vertex budget.
  *
@@ -94,11 +106,7 @@ const AWARENESS_HALF_ANGLE = 1.05
  * @param segments - Whether the vertices are independent segments rather than one strip.
  * @returns The overlay object, its material, and the buffer to write into.
  */
-function createLines(
-  capacity: number,
-  colour: string,
-  segments: boolean
-): { object: Line | LineSegments; material: LineBasicMaterial; positions: Float32Array; attribute: BufferAttribute } {
+function createLines(capacity: number, colour: string, segments: boolean): LineOverlay {
   const positions = new Float32Array(capacity * 3)
   const attribute = new BufferAttribute(positions, 3)
   attribute.setUsage(35048)
@@ -115,6 +123,16 @@ function createLines(
   object.frustumCulled = false
   object.renderOrder = 10
   return { object, material, positions, attribute }
+}
+
+/** The part of a posed spine station a cross-section ring is placed against. */
+interface SectionFrame {
+  /** The station's point on the posed centreline, in the koi's local space. */
+  position: [number, number, number]
+  /** Local heading in radians; positive swings toward the right flank. */
+  yaw: number
+  /** Local bank in radians; positive rolls the right flank downward. */
+  roll: number
 }
 
 /**
@@ -176,11 +194,7 @@ export function createKoiDebugLayer(koi: Koi): KoiDebugLayer {
    * @param z - Lateral offset in scene units.
    * @returns The offset point in the koi's local space.
    */
-  const place = (
-    station: { position: [number, number, number]; yaw: number; roll: number },
-    y: number,
-    z: number
-  ): [number, number, number] => {
+  const place = (station: SectionFrame, y: number, z: number): [number, number, number] => {
     const rolledY = y * Math.cos(station.roll) - z * Math.sin(station.roll)
     const rolledZ = y * Math.sin(station.roll) + z * Math.cos(station.roll)
     return [

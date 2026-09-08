@@ -76,7 +76,7 @@ export function headingAwayFrom(position: Vec2, threat: Vec2, fallback: number):
 }
 
 /**
- * A slow, wandering drift for a koi with nothing better to do.
+ * A slow, wandering drift for a koi with nothing more pressing on its attention.
  *
  * Two detuned sines beat against each other, so the course never repeats on a
  * period a visitor can spot.
@@ -128,10 +128,10 @@ export function closestApproach(position: Vec2, velocity: Vec2, otherPosition: V
   return { timeS, distance: Math.hypot(px + vx * timeS, py + vy * timeS) }
 }
 
-/** What a koi decides to do about a neighbour it is closing on. */
+/** What a koi settles on in answer to a neighbour it is closing on. */
 export type EncounterAction = 'hold' | 'turn' | 'slow' | 'accelerate' | 'pass-above' | 'pass-below'
 
-/** A resolved encounter: what to do, and which way. */
+/** A resolved encounter: which manoeuvre, and which way. */
 export interface EncounterResolution {
   /** The manoeuvre to make. */
   action: EncounterAction
@@ -283,6 +283,16 @@ export interface EncounterMemory {
   resolve(self: EncounterSelf, neighbor: NeighborObservation, tieBreak: boolean, nowS: number, prefer?: () => -1 | 1): EncounterResolution
 }
 
+/** A latched encounter answer, held for one neighbour so a crossing is not re-argued every frame. */
+interface HeldEncounter {
+  /** The manoeuvre the koi committed to for this neighbour. */
+  action: 'turn' | 'slow' | 'accelerate'
+  /** The flank it broke toward: `1` clockwise on screen, `-1` the other way, `0` when the manoeuvre does not turn. */
+  turn: -1 | 0 | 1
+  /** The clock reading after which the latch lapses and the crossing is read afresh, in seconds. */
+  untilS: number
+}
+
 /**
  * Creates the per-neighbour encounter memory for one koi's brain.
  *
@@ -295,7 +305,7 @@ export interface EncounterMemory {
  * ```
  */
 export function createEncounterMemory(): EncounterMemory {
-  const held = new Map<string, { action: 'turn' | 'slow' | 'accelerate'; turn: -1 | 0 | 1; untilS: number }>()
+  const held = new Map<string, HeldEncounter>()
 
   return {
     resolve(self, neighbor, tieBreak, nowS, prefer) {

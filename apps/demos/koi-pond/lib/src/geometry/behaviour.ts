@@ -3,7 +3,7 @@
  *
  * These are verbs, not a brain. A koi's pace changes, its itinerary across the
  * pond, and its occasional decision to slip out past the boundary are all
- * *discrete, scheduled events* rather than continuous noise: an event begins,
+ * _discrete, scheduled events_ rather than continuous noise: an event begins,
  * runs its bounded course, and ends before another may start. Everything is
  * seeded through `randomPseudo`, so the same koi lives the same life on every
  * reload and none of the fish apps needs to exchange a message about it.
@@ -11,8 +11,8 @@
  * Each fish app composes these verbs with its own thresholds and priorities;
  * the shared part is only the vocabulary and the determinism.
  */
-import { randomPseudo } from '@hyperfrontend/random-generator-utils'
 import type { PondEnvironment, Vec2 } from '../model/types.js'
+import { randomPseudo } from '@hyperfrontend/random-generator-utils'
 import { pondBounds } from './virtual-pond.js'
 
 /** Where the pace schedule's draw band starts on the koi's seed. */
@@ -28,12 +28,20 @@ const SHORE_DRAWS = 400
 const PACE_REST_S = { min: 6, max: 14 }
 
 /** The three pace events a koi schedules, with their bands. */
-const PACE_EVENTS = <const>[
+const PACE_EVENTS = [
   // why: Loafing is the most common change a pond visitor should see — real koi spend most of their slow time drifting, not sprinting.
   { weight: 0.45, multiplier: { min: 0.55, max: 0.78 }, duration: { min: 4, max: 9 } },
   { weight: 0.4, multiplier: { min: 1.3, max: 1.6 }, duration: { min: 2, max: 5 } },
   { weight: 0.15, multiplier: { min: 1.85, max: 2.2 }, duration: { min: 0.8, max: 1.6 } },
-]
+] as const
+
+/** The two ends a 0-to-1 draw is spread between. */
+interface DrawBand {
+  /** The value a draw of 0 lands on. */
+  min: number
+  /** The value a draw of 1 lands on. */
+  max: number
+}
 
 /**
  * Maps a 0-to-1 draw onto a band.
@@ -42,7 +50,7 @@ const PACE_EVENTS = <const>[
  * @param band - The band to map onto.
  * @returns The mapped value.
  */
-function spread(draw: number, band: { min: number; max: number }): number {
+function spread(draw: number, band: DrawBand): number {
   return band.min + draw * (band.max - band.min)
 }
 
@@ -61,6 +69,16 @@ export interface PaceSchedule {
   multiplier(elapsedS: number): number
 }
 
+/** One rest-then-event cycle of a koi's pace timeline, drawn whole from the cycle's own slots. */
+interface PaceCycle {
+  /** How long the koi cruises plainly before the event opens, in seconds. */
+  restS: number
+  /** How long the event then holds, in seconds. */
+  eventS: number
+  /** The cruise-speed multiplier the event holds for its whole length. */
+  multiplier: number
+}
+
 /**
  * Creates a koi's seeded pace schedule.
  *
@@ -69,7 +87,7 @@ export interface PaceSchedule {
  * then rest again. Events therefore never stack or overlap by construction.
  *
  * @param seed - The koi's stable seed.
- * @returns The schedule.
+ * @returns A timeline that answers, for any moment of the koi's own clock, what its cruise speed is multiplied by.
  *
  * @example Easing toward the scheduled pace
  * ```typescript
@@ -86,7 +104,7 @@ export function createPaceSchedule(seed: number): PaceSchedule {
    * @param cycle - The cycle index.
    * @returns Its rest length, event length, and event multiplier.
    */
-  const describe = (cycle: number): { restS: number; eventS: number; multiplier: number } => {
+  const describe = (cycle: number): PaceCycle => {
     const kindDraw = draw(cycle, 1)
     const loaf = PACE_EVENTS[0]
     const brisk = PACE_EVENTS[1]
@@ -173,7 +191,7 @@ export interface Itinerary {
  * visitor is actually looking at without ever fencing the fish in.
  *
  * @param seed - The koi's stable seed.
- * @returns The itinerary.
+ * @returns A run of waypoints that hands back the one to swim toward now and moves on when the koi arrives or loses interest.
  *
  * @example Steering along the itinerary
  * ```typescript

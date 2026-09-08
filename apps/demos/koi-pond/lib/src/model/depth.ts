@@ -116,7 +116,7 @@ export function swimDepth(level: number): number {
  * Levels are laid between the pond floor and the surface-water layer, so a koi
  * can never paint over the water it swims under.
  *
- * @param level - The depth level.
+ * @param level - The level whose container is being stacked; a fractional level rounds to its nearest layer.
  * @returns The stacking index for that level's container.
  */
 export function depthZIndex(level: number): number {

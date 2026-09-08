@@ -18,19 +18,22 @@ import { ACESFilmicToneMapping, PerspectiveCamera, Vector3, WebGLRenderer } from
 import { PIVOT_STATION } from '../koi3d/config.js'
 import { POND_VIEW, pxPerUnit } from '../model/pond-view.js'
 
+/** A window of pond space, in CSS pixels: the whole view, or the sub-rect the camera has been narrowed onto. */
+export interface PondViewWindow {
+  /** Pond-space x of the window's left edge. */
+  x: number
+  /** Pond-space y of the window's top edge. */
+  y: number
+  /** Window width in CSS pixels. */
+  width: number
+  /** Window height in CSS pixels. */
+  height: number
+}
+
 /** The slice of a pond announcement the view is built from. */
 export interface PondViewport {
   /** The window of pond space the presenting frame currently shows. */
-  view: {
-    /** Pond-space x of the window's left edge. */
-    x: number
-    /** Pond-space y of the window's top edge. */
-    y: number
-    /** Window width in CSS pixels. */
-    width: number
-    /** Window height in CSS pixels. */
-    height: number
-  }
+  view: PondViewWindow
   /** Nose-to-tail length of a koi at depth scale 1, in CSS pixels. */
   fishLength: number
 }
@@ -120,7 +123,7 @@ export function createPondView(pond: PondViewport): PondView {
   const pivot = { x: 0, y: 0 }
   let viewport = pond
   // why: When the camera is narrowed onto a sub-rect, unprojection must read NDC against that rect — the offset projection maps the rect, not the view, onto clip space.
-  let framed: { x: number; y: number; width: number; height: number } | null = null
+  let framed: PondViewWindow | null = null
 
   const setPond = (next: PondViewport): void => {
     const unitsHigh = next.view.height / pxPerUnit(next.fishLength)

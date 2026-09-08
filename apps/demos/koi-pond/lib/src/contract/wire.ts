@@ -117,11 +117,11 @@ function readNeighbor(value: unknown): NeighborObservation | null {
   if (typeof value !== 'object' || value === null) {
     return null
   }
-  const record = <Record<string, unknown>>value
+  const record = value as Record<string, unknown>
   if (typeof record['framework'] !== 'string' || NEIGHBOR_NUMBERS.some((key) => typeof record[key] !== 'number')) {
     return null
   }
-  return <NeighborObservation>value
+  return value as NeighborObservation
 }
 
 /**
@@ -145,6 +145,32 @@ function readShoal(data: unknown): NeighborObservation[] {
 }
 // ref: [guide:compose-independent-features/neighbors-handler] end
 
+/** The `depth` payload: the level the host has granted this koi. */
+interface DepthGrant {
+  /** The granted level, counted from the surface down. */
+  level: number
+}
+
+/** The `hover` payload: what the host's pointer is doing to this koi. */
+interface HoverSignal {
+  /** Whether the pointer is resting on this koi right now. */
+  hovered: boolean
+}
+
+/** The `sleep` payload: whether the koi's whole animation is held. */
+interface SleepSignal {
+  /** Whether the koi stops animating entirely. */
+  paused: boolean
+}
+
+/** The `pause` payload: a hold the koi keeps sculling through. */
+interface PauseSignal {
+  /** Whether the koi holds the position it is in. */
+  paused: boolean
+  /** Whether the hold is a resting one, which keeps the scull and suppresses the held-inspection chrome; absent reads as an ordinary hold. */
+  resting?: boolean
+}
+
 /**
  * Binds the koi contract to a koi app's runtime.
  *
@@ -160,37 +186,37 @@ export function wireKoiContract(link: FeatureLink, koi: KoiRuntime): void {
   koi.connect((type, data) => link.send(type, data))
 
   link.on('pond', (data) => {
-    koi.setPond(<PondEnvironment>data)
+    koi.setPond(data as PondEnvironment)
   })
 
   link.on('identity', (data) => {
-    koi.adopt(<KoiIdentity>data)
+    koi.adopt(data as KoiIdentity)
   })
 
   link.on('depth', (data) => {
-    koi.setDepth((<{ level: number }>data).level)
+    koi.setDepth((data as DepthGrant).level)
   })
 
   link.on('disturbance', (data) => {
-    koi.startle(<Disturbance>data)
+    koi.startle(data as Disturbance)
   })
 
   link.on('hover', (data) => {
-    koi.setHovered((<{ hovered: boolean }>data).hovered)
+    koi.setHovered((data as HoverSignal).hovered)
   })
 
   link.on('sleep', (data) => {
-    koi.setPaused((<{ paused: boolean }>data).paused)
+    koi.setPaused((data as SleepSignal).paused)
   })
 
   link.on('pause', (data) => {
-    const held = <{ paused: boolean; resting?: boolean }>data
+    const held = data as PauseSignal
     // why: A resting hold is still a hold, so the runtime is told both facts at once and decides for itself which chrome a rest suppresses.
     koi.setInspected(held.paused, held.resting === true)
   })
 
   link.on('place', (data) => {
-    const point = <{ x: number; y: number }>data
+    const point = data as Vec2
     koi.placeAt({ x: point.x, y: point.y })
   })
 

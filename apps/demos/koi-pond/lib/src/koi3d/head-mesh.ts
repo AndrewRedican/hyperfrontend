@@ -18,8 +18,20 @@ import { CAUDAL_ROOT } from './config.js'
 import { FIN_PART } from './fin-mesh.js'
 import { createMeshBuilder, finishMesh, mergeMeshes, pushQuad, pushVertex } from './mesh-data.js'
 
+/** Where one pair of barbels leaves the mouth, and how its whiskers hang from there. */
+interface BarbelRoot {
+  /** Station along the deformation curve the pair leaves from, in total-length units. */
+  station: number
+  /** Position around the body in turns for the left whisker; the right one mirrors it across the belly. */
+  girth: number
+  /** How far the whisker reaches, as a fraction of body length. */
+  length: number
+  /** How hard the whisker falls away toward its tip, as a fraction of its own length. */
+  droop: number
+}
+
 /** Where the two pairs of barbels leave the mouth: station along the body, then position around it. */
-const BARBEL_ROOTS: readonly { station: number; girth: number; length: number; droop: number }[] = [
+const BARBEL_ROOTS: readonly BarbelRoot[] = [
   { station: 0.024, girth: 0.375, length: 0.019, droop: 0.75 },
   { station: 0.052, girth: 0.41, length: 0.032, droop: 0.95 },
 ]

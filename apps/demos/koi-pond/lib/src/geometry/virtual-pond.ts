@@ -20,10 +20,10 @@
  * fish that bounces.
  */
 import type { RandomGenerator } from '@hyperfrontend/random-generator-utils'
-import { createRandomGenerator } from '@hyperfrontend/random-generator-utils'
 import type { PondEnvironment, PondWindow, Vec2 } from '../model/types.js'
-import { DEPTH_LEVELS, KOI_FRAMEWORKS } from '../model/types.js'
+import { createRandomGenerator } from '@hyperfrontend/random-generator-utils'
 import { VARIANT_STRIDE, koiSeed } from '../model/traits.js'
+import { DEPTH_LEVELS, KOI_FRAMEWORKS } from '../model/types.js'
 
 /** How far pond space runs past each pond edge, in nominal fish lengths. */
 export const MARGIN_FISH_LENGTHS = 1.05
@@ -70,6 +70,14 @@ export function nominalFishLength(width: number, height: number): number {
   return clamp(shorter * FISH_LENGTH_RATIO, MIN_FISH_LENGTH, MAX_FISH_LENGTH)
 }
 
+/** The extent of a pond, which is all a window onto it needs to know about the water. */
+export interface PondExtent {
+  /** The pond's full width in CSS pixels, margins included. */
+  width: number
+  /** The pond's full height in CSS pixels, margins included. */
+  height: number
+}
+
 /**
  * The window a frame of the given size shows, centred on the pond.
  *
@@ -77,7 +85,7 @@ export function nominalFishLength(width: number, height: number): number {
  * card, a debug panel, and a fullscreen tab all look into the middle of the
  * same water, and growing the frame reveals more pond around the same centre.
  *
- * @param pond - The environment whose pond is being windowed, or its dimensions.
+ * @param pond - The environment whose pond is being windowed, or a bare pair of pond dimensions.
  * @param frameWidth - The presenting frame's width in CSS pixels.
  * @param frameHeight - The presenting frame's height in CSS pixels.
  * @returns The window rectangle in pond space.
@@ -88,7 +96,7 @@ export function nominalFishLength(width: number, height: number): number {
  * sessions.forEach((session) => session.shell.send('pond', pond))
  * ```
  */
-export function pondWindow(pond: { width: number; height: number }, frameWidth: number, frameHeight: number): PondWindow {
+export function pondWindow(pond: PondExtent, frameWidth: number, frameHeight: number): PondWindow {
   return {
     x: (pond.width - frameWidth) / 2,
     y: (pond.height - frameHeight) / 2,
@@ -268,6 +276,14 @@ function rawEntry(pond: PondEnvironment, seed: number, draws: RandomGenerator = 
   }
 }
 
+/** Where a koi is put into the water at boot, and which way it is pointed once it is there. */
+export interface KoiEntryStation {
+  /** The nose position the koi opens on, in pond space. */
+  position: Vec2
+  /** The heading it opens on, in radians. */
+  heading: number
+}
+
 /**
  * Where one koi enters the pond, and pointing which way.
  *
@@ -305,7 +321,7 @@ function rawEntry(pond: PondEnvironment, seed: number, draws: RandomGenerator = 
  * const motion = createKoiMotion({ profile, pond, ...entry, depth: 3 })
  * ```
  */
-export function entryStation(pond: PondEnvironment, seed: number, instance = 0): { position: Vec2; heading: number } {
+export function entryStation(pond: PondEnvironment, seed: number, instance = 0): KoiEntryStation {
   const seeds = KOI_FRAMEWORKS.map((framework) => koiSeed(framework))
   const slot = seeds.indexOf(seed)
   // why: Ordinals are whole and finite by construction; anything else settles as the canonical fish rather than hanging the round loop or deriving a station no other agent could reproduce.

@@ -81,6 +81,14 @@ export interface KoiRuntimeInit {
   motionFactory?: KoiMotionFactory
 }
 
+/** The newest coordination event this koi took part in, kept only as long as the card needs to age it. */
+interface CoordinationEvent {
+  /** What happened, in the contract's own vocabulary. */
+  kind: string
+  /** When it happened, on `performance.now`'s clock in milliseconds. */
+  at: number
+}
+
 /**
  * Creates a koi's runtime, binds it to the contract, and starts it swimming.
  *
@@ -126,7 +134,7 @@ export function createKoiRuntime(init: KoiRuntimeInit): KoiRuntime {
     undress = null
   }
 
-  let emit: (type: string, data?: unknown) => void = () => {}
+  let emit: (type: string, data?: unknown) => void = () => undefined
   let hosted = init.hosted === true
   let paused = false
   let held = false
@@ -141,14 +149,18 @@ export function createKoiRuntime(init: KoiRuntimeInit): KoiRuntime {
   let wasFleeing = false
   let lastRippleAt = 0
   let neighbourCount = 0
-  let lastEvent: { kind: string; at: number } | null = null
+  let lastEvent: CoordinationEvent | null = null
   let fpsEma = 0
   let memoryBytes: number | null = null
   let memoryState: KoiMemoryState = 'pending'
   let cardTimer = 0
   let memoryTimer = 0
 
-  /** Remembers the newest coordination event for the card's story. */
+  /**
+   * Remembers the newest coordination event for the card's story.
+   *
+   * @param kind - What just happened, in the contract's own vocabulary.
+   */
   const noteEvent = (kind: string): void => {
     lastEvent = { kind, at: performance.now() }
   }
@@ -160,7 +172,11 @@ export function createKoiRuntime(init: KoiRuntimeInit): KoiRuntime {
     memoryState = reading.state
   }
 
-  /** The live facts the card renders. */
+  /**
+   * The live facts the card renders.
+   *
+   * @returns This frame's own reading of its koi, its neighbours, and its browsing context, all sampled at the moment of the call.
+   */
   const cardDetails = (): KoiCardDetails => {
     const state = motion.state
     return {

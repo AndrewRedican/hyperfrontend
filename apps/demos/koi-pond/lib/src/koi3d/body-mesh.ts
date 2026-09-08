@@ -133,7 +133,7 @@ interface RingPlan {
  * How many rings the shell is lofted from, including its snout cap and tail blend.
  *
  * @param resolution - How finely to tessellate.
- * @returns The ring count.
+ * @returns How many rings the loft walks, nose cap and tail blend included.
  *
  * @example Reporting a koi's topology
  * ```typescript

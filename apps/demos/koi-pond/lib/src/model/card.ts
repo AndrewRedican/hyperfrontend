@@ -12,6 +12,14 @@ import type { KoiPhase } from './types.js'
 /** How a koi's memory reading stands. */
 export type KoiMemoryState = 'pending' | 'measured' | 'unavailable'
 
+/** The most recent coordination event a koi took part in, as its card reports it. */
+export interface KoiCardEvent {
+  /** The event's name on the wire, e.g. `disturbance`, shown verbatim on the card. */
+  kind: string
+  /** How long ago it happened, in seconds. */
+  ageS: number
+}
+
 /** The live facts one koi's card shows while a visitor holds it. */
 export interface KoiCardDetails {
   /** Whether a visitor is holding this koi right now. */
@@ -41,7 +49,7 @@ export interface KoiCardDetails {
   /** How the memory reading stands. */
   memoryState: KoiMemoryState
   /** The most recent coordination event this app took part in, or `null`. */
-  lastEvent: { kind: string; ageS: number } | null
+  lastEvent: KoiCardEvent | null
 }
 
 /** What each behavioural phase is called on a card. */

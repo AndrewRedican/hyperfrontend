@@ -15,7 +15,13 @@ import type { KoiFramework } from '../model/types.js'
 /** The box every mark is drawn in, so a page can scale them together. */
 export const MARK_VIEW_BOX = '0 0 24 24'
 
-/** A letterform mark, for the projects whose identity is their initials. */
+/**
+ * A letterform mark, for the projects whose identity is their initials.
+ *
+ * @param text - The initials to set, one or two characters.
+ * @param size - Font size in box units; two letters need a smaller size than one to stay inside the tile.
+ * @returns The mark's markup: a tinted tile with the letters centred on it.
+ */
 // why: Drawn as text rather than as outlines so it stays legible at the size a page actually shows it, and so no letter has to be traced by hand into a path that will never be as good as the font's.
 function letters(text: string, size: number): string {
   return (

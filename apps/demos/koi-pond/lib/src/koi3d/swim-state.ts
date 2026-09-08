@@ -41,13 +41,13 @@ export const MOTION_PRESETS: Readonly<Record<string, KoiMotionInput>> = {
 const BLADE_DRIVE = 1.14
 
 /** How fast each parameter chases its target, in seconds to close most of the gap. */
-const RESPONSE = <const>{
+const RESPONSE = {
   wave: 0.22,
   // why: The bend answers the helm noticeably slower than the wave — a koi's turn is muscle working down the whole body, and a quick constant here is what read as the head snapping.
   turn: 0.22,
   bank: 0.3,
   pitch: 0.35,
-}
+} as const
 
 /**
  * Clamps a value into a band.
@@ -121,7 +121,7 @@ export interface KoiSwimState {
   readonly phase: number
   /** Tail-beat frequency the phase is currently advancing at, in hertz. */
   readonly frequency: number
-  /** What the koi was last told to do. */
+  /** The koi's last orders. */
   readonly motion: KoiMotionInput
   /** This koi's own trim on the swimming model. */
   readonly trim: KoiSwimTrim
@@ -132,7 +132,7 @@ export interface KoiSwimState {
    */
   setTrim(input: Partial<KoiSwimTrim>): void
   /**
-   * Tells the koi what to do; anything left out keeps its current value.
+   * Gives the koi its orders; anything left out keeps its current value.
    *
    * @param input - The motion to chase.
    */

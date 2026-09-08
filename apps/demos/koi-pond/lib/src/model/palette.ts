@@ -48,8 +48,18 @@ const SUMI = '#221e1b'
 /** The warm orange a koi's beni brings, used only as a natural tone. */
 const BENI_ORANGE = '#e08a3c'
 
+/** One nishikigoi variety as a koi wears it, before the brand colour finishes the dressing. */
+interface KoiVariety {
+  /** The pattern family the markings are drawn from, as the 3D skin names it. */
+  pattern: KoiPalette['pattern']
+  /** The ground colour the markings are written on; a natural koi tone, never a brand colour. */
+  body: string
+  /** The second marking colour, a natural tone that says nothing about the framework. */
+  shade: string
+}
+
 /** How each framework's koi is dressed: variety, ground, and second marking colour. */
-const VARIETIES: Readonly<Record<KoiFramework, { pattern: KoiPalette['pattern']; body: string; shade: string }>> = {
+const VARIETIES: Readonly<Record<KoiFramework, KoiVariety>> = {
   // why: The mixture is deliberate — ogon and kohaku keep some fish simple while sanke, showa and asagi carry black or orange, so the shoal shows a spread of colour topologies rather than eight of one.
   vanilla: { pattern: 'ogon', body: '#efe3c8', shade: '#d8c49a' },
   react: { pattern: 'asagi', body: '#eef0ee', shade: BENI_ORANGE },

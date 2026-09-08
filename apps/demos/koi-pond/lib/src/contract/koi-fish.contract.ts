@@ -1,21 +1,7 @@
-/**
- * The contract every koi speaks, whatever framework renders it.
- *
- * The fish owns its body and its motion; the pond owns the world. That split is
- * the whole protocol: the host announces the water, the light, and who else is
- * nearby, and the fish answers with where its body currently is.
- *
- * High-cadence traffic (`outline`, `neighbors`) is deliberately schema-less so
- * the SDK's payload validator is skipped on the hot path — a whole shoal reporting
- * ten times a second is the one place validation cost would show. Every
- * low-cadence action carries a schema, so a malformed world or a bad depth grant
- * is still caught at the boundary.
- *
- * The shape is declared locally rather than imported from the SDK: the shared
- * lib stays dependency-free so it can be packed and installed into eight apps
- * without dragging a second copy of `@hyperfrontend/features` behind it. Each
- * consuming app checks the object against the real `FeatureContract` type.
- */
+// context: The contract every koi speaks, whatever framework renders it.
+// context: The fish owns its body and its motion; the pond owns the world. That split is the whole protocol: the host announces the water, the light, and who else is nearby, and the fish answers with where its body currently is.
+// context: High-cadence traffic (`outline`, `neighbors`) is deliberately schema-less so the SDK's payload validator is skipped on the hot path: a whole shoal reporting ten times a second is the one place validation cost would show. Every low-cadence action carries a schema, so a malformed world or a bad depth grant is still caught at the boundary.
+// context: The shape is declared locally rather than imported from the SDK: the shared lib stays dependency-free so it can be packed and installed into eight apps without dragging a second copy of `@hyperfrontend/features` behind it. Each consuming app checks the object against the real `FeatureContract` type.
 
 /** One action in a direction of the contract. */
 export interface KoiActionDescription {

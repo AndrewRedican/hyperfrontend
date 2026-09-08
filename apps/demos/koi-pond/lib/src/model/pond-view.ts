@@ -1,17 +1,8 @@
-/**
- * The one view of the pond every fish agrees to draw through.
- *
- * Eight applications each render one koi into their own transparent frame, and
- * the frames are composited into a single scene. That only reads as *one* pond
- * if every application builds the same camera, lights its koi the same way and
- * exposes the same tone curve — a koi that is warmer, larger or more oblique
- * than its neighbours breaks the illusion instantly.
- *
- * This module is the agreement, expressed as numbers. It is deliberately
- * renderer-free so the host — which draws no fish — can reason about the view
- * without ever importing a rendering engine. The camera *builder* that turns
- * these numbers into a projection lives in the `./three` entry.
- */
+// context: The one view of the pond every fish agrees to draw through.
+// context: Eight applications each render one koi into their own transparent frame, and the frames are composited into a single scene.
+// context: That only reads as *one* pond if every application builds the same camera, lights its koi the same way and exposes the same tone curve; a koi that is warmer, larger or more oblique than its neighbours breaks the illusion instantly.
+// context: This module is the agreement, expressed as numbers. It is deliberately renderer-free so the host (which draws no fish) can reason about the view without ever importing a rendering engine.
+// context: The camera *builder* that turns these numbers into a projection lives in the `./three` entry.
 
 /** The numbers every fish derives its camera and renderer setup from. */
 export interface PondViewSpec {
