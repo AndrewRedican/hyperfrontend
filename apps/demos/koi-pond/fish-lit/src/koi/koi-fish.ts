@@ -17,12 +17,12 @@
  *
  * @module @hyperfrontend/demo-koi-fish-lit.element
  */
+import type { PropertyDeclarations, TemplateResult } from 'lit'
 import type { KoiRuntime } from '@hyperfrontend/demo-koi-lib'
 import type { GlRenderer } from '@hyperfrontend/demo-koi-lib/three'
-import type { PropertyDeclarations, TemplateResult } from 'lit'
-import { FRAMEWORK_SITES, koiProfile, koiSourceUrl } from '@hyperfrontend/demo-koi-lib'
 import { LitElement, css, html } from 'lit'
 import { styleMap } from 'lit/directives/style-map.js'
+import { FRAMEWORK_SITES, koiProfile, koiSourceUrl } from '@hyperfrontend/demo-koi-lib'
 import { feature } from '../hyperfrontend.feature'
 import { createKoiRenderer } from './koi-render'
 import { KoiSwimController } from './koi-swim-controller'

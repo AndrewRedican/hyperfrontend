@@ -7,8 +7,8 @@
  * runtime keeps owning the animation frame, the renderer, and the channel to
  * the pond host; the controller only ties that lifetime to the host element's.
  */
-import type { KoiRuntime, KoiRuntimeInit } from '@hyperfrontend/demo-koi-lib'
 import type { ReactiveController, ReactiveControllerHost } from 'lit'
+import type { KoiRuntime, KoiRuntimeInit } from '@hyperfrontend/demo-koi-lib'
 import { createKoiRuntime } from '@hyperfrontend/demo-koi-lib'
 
 /**

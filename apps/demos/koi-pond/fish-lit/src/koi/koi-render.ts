@@ -45,7 +45,7 @@ const HELD_OUTLINE = 1
  * @param profile - Everything about this koi that never changes.
  * @param pond - The world at build time; later announcements arrive via `setPond`.
  * @param createGl - The GL factory, replaceable so specs can run headless.
- * @returns The renderer.
+ * @returns The renderer the runtime loop drives: it draws this koi into the frame's own box, re-sizes to every pond the host announces, and on disposal releases the stage and removes the canvas, leaving the template's card hidden where the next renderer will find it, so a stood-down koi can be built again on wake.
  *
  * @example Drawing a koi each frame
  * ```typescript
