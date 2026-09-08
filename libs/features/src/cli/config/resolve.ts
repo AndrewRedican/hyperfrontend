@@ -4,7 +4,7 @@ import { dirname, isAbsolute, resolve } from 'node:path'
 import { isArray } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { canonicalVersion } from '../../generators/shared/canonical-version'
-import { validateContract, validateDisplayConfig, validateFeatureConfig } from '../../shared/contract'
+import { validateContract, validateDisplayConfig, validateFeatureConfig, validateIsolationConfig } from '../../shared/contract'
 import { discoverConfigFile, FEATURE_CONFIG_BASENAME } from './discover'
 import { loadModuleFile } from './load-module'
 
@@ -130,12 +130,15 @@ export async function resolveBuildConfig(options: ResolveBuildConfigOptions): Pr
       `Contract version "${contract.version}" does not match the feature version "${config.version}". Align the contract's "version" with the config, or remove it to inherit the config version.`
     )
   }
-  const display = loaded['display'] === undefined ? undefined : validateDisplayConfig(loaded['display'])
+  const isolation = loaded['isolation'] === undefined ? undefined : validateIsolationConfig(loaded['isolation'])
+  // why: The display check needs the isolation alongside it, so a mode the origin's opener policy can never serve is refused with the other display problems rather than shipping a shell that cannot connect.
+  const display = loaded['display'] === undefined ? undefined : validateDisplayConfig(loaded['display'], isolation)
   const permissions = parsePermissions(loaded['permissions'])
 
   const resolved: ResolvedFeatureConfig = {
     ...config,
     url: flags.url ?? (typeof loaded['url'] === 'string' ? loaded['url'] : '/'),
+    ...(isolation !== undefined && { isolation }),
     ...(display !== undefined && { display }),
     ...(permissions !== undefined && { permissions }),
     protocol: protocol as SecurityProtocol,

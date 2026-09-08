@@ -10,6 +10,7 @@ export type { RequestHandler, RequestOptions } from './shared/request'
 export type { ServeConfig, ServeHeaderRule } from './shared/serve-types'
 export type {
   ActionDescription,
+  AuthoredDisplayConfig,
   BackdropBehavior,
   BoxPosition,
   DevAppConfig,
@@ -19,21 +20,28 @@ export type {
   DisplayConfig,
   ExperiencePlugin,
   ExperiencePluginContext,
+  FeatureCoep,
   FeatureConfig,
   FeatureContract,
   FeatureDescriptor,
+  FeatureIsolation,
   FeatureOptions,
   FeaturePermission,
   FixedEmbedSize,
+  FramedDisplayConfig,
+  FramedDisplayMode,
   PopupWindowConfig,
   ResolvedFeatureConfig,
+  SameOriginIsolation,
   SandboxOptions,
   SecurityProtocol,
   ShellOptions,
   UnresponsiveInfo,
   UnresponsivePolicy,
+  WindowedDisplayMode,
 } from './shared/types'
 export { validateContract, validateFeatureConfig, validatePayload } from './shared/contract'
+export { defineConfig, defineDevConfig } from './shared/define-config'
 export { sdkInfo } from './shared/sdk-info'
 export { defineServeConfig } from './shared/serve-types'
-export { DisplayMode, defineConfig, defineDevConfig } from './shared/types'
+export { DisplayMode } from './shared/types'

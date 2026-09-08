@@ -33,6 +33,7 @@ export function generateMetadata(config: ResolvedFeatureConfig, contract: Featur
     url: config.url,
     contract,
     modes: resolveDeclaredModes(config),
+    ...(config.isolation !== undefined && { isolation: config.isolation }),
     ...(config.protocol !== undefined && { protocol: config.protocol }),
     ...(config.permissions !== undefined && { permissions: config.permissions }),
     generatedBy: '@hyperfrontend/features',

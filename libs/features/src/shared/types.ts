@@ -24,6 +24,23 @@ export const DisplayMode = freeze({
 export type DisplayMode = (typeof DisplayMode)[keyof typeof DisplayMode]
 
 /**
+ * Display modes that mount inside the host's own document.
+ *
+ * A nested browsing context is unaffected by the opener policy of the origin it
+ * loads, so these modes stay available to a cross-origin isolated feature.
+ */
+export type FramedDisplayMode = Extract<DisplayMode, 'embedded' | 'dialog'>
+
+/**
+ * Display modes that open a top-level browser window.
+ *
+ * These depend on the opener relationship surviving the feature document's
+ * load, which a cross-origin isolated origin severs for every opener that is
+ * not both same-origin and itself isolated.
+ */
+export type WindowedDisplayMode = Extract<DisplayMode, 'popup' | 'standalone'>
+
+/**
  * How the host reacts when the feature reports a pointer interaction on the
  * dialog backdrop (the transparent area outside the feature's dialog box).
  *
@@ -405,9 +422,13 @@ export interface FeatureOptions {
  * The tiered loader and CLI flag parity live in the CLI; the SDK only exports
  * the type and the {@link defineConfig} identity helper. Beyond the three
  * identity keys, the build also reads the optional `url`, `protocol`,
- * `display`, and `permissions` keys declared here.
+ * `isolation`, `display`, and `permissions` keys declared here.
+ *
+ * The `isolation` key parameterises `display`: declaring isolation without
+ * same-origin reach withdraws the windowed display modes, so a configuration
+ * the browser could never connect does not typecheck.
  */
-export interface FeatureConfig {
+export interface FeatureConfig<I extends FeatureIsolation | undefined = undefined> {
   /** Published feature name. */
   name: string
   /** Feature version string. */
@@ -418,8 +439,10 @@ export interface FeatureConfig {
   url?: string
   /** Security envelope baked into the generated shell; `hf build` requires an explicit choice. */
   protocol?: SecurityProtocol
-  /** Display modes and per-mode defaults baked into the generated shell. */
-  display?: DisplayConfig
+  /** Cross-origin isolation this feature's origin needs; the bare COEP value also declares cross-origin reach, which withdraws the windowed display modes. */
+  isolation?: I
+  /** Display modes and per-mode defaults baked into the generated shell, narrowed to what the declared isolation can serve. */
+  display?: AuthoredDisplayConfig<I>
   /** Permissions-Policy features the shell delegates to the feature frame. */
   permissions?: FeaturePermission[]
 }
@@ -489,15 +512,88 @@ export interface DisplayConfig {
 }
 
 /**
+ * COEP value a feature origin sends alongside `Cross-Origin-Opener-Policy:
+ * same-origin` to become cross-origin isolated.
+ *
+ * `require-corp` demands an explicit opt-in header from every cross-origin
+ * subresource; `credentialless` instead strips credentials from those requests,
+ * which is easier to adopt for a feature that loads third-party assets.
+ */
+export type FeatureCoep = 'require-corp' | 'credentialless'
+
+/**
+ * Isolation declared by a feature that is served only to same-origin hosts
+ * which are themselves isolated.
+ *
+ * That is the one pairing a `Cross-Origin-Opener-Policy: same-origin` document
+ * keeps its opener across, so it is the one declaration under which an isolated
+ * feature may still offer the windowed display modes.
+ */
+export interface SameOriginIsolation {
+  /** COEP value the origin sends alongside the opener policy. */
+  coep: FeatureCoep
+  /** The only reach an isolated origin keeps an opener for. */
+  hosts: 'same-origin'
+}
+
+/**
+ * Cross-origin isolation a feature's origin needs, and the reach it is served to.
+ *
+ * Isolation unlocks `SharedArrayBuffer` and
+ * `performance.measureUserAgentSpecificMemory`, and it requires
+ * `Cross-Origin-Opener-Policy: same-origin`. That header severs the opener of
+ * any window opened onto this origin unless the opener is both same-origin and
+ * itself isolated, and a severed opener can never complete the session
+ * handshake.
+ *
+ * The bare COEP value declares the ordinary case, a feature served to hosts on
+ * other origins, which therefore supports only the framed display modes. The
+ * object form declares that this feature is served exclusively to same-origin
+ * isolated hosts, the one pairing the browser leaves intact, and keeps the
+ * windowed modes available.
+ */
+export type FeatureIsolation = FeatureCoep | SameOriginIsolation
+
+/**
+ * Whether a declared isolation still permits windows that keep their opener.
+ */
+type KeepsWindowedModes<I> = [I] extends [undefined] ? true : I extends SameOriginIsolation ? true : false
+
+/**
+ * The presentation agreement available to a feature whose origin is isolated
+ * and served to hosts elsewhere.
+ *
+ * Such an origin severs the opener of every window a cross-origin host opens
+ * onto it, so the windowed modes are absent and the popup section that would
+ * configure one of them goes with it.
+ */
+export interface FramedDisplayConfig extends Omit<DisplayConfig, 'modes' | 'popup'> {
+  /** Display modes the feature supports; an isolated origin serves only these to cross-origin hosts. */
+  modes?: FramedDisplayMode[]
+  /** Withdrawn: an isolated origin cannot serve `popup` to a cross-origin host, so its defaults would configure nothing. */
+  popup?: never
+}
+
+/**
+ * The `display` shape available to a feature that declared isolation `I`.
+ *
+ * Identical to {@link DisplayConfig} wherever the windowed modes are reachable,
+ * and {@link FramedDisplayConfig} where they are not.
+ */
+export type AuthoredDisplayConfig<I> = KeepsWindowedModes<I> extends true ? DisplayConfig : FramedDisplayConfig
+
+/**
  * A fully-resolved feature configuration: the parsed config plus the values the
  * shell and feature-integration generators bake into their output.
  *
  * The CLI resolves this from the config file and flags; the generators receive
  * it ready to use and never read it from disk.
  */
-export interface ResolvedFeatureConfig extends FeatureConfig {
+export interface ResolvedFeatureConfig extends Omit<FeatureConfig, 'isolation'> {
   /** URL of the feature app the generated shell loads. */
   url: string
+  /** Cross-origin isolation the build resolved from the config, when the feature declared any. */
+  isolation?: FeatureIsolation
   /** Declared display modes and per-mode defaults baked into the generated shell. */
   display?: DisplayConfig
   /** Permissions-Policy features the feature declared it needs; baked into the generated shell as its default `permissions`. */
@@ -525,6 +621,8 @@ export interface FeatureDescriptor {
   contract: FeatureContract
   /** Display modes the generated shell composes; reviewable without unpacking the bundle. */
   modes: DisplayMode[]
+  /** Cross-origin isolation the feature's origin declared, when it declared any; explains why the windowed modes are absent. */
+  isolation?: FeatureIsolation
   /** Security envelope baked into the shell, when one was resolved. */
   protocol?: SecurityProtocol
   /** Permissions-Policy features the feature declared it needs, when any; reviewable without unpacking the bundle. */
@@ -570,30 +668,3 @@ export interface DevConfig {
   /** Debug-UI toggles. */
   debug?: DevDebugConfig
 }
-
-/**
- * Identity helper that gives `feature.config.*` files type-checked authoring:
- * a pure inference-only function that returns its argument unchanged.
- *
- * @param config - The feature configuration object.
- * @returns The same configuration object, narrowed to {@link FeatureConfig}.
- *
- * @example Authoring a typed `feature.config.ts`
- * ```typescript
- * export default defineConfig({ name: 'clock', version: '1.0.0', contract: './clock.contract.json' })
- * ```
- */
-export const defineConfig = (config: FeatureConfig): FeatureConfig => config
-
-/**
- * Identity helper that gives `hf-dev.config.*` files type-checked authoring.
- *
- * @param config - The dev-server configuration object.
- * @returns The same configuration object, narrowed to {@link DevConfig}.
- *
- * @example Authoring a typed `hf-dev.config.ts`
- * ```typescript
- * export default defineDevConfig({ apps: [{ name: 'clock', outputDir: 'dist/clock', port: 4200 }] })
- * ```
- */
-export const defineDevConfig = (config: DevConfig): DevConfig => config

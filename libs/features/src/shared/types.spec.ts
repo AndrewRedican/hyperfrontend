@@ -1,5 +1,6 @@
 import { describe, expect, it } from '@hyperfrontend/testing'
-import { DisplayMode, defineConfig, defineDevConfig } from './types'
+import { defineConfig, defineDevConfig } from './define-config'
+import { DisplayMode } from './types'
 
 describe('DisplayMode', () => {
   it('exposes all four baked-in display modes', () => {
