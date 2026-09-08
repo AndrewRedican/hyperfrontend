@@ -15,6 +15,9 @@ const DEFAULT_SERVE_PORT = 4284
 // note: The only artifact-carried config format; TS/JS configs need the loader's import machinery and belong beside the project instead.
 const ARTIFACT_CONFIG_FILENAME = `${SERVE_CONFIG_BASENAME}.json`
 
+// note: The COEP values that, paired with COOP same-origin, make a document cross-origin isolated.
+const ISOLATION_VALUES: readonly string[] = ['require-corp', 'credentialless']
+
 // note: RFC 7230 token characters — the only bytes legal in a header field name.
 const HEADER_NAME_PATTERN = /^[!#$%&'*+.^_`|~0-9A-Za-z-]+$/
 
@@ -192,6 +195,9 @@ export function validateServeConfig(value: unknown, sourcePath: string): ServeCo
   if (value['log'] !== undefined && typeof value['log'] !== 'boolean') {
     throw createError(`${sourcePath}: "log" must be a boolean.`)
   }
+  if (value['isolation'] !== undefined && (typeof value['isolation'] !== 'string' || !ISOLATION_VALUES.includes(value['isolation']))) {
+    throw createError(`${sourcePath}: "isolation" must be one of ${ISOLATION_VALUES.join(', ')}.`)
+  }
   const headers = value['headers']
   if (headers !== undefined && !isArray(headers)) {
     throw createError(`${sourcePath}: "headers" must be an array.`)
@@ -200,6 +206,37 @@ export function validateServeConfig(value: unknown, sourcePath: string): ServeCo
     headers.forEach((rule, index) => validateHeaderRule(rule, index, sourcePath))
   }
   return value as unknown as ServeConfig
+}
+
+/**
+ * Expands a declared isolation into the header rule that produces it.
+ *
+ * `Cross-Origin-Opener-Policy: same-origin` and the chosen
+ * `Cross-Origin-Embedder-Policy` are what make the document cross-origin
+ * isolated; `Cross-Origin-Resource-Policy: cross-origin` keeps the origin
+ * embeddable by hosts elsewhere, which is what a feature is for.
+ *
+ * @param isolation - The declared COEP value, or `undefined` when none was declared.
+ * @returns A single-element rule list applied to every path, or an empty list.
+ *
+ * @example Expanding a declared isolation
+ * ```typescript
+ * isolationRules('require-corp')
+ * ```
+ */
+function isolationRules(isolation: ServeConfig['isolation']): readonly ServeHeaderRule[] {
+  if (isolation === undefined) {
+    return []
+  }
+  return [
+    {
+      headers: {
+        'Cross-Origin-Opener-Policy': 'same-origin',
+        'Cross-Origin-Embedder-Policy': isolation,
+        'Cross-Origin-Resource-Policy': 'cross-origin',
+      },
+    },
+  ]
 }
 
 /**
@@ -274,7 +311,8 @@ export async function resolveServeConfig(options: ResolveServeConfigOptions): Pr
     root,
     port: flags.port !== undefined ? parsePort(flags.port, '--port') : (envPort(env) ?? config.port ?? DEFAULT_SERVE_PORT),
     ...(host !== undefined && { host }),
-    headers: config.headers ?? [],
+    // why: The expansion leads so a hand-written rule for any of the three still wins — declaring the intent must not take the escape hatch away.
+    headers: [...isolationRules(config.isolation), ...(config.headers ?? [])],
     log: config.log ?? true,
     ...(sourcePath !== null && { sourcePath }),
   }
