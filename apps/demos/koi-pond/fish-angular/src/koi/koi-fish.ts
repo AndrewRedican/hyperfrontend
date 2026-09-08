@@ -90,12 +90,20 @@ export class KoiFish implements AfterViewInit, OnDestroy {
 
   private teardown: (() => void) | null = null
 
-  /** The framework's official site, linked from the card's penultimate line. */
+  /**
+   * The framework's official site, linked from the card's penultimate line.
+   *
+   * @returns The home page of the framework this koi is written in.
+   */
   site(): string {
     return FRAMEWORK_SITES[this.profile().framework]
   }
 
-  /** This very app's implementation in the repository, linked from the card's last line. */
+  /**
+   * This very app's implementation in the repository, linked from the card's last line.
+   *
+   * @returns The repository page holding the source of the app that draws this koi.
+   */
   source(): string {
     return koiSourceUrl(this.profile().framework)
   }
