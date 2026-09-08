@@ -161,8 +161,8 @@ Two more claims run alongside it:
   pins protocol `v3`; that is the real cross-site boundary.
 - **Identity is seeded.** Every reproducible trait (behaviour, build, phenotype, swim trim,
   markings, entry station) derives from one integer seed per instance through
-  `createRandomGenerator`, one seeded stream per property band, so the same fish appears on
-  every reload and the host and fish agree on its size without exchanging a message. Each framework wears a real nishikigoi variety
+  `randomPseudo`, so the same fish appears on every reload and the host and fish agree on
+  its size without exchanging a message. Each framework wears a real nishikigoi variety
   whose dominant marking is its brand colour; the whites, sumi blacks and oranges are the
   variety's own and mean nothing.
 
