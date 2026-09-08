@@ -96,6 +96,25 @@ module.exports = [
     },
   },
   {
+    // context: no demo carries a lint target; these three only stop an editor resolving this config from reporting a shipped demo against rules it cannot satisfy from a consumer's seat.
+    files: ['apps/demos/**/*.ts', 'apps/demos/**/*.tsx'],
+    rules: {
+      // why: the safe built-in copies live in an internal package a consumer-lens demo must not depend on, so the rule is unsatisfiable rather than unmet.
+      'workspace/no-unsafe-builtin-methods': 'off',
+      // why: a demo consumes the published packages by npm name, and the project graph resolves those names through the tsconfig path aliases and reads them as coupling to workspace sources.
+      '@nx/enforce-module-boundaries': 'off',
+      // why: a shipped simulation is an exhibit; splitting its steering brain or pond assembly for a line count is surgery that changes nothing a visitor sees.
+      'workspace/max-file-lines': 'off',
+    },
+  },
+  {
+    // context: the features CLI owns the `<hf:feature>` block at the top of a demo's entry module and deliberately imports the feature handle first. Ordering that block by source category moves the import and drops the block's closing marker, so the CLI can no longer find the region it manages.
+    files: ['apps/demos/**/src/main.ts', 'apps/demos/**/src/main.tsx'],
+    rules: {
+      'workspace/import-order': 'off',
+    },
+  },
+  {
     // context: package-e2e projects consume @hyperfrontend packages installed from built tarballs, not workspace sources.
     // context: their specs also import shared helpers that live one level above each project root.
     files: ['apps/package-e2e/**/*.ts'],
