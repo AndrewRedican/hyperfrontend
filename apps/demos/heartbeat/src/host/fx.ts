@@ -1,8 +1,5 @@
-/**
- * Pure geometry and state logic for the host's stage effects — the toast
- * stickers that pop off extra beats and the skull that haunts a flatline.
- * The DOM painter stays thin; everything measurable lives here.
- */
+// context: Pure geometry and state logic for the host's stage effects: the toast stickers that pop off extra beats and the skull that haunts a flatline.
+// context: The DOM painter stays thin; everything measurable lives here.
 
 /** Closest a toast may spawn to the heart's centre (px) — near, never on it. */
 export const TOAST_MIN_START_RADIUS = 36

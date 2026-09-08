@@ -1,13 +1,6 @@
-/**
- * Measured heart rate derived from observed beat timestamps.
- *
- * The displayed rate is never copied from the configured target: it is
- * computed from the beats that actually happened — scheduled beats, visitor
- * extras, jitter, pauses, and recoveries all move it. While beats flow, the
- * reading follows the mean observed interval; once they stop, the growing
- * silence takes over the estimate so the value decays instead of freezing,
- * and it reaches 0 when the window empties.
- */
+// context: Measured heart rate derived from observed beat timestamps.
+// context: The displayed rate is never copied from the configured target: it is computed from the beats that actually happened, so scheduled beats, visitor extras, jitter, pauses, and recoveries all move it.
+// context: While beats flow, the reading follows the mean observed interval; once they stop, the growing silence takes over the estimate so the value decays instead of freezing, and it reaches 0 when the window empties.
 
 /** How far back observed beats count toward the measured rate. */
 export const DEFAULT_WINDOW_MS = 10000

@@ -63,8 +63,7 @@ export function wireHeartbeatContract(feature: FeatureLink, rhythm: RhythmLink):
     feature.setDirty(change.state !== 'beating')
   })
 
-  // how: A correlated request gets the echo back directly; the `pong` event
-  // still fires so plain event listeners observe the answer too.
+  // how: A correlated request gets the echo back directly; the `pong` event still fires so plain event listeners observe the answer too.
   feature.handle('ping', (data) => {
     if (!isRecord(data) || typeof data['seq'] !== 'number' || typeof data['sentAt'] !== 'number') {
       throw new Error('ping requires numeric seq and sentAt')

@@ -3,7 +3,6 @@
  * with, so visitors recognise the stage as an embedded page of a different
  * framework than its host. Rendered by the feature — the badge travels with
  * the page wherever it is embedded.
- *
  * @returns The badge markup with the React mark and label.
  */
 export function FrameworkBadge() {

@@ -14,7 +14,7 @@ import { wireHeartbeatContract } from './feature/wire-contract'
 import { featureUi } from './state/feature-ui'
 import { heartRhythm } from './state/heart-rhythm'
 
-/** The @hyperfrontend/demo-heartbeat feature handle; use it to send and receive contract actions. */
+/** The `@hyperfrontend/demo-heartbeat` feature handle; use it to send and receive contract actions. */
 export const feature = createFeature({
   name: '@hyperfrontend/demo-heartbeat',
   contract,

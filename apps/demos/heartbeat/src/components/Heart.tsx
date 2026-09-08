@@ -30,8 +30,8 @@ const GOO_ALPHA_MATRIX = '1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 26 -13'
  * `hb-underlay`) each pulse on their own schedule per beat, and a gooey filter
  * over the shared container blends neighbouring plates so the cuts between
  * them never read as straight seams mid-beat.
- *
  * @param props - The {@link HeartProps}.
+ * @param props.svgRef - Ref the beat driver reads to reach the stage groups inside this heart's `<svg>` root.
  * @returns The inline SVG illustration.
  */
 export function Heart({ svgRef }: HeartProps) {

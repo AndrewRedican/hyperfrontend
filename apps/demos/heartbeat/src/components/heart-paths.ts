@@ -1,9 +1,5 @@
-/**
- * Path geometry for the anatomical heart, decomposed from the source artwork
- * into its natural subpaths so each region can pulse independently. All
- * coordinates live in the artwork's original user space; the drawing is
- * cropped by the {@link HEART_VIEW_BOX}.
- */
+// context: Path geometry for the anatomical heart, decomposed from the source artwork into its natural subpaths so each region can pulse independently.
+// context: All coordinates live in the artwork's original user space; the drawing is cropped by the `HEART_VIEW_BOX` below.
 
 /** Crop of the source artwork's canvas tight to the heart, with breathing room. */
 export const HEART_VIEW_BOX = '52 1 106 140'

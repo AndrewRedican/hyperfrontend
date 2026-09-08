@@ -25,7 +25,6 @@ const READOUT_TICK_MS = 250
  * measured rate/state readout underneath. The number shown is never the
  * configured target — it is computed from the beats that actually happened,
  * so extra taps raise it, holds decay it, and recoveries climb back.
- *
  * @returns The feature UI.
  */
 export default function App() {
