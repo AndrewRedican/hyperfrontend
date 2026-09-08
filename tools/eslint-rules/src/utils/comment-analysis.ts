@@ -81,6 +81,8 @@ export const TOOLING_DIRECTIVE_PATTERNS = [
   '@ts-expect-error',
   '@ts-nocheck',
   '@ts-check',
+  // note: a triple-slash reference reaches the rule as a line comment whose value opens with the third slash.
+  '/ <reference',
   'eslint-disable',
   'eslint-enable',
   'eslint-disable-line',
@@ -100,6 +102,9 @@ export const TOOLING_DIRECTIVE_PATTERNS = [
   'webpackInclude',
   'webpackExclude',
   'vite-ignore',
+  // note: the features CLI fences the block it manages in a feature's entry module with these markers and rewrites it in place.
+  '<hf:',
+  '</hf:',
   'prettier-ignore',
   '@vite-ignore',
   '@rollup-plugin-ignore',
