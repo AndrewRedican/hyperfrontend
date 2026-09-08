@@ -16,10 +16,10 @@
  * This is the one browser-facing part of the app. The other seven koi replace it
  * with their own framework's idiom, and share everything else.
  */
-import type { KoiProfile } from '@hyperfrontend/demo-koi-lib'
 import type { VNode } from 'preact'
-import { FRAMEWORK_SITES, koiSourceUrl } from '@hyperfrontend/demo-koi-lib'
+import type { KoiProfile } from '@hyperfrontend/demo-koi-lib'
 import { useLayoutEffect, useRef } from 'preact/hooks'
+import { FRAMEWORK_SITES, koiSourceUrl } from '@hyperfrontend/demo-koi-lib'
 
 /** The card's committed nodes, handed to the imperative renderer as one piece. */
 export interface KoiCardHandles {
@@ -49,7 +49,6 @@ export interface KoiFishProps {
   url: string
   /**
    * Hands the mounted nodes to the imperative renderer.
-   *
    * @param canvas - The canvas the koi's body renders into.
    * @param handles - The identity card's nodes the renderer writes through.
    * @returns The teardown that releases whatever the renderer built on them.
@@ -59,8 +58,10 @@ export interface KoiFishProps {
 
 /**
  * One koi's canvas and identity card.
- *
  * @param props - The {@link KoiFishProps}.
+ * @param props.profile - Everything about this koi that never changes: its colours, its proportions, and the framework it swims for.
+ * @param props.url - The URL of the app rendering it, shown on the identity card.
+ * @param props.mount - Hands the committed canvas and card nodes to the imperative renderer, and returns the teardown that releases them.
  * @returns The canvas the 3D koi renders into and, hidden until a visitor holds the fish, its identity card.
  */
 export function KoiFish({ profile, url, mount }: KoiFishProps): VNode {
