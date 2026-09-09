@@ -22,12 +22,15 @@ export default function DocsPage() {
       </p>
 
       {/* why: the cheapest failure to prevent is a team adopting an architecture that does not fit them, so the fit check sits above installation rather than in the sidebar competing as a destination */}
+      {/* why: it is also the one thing on this page a reader can skip past without noticing, so it is built like the fit assessment's own verdict — the mark stands in a panel of its own and fills the height beside the words, and orients itself once on arrival. A glyph the size of the body text reads as decoration on a link; this reads as a decision. */}
       <Link
         href="/docs/is-hyperfrontend-right-for-you"
-        className="mt-8 flex items-start gap-4 rounded-xl border border-primary-200 bg-primary-50/60 p-5 transition-colors hover:border-primary-400 hover:bg-primary-50 dark:border-primary-900 dark:bg-primary-950/30 dark:hover:border-primary-700 dark:hover:bg-primary-950/50"
+        className="mt-8 flex flex-col gap-4 overflow-hidden rounded-xl border border-primary-200 bg-primary-50/60 transition-colors hover:border-primary-400 hover:bg-primary-50 dark:border-primary-900 dark:bg-primary-950/30 dark:hover:border-primary-700 dark:hover:bg-primary-950/50 sm:flex-row sm:items-stretch sm:gap-6"
       >
-        <CompassIcon className="mt-0.5 h-6 w-6 shrink-0 text-primary-600 dark:text-primary-400" />
-        <span className="block">
+        <span className="flex shrink-0 items-stretch justify-center bg-primary-100 px-6 py-5 dark:bg-primary-900/40 sm:py-6">
+          <CompassIcon className="h-16 w-16 self-center text-primary-600 dark:text-primary-400 sm:h-auto sm:w-auto sm:min-h-[6.5rem] sm:self-stretch" />
+        </span>
+        <span className="block min-w-0 flex-1 px-6 pb-5 sm:py-6 sm:pl-0 sm:pr-7">
           <span className="block font-semibold text-slate-900 dark:text-white">First, check this is the right fit</span>
           <span className="mt-1 block text-sm text-slate-600 dark:text-slate-400">
             Ten minutes now beats a rewrite later. Answer a few questions about your systems and teams to find out whether HyperFrontend
@@ -155,7 +158,8 @@ function CompassIcon({ className }: CheckIconProps) {
   return (
     <svg className={className} fill="none" viewBox="0 0 24 24" strokeWidth={1.6} stroke="currentColor" aria-hidden="true">
       <path strokeLinecap="round" strokeLinejoin="round" d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Z" />
-      <path strokeLinecap="round" strokeLinejoin="round" d="m14.6 9.4-1.5 4.1-4.1 1.5 1.5-4.1 4.1-1.5Z" />
+      {/* why: only the needle turns, and only once — the dial it turns inside is what makes the motion read as a compass finding north rather than as something still loading */}
+      <path className="compass-needle" strokeLinecap="round" strokeLinejoin="round" d="m14.6 9.4-1.5 4.1-4.1 1.5 1.5-4.1 4.1-1.5Z" />
     </svg>
   )
 }

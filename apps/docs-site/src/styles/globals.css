@@ -306,6 +306,47 @@
 }
 
 @layer components {
+  /* The needle of the compass on the fit-check callout, swinging to north once
+     as the page arrives.
+
+     It is an entrance, not a status: it runs a single time, and what it is
+     there to do is pull the eye to the one thing on this page a reader can
+     skip past and later regret skipping. The long tail of the easing is what
+     separates the two readings — a spinner turns at a constant rate forever,
+     and this throws the needle around and then spends most of its two and a
+     half seconds coming to rest, overshooting north by a few degrees on the
+     way like a needle with mass behind it.
+
+     Only the needle turns. The dial stays put, so the shape stays a compass
+     throughout rather than becoming a rotating glyph, and the rotation is
+     about the dial's centre rather than the needle's own box, which is what
+     `transform-box: view-box` buys. */
+  .compass-needle {
+    transform-box: view-box;
+    transform-origin: 50% 50%;
+    animation: compass-orient 2.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  @keyframes compass-orient {
+    0% {
+      transform: rotate(-540deg);
+    }
+    78% {
+      transform: rotate(9deg);
+    }
+    100% {
+      transform: rotate(0deg);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .compass-needle {
+      animation: none;
+    }
+  }
+}
+
+@layer components {
   /* The landing page's lit band, directly under the hero.
 
      Everything here is one idea: light entering a body of blue water from
