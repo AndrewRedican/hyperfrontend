@@ -1,5 +1,6 @@
 'use client'
 
+import type { ReactNode } from 'react'
 import { useEffect, useMemo, useRef } from 'react'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { setTimeout, clearTimeout } from '@hyperfrontend/immutable-api-utils/built-in-copy/timers'
@@ -20,6 +21,16 @@ interface MermaidDiagramEntry {
 interface ReadmeContentProps {
   html: string
   mermaidDiagrams: MermaidDiagramEntry[]
+  /**
+   * Components to render where the markdown carries a matching
+   * `<div data-readme-slot="name">` placeholder, keyed by that name.
+   *
+   * This is how a page replaces a section of a README with richer UI without
+   * the README learning anything about the site: the markdown keeps its
+   * heading and its position in the document, and the renderer swaps one
+   * placeholder for a component at exactly the point the removed content sat.
+   */
+  slots?: Record<string, ReactNode>
 }
 
 /**
@@ -208,22 +219,28 @@ interface ReadmeMermaidPart {
   id: string
 }
 
+/** Component-slot placeholder reference in the README split sequence */
+interface ReadmeSlotPart {
+  type: 'slot'
+  id: string
+}
+
 /**
- * Discriminated chunk emitted while splitting README HTML around mermaid
+ * Discriminated chunk emitted while splitting README HTML around its
  * placeholders so each chunk can be rendered inline in document order.
  */
-type ReadmePart = ReadmeHtmlPart | ReadmeMermaidPart
+type ReadmePart = ReadmeHtmlPart | ReadmeMermaidPart | ReadmeSlotPart
 
-export function ReadmeContent({ html, mermaidDiagrams }: ReadmeContentProps) {
+export function ReadmeContent({ html, mermaidDiagrams, slots }: ReadmeContentProps) {
   const containerRef = useRef<HTMLDivElement>(null)
 
   // why: Build diagram lookup map for efficient access during rendering
   const diagramMap = useMemo(() => createMap(mermaidDiagrams.map((d) => [d.id, d.chart])), [mermaidDiagrams])
 
-  // why: Split HTML on mermaid placeholders to enable inline rendering
+  // why: Split HTML on placeholders to enable inline rendering
   const parts = useMemo(() => {
-    // note: Regex captures the ID from: <div data-mermaid-id="mermaid-block-0"></div>
-    const placeholderPattern = /<div data-mermaid-id="([^"]+)"><\/div>/g
+    // note: Regex captures the kind and ID from: <div data-mermaid-id="mermaid-block-0"></div> or <div data-readme-slot="capabilities"></div>
+    const placeholderPattern = /<div data-(mermaid-id|readme-slot)="([^"]+)"><\/div>/g
     const result: ReadmePart[] = []
 
     let lastIndex = 0
@@ -234,8 +251,8 @@ export function ReadmeContent({ html, mermaidDiagrams }: ReadmeContentProps) {
       if (match.index > lastIndex) {
         result.push({ type: 'html', content: html.slice(lastIndex, match.index) })
       }
-      // why: Add mermaid placeholder reference
-      result.push({ type: 'mermaid', id: match[1] })
+      // why: Add the placeholder reference, so the component lands where the markdown put it
+      result.push(match[1] === 'mermaid-id' ? { type: 'mermaid', id: match[2] } : { type: 'slot', id: match[2] })
       lastIndex = match.index + match[0].length
     }
 
@@ -307,6 +324,11 @@ export function ReadmeContent({ html, mermaidDiagrams }: ReadmeContentProps) {
       {parts.map((part, index) => {
         if (part.type === 'html') {
           return <div key={`html-${index}`} className={proseClasses} dangerouslySetInnerHTML={{ __html: part.content }} />
+        }
+
+        // why: Render the slot's component inline at the point the markdown reserved for it
+        if (part.type === 'slot') {
+          return slots?.[part.id] ? <div key={`slot-${part.id}`}>{slots[part.id]}</div> : null
         }
 
         // why: Render mermaid diagram inline at its original position
