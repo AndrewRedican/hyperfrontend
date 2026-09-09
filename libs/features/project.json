@@ -5,6 +5,16 @@
   "sourceRoot": "{projectRoot}/src",
   "projectType": "library",
   "tags": ["type:protocol", "scope:public"],
+  "metadata": {
+    "compatibility": {
+      "environments": {
+        "node": "full",
+        "browser": "full",
+        "webWorker": "partial"
+      },
+      "note": "Support is per entry point: `/host` and `/hostee` are browser runtimes, `/cli`, `/server`, and `/generators` are Node-only, and the root entry is DOM-free and runs anywhere."
+    }
+  },
   "targets": {
     "version": {},
     "version-check": {},
