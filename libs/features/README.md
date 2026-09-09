@@ -171,7 +171,23 @@ npx @hyperfrontend/features serve --root dist   # serve a built site for product
 | --------------- | --------- |
 | Node.js >= 18   | ✅        |
 | Modern Browsers | ✅        |
-| Tree Shakeable  | ✅        |
+
+Support is per entry point. `/host` and `/hostee` are browser runtimes, `/cli`, `/server`, and `/generators` are Node-only, and the root entry is DOM-free and runs anywhere.
+
+### Output Formats
+
+| Format | File                              | Tree-Shakeable |
+| ------ | --------------------------------- | :------------: |
+| ESM    | `index.esm.js`                    |       ✅       |
+| CJS    | `index.cjs.js`                    |       ❌       |
+| IIFE   | `bundle/host/index.iife.min.js`   |       ❌       |
+| UMD    | `bundle/host/index.umd.min.js`    |       ❌       |
+| IIFE   | `bundle/hostee/index.iife.min.js` |       ❌       |
+| UMD    | `bundle/hostee/index.umd.min.js`  |       ❌       |
+
+**Global variables:** `HyperfrontendFeaturesHost`, `HyperfrontendFeaturesHostee`
+
+The package also installs the `hf` command.
 
 ## License
 
