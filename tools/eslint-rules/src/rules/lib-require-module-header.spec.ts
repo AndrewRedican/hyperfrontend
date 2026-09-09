@@ -1,11 +1,17 @@
 import type { InvalidTestCase, ValidTestCase } from '@typescript-eslint/rule-tester'
+import type { RuleOptions } from './lib-require-module-header'
 import { join } from 'node:path'
 import { after as afterAll } from 'node:test'
 import { createTempWorkspaceManager, createTypeScriptRuleTester } from '../testing'
 import rule, { RULE_NAME } from './lib-require-module-header'
 
-type TestOptions = readonly []
-type MessageIds = 'missingModuleHeader'
+type TestOptions = readonly [RuleOptions?]
+type MessageIds =
+  | 'missingModuleHeader'
+  | 'missingModuleDescription'
+  | 'moduleDescriptionTooLong'
+  | 'moduleDescriptionTooShort'
+  | 'moduleDescriptionRestatesPath'
 
 const manager = createTempWorkspaceManager()
 
@@ -165,6 +171,8 @@ function createValidModuleHeaderCase(): ValidTestCase<TestOptions> {
   return {
     name: 'allows entry point with @module header',
     code: `/**
+ * Fixture helpers for exercising the rule tester.
+ *
  * @module @hyperfrontend/test-lib
  */
 export * from './foo'`,
@@ -274,6 +282,8 @@ function createSecondaryEntrypointCase(): ValidTestCase<TestOptions> {
   return {
     name: 'allows secondary entry point with @module header',
     code: `/**
+ * Assertion helpers shared by the fixture suites.
+ *
  * @module @hyperfrontend/test-lib/utils
  */
 export * from './helpers'`,
@@ -310,6 +320,8 @@ function createExportWithImportKeyCase(): ValidTestCase<TestOptions> {
   return {
     name: 'allows entry point defined via export object with import key',
     code: `/**
+ * Assertion helpers shared by the fixture suites.
+ *
  * @module @hyperfrontend/test-lib/utils
  */
 export * from './helpers'`,
@@ -329,6 +341,8 @@ function createExportWithRequireKeyCase(): ValidTestCase<TestOptions> {
   return {
     name: 'allows entry point defined via export object with require key',
     code: `/**
+ * Assertion helpers shared by the fixture suites.
+ *
  * @module @hyperfrontend/test-lib/cjs
  */
 export * from './helpers'`,
@@ -348,6 +362,8 @@ function createExportWithDefaultKeyCase(): ValidTestCase<TestOptions> {
   return {
     name: 'allows entry point defined via export object with default key',
     code: `/**
+ * Assertion helpers shared by the fixture suites.
+ *
  * @module @hyperfrontend/test-lib/esm
  */
 export * from './helpers'`,
@@ -380,7 +396,7 @@ function createModuleAtEndCase(): ValidTestCase<TestOptions> {
   const projectDir = createTempProject()
   return {
     name: 'allows @module at end of JSDoc comment',
-    code: `/** @module */
+    code: `/** Fixture helpers for exercising the rule tester. @module */
 export * from './foo'`,
     filename: join(projectDir, 'src', 'index.ts'),
   }
@@ -395,7 +411,7 @@ function createModuleWithTabCase(): ValidTestCase<TestOptions> {
   const projectDir = createTempProject()
   return {
     name: 'allows @module followed by tab',
-    code: `/**\n * @module\t@hyperfrontend/test-lib\n */
+    code: `/**\n * Fixture helpers for exercising the rule tester.\n *\n * @module\t@hyperfrontend/test-lib\n */
 export * from './foo'`,
     filename: join(projectDir, 'src', 'index.ts'),
   }
@@ -411,6 +427,8 @@ function createModuleWithNewlineCase(): ValidTestCase<TestOptions> {
   return {
     name: 'allows @module followed by newline',
     code: `/**
+ * Fixture helpers for exercising the rule tester.
+ *
  * @module
  * @hyperfrontend/test-lib
  */
@@ -428,7 +446,7 @@ function createModuleWithCarriageReturnCase(): ValidTestCase<TestOptions> {
   const projectDir = createTempProject()
   return {
     name: 'allows @module followed by carriage return',
-    code: `/**\r\n * @module\r\n */\r\nexport * from './foo'`,
+    code: `/**\r\n * Fixture helpers for exercising the rule tester.\r\n *\r\n * @module\r\n */\r\nexport * from './foo'`,
     filename: join(projectDir, 'src', 'index.ts'),
   }
 }
@@ -467,6 +485,129 @@ export * from './foo'`,
   }
 }
 
+/**
+ * Creates a valid test case whose description is long, but not past the
+ * configured ceiling.
+ *
+ * @returns A valid test case configuration.
+ */
+function createConfiguredLongDescriptionCase(): ValidTestCase<TestOptions> {
+  const projectDir = createTempProject()
+  return {
+    name: 'allows a long description when the ceiling is raised',
+    code: `/**
+ * ${'Fixture helpers for exercising the rule tester across every branch it has. '.repeat(3)}
+ *
+ * @module @hyperfrontend/test-lib
+ */
+export * from './foo'`,
+    filename: join(projectDir, 'src', 'index.ts'),
+    options: [{ maxDescriptionLength: 400 }],
+  }
+}
+
+/**
+ * Creates a valid test case whose description survives a lowered substantive
+ * word floor.
+ *
+ * @returns A valid test case configuration.
+ */
+function createConfiguredSubstantiveWordsCase(): ValidTestCase<TestOptions> {
+  const projectDir = createTempProject()
+  return {
+    name: 'allows a thin description when the substantive word floor is lowered',
+    code: `/**
+ * Test lib entry point, restated.
+ *
+ * @module @hyperfrontend/test-lib
+ */
+export * from './foo'`,
+    filename: join(projectDir, 'src', 'index.ts'),
+    options: [{ minSubstantiveWords: 1, minDescriptionLength: 10 }],
+  }
+}
+
+/**
+ * Creates an invalid test case for a header that opens straight on its tags.
+ *
+ * @returns An invalid test case configuration.
+ */
+function createMissingDescriptionCase(): InvalidTestCase<MessageIds, TestOptions> {
+  const projectDir = createTempProject()
+  return {
+    name: 'reports a @module header with no description',
+    code: `/**
+ * @module @hyperfrontend/test-lib
+ */
+export * from './foo'`,
+    filename: join(projectDir, 'src', 'index.ts'),
+    errors: [{ messageId: 'missingModuleDescription' }],
+  }
+}
+
+/**
+ * Creates an invalid test case for a description that runs on into a
+ * walkthrough of the implementation.
+ *
+ * @returns An invalid test case configuration.
+ */
+function createDescriptionTooLongCase(): InvalidTestCase<MessageIds, TestOptions> {
+  const projectDir = createTempProject()
+  return {
+    name: 'reports a description longer than the ceiling',
+    code: `/**
+ * ${'Fixture helpers for exercising the rule tester across every branch it has. '.repeat(4)}
+ *
+ * @module @hyperfrontend/test-lib
+ */
+export * from './foo'`,
+    filename: join(projectDir, 'src', 'index.ts'),
+    errors: [{ messageId: 'moduleDescriptionTooLong' }],
+  }
+}
+
+/**
+ * Creates an invalid test case for a description too short to say anything.
+ *
+ * @returns An invalid test case configuration.
+ */
+function createDescriptionTooShortCase(): InvalidTestCase<MessageIds, TestOptions> {
+  const projectDir = createTempProject()
+  return {
+    name: 'reports a description shorter than the floor',
+    code: `/**
+ * Parses ranges.
+ *
+ * @module @hyperfrontend/test-lib
+ */
+export * from './foo'`,
+    filename: join(projectDir, 'src', 'index.ts'),
+    errors: [{ messageId: 'moduleDescriptionTooShort' }],
+  }
+}
+
+/**
+ * Creates an invalid test case for a description that only restates the path.
+ *
+ * @returns An invalid test case configuration.
+ */
+function createDescriptionRestatesPathCase(): InvalidTestCase<MessageIds, TestOptions> {
+  const projectDir = createTempProject({
+    exports: { './nx/executors/serve': './src/nx/executors/serve/index.js' },
+  })
+  return {
+    name: 'reports a description that only restates the module path',
+    code: `/**
+ * Nx \`serve\` executor entry point.
+ *
+ * @module @hyperfrontend/test-lib/nx/executors/serve
+ */
+export * from './serve'`,
+    filename: join(projectDir, 'src', 'nx', 'executors', 'serve', 'index.ts'),
+    errors: [{ messageId: 'moduleDescriptionRestatesPath' }],
+  }
+}
+
 ruleTester.run(RULE_NAME, rule, {
   valid: [
     createNonIndexFileCase(),
@@ -484,6 +625,8 @@ ruleTester.run(RULE_NAME, rule, {
     createModuleWithTabCase(),
     createModuleWithNewlineCase(),
     createModuleWithCarriageReturnCase(),
+    createConfiguredLongDescriptionCase(),
+    createConfiguredSubstantiveWordsCase(),
   ],
   invalid: [
     createMissingModuleHeaderCase(),
@@ -493,5 +636,9 @@ ruleTester.run(RULE_NAME, rule, {
     createSecondaryEntrypointMissingCase(),
     createModuleXFalsePositiveCase(),
     createBlockCommentNotJsDocCase(),
+    createMissingDescriptionCase(),
+    createDescriptionTooLongCase(),
+    createDescriptionTooShortCase(),
+    createDescriptionRestatesPathCase(),
   ],
 })
