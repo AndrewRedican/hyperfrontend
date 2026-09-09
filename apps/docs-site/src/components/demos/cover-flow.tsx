@@ -8,7 +8,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { abs, max, min, round } from '@hyperfrontend/immutable-api-utils/built-in-copy/math'
 import { cancelAnimationFrame, requestAnimationFrame } from '@hyperfrontend/immutable-api-utils/built-in-copy/timers'
 import { DemoEmbed } from './demo-embed'
-import { DemoFallbackCard, getDemoTheme, restingStatusFor } from './demo-fallback-card'
+import { DemoFallbackCard, getDemoTheme, isBareDemoCard, restingStatusFor } from './demo-fallback-card'
 import { ExpandButton, ExpandedChrome } from './expanded-chrome'
 import { RingControl } from './ring-control'
 import { useExpandedEmbed } from './use-expanded-embed'
@@ -497,7 +497,8 @@ function CoverFlowCard({
         <button
           type="button"
           onClick={onSelect}
-          className="h-full w-full rounded-2xl shadow-xl"
+          // why: the drop shadow belongs to a card with a surface; on a bare card it would be the only thing drawn, a shadow cast by nothing.
+          className={`h-full w-full rounded-2xl ${isBareDemoCard(entry.slug) ? '' : 'shadow-xl'}`}
           aria-label={`Show the ${entry.title} demo`}
           tabIndex={-1}
         >

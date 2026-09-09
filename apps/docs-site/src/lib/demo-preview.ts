@@ -24,9 +24,11 @@ export interface DemoPreview {
   /**
    * Whether the capture carries its own alpha.
    *
-   * A feature that paints no background is transparent in the live embed too,
-   * and the card's gradient shows through both. One that paints its own
-   * surface is opaque in both.
+   * It is a fact about the feature rather than about the file: a feature that
+   * paints no background is transparent in the live embed too, so its card
+   * paints none either and the still and the live frame hang on the same
+   * backdrop. One that paints its own surface is opaque in both, and its card
+   * carries the accent surface behind it.
    */
   transparent: boolean
 }

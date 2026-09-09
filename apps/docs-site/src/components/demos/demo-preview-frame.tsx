@@ -44,6 +44,8 @@ export function DemoPreviewFrame({ slug, theme, connecting }: DemoPreviewFramePr
         {
           '--demo-accent-light': cssTriple(theme.accent.light),
           '--demo-accent-dark': cssTriple(theme.accent.dark),
+          // why: a still carrying its own alpha has no rectangle to treat, so the stylesheet masks the wash and the sheen to the picture itself, which it cannot reach without being handed it
+          '--demo-preview-still': `url(${preview.src})`,
         } as CSSProperties
       }
     >
@@ -58,20 +60,11 @@ export function DemoPreviewFrame({ slug, theme, connecting }: DemoPreviewFramePr
         className="demo-preview__image h-full w-full object-cover"
       />
       <div className="demo-preview__tint absolute inset-0" />
-      {connecting ? <div className="demo-preview__sheen absolute inset-y-0 -inset-x-1/3 motion-reduce:inset-x-0" /> : null}
+      {connecting ? (
+        <div className="demo-preview__sheen-clip">
+          <div className="demo-preview__sheen absolute inset-y-0 -inset-x-1/3 motion-reduce:inset-x-0" />
+        </div>
+      ) : null}
     </div>
   )
-}
-
-/**
- * Whether a demo's card should carry its still rather than its icon.
- * @param slug - The demo slug to test.
- * @returns `true` when a still is committed for the demo.
- * @example
- * ```tsx
- * {hasDemoPreview(entry.slug) ? null : <DemoIcon slug={entry.slug} />}
- * ```
- */
-export function hasDemoPreview(slug: string): boolean {
-  return demoPreviewFor(slug) !== undefined
 }

@@ -1,7 +1,8 @@
 import type { AccentRGB } from '@/components/tesseract-background'
 import type { DemoManifestEntry } from '@/lib/demo-manifest'
 import { BOUNDARY_LABELS } from '@/lib/demo-manifest'
-import { DemoPreviewFrame, hasDemoPreview } from './demo-preview-frame'
+import { demoPreviewFor } from '@/lib/demo-preview'
+import { DemoPreviewFrame } from './demo-preview-frame'
 
 /** Why the card is standing in for the demo's live surface. */
 export type FallbackStatus = 'planned' | 'built' | 'connecting' | 'offline' | 'idle'
@@ -145,6 +146,29 @@ export function getDemoTheme(slug: string): DemoTheme {
   return THEMES[slug] ?? DEFAULT_THEME
 }
 
+/**
+ * Whether a demo's fallback card paints no surface of its own.
+ *
+ * A feature that draws no background is transparent in the live embed, and
+ * whatever the card sits on is what the visitor sees through it. A card that
+ * painted its own gradient behind the still would have to drain that colour
+ * out of the picture the moment the session proved itself, which is the one
+ * flash the still exists to prevent, so the still is hung on the same backdrop
+ * the live frame will hang on and the card contributes nothing but the clip.
+ *
+ * Whatever surrounds the card has to agree: a shadow or a border drawn around
+ * a card with nothing in it is a frame around a hole.
+ * @param slug - The demo slug to test.
+ * @returns `true` when the demo's still carries its own alpha.
+ * @example
+ * ```tsx
+ * <div className={isBareDemoCard(entry.slug) ? '' : 'shadow-xl'}>
+ * ```
+ */
+export function isBareDemoCard(slug: string): boolean {
+  return demoPreviewFor(slug)?.transparent === true
+}
+
 /** Status-pill copy per fallback status. */
 const STATUS_LABELS: Record<FallbackStatus, string> = {
   planned: 'In planning',
@@ -188,19 +212,26 @@ const FALLBACK_ICON_PATH =
  * non-centered gallery card.
  *
  * Always fills its parent (`h-full w-full`), so the parent owns the aspect
- * ratio. Each demo carries its own accent hue over the shared structure, the
- * card sits at 80% opacity so the page shows through, and only the status
- * pill and corner label change between states.
+ * ratio, and only the status pill and corner label change between states.
+ *
+ * How much of a card there is depends on what it is holding. A demo still in
+ * planning gets the full card: its accent surface at 80% opacity, a dot grid
+ * for texture, and its icon and title in the middle. A demo with a still gets
+ * the picture instead of the icon and the texture, and drops the title the
+ * picture already gives it. A demo whose still carries its own alpha gets no
+ * surface at all, for the reason in {@link isBareDemoCard}.
  * @param root0
  * @param root0.entry
  * @param root0.status
  */
 export function DemoFallbackCard({ entry, status = 'planned' }: DemoFallbackCardProps) {
   const theme = getDemoTheme(entry.slug)
-  const previewed = hasDemoPreview(entry.slug)
+  const preview = demoPreviewFor(entry.slug)
+  const previewed = preview !== undefined
+  const bare = isBareDemoCard(entry.slug)
   return (
     <div
-      className={`relative h-full w-full overflow-hidden rounded-2xl border bg-gradient-to-br ${previewed ? '' : 'opacity-80'} ${theme.surface}`}
+      className={`relative h-full w-full overflow-hidden rounded-2xl ${bare ? '' : `border bg-gradient-to-br ${previewed ? '' : 'opacity-80'} ${theme.surface}`}`}
     >
       {/* note: the dot grid is the texture of an empty card; a card holding a photograph of its demo has no emptiness to texture. */}
       {previewed ? (
@@ -212,9 +243,11 @@ export function DemoFallbackCard({ entry, status = 'planned' }: DemoFallbackCard
         {CORNER_LABELS[status]}
       </span>
       {previewed ? (
-        // why: the still is the card, so the metadata sits at its foot on a soft scrim rather than over the middle of the picture
-        <div className="absolute inset-x-0 bottom-0 flex flex-col items-center gap-2 bg-gradient-to-t from-white/95 via-white/75 to-transparent p-4 pt-14 text-center dark:from-slate-950/95 dark:via-slate-950/70">
-          <h3 className="font-display text-lg font-semibold text-slate-900 dark:text-white">{entry.title}</h3>
+        // why: the picture names the demo, so repeating the name under it says nothing the card is not already saying; only the status the still cannot show is left, at the foot of the picture rather than over the middle of it.
+        // why: the scrim carries the pills over an opaque still; a bare card has the page behind it and the pills already carry their own fills, so laying a white wash over it would put back the surface the card just dropped.
+        <div
+          className={`absolute inset-x-0 bottom-0 flex flex-col items-center gap-2 p-4 text-center ${bare ? '' : 'bg-gradient-to-t from-white/95 via-white/75 to-transparent pt-12 dark:from-slate-950/95 dark:via-slate-950/70'}`}
+        >
           <StatusPills entry={entry} status={status} theme={theme} />
         </div>
       ) : (

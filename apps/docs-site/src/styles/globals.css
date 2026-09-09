@@ -210,13 +210,13 @@
     --demo-preview-accent: var(--demo-accent-dark, 148 163 184);
   }
 
-  /* Dimming is what the card gradient shows through, so it is set per demo
-     rather than globally: a capture that carries its own alpha is already
-     sitting on that gradient and needs very little, while an opaque one is
-     covering it and turns to mush long before it looks subdued. Both end up
-     equally quiet because desaturation and the accent wash are doing most of
-     the work, which is also what keeps the crossfade to live from being a
-     change in brightness. */
+  /* Dimming is what the page shows through, so it is set per demo rather than
+     globally: a capture that carries its own alpha is sitting straight on the
+     page and needs very little, while an opaque one is covering a card and
+     turns to mush long before it looks subdued. Both end up equally quiet
+     because desaturation and the accent wash are doing most of the work, which
+     is also what keeps the crossfade to live from being a change in
+     brightness. */
   .demo-preview__image {
     opacity: 0.82;
     filter: saturate(0.55) contrast(0.98);
@@ -242,6 +242,34 @@
   .demo-preview__tint {
     background-color: rgb(var(--demo-preview-accent) / 0.32);
     mix-blend-mode: soft-light;
+  }
+
+  /* A still that carries its own alpha is hung on a card with no surface, so
+     there is no rectangle for either light layer to fall on: laid over the
+     whole card they would wash the page showing through beside the demo, and
+     the swap to live would have to take that wash away again. Masking both to
+     the still puts the accent and the sheen on the demo itself, which is the
+     only thing there to light. */
+  .demo-preview--transparent .demo-preview__tint,
+  .demo-preview--transparent .demo-preview__sheen-clip {
+    -webkit-mask-image: var(--demo-preview-still);
+    mask-image: var(--demo-preview-still);
+    -webkit-mask-size: cover;
+    mask-size: cover;
+    -webkit-mask-position: center;
+    mask-position: center;
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    mask-mode: alpha;
+  }
+
+  /* The window the sheen travels across. It is a layer of its own rather than
+     the card, because the pass is wider than the card it crosses and the mask
+     above has to hold still while the light moves under it. */
+  .demo-preview__sheen-clip {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
   }
 
   .demo-preview__sheen {
