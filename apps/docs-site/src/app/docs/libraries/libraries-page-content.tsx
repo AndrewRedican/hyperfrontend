@@ -3,6 +3,7 @@
 import type { EcosystemCard, EcosystemLevel, EcosystemLibrary, EcosystemEmphasis, EcosystemTier } from '@/lib/ecosystem'
 import { Breadcrumb } from '@/components/breadcrumb'
 import { H1 } from '@/components/heading-with-anchor'
+import { PackageIcon } from '@/components/package/package-icon'
 import { buildEcosystem } from '@/lib/ecosystem'
 import Link from 'next/link'
 import { useCallback, useMemo, useState } from 'react'
@@ -45,7 +46,23 @@ const COLUMN_CLASSES = {
 } as const
 
 /** The shared card recipe, before the level's own weight is applied. */
-const CARD_BASE = 'group relative flex flex-col border transition-colors'
+const CARD_BASE = 'group relative flex flex-col overflow-hidden border transition-colors'
+
+/**
+ * How a package's mark is drawn behind its card.
+ *
+ * The mark is identity, not information: it sits against the right edge at a
+ * quarter opacity, in the same slate the rest of the card's chrome uses, so it
+ * reads as a watermark the eye can learn rather than as something to look at.
+ * The card's own text always wins, which is why every mark is paired with
+ * enough right padding on the content that no line ever runs under it.
+ *
+ * It brightens slightly on hover, the same way the card's border and title do,
+ * so the identity is at its clearest exactly when a reader has singled the
+ * package out.
+ */
+const CARD_MARK =
+  'pointer-events-none absolute top-1/2 -translate-y-1/2 text-slate-400 opacity-25 transition-opacity duration-300 group-hover:opacity-40 dark:text-slate-500'
 
 /** The class strings one level applies to its cards. */
 interface EmphasisStyle {
@@ -55,6 +72,8 @@ interface EmphasisStyle {
   title: string
   /** The package description */
   description: string
+  /** Size and inset of the package mark behind the card */
+  mark: string
 }
 
 /**
@@ -65,27 +84,31 @@ interface EmphasisStyle {
  */
 const EMPHASIS_STYLES: Record<EcosystemEmphasis, EmphasisStyle> = {
   apex: {
-    card: `${CARD_BASE} rounded-xl border-primary-200 bg-gradient-to-br from-primary-50 to-white p-6 hover:border-primary-400 dark:border-primary-900 dark:from-primary-950/50 dark:to-slate-900 dark:hover:border-primary-700 sm:p-8`,
+    card: `${CARD_BASE} rounded-xl border-primary-200 bg-gradient-to-br from-primary-50 to-white p-6 pr-20 hover:border-primary-400 dark:border-primary-900 dark:from-primary-950/50 dark:to-slate-900 dark:hover:border-primary-700 sm:p-8 sm:pr-44`,
     title:
       'font-display text-xl font-bold tracking-tight text-slate-900 group-hover:text-primary-600 dark:text-white dark:group-hover:text-primary-400 sm:text-2xl',
     description: 'mt-3 text-base text-slate-600 dark:text-slate-300',
+    mark: 'right-3 h-16 w-16 sm:right-6 sm:h-36 sm:w-36',
   },
   strong: {
-    card: `${CARD_BASE} rounded-lg border-slate-200 bg-white p-5 hover:border-primary-300 hover:bg-primary-50 dark:border-slate-700 dark:bg-slate-900 dark:hover:border-primary-700 dark:hover:bg-primary-950/30`,
+    card: `${CARD_BASE} rounded-lg border-slate-200 bg-white p-5 pr-24 hover:border-primary-300 hover:bg-primary-50 dark:border-slate-700 dark:bg-slate-900 dark:hover:border-primary-700 dark:hover:bg-primary-950/30`,
     title:
       'font-mono text-base font-semibold text-slate-900 group-hover:text-primary-600 dark:text-white dark:group-hover:text-primary-400',
     description: 'mt-1.5 text-sm text-slate-600 dark:text-slate-400',
+    mark: 'right-3 h-16 w-16',
   },
   medium: {
-    card: `${CARD_BASE} rounded-lg border-slate-200 bg-white p-4 hover:border-primary-300 hover:bg-primary-50 dark:border-slate-700 dark:bg-slate-900 dark:hover:border-primary-700 dark:hover:bg-primary-950/30`,
+    card: `${CARD_BASE} rounded-lg border-slate-200 bg-white p-4 pr-20 hover:border-primary-300 hover:bg-primary-50 dark:border-slate-700 dark:bg-slate-900 dark:hover:border-primary-700 dark:hover:bg-primary-950/30`,
     title: 'font-mono text-sm font-semibold text-slate-900 group-hover:text-primary-600 dark:text-white dark:group-hover:text-primary-400',
     description: 'mt-1.5 text-sm text-slate-600 dark:text-slate-400',
+    mark: 'right-3 h-14 w-14',
   },
   soft: {
-    card: `${CARD_BASE} rounded-lg border-slate-200 bg-white p-4 hover:border-primary-300 hover:bg-primary-50 dark:border-slate-700 dark:bg-slate-900 dark:hover:border-primary-700 dark:hover:bg-primary-950/30`,
+    card: `${CARD_BASE} rounded-lg border-slate-200 bg-white p-4 pr-16 hover:border-primary-300 hover:bg-primary-50 dark:border-slate-700 dark:bg-slate-900 dark:hover:border-primary-700 dark:hover:bg-primary-950/30`,
     title:
       'font-mono text-sm font-medium text-slate-800 group-hover:text-primary-600 dark:text-slate-200 dark:group-hover:text-primary-400',
     description: 'mt-1.5 line-clamp-3 text-sm text-slate-500 dark:text-slate-400',
+    mark: 'right-3 h-12 w-12',
   },
 }
 
@@ -271,7 +294,10 @@ function PackageCard({ card, emphasis }: PackageCardProps) {
 
   return (
     <article className={`${style.card} w-full`}>
-      <div className="flex items-start justify-between gap-3">
+      {/* why: first in the DOM and unpositioned content after it, so the mark paints behind every line of the card without a z-index to keep in step with the rest of the site's layering */}
+      <PackageIcon packageName={card.packageName} className={`${CARD_MARK} ${style.mark}`} />
+
+      <div className="relative flex items-start justify-between gap-3">
         <div className="min-w-0">
           <h3 className={style.title}>
             <Link href={card.href} className="after:absolute after:inset-0 after:content-['']">
@@ -285,7 +311,7 @@ function PackageCard({ card, emphasis }: PackageCardProps) {
         />
       </div>
 
-      {card.description && <p className={style.description}>{card.description}</p>}
+      {card.description && <p className={`relative ${style.description}`}>{card.description}</p>}
 
       {/* why: relative lifts this row above the heading link's card-covering overlay, so the pills are readable text rather than a shadowed strip. */}
       <div className="relative mt-auto flex flex-wrap items-center gap-1.5 pt-3">
