@@ -31,7 +31,9 @@ npx nx run tool-media:shot -- \
   --console
 ```
 
-`--wait` takes a selector rather than a delay, because a delay that is long enough on one machine is short on another and the failure is a blank image. `--console` writes the page's console output and uncaught errors to a `.log.json` file beside the image, so a render that came out wrong explains itself. `--format webp` is roughly twenty times smaller than PNG for the same frame when size matters more than fidelity.
+`--wait` takes a selector rather than a delay, because a delay that is long enough on one machine is short on another and the failure is a blank image. `--console` writes the page's console output and uncaught errors to a `.log.json` file beside the image, so a render that came out wrong explains itself. `--format webp` is roughly twenty times smaller than PNG for the same frame when size matters more than fidelity. `--omit-background` keeps the transparency of a page that paints no background of its own, instead of compositing it onto the browser's white; `png` and `webp` carry the alpha through, `jpeg` discards it.
+
+A screenshot is the way to iterate, not the way to commit. It is unbudgeted, it cannot pin the clock, and it leaves no audit record, so a page that renders the time or the date produces a different image on every run. Anything that gets committed belongs in a scene.
 
 ## Adding a scene
 
@@ -67,7 +69,29 @@ export default defineBrowserScene({
 | `determinism`  | Pins the clock and the reported device capability, so the same scene records the same way on every machine.                                                                        |
 | `assert`       | Conditions the ready page must satisfy before anything is encoded. A page can pass its readiness gate and still be visibly wrong.                                                  |
 | `gif.maxBytes` | A finished asset above this fails the run rather than landing.                                                                                                                     |
-| `stills`       | Frames captured inside the record window, at offsets measured from the first kept frame.                                                                                           |
+| `stills`       | Frames captured inside the record window, at offsets measured from the first kept frame. Each takes its own `format`, `quality`, `width`, `maxBytes` and `omitBackground`.         |
+| `outputs`      | What the scene is for. A scene that does not list `gif` records no video and encodes nothing.                                                                                      |
+
+### Scenes that emit only a still
+
+Drop `gif` from `outputs` and the run opens the page, holds it for the record window, writes the stills and stops. Nothing is recorded and nothing is encoded, so a scene whose asset is one frame costs a few seconds rather than a video and a palette:
+
+```typescript
+export default defineBrowserScene({
+  slug: 'my-demo-preview',
+  asset: 'preview',
+  outputs: ['still'],
+  viewport: { width: 640, height: 640 },
+  serve: { command: ['npx', 'hf', 'serve', '--root', '{root}', '--port', '{port}'], root: 'dist/apps/my-app' },
+  page: { path: '/' },
+  determinism: { clock: { time: '2026-01-01T10:09:30Z', resume: true } },
+  ready: { selector: '[data-state="ready"]', timeoutMs: 60_000 },
+  record: { settleMs: 2_500, durationMs: 0 },
+  stills: [{ name: 'preview', atMs: 0, format: 'webp', quality: 82, width: 640, maxBytes: 60_000 }],
+})
+```
+
+`record.durationMs` is the window the stills are taken in, so a single frame at `atMs: 0` needs none of it; `settleMs` is what decides which moment gets photographed. `check` verifies every still the audit record names, against the same `maxBytes` the run enforced.
 
 ## Determinism
 
