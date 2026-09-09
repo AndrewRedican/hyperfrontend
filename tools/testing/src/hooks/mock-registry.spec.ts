@@ -9,6 +9,7 @@ import {
   MOCK_SCHEME,
   clearRegistrations,
   isMocked,
+  isReplacementRequest,
   mockContext,
   mockTarget,
   mockedSource,
@@ -183,6 +184,24 @@ describe('mockTarget', () => {
 
   it('reads a built-in identifier back out', () => {
     assert.equal(mockTarget(`${MOCK_SCHEME}node%3Aos?g=0`), 'node:os')
+  })
+})
+
+describe('isReplacementRequest', () => {
+  it('recognises a replacement importing the module it stands in for', () => {
+    assert.equal(isReplacementRequest(DEP_URL, `${MOCK_SCHEME}${encodeURIComponent(DEP_URL)}?g=0`), true)
+  })
+
+  it('recognises Node re-resolving a required module by its own filename', () => {
+    assert.equal(isReplacementRequest(join(fixtureRoot, 'dep.ts'), undefined), true)
+  })
+
+  it('leaves an ordinary import from a spec alone', () => {
+    assert.equal(isReplacementRequest('./dep.ts', SPEC_URL), false)
+  })
+
+  it('leaves a bare specifier with no importer alone', () => {
+    assert.equal(isReplacementRequest('node:os', undefined), false)
   })
 })
 

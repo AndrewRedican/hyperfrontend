@@ -1,5 +1,6 @@
 import type { MockDeclaration } from './mock-declarations.ts'
 import { createRequire } from 'node:module'
+import { isAbsolute } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { readMockDeclarations, readUnmockDeclarations } from './mock-declarations.ts'
 
@@ -28,6 +29,25 @@ const LOCAL_PREFIX = '__hfExport$'
  */
 export function mockTarget(url: string): string {
   return decodeURIComponent(url.slice(MOCK_SCHEME.length).split('?g=')[0] ?? '')
+}
+
+/**
+ * Reports whether a resolution is a replacement reaching the module it stands in for,
+ * rather than code under test asking for that module.
+ *
+ * A replacement imports the real module by URL, so its own imports name it as the importer.
+ * A CommonJS module is not imported but required, and Node resolves it a second time by its
+ * own filename while evaluating it for the replacement that asked for it. That second
+ * resolution carries no importer at all, and substituting the replacement for it would make
+ * the replacement import itself: a require cycle, reported against the real module.
+ *
+ * @param specifier - The specifier as written.
+ * @param parentUrl - URL of the importing module, absent when Node re-resolves a module it has already resolved.
+ * @returns True when the substitution must be left off.
+ */
+export function isReplacementRequest(specifier: string, parentUrl: string | undefined): boolean {
+  if (parentUrl === undefined) return isAbsolute(specifier)
+  return parentUrl.startsWith(MOCK_SCHEME)
 }
 
 /**
