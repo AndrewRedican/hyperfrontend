@@ -6,6 +6,7 @@ import { Breadcrumb } from '@/components/breadcrumb'
 import { CodeBlock } from '@/components/code-block'
 import { DocumentShell } from '@/components/document/document-shell'
 import { H1, H2 } from '@/components/heading-with-anchor'
+import { PackageCapabilities } from '@/components/package/package-capabilities'
 import { PackageMetadata } from '@/components/package/package-metadata'
 import { RelatedReading } from '@/components/package/related-reading'
 import { removeBadges, transformLinks } from '@/lib/content'
@@ -16,7 +17,7 @@ import { getGuidesForPackage } from '@/lib/guides'
 import { markdownToHtml } from '@/lib/markdown'
 import { extractMermaidBlocks } from '@/lib/mermaid-utils'
 import { getPackageFacts, npmPackageUrl } from '@/lib/package-facts'
-import { preparePackageReadme } from '@/lib/package-readme'
+import { CAPABILITIES_SLOT, preparePackageReadme } from '@/lib/package-readme'
 import { readSectionLink } from '@/lib/readme-sections'
 import { buildRelatedReading } from '@/lib/related-reading'
 import { extractMarkdownSections } from '@/lib/slug'
@@ -89,7 +90,13 @@ export async function LibraryDocPage({ title, packageName, slug, category, fallb
         <PackageMetadata packageName={packageName} facts={facts} licenseHref={licenseHref} />
 
         <div className="mt-6">
-          <ReadmeContent html={html} mermaidDiagrams={diagrams} />
+          <ReadmeContent
+            html={html}
+            mermaidDiagrams={diagrams}
+            slots={{
+              [CAPABILITIES_SLOT]: <PackageCapabilities compatibility={facts.compatibility} outputs={facts.outputs} />,
+            }}
+          />
         </div>
 
         {/* API Reference */}
