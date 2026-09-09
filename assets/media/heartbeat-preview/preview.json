@@ -1,0 +1,43 @@
+{
+  "slug": "heartbeat-preview",
+  "asset": "preview.webp",
+  "generatedAt": "2026-09-08T23:55:48.923Z",
+  "sceneHash": "c3163ca7629b926a",
+  "sourceUrl": "http://127.0.0.1:45937/",
+  "viewport": {
+    "width": 640,
+    "height": 640
+  },
+  "record": {
+    "settleMs": 3000,
+    "durationMs": 0
+  },
+  "startMs": 3523.6075690000007,
+  "stills": [
+    {
+      "asset": "preview.webp",
+      "bytes": 7372,
+      "maxBytes": 60000
+    }
+  ],
+  "browser": {
+    "name": "chromium",
+    "version": "149.0.7827.55",
+    "executablePath": "/home/vscode/.cache/ms-playwright/chromium-1228/chrome-linux64/chrome"
+  },
+  "determinism": {
+    "clock": {
+      "time": "2026-01-01T10:09:30Z",
+      "resume": true
+    },
+    "navigator": {
+      "hardwareConcurrency": 4,
+      "deviceMemory": 8
+    }
+  },
+  "console": {
+    "errors": 0,
+    "warnings": 0,
+    "pageErrors": 0
+  }
+}
