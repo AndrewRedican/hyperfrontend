@@ -56,6 +56,7 @@ export async function runShot(config: ResolvedMediaConfig, args: ParsedArgs): Pr
     const png = await capturePng(session.page, {
       ...(selector === '' ? {} : { selector }),
       fullPage: args.flags.has('full-page'),
+      omitBackground: args.flags.has('omit-background'),
     })
     const bytes = await writeStill(png, outputPath, {
       format: format as 'png' | 'webp' | 'jpeg',

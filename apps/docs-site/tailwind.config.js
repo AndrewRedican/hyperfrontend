@@ -25,6 +25,9 @@ module.exports = {
         // Width at which the left navigation, the document, and the document index all fit side by side.
         // Sorted between xl and 2xl by min-width; see src/lib/nav-visibility.ts for why it sits here.
         rail: '1400px',
+        // Width past which the documentation shell stops growing and the surplus becomes margin.
+        // See src/lib/doc-layout.ts for why the ladder ends here.
+        ultra: '1920px',
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],

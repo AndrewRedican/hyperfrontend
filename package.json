@@ -56,7 +56,7 @@
     "rollup": "4.59.0",
     "rollup-plugin-dts": "6.4.1",
     "safe-regex2": "5.0.0",
-    "sharp": "0.35.3",
+    "sharp": "0.35.4",
     "typescript": "5.9.3",
     "typescript-eslint": "8.53.1",
     "yaml-eslint-parser": "2.0.0"
@@ -75,7 +75,7 @@
     "axios": "1.18.0",
     "brace-expansion": "5.0.9",
     "form-data": "4.0.6",
-    "js-yaml": "4.3.1",
+    "js-yaml": "4.3.2",
     "minimatch": "10.2.3",
     "picomatch": "4.0.4",
     "tmp": "0.2.7"

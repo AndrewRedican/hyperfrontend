@@ -203,6 +203,7 @@ const name = user?.profile?.name
 - `@returns` with description
 - No `@deprecated` — use the issue tracker
 - No `@todo`
+- Entry-point `@module` headers: one or two sentences naming the capability, 200 characters max — see the `library-package-config` skill
 
 Member docs go **above** the member as JSDoc, never as trailing comments:
 

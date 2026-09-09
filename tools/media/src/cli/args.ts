@@ -4,7 +4,7 @@ import { globalIsNaN, parseInt as parseInteger } from '@hyperfrontend/immutable-
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 
 /** Flags that stand alone, so the token after them is never swallowed as a value. */
-const BOOLEAN_FLAGS: readonly string[] = ['json', 'verbose', 'skip-build', 'keep-tmp', 'full-page', 'console', 'help']
+const BOOLEAN_FLAGS: readonly string[] = ['json', 'verbose', 'skip-build', 'keep-tmp', 'full-page', 'omit-background', 'console', 'help']
 
 /** A parsed command line. */
 export interface ParsedArgs {

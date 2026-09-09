@@ -2,13 +2,23 @@ import { TrackedLink } from '@/components/analytics/tracked-link'
 import { ConsentSettingsButton } from '@/components/consent/consent-settings-button'
 import Link from 'next/link'
 import { createDate } from '@hyperfrontend/immutable-api-utils/built-in-copy/date'
+import { docLayout } from '../lib/doc-layout'
 
 const FOOTER_LINK_CLASSES = 'text-sm text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'
 
-export function Footer() {
+/** Props for {@link Footer}. */
+export interface FooterProps {
+  /**
+   * Width classes for the bar's inner row, for a page whose own shell is wider
+   * than the default. Defaults to {@link docLayout.bar}.
+   */
+  width?: string
+}
+
+export function Footer({ width = docLayout.bar }: FooterProps = {}) {
   return (
     <footer className="border-t border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-900">
-      <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+      <div className={`py-12 ${width} ${docLayout.gutter}`}>
         <div className="flex flex-col items-center justify-between gap-6 sm:flex-row">
           <p className="text-sm text-slate-500 dark:text-slate-400">
             &copy; {createDate().getFullYear()} HyperFrontend.{' '}

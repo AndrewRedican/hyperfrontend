@@ -1,15 +1,26 @@
 import { TrackedLink } from '@/components/analytics/tracked-link'
 import { SearchControl } from '@/components/search/search-dialog'
 import Link from 'next/link'
+import { docLayout } from '../lib/doc-layout'
 import { navVisibility } from '../lib/nav-visibility'
 import { mainNavLinks } from '../lib/navigation'
 import { MobileMenu } from './mobile-menu'
 import { ThemeToggle } from './theme-toggle'
 
-export function Header() {
+/** Props for {@link Header}. */
+export interface HeaderProps {
+  /**
+   * Width classes for the bar's inner row, for a page whose own shell is wider
+   * than the default. Defaults to {@link docLayout.bar}.
+   */
+  width?: string
+}
+
+export function Header({ width = docLayout.bar }: HeaderProps = {}) {
   return (
     <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/80 backdrop-blur-sm dark:border-slate-800 dark:bg-slate-900/80">
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+      {/* note: The bar tracks the width of the page beneath it, or the logo and the search control stop lining up with the content they sit above. */}
+      <div className={`flex h-16 items-center justify-between ${width} ${docLayout.gutter}`}>
         <div className="flex items-center gap-4">
           <MobileMenu />
           <Link href="/" className="flex items-center gap-3">

@@ -1,11 +1,7 @@
 /**
- * Safe copies of Error built-ins via factory functions.
- *
- * Since constructors cannot be safely captured via Object.assign, this module
- * provides factory functions that use Reflect.construct internally.
- *
- * These references are captured at module initialization time to protect against
- * prototype pollution attacks. Import only what you need for tree-shaking.
+ * Safe copies of the Error built-ins, captured at load so later prototype
+ * pollution cannot reach them. Constructors arrive as factory functions,
+ * which is the only way to capture a constructor safely.
  *
  * @module @hyperfrontend/immutable-api-utils/built-in-copy/error
  */

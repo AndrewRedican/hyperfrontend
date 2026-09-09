@@ -129,6 +129,245 @@
 }
 
 @layer components {
+  /* The reading measure inside a documentation column.
+
+     A document column that grows with the viewport is the whole point of the
+     wide layout: a diagram, a code sample or a reference table is easier to
+     read the more of it is on screen at once. Running paragraphs to that same
+     width is the opposite — past a certain line length the eye loses the start
+     of the next line on the way back, and a wide screen makes the document
+     worse rather than better.
+
+     What decides where that cap belongs is the rest of the ladder rather than
+     a typographic ideal in the abstract. Every width from a phone up to the
+     point the shell stops growing already lays README prose out at the full
+     column, and that column peaks a little over nine hundred pixels: the
+     navigation, the document index and the padding take the surplus as the
+     viewport grows, so the text block stays roughly the same size whatever
+     laptop it is read on. A cap tighter than that is not a reading measure at
+     all, it is a second container inside the first — the column has room the
+     text visibly refuses, and the page reads as though something is broken.
+
+     So the cap is set at the width the column reaches on its own, and it is
+     only switched on where the column would otherwise outrun it: `ultra`, the
+     width at which the shell stops growing and hands the rest back as margin.
+     Below that the measure never binds and prose simply fills its column,
+     which is what every narrower layout has always done. Above it the document
+     column jumps by nearly two hundred pixels and the text stays where it was.
+
+     The blocks worth the extra width are exempted rather than each being asked
+     to opt in, and the list is deliberately short: everything on it is
+     something the reader scans rather than reads a line at a time. Headings
+     are on it because they are neither — they are the page's own structure,
+     and a heading that wraps early inside a column with room to spare is the
+     clearest signal of the inner container this rule exists not to be.
+
+     Scoped to `.doc-measure` rather than applied to every `.prose` on the site
+     because the article pages set their own, narrower, editorial width and
+     must not be pulled to this one. */
+  /* The other end of the same problem. A README's title is a package name, and
+     a package name is one unbreakable word set at forty pixels: on a phone it
+     is wider than the screen, and because the anchor link turns every heading
+     into a flex row, the word cannot shrink and takes the whole page sideways
+     with it. `anywhere` rather than `break-word` because only `anywhere`
+     lowers the box's min-content size, which is the number the flex item is
+     refusing to go below. */
+  .readme-content :is(h1, h2, h3, h4, h5, h6) {
+    overflow-wrap: anywhere;
+  }
+
+  @media (min-width: 1920px) {
+    .doc-measure {
+      --doc-measure: 58rem;
+    }
+
+    .doc-measure .readme-content > .prose > * {
+      max-width: var(--doc-measure);
+    }
+
+    /* Headings, code, tables, images and the rules between sections take the
+       whole column. A mermaid diagram needs no rule here: it is rendered as a
+       sibling of the prose containers rather than inside one, so it already
+       spans the column. */
+    .doc-measure .readme-content > .prose > :is(h1, h2, h3, h4, h5, h6, pre, table, figure, img, hr) {
+      max-width: none;
+    }
+  }
+}
+
+@layer components {
+  /* A demo's card while its live session is still connecting.
+
+     The card holds a real photograph of the demo it is about to show, taken
+     from the same build the embed loads, at the size and framing the live
+     frame will occupy. So the loading state is not a stand-in for the demo, it
+     is the demo, held still: when the session proves itself the frame fades up
+     over an image already in its place, and there is no box to fill, no
+     reflow, and nothing that jumps.
+
+     What separates the two is a treatment rather than a shape. The still is
+     desaturated and dimmed and carries a wash of the card's own accent, the
+     way a photograph reads against the scene it was taken from: recognisably
+     the same thing, plainly not the live one. The wash is deliberately gentle
+     and blended rather than laid on top, because a strong tint would have to
+     drain out of the picture during the crossfade and that is exactly the
+     colour flash this is here to avoid.
+
+     The hue arrives as --demo-accent-light / --demo-accent-dark, set on the
+     card by the component from the demo's own theme, so every card is tinted
+     toward the colour the rest of the page already lends it.
+
+     The sheen is the only thing that says work is happening. It is slow, low
+     in contrast and in the same accent, so it reads as light crossing a
+     surface rather than as a skeleton bar: a placeholder shimmer is fast and
+     grey and moves over empty boxes, and this moves over a picture. It is the
+     only moving part, it is composited, and it holds still when the visitor
+     has asked for less motion. */
+  .demo-preview {
+    --demo-preview-accent: var(--demo-accent-light, 71 85 105);
+  }
+
+  .dark .demo-preview {
+    --demo-preview-accent: var(--demo-accent-dark, 148 163 184);
+  }
+
+  /* Dimming is what the page shows through, so it is set per demo rather than
+     globally: a capture that carries its own alpha is sitting straight on the
+     page and needs very little, while an opaque one is covering a card and
+     turns to mush long before it looks subdued. Both end up equally quiet
+     because desaturation and the accent wash are doing most of the work, which
+     is also what keeps the crossfade to live from being a change in
+     brightness. */
+  .demo-preview__image {
+    opacity: 0.82;
+    filter: saturate(0.55) contrast(0.98);
+  }
+
+  .demo-preview--transparent .demo-preview__image {
+    opacity: 0.66;
+    filter: saturate(0.5) contrast(0.97);
+  }
+
+  .dark .demo-preview__image {
+    opacity: 0.72;
+    filter: saturate(0.5) contrast(1);
+  }
+
+  .dark .demo-preview--transparent .demo-preview__image {
+    opacity: 0.55;
+    filter: saturate(0.45) contrast(1);
+  }
+
+  /* One flat accent, blended into the picture rather than covering it, so the
+     still takes the card's colour without losing its own. */
+  .demo-preview__tint {
+    background-color: rgb(var(--demo-preview-accent) / 0.32);
+    mix-blend-mode: soft-light;
+  }
+
+  /* A still that carries its own alpha is hung on a card with no surface, so
+     there is no rectangle for either light layer to fall on: laid over the
+     whole card they would wash the page showing through beside the demo, and
+     the swap to live would have to take that wash away again. Masking both to
+     the still puts the accent and the sheen on the demo itself, which is the
+     only thing there to light. */
+  .demo-preview--transparent .demo-preview__tint,
+  .demo-preview--transparent .demo-preview__sheen-clip {
+    -webkit-mask-image: var(--demo-preview-still);
+    mask-image: var(--demo-preview-still);
+    -webkit-mask-size: cover;
+    mask-size: cover;
+    -webkit-mask-position: center;
+    mask-position: center;
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    mask-mode: alpha;
+  }
+
+  /* The window the sheen travels across. It is a layer of its own rather than
+     the card, because the pass is wider than the card it crosses and the mask
+     above has to hold still while the light moves under it. */
+  .demo-preview__sheen-clip {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+  }
+
+  .demo-preview__sheen {
+    background-image: linear-gradient(
+      100deg,
+      transparent 30%,
+      rgb(var(--demo-preview-accent) / 0.14) 45%,
+      rgb(var(--demo-preview-accent) / 0.22) 50%,
+      rgb(var(--demo-preview-accent) / 0.14) 55%,
+      transparent 70%
+    );
+    animation: demo-preview-sheen 5.5s cubic-bezier(0.45, 0, 0.25, 1) infinite;
+  }
+
+  @keyframes demo-preview-sheen {
+    0% {
+      transform: translate3d(-115%, 0, 0);
+    }
+    /* why: the pass is quick relative to the cycle, so the card spends most of its time simply being a photograph */
+    55%,
+    100% {
+      transform: translate3d(115%, 0, 0);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .demo-preview__sheen {
+      animation: none;
+      /* why: the light stays, it just stops travelling, so the card still reads as unfinished */
+      transform: none;
+      opacity: 0.6;
+    }
+  }
+}
+
+@layer components {
+  /* The needle of the compass on the fit-check callout, swinging to north once
+     as the page arrives.
+
+     It is an entrance, not a status: it runs a single time, and what it is
+     there to do is pull the eye to the one thing on this page a reader can
+     skip past and later regret skipping. The long tail of the easing is what
+     separates the two readings — a spinner turns at a constant rate forever,
+     and this throws the needle around and then spends most of its two and a
+     half seconds coming to rest, overshooting north by a few degrees on the
+     way like a needle with mass behind it.
+
+     Only the needle turns. The dial stays put, so the shape stays a compass
+     throughout rather than becoming a rotating glyph, and the rotation is
+     about the dial's centre rather than the needle's own box, which is what
+     `transform-box: view-box` buys. */
+  .compass-needle {
+    transform-box: view-box;
+    transform-origin: 50% 50%;
+    animation: compass-orient 2.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  @keyframes compass-orient {
+    0% {
+      transform: rotate(-540deg);
+    }
+    78% {
+      transform: rotate(9deg);
+    }
+    100% {
+      transform: rotate(0deg);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .compass-needle {
+      animation: none;
+    }
+  }
+}
+
+@layer components {
   /* The landing page's lit band, directly under the hero.
 
      Everything here is one idea: light entering a body of blue water from

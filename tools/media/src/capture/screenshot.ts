@@ -13,6 +13,11 @@ export interface ShotFraming {
   selector?: string
   /** Whether to capture the full scrollable page rather than the viewport. */
   fullPage?: boolean
+  /**
+   * Whether to keep the page's own transparency rather than compositing it
+   * onto the browser's default white.
+   */
+  omitBackground?: boolean
 }
 
 /**
@@ -27,12 +32,13 @@ export interface ShotFraming {
  * @throws {Error} When the requested element is not on the page.
  */
 export async function capturePng(page: Page, framing: ShotFraming): Promise<Buffer> {
+  const omitBackground = framing.omitBackground ?? false
   if (framing.selector === undefined) {
-    return page.screenshot({ type: 'png', fullPage: framing.fullPage ?? false, timeout: CAPTURE_TIMEOUT_MS })
+    return page.screenshot({ type: 'png', fullPage: framing.fullPage ?? false, omitBackground, timeout: CAPTURE_TIMEOUT_MS })
   }
   const element = await page.$(framing.selector)
   if (element === null) {
     throw mediaError(ExitCode.SceneFailed, `No element matches "${framing.selector}"`)
   }
-  return element.screenshot({ type: 'png', timeout: CAPTURE_TIMEOUT_MS })
+  return element.screenshot({ type: 'png', omitBackground, timeout: CAPTURE_TIMEOUT_MS })
 }

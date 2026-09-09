@@ -27,6 +27,7 @@ shot options
   --timeout <ms>      How long to wait for the selector (default: 60000)
   --selector <sel>    Capture this element instead of the viewport
   --full-page         Capture the whole scrollable page
+  --omit-background   Keep the page's own transparency instead of white
   --format <fmt>      png, webp or jpeg (default: png)
   --quality <n>       Quality for webp and jpeg (default: 90)
   --width <n>         Resize the capture to this width

@@ -1,0 +1,43 @@
+{
+  "slug": "clock-preview",
+  "asset": "preview.webp",
+  "generatedAt": "2026-09-09T00:26:20.736Z",
+  "sceneHash": "dd221f23fbbf111a",
+  "sourceUrl": "http://127.0.0.1:43749/",
+  "viewport": {
+    "width": 640,
+    "height": 640
+  },
+  "record": {
+    "settleMs": 2500,
+    "durationMs": 0
+  },
+  "startMs": 3114.2718799999993,
+  "stills": [
+    {
+      "asset": "preview.webp",
+      "bytes": 28814,
+      "maxBytes": 60000
+    }
+  ],
+  "browser": {
+    "name": "chromium",
+    "version": "149.0.7827.55",
+    "executablePath": "/home/vscode/.cache/ms-playwright/chromium-1228/chrome-linux64/chrome"
+  },
+  "determinism": {
+    "clock": {
+      "time": "2026-01-01T10:09:30Z",
+      "resume": true
+    },
+    "navigator": {
+      "hardwareConcurrency": 4,
+      "deviceMemory": 8
+    }
+  },
+  "console": {
+    "errors": 0,
+    "warnings": 0,
+    "pageErrors": 0
+  }
+}

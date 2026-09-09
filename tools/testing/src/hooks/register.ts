@@ -5,6 +5,7 @@ import { currentGeneration } from './generation.ts'
 import {
   MOCK_SCHEME,
   isMocked,
+  isReplacementRequest,
   mockTarget,
   mockedSource,
   registerSetupMocks,
@@ -72,7 +73,7 @@ export function registerResolutionHooks(): void {
       const url = resolveSpecifier(specifier, resolveContext.parentURL, context) ?? nextResolve(specifier, resolveContext).url
 
       // why: a replacement reaches the module it stands in for by importing it, so its own imports must not be replaced in turn.
-      if (resolveContext.parentURL?.startsWith(MOCK_SCHEME)) return { url, shortCircuit: true }
+      if (isReplacementRequest(specifier, resolveContext.parentURL)) return { url, shortCircuit: true }
 
       // why: substituting here rather than at load is what lets a built-in be replaced at all, since one this loader has already imported would never be loaded again.
       // why: `jest.resetModules` must reach replacements too, or a `jest.doMock` declared after the first one would be served the cached replacement.

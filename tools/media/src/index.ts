@@ -1,10 +1,7 @@
 /**
- * Configuration-driven recorder that turns real browser sessions into
- * size-budgeted GIFs and stills.
- *
- * Everything workspace-specific arrives through `defineConfig` and the scene
- * files it points at, so this module never learns a path, a port or a command
- * belonging to the project it is recording.
+ * Configuration-driven recorder turning real browser sessions into
+ * size-budgeted GIFs and stills, knowing nothing of the project it records
+ * beyond the config it is handed.
  *
  * @module @hyperfrontend/media
  */

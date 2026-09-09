@@ -30,6 +30,19 @@ export interface ConsoleRecord {
 }
 
 /**
+ * One still a run wrote, recorded so its size can be checked without a
+ * browser.
+ */
+export interface StillRecord {
+  /** Filename of the still, including its extension. */
+  asset: string
+  /** Size of the written file. */
+  bytes: number
+  /** Size ceiling the scene declared for it, or 0 when it declared none. */
+  maxBytes: number
+}
+
+/**
  * The audit record written beside every asset.
  *
  * Identical scenes produce different bytes on every run, so an asset cannot be
@@ -54,16 +67,18 @@ export interface AssetSidecar {
   record: RecordWindow
   /** Offset into the recording where the kept animation started. */
   startMs: number
-  /** Encoding parameters that were applied. */
-  gif: GifOptions
-  /** Backend that produced the file. */
-  encoder: EncoderName
+  /** Encoding parameters that were applied, absent on a scene that emits no animation. */
+  gif?: GifOptions
+  /** Backend that produced the file, absent on a scene that emits no animation. */
+  encoder?: EncoderName
   /** Versions of every binary the encode invoked. */
-  toolVersions: readonly ToolVersion[]
-  /** Size of the written file. */
-  bytes: number
-  /** Number of frames the animation contains. */
-  frames: number
+  toolVersions?: readonly ToolVersion[]
+  /** Size of the written file, absent on a scene that emits no animation. */
+  bytes?: number
+  /** Number of frames the animation contains, absent on a scene that emits no animation. */
+  frames?: number
+  /** Every still the run wrote, in the order they were captured. */
+  stills?: readonly StillRecord[]
   /** Browser build that produced the recording. */
   browser: BrowserRecord
   /** Overrides that were applied before the page ran. */
@@ -80,12 +95,12 @@ export interface RunSummaryRow {
   asset: string
   /** Size of the written file. */
   bytes: number
-  /** Size ceiling the scene declared. */
+  /** Size ceiling the scene declared, or 0 when it declared none. */
   maxBytes: number
-  /** Number of frames the animation contains. */
+  /** Number of frames the animation contains, or 0 for a still. */
   frames: number
-  /** Backend that produced the file. */
-  encoder: EncoderName
+  /** Backend that produced the file, absent for a still. */
+  encoder?: EncoderName
   /** Wall time the whole scene took. */
   elapsedMs: number
 }

@@ -1,9 +1,7 @@
 /**
- * V4 protocol for Node.js: the session-keyed envelope with a shared secret mixed in.
- *
- * Every session is keyed from an ephemeral P-256 agreement plus the shared key stretched
- * once, so a party without the key cannot complete the agreement and a key that leaks later
- * does not expose earlier sessions.
+ * V4 protocol for Node.js: the session envelope keyed by an ephemeral P-256
+ * agreement plus a stretched shared secret, so an outsider cannot join and a
+ * key that leaks later cannot open past sessions.
  *
  * @module @hyperfrontend/network-protocol/node/v4
  */

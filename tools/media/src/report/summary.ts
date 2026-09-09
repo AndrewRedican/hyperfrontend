@@ -13,13 +13,14 @@ const HEADINGS: readonly string[] = ['scene', 'asset', 'size', 'budget', 'frames
  * @returns One cell per column.
  */
 function toCells(row: RunSummaryRow): readonly string[] {
+  // note: a scene that emits only stills has no budget, no frame count and no encoder to report, and a dash reads better than a zero that looks measured
   return [
     row.slug,
     row.asset,
     formatBytes(row.bytes),
-    formatBytes(row.maxBytes),
-    `${row.frames}`,
-    row.encoder,
+    row.maxBytes === 0 ? '-' : formatBytes(row.maxBytes),
+    row.frames === 0 ? '-' : `${row.frames}`,
+    row.encoder ?? '-',
     `${round(row.elapsedMs / 100) / 10}s`,
   ]
 }
