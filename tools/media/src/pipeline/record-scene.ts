@@ -1,5 +1,5 @@
 import type { ResolvedMediaConfig } from '../models/config'
-import type { AssetSidecar, RunSummaryRow } from '../models/report'
+import type { AssetSidecar, RunSummaryRow, StillRecord } from '../models/report'
 import type { LoadedScene } from '../models/scene'
 import type { ServerHandle } from '../serve/run-command'
 import { mkdirSync, rmSync } from 'node:fs'
@@ -10,6 +10,9 @@ import { openSession } from '../browser/session'
 import { recordWindow } from '../capture/record-video'
 import { encodeGif } from '../encode/gif'
 import { writeStill } from '../encode/still'
+import { formatBytes } from '../lib/format-bytes'
+import { mediaError } from '../lib/media-error'
+import { ExitCode } from '../models/exit-code'
 import { hashScene, nowIso, writeSidecar } from '../report/sidecar'
 import { mergeGifOptions, mergeStillOptions } from '../scene/merge-options'
 import { startServer } from '../serve/run-command'
@@ -39,6 +42,8 @@ export async function recordScene(loaded: LoadedScene, config: ResolvedMediaConf
   const startedAt = performance.now()
   const { scene } = loaded
   const assetName = scene.asset ?? 'hero'
+  // why: the outputs list is what decides whether a video is recorded at all, so a scene that only wants a still never pays for one it would throw away
+  const animated = scene.outputs.includes('gif')
   const gif = mergeGifOptions(config.defaults, scene.gif)
   const sceneTmp = join(config.roots.tmpDir, scene.slug)
   const outputDir = join(config.roots.outputDir, scene.slug)
@@ -54,7 +59,7 @@ export async function recordScene(loaded: LoadedScene, config: ResolvedMediaConf
     const url = scene.page?.url ?? `${server?.origin ?? ''}${scene.page?.path ?? '/'}`
     const session = await openSession(launched.browser, {
       viewport: scene.viewport,
-      videoDir: join(sceneTmp, 'video'),
+      videoDir: animated ? join(sceneTmp, 'video') : '',
       determinism: scene.determinism,
       url,
       ready: scene.ready,
@@ -63,41 +68,47 @@ export async function recordScene(loaded: LoadedScene, config: ResolvedMediaConf
     await assertScene(session.page, scene.assert, session.consoleRecord)
 
     const recorded = await recordWindow(session, scene.record, scene.stills ?? [], scene.choreograph)
-    const outputPath = join(outputDir, `${assetName}.gif`)
-    const outcome = await encodeGif(
-      {
-        sourcePath: recorded.path,
-        outputPath,
-        scratchDir: join(sceneTmp, 'encode'),
-        startMs: recorded.startMs,
-        durationMs: recorded.durationMs,
-        gif,
-      },
-      config.encoder,
-      scene.slug
-    )
+    const outcome =
+      recorded.path === undefined
+        ? undefined
+        : await encodeGif(
+            {
+              sourcePath: recorded.path,
+              outputPath: join(outputDir, `${assetName}.gif`),
+              scratchDir: join(sceneTmp, 'encode'),
+              startMs: recorded.startMs,
+              durationMs: recorded.durationMs,
+              gif,
+            },
+            config.encoder,
+            scene.slug
+          )
+    const stills: StillRecord[] = []
     for (const still of recorded.stills) {
-      await writeStill(
-        still.png,
-        join(outputDir, `${still.spec.name}.${still.spec.format ?? config.defaults.still.format}`),
-        mergeStillOptions(config.defaults, still.spec)
-      )
+      const asset = `${still.spec.name}.${still.spec.format ?? config.defaults.still.format}`
+      const bytes = await writeStill(still.png, join(outputDir, asset), mergeStillOptions(config.defaults, still.spec))
+      const maxBytes = still.spec.maxBytes ?? 0
+      if (maxBytes > 0 && bytes > maxBytes) {
+        throw mediaError(ExitCode.SceneFailed, `${scene.slug}/${asset} is ${formatBytes(bytes)}, over the ${formatBytes(maxBytes)} budget`)
+      }
+      stills.push({ asset, bytes, maxBytes })
     }
+    // why: a still-only scene's record is named for the asset it actually produced, so `check` can find it without knowing which lane wrote it
+    const primary = outcome === undefined ? (stills[0]?.asset ?? `${assetName}.png`) : `${assetName}.gif`
 
     const sidecar: AssetSidecar = {
       slug: scene.slug,
-      asset: `${assetName}.gif`,
+      asset: primary,
       generatedAt: nowIso(),
       sceneHash: hashScene(loaded.filePath),
       sourceUrl: url,
       viewport: scene.viewport,
       record: scene.record,
       startMs: recorded.startMs,
-      gif,
-      encoder: outcome.encoder,
-      toolVersions: outcome.toolVersions,
-      bytes: outcome.bytes,
-      frames: outcome.frames,
+      ...(outcome === undefined
+        ? {}
+        : { gif, encoder: outcome.encoder, toolVersions: outcome.toolVersions, bytes: outcome.bytes, frames: outcome.frames }),
+      ...(stills.length === 0 ? {} : { stills }),
       browser: { name: 'chromium', version: launched.browser.version(), executablePath: launched.executablePath },
       determinism: scene.determinism ?? {},
       console: session.consoleRecord,
@@ -106,11 +117,11 @@ export async function recordScene(loaded: LoadedScene, config: ResolvedMediaConf
 
     return {
       slug: scene.slug,
-      asset: sidecar.asset,
-      bytes: outcome.bytes,
-      maxBytes: gif.maxBytes,
-      frames: outcome.frames,
-      encoder: outcome.encoder,
+      asset: primary,
+      bytes: outcome?.bytes ?? stills.reduce((total, still) => total + still.bytes, 0),
+      maxBytes: outcome === undefined ? 0 : gif.maxBytes,
+      frames: outcome?.frames ?? 0,
+      ...(outcome === undefined ? {} : { encoder: outcome.encoder }),
       elapsedMs: performance.now() - startedAt,
     }
   } finally {

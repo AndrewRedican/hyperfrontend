@@ -50,6 +50,8 @@ export interface StillSpec {
   quality?: number
   /** Output width in pixels, or omitted to keep the captured size. */
   width?: number
+  /** Size ceiling for the written file, or omitted to leave it unbudgeted. */
+  maxBytes?: number
 }
 
 /** How many elements a selector is expected to match once the page is ready. */
@@ -85,7 +87,15 @@ export interface BrowserSceneInput {
   slug: string
   /** Filename stem the scene's assets are written under. */
   asset?: string
-  /** Artefacts this scene emits. */
+  /**
+   * Artefacts this scene emits.
+   *
+   * A scene that does not list `gif` records no video and encodes nothing: it
+   * opens the page, holds it for the record window, writes its {@link stills}
+   * and stops. A scene that does not list `still` may still declare stills;
+   * the list says what the scene is *for*, and the GIF is what the budget and
+   * the freshness check are applied to.
+   */
   outputs: readonly SceneOutput[]
   /** Viewport the session is recorded at. */
   viewport: Viewport

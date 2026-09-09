@@ -16,8 +16,11 @@ export interface CapturedStill {
 
 /** The finished recording and where inside it the interesting part sits. */
 export interface RecordedVideo {
-  /** Absolute path of the recorded video. */
-  path: string
+  /**
+   * Absolute path of the recorded video, or undefined for a scene that
+   * recorded none because it emits no animation.
+   */
+  path?: string
   /** Offset into the video where the kept animation starts. */
   startMs: number
   /** Length of the kept animation. */
@@ -67,7 +70,11 @@ export async function recordWindow(
   await interaction
 
   await session.context.close()
-  const path = await video?.path()
+  // why: a session opened without a video directory has nothing to resolve, and a scene that emits only stills is exactly that case rather than a failure
+  if (video === null) {
+    return { startMs, durationMs: window.durationMs, stills: captured }
+  }
+  const path = await video.path()
   if (path === undefined) {
     throw mediaError(ExitCode.SceneFailed, 'The browser produced no video file. Check that the scene declares a gif output.')
   }
