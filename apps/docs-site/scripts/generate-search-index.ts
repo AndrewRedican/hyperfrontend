@@ -7,8 +7,8 @@ import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { logger } from '@hyperfrontend/logging'
 import { getAllArticles } from '../src/lib/articles'
 import { libraryRoute } from '../src/lib/library-routes'
-import { preparePackageReadme } from '../src/lib/package-readme'
 import { docsNavigation, mainNavLinks } from '../src/lib/navigation'
+import { preparePackageReadme } from '../src/lib/package-readme'
 import { extractMarkdownSections } from '../src/lib/slug'
 
 const OUTPUT_DIR = resolve(__dirname, '../.generated')
