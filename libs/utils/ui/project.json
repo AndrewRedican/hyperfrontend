@@ -5,6 +5,16 @@
   "sourceRoot": "{projectRoot}/src",
   "projectType": "library",
   "tags": ["type:util", "scope:public"],
+  "metadata": {
+    "compatibility": {
+      "environments": {
+        "node": "partial",
+        "browser": "full",
+        "webWorker": "full"
+      },
+      "note": "Some utilities require browser APIs; check individual exports."
+    }
+  },
   "targets": {
     "version": {},
     "version-check": {},
