@@ -134,41 +134,62 @@
      A document column that grows with the viewport is the whole point of the
      wide layout: a diagram, a code sample or a reference table is easier to
      read the more of it is on screen at once. Running paragraphs to that same
-     width is the opposite — past roughly eighty characters the eye loses the
-     start of the next line on the way back, and a wide screen makes the
-     document worse rather than better.
+     width is the opposite — past a certain line length the eye loses the start
+     of the next line on the way back, and a wide screen makes the document
+     worse rather than better.
 
-     So the column and the measure are separated. The column takes whatever
-     width the shell can give it; prose is capped here; and the blocks that are
-     worth the width are exempted rather than each being asked to opt in. The
-     exemption list is deliberately short, and everything on it is a block the
-     reader scans rather than reads a line at a time.
+     What decides where that cap belongs is the rest of the ladder rather than
+     a typographic ideal in the abstract. Every width from a phone up to the
+     point the shell stops growing already lays README prose out at the full
+     column, and that column peaks a little over nine hundred pixels: the
+     navigation, the document index and the padding take the surplus as the
+     viewport grows, so the text block stays roughly the same size whatever
+     laptop it is read on. A cap tighter than that is not a reading measure at
+     all, it is a second container inside the first — the column has room the
+     text visibly refuses, and the page reads as though something is broken.
 
-     The cap starts at the same width the shell does, and for the same reason.
-     Below it the document column is already a measure — the navigation and the
-     padding have taken the surplus — and capping there would only pull the text
-     in and leave a gap beside it. It is the width at which the column stops
-     being constrained by the screen that the text needs a constraint of its
-     own. Keeping the two on one breakpoint is also what leaves every narrower
-     layout, phone through laptop, rendering exactly as it did.
+     So the cap is set at the width the column reaches on its own, and it is
+     only switched on where the column would otherwise outrun it: `ultra`, the
+     width at which the shell stops growing and hands the rest back as margin.
+     Below that the measure never binds and prose simply fills its column,
+     which is what every narrower layout has always done. Above it the document
+     column jumps by nearly two hundred pixels and the text stays where it was.
+
+     The blocks worth the extra width are exempted rather than each being asked
+     to opt in, and the list is deliberately short: everything on it is
+     something the reader scans rather than reads a line at a time. Headings
+     are on it because they are neither — they are the page's own structure,
+     and a heading that wraps early inside a column with room to spare is the
+     clearest signal of the inner container this rule exists not to be.
 
      Scoped to `.doc-measure` rather than applied to every `.prose` on the site
      because the article pages set their own, narrower, editorial width and
      must not be pulled to this one. */
-  @media (min-width: 1400px) {
+  /* The other end of the same problem. A README's title is a package name, and
+     a package name is one unbreakable word set at forty pixels: on a phone it
+     is wider than the screen, and because the anchor link turns every heading
+     into a flex row, the word cannot shrink and takes the whole page sideways
+     with it. `anywhere` rather than `break-word` because only `anywhere`
+     lowers the box's min-content size, which is the number the flex item is
+     refusing to go below. */
+  .readme-content :is(h1, h2, h3, h4, h5, h6) {
+    overflow-wrap: anywhere;
+  }
+
+  @media (min-width: 1920px) {
     .doc-measure {
-      --doc-measure: 44rem;
+      --doc-measure: 58rem;
     }
 
     .doc-measure .readme-content > .prose > * {
       max-width: var(--doc-measure);
     }
 
-    /* Code, tables, images and the rules between sections take the whole
-       column. A mermaid diagram needs no rule here: it is rendered as a sibling
-       of the prose containers rather than inside one, so it already spans the
-       column. */
-    .doc-measure .readme-content > .prose > :is(pre, table, figure, img, hr) {
+    /* Headings, code, tables, images and the rules between sections take the
+       whole column. A mermaid diagram needs no rule here: it is rendered as a
+       sibling of the prose containers rather than inside one, so it already
+       spans the column. */
+    .doc-measure .readme-content > .prose > :is(h1, h2, h3, h4, h5, h6, pre, table, figure, img, hr) {
       max-width: none;
     }
   }

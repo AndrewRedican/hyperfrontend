@@ -60,10 +60,16 @@ export const docLayout = freeze({
  *
  * A document column that grows with the viewport is what lets a diagram, a
  * code block or a table use the room a wide screen has; running paragraphs to
- * that same width is what makes it unreadable. The measure separates the two:
- * text is capped at a line length the eye can track back from, and the blocks
- * that are worth the width are exempted from the cap in
+ * that same width is what makes it unreadable. The measure separates the two,
+ * and the blocks that are worth the width are exempted from it in
  * {@link file://../styles/globals.css} rather than each being asked to opt out.
+ *
+ * The cap only binds past {@link SHELL_MAX_BREAKPOINT}. Below it the column is
+ * already the measure: the navigation, the document index and the padding take
+ * the surplus as the viewport grows, so prose fills its column at every width
+ * from a phone through a wide laptop, exactly as it always has. Past it the
+ * shell stops growing, the column gains the whole remainder at once, and that
+ * is the only place text has to be held back from it.
  *
  * @see {@link docLayout}
  */
