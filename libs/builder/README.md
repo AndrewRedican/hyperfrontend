@@ -158,6 +158,15 @@ intended for browser, Web Worker, or CDN runtimes.
 | TypeScript >= 5.9 | ✅        |
 | Browser           | ❌        |
 
+### Output Formats
+
+| Format | File           | Tree-Shakeable |
+| ------ | -------------- | :------------: |
+| ESM    | `index.esm.js` |       ✅       |
+| CJS    | `index.cjs.js` |       ❌       |
+
+The package installs the `hf-build` command, and ships Node SEA native binaries alongside it for `linux-x64`, `linux-arm64`, `darwin-x64`, `darwin-arm64`, and `win32-x64`.
+
 ## License
 
 [MIT](https://github.com/AndrewRedican/hyperfrontend/blob/main/LICENSE.md)
