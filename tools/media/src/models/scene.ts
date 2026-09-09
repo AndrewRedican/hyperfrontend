@@ -44,6 +44,17 @@ export interface StillSpec {
   selector?: string
   /** Whether to capture the full scrollable page rather than the viewport. */
   fullPage?: boolean
+  /**
+   * Whether to keep the page's own transparency instead of compositing it onto
+   * white.
+   *
+   * A page that paints no background of its own is transparent by design, and
+   * the browser's default white is not part of what it renders. Capturing that
+   * white bakes a colour into the image that the page never drew, which shows
+   * the moment the still is laid over anything but white. Only `png` and
+   * `webp` carry the alpha through; `jpeg` discards it.
+   */
+  omitBackground?: boolean
   /** Container and codec to write. */
   format?: StillFormat
   /** Quality from 1 to 100. Ignored for PNG. */
