@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import type { AnchorSplitResult, MarkdownLinkResult, TransformLinkResult, ContentExtractionResult } from './generate-docs.types'
+import type { PackageCompatibility, PackageOutput } from './package-facts.types'
 import { execFileSync } from 'node:child_process'
 import { existsSync, readFileSync, mkdirSync, writeFileSync } from 'node:fs'
 import { resolve, join, dirname } from 'node:path'
@@ -13,6 +14,7 @@ import { logger } from '@hyperfrontend/logging'
 import { generateGuides } from './generate-guides'
 import { generateMachineReadableDocs } from './generate-machine-readable'
 import { generateSearchIndex } from './generate-search-index'
+import { readPackageFacts } from './package-facts'
 import { REPO_BLOB_BASE } from './repo'
 
 logger.setLogLevel('log')
@@ -617,39 +619,43 @@ interface LibraryDoc {
   version: string
   /** Whether the package is withheld from the registry */
   isPrivate: boolean
+  /** SPDX license identifier from package.json */
+  license: string
+  /** Declared runtime compatibility, null for a package that declares none */
+  compatibility: PackageCompatibility | null
+  /** Formats the package's build target emits */
+  outputs: PackageOutput[]
 }
 
-/** Metadata extracted from a package.json */
+/** Discovery metadata extracted from a package.json */
 interface PackageMetadata {
   /** Keywords from package.json */
   keywords: string[]
   /** Description from package.json */
   description: string
-  /** Released version, empty when the package.json carries none */
-  version: string
-  /** Whether the package is withheld from the registry */
-  isPrivate: boolean
 }
 
 /**
- * Load the published-facing fields of a library's package.json.
+ * Load the discovery fields of a library's package.json.
+ *
+ * Everything a page states about the package itself (version, license,
+ * compatibility, outputs) comes from {@link readPackageFacts} instead, so
+ * those facts have one reader and one set of rules.
  *
  * @param lib - The library configuration
- * @returns Keywords, description, version, and registry visibility
+ * @returns Keywords and description
  */
 function extractPackageMetadata(lib: LibraryConfig): PackageMetadata {
   const packageJsonPath = join(WORKSPACE_ROOT, lib.srcPath, 'package.json')
 
   if (!existsSync(packageJsonPath)) {
-    return { keywords: [], description: '', version: '', isPrivate: false }
+    return { keywords: [], description: '' }
   }
 
   const packageJson: PackageJson = parse(readFileSync(packageJsonPath, 'utf-8'))
   return {
     keywords: packageJson.keywords ?? [],
     description: packageJson.description ?? '',
-    version: packageJson.version ?? '',
-    isPrivate: packageJson.private === true,
   }
 }
 
@@ -674,7 +680,8 @@ function generateDocs() {
 
     const hasApi = generateTypeDoc(lib)
 
-    const { keywords, description, version, isPrivate } = extractPackageMetadata(lib)
+    const { keywords, description } = extractPackageMetadata(lib)
+    const facts = readPackageFacts(join(WORKSPACE_ROOT, lib.srcPath), lib.packageName)
 
     if (readme.exists) {
       const readmeOutput = join(DOCS_OUTPUT, lib.slug, 'readme.md')
@@ -698,8 +705,11 @@ function generateDocs() {
       hasApi,
       keywords,
       description,
-      version,
-      isPrivate,
+      version: facts.version,
+      isPrivate: facts.isPrivate,
+      license: facts.license,
+      compatibility: facts.compatibility,
+      outputs: facts.outputs,
     })
 
     logger.log('')

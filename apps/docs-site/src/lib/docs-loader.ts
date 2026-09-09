@@ -1,5 +1,6 @@
 import type { ApiLinkIndex, PackageSymbolLinks } from '@/components/api-reference/api-link-context'
 import type { EcosystemLibrary } from '@/lib/ecosystem'
+import type { PackageCompatibility, PackageOutput } from '../../scripts/package-facts.types'
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs'
 import { resolve, join } from 'node:path'
 import { LIBRARIES } from '@/lib/content'
@@ -75,6 +76,12 @@ interface ManifestLibrary {
   version?: string
   /** Whether the package is withheld from the registry */
   isPrivate?: boolean
+  /** SPDX license identifier from package.json */
+  license?: string
+  /** Runtime compatibility the package declares in its project.json */
+  compatibility?: PackageCompatibility | null
+  /** Formats the package's build target emits */
+  outputs?: PackageOutput[]
 }
 
 /**
