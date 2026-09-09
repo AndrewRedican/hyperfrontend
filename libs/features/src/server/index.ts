@@ -1,11 +1,6 @@
 /**
- * Dev server, debug UI, and production static server for feature apps.
- *
- * Serves each app's compiled output on its own port and hosts the in-browser
- * debug UI (display-mode, resize, message-log, and security controls) at the
- * root of a control server. The same static core also powers `hf serve`, the
- * production server with compression, conditional requests, and header rules,
- * whose pipeline is open for custom steps.
+ * Serves feature apps: one static server per app, the in-browser debug UI that
+ * drives them, and the production static server behind `hf serve`.
  *
  * @module @hyperfrontend/features/server
  */

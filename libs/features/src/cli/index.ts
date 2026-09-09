@@ -1,9 +1,7 @@
 /**
- * Programmatic entry point for the hyperfrontend features CLI (`init`, `build`, `dev`, `serve`).
- *
- * Exposes the argv dispatcher consumed by the `hf` bin plus the individual
- * command runners, the tiered config loader, and the build-config resolver so
- * the surface can be driven in-process and unit-tested.
+ * The `hf` command surface as a library: the argv dispatcher behind the bin,
+ * the `init`, `build`, `dev` and `serve` runners, the tiered config loader, and
+ * the build-config resolver.
  *
  * @module @hyperfrontend/features/cli
  */
