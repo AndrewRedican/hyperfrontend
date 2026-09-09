@@ -1,9 +1,6 @@
 /**
- * Safe copies of WebSocket built-ins via factory functions.
- *
- * Provides safe references to WebSocket.
- * These references are captured at module initialization time to protect against
- * prototype pollution attacks. Import only what you need for tree-shaking.
+ * Safe factory for the WebSocket constructor, captured at load so later
+ * prototype pollution cannot reach it.
  *
  * @module @hyperfrontend/immutable-api-utils/built-in-copy/websocket
  */

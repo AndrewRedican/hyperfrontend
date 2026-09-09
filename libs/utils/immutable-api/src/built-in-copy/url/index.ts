@@ -1,9 +1,6 @@
 /**
- * Safe copies of URL built-ins via factory functions.
- *
- * Provides safe references to URL and URLSearchParams.
- * These references are captured at module initialization time to protect against
- * prototype pollution attacks. Import only what you need for tree-shaking.
+ * Safe factories for the URL built-ins, URL and URLSearchParams, captured at
+ * load so later prototype pollution cannot reach them.
  *
  * @module @hyperfrontend/immutable-api-utils/built-in-copy/url
  */

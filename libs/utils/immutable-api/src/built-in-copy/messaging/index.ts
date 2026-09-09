@@ -1,12 +1,7 @@
 /**
- * Safe copies of Messaging/Communication built-in functions and constructors.
- *
- * These references are captured at module initialization time to protect against
- * prototype pollution attacks. Import only what you need for tree-shaking.
- *
- * Note: `postMessage` is a method on specific objects (Window, Worker, MessagePort)
- * rather than a global. This module provides factory functions for MessageChannel
- * and BroadcastChannel, whose instances have safe postMessage methods.
+ * Safe copies of the messaging built-ins, captured at load so later prototype
+ * pollution cannot reach them: factories for MessageChannel and
+ * BroadcastChannel, whose instances carry a safe `postMessage`.
  *
  * @module @hyperfrontend/immutable-api-utils/built-in-copy/messaging
  */

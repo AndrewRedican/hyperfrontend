@@ -1,8 +1,6 @@
 /**
- * Safe copies of Number built-in methods and constants.
- *
- * These references are captured at module initialization time to protect against
- * prototype pollution attacks. Import only what you need for tree-shaking.
+ * Safe copies of the Number built-in methods and constants, captured at load
+ * so later prototype pollution cannot reach them.
  *
  * @module @hyperfrontend/immutable-api-utils/built-in-copy/number
  */

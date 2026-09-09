@@ -1,12 +1,6 @@
 /**
- * `@hyperfrontend/immutable-api-utils`
- *
- * Decorators and utilities for creating immutable, tamper-proof object APIs.
- *
- * This package provides:
- * - Safe copies of built-in JavaScript objects and methods
- * - Utilities for locking object properties
- * - Property descriptor utilities
+ * Tamper-proof copies of the JavaScript built-ins, and the decorators and
+ * helpers that lock an object's own properties and descriptors.
  *
  * @module @hyperfrontend/immutable-api-utils
  */
