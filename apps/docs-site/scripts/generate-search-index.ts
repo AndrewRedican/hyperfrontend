@@ -7,6 +7,7 @@ import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { logger } from '@hyperfrontend/logging'
 import { getAllArticles } from '../src/lib/articles'
 import { libraryRoute } from '../src/lib/library-routes'
+import { preparePackageReadme } from '../src/lib/package-readme'
 import { docsNavigation, mainNavLinks } from '../src/lib/navigation'
 import { extractMarkdownSections } from '../src/lib/slug'
 
@@ -67,12 +68,13 @@ interface TypedocNode {
  * Read markdown sections from a generated file, when it exists.
  *
  * @param relativePath - Path under `.generated/`
+ * @param prepare - Reduces the file to the markdown its page renders, when the page renders less than the file holds
  * @returns Sections, or undefined when the file is absent or has none
  */
-function sectionsFrom(relativePath: string) {
+function sectionsFrom(relativePath: string, prepare: (markdown: string) => string = (markdown) => markdown) {
   const filePath = join(OUTPUT_DIR, relativePath)
   if (!existsSync(filePath)) return undefined
-  const sections = extractMarkdownSections(readFileSync(filePath, 'utf-8')).map(({ title, anchor }) => ({ title, anchor }))
+  const sections = extractMarkdownSections(prepare(readFileSync(filePath, 'utf-8'))).map(({ title, anchor }) => ({ title, anchor }))
   return sections.length > 0 ? sections : undefined
 }
 
@@ -161,7 +163,7 @@ function generateSearchIndex(): void {
       description: library.description || undefined,
       package: library.packageName,
       terms: isArray(library.keywords) && library.keywords.length > 0 ? library.keywords : undefined,
-      sections: sectionsFrom(`docs/${library.slug}/readme.md`),
+      sections: sectionsFrom(`docs/${library.slug}/readme.md`, preparePackageReadme),
     })
 
     const architectureSections = sectionsFrom(`docs/${library.slug}/architecture.md`)

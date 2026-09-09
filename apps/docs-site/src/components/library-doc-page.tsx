@@ -4,8 +4,8 @@ import { ApiLinkProvider, ApiReference } from '@/components/api-reference'
 import { Breadcrumb } from '@/components/breadcrumb'
 import { CodeBlock } from '@/components/code-block'
 import { DocumentShell } from '@/components/document/document-shell'
-import { SuggestGuideLink } from '@/components/guides/suggest-guide-link'
 import { H2 } from '@/components/heading-with-anchor'
+import { RelatedReading } from '@/components/package/related-reading'
 import { removeBadges, transformLinks } from '@/lib/content'
 import { getLibraryReadme, getLibraryArchitecture, getLibraryApi, getApiLinkIndex } from '@/lib/docs-loader'
 import { documentSubject } from '@/lib/document-model'
@@ -13,6 +13,8 @@ import { buildGuidesHref } from '@/lib/guide-filters'
 import { getGuidesForPackage } from '@/lib/guides'
 import { markdownToHtml } from '@/lib/markdown'
 import { extractMermaidBlocks } from '@/lib/mermaid-utils'
+import { preparePackageReadme } from '@/lib/package-readme'
+import { buildRelatedReading } from '@/lib/related-reading'
 import { extractMarkdownSections } from '@/lib/slug'
 import Link from 'next/link'
 import { ReadmeContent } from './readme-content'
@@ -49,7 +51,9 @@ export async function LibraryDocPage({ title, packageName, slug, category, fallb
     let processed = removeBadges(readme)
     processed = transformLinks(processed, { librarySlug: slug })
 
-    const { processedContent, diagrams } = extractMermaidBlocks(processed)
+    const related = buildRelatedReading({ packageName, slug, readme: processed })
+
+    const { processedContent, diagrams } = extractMermaidBlocks(preparePackageReadme(processed))
 
     const html = await markdownToHtml(processedContent)
 
@@ -109,35 +113,14 @@ export async function LibraryDocPage({ title, packageName, slug, category, fallb
           </section>
         )}
 
-        {/* why: one place to go next, at the end where a reader is looking for one. The package's own guides and the two orientation documents were separate sections either side of the reference for no reason a reader could see — both answer "what else should I read", the reader does not care that one list comes from the guide corpus and the other is fixed, and putting one of them before hundreds of API symbols asked them to choose before they had read the page. */}
-        <section className="mt-12 border-t border-slate-200 pt-8 dark:border-slate-700">
-          <H2 id={RELATED_READING_ANCHOR} className="text-2xl font-bold text-slate-900 dark:text-white mb-6">
-            {RELATED_READING_TITLE}
-          </H2>
-          <div className="grid gap-4 sm:grid-cols-2">
-            {/* why: the package's own guides come first because they are the only entries on this list that are about this package */}
-            {guides.map((guide) => (
-              <RelatedCard key={guide.slug} href={guide.route} title={guide.title} blurb={guide.problem} />
-            ))}
-            <RelatedCard href="/docs" title="Getting Started" blurb="Learn how to set up hyperfrontend." />
-            <RelatedCard href="/architecture" title="Architecture Guide" blurb="Understand how the libraries work together." />
-          </div>
-          <p className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-slate-600 dark:text-slate-400">
-            {guides.length > 0 ? (
-              <>
-                <Link href={guidesHref} className="font-medium text-primary-600 hover:underline dark:text-primary-400">
-                  Browse guides filtered to this package
-                </Link>
-                <SuggestGuideLink packageName={packageName} />
-              </>
-            ) : (
-              <>
-                <span>No guides cover {packageName} yet.</span>
-                <SuggestGuideLink packageName={packageName} label="Request one" />
-              </>
-            )}
-          </p>
-        </section>
+        <RelatedReading
+          anchor={RELATED_READING_ANCHOR}
+          title={RELATED_READING_TITLE}
+          entries={related}
+          packageName={packageName}
+          guidesHref={guidesHref}
+          hasGuides={guides.length > 0}
+        />
       </DocumentShell>
     )
   }
@@ -191,43 +174,6 @@ export async function LibraryDocPage({ title, packageName, slug, category, fallb
         <CodeBlock code={`npm install ${packageName}`} />
       </section>
     </>
-  )
-}
-
-/** Props for {@link RelatedCard}. */
-interface RelatedCardProps {
-  /** Site-relative route the card opens. */
-  href: string
-  /** What the destination is called. */
-  title: string
-  /** One line on what the reader will find there. */
-  blurb: string
-}
-
-/**
- * One entry in a library page's related reading.
- *
- * Every entry is rendered the same whether it came from the guide corpus or is
- * one of the two fixed orientation documents, because from the reader's side
- * they are the same kind of thing and the difference is only in where the page
- * looked them up.
- * @param props - See {@link RelatedCardProps}.
- * @param props.href - Site-relative route the card opens
- * @param props.title - What the destination is called
- * @param props.blurb - One line on what the reader will find there
- * @returns The card.
- */
-function RelatedCard({ href, title, blurb }: RelatedCardProps) {
-  return (
-    <Link
-      href={href}
-      className="group rounded-lg border border-slate-200 bg-white p-4 transition-colors hover:border-primary-300 hover:bg-primary-50 dark:border-slate-700 dark:bg-slate-900 dark:hover:border-primary-700 dark:hover:bg-primary-950/30"
-    >
-      <h3 className="font-semibold text-slate-900 group-hover:text-primary-600 dark:text-white dark:group-hover:text-primary-400">
-        {title}
-      </h3>
-      <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">{blurb}</p>
-    </Link>
   )
 }
 
