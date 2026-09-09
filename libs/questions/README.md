@@ -165,6 +165,15 @@ type PromptOutcome<T> = { result: 'submitted'; value: T } | { result: 'cancelled
 
 On TTY inputs a prompt session enables bracketed paste mode (`ESC[?2004h`) and restores it on close; terminals without bracketed paste still paste correctly because multi-character input chunks are treated as pastes. Single-line prompts collapse pasted newlines into spaces, so pasting can never submit a value.
 
+### Output Formats
+
+| Format | File           | Tree-Shakeable |
+| ------ | -------------- | :------------: |
+| ESM    | `index.esm.js` |       ✅       |
+| CJS    | `index.cjs.js` |       ❌       |
+
+No browser bundle is published: the library drives a terminal, so an IIFE or UMD build would have nothing to run against.
+
 ## License
 
 [MIT](https://github.com/AndrewRedican/hyperfrontend/blob/main/LICENSE.md)
