@@ -1,8 +1,6 @@
 /**
- * Pure formatter that renders a `CommitDraft` (the in-progress shape of
- * `ConventionalCommit`) into the final commit message string: the exact
- * text that would land in `.git/COMMIT_EDITMSG`. Used by the authoring
- * session's preview step and by the subject step's live header countdown.
+ * Pure formatter rendering a `CommitDraft` into the final message string: the
+ * exact text that would land in `.git/COMMIT_EDITMSG`.
  *
  * @module @hyperfrontend/versioning/commits/format
  */

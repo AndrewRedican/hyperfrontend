@@ -1,8 +1,6 @@
 /**
- * Pure rule engine that validates parsed conventional commits against a
- * configurable ruleset. Mirrors the semantics of commitlint and is reused
- * inline during authoring (`commits/author/`) and out-of-band by the `cl`
- * commit-msg hook bin.
+ * Pure rule engine judging parsed conventional commits against a configurable
+ * ruleset, with commitlint's semantics.
  *
  * @module @hyperfrontend/versioning/commits/validate
  */
