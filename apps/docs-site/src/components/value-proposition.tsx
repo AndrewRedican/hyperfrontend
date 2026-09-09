@@ -339,13 +339,15 @@ export function ValueProposition() {
     <div className="flex h-full flex-col justify-center py-8 lg:py-12">
       {/* Headline */}
       <div className="mb-6 lg:mb-8">
-        <p className="mb-3 text-sm font-medium uppercase tracking-wider text-primary-600 dark:text-primary-400">
-          Micro-Frontend Architecture
+        {/* why: what the architecture is stays on the page, but under the outcome rather than over it — an evaluator asks what this buys them before asking how it is built, and the differentiators read as evidence for the claim above only if the claim comes first. Set at the narrative's own size so it reads as the supporting line it is. */}
+        <p className="mb-4 text-base leading-relaxed text-slate-600 dark:text-slate-400">
+          Sandbox any web app, however old, and compose it at build time or at runtime. Open source, zero runtime dependencies, enterprise
+          edition announced.
         </p>
         <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-4xl lg:text-5xl">
-          Ship independently.
+          Integrate in weeks.
           <br />
-          <span className="text-primary-600 dark:text-primary-400">Compose at runtime.</span>
+          <span className="text-primary-600 dark:text-primary-400">Modernize without a rewrite.</span>
         </h1>
       </div>
 
