@@ -1,8 +1,7 @@
 /**
- * V3 protocol for browser: a session-keyed envelope with no shared secret.
- *
- * Every session is keyed from an ephemeral P-256 agreement carried in the handshake, so a
- * party that only listens cannot read the traffic; the peer itself is not authenticated.
+ * V3 protocol for the browser: a session envelope keyed by an ephemeral P-256
+ * agreement in the handshake and no shared secret, so a listener cannot read
+ * the traffic and the peer is unauthenticated.
  *
  * @module @hyperfrontend/network-protocol/browser/v3
  */
