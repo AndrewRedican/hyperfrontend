@@ -55,7 +55,48 @@ Generators create compliant configs. Manual edits must pass these ESLint rules.
 }
 ```
 
-Each entry point `index.ts` requires `@module` JSDoc header — see `lib-require-module-header`.
+Each entry point `index.ts` requires a `@module` JSDoc header — see `lib-require-module-header`.
+
+---
+
+## Module Headers
+
+The description above `@module` is what a reader sees beside the module in the generated API docs. It answers one question: **what capability or responsibility does this module expose?**
+
+- One or two sentences, **200 characters maximum** (the description only; tags are not counted).
+- Name the capability, not the implementation. No walkthroughs, no bullet lists, no miniature README.
+- Say something the path does not. "Nx `serve` executor entry point" for `.../nx/executors/serve` is not a description.
+- Detail belongs where a reader goes looking for it: the package README, the entry point's own README, or the JSDoc on the symbols themselves.
+
+```typescript
+// ❌ restates the path
+/**
+ * Nx `serve` executor entry point.
+ *
+ * @module @hyperfrontend/features/nx/executors/serve
+ */
+
+// ❌ explains how it works
+/**
+ * Dev server, debug UI, and production static server for feature apps.
+ *
+ * Serves each app's compiled output on its own port and hosts the in-browser
+ * debug UI (display-mode, resize, message-log, and security controls) at the
+ * root of a control server. The same static core also powers `hf serve`, ...
+ *
+ * @module @hyperfrontend/features/server
+ */
+
+// ✅ names the capability
+/**
+ * Serves feature apps: one static server per app, the in-browser debug UI that
+ * drives them, and the production static server behind `hf serve`.
+ *
+ * @module @hyperfrontend/features/server
+ */
+```
+
+`lib-require-module-header` enforces the mechanical part: a description exists, it fits the ceiling, it clears the floor, and it carries words the module path does not. It cannot judge whether a sentence is worth reading — that part is yours.
 
 ---
 
