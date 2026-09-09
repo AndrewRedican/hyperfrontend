@@ -1,19 +1,23 @@
 import type { TypeDocOutput } from '@/components/api-reference'
+import type { PackageFacts } from '@/lib/package-facts'
 import { TrackedLink } from '@/components/analytics/tracked-link'
 import { ApiLinkProvider, ApiReference } from '@/components/api-reference'
 import { Breadcrumb } from '@/components/breadcrumb'
 import { CodeBlock } from '@/components/code-block'
 import { DocumentShell } from '@/components/document/document-shell'
-import { H2 } from '@/components/heading-with-anchor'
+import { H1, H2 } from '@/components/heading-with-anchor'
+import { PackageMetadata } from '@/components/package/package-metadata'
 import { RelatedReading } from '@/components/package/related-reading'
 import { removeBadges, transformLinks } from '@/lib/content'
-import { getLibraryReadme, getLibraryArchitecture, getLibraryApi, getApiLinkIndex } from '@/lib/docs-loader'
+import { getLibraryReadme, getLibraryApi, getApiLinkIndex } from '@/lib/docs-loader'
 import { documentSubject } from '@/lib/document-model'
 import { buildGuidesHref } from '@/lib/guide-filters'
 import { getGuidesForPackage } from '@/lib/guides'
 import { markdownToHtml } from '@/lib/markdown'
 import { extractMermaidBlocks } from '@/lib/mermaid-utils'
+import { getPackageFacts, npmPackageUrl } from '@/lib/package-facts'
 import { preparePackageReadme } from '@/lib/package-readme'
+import { readSectionLink } from '@/lib/readme-sections'
 import { buildRelatedReading } from '@/lib/related-reading'
 import { extractMarkdownSections } from '@/lib/slug'
 import Link from 'next/link'
@@ -39,9 +43,11 @@ const RELATED_READING_TITLE = 'Related reading'
 /** @see {@link RELATED_READING_TITLE} */
 const RELATED_READING_ANCHOR = 'related-reading'
 
+/** What a page assumes about a package the manifest has not covered yet. */
+const NO_FACTS: PackageFacts = { license: '', version: '', isPrivate: false, compatibility: null, outputs: [] }
+
 export async function LibraryDocPage({ title, packageName, slug, category, fallbackDescription, fallbackFeatures }: LibraryPageProps) {
   const readme = getLibraryReadme(slug)
-  const hasArchitecture = !!getLibraryArchitecture(slug)
   const apiData = getLibraryApi(slug) as TypeDocOutput | null
   const guides = getGuidesForPackage(packageName)
   // why: The same canonical destination the package README points at, so both entry points land on one filtered view
@@ -51,9 +57,13 @@ export async function LibraryDocPage({ title, packageName, slug, category, fallb
     let processed = removeBadges(readme)
     processed = transformLinks(processed, { librarySlug: slug })
 
+    const facts = getPackageFacts(packageName) ?? NO_FACTS
+    const licenseHref = readSectionLink(processed, 'license')
     const related = buildRelatedReading({ packageName, slug, readme: processed })
 
-    const { processedContent, diagrams } = extractMermaidBlocks(preparePackageReadme(processed))
+    const { title: packageTitle, body } = preparePackageReadme(processed)
+
+    const { processedContent, diagrams } = extractMermaidBlocks(body)
 
     const html = await markdownToHtml(processedContent)
 
@@ -72,34 +82,15 @@ export async function LibraryDocPage({ title, packageName, slug, category, fallb
       >
         <Breadcrumb />
 
-        <div className="mb-4 flex flex-wrap items-center gap-3">
-          <code className="rounded-lg bg-slate-100 px-3 py-1.5 text-sm font-medium text-slate-700 dark:bg-slate-800 dark:text-slate-300">
-            {packageName}
-          </code>
-          <TrackedLink
-            href={`https://www.npmjs.com/package/${packageName}`}
-            event={{ kind: 'npm', packageName }}
-            external
-            className="text-sm text-primary-600 hover:underline dark:text-primary-400"
-          >
-            View on npm →
-          </TrackedLink>
-          {hasArchitecture && (
-            <Link href={`/docs/libraries/${slug}/architecture`} className="text-sm text-primary-600 hover:underline dark:text-primary-400">
-              Architecture →
-            </Link>
-          )}
-          <Link href={guidesHref} className="text-sm text-primary-600 hover:underline dark:text-primary-400">
-            Guides &amp; tutorials →
-          </Link>
-          {apiData && (
-            <a href="#api-reference" className="text-sm text-primary-600 hover:underline dark:text-primary-400">
-              API Reference →
-            </a>
-          )}
-        </div>
+        <H1 className="font-display text-3xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-4xl">
+          {packageTitle ?? packageName}
+        </H1>
 
-        <ReadmeContent html={html} mermaidDiagrams={diagrams} />
+        <PackageMetadata packageName={packageName} facts={facts} licenseHref={licenseHref} />
+
+        <div className="mt-6">
+          <ReadmeContent html={html} mermaidDiagrams={diagrams} />
+        </div>
 
         {/* API Reference */}
         {apiData && (
@@ -141,7 +132,7 @@ export async function LibraryDocPage({ title, packageName, slug, category, fallb
           {packageName}
         </code>
         <TrackedLink
-          href={`https://www.npmjs.com/package/${packageName}`}
+          href={npmPackageUrl(packageName)}
           event={{ kind: 'npm', packageName }}
           external
           className="text-sm text-primary-600 hover:underline dark:text-primary-400"

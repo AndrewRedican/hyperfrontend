@@ -79,6 +79,20 @@ function sectionsFrom(relativePath: string, prepare: (markdown: string) => strin
 }
 
 /**
+ * A package README as its documentation page renders it.
+ *
+ * The page claims a few README sections and shows them as metadata rather than
+ * as document body, so indexing the file as written would offer a reader a
+ * deep link to a heading that is not on the page.
+ *
+ * @param markdown - The generated package README
+ * @returns The markdown the page actually renders
+ */
+function renderedPackageReadme(markdown: string): string {
+  return preparePackageReadme(markdown).body
+}
+
+/**
  * Collect the exported symbol names that render with an `api-<name>` anchor
  * on a library page, from that library's TypeDoc JSON.
  *
@@ -163,7 +177,7 @@ function generateSearchIndex(): void {
       description: library.description || undefined,
       package: library.packageName,
       terms: isArray(library.keywords) && library.keywords.length > 0 ? library.keywords : undefined,
-      sections: sectionsFrom(`docs/${library.slug}/readme.md`, preparePackageReadme),
+      sections: sectionsFrom(`docs/${library.slug}/readme.md`, renderedPackageReadme),
     })
 
     const architectureSections = sectionsFrom(`docs/${library.slug}/architecture.md`)
