@@ -175,6 +175,109 @@
 }
 
 @layer components {
+  /* A demo's card while its live session is still connecting.
+
+     The card holds a real photograph of the demo it is about to show, taken
+     from the same build the embed loads, at the size and framing the live
+     frame will occupy. So the loading state is not a stand-in for the demo, it
+     is the demo, held still: when the session proves itself the frame fades up
+     over an image already in its place, and there is no box to fill, no
+     reflow, and nothing that jumps.
+
+     What separates the two is a treatment rather than a shape. The still is
+     desaturated and dimmed and carries a wash of the card's own accent, the
+     way a photograph reads against the scene it was taken from: recognisably
+     the same thing, plainly not the live one. The wash is deliberately gentle
+     and blended rather than laid on top, because a strong tint would have to
+     drain out of the picture during the crossfade and that is exactly the
+     colour flash this is here to avoid.
+
+     The hue arrives as --demo-accent-light / --demo-accent-dark, set on the
+     card by the component from the demo's own theme, so every card is tinted
+     toward the colour the rest of the page already lends it.
+
+     The sheen is the only thing that says work is happening. It is slow, low
+     in contrast and in the same accent, so it reads as light crossing a
+     surface rather than as a skeleton bar: a placeholder shimmer is fast and
+     grey and moves over empty boxes, and this moves over a picture. It is the
+     only moving part, it is composited, and it holds still when the visitor
+     has asked for less motion. */
+  .demo-preview {
+    --demo-preview-accent: var(--demo-accent-light, 71 85 105);
+  }
+
+  .dark .demo-preview {
+    --demo-preview-accent: var(--demo-accent-dark, 148 163 184);
+  }
+
+  /* Dimming is what the card gradient shows through, so it is set per demo
+     rather than globally: a capture that carries its own alpha is already
+     sitting on that gradient and needs very little, while an opaque one is
+     covering it and turns to mush long before it looks subdued. Both end up
+     equally quiet because desaturation and the accent wash are doing most of
+     the work, which is also what keeps the crossfade to live from being a
+     change in brightness. */
+  .demo-preview__image {
+    opacity: 0.82;
+    filter: saturate(0.55) contrast(0.98);
+  }
+
+  .demo-preview--transparent .demo-preview__image {
+    opacity: 0.66;
+    filter: saturate(0.5) contrast(0.97);
+  }
+
+  .dark .demo-preview__image {
+    opacity: 0.72;
+    filter: saturate(0.5) contrast(1);
+  }
+
+  .dark .demo-preview--transparent .demo-preview__image {
+    opacity: 0.55;
+    filter: saturate(0.45) contrast(1);
+  }
+
+  /* One flat accent, blended into the picture rather than covering it, so the
+     still takes the card's colour without losing its own. */
+  .demo-preview__tint {
+    background-color: rgb(var(--demo-preview-accent) / 0.32);
+    mix-blend-mode: soft-light;
+  }
+
+  .demo-preview__sheen {
+    background-image: linear-gradient(
+      100deg,
+      transparent 30%,
+      rgb(var(--demo-preview-accent) / 0.14) 45%,
+      rgb(var(--demo-preview-accent) / 0.22) 50%,
+      rgb(var(--demo-preview-accent) / 0.14) 55%,
+      transparent 70%
+    );
+    animation: demo-preview-sheen 5.5s cubic-bezier(0.45, 0, 0.25, 1) infinite;
+  }
+
+  @keyframes demo-preview-sheen {
+    0% {
+      transform: translate3d(-115%, 0, 0);
+    }
+    /* why: the pass is quick relative to the cycle, so the card spends most of its time simply being a photograph */
+    55%,
+    100% {
+      transform: translate3d(115%, 0, 0);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .demo-preview__sheen {
+      animation: none;
+      /* why: the light stays, it just stops travelling, so the card still reads as unfinished */
+      transform: none;
+      opacity: 0.6;
+    }
+  }
+}
+
+@layer components {
   /* The landing page's lit band, directly under the hero.
 
      Everything here is one idea: light entering a body of blue water from

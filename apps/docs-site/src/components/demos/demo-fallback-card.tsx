@@ -1,6 +1,7 @@
 import type { AccentRGB } from '@/components/tesseract-background'
 import type { DemoManifestEntry } from '@/lib/demo-manifest'
 import { BOUNDARY_LABELS } from '@/lib/demo-manifest'
+import { DemoPreviewFrame, hasDemoPreview } from './demo-preview-frame'
 
 /** Why the card is standing in for the demo's live surface. */
 export type FallbackStatus = 'planned' | 'built' | 'connecting' | 'offline' | 'idle'
@@ -196,31 +197,71 @@ const FALLBACK_ICON_PATH =
  */
 export function DemoFallbackCard({ entry, status = 'planned' }: DemoFallbackCardProps) {
   const theme = getDemoTheme(entry.slug)
+  const previewed = hasDemoPreview(entry.slug)
   return (
-    <div className={`relative h-full w-full overflow-hidden rounded-2xl border bg-gradient-to-br opacity-80 ${theme.surface}`}>
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,rgba(0,0,0,0.03)_1px,transparent_0)] bg-[length:24px_24px] dark:bg-[radial-gradient(circle_at_1px_1px,rgba(255,255,255,0.03)_1px,transparent_0)]" />
+    <div
+      className={`relative h-full w-full overflow-hidden rounded-2xl border bg-gradient-to-br ${previewed ? '' : 'opacity-80'} ${theme.surface}`}
+    >
+      {/* note: the dot grid is the texture of an empty card; a card holding a photograph of its demo has no emptiness to texture. */}
+      {previewed ? (
+        <DemoPreviewFrame slug={entry.slug} theme={theme} connecting={status === 'connecting'} />
+      ) : (
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,rgba(0,0,0,0.03)_1px,transparent_0)] bg-[length:24px_24px] dark:bg-[radial-gradient(circle_at_1px_1px,rgba(255,255,255,0.03)_1px,transparent_0)]" />
+      )}
       <span className="absolute right-4 top-3 font-mono text-[10px] uppercase tracking-widest text-slate-400 dark:text-slate-500">
         {CORNER_LABELS[status]}
       </span>
-      <div className="relative flex h-full w-full flex-col items-center justify-center gap-3 p-6 text-center">
-        <span className={`inline-flex rounded-lg p-2.5 ${theme.chip}`}>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="h-7 w-7" aria-hidden>
-            <path strokeLinecap="round" strokeLinejoin="round" d={ICON_PATHS[entry.slug] ?? FALLBACK_ICON_PATH} />
-          </svg>
-        </span>
-        <h3 className="font-display text-xl font-semibold text-slate-900 dark:text-white">{entry.title}</h3>
-        <div className="flex flex-wrap items-center justify-center gap-2 text-xs">
-          <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 font-medium ${theme.pill}`}>
-            {status === 'planned' || status === 'built' || status === 'connecting' ? (
-              <span aria-hidden className={`h-1.5 w-1.5 rounded-full motion-safe:animate-pulse ${theme.dot}`} />
-            ) : null}
-            {STATUS_LABELS[status]}
-          </span>
-          <span className="rounded-full bg-white/60 px-2.5 py-1 font-medium text-slate-600 dark:bg-slate-800/70 dark:text-slate-300">
-            {BOUNDARY_LABELS[entry.boundary]}
-          </span>
+      {previewed ? (
+        // why: the still is the card, so the metadata sits at its foot on a soft scrim rather than over the middle of the picture
+        <div className="absolute inset-x-0 bottom-0 flex flex-col items-center gap-2 bg-gradient-to-t from-white/95 via-white/75 to-transparent p-4 pt-14 text-center dark:from-slate-950/95 dark:via-slate-950/70">
+          <h3 className="font-display text-lg font-semibold text-slate-900 dark:text-white">{entry.title}</h3>
+          <StatusPills entry={entry} status={status} theme={theme} />
         </div>
-      </div>
+      ) : (
+        <div className="relative flex h-full w-full flex-col items-center justify-center gap-3 p-6 text-center">
+          <span className={`inline-flex rounded-lg p-2.5 ${theme.chip}`}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="h-7 w-7" aria-hidden>
+              <path strokeLinecap="round" strokeLinejoin="round" d={ICON_PATHS[entry.slug] ?? FALLBACK_ICON_PATH} />
+            </svg>
+          </span>
+          <h3 className="font-display text-xl font-semibold text-slate-900 dark:text-white">{entry.title}</h3>
+          <StatusPills entry={entry} status={status} theme={theme} />
+        </div>
+      )}
+    </div>
+  )
+}
+
+/** Props for {@link StatusPills}. */
+interface StatusPillsProps {
+  /** The demo the pills describe. */
+  entry: DemoManifestEntry
+  /** Why the live surface is not showing. */
+  status: FallbackStatus
+  /** The demo's accent theme. */
+  theme: DemoTheme
+}
+
+/**
+ * The status and boundary pills, identical whichever way the card is laid out.
+ * @param props - See {@link StatusPillsProps}.
+ * @param props.entry - The demo the pills describe
+ * @param props.status - Why the live surface is not showing
+ * @param props.theme - The demo's accent theme
+ * @returns The pill row.
+ */
+function StatusPills({ entry, status, theme }: StatusPillsProps) {
+  return (
+    <div className="flex flex-wrap items-center justify-center gap-2 text-xs">
+      <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 font-medium ${theme.pill}`}>
+        {status === 'planned' || status === 'built' || status === 'connecting' ? (
+          <span aria-hidden className={`h-1.5 w-1.5 rounded-full motion-safe:animate-pulse ${theme.dot}`} />
+        ) : null}
+        {STATUS_LABELS[status]}
+      </span>
+      <span className="rounded-full bg-white/60 px-2.5 py-1 font-medium text-slate-600 dark:bg-slate-800/70 dark:text-slate-300">
+        {BOUNDARY_LABELS[entry.boundary]}
+      </span>
     </div>
   )
 }
