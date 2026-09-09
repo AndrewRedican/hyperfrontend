@@ -56,7 +56,8 @@ export default async function GuidePage({ params }: GuidePageProps) {
   const prerequisiteKnowledge: string[] = await promiseAll((guide.prerequisites?.knowledge ?? []).map(markdownToInlineHtml))
 
   return (
-    <div className="mx-auto max-w-4xl">
+    // why: the cap is what gives a guide its measure until the document index arrives; past that the measure is set on the prose itself, and holding the cap here would only stop a guide's code samples using the room the wider shell just gave them
+    <div className="mx-auto max-w-4xl rail:max-w-none">
       <MarkdownDocPage
         markdown={guide.content}
         descriptor={{
