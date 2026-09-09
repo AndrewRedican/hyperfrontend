@@ -26,6 +26,17 @@ interface LibraryPageProps {
   fallbackFeatures?: string[]
 }
 
+/**
+ * Heading of the one section a library page ends on, and the id the document
+ * index addresses it by. Held together because the index entry is pushed from
+ * one place and the heading is rendered in another, and a page whose index
+ * names a section that is not there is worse than a page with no index.
+ */
+const RELATED_READING_TITLE = 'Related reading'
+
+/** @see {@link RELATED_READING_TITLE} */
+const RELATED_READING_ANCHOR = 'related-reading'
+
 export async function LibraryDocPage({ title, packageName, slug, category, fallbackDescription, fallbackFeatures }: LibraryPageProps) {
   const readme = getLibraryReadme(slug)
   const hasArchitecture = !!getLibraryArchitecture(slug)
@@ -47,6 +58,8 @@ export async function LibraryDocPage({ title, packageName, slug, category, fallb
       // why: the reference is a section of this page with a server-rendered anchor, but its symbols are not; there are hundreds per package and they have their own filter, so the index offers the way in and stops there
       sections.push({ title: 'API Reference', anchor: 'api-reference', level: 2 })
     }
+    // why: the last section of the page is a section of it, and a reader who has reached the reference and wants somewhere to go next should be able to jump there from the index rather than scrolling past every symbol to find out whether there is anything after them
+    sections.push({ title: RELATED_READING_TITLE, anchor: RELATED_READING_ANCHOR, level: 2 })
 
     return (
       <DocumentShell
@@ -84,40 +97,6 @@ export async function LibraryDocPage({ title, packageName, slug, category, fallb
 
         <ReadmeContent html={html} mermaidDiagrams={diagrams} />
 
-        {/* Guides */}
-        <section className="mt-12 border-t border-slate-200 pt-8 dark:border-slate-700">
-          <h2 className="text-lg font-bold text-slate-900 dark:text-white">Guides &amp; tutorials for {packageName}</h2>
-          {guides.length > 0 ? (
-            <>
-              <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                {guides.map((guide) => (
-                  <Link
-                    key={guide.slug}
-                    href={guide.route}
-                    className="group rounded-lg border border-slate-200 bg-white p-4 transition-colors hover:border-primary-300 hover:bg-primary-50 dark:border-slate-700 dark:bg-slate-900 dark:hover:border-primary-700 dark:hover:bg-primary-950/30"
-                  >
-                    <h3 className="font-semibold text-slate-900 group-hover:text-primary-600 dark:text-white dark:group-hover:text-primary-400">
-                      {guide.title}
-                    </h3>
-                    <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">{guide.problem}</p>
-                  </Link>
-                ))}
-              </div>
-              <p className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-slate-600 dark:text-slate-400">
-                <Link href={guidesHref} className="font-medium text-primary-600 hover:underline dark:text-primary-400">
-                  Browse them filtered to this package
-                </Link>
-                <SuggestGuideLink packageName={packageName} />
-              </p>
-            </>
-          ) : (
-            <p className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-slate-600 dark:text-slate-400">
-              There are none for {packageName} yet.
-              <SuggestGuideLink packageName={packageName} label="Request one" />
-            </p>
-          )}
-        </section>
-
         {/* API Reference */}
         {apiData && (
           <section className="mt-12 border-t border-slate-200 pt-8 dark:border-slate-700">
@@ -130,29 +109,34 @@ export async function LibraryDocPage({ title, packageName, slug, category, fallb
           </section>
         )}
 
-        {/* Related Links */}
+        {/* why: one place to go next, at the end where a reader is looking for one. The package's own guides and the two orientation documents were separate sections either side of the reference for no reason a reader could see — both answer "what else should I read", the reader does not care that one list comes from the guide corpus and the other is fixed, and putting one of them before hundreds of API symbols asked them to choose before they had read the page. */}
         <section className="mt-12 border-t border-slate-200 pt-8 dark:border-slate-700">
-          <h2 className="text-lg font-bold text-slate-900 dark:text-white">Related</h2>
-          <div className="mt-4 grid gap-4 sm:grid-cols-2">
-            <Link
-              href="/docs"
-              className="group rounded-lg border border-slate-200 bg-white p-4 transition-colors hover:border-primary-300 hover:bg-primary-50 dark:border-slate-700 dark:bg-slate-900 dark:hover:border-primary-700 dark:hover:bg-primary-950/30"
-            >
-              <h3 className="font-semibold text-slate-900 group-hover:text-primary-600 dark:text-white dark:group-hover:text-primary-400">
-                Getting Started
-              </h3>
-              <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">Learn how to set up hyperfrontend.</p>
-            </Link>
-            <Link
-              href="/architecture"
-              className="group rounded-lg border border-slate-200 bg-white p-4 transition-colors hover:border-primary-300 hover:bg-primary-50 dark:border-slate-700 dark:bg-slate-900 dark:hover:border-primary-700 dark:hover:bg-primary-950/30"
-            >
-              <h3 className="font-semibold text-slate-900 group-hover:text-primary-600 dark:text-white dark:group-hover:text-primary-400">
-                Architecture Guide
-              </h3>
-              <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">Understand how the libraries work together.</p>
-            </Link>
+          <H2 id={RELATED_READING_ANCHOR} className="text-2xl font-bold text-slate-900 dark:text-white mb-6">
+            {RELATED_READING_TITLE}
+          </H2>
+          <div className="grid gap-4 sm:grid-cols-2">
+            {/* why: the package's own guides come first because they are the only entries on this list that are about this package */}
+            {guides.map((guide) => (
+              <RelatedCard key={guide.slug} href={guide.route} title={guide.title} blurb={guide.problem} />
+            ))}
+            <RelatedCard href="/docs" title="Getting Started" blurb="Learn how to set up hyperfrontend." />
+            <RelatedCard href="/architecture" title="Architecture Guide" blurb="Understand how the libraries work together." />
           </div>
+          <p className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-slate-600 dark:text-slate-400">
+            {guides.length > 0 ? (
+              <>
+                <Link href={guidesHref} className="font-medium text-primary-600 hover:underline dark:text-primary-400">
+                  Browse guides filtered to this package
+                </Link>
+                <SuggestGuideLink packageName={packageName} />
+              </>
+            ) : (
+              <>
+                <span>No guides cover {packageName} yet.</span>
+                <SuggestGuideLink packageName={packageName} label="Request one" />
+              </>
+            )}
+          </p>
         </section>
       </DocumentShell>
     )
@@ -207,6 +191,43 @@ export async function LibraryDocPage({ title, packageName, slug, category, fallb
         <CodeBlock code={`npm install ${packageName}`} />
       </section>
     </>
+  )
+}
+
+/** Props for {@link RelatedCard}. */
+interface RelatedCardProps {
+  /** Site-relative route the card opens. */
+  href: string
+  /** What the destination is called. */
+  title: string
+  /** One line on what the reader will find there. */
+  blurb: string
+}
+
+/**
+ * One entry in a library page's related reading.
+ *
+ * Every entry is rendered the same whether it came from the guide corpus or is
+ * one of the two fixed orientation documents, because from the reader's side
+ * they are the same kind of thing and the difference is only in where the page
+ * looked them up.
+ * @param props - See {@link RelatedCardProps}.
+ * @param props.href - Site-relative route the card opens
+ * @param props.title - What the destination is called
+ * @param props.blurb - One line on what the reader will find there
+ * @returns The card.
+ */
+function RelatedCard({ href, title, blurb }: RelatedCardProps) {
+  return (
+    <Link
+      href={href}
+      className="group rounded-lg border border-slate-200 bg-white p-4 transition-colors hover:border-primary-300 hover:bg-primary-50 dark:border-slate-700 dark:bg-slate-900 dark:hover:border-primary-700 dark:hover:bg-primary-950/30"
+    >
+      <h3 className="font-semibold text-slate-900 group-hover:text-primary-600 dark:text-white dark:group-hover:text-primary-400">
+        {title}
+      </h3>
+      <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">{blurb}</p>
+    </Link>
   )
 }
 
