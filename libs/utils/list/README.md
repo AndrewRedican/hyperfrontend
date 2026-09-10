@@ -55,7 +55,7 @@ The library enforces immutability through frozen interfaces while maintaining hi
 
 ### Architecture Highlights
 
-Queue implementations return frozen objects to prevent external mutation while using native `Set` internally for optimal performance. Object-only restriction on queues prevents reference comparison issues with primitives.
+Both queue kinds hold object references only: pushing a primitive throws at runtime, not just at compile time. Membership is reference identity, so two structurally identical objects are two separate entries, and `has()` and `remove()` need the same reference you pushed.
 
 ## Why Use @hyperfrontend/list-utils?
 
