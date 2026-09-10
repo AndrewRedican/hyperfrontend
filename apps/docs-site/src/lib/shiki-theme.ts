@@ -49,8 +49,8 @@ interface CodePalette {
  */
 const DARK: CodePalette = {
   foreground: '#cbd5f5',
-  punctuation: '#8494bd',
-  comment: '#7d8cb5',
+  punctuation: '#8c9cc3',
+  comment: '#8c99c0',
   keyword: '#f472b6',
   operator: '#e879f9',
   string: '#7dd3fc',
@@ -71,11 +71,21 @@ const DARK: CodePalette = {
  * theme that simply reuses the dark hues is the usual way these two drift
  * apart; keeping the families and moving only the lightness is what makes the
  * two read as one language.
+ *
+ * The two quietest roles are set a band lower than the slate scale would
+ * suggest, and the reason is the page rather than the palette. A block is
+ * translucent, so the surface it is read against is not one colour: it cools
+ * and lifts as the reader descends, and measured at the far end of a long
+ * document the slate-500 punctuation this used to carry falls to 4.48 against
+ * it. These clear the floor at every depth instead of only at the top of the
+ * page, which is the only place a fixed pair of colours would have been
+ * checked. The dark palette's two quietest roles moved for the same reason and
+ * in the same direction, which is up rather than down.
  */
 const LIGHT: CodePalette = {
   foreground: '#1e293b',
-  punctuation: '#64748b',
-  comment: '#6b7280',
+  punctuation: '#586477',
+  comment: '#5f6472',
   keyword: '#be185d',
   operator: '#a21caf',
   string: '#0369a1',
