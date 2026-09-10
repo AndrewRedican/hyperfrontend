@@ -130,12 +130,13 @@ export function readSectionLink(markdown: string, slug: string, level = 2): stri
  * Remove whole sections from a document, subsections included.
  *
  * @param markdown - Raw markdown content
- * @param slugs - Anchor ids of the level-2 sections to drop
+ * @param slugs - Anchor ids of the sections to drop
+ * @param level - The heading level to match, for a section nested under another
  * @returns The document without them
  */
-export function dropSections(markdown: string, slugs: readonly string[]): string {
+export function dropSections(markdown: string, slugs: readonly string[], level = 2): string {
   const wanted = createSet(slugs)
-  const doomed = findSections(markdown).filter((section) => section.level === 2 && wanted.has(section.slug))
+  const doomed = findSections(markdown).filter((section) => section.level === level && wanted.has(section.slug))
   return removeLineRanges(
     markdown,
     doomed.map((section) => [section.headingLine, section.endLine])
@@ -154,18 +155,25 @@ export function dropSections(markdown: string, slugs: readonly string[]): string
  * out.
  *
  * @param markdown - Raw markdown content
- * @param slug - Anchor id of the level-2 section to enhance
+ * @param slug - Anchor id of the section to enhance
  * @param placeholder - Raw HTML the renderer swaps for a component
- * @param dropSubsections - Anchor ids of level-3 subsections to remove as well
+ * @param dropSubsections - Anchor ids of nested subsections to remove as well
+ * @param level - The heading level to match, for a section nested under another
  * @returns The document with the section's prose replaced, unchanged when it has no such section
  */
-export function enhanceSection(markdown: string, slug: string, placeholder: string, dropSubsections: readonly string[] = []): string {
+export function enhanceSection(
+  markdown: string,
+  slug: string,
+  placeholder: string,
+  dropSubsections: readonly string[] = [],
+  level = 2
+): string {
   const sections = findSections(markdown)
-  const section = sections.find((candidate) => candidate.level === 2 && candidate.slug === slug)
+  const section = sections.find((candidate) => candidate.level === level && candidate.slug === slug)
   if (!section) return markdown
 
   const nested = sections.filter(
-    (candidate) => candidate.level > 2 && candidate.headingLine > section.headingLine && candidate.headingLine < section.endLine
+    (candidate) => candidate.level > level && candidate.headingLine > section.headingLine && candidate.headingLine < section.endLine
   )
   const kept = nested.filter((candidate) => !dropSubsections.includes(candidate.slug))
   const leadEnd = kept.length > 0 ? kept[0].headingLine : section.endLine

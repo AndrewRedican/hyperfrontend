@@ -259,6 +259,304 @@
 }
 
 @layer components {
+  /* How a package is built, set as a margin note at the end of its page.
+
+     One hairline and a smaller, quieter type scale. No border on the other
+     three sides, no fill, no radius: the rule is there to say the block is an
+     aside, and the moment it closes into a rectangle it is a card again and
+     carries as much weight as the sections it was moved below.
+
+     The rule takes the package's own hue at a low opacity, which is the third
+     and last place the accent appears on a page. That is the whole of the
+     package theme: the wash behind the document, the marks beside its
+     capabilities, and this. */
+  .architecture-note {
+    border-left: 1px solid hsl(var(--page-accent, 217) 45% 55% / 0.35);
+    padding-left: 1.5rem;
+  }
+
+  .dark .architecture-note {
+    border-left-color: hsl(var(--page-accent, 217) 55% 62% / 0.3);
+  }
+
+  .architecture-note__title {
+    margin: 0;
+    font-family: theme('fontFamily.display');
+    font-size: theme('fontSize.lg');
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: theme('colors.slate.500');
+  }
+
+  .dark .architecture-note__title {
+    color: theme('colors.slate.400');
+  }
+
+  .architecture-note__body {
+    margin-top: 0.75rem;
+    font-size: theme('fontSize.sm');
+    line-height: 1.75;
+    color: theme('colors.slate.500');
+  }
+
+  .dark .architecture-note__body {
+    color: theme('colors.slate.400');
+  }
+
+  .architecture-note__body > * + * {
+    margin-top: 0.75rem;
+  }
+
+  .architecture-note__body ul {
+    margin: 0.75rem 0 0;
+    padding-left: 1.125rem;
+    list-style: disc;
+  }
+
+  .architecture-note__body li + li {
+    margin-top: 0.375rem;
+  }
+
+  .architecture-note__body code {
+    border-radius: 0.25rem;
+    background-color: theme('colors.slate.100');
+    padding: 0.125rem 0.375rem;
+    font-size: 0.875em;
+    color: theme('colors.slate.600');
+  }
+
+  .dark .architecture-note__body code {
+    background-color: theme('colors.slate.800');
+    color: theme('colors.slate.400');
+  }
+
+  .architecture-note__body a {
+    color: theme('colors.primary.600');
+    text-decoration: none;
+  }
+
+  .architecture-note__body a:hover {
+    text-decoration: underline;
+  }
+
+  .dark .architecture-note__body a {
+    color: theme('colors.primary.400');
+  }
+}
+
+@layer components {
+  /* A package's capabilities, drawn as a run down one rail.
+
+     The geometry is a two-column grid per item: a fixed gutter the mark sits
+     in, and the text. The label and the sentence are separate rows of that
+     grid rather than one wrapped line, because the label is the thing a reader
+     scans for and a sentence starting on the same line takes that away.
+
+     The rail is a single hairline behind the gutter, masked so it arrives and
+     leaves rather than starting and stopping. Marks are drawn straight over it
+     with no disc behind them: at a hairline's weight the crossing is invisible,
+     and a disc would have to be filled with a colour, which on a page whose
+     background is a gradient means a colour that is right in one place only. */
+  .key-features {
+    position: relative;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .key-features::before {
+    content: '';
+    position: absolute;
+    left: 0.4375rem;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background-color: rgb(148 163 184 / 0.45);
+    -webkit-mask-image: linear-gradient(to bottom, transparent, #000 12%, #000 88%, transparent);
+    mask-image: linear-gradient(to bottom, transparent, #000 12%, #000 88%, transparent);
+  }
+
+  .dark .key-features::before {
+    background-color: rgb(148 163 184 / 0.3);
+  }
+
+  .key-features__item {
+    display: grid;
+    grid-template-columns: 1.75rem 1fr;
+    align-items: baseline;
+    margin: 0;
+    padding: 0 0 1.125rem;
+  }
+
+  .key-features__item:last-child {
+    padding-bottom: 0;
+  }
+
+  .key-features__mark {
+    grid-column: 1;
+    grid-row: 1;
+    width: 0.9375rem;
+    height: 0.9375rem;
+    /* why: the mark is a point on the rail rather than a bullet beside the text, so it is centred on the rail and nudged to sit on the label's own line */
+    align-self: center;
+    transform: translateY(0.05rem);
+    stroke: hsl(var(--page-accent, 217) 62% 40%);
+  }
+
+  .dark .key-features__mark {
+    stroke: hsl(var(--page-accent, 217) 72% 68%);
+  }
+
+  .key-features__label {
+    grid-column: 2;
+    grid-row: 1;
+    margin: 0;
+    font-weight: 600;
+    line-height: 1.6;
+    color: theme('colors.slate.900');
+  }
+
+  .dark .key-features__label {
+    color: theme('colors.white');
+  }
+
+  /* An author's qualifier, such as the entry point a capability lives behind.
+     It belongs with the name rather than with the sentence, but it is not the
+     name, so it is set lighter and it never takes the weight. */
+  .key-features__detail {
+    margin-left: 0.4375rem;
+    font-weight: 400;
+    color: theme('colors.slate.500');
+  }
+
+  .dark .key-features__detail {
+    color: theme('colors.slate.400');
+  }
+
+  .key-features__body {
+    grid-column: 2;
+    grid-row: 2;
+    margin: 0.125rem 0 0;
+    line-height: 1.7;
+    color: theme('colors.slate.600');
+  }
+
+  .dark .key-features__body {
+    color: theme('colors.slate.400');
+  }
+
+  .key-features code {
+    border-radius: 0.25rem;
+    background-color: theme('colors.slate.100');
+    padding: 0.125rem 0.375rem;
+    font-size: 0.875em;
+    color: theme('colors.slate.700');
+  }
+
+  .dark .key-features code {
+    background-color: theme('colors.slate.800');
+    color: theme('colors.slate.300');
+  }
+
+  .key-features a {
+    color: theme('colors.primary.600');
+    text-decoration: none;
+  }
+
+  .key-features a:hover {
+    text-decoration: underline;
+  }
+
+  .dark .key-features a {
+    color: theme('colors.primary.400');
+  }
+}
+
+@layer components {
+  /* The atmosphere behind a document.
+
+     A documentation page is a column of text on a flat ground, and past a
+     certain length that flatness is the thing a reader feels rather than the
+     writing. What this adds is depth without adding anything to look at: the
+     head of a page is exactly the ground it always was, and the further down
+     the reader goes the more a wash and a grain come up underneath the text.
+
+     The progression is the page's own height rather than the scroll position.
+     Both layers are absolutely positioned inside the document column, so their
+     gradients are measured against the article rather than the viewport, and
+     descending reveals more of them for free. Nothing listens to scroll,
+     nothing animates, and a short page never reaches the far end of the ramp
+     because there is not enough of it to reach with.
+
+     The first stop is a fixed length rather than a percentage, so the clean
+     zone at the top is the same 340 pixels whatever the page's length. A
+     percentage would compress the whole progression into a stub page and give
+     the shortest documents the strongest tint, which is precisely backwards.
+
+     Hue comes from the package the page belongs to, as a single number set by
+     the component. The stylesheet keeps the saturation, the lightness and the
+     alpha, so a package chooses where on the wheel its page sits and nothing
+     else: a hue cannot take contrast away from the text above it the way a
+     colour could. A page that sets none gets the site's blue. */
+  .page-atmosphere {
+    position: relative;
+    isolation: isolate;
+  }
+
+  .page-atmosphere::before,
+  .page-atmosphere::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+  }
+
+  /* The wash: the page's own hue arriving from below, crossed with a magenta
+     that is never quite present on its own. Two stops rather than one because
+     a single ramp reads as a gradient, and a colour changing on the way down
+     reads as depth. */
+  .page-atmosphere::before {
+    background-image: linear-gradient(
+      to bottom,
+      transparent 0,
+      transparent 340px,
+      hsl(var(--page-accent, 217) 70% 55% / 0.035) 55%,
+      hsl(310 75% 58% / 0.05) 100%
+    );
+  }
+
+  /* The grain, drawn by the browser from a filter rather than fetched: a
+     hundred and forty pixel tile of fractal noise, tiled and masked so it is
+     absent at the top of a page and barely present at the bottom. It is the
+     part that makes the wash read as a surface instead of as a colour, and it
+     is worth about two hundred bytes of stylesheet. */
+  .page-atmosphere::after {
+    opacity: 0.035;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23g)'/%3E%3C/svg%3E");
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0, transparent 420px, #000 100%);
+    mask-image: linear-gradient(to bottom, transparent 0, transparent 420px, #000 100%);
+  }
+
+  /* Dark mode carries both a little further. A wash this faint disappears
+     entirely against a dark ground, and grain is what a dark surface is short
+     of rather than what it has too much of. */
+  .dark .page-atmosphere::before {
+    background-image: linear-gradient(
+      to bottom,
+      transparent 0,
+      transparent 340px,
+      hsl(var(--page-accent, 217) 80% 60% / 0.07) 55%,
+      hsl(310 80% 62% / 0.085) 100%
+    );
+  }
+
+  .dark .page-atmosphere::after {
+    opacity: 0.06;
+  }
+}
+
+@layer components {
   /* The reading measure inside a documentation column.
 
      A document column that grows with the viewport is the whole point of the

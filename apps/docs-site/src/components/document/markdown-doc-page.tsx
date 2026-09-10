@@ -57,10 +57,13 @@ export async function MarkdownDocPage({ markdown, descriptor, before, after, pro
   const prose = <ReadmeContent html={html} mermaidDiagrams={diagrams} />
 
   return (
-    <DocumentShell descriptor={descriptor} sections={sections}>
-      {before}
-      {proseClassName ? <div className={proseClassName}>{prose}</div> : prose}
-      {after}
-    </DocumentShell>
+    // why: the atmosphere is measured against the document rather than the viewport, so how far down a reader has come is what decides how much of it has arrived
+    <div className="page-atmosphere">
+      <DocumentShell descriptor={descriptor} sections={sections}>
+        {before}
+        {proseClassName ? <div className={proseClassName}>{prose}</div> : prose}
+        {after}
+      </DocumentShell>
+    </div>
   )
 }

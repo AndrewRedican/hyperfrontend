@@ -1,11 +1,15 @@
 import type { TypeDocOutput } from '@/components/api-reference'
 import type { PackageFacts } from '@/lib/package-facts'
+import type { CSSProperties } from 'react'
 import { TrackedLink } from '@/components/analytics/tracked-link'
 import { ApiLinkProvider, ApiReference } from '@/components/api-reference'
 import { Breadcrumb } from '@/components/breadcrumb'
 import { CodeBlock } from '@/components/code-block'
 import { DocumentShell } from '@/components/document/document-shell'
 import { H1, H2 } from '@/components/heading-with-anchor'
+import { ArchitectureNote } from '@/components/package/architecture-note'
+import { KeyFeatures } from '@/components/package/key-features'
+import { packageAccentHue } from '@/components/package/package-accents'
 import { PackageCapabilities } from '@/components/package/package-capabilities'
 import { PackageMetadata } from '@/components/package/package-metadata'
 import { RelatedReading } from '@/components/package/related-reading'
@@ -14,12 +18,13 @@ import { getLibraryReadme, getLibraryApi, getApiLinkIndex } from '@/lib/docs-loa
 import { documentSubject } from '@/lib/document-model'
 import { buildGuidesHref } from '@/lib/guide-filters'
 import { getGuidesForPackage } from '@/lib/guides'
+import { readKeyFeatures } from '@/lib/key-features'
 import { markdownToHtml } from '@/lib/markdown'
 import { extractMermaidBlocks } from '@/lib/mermaid-utils'
 import { npmPackageUrl } from '@/lib/npm-url'
 import { getPackageFacts } from '@/lib/package-facts'
-import { CAPABILITIES_SLOT, preparePackageReadme } from '@/lib/package-readme'
-import { readSectionLink } from '@/lib/readme-sections'
+import { ARCHITECTURE_LEVEL, ARCHITECTURE_SLUG, CAPABILITIES_SLOT, KEY_FEATURES_SLOT, preparePackageReadme } from '@/lib/package-readme'
+import { readSection, readSectionLink } from '@/lib/readme-sections'
 import { buildRelatedReading } from '@/lib/related-reading'
 import { extractMarkdownSections } from '@/lib/slug'
 import Link from 'next/link'
@@ -45,8 +50,24 @@ const RELATED_READING_TITLE = 'Related reading'
 /** @see {@link RELATED_READING_TITLE} */
 const RELATED_READING_ANCHOR = 'related-reading'
 
+/** Heading the moved architecture note keeps, matching the README's own. */
+const ARCHITECTURE_TITLE = 'Architecture Highlights'
+
 /** What a page assumes about a package the manifest has not covered yet. */
 const NO_FACTS: PackageFacts = { license: '', version: '', isPrivate: false, compatibility: null, outputs: [] }
+
+/**
+ * The custom property that hands a package's hue to the stylesheet.
+ *
+ * A property rather than a class because there are twenty-one packages and one
+ * treatment: the rule is written once and the number is what changes, so
+ * adding a package is an entry in the accent table and nothing in the CSS.
+ * @param packageName - Full npm package name
+ * @returns An inline style carrying the hue
+ */
+function accentStyle(packageName: string): CSSProperties {
+  return { '--page-accent': packageAccentHue(packageName) } as CSSProperties
+}
 
 export async function LibraryDocPage({ title, packageName, slug, category, fallbackDescription, fallbackFeatures }: LibraryPageProps) {
   const readme = getLibraryReadme(slug)
@@ -63,13 +84,24 @@ export async function LibraryDocPage({ title, packageName, slug, category, fallb
     const licenseHref = readSectionLink(processed, 'license')
     const related = buildRelatedReading({ packageName, slug, readme: processed })
 
-    const { title: packageTitle, body } = preparePackageReadme(processed)
+    // why: the run is drawn only for a section the parser could read, so a README stating its features some other way keeps the rendering it already had
+    const features = await readKeyFeatures(processed)
+    const architecture = readSection(processed, ARCHITECTURE_SLUG, ARCHITECTURE_LEVEL)
+    const architectureHtml = architecture === null ? null : await markdownToHtml(architecture)
+    const { title: packageTitle, body } = preparePackageReadme(processed, {
+      keyFeatures: features !== null,
+      architecture: architectureHtml !== null,
+    })
 
     const { processedContent, diagrams } = extractMermaidBlocks(body)
 
     const html = await markdownToHtml(processedContent)
 
     const sections = extractMarkdownSections(processedContent)
+    if (architectureHtml !== null) {
+      // why: the note moved to the end of the page, so its index entry moves with it rather than pointing back into the opening section it left
+      sections.push({ title: ARCHITECTURE_TITLE, anchor: ARCHITECTURE_SLUG, level: 2 })
+    }
     if (apiData) {
       // why: the reference is a section of this page with a server-rendered anchor, but its symbols are not; there are hundreds per package and they have their own filter, so the index offers the way in and stops there
       sections.push({ title: 'API Reference', anchor: 'api-reference', level: 2 })
@@ -78,49 +110,55 @@ export async function LibraryDocPage({ title, packageName, slug, category, fallb
     sections.push({ title: RELATED_READING_TITLE, anchor: RELATED_READING_ANCHOR, level: 2 })
 
     return (
-      <DocumentShell
-        descriptor={{ route: libraryDocRoute(slug, category), title, subject: documentSubject('package', packageName), kind: 'package' }}
-        sections={sections}
-      >
-        <Breadcrumb />
+      // why: a package's own hue tints the atmosphere behind its documentation, so moving between packages feels like moving between places rather than reloading one
+      <div className="page-atmosphere" style={accentStyle(packageName)}>
+        <DocumentShell
+          descriptor={{ route: libraryDocRoute(slug, category), title, subject: documentSubject('package', packageName), kind: 'package' }}
+          sections={sections}
+        >
+          <Breadcrumb />
 
-        <H1 className="font-display text-3xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-4xl">
-          {packageTitle ?? packageName}
-        </H1>
+          <H1 className="font-display text-3xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-4xl">
+            {packageTitle ?? packageName}
+          </H1>
 
-        <PackageMetadata packageName={packageName} facts={facts} licenseHref={licenseHref} />
+          <PackageMetadata packageName={packageName} facts={facts} licenseHref={licenseHref} />
 
-        <div className="mt-6">
-          <ReadmeContent
-            html={html}
-            mermaidDiagrams={diagrams}
-            slots={{
-              [CAPABILITIES_SLOT]: <PackageCapabilities compatibility={facts.compatibility} outputs={facts.outputs} />,
-            }}
+          <div className="mt-6">
+            <ReadmeContent
+              html={html}
+              mermaidDiagrams={diagrams}
+              slots={{
+                [CAPABILITIES_SLOT]: <PackageCapabilities compatibility={facts.compatibility} outputs={facts.outputs} />,
+                ...(features === null ? {} : { [KEY_FEATURES_SLOT]: <KeyFeatures features={features} /> }),
+              }}
+            />
+          </div>
+
+          {architectureHtml !== null && <ArchitectureNote html={architectureHtml} title={ARCHITECTURE_TITLE} anchor={ARCHITECTURE_SLUG} />}
+
+          {/* API Reference */}
+          {apiData && (
+            <section className="mt-12 border-t border-slate-200 pt-8 dark:border-slate-700">
+              <H2 id="api-reference" className="text-2xl font-bold text-slate-900 dark:text-white mb-6">
+                API Reference
+              </H2>
+              <ApiLinkProvider index={getApiLinkIndex(slug, packageName)} currentPackage={packageName}>
+                <ApiReference data={apiData} />
+              </ApiLinkProvider>
+            </section>
+          )}
+
+          <RelatedReading
+            anchor={RELATED_READING_ANCHOR}
+            title={RELATED_READING_TITLE}
+            entries={related}
+            packageName={packageName}
+            guidesHref={guidesHref}
+            hasGuides={guides.length > 0}
           />
-        </div>
-
-        {/* API Reference */}
-        {apiData && (
-          <section className="mt-12 border-t border-slate-200 pt-8 dark:border-slate-700">
-            <H2 id="api-reference" className="text-2xl font-bold text-slate-900 dark:text-white mb-6">
-              API Reference
-            </H2>
-            <ApiLinkProvider index={getApiLinkIndex(slug, packageName)} currentPackage={packageName}>
-              <ApiReference data={apiData} />
-            </ApiLinkProvider>
-          </section>
-        )}
-
-        <RelatedReading
-          anchor={RELATED_READING_ANCHOR}
-          title={RELATED_READING_TITLE}
-          entries={related}
-          packageName={packageName}
-          guidesHref={guidesHref}
-          hasGuides={guides.length > 0}
-        />
-      </DocumentShell>
+        </DocumentShell>
+      </div>
     )
   }
 
