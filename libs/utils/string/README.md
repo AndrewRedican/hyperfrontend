@@ -33,6 +33,15 @@
   <img src="https://img.shields.io/badge/tree%20shakeable-%E2%9C%93-success?style=flat-square" alt="Tree Shakeable">
 </p>
 
+<p align="center">
+  <a href="https://www.hyperfrontend.dev/docs/libraries/utils/string/">
+    <img width="640" src="https://www.hyperfrontend.dev/media/string-utils-base64/hero.gif" alt="Four strings typed one at a time into a left column, each answered by two result columns: btoa returns a struck-through wrong answer for café and then throws InvalidCharacterError on the Japanese and emoji inputs, while toBase64 encodes all four and finishes with a URL-safe result">
+  </a>
+</p>
+<p align="center">
+  <sub>The same four strings, handed to the platform's btoa and to toBase64. The struck-through row is the dangerous one: nothing threw, so nothing was caught.</sub>
+</p>
+
 Isomorphic string encoding utilities with unified APIs for browser and Node.js environments.
 
 • 👉 See [**documentation**](https://www.hyperfrontend.dev/docs/libraries/utils/string/)
@@ -120,22 +129,27 @@ const bytes = utf8StringToUint8Array('こんにちは')
 
 ## API Overview
 
-All functions are available from both `/browser` and `/node` entry points with identical signatures:
+One API surface, two ways in. `@hyperfrontend/string-utils/browser` and `@hyperfrontend/string-utils/node` export the same seven functions under the same names, with
+the same signatures, producing byte-identical output; which one you import is a question about where your code runs, not about what you need. The split is there so that
+`TextEncoder`/`btoa` stays on one side and `Buffer` on the other: a bundler ships exactly one implementation and nothing has to sniff the environment at runtime. The
+identifiers below link to the browser entry point, and the node page documents the same seven.
 
-- **`toBase64(text, urlSafe?, keepPadding?)`** - Encode UTF-8 string to base64
-- **`fromBase64(base64)`** - Decode base64 string to UTF-8 (supports standard and URL-safe)
-- **`utf8StringToUint8Array(text)`** - Convert UTF-8 string to Uint8Array
-- **`uint8ArrayToUtf8String(bytes)`** - Convert Uint8Array to UTF-8 string
-- **`arrayBufferToUtf8String(buffer)`** - Convert ArrayBuffer to UTF-8 string
-- **`uint8ArrayToBase64(bytes, urlSafe?, keepPadding?)`** - Encode Uint8Array to base64
-- **`base64ToUint8Array(base64)`** - Decode base64 string to Uint8Array
+Two of them cover most uses. [`toBase64`](https://www.hyperfrontend.dev/docs/libraries/utils/string/browser/#api-toBase64) takes a UTF-8 string and returns base64;
+[`fromBase64`](https://www.hyperfrontend.dev/docs/libraries/utils/string/browser/#api-fromBase64) takes base64 back to a string, accepting standard and URL-safe spellings
+without being told which. The options live on the encoding side, as `toBase64(text, urlSafe = false, keepPadding = false)`: `urlSafe` maps `+` to `-` and `/` to `_`, and
+`keepPadding` is read only inside that branch, so standard base64 always keeps its `=`. This pair is why the package exists at all: `btoa` is a Latin-1 API and `toBase64`
+encodes UTF-8 first, so `'café'` round-trips instead of returning `Y2Fm6Q==`.
 
-Internal utilities (exported but typically not needed):
+The other five are for when the payload is bytes rather than text. [`utf8StringToUint8Array`](https://www.hyperfrontend.dev/docs/libraries/utils/string/browser/#api-utf8StringToUint8Array)
+and `uint8ArrayToUtf8String` are the text-to-bytes pair that `@hyperfrontend/cryptography` is built on;
+[`uint8ArrayToBase64`](https://www.hyperfrontend.dev/docs/libraries/utils/string/browser/#api-uint8ArrayToBase64) and
+[`base64ToUint8Array`](https://www.hyperfrontend.dev/docs/libraries/utils/string/browser/#api-base64ToUint8Array) are the same base64 hop with a `Uint8Array` on the near
+side, the encoder taking the same two flags; and [`arrayBufferToUtf8String`](https://www.hyperfrontend.dev/docs/libraries/utils/string/browser/#api-arrayBufferToUtf8String) decodes
+what a `fetch` response or a `FileReader` hands you. All of them are plain synchronous calls: a value in, a value out, no options object and no state.
 
-- **`bytesToBinaryString(bytes)`** - Uint8Array to Latin-1 binary string (for browser btoa interop)
-- **`binaryStringToBytes(binaryStr)`** - Latin-1 binary string to Uint8Array (for browser atob interop)
-- **`base64ToUrlSafeBase64(base64, options)`** - Transform standard base64 to URL-safe format
-- **`urlSafeBase64ToBase64(urlSafeBase64)`** - Transform URL-safe base64 to standard format
+Every signature, parameter and default is in the API reference for
+[browser](https://www.hyperfrontend.dev/docs/libraries/utils/string/browser/#api-reference) and for
+[node](https://www.hyperfrontend.dev/docs/libraries/utils/string/node/#api-reference).
 
 ## Compatibility
 
