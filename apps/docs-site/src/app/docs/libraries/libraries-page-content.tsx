@@ -1,6 +1,7 @@
 'use client'
 
 import type { EcosystemCard, EcosystemLevel, EcosystemLibrary, EcosystemEmphasis, EcosystemTier } from '@/lib/ecosystem'
+import { TrackedLink } from '@/components/analytics/tracked-link'
 import { Breadcrumb } from '@/components/breadcrumb'
 import { H1 } from '@/components/heading-with-anchor'
 import { PackageIcon } from '@/components/package/package-icon'
@@ -26,6 +27,14 @@ interface PackageCardProps {
   card: EcosystemCard
   /** How much weight its level carries */
   emphasis: EcosystemEmphasis
+}
+
+/** Props for {@link CardVersion}. */
+interface CardVersionProps {
+  /** The package the version belongs to */
+  card: EcosystemCard
+  /** Positioning and colour for the corner it sits in */
+  className: string
 }
 
 /** Props for the inline icon components. */
@@ -54,8 +63,14 @@ const CARD_BASE = 'group relative flex flex-col overflow-hidden border transitio
  * The mark is identity, not information: it sits against the right edge at a
  * quarter opacity, in the same slate the rest of the card's chrome uses, so it
  * reads as a watermark the eye can learn rather than as something to look at.
- * The card's own text always wins, which is why every mark is paired with
- * enough right padding on the content that no line ever runs under it.
+ *
+ * Being ambient is also why it reserves no room. A background does not get a
+ * column: the arrow and the version are pinned to the card's own corners and
+ * paint over the mark, and only the card's running text is held clear of it,
+ * by a gutter carried on the text blocks themselves rather than on the card.
+ * The distinction matters at the right edge, which is where a reader looks for
+ * both of those controls, and where a mark that pushed them inward would leave
+ * a band of nothing.
  *
  * It brightens slightly on hover, the same way the card's border and title do,
  * so the identity is at its clearest exactly when a reader has singled the
@@ -63,6 +78,27 @@ const CARD_BASE = 'group relative flex flex-col overflow-hidden border transitio
  */
 const CARD_MARK =
   'pointer-events-none absolute top-1/2 -translate-y-1/2 text-slate-400 opacity-25 transition-opacity duration-300 group-hover:opacity-40 dark:text-slate-500'
+
+/**
+ * The arrow, pinned to the card's top-right corner.
+ *
+ * Positioned against the card rather than laid out beside the title, so it
+ * lands on the same corner whatever the title does: a package name that wraps
+ * to two lines no longer drags it down the card with it.
+ */
+const CARD_ARROW =
+  'pointer-events-none absolute h-5 w-5 text-slate-400 transition-transform duration-200 group-hover:translate-x-1 group-hover:text-primary-500 dark:text-slate-500'
+
+/**
+ * The version, pinned to the card's bottom-right corner.
+ *
+ * It is a link to exactly this release on npm, so it sits above the heading's
+ * card-covering overlay and takes its own pointer events back. That makes the
+ * one part of the card that does not open the package the one part that says
+ * where else it could go.
+ */
+const CARD_VERSION =
+  'absolute font-mono text-xs text-slate-400 transition-colors hover:text-primary-600 dark:text-slate-500 dark:hover:text-primary-400'
 
 /** The class strings one level applies to its cards. */
 interface EmphasisStyle {
@@ -74,6 +110,14 @@ interface EmphasisStyle {
   description: string
   /** Size and inset of the package mark behind the card */
   mark: string
+  /** Right gutter that holds the card's running text clear of the mark */
+  gutter: string
+  /** Right gutter on the bottom row, which clears the version rather than the mark */
+  bottomGutter: string
+  /** Where the arrow sits, relative to the card's top-right corner */
+  arrowAt: string
+  /** Where the version sits, relative to the card's bottom-right corner */
+  versionAt: string
 }
 
 /**
@@ -84,31 +128,47 @@ interface EmphasisStyle {
  */
 const EMPHASIS_STYLES: Record<EcosystemEmphasis, EmphasisStyle> = {
   apex: {
-    card: `${CARD_BASE} rounded-xl border-primary-200 bg-gradient-to-br from-primary-50 to-white p-6 pr-20 hover:border-primary-400 dark:border-primary-900 dark:from-primary-950/50 dark:to-slate-900 dark:hover:border-primary-700 sm:p-8 sm:pr-44`,
+    card: `${CARD_BASE} rounded-xl border-primary-200 bg-gradient-to-br from-primary-50 to-white p-6 hover:border-primary-400 dark:border-primary-900 dark:from-primary-950/50 dark:to-slate-900 dark:hover:border-primary-700 sm:p-8`,
     title:
       'font-display text-xl font-bold tracking-tight text-slate-900 group-hover:text-primary-600 dark:text-white dark:group-hover:text-primary-400 sm:text-2xl',
     description: 'mt-3 text-base text-slate-600 dark:text-slate-300',
-    mark: 'right-3 h-16 w-16 sm:right-6 sm:h-36 sm:w-36',
+    mark: 'right-0 h-16 w-16 sm:h-36 sm:w-36',
+    gutter: 'pr-10 sm:pr-40',
+    bottomGutter: 'pr-16 sm:pr-40',
+    arrowAt: 'right-6 top-6 sm:right-8 sm:top-8',
+    versionAt: 'right-6 bottom-6 sm:right-8 sm:bottom-8',
   },
   strong: {
-    card: `${CARD_BASE} rounded-lg border-slate-200 bg-white p-5 pr-24 hover:border-primary-300 hover:bg-primary-50 dark:border-slate-700 dark:bg-slate-900 dark:hover:border-primary-700 dark:hover:bg-primary-950/30`,
+    card: `${CARD_BASE} rounded-lg border-slate-200 bg-white p-5 hover:border-primary-300 hover:bg-primary-50 dark:border-slate-700 dark:bg-slate-900 dark:hover:border-primary-700 dark:hover:bg-primary-950/30`,
     title:
       'font-mono text-base font-semibold text-slate-900 group-hover:text-primary-600 dark:text-white dark:group-hover:text-primary-400',
     description: 'mt-1.5 text-sm text-slate-600 dark:text-slate-400',
-    mark: 'right-3 h-16 w-16',
+    mark: 'right-0 h-16 w-16',
+    gutter: 'pr-16',
+    bottomGutter: 'pr-16',
+    arrowAt: 'right-5 top-5',
+    versionAt: 'right-5 bottom-5',
   },
   medium: {
-    card: `${CARD_BASE} rounded-lg border-slate-200 bg-white p-4 pr-20 hover:border-primary-300 hover:bg-primary-50 dark:border-slate-700 dark:bg-slate-900 dark:hover:border-primary-700 dark:hover:bg-primary-950/30`,
+    card: `${CARD_BASE} rounded-lg border-slate-200 bg-white p-4 hover:border-primary-300 hover:bg-primary-50 dark:border-slate-700 dark:bg-slate-900 dark:hover:border-primary-700 dark:hover:bg-primary-950/30`,
     title: 'font-mono text-sm font-semibold text-slate-900 group-hover:text-primary-600 dark:text-white dark:group-hover:text-primary-400',
     description: 'mt-1.5 text-sm text-slate-600 dark:text-slate-400',
-    mark: 'right-3 h-14 w-14',
+    mark: 'right-0 h-14 w-14',
+    gutter: 'pr-14',
+    bottomGutter: 'pr-16',
+    arrowAt: 'right-4 top-4',
+    versionAt: 'right-4 bottom-4',
   },
   soft: {
-    card: `${CARD_BASE} rounded-lg border-slate-200 bg-white p-4 pr-16 hover:border-primary-300 hover:bg-primary-50 dark:border-slate-700 dark:bg-slate-900 dark:hover:border-primary-700 dark:hover:bg-primary-950/30`,
+    card: `${CARD_BASE} rounded-lg border-slate-200 bg-white p-4 hover:border-primary-300 hover:bg-primary-50 dark:border-slate-700 dark:bg-slate-900 dark:hover:border-primary-700 dark:hover:bg-primary-950/30`,
     title:
       'font-mono text-sm font-medium text-slate-800 group-hover:text-primary-600 dark:text-slate-200 dark:group-hover:text-primary-400',
     description: 'mt-1.5 line-clamp-3 text-sm text-slate-500 dark:text-slate-400',
-    mark: 'right-3 h-12 w-12',
+    mark: 'right-0 h-12 w-12',
+    gutter: 'pr-12',
+    bottomGutter: 'pr-16',
+    arrowAt: 'right-4 top-4',
+    versionAt: 'right-4 bottom-4',
   },
 }
 
@@ -297,34 +357,64 @@ function PackageCard({ card, emphasis }: PackageCardProps) {
       {/* why: first in the DOM and unpositioned content after it, so the mark paints behind every line of the card without a z-index to keep in step with the rest of the site's layering */}
       <PackageIcon packageName={card.packageName} className={`${CARD_MARK} ${style.mark}`} />
 
-      <div className="relative flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <h3 className={style.title}>
-            <Link href={card.href} className="after:absolute after:inset-0 after:content-['']">
-              {isApex ? card.name : card.packageName}
-            </Link>
-          </h3>
-          {isApex && <p className="mt-1 font-mono text-sm text-slate-500 dark:text-slate-400">{card.packageName}</p>}
-        </div>
-        <ArrowRightIcon
-          className={`h-5 w-5 shrink-0 text-slate-400 transition-transform group-hover:translate-x-1 group-hover:text-primary-500 ${isApex ? 'mt-1' : ''}`}
-        />
+      <div className={`relative min-w-0 ${style.gutter}`}>
+        <h3 className={style.title}>
+          <Link href={card.href} className="after:absolute after:inset-0 after:content-['']">
+            {isApex ? card.name : card.packageName}
+          </Link>
+        </h3>
+        {isApex && <p className="mt-1 font-mono text-sm text-slate-500 dark:text-slate-400">{card.packageName}</p>}
       </div>
 
-      {card.description && <p className={`relative ${style.description}`}>{card.description}</p>}
+      {card.description && <p className={`relative ${style.gutter} ${style.description}`}>{card.description}</p>}
 
       {/* why: relative lifts this row above the heading link's card-covering overlay, so the pills are readable text rather than a shadowed strip. */}
-      <div className="relative mt-auto flex flex-wrap items-center gap-1.5 pt-3">
+      <div className={`relative mt-auto flex flex-wrap items-center gap-1.5 pt-3 ${style.bottomGutter}`}>
         {card.topics.map((topic) => (
           <span key={topic} className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-600 dark:bg-slate-800 dark:text-slate-400">
             {topic}
           </span>
         ))}
-        {card.version && !card.isPrivate && (
-          <span className="ml-auto font-mono text-xs text-slate-400 dark:text-slate-500">v{card.version}</span>
-        )}
       </div>
+
+      {/* why: both controls come after the mark and after the heading's overlay, so they paint over the watermark and stay reachable, with no z-index of their own to keep in step with the site's layering */}
+      <ArrowRightIcon className={`${CARD_ARROW} ${style.arrowAt}`} />
+      <CardVersion card={card} className={`${CARD_VERSION} ${style.versionAt}`} />
     </article>
+  )
+}
+
+/**
+ * The version in a card's bottom-right corner.
+ *
+ * A published package gets a link to exactly this release on npm, built by the
+ * same function the package pages use, so the two surfaces can never disagree
+ * about where a version leads. A package withheld from the registry has no
+ * version worth showing and nowhere to send anyone, so the corner stays empty
+ * rather than carrying a number beside a link that would not resolve.
+ * @param props - Component props
+ * @param props.card - The package the version belongs to
+ * @param props.className - Positioning and colour for the corner
+ * @returns The version, linked when there is a release to link to
+ */
+function CardVersion({ card, className }: CardVersionProps) {
+  if (!card.version || card.isPrivate) {
+    return null
+  }
+  const label = `v${card.version}`
+  if (card.npmUrl === null) {
+    return <span className={className}>{label}</span>
+  }
+  return (
+    <TrackedLink
+      href={card.npmUrl}
+      event={{ kind: 'npm', packageName: card.packageName }}
+      external
+      className={className}
+      ariaLabel={`${card.packageName} ${label} on npm`}
+    >
+      {label}
+    </TrackedLink>
   )
 }
 

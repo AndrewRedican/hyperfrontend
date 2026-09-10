@@ -175,6 +175,15 @@ export interface EcosystemLibrary {
   version: string
   /** Whether the package is withheld from the registry */
   isPrivate: boolean
+  /**
+   * Registry page for exactly the version this card shows, or null when the
+   * package is withheld from the registry and there is nowhere to follow it to.
+   *
+   * Built by the same function the package pages build their version badge
+   * from, so the two can never name the same release and point at different
+   * pages.
+   */
+  npmUrl: string | null
   /** Route to the package's documentation */
   href: string
 }

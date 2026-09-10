@@ -19,6 +19,7 @@ function library(packageName: string, keywords: string[] = []): EcosystemLibrary
     description: `${packageName} description`,
     version: '1.0.0',
     isPrivate: false,
+    npmUrl: `https://www.npmjs.com/package/${packageName}/v/1.0.0`,
     href: `/docs/libraries/${packageName.replace('@hyperfrontend/', '')}`,
   }
 }

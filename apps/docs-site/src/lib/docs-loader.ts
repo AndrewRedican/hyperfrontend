@@ -4,6 +4,7 @@ import type { PackageCompatibility, PackageOutput } from '../../scripts/package-
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs'
 import { resolve, join } from 'node:path'
 import { LIBRARIES } from '@/lib/content'
+import { npmVersionUrl } from '@/lib/npm-url'
 import { isArray } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
 import { parse } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
@@ -576,6 +577,8 @@ export function getAllLibraryData(): LibraryData[] {
 
   return LIBRARIES.map((lib) => {
     const entry = published.get(lib.packageName)
+    const version = entry?.version ?? ''
+    const isPrivate = entry?.isPrivate ?? false
 
     return {
       name: lib.name,
@@ -585,8 +588,10 @@ export function getAllLibraryData(): LibraryData[] {
       hasApi: entry?.hasApi ?? false,
       keywords: entry?.keywords ?? [],
       description: entry?.description ?? '',
-      version: entry?.version ?? '',
-      isPrivate: entry?.isPrivate ?? false,
+      version,
+      isPrivate,
+      // why: the index and the package page must resolve the same release to the same registry page, so both go through the one function that knows how
+      npmUrl: npmVersionUrl({ version, isPrivate, license: '', compatibility: null, outputs: [] }, lib.packageName),
       href: `/docs/libraries/${lib.slug}`,
     }
   })
