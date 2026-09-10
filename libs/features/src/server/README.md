@@ -1,6 +1,6 @@
 # Server
 
-Dev server and debug UI for testing host/hostee interactions — per-app static hosting plus display-mode, resize, message-log, and security controls — and the production static server behind `hf serve`.
+Dev server and debug UI for testing host/hostee interactions (per-app static hosting plus display-mode, resize, message-log, and security controls), and the production static server behind `hf serve`.
 
 ## Quick start
 
