@@ -64,7 +64,7 @@ If you need full JSON Schema support across multiple draft versions, consider [A
 
 ### Architecture Highlights
 
-The library uses a **functional composition approach** with pure validation functions. The core `validate` function recursively traverses schemas and data, delegating to specialized validators for each JSON Schema keyword. Schema references (`$ref`) are resolved through a context object that tracks definitions, enabling circular reference handling. Error collection uses accumulation rather than early termination, providing complete validation feedback in a single pass.
+`$ref` resolves against the schema's own `definitions`, so a schema that refers back to itself validates recursive data without looping. Validation accumulates errors instead of stopping at the first failure, so one `validate` call reports every violation in the data, each with its path, message, and code.
 
 ## Why Use @hyperfrontend/json-utils?
 
