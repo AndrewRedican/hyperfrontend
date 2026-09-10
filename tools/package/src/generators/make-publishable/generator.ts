@@ -1,10 +1,63 @@
 import type { Tree } from '@nx/devkit'
-import type { MakePublishableGeneratorSchema } from './schema'
+import type { CompatibilityProfile, MakePublishableGeneratorSchema } from './schema'
 import { join } from 'node:path'
 import { formatFiles, generateFiles, names, offsetFromRoot, readProjectConfiguration, updateJson, joinPathFragments } from '@nx/devkit'
+import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
+import { keys } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { logger } from '../../lib/logger'
 import { derivePackageName } from '../../lib/naming-utils'
 import { readPackageJsonInfo } from '../../lib/package-json-utils'
+
+/**
+ * The level a package's support for one runtime is declared at. Profiles only
+ * ever claim the two levels that need no explanation; `partial` is written by
+ * hand, next to the note that says what is missing.
+ */
+type SupportLevel = 'full' | 'none'
+
+/**
+ * The runtimes a compatibility block reports on, in the order the docs site
+ * draws them.
+ */
+interface CompatibilityEnvironments {
+  /** Support when the package is loaded by Node.js */
+  node: SupportLevel
+  /** Support when the package is loaded by a browser main thread */
+  browser: SupportLevel
+  /** Support when the package is loaded inside a Web Worker */
+  webWorker: SupportLevel
+}
+
+/**
+ * The runtimes each named profile declares.
+ *
+ * A Web Worker is a browser runtime, so no profile claims worker support
+ * without browser support: the two move together.
+ */
+const COMPATIBILITY_PROFILES: Record<CompatibilityProfile, CompatibilityEnvironments> = {
+  isomorphic: { node: 'full', browser: 'full', webWorker: 'full' },
+  'node-only': { node: 'full', browser: 'none', webWorker: 'none' },
+  'browser-only': { node: 'none', browser: 'full', webWorker: 'full' },
+}
+
+/**
+ * The bundle formats only a browser or a CDN consumer loads. The name is both
+ * the build option key and the stem of the E2E spec that loads it.
+ */
+const BROWSER_BUNDLE_FORMATS = ['iife', 'umd'] as const
+
+/**
+ * How each support level is written in the generated README.
+ *
+ * The README's compatibility table and the project's own metadata are two
+ * statements of one fact, and a package whose readme claims browser support it
+ * did not declare is the drift this generator exists to prevent. So the table
+ * is rendered from the profile rather than shipped as fixed text.
+ */
+const SUPPORT_GLYPHS: Record<SupportLevel, string> = {
+  full: '\u2705',
+  none: '\u274c',
+}
 
 /**
  * Normalized options for make-publishable generator.
@@ -22,6 +75,8 @@ interface NormalizedOptions {
   globalName: string
   /** npm keywords */
   keywords: string[]
+  /** Runtimes to declare under metadata.compatibility */
+  compatibility: CompatibilityEnvironments
   /** Library name without prefix */
   libName: string
   /** Library description */
@@ -48,8 +103,16 @@ interface NormalizedOptions {
  * @param tree - Virtual file system tree
  * @param options - User provided options
  * @returns Normalized options
+ * @throws {Error} When no runtime compatibility profile was given, because a published
+ * package that says nothing about where it runs fails the docs build.
  */
 function normalizeOptions(tree: Tree, options: MakePublishableGeneratorSchema): NormalizedOptions {
+  if (!options.compatibility) {
+    throw createError(
+      `A publishable package must declare where it runs. Re-run with --compatibility=<profile>, where profile is one of: ${keys(COMPATIBILITY_PROFILES).join(', ')}.`
+    )
+  }
+
   const projectConfig = readProjectConfiguration(tree, options.project)
   const projectRoot = projectConfig.root
   const projectName = options.project
@@ -78,6 +141,7 @@ function normalizeOptions(tree: Tree, options: MakePublishableGeneratorSchema): 
     packageNameEncoded: encodeURIComponent(packageName),
     globalName,
     keywords,
+    compatibility: COMPATIBILITY_PROFILES[options.compatibility],
     libName,
     description,
     bundleEntry,
@@ -91,7 +155,8 @@ function normalizeOptions(tree: Tree, options: MakePublishableGeneratorSchema): 
 }
 
 /**
- * Update project.json to add publishable targets and change scope tag.
+ * Update project.json to declare runtime compatibility, add publishable
+ * targets, and change the scope tag.
  *
  * @param tree - Virtual file system tree
  * @param options - Normalized options
@@ -104,27 +169,50 @@ function updateProjectJson(tree: Tree, options: NormalizedOptions): void {
     const newTags = tags.filter((tag: string) => !tag.startsWith('scope:')).concat('scope:public')
     json.tags = newTags
 
-    json.targets = {
+    const existingTargets = (json.targets ?? {}) as Record<string, unknown>
+
+    // why: metadata sits between tags and targets in every hand-written publishable project.json, and a new key only lands there if targets is removed and re-added after it
+    delete json.targets
+
+    json.metadata = {
+      ...(json.metadata as Record<string, unknown> | undefined),
+      compatibility: { environments: options.compatibility },
+    }
+
+    const buildOptions: Record<string, unknown> = {
+      esm: { bundleWorkspaceDeps: true },
+      cjs: { bundleWorkspaceDeps: true },
+    }
+
+    // why: an iife or umd bundle is only ever loaded by a browser or a CDN consumer, so a package that reaches no browser ships neither
+    if (options.compatibility.browser !== 'none') {
+      for (const format of BROWSER_BUNDLE_FORMATS) {
+        buildOptions[format] = {
+          entry: options.bundleEntry,
+          globalName: options.globalName,
+        }
+      }
+    }
+
+    const targets: Record<string, unknown> = {
       version: {},
       'version-check': {},
       build: {
         executor: '@hyperfrontend/package:build',
-        options: {
-          esm: { bundleWorkspaceDeps: true },
-          cjs: { bundleWorkspaceDeps: true },
-          iife: {
-            entry: options.bundleEntry,
-            globalName: options.globalName,
-          },
-          umd: {
-            entry: options.bundleEntry,
-            globalName: options.globalName,
-          },
-        },
+        options: buildOptions,
       },
       publish: {},
       typecheck: {},
     }
+
+    // why: assigning the block outright used to delete every target this generator does not write, including the test target the library template had just added
+    for (const name of keys(existingTargets)) {
+      if (!(name in targets)) {
+        targets[name] = existingTargets[name]
+      }
+    }
+
+    json.targets = targets
 
     return json
   })
@@ -185,6 +273,18 @@ function createE2EProject(tree: Tree, options: NormalizedOptions): void {
   }
 
   generateFiles(tree, join(__dirname, 'files-e2e'), options.e2eProjectRoot, e2eTemplateOptions)
+
+  if (options.compatibility.browser !== 'none') return
+
+  // why: the templates cover a package that ships browser bundles, and a package that reaches no browser has none for these checks to load
+  for (const format of BROWSER_BUNDLE_FORMATS) {
+    tree.delete(joinPathFragments(options.e2eProjectRoot, 'src', `${format}.spec.ts`))
+  }
+
+  updateJson(tree, joinPathFragments(options.e2eProjectRoot, 'project.json'), (json) => {
+    json.targets.e2e.options.formats = ['cjs', 'esm']
+    return json
+  })
 }
 
 /**
@@ -196,6 +296,11 @@ function createE2EProject(tree: Tree, options: NormalizedOptions): void {
 function generatePublishableReadme(tree: Tree, options: NormalizedOptions): void {
   const templateOptions = {
     ...options,
+    compatibilityGlyphs: {
+      node: SUPPORT_GLYPHS[options.compatibility.node],
+      browser: SUPPORT_GLYPHS[options.compatibility.browser],
+      webWorker: SUPPORT_GLYPHS[options.compatibility.webWorker],
+    },
     template: '',
   }
 
@@ -271,26 +376,28 @@ function updateDocsSiteConfig(options: NormalizedOptions): void {
  * Nx generator that converts an internal library to a publishable library.
  *
  * This generator:
- * 1. Updates project.json with build, version, and publish targets
- * 2. Changes scope:internal tag to scope:public
- * 3. Adds required package.json fields (exports, engines, sideEffects, keywords)
- * 4. Generates publishable README with required structure
- * 5. Creates E2E project in apps/package-e2e/
- * 6. Creates CI workflow status file
- * 7. Provides instructions for additional manual steps
+ * 1. Updates project.json with build, version, and publish targets, keeping any target it does not write
+ * 2. Declares metadata.compatibility from the chosen runtime profile
+ * 3. Changes scope:internal tag to scope:public
+ * 4. Adds required package.json fields (exports, engines, sideEffects, keywords)
+ * 5. Generates publishable README with required structure
+ * 6. Creates E2E project in apps/package-e2e/
+ * 7. Creates CI workflow status file
+ * 8. Provides instructions for additional manual steps
  *
  * @param tree - The Nx virtual file system tree
  * @param options - Configuration options
  * @returns A promise that resolves when the generator completes
+ * @throws {Error} When no runtime compatibility profile was given.
  *
  * @example Make a library publishable
  * ```bash
- * nx generate @hyperfrontend/package:make-publishable lib-my-utils
+ * nx generate @hyperfrontend/package:make-publishable lib-my-utils --compatibility=isomorphic
  * ```
  *
  * @example With custom global name and bundle entry
  * ```bash
- * nx generate @hyperfrontend/package:make-publishable lib-my-utils --globalName=MyUtils --bundleEntry=./browser
+ * nx generate @hyperfrontend/package:make-publishable lib-my-utils --compatibility=browser-only --globalName=MyUtils --bundleEntry=./browser
  * ```
  */
 export async function makePublishableGenerator(tree: Tree, options: MakePublishableGeneratorSchema): Promise<void> {

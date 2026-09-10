@@ -25,6 +25,12 @@
       "description": "npm keywords for the package",
       "x-prompt": "Enter npm keywords for this package (comma-separated)"
     },
+    "compatibility": {
+      "type": "string",
+      "enum": ["isomorphic", "node-only", "browser-only"],
+      "description": "Runtime profile written to metadata.compatibility in project.json: 'isomorphic' runs in Node, browsers and Web Workers, 'node-only' runs in Node alone, 'browser-only' runs in browsers and Web Workers. A package with partial support in a runtime declares it by hand instead.",
+      "x-prompt": "Where does this package run?"
+    },
     "skipE2E": {
       "type": "boolean",
       "description": "Skip creating E2E project",

@@ -108,11 +108,14 @@ function addFiles(tree: Tree, options: NormalizedOptions): void {
  * - README.md template
  *
  * If publishable option is true, also runs the make-publishable generator
- * to add build targets, CI configuration, and E2E project.
+ * to declare runtime compatibility and add build targets, CI configuration,
+ * and E2E project. An internal library declares no compatibility, because it
+ * is never published for anyone to read it.
  *
  * @param tree - The Nx virtual file system tree
  * @param options - Configuration options for the library
  * @returns A promise that resolves when the generator completes
+ * @throws {Error} When publishable is true and no compatibility profile was given.
  *
  * @example Create an internal utility library
  * ```bash
@@ -121,7 +124,7 @@ function addFiles(tree: Tree, options: NormalizedOptions): void {
  *
  * @example Create a publishable library
  * ```bash
- * nx generate @hyperfrontend/package:library my-lib --type=util --publishable
+ * nx generate @hyperfrontend/package:library my-lib --type=util --publishable --compatibility=isomorphic
  * ```
  *
  * @example Create a nested library under utils
@@ -141,6 +144,7 @@ export async function libraryGenerator(tree: Tree, options: LibraryGeneratorSche
     await makePublishableGenerator(tree, {
       project: normalizedOptions.projectName,
       keywords: options.keywords,
+      compatibility: options.compatibility,
       skipFormat: true,
     })
   }

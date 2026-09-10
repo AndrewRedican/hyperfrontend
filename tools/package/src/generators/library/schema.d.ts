@@ -1,3 +1,5 @@
+import type { CompatibilityProfile } from '../make-publishable/schema'
+
 /**
  * Schema options for the library generator.
  */
@@ -14,6 +16,8 @@ export interface LibraryGeneratorSchema {
   publishable?: boolean
   /** npm keywords for the package (only used when publishable is true) */
   keywords?: string[]
+  /** Runtime profile written to metadata.compatibility (required when publishable is true) */
+  compatibility?: CompatibilityProfile
   /** Skip formatting the generated files */
   skipFormat?: boolean
 }
