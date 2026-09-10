@@ -57,7 +57,7 @@ Additionally, the library provides **safe built-in copies**: pre-captured refere
 
 ### Architecture Highlights
 
-The `@locked()` decorator uses Symbol-based caching to store bound methods per instance, avoiding the performance cost of repeated `.bind()` calls. Properties are marked `configurable: false` to prevent deletion or descriptor modification, and `writable: false` to block reassignment.
+A locked property is defined `writable: false` and `configurable: false`, so it cannot be reassigned, deleted, or redefined afterwards. Reassignment fails silently in sloppy mode and throws a `TypeError` in strict mode, which includes every ES module.
 
 The safe built-in copies are captured at module initialization time. **Important:** This only works if the module loads before any malicious code runs; it mitigates pollution, not prevents it retroactively.
 
