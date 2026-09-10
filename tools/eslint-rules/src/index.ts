@@ -59,6 +59,7 @@ import preferJsDocOverTrailingComments, {
 } from './rules/prefer-jsdoc-over-trailing-comments'
 import projectLifecyclePolicy, { RULE_NAME as PROJECT_LIFECYCLE_POLICY } from './rules/project-lifecycle-policy'
 import readmeMediaAsset, { RULE_NAME as README_MEDIA_ASSET } from './rules/readme-media-asset'
+import readmeParagraphLength, { RULE_NAME as README_PARAGRAPH_LENGTH } from './rules/readme-paragraph-length'
 import requireCodeblockLanguage, { RULE_NAME as REQUIRE_CODEBLOCK_LANGUAGE } from './rules/require-codeblock-language'
 import requireNodeProtocol, { RULE_NAME as REQUIRE_NODE_PROTOCOL } from './rules/require-node-protocol'
 import rootReadmePackages, { RULE_NAME as ROOT_README_PACKAGES } from './rules/root-readme-packages'
@@ -126,6 +127,7 @@ export const rules: ESLint.Plugin['rules'] = {
   [PREFER_INLINE_SINGLE_USE]: preferInlineSingleUse as unknown as Rule.RuleModule,
   [PREFER_JSDOC_OVER_TRAILING_COMMENTS]: preferJsDocOverTrailingComments as unknown as Rule.RuleModule,
   [README_MEDIA_ASSET]: readmeMediaAsset as unknown as Rule.RuleModule,
+  [README_PARAGRAPH_LENGTH]: readmeParagraphLength as unknown as Rule.RuleModule,
   [REQUIRE_CODEBLOCK_LANGUAGE]: requireCodeblockLanguage as unknown as Rule.RuleModule,
   [REQUIRE_NODE_PROTOCOL]: requireNodeProtocol as unknown as Rule.RuleModule,
   [ROOT_README_PACKAGES]: rootReadmePackages as unknown as Rule.RuleModule,
