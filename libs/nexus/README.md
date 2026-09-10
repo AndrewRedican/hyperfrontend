@@ -71,12 +71,6 @@ cart.connect()
 - **Contract Extension & Merging**: extend contracts at runtime or merge several into one
 - **Functional API Design**: factory functions with closure-based encapsulation, no class hierarchy to subclass
 
-### Architecture Highlights
-
-Nexus uses a **functional programming approach** with factory functions (`createBroker`, `createChannel`) that return handle objects. Internal state is encapsulated via closures, making the system highly testable and avoiding the complexity of class-based inheritance. The routing layer uses a handler registry pattern, allowing protocol actions (REQUEST_CONNECTION, ACCEPT_CONNECTION, etc.) to be processed by dedicated handlers.
-
-For a comprehensive deep dive into the library's internals, see the [Architecture Documentation](https://www.hyperfrontend.dev/docs/libraries/nexus/architecture/).
-
 ## Why Use @hyperfrontend/nexus?
 
 Micro-frontend integrations fail where two teams assumed different message shapes. A contract makes the assumption a value both sides exchange and the runtime enforces:
@@ -128,7 +122,13 @@ Contracts are exchanged during the handshake, but vocabulary differences never g
 
 ### Security Negotiation
 
-Channels can negotiate a sealed envelope during the handshake: register a security provider on the broker (via `broker.registerProtocol(version, provider)` or the `settings.security.protocols` bag) and opt the channel in with `security: { protocol: 'v3' }` or `security: { protocol: 'v4' }`. The initiator's REQUEST advertises that protocol with plaintext as the fallback, the responder's ACCEPT answers with the outcome, and the initiator's OPEN confirms it; a channel that selected a protocol accepts that protocol or plaintext and nothing else. Each side attaches its transport as it sends its own handshake answer (the responder with ACCEPT, the initiator with OPEN) and posts the session hello right behind that frame, retrying it every `requestRetryMs` until the counterpart confirms. Product traffic, including sends queued before the handshake, leaves as `Uint8Array` frames sealed under the session keys while the handshake actions themselves stay plaintext; once a transport is attached, any other plaintext action is dropped. The first inbound frame that authenticates confirms the counterpart and fires `security-ready`; a session nothing confirms within `connectTimeoutMs` fires `security-error` with code `security-unconfirmed` and closes with `reason: 'security-unconfirmed'`. Negotiation fails open by default, falling back to plaintext with a warning when the counterpart cannot provide the protocol; `mode: 'fail-closed'` denies the connection instead with `reason: 'security-unavailable'`. The transport seam is public: `createSecurityTransport` plus the `SecurityTransport` and `SecurityProvider` types define the boundary a security package implements, and `@hyperfrontend/network-protocol` (`v3`: ephemeral session keys agreed over the wire, defeating scripts that can only listen; `v4`: the same keys bound to a pre-shared key, defeating any script without the key) satisfies it directly. See [Security Model](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/nexus/ARCHITECTURE.md#security-model).
+Channels can negotiate a sealed envelope during the handshake: register a security provider on the broker (via `broker.registerProtocol(version, provider)` or the `settings.security.protocols` bag) and opt the channel in with `security: { protocol: 'v3' }` or `security: { protocol: 'v4' }`. The initiator's REQUEST advertises that protocol with plaintext as the fallback, the responder's ACCEPT answers with the outcome, and the initiator's OPEN confirms it; a channel that selected a protocol accepts that protocol or plaintext and nothing else.
+
+Each side attaches its transport as it sends its own handshake answer (the responder with ACCEPT, the initiator with OPEN) and posts the session hello right behind that frame, retrying it every `requestRetryMs` until the counterpart confirms. Product traffic, including sends queued before the handshake, leaves as `Uint8Array` frames sealed under the session keys while the handshake actions themselves stay plaintext; once a transport is attached, any other plaintext action is dropped.
+
+The first inbound frame that authenticates confirms the counterpart and fires `security-ready`; a session nothing confirms within `connectTimeoutMs` fires `security-error` with code `security-unconfirmed` and closes with `reason: 'security-unconfirmed'`. Negotiation fails open by default, falling back to plaintext with a warning when the counterpart cannot provide the protocol; `mode: 'fail-closed'` denies the connection instead with `reason: 'security-unavailable'`.
+
+The transport seam is public: `createSecurityTransport` plus the `SecurityTransport` and `SecurityProvider` types define the boundary a security package implements, and `@hyperfrontend/network-protocol` (`v3`: ephemeral session keys agreed over the wire, defeating scripts that can only listen; `v4`: the same keys bound to a pre-shared key, defeating any script without the key) satisfies it directly. See [Security Model](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/nexus/ARCHITECTURE.md#security-model).
 
 ### Disconnection & Cancellation
 
@@ -253,7 +253,9 @@ Events delivered to `channel.on(...)` subscribers:
 | `security-ready`  | The counterpart's first sealed frame authenticated (session confirmed) | `{ protocol }`                 |
 | `security-error`  | A frame was dropped in either direction, or the session failed         | `{ message, code, cause? }`    |
 
-The `close` payload's `reason` (`CloseReason`) is set only when neither side asked for the close: `'peer-reload'` when the counterpart window now hosts a different instance (the channel re-handshakes with it), and `'security-unconfirmed'` when a sealed session was never confirmed within `connectTimeoutMs` (the close is silent: no CLOSE frame travels). The `security-error` payload's `code` (`SecurityErrorCode`) is one of the wire protocol's verdicts on a single frame (`'unsupported-version'`, `'replayed'`, `'authentication-failed'`, `'malformed'`, `'counter-exhausted'`, `'invalid-session'`) or a transport-level code: `'hello-rejected'` (a hello arrived that differs from the one keying the session), `'security-unconfirmed'` (the confirmation deadline expired), `'transport-error'` (a packet could not be sealed or handed to the wire), or `'unknown'`.
+The `close` payload's `reason` (`CloseReason`) is set only when neither side asked for the close: `'peer-reload'` when the counterpart window now hosts a different instance (the channel re-handshakes with it), and `'security-unconfirmed'` when a sealed session was never confirmed within `connectTimeoutMs` (the close is silent: no CLOSE frame travels).
+
+The `security-error` payload's `code` (`SecurityErrorCode`) is one of the wire protocol's verdicts on a single frame (`'unsupported-version'`, `'replayed'`, `'authentication-failed'`, `'malformed'`, `'counter-exhausted'`, `'invalid-session'`) or a transport-level code: `'hello-rejected'` (a hello arrived that differs from the one keying the session), `'security-unconfirmed'` (the confirmation deadline expired), `'transport-error'` (a packet could not be sealed or handed to the wire), or `'unknown'`.
 
 ### Deny Reasons
 
