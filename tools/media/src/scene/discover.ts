@@ -1,4 +1,4 @@
-import type { BrowserScene, LoadedScene } from '../models/scene'
+import type { LoadedScene, MediaScene } from '../models/scene'
 import { existsSync, readdirSync } from 'node:fs'
 import { join } from 'node:path'
 import { pathToFileURL } from 'node:url'
@@ -8,8 +8,11 @@ import { promiseAll } from '@hyperfrontend/immutable-api-utils/built-in-copy/pro
 /** Shape a scene module arrives in once the runtime has transpiled it. */
 interface SceneModule {
   /** The scene the file default-exported. */
-  default?: BrowserScene
+  default?: MediaScene
 }
+
+/** Discriminants a scene file is allowed to carry. */
+const LANES: readonly string[] = ['browser', 'scripted']
 
 /**
  * Load one scene file and confirm it exported something the pipeline can run.
@@ -21,8 +24,8 @@ interface SceneModule {
 async function loadScene(filePath: string): Promise<LoadedScene> {
   const loaded = (await import(pathToFileURL(filePath).href)) as SceneModule
   const scene = loaded.default
-  if (scene === undefined || scene.kind !== 'browser') {
-    throw createError(`${filePath} must default-export defineBrowserScene({ ... })`)
+  if (scene === undefined || !LANES.includes(scene.kind)) {
+    throw createError(`${filePath} must default-export defineBrowserScene({ ... }) or defineScriptedScene({ ... })`)
   }
   return { filePath, scene }
 }

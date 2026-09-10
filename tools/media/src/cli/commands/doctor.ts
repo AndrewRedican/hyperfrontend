@@ -3,6 +3,7 @@ import { existsSync } from 'node:fs'
 import { stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 import { resolveChromium } from '../../browser/resolve-chromium'
 import { findBundledFfmpeg, readVersion } from '../../encode/binaries'
+import { listProfiles } from '../../stage/profiles'
 
 /** What the doctor found for one prerequisite. */
 interface Finding {
@@ -29,11 +30,14 @@ function findChromium(configured: string): string {
 }
 
 /**
- * Report which browsers and encoders this machine can offer.
+ * Report which browsers and encoders this machine can offer, and what sizes a
+ * scene can be composed for.
  *
  * Written to be the first thing anyone runs on a new machine: every missing
  * prerequisite is printed with the command that installs it, rather than
- * surfacing later as a failure part-way through a recording.
+ * surfacing later as a failure part-way through a recording. The profiles are
+ * printed alongside because a scene has to name one, and this is the only place
+ * that can answer what the names are without reading the source.
  *
  * @param config - The workspace configuration.
  * @param asJson - Whether to print machine-readable output.
@@ -48,13 +52,17 @@ export function runDoctor(config: ResolvedMediaConfig, asJson: boolean): string 
     { name: 'gifsicle', detail: readVersion(config.encoder.binaries.gifsicle, '--version'), fix: 'apt-get install gifsicle' },
     { name: 'bundled ffmpeg', detail: existsSync(bundledFfmpeg) ? bundledFfmpeg : '', fix: 'npx playwright install chromium' },
   ]
+  const profiles = listProfiles()
   if (asJson) {
-    return stringify({ findings }, undefined, 2)
+    return stringify({ findings, profiles }, undefined, 2)
   }
-  return findings
-    .map(
-      (finding) =>
-        `${finding.detail === '' ? 'missing' : 'ok     '}  ${finding.name.padEnd(16)}${finding.detail === '' ? finding.fix : finding.detail}`
-    )
-    .join('\n')
+  const tools = findings.map(
+    (finding) =>
+      `${finding.detail === '' ? 'missing' : 'ok     '}  ${finding.name.padEnd(16)}${finding.detail === '' ? finding.fix : finding.detail}`
+  )
+  const sizes = profiles.map(
+    (profile) =>
+      `         ${profile.id.padEnd(16)}${profile.width}x${profile.height} at ${profile.scale}x, ${profile.fps}fps: ${profile.intent}`
+  )
+  return [...tools, '', 'profiles', ...sizes].join('\n')
 }

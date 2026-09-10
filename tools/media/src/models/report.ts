@@ -1,5 +1,6 @@
 import type { Determinism, RecordWindow, Viewport } from './capture'
 import type { EncoderName, GifOptions, ToolVersion } from './encode'
+import type { MediaProfile } from './profile'
 
 /** Identity of the browser build that produced a recording. */
 export interface BrowserRecord {
@@ -59,8 +60,10 @@ export interface AssetSidecar {
   generatedAt: string
   /** Digest of the scene file, so a stale asset can be detected. */
   sceneHash: string
-  /** Document that was recorded. */
+  /** Document that was recorded, or `stage:<id>` for a scene the recorder drew itself. */
   sourceUrl: string
+  /** Presentation target the scene was composed for, absent on a browser scene. */
+  profile?: MediaProfile
   /** Viewport the session was recorded at. */
   viewport: Viewport
   /** The slice of the session that reached the asset. */

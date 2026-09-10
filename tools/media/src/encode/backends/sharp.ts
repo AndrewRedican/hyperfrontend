@@ -1,18 +1,13 @@
 import type { EncoderBinaries, GifBackend, GifEncodeOutcome, GifEncodeRequest, ToolVersion } from '../../models/encode'
 import { execFileSync } from 'node:child_process'
-import { mkdirSync, readdirSync, statSync } from 'node:fs'
+import { mkdirSync, readdirSync } from 'node:fs'
 import { join } from 'node:path'
 import sharpFactory from 'sharp'
-import { min, round } from '@hyperfrontend/immutable-api-utils/built-in-copy/math'
-import { promiseAll } from '@hyperfrontend/immutable-api-utils/built-in-copy/promise'
 import { mediaError } from '../../lib/media-error'
 import { ExitCode } from '../../models/exit-code'
 import { readVersion, resolveFrameFfmpeg } from '../binaries'
 import { planFrames } from '../decimate'
-import { countGifFrames } from '../gif-frames'
-
-/** Colour channels each extracted frame is read back as. */
-const CHANNELS = 3
+import { encodeFrames } from '../frames'
 
 /**
  * Turn the recorded video into one PNG per source frame.
@@ -84,33 +79,17 @@ export const sharpBackend: GifBackend = {
     }
     const frames = extractFrames(request, ffmpegPath)
     const plan = planFrames(frames.length, request.durationMs, request.gif.fps)
-    const kept = plan.indexes.map((index) => frames[index] ?? '')
-    const first = await sharpFactory(kept[0] ?? '').metadata()
-    const width = first.width ?? request.gif.width
-    const height = first.height ?? 0
-    const pixels = await promiseAll(kept.map((path) => sharpFactory(path).removeAlpha().raw().toBuffer()))
-
-    await sharpFactory(Buffer.concat(pixels), { raw: { width, height: height * kept.length, channels: CHANNELS, pageHeight: height } })
-      .gif({
-        delay: [...plan.delaysMs],
-        loop: request.gif.loop,
-        colours: request.gif.colours,
-        dither: request.gif.dither ? 1 : 0,
-        effort: 10,
-        // why: lossy inter-frame merging is the only size lever this backend has
-        interFrameMaxError: min(32, round(request.gif.lossy / 10)),
-      })
-      .toFile(request.outputPath)
+    const outcome = await encodeFrames(
+      plan.indexes.map((index) => frames[index] ?? ''),
+      plan.delaysMs,
+      request.gif,
+      request.outputPath
+    )
 
     const toolVersions: readonly ToolVersion[] = [
       { name: 'sharp', version: sharpFactory.versions.vips },
       { name: 'ffmpeg', version: readVersion(ffmpegPath, '-version') },
     ]
-    return {
-      bytes: statSync(request.outputPath).size,
-      frames: await countGifFrames(request.outputPath),
-      encoder: 'sharp',
-      toolVersions,
-    }
+    return { bytes: outcome.bytes, frames: outcome.frames, encoder: 'sharp', toolVersions }
   },
 }
