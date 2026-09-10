@@ -58,7 +58,7 @@ The library features three modular entry points: platform-specific implementatio
 
 ### Architecture Highlights
 
-Built on functional composition with dependency injection, allowing complete mocking in tests without module patching. All cryptographic operations use platform-native APIs (Web Crypto API in browsers, Node.js crypto module) wrapped in consistent interfaces. `encrypt` generates a unique salt and initialization vector per operation, so a secret at rest never reuses a key; the session primitives (`createKeyAgreement`, `expandKey`, `seal`, `open`) hand the key and nonce lifecycle to the caller, which is what a message stream needs.
+`encrypt` generates a unique salt and initialization vector per operation, so a secret at rest never reuses a key, and the same plaintext encrypted twice produces two different ciphertexts. The session primitives (`createKeyAgreement`, `expandKey`, `seal`, `open`) hand the key and nonce lifecycle to the caller instead, which is what a message stream needs.
 
 ## Why Use @hyperfrontend/cryptography?
 
