@@ -67,6 +67,8 @@ library and a multi-entry framework alike.
 - **Predicate extension model.** Externals, workspace membership, and asset conditions are expressed as predicates (`byNames`, `byPrefix`, or your own), keeping the core free of workspace-specific assumptions.
 - **Memory-aware by design.** Per-entry bundling plus an opt-in memory monitor (`createMemoryMonitor`, `recover`) keep large builds inside constrained environments.
 
+The [architecture guide](https://www.hyperfrontend.dev/docs/libraries/builder/architecture/) covers the phase pipeline, the per-entry worker model, and the shared-internals dedup pass.
+
 ## Why Use @hyperfrontend/builder?
 
 Most library bundlers assume one entry point, one format, and a fixed notion of
