@@ -46,6 +46,13 @@ function createTempProject(config: { projectJson: object; packageJson?: object }
 }
 
 /**
+ * The Key Features list a valid README carries, kept apart so a test can swap it out.
+ */
+const VALID_KEY_FEATURES = `- **Feature One** - Description of the first feature and what it does for you
+- **Feature Two** - Description of the second feature and what it does for you
+- **Feature Three** - Description of the third feature and what it does for you`
+
+/**
  * Creates a valid README.md content for testing.
  *
  * @param packageName - The name of the package to use in the README title and badges.
@@ -99,8 +106,7 @@ This is a description of what the library does.
 
 ### Key Features
 
-- **Feature One** - Description of feature one
-- **Feature Two** - Description of feature two
+${VALID_KEY_FEATURES}
 
 ### Architecture Highlights
 
@@ -137,6 +143,71 @@ import { something } from '@hyperfrontend/${packageName}'
 `
 }
 
+/**
+ * Creates a valid README carrying a different Key Features list.
+ *
+ * @param features - The lines to put under the Key Features heading.
+ * @returns The README content with its feature list replaced.
+ */
+function createReadmeWithKeyFeatures(features: string): string {
+  return createValidReadme('test').replace(VALID_KEY_FEATURES, features)
+}
+
+/**
+ * The parts of a report this spec inspects.
+ */
+interface ReportCall {
+  /** The message the rule reported. */
+  messageId?: string
+  /** Where the rule pointed, when it pointed anywhere. */
+  loc?: SourceLocation
+  /** The values the message interpolates. */
+  data?: Record<string, string>
+}
+
+/**
+ * A position a report points at.
+ */
+interface SourceLocation {
+  /** Line number, 1-based. */
+  line: number
+  /** Column number, 0-based. */
+  column: number
+}
+
+/**
+ * Runs the rule over README content and collects everything it reported.
+ *
+ * @param content - The README content to lint.
+ * @returns Every report the rule made, in the order it made them.
+ */
+function collectReports(content: string): ReportCall[] {
+  const dir = createTempProject({ projectJson: validProjectJson, packageJson: { name: '@hyperfrontend/test' } })
+  const reportMock = jest.fn()
+  const context = {
+    filename: join(dir, 'README.md'),
+    sourceCode: { getText: () => content },
+    report: reportMock,
+  }
+  // @ts-expect-error - partial mock
+  const listener = rule.create(context)
+  const mockNode = { type: 'root' }
+  // @ts-expect-error - partial mock
+  listener.root?.(mockNode)
+
+  return reportMock.mock.calls.map((call) => call[0] as ReportCall)
+}
+
+/**
+ * Collects the reports a Key Features list draws, ignoring the rest of the README.
+ *
+ * @param features - The lines to put under the Key Features heading.
+ * @returns Every report whose message concerns the Key Features list.
+ */
+function collectKeyFeatureReports(features: string): ReportCall[] {
+  return collectReports(createReadmeWithKeyFeatures(features)).filter((report) => report.messageId?.startsWith('keyFeature'))
+}
+
 describe('lib-readme-structure', () => {
   afterAll(() => {
     manager.cleanupAll()
@@ -169,6 +240,13 @@ describe('lib-readme-structure', () => {
       expect(messageIds).toContain('sectionOutOfOrder')
       expect(messageIds).toContain('missingSubsection')
       expect(messageIds).toContain('missingKeyFeaturesList')
+      expect(messageIds).toContain('keyFeaturesNotAList')
+      expect(messageIds).toContain('keyFeatureMissingLabel')
+      expect(messageIds).toContain('keyFeatureMissingDescription')
+      expect(messageIds).toContain('keyFeatureLabelTooLong')
+      expect(messageIds).toContain('keyFeatureDescriptionTooShort')
+      expect(messageIds).toContain('keyFeaturesTooFew')
+      expect(messageIds).toContain('keyFeaturesTooMany')
     })
   })
 
@@ -474,10 +552,14 @@ Content 2
   })
 
   describe('REQUIRED_SUBSECTIONS', () => {
-    it('has Key Features and Architecture Highlights', () => {
+    it('requires Key Features', () => {
       const subsectionNames = REQUIRED_SUBSECTIONS.map((s) => s.name)
       expect(subsectionNames).toContain('Key Features')
-      expect(subsectionNames).toContain('Architecture Highlights')
+    })
+
+    it('leaves Architecture Highlights optional', () => {
+      const subsectionNames = REQUIRED_SUBSECTIONS.map((s) => s.name)
+      expect(subsectionNames).not.toContain('Architecture Highlights')
     })
 
     it('all subsections are level 3', () => {
@@ -839,7 +921,8 @@ Compatible.
       listener.root?.(mockNode)
 
       const subCalls = reportMock.mock.calls.filter((call) => call[0].messageId === 'missingSubsection')
-      expect(subCalls.length).toBe(2)
+      expect(subCalls.length).toBe(1)
+      expect(subCalls[0]?.[0].data).toEqual({ subsection: 'Key Features', parent: 'What is @hyperfrontend/test?' })
     })
 
     it('reports missing key features bullet list', () => {
@@ -912,6 +995,111 @@ Compatible.
           messageId: 'missingKeyFeaturesList',
         })
       )
+    })
+
+    it('accepts a README that states no architecture highlights', () => {
+      const content = createValidReadme('test').replace(
+        '### Architecture Highlights\n\nBuilt on functional composition with dependency injection.\n\n',
+        ''
+      )
+
+      expect(collectReports(content)).toEqual([])
+    })
+
+    it('accepts an HTML comment parked in the Key Features list', () => {
+      const features = `${VALID_KEY_FEATURES}
+<!-- TODO(asset): a capture of the first feature in use -->`
+
+      expect(collectKeyFeatureReports(features)).toEqual([])
+    })
+
+    it('reports a lead-in paragraph above the Key Features list', () => {
+      const features = `This package offers:
+
+${VALID_KEY_FEATURES}`
+      const reports = collectKeyFeatureReports(features)
+
+      expect(reports).toHaveLength(1)
+      expect(reports[0]).toMatchObject({ messageId: 'keyFeaturesNotAList', data: { line: 'This package offers:' } })
+    })
+
+    it('reports a nested bullet under a key feature', () => {
+      const features = `${VALID_KEY_FEATURES}
+  - a detail hanging off the last feature`
+      const reports = collectKeyFeatureReports(features)
+
+      expect(reports).toHaveLength(1)
+      expect(reports[0]).toMatchObject({ messageId: 'keyFeaturesNotAList', data: { line: '- a detail hanging off the last feature' } })
+    })
+
+    it('reports a key feature that opens with no bold label', () => {
+      const features = `${VALID_KEY_FEATURES}
+- runs everywhere the platform runs, with no configuration`
+      const reports = collectKeyFeatureReports(features)
+
+      expect(reports).toHaveLength(1)
+      expect(reports[0]).toMatchObject({
+        messageId: 'keyFeatureMissingLabel',
+        data: { feature: 'runs everywhere the platform runs, with no configuration' },
+      })
+    })
+
+    it('reports a key feature that is a bare label', () => {
+      const features = `${VALID_KEY_FEATURES}
+- **Tree shakeable**`
+      const reports = collectKeyFeatureReports(features)
+
+      expect(reports).toHaveLength(1)
+      expect(reports[0]).toMatchObject({ messageId: 'keyFeatureMissingDescription', data: { feature: 'Tree shakeable' } })
+    })
+
+    it('reports a key feature label that has grown into a sentence', () => {
+      const features = `${VALID_KEY_FEATURES}
+- **Everything this package does for you and then some more** - with an explanation after it`
+      const reports = collectKeyFeatureReports(features)
+
+      expect(reports).toHaveLength(1)
+      expect(reports[0]).toMatchObject({ messageId: 'keyFeatureLabelTooLong', data: { characters: '55', maximum: '48' } })
+    })
+
+    it('reports a key feature whose explanation restates its label', () => {
+      const features = `${VALID_KEY_FEATURES}
+- **Fast** - it is fast`
+      const reports = collectKeyFeatureReports(features)
+
+      expect(reports).toHaveLength(1)
+      expect(reports[0]).toMatchObject({
+        messageId: 'keyFeatureDescriptionTooShort',
+        data: { feature: 'Fast', characters: '10', minimum: '20' },
+      })
+    })
+
+    it('reports a Key Features list too short to summarise a package', () => {
+      const features = '- **Feature One** - Description of the first feature and what it does for you'
+      const reports = collectKeyFeatureReports(features)
+
+      expect(reports).toHaveLength(1)
+      expect(reports[0]).toMatchObject({ messageId: 'keyFeaturesTooFew', data: { count: '1', minimum: '3' } })
+    })
+
+    it('reports a Key Features list longer than a reader takes in', () => {
+      const bullets: string[] = []
+      for (let index = 1; index <= 13; index++) {
+        bullets.push(`- **Feature ${index}** - Description of a feature and what it does for you`)
+      }
+      const reports = collectKeyFeatureReports(bullets.join('\n'))
+
+      expect(reports).toHaveLength(1)
+      expect(reports[0]).toMatchObject({ messageId: 'keyFeaturesTooMany', data: { count: '13', maximum: '12' } })
+    })
+
+    it('points a Key Features report at the line the problem sits on', () => {
+      const bareLabel = '- **Tree shakeable**'
+      const content = createReadmeWithKeyFeatures(`${VALID_KEY_FEATURES}\n${bareLabel}`)
+      const expectedLine = content.split('\n').indexOf(bareLabel) + 1
+      const reports = collectReports(content).filter((report) => report.messageId === 'keyFeatureMissingDescription')
+
+      expect(reports[0]?.loc).toEqual({ line: expectedLine, column: 0 })
     })
   })
 })

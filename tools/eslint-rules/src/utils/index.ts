@@ -2,6 +2,7 @@ export type { SectionDividerBlock } from './comment-analysis'
 export type { ImportCategoryType } from './import-analysis'
 export type { ScopedLogger, ScopedLoggerOptions } from './logger'
 export type { PackageJson, ProjectJson, PublishableLibrary } from './nx-project'
+export type { FeatureBullet, KeyFeaturesMessageId, KeyFeaturesProblem, KeyFeaturesRange } from './readme-key-features'
 export {
   JSDOC_TAGS,
   TOOLING_DIRECTIVE_PATTERNS,
@@ -31,6 +32,15 @@ export {
   readPackageJson,
   readProjectJson,
 } from './nx-project'
+export {
+  MAX_FEATURE_LABEL_CHARACTERS,
+  MIN_FEATURE_DESCRIPTION_CHARACTERS,
+  MIN_KEY_FEATURES,
+  MAX_KEY_FEATURES,
+  analyzeKeyFeatures,
+  isFeatureBullet,
+  parseFeatureBullet,
+} from './readme-key-features'
 export {
   findNxWorkspaceRoot,
   findProjectRoot,
