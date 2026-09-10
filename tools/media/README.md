@@ -153,12 +153,66 @@ The profile reaches the stage, so a stage can show less at the smaller size rath
 
 ### The stages that ship
 
-| Stage           | Import               | Draws                                         |
-| --------------- | -------------------- | --------------------------------------------- |
-| `terminalStage` | `src/terminal/stage` | A terminal window playing a typed script      |
-| `flowStage`     | `src/flow/stage`     | Two endpoints exchanging messages over a wire |
+| Stage           | Import               | Draws                                               |
+| --------------- | -------------------- | --------------------------------------------------- |
+| `terminalStage` | `src/terminal/stage` | A terminal window playing a typed script            |
+| `flowStage`     | `src/flow/stage`     | Two endpoints exchanging messages over a wire       |
+| `panelStage`    | `src/panel/stage`    | Columns of source and results, filling in over time |
+| `gaugeStage`    | `src/gauge/stage`    | Labelled quantities moving between stated values    |
+| `byteStage`     | `src/byte/stage`     | A field of bytes assembling into labelled segments  |
 
-Each takes a `theme`, which is a table of colours rather than a stylesheet, so one implementation carries several looks: `midnight`, `daylight` and `ink` for the terminal, `midnight` and `daylight` for the flow. A scene that needs another passes a theme object instead of a name.
+Each takes a `theme`, which is a table of colours rather than a stylesheet, so one implementation carries several looks: `midnight`, `daylight` and `ink` for the terminal, `midnight` and `daylight` for the rest. A scene that needs another passes a theme object instead of a name, and a scene that wants only one colour changed spreads a built-in and overrides it:
+
+```typescript
+import { resolvePanelTheme } from '../src/panel/themes'
+
+const teal = { ...resolvePanelTheme('midnight'), cursor: '#5eead4', emphasis: 'rgba(94, 234, 212, 0.12)' }
+```
+
+#### `panelStage`
+
+A row of columns; each column a stack of lines; each line knowing when it arrives, whether it types itself in, and when it leaves again. Two columns are a before and an after, four are four wrappers fed the same call, one is a listing that fills.
+
+```typescript
+config: {
+  heading: 'One line over the frame',
+  caption: 'One line under it, arriving last',
+  panels: [
+    {
+      title: 'setup.mjs',
+      kind: 'code',           // 'code' is tokenised, 'result' is not, 'note' is set in the sans face
+      align: 'top',           // or 'center' / 'bottom', for a short column beside a long one
+      rows: [
+        { text: "const n = encrypt('secret')", atMs: 200, typeMs: 700 },
+        { text: '', atMs: 900 },                       // a blank row is a spacer
+      ],
+    },
+    {
+      title: 'node setup.mjs',
+      chrome: true,           // draws the column as a terminal window
+      kind: 'result',
+      rows: [
+        { text: '  ◯ Playwright', atMs: 1_200, untilMs: 2_400 },   // leaves again, for a surface that repaints
+        { text: 'Uint8Array(58)', atMs: 2_400, marker: '›', emphasis: true, tone: 'accent' },
+      ],
+    },
+  ],
+}
+```
+
+`emphasis` puts a row on a lit band, `strike` rules it through, `marker` sets a character in the margin. Type is smaller here than in the terminal stage at the same profile, because a terminal is one column and this is two to four.
+
+#### `gaugeStage`
+
+Quantities that move. Each track carries a label, a maximum and a list of `{ atMs, value }` stops; the value between two stops is interpolated, so a countdown that pauses is two stops with the same number and a bar that fills is two stops with different ones. `orientation: 'column'` draws the tracks as vertical bins, which is what a histogram is.
+
+#### `byteStage`
+
+A row of cells that fill in as a buffer is built, grouped into labelled segments. For the packages whose subject is a layout rather than a call: what `encrypt` actually returns, what a sealed frame is made of.
+
+#### `flowStage`
+
+Two endpoints and a wire. Beyond the message list it carries three things a protocol scene needs: `detail` on a message (what it actually carries, under the name on the wire and after it in the log), `phases` (named stretches of the exchange, captioned as each begins), and `repeatEveryMs`/`repeatUntilMs` for traffic that is a cadence rather than an event. A heartbeat is one fact about a session, so it pulses on the wire and takes one line in the log with a count beside it.
 
 ### Writing a new stage
 
