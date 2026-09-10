@@ -59,7 +59,7 @@ The library centers around a powerful `traverse()` function that recursively wal
 
 ### Architecture Highlights
 
-Uses a class registration system where custom types (Map, Set, domain models) define traversal operators (getKeys, read, write, remove, instantiate). Reference stacks track visited objects during traversal to detect circular references without WeakMap dependencies. Traversal functions use functional composition with configurable predicates and callbacks, allowing complex operations to be built from simple building blocks.
+Custom types are taught to the library through `registerIterableClass`, which takes a class plus four operators (`getKeys`, `read`, `write`, `remove`) and an optional `instantiate`. Once registered, a class is traversed, compared, and cloned by the same functions that handle plain objects. Circular references are found by tracking the references actually visited, not by capping depth, so a deep but acyclic structure is never mistaken for a loop.
 
 ## Why Use @hyperfrontend/data-utils?
 
