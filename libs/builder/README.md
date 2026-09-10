@@ -33,6 +33,15 @@
   <img src="https://img.shields.io/badge/tree%20shakeable-%E2%9C%93-success?style=flat-square" alt="Tree Shakeable">
 </p>
 
+<p align="center">
+  <a href="https://www.hyperfrontend.dev/docs/libraries/builder/">
+    <img width="640" src="https://www.hyperfrontend.dev/media/builder-manifest/hero.gif" alt="A library's source folder tree being typed out on the left while the generated package.json appears on the right: first the exports map, then main, module, types and the files allowlist">
+  </a>
+</p>
+<p align="center">
+  <sub>The division of labour. You keep the source tree; every build rewrites the manifest from what actually landed in the output directory.</sub>
+</p>
+
 Composable, vendor-neutral build toolkit for TypeScript libraries, JS bins, and Node SEA native binaries.
 
 • 👉 See [**documentation**](https://www.hyperfrontend.dev/docs/libraries/builder/)
@@ -86,13 +95,11 @@ many packages with shared internals and varied output needs:
 npm install --save-dev @hyperfrontend/builder
 ```
 
-`typescript` is a required peer dependency: the builder drives declaration emit
-through your project's TypeScript and is built against **TypeScript >= 5.9**.
-Install it alongside the builder if your project does not already depend on it:
-
-```bash
-npm install --save-dev "typescript@>=5.9"
-```
+`typescript` is a regular dependency of the builder, not a peer: installing the
+builder installs a compiler, and the published manifest declares no
+`peerDependencies` at all. Declaration emit spawns the workspace's own
+`node_modules/.bin/tsc`, so when your project already depends on TypeScript that
+is the compiler that runs. The builder is built against **TypeScript >= 5.9**.
 
 ## Quick Start
 
@@ -132,21 +139,33 @@ await runPackagePhase(ctx, config, /* formats */ [])
 
 ## API Overview
 
-| Export                            | Description                                                          |
-| --------------------------------- | -------------------------------------------------------------------- |
-| `build`                           | Run the full pipeline (bundle → package → bin) from a `BuildConfig`. |
-| `createBuildContext`              | Derive the shared `BuildContext` used by the individual phases.      |
-| `runBundlePhase`                  | Emit per-entry bundles and declarations for the configured formats.  |
-| `runPackagePhase`                 | Synthesize the output `package.json`, assets, and license file.      |
-| `runBinPhase`                     | Synthesize JavaScript bins and Node SEA native binaries.             |
-| `createMemoryMonitor` / `recover` | Observe build memory pressure and recover from soft limits.          |
-| `byNames` / `byPrefix`            | Preset predicate factories for classifying packages and externals.   |
+The surface is the pipeline, in order. `build(config)` is the whole of it: it derives a `BuildContext`, runs the bundle, package and bin phases against it, and resolves
+to a `BuildResult` carrying per-format counts, the artifacts emitted and a wall-clock duration. Each phase stays callable on its own against a context you built
+yourself, so [`runBundlePhase`](https://www.hyperfrontend.dev/docs/libraries/builder/bundle/#api-runBundlePhase),
+[`runPackagePhase`](https://www.hyperfrontend.dev/docs/libraries/builder/package/#api-runPackagePhase) and
+[`runBinPhase`](https://www.hyperfrontend.dev/docs/libraries/builder/bin/#api-runBinPhase) are the seam for driving one step in isolation.
 
-Advanced primitives are available under sub-path entries: for example
-`@hyperfrontend/builder/presets`, `@hyperfrontend/builder/bundle`,
-`@hyperfrontend/builder/package`, and `@hyperfrontend/builder/bin`. See the
-[documentation](https://www.hyperfrontend.dev/docs/libraries/builder/) for the
-full surface.
+Most of that work is discovery rather than declaration, which is why the config stays small. Entry points come from the folder layout:
+[`discoverEntries`](https://www.hyperfrontend.dev/docs/libraries/builder/bundle/entries/#api-discoverEntries) walks `src/`, and every directory holding an `index.ts`
+becomes a published subpath, so adding an entry point is adding a folder. The seams that could have hard-coded a workspace are plain predicate functions instead:
+`isWorkspacePackage` is a `(name: string) => boolean`, with
+[`byPrefix`](https://www.hyperfrontend.dev/docs/libraries/builder/presets/#api-byPrefix) and
+[`byNames`](https://www.hyperfrontend.dev/docs/libraries/builder/presets/#api-byNames) as conveniences for the two common answers and a closure of your own just as
+valid an argument.
+
+What ships is measured rather than predicted. Each entry bundles in its own spawned child process, one per entry per format, and that isolation is what keeps peak
+memory flat instead of climbing with the size of the graph; declarations are not synthesized in-process at all, since the builder spawns the workspace's own `tsc` and
+flattens what it emits. The output `package.json` is reflected from what actually landed:
+[`synthesizePackageJson`](https://www.hyperfrontend.dev/docs/libraries/builder/package/json/#api-synthesizePackageJson) writes `exports`, `main`, `module` and `types`
+from the formats that really emitted, and
+[`reflectFilesAllowlist`](https://www.hyperfrontend.dev/docs/libraries/builder/package/json/#api-reflectFilesAllowlist) walks the finished output tree for `files`.
+
+The sub-path entries expose that same machinery a level down, each for a different job: `/bundle` and its children for entry discovery, externals, rollup dispatch,
+declarations and the shared-internals dedup pass; `/package` for the manifest, assets and third-party licenses; `/bin` for JavaScript bins and Node SEA binaries;
+`/memory` for the build-memory monitor; `/presets` for the predicate factories; and `/models` for the types all of them speak. Import the root when you want the
+pipeline, a sub-path when you are replacing one step of it.
+
+Every config field, phase signature and result type is in the [API reference](https://www.hyperfrontend.dev/docs/libraries/builder/#api-reference).
 
 ## Compatibility
 
