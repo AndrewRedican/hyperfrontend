@@ -54,10 +54,6 @@ Rather than wrapping platform differences behind abstraction layers, the library
 - **TypeScript native** - Full type safety with comprehensive JSDoc documentation
 - **Modular entry points** - Import only browser or Node.js implementations for optimal bundle sizes
 
-### Architecture Highlights
-
-The library maintains separate browser and Node.js implementations that share identical APIs but optimize for platform-specific capabilities. Browser implementations use `TextEncoder`/`TextDecoder` and `atob`/`btoa`, while Node.js implementations leverage `Buffer` operations. This dual-implementation strategy avoids runtime checks and polyfills, resulting in smaller bundles and better performance.
-
 ## Why Use @hyperfrontend/string-utils?
 
 ### 1. Eliminates Cross-Platform Encoding Complexity
