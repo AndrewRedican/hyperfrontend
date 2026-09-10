@@ -55,13 +55,9 @@ A terminal prompting library built on functional programming principles. Create 
 
 ### Architecture Highlights
 
-Each prompt follows a functional state machine pattern:
-
-- **Immutable State**: All prompt state is frozen; updates create new state objects
-- **Explicit Outcomes**: Prompts return either `{ result: 'submitted', value: T }` or `{ result: 'cancelled', value: undefined }`
-- **Terminal Abstraction**: Low-level I/O is encapsulated in a `Terminal` interface for testability
-- **Token Input Stream**: Raw input is tokenized into keys, pastes, and resize notifications by a persistent listener, with raw mode held for the whole prompt session and restored on close
-- **Frame Renderer**: A width-aware screen helper erases and repaints exact frames; on resize it recomputes the previous frame's height at the new width (assumes a reflowing terminal; display width is code-point based, east-asian double width out of scope)
+- **Explicit outcomes**: prompts resolve to either `{ result: 'submitted', value: T }` or `{ result: 'cancelled', value: undefined }`, so Ctrl+C is an ordinary branch to handle rather than a rejection to catch
+- **Terminal state is restored**: raw mode is taken once for the whole prompt session and given back when it closes, on cancel as well as on submit
+- **Rendering assumptions**: repainting on resize assumes a reflowing terminal, and display width is counted in code points, so east-asian double-width characters are out of scope
 
 ## Why Use @hyperfrontend/questions?
 
@@ -95,7 +91,7 @@ if (nameResult.result === PromptResult.Submitted) {
   console.log(`Hello, ${nameResult.value}!`)
 }
 
-// Text input with a live label — `renderMessage` is recomputed on every keystroke
+// Text input with a live label; `renderMessage` is recomputed on every keystroke
 import { style } from '@hyperfrontend/questions'
 
 await text({
