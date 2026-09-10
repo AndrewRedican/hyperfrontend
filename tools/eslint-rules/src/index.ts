@@ -13,7 +13,7 @@ import importOrder, { RULE_NAME as IMPORT_ORDER } from './rules/import-order'
 import jestMockAfterImports, { RULE_NAME as JEST_MOCK_AFTER_IMPORTS } from './rules/jest-mock-after-imports'
 import libBuilderImplicitDependency, { RULE_NAME as LIB_BUILDER_IMPLICIT_DEPENDENCY } from './rules/lib-builder-implicit-dependency'
 import libCiWorkflows, { RULE_NAME as LIB_CI_WORKFLOWS } from './rules/lib-ci-workflows'
-import libCompatibilityDocs, { RULE_NAME as LIB_COMPATIBILITY_DOCS } from './rules/lib-compatibility-docs'
+import libCompatibilityMatrix, { RULE_NAME as LIB_COMPATIBILITY_MATRIX } from './rules/lib-compatibility-matrix'
 import libE2eProjectRequired, { RULE_NAME as LIB_E2E_PROJECT_REQUIRED } from './rules/lib-e2e-project-required'
 import libEntryExportSpacing, { RULE_NAME as LIB_ENTRY_EXPORT_SPACING } from './rules/lib-entry-export-spacing'
 import libPkgBundleEntry, { RULE_NAME as LIB_PKG_BUNDLE_ENTRY } from './rules/lib-pkg-bundle-entry'
@@ -80,7 +80,7 @@ export const rules: ESLint.Plugin['rules'] = {
   [DOCS_SITE_SECONDARY_ENTRIES]: docsSiteSecondaryEntries as unknown as Rule.RuleModule,
   [ESCAPE_PACKAGE_TAGS]: escapePackageTags as unknown as Rule.RuleModule,
   [EXPORT_ORDER]: exportOrder as unknown as Rule.RuleModule,
-  [LIB_COMPATIBILITY_DOCS]: libCompatibilityDocs as unknown as Rule.RuleModule,
+  [LIB_COMPATIBILITY_MATRIX]: libCompatibilityMatrix as unknown as Rule.RuleModule,
   [LIB_ENTRY_EXPORT_SPACING]: libEntryExportSpacing as unknown as Rule.RuleModule,
   [IMPORT_ORDER]: importOrder as unknown as Rule.RuleModule,
   [JEST_MOCK_AFTER_IMPORTS]: jestMockAfterImports as unknown as Rule.RuleModule,

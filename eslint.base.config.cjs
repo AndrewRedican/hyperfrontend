@@ -310,7 +310,7 @@ module.exports = [
     },
     language: 'markdown/gfm',
     rules: {
-      'workspace/lib-compatibility-docs': 'error',
+      'workspace/lib-compatibility-matrix': 'error',
     },
   },
 ]

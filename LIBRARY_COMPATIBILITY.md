@@ -1,317 +1,111 @@
 # Library Compatibility Matrix
 
-> **Can I Use** style reference for @hyperfrontend libraries
+> Generated from each package's `project.json` and `package.json`. Regenerate it with `npx nx lint:all` rather than editing it by hand.
 
-Last updated: July 31, 2026
+## Platform Support
 
----
+| Library                                 | Node.js | Browser | Web Worker | CDN Bundle |
+| --------------------------------------- | ------- | ------- | ---------- | ---------- |
+| `@hyperfrontend/builder`                | ✅      | ❌      | ❌         | ❌         |
+| `@hyperfrontend/cryptography`           | ✅      | ✅      | ✅         | ✅         |
+| `@hyperfrontend/data-utils`             | ✅      | ✅      | ✅         | ✅         |
+| `@hyperfrontend/features`               | ✅      | ✅      | ⚠️         | ✅         |
+| `@hyperfrontend/function-utils`         | ✅      | ✅      | ✅         | ✅         |
+| `@hyperfrontend/immutable-api-utils`    | ✅      | ✅      | ✅         | ✅         |
+| `@hyperfrontend/json-utils`             | ✅      | ✅      | ✅         | ✅         |
+| `@hyperfrontend/list-utils`             | ✅      | ✅      | ✅         | ✅         |
+| `@hyperfrontend/logging`                | ✅      | ✅      | ✅         | ✅         |
+| `@hyperfrontend/network-protocol`       | ✅      | ✅      | ✅         | ✅         |
+| `@hyperfrontend/nexus`                  | ✅      | ✅      | ✅         | ✅         |
+| `@hyperfrontend/project-scope`          | ✅      | ❌      | ❌         | ❌         |
+| `@hyperfrontend/questions`              | ✅      | ❌      | ❌         | ❌         |
+| `@hyperfrontend/random-generator-utils` | ✅      | ✅      | ✅         | ✅         |
+| `@hyperfrontend/state-machine`          | ✅      | ✅      | ✅         | ✅         |
+| `@hyperfrontend/string-utils`           | ✅      | ✅      | ✅         | ✅         |
+| `@hyperfrontend/time-utils`             | ✅      | ✅      | ✅         | ✅         |
+| `@hyperfrontend/ui-utils`               | ⚠️      | ✅      | ✅         | ✅         |
+| `@hyperfrontend/versioning`             | ✅      | ❌      | ❌         | ❌         |
 
-## Platform Support Overview
+Legend: ✅ full support, ⚠️ partial support, ❌ no support, ❓ nothing declared. CDN Bundle marks the packages whose build produces an IIFE or UMD bundle.
 
-| Library                                 | Browser | Node.js | Web Worker | CDN Bundle |
-| --------------------------------------- | :-----: | :-----: | :--------: | :--------: |
-| `@hyperfrontend/data-utils`             |   ✅    |   ✅    |     ✅     |     ✅     |
-| `@hyperfrontend/function-utils`         |   ✅    |   ✅    |     ✅     |     ✅     |
-| `@hyperfrontend/string-utils`           |   ✅    |   ✅    |     ✅     |     ✅     |
-| `@hyperfrontend/time-utils`             |   ✅    |   ✅    |     ✅     |     ✅     |
-| `@hyperfrontend/immutable-api-utils`    |   ✅    |   ✅    |     ✅     |     ✅     |
-| `@hyperfrontend/json-utils`             |   ✅    |   ✅    |     ✅     |     ✅     |
-| `@hyperfrontend/list-utils`             |   ✅    |   ✅    |     ✅     |     ✅     |
-| `@hyperfrontend/random-generator-utils` |   ✅    |   ✅    |     ✅     |     ✅     |
-| `@hyperfrontend/ui-utils`               |   ✅    |   ⚠️¹   |     ✅     |     ✅     |
-| `@hyperfrontend/logging`                |   ✅    |   ✅    |     ✅     |     ✅     |
-| `@hyperfrontend/state-machine`          |   ✅    |   ✅    |     ✅     |     ✅     |
-| `@hyperfrontend/cryptography`           |   ✅    |   ✅    |     ✅     |     ✅     |
-| `@hyperfrontend/network-protocol`       |   ✅    |   ✅    |     ✅     |     ✅     |
-| `@hyperfrontend/nexus`                  |   ✅    |   ✅    |     ✅     |     ✅     |
-| `@hyperfrontend/features`               |   ✅    |   ✅³   |    ⚠️³     |    ✅³     |
-| `@hyperfrontend/questions`              |   ❌²   |   ✅    |    ❌²     |    ❌²     |
-| `@hyperfrontend/project-scope`          |   ❌²   |   ✅    |    ❌²     |    ❌²     |
-| `@hyperfrontend/versioning`             |   ❌²   |   ✅    |    ❌²     |    ❌²     |
-| `@hyperfrontend/builder`                |   ❌²   |   ✅    |    ❌²     |    ❌²     |
+**Notes**
 
-**Notes:**
-
-1. `ui-utils`: Some DOM utilities require browser APIs; check individual exports
-2. Build-time or CLI-time Node.js toolkits; not intended for browser, Web Worker, or CDN runtimes
-3. `features`: Support is per entry point, not per package. `/host` and `/hostee` are browser
-   runtimes and ship IIFE/UMD bundles for CDN use; `/cli`, `/server`, and `/generators` are Node-only.
-   The root entry (types, `defineConfig`, contract validation) is DOM-free and runs anywhere,
-   including a Web Worker; `/host` and `/hostee` drive `window` directly, so neither does.
-
----
+- `@hyperfrontend/features`: Support is per entry point: `/host` and `/hostee` are browser runtimes, `/cli`, `/server`, and `/generators` are Node-only, and the root entry is DOM-free and runs anywhere.
+- `@hyperfrontend/ui-utils`: Some utilities require browser APIs; check individual exports.
 
 ## Output Formats
 
-All libraries ship with multiple output formats:
-
-| Format | File Extension | Use Case                                         | Tree-Shakeable |
-| ------ | -------------- | ------------------------------------------------ | :------------: |
-| ESM    | `.esm.js`      | Modern bundlers, native `<script type="module">` |       ✅       |
-| CJS    | `.cjs.js`      | Node.js, legacy bundlers (Webpack 4, etc.)       |       ❌       |
-| IIFE   | `.iife.js`     | Browser `<script>` tags, CDN                     |       ❌       |
-| UMD    | `.umd.js`      | Universal (AMD, CommonJS, global)                |       ❌       |
-
----
-
-## CDN Usage
-
-### unpkg
-
-```html
-<!-- Latest version -->
-<script src="https://unpkg.com/@hyperfrontend/data-utils"></script>
-
-<!-- Specific version -->
-<script src="https://unpkg.com/@hyperfrontend/data-utils@0.0.1"></script>
-
-<!-- Explicit bundle path (required for multi-bundle packages) -->
-<script src="https://unpkg.com/@hyperfrontend/network-protocol/bundle/v4/index.umd.min.js"></script>
-```
-
-### jsDelivr
-
-```html
-<!-- Latest version -->
-<script src="https://cdn.jsdelivr.net/npm/@hyperfrontend/data-utils"></script>
-
-<!-- Specific version -->
-<script src="https://cdn.jsdelivr.net/npm/@hyperfrontend/data-utils@0.0.1"></script>
-
-<!-- Explicit bundle path -->
-<script src="https://cdn.jsdelivr.net/npm/@hyperfrontend/network-protocol/bundle/v4/index.umd.min.js"></script>
-```
-
-### Global Variable Names
-
-| Library                  | Global Name                      |
-| ------------------------ | -------------------------------- |
-| `data-utils`             | `HyperfrontendDataUtils`         |
-| `function-utils`         | `HyperfrontendFunctionUtils`     |
-| `string-utils`           | `HyperfrontendStringUtils`       |
-| `time-utils`             | `HyperfrontendTimeUtils`         |
-| `immutable-api-utils`    | `HyperfrontendImmutableApiUtils` |
-| `json-utils`             | `HyperfrontendJsonUtils`         |
-| `list-utils`             | `HyperfrontendListUtils`         |
-| `random-generator-utils` | `HyperfrontendRandomGenerator`   |
-| `ui-utils`               | `HyperfrontendUIUtils`           |
-| `logging`                | `HyperfrontendLogging`           |
-| `state-machine`          | `HyperfrontendStateMachine`      |
-| `cryptography`           | `HyperfrontendCryptography`      |
-| `network-protocol` (v3)  | `HyperfrontendNetworkProtocolV3` |
-| `network-protocol` (v4)  | `HyperfrontendNetworkProtocolV4` |
-| `nexus`                  | `HyperfrontendNexus`             |
-| `features` (`/host`)     | `HyperfrontendFeaturesHost`      |
-| `features` (`/hostee`)   | `HyperfrontendFeaturesHostee`    |
-
----
-
-## Platform-Specific Exports
-
-Some libraries have separate entry points for browser and Node.js environments:
-
-### `@hyperfrontend/cryptography`
-
-```typescript
-// Auto-resolved based on environment (bundler conditions)
-import { createHash } from '@hyperfrontend/cryptography'
-
-// Explicit platform import
-import { createHash } from '@hyperfrontend/cryptography/browser'
-import { createHash } from '@hyperfrontend/cryptography/node'
-```
-
-### `@hyperfrontend/string-utils`
-
-```typescript
-// Auto-resolved based on environment
-import { utf8StringToUint8Array } from '@hyperfrontend/string-utils'
-
-// Explicit platform import
-import { utf8StringToUint8Array } from '@hyperfrontend/string-utils/browser'
-import { utf8StringToUint8Array } from '@hyperfrontend/string-utils/node'
-```
-
-### `@hyperfrontend/network-protocol`
-
-```typescript
-// Browser: choose the protocol explicitly (v3: ephemeral session keys; v4: session keys bound to a pre-shared key)
-import { createProtocol } from '@hyperfrontend/network-protocol/browser/v4'
-
-// Node.js
-import { createProtocol } from '@hyperfrontend/network-protocol/node/v4'
-
-// Shared error codes and types (isomorphic)
-import { ProtocolErrorCode } from '@hyperfrontend/network-protocol/security'
-```
-
-### `@hyperfrontend/features`
-
-Entry points split by role rather than by platform. Import only the surface you need; each is an
-independent subpath, so a feature app never pulls in the host SDK or the CLI.
-
-```typescript
-// Browser — the host embedding a feature
-import { createShell } from '@hyperfrontend/features/host'
-
-// Browser — the feature app being embedded
-import { createFeature } from '@hyperfrontend/features/hostee'
-
-// Node.js — build tooling
-import { runBuild } from '@hyperfrontend/features/cli'
-import { generateShell } from '@hyperfrontend/features/generators'
-import { startDevServer } from '@hyperfrontend/features/server'
-
-// Shared types, contract validation, defineConfig
-import { defineConfig } from '@hyperfrontend/features'
-```
-
-The package also ships an `hf` bin and an optional Nx adapter at `@hyperfrontend/features/nx/*`
-(a `feature` generator plus `build` and `serve` executors), neither of which the core imports.
-
----
-
-## Dependency Graph
-
-### Zero Dependencies (Leaf Nodes)
-
-These libraries have no internal dependencies:
-
-- `function-utils`
-- `immutable-api-utils`
-
-### Core Utilities (Depend Only on immutable-api-utils)
-
-| Library        | Depends On          |
-| -------------- | ------------------- |
-| `data-utils`   | immutable-api-utils |
-| `string-utils` | immutable-api-utils |
-| `time-utils`   | immutable-api-utils |
-| `json-utils`   | immutable-api-utils |
-
-### Internal Dependencies
-
-| Library                  | Depends On                                                                                   |
-| ------------------------ | -------------------------------------------------------------------------------------------- |
-| `list-utils`             | data-utils, immutable-api-utils                                                              |
-| `random-generator-utils` | data-utils, immutable-api-utils                                                              |
-| `logging`                | data-utils, function-utils, immutable-api-utils                                              |
-| `state-machine`          | data-utils, immutable-api-utils                                                              |
-| `ui-utils`               | data-utils, function-utils, list-utils, logging, random-generator-utils, immutable-api-utils |
-| `cryptography`           | data-utils, random-generator-utils, string-utils, time-utils, immutable-api-utils            |
-
-### High-Level Libraries
-
-| Library            | Key Dependencies                                                                                                  |
-| ------------------ | ----------------------------------------------------------------------------------------------------------------- |
-| `network-protocol` | cryptography, logging, json-utils, list-utils, random-generator-utils, string-utils, time-utils                   |
-| `nexus`            | network-protocol, logging, json-utils, random-generator-utils                                                     |
-| `builder`          | logging, project-scope, immutable-api-utils, versioning                                                           |
-| `features`         | nexus, network-protocol, builder, project-scope, questions, versioning, json-utils, ui-utils, immutable-api-utils |
-
----
+| Library                                 | ESM | CJS | IIFE | UMD | Global name                                                                                |
+| --------------------------------------- | --- | --- | ---- | --- | ------------------------------------------------------------------------------------------ |
+| `@hyperfrontend/builder`                | ✅  | ✅  | ❌   | ❌  | -                                                                                          |
+| `@hyperfrontend/cryptography`           | ✅  | ✅  | ✅   | ✅  | `HyperfrontendCryptography`                                                                |
+| `@hyperfrontend/data-utils`             | ✅  | ✅  | ✅   | ✅  | `HyperfrontendDataUtils`                                                                   |
+| `@hyperfrontend/features`               | ✅  | ✅  | ✅   | ✅  | `HyperfrontendFeaturesHost`, `HyperfrontendFeaturesHostee`, `HyperfrontendFeaturesDebugUi` |
+| `@hyperfrontend/function-utils`         | ✅  | ✅  | ✅   | ✅  | `HyperfrontendFunctionUtils`                                                               |
+| `@hyperfrontend/immutable-api-utils`    | ✅  | ✅  | ✅   | ✅  | `HyperfrontendImmutableApiUtils`                                                           |
+| `@hyperfrontend/json-utils`             | ✅  | ✅  | ✅   | ✅  | `HyperfrontendJsonUtils`                                                                   |
+| `@hyperfrontend/list-utils`             | ✅  | ✅  | ✅   | ✅  | `HyperfrontendListUtils`                                                                   |
+| `@hyperfrontend/logging`                | ✅  | ✅  | ✅   | ✅  | `HyperfrontendLogging`                                                                     |
+| `@hyperfrontend/network-protocol`       | ✅  | ✅  | ✅   | ✅  | `HyperfrontendNetworkProtocolV3`, `HyperfrontendNetworkProtocolV4`                         |
+| `@hyperfrontend/nexus`                  | ✅  | ✅  | ✅   | ✅  | `HyperfrontendNexus`                                                                       |
+| `@hyperfrontend/project-scope`          | ✅  | ✅  | ❌   | ❌  | -                                                                                          |
+| `@hyperfrontend/questions`              | ✅  | ✅  | ❌   | ❌  | -                                                                                          |
+| `@hyperfrontend/random-generator-utils` | ✅  | ✅  | ✅   | ✅  | `HyperfrontendRandomGenerator`                                                             |
+| `@hyperfrontend/state-machine`          | ✅  | ✅  | ✅   | ✅  | `HyperfrontendStateMachine`                                                                |
+| `@hyperfrontend/string-utils`           | ✅  | ✅  | ✅   | ✅  | `HyperfrontendStringUtils`                                                                 |
+| `@hyperfrontend/time-utils`             | ✅  | ✅  | ✅   | ✅  | `HyperfrontendTimeUtils`                                                                   |
+| `@hyperfrontend/ui-utils`               | ✅  | ✅  | ✅   | ✅  | `HyperfrontendUIUtils`                                                                     |
+| `@hyperfrontend/versioning`             | ✅  | ✅  | ❌   | ❌  | -                                                                                          |
 
 ## Engine Requirements
 
-All libraries specify minimum Node.js and npm versions in their `package.json` `engines` field.
+| Library                                 | Node.js    | npm       |
+| --------------------------------------- | ---------- | --------- |
+| `@hyperfrontend/builder`                | `>=18.0.0` | `>=8.0.0` |
+| `@hyperfrontend/cryptography`           | `>=18.0.0` | `>=8.0.0` |
+| `@hyperfrontend/data-utils`             | `>=18.0.0` | `>=8.0.0` |
+| `@hyperfrontend/features`               | `>=18.0.0` | `>=8.0.0` |
+| `@hyperfrontend/function-utils`         | `>=18.0.0` | `>=8.0.0` |
+| `@hyperfrontend/immutable-api-utils`    | `>=18.0.0` | `>=8.0.0` |
+| `@hyperfrontend/json-utils`             | `>=18.0.0` | `>=8.0.0` |
+| `@hyperfrontend/list-utils`             | `>=18.0.0` | `>=8.0.0` |
+| `@hyperfrontend/logging`                | `>=18.0.0` | `>=8.0.0` |
+| `@hyperfrontend/network-protocol`       | `>=18.0.0` | `>=8.0.0` |
+| `@hyperfrontend/nexus`                  | `>=18.0.0` | `>=8.0.0` |
+| `@hyperfrontend/project-scope`          | `>=18.0.0` | `>=8.0.0` |
+| `@hyperfrontend/questions`              | `>=18.0.0` | `>=8.0.0` |
+| `@hyperfrontend/random-generator-utils` | `>=18.0.0` | `>=8.0.0` |
+| `@hyperfrontend/state-machine`          | `>=18.0.0` | `>=8.0.0` |
+| `@hyperfrontend/string-utils`           | `>=18.0.0` | `>=8.0.0` |
+| `@hyperfrontend/time-utils`             | `>=18.0.0` | `>=8.0.0` |
+| `@hyperfrontend/ui-utils`               | `>=18.0.0` | `>=8.0.0` |
+| `@hyperfrontend/versioning`             | `>=18.0.0` | `>=8.0.0` |
 
-### Version Requirements
+## Dependency Graph
 
-| Library                                 |  Node.js   |    npm    | Notes                                             |
-| --------------------------------------- | :--------: | :-------: | ------------------------------------------------- |
-| `@hyperfrontend/data-utils`             | `>=18.0.0` | `>=8.0.0` | Platform-agnostic                                 |
-| `@hyperfrontend/function-utils`         | `>=18.0.0` | `>=8.0.0` | Platform-agnostic                                 |
-| `@hyperfrontend/time-utils`             | `>=18.0.0` | `>=8.0.0` | Platform-agnostic                                 |
-| `@hyperfrontend/immutable-api-utils`    | `>=18.0.0` | `>=8.0.0` | Platform-agnostic                                 |
-| `@hyperfrontend/json-utils`             | `>=18.0.0` | `>=8.0.0` | Platform-agnostic                                 |
-| `@hyperfrontend/list-utils`             | `>=18.0.0` | `>=8.0.0` | Platform-agnostic                                 |
-| `@hyperfrontend/random-generator-utils` | `>=18.0.0` | `>=8.0.0` | Platform-agnostic                                 |
-| `@hyperfrontend/logging`                | `>=18.0.0` | `>=8.0.0` | Platform-agnostic                                 |
-| `@hyperfrontend/state-machine`          | `>=18.0.0` | `>=8.0.0` | Platform-agnostic                                 |
-| `@hyperfrontend/string-utils`           | `>=18.0.0` | `>=8.0.0` | Isomorphic (browser/node entries)                 |
-| `@hyperfrontend/ui-utils`               | `>=18.0.0` | `>=8.0.0` | Browser runtime, Node for dev/test                |
-| `@hyperfrontend/cryptography`           | `>=18.0.0` | `>=8.0.0` | Node 19+ recommended for `/node` entry ¹          |
-| `@hyperfrontend/network-protocol`       | `>=18.0.0` | `>=8.0.0` | Node 19+ recommended for `/node/*` entries ¹      |
-| `@hyperfrontend/nexus`                  | `>=18.0.0` | `>=8.0.0` | Browser runtime, Node for dev/test                |
-| `@hyperfrontend/features`               | `>=18.0.0` | `>=8.0.0` | Browser SDK plus Node CLI, dev server, generators |
-| `@hyperfrontend/questions`              | `>=18.0.0` | `>=8.0.0` | Node CLI prompts                                  |
-| `@hyperfrontend/project-scope`          | `>=18.0.0` | `>=8.0.0` | Node project analysis + VFS                       |
-| `@hyperfrontend/versioning`             | `>=18.0.0` | `>=8.0.0` | Node release toolkit (CLI + library)              |
-| `@hyperfrontend/builder`                | `>=18.0.0` | `>=8.0.0` | Node build tool (CLI + library)                   |
+| Library                                 | Depends on                                                                                                                                                                                                                                                                 |
+| --------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@hyperfrontend/builder`                | `@hyperfrontend/immutable-api-utils`, `@hyperfrontend/logging`, `@hyperfrontend/project-scope`, `@hyperfrontend/versioning`                                                                                                                                                |
+| `@hyperfrontend/cryptography`           | `@hyperfrontend/data-utils`, `@hyperfrontend/immutable-api-utils`, `@hyperfrontend/random-generator-utils`, `@hyperfrontend/string-utils`, `@hyperfrontend/time-utils`                                                                                                     |
+| `@hyperfrontend/data-utils`             | `@hyperfrontend/immutable-api-utils`                                                                                                                                                                                                                                       |
+| `@hyperfrontend/features`               | `@hyperfrontend/builder`, `@hyperfrontend/immutable-api-utils`, `@hyperfrontend/json-utils`, `@hyperfrontend/network-protocol`, `@hyperfrontend/nexus`, `@hyperfrontend/project-scope`, `@hyperfrontend/questions`, `@hyperfrontend/ui-utils`, `@hyperfrontend/versioning` |
+| `@hyperfrontend/function-utils`         | -                                                                                                                                                                                                                                                                          |
+| `@hyperfrontend/immutable-api-utils`    | -                                                                                                                                                                                                                                                                          |
+| `@hyperfrontend/json-utils`             | `@hyperfrontend/immutable-api-utils`                                                                                                                                                                                                                                       |
+| `@hyperfrontend/list-utils`             | `@hyperfrontend/data-utils`, `@hyperfrontend/immutable-api-utils`                                                                                                                                                                                                          |
+| `@hyperfrontend/logging`                | `@hyperfrontend/data-utils`, `@hyperfrontend/function-utils`, `@hyperfrontend/immutable-api-utils`                                                                                                                                                                         |
+| `@hyperfrontend/network-protocol`       | `@hyperfrontend/cryptography`, `@hyperfrontend/data-utils`, `@hyperfrontend/immutable-api-utils`, `@hyperfrontend/json-utils`, `@hyperfrontend/logging`, `@hyperfrontend/random-generator-utils`, `@hyperfrontend/string-utils`, `@hyperfrontend/time-utils`               |
+| `@hyperfrontend/nexus`                  | `@hyperfrontend/data-utils`, `@hyperfrontend/immutable-api-utils`, `@hyperfrontend/json-utils`, `@hyperfrontend/logging`, `@hyperfrontend/network-protocol` (peer), `@hyperfrontend/random-generator-utils`                                                                |
+| `@hyperfrontend/project-scope`          | `@hyperfrontend/immutable-api-utils`, `@hyperfrontend/logging`                                                                                                                                                                                                             |
+| `@hyperfrontend/questions`              | `@hyperfrontend/immutable-api-utils`                                                                                                                                                                                                                                       |
+| `@hyperfrontend/random-generator-utils` | `@hyperfrontend/data-utils`, `@hyperfrontend/immutable-api-utils`                                                                                                                                                                                                          |
+| `@hyperfrontend/state-machine`          | `@hyperfrontend/data-utils`, `@hyperfrontend/immutable-api-utils`                                                                                                                                                                                                          |
+| `@hyperfrontend/string-utils`           | `@hyperfrontend/immutable-api-utils`                                                                                                                                                                                                                                       |
+| `@hyperfrontend/time-utils`             | `@hyperfrontend/immutable-api-utils`                                                                                                                                                                                                                                       |
+| `@hyperfrontend/ui-utils`               | `@hyperfrontend/data-utils`, `@hyperfrontend/function-utils`, `@hyperfrontend/immutable-api-utils`, `@hyperfrontend/list-utils`, `@hyperfrontend/logging`, `@hyperfrontend/random-generator-utils`                                                                         |
+| `@hyperfrontend/versioning`             | `@hyperfrontend/immutable-api-utils`, `@hyperfrontend/json-utils`, `@hyperfrontend/logging`, `@hyperfrontend/project-scope`, `@hyperfrontend/questions`                                                                                                                    |
 
-¹ The `/node` entry points use `webcrypto.subtle` which was experimental in Node 18.x and became stable in Node 19.0.0. For production use with Node.js, version 19+ is recommended.
-
-### Why Node 18+?
-
-- **ES2022 target**: All libraries compile to ES2022, which requires Node 18+ for full feature support
-- **ESM support**: Native ES modules with `exports` field conditions
-- **npm 8+**: Required for workspace dependencies and modern `package.json` features
-
----
-
-## Web Worker Compatibility
-
-Every browser bundle except `@hyperfrontend/features` uses `globalThis.crypto` instead of `window.crypto`, so it runs unchanged in:
-
-- Dedicated Workers
-- Shared Workers
-- Service Workers
-- Cloudflare Workers
-- Deno
-- Bun
-
-The `features` `/host` and `/hostee` bundles are the exception: they drive `window` and DOM APIs directly, so they are browser-only (see note 3 above).
-
-### Example: Using in a Web Worker
-
-```javascript
-// worker.js
-importScripts('https://unpkg.com/@hyperfrontend/cryptography')
-
-const { createHash } = HyperfrontendCryptography
-
-self.onmessage = async (e) => {
-  const hash = await createHash(e.data)
-  self.postMessage(hash)
-}
-```
-
----
-
-## TypeScript Support
-
-All libraries ship with TypeScript declarations (`.d.ts` files) alongside JavaScript outputs.
-
-| Feature           | Supported |
-| ----------------- | :-------: |
-| Type declarations |    ✅     |
-| Source maps       |    ✅     |
-| Strict mode       |    ✅     |
-| ESM types         |    ✅     |
-
-### tsconfig.json Recommendations
-
-```json
-{
-  "compilerOptions": {
-    "moduleResolution": "bundler",
-    "target": "ES2022",
-    "module": "ESNext"
-  }
-}
-```
-
----
-
-## Version Compatibility
-
-| @hyperfrontend Version | Minimum TypeScript | Minimum Node.js | ES Target |
-| :--------------------: | :----------------: | :-------------: | :-------: |
-|         0.0.1          |        5.0         |     18.0.0      |  ES2022   |
-
----
-
-## Library Dependency Diagram
+Solid edges are runtime dependencies; dotted edges are peer dependencies.
 
 ```mermaid
 ---
@@ -321,122 +115,106 @@ config:
     fontSize: 12px
 ---
 flowchart TB
-    subgraph ZERO["🌱 Zero Dependencies"]
-        direction LR
-        function-utils
-        immutable-api-utils
-    end
-
-    subgraph CORE["📦 Core Utilities"]
-        direction LR
-        data-utils
-        string-utils
-        time-utils
-        json-utils
-    end
-
-    subgraph UTILS["🔧 Utilities"]
-        direction LR
-        list-utils
-        random-generator-utils
-        logging
-        ui-utils
-    end
-
-    subgraph STATE["📊 State"]
-        state-machine
-    end
-
-    subgraph CRYPTO["🔐 Crypto"]
-        cryptography
-    end
-
-    subgraph NET["🌐 Networking"]
-        direction LR
-        network-protocol
-        nexus
-    end
-
-    subgraph SDK["🧩 Feature SDK"]
-        features
-    end
-
-    %% Core utilities depend on immutable-api-utils
-    data-utils --> immutable-api-utils
-    string-utils --> immutable-api-utils
-    time-utils --> immutable-api-utils
-    json-utils --> immutable-api-utils
-
-    %% Utilities layer
-    list-utils --> data-utils
-    random-generator-utils --> data-utils
-    logging --> data-utils
-    logging --> function-utils
-    state-machine --> data-utils
-    ui-utils --> data-utils
-    ui-utils --> function-utils
-    ui-utils --> list-utils
-    ui-utils --> logging
-    ui-utils --> random-generator-utils
-
-    %% Crypto layer
-    cryptography --> data-utils
-    cryptography --> random-generator-utils
-    cryptography --> string-utils
-    cryptography --> time-utils
-
-    %% Network layer
-    network-protocol --> cryptography
-    network-protocol --> logging
-    network-protocol --> json-utils
-    network-protocol --> list-utils
-    network-protocol --> random-generator-utils
-    network-protocol --> string-utils
-    network-protocol --> time-utils
-
-    nexus --> network-protocol
-    nexus --> logging
-    nexus --> json-utils
-    nexus --> random-generator-utils
-
-    %% Feature SDK layer
+    builder["builder"]
+    cryptography["cryptography"]
+    data_utils["data-utils"]
+    features["features"]
+    function_utils["function-utils"]
+    immutable_api_utils["immutable-api-utils"]
+    json_utils["json-utils"]
+    list_utils["list-utils"]
+    logging["logging"]
+    network_protocol["network-protocol"]
+    nexus["nexus"]
+    project_scope["project-scope"]
+    questions["questions"]
+    random_generator_utils["random-generator-utils"]
+    state_machine["state-machine"]
+    string_utils["string-utils"]
+    time_utils["time-utils"]
+    ui_utils["ui-utils"]
+    versioning["versioning"]
+    builder --> immutable_api_utils
+    builder --> logging
+    builder --> project_scope
+    builder --> versioning
+    cryptography --> data_utils
+    cryptography --> immutable_api_utils
+    cryptography --> random_generator_utils
+    cryptography --> string_utils
+    cryptography --> time_utils
+    data_utils --> immutable_api_utils
+    features --> builder
+    features --> immutable_api_utils
+    features --> json_utils
+    features --> network_protocol
     features --> nexus
-    features --> network-protocol
-    features --> json-utils
-    features --> ui-utils
+    features --> project_scope
+    features --> questions
+    features --> ui_utils
+    features --> versioning
+    json_utils --> immutable_api_utils
+    list_utils --> data_utils
+    list_utils --> immutable_api_utils
+    logging --> data_utils
+    logging --> function_utils
+    logging --> immutable_api_utils
+    network_protocol --> cryptography
+    network_protocol --> data_utils
+    network_protocol --> immutable_api_utils
+    network_protocol --> json_utils
+    network_protocol --> logging
+    network_protocol --> random_generator_utils
+    network_protocol --> string_utils
+    network_protocol --> time_utils
+    nexus --> data_utils
+    nexus --> immutable_api_utils
+    nexus --> json_utils
+    nexus --> logging
+    nexus -.-> network_protocol
+    nexus --> random_generator_utils
+    project_scope --> immutable_api_utils
+    project_scope --> logging
+    questions --> immutable_api_utils
+    random_generator_utils --> data_utils
+    random_generator_utils --> immutable_api_utils
+    state_machine --> data_utils
+    state_machine --> immutable_api_utils
+    string_utils --> immutable_api_utils
+    time_utils --> immutable_api_utils
+    ui_utils --> data_utils
+    ui_utils --> function_utils
+    ui_utils --> immutable_api_utils
+    ui_utils --> list_utils
+    ui_utils --> logging
+    ui_utils --> random_generator_utils
+    versioning --> immutable_api_utils
+    versioning --> json_utils
+    versioning --> logging
+    versioning --> project_scope
+    versioning --> questions
 ```
 
-### Platform & Format Support
+## Published Versions
 
-```mermaid
----
-config:
-  theme: base
-  themeVariables:
-    fontSize: 12px
----
-flowchart LR
-    subgraph PLATFORMS["🖥️ Platforms"]
-        direction TB
-        Browser["Browser ✅"]
-        NodeJS["Node.js ✅"]
-        Workers["Web Workers ✅"]
-    end
-
-    subgraph FORMATS["📦 Output Formats"]
-        direction TB
-        ESM["ESM ✅"]
-        CJS["CJS ✅"]
-        IIFE["IIFE ✅"]
-        UMD["UMD ✅"]
-    end
-
-    subgraph CDN["🌍 CDN"]
-        direction TB
-        unpkg["unpkg"]
-        jsdelivr["jsDelivr"]
-    end
-
-    PLATFORMS --> FORMATS
-    FORMATS --> CDN
-```
+| Library                                 | Version  |
+| --------------------------------------- | -------- |
+| `@hyperfrontend/builder`                | `0.2.1`  |
+| `@hyperfrontend/cryptography`           | `1.1.0`  |
+| `@hyperfrontend/data-utils`             | `1.0.0`  |
+| `@hyperfrontend/features`               | `0.10.0` |
+| `@hyperfrontend/function-utils`         | `1.0.0`  |
+| `@hyperfrontend/immutable-api-utils`    | `1.0.0`  |
+| `@hyperfrontend/json-utils`             | `1.0.0`  |
+| `@hyperfrontend/list-utils`             | `0.1.0`  |
+| `@hyperfrontend/logging`                | `1.0.0`  |
+| `@hyperfrontend/network-protocol`       | `2.0.0`  |
+| `@hyperfrontend/nexus`                  | `3.0.0`  |
+| `@hyperfrontend/project-scope`          | `0.2.4`  |
+| `@hyperfrontend/questions`              | `0.3.0`  |
+| `@hyperfrontend/random-generator-utils` | `0.2.0`  |
+| `@hyperfrontend/state-machine`          | `0.2.0`  |
+| `@hyperfrontend/string-utils`           | `1.0.0`  |
+| `@hyperfrontend/time-utils`             | `1.0.0`  |
+| `@hyperfrontend/ui-utils`               | `0.0.8`  |
+| `@hyperfrontend/versioning`             | `0.8.0`  |
