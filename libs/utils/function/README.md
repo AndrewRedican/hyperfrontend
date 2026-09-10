@@ -55,10 +55,6 @@ Each utility maintains the original function's type signature through generic co
 - **Minimal overhead** - Simple closure-based implementations with negligible performance impact
 - **TypeScript native** - Complete type inference with comprehensive JSDoc documentation
 
-### Architecture Highlights
-
-All utilities are implemented as factory functions that create and return wrapper functions. State management (execution flags, cached results) occurs in private closure scope, making the wrappers themselves stateless from the caller's perspective. This functional approach avoids prototype chains and class overhead while maintaining thread-safe (non-concurrent) state encapsulation.
-
 ## Why Use @hyperfrontend/function-utils?
 
 ### 1. Declarative Run-Once Logic Without Manual Guards
