@@ -473,86 +473,123 @@
 }
 
 @layer components {
-  /* The atmosphere behind a document.
+  /* The atmosphere behind a documentation page.
 
      A documentation page is a column of text on a flat ground, and past a
      certain length that flatness is the thing a reader feels rather than the
      writing. What this adds is depth without adding anything to look at: the
-     head of a page is exactly the ground it always was, and the further down
-     the reader goes the more a wash and a grain come up underneath the text.
+     head of a page is very nearly the ground it always was, and the further
+     down the reader goes the more a wash and a grain come up underneath it.
 
-     The progression is the page's own height rather than the scroll position.
-     Both layers are absolutely positioned inside the document column, so their
-     gradients are measured against the article rather than the viewport, and
-     descending reveals more of them for free. Nothing listens to scroll,
-     nothing animates, and a short page never reaches the far end of the ramp
-     because there is not enough of it to reach with.
+     Three layers, all fixed to the viewport and all behind everything. Fixed
+     rather than painted behind the article, because this is the page's
+     environment rather than the article's background: a layer measured against
+     the document column ends at the column's edges, and what a reader sees
+     then is a tinted panel with untouched navigation either side of it. Pinned
+     to the viewport instead, one continuous field runs under the navigation,
+     the document, the index and the gutters alike, and every surface above it
+     keeps whatever translucency it already had.
 
-     The first stop is a fixed length rather than a percentage, so the clean
-     zone at the top is the same 340 pixels whatever the page's length. A
-     percentage would compress the whole progression into a stub page and give
-     the shortest documents the strongest tint, which is precisely backwards.
+     They start at the header's lower edge and nowhere above it, so the site's
+     own chrome is the same colour on every page at every depth, and they fade
+     in over the first few dozen pixels so that boundary is a transition rather
+     than a line.
 
-     Hue comes from the package the page belongs to, as a single number set by
-     the component. The stylesheet keeps the saturation, the lightness and the
-     alpha, so a package chooses where on the wheel its page sits and nothing
-     else: a hue cannot take contrast away from the text above it the way a
-     colour could. A page that sets none gets the site's blue. */
+     How far down the reader has come arrives as `--page-progress`, a single
+     number between zero and one published on the document element. Nothing
+     here animates and nothing here runs: the number changes, two gradients
+     repaint, and that is the whole of the cost. A page with nothing to scroll
+     reports zero and stays clean, which is the right answer for a document
+     short enough to be read without descending at all. */
   .page-atmosphere {
-    position: relative;
-    isolation: isolate;
+    --p: var(--page-progress, 0);
   }
 
-  .page-atmosphere::before,
-  .page-atmosphere::after {
-    content: '';
-    position: absolute;
-    inset: 0;
+  .page-atmosphere > div {
+    position: fixed;
+    /* why: the global navigation is the one surface the atmosphere stays out of, and it is four rem tall at every width */
+    inset: 4rem 0 0 0;
     z-index: -1;
     pointer-events: none;
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 6rem);
+    mask-image: linear-gradient(to bottom, transparent 0, #000 6rem);
   }
 
-  /* The wash: the page's own hue arriving from below, crossed with a magenta
-     that is never quite present on its own. Two stops rather than one because
-     a single ramp reads as a gradient, and a colour changing on the way down
-     reads as depth. */
-  .page-atmosphere::before {
+  /* The wash. Two things are happening in one gradient, and keeping them apart
+     is what stopped this reading as dirt.
+
+     Down the viewport it is a blue-green volume lit from above, which is the
+     depth cue and never changes. Down the document it is the alpha of that
+     volume, which is the progression and is all the progression there is.
+
+     The hue a package chose tints the top of the volume and only the top.
+     Twenty-one packages sit all the way around the wheel, so letting any of
+     them decide the colour a reader finishes a long page on is how a warm
+     accent ends up as clay and a violet one as a bruise. The far end is a
+     fixed teal instead: the house colour of the place, arrived at from
+     wherever the package started. */
+  .page-atmosphere__wash {
     background-image: linear-gradient(
       to bottom,
-      transparent 0,
-      transparent 340px,
-      hsl(var(--page-accent, 217) 70% 55% / 0.035) 55%,
-      hsl(310 75% 58% / 0.05) 100%
+      hsl(var(--page-accent, 217) 55% 52% / calc(var(--p) * 0.03)) 0%,
+      hsl(196 60% 46% / calc(var(--p) * 0.048)) 55%,
+      hsl(178 56% 40% / calc(var(--p) * 0.075)) 100%
     );
   }
 
-  /* The grain, drawn by the browser from a filter rather than fetched: a
-     hundred and forty pixel tile of fractal noise, tiled and masked so it is
-     absent at the top of a page and barely present at the bottom. It is the
-     part that makes the wash read as a surface instead of as a colour, and it
-     is worth about two hundred bytes of stylesheet. */
-  .page-atmosphere::after {
-    opacity: 0.035;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23g)'/%3E%3C/svg%3E");
-    -webkit-mask-image: linear-gradient(to bottom, transparent 0, transparent 420px, #000 100%);
-    mask-image: linear-gradient(to bottom, transparent 0, transparent 420px, #000 100%);
-  }
-
-  /* Dark mode carries both a little further. A wash this faint disappears
-     entirely against a dark ground, and grain is what a dark surface is short
-     of rather than what it has too much of. */
-  .dark .page-atmosphere::before {
+  .dark .page-atmosphere__wash {
     background-image: linear-gradient(
       to bottom,
-      transparent 0,
-      transparent 340px,
-      hsl(var(--page-accent, 217) 80% 60% / 0.07) 55%,
-      hsl(310 80% 62% / 0.085) 100%
+      hsl(var(--page-accent, 217) 62% 58% / calc(var(--p) * 0.045)) 0%,
+      hsl(196 68% 52% / calc(var(--p) * 0.068)) 55%,
+      hsl(178 62% 46% / calc(var(--p) * 0.1)) 100%
     );
   }
 
-  .dark .page-atmosphere::after {
-    opacity: 0.06;
+  /* The grain, in two layers that hand over to each other on the way down.
+
+     The specks come first and are meant to be almost countable: a low octave
+     of fractal noise, thresholded so that only the brightest twentieth of it
+     survives, then tiled at three times the size it was drawn at so each
+     surviving speck lands as a few pixels rather than one. That is what makes
+     the head of a page read as a surface with a tooth instead of as a screen
+     with noise on it, and it costs one tile.
+
+     Both are desaturated at the filter. Fractal noise generates its red, green
+     and blue independently, so the raw tile is coloured confetti, and coloured
+     confetti under a coloured wash is precisely the dirt this was replacing.
+     Taking the chroma out leaves the tooth and removes the dirt. */
+  .page-atmosphere__specks {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='s'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='1' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3CfeComponentTransfer%3E%3CfeFuncA type='discrete' tableValues='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 1 1 1 1 1 1 1 1 1'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23s)'/%3E%3C/svg%3E");
+    background-size: 600px 600px;
+    /* why: the specks are the top of the page's character, so they thin out as the film they are handing over to arrives */
+    opacity: calc(0.1 - var(--p) * 0.058);
+  }
+
+  .dark .page-atmosphere__specks {
+    opacity: calc(0.13 - var(--p) * 0.075);
+  }
+
+  /* The film: the fine, dense tile the specks resolve into. Absent at the top
+     and never strong anywhere, it is what turns the far end of a page from a
+     flat colour into an atmosphere. */
+  .page-atmosphere__film {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23f)'/%3E%3C/svg%3E");
+    opacity: calc(var(--p) * 0.075);
+  }
+
+  .dark .page-atmosphere__film {
+    opacity: calc(var(--p) * 0.085);
+  }
+
+  /* A reader who has asked for less motion gets the place rather than the
+     descent: the layers hold at the depth a page settles into and stop
+     answering the scroll. The component declines to publish the fraction in
+     the same case, so neither half has to trust the other. */
+  @media (prefers-reduced-motion: reduce) {
+    .page-atmosphere {
+      --p: 0.55;
+    }
   }
 }
 

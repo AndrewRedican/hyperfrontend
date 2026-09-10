@@ -1,5 +1,6 @@
 import { Breadcrumb } from '@/components/breadcrumb'
 import { MarkdownDocPage } from '@/components/document/markdown-doc-page'
+import { packageAccentHue } from '@/components/package/package-accents'
 import { getLibraryArchitecture } from '@/lib/docs-loader'
 import { documentSubject } from '@/lib/document-model'
 import Link from 'next/link'
@@ -38,6 +39,7 @@ export function LibraryArchitecturePage({ slug, packageName }: LibraryArchitectu
   return (
     <MarkdownDocPage
       markdown={markdown}
+      accent={packageAccentHue(packageName)}
       descriptor={{
         route: `/docs/libraries/${slug}/architecture`,
         title: `${packageName} architecture`,

@@ -1,6 +1,7 @@
 import type { DocumentDescriptor } from '@/lib/document-model'
 import type { MarkdownSection } from '@/lib/slug'
 import type { ReactNode } from 'react'
+import { PageAtmosphere } from '@/components/page-atmosphere'
 import { ReadmeContent } from '@/components/readme-content'
 import { markdownToHtml } from '@/lib/markdown'
 import { extractMermaidBlocks } from '@/lib/mermaid-utils'
@@ -21,6 +22,8 @@ export interface MarkdownDocPageProps {
   proseClassName?: string
   /** Sections appended to the index for content the page renders after the markdown */
   extraSections?: MarkdownSection[]
+  /** Hue the atmosphere behind the document is tinted with, for a document that belongs to a package */
+  accent?: number
 }
 
 /**
@@ -39,6 +42,7 @@ export interface MarkdownDocPageProps {
  * @param props.after - Page furniture rendered below the document
  * @param props.proseClassName - Classes wrapping the rendered prose
  * @param props.extraSections - Sections appended to the index
+ * @param props.accent - Hue the atmosphere behind the document is tinted with
  * @returns The rendered document.
  * @example
  * ```tsx
@@ -49,7 +53,15 @@ export interface MarkdownDocPageProps {
  * />
  * ```
  */
-export async function MarkdownDocPage({ markdown, descriptor, before, after, proseClassName, extraSections = [] }: MarkdownDocPageProps) {
+export async function MarkdownDocPage({
+  markdown,
+  descriptor,
+  before,
+  after,
+  proseClassName,
+  extraSections = [],
+  accent,
+}: MarkdownDocPageProps) {
   const { processedContent, diagrams } = extractMermaidBlocks(markdown)
   const html = await markdownToHtml(processedContent)
   const sections = [...extractMarkdownSections(processedContent), ...extraSections]
@@ -57,13 +69,13 @@ export async function MarkdownDocPage({ markdown, descriptor, before, after, pro
   const prose = <ReadmeContent html={html} mermaidDiagrams={diagrams} />
 
   return (
-    // why: the atmosphere is measured against the document rather than the viewport, so how far down a reader has come is what decides how much of it has arrived
-    <div className="page-atmosphere">
+    <>
+      <PageAtmosphere accent={accent} />
       <DocumentShell descriptor={descriptor} sections={sections}>
         {before}
         {proseClassName ? <div className={proseClassName}>{prose}</div> : prose}
         {after}
       </DocumentShell>
-    </div>
+    </>
   )
 }

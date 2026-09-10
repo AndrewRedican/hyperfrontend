@@ -1,6 +1,5 @@
 import type { TypeDocOutput } from '@/components/api-reference'
 import type { PackageFacts } from '@/lib/package-facts'
-import type { CSSProperties } from 'react'
 import { TrackedLink } from '@/components/analytics/tracked-link'
 import { ApiLinkProvider, ApiReference } from '@/components/api-reference'
 import { Breadcrumb } from '@/components/breadcrumb'
@@ -9,6 +8,7 @@ import { DocumentShell } from '@/components/document/document-shell'
 import { H1, H2 } from '@/components/heading-with-anchor'
 import { ArchitectureNote } from '@/components/package/architecture-note'
 import { KeyFeatures } from '@/components/package/key-features'
+import { PageAtmosphere } from '@/components/page-atmosphere'
 import { packageAccentHue } from '@/components/package/package-accents'
 import { PackageCapabilities } from '@/components/package/package-capabilities'
 import { PackageMetadata } from '@/components/package/package-metadata'
@@ -56,19 +56,6 @@ const ARCHITECTURE_TITLE = 'Architecture Highlights'
 /** What a page assumes about a package the manifest has not covered yet. */
 const NO_FACTS: PackageFacts = { license: '', version: '', isPrivate: false, compatibility: null, outputs: [] }
 
-/**
- * The custom property that hands a package's hue to the stylesheet.
- *
- * A property rather than a class because there are twenty-one packages and one
- * treatment: the rule is written once and the number is what changes, so
- * adding a package is an entry in the accent table and nothing in the CSS.
- * @param packageName - Full npm package name
- * @returns An inline style carrying the hue
- */
-function accentStyle(packageName: string): CSSProperties {
-  return { '--page-accent': packageAccentHue(packageName) } as CSSProperties
-}
-
 export async function LibraryDocPage({ title, packageName, slug, category, fallbackDescription, fallbackFeatures }: LibraryPageProps) {
   const readme = getLibraryReadme(slug)
   const apiData = getLibraryApi(slug) as TypeDocOutput | null
@@ -110,8 +97,9 @@ export async function LibraryDocPage({ title, packageName, slug, category, fallb
     sections.push({ title: RELATED_READING_TITLE, anchor: RELATED_READING_ANCHOR, level: 2 })
 
     return (
-      // why: a package's own hue tints the atmosphere behind its documentation, so moving between packages feels like moving between places rather than reloading one
-      <div className="page-atmosphere" style={accentStyle(packageName)}>
+      <>
+        {/* why: a package's own hue tints the atmosphere behind its documentation, so moving between packages feels like moving between places rather than reloading one */}
+        <PageAtmosphere accent={packageAccentHue(packageName)} />
         <DocumentShell
           descriptor={{ route: libraryDocRoute(slug, category), title, subject: documentSubject('package', packageName), kind: 'package' }}
           sections={sections}
@@ -158,7 +146,7 @@ export async function LibraryDocPage({ title, packageName, slug, category, fallb
             hasGuides={guides.length > 0}
           />
         </DocumentShell>
-      </div>
+      </>
     )
   }
 
