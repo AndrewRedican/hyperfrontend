@@ -33,6 +33,15 @@
   <img src="https://img.shields.io/badge/tree%20shakeable-%E2%9C%93-success?style=flat-square" alt="Tree Shakeable">
 </p>
 
+<p align="center">
+  <a href="https://www.hyperfrontend.dev/docs/libraries/nexus/">
+    <img width="640" src="https://www.hyperfrontend.dev/media/nexus-handshake/hero.gif" alt="Two panels, host-app on shop.example.com and cart-app on cart.example.com, trading labelled packets along a wire: the three handshake frames, then THEME_CHANGED and CART_UPDATED, then a PRICE_SYNC the host never accepted, which arrives and is dropped">
+  </a>
+</p>
+<p align="center">
+  <sub>The three handshake frames in their real order, then the first message that falls outside the contract: it crosses, it lands, and no handler runs.</sub>
+</p>
+
 Secure cross-window communication library for micro-frontends with contract-validated messaging, origin-based security policies, and connection lifecycle management.
 
 • 👉 See [**documentation**](https://www.hyperfrontend.dev/docs/libraries/nexus/)
@@ -196,142 +205,15 @@ channel.send('MESSAGE', { hello: 'world' })
 
 ## API Overview
 
-### Core Factory Functions
+Everything starts at [`createBroker`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-createBroker). One broker per app: it owns the single `message` listener on your window, holds the contract every channel inherits, and carries the origin whitelist and security policy that apply to all of them. Channels are what you actually hold, one per counterpart window, handed out by `addChannel(name, targetWindow, settings?)` as a [`ChannelHandle`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-ChannelHandle). [`defaultBroker`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-defaultBroker) is a ready-made singleton for a prototype that only ever talks to one frame.
 
-| Export                            | Description                                                                   |
-| --------------------------------- | ----------------------------------------------------------------------------- |
-| `createBroker(config)`            | Creates a message broker that manages multiple channels                       |
-| `createChannel(config, deps)`     | Creates a single channel (typically called via broker.addChannel)             |
-| `mergeContracts(...contracts)`    | Combines multiple contracts into one, deduplicating action types              |
-| `createSecurityTransport(config)` | Wraps a security provider's wire pipeline for one channel (the security seam) |
+A channel does nothing until `connect()`, which starts the three-way handshake. That handshake is where the three things worth having get settled at once: the two [`IChannelContract`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-IChannelContract) values (an `emitted` list and an `accepted` list of action types) are exchanged, each side pins the counterpart's origin, and the broker's gates vet the request before anything opens. After that the day-to-day surface is two calls. `send(type, data)` throws at the call site for any type outside your own `emitted` list, so a typo never travels. `onMessage(handler)` delivers only the types in your own `accepted` list; anything else arrives, is logged, and stops there, which is not an event you can subscribe to.
 
-### Broker Handle
+Connection state is an event stream rather than a flag you poll. `channel.on(event, handler)` subscribes to one [`ChannelEvent`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-ChannelEvent) and `channel.on(handler)` to all of them; both return an unsubscribe function. Every connection attempt ends in exactly one of `open`, `close`, `cancel`, `deny` or `connect-timeout`, and a denial (or a close neither side asked for) carries a machine-readable `reason` beside its message, so a failure is something you branch on rather than parse.
 
-| Property/Method                       | Description                                        |
-| ------------------------------------- | -------------------------------------------------- |
-| `id`                                  | Unique broker identifier                           |
-| `name`                                | Broker name                                        |
-| `contract`                            | Current communication contract                     |
-| `channels`                            | List of active channels                            |
-| `addChannel(name, target, settings?)` | Creates and registers a new channel                |
-| `getChannel(ref)`                     | Retrieves channel by name, id, or window reference |
-| `removeChannel(ref)`                  | Removes a channel from the broker                  |
-| `setSecurityPolicy(fn)`               | Sets custom origin validation function             |
-| `extendContract(contract)`            | Extends broker contract (if enabled)               |
-| `registerProtocol(version, provider)` | Registers a security provider for negotiation      |
-| `unregisterProtocol(version)`         | Removes a registered security provider             |
+The rest is opt-in. [`byType`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-byType) and `compose` replace a switch over message types with one narrow subscription per type; `mergeContracts` folds several contracts into one; and [`createSecurityTransport`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-createSecurityTransport) with the `SecurityProvider` type is the seam a security package implements, which is how `@hyperfrontend/network-protocol` supplies the sealed `v3` and `v4` session envelope.
 
-### Channel Handle
-
-| Property/Method       | Description                        |
-| --------------------- | ---------------------------------- |
-| `id`                  | Unique channel identifier          |
-| `name`                | Channel name                       |
-| `isActive()`          | Returns connection status          |
-| `connect()`           | Initiates connection handshake     |
-| `disconnect(notify?)` | Gracefully closes connection       |
-| `cancel(notify?)`     | Cancels pending connection         |
-| `destroy(notify?)`    | Forcefully terminates channel      |
-| `send(type, data)`    | Sends a user message               |
-| `on(handler)`         | Subscribes to lifecycle events     |
-| `onMessage(handler)`  | Subscribes to user messages        |
-| `toJSON()`            | Returns serializable channel state |
-
-### Lifecycle Events
-
-Events delivered to `channel.on(...)` subscribers:
-
-| Event             | Fired when                                                             | Payload                        |
-| ----------------- | ---------------------------------------------------------------------- | ------------------------------ |
-| `open`            | Connection successfully established (both sides)                       | `{ origin, contract }`         |
-| `closing`         | Polite close proposed; the channel still delivers                      | `{ initiatedLocally }`         |
-| `close`           | Close completed, or the session ended without either side asking       | `{ notify, reason? }`          |
-| `cancel`          | Connection attempt cancelled before completion                         | `{ notify }`                   |
-| `deny`            | Connection request denied by a handshake gate                          | `{ error?, reason?, origin? }` |
-| `invalid`         | Protocol violation, unexpected-origin drop, or plaintext bypass        | `{ error, action? }`           |
-| `connect-timeout` | Handshake deadline expired with no answer                              | `{ elapsedMs }`                |
-| `security-ready`  | The counterpart's first sealed frame authenticated (session confirmed) | `{ protocol }`                 |
-| `security-error`  | A frame was dropped in either direction, or the session failed         | `{ message, code, cause? }`    |
-
-The `close` payload's `reason` (`CloseReason`) is set only when neither side asked for the close: `'peer-reload'` when the counterpart window now hosts a different instance (the channel re-handshakes with it), and `'security-unconfirmed'` when a sealed session was never confirmed within `connectTimeoutMs` (the close is silent: no CLOSE frame travels).
-
-The `security-error` payload's `code` (`SecurityErrorCode`) is one of the wire protocol's verdicts on a single frame (`'unsupported-version'`, `'replayed'`, `'authentication-failed'`, `'malformed'`, `'counter-exhausted'`, `'invalid-session'`) or a transport-level code: `'hello-rejected'` (a hello arrived that differs from the one keying the session), `'security-unconfirmed'` (the confirmation deadline expired), `'transport-error'` (a packet could not be sealed or handed to the wire), or `'unknown'`.
-
-### Deny Reasons
-
-The `deny` payload's machine-readable `reason` (`DenyReason`, an open union, so a counterpart on a
-newer protocol can report a reason this build does not know yet):
-
-| Reason                       | Meaning                                                                       |
-| ---------------------------- | ----------------------------------------------------------------------------- |
-| `'invalid-contract'`         | The counterpart's contract failed structural validation                       |
-| `'missing-required-actions'` | The counterpart does not emit an action this side accepts as `required: true` |
-| `'policy-rejected'`          | The broker's `securityPolicy` refused the exchange                            |
-| `'incompatible-contract'`    | A `contractCompat` rule rejected the contract pair                            |
-| `'security-unavailable'`     | A fail-closed channel could not obtain a sealed transport                     |
-
-Every gate fires `deny` on the side that decided, so a denying host is never left waiting on a
-channel it refused. The DENY frame the counterpart receives carries the same `error` and `reason`,
-except for a policy rejection: the refused requester is told only `'Not accepted.'`, with no reason.
-A fail-closed refusal fires on whichever side detects the plaintext outcome: the responder denies at
-REQUEST time; the initiator aborts at ACCEPT time by sending CANCEL, so its counterpart observes a
-`cancel` rather than a `deny`; the responder refuses a plaintext OPEN confirmation the same way.
-
-### Filter Utilities
-
-| Export                                                                     | Description                                                |
-| -------------------------------------------------------------------------- | ---------------------------------------------------------- |
-| `openFilter`, `closeFilter`, `cancelFilter`, `denyFilter`, `invalidFilter` | Event-specific filter creators                             |
-| `byType(type)`                                                             | Message type filter, returns a handler wrapper             |
-| `compose(...filters)`                                                      | Combines message filters, a message must pass every filter |
-
-### Types
-
-| Type                 | Description                                                             |
-| -------------------- | ----------------------------------------------------------------------- |
-| `IChannelContract`   | Contract with accepted and emitted action arrays and optional `version` |
-| `IActionDescription` | Action type definition with optional schema and `required` flag         |
-| `ContractCompat`     | Channel-settings rule deciding whether two contracts may interoperate   |
-| `BrokerHandle`       | Broker instance interface                                               |
-| `ChannelHandle`      | Channel instance interface                                              |
-| `ChannelEvent`       | Lifecycle and security event types (see Lifecycle Events above)         |
-| `CloseReason`        | Why a session ended when neither side asked (`close` payload)           |
-| `DenyReason`         | Machine-readable denial reason on the `deny` payload (open union)       |
-| `IMessage`           | User message with type and optional data                                |
-
-#### Security Types
-
-The security seam is typed end to end, so a security package other than `@hyperfrontend/network-protocol` can implement it:
-
-| Type                          | Description                                                                                      |
-| ----------------------------- | ------------------------------------------------------------------------------------------------ |
-| `SecurityProtocolVersion`     | `'none' \| 'v3' \| 'v4'`, open to other identifiers a security package registers                 |
-| `SecurityNegotiationRequest`  | The initiator's REQUEST slot: `{ supported, preferred }`                                         |
-| `SecurityNegotiationResponse` | The responder's ACCEPT slot: `{ negotiated }`                                                    |
-| `SecurityConfirmation`        | The initiator's OPEN slot: `{ active, protocol }`                                                |
-| `SecurityErrorCode`           | The `code` on `security-error` payloads and transport errors                                     |
-| `SecurityTransportError`      | `{ message, code, cause? }` delivered to a transport's `onError`/`onFailed`                      |
-| `SecurityReadyEventData`      | `security-ready` payload: `{ protocol }`                                                         |
-| `SecurityErrorEventData`      | `security-error` payload: `{ message, code, cause? }`                                            |
-| `SecurityPacketData`          | Data envelope sealed inside each frame; the transported action lives at `message`                |
-| `SecurityPacket`              | An opened packet: `{ origin, target, data }`                                                     |
-| `SecurityPacketDrop`          | A packet the pipeline discarded: `{ direction, stage, reason, cause?, packet }`                  |
-| `SecuritySendPacket`          | Callback transmitting a sealed frame                                                             |
-| `SecurityReceivePacket`       | Callback receiving an opened packet                                                              |
-| `SecuritySessionRole`         | `'initiator' \| 'responder'`                                                                     |
-| `SecuritySession`             | The session a protocol instance protects: `{ protocol, role, localId, peerId }`                  |
-| `SecurityHelloOutcome`        | `'accepted' \| 'duplicate' \| 'rejected'`, what a protocol made of a counterpart's hello         |
-| `SecurityWireProtocol`        | Protocol instance: `seal`, `open`, `hello`, `isHello`, `acceptHello`, `send`, `receive`          |
-| `SecurityProtocolProvider`    | `(send, receive, session) => SecurityWireProtocol`                                               |
-| `SecurityWireChannel`         | The per-channel pipeline: `send`, `receive`, `stop`, `resume`, `hello`, `isHello`, `acceptHello` |
-| `SecurityChannelOptions`      | What the channel factory needs: `{ send, receive, protocolProvider, session, onDrop? }`          |
-| `SecurityChannelFactory`      | `(label, options) => SecurityWireChannel`                                                        |
-| `SecurityProvider`            | What a broker registers: `{ createChannel, protocolProvider }`                                   |
-| `SecurityTransport`           | Per-channel transport: `send`, `receive`, `start`, `stop`, `resume`, `dispose`, `getProtocol`    |
-| `SecurityTransportConfig`     | `createSecurityTransport` input (protocol, provider, endpoints, role, deadlines, callbacks)      |
-| `SecurityProtocolProviders`   | The `settings.security.protocols` bag: `{ v3?, v4? }`                                            |
-| `BrokerSecurityConfig`        | Broker-level security settings: `{ protocols? }`                                                 |
-| `ChannelSecuritySettings`     | Channel-level security settings: `{ protocol?, disabled?, mode? }`                               |
+Every setting, event payload, deny reason and security type is in the [API reference](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-reference).
 
 ## Compatibility
 
