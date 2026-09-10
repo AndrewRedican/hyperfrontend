@@ -89,21 +89,39 @@
   }
 }
 
-/* Where the pointer is over a code block, as a fraction of the block's own box.
-   Registered rather than merely set so the two can be transitioned: the light
-   inside a block then lags the cursor by a fraction of a second instead of
-   being pinned to it, which is the whole of the effect. A browser that does not
-   support `@property` still gets the light, it simply arrives instantly. */
+/* Where the pointer is over a code block, as a fraction of the block's own box:
+   zero at the left and top edges, one at the right and bottom.
+
+   Plain numbers rather than percentages because the same pair drives three
+   different things and only one of them takes a percentage. A gradient wants a
+   position, a rotation wants an angle and an offset shadow wants a length, and
+   a number multiplies into all three while a percentage multiplies into none.
+
+   Registered rather than merely set for two reasons. It is what makes them
+   transitionable, which is where the light's lag behind the cursor comes from,
+   and it is what makes the arithmetic above legal at all: an unregistered
+   custom property is an untyped token, and `calc()` cannot multiply a token by
+   a length. */
 @property --code-x {
-  syntax: '<percentage>';
-  initial-value: 50%;
-  inherits: false;
+  syntax: '<number>';
+  initial-value: 0.5;
+  inherits: true;
 }
 
 @property --code-y {
-  syntax: '<percentage>';
-  initial-value: 0%;
-  inherits: false;
+  syntax: '<number>';
+  initial-value: 0.5;
+  inherits: true;
+}
+
+/* How present the pointer is over a block: zero when there is none, one while
+   there is. Every term the pointer drives is multiplied by it, so a block a
+   reader has left relaxes back to the neutral, evenly lit surface it started
+   as instead of freezing wherever the cursor happened to leave. */
+@property --code-lit {
+  syntax: '<number>';
+  initial-value: 0;
+  inherits: true;
 }
 
 @layer components {
@@ -123,10 +141,18 @@
      shifts under it as the reader descends, and the block shifts with it, while
      the blur keeps anything behind it from competing with the code itself.
 
-     The inset highlight along the top edge is what makes the translucency read
-     as a pane rather than as low opacity. It is a single hairline, brighter in
-     light mode where the surface is nearly white and very faint in dark mode
-     where a strong one would look like a seam. */
+     The surface is a pane rather than a fill, and three things make it read
+     that way. A hairline of light along its top edge, brighter in light mode
+     where the surface is nearly white and very faint in dark mode where a
+     strong one would look like a seam. A gradient down the fill itself,
+     thinning as it descends, so the pane is lit from where every other light
+     on this site comes from. And the alpha, which is deliberately low enough
+     that the atmosphere behind the page reaches the code: descend a long
+     document and the blocks cool with it.
+
+     What is not translucent is the text. Every alpha here is on the surface
+     under it, never on the ink, because a code block that is pleasant to look
+     at and tiring to read is a failure at the only thing it is for. */
   pre.shiki {
     position: relative;
     isolation: isolate;
@@ -137,12 +163,30 @@
     font-size: theme('fontSize.sm');
     line-height: 1.625;
     border: 1px solid rgb(148 163 184 / 0.28);
-    background-color: rgb(248 250 252 / 0.72);
-    -webkit-backdrop-filter: blur(12px) saturate(1.3);
-    backdrop-filter: blur(12px) saturate(1.3);
+    background-color: rgb(248 250 252 / 0.6);
+    background-image:
+      radial-gradient(
+        30rem 22rem at calc(var(--code-x) * 100%) calc(var(--code-y) * 100%),
+        rgb(59 130 246 / calc(var(--code-lit) * 0.11)),
+        transparent 70%
+      ),
+      radial-gradient(
+        18rem 13rem at calc(var(--code-x) * 118% - 9%) calc(var(--code-y) * 118% - 2%),
+        rgb(217 70 239 / calc(var(--code-lit) * 0.07)),
+        transparent 72%
+      ),
+      linear-gradient(to bottom, rgb(255 255 255 / 0.34), rgb(255 255 255 / 0) 62%);
+    -webkit-backdrop-filter: blur(16px) saturate(1.5);
+    backdrop-filter: blur(16px) saturate(1.5);
     box-shadow:
+      inset calc((0.5 - var(--code-x)) * var(--code-lit) * 18px) calc((0.5 - var(--code-y)) * var(--code-lit) * 12px) 28px -15px
+        rgb(255 255 255 / 0.9),
+      inset calc((var(--code-x) - 0.5) * var(--code-lit) * 18px) calc((var(--code-y) - 0.5) * var(--code-lit) * 12px) 32px -19px
+        rgb(15 23 42 / 0.22),
       inset 0 1px 0 rgb(255 255 255 / 0.75),
-      0 1px 2px rgb(15 23 42 / 0.04);
+      calc((0.5 - var(--code-x)) * var(--code-lit) * 10px) calc((0.5 - var(--code-y)) * var(--code-lit) * 7px + 1px)
+        calc(2px + var(--code-lit) * 12px) calc(0px - var(--code-lit) * 5px) rgb(15 23 42 / 0.1);
+    transition: --code-lit 300ms ease-out;
   }
 
   pre.shiki,
@@ -152,11 +196,28 @@
 
   .dark pre.shiki {
     border-color: rgb(148 163 184 / 0.16);
-    /* why: slate-800 over the page's slate-900 rather than slate-900 over itself, so the pane is a surface a reader can see the edge of rather than a hole with a border drawn on it */
-    background-color: rgb(30 41 59 / 0.55);
+    /* why: a shade under the page's slate-900 rather than over it, so a block stays the darker thing on a page whose ground lifts as the reader descends, and its ink keeps the contrast it was chosen for */
+    background-color: rgb(20 29 47 / 0.64);
+    background-image:
+      radial-gradient(
+        30rem 22rem at calc(var(--code-x) * 100%) calc(var(--code-y) * 100%),
+        rgb(96 165 250 / calc(var(--code-lit) * 0.1)),
+        transparent 70%
+      ),
+      radial-gradient(
+        18rem 13rem at calc(var(--code-x) * 118% - 9%) calc(var(--code-y) * 118% - 2%),
+        rgb(232 121 249 / calc(var(--code-lit) * 0.07)),
+        transparent 72%
+      ),
+      linear-gradient(to bottom, rgb(148 163 184 / 0.05), rgb(148 163 184 / 0) 62%);
     box-shadow:
+      inset calc((0.5 - var(--code-x)) * var(--code-lit) * 18px) calc((0.5 - var(--code-y)) * var(--code-lit) * 12px) 28px -15px
+        rgb(186 230 253 / 0.26),
+      inset calc((var(--code-x) - 0.5) * var(--code-lit) * 18px) calc((var(--code-y) - 0.5) * var(--code-lit) * 12px) 32px -17px
+        rgb(2 6 23 / 0.55),
       inset 0 1px 0 rgb(203 213 225 / 0.07),
-      0 1px 3px rgb(2 6 23 / 0.45);
+      calc((0.5 - var(--code-x)) * var(--code-lit) * 10px) calc((0.5 - var(--code-y)) * var(--code-lit) * 7px + 1px)
+        calc(3px + var(--code-lit) * 12px) calc(0px - var(--code-lit) * 5px) rgb(2 6 23 / 0.45);
   }
 
   .dark pre.shiki,
@@ -164,54 +225,59 @@
     color: var(--shiki-dark);
   }
 
-  /* The pointer light.
+  /* The pointer light, and the tilt that comes with it.
 
-     One decorative layer under the code, never the code itself. A tilt or a
-     parallax applied to the block would move the text, and text that moves
-     under the cursor is text that is harder to select and harder to read, which
-     is the opposite of what a code block is for. So what responds is a soft
-     wash of the site's own blue that follows the pointer across the pane, plus
-     a second, smaller magenta one trailing it, and the two together read as
-     light moving under glass rather than as a highlight tracking a cursor.
+     Everything the pointer drives is a background or a shadow on the block
+     itself. Not a transform, and not a pseudo-element either, and both of those
+     are load-bearing decisions.
 
-     It exists only while a pointer is actually inside a block: the class is put
-     on by script on enter and taken off on leave, and the layer is `opacity: 0`
-     and composited otherwise, so a page holding forty code samples is painting
-     nothing extra for thirty-nine of them. The script never attaches on a
-     coarse pointer or when the visitor has asked for less motion, and the
-     stylesheet refuses the effect independently in the same case, so neither
-     one has to trust the other. */
-  pre.shiki::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    z-index: -1;
-    pointer-events: none;
-    opacity: 0;
-    transition: opacity 320ms ease-out;
-    background:
-      radial-gradient(28rem 20rem at var(--code-x) var(--code-y), rgb(59 130 246 / 0.16), transparent 70%),
-      radial-gradient(16rem 12rem at calc(var(--code-x) - 6%) calc(var(--code-y) + 8%), rgb(217 70 239 / 0.1), transparent 72%);
-  }
+     Not a transform, because the block is a scroll container with a copy
+     control pinned in its corner and a selection a reader drags across it.
+     Rotating the element those live in moves all three: the control leaves the
+     corner it was aimed at, the selection lands a line off, and the text loses
+     subpixel rendering the moment it enters a transformed layer. Code that is
+     pleasant to look at and tiring to read has failed at the only thing it is
+     for.
 
-  .dark pre.shiki::before {
-    background:
-      radial-gradient(28rem 20rem at var(--code-x) var(--code-y), rgb(96 165 250 / 0.2), transparent 70%),
-      radial-gradient(16rem 12rem at calc(var(--code-x) - 6%) calc(var(--code-y) + 8%), rgb(232 121 249 / 0.13), transparent 72%);
-  }
+     And not a pseudo-element, because an absolutely positioned child of a
+     scroll container scrolls with the content. A block whose sample runs off
+     the right-hand edge would carry its light away with the code, leaving the
+     wash somewhere the pointer is not and the rim floating in the middle of the
+     pane. A background and an inset shadow are painted against the box instead
+     and stay where the box is.
 
-  pre.shiki.is-lit::before {
-    opacity: 1;
+     What the reader gets is four things moving together. A soft wash of the
+     site's own blue centred on the pointer. A smaller magenta one that travels
+     further for the same movement, which is the parallax. A rim that brightens
+     on the side the pointer is on and darkens on the far one. And a cast
+     shadow thrown away from the pointer, lengthening as it goes. A pane picking
+     up a light source and tipping towards it does exactly those four things,
+     which is why the surface reads as tilted without a degree of rotation
+     anywhere in it. Nothing here can reflow.
+
+     The lag is a transition on the two numbers rather than anything driving
+     them: the script sets a target and stops, and the light spends the next
+     four hundred milliseconds arriving. Every pointer-driven term is scaled by
+     `--code-lit`, which is zero until a pointer is inside a block, so a page
+     holding forty samples paints its ordinary surface for thirty-nine of them
+     and relaxes the fortieth back to neutral when the reader leaves it.
+
+     The script attaches on neither a coarse pointer nor for a visitor who has
+     asked for less motion, and the stylesheet refuses in the same two cases, so
+     neither half has to trust the other. */
+  pre.shiki.is-lit {
+    --code-lit: 1;
     transition:
-      opacity 220ms ease-out,
-      --code-x 340ms cubic-bezier(0.22, 1, 0.36, 1),
-      --code-y 340ms cubic-bezier(0.22, 1, 0.36, 1);
+      --code-lit 200ms ease-out,
+      --code-x 420ms cubic-bezier(0.22, 1, 0.36, 1),
+      --code-y 420ms cubic-bezier(0.22, 1, 0.36, 1);
   }
 
-  @media (prefers-reduced-motion: reduce) {
-    /* why: the light is the motion, so it is the light that goes rather than only its easing */
-    pre.shiki::before {
-      display: none;
+  /* why: a finger has no hover to carry a light with, so the effect is refused rather than left waiting for one that never comes */
+  @media (prefers-reduced-motion: reduce), (pointer: coarse) {
+    pre.shiki.is-lit {
+      --code-lit: 0;
+      transition: none;
     }
   }
 

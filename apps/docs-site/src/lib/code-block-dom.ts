@@ -26,16 +26,31 @@ function wantsPointerLight(): boolean {
 }
 
 /**
- * Light code blocks from wherever the pointer is.
+ * Light code blocks from wherever the pointer is, and tip them towards it.
  *
  * One listener for the whole document rather than one per block, because a
  * reference page can hold dozens of samples and the effect is worth nothing if
  * it costs something on each of them. Nothing is measured until the pointer is
- * actually inside a block, the position is written as two custom properties the
- * stylesheet reads, and the block is left alone again the moment the pointer
- * leaves it.
+ * actually inside a block, and the block is left alone again the moment the
+ * pointer leaves it, so a page nobody is pointing at runs no code at all.
  *
- * @returns A function that removes the listener and clears any lit block.
+ * What is written is two numbers, each between zero and one, saying where in
+ * the block's own box the pointer is. Everything the reader sees is the
+ * stylesheet's doing from there: the wash, its trailing companion, the rim
+ * that brightens on the pointer's side, and the fraction of a degree each
+ * decorative layer is tipped by. None of them is the block itself, so the code
+ * does not move, the selection does not shift, and the copy control stays
+ * where it was aimed.
+ *
+ * There is no interpolation here either. The numbers are transitioned by the
+ * stylesheet, so this sets a target and stops; the lag a reader feels is the
+ * transition still running after the pointer has moved on.
+ *
+ * @returns A function that removes the listeners and clears any lit block.
+ * @example Lighting every block on the page for as long as it is mounted
+ * ```ts
+ * useEffect(() => attachPointerLight(), [])
+ * ```
  */
 export function attachPointerLight(): () => void {
   if (!wantsPointerLight()) {
@@ -49,13 +64,13 @@ export function attachPointerLight(): () => void {
     lit = null
   }
 
-  const paint = (block: HTMLElement, clientX: number, clientY: number): void => {
+  const aim = (block: HTMLElement, clientX: number, clientY: number): void => {
     const box = block.getBoundingClientRect()
     if (box.width === 0 || box.height === 0) {
       return
     }
-    block.style.setProperty('--code-x', `${(((clientX - box.left) / box.width) * 100).toFixed(2)}%`)
-    block.style.setProperty('--code-y', `${(((clientY - box.top) / box.height) * 100).toFixed(2)}%`)
+    block.style.setProperty('--code-x', ((clientX - box.left) / box.width).toFixed(4))
+    block.style.setProperty('--code-y', ((clientY - box.top) / box.height).toFixed(4))
   }
 
   const onMove = (event: PointerEvent): void => {
@@ -71,20 +86,25 @@ export function attachPointerLight(): () => void {
         return
       }
       if (block !== lit) {
-        // why: the light is placed before it is shown, so a block never lights up at its centre and then jumps to the cursor
-        paint(block, clientX, clientY)
+        // why: the light is aimed before the transition that lags it is switched on, so a block lights up where the pointer entered instead of swinging in from its centre
+        aim(block, clientX, clientY)
         release()
         lit = block
         block.classList.add(LIT_CLASS)
         return
       }
-      paint(block, clientX, clientY)
+      aim(block, clientX, clientY)
     })
   }
 
+  // why: a pointer that leaves through the edge of the window sends no further move, so without this the last block a reader touched stays lit behind them
+  const onLeave = (): void => release()
+
   document.addEventListener('pointermove', onMove, { passive: true })
+  document.addEventListener('pointerleave', onLeave, { passive: true })
   return () => {
     document.removeEventListener('pointermove', onMove)
+    document.removeEventListener('pointerleave', onLeave)
     if (pending !== 0) {
       window.cancelAnimationFrame(pending)
     }
