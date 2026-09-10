@@ -57,7 +57,9 @@ Designed for tooling authors building code generators, IDE extensions, CI/CD pip
 
 ### Architecture Highlights
 
-Four-layer architecture: core (fs, path, encoding, platform), project (config detection, package.json, root finding), tech (framework/tool detectors with consistent interfaces), and heuristics (multi-signal classification with evidence). Detectors use function-scoped caching (30-60s TTL). VFS buffers changes in memory until explicit commit, with path traversal prevention and symlink validation.
+Detector results are cached per function for 30 to 60 seconds, so back-to-back analyses of the same project return the same answer: pass `skipCache` for a fresh read, or call `clearAllCaches()` to drop every cache at once. The virtual file system buffers writes, deletes, and renames in memory until `commitChanges()`, rejects paths that escape the tree, and validates symlinks before following them, so nothing reaches disk until you say so.
+
+The [architecture guide](https://www.hyperfrontend.dev/docs/libraries/project-scope/architecture/) covers the module layers, the analysis pipeline, and the caching and security models.
 
 ## Why Use @hyperfrontend/project-scope?
 
