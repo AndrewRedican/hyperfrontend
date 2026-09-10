@@ -2,7 +2,7 @@ import type { NpmLinkEvent } from '@/components/analytics/tracked-link'
 import type { PackageFacts } from '@/lib/package-facts'
 import type { ReactNode } from 'react'
 import { TrackedLink } from '@/components/analytics/tracked-link'
-import { npmVersionUrl } from '@/lib/package-facts'
+import { npmVersionUrl } from '@/lib/npm-url'
 
 /** Props for {@link PackageMetadata}. */
 export interface PackageMetadataProps {
