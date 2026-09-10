@@ -41,7 +41,9 @@ Production-grade network protocol for secure, real-time cross-window and cross-p
 
 ## What is @hyperfrontend/network-protocol?
 
-You already have a transport: a WebSocket, `postMessage` to another window or a worker, a Node IPC pipe. What you do not have is the envelope to put on it. That is this library. Hand it a function that transmits bytes, a callback for delivered messages, a protocol provider, and the session the two ends agreed on, and you get a channel back. Each end mints a random nonce and an ephemeral P-256 key pair, advertises them in a 99-byte hello frame, and derives two AES-GCM-256 keys from the agreement, one per direction. Every message is sealed under the sending key with a counter that serves as the nonce and as the replay check; every inbound frame is opened under the receiving key and arrives as a typed packet with an origin, a target, and a payload that has already been checked for the fields it claims to have.
+You already have a transport: a WebSocket, `postMessage` to another window or a worker, a Node IPC pipe. What you do not have is the envelope to put on it. That is this library. Hand it a function that transmits bytes, a callback for delivered messages, a protocol provider, and the session the two ends agreed on, and you get a channel back.
+
+Each end mints a random nonce and an ephemeral P-256 key pair, advertises them in a 99-byte hello frame, and derives two AES-GCM-256 keys from the agreement, one per direction. Every message is sealed under the sending key with a counter that serves as the nonce and as the replay check; every inbound frame is opened under the receiving key and arrives as a typed packet with an origin, a target, and a payload that has already been checked for the fields it claims to have.
 
 Two protocols share that wire format. `v3` keys the session from the agreement alone, which defeats anything that can only listen. `v4` mixes a pre-shared key into the schedule, stretched once per session, so a script without the key can neither read frames nor produce frames the counterpart accepts.
 
@@ -98,7 +100,9 @@ The worker mirrors this with `role: 'responder'` and the two identities swapped;
 
 ### Architecture Highlights
 
-The platform entries (`/browser/*`, `/node/*`) inject a `SessionCrypto` set of primitives from `@hyperfrontend/cryptography` (`getRandomValues`, `createKeyAgreement`, `stretchPassword`, `expandKey`, `seal`, `open`) and the platform's UTF-8 codec into a shared, platform-neutral session protocol; the business logic in `lib/` never touches a crypto API directly. A channel binds one protocol instance to one negotiated session (`{ protocol, role, localId, peerId }`), feeds the instance's `seal` and `open` into its two pipelines, and exposes the instance's hello exchange unchanged so the owner can run it over the same transport. Packets have exactly two states: `UnencryptedPacket<T>` (origin, target, `Data<T>`) and `WirePacket` (a `Uint8Array` frame). The key schedule binds both nonces, both public keys, the protocol id, and both identities into the derived keys, so a frame from any other session fails to authenticate. The cost is one ECDH agreement plus one HKDF expansion per direction per session (plus one PBKDF2 stretch for `v4`), then one AES-GCM operation per message in each direction.
+The key schedule binds both nonces, both public keys, the protocol id, and both identities into the derived keys, so a frame from any other session fails to authenticate. The cost is one ECDH agreement plus one HKDF expansion per direction per session (plus one PBKDF2 stretch for `v4`), then one AES-GCM operation per message in each direction; the stretch runs once, when the session is keyed, so it lands on the handshake and not on traffic.
+
+The [architecture guide](https://www.hyperfrontend.dev/docs/libraries/network-protocol/architecture/) works through the hello exchange, the wire format, the injected platform primitives, and what each protocol does and does not claim.
 
 ## Why Use @hyperfrontend/network-protocol?
 
