@@ -18,21 +18,22 @@ Generators create compliant configs. Manual edits must pass these ESLint rules.
 
 ## ESLint Rules
 
-| Rule                          | Enforces                                                   |
-| ----------------------------- | ---------------------------------------------------------- |
-| `lib-project-metadata`        | `name` starts with `lib-`, has description + tags          |
-| `lib-project-version-targets` | Publishable has `version` + `version-check` targets        |
-| `lib-project-bundle-config`   | IIFE/UMD have both `entry` + `globalName`                  |
-| `lib-pkg-fields`              | name, description, license, sideEffects, engines, keywords |
-| `lib-pkg-no-main`             | No `main` field — use `exports`                            |
-| `lib-pkg-exports-js-only`     | Export paths use `.js` not `.ts`                           |
-| `lib-pkg-exports-exist`       | Export paths point to existing files                       |
-| `lib-pkg-package-json-export` | Exports include `"./package.json"`                         |
-| `lib-tsconfig-paths`          | Every export has tsconfig.base.json path mapping           |
-| `no-unwanted-barrel-files`    | `index.ts` only at declared entry points                   |
-| `lib-readme-structure`        | README has required sections/badges                        |
-| `root-readme-packages`        | Root README lists library in packages table                |
-| `docs-site-library-docs`      | docs-site has page routes for library markdown             |
+| Rule                          | Enforces                                                                |
+| ----------------------------- | ----------------------------------------------------------------------- |
+| `lib-project-metadata`        | `name` starts with `lib-`, has description + tags                       |
+| `lib-project-version-targets` | Publishable has `version` + `version-check` targets                     |
+| `lib-project-bundle-config`   | IIFE/UMD have both `entry` + `globalName`                               |
+| `lib-project-compatibility`   | Publishable libs declare metadata.compatibility with legal environments |
+| `lib-pkg-fields`              | name, description, license, sideEffects, engines, keywords              |
+| `lib-pkg-no-main`             | No `main` field — use `exports`                                         |
+| `lib-pkg-exports-js-only`     | Export paths use `.js` not `.ts`                                        |
+| `lib-pkg-exports-exist`       | Export paths point to existing files                                    |
+| `lib-pkg-package-json-export` | Exports include `"./package.json"`                                      |
+| `lib-tsconfig-paths`          | Every export has tsconfig.base.json path mapping                        |
+| `no-unwanted-barrel-files`    | `index.ts` only at declared entry points                                |
+| `lib-readme-structure`        | README has required sections/badges                                     |
+| `root-readme-packages`        | Root README lists library in packages table                             |
+| `docs-site-library-docs`      | docs-site has page routes for library markdown                          |
 
 ---
 
