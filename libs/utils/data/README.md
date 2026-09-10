@@ -33,6 +33,15 @@
   <img src="https://img.shields.io/badge/tree%20shakeable-%E2%9C%93-success?style=flat-square" alt="Tree Shakeable">
 </p>
 
+<p align="center">
+  <a href="https://www.hyperfrontend.dev/docs/libraries/utils/data/">
+    <img width="640" src="https://www.hyperfrontend.dev/media/data-utils-circular/hero.gif" alt="A graph with three back references is typed into graph.mjs on the left; on the right a node session lets JSON.stringify throw on it and name a single cycle, then one locateCircularReference call prints all three as arrow paths">
+  </a>
+</p>
+<p align="center">
+  <sub>The same graph, asked twice. The exception describes the first cycle its own walk reached; the call under it returns every one, with where each was found and what it points back to.</sub>
+</p>
+
 Comprehensive data structure manipulation with circular reference handling and custom class support.
 
 • 👉 See [**documentation**](https://www.hyperfrontend.dev/docs/libraries/utils/data/)
@@ -109,13 +118,15 @@ getType(new User()) // 'User'
 ### Deep Equality with Circular References
 
 ```typescript
-import { isIdentical } from '@hyperfrontend/data-utils'
+import { isIdentical, setConfig } from '@hyperfrontend/data-utils'
 
 const obj1 = { a: 1, b: { c: 2 } }
 const obj2 = { a: 1, b: { c: 2 } }
 isIdentical(obj1, obj2) // true (deep equality)
 
-// Handles circular references
+// Circular references need reference tracking; without it the comparison recurses until the stack overflows
+setConfig({ detectCircularReferences: true })
+
 const circular1 = { name: 'node' }
 circular1.self = circular1
 const circular2 = { name: 'node' }
@@ -157,14 +168,15 @@ const data = {
 }
 
 // Clone without sensitive fields
-const sanitized = selectiveCopy(data, {
-  includeKey: (value, path, key) => key !== 'password',
+const { clone: sanitized, skipped } = selectiveCopy(data, {
+  include: (value, path, key) => key !== 'password',
 })
 // sanitized: { user: { id: 1, name: 'Alice' }, settings: { theme: 'dark' } }
+// skipped: [{ target: 'secret', path: ['user', 'password'], key: 'password', dataType: 'string' }]
 
 // Clone only specific paths
-const partial = selectiveCopy(data, {
-  includeKey: (value, path) => path[0] === 'user',
+const { clone: partial } = selectiveCopy(data, {
+  include: (value, path) => path[0] === 'user',
 })
 // partial: { user: { id: 1, name: 'Alice', password: 'secret' } }
 ```
@@ -180,8 +192,9 @@ obj.self = obj
 hasCircularReference(obj) // true
 
 const locations = locateCircularReference(obj)
-// locations: [{ startPath: ['self'], destinationPath: [] }]
+// locations: [CircularReference { location: { path: ['self'] }, target: { path: [] } }]
 // Meaning: path ['self'] references the root object
+// One result by default: pass '*' as the second argument to get every cycle in the graph
 ```
 
 ### Search for Keys and Values
@@ -252,60 +265,21 @@ registerIterableClass(
 // Now all utilities work with Graph instances
 const g1 = new Graph()
 g1.addNode('a', 1)
-const g2 = selectiveCopy(g1) // Deep clone works
+const { clone: g2 } = selectiveCopy(g1) // Deep clone works, and g2 is a Graph
 isIdentical(g1, g2) // true
 ```
 
 ## API Overview
 
-### Type Detection & Comparison
+There is one walker. [`traverse`](https://www.hyperfrontend.dev/docs/libraries/utils/data/#api-traverse) recurses through anything iterable and calls your callback at every data point with `(key, value, path, state, parent)`, where `path` is the list of keys that got there and `state` is an object you hand in and get back. Most of the rest of the package is a callback over it: `locateKey`, `locateText`, `renameKey`, `removeKey` and `replaceText` differ only in what their callback does at each node, and all five return the same `string[][]` of paths they acted on. The factory behind it, `createTraversal`, is exported too, so a walk with a different admission rule is one call away.
 
-- **`getType(target): DataType | string`** - Enhanced typeof with null/array/class distinction
-- **`sameType(a, b): boolean`** - Check if two values have identical types
-- **`sameStructure(a, b): boolean | DataType`** - Check if values share structure/type
-- **`isIdentical(a, b): boolean`** - Deep equality with circular reference support
+Back references are opt in, because tracking them costs. [`setConfig`](https://www.hyperfrontend.dev/docs/libraries/utils/data/#api-setConfig) with `{ detectCircularReferences: true }` swaps that plain recursion for one that keeps a stack of the references it has already visited, which is what lets [`isIdentical`](https://www.hyperfrontend.dev/docs/libraries/utils/data/#api-isIdentical) compare two self-referential graphs and [`selectiveCopy`](https://www.hyperfrontend.dev/docs/libraries/utils/data/#api-selectiveCopy) rebuild the loops inside its clone. With the flag off both assume an acyclic structure, and a cycle overflows the stack.
 
-### Traversal & Search
+Two functions never need the flag, because they set it for the length of their own call: `hasCircularReference` answers yes or no, and [`locateCircularReference`](https://www.hyperfrontend.dev/docs/libraries/utils/data/#api-locateCircularReference) reports where each cycle was found and what it points back to, one by default and all of them if you pass `'*'`. Note that `selectiveCopy` resolves to `{ clone, skipped }`, so the data points it left out stay inspectable instead of vanishing.
 
-- **`traverse(target, callback, options, state): state`** - Recursively walk data structures with callbacks
-- **`locateKey(target, pattern, options?): string[][]`** - Find all paths matching key pattern
-- **`locateText(target, pattern, options?): string[][]`** - Find all paths containing text value
-- **`getValue(target, path): unknown`** - Safely access nested values by path
-- **`getDepth(target): number`** - Calculate maximum nesting depth
+Out of the box only arrays and plain objects are traversable; everything else is a leaf the walk stops at. [`registerIterableClass`](https://www.hyperfrontend.dev/docs/libraries/utils/data/#api-registerIterableClass) is how that list grows. Give it a class plus four operators (`getKeys`, `read`, `write`, `remove`) and an optional `instantiate`, and from that point every function above reads and writes inside its instances exactly as it does a plain object: [`getType`](https://www.hyperfrontend.dev/docs/libraries/utils/data/#api-getType) reports the class name rather than `'object'`, searches descend into it, and `selectiveCopy` rebuilds a real instance rather than an object literal. One registration is what turns a `Map`, a `Set` or your own domain model into a first-class traversable type.
 
-### Data Manipulation
-
-- **`selectiveCopy(target, options): Partial<T>`** - Deep clone with filtering and circular reference handling
-- **`renameKey(target, oldKey, newKey, options?): void`** - Rename keys throughout structure
-- **`removeKey(target, pattern, options?): void`** - Remove keys matching pattern
-- **`replaceText(target, pattern, replacement, options?): void`** - Replace text in all string values
-
-### Circular Reference Utilities
-
-- **`hasCircularReference(target): boolean`** - Check if structure contains circular references
-- **`locateCircularReference(target): CircularReference[]`** - Find all circular reference locations
-- **`circularReference(target): CircularReference[]`** - Alias for locateCircularReference
-
-### Class Registration
-
-- **`registerClassTypes(...classes): void`** - Register classes for type detection
-- **`registerIterableClass(classRef, getKeys, read, write, remove, instantiate?): void`** - Register custom traversable classes
-- **`deregisterClassTypes(...classes): void`** - Remove registered classes
-- **`deregisterIterableClass(classRef): void`** - Remove registered iterable class
-
-### Iterable Utilities
-
-- **`isIterable(target): boolean`** - Check if value is iterable (object/array/custom)
-- **`isIterableType(type): boolean`** - Check if type string represents iterable
-- **`getIterableTypes(): string[]`** - Get all registered iterable type names
-- **`getIterableOperators(type): IterableOperators`** - Get traversal operators for type
-- **`getKeysFromIterable(target, type): string[]`** - Get all keys from iterable value
-- **`getUniqueKeys(...targets): string[]`** - Get all unique keys from multiple iterables
-
-### Validation
-
-- **`containsKeys(target, keys): boolean`** - Check if target contains all specified keys
-- **`isMarker(key): boolean`** - Check if key is internal marker (for circular reference tracking)
+Every option, callback signature and result type is in the [API reference](https://www.hyperfrontend.dev/docs/libraries/utils/data/#api-reference).
 
 ## Compatibility
 
@@ -335,7 +309,7 @@ isIdentical(g1, g2) // true
 <script src="https://cdn.jsdelivr.net/npm/@hyperfrontend/data-utils"></script>
 
 <script>
-  const { isEqual, deepClone, getType } = HyperfrontendDataUtils
+  const { isIdentical, selectiveCopy, getType } = HyperfrontendDataUtils
 </script>
 ```
 
