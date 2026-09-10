@@ -266,6 +266,7 @@ module.exports = [
     rules: {
       'workspace/lib-project-metadata': 'error',
       'workspace/lib-project-bundle-config': 'error',
+      'workspace/lib-project-compatibility': 'error',
       'workspace/lib-project-version-targets': 'error',
       'workspace/lib-e2e-project-required': 'error',
       'workspace/deploy-static-headers': 'error',
@@ -280,6 +281,7 @@ module.exports = [
     language: 'markdown/gfm',
     rules: {
       'workspace/lib-readme-structure': 'error',
+      'workspace/readme-paragraph-length': 'error',
       'workspace/no-ascii-art-diagrams': 'error',
       'workspace/readme-media-asset': [
         'error',
