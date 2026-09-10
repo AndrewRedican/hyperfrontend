@@ -33,6 +33,15 @@
   <img src="https://img.shields.io/badge/tree%20shakeable-%E2%9C%93-success?style=flat-square" alt="Tree Shakeable">
 </p>
 
+<p align="center">
+  <a href="https://www.hyperfrontend.dev/docs/libraries/utils/function/">
+    <img width="640" src="https://www.hyperfrontend.dev/media/function-utils-lanes/hero.gif" alt="Four terminal columns typing the same three calls: the unwrapped one throws on the second and stops, run-once returns its cached 1 three times, the conditional one prints undefined for the shut gate, and the error-ignoring one prints undefined and carries on">
+  </a>
+</p>
+<p align="center">
+  <sub>One function, three calls, four columns. The second call fails, and what each wrapper does about it is the whole library.</sub>
+</p>
+
 Higher-order function utilities for behavioral modification and composition.
 
 • 👉 See [**documentation**](https://www.hyperfrontend.dev/docs/libraries/utils/function/)
@@ -186,32 +195,24 @@ const setupAnalytics = createRunOnceFunction(
 
 ## API Overview
 
-**Higher-Order Functions:**
+The surface is three higher-order wrappers and one placeholder, and nothing else: no configuration objects, no registry, no state shared between two wrappers. Each
+wrapper takes a function and gives back a function you call exactly the way you called the original, because its parameters are typed `Parameters<T>` and its result is
+derived from `ReturnType<T>`. What a wrapper changes is when, or whether, the underlying call happens.
 
-- **`createRunOnceFunction<T>(func)`** - Wraps function to execute only once, memoizing and returning first result for all subsequent calls
-  - **Parameters:** `func` - Function to wrap (any signature)
-  - **Returns:** Wrapped function with same signature that executes once
-  - **Use cases:** Lazy initialization, singleton setup, one-time DOM manipulation
+Start with [`createRunOnceFunction`](https://www.hyperfrontend.dev/docs/libraries/utils/function/#api-createRunOnceFunction): it invokes the wrapped function on the
+first call, stores that result and returns the stored one for every call after, ignoring their arguments entirely. [`createConditionalExecutionFunction`](https://www.hyperfrontend.dev/docs/libraries/utils/function/#api-createConditionalExecutionFunction)
+takes a second argument, a no-argument predicate that is re-read on every call, and calls through only while it returns true; it is the piece behind log-level filtering
+and environment guards. [`createErrorIgnoringFunction`](https://www.hyperfrontend.dev/docs/libraries/utils/function/#api-createErrorIgnoringFunction) puts the call
+inside a `try` with an empty `catch`, for work you would rather lose than crash on: analytics beacons, cache writes, debug output.
 
-- **`createConditionalExecutionFunction<T>(func, conditionFunc)`** - Wraps function to execute only when condition returns true
-  - **Parameters:**
-    - `func` - Function to wrap (any signature)
-    - `conditionFunc` - Predicate function returning boolean
-  - **Returns:** Wrapped function that executes conditionally, returns `void` if condition is false
-  - **Use cases:** Feature flags, environment guards, permission checks, log level filtering
+One typing detail decides between them. Run-once returns `ReturnType<T>`, and error-ignoring is constrained to functions that already return void, so it returns `void`
+too and quietly discards anything a wrapped function hands back. The conditional wrapper is the only one that widens the return type, to `ReturnType<T> | void`: when
+its predicate is false it never calls through, and the caller receives `undefined`, so a skipped call is a value you can branch on rather than something to infer.
 
-- **`createErrorIgnoringFunction<T>(func)`** - Wraps void function to silently catch and suppress all exceptions
-  - **Parameters:** `func` - Void function to wrap (must return void)
-  - **Returns:** Wrapped function that never throws
-  - **Use cases:** Analytics tracking, debug logging, cache updates, experimental features
-  - **Note:** Only for void functions where failures are acceptable
+[`noop`](https://www.hyperfrontend.dev/docs/libraries/utils/function/#api-noop) wraps nothing. It takes any arguments and returns nothing, as a typed default for an
+optional callback parameter.
 
-**Utility Functions:**
-
-- **`noop(...args)`** - No-operation function that accepts any arguments and does nothing
-  - **Parameters:** `...args` - Any arguments (ignored)
-  - **Returns:** `void`
-  - **Use cases:** Default callback parameters, placeholder functions, event handler stubs
+Full signatures, generic constraints and per-function examples are in the [API reference](https://www.hyperfrontend.dev/docs/libraries/utils/function/#api-reference).
 
 ## Type Safety
 
@@ -257,7 +258,7 @@ const result: number = addOnce(2, 3) // Type safe ✓
 <script src="https://cdn.jsdelivr.net/npm/@hyperfrontend/function-utils"></script>
 
 <script>
-  const { createRunOnceFunction, safeFunction, noop } = HyperfrontendFunctionUtils
+  const { createRunOnceFunction, createErrorIgnoringFunction, noop } = HyperfrontendFunctionUtils
 </script>
 ```
 
