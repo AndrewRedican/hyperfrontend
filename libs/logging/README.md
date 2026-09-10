@@ -55,10 +55,6 @@ The core `createLogger()` factory accepts custom log functions for each severity
 - **Zero External Dependencies** - Self-contained implementation with no third-party runtime dependencies
 - **Type-Safe API** - Full TypeScript support with strongly-typed log functions and levels
 
-### Architecture Highlights
-
-Built on functional composition with dependency injection for complete testability. Each log function is wrapped in two layers: error suppression (via `createErrorIgnoringFunction`) prevents exceptions during logging, and conditional execution (via `createConditionalExecutionFunction`) checks log level before execution. The priority system evaluates numeric thresholds rather than string comparisons for efficient runtime filtering.
-
 ## Why Use @hyperfrontend/logging?
 
 ### Production Observability Without Restarts
@@ -185,7 +181,7 @@ const logger = createLogger(console.error, console.warn, console.log, console.in
 logger.setLogLevel('debug')
 
 // channel() returns a sub-logger that prepends `[prefix]` to every emission.
-// Nested channels chain with `:` — channel('build').channel('rollup') emits `[build:rollup]`.
+// Nested channels chain with `:`; channel('build').channel('rollup') emits `[build:rollup]`.
 const build = logger.channel('build')
 build.info('starting') // [build] starting
 build.channel('rollup').warn(':') // [build:rollup] :
