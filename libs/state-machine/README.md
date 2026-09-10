@@ -78,9 +78,9 @@ store.dispatch(start()) // restarting: running, with a good result still on scre
 
 ### Architecture Highlights
 
-The library uses a functional core with imperative shell pattern. The `rootReducer` is a pure function mapping (state, action) → new state using a handler lookup table. The `Store` class wraps the reducer with subscription management using a `Set<Listener>` for efficient add/remove operations. Derived state computation happens through selector functions that transform core state into boolean flags, with the `Events` class comparing previous/current derived states to trigger event handlers only when specific flags activate. The `LifecycleAwareComponent` uses protected setter methods (setInitializing, setReady, etc.) that invoke callback stacks only when state actually changes, preventing duplicate notifications. All state updates are immutable using object spread (`{ ...state, inProgress: true }`).
+Event handlers are edge-triggered: a handler for `retrying` fires on the transition into that derived state, not on every dispatch that leaves the flag true, so you get one notification per activation. Every dispatch replaces the state object rather than mutating it, so the state a subscriber receives can be compared by reference; `getState()` returns a fresh shallow copy on each call and is not a reference to compare against.
 
-For a detailed technical deep dive, see [ARCHITECTURE.md](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/state-machine/ARCHITECTURE.md).
+For a detailed technical deep dive, see the [architecture guide](https://www.hyperfrontend.dev/docs/libraries/state-machine/architecture/).
 
 ## Why Use @hyperfrontend/state-machine?
 
