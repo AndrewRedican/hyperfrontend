@@ -12,6 +12,7 @@ const MIDNIGHT: FlowTheme = {
   packet: '#60a5fa',
   title: '#dbe4f2',
   subtitle: '#7386a3',
+  phase: '#8ea2c2',
   tones: {
     plain: '#c3cfe4',
     muted: '#6b7c9c',
@@ -31,6 +32,7 @@ const DAYLIGHT: FlowTheme = {
   packet: '#2563eb',
   title: '#1e293b',
   subtitle: '#64748b',
+  phase: '#5b6b85',
   tones: {
     plain: '#334155',
     muted: '#7c8ba1',
