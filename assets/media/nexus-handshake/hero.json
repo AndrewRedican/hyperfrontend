@@ -1,0 +1,60 @@
+{
+  "slug": "nexus-handshake",
+  "asset": "hero.gif",
+  "generatedAt": "2026-09-10T06:41:55.136Z",
+  "sceneHash": "4917e08f9a6275bb",
+  "sourceUrl": "stage:flow",
+  "profile": {
+    "id": "compact",
+    "intent": "npm package pages, GitHub readmes and documentation read on a phone",
+    "width": 640,
+    "height": 360,
+    "scale": 2,
+    "fps": 12
+  },
+  "viewport": {
+    "width": 640,
+    "height": 360
+  },
+  "record": {
+    "settleMs": 0,
+    "durationMs": 10200
+  },
+  "startMs": 0,
+  "gif": {
+    "width": 640,
+    "fps": 6,
+    "colours": 56,
+    "lossy": 75,
+    "dither": true,
+    "loop": 0,
+    "maxBytes": 850000
+  },
+  "encoder": "sharp",
+  "toolVersions": [
+    {
+      "name": "sharp",
+      "version": "8.18.6"
+    }
+  ],
+  "bytes": 309096,
+  "frames": 75,
+  "stills": [
+    {
+      "asset": "poster.webp",
+      "bytes": 35016,
+      "maxBytes": 90000
+    }
+  ],
+  "browser": {
+    "name": "chromium",
+    "version": "149.0.7827.55",
+    "executablePath": "/home/vscode/.cache/ms-playwright/chromium-1228/chrome-linux64/chrome"
+  },
+  "determinism": {},
+  "console": {
+    "errors": 0,
+    "warnings": 0,
+    "pageErrors": 0
+  }
+}

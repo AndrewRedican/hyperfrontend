@@ -1,0 +1,60 @@
+{
+  "slug": "network-protocol-frame",
+  "asset": "hero.gif",
+  "generatedAt": "2026-09-10T07:10:21.007Z",
+  "sceneHash": "f03802cc7d929696",
+  "sourceUrl": "stage:byte",
+  "profile": {
+    "id": "compact",
+    "intent": "npm package pages, GitHub readmes and documentation read on a phone",
+    "width": 640,
+    "height": 360,
+    "scale": 2,
+    "fps": 12
+  },
+  "viewport": {
+    "width": 640,
+    "height": 360
+  },
+  "record": {
+    "settleMs": 0,
+    "durationMs": 8400
+  },
+  "startMs": 0,
+  "gif": {
+    "width": 640,
+    "fps": 6,
+    "colours": 48,
+    "lossy": 75,
+    "dither": true,
+    "loop": 0,
+    "maxBytes": 800000
+  },
+  "encoder": "sharp",
+  "toolVersions": [
+    {
+      "name": "sharp",
+      "version": "8.18.6"
+    }
+  ],
+  "bytes": 190306,
+  "frames": 37,
+  "stills": [
+    {
+      "asset": "poster.webp",
+      "bytes": 36876,
+      "maxBytes": 70000
+    }
+  ],
+  "browser": {
+    "name": "chromium",
+    "version": "149.0.7827.55",
+    "executablePath": "/home/vscode/.cache/ms-playwright/chromium-1228/chrome-linux64/chrome"
+  },
+  "determinism": {},
+  "console": {
+    "errors": 0,
+    "warnings": 0,
+    "pageErrors": 0
+  }
+}
