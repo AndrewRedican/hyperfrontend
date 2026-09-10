@@ -33,6 +33,15 @@
   <img src="https://img.shields.io/badge/tree%20shakeable-%E2%9C%93-success?style=flat-square" alt="Tree Shakeable">
 </p>
 
+<p align="center">
+  <a href="https://www.hyperfrontend.dev/docs/libraries/utils/json/">
+    <img width="640" src="https://www.hyperfrontend.dev/media/json-utils-validate/hero.gif" alt="A schema and a broken config being typed on the left, and on the right one validate call printing all four violations as a path and keyword-code table">
+  </a>
+</p>
+<p align="center">
+  <sub>A config that breaks four rules at once, and the single call that reports all four instead of stopping at the first.</sub>
+</p>
+
 Zero-dependency JSON Schema Draft v4 validation and schema generation utilities.
 
 • 👉 See [**documentation**](https://www.hyperfrontend.dev/docs/libraries/utils/json/)
@@ -70,7 +79,7 @@ If you need full JSON Schema support across multiple draft versions, consider [A
 
 ### Validate User-Provided Schemas
 
-When your application accepts user-defined JSON Schema (like contract definitions or API specifications), you need reliable validation. This library validates both the data and can verify that schemas themselves are valid Draft v4 documents using the meta-schema.
+When your application accepts user-defined JSON Schema (like contract definitions or API specifications), you need reliable validation. This library validates data against those schemas without a large dependency tree, and because a schema is itself just JSON, you can validate a submitted schema by writing a schema for it and running `validate` twice.
 
 ### Generate Schemas from Sample Data
 
@@ -111,9 +120,9 @@ const invalid = validate({ name: '', age: -5 }, schema)
 console.log(invalid.valid) // false
 console.log(invalid.errors)
 // [
-//   { message: 'Missing required property: email', path: '/', code: 'required' },
 //   { message: 'String must be at least 1 characters, got 0', path: '/name', code: 'minLength' },
-//   { message: 'Number must be at least 0, got -5', path: '/age', code: 'minimum' }
+//   { message: 'Number must be at least 0, got -5', path: '/age', code: 'minimum' },
+//   { message: 'Missing required property: email', path: '/', code: 'required' }
 // ]
 ```
 
@@ -208,39 +217,17 @@ validate(
 
 ## API Overview
 
-### Validation
+Two halves that mirror each other. [`validate`](https://www.hyperfrontend.dev/docs/libraries/utils/json/#api-validate) walks a value against a schema and reports what is wrong with it; [`toJsonSchema`](https://www.hyperfrontend.dev/docs/libraries/utils/json/#api-toJsonSchema) runs the other way, inferring a schema from a value you already have. Everything else here is a variant of one of those two, or a type one of them hands back.
 
-- **`validate(instance, schema, options?): ValidationResult`** - Validate a value against a JSON Schema
-- **`createValidator(schema, options?): (data) => ValidationResult`** - Create a reusable validator function
+Validation is where the shape matters. `validate(instance, schema, options?)` returns a [`ValidationResult`](https://www.hyperfrontend.dev/docs/libraries/utils/json/#api-ValidationResult): a `valid` flag and a flat array of errors. Flat, because the walk carries an immutable context down through each property and array index, forking a child that knows the JSON Pointer for that position, while every keyword that fails appends to one shared list instead of throwing.
 
-### Generation
+So a single call over a broken object comes back with every violation at once, each carrying the pointer that found it (`/port`, `/items/2`, or `/` when the failure is a missing key that no pointer can address) and the keyword code that raised it (`minimum`, `pattern`, `type`, `required`). Collecting everything is the default; `collectAllErrors: false` stops at the first. When one schema is used repeatedly, [`createValidator`](https://www.hyperfrontend.dev/docs/libraries/utils/json/#api-createValidator) closes the schema and its options over a one-argument function, so callers pass only data.
 
-- **`toJsonSchema(value, options?): Schema`** - Generate a JSON Schema from a JavaScript value
+Two things bound that walk, and both of them keep it offline. `$ref` resolves inside the document only: the root schema's `definitions` are indexed up front and any other `#/...` pointer is walked against the root, so a schema that refers back to itself validates arbitrarily deep recursive data with no network or filesystem access (a `$ref` that resolves to nothing is skipped rather than raised). And with `safePatterns` on, every `pattern` and `patternProperties` regex goes to [`checkPatternSafety`](https://www.hyperfrontend.dev/docs/libraries/utils/json/#api-checkPatternSafety), or to a checker of your own, before `RegExp` is ever constructed: a user-supplied pattern can then come back as an ordinary validation error instead of being executed.
 
-### Utilities
+Generation is the smaller half. `toJsonSchema(value, options?)` returns a `Schema` describing the sample, and [`GenerateOptions`](https://www.hyperfrontend.dev/docs/libraries/utils/json/#api-GenerateOptions) decides how far that sample is trusted: whether an array's `items` are merged across every element, taken from the first, or assumed uniform, whether the observed keys become `required`, and whether `additionalProperties: false` is stamped on.
 
-- **`getJsonType(value): JsonType`** - Get the JSON Schema type of a JavaScript value
-- **`isEqual(a, b): boolean`** - Deep equality comparison for JSON values
-- **`checkPatternSafety(pattern): PatternSafetyResult`** - Check if a regex pattern may cause ReDoS
-
-### Types
-
-- **`Schema`** - TypeScript interface representing JSON Schema Draft v4
-- **`JsonType`** - `'string' | 'number' | 'integer' | 'boolean' | 'array' | 'object' | 'null'`
-- **`ValidationResult`** - `{ valid: boolean, errors: ValidationError[] }`
-- **`ValidationError`** - `{ message: string, path: string, code?: string, instance?: unknown, params?: object }`
-- **`ValidateOptions`** - Validation configuration (see below)
-- **`GenerateOptions`** - `{ arrays?: { mode: 'all' | 'first' | 'uniform' }, includeRequired?: boolean }`
-- **`PatternSafetyChecker`** - Custom function for ReDoS pattern detection
-- **`PatternSafetyResult`** - `{ safe: boolean, reason?: string }`
-
-### ValidateOptions
-
-| Option             | Type                              | Default | Description                                              |
-| ------------------ | --------------------------------- | ------- | -------------------------------------------------------- |
-| `collectAllErrors` | `boolean`                         | `true`  | When `false`, stops at first error                       |
-| `strictPatterns`   | `boolean`                         | `false` | Report errors for invalid regex patterns (syntax errors) |
-| `safePatterns`     | `boolean \| PatternSafetyChecker` | `false` | Enable ReDoS protection (see Security section)           |
+Every option, error field and type is in the full [API reference](https://www.hyperfrontend.dev/docs/libraries/utils/json/#api-reference).
 
 ## Security: ReDoS Protection
 
