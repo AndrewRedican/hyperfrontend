@@ -25,6 +25,7 @@ import libPkgNoMain, { RULE_NAME as LIB_PKG_NO_MAIN } from './rules/lib-pkg-no-m
 import libPkgPackageJsonExport, { RULE_NAME as LIB_PKG_PACKAGE_JSON_EXPORT } from './rules/lib-pkg-package-json-export'
 import libPkgSecondaryEntryReadme, { RULE_NAME as LIB_PKG_SECONDARY_ENTRY_README } from './rules/lib-pkg-secondary-entry-readme'
 import libProjectBundleConfig, { RULE_NAME as LIB_PROJECT_BUNDLE_CONFIG } from './rules/lib-project-bundle-config'
+import libProjectCompatibility, { RULE_NAME as LIB_PROJECT_COMPATIBILITY } from './rules/lib-project-compatibility'
 import libProjectMetadata, { RULE_NAME as LIB_PROJECT_METADATA } from './rules/lib-project-metadata'
 import libProjectVersionTargets, { RULE_NAME as LIB_PROJECT_VERSION_TARGETS } from './rules/lib-project-version-targets'
 import libReadmeStructure, { RULE_NAME as LIB_README_STRUCTURE } from './rules/lib-readme-structure'
@@ -95,6 +96,7 @@ export const rules: ESLint.Plugin['rules'] = {
   [LIB_PKG_PACKAGE_JSON_EXPORT]: libPkgPackageJsonExport as unknown as Rule.RuleModule,
   [LIB_PKG_SECONDARY_ENTRY_README]: libPkgSecondaryEntryReadme as unknown as Rule.RuleModule,
   [LIB_PROJECT_BUNDLE_CONFIG]: libProjectBundleConfig as unknown as Rule.RuleModule,
+  [LIB_PROJECT_COMPATIBILITY]: libProjectCompatibility as unknown as Rule.RuleModule,
   [LIB_PROJECT_METADATA]: libProjectMetadata as unknown as Rule.RuleModule,
   [LIB_PROJECT_VERSION_TARGETS]: libProjectVersionTargets as unknown as Rule.RuleModule,
   [LIB_README_STRUCTURE]: libReadmeStructure as unknown as Rule.RuleModule,
