@@ -57,9 +57,9 @@ Versioning library with changelog parsing, conventional commits, and semver flow
 
 ### Architecture Highlights
 
-Built on a purely functional architecture with factory functions and immutable data structures. All parsing uses character-by-character state machines for predictable O(n) performance. The library integrates with `@hyperfrontend/project-scope` for virtual file system operations and `@hyperfrontend/data-utils` for deep comparison.
+Parsing is bounded and predictable: every parser is a character-by-character state machine rather than a regular expression, so no input pattern can trigger catastrophic backtracking. Each entry point also rejects oversized input before processing it (10,000 characters for a commit message, 1 MB for a changelog file, 256 for a version string, 214 for a package name).
 
-👉 See [ARCHITECTURE.md](./ARCHITECTURE.md) for detailed design principles, data flow diagrams, and module composition.
+👉 See the [architecture guide](https://www.hyperfrontend.dev/docs/libraries/versioning/architecture/) for detailed design principles, data flow diagrams, and module composition.
 
 ## Why Use @hyperfrontend/versioning?
 
