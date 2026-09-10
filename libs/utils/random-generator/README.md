@@ -33,6 +33,15 @@
   <img src="https://img.shields.io/badge/tree%20shakeable-%E2%9C%93-success?style=flat-square" alt="Tree Shakeable">
 </p>
 
+<p align="center">
+  <a href="https://www.hyperfrontend.dev/docs/libraries/utils/random-generator/">
+    <img width="640" src="https://www.hyperfrontend.dev/media/random-generator-shapes/hero.gif" alt="Two histograms of four thousand samples filling side by side: uniform(0, 100) settles into a flat row of even blue bars, gaussian(0, 100) into a tall green bell">
+  </a>
+</p>
+<p align="center">
+  <sub>Real bin counts, both panels drawn to one scale, so what differs is the shape and not the sample size. The bell is the draw Math.random cannot give you.</sub>
+</p>
+
 Statistical random distributions and UUID generation for simulations, testing, and procedural content.
 
 • 👉 See [**documentation**](https://www.hyperfrontend.dev/docs/libraries/utils/random-generator/)
@@ -52,7 +61,7 @@ Unlike cryptographic random generators (like Web Crypto API), these utilities pr
 - **UUID v4 generation** with validation (`uuidV4()`, `isUuidV4()`)
 - **Stateless seeded hash** (`randomPseudo()`) for one-off reproducible values
 - **Time-based seeding** for pseudo-random variations
-- **Zero dependencies** - Self-contained implementation with no third-party runtime dependencies
+- **No third-party dependencies**: at runtime it imports only JavaScript built-ins and `@hyperfrontend` utilities
 - **Pure functions** for functional composition
 
 ### Architecture Highlights
@@ -134,26 +143,26 @@ console.log(isUuidV4('not-a-uuid')) // false
 
 ## API Overview
 
-### Statistical Distributions
+Five distributions, one call shape: parameters that describe the shape go in, a single number comes out.
+[`randomGaussian(min, max)`](https://www.hyperfrontend.dev/docs/libraries/utils/random-generator/#api-randomGaussian) clusters draws around the midpoint of a
+bounded range and never leaves it, [`randomExponential(lambda)`](https://www.hyperfrontend.dev/docs/libraries/utils/random-generator/#api-randomExponential)
+decays with a mean of `1 / lambda`, and [`randomPowerLaw(alpha, min, max)`](https://www.hyperfrontend.dev/docs/libraries/utils/random-generator/#api-randomPowerLaw)
+piles most of its mass near `min` while keeping a long tail out to `max`; `randomLogarithmic` and `randomUniform` cover the skewed and the flat cases. Every one
+of them ends with an optional `source: () => number` that defaults to `Math.random`, and that last parameter is the seam the rest of the package plugs into.
 
-- **`randomUniform(min, max)`** - Uniform distribution (flat probability)
-- **`randomGaussian(min, max)`** - Gaussian/normal distribution (bell curve)
-- **`randomExponential(lambda)`** - Exponential distribution (decay)
-- **`randomPowerLaw(alpha, min, max)`** - Power law distribution (long tail; alpha is the standard Pareto exponent, so a higher alpha concentrates more mass near min)
-- **`randomLogarithmic(scale)`** - Logarithmic distribution
+[`createRandomGenerator(seed)`](https://www.hyperfrontend.dev/docs/libraries/utils/random-generator/#api-createRandomGenerator) fills the seam. It returns a
+frozen object carrying the `seed` it was opened with, a `next()` that draws the stream's unit values, and one method per distribution, so a whole procedural
+scene or fixture set becomes a function of one number and replays draw for draw on any machine. The methods share a single stream, which means the order of the
+calls is part of what the seed reproduces. `next` is a plain function and detaches cleanly, so `randomUniform(0, 360, stream.next)` puts a free-standing
+distribution on the same stream.
 
-Every distribution takes an optional trailing `source: () => number` and defaults to `Math.random`.
+Two smaller pieces sit outside the stream. [`randomPseudo(seed)`](https://www.hyperfrontend.dev/docs/libraries/utils/random-generator/#api-randomPseudo) is a
+stateless hash rather than a generator: one seed maps to one value forever, which is what you want for a single reproducible number and not what you want for a
+sequence (`randomPseudoTimeBased` is the same hash over a `Date`, which is how you get a variation that holds steady for a day or an hour). And
+[`uuidV4()`](https://www.hyperfrontend.dev/docs/libraries/utils/random-generator/#api-uuidV4) generates a version 4 id, drawing from a seeded source when you
+hand it one, with `isUuidV4` to check a string coming back the other way.
 
-### Seeded Generation
-
-- **`createRandomGenerator(seed)`** - A seeded stream with `next()`, `uniform`, `gaussian`, `exponential`, `powerLaw`, `logarithmic`, and `uuidV4` that replays exactly for the same seed
-- **`randomPseudo(seed)`** - Stateless seeded hash (one value per seed, reproducible)
-- **`randomPseudoTimeBased(seedTime)`** - Time-based seeding for date/time variations
-
-### UUID Utilities
-
-- **`uuidV4(source?)`** - Generate RFC 4122 version 4 UUID, from a seeded source when given one
-- **`isUuidV4(str)`** - Validate UUID v4 format
+Every parameter, bound and return type is in the [API reference](https://www.hyperfrontend.dev/docs/libraries/utils/random-generator/#api-reference).
 
 ## Use Cases
 
