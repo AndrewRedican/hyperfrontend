@@ -43,7 +43,16 @@ Modular DOM utilities for dynamic styling, gesture detection, element lifecycle,
 
 Sometimes a framework is not on the table. You are writing an embed that drops into someone else's page, a debug overlay, a script tag, a canvas experiment: something where React would be more runtime than the thing it wraps. So you are back to `document.createElement` and `appendChild`, a `<style>` tag you have to remember to remove, and a `ResizeObserver` you have to remember to disconnect. This package is that pile of chores, written once and tested.
 
-The parts worth the install: `createElement` gives you the node plus attach, detach, show, and hide, with an opacity transition when you pass a duration. `addStylesheet` injects real CSS and hands back the function that removes it, so your rules leave when your widget does. `syncElementDimensions` pins an overlay to an element you do not control and keeps it there through resizes. `getElementAsync` polls for a node that has not rendered yet and returns a cancel function. `createGestureListener` covers Escape and pinch-out with one cleanup. `setupAudio` waits for the click or touch that browsers require before an `AudioContext` will start. Anything that attaches something gives you back the function that detaches it.
+The parts worth the install:
+
+- `createElement` gives you the node plus attach, detach, show, and hide, with an opacity transition when you pass a duration.
+- `addStylesheet` injects real CSS and hands back the function that removes it, so your rules leave when your widget does.
+- `syncElementDimensions` pins an overlay to an element you do not control and keeps it there through resizes.
+- `getElementAsync` polls for a node that has not rendered yet and returns a cancel function.
+- `createGestureListener` covers Escape and pinch-out with one cleanup.
+- `setupAudio` waits for the click or touch that browsers require before an `AudioContext` will start.
+
+Anything that attaches something gives you back the function that detaches it.
 
 At a glance:
 
@@ -80,7 +89,7 @@ removeStyles()
 
 ### Architecture Highlights
 
-Each capability sits behind its own secondary entry point (`/element`, `/style`, `/selector`, `/color`, `/event`, `/audio`, `/mobile`, `/time`, `/misc`, `/component`), so importing one never drags in the rest. The pattern throughout is that anything touching the document returns its own undo: `addStylesheet` returns the style element and a remover, `onElementResize` and `syncElementDimensions` return disconnect functions, `getElementAsync` returns a cancel function. Everything is built on plain browser APIs (`ResizeObserver`, touch events, Web Audio) with no third-party dependencies.
+Each capability sits behind its own secondary entry point (`/element`, `/style`, `/selector`, `/color`, `/event`, `/audio`, `/mobile`, `/time`, `/misc`, `/component`), so importing one never drags in the rest. Everything is built on plain browser APIs (`ResizeObserver`, touch events, Web Audio) with no third-party dependencies.
 
 ## Why Use @hyperfrontend/ui-utils?
 
