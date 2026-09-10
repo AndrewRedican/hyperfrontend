@@ -55,10 +55,6 @@ Unlike the native timing APIs which offer limited lifecycle control, this librar
 - **Zero dependencies** - Self-contained timing utilities with no external dependencies
 - **TypeScript native** - Full type definitions with comprehensive JSDoc documentation
 
-### Architecture Highlights
-
-All timing abstractions maintain internal state privately while exposing frozen API objects, following the revealing module pattern. Timer implementations track elapsed time explicitly to enable pause/resume functionality, while clock implementations manage subscriber arrays with simple filter-based unsubscription. The library avoids classes and prototypes in favor of factory functions that return object literals.
-
 ## Why Use @hyperfrontend/time-utils?
 
 ### 1. Pause/Resume Capabilities Native APIs Lack
