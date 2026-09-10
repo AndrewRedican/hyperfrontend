@@ -33,6 +33,15 @@
   <img src="https://img.shields.io/badge/tree%20shakeable-%E2%9C%93-success?style=flat-square" alt="Tree Shakeable">
 </p>
 
+<p align="center">
+  <a href="https://www.hyperfrontend.dev/docs/libraries/project-scope/">
+    <img width="640" src="https://www.hyperfrontend.dev/media/project-scope-detect/hero.gif" alt="Confidence bars filling one after another as four repositories are read: React, Vue, Svelte and Angular settle between 70 and 90 percent, SvelteKit stops at 20, Vite and the Nx workspace reach 100, and the test runner bar stays empty at zero">
+  </a>
+</p>
+<p align="center">
+  <sub>Four repositories read without being installed, built or run: the number beside each detection is what lets a tool decide whether to act on it or ask.</sub>
+</p>
+
 Comprehensive project analysis, technology stack detection, and transactional virtual file system for Node.js tooling.
 
 • 👉 See [**documentation**](https://www.hyperfrontend.dev/docs/libraries/project-scope/)
@@ -127,7 +136,7 @@ console.log(
 ### Virtual File System
 
 ```typescript
-import { createTree, Mode } from '@hyperfrontend/project-scope'
+import { createTree, commitChanges, rollbackChanges } from '@hyperfrontend/project-scope'
 
 const tree = createTree('./my-project')
 
@@ -135,88 +144,58 @@ tree.write('src/new-file.ts', 'export const hello = "world"')
 tree.rename('src/old.ts', 'src/renamed.ts')
 tree.delete('src/deprecated.ts')
 
-tree.commitChanges() // Atomic commit, or rollbackChanges() to discard
+commitChanges(tree) // Atomic commit, or rollbackChanges(tree) to discard
 ```
 
 ### CLI
 
-```bash
-project-scope analyze ./my-project --format json
-project-scope config ./my-project --type typescript,eslint
-project-scope tree ./my-project --depth 3
+The package declares no `bin`, so nothing is installed onto your `PATH`. The commands are reached by calling `run()` with the argument list yourself, from a script or from your own tool's binary:
+
+```typescript
+import { run } from '@hyperfrontend/project-scope'
+
+run(['analyze', './my-project', '--format', 'json'])
+run(['config', './my-project', '--type', 'typescript,eslint'])
+
+const result = run(['tree', './my-project', '--depth', '3'])
+process.exit(result.exitCode)
 ```
 
 ## API Overview
 
-### Analysis
+The surface answers three questions about a directory on disk, and which one you are asking decides what you reach for.
 
-- **`analyzeProject(path, options?): AnalysisResult`** - Comprehensive project analysis
-- **`detectProjectType(path): ProjectTypeDetection`** - Classify project type with evidence
-- **`identifyFrameworks(path): FrameworkIdentification`** - Detect frameworks with confidence scores
-- **`discoverEntryPoints(path): EntryPointInfo[]`** - Find application entry points
-- **`buildDependencyGraph(path): DependencyGraph`** - Build internal dependency graph
+**What is this repository?** `analyzeProject(dir)` answers the whole question in one call and returns an
+[`AnalysisResult`](https://www.hyperfrontend.dev/docs/libraries/project-scope/models/#api-AnalysisResult): project type, workspace type, frameworks,
+build tools, testing frameworks, entry points, config files and a dependency summary, all in one object. Nothing is installed, built or executed to
+produce it.
 
-### Technology Detection
+Each detection carries a `confidence` from 0 to 100 and the evidence that earned it, and that number is the useful part: a repository with a Svelte
+dependency but no SvelteKit routing scores SvelteKit at 20, which is the signal a tool needs to ask rather than assume. When the whole report is more
+than you want, [`detectProjectType`](https://www.hyperfrontend.dev/docs/libraries/project-scope/heuristics/#api-detectProjectType) classifies the
+project alone and [`detectAll`](https://www.hyperfrontend.dev/docs/libraries/project-scope/tech/#api-detectAll) runs only the technology detectors.
+Results are memoised for 30 to 60 seconds, so a loop over a monorepo does not re-read the same package twice.
 
-- **`detectAll(path): AllDetections`** - Run all technology detectors
-- **`frameworkDetectors`** - Individual framework detectors (React, Vue, Angular, etc.)
-- **`backendDetectors`** - Backend framework detectors (Express, NestJS, Fastify, etc.)
-- **`buildToolDetectors`** - Build tool detectors (Webpack, Vite, Rollup, etc.)
-- **`testingDetectors`** - Testing framework detectors (Jest, Vitest, Cypress, etc.)
+**Where are its pieces?** [`discoverEntryPoints`](https://www.hyperfrontend.dev/docs/libraries/project-scope/heuristics/#api-discoverEntryPoints) works
+out what the project actually starts from, reading `exports`, `main` and `bin` off the manifest and scoring convention and framework paths beside them, and
+[`buildDependencyGraph`](https://www.hyperfrontend.dev/docs/libraries/project-scope/heuristics/#api-buildDependencyGraph) follows first-party imports
+through the source to a graph with its roots and leaves marked. Root and workspace finders walk upwards from any nested path, so a tool handed one
+file can still locate the repository it belongs to.
 
-### Project Utilities
+**How do I change it safely?** [`createTree(dir)`](https://www.hyperfrontend.dev/docs/libraries/project-scope/vfs/#api-createTree) returns a `Tree` that
+buffers every write, delete, rename and permission change in memory; `exists()` and `read()` see those pending changes, so the tree reads as though the
+edits had already landed. Committing is a free function rather than a method: `commitChanges(tree)` applies the batch to disk and reports what it did,
+`commitChanges(tree, { dryRun: true })` reports the same without touching anything, and `rollbackChanges(tree)` discards it. Paths that escape the root
+are rejected before any of that.
 
-- **`readPackageJson(path): PackageJson`** - Parse package.json
-- **`findProjectRoot(path): string`** - Find nearest project root
-- **`findWorkspaceRoot(path): string`** - Find monorepo/workspace root
-- **`detectConfigs(path, types?): ConfigFileInfo[]`** - Find configuration files
+Subpath imports narrow the surface rather than adding to it. `/heuristics` is the inference layer above, `/tech` is the detector catalogue (with
+`/tech/frontend`, `/tech/build`, `/tech/testing` and their siblings splitting it by category), `/project` reads package manifests, config files and
+repository roots, `/nx` reads `nx.json` and `project.json` for Nx-shaped repos, `/vfs` is the transactional tree, `/models` is types only, and `/core`
+holds the filesystem, path, encoding and platform primitives everything else is built from. `/cli` is the command layer: the package declares no `bin`,
+so [`run(argv)`](https://www.hyperfrontend.dev/docs/libraries/project-scope/cli/#api-run) is how `analyze`, `config`, `deps` and `tree` are invoked,
+from your own binary rather than from a shell.
 
-### Virtual File System
-
-- **`createTree(path, options?): Tree`** - Create transactional file tree
-- **`Mode`** - Write modes: `Overwrite`, `ExclusiveCreate`, `SkipIfExists`
-- Tree methods: `read()`, `write()`, `exists()`, `delete()`, `rename()`, `commitChanges()`, `rollbackChanges()`
-
-### NX Integration
-
-- **`isNxWorkspace(path): boolean`** - Check if directory is NX workspace
-- **`getNxWorkspaceInfo(path): NxWorkspaceInfo`** - Get workspace details
-- **`findNxProjects(path): NxProjectConfig[]`** - Find all projects
-
-### Core Utilities
-
-- **File System:** `readFileContent()`, `writeFileContent()`, `readJsonFile()`, `exists()`, `isFile()`, `isDirectory()`
-- **Path:** `normalizePath()`, `joinPath()`, `resolvePath()`, `relativePath()`
-- **Encoding:** `detectEncoding()`, `convertEncoding()`
-- **Platform:** `detectPlatform()`, `isWindows()`, `isMacOS()`, `isLinux()`
-
-## Secondary Entry Points
-
-Import specific modules for tree-shaking optimization:
-
-```typescript
-// Core utilities
-import { readFileContent, writeFileContent } from '@hyperfrontend/project-scope/core/fs'
-import { normalizePath, joinPath } from '@hyperfrontend/project-scope/core/path'
-
-// Heuristics
-import { detectProjectType } from '@hyperfrontend/project-scope/heuristics/project-type'
-import { discoverEntryPoints } from '@hyperfrontend/project-scope/heuristics/entry-points'
-
-// Technology detection
-import { detectAll } from '@hyperfrontend/project-scope/tech'
-import { reactDetector } from '@hyperfrontend/project-scope/tech/frontend'
-
-// Project utilities
-import { readPackageJson } from '@hyperfrontend/project-scope/project/package'
-import { detectConfigs } from '@hyperfrontend/project-scope/project/config'
-
-// Virtual file system
-import { createTree, Mode } from '@hyperfrontend/project-scope/vfs'
-
-// NX integration
-import { isNxWorkspace, findNxProjects } from '@hyperfrontend/project-scope/nx'
-```
+Every export, option and return type is in the [API reference](https://www.hyperfrontend.dev/docs/libraries/project-scope/#api-reference).
 
 ## Compatibility
 
