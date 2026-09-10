@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next'
 import { Analytics } from '@/components/analytics/analytics'
+import { CodeBlockLight } from '@/components/code-block-light'
 import { ConsentBanner } from '@/components/consent/consent-banner'
 import { JsonLd } from '@/components/json-ld'
 import { ThemeProvider } from '@/components/theme-provider'
@@ -86,6 +87,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
           }}
         />
         <ThemeProvider>{children}</ThemeProvider>
+        <CodeBlockLight />
         <Analytics />
         <ConsentBanner />
       </body>

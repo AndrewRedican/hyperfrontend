@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef } from 'react'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { setTimeout, clearTimeout } from '@hyperfrontend/immutable-api-utils/built-in-copy/timers'
 import { useHashNavigation } from '../hooks/use-hash-navigation'
+import { injectLanguageLabels } from '../lib/code-block-dom'
 import { createHeadingSlugger } from '../lib/slug'
 import { CONTENT_ANCHORS_EVENT } from './document/content-anchors'
 import { MermaidDiagram } from './mermaid-diagram'
@@ -280,6 +281,7 @@ export function ReadmeContent({ html, mermaidDiagrams, slots }: ReadmeContentPro
 
     proseContainers.forEach((proseContainer) => {
       cleanupFunctions.push(injectCopyButtons(proseContainer as HTMLElement))
+      cleanupFunctions.push(injectLanguageLabels(proseContainer as HTMLElement))
       cleanupFunctions.push(injectHeadingAnchors(proseContainer as HTMLElement, slugger))
     })
 
@@ -309,8 +311,7 @@ export function ReadmeContent({ html, mermaidDiagrams, slots }: ReadmeContentPro
     prose-code:rounded prose-code:bg-slate-100 prose-code:px-1.5 prose-code:py-0.5
     prose-code:font-normal prose-code:text-slate-700 prose-code:before:content-none prose-code:after:content-none
     dark:prose-code:bg-slate-800 dark:prose-code:text-slate-300
-    prose-pre:relative prose-pre:border prose-pre:border-slate-200 dark:prose-pre:border-slate-700
-    prose-pre:rounded-lg prose-pre:overflow-x-auto
+    prose-pre:relative prose-pre:overflow-x-auto prose-pre:bg-transparent
     [&_pre_code]:bg-transparent [&_pre_code]:p-0
     [&_pre_code]:text-sm [&_pre_code]:leading-relaxed
     prose-table:border prose-table:border-slate-200 dark:prose-table:border-slate-700
