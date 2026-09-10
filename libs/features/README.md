@@ -54,8 +54,6 @@ SDK, CLI, and dev server for building, embedding, and orchestrating hyperfronten
 
 Embedding another team's app inside your page usually means an iframe, a pile of `postMessage` conventions nobody wrote down, and a frame that never quite fits the space you gave it. `@hyperfrontend/features` turns that into a contract: the feature app declares what it sends, what it accepts, and which display modes it supports; the host picks a mode and gets a typed handle back. The messaging protocol underneath is [`@hyperfrontend/nexus`](https://www.hyperfrontend.dev/docs/libraries/nexus/), and this package adds everything around it: iframe management, display modes and sizing, the open/close lifecycle, and a CLI that packages a feature app into an installable shell.
 
-<!-- TODO(asset): 20-second capture of a host page opening a feature in dialog mode with the hf dev debug UI streaming the handshake alongside -->
-
 ```typescript
 // In the feature app, from '@hyperfrontend/features/hostee'
 const feature = createFeature({ name: 'checkout', contract })
@@ -67,6 +65,15 @@ const checkout = createShell({ modes: { dialog: mountDialog }, url: 'https://che
 checkout.on('order-placed', (order) => showReceipt(order))
 checkout.open({ displayMode: DisplayMode.Dialog })
 ```
+
+<p align="center">
+  <a href="https://www.hyperfrontend.dev/docs/libraries/features/architecture/">
+    <img width="640" src="https://www.hyperfrontend.dev/media/feature-session/hero.gif" alt="A Host panel and a Feature panel joined by a wire, with each named message travelling across it as a dot and landing in a growing log below: three nexus handshake frames, then __hf:present carrying mode dialog and a 720 by 540 viewport, then a repeating __hf:beat, then a single order-placed message">
+  </a>
+</p>
+<p align="center">
+  <sub>Everything above the last line is the session being established for you; <code>order-placed</code> is the only message either app actually wrote.</sub>
+</p>
 
 It is organized into independent subpath entry points so consumers import only the surface they need.
 
@@ -167,15 +174,26 @@ npx @hyperfrontend/features serve --root dist   # serve a built site for product
 
 ## API Overview
 
-| Entry point                      | Purpose                                            |
-| -------------------------------- | -------------------------------------------------- |
-| `@hyperfrontend/features`        | Shared types, contract validation, `defineConfig`  |
-| `@hyperfrontend/features/host`   | Host-side SDK (shell, display modes, lifecycle)    |
-| `@hyperfrontend/features/hostee` | Hostee-side SDK (feature init, lifecycle)          |
-| `@hyperfrontend/features/cli`    | CLI (`init`, `build`, `dev`, `serve`) and `hf` bin |
-| `@hyperfrontend/features/server` | Dev server, debug UI, and production static server |
+Two of the entry points are runtimes, one per side of the frame, and an app imports exactly one. `/host` gives a host page
+[`createShell`](https://www.hyperfrontend.dev/docs/libraries/features/host/#api-createShell): hand it a feature URL and a map of display modes, get back a
+`ShellHandle` to `open`, `send` to, listen `on` and `close`. `/hostee` gives a feature app
+[`createFeature`](https://www.hyperfrontend.dev/docs/libraries/features/hostee/#api-createFeature): hand it the contract that app will speak, get back a
+`FeatureHandle` of the same shape. Both return synchronously; the feature awaits `ready()`, and the host watches its shell's `open`, `close` and `error` events.
 
-> Using Nx? `nx add @hyperfrontend/features` installs the package and runs its `init` generator to declare the dependency. The package also ships `init`/`feature` generators and `build`/`serve` executors, importable from the `@hyperfrontend/features/nx/generators` and `@hyperfrontend/features/nx/executors` entry points, that use the consumer workspace's `@nx/devkit` for formatting and installs when present, falling back to built-in equivalents.
+The root entry is the DOM-free one: the contract, config and payload types both runtimes share, the `defineConfig` helper a `feature.config.*` file exports, and
+`validateContract` for checking one before it ever reaches a wire. Import it from build scripts, config files and Node tests, where reaching for `/host` or
+`/hostee` would drag a browser runtime along.
+
+The last two entry points are Node tooling, importable as modules because the `hf` bin is only a thin argv wrapper over them. `/cli` is `init`, `build`, `dev` and
+`serve` as functions, for when a shell invocation will not do. `/server` is the machinery under two of those:
+[`startDevServer`](https://www.hyperfrontend.dev/docs/libraries/features/server/#api-startDevServer) for the multi-app dev server and its traffic-inspecting debug
+UI, and [`startStaticServer`](https://www.hyperfrontend.dev/docs/libraries/features/server/#api-startStaticServer) for production hosting.
+
+What `build` emits is the part worth knowing: a feature becomes a self-contained shell package with its direct dependencies bundled in, so a host installs that one
+package and inherits no transitive install burden. Nx workspaces reach the same tooling as plugin targets, through `init` and `feature` generators and `build` and
+`serve` executors under the `nx/generators` and `nx/executors` subpaths; `nx add @hyperfrontend/features` installs the package and runs the `init` one for you.
+
+Every option, handle, contract and payload type is in the [API reference](https://www.hyperfrontend.dev/docs/libraries/features/#api-reference).
 
 ## Compatibility
 
