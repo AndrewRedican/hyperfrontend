@@ -1,3 +1,8 @@
+/**
+ * Scoped logger factory with a per-call-site log level.
+ *
+ * @module @hyperfrontend/project-scope/core/logger
+ */
 import type { Logger, LogLevel } from '@hyperfrontend/logging'
 import { isArray } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
 import { error, warn, log, info, debug } from '@hyperfrontend/immutable-api-utils/built-in-copy/console'
