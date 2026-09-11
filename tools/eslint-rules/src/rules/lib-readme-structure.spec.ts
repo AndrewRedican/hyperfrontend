@@ -367,13 +367,28 @@ A short description here.
       expect(result).toBeNull()
     })
 
-    it('skips HTML tags except links', () => {
+    it('skips HTML tags', () => {
       const content = `Line 0
 </p>
 <div>skip me</div>
 A description`
       const result = extractShortDescription(content, 2)
       expect(result?.text).toBe('A description')
+    })
+
+    it('skips a centred hero block so the description under it is still checked', () => {
+      const content = `Line 0
+</p>
+
+<p align="center">
+  <a href="https://www.hyperfrontend.dev/docs/libraries/thing/">
+    <img src="https://www.hyperfrontend.dev/media/thing/hero.gif" alt="A capture">
+  </a>
+</p>
+
+A short description here.`
+      const result = extractShortDescription(content, 2)
+      expect(result).toEqual({ text: 'A short description here.', line: 10 })
     })
 
     it('skips a bare markdown image so the real description is still checked', () => {

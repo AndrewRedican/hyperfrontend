@@ -358,7 +358,7 @@ export function extractShortDescription(content: string, badgesEndLine: number):
       continue
     }
 
-    if (line.startsWith('<') && !line.startsWith('<a')) {
+    if (line.startsWith('<')) {
       continue
     }
 
