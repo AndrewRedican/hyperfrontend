@@ -1,20 +1,12 @@
 'use client'
 
 import type { MarkdownSection } from '@/lib/slug'
-import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
+import { useEffect, useId, useMemo, useState } from 'react'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { keys } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
-import { cancelAnimationFrame, requestAnimationFrame } from '@hyperfrontend/immutable-api-utils/built-in-copy/timers'
-import { CONTENT_ANCHORS_EVENT } from './content-anchors'
+import { useReachedAnchor } from '../../hooks/use-reached-anchor'
 import { CaretIcon } from './document-icons'
-
-/**
- * Distance below the viewport top, in pixels, at which a heading counts as
- * reached. The site header is 64px tall and headings carry `scroll-mt-20`, so
- * a heading the reader has just jumped to sits at 80px; the marker is placed
- * just past it, where a heading is unambiguously behind the reader.
- */
-const REACHED_MARKER = 96
+import { ACTIVE_EDGE, ACTIVE_TEXT, INACTIVE_TEXT, RAIL } from './rail-styles'
 
 /** A top-level entry, with the subsections filed beneath it. */
 interface IndexGroup {
@@ -60,11 +52,8 @@ export interface DocumentIndexProps {
  *
  * Entries are plain anchors, so a section is reachable before any script runs
  * and the browser's own smooth scrolling and history handling apply. Which
- * entry is highlighted is worked out from where the headings currently sit
- * rather than from an intersection ratio: reading the positions directly gives
- * the same answer scrolling up as scrolling down, needs no observer to be
- * re-registered when the anchors are attached late, and lands on the right
- * entry when the page is opened straight at a heading.
+ * entry is highlighted is the reading position {@link useReachedAnchor}
+ * tracks, worked out from where the headings currently sit.
  *
  * Subsections stay folded under the section that owns them, and the one group
  * the reader is currently inside opens. A reference document can carry thirty
@@ -84,12 +73,12 @@ export interface DocumentIndexProps {
  * ```
  */
 export function DocumentIndex({ sections, onNavigate }: DocumentIndexProps) {
-  const [active, setActive] = useState('')
   const [overrides, setOverrides] = useState<Record<string, boolean>>({})
-  const frameRef = useRef(0)
   const baseId = useId()
 
   const groups = useMemo(() => groupSections(sections), [sections])
+  const anchors = useMemo(() => sections.map((section) => section.anchor), [sections])
+  const active = useReachedAnchor(anchors)
 
   // why: the highlight lands on whichever entry the reader has reached, and the group that opens is the one owning it, so a subsection and its parent are the same answer
   const ownerOf = useMemo(() => {
@@ -101,52 +90,6 @@ export function DocumentIndex({ sections, onNavigate }: DocumentIndexProps) {
     return owners
   }, [groups])
 
-  const update = useCallback(() => {
-    frameRef.current = 0
-
-    let reached = ''
-    let first = ''
-
-    for (const { anchor } of sections) {
-      const heading = document.getElementById(anchor)
-      if (!heading) continue
-      if (!first) first = anchor
-      if (heading.getBoundingClientRect().top > REACHED_MARKER) break
-      reached = anchor
-    }
-
-    // why: the last section is often too short to push its heading past the marker, so at the end of the document it is chosen by where the reader is rather than by where its heading is
-    const atEnd = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 2
-    if (atEnd) {
-      for (const { anchor } of sections) {
-        if (document.getElementById(anchor)) reached = anchor
-      }
-    }
-
-    setActive(reached || first)
-  }, [sections])
-
-  useEffect(() => {
-    const schedule = () => {
-      if (!frameRef.current) frameRef.current = requestAnimationFrame(update)
-    }
-
-    schedule()
-    window.addEventListener('scroll', schedule, { passive: true })
-    window.addEventListener('resize', schedule)
-    window.addEventListener('hashchange', schedule)
-    window.addEventListener(CONTENT_ANCHORS_EVENT, schedule)
-
-    return () => {
-      if (frameRef.current) cancelAnimationFrame(frameRef.current)
-      frameRef.current = 0
-      window.removeEventListener('scroll', schedule)
-      window.removeEventListener('resize', schedule)
-      window.removeEventListener('hashchange', schedule)
-      window.removeEventListener(CONTENT_ANCHORS_EVENT, schedule)
-    }
-  }, [update])
-
   const activeGroup = ownerOf.get(active) ?? ''
 
   useEffect(() => {
@@ -157,7 +100,7 @@ export function DocumentIndex({ sections, onNavigate }: DocumentIndexProps) {
   if (groups.length === 0) return null
 
   return (
-    <ul className="space-y-0.5 border-l border-slate-200 dark:border-slate-800">
+    <ul className={`space-y-0.5 ${RAIL}`}>
       {groups.map(({ section, children }) => {
         const panelId = `${baseId}-${section.anchor}`
         const open = overrides[section.anchor] ?? section.anchor === activeGroup
@@ -212,12 +155,3 @@ export function DocumentIndex({ sections, onNavigate }: DocumentIndexProps) {
     </ul>
   )
 }
-
-/** Left edge drawn over the guide rail for the entry the reader has reached. */
-const ACTIVE_EDGE = 'border-primary-600 dark:border-primary-400'
-
-/** Type treatment for that entry. */
-const ACTIVE_TEXT = 'font-medium text-primary-700 dark:text-primary-300'
-
-/** Type treatment for every other entry, which picks up the rail on hover. */
-const INACTIVE_TEXT = 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100'
