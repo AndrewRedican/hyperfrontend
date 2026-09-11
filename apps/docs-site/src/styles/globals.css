@@ -58,6 +58,45 @@
     @apply bg-white text-slate-900 antialiased dark:bg-slate-900 dark:text-slate-100;
   }
 
+  /* A heading is the one run of text on this site that is routinely a single
+     unbreakable word: a package name at forty pixels, an API symbol, a
+     command. Every heading here is also laid out as a flex row so its anchor
+     can sit beside it, and a flex item refuses to shrink below the width of
+     its longest word, so on a phone that word takes the whole page sideways
+     with it. `anywhere` rather than `break-word` because only `anywhere`
+     lowers the box's min-content size, which is the number the flex item is
+     refusing to go below; an ordinary heading with ordinary words is left
+     exactly as it was, since a break inside a word is taken only when no
+     other break would keep the line inside its box. */
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    overflow-wrap: anywhere;
+  }
+
+  /* Inline code is the other run of text that is routinely one word, and in
+     a reference it is routinely a long one: a path, a package subpath, six
+     event names joined with slashes. Given a break opportunity nowhere else,
+     it takes one inside the token rather than past the edge of the screen. A
+     block of code is unaffected, because a block never wraps at all: it keeps
+     its whitespace and scrolls, which is the behaviour set on `pre.shiki`. */
+  code {
+    overflow-wrap: anywhere;
+  }
+
+  /* And the page's own text, for the same reason: a reference description
+     that ends in a bare URL is a paragraph with one word wider than a phone.
+     The property inherits, so setting it on the page column reaches every
+     run of text a document renders, generated reference included, and it
+     changes nothing about a line that already fits: the break inside a word
+     is the breaker's last resort, not its first. */
+  main {
+    overflow-wrap: anywhere;
+  }
+
   /* Global focus-visible styles for accessibility */
   a:focus-visible,
   button:focus-visible {
@@ -152,12 +191,21 @@
 
      What is not translucent is the text. Every alpha here is on the surface
      under it, never on the ink, because a code block that is pleasant to look
-     at and tiring to read is a failure at the only thing it is for. */
+     at and tiring to read is a failure at the only thing it is for.
+
+     The block never widens whatever holds it. Its own box is capped at the
+     width it is given and the sample scrolls inside it, which is the one
+     behaviour that keeps a phone's page the width of the phone: the viewport
+     sets the page, the page sets the column, the column sets the block, and
+     a line longer than the block moves under the reader's finger rather than
+     dragging the whole document sideways. Nothing wraps, because a wrapped
+     command is a different command. */
   pre.shiki {
     position: relative;
     isolation: isolate;
     margin: 0;
     padding: 1rem 1.125rem;
+    max-width: 100%;
     border-radius: 0.625rem;
     overflow-x: auto;
     font-size: theme('fontSize.sm');
@@ -448,7 +496,8 @@
 
   .key-features__item {
     display: grid;
-    grid-template-columns: 1.75rem 1fr;
+    /* why: a track that can shrink to nothing, so a long inline code in a label wraps on a narrow phone instead of widening the run and the page with it */
+    grid-template-columns: 1.75rem minmax(0, 1fr);
     align-items: baseline;
     margin: 0;
     padding: 0 0 1.125rem;
@@ -693,20 +742,10 @@
      and a heading that wraps early inside a column with room to spare is the
      clearest signal of the inner container this rule exists not to be.
 
+
      Scoped to `.doc-measure` rather than applied to every `.prose` on the site
      because the article pages set their own, narrower, editorial width and
      must not be pulled to this one. */
-  /* The other end of the same problem. A README's title is a package name, and
-     a package name is one unbreakable word set at forty pixels: on a phone it
-     is wider than the screen, and because the anchor link turns every heading
-     into a flex row, the word cannot shrink and takes the whole page sideways
-     with it. `anywhere` rather than `break-word` because only `anywhere`
-     lowers the box's min-content size, which is the number the flex item is
-     refusing to go below. */
-  .readme-content :is(h1, h2, h3, h4, h5, h6) {
-    overflow-wrap: anywhere;
-  }
-
   @media (min-width: 1920px) {
     .doc-measure {
       --doc-measure: 58rem;
@@ -720,9 +759,24 @@
        whole column. A mermaid diagram needs no rule here: it is rendered as a
        sibling of the prose containers rather than inside one, so it already
        spans the column. */
-    .doc-measure .readme-content > .prose > :is(h1, h2, h3, h4, h5, h6, pre, table, figure, img, hr) {
+    .doc-measure .readme-content > .prose > :is(h1, h2, h3, h4, h5, h6, pre, table, .table-scroll, figure, img, hr) {
       max-width: none;
     }
+  }
+}
+
+@layer components {
+  /* A markdown table on a phone.
+
+     A reference table is the second thing on a documentation page, after a
+     long line of code, that is legitimately wider than a phone. It is not
+     asked to wrap: a table whose cells fold onto three lines each is harder to
+     read than one that scrolls. It is wrapped at render time in this box
+     instead, which is the width of its column and scrolls sideways when the
+     table inside is wider, so the table moves and the page does not. */
+  .table-scroll {
+    max-width: 100%;
+    overflow-x: auto;
   }
 }
 

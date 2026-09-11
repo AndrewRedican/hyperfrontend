@@ -52,12 +52,13 @@ export default function ContributingPage() {
       {/* Getting Started */}
       <section className="mt-12">
         <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Getting Started</h2>
+        {/* why: each step's body is a flex item beside its marker, and a flex item will not shrink below its content unless told to; without min-w-0 a long command widens the step, the page, and the phone's viewport with it */}
         <ol className="mt-4 space-y-4 text-slate-600 dark:text-slate-400">
           <li className="flex gap-3">
             <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary-100 text-sm font-semibold text-primary-700 dark:bg-primary-900/50 dark:text-primary-300">
               1
             </span>
-            <div>
+            <div className="min-w-0 flex-1">
               <strong className="text-slate-900 dark:text-white">Fork the repository</strong>
               <p className="mt-1">
                 Create your own fork of{' '}
@@ -72,18 +73,16 @@ export default function ContributingPage() {
             <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary-100 text-sm font-semibold text-primary-700 dark:bg-primary-900/50 dark:text-primary-300">
               2
             </span>
-            <div>
+            <div className="min-w-0 flex-1">
               <strong className="text-slate-900 dark:text-white">Clone and install</strong>
-              <CodeBlock
-                code="git clone https://github.com/YOUR_USERNAME/hyperfrontend.git&#10;cd hyperfrontend&#10;npm install"
-              />
+              <CodeBlock code={'git clone https://github.com/YOUR_USERNAME/hyperfrontend.git\ncd hyperfrontend\nnpm install'} />
             </div>
           </li>
           <li className="flex gap-3">
             <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary-100 text-sm font-semibold text-primary-700 dark:bg-primary-900/50 dark:text-primary-300">
               3
             </span>
-            <div>
+            <div className="min-w-0 flex-1">
               <strong className="text-slate-900 dark:text-white">Create a branch</strong>
               <CodeBlock code="git checkout -b feat/your-feature-name" />
             </div>
@@ -92,7 +91,7 @@ export default function ContributingPage() {
             <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary-100 text-sm font-semibold text-primary-700 dark:bg-primary-900/50 dark:text-primary-300">
               4
             </span>
-            <div>
+            <div className="min-w-0 flex-1">
               <strong className="text-slate-900 dark:text-white">Make your changes</strong>
               <p className="mt-1">Write your code, add tests, and ensure all checks pass.</p>
             </div>
@@ -101,7 +100,7 @@ export default function ContributingPage() {
             <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary-100 text-sm font-semibold text-primary-700 dark:bg-primary-900/50 dark:text-primary-300">
               5
             </span>
-            <div>
+            <div className="min-w-0 flex-1">
               <strong className="text-slate-900 dark:text-white">Submit a pull request</strong>
               <p className="mt-1">Open a PR against the main branch with a clear description of your changes.</p>
             </div>

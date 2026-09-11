@@ -6,6 +6,9 @@ import { remark } from 'remark'
 import remarkGfm from 'remark-gfm'
 import remarkRehype from 'remark-rehype'
 
+/** Class the scroll box around a rendered table carries; sized in `globals.css`. */
+const TABLE_SCROLL_CLASS = 'table-scroll'
+
 /**
  * Convert markdown to HTML with GitHub Flavored Markdown support and Shiki
  * syntax highlighting.
@@ -17,6 +20,8 @@ import remarkRehype from 'remark-rehype'
  * `rehype-raw`, except for HTML comments: authoring notes stay useful in the
  * source files and never reach the published page. Comment syntax inside a
  * fenced code block is sample text rather than a comment, so it still renders.
+ * Tables are wrapped in a box that scrolls sideways, so a wide reference table
+ * moves on a phone and the page does not.
  *
  * @param markdown - The markdown string to convert
  * @returns A promise that resolves to the HTML string
@@ -27,6 +32,7 @@ export async function markdownToHtml(markdown: string): Promise<string> {
     .use(remarkRehype, { allowDangerousHtml: true })
     .use(rehypeRaw)
     .use(rehypeRemoveComments)
+    .use(rehypeScrollTables)
     .use(rehypeShiki, {
       themes: CODE_THEMES,
       defaultColor: false,
@@ -38,6 +44,58 @@ export async function markdownToHtml(markdown: string): Promise<string> {
     .process(markdown)
 
   return result.toString()
+}
+
+/**
+ * The subset of a hast element the table pass needs.
+ */
+interface WrappableNode {
+  /** Node type, `'element'` for a tag */
+  type: string
+  /** Tag name, present on elements */
+  tagName?: string
+  /** Attributes, present on elements */
+  properties?: Record<string, unknown>
+  /** Child nodes, absent on leaves */
+  children?: WrappableNode[]
+}
+
+/**
+ * Rehype plugin that puts every table inside a horizontally scrolling box.
+ *
+ * Done in the tree rather than in the stylesheet because the alternative,
+ * making the table itself the scroll container, means giving it a block
+ * display and losing its table semantics to assistive technology. A wrapper
+ * costs nothing a reader can see and keeps the table a table.
+ *
+ * @returns The tree transformer
+ */
+function rehypeScrollTables(): (tree: WrappableNode) => void {
+  return (tree) => {
+    wrapTables(tree)
+  }
+}
+
+/**
+ * Wrap every table beneath a node in a scroll box, in place.
+ *
+ * @param node - Node whose subtree is wrapped
+ */
+function wrapTables(node: WrappableNode): void {
+  if (!node.children) {
+    return
+  }
+
+  // why: descendants first, so the boxes added here are never walked into and a table is boxed exactly once
+  for (const child of node.children) {
+    wrapTables(child)
+  }
+
+  node.children = node.children.map((child) =>
+    child.type === 'element' && child.tagName === 'table'
+      ? { type: 'element', tagName: 'div', properties: { className: [TABLE_SCROLL_CLASS] }, children: [child] }
+      : child
+  )
 }
 
 /**
