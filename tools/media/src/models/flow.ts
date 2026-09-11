@@ -18,7 +18,7 @@ export interface FlowEndpoint {
 export type FlowSide = 'left' | 'right'
 
 /** How a delivered message is coloured in the log. */
-export type FlowTone = 'plain' | 'muted' | 'accent' | 'success'
+export type FlowTone = 'plain' | 'muted' | 'accent' | 'success' | 'warning'
 
 /** One message crossing between the endpoints. */
 export interface FlowMessage {

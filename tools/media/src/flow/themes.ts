@@ -18,6 +18,7 @@ const MIDNIGHT: FlowTheme = {
     muted: '#6b7c9c',
     accent: '#7dd3fc',
     success: '#5ec98a',
+    warning: '#f5bf58',
   },
 }
 
@@ -38,6 +39,7 @@ const DAYLIGHT: FlowTheme = {
     muted: '#7c8ba1',
     accent: '#0369a1',
     success: '#15803d',
+    warning: '#a16207',
   },
 }
 

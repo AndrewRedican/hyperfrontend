@@ -263,7 +263,7 @@ function flowStyles(config: FlowConfig, profile: MediaProfile): string {
   const theme = resolveFlowTheme(config.theme)
   const metrics = flowMetrics(profile, (config.phases ?? []).length > 0)
   const wide = profile.width >= WIDE_ENOUGH
-  const tones = (['plain', 'muted', 'accent', 'success'] as const)
+  const tones = (['plain', 'muted', 'accent', 'success', 'warning'] as const)
     .map((tone) => `.f-tone--${tone} { color: ${theme.tones[tone]}; }`)
     .join('\n')
   return `
