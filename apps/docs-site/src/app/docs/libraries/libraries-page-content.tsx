@@ -1,13 +1,15 @@
 'use client'
 
 import type { EcosystemCard, EcosystemLevel, EcosystemLibrary, EcosystemEmphasis, EcosystemTier } from '@/lib/ecosystem'
+import type { SpineSegment } from '@/lib/ecosystem-spine'
 import { TrackedLink } from '@/components/analytics/tracked-link'
 import { Breadcrumb } from '@/components/breadcrumb'
 import { H1 } from '@/components/heading-with-anchor'
 import { PackageIcon } from '@/components/package/package-icon'
 import { buildEcosystem } from '@/lib/ecosystem'
+import { computeSpine } from '@/lib/ecosystem-spine'
 import Link from 'next/link'
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react'
 
 /** Props for {@link LibrariesPageContent}. */
 interface LibrariesPageContentProps {
@@ -53,6 +55,9 @@ const COLUMN_CLASSES = {
   2: 'grid-cols-1 sm:grid-cols-2',
   3: 'grid-cols-1 sm:grid-cols-2 xl:grid-cols-3',
 } as const
+
+/** Attribute the spine finds the cards by, whatever level they sit on. */
+const CARD_ATTRIBUTE = 'data-ecosystem-card'
 
 /**
  * The shared card recipe, before the level's own weight is applied. The
@@ -184,8 +189,8 @@ const EMPHASIS_STYLES: Record<EcosystemEmphasis, EmphasisStyle> = {
  * because it is what a visitor came for, and every level below it is a step
  * further from that problem and closer to the machinery. The axis is an axis
  * of abstraction, not a dependency graph: nothing here claims that a package
- * imports the one above it, which is why no connector ever touches an
- * individual card.
+ * imports the one above it, which is why the spine is drawn from the
+ * flagship's lower edge to the last card in its path and never into one.
  *
  * Search filters the packages and rebuilds the hierarchy from what survives,
  * so a query narrows the map instead of replacing it with a flat list.
@@ -252,17 +257,75 @@ export function LibrariesPageContent({ libraries }: LibrariesPageContentProps) {
       {levels.length === 0 ? (
         <p className="mt-12 py-12 text-center text-slate-500 dark:text-slate-400">No packages match your search. Try different keywords.</p>
       ) : (
-        <div className="relative mt-12">
-          {/* why: the axis is drawn once behind everything and interrupted by the opaque cards and level markers, so it reads as a spine threading the levels without ever pointing at a package. */}
-          <div aria-hidden="true" className="absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-slate-200 dark:bg-slate-800" />
-          <div className="relative space-y-12">
-            {levels.map((level) => (
-              <EcosystemLevelSection key={level.tier.id} level={level} />
-            ))}
-          </div>
-        </div>
+        <EcosystemMap levels={levels} />
       )}
     </>
+  )
+}
+
+/** Props for {@link EcosystemMap}. */
+interface EcosystemMapProps {
+  /** The levels with something on them, top to bottom */
+  levels: EcosystemLevel[]
+}
+
+/**
+ * The levels and the spine that threads them.
+ *
+ * The spine is measured rather than declared. Where it starts and stops
+ * depends on which card the axis meets last, and that depends on how many
+ * columns each level has at this width, how many packages are on it, and
+ * whether a search has thinned it: three things the layout knows and the
+ * markup does not. So the map reads its own cards after layout, hands their
+ * boxes to {@link computeSpine}, and draws the one segment it gets back. It
+ * re-reads whenever the map changes size, which is every case in which the
+ * answer could have changed, and it re-reads before paint so a reader never
+ * sees a spine that was right for a layout that is no longer there.
+ * @param props - See {@link EcosystemMapProps}.
+ * @param props.levels - The levels to draw
+ * @returns The rendered map
+ */
+function EcosystemMap({ levels }: EcosystemMapProps) {
+  const mapRef = useRef<HTMLDivElement>(null)
+  const [spine, setSpine] = useState<SpineSegment | null>(null)
+
+  useLayoutEffect(() => {
+    const map = mapRef.current
+    if (!map) return undefined
+
+    const measure = (): void => {
+      const frame = map.getBoundingClientRect()
+      const cards = [...map.querySelectorAll<HTMLElement>(`[${CARD_ATTRIBUTE}]`)].map((card) => {
+        const box = card.getBoundingClientRect()
+        return { top: box.top - frame.top, bottom: box.bottom - frame.top, left: box.left - frame.left, right: box.right - frame.left }
+      })
+      const next = computeSpine(cards, frame.width / 2)
+      // why: a resize that leaves the cards where they were must not re-render the map for nothing
+      setSpine((current) => (current?.top === next?.top && current?.height === next?.height ? current : next))
+    }
+
+    measure()
+    const observer = new ResizeObserver(measure)
+    observer.observe(map)
+    return () => observer.disconnect()
+  }, [levels])
+
+  return (
+    <div ref={mapRef} className="relative mt-12">
+      {/* why: the spine is drawn once behind everything, and its run is the measured distance from the flagship's lower edge to the last card on its path, so it reads as connecting cards rather than spanning a grid */}
+      {spine && (
+        <div
+          aria-hidden="true"
+          className="absolute left-1/2 w-px -translate-x-1/2 bg-slate-200 dark:bg-slate-800"
+          style={{ top: spine.top, height: spine.height }}
+        />
+      )}
+      <div className="relative space-y-12">
+        {levels.map((level) => (
+          <EcosystemLevelSection key={level.tier.id} level={level} />
+        ))}
+      </div>
+    </div>
   )
 }
 
@@ -271,7 +334,8 @@ export function LibrariesPageContent({ libraries }: LibrariesPageContentProps) {
  *
  * The marker is an opaque bead that breaks the spine, so the axis reads as a
  * sequence of named altitudes. The apex has no bead because nothing runs above
- * it to interrupt; it gets a plain eyebrow instead.
+ * it to interrupt; it gets a plain eyebrow instead, and the spine begins below
+ * its card rather than above its label.
  * @param props - Component props
  * @param props.level - The level to draw
  * @returns The rendered level
@@ -339,7 +403,7 @@ function PackageCard({ card, emphasis }: PackageCardProps) {
   const isApex = emphasis === 'apex'
 
   return (
-    <article className={`${style.card} w-full`}>
+    <article className={`${style.card} w-full`} {...{ [CARD_ATTRIBUTE]: '' }}>
       {/* why: first in the DOM and unpositioned content after it, so the mark paints behind every line of the card without a z-index to keep in step with the rest of the site's layering */}
       <PackageIcon packageName={card.packageName} className={`${CARD_MARK} ${style.mark}`} />
 
