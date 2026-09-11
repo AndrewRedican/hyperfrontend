@@ -5,7 +5,7 @@ import { hasScopedApiReference } from '@/components/api-reference/scoped-api-ref
 import { Breadcrumb } from '@/components/breadcrumb'
 import { DocumentShell } from '@/components/document/document-shell'
 import { packageAccentHue } from '@/components/package/package-accents'
-import { PageAtmosphere } from '@/components/page-atmosphere'
+import { PageAccent } from '@/components/page-accent'
 import { ReadmeContent } from '@/components/readme-content'
 import { removeBadges, transformLinks } from '@/lib/content'
 import { getLibraryApi, getSubmoduleReadme, getApiLinkIndex } from '@/lib/docs-loader'
@@ -65,7 +65,7 @@ export async function SubmoduleDocPage({ librarySlug, packageName, submodulePath
   return (
     <>
       {/* why: an entry point is a page of its package, so it carries the same hue the package's own page does */}
-      <PageAtmosphere accent={packageAccentHue(packageName)} />
+      <PageAccent hue={packageAccentHue(packageName)} />
       <DocumentShell
         // why: an entrypoint with no README publishes no markdown counterpart, so it must not offer actions that would fetch one
         descriptor={

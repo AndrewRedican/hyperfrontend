@@ -67,7 +67,7 @@ const FALLBACK_HUE = 217
  *
  * @example Tinting a package page
  * ```tsx
- * <main style={{ '--page-accent': packageAccentHue('@hyperfrontend/nexus') }}>
+ * <PageAccent hue={packageAccentHue('@hyperfrontend/nexus')} />
  * ```
  */
 export function packageAccentHue(packageName: string): number {

@@ -13,7 +13,7 @@ import { PackageCapabilities } from '@/components/package/package-capabilities'
 import { PackageMetadata } from '@/components/package/package-metadata'
 import { breakablePackageName } from '@/components/package/package-name'
 import { RelatedReading } from '@/components/package/related-reading'
-import { PageAtmosphere } from '@/components/page-atmosphere'
+import { PageAccent } from '@/components/page-accent'
 import { removeBadges, transformLinks } from '@/lib/content'
 import { getLibraryReadme, getLibraryApi, getApiLinkIndex } from '@/lib/docs-loader'
 import { documentSubject } from '@/lib/document-model'
@@ -100,7 +100,7 @@ export async function LibraryDocPage({ title, packageName, slug, category, fallb
     return (
       <>
         {/* why: a package's own hue tints the atmosphere behind its documentation, so moving between packages feels like moving between places rather than reloading one */}
-        <PageAtmosphere accent={packageAccentHue(packageName)} />
+        <PageAccent hue={packageAccentHue(packageName)} />
         <DocumentShell
           descriptor={{ route: libraryDocRoute(slug, category), title, subject: documentSubject('package', packageName), kind: 'package' }}
           sections={sections}

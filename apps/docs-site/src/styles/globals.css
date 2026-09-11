@@ -706,6 +706,13 @@
       --p: 0.55;
     }
   }
+
+  /* why: the environment is a screen's, and a printed record would carry a grain over every page for no reader's benefit */
+  @media print {
+    .page-atmosphere {
+      display: none;
+    }
+  }
 }
 
 @layer components {

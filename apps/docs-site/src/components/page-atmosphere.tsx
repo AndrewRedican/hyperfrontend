@@ -1,17 +1,7 @@
 'use client'
 
-import type { CSSProperties } from 'react'
 import { trackScrollProgress } from '@/lib/scroll-progress'
 import { useEffect } from 'react'
-
-/** Props for {@link PageAtmosphere}. */
-export interface PageAtmosphereProps {
-  /**
-   * Hue, in degrees, the descent is tinted with on the way down. Defaults to
-   * the site's own blue.
-   */
-  accent?: number
-}
 
 /**
  * The environment behind a documentation page.
@@ -36,19 +26,24 @@ export interface PageAtmosphereProps {
  * lower edge and fade in over the first few dozen pixels, so the boundary is a
  * transition rather than a line.
  *
+ * Because it is the environment, it belongs to the shell a page is read in
+ * rather than to the page: the documentation frame renders it once, and every
+ * page inside that frame is in it without asking. A page that belongs to a
+ * package says which hue it is with {@link PageAccent}, and the wash reads that
+ * from the root; nothing is passed here.
+ *
  * How far down the reader is arrives as `--page-progress`, published by
  * {@link trackScrollProgress}. Nothing here animates and nothing here paints
  * while the page is still: the property changes, the compositor repaints two
  * gradients, and that is the whole of the running cost.
- * @param props - See {@link PageAtmosphereProps}.
- * @param props.accent - Hue the descent is tinted with
  * @returns The atmosphere's layers.
- * @example Tinting a package's page with the package's own hue
+ * @example Rendering it once, in the frame every page shares
  * ```tsx
- * <PageAtmosphere accent={packageAccentHue('@hyperfrontend/nexus')} />
+ * <PageAtmosphere />
+ * <main>{children}</main>
  * ```
  */
-export function PageAtmosphere({ accent }: PageAtmosphereProps = {}) {
+export function PageAtmosphere() {
   useEffect(() => {
     // why: a field that answers the scroll is the one part of this a reader could have opted out of, and the stylesheet holds it at a settled depth when nothing publishes the fraction
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
@@ -58,11 +53,7 @@ export function PageAtmosphere({ accent }: PageAtmosphereProps = {}) {
   }, [])
 
   return (
-    <div
-      aria-hidden="true"
-      className="page-atmosphere"
-      style={accent === undefined ? undefined : ({ '--page-accent': accent } as CSSProperties)}
-    >
+    <div aria-hidden="true" className="page-atmosphere">
       <div className="page-atmosphere__wash" />
       <div className="page-atmosphere__specks" />
       <div className="page-atmosphere__film" />
