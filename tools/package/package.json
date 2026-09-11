@@ -7,7 +7,7 @@
     "@hyperfrontend/builder": "0.2.1"
   },
   "devDependencies": {
-    "@hyperfrontend/project-scope": "0.2.1",
+    "@hyperfrontend/project-scope": "0.2.5",
     "@nx/devkit": "22.3.3",
     "@types/node": "25.3.3",
     "jest": "30.2.0",

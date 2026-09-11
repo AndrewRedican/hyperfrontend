@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.5](https://github.com/AndrewRedican/hyperfrontend/compare/d07b3add2620b9c6e9ddcf48e01571b8788a3bc7...98420cc3436bcb04e86571a5403255d93e957c5e) - 2026-09-11
+
+### Bug Fixes
+
+- derive a config format from its extension when the pattern declares none
+
 ## [0.2.4](https://github.com/AndrewRedican/hyperfrontend/compare/6b5a02be62850b0509b9fd71ad9232655cf5fbbf...a830a2c5d3a9b7c9c9955a42823b49a4aaa4b3e8) - 2026-08-01
 
 ### Bug Fixes
