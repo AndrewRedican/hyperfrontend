@@ -1,5 +1,6 @@
 import type { ESLint, Rule } from 'eslint'
 import assertiveTestNames, { RULE_NAME as ASSERTIVE_TEST_NAMES } from './rules/assertive-test-names'
+import codeblockLineWidth, { RULE_NAME as CODEBLOCK_LINE_WIDTH } from './rules/codeblock-line-width'
 import deepestImportPath, { RULE_NAME as DEEPEST_IMPORT_PATH } from './rules/deepest-import-path'
 import deployStaticHeaders, { RULE_NAME as DEPLOY_STATIC_HEADERS } from './rules/deploy-static-headers'
 import docsSiteLibraries, { RULE_NAME as DOCS_SITE_LIBRARIES } from './rules/docs-site-libraries'
@@ -71,6 +72,7 @@ import rootReadmePackages, { RULE_NAME as ROOT_README_PACKAGES } from './rules/r
  */
 export const rules: ESLint.Plugin['rules'] = {
   [ASSERTIVE_TEST_NAMES]: assertiveTestNames as unknown as Rule.RuleModule,
+  [CODEBLOCK_LINE_WIDTH]: codeblockLineWidth as unknown as Rule.RuleModule,
   [DEEPEST_IMPORT_PATH]: deepestImportPath as unknown as Rule.RuleModule,
   [DEPLOY_STATIC_HEADERS]: deployStaticHeaders as unknown as Rule.RuleModule,
   [DOCS_SITE_LIBRARIES]: docsSiteLibraries as unknown as Rule.RuleModule,
