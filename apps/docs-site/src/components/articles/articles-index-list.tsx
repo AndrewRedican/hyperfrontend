@@ -17,8 +17,6 @@ export interface ArticleCardData {
   description: string
   /** Publication date in YYYY-MM-DD format */
   date: string
-  /** Author display name */
-  author: string
   /** Human-readable reading time */
   readingTime: string
   /** Site-relative hero image path, empty when absent */
@@ -127,7 +125,7 @@ export function ArticlesIndexList({ articles }: ArticlesIndexListProps) {
                 </h2>
                 <p className="mt-3 text-slate-600 dark:text-slate-400">{article.description}</p>
                 <p className="mt-4 text-sm text-slate-500 dark:text-slate-500">
-                  {article.author} · {formatArticleDate(article.date)} · {article.readingTime}
+                  {formatArticleDate(article.date)} · {article.readingTime}
                 </p>
               </div>
             </Link>

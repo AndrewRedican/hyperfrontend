@@ -20,21 +20,16 @@ export default function ArticlesPage() {
     <DocsChrome>
       <div className="max-w-5xl">
         <h1 className="font-display text-4xl font-bold tracking-tight text-slate-900 dark:text-white">Articles</h1>
-        <p className="mt-4 max-w-3xl text-lg text-slate-600 dark:text-slate-400">
-          Long-form writing on microfrontend architecture: the pressures that produce it, the boundaries that shape it, and the reasoning
-          behind hyperfrontend. These pages are the canonical versions.
-        </p>
 
         {articles.length === 0 ? (
           <p className="mt-12 text-slate-600 dark:text-slate-400">No articles published yet. Check back later.</p>
         ) : (
           <ArticlesIndexList
-            articles={articles.map(({ slug, title, description, date, author, readingTime, heroImage, category, tags }) => ({
+            articles={articles.map(({ slug, title, description, date, readingTime, heroImage, category, tags }) => ({
               slug,
               title,
               description,
               date,
-              author,
               readingTime,
               heroImage,
               category,
