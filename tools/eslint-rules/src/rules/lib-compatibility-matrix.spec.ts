@@ -763,6 +763,25 @@ describe('lib-compatibility-matrix', () => {
 
       expect(document).toContain('| `1.0.0 \\| beta` |')
     })
+
+    it('escapes a backslash before a pipe so the pipe stays escaped', () => {
+      const document = renderCompatibilityDocument([
+        {
+          packageName: '@hyperfrontend/slashed',
+          shortName: 'slashed',
+          version: '1.0.0 \\| beta',
+          nodeEngine: null,
+          npmEngine: null,
+          environments: { node: 'full', browser: 'none', webWorker: 'none' },
+          note: null,
+          formats: { esm: true, cjs: true, iife: false, umd: false },
+          globalNames: [],
+          dependencies: [],
+        },
+      ])
+
+      expect(document).toContain('| `1.0.0 \\\\\\| beta` |')
+    })
   })
 
   describe('rule behavior', () => {

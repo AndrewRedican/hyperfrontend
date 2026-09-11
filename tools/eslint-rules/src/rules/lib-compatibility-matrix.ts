@@ -434,13 +434,15 @@ export function collectMatrixLibraries(workspaceRoot: string): MatrixLibrary[] {
 }
 
 /**
- * Escapes the one character that would split a markdown table cell in two.
+ * Escapes the characters that would break a markdown table cell: the pipe that
+ * splits a cell in two, and the backslash that would otherwise swallow the
+ * escape placed before that pipe.
  *
  * @param value - The cell text.
  * @returns The cell text, safe to place between pipes.
  */
 function escapeCell(value: string): string {
-  return value.replace(/\|/g, '\\|')
+  return value.replace(/\\/g, '\\\\').replace(/\|/g, '\\|')
 }
 
 /**
