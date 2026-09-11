@@ -435,6 +435,44 @@
 }
 
 @layer components {
+  /* The whole package card opens the package, and it does so through its
+     heading's link: that link's overlay is laid across the card, so the card
+     is one tab stop with one destination and no script. Focus on that link is
+     drawn on the card, where a reader's eye is, rather than on the two words
+     of the title. */
+  .package-card:has(.package-card__link:focus-visible) {
+    outline: 2px solid theme('colors.primary.500');
+    outline-offset: 2px;
+  }
+
+  .dark .package-card:has(.package-card__link:focus-visible) {
+    outline-color: theme('colors.primary.400');
+  }
+
+  .package-card__link:focus-visible {
+    outline: none;
+    box-shadow: none;
+  }
+
+  /* The overlay: the heading link's own box, stretched over the card. It is
+     the card's containing block that positions it, which is why the card is
+     the positioned ancestor and nothing between the two is. */
+  .package-card__link::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+  }
+
+  /* The one part of the card that goes somewhere else. It is stacked above the
+     overlay and takes its pointer events back, so the version opens the
+     release on npm and the rest of the card opens the package. */
+  .package-card__version {
+    z-index: 2;
+  }
+}
+
+@layer components {
   /* A run of short commands, laid out as a cross-section rather than a stack.
 
      Four one-line commands each spanning the whole column is four rows of

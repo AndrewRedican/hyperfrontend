@@ -55,7 +55,7 @@ const COLUMN_CLASSES = {
 } as const
 
 /** The shared card recipe, before the level's own weight is applied. */
-const CARD_BASE = 'group relative flex flex-col overflow-hidden border transition-colors'
+const CARD_BASE = 'group package-card relative flex flex-col overflow-hidden border transition-colors'
 
 /**
  * How a package's mark is drawn behind its card.
@@ -84,7 +84,8 @@ const CARD_MARK =
  *
  * Positioned against the card rather than laid out beside the title, so it
  * lands on the same corner whatever the title does: a package name that wraps
- * to two lines no longer drags it down the card with it.
+ * to two lines no longer drags it down the card with it. It is a cue for the
+ * direction the whole card goes in, not a control of its own.
  */
 const CARD_ARROW =
   'pointer-events-none absolute h-5 w-5 text-slate-400 transition-transform duration-200 group-hover:translate-x-1 group-hover:text-primary-500 dark:text-slate-500'
@@ -92,13 +93,13 @@ const CARD_ARROW =
 /**
  * The version, pinned to the card's bottom-right corner.
  *
- * It is a link to exactly this release on npm, so it sits above the heading's
- * card-covering overlay and takes its own pointer events back. That makes the
- * one part of the card that does not open the package the one part that says
- * where else it could go.
+ * It is a link to exactly this release on npm, so it is stacked above the
+ * heading's card-covering overlay and keeps its own pointer events. That makes
+ * the one part of the card that does not open the package the one part that
+ * says where else it could go.
  */
 const CARD_VERSION =
-  'absolute font-mono text-xs text-slate-400 transition-colors hover:text-primary-600 dark:text-slate-500 dark:hover:text-primary-400'
+  'package-card__version absolute font-mono text-xs text-slate-400 transition-colors hover:text-primary-600 dark:text-slate-500 dark:hover:text-primary-400'
 
 /** The class strings one level applies to its cards. */
 interface EmphasisStyle {
@@ -314,8 +315,16 @@ function levelHeadingId(tier: EcosystemTier): string {
 }
 
 /**
- * One package. The heading's link covers the card, so anywhere on it opens the
- * package, and the card stays a single tab stop with one destination.
+ * One package.
+ *
+ * The whole card opens the package, and it does so through one real link: the
+ * heading's, whose overlay the stylesheet stretches across the card. So the
+ * card is a single tab stop with a single destination, a middle click or a
+ * modifier click on any part of it opens the package in a new tab the way the
+ * browser does for any link, and focus is drawn around the card rather than
+ * around two words of title. The version in the corner is the one exception,
+ * a second link stacked above the overlay, because it goes somewhere else.
+ * Two links, never one inside the other.
  * @param props - Component props
  * @param props.card - The package to draw
  * @param props.emphasis - How much weight its level carries
@@ -330,19 +339,18 @@ function PackageCard({ card, emphasis }: PackageCardProps) {
       {/* why: first in the DOM and unpositioned content after it, so the mark paints behind every line of the card without a z-index to keep in step with the rest of the site's layering */}
       <PackageIcon packageName={card.packageName} className={`${CARD_MARK} ${style.mark}`} />
 
-      <div className={`relative min-w-0 ${style.gutter}`}>
+      <div className={`min-w-0 ${style.gutter}`}>
         <h3 className={style.title}>
-          <Link href={card.href} className="after:absolute after:inset-0 after:content-['']">
+          <Link href={card.href} className="package-card__link">
             {isApex ? card.name : card.packageName}
           </Link>
         </h3>
         {isApex && <p className="mt-1 font-mono text-sm text-slate-500 dark:text-slate-400">{card.packageName}</p>}
       </div>
 
-      {card.description && <p className={`relative ${style.gutter} ${style.description}`}>{card.description}</p>}
+      {card.description && <p className={`${style.gutter} ${style.description}`}>{card.description}</p>}
 
-      {/* why: relative lifts this row above the heading link's card-covering overlay, so the pills are readable text rather than a shadowed strip. */}
-      <div className={`relative mt-auto flex flex-wrap items-center gap-1.5 pt-3 ${style.bottomGutter}`}>
+      <div className={`mt-auto flex flex-wrap items-center gap-1.5 pt-3 ${style.bottomGutter}`}>
         {card.topics.map((topic) => (
           <span key={topic} className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-600 dark:bg-slate-800 dark:text-slate-400">
             {topic}
@@ -350,7 +358,6 @@ function PackageCard({ card, emphasis }: PackageCardProps) {
         ))}
       </div>
 
-      {/* why: both controls come after the mark and after the heading's overlay, so they paint over the watermark and stay reachable, with no z-index of their own to keep in step with the site's layering */}
       <ArrowRightIcon className={`${CARD_ARROW} ${style.arrowAt}`} />
       <CardVersion card={card} className={`${CARD_VERSION} ${style.versionAt}`} />
     </article>
