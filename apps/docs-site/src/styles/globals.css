@@ -333,8 +333,32 @@
     }
   }
 
+  /* Code on a phone.
+
+     Fourteen pixels of monospace on a 390px screen shows about forty
+     characters of a line before the block starts scrolling, and most lines in
+     this documentation are longer than that. The block steps down one stop on
+     the site's own type scale, to twelve pixels, which is a hair over 85% of
+     the desktop size: enough that a typical install command fits, not so
+     small that a reader has to lean in. The side padding tightens by the
+     same proportion so the extra width goes to the code rather than to the
+     frame around it. Inline code in prose is left alone; it sits inside a
+     sentence and takes the sentence's size. */
+  @media (max-width: 639px) {
+    :root {
+      --code-pad-x: 0.875rem;
+    }
+
+    pre.shiki {
+      font-size: theme('fontSize.xs');
+      padding-block: 0.875rem;
+    }
+  }
+
   /* Keep the <code> wrapper inside a highlighted <pre> visually flush so the
-     Shiki background and token colors are the only thing painting the block. */
+     Shiki background and token colors are the only thing painting the block.
+     Its size is the block's size, which is what lets the block alone decide
+     how large the code is on a phone. */
   .prose pre.shiki code {
     background-color: transparent;
     padding: 0;
