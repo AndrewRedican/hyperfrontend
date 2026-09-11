@@ -1,3 +1,5 @@
+import type { CodeLayout } from '@/lib/code-layout'
+import { classifyCodeLayout, CODE_LAYOUT_ATTRIBUTE } from '@/lib/code-layout'
 import { highlightCode } from '@/lib/shiki'
 import { CopyButton } from './copy-button'
 
@@ -8,6 +10,12 @@ interface CodeBlockProps {
   language?: string
   /** Additional class name for top margin adjustment */
   className?: string
+  /**
+   * The width the block is drawn at, when the automatic classification is
+   * wrong for it. Left out, the block is compact when its text is short in
+   * both directions and full otherwise, the same rule rendered markdown uses.
+   */
+  layout?: CodeLayout
 }
 
 /**
@@ -23,17 +31,22 @@ interface CodeBlockProps {
  * component and a rendered README end up producing, so the two cannot drift
  * into two different treatments. The language is a label over the corner rather
  * than a header bar above the block, matching what the README path draws.
+ *
+ * The wrapper, not the `<pre>`, carries the compact-or-full classification
+ * here: the copy control is pinned to the wrapper's corner, so the wrapper is
+ * what has to be the block's width for the control to land on the block.
  * @param root0 - The props object containing code, language, and className.
  * @param root0.code - The code string to display inside the block.
  * @param root0.language - An optional language id, shown in the corner and used for highlighting.
  * @param root0.className - An optional class for additional CSS, primarily margin adjustments.
+ * @param root0.layout - An explicit width mode, overriding the automatic classification.
  * @returns A JSX element rendering the highlighted code block with a copy button.
  */
-export async function CodeBlock({ code, language, className = 'mt-4' }: CodeBlockProps) {
+export async function CodeBlock({ code, language, className = 'mt-4', layout }: CodeBlockProps) {
   const html = await highlightCode(code, language ?? 'bash')
 
   return (
-    <div className={`group relative ${className}`}>
+    <div className={`code-block group relative ${className}`} {...{ [CODE_LAYOUT_ATTRIBUTE]: classifyCodeLayout(code, layout) }}>
       <div dangerouslySetInnerHTML={{ __html: html }} />
       {language && (
         <span className="code-language" aria-hidden="true">

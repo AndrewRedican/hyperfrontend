@@ -41,6 +41,8 @@
     --color-bg-secondary: theme('colors.slate.50');
     --color-text: theme('colors.slate.900');
     --color-text-secondary: theme('colors.slate.600');
+    /* why: the side padding of a code block is read in two places, the block itself and the compact width that adds it back, so it is one number rather than two that have to agree */
+    --code-pad-x: 1.125rem;
   }
 
   .dark {
@@ -204,12 +206,14 @@
     position: relative;
     isolation: isolate;
     margin: 0;
-    padding: 1rem 1.125rem;
+    padding: 1rem var(--code-pad-x);
     max-width: 100%;
     border-radius: 0.625rem;
     overflow-x: auto;
     font-size: theme('fontSize.sm');
     line-height: 1.625;
+    /* why: the classification that sizes a block counts a tab as four columns, and the block has to draw what was counted */
+    tab-size: 4;
     border: 1px solid rgb(148 163 184 / 0.28);
     background-color: rgb(248 250 252 / 0.6);
     background-image:
@@ -337,6 +341,40 @@
     border-radius: 0;
     font-size: inherit;
     line-height: inherit;
+  }
+
+  /* Compact and full-width code.
+
+     A one-line install command and a forty-line module are both fenced code,
+     and rendering both across the whole column gives the command a great deal
+     of empty pane to sit in. Every block is therefore classified, from its
+     text alone and at render time, as either compact or full: compact when
+     the sample is short in both directions, full otherwise. Two modes, not a
+     width per block. Every compact block in a column is the same width, and
+     the page reads as a system rather than as a set of boxes each sized to
+     its own contents.
+
+     The compact width is half the column plus the block's own side padding,
+     so it is the code's text area that measures half the column, and the
+     column decides whether it is wide enough to be halved at all: the query
+     is on the document column, not the viewport, because the same viewport
+     holds a wider column with the navigation collapsed and a narrower one
+     with the index beside it. Below the threshold, and on every phone, a
+     compact block is simply a block. The container is the document column
+     itself, named where the shell renders it.
+
+     The classification lives in code-layout.ts, next to the numbers this
+     stylesheet pairs with: a compact block is one whose longest line fits in
+     half of a column at the threshold width in the site's monospace face. */
+  .doc-column {
+    container: doc-column / inline-size;
+  }
+
+  @container doc-column (min-width: 56rem) {
+    .prose pre.shiki[data-code-layout='compact'],
+    .code-block[data-code-layout='compact'] {
+      max-width: calc(50% + 2 * var(--code-pad-x));
+    }
   }
 
   /* The language a markdown block was fenced with, added by script from the
@@ -749,16 +787,20 @@
      and a heading that wraps early inside a column with room to spare is the
      clearest signal of the inner container this rule exists not to be.
 
-
      Scoped to `.doc-measure` rather than applied to every `.prose` on the site
      because the article pages set their own, narrower, editorial width and
-     must not be pulled to this one. */
+     must not be pulled to this one.
+
+     Both rules are written with `:where()` so they carry no specificity of
+     their own: they are the column's default, and a block with a width of its
+     own to state, such as a compact code sample, states it over them without
+     a contest. */
   @media (min-width: 1920px) {
     .doc-measure {
       --doc-measure: 58rem;
     }
 
-    .doc-measure .readme-content > .prose > * {
+    :where(.doc-measure .readme-content > .prose) > * {
       max-width: var(--doc-measure);
     }
 
@@ -766,7 +808,7 @@
        whole column. A mermaid diagram needs no rule here: it is rendered as a
        sibling of the prose containers rather than inside one, so it already
        spans the column. */
-    .doc-measure .readme-content > .prose > :is(h1, h2, h3, h4, h5, h6, pre, table, .table-scroll, figure, img, hr) {
+    :where(.doc-measure .readme-content > .prose) > :where(h1, h2, h3, h4, h5, h6, pre, table, .table-scroll, figure, img, hr) {
       max-width: none;
     }
   }

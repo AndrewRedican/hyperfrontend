@@ -371,6 +371,22 @@ The mermaid library is initialized with a custom theme matching the site's desig
 
 ---
 
+## Code Blocks
+
+Every fenced code block is drawn in one of two widths, decided at render time from its text: **compact** (half the document column, on columns wide enough to halve) when the longest line is 52 characters or fewer and the block has at most 6 lines, **full** otherwise. The rule lives in [src/lib/code-layout.ts](src/lib/code-layout.ts) and the widths in [src/styles/globals.css](src/styles/globals.css); a `CodeBlock` component takes a `layout` prop for the same choice.
+
+An author overrides the classification from the fence, after the language:
+
+````markdown
+```bash layout=full
+npm install @hyperfrontend/features
+```
+````
+
+`layout=compact` works the same way. A wide line never widens the page: a block is capped at its column and scrolls sideways inside itself, on every surface. The `workspace/codeblock-line-width` lint rule warns, separately, about lines that would read better one entry per line.
+
+---
+
 ## Key Components
 
 | Component        | Purpose                                                       |

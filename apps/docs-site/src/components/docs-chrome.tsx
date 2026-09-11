@@ -3,7 +3,7 @@ import { Footer } from '@/components/footer'
 import { Header } from '@/components/header'
 import { PageAtmosphere } from '@/components/page-atmosphere'
 import { Sidebar } from '@/components/sidebar'
-import { DOC_MEASURE_CLASS, docLayout } from '@/lib/doc-layout'
+import { DOC_COLUMN_CLASS, DOC_MEASURE_CLASS, docLayout } from '@/lib/doc-layout'
 import { navVisibility } from '@/lib/nav-visibility'
 
 /** Props for {@link DocsChrome}. */
@@ -55,7 +55,7 @@ export function DocsChrome({ children }: DocsChromeProps) {
         </aside>
 
         {/* Main Content */}
-        <main id="main-content" className={`min-w-0 flex-1 py-10 lg:pl-8 ${DOC_MEASURE_CLASS}`}>
+        <main id="main-content" className={`min-w-0 flex-1 py-10 lg:pl-8 ${DOC_MEASURE_CLASS} ${DOC_COLUMN_CLASS}`}>
           {children}
         </main>
       </div>

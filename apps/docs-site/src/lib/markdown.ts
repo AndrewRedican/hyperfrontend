@@ -1,3 +1,4 @@
+import { codeLayoutTransformer } from '@/lib/code-layout'
 import { CODE_THEMES } from '@/lib/shiki-theme'
 import rehypeShiki from '@shikijs/rehype'
 import rehypeRaw from 'rehype-raw'
@@ -15,13 +16,17 @@ const TABLE_SCROLL_CLASS = 'table-scroll'
  *
  * Fenced code blocks are highlighted with this site's own dual light/dark
  * themes (`defaultColor: false`); the active palette is chosen by the `.dark`
- * class via the `pre.shiki` rules in `globals.css`. Raw HTML embedded in the markdown
- * (mermaid placeholders, badges, alignment wrappers) is preserved through
- * `rehype-raw`, except for HTML comments: authoring notes stay useful in the
- * source files and never reach the published page. Comment syntax inside a
- * fenced code block is sample text rather than a comment, so it still renders.
- * Tables are wrapped in a box that scrolls sideways, so a wide reference table
- * moves on a phone and the page does not.
+ * class via the `pre.shiki` rules in `globals.css`. Each block is also
+ * classified as compact or full from its text, and a fence's meta string
+ * (`layout=full` after the language) overrides that; the meta is carried to
+ * the highlighter explicitly because the raw-HTML pass below would otherwise
+ * drop it. Raw HTML embedded in the markdown (mermaid placeholders, badges,
+ * alignment wrappers) is preserved through `rehype-raw`, except for HTML
+ * comments: authoring notes stay useful in the source files and never reach
+ * the published page. Comment syntax inside a fenced code block is sample
+ * text rather than a comment, so it still renders. Tables are wrapped in a
+ * box that scrolls sideways, so a wide reference table moves on a phone and
+ * the page does not.
  *
  * @param markdown - The markdown string to convert
  * @returns A promise that resolves to the HTML string
@@ -29,6 +34,7 @@ const TABLE_SCROLL_CLASS = 'table-scroll'
 export async function markdownToHtml(markdown: string): Promise<string> {
   const result = await remark()
     .use(remarkGfm)
+    .use(remarkCodeMeta)
     .use(remarkRehype, { allowDangerousHtml: true })
     .use(rehypeRaw)
     .use(rehypeRemoveComments)
@@ -39,11 +45,65 @@ export async function markdownToHtml(markdown: string): Promise<string> {
       fallbackLanguage: 'text',
       addLanguageClass: true,
       lazy: true,
+      transformers: [codeLayoutTransformer()],
     })
     .use(rehypeStringify, { allowDangerousHtml: true })
     .process(markdown)
 
   return result.toString()
+}
+
+/**
+ * The node data the markdown-to-hast conversion reads extra element properties from.
+ */
+interface FencedCodeData {
+  /** Attributes written onto the element the node becomes */
+  hProperties?: Record<string, string>
+}
+
+/**
+ * The subset of an mdast code node the meta pass reads and writes.
+ */
+interface FencedCodeNode {
+  /** Node type, `'code'` for a fenced block */
+  type: string
+  /** Everything after the language on the fence line, absent when there is none */
+  meta?: string | null
+  /** Where the hast conversion reads extra element properties from */
+  data?: FencedCodeData
+  /** Child nodes, absent on leaves */
+  children?: FencedCodeNode[]
+}
+
+/**
+ * Remark plugin that copies a fence's meta string onto the element it becomes.
+ *
+ * The markdown-to-hast step already records the meta as node data, but the
+ * raw-HTML pass rebuilds every element and keeps only its attributes, so by
+ * the time the highlighter looks for it the data is gone. Written as the
+ * `metastring` attribute instead, it survives the rebuild, and `metastring`
+ * is the attribute the highlighter already reads a fence's meta from.
+ *
+ * @returns The tree transformer
+ */
+function remarkCodeMeta(): (tree: FencedCodeNode) => void {
+  return (tree) => {
+    stampCodeMeta(tree)
+  }
+}
+
+/**
+ * Write every fenced block's meta beneath a node onto its element properties.
+ *
+ * @param node - Node whose subtree is stamped
+ */
+function stampCodeMeta(node: FencedCodeNode): void {
+  if (node.type === 'code' && node.meta) {
+    node.data = { ...node.data, hProperties: { ...node.data?.hProperties, metastring: node.meta } }
+  }
+  for (const child of node.children ?? []) {
+    stampCodeMeta(child)
+  }
 }
 
 /**
