@@ -435,6 +435,38 @@
 }
 
 @layer components {
+  /* A number in a circle, marking a step.
+
+     The circle is a fixed box and the number is text, and text is placed in
+     a box by its font's ascent and descent, not by where its ink is. Fonts
+     disagree about that by a couple of pixels either way at this size, so a
+     digit that sits dead centre in one face sits visibly low in another, and
+     this site takes whatever sans the reader's platform offers. Trimming the
+     line box to the cap height puts the ink itself in the centre wherever it
+     is supported; where it is not, the number falls back to the ordinary
+     centring, which is what it always had. */
+  .step-marker {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    border-radius: 9999px;
+    font-weight: 600;
+    line-height: 1;
+    font-variant-numeric: lining-nums tabular-nums;
+    user-select: none;
+  }
+
+  /* why: the trim applies to the block that owns the line box, and inside a flex container that is the digit's own box rather than the container, so the digit is a block of its own */
+  .step-marker__digit {
+    display: block;
+    text-box-trim: trim-both;
+    text-box-edge: cap alphabetic;
+    text-box: trim-both cap alphabetic;
+  }
+}
+
+@layer components {
   /* How a package is built, set as a margin note at the end of its page.
 
      One hairline and a smaller, quieter type scale. No border on the other
