@@ -18,10 +18,12 @@ interface FakeWindowOptions {
  * height, so the function is handed the smallest object that answers what it
  * asks. Every field it reads is here; anything it reached for that is not
  * would fail loudly rather than silently returning zero.
+ *
  * @param options - See {@link FakeWindowOptions}.
  * @returns Something shaped enough like a window for the reader to measure.
  */
-function fakeWindow({ scrollY, scrollHeight, innerHeight }: FakeWindowOptions): Window {
+function fakeWindow(options: FakeWindowOptions): Window {
+  const { scrollY, scrollHeight, innerHeight } = options
   return { scrollY, innerHeight, document: { documentElement: { scrollHeight } } } as unknown as Window
 }
 
@@ -67,6 +69,7 @@ describe('readScrollProgress', () => {
 
 /**
  * Wait for the frame the listener coalesces its work into.
+ *
  * @returns A promise resolved after one animation frame.
  */
 function nextFrame(): Promise<void> {

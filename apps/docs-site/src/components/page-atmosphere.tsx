@@ -50,7 +50,7 @@ export interface PageAtmosphereProps {
  */
 export function PageAtmosphere({ accent }: PageAtmosphereProps = {}) {
   useEffect(() => {
-    // why: a field that answers the scroll is the one part of this a reader could have asked us not to do, and the stylesheet holds it at a settled depth when nothing publishes the fraction
+    // why: a field that answers the scroll is the one part of this a reader could have opted out of, and the stylesheet holds it at a settled depth when nothing publishes the fraction
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
       return undefined
     }

@@ -1,3 +1,5 @@
+import { max, min, round } from '@hyperfrontend/immutable-api-utils/built-in-copy/math'
+
 /** Custom property the stylesheet reads how far down the page a reader is from. */
 const PROGRESS_PROPERTY = '--page-progress'
 
@@ -50,7 +52,7 @@ export function readScrollProgress(view: Window): number {
   }
   const fraction = view.scrollY / scrollable
   const travelled = view.scrollY / (REFERENCE_SCREENS * view.innerHeight)
-  return Math.min(1, Math.max(0, Math.min(fraction, travelled)))
+  return min(1, max(0, min(fraction, travelled)))
 }
 
 /**
@@ -76,7 +78,7 @@ export function trackScrollProgress(view: Window): () => void {
 
   const publish = (): void => {
     frame = 0
-    const value = Math.round(readScrollProgress(view) / STEP) * STEP
+    const value = round(readScrollProgress(view) / STEP) * STEP
     if (value === published) {
       return
     }
