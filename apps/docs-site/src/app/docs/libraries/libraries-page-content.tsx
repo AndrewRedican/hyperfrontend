@@ -257,33 +257,6 @@ export function LibrariesPageContent({ libraries }: LibrariesPageContentProps) {
           </div>
         </div>
       )}
-
-      <section className="mt-16 rounded-xl border border-slate-200 bg-slate-50 p-6 dark:border-slate-700 dark:bg-slate-800/50">
-        <h2 className="text-lg font-bold text-slate-900 dark:text-white">Generated Documentation</h2>
-        <p className="mt-2 text-slate-600 dark:text-slate-400">
-          Full API documentation is generated from TypeScript JSDoc comments using{' '}
-          <a
-            href="https://typedoc.org/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-primary-600 hover:underline dark:text-primary-400"
-          >
-            TypeDoc
-          </a>
-          . Each package includes inline documentation accessible via your IDE&apos;s IntelliSense.
-        </p>
-        <div className="mt-4">
-          <Link
-            href="https://github.com/AndrewRedican/hyperfrontend"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 text-sm font-medium text-primary-600 hover:underline dark:text-primary-400"
-          >
-            View source on GitHub
-            <ArrowRightIcon className="h-4 w-4" />
-          </Link>
-        </div>
-      </section>
     </>
   )
 }
