@@ -54,8 +54,12 @@ const COLUMN_CLASSES = {
   3: 'grid-cols-1 sm:grid-cols-2 xl:grid-cols-3',
 } as const
 
-/** The shared card recipe, before the level's own weight is applied. */
-const CARD_BASE = 'group package-card relative flex flex-col overflow-hidden border transition-colors'
+/**
+ * The shared card recipe, before the level's own weight is applied. The
+ * surface itself is `package-card` in the stylesheet, where its glass lives
+ * beside the code block's.
+ */
+const CARD_BASE = 'group package-card flex flex-col overflow-hidden'
 
 /**
  * How a package's mark is drawn behind its card.
@@ -124,12 +128,12 @@ interface EmphasisStyle {
 /**
  * How a level's weight is drawn. Weight falls with altitude through size and
  * density alone: padding, type scale, and how much of a package the card says
- * out loud. Nothing below the apex changes color, so the descent reads as one
- * surface losing emphasis rather than as five different components.
+ * out loud. Nothing below the apex changes surface, so the descent reads as
+ * one material losing emphasis rather than as five different components.
  */
 const EMPHASIS_STYLES: Record<EcosystemEmphasis, EmphasisStyle> = {
   apex: {
-    card: `${CARD_BASE} rounded-xl border-primary-200 bg-gradient-to-br from-primary-50 to-white p-6 hover:border-primary-400 dark:border-primary-900 dark:from-primary-950/50 dark:to-slate-900 dark:hover:border-primary-700 sm:p-8`,
+    card: `${CARD_BASE} package-card--apex rounded-xl p-6 sm:p-8`,
     title:
       'font-display text-xl font-bold tracking-tight text-slate-900 group-hover:text-primary-600 dark:text-white dark:group-hover:text-primary-400 sm:text-2xl',
     description: 'mt-3 text-base text-slate-600 dark:text-slate-300',
@@ -140,7 +144,7 @@ const EMPHASIS_STYLES: Record<EcosystemEmphasis, EmphasisStyle> = {
     versionAt: 'right-6 bottom-6 sm:right-8 sm:bottom-8',
   },
   strong: {
-    card: `${CARD_BASE} rounded-lg border-slate-200 bg-white p-5 hover:border-primary-300 hover:bg-primary-50 dark:border-slate-700 dark:bg-slate-900 dark:hover:border-primary-700 dark:hover:bg-primary-950/30`,
+    card: `${CARD_BASE} rounded-lg p-5`,
     title:
       'font-mono text-base font-semibold text-slate-900 group-hover:text-primary-600 dark:text-white dark:group-hover:text-primary-400',
     description: 'mt-1.5 text-sm text-slate-600 dark:text-slate-400',
@@ -151,7 +155,7 @@ const EMPHASIS_STYLES: Record<EcosystemEmphasis, EmphasisStyle> = {
     versionAt: 'right-5 bottom-5',
   },
   medium: {
-    card: `${CARD_BASE} rounded-lg border-slate-200 bg-white p-4 hover:border-primary-300 hover:bg-primary-50 dark:border-slate-700 dark:bg-slate-900 dark:hover:border-primary-700 dark:hover:bg-primary-950/30`,
+    card: `${CARD_BASE} rounded-lg p-4`,
     title: 'font-mono text-sm font-semibold text-slate-900 group-hover:text-primary-600 dark:text-white dark:group-hover:text-primary-400',
     description: 'mt-1.5 text-sm text-slate-600 dark:text-slate-400',
     mark: 'right-0 h-14 w-14',
@@ -161,7 +165,7 @@ const EMPHASIS_STYLES: Record<EcosystemEmphasis, EmphasisStyle> = {
     versionAt: 'right-4 bottom-4',
   },
   soft: {
-    card: `${CARD_BASE} rounded-lg border-slate-200 bg-white p-4 hover:border-primary-300 hover:bg-primary-50 dark:border-slate-700 dark:bg-slate-900 dark:hover:border-primary-700 dark:hover:bg-primary-950/30`,
+    card: `${CARD_BASE} rounded-lg p-4`,
     title:
       'font-mono text-sm font-medium text-slate-800 group-hover:text-primary-600 dark:text-slate-200 dark:group-hover:text-primary-400',
     description: 'mt-1.5 line-clamp-3 text-sm text-slate-500 dark:text-slate-400',
