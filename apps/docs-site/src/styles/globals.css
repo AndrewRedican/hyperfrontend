@@ -435,6 +435,77 @@
 }
 
 @layer components {
+  /* A run of short commands, laid out as a cross-section rather than a stack.
+
+     Four one-line commands each spanning the whole column is four rows of
+     mostly empty pane. Two columns put them where the eye can take them in
+     together. What separates the cells is a hairline between the columns and
+     a hairline between the rows, and nothing around the outside: a border
+     around the run would be one more rectangle around rectangles, and the
+     commands are already rectangles. The horizontal room is a half again the
+     vertical, because the columns are what the eye crosses.
+
+     Below the two-column width it is a stack again, with the hairline kept
+     between the rows and the side room given back, so a phone reads a plain
+     list with a rule between each entry. */
+  .command-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .command-grid > * {
+    min-width: 0;
+    padding-block: 1rem;
+  }
+
+  .command-grid > *:first-child {
+    padding-top: 0;
+  }
+
+  .command-grid > * + * {
+    border-top: 1px solid theme('colors.slate.200');
+  }
+
+  .dark .command-grid > * + * {
+    border-top-color: theme('colors.slate.800');
+  }
+
+  @media (min-width: 640px) {
+    .command-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .command-grid > * {
+      padding-block: 1.25rem;
+    }
+
+    /* why: the rule between the rows is drawn by the row below it, so it is on every cell from the second row on, and no cell in the first row */
+    .command-grid > *:nth-child(-n + 2) {
+      border-top: 0;
+      padding-top: 0;
+    }
+
+    .command-grid > *:nth-child(odd) {
+      padding-right: 2rem;
+      border-right: 1px solid theme('colors.slate.200');
+    }
+
+    .dark .command-grid > *:nth-child(odd) {
+      border-right-color: theme('colors.slate.800');
+    }
+
+    .command-grid > *:nth-child(even) {
+      padding-left: 2rem;
+    }
+
+    /* why: a run with an odd count leaves the last row a lone cell, and a divider standing beside nothing is a divider to nowhere */
+    .command-grid > *:last-child:nth-child(odd) {
+      border-right: 0;
+    }
+  }
+}
+
+@layer components {
   /* A number in a circle, marking a step.
 
      The circle is a fixed box and the number is text, and text is placed in

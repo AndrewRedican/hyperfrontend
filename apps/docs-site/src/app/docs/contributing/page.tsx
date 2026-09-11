@@ -102,22 +102,23 @@ export default function ContributingPage() {
       {/* Development Commands */}
       <section className="mt-12">
         <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Development Commands</h2>
-        <div className="mt-4 space-y-4">
+        {/* why: four one-line commands are read side by side rather than as four full-width rows, and each block is told to fill its cell so the pair in a row line up whatever the classification would have made them */}
+        <div className="command-grid mt-4">
           <div>
             <h3 className="font-semibold text-slate-900 dark:text-white">Run tests</h3>
-            <CodeBlock code="npx nx run-many -t test" />
+            <CodeBlock code="npx nx run-many -t test" layout="full" />
           </div>
           <div>
             <h3 className="font-semibold text-slate-900 dark:text-white">Run linting</h3>
-            <CodeBlock code="npx nx run-many -t lint" />
+            <CodeBlock code="npx nx run-many -t lint" layout="full" />
           </div>
           <div>
             <h3 className="font-semibold text-slate-900 dark:text-white">Build all packages</h3>
-            <CodeBlock code="npx nx run-many -t build" />
+            <CodeBlock code="npx nx run-many -t build" layout="full" />
           </div>
           <div>
             <h3 className="font-semibold text-slate-900 dark:text-white">Run a specific demo</h3>
-            <CodeBlock code="npx nx serve chess" />
+            <CodeBlock code="npx nx serve chess" layout="full" />
           </div>
         </div>
       </section>
