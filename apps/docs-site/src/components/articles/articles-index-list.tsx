@@ -1,11 +1,12 @@
 'use client'
 
 import type { FilterableArticle } from '@/lib/article-filters'
-import { collectFilterTerms, filterArticles } from '@/lib/article-filters'
+import { collectFilterTerms, filterArticles, groupArticlesByYear, yearAnchor } from '@/lib/article-filters'
 import { formatArticleDate } from '@/lib/article-format'
 import Link from 'next/link'
 import { useMemo, useState } from 'react'
 import { ArticleFilter } from './article-filter'
+import { ArticlesYearNav } from './articles-year-nav'
 
 /**
  * Serializable card data for one article on the index page.
@@ -29,13 +30,18 @@ interface ArticlesIndexListProps {
 }
 
 /**
- * Article browser: newest-first cards with one filter above them.
+ * Article browser: newest-first cards grouped by the year they were
+ * published, with a rail of those years beside them and one filter above.
  *
  * The filter is a single searchable multi-select over the categories and
  * tags the corpus carries, and every term chosen must match: selections
  * narrow, and the way to widen the list again is to take a term off. The
  * filter appears once the corpus is large enough for narrowing to mean
  * anything; a single article has nothing to be narrowed from.
+ *
+ * The years are read off the articles that survive the filter, so the rail
+ * and the list always agree about what is on the page, and a year with no
+ * matching article is not offered as somewhere to go.
  * @param props - Component props
  * @param props.articles - Articles, newest first
  * @returns The rendered article list
@@ -45,27 +51,48 @@ export function ArticlesIndexList({ articles }: ArticlesIndexListProps) {
 
   const terms = useMemo(() => collectFilterTerms(articles), [articles])
   const visible = useMemo(() => filterArticles(articles, terms, selected), [articles, terms, selected])
+  const groups = useMemo(() => groupArticlesByYear(visible), [visible])
+  const years = useMemo(() => groups.map((group) => group.year), [groups])
 
   // why: with a single article, filters are noise; they appear once the corpus can actually be narrowed
   const showFilter = articles.length > 1 && terms.length > 1
 
   return (
-    <div>
-      {showFilter ? (
-        <div className="mt-8">
-          <ArticleFilter terms={terms} selected={selected} onChange={setSelected} />
-        </div>
-      ) : null}
+    <div className="mt-8 md:flex md:gap-8">
+      <ArticlesYearNav years={years} />
 
-      {visible.length === 0 ? (
-        <p className="mt-12 text-slate-600 dark:text-slate-400">No articles match every selected filter. Remove one to widen the list.</p>
-      ) : (
-        <div className="mt-12 grid gap-8">
-          {visible.map((article) => (
-            <ArticleCard key={article.slug} article={article} />
-          ))}
-        </div>
-      )}
+      <div className="min-w-0 flex-1">
+        {showFilter ? (
+          <div className="mt-4 md:mt-0">
+            <ArticleFilter terms={terms} selected={selected} onChange={setSelected} />
+          </div>
+        ) : null}
+
+        {groups.length === 0 ? (
+          <p className="mt-12 text-slate-600 dark:text-slate-400">No articles match every selected filter. Remove one to widen the list.</p>
+        ) : (
+          groups.map((group) => (
+            <section
+              key={group.year}
+              id={yearAnchor(group.year)}
+              aria-labelledby={`${yearAnchor(group.year)}-heading`}
+              className="mt-10 scroll-mt-20 first:mt-8"
+            >
+              <h2
+                id={`${yearAnchor(group.year)}-heading`}
+                className="mb-6 font-mono text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
+              >
+                {group.year}
+              </h2>
+              <div className="grid gap-8">
+                {group.articles.map((article) => (
+                  <ArticleCard key={article.slug} article={article} />
+                ))}
+              </div>
+            </section>
+          ))
+        )}
+      </div>
     </div>
   )
 }

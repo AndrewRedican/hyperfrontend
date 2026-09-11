@@ -132,3 +132,66 @@ export function filterArticles<T extends FilterableArticle>(
   const chosen = terms.filter((term) => selected.includes(term.id))
   return articles.filter((article) => chosen.every((term) => articleHasTerm(article, term)))
 }
+
+/**
+ * The publication year of an article.
+ *
+ * @param article - The article whose date is read
+ * @returns The four-digit year, as the date states it
+ */
+export function articleYear(article: FilterableArticle): string {
+  return article.date.slice(0, 4)
+}
+
+/**
+ * The id the year's section on the index is addressed by.
+ *
+ * @param year - A four-digit year
+ * @returns The anchor id, `year-2026` for 2026
+ */
+export function yearAnchor(year: string): string {
+  return `year-${year}`
+}
+
+/**
+ * One year of the index, with the articles published in it.
+ */
+export interface ArticleYearGroup<T> {
+  /** The four-digit year */
+  year: string
+  /** The articles published in it, in the order given */
+  articles: T[]
+}
+
+/**
+ * Articles grouped by the year they were published, newest year first.
+ *
+ * The years are read off the articles, so the navigation built from these
+ * groups names exactly the years the corpus spans and updates as it grows in
+ * either direction. Within a year the articles keep the order they arrived
+ * in, which the index supplies newest first.
+ *
+ * @param articles - The articles to group, newest first
+ * @returns One group per year that has an article, newest year first
+ *
+ * @example A corpus that so far spans one year
+ * ```typescript
+ * groupArticlesByYear([{ date: '2026-08-24', ... }, { date: '2026-07-22', ... }]).map((group) => group.year)
+ * // ['2026']
+ * ```
+ */
+export function groupArticlesByYear<T extends FilterableArticle>(articles: readonly T[]): ArticleYearGroup<T>[] {
+  const groups = createMap<string, ArticleYearGroup<T>>()
+
+  for (const article of articles) {
+    const year = articleYear(article)
+    const group = groups.get(year)
+    if (group) {
+      group.articles.push(article)
+    } else {
+      groups.set(year, { year, articles: [article] })
+    }
+  }
+
+  return [...groups.values()].sort((a, b) => b.year.localeCompare(a.year))
+}

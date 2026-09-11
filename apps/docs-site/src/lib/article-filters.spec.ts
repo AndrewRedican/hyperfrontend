@@ -1,6 +1,6 @@
 import type { FilterableArticle } from './article-filters'
 import { describe, expect, it } from 'vitest'
-import { collectFilterTerms, filterArticles, searchFilterTerms } from './article-filters'
+import { articleYear, collectFilterTerms, filterArticles, groupArticlesByYear, searchFilterTerms, yearAnchor } from './article-filters'
 
 const COMPARISON: FilterableArticle = { date: '2026-08-24', category: 'comparison', tags: ['module federation', 'iframes', 'architecture'] }
 const PRINCIPLES: FilterableArticle = { date: '2026-07-22', category: 'first-principles', tags: ['iframes', 'security', 'architecture'] }
@@ -69,5 +69,34 @@ describe('filterArticles', () => {
 
   it('returns nothing when the selected terms never meet', () => {
     expect(filterArticles(ARTICLES, TERMS, ['category:comparison', 'tag:security'])).toEqual([])
+  })
+})
+
+describe('articleYear', () => {
+  it('reads the year off the date', () => {
+    expect(articleYear(EARLIER)).toBe('2025')
+  })
+})
+
+describe('yearAnchor', () => {
+  it('builds the id the year section carries', () => {
+    expect(yearAnchor('2026')).toBe('year-2026')
+  })
+})
+
+describe('groupArticlesByYear', () => {
+  it('groups newest year first, keeping article order inside a year', () => {
+    expect(groupArticlesByYear(ARTICLES)).toEqual([
+      { year: '2026', articles: [COMPARISON, PRINCIPLES] },
+      { year: '2025', articles: [EARLIER] },
+    ])
+  })
+
+  it('yields one group for a corpus that spans one year', () => {
+    expect(groupArticlesByYear([COMPARISON, PRINCIPLES]).map((group) => group.year)).toEqual(['2026'])
+  })
+
+  it('yields nothing for no articles', () => {
+    expect(groupArticlesByYear([])).toEqual([])
   })
 })
