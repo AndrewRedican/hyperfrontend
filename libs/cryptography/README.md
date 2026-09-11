@@ -33,6 +33,15 @@
   <img src="https://img.shields.io/badge/tree%20shakeable-%E2%9C%93-success?style=flat-square" alt="Tree Shakeable">
 </p>
 
+<p align="center">
+  <a href="https://www.hyperfrontend.dev/docs/libraries/cryptography/">
+    <img width="640" src="https://www.hyperfrontend.dev/media/cryptography-envelope/hero.gif" alt="A 58-byte buffer assembling block by block into four labelled runs: a 16-byte salt, a 12-byte IV, 14 bytes of ciphertext and a 16-byte authentication tag">
+  </a>
+</p>
+<p align="center">
+  <sub>The bytes a single encrypt call hands back. The salt and IV are fresh every call, which is why the same secret encrypted twice is never the same buffer.</sub>
+</p>
+
 Production-grade cryptographic primitives with isomorphic APIs for browser and Node.js environments.
 
 • 👉 See [**documentation**](https://www.hyperfrontend.dev/docs/libraries/cryptography/)
@@ -58,7 +67,7 @@ The library features three modular entry points: platform-specific implementatio
 
 ### Architecture Highlights
 
-Built on functional composition with dependency injection, allowing complete mocking in tests without module patching. All cryptographic operations use platform-native APIs (Web Crypto API in browsers, Node.js crypto module) wrapped in consistent interfaces. `encrypt` generates a unique salt and initialization vector per operation, so a secret at rest never reuses a key; the session primitives (`createKeyAgreement`, `expandKey`, `seal`, `open`) hand the key and nonce lifecycle to the caller, which is what a message stream needs.
+`encrypt` generates a unique salt and initialization vector per operation, so a secret at rest never reuses a key, and the same plaintext encrypted twice produces two different ciphertexts. The session primitives (`createKeyAgreement`, `expandKey`, `seal`, `open`) hand the key and nonce lifecycle to the caller instead, which is what a message stream needs.
 
 ## Why Use @hyperfrontend/cryptography?
 
@@ -128,8 +137,8 @@ import { encrypt, decrypt, createVault, getTimeBasedPasswords } from '@hyperfron
 const encrypted = await encrypt('Sensitive data', 'secure-password')
 const decrypted = await decrypt(encrypted, 'secure-password')
 
-// Time-based rotating passwords (5-minute windows)
-const generators = getTimeBasedPasswords(new Date(), 300_000)
+// Time-based rotating passwords; the window is counted in minutes, so this is a 5-minute window
+const generators = getTimeBasedPasswords(new Date(), 5)
 const currentPassword = await generators.current()
 const previousPassword = await generators.previous() // Handle clock drift
 ```
@@ -146,46 +155,15 @@ isSHA256Hash('e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855')
 
 ## API Overview
 
-### Encryption/Decryption
+Two layers, not nineteen functions, and choosing between them is most of the work. The password layer is one call: [`encrypt`](https://www.hyperfrontend.dev/docs/libraries/cryptography/browser/#api-encrypt) takes a message and a password and returns a `Uint8Array` already carrying a fresh salt and initialization vector alongside the ciphertext and its tag, and [`decrypt`](https://www.hyperfrontend.dev/docs/libraries/cryptography/browser/#api-decrypt) takes that buffer and the same password back to the original string. Key derivation and nonce choice are never yours to get right, and because the salt and IV are new every call, encrypting one secret twice yields two unrelated buffers. [`createVault`](https://www.hyperfrontend.dev/docs/libraries/cryptography/browser/#api-createVault) is that same layer with a lifetime attached, holding labelled values encrypted in memory behind a password it generates, optionally closing after the first read.
 
-- **`encrypt(message: string, password: string): Promise<Uint8Array>`** - Encrypt message with password-derived AES-GCM key
-- **`decrypt(encrypted: Uint8Array, password: string): Promise<string>`** - Decrypt message with password
+The session layer inverts the trade: it hands you the key and the nonce rather than managing them, which is what a stream of messages needs and a lone secret does not. [`createKeyAgreement`](https://www.hyperfrontend.dev/docs/libraries/cryptography/browser/#api-createKeyAgreement) gives each side an ephemeral P-256 keypair whose private half is non-extractable, and its `deriveSecret` turns the peer's public point into the 32 bytes both sides share; `stretchPassword` is the alternative start when the shared thing is a password rather than a handshake. [`expandKey`](https://www.hyperfrontend.dev/docs/libraries/cryptography/browser/#api-expandKey) splits that secret into per-purpose AES-GCM-256 keys, each restricted to encrypting or to decrypting but not both.
 
-### Vault Storage
+[`seal`](https://www.hyperfrontend.dev/docs/libraries/cryptography/browser/#api-seal) and `open` then carry individual messages under those keys, taking a 12-byte nonce and an additional-data buffer that is authenticated but not encrypted, so a header can be bound to a payload without being hidden. That control costs you one rule: a nonce must never repeat under a given key, which a per-message counter scoped to a per-session key satisfies by construction. This is the layer [@hyperfrontend/network-protocol](https://www.hyperfrontend.dev/docs/libraries/network-protocol/) builds its envelope on.
 
-- **`createVault(singleUse?: boolean): Vault`** - Create encrypted in-memory storage
-  - `vault.write(label: string, value: string): Promise<void>` - Store encrypted value
-  - `vault.read(label: string, password: string): Promise<string | null>` - Retrieve decrypted value
-  - `vault.getPassword(): string` - Get vault password
-  - `vault.close(): void` - Close vault permanently
+Beside both sit the small utilities: SHA-256 hashing with its format guard, raw random bytes, and [`getTimeBasedPasswords`](https://www.hyperfrontend.dev/docs/libraries/cryptography/browser/#api-getTimeBasedPasswords), which derives the same rotating credential on two machines from the clock alone and returns `current`, `previous` and `next` so a receiver tolerates a peer one window out of step; that window is counted in minutes, not milliseconds. As for which entry point to import, `/browser` is backed by the Web Crypto API and `/node` by the Node.js `crypto` module, exporting the same names with the same signatures, so the choice is only about the runtime; `/common` is the narrow shared slice, currently just `isSHA256Hash`.
 
-### Hashing
-
-- **`createHash(data: string, algorithm?: 'SHA-256' | 'SHA-384' | 'SHA-512'): Promise<string>`** - Generate cryptographic hash (hex string)
-- **`isSHA256Hash(hash: unknown): boolean`** - Validate SHA-256 hash format
-
-### Time-Based Passwords
-
-- **`getTimeBasedPassword(currentUtcTime: Date, baseTimeWindow: number, windowOffset?: -1 | 0 | 1): Promise<string>`** - Generate password for specific time window
-- **`getTimeBasedPasswords(currentUtcTime: Date, baseTimeWindow: number): TimeBasedPasswordGenerators`** - Create generators for current/previous/next windows
-
-### Key Generation & Random Values
-
-- **`generateKey(password: string, salt: Uint8Array): Promise<CryptoKey>`** - Derive encryption key using PBKDF2
-- **`getRandomValues(byteLength: number): Uint8Array`** - Generate cryptographically-secure random bytes
-
-### Session Keys & Authenticated Framing
-
-The building blocks of a keyed session: agree or stretch a secret once, expand it into per-purpose keys, then seal many messages under those keys with caller-managed nonces. This is the layer `@hyperfrontend/network-protocol` builds its envelope on.
-
-- **`createKeyAgreement(): Promise<KeyAgreement>`** - Ephemeral P-256 ECDH: exposes `publicKey` (65-byte uncompressed point) and `deriveSecret(peerPublicKey)` (32 bytes); the private key is non-extractable and never leaves the agreement
-- **`stretchPassword(password: string, salt: Uint8Array, options?: StretchPasswordOptions): Promise<Uint8Array>`** - PBKDF2-HMAC-SHA256 into raw key material (default 100,000 iterations, 256 bits), for use once per session or storage boundary
-- **`expandKey(ikm: Uint8Array, salt: Uint8Array, info: Uint8Array, usages: KeyUsage[]): Promise<CryptoKey>`** - HKDF-SHA256 into a non-extractable AES-GCM-256 key restricted to `'encrypt'`, `'decrypt'`, or both
-- **`seal(key: CryptoKey, nonce: Uint8Array, additionalData: Uint8Array, plaintext: Uint8Array): Promise<Uint8Array>`** - AES-GCM under a caller-supplied key and 12-byte nonce; the additional data is authenticated, not encrypted
-- **`open(key: CryptoKey, nonce: Uint8Array, additionalData: Uint8Array, sealed: Uint8Array): Promise<Uint8Array>`** - The inverse of `seal`; any mismatch rejects with one error
-- **`keyStretchingConfig`** - The PBKDF2 parameters `generateKey` and `stretchPassword` share
-
-The caller owns nonce uniqueness: a nonce must never repeat under one key. A per-message counter under a per-session key satisfies that by construction.
+Every signature, option type and thrown error is in the [API reference](https://www.hyperfrontend.dev/docs/libraries/cryptography/#api-reference).
 
 ## Compatibility
 

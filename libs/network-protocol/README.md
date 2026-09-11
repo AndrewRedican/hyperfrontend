@@ -33,6 +33,15 @@
   <img src="https://img.shields.io/badge/tree%20shakeable-%E2%9C%93-success?style=flat-square" alt="Tree Shakeable">
 </p>
 
+<p align="center">
+  <a href="https://www.hyperfrontend.dev/docs/libraries/network-protocol/">
+    <img width="640" src="https://www.hyperfrontend.dev/media/network-protocol-frame/hero.gif" alt="One channel.send call drawn as a row of coloured byte cells filling in left to right: version 1B, type 1B, counter 8B, sealed packet 37B, tag 16B, ending with a replayed frame reported as onDrop code 'replayed'">
+  </a>
+</p>
+<p align="center">
+  <sub>One frame, byte by byte. Ten of them travel in the clear and the tag covers those ten too, so a captured frame cannot be edited and a replay of it never reaches your handler.</sub>
+</p>
+
 Production-grade network protocol for secure, real-time cross-window and cross-process communication with a session-keyed authenticated envelope, routing, and message queueing.
 
 • 👉 See [**documentation**](https://www.hyperfrontend.dev/docs/libraries/network-protocol/)
@@ -41,7 +50,9 @@ Production-grade network protocol for secure, real-time cross-window and cross-p
 
 ## What is @hyperfrontend/network-protocol?
 
-You already have a transport: a WebSocket, `postMessage` to another window or a worker, a Node IPC pipe. What you do not have is the envelope to put on it. That is this library. Hand it a function that transmits bytes, a callback for delivered messages, a protocol provider, and the session the two ends agreed on, and you get a channel back. Each end mints a random nonce and an ephemeral P-256 key pair, advertises them in a 99-byte hello frame, and derives two AES-GCM-256 keys from the agreement, one per direction. Every message is sealed under the sending key with a counter that serves as the nonce and as the replay check; every inbound frame is opened under the receiving key and arrives as a typed packet with an origin, a target, and a payload that has already been checked for the fields it claims to have.
+You already have a transport: a WebSocket, `postMessage` to another window or a worker, a Node IPC pipe. What you do not have is the envelope to put on it. That is this library. Hand it a function that transmits bytes, a callback for delivered messages, a protocol provider, and the session the two ends agreed on, and you get a channel back.
+
+Each end mints a random nonce and an ephemeral P-256 key pair, advertises them in a 99-byte hello frame, and derives two AES-GCM-256 keys from the agreement, one per direction. Every message is sealed under the sending key with a counter that serves as the nonce and as the replay check; every inbound frame is opened under the receiving key and arrives as a typed packet with an origin, a target, and a payload that has already been checked for the fields it claims to have.
 
 Two protocols share that wire format. `v3` keys the session from the agreement alone, which defeats anything that can only listen. `v4` mixes a pre-shared key into the schedule, stretched once per session, so a script without the key can neither read frames nor produce frames the counterpart accepts.
 
@@ -98,7 +109,9 @@ The worker mirrors this with `role: 'responder'` and the two identities swapped;
 
 ### Architecture Highlights
 
-The platform entries (`/browser/*`, `/node/*`) inject a `SessionCrypto` set of primitives from `@hyperfrontend/cryptography` (`getRandomValues`, `createKeyAgreement`, `stretchPassword`, `expandKey`, `seal`, `open`) and the platform's UTF-8 codec into a shared, platform-neutral session protocol; the business logic in `lib/` never touches a crypto API directly. A channel binds one protocol instance to one negotiated session (`{ protocol, role, localId, peerId }`), feeds the instance's `seal` and `open` into its two pipelines, and exposes the instance's hello exchange unchanged so the owner can run it over the same transport. Packets have exactly two states: `UnencryptedPacket<T>` (origin, target, `Data<T>`) and `WirePacket` (a `Uint8Array` frame). The key schedule binds both nonces, both public keys, the protocol id, and both identities into the derived keys, so a frame from any other session fails to authenticate. The cost is one ECDH agreement plus one HKDF expansion per direction per session (plus one PBKDF2 stretch for `v4`), then one AES-GCM operation per message in each direction.
+The key schedule binds both nonces, both public keys, the protocol id, and both identities into the derived keys, so a frame from any other session fails to authenticate. The cost is one ECDH agreement plus one HKDF expansion per direction per session (plus one PBKDF2 stretch for `v4`), then one AES-GCM operation per message in each direction; the stretch runs once, when the session is keyed, so it lands on the handshake and not on traffic.
+
+The [architecture guide](https://www.hyperfrontend.dev/docs/libraries/network-protocol/architecture/) works through the hello exchange, the wire format, the injected platform primitives, and what each protocol does and does not claim.
 
 ## Why Use @hyperfrontend/network-protocol?
 
@@ -108,7 +121,7 @@ Raw `postMessage` and IPC give you bytes and nothing else. Everything above them
 
 ### A real key schedule, and you can read all of it
 
-Each side contributes a 32-byte nonce and an ephemeral P-256 public key in its hello. The salt is the two nonces in role order, the input key material is the ECDH shared secret (`v3`) or the shared secret followed by a PBKDF2 stretch of the pre-shared key (`v4`), and two keys come out of HKDF-SHA256 under info strings that name the protocol and both identities. Each side seals with its own direction's key and opens with the other's, raw material is zeroed after derivation, and the AES-GCM nonce is the frame counter, unique by construction. What each protocol promises is stated in [Choosing between v3 and v4](#choosing-between-v3-and-v4); neither hides the hello, because public keys and nonces are public by design.
+Each side contributes a 32-byte nonce and an ephemeral P-256 public key in its hello. The salt is the two nonces in role order, the input key material is the ECDH shared secret (`v3`) or the shared secret followed by a PBKDF2 stretch of the pre-shared key (`v4`), and two keys come out of HKDF-SHA256 under info strings that name the protocol and both identities. Each side seals with its own direction's key and opens with the other's, raw material is zeroed after derivation, and the AES-GCM nonce is the frame counter, unique by construction. What each protocol promises is stated claim by claim in the [architecture guide](https://www.hyperfrontend.dev/docs/libraries/network-protocol/architecture/); neither hides the hello, because public keys and nonces are public by design.
 
 ### Ordering and backpressure come from the queues, not from a promise
 
@@ -265,101 +278,22 @@ Hello frames are posted by copy and sealed frames by transfer: the protocol hand
 
 ## API Overview
 
-### Entry Points
+Nothing is exported from the package root: every import names a subpath, and the subpaths sit on two axes. One is the platform that supplies the crypto and text primitives, `/browser` or `/node`. The other is the protocol version that keys the session, `/v3` or `/v4`. A browser subpath and its Node twin export the same names with the same signatures, and a session between the two works because both sides derive their keys from the same bytes, so moving code between a page and a worker, or between a renderer and a main process, is an edit to the import path and nothing else.
 
-Platform-neutral (tree-shakeable):
-
-- `@hyperfrontend/network-protocol/queue` - `createQueue`, `createSealQueue`, `createOpenQueue`
-- `@hyperfrontend/network-protocol/routing` - Router types and routed packet creators
-- `@hyperfrontend/network-protocol/security` - `ProtocolErrorCode`, `createProtocolError`, `getProtocolErrorCode`, and the session types
-- `@hyperfrontend/network-protocol/topic` - Topic creation and stores
-
-Per platform, with `browser` or `node` in the path:
-
-- `/browser/v3`, `/node/v3` - `createProtocol(logger)` and `V3`
-- `/browser/v4`, `/node/v4` - `createProtocol(logger, sharedKey)`, `V4`, `isValidSharedKey`, `MIN_SHARED_KEY_LENGTH`
-- `/browser/channel`, `/node/channel` - `createChannel`, `createChannelStore`, and the channel, session, and drop types
-- `/browser/data`, `/node/data` - `createData`, `serializeData`, `deserializeData`, schema helpers and validators
-- `/browser/packet`, `/node/packet` - Packet creators and validators
-- `/browser/sender`, `/node/sender` - `createSender`, the outbound pipeline
-- `/browser/receiver`, `/node/receiver` - `createReceiver`, the inbound pipeline
-
-### Protocols
-
-`createProtocol` returns a `ProtocolProvider`: `(send, receive, session) => Protocol`. `createChannel` calls it once with the transport callbacks and the session, and throws in your frame when the session was negotiated for another protocol. A `Protocol` has `seal(packet)`, `open(frame)`, `hello()`, `isHello(frame)`, `acceptHello(frame)`, `send`, `receive`, and `getLogger`.
-
-#### v3: session keyed from the agreement alone
+Two calls get a link running. [`createProtocol`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/browser/v3/#api-createProtocol) takes your logger, and on `/v4` the pre-shared key as well, and hands back a provider. [`createChannel`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/browser/channel/#api-createChannel) takes a label and an options object holding the `send` and `receive` callbacks that reach your transport, that provider, and the session the two ends agreed on.
 
 ```typescript
-import { createProtocol, V3 } from '@hyperfrontend/network-protocol/browser/v3'
-
-const protocolProvider = createProtocol(logger)
-V3 // => { id: 'v3', version: 3 }
+const channel = createChannel(label, { send, receive, protocolProvider, session, onDrop })
+// session: { protocol: 'v3' | 'v4', role: 'initiator' | 'responder', localId, peerId }
 ```
 
-`v3` defeats scripts that can only listen: a passive observer of `message` events cannot read or forge frames. It does not authenticate who the counterpart is. Any script that can post to a peer's window with a genuine source can complete a `v3` handshake as that peer.
+What comes back is a [`Channel`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/browser/channel/#api-Channel), and for most code it is the only object in play: the hello exchange your transport carries, `send(origin, target, data)` for traffic, `stop` and `resume` for both directions at once, and `outbound` and `inbound` for per-direction queue depth. Nothing rejects. A frame that will not seal or will not open is dropped inside its own stage and reported to your `onDrop` as a [`PacketDrop`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/browser/channel/#api-PacketDrop), while the rest of the pipeline keeps running.
 
-#### v4: the agreement plus a pre-shared key
+The version is the security decision, and it is the only thing that differs between `/v3` and `/v4`. `v3` keys the session from the ephemeral agreement alone, which defeats anything that can only listen but says nothing about who the counterpart is. `v4` mixes in a pre-shared key, stretched once when the session is keyed, so a script without that key can neither read frames nor produce frames the far side accepts; it carries two extra exports for that key, [`isValidSharedKey`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/browser/v4/#api-isValidSharedKey) and `MIN_SHARED_KEY_LENGTH`, and otherwise mirrors `/v3`.
 
-```typescript
-import { createProtocol, isValidSharedKey, MIN_SHARED_KEY_LENGTH, V4 } from '@hyperfrontend/network-protocol/browser/v4'
+Four subpaths name no platform because they hold no crypto. `/queue` is the FIFO stage both pipelines are built from, `/routing` and `/topic` are the pub/sub layer that names message categories and decides which channels a topic's messages reach, and `/security` holds the session types and the six [`ProtocolErrorCode`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/security/#api-ProtocolErrorCode) values a drop can carry. The remaining per-platform subpaths are for taking one piece rather than a whole channel: `/data` builds the message envelope, stamping a conversation id, a sequence number and a schema hash onto your payload, `/packet` holds the packet builders and validators, and `/sender` and `/receiver` are the outbound and inbound halves on their own.
 
-isValidSharedKey(sharedKey) // => true for a string of at least MIN_SHARED_KEY_LENGTH (16) characters
-const protocolProvider = createProtocol(logger, sharedKey) // throws for a shorter key
-V4 // => { id: 'v4', version: 4 }
-```
-
-`v4` binds the session to the pre-shared key. Without the key a script can neither read frames nor produce frames the counterpart accepts, and a key mismatch is detected because no frame ever authenticates. The stretch (PBKDF2-SHA256, 600,000 iterations) is paid once per session, not per message. A party that can run a hello exchange against this side can test key guesses offline afterwards, so the key must be generated (128 bits or more, for example 32 hex characters from a secure random source), not chosen by a person.
-
-#### Choosing between v3 and v4
-
-| Property                                            |            v3             |            v4             |
-| --------------------------------------------------- | :-----------------------: | :-----------------------: |
-| A script that can only listen cannot read frames    |            ✅             |            ✅             |
-| A script that can only listen cannot forge frames   |            ✅             |            ✅             |
-| Replays and frames from other sessions are rejected |            ✅             |            ✅             |
-| The counterpart is authenticated                    |            ❌             |    ✅ (holds the key)     |
-| A key mismatch is detected                          |       no key exists       |            ✅             |
-| The hello (nonce, public key) is hidden             |            ❌             |            ❌             |
-| Per-session cost beyond ECDH and HKDF               |           none            |        one PBKDF2         |
-| Per-message cost                                    | one AES-GCM per direction | one AES-GCM per direction |
-
-Neither protocol hides the hello: public keys and nonces are public by design.
-
-### Wire Format
-
-Every frame starts with a version byte (`3` or `4`) and a type byte.
-
-| Frame | Bytes                                                                               | Notes                                                                                                                                 |
-| ----- | ----------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| Hello | `[version][type=1][nonce 32][public key 65]`, 99 bytes, plaintext                   | The public key is the uncompressed P-256 point                                                                                        |
-| Data  | `[version][type=0][counter u64 big-endian]` then AES-GCM ciphertext and 16-byte tag | The ten-byte header is the additional authenticated data and the nonce is derived from it; a frame shorter than 27 bytes is malformed |
-
-### Error Codes
-
-Every rejected frame is reported through `onDrop` with a `ProtocolError` as `cause`; read its code with `getProtocolErrorCode(drop.cause)`.
-
-| Code                    | Raised when                                                                |
-| ----------------------- | -------------------------------------------------------------------------- |
-| `unsupported-version`   | The frame's version byte is not this protocol's                            |
-| `replayed`              | The frame's counter is not above the last accepted one                     |
-| `authentication-failed` | The frame's tag does not verify under the session's keys                   |
-| `malformed`             | The frame is shorter than 27 bytes, or authenticated but carries no packet |
-| `counter-exhausted`     | The session has sealed every counter value it can number                   |
-| `invalid-session`       | The session cannot be keyed from the material it holds                     |
-
-### Main Types
-
-- `Protocol<T>` - One session's `seal`, `open`, hello exchange, and transport callbacks
-- `ProtocolProvider<T>` - `(send, receive, session) => Protocol<T>`
-- `ProtocolSession` - `{ protocol, role: 'initiator' | 'responder', localId, peerId }`
-- `HelloOutcome` - `'accepted' | 'duplicate' | 'rejected'`
-- `Channel<T>` - Named channel with `send`, `receive`, the hello exchange, `stop`, `resume`, and its `outbound` and `inbound` pipelines
-- `ChannelOptions<T>` - `{ send, receive, protocolProvider, session, onDrop? }`
-- `PacketDrop` - `{ direction, stage: 'seal' | 'open', reason, cause?, packet }`
-- `UnencryptedPacket<T>`, `WirePacket` - A packet in the clear and a sealed frame; `Packet<T>` is their union
-- `Router`, `Topic` - Topic-to-channel subscription configuration and named message categories
-- `Queue<T>` - Message queue with processing and backpressure control
+Every option, type and validator is in the [API reference](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-reference).
 
 ## Documentation
 

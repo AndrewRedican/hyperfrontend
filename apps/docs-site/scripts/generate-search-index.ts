@@ -8,6 +8,7 @@ import { logger } from '@hyperfrontend/logging'
 import { getAllArticles } from '../src/lib/articles'
 import { libraryRoute } from '../src/lib/library-routes'
 import { docsNavigation, mainNavLinks } from '../src/lib/navigation'
+import { preparePackageReadme } from '../src/lib/package-readme'
 import { extractMarkdownSections } from '../src/lib/slug'
 
 const OUTPUT_DIR = resolve(__dirname, '../.generated')
@@ -67,13 +68,28 @@ interface TypedocNode {
  * Read markdown sections from a generated file, when it exists.
  *
  * @param relativePath - Path under `.generated/`
+ * @param prepare - Reduces the file to the markdown its page renders, when the page renders less than the file holds
  * @returns Sections, or undefined when the file is absent or has none
  */
-function sectionsFrom(relativePath: string) {
+function sectionsFrom(relativePath: string, prepare: (markdown: string) => string = (markdown) => markdown) {
   const filePath = join(OUTPUT_DIR, relativePath)
   if (!existsSync(filePath)) return undefined
-  const sections = extractMarkdownSections(readFileSync(filePath, 'utf-8')).map(({ title, anchor }) => ({ title, anchor }))
+  const sections = extractMarkdownSections(prepare(readFileSync(filePath, 'utf-8'))).map(({ title, anchor }) => ({ title, anchor }))
   return sections.length > 0 ? sections : undefined
+}
+
+/**
+ * A package README as its documentation page renders it.
+ *
+ * The page claims a few README sections and shows them as metadata rather than
+ * as document body, so indexing the file as written would offer a reader a
+ * deep link to a heading that is not on the page.
+ *
+ * @param markdown - The generated package README
+ * @returns The markdown the page actually renders
+ */
+function renderedPackageReadme(markdown: string): string {
+  return preparePackageReadme(markdown).body
 }
 
 /**
@@ -161,7 +177,7 @@ function generateSearchIndex(): void {
       description: library.description || undefined,
       package: library.packageName,
       terms: isArray(library.keywords) && library.keywords.length > 0 ? library.keywords : undefined,
-      sections: sectionsFrom(`docs/${library.slug}/readme.md`),
+      sections: sectionsFrom(`docs/${library.slug}/readme.md`, renderedPackageReadme),
     })
 
     const architectureSections = sectionsFrom(`docs/${library.slug}/architecture.md`)

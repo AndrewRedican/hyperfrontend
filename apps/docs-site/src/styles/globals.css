@@ -89,18 +89,104 @@
   }
 }
 
+/* Where the pointer is over a code block, as a fraction of the block's own box:
+   zero at the left and top edges, one at the right and bottom.
+
+   Plain numbers rather than percentages because the same pair drives three
+   different things and only one of them takes a percentage. A gradient wants a
+   position, a rotation wants an angle and an offset shadow wants a length, and
+   a number multiplies into all three while a percentage multiplies into none.
+
+   Registered rather than merely set for two reasons. It is what makes them
+   transitionable, which is where the light's lag behind the cursor comes from,
+   and it is what makes the arithmetic above legal at all: an unregistered
+   custom property is an untyped token, and `calc()` cannot multiply a token by
+   a length. */
+@property --code-x {
+  syntax: '<number>';
+  initial-value: 0.5;
+  inherits: true;
+}
+
+@property --code-y {
+  syntax: '<number>';
+  initial-value: 0.5;
+  inherits: true;
+}
+
+/* How present the pointer is over a block: zero when there is none, one while
+   there is. Every term the pointer drives is multiplied by it, so a block a
+   reader has left relaxes back to the neutral, evenly lit surface it started
+   as instead of freezing wherever the cursor happened to leave. */
+@property --code-lit {
+  syntax: '<number>';
+  initial-value: 0;
+  inherits: true;
+}
+
 @layer components {
-  /* Shiki dual-theme code blocks (github-light / github-dark). With
-     `defaultColor: false` Shiki emits only CSS variables, so we select the
-     active palette from the `.dark` class the theme provider toggles. */
+  /* Code blocks.
+
+     Shiki is configured with this site's own light and dark themes and
+     `defaultColor: false`, so it writes no colour of its own: every token
+     carries both palettes as custom properties and the rules below pick one
+     from the `.dark` class the theme provider toggles. That is what lets a
+     statically rendered page switch theme without re-highlighting anything.
+
+     The surface is deliberately not opaque. A code block is the densest thing
+     on a documentation page and an opaque slab of a second colour is how it
+     ends up reading as a foreign object dropped into the article. Letting the
+     page through instead, blurred and slightly saturated, means the block
+     inherits whatever the page is doing behind it: the atmosphere gradient
+     shifts under it as the reader descends, and the block shifts with it, while
+     the blur keeps anything behind it from competing with the code itself.
+
+     The surface is a pane rather than a fill, and three things make it read
+     that way. A hairline of light along its top edge, brighter in light mode
+     where the surface is nearly white and very faint in dark mode where a
+     strong one would look like a seam. A gradient down the fill itself,
+     thinning as it descends, so the pane is lit from where every other light
+     on this site comes from. And the alpha, which is deliberately low enough
+     that the atmosphere behind the page reaches the code: descend a long
+     document and the blocks cool with it.
+
+     What is not translucent is the text. Every alpha here is on the surface
+     under it, never on the ink, because a code block that is pleasant to look
+     at and tiring to read is a failure at the only thing it is for. */
   pre.shiki {
+    position: relative;
+    isolation: isolate;
     margin: 0;
-    padding: 1rem;
-    border-radius: 0.5rem;
+    padding: 1rem 1.125rem;
+    border-radius: 0.625rem;
     overflow-x: auto;
     font-size: theme('fontSize.sm');
     line-height: 1.625;
-    background-color: var(--shiki-light-bg);
+    border: 1px solid rgb(148 163 184 / 0.28);
+    background-color: rgb(248 250 252 / 0.6);
+    background-image:
+      radial-gradient(
+        30rem 22rem at calc(var(--code-x) * 100%) calc(var(--code-y) * 100%),
+        rgb(59 130 246 / calc(var(--code-lit) * 0.11)),
+        transparent 70%
+      ),
+      radial-gradient(
+        18rem 13rem at calc(var(--code-x) * 118% - 9%) calc(var(--code-y) * 118% - 2%),
+        rgb(217 70 239 / calc(var(--code-lit) * 0.07)),
+        transparent 72%
+      ),
+      linear-gradient(to bottom, rgb(255 255 255 / 0.34), rgb(255 255 255 / 0) 62%);
+    -webkit-backdrop-filter: blur(16px) saturate(1.5);
+    backdrop-filter: blur(16px) saturate(1.5);
+    box-shadow:
+      inset calc((0.5 - var(--code-x)) * var(--code-lit) * 18px) calc((0.5 - var(--code-y)) * var(--code-lit) * 12px) 28px -15px
+        rgb(255 255 255 / 0.9),
+      inset calc((var(--code-x) - 0.5) * var(--code-lit) * 18px) calc((var(--code-y) - 0.5) * var(--code-lit) * 12px) 32px -19px
+        rgb(15 23 42 / 0.22),
+      inset 0 1px 0 rgb(255 255 255 / 0.75),
+      calc((0.5 - var(--code-x)) * var(--code-lit) * 10px) calc((0.5 - var(--code-y)) * var(--code-lit) * 7px + 1px)
+        calc(2px + var(--code-lit) * 12px) calc(0px - var(--code-lit) * 5px) rgb(15 23 42 / 0.1);
+    transition: --code-lit 300ms ease-out;
   }
 
   pre.shiki,
@@ -109,12 +195,90 @@
   }
 
   .dark pre.shiki {
-    background-color: var(--shiki-dark-bg);
+    border-color: rgb(148 163 184 / 0.16);
+    /* why: a shade under the page's slate-900 rather than over it, so a block stays the darker thing on a page whose ground lifts as the reader descends, and its ink keeps the contrast it was chosen for */
+    background-color: rgb(20 29 47 / 0.64);
+    background-image:
+      radial-gradient(
+        30rem 22rem at calc(var(--code-x) * 100%) calc(var(--code-y) * 100%),
+        rgb(96 165 250 / calc(var(--code-lit) * 0.1)),
+        transparent 70%
+      ),
+      radial-gradient(
+        18rem 13rem at calc(var(--code-x) * 118% - 9%) calc(var(--code-y) * 118% - 2%),
+        rgb(232 121 249 / calc(var(--code-lit) * 0.07)),
+        transparent 72%
+      ),
+      linear-gradient(to bottom, rgb(148 163 184 / 0.05), rgb(148 163 184 / 0) 62%);
+    box-shadow:
+      inset calc((0.5 - var(--code-x)) * var(--code-lit) * 18px) calc((0.5 - var(--code-y)) * var(--code-lit) * 12px) 28px -15px
+        rgb(186 230 253 / 0.26),
+      inset calc((var(--code-x) - 0.5) * var(--code-lit) * 18px) calc((var(--code-y) - 0.5) * var(--code-lit) * 12px) 32px -17px
+        rgb(2 6 23 / 0.55),
+      inset 0 1px 0 rgb(203 213 225 / 0.07),
+      calc((0.5 - var(--code-x)) * var(--code-lit) * 10px) calc((0.5 - var(--code-y)) * var(--code-lit) * 7px + 1px)
+        calc(3px + var(--code-lit) * 12px) calc(0px - var(--code-lit) * 5px) rgb(2 6 23 / 0.45);
   }
 
   .dark pre.shiki,
   .dark pre.shiki span {
     color: var(--shiki-dark);
+  }
+
+  /* The pointer light, and the tilt that comes with it.
+
+     Everything the pointer drives is a background or a shadow on the block
+     itself. Not a transform, and not a pseudo-element either, and both of those
+     are load-bearing decisions.
+
+     Not a transform, because the block is a scroll container with a copy
+     control pinned in its corner and a selection a reader drags across it.
+     Rotating the element those live in moves all three: the control leaves the
+     corner it was aimed at, the selection lands a line off, and the text loses
+     subpixel rendering the moment it enters a transformed layer. Code that is
+     pleasant to look at and tiring to read has failed at the only thing it is
+     for.
+
+     And not a pseudo-element, because an absolutely positioned child of a
+     scroll container scrolls with the content. A block whose sample runs off
+     the right-hand edge would carry its light away with the code, leaving the
+     wash somewhere the pointer is not and the rim floating in the middle of the
+     pane. A background and an inset shadow are painted against the box instead
+     and stay where the box is.
+
+     What the reader gets is four things moving together. A soft wash of the
+     site's own blue centred on the pointer. A smaller magenta one that travels
+     further for the same movement, which is the parallax. A rim that brightens
+     on the side the pointer is on and darkens on the far one. And a cast
+     shadow thrown away from the pointer, lengthening as it goes. A pane picking
+     up a light source and tipping towards it does exactly those four things,
+     which is why the surface reads as tilted without a degree of rotation
+     anywhere in it. Nothing here can reflow.
+
+     The lag is a transition on the two numbers rather than anything driving
+     them: the script sets a target and stops, and the light spends the next
+     four hundred milliseconds arriving. Every pointer-driven term is scaled by
+     `--code-lit`, which is zero until a pointer is inside a block, so a page
+     holding forty samples paints its ordinary surface for thirty-nine of them
+     and relaxes the fortieth back to neutral when the reader leaves it.
+
+     The script attaches on neither a coarse pointer nor for a visitor who has
+     asked for less motion, and the stylesheet refuses in the same two cases, so
+     neither half has to trust the other. */
+  pre.shiki.is-lit {
+    --code-lit: 1;
+    transition:
+      --code-lit 200ms ease-out,
+      --code-x 420ms cubic-bezier(0.22, 1, 0.36, 1),
+      --code-y 420ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  /* why: a finger has no hover to carry a light with, so the effect is refused rather than left waiting for one that never comes */
+  @media (prefers-reduced-motion: reduce), (pointer: coarse) {
+    pre.shiki.is-lit {
+      --code-lit: 0;
+      transition: none;
+    }
   }
 
   /* Keep the <code> wrapper inside a highlighted <pre> visually flush so the
@@ -125,6 +289,373 @@
     border-radius: 0;
     font-size: inherit;
     line-height: inherit;
+  }
+
+  /* The language a markdown block was fenced with, added by script from the
+     class Shiki writes onto the element. It is a label rather than a header
+     bar: a strip above the block would give four characters the same weight as
+     the sample, and it would have to be drawn twice because the blocks written
+     into pages as components are not the blocks rendered out of a README. */
+  .code-language {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.625rem;
+    font-family: theme('fontFamily.mono');
+    font-size: 0.6875rem;
+    line-height: 1;
+    letter-spacing: 0.04em;
+    color: rgb(100 116 139 / 0.75);
+    opacity: 0.7;
+    transition: opacity 200ms ease-out;
+    pointer-events: none;
+    user-select: none;
+  }
+
+  .dark .code-language {
+    color: rgb(148 163 184 / 0.7);
+  }
+
+  /* why: the copy button lands in the same corner on hover, so the label yields to it rather than being covered by it */
+  pre.shiki:hover .code-language,
+  pre.shiki:focus-within .code-language,
+  .group:hover > .code-language,
+  .group:focus-within > .code-language {
+    opacity: 0;
+  }
+}
+
+@layer components {
+  /* How a package is built, set as a margin note at the end of its page.
+
+     One hairline and a smaller, quieter type scale. No border on the other
+     three sides, no fill, no radius: the rule is there to say the block is an
+     aside, and the moment it closes into a rectangle it is a card again and
+     carries as much weight as the sections it was moved below.
+
+     The rule takes the package's own hue at a low opacity, which is the third
+     and last place the accent appears on a page. That is the whole of the
+     package theme: the wash behind the document, the marks beside its
+     capabilities, and this. */
+  .architecture-note {
+    border-left: 1px solid hsl(var(--page-accent, 217) 45% 55% / 0.35);
+    padding-left: 1.5rem;
+  }
+
+  .dark .architecture-note {
+    border-left-color: hsl(var(--page-accent, 217) 55% 62% / 0.3);
+  }
+
+  .architecture-note__title {
+    margin: 0;
+    font-family: theme('fontFamily.display');
+    font-size: theme('fontSize.lg');
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: theme('colors.slate.500');
+  }
+
+  .dark .architecture-note__title {
+    color: theme('colors.slate.400');
+  }
+
+  .architecture-note__body {
+    margin-top: 0.75rem;
+    font-size: theme('fontSize.sm');
+    line-height: 1.75;
+    color: theme('colors.slate.500');
+  }
+
+  .dark .architecture-note__body {
+    color: theme('colors.slate.400');
+  }
+
+  .architecture-note__body > * + * {
+    margin-top: 0.75rem;
+  }
+
+  .architecture-note__body ul {
+    margin: 0.75rem 0 0;
+    padding-left: 1.125rem;
+    list-style: disc;
+  }
+
+  .architecture-note__body li + li {
+    margin-top: 0.375rem;
+  }
+
+  .architecture-note__body code {
+    border-radius: 0.25rem;
+    background-color: theme('colors.slate.100');
+    padding: 0.125rem 0.375rem;
+    font-size: 0.875em;
+    color: theme('colors.slate.600');
+  }
+
+  .dark .architecture-note__body code {
+    background-color: theme('colors.slate.800');
+    color: theme('colors.slate.400');
+  }
+
+  .architecture-note__body a {
+    color: theme('colors.primary.600');
+    text-decoration: none;
+  }
+
+  .architecture-note__body a:hover {
+    text-decoration: underline;
+  }
+
+  .dark .architecture-note__body a {
+    color: theme('colors.primary.400');
+  }
+}
+
+@layer components {
+  /* A package's capabilities, drawn as a run down one rail.
+
+     The geometry is a two-column grid per item: a fixed gutter the mark sits
+     in, and the text. The label and the sentence are separate rows of that
+     grid rather than one wrapped line, because the label is the thing a reader
+     scans for and a sentence starting on the same line takes that away.
+
+     The rail is a single hairline behind the gutter, masked so it arrives and
+     leaves rather than starting and stopping. Marks are drawn straight over it
+     with no disc behind them: at a hairline's weight the crossing is invisible,
+     and a disc would have to be filled with a colour, which on a page whose
+     background is a gradient means a colour that is right in one place only. */
+  .key-features {
+    position: relative;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .key-features::before {
+    content: '';
+    position: absolute;
+    left: 0.4375rem;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background-color: rgb(148 163 184 / 0.45);
+    -webkit-mask-image: linear-gradient(to bottom, transparent, #000 12%, #000 88%, transparent);
+    mask-image: linear-gradient(to bottom, transparent, #000 12%, #000 88%, transparent);
+  }
+
+  .dark .key-features::before {
+    background-color: rgb(148 163 184 / 0.3);
+  }
+
+  .key-features__item {
+    display: grid;
+    grid-template-columns: 1.75rem 1fr;
+    align-items: baseline;
+    margin: 0;
+    padding: 0 0 1.125rem;
+  }
+
+  .key-features__item:last-child {
+    padding-bottom: 0;
+  }
+
+  .key-features__mark {
+    grid-column: 1;
+    grid-row: 1;
+    width: 0.9375rem;
+    height: 0.9375rem;
+    /* why: the mark is a point on the rail rather than a bullet beside the text, so it is centred on the rail and nudged to sit on the label's own line */
+    align-self: center;
+    transform: translateY(0.05rem);
+    stroke: hsl(var(--page-accent, 217) 62% 40%);
+  }
+
+  .dark .key-features__mark {
+    stroke: hsl(var(--page-accent, 217) 72% 68%);
+  }
+
+  .key-features__label {
+    grid-column: 2;
+    grid-row: 1;
+    margin: 0;
+    font-weight: 600;
+    line-height: 1.6;
+    color: theme('colors.slate.900');
+  }
+
+  .dark .key-features__label {
+    color: theme('colors.white');
+  }
+
+  /* An author's qualifier, such as the entry point a capability lives behind.
+     It belongs with the name rather than with the sentence, but it is not the
+     name, so it is set lighter and it never takes the weight. */
+  .key-features__detail {
+    margin-left: 0.4375rem;
+    font-weight: 400;
+    color: theme('colors.slate.500');
+  }
+
+  .dark .key-features__detail {
+    color: theme('colors.slate.400');
+  }
+
+  .key-features__body {
+    grid-column: 2;
+    grid-row: 2;
+    margin: 0.125rem 0 0;
+    line-height: 1.7;
+    color: theme('colors.slate.600');
+  }
+
+  .dark .key-features__body {
+    color: theme('colors.slate.400');
+  }
+
+  .key-features code {
+    border-radius: 0.25rem;
+    background-color: theme('colors.slate.100');
+    padding: 0.125rem 0.375rem;
+    font-size: 0.875em;
+    color: theme('colors.slate.700');
+  }
+
+  .dark .key-features code {
+    background-color: theme('colors.slate.800');
+    color: theme('colors.slate.300');
+  }
+
+  .key-features a {
+    color: theme('colors.primary.600');
+    text-decoration: none;
+  }
+
+  .key-features a:hover {
+    text-decoration: underline;
+  }
+
+  .dark .key-features a {
+    color: theme('colors.primary.400');
+  }
+}
+
+@layer components {
+  /* The atmosphere behind a documentation page.
+
+     A documentation page is a column of text on a flat ground, and past a
+     certain length that flatness is the thing a reader feels rather than the
+     writing. What this adds is depth without adding anything to look at: the
+     head of a page is very nearly the ground it always was, and the further
+     down the reader goes the more a wash and a grain come up underneath it.
+
+     Three layers, all fixed to the viewport and all behind everything. Fixed
+     rather than painted behind the article, because this is the page's
+     environment rather than the article's background: a layer measured against
+     the document column ends at the column's edges, and what a reader sees
+     then is a tinted panel with untouched navigation either side of it. Pinned
+     to the viewport instead, one continuous field runs under the navigation,
+     the document, the index and the gutters alike, and every surface above it
+     keeps whatever translucency it already had.
+
+     They start at the header's lower edge and nowhere above it, so the site's
+     own chrome is the same colour on every page at every depth, and they fade
+     in over the first few dozen pixels so that boundary is a transition rather
+     than a line.
+
+     How far down the reader has come arrives as `--page-progress`, a single
+     number between zero and one published on the document element. Nothing
+     here animates and nothing here runs: the number changes, two gradients
+     repaint, and that is the whole of the cost. A page with nothing to scroll
+     reports zero and stays clean, which is the right answer for a document
+     short enough to be read without descending at all. */
+  .page-atmosphere {
+    --p: var(--page-progress, 0);
+  }
+
+  .page-atmosphere > div {
+    position: fixed;
+    /* why: the global navigation is the one surface the atmosphere stays out of, and it is four rem tall at every width */
+    inset: 4rem 0 0 0;
+    z-index: -1;
+    pointer-events: none;
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 6rem);
+    mask-image: linear-gradient(to bottom, transparent 0, #000 6rem);
+  }
+
+  /* The wash. Two things are happening in one gradient, and keeping them apart
+     is what stopped this reading as dirt.
+
+     Down the viewport it is a blue-green volume lit from above, which is the
+     depth cue and never changes. Down the document it is the alpha of that
+     volume, which is the progression and is all the progression there is.
+
+     The hue a package chose tints the top of the volume and only the top.
+     Twenty-one packages sit all the way around the wheel, so letting any of
+     them decide the colour a reader finishes a long page on is how a warm
+     accent ends up as clay and a violet one as a bruise. The far end is a
+     fixed teal instead: the house colour of the place, arrived at from
+     wherever the package started. */
+  .page-atmosphere__wash {
+    background-image: linear-gradient(
+      to bottom,
+      hsl(var(--page-accent, 217) 55% 52% / calc(var(--p) * 0.03)) 0%,
+      hsl(196 60% 46% / calc(var(--p) * 0.048)) 55%,
+      hsl(178 56% 40% / calc(var(--p) * 0.075)) 100%
+    );
+  }
+
+  .dark .page-atmosphere__wash {
+    background-image: linear-gradient(
+      to bottom,
+      hsl(var(--page-accent, 217) 62% 58% / calc(var(--p) * 0.045)) 0%,
+      hsl(196 68% 52% / calc(var(--p) * 0.068)) 55%,
+      hsl(178 62% 46% / calc(var(--p) * 0.1)) 100%
+    );
+  }
+
+  /* The grain, in two layers that hand over to each other on the way down.
+
+     The specks come first and are meant to be almost countable: a low octave
+     of fractal noise, thresholded so that only the brightest twentieth of it
+     survives, then tiled at three times the size it was drawn at so each
+     surviving speck lands as a few pixels rather than one. That is what makes
+     the head of a page read as a surface with a tooth instead of as a screen
+     with noise on it, and it costs one tile.
+
+     Both are desaturated at the filter. Fractal noise generates its red, green
+     and blue independently, so the raw tile is coloured confetti, and coloured
+     confetti under a coloured wash is precisely the dirt this was replacing.
+     Taking the chroma out leaves the tooth and removes the dirt. */
+  .page-atmosphere__specks {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='s'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='1' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3CfeComponentTransfer%3E%3CfeFuncA type='discrete' tableValues='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 1 1 1 1 1 1 1 1 1'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23s)'/%3E%3C/svg%3E");
+    background-size: 600px 600px;
+    /* why: the specks are the top of the page's character, so they thin out as the film they are handing over to arrives */
+    opacity: calc(0.1 - var(--p) * 0.058);
+  }
+
+  .dark .page-atmosphere__specks {
+    opacity: calc(0.13 - var(--p) * 0.075);
+  }
+
+  /* The film: the fine, dense tile the specks resolve into. Absent at the top
+     and never strong anywhere, it is what turns the far end of a page from a
+     flat colour into an atmosphere. */
+  .page-atmosphere__film {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23f)'/%3E%3C/svg%3E");
+    opacity: calc(var(--p) * 0.075);
+  }
+
+  .dark .page-atmosphere__film {
+    opacity: calc(var(--p) * 0.085);
+  }
+
+  /* A reader who has asked for less motion gets the place rather than the
+     descent: the layers hold at the depth a page settles into and stop
+     answering the scroll. The component declines to publish the fraction in
+     the same case, so neither half has to trust the other. */
+  @media (prefers-reduced-motion: reduce) {
+    .page-atmosphere {
+      --p: 0.55;
+    }
   }
 }
 

@@ -1,0 +1,60 @@
+{
+  "slug": "ui-utils-teardown",
+  "asset": "hero.gif",
+  "generatedAt": "2026-09-10T07:41:20.605Z",
+  "sceneHash": "f16ce6dcc8015174",
+  "sourceUrl": "stage:gauge",
+  "profile": {
+    "id": "compact",
+    "intent": "npm package pages, GitHub readmes and documentation read on a phone",
+    "width": 640,
+    "height": 360,
+    "scale": 2,
+    "fps": 12
+  },
+  "viewport": {
+    "width": 640,
+    "height": 360
+  },
+  "record": {
+    "settleMs": 0,
+    "durationMs": 8400
+  },
+  "startMs": 0,
+  "gif": {
+    "width": 640,
+    "fps": 6,
+    "colours": 40,
+    "lossy": 80,
+    "dither": true,
+    "loop": 0,
+    "maxBytes": 700000
+  },
+  "encoder": "sharp",
+  "toolVersions": [
+    {
+      "name": "sharp",
+      "version": "8.18.6"
+    }
+  ],
+  "bytes": 149604,
+  "frames": 72,
+  "stills": [
+    {
+      "asset": "poster.webp",
+      "bytes": 29192,
+      "maxBytes": 60000
+    }
+  ],
+  "browser": {
+    "name": "chromium",
+    "version": "149.0.7827.55",
+    "executablePath": "/home/vscode/.cache/ms-playwright/chromium-1228/chrome-linux64/chrome"
+  },
+  "determinism": {},
+  "console": {
+    "errors": 0,
+    "warnings": 0,
+    "pageErrors": 0
+  }
+}

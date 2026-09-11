@@ -33,6 +33,15 @@
   <img src="https://img.shields.io/badge/tree%20shakeable-%E2%9C%93-success?style=flat-square" alt="Tree Shakeable">
 </p>
 
+<p align="center">
+  <a href="https://www.hyperfrontend.dev/docs/libraries/state-machine/">
+    <img width="640" src="https://www.hyperfrontend.dev/media/state-machine-derived/hero.gif" alt="Code on the left dispatches start, fail, start, success, start into a store while the panel on the right repaints the four booleans and names the derived states they add up to: notStarted, inProgress, failed, retrying, restarting">
+  </a>
+</p>
+<p align="center">
+  <sub>The same start() dispatched three times. START keeps the previous outcome, so the second call lands in retrying and the third in restarting.</sub>
+</p>
+
 Lightweight, functional state management library with Redux-inspired actions/reducers, async operation orchestration, and lifecycle-aware component abstractions for predictable application state.
 
 • 👉 See [**documentation**](https://www.hyperfrontend.dev/docs/libraries/state-machine/)
@@ -78,9 +87,9 @@ store.dispatch(start()) // restarting: running, with a good result still on scre
 
 ### Architecture Highlights
 
-The library uses a functional core with imperative shell pattern. The `rootReducer` is a pure function mapping (state, action) → new state using a handler lookup table. The `Store` class wraps the reducer with subscription management using a `Set<Listener>` for efficient add/remove operations. Derived state computation happens through selector functions that transform core state into boolean flags, with the `Events` class comparing previous/current derived states to trigger event handlers only when specific flags activate. The `LifecycleAwareComponent` uses protected setter methods (setInitializing, setReady, etc.) that invoke callback stacks only when state actually changes, preventing duplicate notifications. All state updates are immutable using object spread (`{ ...state, inProgress: true }`).
+Event handlers are edge-triggered: a handler for `retrying` fires on the transition into that derived state, not on every dispatch that leaves the flag true, so you get one notification per activation. Every dispatch replaces the state object rather than mutating it, so the state a subscriber receives can be compared by reference; `getState()` returns a fresh shallow copy on each call and is not a reference to compare against.
 
-For a detailed technical deep dive, see [ARCHITECTURE.md](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/state-machine/ARCHITECTURE.md).
+For a detailed technical deep dive, see the [architecture guide](https://www.hyperfrontend.dev/docs/libraries/state-machine/architecture/).
 
 ## Why Use @hyperfrontend/state-machine?
 
@@ -237,64 +246,15 @@ coordinator.cancelAll()
 
 ## API Overview
 
-### Core Modules
+The whole state is four booleans: `inProgress`, `success`, `fail`, and `halt`. A [`Store`](https://www.hyperfrontend.dev/docs/libraries/state-machine/store/#api-Store) holds one copy of them, five action creators (`start`, `pause`, `cancel`, `success`, `fail`) are the only things that move them, and `START` is the handler that carries history forward: it sets `inProgress` and leaves whatever `success` or `fail` was already there. That is the whole trick, and everything else reads those four flags back.
 
-**Store Management:**
+Reading them back is what the selectors do. Ten of them take a state and return a boolean, and [`derivedState`](https://www.hyperfrontend.dev/docs/libraries/state-machine/selectors/#api-derivedState) computes the set in a single call and hands back a named object to render from. `notStarted`, `inProgress`, `done`, `successful`, `failed`, `halted`, `paused`, and `cancelled` are the ones you would expect. The two that pay for the package are [`retrying`](https://www.hyperfrontend.dev/docs/libraries/state-machine/selectors/#api-retrying), true while an attempt runs after a failure, so the error banner can stay up instead of blinking off, and [`restarting`](https://www.hyperfrontend.dev/docs/libraries/state-machine/selectors/#api-restarting), true while a refresh runs with a good result still on screen, so a table can keep its rows. A lone `isLoading` is true at both of those moments and at a first load, and says the same thing at all three.
 
-- `Store` - Central state container with dispatch/subscribe/getState
-- `rootReducer` - Pre-built reducer for process state (START/PAUSE/CANCEL/SUCCESS/FAIL)
+Two classes do that dispatching for you. [`AsyncOperation`](https://www.hyperfrontend.dev/docs/libraries/state-machine/async-operation/#api-AsyncOperation) takes a `() => Promise<void>`, dispatches start before it and success or fail after it, and lets you listen by derived-state name: `on('retrying', handler)` fires on the transition into that state, once per activation. [`CoordinatedAsyncProcess`](https://www.hyperfrontend.dev/docs/libraries/state-machine/coordinated-async-operation/#api-CoordinatedAsyncProcess) is that wrapper over a set of processes, with `startAll()`, `pauseAll()`, and `cancelAll()`. [`LifecycleAwareComponent`](https://www.hyperfrontend.dev/docs/libraries/state-machine/lifecycle-aware-component/#api-LifecycleAwareComponent) tracks a different lifecycle: the initializing, ready, starting, stopping, and active of a long-lived object, where a callback registered after that state is already true is called straight away rather than waiting for a transition that has been and gone.
 
-**Actions:**
+Every folder is its own entry point, so an import can take just the surface you need. Reach for `/selectors` and `/models` when something else already owns the state and you only want to read and type it; `/store`, `/actions`, `/reducer`, and `/state` to drive the flags yourself; `/events` and `/state-change` for the edge-triggered dispatcher and the previous-versus-current pair it compares; and `/async-operation`, `/coordinated-async-operation`, or `/lifecycle-aware-component` when you would rather a class did the dispatching. The root entry re-exports all of it, which is the easier start and the one the bundler can still tree-shake.
 
-- `start(...args)` - Dispatch START action
-- `pause(...args)` - Dispatch PAUSE action
-- `cancel(...args)` - Dispatch CANCEL action
-- `success(...args)` - Dispatch SUCCESS action
-- `fail(error)` - Dispatch FAIL action
-
-**State Types:**
-
-- `State` - Core state shape: `{ inProgress, success, fail, halt }`
-- `DerivedState` - Computed state: `{ notStarted, inProgress, done, successful, failed, retrying, restarting, paused, cancelled }`
-- `Action` - Base action type with `type` property
-- `Event` - Event names for derived state transitions
-
-**Async Operations:**
-
-- `AsyncOperation` - Wraps async functions with automatic action dispatching
-- `CoordinatedAsyncProcess` - Manages multiple async operations
-- `AsyncProcess` - Type for the wrapped function: `() => Promise<void>`
-
-**Lifecycle Components:**
-
-- `LifecycleAwareComponent` - Abstract class with lifecycle state tracking
-- Lifecycle properties: `initializing`, `ready`, `starting`, `stopping`, `active`
-- Lifecycle callbacks: `onInitializingStatusChange`, `onReadyStatusChange`, `onStartStatusChange`, `onStopStatusChange`, `onActiveStatusChange`
-
-**Events:**
-
-- `Events` - Event dispatcher with derived state change detection
-- Event types: `notStarted`, `inProgress`, `done`, `successful`, `failed`, `retrying`, `restarting`, `paused`, `cancelled`
-
-**Selectors:**
-
-- `derivedState(state)` - Compute all nine flags at once
-- `notStarted`, `inProgress`, `done`, `successful`, `failed`, `retrying`, `restarting`, `halted`, `paused`, `cancelled` - Each one on its own, `(state) => boolean`
-- `StateChange` - Keeps the previous and current derived state so you can compare them
-
-### Modular Exports
-
-- `@hyperfrontend/state-machine/actions` - Action creators
-- `@hyperfrontend/state-machine/store` - Store implementation
-- `@hyperfrontend/state-machine/reducer` - Root reducer
-- `@hyperfrontend/state-machine/state` - State utilities and initial state
-- `@hyperfrontend/state-machine/selectors` - State selectors
-- `@hyperfrontend/state-machine/state-change` - Previous and current derived state tracking
-- `@hyperfrontend/state-machine/events` - Event system
-- `@hyperfrontend/state-machine/async-operation` - Async operation wrapper
-- `@hyperfrontend/state-machine/coordinated-async-operation` - Multi-process coordination
-- `@hyperfrontend/state-machine/lifecycle-aware-component` - Lifecycle component base class
-- `@hyperfrontend/state-machine/models` - TypeScript types and interfaces
+Every action, selector, event name, and type is in the [API reference](https://www.hyperfrontend.dev/docs/libraries/state-machine/#api-reference).
 
 ## Compatibility
 

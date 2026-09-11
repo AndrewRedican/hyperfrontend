@@ -32,6 +32,8 @@ pnpm-lock.yaml
 coverage/
 .nyc_output/
 apps/docs-site/.generated/
+# Written by the lib-compatibility-matrix rule, which is the only thing allowed to decide its shape
+LIBRARY_COMPATIBILITY.md
 
 # Test fixtures
 **/__fixtures__/
@@ -42,3 +44,6 @@ apps/docs-site/.generated/
 .nx/self-healing
 # Research notes kept verbatim as written (apps/docs-site/notes)
 apps/docs-site/notes/
+
+# Recorded scene files: their sha256 binds a media asset, so a reformat invalidates the recording
+tools/media/scenes/

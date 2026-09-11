@@ -2,6 +2,7 @@ import type { Rule } from 'eslint'
 import { dirname } from 'node:path'
 import { createURL } from '@hyperfrontend/immutable-api-utils/built-in-copy/url'
 import { isPublishableLibrary, readPackageJson } from '../utils/nx-project'
+import { analyzeKeyFeatures } from '../utils/readme-key-features'
 
 /**
  * The expected base URL for documentation links.
@@ -112,11 +113,19 @@ export const REQUIRED_SECTIONS = [
 ] as const
 
 /**
+ * The Key Features subsection, which every publishable README carries.
+ *
+ * The documentation site renders its list as the package's feature summary, so the rule
+ * checks the list itself as well as the heading above it.
+ */
+export const KEY_FEATURES_SUBSECTION = { level: 3, pattern: /^key features$/i, name: 'Key Features', parent: /^what is/i } as const
+
+/**
  * Required subsections that should appear under specific parent sections.
  */
 export const REQUIRED_SUBSECTIONS = [
-  { level: 3, pattern: /^key features$/i, name: 'Key Features', parent: /^what is/i },
-  { level: 3, pattern: /^architecture highlights$/i, name: 'Architecture Highlights', parent: /^what is/i },
+  // why: Architecture Highlights is optional, since a package with no consumer-relevant architecture to state should not be made to invent one
+  KEY_FEATURES_SUBSECTION,
 ] as const
 
 /**
@@ -349,7 +358,7 @@ export function extractShortDescription(content: string, badgesEndLine: number):
       continue
     }
 
-    if (line.startsWith('<') && !line.startsWith('<a')) {
+    if (line.startsWith('<')) {
       continue
     }
 
@@ -401,6 +410,18 @@ export function extractDocumentationLink(content: string): DocLinkInfo | null {
 }
 
 /**
+ * Collects the subsections of a given level that sit inside a parent section.
+ *
+ * @param sections - Every section parsed from the README.
+ * @param parent - The section to look inside.
+ * @param level - The heading level the subsections use.
+ * @returns The subsections nested under the parent, in document order.
+ */
+export function collectSubsections(sections: ParsedSection[], parent: ParsedSection, level: number): ParsedSection[] {
+  return sections.filter((section) => section.level === level && section.startLine > parent.startLine && section.startLine < parent.endLine)
+}
+
+/**
  * Extracts the package-filtered guides link from the content.
  *
  * The link must survive a package having no guides yet: it points at a filter,
@@ -449,6 +470,20 @@ const rule: Rule.RuleModule = {
         "README section '{{ section }}' should appear before '{{ before }}' (expected order: What is, Why Use, Installation, Quick Start, API Overview, Compatibility)",
       missingSubsection: "README must have subsection '{{ subsection }}' under '{{ parent }}'",
       missingKeyFeaturesList: "Key Features section must have a bullet list (lines starting with '- **')",
+      keyFeaturesNotAList:
+        "Key Features must be a flat bullet list, and '{{ line }}' is not a top-level bullet. Rewrite it as a '- **Label** - explanation' bullet, or move it under a heading of its own.",
+      keyFeatureMissingLabel:
+        "Key feature '{{ feature }}' does not open with a bold label. Write it as '- **Label** - explanation' so the label can be read on its own.",
+      keyFeatureMissingDescription:
+        "Key feature '{{ feature }}' is a bare label. Follow it with an explanation, separated by ': ' or ' - ', saying what the feature gives the reader.",
+      keyFeatureLabelTooLong:
+        "Key feature label '{{ feature }}' is {{ characters }} characters, past the {{ maximum }} a label may use. Cut it back to a name and move the rest into the explanation after it.",
+      keyFeatureDescriptionTooShort:
+        "Key feature '{{ feature }}' explains itself in {{ characters }} characters, under the {{ minimum }} required. Say what it does for the reader instead of restating the label.",
+      keyFeaturesTooFew:
+        'Key Features lists {{ count }} features, under the {{ minimum }} a package needs to summarise itself. Add the features a reader would choose this package for.',
+      keyFeaturesTooMany:
+        'Key Features lists {{ count }} features, past the {{ maximum }} a reader takes in at a glance. Keep the ones that decide adoption and let the sections below carry the rest.',
     },
   },
 
@@ -580,11 +615,7 @@ const rule: Rule.RuleModule = {
           const parentSection = level2Sections.find((s) => requiredSub.parent.test(s.title))
 
           if (parentSection) {
-            const subsectionsInParent = sections.filter(
-              (s) => s.level === requiredSub.level && s.startLine > parentSection.startLine && s.startLine < parentSection.endLine
-            )
-
-            const found = subsectionsInParent.some((s) => requiredSub.pattern.test(s.title))
+            const found = collectSubsections(sections, parentSection, requiredSub.level).some((s) => requiredSub.pattern.test(s.title))
 
             if (!found) {
               context.report({
@@ -596,20 +627,33 @@ const rule: Rule.RuleModule = {
                 },
               })
             }
+          }
+        }
 
-            if (requiredSub.name === 'Key Features') {
-              const keyFeaturesSection = subsectionsInParent.find((s) => requiredSub.pattern.test(s.title))
+        const keyFeaturesParent = level2Sections.find((s) => KEY_FEATURES_SUBSECTION.parent.test(s.title))
+        const keyFeaturesSection = keyFeaturesParent
+          ? collectSubsections(sections, keyFeaturesParent, KEY_FEATURES_SUBSECTION.level).find((s) =>
+              KEY_FEATURES_SUBSECTION.pattern.test(s.title)
+            )
+          : undefined
 
-              if (keyFeaturesSection) {
-                const hasKeyFeaturesBullets = keyFeaturesSection.content.split('\n').some((line) => line.trimStart().startsWith('- **'))
-                if (!hasKeyFeaturesBullets) {
-                  context.report({
-                    node,
-                    messageId: 'missingKeyFeaturesList',
-                  })
-                }
-              }
-            }
+        if (keyFeaturesSection) {
+          const hasKeyFeaturesBullets = keyFeaturesSection.content.split('\n').some((line) => line.trimStart().startsWith('- **'))
+          if (!hasKeyFeaturesBullets) {
+            context.report({
+              node,
+              messageId: 'missingKeyFeaturesList',
+            })
+          }
+
+          // why: the site renders each label as the feature's name and the text after it as the reason it matters, so the list's shape is the contract, not just its presence
+          for (const problem of analyzeKeyFeatures(content.split('\n'), keyFeaturesSection)) {
+            context.report({
+              node,
+              loc: { line: problem.line, column: 0 },
+              messageId: problem.messageId,
+              data: problem.data,
+            })
           }
         }
       },

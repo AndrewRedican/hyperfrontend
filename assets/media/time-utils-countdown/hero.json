@@ -1,0 +1,60 @@
+{
+  "slug": "time-utils-countdown",
+  "asset": "hero.gif",
+  "generatedAt": "2026-09-10T07:40:50.131Z",
+  "sceneHash": "2376dd3cf7fb9b55",
+  "sourceUrl": "stage:gauge",
+  "profile": {
+    "id": "compact",
+    "intent": "npm package pages, GitHub readmes and documentation read on a phone",
+    "width": 640,
+    "height": 360,
+    "scale": 2,
+    "fps": 12
+  },
+  "viewport": {
+    "width": 640,
+    "height": 360
+  },
+  "record": {
+    "settleMs": 0,
+    "durationMs": 14300
+  },
+  "startMs": 0,
+  "gif": {
+    "width": 640,
+    "fps": 6,
+    "colours": 40,
+    "lossy": 80,
+    "dither": true,
+    "loop": 0,
+    "maxBytes": 700000
+  },
+  "encoder": "sharp",
+  "toolVersions": [
+    {
+      "name": "sharp",
+      "version": "8.18.6"
+    }
+  ],
+  "bytes": 127437,
+  "frames": 147,
+  "stills": [
+    {
+      "asset": "poster.webp",
+      "bytes": 17858,
+      "maxBytes": 60000
+    }
+  ],
+  "browser": {
+    "name": "chromium",
+    "version": "149.0.7827.55",
+    "executablePath": "/home/vscode/.cache/ms-playwright/chromium-1228/chrome-linux64/chrome"
+  },
+  "determinism": {},
+  "console": {
+    "errors": 0,
+    "warnings": 0,
+    "pageErrors": 0
+  }
+}

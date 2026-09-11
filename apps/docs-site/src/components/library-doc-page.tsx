@@ -1,18 +1,31 @@
 import type { TypeDocOutput } from '@/components/api-reference'
+import type { PackageFacts } from '@/lib/package-facts'
 import { TrackedLink } from '@/components/analytics/tracked-link'
 import { ApiLinkProvider, ApiReference } from '@/components/api-reference'
 import { Breadcrumb } from '@/components/breadcrumb'
 import { CodeBlock } from '@/components/code-block'
 import { DocumentShell } from '@/components/document/document-shell'
-import { SuggestGuideLink } from '@/components/guides/suggest-guide-link'
-import { H2 } from '@/components/heading-with-anchor'
+import { H1, H2 } from '@/components/heading-with-anchor'
+import { ArchitectureNote } from '@/components/package/architecture-note'
+import { KeyFeatures } from '@/components/package/key-features'
+import { packageAccentHue } from '@/components/package/package-accents'
+import { PackageCapabilities } from '@/components/package/package-capabilities'
+import { PackageMetadata } from '@/components/package/package-metadata'
+import { RelatedReading } from '@/components/package/related-reading'
+import { PageAtmosphere } from '@/components/page-atmosphere'
 import { removeBadges, transformLinks } from '@/lib/content'
-import { getLibraryReadme, getLibraryArchitecture, getLibraryApi, getApiLinkIndex } from '@/lib/docs-loader'
+import { getLibraryReadme, getLibraryApi, getApiLinkIndex } from '@/lib/docs-loader'
 import { documentSubject } from '@/lib/document-model'
 import { buildGuidesHref } from '@/lib/guide-filters'
 import { getGuidesForPackage } from '@/lib/guides'
+import { readKeyFeatures } from '@/lib/key-features'
 import { markdownToHtml } from '@/lib/markdown'
 import { extractMermaidBlocks } from '@/lib/mermaid-utils'
+import { npmPackageUrl } from '@/lib/npm-url'
+import { getPackageFacts } from '@/lib/package-facts'
+import { ARCHITECTURE_LEVEL, ARCHITECTURE_SLUG, CAPABILITIES_SLOT, KEY_FEATURES_SLOT, preparePackageReadme } from '@/lib/package-readme'
+import { readSection, readSectionLink } from '@/lib/readme-sections'
+import { buildRelatedReading } from '@/lib/related-reading'
 import { extractMarkdownSections } from '@/lib/slug'
 import Link from 'next/link'
 import { ReadmeContent } from './readme-content'
@@ -37,9 +50,14 @@ const RELATED_READING_TITLE = 'Related reading'
 /** @see {@link RELATED_READING_TITLE} */
 const RELATED_READING_ANCHOR = 'related-reading'
 
+/** Heading the moved architecture note keeps, matching the README's own. */
+const ARCHITECTURE_TITLE = 'Architecture Highlights'
+
+/** What a page assumes about a package the manifest has not covered yet. */
+const NO_FACTS: PackageFacts = { license: '', version: '', isPrivate: false, compatibility: null, outputs: [] }
+
 export async function LibraryDocPage({ title, packageName, slug, category, fallbackDescription, fallbackFeatures }: LibraryPageProps) {
   const readme = getLibraryReadme(slug)
-  const hasArchitecture = !!getLibraryArchitecture(slug)
   const apiData = getLibraryApi(slug) as TypeDocOutput | null
   const guides = getGuidesForPackage(packageName)
   // why: The same canonical destination the package README points at, so both entry points land on one filtered view
@@ -49,11 +67,28 @@ export async function LibraryDocPage({ title, packageName, slug, category, fallb
     let processed = removeBadges(readme)
     processed = transformLinks(processed, { librarySlug: slug })
 
-    const { processedContent, diagrams } = extractMermaidBlocks(processed)
+    const facts = getPackageFacts(packageName) ?? NO_FACTS
+    const licenseHref = readSectionLink(processed, 'license')
+    const related = buildRelatedReading({ packageName, slug, readme: processed })
+
+    // why: the run is drawn only for a section the parser could read, so a README stating its features some other way keeps the rendering it already had
+    const features = await readKeyFeatures(processed)
+    const architecture = readSection(processed, ARCHITECTURE_SLUG, ARCHITECTURE_LEVEL)
+    const architectureHtml = architecture === null ? null : await markdownToHtml(architecture)
+    const { title: packageTitle, body } = preparePackageReadme(processed, {
+      keyFeatures: features !== null,
+      architecture: architectureHtml !== null,
+    })
+
+    const { processedContent, diagrams } = extractMermaidBlocks(body)
 
     const html = await markdownToHtml(processedContent)
 
     const sections = extractMarkdownSections(processedContent)
+    if (architectureHtml !== null) {
+      // why: the note moved to the end of the page, so its index entry moves with it rather than pointing back into the opening section it left
+      sections.push({ title: ARCHITECTURE_TITLE, anchor: ARCHITECTURE_SLUG, level: 2 })
+    }
     if (apiData) {
       // why: the reference is a section of this page with a server-rendered anchor, but its symbols are not; there are hundreds per package and they have their own filter, so the index offers the way in and stops there
       sections.push({ title: 'API Reference', anchor: 'api-reference', level: 2 })
@@ -62,83 +97,56 @@ export async function LibraryDocPage({ title, packageName, slug, category, fallb
     sections.push({ title: RELATED_READING_TITLE, anchor: RELATED_READING_ANCHOR, level: 2 })
 
     return (
-      <DocumentShell
-        descriptor={{ route: libraryDocRoute(slug, category), title, subject: documentSubject('package', packageName), kind: 'package' }}
-        sections={sections}
-      >
-        <Breadcrumb />
+      <>
+        {/* why: a package's own hue tints the atmosphere behind its documentation, so moving between packages feels like moving between places rather than reloading one */}
+        <PageAtmosphere accent={packageAccentHue(packageName)} />
+        <DocumentShell
+          descriptor={{ route: libraryDocRoute(slug, category), title, subject: documentSubject('package', packageName), kind: 'package' }}
+          sections={sections}
+        >
+          <Breadcrumb />
 
-        <div className="mb-4 flex flex-wrap items-center gap-3">
-          <code className="rounded-lg bg-slate-100 px-3 py-1.5 text-sm font-medium text-slate-700 dark:bg-slate-800 dark:text-slate-300">
-            {packageName}
-          </code>
-          <TrackedLink
-            href={`https://www.npmjs.com/package/${packageName}`}
-            event={{ kind: 'npm', packageName }}
-            external
-            className="text-sm text-primary-600 hover:underline dark:text-primary-400"
-          >
-            View on npm →
-          </TrackedLink>
-          {hasArchitecture && (
-            <Link href={`/docs/libraries/${slug}/architecture`} className="text-sm text-primary-600 hover:underline dark:text-primary-400">
-              Architecture →
-            </Link>
-          )}
-          <Link href={guidesHref} className="text-sm text-primary-600 hover:underline dark:text-primary-400">
-            Guides &amp; tutorials →
-          </Link>
-          {apiData && (
-            <a href="#api-reference" className="text-sm text-primary-600 hover:underline dark:text-primary-400">
-              API Reference →
-            </a>
-          )}
-        </div>
+          <H1 className="font-display text-3xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-4xl">
+            {packageTitle ?? packageName}
+          </H1>
 
-        <ReadmeContent html={html} mermaidDiagrams={diagrams} />
+          <PackageMetadata packageName={packageName} facts={facts} licenseHref={licenseHref} />
 
-        {/* API Reference */}
-        {apiData && (
-          <section className="mt-12 border-t border-slate-200 pt-8 dark:border-slate-700">
-            <H2 id="api-reference" className="text-2xl font-bold text-slate-900 dark:text-white mb-6">
-              API Reference
-            </H2>
-            <ApiLinkProvider index={getApiLinkIndex(slug, packageName)} currentPackage={packageName}>
-              <ApiReference data={apiData} />
-            </ApiLinkProvider>
-          </section>
-        )}
-
-        {/* why: one place to go next, at the end where a reader is looking for one. The package's own guides and the two orientation documents were separate sections either side of the reference for no reason a reader could see — both answer "what else should I read", the reader does not care that one list comes from the guide corpus and the other is fixed, and putting one of them before hundreds of API symbols asked them to choose before they had read the page. */}
-        <section className="mt-12 border-t border-slate-200 pt-8 dark:border-slate-700">
-          <H2 id={RELATED_READING_ANCHOR} className="text-2xl font-bold text-slate-900 dark:text-white mb-6">
-            {RELATED_READING_TITLE}
-          </H2>
-          <div className="grid gap-4 sm:grid-cols-2">
-            {/* why: the package's own guides come first because they are the only entries on this list that are about this package */}
-            {guides.map((guide) => (
-              <RelatedCard key={guide.slug} href={guide.route} title={guide.title} blurb={guide.problem} />
-            ))}
-            <RelatedCard href="/docs" title="Getting Started" blurb="Learn how to set up hyperfrontend." />
-            <RelatedCard href="/architecture" title="Architecture Guide" blurb="Understand how the libraries work together." />
+          <div className="mt-6">
+            <ReadmeContent
+              html={html}
+              mermaidDiagrams={diagrams}
+              slots={{
+                [CAPABILITIES_SLOT]: <PackageCapabilities compatibility={facts.compatibility} outputs={facts.outputs} />,
+                ...(features === null ? {} : { [KEY_FEATURES_SLOT]: <KeyFeatures features={features} /> }),
+              }}
+            />
           </div>
-          <p className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-slate-600 dark:text-slate-400">
-            {guides.length > 0 ? (
-              <>
-                <Link href={guidesHref} className="font-medium text-primary-600 hover:underline dark:text-primary-400">
-                  Browse guides filtered to this package
-                </Link>
-                <SuggestGuideLink packageName={packageName} />
-              </>
-            ) : (
-              <>
-                <span>No guides cover {packageName} yet.</span>
-                <SuggestGuideLink packageName={packageName} label="Request one" />
-              </>
-            )}
-          </p>
-        </section>
-      </DocumentShell>
+
+          {architectureHtml !== null && <ArchitectureNote html={architectureHtml} title={ARCHITECTURE_TITLE} anchor={ARCHITECTURE_SLUG} />}
+
+          {/* API Reference */}
+          {apiData && (
+            <section className="mt-12 border-t border-slate-200 pt-8 dark:border-slate-700">
+              <H2 id="api-reference" className="text-2xl font-bold text-slate-900 dark:text-white mb-6">
+                API Reference
+              </H2>
+              <ApiLinkProvider index={getApiLinkIndex(slug, packageName)} currentPackage={packageName}>
+                <ApiReference data={apiData} />
+              </ApiLinkProvider>
+            </section>
+          )}
+
+          <RelatedReading
+            anchor={RELATED_READING_ANCHOR}
+            title={RELATED_READING_TITLE}
+            entries={related}
+            packageName={packageName}
+            guidesHref={guidesHref}
+            hasGuides={guides.length > 0}
+          />
+        </DocumentShell>
+      </>
     )
   }
 
@@ -158,7 +166,7 @@ export async function LibraryDocPage({ title, packageName, slug, category, fallb
           {packageName}
         </code>
         <TrackedLink
-          href={`https://www.npmjs.com/package/${packageName}`}
+          href={npmPackageUrl(packageName)}
           event={{ kind: 'npm', packageName }}
           external
           className="text-sm text-primary-600 hover:underline dark:text-primary-400"
@@ -191,43 +199,6 @@ export async function LibraryDocPage({ title, packageName, slug, category, fallb
         <CodeBlock code={`npm install ${packageName}`} />
       </section>
     </>
-  )
-}
-
-/** Props for {@link RelatedCard}. */
-interface RelatedCardProps {
-  /** Site-relative route the card opens. */
-  href: string
-  /** What the destination is called. */
-  title: string
-  /** One line on what the reader will find there. */
-  blurb: string
-}
-
-/**
- * One entry in a library page's related reading.
- *
- * Every entry is rendered the same whether it came from the guide corpus or is
- * one of the two fixed orientation documents, because from the reader's side
- * they are the same kind of thing and the difference is only in where the page
- * looked them up.
- * @param props - See {@link RelatedCardProps}.
- * @param props.href - Site-relative route the card opens
- * @param props.title - What the destination is called
- * @param props.blurb - One line on what the reader will find there
- * @returns The card.
- */
-function RelatedCard({ href, title, blurb }: RelatedCardProps) {
-  return (
-    <Link
-      href={href}
-      className="group rounded-lg border border-slate-200 bg-white p-4 transition-colors hover:border-primary-300 hover:bg-primary-50 dark:border-slate-700 dark:bg-slate-900 dark:hover:border-primary-700 dark:hover:bg-primary-950/30"
-    >
-      <h3 className="font-semibold text-slate-900 group-hover:text-primary-600 dark:text-white dark:group-hover:text-primary-400">
-        {title}
-      </h3>
-      <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">{blurb}</p>
-    </Link>
   )
 }
 

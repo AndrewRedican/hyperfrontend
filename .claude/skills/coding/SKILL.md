@@ -322,6 +322,7 @@ Do not add branches that cannot be reached, and avoid defensive branching that a
 - [ ] `project.json` → `name` starts with `lib-`, has `description` and `tags`
 - [ ] `project.json` → targets: `build`, `publish`, `version`, `version-check`
 - [ ] `project.json` → IIFE/UMD outputs include both `entry` and `globalName`
+- [ ] `project.json` → `metadata.compatibility.environments` declares `node`, `browser`, `webWorker` as `full` / `partial` / `none` (the `library` and `make-publishable` generators ask for this; `lib-project-compatibility` enforces it)
 - [ ] `package.json` → required fields present (see `lib-pkg-fields` rule doc)
 - [ ] `package.json` → exports use `.js` only (no `.ts` paths)
 - [ ] `package.json` → includes `"./package.json": "./package.json"` export
@@ -330,7 +331,6 @@ Do not add branches that cannot be reached, and avoid defensive branching that a
 - [ ] `README.md` → title, badges block, description, all required sections in order
 - [ ] Root `README.md` → library listed in **Main Packages** or **Internal Packages**
 - [ ] CI workflow file added
-- [ ] `LIBRARY_COMPATIBILITY.md` updated
 - [ ] E2E project created alongside the library
 - [ ] `index.ts` barrel only at declared export paths
 

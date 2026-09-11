@@ -56,6 +56,8 @@
         "{workspaceRoot}/assets/media/**",
         "{workspaceRoot}/libs/**/*.md",
         "{workspaceRoot}/libs/**/src/**/*.ts",
+        "{workspaceRoot}/libs/**/package.json",
+        "{workspaceRoot}/libs/**/project.json",
         "{workspaceRoot}/plugins/**/*.md",
         "{workspaceRoot}/plugins/**/src/**/*.ts"
       ],

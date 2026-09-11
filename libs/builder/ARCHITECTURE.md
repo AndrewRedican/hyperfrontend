@@ -69,7 +69,7 @@ const ctx = createBuildContext(config)
 const outputs = await runBundlePhase(ctx, config)
 await runPackagePhase(ctx, config, outputs)
 
-// ❌ No phase depends on `build` having run — there is no hidden global state
+// ❌ No phase depends on `build` having run; there is no hidden global state
 ```
 
 ### 2. Vendor-neutral via predicates, not config DSLs
@@ -253,7 +253,7 @@ flowchart TB
     esm --> r1["recover()"]
     r1 --> cjs["CJS entries"]
     cjs --> iife["IIFE + UMD entries"]
-    iife --> dts["generateDeclarations() — tsc once"]
+    iife --> dts["generateDeclarations() (tsc once)"]
     dts --> dtsdep["Per-entry .d.ts for bundled deps + sibling dedup"]
     dtsdep --> prune["Prune orphan + dead deps"]
     prune --> dedupe["hoistSharedFirstParty() → _shared/<br/>(dedupeSharedInternals, default on)"]

@@ -13,7 +13,7 @@ import importOrder, { RULE_NAME as IMPORT_ORDER } from './rules/import-order'
 import jestMockAfterImports, { RULE_NAME as JEST_MOCK_AFTER_IMPORTS } from './rules/jest-mock-after-imports'
 import libBuilderImplicitDependency, { RULE_NAME as LIB_BUILDER_IMPLICIT_DEPENDENCY } from './rules/lib-builder-implicit-dependency'
 import libCiWorkflows, { RULE_NAME as LIB_CI_WORKFLOWS } from './rules/lib-ci-workflows'
-import libCompatibilityDocs, { RULE_NAME as LIB_COMPATIBILITY_DOCS } from './rules/lib-compatibility-docs'
+import libCompatibilityMatrix, { RULE_NAME as LIB_COMPATIBILITY_MATRIX } from './rules/lib-compatibility-matrix'
 import libE2eProjectRequired, { RULE_NAME as LIB_E2E_PROJECT_REQUIRED } from './rules/lib-e2e-project-required'
 import libEntryExportSpacing, { RULE_NAME as LIB_ENTRY_EXPORT_SPACING } from './rules/lib-entry-export-spacing'
 import libPkgBundleEntry, { RULE_NAME as LIB_PKG_BUNDLE_ENTRY } from './rules/lib-pkg-bundle-entry'
@@ -25,6 +25,7 @@ import libPkgNoMain, { RULE_NAME as LIB_PKG_NO_MAIN } from './rules/lib-pkg-no-m
 import libPkgPackageJsonExport, { RULE_NAME as LIB_PKG_PACKAGE_JSON_EXPORT } from './rules/lib-pkg-package-json-export'
 import libPkgSecondaryEntryReadme, { RULE_NAME as LIB_PKG_SECONDARY_ENTRY_README } from './rules/lib-pkg-secondary-entry-readme'
 import libProjectBundleConfig, { RULE_NAME as LIB_PROJECT_BUNDLE_CONFIG } from './rules/lib-project-bundle-config'
+import libProjectCompatibility, { RULE_NAME as LIB_PROJECT_COMPATIBILITY } from './rules/lib-project-compatibility'
 import libProjectMetadata, { RULE_NAME as LIB_PROJECT_METADATA } from './rules/lib-project-metadata'
 import libProjectVersionTargets, { RULE_NAME as LIB_PROJECT_VERSION_TARGETS } from './rules/lib-project-version-targets'
 import libReadmeStructure, { RULE_NAME as LIB_README_STRUCTURE } from './rules/lib-readme-structure'
@@ -59,6 +60,7 @@ import preferJsDocOverTrailingComments, {
 } from './rules/prefer-jsdoc-over-trailing-comments'
 import projectLifecyclePolicy, { RULE_NAME as PROJECT_LIFECYCLE_POLICY } from './rules/project-lifecycle-policy'
 import readmeMediaAsset, { RULE_NAME as README_MEDIA_ASSET } from './rules/readme-media-asset'
+import readmeParagraphLength, { RULE_NAME as README_PARAGRAPH_LENGTH } from './rules/readme-paragraph-length'
 import requireCodeblockLanguage, { RULE_NAME as REQUIRE_CODEBLOCK_LANGUAGE } from './rules/require-codeblock-language'
 import requireNodeProtocol, { RULE_NAME as REQUIRE_NODE_PROTOCOL } from './rules/require-node-protocol'
 import rootReadmePackages, { RULE_NAME as ROOT_README_PACKAGES } from './rules/root-readme-packages'
@@ -78,7 +80,7 @@ export const rules: ESLint.Plugin['rules'] = {
   [DOCS_SITE_SECONDARY_ENTRIES]: docsSiteSecondaryEntries as unknown as Rule.RuleModule,
   [ESCAPE_PACKAGE_TAGS]: escapePackageTags as unknown as Rule.RuleModule,
   [EXPORT_ORDER]: exportOrder as unknown as Rule.RuleModule,
-  [LIB_COMPATIBILITY_DOCS]: libCompatibilityDocs as unknown as Rule.RuleModule,
+  [LIB_COMPATIBILITY_MATRIX]: libCompatibilityMatrix as unknown as Rule.RuleModule,
   [LIB_ENTRY_EXPORT_SPACING]: libEntryExportSpacing as unknown as Rule.RuleModule,
   [IMPORT_ORDER]: importOrder as unknown as Rule.RuleModule,
   [JEST_MOCK_AFTER_IMPORTS]: jestMockAfterImports as unknown as Rule.RuleModule,
@@ -94,6 +96,7 @@ export const rules: ESLint.Plugin['rules'] = {
   [LIB_PKG_PACKAGE_JSON_EXPORT]: libPkgPackageJsonExport as unknown as Rule.RuleModule,
   [LIB_PKG_SECONDARY_ENTRY_README]: libPkgSecondaryEntryReadme as unknown as Rule.RuleModule,
   [LIB_PROJECT_BUNDLE_CONFIG]: libProjectBundleConfig as unknown as Rule.RuleModule,
+  [LIB_PROJECT_COMPATIBILITY]: libProjectCompatibility as unknown as Rule.RuleModule,
   [LIB_PROJECT_METADATA]: libProjectMetadata as unknown as Rule.RuleModule,
   [LIB_PROJECT_VERSION_TARGETS]: libProjectVersionTargets as unknown as Rule.RuleModule,
   [LIB_README_STRUCTURE]: libReadmeStructure as unknown as Rule.RuleModule,
@@ -126,6 +129,7 @@ export const rules: ESLint.Plugin['rules'] = {
   [PREFER_INLINE_SINGLE_USE]: preferInlineSingleUse as unknown as Rule.RuleModule,
   [PREFER_JSDOC_OVER_TRAILING_COMMENTS]: preferJsDocOverTrailingComments as unknown as Rule.RuleModule,
   [README_MEDIA_ASSET]: readmeMediaAsset as unknown as Rule.RuleModule,
+  [README_PARAGRAPH_LENGTH]: readmeParagraphLength as unknown as Rule.RuleModule,
   [REQUIRE_CODEBLOCK_LANGUAGE]: requireCodeblockLanguage as unknown as Rule.RuleModule,
   [REQUIRE_NODE_PROTOCOL]: requireNodeProtocol as unknown as Rule.RuleModule,
   [ROOT_README_PACKAGES]: rootReadmePackages as unknown as Rule.RuleModule,

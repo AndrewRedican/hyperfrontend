@@ -33,6 +33,15 @@
   <img src="https://img.shields.io/badge/tree%20shakeable-%E2%9C%93-success?style=flat-square" alt="Tree Shakeable">
 </p>
 
+<p align="center">
+  <a href="https://www.hyperfrontend.dev/docs/libraries/utils/immutable-api/">
+    <img width="640" src="https://www.hyperfrontend.dev/media/immutable-api-capture/hero.gif" alt="A main.mjs file typed out on the left, ending in a vendor script that overwrites Object.keys, Object.prototype.hasOwnProperty and JSON.parse; on the right a node run asks each of those three questions twice, the global call returning the tampered answer in red and the captured copy returning the real one in green">
+  </a>
+</p>
+<p align="center">
+  <sub>Both columns run in the same process. The copies answer correctly only because their imports were evaluated before the widget that rewrote the globals.</sub>
+</p>
+
 Decorators and utilities for creating immutable, tamper-proof object APIs with built-in prototype pollution defense.
 
 • 👉 See [**documentation**](https://www.hyperfrontend.dev/docs/libraries/utils/immutable-api/)
@@ -57,7 +66,7 @@ Additionally, the library provides **safe built-in copies**: pre-captured refere
 
 ### Architecture Highlights
 
-The `@locked()` decorator uses Symbol-based caching to store bound methods per instance, avoiding the performance cost of repeated `.bind()` calls. Properties are marked `configurable: false` to prevent deletion or descriptor modification, and `writable: false` to block reassignment.
+A locked property is defined `writable: false` and `configurable: false`, so it cannot be reassigned, deleted, or redefined afterwards. Reassignment fails silently in sloppy mode and throws a `TypeError` in strict mode, which includes every ES module.
 
 The safe built-in copies are captured at module initialization time. **Important:** This only works if the module loads before any malicious code runs; it mitigates pollution, not prevents it retroactively.
 
@@ -73,7 +82,7 @@ Arrow functions in class fields break inheritance and bloat bundle sizes due to 
 
 ### Simplifies Immutable Object Construction
 
-Building frozen objects with `Object.freeze()` is shallow and doesn't prevent descriptor modification. `lockedProps()` provides deep immutability for specific properties while allowing controlled mutability elsewhere, ideal for partially frozen configs or API surfaces.
+`Object.freeze()` is all or nothing: every own property goes read-only, including the ones you meant to keep mutable. `lockedProps()` locks only the properties you name, non-writable and non-configurable, so they cannot be reassigned, redefined or deleted while the rest of the object stays ordinary. It is shallow, like `Object.freeze()`: a locked property holding an object still hands out an object you can mutate.
 
 ### TypeScript-First with Runtime Enforcement
 
@@ -133,65 +142,23 @@ Object.defineProperty(obj, 'version', lockedPropertyDescriptors('1.0.0', true))
 
 ## API Overview
 
-### Decorator
+Two jobs share one mechanism, the property descriptor. One half locks the properties of an object you own; the other half captures the built-ins before anything else can swap them. Every module under `built-in-copy/` reads its global exactly once, while it is being evaluated, and re-exports what it found as a named binding: `built-in-copy/object` reads `globalThis.Object`, so its [`keys`](https://www.hyperfrontend.dev/docs/libraries/utils/immutable-api/built-in-copy/object/#api-keys) is the function value `Object.keys` held at that instant, and a later write to `Object.keys` lands on the global while the binding goes on answering correctly. [`parse`](https://www.hyperfrontend.dev/docs/libraries/utils/immutable-api/built-in-copy/json/#api-parse) does the same for `JSON.parse`.
 
-- **`@locked()`** - TypeScript decorator that makes class methods immutable with correct `this` binding
-
-### Functions
-
-- **`lockedProps(object, pairs)`** - Lock multiple properties on an object with key-value pairs
-- **`lockedPropertyDescriptors(value, enumerable?)`** - Create a locked property descriptor for manual use with `Object.defineProperty`
-
-### Safe Built-in Copies
-
-Pre-captured references to JavaScript built-ins via secondary entrypoints. Available modules:
-
-| Entrypoint                   | Description                                                                                                  |
-| ---------------------------- | ------------------------------------------------------------------------------------------------------------ |
-| `built-in-copy/object`       | Object static methods (`freeze`, `keys`, `entries`, etc.)                                                    |
-| `built-in-copy/array`        | Array static methods (`isArray`, `from`, `of`)                                                               |
-| `built-in-copy/json`         | JSON methods (`parse`, `stringify`)                                                                          |
-| `built-in-copy/promise`      | Promise static methods and factory (`createPromise`, `all`, `race`, etc.)                                    |
-| `built-in-copy/console`      | Console methods (`log`, `warn`, `error`, `info`, `debug`, etc.)                                              |
-| `built-in-copy/timers`       | Timer functions (`setTimeout`, `setInterval`, `queueMicrotask`, `requestAnimationFrame`, etc.)               |
-| `built-in-copy/messaging`    | Messaging APIs (`structuredClone`, `createMessageChannel`, `createBroadcastChannel`, `postMessage*` helpers) |
-| `built-in-copy/encoding`     | Encoding APIs (`createTextEncoder`, `createTextDecoder`, `atob`, `btoa`)                                     |
-| `built-in-copy/typed-arrays` | Typed arrays and buffers (`createUint8Array`, `createArrayBuffer`, `createDataView`, etc.)                   |
-| `built-in-copy/url`          | URL APIs (`createURL`, `createURLSearchParams`, `canParse`, `createObjectURL`, etc.)                         |
-| `built-in-copy/websocket`    | WebSocket factory (`createWebSocket`, ready state constants)                                                 |
-| `built-in-copy/math`         | Math methods and constants (`random`, `floor`, `ceil`, `PI`, etc.)                                           |
-| `built-in-copy/number`       | Number methods and constants (`isNaN`, `parseInt`, `parseFloat`, `MAX_SAFE_INTEGER`, etc.)                   |
-| `built-in-copy/string`       | String static methods (`fromCharCode`, `fromCodePoint`, `raw`)                                               |
-| `built-in-copy/reflect`      | Reflect methods                                                                                              |
-| `built-in-copy/function`     | Function utilities                                                                                           |
-| `built-in-copy/symbol`       | Symbol static methods                                                                                        |
-| `built-in-copy/map`          | Map constructor factory                                                                                      |
-| `built-in-copy/set`          | Set constructor factory                                                                                      |
-| `built-in-copy/weak-map`     | WeakMap constructor factory                                                                                  |
-| `built-in-copy/weak-set`     | WeakSet constructor factory                                                                                  |
-| `built-in-copy/regexp`       | RegExp constructor factory                                                                                   |
-| `built-in-copy/date`         | Date constructor factory                                                                                     |
-| `built-in-copy/error`        | Error constructor factories                                                                                  |
-
-**Limitations:**
-
-- Only effective if imported before any untrusted code executes
-- Does not protect against pollution that occurred before module load
-- Best used as an early import in application entry points
+The limit is worth stating plainly: this mitigates rather than prevents, and import order decides whether it works at all. A module graph evaluates in source order, so a copy is honest only when its import sits above the code that tampers. Put the untrusted import first and the capture reads an already poisoned global, returning exactly the wrong answer the global would. Treat these as entry-point imports:
 
 ```typescript
-// Import early in your entry point
-import { freeze, keys } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
+// these two lines have to be evaluated first
+import { keys, hasOwn } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { parse } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
-import { log, warn } from '@hyperfrontend/immutable-api-utils/built-in-copy/console'
-import { setTimeout } from '@hyperfrontend/immutable-api-utils/built-in-copy/timers'
-import { structuredClone, createMessageChannel } from '@hyperfrontend/immutable-api-utils/built-in-copy/messaging'
 
-const config = freeze({ api: 'https://example.com' })
-const data = parse('{"key": "value"}')
-log('Config loaded:', config)
-setTimeout(() => log('Delayed message'), 1000)
+import './vendor/analytics.js' // whatever this does to Object.keys, keys() is unaffected
 ```
+
+There are 24 of these subpaths, each named after the global or family of globals it copies, so the one you want is spelled like the thing you were reaching for: `built-in-copy/timers` holds `setTimeout` and `queueMicrotask`, `built-in-copy/console` holds `log` and `warn`. Members that need a receiver come through as wrappers ([`hasOwn`](https://www.hyperfrontend.dev/docs/libraries/utils/immutable-api/built-in-copy/object/#api-hasOwn) applies the captured `Object.prototype.hasOwnProperty` through a captured `Reflect.apply`), and constructors as `create*` factories such as `createMap`. The package root re-exports frozen namespace objects for many of these globals, which reads nicely but pulls in the whole namespace; named bindings from a subpath are what keep the rest out of your bundle.
+
+Three entries do the locking, and they stack. [`lockedPropertyDescriptors`](https://www.hyperfrontend.dev/docs/libraries/utils/immutable-api/locked-prop-descriptors/#api-lockedPropertyDescriptors) is the primitive: hand it a value and it returns `{ value, writable: false, configurable: false, enumerable }` for you to pass to `Object.defineProperty`. [`lockedProps`](https://www.hyperfrontend.dev/docs/libraries/utils/immutable-api/locked-props/#api-lockedProps) applies that across a list, taking the target object and an array of `[key, value]` pairs, and returns nothing: it mutates the object you handed it. [`locked`](https://www.hyperfrontend.dev/docs/libraries/utils/immutable-api/locked/#api-locked) is the class-method decorator and the odd one out, installing an accessor whose getter binds the method to the instance once and caches it under a symbol, and whose setter throws a `TypeError`.
+
+Every export, on every subpath, is in the [API reference](https://www.hyperfrontend.dev/docs/libraries/utils/immutable-api/#api-reference).
 
 ## Use Cases
 

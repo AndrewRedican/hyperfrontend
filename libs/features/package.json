@@ -10,7 +10,7 @@
     "@hyperfrontend/json-utils": "1.0.0",
     "@hyperfrontend/network-protocol": "2.0.0",
     "@hyperfrontend/nexus": "3.0.0",
-    "@hyperfrontend/project-scope": "0.2.4",
+    "@hyperfrontend/project-scope": "0.2.5",
     "@hyperfrontend/questions": "0.3.0",
     "@hyperfrontend/ui-utils": "0.0.8",
     "@hyperfrontend/versioning": "0.8.0",

@@ -3,6 +3,7 @@ import { Breadcrumb } from '@/components/breadcrumb'
 import { MarkdownDocPage } from '@/components/document/markdown-doc-page'
 import { GuideTypeBadge, VerificationBadge } from '@/components/guides/guide-badges'
 import { PackagePill } from '@/components/guides/package-pill'
+import { packageAccentHue } from '@/components/package/package-accents'
 import { ShareMenu } from '@/components/share/share-menu'
 import { documentSubject } from '@/lib/document-model'
 import { buildGuidesHref } from '@/lib/guide-filters'
@@ -54,12 +55,15 @@ export default async function GuidePage({ params }: GuidePageProps) {
   const relatedGuides = (guide.related?.guides ?? []).flatMap((ref) => index.filter((entry) => entry.slug === ref))
   // why: Prerequisites are authored sentences, so an API they name can carry its own reference link instead of going bare
   const prerequisiteKnowledge: string[] = await promiseAll((guide.prerequisites?.knowledge ?? []).map(markdownToInlineHtml))
+  // why: a guide's packages are listed owner first, so the first is the package the reader is here about
+  const primaryPackage = guide.packages[0]
 
   return (
     // why: the cap is what gives a guide its measure until the document index arrives; past that the measure is set on the prose itself, and holding the cap here would only stop a guide's code samples using the room the wider shell just gave them
     <div className="mx-auto max-w-4xl rail:max-w-none">
       <MarkdownDocPage
         markdown={guide.content}
+        {...(primaryPackage === undefined ? {} : { accent: packageAccentHue(primaryPackage) })}
         descriptor={{
           route: guide.route,
           title: guide.title,

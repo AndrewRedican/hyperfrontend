@@ -7,7 +7,7 @@
     "@hyperfrontend/immutable-api-utils": "1.0.0",
     "@hyperfrontend/logging": "1.0.0",
     "playwright-core": "1.62.1",
-    "sharp": "0.35.3"
+    "sharp": "0.35.4"
   },
   "devDependencies": {
     "@types/node": "25.3.3",

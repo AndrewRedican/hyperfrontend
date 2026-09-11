@@ -31,6 +31,15 @@
   <img src="https://img.shields.io/badge/tree%20shakeable-%E2%9C%93-success?style=flat-square" alt="Tree Shakeable">
 </p>
 
+<p align="center">
+  <a href="https://www.hyperfrontend.dev/docs/libraries/versioning/">
+    <img width="640" src="https://www.hyperfrontend.dev/media/versioning-cascade/hero.gif" alt="A commit header types itself out on the left while the right panel fills in the parsed commit object, a major bump, the version 3.0.0 and the CHANGELOG.md line it writes">
+  </a>
+</p>
+<p align="center">
+  <sub>Nobody picks the version here. The breaking marker in the header is what makes this release a major, and everything on the right is derived from that one line.</sub>
+</p>
+
 Versioning library with changelog parsing, conventional commits, and semver flow orchestration.
 
 • 👉 See [**documentation**](https://www.hyperfrontend.dev/docs/libraries/versioning/)
@@ -53,13 +62,12 @@ Versioning library with changelog parsing, conventional commits, and semver flow
 - **Monorepo Scope Filtering** - Intelligent commit classification ensures changelogs only include relevant commits
 - **Composable Operations** - Build complex versioning workflows from simple, pure functions
 - **Zero External Dependencies** - Self-contained implementation with no third-party runtime dependencies
-<!-- TODO(asset): keystroke-live npx cz session showing scope pick and the subject character countdown -->
 
 ### Architecture Highlights
 
-Built on a purely functional architecture with factory functions and immutable data structures. All parsing uses character-by-character state machines for predictable O(n) performance. The library integrates with `@hyperfrontend/project-scope` for virtual file system operations and `@hyperfrontend/data-utils` for deep comparison.
+Parsing is bounded and predictable: every parser is a character-by-character state machine rather than a regular expression, so no input pattern can trigger catastrophic backtracking. Each entry point also rejects oversized input before processing it (10,000 characters for a commit message, 1 MB for a changelog file, 256 for a version string, 214 for a package name).
 
-👉 See [ARCHITECTURE.md](./ARCHITECTURE.md) for detailed design principles, data flow diagrams, and module composition.
+👉 See the [architecture guide](https://www.hyperfrontend.dev/docs/libraries/versioning/architecture/) for detailed design principles, data flow diagrams, and module composition.
 
 ## Why Use @hyperfrontend/versioning?
 
@@ -118,7 +126,7 @@ import { parseConventionalCommit } from '@hyperfrontend/versioning'
 const commit = parseConventionalCommit('feat(api): add user authentication')
 
 console.log(commit.type) // 'feat'
-console.log(commit.scope) // 'api'
+console.log(commit.scope) // ['api'], an array because `feat(a,b): x` names two
 console.log(commit.subject) // 'add user authentication'
 console.log(commit.breaking) // false
 ```
@@ -142,39 +150,15 @@ console.log(commit2.breakingDescription) // 'Response structure has changed'
 
 ## API Overview
 
-### Changelog Models
+The package publishes one subpath per concern, and the name of the import is the job it does. `commits` parses, validates, classifies and authors conventional commit messages. `changelog` reads and writes CHANGELOG.md. `semver` parses, compares and increments versions and ranges. `git`, `registry` and `workspace` cover the three things a release has to ask the world outside the process: the repository, the npm registry, and the packages on disk. `repository` turns a remote URL into the compare links a changelog entry carries. `flow` composes the rest into a release. The root entry re-exports all of them.
 
-- **Changelog** - Complete representation of a CHANGELOG.md file
-- **ChangelogEntry** - A single version entry with date and sections
-- **ChangelogSection** - A category of changes (Features, Bug Fixes, etc.)
-- **ChangelogItem** - An individual change with description and references
+[`parseConventionalCommit`](https://www.hyperfrontend.dev/docs/libraries/versioning/commits/#api-parseConventionalCommit) is where most work starts: hand it the raw message and it returns a `ConventionalCommit` carrying `type`, `subject`, `breaking`, the parsed `footers` and a `scope` that is a `readonly string[]` rather than a string, because `feat(a,b): x` names two. Its `type` and `breaking` go to [`getSemverBump`](https://www.hyperfrontend.dev/docs/libraries/versioning/commits/#api-getSemverBump), which answers `major`, `minor`, `patch` or `none`, and that answer plus a parsed version goes to [`increment`](https://www.hyperfrontend.dev/docs/libraries/versioning/semver/#api-increment). All three are pure functions over plain data.
 
-### Commit Models
+[`parseChangelog`](https://www.hyperfrontend.dev/docs/libraries/versioning/changelog/#api-parseChangelog) turns a CHANGELOG.md into an addressable tree of entries, sections and items, and [`serializeChangelog`](https://www.hyperfrontend.dev/docs/libraries/versioning/changelog/#api-serializeChangelog) writes that tree back to markdown, so a file read and rewritten unedited comes back as itself. Those parsers, and the commit parsers beside them, are hand-written character state machines rather than regular expressions, and each refuses oversized input before it begins, which is why no pathological changelog can stall a release job.
 
-- **ConventionalCommit** - Parsed conventional commit message
-- **CommitType** - Type constants (feat, fix, docs, etc.)
-- **CommitFooter** - Parsed footer/trailer from commit message
+Two bins ship alongside the API, and neither asks you to import anything: `npx cz` runs the interactive session that authors a conventional commit, and `npx cl <path>` validates one message from a `commit-msg` hook. For unattended releases, [`createConventionalFlow`](https://www.hyperfrontend.dev/docs/libraries/versioning/flow/#api-createConventionalFlow) assembles the ordered steps (fetch the published version, analyse commits, calculate the bump, generate the changelog entry, update package.json, write, commit, tag) and [`executeFlow`](https://www.hyperfrontend.dev/docs/libraries/versioning/flow/#api-executeFlow) runs them against a virtual file system, so a dry run reports the whole diff without touching disk.
 
-### Parser Functions
-
-- **parseChangelog(content: string)** - Parse markdown changelog content
-- **parseConventionalCommit(message: string)** - Parse a commit message
-- **tokenize(input: string)** - Low-level tokenizer for changelog content
-
-## Module Documentation
-
-| Module        | Description                             | Documentation                        |
-| ------------- | --------------------------------------- | ------------------------------------ |
-| `changelog/`  | Parse and manipulate CHANGELOG.md files | [README](./src/changelog/README.md)  |
-| `commits/`    | Parse conventional commit messages      | [README](./src/commits/README.md)    |
-| `semver/`     | Semantic version parsing and comparison | [README](./src/semver/README.md)     |
-| `registry/`   | npm registry client                     | [README](./src/registry/README.md)   |
-| `git/`        | Git operations abstraction              | [README](./src/git/README.md)        |
-| `workspace/`  | Project discovery and package.json      | [README](./src/workspace/README.md)  |
-| `flow/`       | Version release workflow orchestration  | [README](./src/flow/README.md)       |
-| `repository/` | Repository detection and compare URLs   | [README](./src/repository/README.md) |
-
-👉 See [ARCHITECTURE.md](./ARCHITECTURE.md) for module composition diagrams and data flow.
+Every model, option, step and outcome type is in the [API reference](https://www.hyperfrontend.dev/docs/libraries/versioning/#api-reference).
 
 ## Compatibility
 

@@ -33,6 +33,15 @@
   <img src="https://img.shields.io/badge/tree%20shakeable-%E2%9C%93-success?style=flat-square" alt="Tree Shakeable">
 </p>
 
+<p align="center">
+  <a href="https://www.hyperfrontend.dev/docs/libraries/utils/ui/">
+    <img width="640" src="https://www.hyperfrontend.dev/media/ui-utils-teardown/hero.gif" alt="Two panels of counters over six mount and unmount cycles: on the left, red bars for style elements, ResizeObservers and listeners climb to six and stay there; on the right, the same three counters in green rise and drop back to zero every cycle">
+  </a>
+</p>
+<p align="center">
+  <sub>Six mounts of the same widget, counted two ways. The bars only come back down on the side that called the teardown each function returned.</sub>
+</p>
+
 Modular DOM utilities for dynamic styling, gesture detection, element lifecycle, and color manipulation.
 
 • 👉 See [**documentation**](https://www.hyperfrontend.dev/docs/libraries/utils/ui/)
@@ -43,7 +52,16 @@ Modular DOM utilities for dynamic styling, gesture detection, element lifecycle,
 
 Sometimes a framework is not on the table. You are writing an embed that drops into someone else's page, a debug overlay, a script tag, a canvas experiment: something where React would be more runtime than the thing it wraps. So you are back to `document.createElement` and `appendChild`, a `<style>` tag you have to remember to remove, and a `ResizeObserver` you have to remember to disconnect. This package is that pile of chores, written once and tested.
 
-The parts worth the install: `createElement` gives you the node plus attach, detach, show, and hide, with an opacity transition when you pass a duration. `addStylesheet` injects real CSS and hands back the function that removes it, so your rules leave when your widget does. `syncElementDimensions` pins an overlay to an element you do not control and keeps it there through resizes. `getElementAsync` polls for a node that has not rendered yet and returns a cancel function. `createGestureListener` covers Escape and pinch-out with one cleanup. `setupAudio` waits for the click or touch that browsers require before an `AudioContext` will start. Anything that attaches something gives you back the function that detaches it.
+The parts worth the install:
+
+- `createElement` gives you the node plus attach, detach, show, and hide, with an opacity transition when you pass a duration.
+- `addStylesheet` injects real CSS and hands back the function that removes it, so your rules leave when your widget does.
+- `syncElementDimensions` pins an overlay to an element you do not control and keeps it there through resizes.
+- `getElementAsync` polls for a node that has not rendered yet and returns a cancel function.
+- `createGestureListener` covers Escape and pinch-out with one cleanup.
+- `setupAudio` waits for the click or touch that browsers require before an `AudioContext` will start.
+
+Anything that attaches something gives you back the function that detaches it.
 
 At a glance:
 
@@ -80,7 +98,7 @@ removeStyles()
 
 ### Architecture Highlights
 
-Each capability sits behind its own secondary entry point (`/element`, `/style`, `/selector`, `/color`, `/event`, `/audio`, `/mobile`, `/time`, `/misc`, `/component`), so importing one never drags in the rest. The pattern throughout is that anything touching the document returns its own undo: `addStylesheet` returns the style element and a remover, `onElementResize` and `syncElementDimensions` return disconnect functions, `getElementAsync` returns a cancel function. Everything is built on plain browser APIs (`ResizeObserver`, touch events, Web Audio) with no third-party dependencies.
+Each capability sits behind its own secondary entry point (`/element`, `/style`, `/selector`, `/color`, `/event`, `/audio`, `/mobile`, `/time`, `/misc`, `/component`), so importing one never drags in the rest. Everything is built on plain browser APIs (`ResizeObserver`, touch events, Web Audio) with no third-party dependencies.
 
 ## Why Use @hyperfrontend/ui-utils?
 
@@ -143,60 +161,15 @@ const cleanup = createGestureListener(() => console.log('Escape or pinch detecte
 
 ## API Overview
 
-### Element Utilities (`/element`)
+One rule organises the whole surface: anything that attaches something hands back the function that detaches it. [`addStylesheet`](https://www.hyperfrontend.dev/docs/libraries/utils/ui/style/#api-addStylesheet) returns a tuple of the `<style>` element it injected and the function that removes it; [`onElementResize`](https://www.hyperfrontend.dev/docs/libraries/utils/ui/element/#api-onElementResize) and [`createGestureListener`](https://www.hyperfrontend.dev/docs/libraries/utils/ui/event/#api-createGestureListener) return that remover on its own, one call closing all four listeners in the gesture case. Teardown is a list of functions you are already holding rather than a hunt through the document, which is what the counters above are counting.
 
-- **`createElement(tagName, config)`** - Create an element and get attach, detach, show, hide, and `ref` back
-- **`div(config)`, `span(config)`, `button(config)`, and the rest** - Shorthands for the common tags
-- **`getElementAsync(selector, options)`** - Poll for an element, with `onSuccess`, `onFail`, `duration`, and `interval`; returns a cancel function
-- **`syncElementDimensions(source, target, options)`** - Copy size and position from source to target on every resize
-- **`onElementResize(element, callback)`** - `ResizeObserver` wrapper that returns its own disconnect
+The second shape to know is what [`createElement`](https://www.hyperfrontend.dev/docs/libraries/utils/ui/element/#api-createElement) hands back: not the node, but an object around it carrying `attachTo`, `detachFromParent`, `addChild`, `removeChild`, `show`, `hide`, a `visible` flag, and `ref`, the live element for anything the wrapper does not do. `show` and `hide` take an optional duration in milliseconds and transition opacity over it. The tag shorthands (`div`, `button`, `canvas` and twenty-one others) are the same function with the tag already chosen.
 
-### Style Utilities (`/style`)
+Targets are elements or selector strings, interchangeably, and that is what lets [`syncElementDimensions`](https://www.hyperfrontend.dev/docs/libraries/utils/ui/element/#api-syncElementDimensions) pin an overlay to a third-party node before that node exists: underneath, [`getElementAsync`](https://www.hyperfrontend.dev/docs/libraries/utils/ui/element/#api-getElementAsync) polls every 100ms, gives up after 10 seconds, and the cleanup it returns cancels the poll if you gave up first.
 
-- **`addStylesheet(css, label)`** - Add a `<style>` element from a CSS string or style map; returns the element and a remover
-- **`removeStylesheet(styleElementOrLabel)`** - Remove a stylesheet added earlier
-- **`createApplyStyle(selector, style)` / `createApplyStyles(styles)`** - Build a run-once function that injects the rules on first call
-- **`cssRule(selector, css)` / `cssRules(styleMap)`** - Turn style objects into CSS rule text
-- **`cssObjectToString(css)`** - Convert a style object to a CSS declaration string
+Ten secondary entry points sit beside the root one, and they exist for weight rather than filing: importing from `@hyperfrontend/ui-utils/color` costs the color conversions and nothing else, which is what lets any of this into an embed with a few kilobytes to spend. Two are worth naming because their names give nothing away: `/time` is a promise delay and a UTC timestamp formatter, and `/misc` is one function, [`simpleHash`](https://www.hyperfrontend.dev/docs/libraries/utils/ui/misc/#api-simpleHash), which turns a string into six characters (`simpleHash('hello world')` returns `'to5x38'`).
 
-### Selector Utilities (`/selector`)
-
-- **`CssSelector`** - Chainable selector builder: `id`, `class`, `attribute`, `first`, `last`, `nth`, `hover`, `active`, `focus`, `pseudo`, `childOf`, `parentOf`, sibling combinators
-- **`select`, `selectBy`, `selectByElement`, `selectById`, `selectByClass`, `selectByAttribute`, `selectAllElements`** - Start a builder from a tag, id, class, or attribute
-- **`isValidCssSelector(selector)`** - Validate CSS selector strings
-
-### Color Utilities (`/color`)
-
-- **`getColorVariation(baseColor, intensity)`** - Scale a hex color by an intensity of 0 to 255, returned as an `rgba()` string with matching alpha
-- **`hexToRgb(hex)`** / **`rgbToHex(r, g, b, a?)`** - Convert between hex and channel values, with optional alpha
-- **`rgbToString(rgb)`** - Turn an RGB object into an `rgb()` or `rgba()` string
-- **`rgbStringToHex(rgbString)`** - Parse a CSS color string back to hex
-
-### Event Utilities (`/event`)
-
-- **`createGestureListener(callback)`** - Fire on Escape or a pinch-out; returns one cleanup for all four listeners
-- **`clickAtPosition(x, y)`** - Dispatch a synthetic `mousedown` at document coordinates
-
-### Mobile Utilities (`/mobile`)
-
-- **`isMobileDevice()`** - User agent based mobile detection
-
-### Component Utilities (`/component`)
-
-- **`component(create, style)`** - Pair a factory with a stylesheet function, injected once on first call
-
-### Audio Utilities (`/audio`)
-
-- **`setupAudio(elementOrSelector)`** - Resolve an `AudioContext` once the user clicks or touches the given element
-
-### Time Utilities (`/time`)
-
-- **`pause(ms)`** - Promise that resolves after a delay
-- **`timestampToDateTime(timestamp)`** - Format a millisecond timestamp as a UTC date and time string
-
-### Misc Utilities (`/misc`)
-
-- **`simpleHash(str)`** - Six character non-cryptographic string hash, handy for generated class names
+Every export, option and type is in the [API reference](https://www.hyperfrontend.dev/docs/libraries/utils/ui/#api-reference), listed under the entry point it belongs to.
 
 ## Compatibility
 

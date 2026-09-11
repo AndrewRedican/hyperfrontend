@@ -183,11 +183,32 @@ sequenceDiagram
     Note over H,F: A refused gate emits a local "error" carrying the reason<br/>and sends DENY (or CANCEL) on to the counterpart
 ```
 
+<p align="center">
+  <img width="640" src="https://www.hyperfrontend.dev/media/feature-session/hero.gif" alt="A host and a feature exchanging the three nexus handshake frames, then a presentation announcement, then a repeating heartbeat, and finally one ordinary application message">
+</p>
+<p align="center">
+  <sub>The diagram above is every gate a session can be refused at. This is the ordinary path, in order, with what each frame carries: three nexus frames settle the contract, <code>__hf:present</code> is queued ahead of the connect so it arrives first, and the beat starts. Everything before <code>order-placed</code> is the session being established.</sub>
+</p>
+
 Handshake frames replay idempotently and re-send on a retry cadence until answered, so neither side depends on the other having booted first. Refusal is symmetric too: whichever side decides emits a local `error` carrying a machine-readable `reason`, so a host that turns a feature down is never left waiting on the channel it refused. One asymmetry is deliberate: a security-policy rejection tells the refused requester only that it was not accepted, since naming the gate would disclose how this side judges connections.
+
+<p align="center">
+  <img width="640" src="https://www.hyperfrontend.dev/media/feature-watchdog/hero.gif" alt="A tape of beats, ticks and visibility reports beside the watchdog state each one produces, showing three ticks of silence reaching suspect while visible and reaching nothing while hidden">
+</p>
+<p align="center">
+  <sub>The same silence, three times. Three missed ticks while both pages are visible reach <code>suspect</code>; three while either is hidden reach nothing, because the watchdog is not counting. Returning to the tab grants a fresh budget and says nothing: only a beat earns <code>healthy</code> back.</sub>
+</p>
 
 Liveness is judged in four states, not a boolean. The feature pulses a hidden beat and reports its page visibility; the host watchdog counts misses only while both pages are visible (`healthy`), pauses while either is hidden (`unobservable`: throttled timers make silence weak evidence, and the state holds once watching resumes until a beat earns `healthy` back), runs the `UnresponsivePolicy` once per `suspect` episode (a recovering beat returns to `healthy` and re-arms it), and reports `gone` once the session closes. Transitions surface as the shell's `status` event, and the default policy emits `error` with `reason: 'unresponsive'`, carrying the missed-beat count, last beat timestamp, and display mode.
 
 Both sides read page visibility rather than take it on notice. `visibilitychange` is the fast path, and a coarse poll of `document.visibilityState` stands behind it, because an announcement that is never delivered would otherwise pin the watchdog at `unobservable` for the rest of the session, blind to the one failure it exists to catch. While a page is believed hidden, one probe animation frame is left armed: a hidden page is served none, so it costs nothing, and a page that is painted again reports its return on that frame rather than waiting for the next poll.
+
+<p align="center">
+  <img width="640" src="https://www.hyperfrontend.dev/media/feature-flush-window/hero.gif" alt="A close proposed on an open channel, an unsaved draft crossing while the channel is still delivering, and only then the acknowledgement that takes the channel down">
+</p>
+<p align="center">
+  <sub>The window is the feature. Between the proposed close and the acknowledgement the channel is still live, and that is when work the feature was holding gets out.</sub>
+</p>
 
 Teardown is polite by default: `close()` on either side proposes the close, the counterpart receives a `closing` event while the channel still delivers (its flush window for unsaved work), then acknowledges, and each side fires a single `close` (an unacknowledged close completes at a deadline). The feature can declare unsaved work with `setDirty(true)`; the host sees it as the `dirty-state` event and the `isDirty` flag and can take it into account before proposing a close. `destroy()` remains the impolite immediate teardown.
 

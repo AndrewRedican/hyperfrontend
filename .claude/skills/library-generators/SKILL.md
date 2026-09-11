@@ -25,10 +25,10 @@ nx generate @hyperfrontend/package:library --name=my-utils --type=util --descrip
 nx generate @hyperfrontend/package:library --name=my-utils --directory=libs/utils --type=util --description="..."
 
 # Create publishable
-nx generate @hyperfrontend/package:library --name=my-utils --type=util --description="..." --publishable
+nx generate @hyperfrontend/package:library --name=my-utils --type=util --description="..." --publishable --compatibility=isomorphic
 
 # Promote to publishable
-nx generate @hyperfrontend/package:make-publishable --project=lib-my-utils
+nx generate @hyperfrontend/package:make-publishable --project=lib-my-utils --compatibility=isomorphic
 
 # Rename
 nx generate @hyperfrontend/package:rename --project=lib-my-utils --newName=my-helpers
@@ -36,6 +36,12 @@ nx generate @hyperfrontend/package:rename --project=lib-my-utils --newName=my-he
 # Move
 nx generate @hyperfrontend/package:move --project=lib-my-utils --destination=libs/utils
 ```
+
+---
+
+## Runtime Compatibility
+
+The publishable path asks "Where does this package run?" and writes the answer to `metadata.compatibility` in project.json: `isomorphic`, `node-only`, or `browser-only`. Internal libraries are never asked and get no metadata block; `partial` support and a `note` are added by hand afterwards.
 
 ---
 

@@ -305,6 +305,7 @@ The documentation site is live at [hyperfrontend.dev](https://www.hyperfrontend.
 - Each library has a detailed README with installation, usage, and architecture information
 - See the [Main Packages](#main-packages) and [Internal Packages](#internal-packages) tables above for links
 - [Architecture Guide](ARCHITECTURE.md) explains how the libraries compose together
+- [Library Compatibility Matrix](LIBRARY_COMPATIBILITY.md) states where every package runs, what it publishes, and what it depends on, generated from each package's own manifests
 - [Manifesto](MANIFESTO.md) explains the project's philosophy and scope
 
 For the documentation roadmap, see [roadmap/docs-site-action-plan.md](roadmap/docs-site-action-plan.md).

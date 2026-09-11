@@ -65,13 +65,48 @@ the field.
 ### Required Sections (in order)
 
 1. **What is @hyperfrontend/<name>?** - Library description
-   - Must include **Key Features** subsection with bullet list (`- **Feature** - Description`)
-   - Must include **Architecture Highlights** subsection
+   - Must include a **Key Features** subsection, whose list is checked in full (see below)
+   - May include an **Architecture Highlights** subsection; it is optional
 2. **Why Use @hyperfrontend/<name>?** - Value proposition
 3. **Installation** - Installation instructions
 4. **Quick Start** - Quick start guide
 5. **API Overview** - API documentation
 6. **Compatibility** - Platform/environment compatibility
+
+**Architecture Highlights** is optional on purpose. A package whose internals hold nothing a
+consumer needs to know should not be made to invent an architecture story to satisfy a
+linter, and an invented one is worse than none.
+
+### Key Features
+
+The documentation site renders this list as the package's feature summary: it reads each bold
+label as the feature's name and the text after it as the reason the feature matters. The rule
+holds the list to that shape.
+
+| Check              | Requirement                                                          | Message                                   |
+| ------------------ | -------------------------------------------------------------------- | ----------------------------------------- |
+| Flat list          | Every line is a `-` or `*` bullet at column zero, or an HTML comment | `keyFeaturesNotAList`                     |
+| Bold label         | Every bullet opens with `- **Label**`                                | `keyFeatureMissingLabel`                  |
+| Explanation        | Something follows the label                                          | `keyFeatureMissingDescription`            |
+| Label length       | The label is at most 48 characters                                   | `keyFeatureLabelTooLong`                  |
+| Explanation length | The explanation is at least 20 characters                            | `keyFeatureDescriptionTooShort`           |
+| List length        | The list holds between 3 and 12 features                             | `keyFeaturesTooFew`, `keyFeaturesTooMany` |
+
+Each of these reports points at the line it is about, so the editor lands on the bullet rather
+than on the top of the file.
+
+A lead-in paragraph, a nested bullet, a table or a fenced block has nowhere to render, so none
+of them may sit in the section; a fenced block is reported once rather than once per line
+inside it. An HTML comment is left alone, since a README parks an asset note inside the list
+the note belongs to.
+
+The explanation may be introduced by a colon or a dash, or may continue the label as a clause:
+`- **Value picker** for cyclical iteration` reads better than the same sentence with
+punctuation forced into the middle of it, and both leave the reader the same explanation.
+
+The bounds are set from the READMEs already published: their lists run from 5 to 11 features,
+their longest label is 36 characters and their shortest explanation is 22, so the limits catch
+a list that has stopped being a summary rather than one that is merely long.
 
 ### Why?
 
@@ -136,6 +171,26 @@ npm install
 Should come before Installation.
 ```
 
+A Key Features section that is not a flat list of labelled features:
+
+```markdown
+### Key Features
+
+This package gives you:
+
+- **Fast** - it is fast
+- Works everywhere the platform works
+- **Everything this package does for you and then some more** - explained here
+  - and a detail hanging off the bullet above
+
+| Feature | Why |
+| ------- | --- |
+```
+
+Every line here draws a report: the lead-in paragraph and the two table lines are not bullets,
+`Fast` is explained in ten characters, the second bullet carries no label, the third wears a
+sentence as its label, and the detail hanging off it is nested.
+
 ### ✅ Correct
 
 ```markdown
@@ -184,8 +239,9 @@ Description of the library.
 
 ### Key Features
 
-- **Feature One** - Description of feature one
-- **Feature Two** - Description of feature two
+- **Feature One** - Description of feature one and what it does for you
+- **Feature Two** - Description of feature two and what it does for you
+- **Feature Three**: Description of feature three and what it does for you
 
 ### Architecture Highlights
 
@@ -220,6 +276,9 @@ import { utility } from '@hyperfrontend/utils'
 | Browser  |   ✅    |
 | Node.js  |   ✅    |
 ```
+
+A README that has no architecture worth stating leaves the **Architecture Highlights** section
+out entirely and still passes.
 
 ## When Not To Use It
 

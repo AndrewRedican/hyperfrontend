@@ -1,3 +1,4 @@
+import { CODE_THEMES } from '@/lib/shiki-theme'
 import rehypeShiki from '@shikijs/rehype'
 import rehypeRaw from 'rehype-raw'
 import rehypeStringify from 'rehype-stringify'
@@ -9,9 +10,9 @@ import remarkRehype from 'remark-rehype'
  * Convert markdown to HTML with GitHub Flavored Markdown support and Shiki
  * syntax highlighting.
  *
- * Fenced code blocks are highlighted with dual light/dark themes
- * (`defaultColor: false`); the active palette is chosen by the `.dark` class
- * via the `pre.shiki` rules in `globals.css`. Raw HTML embedded in the markdown
+ * Fenced code blocks are highlighted with this site's own dual light/dark
+ * themes (`defaultColor: false`); the active palette is chosen by the `.dark`
+ * class via the `pre.shiki` rules in `globals.css`. Raw HTML embedded in the markdown
  * (mermaid placeholders, badges, alignment wrappers) is preserved through
  * `rehype-raw`, except for HTML comments: authoring notes stay useful in the
  * source files and never reach the published page. Comment syntax inside a
@@ -27,9 +28,10 @@ export async function markdownToHtml(markdown: string): Promise<string> {
     .use(rehypeRaw)
     .use(rehypeRemoveComments)
     .use(rehypeShiki, {
-      themes: { light: 'github-light', dark: 'github-dark' },
+      themes: CODE_THEMES,
       defaultColor: false,
       fallbackLanguage: 'text',
+      addLanguageClass: true,
       lazy: true,
     })
     .use(rehypeStringify, { allowDangerousHtml: true })

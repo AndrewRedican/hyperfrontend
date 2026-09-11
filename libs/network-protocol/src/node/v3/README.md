@@ -4,7 +4,9 @@ Node.js-side v3 protocol: a session-keyed envelope with no shared secret, wired 
 
 ## Overview
 
-`createProtocol(logger)` returns a `ProtocolProvider`. Bound to a session by `createChannel`, each instance mints a random 32-byte nonce and an ephemeral P-256 key pair and advertises them in a 99-byte hello frame (`channel.hello()`); the peer's hello goes to `channel.acceptHello(frame)`, after which two AES-GCM-256 keys, one per direction, are derived from the agreement with HKDF-SHA256 under info strings that name the protocol and both identities. Every sealed frame carries its counter in the clear as the nonce and authenticates its ten-byte header; a frame whose counter is not above the last accepted one is rejected before decryption, and a frame from any other session fails to authenticate. The first hello keys the session, a byte-for-byte repeat of it is a duplicate, anything else is rejected, and a live session is never rekeyed.
+`createProtocol(logger)` returns a `ProtocolProvider`. Bound to a session by `createChannel`, each instance mints a random 32-byte nonce and an ephemeral P-256 key pair and advertises them in a 99-byte hello frame (`channel.hello()`); the peer's hello goes to `channel.acceptHello(frame)`, after which two AES-GCM-256 keys, one per direction, are derived from the agreement with HKDF-SHA256 under info strings that name the protocol and both identities. The first hello keys the session, a byte-for-byte repeat of it is a duplicate, anything else is rejected, and a live session is never rekeyed.
+
+Every sealed frame carries its counter in the clear as the nonce and authenticates its ten-byte header; a frame whose counter is not above the last accepted one is rejected before decryption, and a frame from any other session fails to authenticate.
 
 `V3` is the protocol's definition, `{ id: 'v3', version: 3 }`: the identifier a session names and the byte every frame starts with.
 

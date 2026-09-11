@@ -10,7 +10,7 @@ import type {
   TestingInfo,
   WorkspaceType,
 } from './models'
-import { basename, resolve } from 'node:path'
+import { basename, extname, resolve } from 'node:path'
 import { createDate, dateNow } from '@hyperfrontend/immutable-api-utils/built-in-copy/date'
 import { exists } from './core/fs'
 import { createScopedLogger } from './core/logger'
@@ -104,7 +104,7 @@ function shouldInclude(
 /**
  * Convert config format to expected format type.
  *
- * @param format - Original format from detection
+ * @param format - Original format from detection, or the file extension when the pattern declares none
  * @returns Normalized format type
  */
 function normalizeConfigFormat(format: string): 'json' | 'yaml' | 'js' | 'ts' | 'toml' | 'env' {
@@ -234,7 +234,7 @@ export function analyzeProject(projectPath: string, options?: AnalyzeOptions): A
     ? detectConfigs(resolvedPath).map((c) => ({
         path: c.path,
         name: basename(c.path),
-        format: normalizeConfigFormat(c.info.format),
+        format: normalizeConfigFormat(c.info.format ?? extname(c.path).slice(1)),
         tool: c.type,
       }))
     : []

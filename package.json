@@ -78,6 +78,7 @@
     "js-yaml": "4.3.2",
     "minimatch": "10.2.3",
     "picomatch": "4.0.4",
+    "smol-toml": "1.7.2",
     "tmp": "0.2.7"
   }
 }

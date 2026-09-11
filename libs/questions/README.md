@@ -33,6 +33,15 @@
   <img src="https://img.shields.io/badge/tree%20shakeable-%E2%9C%93-success?style=flat-square" alt="Tree Shakeable">
 </p>
 
+<p align="center">
+  <a href="https://www.hyperfrontend.dev/docs/libraries/questions/">
+    <img width="640" src="https://www.hyperfrontend.dev/media/questions-prompt/hero.gif" alt="A multiselect prompt being programmed on the left and answered on the right, ending in a submitted result object">
+  </a>
+</p>
+<p align="center">
+  <sub>The call you write, and the session it produces. An answered prompt resolves; a cancelled one resolves too.</sub>
+</p>
+
 Terminal prompting library with composable, functional API for text, select, confirm, and multiselect prompts
 
 • 👉 See [**documentation**](https://www.hyperfrontend.dev/docs/libraries/questions/)
@@ -51,17 +60,12 @@ A terminal prompting library built on functional programming principles. Create 
 - **Searchable Multiselect**: Type-to-filter functionality for large option lists
 - **Clipboard Paste**: Bracketed paste mode on TTYs (with a multi-character-chunk fallback elsewhere); pasted text is sanitized and never auto-submits
 - **Resize-Aware Rendering**: Prompts hard-wrap to the terminal width and repaint on resize, preserving value, cursor, selection, and validation state
-<!-- TODO(asset): terminal capture of a searchable multiselect narrowing options as the user types -->
 
 ### Architecture Highlights
 
-Each prompt follows a functional state machine pattern:
-
-- **Immutable State**: All prompt state is frozen; updates create new state objects
-- **Explicit Outcomes**: Prompts return either `{ result: 'submitted', value: T }` or `{ result: 'cancelled', value: undefined }`
-- **Terminal Abstraction**: Low-level I/O is encapsulated in a `Terminal` interface for testability
-- **Token Input Stream**: Raw input is tokenized into keys, pastes, and resize notifications by a persistent listener, with raw mode held for the whole prompt session and restored on close
-- **Frame Renderer**: A width-aware screen helper erases and repaints exact frames; on resize it recomputes the previous frame's height at the new width (assumes a reflowing terminal; display width is code-point based, east-asian double width out of scope)
+- **Explicit outcomes**: prompts resolve to either `{ result: 'submitted', value: T }` or `{ result: 'cancelled', value: undefined }`, so Ctrl+C is an ordinary branch to handle rather than a rejection to catch
+- **Terminal state is restored**: raw mode is taken once for the whole prompt session and given back when it closes, on cancel as well as on submit
+- **Rendering assumptions**: repainting on resize assumes a reflowing terminal, and display width is counted in code points, so east-asian double-width characters are out of scope
 
 ## Why Use @hyperfrontend/questions?
 
@@ -95,7 +99,7 @@ if (nameResult.result === PromptResult.Submitted) {
   console.log(`Hello, ${nameResult.value}!`)
 }
 
-// Text input with a live label — `renderMessage` is recomputed on every keystroke
+// Text input with a live label; `renderMessage` is recomputed on every keystroke
 import { style } from '@hyperfrontend/questions'
 
 await text({
@@ -137,20 +141,15 @@ const featuresResult = await multiselect({
 
 ## API Overview
 
-| Function       | Description                                                                   |
-| -------------- | ----------------------------------------------------------------------------- |
-| `text`         | Free-form text input with optional validation and live-updating labels        |
-| `confirm`      | Yes/no confirmation prompt                                                    |
-| `select`       | Single selection from a list of choices                                       |
-| `multiselect`  | Multiple selections with optional search                                      |
-| `style`        | ANSI colour helpers (`green`, `yellow`, `red`, `cyan`, `bold`, `dim`, `gray`) |
-| `PromptResult` | Discriminated union: `'submitted' \| 'cancelled'`                             |
-
-All prompts return `Promise<PromptOutcome<T>>` where:
+Four prompts, one shape. [`text`](https://www.hyperfrontend.dev/docs/libraries/questions/#api-text), [`confirm`](https://www.hyperfrontend.dev/docs/libraries/questions/#api-confirm), [`select`](https://www.hyperfrontend.dev/docs/libraries/questions/#api-select) and [`multiselect`](https://www.hyperfrontend.dev/docs/libraries/questions/#api-multiselect) each take a config object and resolve to the same discriminated union, so the code that reads an answer is the same code whichever question asked it:
 
 ```typescript
 type PromptOutcome<T> = { result: 'submitted'; value: T } | { result: 'cancelled'; value: undefined }
 ```
+
+Two things sit beside them. [`style`](https://www.hyperfrontend.dev/docs/libraries/questions/#api-style) is the ANSI colour helper the prompts use on their own labels, exposed so yours can match. And every config takes `input` and `output` streams, which is what makes a prompt testable without a TTY: hand it a pair of `PassThrough`s, write keystrokes into one and read frames out of the other.
+
+Every config, option and outcome type is in the [API reference](https://www.hyperfrontend.dev/docs/libraries/questions/#api-reference).
 
 ## Compatibility
 
@@ -164,6 +163,15 @@ type PromptOutcome<T> = { result: 'submitted'; value: T } | { result: 'cancelled
 | Tree Shakeable                 | ✅        |
 
 On TTY inputs a prompt session enables bracketed paste mode (`ESC[?2004h`) and restores it on close; terminals without bracketed paste still paste correctly because multi-character input chunks are treated as pastes. Single-line prompts collapse pasted newlines into spaces, so pasting can never submit a value.
+
+### Output Formats
+
+| Format | File           | Tree-Shakeable |
+| ------ | -------------- | :------------: |
+| ESM    | `index.esm.js` |       ✅       |
+| CJS    | `index.cjs.js` |       ❌       |
+
+No browser bundle is published: the library drives a terminal, so an IIFE or UMD build would have nothing to run against.
 
 ## License
 

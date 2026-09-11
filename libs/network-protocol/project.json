@@ -5,6 +5,15 @@
   "sourceRoot": "{projectRoot}/src",
   "projectType": "library",
   "tags": ["type:protocol", "scope:public"],
+  "metadata": {
+    "compatibility": {
+      "environments": {
+        "node": "full",
+        "browser": "full",
+        "webWorker": "full"
+      }
+    }
+  },
   "targets": {
     "version": {},
     "version-check": {},

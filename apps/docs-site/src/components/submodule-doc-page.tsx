@@ -4,6 +4,8 @@ import { ApiLinkProvider, CopyButton, ScopedApiReference } from '@/components/ap
 import { hasScopedApiReference } from '@/components/api-reference/scoped-api-reference'
 import { Breadcrumb } from '@/components/breadcrumb'
 import { DocumentShell } from '@/components/document/document-shell'
+import { packageAccentHue } from '@/components/package/package-accents'
+import { PageAtmosphere } from '@/components/page-atmosphere'
 import { ReadmeContent } from '@/components/readme-content'
 import { removeBadges, transformLinks } from '@/lib/content'
 import { getLibraryApi, getSubmoduleReadme, getApiLinkIndex } from '@/lib/docs-loader'
@@ -61,44 +63,48 @@ export async function SubmoduleDocPage({ librarySlug, packageName, submodulePath
   }
 
   return (
-    <DocumentShell
-      // why: an entrypoint with no README publishes no markdown counterpart, so it must not offer actions that would fetch one
-      descriptor={
-        readmeContent
-          ? {
-              route: `/docs/libraries/${librarySlug}/${submodulePath}`,
-              title: importPath,
-              subject: documentSubject('submodule', importPath),
-              kind: 'submodule',
-            }
-          : undefined
-      }
-      sections={sections}
-    >
-      <Breadcrumb />
+    <>
+      {/* why: an entry point is a page of its package, so it carries the same hue the package's own page does */}
+      <PageAtmosphere accent={packageAccentHue(packageName)} />
+      <DocumentShell
+        // why: an entrypoint with no README publishes no markdown counterpart, so it must not offer actions that would fetch one
+        descriptor={
+          readmeContent
+            ? {
+                route: `/docs/libraries/${librarySlug}/${submodulePath}`,
+                title: importPath,
+                subject: documentSubject('submodule', importPath),
+                kind: 'submodule',
+              }
+            : undefined
+        }
+        sections={sections}
+      >
+        <Breadcrumb />
 
-      <div className="mb-6">
-        <Link href={`/docs/libraries/${librarySlug}`} className="text-sm text-primary-600 hover:underline dark:text-primary-400">
-          ← Back to {packageName}
-        </Link>
-      </div>
+        <div className="mb-6">
+          <Link href={`/docs/libraries/${librarySlug}`} className="text-sm text-primary-600 hover:underline dark:text-primary-400">
+            ← Back to {packageName}
+          </Link>
+        </div>
 
-      <div className="mb-6 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg flex items-center justify-between gap-4">
-        <code className="font-mono text-sm font-semibold text-slate-900 dark:text-white truncate">{importPath}</code>
-        <CopyButton text={importStatement} size="sm" />
-      </div>
+        <div className="mb-6 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg flex items-center justify-between gap-4">
+          <code className="font-mono text-sm font-semibold text-slate-900 dark:text-white truncate">{importPath}</code>
+          <CopyButton text={importStatement} size="sm" />
+        </div>
 
-      {readmeHtml ? (
-        <ReadmeContent html={readmeHtml} mermaidDiagrams={readmeDiagrams} />
-      ) : (
-        <p className="text-sm italic text-slate-500 dark:text-slate-400 mb-6">This submodule does not yet have a written description.</p>
-      )}
+        {readmeHtml ? (
+          <ReadmeContent html={readmeHtml} mermaidDiagrams={readmeDiagrams} />
+        ) : (
+          <p className="text-sm italic text-slate-500 dark:text-slate-400 mb-6">This submodule does not yet have a written description.</p>
+        )}
 
-      {apiData && (
-        <ApiLinkProvider index={getApiLinkIndex(librarySlug, packageName)} currentPackage={packageName}>
-          <ScopedApiReference data={apiData} packageName={packageName} subpath={submodulePath} />
-        </ApiLinkProvider>
-      )}
-    </DocumentShell>
+        {apiData && (
+          <ApiLinkProvider index={getApiLinkIndex(librarySlug, packageName)} currentPackage={packageName}>
+            <ScopedApiReference data={apiData} packageName={packageName} subpath={submodulePath} />
+          </ApiLinkProvider>
+        )}
+      </DocumentShell>
+    </>
   )
 }

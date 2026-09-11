@@ -79,11 +79,12 @@ import { /* exports */ } from '<%= packageName %>'
 
 ## Compatibility
 
-| Environment | Supported |
-| ----------- | --------- |
-| Node.js >= 18 | ✅ |
-| Modern Browsers | ✅ |
-| Tree Shakeable | ✅ |
+| Environment     | Supported                            |
+| --------------- | ------------------------------------ |
+| Node.js >= 18   | <%= compatibilityGlyphs.node %>       |
+| Modern Browsers | <%= compatibilityGlyphs.browser %>    |
+| Web Workers     | <%= compatibilityGlyphs.webWorker %>  |
+| Tree Shakeable  | ✅                                   |
 
 ## License
 

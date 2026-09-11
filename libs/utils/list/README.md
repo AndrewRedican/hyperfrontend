@@ -33,6 +33,15 @@
   <img src="https://img.shields.io/badge/tree%20shakeable-%E2%9C%93-success?style=flat-square" alt="Tree Shakeable">
 </p>
 
+<p align="center">
+  <a href="https://www.hyperfrontend.dev/docs/libraries/utils/list/">
+    <img width="640" src="https://www.hyperfrontend.dev/media/list-utils-order/hero.gif" alt="Two side-by-side code panels type the same three pushes into a FIFO list and a LIFO list, then drain them: the left panel returns id 1, 2, 3 and the right returns 3, 2, 1, and both answer false when has() is called with a freshly written identical object">
+  </a>
+</p>
+<p align="center">
+  <sub>The same three objects into both list kinds. Only the order they come back out differs, and an object that merely looks like a member never was one.</sub>
+</p>
+
 Purpose-built collection utilities for queue management, filtering, and iteration patterns.
 
 • 👉 See [**documentation**](https://www.hyperfrontend.dev/docs/libraries/utils/list/)
@@ -55,7 +64,7 @@ The library enforces immutability through frozen interfaces while maintaining hi
 
 ### Architecture Highlights
 
-Queue implementations return frozen objects to prevent external mutation while using native `Set` internally for optimal performance. Object-only restriction on queues prevents reference comparison issues with primitives.
+Both queue kinds hold object references only: pushing a primitive throws at runtime, not just at compile time. Membership is reference identity, so two structurally identical objects are two separate entries, and `has()` and `remove()` need the same reference you pushed.
 
 ## Why Use @hyperfrontend/list-utils?
 
@@ -99,31 +108,20 @@ colorPicker.next() // 'blue'
 colorPicker.next() // 'green'
 colorPicker.next() // 'red' (cycles back)
 
-// String sanitization
+// String sanitization: blanks are dropped, survivors keep their original padding
 const userInputs = ['  hello  ', '', 'world', null, 'hello', '   ', 'world']
-const cleaned = uniqueStrings(nonEmptyStrings(userInputs)) // ['hello', 'world']
+const cleaned = uniqueStrings(nonEmptyStrings(userInputs)) // ['  hello  ', 'world', 'hello']
 ```
 
 ## API Overview
 
-### Queue Management
+Two ordered collections plus a few standalone helpers; the collections are the place to start. [`createFifoList`](https://www.hyperfrontend.dev/docs/libraries/utils/list/#api-createFifoList) and [`createLifoList`](https://www.hyperfrontend.dev/docs/libraries/utils/list/#api-createLifoList) each take no arguments, are generic over an object type, and return a frozen instance with the same fixed method surface: `push`, `pull`, `map`, `forEach`, `remove`, `has`, `size` and `clear`. Choosing one factory over the other decides which end `pull()` reads from and nothing else about the surrounding code. They diverge on one point, deliberately: pushing an item a FIFO list already holds throws, surfacing a queue that would otherwise take the same job twice, whereas a LIFO list ignores the duplicate and leaves the item where it already was.
 
-- **`createFifoList<T>()`** - First-in-first-out queue with reference uniqueness
-- **`createLifoList<T>()`** - Last-in-first-out stack with reference uniqueness
+Both are backed by a `Set` of the references you pushed, which has two consequences to know before reaching for either. A primitive is rejected at runtime, not only by the type parameter. And membership is reference identity, so two structurally identical objects are two entries, and `has()` and `remove()` want back the exact reference you handed over.
 
-### Iteration Utilities
+The helpers are independent of the lists and of each other. [`createValuePicker`](https://www.hyperfrontend.dev/docs/libraries/utils/list/#api-createValuePicker) wraps a non-empty string array in a `current()` and `next()` pair that cycles forever, while [`createRange`](https://www.hyperfrontend.dev/docs/libraries/utils/list/#api-createRange) returns an inclusive run of numbers. For string arrays, [`nonEmptyStrings`](https://www.hyperfrontend.dev/docs/libraries/utils/list/#api-nonEmptyStrings) drops null, undefined, empty and whitespace-only entries but returns the survivors exactly as they arrived: it tests `value.trim()`, it does not trim, so padded values come through padded and [`uniqueStrings`](https://www.hyperfrontend.dev/docs/libraries/utils/list/#api-uniqueStrings) then dedupes on exact string equality, which leaves `'  hello  '` and `'hello'` as two distinct results. The last helper, `getLastKeyInMap`, reads the most recently inserted key of a `Map`.
 
-- **`createValuePicker(values)`** - Cyclical iterator for round-robin patterns
-- **`createRange(start, end)`** - Generate number arrays without loops
-
-### String Utilities
-
-- **`nonEmptyStrings(values)`** - Filter null/undefined/empty/whitespace strings
-- **`uniqueStrings(values)`** - Remove duplicates while preserving order
-
-### Map Helpers
-
-- **`getLastKeyInMap(map)`** - Retrieve the last inserted key from a Map
+Every signature, type parameter and thrown error is in the [API reference](https://www.hyperfrontend.dev/docs/libraries/utils/list/#api-reference).
 
 ## Compatibility
 

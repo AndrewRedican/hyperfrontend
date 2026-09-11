@@ -199,6 +199,12 @@ describe('analyzeProject', () => {
         expect(['json', 'yaml', 'js', 'ts', 'toml', 'env']).toContain(config.format)
       }
     })
+
+    it('derives the format from the file extension when the pattern declares none', () => {
+      const result = analyzeProject(resolve(FIXTURES_DIR, 'vitest-project'))
+      const vitestConfig = result.configFiles.find((config) => config.name === 'vitest.config.ts')
+      expect(vitestConfig?.format).toBe('ts')
+    })
   })
 
   describe('empty project handling', () => {

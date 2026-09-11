@@ -1,6 +1,8 @@
 import type { Page } from 'playwright-core'
 import type { Determinism, ReadyGate, RecordWindow, ServeSpec, Viewport } from './capture'
 import type { GifOptions, StillFormat } from './encode'
+import type { MediaProfile, ProfileRef } from './profile'
+import type { Stage } from './stage'
 
 /** Kinds of artefact a scene can emit. */
 export type SceneOutput = 'gif' | 'still'
@@ -88,12 +90,13 @@ export interface SceneAssertions {
 }
 
 /**
- * A browser scene as authored.
+ * What every scene declares, whichever lane runs it.
  *
- * Optional fields fall back to the workspace defaults, so a scene file states
- * only what makes it different from every other scene.
+ * These are the fields the parts of the pipeline outside a lane read: where an
+ * asset is written, what it is called, what it is worth budgeting, and what
+ * `check` should look for once it exists.
  */
-export interface BrowserSceneInput {
+export interface SceneCommon {
   /** Directory name the scene's assets are written under. */
   slug: string
   /** Filename stem the scene's assets are written under. */
@@ -101,13 +104,26 @@ export interface BrowserSceneInput {
   /**
    * Artefacts this scene emits.
    *
-   * A scene that does not list `gif` records no video and encodes nothing: it
-   * opens the page, holds it for the record window, writes its {@link stills}
-   * and stops. A scene that does not list `still` may still declare stills;
-   * the list says what the scene is *for*, and the GIF is what the budget and
-   * the freshness check are applied to.
+   * A scene that does not list `gif` records nothing and encodes nothing: it
+   * reaches the moment it is meant to show, writes its {@link stills} and
+   * stops. A scene that does not list `still` may still declare stills; the
+   * list says what the scene is *for*, and the GIF is what the budget and the
+   * freshness check are applied to.
    */
   outputs: readonly SceneOutput[]
+  /** Encoding parameters that differ from the workspace defaults. */
+  gif?: Partial<GifOptions>
+  /** Stills to capture from the scene. */
+  stills?: readonly StillSpec[]
+}
+
+/**
+ * A browser scene as authored.
+ *
+ * Optional fields fall back to the workspace defaults, so a scene file states
+ * only what makes it different from every other scene.
+ */
+export interface BrowserSceneInput extends SceneCommon {
   /** Viewport the session is recorded at. */
   viewport: Viewport
   /** Server to start and stop around this scene. */
@@ -122,10 +138,6 @@ export interface BrowserSceneInput {
   record: RecordWindow
   /** Conditions the ready page must satisfy before it is encoded. */
   assert?: SceneAssertions
-  /** Encoding parameters that differ from the workspace defaults. */
-  gif?: Partial<GifOptions>
-  /** Stills to capture inside the record window. */
-  stills?: readonly StillSpec[]
   /** Interaction driven against the ready page. */
   choreograph?: Choreography
 }
@@ -141,10 +153,85 @@ export interface BrowserScene extends BrowserSceneInput {
   kind: 'browser'
 }
 
+/**
+ * A scripted scene as authored.
+ *
+ * Where a browser scene points at something already built and records whatever
+ * it does, a scripted scene *is* the thing being recorded: a stage draws it,
+ * and the recorder walks a timeline rather than watching a clock. Nothing here
+ * describes a server, a URL or a readiness gate, because there is no separate
+ * application to wait for.
+ */
+export interface ScriptedSceneInput<TConfig> extends SceneCommon {
+  /** The presentation target the scene is composed for. */
+  profile: ProfileRef
+  /** The stage that draws it. */
+  stage: Stage<TConfig>
+  /** What this scene configures that stage with. */
+  config: TConfig
+  /** Frames per second, when this scene wants a rate other than its profile's. */
+  fps?: number
+  /**
+   * Time held on the closing frame before the animation loops.
+   *
+   * A looping GIF with no hold snaps from its last moment back to its first,
+   * which reads as a glitch rather than a repeat. A beat of stillness at the
+   * end is what turns the loop into a rest.
+   */
+  holdMs?: number
+}
+
+/**
+ * A scripted scene after `defineScriptedScene` has stamped it.
+ *
+ * The stage and its configuration arrive here already bound together. Their
+ * relationship is checked where the scene is written, which is the only place
+ * that knows what the configuration is meant to be; carrying the type any
+ * further would put a type parameter through every part of the pipeline in
+ * exchange for nothing it could use.
+ */
+export interface ScriptedScene extends SceneCommon {
+  /** Discriminant identifying the lane that runs this scene. */
+  kind: 'scripted'
+  /** The presentation target the scene is composed for. */
+  profile: ProfileRef
+  /** Name of the stage that draws it, recorded in the audit record. */
+  stageId: string
+  /** Frames per second, when this scene wants a rate other than its profile's. */
+  fps?: number
+  /** Time held on the closing frame before the animation loops. */
+  holdMs?: number
+  /**
+   * The stage's stylesheet, with this scene's configuration already bound.
+   *
+   * @param profile - The presentation target being composed for.
+   * @returns CSS, inlined into the page.
+   */
+  styles: (profile: MediaProfile) => string
+  /**
+   * How long the timeline runs, with this scene's configuration already bound.
+   *
+   * @param profile - The presentation target being composed for.
+   * @returns Length of the timeline in milliseconds, before any hold.
+   */
+  durationMs: (profile: MediaProfile) => number
+  /**
+   * Markup for one instant, with this scene's configuration already bound.
+   *
+   * @param profile - The presentation target being composed for.
+   * @param atMs - Offset from the start of the timeline.
+   * @returns HTML placed inside the stage element.
+   */
+  frame: (profile: MediaProfile, atMs: number) => string
+}
+
+/** Any scene the recorder knows how to run. */
+export type MediaScene = BrowserScene | ScriptedScene
+
 /** A scene file paired with the path it was loaded from. */
 export interface LoadedScene {
   /** Absolute path of the file the scene was loaded from. */
   filePath: string
   /** The scene the file exported. */
-  scene: BrowserScene
+  scene: MediaScene
 }

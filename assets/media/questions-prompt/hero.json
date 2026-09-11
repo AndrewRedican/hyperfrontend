@@ -1,0 +1,60 @@
+{
+  "slug": "questions-prompt",
+  "asset": "hero.gif",
+  "generatedAt": "2026-09-10T06:46:16.138Z",
+  "sceneHash": "f7efafa19c3ce178",
+  "sourceUrl": "stage:panel",
+  "profile": {
+    "id": "docs-wide",
+    "intent": "the documentation site's content column on a laptop or desktop",
+    "width": 928,
+    "height": 522,
+    "scale": 2,
+    "fps": 12
+  },
+  "viewport": {
+    "width": 928,
+    "height": 522
+  },
+  "record": {
+    "settleMs": 0,
+    "durationMs": 11560
+  },
+  "startMs": 0,
+  "gif": {
+    "width": 928,
+    "fps": 6,
+    "colours": 64,
+    "lossy": 70,
+    "dither": true,
+    "loop": 0,
+    "maxBytes": 1000000
+  },
+  "encoder": "sharp",
+  "toolVersions": [
+    {
+      "name": "sharp",
+      "version": "8.18.6"
+    }
+  ],
+  "bytes": 164568,
+  "frames": 71,
+  "stills": [
+    {
+      "asset": "poster.webp",
+      "bytes": 40712,
+      "maxBytes": 90000
+    }
+  ],
+  "browser": {
+    "name": "chromium",
+    "version": "149.0.7827.55",
+    "executablePath": "/home/vscode/.cache/ms-playwright/chromium-1228/chrome-linux64/chrome"
+  },
+  "determinism": {},
+  "console": {
+    "errors": 0,
+    "warnings": 0,
+    "pageErrors": 0
+  }
+}

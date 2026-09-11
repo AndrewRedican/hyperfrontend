@@ -33,6 +33,15 @@
   <img src="https://img.shields.io/badge/tree%20shakeable-%E2%9C%93-success?style=flat-square" alt="Tree Shakeable">
 </p>
 
+<p align="center">
+  <a href="https://www.hyperfrontend.dev/docs/libraries/utils/time/">
+    <img width="640" src="https://www.hyperfrontend.dev/media/time-utils-countdown/hero.gif" alt="Two stacked 30-second countdown bars draining in parallel: the setTimeout bar runs red straight to zero, while the createTimer bar holds green at 21.0s through a pause and then continues down from there">
+  </a>
+</p>
+<p align="center">
+  <sub>An interruption at nine seconds. The paused timer banks its remaining twenty-one and resumes on the remainder, rather than starting a fresh thirty.</sub>
+</p>
+
 Functional time utilities for async operations, intervals, and time normalization.
 
 • 👉 See [**documentation**](https://www.hyperfrontend.dev/docs/libraries/utils/time/)
@@ -54,10 +63,6 @@ Unlike the native timing APIs which offer limited lifecycle control, this librar
 - **Immutable APIs** - All returned objects are frozen, preventing accidental state modifications
 - **Zero dependencies** - Self-contained timing utilities with no external dependencies
 - **TypeScript native** - Full type definitions with comprehensive JSDoc documentation
-
-### Architecture Highlights
-
-All timing abstractions maintain internal state privately while exposing frozen API objects, following the revealing module pattern. Timer implementations track elapsed time explicitly to enable pause/resume functionality, while clock implementations manage subscriber arrays with simple filter-based unsubscription. The library avoids classes and prototypes in favor of factory functions that return object literals.
 
 ## Why Use @hyperfrontend/time-utils?
 
@@ -171,8 +176,9 @@ events.forEach((timestamp) => {
   buckets.set(key, (buckets.get(key) || 0) + 1)
 })
 
-// Results:
-// "2024-01-17T10:00:00Z" → 2 events
+// Results: 10:07:22 floors to 10:05, not to 10:00, so the three events land in three separate buckets
+// "2024-01-17T10:00:00Z" → 1 event
+// "2024-01-17T10:05:00Z" → 1 event
 // "2024-01-17T10:10:00Z" → 1 event
 ```
 
@@ -192,25 +198,24 @@ cleanup()
 
 ## API Overview
 
-**Timing Abstractions:**
+Five functions, one gap they all fill: `setTimeout` and `setInterval` schedule work but give you nothing to steer it with afterwards. Two of the five are where you
+start. [`createTimer`](https://www.hyperfrontend.dev/docs/libraries/utils/time/#api-createTimer) is a timeout you can interrupt: pausing banks whatever was
+left of the delay instead of discarding it, so resuming runs out that remainder rather than serving the full delay again, and `reset(newDelay?)` is the one call
+that does start over. [`createClock`](https://www.hyperfrontend.dev/docs/libraries/utils/time/#api-createClock) solves the opposite problem, fanning a single
+interval out to any number of subscribers, so ten widgets on a one-second cadence share one tick and one `Date` rather than drifting apart on ten intervals of
+their own.
 
-- **`createTimer(callback, delay)`** - Creates a pauseable, resumable timer (enhanced setTimeout)
-  - `timer.pause()` - Pauses timer, preserving remaining time
-  - `timer.resume()` - Resumes timer from remaining time
-  - `timer.reset(newDelay?)` - Restarts timer with optional new duration
+Both hand back a frozen object rather than a numeric handle you are expected to hold onto and clear. A [`Timer`](https://www.hyperfrontend.dev/docs/libraries/utils/time/#api-Timer)
+is `pause`, `resume` and `reset`; a [`Clock`](https://www.hyperfrontend.dev/docs/libraries/utils/time/#api-Clock) is `start`, `stop`, `subscribe`, `unsubscribe`
+and a read-only `interval`. One detail worth knowing before your first call: a timer is created idle, so nothing is scheduled until you `resume()` it once.
 
-- **`createClock(interval?)`** - Creates a multi-subscriber interval loop (default: 1000ms)
-  - `clock.start()` - Begins interval loop
-  - `clock.stop()` - Stops interval loop
-  - `clock.subscribe(callback)` - Adds callback to subscriber list
-  - `clock.unsubscribe(callback)` - Removes callback from subscribers
-  - `clock.interval` - Read-only interval duration
+The remaining three are single-purpose and take no object at all. [`sleep`](https://www.hyperfrontend.dev/docs/libraries/utils/time/#api-sleep) is a delay you can
+`await` in sequence. [`setIntervalCallback`](https://www.hyperfrontend.dev/docs/libraries/utils/time/#api-setIntervalCallback) is a repeating interval for the case
+where teardown is all you want back, returning the cleanup function directly. And
+[`normalizeToBaseTimeWindow`](https://www.hyperfrontend.dev/docs/libraries/utils/time/#api-normalizeToBaseTimeWindow) floors a `Date` to a window boundary and
+returns a new `Date`, which is how independent callers derive the same bucket key from clocks that never agreed to the millisecond.
 
-**Utility Functions:**
-
-- **`sleep(milliseconds)`** - Returns promise that resolves after delay (async/await compatible)
-- **`setIntervalCallback(callback, interval)`** - Simple setInterval wrapper returning cleanup function
-- **`normalizeToBaseTimeWindow(time, baseTimeWindow)`** - Rounds timestamp down to nearest time window boundary (window in minutes)
+Every signature, option and return type is in the [API reference](https://www.hyperfrontend.dev/docs/libraries/utils/time/#api-reference).
 
 ## Compatibility
 

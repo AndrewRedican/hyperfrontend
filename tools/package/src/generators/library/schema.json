@@ -27,6 +27,16 @@
       "description": "Whether the library should be publishable to npm (if true, runs make-publishable generator)",
       "default": false
     },
+    "keywords": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "npm keywords for the package, used only when publishable is true"
+    },
+    "compatibility": {
+      "type": "string",
+      "enum": ["isomorphic", "node-only", "browser-only"],
+      "description": "Runtime profile written to metadata.compatibility in project.json, required when publishable is true: 'isomorphic' runs in Node, browsers and Web Workers, 'node-only' runs in Node alone, 'browser-only' runs in browsers and Web Workers"
+    },
     "skipFormat": {
       "type": "boolean",
       "description": "Skip formatting the generated files",

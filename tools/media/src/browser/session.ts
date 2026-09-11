@@ -9,11 +9,21 @@ import { applyDeterminism } from './determinism'
 export interface SessionOptions {
   /** Size the page is rendered at. */
   viewport: Viewport
+  /**
+   * Device pixel ratio the page renders at, or omitted for one physical pixel
+   * per CSS pixel.
+   *
+   * Rendering above one and resampling by that same whole number afterwards is
+   * what keeps small text legible in an asset whose palette is 256 colours
+   * wide, so a scene composed at a fixed size asks for it and a scene recording
+   * a real application does not.
+   */
+  deviceScaleFactor?: number
   /** Directory video is written to, or an empty string to record nothing. */
   videoDir: string
   /** Overrides applied before any page script runs. */
   determinism?: Determinism
-  /** Document to open. */
+  /** Document to open, or an empty string for a page the caller will fill itself. */
   url: string
   /** Condition that says the page is worth recording. */
   ready?: ReadyGate
@@ -52,6 +62,7 @@ export interface OpenSession {
 export async function openSession(browser: Browser, options: SessionOptions): Promise<OpenSession> {
   const context = await browser.newContext({
     viewport: options.viewport,
+    ...(options.deviceScaleFactor === undefined ? {} : { deviceScaleFactor: options.deviceScaleFactor }),
     ...(options.videoDir === '' ? {} : { recordVideo: { dir: options.videoDir, size: options.viewport } }),
   })
   const openedAtMs = performance.now()
@@ -78,7 +89,10 @@ export async function openSession(browser: Browser, options: SessionOptions): Pr
   })
 
   await applyDeterminism(page, options.determinism)
-  await page.goto(options.url, { waitUntil: 'load' })
+  // why: a scene that draws its own document has nowhere to navigate, and the blank page the context already opened is exactly where it wants to be
+  if (options.url !== '') {
+    await page.goto(options.url, { waitUntil: 'load' })
+  }
   if (options.ready !== undefined) {
     const timeout = options.ready.timeoutMs ?? options.readyTimeoutMs
     try {

@@ -38,13 +38,17 @@ The sub-module page renders this README plus an auto-generated scoped API refere
 **Required sections (in order):**
 
 1. `## What is @hyperfrontend/<name>?`
-   - `### Key Features`
-   - `### Architecture Highlights`
+   - `### Key Features` (required)
+   - `### Architecture Highlights` (optional)
 2. `## Why Use @hyperfrontend/<name>?`
 3. `## Installation`
 4. `## Quick Start`
 5. `## API Overview`
 6. `## Compatibility`
+
+**`### Key Features`** is a flat bullet list of 3 to 12 items, each `- **Label**` (48 characters or fewer) followed by an explanation of at least 20 characters saying why the capability matters. The documentation site draws a correctly structured list as a marked run rather than as bullets, and falls back to plain markdown for one that is not. `lib-readme-structure` enforces the shape.
+
+**`### Architecture Highlights`** is optional and earns its place. Include it only for properties a consumer can rely on or must know to use the package correctly, such as a security guarantee, a cost, or a documented limit. Names of internal helpers, the fact that something uses factory functions, and anything already stated in Key Features all belong out of the README; where the package has an `ARCHITECTURE.md`, depth belongs there and the section becomes a short pointer. A package with nothing consumer-relevant to say omits the section entirely. The documentation site renders it as a quiet margin note at the end of the page rather than beside the capability list.
 
 **Required badges:**
 

@@ -38,6 +38,7 @@
         "cwd": "tools/media"
       }
     },
-    "typecheck": {}
+    "typecheck": {},
+    "audit": {}
   }
 }
