@@ -210,7 +210,7 @@ flowchart TB
 | `@hyperfrontend/logging` | `1.0.0` |
 | `@hyperfrontend/network-protocol` | `2.0.0` |
 | `@hyperfrontend/nexus` | `3.0.0` |
-| `@hyperfrontend/project-scope` | `0.2.4` |
+| `@hyperfrontend/project-scope` | `0.2.5` |
 | `@hyperfrontend/questions` | `0.3.0` |
 | `@hyperfrontend/random-generator-utils` | `0.2.0` |
 | `@hyperfrontend/state-machine` | `0.2.0` |
