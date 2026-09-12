@@ -17,7 +17,7 @@ export type PackageMark = readonly PackageMarkShape[]
  * @param d - SVG path data
  * @returns The shape
  */
-function line(d: string): PackageMarkShape {
+export function line(d: string): PackageMarkShape {
   return { as: 'path', attrs: { d } }
 }
 
@@ -29,7 +29,7 @@ function line(d: string): PackageMarkShape {
  * @param r - Radius
  * @returns The shape
  */
-function ring(cx: number, cy: number, r: number): PackageMarkShape {
+export function ring(cx: number, cy: number, r: number): PackageMarkShape {
   return { as: 'circle', attrs: { cx, cy, r } }
 }
 
@@ -41,7 +41,7 @@ function ring(cx: number, cy: number, r: number): PackageMarkShape {
  * @param r - Radius
  * @returns The shape
  */
-function dot(cx: number, cy: number, r: number): PackageMarkShape {
+export function dot(cx: number, cy: number, r: number): PackageMarkShape {
   return { as: 'circle', attrs: { cx, cy, r }, solid: true }
 }
 
@@ -55,7 +55,7 @@ function dot(cx: number, cy: number, r: number): PackageMarkShape {
  * @param rx - Corner radius
  * @returns The shape
  */
-function box(x: number, y: number, width: number, height: number, rx: number): PackageMarkShape {
+export function box(x: number, y: number, width: number, height: number, rx: number): PackageMarkShape {
   return { as: 'rect', attrs: { x, y, width, height, rx } }
 }
 
@@ -69,7 +69,7 @@ function box(x: number, y: number, width: number, height: number, rx: number): P
  * @param rx - Corner radius
  * @returns The shape
  */
-function slab(x: number, y: number, width: number, height: number, rx: number): PackageMarkShape {
+export function slab(x: number, y: number, width: number, height: number, rx: number): PackageMarkShape {
   return { as: 'rect', attrs: { x, y, width, height, rx }, solid: true }
 }
 
