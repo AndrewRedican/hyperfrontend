@@ -57,49 +57,34 @@ flowchart TB
 
 **CascadeOptions:**
 
-| Option                    | Default   | Description                                |
-| ------------------------- | --------- | ------------------------------------------ |
-| `cascadeBumpType`         | `'patch'` | Bump type for cascaded dependents          |
-| `includeDevDependencies`  | `false`   | Cascade through dev dependencies           |
-| `includePeerDependencies` | `true`    | Cascade through peer dependencies          |
-| `prereleaseId`            | `'alpha'` | Prerelease identifier for prerelease bumps |
+| Option                                                                                                                                                         | Default   | Description                                |
+| -------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------- | ------------------------------------------ |
+| [`cascadeBumpType`](https://www.hyperfrontend.dev/docs/libraries/versioning/workspace/operations/#api-CascadeBumpOptions-prop-cascadeBumpType)                 | `'patch'` | Bump type for cascaded dependents          |
+| [`includeDevDependencies`](https://www.hyperfrontend.dev/docs/libraries/versioning/workspace/operations/#api-CascadeBumpOptions-prop-includeDevDependencies)   | `false`   | Cascade through dev dependencies           |
+| [`includePeerDependencies`](https://www.hyperfrontend.dev/docs/libraries/versioning/workspace/operations/#api-CascadeBumpOptions-prop-includePeerDependencies) | `true`    | Cascade through peer dependencies          |
+| [`prereleaseId`](https://www.hyperfrontend.dev/docs/libraries/versioning/workspace/operations/#api-CascadeBumpOptions-prop-prereleaseId)                       | `'alpha'` | Prerelease identifier for prerelease bumps |
 
 ### Batch Updates
 
-**BatchOptions:**
+**[`BatchUpdateOptions`](https://www.hyperfrontend.dev/docs/libraries/versioning/workspace/operations/#api-BatchUpdateOptions):**
 
-| Option                     | Default | Description                              |
-| -------------------------- | ------- | ---------------------------------------- |
-| `dryRun`                   | `false` | Preview changes without writing          |
-| `updateChangelogs`         | `true`  | Update changelog files                   |
-| `updateDependencyVersions` | `true`  | Update dependency version ranges         |
-| `createGitCommit`          | `false` | Create git commit after updates          |
-| `createGitTag`             | `false` | Create git tags for each updated package |
+| Option                                                                                                                                                               | Default | Description                                                       |
+| -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ----------------------------------------------------------------- |
+| [`updateDependencyReferences`](https://www.hyperfrontend.dev/docs/libraries/versioning/workspace/operations/#api-BatchUpdateOptions-prop-updateDependencyReferences) | `true`  | Rewrite the version ranges other packages hold on the bumped ones |
 
 ### Validation
 
-**ValidationOptions:**
+[`validateWorkspace`](https://www.hyperfrontend.dev/docs/libraries/versioning/workspace/operations/#api-validateWorkspace) takes no options: it runs every check below and returns a [`ValidationReport`](https://www.hyperfrontend.dev/docs/libraries/versioning/workspace/operations/#api-ValidationReport) whose [`ValidationCheckResult`](https://www.hyperfrontend.dev/docs/libraries/versioning/workspace/operations/#api-ValidationCheckResult) entries name the check and the package it ran against. [`validateProject`](https://www.hyperfrontend.dev/docs/libraries/versioning/workspace/operations/#api-validateProject) runs the per-package checks for one project.
 
-| Option           | Description                 |
-| ---------------- | --------------------------- |
-| `customRules`    | Additional validation rules |
-| `ignoreProjects` | Projects to skip validation |
-| `disabledRules`  | Rules to disable            |
+**Built-in Validation Checks:**
 
-**Built-in Validation Rules:**
-
-| Rule                    | Severity | Description                                |
-| ----------------------- | -------- | ------------------------------------------ |
-| `valid-version`         | error    | Version must be valid semver               |
-| `valid-name`            | error    | Package name required                      |
-| `valid-name-format`     | error    | Package name must follow npm conventions   |
-| `no-self-dependency`    | error    | Package cannot depend on itself            |
-| `no-circular-deps`      | error    | No circular dependencies in workspace      |
-| `version-compatibility` | warning  | Internal deps should be compatible         |
-| `has-changelog`         | warning  | Publishable packages should have changelog |
-| `no-prerelease-deps`    | warning  | Avoid prerelease external dependencies     |
-| `no-wildcard-deps`      | warning  | Avoid wildcard version ranges              |
-| `no-git-deps`           | warning  | Avoid git URL dependencies                 |
+| Check                      | Scope     | Description                                         |
+| -------------------------- | --------- | --------------------------------------------------- |
+| `workspace-has-projects`   | workspace | At least one project was discovered                 |
+| `no-circular-dependencies` | workspace | No circular dependencies between internal packages  |
+| `valid-version`            | package   | Version must be valid semver                        |
+| `valid-name`               | package   | Package name must follow npm conventions            |
+| `dependency-versions`      | package   | Internal dependencies must name versions that exist |
 
 ## Usage Example
 
@@ -146,7 +131,7 @@ console.log(formatBatchResult(updateResult))
 
 ## Dependencies
 
-Uses `@hyperfrontend/project-scope` for file system operations and workspace detection. Uses `@hyperfrontend/immutable-api-utils` for immutable data structures.
+Uses [`@hyperfrontend/project-scope`](https://www.hyperfrontend.dev/docs/libraries/project-scope/) for file system operations and workspace detection. Uses [`@hyperfrontend/immutable-api-utils`](https://www.hyperfrontend.dev/docs/libraries/utils/immutable-api/) for immutable data structures.
 
 ## See Also
 

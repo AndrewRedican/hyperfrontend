@@ -1,6 +1,6 @@
 # Architecture
 
-This document describes the internal architecture of `@hyperfrontend/versioning`. For usage examples and quick start guides, see the main [README.md](./README.md).
+This document describes the internal architecture of [`@hyperfrontend/versioning`](https://www.hyperfrontend.dev/docs/libraries/versioning/). For usage examples and quick start guides, see the main [README.md](./README.md).
 
 ## Table of Contents
 
@@ -318,15 +318,15 @@ classDiagram
 
 ### Type Categories
 
-| Category  | Types                                                              | Location     |
-| --------- | ------------------------------------------------------------------ | ------------ |
-| Changelog | `Changelog`, `ChangelogEntry`, `ChangelogSection`, `ChangelogItem` | `changelog/` |
-| Commits   | `ConventionalCommit`, `CommitType`, `CommitFooter`                 | `commits/`   |
-| Semver    | `ParsedVersion`, `ReleaseType`, `PreReleaseType`                   | `semver/`    |
-| Git       | `GitClient`, `GitCommit`, `GitTag`, `GitLogEntry`                  | `git/`       |
-| Registry  | `RegistryClient`, `PackageInfo`, `VersionInfo`                     | `registry/`  |
-| Workspace | `Project`, `Workspace`, `PackageJson`                              | `workspace/` |
-| Flow      | `FlowContext`, `FlowStep`, `FlowResult`, `FlowError`               | `flow/`      |
+| Category  | Types                                                                                                                                                                                                                                                                                                                                                                                                                                                          | Location     |
+| --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------ |
+| Changelog | [`Changelog`](https://www.hyperfrontend.dev/docs/libraries/versioning/changelog/models/#api-Changelog), [`ChangelogEntry`](https://www.hyperfrontend.dev/docs/libraries/versioning/changelog/models/#api-ChangelogEntry), [`ChangelogSection`](https://www.hyperfrontend.dev/docs/libraries/versioning/changelog/models/#api-ChangelogSection), [`ChangelogItem`](https://www.hyperfrontend.dev/docs/libraries/versioning/changelog/models/#api-ChangelogItem) | `changelog/` |
+| Commits   | [`ConventionalCommit`](https://www.hyperfrontend.dev/docs/libraries/versioning/commits/models/#api-ConventionalCommit), [`CommitType`](https://www.hyperfrontend.dev/docs/libraries/versioning/commits/models/#api-CommitType), [`CommitFooter`](https://www.hyperfrontend.dev/docs/libraries/versioning/commits/models/#api-CommitFooter)                                                                                                                     | `commits/`   |
+| Semver    | [`SemVer`](https://www.hyperfrontend.dev/docs/libraries/versioning/semver/models/#api-SemVer), [`BumpType`](https://www.hyperfrontend.dev/docs/libraries/versioning/semver/models/#api-BumpType), [`Range`](https://www.hyperfrontend.dev/docs/libraries/versioning/semver/models/#api-Range)                                                                                                                                                                  | `semver/`    |
+| Git       | [`GitClient`](https://www.hyperfrontend.dev/docs/libraries/versioning/git/#api-GitClient), [`GitCommit`](https://www.hyperfrontend.dev/docs/libraries/versioning/git/models/#api-GitCommit), [`GitTag`](https://www.hyperfrontend.dev/docs/libraries/versioning/git/models/#api-GitTag), [`GitRef`](https://www.hyperfrontend.dev/docs/libraries/versioning/git/models/#api-GitRef)                                                                            | `git/`       |
+| Registry  | [`Registry`](https://www.hyperfrontend.dev/docs/libraries/versioning/registry/models/#api-Registry), [`PackageInfo`](https://www.hyperfrontend.dev/docs/libraries/versioning/registry/models/#api-PackageInfo), [`VersionInfo`](https://www.hyperfrontend.dev/docs/libraries/versioning/registry/models/#api-VersionInfo)                                                                                                                                      | `registry/`  |
+| Workspace | [`Project`](https://www.hyperfrontend.dev/docs/libraries/versioning/workspace/models/#api-Project), [`Workspace`](https://www.hyperfrontend.dev/docs/libraries/versioning/workspace/models/#api-Workspace), [`PackageJson`](https://www.hyperfrontend.dev/docs/libraries/project-scope/project/package/#api-PackageJson)                                                                                                                                       | `workspace/` |
+| Flow      | [`FlowContext`](https://www.hyperfrontend.dev/docs/libraries/versioning/flow/models/#api-FlowContext), [`FlowStep`](https://www.hyperfrontend.dev/docs/libraries/versioning/flow/models/#api-FlowStep), [`FlowResult`](https://www.hyperfrontend.dev/docs/libraries/versioning/flow/models/#api-FlowResult), [`FlowState`](https://www.hyperfrontend.dev/docs/libraries/versioning/flow/models/#api-FlowState)                                                 | `flow/`      |
 
 ---
 

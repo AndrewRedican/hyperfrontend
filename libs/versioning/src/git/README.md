@@ -189,13 +189,13 @@ All user input undergoes character-by-character validation before being used in 
 
 ### Allowed Characters by Function
 
-| Function              | Allowed Characters                |
-| --------------------- | --------------------------------- |
-| `escapeGitRef`        | `a-z A-Z 0-9 / - _ . @ ~ ^ { }`   |
-| `escapeGitPath`       | `a-z A-Z 0-9 / - _ . (space)`     |
-| `escapeFilePath`      | `a-z A-Z 0-9 / - _ . (space)`     |
-| `escapeAuthor`        | `a-z A-Z 0-9 - _ . @ < > (space)` |
-| `escapeGitTagPattern` | `a-z A-Z 0-9 / - _ . @ *`         |
+| Function                                                                                                      | Allowed Characters                |
+| ------------------------------------------------------------------------------------------------------------- | --------------------------------- |
+| [`escapeGitRef`](https://www.hyperfrontend.dev/docs/libraries/versioning/git/#api-escapeGitRef)               | `a-z A-Z 0-9 / - _ . @ ~ ^ { }`   |
+| [`escapeGitPath`](https://www.hyperfrontend.dev/docs/libraries/versioning/git/#api-escapeGitPath)             | `a-z A-Z 0-9 / - _ . (space)`     |
+| [`escapeFilePath`](https://www.hyperfrontend.dev/docs/libraries/versioning/git/#api-escapeFilePath)           | `a-z A-Z 0-9 / - _ . (space)`     |
+| [`escapeAuthor`](https://www.hyperfrontend.dev/docs/libraries/versioning/git/#api-escapeAuthor)               | `a-z A-Z 0-9 - _ . @ < > (space)` |
+| [`escapeGitTagPattern`](https://www.hyperfrontend.dev/docs/libraries/versioning/git/#api-escapeGitTagPattern) | `a-z A-Z 0-9 / - _ . @ *`         |
 
 ### Maximum Input Lengths
 

@@ -4,13 +4,13 @@ Pure rule engine for commit-message validation.
 
 ## Overview
 
-Runs a configurable ruleset over a parsed `ConventionalCommit` and returns a structured `ValidationResult` containing warn-level and error-level messages. Mirrors the semantics of `@commitlint/config-conventional`'s baseline but is bundled with `@hyperfrontend/versioning` and TTY-free.
+Runs a configurable ruleset over a parsed [`ConventionalCommit`](https://www.hyperfrontend.dev/docs/libraries/versioning/commits/models/#api-ConventionalCommit) and returns a structured [`ValidationResult`](https://www.hyperfrontend.dev/docs/libraries/versioning/commits/validate/#api-ValidationResult) containing warn-level and error-level messages. Mirrors the semantics of `@commitlint/config-conventional`'s baseline but is bundled with [`@hyperfrontend/versioning`](https://www.hyperfrontend.dev/docs/libraries/versioning/) and TTY-free.
 
 The same engine powers three consumers:
 
 1. Inline step validators during interactive authoring (`commits/author/`).
 2. Preview-step warnings that render before the user confirms a commit.
-3. The out-of-band `cl` bin wired into `.git/hooks/commit-msg`.
+3. The out-of-band [`cl`](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/versioning/src/bin/cl.ts) bin wired into `.git/hooks/commit-msg`.
 
 ```mermaid
 flowchart LR
@@ -89,8 +89,8 @@ const dogfoodRuleset: Ruleset = {
 ## Authoring New Rules
 
 1. Create `rules/<name>.ts` exporting a `Rule<YourOptions>` whose `check()` returns a list of violation strings.
-2. Register it in `rules/index.ts` and in `BUILT_IN_RULES` inside [engine.ts](./engine.ts).
-3. Write a colocated `.spec.ts` covering: happy path, each failure branch, the `off`/empty-options pass-through paths.
+2. Register it in `rules/index.ts` and in [`BUILT_IN_RULES`](https://www.hyperfrontend.dev/docs/libraries/versioning/commits/validate/#api-BUILT_IN_RULES) inside [engine.ts](./engine.ts).
+3. Write a colocated `.spec.ts` covering: happy path, each failure branch, the [`off`](https://www.hyperfrontend.dev/docs/libraries/versioning/commits/validate/#api-RuleLevel)/empty-options pass-through paths.
 4. If it should ship in the default preset, add it to [presets/conventional.ts](./presets/conventional.ts).
 
 The engine is intentionally dumb about rule semantics: rules own both the check and the message wording. Keep messages specific enough to act on (`'type must be one of [feat, fix] but was "wip"'`, not `'invalid type'`).

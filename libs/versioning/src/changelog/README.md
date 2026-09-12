@@ -144,20 +144,20 @@ flowchart LR
 
 The module recognizes these standard changelog section types:
 
-| Type            | Common Headings            |
-| --------------- | -------------------------- |
-| `breaking`      | Breaking Changes, BREAKING |
-| `features`      | Features, Added, New       |
-| `fixes`         | Bug Fixes, Fixed           |
-| `performance`   | Performance, Perf          |
-| `documentation` | Documentation, Docs        |
-| `deprecations`  | Deprecated                 |
-| `refactoring`   | Refactored, Refactor       |
-| `tests`         | Tests, Testing             |
-| `build`         | Build, Dependencies        |
-| `ci`            | CI, Continuous Integration |
-| `chores`        | Chores, Misc               |
-| `other`         | Other (fallback)           |
+| Type                                                                                                                  | Common Headings            |
+| --------------------------------------------------------------------------------------------------------------------- | -------------------------- |
+| [`breaking`](https://www.hyperfrontend.dev/docs/libraries/versioning/changelog/models/#api-ChangelogSectionType)      | Breaking Changes, BREAKING |
+| [`features`](https://www.hyperfrontend.dev/docs/libraries/versioning/changelog/models/#api-ChangelogSectionType)      | Features, Added, New       |
+| [`fixes`](https://www.hyperfrontend.dev/docs/libraries/versioning/changelog/models/#api-ChangelogSectionType)         | Bug Fixes, Fixed           |
+| `performance`                                                                                                         | Performance, Perf          |
+| [`documentation`](https://www.hyperfrontend.dev/docs/libraries/versioning/changelog/models/#api-ChangelogSectionType) | Documentation, Docs        |
+| [`deprecations`](https://www.hyperfrontend.dev/docs/libraries/versioning/changelog/models/#api-ChangelogSectionType)  | Deprecated                 |
+| [`refactoring`](https://www.hyperfrontend.dev/docs/libraries/versioning/changelog/models/#api-ChangelogSectionType)   | Refactored, Refactor       |
+| [`tests`](https://www.hyperfrontend.dev/docs/libraries/versioning/changelog/models/#api-ChangelogSectionType)         | Tests, Testing             |
+| [`build`](https://www.hyperfrontend.dev/docs/libraries/versioning/changelog/models/#api-ChangelogSectionType)         | Build, Dependencies        |
+| [`ci`](https://www.hyperfrontend.dev/docs/libraries/versioning/changelog/models/#api-ChangelogSectionType)            | CI, Continuous Integration |
+| [`chores`](https://www.hyperfrontend.dev/docs/libraries/versioning/changelog/models/#api-ChangelogSectionType)        | Chores, Misc               |
+| [`other`](https://www.hyperfrontend.dev/docs/libraries/versioning/changelog/models/#api-ChangelogSectionType)         | Other (fallback)           |
 
 ## Usage Examples
 
@@ -263,12 +263,12 @@ flowchart TB
     end
 ```
 
-| Strategy | Entry Behavior        | Section Behavior   | Item Behavior          |
-| -------- | --------------------- | ------------------ | ---------------------- |
-| `source` | Use source entry      | Use source section | Use source item        |
-| `target` | Use target entry      | Use target section | Use target item        |
-| `union`  | Include both (unique) | Combine sections   | Combine items          |
-| `latest` | Use newer entry       | Merge by type      | Replace by description |
+| Strategy                                                                                                    | Entry Behavior        | Section Behavior   | Item Behavior          |
+| ----------------------------------------------------------------------------------------------------------- | --------------------- | ------------------ | ---------------------- |
+| [`source`](https://www.hyperfrontend.dev/docs/libraries/versioning/changelog/operations/#api-MergeStrategy) | Use source entry      | Use source section | Use source item        |
+| [`target`](https://www.hyperfrontend.dev/docs/libraries/versioning/changelog/operations/#api-MergeStrategy) | Use target entry      | Use target section | Use target item        |
+| [`union`](https://www.hyperfrontend.dev/docs/libraries/versioning/changelog/#api-MergeStrategy)             | Include both (unique) | Combine sections   | Combine items          |
+| [`latest`](https://www.hyperfrontend.dev/docs/libraries/versioning/changelog/#api-MergeStrategy)            | Use newer entry       | Merge by type      | Replace by description |
 
 ## Design Principles
 

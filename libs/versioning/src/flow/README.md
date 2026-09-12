@@ -82,17 +82,17 @@ flowchart LR
 
 ### FlowExecutionOptions
 
-| Option              | Default     | Description                               |
-| ------------------- | ----------- | ----------------------------------------- |
-| `showDiff`          | `false`     | Preview changes before committing to VFS  |
-| `diffFormat`        | `'unified'` | Diff format: `'unified'` or `'simple'`    |
-| `rollbackOnFailure` | `false`     | Discard all VFS changes if any step fails |
+| Option                                                                                                                         | Default     | Description                               |
+| ------------------------------------------------------------------------------------------------------------------------------ | ----------- | ----------------------------------------- |
+| [`showDiff`](https://www.hyperfrontend.dev/docs/libraries/versioning/flow/#api-ExecuteOptions-prop-showDiff)                   | `false`     | Preview changes before committing to VFS  |
+| [`diffFormat`](https://www.hyperfrontend.dev/docs/libraries/versioning/flow/#api-ExecuteOptions-prop-diffFormat)               | `'unified'` | Diff format: `'unified'` or `'simple'`    |
+| [`rollbackOnFailure`](https://www.hyperfrontend.dev/docs/libraries/versioning/flow/#api-ExecuteOptions-prop-rollbackOnFailure) | `false`     | Discard all VFS changes if any step fails |
 
 ### WriteChangelogStepOptions
 
-| Option            | Default | Description                                                     |
-| ----------------- | ------- | --------------------------------------------------------------- |
-| `backupChangelog` | `false` | Backup existing changelog before writing (uses `tree.rename()`) |
+| Option                                                                                                                        | Default | Description                                                     |
+| ----------------------------------------------------------------------------------------------------------------------------- | ------- | --------------------------------------------------------------- |
+| [`backupChangelog`](https://www.hyperfrontend.dev/docs/libraries/versioning/flow/models/#api-FlowConfig-prop-backupChangelog) | `false` | Backup existing changelog before writing (uses `tree.rename()`) |
 
 ## Usage
 
@@ -179,30 +179,30 @@ sequenceDiagram
 
 ## Configuration
 
-| Option                | Type       | Default                               | Description                                      |
-| --------------------- | ---------- | ------------------------------------- | ------------------------------------------------ |
-| `preset`              | `string`   | `'conventional'`                      | Flow preset name                                 |
-| `releaseTypes`        | `string[]` | `['feat', 'fix', 'perf', 'revert']`   | Types that trigger releases                      |
-| `minorTypes`          | `string[]` | `['feat']`                            | Types that trigger minor bumps                   |
-| `patchTypes`          | `string[]` | `['fix', 'perf', 'revert']`           | Types that trigger patch bumps                   |
-| `skipGit`             | `boolean`  | `false`                               | Skip git operations                              |
-| `skipTag`             | `boolean`  | `true`                                | Skip tag creation                                |
-| `skipChangelog`       | `boolean`  | `false`                               | Skip changelog update                            |
-| `dryRun`              | `boolean`  | `false`                               | Preview without changes                          |
-| `commitMessage`       | `string`   | `'chore(${projectName}): release...'` | Commit message template                          |
-| `tagFormat`           | `string`   | `'${projectName}@${version}'`         | Tag name template                                |
-| `trackDeps`           | `boolean`  | `false`                               | Track dependency bumps                           |
-| `releaseBranch`       | `string`   | `'main'`                              | Allowed release branch                           |
-| `firstReleaseVersion` | `string`   | `'0.1.0'`                             | Initial version for new packages                 |
-| `releaseAs`           | `string`   | `undefined`                           | Force bump type: 'major', 'minor', or 'patch'    |
-| `maxCommitFallback`   | `number`   | `500`                                 | Max commits to analyze when no base available    |
-| `repository`          | `*`        | `undefined`                           | Repository config for compare URLs (see below)   |
-| `changelogFileName`   | `string`   | `'CHANGELOG.md'`                      | Custom changelog filename                        |
-| `commitTypeToSection` | `object`   | `undefined`                           | Custom commit type → section mapping (see below) |
+| Option                                                                                                                                | Type       | Default                               | Description                                      |
+| ------------------------------------------------------------------------------------------------------------------------------------- | ---------- | ------------------------------------- | ------------------------------------------------ |
+| [`preset`](https://www.hyperfrontend.dev/docs/libraries/versioning/flow/#api-FlowConfig-prop-preset)                                  | `string`   | `'conventional'`                      | Flow preset name                                 |
+| [`releaseTypes`](https://www.hyperfrontend.dev/docs/libraries/versioning/flow/models/#api-FlowConfig-prop-releaseTypes)               | `string[]` | `['feat', 'fix', 'perf', 'revert']`   | Types that trigger releases                      |
+| [`minorTypes`](https://www.hyperfrontend.dev/docs/libraries/versioning/flow/models/#api-FlowConfig-prop-minorTypes)                   | `string[]` | `['feat']`                            | Types that trigger minor bumps                   |
+| [`patchTypes`](https://www.hyperfrontend.dev/docs/libraries/versioning/flow/models/#api-FlowConfig-prop-patchTypes)                   | `string[]` | `['fix', 'perf', 'revert']`           | Types that trigger patch bumps                   |
+| [`skipGit`](https://www.hyperfrontend.dev/docs/libraries/versioning/flow/models/#api-FlowConfig-prop-skipGit)                         | `boolean`  | `false`                               | Skip git operations                              |
+| [`skipTag`](https://www.hyperfrontend.dev/docs/libraries/versioning/flow/models/#api-FlowConfig-prop-skipTag)                         | `boolean`  | `true`                                | Skip tag creation                                |
+| [`skipChangelog`](https://www.hyperfrontend.dev/docs/libraries/versioning/flow/models/#api-FlowConfig-prop-skipChangelog)             | `boolean`  | `false`                               | Skip changelog update                            |
+| [`dryRun`](https://www.hyperfrontend.dev/docs/libraries/versioning/flow/#api-dryRun)                                                  | `boolean`  | `false`                               | Preview without changes                          |
+| [`commitMessage`](https://www.hyperfrontend.dev/docs/libraries/versioning/flow/models/#api-FlowConfig-prop-commitMessage)             | `string`   | `'chore(${projectName}): release...'` | Commit message template                          |
+| [`tagFormat`](https://www.hyperfrontend.dev/docs/libraries/versioning/flow/models/#api-FlowConfig-prop-tagFormat)                     | `string`   | `'${projectName}@${version}'`         | Tag name template                                |
+| [`trackDeps`](https://www.hyperfrontend.dev/docs/libraries/versioning/flow/models/#api-FlowConfig-prop-trackDeps)                     | `boolean`  | `false`                               | Track dependency bumps                           |
+| [`releaseBranch`](https://www.hyperfrontend.dev/docs/libraries/versioning/flow/models/#api-FlowConfig-prop-releaseBranch)             | `string`   | `'main'`                              | Allowed release branch                           |
+| [`firstReleaseVersion`](https://www.hyperfrontend.dev/docs/libraries/versioning/flow/models/#api-FlowConfig-prop-firstReleaseVersion) | `string`   | `'0.1.0'`                             | Initial version for new packages                 |
+| [`releaseAs`](https://www.hyperfrontend.dev/docs/libraries/versioning/flow/models/#api-FlowConfig-prop-releaseAs)                     | `string`   | `undefined`                           | Force bump type: 'major', 'minor', or 'patch'    |
+| [`maxCommitFallback`](https://www.hyperfrontend.dev/docs/libraries/versioning/flow/models/#api-FlowConfig-prop-maxCommitFallback)     | `number`   | `500`                                 | Max commits to analyze when no base available    |
+| [`repository`](https://www.hyperfrontend.dev/docs/libraries/versioning/flow/#api-FlowConfig-prop-repository)                          | `*`        | `undefined`                           | Repository config for compare URLs (see below)   |
+| [`changelogFileName`](https://www.hyperfrontend.dev/docs/libraries/versioning/flow/models/#api-FlowConfig-prop-changelogFileName)     | `string`   | `'CHANGELOG.md'`                      | Custom changelog filename                        |
+| [`commitTypeToSection`](https://www.hyperfrontend.dev/docs/libraries/versioning/flow/models/#api-FlowConfig-prop-commitTypeToSection) | `object`   | `undefined`                           | Custom commit type → section mapping (see below) |
 
 ### Repository Configuration
 
-The `repository` option controls compare URL generation in changelog entries:
+The [`repository`](https://www.hyperfrontend.dev/docs/libraries/versioning/flow/#api-FlowConfig-prop-repository) option controls compare URL generation in changelog entries:
 
 ```typescript
 // Auto-detect from package.json or git remote
@@ -239,7 +239,7 @@ When repository is resolved, changelog entries include compare URLs:
 
 ### Commit Type to Section Mapping
 
-The `commitTypeToSection` option customizes how commit types map to changelog sections:
+The [`commitTypeToSection`](https://www.hyperfrontend.dev/docs/libraries/versioning/flow/models/#api-FlowConfig-prop-commitTypeToSection) option customizes how commit types map to changelog sections:
 
 ```typescript
 createVersionFlow('conventional', {
@@ -258,25 +258,25 @@ createVersionFlow('conventional', {
 
 Default mapping:
 
-| Commit Type | Section         |
-| ----------- | --------------- |
-| `feat`      | `features`      |
-| `fix`       | `fixes`         |
-| `perf`      | `performance`   |
-| `docs`      | `documentation` |
-| `refactor`  | `refactoring`   |
-| `revert`    | `other`         |
-| `build`     | `build`         |
-| `ci`        | `ci`            |
-| `test`      | `tests`         |
-| `chore`     | `chores`        |
-| `style`     | `other`         |
+| Commit Type                                                                                                    | Section                                                                                                             |
+| -------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| [`feat`](https://www.hyperfrontend.dev/docs/libraries/versioning/flow/#api-DEFAULT_COMMIT_TYPE_TO_SECTION)     | [`features`](https://www.hyperfrontend.dev/docs/libraries/versioning/flow/#api-DEFAULT_COMMIT_TYPE_TO_SECTION)      |
+| [`fix`](https://www.hyperfrontend.dev/docs/libraries/versioning/flow/#api-DEFAULT_COMMIT_TYPE_TO_SECTION)      | [`fixes`](https://www.hyperfrontend.dev/docs/libraries/versioning/flow/#api-DEFAULT_COMMIT_TYPE_TO_SECTION)         |
+| [`perf`](https://www.hyperfrontend.dev/docs/libraries/versioning/flow/#api-DEFAULT_COMMIT_TYPE_TO_SECTION)     | `performance`                                                                                                       |
+| [`docs`](https://www.hyperfrontend.dev/docs/libraries/versioning/flow/#api-DEFAULT_COMMIT_TYPE_TO_SECTION)     | [`documentation`](https://www.hyperfrontend.dev/docs/libraries/versioning/flow/#api-DEFAULT_COMMIT_TYPE_TO_SECTION) |
+| [`refactor`](https://www.hyperfrontend.dev/docs/libraries/versioning/flow/#api-DEFAULT_COMMIT_TYPE_TO_SECTION) | [`refactoring`](https://www.hyperfrontend.dev/docs/libraries/versioning/flow/#api-DEFAULT_COMMIT_TYPE_TO_SECTION)   |
+| [`revert`](https://www.hyperfrontend.dev/docs/libraries/versioning/flow/#api-DEFAULT_COMMIT_TYPE_TO_SECTION)   | [`other`](https://www.hyperfrontend.dev/docs/libraries/versioning/flow/#api-DEFAULT_COMMIT_TYPE_TO_SECTION)         |
+| [`build`](https://www.hyperfrontend.dev/docs/libraries/versioning/flow/#api-DEFAULT_COMMIT_TYPE_TO_SECTION)    | [`build`](https://www.hyperfrontend.dev/docs/libraries/versioning/flow/#api-DEFAULT_COMMIT_TYPE_TO_SECTION)         |
+| [`ci`](https://www.hyperfrontend.dev/docs/libraries/versioning/flow/#api-DEFAULT_COMMIT_TYPE_TO_SECTION)       | [`ci`](https://www.hyperfrontend.dev/docs/libraries/versioning/flow/#api-DEFAULT_COMMIT_TYPE_TO_SECTION)            |
+| [`test`](https://www.hyperfrontend.dev/docs/libraries/versioning/flow/#api-DEFAULT_COMMIT_TYPE_TO_SECTION)     | [`tests`](https://www.hyperfrontend.dev/docs/libraries/versioning/flow/#api-DEFAULT_COMMIT_TYPE_TO_SECTION)         |
+| [`chore`](https://www.hyperfrontend.dev/docs/libraries/versioning/flow/#api-DEFAULT_COMMIT_TYPE_TO_SECTION)    | [`chores`](https://www.hyperfrontend.dev/docs/libraries/versioning/flow/#api-DEFAULT_COMMIT_TYPE_TO_SECTION)        |
+| `style`                                                                                                        | [`other`](https://www.hyperfrontend.dev/docs/libraries/versioning/flow/#api-DEFAULT_COMMIT_TYPE_TO_SECTION)         |
 
-Unmapped types fall back to `chores`. Use `null` to exclude a type entirely.
+Unmapped types fall back to [`chores`](https://www.hyperfrontend.dev/docs/libraries/versioning/flow/#api-DEFAULT_COMMIT_TYPE_TO_SECTION). Use `null` to exclude a type entirely.
 
 ## Step Dependencies
 
-Steps can declare dependencies using `dependsOn`:
+Steps can declare dependencies using [`dependsOn`](https://www.hyperfrontend.dev/docs/libraries/versioning/workspace/models/#api-dependsOn):
 
 ```typescript
 const tagStep = createStep('create-tag', 'Create Tag', execute, {
@@ -288,7 +288,7 @@ The executor respects dependencies and skips steps when dependencies fail.
 
 ## Error Handling
 
-Steps can use `continueOnError` to allow the flow to continue:
+Steps can use [`continueOnError`](https://www.hyperfrontend.dev/docs/libraries/versioning/flow/models/#api-FlowStep-prop-continueOnError) to allow the flow to continue:
 
 ```typescript
 const optionalStep = createStep('optional', 'Optional Step', execute, {
