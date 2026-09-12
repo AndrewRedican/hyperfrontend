@@ -57,10 +57,10 @@ Additionally, the library provides **safe built-in copies**: pre-captured refere
 
 ### Key Features
 
-- **`@locked()` decorator** for TypeScript classes: prevents method overwriting and ensures correct `this` binding
-- **Bulk property locking** via `lockedProps()` for multiple properties in one call
-- **Property descriptor creation** with `lockedPropertyDescriptors()` for custom locking patterns
-- **Safe built-in copies** via secondary entrypoints: captured at module load time before any pollution can occur
+- **[`@locked()` decorator](https://www.hyperfrontend.dev/docs/libraries/utils/immutable-api/locked/)** for TypeScript classes: prevents method overwriting and ensures correct `this` binding
+- **[Bulk property locking](https://www.hyperfrontend.dev/docs/libraries/utils/immutable-api/locked-props/)** via `lockedProps()` for multiple properties in one call
+- **[Property descriptor creation](https://www.hyperfrontend.dev/docs/libraries/utils/immutable-api/locked-prop-descriptors/)** with `lockedPropertyDescriptors()` for custom locking patterns
+- **[Safe built-in copies](https://www.hyperfrontend.dev/docs/guides/harden-code-against-prototype-pollution/)** via secondary entrypoints: captured at module load time before any pollution can occur
 - **Per-instance binding cache** to avoid repeated `.bind()` calls
 - **Zero runtime dependencies** - pure JavaScript property descriptor manipulation
 
@@ -155,7 +155,7 @@ import { parse } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 import './vendor/analytics.js' // whatever this does to Object.keys, keys() is unaffected
 ```
 
-There are 24 of these subpaths, each named after the global or family of globals it copies, so the one you want is spelled like the thing you were reaching for: `built-in-copy/timers` holds `setTimeout` and `queueMicrotask`, `built-in-copy/console` holds `log` and `warn`. Members that need a receiver come through as wrappers ([`hasOwn`](https://www.hyperfrontend.dev/docs/libraries/utils/immutable-api/built-in-copy/object/#api-hasOwn) applies the captured `Object.prototype.hasOwnProperty` through a captured `Reflect.apply`), and constructors as `create*` factories such as `createMap`. The package root re-exports frozen namespace objects for many of these globals, which reads nicely but pulls in the whole namespace; named bindings from a subpath are what keep the rest out of your bundle.
+There are 24 of these subpaths, each named after the global or family of globals it copies, so the one you want is spelled like the thing you were reaching for: `built-in-copy/timers` holds `setTimeout` and `queueMicrotask`, `built-in-copy/console` holds [`log`](https://www.hyperfrontend.dev/docs/libraries/utils/immutable-api/#api-log) and [`warn`](https://www.hyperfrontend.dev/docs/libraries/utils/immutable-api/built-in-copy/console/#api-warn). Members that need a receiver come through as wrappers ([`hasOwn`](https://www.hyperfrontend.dev/docs/libraries/utils/immutable-api/built-in-copy/object/#api-hasOwn) applies the captured `Object.prototype.hasOwnProperty` through a captured `Reflect.apply`), and constructors as `create*` factories such as [`createMap`](https://www.hyperfrontend.dev/docs/libraries/utils/immutable-api/built-in-copy/map/#api-createMap). The package root re-exports frozen namespace objects for many of these globals, which reads nicely but pulls in the whole namespace; named bindings from a subpath are what keep the rest out of your bundle.
 
 Three entries do the locking, and they stack. [`lockedPropertyDescriptors`](https://www.hyperfrontend.dev/docs/libraries/utils/immutable-api/locked-prop-descriptors/#api-lockedPropertyDescriptors) is the primitive: hand it a value and it returns `{ value, writable: false, configurable: false, enumerable }` for you to pass to `Object.defineProperty`. [`lockedProps`](https://www.hyperfrontend.dev/docs/libraries/utils/immutable-api/locked-props/#api-lockedProps) applies that across a list, taking the target object and an array of `[key, value]` pairs, and returns nothing: it mutates the object you handed it. [`locked`](https://www.hyperfrontend.dev/docs/libraries/utils/immutable-api/locked/#api-locked) is the class-method decorator and the odd one out, installing an accessor whose getter binds the method to the instance once and caches it under a symbol, and whose setter throws a `TypeError`.
 
@@ -208,7 +208,7 @@ Secondary entrypoints (`built-in-copy/*`) are individually tree-shakeable: impor
 </script>
 ```
 
-**Global variable:** `HyperfrontendImmutableApiUtils`
+**Global variable:** [`HyperfrontendImmutableApiUtils`](https://www.hyperfrontend.dev/docs/libraries/utils/immutable-api/)
 
 ### Dependencies
 
