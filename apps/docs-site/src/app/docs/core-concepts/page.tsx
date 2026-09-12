@@ -3,6 +3,7 @@ import { Breadcrumb } from '@/components/breadcrumb'
 import { CodeBlock } from '@/components/code-block'
 import { DocsContentWrapper } from '@/components/docs-content-wrapper'
 import { H1, H2 } from '@/components/heading-with-anchor'
+import { CONCEPT_MARKS, Vocabulary } from '@/components/vocabulary'
 import Link from 'next/link'
 
 export const metadata: Metadata = {
@@ -27,36 +28,42 @@ export default function CoreConceptsPage() {
           Four words carry most of the weight in these docs. They name roles, not packages: one application can be a host in one place and a
           hostee in another.
         </p>
-        <dl className="mt-4 space-y-3 text-slate-600 dark:text-slate-400">
-          <div>
-            <dt className="font-semibold text-slate-900 dark:text-white">Host</dt>
-            <dd className="mt-1">
-              The application that provides the containing product surface. It decides where a feature appears, in which display mode, and
-              under what capabilities.
-            </dd>
-          </div>
-          <div>
-            <dt className="font-semibold text-slate-900 dark:text-white">Hostee</dt>
-            <dd className="mt-1">
-              The application loaded inside the host. Not a dictionary word. The suffix does the same job it does in <em>employee</em> or{' '}
-              <em>addressee</em>: a hostee is the one hosted.
-            </dd>
-          </div>
-          <div>
-            <dt className="font-semibold text-slate-900 dark:text-white">Feature</dt>
-            <dd className="mt-1">
-              The hostee viewed as a product unit: independently owned, deployed, and versioned, with a contract describing what it says and
-              accepts.
-            </dd>
-          </div>
-          <div>
-            <dt className="font-semibold text-slate-900 dark:text-white">Shell</dt>
-            <dd className="mt-1">
-              The installable package a feature ships so any host can embed it. The shell carries the contract and speaks the protocol; the
-              host is never the shell.
-            </dd>
-          </div>
-        </dl>
+        <Vocabulary
+          entries={[
+            {
+              term: 'Host',
+              href: '/docs/libraries/features/host',
+              mark: CONCEPT_MARKS.host,
+              definition:
+                'The application that provides the containing product surface. It decides where a feature appears, in which display mode, and under what capabilities.',
+            },
+            {
+              term: 'Hostee',
+              href: '/docs/libraries/features/hostee',
+              mark: CONCEPT_MARKS.hostee,
+              definition: (
+                <>
+                  The application loaded inside the host. Not a dictionary word. The suffix does the same job it does in <em>employee</em>{' '}
+                  or <em>addressee</em>: a hostee is the one hosted.
+                </>
+              ),
+            },
+            {
+              term: 'Feature',
+              href: '/docs/libraries/features',
+              mark: CONCEPT_MARKS.feature,
+              definition:
+                'The hostee viewed as a product unit: independently owned, deployed, and versioned, with a contract describing what it says and accepts.',
+            },
+            {
+              term: 'Shell',
+              href: '/docs/libraries/features/architecture#shell-generation',
+              mark: CONCEPT_MARKS.shell,
+              definition:
+                'The installable package a feature ships so any host can embed it. The shell carries the contract and speaks the protocol; the host is never the shell.',
+            },
+          ]}
+        />
         <p className="mt-4 text-sm text-slate-500 dark:text-slate-400">
           Where these terms come from, and why the boundary is drawn here, is argued end to end in{' '}
           <Link href="/articles/microfrontends-from-first-principles" className="text-primary-600 hover:underline dark:text-primary-400">
