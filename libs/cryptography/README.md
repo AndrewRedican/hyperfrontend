@@ -51,29 +51,29 @@ Production-grade cryptographic primitives with isomorphic APIs for browser and N
 
 @hyperfrontend/cryptography provides a comprehensive suite of cryptographic utilities designed for secure data handling in full-stack JavaScript applications. The library implements industry-standard encryption (AES-GCM), key derivation (PBKDF2), and hashing (SHA-256) with identical APIs across browser and Node.js environments, eliminating platform-specific code branching.
 
-The library features three modular entry points: platform-specific implementations (`/browser`, `/node`) for optimized runtime performance, and a shared entry point (`/common`) for platform-agnostic utilities. Core capabilities include secure password-based encryption/decryption, cryptographic vault storage with single-use modes, time-based password generation for rotating credentials, and cryptographically-secure random value generation.
+The library features three modular entry points: platform-specific implementations ([`/browser`](https://www.hyperfrontend.dev/docs/libraries/cryptography/browser/), [`/node`](https://www.hyperfrontend.dev/docs/libraries/cryptography/node/)) for optimized runtime performance, and a shared entry point ([`/common`](https://www.hyperfrontend.dev/docs/libraries/cryptography/common/)) for platform-agnostic utilities. Core capabilities include secure password-based encryption/decryption, cryptographic vault storage with single-use modes, time-based password generation for rotating credentials, and cryptographically-secure random value generation.
 
 ### Key Features
 
 - **Isomorphic API Design** - Write once, run everywhere with identical function signatures for browser Web Crypto API and Node.js crypto module
-- **AES-GCM Encryption** - Industry-standard authenticated encryption with password-derived keys using PBKDF2 (100,000 iterations)
-- **Session Key Agreement** - Ephemeral P-256 ECDH, HKDF key expansion with usage-restricted keys, and raw AEAD sealing for many messages under one agreed key
-- **Secure Vault Storage** - Password-protected in-memory storage with optional single-use mode for sensitive data
-- **Time-Based Passwords** - Generate rotating credentials synchronized to UTC time windows for short-lived authentication
-- **Cryptographic Hashing** - SHA-256 hash generation with hexadecimal output and validation utilities
+- **[AES-GCM Encryption](https://www.hyperfrontend.dev/docs/libraries/cryptography/#api-encrypt)** - Industry-standard authenticated encryption with password-derived keys using PBKDF2 (100,000 iterations)
+- **[Session Key Agreement](https://www.hyperfrontend.dev/docs/libraries/cryptography/#api-createKeyAgreement)** - Ephemeral P-256 ECDH, HKDF key expansion with usage-restricted keys, and raw AEAD sealing for many messages under one agreed key
+- **[Secure Vault Storage](https://www.hyperfrontend.dev/docs/libraries/cryptography/#api-createVault)** - Password-protected in-memory storage with optional single-use mode for sensitive data
+- **[Time-Based Passwords](https://www.hyperfrontend.dev/docs/libraries/cryptography/#api-getTimeBasedPassword)** - Generate rotating credentials synchronized to UTC time windows for short-lived authentication
+- **[Cryptographic Hashing](https://www.hyperfrontend.dev/docs/libraries/cryptography/#api-createHash)** - SHA-256 hash generation with hexadecimal output and validation utilities
 - **Zero External Dependencies** - Self-contained implementation using only platform crypto APIs
 - **Functional Architecture** - Pure functions with dependency injection for testability and composability
-- **Secondary Entry Points** - Tree-shakeable imports optimize bundle size (`/browser`, `/node`, `/common`)
+- **Secondary Entry Points** - Tree-shakeable imports optimize bundle size ([`/browser`](https://www.hyperfrontend.dev/docs/libraries/cryptography/browser/), [`/node`](https://www.hyperfrontend.dev/docs/libraries/cryptography/node/), [`/common`](https://www.hyperfrontend.dev/docs/libraries/cryptography/common/))
 
 ### Architecture Highlights
 
-`encrypt` generates a unique salt and initialization vector per operation, so a secret at rest never reuses a key, and the same plaintext encrypted twice produces two different ciphertexts. The session primitives (`createKeyAgreement`, `expandKey`, `seal`, `open`) hand the key and nonce lifecycle to the caller instead, which is what a message stream needs.
+[`encrypt`](https://www.hyperfrontend.dev/docs/libraries/cryptography/#api-encrypt) generates a unique salt and initialization vector per operation, so a secret at rest never reuses a key, and the same plaintext encrypted twice produces two different ciphertexts. The session primitives ([`createKeyAgreement`](https://www.hyperfrontend.dev/docs/libraries/cryptography/#api-createKeyAgreement), [`expandKey`](https://www.hyperfrontend.dev/docs/libraries/cryptography/#api-expandKey), [`seal`](https://www.hyperfrontend.dev/docs/libraries/cryptography/#api-seal), [`open`](https://www.hyperfrontend.dev/docs/libraries/cryptography/#api-open)) hand the key and nonce lifecycle to the caller instead, which is what a message stream needs.
 
 ## Why Use @hyperfrontend/cryptography?
 
 ### Eliminate Platform Branching in Isomorphic Applications
 
-Full-stack applications typically require separate cryptography implementations for browser and server environments, leading to code duplication and testing complexity. This library provides identical APIs powered by platform-optimized implementations, allowing shared business logic for encryption workflows across your entire stack. Import from `/browser` or `/node` based on your runtime - the function signatures remain identical.
+Full-stack applications typically require separate cryptography implementations for browser and server environments, leading to code duplication and testing complexity. This library provides identical APIs powered by platform-optimized implementations, allowing shared business logic for encryption workflows across your entire stack. Import from [`/browser`](https://www.hyperfrontend.dev/docs/libraries/cryptography/browser/) or [`/node`](https://www.hyperfrontend.dev/docs/libraries/cryptography/node/) based on your runtime - the function signatures remain identical.
 
 ### Production-Hardened Encryption Without Configuration Complexity
 
@@ -103,7 +103,7 @@ npm install @hyperfrontend/cryptography
 - **npm:** 8.0.0 or higher
 - **Browser:** Modern browsers with Web Crypto API support
 
-> **Note:** The `/node` entry point uses `webcrypto.subtle` which was experimental in Node.js 18.x. For production use with the Node.js entry point, Node.js 19+ is recommended for stable crypto APIs.
+> **Note:** The [`/node`](https://www.hyperfrontend.dev/docs/libraries/cryptography/node/) entry point uses `webcrypto.subtle` which was experimental in Node.js 18.x. For production use with the Node.js entry point, Node.js 19+ is recommended for stable crypto APIs.
 
 ## Quick Start
 
@@ -157,11 +157,11 @@ isSHA256Hash('e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855')
 
 Two layers, not nineteen functions, and choosing between them is most of the work. The password layer is one call: [`encrypt`](https://www.hyperfrontend.dev/docs/libraries/cryptography/browser/#api-encrypt) takes a message and a password and returns a `Uint8Array` already carrying a fresh salt and initialization vector alongside the ciphertext and its tag, and [`decrypt`](https://www.hyperfrontend.dev/docs/libraries/cryptography/browser/#api-decrypt) takes that buffer and the same password back to the original string. Key derivation and nonce choice are never yours to get right, and because the salt and IV are new every call, encrypting one secret twice yields two unrelated buffers. [`createVault`](https://www.hyperfrontend.dev/docs/libraries/cryptography/browser/#api-createVault) is that same layer with a lifetime attached, holding labelled values encrypted in memory behind a password it generates, optionally closing after the first read.
 
-The session layer inverts the trade: it hands you the key and the nonce rather than managing them, which is what a stream of messages needs and a lone secret does not. [`createKeyAgreement`](https://www.hyperfrontend.dev/docs/libraries/cryptography/browser/#api-createKeyAgreement) gives each side an ephemeral P-256 keypair whose private half is non-extractable, and its `deriveSecret` turns the peer's public point into the 32 bytes both sides share; `stretchPassword` is the alternative start when the shared thing is a password rather than a handshake. [`expandKey`](https://www.hyperfrontend.dev/docs/libraries/cryptography/browser/#api-expandKey) splits that secret into per-purpose AES-GCM-256 keys, each restricted to encrypting or to decrypting but not both.
+The session layer inverts the trade: it hands you the key and the nonce rather than managing them, which is what a stream of messages needs and a lone secret does not. [`createKeyAgreement`](https://www.hyperfrontend.dev/docs/libraries/cryptography/browser/#api-createKeyAgreement) gives each side an ephemeral P-256 keypair whose private half is non-extractable, and its [`deriveSecret`](https://www.hyperfrontend.dev/docs/libraries/cryptography/#api-KeyAgreement) turns the peer's public point into the 32 bytes both sides share; [`stretchPassword`](https://www.hyperfrontend.dev/docs/libraries/cryptography/#api-stretchPassword) is the alternative start when the shared thing is a password rather than a handshake. [`expandKey`](https://www.hyperfrontend.dev/docs/libraries/cryptography/browser/#api-expandKey) splits that secret into per-purpose AES-GCM-256 keys, each restricted to encrypting or to decrypting but not both.
 
-[`seal`](https://www.hyperfrontend.dev/docs/libraries/cryptography/browser/#api-seal) and `open` then carry individual messages under those keys, taking a 12-byte nonce and an additional-data buffer that is authenticated but not encrypted, so a header can be bound to a payload without being hidden. That control costs you one rule: a nonce must never repeat under a given key, which a per-message counter scoped to a per-session key satisfies by construction. This is the layer [@hyperfrontend/network-protocol](https://www.hyperfrontend.dev/docs/libraries/network-protocol/) builds its envelope on.
+[`seal`](https://www.hyperfrontend.dev/docs/libraries/cryptography/browser/#api-seal) and [`open`](https://www.hyperfrontend.dev/docs/libraries/cryptography/#api-open) then carry individual messages under those keys, taking a 12-byte nonce and an additional-data buffer that is authenticated but not encrypted, so a header can be bound to a payload without being hidden. That control costs you one rule: a nonce must never repeat under a given key, which a per-message counter scoped to a per-session key satisfies by construction. This is the layer [@hyperfrontend/network-protocol](https://www.hyperfrontend.dev/docs/libraries/network-protocol/) builds its envelope on.
 
-Beside both sit the small utilities: SHA-256 hashing with its format guard, raw random bytes, and [`getTimeBasedPasswords`](https://www.hyperfrontend.dev/docs/libraries/cryptography/browser/#api-getTimeBasedPasswords), which derives the same rotating credential on two machines from the clock alone and returns `current`, `previous` and `next` so a receiver tolerates a peer one window out of step; that window is counted in minutes, not milliseconds. As for which entry point to import, `/browser` is backed by the Web Crypto API and `/node` by the Node.js `crypto` module, exporting the same names with the same signatures, so the choice is only about the runtime; `/common` is the narrow shared slice, currently just `isSHA256Hash`.
+Beside both sit the small utilities: SHA-256 hashing with its format guard, raw random bytes, and [`getTimeBasedPasswords`](https://www.hyperfrontend.dev/docs/libraries/cryptography/browser/#api-getTimeBasedPasswords), which derives the same rotating credential on two machines from the clock alone and returns [`current`](https://www.hyperfrontend.dev/docs/libraries/cryptography/#api-TimeBasedPasswordGenerators-prop-current), [`previous`](https://www.hyperfrontend.dev/docs/libraries/cryptography/#api-TimeBasedPasswordGenerators-prop-previous) and [`next`](https://www.hyperfrontend.dev/docs/libraries/cryptography/#api-TimeBasedPasswordGenerators-prop-next) so a receiver tolerates a peer one window out of step; that window is counted in minutes, not milliseconds. As for which entry point to import, [`/browser`](https://www.hyperfrontend.dev/docs/libraries/cryptography/browser/) is backed by the Web Crypto API and [`/node`](https://www.hyperfrontend.dev/docs/libraries/cryptography/node/) by the Node.js `crypto` module, exporting the same names with the same signatures, so the choice is only about the runtime; [`/common`](https://www.hyperfrontend.dev/docs/libraries/cryptography/common/) is the narrow shared slice, currently just [`isSHA256Hash`](https://www.hyperfrontend.dev/docs/libraries/cryptography/#api-isSHA256Hash).
 
 Every signature, option type and thrown error is in the [API reference](https://www.hyperfrontend.dev/docs/libraries/cryptography/#api-reference).
 
@@ -197,7 +197,7 @@ Every signature, option type and thrown error is in the [API reference](https://
 </script>
 ```
 
-**Global variable:** `HyperfrontendCryptography`
+**Global variable:** [`HyperfrontendCryptography`](https://www.hyperfrontend.dev/docs/libraries/cryptography/browser/)
 
 ## Part of hyperfrontend
 
