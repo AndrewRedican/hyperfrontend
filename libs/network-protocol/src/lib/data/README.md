@@ -2,7 +2,7 @@
 
 ## Purpose
 
-The Data module defines the message envelope a packet carries: a process identifier, a unique message identifier, a sequence number, the message itself, and a JSON Schema of the message with its SHA-256 hash. Data objects are the content inside every `UnencryptedPacket`.
+The Data module defines the message envelope a packet carries: a process identifier, a unique message identifier, a sequence number, the message itself, and a JSON Schema of the message with its SHA-256 hash. Data objects are the content inside every [`UnencryptedPacket`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-UnencryptedPacket).
 
 ---
 
@@ -10,7 +10,7 @@ The Data module defines the message envelope a packet carries: a process identif
 
 ### `Data<T>`
 
-Logical view with the message deserialised; what `channel.send` takes and what a receiver delivers.
+Logical view with the message deserialised; what [`channel.send`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-Channel-prop-send) takes and what a receiver delivers.
 
 ```typescript
 interface Data<T = unknown> {
@@ -25,7 +25,7 @@ interface Data<T = unknown> {
 
 ### `SerializedData<T>`
 
-The same envelope with `message` as a JSON string; what `createData` returns and what travels inside a sealed frame.
+The same envelope with [`message`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-Data-prop-message) as a JSON string; what [`createData`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-createData) returns and what travels inside a sealed frame.
 
 ```typescript
 interface SerializedData<T = unknown> {
@@ -79,7 +79,7 @@ flowchart LR
 
 ### `createData`
 
-**Location**: `@hyperfrontend/network-protocol/browser/data`, `@hyperfrontend/network-protocol/node/data`
+**Location**: [`@hyperfrontend/network-protocol/browser/data`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/browser/data/), [`@hyperfrontend/network-protocol/node/data`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/node/data/)
 
 ```typescript
 const createData: DataCreater
@@ -107,7 +107,7 @@ The composition point the platform entries use; it injects the hash function and
 function createDataFactory(createHash: (data: string, algorithm: string) => Promise<string>): DataCreater
 ```
 
-The browser entry passes `createHash` from `@hyperfrontend/cryptography/browser` (Web Crypto); the Node.js entry passes the one from `@hyperfrontend/cryptography/node`.
+The browser entry passes [`createHash`](https://www.hyperfrontend.dev/docs/libraries/cryptography/#api-createHash) from [`@hyperfrontend/cryptography/browser`](https://www.hyperfrontend.dev/docs/libraries/cryptography/browser/) (Web Crypto); the Node.js entry passes the one from [`@hyperfrontend/cryptography/node`](https://www.hyperfrontend.dev/docs/libraries/cryptography/node/).
 
 ### `getSchema`
 
@@ -119,13 +119,13 @@ const getSchema: SchemaCreater // toJsonSchema(data, { arrays: { mode: 'all' } }
 
 ## Helper Functions
 
-| Function                         | Effect                                                     |
-| -------------------------------- | ---------------------------------------------------------- |
-| `serializeData(data)`            | `Data<T>` to `SerializedData<T>` by stringifying `message` |
-| `deserializeData(serialized)`    | `SerializedData<T>` to `Data<T>` by parsing `message`      |
-| `asJSONString<T>(value)`         | Casts a string to `JSONString<T>`                          |
-| `parseJSONString<T>(jsonString)` | Parses a `JSONString<T>` back to `T`                       |
-| `isJSONString<T>(value)`         | Type guard: true for any string                            |
+| Function                         | Effect                                                                                                                                             |
+| -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `serializeData(data)`            | `Data<T>` to `SerializedData<T>` by stringifying [`message`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-Data-prop-message) |
+| `deserializeData(serialized)`    | `SerializedData<T>` to `Data<T>` by parsing [`message`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-Data-prop-message)      |
+| `asJSONString<T>(value)`         | Casts a string to `JSONString<T>`                                                                                                                  |
+| `parseJSONString<T>(jsonString)` | Parses a `JSONString<T>` back to `T`                                                                                                               |
+| `isJSONString<T>(value)`         | Type guard: true for any string                                                                                                                    |
 
 Both conversions return frozen objects.
 
@@ -133,7 +133,7 @@ Both conversions return frozen objects.
 
 ## Schema Generation
 
-Schemas are generated from the message shape, and `schemaHash` is the SHA-256 of the schema's JSON:
+Schemas are generated from the message shape, and [`schemaHash`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-Data-prop-schemaHash) is the SHA-256 of the schema's JSON:
 
 ```typescript
 const data = await createData(pid, 1, {
@@ -154,13 +154,13 @@ const data = await createData(pid, 1, {
 // }
 ```
 
-Receivers can compare `schemaHash` values to detect a change in message shape.
+Receivers can compare [`schemaHash`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-Data-prop-schemaHash) values to detect a change in message shape.
 
 ---
 
 ## Validation
 
-`createData` validates its inputs and throws:
+[`createData`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-createData) validates its inputs and throws:
 
 ```typescript
 await createData('not-a-uuid', 1, message)
@@ -196,7 +196,7 @@ The validators are exported from the data entries:
 
 ## Relationship to Other Modules
 
-- **Depends on**: `@hyperfrontend/cryptography` (hashing), `@hyperfrontend/json-utils` (schema generation and validation), `@hyperfrontend/data-utils`
+- **Depends on**: [`@hyperfrontend/cryptography`](https://www.hyperfrontend.dev/docs/libraries/cryptography/) (hashing), [`@hyperfrontend/json-utils`](https://www.hyperfrontend.dev/docs/libraries/utils/json/) (schema generation and validation), [`@hyperfrontend/data-utils`](https://www.hyperfrontend.dev/docs/libraries/utils/data/)
 - **Used by**: [`packet/`](../packet/README.md), [`protocol/`](../protocol/README.md) (serialises the envelope into the frame plaintext), [`sender/`](../sender/README.md), [`receiver/`](../receiver/README.md)
 
 ---
@@ -210,7 +210,7 @@ The validators are exported from the data entries:
 
 ### Related Modules
 
-| Module                             | Relationship                               |
-| ---------------------------------- | ------------------------------------------ |
-| [packet/](../packet/README.md)     | Data is the payload of `UnencryptedPacket` |
-| [protocol/](../protocol/README.md) | Serialises and deserialises the envelope   |
+| Module                             | Relationship                                                                                                                       |
+| ---------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| [packet/](../packet/README.md)     | Data is the payload of [`UnencryptedPacket`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-UnencryptedPacket) |
+| [protocol/](../protocol/README.md) | Serialises and deserialises the envelope                                                                                           |

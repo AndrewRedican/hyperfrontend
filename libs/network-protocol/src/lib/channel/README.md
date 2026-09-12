@@ -20,7 +20,7 @@ interface Channel<T = any> extends StopResumeControl, HelloExchange {
 }
 ```
 
-`HelloExchange` contributes `hello()`, `isHello(frame)`, and `acceptHello(frame)`; `StopResumeControl` contributes `stop()` and `resume()`.
+[`HelloExchange`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-HelloExchange) contributes `hello()`, `isHello(frame)`, and `acceptHello(frame)`; [`StopResumeControl`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-StopResumeControl) contributes `stop()` and `resume()`.
 
 ### `ChannelOptions<T>`
 
@@ -44,7 +44,7 @@ type ChannelCreater<T = any> = (label: string, options: ChannelOptions<T>) => Ch
 
 ### `Protocol<T>` and `ProtocolProvider<T>`
 
-Declared here and documented in [`protocol/`](../protocol/README.md): a protocol carries `seal`, `open`, the hello exchange, `send`, `receive`, and `getLogger`; a provider is `(send, receive, session) => Protocol`.
+Declared here and documented in [`protocol/`](../protocol/README.md): a protocol carries [`seal`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-Protocol-prop-seal), [`open`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-Protocol-prop-open), the hello exchange, [`send`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-Protocol-prop-send), [`receive`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-Protocol-prop-receive), and [`getLogger`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-Protocol-prop-getLogger); a provider is `(send, receive, session) => Protocol`.
 
 ### `ChannelStore<T>`
 
@@ -69,13 +69,13 @@ interface ChannelStore<T = any> {
 
 ### `createChannelFactory`
 
-Creates a channel creator with injected sender and receiver factories. The `/browser/channel` and `/node/channel` entries call it with their platform's `createSender` and `createReceiver` and export the result as `createChannel`.
+Creates a channel creator with injected sender and receiver factories. The [`/browser/channel`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/browser/channel/) and [`/node/channel`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/node/channel/) entries call it with their platform's [`createSender`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-createSender) and [`createReceiver`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-createReceiver) and export the result as [`createChannel`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-createChannel).
 
 ```typescript
 function createChannelFactory(createSender: SenderFactory, createReceiver: ReceiverFactory): ChannelCreater
 ```
 
-The creator validates the label, the options object, both callbacks, the provider, and the session, then calls the provider once. A provider that throws (a session it cannot key) throws out of `createChannel` in the caller's frame. The protocol's `seal` feeds the sender and its `open` feeds the receiver; `onDrop` is passed to both.
+The creator validates the label, the options object, both callbacks, the provider, and the session, then calls the provider once. A provider that throws (a session it cannot key) throws out of [`createChannel`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-createChannel) in the caller's frame. The protocol's [`seal`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-Protocol-prop-seal) feeds the sender and its [`open`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-Protocol-prop-open) feeds the receiver; [`onDrop`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-ChannelOptions-prop-onDrop) is passed to both.
 
 ```typescript
 import { createChannel } from '@hyperfrontend/network-protocol/browser/channel'
@@ -112,20 +112,20 @@ store.removeByName('channel-1')
 store.clear()
 ```
 
-`create` and `add` throw for a name already in the store; `removeByName` and `removeById` throw when nothing matches.
+[`create`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-ChannelStore-prop-create) and [`add`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-ChannelStore-prop-add) throw for a name already in the store; [`removeByName`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-ChannelStore-prop-removeByName) and [`removeById`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-ChannelStore-prop-removeById) throw when nothing matches.
 
 ---
 
 ## Hello Exchange
 
-The channel exposes the protocol's `hello`, `isHello`, and `acceptHello` so the owner can key the session over the same transport that carries frames:
+The channel exposes the protocol's [`hello`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-HelloExchange), [`isHello`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-HelloExchange), and [`acceptHello`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-HelloExchange) so the owner can key the session over the same transport that carries frames:
 
 ```typescript
 otherWindow.postMessage(await channel.hello(), origin)
 window.addEventListener('message', ({ data }) => (channel.isHello(data) ? channel.acceptHello(data) : channel.receive(data)))
 ```
 
-`hello()` returns the same bytes on every call, so it can be retried until the peer confirms. `acceptHello` returns `'accepted'` for the first hello, `'duplicate'` for the same bytes again, and `'rejected'` for anything else. Frames sent or received before the peer's hello is accepted wait inside the pipelines.
+`hello()` returns the same bytes on every call, so it can be retried until the peer confirms. [`acceptHello`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-HelloExchange) returns `'accepted'` for the first hello, `'duplicate'` for the same bytes again, and `'rejected'` for anything else. Frames sent or received before the peer's hello is accepted wait inside the pipelines.
 
 ---
 
@@ -149,8 +149,8 @@ flowchart LR
     OpenQ --> Deliver["options.receive(packet)"]
 ```
 
-- **Outbound**: `send` builds and validates the plaintext packet synchronously, then queues it; the seal stage produces the wire frame and hands it to `options.send`.
-- **Inbound**: `receive` queues the frame; the open stage produces the plaintext packet and hands it to `options.receive`.
+- **Outbound**: [`send`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-Channel-prop-send) builds and validates the plaintext packet synchronously, then queues it; the seal stage produces the wire frame and hands it to [`options.send`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-ChannelOptions-prop-send).
+- **Inbound**: [`receive`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-Channel-prop-receive) queues the frame; the open stage produces the plaintext packet and hands it to [`options.receive`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-ChannelOptions-prop-receive).
 
 ---
 
@@ -166,7 +166,7 @@ channel.outbound.resume()
 channel.inbound.resume()
 ```
 
-While stopped, `send` and `receive` still enqueue; nothing is sealed or opened, and `queue.size` grows. On resume, accumulated items process in FIFO order.
+While stopped, [`send`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-Channel-prop-send) and [`receive`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-Channel-prop-receive) still enqueue; nothing is sealed or opened, and [`queue.size`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/queue/#api-Queue-prop-size) grows. On resume, accumulated items process in FIFO order.
 
 ---
 
@@ -185,7 +185,7 @@ if (pendingOut > 100) {
 
 ## Error Handling
 
-`createChannel` throws in the caller's frame for invalid input:
+[`createChannel`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-createChannel) throws in the caller's frame for invalid input:
 
 ```typescript
 createChannel('', options) // 'Cannot create a channel without a valid label'
@@ -196,9 +196,9 @@ createChannel('comms', { ...options, protocolProvider: null }) // 'Cannot create
 createChannel('comms', { ...options, session: null }) // 'Cannot create a channel without a valid session'
 ```
 
-A provider that returns an object missing a protocol function throws `Cannot create a channel without a valid <name> function`, where `<name>` is the first invalid property (`getFirstInvalidProtocolProperty`).
+A provider that returns an object missing a protocol function throws `Cannot create a channel without a valid <name> function`, where `<name>` is the first invalid property ([`getFirstInvalidProtocolProperty`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-getFirstInvalidProtocolProperty)).
 
-`send` throws synchronously for a malformed origin, target, or data envelope (see [`packet/`](../packet/README.md)). Everything after that is asynchronous: a packet a stage rejects is logged and discarded, the channel continues with the next one, and `onDrop` (when given) receives a `PacketDrop`:
+[`send`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-Channel-prop-send) throws synchronously for a malformed origin, target, or data envelope (see [`packet/`](../packet/README.md)). Everything after that is asynchronous: a packet a stage rejects is logged and discarded, the channel continues with the next one, and [`onDrop`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-ChannelOptions-prop-onDrop) (when given) receives a [`PacketDrop`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-PacketDrop):
 
 ```typescript
 const channel = createChannel('comms', {
@@ -218,7 +218,7 @@ const channel = createChannel('comms', {
 
 ## Validation Helpers
 
-Exported from the channel entries for upstream guards: `isValidChannel`, `isValidLabel`, `isValidSender`, `isValidReceiver`, `isValidSession`, and `getFirstInvalidProtocolProperty`.
+Exported from the channel entries for upstream guards: [`isValidChannel`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-isValidChannel), [`isValidLabel`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-isValidLabel), [`isValidSender`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-isValidSender), [`isValidReceiver`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-isValidReceiver), [`isValidSession`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-isValidSession), and [`getFirstInvalidProtocolProperty`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-getFirstInvalidProtocolProperty).
 
 ---
 

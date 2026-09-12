@@ -85,7 +85,7 @@ flowchart TB
 
 ### `createRoutedUnencryptedPacket`
 
-Builds the plaintext packet with `createUnencryptedPacket` and pairs it with a topic; the result is frozen.
+Builds the plaintext packet with [`createUnencryptedPacket`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-createUnencryptedPacket) and pairs it with a topic; the result is frozen.
 
 ```typescript
 function createRoutedUnencryptedPacket<T = any>(topicId: string, origin: string, target: string, data: Data<T>): RoutedUnencryptedPacket
@@ -187,13 +187,13 @@ createRoutedWirePacket(topic.id, new Uint8Array(0))
 // Error: 'Cannot create a routed wire packet without a valid wire packet'
 ```
 
-`createRoutedUnencryptedPacket` also throws the packet creator's errors for an invalid origin, target, or data envelope.
+[`createRoutedUnencryptedPacket`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/routing/#api-createRoutedUnencryptedPacket) also throws the packet creator's errors for an invalid origin, target, or data envelope.
 
 ---
 
 ## Validation Helpers
 
-`validations/` holds `isValidRoutedUnencryptedPacket`, `isValidRoutedWirePacket`, `isValidRoutingOptions`, `isValidSubscriptions` (a `WeakMap`), and `isValidRouter` (a function whose result for empty inputs is valid routing options). They are internal to the module.
+`validations/` holds [`isValidRoutedUnencryptedPacket`](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/network-protocol/src/lib/routing/validations/is-valid-routed-unencrypted-packet.ts), [`isValidRoutedWirePacket`](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/network-protocol/src/lib/routing/validations/is-valid-routed-wire-packet.ts), [`isValidRoutingOptions`](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/network-protocol/src/lib/routing/validations/is-valid-routing-options.ts), [`isValidSubscriptions`](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/network-protocol/src/lib/routing/validations/is-valid-subscriptions.ts) (a `WeakMap`), and [`isValidRouter`](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/network-protocol/src/lib/routing/validations/is-valid-router.ts) (a function whose result for empty inputs is valid routing options). They are internal to the module.
 
 ---
 
@@ -208,7 +208,7 @@ createRoutedWirePacket(topic.id, new Uint8Array(0))
 
 - **[Library Index](../README.md)** - All modules
 - **[Architecture Guide](../../../ARCHITECTURE.md#routing)** - Routing architecture
-- **[Routing Entry](../../routing/README.md)** - The `@hyperfrontend/network-protocol/routing` entry
+- **[Routing Entry](../../routing/README.md)** - The [`@hyperfrontend/network-protocol/routing`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/routing/) entry
 
 ### Related Modules
 

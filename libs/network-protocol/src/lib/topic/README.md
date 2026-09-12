@@ -40,7 +40,7 @@ interface TopicStore {
 
 ### `createTopicStore`
 
-**Location**: `@hyperfrontend/network-protocol/topic`
+**Location**: [`@hyperfrontend/network-protocol/topic`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/topic/)
 
 ```typescript
 function createTopicStore(): TopicStore
@@ -73,7 +73,7 @@ topicStore.add({ name: 'chat.messages', id: chatTopicId })
 topicStore.getById(chatTopicId)
 ```
 
-The id is not validated by `add`, but every routed-packet creator requires a UUID v4 topic id (see [`routing/`](../routing/README.md)), so use one.
+The id is not validated by [`add`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/topic/#api-TopicStore-prop-add), but every routed-packet creator requires a UUID v4 topic id (see [`routing/`](../routing/README.md)), so use one.
 
 ### Topic Removal
 
@@ -109,12 +109,12 @@ topicStore.removeById('missing')
 
 ## Topic Naming Conventions
 
-| Pattern           | Example          | Use Case                   |
-| ----------------- | ---------------- | -------------------------- |
-| `entity-action`   | `user-created`   | Entity lifecycle events    |
-| `domain-events`   | `payment-events` | Domain-specific events     |
-| `system-category` | `system-metrics` | System-level notifications |
-| `feature.sub`     | `chat.messages`  | Hierarchical namespacing   |
+| Pattern           | Example           | Use Case                   |
+| ----------------- | ----------------- | -------------------------- |
+| `entity-action`   | `user-created`    | Entity lifecycle events    |
+| `domain-events`   | `payment-events`  | Domain-specific events     |
+| `system-category` | `system-metrics`  | System-level notifications |
+| `'feature.sub'`   | `'chat.messages'` | Hierarchical namespacing   |
 
 ---
 
@@ -153,13 +153,13 @@ const routingOptions = router(
 
 ## Validation Helpers
 
-`validations/` holds `isValidName` (a non-empty string), `isValidTopicId` (a 36-character UUID v4 string), and `isValidTopic` (both). `isValidTopicId` is what the routing creators use to check a topic id.
+`validations/` holds [`isValidName`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-isValidName) (a non-empty string), [`isValidTopicId`](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/network-protocol/src/lib/topic/validations/is-valid-topic-id.ts) (a 36-character UUID v4 string), and [`isValidTopic`](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/network-protocol/src/lib/topic/validations/is-valid-topic.ts) (both). [`isValidTopicId`](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/network-protocol/src/lib/topic/validations/is-valid-topic-id.ts) is what the routing creators use to check a topic id.
 
 ---
 
 ## Relationship to Other Modules
 
-- **Depends on**: `@hyperfrontend/random-generator-utils` (identifiers)
+- **Depends on**: [`@hyperfrontend/random-generator-utils`](https://www.hyperfrontend.dev/docs/libraries/utils/random-generator/) (identifiers)
 - **Used by**: [`routing/`](../routing/README.md)
 
 ---
@@ -168,7 +168,7 @@ const routingOptions = router(
 
 - **[Library Index](../README.md)** - All modules
 - **[Architecture Guide](../../../ARCHITECTURE.md#topic)** - Topic architecture
-- **[Topic Entry](../../topic/README.md)** - The `@hyperfrontend/network-protocol/topic` entry
+- **[Topic Entry](../../topic/README.md)** - The [`@hyperfrontend/network-protocol/topic`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/topic/) entry
 
 ### Related Modules
 

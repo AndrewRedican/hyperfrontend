@@ -1,6 +1,6 @@
 # Network Protocol Architecture Guide
 
-This document provides an in-depth explanation of the major artifacts produced by `@hyperfrontend/network-protocol`. Each section covers the purpose, behavior, requirements, and usage examples for the core components of the library.
+This document provides an in-depth explanation of the major artifacts produced by [`@hyperfrontend/network-protocol`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/). Each section covers the purpose, behavior, requirements, and usage examples for the core components of the library.
 
 ---
 
@@ -28,21 +28,21 @@ This document provides an in-depth explanation of the major artifacts produced b
 
 ## Quick Reference: How Do I...
 
-| Task                                  | Solution                                                                            | Module                                        |
-| ------------------------------------- | ----------------------------------------------------------------------------------- | --------------------------------------------- |
-| **Create a secure channel?**          | `createChannel(label, { send, receive, protocolProvider, session, onDrop? })`       | [channel/](src/lib/channel/README.md)         |
-| **Send a sealed message?**            | `channel.send(origin, target, data)`                                                | [channel/](src/lib/channel/README.md)         |
-| **Key the session?**                  | Post `await channel.hello()`; feed the peer's hello to `channel.acceptHello(frame)` | [protocol/](src/lib/protocol/README.md)       |
-| **Tell a hello from a sealed frame?** | `channel.isHello(frame)`; hellos go to `acceptHello`, everything else to `receive`  | [protocol/](src/lib/protocol/README.md)       |
-| **Authenticate the counterpart?**     | Use `v4` with a generated shared key of at least 16 characters                      | [protocol/](src/lib/protocol/README.md)       |
-| **Find out why a frame was dropped?** | Pass `onDrop`; read `getProtocolErrorCode(drop.cause)`                              | [security/](src/lib/security/README.md)       |
-| **Route messages by topic?**          | Create topics with `TopicStore`, configure a `Router` function                      | [routing/](src/lib/routing/README.md)         |
-| **Manage multiple channels?**         | Use `ChannelStore` for CRUD operations                                              | [channel/](src/lib/channel/README.md)         |
-| **Stop/resume message processing?**   | Call `channel.stop()` and `channel.resume()`                                        | [channel/](src/lib/channel/README.md)         |
-| **Monitor queue depth?**              | Read `channel.outbound.queue.size` and `channel.inbound.queue.size`                 | [queue/](src/lib/queue/README.md)             |
-| **Validate message structure?**       | Use auto-generated JSON Schema in `Data.schema`                                     | [data/](src/lib/data/README.md)               |
-| **Start a new session?**              | Create a new channel; a live session is never rekeyed                               | [protocol/](src/lib/protocol/README.md)       |
-| **Use in browser vs Node.js?**        | Import from `/browser/v3`, `/browser/v4`, `/node/v3`, or `/node/v4`                 | [Platform Differences](#platform-differences) |
+| Task                                  | Solution                                                                                                                                                                                                                                                                                                                                                                          | Module                                        |
+| ------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------- |
+| **Create a secure channel?**          | `createChannel(label, { send, receive, protocolProvider, session, onDrop? })`                                                                                                                                                                                                                                                                                                     | [channel/](src/lib/channel/README.md)         |
+| **Send a sealed message?**            | `channel.send(origin, target, data)`                                                                                                                                                                                                                                                                                                                                              | [channel/](src/lib/channel/README.md)         |
+| **Key the session?**                  | Post `await channel.hello()`; feed the peer's hello to `channel.acceptHello(frame)`                                                                                                                                                                                                                                                                                               | [protocol/](src/lib/protocol/README.md)       |
+| **Tell a hello from a sealed frame?** | `channel.isHello(frame)`; hellos go to [`acceptHello`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-HelloExchange), everything else to [`receive`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-Channel-prop-receive)                                                                                                                 | [protocol/](src/lib/protocol/README.md)       |
+| **Authenticate the counterpart?**     | Use [`v4`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-V4) with a generated shared key of at least 16 characters                                                                                                                                                                                                                                           | [protocol/](src/lib/protocol/README.md)       |
+| **Find out why a frame was dropped?** | Pass [`onDrop`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-ChannelOptions-prop-onDrop); read `getProtocolErrorCode(drop.cause)`                                                                                                                                                                                                                           | [security/](src/lib/security/README.md)       |
+| **Route messages by topic?**          | Create topics with [`TopicStore`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/topic/#api-TopicStore), configure a [`Router`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/routing/#api-Router) function                                                                                                                                        | [routing/](src/lib/routing/README.md)         |
+| **Manage multiple channels?**         | Use [`ChannelStore`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-ChannelStore) for CRUD operations                                                                                                                                                                                                                                                         | [channel/](src/lib/channel/README.md)         |
+| **Stop/resume message processing?**   | Call `channel.stop()` and `channel.resume()`                                                                                                                                                                                                                                                                                                                                      | [channel/](src/lib/channel/README.md)         |
+| **Monitor queue depth?**              | Read [`channel.outbound.queue.size`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-Channel-prop-outbound) and [`channel.inbound.queue.size`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-Channel-prop-inbound)                                                                                                                        | [queue/](src/lib/queue/README.md)             |
+| **Validate message structure?**       | Use auto-generated JSON Schema in [`Data.schema`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-Data)                                                                                                                                                                                                                                                        | [data/](src/lib/data/README.md)               |
+| **Start a new session?**              | Create a new channel; a live session is never rekeyed                                                                                                                                                                                                                                                                                                                             | [protocol/](src/lib/protocol/README.md)       |
+| **Use in browser vs Node.js?**        | Import from [`/browser/v3`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/browser/v3/), [`/browser/v4`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/browser/v4/), [`/node/v3`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/node/v3/), or [`/node/v4`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/node/v4/) | [Platform Differences](#platform-differences) |
 
 ---
 
@@ -50,25 +50,25 @@ This document provides an in-depth explanation of the major artifacts produced b
 
 The library uses factory functions to inject platform-specific dependencies while producing platform-agnostic artifacts.
 
-| Factory                                                       | Injects                                                      | Produces                            | Location                                         |
-| ------------------------------------------------------------- | ------------------------------------------------------------ | ----------------------------------- | ------------------------------------------------ |
-| `createProtocol`                                              | The platform's `SessionCrypto` (composed at the entry)       | `ProtocolProvider`                  | `browser/v3`, `browser/v4`, `node/v3`, `node/v4` |
-| `createV3ProtocolFactory(crypto)`                             | `SessionCrypto`                                              | `createProtocol(logger)`            | `lib/protocol/session`                           |
-| `createV4ProtocolFactory(crypto)`                             | `SessionCrypto`                                              | `createProtocol(logger, sharedKey)` | `lib/protocol/session`                           |
-| `createSessionProtocolProvider(crypto, definition, logger)`   | `SessionCrypto`, `{ id, version, sharedKey? }`, `Logger`     | `ProtocolProvider`                  | `lib/protocol/session`                           |
-| `createSessionProtocol(input)`                                | Primitives, definition, session, `send`, `receive`, `Logger` | `Protocol`                          | `lib/protocol/session`                           |
-| `createChannelFactory(createSender, createReceiver)`          | `CreateSender`, `CreateReceiver`                             | `ChannelCreater`                    | `lib/channel`                                    |
-| `createChannelStoreFactory(createChannel)`                    | `ChannelCreater`                                             | `() => ChannelStore`                | `lib/channel`                                    |
-| `createSender(label, sendPacket, logger, seal, onDrop?)`      | Transport send, the session's sealer                         | `Sender`                            | `lib/sender`                                     |
-| `createReceiver(label, receivePacket, logger, open, onDrop?)` | Delivery callback, the session's opener                      | `Receiver`                          | `lib/receiver`                                   |
-| `createSealQueue(label, seal, logger, onSuccess, onFail)`     | The session's sealer                                         | `Queue<UnencryptedPacket>`          | `lib/queue`                                      |
-| `createOpenQueue(label, open, logger, onSuccess, onFail)`     | The session's opener                                         | `Queue<WirePacket>`                 | `lib/queue`                                      |
-| `createQueue(processMessage, autoStart?)`                     | Message handler                                              | `Queue<T>`                          | `lib/queue`                                      |
-| `createDataFactory(createHash)`                               | `createHash` (platform-specific)                             | `DataCreater`                       | `lib/data`                                       |
-| `createProtocolProviderStore()`                               | None                                                         | `ProtocolProviderStore`             | `lib/protocol`                                   |
-| `createTopicStore()`                                          | None                                                         | `TopicStore`                        | `lib/topic`                                      |
+| Factory                                                                                               | Injects                                                                                                                                                                                                                                                                                                                           | Produces                                                                                                            | Location                                         |
+| ----------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------ |
+| [`createProtocol`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-createProtocol) | The platform's [`SessionCrypto`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-SessionCrypto) (composed at the entry)                                                                                                                                                                                        | [`ProtocolProvider`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-ProtocolProvider)           | `browser/v3`, `browser/v4`, `node/v3`, `node/v4` |
+| `createV3ProtocolFactory(crypto)`                                                                     | [`SessionCrypto`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-SessionCrypto)                                                                                                                                                                                                                               | `createProtocol(logger)`                                                                                            | `lib/protocol/session`                           |
+| `createV4ProtocolFactory(crypto)`                                                                     | [`SessionCrypto`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-SessionCrypto)                                                                                                                                                                                                                               | `createProtocol(logger, sharedKey)`                                                                                 | `lib/protocol/session`                           |
+| `createSessionProtocolProvider(crypto, definition, logger)`                                           | [`SessionCrypto`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-SessionCrypto), `{ id, version, sharedKey? }`, [`Logger`](https://www.hyperfrontend.dev/docs/libraries/logging/#api-Logger)                                                                                                                  | [`ProtocolProvider`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-ProtocolProvider)           | `lib/protocol/session`                           |
+| `createSessionProtocol(input)`                                                                        | Primitives, definition, session, [`send`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-ChannelOptions-prop-send), [`receive`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-ChannelOptions-prop-receive), [`Logger`](https://www.hyperfrontend.dev/docs/libraries/logging/#api-Logger) | [`Protocol`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-Protocol)                           | `lib/protocol/session`                           |
+| `createChannelFactory(createSender, createReceiver)`                                                  | [`CreateSender`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-CreateSender), [`CreateReceiver`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-CreateReceiver)                                                                                                                          | [`ChannelCreater`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-ChannelCreater)               | `lib/channel`                                    |
+| `createChannelStoreFactory(createChannel)`                                                            | [`ChannelCreater`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-ChannelCreater)                                                                                                                                                                                                                             | `() => ChannelStore`                                                                                                | `lib/channel`                                    |
+| `createSender(label, sendPacket, logger, seal, onDrop?)`                                              | Transport send, the session's sealer                                                                                                                                                                                                                                                                                              | [`Sender`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-Sender)                               | `lib/sender`                                     |
+| `createReceiver(label, receivePacket, logger, open, onDrop?)`                                         | Delivery callback, the session's opener                                                                                                                                                                                                                                                                                           | [`Receiver`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-Receiver)                           | `lib/receiver`                                   |
+| `createSealQueue(label, seal, logger, onSuccess, onFail)`                                             | The session's sealer                                                                                                                                                                                                                                                                                                              | `Queue<UnencryptedPacket>`                                                                                          | `lib/queue`                                      |
+| `createOpenQueue(label, open, logger, onSuccess, onFail)`                                             | The session's opener                                                                                                                                                                                                                                                                                                              | `Queue<WirePacket>`                                                                                                 | `lib/queue`                                      |
+| `createQueue(processMessage, autoStart?)`                                                             | Message handler                                                                                                                                                                                                                                                                                                                   | `Queue<T>`                                                                                                          | `lib/queue`                                      |
+| `createDataFactory(createHash)`                                                                       | [`createHash`](https://www.hyperfrontend.dev/docs/libraries/cryptography/#api-createHash) (platform-specific)                                                                                                                                                                                                                     | [`DataCreater`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-DataCreater)                     | `lib/data`                                       |
+| `createProtocolProviderStore()`                                                                       | None                                                                                                                                                                                                                                                                                                                              | [`ProtocolProviderStore`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-ProtocolProviderStore) | `lib/protocol`                                   |
+| `createTopicStore()`                                                                                  | None                                                                                                                                                                                                                                                                                                                              | [`TopicStore`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/topic/#api-TopicStore)                 | `lib/topic`                                      |
 
-`SessionCrypto` is the set of primitives a session protocol is composed from: `getRandomValues`, `createKeyAgreement`, `stretchPassword`, `expandKey`, `seal`, and `open` from `@hyperfrontend/cryptography`, plus `utf8Encode` and `utf8Decode` from `@hyperfrontend/string-utils`. Each platform entry passes its platform's implementations; the shared logic in `lib/` never touches a crypto API directly.
+[`SessionCrypto`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-SessionCrypto) is the set of primitives a session protocol is composed from: [`getRandomValues`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-SessionCrypto-prop-getRandomValues), [`createKeyAgreement`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-SessionCrypto-prop-createKeyAgreement), [`stretchPassword`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-SessionCrypto-prop-stretchPassword), [`expandKey`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-SessionCrypto-prop-expandKey), [`seal`](https://www.hyperfrontend.dev/docs/libraries/cryptography/#api-seal), and [`open`](https://www.hyperfrontend.dev/docs/libraries/cryptography/#api-open) from [`@hyperfrontend/cryptography`](https://www.hyperfrontend.dev/docs/libraries/cryptography/), plus [`utf8Encode`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-SessionCrypto-prop-utf8Encode) and [`utf8Decode`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-SessionCrypto-prop-utf8Decode) from [`@hyperfrontend/string-utils`](https://www.hyperfrontend.dev/docs/libraries/utils/string/). Each platform entry passes its platform's implementations; the shared logic in `lib/` never touches a crypto API directly.
 
 ---
 
@@ -149,7 +149,7 @@ flowchart BT
 
 ## Design Principles
 
-1. **Platform primitives are injected, never imported by the core.** The shared session protocol takes a `SessionCrypto`; the platform entries compose it.
+1. **Platform primitives are injected, never imported by the core.** The shared session protocol takes a [`SessionCrypto`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-SessionCrypto); the platform entries compose it.
 
    ```typescript
    // ✅ lib/ receives its primitives
@@ -185,7 +185,7 @@ flowchart BT
    if (seen.has(packet.data.id)) return
    ```
 
-4. **Pipelines report, they do not throw.** `send` and `receive` return before any crypto runs; a stage that rejects a packet logs it and calls `onDrop`, and the next packet proceeds.
+4. **Pipelines report, they do not throw.** [`send`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-Channel-prop-send) and [`receive`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-Channel-prop-receive) return before any crypto runs; a stage that rejects a packet logs it and calls [`onDrop`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-ChannelOptions-prop-onDrop), and the next packet proceeds.
 
    ```typescript
    // ✅ observe drops where they happen
@@ -276,27 +276,27 @@ interface ProtocolSession {
    ```
 
 3. **Key schedule**: Keys are derived once, on the first seal or open after both materials exist. Both sides order the material by role and compute the same two keys:
-   - `salt` = initiator nonce followed by responder nonce
-   - `dh` = ECDH(own private key, peer public key), 32 bytes; a peer public key that is not a point on the curve rejects here
-   - `ikm` = `dh` (`v3`), or `dh` followed by PBKDF2-SHA256(`sharedKey`, `salt`, 600,000 iterations) (`v4`)
-   - initiator-to-responder key = HKDF-SHA256(`ikm`, `salt`, `hyperfrontend/network-protocol/<protocol>/<initiatorId>/<responderId>/i2r`)
-   - responder-to-initiator key = the same with `/r2i`
+   - [`salt`](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/network-protocol/src/lib/protocol/session/derive-keys.ts) = initiator nonce followed by responder nonce
+   - [`dh`](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/network-protocol/src/lib/protocol/session/derive-keys.ts) = ECDH(own private key, peer public key), 32 bytes; a peer public key that is not a point on the curve rejects here
+   - [`ikm`](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/network-protocol/src/lib/protocol/session/derive-keys.ts) = [`dh`](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/network-protocol/src/lib/protocol/session/derive-keys.ts) ([`v3`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-V3)), or [`dh`](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/network-protocol/src/lib/protocol/session/derive-keys.ts) followed by PBKDF2-SHA256([`sharedKey`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/browser/v4/#api-createProtocol), [`salt`](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/network-protocol/src/lib/protocol/session/derive-keys.ts), 600,000 iterations) ([`v4`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-V4))
+   - initiator-to-responder key = HKDF-SHA256([`ikm`](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/network-protocol/src/lib/protocol/session/derive-keys.ts), [`salt`](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/network-protocol/src/lib/protocol/session/derive-keys.ts), `hyperfrontend/network-protocol/<protocol>/<initiatorId>/<responderId>/i2r`)
+   - responder-to-initiator key = the same with [`/r2i`](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/network-protocol/src/lib/protocol/session/derive-keys.ts)
 
-   Each key is a non-extractable AES-GCM-256 `CryptoKey` with a single usage: the initiator's `i2r` key can only encrypt and its `r2i` key can only decrypt, and the responder holds the mirror image. The protocol id and both identities are bound into the info, so keys belong to one negotiated session; both public keys are bound in through the agreement. Raw material (`dh`, the stretch, `ikm`) is zeroed once the keys exist. A derivation that fails rejects every later seal and open with `invalid-session`.
+   Each key is a non-extractable AES-GCM-256 `CryptoKey` with a single usage: the initiator's [`i2r`](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/network-protocol/src/lib/protocol/session/derive-keys.ts) key can only encrypt and its [`r2i`](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/network-protocol/src/lib/protocol/session/derive-keys.ts) key can only decrypt, and the responder holds the mirror image. The protocol id and both identities are bound into the info, so keys belong to one negotiated session; both public keys are bound in through the agreement. Raw material ([`dh`](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/network-protocol/src/lib/protocol/session/derive-keys.ts), the stretch, [`ikm`](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/network-protocol/src/lib/protocol/session/derive-keys.ts)) is zeroed once the keys exist. A derivation that fails rejects every later seal and open with `invalid-session`.
 
 4. **Sealing**: `seal(packet)` takes the next counter (starting at 1), encodes the ten-byte header (version, type 0, counter as an unsigned 64-bit big-endian integer), serialises `{ origin, target, data }` with the message as a JSON string, UTF-8 encodes it, and seals it with AES-GCM under the sending key with the header as additional authenticated data and a nonce of four zero bytes followed by the counter's eight header bytes. The result is the header followed by the ciphertext and its 16-byte tag, in a buffer the transport may transfer. A session that has numbered every frame it can (the counter passes the largest safe integer) rejects with `counter-exhausted`.
 
-5. **Opening**: `open(frame)` checks, in order and before any key operation, that the frame is at least 27 bytes (`malformed`), that its version byte is this protocol's (`unsupported-version`), and that its counter is above the last accepted one (`replayed`). It then opens the ciphertext under the receiving key with the same nonce and additional data (`authentication-failed` when the tag does not verify), parses and validates the packet (`malformed` when it authenticated but carries no valid packet), and only then records the counter as accepted.
+5. **Opening**: `open(frame)` checks, in order and before any key operation, that the frame is at least 27 bytes ([`malformed`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/security/#api-ProtocolErrorCode)), that its version byte is this protocol's (`unsupported-version`), and that its counter is above the last accepted one ([`replayed`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/security/#api-ProtocolErrorCode)). It then opens the ciphertext under the receiving key with the same nonce and additional data (`authentication-failed` when the tag does not verify), parses and validates the packet ([`malformed`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/security/#api-ProtocolErrorCode) when it authenticated but carries no valid packet), and only then records the counter as accepted.
 
 6. **Waiting for the peer**: Until the peer's hello is accepted, every seal and open waits on the keys. The channel's queues hold their frames, so product traffic sent before the session is keyed leaves as soon as it is.
 
-7. **Send/Receive**: Transport-agnostic functions injected at creation time. For browsers, `send` typically wraps `postMessage`; for Node.js, a worker or IPC port.
+7. **Send/Receive**: Transport-agnostic functions injected at creation time. For browsers, [`send`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-ChannelOptions-prop-send) typically wraps `postMessage`; for Node.js, a worker or IPC port.
 
 ### Requirements
 
-- A valid `Logger` instance from `@hyperfrontend/logging`
-- For `v4`, a shared key of at least `MIN_SHARED_KEY_LENGTH` (16) characters; `createProtocol` throws otherwise
-- A session whose `protocol` matches the provider's id; the provider throws `invalid-session` in the caller's frame otherwise
+- A valid [`Logger`](https://www.hyperfrontend.dev/docs/libraries/logging/#api-Logger) instance from [`@hyperfrontend/logging`](https://www.hyperfrontend.dev/docs/libraries/logging/)
+- For [`v4`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-V4), a shared key of at least [`MIN_SHARED_KEY_LENGTH`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-MIN_SHARED_KEY_LENGTH) (16) characters; [`createProtocol`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-createProtocol) throws otherwise
+- A session whose [`protocol`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-ProtocolSession-prop-protocol) matches the provider's id; the provider throws `invalid-session` in the caller's frame otherwise
 - Send function: `(frame: Uint8Array) => void`
 - Receive function: `(packet: UnencryptedPacket<T>) => void`
 
@@ -361,25 +361,25 @@ interface StopResumeControl {
 
 ### How It Works
 
-1. **Binding**: `createChannel(label, options)` validates the label, the callbacks, the provider, and the session, then calls the provider once. A provider that throws (a session negotiated for another protocol) throws out of `createChannel` in the caller's frame. The instance's `seal` feeds the outbound pipeline and its `open` feeds the inbound one; its `hello`, `isHello`, and `acceptHello` are exposed on the channel unchanged.
+1. **Binding**: `createChannel(label, options)` validates the label, the callbacks, the provider, and the session, then calls the provider once. A provider that throws (a session negotiated for another protocol) throws out of [`createChannel`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-createChannel) in the caller's frame. The instance's [`seal`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-Protocol-prop-seal) feeds the outbound pipeline and its [`open`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-Protocol-prop-open) feeds the inbound one; its [`hello`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-HelloExchange), [`isHello`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-HelloExchange), and [`acceptHello`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-HelloExchange) are exposed on the channel unchanged.
 
-2. **Outbound Flow**: `channel.send(origin, target, data)` validates the origin, the target, and the data envelope synchronously (and throws on a malformed packet), assembles an `UnencryptedPacket`, and appends it to the seal queue. The seal stage seals one packet at a time and hands each frame to your `send`.
+2. **Outbound Flow**: `channel.send(origin, target, data)` validates the origin, the target, and the data envelope synchronously (and throws on a malformed packet), assembles an [`UnencryptedPacket`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-UnencryptedPacket), and appends it to the seal queue. The seal stage seals one packet at a time and hands each frame to your [`send`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-ChannelOptions-prop-send).
 
-3. **Inbound Flow**: `channel.receive(frame)` appends the frame to the open queue. The open stage opens one frame at a time and hands each packet to your `receive`. Route hello frames to `channel.acceptHello` instead; a hello fed to `receive` fails to authenticate and is dropped.
+3. **Inbound Flow**: `channel.receive(frame)` appends the frame to the open queue. The open stage opens one frame at a time and hands each packet to your [`receive`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-ChannelOptions-prop-receive). Route hello frames to [`channel.acceptHello`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-HelloExchange) instead; a hello fed to [`receive`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-ChannelOptions-prop-receive) fails to authenticate and is dropped.
 
-4. **Lifecycle Control**: `stop()` pauses both queues (frames accumulate but are not processed); `resume()` restarts processing. `channel.outbound` and `channel.inbound` expose the same controls per direction.
+4. **Lifecycle Control**: `stop()` pauses both queues (frames accumulate but are not processed); `resume()` restarts processing. [`channel.outbound`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-Channel-prop-outbound) and [`channel.inbound`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-Channel-prop-inbound) expose the same controls per direction.
 
-5. **Queue Visibility**: `channel.outbound.queue.size` and `channel.inbound.queue.size` report how many packets are waiting, for monitoring and backpressure.
+5. **Queue Visibility**: [`channel.outbound.queue.size`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-Channel-prop-outbound) and [`channel.inbound.queue.size`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-Channel-prop-inbound) report how many packets are waiting, for monitoring and backpressure.
 
-6. **Drops**: A packet a stage rejects is logged through the protocol's logger and, when `onDrop` is given, reported as a `PacketDrop` with the `direction`, the `stage` (`'seal'` or `'open'`), the `reason`, the `cause` (a `ProtocolError` for a protocol rejection), and the `packet` as the stage received it. The channel continues with the next packet.
+6. **Drops**: A packet a stage rejects is logged through the protocol's logger and, when [`onDrop`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-ChannelOptions-prop-onDrop) is given, reported as a [`PacketDrop`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-PacketDrop) with the [`direction`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-PacketDrop-prop-direction), the [`stage`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-PacketDrop-prop-stage) (`'seal'` or `'open'`), the [`reason`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-PacketDrop-prop-reason), the [`cause`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-PacketDrop-prop-cause) (a [`ProtocolError`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/security/#api-ProtocolError) for a protocol rejection), and the [`packet`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-PacketDrop-prop-packet) as the stage received it. The channel continues with the next packet.
 
 ### Requirements
 
 - A unique label (non-empty string)
 - Send packet function for transport
 - Receive packet callback
-- A configured `ProtocolProvider`
-- A `ProtocolSession` with a protocol id, a role, and both identities (non-empty strings)
+- A configured [`ProtocolProvider`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-ProtocolProvider)
+- A [`ProtocolSession`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-ProtocolSession) with a protocol id, a role, and both identities (non-empty strings)
 
 ### Example
 
@@ -411,7 +411,7 @@ channel.resume()
 
 ### Channel Store
 
-For managing multiple channels, use `ChannelStore`:
+For managing multiple channels, use [`ChannelStore`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-ChannelStore):
 
 ```typescript
 interface ChannelStore<T = any> {
@@ -428,7 +428,7 @@ interface ChannelStore<T = any> {
 }
 ```
 
-`createChannelStore()` from `/browser/channel` or `/node/channel` returns a store whose `create` uses that platform's `createChannel`; labels are unique within a store.
+`createChannelStore()` from [`/browser/channel`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/browser/channel/) or [`/node/channel`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/node/channel/) returns a store whose [`create`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-ChannelStore-prop-create) uses that platform's [`createChannel`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-createChannel); labels are unique within a store.
 
 ---
 
@@ -485,14 +485,14 @@ interface PacketDrop {
 
 ### Wire Format
 
-Every frame starts with a version byte (`3` for `v3`, `4` for `v4`) and a type byte.
+Every frame starts with a version byte (`3` for [`v3`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-V3), `4` for [`v4`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-V4)) and a type byte.
 
 | Frame | Layout                                                                              | Length                                  |
 | ----- | ----------------------------------------------------------------------------------- | --------------------------------------- |
 | Hello | `[version][type=1][nonce 32][public key 65]`                                        | 99 bytes, plaintext                     |
 | Data  | `[version][type=0][counter u64 big-endian]` then AES-GCM ciphertext and 16-byte tag | at least 27 bytes; shorter is malformed |
 
-The ten-byte data header is the additional authenticated data of the seal, and the AES-GCM nonce is four zero bytes followed by the counter's eight header bytes, so a counter is used once under a direction's key and the nonce is unique by construction. The plaintext inside a data frame is the UTF-8 JSON of `{ origin, target, data }`, where `data` is the `SerializedData` envelope (its `message` as a JSON string).
+The ten-byte data header is the additional authenticated data of the seal, and the AES-GCM nonce is four zero bytes followed by the counter's eight header bytes, so a counter is used once under a direction's key and the nonce is unique by construction. The plaintext inside a data frame is the UTF-8 JSON of `{ origin, target, data }`, where [`data`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-UnencryptedPacket-prop-data) is the [`SerializedData`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-SerializedData) envelope (its [`message`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-Data-prop-message) as a JSON string).
 
 ### How They Work
 
@@ -556,10 +556,10 @@ interface Queue<T extends object> {
 
 ### Queue Types
 
-| Queue      | Creator           | Input               | Output              | Purpose                                                    |
-| ---------- | ----------------- | ------------------- | ------------------- | ---------------------------------------------------------- |
-| Seal queue | `createSealQueue` | `UnencryptedPacket` | `WirePacket`        | Validate the packet, seal it, validate the frame           |
-| Open queue | `createOpenQueue` | `WirePacket`        | `UnencryptedPacket` | Validate the frame, open it, validate the resulting packet |
+| Queue      | Creator                                                                                                       | Input                                                                                                       | Output                                                                                                      | Purpose                                                    |
+| ---------- | ------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| Seal queue | [`createSealQueue`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/queue/#api-createSealQueue) | [`UnencryptedPacket`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-UnencryptedPacket) | [`WirePacket`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-WirePacket)               | Validate the packet, seal it, validate the frame           |
+| Open queue | [`createOpenQueue`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/queue/#api-createOpenQueue) | [`WirePacket`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-WirePacket)               | [`UnencryptedPacket`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-UnencryptedPacket) | Validate the frame, open it, validate the resulting packet |
 
 ### Example
 
@@ -792,7 +792,7 @@ interface RoutedUnencryptedPacket<T = any> extends RoutedPacket {
 
 ### How It Works
 
-1. **Router Configuration**: A `Router` function receives available channels and topics, returning a `RoutingOptions` object that maps channels to their subscribed topics.
+1. **Router Configuration**: A [`Router`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/routing/#api-Router) function receives available channels and topics, returning a [`RoutingOptions`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/routing/#api-RoutingOptions) object that maps channels to their subscribed topics.
 
 2. **WeakMap for Memory Efficiency**: Subscriptions use `WeakMap<Channel, Topic[]>`, allowing channels to be garbage collected when no longer referenced elsewhere.
 
@@ -800,7 +800,7 @@ interface RoutedUnencryptedPacket<T = any> extends RoutedPacket {
    - `isDynamic: true` - Subscriptions are resolved for each message (useful when subscriptions change frequently)
    - `isDynamic: false` - Subscriptions are cached after first resolution (optimal for stable configurations)
 
-4. **Routed Packets**: Packets are wrapped with a `topicId` for routing decisions, allowing the same packet to be sent to multiple channels subscribed to a topic. `createRoutedWirePacket` wraps a sealed frame; `createRoutedUnencryptedPacket` wraps a packet in the clear.
+4. **Routed Packets**: Packets are wrapped with a [`topicId`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/routing/#api-RoutedPacket-prop-topicId) for routing decisions, allowing the same packet to be sent to multiple channels subscribed to a topic. [`createRoutedWirePacket`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/routing/#api-createRoutedWirePacket) wraps a sealed frame; [`createRoutedUnencryptedPacket`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/routing/#api-createRoutedUnencryptedPacket) wraps a packet in the clear.
 
 ### Example
 
@@ -835,7 +835,7 @@ const router: Router = (channels, topics) => {
 
 ### Purpose
 
-The **Security Suite** is the pair of per-session packet operations a protocol implements, together with the session description, the hello outcome, and the error codes a protocol raises. The `/security` entry exports the types and the error helpers; the protocol entries provide the implementations.
+The **Security Suite** is the pair of per-session packet operations a protocol implements, together with the session description, the hello outcome, and the error codes a protocol raises. The [`/security`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/security/) entry exports the types and the error helpers; the protocol entries provide the implementations.
 
 ### Interface
 
@@ -866,16 +866,16 @@ function getProtocolErrorCode(error: unknown): ProtocolErrorCode | null
 
 ### Error Codes
 
-| Code                    | Raised by              | When                                                                                           |
-| ----------------------- | ---------------------- | ---------------------------------------------------------------------------------------------- |
-| `unsupported-version`   | `open`                 | The frame's version byte is not this protocol's                                                |
-| `replayed`              | `open`                 | The frame's counter is not above the last accepted one                                         |
-| `authentication-failed` | `open`                 | The frame's tag does not verify under the session's keys                                       |
-| `malformed`             | `open`                 | The frame is shorter than 27 bytes, or authenticated but carries no packet                     |
-| `counter-exhausted`     | `seal`                 | The session has sealed every counter value it can number                                       |
-| `invalid-session`       | both, and the provider | The session cannot be keyed from the material it holds, or was negotiated for another protocol |
+| Code                                                                                                         | Raised by                                                                                    | When                                                                                           |
+| ------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `unsupported-version`                                                                                        | [`open`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-PacketDropStage) | The frame's version byte is not this protocol's                                                |
+| [`replayed`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/security/#api-ProtocolErrorCode)  | [`open`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-PacketDropStage) | The frame's counter is not above the last accepted one                                         |
+| `authentication-failed`                                                                                      | [`open`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-PacketDropStage) | The frame's tag does not verify under the session's keys                                       |
+| [`malformed`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/security/#api-ProtocolErrorCode) | [`open`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-PacketDropStage) | The frame is shorter than 27 bytes, or authenticated but carries no packet                     |
+| `counter-exhausted`                                                                                          | [`seal`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-PacketDropStage) | The session has sealed every counter value it can number                                       |
+| `invalid-session`                                                                                            | both, and the provider                                                                       | The session cannot be keyed from the material it holds, or was negotiated for another protocol |
 
-Every error survives the pipeline's drop report as `drop.cause`; `getProtocolErrorCode(drop.cause)` returns the code, or `null` for an error that is not a protocol error.
+Every error survives the pipeline's drop report as [`drop.cause`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-PacketDrop-prop-cause); `getProtocolErrorCode(drop.cause)` returns the code, or `null` for an error that is not a protocol error.
 
 ### What Each Protocol Claims
 
@@ -888,7 +888,7 @@ Every error survives the pipeline's drop report as `drop.cause`; `getProtocolErr
 | A key mismatch is detected                                     | n/a | ✅  |
 | The hello is hidden                                            | ❌  | ❌  |
 
-`v3` defeats scripts that can only listen: a passive observer of `message` events cannot read or forge frames. Any script that can post to a peer's window with a genuine source can complete a `v3` handshake as that peer, so `v3` does not authenticate who the counterpart is. `v4` binds the session to the pre-shared key: without the key a script can neither read frames nor produce frames the counterpart accepts, and a key mismatch is detected because no frame ever authenticates. A party that can run a hello exchange against a `v4` side can test key guesses offline afterwards, which is why the key must be generated (128 bits or more), not chosen by a person. Neither protocol hides the hello; public keys and nonces are public by design.
+[`v3`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-V3) defeats scripts that can only listen: a passive observer of [`message`](https://developer.mozilla.org/en-US/docs/Web/API/Window/message_event) events cannot read or forge frames. Any script that can post to a peer's window with a genuine source can complete a [`v3`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-V3) handshake as that peer, so [`v3`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-V3) does not authenticate who the counterpart is. [`v4`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-V4) binds the session to the pre-shared key: without the key a script can neither read frames nor produce frames the counterpart accepts, and a key mismatch is detected because no frame ever authenticates. A party that can run a hello exchange against a [`v4`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-V4) side can test key guesses offline afterwards, which is why the key must be generated (128 bits or more), not chosen by a person. Neither protocol hides the hello; public keys and nonces are public by design.
 
 ### Cost
 
@@ -951,19 +951,19 @@ interface SerializedData<T = unknown> {
 
 ### How It Works
 
-1. **Process Tracking**: `pid` groups related messages; `sequence` orders them within a process.
+1. **Process Tracking**: [`pid`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-Data-prop-pid) groups related messages; [`sequence`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-Data-prop-sequence) orders them within a process.
 
-2. **Message Identification**: `id` is a unique UUID for deduplication and acknowledgment.
+2. **Message Identification**: [`id`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-Data-prop-id) is a unique UUID for deduplication and acknowledgment.
 
-3. **Schema Validation**: Auto-generated JSON Schema enables runtime validation of message structure. The `schemaHash` allows quick comparison without full schema analysis.
+3. **Schema Validation**: Auto-generated JSON Schema enables runtime validation of message structure. The [`schemaHash`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-Data-prop-schemaHash) allows quick comparison without full schema analysis.
 
-4. **Serialization**: For wire transmission, `message` is JSON-stringified and typed as `JSONString<T>` to preserve type information; the seal stage does this itself, so a channel takes `Data<T>` and the frame carries `SerializedData<T>`.
+4. **Serialization**: For wire transmission, [`message`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-Data-prop-message) is JSON-stringified and typed as `JSONString<T>` to preserve type information; the seal stage does this itself, so a channel takes `Data<T>` and the frame carries `SerializedData<T>`.
 
 ### Requirements
 
-- `pid`: UUID v4
-- `sequence`: Positive number
-- `message`: Serializable value (no circular references)
+- [`pid`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-Data-prop-pid): UUID v4
+- [`sequence`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-Data-prop-sequence): Positive number
+- [`message`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-Data-prop-message): Serializable value (no circular references)
 
 ### Example
 
@@ -1104,26 +1104,26 @@ window.addEventListener('message', ({ origin, data }) => {
 window.parent.postMessage(await channelB.hello(), mainOrigin)
 ```
 
-Both sides agree on the roles and the identities before the channels exist; `mainId` is A's `localId` and B's `peerId`, and the reverse for `iframeId`.
+Both sides agree on the roles and the identities before the channels exist; mainId is A's [`localId`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-ProtocolSession-prop-localId) and B's [`peerId`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-ProtocolSession-prop-peerId), and the reverse for iframeId.
 
 ---
 
 ## Platform Differences
 
-| Aspect        | Browser                                                        | Node.js                                                  |
-| ------------- | -------------------------------------------------------------- | -------------------------------------------------------- |
-| Crypto API    | Web Crypto API                                                 | Node.js `crypto` module (`webcrypto.subtle`)             |
-| Transport     | `postMessage`, `MessageChannel`                                | `worker_threads`, IPC, `process.send()`                  |
-| Entry Points  | `@hyperfrontend/network-protocol/browser/v3`, `.../browser/v4` | `@hyperfrontend/network-protocol/node/v3`, `.../node/v4` |
-| Text Encoding | `@hyperfrontend/string-utils/browser`                          | `@hyperfrontend/string-utils/node`                       |
+| Aspect        | Browser                                                                                                                                     | Node.js                                                                                                                            |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| Crypto API    | Web Crypto API                                                                                                                              | Node.js `crypto` module (`webcrypto.subtle`)                                                                                       |
+| Transport     | `postMessage`, `MessageChannel`                                                                                                             | `worker_threads`, IPC, `process.send()`                                                                                            |
+| Entry Points  | [`@hyperfrontend/network-protocol/browser/v3`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/browser/v3/), `.../browser/v4` | [`@hyperfrontend/network-protocol/node/v3`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/node/v3/), `.../node/v4` |
+| Text Encoding | [`@hyperfrontend/string-utils/browser`](https://www.hyperfrontend.dev/docs/libraries/utils/string/browser/)                                 | [`@hyperfrontend/string-utils/node`](https://www.hyperfrontend.dev/docs/libraries/utils/string/node/)                              |
 
-Both platforms expose identical `Protocol`, `Channel`, and other interfaces; only the injected primitives differ, and a session keyed by a browser-composed side and a Node-composed side produces identical frames.
+Both platforms expose identical [`Protocol`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-Protocol), [`Channel`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-Channel), and other interfaces; only the injected primitives differ, and a session keyed by a browser-composed side and a Node-composed side produces identical frames.
 
 ---
 
 ## Summary
 
-The `@hyperfrontend/network-protocol` library provides a comprehensive, secure communication framework built on these principles:
+The [`@hyperfrontend/network-protocol`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/) library provides a comprehensive, secure communication framework built on these principles:
 
 1. **Session-Keyed Envelope**: Ephemeral P-256 agreement, HKDF expansion per direction, AES-GCM with the header authenticated and the counter as the nonce
 2. **One-Shot Sessions**: The first hello keys the session; a repeat is a duplicate, anything else is rejected, and a live session is never rekeyed

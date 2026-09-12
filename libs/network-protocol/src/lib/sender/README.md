@@ -61,15 +61,15 @@ type SenderFactory = CreateSender
 
 ### `createSender`
 
-**Location**: `@hyperfrontend/network-protocol/browser/sender`, `@hyperfrontend/network-protocol/node/sender`
+**Location**: [`@hyperfrontend/network-protocol/browser/sender`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/browser/sender/), [`@hyperfrontend/network-protocol/node/sender`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/node/sender/)
 
-| Parameter    | Type                | Description                                                  |
-| ------------ | ------------------- | ------------------------------------------------------------ |
-| `label`      | `string`            | Identifier for logging (a channel passes `'<label> sender'`) |
-| `sendPacket` | `SendPacketFn`      | Transmits each sealed frame                                  |
-| `logger`     | `Logger`            | Logger instance from `@hyperfrontend/logging`                |
-| `seal`       | `PacketSealer<T>`   | The session's sealer, `protocol.seal`                        |
-| `onDrop`     | `PacketDropHandler` | Optional; receives each packet the sealer rejects            |
+| Parameter                                                                                                 | Type                                                                                                        | Description                                                                                                                    |
+| --------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| [`label`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-createSender)                | `string`                                                                                                    | Identifier for logging (a channel passes `'<label> sender'`)                                                                   |
+| [`sendPacket`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-createSender)           | [`SendPacketFn`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-SendPacketFn)           | Transmits each sealed frame                                                                                                    |
+| [`logger`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-createSender)               | [`Logger`](https://www.hyperfrontend.dev/docs/libraries/logging/#api-Logger)                                | Logger instance from [`@hyperfrontend/logging`](https://www.hyperfrontend.dev/docs/libraries/logging/)                         |
+| [`seal`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-createSender)                 | `PacketSealer<T>`                                                                                           | The session's sealer, [`protocol.seal`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-Protocol-prop-seal) |
+| [`onDrop`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-ChannelOptions-prop-onDrop) | [`PacketDropHandler`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-PacketDropHandler) | Optional; receives each packet the sealer rejects                                                                              |
 
 ```typescript
 import { createSender } from '@hyperfrontend/network-protocol/browser/sender'
@@ -84,7 +84,7 @@ const sender = createSender(
 sender.send(originId, targetId, data)
 ```
 
-A channel creates its sender for you; standalone use needs a `Protocol` instance from a provider (see [`protocol/`](../protocol/README.md)).
+A channel creates its sender for you; standalone use needs a [`Protocol`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-Protocol) instance from a provider (see [`protocol/`](../protocol/README.md)).
 
 ---
 
@@ -103,7 +103,7 @@ flowchart LR
     Queue --> Transport["sendPacket(frame)"]
 ```
 
-`send` validates the origin, the target, and the data envelope synchronously and throws in the caller's frame on a malformed packet. Everything after that is asynchronous: the seal queue processes one packet at a time, and each sealed frame goes to `sendPacket` in order.
+[`send`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-Sender) validates the origin, the target, and the data envelope synchronously and throws in the caller's frame on a malformed packet. Everything after that is asynchronous: the seal queue processes one packet at a time, and each sealed frame goes to [`sendPacket`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-createSender) in order.
 
 ---
 
@@ -128,20 +128,20 @@ if (sender.queue.size > 100) {
 
 ## Error Handling
 
-`send` throws for invalid input (see [`packet/`](../packet/README.md)):
+[`send`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-Sender) throws for invalid input (see [`packet/`](../packet/README.md)):
 
 ```typescript
 sender.send('not-a-uuid', targetId, data)
 // Error: 'Cannot create a packet without a valid origin value'
 ```
 
-A packet the sealer rejects is logged and reported through `onDrop` as `{ direction: 'outbound', stage: 'seal', reason, cause, packet }`, never thrown. The reasons are those of the seal queue (see [`queue/`](../queue/README.md)); a `cause` that is a `ProtocolError` carries a code such as `counter-exhausted` or `invalid-session`.
+A packet the sealer rejects is logged and reported through [`onDrop`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-ChannelOptions-prop-onDrop) as `{ direction: 'outbound', stage: 'seal', reason, cause, packet }`, never thrown. The reasons are those of the seal queue (see [`queue/`](../queue/README.md)); a [`cause`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-PacketDrop-prop-cause) that is a [`ProtocolError`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/security/#api-ProtocolError) carries a code such as `counter-exhausted` or `invalid-session`.
 
 ---
 
 ## Relationship to Other Modules
 
-- **Depends on**: [`queue/`](../queue/README.md), [`packet/`](../packet/README.md), `@hyperfrontend/logging`
+- **Depends on**: [`queue/`](../queue/README.md), [`packet/`](../packet/README.md), [`@hyperfrontend/logging`](https://www.hyperfrontend.dev/docs/libraries/logging/)
 - **Used by**: [`channel/`](../channel/README.md)
 
 ---

@@ -7,7 +7,7 @@
 The `node/` directory provides Node.js-specific implementations that:
 
 1. Import shared logic from `lib/`
-2. Inject Node.js-native primitives: the Node.js crypto module through `@hyperfrontend/cryptography/node` and the UTF-8 codec from `@hyperfrontend/string-utils/node`
+2. Inject Node.js-native primitives: the Node.js crypto module through [`@hyperfrontend/cryptography/node`](https://www.hyperfrontend.dev/docs/libraries/cryptography/node/) and the UTF-8 codec from [`@hyperfrontend/string-utils/node`](https://www.hyperfrontend.dev/docs/libraries/utils/string/node/)
 3. Export ready-to-use factories for Node.js environments
 
 ## Entry Points
@@ -48,7 +48,7 @@ parentPort.postMessage(await channel.hello())
 
 ## Integration Tests
 
-Node.js unit suites (`*.spec.ts`) run under the `node` test environment. The Node.js protocol entries are also exercised end to end by `src/integration-tests/session-envelope.browser.spec.ts`, whose cross-platform cases pair a Node-composed initiator with a browser-composed responder over `v4` and a browser-composed initiator with a Node-composed responder over `v3`.
+Node.js unit suites (`*.spec.ts`) run under the `'node'` test environment. The Node.js protocol entries are also exercised end to end by `src/integration-tests/session-envelope.browser.spec.ts`, whose cross-platform cases pair a Node-composed initiator with a browser-composed responder over [`v4`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-V4) and a browser-composed initiator with a Node-composed responder over [`v3`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-V3).
 
 ## Documentation
 
@@ -62,13 +62,13 @@ For detailed documentation on each module, see the library core:
 
 ## Differences from Browser
 
-| Aspect           | Node.js                                      | Browser                                      |
-| ---------------- | -------------------------------------------- | -------------------------------------------- |
-| Crypto           | Node.js `crypto` module (`webcrypto.subtle`) | Web Crypto API (`crypto.subtle`)             |
-| Text codec       | `@hyperfrontend/string-utils/node`           | `@hyperfrontend/string-utils/browser`        |
-| Transport        | `worker_threads`, IPC, `process.send`        | `postMessage`, `MessageChannel`              |
-| Test environment | `node` in `test.config.ts`                   | `browser` in `test.config.ts`, DOM preloaded |
-| Test suffix      | `*.spec.ts`                                  | `*.browser.spec.ts`                          |
+| Aspect           | Node.js                                                                                               | Browser                                                                                                     |
+| ---------------- | ----------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| Crypto           | Node.js `crypto` module (`webcrypto.subtle`)                                                          | Web Crypto API (`crypto.subtle`)                                                                            |
+| Text codec       | [`@hyperfrontend/string-utils/node`](https://www.hyperfrontend.dev/docs/libraries/utils/string/node/) | [`@hyperfrontend/string-utils/browser`](https://www.hyperfrontend.dev/docs/libraries/utils/string/browser/) |
+| Transport        | `worker_threads`, IPC, `process.send`                                                                 | `postMessage`, `MessageChannel`                                                                             |
+| Test environment | `'node'` in `test.config.ts`                                                                          | `'browser'` in `test.config.ts`, DOM preloaded                                                              |
+| Test suffix      | `*.spec.ts`                                                                                           | `*.browser.spec.ts`                                                                                         |
 
 Frames are identical across platforms: a session keyed by a Node-composed side and a browser-composed side interoperates.
 
