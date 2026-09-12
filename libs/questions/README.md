@@ -54,10 +54,10 @@ A terminal prompting library built on functional programming principles. Create 
 ### Key Features
 
 - **Pure Functions**: Every prompt is a pure function returning `Promise<PromptOutcome<T>>`, making results predictable and easily testable
-- **Composable API**: Build complex interactive flows by combining simple prompt functions
-- **Type-Safe**: Full TypeScript support with discriminated unions for prompt outcomes
+- **[Composable API](https://www.hyperfrontend.dev/docs/guides/build-a-setup-wizard-for-your-cli/)**: Build complex interactive flows by combining simple prompt functions
+- **[Type-Safe](https://www.hyperfrontend.dev/docs/libraries/questions/#api-PromptOutcome)**: Full TypeScript support with discriminated unions for prompt outcomes
 - **Zero External Dependencies**: Uses only Node.js built-ins and `@hyperfrontend` utilities
-- **Searchable Multiselect**: Type-to-filter functionality for large option lists
+- **[Searchable Multiselect](https://www.hyperfrontend.dev/docs/libraries/questions/#api-multiselect)**: Type-to-filter functionality for large option lists
 - **Clipboard Paste**: Bracketed paste mode on TTYs (with a multi-character-chunk fallback elsewhere); pasted text is sanitized and never auto-submits
 - **Resize-Aware Rendering**: Prompts hard-wrap to the terminal width and repaint on resize, preserving value, cursor, selection, and validation state
 
@@ -147,7 +147,7 @@ Four prompts, one shape. [`text`](https://www.hyperfrontend.dev/docs/libraries/q
 type PromptOutcome<T> = { result: 'submitted'; value: T } | { result: 'cancelled'; value: undefined }
 ```
 
-Two things sit beside them. [`style`](https://www.hyperfrontend.dev/docs/libraries/questions/#api-style) is the ANSI colour helper the prompts use on their own labels, exposed so yours can match. And every config takes `input` and `output` streams, which is what makes a prompt testable without a TTY: hand it a pair of `PassThrough`s, write keystrokes into one and read frames out of the other.
+Two things sit beside them. [`style`](https://www.hyperfrontend.dev/docs/libraries/questions/#api-style) is the ANSI colour helper the prompts use on their own labels, exposed so yours can match. And every config takes [`input`](https://www.hyperfrontend.dev/docs/libraries/questions/#api-PromptConfig-prop-input) and [`output`](https://www.hyperfrontend.dev/docs/libraries/questions/#api-PromptConfig-prop-output) streams, which is what makes a prompt testable without a TTY: hand it a pair of `PassThrough`s, write keystrokes into one and read frames out of the other.
 
 Every config, option and outcome type is in the [API reference](https://www.hyperfrontend.dev/docs/libraries/questions/#api-reference).
 
