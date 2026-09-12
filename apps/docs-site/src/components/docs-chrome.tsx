@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { Footer } from '@/components/footer'
 import { Header } from '@/components/header'
 import { PageAtmosphere } from '@/components/page-atmosphere'
+import { ScrollToTop } from '@/components/scroll-to-top'
 import { Sidebar } from '@/components/sidebar'
 import { DOC_COLUMN_CLASS, DOC_MEASURE_CLASS, docLayout } from '@/lib/doc-layout'
 import { navVisibility } from '@/lib/nav-visibility'
@@ -60,6 +61,8 @@ export function DocsChrome({ children }: DocsChromeProps) {
         </main>
       </div>
       <Footer width={docLayout.shell} />
+      {/* why: every page in this frame is long-form or may be, and the control decides for itself whether the page is long enough to deserve it */}
+      <ScrollToTop />
     </>
   )
 }

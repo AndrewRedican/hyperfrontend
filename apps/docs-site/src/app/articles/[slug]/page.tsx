@@ -3,6 +3,7 @@ import { MarkdownDocPage } from '@/components/document/markdown-doc-page'
 import { Footer } from '@/components/footer'
 import { Header } from '@/components/header'
 import { PageAtmosphere } from '@/components/page-atmosphere'
+import { ScrollToTop } from '@/components/scroll-to-top'
 import { ShareMenu } from '@/components/share/share-menu'
 import { formatArticleDate, getAllArticleSlugs, getArticle } from '@/lib/articles'
 import { documentSubject } from '@/lib/document-model'
@@ -186,6 +187,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
         />
       </main>
       <Footer />
+      <ScrollToTop />
     </>
   )
 }
