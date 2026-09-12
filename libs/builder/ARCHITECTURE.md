@@ -2,16 +2,6 @@
 
 This document describes the internal architecture of [`@hyperfrontend/builder`](https://www.hyperfrontend.dev/docs/libraries/builder/). For installation and usage examples, see the main [README.md](./README.md); for the full module surface, see the [per-module docs](./src/).
 
-## Table of Contents
-
-- [System Overview](#system-overview)
-- [Design Principles](#design-principles)
-- [Module Composition](#module-composition)
-- [Data Flow](#data-flow)
-- [Core Interfaces](#core-interfaces)
-- [Module Details](#module-details)
-- [Further Reading](#further-reading)
-
 ---
 
 ## System Overview
