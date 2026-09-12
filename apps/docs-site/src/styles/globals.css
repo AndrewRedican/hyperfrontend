@@ -15,7 +15,7 @@
           50  site header (sticky)
           60  mobile navigation drawer
           80  share menu
-         100  skip link, diagram modal
+         100  skip link, media lightbox (diagrams, stills, charts)
          120  the demo deck's side dial
      140-150  consent banner and its preferences dialog
          160  search dialog
@@ -837,6 +837,53 @@
   @media print {
     .scroll-to-top {
       display: none;
+    }
+  }
+}
+
+@layer components {
+  /* A picture that can be inspected at its native size.
+
+     The mark is a class set by script on an image that has loaded larger
+     than the column draws it, so the affordance only ever appears where
+     expanding would show something. The cursor says so on hover; the rim is
+     the same lift a diagram gets, so the two read as one kind of thing; and
+     a keyboard reader gets the same rim on focus, since the image is a tab
+     stop while it is expandable.
+
+     The chip in the corner is drawn with the same expand glyph the diagram
+     overlay uses, positioned relative to the image itself through an outline
+     rather than a wrapper: an image in prose sits inside a paragraph, and
+     wrapping it would change the paragraph's layout. A background image on
+     the element cannot be placed over its own pixels, so the chip is the
+     cursor's job on a pointer and the rim's on a keyboard, and no chip is
+     drawn at all. */
+  .expandable-image {
+    cursor: zoom-in;
+    border-radius: 0.375rem;
+    transition:
+      box-shadow 180ms ease-out,
+      transform 180ms ease-out;
+  }
+
+  .expandable-image:hover,
+  .expandable-image:focus-visible {
+    outline: none;
+    box-shadow:
+      0 0 0 2px rgb(59 130 246 / 0.55),
+      0 12px 32px -18px rgb(15 23 42 / 0.45);
+  }
+
+  .dark .expandable-image:hover,
+  .dark .expandable-image:focus-visible {
+    box-shadow:
+      0 0 0 2px rgb(96 165 250 / 0.55),
+      0 14px 36px -18px rgb(2 6 23 / 0.8);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .expandable-image {
+      transition: none;
     }
   }
 }

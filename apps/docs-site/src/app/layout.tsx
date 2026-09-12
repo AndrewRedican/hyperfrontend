@@ -3,6 +3,7 @@ import { Analytics } from '@/components/analytics/analytics'
 import { CodeBlockLight } from '@/components/code-block-light'
 import { ConsentBanner } from '@/components/consent/consent-banner'
 import { JsonLd } from '@/components/json-ld'
+import { ExpandableImages } from '@/components/media/expandable-images'
 import { ThemeProvider } from '@/components/theme-provider'
 import '@/lib/dev-logger'
 import { DEFAULT_OG_IMAGE, DEFAULT_TWITTER_IMAGE } from '@/lib/metadata'
@@ -88,6 +89,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
         />
         <ThemeProvider>{children}</ThemeProvider>
         <CodeBlockLight />
+        <ExpandableImages />
         <Analytics />
         <ConsentBanner />
       </body>

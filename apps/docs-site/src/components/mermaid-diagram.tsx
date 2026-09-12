@@ -1,11 +1,12 @@
 'use client'
 
+import type { LightboxMedia } from './media/media-lightbox'
 import mermaid from 'mermaid'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { random } from '@hyperfrontend/immutable-api-utils/built-in-copy/math'
 import { logger } from '@hyperfrontend/logging'
 import { createMermaidConfig } from '../lib/mermaid-theme'
-import { DiagramModal } from './diagram-modal'
+import { MediaLightbox } from './media/media-lightbox'
 import { useTheme } from './theme-provider'
 
 interface MermaidDiagramProps {
@@ -57,6 +58,9 @@ export function MermaidDiagram({ chart, className = '' }: MermaidDiagramProps) {
 
     renderDiagram()
   }, [chart, resolvedTheme])
+
+  // why: the lightbox re-lays the media out whenever the object changes, and it re-renders on every pan and zoom
+  const media = useMemo((): LightboxMedia => ({ kind: 'svg', svg }), [svg])
 
   const handleExpand = useCallback(() => {
     setIsExpanded(true)
@@ -115,8 +119,8 @@ export function MermaidDiagram({ chart, className = '' }: MermaidDiagramProps) {
         <div className="[&_svg]:max-w-full" dangerouslySetInnerHTML={{ __html: svg }} />
       </div>
 
-      {/* Expanded modal */}
-      <DiagramModal svg={svg} isOpen={isExpanded} onClose={handleClose} />
+      {/* Expanded view, in the one lightbox every expandable medium on the site shares */}
+      <MediaLightbox media={media} label="Expanded diagram view" isOpen={isExpanded} onClose={handleClose} />
     </>
   )
 }

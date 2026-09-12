@@ -1,10 +1,7 @@
 'use client'
 
-import type { DiagramSize, ViewportPoint, ViewportTransform } from '../lib/diagram-viewport'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { createPortal } from 'react-dom'
-import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
-import { hypot, round } from '@hyperfrontend/immutable-api-utils/built-in-copy/math'
+import type { DiagramSize, ViewportPoint, ViewportTransform } from '@/lib/diagram-viewport'
+import type { ReactNode } from 'react'
 import {
   FIT_PADDING,
   ZOOM_STEP,
@@ -16,14 +13,66 @@ import {
   prepareNaturalSvg,
   wheelZoomFactor,
   zoomAtPoint,
-} from '../lib/diagram-viewport'
+} from '@/lib/diagram-viewport'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
+import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
+import { hypot, round } from '@hyperfrontend/immutable-api-utils/built-in-copy/math'
 
-interface DiagramModalProps {
-  /** SVG content to display */
+/** A serialized SVG, sized from its own root tag. */
+export interface SvgMedia {
+  /** Discriminator */
+  kind: 'svg'
+  /** The markup */
   svg: string
-  /** Called when modal should close */
+}
+
+/** A raster image, shown at its native resolution. */
+export interface ImageMedia {
+  /** Discriminator */
+  kind: 'image'
+  /** The image URL */
+  src: string
+  /** The image's alternative text, read as the dialog's name */
+  alt: string
+  /** Native width in CSS pixels */
+  width: number
+  /** Native height in CSS pixels */
+  height: number
+}
+
+/** Anything React can draw, laid out in a box of a stated size. */
+export interface NodeMedia {
+  /** Discriminator */
+  kind: 'node'
+  /** The content */
+  node: ReactNode
+  /** The box's width in CSS pixels */
+  width: number
+  /** The box's height in CSS pixels */
+  height: number
+}
+
+/** What the lightbox can show. */
+export type LightboxMedia = SvgMedia | ImageMedia | NodeMedia
+
+/** A medium laid out for the canvas: its natural size, and what to draw at that size. */
+interface LaidOutMedia {
+  /** The box the medium occupies before any zoom */
+  naturalSize: DiagramSize
+  /** The drawing */
+  content: ReactNode
+}
+
+/** Props for {@link MediaLightbox}. */
+export interface MediaLightboxProps {
+  /** What to show */
+  media: LightboxMedia
+  /** What a screen reader calls the dialog */
+  label: string
+  /** Called when the lightbox should close */
   onClose: () => void
-  /** Whether the modal is open */
+  /** Whether the lightbox is open */
   isOpen: boolean
 }
 
@@ -104,21 +153,31 @@ function trapFocus(event: KeyboardEvent, dialog: HTMLElement | null) {
 }
 
 /**
- * Full-screen modal for viewing diagrams at a larger scale, with zoom and pan.
- * Uses portal to escape parent stacking contexts.
+ * The one full-screen viewer every piece of media on the site expands into:
+ * a diagram, a still that is larger than the column it sits in, a chart
+ * drawn small in a grid. Uses a portal to escape parent stacking contexts.
  *
- * Interactions: toolbar buttons (zoom in/out, fit, 100%), click-drag panning,
- * wheel panning, ctrl/meta+wheel and two-finger pinch zooming anchored on the
- * cursor, double-click stepwise zoom (shift inverts), and keyboard shortcuts
- * (+/- zoom, 0 resets, f fits, arrows pan, Escape closes). Focus moves into
- * the dialog on open, is trapped while open, and returns to the trigger on close.
- * @param props - The component props
- * @param props.svg - SVG content to display
- * @param props.onClose - Called when modal should close
- * @param props.isOpen - Whether the modal is open
- * @returns The modal JSX or null if not mounted/open
+ * Whatever the media is, it is laid out at its natural size inside a canvas
+ * that can be zoomed and panned: toolbar buttons (zoom in/out, fit, 100%),
+ * click-drag panning, wheel panning, ctrl/meta+wheel and two-finger pinch
+ * zooming anchored on the cursor, double-click stepwise zoom (shift inverts),
+ * and keyboard shortcuts (+/- zoom, 0 resets, f fits, arrows pan, Escape
+ * closes). Focus moves into the dialog on open, is trapped while open, and
+ * returns to the trigger on close. One viewer rather than one per kind of
+ * media, so a reader who has learned to inspect a diagram has learned to
+ * inspect everything.
+ * @param props - See {@link MediaLightboxProps}.
+ * @param props.media - What to show
+ * @param props.label - What a screen reader calls the dialog
+ * @param props.onClose - Called when the lightbox should close
+ * @param props.isOpen - Whether the lightbox is open
+ * @returns The lightbox, or null when closed or not yet mounted
+ * @example Expanding a diagram
+ * ```tsx
+ * <MediaLightbox media={{ kind: 'svg', svg }} label="Expanded diagram" isOpen={open} onClose={() => setOpen(false)} />
+ * ```
  */
-export function DiagramModal({ svg, onClose, isOpen }: DiagramModalProps) {
+export function MediaLightbox({ media, label, onClose, isOpen }: MediaLightboxProps) {
   const [mounted, setMounted] = useState(false)
   const [view, setView] = useState<ViewportTransform>({ scale: 1, tx: 0, ty: 0 })
   const [dragging, setDragging] = useState(false)
@@ -132,12 +191,26 @@ export function DiagramModal({ svg, onClose, isOpen }: DiagramModalProps) {
   const tapRef = useRef<TapSample | null>(null)
   const gestureRef = useRef({ x: 0, y: 0, moved: false, multi: false })
 
-  // why: The wrapper is transform-positioned at natural pixel size, so the SVG needs explicit dimensions instead of mermaid's max-width cap
-  const { naturalSize, naturalSvg } = useMemo(() => {
-    // note: Mermaid always emits a viewBox; the fallback size only guards malformed input
-    const size = extractNaturalSize(svg) ?? { width: 600, height: 400 }
-    return { naturalSize: size, naturalSvg: prepareNaturalSvg(svg, size) }
-  }, [svg])
+  // why: The wrapper is transform-positioned at natural pixel size, so every kind of media needs explicit dimensions rather than a max-width cap
+  const { naturalSize, content } = useMemo((): LaidOutMedia => {
+    if (media.kind === 'svg') {
+      // note: Mermaid always emits a viewBox; the fallback size only guards malformed input
+      const size = extractNaturalSize(media.svg) ?? { width: 600, height: 400 }
+      return {
+        naturalSize: size,
+        content: <div className="[&>svg]:block" dangerouslySetInnerHTML={{ __html: prepareNaturalSvg(media.svg, size) }} />,
+      }
+    }
+    if (media.kind === 'image') {
+      return {
+        naturalSize: { width: media.width, height: media.height },
+        content: (
+          <img src={media.src} alt={media.alt} width={media.width} height={media.height} className="block max-w-none" draggable={false} />
+        ),
+      }
+    }
+    return { naturalSize: { width: media.width, height: media.height }, content: media.node }
+  }, [media])
 
   // how: viewRef mirrors the committed state synchronously so gesture handlers can compose several transform updates per event without stale reads
   const applyView = useCallback(
@@ -392,8 +465,8 @@ export function DiagramModal({ svg, onClose, isOpen }: DiagramModalProps) {
       className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm"
       role="dialog"
       aria-modal="true"
-      aria-label="Expanded diagram view"
-      aria-describedby="diagram-modal-hint"
+      aria-label={label}
+      aria-describedby="media-lightbox-hint"
     >
       {/* Close button */}
       <button
@@ -408,7 +481,7 @@ export function DiagramModal({ svg, onClose, isOpen }: DiagramModalProps) {
       {/* Zoom toolbar */}
       <div
         role="group"
-        aria-label="Diagram zoom controls"
+        aria-label="Zoom controls"
         className="absolute left-1/2 top-4 z-10 flex -translate-x-1/2 items-center gap-0.5 rounded-full bg-white/90 px-2 py-1 shadow-lg dark:bg-slate-800/90"
       >
         <ToolbarButton label="Zoom out" onClick={() => zoomStep(1 / ZOOM_STEP)}>
@@ -421,7 +494,7 @@ export function DiagramModal({ svg, onClose, isOpen }: DiagramModalProps) {
           <PlusIcon className="h-4 w-4" />
         </ToolbarButton>
         <span aria-hidden className="mx-1 h-4 w-px bg-slate-300 dark:bg-slate-600" />
-        <ToolbarButton label="Fit diagram to viewport" onClick={applyFit}>
+        <ToolbarButton label="Fit to viewport" onClick={applyFit}>
           <span className="px-1 font-mono text-xs">Fit</span>
         </ToolbarButton>
         <ToolbarButton label="Reset zoom to 100%" onClick={applyActualSize}>
@@ -431,14 +504,14 @@ export function DiagramModal({ svg, onClose, isOpen }: DiagramModalProps) {
 
       {/* Hint text */}
       <div
-        id="diagram-modal-hint"
+        id="media-lightbox-hint"
         className="pointer-events-none absolute bottom-4 left-1/2 z-10 -translate-x-1/2 whitespace-nowrap rounded-full bg-black/50 px-4 py-2 text-sm text-white/80"
       >
         Drag to pan · <kbd className="rounded bg-white/20 px-1.5 py-0.5 font-mono text-xs">Ctrl</kbd>+scroll to zoom ·{' '}
         <kbd className="rounded bg-white/20 px-1.5 py-0.5 font-mono text-xs">Esc</kbd> to close
       </div>
 
-      {/* Diagram canvas */}
+      {/* The canvas the media is zoomed and panned inside */}
       <div
         ref={attachCanvas}
         className={`relative h-[80vh] w-[85vw] touch-none select-none overflow-hidden rounded-lg bg-white shadow-2xl dark:bg-slate-900 ${dragging ? 'cursor-grabbing' : 'cursor-grab'}`}
@@ -448,15 +521,16 @@ export function DiagramModal({ svg, onClose, isOpen }: DiagramModalProps) {
         onPointerCancel={onPointerUp}
       >
         <div
-          className="absolute left-0 top-0 [&>svg]:block"
+          className="absolute left-0 top-0"
           style={{
             width: naturalSize.width,
             height: naturalSize.height,
             transform: `translate(${view.tx}px, ${view.ty}px) scale(${view.scale})`,
             transformOrigin: '0 0',
           }}
-          dangerouslySetInnerHTML={{ __html: naturalSvg }}
-        />
+        >
+          {content}
+        </div>
       </div>
     </div>
   )
