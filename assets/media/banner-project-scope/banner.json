@@ -1,0 +1,105 @@
+{
+  "slug": "banner-project-scope",
+  "asset": "banner.gif",
+  "generatedAt": "2026-09-12T18:24:41.185Z",
+  "sceneHash": "e1d5c7ecc1c00f70",
+  "sourceUrl": "stage:banner",
+  "profile": {
+    "id": "banner",
+    "intent": "the top of a package readme, at the width npm and GitHub render it",
+    "width": 640,
+    "height": 180,
+    "scale": 2,
+    "fps": 4
+  },
+  "viewport": {
+    "width": 640,
+    "height": 180
+  },
+  "record": {
+    "settleMs": 0,
+    "durationMs": 12000
+  },
+  "startMs": 0,
+  "gif": {
+    "width": 640,
+    "fps": 4,
+    "colours": 64,
+    "lossy": 60,
+    "dither": true,
+    "loop": 0,
+    "maxBytes": 1200000
+  },
+  "encoder": "sharp",
+  "toolVersions": [
+    {
+      "name": "sharp",
+      "version": "8.18.6"
+    }
+  ],
+  "bytes": 395535,
+  "frames": 45,
+  "variants": [
+    {
+      "theme": "portable",
+      "asset": "banner.gif",
+      "bytes": 395535,
+      "maxBytes": 1200000,
+      "frames": 45,
+      "gif": {
+        "width": 640,
+        "fps": 4,
+        "colours": 64,
+        "lossy": 60,
+        "dither": true,
+        "loop": 0,
+        "maxBytes": 1200000
+      },
+      "compromises": []
+    },
+    {
+      "theme": "dark",
+      "asset": "banner.dark.gif",
+      "bytes": 305348,
+      "maxBytes": 500000,
+      "frames": 45,
+      "gif": {
+        "width": 640,
+        "fps": 4,
+        "colours": 64,
+        "lossy": 60,
+        "dither": true,
+        "loop": 0,
+        "maxBytes": 500000
+      },
+      "compromises": []
+    },
+    {
+      "theme": "light",
+      "asset": "banner.light.gif",
+      "bytes": 238608,
+      "maxBytes": 500000,
+      "frames": 44,
+      "gif": {
+        "width": 640,
+        "fps": 4,
+        "colours": 64,
+        "lossy": 60,
+        "dither": true,
+        "loop": 0,
+        "maxBytes": 500000
+      },
+      "compromises": []
+    }
+  ],
+  "browser": {
+    "name": "chromium",
+    "version": "149.0.7827.55"
+  },
+  "determinism": {},
+  "console": {
+    "errors": 0,
+    "warnings": 0,
+    "pageErrors": 0
+  }
+}
