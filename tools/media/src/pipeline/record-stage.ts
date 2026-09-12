@@ -164,7 +164,7 @@ export async function recordScriptedScene(filePath: string, scene: ScriptedScene
           }),
       ...(primary.stills === undefined ? {} : { stills: primary.stills }),
       variants: records,
-      browser: { name: 'chromium', version: launched.browser.version(), executablePath: launched.executablePath },
+      browser: { name: 'chromium', version: launched.browser.version() },
       determinism: {},
       console: { errors: 0, warnings: 0, pageErrors: 0 },
     }

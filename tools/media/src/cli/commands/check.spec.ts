@@ -15,7 +15,7 @@ const RECORD_BASE = {
   viewport: { width: 640, height: 360 },
   record: { settleMs: 0, durationMs: 1_000 },
   startMs: 0,
-  browser: { name: 'chromium', version: '1', executablePath: '' },
+  browser: { name: 'chromium', version: '1' },
   determinism: {},
   console: { errors: 0, warnings: 0, pageErrors: 0 },
 }

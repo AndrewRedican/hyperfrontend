@@ -9,8 +9,6 @@ export interface BrowserRecord {
   name: string
   /** Version string the browser reported. */
   version: string
-  /** Executable that was launched. */
-  executablePath: string
 }
 
 /** One line the page printed, kept verbatim for a person to read. */
