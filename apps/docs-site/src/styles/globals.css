@@ -684,6 +684,618 @@
 }
 
 @layer components {
+  /* The downloads page: the ranking, the focused package, and the trend
+     grid.
+
+     One series everywhere, in the site's own blue, because every chart on
+     the page shows the same measure for a different package and a second
+     hue would claim a second meaning. A focused package is emphasized, not
+     recoloured: its bar keeps its blue while the others step back, its card
+     takes a rim, and its line is drawn a shade deeper. Every mark is thin
+     and every axis is recessive, so the data is the only loud thing on the
+     page. */
+  .downloads__controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+    margin-top: 2rem;
+  }
+
+  .downloads__heading {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0;
+    font-family: theme('fontFamily.display');
+    font-size: theme('fontSize.2xl');
+    font-weight: 700;
+    line-height: 1.3;
+    color: theme('colors.slate.900');
+  }
+
+  .dark .downloads__heading {
+    color: theme('colors.white');
+  }
+
+  .downloads__lede {
+    margin: 0.5rem 0 1.25rem;
+    color: theme('colors.slate.600');
+  }
+
+  .dark .downloads__lede {
+    color: theme('colors.slate.400');
+  }
+
+  /* The focused package's detail: the figures as a row of labelled values,
+     and a wide chart under them. */
+  .downloads__focus {
+    scroll-margin-top: 5rem;
+  }
+
+  .downloads__facts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem 2rem;
+    margin: 1rem 0 1.25rem;
+  }
+
+  .downloads__facts > div {
+    min-width: 0;
+  }
+
+  .downloads__facts dt {
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    color: theme('colors.slate.500');
+  }
+
+  .dark .downloads__facts dt {
+    color: theme('colors.slate.400');
+  }
+
+  .downloads__facts dd {
+    margin: 0.125rem 0 0;
+    font-size: theme('fontSize.xl');
+    font-weight: 600;
+    line-height: 1.3;
+    color: theme('colors.slate.900');
+  }
+
+  .dark .downloads__facts dd {
+    color: theme('colors.white');
+  }
+
+  /* The ranking: one row per package, the bar in a track between the name
+     and the value. Bars are capped at a comfortable thickness and rounded
+     only at the data end, and a surface gap keeps neighbours apart. */
+  .ranking {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .ranking__row + .ranking__row {
+    margin-top: 0.125rem;
+  }
+
+  .ranking__bar-button {
+    display: grid;
+    grid-template-columns: minmax(7.5rem, 11rem) minmax(0, 1fr) 3.5rem;
+    align-items: center;
+    column-gap: 0.75rem;
+    width: 100%;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.5rem;
+    text-align: left;
+    transition: background-color 150ms ease-out;
+  }
+
+  @media (max-width: 479px) {
+    .ranking__bar-button {
+      grid-template-columns: minmax(6rem, 8rem) minmax(0, 1fr) 3rem;
+      column-gap: 0.5rem;
+    }
+  }
+
+  .ranking__bar-button:hover {
+    background-color: rgb(241 245 249 / 0.7);
+  }
+
+  .dark .ranking__bar-button:hover {
+    background-color: rgb(30 41 59 / 0.5);
+  }
+
+  .ranking__bar-button:focus-visible {
+    outline: 2px solid theme('colors.primary.500');
+    outline-offset: 2px;
+  }
+
+  .ranking__name {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 0;
+    font-family: theme('fontFamily.mono');
+    font-size: 0.8125rem;
+    color: theme('colors.slate.700');
+  }
+
+  .dark .ranking__name {
+    color: theme('colors.slate.300');
+  }
+
+  .ranking__mark {
+    width: 1rem;
+    height: 1rem;
+    flex-shrink: 0;
+    color: theme('colors.slate.400');
+  }
+
+  .ranking__short {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .ranking__track {
+    display: block;
+    height: 0.875rem;
+    min-width: 0;
+  }
+
+  .ranking__bar {
+    display: block;
+    height: 100%;
+    min-width: 2px;
+    border-radius: 0 3px 3px 0;
+    background-color: theme('colors.primary.500');
+    transition:
+      opacity 200ms ease-out,
+      width 400ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .dark .ranking__bar {
+    background-color: theme('colors.primary.400');
+  }
+
+  .ranking__value {
+    font-family: theme('fontFamily.mono');
+    font-size: 0.8125rem;
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+    color: theme('colors.slate.700');
+  }
+
+  .dark .ranking__value {
+    color: theme('colors.slate.300');
+  }
+
+  .ranking--focused .ranking__row:not(.ranking__row--active) .ranking__bar {
+    opacity: 0.3;
+  }
+
+  .ranking__row--active .ranking__bar-button {
+    background-color: rgb(59 130 246 / 0.08);
+  }
+
+  .dark .ranking__row--active .ranking__bar-button {
+    background-color: rgb(96 165 250 / 0.12);
+  }
+
+  .ranking__row--active .ranking__name,
+  .ranking__row--active .ranking__value {
+    font-weight: 600;
+    color: theme('colors.slate.900');
+  }
+
+  .dark .ranking__row--active .ranking__name,
+  .dark .ranking__row--active .ranking__value {
+    color: theme('colors.white');
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ranking__bar {
+      transition: none;
+    }
+  }
+
+  /* The trend grid: as many cards per row as the column has room for,
+     three on a wide document, two on a laptop, one on a phone. */
+  .trend-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(16.5rem, 1fr));
+    gap: 0.875rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .trend-grid > li {
+    min-width: 0;
+  }
+
+  .trend-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    width: 100%;
+    padding: 0.75rem 0.875rem 0.625rem;
+    border: 1px solid rgb(148 163 184 / 0.32);
+    border-radius: 0.75rem;
+    background-color: rgb(255 255 255 / 0.7);
+    cursor: zoom-in;
+    text-align: left;
+    transition:
+      border-color 200ms ease-out,
+      box-shadow 200ms ease-out;
+  }
+
+  .dark .trend-card {
+    border-color: rgb(148 163 184 / 0.18);
+    background-color: rgb(24 33 52 / 0.6);
+  }
+
+  .trend-card:hover,
+  .trend-card:focus-visible {
+    outline: none;
+    border-color: rgb(59 130 246 / 0.5);
+    box-shadow: 0 12px 32px -18px rgb(15 23 42 / 0.3);
+  }
+
+  .dark .trend-card:hover,
+  .dark .trend-card:focus-visible {
+    border-color: rgb(96 165 250 / 0.45);
+    box-shadow: 0 14px 36px -18px rgb(2 6 23 / 0.7);
+  }
+
+  .trend-card--active {
+    border-color: rgb(59 130 246 / 0.6);
+    box-shadow: 0 0 0 3px rgb(59 130 246 / 0.15);
+  }
+
+  .dark .trend-card--active {
+    border-color: rgb(96 165 250 / 0.6);
+    box-shadow: 0 0 0 3px rgb(96 165 250 / 0.18);
+  }
+
+  .trend-card--wide {
+    padding: 1rem 1rem 0.75rem;
+  }
+
+  .trend-card__head {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 0;
+  }
+
+  .trend-card__mark {
+    width: 1rem;
+    height: 1rem;
+    flex-shrink: 0;
+    color: theme('colors.slate.400');
+  }
+
+  .trend-card__name {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-family: theme('fontFamily.mono');
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: theme('colors.slate.800');
+  }
+
+  .dark .trend-card__name {
+    color: theme('colors.slate.200');
+  }
+
+  .trend-card__total {
+    font-family: theme('fontFamily.mono');
+    font-size: 0.8125rem;
+    font-variant-numeric: tabular-nums;
+    color: theme('colors.slate.500');
+  }
+
+  .dark .trend-card__total {
+    color: theme('colors.slate.400');
+  }
+
+  .trend-card__foot {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.5rem;
+    font-size: 0.6875rem;
+    color: theme('colors.slate.400');
+  }
+
+  .dark .trend-card__foot {
+    color: theme('colors.slate.500');
+  }
+
+  /* The chart itself, drawn once and used at every size. The line is two
+     pixels whatever the box is scaled to, the wash is the hue at a tenth,
+     the end marker carries a ring of the surface so it stays legible over
+     the line, and the hairline that follows the pointer is the only thing
+     that moves. */
+  .trend-chart {
+    position: relative;
+    width: 100%;
+    --trend-hue: theme('colors.primary.500');
+    --trend-surface: theme('colors.white');
+  }
+
+  .dark .trend-chart {
+    --trend-hue: theme('colors.primary.400');
+    --trend-surface: theme('colors.slate.900');
+  }
+
+  .trend-chart--emphasized {
+    --trend-hue: theme('colors.primary.600');
+  }
+
+  .dark .trend-chart--emphasized {
+    --trend-hue: theme('colors.primary.300');
+  }
+
+  .trend-chart__svg {
+    display: block;
+    width: 100%;
+    height: auto;
+    overflow: visible;
+    touch-action: pan-y;
+  }
+
+  .trend-chart__area {
+    fill: var(--trend-hue);
+    fill-opacity: 0.1;
+  }
+
+  .trend-chart__line {
+    fill: none;
+    stroke: var(--trend-hue);
+    stroke-width: 2;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+    vector-effect: non-scaling-stroke;
+  }
+
+  .trend-chart__end {
+    fill: var(--trend-hue);
+    stroke: var(--trend-surface);
+    stroke-width: 2;
+    vector-effect: non-scaling-stroke;
+  }
+
+  .trend-chart__grid {
+    stroke: rgb(148 163 184 / 0.35);
+    stroke-width: 1;
+    vector-effect: non-scaling-stroke;
+  }
+
+  .trend-chart__tick {
+    font-family: theme('fontFamily.mono');
+    font-size: 12px;
+    fill: theme('colors.slate.500');
+  }
+
+  .dark .trend-chart__tick {
+    fill: theme('colors.slate.400');
+  }
+
+  .trend-chart__hairline {
+    stroke: rgb(100 116 139 / 0.6);
+    stroke-width: 1;
+    vector-effect: non-scaling-stroke;
+    pointer-events: none;
+  }
+
+  .trend-chart__cursor {
+    pointer-events: none;
+  }
+
+  /* The readout: the value first and strong, the bucket second and quiet,
+     both in the text colours. It sits above the plot at the hairline's x
+     and turns to face inward near either edge so it never leaves the card. */
+  .trend-chart__readout {
+    position: absolute;
+    top: -0.25rem;
+    display: flex;
+    flex-direction: column;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.375rem;
+    background-color: rgb(255 255 255 / 0.96);
+    border: 1px solid rgb(148 163 184 / 0.35);
+    box-shadow: 0 6px 16px -8px rgb(15 23 42 / 0.3);
+    font-size: 0.6875rem;
+    line-height: 1.3;
+    color: theme('colors.slate.500');
+    white-space: nowrap;
+    transform: translate(-50%, -100%);
+    pointer-events: none;
+  }
+
+  .dark .trend-chart__readout {
+    background-color: rgb(15 23 42 / 0.96);
+    border-color: rgb(148 163 184 / 0.25);
+    color: theme('colors.slate.400');
+  }
+
+  .trend-chart__readout > strong {
+    font-family: theme('fontFamily.mono');
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: theme('colors.slate.900');
+  }
+
+  .dark .trend-chart__readout > strong {
+    color: theme('colors.white');
+  }
+
+  .trend-chart--detailed .trend-chart__readout {
+    font-size: 0.8125rem;
+    padding: 0.375rem 0.625rem;
+  }
+
+  .trend-chart--detailed .trend-chart__readout > strong {
+    font-size: 1rem;
+  }
+
+  /* The expanded chart in the lightbox: a header naming the package and its
+     span, then the chart with axes, on the lightbox's own surface. */
+  .trend-expanded {
+    padding: 1.5rem 1.5rem 1rem;
+    background-color: theme('colors.white');
+  }
+
+  .dark .trend-expanded {
+    background-color: theme('colors.slate.900');
+  }
+
+  .trend-expanded__header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+  }
+
+  /* The methodology, folded under its heading until asked for. */
+  .methodology {
+    border-top: 1px solid theme('colors.slate.200');
+    padding-top: 1.5rem;
+  }
+
+  .dark .methodology {
+    border-top-color: theme('colors.slate.800');
+  }
+
+  .methodology__summary {
+    cursor: pointer;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    font-family: theme('fontFamily.display');
+    font-size: theme('fontSize.xl');
+    font-weight: 600;
+    color: theme('colors.slate.900');
+  }
+
+  .dark .methodology__summary {
+    color: theme('colors.white');
+  }
+
+  .methodology__summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .methodology__summary::before {
+    content: '';
+    width: 0.5rem;
+    height: 0.5rem;
+    border-right: 2px solid theme('colors.slate.400');
+    border-bottom: 2px solid theme('colors.slate.400');
+    transform: rotate(-45deg);
+    transition: transform 200ms ease-out;
+  }
+
+  .methodology[open] .methodology__summary::before {
+    transform: rotate(45deg);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .methodology__summary::before {
+      transition: none;
+    }
+  }
+
+  .methodology__summary:focus-visible {
+    outline: 2px solid theme('colors.primary.500');
+    outline-offset: 4px;
+    border-radius: 0.25rem;
+  }
+
+  .methodology__body {
+    max-width: 68ch;
+    margin-top: 1rem;
+    font-size: theme('fontSize.sm');
+    line-height: 1.75;
+    color: theme('colors.slate.600');
+  }
+
+  .dark .methodology__body {
+    color: theme('colors.slate.400');
+  }
+
+  .methodology__body > * + * {
+    margin-top: 0.875rem;
+  }
+
+  .methodology__body h3 {
+    margin-top: 1.25rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: theme('colors.slate.500');
+  }
+
+  .dark .methodology__body h3 {
+    color: theme('colors.slate.400');
+  }
+
+  .methodology__body ul {
+    padding-left: 1.125rem;
+    list-style: disc;
+  }
+
+  .methodology__body li + li {
+    margin-top: 0.5rem;
+  }
+
+  .methodology__body code {
+    border-radius: 0.25rem;
+    background-color: theme('colors.slate.100');
+    padding: 0.0625rem 0.3125rem;
+    font-size: 0.875em;
+    color: theme('colors.slate.700');
+  }
+
+  .dark .methodology__body code {
+    background-color: theme('colors.slate.800');
+    color: theme('colors.slate.300');
+  }
+
+  .methodology__body a {
+    color: theme('colors.primary.600');
+    text-decoration: none;
+  }
+
+  .methodology__body a:hover {
+    text-decoration: underline;
+  }
+
+  .dark .methodology__body a {
+    color: theme('colors.primary.400');
+  }
+
+  .methodology__thanks {
+    padding-top: 0.875rem;
+    border-top: 1px solid theme('colors.slate.200');
+  }
+
+  .dark .methodology__thanks {
+    border-top-color: theme('colors.slate.800');
+  }
+}
+
+@layer components {
   /* The frame every embedded medium sits in.
 
      The stage is sized by its aspect ratio alone, so the space a video, a

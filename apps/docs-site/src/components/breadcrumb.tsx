@@ -25,6 +25,7 @@ const pathLabels: Record<string, string> = {
   'project-scope': '@hyperfrontend/project-scope',
   versioning: '@hyperfrontend/versioning',
   releases: 'Changelog',
+  downloads: 'Downloads',
 }
 
 export function Breadcrumb() {
