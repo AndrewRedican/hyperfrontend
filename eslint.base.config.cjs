@@ -295,6 +295,8 @@ module.exports = [
       'workspace/codeblock-line-width': 'error',
       // why: the rule decides for itself whether a file belongs to a publishable package, so it can be switched on for every markdown file and still touch only package documentation
       'workspace/lib-inline-code-links': 'error',
+      // why: the rule touches only markdown under libs/, where the documentation site already draws an on-page index from the headings
+      'workspace/no-manual-table-of-contents': 'error',
     },
   },
   {
@@ -309,6 +311,7 @@ module.exports = [
       'workspace/require-codeblock-language': 'error',
       'workspace/codeblock-line-width': 'error',
       'workspace/lib-inline-code-links': 'error',
+      'workspace/no-manual-table-of-contents': 'error',
     },
   },
   {
