@@ -229,9 +229,6 @@ export function LibrariesPageContent({ libraries }: LibrariesPageContentProps) {
       <Breadcrumb />
 
       <H1 className="font-display text-4xl font-bold tracking-tight text-slate-900 dark:text-white">Libraries</H1>
-      <p className="mt-4 text-lg text-slate-600 dark:text-slate-400">
-        Every HyperFrontend package, ordered from the SDK you build against down to the primitives underneath.
-      </p>
 
       <div className="relative mt-8">
         <SearchIcon className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
