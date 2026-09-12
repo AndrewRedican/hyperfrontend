@@ -1,6 +1,6 @@
 # generators
 
-Nx generators for hyperfrontend features: `init` declares the SDK dependency in the consumer workspace, `feature` scaffolds a feature by delegating to the SDK's headless `hf init`.
+Nx generators for hyperfrontend features: [`init`](https://www.hyperfrontend.dev/docs/libraries/features/nx/generators/init/) declares the SDK dependency in the consumer workspace, [`feature`](https://www.hyperfrontend.dev/docs/libraries/features/nx/generators/feature/) scaffolds a feature by delegating to the SDK's headless `hf init`.
 
 ```ts
 import { featureGenerator, initGenerator } from '@hyperfrontend/features/nx/generators'
@@ -10,15 +10,15 @@ const installCallback = await initGenerator(tree, {})
 
 ## Generators
 
-| Generator | Purpose                                                                                                                      |
-| --------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| `init`    | Ensures `@hyperfrontend/features` is declared in the root `package.json`; run automatically by `nx add`.                     |
-| `feature` | Scaffolds the glue module, `feature.config.json`, and entry wiring for a feature, declaring the SDK dependency when missing. |
+| Generator                                                                                 | Purpose                                                                                                                                                            |
+| ----------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| [`init`](https://www.hyperfrontend.dev/docs/libraries/features/nx/generators/init/)       | Ensures [`@hyperfrontend/features`](https://www.hyperfrontend.dev/docs/libraries/features/) is declared in the root `package.json`; run automatically by `nx add`. |
+| [`feature`](https://www.hyperfrontend.dev/docs/libraries/features/nx/generators/feature/) | Scaffolds the glue module, `feature.config.json`, and entry wiring for a feature, declaring the SDK dependency when missing.                                       |
 
 Both generators stage every write into the Nx tree, so `nx g ... --dry-run`
 previews the full change set without touching the disk. When the consumer
 workspace has `@nx/devkit` installed, staged files are formatted with it and
-installs run through its `installPackagesTask`; otherwise built-in equivalents
+installs run through its [`installPackagesTask`](https://nx.dev/reference/core-api/devkit/documents/installPackagesTask); otherwise built-in equivalents
 take over. Each generator returns a callback Nx runs after flushing, which
 installs dependencies only when the root manifest actually changed.
 

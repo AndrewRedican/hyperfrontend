@@ -52,7 +52,7 @@ SDK, CLI, and dev server for building, embedding, and orchestrating hyperfronten
 
 ## What is @hyperfrontend/features?
 
-Embedding another team's app inside your page usually means an iframe, a pile of `postMessage` conventions nobody wrote down, and a frame that never quite fits the space you gave it. `@hyperfrontend/features` turns that into a contract: the feature app declares what it sends, what it accepts, and which display modes it supports; the host picks a mode and gets a typed handle back. The messaging protocol underneath is [`@hyperfrontend/nexus`](https://www.hyperfrontend.dev/docs/libraries/nexus/), and this package adds everything around it: iframe management, display modes and sizing, the open/close lifecycle, and a CLI that packages a feature app into an installable shell.
+Embedding another team's app inside your page usually means an iframe, a pile of `postMessage` conventions nobody wrote down, and a frame that never quite fits the space you gave it. [`@hyperfrontend/features`](https://www.hyperfrontend.dev/docs/libraries/features/) turns that into a contract: the feature app declares what it sends, what it accepts, and which display modes it supports; the host picks a mode and gets a typed handle back. The messaging protocol underneath is [`@hyperfrontend/nexus`](https://www.hyperfrontend.dev/docs/libraries/nexus/), and this package adds everything around it: iframe management, display modes and sizing, the open/close lifecycle, and a CLI that packages a feature app into an installable shell.
 
 ```typescript
 // In the feature app, from '@hyperfrontend/features/hostee'
@@ -79,11 +79,11 @@ It is organized into independent subpath entry points so consumers import only t
 
 ### Key Features
 
-- **Host SDK** (`/host`) - Embed features with a shell factory, display modes (embedded, dialog, popup, standalone), and open/close lifecycle.
-- **Hostee SDK** (`/hostee`) - Initialize a feature app, declare its contract, and manage its lifecycle.
-- **CLI** (`/cli`) - `init`, `build`, and `dev` commands driven by `feature.config.*`, plus `serve` for production static hosting.
-- **Dev server** (`/server`) - Static file server plus a debug UI for inspecting host/hostee message traffic; the same core backs the `hf serve` production server.
-- **Zero-config bundling** - Direct dependencies are bundled by `@hyperfrontend/builder`, so generated shells stay self-contained.
+- **[Host SDK](https://www.hyperfrontend.dev/docs/libraries/features/host/)** - Embed features with a shell factory, display modes (embedded, dialog, popup, standalone), and open/close lifecycle.
+- **[Hostee SDK](https://www.hyperfrontend.dev/docs/libraries/features/hostee/)** - Initialize a feature app, declare its contract, and manage its lifecycle.
+- **[CLI](https://www.hyperfrontend.dev/docs/libraries/features/cli/)** - [`init`](https://www.hyperfrontend.dev/docs/libraries/features/cli/#api-runInit), [`build`](https://www.hyperfrontend.dev/docs/libraries/features/cli/#api-runBuild), and [`dev`](https://www.hyperfrontend.dev/docs/libraries/features/cli/#api-runDev) commands driven by `feature.config.*`, plus [`serve`](https://www.hyperfrontend.dev/docs/libraries/features/cli/#api-runServe) for production static hosting.
+- **[Dev server](https://www.hyperfrontend.dev/docs/libraries/features/server/)** - Static file server plus a debug UI for inspecting host/hostee message traffic; the same core backs the `hf serve` production server.
+- **[Zero-config bundling](https://www.hyperfrontend.dev/docs/libraries/features/architecture/#shell-generation)** - Direct dependencies are bundled by [`@hyperfrontend/builder`](https://www.hyperfrontend.dev/docs/libraries/builder/), so generated shells stay self-contained.
 
 ### Architecture Highlights
 
@@ -133,31 +133,31 @@ shell.open()
 shell.send('set-timezone', { tz: 'UTC' })
 ```
 
-Presentation is host-controlled and contract-preconfigured: a feature declares the display modes it supports (`display.modes` in `feature.config.*`, plus per-mode defaults like fixed embedded dimensions or the dialog box footprint and position), the generated shell builds in exactly those modes, and the host picks one per open.
+Presentation is host-controlled and contract-preconfigured: a feature declares the display modes it supports ([`display.modes`](https://www.hyperfrontend.dev/docs/libraries/features/#api-DisplayConfig-prop-modes) in `feature.config.*`, plus per-mode defaults like fixed embedded dimensions or the dialog box footprint and position), the generated shell builds in exactly those modes, and the host picks one per open.
 
 At runtime the SDK measures the host-side space and reports it to the feature as exact pixels (the initial size travels with the mode announcement itself), and frames stay hidden until the session opens. In dialog mode the feature draws its own dialog box inside a transparent full-viewport pane and backdrop/Escape dismissal is coordinated for you. The [host SDK docs](https://www.hyperfrontend.dev/docs/libraries/features/host/) cover the modes one by one.
 
-Contract actions may carry a `required: true` flag on `accepted` entries, which denies the connection unless the counterpart emits that type. Unflagged actions never gate the connection, so adding actions to a contract stays backward compatible.
+Contract actions may carry a `required: true` flag on [`accepted`](https://www.hyperfrontend.dev/docs/libraries/features/#api-FeatureContract-prop-accepted) entries, which denies the connection unless the counterpart emits that type. Unflagged actions never gate the connection, so adding actions to a contract stays backward compatible.
 
 The SDK's own traffic (the heartbeat, the presentation announcements, dismiss signals, dirty state, and the request/response envelopes) rides the same channel under a reserved `__hf:` prefix and is filtered out before your handlers run. Your contract must not declare action types beginning with `__hf:`; everything the plane carries is listed in the [architecture guide](https://www.hyperfrontend.dev/docs/libraries/features/architecture/).
 
-Both sides can opt into a sealed envelope: pass `protocol` (and, for `v4`, a `sharedKey`) to `createShell` and `createFeature`, and the two sides negotiate it during the connection handshake.
+Both sides can opt into a sealed envelope: pass [`protocol`](https://www.hyperfrontend.dev/docs/libraries/features/host/#api-ShellOptions-prop-protocol) (and, for [`v4`](https://www.hyperfrontend.dev/docs/libraries/features/#api-SecurityProtocol), a [`sharedKey`](https://www.hyperfrontend.dev/docs/libraries/features/host/#api-ShellOptions-prop-sharedKey)) to [`createShell`](https://www.hyperfrontend.dev/docs/libraries/features/host/#api-createShell) and [`createFeature`](https://www.hyperfrontend.dev/docs/libraries/features/hostee/#api-createFeature), and the two sides negotiate it during the connection handshake.
 
-| `protocol`         | Session keys                                          | `sharedKey`                                                        | Defeats                                                              |
-| ------------------ | ----------------------------------------------------- | ------------------------------------------------------------------ | -------------------------------------------------------------------- |
-| `'none'` (default) | None: product messages cross in plaintext             | Rejected: passing one throws                                       | Nothing                                                              |
-| `'v3'`             | Agreed fresh over the wire, once per session          | Rejected: passing one throws                                       | Scripts that listen                                                  |
-| `'v4'`             | Agreed fresh per session, bound to the pre-shared key | Required, 16 characters or more: selecting `v4` without one throws | Scripts that listen, and scripts that could speak to the counterpart |
+| [`protocol`](https://www.hyperfrontend.dev/docs/libraries/features/host/#api-ShellOptions-prop-protocol) | Session keys                                          | [`sharedKey`](https://www.hyperfrontend.dev/docs/libraries/features/host/#api-ShellOptions-prop-sharedKey)                                        | Defeats                                                              |
+| -------------------------------------------------------------------------------------------------------- | ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| `'none'` (default)                                                                                       | None: product messages cross in plaintext             | Rejected: passing one throws                                                                                                                      | Nothing                                                              |
+| `'v3'`                                                                                                   | Agreed fresh over the wire, once per session          | Rejected: passing one throws                                                                                                                      | Scripts that listen                                                  |
+| `'v4'`                                                                                                   | Agreed fresh per session, bound to the pre-shared key | Required, 16 characters or more: selecting [`v4`](https://www.hyperfrontend.dev/docs/libraries/features/#api-SecurityProtocol) without one throws | Scripts that listen, and scripts that could speak to the counterpart |
 
 Handshake frames stay plaintext while product messages (including sends queued before the handshake) leave sealed, and a plaintext product message arriving on a secured channel is dropped. Key agreement is paid once per session; each message then costs one AES-GCM operation, so many secured channels can run at once on one page.
 
-Security is fail-closed: a counterpart that cannot run the selected protocol is denied, and a session the counterpart never confirms (a mismatched `v4` key, for instance) closes with `reason: 'security-unconfirmed'` after the connect timeout. A packet the envelope cannot protect or unwrap is discarded and surfaced on that side as an `error` event shaped `{ reason: 'security-error', message, code }`, so a message one side sent and the other never received is never silent.
+Security is fail-closed: a counterpart that cannot run the selected protocol is denied, and a session the counterpart never confirms (a mismatched [`v4`](https://www.hyperfrontend.dev/docs/libraries/features/#api-SecurityProtocol) key, for instance) closes with `reason: 'security-unconfirmed'` after the connect timeout. A packet the envelope cannot protect or unwrap is discarded and surfaced on that side as an [`error`](https://www.hyperfrontend.dev/docs/libraries/features/host/#api-ShellHandle) event shaped `{ reason: 'security-error', message, code }`, so a message one side sent and the other never received is never silent.
 
-A contract may carry a semver `version`, or `createFeature` can receive a `version` option that takes precedence over `contract.version`. Each side presents its version during the handshake, and incompatible cuts (a different major, or a different minor below `1.0.0`) are denied before the channel opens, surfacing as an `error` on both handles. A side without a version always passes the check, so unversioned peers keep connecting.
+A contract may carry a semver [`version`](https://www.hyperfrontend.dev/docs/libraries/features/#api-FeatureContract-prop-version), or [`createFeature`](https://www.hyperfrontend.dev/docs/libraries/features/hostee/#api-createFeature) can receive a [`version`](https://www.hyperfrontend.dev/docs/libraries/features/#api-FeatureContract-prop-version) option that takes precedence over [`contract.version`](https://www.hyperfrontend.dev/docs/libraries/features/#api-FeatureContract-prop-version). Each side presents its version during the handshake, and incompatible cuts (a different major, or a different minor below `1.0.0`) are denied before the channel opens, surfacing as an [`error`](https://www.hyperfrontend.dev/docs/libraries/features/host/#api-ShellHandle) on both handles. A side without a version always passes the check, so unversioned peers keep connecting.
 
-A refused handshake ends at once. Whichever gate refuses (contract, policy, version, or fail-closed security), the host destroys the mount and the feature's pending `ready()` rejects: a `deny` surfaces as an `error` carrying the gate's `reason`, and a `cancel` the counterpart sent after aborting at its own gates surfaces on the host as `error` with `reason: 'handshake-cancelled'`.
+A refused handshake ends at once. Whichever gate refuses (contract, policy, version, or fail-closed security), the host destroys the mount and the feature's pending `ready()` rejects: a [`deny`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-ChannelEvent) surfaces as an [`error`](https://www.hyperfrontend.dev/docs/libraries/features/host/#api-ShellHandle) carrying the gate's [`reason`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-DenyEventData), and a [`cancel`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-ChannelEvent) the counterpart sent after aborting at its own gates surfaces on the host as [`error`](https://www.hyperfrontend.dev/docs/libraries/features/host/#api-ShellHandle) with `reason: 'handshake-cancelled'`.
 
-Contract entries with a `schema` are enforced on both ends: `send` validates the payload against the sender's own `emitted` schema and throws in the sender's frame before anything crosses the wire, while incoming messages are validated against the receiver's own `accepted` schema. An invalid payload is dropped and surfaced as an `error` event shaped `{ reason: 'invalid-payload', type, errors }`. Schema-less actions pass through unchanged.
+Contract entries with a [`schema`](https://www.hyperfrontend.dev/docs/libraries/features/#api-ActionDescription-prop-schema) are enforced on both ends: [`send`](https://www.hyperfrontend.dev/docs/libraries/features/host/#api-ShellHandle) validates the payload against the sender's own [`emitted`](https://www.hyperfrontend.dev/docs/libraries/features/#api-FeatureContract-prop-emitted) schema and throws in the sender's frame before anything crosses the wire, while incoming messages are validated against the receiver's own [`accepted`](https://www.hyperfrontend.dev/docs/libraries/features/#api-FeatureContract-prop-accepted) schema. An invalid payload is dropped and surfaced as an [`error`](https://www.hyperfrontend.dev/docs/libraries/features/host/#api-ShellHandle) event shaped `{ reason: 'invalid-payload', type, errors }`. Schema-less actions pass through unchanged.
 
 What each of these controls is actually worth, and which parts of an integration's security remain the operator's job rather than the SDK's, is stated once, in the [Security Model](https://www.hyperfrontend.dev/docs/core-concepts/security).
 
@@ -174,28 +174,28 @@ npx @hyperfrontend/features dev
 npx @hyperfrontend/features serve --root dist
 ```
 
-`build` requires `--protocol v3` or `--protocol v4`; an explicit `--protocol none` produces an open, unauthenticated shell and builds only together with `--allow-open`.
+[`build`](https://www.hyperfrontend.dev/docs/libraries/features/cli/#api-runBuild) requires `--protocol v3` or `--protocol v4`; an explicit `--protocol none` produces an open, unauthenticated shell and builds only together with `--allow-open`.
 
 ## API Overview
 
-Two of the entry points are runtimes, one per side of the frame, and an app imports exactly one. `/host` gives a host page
+Two of the entry points are runtimes, one per side of the frame, and an app imports exactly one. [`/host`](https://www.hyperfrontend.dev/docs/libraries/features/host/) gives a host page
 [`createShell`](https://www.hyperfrontend.dev/docs/libraries/features/host/#api-createShell): hand it a feature URL and a map of display modes, get back a
-`ShellHandle` to `open`, `send` to, listen `on` and `close`. `/hostee` gives a feature app
+[`ShellHandle`](https://www.hyperfrontend.dev/docs/libraries/features/host/#api-ShellHandle) to [`open`](https://www.hyperfrontend.dev/docs/libraries/features/host/#api-ShellHandle), [`send`](https://www.hyperfrontend.dev/docs/libraries/features/host/#api-ShellHandle) to, listen [`on`](https://www.hyperfrontend.dev/docs/libraries/features/host/#api-ShellHandle) and [`close`](https://www.hyperfrontend.dev/docs/libraries/features/host/#api-ShellHandle). [`/hostee`](https://www.hyperfrontend.dev/docs/libraries/features/hostee/) gives a feature app
 [`createFeature`](https://www.hyperfrontend.dev/docs/libraries/features/hostee/#api-createFeature): hand it the contract that app will speak, get back a
-`FeatureHandle` of the same shape. Both return synchronously; the feature awaits `ready()`, and the host watches its shell's `open`, `close` and `error` events.
+[`FeatureHandle`](https://www.hyperfrontend.dev/docs/libraries/features/hostee/#api-FeatureHandle) of the same shape. Both return synchronously; the feature awaits `ready()`, and the host watches its shell's [`open`](https://www.hyperfrontend.dev/docs/libraries/features/host/#api-ShellHandle), [`close`](https://www.hyperfrontend.dev/docs/libraries/features/host/#api-ShellHandle) and [`error`](https://www.hyperfrontend.dev/docs/libraries/features/host/#api-ShellHandle) events.
 
-The root entry is the DOM-free one: the contract, config and payload types both runtimes share, the `defineConfig` helper a `feature.config.*` file exports, and
-`validateContract` for checking one before it ever reaches a wire. Import it from build scripts, config files and Node tests, where reaching for `/host` or
-`/hostee` would drag a browser runtime along.
+The root entry is the DOM-free one: the contract, config and payload types both runtimes share, the [`defineConfig`](https://www.hyperfrontend.dev/docs/libraries/features/#api-defineConfig) helper a `feature.config.*` file exports, and
+[`validateContract`](https://www.hyperfrontend.dev/docs/libraries/features/#api-validateContract) for checking one before it ever reaches a wire. Import it from build scripts, config files and Node tests, where reaching for [`/host`](https://www.hyperfrontend.dev/docs/libraries/features/host/) or
+[`/hostee`](https://www.hyperfrontend.dev/docs/libraries/features/hostee/) would drag a browser runtime along.
 
-The last two entry points are Node tooling, importable as modules because the `hf` bin is only a thin argv wrapper over them. `/cli` is `init`, `build`, `dev` and
-`serve` as functions, for when a shell invocation will not do. `/server` is the machinery under two of those:
+The last two entry points are Node tooling, importable as modules because the `hf` bin is only a thin argv wrapper over them. [`/cli`](https://www.hyperfrontend.dev/docs/libraries/features/cli/) is [`init`](https://www.hyperfrontend.dev/docs/libraries/features/cli/#api-runInit), [`build`](https://www.hyperfrontend.dev/docs/libraries/features/cli/#api-runBuild), [`dev`](https://www.hyperfrontend.dev/docs/libraries/features/cli/#api-runDev) and
+[`serve`](https://www.hyperfrontend.dev/docs/libraries/features/cli/#api-runServe) as functions, for when a shell invocation will not do. [`/server`](https://www.hyperfrontend.dev/docs/libraries/features/server/) is the machinery under two of those:
 [`startDevServer`](https://www.hyperfrontend.dev/docs/libraries/features/server/#api-startDevServer) for the multi-app dev server and its traffic-inspecting debug
 UI, and [`startStaticServer`](https://www.hyperfrontend.dev/docs/libraries/features/server/#api-startStaticServer) for production hosting.
 
-What `build` emits is the part worth knowing: a feature becomes a self-contained shell package with its direct dependencies bundled in, so a host installs that one
-package and inherits no transitive install burden. Nx workspaces reach the same tooling as plugin targets, through `init` and `feature` generators and `build` and
-`serve` executors under the `nx/generators` and `nx/executors` subpaths; `nx add @hyperfrontend/features` installs the package and runs the `init` one for you.
+What [`build`](https://www.hyperfrontend.dev/docs/libraries/features/cli/#api-runBuild) emits is the part worth knowing: a feature becomes a self-contained shell package with its direct dependencies bundled in, so a host installs that one
+package and inherits no transitive install burden. Nx workspaces reach the same tooling as plugin targets, through [`init`](https://www.hyperfrontend.dev/docs/libraries/features/nx/generators/init/) and [`feature`](https://www.hyperfrontend.dev/docs/libraries/features/nx/generators/feature/) generators and [`build`](https://www.hyperfrontend.dev/docs/libraries/features/nx/executors/build/) and
+[`serve`](https://www.hyperfrontend.dev/docs/libraries/features/nx/executors/serve/) executors under the [`nx/generators`](https://www.hyperfrontend.dev/docs/libraries/features/nx/generators/) and [`nx/executors`](https://www.hyperfrontend.dev/docs/libraries/features/nx/executors/) subpaths; `nx add @hyperfrontend/features` installs the package and runs the [`init`](https://www.hyperfrontend.dev/docs/libraries/features/nx/generators/init/) one for you.
 
 Every option, handle, contract and payload type is in the [API reference](https://www.hyperfrontend.dev/docs/libraries/features/#api-reference).
 
@@ -206,7 +206,7 @@ Every option, handle, contract and payload type is in the [API reference](https:
 | Node.js >= 18   | ✅        |
 | Modern Browsers | ✅        |
 
-Support is per entry point. `/host` and `/hostee` are browser runtimes, `/cli`, `/server`, and `/generators` are Node-only, and the root entry is DOM-free and runs anywhere.
+Support is per entry point. [`/host`](https://www.hyperfrontend.dev/docs/libraries/features/host/) and [`/hostee`](https://www.hyperfrontend.dev/docs/libraries/features/hostee/) are browser runtimes, [`/cli`](https://www.hyperfrontend.dev/docs/libraries/features/cli/), [`/server`](https://www.hyperfrontend.dev/docs/libraries/features/server/), and [`/generators`](https://www.hyperfrontend.dev/docs/libraries/features/generators/) are Node-only, and the root entry is DOM-free and runs anywhere.
 
 ### Output Formats
 
@@ -219,7 +219,7 @@ Support is per entry point. `/host` and `/hostee` are browser runtimes, `/cli`, 
 | IIFE   | `bundle/hostee/index.iife.min.js` |       ❌       |
 | UMD    | `bundle/hostee/index.umd.min.js`  |       ❌       |
 
-**Global variables:** `HyperfrontendFeaturesHost`, `HyperfrontendFeaturesHostee`
+**Global variables:** [`HyperfrontendFeaturesHost`](https://www.hyperfrontend.dev/docs/libraries/features/host/), [`HyperfrontendFeaturesHostee`](https://www.hyperfrontend.dev/docs/libraries/features/hostee/)
 
 The package also installs the `hf` command.
 
