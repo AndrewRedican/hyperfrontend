@@ -8,6 +8,7 @@ import {
   MIN_FEATURE_DESCRIPTION_CHARACTERS,
   MIN_KEY_FEATURES,
   parseFeatureBullet,
+  visibleLabel,
 } from './readme-key-features'
 
 /**
@@ -61,6 +62,22 @@ describe('readme-key-features', () => {
 
     it('rejects a paragraph', () => {
       expect(isFeatureBullet('This package offers the following:')).toBe(false)
+    })
+  })
+
+  describe('visibleLabel', () => {
+    it('leaves a plain label alone', () => {
+      expect(visibleLabel('Multi-format output')).toBe('Multi-format output')
+    })
+
+    it('reduces a linked label to its text', () => {
+      expect(visibleLabel('[Host SDK](https://www.hyperfrontend.dev/docs/libraries/features/host/)')).toBe('Host SDK')
+    })
+
+    it('drops the backticks around a code label', () => {
+      expect(visibleLabel('[`createShell`](https://www.hyperfrontend.dev/docs/libraries/features/host/#api-createShell)')).toBe(
+        'createShell'
+      )
     })
   })
 
@@ -200,6 +217,22 @@ describe('readme-key-features', () => {
 
       expect(messageIds(problems)).toEqual(['keyFeatureLabelTooLong'])
       expect(problems[0]?.data).toMatchObject({ characters: `${label.length}`, maximum: `${MAX_FEATURE_LABEL_CHARACTERS}` })
+    })
+
+    it('measures a linked label by its visible text rather than by its URL', () => {
+      const label = '[Host SDK](https://www.hyperfrontend.dev/docs/libraries/features/host/)'
+      const body = [validBullet(1), validBullet(2), `- **${label}** - embed features with a shell factory and lifecycle`].join('\n')
+
+      expect(analyzeBody(body)).toEqual([])
+    })
+
+    it('measures a linked label that has still grown into a sentence', () => {
+      const label = '[Everything this package does for you and then some more](https://www.hyperfrontend.dev/docs/)'
+      const body = [validBullet(1), validBullet(2), `- **${label}** - and here is the explanation of it`].join('\n')
+      const problems = analyzeBody(body)
+
+      expect(messageIds(problems)).toEqual(['keyFeatureLabelTooLong'])
+      expect(problems[0]?.data).toMatchObject({ feature: 'Everything this package does for you and then some more', characters: '55' })
     })
 
     it('reports an explanation that only restates the label', () => {
