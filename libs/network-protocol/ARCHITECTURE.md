@@ -4,28 +4,6 @@ This document provides an in-depth explanation of the major artifacts produced b
 
 ---
 
-## Table of Contents
-
-1. [Quick Reference: How Do I...](#quick-reference-how-do-i)
-2. [Factory Function Reference](#factory-function-reference)
-3. [Composition Tree](#composition-tree)
-4. [Design Principles](#design-principles)
-5. [Protocol](#protocol)
-6. [Channel](#channel)
-7. [Packet Types](#packet-types)
-8. [Queue](#queue)
-9. [Sender & Receiver](#sender--receiver)
-10. [Topic](#topic)
-11. [Routing](#routing)
-12. [Security Suite](#security-suite)
-13. [Data](#data)
-14. [End-to-End Flow](#end-to-end-flow)
-15. [Platform Differences](#platform-differences)
-16. [Summary](#summary)
-17. [Links](#links)
-
----
-
 ## Quick Reference: How Do I...
 
 | Task                                  | Solution                                                                                                                                                                                                                                                                                                                                                                          | Module                                        |
