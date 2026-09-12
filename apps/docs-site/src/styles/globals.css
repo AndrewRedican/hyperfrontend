@@ -684,6 +684,123 @@
 }
 
 @layer components {
+  /* The frame every embedded medium sits in.
+
+     The stage is sized by its aspect ratio alone, so the space a video, a
+     poster or a chart will take is taken before any of them arrive and the
+     page does not move when they do. Whatever is put on the stage fills
+     it, which is the one rule about media size and it is written here once.
+     The surface is the code block's pane, because a medium is the other
+     dense thing on a documentation page and reads as the same kind of
+     object. */
+  .media-frame {
+    margin: 1.5rem 0;
+  }
+
+  .media-frame__stage {
+    position: relative;
+    width: 100%;
+    max-width: 100%;
+    overflow: hidden;
+    border-radius: 0.625rem;
+    border: 1px solid rgb(148 163 184 / 0.28);
+    background-color: rgb(15 23 42 / 0.04);
+  }
+
+  .dark .media-frame__stage {
+    border-color: rgb(148 163 184 / 0.16);
+    background-color: rgb(2 6 23 / 0.35);
+  }
+
+  .media-frame__media {
+    position: absolute;
+    inset: 0;
+    display: block;
+    width: 100%;
+    height: 100%;
+    border: 0;
+    object-fit: contain;
+  }
+
+  .media-frame__caption {
+    margin-top: 0.625rem;
+    font-size: theme('fontSize.sm');
+    line-height: 1.6;
+    text-align: center;
+    color: theme('colors.slate.500');
+  }
+
+  .dark .media-frame__caption {
+    color: theme('colors.slate.400');
+  }
+
+  /* A third-party video before it is played: its own poster and a play
+     button, and no player until the button is pressed. */
+  .media-facade {
+    padding: 0;
+    cursor: pointer;
+    background-color: theme('colors.slate.900');
+  }
+
+  .media-facade__poster {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0.92;
+    transition: opacity 200ms ease-out;
+  }
+
+  .media-facade:hover .media-facade__poster,
+  .media-facade:focus-visible .media-facade__poster {
+    opacity: 1;
+  }
+
+  .media-facade__play {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    display: flex;
+    width: 4rem;
+    height: 4rem;
+    align-items: center;
+    justify-content: center;
+    border-radius: 9999px;
+    transform: translate(-50%, -50%);
+    color: theme('colors.white');
+    background-color: rgb(15 23 42 / 0.7);
+    box-shadow: 0 8px 24px -8px rgb(2 6 23 / 0.6);
+    transition:
+      transform 200ms ease-out,
+      background-color 200ms ease-out;
+  }
+
+  .media-facade__play > svg {
+    width: 2rem;
+    height: 2rem;
+    margin-left: 0.2rem;
+  }
+
+  .media-facade:hover .media-facade__play,
+  .media-facade:focus-visible .media-facade__play {
+    transform: translate(-50%, -50%) scale(1.06);
+    background-color: rgb(37 99 235 / 0.9);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .media-facade__poster,
+    .media-facade__play {
+      transition: none;
+    }
+
+    .media-facade:hover .media-facade__play {
+      transform: translate(-50%, -50%);
+    }
+  }
+}
+
+@layer components {
   /* The way back to the top of a long document.
 
      A small circle in the corner, glass like the rest of the site's chrome,
