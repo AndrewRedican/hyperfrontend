@@ -1,3 +1,5 @@
+import { ecosystemRank } from './ecosystem'
+
 /**
  * Navigation item for the docs site sidebar.
  */
@@ -43,8 +45,27 @@ export function getNavIconKind(item: NavItem, insidePackage: boolean): NavIconKi
 }
 
 /**
+ * Order package entries the way the library index orders the ecosystem.
+ *
+ * The index is the site's one statement of which package a reader should
+ * meet first, and the navigation is a list of the same packages, so it
+ * reads the same statement rather than keeping an order of its own: the
+ * flagship first, then the messaging layer it runs on, the tooling, the
+ * primitives, the standalone libraries, and the single-purpose utilities.
+ * The index draws that as levels and columns; the navigation flattens it,
+ * level by level and then in each level's own order, which is the order a
+ * reader exploring the packages is best served meeting them in.
+ *
+ * @param items - Package entries in any order
+ * @returns The same entries, flagship first
+ */
+function byEcosystemRank(items: NavItem[]): NavItem[] {
+  return [...items].sort((a, b) => ecosystemRank(a.packageName ?? '') - ecosystemRank(b.packageName ?? ''))
+}
+
+/**
  * Core library navigation items.
- * Listed alphabetically for consistency.
+ * Written alphabetically; presented in ecosystem order by {@link byEcosystemRank}.
  */
 const coreLibraries: NavItem[] = [
   {
@@ -176,7 +197,7 @@ const coreLibraries: NavItem[] = [
 
 /**
  * Supporting library navigation items.
- * Listed alphabetically for consistency.
+ * Written alphabetically; presented in ecosystem order by {@link byEcosystemRank}.
  */
 const supportingLibraries: NavItem[] = [
   { slug: 'logging', packageName: '@hyperfrontend/logging', href: '/docs/libraries/logging' },
@@ -349,7 +370,7 @@ const supportingLibraries: NavItem[] = [
 
 /**
  * Utility library navigation items.
- * Listed alphabetically for consistency.
+ * Written alphabetically; presented in ecosystem order by {@link byEcosystemRank}, under their own `Utils` group.
  */
 const utilsLibraries: NavItem[] = [
   { slug: 'data-utils', packageName: '@hyperfrontend/data-utils', href: '/docs/libraries/utils/data' },
@@ -463,10 +484,14 @@ export const docsNavigation: NavItem[] = [
     href: '/docs/guides',
   },
   // why: Libraries is both the ecosystem landing page and the parent of every package subtree, so its label links and its caret expands, the same split the package entries below it already use.
+  // why: the packages are listed in the order the library index presents the ecosystem, flagship first, so the two surfaces cannot drift; the utilities keep their own group, ordered by the same rule inside it, because a reader looks for a utility by knowing it is one.
   {
     slug: 'Libraries',
     href: '/docs/libraries',
-    children: [...coreLibraries, ...supportingLibraries, { slug: 'Utils', children: utilsLibraries }],
+    children: [
+      ...byEcosystemRank([...coreLibraries, ...supportingLibraries]),
+      { slug: 'Utils', children: byEcosystemRank(utilsLibraries) },
+    ],
   },
   {
     slug: 'Articles',
