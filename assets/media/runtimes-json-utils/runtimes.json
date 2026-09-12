@@ -1,0 +1,53 @@
+{
+  "slug": "runtimes-json-utils",
+  "asset": "runtimes.png",
+  "generatedAt": "2026-09-12T21:32:52.928Z",
+  "sceneHash": "b00241c4befe0071",
+  "sourceUrl": "stage:matrix",
+  "profile": {
+    "id": "runtimes",
+    "intent": "the compatibility section of a package readme, at the width npm and GitHub render it",
+    "width": 640,
+    "height": 150,
+    "scale": 2,
+    "fps": 1
+  },
+  "viewport": {
+    "width": 640,
+    "height": 150
+  },
+  "record": {
+    "settleMs": 0,
+    "durationMs": 0
+  },
+  "startMs": 0,
+  "stills": [
+    {
+      "asset": "runtimes.png",
+      "bytes": 13776,
+      "maxBytes": 60000
+    }
+  ],
+  "variants": [
+    {
+      "theme": "portable",
+      "stills": [
+        {
+          "asset": "runtimes.png",
+          "bytes": 13776,
+          "maxBytes": 60000
+        }
+      ]
+    }
+  ],
+  "browser": {
+    "name": "chromium",
+    "version": "149.0.7827.55"
+  },
+  "determinism": {},
+  "console": {
+    "errors": 0,
+    "warnings": 0,
+    "pageErrors": 0
+  }
+}
