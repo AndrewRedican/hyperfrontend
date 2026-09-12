@@ -49,19 +49,19 @@ Isomorphic string encoding utilities with unified APIs for browser and Node.js e
 
 ## What is @hyperfrontend/string-utils?
 
-`@hyperfrontend/string-utils` provides a consistent, cross-platform API for encoding operations that typically differ between browser and Node.js environments. The library specializes in UTF-8 and base64 conversions, offering identical function signatures across platforms while optimizing each implementation for its native environment.
+[`@hyperfrontend/string-utils`](https://www.hyperfrontend.dev/docs/libraries/utils/string/) provides a consistent, cross-platform API for encoding operations that typically differ between browser and Node.js environments. The library specializes in UTF-8 and base64 conversions, offering identical function signatures across platforms while optimizing each implementation for its native environment.
 
-Rather than wrapping platform differences behind abstraction layers, the library exposes **platform-specific entry points** (`/browser` and `/node`) that deliver optimal performance by leveraging `TextEncoder`/`atob`/`btoa` in browsers and `Buffer` in Node.js. This design eliminates runtime environment detection overhead while ensuring tree-shaking efficiency.
+Rather than wrapping platform differences behind abstraction layers, the library exposes **platform-specific entry points** ([`/browser`](https://www.hyperfrontend.dev/docs/libraries/utils/string/browser/) and [`/node`](https://www.hyperfrontend.dev/docs/libraries/utils/string/node/)) that deliver optimal performance by leveraging `TextEncoder`/`atob`/`btoa` in browsers and `Buffer` in Node.js. This design eliminates runtime environment detection overhead while ensuring tree-shaking efficiency.
 
 ### Key Features
 
 - **Unified cross-platform API** - Identical function signatures for browser and Node.js with platform-optimized implementations
 - **Zero dependencies** - Self-contained encoding operations with no external dependencies
-- **URL-safe base64 support** - Built-in handling of URL-safe encoding with configurable padding removal
-- **Binary data conversions** - Seamless transforms between UTF-8 strings, Uint8Arrays, ArrayBuffers, and base64
+- **[URL-safe base64 support](https://www.hyperfrontend.dev/docs/guides/base64-for-unicode-and-urls/)** - Built-in handling of URL-safe encoding with configurable padding removal
+- **[Binary data conversions](https://www.hyperfrontend.dev/docs/libraries/utils/string/#api-utf8StringToUint8Array)** - Seamless transforms between UTF-8 strings, Uint8Arrays, ArrayBuffers, and base64
 - **Security-hardened** - ReDoS-resistant implementations without regex-based string operations
 - **TypeScript native** - Full type safety with comprehensive JSDoc documentation
-- **Modular entry points** - Import only browser or Node.js implementations for optimal bundle sizes
+- **[Modular entry points](https://www.hyperfrontend.dev/docs/libraries/utils/string/browser/)** - Import only browser or Node.js implementations for optimal bundle sizes
 
 ## Why Use @hyperfrontend/string-utils?
 
@@ -73,7 +73,7 @@ String encoding operations differ significantly between browsers and Node.js. Br
 
 ### 2. Required Foundation for @hyperfrontend/cryptography
 
-All cryptographic operations in `@hyperfrontend/cryptography` depend on these encoding utilities for converting between text strings and binary data. The library provides the UTF-8 ↔ Uint8Array conversions essential for encryption/decryption workflows, ensuring consistent encoding behavior across Web Crypto API (browser) and Node.js crypto implementations.
+All cryptographic operations in [`@hyperfrontend/cryptography`](https://www.hyperfrontend.dev/docs/libraries/cryptography/) depend on these encoding utilities for converting between text strings and binary data. The library provides the UTF-8 ↔ Uint8Array conversions essential for encryption/decryption workflows, ensuring consistent encoding behavior across Web Crypto API (browser) and Node.js crypto implementations.
 
 ### 3. URL-Safe Base64 Without Manual Character Replacement
 
@@ -85,7 +85,7 @@ String manipulation with regular expressions can expose applications to ReDoS (R
 
 ### 5. Optimal Tree-Shaking Through Modular Exports
 
-By exposing separate `/browser` and `/node` entry points rather than auto-detecting environments at runtime, the library enables bundlers to eliminate unused code automatically. Frontend builds only include browser implementations, and backend builds only include Node.js implementations: no dead code, no runtime checks.
+By exposing separate [`/browser`](https://www.hyperfrontend.dev/docs/libraries/utils/string/browser/) and [`/node`](https://www.hyperfrontend.dev/docs/libraries/utils/string/node/) entry points rather than auto-detecting environments at runtime, the library enables bundlers to eliminate unused code automatically. Frontend builds only include browser implementations, and backend builds only include Node.js implementations: no dead code, no runtime checks.
 
 ## Installation
 
@@ -129,19 +129,19 @@ const bytes = utf8StringToUint8Array('こんにちは')
 
 ## API Overview
 
-One API surface, two ways in. `@hyperfrontend/string-utils/browser` and `@hyperfrontend/string-utils/node` export the same seven functions under the same names, with
+One API surface, two ways in. [`@hyperfrontend/string-utils/browser`](https://www.hyperfrontend.dev/docs/libraries/utils/string/browser/) and [`@hyperfrontend/string-utils/node`](https://www.hyperfrontend.dev/docs/libraries/utils/string/node/) export the same seven functions under the same names, with
 the same signatures, producing byte-identical output; which one you import is a question about where your code runs, not about what you need. The split is there so that
 `TextEncoder`/`btoa` stays on one side and `Buffer` on the other: a bundler ships exactly one implementation and nothing has to sniff the environment at runtime. The
 identifiers below link to the browser entry point, and the node page documents the same seven.
 
 Two of them cover most uses. [`toBase64`](https://www.hyperfrontend.dev/docs/libraries/utils/string/browser/#api-toBase64) takes a UTF-8 string and returns base64;
 [`fromBase64`](https://www.hyperfrontend.dev/docs/libraries/utils/string/browser/#api-fromBase64) takes base64 back to a string, accepting standard and URL-safe spellings
-without being told which. The options live on the encoding side, as `toBase64(text, urlSafe = false, keepPadding = false)`: `urlSafe` maps `+` to `-` and `/` to `_`, and
-`keepPadding` is read only inside that branch, so standard base64 always keeps its `=`. This pair is why the package exists at all: `btoa` is a Latin-1 API and `toBase64`
+without being told which. The options live on the encoding side, as `toBase64(text, urlSafe = false, keepPadding = false)`: [`urlSafe`](https://www.hyperfrontend.dev/docs/libraries/utils/string/#api-toBase64) maps `+` to `-` and `/` to `_`, and
+[`keepPadding`](https://www.hyperfrontend.dev/docs/libraries/utils/string/#api-toBase64) is read only inside that branch, so standard base64 always keeps its `=`. This pair is why the package exists at all: `btoa` is a Latin-1 API and [`toBase64`](https://www.hyperfrontend.dev/docs/libraries/utils/string/#api-toBase64)
 encodes UTF-8 first, so `'café'` round-trips instead of returning `Y2Fm6Q==`.
 
 The other five are for when the payload is bytes rather than text. [`utf8StringToUint8Array`](https://www.hyperfrontend.dev/docs/libraries/utils/string/browser/#api-utf8StringToUint8Array)
-and `uint8ArrayToUtf8String` are the text-to-bytes pair that `@hyperfrontend/cryptography` is built on;
+and [`uint8ArrayToUtf8String`](https://www.hyperfrontend.dev/docs/libraries/utils/string/#api-uint8ArrayToUtf8String) are the text-to-bytes pair that [`@hyperfrontend/cryptography`](https://www.hyperfrontend.dev/docs/libraries/cryptography/) is built on;
 [`uint8ArrayToBase64`](https://www.hyperfrontend.dev/docs/libraries/utils/string/browser/#api-uint8ArrayToBase64) and
 [`base64ToUint8Array`](https://www.hyperfrontend.dev/docs/libraries/utils/string/browser/#api-base64ToUint8Array) are the same base64 hop with a `Uint8Array` on the near
 side, the encoder taking the same two flags; and [`arrayBufferToUtf8String`](https://www.hyperfrontend.dev/docs/libraries/utils/string/browser/#api-arrayBufferToUtf8String) decodes
@@ -183,7 +183,7 @@ Every signature, parameter and default is in the API reference for
 </script>
 ```
 
-**Global variable:** `HyperfrontendStringUtils`
+**Global variable:** [`HyperfrontendStringUtils`](https://www.hyperfrontend.dev/docs/libraries/utils/string/browser/)
 
 ### Dependencies
 
