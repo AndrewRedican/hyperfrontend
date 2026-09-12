@@ -45,8 +45,11 @@ apps/docs-site/
 │   ├── api/                 # TypeDoc JSON for each library
 │   ├── docs/                # Extracted README.md and ARCHITECTURE.md
 │   └── manifest.json        # Library metadata and generation status
+├── data/
+│   └── npm-downloads/       # Committed daily npm download history (NDJSON per package)
 ├── scripts/
 │   ├── generate-docs.ts     # Content generation pipeline
+│   ├── refresh-npm-downloads.ts  # Refreshes data/npm-downloads from npm, on demand
 │   └── validate-links.ts    # Build-time link validation
 ├── src/
 │   ├── app/                 # Next.js App Router pages
