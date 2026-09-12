@@ -2840,6 +2840,31 @@
 }
 
 @layer components {
+  /* A code span that is a link.
+
+     Package prose links the names it mentions to their reference, so most
+     code spans in a README are links, and a link a reader cannot tell from
+     the span beside it is a link nobody follows. The span keeps its chip, and
+     takes the link colour its typography would otherwise paint over, so the
+     names that lead somewhere read as the navigation they are. */
+  .readme-content .prose a > code,
+  .key-features a > code {
+    color: theme('colors.primary.700');
+  }
+
+  .dark .readme-content .prose a > code,
+  .dark .key-features a > code {
+    color: theme('colors.primary.300');
+  }
+
+  .readme-content .prose a:hover > code,
+  .key-features a:hover > code {
+    text-decoration: underline;
+    text-underline-offset: 0.15em;
+  }
+}
+
+@layer components {
   /* A demo's card while its live session is still connecting.
 
      The card holds a real photograph of the demo it is about to show, taken
