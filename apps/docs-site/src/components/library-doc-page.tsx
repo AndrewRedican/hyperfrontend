@@ -18,6 +18,7 @@ import { changelogPathFor, changelogRouteFor } from '@/lib/changelog'
 import { removeBadges, transformLinks } from '@/lib/content'
 import { getLibraryReadme, getLibraryApi, getApiLinkIndex } from '@/lib/docs-loader'
 import { documentSubject } from '@/lib/document-model'
+import { getPackageDownloads } from '@/lib/downloads'
 import { buildGuidesHref } from '@/lib/guide-filters'
 import { getGuidesForPackage } from '@/lib/guides'
 import { readKeyFeatures } from '@/lib/key-features'
@@ -71,9 +72,10 @@ export async function LibraryDocPage({ title, packageName, slug, category, fallb
 
     const facts = getPackageFacts(packageName) ?? NO_FACTS
     const licenseHref = readSectionLink(processed, 'license')
-    // why: a package withheld from the registry has no releases to list, so the pill is not offered for one
+    // why: a package withheld from the registry has no releases to list and no downloads to count, so neither pill is offered for one
     const changelogHref =
       facts.isPrivate || changelogPathFor(packageName) === null ? null : changelogRouteFor(libraryDocRoute(slug, category))
+    const downloads = facts.isPrivate ? null : (getPackageDownloads(packageName)?.total ?? null)
     const related = buildRelatedReading({ packageName, slug, readme: processed })
 
     // why: the run is drawn only for a section the parser could read, so a README stating its features some other way keeps the rendering it already had
@@ -115,7 +117,13 @@ export async function LibraryDocPage({ title, packageName, slug, category, fallb
             {breakablePackageName(packageTitle ?? packageName)}
           </H1>
 
-          <PackageMetadata packageName={packageName} facts={facts} licenseHref={licenseHref} changelogHref={changelogHref} />
+          <PackageMetadata
+            packageName={packageName}
+            facts={facts}
+            licenseHref={licenseHref}
+            changelogHref={changelogHref}
+            downloads={downloads}
+          />
 
           <div className="mt-6">
             <ReadmeContent

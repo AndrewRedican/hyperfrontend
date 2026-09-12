@@ -1,8 +1,11 @@
 'use client'
 
+import type { EcosystemDownloads } from '@/lib/downloads-route'
 import type { ReactNode, TouchEvent as ReactTouchEvent } from 'react'
 import type { Timer } from '@hyperfrontend/time-utils'
 import { TrackedLink } from '@/components/analytics/tracked-link'
+import { DownloadsMark } from '@/components/package/package-metadata'
+import { buildDownloadsHref, formatCompactCount, formatExactCount } from '@/lib/downloads-route'
 import Link from 'next/link'
 import { Fragment, useCallback, useEffect, useRef, useState } from 'react'
 import { dateNow } from '@hyperfrontend/immutable-api-utils/built-in-copy/date'
@@ -206,7 +209,20 @@ const TRANSITION_DURATION = 300
 /** context: Minimum px distance to register as a swipe gesture */
 const SWIPE_THRESHOLD = 50
 
-export function ValueProposition() {
+/** Props for {@link ValueProposition}. */
+export interface ValuePropositionProps {
+  /** The ecosystem's tracked npm downloads, or null before any have been collected */
+  downloads: EcosystemDownloads | null
+}
+
+/**
+ * The landing page's pitch: the rotating narrative, the install command, the
+ * primary links, and the badge row that closes it.
+ * @param props - See {@link ValuePropositionProps}.
+ * @param props.downloads - The ecosystem's tracked npm downloads
+ * @returns The value proposition column.
+ */
+export function ValueProposition({ downloads }: ValuePropositionProps) {
   const [currentSet, setCurrentSet] = useState(0)
   const [isTransitioning, setIsTransitioning] = useState(false)
   const [isPaused, setIsPaused] = useState(false)
@@ -474,6 +490,18 @@ export function ValueProposition() {
           <StarIcon className="h-3.5 w-3.5 text-amber-500" />
           Star on GitHub
         </TrackedLink>
+        {/* why: the ecosystem's one metadata fact sits beside the star it earns, as a badge of the same cut, and reads the exact figure on hover */}
+        {downloads !== null ? (
+          <Link
+            href={buildDownloadsHref()}
+            title={downloadsLabel(downloads)}
+            aria-label={downloadsLabel(downloads)}
+            className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 transition-colors hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+          >
+            <DownloadsMark className="h-3.5 w-3.5 text-teal-600 dark:text-teal-400" />
+            <span className="font-mono">{formatCompactCount(downloads.total)}</span> downloads
+          </Link>
+        ) : null}
         <a
           href="https://github.com/sponsors/AndrewRedican"
           target="_blank"
@@ -486,6 +514,16 @@ export function ValueProposition() {
       </div>
     </div>
   )
+}
+
+/**
+ * What the downloads badge says on hover and to a screen reader: where it
+ * leads, then the exact figure the compact count on its face rounds.
+ * @param downloads - The ecosystem's tracked npm downloads
+ * @returns The badge's label
+ */
+function downloadsLabel(downloads: EcosystemDownloads): string {
+  return `See download breakdown: ${formatExactCount(downloads.total)} npm downloads across ${downloads.packages} published packages`
 }
 
 function InstallCommand() {

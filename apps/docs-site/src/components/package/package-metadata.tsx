@@ -1,5 +1,6 @@
 import type { PackageFacts } from '@/lib/package-facts'
 import { MetadataPill } from '@/components/package/metadata-pill'
+import { buildDownloadsHref, formatCompactCount, formatExactCount } from '@/lib/downloads-route'
 import { npmVersionUrl } from '@/lib/npm-url'
 import { globalIsNaN, parseInt as parseInteger } from '@hyperfrontend/immutable-api-utils/built-in-copy/number'
 
@@ -13,6 +14,8 @@ export interface PackageMetadataProps {
   licenseHref: string | null
   /** Route of the package's changelog page, or null for a package without one */
   changelogHref: string | null
+  /** The package's tracked npm downloads, or null when none have been collected */
+  downloads: number | null
 }
 
 /**
@@ -37,11 +40,12 @@ function isStableVersion(version: string): boolean {
  * pill instead of a heading and a paragraph. Given a full-width section each,
  * they would cost more vertical space than the introduction they push down.
  *
- * Three facts, in a fixed order: the version, because it is the first thing a
+ * Four facts, in a fixed order: the version, because it is the first thing a
  * reader installing the package wants to confirm; the changelog, because it
- * is what that version means; and the licence, which is checked once and
- * read last. Every pill is the same height and sits on the same line, and
- * the row wraps as a row when it must.
+ * is what that version means; the downloads, because they say how many
+ * others have made the same choice; and the licence, which is checked once
+ * and read last. Every pill is the same height and sits on the same line,
+ * and the row wraps as a row when it must.
  *
  * The version is blue for a stable release and violet before 1.0: a
  * category, not a warning. A package withheld from the registry has no
@@ -52,9 +56,10 @@ function isStableVersion(version: string): boolean {
  * @param props.facts - What the package states about itself
  * @param props.licenseHref - Where the package's README points its licence
  * @param props.changelogHref - Route of the package's changelog page
+ * @param props.downloads - The package's tracked npm downloads
  * @returns The metadata strip, or nothing when the package states no fact at all.
  */
-export function PackageMetadata({ packageName, facts, licenseHref, changelogHref }: PackageMetadataProps) {
+export function PackageMetadata({ packageName, facts, licenseHref, changelogHref, downloads }: PackageMetadataProps) {
   const npmUrl = npmVersionUrl(facts, packageName)
   const hasLicense = facts.license !== ''
   const hasVersion = facts.version !== '' && !facts.isPrivate
@@ -97,6 +102,20 @@ export function PackageMetadata({ packageName, facts, licenseHref, changelogHref
             icon={<ChangelogMark />}
           >
             Changelog
+          </MetadataPill>
+        </li>
+      )}
+
+      {downloads !== null && (
+        <li>
+          <MetadataPill
+            href={buildDownloadsHref(packageName)}
+            label={`${formatExactCount(downloads)} npm downloads of ${packageName} tracked so far; see the download breakdown`}
+            tone="accent"
+            icon={<DownloadsMark />}
+            mono
+          >
+            {formatCompactCount(downloads)}
           </MetadataPill>
         </li>
       )}
@@ -165,6 +184,41 @@ function ChangelogMark() {
       <circle cx="4.5" cy="6.5" r="1.1" fill="currentColor" stroke="none" />
       <circle cx="4.5" cy="12" r="1.1" fill="currentColor" stroke="none" />
       <circle cx="4.5" cy="17.5" r="1.1" fill="currentColor" stroke="none" />
+    </svg>
+  )
+}
+
+/** Props for {@link DownloadsMark}. */
+export interface DownloadsMarkProps {
+  /** Sizing and colour classes, where the mark is not sized by a pill */
+  className?: string
+}
+
+/**
+ * An arrow into a tray: a download.
+ *
+ * Shared with the ecosystem badge on the landing page, so the same idea is
+ * drawn the same way wherever a download count appears.
+ * @param props - See {@link DownloadsMarkProps}.
+ * @param props.className - Sizing and colour classes
+ * @returns The downloads mark.
+ */
+export function DownloadsMark({ className }: DownloadsMarkProps = {}) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.7}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <path d="M12 4v10.5" />
+      <path d="m7.8 10.5 4.2 4.2 4.2-4.2" />
+      <path d="M4.5 16.5v2.2a1.3 1.3 0 0 0 1.3 1.3h12.4a1.3 1.3 0 0 0 1.3-1.3v-2.2" />
     </svg>
   )
 }

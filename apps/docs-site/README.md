@@ -252,6 +252,30 @@ else, and the page is a reading of it. In the browser the page asks the npm regi
 what it serves as `latest`; when that is newer than the newest release listed, a notice says
 a release has been published that this build does not describe yet.
 
+### npm download history
+
+`/docs/downloads`, the download pills on package pages, and the ecosystem badge on the landing
+page read a committed dataset under `data/npm-downloads/`: one newline-delimited JSON file per
+published package, one line per UTC day, plus a `manifest.json` recording the newest day npm
+had counted and when the dataset was last refreshed. The build never asks npm; it is a
+function of the committed files.
+
+The dataset is refreshed on purpose, not as part of a build:
+
+```bash
+npm run refresh-downloads            # or: npx nx run docs-site:refresh-downloads
+npm run refresh-downloads -- --force # run even when already refreshed today
+```
+
+The collector (`src/lib/npm-downloads/`) asks npm for daily counts in bounded chunks of at
+most 500 days, because a longer span is silently cut to the most recent eighteen months;
+validates every answer against the request before anything is written; runs one request at
+a time with at least a second between them; re-reads the most recent seven days on every
+refresh, since npm counts a day once, soon after the UTC midnight that ends it; and commits
+the whole run transactionally or not at all. A refresh made earlier the same UTC day is
+skipped unless forced, because npm has nothing new to say until the next day is counted.
+Commit the changed files under `data/npm-downloads/` with the refresh.
+
 `public/llms.txt` follows the [llms.txt convention](https://llmstxt.org): an H1, a summary,
 and link sections pointing at the `.md` files. Secondary entry points are left out of it on
 purpose; there are 172 of them, listing them would blow the context budget the convention
