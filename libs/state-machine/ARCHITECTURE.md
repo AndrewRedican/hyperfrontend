@@ -1,6 +1,6 @@
 # Architecture
 
-This document provides a technical deep dive into the `@hyperfrontend/state-machine` library architecture.
+This document provides a technical deep dive into the [`@hyperfrontend/state-machine`](https://www.hyperfrontend.dev/docs/libraries/state-machine/) library architecture.
 
 ## System Overview
 
@@ -415,17 +415,17 @@ abstract class LifecycleAwareComponent {
 
 ## Design Patterns
 
-| Pattern                               | Implementation                                         |
-| ------------------------------------- | ------------------------------------------------------ |
-| **Flux/Redux**                        | Unidirectional data flow with Store, Actions, Reducers |
-| **Observer**                          | Store subscribers, Event handlers, CallStack callbacks |
-| **Factory**                           | `createInitialState()`, `callStack()`                  |
-| **Template Method**                   | `LifecycleAwareComponent` abstract class               |
-| **Facade**                            | `AsyncOperation` wraps Events + Store                  |
-| **Strategy**                          | Handler lookup table in reducer                        |
-| **Decorator**                         | `AsyncOperation` wraps async functions                 |
-| **Sliding Window**                    | `StateChange` tracks previous/current state            |
-| **Functional Core, Imperative Shell** | Pure reducer/selectors, imperative Store/Events        |
+| Pattern                               | Implementation                                                                                                                                                |
+| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Flux/Redux**                        | Unidirectional data flow with Store, Actions, Reducers                                                                                                        |
+| **Observer**                          | Store subscribers, Event handlers, CallStack callbacks                                                                                                        |
+| **Factory**                           | `createInitialState()`, `callStack()`                                                                                                                         |
+| **Template Method**                   | [`LifecycleAwareComponent`](https://www.hyperfrontend.dev/docs/libraries/state-machine/lifecycle-aware-component/#api-LifecycleAwareComponent) abstract class |
+| **Facade**                            | [`AsyncOperation`](https://www.hyperfrontend.dev/docs/libraries/state-machine/async-operation/#api-AsyncOperation) wraps Events + Store                       |
+| **Strategy**                          | Handler lookup table in reducer                                                                                                                               |
+| **Decorator**                         | [`AsyncOperation`](https://www.hyperfrontend.dev/docs/libraries/state-machine/async-operation/#api-AsyncOperation) wraps async functions                      |
+| **Sliding Window**                    | [`StateChange`](https://www.hyperfrontend.dev/docs/libraries/state-machine/state-change/#api-StateChange) tracks previous/current state                       |
+| **Functional Core, Imperative Shell** | Pure reducer/selectors, imperative Store/Events                                                                                                               |
 
 ## Type System
 
