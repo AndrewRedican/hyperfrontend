@@ -17,24 +17,6 @@
 
 ---
 
-## Table of Contents
-
-1. [Architecture Overview](#architecture-overview)
-2. [Design Philosophy](#design-philosophy)
-3. [Module Organization](#module-organization)
-4. [Core Concepts](#core-concepts)
-5. [Protocol Design](#protocol-design)
-6. [Handler Reference](#handler-reference)
-7. [Event System](#event-system)
-8. [Logging System](#logging-system)
-9. [Security Model](#security-model)
-10. [Internal Dependencies](#internal-dependencies)
-11. [Integration Points](#integration-points)
-12. [Public API Surface](#public-api-surface)
-13. [Links](#links)
-
----
-
 ## Architecture Overview
 
 ```mermaid
