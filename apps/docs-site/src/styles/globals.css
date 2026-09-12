@@ -600,6 +600,90 @@
 }
 
 @layer components {
+  /* The metadata pills under a package's title, and the ecosystem's under
+     the library index's.
+
+     One geometry for the whole family, set here rather than per pill, so a
+     version, a changelog link, a download count and a licence can never be
+     four slightly different heights. Two things made them different heights
+     before, and both are fixed at the root. A pill is inline-level inside a
+     list item, so it was placed on the item's baseline, and the version pill
+     is set in the monospace face whose baseline sits a pixel or two lower in
+     the same line box than the sans of the pill beside it: the items are
+     flex containers now, so a pill is placed by its box and not by its text.
+     And the text inside a pill is placed by its font's ascent and descent
+     rather than by its ink, so a mark centred on the line box sat a pixel
+     below the capitals beside it: the label is trimmed to its cap height
+     where the platform can trim, and the mark is centred on the trimmed box.
+     Where it cannot trim, the label falls back to ordinary centring, which
+     is what it always had. */
+  .metadata-strip {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .metadata-strip > li {
+    display: flex;
+    margin: 0;
+  }
+
+  .metadata-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    height: 1.5rem;
+    padding: 0 0.5rem;
+    border-width: 1px;
+    border-style: solid;
+    border-radius: 0.375rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    line-height: 1;
+    letter-spacing: 0.025em;
+    white-space: nowrap;
+    text-decoration: none;
+    transition:
+      border-color 150ms ease-out,
+      background-color 150ms ease-out;
+  }
+
+  .metadata-pill:focus-visible {
+    outline: none;
+  }
+
+  .metadata-pill--mono {
+    font-family: theme('fontFamily.mono');
+    letter-spacing: 0;
+  }
+
+  .metadata-pill__label {
+    display: block;
+    text-box-trim: trim-both;
+    text-box-edge: cap alphabetic;
+    text-box: trim-both cap alphabetic;
+  }
+
+  /* why: a mark is drawn on a 24 unit grid centred top to bottom, and its box is the cap height of the label plus a hair, so the two centres coincide */
+  .metadata-pill__mark {
+    display: block;
+    width: 0.875rem;
+    height: 0.875rem;
+    flex-shrink: 0;
+  }
+
+  .metadata-pill__mark > svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+}
+
+@layer components {
   /* The way back to the top of a long document.
 
      A small circle in the corner, glass like the rest of the site's chrome,
