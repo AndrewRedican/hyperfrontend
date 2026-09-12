@@ -49,16 +49,16 @@ Functional time utilities for async operations, intervals, and time normalizatio
 
 ## What is @hyperfrontend/time-utils?
 
-`@hyperfrontend/time-utils` provides composable, testable utilities for working with time-based operations in JavaScript. The library focuses on enhancing the control and flexibility of standard timing APIs (`setTimeout`, `setInterval`) while adding specialized utilities for async workflows and time window calculations.
+[`@hyperfrontend/time-utils`](https://www.hyperfrontend.dev/docs/libraries/utils/time/) provides composable, testable utilities for working with time-based operations in JavaScript. The library focuses on enhancing the control and flexibility of standard timing APIs (`setTimeout`, `setInterval`) while adding specialized utilities for async workflows and time window calculations.
 
 Unlike the native timing APIs which offer limited lifecycle control, this library wraps them in functional interfaces that support pausing, resuming, resetting, and subscription management. All utilities return immutable objects with frozen APIs, preventing accidental mutation while maintaining predictable behavior.
 
 ### Key Features
 
-- **Controllable timers** - Pause, resume, and reset `setTimeout` operations with tracked remaining time
-- **Multi-subscriber clocks** - Observable interval loops supporting multiple callbacks with unified start/stop control
-- **Promise-based delays** - Async/await compatible `sleep()` utility for sequential code flows
-- **Time window normalization** - Bucket timestamps into fixed intervals (e.g., 5-minute windows for aggregation)
+- **[Controllable timers](https://www.hyperfrontend.dev/docs/libraries/utils/time/#api-createTimer)** - Pause, resume, and reset `setTimeout` operations with tracked remaining time
+- **[Multi-subscriber clocks](https://www.hyperfrontend.dev/docs/libraries/utils/time/#api-createClock)** - Observable interval loops supporting multiple callbacks with unified start/stop control
+- **[Promise-based delays](https://www.hyperfrontend.dev/docs/libraries/utils/time/#api-sleep)** - Async/await compatible `sleep()` utility for sequential code flows
+- **[Time window normalization](https://www.hyperfrontend.dev/docs/libraries/utils/time/#api-normalizeToBaseTimeWindow)** - Bucket timestamps into fixed intervals (e.g., 5-minute windows for aggregation)
 - **Functional cleanup** - All repeating operations return cleanup functions for straightforward teardown
 - **Immutable APIs** - All returned objects are frozen, preventing accidental state modifications
 - **Zero dependencies** - Self-contained timing utilities with no external dependencies
@@ -70,7 +70,7 @@ Unlike the native timing APIs which offer limited lifecycle control, this librar
 
 JavaScript's `setTimeout` and `setInterval` cannot be paused: once started, they either complete or get cancelled. This creates problems for features like user-initiated pauses in games, animations during background tabs, or request throttling. `createTimer()` tracks elapsed time internally, enabling pause/resume without restarting from the beginning or losing progress.
 
-**Example:** A countdown timer in a game needs to pause when the user switches tabs. With `setTimeout`, you'd need to calculate remaining time manually and create a new timeout. With `createTimer`, just call `timer.pause()`.
+**Example:** A countdown timer in a game needs to pause when the user switches tabs. With `setTimeout`, you'd need to calculate remaining time manually and create a new timeout. With [`createTimer`](https://www.hyperfrontend.dev/docs/libraries/utils/time/#api-createTimer), just call `timer.pause()`.
 
 ### 2. Multi-Subscriber Interval Management
 
@@ -207,8 +207,8 @@ interval out to any number of subscribers, so ten widgets on a one-second cadenc
 their own.
 
 Both hand back a frozen object rather than a numeric handle you are expected to hold onto and clear. A [`Timer`](https://www.hyperfrontend.dev/docs/libraries/utils/time/#api-Timer)
-is `pause`, `resume` and `reset`; a [`Clock`](https://www.hyperfrontend.dev/docs/libraries/utils/time/#api-Clock) is `start`, `stop`, `subscribe`, `unsubscribe`
-and a read-only `interval`. One detail worth knowing before your first call: a timer is created idle, so nothing is scheduled until you `resume()` it once.
+is [`pause`](https://www.hyperfrontend.dev/docs/libraries/utils/time/#api-Timer-prop-pause), [`resume`](https://www.hyperfrontend.dev/docs/libraries/utils/time/#api-Timer-prop-resume) and [`reset`](https://www.hyperfrontend.dev/docs/libraries/utils/time/#api-Timer-prop-reset); a [`Clock`](https://www.hyperfrontend.dev/docs/libraries/utils/time/#api-Clock) is [`start`](https://www.hyperfrontend.dev/docs/libraries/utils/time/#api-Clock-prop-start), [`stop`](https://www.hyperfrontend.dev/docs/libraries/utils/time/#api-Clock-prop-stop), [`subscribe`](https://www.hyperfrontend.dev/docs/libraries/utils/time/#api-Clock-prop-subscribe), [`unsubscribe`](https://www.hyperfrontend.dev/docs/libraries/utils/time/#api-Clock-prop-unsubscribe)
+and a read-only [`interval`](https://www.hyperfrontend.dev/docs/libraries/utils/time/#api-Clock-prop-interval). One detail worth knowing before your first call: a timer is created idle, so nothing is scheduled until you `resume()` it once.
 
 The remaining three are single-purpose and take no object at all. [`sleep`](https://www.hyperfrontend.dev/docs/libraries/utils/time/#api-sleep) is a delay you can
 `await` in sequence. [`setIntervalCallback`](https://www.hyperfrontend.dev/docs/libraries/utils/time/#api-setIntervalCallback) is a repeating interval for the case
@@ -250,7 +250,7 @@ Every signature, option and return type is in the [API reference](https://www.hy
 </script>
 ```
 
-**Global variable:** `HyperfrontendTimeUtils`
+**Global variable:** [`HyperfrontendTimeUtils`](https://www.hyperfrontend.dev/docs/libraries/utils/time/)
 
 ### Dependencies
 
