@@ -49,16 +49,16 @@ Higher-order function utilities for behavioral modification and composition.
 
 ## What is @hyperfrontend/function-utils?
 
-`@hyperfrontend/function-utils` provides lightweight functional wrappers that modify the execution behavior of functions without changing their signatures. The library focuses on common patterns like single-execution guarantees, conditional execution, error suppression, and no-op placeholders, all implemented as composable higher-order functions.
+[`@hyperfrontend/function-utils`](https://www.hyperfrontend.dev/docs/libraries/utils/function/) provides lightweight functional wrappers that modify the execution behavior of functions without changing their signatures. The library focuses on common patterns like single-execution guarantees, conditional execution, error suppression, and no-op placeholders, all implemented as composable higher-order functions.
 
 Each utility maintains the original function's type signature through generic constraints, ensuring type safety while adding behavioral modifications. The implementations use closure-based state management to track execution context (like memoized results or call counts) without external dependencies or complex class hierarchies.
 
 ### Key Features
 
-- **Run-once enforcement** - Memoize first result and prevent subsequent executions (lazy initialization, singleton setup)
-- **Conditional execution** - Guard function calls behind runtime predicates without inline conditionals
-- **Error suppression** - Silent exception handling for void functions where failures are acceptable
-- **No-op placeholder** - Type-safe no-operation function for default parameters and optional callbacks
+- **[Run-once enforcement](https://www.hyperfrontend.dev/docs/libraries/utils/function/#api-createRunOnceFunction)** - Memoize first result and prevent subsequent executions (lazy initialization, singleton setup)
+- **[Conditional execution](https://www.hyperfrontend.dev/docs/libraries/utils/function/#api-createConditionalExecutionFunction)** - Guard function calls behind runtime predicates without inline conditionals
+- **[Error suppression](https://www.hyperfrontend.dev/docs/libraries/utils/function/#api-createErrorIgnoringFunction)** - Silent exception handling for void functions where failures are acceptable
+- **[No-op placeholder](https://www.hyperfrontend.dev/docs/libraries/utils/function/#api-noop)** - Type-safe no-operation function for default parameters and optional callbacks
 - **Full type preservation** - Generic constraints maintain original function signatures through transformations
 - **Zero dependencies** - Self-contained higher-order functions with no external dependencies
 - **Minimal overhead** - Simple closure-based implementations with negligible performance impact
@@ -86,11 +86,11 @@ Some operations (analytics tracking, debug logging, experimental features) shoul
 
 ### 4. Foundation for Logger Error Handling
 
-The `@hyperfrontend/logging` library uses `createErrorIgnoringFunction()` and `createConditionalExecutionFunction()` extensively to prevent logging failures from crashing applications and to implement log level filtering. These utilities enable the logger to be resilient and configurable without defensive try-catch blocks throughout the logging implementation.
+The [`@hyperfrontend/logging`](https://www.hyperfrontend.dev/docs/libraries/logging/) library uses `createErrorIgnoringFunction()` and `createConditionalExecutionFunction()` extensively to prevent logging failures from crashing applications and to implement log level filtering. These utilities enable the logger to be resilient and configurable without defensive try-catch blocks throughout the logging implementation.
 
 ### 5. Type-Safe No-Op for Optional Callbacks
 
-Default parameters and optional callback patterns often require placeholder no-op functions. Using `() => {}` loses type information and creates subtle bugs when functions expect specific signatures. The `noop` utility provides a type-safe placeholder that accepts any arguments and returns void, working correctly as a default for any callback pattern.
+Default parameters and optional callback patterns often require placeholder no-op functions. Using `() => {}` loses type information and creates subtle bugs when functions expect specific signatures. The [`noop`](https://www.hyperfrontend.dev/docs/libraries/utils/function/#api-noop) utility provides a type-safe placeholder that accepts any arguments and returns void, working correctly as a default for any callback pattern.
 
 ## Installation
 
@@ -263,7 +263,7 @@ const result: number = addOnce(2, 3) // Type safe ✓
 </script>
 ```
 
-**Global variable:** `HyperfrontendFunctionUtils`
+**Global variable:** [`HyperfrontendFunctionUtils`](https://www.hyperfrontend.dev/docs/libraries/utils/function/)
 
 ### Dependencies
 
