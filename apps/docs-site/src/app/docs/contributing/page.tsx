@@ -1,12 +1,22 @@
 import type { Metadata } from 'next'
 import { Breadcrumb } from '@/components/breadcrumb'
 import { CodeBlock } from '@/components/code-block'
+import { CyclingCodeBlock } from '@/components/cycling-code-block'
 import { StepMarker } from '@/components/step-marker'
 
 export const metadata: Metadata = {
   title: 'Contributing',
   description: 'Guide to contributing to hyperfrontend: development setup, coding standards, and pull request guidelines.',
 }
+
+/**
+ * The command that serves each shipped demo, in the order the site lists them.
+ *
+ * Every demo project declares a `dev` target that builds the feature and
+ * serves it hosted, so `nx dev <project>` is the one command that runs any
+ * of them; the project names are the ones in each demo's `project.json`.
+ */
+const DEMO_DEV_COMMANDS = ['npx nx dev demo-clock', 'npx nx dev demo-heartbeat', 'npx nx dev demo-koi-pond']
 
 export default function ContributingPage() {
   return (
@@ -118,7 +128,8 @@ export default function ContributingPage() {
           </div>
           <div>
             <h3 className="font-semibold text-slate-900 dark:text-white">Run a specific demo</h3>
-            <CodeBlock code="npx nx serve chess" layout="full" />
+            {/* why: the three shipped demos each serve through the same target, so the block types each project's command in turn rather than naming one and implying it is the only one */}
+            <CyclingCodeBlock commands={DEMO_DEV_COMMANDS} layout="full" />
           </div>
         </div>
       </section>

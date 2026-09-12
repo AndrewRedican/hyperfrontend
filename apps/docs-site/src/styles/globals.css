@@ -429,8 +429,49 @@
   pre.shiki:hover .code-language,
   pre.shiki:focus-within .code-language,
   .group:hover > .code-language,
-  .group:focus-within > .code-language {
+  .group:focus-within > .code-language,
+  .group:hover .cycling-code > .code-language,
+  .group:focus-within .cycling-code > .code-language {
     opacity: 0;
+  }
+
+  /* The cursor at the end of a command being typed in a cycling block.
+
+     A block cursor the width of a character, in the block's own ink, so it
+     reads as a terminal's rather than as a text field's. It blinks while
+     the command holds, on a step so it is either there or not, and holds
+     still for a reader who has asked for less motion: the cursor is then a
+     mark at the end of the line and nothing more. */
+  .code-cursor {
+    display: inline-block;
+    width: 0.55em;
+    height: 1.05em;
+    margin-left: 0.08em;
+    vertical-align: -0.18em;
+    border-radius: 1px;
+    background-color: currentColor;
+    opacity: 0.75;
+    animation: code-cursor-blink 1.1s steps(2, jump-none) infinite;
+  }
+
+  /* why: a terminal's cursor holds solid while keys arrive and blinks once they stop */
+  .cycling-code[data-typing='true'] .code-cursor {
+    animation: none;
+  }
+
+  @keyframes code-cursor-blink {
+    from {
+      opacity: 0.75;
+    }
+    to {
+      opacity: 0;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .code-cursor {
+      animation: none;
+    }
   }
 }
 
