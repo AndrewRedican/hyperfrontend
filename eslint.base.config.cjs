@@ -293,6 +293,8 @@ module.exports = [
       'workspace/require-codeblock-language': 'error',
       // why: documentation is what the rule governs, and every package's markdown is documentation the site renders at a phone's width; an application's own README is not, and each app switches the rule off in its own config
       'workspace/codeblock-line-width': 'error',
+      // why: the rule decides for itself whether a file belongs to a publishable package, so it can be switched on for every markdown file and still touch only package documentation
+      'workspace/lib-inline-code-links': 'error',
     },
   },
   {
@@ -306,6 +308,7 @@ module.exports = [
       'workspace/no-ascii-art-diagrams': 'error',
       'workspace/require-codeblock-language': 'error',
       'workspace/codeblock-line-width': 'error',
+      'workspace/lib-inline-code-links': 'error',
     },
   },
   {
