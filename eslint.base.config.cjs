@@ -291,8 +291,8 @@ module.exports = [
         },
       ],
       'workspace/require-codeblock-language': 'error',
-      // why: a warning rather than an error, so the corpus that predates the rule keeps building while every new wide line is pointed out where it is written
-      'workspace/codeblock-line-width': 'warn',
+      // why: documentation is what the rule governs, and every package's markdown is documentation the site renders at a phone's width; an application's own README is not, and each app switches the rule off in its own config
+      'workspace/codeblock-line-width': 'error',
     },
   },
   {
@@ -305,7 +305,7 @@ module.exports = [
     rules: {
       'workspace/no-ascii-art-diagrams': 'error',
       'workspace/require-codeblock-language': 'error',
-      'workspace/codeblock-line-width': 'warn',
+      'workspace/codeblock-line-width': 'error',
     },
   },
   {

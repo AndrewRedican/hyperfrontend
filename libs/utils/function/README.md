@@ -258,7 +258,8 @@ const result: number = addOnce(2, 3) // Type safe ✓
 <script src="https://cdn.jsdelivr.net/npm/@hyperfrontend/function-utils"></script>
 
 <script>
-  const { createRunOnceFunction, createErrorIgnoringFunction, noop } = HyperfrontendFunctionUtils
+  const { createRunOnceFunction, noop } = HyperfrontendFunctionUtils
+  const { createErrorIgnoringFunction } = HyperfrontendFunctionUtils
 </script>
 ```
 

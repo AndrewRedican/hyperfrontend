@@ -164,10 +164,14 @@ What each of these controls is actually worth, and which parts of an integration
 **From the command line**, scaffold, build, and serve features with the bundled `hf` CLI:
 
 ```bash
-npx @hyperfrontend/features init                # scaffold the hostee glue into an app
-npx @hyperfrontend/features build --protocol v4 # generate + bundle a publishable shell package
-npx @hyperfrontend/features dev                 # serve apps with the debug UI
-npx @hyperfrontend/features serve --root dist   # serve a built site for production
+# scaffold the hostee glue into an app
+npx @hyperfrontend/features init
+# generate and bundle a publishable shell package
+npx @hyperfrontend/features build --protocol v4
+# serve apps with the debug UI
+npx @hyperfrontend/features dev
+# serve a built site for production
+npx @hyperfrontend/features serve --root dist
 ```
 
 `build` requires `--protocol v3` or `--protocol v4`; an explicit `--protocol none` produces an open, unauthenticated shell and builds only together with `--allow-open`.

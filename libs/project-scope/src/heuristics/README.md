@@ -14,7 +14,8 @@ import { detectProjectType } from '@hyperfrontend/project-scope'
 const result = detectProjectType('./my-project')
 console.log(result.type) // 'library' | 'application' | 'e2e' | 'tool' | 'plugin'
 console.log(result.confidence) // 85
-console.log(result.evidence) // [{ factor: 'exports', confidence: 20, description: '...' }]
+console.log(result.evidence)
+// [{ factor: 'exports', confidence: 20, description: '...' }]
 ```
 
 #### Detection Factors

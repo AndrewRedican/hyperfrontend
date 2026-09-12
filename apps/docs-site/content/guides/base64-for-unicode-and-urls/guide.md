@@ -33,7 +33,11 @@ fromBase64('8J+QnyBrb2kg8J+Qnw==') // '🐟 koi 🐟'
 Pass `true` as the second argument. `+` becomes `-`, `/` becomes `_`, and the trailing `=` is dropped:
 
 ```ts
-const state = JSON.stringify({ q: 'koi fish', filters: ['size>3', 'colour=orange'], page: 2 })
+const state = JSON.stringify({
+  q: 'koi fish',
+  filters: ['size>3', 'colour=orange'],
+  page: 2,
+})
 
 toBase64(state)
 // 'eyJxIjoia29pIGZpc2giLCJmaWx0ZXJzIjpbInNpemU+MyIsImNvbG91cj1vcmFuZ2UiXSwicGFnZSI6Mn0='

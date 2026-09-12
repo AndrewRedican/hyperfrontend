@@ -116,12 +116,22 @@ apps/docs-site/src/app/docs/libraries/nexus/page.tsx  ✓
 
 ```typescript
 // navigation.ts — in coreLibraries
-{ slug: 'nexus', packageName: '@hyperfrontend/nexus', href: '/docs/libraries/nexus' }
+{
+  slug: 'nexus',
+  packageName: '@hyperfrontend/nexus',
+  href: '/docs/libraries/nexus',
+}
 ```
 
 ```typescript
 // generate-docs.ts — in LIBRARIES
-{ name: 'Nexus', packageName: '@hyperfrontend/nexus', slug: 'nexus', srcPath: 'libs/nexus', category: 'core' }
+{
+  name: 'Nexus',
+  packageName: '@hyperfrontend/nexus',
+  slug: 'nexus',
+  srcPath: 'libs/nexus',
+  category: 'core',
+}
 
 // generate-docs.ts — in LIBRARY_SLUGS
 nexus: 'nexus',

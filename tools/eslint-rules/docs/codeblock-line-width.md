@@ -37,7 +37,7 @@ Strings and nested brackets are skipped when entries are counted, so a comma ins
 | `maxLineLength` | `number` | `140`   | Rendered columns past which a line's width is taken as deliberate. |
 
 ```js
-'workspace/codeblock-line-width': ['warn', { minLineLength: 80, maxLineLength: 140 }]
+'workspace/codeblock-line-width': ['error', { minLineLength: 80, maxLineLength: 140 }]
 ```
 
 ### Why 80 and 140
@@ -48,7 +48,9 @@ A phone shows about forty-five characters of a code line and a small laptop's do
 
 Past a hundred and forty the corpus holds a handful of lines, every one of them a declaration or a signature the exemptions already cover. The ceiling is there so that a deliberately wide line, a table of output, a minified sample, is never mistaken for a sample that grew.
 
-The rule is configured as a warning: the corpus that predates it keeps building, and every new wide line is pointed out where it is written.
+### Where it applies
+
+The rule is an error wherever markdown is documentation the site renders: every library, tool and plugin README and architecture document, the workspace-root documents the site republishes, and the site's own guides and articles. It is switched off in an application's own config for the application's README, which is an engineering note read on GitHub rather than a document rendered at a phone's width, and for the shipped demos, which are frozen and whose READMEs are the same kind of note.
 
 ## Examples
 
@@ -108,7 +110,7 @@ DEBUG [config] resolving orders.json against /home/you/sync/projects/example/con
 
 ## When Not To Use It
 
-If a document is a transcript or a generated reference whose lines have to keep their exact shape, turn the rule off for that file. Raising `minLineLength` is the better lever for a package whose samples are legitimately denser than the rest.
+If a document is a transcript or a generated reference whose lines have to keep their exact shape, turn the rule off for that file. Raising `minLineLength` is the better lever for a package whose samples are legitimately denser than the rest. An application's README is switched off in that application's own config rather than here, since the base config cannot tell an application from a library by path.
 
 ## Related Rules
 

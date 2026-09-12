@@ -136,7 +136,12 @@ Both conversions return frozen objects.
 Schemas are generated from the message shape, and `schemaHash` is the SHA-256 of the schema's JSON:
 
 ```typescript
-const data = await createData(pid, 1, { type: 'greeting', count: 42, active: true, items: ['a', 'b'] })
+const data = await createData(pid, 1, {
+  type: 'greeting',
+  count: 42,
+  active: true,
+  items: ['a', 'b'],
+})
 
 // data.schema = {
 //   type: 'object',

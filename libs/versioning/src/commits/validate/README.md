@@ -69,7 +69,8 @@ import { validateCommitMessage, conventionalPreset } from '@hyperfrontend/versio
 const result = validateCommitMessage('feat: added login', conventionalPreset)
 
 result.valid // true — `imperative-mood` is a warning, not an error
-result.warnings // [{ level: 'warn', ruleName: 'imperative-mood', message: '...' }]
+result.warnings
+// [{ level: 'warn', ruleName: 'imperative-mood', message: '...' }]
 ```
 
 ### Extend the preset

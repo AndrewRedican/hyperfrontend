@@ -146,7 +146,8 @@ const structuredLogger = createLogger(
 import { createLogger } from '@hyperfrontend/logging'
 import express from 'express'
 
-const logger = createLogger(console.error, console.warn, console.log, console.info, console.debug)
+const { error, warn, log, info, debug } = console
+const logger = createLogger(error, warn, log, info, debug)
 
 // Admin endpoint to control log level
 const app = express()
@@ -186,7 +187,8 @@ test('logs only errors at error level', () => {
 ```typescript
 import { createLogger } from '@hyperfrontend/logging'
 
-const logger = createLogger(console.error, console.warn, console.log, console.info, console.debug)
+const { error, warn, log, info, debug } = console
+const logger = createLogger(error, warn, log, info, debug)
 logger.setLogLevel('debug')
 
 // channel() returns a sub-logger that prepends `[prefix]` to every emission.

@@ -163,7 +163,12 @@ flowchart BT
 
    ```typescript
    // ✅ a fresh channel for a fresh session
-   const next = createChannel('link', { send, receive, protocolProvider, session: nextSession })
+   const next = createChannel('link', {
+     send,
+     receive,
+     protocolProvider,
+     session: nextSession,
+   })
 
    // ❌ feeding a second hello to a keyed session; the outcome is 'rejected'
    channel.acceptHello(anotherHello)
@@ -1049,7 +1054,12 @@ const channelA = createChannel('main-to-iframe', {
   send: (frame) => iframeWindow.postMessage(frame, iframeOrigin, [frame.buffer]),
   receive: (packet) => console.log('A received:', packet.data.message),
   protocolProvider,
-  session: { protocol: 'v4', role: 'initiator', localId: mainId, peerId: iframeId },
+  session: {
+    protocol: 'v4',
+    role: 'initiator',
+    localId: mainId,
+    peerId: iframeId,
+  },
 })
 
 window.addEventListener('message', ({ origin, data }) => {
@@ -1061,7 +1071,12 @@ window.addEventListener('message', ({ origin, data }) => {
 iframeWindow.postMessage(await channelA.hello(), iframeOrigin)
 
 // Send a message; it is sealed as soon as B's hello has keyed the session
-const data = deserializeData(await createData(sessionPid, 1, { action: 'SYNC_STATE', payload: state }))
+const data = deserializeData(
+  await createData(sessionPid, 1, {
+    action: 'SYNC_STATE',
+    payload: state,
+  })
+)
 channelA.send(mainId, iframeId, data)
 ```
 
@@ -1072,7 +1087,12 @@ const channelB = createChannel('iframe-to-main', {
   send: (frame) => window.parent.postMessage(frame, mainOrigin, [frame.buffer]),
   receive: (packet) => console.log('B received:', packet.data.message),
   protocolProvider,
-  session: { protocol: 'v4', role: 'responder', localId: iframeId, peerId: mainId },
+  session: {
+    protocol: 'v4',
+    role: 'responder',
+    localId: iframeId,
+    peerId: mainId,
+  },
 })
 
 window.addEventListener('message', ({ origin, data }) => {

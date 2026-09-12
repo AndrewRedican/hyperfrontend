@@ -141,8 +141,10 @@ Then install the tarball into a directory that knows nothing about the project, 
 ```bash
 mkdir ../bytesize-check && cd ../bytesize-check
 npm install ../bytesize/bytesize-1.0.0.tgz
-node --input-type=module -e "import { formatBytes } from 'bytesize'; console.log(formatBytes(1536))"
-node --input-type=commonjs -e "const { formatBytes } = require('bytesize'); console.log(formatBytes(5368709120))"
+node --input-type=module \
+  -e "import { formatBytes } from 'bytesize'; console.log(formatBytes(1536))"
+node --input-type=commonjs \
+  -e "const { formatBytes } = require('bytesize'); console.log(formatBytes(5368709120))"
 ```
 
 ```text

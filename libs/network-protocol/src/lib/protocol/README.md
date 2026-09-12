@@ -265,7 +265,8 @@ protocolProvider(null, receiveFn, session)
 protocolProvider(sendFn, null, session)
 // Error: 'Cannot create protocol without a valid receive function'
 
-protocolProvider(sendFn, receiveFn, { ...session, protocol: 'v4' }) // on a v3 provider
+// on a v3 provider
+protocolProvider(sendFn, receiveFn, { ...session, protocol: 'v4' })
 // ProtocolError (code 'invalid-session'): "The session was negotiated for 'v4', not 'v3'"
 ```
 

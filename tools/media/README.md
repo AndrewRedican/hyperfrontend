@@ -97,12 +97,24 @@ export default defineBrowserScene({
   asset: 'preview',
   outputs: ['still'],
   viewport: { width: 640, height: 640 },
-  serve: { command: ['npx', 'hf', 'serve', '--root', '{root}', '--port', '{port}'], root: 'dist/apps/my-app' },
+  serve: {
+    command: ['npx', 'hf', 'serve', '--root', '{root}', '--port', '{port}'],
+    root: 'dist/apps/my-app',
+  },
   page: { path: '/' },
   determinism: { clock: { time: '2026-01-01T10:09:30Z', resume: true } },
   ready: { selector: '[data-state="ready"]', timeoutMs: 60_000 },
   record: { settleMs: 2_500, durationMs: 0 },
-  stills: [{ name: 'preview', atMs: 0, format: 'webp', quality: 82, width: 640, maxBytes: 60_000 }],
+  stills: [
+    {
+      name: 'preview',
+      atMs: 0,
+      format: 'webp',
+      quality: 82,
+      width: 640,
+      maxBytes: 60_000,
+    },
+  ],
 })
 ```
 
@@ -192,8 +204,15 @@ config: {
       chrome: true,           // draws the column as a terminal window
       kind: 'result',
       rows: [
-        { text: '  ◯ Playwright', atMs: 1_200, untilMs: 2_400 },   // leaves again, for a surface that repaints
-        { text: 'Uint8Array(58)', atMs: 2_400, marker: '›', emphasis: true, tone: 'accent' },
+        // leaves again, for a surface that repaints
+        { text: '  ◯ Playwright', atMs: 1_200, untilMs: 2_400 },
+        {
+          text: 'Uint8Array(58)',
+          atMs: 2_400,
+          marker: '›',
+          emphasis: true,
+          tone: 'accent',
+        },
       ],
     },
   ],

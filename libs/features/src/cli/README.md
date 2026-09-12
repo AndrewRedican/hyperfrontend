@@ -56,7 +56,12 @@ into the generated shell, which composes only the declared modes:
   "display": {
     "modes": ["embedded", "dialog"],
     "embedded": { "width": 320, "height": 240 }, // optional fixed footprint; omit to fill the container
-    "dialog": { "width": 480, "height": 360, "position": "center", "backdrop": "close" },
+    "dialog": {
+      "width": 480,
+      "height": 360,
+      "position": "center",
+      "backdrop": "close",
+    },
     "closeOnEscape": true,
   },
 }

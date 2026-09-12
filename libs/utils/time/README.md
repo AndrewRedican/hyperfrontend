@@ -167,7 +167,8 @@ async function retryWithDelay(fn, attempts = 3) {
 import { normalizeToBaseTimeWindow } from '@hyperfrontend/time-utils'
 
 // Group metrics into 5-minute windows
-const events = [new Date('2024-01-17T10:03:45Z'), new Date('2024-01-17T10:07:22Z'), new Date('2024-01-17T10:12:03Z')]
+const times = ['10:03:45', '10:07:22', '10:12:03']
+const events = times.map((time) => new Date(`2024-01-17T${time}Z`))
 
 const buckets = new Map()
 events.forEach((timestamp) => {

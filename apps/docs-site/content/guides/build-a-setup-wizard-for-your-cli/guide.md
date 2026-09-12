@@ -82,7 +82,11 @@ const runtime = await ask(
     message: 'Runtime:',
     choices: [
       { label: 'node', value: 'node', hint: 'long-running process' },
-      { label: 'edge', value: 'edge', hint: 'no filesystem, no native modules' },
+      {
+        label: 'edge',
+        value: 'edge',
+        hint: 'no filesystem, no native modules',
+      },
     ],
   })
 )

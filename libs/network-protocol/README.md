@@ -76,7 +76,12 @@ const channel = createChannel('worker-bridge', {
   send: (frame) => worker.postMessage(frame, [frame.buffer]), // your transport, outbound
   receive: (packet) => render(packet.origin, packet.data.message), // opened, validated, in order
   protocolProvider: createProtocol(logger),
-  session: { protocol: 'v3', role: 'initiator', localId: pageId, peerId: workerId },
+  session: {
+    protocol: 'v3',
+    role: 'initiator',
+    localId: pageId,
+    peerId: workerId,
+  },
 })
 
 worker.addEventListener('message', ({ data }) => {
@@ -87,7 +92,8 @@ worker.addEventListener('message', ({ data }) => {
 worker.postMessage(await channel.hello()) // this side's public material, in the clear by design
 
 // pid is a UUID v4 naming the conversation, 1 is the step number within it
-const data = deserializeData(await createData(crypto.randomUUID(), 1, { type: 'PING' }))
+const pid = crypto.randomUUID()
+const data = deserializeData(await createData(pid, 1, { type: 'PING' }))
 channel.send(pageId, workerId, data) // waits inside the seal stage until the worker's hello has arrived
 ```
 
@@ -169,7 +175,12 @@ const channel = createChannel('window-link', {
   send: (frame) => guest.postMessage(frame, guestOrigin, [frame.buffer]),
   receive: (packet) => console.log('from', packet.origin, packet.data.message),
   protocolProvider: createProtocol(logger, sharedKey),
-  session: { protocol: 'v4', role: 'initiator', localId: hostId, peerId: guestId },
+  session: {
+    protocol: 'v4',
+    role: 'initiator',
+    localId: hostId,
+    peerId: guestId,
+  },
 })
 
 window.addEventListener('message', ({ origin, data }) => {
@@ -211,7 +222,12 @@ window.addEventListener('message', ({ origin, data }) => {
       send: (frame) => window.parent.postMessage(frame, hostOrigin, [frame.buffer]),
       receive: (packet) => console.log('from', packet.origin, packet.data.message),
       protocolProvider: createProtocol(logger, sharedKey),
-      session: { protocol: 'v4', role: 'responder', localId: guestId, peerId: hostId },
+      session: {
+        protocol: 'v4',
+        role: 'responder',
+        localId: guestId,
+        peerId: hostId,
+      },
     })
     channel.hello().then((hello) => window.parent.postMessage(hello, hostOrigin))
     return
@@ -243,13 +259,23 @@ const channel = createChannel('thread-link', {
   send: (frame) => worker.postMessage(frame, [frame.buffer]),
   receive: (packet) => handle(packet.data.message),
   protocolProvider: createProtocol(logger),
-  session: { protocol: 'v3', role: 'initiator', localId: mainId, peerId: workerId },
+  session: {
+    protocol: 'v3',
+    role: 'initiator',
+    localId: mainId,
+    peerId: workerId,
+  },
 })
 
 worker.on('message', (frame: Uint8Array) => (channel.isHello(frame) ? channel.acceptHello(frame) : channel.receive(frame)))
 worker.postMessage(await channel.hello())
 
-const data = deserializeData(await createData(randomUUID(), 1, { job: 'resize', file: 'a.png' }))
+const data = deserializeData(
+  await createData(randomUUID(), 1, {
+    job: 'resize',
+    file: 'a.png',
+  })
+)
 channel.send(mainId, workerId, data)
 ```
 
@@ -267,7 +293,12 @@ const channel = createChannel('thread-link', {
   send: (frame) => parentPort.postMessage(frame, [frame.buffer]),
   receive: (packet) => handle(packet.data.message),
   protocolProvider: createProtocol(logger),
-  session: { protocol: 'v3', role: 'responder', localId: workerId, peerId: mainId },
+  session: {
+    protocol: 'v3',
+    role: 'responder',
+    localId: workerId,
+    peerId: mainId,
+  },
 })
 
 parentPort.on('message', (frame: Uint8Array) => (channel.isHello(frame) ? channel.acceptHello(frame) : channel.receive(frame)))
@@ -283,7 +314,13 @@ Nothing is exported from the package root: every import names a subpath, and the
 Two calls get a link running. [`createProtocol`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/browser/v3/#api-createProtocol) takes your logger, and on `/v4` the pre-shared key as well, and hands back a provider. [`createChannel`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/browser/channel/#api-createChannel) takes a label and an options object holding the `send` and `receive` callbacks that reach your transport, that provider, and the session the two ends agreed on.
 
 ```typescript
-const channel = createChannel(label, { send, receive, protocolProvider, session, onDrop })
+const channel = createChannel(label, {
+  send,
+  receive,
+  protocolProvider,
+  session,
+  onDrop,
+})
 // session: { protocol: 'v3' | 'v4', role: 'initiator' | 'responder', localId, peerId }
 ```
 

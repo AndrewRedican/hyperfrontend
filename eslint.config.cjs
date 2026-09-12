@@ -108,6 +108,13 @@ module.exports = [
     },
   },
   {
+    // context: a demo's README is an engineering note read on GitHub, never a document the site renders at a phone's width, and the demos are frozen besides; this only stops an editor resolving this config from asking a shipped demo to refold its samples.
+    files: ['apps/demos/**/*.md'],
+    rules: {
+      'workspace/codeblock-line-width': 'off',
+    },
+  },
+  {
     // context: the features CLI owns the `<hf:feature>` block at the top of a demo's entry module and deliberately imports the feature handle first. Ordering that block by source category moves the import and drops the block's closing marker, so the CLI can no longer find the region it manages.
     files: ['apps/demos/**/src/main.ts', 'apps/demos/**/src/main.tsx'],
     rules: {

@@ -77,7 +77,11 @@ const repo = createRepositoryConfig({
   baseUrl: 'https://github.com/owner/repo',
 })
 
-createCompareUrl({ repository: repo, fromCommit: 'abc1234', toCommit: 'def5678' })
+createCompareUrl({
+  repository: repo,
+  fromCommit: 'abc1234',
+  toCommit: 'def5678',
+})
 // → 'https://github.com/owner/repo/compare/abc1234...def5678'
 ```
 

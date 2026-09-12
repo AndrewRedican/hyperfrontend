@@ -11,7 +11,10 @@ A `Data<T>` is the envelope that wraps every application message inside a packet
 ```typescript
 import { createData, deserializeData } from '@hyperfrontend/network-protocol/browser/data'
 
-const serialized = await createData(pid, 1, { type: 'greeting', content: 'hello' })
+const serialized = await createData(pid, 1, {
+  type: 'greeting',
+  content: 'hello',
+})
 const data = deserializeData(serialized)
 
 channel.send(localId, peerId, data)

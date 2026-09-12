@@ -132,7 +132,8 @@ lockedProps(config, [
 ])
 
 config.apiKey = 'hacked' // Silent fail in non-strict mode, throws in strict mode
-Object.defineProperty(config, 'apiKey', { writable: true }) // Throws: cannot redefine
+// Throws: cannot redefine
+Object.defineProperty(config, 'apiKey', { writable: true })
 
 // Low-level descriptor creation
 const obj = {}
@@ -202,7 +203,8 @@ Secondary entrypoints (`built-in-copy/*`) are individually tree-shakeable: impor
 <script src="https://cdn.jsdelivr.net/npm/@hyperfrontend/immutable-api-utils"></script>
 
 <script>
-  const { locked, lockedProps, lockedPropertyDescriptors } = HyperfrontendImmutableApiUtils
+  const { locked, lockedProps } = HyperfrontendImmutableApiUtils
+  const { lockedPropertyDescriptors } = HyperfrontendImmutableApiUtils
 </script>
 ```
 

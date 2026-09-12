@@ -133,10 +133,12 @@ const unsubscribe = store.subscribe((state, action) => {
 
 // Dispatch actions
 store.dispatch(start())
-console.log(store.getState()) // { inProgress: true, success: false, fail: false, halt: false }
+console.log(store.getState())
+// { inProgress: true, success: false, fail: false, halt: false }
 
 store.dispatch(success())
-console.log(store.getState()) // { inProgress: false, success: true, fail: false, halt: false }
+console.log(store.getState())
+// { inProgress: false, success: true, fail: false, halt: false }
 
 // Cleanup
 unsubscribe()
@@ -284,7 +286,8 @@ Every action, selector, event name, and type is in the [API reference](https://w
 <script src="https://cdn.jsdelivr.net/npm/@hyperfrontend/state-machine"></script>
 
 <script>
-  const { Store, AsyncOperation, start, success, fail } = HyperfrontendStateMachine
+  const { Store, AsyncOperation } = HyperfrontendStateMachine
+  const { start, success, fail } = HyperfrontendStateMachine
 </script>
 ```
 

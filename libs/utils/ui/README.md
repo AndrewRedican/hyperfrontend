@@ -69,7 +69,12 @@ At a glance:
 import { createElement, syncElementDimensions } from '@hyperfrontend/ui-utils/element'
 import { addStylesheet } from '@hyperfrontend/ui-utils/style'
 
-const [, removeStyles] = addStylesheet({ '.hf-hint': { position: 'fixed', opacity: '0', outline: '2px solid #f0f' } }, 'hf-hint')
+const [, removeStyles] = addStylesheet(
+  {
+    '.hf-hint': { position: 'fixed', opacity: '0', outline: '2px solid #f0f' },
+  },
+  'hf-hint'
+)
 
 const hint = createElement('div', { className: 'hf-hint' })
 hint.attachTo(document.body)

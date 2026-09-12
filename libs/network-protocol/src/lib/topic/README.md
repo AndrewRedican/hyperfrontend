@@ -129,7 +129,12 @@ const channelStore = createChannelStore()
 
 topicStore.create('user-events', 'system-events')
 
-const first = channelStore.create('client-1', { send, receive, protocolProvider, session: firstSession })
+const first = channelStore.create('client-1', {
+  send,
+  receive,
+  protocolProvider,
+  session: firstSession,
+})
 
 const router: Router = (channels, topics) => {
   const subscriptions = new WeakMap<Channel, Topic[]>()

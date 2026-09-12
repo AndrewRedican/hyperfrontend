@@ -63,7 +63,12 @@ A feature with intrinsic dimensions can bake fixed `embedWidth`/`embedHeight` in
 **Dialog** is a full-viewport transparent pane layered above your page. The feature draws its dialog box (and any backdrop paint) inside the pane; `dialogWidth`/`dialogHeight` set the inner box (viewport-derived when unset) and `dialogPosition` places it: `center` by default, or any edge/corner (`top-left` … `bottom-right`). The feature detects backdrop clicks and in-frame Escape presses and reports them as a dismiss signal; `dialogBackdrop` decides what the shell does: `close` (default) starts the polite teardown, `event` emits a `dismiss` event for you to handle, `none` ignores it. `closeOnEscape` covers Escape from both documents.
 
 ```ts
-shell.open({ displayMode: DisplayMode.Dialog, dialogWidth: 480, dialogPosition: 'top-center', dialogBackdrop: 'event' })
+shell.open({
+  displayMode: DisplayMode.Dialog,
+  dialogWidth: 480,
+  dialogPosition: 'top-center',
+  dialogBackdrop: 'event',
+})
 shell.on('dismiss', ({ source }) => console.log('backdrop interaction', source))
 ```
 

@@ -201,7 +201,9 @@ tools/package/src/executors/
 async function validateVersionState(options) {
   // 1. Run version flow in dry-run mode
   const flow = createVersionFlow('conventional', { dryRun: true })
-  const result = await executeFlow(flow, projectName, workspaceRoot, { dryRun: true })
+  const result = await executeFlow(flow, projectName, workspaceRoot, {
+    dryRun: true,
+  })
 
   // 2. Read actual state from disk
   const actualVersion = readPackageJson().version

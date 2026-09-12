@@ -104,7 +104,7 @@ await dispatchRollupWorker(descriptor)
 
 ```typescript
 // ✅ Defaults and discovery happen once, up front
-outputPath: config.outputPath ?? join(workspaceRoot, 'dist', projectRelativePath)
+outputPath: config.outputPath ?? join(root, 'dist', projectPath)
 entryPointDiscovery: discoverEntries(config.projectRoot)
 ```
 
@@ -376,7 +376,8 @@ interface BuildResult {
   success: true
   formatCounts: FormatCounts // { esm, cjs, iife, umd }
   formatOutputs: FormatOutputs
-  binOutputs: BinOutput[] // { name, kind: 'cjs' | 'esm' | 'native', outputPath, platform? }
+  // { name, kind: 'cjs' | 'esm' | 'native', outputPath, platform? }
+  binOutputs: BinOutput[]
   durationMs: number
 }
 ```

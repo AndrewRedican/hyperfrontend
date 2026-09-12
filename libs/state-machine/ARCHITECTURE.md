@@ -158,7 +158,11 @@ Pure function with handler lookup table:
 const handlers: Handlers = {
   [ActionTypes.START]: (state) => ({ ...state, inProgress: true }),
   [ActionTypes.PAUSE]: (state) => ({ ...state, halt: true }),
-  [ActionTypes.CANCEL]: (state) => ({ ...state, inProgress: false, halt: true }),
+  [ActionTypes.CANCEL]: (state) => ({
+    ...state,
+    inProgress: false,
+    halt: true,
+  }),
   [ActionTypes.SUCCESS]: (state) => ({
     ...state,
     inProgress: false,
@@ -265,7 +269,8 @@ class Events {
     const onActivated = (selector: StateStatusDeriver, eventName: Event) => {
       if (!isActivated(selector)) return
       this.eventHandlers.forEach(([event, handler]) => {
-        if (event === eventName) handler(event, this.change.current, this.change.previous)
+        if (event !== eventName) return
+        handler(event, this.change.current, this.change.previous)
       })
     }
 

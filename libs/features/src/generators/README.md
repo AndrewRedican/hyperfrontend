@@ -18,5 +18,14 @@ import { createTree } from '@hyperfrontend/project-scope/vfs'
 import { generateShell } from '@hyperfrontend/features/generators'
 
 const tree = createTree('/tmp/clock-shell')
-generateShell({ name: 'clock', version: '1.0.0', contract: './clock.contract.json', url: '/clock' }, contract, tree)
+generateShell(
+  {
+    name: 'clock',
+    version: '1.0.0',
+    contract: './clock.contract.json',
+    url: '/clock',
+  },
+  contract,
+  tree
+)
 ```

@@ -108,7 +108,12 @@ const channel = createChannel('app-to-widget', {
   send: (frame) => widget.postMessage(frame, widgetOrigin, [frame.buffer]),
   receive: (packet) => handle(packet.data.message),
   protocolProvider: createProtocol(logger, CHECKOUT_CHANNEL_KEY),
-  session: { protocol: 'v4', role: 'initiator', localId: appId, peerId: widgetId },
+  session: {
+    protocol: 'v4',
+    role: 'initiator',
+    localId: appId,
+    peerId: widgetId,
+  },
   onDrop: (drop) => report(drop.reason, drop.cause),
 })
 
