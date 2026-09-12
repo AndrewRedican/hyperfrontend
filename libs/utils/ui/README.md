@@ -54,12 +54,12 @@ Sometimes a framework is not on the table. You are writing an embed that drops i
 
 The parts worth the install:
 
-- `createElement` gives you the node plus attach, detach, show, and hide, with an opacity transition when you pass a duration.
-- `addStylesheet` injects real CSS and hands back the function that removes it, so your rules leave when your widget does.
-- `syncElementDimensions` pins an overlay to an element you do not control and keeps it there through resizes.
-- `getElementAsync` polls for a node that has not rendered yet and returns a cancel function.
-- `createGestureListener` covers Escape and pinch-out with one cleanup.
-- `setupAudio` waits for the click or touch that browsers require before an `AudioContext` will start.
+- [`createElement`](https://www.hyperfrontend.dev/docs/libraries/utils/ui/element/#api-createElement) gives you the node plus attach, detach, show, and hide, with an opacity transition when you pass a duration.
+- [`addStylesheet`](https://www.hyperfrontend.dev/docs/libraries/utils/ui/style/#api-addStylesheet) injects real CSS and hands back the function that removes it, so your rules leave when your widget does.
+- [`syncElementDimensions`](https://www.hyperfrontend.dev/docs/libraries/utils/ui/element/#api-syncElementDimensions) pins an overlay to an element you do not control and keeps it there through resizes.
+- [`getElementAsync`](https://www.hyperfrontend.dev/docs/libraries/utils/ui/element/#api-getElementAsync) polls for a node that has not rendered yet and returns a cancel function.
+- [`createGestureListener`](https://www.hyperfrontend.dev/docs/libraries/utils/ui/event/#api-createGestureListener) covers Escape and pinch-out with one cleanup.
+- [`setupAudio`](https://www.hyperfrontend.dev/docs/libraries/utils/ui/audio/#api-setupAudio) waits for the click or touch that browsers require before an `AudioContext` will start.
 
 Anything that attaches something gives you back the function that detaches it.
 
@@ -92,18 +92,18 @@ removeStyles()
 ### Key Features
 
 - **Modular secondary entry points** for importing one corner of the package at a time
-- **Elements with a lifecycle** - attach, detach, show, hide, and a live `ref`, all on the object `createElement` returns
-- **Runtime stylesheets** - inject rules from a CSS string or a style map, label them, and get the remover back
-- **CSS selector builder** - chainable `id`, `class`, `attribute`, `nth`, `childOf`, and pseudo-class methods with validation
-- **Color conversion** - hex and RGB in both directions, with alpha, plus scaled variations of a base color
-- **Gestures** - Escape key and pinch-out behind one listener with one cleanup
-- **Element tracking** - `ResizeObserver` and dimension syncing that stop when you call what they returned
-- **Mobile device detection** via user agent parsing
-- **Audio unlock** - resolves an `AudioContext` after the click or touch browsers insist on
+- **[Elements with a lifecycle](https://www.hyperfrontend.dev/docs/libraries/utils/ui/element/)** - attach, detach, show, hide, and a live [`ref`](https://www.hyperfrontend.dev/docs/libraries/utils/ui/element/#api-ElementMethods), all on the object [`createElement`](https://www.hyperfrontend.dev/docs/libraries/utils/ui/element/#api-createElement) returns
+- **[Runtime stylesheets](https://www.hyperfrontend.dev/docs/libraries/utils/ui/style/)** - inject rules from a CSS string or a style map, label them, and get the remover back
+- **[CSS selector builder](https://www.hyperfrontend.dev/docs/libraries/utils/ui/selector/)** - chainable [`id`](https://www.hyperfrontend.dev/docs/libraries/utils/ui/selector/#api-CssSelector-prop-id), `class`, [`attribute`](https://www.hyperfrontend.dev/docs/libraries/utils/ui/selector/#api-CssSelector-prop-attribute), [`nth`](https://www.hyperfrontend.dev/docs/libraries/utils/ui/selector/#api-CssSelector-prop-nth), [`childOf`](https://www.hyperfrontend.dev/docs/libraries/utils/ui/selector/#api-CssSelector-prop-childOf), and pseudo-class methods with validation
+- **[Color conversion](https://www.hyperfrontend.dev/docs/libraries/utils/ui/color/)** - hex and RGB in both directions, with alpha, plus scaled variations of a base color
+- **[Gestures](https://www.hyperfrontend.dev/docs/libraries/utils/ui/event/)** - Escape key and pinch-out behind one listener with one cleanup
+- **[Element tracking](https://www.hyperfrontend.dev/docs/libraries/utils/ui/element/#api-onElementResize)** - `ResizeObserver` and dimension syncing that stop when you call what they returned
+- **[Mobile device detection](https://www.hyperfrontend.dev/docs/libraries/utils/ui/mobile/)** via user agent parsing
+- **[Audio unlock](https://www.hyperfrontend.dev/docs/libraries/utils/ui/audio/)** - resolves an `AudioContext` after the click or touch browsers insist on
 
 ### Architecture Highlights
 
-Each capability sits behind its own secondary entry point (`/element`, `/style`, `/selector`, `/color`, `/event`, `/audio`, `/mobile`, `/time`, `/misc`, `/component`), so importing one never drags in the rest. Everything is built on plain browser APIs (`ResizeObserver`, touch events, Web Audio) with no third-party dependencies.
+Each capability sits behind its own secondary entry point ([`/element`](https://www.hyperfrontend.dev/docs/libraries/utils/ui/element/), [`/style`](https://www.hyperfrontend.dev/docs/libraries/utils/ui/style/), [`/selector`](https://www.hyperfrontend.dev/docs/libraries/utils/ui/selector/), [`/color`](https://www.hyperfrontend.dev/docs/libraries/utils/ui/color/), [`/event`](https://www.hyperfrontend.dev/docs/libraries/utils/ui/event/), [`/audio`](https://www.hyperfrontend.dev/docs/libraries/utils/ui/audio/), [`/mobile`](https://www.hyperfrontend.dev/docs/libraries/utils/ui/mobile/), [`/time`](https://www.hyperfrontend.dev/docs/libraries/utils/ui/time/), [`/misc`](https://www.hyperfrontend.dev/docs/libraries/utils/ui/misc/), [`/component`](https://www.hyperfrontend.dev/docs/libraries/utils/ui/component/)), so importing one never drags in the rest. Everything is built on plain browser APIs (`ResizeObserver`, touch events, Web Audio) with no third-party dependencies.
 
 ## Why Use @hyperfrontend/ui-utils?
 
@@ -117,7 +117,7 @@ Overlay code leaks in predictable ways: a stylesheet that outlives the widget it
 
 ### Following elements you do not control
 
-`syncElementDimensions` takes a source and a target, copies width, height, top, left, and position from one to the other, and repeats that on every resize of the source. Both arguments accept a selector, so the source can be a node that has not rendered yet: `getElementAsync` polls for it every 100ms and gives up after 10 seconds by default, and the cleanup function cancels the poll if you gave up first.
+[`syncElementDimensions`](https://www.hyperfrontend.dev/docs/libraries/utils/ui/element/#api-syncElementDimensions) takes a source and a target, copies width, height, top, left, and position from one to the other, and repeats that on every resize of the source. Both arguments accept a selector, so the source can be a node that has not rendered yet: [`getElementAsync`](https://www.hyperfrontend.dev/docs/libraries/utils/ui/element/#api-getElementAsync) polls for it every 100ms and gives up after 10 seconds by default, and the cleanup function cancels the poll if you gave up first.
 
 ### Import one corner, not the package
 
@@ -168,11 +168,11 @@ const cleanup = createGestureListener(() => console.log('Escape or pinch detecte
 
 One rule organises the whole surface: anything that attaches something hands back the function that detaches it. [`addStylesheet`](https://www.hyperfrontend.dev/docs/libraries/utils/ui/style/#api-addStylesheet) returns a tuple of the `<style>` element it injected and the function that removes it; [`onElementResize`](https://www.hyperfrontend.dev/docs/libraries/utils/ui/element/#api-onElementResize) and [`createGestureListener`](https://www.hyperfrontend.dev/docs/libraries/utils/ui/event/#api-createGestureListener) return that remover on its own, one call closing all four listeners in the gesture case. Teardown is a list of functions you are already holding rather than a hunt through the document, which is what the counters above are counting.
 
-The second shape to know is what [`createElement`](https://www.hyperfrontend.dev/docs/libraries/utils/ui/element/#api-createElement) hands back: not the node, but an object around it carrying `attachTo`, `detachFromParent`, `addChild`, `removeChild`, `show`, `hide`, a `visible` flag, and `ref`, the live element for anything the wrapper does not do. `show` and `hide` take an optional duration in milliseconds and transition opacity over it. The tag shorthands (`div`, `button`, `canvas` and twenty-one others) are the same function with the tag already chosen.
+The second shape to know is what [`createElement`](https://www.hyperfrontend.dev/docs/libraries/utils/ui/element/#api-createElement) hands back: not the node, but an object around it carrying [`attachTo`](https://www.hyperfrontend.dev/docs/libraries/utils/ui/element/#api-ElementMethods), [`detachFromParent`](https://www.hyperfrontend.dev/docs/libraries/utils/ui/element/#api-ElementMethods), [`addChild`](https://www.hyperfrontend.dev/docs/libraries/utils/ui/element/#api-ElementMethods), [`removeChild`](https://www.hyperfrontend.dev/docs/libraries/utils/ui/element/#api-ElementMethods), [`show`](https://www.hyperfrontend.dev/docs/libraries/utils/ui/element/#api-ElementMethods), [`hide`](https://www.hyperfrontend.dev/docs/libraries/utils/ui/element/#api-ElementMethods), a [`visible`](https://www.hyperfrontend.dev/docs/libraries/utils/ui/element/#api-ElementMethods) flag, and [`ref`](https://www.hyperfrontend.dev/docs/libraries/utils/ui/element/#api-ElementMethods), the live element for anything the wrapper does not do. [`show`](https://www.hyperfrontend.dev/docs/libraries/utils/ui/element/#api-ElementMethods) and [`hide`](https://www.hyperfrontend.dev/docs/libraries/utils/ui/element/#api-ElementMethods) take an optional duration in milliseconds and transition opacity over it. The tag shorthands (`div`, [`button`](https://www.hyperfrontend.dev/docs/libraries/utils/ui/element/#api-button), `canvas` and twenty-one others) are the same function with the tag already chosen.
 
 Targets are elements or selector strings, interchangeably, and that is what lets [`syncElementDimensions`](https://www.hyperfrontend.dev/docs/libraries/utils/ui/element/#api-syncElementDimensions) pin an overlay to a third-party node before that node exists: underneath, [`getElementAsync`](https://www.hyperfrontend.dev/docs/libraries/utils/ui/element/#api-getElementAsync) polls every 100ms, gives up after 10 seconds, and the cleanup it returns cancels the poll if you gave up first.
 
-Ten secondary entry points sit beside the root one, and they exist for weight rather than filing: importing from `@hyperfrontend/ui-utils/color` costs the color conversions and nothing else, which is what lets any of this into an embed with a few kilobytes to spend. Two are worth naming because their names give nothing away: `/time` is a promise delay and a UTC timestamp formatter, and `/misc` is one function, [`simpleHash`](https://www.hyperfrontend.dev/docs/libraries/utils/ui/misc/#api-simpleHash), which turns a string into six characters (`simpleHash('hello world')` returns `'to5x38'`).
+Ten secondary entry points sit beside the root one, and they exist for weight rather than filing: importing from [`@hyperfrontend/ui-utils/color`](https://www.hyperfrontend.dev/docs/libraries/utils/ui/color/) costs the color conversions and nothing else, which is what lets any of this into an embed with a few kilobytes to spend. Two are worth naming because their names give nothing away: [`/time`](https://www.hyperfrontend.dev/docs/libraries/utils/ui/time/) is a promise delay and a UTC timestamp formatter, and [`/misc`](https://www.hyperfrontend.dev/docs/libraries/utils/ui/misc/) is one function, [`simpleHash`](https://www.hyperfrontend.dev/docs/libraries/utils/ui/misc/#api-simpleHash), which turns a string into six characters (`simpleHash('hello world')` returns `'to5x38'`).
 
 Every export, option and type is in the [API reference](https://www.hyperfrontend.dev/docs/libraries/utils/ui/#api-reference), listed under the entry point it belongs to.
 
@@ -210,7 +210,7 @@ Every export, option and type is in the [API reference](https://www.hyperfronten
 </script>
 ```
 
-**Global variable:** `HyperfrontendUIUtils`
+**Global variable:** [`HyperfrontendUIUtils`](https://www.hyperfrontend.dev/docs/libraries/utils/ui/)
 
 ## Part of hyperfrontend
 
