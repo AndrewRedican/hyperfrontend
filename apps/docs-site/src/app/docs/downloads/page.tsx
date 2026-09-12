@@ -5,7 +5,7 @@ import { H1 } from '@/components/heading-with-anchor'
 import { formatArticleDate } from '@/lib/article-format'
 import { getDownloadsSnapshot } from '@/lib/downloads'
 import { DOWNLOADS_ROUTE, formatExactCount } from '@/lib/downloads-route'
-import { CHUNK_DAYS, MIN_REQUEST_GAP_MS, REVALIDATION_DAYS } from '@/lib/npm-downloads/model'
+import { REVALIDATION_DAYS } from '@/lib/npm-downloads/model'
 import { REPO_URL } from '@/lib/site'
 import Link from 'next/link'
 import { Suspense } from 'react'
@@ -60,68 +60,31 @@ export default function DownloadsPage() {
         <summary className="methodology__summary">How these numbers are calculated</summary>
         <div className="methodology__body">
           <p>
-            Every figure on this page is a sum of daily download counts collected from npm&apos;s public download API, the same counts npm
-            shows on a package&apos;s own page. The collection is done by a small tool in this repository, and the records it collects are
-            committed beside the site, so both the method and the data are open to inspection.
+            Every figure on this page is a sum of daily download counts from npm&apos;s public download statistics, the same counts npm
+            shows on a package&apos;s own page. History is collected one day at a time rather than as a single all-time total, because npm
+            answers a request spanning more than eighteen months by quietly returning only the most recent eighteen; long histories are
+            fetched in bounded ranges instead, and every answer is checked against the package and the days it was asked for before anything
+            is kept.
           </p>
-          <h3>Collection</h3>
-          <ul>
-            <li>
-              Counts are requested one day at a time from npm&apos;s <code>range</code> endpoint rather than as one all-time total, because
-              the API answers a span longer than eighteen months by quietly returning only the most recent eighteen. A long history is
-              therefore fetched in bounded chunks of at most {CHUNK_DAYS} days, and every answer is checked against what was asked for: the
-              package it names, the first and last day it covers, and that every day in between is present exactly once.
-            </li>
-            <li>
-              Requests are made one at a time with a pause of at least {MIN_REQUEST_GAP_MS / 1000} second after each, and a failed request
-              is retried a few times with a growing pause. Nothing is parallelised: the ecosystem is small, and being unhurried costs a
-              minute.
-            </li>
-            <li>
-              A response that is not the documented shape, a span that came back shorter than requested, or a package npm does not know,
-              fails the run outright. Nothing is written unless every package came through cleanly, so a bad answer can never be published
-              as a number.
-            </li>
-          </ul>
-          <h3>Storage</h3>
-          <ul>
-            <li>
-              Each package&apos;s history is one file of newline-delimited JSON, one line per day, committed to the repository. A refresh
-              appends the days npm has counted since the last one and leaves the rest of the file exactly as it was.
-            </li>
-            <li>
-              npm finishes counting a day soon after the UTC midnight that ends it, and a day is not treated as final the moment it appears:
-              the most recent {REVALIDATION_DAYS} days behind npm&apos;s newest counted day are read again on every refresh and corrected if
-              npm&apos;s count moved. Older days are locked and never requested again.
-            </li>
-            <li>
-              A package&apos;s total is the sum of its stored days. The ecosystem total is the sum of every published package&apos;s total.
-              Neither is adjusted for packages that depend on one another, so the figures are raw npm downloads and not unique
-              installations.
-            </li>
-          </ul>
-          <h3>Display</h3>
-          <ul>
-            <li>
-              The site is built from the committed records and never asks npm while building or while being read, so a page is a function of
-              the repository at the commit it was built from.
-            </li>
-            <li>
-              Charts fold the daily records into display buckets chosen from the length of each history: days for a young package, weeks for
-              one a few months old, months for one with years behind it. The buckets are for reading; the stored records stay daily.
-            </li>
-          </ul>
           <p>
-            The collector lives at{' '}
-            <a href={COLLECTOR_URL} target="_blank" rel="noopener noreferrer">
-              apps/docs-site/src/lib/npm-downloads
-            </a>{' '}
-            and the records it has collected at{' '}
+            The daily records are committed to the repository, one file per package, and the site is built from those files without asking
+            npm at build time or while being read. A refresh appends the days npm has counted since the last one, and re-reads the most
+            recent {REVALIDATION_DAYS} days because npm&apos;s latest counts can still settle; older days are never requested again. So a
+            total is reproducible from the records at the commit a page was built from, and anyone can audit both the{' '}
             <a href={DATASET_URL} target="_blank" rel="noopener noreferrer">
-              apps/docs-site/data/npm-downloads
+              data
+            </a>{' '}
+            and the{' '}
+            <a href={COLLECTOR_URL} target="_blank" rel="noopener noreferrer">
+              collector
             </a>
-            . Each package page links here with that package in focus, and the <Link href="/">landing page</Link> carries the ecosystem
-            total.
+            .
+          </p>
+          <p>
+            A package&apos;s total is the sum of its stored days, and the ecosystem total is the sum of every published package&apos;s
+            total; neither is adjusted for packages that depend on one another. Charts fold the daily records into days, weeks or months
+            depending on how long a history is. The buckets are for reading; the stored records stay daily. Each package page links here
+            with that package in focus, and the <Link href="/">landing page</Link> carries the ecosystem total.
           </p>
           <p className="methodology__thanks">
             Thanks to the TanStack team for publishing their research into npm download statistics and laying much of the groundwork for

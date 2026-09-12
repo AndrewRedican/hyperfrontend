@@ -1290,41 +1290,6 @@
     margin-top: 0.875rem;
   }
 
-  .methodology__body h3 {
-    margin-top: 1.25rem;
-    font-size: 0.75rem;
-    font-weight: 600;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: theme('colors.slate.500');
-  }
-
-  .dark .methodology__body h3 {
-    color: theme('colors.slate.400');
-  }
-
-  .methodology__body ul {
-    padding-left: 1.125rem;
-    list-style: disc;
-  }
-
-  .methodology__body li + li {
-    margin-top: 0.5rem;
-  }
-
-  .methodology__body code {
-    border-radius: 0.25rem;
-    background-color: theme('colors.slate.100');
-    padding: 0.0625rem 0.3125rem;
-    font-size: 0.875em;
-    color: theme('colors.slate.700');
-  }
-
-  .dark .methodology__body code {
-    background-color: theme('colors.slate.800');
-    color: theme('colors.slate.300');
-  }
-
   .methodology__body a {
     color: theme('colors.primary.600');
     text-decoration: none;
