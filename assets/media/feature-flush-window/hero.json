@@ -1,12 +1,12 @@
 {
   "slug": "feature-flush-window",
   "asset": "hero.gif",
-  "generatedAt": "2026-09-10T07:57:35.470Z",
-  "sceneHash": "13d0970c5e5e21f9",
-  "sourceUrl": "stage:flow",
+  "generatedAt": "2026-09-12T20:39:52.624Z",
+  "sceneHash": "75cb550fdeed0889",
+  "sourceUrl": "stage:embed",
   "profile": {
     "id": "compact",
-    "intent": "npm package pages, GitHub readmes and documentation read on a phone",
+    "intent": "the width every package readme is displayed at: npm, GitHub and the documentation site alike",
     "width": 640,
     "height": 360,
     "scale": 2,
@@ -18,17 +18,17 @@
   },
   "record": {
     "settleMs": 0,
-    "durationMs": 9700
+    "durationMs": 8400
   },
   "startMs": 0,
   "gif": {
     "width": 640,
-    "fps": 6,
-    "colours": 56,
-    "lossy": 75,
+    "fps": 12,
+    "colours": 128,
+    "lossy": 0,
     "dither": true,
     "loop": 0,
-    "maxBytes": 900000
+    "maxBytes": 1200000
   },
   "encoder": "sharp",
   "toolVersions": [
@@ -37,13 +37,87 @@
       "version": "8.18.6"
     }
   ],
-  "bytes": 234149,
-  "frames": 61,
+  "bytes": 191137,
+  "frames": 85,
   "stills": [
     {
       "asset": "poster.webp",
-      "bytes": 29826,
+      "bytes": 12406,
       "maxBytes": 70000
+    }
+  ],
+  "variants": [
+    {
+      "theme": "portable",
+      "asset": "hero.gif",
+      "bytes": 191137,
+      "maxBytes": 1200000,
+      "frames": 85,
+      "gif": {
+        "width": 640,
+        "fps": 12,
+        "colours": 128,
+        "lossy": 0,
+        "dither": true,
+        "loop": 0,
+        "maxBytes": 1200000
+      },
+      "compromises": [],
+      "stills": [
+        {
+          "asset": "poster.webp",
+          "bytes": 12406,
+          "maxBytes": 70000
+        }
+      ]
+    },
+    {
+      "theme": "dark",
+      "asset": "hero.dark.gif",
+      "bytes": 300189,
+      "maxBytes": 900000,
+      "frames": 87,
+      "gif": {
+        "width": 640,
+        "fps": 12,
+        "colours": 128,
+        "lossy": 0,
+        "dither": true,
+        "loop": 0,
+        "maxBytes": 900000
+      },
+      "compromises": [],
+      "stills": [
+        {
+          "asset": "poster.dark.webp",
+          "bytes": 12334,
+          "maxBytes": 70000
+        }
+      ]
+    },
+    {
+      "theme": "light",
+      "asset": "hero.light.gif",
+      "bytes": 221051,
+      "maxBytes": 900000,
+      "frames": 85,
+      "gif": {
+        "width": 640,
+        "fps": 12,
+        "colours": 128,
+        "lossy": 0,
+        "dither": true,
+        "loop": 0,
+        "maxBytes": 900000
+      },
+      "compromises": [],
+      "stills": [
+        {
+          "asset": "poster.light.webp",
+          "bytes": 13112,
+          "maxBytes": 70000
+        }
+      ]
     }
   ],
   "browser": {

@@ -1,34 +1,34 @@
 {
   "slug": "project-scope-detect",
   "asset": "hero.gif",
-  "generatedAt": "2026-09-10T07:59:28.131Z",
-  "sceneHash": "4aac059bcc73df99",
-  "sourceUrl": "stage:gauge",
+  "generatedAt": "2026-09-12T17:29:31.492Z",
+  "sceneHash": "d10e712af1e8790d",
+  "sourceUrl": "stage:sequence",
   "profile": {
-    "id": "docs-wide",
-    "intent": "the documentation site's content column on a laptop or desktop",
-    "width": 928,
-    "height": 522,
+    "id": "compact",
+    "intent": "the width every package readme is displayed at: npm, GitHub and the documentation site alike",
+    "width": 640,
+    "height": 360,
     "scale": 2,
     "fps": 12
   },
   "viewport": {
-    "width": 928,
-    "height": 522
+    "width": 640,
+    "height": 360
   },
   "record": {
     "settleMs": 0,
-    "durationMs": 7800
+    "durationMs": 13640
   },
   "startMs": 0,
   "gif": {
-    "width": 928,
-    "fps": 6,
-    "colours": 48,
-    "lossy": 75,
+    "width": 640,
+    "fps": 12,
+    "colours": 56,
+    "lossy": 40,
     "dither": true,
     "loop": 0,
-    "maxBytes": 900000
+    "maxBytes": 1200000
   },
   "encoder": "sharp",
   "toolVersions": [
@@ -37,13 +37,87 @@
       "version": "8.18.6"
     }
   ],
-  "bytes": 158000,
-  "frames": 57,
+  "bytes": 463820,
+  "frames": 115,
   "stills": [
     {
       "asset": "poster.webp",
-      "bytes": 39372,
-      "maxBytes": 80000
+      "bytes": 31640,
+      "maxBytes": 70000
+    }
+  ],
+  "variants": [
+    {
+      "theme": "portable",
+      "asset": "hero.gif",
+      "bytes": 463820,
+      "maxBytes": 1200000,
+      "frames": 115,
+      "gif": {
+        "width": 640,
+        "fps": 12,
+        "colours": 56,
+        "lossy": 40,
+        "dither": true,
+        "loop": 0,
+        "maxBytes": 1200000
+      },
+      "compromises": [],
+      "stills": [
+        {
+          "asset": "poster.webp",
+          "bytes": 31640,
+          "maxBytes": 70000
+        }
+      ]
+    },
+    {
+      "theme": "dark",
+      "asset": "hero.dark.gif",
+      "bytes": 522265,
+      "maxBytes": 900000,
+      "frames": 115,
+      "gif": {
+        "width": 640,
+        "fps": 12,
+        "colours": 56,
+        "lossy": 40,
+        "dither": true,
+        "loop": 0,
+        "maxBytes": 900000
+      },
+      "compromises": [],
+      "stills": [
+        {
+          "asset": "poster.dark.webp",
+          "bytes": 29926,
+          "maxBytes": 70000
+        }
+      ]
+    },
+    {
+      "theme": "light",
+      "asset": "hero.light.gif",
+      "bytes": 502447,
+      "maxBytes": 900000,
+      "frames": 115,
+      "gif": {
+        "width": 640,
+        "fps": 12,
+        "colours": 56,
+        "lossy": 40,
+        "dither": true,
+        "loop": 0,
+        "maxBytes": 900000
+      },
+      "compromises": [],
+      "stills": [
+        {
+          "asset": "poster.light.webp",
+          "bytes": 32728,
+          "maxBytes": 70000
+        }
+      ]
     }
   ],
   "browser": {
