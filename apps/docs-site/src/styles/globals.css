@@ -1272,8 +1272,10 @@
     border-radius: 0.25rem;
   }
 
+  /* The body runs the width of the page's own prose: unbounded until the
+     shell stops growing, then held to the document measure the column sets. */
   .methodology__body {
-    max-width: 68ch;
+    max-width: var(--doc-measure, none);
     margin-top: 1rem;
     font-size: theme('fontSize.sm');
     line-height: 1.75;
