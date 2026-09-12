@@ -1,3 +1,6 @@
+import { entries, fromEntries } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
+import identity from '../../../../../assets/brand/package-identity.json'
+
 /**
  * Hue a package's own pages are tinted with, keyed by npm package name.
  *
@@ -18,46 +21,15 @@
  * Marks stay colourless; the geometry in `package-marks.ts` still inherits
  * whatever it is placed in. These two are different halves of one identity:
  * the mark is what a package looks like on a card beside twenty others, and the
- * hue is what its own page feels like once a reader is inside it.
+ * hue is what its own page feels like once a reader is inside it. Both halves
+ * are read from the workspace's package identity file, which the media recorder
+ * tints and draws a package's showcase media from, so a package's pages and its
+ * assets agree on where on the wheel it sits.
  */
-export const PACKAGE_ACCENT_HUES: Record<string, number> = {
-  /* The SDK, on the site's own blue. */
-  '@hyperfrontend/features': 217,
-
-  /* Messaging and transport: blue running toward indigo as the layer gets lower. */
-  '@hyperfrontend/nexus': 228,
-  '@hyperfrontend/network-protocol': 243,
-
-  /* Security, at the violet end where the transport stack finishes. */
-  '@hyperfrontend/cryptography': 268,
-
-  /* Build and release tooling, the one group off the cool half: a warmer amber
-     for the things that run before anything ships. */
-  '@hyperfrontend/builder': 32,
-  '@hyperfrontend/versioning': 22,
-  '@hyperfrontend/project-scope': 44,
-  '@hyperfrontend/questions': 12,
-
-  /* Runtime primitives, in the teal band between the utilities and the stack. */
-  '@hyperfrontend/state-machine': 172,
-  '@hyperfrontend/logging': 190,
-  '@hyperfrontend/web-worker': 158,
-
-  /* Utilities, spread across the cyan-to-magenta arc so that twenty small
-     packages are still told apart by the page they open. */
-  '@hyperfrontend/immutable-api-utils': 288,
-  '@hyperfrontend/data-utils': 202,
-  '@hyperfrontend/json-utils': 210,
-  '@hyperfrontend/string-utils': 196,
-  '@hyperfrontend/list-utils': 184,
-  '@hyperfrontend/time-utils': 252,
-  '@hyperfrontend/random-generator-utils': 306,
-  '@hyperfrontend/function-utils': 260,
-  '@hyperfrontend/ui-utils': 322,
-}
+export const PACKAGE_ACCENT_HUES: Record<string, number> = fromEntries(entries(identity.packages).map(([name, entry]) => [name, entry.hue]))
 
 /** Where a package with no hue of its own sits: the site's blue. */
-const FALLBACK_HUE = 217
+const FALLBACK_HUE = identity.fallbackHue
 
 /**
  * The hue a package's documentation is tinted with.

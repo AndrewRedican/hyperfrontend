@@ -60,13 +60,14 @@ module.exports = [
     },
   },
   {
-    // Allow @hyperfrontend/ imports from npm packages installed in this app's node_modules
+    // Allow @hyperfrontend/ imports from npm packages installed in this app's node_modules, and the workspace's
+    // package identity data, which the site and the media recorder both read so a package's mark and hue are stated once
     files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
     rules: {
       '@nx/enforce-module-boundaries': [
         'error',
         {
-          allow: ['^@hyperfrontend/'],
+          allow: ['^@hyperfrontend/', '^.*/assets/brand/[^/]+\\.json$'],
         },
       ],
     },
