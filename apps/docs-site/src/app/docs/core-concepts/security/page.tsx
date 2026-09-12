@@ -77,11 +77,12 @@ export default function SecurityModelPage() {
 
         <H3 className="mt-8 text-xl font-semibold text-slate-900 dark:text-white">The browser enforces isolation</H3>
         <p className="mt-3 text-slate-600 dark:text-slate-400">
-          The same-origin policy keeps the feature&apos;s DOM, JavaScript state, and storage away from the host and the host&apos;s away
-          from the feature. This is not a convention that holds until someone is in a hurry; the browser refuses, on every page load. It is
-          the reason the boundary is an iframe and not a shared runtime. The browser also enforces the two capability attributes the host
-          writes (<code>sandbox</code> and <code>allow</code>) and the <code>frame-ancestors</code> directive the feature&apos;s server
-          sends.
+          For a feature served from its own origin, the same-origin policy keeps the feature&apos;s DOM, JavaScript state, and storage away
+          from the host and the host&apos;s away from the feature. This is not a convention that holds until someone is in a hurry; the
+          browser refuses, on every page load. It is the reason the boundary is an iframe and not a shared runtime. A feature served from
+          the host&apos;s own origin shares that origin, and is walled off only when the host sandboxes its frame. The browser also enforces
+          the two capability attributes the host writes (<code>sandbox</code> and <code>allow</code>) and the <code>frame-ancestors</code>{' '}
+          directive the feature&apos;s server sends.
         </p>
 
         <H3 className="mt-8 text-xl font-semibold text-slate-900 dark:text-white">The protocol enforces the relationship</H3>
@@ -225,8 +226,11 @@ export default function SecurityModelPage() {
             <tbody className="text-slate-600 dark:text-slate-400">
               <tr className="border-b border-slate-100 dark:border-slate-800">
                 <td className="py-2 pr-4">Document isolation</td>
-                <td className="py-2 pr-4">Browser-enforced, always</td>
-                <td className="py-2">The guarantee the whole design is built on. Not optional, not bypassable by either side.</td>
+                <td className="py-2 pr-4">Browser-enforced for a cross-origin feature URL</td>
+                <td className="py-2">
+                  The guarantee the whole design is built on, and not bypassable by either side. A feature served from the host&apos;s own
+                  origin shares it, and is isolated only under a host-requested <code>sandbox</code>.
+                </td>
               </tr>
               <tr className="border-b border-slate-100 dark:border-slate-800">
                 <td className="py-2 pr-4">Origin pinning and window binding</td>
