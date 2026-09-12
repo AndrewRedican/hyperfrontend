@@ -1,6 +1,6 @@
 # VFS Module
 
-The `vfs` (Virtual File System) module provides a transactional file system abstraction for safely creating, updating, and deleting files. Changes are buffered in memory and can be committed atomically or rolled back.
+The vfs (Virtual File System) module provides a transactional file system abstraction for safely creating, updating, and deleting files. Changes are buffered in memory and can be committed atomically or rolled back.
 
 ## Capabilities
 

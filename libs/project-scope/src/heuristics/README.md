@@ -1,6 +1,6 @@
 # Heuristics Module
 
-The `heuristics` module provides intelligent detection of project characteristics using multiple signals. It analyzes project structure, configuration files, dependencies, and code patterns to make accurate determinations about project type, frameworks, entry points, and dependency graphs.
+The heuristics module provides intelligent detection of project characteristics using multiple signals. It analyzes project structure, configuration files, dependencies, and code patterns to make accurate determinations about project type, frameworks, entry points, and dependency graphs.
 
 ## Capabilities
 
@@ -20,15 +20,15 @@ console.log(result.evidence)
 
 #### Detection Factors
 
-| Factor              | Signals                                 | Confidence Impact   |
-| ------------------- | --------------------------------------- | ------------------- |
-| Package name        | `-lib`, `-app`, `-e2e`, `-cli` suffixes | 15-30               |
-| Exports field       | Has `exports`, `main`, or `module`      | +20 for library     |
-| Bin field           | Has CLI executable definition           | +40 for tool        |
-| Entry points        | `server.ts` vs `index.ts` patterns      | 20-30               |
-| Directory structure | `public/`, `pages/`, `lib/`, `cypress/` | 10-20               |
-| Framework presence  | Frontend/backend frameworks             | +20 for application |
-| E2E frameworks      | Cypress, Playwright, Puppeteer          | +25 for e2e         |
+| Factor              | Signals                                                                                                                         | Confidence Impact   |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------- | ------------------- |
+| Package name        | `-lib`, `-app`, `-e2e`, `-cli` suffixes                                                                                         | 15-30               |
+| Exports field       | Has `exports`, [`main`](https://www.hyperfrontend.dev/docs/libraries/project-scope/heuristics/#api-EntryPointType), or `module` | +20 for library     |
+| Bin field           | Has CLI executable definition                                                                                                   | +40 for tool        |
+| Entry points        | `server.ts` vs `index.ts` patterns                                                                                              | 20-30               |
+| Directory structure | `public/`, `pages/`, `lib/`, `cypress/`                                                                                         | 10-20               |
+| Framework presence  | Frontend/backend frameworks                                                                                                     | +20 for application |
+| E2E frameworks      | Cypress, Playwright, Puppeteer                                                                                                  | +25 for e2e         |
 
 ### Framework Identification
 
@@ -73,11 +73,11 @@ for (const entry of entryPoints) {
 
 #### Entry Point Sources
 
-| Source                | Priority | Examples                                       |
-| --------------------- | -------- | ---------------------------------------------- |
-| `package.json` fields | 100%     | `main`, `module`, `browser`, `bin`, `exports`  |
-| Convention patterns   | 80-90%   | `src/index.ts`, `src/main.ts`, `src/server.ts` |
-| Framework-specific    | 85%      | Next.js pages, Angular modules                 |
+| Source                | Priority | Examples                                                                                                                                                                                                                                                                                                                                                       |
+| --------------------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `package.json` fields | 100%     | [`main`](https://www.hyperfrontend.dev/docs/libraries/project-scope/heuristics/#api-EntryPointType), `module`, [`browser`](https://www.hyperfrontend.dev/docs/libraries/project-scope/project/package/#api-PackageJson-prop-browser), [`bin`](https://www.hyperfrontend.dev/docs/libraries/project-scope/project/package/#api-PackageJson-prop-bin), `exports` |
+| Convention patterns   | 80-90%   | `src/index.ts`, `src/main.ts`, `src/server.ts`                                                                                                                                                                                                                                                                                                                 |
+| Framework-specific    | 85%      | Next.js pages, Angular modules                                                                                                                                                                                                                                                                                                                                 |
 
 ### Dependency Graph Analysis
 

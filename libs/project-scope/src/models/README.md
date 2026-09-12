@@ -1,6 +1,6 @@
 # Models Module
 
-The `models` module defines the core TypeScript types and interfaces used throughout the library. These types provide a consistent, well-documented structure for all analysis results and data exchanges.
+The models module defines the core TypeScript types and interfaces used throughout the library. These types provide a consistent, well-documented structure for all analysis results and data exchanges.
 
 ## Core Types
 

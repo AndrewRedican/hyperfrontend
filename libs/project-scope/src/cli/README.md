@@ -1,6 +1,6 @@
 # CLI Module
 
-The `cli` module provides a command-line interface for analyzing JavaScript/TypeScript projects. It exposes the library's capabilities through an easy-to-use terminal interface.
+The cli module provides a command-line interface for analyzing JavaScript/TypeScript projects. It exposes the library's capabilities through an easy-to-use terminal interface.
 
 ## Usage
 
@@ -120,7 +120,7 @@ if (result.exitCode === 0) {
 
 ## Adding Custom Commands
 
-Commands implement the `Command` interface:
+Commands implement the [`Command`](https://www.hyperfrontend.dev/docs/libraries/project-scope/cli/#api-Command) interface:
 
 ```typescript
 interface Command {
