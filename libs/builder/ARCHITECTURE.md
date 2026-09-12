@@ -1,6 +1,6 @@
 # Architecture
 
-This document describes the internal architecture of `@hyperfrontend/builder`. For installation and usage examples, see the main [README.md](./README.md); for the full module surface, see the [per-module docs](./src/).
+This document describes the internal architecture of [`@hyperfrontend/builder`](https://www.hyperfrontend.dev/docs/libraries/builder/). For installation and usage examples, see the main [README.md](./README.md); for the full module surface, see the [per-module docs](./src/).
 
 ## Table of Contents
 
@@ -16,7 +16,7 @@ This document describes the internal architecture of `@hyperfrontend/builder`. F
 
 ## System Overview
 
-`@hyperfrontend/builder` turns a TypeScript source tree into a publishable npm package. A single declarative `BuildConfig` is resolved once into a fully-computed `BuildContext`, which is then handed to three composable phases that run in order:
+[`@hyperfrontend/builder`](https://www.hyperfrontend.dev/docs/libraries/builder/) turns a TypeScript source tree into a publishable npm package. A single declarative [`BuildConfig`](https://www.hyperfrontend.dev/docs/libraries/builder/models/#api-BuildConfig) is resolved once into a fully-computed [`BuildContext`](https://www.hyperfrontend.dev/docs/libraries/builder/models/#api-BuildContext), which is then handed to three composable phases that run in order:
 
 - **bundle**: discover entry points, resolve externals, emit per-entry bundles for each format (ESM, CJS, IIFE, UMD), generate declarations, and deduplicate shared internals.
 - **package**: synthesize the output `package.json`, copy assets, and optionally collect third-party licenses.
@@ -61,7 +61,7 @@ flowchart TB
 
 ### 1. `build` orchestrates; phases compose
 
-`build(config)` runs the full pipeline, but `runBundlePhase`, `runPackagePhase`, and `runBinPhase` remain independently callable against a shared `BuildContext` from `createBuildContext`. Nothing in a phase reaches back into the facade.
+`build(config)` runs the full pipeline, but [`runBundlePhase`](https://www.hyperfrontend.dev/docs/libraries/builder/bundle/#api-runBundlePhase), [`runPackagePhase`](https://www.hyperfrontend.dev/docs/libraries/builder/package/#api-runPackagePhase), and [`runBinPhase`](https://www.hyperfrontend.dev/docs/libraries/builder/bin/#api-runBinPhase) remain independently callable against a shared [`BuildContext`](https://www.hyperfrontend.dev/docs/libraries/builder/models/#api-BuildContext) from [`createBuildContext`](https://www.hyperfrontend.dev/docs/libraries/builder/#api-createBuildContext). Nothing in a phase reaches back into the facade.
 
 ```typescript
 // ✅ Compose phases against a shared, resolved context
@@ -100,7 +100,7 @@ await dispatchRollupWorker(descriptor)
 
 ### 4. Config resolves once into an immutable context
 
-`createBuildContext` performs entry discovery and dependency resolution exactly once, filling every default and absolutizing every path. Phases consume the `BuildContext`, never the raw `BuildConfig`.
+[`createBuildContext`](https://www.hyperfrontend.dev/docs/libraries/builder/#api-createBuildContext) performs entry discovery and dependency resolution exactly once, filling every default and absolutizing every path. Phases consume the [`BuildContext`](https://www.hyperfrontend.dev/docs/libraries/builder/models/#api-BuildContext), never the raw [`BuildConfig`](https://www.hyperfrontend.dev/docs/libraries/builder/models/#api-BuildConfig).
 
 ```typescript
 // ✅ Defaults and discovery happen once, up front
@@ -123,7 +123,7 @@ dedupeSharedInternals?: boolean // default true; only hoists provably-safe modul
 
 ## Module Composition
 
-The library is organized into six top-level modules. The three phase modules (`bundle/`, `package/`, `bin/`) are orchestrated by `build`; the remaining three are cross-cutting.
+The library is organized into six top-level modules. The three phase modules (`bundle/`, `package/`, `bin/`) are orchestrated by [`build`](https://www.hyperfrontend.dev/docs/libraries/builder/#api-build); the remaining three are cross-cutting.
 
 ```mermaid
 ---
@@ -159,27 +159,27 @@ flowchart TB
     models -.-> bin
 ```
 
-| Module     | Responsibility                                                                                 |
-| ---------- | ---------------------------------------------------------------------------------------------- |
-| `bundle/`  | Entry discovery, per-entry Rollup bundling, declaration emit, dependency bundling, and dedupe. |
-| `package/` | Synthesize the output `package.json`, copy assets, collect third-party licenses.               |
-| `bin/`     | Synthesize JavaScript bins and Node SEA native binaries.                                       |
-| `models/`  | Type definitions for config, context, and results: the contracts shared across every phase.    |
-| `memory/`  | Opt-in memory monitor (`createMemoryMonitor`) and the inter-phase `recover()` primitive.       |
-| `presets/` | Predicate factories (`byPrefix`, `byNames`) for classifying workspace packages and externals.  |
+| Module     | Responsibility                                                                                                                                                                                                                                           |
+| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `bundle/`  | Entry discovery, per-entry Rollup bundling, declaration emit, dependency bundling, and dedupe.                                                                                                                                                           |
+| `package/` | Synthesize the output `package.json`, copy assets, collect third-party licenses.                                                                                                                                                                         |
+| `bin/`     | Synthesize JavaScript bins and Node SEA native binaries.                                                                                                                                                                                                 |
+| `models/`  | Type definitions for config, context, and results: the contracts shared across every phase.                                                                                                                                                              |
+| `memory/`  | Opt-in memory monitor ([`createMemoryMonitor`](https://www.hyperfrontend.dev/docs/libraries/builder/memory/#api-createMemoryMonitor)) and the inter-phase `recover()` primitive.                                                                         |
+| `presets/` | Predicate factories ([`byPrefix`](https://www.hyperfrontend.dev/docs/libraries/builder/presets/#api-byPrefix), [`byNames`](https://www.hyperfrontend.dev/docs/libraries/builder/presets/#api-byNames)) for classifying workspace packages and externals. |
 
 ### `bundle/` sub-modules
 
 Each sub-module is its own package entry point and ships its own README; follow the link on its name for the full surface.
 
-| Sub-module                                             | Responsibility                                                                                                 |
-| ------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------- |
-| [`entries/`](./src/bundle/entries/README.md)           | Discover entry points from `src/` and resolve them per-format (`discoverEntries`).                             |
-| [`rollup/`](./src/bundle/rollup/README.md)             | Build per-entry, JSON-serializable descriptors and dispatch isolated Rollup workers.                           |
-| [`dependencies/`](./src/bundle/dependencies/README.md) | Pre-pass bundle each third-party/workspace dep into `_dependencies/`; route imports via an externalize plugin. |
-| [`externals/`](./src/bundle/externals/README.md)       | Resolve which packages stay external; validate globals/externals pairing for IIFE/UMD.                         |
-| [`declarations/`](./src/bundle/declarations/README.md) | Emit `.d.ts` via TypeScript, inline bundled-dep declarations, prune orphans.                                   |
-| [`dedupe/`](./src/bundle/dedupe/README.md)             | Post-emit hoist of identical first-party modules shared across entries into `_shared/` chunks.                 |
+| Sub-module                                             | Responsibility                                                                                                                                                                 |
+| ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| [`entries/`](./src/bundle/entries/README.md)           | Discover entry points from `src/` and resolve them per-format ([`discoverEntries`](https://www.hyperfrontend.dev/docs/libraries/builder/bundle/entries/#api-discoverEntries)). |
+| [`rollup/`](./src/bundle/rollup/README.md)             | Build per-entry, JSON-serializable descriptors and dispatch isolated Rollup workers.                                                                                           |
+| [`dependencies/`](./src/bundle/dependencies/README.md) | Pre-pass bundle each third-party/workspace dep into `_dependencies/`; route imports via an externalize plugin.                                                                 |
+| [`externals/`](./src/bundle/externals/README.md)       | Resolve which packages stay external; validate globals/externals pairing for IIFE/UMD.                                                                                         |
+| [`declarations/`](./src/bundle/declarations/README.md) | Emit `.d.ts` via TypeScript, inline bundled-dep declarations, prune orphans.                                                                                                   |
+| [`dedupe/`](./src/bundle/dedupe/README.md)             | Post-emit hoist of identical first-party modules shared across entries into `_shared/` chunks.                                                                                 |
 
 ### `package/` and `bin/` sub-modules
 
@@ -287,7 +287,7 @@ The contracts below live in `models/` and are re-exported from the package root.
 
 ### Configuration and context
 
-`BuildConfig` is the declarative input; `createBuildContext` resolves it into the immutable `BuildContext` that every phase consumes.
+[`BuildConfig`](https://www.hyperfrontend.dev/docs/libraries/builder/models/#api-BuildConfig) is the declarative input; [`createBuildContext`](https://www.hyperfrontend.dev/docs/libraries/builder/#api-createBuildContext) resolves it into the immutable [`BuildContext`](https://www.hyperfrontend.dev/docs/libraries/builder/models/#api-BuildContext) that every phase consumes.
 
 ```typescript
 interface BuildConfig {
@@ -429,9 +429,9 @@ interface BuildResult {
 
 **Key components:**
 
-- `BuildConfig` plus the per-format shapes (`EsmConfig`, `CjsConfig`, `IifeConfig`, `UmdConfig`) and `BinConfig`/`SeaConfig`: the declarative input surface.
-- `BuildContext`: the resolved, immutable shape `createBuildContext()` produces and every phase consumes.
-- `BuildResult`, `FormatOutputs`, `BinOutput`, and the predicate aliases: the values phases return and the functions consumers inject.
+- [`BuildConfig`](https://www.hyperfrontend.dev/docs/libraries/builder/models/#api-BuildConfig) plus the per-format shapes ([`EsmConfig`](https://www.hyperfrontend.dev/docs/libraries/builder/models/#api-EsmConfig), [`CjsConfig`](https://www.hyperfrontend.dev/docs/libraries/builder/models/#api-CjsConfig), [`IifeConfig`](https://www.hyperfrontend.dev/docs/libraries/builder/models/#api-IifeConfig), [`UmdConfig`](https://www.hyperfrontend.dev/docs/libraries/builder/models/#api-UmdConfig)) and [`BinConfig`](https://www.hyperfrontend.dev/docs/libraries/builder/models/#api-BinConfig)/[`SeaConfig`](https://www.hyperfrontend.dev/docs/libraries/builder/models/#api-SeaConfig): the declarative input surface.
+- [`BuildContext`](https://www.hyperfrontend.dev/docs/libraries/builder/models/#api-BuildContext): the resolved, immutable shape `createBuildContext()` produces and every phase consumes.
+- [`BuildResult`](https://www.hyperfrontend.dev/docs/libraries/builder/models/#api-BuildResult), [`FormatOutputs`](https://www.hyperfrontend.dev/docs/libraries/builder/models/#api-FormatOutputs), [`BinOutput`](https://www.hyperfrontend.dev/docs/libraries/builder/models/#api-BinOutput), and the predicate aliases: the values phases return and the functions consumers inject.
 
 These types are reproduced in [Core Interfaces](#core-interfaces).
 
@@ -443,7 +443,7 @@ These types are reproduced in [Core Interfaces](#core-interfaces).
 
 **Key components:**
 
-- `createMemoryMonitor()` captures labeled `MemorySnapshot`s at phase boundaries and emits threshold warnings.
+- `createMemoryMonitor()` captures labeled [`MemorySnapshot`](https://www.hyperfrontend.dev/docs/libraries/builder/memory/#api-MemorySnapshot)s at phase boundaries and emits threshold warnings.
 - `recover()` yields the event loop and triggers a manual GC (when `--expose-gc` is set) between phases and entries.
 
 📖 [Full memory/ documentation](./src/memory/README.md)
@@ -452,7 +452,7 @@ These types are reproduced in [Core Interfaces](#core-interfaces).
 
 **Purpose:** Ready-made classification predicates.
 
-**Key components:** `byPrefix(scope)` and `byNames(names)` return `IsWorkspacePackagePredicate` closures so the core stays free of workspace-specific assumptions.
+**Key components:** `byPrefix(scope)` and `byNames(names)` return [`IsWorkspacePackagePredicate`](https://www.hyperfrontend.dev/docs/libraries/builder/models/#api-IsWorkspacePackagePredicate) closures so the core stays free of workspace-specific assumptions.
 
 📖 [Full presets/ documentation](./src/presets/README.md)
 

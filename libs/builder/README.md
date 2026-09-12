@@ -49,7 +49,7 @@ Composable, vendor-neutral build toolkit for TypeScript libraries, JS bins, and 
 
 ## What is @hyperfrontend/builder?
 
-`@hyperfrontend/builder` is a build-time Node.js toolkit that turns a TypeScript
+[`@hyperfrontend/builder`](https://www.hyperfrontend.dev/docs/libraries/builder/) is a build-time Node.js toolkit that turns a TypeScript
 source tree into a publishable npm package. From a single declarative config it
 discovers entry points, resolves externals, bundles each entry in isolation,
 emits type declarations, synthesizes the output `package.json`, copies assets,
@@ -63,25 +63,25 @@ library and a multi-entry framework alike.
 
 ### Key Features
 
-- **Multi-format output**: emit ESM, CJS, IIFE, and UMD bundles from one config; omit a format to skip it.
-- **Bins & native binaries**: synthesize JavaScript bins and cross-platform Node SEA native executables.
-- **Per-entry isolation**: each entry point bundles independently, keeping peak memory bounded on large graphs.
-- **Predicate-driven extensibility**: classify workspace packages, externals, and assets with plain functions instead of config DSLs.
-- **Self-contained packages**: bundle first-party and third-party dependencies, with an additive post-emit pass that dedups shared internals into `_shared/` chunks.
-- **Composable phases**: run the bundle, package, and bin phases together via `build`, or drive each phase on its own.
+- **[Multi-format output](https://www.hyperfrontend.dev/docs/libraries/builder/models/#api-BuildConfig)**: emit ESM, CJS, IIFE, and UMD bundles from one config; omit a format to skip it.
+- **[Bins & native binaries](https://www.hyperfrontend.dev/docs/libraries/builder/bin/)**: synthesize JavaScript bins and cross-platform Node SEA native executables.
+- **[Per-entry isolation](https://www.hyperfrontend.dev/docs/libraries/builder/architecture/#3-per-entry-isolation-keeps-peak-memory-bounded)**: each entry point bundles independently, keeping peak memory bounded on large graphs.
+- **[Predicate-driven extensibility](https://www.hyperfrontend.dev/docs/libraries/builder/presets/)**: classify workspace packages, externals, and assets with plain functions instead of config DSLs.
+- **[Self-contained packages](https://www.hyperfrontend.dev/docs/libraries/builder/bundle/dependencies/)**: bundle first-party and third-party dependencies, with an additive post-emit pass that dedups shared internals into `_shared/` chunks.
+- **[Composable phases](https://www.hyperfrontend.dev/docs/libraries/builder/architecture/#1-build-orchestrates-phases-compose)**: run the bundle, package, and bin phases together via [`build`](https://www.hyperfrontend.dev/docs/libraries/builder/#api-build), or drive each phase on its own.
 
 ### Architecture Highlights
 
-- **`build` orchestrates; phases compose.** `build(config)` runs the full pipeline, while `runBundlePhase`, `runPackagePhase`, and `runBinPhase` remain individually callable against a shared `BuildContext` from `createBuildContext`.
-- **Predicate extension model.** Externals, workspace membership, and asset conditions are expressed as predicates (`byNames`, `byPrefix`, or your own), keeping the core free of workspace-specific assumptions.
-- **Memory-aware by design.** Per-entry bundling plus an opt-in memory monitor (`createMemoryMonitor`, `recover`) keep large builds inside constrained environments.
+- **[`build`](https://www.hyperfrontend.dev/docs/libraries/builder/#api-build) orchestrates; phases compose.** `build(config)` runs the full pipeline, while [`runBundlePhase`](https://www.hyperfrontend.dev/docs/libraries/builder/bundle/#api-runBundlePhase), [`runPackagePhase`](https://www.hyperfrontend.dev/docs/libraries/builder/package/#api-runPackagePhase), and [`runBinPhase`](https://www.hyperfrontend.dev/docs/libraries/builder/bin/#api-runBinPhase) remain individually callable against a shared [`BuildContext`](https://www.hyperfrontend.dev/docs/libraries/builder/models/#api-BuildContext) from [`createBuildContext`](https://www.hyperfrontend.dev/docs/libraries/builder/#api-createBuildContext).
+- **Predicate extension model.** Externals, workspace membership, and asset conditions are expressed as predicates ([`byNames`](https://www.hyperfrontend.dev/docs/libraries/builder/presets/#api-byNames), [`byPrefix`](https://www.hyperfrontend.dev/docs/libraries/builder/presets/#api-byPrefix), or your own), keeping the core free of workspace-specific assumptions.
+- **Memory-aware by design.** Per-entry bundling plus an opt-in memory monitor ([`createMemoryMonitor`](https://www.hyperfrontend.dev/docs/libraries/builder/memory/#api-createMemoryMonitor), [`recover`](https://www.hyperfrontend.dev/docs/libraries/builder/memory/#api-recover)) keep large builds inside constrained environments.
 
 The [architecture guide](https://www.hyperfrontend.dev/docs/libraries/builder/architecture/) covers the phase pipeline, the per-entry worker model, and the shared-internals dedup pass.
 
 ## Why Use @hyperfrontend/builder?
 
 Most library bundlers assume one entry point, one format, and a fixed notion of
-what is "external." `@hyperfrontend/builder` is built for monorepos that publish
+what is "external." [`@hyperfrontend/builder`](https://www.hyperfrontend.dev/docs/libraries/builder/) is built for monorepos that publish
 many packages with shared internals and varied output needs:
 
 - You need ESM **and** CJS **and** CDN-ready bundles from the same source.
@@ -95,15 +95,15 @@ many packages with shared internals and varied output needs:
 npm install --save-dev @hyperfrontend/builder
 ```
 
-`typescript` is a regular dependency of the builder, not a peer: installing the
+[`typescript`](https://www.npmjs.com/package/typescript) is a regular dependency of the builder, not a peer: installing the
 builder installs a compiler, and the published manifest declares no
-`peerDependencies` at all. Declaration emit spawns the workspace's own
+[`peerDependencies`](https://www.hyperfrontend.dev/docs/libraries/builder/models/#api-PackageJson-prop-peerDependencies) at all. Declaration emit spawns the workspace's own
 `node_modules/.bin/tsc`, so when your project already depends on TypeScript that
 is the compiler that runs. The builder is built against **TypeScript >= 5.9**.
 
 ## Quick Start
 
-Drive the full pipeline programmatically with `build`:
+Drive the full pipeline programmatically with [`build`](https://www.hyperfrontend.dev/docs/libraries/builder/#api-build):
 
 ```typescript
 import { build, byPrefix } from '@hyperfrontend/builder'
@@ -139,8 +139,8 @@ await runPackagePhase(ctx, config, /* formats */ [])
 
 ## API Overview
 
-The surface is the pipeline, in order. `build(config)` is the whole of it: it derives a `BuildContext`, runs the bundle, package and bin phases against it, and resolves
-to a `BuildResult` carrying per-format counts, the artifacts emitted and a wall-clock duration. Each phase stays callable on its own against a context you built
+The surface is the pipeline, in order. `build(config)` is the whole of it: it derives a [`BuildContext`](https://www.hyperfrontend.dev/docs/libraries/builder/models/#api-BuildContext), runs the bundle, package and bin phases against it, and resolves
+to a [`BuildResult`](https://www.hyperfrontend.dev/docs/libraries/builder/models/#api-BuildResult) carrying per-format counts, the artifacts emitted and a wall-clock duration. Each phase stays callable on its own against a context you built
 yourself, so [`runBundlePhase`](https://www.hyperfrontend.dev/docs/libraries/builder/bundle/#api-runBundlePhase),
 [`runPackagePhase`](https://www.hyperfrontend.dev/docs/libraries/builder/package/#api-runPackagePhase) and
 [`runBinPhase`](https://www.hyperfrontend.dev/docs/libraries/builder/bin/#api-runBinPhase) are the seam for driving one step in isolation.
@@ -148,7 +148,7 @@ yourself, so [`runBundlePhase`](https://www.hyperfrontend.dev/docs/libraries/bui
 Most of that work is discovery rather than declaration, which is why the config stays small. Entry points come from the folder layout:
 [`discoverEntries`](https://www.hyperfrontend.dev/docs/libraries/builder/bundle/entries/#api-discoverEntries) walks `src/`, and every directory holding an `index.ts`
 becomes a published subpath, so adding an entry point is adding a folder. The seams that could have hard-coded a workspace are plain predicate functions instead:
-`isWorkspacePackage` is a `(name: string) => boolean`, with
+[`isWorkspacePackage`](https://www.hyperfrontend.dev/docs/libraries/builder/models/#api-BuildConfig-prop-isWorkspacePackage) is a `(name: string) => boolean`, with
 [`byPrefix`](https://www.hyperfrontend.dev/docs/libraries/builder/presets/#api-byPrefix) and
 [`byNames`](https://www.hyperfrontend.dev/docs/libraries/builder/presets/#api-byNames) as conveniences for the two common answers and a closure of your own just as
 valid an argument.
@@ -156,20 +156,20 @@ valid an argument.
 What ships is measured rather than predicted. Each entry bundles in its own spawned child process, one per entry per format, and that isolation is what keeps peak
 memory flat instead of climbing with the size of the graph; declarations are not synthesized in-process at all, since the builder spawns the workspace's own `tsc` and
 flattens what it emits. The output `package.json` is reflected from what actually landed:
-[`synthesizePackageJson`](https://www.hyperfrontend.dev/docs/libraries/builder/package/json/#api-synthesizePackageJson) writes `exports`, `main`, `module` and `types`
+[`synthesizePackageJson`](https://www.hyperfrontend.dev/docs/libraries/builder/package/json/#api-synthesizePackageJson) writes [`exports`](https://www.hyperfrontend.dev/docs/libraries/builder/models/#api-PackageJson-prop-exports), [`main`](https://www.hyperfrontend.dev/docs/libraries/builder/models/#api-PackageJson-prop-main), [`module`](https://www.hyperfrontend.dev/docs/libraries/builder/models/#api-PackageJson-prop-module) and [`types`](https://www.hyperfrontend.dev/docs/libraries/builder/models/#api-PackageJson-prop-types)
 from the formats that really emitted, and
-[`reflectFilesAllowlist`](https://www.hyperfrontend.dev/docs/libraries/builder/package/json/#api-reflectFilesAllowlist) walks the finished output tree for `files`.
+[`reflectFilesAllowlist`](https://www.hyperfrontend.dev/docs/libraries/builder/package/json/#api-reflectFilesAllowlist) walks the finished output tree for [`files`](https://www.hyperfrontend.dev/docs/libraries/builder/models/#api-PackageJson-prop-files).
 
-The sub-path entries expose that same machinery a level down, each for a different job: `/bundle` and its children for entry discovery, externals, rollup dispatch,
-declarations and the shared-internals dedup pass; `/package` for the manifest, assets and third-party licenses; `/bin` for JavaScript bins and Node SEA binaries;
-`/memory` for the build-memory monitor; `/presets` for the predicate factories; and `/models` for the types all of them speak. Import the root when you want the
+The sub-path entries expose that same machinery a level down, each for a different job: [`/bundle`](https://www.hyperfrontend.dev/docs/libraries/builder/bundle/) and its children for entry discovery, externals, rollup dispatch,
+declarations and the shared-internals dedup pass; [`/package`](https://www.hyperfrontend.dev/docs/libraries/builder/package/) for the manifest, assets and third-party licenses; [`/bin`](https://www.hyperfrontend.dev/docs/libraries/builder/bin/) for JavaScript bins and Node SEA binaries;
+[`/memory`](https://www.hyperfrontend.dev/docs/libraries/builder/memory/) for the build-memory monitor; [`/presets`](https://www.hyperfrontend.dev/docs/libraries/builder/presets/) for the predicate factories; and [`/models`](https://www.hyperfrontend.dev/docs/libraries/builder/models/) for the types all of them speak. Import the root when you want the
 pipeline, a sub-path when you are replacing one step of it.
 
 Every config field, phase signature and result type is in the [API reference](https://www.hyperfrontend.dev/docs/libraries/builder/#api-reference).
 
 ## Compatibility
 
-`@hyperfrontend/builder` is a build-time tool that runs on Node.js. It is not
+[`@hyperfrontend/builder`](https://www.hyperfrontend.dev/docs/libraries/builder/) is a build-time tool that runs on Node.js. It is not
 intended for browser, Web Worker, or CDN runtimes.
 
 | Environment       | Supported |
