@@ -2,15 +2,6 @@
 
 This document describes the internal architecture of [`@hyperfrontend/versioning`](https://www.hyperfrontend.dev/docs/libraries/versioning/). For usage examples and quick start guides, see the main [README.md](./README.md).
 
-## Table of Contents
-
-- [Design Principles](#design-principles)
-- [Module Composition](#module-composition)
-- [Data Flow](#data-flow)
-- [Core Types](#core-types)
-- [Security Architecture](#security-architecture)
-- [Module Details](#module-details)
-
 ---
 
 ## Design Principles
