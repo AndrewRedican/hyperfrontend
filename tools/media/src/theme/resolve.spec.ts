@@ -21,7 +21,9 @@ describe('resolveTheme', () => {
   })
 
   it('tints the light backdrop with the hue', () => {
-    expect(resolveTheme('light', 120, undefined).backdrop).toBe('linear-gradient(170deg, hsl(120 60% 98%) 0%, hsl(120 45% 93%) 100%)')
+    expect(resolveTheme('light', 120, undefined).backdrop).toBe(
+      'radial-gradient(120% 130% at 50% -10%, hsl(120 58% 91%) 0%, hsl(120 45% 96%) 58%, hsl(120 30% 98%) 100%)'
+    )
   })
 
   it('tints the portable plate and surfaces faintly and leaves the backdrop transparent', () => {
@@ -29,7 +31,7 @@ describe('resolveTheme', () => {
     expect(tinted).toEqual({
       ...builtInTheme('portable'),
       backdrop: 'transparent',
-      plate: 'hsl(120 9% 12%)',
+      plate: 'radial-gradient(120% 130% at 50% -10%, hsl(120 18% 17%) 0%, hsl(120 9% 12%) 58%, hsl(120 9% 10%) 100%)',
       plateBorder: 'hsl(120 8% 33%)',
       surface: 'hsl(120 10% 16%)',
       surfaceRaised: 'hsl(120 10% 20%)',

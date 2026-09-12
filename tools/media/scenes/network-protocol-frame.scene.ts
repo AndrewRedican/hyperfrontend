@@ -1,57 +1,62 @@
-import { byteStage } from '../src/byte/stage'
+import type { SealedConfig } from '../src/models/sealed'
 import { defineScriptedScene } from '../src/scene/define-scene'
+import { sealedStage } from '../src/sealed/stage'
+import { sealedTimeline } from '../src/sealed/timeline'
+import { packageIdentity } from './lib/identity'
+
+/** The package's hue and mark. */
+const identity = packageIdentity('network-protocol')
 
 /**
- * What your transport actually carries once the envelope is on it.
+ * The exchange the frame shows: the readme example's two ends, two messages,
+ * and the copy of the second that is thrown out by its number.
+ */
+const config: SealedConfig = {
+  api: { channel: 'createChannel', drop: 'onDrop', mark: identity.mark },
+  ends: { sender: 'page', receiver: 'worker' },
+  hello: 'hello',
+  messages: 2,
+  replayCode: 'replayed',
+  restMs: 1_100,
+}
+
+/** Every moment on the timeline, so the poster can be taken at the refusal. */
+const timeline = sealedTimeline(config)
+
+/**
+ * Two ends, a pipe, and a seal with a number on it.
  *
- * This package does not move bytes; it decides what the bytes are. So the
- * frame is the subject, and the two numbers worth taking away are the ten
- * header bytes that travel in the clear and the sixteen tag bytes that make
- * the header impossible to edit: version, frame type and an eight-byte counter
- * are all a listener ever sees, and changing any of them fails the tag.
+ * You own the transport; this package is the envelope on it. So the frame is
+ * the transport, drawn as a pipe between two ends, and everything the package
+ * does happens on or beside it. A hello crosses each way in the clear and the
+ * same key appears at both ends. A message is wrapped into a numbered frame,
+ * carried, and unwrapped by the far end's key; then another, numbered `2`. A
+ * listener under the pipe copies the second frame and pushes the copy back
+ * in. The receiver reads its number, sees it is not above the last one it
+ * accepted, and drops it into the `onDrop` tray marked `replayed` without
+ * ever touching a key.
  *
- * The counter is the closing beat because it is the part a reader is least
- * likely to expect a transport wrapper to have opinions about. A frame whose
- * counter is not above the last accepted one is not delivered late; it is
- * dropped inside the open stage and reported with a code, which is what makes
- * a captured frame useless to replay.
- *
- * Verified against `libs/network-protocol/src/lib/protocol/session/frame.ts`:
- * `HEADER_LENGTH` 10, `TAG_LENGTH` 16, `NONCE_LENGTH` 12, `HELLO_LENGTH` 99
- * (2 + a 32-byte nonce + a 65-byte uncompressed P-256 point), the header being
- * `[version][0][counter as uint64 big-endian]`, and the nonce being four zero
- * bytes followed by the counter's own eight. The rejection codes are
- * `ProtocolErrorCode` in `libs/network-protocol/src/lib/security/errors.ts`.
- * The sealed length is the plaintext length because AES-GCM does not pad:
- * `{"type":"ORDER_PLACED","id":"A-1094"}` is 37 bytes, so the frame is 63.
+ * Verified against `libs/network-protocol/src/lib/protocol/session/frame.ts`
+ * and `create-session-protocol.ts` on 2026-09-12: each end's hello carries
+ * its nonce and P-256 public key in the clear; every sealed frame is a
+ * ten-byte header (version, type, an eight-byte counter that is also the
+ * nonce) followed by the AES-GCM output with its sixteen-byte tag; counters
+ * start at 1 and must increase; `open` compares the counter against the last
+ * one accepted and throws `replayed` before the session keys are awaited,
+ * so a copied frame is refused before any key is touched. The code is
+ * `ProtocolErrorCode.Replayed` in `libs/network-protocol/src/lib/security/errors.ts`,
+ * and it reaches `onDrop` on the channel, as the readme's "Replay rejection
+ * before decryption" states.
  */
 export default defineScriptedScene({
   slug: 'network-protocol-frame',
   asset: 'hero',
   outputs: ['gif', 'still'],
   profile: 'compact',
-  hue: 243,
-  stage: byteStage,
-  holdMs: 1_700,
-  gif: { colours: 48, lossy: 75, maxBytes: 800_000 },
-  stills: [{ name: 'poster', atMs: 7_000, format: 'webp', quality: 82, maxBytes: 70_000 }],
-  config: {
-    heading: 'Your transport. Our envelope.',
-    source: "channel.send({ type: 'ORDER_PLACED', id: 'A-1094' })",
-    caption: 'Ten bytes in the clear, and none of them can be edited without failing the tag.',
-    restMs: 1_600,
-    segments: [
-      { label: 'version', count: 1, atMs: 900, tone: 'muted', note: '4' },
-      { label: 'type', count: 1, atMs: 1_050, tone: 'muted', note: 'data' },
-      { label: 'counter', count: 8, atMs: 1_200, fillMs: 500, tone: 'warning', note: 'uint64, big-endian' },
-      { label: 'sealed packet', count: 37, atMs: 1_800, fillMs: 900, tone: 'accent', note: 'AES-GCM-256, no padding' },
-      { label: 'tag', count: 16, atMs: 2_800, fillMs: 600, tone: 'success', note: 'covers the header too' },
-    ],
-    annotations: [
-      { atMs: 3_700, text: 'the nonce is four zero bytes then the counter: unique by construction', tone: 'muted' },
-      { atMs: 4_700, text: 'one 99-byte plaintext hello keyed this: nonce + P-256 public key', tone: 'muted' },
-      { atMs: 5_900, text: 'a listener replays the frame verbatim', tone: 'warning' },
-      { atMs: 6_800, text: "onDrop({ code: 'replayed' })  ->  never reaches your handler", tone: 'danger' },
-    ],
-  },
+  hue: identity.hue,
+  stage: sealedStage,
+  holdMs: 1_800,
+  gif: { colours: 96, lossy: 40, maxBytes: 800_000 },
+  stills: [{ name: 'poster', atMs: timeline.compareAt + 300, format: 'webp', quality: 82, maxBytes: 70_000 }],
+  config,
 })

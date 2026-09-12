@@ -5,6 +5,7 @@ import type { MediaTheme } from '../models/theme'
 import { ceil, max, min, PI } from '@hyperfrontend/immutable-api-utils/built-in-copy/math'
 import { valueAt } from '../gauge/stage'
 import { escapeHtml } from '../lib/escape-html'
+import { apiChipStyles, renderApiChip, renderForeignLabel } from '../stage/api-chip'
 import { defineStage } from '../stage/define-stage'
 
 /** Width past which the frame is drawn at its full density. */
@@ -117,8 +118,10 @@ function renderDial(dial: Dial, metrics: DialMetrics, theme: MediaTheme, atMs: n
       : dial.outcome !== undefined && atMs >= lastStop
         ? `<div class="dl-state" style="color:${toneColour(dial.outcomeTone, theme)}">${escapeHtml(dial.outcome)}</div>`
         : '<div class="dl-state"></div>'
+  // why: the title is the one place the frame says whose timer this is, so the package's own call is set as a chip and the platform's plainly
+  const title = dial.mark === undefined ? renderForeignLabel(dial.title) : renderApiChip(dial.title, dial.mark)
   return `<div class="dl-dial">
-    <div class="dl-title">${escapeHtml(dial.title)}</div>
+    <div class="dl-title">${title}</div>
     <svg class="dl-ring" viewBox="0 0 ${metrics.ringPx} ${metrics.ringPx}" aria-hidden="true">
       <circle cx="${centre}" cy="${centre}" r="${radius}" fill="none" stroke="${theme.rule}" stroke-width="${metrics.strokePx}"/>
       <circle cx="${centre}" cy="${centre}" r="${radius}" fill="none" stroke="${colour}" stroke-width="${metrics.strokePx}" stroke-linecap="round" stroke-dasharray="${circumference.toFixed(2)}" stroke-dashoffset="${(circumference * (1 - fraction)).toFixed(2)}" transform="rotate(-90 ${centre} ${centre})"/>
@@ -139,11 +142,12 @@ function renderDial(dial: Dial, metrics: DialMetrics, theme: MediaTheme, atMs: n
 function dialStyles(config: DialConfig, profile: MediaProfile, theme: MediaTheme): string {
   const metrics = dialMetrics(profile)
   return `
+${apiChipStyles(theme, metrics.titlePx)}
 .dl-frame { position: absolute; inset: ${metrics.insetPx}px; display: flex; flex-direction: column; gap: ${metrics.insetPx * 0.5}px; }
 .dl-heading { flex: none; font-size: ${metrics.headingPx}px; font-weight: 600; letter-spacing: -0.01em; color: ${theme.text.strong}; }
 .dl-dials { flex: 1 1 auto; min-height: 0; position: relative; display: flex; justify-content: space-between; align-items: center; padding: 0 ${metrics.insetPx * 2}px; }
 .dl-dial { display: flex; flex-direction: column; align-items: center; gap: ${ceil(metrics.titlePx * 0.6)}px; }
-.dl-title { font-family: ${theme.fonts.mono}; font-size: ${metrics.titlePx}px; color: ${theme.text.muted}; white-space: nowrap; }
+.dl-title { display: flex; justify-content: center; white-space: nowrap; }
 .dl-ring { width: ${metrics.ringPx}px; height: ${metrics.ringPx}px; }
 .dl-readout { font-family: ${theme.fonts.mono}; font-size: ${metrics.readoutPx}px; font-weight: 600; letter-spacing: -0.02em; }
 .dl-state { min-height: ${ceil(metrics.statePx * 1.4)}px; font-size: ${metrics.statePx}px; font-weight: 600; letter-spacing: 0.02em; }

@@ -1,5 +1,9 @@
 import { dialStage } from '../src/dial/stage'
 import { defineScriptedScene } from '../src/scene/define-scene'
+import { packageIdentity } from './lib/identity'
+
+/** The package's hue and mark. */
+const identity = packageIdentity('time-utils')
 
 /**
  * The same thirty seconds, interrupted, twice.
@@ -24,14 +28,12 @@ export default defineScriptedScene({
   asset: 'hero',
   outputs: ['gif', 'still'],
   profile: 'compact',
-  hue: 252,
+  hue: identity.hue,
   stage: dialStage,
   holdMs: 1_800,
   gif: { colours: 48, lossy: 40, maxBytes: 900_000 },
   stills: [{ name: 'poster', atMs: 4_600, format: 'webp', quality: 82, maxBytes: 60_000 }],
   config: {
-    heading: 'Thirty seconds to sign-out. A dialog opens at nine.',
-    caption: 'resume() continues the remainder. It does not start a new thirty seconds.',
     restMs: 1_600,
     overlay: { atMs: 3_300, untilMs: 6_300, title: 'Still there?', detail: 'Your session is about to end.', action: 'Keep me signed in' },
     dials: [
@@ -51,6 +53,7 @@ export default defineScriptedScene({
       },
       {
         title: 'createTimer(signOut, 30_000)',
+        mark: identity.mark,
         max: 30,
         unit: 's',
         decimals: 1,

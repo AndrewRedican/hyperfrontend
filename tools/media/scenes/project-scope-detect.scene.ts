@@ -51,13 +51,12 @@ export default defineScriptedScene({
   stills: [{ name: 'poster', atMs: 5_200, format: 'webp', quality: 82, maxBytes: 70_000 }],
   config: {
     transitionMs: 520,
+    rail: false,
     segments: [
       chapter(
         'Read a repository it has never seen',
         scanStage,
         {
-          heading: 'A checkout nobody configured it for. Nothing installed, nothing run.',
-          caption: 'Every claim carries its evidence and a confidence, so your tool can act on it or ask.',
           restMs: 1_200,
           root: 'fish-svelte/',
           files: [
@@ -83,8 +82,6 @@ export default defineScriptedScene({
         'Change it without touching disk',
         panelStage,
         {
-          heading: 'Every write is staged. One commit lands them, or none does.',
-          caption: 'A path that leaves the root is refused before it is even staged.',
           restMs: 1_100,
           panels: [
             {

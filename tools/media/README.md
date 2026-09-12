@@ -170,7 +170,7 @@ export default defineScriptedScene({
 })
 ```
 
-`stage` and `config` are checked against each other where the scene is written, so a terminal script handed to the flow stage is a typecheck failure rather than a blank recording. There is no server, no build command and no readiness gate, because there is nothing to wait for.
+`stage` and `config` are checked against each other where the scene is written, so a terminal script handed to the flow stage is a typecheck failure rather than a blank recording. There is no server, no build command and no readiness gate, because there is nothing to wait for. An output step whose command has not returned, a server that has announced its address say, sets `running: true` so the prompt does not come back under it.
 
 ### Themes and variants
 
@@ -182,7 +182,7 @@ A scripted scene is recorded once per configured variant, and every variant shar
 | `dark`     | `hero.dark.gif`, `poster.dark.webp`   | the documentation site's dark theme, which swaps it in for the bare file |
 | `light`    | `hero.light.gif`, `poster.light.webp` | the documentation site's light theme                                     |
 
-The bare name goes to the portable variant because it is the file a readme points at, and a readme is rendered on pages nobody here controls. The portable theme draws on a transparent canvas: everything sits on one opaque plate with an edge that shows on both black and white, the palette is neutral rather than the site's blue, and there are no shadows, because a GIF has no half-transparency to blend one with. The dark and light themes are the documentation site's own palettes, drawn edge to edge because the page around them supplies the ground.
+The bare name goes to the portable variant because it is the file a readme points at, and a readme is rendered on pages nobody here controls. The portable theme draws on a transparent canvas: everything sits on one opaque plate with an edge that shows on both black and white, the palette is neutral rather than the site's blue, and there are no shadows, because a GIF has no half-transparency to blend one with. The dark and light themes are the documentation site's own palettes, drawn edge to edge because the page around them supplies the ground. All three grounds are the same composition, a wash of the package's hue at the top of the frame thinning into the page: deep on the dark ground, pale on the light one, and barely there on the portable plate.
 
 A stage never names a colour. It draws with the tokens of the theme it is handed (`surface`, `border`, `rule`, `accent`, `text.muted`, the six `tones`, the `syntax` colours, the window `chrome`), so one implementation carries every look. A scene can tint the ground with its package's `hue`, the same number the documentation site tints that package's pages with, and can override tokens for every variant or one:
 
@@ -230,8 +230,36 @@ The profile reaches the stage, so a stage can show less at the smaller size rath
 | `dialStage`      | `src/dial/stage`      | Countdowns as rings draining, and a card that interrupts them              |
 | `lifecycleStage` | `src/lifecycle/stage` | A widget mounted and unmounted, on a page that lets go and one that cannot |
 | `sequenceStage`  | `src/sequence/stage`  | Two or three of the above as chapters of one story                         |
+| `bannerStage`    | `src/banner/stage`    | A package's identity strip for the top of its readme, as a slow loop       |
+| `matrixStage`    | `src/matrix/stage`    | Where a package runs, as a strip of cells                                  |
+| `graphStage`     | `src/graph/stage`     | An object graph walked to its leaves, lighting the edges that point back   |
+| `envelopeStage`  | `src/envelope/stage`  | A secret sealed into salt, IV, ciphertext and tag, and opened by its key   |
+| `forgeStage`     | `src/forge/stage`     | Source entries forged into formats, and the manifest wired to what landed  |
+| `embedStage`     | `src/embed/stage`     | A host page and the feature it seats: session, watchdog, flush window      |
+| `portsStage`     | `src/ports/stage`     | Two brokers with shaped slots; only a message that fits its slot gets in   |
+| `lanesStage`     | `src/lanes/stage`     | The same calls dropped into four lanes, each wrapper deciding their fate   |
+| `sealedStage`    | `src/sealed/stage`    | A pipe between two ends: hello, numbered sealed frames, a replay refused   |
+| `derivedStage`   | `src/derived/stage`   | Base lamps wired to derived names; an action flips lamps, names light      |
+| `transcodeStage` | `src/transcode/stage` | Text tiles dropping bytes that regroup into Base64, and back               |
+| `cascadeStage`   | `src/cascade/stage`   | One commit header, and everything a release derives from it, falling       |
+| `vaultStage`     | `src/vault/stage`     | Built-ins copied into a vault before an intruder rewrites the globals      |
+| `queueStage`     | `src/queue/stage`     | A tube and a cup: the same discs out oldest first, or newest first         |
+| `levelsStage`    | `src/levels/stage`    | A level knob filtering a fixed stream of log lines                         |
+| `galtonStage`    | `src/galton/stage`    | Grains falling into columns until two distributions show their shape       |
 
 None of them takes a colour. Each draws with the theme the recorder hands it, which is what lets one scene become three assets that differ in nothing but their palette.
+
+The first eleven are general: a terminal, a wire, columns of lines. The showcases at the top of each package readme are not drawn with them, because a showcase has to carry one idea in a few seconds and a general stage carries a transcript. Each showcase has a stage of its own under `src/`, named for the metaphor it draws (`graph`, `envelope`, `lanes`, `ports`, `queue`), and the table below lists them.
+
+### What a showcase may say
+
+A showcase is understood from its motion and imagery or not at all, so it carries no heading, no caption, no phase label and no progress rail, and it shows no source code unless the subject is a command line or a textual transformation. Three kinds of text are allowed, and each is drawn one way everywhere:
+
+- The package's own API, drawn with `renderApiChip(name, mark)` from `src/stage/api-chip`: the package mark, then the name, in the accent on a soft band. The mark comes from `packageIdentity(name)` in `scenes/lib/identity`, which reads the same file the documentation site tints its pages from.
+- A platform or example name the package is being compared with (`setTimeout`, `btoa`, `send`), drawn with `renderForeignLabel(name)`: muted mono, no mark.
+- The vocabulary of the idea itself: a node's name, a segment's name, a value that is the evidence. Single words, never a sentence.
+
+Motion is a function of the instant, as it is for every stage, and the helpers in `src/lib/motion` (`progress`, `easeInOut`, `easeOut`, `pulse`, `lerp`) keep one stage's easing the same as the next's.
 
 #### `sequenceStage`
 
@@ -295,7 +323,7 @@ config: {
 }
 ```
 
-`emphasis` puts a row on a lit band, `strike` rules it through, `marker` sets a character in the margin. Type is smaller here than in the terminal stage at the same profile, because a terminal is one column and this is two to four.
+`emphasis` puts a row on a lit band, `emphasisAtMs` puts it there from a stated moment (for the line an error turns out to be about), `strike` rules it through, `marker` sets a character in the margin. Type is smaller here than in the terminal stage at the same profile, because a terminal is one column and this is two to four.
 
 #### `gaugeStage`
 
@@ -331,6 +359,10 @@ Everything else is the stage's own business. The harness mounts the stylesheet, 
 ### Scenes that are one file, many scenes
 
 A scene file may default-export a list of scenes instead of one. That is for the case where one table drives many near-identical scenes, one per package say, so a row added to the table gets its asset on the next recording without anyone adding a file. Every scene still needs a slug of its own: two scenes sharing one is refused when the files are read, naming the second.
+
+## The package banner and the runtime strip
+
+Two scene files draw one asset per publishable package, read from the workspace rather than listed by hand. `scenes/package-banners.scene.ts` draws the identity strip for the top of a readme with `bannerStage`, from the package's manifest, project configuration and identity file. `scenes/package-runtimes.scene.ts` draws where the package runs with `matrixStage`, from `metadata.compatibility` in its `project.json` and `engines.node` in its manifest. The banner is a twelve-second loop rather than a still: the light behind the tile drifts once round a closed path, slowly enough that a glance sees a still image, and the last frame leads back into the first. The runtime strip is a still recorded in the portable theme only, because the one page that shows it is a package readme on the registry. Neither asset is placed by hand: the build executor of `@hyperfrontend/package` substitutes them into the readme it writes to `dist`, and that executor's README describes the markers that say where.
 
 ## Determinism
 
@@ -379,4 +411,4 @@ Every asset is written with an audit record beside it recording the scene digest
 
 ## Where assets go
 
-Finished assets land in `assets/media/<slug>/` at the workspace root, which is committed. The documentation site copies that directory into its own `public/media/` at build time, so one file serves npm, GitHub and the site from a single absolute URL. The themed variants sit beside the bare file under their suffixes, for a page that knows its theme to pick up; a readme keeps pointing at the bare, portable file.
+Finished assets land in `assets/media/<slug>/` at the workspace root, which is committed. The documentation site copies that directory into its own `public/media/` at build time, so one file serves npm, GitHub and the site from a single absolute URL. The site's markdown pipeline recognises a reference to `<slug>/hero.gif` whose record lists dark and light variants and puts both in the page, lazily, for the theme to choose between; a readme keeps pointing at the bare, portable file.

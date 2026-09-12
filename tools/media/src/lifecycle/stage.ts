@@ -4,6 +4,7 @@ import type { Stage } from '../models/stage'
 import type { MediaTheme } from '../models/theme'
 import { ceil, floor, max, min } from '@hyperfrontend/immutable-api-utils/built-in-copy/math'
 import { escapeHtml } from '../lib/escape-html'
+import { apiChipStyles, renderApiChip, renderForeignLabel } from '../stage/api-chip'
 import { defineStage } from '../stage/define-stage'
 
 /** Width past which the frame is drawn at its full density. */
@@ -160,6 +161,10 @@ function renderPanel(panel: LifecyclePanel, config: LifecycleConfig, metrics: Li
   const attached = state.widget > 0 ? `${glyph(EYE, 'lc-glyph--live')}${glyph(BOLT, 'lc-glyph--live')}` : ''
   const widgetStyle = `opacity:${state.widget.toFixed(3)}; transform: scale(${(0.92 + 0.08 * state.widget).toFixed(3)});`
   const tone = leak && state.mounts > 1 ? theme.tones.danger : theme.tones.success
+  // why: the calls under a page are how a reader tells the package's own attach functions from the platform's, so each is set as a chip or plainly by whether it carries the mark
+  const calls = (panel.calls ?? [])
+    .map((call) => (call.mark === undefined ? renderForeignLabel(call.name) : renderApiChip(call.name, call.mark)))
+    .join('')
   return `<div class="lc-page-wrap">
     <div class="lc-title">${escapeHtml(panel.title)}</div>
     <div class="lc-page">
@@ -170,7 +175,8 @@ function renderPanel(panel: LifecyclePanel, config: LifecycleConfig, metrics: Li
       </div>
     </div>
     <div class="lc-counts" style="color:${tone}">&lt;style&gt; ${state.styles} · observers ${state.observers} · listeners ${state.listeners}</div>
-    <div class="lc-note">${escapeHtml(panel.note)}</div>
+    ${panel.note === undefined ? '' : `<div class="lc-note">${escapeHtml(panel.note)}</div>`}
+    ${calls === '' ? '' : `<div class="lc-calls">${calls}</div>`}
   </div>`
 }
 
@@ -185,7 +191,9 @@ function renderPanel(panel: LifecyclePanel, config: LifecycleConfig, metrics: Li
 function lifecycleStyles(config: LifecycleConfig, profile: MediaProfile, theme: MediaTheme): string {
   const metrics = lifecycleMetrics(profile)
   return `
+${apiChipStyles(theme, metrics.notePx)}
 .lc-frame { position: absolute; inset: ${metrics.insetPx}px; display: flex; flex-direction: column; gap: ${metrics.gapPx * 0.8}px; }
+.lc-calls { display: flex; flex-wrap: wrap; gap: ${ceil(metrics.notePx * 0.5)}px; }
 .lc-heading { flex: none; font-size: ${metrics.headingPx}px; font-weight: 600; letter-spacing: -0.01em; color: ${theme.text.strong}; }
 .lc-pages { flex: 1 1 auto; min-height: 0; display: flex; gap: ${metrics.gapPx}px; }
 .lc-page-wrap { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; gap: ${ceil(metrics.padPx * 0.6)}px; }

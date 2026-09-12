@@ -67,7 +67,7 @@ const STAGES: readonly Shipped[] = [
   shipped(lifecycleStage, {
     heading: 'h',
     caption: 'c',
-    panels: [{ title: 'p', teardown: false, note: 'n' }],
+    panels: [{ title: 'p', teardown: false, note: 'n', calls: [{ name: 'c' }] }],
     cycles: 1,
     cycleMs: 100,
     listenersPerMount: 1,

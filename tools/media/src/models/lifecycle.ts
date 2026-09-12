@@ -1,3 +1,18 @@
+import type { Mark } from './banner'
+
+/** One call a page makes to attach something, named under the page. */
+export interface LifecycleCall {
+  /** The function as a reader would write it. */
+  name: string
+  /**
+   * The package's mark, when the call is the package's own API.
+   *
+   * A call with a mark is drawn as a chip in the accent; one without is drawn
+   * plainly, as the platform call the page made instead.
+   */
+  mark?: Mark
+}
+
 /** One page in the frame: a way of mounting the same widget. */
 export interface LifecyclePanel {
   /** What this page does differently, set over it. */
@@ -5,7 +20,9 @@ export interface LifecyclePanel {
   /** Whether the page calls the teardown each mount handed back. */
   teardown: boolean
   /** One line under the page, saying why the counts look as they do. */
-  note: string
+  note?: string
+  /** The calls this page attaches things with, set under the counts. */
+  calls?: readonly LifecycleCall[]
 }
 
 /** Everything a scene tells the lifecycle stage. */

@@ -1,26 +1,29 @@
-import { flowStage } from '../src/flow/stage'
+import { embedStage } from '../src/embed/stage'
 import { defineScriptedScene } from '../src/scene/define-scene'
+import { packageIdentity } from './lib/identity'
+
+/** The package's hue and mark. */
+const identity = packageIdentity('features')
 
 /**
- * What actually happens between a host page and a feature it mounts.
+ * What happens when a host mounts a feature, drawn rather than logged.
  *
- * Every name on the wire is the real one. The three-way handshake is nexus's
- * (`connection-request` carrying the host's contract, `connection-request-accepted`
- * carrying the feature's, then `connection-opened`, which is where contract
- * compatibility is decided). Everything after it is this package's reserved
- * control plane: `__hf:present` is queued before the channel connects so it is
- * the first message the feature receives, and it carries the display mode and
- * the frame's measured pixel size rather than leaving the feature to guess;
- * `__hf:beat` is the feature's own liveness pulse on a fixed one-second
- * cadence, which the host counts and stops trusting after three misses.
+ * A feature window slides out of its own space into the slot the host holds
+ * for it. Three dots cross the dashed wire, one each way and one back, and on
+ * the third the wire goes solid: that is nexus's three-way handshake
+ * (`connection-request`, `connection-request-accepted`, `connection-opened`).
+ * The host then measures the slot, a bracket draws around it with the size,
+ * and a dot carries that size across: the presentation announcement, which is
+ * queued before the channel even connects so it is the first thing the
+ * feature hears, and why the feature's content only fills its frame once it
+ * has been told the frame. Small dots then leave the feature once a second,
+ * the host's lamp turns green on the first, and finally the feature says the
+ * one thing either side actually wanted to say, and a receipt pops on the
+ * host.
  *
- * The one thing here that is not a message is the `order-placed` line, and that
- * is the point of the whole exchange: everything above it is the session being
- * established, and it is the first thing either app actually wanted to say.
- *
- * Verified against `libs/nexus/src/types/action.ts` (the wire names),
- * `libs/features/src/shared/control.ts` (the control types),
- * `libs/features/src/host/lifecycle.ts` (present queued ahead of connect) and
+ * Verified against `libs/nexus/src/types/action.ts` (the handshake actions),
+ * `libs/features/src/host/lifecycle.ts` (the announcement queued ahead of
+ * `connect()` with the host-measured viewport) and
  * `libs/features/src/hostee/heartbeat.ts` (the one-second cadence).
  */
 export default defineScriptedScene({
@@ -28,72 +31,26 @@ export default defineScriptedScene({
   asset: 'hero',
   outputs: ['gif', 'still'],
   profile: 'compact',
-  hue: 217,
-  stage: flowStage,
-  holdMs: 1_500,
-  gif: { colours: 56, lossy: 75, maxBytes: 900_000 },
-  stills: [{ name: 'poster', atMs: 9_400, format: 'webp', quality: 82, maxBytes: 70_000 }],
+  hue: identity.hue,
+  stage: embedStage,
+  holdMs: 1_800,
+  gif: { colours: 128, lossy: 0, maxBytes: 900_000 },
+  stills: [{ name: 'poster', atMs: 9_500, format: 'webp', quality: 82, maxBytes: 70_000 }],
   config: {
-    left: { title: 'Host', subtitle: 'shop.example.com', note: 'createShell({ modes })' },
-    right: { title: 'Feature', subtitle: 'checkout.example.com', note: 'createFeature({ contract })' },
-    phases: [
-      { atMs: 0, label: 'Handshake' },
-      { atMs: 4_600, label: 'Presentation' },
-      { atMs: 6_600, label: 'Session' },
-    ],
-    settled: 'One typed channel. Anything off the contract never reaches your handler.',
-    restMs: 1_600,
-    messages: [
-      {
-        from: 'left',
-        label: '[nexus] connection-request',
-        detail: 'the host contract, and the origin it will pin to',
-        atMs: 500,
-        flightMs: 850,
-        tone: 'muted',
-      },
-      {
-        from: 'right',
-        label: '[nexus] connection-request-accepted',
-        detail: 'the feature contract, and its display modes',
-        atMs: 1_900,
-        flightMs: 850,
-        tone: 'muted',
-      },
-      {
-        from: 'left',
-        label: '[nexus] connection-opened',
-        detail: 'contracts checked, channel open',
-        atMs: 3_300,
-        flightMs: 850,
-        tone: 'accent',
-      },
-      {
-        from: 'left',
-        label: '__hf:present',
-        detail: 'mode: dialog, viewport: 720 x 540',
-        atMs: 4_800,
-        flightMs: 800,
-        tone: 'accent',
-      },
-      {
-        from: 'right',
-        label: '__hf:beat',
-        detail: 'every 1s, three misses and the host stops trusting it',
-        atMs: 6_200,
-        flightMs: 620,
-        repeatEveryMs: 1_000,
-        repeatUntilMs: 10_200,
-        tone: 'muted',
-      },
-      {
-        from: 'right',
-        label: 'order-placed',
-        detail: "{ id: 'A-1094' }",
-        atMs: 8_900,
-        flightMs: 800,
-        tone: 'success',
-      },
+    mark: identity.mark,
+    shellApi: 'createShell',
+    featureApi: 'createFeature',
+    closeApi: 'close()',
+    restMs: 1_000,
+    script: [
+      { kind: 'dock', atMs: 0, durationMs: 1_300 },
+      { kind: 'pulse', atMs: 1_500, from: 'host' },
+      { kind: 'pulse', atMs: 2_400, from: 'feature' },
+      { kind: 'pulse', atMs: 3_300, from: 'host' },
+      { kind: 'link', atMs: 4_000 },
+      { kind: 'present', atMs: 4_600, width: 720, height: 540 },
+      { kind: 'beat', atMs: 6_000, everyMs: 1_000, untilMs: 9_000 },
+      { kind: 'message', atMs: 8_600, from: 'feature', label: 'order-placed' },
     ],
   },
 })

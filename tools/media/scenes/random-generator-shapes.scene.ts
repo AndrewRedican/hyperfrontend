@@ -1,74 +1,87 @@
-import { gaugeStage } from '../src/gauge/stage'
+import { max } from '@hyperfrontend/immutable-api-utils/built-in-copy/math'
+import { galtonStage } from '../src/galton/stage'
 import { defineScriptedScene } from '../src/scene/define-scene'
+import { packageIdentity } from './lib/identity'
+
+/** The package's hue and mark. */
+const identity = packageIdentity('random-generator-utils')
+
+/** How many columns each board bins its draws into. */
+const COLUMNS = 24
+
+/** The digit a column index is written as, so a run of hundreds of draws fits on one line. */
+const DIGITS = '0123456789abcdefghijklmn'
 
 /**
- * The shape `Math.random` cannot make, drawn beside the one it can.
+ * The column each of 340 draws of `uniform(0, 100)` fell into, in draw order.
  *
- * A distribution is not a fact you can state in a sentence and have anybody
- * believe: it is a shape, and the only way to show that a bounded Gaussian is
- * a different thing from a uniform draw is to fill two histograms from the
- * same number of samples and let the reader watch one settle into a plateau
- * and the other into a bell. Both bars fill together so the difference is in
- * the shape rather than in the timing.
+ * Drawn from the real generator on 2026-09-12, from the workspace root, with
+ * `npx tsx --tsconfig tsconfig.base.json` over a one-off script that opened
+ * `createRandomGenerator(2026)`, took 340 `uniform(0, 100)` values and then
+ * 340 `gaussian(0, 100)` values from that one stream, and binned each as
+ * `floor(v / 100 * 24)` clamped to 0..23. One base-24 digit per draw.
+ */
+// note: seed 2026, drawn 2026-09-12 with `npx tsx --tsconfig tsconfig.base.json` from the workspace root; the uniform draws come first because both methods share the seeded stream
+const UNIFORM =
+  'a7fe35gj711e92479md046immi6696fk7m108ih9ngf80n4nj6b4nekiebciidgn8041mm44be6ml0nel5ed0lknj0mmbb05jld42bnk57hk4em1d3fe4573l8198lkfh85b512n3jn2447l260edn8cdglc9fh38aa2481ab456gg725kmlh469nd7nbacii4n32823070ga1e19198bddk9a3hjjf7hh3hgc2ncccehm99hl0nd47mdklmm68g38gak74gki5c0c3jcfcm8anmlcknm03d52a2d2kd9e43eclj99m689b4f812cc66nfi1ef42algb1jhlhkh3'
+
+/**
+ * The column each of 340 draws of `gaussian(0, 100)` fell into, in draw order.
  *
- * The closing line is the second half of the package and the half that is
- * easier to miss: the same seed opens the same stream, so a whole procedural
- * scene or fixture set is a function of one number.
+ * Same stream, same run and same binning as `UNIFORM`, taken after it.
+ */
+// note: seed 2026, drawn 2026-09-12; these are the 340 gaussian draws that followed the 340 uniform draws on the same stream
+const GAUSSIAN =
+  '98dmbf49gdbeflafg77bgb43cbeba9fcalgifbd2fabbg9db87f995ah77icd9be4gbiljihgdd79bafb2b4eee8ffa8ca8b8ied46g6f97cdihe9hdfdhf67decbf88ga9n957de8939j52fa76jf8a746cdafjfead69bbaeicb6gcjabidc7hgadbf8dhcccgbdajih7ceb8ce9efe3dca9e8be89ggdciddkbdbea9d5ldai6eid6cb69c898f4dcgbafc99bea43dbeh476befaegfad989i9b8f84b9dbda7df9fc7j5dabaf9bc8hg6aac70aejb0igdb'
+
+/**
+ * Read a run of base-24 digits back into column indices.
  *
- * Both histograms are real counts. Four thousand samples were drawn from
- * `createRandomGenerator(2026)` through `uniform(0, 100)` and `gaussian(0, 100)`
- * on 2026-09-10, binned into sixteen, and the totals transcribed here
- * unaltered; `next()` from two generators opened on seed 2026 both returned
- * 0.455408, and seed 2027 returned 0.987989.
+ * @param encoded - One digit per draw, from `DIGITS`.
+ * @returns The column of each draw, in draw order.
+ */
+function decodeColumns(encoded: string): readonly number[] {
+  return encoded.split('').map((digit) => max(0, DIGITS.indexOf(digit)))
+}
+
+/**
+ * Grains falling into place: the two shapes a seeded stream draws.
+ *
+ * `createRandomGenerator(2026)` opens one stream; `uniform(0, 100)` and
+ * `gaussian(0, 100)` draw from it. A single draw looks like nothing, so the
+ * frame shows hundreds: on each board a grain appears at the top, over the
+ * column the next draw fell into, and drops onto the pile already there. For
+ * the first second the piles are ragged and unpredictable. By the end the
+ * uniform board has flattened into a plateau and the gaussian board has risen
+ * into a bell, and the difference between the two methods is a picture.
+ *
+ * Every grain's column is the real generator's own draw, embedded above in
+ * draw order, so the raggedness on the way and the shapes at the end are what
+ * seed 2026 actually produces. Both boards release a grain every 22 ms from
+ * 400 ms; the last of 340 lands at about 8.2 s and the frame rests on the two
+ * finished shapes.
  */
 export default defineScriptedScene({
   slug: 'random-generator-shapes',
   asset: 'hero',
   outputs: ['gif', 'still'],
   profile: 'compact',
-  hue: 306,
-  stage: gaugeStage,
+  hue: identity.hue,
+  stage: galtonStage,
   holdMs: 1_800,
-  gif: { colours: 40, lossy: 80, maxBytes: 700_000 },
-  stills: [{ name: 'poster', atMs: 4_600, format: 'webp', quality: 82, maxBytes: 60_000 }],
+  gif: { colours: 48, lossy: 60, maxBytes: 800_000 },
+  stills: [{ name: 'poster', atMs: 8_400, format: 'webp', quality: 82, maxBytes: 70_000 }],
   config: {
-    heading: 'Four thousand draws. Two shapes.',
-    caption: 'Seed 2026 opens the same stream every time: next() is 0.455408, twice.',
-    restMs: 1_700,
-    groups: [
-      {
-        title: 'uniform(0, 100)',
-        orientation: 'column',
-        tracks: bins([258, 240, 258, 258, 261, 235, 260, 224, 234, 244, 249, 248, 246, 237, 258, 290], 'accent'),
-      },
-      {
-        title: 'gaussian(0, 100)',
-        orientation: 'column',
-        tracks: bins([8, 28, 61, 153, 244, 400, 525, 595, 567, 502, 396, 262, 155, 67, 30, 7], 'success'),
-      },
+    api: { name: 'createRandomGenerator(2026)', mark: identity.mark },
+    columns: COLUMNS,
+    axis: ['0', '100'],
+    startMs: 400,
+    everyMs: 22,
+    fallMs: 380,
+    restMs: 1_300,
+    boards: [
+      { label: 'uniform(0, 100)', tone: 'accent', draws: decodeColumns(UNIFORM) },
+      { label: 'gaussian(0, 100)', tone: 'success', draws: decodeColumns(GAUSSIAN) },
     ],
   },
 })
-
-/**
- * Turn a run of bin totals into tracks that fill together.
- *
- * The maximum is shared across both histograms rather than taken per bin, so
- * the two groups are drawn to one scale and the reader is comparing shapes
- * instead of comparing two independently normalised pictures.
- *
- * @param counts - Sample totals, one per bin, in bin order.
- * @param tone - How the bars are coloured.
- * @returns One gauge track per bin.
- */
-function bins(counts: readonly number[], tone: 'accent' | 'success') {
-  return counts.map((count, index) => ({
-    label: index % 4 === 0 ? `${index * 6}` : '',
-    max: 600,
-    tone,
-    stops: [
-      { atMs: 600, value: 0 },
-      { atMs: 4_600, value: count },
-    ],
-  }))
-}

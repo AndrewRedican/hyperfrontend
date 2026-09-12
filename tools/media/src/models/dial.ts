@@ -1,3 +1,5 @@
+import type { Mark } from './banner'
+
 /** How a dial is coloured. */
 export type DialTone = 'accent' | 'success' | 'warning' | 'danger'
 
@@ -13,6 +15,13 @@ export interface DialStop {
 export interface Dial {
   /** What the dial stands for, set over it. */
   title: string
+  /**
+   * The package's mark, when the title is the package's own API.
+   *
+   * A dial with a mark is drawn as a chip in the accent; one without is drawn
+   * plainly, as the thing the package is being compared against.
+   */
+  mark?: Mark
   /** The value the ring is full at. */
   max: number
   /** Set after the readout. */

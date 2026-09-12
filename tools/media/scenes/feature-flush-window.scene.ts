@@ -1,30 +1,26 @@
-import { flowStage } from '../src/flow/stage'
+import { embedStage } from '../src/embed/stage'
 import { defineScriptedScene } from '../src/scene/define-scene'
+import { packageIdentity } from './lib/identity'
+
+/** The package's hue and mark. */
+const identity = packageIdentity('features')
 
 /**
- * The gap between "we are closing" and "we are closed".
+ * Closing is a duration, and the draft gets out through it.
  *
- * Closing a session is not an event, it is a duration, and that duration is
- * the entire feature. The moment a close is proposed the channel is still
- * live: `closing` fires on both sides while messages still deliver, the
- * feature gets its window to push out whatever it was holding, and only then
- * does the acknowledgement land and the channel go down.
+ * The seated feature holds a draft with an amber marker, and tells the host
+ * so: an amber dot crosses and the host's lamp takes the colour. The host
+ * presses `close()` and a dot carries the proposal across. A shutter comes
+ * down over the wire and stops part way: the wire under it turns amber and
+ * both windows' borders with it, because the channel is closing and still
+ * delivering. The draft leaves the feature, passes through the gap and lands
+ * in the host with a green check, and the amber clears on both sides. Only
+ * then does the acknowledgement cross back, the shutter finish its descent,
+ * the wire go dead and the feature fade out of the slot.
  *
- * A window is the archetypal thing to animate and close to impossible to write
- * down: eleven lines of prose in the nexus architecture and a footnote on a
- * diagram currently carry it. Here the phase caption names the window while it
- * is open, and the draft crosses inside it, which is the whole argument.
- *
- * The `__hf:dirty` beat at the start is what makes the window worth having:
- * the host asked to close, saw the feature was holding unsaved work, and the
- * exchange it started is the one that gets the work out rather than the one
- * that discards it.
- *
- * Verified against `libs/nexus/src/types/action.ts` (`[nexus] connection-closed`
- * and `[nexus] connection-closed-acknowledged`),
- * `libs/nexus/src/broker/routing/handle-close.ts` (`closing` is fired while the
- * channel is still active, deliberately, so subscribers can flush messages that
- * deliver before the acknowledgement), and
+ * Verified against `libs/nexus/src/broker/routing/handle-close.ts` (`closing`
+ * fires while the channel is still active so subscribers can flush, then
+ * `connection-closed-acknowledged` is sent and the channel disconnects) and
  * `libs/features/src/shared/control.ts` (`__hf:dirty` is the feature's own
  * declaration that it holds unsaved work).
  */
@@ -33,62 +29,26 @@ export default defineScriptedScene({
   asset: 'hero',
   outputs: ['gif', 'still'],
   profile: 'compact',
-  hue: 217,
-  stage: flowStage,
-  holdMs: 1_500,
-  gif: { colours: 56, lossy: 75, maxBytes: 900_000 },
-  stills: [{ name: 'poster', atMs: 7_800, format: 'webp', quality: 82, maxBytes: 70_000 }],
+  hue: identity.hue,
+  stage: embedStage,
+  holdMs: 1_800,
+  gif: { colours: 128, lossy: 0, maxBytes: 900_000 },
+  stills: [{ name: 'poster', atMs: 3_750, format: 'webp', quality: 82, maxBytes: 70_000 }],
   config: {
-    left: { title: 'Host', subtitle: 'shop.example.com', note: 'the reader clicked away' },
-    right: { title: 'Feature', subtitle: 'checkout.example.com', note: 'holding an unsaved draft' },
-    phases: [
-      { atMs: 0, label: 'Open' },
-      { atMs: 2_400, label: 'Closing: the channel still delivers' },
-      { atMs: 8_200, label: 'Closed' },
-    ],
-    settled: 'Nothing was discarded. The window is what the draft left through.',
-    restMs: 1_700,
-    messages: [
-      {
-        from: 'right',
-        label: '__hf:dirty',
-        detail: '{ dirty: true }, so the host knows there is work',
-        atMs: 500,
-        flightMs: 800,
-        tone: 'muted',
-      },
-      {
-        from: 'left',
-        label: '[nexus] connection-closed',
-        detail: 'both sides fire closing; the channel is still up',
-        atMs: 2_600,
-        flightMs: 800,
-        tone: 'accent',
-      },
-      {
-        from: 'right',
-        label: 'draft-saved',
-        detail: 'an ordinary message, sent after the close was proposed',
-        atMs: 4_200,
-        flightMs: 800,
-        tone: 'success',
-      },
-      {
-        from: 'right',
-        label: '__hf:dirty',
-        detail: '{ dirty: false }, and there is nothing left to lose',
-        atMs: 5_700,
-        flightMs: 800,
-        tone: 'muted',
-      },
-      {
-        from: 'right',
-        label: '[nexus] connection-closed-acknowledged',
-        detail: 'now the channel goes down, on both sides',
-        atMs: 7_100,
-        flightMs: 900,
-        tone: 'warning',
-      },
+    mark: identity.mark,
+    shellApi: 'createShell',
+    featureApi: 'createFeature',
+    closeApi: 'close()',
+    restMs: 800,
+    script: [
+      { kind: 'link', atMs: 0, flash: false },
+      { kind: 'dirty', atMs: 400, on: true, flightMs: 650 },
+      { kind: 'close', atMs: 1_400, flightMs: 800 },
+      { kind: 'gate', atMs: 2_300, to: 0.6 },
+      { kind: 'draft', atMs: 3_200 },
+      { kind: 'pulse', atMs: 5_200, from: 'feature', flightMs: 800 },
+      { kind: 'gate', atMs: 6_100, to: 1 },
+      { kind: 'undock', atMs: 6_600 },
     ],
   },
 })

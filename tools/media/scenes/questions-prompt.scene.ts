@@ -42,7 +42,6 @@ export default defineScriptedScene({
   stills: [{ name: 'poster', atMs: 6_700, format: 'webp', quality: 82, maxBytes: 70_000 }],
   config: {
     heading: 'Ask a question. Get a value back, never an exception.',
-    caption: 'A cancelled prompt is a result, not a throw: the caller branches instead of catching.',
     restMs: 1_500,
     panels: [
       {

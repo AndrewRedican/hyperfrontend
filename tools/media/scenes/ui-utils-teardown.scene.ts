@@ -1,8 +1,12 @@
 import { lifecycleStage } from '../src/lifecycle/stage'
 import { defineScriptedScene } from '../src/scene/define-scene'
+import { packageIdentity } from './lib/identity'
+
+/** The package's hue and mark. */
+const identity = packageIdentity('ui-utils')
 
 /** How long one mount and unmount cycle takes on screen. */
-const CYCLE_MS = 1_100
+const CYCLE_MS = 1_350
 
 /** How many times the widget is mounted. */
 const CYCLES = 6
@@ -32,22 +36,31 @@ export default defineScriptedScene({
   asset: 'hero',
   outputs: ['gif', 'still'],
   profile: 'compact',
-  hue: 322,
+  hue: identity.hue,
   stage: lifecycleStage,
   holdMs: 1_800,
   gif: { colours: 48, lossy: 40, maxBytes: 900_000 },
   stills: [{ name: 'poster', atMs: 7_900, format: 'webp', quality: 82, maxBytes: 60_000 }],
   config: {
-    heading: 'Mount the same widget six times. Unmount it six times.',
-    caption: 'const [element, remove] = addStylesheet(css). The second half is the point.',
     cycles: CYCLES,
     cycleMs: CYCLE_MS,
     startMs: 500,
     listenersPerMount: 4,
     restMs: 1_500,
     panels: [
-      { title: 'The obvious way', teardown: false, note: 'appended on mount, never removed; observers watching an element that is gone' },
-      { title: 'With the returned teardown', teardown: true, note: 'remove() on unmount; onElementResize hands back its disconnect' },
+      {
+        title: 'The obvious way',
+        teardown: false,
+        calls: [{ name: 'document.head.append' }, { name: 'new ResizeObserver' }],
+      },
+      {
+        title: 'With the returned teardown',
+        teardown: true,
+        calls: [
+          { name: 'addStylesheet', mark: identity.mark },
+          { name: 'onElementResize', mark: identity.mark },
+        ],
+      },
     ],
   },
 })

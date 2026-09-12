@@ -22,13 +22,14 @@ function tint(theme: MediaTheme, hue: number): ThemeOverride {
     }
   }
   if (theme.id === 'light') {
+    // why: the same composition as the dark ground, a wash of the hue at the top thinning into the page, read in daylight: pale rather than deep, and never so strong that a chip or a rule sitting on it loses contrast
     return {
-      backdrop: `linear-gradient(170deg, hsl(${hue} 60% 98%) 0%, hsl(${hue} 45% 93%) 100%)`,
+      backdrop: `radial-gradient(120% 130% at 50% -10%, hsl(${hue} 58% 91%) 0%, hsl(${hue} 45% 96%) 58%, hsl(${hue} 30% 98%) 100%)`,
     }
   }
   // why: a portable plate must not read as belonging to any page, so the hue is barely there: enough to tell two packages apart side by side, not enough to clash with a page of its own colour
   return {
-    plate: `hsl(${hue} 9% 12%)`,
+    plate: `radial-gradient(120% 130% at 50% -10%, hsl(${hue} 18% 17%) 0%, hsl(${hue} 9% 12%) 58%, hsl(${hue} 9% 10%) 100%)`,
     plateBorder: `hsl(${hue} 8% 33%)`,
     surface: `hsl(${hue} 10% 16%)`,
     surfaceRaised: `hsl(${hue} 10% 20%)`,

@@ -142,7 +142,9 @@ function renderRow(row: PanelRow, kind: Panel['kind'], theme: MediaTheme, atMs: 
   const marker = row.marker ?? ''
   const margin = marker === '' ? '' : `<span class="p-marker">${marker}</span>`
   const classes = ['p-row', `p-tone--${row.tone ?? 'plain'}`]
-  if (row.emphasis === true) {
+  // why: a row may become the point of the frame after it has arrived, so the band is timed when the row says so and immediate otherwise
+  const lit = row.emphasisAtMs === undefined ? row.emphasis === true : atMs >= row.emphasisAtMs
+  if (lit) {
     classes.push('p-row--lit')
   }
   if (row.strike === true) {

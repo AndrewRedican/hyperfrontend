@@ -44,6 +44,14 @@ export interface TerminalOutputStep {
   lines: readonly TerminalSpan[]
   /** How long each line waits before the next appears. */
   lineMs?: number
+  /**
+   * Whether the command is still running once these lines are printed.
+   *
+   * A server that has announced its address has not returned, so the prompt
+   * must not come back under it; a later output step from the same command
+   * can then add its access log.
+   */
+  running?: boolean
 }
 
 /** A beat where nothing changes. */

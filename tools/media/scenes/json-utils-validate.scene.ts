@@ -49,8 +49,6 @@ export default defineScriptedScene({
   gif: { colours: 56, lossy: 72, maxBytes: 900_000 },
   stills: [{ name: 'poster', atMs: 7_500, format: 'webp', quality: 82, maxBytes: 70_000 }],
   config: {
-    heading: 'One call over the whole object. Every rule it broke, with the pointer that found it.',
-    caption: "safePatterns: true rejects '^(a+)+$' by inspection, before any regex is compiled.",
     restMs: 1_400,
     panels: [
       {
@@ -59,15 +57,15 @@ export default defineScriptedScene({
         weight: 0.95,
         rows: [
           { text: 'const schema = {', atMs: 200, typeMs: 240 },
-          { text: "  required: ['url', 'retries'],", atMs: 500, typeMs: 380 },
+          { text: "  required: ['url', 'retries'],", atMs: 500, typeMs: 380, emphasisAtMs: 6_220 },
           { text: '  properties: {', atMs: 940, typeMs: 200 },
           { text: '    port: { minimum: 1024 },', atMs: 1_200, typeMs: 420 },
           { text: "    timeout: { type: 'integer' },", atMs: 1_680, typeMs: 420 },
           { text: '  },', atMs: 2_160, typeMs: 100 },
           { text: '}', atMs: 2_300, typeMs: 80 },
           { text: 'const config = {', atMs: 2_500, typeMs: 240 },
-          { text: "  port: 80, url: 'https://shop.io',", atMs: 2_800, typeMs: 440 },
-          { text: "  timeout: '5000',", atMs: 3_300, typeMs: 240 },
+          { text: "  port: 80, url: 'https://shop.io',", atMs: 2_800, typeMs: 440, emphasisAtMs: 5_060 },
+          { text: "  timeout: '5000',", atMs: 3_300, typeMs: 240, emphasisAtMs: 5_640 },
           { text: '}', atMs: 3_600, typeMs: 80 },
         ],
       },

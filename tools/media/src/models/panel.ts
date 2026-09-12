@@ -33,6 +33,14 @@ export interface PanelRow {
   typeMs?: number
   /** Draw the line on a lit band, for the one line the frame is about. */
   emphasis?: boolean
+  /**
+   * When the lit band arrives, for a line that is lit later than it appears.
+   *
+   * A row that becomes the point of the frame part way through, such as the
+   * line a validation error turns out to be about, is emphasised from this
+   * moment on and is drawn plainly before it. Implies `emphasis`.
+   */
+  emphasisAtMs?: number
   /** Strike the line through, for something that was true and is not. */
   strike?: boolean
   /** A short label set in the margin, in place of the kind's own marker. */
