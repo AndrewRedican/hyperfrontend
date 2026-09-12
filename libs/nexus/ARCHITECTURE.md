@@ -1,12 +1,12 @@
 # Nexus Architecture
 
-**Complete Overview of `@hyperfrontend/nexus`**
+**Complete Overview of [`@hyperfrontend/nexus`](https://www.hyperfrontend.dev/docs/libraries/nexus/)**
 
 ---
 
 ## Overview
 
-`@hyperfrontend/nexus` is a cross-window communication library designed for micro-frontend architectures. It implements a TCP-like connection protocol over the browser's `postMessage` API, providing secure, contract-validated messaging between browser contexts (iframes, windows, and web workers).
+[`@hyperfrontend/nexus`](https://www.hyperfrontend.dev/docs/libraries/nexus/) is a cross-window communication library designed for micro-frontend architectures. It implements a TCP-like connection protocol over the browser's `postMessage` API, providing secure, contract-validated messaging between browser contexts (iframes, windows, and web workers).
 
 ### Target Use Cases
 
@@ -193,26 +193,26 @@ interface IActionDescription {
 }
 ```
 
-Contracts are exchanged during the handshake. Unknown inbound types are dropped and logged; only `accepted` entries flagged `required` gate the connection (the peer must emit them), so additive contract evolution is non-breaking in both directions. See [Contract Compatibility](#contract-compatibility) for the full gating rules, including the optional `version` announcement and the channel-supplied `contractCompat` rule.
+Contracts are exchanged during the handshake. Unknown inbound types are dropped and logged; only [`accepted`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-IChannelContract-prop-accepted) entries flagged [`required`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-IActionDescription-prop-required) gate the connection (the peer must emit them), so additive contract evolution is non-breaking in both directions. See [Contract Compatibility](#contract-compatibility) for the full gating rules, including the optional [`version`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-IChannelContract-prop-version) announcement and the channel-supplied [`contractCompat`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-IChannelSettings-prop-contractCompat) rule.
 
 ### 4. Actions (Protocol Messages)
 
 The protocol defines 12 action types for connection lifecycle:
 
-| Action Type                      | Purpose                                                               |
-| -------------------------------- | --------------------------------------------------------------------- |
-| `REQUEST_CONNECTION`             | Initiate connection (SYN)                                             |
-| `ACCEPT_CONNECTION`              | Accept connection (SYN-ACK)                                           |
-| `OPEN_CONNECTION`                | Confirm connection (ACK)                                              |
-| `DENY_CONNECTION`                | Reject connection (RST)                                               |
-| `CANCEL_CONNECTION`              | Cancel pending connection                                             |
-| `CANCEL_CONNECTION_ACKNOWLEDGED` | Acknowledge cancellation                                              |
-| `CLOSE_CONNECTION`               | Graceful disconnect                                                   |
-| `CLOSE_CONNECTION_ACKNOWLEDGED`  | Acknowledge disconnect                                                |
-| `DESTROY_CONNECTION`             | Force disconnect                                                      |
-| `NEW_MESSAGE`                    | User data transmission                                                |
-| `INVALID_REQUEST`                | Protocol violation                                                    |
-| `SECURITY_CONFIRMED`             | Sealed session confirmation (consumed by the transport, never routed) |
+| Action Type                                                                                                                 | Purpose                                                               |
+| --------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| [`REQUEST_CONNECTION`](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/nexus/src/types/action.ts)             | Initiate connection (SYN)                                             |
+| [`ACCEPT_CONNECTION`](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/nexus/src/types/action.ts)              | Accept connection (SYN-ACK)                                           |
+| [`OPEN_CONNECTION`](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/nexus/src/types/action.ts)                | Confirm connection (ACK)                                              |
+| [`DENY_CONNECTION`](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/nexus/src/types/action.ts)                | Reject connection (RST)                                               |
+| [`CANCEL_CONNECTION`](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/nexus/src/types/action.ts)              | Cancel pending connection                                             |
+| [`CANCEL_CONNECTION_ACKNOWLEDGED`](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/nexus/src/types/action.ts) | Acknowledge cancellation                                              |
+| [`CLOSE_CONNECTION`](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/nexus/src/types/action.ts)               | Graceful disconnect                                                   |
+| [`CLOSE_CONNECTION_ACKNOWLEDGED`](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/nexus/src/types/action.ts)  | Acknowledge disconnect                                                |
+| [`DESTROY_CONNECTION`](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/nexus/src/types/action.ts)             | Force disconnect                                                      |
+| [`NEW_MESSAGE`](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/nexus/src/types/action.ts)                    | User data transmission                                                |
+| [`INVALID_REQUEST`](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/nexus/src/types/action.ts)                | Protocol violation                                                    |
+| [`SECURITY_CONFIRMED`](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/nexus/src/types/action.ts)             | Sealed session confirmation (consumed by the transport, never routed) |
 
 The first six are the handshake actions and always travel in plaintext; once a channel has a security transport, every other action crosses the wire sealed (see [Layer 4](#layer-4-transport-security-optional)).
 
@@ -245,7 +245,7 @@ sequenceDiagram
     Note over HostB: [CHANNEL OPEN]<br/>Event: 'open'
 ```
 
-Initiation is symmetric: either side may `connect()` first, and simultaneous requests (glare) resolve by broker-id tie-break (the lower id yields and answers as responder). Pending REQUEST/ACCEPT frames are re-sent every `requestRetryMs` (default 500 ms) until answered; all three handshake messages are idempotent under replay. A handshake that stays unanswered past `connectTimeoutMs` (default 10 000 ms) fires `connect-timeout` and leaves the channel inactive, reconnectable, with queued messages retained. Each side pins the counterpart's origin during the handshake; subsequent sends target the pin and mismatched inbound origins are dropped. A channel can also be pre-pinned via the `origin` setting before the first message leaves.
+Initiation is symmetric: either side may `connect()` first, and simultaneous requests (glare) resolve by broker-id tie-break (the lower id yields and answers as responder). Pending REQUEST/ACCEPT frames are re-sent every [`requestRetryMs`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-IChannelSettings-prop-requestRetryMs) (default 500 ms) until answered; all three handshake messages are idempotent under replay. A handshake that stays unanswered past [`connectTimeoutMs`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-IChannelSettings-prop-connectTimeoutMs) (default 10 000 ms) fires `connect-timeout` and leaves the channel inactive, reconnectable, with queued messages retained. Each side pins the counterpart's origin during the handshake; subsequent sends target the pin and mismatched inbound origins are dropped. A channel can also be pre-pinned via the [`origin`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-IChannelSettings-prop-origin) setting before the first message leaves.
 
 **Internal Sequence:**
 
@@ -274,8 +274,8 @@ sequenceDiagram
 
 ### Instance Identity
 
-Every broker mints a UUID when it boots and stamps it on every action it sends (`senderId`).
-It is a machine identity, not a label (the broker's `name` is the readable one), and it does
+Every broker mints a UUID when it boots and stamps it on every action it sends ([`senderId`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-IAction)).
+It is a machine identity, not a label (the broker's [`name`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-BrokerHandle-prop-name) is the readable one), and it does
 three jobs a name cannot: it is the endpoint identifier the encrypted wire format requires
 (each packet carries the sender's and the target's id, both validated as UUID v4), the ordinal
 that settles glare without an extra round trip, and the identity of one **incarnation** of the
@@ -283,15 +283,15 @@ counterpart.
 
 That last job matters because a window outlives the documents loaded into it. Routing resolves
 an inbound frame by its source window, which identifies the window, not what is running inside
-it. So the channel records the counterpart's id at handshake time (`peerId`, exposed on
-`ChannelJSON`) and, while a session is open, ignores frames stamped with any other id: product
+it. So the channel records the counterpart's id at handshake time ([`peerId`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-ChannelJSON-prop-peerId), exposed on
+[`ChannelJSON`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-ChannelJSON)) and, while a session is open, ignores frames stamped with any other id: product
 messages, CLOSE, CANCEL, DESTROY, and the OPEN that completes a handshake. Traffic left over
 from a document that has been replaced is dropped instead of entering the session that
 replaced it.
 
 REQUEST is the exception, because it is how a new incarnation announces itself. A REQUEST
 carrying a different id on a connected channel means the window reloaded (or navigated
-in-frame): the session it belonged to ends silently. `close` fires with
+in-frame): the session it belonged to ends silently. [`close`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-ChannelEvent) fires with
 `reason: 'peer-reload'` so subscribers can drop session-scoped state, and the same channel
 re-handshakes with the new instance. The channel is never removed, and security and contract
 compatibility are renegotiated from scratch; only the origin pin carries over.
@@ -303,16 +303,16 @@ authenticated, because producing a frame at all requires the session keys.
 
 ### Contract Compatibility
 
-Both sides exchange contracts during the handshake. Vocabulary differences never gate the connection: only `accepted` entries flagged `required: true` do, and each must appear in the counterpart's `emitted` list or the connection is denied with `Incompatible contract: missing required actions …`. This keeps additive contract evolution non-breaking in both directions:
+Both sides exchange contracts during the handshake. Vocabulary differences never gate the connection: only [`accepted`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-IChannelContract-prop-accepted) entries flagged `required: true` do, and each must appear in the counterpart's [`emitted`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-IChannelContract-prop-emitted) list or the connection is denied with `Incompatible contract: missing required actions …`. This keeps additive contract evolution non-breaking in both directions:
 
-| Situation                               | Fatal? | Handling                                              |
-| --------------------------------------- | ------ | ----------------------------------------------------- |
-| Peer emits a type outside my vocabulary | No     | Dropped and logged at receive                         |
-| I accept a type the peer never emits    | No     | Nothing: dormant vocabulary                           |
-| I emit a type the peer does not accept  | No     | Peer drops it; the peer's own `required` flags decide |
-| I require an input the peer never emits | Yes    | Connection denied at handshake time                   |
+| Situation                               | Fatal? | Handling                                                                                                                                          |
+| --------------------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Peer emits a type outside my vocabulary | No     | Dropped and logged at receive                                                                                                                     |
+| I accept a type the peer never emits    | No     | Nothing: dormant vocabulary                                                                                                                       |
+| I emit a type the peer does not accept  | No     | Peer drops it; the peer's own [`required`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-IActionDescription-prop-required) flags decide |
+| I require an input the peer never emits | Yes    | Connection denied at handshake time                                                                                                               |
 
-A contract may also carry an optional `version` string. Nexus attaches no semantics to it; supply a `contractCompat` rule in the channel settings to decide whether two contracts may interoperate:
+A contract may also carry an optional [`version`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-IChannelContract-prop-version) string. Nexus attaches no semantics to it; supply a [`contractCompat`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-IChannelSettings-prop-contractCompat) rule in the channel settings to decide whether two contracts may interoperate:
 
 ```typescript
 const channel = broker.addChannel('partner', partnerWindow, {
@@ -321,7 +321,7 @@ const channel = broker.addChannel('partner', partnerWindow, {
 })
 ```
 
-The rule runs at the same handshake gate as the required-actions check, on whichever side holds it, receiving the local contract and the counterpart's. On the responder (REQUEST time) an incompatible result sends DENY with the rule's reason and `reason: 'incompatible-contract'`, so the `deny` event fires on both the denying responder and the denied initiator. On the initiator (ACCEPT time) an incompatible result aborts the handshake: the initiator fires its own `deny` event with the same reason and sends CANCEL to the counterpart, which observes a `cancel`, not a `deny`.
+The rule runs at the same handshake gate as the required-actions check, on whichever side holds it, receiving the local contract and the counterpart's. On the responder (REQUEST time) an incompatible result sends DENY with the rule's reason and `reason: 'incompatible-contract'`, so the [`deny`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-ChannelEvent) event fires on both the denying responder and the denied initiator. On the initiator (ACCEPT time) an incompatible result aborts the handshake: the initiator fires its own [`deny`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-ChannelEvent) event with the same reason and sends CANCEL to the counterpart, which observes a [`cancel`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-ChannelEvent), not a [`deny`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-ChannelEvent).
 
 ### Denial Flow
 
@@ -346,13 +346,13 @@ sequenceDiagram
     Note over HostA: [handleDeny]<br/>[stop retries, terminateProcess]<br/>[notifyEvent('deny')]<br/>[CLOSED - never connected]
 ```
 
-Every gate carries a machine-readable `reason` (`'invalid-contract'`, `'missing-required-actions'`, `'policy-rejected'`, `'incompatible-contract'`, or `'security-unavailable'`) alongside the human-readable `error`, and every gate fires the denial locally on the responder as a `deny` event. A denying side is never left waiting on a channel it refused: without the local event, a responder that yielded the glare tie-break has already cleared its handshake timers and would see neither `deny` nor `connect-timeout`. The local event fires once per handshake process: the initiator retries REQUEST while pending, and each retry is answered with another DENY frame without re-notifying the responder's subscribers. On the initiator, `handleDeny` stops the request retries and removes the tracked process, so duplicate DENY frames are no-ops and the `deny` event fires once.
+Every gate carries a machine-readable [`reason`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-DenyEventData-prop-reason) (`'invalid-contract'`, `'missing-required-actions'`, `'policy-rejected'`, `'incompatible-contract'`, or `'security-unavailable'`) alongside the human-readable [`error`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-DenyEventData-prop-error), and every gate fires the denial locally on the responder as a [`deny`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-ChannelEvent) event. A denying side is never left waiting on a channel it refused: without the local event, a responder that yielded the glare tie-break has already cleared its handshake timers and would see neither [`deny`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-ChannelEvent) nor `connect-timeout`. The local event fires once per handshake process: the initiator retries REQUEST while pending, and each retry is answered with another DENY frame without re-notifying the responder's subscribers. On the initiator, [`handleDeny`](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/nexus/src/broker/routing/handle-deny.ts) stops the request retries and removes the tracked process, so duplicate DENY frames are no-ops and the [`deny`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-ChannelEvent) event fires once.
 
-The DENY frame discloses less than the local event for one gate. A policy rejection tells the refused requester only `error: 'Not accepted.'` with no `reason`, because naming the gate would tell an origin the policy just refused how this side judges connections; the local event names the rejected origin and carries `reason: 'policy-rejected'`. The other gates disclose the same `error` and `reason` both ways: an invalid or under-specified contract is the requester's own artifact, so the detail is actionable on both ends.
+The DENY frame discloses less than the local event for one gate. A policy rejection tells the refused requester only `error: 'Not accepted.'` with no [`reason`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-DenyEventData-prop-reason), because naming the gate would tell an origin the policy just refused how this side judges connections; the local event names the rejected origin and carries `reason: 'policy-rejected'`. The other gates disclose the same [`error`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-DenyEventData-prop-error) and [`reason`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-DenyEventData-prop-reason) both ways: an invalid or under-specified contract is the requester's own artifact, so the detail is actionable on both ends.
 
 ### Cancellation Flow
 
-Either party can cancel before the connection completes: CANCEL_CONNECTION is answered with CANCEL_CONNECTION_ACKNOWLEDGED, and both sides fire the `cancel` event. The initiator-side gates that run at ACCEPT time (invalid contract, missing required actions, security policy, contract compatibility, fail-closed security) also abort through this verb: the aborting initiator sends CANCEL to the counterpart, logs an operator warning naming the channel, and fires a local `deny` with the gate's reason, once per handshake process, so a replayed ACCEPT that raced the CANCEL does not notify twice. The counterpart observes a `cancel`, not a `deny`: an aborted acceptance is indistinguishable on the wire from any other cancellation.
+Either party can cancel before the connection completes: CANCEL_CONNECTION is answered with CANCEL_CONNECTION_ACKNOWLEDGED, and both sides fire the [`cancel`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-ChannelEvent) event. The initiator-side gates that run at ACCEPT time (invalid contract, missing required actions, security policy, contract compatibility, fail-closed security) also abort through this verb: the aborting initiator sends CANCEL to the counterpart, logs an operator warning naming the channel, and fires a local [`deny`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-ChannelEvent) with the gate's reason, once per handshake process, so a replayed ACCEPT that raced the CANCEL does not notify twice. The counterpart observes a [`cancel`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-ChannelEvent), not a [`deny`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-ChannelEvent): an aborted acceptance is indistinguishable on the wire from any other cancellation.
 
 ### Graceful Disconnection
 
@@ -379,15 +379,15 @@ sequenceDiagram
 ```
 
 The polite close is a flush-then-confirm exchange. The disconnector posts CLOSE, fires
-`closing` (`{ initiatedLocally: true }`), and stays active so the partner's final sends
-still deliver; its single `close` fires only when the acknowledgement arrives, or when
-`closeTimeoutMs` (default 2 s) expires, so an unresponsive partner cannot hold the channel
-open. The partner fires `closing` (`{ initiatedLocally: false }`) while the channel still
+[`closing`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-ChannelEvent) (`{ initiatedLocally: true }`), and stays active so the partner's final sends
+still deliver; its single [`close`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-ChannelEvent) fires only when the acknowledgement arrives, or when
+[`closeTimeoutMs`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-IChannelSettings-prop-closeTimeoutMs) (default 2 s) expires, so an unresponsive partner cannot hold the channel
+open. The partner fires [`closing`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-ChannelEvent) (`{ initiatedLocally: false }`) while the channel still
 delivers (subscribers may synchronously send final messages, which arrive before the
-acknowledgement), then acknowledges, deactivates, and fires its single `close`. New sends
+acknowledgement), then acknowledges, deactivates, and fires its single [`close`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-ChannelEvent). New sends
 issued after a close was proposed queue for the next connection instead of racing the CLOSE.
 Simultaneous polite closes (close glare) acknowledge each other and still fire exactly one
-`closing` and one `close` per side. `destroy()` remains the immediate, unacknowledged
+[`closing`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-ChannelEvent) and one [`close`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-ChannelEvent) per side. `destroy()` remains the immediate, unacknowledged
 teardown.
 
 ### State Transitions
@@ -420,19 +420,19 @@ stateDiagram-v2
 
 Each protocol action is processed by a dedicated handler. All handlers receive the broker state, channel registry, process manager, and incoming message.
 
-| Handler                    | Responsibilities                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
-| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `handleRequest`            | Enforce origin pin, resolve glare/reload (a new instance in the window ends the stale session with `reason: 'peer-reload'`), validate contract + requirements + compat rule, apply policy, negotiate security against the protocol registry (a channel that selected a protocol offers that protocol or plaintext only; deny fail-closed plaintext outcomes, firing the local 'deny' once per process), attach the security transport before ACCEPT leaves (a scheduled answer attaches it when connect() composes the ACCEPT), track process, pin origin, send ACCEPT with retry/deadline (or schedule until connect()), start the transport so the hello follows ACCEPT |
-| `handleAccept`             | Resolve by process or source window, enforce origin pin, drop an ACCEPT that does not answer the pending request (with an 'invalid' event), validate contract + requirements + compat rule, apply policy, settle security (a protocol other than the one the channel asked for counts as plaintext) and attach the transport before OPEN leaves (abort fail-closed plaintext outcomes via CANCEL + local 'deny'), activate + flush (queued traffic waits in the seal stage until keyed), send OPEN confirming the security outcome, start the transport so the hello follows OPEN, notify 'open'                                                                          |
-| `handleOpen`               | Ignore an OPEN from another instance (leaving the process intact), check the initiator's confirmation against the negotiated protocol (keep the transport attached at ACCEPT time when it matches; release it and record plaintext otherwise, refusing fail-closed outcomes via CANCEL + local 'deny'), activate from the pending accept, flush queue, terminate process, notify 'open' (responder side)                                                                                                                                                                                                                                                                  |
-| `handleDeny`               | Abandon the pending request (stop retrying), terminate process, notify 'deny' with error context                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
-| `handleCancel`             | Ignore a CANCEL from another instance, else cancel channel, send CANCEL_ACK, notify 'cancel'                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
-| `handleCancelAcknowledged` | Terminate process, notify 'cancel' (initiator side)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
-| `handleClose`              | Ignore a CLOSE from another instance, else notify 'closing' (flush window, channel still active), send CLOSE_ACK, then deactivate and notify a single 'close'                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
-| `handleCloseAcknowledged`  | Complete the initiator's polite close: deactivate, terminate process, notify its single 'close' (ignores stray acks for channels not closing)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
-| `handleMessage`            | Drop and log messages from another instance, validate payload, forward to subscribers via `notifyMessage()`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
-| `handleDestroy`            | Ignore a DESTROY from another instance, else force-destroy connection, clean up resources                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
-| `handleInvalid`            | Log invalid requests, optionally notify sender: see [handle-invalid.ts](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/nexus/src/broker/routing/handle-invalid.ts)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| Handler                                                                                                                                            | Responsibilities                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| -------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`handleRequest`](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/nexus/src/broker/routing/handle-request.ts)                        | Enforce origin pin, resolve glare/reload (a new instance in the window ends the stale session with `reason: 'peer-reload'`), validate contract + requirements + compat rule, apply policy, negotiate security against the protocol registry (a channel that selected a protocol offers that protocol or plaintext only; deny fail-closed plaintext outcomes, firing the local 'deny' once per process), attach the security transport before ACCEPT leaves (a scheduled answer attaches it when connect() composes the ACCEPT), track process, pin origin, send ACCEPT with retry/deadline (or schedule until connect()), start the transport so the hello follows ACCEPT |
+| [`handleAccept`](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/nexus/src/broker/routing/handle-accept.ts)                          | Resolve by process or source window, enforce origin pin, drop an ACCEPT that does not answer the pending request (with an 'invalid' event), validate contract + requirements + compat rule, apply policy, settle security (a protocol other than the one the channel asked for counts as plaintext) and attach the transport before OPEN leaves (abort fail-closed plaintext outcomes via CANCEL + local 'deny'), activate + flush (queued traffic waits in the seal stage until keyed), send OPEN confirming the security outcome, start the transport so the hello follows OPEN, notify 'open'                                                                          |
+| [`handleOpen`](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/nexus/src/broker/routing/handle-open.ts)                              | Ignore an OPEN from another instance (leaving the process intact), check the initiator's confirmation against the negotiated protocol (keep the transport attached at ACCEPT time when it matches; release it and record plaintext otherwise, refusing fail-closed outcomes via CANCEL + local 'deny'), activate from the pending accept, flush queue, terminate process, notify 'open' (responder side)                                                                                                                                                                                                                                                                  |
+| [`handleDeny`](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/nexus/src/broker/routing/handle-deny.ts)                              | Abandon the pending request (stop retrying), terminate process, notify 'deny' with error context                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| [`handleCancel`](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/nexus/src/broker/routing/handle-cancel.ts)                          | Ignore a CANCEL from another instance, else cancel channel, send CANCEL_ACK, notify 'cancel'                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| [`handleCancelAcknowledged`](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/nexus/src/broker/routing/handle-cancel-acknowledged.ts) | Terminate process, notify 'cancel' (initiator side)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| [`handleClose`](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/nexus/src/broker/routing/handle-close.ts)                            | Ignore a CLOSE from another instance, else notify 'closing' (flush window, channel still active), send CLOSE_ACK, then deactivate and notify a single 'close'                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| [`handleCloseAcknowledged`](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/nexus/src/broker/routing/handle-close-acknowledged.ts)   | Complete the initiator's polite close: deactivate, terminate process, notify its single 'close' (ignores stray acks for channels not closing)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| [`handleMessage`](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/nexus/src/broker/routing/handle-message.ts)                        | Drop and log messages from another instance, validate payload, forward to subscribers via `notifyMessage()`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| [`handleDestroy`](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/nexus/src/broker/routing/handle-destroy.ts)                        | Ignore a DESTROY from another instance, else force-destroy connection, clean up resources                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| [`handleInvalid`](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/nexus/src/broker/routing/handle-invalid.ts)                        | Log invalid requests, optionally notify sender: see [handle-invalid.ts](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/nexus/src/broker/routing/handle-invalid.ts)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
 
 ---
 
@@ -452,18 +452,18 @@ Channels emit lifecycle events to subscribers. Each event has a specific trigger
 | `'invalid'`         | Protocol violation or unexpected-origin drop      | `{ error, action? }`            |
 | `'connect-timeout'` | Handshake deadline expired with no answer         | `{ elapsedMs }`                 |
 
-The `close` payload's optional `reason` (`CloseReason`) is set only when neither side asked for the close: `'peer-reload'` when the session ended because the target window now hosts a different instance (see [Instance Identity](#instance-identity)), and `'security-unconfirmed'` when a sealed session was never confirmed within `connectTimeoutMs` (a silent close: no CLOSE frame travels, see [Layer 4](#layer-4-transport-security-optional)). The `deny` payload's `reason` is machine-readable and typed as `DenyReason`: `'invalid-contract'` (the counterpart's contract failed structural validation), `'missing-required-actions'` (it does not emit an action this side accepts as `required: true`), `'policy-rejected'` (the broker's `securityPolicy` refused the exchange), `'incompatible-contract'` (a `contractCompat` rule rejected the pair), or `'security-unavailable'` (a fail-closed channel could not obtain an encrypted transport). The union stays open, so a counterpart running a newer protocol can report a reason this build does not know yet. The `invalid` event fires with `{ error, action? }` for unexpected-origin drops, and with `{ reason, origin }` when the counterpart reports an INVALID_REQUEST frame.
+The [`close`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-ChannelEvent) payload's optional [`reason`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-DenyEventData-prop-reason) ([`CloseReason`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-CloseReason)) is set only when neither side asked for the close: `'peer-reload'` when the session ended because the target window now hosts a different instance (see [Instance Identity](#instance-identity)), and `'security-unconfirmed'` when a sealed session was never confirmed within [`connectTimeoutMs`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-IChannelSettings-prop-connectTimeoutMs) (a silent close: no CLOSE frame travels, see [Layer 4](#layer-4-transport-security-optional)). The [`deny`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-ChannelEvent) payload's [`reason`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-DenyEventData-prop-reason) is machine-readable and typed as [`DenyReason`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-DenyReason): `'invalid-contract'` (the counterpart's contract failed structural validation), `'missing-required-actions'` (it does not emit an action this side accepts as `required: true`), `'policy-rejected'` (the broker's [`securityPolicy`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-BrokerSettings-prop-securityPolicy) refused the exchange), `'incompatible-contract'` (a [`contractCompat`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-IChannelSettings-prop-contractCompat) rule rejected the pair), or `'security-unavailable'` (a fail-closed channel could not obtain an encrypted transport). The union stays open, so a counterpart running a newer protocol can report a reason this build does not know yet. The [`invalid`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-ChannelEvent) event fires with `{ error, action? }` for unexpected-origin drops, and with `{ reason, origin }` when the counterpart reports an INVALID_REQUEST frame.
 
 ### Connection Outcomes
 
 A connection attempt ends in one of four distinct ways, each with its own event:
 
-| Event             | A session existed? | Deliberate? | Who decided           | Wire evidence of a peer | Natural reaction         |
-| ----------------- | ------------------ | ----------- | --------------------- | ----------------------- | ------------------------ |
-| `close`           | Yes                | Yes         | Either side           | Yes (CLOSE/ACK)         | Handle disconnect        |
-| `cancel`          | No                 | Yes         | Either side           | Yes (CANCEL verb)       | Accept abandonment       |
-| `deny`            | No                 | Yes         | A gate, with a reason | Yes (DENY + reason)     | Fix the integration      |
-| `connect-timeout` | No                 | No          | Nobody: silence       | None                    | Fallback UI, retry later |
+| Event                                                                            | A session existed? | Deliberate? | Who decided           | Wire evidence of a peer | Natural reaction         |
+| -------------------------------------------------------------------------------- | ------------------ | ----------- | --------------------- | ----------------------- | ------------------------ |
+| [`close`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-ChannelEvent)  | Yes                | Yes         | Either side           | Yes (CLOSE/ACK)         | Handle disconnect        |
+| [`cancel`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-ChannelEvent) | No                 | Yes         | Either side           | Yes (CANCEL verb)       | Accept abandonment       |
+| [`deny`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-ChannelEvent)   | No                 | Yes         | A gate, with a reason | Yes (DENY + reason)     | Fix the integration      |
+| `connect-timeout`                                                                | No                 | No          | Nobody: silence       | None                    | Fallback UI, retry later |
 
 ### Security Events
 
@@ -472,7 +472,7 @@ A connection attempt ends in one of four distinct ways, each with its own event:
 | `security-ready` | `{ protocol }`              | The counterpart's first sealed frame authenticated: the session is confirmed on this side |
 | `security-error` | `{ message, code, cause? }` | A frame was dropped in either direction, a hello was rejected, or the session failed      |
 
-`security-ready` follows `open`: it fires once per session, when the first frame the counterpart sealed under the session keys authenticates, whether that frame is the counterpart's `SECURITY_CONFIRMED` control action or a product message. `security-error` reports every dropped frame, so a message one side sent and the other never delivered is never silent. Its `code` (`SecurityErrorCode`) is one of the wire protocol's verdicts on a single frame (`'unsupported-version'`, `'replayed'`, `'authentication-failed'`, `'malformed'`, `'counter-exhausted'`, `'invalid-session'`) or a transport-level code: `'hello-rejected'` (a hello arrived that differs from the one keying the session), `'security-unconfirmed'` (the confirmation deadline expired), `'transport-error'` (a packet could not be sealed or handed to the wire), or `'unknown'`. Two codes end the session rather than describe a single frame: `'security-unconfirmed'` and `'invalid-session'` are followed by the silent `close` with `reason: 'security-unconfirmed'` (or, on a responder still awaiting OPEN, by a CANCEL and a local `deny` with `reason: 'security-unavailable'`).
+`security-ready` follows [`open`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-ChannelEvent): it fires once per session, when the first frame the counterpart sealed under the session keys authenticates, whether that frame is the counterpart's [`SECURITY_CONFIRMED`](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/nexus/src/types/action.ts) control action or a product message. `security-error` reports every dropped frame, so a message one side sent and the other never delivered is never silent. Its [`code`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-SecurityErrorEventData-prop-code) ([`SecurityErrorCode`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-SecurityErrorCode)) is one of the wire protocol's verdicts on a single frame (`'unsupported-version'`, `'replayed'`, `'authentication-failed'`, `'malformed'`, `'counter-exhausted'`, `'invalid-session'`) or a transport-level code: `'hello-rejected'` (a hello arrived that differs from the one keying the session), `'security-unconfirmed'` (the confirmation deadline expired), `'transport-error'` (a packet could not be sealed or handed to the wire), or `'unknown'`. Two codes end the session rather than describe a single frame: `'security-unconfirmed'` and `'invalid-session'` are followed by the silent [`close`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-ChannelEvent) with `reason: 'security-unconfirmed'` (or, on a responder still awaiting OPEN, by a CANCEL and a local [`deny`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-ChannelEvent) with `reason: 'security-unavailable'`).
 
 ### Event Subscription
 
@@ -505,7 +505,7 @@ channel.on(closeFilter((data) => console.log('Closed')))
 
 ## Logging System
 
-Nexus provides a configurable logging system that routes all internal output through a `Logger` interface from `@hyperfrontend/logging`.
+Nexus provides a configurable logging system that routes all internal output through a [`Logger`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-Logger) interface from [`@hyperfrontend/logging`](https://www.hyperfrontend.dev/docs/libraries/logging/).
 
 ### Logger Interface
 
@@ -525,13 +525,13 @@ type LogLevel = 'error' | 'warn' | 'log' | 'info' | 'debug' | 'none'
 
 ### Logger Flow
 
-1. **Broker initialization**: `createBroker()` creates or adopts a logger based on `settings.logLevel` and `settings.logger`
+1. **Broker initialization**: `createBroker()` creates or adopts a logger based on [`settings.logLevel`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-BrokerSettings-prop-logLevel) and [`settings.logger`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-BrokerSettings-prop-logger)
 2. **Channel inheritance**: Channels created via `broker.addChannel()` inherit the broker's logger
-3. **RoutingContext**: All routing handlers receive the logger via `RoutingContext`
+3. **RoutingContext**: All routing handlers receive the logger via [`RoutingContext`](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/nexus/src/broker/routing/types.ts)
 
 ### RoutingContext
 
-All routing handlers receive a `RoutingContext` object containing shared dependencies:
+All routing handlers receive a [`RoutingContext`](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/nexus/src/broker/routing/types.ts) object containing shared dependencies:
 
 ```typescript
 interface RoutingContext {
@@ -553,10 +553,10 @@ This pattern:
 
 ### Structured Logging Utilities
 
-| Utility     | Purpose                         | Output Format                                 |
-| ----------- | ------------------------------- | --------------------------------------------- |
-| `logAction` | Protocol action tracing         | `[nexus] Action <direction>: <type> <action>` |
-| `logEvent`  | Channel lifecycle event logging | `[nexus] Channel event: <event> <data>`       |
+| Utility                                                                          | Purpose                         | Output Format                                 |
+| -------------------------------------------------------------------------------- | ------------------------------- | --------------------------------------------- |
+| [`logAction`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-logAction) | Protocol action tracing         | `[nexus] Action <direction>: <type> <action>` |
+| [`logEvent`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-logEvent)   | Channel lifecycle event logging | `[nexus] Channel event: <event> <data>`       |
 
 ### createLogger Factory
 
@@ -574,7 +574,7 @@ const logger = createLogger({ level: 'debug', prefix: '[app]' })
 
 ### Custom Logger Injection
 
-Verbosity is controlled with the `logLevel` setting; a custom logger (Winston, Pino, etc.) can be injected for production:
+Verbosity is controlled with the [`logLevel`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-BrokerSettings-prop-logLevel) setting; a custom logger (Winston, Pino, etc.) can be injected for production:
 
 ```typescript
 const broker = createBroker({
@@ -594,7 +594,7 @@ const broker = createBroker({
 })
 ```
 
-Channels inherit the broker's logger; it is exposed via `broker.logger`.
+Channels inherit the broker's logger; it is exposed via [`broker.logger`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-BrokerHandle-prop-logger).
 
 ---
 
@@ -604,7 +604,7 @@ Nexus provides a multi-layered security approach:
 
 ### Layer 1: Origin Filtering
 
-Basic origin-based access control, applied to every inbound message before routing. A non-empty `whitelist` takes precedence over the `blacklist`:
+Basic origin-based access control, applied to every inbound message before routing. A non-empty [`whitelist`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-BrokerSettings-prop-whitelist) takes precedence over the [`blacklist`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-BrokerSettings-prop-blacklist):
 
 ```typescript
 const broker = createBroker({
@@ -615,7 +615,7 @@ const broker = createBroker({
 })
 ```
 
-During the handshake each side additionally pins the counterpart's concrete origin; inbound frames from any other origin are dropped and surfaced as `invalid`.
+During the handshake each side additionally pins the counterpart's concrete origin; inbound frames from any other origin are dropped and surfaced as [`invalid`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-ChannelEvent).
 
 ### Layer 2: Security Policy
 
@@ -629,7 +629,7 @@ broker.setSecurityPolicy((event: MessageEvent) => {
 
 ### Layer 3: Contract Validation
 
-Contracts gate the handshake (structure validation, the required-actions check, and any `contractCompat` rule) and filter product traffic: inbound messages are validated for envelope shape and dropped when their type is not in the channel's `accepted` list. Per-action `schema` fields travel with the contract but nexus does not evaluate them against message payloads: payload-schema enforcement is left to the consuming layer (`@hyperfrontend/features` validates payloads against the sender's `emitted` and the receiver's `accepted` schemas on both ends):
+Contracts gate the handshake (structure validation, the required-actions check, and any [`contractCompat`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-IChannelSettings-prop-contractCompat) rule) and filter product traffic: inbound messages are validated for envelope shape and dropped when their type is not in the channel's [`accepted`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-IChannelContract-prop-accepted) list. Per-action [`schema`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-IActionDescription-prop-schema) fields travel with the contract but nexus does not evaluate them against message payloads: payload-schema enforcement is left to the consuming layer ([`@hyperfrontend/features`](https://www.hyperfrontend.dev/docs/libraries/features/) validates payloads against the sender's [`emitted`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-IChannelContract-prop-emitted) and the receiver's [`accepted`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-IChannelContract-prop-accepted) schemas on both ends):
 
 ```typescript
 const contract: IChannelContract = {
@@ -652,21 +652,21 @@ const contract: IChannelContract = {
 
 ### Layer 4: Transport Security (Optional)
 
-A sealed session envelope via `@hyperfrontend/network-protocol`:
+A sealed session envelope via [`@hyperfrontend/network-protocol`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/):
 
-| Protocol | Key schedule                                                                                                        | Defeats                                                                                                    |
-| -------- | ------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| `none`   | Passthrough, no envelope                                                                                            | Nothing: trusted environments only                                                                         |
-| `v3`     | Ephemeral P-256 agreement per session, HKDF-SHA256 into two direction-bound AES-GCM-256 keys                        | Scripts that can only listen: a passive observer of `message` events can neither read nor forge frames     |
-| `v4`     | The `v3` agreement with a PBKDF2-SHA256 stretch of the pre-shared key mixed into the key material, once per session | Any script without the key: without it no frame can be read or accepted, and a key mismatch never confirms |
+| Protocol                                                                                  | Key schedule                                                                                                                                                                                           | Defeats                                                                                                                                                                         |
+| ----------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`none`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-SecurityProtocolVersion) | Passthrough, no envelope                                                                                                                                                                               | Nothing: trusted environments only                                                                                                                                              |
+| [`v3`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-SecurityProtocolVersion)   | Ephemeral P-256 agreement per session, HKDF-SHA256 into two direction-bound AES-GCM-256 keys                                                                                                           | Scripts that can only listen: a passive observer of [`message`](https://developer.mozilla.org/en-US/docs/Web/API/Window/message_event) events can neither read nor forge frames |
+| [`v4`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-SecurityProtocolVersion)   | The [`v3`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-SecurityProtocolVersion) agreement with a PBKDF2-SHA256 stretch of the pre-shared key mixed into the key material, once per session | Any script without the key: without it no frame can be read or accepted, and a key mismatch never confirms                                                                      |
 
-Neither protocol hides the hello (public keys and nonces are public by design), and `v3` does not authenticate who the counterpart is: any script that can post to a peer's window with a genuine source can complete a `v3` handshake as that peer. The cost is one key agreement plus one HKDF per session (plus one 600k-iteration PBKDF2 for `v4`), then one AES-GCM operation per message in each direction.
+Neither protocol hides the hello (public keys and nonces are public by design), and [`v3`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-SecurityProtocolVersion) does not authenticate who the counterpart is: any script that can post to a peer's window with a genuine source can complete a [`v3`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-SecurityProtocolVersion) handshake as that peer. The cost is one key agreement plus one HKDF per session (plus one 600k-iteration PBKDF2 for [`v4`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-SecurityProtocolVersion)), then one AES-GCM operation per message in each direction.
 
 #### Security Negotiation Flow
 
-Negotiation is registry-sourced: each broker holds a protocol registry, filled via `broker.registerProtocol(version, provider)` or the `settings.security.protocols` bag (`{ v3?, v4? }`), and `getSupportedProtocols()` lists `v4`, then `v3`, then other registered identifiers, then `none`. A channel opts in with `security: { protocol: ... }` and from then on accepts that protocol or plaintext and nothing else, on both sides: its REQUEST advertises `[protocol, 'none']`, and a counterpart naming any other protocol is treated as offering plaintext. The responder picks the first initiator preference its own registry supports (falling back to `'none'`), answers it in ACCEPT_CONNECTION, and the initiator confirms the outcome in OPEN_CONNECTION. An ACCEPT must answer the process this side has pending and an OPEN must match the accept this side made; anything else is dropped with an `invalid` event.
+Negotiation is registry-sourced: each broker holds a protocol registry, filled via `broker.registerProtocol(version, provider)` or the [`settings.security.protocols`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-BrokerSettings-prop-security) bag (`{ v3?, v4? }`), and `getSupportedProtocols()` lists [`v4`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-SecurityProtocolVersion), then [`v3`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-SecurityProtocolVersion), then other registered identifiers, then [`none`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-SecurityProtocolVersion). A channel opts in with `security: { protocol: ... }` and from then on accepts that protocol or plaintext and nothing else, on both sides: its REQUEST advertises `[protocol, 'none']`, and a counterpart naming any other protocol is treated as offering plaintext. The responder picks the first initiator preference its own registry supports (falling back to `'none'`), answers it in ACCEPT_CONNECTION, and the initiator confirms the outcome in OPEN_CONNECTION. An ACCEPT must answer the process this side has pending and an OPEN must match the accept this side made; anything else is dropped with an [`invalid`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-ChannelEvent) event.
 
-The transport is attached as each side composes its own handshake answer: the responder when it composes ACCEPT (or, for a request that arrived before `connect()`, when `connect()` composes it), the initiator when it handles ACCEPT, before OPEN leaves. Once that frame is posted the transport starts: it posts the session hello and retries it every `requestRetryMs` (500 ms default) until the counterpart confirms. Product traffic sent before the session is keyed waits inside the seal stage, so sends queued before the handshake still leave sealed. Once keyed, each side sends a sealed `SECURITY_CONFIRMED` control action; the first inbound frame that authenticates (that action or any product frame) confirms the counterpart and fires `security-ready` `{ protocol }`:
+The transport is attached as each side composes its own handshake answer: the responder when it composes ACCEPT (or, for a request that arrived before `connect()`, when `connect()` composes it), the initiator when it handles ACCEPT, before OPEN leaves. Once that frame is posted the transport starts: it posts the session hello and retries it every [`requestRetryMs`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-IChannelSettings-prop-requestRetryMs) (500 ms default) until the counterpart confirms. Product traffic sent before the session is keyed waits inside the seal stage, so sends queued before the handshake still leave sealed. Once keyed, each side sends a sealed [`SECURITY_CONFIRMED`](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/nexus/src/types/action.ts) control action; the first inbound frame that authenticates (that action or any product frame) confirms the counterpart and fires `security-ready` `{ protocol }`:
 
 ```mermaid
 ---
@@ -700,13 +700,13 @@ sequenceDiagram
     Note over HostA,HostB: Plaintext gate: with a transport attached, only REQUEST, ACCEPT, DENY, CANCEL, CANCEL_ACK and OPEN<br/>may arrive in plaintext. Any other plaintext action is dropped with 'invalid'
 ```
 
-The confirmation deadline is `connectTimeoutMs` (10 s default), armed when the transport starts. If nothing authenticates in time, the channel fires `security-error` with code `'security-unconfirmed'` and closes silently with `close` `{ notify: false, reason: 'security-unconfirmed' }`: no CLOSE frame travels, because nothing but the handshake may cross in plaintext once a transport is attached and the session keys were never confirmed. A session whose material cannot key (`'invalid-session'`) ends the same way at once. A responder still awaiting OPEN when its session fails cancels the handshake instead (CANCEL to the counterpart, a local `deny` with `reason: 'security-unavailable'`). Every dropped frame in either direction (replays, forgeries, malformed frames, seal failures) is reported through `security-error` with the wire protocol's code, and a hello that differs from the one keying the session is reported as `'hello-rejected'`; the session itself is one-shot and never rekeyed.
+The confirmation deadline is [`connectTimeoutMs`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-IChannelSettings-prop-connectTimeoutMs) (10 s default), armed when the transport starts. If nothing authenticates in time, the channel fires `security-error` with code `'security-unconfirmed'` and closes silently with [`close`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-ChannelEvent) `{ notify: false, reason: 'security-unconfirmed' }`: no CLOSE frame travels, because nothing but the handshake may cross in plaintext once a transport is attached and the session keys were never confirmed. A session whose material cannot key (`'invalid-session'`) ends the same way at once. A responder still awaiting OPEN when its session fails cancels the handshake instead (CANCEL to the counterpart, a local [`deny`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-ChannelEvent) with `reason: 'security-unavailable'`). Every dropped frame in either direction (replays, forgeries, malformed frames, seal failures) is reported through `security-error` with the wire protocol's code, and a hello that differs from the one keying the session is reported as `'hello-rejected'`; the session itself is one-shot and never rekeyed.
 
-Wire frames arrive as `Uint8Array` payloads. The broker resolves them by source window, enforces the channel's pinned origin, and hands them to the channel's transport: a hello keys the session, anything else is opened and the transported action is dispatched into the same handler map as a plaintext action, with the counterpart window as its source. The plaintext gate guards the other entry: once a channel has a transport, only the six handshake actions may arrive in plaintext, and any other plaintext action (a bypass attempt, or a counterpart that lost its transport) is dropped with an `invalid` event before any handler sees it. CLOSE, CLOSE_ACK, DESTROY, NEW_MESSAGE and SECURITY_CONFIRMED therefore always travel sealed on a secured channel.
+Wire frames arrive as `Uint8Array` payloads. The broker resolves them by source window, enforces the channel's pinned origin, and hands them to the channel's transport: a hello keys the session, anything else is opened and the transported action is dispatched into the same handler map as a plaintext action, with the counterpart window as its source. The plaintext gate guards the other entry: once a channel has a transport, only the six handshake actions may arrive in plaintext, and any other plaintext action (a bypass attempt, or a counterpart that lost its transport) is dropped with an [`invalid`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-ChannelEvent) event before any handler sees it. CLOSE, CLOSE_ACK, DESTROY, NEW_MESSAGE and SECURITY_CONFIRMED therefore always travel sealed on a secured channel.
 
 #### Fail-Open and Fail-Closed Modes
 
-Negotiation **fails open** by default: when the handshake cannot deliver a sealed transport (the counterpart predates security, offers no common protocol, selects a protocol other than the one asked for, or the negotiated provider is missing), the channel falls back to plaintext with a warning. Setting `security: { protocol: ..., mode: 'fail-closed' }` refuses that outcome instead: the connection is denied before it opens, with a `deny` event carrying `reason: 'security-unavailable'` (the responder denies at REQUEST time, or when `connect()` finds no working provider for a scheduled answer; the initiator aborts at ACCEPT time via CANCEL plus a local `deny`; the responder refuses a plaintext OPEN confirmation the same way). A session that negotiates but is never confirmed is a different failure and ends the same way in both modes: the silent `close` with `reason: 'security-unconfirmed'` described above.
+Negotiation **fails open** by default: when the handshake cannot deliver a sealed transport (the counterpart predates security, offers no common protocol, selects a protocol other than the one asked for, or the negotiated provider is missing), the channel falls back to plaintext with a warning. Setting `security: { protocol: ..., mode: 'fail-closed' }` refuses that outcome instead: the connection is denied before it opens, with a [`deny`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-ChannelEvent) event carrying `reason: 'security-unavailable'` (the responder denies at REQUEST time, or when `connect()` finds no working provider for a scheduled answer; the initiator aborts at ACCEPT time via CANCEL plus a local [`deny`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-ChannelEvent); the responder refuses a plaintext OPEN confirmation the same way). A session that negotiates but is never confirmed is a different failure and ends the same way in both modes: the silent [`close`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-ChannelEvent) with `reason: 'security-unconfirmed'` described above.
 
 #### Security Transport Architecture
 
@@ -739,11 +739,11 @@ flowchart TB
     classDef header text-align:center,padding:8px
 ```
 
-`SecurityTransport` is `{ send, receive, start, stop, resume, dispose, getProtocol }`. `createSecurityTransport(config)` builds one from a `SecurityTransportConfig`: the protocol and provider, the counterpart window and pinned-origin accessor, the two endpoint ids and this side's `role`, `helloRetryMs` and `confirmTimeoutMs` (defaulting to the request retry interval and the connect timeout), and the `onAction`, `onError`, `onConfirmed` and `onFailed` callbacks. For `'none'` it returns the passthrough transport, which has no session to start.
+[`SecurityTransport`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-SecurityTransport) is `{ send, receive, start, stop, resume, dispose, getProtocol }`. `createSecurityTransport(config)` builds one from a [`SecurityTransportConfig`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-SecurityTransportConfig): the protocol and provider, the counterpart window and pinned-origin accessor, the two endpoint ids and this side's [`role`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-SecuritySession-prop-role), [`helloRetryMs`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-SecurityTransportConfig-prop-helloRetryMs) and [`confirmTimeoutMs`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-SecurityTransportConfig-prop-confirmTimeoutMs) (defaulting to the request retry interval and the connect timeout), and the [`onAction`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-SecurityTransportConfig-prop-onAction), [`onError`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-SecurityTransportConfig-prop-onError), [`onConfirmed`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-SecurityTransportConfig-prop-onConfirmed) and [`onFailed`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-SecurityTransportConfig-prop-onFailed) callbacks. For `'none'` it returns the passthrough transport, which has no session to start.
 
 #### Configuration Examples
 
-The registered provider satisfies the `SecurityProvider` shape: a per-channel wire-pipeline factory plus the protocol instance factory. `@hyperfrontend/network-protocol`'s `createChannel` and `createProtocol` exports satisfy it directly (`createProtocol(logger)` from the `v3` entry; `createProtocol(logger, sharedKey)` from the `v4` entry, which throws for a key shorter than 16 characters), and `createSecurityTransport` plus the `SecurityTransport`/`SecurityProvider` types keep the seam public for other implementations. The pre-shared key lives in the `v4` provider, not in the channel settings:
+The registered provider satisfies the [`SecurityProvider`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-SecurityProvider) shape: a per-channel wire-pipeline factory plus the protocol instance factory. [`@hyperfrontend/network-protocol`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/)'s [`createChannel`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-createChannel) and [`createProtocol`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-createProtocol) exports satisfy it directly (`createProtocol(logger)` from the [`v3`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-SecurityProtocolVersion) entry; `createProtocol(logger, sharedKey)` from the [`v4`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-SecurityProtocolVersion) entry, which throws for a key shorter than 16 characters), and [`createSecurityTransport`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-createSecurityTransport) plus the [`SecurityTransport`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-SecurityTransport)/[`SecurityProvider`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-SecurityProvider) types keep the seam public for other implementations. The pre-shared key lives in the [`v4`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-SecurityProtocolVersion) provider, not in the channel settings:
 
 ```typescript
 import { createChannel as createWireChannel } from '@hyperfrontend/network-protocol/browser/channel'
@@ -775,15 +775,15 @@ broker.unregisterProtocol('v4') // Remove provider
 
 ### Hyperfrontend Libraries
 
-- `@hyperfrontend/data-utils`
-- `@hyperfrontend/immutable-api-utils`
-- `@hyperfrontend/json-utils`
-- `@hyperfrontend/logging`
-- `@hyperfrontend/random-generator-utils`
+- [`@hyperfrontend/data-utils`](https://www.hyperfrontend.dev/docs/libraries/utils/data/)
+- [`@hyperfrontend/immutable-api-utils`](https://www.hyperfrontend.dev/docs/libraries/utils/immutable-api/)
+- [`@hyperfrontend/json-utils`](https://www.hyperfrontend.dev/docs/libraries/utils/json/)
+- [`@hyperfrontend/logging`](https://www.hyperfrontend.dev/docs/libraries/logging/)
+- [`@hyperfrontend/random-generator-utils`](https://www.hyperfrontend.dev/docs/libraries/utils/random-generator/)
 
 ### Optional Integration
 
-- `@hyperfrontend/network-protocol` 2.0.0 (optional peer dependency): the `v3`/`v4` sealed session envelope
+- [`@hyperfrontend/network-protocol`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/) 2.0.0 (optional peer dependency): the [`v3`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-SecurityProtocolVersion)/[`v4`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-SecurityProtocolVersion) sealed session envelope
 
 ---
 
@@ -791,14 +791,14 @@ broker.unregisterProtocol('v4') // Remove provider
 
 ### With Other Hyperfrontend Libraries
 
-| Library                                 | Integration                                |
-| --------------------------------------- | ------------------------------------------ |
-| `@hyperfrontend/network-protocol`       | Optional transport security                |
-| `@hyperfrontend/logging`                | Logging infrastructure                     |
-| `@hyperfrontend/random-generator-utils` | UUID generation                            |
-| `@hyperfrontend/json-utils`             | JSON Schema validation of protocol shapes  |
-| `@hyperfrontend/immutable-api-utils`    | Immutable built-in wrappers                |
-| `@hyperfrontend/data-utils`             | Type inspection for deep-freeze and guards |
+| Library                                                                                                         | Integration                                |
+| --------------------------------------------------------------------------------------------------------------- | ------------------------------------------ |
+| [`@hyperfrontend/network-protocol`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/)             | Optional transport security                |
+| [`@hyperfrontend/logging`](https://www.hyperfrontend.dev/docs/libraries/logging/)                               | Logging infrastructure                     |
+| [`@hyperfrontend/random-generator-utils`](https://www.hyperfrontend.dev/docs/libraries/utils/random-generator/) | UUID generation                            |
+| [`@hyperfrontend/json-utils`](https://www.hyperfrontend.dev/docs/libraries/utils/json/)                         | JSON Schema validation of protocol shapes  |
+| [`@hyperfrontend/immutable-api-utils`](https://www.hyperfrontend.dev/docs/libraries/utils/immutable-api/)       | Immutable built-in wrappers                |
+| [`@hyperfrontend/data-utils`](https://www.hyperfrontend.dev/docs/libraries/utils/data/)                         | Type inspection for deep-freeze and guards |
 
 ### With External Systems
 
