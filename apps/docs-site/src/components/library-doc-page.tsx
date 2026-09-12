@@ -11,7 +11,7 @@ import { KeyFeatures } from '@/components/package/key-features'
 import { packageAccentHue } from '@/components/package/package-accents'
 import { PackageCapabilities } from '@/components/package/package-capabilities'
 import { PackageMetadata } from '@/components/package/package-metadata'
-import { breakablePackageName } from '@/components/package/package-name'
+import { packageTitle } from '@/components/package/package-name'
 import { RelatedReading } from '@/components/package/related-reading'
 import { PageAccent } from '@/components/page-accent'
 import { changelogPathFor, changelogRouteFor } from '@/lib/changelog'
@@ -82,7 +82,7 @@ export async function LibraryDocPage({ title, packageName, slug, category, fallb
     const features = await readKeyFeatures(processed)
     const architecture = readSection(processed, ARCHITECTURE_SLUG, ARCHITECTURE_LEVEL)
     const architectureHtml = architecture === null ? null : await markdownToHtml(architecture)
-    const { title: packageTitle, body } = preparePackageReadme(processed, {
+    const { title: readmeTitle, body } = preparePackageReadme(processed, {
       keyFeatures: features !== null,
       architecture: architectureHtml !== null,
     })
@@ -114,7 +114,7 @@ export async function LibraryDocPage({ title, packageName, slug, category, fallb
           <Breadcrumb />
 
           <H1 className="font-display text-3xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-4xl">
-            {breakablePackageName(packageTitle ?? packageName)}
+            {packageTitle(readmeTitle ?? packageName)}
           </H1>
 
           <PackageMetadata

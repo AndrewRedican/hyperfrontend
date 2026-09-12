@@ -600,6 +600,57 @@
 }
 
 @layer components {
+  /* A package's title on a phone.
+
+     The scope is fifteen characters every package shares, and at a title's
+     size on a narrow screen it is most of the line: the name that matters
+     ends up wrapped or broken under it. Below the first breakpoint the scope
+     is taken out of the flow and the package's own mark stands in for it,
+     the mark the navigation and the index already use, drawn at the
+     heading's own size so it reads as part of the title rather than as an
+     ornament beside it. The scope stays in the document for anyone reading
+     it rather than looking at it, so the heading is still the whole name.
+
+     The mark is sized in ems so it scales with whatever size the heading
+     takes, and dropped a fraction below the baseline so its centre sits on
+     the capitals' centre rather than on the line box's. */
+  .package-title {
+    display: inline;
+  }
+
+  .package-title__mark {
+    display: none;
+  }
+
+  @media (max-width: 639px) {
+    .package-title__mark {
+      display: inline-block;
+      width: 0.86em;
+      height: 0.86em;
+      margin-right: 0.28em;
+      vertical-align: -0.09em;
+      color: theme('colors.slate.700');
+    }
+
+    .dark .package-title__mark {
+      color: theme('colors.slate.200');
+    }
+
+    .package-title__scope {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border-width: 0;
+    }
+  }
+}
+
+@layer components {
   /* The metadata pills under a package's title, and the ecosystem's under
      the library index's.
 
