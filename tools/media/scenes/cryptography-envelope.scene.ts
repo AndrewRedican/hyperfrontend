@@ -26,12 +26,12 @@ export default defineScriptedScene({
   asset: 'hero',
   outputs: ['gif', 'still'],
   profile: 'compact',
+  hue: 268,
   stage: byteStage,
   holdMs: 1_700,
   gif: { colours: 48, lossy: 75, maxBytes: 800_000 },
   stills: [{ name: 'poster', atMs: 6_400, format: 'webp', quality: 82, maxBytes: 70_000 }],
   config: {
-    theme: 'midnight',
     heading: 'One call. Salt, IV and tag are not your problem.',
     source: "await encrypt('sk_live_9f2c41', 'vault-password')",
     caption: 'Uint8Array(58). Run it again and only the length is the same.',

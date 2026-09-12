@@ -1,6 +1,7 @@
 import type { Determinism, RecordWindow, Viewport } from './capture'
 import type { EncoderName, GifOptions, ToolVersion } from './encode'
 import type { MediaProfile } from './profile'
+import type { ThemeId } from './theme'
 
 /** Identity of the browser build that produced a recording. */
 export interface BrowserRecord {
@@ -44,6 +45,32 @@ export interface StillRecord {
 }
 
 /**
+ * One variant of a scripted scene, as the audit record describes it.
+ *
+ * A scripted scene lands as several files that differ only in their theme,
+ * and each has its own size, its own budget and its own set of compromises,
+ * because a transparent plate and a gradient ground do not compress alike.
+ */
+export interface VariantRecord {
+  /** The theme this variant was drawn with. */
+  theme: ThemeId
+  /** Filename of the animation, absent on a scene that emits none. */
+  asset?: string
+  /** Size of the animation, absent on a scene that emits none. */
+  bytes?: number
+  /** Size ceiling the animation was held to, absent on a scene that emits none. */
+  maxBytes?: number
+  /** Number of frames the animation contains, absent on a scene that emits none. */
+  frames?: number
+  /** Encoding parameters that were finally applied, after any optimisation. */
+  gif?: GifOptions
+  /** Each compromise the optimiser made to reach the budget, in order; empty when none was needed. */
+  compromises?: readonly string[]
+  /** Every still this variant wrote, in the order they were captured. */
+  stills?: readonly StillRecord[]
+}
+
+/**
  * The audit record written beside every asset.
  *
  * Identical scenes produce different bytes on every run, so an asset cannot be
@@ -82,6 +109,8 @@ export interface AssetSidecar {
   frames?: number
   /** Every still the run wrote, in the order they were captured. */
   stills?: readonly StillRecord[]
+  /** Every variant a scripted scene was rendered as, absent on a browser scene. */
+  variants?: readonly VariantRecord[]
   /** Browser build that produced the recording. */
   browser: BrowserRecord
   /** Overrides that were applied before the page ran. */
@@ -104,6 +133,8 @@ export interface RunSummaryRow {
   frames: number
   /** Backend that produced the file, absent for a still. */
   encoder?: EncoderName
+  /** How many variants the scene was rendered as, or 0 for a browser scene. */
+  variants?: number
   /** Wall time the whole scene took. */
   elapsedMs: number
 }

@@ -1,4 +1,4 @@
-import type { PanelSyntaxColours } from '../models/panel'
+import type { ThemeSyntax } from '../models/theme'
 import { escapeHtml } from '../lib/escape-html'
 
 /**
@@ -42,7 +42,7 @@ const KEYWORDS: readonly string[] = [
 /**
  * One run of a line that shares a colour.
  *
- * A pattern that matches, and the field of {@link PanelSyntaxColours} its
+ * A pattern that matches, and the field of {@link ThemeSyntax} its
  * matches are painted with. Order matters: the first pattern to match at a
  * position wins, so comments and strings come before anything that could be
  * found inside one.
@@ -51,7 +51,7 @@ interface TokenRule {
   /** What the run looks like, anchored at the current position. */
   pattern: RegExp
   /** Which colour the run takes. */
-  colour: keyof PanelSyntaxColours
+  colour: keyof ThemeSyntax
 }
 
 /**
@@ -97,7 +97,7 @@ const RULES: readonly TokenRule[] = [
  * highlight("const n = encrypt('secret')", theme.syntax)
  * ```
  */
-export function highlight(line: string, colours: PanelSyntaxColours): string {
+export function highlight(line: string, colours: ThemeSyntax): string {
   let rest = line
   let out = ''
 

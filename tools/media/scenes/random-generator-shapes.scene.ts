@@ -26,12 +26,12 @@ export default defineScriptedScene({
   asset: 'hero',
   outputs: ['gif', 'still'],
   profile: 'compact',
+  hue: 306,
   stage: gaugeStage,
   holdMs: 1_800,
   gif: { colours: 40, lossy: 80, maxBytes: 700_000 },
   stills: [{ name: 'poster', atMs: 4_600, format: 'webp', quality: 82, maxBytes: 60_000 }],
   config: {
-    theme: 'midnight',
     heading: 'Four thousand draws. Two shapes.',
     caption: 'Seed 2026 opens the same stream every time: next() is 0.455408, twice.',
     restMs: 1_700,

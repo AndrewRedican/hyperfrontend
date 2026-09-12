@@ -22,6 +22,14 @@
         "cwd": "tools/media"
       }
     },
+    "preview": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "npx tsx src/cli/main.ts preview",
+        "cwd": "tools/media"
+      }
+    },
     "check": {
       "executor": "nx:run-commands",
       "cache": false,
@@ -38,6 +46,7 @@
         "cwd": "tools/media"
       }
     },
+    "test": {},
     "typecheck": {},
     "audit": {}
   }

@@ -1,11 +1,10 @@
 import type { ByteConfig, ByteSegment, ByteTone } from '../models/byte'
 import type { MediaProfile } from '../models/profile'
 import type { Stage } from '../models/stage'
-import { ceil, floor, max, min } from '@hyperfrontend/immutable-api-utils/built-in-copy/math'
+import type { MediaTheme } from '../models/theme'
+import { ceil, floor, max, min, round } from '@hyperfrontend/immutable-api-utils/built-in-copy/math'
 import { escapeHtml } from '../lib/escape-html'
 import { defineStage } from '../stage/define-stage'
-import { STAGE_ELEMENT_ID } from '../stage/document'
-import { resolveByteTheme } from './themes'
 
 /** Every tone a theme colours, in the order the stylesheet declares them. */
 const TONES: readonly ByteTone[] = ['plain', 'muted', 'accent', 'success', 'warning', 'danger']
@@ -15,12 +14,6 @@ const WIDE_ENOUGH = 800
 
 /** How long the closing caption takes to arrive after the last cell. */
 const CAPTION_DELAY_MS = 300
-
-/** The face labels are set in. */
-const FONT_STACK = "'Liberation Sans', 'DejaVu Sans', 'Inter', Helvetica, Arial, sans-serif"
-
-/** The face the source line and the byte counts are set in. */
-const MONO_STACK = "'Liberation Mono', 'DejaVu Sans Mono', 'JetBrains Mono', Menlo, monospace"
 
 /** Advance width of one label character, as a fraction of the font size. */
 const LABEL_RATIO = 0.55
@@ -37,7 +30,9 @@ interface ByteMetrics {
   cellPx: number
   /** Font size of a segment's label. */
   labelPx: number
-  /** Font size of the heading, the source line and the caption. */
+  /** Font size of the heading over the field. */
+  headingPx: number
+  /** Font size of the source line and the caption. */
   chromePx: number
 }
 
@@ -54,8 +49,9 @@ function byteMetrics(profile: MediaProfile): ByteMetrics {
     cellGapPx: wide ? 2 : 1,
     segmentGapPx: wide ? 14 : 9,
     cellPx: wide ? 26 : 20,
-    labelPx: wide ? 12 : 10,
-    chromePx: wide ? 15 : 12,
+    labelPx: wide ? 12 : 11,
+    headingPx: wide ? 15 : 14,
+    chromePx: wide ? 14 : 12.5,
   }
 }
 
@@ -171,15 +167,14 @@ function fitCellWidth(config: ByteConfig, metrics: ByteMetrics, roomPx: number):
  *
  * @param config - The frame as the scene configured it.
  * @param profile - The presentation target being composed for.
+ * @param theme - The visual tokens this variant is drawn with.
  * @returns CSS for this frame.
  */
-function byteStyles(config: ByteConfig, profile: MediaProfile): string {
-  const theme = resolveByteTheme(config.theme)
+function byteStyles(config: ByteConfig, profile: MediaProfile, theme: MediaTheme): string {
   const metrics = byteMetrics(profile)
   const tones = TONES.map((tone) => `.b-tone--${tone} { background: ${theme.tones[tone]}; }`).join('\n')
 
   return `
-#${STAGE_ELEMENT_ID} { background: ${theme.backdrop}; font-family: ${FONT_STACK}; }
 .b-frame {
   position: absolute;
   inset: ${metrics.insetPx}px;
@@ -189,16 +184,16 @@ function byteStyles(config: ByteConfig, profile: MediaProfile): string {
 }
 .b-heading {
   flex: none;
-  font-size: ${metrics.chromePx}px;
+  font-size: ${metrics.headingPx}px;
   font-weight: 600;
   letter-spacing: -0.01em;
-  color: ${theme.label};
+  color: ${theme.text.strong};
 }
 .b-source {
   flex: none;
-  font-family: ${MONO_STACK};
+  font-family: ${theme.fonts.mono};
   font-size: ${metrics.chromePx - 1}px;
-  color: ${theme.source};
+  color: ${theme.tones.accent};
 }
 /* why: the field and the lines that explain it are one object, so they are
    centred together in the room under the source line rather than each finding
@@ -214,33 +209,39 @@ function byteStyles(config: ByteConfig, profile: MediaProfile): string {
 .b-field { flex: none; display: flex; align-items: flex-start; gap: ${metrics.segmentGapPx}px; }
 .b-segment { flex: none; min-width: 0; display: flex; flex-direction: column; }
 .b-cells { display: flex; gap: ${metrics.cellGapPx}px; }
-.b-cell { height: ${metrics.cellPx}px; border-radius: 2px; background: ${theme.empty}; }
+.b-cell { height: ${metrics.cellPx}px; border-radius: 2px; background: ${theme.rule}; }
 .b-cell--filled { border-radius: 2px; }
 .b-bracket {
   height: ${floor(metrics.cellPx / 4)}px;
   margin-top: 5px;
-  border: 1px solid ${theme.bracket};
+  border: 1px solid ${theme.border};
   border-top: none;
   border-radius: 0 0 4px 4px;
 }
-.b-label { margin-top: 5px; font-size: ${metrics.labelPx}px; color: ${theme.label}; }
-.b-count { font-family: ${MONO_STACK}; color: ${theme.note}; }
-.b-note { margin-top: 2px; font-size: ${metrics.labelPx - 2}px; color: ${theme.note}; }
+.b-label { margin-top: 5px; font-size: ${metrics.labelPx}px; color: ${theme.text.plain}; }
+.b-count { font-family: ${theme.fonts.mono}; color: ${theme.text.muted}; }
+.b-note { margin-top: 2px; font-size: ${metrics.labelPx - 1.5}px; color: ${theme.text.muted}; }
+/* why: the field and the notes are centred as one block, so the room the notes will
+   take is reserved from the first frame; otherwise the field would climb a line
+   every time a note arrived, and a frame that shifts is a frame the encoder has
+   to redraw whole */
 .b-notes {
   flex: none;
   display: flex;
   flex-direction: column;
   gap: ${floor(metrics.segmentGapPx / 3)}px;
-  font-family: ${MONO_STACK};
+  min-height: ${(config.annotations ?? []).length * (round((metrics.labelPx + 1) * 1.25) + floor(metrics.segmentGapPx / 3))}px;
+  font-family: ${theme.fonts.mono};
   font-size: ${metrics.labelPx + 1}px;
+  line-height: ${round((metrics.labelPx + 1) * 1.25)}px;
 }
-.b-annotation { color: ${theme.label}; }
+.b-annotation { color: ${theme.text.plain}; }
 .b-annotation.b-text--muted { color: ${theme.tones.muted}; }
 .b-annotation.b-text--accent { color: ${theme.tones.accent}; }
 .b-annotation.b-text--success { color: ${theme.tones.success}; }
 .b-annotation.b-text--warning { color: ${theme.tones.warning}; }
 .b-annotation.b-text--danger { color: ${theme.tones.danger}; }
-.b-caption { flex: none; font-family: ${FONT_STACK}; font-size: ${metrics.chromePx}px; color: ${theme.tones.success}; }
+.b-caption { flex: none; min-height: ${ceil(metrics.chromePx * 1.3)}px; font-family: ${theme.fonts.sans}; font-size: ${metrics.chromePx}px; color: ${theme.tones.success}; }
 ${tones}
 `
 }
@@ -290,10 +291,11 @@ export const byteStage: Stage<ByteConfig> = defineStage<ByteConfig>({
       .filter((annotation) => atMs >= annotation.atMs && (annotation.untilMs === undefined || atMs < annotation.untilMs))
       .map((annotation) => `<div class="b-annotation b-text--${annotation.tone ?? 'plain'}">${escapeHtml(annotation.text)}</div>`)
       .join('')
+    // why: the caption's room is held from the first frame, so its arrival adds a line rather than moving everything above it up by one
     const caption =
-      config.caption !== undefined && atMs >= settledAt(config) + CAPTION_DELAY_MS
-        ? `<div class="b-caption">${escapeHtml(config.caption)}</div>`
-        : ''
+      config.caption === undefined
+        ? ''
+        : `<div class="b-caption">${atMs >= settledAt(config) + CAPTION_DELAY_MS ? escapeHtml(config.caption) : ''}</div>`
 
     return `<div class="b-frame">${heading}${source}<div class="b-body"><div class="b-field">${field}</div><div class="b-notes">${notes}</div></div>${caption}</div>`
   },

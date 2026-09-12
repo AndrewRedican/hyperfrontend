@@ -33,12 +33,12 @@ export default defineScriptedScene({
   asset: 'hero',
   outputs: ['gif', 'still'],
   profile: 'compact',
+  hue: 217,
   stage: flowStage,
   holdMs: 1_500,
   gif: { colours: 56, lossy: 75, maxBytes: 900_000 },
   stills: [{ name: 'poster', atMs: 7_800, format: 'webp', quality: 82, maxBytes: 70_000 }],
   config: {
-    theme: 'midnight',
     left: { title: 'Host', subtitle: 'shop.example.com', note: 'the reader clicked away' },
     right: { title: 'Feature', subtitle: 'checkout.example.com', note: 'holding an unsaved draft' },
     phases: [

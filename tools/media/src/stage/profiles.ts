@@ -13,16 +13,17 @@ import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/er
  *
  * The widths themselves come from where the assets are embedded rather than
  * from a preference. npm renders a package readme in a column a little over
- * 640 pixels wide and GitHub in one around 900; the documentation site's own
- * column peaks a little over 900 and exempts images from the reading measure
- * that holds prose narrower. So one asset at 640 is never downscaled anywhere
- * it is likely to appear, and one at 928 fills the widest column any of the
- * three offers without overflowing it.
+ * 640 pixels wide, and every readme here embeds its showcase at exactly that
+ * width, on GitHub and on the documentation site as well as on npm. So a
+ * package scene is composed at 640 and never resampled anywhere it appears,
+ * and a stage's type is sized for being read at that width. The wide profile
+ * remains for a scene embedded somewhere that gives it the room, such as a
+ * guide whose column peaks a little over 900.
  */
 const BUILT_IN: readonly MediaProfile[] = [
   {
     id: 'compact',
-    intent: 'npm package pages, GitHub readmes and documentation read on a phone',
+    intent: 'the width every package readme is displayed at: npm, GitHub and the documentation site alike',
     width: 640,
     height: 360,
     scale: 2,

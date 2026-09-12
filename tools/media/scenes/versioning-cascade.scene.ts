@@ -1,5 +1,6 @@
 import { panelStage } from '../src/panel/stage'
 import { defineScriptedScene } from '../src/scene/define-scene'
+import { chapter, sequenceStage } from '../src/sequence/stage'
 
 /**
  * One header line, and everything that falls out of it.
@@ -8,9 +9,10 @@ import { defineScriptedScene } from '../src/scene/define-scene'
  * the commit message already contains the decision, and the `!` in
  * `feat(api)!` is the whole argument for a major. So the frame is that one line
  * typing itself out and the four things derived from it, in the order the
- * library derives them: the commit it parses to, the bump the type and the
- * breaking flag imply, the version `increment` produces from the one on disk,
- * and the line the serializer writes into CHANGELOG.md.
+ * library derives them, over two chapters: the commit it parses to and the
+ * bump the type and the breaking flag imply; then the version `increment`
+ * produces from the one on disk, and the line the serializer writes into
+ * CHANGELOG.md.
  *
  * The scope reads `[ 'api' ]` rather than `'api'` because
  * `ConventionalCommit.scope` is a `readonly string[]`; a header may name
@@ -49,59 +51,94 @@ export default defineScriptedScene({
   slug: 'versioning-cascade',
   asset: 'hero',
   outputs: ['gif', 'still'],
-  profile: 'docs-wide',
-  stage: panelStage,
+  profile: 'compact',
+  hue: 22,
+  stage: sequenceStage,
   holdMs: 1_500,
-  gif: { colours: 56, lossy: 75, maxBytes: 1_000_000 },
-  stills: [{ name: 'poster', atMs: 9_700, format: 'webp', quality: 82, maxBytes: 90_000 }],
+  gif: { colours: 56, lossy: 40, maxBytes: 900_000 },
+  stills: [{ name: 'poster', atMs: 13_600, format: 'webp', quality: 82, maxBytes: 70_000 }],
   config: {
-    theme: 'midnight',
-    heading: 'One commit header decides the bump, the version it produces and the entry it writes.',
-    caption: 'The release flow adds a rule getSemverBump does not: below 1.0.0, a breaking change takes the minor.',
-    restMs: 1_400,
-    panels: [
-      {
-        title: '@hyperfrontend/versioning',
-        kind: 'code',
-        weight: 1.05,
-        rows: [
-          { text: "const header = 'feat(api)!: remove v1 endpoint'", atMs: 200, typeMs: 1_050 },
-          { text: '', atMs: 1_320 },
-          { text: 'const commit = parseConventionalCommit(header)', atMs: 1_420, typeMs: 720 },
-          { text: 'const { type, scope, subject, breaking } = commit', atMs: 3_050, typeMs: 660 },
-          { text: '', atMs: 3_760 },
-          { text: 'const bump = getSemverBump(type, breaking)', atMs: 3_900, typeMs: 580 },
-          { text: "const from = parseVersionStrict('2.4.1')", atMs: 5_000, typeMs: 540 },
-          { text: 'const next = format(increment(from, bump))', atMs: 5_650, typeMs: 580 },
-          { text: '', atMs: 6_550 },
-          { text: 'const item = createChangelogItem(subject, {', atMs: 6_700, typeMs: 540 },
-          { text: "  scope: scope.join(', '),", atMs: 7_300, typeMs: 320 },
-          { text: '  breaking: true,', atMs: 7_680, typeMs: 220 },
-          { text: '})', atMs: 7_950, typeMs: 110 },
-        ],
-      },
-      {
-        title: 'what it produces',
-        kind: 'result',
-        weight: 0.95,
-        rows: [
-          { text: "{ type: 'feat', scope: [ 'api' ],", atMs: 2_330 },
-          { text: "  subject: 'remove v1 endpoint',", atMs: 2_460 },
-          { text: '  footers: [], breaking: true,', atMs: 2_590 },
-          { text: "  breakingDescription: 'remove v1 endpoint',", atMs: 2_720 },
-          { text: '  raw: header }', atMs: 2_850 },
-          { text: '', atMs: 4_550 },
-          { text: "bump: 'major'", atMs: 4_680, untilMs: 6_400, marker: '›', tone: 'accent' },
-          { text: "bump: 'major'   next: '3.0.0'", atMs: 6_400, marker: '›', tone: 'accent', emphasis: true },
-          { text: '', atMs: 8_200 },
-          { text: 'CHANGELOG.md', atMs: 8_300, tone: 'muted' },
-          { text: '## 3.0.0 - 2026-09-10', atMs: 8_500 },
-          { text: '', atMs: 8_640 },
-          { text: '### Breaking Changes', atMs: 8_780 },
-          { text: '', atMs: 8_920 },
-          { text: '- **BREAKING** **api:** remove v1 endpoint', atMs: 9_060, tone: 'success', emphasis: true },
-        ],
-      },
+    segments: [
+      chapter(
+        'The header decides the bump',
+        panelStage,
+        {
+          heading: 'One commit header. Nobody picks the version.',
+          caption: 'The ! before the colon is the whole argument for a major.',
+          restMs: 1_100,
+          panels: [
+            {
+              title: '@hyperfrontend/versioning',
+              kind: 'code',
+              rows: [
+                { text: "const header = 'feat(api)!: drop v1'", atMs: 200, typeMs: 900 },
+                { text: '', atMs: 1_160 },
+                { text: 'const commit =', atMs: 1_200, typeMs: 260 },
+                { text: '  parseConventionalCommit(header)', atMs: 1_500, typeMs: 560 },
+                { text: 'const { type, scope, breaking } =', atMs: 3_100, typeMs: 560 },
+                { text: '  commit', atMs: 3_700, typeMs: 120 },
+                { text: '', atMs: 3_800 },
+                { text: 'const bump =', atMs: 3_850, typeMs: 220 },
+                { text: '  getSemverBump(type, breaking)', atMs: 4_100, typeMs: 540 },
+              ],
+            },
+            {
+              title: 'what it produces',
+              kind: 'result',
+              rows: [
+                { text: "{ type: 'feat', scope: [ 'api' ],", atMs: 2_300 },
+                { text: "  subject: 'drop v1',", atMs: 2_430 },
+                { text: '  footers: [], breaking: true,', atMs: 2_560 },
+                { text: "  breakingDescription: 'drop v1',", atMs: 2_690 },
+                { text: '  raw: header }', atMs: 2_820 },
+                { text: '', atMs: 4_700 },
+                { text: "bump: 'major'", atMs: 4_800, marker: '›', tone: 'accent', emphasis: true },
+              ],
+            },
+          ],
+        },
+        500
+      ),
+      chapter(
+        'The bump decides the version and the entry',
+        panelStage,
+        {
+          heading: 'From the version on disk to the line in CHANGELOG.md.',
+          caption: 'Below 1.0.0 the release flow takes the minor instead: getSemverBump never does.',
+          restMs: 1_200,
+          panels: [
+            {
+              title: '@hyperfrontend/versioning',
+              kind: 'code',
+              rows: [
+                { text: 'const from =', atMs: 200, typeMs: 220 },
+                { text: "  parseVersionStrict('2.4.1')", atMs: 460, typeMs: 480 },
+                { text: 'const next =', atMs: 900, typeMs: 220 },
+                { text: '  format(increment(from, bump))', atMs: 1_160, typeMs: 520 },
+                { text: '', atMs: 2_300 },
+                { text: 'const item = createChangelogItem(', atMs: 2_400, typeMs: 540 },
+                { text: '  subject,', atMs: 3_000, typeMs: 180 },
+                { text: "  { scope: scope.join(', '),", atMs: 3_240, typeMs: 420 },
+                { text: '    breaking: true })', atMs: 3_720, typeMs: 340 },
+              ],
+            },
+            {
+              title: 'what it produces',
+              kind: 'result',
+              rows: [
+                { text: "next: '3.0.0'", atMs: 1_900, marker: '›', tone: 'accent', emphasis: true },
+                { text: '', atMs: 4_300 },
+                { text: 'CHANGELOG.md', atMs: 4_400, tone: 'muted' },
+                { text: '## 3.0.0 - 2026-09-10', atMs: 4_600 },
+                { text: '', atMs: 4_740 },
+                { text: '### Breaking Changes', atMs: 4_880 },
+                { text: '', atMs: 5_020 },
+                { text: '- **BREAKING** **api:** drop v1', atMs: 5_160, tone: 'success', emphasis: true },
+              ],
+            },
+          ],
+        }
+      ),
     ],
   },
 })

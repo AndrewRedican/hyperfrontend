@@ -25,4 +25,18 @@ export default defineConfig({
       maxBytes: 2_000_000,
     },
   },
+  // why: the bare name is what every readme points at, so it goes to the variant that
+  // why: is safe on any page; the two themed variants are what the documentation site
+  // why: swaps in for its own light and dark modes. A readme's images load before
+  // why: anything else on a package page, so that budget sits well under the site's.
+  variants: [
+    {
+      theme: 'portable',
+      suffix: '',
+      intent: 'npm and GitHub readmes, and any page whose theme is not known',
+      gif: { maxBytes: 1_200_000 },
+    },
+    { theme: 'dark', suffix: '.dark', intent: 'the documentation site in its dark theme' },
+    { theme: 'light', suffix: '.light', intent: 'the documentation site in its light theme' },
+  ],
 })

@@ -25,11 +25,14 @@ A **scripted scene** has nothing to point at, because the recorder draws it. A s
 | ------------------------------------------ | --------------------------------------------------------------- |
 | `npx nx media tool-media`                  | Record every scene                                              |
 | `npx nx media tool-media --scene=koi-pond` | Record one scene                                                |
+| `npx nx run tool-media:preview -- ...`     | Draw chosen moments of a scripted scene onto one contact sheet  |
 | `npx nx run tool-media:check`              | Verify committed assets against their scenes, without a browser |
 | `npx nx run tool-media:doctor`             | Report which browsers and encoders this machine has             |
 | `npx nx run tool-media:shot -- ...`        | Take one screenshot, no scene file involved                     |
 
 Run `npx tsx src/cli/main.ts --help` from this directory for the full option list.
+
+Nothing runs the recorder but these commands. No build, publish or documentation target depends on `media`, and Nx never caches it, because two recordings of one scene differ byte for byte even when the scene has not changed. An asset is regenerated when someone decides it should be, by recording the scene (one, or all of them) and committing what landed; everything else that needs the asset reads the committed file. `check` is the target for everywhere else, because it verifies without recording.
 
 ## Taking a screenshot
 
@@ -120,9 +123,28 @@ export default defineBrowserScene({
 
 `record.durationMs` is the window the stills are taken in, so a single frame at `atMs: 0` needs none of it; `settleMs` is what decides which moment gets photographed. `check` verifies every still the audit record names, against the same `maxBytes` the run enforced.
 
+## Previewing a scripted scene
+
+Recording a scene in every variant takes minutes; a contact sheet of four moments takes seconds, and it answers the questions a recording would be asked: whether a line wraps, whether a column overflows, whether the caption lands on top of a row.
+
+```bash
+npx nx run tool-media:preview -- \
+  --scene=project-scope-detect \
+  --at=every:4 \
+  --out=tmp/sheet.png
+
+npx nx run tool-media:preview -- \
+  --scene=questions-prompt \
+  --theme=light \
+  --at=1200,7400 \
+  --out=tmp/sheet.png
+```
+
+`--at` takes millisecond offsets, or `every:N` to spread N moments evenly to the end of the timeline. `--theme` picks `portable` (the default), `dark` or `light`; a portable frame is composited onto `--background`, white by default, because a transparent frame on its own shows nothing about how it will sit on a page.
+
 ## Adding a scripted scene
 
-A scripted scene names a **stage**, hands it a **configuration**, and picks a **profile**. That is the whole of it.
+A scripted scene names a **stage**, hands it a **configuration**, and picks a **profile**. It may also name a **hue**, which tints the ground the way the documentation site tints that package's pages. That is the whole of it.
 
 ```typescript
 import { defineScriptedScene } from '../src/scene/define-scene'
@@ -131,11 +153,11 @@ import { terminalStage } from '../src/terminal/stage'
 export default defineScriptedScene({
   slug: 'hf-serve',
   outputs: ['gif', 'still'],
-  profile: 'docs-wide',
+  profile: 'compact',
+  hue: 217,
   stage: terminalStage,
   holdMs: 1_400,
   config: {
-    theme: 'midnight',
     title: 'hyperfrontend',
     prompt: '~/storefront',
     script: [
@@ -149,6 +171,38 @@ export default defineScriptedScene({
 ```
 
 `stage` and `config` are checked against each other where the scene is written, so a terminal script handed to the flow stage is a typecheck failure rather than a blank recording. There is no server, no build command and no readiness gate, because there is nothing to wait for.
+
+### Themes and variants
+
+A scripted scene is recorded once per configured variant, and every variant shares the frames, the timing, the layout and the content; only the palette changes. The workspace configures three:
+
+| Variant    | Files                                 | For                                                                      |
+| ---------- | ------------------------------------- | ------------------------------------------------------------------------ |
+| `portable` | `hero.gif`, `poster.webp`             | npm, GitHub, and any page whose theme is not known                       |
+| `dark`     | `hero.dark.gif`, `poster.dark.webp`   | the documentation site's dark theme, which swaps it in for the bare file |
+| `light`    | `hero.light.gif`, `poster.light.webp` | the documentation site's light theme                                     |
+
+The bare name goes to the portable variant because it is the file a readme points at, and a readme is rendered on pages nobody here controls. The portable theme draws on a transparent canvas: everything sits on one opaque plate with an edge that shows on both black and white, the palette is neutral rather than the site's blue, and there are no shadows, because a GIF has no half-transparency to blend one with. The dark and light themes are the documentation site's own palettes, drawn edge to edge because the page around them supplies the ground.
+
+A stage never names a colour. It draws with the tokens of the theme it is handed (`surface`, `border`, `rule`, `accent`, `text.muted`, the six `tones`, the `syntax` colours, the window `chrome`), so one implementation carries every look. A scene can tint the ground with its package's `hue`, the same number the documentation site tints that package's pages with, and can override tokens for every variant or one:
+
+```typescript
+export default defineScriptedScene({
+  slug: 'my-scene',
+  hue: 217,
+  themeOverrides: { all: { accent: '#5eead4' }, light: { accentSoft: 'rgba(20, 184, 166, 0.12)' } },
+  themes: ['portable', 'dark'], // omit to record every configured variant
+  // ...
+})
+```
+
+The audit record beside the asset lists every variant with its size, its budget and any compromise the optimiser made to reach it, and `check` verifies each one against the budget the configuration states today. A scene that names a theme the workspace does not configure is refused, as is a configuration with two variants under one suffix or one theme, or with none at all.
+
+The theme reaches a stage through the recorder and nowhere else: `resolveTheme` is called once per variant, the result is handed to the stage's `styles` and `frame`, and no stage imports a theme table of its own. That is what keeps a scene's overrides from leaking into the next scene's recording.
+
+### Budgets and the optimiser
+
+Every variant carries a byte budget: the workspace's `defaults.gif.maxBytes` for the themed variants, and a stricter one the portable variant sets for itself, because a readme's images load before anything else on a package page. Runs of identical frames are always folded into one held frame, which costs nothing. When a first encode is still over budget the optimiser walks a fixed ladder, cheapest compromise first: stronger inter-frame merging, a smaller palette, half the frame rate, and only then a narrower frame in small steps down to three quarters of the composed width. Each rung it takes is logged and written into the audit record, and a variant that is still over budget at the bottom of the ladder fails the run with the list of what was tried, because the scene then has to show less.
 
 ### Profiles
 
@@ -165,21 +219,43 @@ The profile reaches the stage, so a stage can show less at the smaller size rath
 
 ### The stages that ship
 
-| Stage           | Import               | Draws                                               |
-| --------------- | -------------------- | --------------------------------------------------- |
-| `terminalStage` | `src/terminal/stage` | A terminal window playing a typed script            |
-| `flowStage`     | `src/flow/stage`     | Two endpoints exchanging messages over a wire       |
-| `panelStage`    | `src/panel/stage`    | Columns of source and results, filling in over time |
-| `gaugeStage`    | `src/gauge/stage`    | Labelled quantities moving between stated values    |
-| `byteStage`     | `src/byte/stage`     | A field of bytes assembling into labelled segments  |
+| Stage            | Import                | Draws                                                                      |
+| ---------------- | --------------------- | -------------------------------------------------------------------------- |
+| `terminalStage`  | `src/terminal/stage`  | A terminal window playing a typed script                                   |
+| `flowStage`      | `src/flow/stage`      | Two endpoints exchanging messages over a wire                              |
+| `panelStage`     | `src/panel/stage`     | Columns of source and results, filling in over time                        |
+| `gaugeStage`     | `src/gauge/stage`     | Labelled quantities moving between stated values                           |
+| `byteStage`      | `src/byte/stage`      | A field of bytes assembling into labelled segments                         |
+| `scanStage`      | `src/scan/stage`      | A beam reading a file tree, with findings threaded back to their evidence  |
+| `dialStage`      | `src/dial/stage`      | Countdowns as rings draining, and a card that interrupts them              |
+| `lifecycleStage` | `src/lifecycle/stage` | A widget mounted and unmounted, on a page that lets go and one that cannot |
+| `sequenceStage`  | `src/sequence/stage`  | Two or three of the above as chapters of one story                         |
 
-Each takes a `theme`, which is a table of colours rather than a stylesheet, so one implementation carries several looks: `midnight`, `daylight` and `ink` for the terminal, `midnight` and `daylight` for the rest. A scene that needs another passes a theme object instead of a name, and a scene that wants only one colour changed spreads a built-in and overrides it:
+None of them takes a colour. Each draws with the theme the recorder hands it, which is what lets one scene become three assets that differ in nothing but their palette.
+
+#### `sequenceStage`
+
+Some packages are undersold by one scene: the frame that shows what they detect says nothing about what they can then safely do. A sequence plays two or three chapters in turn, each drawn by its own stage, with a short slide between them and a rail along the top naming every chapter so a reader who arrives mid-loop still knows where they are. Use it only when one capability alone gives an incomplete impression; three chapters is the ceiling, and the whole should still be read in a short attention span.
 
 ```typescript
-import { resolvePanelTheme } from '../src/panel/themes'
+import { chapter, sequenceStage } from '../src/sequence/stage'
 
-const teal = { ...resolvePanelTheme('midnight'), cursor: '#5eead4', emphasis: 'rgba(94, 234, 212, 0.12)' }
+config: {
+  segments: [
+    chapter(
+      'Read a repository it has never seen',
+      scanStage,
+      { root: 'fish-svelte/', files: [...], findings: [...] },
+      700
+    ),
+    chapter('Change it without touching disk', panelStage, { panels: [...] }),
+  ],
+}
 ```
+
+Each chapter is composed against the frame less the rail, so a stage inside a sequence lays itself out exactly as it would on its own at that size, and each chapter's stylesheet is confined to its own element, so two chapters drawn by the same stage cannot restyle each other. The fourth argument to `chapter` is a hold on the chapter's last frame before the next one arrives; `transitionMs` on the sequence sets the length of every move, and `rail: false` drops the rail and gives the chapters the whole frame.
+
+The timeline is laid out from the scene's numbers alone: chapters run in the order given, each for its own duration plus its hold, one transition apart. A sequence with no chapters, a negative transition or a negative hold is refused before anything is drawn, and a stage that throws while drawing its chapter does so under the chapter's label, so a failure in a three-chapter scene says which third. The layout is a pure function (`placeSegments` and `chaptersAt` in `src/sequence/timeline`), which is what makes a sequence testable without a browser.
 
 #### `panelStage`
 
@@ -252,6 +328,10 @@ The one rule is that a stage must not animate itself. CSS animations, transition
 
 Everything else is the stage's own business. The harness mounts the stylesheet, mounts the markup, and photographs the result; it has no opinion about what is in either, which is why the flow stage needed nothing added to the harness to exist.
 
+### Scenes that are one file, many scenes
+
+A scene file may default-export a list of scenes instead of one. That is for the case where one table drives many near-identical scenes, one per package say, so a row added to the table gets its asset on the next recording without anyone adding a file. Every scene still needs a slug of its own: two scenes sharing one is refused when the files are read, naming the second.
+
 ## Determinism
 
 A scripted scene needs none of this: it is drawn frame by frame from a timeline, so there is no clock to pin and no device capability it can read. The rest of this section is about browser scenes.
@@ -295,8 +375,8 @@ npx nx run tool-media:check
 
 Identical scenes produce different bytes on every run, so an asset can never be verified by regenerating it and comparing. What `check` verifies instead is that the file exists, is within its budget, matches the size its audit record claims, and was produced from the scene as it stands today. It needs no browser and no encoder, which makes it the part of this pipeline that is safe to run anywhere.
 
-Every asset is written with an audit record beside it recording the scene digest, the viewport, the encoding parameters, the encoder and its binary versions, the browser build, the determinism overrides, and what the page said for itself while it was recorded.
+Every asset is written with an audit record beside it recording the scene digest, the viewport, the encoding parameters, the encoder and its binary versions, the browser build, the determinism overrides, and what the page said for itself while it was recorded. A scripted scene's record also lists every variant it was rendered as, with each one's size, budget and the compromises the optimiser made to reach it.
 
 ## Where assets go
 
-Finished assets land in `assets/media/<slug>/` at the workspace root, which is committed. The documentation site copies that directory into its own `public/media/` at build time, so one file serves npm, GitHub and the site from a single absolute URL.
+Finished assets land in `assets/media/<slug>/` at the workspace root, which is committed. The documentation site copies that directory into its own `public/media/` at build time, so one file serves npm, GitHub and the site from a single absolute URL. The themed variants sit beside the bare file under their suffixes, for a page that knows its theme to pick up; a readme keeps pointing at the bare, portable file.

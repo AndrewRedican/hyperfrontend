@@ -8,8 +8,9 @@ import { defineScriptedScene } from '../src/scene/define-scene'
  * takes `globalThis.Object` and the two `Object.prototype` methods it wraps, `built-in-copy/json` takes `globalThis.JSON`.
  * What the importer gets back is the function value that was there at that moment, so a later write to `Object.keys`, to
  * `Object.prototype.hasOwnProperty` or to `JSON.parse` lands on the global and leaves the captured binding alone. The
- * frame is that difference and nothing else: three writes on the left, and on the right the same three questions asked
- * twice, once through the global and once through the copy.
+ * frame is that difference and nothing else: two writes on the left, and on the right the same two questions asked
+ * twice, once through the global and once through the copy. `raw` is the string `'{"role":"user"}'`, declared off
+ * screen for room, and the package scope in the two import paths is elided for the same reason.
  *
  * The caption carries the part that matters most, because this is a mitigation rather than a defence. An ES module graph
  * evaluates in source order, so the copies here answer correctly only because the two `built-in-copy` imports sit above
@@ -18,7 +19,8 @@ import { defineScriptedScene } from '../src/scene/define-scene'
  * what it does not.
  *
  * The right-hand column is composed as expression and value pairs rather than presented as a verbatim stdout, in the way
- * the other panel scenes in this directory are, but every value in it is real.
+ * the other panel scenes in this directory are, but every value in it is real. The `hasOwnProperty` pair the package
+ * also protects is left to the readme, because a third pair is one more than a readme-width frame holds.
  *
  * Verified against `libs/utils/immutable-api/src/built-in-copy/object/index.ts` (`const _Object = globalThis.Object` at
  * module scope, `keys` bound to `_Object.keys`, and `hasOwn` applying the captured `_hasOwnProperty` through
@@ -32,59 +34,50 @@ export default defineScriptedScene({
   slug: 'immutable-api-capture',
   asset: 'hero',
   outputs: ['gif', 'still'],
-  profile: 'docs-wide',
+  profile: 'compact',
+  hue: 288,
   stage: panelStage,
   holdMs: 1_500,
-  gif: { colours: 56, lossy: 72, maxBytes: 1_000_000 },
-  stills: [{ name: 'poster', atMs: 9_900, format: 'webp', quality: 82, maxBytes: 90_000 }],
+  gif: { colours: 56, lossy: 72, maxBytes: 900_000 },
+  stills: [{ name: 'poster', atMs: 8_000, format: 'webp', quality: 82, maxBytes: 70_000 }],
   config: {
-    theme: 'midnight',
-    heading: 'One widget rewrites Object and JSON. The copies captured before it loaded still answer.',
+    heading: 'A widget rewrites Object and JSON. Copies captured before it loaded still answer.',
     caption: 'Mitigation, not prevention: import order decides. Load the widget first and the copy captures the lie.',
     restMs: 1_400,
     panels: [
       {
         title: 'main.mjs',
         kind: 'code',
-        weight: 1.3,
+        weight: 1.2,
         rows: [
-          { text: 'import { hasOwn, keys } from', atMs: 160, typeMs: 420 },
-          { text: "  '@hyperfrontend/immutable-api-utils/built-in-copy/object'", atMs: 620, typeMs: 640 },
-          { text: 'import { parse } from', atMs: 1_300, typeMs: 300 },
-          { text: "  '@hyperfrontend/immutable-api-utils/built-in-copy/json'", atMs: 1_640, typeMs: 600 },
-          { text: "import './vendor/analytics.js'", atMs: 2_280, typeMs: 400 },
-          { text: '', atMs: 2_740 },
-          { text: "const user = { id: 'u_17', role: 'guest' }", atMs: 2_780, typeMs: 480 },
-          { text: 'const raw = \'{"role":"user"}\'', atMs: 3_300, typeMs: 360 },
-          { text: '', atMs: 3_720 },
-          { text: '// vendor/analytics.js, evaluated by that import:', atMs: 3_760, typeMs: 520 },
-          { text: 'globalThis.Object.keys = () => []', atMs: 4_360, typeMs: 520 },
-          { text: 'Object.prototype.hasOwnProperty = () => true', atMs: 4_940, typeMs: 620 },
-          { text: "globalThis.JSON.parse = () => ({ role: 'admin' })", atMs: 5_620, typeMs: 660 },
+          { text: 'import { keys } from', atMs: 160, typeMs: 380 },
+          { text: "  '…/immutable-api-utils/built-in-copy/object'", atMs: 580, typeMs: 640 },
+          { text: 'import { parse } from', atMs: 1_280, typeMs: 380 },
+          { text: "  '…/immutable-api-utils/built-in-copy/json'", atMs: 1_700, typeMs: 600 },
+          { text: "import './vendor/analytics.js'", atMs: 2_360, typeMs: 420 },
+          { text: '', atMs: 2_820 },
+          { text: "const user = { id: 'u_17', role: 'guest' }", atMs: 2_860, typeMs: 520 },
+          { text: '', atMs: 3_420 },
+          { text: '// vendor/analytics.js, run by that import:', atMs: 3_460, typeMs: 520 },
+          { text: 'Object.keys = () => []', atMs: 4_040, typeMs: 420 },
+          { text: "JSON.parse = () => ({ role: 'admin' })", atMs: 4_520, typeMs: 600 },
         ],
       },
       {
         title: 'node main.mjs',
         kind: 'result',
         chrome: true,
-        weight: 0.7,
+        weight: 0.8,
         rows: [
-          { text: 'Object.keys(user)', atMs: 6_400, tone: 'muted' },
-          { text: '[]', atMs: 6_680, marker: '›', tone: 'danger' },
-          { text: 'keys(user)', atMs: 7_000, tone: 'plain' },
-          { text: "[ 'id', 'role' ]", atMs: 7_280, marker: '›', emphasis: true, tone: 'success' },
-
-          { text: '', atMs: 7_460 },
-          { text: "user.hasOwnProperty('admin')", atMs: 7_540, tone: 'muted' },
-          { text: 'true', atMs: 7_820, marker: '›', tone: 'danger' },
-          { text: "hasOwn(user, 'admin')", atMs: 8_140, tone: 'plain' },
-          { text: 'false', atMs: 8_420, marker: '›', emphasis: true, tone: 'success' },
-
-          { text: '', atMs: 8_600 },
-          { text: 'JSON.parse(raw).role', atMs: 8_680, tone: 'muted' },
-          { text: "'admin'", atMs: 8_960, marker: '›', tone: 'danger' },
-          { text: 'parse(raw).role', atMs: 9_280, tone: 'plain' },
-          { text: "'user'", atMs: 9_560, marker: '›', emphasis: true, tone: 'success' },
+          { text: 'Object.keys(user)', atMs: 5_500, tone: 'muted' },
+          { text: '[]', atMs: 5_780, marker: '›', tone: 'danger' },
+          { text: 'keys(user)', atMs: 6_100, tone: 'plain' },
+          { text: "[ 'id', 'role' ]", atMs: 6_380, marker: '›', emphasis: true, tone: 'success' },
+          { text: '', atMs: 6_560 },
+          { text: "JSON.parse(raw).role", atMs: 6_640, tone: 'muted' },
+          { text: "'admin'", atMs: 6_920, marker: '›', tone: 'danger' },
+          { text: 'parse(raw).role', atMs: 7_240, tone: 'plain' },
+          { text: "'user'", atMs: 7_520, marker: '›', emphasis: true, tone: 'success' },
         ],
       },
     ],

@@ -58,6 +58,14 @@ export interface Panel {
    */
   align?: 'top' | 'center' | 'bottom'
   /**
+   * Keep only the newest rows that fit, the way a terminal's scrollback does.
+   *
+   * For a column that is a tape rather than a listing: what matters is the
+   * last dozen things that happened, and a tape that stopped at the bottom
+   * edge would hide exactly the events the reader is waiting for.
+   */
+  tail?: boolean
+  /**
    * Draw the column as a terminal window rather than as a plain pane.
    *
    * For the panels that are standing in for a session rather than for a
@@ -67,65 +75,8 @@ export interface Panel {
   chrome?: boolean
 }
 
-/**
- * A panel stage's look, as a set of colours.
- *
- * The same shape of idea as the terminal and flow themes: the treatment is
- * data, so one implementation carries several looks and a scene can hand over
- * a whole theme of its own without touching this package.
- */
-export interface PanelTheme {
-  /** Name a scene selects this theme by. */
-  id: string
-  /** The surface the frame sits on. */
-  backdrop: string
-  /** A panel's own surface. */
-  panel: string
-  /** A panel's outline. */
-  panelBorder: string
-  /** The rule between a panel's title and its rows. */
-  rule: string
-  /** Colour of a panel's title. */
-  title: string
-  /** Colour of the marker set in a result row's margin. */
-  marker: string
-  /** The band an emphasised row is drawn on. */
-  emphasis: string
-  /** The bar over a column drawn with chrome. */
-  chrome: string
-  /** The three dots in that bar. */
-  buttons: readonly [string, string, string]
-  /** Colour of the caret at the end of a line still being typed. */
-  cursor: string
-  /** Colour each tone is written in. */
-  tones: Readonly<Record<PanelTone, string>>
-  /** Colours the code tokeniser paints with. */
-  syntax: PanelSyntaxColours
-}
-
-/** What the tokeniser colours, and with what. */
-export interface PanelSyntaxColours {
-  /** Anything from `//` to the end of the line. */
-  comment: string
-  /** A quoted or backticked run. */
-  string: string
-  /** A bare number. */
-  number: string
-  /** One of the language's own words. */
-  keyword: string
-  /** A name immediately before an opening parenthesis. */
-  call: string
-  /** Braces, brackets, commas and operators. */
-  punctuation: string
-}
-
-/** A theme as a scene states it: a built-in name, or one written out in full. */
-export type PanelThemeRef = string | PanelTheme
-
 /** Everything a scene tells the panel stage. */
 export interface PanelConfig {
-  /** The visual treatment, defaulting to the first built-in theme. */
-  theme?: PanelThemeRef
   /** One line over the panels, naming what the frame is about. */
   heading?: string
   /** One line under them, arriving once every row has. */

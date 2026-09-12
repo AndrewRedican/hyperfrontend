@@ -1,12 +1,11 @@
-import type { Panel, PanelConfig, PanelRow, PanelTheme, PanelTone } from '../models/panel'
+import type { Panel, PanelConfig, PanelRow, PanelTone } from '../models/panel'
 import type { MediaProfile } from '../models/profile'
 import type { Stage } from '../models/stage'
-import { ceil, max } from '@hyperfrontend/immutable-api-utils/built-in-copy/math'
+import type { MediaTheme } from '../models/theme'
+import { ceil, floor, max } from '@hyperfrontend/immutable-api-utils/built-in-copy/math'
 import { escapeHtml } from '../lib/escape-html'
 import { defineStage } from '../stage/define-stage'
-import { STAGE_ELEMENT_ID } from '../stage/document'
 import { highlight } from './syntax'
-import { resolvePanelTheme } from './themes'
 
 /** Every tone a theme colours, in the order the stylesheet declares them. */
 const TONES: readonly PanelTone[] = ['plain', 'muted', 'accent', 'success', 'warning', 'danger']
@@ -16,12 +15,6 @@ const WIDE_ENOUGH = 800
 
 /** How long the closing caption takes to arrive after the last row. */
 const CAPTION_DELAY_MS = 260
-
-/** The face source and values are set in. */
-const MONO_STACK = "'Liberation Mono', 'DejaVu Sans Mono', 'JetBrains Mono', Menlo, Consolas, monospace"
-
-/** The face headings and notes are set in. */
-const FONT_STACK = "'Liberation Sans', 'DejaVu Sans', 'Inter', Helvetica, Arial, sans-serif"
 
 /** How the frame is sized for the surface it is being drawn for. */
 interface PanelMetrics {
@@ -39,17 +32,21 @@ interface PanelMetrics {
   radiusPx: number
   /** Font size of a panel's title. */
   titlePx: number
-  /** Font size of the heading and the caption. */
-  chromePx: number
+  /** Font size of the heading over the panels. */
+  headingPx: number
+  /** Font size of the caption under them. */
+  captionPx: number
 }
 
 /**
  * Size the frame for the surface it is being drawn for.
  *
  * The two profiles are two surfaces rather than one at two magnifications: the
- * compact one gets proportionally larger type and is expected to be handed
- * fewer, shorter rows, because a phone that has to be pinched is a phone that
- * has been handed the desktop composition.
+ * compact one is expected to be handed fewer, shorter rows, because a phone
+ * that has to be pinched is a phone that has been handed the desktop
+ * composition. Its type is held at a size that survives being read on npm at
+ * exactly the width it was drawn, which is the whole reason the compact
+ * profile is that width.
  *
  * Both sit smaller than the terminal stage's type at the same profile, and
  * deliberately: a terminal is one column and this is two or four, so a line
@@ -61,15 +58,36 @@ interface PanelMetrics {
 function panelMetrics(profile: MediaProfile): PanelMetrics {
   const wide = profile.width >= WIDE_ENOUGH
   return {
-    fontSizePx: wide ? 13 : 11,
-    lineHeightPx: wide ? 22 : 18,
-    insetPx: wide ? 28 : 16,
-    padPx: wide ? 16 : 11,
-    gapPx: wide ? 16 : 10,
-    radiusPx: wide ? 12 : 9,
-    titlePx: wide ? 12 : 10,
-    chromePx: wide ? 15 : 12,
+    fontSizePx: wide ? 13 : 11.5,
+    lineHeightPx: wide ? 22 : 18.5,
+    insetPx: wide ? 28 : 18,
+    padPx: wide ? 16 : 12,
+    gapPx: wide ? 16 : 12,
+    radiusPx: wide ? 12 : 10,
+    titlePx: wide ? 12 : 11,
+    headingPx: wide ? 15 : 14,
+    captionPx: wide ? 14 : 12.5,
   }
+}
+
+/**
+ * How many rows fit in a column, for a column that keeps only its newest.
+ *
+ * Worked out from the same measurements the stylesheet is built from, and
+ * rounded down, so a tape never keeps a row the panel would clip.
+ *
+ * @param config - The frame as the scene configured it.
+ * @param profile - The presentation target being composed for.
+ * @returns A row count of at least one.
+ */
+function rowCapacity(config: PanelConfig, profile: MediaProfile): number {
+  const metrics = panelMetrics(profile)
+  const chrome =
+    (config.heading === undefined ? 0 : ceil(metrics.headingPx * 1.3) + metrics.gapPx) +
+    (config.caption === undefined ? 0 : ceil(metrics.captionPx * 1.3) + metrics.gapPx)
+  const title = metrics.titlePx * 1.3 + (metrics.padPx - 4) + (metrics.padPx - 6) + 1
+  const inner = profile.height - metrics.insetPx * 2 - chrome - metrics.padPx * 2 - title
+  return max(1, floor(inner / metrics.lineHeightPx))
 }
 
 /**
@@ -109,11 +127,11 @@ function settledAt(config: PanelConfig): number {
  *
  * @param row - The row to draw.
  * @param kind - What the panel holds, which decides the margin marker.
- * @param theme - The colours in use.
+ * @param theme - The visual tokens this variant is drawn with.
  * @param atMs - Offset from the start of the timeline.
  * @returns Markup for the row.
  */
-function renderRow(row: PanelRow, kind: Panel['kind'], theme: PanelTheme, atMs: number): string {
+function renderRow(row: PanelRow, kind: Panel['kind'], theme: MediaTheme, atMs: number): string {
   const typeMs = row.typeMs ?? 0
   const elapsed = atMs - row.atMs
   const typing = typeMs > 0 && elapsed < typeMs
@@ -138,15 +156,14 @@ function renderRow(row: PanelRow, kind: Panel['kind'], theme: PanelTheme, atMs: 
  * Draw one column at one instant.
  *
  * @param panel - The column.
- * @param theme - The colours in use.
+ * @param theme - The visual tokens this variant is drawn with.
  * @param atMs - Offset from the start of the timeline.
+ * @param capacity - How many rows a tailed column keeps.
  * @returns Markup for the column.
  */
-function renderPanel(panel: Panel, theme: PanelTheme, atMs: number): string {
-  const rows = ordered(panel)
-    .filter((row) => atMs >= row.atMs && (row.untilMs === undefined || atMs < row.untilMs))
-    .map((row) => renderRow(row, panel.kind, theme, atMs))
-    .join('')
+function renderPanel(panel: Panel, theme: MediaTheme, atMs: number, capacity: number): string {
+  const live = ordered(panel).filter((row) => atMs >= row.atMs && (row.untilMs === undefined || atMs < row.untilMs))
+  const rows = (panel.tail === true ? live.slice(-capacity) : live).map((row) => renderRow(row, panel.kind, theme, atMs)).join('')
   const heading = panel.title === undefined ? '' : escapeHtml(panel.title)
   const head =
     panel.chrome === true
@@ -166,15 +183,14 @@ function renderPanel(panel: Panel, theme: PanelTheme, atMs: number): string {
  *
  * @param config - The frame as the scene configured it.
  * @param profile - The presentation target being composed for.
+ * @param theme - The visual tokens this variant is drawn with.
  * @returns CSS for this frame.
  */
-function panelStyles(config: PanelConfig, profile: MediaProfile): string {
-  const theme = resolvePanelTheme(config.theme)
+function panelStyles(config: PanelConfig, profile: MediaProfile, theme: MediaTheme): string {
   const metrics = panelMetrics(profile)
   const tones = TONES.map((tone) => `.p-tone--${tone} { color: ${theme.tones[tone]}; }`).join('\n')
 
   return `
-#${STAGE_ELEMENT_ID} { background: ${theme.backdrop}; font-family: ${FONT_STACK}; }
 .p-frame {
   position: absolute;
   inset: ${metrics.insetPx}px;
@@ -183,10 +199,10 @@ function panelStyles(config: PanelConfig, profile: MediaProfile): string {
   gap: ${metrics.gapPx}px;
 }
 .p-heading {
-  font-size: ${metrics.chromePx}px;
+  font-size: ${metrics.headingPx}px;
   font-weight: 600;
   letter-spacing: -0.01em;
-  color: ${theme.tones.plain};
+  color: ${theme.text.strong};
   flex: none;
 }
 .p-columns {
@@ -202,9 +218,10 @@ function panelStyles(config: PanelConfig, profile: MediaProfile): string {
   display: flex;
   flex-direction: column;
   padding: ${metrics.padPx}px ${metrics.padPx + 2}px;
-  border: 1px solid ${theme.panelBorder};
+  border: 1px solid ${theme.border};
   border-radius: ${metrics.radiusPx}px;
-  background: ${theme.panel};
+  background: ${theme.surface};
+  box-shadow: ${theme.shadow};
   overflow: hidden;
   transition: none;
 }
@@ -213,12 +230,12 @@ function panelStyles(config: PanelConfig, profile: MediaProfile): string {
   font-weight: 600;
   /* why: a column's title is as often a filename or a call as it is a word, and neither survives being uppercased */
   letter-spacing: 0.02em;
-  color: ${theme.title};
+  color: ${theme.text.muted};
   padding-bottom: ${metrics.padPx - 4}px;
   margin-bottom: ${metrics.padPx - 6}px;
   border-bottom: 1px solid ${theme.rule};
 }
-.p-rows { font-family: ${MONO_STACK}; font-size: ${metrics.fontSizePx}px; line-height: ${metrics.lineHeightPx}px; }
+.p-rows { font-family: ${theme.fonts.mono}; font-size: ${metrics.fontSizePx}px; line-height: ${metrics.lineHeightPx}px; }
 .p-row {
   display: flex;
   /* why: a blank row is a spacer the scene asked for, and a flex box with no content is zero pixels tall */
@@ -231,9 +248,9 @@ function panelStyles(config: PanelConfig, profile: MediaProfile): string {
   padding: 0 3px;
   margin: 0 -3px;
 }
-.p-row--lit { background: ${theme.emphasis}; }
+.p-row--lit { background: ${theme.accentSoft}; }
 .p-row--struck { text-decoration: line-through; opacity: 0.55; }
-.p-marker { flex: none; color: ${theme.marker}; }
+.p-marker { flex: none; color: ${theme.text.faint}; }
 .p-text { min-width: 0; }
 .p-caret {
   display: inline-block;
@@ -241,41 +258,43 @@ function panelStyles(config: PanelConfig, profile: MediaProfile): string {
   height: ${ceil(metrics.fontSizePx * 0.95)}px;
   margin-left: 1px;
   vertical-align: text-bottom;
-  background: ${theme.cursor};
+  background: ${theme.accent};
 }
 .p-panel--top .p-rows { margin-bottom: auto; }
 .p-panel--center .p-rows { margin: auto 0; }
 .p-panel--bottom .p-rows { margin-top: auto; }
-.p-panel--note .p-rows { font-family: ${FONT_STACK}; }
+.p-panel--note .p-rows { font-family: ${theme.fonts.sans}; }
 /* A column standing in for a session rather than for a listing: the bar
    replaces the title rule, so the padding moves off the panel and onto the two
    parts of it separately. */
 .p-panel--chrome { padding: 0; }
 .p-panel--chrome .p-rows { padding: ${metrics.padPx}px ${metrics.padPx + 2}px; }
 .p-bar {
+  flex: none;
   display: flex;
   align-items: center;
   gap: ${ceil(metrics.padPx * 0.36)}px;
   height: ${metrics.lineHeightPx + 8}px;
   padding: 0 ${metrics.padPx}px;
-  background: ${theme.chrome};
+  background: ${theme.chrome.bar};
   border-bottom: 1px solid ${theme.rule};
   border-radius: ${metrics.radiusPx - 1}px ${metrics.radiusPx - 1}px 0 0;
 }
 .p-dot { width: ${ceil(metrics.titlePx * 0.62)}px; height: ${ceil(metrics.titlePx * 0.62)}px; border-radius: 50%; flex: none; }
-.p-dot--1 { background: ${theme.buttons[0]}; }
-.p-dot--2 { background: ${theme.buttons[1]}; }
-.p-dot--3 { background: ${theme.buttons[2]}; }
+.p-dot--1 { background: ${theme.chrome.buttons[0]}; }
+.p-dot--2 { background: ${theme.chrome.buttons[1]}; }
+.p-dot--3 { background: ${theme.chrome.buttons[2]}; }
 .p-bar-title {
   margin-left: ${ceil(metrics.padPx * 0.5)}px;
   font-size: ${metrics.titlePx}px;
   letter-spacing: 0.04em;
-  color: ${theme.title};
-  font-family: ${MONO_STACK};
+  color: ${theme.chrome.title};
+  font-family: ${theme.fonts.mono};
 }
 .p-caption {
   flex: none;
-  font-size: ${metrics.chromePx}px;
+  min-height: ${ceil(metrics.captionPx * 1.3)}px;
+  font-size: ${metrics.captionPx}px;
   color: ${theme.tones.success};
 }
 ${tones}
@@ -305,13 +324,16 @@ export const panelStage: Stage<PanelConfig> = defineStage<PanelConfig>({
     return settledAt(config) + (config.restMs ?? 1200)
   },
 
-  frame({ config, atMs }): string {
-    const theme = resolvePanelTheme(config.theme)
-    const columns = config.panels.map((panel) => renderPanel(panel, theme, atMs)).join('')
+  frame({ config, profile, theme, atMs }): string {
+    const capacity = rowCapacity(config, profile)
+    const columns = config.panels.map((panel) => renderPanel(panel, theme, atMs, capacity)).join('')
     const heading = config.heading === undefined ? '' : `<div class="p-heading">${escapeHtml(config.heading)}</div>`
     const settled = settledAt(config)
+    // why: the caption's room is held from the first frame, so its arrival adds a line rather than moving everything above it up by one
     const caption =
-      config.caption !== undefined && atMs >= settled + CAPTION_DELAY_MS ? `<div class="p-caption">${escapeHtml(config.caption)}</div>` : ''
+      config.caption === undefined
+        ? ''
+        : `<div class="p-caption">${atMs >= settled + CAPTION_DELAY_MS ? escapeHtml(config.caption) : ''}</div>`
 
     return `<div class="p-frame">${heading}<div class="p-columns">${columns}</div>${caption}</div>`
   },

@@ -9,6 +9,7 @@ import { renderJson, renderSummary } from '../report/summary'
 import { parseArgs, readString } from './args'
 import { runCheck } from './commands/check'
 import { runDoctor } from './commands/doctor'
+import { runPreview } from './commands/preview'
 import { runRecord } from './commands/record'
 import { runShot } from './commands/shot'
 import { USAGE } from './usage'
@@ -33,6 +34,10 @@ async function dispatch(args: ParsedArgs): Promise<ExitCode> {
   }
   if (args.command === 'shot') {
     process.stdout.write(`${await runShot(config, args)}\n`)
+    return ExitCode.Ok
+  }
+  if (args.command === 'preview') {
+    process.stdout.write(`${await runPreview(config, args)}\n`)
     return ExitCode.Ok
   }
   if (args.command === 'check') {

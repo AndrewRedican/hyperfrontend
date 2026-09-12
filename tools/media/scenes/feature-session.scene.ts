@@ -28,12 +28,12 @@ export default defineScriptedScene({
   asset: 'hero',
   outputs: ['gif', 'still'],
   profile: 'compact',
+  hue: 217,
   stage: flowStage,
   holdMs: 1_500,
   gif: { colours: 56, lossy: 75, maxBytes: 900_000 },
   stills: [{ name: 'poster', atMs: 9_400, format: 'webp', quality: 82, maxBytes: 70_000 }],
   config: {
-    theme: 'midnight',
     left: { title: 'Host', subtitle: 'shop.example.com', note: 'createShell({ modes })' },
     right: { title: 'Feature', subtitle: 'checkout.example.com', note: 'createFeature({ contract })' },
     phases: [

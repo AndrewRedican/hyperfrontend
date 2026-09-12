@@ -30,13 +30,13 @@ export default defineScriptedScene({
   slug: 'feature-watchdog',
   asset: 'hero',
   outputs: ['gif', 'still'],
-  profile: 'docs-wide',
+  profile: 'compact',
+  hue: 217,
   stage: panelStage,
   holdMs: 1_700,
   gif: { colours: 56, lossy: 72, maxBytes: 1_000_000 },
   stills: [{ name: 'poster', atMs: 8_900, format: 'webp', quality: 82, maxBytes: 90_000 }],
   config: {
-    theme: 'midnight',
     heading: 'The same silence, three times, meaning three different things.',
     caption: 'Returning to the tab grants a fresh budget, not a verdict. Only a beat says healthy.',
     restMs: 1_600,
@@ -44,6 +44,7 @@ export default defineScriptedScene({
       {
         title: 'what the host saw',
         kind: 'result',
+        tail: true,
         weight: 1.25,
         rows: [
           { text: 'open', atMs: 300, marker: '·', tone: 'muted' },

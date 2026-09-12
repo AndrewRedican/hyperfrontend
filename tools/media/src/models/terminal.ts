@@ -77,45 +77,8 @@ export type TerminalStep =
   | TerminalRunStep
   | TerminalTypeStep
 
-/**
- * A terminal's look, as a set of colours the renderer resolves tones against.
- *
- * Every value is a CSS colour. Keeping the look entirely in data is what lets
- * one terminal implementation carry several visual treatments without any of
- * them being a second implementation.
- */
-export interface TerminalTheme {
-  /** Name a scene selects this theme by. */
-  id: string
-  /** The surface the window sits on. */
-  backdrop: string
-  /** The window's own surface. */
-  surface: string
-  /** The title bar's surface. */
-  chrome: string
-  /** The window's outline. */
-  border: string
-  /** The shadow cast onto the backdrop, as a full `box-shadow` value. */
-  shadow: string
-  /** Colour of the three window buttons, left to right. */
-  buttons: readonly [string, string, string]
-  /** Colour of the title bar's text. */
-  titleText: string
-  /** Colour of the prompt. */
-  prompt: string
-  /** Colour of the cursor block. */
-  cursor: string
-  /** Colour each tone is printed in. */
-  tones: Readonly<Record<TerminalTone, string>>
-}
-
-/** A theme as a scene states it: a built-in name, or one written out in full. */
-export type TerminalThemeRef = string | TerminalTheme
-
 /** Everything a scene tells the terminal stage. */
 export interface TerminalConfig {
-  /** The visual treatment, defaulting to the first built-in theme. */
-  theme?: TerminalThemeRef
   /** Text in the title bar, or an empty string for a window with no title bar. */
   title?: string
   /** The prompt the script starts with. */

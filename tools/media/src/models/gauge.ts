@@ -50,40 +50,8 @@ export interface GaugeGroup {
   orientation?: 'row' | 'column'
 }
 
-/**
- * A gauge stage's look, as a set of colours.
- *
- * The same shape of idea as the other stages' themes: the treatment is data,
- * so one implementation carries several looks.
- */
-export interface GaugeTheme {
-  /** Name a scene selects this theme by. */
-  id: string
-  /** The surface the frame sits on. */
-  backdrop: string
-  /** A group's surface. */
-  panel: string
-  /** A group's outline. */
-  panelBorder: string
-  /** The empty part of a track. */
-  trough: string
-  /** Colour of a group's heading. */
-  title: string
-  /** Colour of a track's label. */
-  label: string
-  /** Colour of the line under a label. */
-  note: string
-  /** Colour each tone fills and reads out in. */
-  tones: Readonly<Record<GaugeTone, string>>
-}
-
-/** A theme as a scene states it: a built-in name, or one written out in full. */
-export type GaugeThemeRef = string | GaugeTheme
-
 /** Everything a scene tells the gauge stage. */
 export interface GaugeConfig {
-  /** The visual treatment, defaulting to the first built-in theme. */
-  theme?: GaugeThemeRef
   /** One line over the groups, naming what the frame is about. */
   heading?: string
   /** One line under them, arriving once every track has settled. */

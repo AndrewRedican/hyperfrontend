@@ -47,12 +47,12 @@ export default defineScriptedScene({
   asset: 'hero',
   outputs: ['gif', 'still'],
   profile: 'compact',
+  hue: 228,
   stage: flowStage,
   holdMs: 1_500,
   gif: { colours: 56, lossy: 75, maxBytes: 850_000 },
   stills: [{ name: 'poster', atMs: 8_150, format: 'webp', quality: 82, maxBytes: 90_000 }],
   config: {
-    theme: 'midnight',
     left: { title: 'host-app', subtitle: 'shop.example.com', note: 'accepted: [CART_UPDATED]' },
     right: { title: 'cart-app', subtitle: 'cart.example.com', note: 'emitted: [CART_UPDATED, PRICE_SYNC]' },
     phases: [

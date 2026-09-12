@@ -30,12 +30,12 @@ export default defineScriptedScene({
   asset: 'hero',
   outputs: ['gif', 'still'],
   profile: 'compact',
+  hue: 243,
   stage: byteStage,
   holdMs: 1_700,
   gif: { colours: 48, lossy: 75, maxBytes: 800_000 },
   stills: [{ name: 'poster', atMs: 7_000, format: 'webp', quality: 82, maxBytes: 70_000 }],
   config: {
-    theme: 'midnight',
     heading: 'Your transport. Our envelope.',
     source: "channel.send({ type: 'ORDER_PLACED', id: 'A-1094' })",
     caption: 'Ten bytes in the clear, and none of them can be edited without failing the tag.',

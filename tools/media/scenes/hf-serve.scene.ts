@@ -5,13 +5,13 @@ export default defineScriptedScene({
   slug: 'hf-serve',
   asset: 'hero',
   outputs: ['gif', 'still'],
-  profile: 'docs-wide',
+  profile: 'compact',
+  hue: 217,
   stage: terminalStage,
   holdMs: 1_400,
   gif: { colours: 64, lossy: 60, maxBytes: 1_200_000 },
   stills: [{ name: 'poster', atMs: 8_200, format: 'webp', quality: 82, maxBytes: 90_000 }],
   config: {
-    theme: 'midnight',
     title: 'hyperfrontend',
     prompt: '~/storefront',
     script: [

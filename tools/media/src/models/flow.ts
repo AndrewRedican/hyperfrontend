@@ -60,45 +60,8 @@ export interface FlowPhase {
   label: string
 }
 
-/**
- * A flow diagram's look, as a set of colours.
- *
- * The same shape as a terminal theme and for the same reason: keeping the look
- * entirely in data is what lets one implementation carry several treatments
- * without any of them being a second implementation.
- */
-export interface FlowTheme {
-  /** Name a scene selects this theme by. */
-  id: string
-  /** The surface the diagram sits on. */
-  backdrop: string
-  /** An endpoint panel's surface. */
-  panel: string
-  /** An endpoint panel's outline. */
-  panelBorder: string
-  /** An endpoint panel's outline while it is sending or receiving. */
-  panelActive: string
-  /** The line messages travel along. */
-  wire: string
-  /** A message in flight. */
-  packet: string
-  /** Colour of an endpoint's name. */
-  title: string
-  /** Colour of an endpoint's second line. */
-  subtitle: string
-  /** Colour of the running phase caption. */
-  phase: string
-  /** Colour each tone is written in. */
-  tones: Readonly<Record<FlowTone, string>>
-}
-
-/** A theme as a scene states it: a built-in name, or one written out in full. */
-export type FlowThemeRef = string | FlowTheme
-
 /** Everything a scene tells the flow stage. */
 export interface FlowConfig {
-  /** The visual treatment, defaulting to the first built-in theme. */
-  theme?: FlowThemeRef
   /** The participant on the left. */
   left: FlowEndpoint
   /** The participant on the right. */

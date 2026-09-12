@@ -1,4 +1,5 @@
 import type { MediaProfile } from './profile'
+import type { MediaTheme } from './theme'
 
 /**
  * One instant on a stage's timeline.
@@ -13,6 +14,8 @@ export interface StageInstant<TConfig> {
   config: TConfig
   /** The presentation target the scene is being composed for. */
   profile: MediaProfile
+  /** The visual tokens this variant is drawn with. */
+  theme: MediaTheme
   /** Offset from the start of the timeline. */
   atMs: number
 }
@@ -31,6 +34,10 @@ export interface StageInstant<TConfig> {
  * quickly the machine got through it. Motion belongs in {@link frame} as a
  * function of {@link StageInstant.atMs}, which costs a stage very little and
  * buys an asset that can be regenerated rather than merely remade.
+ *
+ * Nor does a stage own a colour. Everything it paints with comes from the
+ * theme it is handed, which is what lets one scene become three assets that
+ * differ in nothing but their palette.
  */
 export interface Stage<TConfig> {
   /** Name this stage is registered and reported under. */
@@ -38,15 +45,16 @@ export interface Stage<TConfig> {
   /**
    * The stylesheet the stage's markup is drawn with.
    *
-   * Mounted once, before the first frame, so a rule here is free to be as
-   * expensive as it likes. Selectors should be scoped to the stage's own class
-   * names; the harness owns the document around it.
+   * Mounted once per variant, before the first frame, so a rule here is free
+   * to be as expensive as it likes. Selectors should be scoped to the stage's
+   * own class names; the harness owns the document and the ground around it.
    *
    * @param config - What the scene configured this stage with.
    * @param profile - The presentation target being composed for.
+   * @param theme - The visual tokens this variant is drawn with.
    * @returns CSS, inlined into the page.
    */
-  styles: (config: TConfig, profile: MediaProfile) => string
+  styles: (config: TConfig, profile: MediaProfile, theme: MediaTheme) => string
   /**
    * How long this stage's timeline runs for.
    *
@@ -62,7 +70,7 @@ export interface Stage<TConfig> {
   /**
    * The markup for one instant.
    *
-   * @param instant - The configuration, the profile, and the moment wanted.
+   * @param instant - The configuration, the profile, the theme, and the moment wanted.
    * @returns HTML placed inside the stage element.
    */
   frame: (instant: StageInstant<TConfig>) => string
