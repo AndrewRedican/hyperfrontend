@@ -307,6 +307,29 @@ export function getArchitectureMetadata(librarySlug: string): Metadata {
 }
 
 /**
+ * Generate metadata for a package's changelog page.
+ *
+ * @param librarySlug - The library URL slug as the manifest names it, `data-utils` for a utility
+ * @returns Metadata object with title, description, canonical, and social cards
+ */
+export function getChangelogMetadata(librarySlug: string): Metadata {
+  const library = getManifest()?.libraries.find((lib) => lib.slug === librarySlug)
+  const packageName = library?.packageName ?? `@hyperfrontend/${librarySlug}`
+  const title = `Changelog — ${packageName}`
+  const description = `Every published release of ${packageName}, newest first, with what changed in each: searchable by words, version range and date.`
+  const path =
+    library?.category === 'utils'
+      ? `/docs/libraries/utils/${librarySlug.replace('-utils', '')}/releases/`
+      : `/docs/libraries/${librarySlug}/releases/`
+
+  return {
+    title,
+    description,
+    ...buildSocialMetadata(title, description, path),
+  }
+}
+
+/**
  * Generate metadata for the fit assessment. The description is written for the
  * search result itself: someone deciding between microfrontend approaches has
  * to recognize this page as the thing that answers that question.

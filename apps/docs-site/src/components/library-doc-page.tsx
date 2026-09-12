@@ -14,6 +14,7 @@ import { PackageMetadata } from '@/components/package/package-metadata'
 import { breakablePackageName } from '@/components/package/package-name'
 import { RelatedReading } from '@/components/package/related-reading'
 import { PageAccent } from '@/components/page-accent'
+import { changelogPathFor, changelogRouteFor } from '@/lib/changelog'
 import { removeBadges, transformLinks } from '@/lib/content'
 import { getLibraryReadme, getLibraryApi, getApiLinkIndex } from '@/lib/docs-loader'
 import { documentSubject } from '@/lib/document-model'
@@ -70,6 +71,9 @@ export async function LibraryDocPage({ title, packageName, slug, category, fallb
 
     const facts = getPackageFacts(packageName) ?? NO_FACTS
     const licenseHref = readSectionLink(processed, 'license')
+    // why: a package withheld from the registry has no releases to list, so the pill is not offered for one
+    const changelogHref =
+      facts.isPrivate || changelogPathFor(packageName) === null ? null : changelogRouteFor(libraryDocRoute(slug, category))
     const related = buildRelatedReading({ packageName, slug, readme: processed })
 
     // why: the run is drawn only for a section the parser could read, so a README stating its features some other way keeps the rendering it already had
@@ -111,7 +115,7 @@ export async function LibraryDocPage({ title, packageName, slug, category, fallb
             {breakablePackageName(packageTitle ?? packageName)}
           </H1>
 
-          <PackageMetadata packageName={packageName} facts={facts} licenseHref={licenseHref} />
+          <PackageMetadata packageName={packageName} facts={facts} licenseHref={licenseHref} changelogHref={changelogHref} />
 
           <div className="mt-6">
             <ReadmeContent

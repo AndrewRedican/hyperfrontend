@@ -1,6 +1,7 @@
 import type { NavItem } from '@/lib/navigation'
 import type { MetadataRoute } from 'next'
 import { getAllArticles } from '@/lib/articles'
+import { getChangelogRoutes } from '@/lib/changelog'
 import { getGuideIndex } from '@/lib/guides'
 import { docsNavigation, mainNavLinks } from '@/lib/navigation'
 import { SITE_URL } from '@/lib/site'
@@ -45,6 +46,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     // why: these pages exist but the sidebar navigation does not link them directly; validate-sitemap fails the build if one goes missing here
     '/docs/is-hyperfrontend-right-for-you',
     '/docs/libraries/utils',
+    // why: the changelog pages are reached from their package's metadata strip rather than from the navigation, one per published package
+    ...getChangelogRoutes(),
     '/docs/libraries/network-protocol/channel',
     '/docs/libraries/network-protocol/data',
     '/docs/libraries/network-protocol/packet',

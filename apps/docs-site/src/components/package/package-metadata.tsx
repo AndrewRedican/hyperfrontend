@@ -11,6 +11,8 @@ export interface PackageMetadataProps {
   facts: PackageFacts
   /** Where the package's own README points its licence, when it points anywhere */
   licenseHref: string | null
+  /** Route of the package's changelog page, or null for a package without one */
+  changelogHref: string | null
 }
 
 /**
@@ -35,10 +37,11 @@ function isStableVersion(version: string): boolean {
  * pill instead of a heading and a paragraph. Given a full-width section each,
  * they would cost more vertical space than the introduction they push down.
  *
- * Two facts, in a fixed order: the version, because it is the first thing a
- * reader installing the package wants to confirm, and the licence, which is
- * checked once and read last. Every pill is the same height and sits on the
- * same line, and the row wraps as a row when it must.
+ * Three facts, in a fixed order: the version, because it is the first thing a
+ * reader installing the package wants to confirm; the changelog, because it
+ * is what that version means; and the licence, which is checked once and
+ * read last. Every pill is the same height and sits on the same line, and
+ * the row wraps as a row when it must.
  *
  * The version is blue for a stable release and violet before 1.0: a
  * category, not a warning. A package withheld from the registry has no
@@ -48,9 +51,10 @@ function isStableVersion(version: string): boolean {
  * @param props.packageName - Full npm package name
  * @param props.facts - What the package states about itself
  * @param props.licenseHref - Where the package's README points its licence
+ * @param props.changelogHref - Route of the package's changelog page
  * @returns The metadata strip, or nothing when the package states no fact at all.
  */
-export function PackageMetadata({ packageName, facts, licenseHref }: PackageMetadataProps) {
+export function PackageMetadata({ packageName, facts, licenseHref, changelogHref }: PackageMetadataProps) {
   const npmUrl = npmVersionUrl(facts, packageName)
   const hasLicense = facts.license !== ''
   const hasVersion = facts.version !== '' && !facts.isPrivate
@@ -80,6 +84,19 @@ export function PackageMetadata({ packageName, facts, licenseHref }: PackageMeta
         <li>
           <MetadataPill label="Not published to npm" tone="muted">
             Unpublished
+          </MetadataPill>
+        </li>
+      )}
+
+      {changelogHref !== null && (
+        <li>
+          <MetadataPill
+            href={changelogHref}
+            label={`${packageName} changelog: every published release and what changed in it`}
+            tone="neutral"
+            icon={<ChangelogMark />}
+          >
+            Changelog
           </MetadataPill>
         </li>
       )}
@@ -122,6 +139,32 @@ function ScalesMark() {
       <path d="M4.4 7.8h15.2" />
       <path d="M4.4 7.8 1.9 13.4h5z" />
       <path d="M19.6 7.8 17.1 13.4h5z" />
+    </svg>
+  )
+}
+
+/**
+ * A short list with a marker on each line, standing in for a release history.
+ * @returns The changelog mark.
+ */
+function ChangelogMark() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.7}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <path d="M9 6.5h11" />
+      <path d="M9 12h11" />
+      <path d="M9 17.5h11" />
+      <circle cx="4.5" cy="6.5" r="1.1" fill="currentColor" stroke="none" />
+      <circle cx="4.5" cy="12" r="1.1" fill="currentColor" stroke="none" />
+      <circle cx="4.5" cy="17.5" r="1.1" fill="currentColor" stroke="none" />
     </svg>
   )
 }

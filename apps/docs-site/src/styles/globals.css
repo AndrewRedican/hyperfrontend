@@ -842,6 +842,565 @@
 }
 
 @layer components {
+  /* A package's release history, drawn down one rail.
+
+     The same family as the capabilities run further up a package's page: a
+     hairline behind a gutter, marks drawn straight on it. Here each mark is
+     a release, and what it looks like says how big a step the release was.
+     A patch is a small dot on the line; a minor is a larger filled one; a
+     major is a ring, larger again, that the line passes through; the first
+     release is a solid stop at the bottom, where the rail ends. A release
+     with a breaking change carries the mark in red whatever its step, so
+     a reader scanning the closed list finds the two things worth stopping
+     for, the majors and the breaks, without opening anything.
+
+     Every release is a native disclosure, so it opens and closes with the
+     keyboard and without a script, and the page's own script only decides
+     which ones start open. The summary is a grid: the mark in the gutter,
+     the version and the day, the facts about what the notes hold, and the
+     caret; on a phone the facts drop under the version rather than being
+     squeezed beside it. */
+  .changelog {
+    position: relative;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .changelog::before {
+    content: '';
+    position: absolute;
+    left: 0.6875rem;
+    top: 0.75rem;
+    bottom: 0.75rem;
+    width: 1px;
+    background-color: rgb(100 116 139 / 0.5);
+  }
+
+  .dark .changelog::before {
+    background-color: rgb(148 163 184 / 0.4);
+  }
+
+  .changelog__release {
+    position: relative;
+    margin: 0;
+  }
+
+  .changelog__release + .changelog__release {
+    margin-top: 0.25rem;
+  }
+
+  .changelog__details {
+    border-radius: 0.625rem;
+    transition: background-color 150ms ease-out;
+  }
+
+  .changelog__details[open] {
+    background-color: rgb(248 250 252 / 0.6);
+  }
+
+  .dark .changelog__details[open] {
+    background-color: rgb(30 41 59 / 0.35);
+  }
+
+  .changelog__summary {
+    display: grid;
+    grid-template-columns: 1.5rem minmax(0, 1fr) auto 1rem;
+    grid-template-areas: 'mark heading facts caret';
+    align-items: center;
+    column-gap: 0.75rem;
+    padding: 0.625rem 0.5rem 0.625rem 0;
+    border-radius: 0.625rem;
+    cursor: pointer;
+    list-style: none;
+    transition: background-color 150ms ease-out;
+  }
+
+  .changelog__summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .changelog__summary:hover {
+    background-color: rgb(241 245 249 / 0.7);
+  }
+
+  .dark .changelog__summary:hover {
+    background-color: rgb(30 41 59 / 0.5);
+  }
+
+  .changelog__summary:focus-visible {
+    outline: 2px solid theme('colors.primary.500');
+    outline-offset: 2px;
+  }
+
+  @media (max-width: 639px) {
+    .changelog__summary {
+      grid-template-columns: 1.5rem minmax(0, 1fr) 1rem;
+      grid-template-areas:
+        'mark heading caret'
+        'mark facts caret';
+      row-gap: 0.125rem;
+    }
+  }
+
+  /* The mark: a box the width of the gutter, with the release drawn in its
+     centre by a pseudo-element the step sizes. It is the one thing in the
+     summary that the rail's hairline has to be able to pass behind, which is
+     why the ring is a border rather than a fill. */
+  .changelog__marker {
+    grid-area: mark;
+    position: relative;
+    display: block;
+    width: 1.5rem;
+    height: 1.5rem;
+    align-self: center;
+  }
+
+  .changelog__marker::before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 9999px;
+    transform: translate(-50%, -50%);
+    background-color: theme('colors.slate.400');
+    box-shadow: 0 0 0 3px theme('colors.white');
+  }
+
+  .dark .changelog__marker::before {
+    background-color: theme('colors.slate.500');
+    box-shadow: 0 0 0 3px theme('colors.slate.900');
+  }
+
+  .changelog__release[data-step='minor'] .changelog__marker::before {
+    width: 0.75rem;
+    height: 0.75rem;
+    background-color: hsl(var(--page-accent, 217) 62% 48%);
+  }
+
+  .dark .changelog__release[data-step='minor'] .changelog__marker::before {
+    background-color: hsl(var(--page-accent, 217) 72% 66%);
+  }
+
+  .changelog__release[data-step='major'] .changelog__marker::before {
+    width: 1rem;
+    height: 1rem;
+    background-color: theme('colors.white');
+    border: 2.5px solid hsl(var(--page-accent, 217) 62% 44%);
+  }
+
+  .dark .changelog__release[data-step='major'] .changelog__marker::before {
+    background-color: theme('colors.slate.900');
+    border-color: hsl(var(--page-accent, 217) 72% 66%);
+  }
+
+  .changelog__release[data-step='initial'] .changelog__marker::before {
+    width: 0.75rem;
+    height: 0.75rem;
+    border-radius: 0.125rem;
+    background-color: theme('colors.slate.500');
+  }
+
+  .changelog__release[data-breaking] .changelog__marker::before {
+    background-color: theme('colors.red.600');
+    border-color: theme('colors.red.600');
+  }
+
+  .changelog__release[data-breaking][data-step='major'] .changelog__marker::before {
+    background-color: theme('colors.white');
+  }
+
+  .dark .changelog__release[data-breaking] .changelog__marker::before {
+    background-color: theme('colors.red.400');
+    border-color: theme('colors.red.400');
+  }
+
+  .dark .changelog__release[data-breaking][data-step='major'] .changelog__marker::before {
+    background-color: theme('colors.slate.900');
+  }
+
+  .changelog__heading {
+    grid-area: heading;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    column-gap: 0.75rem;
+    row-gap: 0.125rem;
+    min-width: 0;
+  }
+
+  .changelog__version {
+    font-family: theme('fontFamily.mono');
+    font-size: theme('fontSize.base');
+    font-weight: 600;
+    line-height: 1.5;
+    color: theme('colors.slate.900');
+  }
+
+  .dark .changelog__version {
+    color: theme('colors.white');
+  }
+
+  .changelog__release[data-step='major'] .changelog__version {
+    font-size: theme('fontSize.lg');
+  }
+
+  .changelog__date {
+    font-size: theme('fontSize.sm');
+    line-height: 1.5;
+    color: theme('colors.slate.500');
+  }
+
+  .dark .changelog__date {
+    color: theme('colors.slate.400');
+  }
+
+  .changelog__facts {
+    grid-area: facts;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.75rem;
+    line-height: 1.25;
+    color: theme('colors.slate.500');
+  }
+
+  .dark .changelog__facts {
+    color: theme('colors.slate.400');
+  }
+
+  .changelog__breaking,
+  .changelog__item-breaking {
+    display: inline-block;
+    padding: 0.125rem 0.375rem;
+    border-radius: 0.25rem;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: theme('colors.red.800');
+    background-color: rgb(153 27 27 / 0.08);
+  }
+
+  .dark .changelog__breaking,
+  .dark .changelog__item-breaking {
+    color: theme('colors.red.300');
+    background-color: rgb(248 113 113 / 0.12);
+  }
+
+  .changelog__caret {
+    grid-area: caret;
+    color: theme('colors.slate.400');
+    transition: transform 200ms ease-out;
+  }
+
+  .changelog__details[open] .changelog__caret {
+    transform: rotate(180deg);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .changelog__caret {
+      transition: none;
+    }
+  }
+
+  /* The notes, indented past the gutter so they hang off the release rather
+     than off the rail. */
+  .changelog__body {
+    padding: 0.25rem 1rem 1.125rem 2.25rem;
+  }
+
+  .changelog__section + .changelog__section {
+    margin-top: 0.875rem;
+  }
+
+  .changelog__section-title {
+    margin: 0 0 0.375rem;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: theme('colors.slate.500');
+  }
+
+  .dark .changelog__section-title {
+    color: theme('colors.slate.400');
+  }
+
+  .changelog__section[data-kind='breaking'] .changelog__section-title {
+    color: theme('colors.red.700');
+  }
+
+  .dark .changelog__section[data-kind='breaking'] .changelog__section-title {
+    color: theme('colors.red.300');
+  }
+
+  .changelog__items {
+    margin: 0;
+    padding: 0 0 0 1rem;
+    list-style: disc;
+  }
+
+  .changelog__item {
+    margin: 0.25rem 0;
+    font-size: theme('fontSize.sm');
+    line-height: 1.7;
+    color: theme('colors.slate.600');
+  }
+
+  .dark .changelog__item {
+    color: theme('colors.slate.300');
+  }
+
+  .changelog__item::marker {
+    color: theme('colors.slate.300');
+  }
+
+  .dark .changelog__item::marker {
+    color: theme('colors.slate.600');
+  }
+
+  .changelog__item > * + * {
+    margin-left: 0.375rem;
+  }
+
+  .changelog__item code,
+  .changelog__scope {
+    border-radius: 0.25rem;
+    background-color: theme('colors.slate.100');
+    padding: 0.0625rem 0.3125rem;
+    font-size: 0.8125em;
+    color: theme('colors.slate.700');
+  }
+
+  .dark .changelog__item code,
+  .dark .changelog__scope {
+    background-color: theme('colors.slate.800');
+    color: theme('colors.slate.300');
+  }
+
+  .changelog__scope {
+    font-weight: 500;
+  }
+
+  .changelog__item a {
+    color: theme('colors.primary.600');
+    text-decoration: none;
+  }
+
+  .changelog__item a:hover {
+    text-decoration: underline;
+  }
+
+  .dark .changelog__item a {
+    color: theme('colors.primary.400');
+  }
+
+  .changelog__compare {
+    display: inline-block;
+    margin-top: 0.875rem;
+    font-size: 0.75rem;
+    color: theme('colors.primary.600');
+    text-decoration: none;
+  }
+
+  .changelog__compare:hover {
+    text-decoration: underline;
+  }
+
+  .dark .changelog__compare {
+    color: theme('colors.primary.400');
+  }
+
+  /* The line above the title naming the package the history belongs to. */
+  .changelog-eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0 0 0.5rem;
+    font-size: theme('fontSize.sm');
+    color: theme('colors.slate.500');
+  }
+
+  .dark .changelog-eyebrow {
+    color: theme('colors.slate.400');
+  }
+
+  /* The filter row: the search takes the width, the dates take what they need,
+     and on a phone the dates drop under the search as a row of their own. */
+  .changelog-filters__row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 0.75rem;
+  }
+
+  .changelog-filters__dates {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .changelog-filters__date-label {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: theme('colors.slate.500');
+  }
+
+  .dark .changelog-filters__date-label {
+    color: theme('colors.slate.400');
+  }
+
+  .changelog-filters__status {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.25rem 0.75rem;
+    margin: 0.625rem 0 0;
+    font-size: 0.75rem;
+    color: theme('colors.slate.500');
+  }
+
+  .dark .changelog-filters__status {
+    color: theme('colors.slate.400');
+  }
+
+  .changelog-filters__reading code {
+    border-radius: 0.25rem;
+    background-color: theme('colors.slate.100');
+    padding: 0.0625rem 0.3125rem;
+    color: theme('colors.slate.700');
+  }
+
+  .dark .changelog-filters__reading code {
+    background-color: theme('colors.slate.800');
+    color: theme('colors.slate.300');
+  }
+
+  .changelog-filters__clear {
+    color: theme('colors.primary.600');
+    font-weight: 500;
+  }
+
+  .changelog-filters__clear:hover {
+    text-decoration: underline;
+  }
+
+  .dark .changelog-filters__clear {
+    color: theme('colors.primary.400');
+  }
+
+  /* The notice that npm is a release ahead of the page.
+
+     Celebratory in the way a good release note is: a party popper, a few
+     specks of confetti that are drawn once and stay where they land, and
+     a headline that names the version and links to it. Nothing moves except
+     a short fade as it arrives, and that is skipped for a reader who asked
+     for less motion. The disclosure under it explains the lag without taking
+     any room until it is asked to. */
+  .npm-latest-notice {
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.875rem;
+    margin-top: 1.25rem;
+    padding: 0.875rem 1rem;
+    border: 1px solid rgb(245 158 11 / 0.35);
+    border-radius: 0.75rem;
+    background-color: rgb(254 243 199 / 0.45);
+    background-image:
+      radial-gradient(circle at 14% 22%, rgb(244 63 94 / 0.55) 0 2px, transparent 2.5px),
+      radial-gradient(circle at 88% 18%, rgb(59 130 246 / 0.5) 0 2px, transparent 2.5px),
+      radial-gradient(circle at 76% 84%, rgb(16 185 129 / 0.55) 0 2px, transparent 2.5px),
+      radial-gradient(circle at 30% 88%, rgb(245 158 11 / 0.6) 0 2px, transparent 2.5px),
+      radial-gradient(circle at 56% 10%, rgb(168 85 247 / 0.5) 0 1.5px, transparent 2px),
+      radial-gradient(circle at 94% 60%, rgb(244 63 94 / 0.45) 0 1.5px, transparent 2px);
+    animation: npm-latest-notice-arrive 400ms ease-out both;
+  }
+
+  .dark .npm-latest-notice {
+    border-color: rgb(251 191 36 / 0.3);
+    background-color: rgb(120 53 15 / 0.18);
+  }
+
+  @keyframes npm-latest-notice-arrive {
+    from {
+      opacity: 0;
+      transform: translateY(-4px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .npm-latest-notice {
+      animation: none;
+    }
+  }
+
+  .npm-latest-notice__party {
+    flex-shrink: 0;
+    font-size: 1.375rem;
+    line-height: 1.4;
+  }
+
+  .npm-latest-notice__headline {
+    margin: 0;
+    font-size: theme('fontSize.sm');
+    line-height: 1.6;
+    font-weight: 500;
+    color: theme('colors.amber.900');
+  }
+
+  .dark .npm-latest-notice__headline {
+    color: theme('colors.amber.100');
+  }
+
+  .npm-latest-notice__version {
+    font-family: theme('fontFamily.mono');
+    font-weight: 600;
+    color: theme('colors.amber.900');
+    text-decoration: underline;
+    text-decoration-color: rgb(180 83 9 / 0.5);
+    text-underline-offset: 0.2em;
+  }
+
+  .npm-latest-notice__version:hover {
+    text-decoration-color: currentColor;
+  }
+
+  .dark .npm-latest-notice__version {
+    color: theme('colors.amber.100');
+    text-decoration-color: rgb(252 211 77 / 0.5);
+  }
+
+  .npm-latest-notice__details {
+    margin-top: 0.25rem;
+    font-size: 0.75rem;
+    line-height: 1.6;
+    color: theme('colors.amber.800');
+  }
+
+  .dark .npm-latest-notice__details {
+    color: theme('colors.amber.200');
+  }
+
+  .npm-latest-notice__details > summary {
+    cursor: pointer;
+    font-weight: 500;
+  }
+
+  .npm-latest-notice__details > p {
+    margin: 0.25rem 0 0;
+    max-width: 60ch;
+  }
+}
+
+@layer components {
   /* A run of short commands, laid out as a cross-section rather than a stack.
 
      Four one-line commands each spanning the whole column is four rows of

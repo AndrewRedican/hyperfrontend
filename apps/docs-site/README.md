@@ -238,6 +238,17 @@ is the case worth remembering: the workspace has a CONTRIBUTING.md, but that pag
 hand-written and says something shorter, so publishing the file there would hand a reader
 a different document from the one they were looking at.
 
+### Package changelogs
+
+Every published package's `CHANGELOG.md` is rendered at `/docs/libraries/<slug>/releases`
+(utilities under `/docs/libraries/utils/<segment>/releases`; the segment is `releases` because
+`changelog` is already an entry point of `@hyperfrontend/versioning`) by `src/lib/changelog.ts`,
+which parses the file the versioning flow writes (`src/lib/changelog-parse.ts`) at build
+time. The file stays the one source of truth: nothing about a release is stored anywhere
+else, and the page is a reading of it. In the browser the page asks the npm registry, once,
+what it serves as `latest`; when that is newer than the newest release listed, a notice says
+a release has been published that this build does not describe yet.
+
 `public/llms.txt` follows the [llms.txt convention](https://llmstxt.org): an H1, a summary,
 and link sections pointing at the `.md` files. Secondary entry points are left out of it on
 purpose; there are 172 of them, listing them would blow the context budget the convention
