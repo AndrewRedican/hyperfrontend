@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { Breadcrumb } from '@/components/breadcrumb'
+import { CodeBlock } from '@/components/code-block'
 import { DocsContentWrapper } from '@/components/docs-content-wrapper'
 import { H1, H2 } from '@/components/heading-with-anchor'
 import Link from 'next/link'
@@ -114,12 +115,9 @@ export default function CoreConceptsPage() {
           <code className="rounded bg-slate-100 px-1 py-0.5 text-slate-700 dark:bg-slate-800 dark:text-slate-300">accepted</code> actions
           (messages this context receives), with optional JSON Schema validation.
         </p>
-        <div className="mt-4 overflow-hidden rounded-lg border border-slate-200 bg-slate-900 dark:border-slate-700">
-          <div className="border-b border-slate-700 px-4 py-2">
-            <span className="text-xs text-slate-400">contract.ts</span>
-          </div>
-          <pre className="overflow-x-auto p-4">
-            <code className="text-sm text-slate-100">{`const contract = {
+        <CodeBlock
+          language="typescript"
+          code={`const contract = {
   emitted: [
     { type: 'CONFIG', schema: configSchema },
     { type: 'NAVIGATION' }
@@ -128,9 +126,8 @@ export default function CoreConceptsPage() {
     { type: 'READY', schema: readySchema },
     { type: 'DATA', schema: dataSchema }
   ]
-}`}</code>
-          </pre>
-        </div>
+}`}
+        />
       </section>
 
       {/* Channels */}
