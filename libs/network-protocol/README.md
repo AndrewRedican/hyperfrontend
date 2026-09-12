@@ -326,47 +326,11 @@ const channel = createChannel(label, {
 
 What comes back is a [`Channel`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/browser/channel/#api-Channel), and for most code it is the only object in play: the hello exchange your transport carries, `send(origin, target, data)` for traffic, `stop` and `resume` for both directions at once, and `outbound` and `inbound` for per-direction queue depth. Nothing rejects. A frame that will not seal or will not open is dropped inside its own stage and reported to your `onDrop` as a [`PacketDrop`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/browser/channel/#api-PacketDrop), while the rest of the pipeline keeps running.
 
-The version is the security decision, and it is the only thing that differs between `/v3` and `/v4`. `v3` keys the session from the ephemeral agreement alone, which defeats anything that can only listen but says nothing about who the counterpart is. `v4` mixes in a pre-shared key, stretched once when the session is keyed, so a script without that key can neither read frames nor produce frames the far side accepts; it carries two extra exports for that key, [`isValidSharedKey`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/browser/v4/#api-isValidSharedKey) and `MIN_SHARED_KEY_LENGTH`, and otherwise mirrors `/v3`.
+The version is the security decision, and it is the only thing that differs between `/v3` and `/v4`. `v3` keys the session from the ephemeral agreement alone, which defeats anything that can only listen but says nothing about who the counterpart is. `v4` mixes in a pre-shared key, stretched once when the session is keyed, so a script without that key can neither read frames nor produce frames the far side accepts; it carries two extra exports for that key, [`isValidSharedKey`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/browser/v4/#api-isValidSharedKey) and `MIN_SHARED_KEY_LENGTH`, and otherwise mirrors `/v3`. Both are built on the same [session protocol](https://www.hyperfrontend.dev/docs/libraries/network-protocol/protocol/): the hello exchange, the key schedule, and the seal and open pipeline.
 
 Four subpaths name no platform because they hold no crypto. `/queue` is the FIFO stage both pipelines are built from, `/routing` and `/topic` are the pub/sub layer that names message categories and decides which channels a topic's messages reach, and `/security` holds the session types and the six [`ProtocolErrorCode`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/security/#api-ProtocolErrorCode) values a drop can carry. The remaining per-platform subpaths are for taking one piece rather than a whole channel: `/data` builds the message envelope, stamping a conversation id, a sequence number and a schema hash onto your payload, `/packet` holds the packet builders and validators, and `/sender` and `/receiver` are the outbound and inbound halves on their own.
 
-Every option, type and validator is in the [API reference](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-reference).
-
-## Documentation
-
-### Comprehensive Guides
-
-- **[ARCHITECTURE.md](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/network-protocol/ARCHITECTURE.md)** - In-depth architecture guide with composition diagrams, the hello exchange, the key schedule, the wire format, and a "How Do I..." quick reference
-- **[src/lib/README.md](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/network-protocol/src/lib/README.md)** - Module index with links to all subdomain documentation
-
-### Module Documentation
-
-Each module has its own README with purpose, interfaces, factory functions, and usage examples:
-
-| Module        | Description                                                   | Documentation                                                                                                       |
-| ------------- | ------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
-| **channel/**  | Bidirectional communication channels                          | [README](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/network-protocol/src/lib/channel/README.md)  |
-| **packet/**   | Plaintext packets, wire frames, and drop reports              | [README](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/network-protocol/src/lib/packet/README.md)   |
-| **protocol/** | Session protocol: hello exchange, key schedule, seal and open | [README](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/network-protocol/src/lib/protocol/README.md) |
-| **security/** | Session types, hello outcome, and protocol error codes        | [README](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/network-protocol/src/lib/security/README.md) |
-| **queue/**    | FIFO seal and open queues                                     | [README](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/network-protocol/src/lib/queue/README.md)    |
-| **sender/**   | Outbound pipeline                                             | [README](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/network-protocol/src/lib/sender/README.md)   |
-| **receiver/** | Inbound pipeline                                              | [README](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/network-protocol/src/lib/receiver/README.md) |
-| **data/**     | Structured message payloads                                   | [README](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/network-protocol/src/lib/data/README.md)     |
-| **routing/**  | Topic-based message routing                                   | [README](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/network-protocol/src/lib/routing/README.md)  |
-| **topic/**    | Topic store management                                        | [README](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/network-protocol/src/lib/topic/README.md)    |
-
-### Platform Entry Points
-
-- **[src/browser/README.md](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/network-protocol/src/browser/README.md)** - Browser platform documentation
-- **[src/node/README.md](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/network-protocol/src/node/README.md)** - Node.js platform documentation
-
-### Integration Tests
-
-Living documentation through executable examples:
-
-- `src/integration-tests/session-envelope.browser.spec.ts` - Two channels wired in memory over `v3` and `v4`: delivery in both directions, only sealed bytes on the wire, order across a burst, replay and foreign-session rejection reported as drops, a key mismatch delivering nothing, and a browser-composed side talking to a Node-composed side
-- `src/integration-tests/harness.ts` - `connectPair`, which runs the hello exchange between two providers exactly as a transport would route it
+Every option, type and validator is in the [API reference](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-reference). The claims above are exercised end to end by the [session envelope integration test](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/network-protocol/src/integration-tests/session-envelope.browser.spec.ts), which wires two channels in memory over `v3` and `v4` and checks delivery in both directions, sealed bytes only on the wire, order across a burst, replay and foreign-session rejection reported as drops, a key mismatch delivering nothing, and a browser-composed side talking to a Node-composed side.
 
 ## Compatibility
 
