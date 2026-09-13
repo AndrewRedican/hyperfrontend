@@ -1,7 +1,7 @@
 import { after as afterAll } from 'node:test'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { createTempWorkspaceManager } from '../testing'
-import rule, { detectMediaReferences, isBadgeUrl, isMediaUrl, RULE_NAME, shouldApplyRule } from './readme-media-asset'
+import rule, { detectMediaReferences, isBadgeUrl, isMediaUrl, isThemedVariantUrl, RULE_NAME, shouldApplyRule } from './readme-media-asset'
 
 const manager = createTempWorkspaceManager()
 
@@ -30,7 +30,9 @@ describe('readme-media-asset', () => {
     })
 
     it('has all required message IDs', () => {
-      expect(rule.meta?.messages).toEqual(expect.objectContaining({ notSiteUrl: expect.any(String), missingAsset: expect.any(String) }))
+      expect(rule.meta?.messages).toEqual(
+        expect.objectContaining({ notSiteUrl: expect.any(String), missingAsset: expect.any(String), themedVariant: expect.any(String) })
+      )
     })
 
     it('accepts baseUrl and assetRoot options', () => {
@@ -65,6 +67,22 @@ describe('readme-media-asset', () => {
 
     it('ignores a markdown link target', () => {
       expect(isMediaUrl('./ARCHITECTURE.md')).toBe(false)
+    })
+  })
+
+  describe('isThemedVariantUrl', () => {
+    it('recognises a dark or light variant by its suffix', () => {
+      expect([
+        isThemedVariantUrl('https://www.hyperfrontend.dev/media/koi-pond/hero.dark.gif'),
+        isThemedVariantUrl('/media/koi-pond/poster.light.webp?v=2'),
+      ]).toEqual([true, true])
+    })
+
+    it('leaves the portable file and a dotted directory alone', () => {
+      expect([
+        isThemedVariantUrl('https://www.hyperfrontend.dev/media/koi-pond/hero.gif'),
+        isThemedVariantUrl('/dark.light/hero.gif'),
+      ]).toEqual([false, false])
     })
   })
 
@@ -167,6 +185,25 @@ describe('readme-media-asset', () => {
       rule.create(context).root?.({ type: 'root' })
 
       expect(report).toHaveBeenCalledWith(expect.objectContaining({ messageId: 'notSiteUrl' }))
+    })
+
+    it('rejects a theme-specific variant even when it is committed', () => {
+      const content = readmeWithHero('https://www.hyperfrontend.dev/media/koi-pond/hero.dark.gif')
+      const workspace = manager.create({
+        files: { 'nx.json': '{}', 'assets/media/koi-pond/hero.dark.gif': 'GIF', 'libs/thing/README.md': content },
+      })
+      const report = jest.fn()
+      const context = {
+        filename: workspace.getPath('libs/thing/README.md'),
+        options: OPTIONS,
+        sourceCode: { getText: () => content },
+        report,
+      }
+
+      // @ts-expect-error - partial mock
+      rule.create(context).root?.({ type: 'root' })
+
+      expect(report).toHaveBeenCalledWith(expect.objectContaining({ messageId: 'themedVariant' }))
     })
 
     it('rejects a site URL with no committed asset behind it', () => {

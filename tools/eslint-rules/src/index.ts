@@ -30,6 +30,8 @@ import libProjectBundleConfig, { RULE_NAME as LIB_PROJECT_BUNDLE_CONFIG } from '
 import libProjectCompatibility, { RULE_NAME as LIB_PROJECT_COMPATIBILITY } from './rules/lib-project-compatibility'
 import libProjectMetadata, { RULE_NAME as LIB_PROJECT_METADATA } from './rules/lib-project-metadata'
 import libProjectVersionTargets, { RULE_NAME as LIB_PROJECT_VERSION_TARGETS } from './rules/lib-project-version-targets'
+import libReadmeCompatibilityTable, { RULE_NAME as LIB_README_COMPATIBILITY_TABLE } from './rules/lib-readme-compatibility-table'
+import libReadmeMediaRegions, { RULE_NAME as LIB_README_MEDIA_REGIONS } from './rules/lib-readme-media-regions'
 import libReadmeStructure, { RULE_NAME as LIB_README_STRUCTURE } from './rules/lib-readme-structure'
 import libRequireJsdocExample, { RULE_NAME as LIB_REQUIRE_JSDOC_EXAMPLE } from './rules/lib-require-jsdoc-example'
 import libRequireJsdocExampleLabel, { RULE_NAME as LIB_REQUIRE_JSDOC_EXAMPLE_LABEL } from './rules/lib-require-jsdoc-example-label'
@@ -104,6 +106,8 @@ export const rules: ESLint.Plugin['rules'] = {
   [LIB_PROJECT_COMPATIBILITY]: libProjectCompatibility as unknown as Rule.RuleModule,
   [LIB_PROJECT_METADATA]: libProjectMetadata as unknown as Rule.RuleModule,
   [LIB_PROJECT_VERSION_TARGETS]: libProjectVersionTargets as unknown as Rule.RuleModule,
+  [LIB_README_COMPATIBILITY_TABLE]: libReadmeCompatibilityTable as unknown as Rule.RuleModule,
+  [LIB_README_MEDIA_REGIONS]: libReadmeMediaRegions as unknown as Rule.RuleModule,
   [LIB_README_STRUCTURE]: libReadmeStructure as unknown as Rule.RuleModule,
   [LIB_REQUIRE_JSDOC_EXAMPLE]: libRequireJsdocExample as unknown as Rule.RuleModule,
   [LIB_REQUIRE_JSDOC_EXAMPLE_LABEL]: libRequireJsdocExampleLabel as unknown as Rule.RuleModule,

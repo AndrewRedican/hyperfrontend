@@ -20,6 +20,8 @@ Status badges are ignored: `img.shields.io`, `shields.io`, `codecov.io` and `bad
 
 References inside fenced code blocks are ignored, so a README can show markup as an example.
 
+The recorder writes a scene's dark and light variants beside the portable file, as `hero.dark.gif` and `hero.light.gif`. Those are for the documentation site, which knows its theme and swaps them in for itself; a README is rendered on pages whose theme nobody here controls, so it references the portable file only, and a themed filename is reported even when it is committed.
+
 The rule is inert until both options are configured, so it carries no assumption about any particular repository.
 
 ## Options
@@ -56,6 +58,12 @@ A relative path resolves differently on npm, on GitHub and on the documentation 
 ```
 
 The file exists, but the documentation site would then load a multi-megabyte asset from a third-party origin on every page view.
+
+```markdown
+<img src="https://www.hyperfrontend.dev/media/koi-pond/hero.dark.gif">
+```
+
+The file exists, but it is drawn for the site's dark theme: on a light page, on npm or on GitHub it is the wrong picture.
 
 ```markdown
 <img src="https://www.hyperfrontend.dev/media/koi-pond/nothing-here.gif">
