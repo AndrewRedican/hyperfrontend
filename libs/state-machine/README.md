@@ -33,9 +33,6 @@
   <img src="https://img.shields.io/badge/tree%20shakeable-%E2%9C%93-success?style=flat-square" alt="Tree Shakeable">
 </p>
 
-<!-- hf:media start id="banner" scene="banner-state-machine" asset="banner" alt="@hyperfrontend/state-machine" -->
-<!-- hf:media end -->
-
 <p align="center">
   <a href="https://www.hyperfrontend.dev/docs/libraries/state-machine/">
     <img width="640" height="360" src="https://www.hyperfrontend.dev/media/state-machine-derived/hero.gif" alt="Four base lamps on the left, inProgress, success, fail and halt, and seven derived names on the right joined to them by faint wires; five action chips fire in turn, start, fail, start, success, start, each dropping a token that flips lamps, and the wires from the lit lamps light the names that hold: inProgress, then failed, then retrying because fail stayed lit, then successful, then restarting because success stayed lit">
