@@ -33,9 +33,6 @@
   <img src="https://img.shields.io/badge/tree%20shakeable-%E2%9C%93-success?style=flat-square" alt="Tree Shakeable">
 </p>
 
-<!-- hf:media start id="banner" scene="banner-string-utils" asset="banner" alt="@hyperfrontend/string-utils" -->
-<!-- hf:media end -->
-
 <p align="center">
   <a href="https://www.hyperfrontend.dev/docs/libraries/utils/string/">
     <img width="640" height="360" src="https://www.hyperfrontend.dev/media/string-utils-base64/hero.gif" alt="The word café as four character tiles; each drops its UTF-8 bytes beneath it, é dropping two; the bytes regroup in threes and rise into the eight Base64 tiles Y2Fmw6k=; then btoa's reading collapses é into a single wrong byte and a struck-through wrong tail 6Q== appears under the correct row; finally fromBase64 folds everything back into café">
