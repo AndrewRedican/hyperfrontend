@@ -199,7 +199,11 @@ dist/libs/my-lib/
 
 ## The distribution readme
 
-The readme a package ships is not a byte copy of the one it maintains. After the build, the executor reads the source `README.md` and writes a second one into the output with every marked region replaced by a committed visual; that copy is what `npm pack` picks up, while the source, GitHub and the documentation site keep the original text. A region is a pair of HTML comments, which every renderer hides:
+The readme a package ships is not a byte copy of the one it maintains. After the build, the executor reads the source `README.md` and writes a second one into the output with its title replaced by the package banner and every marked region replaced by a committed visual; that copy is what `npm pack` picks up, while the source, GitHub and the documentation site keep the original text.
+
+The banner is placed by convention rather than by a marker. The level-1 heading of the source becomes a figure showing `assets/media/banner-<name>/banner.gif`, where `<name>` is the package name without its scope, linked to the package's documentation page and carrying the package name as its alternative text. A registry page already shows the name above the readme, so the heading it would repeat is where the package's visual identity goes instead; the source keeps the heading for GitHub and for the documentation site, which renders it as the page title.
+
+Everything else a visual replaces is marked. A region is a pair of HTML comments, which every renderer hides:
 
 ```markdown
 <!-- hf:media start id="runtimes" scene="runtimes-logging" asset="runtimes" docs="#compatibility" alt="Runs in Node.js 18 or later, evergreen browsers and web workers" -->
@@ -211,12 +215,7 @@ The readme a package ships is not a byte copy of the one it maintains. After the
 <!-- hf:media end -->
 ```
 
-A region may also be empty, for a visual that is inserted rather than substituted; the package banner is placed that way, below the badges:
-
-```markdown
-<!-- hf:media start id="banner" scene="banner-logging" asset="banner" alt="@hyperfrontend/logging" -->
-<!-- hf:media end -->
-```
+A region may also be empty, for a visual that is inserted rather than substituted.
 
 | Attribute | Required | Meaning                                                                                                                                            |
 | --------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -226,7 +225,7 @@ A region may also be empty, for a visual that is inserted rather than substitute
 | `asset`   | no       | The filename stem within the scene, `hero` when omitted. The animation is preferred and a still (`webp`, then `png`) is used when there is none.  |
 | `docs`    | no       | Where the visual links to: an `#anchor` or a path under the package's documentation page, or an absolute URL. The landing page when omitted.       |
 
-Each marker is one line, and a start marker carries only `name="value"` attributes. A stem never names an extension or a theme suffix: the readme is read on pages whose theme nobody here controls, so only the portable file is ever embedded, and the display size comes from the audit record beside it. The build refuses a readme whose markers do not pair, nest, repeat an id, or name media that has not been recorded, and it removes the copied readme from the output rather than leaving a half-transformed one behind. Text stays text wherever text is better: an installation command, an API example, a table of file paths a reader might copy.
+Each marker is one line, and a start marker carries only `name="value"` attributes. A stem never names an extension or a theme suffix: the readme is read on pages whose theme nobody here controls, so only the portable file is ever embedded, and the display size comes from the audit record beside it. The build refuses a readme that has no level-1 heading, whose banner has not been recorded, or whose markers do not pair, nest, repeat an id, or name media that has not been recorded, and it removes the copied readme from the output rather than leaving a half-transformed one behind. Text stays text wherever text is better: an installation command, an API example, a table of file paths a reader might copy.
 
 ## Notes
 

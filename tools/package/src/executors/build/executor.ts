@@ -110,7 +110,7 @@ const runExecutor: PromiseExecutor<BuildExecutorOptions> = async (options, conte
 
   try {
     await build(config)
-    // why: the readme npm packs is the source readme with its marked regions replaced by committed visuals; it is written into the output after the build so the source stays the one humans maintain and the output holds the one readers of the registry see
+    // why: the readme npm packs is the source readme with its title replaced by the package banner and its marked regions replaced by committed visuals; it is written into the output after the build so the source stays the one humans maintain and the output holds the one readers of the registry see
     const prepared = prepareDistReadme({
       workspaceRoot,
       projectRoot,
@@ -118,6 +118,7 @@ const runExecutor: PromiseExecutor<BuildExecutorOptions> = async (options, conte
       mediaRoot: MEDIA_ROOT,
       publicBaseUrl: MEDIA_PUBLIC_BASE_URL,
       docsBaseUrl: DOCS_BASE_URL,
+      packageScope: WORKSPACE_SCOPE,
     })
     if (prepared !== undefined && prepared.outcome.replacements.length > 0) {
       logger.log(`README prepared for the registry: ${prepared.outcome.replacements.map((replacement) => replacement.id).join(', ')}`)

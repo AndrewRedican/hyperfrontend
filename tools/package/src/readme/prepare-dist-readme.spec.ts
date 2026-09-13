@@ -26,19 +26,25 @@ interface Fixture {
 }
 
 /**
- * A throwaway workspace with one library, its build output, and a media tree.
+ * A throwaway workspace with one library, its manifest, its build output, and a media tree.
  *
  * @param readme - The library's source readme, or undefined for a library with none.
  * @param media - Files to write under `assets/media`, by path.
+ * @param manifest - The library's manifest.
  * @returns Where everything is.
  */
-function workspace(readme: string | undefined, media: Record<string, string> = {}): Fixture {
+function workspace(
+  readme: string | undefined,
+  media: Record<string, string> = {},
+  manifest = '{"name":"@hyperfrontend/data-utils"}'
+): Fixture {
   const workspaceRoot = mkdtempSync(join(tmpdir(), 'dist-readme-'))
   roots.push(workspaceRoot)
   const projectRoot = join(workspaceRoot, 'libs', 'utils', 'data')
   const outputPath = join(workspaceRoot, 'dist', 'libs', 'utils', 'data')
   mkdirSync(projectRoot, { recursive: true })
   mkdirSync(outputPath, { recursive: true })
+  writeFileSync(join(projectRoot, 'package.json'), manifest)
   if (readme !== undefined) {
     writeFileSync(join(projectRoot, 'README.md'), readme)
     // why: the asset phase copies the source readme into the output before the transform runs, so the fixture starts from that state
@@ -64,10 +70,23 @@ function optionsFor(fixture: Fixture) {
     mediaRoot: 'assets/media',
     publicBaseUrl: 'https://www.hyperfrontend.dev/media/',
     docsBaseUrl: 'https://www.hyperfrontend.dev/docs/libraries/',
+    packageScope: '@hyperfrontend/',
   }
 }
 
 const SIDECAR = '{"profile":{"width":640,"height":360}}'
+
+/** The recorded banner of the fixture's package. */
+const BANNER_MEDIA = { 'banner-data-utils/banner.gif': '', 'banner-data-utils/banner.json': '{"profile":{"width":640,"height":180}}' }
+
+/** The figure the banner becomes at the top of the fixture's readme. */
+const BANNER_FIGURE = [
+  '<p align="center">',
+  '  <a href="https://www.hyperfrontend.dev/docs/libraries/utils/data/">',
+  '    <img width="640" height="180" src="https://www.hyperfrontend.dev/media/banner-data-utils/banner.gif" alt="@hyperfrontend/data-utils">',
+  '  </a>',
+  '</p>',
+]
 
 const SOURCE = [
   '# @hyperfrontend/data-utils',
@@ -139,8 +158,8 @@ describe('createMediaCatalog', () => {
 })
 
 describe('prepareDistReadme', () => {
-  it('writes the transformed readme into the output and leaves the source untouched', () => {
-    const fixture = workspace(SOURCE, { 'data-utils-circular/hero.gif': '', 'data-utils-circular/hero.json': SIDECAR })
+  it('writes the transformed readme into the output, opening with the banner, and leaves the source untouched', () => {
+    const fixture = workspace(SOURCE, { ...BANNER_MEDIA, 'data-utils-circular/hero.gif': '', 'data-utils-circular/hero.json': SIDECAR })
     const prepared = prepareDistReadme(optionsFor(fixture))
     expect({
       prepared,
@@ -150,10 +169,12 @@ describe('prepareDistReadme', () => {
       prepared: expect.objectContaining({
         path: join(fixture.outputPath, 'README.md'),
         docsLanding: 'https://www.hyperfrontend.dev/docs/libraries/utils/data/',
-        outcome: expect.objectContaining({ replacements: [expect.objectContaining({ id: 'cycles' })] }),
+        outcome: expect.objectContaining({
+          replacements: [expect.objectContaining({ id: 'banner' }), expect.objectContaining({ id: 'cycles' })],
+        }),
       }),
       written: [
-        '# @hyperfrontend/data-utils',
+        ...BANNER_FIGURE,
         '',
         'Prose.',
         '',
@@ -167,12 +188,12 @@ describe('prepareDistReadme', () => {
     })
   })
 
-  it('writes a readme with no regions through unchanged', () => {
-    const fixture = workspace('# @hyperfrontend/data-utils\n\nProse.\n')
+  it('replaces only the title in a readme with no regions', () => {
+    const fixture = workspace('# @hyperfrontend/data-utils\n\nProse.\n', BANNER_MEDIA)
     const prepared = prepareDistReadme(optionsFor(fixture))
     expect({ replacements: prepared?.outcome.replacements, written: readFileSync(join(fixture.outputPath, 'README.md'), 'utf8') }).toEqual({
-      replacements: [],
-      written: '# @hyperfrontend/data-utils\n\nProse.\n',
+      replacements: [expect.objectContaining({ id: 'banner' })],
+      written: [...BANNER_FIGURE, '', 'Prose.', ''].join('\n'),
     })
   })
 
@@ -182,11 +203,31 @@ describe('prepareDistReadme', () => {
   })
 
   it('removes the copied readme from the output when the transform fails', () => {
-    const fixture = workspace(SOURCE)
+    const fixture = workspace(SOURCE, BANNER_MEDIA)
     expect(() => prepareDistReadme(optionsFor(fixture))).toThrow(
       /Could not prepare .*README\.md: Region "cycles" \(line 5\): no scene named "data-utils-circular"/
     )
     expect([existsSync(join(fixture.outputPath, 'README.md')), existsSync(join(fixture.projectRoot, 'README.md'))]).toEqual([false, true])
+  })
+
+  it('refuses a package whose banner has not been recorded', () => {
+    const fixture = workspace(SOURCE)
+    expect(() => prepareDistReadme(optionsFor(fixture))).toThrow(/The banner "banner-data-utils": no scene named "banner-data-utils"/)
+  })
+
+  it('refuses a package whose manifest names nothing, and one with no manifest', () => {
+    const unnamed = workspace(SOURCE, BANNER_MEDIA, '{}')
+    const missing = workspace(SOURCE, BANNER_MEDIA)
+    rmSync(join(missing.projectRoot, 'package.json'))
+    const reasons = [unnamed, missing].map((fixture) => {
+      try {
+        prepareDistReadme(optionsFor(fixture))
+        return 'prepared'
+      } catch (cause) {
+        return cause instanceof Error ? cause.message : 'not an error'
+      }
+    })
+    expect(reasons).toEqual([expect.stringContaining('names no package'), expect.stringContaining('does not exist')])
   })
 
   it('refuses a package that does not live under libs', () => {
@@ -198,7 +239,7 @@ describe('prepareDistReadme', () => {
   })
 
   it('reports an unreadable audit record', () => {
-    const fixture = workspace(SOURCE, { 'data-utils-circular/hero.gif': '', 'data-utils-circular/hero.json': 'not json' })
+    const fixture = workspace(SOURCE, { ...BANNER_MEDIA, 'data-utils-circular/hero.gif': '', 'data-utils-circular/hero.json': 'not json' })
     expect(() => prepareDistReadme(optionsFor(fixture))).toThrow(/Could not prepare/)
   })
 })

@@ -2,11 +2,15 @@ import type { TransformOutcome } from './transform'
 import { existsSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { join, relative, sep } from 'node:path'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
+import { parse } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 import { createMediaCatalog } from './catalog'
-import { transformReadme } from './transform'
+import { packageBanner, transformReadme } from './transform'
 
 /** The filename the readme is read from and written to. */
 const README = 'README.md'
+
+/** The manifest the package's name is read from. */
+const MANIFEST = 'package.json'
 
 /** The directory under the workspace that holds the libraries, which the documentation site mirrors as slugs. */
 const LIBRARIES_DIR = 'libs'
@@ -25,6 +29,8 @@ export interface PrepareDistReadmeOptions {
   publicBaseUrl: string
   /** The URL under which each library's documentation lives, with its trailing slash. */
   docsBaseUrl: string
+  /** The scope every package is published under, with its trailing slash. */
+  packageScope: string
 }
 
 /** What the preparation did, for the build log. */
@@ -59,12 +65,36 @@ function docsSlug(workspaceRoot: string, projectRoot: string): string {
 }
 
 /**
+ * The registry name of a package, from its manifest.
+ *
+ * @param projectRoot - Absolute path of the package's source directory.
+ * @returns The name.
+ * @throws {Error} When the package has no manifest or the manifest names nothing.
+ */
+function packageNameOf(projectRoot: string): string {
+  const path = join(projectRoot, MANIFEST)
+  if (!existsSync(path)) {
+    throw createError(`${path} does not exist, so the package's banner cannot be named`)
+  }
+  const manifest = parse(readFileSync(path, 'utf8')) as {
+    /**
+     *
+     */
+    name?: unknown
+  }
+  if (typeof manifest.name !== 'string' || manifest.name === '') {
+    throw createError(`${path} names no package, so its banner cannot be named`)
+  }
+  return manifest.name
+}
+
+/**
  * Write the distribution readme into the build output.
  *
  * The source readme is read from the package directory and never written to.
- * What lands in the output directory is the source with every marked region
- * replaced by the visual it names, which is what `npm pack` will pick up from
- * there; a source with no regions is written through unchanged. A readme that
+ * What lands in the output directory is the source with its title replaced by
+ * the package banner and every marked region replaced by the visual it
+ * names, which is what `npm pack` will pick up from there. A readme that
  * cannot be transformed completely is not written at all: the copy the asset
  * phase left in the output is removed, so the output holds either the
  * finished readme or none, and a build that failed cannot be packed with a
@@ -72,7 +102,7 @@ function docsSlug(workspaceRoot: string, projectRoot: string): string {
  *
  * @param options - Where things are.
  * @returns What was written, or undefined when the package has no readme.
- * @throws {Error} When a directive cannot be read or names media that does not exist.
+ * @throws {Error} When the package cannot be named, a directive cannot be read, or a visual names media that does not exist.
  * @example Preparing a library's readme after its build
  * ```ts
  * prepareDistReadme({
@@ -82,6 +112,7 @@ function docsSlug(workspaceRoot: string, projectRoot: string): string {
  *   mediaRoot: 'assets/media',
  *   publicBaseUrl: 'https://www.hyperfrontend.dev/media/',
  *   docsBaseUrl: 'https://www.hyperfrontend.dev/docs/libraries/',
+ *   packageScope: '@hyperfrontend/',
  * })
  * ```
  */
@@ -94,7 +125,8 @@ export function prepareDistReadme(options: PrepareDistReadmeOptions): PreparedDi
   try {
     const docsLanding = `${options.docsBaseUrl}${docsSlug(options.workspaceRoot, options.projectRoot)}`
     const catalog = createMediaCatalog(join(options.workspaceRoot, options.mediaRoot), options.publicBaseUrl)
-    const outcome = transformReadme(readFileSync(sourcePath, 'utf8'), { docsLanding, catalog })
+    const banner = packageBanner(packageNameOf(options.projectRoot), options.packageScope)
+    const outcome = transformReadme(readFileSync(sourcePath, 'utf8'), { docsLanding, catalog, banner })
     writeFileSync(targetPath, outcome.markdown)
     return { path: targetPath, outcome, docsLanding }
   } catch (cause) {

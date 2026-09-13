@@ -1,13 +1,19 @@
 import type { MediaCatalog, ResolvedMedia } from './transform'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { describe, expect, it } from '@hyperfrontend/testing'
-import { transformReadme } from './transform'
+import { packageBanner, transformReadme } from './transform'
 
 const LANDING = 'https://www.hyperfrontend.dev/docs/libraries/builder/'
 
-/** A catalog that knows one scene, with an animation for every stem, and nothing else. */
+/** The banner the builder package opens with. */
+const BANNER = packageBanner('@hyperfrontend/builder', '@hyperfrontend/')
+
+/** A catalog that knows the builder's showcase scene and its banner scene, with an animation for every stem, and nothing else. */
 const catalog: MediaCatalog = {
   resolve(scene, asset): ResolvedMedia {
+    if (scene === 'banner-builder') {
+      return { url: `https://www.hyperfrontend.dev/media/${scene}/${asset}.gif`, width: 640, height: 180 }
+    }
     if (scene !== 'builder-manifest') {
       throw createError(`no scene named "${scene}"`)
     }
@@ -34,6 +40,24 @@ const SOURCE = [
   'npm install @hyperfrontend/builder',
   '```',
 ].join('\n')
+
+/** The banner figure the transform writes in place of the builder's title. */
+const BANNER_FIGURE = [
+  '<p align="center">',
+  `  <a href="${LANDING}">`,
+  '    <img width="640" height="180" src="https://www.hyperfrontend.dev/media/banner-builder/banner.gif" alt="@hyperfrontend/builder">',
+  '  </a>',
+  '</p>',
+]
+
+describe('packageBanner', () => {
+  it('names the scene after the package without its scope and keeps the full name as the alternative text', () => {
+    expect([packageBanner('@hyperfrontend/data-utils', '@hyperfrontend/'), packageBanner('unscoped', '@hyperfrontend/')]).toEqual([
+      { scene: 'banner-data-utils', asset: 'banner', alt: '@hyperfrontend/data-utils' },
+      { scene: 'banner-unscoped', asset: 'banner', alt: 'unscoped' },
+    ])
+  })
+})
 
 describe('transformReadme', () => {
   it('replaces the region with a linked, sized visual and keeps everything else byte for byte', () => {
@@ -82,6 +106,36 @@ describe('transformReadme', () => {
     const first = transformReadme(SOURCE, { docsLanding: LANDING, catalog }).markdown
     const second = transformReadme(SOURCE, { docsLanding: LANDING, catalog }).markdown
     expect(first).toBe(second)
+  })
+
+  it('opens with the banner in place of the title, linked to the landing page, and lists it first', () => {
+    const { markdown, replacements } = transformReadme(SOURCE, { docsLanding: LANDING, catalog, banner: BANNER })
+    expect({ opening: markdown.split('\n').slice(0, 7), replacements }).toEqual({
+      opening: [...BANNER_FIGURE, '', 'Intro prose.'],
+      replacements: [
+        expect.objectContaining({ id: 'banner', before: '# @hyperfrontend/builder', after: BANNER_FIGURE.join('\n'), docs: LANDING }),
+        expect.objectContaining({ id: 'layout' }),
+      ],
+    })
+  })
+
+  it('takes the first title outside a fence', () => {
+    const fenced = ['```bash', '# not a title', '```', '', '# @hyperfrontend/builder', '', 'Prose.'].join('\n')
+    const titled = transformReadme(fenced, { docsLanding: LANDING, catalog, banner: BANNER }).markdown.split('\n')
+    expect([titled[0], titled[1], titled[4]]).toEqual(['```bash', '# not a title', '<p align="center">'])
+  })
+
+  it('refuses a source with no title when a banner is given', () => {
+    expect(() => transformReadme('```bash\n# not a title\n```\n', { docsLanding: LANDING, catalog, banner: BANNER })).toThrow(
+      /no level-1 heading for the banner to replace/
+    )
+  })
+
+  it('refuses a banner the catalog cannot find, naming its scene', () => {
+    const banner = packageBanner('@hyperfrontend/nowhere', '@hyperfrontend/')
+    expect(() => transformReadme(SOURCE, { docsLanding: LANDING, catalog, banner })).toThrow(
+      /The banner "banner-nowhere": no scene named "banner-nowhere"/
+    )
   })
 
   it('links to the landing page when no docs are named, and resolves an anchor, a path or an absolute URL', () => {
