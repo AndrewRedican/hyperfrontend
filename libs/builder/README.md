@@ -41,9 +41,6 @@
     <img width="640" height="360" src="https://www.hyperfrontend.dev/media/builder-manifest/hero.gif" alt="Two source entries feed the builder one at a time; each fans out into its ESM, CJS and declaration files, the root entry also into the minified IIFE and UMD bundles; then a package.json sheet rises and wires connect every file that landed to the exports, main, types and files keys it produced">
   </a>
 </p>
-<p align="center">
-  <sub>Every entry bundled on its own, and then the manifest: you keep the source tree, and every build rewrites package.json from what actually landed in the output directory.</sub>
-</p>
 
 Composable, vendor-neutral build toolkit for TypeScript libraries, JS bins, and Node SEA native binaries.
 
