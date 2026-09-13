@@ -217,4 +217,4 @@ flowchart TB
 | `@hyperfrontend/string-utils` | `1.0.0` |
 | `@hyperfrontend/time-utils` | `1.0.0` |
 | `@hyperfrontend/ui-utils` | `0.0.8` |
-| `@hyperfrontend/versioning` | `0.8.0` |
+| `@hyperfrontend/versioning` | `0.9.0` |
