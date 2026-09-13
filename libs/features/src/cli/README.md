@@ -27,9 +27,6 @@ const code = await runFeaturesCli({
     <img width="640" height="360" src="https://www.hyperfrontend.dev/media/hf-serve/hero.gif" alt="A terminal in a checkout project: npx hf build --protocol v4 prints the path of the built shell and the name of the packed tarball; npx hf serve --root dist announces the served root at http://localhost:4284/ and then logs three GET requests, each with a 200 status">
   </a>
 </p>
-<p align="center">
-  <sub>The two commands on the way to production. Build packs the shell a host installs; serve hosts the built site and logs each request.</sub>
-</p>
 
 ## Config resolution
 

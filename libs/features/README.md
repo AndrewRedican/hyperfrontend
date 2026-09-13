@@ -41,9 +41,6 @@
     <img width="560" height="315" src="https://www.hyperfrontend.dev/media/koi-pond/hero-clip.gif" alt="Eight koi swimming in a single pond, each one rendered by a different framework app">
   </a>
 </p>
-<p align="center">
-  <sub>Eight separate apps (React, Vue, Svelte, Solid, Preact, Lit, Angular, vanilla TS) composited into one continuous scene over this package. <a href="https://www.hyperfrontend.dev/demos/#koi-pond">Open the live pond</a>.</sub>
-</p>
 
 SDK, CLI, and dev server for building, embedding, and orchestrating hyperfrontend micro-frontend features.
 
@@ -73,9 +70,6 @@ checkout.open({ displayMode: DisplayMode.Dialog })
   <a href="https://www.hyperfrontend.dev/docs/libraries/features/architecture/">
     <img width="640" height="360" src="https://www.hyperfrontend.dev/media/feature-session/hero.gif" alt="A feature window docks into a slot on a host page; three dots cross the wire between them and it turns solid; the host measures the slot as 720 by 540 and the feature fills it; small beats pulse from the feature to the host once a second; then one order-placed message crosses and a receipt appears on the host">
   </a>
-</p>
-<p align="center">
-  <sub>Everything before the last crossing is the session being established for you; <code>order-placed</code> is the only message either app actually wrote.</sub>
 </p>
 
 It is organized into independent subpath entry points so consumers import only the surface they need.

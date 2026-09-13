@@ -186,17 +186,11 @@ sequenceDiagram
 <p align="center">
   <img width="640" height="360" src="https://www.hyperfrontend.dev/media/feature-session/hero.gif" alt="A feature window docks into a slot on a host page; three dots cross the wire between them and it turns solid; the host measures the slot and the feature fills it; beats pulse from the feature once a second; then one order-placed message crosses">
 </p>
-<p align="center">
-  <sub>The diagram above is every gate a session can be refused at. This is the ordinary path, in order: three nexus frames settle the contract, <code>__hf:present</code> is queued ahead of the connect so it arrives first and carries the host-measured size, and the beat starts. Everything before <code>order-placed</code> is the session being established.</sub>
-</p>
 
 Handshake frames replay idempotently and re-send on a retry cadence until answered, so neither side depends on the other having booted first. Refusal is symmetric too: whichever side decides emits a local [`error`](https://www.hyperfrontend.dev/docs/libraries/features/host/#api-ShellHandle) carrying a machine-readable [`reason`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-DenyEventData-prop-reason), so a host that turns a feature down is never left waiting on the channel it refused. One asymmetry is deliberate: a security-policy rejection tells the refused requester only that it was not accepted, since naming the gate would disclose how this side judges connections.
 
 <p align="center">
   <img width="640" height="360" src="https://www.hyperfrontend.dev/media/feature-watchdog/hero.gif" alt="A three-segment ring on the host beside the seated feature, with the watchdog state inside it: beats keep it empty and healthy; three silent ticks fill it and turn it red as suspect; a beat clears it; the feature dims with a closed eye and silent ticks fill nothing while it is unobservable; it reopens, and three more silent ticks reach suspect again">
-</p>
-<p align="center">
-  <sub>The same silence, three times. Three missed ticks while both pages are visible reach <code>suspect</code>; three while either is hidden reach nothing, because the watchdog is not counting. Returning to the tab grants a fresh budget and says nothing: only a beat earns <code>healthy</code> back.</sub>
 </p>
 
 Liveness is judged in four states, not a boolean. The feature pulses a hidden beat and reports its page visibility; the host watchdog counts misses only while both pages are visible ([`healthy`](https://www.hyperfrontend.dev/docs/libraries/features/host/#api-HeartbeatState)), pauses while either is hidden ([`unobservable`](https://www.hyperfrontend.dev/docs/libraries/features/host/#api-HeartbeatState): throttled timers make silence weak evidence, and the state holds once watching resumes until a beat earns [`healthy`](https://www.hyperfrontend.dev/docs/libraries/features/host/#api-HeartbeatState) back), runs the [`UnresponsivePolicy`](https://www.hyperfrontend.dev/docs/libraries/features/host/#api-UnresponsivePolicy) once per [`suspect`](https://www.hyperfrontend.dev/docs/libraries/features/host/#api-HeartbeatState) episode (a recovering beat returns to [`healthy`](https://www.hyperfrontend.dev/docs/libraries/features/host/#api-HeartbeatState) and re-arms it), and reports [`gone`](https://www.hyperfrontend.dev/docs/libraries/features/host/#api-HeartbeatState) once the session closes. Transitions surface as the shell's [`status`](https://www.hyperfrontend.dev/docs/libraries/features/server/#api-StaticResponse-prop-status) event, and the default policy emits [`error`](https://www.hyperfrontend.dev/docs/libraries/features/host/#api-ShellHandle) with `reason: 'unresponsive'`, carrying the missed-beat count, last beat timestamp, and display mode.
@@ -205,9 +199,6 @@ Both sides read page visibility rather than take it on notice. [`visibilitychang
 
 <p align="center">
   <img width="640" height="360" src="https://www.hyperfrontend.dev/media/feature-flush-window/hero.gif" alt="A seated feature holding a draft with an amber marker; the host presses close and a shutter descends part way across the wire and stops; the draft crosses through the gap and lands on the host with a check; the acknowledgement crosses back, the shutter completes and the feature fades out of its slot">
-</p>
-<p align="center">
-  <sub>The window is the feature. Between the proposed close and the acknowledgement the channel is still live, and that is when work the feature was holding gets out.</sub>
 </p>
 
 Teardown is polite by default: `close()` on either side proposes the close, the counterpart receives a [`closing`](https://www.hyperfrontend.dev/docs/libraries/features/host/#api-ShellHandle) event while the channel still delivers (its flush window for unsaved work), then acknowledges, and each side fires a single [`close`](https://www.hyperfrontend.dev/docs/libraries/features/host/#api-ShellHandle) (an unacknowledged close completes at a deadline). The feature can declare unsaved work with `setDirty(true)`; the host sees it as the `dirty-state` event and the [`isDirty`](https://www.hyperfrontend.dev/docs/libraries/features/host/#api-ShellHandle-prop-isDirty) flag and can take it into account before proposing a close. `destroy()` remains the impolite immediate teardown.
