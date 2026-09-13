@@ -33,9 +33,6 @@
   <img src="https://img.shields.io/badge/tree%20shakeable-%E2%9C%93-success?style=flat-square" alt="Tree Shakeable">
 </p>
 
-<!-- hf:media start id="banner" scene="banner-features" asset="banner" alt="@hyperfrontend/features" -->
-<!-- hf:media end -->
-
 <p align="center">
   <a href="https://www.hyperfrontend.dev/demos/#koi-pond">
     <img width="560" height="315" src="https://www.hyperfrontend.dev/media/koi-pond/hero-clip.gif" alt="Eight koi swimming in a single pond, each one rendered by a different framework app">
