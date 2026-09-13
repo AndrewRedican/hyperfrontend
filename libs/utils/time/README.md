@@ -41,9 +41,6 @@
     <img width="640" height="360" src="https://www.hyperfrontend.dev/media/time-utils-countdown/hero.gif" alt="Two stacked 30-second countdown bars draining in parallel: the setTimeout bar runs red straight to zero, while the createTimer bar holds green at 21.0s through a pause and then continues down from there">
   </a>
 </p>
-<p align="center">
-  <sub>An interruption at nine seconds. The paused timer banks its remaining twenty-one and resumes on the remainder, rather than starting a fresh thirty.</sub>
-</p>
 
 Functional time utilities for async operations, intervals, and time normalization.
 
