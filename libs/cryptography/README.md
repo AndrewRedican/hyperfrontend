@@ -33,9 +33,6 @@
   <img src="https://img.shields.io/badge/tree%20shakeable-%E2%9C%93-success?style=flat-square" alt="Tree Shakeable">
 </p>
 
-<!-- hf:media start id="banner" scene="banner-cryptography" asset="banner" alt="@hyperfrontend/cryptography" -->
-<!-- hf:media end -->
-
 <p align="center">
   <a href="https://www.hyperfrontend.dev/docs/libraries/cryptography/">
     <img width="640" height="360" src="https://www.hyperfrontend.dev/media/cryptography-envelope/hero.gif" alt="The secret sk_live_9f2c41 sealed into an envelope: random salt and IV blocks grow beside it, its characters scramble into ciphertext, a tag and a padlock close it; the same secret sealed a second time comes out different everywhere; the right key opens the first envelope back to the secret and a wrong key leaves the second one shut with a cross on its lock">
