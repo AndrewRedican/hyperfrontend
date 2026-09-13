@@ -321,6 +321,28 @@ describe('analyze-commits step', () => {
         })
       })
 
+      describe('forced releases', () => {
+        it('admits every commit type when a release is forced, so the changelog says what changed', async () => {
+          const git = createMockGitClient({
+            commits: [
+              { message: 'docs: update readme', hash: 'commit1' },
+              { message: 'chore: cleanup', hash: 'commit2' },
+              { message: 'fix: bug fix', hash: 'commit3' },
+            ],
+          })
+          const context = createMockContext({
+            git,
+            state: { isFirstRelease: true },
+            config: { releaseAs: 'patch' },
+          })
+          const step = createAnalyzeCommitsStep()
+
+          const result = await step.execute(context)
+
+          expect(result.stateUpdates?.commits).toHaveLength(3)
+        })
+      })
+
       describe('file-based commit detection', () => {
         it('detects commits touching project files in hybrid mode', async () => {
           const git = createMockGitClient({
