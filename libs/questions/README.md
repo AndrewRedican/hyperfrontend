@@ -33,9 +33,6 @@
   <img src="https://img.shields.io/badge/tree%20shakeable-%E2%9C%93-success?style=flat-square" alt="Tree Shakeable">
 </p>
 
-<!-- hf:media start id="banner" scene="banner-questions" asset="banner" alt="@hyperfrontend/questions" -->
-<!-- hf:media end -->
-
 <p align="center">
   <a href="https://www.hyperfrontend.dev/docs/libraries/questions/">
     <img width="640" height="360" src="https://www.hyperfrontend.dev/media/questions-prompt/hero.gif" alt="A multiselect prompt being programmed on the left and answered on the right, ending in a submitted result object">
