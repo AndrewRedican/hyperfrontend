@@ -2825,6 +2825,39 @@
 }
 
 @layer components {
+  /* A recording that has a version for each theme.
+
+     The markdown pipeline puts both variants in the page, one after the
+     other, and the theme class on the root decides which is drawn. Both are
+     lazy, and a lazy image that has no box is never fetched, so the page
+     downloads the one it shows and fetches the other only if the reader
+     switches. Each carries its drawn size, so the stage holds its shape
+     before either arrives and the theme switch moves nothing. */
+  .themed-media {
+    display: inline-block;
+    max-width: 100%;
+    line-height: 0;
+  }
+
+  .themed-media__dark {
+    display: none;
+  }
+
+  .dark .themed-media__dark {
+    display: inline;
+  }
+
+  .dark .themed-media__light {
+    display: none;
+  }
+
+  .themed-media img {
+    max-width: 100%;
+    height: auto;
+  }
+}
+
+@layer components {
   /* A markdown table on a phone.
 
      A reference table is the second thing on a documentation page, after a

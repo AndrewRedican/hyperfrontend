@@ -1,11 +1,20 @@
 import { codeLayoutTransformer } from '@/lib/code-layout'
 import { CODE_THEMES } from '@/lib/shiki-theme'
+import {
+  findThemedVariants,
+  parseMediaReference,
+  THEMED_MEDIA_CLASS,
+  THEMED_MEDIA_DARK_CLASS,
+  THEMED_MEDIA_LIGHT_CLASS,
+} from '@/lib/themed-media'
 import rehypeShiki from '@shikijs/rehype'
 import rehypeRaw from 'rehype-raw'
 import rehypeStringify from 'rehype-stringify'
 import { remark } from 'remark'
 import remarkGfm from 'remark-gfm'
 import remarkRehype from 'remark-rehype'
+import { round } from '@hyperfrontend/immutable-api-utils/built-in-copy/math'
+import { isFinite as isFiniteNumber } from '@hyperfrontend/immutable-api-utils/built-in-copy/number'
 
 /** Class the scroll box around a rendered table carries; sized in `globals.css`. */
 const TABLE_SCROLL_CLASS = 'table-scroll'
@@ -26,7 +35,10 @@ const TABLE_SCROLL_CLASS = 'table-scroll'
  * the published page. Comment syntax inside a fenced code block is sample
  * text rather than a comment, so it still renders. Tables are wrapped in a
  * box that scrolls sideways, so a wide reference table moves on a phone and
- * the page does not.
+ * the page does not. A picture that points at a committed media asset whose
+ * record lists dark and light variants becomes a pair of images the
+ * stylesheet chooses between by theme, so a light page never shows a dark
+ * recording.
  *
  * @param markdown - The markdown string to convert
  * @returns A promise that resolves to the HTML string
@@ -39,6 +51,7 @@ export async function markdownToHtml(markdown: string): Promise<string> {
     .use(rehypeRaw)
     .use(rehypeRemoveComments)
     .use(rehypeScrollTables)
+    .use(rehypeThemedMedia)
     .use(rehypeShiki, {
       themes: CODE_THEMES,
       defaultColor: false,
@@ -159,6 +172,71 @@ function wrapTables(node: WrappableNode): void {
 }
 
 /**
+ * Rehype plugin that swaps a themed media asset for the pair of images the
+ * stylesheet chooses between.
+ *
+ * A readme embeds the portable variant of a recording, because a readme is
+ * rendered on pages whose theme nobody here controls. This site controls its
+ * own, so where the recorder's record lists dark and light variants beside
+ * the portable one, both are put in the page and the active theme decides
+ * which shows. Both images are lazy, and a lazy image that is not displayed
+ * is never fetched, so switching theme costs one download and the initial
+ * load costs none it did not already need. The size from the record is
+ * written onto both images, so the stage holds its shape before either
+ * arrives.
+ *
+ * @returns The tree transformer
+ */
+function rehypeThemedMedia(): (tree: WrappableNode) => void {
+  return (tree) => {
+    swapThemedMedia(tree)
+  }
+}
+
+/**
+ * Replace every themed picture beneath a node with its pair, in place.
+ *
+ * @param node - Node whose subtree is rewritten
+ */
+function swapThemedMedia(node: WrappableNode): void {
+  if (!node.children) {
+    return
+  }
+  node.children = node.children.map((child) => {
+    if (child.type !== 'element' || child.tagName !== 'img') {
+      swapThemedMedia(child)
+      return child
+    }
+    const src = child.properties?.['src']
+    const reference = typeof src === 'string' ? parseMediaReference(src) : null
+    const variants = reference === null ? null : findThemedVariants(reference)
+    if (variants === null) {
+      return child
+    }
+    const shared: Record<string, unknown> = { ...child.properties, loading: 'lazy' }
+    if (variants.width !== undefined && variants.height !== undefined) {
+      // why: a picture with no stated size has no box until it arrives, and the page jumps when it does; the record knows the size, so it is written in, scaled to any width the author did state
+      const stated = Number(shared['width'])
+      const width = isFiniteNumber(stated) && stated > 0 ? stated : variants.width
+      shared['width'] = width
+      shared['height'] = shared['height'] ?? round((width * variants.height) / variants.width)
+    }
+    const image = (variant: string, className: string): WrappableNode => ({
+      type: 'element',
+      tagName: 'img',
+      properties: { ...shared, src: variant, className: [className] },
+      children: [],
+    })
+    return {
+      type: 'element',
+      tagName: 'span',
+      properties: { className: [THEMED_MEDIA_CLASS] },
+      children: [image(variants.light, THEMED_MEDIA_LIGHT_CLASS), image(variants.dark, THEMED_MEDIA_DARK_CLASS)],
+    }
+  })
+}
+
+/**
  * Convert a single line of markdown to inline HTML, without the wrapping
  * paragraph.
  *
@@ -253,7 +331,7 @@ export function extractDescription(content: string): string {
       continue
     }
 
-    if (line.includes('[![') || line.includes('<p align=')) {
+    if (line.includes('[![') || line.includes('<p align=') || line.trimStart().startsWith('<!--')) {
       continue
     }
 
