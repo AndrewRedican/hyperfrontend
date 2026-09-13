@@ -41,9 +41,6 @@
     <img width="640" height="360" src="https://www.hyperfrontend.dev/media/function-utils-lanes/hero.gif" alt="Four vertical lanes, each with a send box in the middle, and the same three numbered tokens dropped into all four at once while an online switch in the margin goes off for the second call: the bare lane throws and dies, the run-once lane sends its first token through and bypasses the rest with the cached 1, the conditional lane stops the second token at a shut gate and passes the third, and the error-ignoring lane absorbs the throw behind a shield and carries on">
   </a>
 </p>
-<p align="center">
-  <sub>One function, three calls, three wrappers. The second call fails while the switch is off, and what each lane does about it is the whole library.</sub>
-</p>
 
 Higher-order function utilities for behavioral modification and composition.
 
