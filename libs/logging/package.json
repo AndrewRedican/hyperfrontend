@@ -1,7 +1,7 @@
 {
   "name": "@hyperfrontend/logging",
   "version": "1.0.0",
-  "description": "Structured logging utilities for applications.",
+  "description": "Structured logging with configurable severity levels and error-resilient execution.",
   "license": "MIT",
   "sideEffects": false,
   "engines": {
