@@ -33,13 +33,16 @@
   <img src="https://img.shields.io/badge/tree%20shakeable-%E2%9C%93-success?style=flat-square" alt="Tree Shakeable">
 </p>
 
+<!-- hf:media start id="banner" scene="banner-json-utils" asset="banner" alt="@hyperfrontend/json-utils" -->
+<!-- hf:media end -->
+
 <p align="center">
   <a href="https://www.hyperfrontend.dev/docs/libraries/utils/json/">
-    <img width="640" src="https://www.hyperfrontend.dev/media/json-utils-validate/hero.gif" alt="A schema and a broken config being typed on the left, and on the right one validate call printing all four violations as a path and keyword-code table">
+    <img width="640" height="360" src="https://www.hyperfrontend.dev/media/json-utils-validate/hero.gif" alt="A schema and a broken config being typed on the left, and on the right one validate call printing all three violations as a path and keyword-code table, the missing required property reported at the root pointer">
   </a>
 </p>
 <p align="center">
-  <sub>A config that breaks four rules at once, and the single call that reports all four instead of stopping at the first.</sub>
+  <sub>A config that breaks three rules at once, and the single call that reports all three instead of stopping at the first.</sub>
 </p>
 
 Zero-dependency JSON Schema Draft v4 validation and schema generation utilities.
@@ -296,12 +299,15 @@ const result = checkPatternSafety('(a+)+')
 
 ## Compatibility
 
-| Platform                      | Support |
-| ----------------------------- | :-----: |
-| Browser                       |   ✅    |
-| Node.js                       |   ✅    |
-| Web Workers                   |   ✅    |
-| Deno, Bun, Cloudflare Workers |   ✅    |
+<!-- hf:media start id="runtimes" scene="runtimes-json-utils" asset="runtimes" docs="#compatibility" alt="Runs in Node.js 18 or later, evergreen browsers and web workers" -->
+
+| Environment     | Supported |
+| --------------- | :-------: |
+| Node.js >= 18   |    ✅     |
+| Modern Browsers |    ✅     |
+| Web Workers     |    ✅     |
+
+<!-- hf:media end -->
 
 ### Output Formats
 
