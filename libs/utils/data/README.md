@@ -41,9 +41,6 @@
     <img width="640" height="360" src="https://www.hyperfrontend.dev/media/data-utils-circular/hero.gif" alt="Four objects drawn in a row, state, user, cart and line, joined by their forward references, with three back references drawn as arcs; a cursor walks the graph depth first, and each arc that lands on an object already visited lights up and is numbered, until all three are lit and the count beside locateCircularReference reads three">
   </a>
 </p>
-<p align="center">
-  <sub>The graph, walked. Every arc that lands on an object the walk has already visited is a cycle, and the call returns all of them, with where each was found and what it points back to; the exception you would get from JSON.stringify describes only the first.</sub>
-</p>
 
 Comprehensive data structure manipulation with circular reference handling and custom class support.
 
