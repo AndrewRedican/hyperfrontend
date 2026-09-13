@@ -2,9 +2,7 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "outDir": "../../dist/out-tsc",
-    "declaration": true,
     "types": ["node"]
   },
-  "include": ["src/**/*.ts"],
-  "exclude": ["src/**/*.spec.ts", "test.config.ts"]
+  "include": ["test.config.ts", "src/**/*.spec.ts", "src/**/*.d.ts"]
 }

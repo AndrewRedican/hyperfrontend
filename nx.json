@@ -43,6 +43,7 @@
       "inputs": [
         "default",
         "^default",
+        "{workspaceRoot}/assets/media/*/*.json",
         {
           "projects": ["tool-package", "lib-builder"],
           "input": "production"
@@ -96,6 +97,7 @@
       "!{projectRoot}/eslint.config.cjs",
       "!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)",
       "!{projectRoot}/tsconfig.spec.json",
+      "!{projectRoot}/test.config.ts",
       "!{projectRoot}/src/test-setup.[jt]s",
       "!{projectRoot}/test-setup.[jt]s"
     ],

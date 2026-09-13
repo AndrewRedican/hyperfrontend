@@ -4,11 +4,15 @@ import { build } from '@hyperfrontend/builder'
 import { byPrefix } from '@hyperfrontend/builder/presets'
 import { logger } from '@hyperfrontend/logging'
 import { join } from '@hyperfrontend/project-scope/core'
+import { prepareDistReadme } from '../../readme/prepare-dist-readme'
 import {
   DEFAULT_PROJECT_ASSETS,
   DEFAULT_WORKSPACE_ASSETS,
+  DOCS_BASE_URL,
   FUNDING_ASSET,
   INHERITABLE_FIELDS,
+  MEDIA_PUBLIC_BASE_URL,
+  MEDIA_ROOT,
   MEMORY_THRESHOLDS,
   WORKSPACE_SCOPE,
 } from './wrapper-config'
@@ -106,6 +110,18 @@ const runExecutor: PromiseExecutor<BuildExecutorOptions> = async (options, conte
 
   try {
     await build(config)
+    // why: the readme npm packs is the source readme with its marked regions replaced by committed visuals; it is written into the output after the build so the source stays the one humans maintain and the output holds the one readers of the registry see
+    const prepared = prepareDistReadme({
+      workspaceRoot,
+      projectRoot,
+      outputPath: outputPath ?? join(workspaceRoot, 'dist', projectRelativePath),
+      mediaRoot: MEDIA_ROOT,
+      publicBaseUrl: MEDIA_PUBLIC_BASE_URL,
+      docsBaseUrl: DOCS_BASE_URL,
+    })
+    if (prepared !== undefined && prepared.outcome.replacements.length > 0) {
+      logger.log(`README prepared for the registry: ${prepared.outcome.replacements.map((replacement) => replacement.id).join(', ')}`)
+    }
     return { success: true }
   } catch (error) {
     logger.error(`Failed to build ${projectName}`)
