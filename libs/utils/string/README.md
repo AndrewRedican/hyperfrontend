@@ -33,13 +33,16 @@
   <img src="https://img.shields.io/badge/tree%20shakeable-%E2%9C%93-success?style=flat-square" alt="Tree Shakeable">
 </p>
 
+<!-- hf:media start id="banner" scene="banner-string-utils" asset="banner" alt="@hyperfrontend/string-utils" -->
+<!-- hf:media end -->
+
 <p align="center">
   <a href="https://www.hyperfrontend.dev/docs/libraries/utils/string/">
-    <img width="640" src="https://www.hyperfrontend.dev/media/string-utils-base64/hero.gif" alt="Four strings typed one at a time into a left column, each answered by two result columns: btoa returns a struck-through wrong answer for café and then throws InvalidCharacterError on the Japanese and emoji inputs, while toBase64 encodes all four and finishes with a URL-safe result">
+    <img width="640" height="360" src="https://www.hyperfrontend.dev/media/string-utils-base64/hero.gif" alt="The word café as four character tiles; each drops its UTF-8 bytes beneath it, é dropping two; the bytes regroup in threes and rise into the eight Base64 tiles Y2Fmw6k=; then btoa's reading collapses é into a single wrong byte and a struck-through wrong tail 6Q== appears under the correct row; finally fromBase64 folds everything back into café">
   </a>
 </p>
 <p align="center">
-  <sub>The same four strings, handed to the platform's btoa and to toBase64. The struck-through row is the dangerous one: nothing threw, so nothing was caught.</sub>
+  <sub>One value crossing representations: text, its UTF-8 bytes, Base64, and back. The struck-through tail is the dangerous one: btoa read é as one byte, nothing threw, so nothing was caught.</sub>
 </p>
 
 Isomorphic string encoding utilities with unified APIs for browser and Node.js environments.
@@ -153,12 +156,15 @@ Every signature, parameter and default is in the API reference for
 
 ## Compatibility
 
-| Platform                      | Support |
-| ----------------------------- | :-----: |
-| Browser                       |   ✅    |
-| Node.js                       |   ✅    |
-| Web Workers                   |   ✅    |
-| Deno, Bun, Cloudflare Workers |   ✅    |
+<!-- hf:media start id="runtimes" scene="runtimes-string-utils" asset="runtimes" docs="#compatibility" alt="Runs in Node.js 18 or later, evergreen browsers and web workers" -->
+
+| Environment     | Supported |
+| --------------- | :-------: |
+| Node.js >= 18   |    ✅     |
+| Modern Browsers |    ✅     |
+| Web Workers     |    ✅     |
+
+<!-- hf:media end -->
 
 ### Output Formats
 
