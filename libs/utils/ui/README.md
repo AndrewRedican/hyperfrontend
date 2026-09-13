@@ -41,9 +41,6 @@
     <img width="640" height="360" src="https://www.hyperfrontend.dev/media/ui-utils-teardown/hero.gif" alt="Two panels of counters over six mount and unmount cycles: on the left, red bars for style elements, ResizeObservers and listeners climb to six and stay there; on the right, the same three counters in green rise and drop back to zero every cycle">
   </a>
 </p>
-<p align="center">
-  <sub>Six mounts of the same widget, counted two ways. The bars only come back down on the side that called the teardown each function returned.</sub>
-</p>
 
 Modular DOM utilities for dynamic styling, gesture detection, element lifecycle, and color manipulation.
 
