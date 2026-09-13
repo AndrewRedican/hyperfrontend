@@ -33,13 +33,16 @@
   <img src="https://img.shields.io/badge/tree%20shakeable-%E2%9C%93-success?style=flat-square" alt="Tree Shakeable">
 </p>
 
+<!-- hf:media start id="banner" scene="banner-cryptography" asset="banner" alt="@hyperfrontend/cryptography" -->
+<!-- hf:media end -->
+
 <p align="center">
   <a href="https://www.hyperfrontend.dev/docs/libraries/cryptography/">
-    <img width="640" src="https://www.hyperfrontend.dev/media/cryptography-envelope/hero.gif" alt="A 58-byte buffer assembling block by block into four labelled runs: a 16-byte salt, a 12-byte IV, 14 bytes of ciphertext and a 16-byte authentication tag">
+    <img width="640" height="360" src="https://www.hyperfrontend.dev/media/cryptography-envelope/hero.gif" alt="The secret sk_live_9f2c41 sealed into an envelope: random salt and IV blocks grow beside it, its characters scramble into ciphertext, a tag and a padlock close it; the same secret sealed a second time comes out different everywhere; the right key opens the first envelope back to the secret and a wrong key leaves the second one shut with a cross on its lock">
   </a>
 </p>
 <p align="center">
-  <sub>The bytes a single encrypt call hands back. The salt and IV are fresh every call, which is why the same secret encrypted twice is never the same buffer.</sub>
+  <sub>What one encrypt call hands back: a fresh salt, a fresh IV, the ciphertext and a tag, sealed together. The same secret sealed twice is never the same buffer, and only the right password opens either.</sub>
 </p>
 
 Production-grade cryptographic primitives with isomorphic APIs for browser and Node.js environments.
@@ -167,12 +170,15 @@ Every signature, option type and thrown error is in the [API reference](https://
 
 ## Compatibility
 
-| Platform                      | Support |
-| ----------------------------- | :-----: |
-| Browser                       |   ✅    |
-| Node.js                       |   ✅    |
-| Web Workers                   |   ✅    |
-| Deno, Bun, Cloudflare Workers |   ✅    |
+<!-- hf:media start id="runtimes" scene="runtimes-cryptography" asset="runtimes" docs="#compatibility" alt="Runs in Node.js 18 or later, evergreen browsers and web workers" -->
+
+| Environment     | Supported |
+| --------------- | :-------: |
+| Node.js >= 18   |    ✅     |
+| Modern Browsers |    ✅     |
+| Web Workers     |    ✅     |
+
+<!-- hf:media end -->
 
 ### Output Formats
 
