@@ -33,9 +33,6 @@
   <img src="https://img.shields.io/badge/tree%20shakeable-%E2%9C%93-success?style=flat-square" alt="Tree Shakeable">
 </p>
 
-<!-- hf:media start id="banner" scene="banner-builder" asset="banner" alt="@hyperfrontend/builder" -->
-<!-- hf:media end -->
-
 <p align="center">
   <a href="https://www.hyperfrontend.dev/docs/libraries/builder/">
     <img width="640" height="360" src="https://www.hyperfrontend.dev/media/builder-manifest/hero.gif" alt="Two source entries feed the builder one at a time; each fans out into its ESM, CJS and declaration files, the root entry also into the minified IIFE and UMD bundles; then a package.json sheet rises and wires connect every file that landed to the exports, main, types and files keys it produced">
