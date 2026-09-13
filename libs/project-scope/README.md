@@ -33,9 +33,6 @@
   <img src="https://img.shields.io/badge/tree%20shakeable-%E2%9C%93-success?style=flat-square" alt="Tree Shakeable">
 </p>
 
-<!-- hf:media start id="banner" scene="banner-project-scope" asset="banner" alt="@hyperfrontend/project-scope" -->
-<!-- hf:media end -->
-
 <p align="center">
   <a href="https://www.hyperfrontend.dev/docs/libraries/project-scope/">
     <img width="640" height="360" src="https://www.hyperfrontend.dev/media/project-scope-detect/hero.gif" alt="Two chapters. First, confidence bars fill as three checkouts the package was never configured for are read: React, Vue and Svelte settle between 70 and 90 percent, SvelteKit stops at 20, Vite and the Nx workspace reach 100, and the test runner bar stays at zero. Then a script stages two writes and a delete into a virtual tree, a write outside the root is refused, listChanges reports three pending with nothing on disk, and one commitChanges lands them together">
