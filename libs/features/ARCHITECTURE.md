@@ -184,16 +184,16 @@ sequenceDiagram
 ```
 
 <p align="center">
-  <img width="640" src="https://www.hyperfrontend.dev/media/feature-session/hero.gif" alt="A host and a feature exchanging the three nexus handshake frames, then a presentation announcement, then a repeating heartbeat, and finally one ordinary application message">
+  <img width="640" height="360" src="https://www.hyperfrontend.dev/media/feature-session/hero.gif" alt="A feature window docks into a slot on a host page; three dots cross the wire between them and it turns solid; the host measures the slot and the feature fills it; beats pulse from the feature once a second; then one order-placed message crosses">
 </p>
 <p align="center">
-  <sub>The diagram above is every gate a session can be refused at. This is the ordinary path, in order, with what each frame carries: three nexus frames settle the contract, <code>__hf:present</code> is queued ahead of the connect so it arrives first, and the beat starts. Everything before <code>order-placed</code> is the session being established.</sub>
+  <sub>The diagram above is every gate a session can be refused at. This is the ordinary path, in order: three nexus frames settle the contract, <code>__hf:present</code> is queued ahead of the connect so it arrives first and carries the host-measured size, and the beat starts. Everything before <code>order-placed</code> is the session being established.</sub>
 </p>
 
 Handshake frames replay idempotently and re-send on a retry cadence until answered, so neither side depends on the other having booted first. Refusal is symmetric too: whichever side decides emits a local [`error`](https://www.hyperfrontend.dev/docs/libraries/features/host/#api-ShellHandle) carrying a machine-readable [`reason`](https://www.hyperfrontend.dev/docs/libraries/nexus/#api-DenyEventData-prop-reason), so a host that turns a feature down is never left waiting on the channel it refused. One asymmetry is deliberate: a security-policy rejection tells the refused requester only that it was not accepted, since naming the gate would disclose how this side judges connections.
 
 <p align="center">
-  <img width="640" src="https://www.hyperfrontend.dev/media/feature-watchdog/hero.gif" alt="A tape of beats, ticks and visibility reports beside the watchdog state each one produces, showing three ticks of silence reaching suspect while visible and reaching nothing while hidden">
+  <img width="640" height="360" src="https://www.hyperfrontend.dev/media/feature-watchdog/hero.gif" alt="A three-segment ring on the host beside the seated feature, with the watchdog state inside it: beats keep it empty and healthy; three silent ticks fill it and turn it red as suspect; a beat clears it; the feature dims with a closed eye and silent ticks fill nothing while it is unobservable; it reopens, and three more silent ticks reach suspect again">
 </p>
 <p align="center">
   <sub>The same silence, three times. Three missed ticks while both pages are visible reach <code>suspect</code>; three while either is hidden reach nothing, because the watchdog is not counting. Returning to the tab grants a fresh budget and says nothing: only a beat earns <code>healthy</code> back.</sub>
@@ -204,7 +204,7 @@ Liveness is judged in four states, not a boolean. The feature pulses a hidden be
 Both sides read page visibility rather than take it on notice. [`visibilitychange`](https://developer.mozilla.org/en-US/docs/Web/API/Document/visibilitychange_event) is the fast path, and a coarse poll of `document.visibilityState` stands behind it, because an announcement that is never delivered would otherwise pin the watchdog at [`unobservable`](https://www.hyperfrontend.dev/docs/libraries/features/host/#api-HeartbeatState) for the rest of the session, blind to the one failure it exists to catch. While a page is believed hidden, one probe animation frame is left armed: a hidden page is served none, so it costs nothing, and a page that is painted again reports its return on that frame rather than waiting for the next poll.
 
 <p align="center">
-  <img width="640" src="https://www.hyperfrontend.dev/media/feature-flush-window/hero.gif" alt="A close proposed on an open channel, an unsaved draft crossing while the channel is still delivering, and only then the acknowledgement that takes the channel down">
+  <img width="640" height="360" src="https://www.hyperfrontend.dev/media/feature-flush-window/hero.gif" alt="A seated feature holding a draft with an amber marker; the host presses close and a shutter descends part way across the wire and stops; the draft crosses through the gap and lands on the host with a check; the acknowledgement crosses back, the shutter completes and the feature fades out of its slot">
 </p>
 <p align="center">
   <sub>The window is the feature. Between the proposed close and the acknowledgement the channel is still live, and that is when work the feature was holding gets out.</sub>

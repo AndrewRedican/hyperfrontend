@@ -33,9 +33,12 @@
   <img src="https://img.shields.io/badge/tree%20shakeable-%E2%9C%93-success?style=flat-square" alt="Tree Shakeable">
 </p>
 
+<!-- hf:media start id="banner" scene="banner-features" asset="banner" alt="@hyperfrontend/features" -->
+<!-- hf:media end -->
+
 <p align="center">
   <a href="https://www.hyperfrontend.dev/demos/#koi-pond">
-    <img width="560" src="https://www.hyperfrontend.dev/media/koi-pond/hero-clip.gif" alt="Eight koi swimming in a single pond, each one rendered by a different framework app">
+    <img width="560" height="315" src="https://www.hyperfrontend.dev/media/koi-pond/hero-clip.gif" alt="Eight koi swimming in a single pond, each one rendered by a different framework app">
   </a>
 </p>
 <p align="center">
@@ -68,11 +71,11 @@ checkout.open({ displayMode: DisplayMode.Dialog })
 
 <p align="center">
   <a href="https://www.hyperfrontend.dev/docs/libraries/features/architecture/">
-    <img width="640" src="https://www.hyperfrontend.dev/media/feature-session/hero.gif" alt="A Host panel and a Feature panel joined by a wire, with each named message travelling across it as a dot and landing in a growing log below: three nexus handshake frames, then __hf:present carrying mode dialog and a 720 by 540 viewport, then a repeating __hf:beat, then a single order-placed message">
+    <img width="640" height="360" src="https://www.hyperfrontend.dev/media/feature-session/hero.gif" alt="A feature window docks into a slot on a host page; three dots cross the wire between them and it turns solid; the host measures the slot as 720 by 540 and the feature fills it; small beats pulse from the feature to the host once a second; then one order-placed message crosses and a receipt appears on the host">
   </a>
 </p>
 <p align="center">
-  <sub>Everything above the last line is the session being established for you; <code>order-placed</code> is the only message either app actually wrote.</sub>
+  <sub>Everything before the last crossing is the session being established for you; <code>order-placed</code> is the only message either app actually wrote.</sub>
 </p>
 
 It is organized into independent subpath entry points so consumers import only the surface they need.
@@ -201,10 +204,15 @@ Every option, handle, contract and payload type is in the [API reference](https:
 
 ## Compatibility
 
+<!-- hf:media start id="runtimes" scene="runtimes-features" asset="runtimes" docs="#compatibility" alt="Runs in Node.js 18 or later and evergreen browsers, with partial support in web workers" -->
+
 | Environment     | Supported |
-| --------------- | --------- |
-| Node.js >= 18   | ✅        |
-| Modern Browsers | ✅        |
+| --------------- | :-------: |
+| Node.js >= 18   |    ✅     |
+| Modern Browsers |    ✅     |
+| Web Workers     |    ⚠️     |
+
+<!-- hf:media end -->
 
 Support is per entry point. [`/host`](https://www.hyperfrontend.dev/docs/libraries/features/host/) and [`/hostee`](https://www.hyperfrontend.dev/docs/libraries/features/hostee/) are browser runtimes, [`/cli`](https://www.hyperfrontend.dev/docs/libraries/features/cli/), [`/server`](https://www.hyperfrontend.dev/docs/libraries/features/server/), and [`/generators`](https://www.hyperfrontend.dev/docs/libraries/features/generators/) are Node-only, and the root entry is DOM-free and runs anywhere.
 
