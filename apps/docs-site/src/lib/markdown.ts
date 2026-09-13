@@ -19,6 +19,9 @@ import { isFinite as isFiniteNumber } from '@hyperfrontend/immutable-api-utils/b
 /** Class the scroll box around a rendered table carries; sized in `globals.css`. */
 const TABLE_SCROLL_CLASS = 'table-scroll'
 
+/** Attribute a table cell carries when it holds nothing but code spans, so the stylesheet can keep it on one line. */
+const CODE_CELL_ATTRIBUTE = 'data-cell'
+
 /**
  * Convert markdown to HTML with GitHub Flavored Markdown support and Shiki
  * syntax highlighting.
@@ -35,7 +38,8 @@ const TABLE_SCROLL_CLASS = 'table-scroll'
  * the published page. Comment syntax inside a fenced code block is sample
  * text rather than a comment, so it still renders. Tables are wrapped in a
  * box that scrolls sideways, so a wide reference table moves on a phone and
- * the page does not. A picture that points at a committed media asset whose
+ * the page does not, and a cell that holds nothing but code is marked so the
+ * stylesheet can keep an identifier on one line. A picture that points at a committed media asset whose
  * record lists dark and light variants becomes a pair of images the
  * stylesheet chooses between by theme, so a light page never shows a dark
  * recording.
@@ -51,6 +55,7 @@ export async function markdownToHtml(markdown: string): Promise<string> {
     .use(rehypeRaw)
     .use(rehypeRemoveComments)
     .use(rehypeScrollTables)
+    .use(rehypeCodeCells)
     .use(rehypeThemedMedia)
     .use(rehypeShiki, {
       themes: CODE_THEMES,
@@ -169,6 +174,83 @@ function wrapTables(node: WrappableNode): void {
       ? { type: 'element', tagName: 'div', properties: { className: [TABLE_SCROLL_CLASS] }, children: [child] }
       : child
   )
+}
+
+/**
+ * Rehype plugin that marks table cells made only of code spans.
+ *
+ * A reference table's identifier column (a handler name, an event, a path) is
+ * the column a reader scans, and it is the one the browser squeezes hardest
+ * when a prose column beside it wants the width. The stylesheet can keep such
+ * a cell on one line only if it can tell it apart, and the tree is where that
+ * is known: a cell whose children are code elements, and at most the
+ * whitespace and punctuation between them, is one identifier or a short list
+ * of them.
+ *
+ * @returns The tree transformer
+ */
+function rehypeCodeCells(): (tree: WrappableNode) => void {
+  return (tree) => {
+    markCodeCells(tree)
+  }
+}
+
+/**
+ * Mark every code-only cell beneath a node, in place.
+ *
+ * @param node - Node whose subtree is marked
+ */
+function markCodeCells(node: WrappableNode): void {
+  if (!node.children) {
+    return
+  }
+  for (const child of node.children) {
+    if (child.type === 'element' && (child.tagName === 'td' || child.tagName === 'th') && isCodeOnly(child)) {
+      child.properties = { ...child.properties, [CODE_CELL_ATTRIBUTE]: 'code' }
+    }
+    markCodeCells(child)
+  }
+}
+
+/**
+ * Whether a cell holds at least one code span and nothing else but the
+ * separators between spans.
+ *
+ * @param cell - The table cell being judged
+ * @returns True for a cell the stylesheet should keep on one line
+ */
+function isCodeOnly(cell: WrappableNode): boolean {
+  const children = cell.children ?? []
+  let codeSpans = 0
+  for (const child of children) {
+    if (child.type === 'element' && child.tagName === 'code') {
+      codeSpans += 1
+      continue
+    }
+    if (
+      child.type === 'element' &&
+      child.tagName === 'a' &&
+      (child.children ?? []).every((inner) => inner.type === 'element' && inner.tagName === 'code')
+    ) {
+      codeSpans += 1
+      continue
+    }
+    if (child.type === 'text' && /^[\s,;/|·]*$/.test(String((child as TextNode).value ?? ''))) {
+      continue
+    }
+    return false
+  }
+  return codeSpans > 0
+}
+
+/**
+ * The subset of a hast text node the cell pass reads.
+ */
+interface TextNode {
+  /** Node type, `'text'` */
+  type: string
+  /** The text */
+  value?: string
 }
 
 /**

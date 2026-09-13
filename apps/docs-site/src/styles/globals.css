@@ -2870,6 +2870,43 @@
     max-width: 100%;
     overflow-x: auto;
   }
+
+  /* The columns of a reference table.
+
+     The page lets any run of text break inside a word as a last resort, so a
+     long path in a paragraph never pushes a phone sideways. Inside a table that
+     last resort is the first thing the layout reaches for: a break anywhere
+     means a cell's narrowest possible width is one character, and the browser
+     hands every column's width to whichever cell has the most prose, breaking
+     `handleRequest` into three lines to do it. Cells keep ordinary wrapping
+     instead, so a column's floor is its longest word; a prose column still
+     folds at its spaces, an identifier stays whole, and a table that is then
+     wider than the page scrolls in its box rather than crushing itself.
+
+     A header is a label and a cell made only of code is a name, and neither is
+     read across two lines, so they are held to one; the pipeline marks the
+     code-only cells because the stylesheet cannot tell them apart. */
+  .prose th,
+  .prose td {
+    overflow-wrap: normal;
+  }
+
+  .prose th,
+  .prose td[data-cell='code'] {
+    white-space: nowrap;
+  }
+
+  /* On a phone the box is narrower than a sentence, and a prose cell given a
+     tenth of it folds into one word per line: a column of forty short lines
+     beside two identifiers. A floor on the prose cells makes the table wider
+     than the box instead, so it scrolls sideways as a table and each cell still
+     reads as a sentence. Only on a phone: on a laptop the column has room and
+     the floor would only force scrolling on a table that fit. */
+  @media (max-width: 640px) {
+    .prose td:not([data-cell='code']) {
+      min-width: 14rem;
+    }
+  }
 }
 
 @layer components {
