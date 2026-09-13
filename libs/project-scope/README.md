@@ -41,9 +41,6 @@
     <img width="640" height="360" src="https://www.hyperfrontend.dev/media/project-scope-detect/hero.gif" alt="Two chapters. First, confidence bars fill as three checkouts the package was never configured for are read: React, Vue and Svelte settle between 70 and 90 percent, SvelteKit stops at 20, Vite and the Nx workspace reach 100, and the test runner bar stays at zero. Then a script stages two writes and a delete into a virtual tree, a write outside the root is refused, listChanges reports three pending with nothing on disk, and one commitChanges lands them together">
   </a>
 </p>
-<p align="center">
-  <sub>Read a repository it was never configured for, without installing or running it, then change it without touching disk until one commit lands everything. The confidence beside each detection is what lets a tool decide whether to act or ask.</sub>
-</p>
 
 Comprehensive project analysis, technology stack detection, and transactional virtual file system for Node.js tooling.
 
