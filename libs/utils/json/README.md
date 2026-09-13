@@ -41,9 +41,6 @@
     <img width="640" height="360" src="https://www.hyperfrontend.dev/media/json-utils-validate/hero.gif" alt="A schema and a broken config being typed on the left, and on the right one validate call printing all three violations as a path and keyword-code table, the missing required property reported at the root pointer">
   </a>
 </p>
-<p align="center">
-  <sub>A config that breaks three rules at once, and the single call that reports all three instead of stopping at the first.</sub>
-</p>
 
 Zero-dependency JSON Schema Draft v4 validation and schema generation utilities.
 
