@@ -33,9 +33,6 @@
   <img src="https://img.shields.io/badge/tree%20shakeable-%E2%9C%93-success?style=flat-square" alt="Tree Shakeable">
 </p>
 
-<!-- hf:media start id="banner" scene="banner-logging" asset="banner" alt="@hyperfrontend/logging" -->
-<!-- hf:media end -->
-
 <p align="center">
   <a href="https://www.hyperfrontend.dev/docs/libraries/logging/">
     <img width="640" height="360" src="https://www.hyperfrontend.dev/media/logging-levels/hero.gif" alt="A terminal window with a level scale across the top, error to debug, and a knob that slides between the stops; beneath it the same five channel-prefixed lines stay in place, and as the knob moves the lines below the chosen level ghost out and return, with a setLogLevel chip naming the level">
