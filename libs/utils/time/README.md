@@ -33,9 +33,6 @@
   <img src="https://img.shields.io/badge/tree%20shakeable-%E2%9C%93-success?style=flat-square" alt="Tree Shakeable">
 </p>
 
-<!-- hf:media start id="banner" scene="banner-time-utils" asset="banner" alt="@hyperfrontend/time-utils" -->
-<!-- hf:media end -->
-
 <p align="center">
   <a href="https://www.hyperfrontend.dev/docs/libraries/utils/time/">
     <img width="640" height="360" src="https://www.hyperfrontend.dev/media/time-utils-countdown/hero.gif" alt="Two stacked 30-second countdown bars draining in parallel: the setTimeout bar runs red straight to zero, while the createTimer bar holds green at 21.0s through a pause and then continues down from there">
