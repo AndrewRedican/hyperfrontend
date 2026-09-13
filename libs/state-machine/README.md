@@ -33,9 +33,12 @@
   <img src="https://img.shields.io/badge/tree%20shakeable-%E2%9C%93-success?style=flat-square" alt="Tree Shakeable">
 </p>
 
+<!-- hf:media start id="banner" scene="banner-state-machine" asset="banner" alt="@hyperfrontend/state-machine" -->
+<!-- hf:media end -->
+
 <p align="center">
   <a href="https://www.hyperfrontend.dev/docs/libraries/state-machine/">
-    <img width="640" src="https://www.hyperfrontend.dev/media/state-machine-derived/hero.gif" alt="Code on the left dispatches start, fail, start, success, start into a store while the panel on the right repaints the four booleans and names the derived states they add up to: notStarted, inProgress, failed, retrying, restarting">
+    <img width="640" height="360" src="https://www.hyperfrontend.dev/media/state-machine-derived/hero.gif" alt="Four base lamps on the left, inProgress, success, fail and halt, and seven derived names on the right joined to them by faint wires; five action chips fire in turn, start, fail, start, success, start, each dropping a token that flips lamps, and the wires from the lit lamps light the names that hold: inProgress, then failed, then retrying because fail stayed lit, then successful, then restarting because success stayed lit">
   </a>
 </p>
 <p align="center">
@@ -260,12 +263,15 @@ Every action, selector, event name, and type is in the [API reference](https://w
 
 ## Compatibility
 
-| Platform                      | Support |
-| ----------------------------- | :-----: |
-| Browser                       |   ✅    |
-| Node.js                       |   ✅    |
-| Web Workers                   |   ✅    |
-| Deno, Bun, Cloudflare Workers |   ✅    |
+<!-- hf:media start id="runtimes" scene="runtimes-state-machine" asset="runtimes" docs="#compatibility" alt="Runs in Node.js 18 or later, evergreen browsers and web workers" -->
+
+| Environment     | Supported |
+| --------------- | :-------: |
+| Node.js >= 18   |    ✅     |
+| Modern Browsers |    ✅     |
+| Web Workers     |    ✅     |
+
+<!-- hf:media end -->
 
 ### Output Formats
 
