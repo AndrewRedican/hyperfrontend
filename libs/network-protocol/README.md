@@ -33,13 +33,16 @@
   <img src="https://img.shields.io/badge/tree%20shakeable-%E2%9C%93-success?style=flat-square" alt="Tree Shakeable">
 </p>
 
+<!-- hf:media start id="banner" scene="banner-network-protocol" asset="banner" alt="@hyperfrontend/network-protocol" -->
+<!-- hf:media end -->
+
 <p align="center">
   <a href="https://www.hyperfrontend.dev/docs/libraries/network-protocol/">
-    <img width="640" src="https://www.hyperfrontend.dev/media/network-protocol-frame/hero.gif" alt="One channel.send call drawn as a row of coloured byte cells filling in left to right: version 1B, type 1B, counter 8B, sealed packet 37B, tag 16B, ending with a replayed frame reported as onDrop code 'replayed'">
+    <img width="640" height="360" src="https://www.hyperfrontend.dev/media/network-protocol-frame/hero.gif" alt="A page and a worker at the two ends of a pipe: a hello crosses each way and both ends light the same key; a message card is wrapped into a numbered sealed frame, carried through the pipe and unwrapped on the far side; a listener under the pipe copies the second frame and pushes it back in, and the receiver reads its number, refuses it and drops it into the onDrop tray marked replayed">
   </a>
 </p>
 <p align="center">
-  <sub>One frame, byte by byte. Ten of them travel in the clear and the tag covers those ten too, so a captured frame cannot be edited and a replay of it never reaches your handler.</sub>
+  <sub>Your transport, the package's envelope. A hello keys both ends, every message travels sealed under a counter, and a captured frame pushed back in is refused by its number before any key is touched.</sub>
 </p>
 
 Production-grade network protocol for secure, real-time cross-window and cross-process communication with a session-keyed authenticated envelope, routing, and message queueing.
@@ -334,12 +337,15 @@ Every option, type and validator is in the [API reference](https://www.hyperfron
 
 ## Compatibility
 
-| Platform                      | Support |
-| ----------------------------- | :-----: |
-| Browser                       |   ✅    |
-| Node.js                       |   ✅    |
-| Web Workers                   |   ✅    |
-| Deno, Bun, Cloudflare Workers |   ✅    |
+<!-- hf:media start id="runtimes" scene="runtimes-network-protocol" asset="runtimes" docs="#compatibility" alt="Runs in Node.js 18 or later, evergreen browsers and web workers" -->
+
+| Environment     | Supported |
+| --------------- | :-------: |
+| Node.js >= 18   |    ✅     |
+| Modern Browsers |    ✅     |
+| Web Workers     |    ✅     |
+
+<!-- hf:media end -->
 
 ### Output Formats
 
