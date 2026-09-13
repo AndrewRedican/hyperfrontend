@@ -33,13 +33,16 @@
   <img src="https://img.shields.io/badge/tree%20shakeable-%E2%9C%93-success?style=flat-square" alt="Tree Shakeable">
 </p>
 
+<!-- hf:media start id="banner" scene="banner-immutable-api-utils" asset="banner" alt="@hyperfrontend/immutable-api-utils" -->
+<!-- hf:media end -->
+
 <p align="center">
   <a href="https://www.hyperfrontend.dev/docs/libraries/utils/immutable-api/">
-    <img width="640" src="https://www.hyperfrontend.dev/media/immutable-api-capture/hero.gif" alt="A main.mjs file typed out on the left, ending in a vendor script that overwrites Object.keys, Object.prototype.hasOwnProperty and JSON.parse; on the right a node run asks each of those three questions twice, the global call returning the tampered answer in red and the captured copy returning the real one in green">
+    <img width="640" height="360" src="https://www.hyperfrontend.dev/media/immutable-api-capture/hero.gif" alt="A shelf of built-ins, Object.keys and JSON.parse, from which copies drop into a sealed vault at start-up; a third-party analytics.js card slides in and rewrites both shelf tiles; two questions are then asked of the shelf and of the vault, the shelf answering wrongly in red and the vault correctly in green">
   </a>
 </p>
 <p align="center">
-  <sub>Both columns run in the same process. The copies answer correctly only because their imports were evaluated before the widget that rewrote the globals.</sub>
+  <sub>The copies are taken before the intruder arrives, and that is the whole of what they promise: imported after it, they would have captured the lie.</sub>
 </p>
 
 Decorators and utilities for creating immutable, tamper-proof object APIs with built-in prototype pollution defense.
@@ -175,12 +178,15 @@ Every export, on every subpath, is in the [API reference](https://www.hyperfront
 
 ## Compatibility
 
-| Platform                      | Support |
-| ----------------------------- | :-----: |
-| Browser                       |   ✅    |
-| Node.js                       |   ✅    |
-| Web Workers                   |   ✅    |
-| Deno, Bun, Cloudflare Workers |   ✅    |
+<!-- hf:media start id="runtimes" scene="runtimes-immutable-api-utils" asset="runtimes" docs="#compatibility" alt="Runs in Node.js 18 or later, evergreen browsers and web workers" -->
+
+| Environment     | Supported |
+| --------------- | :-------: |
+| Node.js >= 18   |    ✅     |
+| Modern Browsers |    ✅     |
+| Web Workers     |    ✅     |
+
+<!-- hf:media end -->
 
 ### Output Formats
 
