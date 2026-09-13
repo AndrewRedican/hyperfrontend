@@ -31,13 +31,16 @@
   <img src="https://img.shields.io/badge/tree%20shakeable-%E2%9C%93-success?style=flat-square" alt="Tree Shakeable">
 </p>
 
+<!-- hf:media start id="banner" scene="banner-versioning" asset="banner" alt="@hyperfrontend/versioning" -->
+<!-- hf:media end -->
+
 <p align="center">
   <a href="https://www.hyperfrontend.dev/docs/libraries/versioning/">
-    <img width="640" src="https://www.hyperfrontend.dev/media/versioning-cascade/hero.gif" alt="A commit header types itself out on the left while the right panel fills in the parsed commit object, a major bump, the version 3.0.0 and the CHANGELOG.md line it writes">
+    <img width="640" height="360" src="https://www.hyperfrontend.dev/media/versioning-cascade/hero.gif" alt="One commit header, feat(api)!: drop v1, typed at the top of a cascade; its parts fall into type, scope, breaking and subject tiles, feat and true converge into a major bump, the version 2.4.1 rolls to 3.0.0, and the changelog line assembles from the tiles, with the package function that performs each step named beside the row it produces">
   </a>
 </p>
 <p align="center">
-  <sub>Nobody picks the version here. The breaking marker in the header is what makes this release a major, and everything on the right is derived from that one line.</sub>
+  <sub>Nobody picks the version here. The breaking marker in the header is what makes this release a major, and everything below the line falls out of it.</sub>
 </p>
 
 Versioning library with changelog parsing, conventional commits, and semver flow orchestration.
@@ -161,10 +164,15 @@ Every model, option, step and outcome type is in the [API reference](https://www
 
 ## Compatibility
 
-| Platform | Support |
-| -------- | :-----: |
-| Node.js  |   ✅    |
-| Browser  |   ❌    |
+<!-- hf:media start id="runtimes" scene="runtimes-versioning" asset="runtimes" docs="#compatibility" alt="Runs in Node.js 18 or later; not a target for evergreen browsers and web workers" -->
+
+| Environment     | Supported |
+| --------------- | :-------: |
+| Node.js >= 18   |    ✅     |
+| Modern Browsers |    ❌     |
+| Web Workers     |    ❌     |
+
+<!-- hf:media end -->
 
 ### Output Formats
 
