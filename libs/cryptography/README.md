@@ -41,9 +41,6 @@
     <img width="640" height="360" src="https://www.hyperfrontend.dev/media/cryptography-envelope/hero.gif" alt="The secret sk_live_9f2c41 sealed into an envelope: random salt and IV blocks grow beside it, its characters scramble into ciphertext, a tag and a padlock close it; the same secret sealed a second time comes out different everywhere; the right key opens the first envelope back to the secret and a wrong key leaves the second one shut with a cross on its lock">
   </a>
 </p>
-<p align="center">
-  <sub>What one encrypt call hands back: a fresh salt, a fresh IV, the ciphertext and a tag, sealed together. The same secret sealed twice is never the same buffer, and only the right password opens either.</sub>
-</p>
 
 Production-grade cryptographic primitives with isomorphic APIs for browser and Node.js environments.
 
