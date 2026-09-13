@@ -1,7 +1,7 @@
 import type { Rule } from 'eslint'
 import type { LinkOrigins } from '../utils/docs-links'
 import { basename, dirname, join } from 'node:path'
-import { parseMarkers, resolveDocs } from '@hyperfrontend/package'
+import { packageBanner, parseMarkers, resolveDocs } from '@hyperfrontend/package'
 import { validateLink } from '../utils/docs-link-validation'
 import { getDocsTargetIndex, packageOfFile, readRepositoryUrl } from '../utils/docs-targets'
 import { exists, isDirectory } from '../utils/fs'
@@ -31,6 +31,9 @@ const PORTABLE_EXTENSIONS: readonly string[] = ['gif', 'webp', 'png']
 /** The heading of the section the runtime strip replaces. */
 const COMPATIBILITY_HEADING = '## Compatibility'
 
+/** The identifier a region is never given, because the build places the banner itself. */
+const BANNER_ID = 'banner'
+
 /**
  * One region every publishable readme declares.
  */
@@ -47,10 +50,10 @@ export interface RequiredRegion {
 
 /**
  * The regions every publishable readme carries, so the distribution readme
- * shows the package's banner and its runtime strip.
+ * shows the package's runtime strip. The banner is not among them: the build
+ * places it in place of the title, from the scene named after the package.
  */
 export const REQUIRED_REGIONS: readonly RequiredRegion[] = [
-  { id: 'banner', scenePrefix: 'banner-', asset: 'banner', place: 'above the first section heading, below the badges' },
   { id: 'runtimes', scenePrefix: 'runtimes-', asset: 'runtimes', place: 'inside the Compatibility section' },
 ]
 
@@ -69,23 +72,16 @@ export interface ReadmeMediaRegionsOptions {
 }
 
 /**
- * Whether a region sits where its kind belongs.
+ * Whether a runtime strip sits inside the Compatibility section.
  *
- * The banner sits in the top matter, above the first section heading, and the
- * runtime strip sits inside the Compatibility section. A document with no
- * Compatibility heading is left to the structure rule, which reports the
- * missing section itself.
+ * A document with no Compatibility heading is left to the structure rule,
+ * which reports the missing section itself.
  *
  * @param lines - The document's lines.
- * @param id - The region's identifier, one of the required ones.
  * @param line - Index of the line the region starts on.
  * @returns True when the region is where it belongs.
  */
-export function isWellPlaced(lines: readonly string[], id: string, line: number): boolean {
-  if (id === 'banner') {
-    const firstSection = lines.findIndex((text) => text.startsWith('## '))
-    return firstSection === -1 || line < firstSection
-  }
+export function isWellPlaced(lines: readonly string[], line: number): boolean {
   const compatibility = lines.findIndex((text) => text.startsWith(COMPATIBILITY_HEADING))
   if (compatibility === -1) {
     return true
@@ -134,6 +130,10 @@ const rule: Rule.RuleModule = {
         'A publishable README declares a "{{id}}" region naming scene "{{scene}}" and asset "{{asset}}", {{place}}, so the distribution readme carries the package {{id}}.',
       wrongRegion: 'Region "{{id}}" must name scene "{{scene}}" and asset "{{asset}}".',
       misplacedRegion: 'Region "{{id}}" belongs {{place}}.',
+      missingBanner:
+        'The distribution readme opens with the package banner in place of this title, and no portable {{asset}}.gif, {{asset}}.webp or {{asset}}.png is recorded under {{assetRoot}}/{{scene}}. Record it: npx nx media tool-media --scene={{scene}}',
+      bannerRegion:
+        'The build places the package banner in place of the title; remove this region, or the distribution readme shows the banner twice.',
     },
   },
 
@@ -159,6 +159,7 @@ const rule: Rule.RuleModule = {
     }
     const assetRoot = options.assetRoot ?? DEFAULT_ASSET_ROOT
     const mediaRoot = join(workspaceRoot, assetRoot)
+    const banner = packageBanner(packageName, SCOPE)
     const shortName = packageName.startsWith(SCOPE) ? packageName.slice(SCOPE.length) : packageName
     const origins: LinkOrigins = {
       siteUrl: (options.siteUrl ?? DEFAULT_SITE_URL).replace(/\/$/, ''),
@@ -179,11 +180,20 @@ const rule: Rule.RuleModule = {
           })
         }
 
+        if (!hasPortableAsset(join(mediaRoot, banner.scene), banner.asset)) {
+          const title = lines.findIndex((line) => line.startsWith('# '))
+          report('missingBanner', title === -1 ? 0 : title, { scene: banner.scene, asset: banner.asset, assetRoot })
+        }
+
         const { directives, problems } = parseMarkers(text)
         for (const problem of problems) {
           report('unreadable', problem.line, { reason: problem.reason })
         }
         for (const directive of directives) {
+          if (directive.id === BANNER_ID) {
+            report('bannerRegion', directive.startLine, {})
+            continue
+          }
           const sceneDir = join(mediaRoot, directive.scene)
           if (!isDirectory(sceneDir)) {
             report('missingScene', directive.startLine, { scene: directive.scene, assetRoot })
@@ -212,7 +222,7 @@ const rule: Rule.RuleModule = {
           if (found.scene !== scene || found.asset !== required.asset) {
             report('wrongRegion', found.startLine, { id: required.id, scene, asset: required.asset })
           }
-          if (!isWellPlaced(lines, required.id, found.startLine)) {
+          if (!isWellPlaced(lines, found.startLine)) {
             report('misplacedRegion', found.startLine, { id: required.id, place: required.place })
           }
         }
