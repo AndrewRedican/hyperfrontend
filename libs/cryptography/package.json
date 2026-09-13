@@ -1,7 +1,7 @@
 {
   "name": "@hyperfrontend/cryptography",
   "version": "1.1.0",
-  "description": "Cryptography utilities for browser and Node.js environments.",
+  "description": "Production-grade cryptographic primitives with isomorphic APIs for browser and Node.js environments.",
   "license": "MIT",
   "sideEffects": false,
   "engines": {
