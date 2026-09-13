@@ -41,9 +41,6 @@
     <img width="640" height="360" src="https://www.hyperfrontend.dev/media/random-generator-shapes/hero.gif" alt="Two boards side by side under a createRandomGenerator(2026) chip; grains fall one at a time from the top into columns, and as hundreds land the uniform board settles into a flat plateau while the gaussian board rises into a bell">
   </a>
 </p>
-<p align="center">
-  <sub>Real draws from one seed, both boards to one scale, so what differs is the shape and not the sample size. The bell is the draw Math.random cannot give you.</sub>
-</p>
 
 Statistical random distributions and UUID generation for simulations, testing, and procedural content.
 
