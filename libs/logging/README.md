@@ -41,9 +41,6 @@
     <img width="640" height="360" src="https://www.hyperfrontend.dev/media/logging-levels/hero.gif" alt="A terminal window with a level scale across the top, error to debug, and a knob that slides between the stops; beneath it the same five channel-prefixed lines stay in place, and as the knob moves the lines below the chosen level ghost out and return, with a setLogLevel chip naming the level">
   </a>
 </p>
-<p align="center">
-  <sub>The emitting code is written once; the level is the filter, and how much of it reaches the terminal is decided at run time.</sub>
-</p>
 
 Structured logging with configurable severity levels and error-resilient execution.
 
