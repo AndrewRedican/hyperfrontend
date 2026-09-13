@@ -66,7 +66,7 @@ interface Outcome {
 /**
  * Runs the rule over the package readme of a workspace.
  *
- * @param workspace - The workspace.
+ * @param workspace - Where the package and its readme were laid out.
  * @param file - The readme's path within it.
  * @returns Every report, with its fix applied to the source.
  */

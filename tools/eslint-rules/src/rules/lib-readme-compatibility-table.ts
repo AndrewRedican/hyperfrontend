@@ -26,13 +26,16 @@ export const ENVIRONMENT_ROWS: ReadonlyArray<readonly [key: string, label: strin
 /** The glyph each declared support level renders as; an undeclared level renders as unsupported. */
 const GLYPHS: Readonly<Record<string, string>> = { full: '✅', partial: '⚠️', none: '❌' }
 
+/** The compatibility a project declares, as far as this rule reads it. */
+interface CompatibilityDeclaration {
+  /** Support level by runtime. */
+  environments?: Record<string, unknown>
+}
+
 /** The `metadata` block of a project configuration, as far as this rule reads it. */
 interface ProjectMetadata {
   /** Where the package runs. */
-  compatibility?: {
-    /** Support level by runtime. */
-    environments?: Record<string, unknown>
-  }
+  compatibility?: CompatibilityDeclaration
 }
 
 /**
