@@ -33,13 +33,16 @@
   <img src="https://img.shields.io/badge/tree%20shakeable-%E2%9C%93-success?style=flat-square" alt="Tree Shakeable">
 </p>
 
+<!-- hf:media start id="banner" scene="banner-builder" asset="banner" alt="@hyperfrontend/builder" -->
+<!-- hf:media end -->
+
 <p align="center">
   <a href="https://www.hyperfrontend.dev/docs/libraries/builder/">
-    <img width="640" src="https://www.hyperfrontend.dev/media/builder-manifest/hero.gif" alt="A library's source folder tree being typed out on the left while the generated package.json appears on the right: first the exports map, then main, module, types and the files allowlist">
+    <img width="640" height="360" src="https://www.hyperfrontend.dev/media/builder-manifest/hero.gif" alt="Two source entries feed the builder one at a time; each fans out into its ESM, CJS and declaration files, the root entry also into the minified IIFE and UMD bundles; then a package.json sheet rises and wires connect every file that landed to the exports, main, types and files keys it produced">
   </a>
 </p>
 <p align="center">
-  <sub>The division of labour. You keep the source tree; every build rewrites the manifest from what actually landed in the output directory.</sub>
+  <sub>Every entry bundled on its own, and then the manifest: you keep the source tree, and every build rewrites package.json from what actually landed in the output directory.</sub>
 </p>
 
 Composable, vendor-neutral build toolkit for TypeScript libraries, JS bins, and Node SEA native binaries.
@@ -170,14 +173,17 @@ Every config field, phase signature and result type is in the [API reference](ht
 ## Compatibility
 
 [`@hyperfrontend/builder`](https://www.hyperfrontend.dev/docs/libraries/builder/) is a build-time tool that runs on Node.js. It is not
-intended for browser, Web Worker, or CDN runtimes.
+intended for browser, Web Worker, or CDN runtimes, and it needs npm 8 or later.
 
-| Environment       | Supported |
-| ----------------- | --------- |
-| Node.js >= 18     | ✅        |
-| npm >= 8          | ✅        |
-| TypeScript >= 5.9 | ✅        |
-| Browser           | ❌        |
+<!-- hf:media start id="runtimes" scene="runtimes-builder" asset="runtimes" docs="#compatibility" alt="Runs in Node.js 18 or later; not a target for evergreen browsers and web workers" -->
+
+| Environment     | Supported |
+| --------------- | :-------: |
+| Node.js >= 18   |    ✅     |
+| Modern Browsers |    ❌     |
+| Web Workers     |    ❌     |
+
+<!-- hf:media end -->
 
 ### Output Formats
 
