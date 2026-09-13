@@ -1,5 +1,7 @@
 import type { RandomSource } from './types'
+import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { random } from '@hyperfrontend/immutable-api-utils/built-in-copy/math'
+import { isFinite } from '@hyperfrontend/immutable-api-utils/built-in-copy/number'
 
 /**
  * Generates a random number uniformly distributed within a specified range.
@@ -8,6 +10,7 @@ import { random } from '@hyperfrontend/immutable-api-utils/built-in-copy/math'
  * @param max - The maximum value of the range (exclusive)
  * @param source - Where the unit draw comes from; defaults to the built-in `Math.random`
  * @returns A random number between min (inclusive) and max (exclusive)
+ * @throws {Error} When `min` or `max` is `NaN` or infinite.
  *
  * @example Generating a random price within a budget range
  * ```typescript
@@ -30,5 +33,9 @@ import { random } from '@hyperfrontend/immutable-api-utils/built-in-copy/math'
  * ```
  */
 export function randomUniform(min: number, max: number, source: RandomSource = random): number {
+  if (!isFinite(min) || !isFinite(max)) {
+    throw createError('Min and max must be finite numbers.')
+  }
+
   return source() * (max - min) + min
 }

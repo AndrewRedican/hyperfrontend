@@ -34,4 +34,12 @@ describe('randomUniform', () => {
   it('draws from the given source instead of the default', () => {
     expect(randomUniform(2, 8, () => 0.5)).toBe(5)
   })
+
+  it('rejects a NaN min', () => {
+    expect(() => randomUniform(Number.NaN, 8)).toThrow('Min and max must be finite numbers.')
+  })
+
+  it('rejects an infinite max', () => {
+    expect(() => randomUniform(2, Number.POSITIVE_INFINITY)).toThrow('Min and max must be finite numbers.')
+  })
 })

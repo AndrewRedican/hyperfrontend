@@ -76,4 +76,32 @@ describe('randomPowerLaw', () => {
   it('draws the log-uniform fallback from the given source', () => {
     expect(randomPowerLaw(1, 1, 1000000, () => 0.5)).toBeCloseTo(1000, 6)
   })
+
+  it('rejects a NaN alpha', () => {
+    expect(() => randomPowerLaw(Number.NaN, 1, 10)).toThrow('Alpha, min and max must be finite numbers.')
+  })
+
+  it('rejects an infinite min', () => {
+    expect(() => randomPowerLaw(2, Number.POSITIVE_INFINITY, 10)).toThrow('Alpha, min and max must be finite numbers.')
+  })
+
+  it('rejects a NaN max', () => {
+    expect(() => randomPowerLaw(2, 1, Number.NaN)).toThrow('Alpha, min and max must be finite numbers.')
+  })
+
+  it('rejects a min of zero', () => {
+    expect(() => randomPowerLaw(2, 0, 100)).toThrow('Min and max must be greater than zero.')
+  })
+
+  it('rejects a negative min', () => {
+    expect(() => randomPowerLaw(2, -1, 100)).toThrow('Min and max must be greater than zero.')
+  })
+
+  it('rejects a max of zero', () => {
+    expect(() => randomPowerLaw(2, 1, 0)).toThrow('Min and max must be greater than zero.')
+  })
+
+  it('rejects a negative max', () => {
+    expect(() => randomPowerLaw(2.5, 1, -5)).toThrow('Min and max must be greater than zero.')
+  })
 })

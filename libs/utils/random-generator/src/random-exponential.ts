@@ -1,12 +1,15 @@
 import type { RandomSource } from './types'
+import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { log, random } from '@hyperfrontend/immutable-api-utils/built-in-copy/math'
+import { isFinite } from '@hyperfrontend/immutable-api-utils/built-in-copy/number'
 
 /**
  * Generates a random number following an exponential distribution.
  *
- * @param lambda - The rate parameter (λ) controlling the distribution shape
+ * @param lambda - The rate parameter (λ) controlling the distribution shape; must be a positive finite number
  * @param source - Where the unit draw comes from; defaults to the built-in `Math.random`
  * @returns A random number from the exponential distribution
+ * @throws {Error} When `lambda` is zero, negative, `NaN` or infinite.
  *
  * @example Modeling time between events (e.g., customer arrivals)
  * ```typescript
@@ -25,6 +28,12 @@ import { log, random } from '@hyperfrontend/immutable-api-utils/built-in-copy/ma
  * ```
  */
 export function randomExponential(lambda: number, source: RandomSource = random): number {
+  if (!isFinite(lambda) || lambda <= 0) {
+    throw createError('Lambda must be a positive finite number.')
+  }
+
   const u = source()
-  return -log(1 - u) / lambda
+  const value = -log(1 - u) / lambda
+  // why: a unit draw of exactly 0 makes the quotient -0, and the distribution promises a non-negative value.
+  return value === 0 ? 0 : value
 }
