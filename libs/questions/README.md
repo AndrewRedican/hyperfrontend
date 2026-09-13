@@ -33,9 +33,12 @@
   <img src="https://img.shields.io/badge/tree%20shakeable-%E2%9C%93-success?style=flat-square" alt="Tree Shakeable">
 </p>
 
+<!-- hf:media start id="banner" scene="banner-questions" asset="banner" alt="@hyperfrontend/questions" -->
+<!-- hf:media end -->
+
 <p align="center">
   <a href="https://www.hyperfrontend.dev/docs/libraries/questions/">
-    <img width="640" src="https://www.hyperfrontend.dev/media/questions-prompt/hero.gif" alt="A multiselect prompt being programmed on the left and answered on the right, ending in a submitted result object">
+    <img width="640" height="360" src="https://www.hyperfrontend.dev/media/questions-prompt/hero.gif" alt="A multiselect prompt being programmed on the left and answered on the right, ending in a submitted result object">
   </a>
 </p>
 <p align="center">
@@ -153,16 +156,17 @@ Every config, option and outcome type is in the [API reference](https://www.hype
 
 ## Compatibility
 
-| Environment                    | Supported |
-| ------------------------------ | --------- |
-| Node.js >= 18                  | ✅        |
-| TTY Terminal                   | ✅        |
-| Bracketed paste (TTY)          | ✅        |
-| Resize redraw (SIGWINCH)       | ✅        |
-| Non-TTY streams (tests, pipes) | ✅        |
-| Tree Shakeable                 | ✅        |
+<!-- hf:media start id="runtimes" scene="runtimes-questions" asset="runtimes" docs="#compatibility" alt="Runs in Node.js 18 or later; not a target for evergreen browsers and web workers" -->
 
-On TTY inputs a prompt session enables bracketed paste mode (`ESC[?2004h`) and restores it on close; terminals without bracketed paste still paste correctly because multi-character input chunks are treated as pastes. Single-line prompts collapse pasted newlines into spaces, so pasting can never submit a value.
+| Environment     | Supported |
+| --------------- | :-------: |
+| Node.js >= 18   |    ✅     |
+| Modern Browsers |    ❌     |
+| Web Workers     |    ❌     |
+
+<!-- hf:media end -->
+
+Prompts run on a TTY, where the session redraws when the terminal is resized, and on non-TTY streams such as tests and pipes. On TTY inputs a prompt session enables bracketed paste mode (`ESC[?2004h`) and restores it on close; terminals without bracketed paste still paste correctly because multi-character input chunks are treated as pastes. Single-line prompts collapse pasted newlines into spaces, so pasting can never submit a value.
 
 ### Output Formats
 
