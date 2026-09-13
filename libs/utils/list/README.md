@@ -41,9 +41,6 @@
     <img width="640" height="360" src="https://www.hyperfrontend.dev/media/list-utils-order/hero.gif" alt="A tube open at both ends and a cup open only at the top, with the same three numbered discs dropped into each; three pulls take the discs out, the tube from its bottom and the cup from its top, and the exit rows read 1 2 3 under the tube and 3 2 1 beside the cup">
   </a>
 </p>
-<p align="center">
-  <sub>The same three objects into both list kinds. Only the order they come back out differs; and because entries are held by reference, an object that merely looks like a member never was one.</sub>
-</p>
 
 Purpose-built collection utilities for queue management, filtering, and iteration patterns.
 
