@@ -1,7 +1,7 @@
 {
   "name": "@hyperfrontend/data-utils",
   "version": "1.0.0",
-  "description": "Data manipulation and transformation utilities.",
+  "description": "Comprehensive data structure manipulation with circular reference handling and custom class support.",
   "license": "MIT",
   "sideEffects": false,
   "engines": {
