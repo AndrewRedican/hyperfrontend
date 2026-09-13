@@ -41,9 +41,6 @@
     <img width="640" height="360" src="https://www.hyperfrontend.dev/media/immutable-api-capture/hero.gif" alt="A shelf of built-ins, Object.keys and JSON.parse, from which copies drop into a sealed vault at start-up; a third-party analytics.js card slides in and rewrites both shelf tiles; two questions are then asked of the shelf and of the vault, the shelf answering wrongly in red and the vault correctly in green">
   </a>
 </p>
-<p align="center">
-  <sub>The copies are taken before the intruder arrives, and that is the whole of what they promise: imported after it, they would have captured the lie.</sub>
-</p>
 
 Decorators and utilities for creating immutable, tamper-proof object APIs with built-in prototype pollution defense.
 
