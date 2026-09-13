@@ -33,9 +33,6 @@
   <img src="https://img.shields.io/badge/tree%20shakeable-%E2%9C%93-success?style=flat-square" alt="Tree Shakeable">
 </p>
 
-<!-- hf:media start id="banner" scene="banner-data-utils" asset="banner" alt="@hyperfrontend/data-utils" -->
-<!-- hf:media end -->
-
 <p align="center">
   <a href="https://www.hyperfrontend.dev/docs/libraries/utils/data/">
     <img width="640" height="360" src="https://www.hyperfrontend.dev/media/data-utils-circular/hero.gif" alt="Four objects drawn in a row, state, user, cart and line, joined by their forward references, with three back references drawn as arcs; a cursor walks the graph depth first, and each arc that lands on an object already visited lights up and is numbered, until all three are lit and the count beside locateCircularReference reads three">
