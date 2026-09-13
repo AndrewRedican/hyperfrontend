@@ -281,6 +281,9 @@ module.exports = [
     language: 'markdown/gfm',
     rules: {
       'workspace/lib-readme-structure': 'error',
+      // why: both decide for themselves whether a file is a publishable package's readme, so they can be switched on for every README and still touch only package documentation
+      'workspace/lib-readme-media-regions': 'error',
+      'workspace/lib-readme-compatibility-table': 'error',
       'workspace/readme-paragraph-length': 'error',
       'workspace/no-ascii-art-diagrams': 'error',
       'workspace/readme-media-asset': [
