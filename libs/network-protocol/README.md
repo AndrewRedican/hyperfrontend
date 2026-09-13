@@ -41,9 +41,6 @@
     <img width="640" height="360" src="https://www.hyperfrontend.dev/media/network-protocol-frame/hero.gif" alt="A page and a worker at the two ends of a pipe: a hello crosses each way and both ends light the same key; a message card is wrapped into a numbered sealed frame, carried through the pipe and unwrapped on the far side; a listener under the pipe copies the second frame and pushes it back in, and the receiver reads its number, refuses it and drops it into the onDrop tray marked replayed">
   </a>
 </p>
-<p align="center">
-  <sub>Your transport, the package's envelope. A hello keys both ends, every message travels sealed under a counter, and a captured frame pushed back in is refused by its number before any key is touched.</sub>
-</p>
 
 Production-grade network protocol for secure, real-time cross-window and cross-process communication with a session-keyed authenticated envelope, routing, and message queueing.
 
