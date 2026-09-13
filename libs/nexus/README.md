@@ -41,9 +41,6 @@
     <img width="640" height="360" src="https://www.hyperfrontend.dev/media/nexus-handshake/hero.gif" alt="Two broker cards, host-app and cart-app, each with a shaped slot cut into its edge for the message type it accepts; three pulses cross a dashed wire and it turns solid; a triangle token slides into the cart's triangle slot, a circle token into the host's circle slot, and a diamond token for PRICE_SYNC finds no slot on the host, stops at its edge and dissolves">
   </a>
 </p>
-<p align="center">
-  <sub>The three handshake pulses in their real order, then the messages: a type the receiver accepts fits its slot, and the one outside the contract reaches the boundary and goes no further, with no handler run.</sub>
-</p>
 
 Secure cross-window communication library for micro-frontends with contract-validated messaging, origin-based security policies, and connection lifecycle management.
 
