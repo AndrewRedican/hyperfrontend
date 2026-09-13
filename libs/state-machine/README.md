@@ -41,9 +41,6 @@
     <img width="640" height="360" src="https://www.hyperfrontend.dev/media/state-machine-derived/hero.gif" alt="Four base lamps on the left, inProgress, success, fail and halt, and seven derived names on the right joined to them by faint wires; five action chips fire in turn, start, fail, start, success, start, each dropping a token that flips lamps, and the wires from the lit lamps light the names that hold: inProgress, then failed, then retrying because fail stayed lit, then successful, then restarting because success stayed lit">
   </a>
 </p>
-<p align="center">
-  <sub>The same start() dispatched three times. START keeps the previous outcome, so the second call lands in retrying and the third in restarting.</sub>
-</p>
 
 Lightweight, functional state management library with Redux-inspired actions/reducers, async operation orchestration, and lifecycle-aware component abstractions for predictable application state.
 
