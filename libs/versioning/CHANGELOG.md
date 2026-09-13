@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.9.0](https://github.com/AndrewRedican/hyperfrontend/compare/a638efc58ce78e9a84dd21992e7f5c675bd5e7f6...995b8c942441adf7111dd631b0dedcd3b7040627) - 2026-09-13
+
+### Features
+
+- list every commit type in a forced release's changelog
+
 ## [0.8.0](https://github.com/AndrewRedican/hyperfrontend/compare/106ce4517092cdfa9f222b73d938d272c333d69b...9f04133dbc8059c2238bd36f0662fd734619bf75) - 2026-09-04
 
 ### Features
