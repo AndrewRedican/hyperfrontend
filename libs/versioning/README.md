@@ -39,9 +39,6 @@
     <img width="640" height="360" src="https://www.hyperfrontend.dev/media/versioning-cascade/hero.gif" alt="One commit header, feat(api)!: drop v1, typed at the top of a cascade; its parts fall into type, scope, breaking and subject tiles, feat and true converge into a major bump, the version 2.4.1 rolls to 3.0.0, and the changelog line assembles from the tiles, with the package function that performs each step named beside the row it produces">
   </a>
 </p>
-<p align="center">
-  <sub>Nobody picks the version here. The breaking marker in the header is what makes this release a major, and everything below the line falls out of it.</sub>
-</p>
 
 Versioning library with changelog parsing, conventional commits, and semver flow orchestration.
 
