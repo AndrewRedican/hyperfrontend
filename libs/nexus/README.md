@@ -33,13 +33,16 @@
   <img src="https://img.shields.io/badge/tree%20shakeable-%E2%9C%93-success?style=flat-square" alt="Tree Shakeable">
 </p>
 
+<!-- hf:media start id="banner" scene="banner-nexus" asset="banner" alt="@hyperfrontend/nexus" -->
+<!-- hf:media end -->
+
 <p align="center">
   <a href="https://www.hyperfrontend.dev/docs/libraries/nexus/">
-    <img width="640" src="https://www.hyperfrontend.dev/media/nexus-handshake/hero.gif" alt="Two panels, host-app on shop.example.com and cart-app on cart.example.com, trading labelled packets along a wire: the three handshake frames, then THEME_CHANGED and CART_UPDATED, then a PRICE_SYNC the host never accepted, which arrives and is dropped">
+    <img width="640" height="360" src="https://www.hyperfrontend.dev/media/nexus-handshake/hero.gif" alt="Two broker cards, host-app and cart-app, each with a shaped slot cut into its edge for the message type it accepts; three pulses cross a dashed wire and it turns solid; a triangle token slides into the cart's triangle slot, a circle token into the host's circle slot, and a diamond token for PRICE_SYNC finds no slot on the host, stops at its edge and dissolves">
   </a>
 </p>
 <p align="center">
-  <sub>The three handshake frames in their real order, then the first message that falls outside the contract: it crosses, it lands, and no handler runs.</sub>
+  <sub>The three handshake pulses in their real order, then the messages: a type the receiver accepts fits its slot, and the one outside the contract reaches the boundary and goes no further, with no handler run.</sub>
 </p>
 
 Secure cross-window communication library for micro-frontends with contract-validated messaging, origin-based security policies, and connection lifecycle management.
@@ -217,10 +220,15 @@ Every setting, event payload, deny reason and security type is in the [API refer
 
 ## Compatibility
 
-| Platform | Support |
-| -------- | :-----: |
-| Browser  |   ✅    |
-| Node.js  |   ✅    |
+<!-- hf:media start id="runtimes" scene="runtimes-nexus" asset="runtimes" docs="#compatibility" alt="Runs in Node.js 18 or later, evergreen browsers and web workers" -->
+
+| Environment     | Supported |
+| --------------- | :-------: |
+| Node.js >= 18   |    ✅     |
+| Modern Browsers |    ✅     |
+| Web Workers     |    ✅     |
+
+<!-- hf:media end -->
 
 ### Output Formats
 
