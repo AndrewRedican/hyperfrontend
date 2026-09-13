@@ -33,13 +33,16 @@
   <img src="https://img.shields.io/badge/tree%20shakeable-%E2%9C%93-success?style=flat-square" alt="Tree Shakeable">
 </p>
 
+<!-- hf:media start id="banner" scene="banner-random-generator-utils" asset="banner" alt="@hyperfrontend/random-generator-utils" -->
+<!-- hf:media end -->
+
 <p align="center">
   <a href="https://www.hyperfrontend.dev/docs/libraries/utils/random-generator/">
-    <img width="640" src="https://www.hyperfrontend.dev/media/random-generator-shapes/hero.gif" alt="Two histograms of four thousand samples filling side by side: uniform(0, 100) settles into a flat row of even blue bars, gaussian(0, 100) into a tall green bell">
+    <img width="640" height="360" src="https://www.hyperfrontend.dev/media/random-generator-shapes/hero.gif" alt="Two boards side by side under a createRandomGenerator(2026) chip; grains fall one at a time from the top into columns, and as hundreds land the uniform board settles into a flat plateau while the gaussian board rises into a bell">
   </a>
 </p>
 <p align="center">
-  <sub>Real bin counts, both panels drawn to one scale, so what differs is the shape and not the sample size. The bell is the draw Math.random cannot give you.</sub>
+  <sub>Real draws from one seed, both boards to one scale, so what differs is the shape and not the sample size. The bell is the draw Math.random cannot give you.</sub>
 </p>
 
 Statistical random distributions and UUID generation for simulations, testing, and procedural content.
@@ -202,12 +205,15 @@ const terrain = {
 
 ## Compatibility
 
-| Platform                      | Support |
-| ----------------------------- | :-----: |
-| Browser                       |   ✅    |
-| Node.js                       |   ✅    |
-| Web Workers                   |   ✅    |
-| Deno, Bun, Cloudflare Workers |   ✅    |
+<!-- hf:media start id="runtimes" scene="runtimes-random-generator-utils" asset="runtimes" docs="#compatibility" alt="Runs in Node.js 18 or later, evergreen browsers and web workers" -->
+
+| Environment     | Supported |
+| --------------- | :-------: |
+| Node.js >= 18   |    ✅     |
+| Modern Browsers |    ✅     |
+| Web Workers     |    ✅     |
+
+<!-- hf:media end -->
 
 ### Output Formats
 
