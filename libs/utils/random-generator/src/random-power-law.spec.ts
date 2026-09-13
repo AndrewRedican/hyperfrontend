@@ -104,4 +104,12 @@ describe('randomPowerLaw', () => {
   it('rejects a negative max', () => {
     expect(() => randomPowerLaw(2.5, 1, -5)).toThrow('Min and max must be greater than zero.')
   })
+
+  it('rejects a min above max', () => {
+    expect(() => randomPowerLaw(2, 100, 1)).toThrow('Min value should be less than or equal to max value.')
+  })
+
+  it('returns the shared bound when min equals max', () => {
+    expect(randomPowerLaw(2, 5, 5, () => 0.3)).toBeCloseTo(5, 10)
+  })
 })

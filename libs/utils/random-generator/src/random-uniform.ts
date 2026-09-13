@@ -10,7 +10,7 @@ import { isFinite } from '@hyperfrontend/immutable-api-utils/built-in-copy/numbe
  * @param max - The maximum value of the range (exclusive)
  * @param source - Where the unit draw comes from; defaults to the built-in `Math.random`
  * @returns A random number between min (inclusive) and max (exclusive)
- * @throws {Error} When `min` or `max` is `NaN` or infinite.
+ * @throws {Error} When `min` or `max` is `NaN` or infinite, or when `min` is greater than `max`.
  *
  * @example Generating a random price within a budget range
  * ```typescript
@@ -35,6 +35,10 @@ import { isFinite } from '@hyperfrontend/immutable-api-utils/built-in-copy/numbe
 export function randomUniform(min: number, max: number, source: RandomSource = random): number {
   if (!isFinite(min) || !isFinite(max)) {
     throw createError('Min and max must be finite numbers.')
+  }
+
+  if (min > max) {
+    throw createError('Min value should be less than or equal to max value.')
   }
 
   return source() * (max - min) + min

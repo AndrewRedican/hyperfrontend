@@ -11,7 +11,7 @@ import { isFinite } from '@hyperfrontend/immutable-api-utils/built-in-copy/numbe
  * @param max - The maximum value of the range; must be a finite number greater than zero
  * @param source - Where the unit draw comes from; defaults to the built-in `Math.random`
  * @returns A random number from the power law distribution bounded by min and max
- * @throws {Error} When `alpha`, `min` or `max` is `NaN` or infinite, or when `min` or `max` is not greater than zero.
+ * @throws {Error} When `alpha`, `min` or `max` is `NaN` or infinite, or when `min` or `max` is not greater than zero, or when `min` is greater than `max`.
  *
  * @example Simulating social network follower counts (few have many, many have few)
  * ```typescript
@@ -41,6 +41,10 @@ export function randomPowerLaw(alpha: number, min: number, max: number, source: 
   // why: the inverse CDF takes arbitrary real powers of both bounds (and divides by min at alpha 1), so a bound at or below zero yields NaN or a draw outside the range.
   if (min <= 0 || max <= 0) {
     throw createError('Min and max must be greater than zero.')
+  }
+
+  if (min > max) {
+    throw createError('Min value should be less than or equal to max value.')
   }
 
   const u = source()
