@@ -33,9 +33,6 @@
   <img src="https://img.shields.io/badge/tree%20shakeable-%E2%9C%93-success?style=flat-square" alt="Tree Shakeable">
 </p>
 
-<!-- hf:media start id="banner" scene="banner-immutable-api-utils" asset="banner" alt="@hyperfrontend/immutable-api-utils" -->
-<!-- hf:media end -->
-
 <p align="center">
   <a href="https://www.hyperfrontend.dev/docs/libraries/utils/immutable-api/">
     <img width="640" height="360" src="https://www.hyperfrontend.dev/media/immutable-api-capture/hero.gif" alt="A shelf of built-ins, Object.keys and JSON.parse, from which copies drop into a sealed vault at start-up; a third-party analytics.js card slides in and rewrites both shelf tiles; two questions are then asked of the shelf and of the vault, the shelf answering wrongly in red and the vault correctly in green">
