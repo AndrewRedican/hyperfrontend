@@ -38,17 +38,22 @@ export async function getAffectedLibraries(
     }
   }
 
-  const librariesWithVersionTarget = from(affectedProjects).filter((projectName) => {
-    const project = projectGraph.nodes[projectName]
-    if (!project) {
-      return false
-    }
+  return from(affectedProjects)
+    .filter((projectName) => hasVersionTarget(projectGraph, projectName))
+    .sort()
+}
 
-    const targets = project.data?.targets
-    return targets && 'version' in targets
-  })
-
-  return librariesWithVersionTarget.sort()
+/**
+ * Whether a project can be versioned: it exists in the graph and declares a
+ * `version` target.
+ *
+ * @param projectGraph - Nx project graph
+ * @param projectName - The project's name
+ * @returns True when the project declares a version target
+ */
+export function hasVersionTarget(projectGraph: ProjectGraph, projectName: string): boolean {
+  const targets = projectGraph.nodes[projectName]?.data?.targets
+  return targets !== undefined && 'version' in targets
 }
 
 /**

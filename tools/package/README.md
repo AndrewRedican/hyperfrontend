@@ -58,7 +58,7 @@ Idempotent version executor using `@hyperfrontend/versioning` - a zero-dependenc
 - **npm as source of truth** — uses npm registry to determine current version, not git tags
 - **Idempotency** — skips if version is already published to npm
 - **Recursion prevention** — skips if HEAD is a version commit for this project
-- **Documentation support** — `docs` commits trigger MINOR version bumps
+- **Documentation stays out of the bump**: `docs`, `chore` and `build` commits never release on their own; a forced bump lists them
 - **Dependent updates** — automatically updates version references in dependent packages
 
 **Full documentation:** [src/executors/version/README.md](./src/executors/version/README.md) | [Architecture](./src/executors/version/ARCHITECTURE.md)
@@ -74,12 +74,14 @@ Batch versioning executor for all affected libraries. This is the recommended ap
 
 **Options:**
 
-| Option      | Description                         | Default       |
-| ----------- | ----------------------------------- | ------------- |
-| `--base`    | Base git ref for affected detection | `origin/main` |
-| `--head`    | Head git ref for affected detection | `HEAD`        |
-| `--dryRun`  | Preview without making changes      | `false`       |
-| `--verbose` | Enable verbose logging              | `false`       |
+| Option        | Description                                                                       | Default       |
+| ------------- | --------------------------------------------------------------------------------- | ------------- |
+| `--base`      | Base git ref for affected detection                                               | `origin/main` |
+| `--head`      | Head git ref for affected detection                                               | `HEAD`        |
+| `--dryRun`    | Preview without making changes                                                    | `false`       |
+| `--verbose`   | Enable verbose logging                                                            | `false`       |
+| `--releaseAs` | Force `major`, `minor` or `patch` on the libraries named by `--libraries`         | -             |
+| `--libraries` | Project names to version instead of the affected set; required with `--releaseAs` | -             |
 
 **Usage:**
 
@@ -89,7 +91,13 @@ npx nx version-batch --dryRun
 
 # Run batch versioning (typically done by lefthook)
 npx nx version-batch
+
+# Release a change to the package artifact that no commit type would release,
+# such as a readme: a forced patch, calculated from each published version
+npx nx version:all --releaseAs=patch --libraries=lib-logging,lib-nexus
 ```
+
+A forced bump is for a change that lives in the package artifact rather than its code. The version identifies the artifact, and the readme is part of it, but a `docs` commit never bumps on its own; naming the libraries and the bump is what says the change is worth shipping. The changelog entry then lists every commit attributed to the package since its last release, `docs` and `chore` included, so it says what changed rather than that nothing did.
 
 ### publish
 

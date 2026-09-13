@@ -46,4 +46,12 @@ export interface VersionBatchExecutorSchema {
   scopeFiltering?: FlowConfig['scopeFiltering']
   /** Upper bound on the commit window the flow analyzes for bumps and changelogs. */
   maxCommitFallback?: FlowConfig['maxCommitFallback']
+  /**
+   * Force this bump on the libraries named by `libraries`, calculated from each
+   * one's published version, for a release whose change is in the package
+   * artifact rather than its code.
+   */
+  releaseAs?: FlowConfig['releaseAs']
+  /** Project names to version instead of the affected set. Required with `releaseAs`, and only meaningful with it. */
+  libraries?: string[]
 }

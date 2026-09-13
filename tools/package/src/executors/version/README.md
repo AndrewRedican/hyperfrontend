@@ -32,6 +32,10 @@ npx nx version:all --dryRun
 
 # Run batch versioning (typically done by lefthook)
 npx nx version:all
+
+# Force a patch on named libraries, for a change to the package artifact
+# (a readme, say) that no commit type would release on its own
+npx nx version:all --releaseAs=patch --libraries=lib-logging,lib-nexus
 ```
 
 ## Options
