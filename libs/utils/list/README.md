@@ -33,13 +33,16 @@
   <img src="https://img.shields.io/badge/tree%20shakeable-%E2%9C%93-success?style=flat-square" alt="Tree Shakeable">
 </p>
 
+<!-- hf:media start id="banner" scene="banner-list-utils" asset="banner" alt="@hyperfrontend/list-utils" -->
+<!-- hf:media end -->
+
 <p align="center">
   <a href="https://www.hyperfrontend.dev/docs/libraries/utils/list/">
-    <img width="640" src="https://www.hyperfrontend.dev/media/list-utils-order/hero.gif" alt="Two side-by-side code panels type the same three pushes into a FIFO list and a LIFO list, then drain them: the left panel returns id 1, 2, 3 and the right returns 3, 2, 1, and both answer false when has() is called with a freshly written identical object">
+    <img width="640" height="360" src="https://www.hyperfrontend.dev/media/list-utils-order/hero.gif" alt="A tube open at both ends and a cup open only at the top, with the same three numbered discs dropped into each; three pulls take the discs out, the tube from its bottom and the cup from its top, and the exit rows read 1 2 3 under the tube and 3 2 1 beside the cup">
   </a>
 </p>
 <p align="center">
-  <sub>The same three objects into both list kinds. Only the order they come back out differs, and an object that merely looks like a member never was one.</sub>
+  <sub>The same three objects into both list kinds. Only the order they come back out differs; and because entries are held by reference, an object that merely looks like a member never was one.</sub>
 </p>
 
 Purpose-built collection utilities for queue management, filtering, and iteration patterns.
@@ -125,12 +128,15 @@ Every signature, type parameter and thrown error is in the [API reference](https
 
 ## Compatibility
 
-| Platform                      | Support |
-| ----------------------------- | :-----: |
-| Browser                       |   ✅    |
-| Node.js                       |   ✅    |
-| Web Workers                   |   ✅    |
-| Deno, Bun, Cloudflare Workers |   ✅    |
+<!-- hf:media start id="runtimes" scene="runtimes-list-utils" asset="runtimes" docs="#compatibility" alt="Runs in Node.js 18 or later, evergreen browsers and web workers" -->
+
+| Environment     | Supported |
+| --------------- | :-------: |
+| Node.js >= 18   |    ✅     |
+| Modern Browsers |    ✅     |
+| Web Workers     |    ✅     |
+
+<!-- hf:media end -->
 
 ### Output Formats
 
