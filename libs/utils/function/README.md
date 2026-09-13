@@ -33,13 +33,16 @@
   <img src="https://img.shields.io/badge/tree%20shakeable-%E2%9C%93-success?style=flat-square" alt="Tree Shakeable">
 </p>
 
+<!-- hf:media start id="banner" scene="banner-function-utils" asset="banner" alt="@hyperfrontend/function-utils" -->
+<!-- hf:media end -->
+
 <p align="center">
   <a href="https://www.hyperfrontend.dev/docs/libraries/utils/function/">
-    <img width="640" src="https://www.hyperfrontend.dev/media/function-utils-lanes/hero.gif" alt="Four terminal columns typing the same three calls: the unwrapped one throws on the second and stops, run-once returns its cached 1 three times, the conditional one prints undefined for the shut gate, and the error-ignoring one prints undefined and carries on">
+    <img width="640" height="360" src="https://www.hyperfrontend.dev/media/function-utils-lanes/hero.gif" alt="Four vertical lanes, each with a send box in the middle, and the same three numbered tokens dropped into all four at once while an online switch in the margin goes off for the second call: the bare lane throws and dies, the run-once lane sends its first token through and bypasses the rest with the cached 1, the conditional lane stops the second token at a shut gate and passes the third, and the error-ignoring lane absorbs the throw behind a shield and carries on">
   </a>
 </p>
 <p align="center">
-  <sub>One function, three calls, four columns. The second call fails, and what each wrapper does about it is the whole library.</sub>
+  <sub>One function, three calls, three wrappers. The second call fails while the switch is off, and what each lane does about it is the whole library.</sub>
 </p>
 
 Higher-order function utilities for behavioral modification and composition.
@@ -232,12 +235,15 @@ const result: number = addOnce(2, 3) // Type safe ✓
 
 ## Compatibility
 
-| Platform                      | Support |
-| ----------------------------- | :-----: |
-| Browser                       |   ✅    |
-| Node.js                       |   ✅    |
-| Web Workers                   |   ✅    |
-| Deno, Bun, Cloudflare Workers |   ✅    |
+<!-- hf:media start id="runtimes" scene="runtimes-function-utils" asset="runtimes" docs="#compatibility" alt="Runs in Node.js 18 or later, evergreen browsers and web workers" -->
+
+| Environment     | Supported |
+| --------------- | :-------: |
+| Node.js >= 18   |    ✅     |
+| Modern Browsers |    ✅     |
+| Web Workers     |    ✅     |
+
+<!-- hf:media end -->
 
 ### Output Formats
 
