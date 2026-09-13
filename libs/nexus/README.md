@@ -33,9 +33,6 @@
   <img src="https://img.shields.io/badge/tree%20shakeable-%E2%9C%93-success?style=flat-square" alt="Tree Shakeable">
 </p>
 
-<!-- hf:media start id="banner" scene="banner-nexus" asset="banner" alt="@hyperfrontend/nexus" -->
-<!-- hf:media end -->
-
 <p align="center">
   <a href="https://www.hyperfrontend.dev/docs/libraries/nexus/">
     <img width="640" height="360" src="https://www.hyperfrontend.dev/media/nexus-handshake/hero.gif" alt="Two broker cards, host-app and cart-app, each with a shaped slot cut into its edge for the message type it accepts; three pulses cross a dashed wire and it turns solid; a triangle token slides into the cart's triangle slot, a circle token into the host's circle slot, and a diamond token for PRICE_SYNC finds no slot on the host, stops at its edge and dissolves">
