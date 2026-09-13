@@ -33,9 +33,12 @@
   <img src="https://img.shields.io/badge/tree%20shakeable-%E2%9C%93-success?style=flat-square" alt="Tree Shakeable">
 </p>
 
+<!-- hf:media start id="banner" scene="banner-ui-utils" asset="banner" alt="@hyperfrontend/ui-utils" -->
+<!-- hf:media end -->
+
 <p align="center">
   <a href="https://www.hyperfrontend.dev/docs/libraries/utils/ui/">
-    <img width="640" src="https://www.hyperfrontend.dev/media/ui-utils-teardown/hero.gif" alt="Two panels of counters over six mount and unmount cycles: on the left, red bars for style elements, ResizeObservers and listeners climb to six and stay there; on the right, the same three counters in green rise and drop back to zero every cycle">
+    <img width="640" height="360" src="https://www.hyperfrontend.dev/media/ui-utils-teardown/hero.gif" alt="Two panels of counters over six mount and unmount cycles: on the left, red bars for style elements, ResizeObservers and listeners climb to six and stay there; on the right, the same three counters in green rise and drop back to zero every cycle">
   </a>
 </p>
 <p align="center">
@@ -178,14 +181,17 @@ Every export, option and type is in the [API reference](https://www.hyperfronten
 
 ## Compatibility
 
-| Platform                      | Support |
-| ----------------------------- | :-----: |
-| Browser                       |   ✅    |
-| Node.js                       |   ⚠️¹   |
-| Web Workers                   |   ✅    |
-| Deno, Bun, Cloudflare Workers |   ✅    |
+<!-- hf:media start id="runtimes" scene="runtimes-ui-utils" asset="runtimes" docs="#compatibility" alt="Runs in evergreen browsers and web workers, with partial support in Node.js 18 or later" -->
 
-**Note:** ¹ Some DOM utilities require browser APIs; check individual exports.
+| Environment     | Supported |
+| --------------- | :-------: |
+| Node.js >= 18   |    ⚠️     |
+| Modern Browsers |    ✅     |
+| Web Workers     |    ✅     |
+
+<!-- hf:media end -->
+
+**Note:** Some DOM utilities require browser APIs; check individual exports.
 
 ### Output Formats
 
