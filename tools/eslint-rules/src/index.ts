@@ -19,6 +19,7 @@ import libE2eProjectRequired, { RULE_NAME as LIB_E2E_PROJECT_REQUIRED } from './
 import libEntryExportSpacing, { RULE_NAME as LIB_ENTRY_EXPORT_SPACING } from './rules/lib-entry-export-spacing'
 import libInlineCodeLinks, { RULE_NAME as LIB_INLINE_CODE_LINKS } from './rules/lib-inline-code-links'
 import libPkgBundleEntry, { RULE_NAME as LIB_PKG_BUNDLE_ENTRY } from './rules/lib-pkg-bundle-entry'
+import libPkgDescription, { RULE_NAME as LIB_PKG_DESCRIPTION } from './rules/lib-pkg-description'
 import libPkgExportsExist, { RULE_NAME as LIB_PKG_EXPORTS_EXIST } from './rules/lib-pkg-exports-exist'
 import libPkgExportsJsOnly, { RULE_NAME as LIB_PKG_EXPORTS_JS_ONLY } from './rules/lib-pkg-exports-js-only'
 import libPkgFields, { RULE_NAME as LIB_PKG_FIELDS } from './rules/lib-pkg-fields'
@@ -95,6 +96,7 @@ export const rules: ESLint.Plugin['rules'] = {
   [LIB_CI_WORKFLOWS]: libCiWorkflows as unknown as Rule.RuleModule,
   [LIB_E2E_PROJECT_REQUIRED]: libE2eProjectRequired as unknown as Rule.RuleModule,
   [LIB_PKG_BUNDLE_ENTRY]: libPkgBundleEntry as unknown as Rule.RuleModule,
+  [LIB_PKG_DESCRIPTION]: libPkgDescription as unknown as Rule.RuleModule,
   [LIB_PKG_EXPORTS_EXIST]: libPkgExportsExist as unknown as Rule.RuleModule,
   [LIB_PKG_EXPORTS_JS_ONLY]: libPkgExportsJsOnly as unknown as Rule.RuleModule,
   [LIB_PKG_FIELDS]: libPkgFields as unknown as Rule.RuleModule,
