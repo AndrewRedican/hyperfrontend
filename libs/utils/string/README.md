@@ -41,9 +41,6 @@
     <img width="640" height="360" src="https://www.hyperfrontend.dev/media/string-utils-base64/hero.gif" alt="The word café as four character tiles; each drops its UTF-8 bytes beneath it, é dropping two; the bytes regroup in threes and rise into the eight Base64 tiles Y2Fmw6k=; then btoa's reading collapses é into a single wrong byte and a struck-through wrong tail 6Q== appears under the correct row; finally fromBase64 folds everything back into café">
   </a>
 </p>
-<p align="center">
-  <sub>One value crossing representations: text, its UTF-8 bytes, Base64, and back. The struck-through tail is the dangerous one: btoa read é as one byte, nothing threw, so nothing was caught.</sub>
-</p>
 
 Isomorphic string encoding utilities with unified APIs for browser and Node.js environments.
 
