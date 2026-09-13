@@ -33,4 +33,22 @@ describe('normalizeToBaseTimeWindow', () => {
     expect(() => normalizeToBaseTimeWindow(time, 0)).toThrow()
     expect(() => normalizeToBaseTimeWindow(time, -30)).toThrow()
   })
+
+  it('rejects a NaN base time window', () => {
+    expect(() => normalizeToBaseTimeWindow(new Date('2024-01-17T00:30:00Z'), Number.NaN)).toThrow(
+      'Base time window must be a positive finite number'
+    )
+  })
+
+  it('rejects an infinite base time window', () => {
+    expect(() => normalizeToBaseTimeWindow(new Date('2024-01-17T00:30:00Z'), Number.POSITIVE_INFINITY)).toThrow(
+      'Base time window must be a positive finite number'
+    )
+  })
+
+  it('rejects a missing base time window', () => {
+    expect(() => normalizeToBaseTimeWindow(new Date('2024-01-17T00:30:00Z'), undefined as any)).toThrow(
+      'Base time window must be a positive finite number'
+    )
+  })
 })
