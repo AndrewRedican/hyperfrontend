@@ -1,7 +1,7 @@
 {
   "name": "@hyperfrontend/project-scope",
   "version": "0.2.5",
-  "description": "Codebase analysis, project topology detection, and virtual file system utilities for Node.js projects.",
+  "description": "Comprehensive project analysis, technology stack detection, and transactional virtual file system for Node.js tooling.",
   "dependencies": {
     "@hyperfrontend/immutable-api-utils": "1.0.0",
     "@hyperfrontend/logging": "1.0.0"
