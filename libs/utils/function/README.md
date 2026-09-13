@@ -33,9 +33,6 @@
   <img src="https://img.shields.io/badge/tree%20shakeable-%E2%9C%93-success?style=flat-square" alt="Tree Shakeable">
 </p>
 
-<!-- hf:media start id="banner" scene="banner-function-utils" asset="banner" alt="@hyperfrontend/function-utils" -->
-<!-- hf:media end -->
-
 <p align="center">
   <a href="https://www.hyperfrontend.dev/docs/libraries/utils/function/">
     <img width="640" height="360" src="https://www.hyperfrontend.dev/media/function-utils-lanes/hero.gif" alt="Four vertical lanes, each with a send box in the middle, and the same three numbered tokens dropped into all four at once while an online switch in the margin goes off for the second call: the bare lane throws and dies, the run-once lane sends its first token through and bypasses the rest with the cached 1, the conditional lane stops the second token at a shut gate and passes the third, and the error-ignoring lane absorbs the throw behind a shield and carries on">
