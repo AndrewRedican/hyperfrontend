@@ -31,9 +31,6 @@
   <img src="https://img.shields.io/badge/tree%20shakeable-%E2%9C%93-success?style=flat-square" alt="Tree Shakeable">
 </p>
 
-<!-- hf:media start id="banner" scene="banner-versioning" asset="banner" alt="@hyperfrontend/versioning" -->
-<!-- hf:media end -->
-
 <p align="center">
   <a href="https://www.hyperfrontend.dev/docs/libraries/versioning/">
     <img width="640" height="360" src="https://www.hyperfrontend.dev/media/versioning-cascade/hero.gif" alt="One commit header, feat(api)!: drop v1, typed at the top of a cascade; its parts fall into type, scope, breaking and subject tiles, feat and true converge into a major bump, the version 2.4.1 rolls to 3.0.0, and the changelog line assembles from the tiles, with the package function that performs each step named beside the row it produces">
