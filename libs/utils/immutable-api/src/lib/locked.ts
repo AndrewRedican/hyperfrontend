@@ -1,5 +1,5 @@
 import { createTypeError } from '../built-in-copy/error'
-import { hasOwn, defineProperty } from '../built-in-copy/object'
+import { createWeakMap } from '../built-in-copy/weak-map'
 
 /** Method decorator that locks the method preventing overwrites and ensuring correct this binding. */
 export type LockedMethod = (
@@ -38,21 +38,20 @@ export const locked = (): LockedMethod => {
   return function lockMethod(target, key, descriptor) {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
     const original = descriptor.value as Function
-    const BOUND = Symbol(`[[locked.bound:${String(key)}]]`)
+    // why: holding the bound method beside the instance rather than on it keeps a frozen, sealed or non-extensible instance callable.
+    const boundToInstance = createWeakMap<object, typeof original>()
     return {
       configurable: false,
       enumerable: false,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       get(this: any) {
-        if (!hasOwn(this, BOUND)) {
-          defineProperty(this, BOUND, {
-            value: original.bind(this),
-            writable: false,
-            configurable: false,
-            enumerable: false,
-          })
+        const cached = boundToInstance.get(this)
+        if (cached) {
+          return cached
         }
-        return this[BOUND]
+        const bound = original.bind(this)
+        boundToInstance.set(this, bound)
+        return bound
       },
       set() {
         throw createTypeError(`Cannot overwrite locked method ${String(key)}`)
