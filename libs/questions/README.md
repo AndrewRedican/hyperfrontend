@@ -41,9 +41,6 @@
     <img width="640" height="360" src="https://www.hyperfrontend.dev/media/questions-prompt/hero.gif" alt="A multiselect prompt being programmed on the left and answered on the right, ending in a submitted result object">
   </a>
 </p>
-<p align="center">
-  <sub>The call you write, and the session it produces. An answered prompt resolves; a cancelled one resolves too.</sub>
-</p>
 
 Terminal prompting library with composable, functional API for text, select, confirm, and multiselect prompts
 
