@@ -33,9 +33,6 @@
   <img src="https://img.shields.io/badge/tree%20shakeable-%E2%9C%93-success?style=flat-square" alt="Tree Shakeable">
 </p>
 
-<!-- hf:media start id="banner" scene="banner-list-utils" asset="banner" alt="@hyperfrontend/list-utils" -->
-<!-- hf:media end -->
-
 <p align="center">
   <a href="https://www.hyperfrontend.dev/docs/libraries/utils/list/">
     <img width="640" height="360" src="https://www.hyperfrontend.dev/media/list-utils-order/hero.gif" alt="A tube open at both ends and a cup open only at the top, with the same three numbered discs dropped into each; three pulls take the discs out, the tube from its bottom and the cup from its top, and the exit rows read 1 2 3 under the tube and 3 2 1 beside the cup">
