@@ -102,7 +102,8 @@ function extractLinks(content: string): ExtractedLink[] {
   const links: ExtractedLink[] = []
   const lines = content.split('\n')
 
-  const markdownLinkPattern = /\[([^\]]*)\]\(([^)]+)\)/g
+  // why: a destination may be wrapped in angle brackets so it can carry parentheses of its own, and the brackets are not part of the URL
+  const markdownLinkPattern = /\[([^\]]*)\]\((<[^>]*>|[^)]+)\)/g
 
   const htmlLinkPattern = /href=["']([^"']+)["']/g
 
@@ -110,9 +111,10 @@ function extractLinks(content: string): ExtractedLink[] {
     let match
 
     while ((match = markdownLinkPattern.exec(line)) !== null) {
+      const destination = match[2]
       links.push({
         text: match[1],
-        link: match[2],
+        link: destination.startsWith('<') ? destination.slice(1, -1) : destination,
         line: index + 1,
       })
     }
