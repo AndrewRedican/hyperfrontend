@@ -33,13 +33,16 @@
   <img src="https://img.shields.io/badge/tree%20shakeable-%E2%9C%93-success?style=flat-square" alt="Tree Shakeable">
 </p>
 
+<!-- hf:media start id="banner" scene="banner-data-utils" asset="banner" alt="@hyperfrontend/data-utils" -->
+<!-- hf:media end -->
+
 <p align="center">
   <a href="https://www.hyperfrontend.dev/docs/libraries/utils/data/">
-    <img width="640" src="https://www.hyperfrontend.dev/media/data-utils-circular/hero.gif" alt="A graph with three back references is typed into graph.mjs on the left; on the right a node session lets JSON.stringify throw on it and name a single cycle, then one locateCircularReference call prints all three as arrow paths">
+    <img width="640" height="360" src="https://www.hyperfrontend.dev/media/data-utils-circular/hero.gif" alt="Four objects drawn in a row, state, user, cart and line, joined by their forward references, with three back references drawn as arcs; a cursor walks the graph depth first, and each arc that lands on an object already visited lights up and is numbered, until all three are lit and the count beside locateCircularReference reads three">
   </a>
 </p>
 <p align="center">
-  <sub>The same graph, asked twice. The exception describes the first cycle its own walk reached; the call under it returns every one, with where each was found and what it points back to.</sub>
+  <sub>The graph, walked. Every arc that lands on an object the walk has already visited is a cycle, and the call returns all of them, with where each was found and what it points back to; the exception you would get from JSON.stringify describes only the first.</sub>
 </p>
 
 Comprehensive data structure manipulation with circular reference handling and custom class support.
@@ -283,12 +286,15 @@ Every option, callback signature and result type is in the [API reference](https
 
 ## Compatibility
 
-| Platform                      | Support |
-| ----------------------------- | :-----: |
-| Browser                       |   ✅    |
-| Node.js                       |   ✅    |
-| Web Workers                   |   ✅    |
-| Deno, Bun, Cloudflare Workers |   ✅    |
+<!-- hf:media start id="runtimes" scene="runtimes-data-utils" asset="runtimes" docs="#compatibility" alt="Runs in Node.js 18 or later, evergreen browsers and web workers" -->
+
+| Environment     | Supported |
+| --------------- | :-------: |
+| Node.js >= 18   |    ✅     |
+| Modern Browsers |    ✅     |
+| Web Workers     |    ✅     |
+
+<!-- hf:media end -->
 
 ### Output Formats
 
