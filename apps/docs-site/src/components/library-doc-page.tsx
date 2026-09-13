@@ -26,7 +26,14 @@ import { markdownToHtml } from '@/lib/markdown'
 import { extractMermaidBlocks } from '@/lib/mermaid-utils'
 import { npmPackageUrl } from '@/lib/npm-url'
 import { getPackageFacts } from '@/lib/package-facts'
-import { ARCHITECTURE_LEVEL, ARCHITECTURE_SLUG, CAPABILITIES_SLOT, KEY_FEATURES_SLOT, preparePackageReadme } from '@/lib/package-readme'
+import {
+  ARCHITECTURE_LEVEL,
+  ARCHITECTURE_SLUG,
+  CAPABILITIES_SLOT,
+  centreLede,
+  KEY_FEATURES_SLOT,
+  preparePackageReadme,
+} from '@/lib/package-readme'
 import { readSection, readSectionLink } from '@/lib/readme-sections'
 import { buildRelatedReading } from '@/lib/related-reading'
 import { extractMarkdownSections } from '@/lib/slug'
@@ -87,7 +94,8 @@ export async function LibraryDocPage({ title, packageName, slug, category, fallb
       architecture: architectureHtml !== null,
     })
 
-    const { processedContent, diagrams } = extractMermaidBlocks(body)
+    // why: the one sentence between the showcase and the first section is centred like the visuals around it, on the page alone; the README and the search index keep it as written
+    const { processedContent, diagrams } = extractMermaidBlocks(centreLede(body))
 
     const html = await markdownToHtml(processedContent)
 
