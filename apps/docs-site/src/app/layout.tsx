@@ -5,6 +5,7 @@ import { ConsentBanner } from '@/components/consent/consent-banner'
 import { JsonLd } from '@/components/json-ld'
 import { ExpandableImages } from '@/components/media/expandable-images'
 import { ThemeProvider } from '@/components/theme-provider'
+import { ThemeScript } from '@/components/theme-script'
 import '@/lib/dev-logger'
 import { DEFAULT_OG_IMAGE, DEFAULT_TWITTER_IMAGE } from '@/lib/metadata'
 import { SITE_URL } from '@/lib/site'
@@ -71,6 +72,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
   return (
     <html lang="en" suppressHydrationWarning>
       <body>
+        <ThemeScript />
         <a href="#main-content" className="skip-link">
           Skip to content
         </a>
