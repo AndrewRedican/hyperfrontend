@@ -64,11 +64,17 @@ function docsSlug(workspaceRoot: string, projectRoot: string): string {
   return `${parts.slice(1).join('/')}/`
 }
 
+/** The one field of a manifest the preparation reads. */
+interface ManifestName {
+  /** The registry name, as the manifest declares it, or whatever else was written there. */
+  name?: unknown
+}
+
 /**
  * The registry name of a package, from its manifest.
  *
  * @param projectRoot - Absolute path of the package's source directory.
- * @returns The name.
+ * @returns The registry name the manifest declares.
  * @throws {Error} When the package has no manifest or the manifest names nothing.
  */
 function packageNameOf(projectRoot: string): string {
@@ -76,12 +82,7 @@ function packageNameOf(projectRoot: string): string {
   if (!existsSync(path)) {
     throw createError(`${path} does not exist, so the package's banner cannot be named`)
   }
-  const manifest = parse(readFileSync(path, 'utf8')) as {
-    /**
-     *
-     */
-    name?: unknown
-  }
+  const manifest = parse(readFileSync(path, 'utf8')) as ManifestName
   if (typeof manifest.name !== 'string' || manifest.name === '') {
     throw createError(`${path} names no package, so its banner cannot be named`)
   }

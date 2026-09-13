@@ -294,8 +294,8 @@ export function transformReadme(source: string, options: TransformOptions): Tran
  * The markdown between a region's two markers.
  *
  * @param lines - The document's lines.
- * @param directive - The region.
- * @returns The region's own content.
+ * @param directive - The region whose markers bound the content.
+ * @returns The lines between the markers, joined.
  */
 function regionBody(lines: readonly string[], directive: MediaDirective): string {
   return lines.slice(directive.startLine + 1, directive.endLine).join('\n')
