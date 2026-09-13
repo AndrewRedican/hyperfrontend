@@ -48,7 +48,7 @@ export async function getAffectedLibraries(
  * `version` target.
  *
  * @param projectGraph - Nx project graph
- * @param projectName - The project's name
+ * @param projectName - Name of the project, as the graph keys it
  * @returns True when the project declares a version target
  */
 export function hasVersionTarget(projectGraph: ProjectGraph, projectName: string): boolean {

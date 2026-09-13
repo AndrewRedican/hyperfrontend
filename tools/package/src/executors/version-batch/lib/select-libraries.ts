@@ -1,8 +1,24 @@
 import { from } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 
+/** The libraries a batch versions. */
+export interface SelectedLibraries {
+  /** The verdict discriminator. */
+  ok: true
+  /** The libraries to version, once each and sorted. */
+  libraries: readonly string[]
+}
+
+/** A request the batch refuses. */
+export interface RefusedSelection {
+  /** The verdict discriminator. */
+  ok: false
+  /** Why, phrased as the fix. */
+  reason: string
+}
+
 /** The libraries a batch versions, or why the request was refused. */
-export type LibrarySelection = { ok: true; libraries: readonly string[] } | { ok: false; reason: string }
+export type LibrarySelection = SelectedLibraries | RefusedSelection
 
 /**
  * Decide which libraries a batch versions.
