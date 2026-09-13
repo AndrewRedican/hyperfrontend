@@ -33,9 +33,6 @@
   <img src="https://img.shields.io/badge/tree%20shakeable-%E2%9C%93-success?style=flat-square" alt="Tree Shakeable">
 </p>
 
-<!-- hf:media start id="banner" scene="banner-network-protocol" asset="banner" alt="@hyperfrontend/network-protocol" -->
-<!-- hf:media end -->
-
 <p align="center">
   <a href="https://www.hyperfrontend.dev/docs/libraries/network-protocol/">
     <img width="640" height="360" src="https://www.hyperfrontend.dev/media/network-protocol-frame/hero.gif" alt="A page and a worker at the two ends of a pipe: a hello crosses each way and both ends light the same key; a message card is wrapped into a numbered sealed frame, carried through the pipe and unwrapped on the far side; a listener under the pipe copies the second frame and pushes it back in, and the receiver reads its number, refuses it and drops it into the onDrop tray marked replayed">
