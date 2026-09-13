@@ -33,13 +33,16 @@
   <img src="https://img.shields.io/badge/tree%20shakeable-%E2%9C%93-success?style=flat-square" alt="Tree Shakeable">
 </p>
 
+<!-- hf:media start id="banner" scene="banner-logging" asset="banner" alt="@hyperfrontend/logging" -->
+<!-- hf:media end -->
+
 <p align="center">
   <a href="https://www.hyperfrontend.dev/docs/libraries/logging/">
-    <img width="640" src="https://www.hyperfrontend.dev/media/logging-levels/hero.gif" alt="A terminal running one release script three times: the default level prints a single tagged line, LOG_LEVEL=debug prints three with elapsed milliseconds, and the last run ends in a red failure line reporting how long it took to fail">
+    <img width="640" height="360" src="https://www.hyperfrontend.dev/media/logging-levels/hero.gif" alt="A terminal window with a level scale across the top, error to debug, and a knob that slides between the stops; beneath it the same five channel-prefixed lines stay in place, and as the knob moves the lines below the chosen level ghost out and return, with a setLogLevel chip naming the level">
   </a>
 </p>
 <p align="center">
-  <sub>One program, three runs. The emitting code is written once; how much of it reaches the terminal is decided at run time.</sub>
+  <sub>The emitting code is written once; the level is the filter, and how much of it reaches the terminal is decided at run time.</sub>
 </p>
 
 Structured logging with configurable severity levels and error-resilient execution.
@@ -220,12 +223,15 @@ Every type, parameter and return shape is in the [API reference](https://www.hyp
 
 ## Compatibility
 
-| Platform                      | Support |
-| ----------------------------- | :-----: |
-| Browser                       |   ✅    |
-| Node.js                       |   ✅    |
-| Web Workers                   |   ✅    |
-| Deno, Bun, Cloudflare Workers |   ✅    |
+<!-- hf:media start id="runtimes" scene="runtimes-logging" asset="runtimes" docs="#compatibility" alt="Runs in Node.js 18 or later, evergreen browsers and web workers" -->
+
+| Environment     | Supported |
+| --------------- | :-------: |
+| Node.js >= 18   |    ✅     |
+| Modern Browsers |    ✅     |
+| Web Workers     |    ✅     |
+
+<!-- hf:media end -->
 
 ### Output Formats
 
