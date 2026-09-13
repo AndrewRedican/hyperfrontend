@@ -74,10 +74,15 @@ export interface TransformOutcome {
  * Resolve where a region's visual links to.
  *
  * @param docs - The directive's `docs` attribute.
- * @param landing - The package's documentation landing page.
+ * @param landing - The package's documentation landing page, with its trailing slash.
  * @returns An absolute URL.
+ * @example An anchor on the landing page
+ * ```ts
+ * resolveDocs('#compatibility', 'https://www.hyperfrontend.dev/docs/libraries/logging/')
+ * // 'https://www.hyperfrontend.dev/docs/libraries/logging/#compatibility'
+ * ```
  */
-function resolveDocs(docs: string | undefined, landing: string): string {
+export function resolveDocs(docs: string | undefined, landing: string): string {
   if (docs === undefined) {
     return landing
   }
