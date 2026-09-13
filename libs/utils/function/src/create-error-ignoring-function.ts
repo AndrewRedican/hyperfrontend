@@ -2,7 +2,8 @@
 /**
  * Creates a wrapper function that silently ignores any errors thrown by the wrapped void function.
  * This function is specifically for wrapping functions that do not return a value (void functions).
- * Exceptions are swallowed without any logging or handling.
+ * Exceptions are swallowed without any logging or handling. The wrapped function is called with the
+ * receiver the wrapper was invoked on, so a method wrapped in place keeps its `this`.
  *
  * @param func - The void function to be wrapped.
  * @returns A wrapped version of the input function that ignores errors.
@@ -14,9 +15,9 @@
  * ```
  */
 export function createErrorIgnoringFunction<T extends (...args: any[]) => void>(func: T): (...args: Parameters<T>) => void {
-  return function (...args: Parameters<T>): void {
+  return function (this: ThisParameterType<T>, ...args: Parameters<T>): void {
     try {
-      func(...args)
+      func.apply(this, args)
     } catch {
       // Deliberately swallowing/ignoring the exception
     }

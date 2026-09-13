@@ -10,6 +10,27 @@ describe('createRunOnceFunction', () => {
     expect(mockFn).toHaveBeenCalledTimes(1)
   })
 
+  it('calls the wrapped function with the receiver it was invoked on', () => {
+    const host = {
+      value: 'host',
+      read: createRunOnceFunction(function (this: { value: string }) {
+        return this.value
+      }),
+    }
+    expect(host.read()).toBe('host')
+  })
+
+  it('does not override an explicitly bound receiver', () => {
+    const bound = { value: 'bound' }
+    const other = { value: 'other' }
+    const read = createRunOnceFunction(
+      function (this: { value: string }) {
+        return this.value
+      }.bind(bound)
+    )
+    expect(read.call(other)).toBe('bound')
+  })
+
   it('returns the correct value on first call', () => {
     const returnVal = 'test value'
     const func = () => returnVal

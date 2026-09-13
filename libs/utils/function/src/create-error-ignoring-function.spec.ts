@@ -18,4 +18,16 @@ describe('createErrorIgnoringFunction', () => {
     safeFunc()
     expect(testFunc).toHaveBeenCalled()
   })
+
+  it('calls the wrapped function with the receiver it was invoked on', () => {
+    const seen: string[] = []
+    const host = {
+      value: 'host',
+      record: createErrorIgnoringFunction(function (this: { value: string }) {
+        seen.push(this.value)
+      }),
+    }
+    host.record()
+    expect(seen).toEqual(['host'])
+  })
 })
