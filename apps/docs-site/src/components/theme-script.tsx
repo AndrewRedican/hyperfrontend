@@ -12,7 +12,6 @@ const THEME_SCRIPT =
 
 /**
  * Renders the inline script that applies the stored theme before first paint.
- *
  * @returns The script element, placed first in the body so it runs before any
  * of the page is laid out
  */
