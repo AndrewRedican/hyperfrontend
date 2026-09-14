@@ -39,7 +39,8 @@ const formatValidators: Record<string, (value: string) => boolean> = {
   },
 
   email: (v) => {
-    return /^[^\s@]+@[^\s@.]+\.[^\s@.]+$/.test(v)
+    // why: the domain may carry any number of labels; keeping the last label dot-free keeps the match linear
+    return /^[^\s@]+@[^\s@]+\.[^\s@.]+$/.test(v)
   },
 
   hostname: (v) => {
