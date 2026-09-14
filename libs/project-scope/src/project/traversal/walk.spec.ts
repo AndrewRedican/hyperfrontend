@@ -1,5 +1,5 @@
 import type { Tree } from '../../vfs'
-import type { WalkEntry, WalkVisitor } from './walk'
+import type { WalkEntry, WalkOptions, WalkVisitor } from './walk'
 import { mkdirSync, writeFileSync, rmSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { after as afterAll, before as beforeAll } from 'node:test'
@@ -11,6 +11,28 @@ const FIXTURES_DIR = resolve(import.meta.dirname, '../../../__fixtures__')
 const MINIMAL_PROJECT = resolve(FIXTURES_DIR, 'minimal-project')
 const MONOREPO = resolve(FIXTURES_DIR, 'monorepo')
 const TEST_DIR = join(import.meta.dirname, '__test_fixtures_walk__')
+
+/**
+ * Collects the relative path of every entry a walk visits, sorted so a suite can
+ * assert on the whole listing at once.
+ *
+ * @param startPath - Directory to walk
+ * @param options - Walk options forwarded verbatim
+ * @returns Sorted relative paths of the visited entries
+ */
+function collectRelativePaths(startPath: string, options?: WalkOptions): string[] {
+  const found: string[] = []
+
+  walkDirectory(
+    startPath,
+    (entry) => {
+      found.push(entry.relativePath)
+    },
+    options
+  )
+
+  return found.sort()
+}
 
 describe('walkDirectory', () => {
   it('walks the directory tree', () => {
@@ -274,24 +296,50 @@ describe('walkDirectory - edge cases', () => {
     expect(entries.some((e) => e.name === 'node_modules')).toBe(true)
   })
 
-  it('handles negation patterns in ignore', () => {
+  it('re-includes a path matched by a later negation pattern', () => {
     mkdirSync(join(TEST_DIR, 'negation-test'), { recursive: true })
-    mkdirSync(join(TEST_DIR, 'negation-test', 'logs'), { recursive: true })
-    writeFileSync(join(TEST_DIR, 'negation-test', '.gitignore'), 'logs\n!logs/important.log')
-    writeFileSync(join(TEST_DIR, 'negation-test', 'logs', 'debug.log'), 'debug')
-    writeFileSync(join(TEST_DIR, 'negation-test', 'logs', 'important.log'), 'important')
+    writeFileSync(join(TEST_DIR, 'negation-test', '.gitignore'), '*.log\n!keep.log')
+    writeFileSync(join(TEST_DIR, 'negation-test', 'debug.log'), 'debug')
+    writeFileSync(join(TEST_DIR, 'negation-test', 'keep.log'), 'keep')
+    writeFileSync(join(TEST_DIR, 'negation-test', 'index.ts'), 'export {}')
 
-    const entries: WalkEntry[] = []
-    const visitor: WalkVisitor = (entry) => {
-      entries.push(entry)
-    }
+    expect(collectRelativePaths(join(TEST_DIR, 'negation-test'), { includeHidden: true, respectGitignore: true })).toEqual([
+      '.gitignore',
+      'index.ts',
+      'keep.log',
+    ])
+  })
 
-    walkDirectory(join(TEST_DIR, 'negation-test'), visitor, {
-      includeHidden: true,
-      respectGitignore: true,
-    })
+  it('keeps unrelated entries when the ignore file holds a negation', () => {
+    mkdirSync(join(TEST_DIR, 'negation-keeps', 'dist'), { recursive: true })
+    mkdirSync(join(TEST_DIR, 'negation-keeps', 'src'), { recursive: true })
+    writeFileSync(join(TEST_DIR, 'negation-keeps', '.gitignore'), 'dist\n!dist/.gitkeep')
+    writeFileSync(join(TEST_DIR, 'negation-keeps', 'dist', '.gitkeep'), '')
+    writeFileSync(join(TEST_DIR, 'negation-keeps', 'package.json'), '{}')
+    writeFileSync(join(TEST_DIR, 'negation-keeps', 'src', 'index.ts'), 'export {}')
 
-    expect(entries.length).toBeGreaterThanOrEqual(0)
+    expect(collectRelativePaths(join(TEST_DIR, 'negation-keeps'), { respectGitignore: true })).toEqual([
+      'package.json',
+      'src',
+      'src/index.ts',
+    ])
+  })
+
+  it('ignores a directory named by a trailing-slash pattern', () => {
+    mkdirSync(join(TEST_DIR, 'dir-only-test', 'build'), { recursive: true })
+    writeFileSync(join(TEST_DIR, 'dir-only-test', '.gitignore'), 'build/')
+    writeFileSync(join(TEST_DIR, 'dir-only-test', 'build', 'out.js'), 'out')
+    writeFileSync(join(TEST_DIR, 'dir-only-test', 'index.ts'), 'export {}')
+
+    expect(collectRelativePaths(join(TEST_DIR, 'dir-only-test'), { respectGitignore: true })).toEqual(['index.ts'])
+  })
+
+  it('keeps a file whose name matches a trailing-slash pattern', () => {
+    mkdirSync(join(TEST_DIR, 'dir-only-file'), { recursive: true })
+    writeFileSync(join(TEST_DIR, 'dir-only-file', '.gitignore'), 'build/')
+    writeFileSync(join(TEST_DIR, 'dir-only-file', 'build'), 'a file, not a directory')
+
+    expect(collectRelativePaths(join(TEST_DIR, 'dir-only-file'), { respectGitignore: true })).toEqual(['build'])
   })
 
   it('handles patterns starting with slash', () => {
