@@ -1,8 +1,9 @@
-import type { IAction, IActionWithContractAndSecurity } from '../../types/action'
+import type { IAction } from '../../types/action'
 import type { ChannelHandle } from '../../types/channel'
 import type { DenyReason } from '../../types/events'
 import type { SecurityNegotiationRequest, SecurityNegotiationResponse, SecurityProtocolVersion } from '../../types/security'
 import type { RoutingContext } from './types'
+import { isArray } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
 import { validateContract as validateContractFn } from '../../core/validation/contract'
 import { negotiateProtocol, createSecurityResponse } from '../../security/negotiation/negotiate'
 import { requestsSecurity, requiresSecurity } from '../../security/settings'
@@ -10,6 +11,17 @@ import { isActionWithContract } from '../../types/action'
 import { findMissingRequiredActions } from '../../utils/validation/find-missing-required-actions'
 import { addChannel } from '../channels/add'
 import { applyPolicy } from '../security/apply-policy'
+
+/**
+ * Tells whether a REQUEST's security slot holds a negotiation request this side can answer.
+ *
+ * @param security - The value the REQUEST carried in its security slot
+ * @returns True when the value advertises the protocols the counterpart supports
+ */
+function isNegotiationRequest(security: unknown): security is SecurityNegotiationRequest {
+  // why: A slot without a list of supported protocols cannot be negotiated against, and reading it as one throws inside the router, leaving the requester unanswered until it times out.
+  return isArray((security as SecurityNegotiationRequest | undefined)?.supported)
+}
 
 /** Why a connection request is refused, as told to the counterpart and to this side's consumer. */
 interface DenyDetails {
@@ -136,6 +148,9 @@ function negotiateSecurity(
  * - Negotiates the security protocol: a channel that selected a protocol
  *   offers only that protocol, any other channel offers every protocol the
  *   broker registered
+ * - Treats a security slot that advertises no list of supported protocols as
+ *   a request carrying no security at all, so a malformed REQUEST is still
+ *   answered instead of being dropped
  * - Attaches the security transport for the negotiated protocol before
  *   ACCEPT leaves; the transport starts its hello exchange with the ACCEPT.
  *   A scheduled answer attaches it when connect() composes the ACCEPT
@@ -165,7 +180,8 @@ export function handleRequest(context: RoutingContext, message: MessageEvent<IAc
   const processId = action.processId
   const contract = action.contract
 
-  const securityRequest = (action as IActionWithContractAndSecurity).security as SecurityNegotiationRequest | undefined
+  const advertisedSecurity: unknown = action.security
+  const securityRequest = isNegotiationRequest(advertisedSecurity) ? advertisedSecurity : undefined
 
   let channel = (message.source ? registry.getByWindow(message.source as Window) : undefined) as ChannelHandle | undefined
   if (!channel) {

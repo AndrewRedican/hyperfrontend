@@ -441,4 +441,33 @@ describe('handleRequest security negotiation', () => {
       expect(mockLogger.warn).not.toHaveBeenCalled()
     })
   })
+
+  describe('malformed negotiation request', () => {
+    it('answers a request whose security slot carries no supported list', () => {
+      addReadyChannel()
+
+      handleRequest(routingContext, requestEvent({ security: {} }))
+
+      expect(mockWindow.postMessage).toHaveBeenCalledWith(
+        expect.objectContaining({ type: '[nexus] connection-request-accepted' }),
+        expect.any(String)
+      )
+    })
+
+    it('answers without a security response when the supported list is not an array', () => {
+      addReadyChannel()
+
+      handleRequest(routingContext, requestEvent({ security: { supported: 'v4', preferred: 'v4' } }))
+
+      expect(acceptedSecurity()).toBeUndefined()
+    })
+
+    it('negotiates nothing for a request whose security slot carries no supported list', () => {
+      const channel = addReadyChannel()
+
+      handleRequest(routingContext, requestEvent({ security: {} }))
+
+      expect(channel.getNegotiatedProtocol()).toBeNull()
+    })
+  })
 })
