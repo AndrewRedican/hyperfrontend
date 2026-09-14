@@ -13,7 +13,8 @@ import { isIterableType } from './is-iterable-type'
  * @param path - The path to the value.
  * @param defaultValue - The default value to return if the path does not exist or an error occurs.
  * @returns The value at the specified path or the default value.
- * @throws {Error} Will throw an error if the path is not a non-empty array of strings and no default value for errors is provided.
+ * @throws {Error} Will throw an error if the path is not a non-empty array of strings, or if a value along the path is not iterable
+ * and therefore has no key to read, and no default value for errors is provided.
  * @remarks
  * - If `defaultValue.onMissingKey` is provided, it will be returned when a key in the path is missing.
  * - If `defaultValue.onError` is provided, it will be returned when any error occurs during the retrieval process.
@@ -46,9 +47,14 @@ export const getValue = <T = unknown>(target: unknown, path: [string, ...string[
       scopeType = getType(scope)
       scopeIterable = isIterableType(scopeType)
       /* instanbul ignore next */
-      if (!scopeIterable && hasOnMissingKeyDefault) {
-        scope = defaultValue.onMissingKey
-        break
+      if (!scopeIterable) {
+        if (hasOnMissingKeyDefault) {
+          scope = defaultValue.onMissingKey
+          break
+        }
+        throw createError(
+          `Cannot read key "${key}" at ${index === 0 ? 'the root value' : `path ${path.slice(0, index).join('.')}`}: value is ${scopeType}.`
+        )
       }
       scopeOperators = getIterableOperators(scopeType)
       if (scopeIterable && !scopeOperators.getKeys(scope).includes(key) && hasOnMissingKeyDefault) {

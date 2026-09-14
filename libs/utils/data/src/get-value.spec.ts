@@ -60,3 +60,25 @@ describe('getValue', () => {
     expect(() => getValue(errorTarget, ['a', 'b', 'c'])).toThrow()
   })
 })
+
+describe('getValue - when a value along the path cannot be read', () => {
+  it('names the key and the path of a primitive that holds no keys', () => {
+    expect(() => getValue({ a: 1 }, ['a', 'b'])).toThrow('Cannot read key "b" at path a: value is number.')
+  })
+
+  it('names null as the value that holds no keys', () => {
+    expect(() => getValue({ a: null }, ['a', 'b'])).toThrow('Cannot read key "b" at path a: value is null.')
+  })
+
+  it('joins the path already walked with dots', () => {
+    expect(() => getValue({ a: { b: 'text' } }, ['a', 'b', 'c'])).toThrow('Cannot read key "c" at path a.b: value is string.')
+  })
+
+  it('names the root value when the target itself holds no keys', () => {
+    expect(() => getValue(null, ['a'])).toThrow('Cannot read key "a" at the root value: value is null.')
+  })
+
+  it('returns the onError default rather than throwing when one is provided', () => {
+    expect(getValue({ a: 1 }, ['a', 'b'], { onError: 'error-default' })).toEqual('error-default')
+  })
+})
