@@ -66,6 +66,24 @@ describe('removeKey', () => {
   })
 })
 
+describe('removeKey - on an array', () => {
+  it('removes every matching index', () => {
+    const target = [1, 2, 3]
+    removeKey(target, /./)
+    expect(target).toEqual([])
+  })
+
+  it('reports every removed index in ascending order', () => {
+    expect(removeKey([1, 2, 3], /./)).toEqual([['0'], ['1'], ['2']])
+  })
+
+  it('leaves the items whose index does not match', () => {
+    const target = ['a', 'b', 'c']
+    removeKey(target, '1')
+    expect(target).toEqual(['a', 'c'])
+  })
+})
+
 describe('removeKey - with config detectCircularReferences:true', () => {
   let target: any
 

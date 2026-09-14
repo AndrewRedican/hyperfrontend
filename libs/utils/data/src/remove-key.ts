@@ -30,11 +30,12 @@ export const removeKey = (target: unknown, pattern: string | RegExp, options?: D
     const type = getType(value)
     if (!isIterableType(type)) return
     const { getKeys, remove } = getIterableOperators(type)
-    getKeys(value).forEach((nextKey) => {
-      if (!match(nextKey)) return
-      remove(value, nextKey)
-      state.locations.push([...path, nextKey])
-    })
+    const matches = getKeys(value).filter(match)
+    // why: an array drops a match by splicing, which shifts every later index, so the matches are removed back to front.
+    for (let index = matches.length - 1; index >= 0; index -= 1) {
+      remove(value, matches[index])
+    }
+    matches.forEach((nextKey) => state.locations.push([...path, nextKey]))
   }
   return traverse(target, callback, { depth: [0, '*'], ...options } as DepthConfig, { locations: [] }).locations
 }
