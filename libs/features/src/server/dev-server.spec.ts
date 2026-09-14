@@ -1,3 +1,4 @@
+import type { Server } from 'node:http'
 import type { ResolvedDevConfig } from './config'
 import type { DevServerHandle } from './dev-server'
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
@@ -7,6 +8,7 @@ import { join } from 'node:path'
 import { afterEach, beforeEach } from 'node:test'
 import { describe, expect, it } from '@hyperfrontend/testing'
 import { startDevServer } from './dev-server'
+import { closeServer, listen } from './listen'
 
 const fetchUrl = (url: string): Promise<{ status: number; body: string }> =>
   new Promise((resolve, reject) => {
@@ -120,6 +122,36 @@ describe('startDevServer', () => {
     await expect(fetchUrl(handle.debugUrl ?? '')).resolves.toEqual(
       expect.objectContaining({ status: 200, body: expect.stringContaining('"clock"') })
     )
+  })
+
+  it('rejects with the bind error when an app port is already in use', async () => {
+    const blocker = createServer(() => undefined)
+    const taken = await listen(blocker, 0)
+    const failure = await startDevServer(config({ apps: [{ name: 'clock', outputDir: appDir, port: taken }] }), { assetRoot }).catch(
+      (error: unknown) => error
+    )
+    await closeServer(blocker)
+    expect(failure).toEqual(expect.objectContaining({ code: 'EADDRINUSE' }))
+  })
+
+  it('closes the servers it already bound when a later bind fails', async () => {
+    const blocker = createServer(() => undefined)
+    const taken = await listen(blocker, 0)
+    const started: Server[] = []
+    const apps = [
+      { name: 'first', outputDir: appDir, port: 0 },
+      { name: 'second', outputDir: appDir, port: taken },
+    ]
+    await startDevServer(config({ apps }), {
+      assetRoot,
+      createServer: (handler) => {
+        const server = createServer(handler)
+        started.push(server)
+        return server
+      },
+    }).catch(() => undefined)
+    await closeServer(blocker)
+    expect(started.map((server) => server.listening)).toEqual([false, false])
   })
 
   it('stops serving after close', async () => {

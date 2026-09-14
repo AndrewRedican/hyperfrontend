@@ -3,10 +3,12 @@ import type { StaticServeDeps, StaticServerHandle } from '../../server/static-se
 import type { CliFlags } from '../args'
 import type { RunServeOptions } from './serve'
 import { mkdtempSync, rmSync } from 'node:fs'
+import { createServer } from 'node:http'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach } from 'node:test'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
+import { closeServer, listen } from '../../server/listen'
 import { runServe } from './serve'
 
 const mkFlags = (over: Partial<CliFlags>): CliFlags => ({ ci: false, yes: false, dryRun: false, help: false, ...over })
@@ -135,6 +137,20 @@ describe('runServe', () => {
     const err = sink()
     await runServe(deps({ startServer: () => Promise.reject('kaboom'), stderr: err.stream }))
     expect(err.text()).toEqual(expect.stringContaining('kaboom'))
+  })
+
+  it('reports a port already in use instead of crashing the process', async () => {
+    // why: A failed bind reaches the command as a rejection, which is the only way the exit code and the diagnostic can be mapped; an uncaught 'error' event would bypass both.
+    const dir = mkdtempSync(join(tmpdir(), 'hf-serve-port-'))
+    const blocker = createServer(() => undefined)
+    const taken = await listen(blocker, 0)
+    const err = sink()
+    const code = await runServe(
+      deps({ cwd: dir, flags: mkFlags({ port: String(taken) }), resolveConfig: undefined, startServer: undefined, stderr: err.stream })
+    )
+    await closeServer(blocker)
+    rmSync(dir, { recursive: true, force: true })
+    expect({ code, err: err.text() }).toEqual({ code: 1, err: expect.stringContaining('EADDRINUSE') })
   })
 
   it('reports a missing root through the default config resolver', async () => {

@@ -190,6 +190,10 @@ function controlHandler(
  * Starts the dev server: one static server per app (each on its own port for a
  * distinct origin) plus, when enabled, the control server hosting the debug UI.
  *
+ * A bind that fails (most often a port already in use) rejects with that error
+ * after closing the servers already started, so a refused start leaves no port
+ * held.
+ *
  * @param config - The resolved dev-server config.
  * @param deps - Optional server-creation, asset-location, and file-system overrides.
  * @returns A handle exposing the running apps, the manifest, the debug URL, and a teardown.
@@ -206,29 +210,35 @@ export async function startDevServer(config: ResolvedDevConfig, deps: DevServerD
 
   const servers: Server[] = []
   const apps: DevServerApp[] = []
-  for (const app of config.apps) {
-    const server = createServer(createStaticHandler(app.outputDir, deps))
-    const port = await listen(server, app.port)
-    servers.push(server)
-    apps.push({ name: app.name, port, url: `http://localhost:${port}/` })
-  }
+  try {
+    for (const app of config.apps) {
+      const server = createServer(createStaticHandler(app.outputDir, deps))
+      const port = await listen(server, app.port)
+      servers.push(server)
+      apps.push({ name: app.name, port, url: `http://localhost:${port}/` })
+    }
 
-  const manifest: DevManifest = { apps: apps.map((app) => ({ name: app.name, url: app.url })), debug: config.debug }
+    const manifest: DevManifest = { apps: apps.map((app) => ({ name: app.name, url: app.url })), debug: config.debug }
 
-  let debugUrl: string | undefined
-  if (config.debug.enabled) {
-    // why: resolved only when the debug UI is enabled so consumers with it disabled never pay for (or fail on) asset self-location.
-    const assetRoot = deps.assetRoot ?? defaultAssetRoot(deps.isFile ?? isFileOnDisk)
-    const control = createServer(controlHandler(manifest, assetRoot, deps))
-    const port = await listen(control, config.debugPort)
-    servers.push(control)
-    debugUrl = `http://localhost:${port}/`
-  }
+    let debugUrl: string | undefined
+    if (config.debug.enabled) {
+      // why: resolved only when the debug UI is enabled so consumers with it disabled never pay for (or fail on) asset self-location.
+      const assetRoot = deps.assetRoot ?? defaultAssetRoot(deps.isFile ?? isFileOnDisk)
+      const control = createServer(controlHandler(manifest, assetRoot, deps))
+      const port = await listen(control, config.debugPort)
+      servers.push(control)
+      debugUrl = `http://localhost:${port}/`
+    }
 
-  return {
-    apps,
-    manifest,
-    ...(debugUrl !== undefined && { debugUrl }),
-    close: () => promiseAll(servers.map(closeServer)).then(() => undefined),
+    return {
+      apps,
+      manifest,
+      ...(debugUrl !== undefined && { debugUrl }),
+      close: () => promiseAll(servers.map(closeServer)).then(() => undefined),
+    }
+  } catch (error) {
+    // why: A start that fails partway (a port already taken, missing debug assets) would otherwise leave the servers it did bind holding their ports for the life of the process.
+    await promiseAll(servers.map(closeServer))
+    throw error
   }
 }
