@@ -274,6 +274,32 @@ describe('createTerminal', () => {
 
       expect(await keyPromise).toBe('k')
     })
+
+    it('resolves a waiting read with Ctrl+C when the input ends', async () => {
+      const keyPromise = terminal.readKey()
+
+      input.end()
+
+      expect(await keyPromise).toBe(Key.CtrlC)
+    })
+
+    it('sets cancelled when the input ends', async () => {
+      const keyPromise = terminal.readKey()
+
+      input.end()
+      await keyPromise
+
+      expect(terminal.isCancelled()).toBe(true)
+    })
+
+    it('reads the queued end-of-input cancellation on the next read', async () => {
+      const keyPromise = terminal.readKey()
+      input.emit('data', Buffer.from('a'))
+      await keyPromise
+      input.end()
+
+      expect(await terminal.readKey()).toBe(Key.CtrlC)
+    })
   })
 
   describe('readToken', () => {

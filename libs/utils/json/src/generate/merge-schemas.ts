@@ -117,6 +117,8 @@ function mergeObjectSchemas(schemas: Schema[]): Schema {
   for (const schema of schemas) {
     if (schema.properties) {
       for (const [key, propSchema] of entries(schema.properties)) {
+        // why: a parsed __proto__ key would rewrite the prototype of mergedProperties instead of adding an entry
+        if (key === '__proto__') continue
         const existing = mergedProperties[key] ?? []
         existing.push(propSchema)
         mergedProperties[key] = existing

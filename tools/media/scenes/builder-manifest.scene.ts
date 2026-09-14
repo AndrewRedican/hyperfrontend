@@ -1,122 +1,75 @@
-import { panelStage } from '../src/panel/stage'
+import { forgeStage } from '../src/forge/stage'
 import { defineScriptedScene } from '../src/scene/define-scene'
+import { packageIdentity } from './lib/identity'
+
+/** The package's hue and mark. */
+const identity = packageIdentity('builder')
 
 /**
- * A folder layout on the left, and the manifest that ships on the right.
+ * A forge with a mirror: entries go in one at a time, files come out per
+ * entry, and the manifest is wired to what landed.
  *
- * The builder's least visible service is that nobody in a library maintains
- * `main`, `module`, `types`, the conditional `exports` map or the `files`
- * allowlist. So the frame is that division of labour: the tree types itself in,
- * the way a person writes one, and the two panes beside it simply appear,
- * because a build wrote them and a build rewrites them every time.
+ * Two source entries wait on the left. The root entry streams into the
+ * builder first and its files pop into the tree on the right: the ESM and CJS
+ * bundles, the declarations, and the two minified browser bundles under
+ * `bundle/`. Only when every one of them has landed does the second entry
+ * leave its card, because the builder holds one entry at a time. Then the
+ * `package.json` sheet rises and wires draw from the files to the keys the
+ * build wrote from them: every module and declaration file into `exports`,
+ * the root CJS bundle into `main`, the root declarations into `types`, and a
+ * bracket down the whole tree into `files`. Nothing on the sheet was typed by
+ * anyone; it is what is on disk, reflected.
  *
- * Every value on the right is what the builder actually emits. `./package.json`
- * is always the first key of the map; a subpath is published only for the
- * formats that really landed, which is what makes each entry a `types` /
- * `import` / `require` triple; the root pointers are written only when a root
- * entry was bundled, and deleted outright when it was not, so a consumer can
- * never resolve a default that does not exist. The allowlist is walked out of
- * the finished output directory rather than predicted from config, which is why
- * two `index` globs stand in for every entrypoint at any depth, why the
- * metadata files are named one at a time, and why the sourcemap negation has to
- * be the last pattern of all: npm resolves `files` last match wins, so sorting
- * it in with the rest would put it ahead of the glob it exists to subtract.
- *
- * The two panes are one file, and the gap between them is real: a dozen fields
- * carried over from the source manifest sit between the closing brace of
- * `exports` and `main`, and `files` is appended last of all by a second pass
- * that runs after the bin, license and asset phases have finished emitting. The
- * three pointers and the allowlist are neighbours only because this library
- * ships neither a CDN bundle nor a bin; either one would put its own fields
- * between them.
- *
- * The example library is the scene's own, because the package has no opinion
- * about how source is arranged. What is not the scene's own is the subpath
- * itself: the source `package.json` declares it against `./src/...`, and the
- * builder mirrors that declaration onto whatever the bundle phase produced.
- *
- * Verified against `libs/builder/src/package/json/generate-exports.ts` (the
- * self-reference first, the conditional triple, source-exports-first),
- * `libs/builder/src/package/json/synthesize.ts` (the `main` / `module` /
- * `types` rules and the order the fields are assigned in),
- * `libs/builder/src/package/json/reflect-files-allowlist.ts` (the two globs,
- * the named survivors, the trailing negation and why it is appended after the
- * sort), `libs/builder/src/package/finalize-files.ts` (the allowlist is written
- * last, from the materialized tree), `libs/builder/src/package/run-package-phase.ts`
- * (the phase itself never passes `files`), `libs/builder/src/bundle/entries/discover-entries.ts`
- * (a directory becomes an entry point by holding an `index.ts`) and the specs
- * beside them for the exact emitted strings.
+ * Every file name is what the builder emits, verified on 2026-09-12 against
+ * `libs/builder/src/bundle/rollup/worker/job-runner.ts` (`index.esm.js`,
+ * `index.cjs.js`, and the `.min.js` twins of the IIFE and UMD bundles, which
+ * land because `minify` defaults on in `descriptor.ts`),
+ * `libs/builder/src/bundle/run-bundle-phase.ts` (the `bundle/` directory and
+ * the one-entry-per-worker loop), `libs/builder/src/package/json/generate-exports.ts`
+ * (the `types` / `import` / `require` triple per entry that landed),
+ * `libs/builder/src/package/json/synthesize.ts` (`main` and `types` only when a
+ * root entry landed) and `libs/builder/src/package/json/reflect-files-allowlist.ts`
+ * (`files` walked out of the finished output tree).
  */
 export default defineScriptedScene({
   slug: 'builder-manifest',
   asset: 'hero',
   outputs: ['gif', 'still'],
-  profile: 'docs-wide',
-  stage: panelStage,
-  holdMs: 1_500,
-  gif: { colours: 56, lossy: 78, maxBytes: 1_000_000 },
-  stills: [{ name: 'poster', atMs: 7_700, format: 'webp', quality: 82, maxBytes: 90_000 }],
+  profile: 'compact',
+  hue: identity.hue,
+  stage: forgeStage,
+  holdMs: 1_800,
+  gif: { colours: 56, lossy: 50, maxBytes: 900_000 },
+  stills: [{ name: 'poster', atMs: 7_500, format: 'webp', quality: 82, maxBytes: 70_000 }],
   config: {
-    theme: 'midnight',
-    heading: 'You maintain the tree. The build maintains the manifest.',
-    caption: 'Every path on the right is reflected from what actually landed in dist, on every build.',
-    restMs: 1_600,
-    panels: [
+    api: { name: 'build', mark: identity.mark },
+    sourceDir: 'src/',
+    outputDir: 'dist/',
+    entries: [
       {
-        title: 'hand written',
-        kind: 'code',
-        align: 'center',
-        weight: 0.68,
-        rows: [
-          { text: 'libs/toolkit/', atMs: 200, typeMs: 320 },
-          { text: '  package.json', atMs: 620, typeMs: 300 },
-          { text: '  src/', atMs: 1_000, typeMs: 180 },
-          { text: '    index.ts', atMs: 1_240, typeMs: 240 },
-          { text: '    models/', atMs: 1_540, typeMs: 230 },
-          { text: '      index.ts', atMs: 1_830, typeMs: 240 },
-          { text: '      order.ts', atMs: 2_130, typeMs: 240 },
-          { text: '      user.ts', atMs: 2_430, typeMs: 230 },
+        name: 'index.ts',
+        outputs: [
+          { name: 'index.esm.js', format: 'esm', keys: ['exports'] },
+          { name: 'index.cjs.js', format: 'cjs', keys: ['exports', 'main'] },
+          { name: 'index.d.ts', format: 'dts', keys: ['exports', 'types'] },
+          { name: 'bundle/index.iife.min.js', format: 'iife', keys: [] },
+          { name: 'bundle/index.umd.min.js', format: 'umd', keys: [] },
         ],
       },
       {
-        title: 'dist/libs/toolkit/package.json',
-        kind: 'code',
-        weight: 1.34,
-        rows: [
-          { text: '"exports": {', atMs: 3_000 },
-          { text: '  "./package.json": "./package.json",', atMs: 3_180 },
-          { text: '  ".": {', atMs: 3_360 },
-          { text: '    "types": "./index.d.ts",', atMs: 3_500 },
-          { text: '    "import": "./index.esm.js",', atMs: 3_640 },
-          { text: '    "require": "./index.cjs.js"', atMs: 3_780 },
-          { text: '  },', atMs: 3_920 },
-          { text: '  "./models": {', atMs: 4_120 },
-          { text: '    "types": "./models/index.d.ts",', atMs: 4_260 },
-          { text: '    "import": "./models/index.esm.js",', atMs: 4_400 },
-          { text: '    "require": "./models/index.cjs.js"', atMs: 4_540 },
-          { text: '  }', atMs: 4_680 },
-          { text: '}', atMs: 4_820 },
-        ],
-      },
-      {
-        title: 'further down that file',
-        kind: 'code',
-        weight: 0.98,
-        rows: [
-          { text: '"main": "./index.cjs.js",', atMs: 5_300 },
-          { text: '"module": "./index.esm.js",', atMs: 5_460 },
-          { text: '"types": "./index.d.ts",', atMs: 5_620 },
-          { text: '"files": [', atMs: 5_900 },
-          { text: '  "**/index.*",', atMs: 6_060 },
-          { text: '  "**/index.d.ts",', atMs: 6_200 },
-          { text: '  "CHANGELOG.md",', atMs: 6_340 },
-          { text: '  "LICENSE.md",', atMs: 6_480 },
-          { text: '  "README.md",', atMs: 6_620 },
-          { text: '  "SECURITY.md",', atMs: 6_760 },
-          { text: '  "!**/*.js.map"', atMs: 7_060, emphasis: true },
-          { text: ']', atMs: 7_240 },
+        name: 'models/index.ts',
+        outputs: [
+          { name: 'models/index.esm.js', format: 'esm', keys: ['exports'] },
+          { name: 'models/index.cjs.js', format: 'cjs', keys: ['exports'] },
+          { name: 'models/index.d.ts', format: 'dts', keys: ['exports'] },
         ],
       },
     ],
+    manifest: {
+      name: 'package.json',
+      keys: ['main', 'types', 'exports', 'files'],
+      spanKey: 'files',
+    },
+    restMs: 1_300,
   },
 })

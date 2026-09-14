@@ -8,6 +8,7 @@
     "copy-media": "npx tsx scripts/copy-media.ts",
     "generate": "npx tsx scripts/generate-docs.ts",
     "generate:guides": "npx tsx scripts/generate-docs.ts --guides-only",
+    "refresh-downloads": "npx tsx scripts/refresh-npm-downloads.ts",
     "validate-links": "npx tsx scripts/validate-links.ts",
     "validate-sitemap": "npx tsx scripts/validate-sitemap.ts",
     "check:decision-framework": "node notes/decision-framework/matrix/check-projection.mjs",

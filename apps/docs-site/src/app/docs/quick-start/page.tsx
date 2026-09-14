@@ -3,6 +3,7 @@ import { Breadcrumb } from '@/components/breadcrumb'
 import { CodeBlock } from '@/components/code-block'
 import { DocsContentWrapper } from '@/components/docs-content-wrapper'
 import { H1, H2 } from '@/components/heading-with-anchor'
+import { StepMarker } from '@/components/step-marker'
 import Link from 'next/link'
 
 export const metadata: Metadata = {
@@ -21,9 +22,7 @@ export default function QuickStartPage() {
       {/* Step 1 */}
       <section className="mt-12">
         <div className="flex items-center gap-3">
-          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary-100 font-semibold text-primary-700 dark:bg-primary-900/50 dark:text-primary-300">
-            1
-          </span>
+          <StepMarker number={1} size="md" />
           <H2 id="install-the-package" className="text-2xl font-bold text-slate-900 dark:text-white">
             Install the package
           </H2>
@@ -37,9 +36,7 @@ export default function QuickStartPage() {
       {/* Step 2 */}
       <section className="mt-10">
         <div className="flex items-center gap-3">
-          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary-100 font-semibold text-primary-700 dark:bg-primary-900/50 dark:text-primary-300">
-            2
-          </span>
+          <StepMarker number={2} size="md" />
           <H2 id="initialize-a-feature" className="text-2xl font-bold text-slate-900 dark:text-white">
             Initialize a feature
           </H2>
@@ -61,9 +58,7 @@ export default function QuickStartPage() {
       {/* Step 3 */}
       <section className="mt-10">
         <div className="flex items-center gap-3">
-          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary-100 font-semibold text-primary-700 dark:bg-primary-900/50 dark:text-primary-300">
-            3
-          </span>
+          <StepMarker number={3} size="md" />
           <H2 id="build-a-shell" className="text-2xl font-bold text-slate-900 dark:text-white">
             Build a shell
           </H2>
@@ -83,9 +78,7 @@ export default function QuickStartPage() {
       {/* Step 4 */}
       <section className="mt-10">
         <div className="flex items-center gap-3">
-          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary-100 font-semibold text-primary-700 dark:bg-primary-900/50 dark:text-primary-300">
-            4
-          </span>
+          <StepMarker number={4} size="md" />
           <H2 id="run-it" className="text-2xl font-bold text-slate-900 dark:text-white">
             Run it
           </H2>

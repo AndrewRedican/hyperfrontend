@@ -120,7 +120,7 @@ describe('channel/security/fail', () => {
     it('fires the cancel event', () => {
       failSecurity(internals, error)
 
-      expect(internals.notifyEvent).toHaveBeenCalledWith('cancel')
+      expect(internals.notifyEvent).toHaveBeenCalledWith('cancel', { notify: false })
     })
 
     it('tells the counterpart the pending process is cancelled', () => {

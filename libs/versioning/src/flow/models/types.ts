@@ -276,7 +276,12 @@ export interface FlowConfig {
   /** Prerelease identifier (e.g., 'alpha', 'beta') */
   readonly prereleaseId?: string
 
-  /** Force a specific bump type, bypassing commit analysis */
+  /**
+   * Force a specific bump type. The bump no longer comes from the commits, but
+   * they are still analyzed, and every commit type is admitted so the changelog
+   * lists what changed since the last release rather than only what could have
+   * caused a bump.
+   */
   readonly releaseAs?: 'major' | 'minor' | 'patch'
 
   /**

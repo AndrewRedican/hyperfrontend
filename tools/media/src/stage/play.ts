@@ -2,9 +2,11 @@ import type { Page } from 'playwright-core'
 import type { CapturedStill } from '../capture/record-video'
 import type { MediaProfile } from '../models/profile'
 import type { ScriptedScene, StillSpec } from '../models/scene'
+import type { MediaTheme } from '../models/theme'
 import { max, min, round } from '@hyperfrontend/immutable-api-utils/built-in-copy/math'
 import { capturePng } from '../capture/screenshot'
-import { STAGE_ELEMENT_ID, stageDocument } from './document'
+import { stageDocument } from './document'
+import { mountFrame } from './mount'
 
 /** Shortest display time a GIF frame is given, in milliseconds. */
 const MIN_FRAME_DELAY_MS = 20
@@ -18,14 +20,6 @@ export interface FramePlan {
   atMs: readonly number[]
   /** Display time of each frame, index for index. */
   delaysMs: readonly number[]
-}
-
-/** The markup for one instant, and where in the page it is mounted. */
-interface StageMount {
-  /** Id of the element the stage draws into. */
-  elementId: string
-  /** Markup for the instant being shown. */
-  markup: string
 }
 
 /** What one playback of a scripted scene produced. */
@@ -66,26 +60,6 @@ export function planTimeline(durationMs: number, fps: number, holdMs: number): F
 }
 
 /**
- * Show one instant of a scene on an already mounted page.
- *
- * @param page - The page the stage is mounted on.
- * @param scene - The scene being played.
- * @param profile - The presentation target being composed for.
- * @param atMs - Offset from the start of the timeline.
- */
-async function seek(page: Page, scene: ScriptedScene, profile: MediaProfile, atMs: number): Promise<void> {
-  await page.evaluate(
-    (mount: StageMount) => {
-      const host = document.getElementById(mount.elementId)
-      if (host !== null) {
-        host.innerHTML = mount.markup
-      }
-    },
-    { elementId: STAGE_ELEMENT_ID, markup: scene.frame(profile, atMs) }
-  )
-}
-
-/**
  * Play a scripted scene through and capture every frame it is made of.
  *
  * Nothing here waits for the page: each frame is asked for, mounted, and
@@ -94,9 +68,13 @@ async function seek(page: Page, scene: ScriptedScene, profile: MediaProfile, atM
  * the difference between this lane and recording a video, and it is the reason
  * a scripted scene needs no clock pinning, no settle time and no readiness gate.
  *
+ * A transparent variant is photographed without the browser's white behind
+ * it, so what the theme left clear stays clear all the way to the file.
+ *
  * @param page - A page with the viewport already set to the profile's size.
  * @param scene - The scene to play.
  * @param profile - The presentation target being composed for.
+ * @param theme - The visual tokens this variant is drawn with.
  * @param stills - Stills to capture at their own offsets.
  * @returns The captured frames, their display times, and the stills.
  */
@@ -104,10 +82,11 @@ export async function playStage(
   page: Page,
   scene: ScriptedScene,
   profile: MediaProfile,
+  theme: MediaTheme,
   stills: readonly StillSpec[]
 ): Promise<PlayedStage> {
   const durationMs = scene.durationMs(profile)
-  await page.setContent(stageDocument(scene.styles(profile), profile), { waitUntil: 'load' })
+  await page.setContent(stageDocument(scene.styles(profile, theme), profile, theme), { waitUntil: 'load' })
   await page.evaluate(async () => {
     await document.fonts.ready
   })
@@ -116,15 +95,15 @@ export async function playStage(
   const timeline = planTimeline(durationMs, scene.fps ?? profile.fps, scene.holdMs ?? 0)
   if (scene.outputs.includes('gif')) {
     for (const atMs of timeline.atMs) {
-      await seek(page, scene, profile, atMs)
-      frames.push(await capturePng(page, {}))
+      await mountFrame(page, scene.frame(profile, theme, atMs))
+      frames.push(await capturePng(page, { omitBackground: theme.transparent }))
     }
   }
 
   const captured: CapturedStill[] = []
   for (const spec of [...stills].sort((left, right) => left.atMs - right.atMs)) {
-    await seek(page, scene, profile, min(spec.atMs, durationMs))
-    captured.push({ spec, png: await capturePng(page, spec) })
+    await mountFrame(page, scene.frame(profile, theme, min(spec.atMs, durationMs)))
+    captured.push({ spec, png: await capturePng(page, { ...spec, omitBackground: spec.omitBackground ?? theme.transparent }) })
   }
   return { frames, delaysMs: timeline.delaysMs, stills: captured }
 }

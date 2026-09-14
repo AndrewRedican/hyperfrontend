@@ -373,6 +373,22 @@ function updateDocsSiteConfig(options: NormalizedOptions): void {
 }
 
 /**
+ * Log instruction to record the visuals the distribution readme embeds.
+ *
+ * The banner replaces the readme's title and the runtime strip replaces its
+ * compatibility table when the package is built, and both are read from the
+ * committed media tree, so neither can be written by a generator; lint
+ * reports the readme until they are recorded.
+ *
+ * @param options - Normalized options
+ */
+function recordReadmeMedia(options: NormalizedOptions): void {
+  logger.info(
+    `Note: Record the package banner and runtime strip: npx nx media tool-media --scene=banner-${options.libName} --scene=runtimes-${options.libName}`
+  )
+}
+
+/**
  * Nx generator that converts an internal library to a publishable library.
  *
  * This generator:
@@ -418,6 +434,7 @@ export async function makePublishableGenerator(tree: Tree, options: MakePublisha
   updateRootReadme(normalizedOptions)
   updateCILibrariesWorkflow(normalizedOptions)
   updateDocsSiteConfig(normalizedOptions)
+  recordReadmeMedia(normalizedOptions)
   logger.info('')
 
   if (!normalizedOptions.skipFormat) {

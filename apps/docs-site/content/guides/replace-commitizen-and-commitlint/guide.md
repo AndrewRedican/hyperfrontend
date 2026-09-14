@@ -7,7 +7,9 @@ You will drop four packages and both of their configs, and keep the same workflo
 ## 1. Swap the packages
 
 ```bash
-npm uninstall commitizen cz-conventional-changelog @commitlint/cli @commitlint/config-conventional
+npm uninstall \
+  commitizen cz-conventional-changelog \
+  @commitlint/cli @commitlint/config-conventional
 npm install --save-dev @hyperfrontend/versioning
 ```
 

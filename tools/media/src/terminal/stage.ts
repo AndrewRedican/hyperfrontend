@@ -1,26 +1,15 @@
 import type { MediaProfile } from '../models/profile'
 import type { Stage } from '../models/stage'
-import type { TerminalConfig, TerminalTheme, TerminalTone } from '../models/terminal'
+import type { TerminalConfig, TerminalTone } from '../models/terminal'
+import type { MediaTheme } from '../models/theme'
 import type { TerminalRow, TerminalState } from './timeline'
 import { escapeHtml } from '../lib/escape-html'
 import { defineStage } from '../stage/define-stage'
-import { STAGE_ELEMENT_ID } from '../stage/document'
 import { terminalMetrics } from './metrics'
-import { resolveTerminalTheme } from './themes'
 import { compileTimeline, stateAt } from './timeline'
 
 /** Every tone a theme colours, in the order the stylesheet declares them. */
 const TONES: readonly TerminalTone[] = ['plain', 'muted', 'accent', 'success', 'warning', 'danger']
-
-/**
- * The face the terminal is set in.
- *
- * Named explicitly rather than left to `monospace` because the generic family
- * resolves to whatever the recording machine happens to prefer, which on a
- * minimal Linux image is routinely a CJK face with the wrong advance width for
- * everything else in the frame.
- */
-const FONT_STACK = "'Liberation Mono', 'DejaVu Sans Mono', 'JetBrains Mono', Menlo, Consolas, monospace"
 
 /**
  * Draw one row of the scrollback.
@@ -67,20 +56,20 @@ function renderChrome(title: string): string {
  *
  * @param config - The terminal as the scene configured it.
  * @param profile - The presentation target being composed for.
+ * @param theme - The visual tokens this variant is drawn with.
  * @returns CSS for this terminal.
  */
-function terminalStyles(config: TerminalConfig, profile: MediaProfile): string {
-  const theme: TerminalTheme = resolveTerminalTheme(config.theme)
+function terminalStyles(config: TerminalConfig, profile: MediaProfile, theme: MediaTheme): string {
   const metrics = terminalMetrics(profile, (config.title ?? '') !== '')
   const tones = TONES.map((tone) => `.t-tone--${tone} { color: ${theme.tones[tone]}; }`).join('\n')
-  const dots = theme.buttons.map((colour, index) => `.t-dot--${index} { background: ${colour}; }`).join('\n')
+  const dots = theme.chrome.buttons.map((colour, index) => `.t-dot--${index} { background: ${colour}; }`).join('\n')
   return `
-#${STAGE_ELEMENT_ID} { background: ${theme.backdrop}; font-family: ${FONT_STACK}; }
 .t-window {
   position: absolute;
   inset: ${metrics.insetPx}px;
   display: flex;
   flex-direction: column;
+  font-family: ${theme.fonts.mono};
   background: ${theme.surface};
   border: 1px solid ${theme.border};
   border-radius: ${metrics.radiusPx}px;
@@ -93,8 +82,8 @@ function terminalStyles(config: TerminalConfig, profile: MediaProfile): string {
   align-items: center;
   gap: 10px;
   padding: 0 ${metrics.padPx / 2}px;
-  background: ${theme.chrome};
-  border-bottom: 1px solid ${theme.border};
+  background: ${theme.chrome.bar};
+  border-bottom: 1px solid ${theme.rule};
 }
 .t-dots { display: flex; gap: 6px; }
 .t-dot { width: 9px; height: 9px; border-radius: 50%; display: block; }
@@ -102,7 +91,7 @@ ${dots}
 .t-title {
   flex: 1;
   text-align: center;
-  color: ${theme.titleText};
+  color: ${theme.chrome.title};
   font-size: ${metrics.fontSizePx - 3}px;
   letter-spacing: 0.02em;
   padding-right: 39px;
@@ -121,7 +110,7 @@ ${dots}
 /* A blank line is a line. Without a floor an empty row collapses to nothing and
    the spacing a script asked for silently disappears. */
 .t-row { white-space: pre-wrap; word-break: break-word; min-height: ${metrics.lineHeightPx}px; }
-.t-prompt { color: ${theme.prompt}; }
+.t-prompt { color: ${theme.accent}; }
 ${tones}
 .t-cursor {
   display: inline-block;
@@ -130,7 +119,7 @@ ${tones}
   vertical-align: text-bottom;
   background: transparent;
 }
-.t-cursor--on { background: ${theme.cursor}; }
+.t-cursor--on { background: ${theme.accent}; }
 `
 }
 

@@ -1,8 +1,15 @@
-import { getType } from '@hyperfrontend/data-utils'
 import { from } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
+
+/**
+ * Reports whether a value is a non-primitive, the only kind of value these lists accept.
+ *
+ * @param value - The value a caller tried to push.
+ * @returns True when the value is a non-null object or a function.
+ */
+const isNonPrimitive = (value: unknown): boolean => (typeof value === 'object' && value !== null) || typeof value === 'function'
 
 /**
  * A LIFO (Last-In-First-Out) list interface.
@@ -47,7 +54,7 @@ export function createLifoList<T extends object>(): LifoList<T> {
   const list: Set<T> = createSet()
 
   const push = (item: T): void => {
-    if (getType(item) !== 'object') {
+    if (!isNonPrimitive(item)) {
       throw createError('A lifo list only supports non-primitive values')
     }
     list.add(item)

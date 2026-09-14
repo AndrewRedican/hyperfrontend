@@ -70,14 +70,54 @@ describe('reconcileServeIsolation', () => {
     expect(reconcileServeIsolation(FEATURE, withServeConfig({ isolation: 'credentialless' }, true))).toMatch(/composes/)
   })
 
-  it('leaves same-origin-allow-popups alone, which governs windows the document opens', () => {
+  it('warns on same-origin-allow-popups, which still severs the opener a cross-origin host holds', () => {
     const sourcePath = withServeConfig({ headers: [{ headers: { 'Cross-Origin-Opener-Policy': 'same-origin-allow-popups' } }] })
+    expect(reconcileServeIsolation(FEATURE, sourcePath)).toMatch(/never complete a handshake/)
+  })
+
+  it('stays silent when the origin spells the opener policy as unsafe-none', () => {
+    const sourcePath = withServeConfig({ headers: [{ headers: { 'Cross-Origin-Opener-Policy': 'unsafe-none' } }] })
     expect(reconcileServeIsolation(FEATURE, sourcePath)).toBeNull()
+  })
+
+  it('warns when a later unbounded rule sets the opener policy the server ends up serving', () => {
+    const sourcePath = withServeConfig({
+      headers: [{ headers: { 'X-Test': 'on' } }, { headers: { 'Cross-Origin-Opener-Policy': 'same-origin' } }],
+    })
+    expect(reconcileServeIsolation(FEATURE, sourcePath)).toMatch(/never complete a handshake/)
+  })
+
+  it('stays silent when a later unbounded rule relaxes an earlier opener policy', () => {
+    const sourcePath = withServeConfig({
+      headers: [{ headers: { 'Cross-Origin-Opener-Policy': 'same-origin' } }, { headers: { 'Cross-Origin-Opener-Policy': 'unsafe-none' } }],
+    })
+    expect(reconcileServeIsolation(FEATURE, sourcePath)).toBeNull()
+  })
+
+  it('stays silent when an explicit rule takes back the opener policy a declared isolation expands to', () => {
+    const sourcePath = withServeConfig({
+      isolation: 'require-corp',
+      headers: [{ headers: { 'Cross-Origin-Opener-Policy': 'unsafe-none' } }],
+    })
+    expect(reconcileServeIsolation(FEATURE, sourcePath)).toBeNull()
+  })
+
+  it('names the opener policy the origin actually serves', () => {
+    const sourcePath = withServeConfig({ headers: [{ headers: { 'Cross-Origin-Opener-Policy': 'same-origin-allow-popups' } }] })
+    expect(reconcileServeIsolation(FEATURE, sourcePath)).toMatch(/"Cross-Origin-Opener-Policy: same-origin-allow-popups"/)
   })
 
   it('ignores an opener policy scoped to part of the origin', () => {
     const sourcePath = withServeConfig({ headers: [{ prefix: '/admin', headers: { 'Cross-Origin-Opener-Policy': 'same-origin' } }] })
     expect(reconcileServeIsolation(FEATURE, sourcePath)).toBeNull()
+  })
+
+  it('keeps warning when only a suffix-scoped rule relaxes the opener policy', () => {
+    const sourcePath = withServeConfig({
+      isolation: 'require-corp',
+      headers: [{ suffix: '.html', headers: { 'Cross-Origin-Opener-Policy': 'unsafe-none' } }],
+    })
+    expect(reconcileServeIsolation(FEATURE, sourcePath)).toMatch(/never complete a handshake/)
   })
 
   it('stays silent when the feature composes only the framed modes', () => {

@@ -313,7 +313,6 @@ export function ReadmeContent({ html, mermaidDiagrams, slots }: ReadmeContentPro
     dark:prose-code:bg-slate-800 dark:prose-code:text-slate-300
     prose-pre:relative prose-pre:overflow-x-auto prose-pre:bg-transparent
     [&_pre_code]:bg-transparent [&_pre_code]:p-0
-    [&_pre_code]:text-sm [&_pre_code]:leading-relaxed
     prose-table:border prose-table:border-slate-200 dark:prose-table:border-slate-700
     prose-th:bg-slate-50 dark:prose-th:bg-slate-800 prose-th:px-4 prose-th:py-3 prose-th:text-left prose-th:font-semibold
     prose-td:px-4 prose-td:py-3 prose-td:border-t prose-td:border-slate-200 dark:prose-td:border-slate-700

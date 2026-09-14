@@ -1,0 +1,65 @@
+{
+  "version": 1,
+  "refreshedAt": "2026-09-12T00:21:23.242Z",
+  "frontier": "2026-09-10",
+  "revalidationDays": 7,
+  "packages": {
+    "@hyperfrontend/nexus": {
+      "created": "2026-02-15"
+    },
+    "@hyperfrontend/network-protocol": {
+      "created": "2026-02-15"
+    },
+    "@hyperfrontend/cryptography": {
+      "created": "2026-02-15"
+    },
+    "@hyperfrontend/builder": {
+      "created": "2026-06-23"
+    },
+    "@hyperfrontend/state-machine": {
+      "created": "2026-02-15"
+    },
+    "@hyperfrontend/logging": {
+      "created": "2026-02-15"
+    },
+    "@hyperfrontend/project-scope": {
+      "created": "2026-03-08"
+    },
+    "@hyperfrontend/versioning": {
+      "created": "2026-03-16"
+    },
+    "@hyperfrontend/data-utils": {
+      "created": "2026-02-15"
+    },
+    "@hyperfrontend/function-utils": {
+      "created": "2026-02-15"
+    },
+    "@hyperfrontend/immutable-api-utils": {
+      "created": "2026-02-15"
+    },
+    "@hyperfrontend/json-utils": {
+      "created": "2026-02-22"
+    },
+    "@hyperfrontend/list-utils": {
+      "created": "2026-02-15"
+    },
+    "@hyperfrontend/random-generator-utils": {
+      "created": "2026-02-15"
+    },
+    "@hyperfrontend/string-utils": {
+      "created": "2026-02-15"
+    },
+    "@hyperfrontend/time-utils": {
+      "created": "2026-02-15"
+    },
+    "@hyperfrontend/ui-utils": {
+      "created": "2026-02-15"
+    },
+    "@hyperfrontend/questions": {
+      "created": "2026-04-20"
+    },
+    "@hyperfrontend/features": {
+      "created": "2026-06-28"
+    }
+  }
+}

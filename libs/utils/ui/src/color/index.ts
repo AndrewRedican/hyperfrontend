@@ -3,9 +3,9 @@
  *
  * @module @hyperfrontend/ui-utils/color
  */
-export type { Rgb } from '../lib/hex-to-rgb'
-export { getColorVariation } from '../lib/get-color-variation'
-export { hexToRgb } from '../lib/hex-to-rgb'
-export { rgbStringToHex } from '../lib/rgb-string-to-hex'
-export { rgbToHex } from '../lib/rgb-to-hex'
-export { rgbToString } from '../lib/rgb-to-string'
+export type { Rgb } from './hex-to-rgb'
+export { getColorVariation } from './get-color-variation'
+export { hexToRgb } from './hex-to-rgb'
+export { rgbStringToHex } from './rgb-string-to-hex'
+export { rgbToHex } from './rgb-to-hex'
+export { rgbToString } from './rgb-to-string'

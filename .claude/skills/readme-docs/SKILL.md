@@ -50,6 +50,8 @@ The sub-module page renders this README plus an auto-generated scoped API refere
 
 **`### Architecture Highlights`** is optional and earns its place. Include it only for properties a consumer can rely on or must know to use the package correctly, such as a security guarantee, a cost, or a documented limit. Names of internal helpers, the fact that something uses factory functions, and anything already stated in Key Features all belong out of the README; where the package has an `ARCHITECTURE.md`, depth belongs there and the section becomes a short pointer. A package with nothing consumer-relevant to say omits the section entirely. The documentation site renders it as a quiet margin note at the end of the page rather than beside the capability list.
 
+**`## Compatibility`** wraps its runtime table in an `hf:media` region (`<!-- hf:media start id="runtimes" scene="runtimes-<name>" asset="runtimes" docs="#compatibility" alt="..." -->` ... `<!-- hf:media end -->`). The table is generated from `metadata.compatibility` in `project.json` (`lib-readme-compatibility-table` fixes drift); the build replaces the region with the recorded runtime strip in the distribution readme only. The package banner is never authored: the build replaces the `# @hyperfrontend/<name>` title with `assets/media/banner-<name>/banner.gif`, and `lib-readme-media-regions` reports a README whose banner has not been recorded. The one-line description below the badges is mirrored into the manifest's `description` by `lib-pkg-description`; write it in the README and let `--fix` copy it.
+
 **Required badges:**
 
 ```markdown

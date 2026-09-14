@@ -81,10 +81,10 @@ type OpenQueueCreater = (
 
 ## Queue Types
 
-| Queue Creator     | Input               | Output              | Used by                              |
-| ----------------- | ------------------- | ------------------- | ------------------------------------ |
-| `createSealQueue` | `UnencryptedPacket` | `WirePacket`        | [`sender/`](../sender/README.md)     |
-| `createOpenQueue` | `WirePacket`        | `UnencryptedPacket` | [`receiver/`](../receiver/README.md) |
+| Queue Creator                                                                                                 | Input                                                                                                       | Output                                                                                                      | Used by                              |
+| ------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- | ------------------------------------ |
+| [`createSealQueue`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/queue/#api-createSealQueue) | [`UnencryptedPacket`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-UnencryptedPacket) | [`WirePacket`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-WirePacket)               | [`sender/`](../sender/README.md)     |
+| [`createOpenQueue`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/queue/#api-createOpenQueue) | [`WirePacket`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-WirePacket)               | [`UnencryptedPacket`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-UnencryptedPacket) | [`receiver/`](../receiver/README.md) |
 
 ---
 
@@ -92,7 +92,7 @@ type OpenQueueCreater = (
 
 ### `createQueue<T>`
 
-**Location**: `@hyperfrontend/network-protocol/queue`
+**Location**: [`@hyperfrontend/network-protocol/queue`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/queue/)
 
 ```typescript
 function createQueue<T extends Record<string, any>>(processMessage: MessageHandler<T>, autoStart = true): Queue<T>
@@ -109,7 +109,7 @@ const queue = createQueue<{ id: string }>(async (message) => {
 queue.addMessage({ id: '1' }) // starts processing at once
 ```
 
-Throws `processMessage must be a function` and `autoStart must be a boolean` at creation; `addMessage` throws a `TypeError` (`Message must be a non-null object`) for anything that is not an object.
+Throws `processMessage must be a function` and `autoStart must be a boolean` at creation; [`addMessage`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/queue/#api-Queue-prop-addMessage) throws a `TypeError` (`Message must be a non-null object`) for anything that is not an object.
 
 ### `createSealQueue`
 
@@ -126,7 +126,7 @@ const sealing = createSealQueue(
 sealing.addMessage(unencryptedPacket)
 ```
 
-Each packet is checked with `isValidUnencryptedPacket`, sealed, and the result checked with `isValidWirePacket` before `onSuccess`.
+Each packet is checked with [`isValidUnencryptedPacket`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-isValidUnencryptedPacket), sealed, and the result checked with [`isValidWirePacket`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-isValidWirePacket) before [`onSuccess`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/queue/#api-QueueCreatorArguments-prop-onSuccess).
 
 ### `createOpenQueue`
 
@@ -143,7 +143,7 @@ const opening = createOpenQueue(
 opening.addMessage(frame)
 ```
 
-Each frame is checked with `isValidWirePacket`, opened, and the result checked with `isValidUnencryptedPacket` before `onSuccess`.
+Each frame is checked with [`isValidWirePacket`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-isValidWirePacket), opened, and the result checked with [`isValidUnencryptedPacket`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-isValidUnencryptedPacket) before [`onSuccess`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/queue/#api-QueueCreatorArguments-prop-onSuccess).
 
 ---
 
@@ -166,19 +166,19 @@ queue.resume() // processes a, then b
 
 ## Error Handling
 
-A rejected input never blocks the queue: the stage logs it, calls `onFail`, and moves on to the next message.
+A rejected input never blocks the queue: the stage logs it, calls [`onFail`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/queue/#api-QueueCreatorArguments-prop-onFail), and moves on to the next message.
 
-| Queue | `reason`                                                                 | `cause`                    |
-| ----- | ------------------------------------------------------------------------ | -------------------------- |
-| seal  | `Invalid packet ignored`                                                 | none                       |
-| seal  | the message of the error `seal` threw (a `ProtocolError`)                | the thrown error           |
-| seal  | `Sealed packet is not valid`                                             | none                       |
-| open  | `Invalid frame ignored`                                                  | none                       |
-| open  | the message of the error `open` threw (replay, forgery, malformed frame) | the thrown `ProtocolError` |
-| open  | `Opened packet is not valid`                                             | none                       |
-| both  | `An unexpected error occurred. <error>`                                  | the thrown error           |
+| Queue | [`reason`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-PacketDrop-prop-reason)                                                                                                                                           | [`cause`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-PacketDrop-prop-cause)                     |
+| ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| seal  | `Invalid packet ignored`                                                                                                                                                                                                                        | none                                                                                                                    |
+| seal  | the message of the error [`seal`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-Protocol-prop-seal) threw (a [`ProtocolError`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/security/#api-ProtocolError)) | the thrown error                                                                                                        |
+| seal  | `Sealed packet is not valid`                                                                                                                                                                                                                    | none                                                                                                                    |
+| open  | `Invalid frame ignored`                                                                                                                                                                                                                         | none                                                                                                                    |
+| open  | the message of the error [`open`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-Protocol-prop-open) threw (replay, forgery, malformed frame)                                                                               | the thrown [`ProtocolError`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/security/#api-ProtocolError) |
+| open  | `Opened packet is not valid`                                                                                                                                                                                                                    | none                                                                                                                    |
+| both  | `An unexpected error occurred. <error>`                                                                                                                                                                                                         | the thrown error                                                                                                        |
 
-The sender and receiver translate these calls into `PacketDrop` reports for the channel's `onDrop`.
+The sender and receiver translate these calls into [`PacketDrop`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-PacketDrop) reports for the channel's [`onDrop`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-ChannelOptions-prop-onDrop).
 
 ### Validation Errors
 
@@ -188,7 +188,7 @@ The specialised creators validate their arguments and throw `Cannot create seal 
 
 ## Relationship to Other Modules
 
-- **Depends on**: [`packet/`](../packet/README.md) (packet types and validations), `@hyperfrontend/logging`
+- **Depends on**: [`packet/`](../packet/README.md) (packet types and validations), [`@hyperfrontend/logging`](https://www.hyperfrontend.dev/docs/libraries/logging/)
 - **Used by**: [`sender/`](../sender/README.md), [`receiver/`](../receiver/README.md)
 
 ---
@@ -197,7 +197,7 @@ The specialised creators validate their arguments and throw `Cannot create seal 
 
 - **[Library Index](../README.md)** - All modules
 - **[Architecture Guide](../../../ARCHITECTURE.md#queue)** - Queue architecture
-- **[Queue Entry](../../queue/README.md)** - The `@hyperfrontend/network-protocol/queue` entry
+- **[Queue Entry](../../queue/README.md)** - The [`@hyperfrontend/network-protocol/queue`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/queue/) entry
 
 ### Related Modules
 

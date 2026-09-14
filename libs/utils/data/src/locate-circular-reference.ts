@@ -45,6 +45,7 @@ export const locateCircularReferenceRecursive = (
   const { getKeys, read } = getIterableOperators(type)
   const keys = getKeys(target)
   keys.forEach((key) => locateCircularReferenceRecursive(read(target, key), maxResults, [...path, key], stack, result))
+  stack.remove(target)
   if (root) stack.clear()
   return result
 }
@@ -74,9 +75,13 @@ export const locateCircularReference = (target: unknown, maxResults: '*' | numbe
   if (!originalSupportStatus) {
     setConfig({ detectCircularReferences: true })
   }
-  const result = locateCircularReferenceRecursive(target, maxResults, [], referenceStack(), [], true)
-  if (!originalSupportStatus) {
-    setConfig({ detectCircularReferences: false })
+  const stack = referenceStack()
+  try {
+    return locateCircularReferenceRecursive(target, maxResults, [], stack, [], true)
+  } finally {
+    if (!originalSupportStatus) {
+      setConfig({ detectCircularReferences: false })
+    }
+    stack.clear()
   }
-  return result
 }

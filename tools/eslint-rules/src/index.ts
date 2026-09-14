@@ -1,5 +1,6 @@
 import type { ESLint, Rule } from 'eslint'
 import assertiveTestNames, { RULE_NAME as ASSERTIVE_TEST_NAMES } from './rules/assertive-test-names'
+import codeblockLineWidth, { RULE_NAME as CODEBLOCK_LINE_WIDTH } from './rules/codeblock-line-width'
 import deepestImportPath, { RULE_NAME as DEEPEST_IMPORT_PATH } from './rules/deepest-import-path'
 import deployStaticHeaders, { RULE_NAME as DEPLOY_STATIC_HEADERS } from './rules/deploy-static-headers'
 import docsSiteLibraries, { RULE_NAME as DOCS_SITE_LIBRARIES } from './rules/docs-site-libraries'
@@ -16,7 +17,10 @@ import libCiWorkflows, { RULE_NAME as LIB_CI_WORKFLOWS } from './rules/lib-ci-wo
 import libCompatibilityMatrix, { RULE_NAME as LIB_COMPATIBILITY_MATRIX } from './rules/lib-compatibility-matrix'
 import libE2eProjectRequired, { RULE_NAME as LIB_E2E_PROJECT_REQUIRED } from './rules/lib-e2e-project-required'
 import libEntryExportSpacing, { RULE_NAME as LIB_ENTRY_EXPORT_SPACING } from './rules/lib-entry-export-spacing'
+import libInlineCodeLinks, { RULE_NAME as LIB_INLINE_CODE_LINKS } from './rules/lib-inline-code-links'
 import libPkgBundleEntry, { RULE_NAME as LIB_PKG_BUNDLE_ENTRY } from './rules/lib-pkg-bundle-entry'
+import libPkgDescription, { RULE_NAME as LIB_PKG_DESCRIPTION } from './rules/lib-pkg-description'
+import libPkgExportsEntryShape, { RULE_NAME as LIB_PKG_EXPORTS_ENTRY_SHAPE } from './rules/lib-pkg-exports-entry-shape'
 import libPkgExportsExist, { RULE_NAME as LIB_PKG_EXPORTS_EXIST } from './rules/lib-pkg-exports-exist'
 import libPkgExportsJsOnly, { RULE_NAME as LIB_PKG_EXPORTS_JS_ONLY } from './rules/lib-pkg-exports-js-only'
 import libPkgFields, { RULE_NAME as LIB_PKG_FIELDS } from './rules/lib-pkg-fields'
@@ -28,6 +32,8 @@ import libProjectBundleConfig, { RULE_NAME as LIB_PROJECT_BUNDLE_CONFIG } from '
 import libProjectCompatibility, { RULE_NAME as LIB_PROJECT_COMPATIBILITY } from './rules/lib-project-compatibility'
 import libProjectMetadata, { RULE_NAME as LIB_PROJECT_METADATA } from './rules/lib-project-metadata'
 import libProjectVersionTargets, { RULE_NAME as LIB_PROJECT_VERSION_TARGETS } from './rules/lib-project-version-targets'
+import libReadmeCompatibilityTable, { RULE_NAME as LIB_README_COMPATIBILITY_TABLE } from './rules/lib-readme-compatibility-table'
+import libReadmeMediaRegions, { RULE_NAME as LIB_README_MEDIA_REGIONS } from './rules/lib-readme-media-regions'
 import libReadmeStructure, { RULE_NAME as LIB_README_STRUCTURE } from './rules/lib-readme-structure'
 import libRequireJsdocExample, { RULE_NAME as LIB_REQUIRE_JSDOC_EXAMPLE } from './rules/lib-require-jsdoc-example'
 import libRequireJsdocExampleLabel, { RULE_NAME as LIB_REQUIRE_JSDOC_EXAMPLE_LABEL } from './rules/lib-require-jsdoc-example-label'
@@ -43,6 +49,7 @@ import noDeprecatedTag, { RULE_NAME as NO_DEPRECATED_TAG } from './rules/no-depr
 import noDirectConsole, { RULE_NAME as NO_DIRECT_CONSOLE } from './rules/no-direct-console'
 import noEnum, { RULE_NAME as NO_ENUM } from './rules/no-enum'
 import noInlineTypeLiteral, { RULE_NAME as NO_INLINE_TYPE_LITERAL } from './rules/no-inline-type-literal'
+import noManualTableOfContents, { RULE_NAME as NO_MANUAL_TABLE_OF_CONTENTS } from './rules/no-manual-table-of-contents'
 import noMixedTypeExport, { RULE_NAME as NO_MIXED_TYPE_EXPORT } from './rules/no-mixed-type-export'
 import noMixedTypeImport, { RULE_NAME as NO_MIXED_TYPE_IMPORT } from './rules/no-mixed-type-import'
 import noNamespaceImport, { RULE_NAME as NO_NAMESPACE_IMPORT } from './rules/no-namespace-import'
@@ -71,6 +78,7 @@ import rootReadmePackages, { RULE_NAME as ROOT_README_PACKAGES } from './rules/r
  */
 export const rules: ESLint.Plugin['rules'] = {
   [ASSERTIVE_TEST_NAMES]: assertiveTestNames as unknown as Rule.RuleModule,
+  [CODEBLOCK_LINE_WIDTH]: codeblockLineWidth as unknown as Rule.RuleModule,
   [DEEPEST_IMPORT_PATH]: deepestImportPath as unknown as Rule.RuleModule,
   [DEPLOY_STATIC_HEADERS]: deployStaticHeaders as unknown as Rule.RuleModule,
   [DOCS_SITE_LIBRARIES]: docsSiteLibraries as unknown as Rule.RuleModule,
@@ -82,12 +90,15 @@ export const rules: ESLint.Plugin['rules'] = {
   [EXPORT_ORDER]: exportOrder as unknown as Rule.RuleModule,
   [LIB_COMPATIBILITY_MATRIX]: libCompatibilityMatrix as unknown as Rule.RuleModule,
   [LIB_ENTRY_EXPORT_SPACING]: libEntryExportSpacing as unknown as Rule.RuleModule,
+  [LIB_INLINE_CODE_LINKS]: libInlineCodeLinks as unknown as Rule.RuleModule,
   [IMPORT_ORDER]: importOrder as unknown as Rule.RuleModule,
   [JEST_MOCK_AFTER_IMPORTS]: jestMockAfterImports as unknown as Rule.RuleModule,
   [LIB_BUILDER_IMPLICIT_DEPENDENCY]: libBuilderImplicitDependency as unknown as Rule.RuleModule,
   [LIB_CI_WORKFLOWS]: libCiWorkflows as unknown as Rule.RuleModule,
   [LIB_E2E_PROJECT_REQUIRED]: libE2eProjectRequired as unknown as Rule.RuleModule,
   [LIB_PKG_BUNDLE_ENTRY]: libPkgBundleEntry as unknown as Rule.RuleModule,
+  [LIB_PKG_DESCRIPTION]: libPkgDescription as unknown as Rule.RuleModule,
+  [LIB_PKG_EXPORTS_ENTRY_SHAPE]: libPkgExportsEntryShape as unknown as Rule.RuleModule,
   [LIB_PKG_EXPORTS_EXIST]: libPkgExportsExist as unknown as Rule.RuleModule,
   [LIB_PKG_EXPORTS_JS_ONLY]: libPkgExportsJsOnly as unknown as Rule.RuleModule,
   [LIB_PKG_FIELDS]: libPkgFields as unknown as Rule.RuleModule,
@@ -99,6 +110,8 @@ export const rules: ESLint.Plugin['rules'] = {
   [LIB_PROJECT_COMPATIBILITY]: libProjectCompatibility as unknown as Rule.RuleModule,
   [LIB_PROJECT_METADATA]: libProjectMetadata as unknown as Rule.RuleModule,
   [LIB_PROJECT_VERSION_TARGETS]: libProjectVersionTargets as unknown as Rule.RuleModule,
+  [LIB_README_COMPATIBILITY_TABLE]: libReadmeCompatibilityTable as unknown as Rule.RuleModule,
+  [LIB_README_MEDIA_REGIONS]: libReadmeMediaRegions as unknown as Rule.RuleModule,
   [LIB_README_STRUCTURE]: libReadmeStructure as unknown as Rule.RuleModule,
   [LIB_REQUIRE_JSDOC_EXAMPLE]: libRequireJsdocExample as unknown as Rule.RuleModule,
   [LIB_REQUIRE_JSDOC_EXAMPLE_LABEL]: libRequireJsdocExampleLabel as unknown as Rule.RuleModule,
@@ -114,6 +127,7 @@ export const rules: ESLint.Plugin['rules'] = {
   [NO_DIRECT_CONSOLE]: noDirectConsole as unknown as Rule.RuleModule,
   [NO_ENUM]: noEnum as unknown as Rule.RuleModule,
   [NO_INLINE_TYPE_LITERAL]: noInlineTypeLiteral as unknown as Rule.RuleModule,
+  [NO_MANUAL_TABLE_OF_CONTENTS]: noManualTableOfContents as unknown as Rule.RuleModule,
   [NO_MIXED_TYPE_EXPORT]: noMixedTypeExport as unknown as Rule.RuleModule,
   [NO_MIXED_TYPE_IMPORT]: noMixedTypeImport as unknown as Rule.RuleModule,
   [NO_NAMESPACE_IMPORT]: noNamespaceImport as unknown as Rule.RuleModule,

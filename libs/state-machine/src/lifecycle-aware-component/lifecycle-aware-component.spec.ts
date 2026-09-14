@@ -204,6 +204,41 @@ describe('LifecycleAwareComponent', () => {
     expect(callback).toHaveBeenCalled()
   })
 
+  it(`replays the initializing status to the newly registered callback only`, () => {
+    asyncProcess.onInitializingStatusChange(callback)
+    asyncProcess['setInitializing'](true)
+    asyncProcess.onInitializingStatusChange(jest.fn())
+    expect(callback).toHaveBeenCalledTimes(1)
+  })
+
+  it(`replays the ready status to the newly registered callback only`, () => {
+    asyncProcess.onReadyStatusChange(callback)
+    asyncProcess['setReady'](true)
+    asyncProcess.onReadyStatusChange(jest.fn())
+    expect(callback).toHaveBeenCalledTimes(1)
+  })
+
+  it(`replays the starting status to the newly registered callback only`, () => {
+    asyncProcess.onStartStatusChange(callback)
+    asyncProcess['setStarting'](true)
+    asyncProcess.onStartStatusChange(jest.fn())
+    expect(callback).toHaveBeenCalledTimes(1)
+  })
+
+  it(`replays the stopping status to the newly registered callback only`, () => {
+    asyncProcess.onStopStatusChange(callback)
+    asyncProcess['setStopping'](true)
+    asyncProcess.onStopStatusChange(jest.fn())
+    expect(callback).toHaveBeenCalledTimes(1)
+  })
+
+  it(`replays the active status to the newly registered callback only`, () => {
+    asyncProcess.onActiveStatusChange(callback)
+    asyncProcess['setActive'](true)
+    asyncProcess.onActiveStatusChange(jest.fn())
+    expect(callback).toHaveBeenCalledTimes(1)
+  })
+
   it(`clears all lifecycle callback functions`, async () => {
     asyncProcess.onReadyStatusChange(callback)
     asyncProcess.clear()

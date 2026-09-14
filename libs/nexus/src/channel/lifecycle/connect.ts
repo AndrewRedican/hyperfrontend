@@ -67,7 +67,7 @@ function answerScheduledActivation(channel: ChannelInternals, activation: Schedu
 /**
  * Initiates the connection handshake for a channel.
  *
- * - If the channel is already open or mid-handshake, does nothing
+ * - If the channel is already open, mid-handshake, or destroyed, does nothing
  * - If a REQUEST arrived before connect() (scheduled activation), answers it
  *   as the responder: attaches the negotiated security transport, sends
  *   ACCEPT carrying the negotiated security response, and waits for OPEN
@@ -90,7 +90,8 @@ function answerScheduledActivation(channel: ChannelInternals, activation: Schedu
 export function connect(channel: ChannelInternals): void {
   const state = channel.getState()
 
-  if (state.active || state.pendingProcessId || state.pendingAccept) {
+  // why: Destruction is irreversible, so a handle kept past destroy() must not start a handshake the broker no longer routes.
+  if (state.destroyed || state.active || state.pendingProcessId || state.pendingAccept) {
     return
   }
 

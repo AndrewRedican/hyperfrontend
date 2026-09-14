@@ -1,10 +1,11 @@
+import type { IAction } from '../types/action'
 import type { IChannelContract } from '../types/contract'
 import type { MockWindow } from './test-utils'
 import { after as afterAll, afterEach, before as beforeAll, beforeEach } from 'node:test'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { createBroker } from '../broker/factory'
 import { ACTION_TYPES } from '../types/action'
-import { createMockWindow, linkMockWindows, createContractPair } from './test-utils'
+import { collectEvents, createMockWindow, linkMockWindows, createContractPair, simulateMessage } from './test-utils'
 
 describe('Integration: Broker + Channel', () => {
   let windowA: MockWindow
@@ -249,6 +250,17 @@ describe('Integration: Broker + Channel', () => {
   })
 
   describe('Cleanup', () => {
+    const connectThenDestroy = () => {
+      const { contractA, contractB } = createContractPair(['MSG'], ['ACK'])
+      const { channelA } = setupPair(contractA, contractB)
+
+      channelA.connect()
+      const processId = channelA.getPendingProcessId() as string
+      channelA.destroy(false)
+
+      return { channelA, contractB, processId, events: collectEvents(channelA) }
+    }
+
     it('cleans up resources on destroy', () => {
       const { contractA, contractB } = createContractPair(['PING'], ['PONG'])
       const { channelA, channelB } = setupPair(contractA, contractB)
@@ -262,6 +274,42 @@ describe('Integration: Broker + Channel', () => {
       channelA.destroy()
 
       expect(channelA.isActive()).toBe(false)
+    })
+
+    it('fires nothing when an ACCEPT for the abandoned request arrives late', () => {
+      const { contractB, processId, events } = connectThenDestroy()
+
+      simulateMessage(
+        windowA,
+        { type: ACTION_TYPES.ACCEPT_CONNECTION, processId, senderId: 'broker-b', contract: contractB } as IAction,
+        'http://host-b.com',
+        windowB
+      )
+
+      expect(events).toEqual([])
+    })
+
+    it('fires nothing when a DENY for the abandoned request arrives late', () => {
+      const { processId, events } = connectThenDestroy()
+
+      simulateMessage(
+        windowA,
+        { type: ACTION_TYPES.DENY_CONNECTION, processId, senderId: 'broker-b', error: 'refused' } as IAction,
+        'http://host-b.com',
+        windowB
+      )
+
+      expect(events).toEqual([])
+    })
+
+    it('posts nothing when connect() is called on the destroyed handle', () => {
+      const { channelA } = connectThenDestroy()
+      windowB.postMessage.mockClear()
+
+      channelA.connect()
+      jest.advanceTimersByTime(2000)
+
+      expect(postedTypes(windowB)).toEqual([])
     })
   })
 })

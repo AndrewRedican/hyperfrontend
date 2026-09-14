@@ -52,6 +52,9 @@ export function createChannelFactory(createSender: SenderFactory, createReceiver
     if (!isValidSession(session)) {
       throw createError(withoutValidErrorMessage('session'))
     }
+    if (onDrop !== undefined && getType(onDrop) !== 'function') {
+      throw createError(withoutValidErrorMessage('drop handler function'))
+    }
     const protocol = protocolProvider(sendPacket, receivePacket, session)
     const propName = getFirstInvalidProtocolProperty(protocol)
     if (propName) {

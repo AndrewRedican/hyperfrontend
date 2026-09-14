@@ -37,7 +37,7 @@ export function createFakeTerminal() {
 }
 ```
 
-One `write` per key is the part that matters. Typed characters may share a chunk, but Enter must arrive in a write of its own: send `'billing\r'` as one string and the prompt waits forever, with no error to tell you why. Writing every key separately makes that impossible to get wrong. Nothing here belongs to a particular test runner: it is two streams and a string, so it works wherever your suite already runs.
+Keys may share a chunk, Enter included: `'billing\r'` in a single write submits `billing`, and so does sending the text and the `\r` separately. Writing every key on its own is still the clearest way to read a test, because each line says what the user did. Nothing here belongs to a particular test runner: it is two streams and a string, so it works wherever your suite already runs.
 
 ## 2. Start the prompt, then type
 

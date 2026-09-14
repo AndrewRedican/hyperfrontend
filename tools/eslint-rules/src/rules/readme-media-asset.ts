@@ -62,6 +62,25 @@ export function isMediaUrl(url: string): boolean {
 }
 
 /**
+ * Checks whether a URL names one of the theme-specific variants of an asset.
+ *
+ * The recorder writes a scene's dark and light variants beside the portable
+ * file under a `.dark` or `.light` suffix before the extension. Those exist
+ * for the documentation site, which knows its theme and swaps them in for
+ * itself; a README is read on pages whose theme nobody here controls, so it
+ * references the portable file only.
+ *
+ * @param url - The URL as written.
+ * @returns True if the filename carries a theme suffix.
+ */
+export function isThemedVariantUrl(url: string): boolean {
+  const file = (url.split('?')[0] ?? '').split('/').pop() ?? ''
+  const parts = file.split('.')
+  const suffix = parts.length >= 3 ? parts[parts.length - 2] : ''
+  return suffix === 'dark' || suffix === 'light'
+}
+
+/**
  * Finds every media reference in a README, ignoring fenced code blocks.
  *
  * Both markdown images and raw `img`/`source` tags are collected, because a
@@ -151,6 +170,8 @@ const rule: Rule.RuleModule = {
     messages: {
       notSiteUrl: 'README media must use the absolute {{baseUrl}} URL so it renders on npm, on GitHub and on the docs site. Found: {{url}}',
       missingAsset: 'No committed asset at {{path}}. Record it before referencing it, or correct the URL.',
+      themedVariant:
+        'README media must reference the portable file; {{url}} is a theme-specific variant the documentation site swaps in for itself.',
     },
   },
 
@@ -182,6 +203,10 @@ const rule: Rule.RuleModule = {
 
           if (!reference.url.startsWith(baseUrl)) {
             context.report({ node, loc, messageId: 'notSiteUrl', data: { baseUrl, url: reference.url } })
+            continue
+          }
+          if (isThemedVariantUrl(reference.url)) {
+            context.report({ node, loc, messageId: 'themedVariant', data: { url: reference.url } })
             continue
           }
 

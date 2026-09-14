@@ -11,11 +11,14 @@ import { KeyFeatures } from '@/components/package/key-features'
 import { packageAccentHue } from '@/components/package/package-accents'
 import { PackageCapabilities } from '@/components/package/package-capabilities'
 import { PackageMetadata } from '@/components/package/package-metadata'
+import { packageTitle } from '@/components/package/package-name'
 import { RelatedReading } from '@/components/package/related-reading'
-import { PageAtmosphere } from '@/components/page-atmosphere'
+import { PageAccent } from '@/components/page-accent'
+import { changelogPathFor, changelogRouteFor } from '@/lib/changelog'
 import { removeBadges, transformLinks } from '@/lib/content'
 import { getLibraryReadme, getLibraryApi, getApiLinkIndex } from '@/lib/docs-loader'
 import { documentSubject } from '@/lib/document-model'
+import { getPackageDownloads } from '@/lib/downloads'
 import { buildGuidesHref } from '@/lib/guide-filters'
 import { getGuidesForPackage } from '@/lib/guides'
 import { readKeyFeatures } from '@/lib/key-features'
@@ -23,7 +26,14 @@ import { markdownToHtml } from '@/lib/markdown'
 import { extractMermaidBlocks } from '@/lib/mermaid-utils'
 import { npmPackageUrl } from '@/lib/npm-url'
 import { getPackageFacts } from '@/lib/package-facts'
-import { ARCHITECTURE_LEVEL, ARCHITECTURE_SLUG, CAPABILITIES_SLOT, KEY_FEATURES_SLOT, preparePackageReadme } from '@/lib/package-readme'
+import {
+  ARCHITECTURE_LEVEL,
+  ARCHITECTURE_SLUG,
+  CAPABILITIES_SLOT,
+  centreLede,
+  KEY_FEATURES_SLOT,
+  preparePackageReadme,
+} from '@/lib/package-readme'
 import { readSection, readSectionLink } from '@/lib/readme-sections'
 import { buildRelatedReading } from '@/lib/related-reading'
 import { extractMarkdownSections } from '@/lib/slug'
@@ -69,18 +79,23 @@ export async function LibraryDocPage({ title, packageName, slug, category, fallb
 
     const facts = getPackageFacts(packageName) ?? NO_FACTS
     const licenseHref = readSectionLink(processed, 'license')
+    // why: a package withheld from the registry has no releases to list and no downloads to count, so neither pill is offered for one
+    const changelogHref =
+      facts.isPrivate || changelogPathFor(packageName) === null ? null : changelogRouteFor(libraryDocRoute(slug, category))
+    const downloads = facts.isPrivate ? null : (getPackageDownloads(packageName)?.total ?? null)
     const related = buildRelatedReading({ packageName, slug, readme: processed })
 
     // why: the run is drawn only for a section the parser could read, so a README stating its features some other way keeps the rendering it already had
     const features = await readKeyFeatures(processed)
     const architecture = readSection(processed, ARCHITECTURE_SLUG, ARCHITECTURE_LEVEL)
     const architectureHtml = architecture === null ? null : await markdownToHtml(architecture)
-    const { title: packageTitle, body } = preparePackageReadme(processed, {
+    const { title: readmeTitle, body } = preparePackageReadme(processed, {
       keyFeatures: features !== null,
       architecture: architectureHtml !== null,
     })
 
-    const { processedContent, diagrams } = extractMermaidBlocks(body)
+    // why: the one sentence between the showcase and the first section is centred like the visuals around it, on the page alone; the README and the search index keep it as written
+    const { processedContent, diagrams } = extractMermaidBlocks(centreLede(body))
 
     const html = await markdownToHtml(processedContent)
 
@@ -99,7 +114,7 @@ export async function LibraryDocPage({ title, packageName, slug, category, fallb
     return (
       <>
         {/* why: a package's own hue tints the atmosphere behind its documentation, so moving between packages feels like moving between places rather than reloading one */}
-        <PageAtmosphere accent={packageAccentHue(packageName)} />
+        <PageAccent hue={packageAccentHue(packageName)} />
         <DocumentShell
           descriptor={{ route: libraryDocRoute(slug, category), title, subject: documentSubject('package', packageName), kind: 'package' }}
           sections={sections}
@@ -107,10 +122,16 @@ export async function LibraryDocPage({ title, packageName, slug, category, fallb
           <Breadcrumb />
 
           <H1 className="font-display text-3xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-4xl">
-            {packageTitle ?? packageName}
+            {packageTitle(readmeTitle ?? packageName)}
           </H1>
 
-          <PackageMetadata packageName={packageName} facts={facts} licenseHref={licenseHref} />
+          <PackageMetadata
+            packageName={packageName}
+            facts={facts}
+            licenseHref={licenseHref}
+            changelogHref={changelogHref}
+            downloads={downloads}
+          />
 
           <div className="mt-6">
             <ReadmeContent

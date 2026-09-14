@@ -45,8 +45,11 @@ apps/docs-site/
 │   ├── api/                 # TypeDoc JSON for each library
 │   ├── docs/                # Extracted README.md and ARCHITECTURE.md
 │   └── manifest.json        # Library metadata and generation status
+├── data/
+│   └── npm-downloads/       # Committed daily npm download history (NDJSON per package)
 ├── scripts/
 │   ├── generate-docs.ts     # Content generation pipeline
+│   ├── refresh-npm-downloads.ts  # Refreshes data/npm-downloads from npm, on demand
 │   └── validate-links.ts    # Build-time link validation
 ├── src/
 │   ├── app/                 # Next.js App Router pages
@@ -238,6 +241,41 @@ is the case worth remembering: the workspace has a CONTRIBUTING.md, but that pag
 hand-written and says something shorter, so publishing the file there would hand a reader
 a different document from the one they were looking at.
 
+### Package changelogs
+
+Every published package's `CHANGELOG.md` is rendered at `/docs/libraries/<slug>/releases`
+(utilities under `/docs/libraries/utils/<segment>/releases`; the segment is `releases` because
+`changelog` is already an entry point of `@hyperfrontend/versioning`) by `src/lib/changelog.ts`,
+which parses the file the versioning flow writes (`src/lib/changelog-parse.ts`) at build
+time. The file stays the one source of truth: nothing about a release is stored anywhere
+else, and the page is a reading of it. In the browser the page asks the npm registry, once,
+what it serves as `latest`; when that is newer than the newest release listed, a notice says
+a release has been published that this build does not describe yet.
+
+### npm download history
+
+`/docs/downloads`, the download pills on package pages, and the ecosystem badge on the landing
+page read a committed dataset under `data/npm-downloads/`: one newline-delimited JSON file per
+published package, one line per UTC day, plus a `manifest.json` recording the newest day npm
+had counted and when the dataset was last refreshed. The build never asks npm; it is a
+function of the committed files.
+
+The dataset is refreshed on purpose, not as part of a build:
+
+```bash
+npm run refresh-downloads            # or: npx nx run docs-site:refresh-downloads
+npm run refresh-downloads -- --force # run even when already refreshed today
+```
+
+The collector (`src/lib/npm-downloads/`) asks npm for daily counts in bounded chunks of at
+most 500 days, because a longer span is silently cut to the most recent eighteen months;
+validates every answer against the request before anything is written; runs one request at
+a time with at least a second between them; re-reads the most recent seven days on every
+refresh, since npm counts a day once, soon after the UTC midnight that ends it; and commits
+the whole run transactionally or not at all. A refresh made earlier the same UTC day is
+skipped unless forced, because npm has nothing new to say until the next day is counted.
+Commit the changed files under `data/npm-downloads/` with the refresh.
+
 `public/llms.txt` follows the [llms.txt convention](https://llmstxt.org): an H1, a summary,
 and link sections pointing at the `.md` files. Secondary entry points are left out of it on
 purpose; there are 172 of them, listing them would blow the context budget the convention
@@ -368,6 +406,22 @@ Mermaid diagrams in README.md and ARCHITECTURE.md files are rendered client-side
 3. `<MermaidDiagram>` component renders diagrams on the client
 
 The mermaid library is initialized with a custom theme matching the site's design.
+
+---
+
+## Code Blocks
+
+Every fenced code block is drawn in one of two widths, decided at render time from its text: **compact** (half the document column, on columns wide enough to halve) when the longest line is 52 characters or fewer and the block has at most 6 lines, **full** otherwise. The rule lives in [src/lib/code-layout.ts](src/lib/code-layout.ts) and the widths in [src/styles/globals.css](src/styles/globals.css); a `CodeBlock` component takes a `layout` prop for the same choice.
+
+An author overrides the classification from the fence, after the language:
+
+````markdown
+```bash layout=full
+npm install @hyperfrontend/features
+```
+````
+
+`layout=compact` works the same way. A wide line never widens the page: a block is capped at its column and scrolls sideways inside itself, on every surface. The `workspace/codeblock-line-width` lint rule warns, separately, about lines that would read better one entry per line.
 
 ---
 

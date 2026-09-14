@@ -1,6 +1,7 @@
 import type { Tree } from '../../vfs'
 import { join } from 'node:path'
 import { readDirectory, readFileIfExists } from '../../core/fs'
+import { isFileSystemError } from '../../core/fs/read'
 import { createScopedLogger } from '../../core/logger'
 import { matchGlobPattern } from '../../core/patterns/glob'
 
@@ -79,41 +80,59 @@ function loadGitignorePatterns(startPath: string): string[] {
  * Evaluates whether a relative path should be ignored based on
  * a list of gitignore-style patterns.
  *
+ * Patterns are applied in the order they were declared and the last one that
+ * matches decides the outcome, so a later `!pattern` line re-includes a path an
+ * earlier line ignored. A negation that matches nothing leaves the running
+ * decision untouched rather than inverting it.
+ *
  * @param relativePath - Path relative to the root directory
  * @param patterns - Array of gitignore-style patterns to test
- * @returns True if the path matches any ignore pattern
+ * @param isDirectoryEntry - Whether the path names a directory, which is what directory-only patterns require
+ * @returns True if the last matching pattern ignores the path
  */
-function matchesIgnorePattern(relativePath: string, patterns: string[]): boolean {
+function matchesIgnorePattern(relativePath: string, patterns: string[], isDirectoryEntry: boolean): boolean {
+  let ignored = false
+
   for (const pattern of patterns) {
-    if (matchPattern(relativePath, pattern)) {
-      return true
+    const isNegation = pattern.startsWith('!')
+    const candidate = isNegation ? pattern.slice(1) : pattern
+
+    if (matchPattern(relativePath, candidate, isDirectoryEntry)) {
+      ignored = !isNegation
     }
   }
-  return false
+
+  return ignored
 }
 
 /**
- * Tests if the given path matches a gitignore-style pattern,
- * supporting negation patterns with '!' prefix.
+ * Tests if the given path matches a gitignore-style pattern.
  * Uses safe character-by-character matching to prevent ReDoS attacks.
  *
+ * A leading `/` anchors the pattern to the walk root and is dropped before
+ * matching. A trailing `/` marks the pattern as directory-only, so it is
+ * dropped as well and the pattern then matches directories alone.
+ *
  * @param path - File or directory path to test
- * @param pattern - Gitignore-style pattern (may include wildcards)
- * @returns True if the path matches the pattern (or doesn't match if negated)
+ * @param pattern - Gitignore-style pattern without its negation marker (may include wildcards)
+ * @param isDirectoryEntry - Whether the path names a directory
+ * @returns True if the path matches the pattern
  */
-function matchPattern(path: string, pattern: string): boolean {
-  const normalizedPattern = pattern.startsWith('/') ? pattern.slice(1) : pattern
-  const isNegation = normalizedPattern.startsWith('!')
+function matchPattern(path: string, pattern: string, isDirectoryEntry: boolean): boolean {
+  const anchorless = pattern.startsWith('/') ? pattern.slice(1) : pattern
+  const isDirectoryOnly = anchorless.endsWith('/')
 
-  const actualPattern = isNegation ? normalizedPattern.slice(1) : normalizedPattern
+  if (isDirectoryOnly && !isDirectoryEntry) {
+    return false
+  }
+
+  const actualPattern = isDirectoryOnly ? anchorless.slice(0, -1) : anchorless
 
   const matchesFullPath = matchGlobPattern(path, actualPattern) || matchGlobPattern(path, `**/${actualPattern}`)
 
   const matchesSegment = path.split('/').some((segment) => matchGlobPattern(segment, actualPattern))
 
-  const matches = matchesFullPath || matchesSegment
-
-  return isNegation ? !matches : matches
+  return matchesFullPath || matchesSegment
 }
 
 /**
@@ -174,7 +193,11 @@ export function walkDirectory(startPath: string, visitor: WalkVisitor, options?:
     let entries
     try {
       entries = readDirectory(currentPath)
-    } catch {
+    } catch (error) {
+      // why: an unreadable directory yields no entries, but anything that is not a filesystem failure is a defect the caller must see.
+      if (!isFileSystemError(error)) {
+        throw error
+      }
       return true
     }
 
@@ -185,7 +208,7 @@ export function walkDirectory(startPath: string, visitor: WalkVisitor, options?:
 
       const entryRelativePath = relativePath ? `${relativePath}/${entry.name}` : entry.name
 
-      if (matchesIgnorePattern(entryRelativePath, allIgnorePatterns)) {
+      if (matchesIgnorePattern(entryRelativePath, allIgnorePatterns, entry.isDirectory)) {
         continue
       }
 
@@ -267,7 +290,11 @@ export function walkTree(tree: Tree, startPath: string, visitor: WalkVisitor, op
     let children: string[]
     try {
       children = tree.children(currentPath)
-    } catch {
+    } catch (error) {
+      // why: a missing directory yields no children, but a broken tree implementation or a root escape must reach the caller instead of reading as "empty".
+      if (!isFileSystemError(error)) {
+        throw error
+      }
       return true
     }
 
@@ -280,6 +307,7 @@ export function walkTree(tree: Tree, startPath: string, visitor: WalkVisitor, op
       const entryRelativePath = relativePath ? `${relativePath}/${name}` : name
 
       const isFileEntry = tree.isFile(childPath)
+      const isSymlinkEntry = tree.isSymlink(childPath)
 
       const walkEntry: WalkEntry = {
         name,
@@ -287,7 +315,7 @@ export function walkTree(tree: Tree, startPath: string, visitor: WalkVisitor, op
         relativePath: entryRelativePath,
         isFile: isFileEntry,
         isDirectory: !isFileEntry,
-        isSymlink: false,
+        isSymlink: isSymlinkEntry,
         depth,
       }
 
@@ -301,7 +329,8 @@ export function walkTree(tree: Tree, startPath: string, visitor: WalkVisitor, op
         continue
       }
 
-      if (!isFileEntry) {
+      // why: a directory symlink can point back at an ancestor, so descending it never terminates; the link is reported and left unopened, which is what walkDirectory already does.
+      if (!isFileEntry && !isSymlinkEntry) {
         const shouldContinue = walk(childPath, entryRelativePath, depth + 1)
         if (!shouldContinue) {
           return false

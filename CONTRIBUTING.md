@@ -500,7 +500,7 @@ We use [Conventional Commits](https://www.conventionalcommits.org/), authored an
 
 ### Commit Message Format
 
-```
+```text
 <type>(<scope>): <subject>
 
 <body>

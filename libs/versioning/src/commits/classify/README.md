@@ -44,15 +44,15 @@ flowchart TB
 
 ## Commit Sources
 
-| Source                | Description                            | Included | Scope Display |
-| --------------------- | -------------------------------------- | -------- | ------------- |
-| `direct-scope`        | Scope matches project                  | ✅       | Omitted       |
-| `direct-file`         | Files touched in project               | ✅       | Preserved     |
-| `unscoped-file`       | No scope, but touched project files    | ✅       | None          |
-| `indirect-dependency` | Commit to a dependency package         | ✅       | Preserved     |
-| `indirect-infra`      | Commit to build/tooling infrastructure | ✅       | Preserved     |
-| `unscoped-global`     | No scope, no project files touched     | ❌       | N/A           |
-| `excluded`            | Does not relate to project             | ❌       | N/A           |
+| Source                                                                                                           | Description                            | Included | Scope Display |
+| ---------------------------------------------------------------------------------------------------------------- | -------------------------------------- | -------- | ------------- |
+| `direct-scope`                                                                                                   | Scope matches project                  | ✅       | Omitted       |
+| `direct-file`                                                                                                    | Files touched in project               | ✅       | Preserved     |
+| `unscoped-file`                                                                                                  | No scope, but touched project files    | ✅       | None          |
+| `indirect-dependency`                                                                                            | Commit to a dependency package         | ✅       | Preserved     |
+| `indirect-infra`                                                                                                 | Commit to build/tooling infrastructure | ✅       | Preserved     |
+| `unscoped-global`                                                                                                | No scope, no project files touched     | ❌       | N/A           |
+| [`excluded`](https://www.hyperfrontend.dev/docs/libraries/versioning/commits/classify/#api-ClassificationResult) | Does not relate to project             | ❌       | N/A           |
 
 ## Usage Examples
 
@@ -148,16 +148,16 @@ The classification engine applies intelligent scope display rules:
 
 Three strategies are supported via the flow configuration:
 
-| Strategy     | Description                        | Use Case                |
-| ------------ | ---------------------------------- | ----------------------- |
-| `hybrid`     | Scope matching + file validation   | Default, most accurate  |
-| `scope-only` | Trust scope completely             | Disciplined teams, fast |
-| `file-only`  | Ignore scopes, use file paths only | Non-scoped repositories |
-| `inferred`   | Auto-detect from commit history    | External codebases      |
+| Strategy                                                                                                                | Description                        | Use Case                |
+| ----------------------------------------------------------------------------------------------------------------------- | ---------------------------------- | ----------------------- |
+| [`hybrid`](https://www.hyperfrontend.dev/docs/libraries/versioning/flow/models/#api-FlowConfig-prop-scopeFiltering)     | Scope matching + file validation   | Default, most accurate  |
+| [`scope-only`](https://www.hyperfrontend.dev/docs/libraries/versioning/flow/models/#api-FlowConfig-prop-scopeFiltering) | Trust scope completely             | Disciplined teams, fast |
+| [`file-only`](https://www.hyperfrontend.dev/docs/libraries/versioning/flow/models/#api-FlowConfig-prop-scopeFiltering)  | Ignore scopes, use file paths only | Non-scoped repositories |
+| [`inferred`](https://www.hyperfrontend.dev/docs/libraries/versioning/flow/models/#api-FlowConfig-prop-scopeFiltering)   | Auto-detect from commit history    | External codebases      |
 
 ## Configuration
 
-Classification is configured via `ScopeFilteringConfig` in the flow:
+Classification is configured via [`ScopeFilteringConfig`](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/versioning/src/flow/models/types.ts) in the flow:
 
 ```typescript
 import { createVersionFlow } from '@hyperfrontend/versioning'

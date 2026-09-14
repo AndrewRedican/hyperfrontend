@@ -4,7 +4,7 @@ import type { ReactNode } from 'react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { createObjectURL, revokeObjectURL } from '@hyperfrontend/immutable-api-utils/built-in-copy/url'
-import { generateSlug } from '../../lib/markdown'
+import { generateSlug } from '../../lib/slug'
 import { CaretIcon, DownloadIcon, PrintIcon } from '../document/document-icons'
 
 /** Props for {@link RecordActions}. */

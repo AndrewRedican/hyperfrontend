@@ -35,11 +35,8 @@
 
 <p align="center">
   <a href="https://www.hyperfrontend.dev/docs/libraries/questions/">
-    <img width="640" src="https://www.hyperfrontend.dev/media/questions-prompt/hero.gif" alt="A multiselect prompt being programmed on the left and answered on the right, ending in a submitted result object">
+    <img width="640" height="360" src="https://www.hyperfrontend.dev/media/questions-prompt/hero.gif" alt="A multiselect prompt being programmed on the left and answered on the right, ending in a submitted result object">
   </a>
-</p>
-<p align="center">
-  <sub>The call you write, and the session it produces. An answered prompt resolves; a cancelled one resolves too.</sub>
 </p>
 
 Terminal prompting library with composable, functional API for text, select, confirm, and multiselect prompts
@@ -54,11 +51,13 @@ A terminal prompting library built on functional programming principles. Create 
 ### Key Features
 
 - **Pure Functions**: Every prompt is a pure function returning `Promise<PromptOutcome<T>>`, making results predictable and easily testable
-- **Composable API**: Build complex interactive flows by combining simple prompt functions
-- **Type-Safe**: Full TypeScript support with discriminated unions for prompt outcomes
+- **[Composable API](https://www.hyperfrontend.dev/docs/guides/build-a-setup-wizard-for-your-cli/)**: Build complex interactive flows by combining simple prompt functions
+- **[Type-Safe](https://www.hyperfrontend.dev/docs/libraries/questions/#api-PromptOutcome)**: Full TypeScript support with discriminated unions for prompt outcomes
 - **Zero External Dependencies**: Uses only Node.js built-ins and `@hyperfrontend` utilities
-- **Searchable Multiselect**: Type-to-filter functionality for large option lists
-- **Clipboard Paste**: Bracketed paste mode on TTYs (with a multi-character-chunk fallback elsewhere); pasted text is sanitized and never auto-submits
+- **[Searchable Multiselect](https://www.hyperfrontend.dev/docs/libraries/questions/#api-multiselect)**: Type-to-filter functionality for large option lists
+- **Clipboard Paste**: Bracketed paste mode on TTYs (with a multi-character-chunk fallback elsewhere); pasted text is sanitized, and a bracketed paste never auto-submits
+- **End of input is a cancellation**: when the input stream ends, a waiting prompt resolves as cancelled instead of waiting for a key that can never arrive
+- **Unanswerable configurations throw**: a choice prompt with no choices, or a starting index outside its list, rejects with an error rather than painting a frame nothing can answer
 - **Resize-Aware Rendering**: Prompts hard-wrap to the terminal width and repaint on resize, preserving value, cursor, selection, and validation state
 
 ### Architecture Highlights
@@ -147,22 +146,23 @@ Four prompts, one shape. [`text`](https://www.hyperfrontend.dev/docs/libraries/q
 type PromptOutcome<T> = { result: 'submitted'; value: T } | { result: 'cancelled'; value: undefined }
 ```
 
-Two things sit beside them. [`style`](https://www.hyperfrontend.dev/docs/libraries/questions/#api-style) is the ANSI colour helper the prompts use on their own labels, exposed so yours can match. And every config takes `input` and `output` streams, which is what makes a prompt testable without a TTY: hand it a pair of `PassThrough`s, write keystrokes into one and read frames out of the other.
+Two things sit beside them. [`style`](https://www.hyperfrontend.dev/docs/libraries/questions/#api-style) is the ANSI colour helper the prompts use on their own labels, exposed so yours can match. And every config takes [`input`](https://www.hyperfrontend.dev/docs/libraries/questions/#api-PromptConfig-prop-input) and [`output`](https://www.hyperfrontend.dev/docs/libraries/questions/#api-PromptConfig-prop-output) streams, which is what makes a prompt testable without a TTY: hand it a pair of `PassThrough`s, write keystrokes into one and read frames out of the other.
 
 Every config, option and outcome type is in the [API reference](https://www.hyperfrontend.dev/docs/libraries/questions/#api-reference).
 
 ## Compatibility
 
-| Environment                    | Supported |
-| ------------------------------ | --------- |
-| Node.js >= 18                  | ✅        |
-| TTY Terminal                   | ✅        |
-| Bracketed paste (TTY)          | ✅        |
-| Resize redraw (SIGWINCH)       | ✅        |
-| Non-TTY streams (tests, pipes) | ✅        |
-| Tree Shakeable                 | ✅        |
+<!-- hf:media start id="runtimes" scene="runtimes-questions" asset="runtimes" docs="#compatibility" alt="Runs in Node.js 18 or later; not a target for evergreen browsers and web workers" -->
 
-On TTY inputs a prompt session enables bracketed paste mode (`ESC[?2004h`) and restores it on close; terminals without bracketed paste still paste correctly because multi-character input chunks are treated as pastes. Single-line prompts collapse pasted newlines into spaces, so pasting can never submit a value.
+| Environment     | Supported |
+| --------------- | :-------: |
+| Node.js >= 18   |    ✅     |
+| Modern Browsers |    ❌     |
+| Web Workers     |    ❌     |
+
+<!-- hf:media end -->
+
+Prompts run on a TTY, where the session redraws when the terminal is resized, and on non-TTY streams such as tests and pipes. On TTY inputs a prompt session enables bracketed paste mode (`ESC[?2004h`) and restores it on close; terminals without bracketed paste still paste correctly because multi-character input chunks are treated as pastes. Single-line prompts collapse pasted newlines into spaces, so a bracketed paste can never submit a value. Where bracketed paste is unavailable, a chunk that ends in a line ending submits the text before it, which is how a line-buffered reader behaves and is what makes piped input work; line endings in the middle of such a chunk stay data.
 
 ### Output Formats
 

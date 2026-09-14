@@ -56,6 +56,18 @@
       "type": "number",
       "description": "Upper bound on the commit window the flow analyzes for bumps and changelogs.",
       "default": 500
+    },
+    "releaseAs": {
+      "type": "string",
+      "description": "Force this bump on the libraries named by --libraries, calculated from each one's published version. For a release whose change is in the package artifact rather than its code, such as a readme; the changelog lists every commit since the last release.",
+      "enum": ["major", "minor", "patch"]
+    },
+    "libraries": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Project names to version instead of the affected set. Required with --releaseAs, and only meaningful with it."
     }
   },
   "required": []

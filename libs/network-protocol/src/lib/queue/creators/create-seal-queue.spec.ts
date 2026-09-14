@@ -7,6 +7,10 @@ import { createSealQueue } from './create-seal-queue'
 
 describe('createSealQueue', () => {
   const label = 'seal queue'
+  const invalid = { invalid: 'data' } as unknown as UnencryptedPacket
+  const throwingOnFail = () => {
+    throw new Error('consumer bug')
+  }
 
   it('seals a packet and hands the wire bytes to onSuccess', async () => {
     const onSuccess = jest.fn()
@@ -19,7 +23,6 @@ describe('createSealQueue', () => {
   it('reports a packet that is not a valid plaintext packet', async () => {
     const onFail = jest.fn()
     const queue = createSealQueue(label, packetSealer, logger, jest.fn(), onFail)
-    const invalid = { invalid: 'data' } as unknown as UnencryptedPacket
     queue.addMessage(invalid)
     await sleep(50)
     expect(onFail).toHaveBeenCalledWith(invalid, 'Invalid packet ignored')
@@ -56,6 +59,31 @@ describe('createSealQueue', () => {
     queue.addMessage(unencryptedPacket)
     await sleep(50)
     expect(onFail).toHaveBeenCalledWith(unencryptedPacket, expect.stringContaining('An unexpected error occurred'), expect.any(Error))
+  })
+
+  it('keeps draining after onFail throws', async () => {
+    const onSuccess = jest.fn()
+    const queue = createSealQueue(label, packetSealer, logger, onSuccess, throwingOnFail)
+    queue.addMessage(invalid)
+    queue.addMessage(unencryptedPacket)
+    await sleep(50)
+    expect(onSuccess).toHaveBeenCalledWith(wirePacket)
+  })
+
+  it('reports a rejected packet to a throwing onFail once', async () => {
+    const onFail = jest.fn(throwingOnFail)
+    const queue = createSealQueue(label, packetSealer, logger, jest.fn(), onFail)
+    queue.addMessage(invalid)
+    await sleep(50)
+    expect(onFail).toHaveBeenCalledTimes(1)
+  })
+
+  it('logs the error a throwing onFail raises', async () => {
+    const error = jest.fn()
+    const queue = createSealQueue(label, packetSealer, { ...logger, error }, jest.fn(), throwingOnFail)
+    queue.addMessage(invalid)
+    await sleep(50)
+    expect(error).toHaveBeenCalledWith(`${label}: onFail threw. Error: consumer bug`)
   })
 
   it('throws when the arguments are invalid', () => {

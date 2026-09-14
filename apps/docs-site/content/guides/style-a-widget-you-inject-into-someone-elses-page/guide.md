@@ -43,7 +43,7 @@ function mountBadge() {
 }
 ```
 
-[`removeStylesheet`](/docs/libraries/utils/ui/style#api-removeStylesheet) does nothing when the label is unknown, which is what makes the first line safe on a first mount. Labels are also how a second script can find your sheet: a label already in use is an error rather than a silent overwrite.
+[`removeStylesheet`](/docs/libraries/utils/ui/style#api-removeStylesheet) does nothing when the label is unknown, which is what makes the first line safe on a first mount. Labels are also how a second script can find your sheet: a label whose stylesheet is still in the document is an error rather than a silent overwrite. If that stylesheet was torn out by other means, the label is released and yours takes it.
 
 ## 4. Take it down with the widget
 

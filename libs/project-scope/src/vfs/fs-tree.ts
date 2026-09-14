@@ -5,6 +5,7 @@ import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/er
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { exists as fsExists, isFile as fsIsFile, isDirectory as fsIsDirectory, readDirectory } from '../core/fs'
+import { isSafePath } from '../core/fs/guard'
 import { createScopedLogger } from '../core/logger'
 import { normalizePath, joinPath, relativePath, isAbsolute, removeTrailingSlash, resolvePath, getDirname } from '../core/path'
 import { Mode } from './types'
@@ -59,9 +60,14 @@ export function createFsTree(root: string, options?: CreateTreeOptions): Tree {
    *
    * @param filePath - Path to normalize
    * @returns Normalized relative path
-   * @throws {Error} if path traverses outside the tree root
+   * @throws {Error} if the path carries a NUL byte or traverses outside the tree root
    */
   function normalizeFilePath(filePath: string): string {
+    // why: a NUL byte truncates the path inside the syscall, so a buffered write would target a file nobody validated; rejecting it here fails the call instead of the commit.
+    if (!isSafePath(filePath)) {
+      throw createError(`Unsafe path (NUL byte): ${filePath}`)
+    }
+
     const normalized = isAbsolute(filePath) ? relativePath(_root, filePath) : normalizePath(filePath)
 
     const absoluteResolved = resolvePath(_root, normalized)
@@ -333,6 +339,7 @@ export function createFsTree(root: string, options?: CreateTreeOptions): Tree {
 
     isDirectory(filePath: string): boolean {
       const normalPath = normalizeFilePath(filePath)
+      validateSymlink(normalPath)
 
       for (const [changedPath, change] of _changes) {
         if (change.type !== 'DELETE' && changedPath.startsWith(normalPath + '/')) {
@@ -351,6 +358,8 @@ export function createFsTree(root: string, options?: CreateTreeOptions): Tree {
 
     children(dirPath: string): string[] {
       const normalPath = normalizeFilePath(dirPath)
+      validateSymlink(normalPath)
+
       const childSet = createSet<string>()
 
       const absPath = absolutePath(normalPath)

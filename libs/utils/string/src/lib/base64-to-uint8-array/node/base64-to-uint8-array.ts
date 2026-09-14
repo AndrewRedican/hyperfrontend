@@ -21,6 +21,6 @@ import { urlSafeBase64ToBase64 } from '../../utils/url-safe-base64-to-base64'
  * ```
  */
 export function base64ToUint8Array(base64: string): Uint8Array {
-  const buffer = Buffer.from(urlSafeBase64ToBase64(base64), 'base64')
-  return createUint8Array(buffer.buffer, buffer.byteOffset, buffer.byteLength)
+  // why: small Buffers can be views onto Node's shared slab pool, so copy into an exact-size array to match the browser build.
+  return createUint8Array(Buffer.from(urlSafeBase64ToBase64(base64), 'base64'))
 }

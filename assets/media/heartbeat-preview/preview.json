@@ -22,8 +22,7 @@
   ],
   "browser": {
     "name": "chromium",
-    "version": "149.0.7827.55",
-    "executablePath": "/home/vscode/.cache/ms-playwright/chromium-1228/chrome-linux64/chrome"
+    "version": "149.0.7827.55"
   },
   "determinism": {
     "clock": {

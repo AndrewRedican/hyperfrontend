@@ -19,7 +19,7 @@ interface SecuritySuite<T = any> {
 }
 ```
 
-`PacketSealer` and `PacketOpener` are re-exported from [`packet/`](../packet/README.md).
+[`PacketSealer`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/security/#api-PacketSealer) and [`PacketOpener`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/security/#api-PacketOpener) are re-exported from [`packet/`](../packet/README.md).
 
 ### `ProtocolSession` and `SessionRole`
 
@@ -42,11 +42,11 @@ interface ProtocolSession {
 type HelloOutcome = 'accepted' | 'duplicate' | 'rejected'
 ```
 
-| Outcome     | Meaning                                                       |
-| ----------- | ------------------------------------------------------------- |
-| `accepted`  | The peer's material is now known and the session can be keyed |
-| `duplicate` | The same material was already accepted; a retry, ignored      |
-| `rejected`  | The frame is not a hello this session can use                 |
+| Outcome                                                                                                 | Meaning                                                       |
+| ------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| [`accepted`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/security/#api-HelloOutcome)  | The peer's material is now known and the session can be keyed |
+| [`duplicate`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/security/#api-HelloOutcome) | The same material was already accepted; a retry, ignored      |
+| [`rejected`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/security/#api-HelloOutcome)  | The frame is not a hello this session can use                 |
 
 ### `ProtocolError`
 
@@ -56,7 +56,7 @@ interface ProtocolError extends Error {
 }
 ```
 
-The error's `name` is `'ProtocolError'`.
+The error's [`name`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/security/#api-ProtocolError) is `'ProtocolError'`.
 
 ---
 
@@ -75,14 +75,14 @@ const ProtocolErrorCode = {
 type ProtocolErrorCode = (typeof ProtocolErrorCode)[keyof typeof ProtocolErrorCode]
 ```
 
-| Code                    | Meaning                                                              |
-| ----------------------- | -------------------------------------------------------------------- |
-| `unsupported-version`   | The frame's version byte is not this protocol's                      |
-| `replayed`              | The frame's counter is not above the last accepted one               |
-| `authentication-failed` | The frame's tag does not verify under the session's keys             |
-| `malformed`             | The frame is too short, or authenticated but does not carry a packet |
-| `counter-exhausted`     | The session has sealed every counter value it can represent          |
-| `invalid-session`       | The session cannot be keyed from the material it holds               |
+| Code                                                                                                         | Meaning                                                              |
+| ------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------- |
+| `unsupported-version`                                                                                        | The frame's version byte is not this protocol's                      |
+| [`replayed`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/security/#api-ProtocolErrorCode)  | The frame's counter is not above the last accepted one               |
+| `authentication-failed`                                                                                      | The frame's tag does not verify under the session's keys             |
+| [`malformed`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/security/#api-ProtocolErrorCode) | The frame is too short, or authenticated but does not carry a packet |
+| `counter-exhausted`                                                                                          | The session has sealed every counter value it can represent          |
+| `invalid-session`                                                                                            | The session cannot be keyed from the material it holds               |
 
 ---
 
@@ -140,7 +140,7 @@ flowchart LR
     Error -->|"onDrop cause"| Owner["Channel owner"]
 ```
 
-A protocol (see [`protocol/`](../protocol/README.md)) implements the suite for one session; a channel (see [`channel/`](../channel/README.md)) runs it; every rejection reaches the owner as the `cause` of a `PacketDrop`.
+A protocol (see [`protocol/`](../protocol/README.md)) implements the suite for one session; a channel (see [`channel/`](../channel/README.md)) runs it; every rejection reaches the owner as the [`cause`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-PacketDrop-prop-cause) of a [`PacketDrop`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-PacketDrop).
 
 ---
 
@@ -155,7 +155,7 @@ A protocol (see [`protocol/`](../protocol/README.md)) implements the suite for o
 
 - **[Library Index](../README.md)** - All modules
 - **[Architecture Guide](../../../ARCHITECTURE.md#security-suite)** - Security architecture
-- **[Security Entry](../../security/README.md)** - The `@hyperfrontend/network-protocol/security` entry
+- **[Security Entry](../../security/README.md)** - The [`@hyperfrontend/network-protocol/security`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/security/) entry
 
 ### Related Modules
 

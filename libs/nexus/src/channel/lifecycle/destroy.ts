@@ -8,10 +8,12 @@ import { clearHandshakeTimers } from './handshake-timers'
  *
  * - Sets channel to inactive immediately
  * - Optionally notifies the target window
- * - Removes channel from all registries
+ * - Removes channel from all registries, and every handshake or close process
+ *   it still tracked, so a frame that arrives late resolves to nothing
  * - Fires no channel event: unlike a close, destruction is not observable through
  *   subscriptions, and it cancels a pending polite close's deadline timer
- * - This is irreversible - channel cannot be reconnected
+ * - This is irreversible - the channel cannot be reconnected, and connect()
+ *   does nothing on it
  *
  * @param channel - Channel internals with state and dependencies
  * @param notify - Whether to notify target window (default: true)
@@ -25,7 +27,23 @@ import { clearHandshakeTimers } from './handshake-timers'
 export function destroy(channel: ChannelInternals, notify = true): void {
   clearHandshakeTimers(channel)
   clearCloseTimer(channel)
-  channel.updateState({ active: false, pendingProcessId: null, pendingAccept: null, scheduledActivation: null, closingProcessId: null })
+
+  const state = channel.getState()
+  // why: Untracked here, every process the channel held would keep routing late frames to a handle the broker has already dropped.
+  for (const processId of [state.pendingProcessId, state.pendingAccept?.[3], state.scheduledActivation?.[3], state.closingProcessId]) {
+    if (typeof processId === 'string') {
+      channel.removeProcess(processId)
+    }
+  }
+
+  channel.updateState({
+    active: false,
+    destroyed: true,
+    pendingProcessId: null,
+    pendingAccept: null,
+    scheduledActivation: null,
+    closingProcessId: null,
+  })
 
   if (notify) {
     const destroyAction = channel.actions.destroyConnection()

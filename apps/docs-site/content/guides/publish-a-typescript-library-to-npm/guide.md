@@ -106,10 +106,6 @@ Open `dist/bytesize/package.json`:
   "description": "Format byte counts as human-readable strings.",
   "license": "MIT",
   "keywords": ["bytes", "format"],
-  "devDependencies": {
-    "@hyperfrontend/builder": "^0.2.0",
-    "typescript": "^7.0.2"
-  },
   "sideEffects": false,
   "exports": {
     "./package.json": "./package.json",
@@ -141,8 +137,10 @@ Then install the tarball into a directory that knows nothing about the project, 
 ```bash
 mkdir ../bytesize-check && cd ../bytesize-check
 npm install ../bytesize/bytesize-1.0.0.tgz
-node --input-type=module -e "import { formatBytes } from 'bytesize'; console.log(formatBytes(1536))"
-node --input-type=commonjs -e "const { formatBytes } = require('bytesize'); console.log(formatBytes(5368709120))"
+node --input-type=module \
+  -e "import { formatBytes } from 'bytesize'; console.log(formatBytes(1536))"
+node --input-type=commonjs \
+  -e "const { formatBytes } = require('bytesize'); console.log(formatBytes(5368709120))"
 ```
 
 ```text

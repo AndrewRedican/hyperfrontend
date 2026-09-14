@@ -3,4 +3,4 @@
  *
  * @module @hyperfrontend/ui-utils/misc
  */
-export { simpleHash } from '../lib/simple-hash'
+export { simpleHash } from './simple-hash'

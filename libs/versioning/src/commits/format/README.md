@@ -4,8 +4,8 @@ Pure formatter for commit drafts.
 
 ## Overview
 
-Renders a `CommitDraft` (the partial, in-progress shape of a
-`ConventionalCommit`) into the exact message string that will land in
+Renders a [`CommitDraft`](https://www.hyperfrontend.dev/docs/libraries/versioning/commits/format/#api-CommitDraft) (the partial, in-progress shape of a
+[`ConventionalCommit`](https://www.hyperfrontend.dev/docs/libraries/versioning/commits/models/#api-ConventionalCommit)) into the exact message string that will land in
 `.git/COMMIT_EDITMSG`. Used by the authoring session's preview step and by
 the live 72-character countdown in the subject step.
 
@@ -43,8 +43,8 @@ flowchart LR
   `scope: ['a', 'b']` → `(a,b)`.
 - **Breaking marker precedes the colon.** `breaking: true` adds `!` after
   the (optional) scope: `feat(core)!: subject`.
-- **`BREAKING CHANGE:` footer is synthesized** when `breaking` and
-  `breakingDescription` are set and no existing `BREAKING CHANGE` /
+- **`BREAKING CHANGE:` footer is synthesized** when [`breaking`](https://www.hyperfrontend.dev/docs/libraries/versioning/commits/format/#api-CommitDraft-prop-breaking) and
+  [`breakingDescription`](https://www.hyperfrontend.dev/docs/libraries/versioning/commits/format/#api-CommitDraft-prop-breakingDescription) are set and no existing `BREAKING CHANGE` /
   `BREAKING-CHANGE` footer is present. The synthesized footer goes at the
   top of the footer block.
 - **Footer separators are respected verbatim.** `':'` prints as `: `; `' #'`

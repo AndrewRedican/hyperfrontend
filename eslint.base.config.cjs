@@ -250,8 +250,10 @@ module.exports = [
     },
     rules: {
       'workspace/lib-pkg-fields': 'error',
+      'workspace/lib-pkg-description': 'error',
       'workspace/lib-pkg-package-json-export': 'error',
       'workspace/lib-pkg-bundle-entry': 'error',
+      'workspace/lib-pkg-exports-entry-shape': 'error',
       'workspace/lib-pkg-exports-exist': 'error',
       'workspace/lib-pkg-exports-js-only': 'error',
       'workspace/lib-pkg-no-main': 'error',
@@ -281,6 +283,9 @@ module.exports = [
     language: 'markdown/gfm',
     rules: {
       'workspace/lib-readme-structure': 'error',
+      // why: both decide for themselves whether a file is a publishable package's readme, so they can be switched on for every README and still touch only package documentation
+      'workspace/lib-readme-media-regions': 'error',
+      'workspace/lib-readme-compatibility-table': 'error',
       'workspace/readme-paragraph-length': 'error',
       'workspace/no-ascii-art-diagrams': 'error',
       'workspace/readme-media-asset': [
@@ -291,6 +296,12 @@ module.exports = [
         },
       ],
       'workspace/require-codeblock-language': 'error',
+      // why: documentation is what the rule governs, and every package's markdown is documentation the site renders at a phone's width; an application's own README is not, and each app switches the rule off in its own config
+      'workspace/codeblock-line-width': 'error',
+      // why: the rule decides for itself whether a file belongs to a publishable package, so it can be switched on for every markdown file and still touch only package documentation
+      'workspace/lib-inline-code-links': 'error',
+      // why: the rule touches only markdown under libs/, where the documentation site already draws an on-page index from the headings
+      'workspace/no-manual-table-of-contents': 'error',
     },
   },
   {
@@ -303,6 +314,9 @@ module.exports = [
     rules: {
       'workspace/no-ascii-art-diagrams': 'error',
       'workspace/require-codeblock-language': 'error',
+      'workspace/codeblock-line-width': 'error',
+      'workspace/lib-inline-code-links': 'error',
+      'workspace/no-manual-table-of-contents': 'error',
     },
   },
   {

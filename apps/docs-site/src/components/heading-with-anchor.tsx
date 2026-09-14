@@ -2,7 +2,7 @@
 
 import type { ReactNode, ElementType } from 'react'
 import { isArray } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
-import { generateSlug } from '../lib/markdown'
+import { generateSlug } from '../lib/slug'
 import { AnchorLink } from './anchor-link'
 
 type HeadingLevel = 1 | 2 | 3 | 4 | 5 | 6

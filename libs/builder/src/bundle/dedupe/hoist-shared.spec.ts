@@ -247,6 +247,44 @@ describe('hoistSharedFirstParty', () => {
     })
   })
 
+  describe('with a builtin import renamed around a same-named first-party helper', () => {
+    // why: rollup renames `join` from node:path to `join$1` because the first-party helper owns the bare name; the chunk must keep that import instead of reading `join$1` as the helper itself.
+    beforeEach(() => {
+      writeSrc(
+        'join/join.ts',
+        "import { join as pathJoin } from 'node:path'\nexport const join = (...p: string[]): string => pathJoin(...p)\n"
+      )
+      writeSrc('index.ts', "export * from './join/join'\n")
+      writeSrc('greet/index.ts', "export * from '../join/join'\n")
+      const esm = "import { join as join$1 } from 'node:path';\nfunction join(...p) { return join$1(...p) }\nexport { join };\n"
+      const cjs =
+        "'use strict';\nvar node_path = require('node:path');\nfunction join(...p) { return node_path.join(...p) }\nexports.join = join;\n"
+      write('index.esm.js', esm)
+      write('greet/index.esm.js', esm)
+      write('index.cjs.js', cjs)
+      write('greet/index.cjs.js', cjs)
+    })
+
+    it('keeps the renamed builtin import in the shared chunk', () => {
+      hoistSharedFirstParty(context())
+      expect(readFileSync(join(outputPath, '_shared/join/join/index.esm.js'), 'utf8')).toContain(
+        "import { join as join$1 } from 'node:path';"
+      )
+    })
+
+    it('produces an ESM root entry that calls through the shared chunk', () => {
+      hoistSharedFirstParty(context())
+      write('package.json', '{ "type": "module" }')
+      const url = `file://${join(outputPath, 'index.esm.js')}`
+      const out = execFileSync('node', [
+        '--input-type=module',
+        '-e',
+        `const m = await import(${JSON.stringify(url)}); process.stdout.write(m.join('a', 'b'))`,
+      ])
+      expect(out.toString()).toBe('a/b')
+    })
+  })
+
   describe('with a first-party dependency cycle', () => {
     // why: shared chunks load topologically; modules in a cycle cannot be ordered safely, so they are
     const cyclic = (header: string, exportsTail: string): string =>

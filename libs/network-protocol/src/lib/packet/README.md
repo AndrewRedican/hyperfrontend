@@ -83,7 +83,7 @@ interface PacketDrop {
 type PacketDropHandler = (drop: PacketDrop) => void
 ```
 
-When `cause` is a `ProtocolError`, `getProtocolErrorCode(drop.cause)` from [`security/`](../security/README.md) yields the rejection code.
+When [`cause`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-PacketDrop-prop-cause) is a [`ProtocolError`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/security/#api-ProtocolError), `getProtocolErrorCode(drop.cause)` from [`security/`](../security/README.md) yields the rejection code.
 
 ---
 
@@ -149,13 +149,13 @@ createUnencryptedPacket(originId, targetId, {})
 // Error: 'Cannot create a packet without a valid data value'
 ```
 
-The pipelines never throw for a packet they reject; they report it through `onDrop` (see [`queue/`](../queue/README.md)).
+The pipelines never throw for a packet they reject; they report it through [`onDrop`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-ChannelOptions-prop-onDrop) (see [`queue/`](../queue/README.md)).
 
 ---
 
 ## Relationship to Other Modules
 
-- **Depends on**: [`data/`](../data/README.md) (for the `Data` envelope)
+- **Depends on**: [`data/`](../data/README.md) (for the [`Data`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-Data) envelope)
 - **Used by**: [`sender/`](../sender/README.md), [`receiver/`](../receiver/README.md), [`queue/`](../queue/README.md), [`protocol/`](../protocol/README.md), [`routing/`](../routing/README.md)
 
 ---
@@ -169,11 +169,11 @@ The pipelines never throw for a packet they reject; they report it through `onDr
 
 ### Related Modules
 
-| Module                             | Relationship                                  |
-| ---------------------------------- | --------------------------------------------- |
-| [data/](../data/README.md)         | Provides the `Data` envelope a packet carries |
-| [protocol/](../protocol/README.md) | Supplies the sealer and opener                |
-| [security/](../security/README.md) | Error codes carried in a drop's `cause`       |
-| [sender/](../sender/README.md)     | Builds and seals packets                      |
-| [receiver/](../receiver/README.md) | Opens frames into packets                     |
-| [queue/](../queue/README.md)       | Runs the seal and open operations             |
+| Module                             | Relationship                                                                                                                        |
+| ---------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| [data/](../data/README.md)         | Provides the [`Data`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-Data) envelope a packet carries            |
+| [protocol/](../protocol/README.md) | Supplies the sealer and opener                                                                                                      |
+| [security/](../security/README.md) | Error codes carried in a drop's [`cause`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-PacketDrop-prop-cause) |
+| [sender/](../sender/README.md)     | Builds and seals packets                                                                                                            |
+| [receiver/](../receiver/README.md) | Opens frames into packets                                                                                                           |
+| [queue/](../queue/README.md)       | Runs the seal and open operations                                                                                                   |

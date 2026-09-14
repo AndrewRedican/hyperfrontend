@@ -1,89 +1,90 @@
-import { panelStage } from '../src/panel/stage'
+import { graphStage } from '../src/graph/stage'
 import { defineScriptedScene } from '../src/scene/define-scene'
+import { packageIdentity } from './lib/identity'
+
+/** The package's hue and mark. */
+const identity = packageIdentity('data-utils')
+
+/** How long the cursor takes to travel one edge. */
+const TRAVEL_MS = 700
 
 /**
- * A graph with three back references, and the two ways of asking about them.
+ * The moment a step sets off, given when the one before it landed.
  *
- * `JSON.stringify` is where most people meet a circular reference, and what it
- * tells you is the shortest useful thing it could: the one cycle its own walk
- * happened to reach first, drawn as the chain of properties that closes it, and
- * then it throws. There are two more in this graph and nothing about that
- * message says so. So the frame builds the graph on the left, lets stringify
- * fail on the right, and then puts one call under it that returns all three at
- * once, each printed as the path the reference was found at and the path it
- * points back to.
+ * A cycle costs the cursor a landing pause and a return trip on top of the
+ * travel, so the next step waits for that; a forward step only waits for the
+ * travel and a short breath.
  *
- * The right-hand column is a real node REPL transcript rather than a rendering
- * of one: the `Uncaught TypeError` block, its `at JSON.stringify (<anonymous>)`
- * frame, the `undefined` the import echoes, and the array broken over four
- * lines are all what node 24 prints for exactly these bindings. The three
- * results are what the library returns for exactly this graph, in this order.
+ * @param previousAtMs - When the previous step set off.
+ * @param previousWasCycle - Whether the previous step closed a cycle.
+ * @returns When this step sets off.
+ */
+function after(previousAtMs: number, previousWasCycle: boolean): number {
+  return previousAtMs + TRAVEL_MS + (previousWasCycle ? 250 + 500 + 250 : 200)
+}
+
+const step0 = 600
+const step1 = after(step0, false)
+const step2 = after(step1, false)
+const step3 = after(step2, true)
+const step4 = after(step3, false)
+const step5 = after(step4, true)
+
+/**
+ * A graph with three back references, and the walk that finds all of them.
  *
- * The second argument is the whole of the difference and is easy to miss:
- * `maxResults` defaults to 1, so the same call without `'*'` returns a single
- * result and looks no better than the exception it replaced.
+ * `JSON.stringify` meets the first cycle and throws; `locateCircularReference`
+ * with `'*'` walks the whole graph and returns every place a reference points
+ * back at an ancestor. So the frame is the graph itself, drawn as objects in a
+ * row with the forward references between them and the three back references
+ * as arcs, and a cursor that walks it depth first. Each time the cursor
+ * follows an arc onto a node it has already filled, the arc lights, a number
+ * lands on it, and the count beside the call ticks up. The three lit arcs at
+ * the end are what the call returns.
  *
- * Verified against `libs/utils/data/src/locate-circular-reference.ts` (the
- * exported name, the `'*'` sentinel and the default of 1),
- * `libs/utils/data/src/circular-reference.ts` (`toString` joining the location
- * and the target with U+00B7 and a spaced arrow, and `depth` as the distance
- * between them), `libs/utils/data/src/locate-circular-reference.spec.ts` (the
- * printed shape, and that `'*'` is what returns more than one) and
- * `libs/utils/data/src/index.ts` (the symbol is on the package's single entry
- * point). Both transcripts were captured from node v24.18.0.
+ * The bindings are the package readme's own: `user` owns a `cart`, the cart
+ * holds `lines` whose first line points back at the cart and at the buyer.
+ * The order the arcs light in is the order the library reports them,
+ * verified against `libs/utils/data/src/locate-circular-reference.ts` and its
+ * spec on 2026-09-12: `user·cart·owner → user`, `user·cart·lines·0·cart →
+ * user·cart`, `user·cart·lines·0·buyer → user`.
  */
 export default defineScriptedScene({
   slug: 'data-utils-circular',
   asset: 'hero',
   outputs: ['gif', 'still'],
-  profile: 'docs-wide',
-  stage: panelStage,
-  holdMs: 1_500,
-  gif: { colours: 56, lossy: 70, maxBytes: 1_000_000 },
-  stills: [{ name: 'poster', atMs: 9_400, format: 'webp', quality: 82, maxBytes: 90_000 }],
+  profile: 'compact',
+  hue: identity.hue,
+  stage: graphStage,
+  holdMs: 1_800,
+  gif: { colours: 56, lossy: 60, maxBytes: 900_000 },
+  stills: [{ name: 'poster', atMs: 8_600, format: 'webp', quality: 82, maxBytes: 70_000 }],
   config: {
-    theme: 'midnight',
-    heading: 'Three back references in one graph. JSON.stringify names one of them.',
-    caption: 'One call, every cycle: where each was found, and what it points back to.',
-    restMs: 1_500,
-    panels: [
-      {
-        title: 'graph.mjs',
-        kind: 'code',
-        weight: 0.82,
-        rows: [
-          { text: "const user = { name: 'alice' }", atMs: 200, typeMs: 620 },
-          { text: 'const cart = { owner: user }', atMs: 900, typeMs: 560 },
-          { text: 'const line = { cart, buyer: user }', atMs: 1_540, typeMs: 660 },
-          { text: '', atMs: 2_260 },
-          { text: 'user.cart = cart', atMs: 2_300, typeMs: 340 },
-          { text: 'cart.lines = [line]', atMs: 2_700, typeMs: 380 },
-          { text: '', atMs: 3_140 },
-          { text: 'const state = { user }', atMs: 3_180, typeMs: 440 },
-        ],
-      },
-      {
-        title: 'node',
-        kind: 'result',
-        chrome: true,
-        weight: 1.38,
-        rows: [
-          { text: "> const data = await import('@hyperfrontend/data-utils')", atMs: 3_900, typeMs: 1_000 },
-          { text: 'undefined', atMs: 5_050, tone: 'muted' },
-          { text: '> JSON.stringify(state)', atMs: 5_250, typeMs: 460 },
-          { text: 'Uncaught TypeError: Converting circular structure to JSON', atMs: 5_950, tone: 'danger' },
-          { text: "    --> starting at object with constructor 'Object'", atMs: 6_060, tone: 'muted' },
-          { text: "    |     property 'cart' -> object with constructor 'Object'", atMs: 6_150, tone: 'muted' },
-          { text: "    --- property 'owner' closes the circle", atMs: 6_240, tone: 'warning' },
-          { text: '    at JSON.stringify (<anonymous>)', atMs: 6_330, tone: 'muted' },
-          { text: "> data.locateCircularReference(state, '*').map(String)", atMs: 6_800, typeMs: 1_150 },
-          { text: '[', atMs: 8_200, tone: 'muted' },
-          { text: "  'user·cart·owner → user',", atMs: 8_330, tone: 'accent', emphasis: true },
-          { text: "  'user·cart·lines·0·cart → user·cart',", atMs: 8_520, tone: 'accent', emphasis: true },
-          { text: "  'user·cart·lines·0·buyer → user'", atMs: 8_710, tone: 'accent', emphasis: true },
-          { text: ']', atMs: 8_880, tone: 'muted' },
-        ],
-      },
+    api: { name: 'locateCircularReference', mark: identity.mark },
+    start: 'state',
+    travelMs: TRAVEL_MS,
+    restMs: 1_300,
+    nodes: [
+      { id: 'state', label: 'state', x: 96, y: 200 },
+      { id: 'user', label: 'user', x: 246, y: 200 },
+      { id: 'cart', label: 'cart', x: 396, y: 200 },
+      { id: 'line', label: 'line', x: 546, y: 200 },
+    ],
+    edges: [
+      { from: 'state', to: 'user', label: 'user' },
+      { from: 'user', to: 'cart', label: 'cart' },
+      { from: 'cart', to: 'user', label: 'owner', bow: -58 },
+      { from: 'cart', to: 'line', label: 'lines·0' },
+      { from: 'line', to: 'cart', label: 'cart', bow: -58 },
+      { from: 'line', to: 'user', label: 'buyer', bow: 96 },
+    ],
+    steps: [
+      { edge: 0, atMs: step0 },
+      { edge: 1, atMs: step1 },
+      { edge: 2, atMs: step2, cycle: true },
+      { edge: 3, atMs: step3 },
+      { edge: 4, atMs: step4, cycle: true },
+      { edge: 5, atMs: step5, cycle: true },
     ],
   },
 })

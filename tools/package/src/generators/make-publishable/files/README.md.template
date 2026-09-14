@@ -79,12 +79,15 @@ import { /* exports */ } from '<%= packageName %>'
 
 ## Compatibility
 
-| Environment     | Supported                            |
-| --------------- | ------------------------------------ |
-| Node.js >= 18   | <%= compatibilityGlyphs.node %>       |
-| Modern Browsers | <%= compatibilityGlyphs.browser %>    |
-| Web Workers     | <%= compatibilityGlyphs.webWorker %>  |
-| Tree Shakeable  | ✅                                   |
+<!-- hf:media start id="runtimes" scene="runtimes-<%= libName %>" asset="runtimes" docs="#compatibility" alt="The runtimes <%= packageName %> supports" -->
+
+| Environment     | Supported |
+| --------------- | :-------: |
+| Node.js >= 18   |    <%= compatibilityGlyphs.node %>     |
+| Modern Browsers |    <%= compatibilityGlyphs.browser %>     |
+| Web Workers     |    <%= compatibilityGlyphs.webWorker %>     |
+
+<!-- hf:media end -->
 
 ## License
 

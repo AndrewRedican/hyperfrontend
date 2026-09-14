@@ -1,6 +1,6 @@
 # Architecture
 
-This document describes the architecture of `@hyperfrontend/project-scope`, a comprehensive library for analyzing JavaScript/TypeScript project structure, technology stack, and dependencies.
+This document describes the architecture of [`@hyperfrontend/project-scope`](https://www.hyperfrontend.dev/docs/libraries/project-scope/), a comprehensive library for analyzing JavaScript/TypeScript project structure, technology stack, and dependencies.
 
 ## Overview
 
@@ -48,17 +48,17 @@ graph LR
 
 ## Module Organization
 
-| Module         | Responsibility                           |
-| -------------- | ---------------------------------------- |
-| **analyze**    | Main entry point (`analyzeProject`)      |
-| **cli**        | Command-line interface                   |
-| **core**       | Foundation utilities (file system, etc.) |
-| **heuristics** | Intelligent detection algorithms         |
-| **models**     | TypeScript types and interfaces          |
-| **nx**         | NX workspace integration                 |
-| **project**    | Project structure analysis               |
-| **tech**       | Technology stack detection               |
-| **vfs**        | Virtual file system (transactional ops)  |
+| Module         | Responsibility                                                                                                        |
+| -------------- | --------------------------------------------------------------------------------------------------------------------- |
+| **analyze**    | Main entry point ([`analyzeProject`](https://www.hyperfrontend.dev/docs/libraries/project-scope/#api-analyzeProject)) |
+| **cli**        | Command-line interface                                                                                                |
+| **core**       | Foundation utilities (file system, etc.)                                                                              |
+| **heuristics** | Intelligent detection algorithms                                                                                      |
+| **models**     | TypeScript types and interfaces                                                                                       |
+| **nx**         | NX workspace integration                                                                                              |
+| **project**    | Project structure analysis                                                                                            |
+| **tech**       | Technology stack detection                                                                                            |
+| **vfs**        | Virtual file system (transactional ops)                                                                               |
 
 ## Data Flow
 
@@ -269,12 +269,12 @@ graph LR
 
 **Error Types:**
 
-- `FS_NOT_FOUND` - File/directory not found
-- `FS_READ_ERROR` - Read operation failed
-- `FS_WRITE_ERROR` - Write operation failed
-- `FS_PARSE_ERROR` - JSON/config parse failure
-- `CONFIG_NOT_FOUND` - Configuration not found
-- `VALIDATION_ERROR` - Invalid input
+- [`FS_NOT_FOUND`](https://www.hyperfrontend.dev/docs/libraries/project-scope/core/fs/#api-FileSystemErrorCode) - File/directory not found
+- [`FS_READ_ERROR`](https://www.hyperfrontend.dev/docs/libraries/project-scope/core/fs/#api-FileSystemErrorCode) - Read operation failed
+- [`FS_WRITE_ERROR`](https://www.hyperfrontend.dev/docs/libraries/project-scope/core/fs/#api-FileSystemErrorCode) - Write operation failed
+- [`FS_PARSE_ERROR`](https://www.hyperfrontend.dev/docs/libraries/project-scope/core/fs/#api-FileSystemErrorCode) - JSON/config parse failure
+- [`CONFIG_NOT_FOUND`](https://www.hyperfrontend.dev/docs/libraries/project-scope/core/#api-createConfigError) - Configuration not found
+- [`VALIDATION_ERROR`](https://www.hyperfrontend.dev/docs/libraries/project-scope/core/#api-createValidationError) - Invalid input
 
 ## Security Considerations
 
@@ -302,7 +302,7 @@ logger.debug('Config loaded', { apiKey: 'secret123' })
 // Output: [scope] Config loaded {"apiKey":"[REDACTED]"}
 ```
 
-Sensitive key patterns: `token`, `key`, `password`, `secret`, `credential`, `auth`, `bearer`, `api_key`, `private`, `passphrase`
+Sensitive key patterns: `'token'`, `'key'`, `'password'`, `'secret'`, `'credential'`, `'auth'`, `'bearer'`, `'api_key'`, `'private'`, `'passphrase'`
 
 ### ReDoS Protection
 
@@ -359,10 +359,10 @@ const commands = { ..., 'my-command': myCommandDef }
 
 ## Performance Characteristics
 
-| Operation               | Typical Time | Caching       |
-| ----------------------- | ------------ | ------------- |
-| `analyzeProject` (full) | 50-200ms     | Per-component |
-| `detectAll`             | 20-50ms      | 60s TTL       |
-| `detectConfigs`         | 10-30ms      | 30s TTL       |
-| `buildDependencyGraph`  | 100-500ms    | None          |
-| `findFiles`             | 10-100ms     | None          |
+| Operation                                                                                                                              | Typical Time | Caching       |
+| -------------------------------------------------------------------------------------------------------------------------------------- | ------------ | ------------- |
+| [`analyzeProject`](https://www.hyperfrontend.dev/docs/libraries/project-scope/#api-analyzeProject) (full)                              | 50-200ms     | Per-component |
+| [`detectAll`](https://www.hyperfrontend.dev/docs/libraries/project-scope/tech/#api-detectAll)                                          | 20-50ms      | 60s TTL       |
+| [`detectConfigs`](https://www.hyperfrontend.dev/docs/libraries/project-scope/project/config/#api-detectConfigs)                        | 10-30ms      | 30s TTL       |
+| [`buildDependencyGraph`](https://www.hyperfrontend.dev/docs/libraries/project-scope/heuristics/dependencies/#api-buildDependencyGraph) | 100-500ms    | None          |
+| [`findFiles`](https://www.hyperfrontend.dev/docs/libraries/project-scope/project/traversal/#api-findFiles)                             | 10-100ms     | None          |

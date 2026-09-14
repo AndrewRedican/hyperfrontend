@@ -125,7 +125,7 @@ export function createChannel(config: IChannelConfig, deps: ChannelDependencies)
     connect: () => connect(internals),
     disconnect: (notify) => disconnect(internals, notify),
     endStaleSession: () => disconnect(internals, false, 'peer-reload'),
-    cancel: (notify) => cancel(internals, notify),
+    cancel: (notify, peerCancelled) => cancel(internals, notify, peerCancelled),
     destroy: (notify) => destroy(internals, notify),
 
     // why: A payload-less send must omit the data key entirely — an explicit `data: undefined` fails the security envelope's serializability validation, which rejects undefined anywhere in the message.

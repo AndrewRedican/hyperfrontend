@@ -64,7 +64,7 @@ export function TypeDefinition({ node, searchQuery = '' }: TypeDefinitionProps) 
                 const propId = `api-${node.name}-prop-${property.name}`
 
                 return (
-                  <div key={property.id} id={propId} className="flex items-start gap-2 text-sm">
+                  <div key={property.id} id={propId} className="flex flex-wrap items-start gap-x-2 gap-y-1 text-sm">
                     <AnchorLink id={propId} />
                     <code className="font-mono text-slate-900 dark:text-white">
                       {isReadonly && <span className="text-slate-400">readonly </span>}
@@ -109,7 +109,7 @@ export function TypeDefinition({ node, searchQuery = '' }: TypeDefinitionProps) 
                   <div key={method.id} id={methodId} className="text-sm">
                     <div className="flex items-start gap-2">
                       <AnchorLink id={methodId} />
-                      <code className="font-mono text-slate-900 dark:text-white">
+                      <code className="min-w-0 break-words font-mono text-slate-900 dark:text-white">
                         {method.name}(<TypeSegmentsText segments={paramSegments} />
                         ):{' '}
                         <span className="text-emerald-600 dark:text-emerald-400">

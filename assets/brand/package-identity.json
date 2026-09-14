@@ -1,0 +1,889 @@
+{
+  "$comment": "Package identity shared by the documentation site and the media recorder: the hue each package tints its pages and its showcase media with, and the mark it is drawn with. Marks are drawn on a 32 unit grid with a four unit margin, stroked at weight 2 with round joins; a shape marked solid is the one filled accent a mark is allowed.",
+  "fallbackHue": 217,
+  "fallbackMark": [
+    {
+      "as": "path",
+      "attrs": {
+        "d": "M16 4.2l10.2 5.9v11.8L16 27.8 5.8 21.9V10.1z"
+      }
+    },
+    {
+      "as": "path",
+      "attrs": {
+        "d": "M5.8 10.1 16 16l10.2-5.9"
+      }
+    },
+    {
+      "as": "path",
+      "attrs": {
+        "d": "M16 16v11.8"
+      }
+    }
+  ],
+  "packages": {
+    "@hyperfrontend/features": {
+      "note": "The SDK: a host surface with another team's app seated inside it, and the contract channel running between them.",
+      "hue": 217,
+      "mark": [
+        {
+          "as": "rect",
+          "attrs": {
+            "x": 4,
+            "y": 5.5,
+            "width": 24,
+            "height": 21,
+            "rx": 3
+          }
+        },
+        {
+          "as": "path",
+          "attrs": {
+            "d": "M4 11.5h24"
+          }
+        },
+        {
+          "as": "circle",
+          "attrs": {
+            "cx": 7.6,
+            "cy": 8.5,
+            "r": 1.15
+          },
+          "solid": true
+        },
+        {
+          "as": "rect",
+          "attrs": {
+            "x": 16.5,
+            "y": 15,
+            "width": 8.5,
+            "height": 8.5,
+            "rx": 2
+          }
+        },
+        {
+          "as": "path",
+          "attrs": {
+            "d": "M8.5 19.25h4.5"
+          }
+        }
+      ]
+    },
+    "@hyperfrontend/nexus": {
+      "note": "The broker: one hub every participant speaks through, never to each other.",
+      "hue": 228,
+      "mark": [
+        {
+          "as": "circle",
+          "attrs": {
+            "cx": 16,
+            "cy": 16,
+            "r": 3.6
+          }
+        },
+        {
+          "as": "circle",
+          "attrs": {
+            "cx": 16,
+            "cy": 5.6,
+            "r": 2.1
+          }
+        },
+        {
+          "as": "circle",
+          "attrs": {
+            "cx": 26.4,
+            "cy": 16,
+            "r": 2.1
+          }
+        },
+        {
+          "as": "circle",
+          "attrs": {
+            "cx": 16,
+            "cy": 26.4,
+            "r": 2.1
+          }
+        },
+        {
+          "as": "circle",
+          "attrs": {
+            "cx": 5.6,
+            "cy": 16,
+            "r": 2.1
+          }
+        },
+        {
+          "as": "path",
+          "attrs": {
+            "d": "M16 12.4V7.7"
+          }
+        },
+        {
+          "as": "path",
+          "attrs": {
+            "d": "M19.6 16h4.7"
+          }
+        },
+        {
+          "as": "path",
+          "attrs": {
+            "d": "M16 19.6v4.7"
+          }
+        },
+        {
+          "as": "path",
+          "attrs": {
+            "d": "M7.7 16h4.7"
+          }
+        }
+      ]
+    },
+    "@hyperfrontend/network-protocol": {
+      "note": "The sealed envelope: a packet that leaves closed and can only be opened by the session that agreed the key.",
+      "hue": 243,
+      "mark": [
+        {
+          "as": "rect",
+          "attrs": {
+            "x": 4,
+            "y": 7,
+            "width": 21,
+            "height": 15,
+            "rx": 2.5
+          }
+        },
+        {
+          "as": "path",
+          "attrs": {
+            "d": "M4.9 8.2 14.5 14.6 24.1 8.2"
+          }
+        },
+        {
+          "as": "path",
+          "attrs": {
+            "d": "M21.4 21v-1.6a2.6 2.6 0 0 1 5.2 0V21"
+          }
+        },
+        {
+          "as": "rect",
+          "attrs": {
+            "x": 19.5,
+            "y": 21,
+            "width": 9,
+            "height": 7,
+            "rx": 2
+          },
+          "solid": true
+        }
+      ]
+    },
+    "@hyperfrontend/cryptography": {
+      "note": "Key material: the bow, the shaft, and the cuts that make one key open one thing.",
+      "hue": 268,
+      "mark": [
+        {
+          "as": "circle",
+          "attrs": {
+            "cx": 11.5,
+            "cy": 11.5,
+            "r": 5.5
+          }
+        },
+        {
+          "as": "circle",
+          "attrs": {
+            "cx": 11.5,
+            "cy": 11.5,
+            "r": 1.5
+          },
+          "solid": true
+        },
+        {
+          "as": "path",
+          "attrs": {
+            "d": "M15.4 15.4 26.5 26.5"
+          }
+        },
+        {
+          "as": "path",
+          "attrs": {
+            "d": "M22.6 22.6 19.8 25.4"
+          }
+        },
+        {
+          "as": "path",
+          "attrs": {
+            "d": "M19.3 19.3 16.5 22.1"
+          }
+        }
+      ]
+    },
+    "@hyperfrontend/builder": {
+      "note": "The bundler: many inputs drawn into one self-contained artifact.",
+      "hue": 32,
+      "mark": [
+        {
+          "as": "path",
+          "attrs": {
+            "d": "M4 8.5h4.5"
+          }
+        },
+        {
+          "as": "path",
+          "attrs": {
+            "d": "M4 16h4.5"
+          }
+        },
+        {
+          "as": "path",
+          "attrs": {
+            "d": "M4 23.5h4.5"
+          }
+        },
+        {
+          "as": "path",
+          "attrs": {
+            "d": "M11 9.5 14.5 16"
+          }
+        },
+        {
+          "as": "path",
+          "attrs": {
+            "d": "M11 16h3.5"
+          }
+        },
+        {
+          "as": "path",
+          "attrs": {
+            "d": "M11 22.5 14.5 16"
+          }
+        },
+        {
+          "as": "rect",
+          "attrs": {
+            "x": 17.5,
+            "y": 9.5,
+            "width": 10.5,
+            "height": 13,
+            "rx": 2.5
+          }
+        }
+      ]
+    },
+    "@hyperfrontend/versioning": {
+      "note": "The release tag: the label a cut of the history is published under, with the three numbers it carries.",
+      "hue": 22,
+      "mark": [
+        {
+          "as": "rect",
+          "attrs": {
+            "x": 7.5,
+            "y": 7.5,
+            "width": 17,
+            "height": 17,
+            "rx": 3,
+            "transform": "rotate(45 16 16)"
+          }
+        },
+        {
+          "as": "circle",
+          "attrs": {
+            "cx": 11.4,
+            "cy": 16,
+            "r": 1.6
+          },
+          "solid": true
+        },
+        {
+          "as": "circle",
+          "attrs": {
+            "cx": 16,
+            "cy": 16,
+            "r": 1.6
+          }
+        },
+        {
+          "as": "circle",
+          "attrs": {
+            "cx": 20.6,
+            "cy": 16,
+            "r": 1.6
+          }
+        }
+      ]
+    },
+    "@hyperfrontend/project-scope": {
+      "note": "The scope: brackets around the part of a file tree a tool is allowed to see.",
+      "hue": 44,
+      "mark": [
+        {
+          "as": "path",
+          "attrs": {
+            "d": "M10 4.5H7a2.5 2.5 0 0 0-2.5 2.5v3"
+          }
+        },
+        {
+          "as": "path",
+          "attrs": {
+            "d": "M22 4.5h3A2.5 2.5 0 0 1 27.5 7v3"
+          }
+        },
+        {
+          "as": "path",
+          "attrs": {
+            "d": "M10 27.5H7A2.5 2.5 0 0 1 4.5 25v-3"
+          }
+        },
+        {
+          "as": "path",
+          "attrs": {
+            "d": "M22 27.5h3a2.5 2.5 0 0 0 2.5-2.5v-3"
+          }
+        },
+        {
+          "as": "circle",
+          "attrs": {
+            "cx": 11.5,
+            "cy": 10.5,
+            "r": 1.6
+          },
+          "solid": true
+        },
+        {
+          "as": "path",
+          "attrs": {
+            "d": "M11.5 12.4v8.4"
+          }
+        },
+        {
+          "as": "path",
+          "attrs": {
+            "d": "M11.5 15.5h6.5"
+          }
+        },
+        {
+          "as": "path",
+          "attrs": {
+            "d": "M11.5 20.8h6.5"
+          }
+        }
+      ]
+    },
+    "@hyperfrontend/questions": {
+      "note": "The prompt: the chevron a terminal asks with, and the cursor waiting on the answer.",
+      "hue": 12,
+      "mark": [
+        {
+          "as": "path",
+          "attrs": {
+            "d": "M5.5 8.5 12.5 16l-7 7.5"
+          }
+        },
+        {
+          "as": "rect",
+          "attrs": {
+            "x": 16,
+            "y": 11.5,
+            "width": 4.5,
+            "height": 9,
+            "rx": 1.4
+          },
+          "solid": true
+        },
+        {
+          "as": "path",
+          "attrs": {
+            "d": "M16 25.5h10.5"
+          }
+        }
+      ]
+    },
+    "@hyperfrontend/json-utils": {
+      "note": "Schema validation: a value held between braces and checked against a shape.",
+      "hue": 210,
+      "mark": [
+        {
+          "as": "path",
+          "attrs": {
+            "d": "M13 5h-2.5a2 2 0 0 0-2 2v5L5.5 16l3 4v5a2 2 0 0 0 2 2H13"
+          }
+        },
+        {
+          "as": "path",
+          "attrs": {
+            "d": "M19 5h2.5a2 2 0 0 1 2 2v5l3 4-3 4v5a2 2 0 0 1-2 2H19"
+          }
+        },
+        {
+          "as": "circle",
+          "attrs": {
+            "cx": 16,
+            "cy": 16,
+            "r": 2.3
+          },
+          "solid": true
+        }
+      ]
+    },
+    "@hyperfrontend/ui-utils": {
+      "note": "The DOM layer: an element measured and held by its corners.",
+      "hue": 322,
+      "mark": [
+        {
+          "as": "rect",
+          "attrs": {
+            "x": 6.5,
+            "y": 9,
+            "width": 19,
+            "height": 14,
+            "rx": 2
+          }
+        },
+        {
+          "as": "rect",
+          "attrs": {
+            "x": 4,
+            "y": 6.5,
+            "width": 5,
+            "height": 5,
+            "rx": 1.5
+          },
+          "solid": true
+        },
+        {
+          "as": "rect",
+          "attrs": {
+            "x": 23,
+            "y": 6.5,
+            "width": 5,
+            "height": 5,
+            "rx": 1.5
+          },
+          "solid": true
+        },
+        {
+          "as": "rect",
+          "attrs": {
+            "x": 4,
+            "y": 20.5,
+            "width": 5,
+            "height": 5,
+            "rx": 1.5
+          },
+          "solid": true
+        },
+        {
+          "as": "rect",
+          "attrs": {
+            "x": 23,
+            "y": 20.5,
+            "width": 5,
+            "height": 5,
+            "rx": 1.5
+          },
+          "solid": true
+        }
+      ]
+    },
+    "@hyperfrontend/immutable-api-utils": {
+      "note": "Hardened globals: a sealed shell around a core nothing can reach past.",
+      "hue": 288,
+      "mark": [
+        {
+          "as": "path",
+          "attrs": {
+            "d": "M16 4.2l10.2 5.9v11.8L16 27.8 5.8 21.9V10.1z"
+          }
+        },
+        {
+          "as": "path",
+          "attrs": {
+            "d": "M16 11.4l4.4 2.5v5.2L16 21.6l-4.4-2.5v-5.2z"
+          },
+          "solid": true
+        }
+      ]
+    },
+    "@hyperfrontend/state-machine": {
+      "note": "States and the transition between them, with the one the machine is in filled.",
+      "hue": 172,
+      "mark": [
+        {
+          "as": "circle",
+          "attrs": {
+            "cx": 9.5,
+            "cy": 21,
+            "r": 4.8
+          }
+        },
+        {
+          "as": "circle",
+          "attrs": {
+            "cx": 22.5,
+            "cy": 11,
+            "r": 4.8
+          }
+        },
+        {
+          "as": "circle",
+          "attrs": {
+            "cx": 22.5,
+            "cy": 11,
+            "r": 1.7
+          },
+          "solid": true
+        },
+        {
+          "as": "path",
+          "attrs": {
+            "d": "M13.3 18.1 18.7 13.9"
+          }
+        }
+      ]
+    },
+    "@hyperfrontend/logging": {
+      "note": "The stream: records leaving in order, each one carrying a level.",
+      "hue": 190,
+      "mark": [
+        {
+          "as": "circle",
+          "attrs": {
+            "cx": 6.5,
+            "cy": 10,
+            "r": 1.7
+          },
+          "solid": true
+        },
+        {
+          "as": "circle",
+          "attrs": {
+            "cx": 6.5,
+            "cy": 16,
+            "r": 1.7
+          },
+          "solid": true
+        },
+        {
+          "as": "circle",
+          "attrs": {
+            "cx": 6.5,
+            "cy": 22,
+            "r": 1.7
+          },
+          "solid": true
+        },
+        {
+          "as": "path",
+          "attrs": {
+            "d": "M11 10h16"
+          }
+        },
+        {
+          "as": "path",
+          "attrs": {
+            "d": "M11 16h10.5"
+          }
+        },
+        {
+          "as": "path",
+          "attrs": {
+            "d": "M11 22h14"
+          }
+        }
+      ]
+    },
+    "@hyperfrontend/data-utils": {
+      "note": "A structure walked to its leaves, and the edge that points back into it.",
+      "hue": 202,
+      "mark": [
+        {
+          "as": "circle",
+          "attrs": {
+            "cx": 16,
+            "cy": 7.2,
+            "r": 2.8
+          }
+        },
+        {
+          "as": "circle",
+          "attrs": {
+            "cx": 8.5,
+            "cy": 17.5,
+            "r": 2.8
+          }
+        },
+        {
+          "as": "circle",
+          "attrs": {
+            "cx": 23.5,
+            "cy": 17.5,
+            "r": 2.8
+          }
+        },
+        {
+          "as": "path",
+          "attrs": {
+            "d": "M14.3 9.5 10.2 15.2"
+          }
+        },
+        {
+          "as": "path",
+          "attrs": {
+            "d": "M17.7 9.5 21.8 15.2"
+          }
+        },
+        {
+          "as": "path",
+          "attrs": {
+            "d": "M23.5 20.3v1.7a3 3 0 0 1-3 3h-9a3 3 0 0 1-3-3v-1.7"
+          }
+        }
+      ]
+    },
+    "@hyperfrontend/time-utils": {
+      "note": "Elapsed time, which is the thing every timer in the package is about.",
+      "hue": 252,
+      "mark": [
+        {
+          "as": "circle",
+          "attrs": {
+            "cx": 16,
+            "cy": 16,
+            "r": 11.5
+          }
+        },
+        {
+          "as": "path",
+          "attrs": {
+            "d": "M16 9V16l4.8 3.2"
+          }
+        },
+        {
+          "as": "circle",
+          "attrs": {
+            "cx": 16,
+            "cy": 16,
+            "r": 1.5
+          },
+          "solid": true
+        }
+      ]
+    },
+    "@hyperfrontend/random-generator-utils": {
+      "note": "The die: a draw from a distribution, reproducible when it is seeded.",
+      "hue": 306,
+      "mark": [
+        {
+          "as": "rect",
+          "attrs": {
+            "x": 4.5,
+            "y": 4.5,
+            "width": 23,
+            "height": 23,
+            "rx": 4.5
+          }
+        },
+        {
+          "as": "circle",
+          "attrs": {
+            "cx": 10.8,
+            "cy": 10.8,
+            "r": 1.8
+          },
+          "solid": true
+        },
+        {
+          "as": "circle",
+          "attrs": {
+            "cx": 16,
+            "cy": 16,
+            "r": 1.8
+          },
+          "solid": true
+        },
+        {
+          "as": "circle",
+          "attrs": {
+            "cx": 21.2,
+            "cy": 21.2,
+            "r": 1.8
+          },
+          "solid": true
+        }
+      ]
+    },
+    "@hyperfrontend/string-utils": {
+      "note": "Transcoding: one value crossing between two representations and back, which is what every encoder in the package does.",
+      "hue": 196,
+      "mark": [
+        {
+          "as": "rect",
+          "attrs": {
+            "x": 4,
+            "y": 8.5,
+            "width": 6,
+            "height": 6,
+            "rx": 1.6
+          },
+          "solid": true
+        },
+        {
+          "as": "path",
+          "attrs": {
+            "d": "M13 11.5h13"
+          }
+        },
+        {
+          "as": "path",
+          "attrs": {
+            "d": "M23 8.5 26 11.5l-3 3"
+          }
+        },
+        {
+          "as": "circle",
+          "attrs": {
+            "cx": 27,
+            "cy": 20.5,
+            "r": 3
+          }
+        },
+        {
+          "as": "path",
+          "attrs": {
+            "d": "M21 20.5H6"
+          }
+        },
+        {
+          "as": "path",
+          "attrs": {
+            "d": "M9 17.5 6 20.5l3 3"
+          }
+        }
+      ]
+    },
+    "@hyperfrontend/list-utils": {
+      "note": "The queue: items waiting in order, the head about to leave.",
+      "hue": 184,
+      "mark": [
+        {
+          "as": "rect",
+          "attrs": {
+            "x": 4,
+            "y": 11.5,
+            "width": 7,
+            "height": 9,
+            "rx": 2
+          }
+        },
+        {
+          "as": "rect",
+          "attrs": {
+            "x": 12.5,
+            "y": 11.5,
+            "width": 7,
+            "height": 9,
+            "rx": 2
+          }
+        },
+        {
+          "as": "rect",
+          "attrs": {
+            "x": 21,
+            "y": 11.5,
+            "width": 7,
+            "height": 9,
+            "rx": 2
+          },
+          "solid": true
+        },
+        {
+          "as": "path",
+          "attrs": {
+            "d": "M14.5 25.5h11"
+          }
+        },
+        {
+          "as": "path",
+          "attrs": {
+            "d": "M23 23 25.5 25.5 23 28"
+          }
+        }
+      ]
+    },
+    "@hyperfrontend/function-utils": {
+      "note": "A call with a guard on it: what goes in, what the wrapper decides, what comes out.",
+      "hue": 260,
+      "mark": [
+        {
+          "as": "path",
+          "attrs": {
+            "d": "M4 16h5.5"
+          }
+        },
+        {
+          "as": "circle",
+          "attrs": {
+            "cx": 16,
+            "cy": 16,
+            "r": 6.5
+          }
+        },
+        {
+          "as": "circle",
+          "attrs": {
+            "cx": 16,
+            "cy": 16,
+            "r": 1.6
+          },
+          "solid": true
+        },
+        {
+          "as": "path",
+          "attrs": {
+            "d": "M22.5 16H28"
+          }
+        },
+        {
+          "as": "path",
+          "attrs": {
+            "d": "M25 13 28 16l-3 3"
+          }
+        }
+      ]
+    },
+    "@hyperfrontend/web-worker": {
+      "note": "Work lifted off the main line and handed back when it is done.",
+      "hue": 158,
+      "mark": [
+        {
+          "as": "path",
+          "attrs": {
+            "d": "M4 8.5h24"
+          }
+        },
+        {
+          "as": "path",
+          "attrs": {
+            "d": "M4 23.5h24"
+          }
+        },
+        {
+          "as": "path",
+          "attrs": {
+            "d": "M11.5 8.5 20.5 23.5"
+          }
+        },
+        {
+          "as": "circle",
+          "attrs": {
+            "cx": 16,
+            "cy": 16,
+            "r": 2.6
+          },
+          "solid": true
+        }
+      ]
+    }
+  }
+}

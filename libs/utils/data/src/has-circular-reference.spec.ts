@@ -32,6 +32,66 @@ describe('hasCircularReference', () => {
   })
 })
 
+describe('hasCircularReference - with references shared between branches', () => {
+  it('returns false when the same object is reachable through two keys', () => {
+    const shared = { v: 1 }
+    expect(hasCircularReference({ a: shared, b: shared })).toEqual(false)
+  })
+
+  it('returns false when the same object is reachable through two array items', () => {
+    const shared = { v: 1 }
+    expect(hasCircularReference([shared, shared])).toEqual(false)
+  })
+
+  it('returns false when a shared branch is deeper than the branch that follows it', () => {
+    const shared = { deep: { deeper: {} } }
+    expect(hasCircularReference({ a: shared, b: { c: shared } })).toEqual(false)
+  })
+})
+
+describe('hasCircularReference - with non-extensible input', () => {
+  it('returns false for a frozen object', () => {
+    expect(hasCircularReference(Object.freeze({ a: 1 }))).toEqual(false)
+  })
+
+  it('returns false for an object holding a frozen object', () => {
+    expect(hasCircularReference({ a: Object.freeze({ b: 1 }) })).toEqual(false)
+  })
+
+  it('returns false for a sealed object', () => {
+    expect(hasCircularReference(Object.seal({ a: 1 }))).toEqual(false)
+  })
+
+  it('returns false for a frozen array', () => {
+    expect(hasCircularReference(Object.freeze([1, 2]))).toEqual(false)
+  })
+
+  it('returns true for a frozen value that contains itself', () => {
+    const target: Record<string, unknown> = { a: 1 }
+    target['self'] = target
+    Object.freeze(target)
+    expect(hasCircularReference(target)).toEqual(true)
+  })
+
+  it('leaves no key behind on the values it visits', () => {
+    const target = { a: { b: 1 } }
+    hasCircularReference(target)
+    expect(Object.keys(target.a)).toEqual(['b'])
+  })
+})
+
+describe('hasCircularReference - when reading a value throws', () => {
+  it('restores the configuration it turned on', () => {
+    const target = {
+      get explode(): unknown {
+        throw new Error('reader exploded')
+      },
+    }
+    expect(() => hasCircularReference(target)).toThrow('reader exploded')
+    expect(getConfig().detectCircularReferences).toBe(false)
+  })
+})
+
 describe('hasCircularReference - with extended iterable class types', () => {
   beforeEach(() => {
     registerIterableClass<Map<unknown, unknown>>(

@@ -1,4 +1,5 @@
 import type { EncoderBinaries, EncoderPreference, GifOptions, StillOptions } from './encode'
+import type { ThemeId } from './theme'
 
 /** Chromium settings shared by every browser scene in a workspace. */
 export interface BrowserConfig {
@@ -34,6 +35,26 @@ export interface EncoderConfigInput {
   prefer?: EncoderPreference
   /** Commands the ffmpeg backend invokes. */
   binaries?: Partial<EncoderBinaries>
+}
+
+/**
+ * One variant every scripted scene is rendered as.
+ *
+ * A variant is a theme, the suffix its files are written under, and the
+ * budget its animation is held to. The suffix is what the readmes and the
+ * documentation site address an asset by, so it is configuration rather than
+ * convention: the bare name goes to the variant that is safe to embed
+ * anywhere, and the others carry their theme in the filename.
+ */
+export interface VariantSpec {
+  /** The theme this variant is drawn with. */
+  theme: ThemeId
+  /** What is written between the asset's stem and its extension, such as `.dark`. */
+  suffix: string
+  /** Where an asset in this variant is meant to be embedded. */
+  intent: string
+  /** Encoding parameters this variant applies over the scene's own. */
+  gif?: Partial<GifOptions>
 }
 
 /** Encoding parameters every scene inherits unless it says otherwise. */
@@ -76,6 +97,14 @@ export interface MediaConfigInput {
   browser?: BrowserConfigInput
   /** Encoding parameters every scene inherits. */
   defaults?: MediaDefaultsInput
+  /**
+   * The variants every scripted scene is rendered as, in the order they are
+   * produced.
+   *
+   * Omitted, the recorder renders the portable variant under the bare asset
+   * name and the dark and light variants under `.dark` and `.light`.
+   */
+  variants?: readonly VariantSpec[]
 }
 
 /** Absolute directories derived from the configuration file's own location. */
@@ -104,4 +133,6 @@ export interface ResolvedMediaConfig {
   browser: BrowserConfig
   /** Encoding parameters every scene inherits. */
   defaults: MediaDefaults
+  /** The variants every scripted scene is rendered as. */
+  variants: readonly VariantSpec[]
 }

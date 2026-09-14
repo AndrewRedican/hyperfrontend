@@ -1,6 +1,6 @@
 # Core Modules
 
-This documentation covers the core modules of `@hyperfrontend/network-protocol`.
+This documentation covers the core modules of [`@hyperfrontend/network-protocol`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/).
 
 ## Module Overview
 
@@ -19,14 +19,14 @@ This documentation covers the core modules of `@hyperfrontend/network-protocol`.
 
 ## Platform Support
 
-The library provides platform-specific implementations with identical APIs. Each protocol entry exports `createProtocol`: `v3` keys a session from an ephemeral P-256 agreement alone, and `v4` mixes a pre-shared key into the same schedule. Both platforms produce identical frames and interoperate.
+The library provides platform-specific implementations with identical APIs. Each protocol entry exports [`createProtocol`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-createProtocol): [`v3`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-V3) keys a session from an ephemeral P-256 agreement alone, and [`v4`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-V4) mixes a pre-shared key into the same schedule. Both platforms produce identical frames and interoperate.
 
-| Platform | Protocol entries                                                                           | Pipeline entries                                                                                              |
-| -------- | ------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------- |
-| Browser  | `@hyperfrontend/network-protocol/browser/v3`, `@hyperfrontend/network-protocol/browser/v4` | `.../browser/channel`, `.../browser/data`, `.../browser/packet`, `.../browser/sender`, `.../browser/receiver` |
-| Node.js  | `@hyperfrontend/network-protocol/node/v3`, `@hyperfrontend/network-protocol/node/v4`       | `.../node/channel`, `.../node/data`, `.../node/packet`, `.../node/sender`, `.../node/receiver`                |
+| Platform | Protocol entries                                                                                                                                                                                                                                     | Pipeline entries                                                                                              |
+| -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| Browser  | [`@hyperfrontend/network-protocol/browser/v3`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/browser/v3/), [`@hyperfrontend/network-protocol/browser/v4`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/browser/v4/) | `.../browser/channel`, `.../browser/data`, `.../browser/packet`, `.../browser/sender`, `.../browser/receiver` |
+| Node.js  | [`@hyperfrontend/network-protocol/node/v3`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/node/v3/), [`@hyperfrontend/network-protocol/node/v4`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/node/v4/)             | `.../node/channel`, `.../node/data`, `.../node/packet`, `.../node/sender`, `.../node/receiver`                |
 
-The platform-neutral entries `/queue`, `/routing`, `/security`, and `/topic` are shared by both.
+The platform-neutral entries [`/queue`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/queue/), [`/routing`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/routing/), [`/security`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/security/), and [`/topic`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/topic/) are shared by both.
 
 ## Further Reading
 

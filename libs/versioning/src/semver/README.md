@@ -98,7 +98,7 @@ format(bump(version, 'prerelease')) // '1.2.4-0'
 ```typescript
 import { sort, max, min, parseVersion, format } from '@hyperfrontend/versioning'
 
-const versions = [parseVersion('2.0.0')!, parseVersion('1.0.0')!, parseVersion('1.5.0')!]
+const versions = ['2.0.0', '1.0.0', '1.5.0'].map((raw) => parseVersion(raw)!)
 
 sort(versions).map(format) // ['1.0.0', '1.5.0', '2.0.0']
 format(max(versions)!) // '2.0.0'

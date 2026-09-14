@@ -22,7 +22,7 @@ const createExportEntry = (outputDir: string, hasEsm: boolean, hasCjs: boolean):
   return entry
 }
 
-const extractOutputDirFromSourcePath = (srcPath: ExportValue): string => {
+const extractOutputDirFromSourcePath = (srcPath: ExportValue): string | null => {
   const path =
     typeof srcPath === 'string'
       ? srcPath
@@ -31,8 +31,8 @@ const extractOutputDirFromSourcePath = (srcPath: ExportValue): string => {
   const subDirMatch = path.match(/^\.\/src\/(.+?)\/index\.[jt]s$/)
   if (subDirMatch && subDirMatch[1]) return subDirMatch[1]
 
-  if (path.match(/^\.\/src\/index\.[jt]s$/)) return ''
-  return ''
+  // why: only the root `./src/index.[jt]s` shape maps onto the root entry; a file export, a path outside src/ or a conditional with no recognised condition has no built counterpart and must be omitted rather than aliased to the root module.
+  return path.match(/^\.\/src\/index\.[jt]s$/) ? '' : null
 }
 
 /**
@@ -43,7 +43,9 @@ const extractOutputDirFromSourcePath = (srcPath: ExportValue): string => {
  * is mapped to a conditional export entry built from the formats that actually
  * landed for the matching subpath. Internal modules that were built but not
  * advertised in the source `exports` map are intentionally omitted from the
- * published output.
+ * published output, and so is a declared key whose source path is not a
+ * `./src/<dir>/index.[jt]s` or `./src/index.[jt]s` module (a file export, a
+ * path outside `src/`, or a conditional with no recognised condition).
  *
  * If `srcPkg` has no `exports` field, falls back to a single root-entry export
  * synthesized from `discovery.hasRootEntry`.
@@ -77,6 +79,7 @@ export const generateExportsFromFormats = (
       if (exportKey === './package.json') continue
 
       const outputDir = extractOutputDirFromSourcePath(srcPath)
+      if (outputDir === null) continue
       const discoveryPath = outputDir ? `./${outputDir}` : '.'
       const hasEsm = esmPaths.has(discoveryPath)
       const hasCjs = cjsPaths.has(discoveryPath)

@@ -10,6 +10,18 @@ module.exports = [
   },
   ...baseConfig,
   {
+    // context: the rule governs documentation read at a phone's width. The site's own editorial content is exactly that and keeps the rule; the app's README is an engineering note read on GitHub, where a wide line is a wide line and nothing more.
+    files: ['**/*.md'],
+    ignores: ['content/**/*.md'],
+    plugins: {
+      markdown: require('@eslint/markdown').default,
+    },
+    language: 'markdown/gfm',
+    rules: {
+      'workspace/codeblock-line-width': 'off',
+    },
+  },
+  {
     // Ensure all publishable libraries are documented in content.ts and generate-docs.ts
     files: ['src/lib/content.ts', 'scripts/generate-docs.ts'],
     plugins: {
@@ -48,13 +60,14 @@ module.exports = [
     },
   },
   {
-    // Allow @hyperfrontend/ imports from npm packages installed in this app's node_modules
+    // Allow @hyperfrontend/ imports from npm packages installed in this app's node_modules, and the workspace's
+    // package identity data, which the site and the media recorder both read so a package's mark and hue are stated once
     files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
     rules: {
       '@nx/enforce-module-boundaries': [
         'error',
         {
-          allow: ['^@hyperfrontend/'],
+          allow: ['^@hyperfrontend/', '^.*/assets/brand/[^/]+\\.json$'],
         },
       ],
     },

@@ -4,6 +4,7 @@ export const USAGE = `media <command> [options]
 Commands
   record          Record every scene, or one named by --scene
   shot            Take a single screenshot without authoring a scene
+  preview         Draw chosen moments of a scripted scene onto one contact sheet
   check           Verify committed assets against their scenes, without a browser
   doctor          Report which browsers and encoders are available here
 
@@ -29,9 +30,16 @@ shot options
   --full-page         Capture the whole scrollable page
   --omit-background   Keep the page's own transparency instead of white
   --format <fmt>      png, webp or jpeg (default: png)
-  --quality <n>       Quality for webp and jpeg (default: 90)
+  --quality <n>       Quality for webp and jpeg (default: 90); under 100, a png is palette-quantised
   --width <n>         Resize the capture to this width
   --console           Write the page's console output beside the image
+
+preview options
+  --scene <slug>      The scripted scene to draw (required)
+  --out <path>        PNG to write (required)
+  --at <ms,...|every:N>  Moments to draw, or N spread evenly to the end (default: 0)
+  --theme <name>      portable, dark or light (default: portable)
+  --background <css>  Colour behind a transparent frame (default: #ffffff)
 
 check options
   --scene <slug>      Check only this scene

@@ -310,28 +310,21 @@ describe('select', () => {
     })
   })
 
-  describe('empty choices', () => {
-    it('handles empty choices array', async () => {
-      const config = createConfig({ choices: [] })
-      const promise = select(config)
-
-      input.enqueueKeys([Key.CtrlC])
-
-      const result = await promise
-
-      expect(result.result).toBe(PromptResult.Cancelled)
+  describe('configuration', () => {
+    it('rejects an empty choice list', async () => {
+      await expect(select(createConfig({ choices: [] }))).rejects.toThrow('select requires at least one choice')
     })
 
-    it('ignores navigation with empty choices', async () => {
-      const config = createConfig({ choices: [] })
-      const promise = select(config)
+    it('rejects an initial index past the last choice', async () => {
+      await expect(select(createConfig({ initial: 7 }))).rejects.toThrow('select initial must be an index between 0 and 2, received 7')
+    })
 
-      // why: navigation should be ignored with empty choices
-      input.enqueueKeys([Key.Up, Key.Down, Key.CtrlC])
+    it('rejects a negative initial index', async () => {
+      await expect(select(createConfig({ initial: -1 }))).rejects.toThrow('select initial must be an index between 0 and 2, received -1')
+    })
 
-      const result = await promise
-
-      expect(result.result).toBe(PromptResult.Cancelled)
+    it('rejects an initial index that is not a whole number', async () => {
+      await expect(select(createConfig({ initial: 1.5 }))).rejects.toThrow('select initial must be an index between 0 and 2, received 1.5')
     })
   })
 

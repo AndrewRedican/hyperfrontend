@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.1](https://github.com/AndrewRedican/hyperfrontend/compare/106ce4517092cdfa9f222b73d938d272c333d69b...adf0a4f77dece2be855e7ab88185a4fe84e7b16b) - 2026-09-14
+
+### Bug Fixes
+
+- copy decoded base64 bytes out of the shared buffer pool on node
+
 ## [1.0.0](https://github.com/AndrewRedican/hyperfrontend/compare/74110dd15151bfc8360ef4edcdb1086cb003c909...1c140227502e3657fc0a06b7eef34490cdc8b0f0) - 2026-08-31
 
 ### Features

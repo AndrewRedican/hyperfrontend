@@ -1,6 +1,6 @@
 # Node Module
 
-Node.js-optimized implementations of the `@hyperfrontend/string-utils` encoding API, built directly on `Buffer`.
+Node.js-optimized implementations of the [`@hyperfrontend/string-utils`](https://www.hyperfrontend.dev/docs/libraries/utils/string/) encoding API, built directly on `Buffer`.
 
 ## Overview
 
@@ -24,4 +24,4 @@ const bytes = utf8StringToUint8Array('Hello')
 const sameBytes = base64ToUint8Array(toBase64('Hello'))
 ```
 
-Use this entry point in Node.js processes (and any runtime that ships a `Buffer` global). Browser, Web Worker, and edge-runtime consumers should import from `@hyperfrontend/string-utils/browser` so bundlers can drop the `Buffer` paths entirely.
+Use this entry point in Node.js processes (and any runtime that ships a `Buffer` global). Browser, Web Worker, and edge-runtime consumers should import from [`@hyperfrontend/string-utils/browser`](https://www.hyperfrontend.dev/docs/libraries/utils/string/browser/) so bundlers can drop the `Buffer` paths entirely.

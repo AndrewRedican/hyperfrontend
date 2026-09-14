@@ -60,7 +60,8 @@ export async function runShot(config: ResolvedMediaConfig, args: ParsedArgs): Pr
     })
     const bytes = await writeStill(png, outputPath, {
       format: format as 'png' | 'webp' | 'jpeg',
-      quality: readNumber(args, 'quality', 90),
+      // why: a screenshot is for reading a render back, so a PNG is the browser's own bytes unless a quality is asked for; the lossy formats keep their usual default
+      quality: readNumber(args, 'quality', format === 'png' ? 100 : 90),
       width: readNumber(args, 'width', 0),
     })
     if (args.flags.has('console')) {

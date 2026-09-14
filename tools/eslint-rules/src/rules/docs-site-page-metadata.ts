@@ -18,8 +18,8 @@ const SUBMODULE_ARG_NAMES: readonly string[] = ['librarySlug', 'packageName', 's
  */
 interface RoutePlan {
   /** Metadata structure the route conventionally uses. */
-  kind: 'generic' | 'dynamic' | 'library' | 'architecture' | 'submodule'
-  /** Manifest slug expected as the library or architecture helper argument. */
+  kind: 'generic' | 'dynamic' | 'library' | 'architecture' | 'changelog' | 'submodule'
+  /** Manifest slug expected as the library, architecture or changelog helper argument. */
   slug?: string
   /** Expected getSubmoduleMetadata arguments, keyed by option name. */
   submoduleArgs?: Record<string, string>
@@ -90,6 +90,9 @@ function classifyRoute(route: string): RoutePlan {
     if (rest.length === 2) {
       return { kind: 'library', slug: `${utilsSegment}-utils` }
     }
+    if (rest.length === 3 && rest[2] === 'releases') {
+      return { kind: 'changelog', slug: `${utilsSegment}-utils` }
+    }
     return {
       kind: 'submodule',
       submoduleArgs: {
@@ -105,6 +108,10 @@ function classifyRoute(route: string): RoutePlan {
   }
   if (rest.length === 2 && rest[1] === 'architecture') {
     return { kind: 'architecture', slug: head }
+  }
+  // why: a package's changelog page sits at `releases`, since `changelog` is an entry point of the versioning package with a submodule page of its own
+  if (rest.length === 2 && rest[1] === 'releases') {
+    return { kind: 'changelog', slug: head }
   }
   return {
     kind: 'submodule',
@@ -130,6 +137,9 @@ function helperForPlan(plan: RoutePlan): string | null {
   if (plan.kind === 'architecture') {
     return 'getArchitectureMetadata'
   }
+  if (plan.kind === 'changelog') {
+    return 'getChangelogMetadata'
+  }
   if (plan.kind === 'submodule') {
     return 'getSubmoduleMetadata'
   }
@@ -151,6 +161,9 @@ function blockForPlan(plan: RoutePlan): string {
   }
   if (plan.kind === 'architecture') {
     return `export function generateMetadata(): Metadata {\n  return getArchitectureMetadata('${plan.slug}')\n}`
+  }
+  if (plan.kind === 'changelog') {
+    return `export function generateMetadata(): Metadata {\n  return getChangelogMetadata('${plan.slug}')\n}`
   }
   if (plan.kind === 'submodule') {
     const args = plan.submoduleArgs ?? {}
@@ -344,7 +357,7 @@ export default createRule<[], MessageIds>({
     const plan = classifyRoute(route)
 
     /**
-     * Report a library or architecture helper call whose slug argument does
+     * Report a library, architecture or changelog helper call whose slug argument does
      * not match the value derived from the page route.
      *
      * @param call - The helper call expression.
@@ -505,7 +518,8 @@ export default createRule<[], MessageIds>({
         const calleeName = node.callee.name
         const slugHelperMatches =
           (plan.kind === 'library' && calleeName === 'getLibraryMetadata') ||
-          (plan.kind === 'architecture' && calleeName === 'getArchitectureMetadata')
+          (plan.kind === 'architecture' && calleeName === 'getArchitectureMetadata') ||
+          (plan.kind === 'changelog' && calleeName === 'getChangelogMetadata')
         if (slugHelperMatches) {
           reportSlugMismatch(node)
         }

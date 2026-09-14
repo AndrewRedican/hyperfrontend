@@ -36,6 +36,16 @@ describe('createChannel', () => {
     )
   })
 
+  it('throws error when the drop handler is not a function', () => {
+    expect(() => createChannel(label, { ...options, onDrop: 'nope' as any })).toThrow(
+      'Cannot create a channel without a valid drop handler function'
+    )
+  })
+
+  it('accepts an omitted drop handler', () => {
+    expect(createChannel(label, { ...options, onDrop: undefined })).toEqual(expect.objectContaining({ label }))
+  })
+
   it('exposes the protocol hello exchange unchanged', () => {
     const channel = createChannel(label, options)
     expect({ hello: channel.hello, isHello: channel.isHello, acceptHello: channel.acceptHello }).toEqual({

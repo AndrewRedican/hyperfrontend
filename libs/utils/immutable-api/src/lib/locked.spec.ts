@@ -1,6 +1,6 @@
 import { beforeEach } from 'node:test'
 import { describe, expect, it } from '@hyperfrontend/testing'
-import { defineProperty, getOwnPropertyDescriptor } from '../built-in-copy/object'
+import { defineProperty, freeze, getOwnPropertyDescriptor } from '../built-in-copy/object'
 import { locked } from './locked'
 
 interface IContextual {
@@ -43,6 +43,19 @@ describe('lockeded classic prototype method', () => {
   it('remains bound to original context', () => {
     otherInstance.method = instance.method
     expect(otherInstance.method()).toEqual(instance.value)
+  })
+
+  it('is callable on a frozen instance', () => {
+    const frozen = freeze(new MockClass())
+    expect(frozen.method()).toEqual(frozen.value)
+  })
+
+  it('returns the same bound function on every read of a frozen instance', () => {
+    const frozen = freeze(new MockClass())
+    // why: each read runs the getter, and binding afresh per read would hand out a new function object every time.
+    const firstRead = frozen.method
+    const secondRead = frozen.method
+    expect(secondRead).toBe(firstRead)
   })
 
   it('caches the bound function per instance', () => {

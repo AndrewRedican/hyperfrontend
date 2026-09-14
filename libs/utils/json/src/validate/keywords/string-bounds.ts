@@ -20,20 +20,21 @@ import { addError, shouldContinue } from '../context'
  */
 export function validateStringBounds(instance: string, schema: Schema, ctx: ValidationContext): boolean {
   let valid = true
+  const length = countCodePoints(instance)
 
-  if (schema.minLength !== undefined && instance.length < schema.minLength) {
-    addError(ctx, `String must be at least ${schema.minLength} characters, got ${instance.length}`, instance, 'minLength', {
+  if (schema.minLength !== undefined && length < schema.minLength) {
+    addError(ctx, `String must be at least ${schema.minLength} characters, got ${length}`, instance, 'minLength', {
       limit: schema.minLength,
-      actual: instance.length,
+      actual: length,
     })
     valid = false
     if (!shouldContinue(ctx)) return false
   }
 
-  if (schema.maxLength !== undefined && instance.length > schema.maxLength) {
-    addError(ctx, `String must be at most ${schema.maxLength} characters, got ${instance.length}`, instance, 'maxLength', {
+  if (schema.maxLength !== undefined && length > schema.maxLength) {
+    addError(ctx, `String must be at most ${schema.maxLength} characters, got ${length}`, instance, 'maxLength', {
       limit: schema.maxLength,
-      actual: instance.length,
+      actual: length,
     })
     valid = false
     if (!shouldContinue(ctx)) return false
@@ -80,4 +81,22 @@ export function validateStringBounds(instance: string, schema: Schema, ctx: Vali
   }
 
   return valid
+}
+
+/**
+ * Counts the characters of a string the way Draft 4 defines string length: by code point, not by UTF-16 unit.
+ *
+ * @param value - String to measure
+ * @returns Number of code points, with each surrogate pair counted once
+ */
+function countCodePoints(value: string): number {
+  let count = 0
+  for (let index = 0; index < value.length; index++) {
+    const unit = value.charCodeAt(index)
+    const next = value.charCodeAt(index + 1)
+    // why: a high surrogate followed by a low surrogate encodes one character across two units
+    if (unit >= 0xd800 && unit <= 0xdbff && next >= 0xdc00 && next <= 0xdfff) index++
+    count++
+  }
+  return count
 }

@@ -3,5 +3,5 @@
  *
  * @module @hyperfrontend/ui-utils/component
  */
-export type { StyleFn, CreateFn } from '../lib/component'
-export { component } from '../lib/component'
+export type { StyleFn, CreateFn } from './component'
+export { component } from './component'

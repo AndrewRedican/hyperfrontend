@@ -208,3 +208,40 @@ describe('traverse - with config detectCircularReferences:true', () => {
     expect(callback).toHaveBeenCalledTimes(3)
   })
 })
+
+describe('traverse - with references shared between branches', () => {
+  let callback: Mock<void, [key: string, value: unknown, path: string[], state: any, parent: unknown]>
+
+  const shared = { v: 1 }
+
+  beforeEach(() => (callback = jest.fn((key, value, path, state, parent) => {})))
+
+  afterEach(() => setConfig({ detectCircularReferences: false }))
+
+  it('visits a shared reference once for every branch that holds it', () => {
+    setConfig({ detectCircularReferences: true })
+    traverse({ a: shared, b: shared }, callback)
+    expect(callback).toHaveBeenCalledTimes(5)
+  })
+
+  it('visits the same data points as a traversal with detection off', () => {
+    traverse({ a: shared, b: shared }, callback)
+    const withDetectionOff = callback.mock.calls.length
+    setConfig({ detectCircularReferences: true })
+    callback = jest.fn((key, value, path, state, parent) => {})
+    traverse({ a: shared, b: shared }, callback)
+    expect(callback).toHaveBeenCalledTimes(withDetectionOff)
+  })
+
+  it('reaches the second branch of a shared reference', () => {
+    setConfig({ detectCircularReferences: true })
+    traverse({ a: shared, b: shared }, callback)
+    expect(callback).toHaveBeenCalledWith('v', 1, ['b', 'v'], {}, shared)
+  })
+
+  it('traverses a frozen value', () => {
+    setConfig({ detectCircularReferences: true })
+    traverse(Object.freeze({ a: Object.freeze({ b: 1 }) }), callback)
+    expect(callback).toHaveBeenCalledTimes(3)
+  })
+})

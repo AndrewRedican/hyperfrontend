@@ -42,14 +42,15 @@ const circularDependencyTraversal: TraversalCircular = (
   /* node:coverage ignore next */
   if (config.exitEarly) return state
   if (ok) callback(key, value, path, state, parent)
-  stack.add(value)
   const type = getType(value)
   if (!isIterableType(type)) return state
+  stack.add(value)
   const keys = getKeysFromIterable(value, type)
   keys.forEach((key) => {
     const { nextPath, nextValue } = nextIterationDetails(path, key, value)
     circularDependencyTraversal(condition, callback, config, key, nextPath, nextValue, value, state, stack)
   })
+  stack.remove(value)
   if (root) stack.clear()
   return state
 }
@@ -85,8 +86,13 @@ const traversal: Traversal = (target, condition, callback, options, state) => {
     exitEarly: false,
   } as TraverseConfig
   const initialArgs = [condition, callback, config, '', [], target, void 0, state] as TraversalArgs
-  if (getConfig().detectCircularReferences) return circularDependencyTraversal(...initialArgs, referenceStack(), true)
-  return nonCircularDependencyTraversal(...initialArgs)
+  if (!getConfig().detectCircularReferences) return nonCircularDependencyTraversal(...initialArgs)
+  const stack = referenceStack()
+  try {
+    return circularDependencyTraversal(...initialArgs, stack, true)
+  } finally {
+    stack.clear()
+  }
 }
 
 /**

@@ -128,7 +128,7 @@ export function compileTimeline(config: TerminalConfig): TerminalTimeline {
         rows = [...rows, toRow(span)]
         mark(false)
       }
-      showPrompt = true
+      showPrompt = step.running !== true
       mark(true)
       continue
     }

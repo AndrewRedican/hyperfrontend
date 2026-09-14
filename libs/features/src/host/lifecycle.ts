@@ -275,14 +275,16 @@ export function createShellHandle(
   }
 
   const open = (overrides?: Partial<ShellOptions>) => {
+    const options = { ...baseOptions, ...overrides } as ShellOptions
+    const displayMode = options.displayMode ?? DisplayMode.Embedded
+    // why: The mode lookup is a pure read that throws for a mode the shell was not composed with; resolving it before the teardown leaves a rejected call with the running session intact.
+    const mount = wiring.selectMount(displayMode)
     destroy()
     if (pendingUnmount) {
       queuedOpen = () => open(overrides)
       return
     }
-    const options = { ...baseOptions, ...overrides } as ShellOptions
-    const displayMode = options.displayMode ?? DisplayMode.Embedded
-    const result = wiring.selectMount(displayMode)({ options, requestClose: close })
+    const result = mount({ options, requestClose: close })
     cleanup = result.cleanup
     if (result.target === null) {
       emitter.emit('error', { reason: 'open-failed', displayMode })

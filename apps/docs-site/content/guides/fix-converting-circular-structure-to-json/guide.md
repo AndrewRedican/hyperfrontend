@@ -7,7 +7,12 @@ V8 tells you where one loop closes and stops there. Fix that edge and the next t
 Take an order whose lines point back at the order, and whose customer remembers its last one:
 
 ```ts
-const order = { id: 'ord_412', total: 88, customer: { id: 'cus_7', name: 'Ada' }, lines: [] }
+const order = {
+  id: 'ord_412',
+  total: 88,
+  customer: { id: 'cus_7', name: 'Ada' },
+  lines: [],
+}
 order.lines.push({ sku: 'HF-1', qty: 2, order })
 order.lines.push({ sku: 'HF-2', qty: 1, order })
 order.customer.lastOrder = order

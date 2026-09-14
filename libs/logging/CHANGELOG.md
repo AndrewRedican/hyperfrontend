@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.1](https://github.com/AndrewRedican/hyperfrontend/compare/106ce4517092cdfa9f222b73d938d272c333d69b...adf0a4f77dece2be855e7ab88185a4fe84e7b16b) - 2026-09-14
+
+### Bug Fixes
+
+- name the rejected level in the invalid log level error
+- accept an unknown value in isValidLogLevel and narrow it to a log level
+
 ## [1.0.0](https://github.com/AndrewRedican/hyperfrontend/compare/5f116abb8ba6355dfb283fa03b7481e5eb029480...b4b3c79eb77667b0db74d82779a3fbda69e4a0b6) - 2026-08-31
 
 ### Features

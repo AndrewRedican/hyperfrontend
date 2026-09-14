@@ -3,4 +3,4 @@
  *
  * @module @hyperfrontend/ui-utils/audio
  */
-export { setupAudio } from '../lib/setup-audio'
+export { setupAudio } from './setup-audio'

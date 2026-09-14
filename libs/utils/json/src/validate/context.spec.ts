@@ -1,7 +1,9 @@
 import type { Schema } from '../types/schema'
+import type { PatternSafetyChecker } from '../types/validation'
 import type { SchemaValidator } from './context'
+import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { describe, expect, it } from '@hyperfrontend/testing'
-import { createValidationContext, pushPath, addError, shouldContinue } from './context'
+import { createValidationContext, createBranchContext, pushPath, addError, shouldContinue } from './context'
 
 const mockValidator: SchemaValidator = () => true
 
@@ -59,6 +61,12 @@ describe('createValidationContext', () => {
     const ctx = createValidationContext(schema, mockValidator)
 
     expect(ctx.validate).toBe(mockValidator)
+  })
+
+  it('starts with no visited $ref targets', () => {
+    const ctx = createValidationContext({ type: 'string' }, mockValidator)
+
+    expect(ctx.visitedRefs.size).toBe(0)
   })
 })
 
@@ -122,6 +130,46 @@ describe('pushPath', () => {
     const childCtx = pushPath(ctx, 'prop')
 
     expect(childCtx.validate).toBe(mockValidator)
+  })
+
+  it('clears the visited $ref targets because descending consumes data', () => {
+    const ctx = { ...createValidationContext({ type: 'object' }, mockValidator), visitedRefs: createSet(['#']) }
+    const childCtx = pushPath(ctx, 'prop')
+
+    expect(childCtx.visitedRefs.size).toBe(0)
+  })
+})
+
+describe('createBranchContext', () => {
+  const checker: PatternSafetyChecker = () => ({ safe: true })
+  const parent = {
+    ...pushPath(createValidationContext({ definitions: { a: {} } }, mockValidator, true, true, checker), 'field'),
+    visitedRefs: createSet(['#/definitions/a']),
+  }
+
+  it('shares the position, schema index, pattern options and visited $ref targets with the parent', () => {
+    expect(createBranchContext(parent)).toEqual(
+      expect.objectContaining({
+        path: '/field',
+        rootSchema: parent.rootSchema,
+        definitions: parent.definitions,
+        strictPatterns: true,
+        patternSafetyChecker: checker,
+        visitedRefs: parent.visitedRefs,
+        validate: mockValidator,
+      })
+    )
+  })
+
+  it('collects its own errors', () => {
+    const branch = createBranchContext(parent)
+    addError(branch, 'branch failure')
+
+    expect(parent.errors).toEqual([])
+  })
+
+  it('stops at the first error', () => {
+    expect(createBranchContext(parent).collectAllErrors).toBe(false)
   })
 })
 

@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.1](https://github.com/AndrewRedican/hyperfrontend/compare/106ce4517092cdfa9f222b73d938d272c333d69b...adf0a4f77dece2be855e7ab88185a4fe84e7b16b) - 2026-09-14
+
+### Bug Fixes
+
+- swallow the rejection of a promise the error-ignoring wrapper returns
+- call the wrapped function with the receiver the wrapper was invoked on
+
 ## [1.0.0](https://github.com/AndrewRedican/hyperfrontend/compare/5f116abb8ba6355dfb283fa03b7481e5eb029480...e0f45f05f9bbd40569948eab2389a74df5818015) - 2026-08-31
 
 ### Features

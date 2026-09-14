@@ -44,19 +44,24 @@ const priority = {
 }
 
 /**
- * Validates whether a given string is a valid log level.
+ * Validates whether an arbitrary value is a valid log level, narrowing it when it is.
  *
- * @param level - The log level to validate
- * @returns True if the level is valid, false otherwise
+ * @param level - The value to validate, typically read from configuration or a request body
+ * @returns True if the value is a valid log level, false otherwise
  *
- * @example Validating log levels
+ * @example Guarding a value of unknown shape
  * ```typescript
  * isValidLogLevel('error') // => true
  * isValidLogLevel('verbose') // => false
+ *
+ * const fromConfig: unknown = process.env['LOG_LEVEL']
+ * if (isValidLogLevel(fromConfig)) {
+ *   createLogLevelConfig(fromConfig) // fromConfig is a LogLevel here
+ * }
  * ```
  */
-export function isValidLogLevel(level: LogLevel) {
-  return logLevels.includes(level)
+export function isValidLogLevel(level: unknown): level is LogLevel {
+  return typeof level === 'string' && (logLevels as readonly string[]).includes(level)
 }
 
 /**
@@ -78,7 +83,7 @@ export function isValidLogLevel(level: LogLevel) {
  */
 export function createLogLevelConfig(level: LogLevel = 'error'): LogLevelConfig {
   if (!isValidLogLevel(level)) {
-    throw createError('Cannot create log level configuration with a valid default log level')
+    throw createError(`Cannot create log level configuration with invalid default level '${level}'. Expected levels are ${logLevels}.`)
   }
   const state: LogLevelState = { level }
   const getLogLevel: GetLogLevel = () => state.level

@@ -1,13 +1,13 @@
 # CLIs: `cz` and `cl`
 
-`@hyperfrontend/versioning` ships two command-line entries that are wired to the
-npm `bin` field. Install the package and they become available as `npx cz` and
+[`@hyperfrontend/versioning`](https://www.hyperfrontend.dev/docs/libraries/versioning/) ships two command-line entries that are wired to the
+npm [`bin`](https://docs.npmjs.com/cli/v11/configuring-npm/package-json#bin) field. Install the package and they become available as `npx cz` and
 `npx cl <file>` in any consuming project.
 
-| Bin  | Purpose                                                               |
-| ---- | --------------------------------------------------------------------- |
-| `cz` | Interactive conventional-commit authoring session                     |
-| `cl` | Conventional-commit message validator (usable from a commit-msg hook) |
+| Bin                                                                                            | Purpose                                                               |
+| ---------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| [`cz`](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/versioning/src/bin/cz.ts) | Interactive conventional-commit authoring session                     |
+| [`cl`](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/versioning/src/bin/cl.ts) | Conventional-commit message validator (usable from a commit-msg hook) |
 
 Both read their configuration from a `commit.config.{js,mjs,cjs}` file
 discovered upward from the current working directory (or pointed at via
@@ -54,7 +54,7 @@ commit-msg:
       run: npx cl {1}
 ```
 
-The ruleset comes from `commit.config.*` (`validateRuleset`) when one is
+The ruleset comes from `commit.config.*` ([`validateRuleset`](https://www.hyperfrontend.dev/docs/libraries/versioning/commits/author/#api-SessionConfig-prop-validateRuleset)) when one is
 loaded, otherwise the built-in conventional preset.
 
 Exit codes:

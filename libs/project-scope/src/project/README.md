@@ -1,6 +1,6 @@
 # Project Module
 
-The `project` module provides utilities for analyzing project structure, finding configuration files, reading package.json, discovering project roots, and traversing file trees.
+The project module provides utilities for analyzing project structure, finding configuration files, reading package.json, discovering project roots, and traversing file trees.
 
 ## Capabilities
 
@@ -32,20 +32,20 @@ const eslintConfig = findConfigFile('./my-project', 'eslint')
 
 #### Supported Config Types
 
-| Type         | Example Files                                     |
-| ------------ | ------------------------------------------------- |
-| `typescript` | `tsconfig.json`, `tsconfig.*.json`                |
-| `eslint`     | `.eslintrc`, `eslint.config.js`, `.eslintrc.json` |
-| `prettier`   | `.prettierrc`, `prettier.config.js`               |
-| `jest`       | `jest.config.ts`, `jest.config.js`                |
-| `vitest`     | `vitest.config.ts`                                |
-| `babel`      | `babel.config.js`, `.babelrc`                     |
-| `webpack`    | `webpack.config.js`                               |
-| `vite`       | `vite.config.ts`                                  |
-| `rollup`     | `rollup.config.js`                                |
-| `nx`         | `nx.json`, `project.json`                         |
-| `docker`     | `Dockerfile`, `docker-compose.yml`                |
-| `env`        | `.env`, `.env.*`                                  |
+| Type                                                                                                      | Example Files                                                                       |
+| --------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| [`typescript`](https://www.hyperfrontend.dev/docs/libraries/project-scope/project/config/#api-ConfigType) | `tsconfig.json`, `tsconfig.*.json`                                                  |
+| [`eslint`](https://www.hyperfrontend.dev/docs/libraries/project-scope/project/config/#api-ConfigType)     | `.eslintrc`, `eslint.config.js`, `.eslintrc.json`                                   |
+| [`prettier`](https://www.hyperfrontend.dev/docs/libraries/project-scope/project/config/#api-ConfigType)   | `.prettierrc`, `prettier.config.js`                                                 |
+| [`jest`](https://www.hyperfrontend.dev/docs/libraries/project-scope/project/config/#api-ConfigType)       | `jest.config.ts`, `jest.config.js`                                                  |
+| [`vitest`](https://www.hyperfrontend.dev/docs/libraries/project-scope/project/config/#api-ConfigType)     | `vitest.config.ts`                                                                  |
+| [`babel`](https://www.hyperfrontend.dev/docs/libraries/project-scope/project/config/#api-ConfigType)      | `babel.config.js`, `.babelrc`                                                       |
+| [`webpack`](https://www.hyperfrontend.dev/docs/libraries/project-scope/project/config/#api-ConfigType)    | `webpack.config.js`                                                                 |
+| [`vite`](https://www.hyperfrontend.dev/docs/libraries/project-scope/project/config/#api-ConfigType)       | `vite.config.ts`                                                                    |
+| [`rollup`](https://www.hyperfrontend.dev/docs/libraries/project-scope/project/config/#api-ConfigType)     | `rollup.config.js`                                                                  |
+| [`nx`](https://www.hyperfrontend.dev/docs/libraries/project-scope/project/config/#api-ConfigType)         | `nx.json`, `project.json`                                                           |
+| [`docker`](https://www.hyperfrontend.dev/docs/libraries/project-scope/project/config/#api-ConfigType)     | [`Dockerfile`](https://docs.docker.com/reference/dockerfile/), `docker-compose.yml` |
+| [`env`](https://www.hyperfrontend.dev/docs/libraries/project-scope/project/config/#api-ConfigType)        | `.env`, `.env.*`                                                                    |
 
 ### Package.json Utilities
 
@@ -110,7 +110,7 @@ const workspaceRoot = findWorkspaceRoot('./libs/my-lib')
 - `lerna.json`
 - `pnpm-workspace.yaml`
 - `rush.json`
-- `package.json` with `workspaces` field
+- `package.json` with [`workspaces`](https://www.hyperfrontend.dev/docs/libraries/project-scope/project/#api-PackageJson-prop-workspaces) field
 
 ### File Traversal
 

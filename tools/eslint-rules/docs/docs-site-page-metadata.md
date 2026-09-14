@@ -8,6 +8,7 @@ Every `page.tsx` under the docs-site app dir must export `metadata` or `generate
 
 - `docs/libraries/<slug>` pages call `getLibraryMetadata('<slug>')`; pages under `docs/libraries/utils/<segment>` use the `<segment>-utils` manifest slug.
 - `docs/libraries/<slug>/architecture` pages call `getArchitectureMetadata('<slug>')`.
+- `docs/libraries/<slug>/releases` pages, which render the package's changelog, call `getChangelogMetadata('<slug>')`, with the same `<segment>-utils` slug for a utility package.
 - Deeper library pages call `getSubmoduleMetadata({ librarySlug, packageName, submodulePath, path })` with every argument derived from the route.
 - Dynamic segment pages (`[slug]`) and hand-written pages export a literal structure with `title` and `description`.
 

@@ -131,6 +131,20 @@ function stripSeparator(remainder: string): string {
 }
 
 /**
+ * Reduces a label to the text a reader sees.
+ *
+ * A label may be a link, so the feature's name is also the way to its page, and the URL
+ * inside the link is markup rather than something the reader reads. The length limit is
+ * about what is rendered, so it is measured on the visible text alone.
+ *
+ * @param label - The label as the markdown wrote it.
+ * @returns The label with link and code markup removed.
+ */
+export function visibleLabel(label: string): string {
+  return label.replace(/\[([^\]]*)\]\([^)]*\)/g, '$1').replace(/`/g, '')
+}
+
+/**
  * Checks whether a line is a top-level bullet.
  *
  * The marker has to sit at column zero: an indented bullet is a nested list, which the
@@ -216,11 +230,13 @@ function checkBullet(line: string, lineNumber: number): KeyFeaturesProblem[] {
     return problems
   }
 
-  if (label.length > MAX_FEATURE_LABEL_CHARACTERS) {
+  const visible = visibleLabel(label)
+
+  if (visible.length > MAX_FEATURE_LABEL_CHARACTERS) {
     problems.push({
       messageId: 'keyFeatureLabelTooLong',
       line: lineNumber,
-      data: { feature: shorten(label), characters: `${label.length}`, maximum: `${MAX_FEATURE_LABEL_CHARACTERS}` },
+      data: { feature: shorten(visible), characters: `${visible.length}`, maximum: `${MAX_FEATURE_LABEL_CHARACTERS}` },
     })
   }
 

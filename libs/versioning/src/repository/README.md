@@ -77,7 +77,11 @@ const repo = createRepositoryConfig({
   baseUrl: 'https://github.com/owner/repo',
 })
 
-createCompareUrl({ repository: repo, fromCommit: 'abc1234', toCommit: 'def5678' })
+createCompareUrl({
+  repository: repo,
+  fromCommit: 'abc1234',
+  toCommit: 'def5678',
+})
 // → 'https://github.com/owner/repo/compare/abc1234...def5678'
 ```
 
@@ -95,7 +99,7 @@ const repo = createRepositoryConfig({
 
 ### Flow Integration
 
-The repository module integrates with the versioning flow via the `repository` config option:
+The repository module integrates with the versioning flow via the [`repository`](https://www.hyperfrontend.dev/docs/libraries/versioning/flow/models/#api-FlowConfig-prop-repository) config option:
 
 ```typescript
 import { createVersionFlow } from '@hyperfrontend/versioning/flow'
@@ -124,7 +128,7 @@ const flow3 = createVersionFlow('conventional', {
 
 ## Constants
 
-| Export                    | Value                            | Description                     |
-| ------------------------- | -------------------------------- | ------------------------------- |
-| `PLATFORM_HOSTNAMES`      | Map of hostnames to platforms    | Known platform hostname mapping |
-| `DEFAULT_INFERENCE_ORDER` | `['package-json', 'git-remote']` | Default inference source order  |
+| Export                                                                                                                       | Value                            | Description                     |
+| ---------------------------------------------------------------------------------------------------------------------------- | -------------------------------- | ------------------------------- |
+| [`PLATFORM_HOSTNAMES`](https://www.hyperfrontend.dev/docs/libraries/versioning/repository/#api-PLATFORM_HOSTNAMES)           | Map of hostnames to platforms    | Known platform hostname mapping |
+| [`DEFAULT_INFERENCE_ORDER`](https://www.hyperfrontend.dev/docs/libraries/versioning/repository/#api-DEFAULT_INFERENCE_ORDER) | `['package-json', 'git-remote']` | Default inference source order  |

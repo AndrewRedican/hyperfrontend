@@ -1,17 +1,17 @@
 {
   "name": "@hyperfrontend/nexus",
-  "version": "3.0.0",
-  "description": "Cross-window communication library for micro-frontends with secure messaging, state management, and contract validation.",
+  "version": "3.0.1",
+  "description": "Secure cross-window communication library for micro-frontends with contract-validated messaging, origin-based security policies, and connection lifecycle management.",
   "types": "./src/index.ts",
   "dependencies": {
-    "@hyperfrontend/data-utils": "1.0.0",
-    "@hyperfrontend/immutable-api-utils": "1.0.0",
-    "@hyperfrontend/json-utils": "1.0.0",
-    "@hyperfrontend/logging": "1.0.0",
-    "@hyperfrontend/random-generator-utils": "0.2.0"
+    "@hyperfrontend/data-utils": "1.0.1",
+    "@hyperfrontend/immutable-api-utils": "1.0.1",
+    "@hyperfrontend/json-utils": "1.0.1",
+    "@hyperfrontend/logging": "1.0.1",
+    "@hyperfrontend/random-generator-utils": "0.2.1"
   },
   "peerDependencies": {
-    "@hyperfrontend/network-protocol": "2.0.0"
+    "@hyperfrontend/network-protocol": "2.0.1"
   },
   "exports": {
     ".": "./src/index.js",

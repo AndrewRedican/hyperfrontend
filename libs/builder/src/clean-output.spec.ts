@@ -57,7 +57,26 @@ describe('cleanOutputPath', () => {
     expect(() => cleanOutputPath(ctx(join(workspaceRoot, '..'), workspaceRoot))).toThrow(/refusing to clean/)
   })
 
-  it('refuses to clean a path outside the workspace', () => {
+  it('refuses to clean an unrelated directory outside the workspace', () => {
+    const elsewhere = mkdtempSync(join(tmpdir(), 'builder-elsewhere-'))
+    try {
+      expect(() => cleanOutputPath(ctx(join(elsewhere, 'dist', 'libs', 'foo'), workspaceRoot))).toThrow(/refusing to clean/)
+    } finally {
+      rmSync(elsewhere, { recursive: true, force: true })
+    }
+  })
+
+  it('refuses to clean a sibling directory that shares the workspace path as a prefix', () => {
+    const sibling = `${workspaceRoot}-other`
+    mkdirSync(sibling, { recursive: true })
+    try {
+      expect(() => cleanOutputPath(ctx(sibling, workspaceRoot))).toThrow(/refusing to clean/)
+    } finally {
+      rmSync(sibling, { recursive: true, force: true })
+    }
+  })
+
+  it('refuses to clean the filesystem root', () => {
     expect(() => cleanOutputPath(ctx('/', workspaceRoot))).toThrow(/refusing to clean/)
   })
 })

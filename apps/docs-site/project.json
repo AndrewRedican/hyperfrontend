@@ -41,6 +41,14 @@
         "parallel": false
       }
     },
+    "refresh-downloads": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["install"],
+      "options": {
+        "command": "npm run refresh-downloads --",
+        "cwd": "apps/docs-site"
+      }
+    },
     "build": {
       "executor": "@hyperfrontend/app:build",
       "dependsOn": ["install"],

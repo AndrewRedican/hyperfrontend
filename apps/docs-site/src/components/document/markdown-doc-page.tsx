@@ -1,7 +1,7 @@
 import type { DocumentDescriptor } from '@/lib/document-model'
 import type { MarkdownSection } from '@/lib/slug'
 import type { ReactNode } from 'react'
-import { PageAtmosphere } from '@/components/page-atmosphere'
+import { PageAccent } from '@/components/page-accent'
 import { ReadmeContent } from '@/components/readme-content'
 import { markdownToHtml } from '@/lib/markdown'
 import { extractMermaidBlocks } from '@/lib/mermaid-utils'
@@ -22,7 +22,7 @@ export interface MarkdownDocPageProps {
   proseClassName?: string
   /** Sections appended to the index for content the page renders after the markdown */
   extraSections?: MarkdownSection[]
-  /** Hue the atmosphere behind the document is tinted with, for a document that belongs to a package */
+  /** Hue the page is tinted with, for a document that belongs to a package */
   accent?: number
 }
 
@@ -42,7 +42,7 @@ export interface MarkdownDocPageProps {
  * @param props.after - Page furniture rendered below the document
  * @param props.proseClassName - Classes wrapping the rendered prose
  * @param props.extraSections - Sections appended to the index
- * @param props.accent - Hue the atmosphere behind the document is tinted with
+ * @param props.accent - Hue the page is tinted with
  * @returns The rendered document.
  * @example
  * ```tsx
@@ -70,7 +70,7 @@ export async function MarkdownDocPage({
 
   return (
     <>
-      <PageAtmosphere accent={accent} />
+      {accent === undefined ? null : <PageAccent hue={accent} />}
       <DocumentShell descriptor={descriptor} sections={sections}>
         {before}
         {proseClassName ? <div className={proseClassName}>{prose}</div> : prose}

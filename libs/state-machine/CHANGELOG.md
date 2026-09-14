@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.1](https://github.com/AndrewRedican/hyperfrontend/compare/725db1b4556be686fd460b69424229a7d5ac5a63...adf0a4f77dece2be855e7ab88185a4fe84e7b16b) - 2026-09-14
+
+### Bug Fixes
+
+- replay a lifecycle flag to the newly registered callback only
+
 ## [0.2.0](https://github.com/AndrewRedican/hyperfrontend/compare/5f116abb8ba6355dfb283fa03b7481e5eb029480...a1f6e3b4e6b9f0ad51c8908b2fb641deed0078e3) - 2026-08-10
 
 ### Features

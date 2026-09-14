@@ -1,13 +1,60 @@
-import type { MediaConfigInput, ResolvedMediaConfig } from '../models/config'
+import type { MediaConfigInput, ResolvedMediaConfig, VariantSpec } from '../models/config'
 import { existsSync } from 'node:fs'
 import { pathToFileURL } from 'node:url'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
+import { builtInTheme } from '../theme/themes'
 import { resolveRoots } from './resolve-roots'
+
+/**
+ * The variants a workspace gets when it names none.
+ *
+ * Portable first and under the bare name, because that is the file a readme
+ * points at and the one that has to work wherever the readme is rendered. The
+ * budget is held below the documentation variants' on purpose: a package
+ * listing loads a readme's images before anything else on the page, and a
+ * megabyte there is a different cost from a megabyte on a page that asked for
+ * it.
+ */
+const DEFAULT_VARIANTS: readonly VariantSpec[] = [
+  { theme: 'portable', suffix: '', intent: 'npm and GitHub readmes, and any page whose theme is not known', gif: { maxBytes: 1_200_000 } },
+  { theme: 'dark', suffix: '.dark', intent: 'the documentation site in its dark theme' },
+  { theme: 'light', suffix: '.light', intent: 'the documentation site in its light theme' },
+]
 
 /** Shape a configuration module arrives in once the runtime has transpiled it. */
 interface ConfigModule {
   /** The configuration the file default-exported. */
   default?: MediaConfigInput
+}
+
+/**
+ * Confirm the variants a workspace configures can all be produced side by side.
+ *
+ * Two variants with one suffix would write over each other's files, two with
+ * one theme would be the same file twice, and a theme with no built-in table
+ * has nothing to draw with. Each is a configuration mistake, so each is
+ * reported when the configuration is read rather than when the first scene
+ * fails.
+ *
+ * @param variants - The variants as configured, or as defaulted.
+ * @returns The same variants.
+ * @throws {Error} When a variant repeats another's theme or suffix, names an unknown theme, or the list is empty.
+ */
+export function validateVariants(variants: readonly VariantSpec[]): readonly VariantSpec[] {
+  if (variants.length === 0) {
+    throw createError('A media configuration needs at least one variant')
+  }
+  variants.forEach((variant, index) => {
+    builtInTheme(variant.theme)
+    const earlier = variants.slice(0, index)
+    if (earlier.some((other) => other.theme === variant.theme)) {
+      throw createError(`The ${variant.theme} theme is configured as two variants`)
+    }
+    if (earlier.some((other) => other.suffix === variant.suffix)) {
+      throw createError(`Two variants write under the same suffix "${variant.suffix}", so one would overwrite the other`)
+    }
+  })
+  return variants
 }
 
 /**
@@ -58,9 +105,11 @@ export async function loadConfig(configPath: string): Promise<ResolvedMediaConfi
       },
       still: {
         format: config.defaults?.still?.format ?? 'png',
-        quality: config.defaults?.still?.quality ?? 90,
+        // why: a PNG at full quality is the browser's own bytes; a scene that wants an indexed one says so
+        quality: config.defaults?.still?.quality ?? 100,
         width: config.defaults?.still?.width ?? 0,
       },
     },
+    variants: validateVariants(config.variants ?? DEFAULT_VARIANTS),
   }
 }

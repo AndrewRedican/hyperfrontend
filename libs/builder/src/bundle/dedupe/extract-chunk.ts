@@ -116,15 +116,16 @@ export const resolveModuleRefs = (
   const unresolved: string[] = []
   for (const ref of allRefs) {
     if (selfLocals.has(ref)) continue
+    // why: rollup renames an import to `name$N` exactly when a first-party top-level `name` shares the bundle, so an exact-name hit on the entry's import bindings must win before ownership is looked up by base name; otherwise a builtin wrapped by a same-named helper loses its import or is bound to an unrelated first-party symbol.
+    const binding = importBindings.get(ref)
+    if (binding !== undefined) {
+      depImports.push({ ref, binding })
+      continue
+    }
     const base = baseName(ref)
     const owner = owners.ownerOf.get(base)
     if (owner !== undefined) {
       if (owner !== selfModuleKey) crossModule.push({ ref, base, moduleKey: owner })
-      continue
-    }
-    const binding = importBindings.get(ref)
-    if (binding !== undefined) {
-      depImports.push({ ref, binding })
       continue
     }
     if (entryDeclNames.has(ref)) unresolved.push(ref)

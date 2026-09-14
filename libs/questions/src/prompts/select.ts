@@ -13,6 +13,7 @@ import { createScreen } from '../screen'
 import { createTerminal, Ansi, Key } from '../terminal'
 import { TokenType } from '../token-parser'
 import { PromptResult } from '../types'
+import { assertResolvableChoices } from './validate-choices'
 
 /**
  * Internal state for select prompt.
@@ -280,6 +281,7 @@ function processKey<T>(key: string, state: SelectState<T>, config: SelectConfig<
  *
  * @param config - Select prompt configuration
  * @returns Promise resolving to selected value or cancellation
+ * @throws {Error} When `choices` is empty, or `initial` is not a whole number inside the choice list
  *
  * @example Basic select
  * ```typescript
@@ -319,6 +321,8 @@ function processKey<T>(key: string, state: SelectState<T>, config: SelectConfig<
  * ```
  */
 export async function select<T = string>(config: SelectConfig<T>): Promise<PromptOutcome<T>> {
+  assertResolvableChoices('select', config.choices, config.initial === undefined ? [] : [config.initial])
+
   const term = createTerminal({ input: config.input, output: config.output })
   const screen = createScreen(term)
   let state = createInitialState(config)

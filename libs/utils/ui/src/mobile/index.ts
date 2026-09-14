@@ -3,4 +3,4 @@
  *
  * @module @hyperfrontend/ui-utils/mobile
  */
-export { isMobileDevice } from '../lib/is-mobile-device'
+export { isMobileDevice } from './is-mobile-device'

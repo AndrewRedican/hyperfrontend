@@ -14,6 +14,9 @@ const COMPACT_AFTER = 1024
  * after the handler's promise settles. That ordering is what lets a protocol assign a
  * monotonically increasing counter to each frame it seals or opens.
  *
+ * A handler that rejects loses only its own message: the rejection is contained, the next
+ * message starts, and the queue stays resumable. Reporting the failure is the handler's job.
+ *
  * @param processMessage - The handler function to process each message
  * @param autoStart - Whether to automatically start processing messages (default: true)
  * @returns A Queue instance with methods to manage message processing
@@ -84,7 +87,7 @@ export function createQueue<T extends Record<string, any> = any>(processMessage:
 
   /**
    * Processes messages from the queue sequentially.
-   * Continues processing until the queue is empty or stopped.
+   * Continues processing until the queue is empty or stopped; a handler that rejects does not end the loop.
    */
   async function processQueue() {
     if (isProcessing) return
@@ -92,7 +95,11 @@ export function createQueue<T extends Record<string, any> = any>(processMessage:
 
     while (!shouldStop && size() > 0) {
       currentMsg = pull()
-      await processMessage(currentMsg)
+      try {
+        await processMessage(currentMsg)
+      } catch {
+        // why: A rejection that escaped the loop would leave isProcessing latched and strand every message behind it; the handler owns its own failure reporting.
+      }
     }
 
     isProcessing = false

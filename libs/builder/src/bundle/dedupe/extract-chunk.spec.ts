@@ -44,6 +44,24 @@ describe('resolveModuleRefs', () => {
     expect(resolve('const a = () => mine;', ownersOf([['mine', 'me']]), 'me').crossModule).toEqual([])
   })
 
+  it('keeps a rollup-renamed builtin import that shares its base name with the module itself', () => {
+    const entry = "import { join as join$1 } from 'node:path';\nfunction join(...p) { return join$1(...p) }"
+    expect(resolve('function join(...p) { return join$1(...p) }', ownersOf([['join', 'me']]), 'me', entry)).toEqual({
+      crossModule: [],
+      depImports: [{ ref: 'join$1', binding: { specifier: 'node:path', kind: 'named', imported: 'join' } }],
+      unresolved: [],
+    })
+  })
+
+  it('binds a renamed builtin import to the import, never to a first-party owner of its base name', () => {
+    const entry = "import { parse as parse$1 } from 'node:path';\nconst dir = (p) => parse$1(p).dir;"
+    expect(resolve('const dir = (p) => parse$1(p).dir;', ownersOf([['parse', 'core/json/parse']]), 'me', entry)).toEqual({
+      crossModule: [],
+      depImports: [{ ref: 'parse$1', binding: { specifier: 'node:path', kind: 'named', imported: 'parse' } }],
+      unresolved: [],
+    })
+  })
+
   it('records a dependency import the entry carries', () => {
     expect(
       resolve(

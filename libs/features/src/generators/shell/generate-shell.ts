@@ -101,10 +101,10 @@ export function createFeatureShell(options: FeatureShellOptions): FeatureShellHa
  * @returns The package manifest as a JSON string.
  */
 function buildShellPackageJson(config: ResolvedFeatureConfig): string {
+  // why: No top-level `type` is declared: the builder spreads this manifest into the published one, where `type: 'module'` would make Node parse the CommonJS `require` entry as ESM and hand the consumer an empty namespace.
   const manifest = {
     name: `${config.name}-shell`,
     version: config.version,
-    type: 'module',
     sideEffects: false,
     exports: {
       '.': { types: './dist/index.d.ts', import: './dist/index.js' },

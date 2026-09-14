@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { CAPABILITIES_PLACEHOLDER, preparePackageReadme } from './package-readme'
+import { CAPABILITIES_PLACEHOLDER, centreLede, preparePackageReadme } from './package-readme'
 
 /** A README shaped like the ones this site publishes. */
 const README = [
@@ -51,5 +51,43 @@ describe('preparePackageReadme', () => {
     expect(body).not.toContain('### Output Formats')
     expect(body).toContain('## Compatibility')
     expect(body).toContain('### CDN Usage')
+  })
+})
+
+describe('centreLede', () => {
+  it('centres the opening paragraph where it sits, below the showcase and above the first section', () => {
+    const body = [
+      '<p align="center">',
+      '  <img src="hero.gif">',
+      '</p>',
+      '',
+      'One line about',
+      'the package.',
+      '',
+      '## What is it?',
+      '',
+    ].join('\n')
+    expect(centreLede(body)).toBe(
+      [
+        '<p align="center">',
+        '  <img src="hero.gif">',
+        '</p>',
+        '',
+        '<div align="center">',
+        '',
+        'One line about',
+        'the package.',
+        '',
+        '</div>',
+        '',
+        '## What is it?',
+        '',
+      ].join('\n')
+    )
+  })
+
+  it('leaves a body alone when it opens with a section, a list, or nothing but markup', () => {
+    const bodies = ['## Compatibility\n\nText.', '- first\n- second', '<p align="center"><img src="hero.gif"></p>\n']
+    expect(bodies.map(centreLede)).toEqual(bodies)
   })
 })

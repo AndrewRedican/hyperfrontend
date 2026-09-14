@@ -2,6 +2,8 @@ import type { Metadata } from 'next'
 import { MarkdownDocPage } from '@/components/document/markdown-doc-page'
 import { Footer } from '@/components/footer'
 import { Header } from '@/components/header'
+import { PageAtmosphere } from '@/components/page-atmosphere'
+import { ScrollToTop } from '@/components/scroll-to-top'
 import { ShareMenu } from '@/components/share/share-menu'
 import { formatArticleDate, getAllArticleSlugs, getArticle } from '@/lib/articles'
 import { documentSubject } from '@/lib/document-model'
@@ -82,6 +84,8 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
   return (
     <>
       <Header />
+      {/* why: an article is read in its own narrower frame rather than the documentation shell, so the frame carries the environment the shell would */}
+      <PageAtmosphere />
       <main id="main-content" className="mx-auto max-w-4xl px-4 py-16 sm:px-6 lg:px-8 rail:max-w-6xl">
         <MarkdownDocPage
           markdown={article.content}
@@ -183,6 +187,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
         />
       </main>
       <Footer />
+      <ScrollToTop />
     </>
   )
 }

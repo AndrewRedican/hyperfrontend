@@ -74,3 +74,19 @@ export const docLayout = freeze({
  * @see {@link docLayout}
  */
 export const DOC_MEASURE_CLASS = 'doc-measure'
+
+/**
+ * Class naming an element as the document column that code blocks measure
+ * themselves against.
+ *
+ * A short code sample is drawn at half its column only when the column is
+ * wide enough to be halved, and the column is the honest thing to measure:
+ * the same viewport holds a wider column with the navigation collapsed and a
+ * narrower one with the document index beside it. The class makes its element
+ * a size query container, so the stylesheet asks the column rather than the
+ * window. It goes on the shell's main column and on the document column
+ * inside a document shell, and a block reads the nearest of the two above it.
+ *
+ * @see {@link docLayout}
+ */
+export const DOC_COLUMN_CLASS = 'doc-column'

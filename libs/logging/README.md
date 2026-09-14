@@ -35,11 +35,8 @@
 
 <p align="center">
   <a href="https://www.hyperfrontend.dev/docs/libraries/logging/">
-    <img width="640" src="https://www.hyperfrontend.dev/media/logging-levels/hero.gif" alt="A terminal running one release script three times: the default level prints a single tagged line, LOG_LEVEL=debug prints three with elapsed milliseconds, and the last run ends in a red failure line reporting how long it took to fail">
+    <img width="640" height="360" src="https://www.hyperfrontend.dev/media/logging-levels/hero.gif" alt="A terminal window with a level scale across the top, error to debug, and a knob that slides between the stops; beneath it the same five channel-prefixed lines stay in place, and as the knob moves the lines below the chosen level ghost out and return, with a setLogLevel chip naming the level">
   </a>
-</p>
-<p align="center">
-  <sub>One program, three runs. The emitting code is written once; how much of it reaches the terminal is decided at run time.</sub>
 </p>
 
 Structured logging with configurable severity levels and error-resilient execution.
@@ -51,14 +48,14 @@ Structured logging with configurable severity levels and error-resilient executi
 
 @hyperfrontend/logging provides a production-grade logging abstraction that wraps console-like log functions from any backend (console, Winston, Bunyan) with runtime log level control and automatic error handling. Unlike basic console wrappers, this library enables dynamic severity filtering without code changes or environment restarts - adjust verbosity in running production systems via the `setLogLevel()` API.
 
-The core `createLogger()` factory accepts custom log functions for each severity level (error, warn, log, info, debug), wrapping them with conditional execution based on current log level and automatic error suppression to prevent logging failures from crashing applications. A pre-configured `logger` instance using console methods is available for immediate use.
+The core `createLogger()` factory accepts custom log functions for each severity level (error, warn, log, info, debug), wrapping them with conditional execution based on current log level and automatic error suppression to prevent logging failures from crashing applications. A pre-configured [`logger`](https://www.hyperfrontend.dev/docs/libraries/logging/#api-logger) instance using console methods is available for immediate use.
 
 ### Key Features
 
-- **Runtime Log Level Control** - Adjust logging verbosity dynamically via `setLogLevel()` without restarting processes
-- **Priority-Based Filtering** - Log levels follow standard hierarchy (error > warn > log > info > debug) with automatic filtering
+- **[Runtime Log Level Control](https://www.hyperfrontend.dev/docs/libraries/logging/#api-Logger-prop-setLogLevel)** - Adjust logging verbosity dynamically via `setLogLevel()` without restarting processes
+- **[Priority-Based Filtering](https://www.hyperfrontend.dev/docs/libraries/logging/#api-LogLevel)** - Log levels follow standard hierarchy (error > warn > log > info > debug) with automatic filtering
 - **Error-Resilient Execution** - All log functions wrapped with error handlers to prevent logging failures from propagating
-- **Console Abstraction** - Accepts one console-like function per level, from console, Winston, Bunyan or a custom implementation
+- **[Console Abstraction](https://www.hyperfrontend.dev/docs/libraries/logging/#api-createLogger)** - Accepts one console-like function per level, from console, Winston, Bunyan or a custom implementation
 - **Conditional Execution** - Log functions only execute when current severity meets or exceeds configured threshold
 - **Frozen Interfaces** - Logger instances are immutable to prevent runtime modification
 - **Zero External Dependencies** - Self-contained implementation with no third-party runtime dependencies
@@ -146,7 +143,8 @@ const structuredLogger = createLogger(
 import { createLogger } from '@hyperfrontend/logging'
 import express from 'express'
 
-const logger = createLogger(console.error, console.warn, console.log, console.info, console.debug)
+const { error, warn, log, info, debug } = console
+const logger = createLogger(error, warn, log, info, debug)
 
 // Admin endpoint to control log level
 const app = express()
@@ -186,7 +184,8 @@ test('logs only errors at error level', () => {
 ```typescript
 import { createLogger } from '@hyperfrontend/logging'
 
-const logger = createLogger(console.error, console.warn, console.log, console.info, console.debug)
+const { error, warn, log, info, debug } = console
+const logger = createLogger(error, warn, log, info, debug)
 logger.setLogLevel('debug')
 
 // channel() returns a sub-logger that prepends `[prefix]` to every emission.
@@ -208,22 +207,25 @@ await build.timedAsync('bundle', async () => bundleAsync())
 
 One factory and one ready-made instance. [`createLogger`](https://www.hyperfrontend.dev/docs/libraries/logging/#api-createLogger) takes five plain sink functions in severity order (error, warn, log, info, debug) and hands back a frozen logger; only the first is required, and the rest fall back to no-ops. Each sink you pass is wrapped twice on the way in: once so that a sink which throws (a dead socket, an unserializable object) can never surface at your call site, and once by a level check shared with every other method on the logger. The exported [`logger`](https://www.hyperfrontend.dev/docs/libraries/logging/#api-logger) is that same factory already applied to the console methods, for when you do not need your own sinks.
 
-Verbosity is one dial rather than a build-time constant. `setLogLevel` and `getLogLevel` read and write state shared by the whole logger, so an admin endpoint or a signal handler can open the tap on a running process. A [`LogLevel`](https://www.hyperfrontend.dev/docs/libraries/logging/#api-LogLevel) is one of `'none'`, `'error'`, `'warn'`, `'log'`, `'info'` or `'debug'`, and setting one admits it plus everything more severe. Note that `log` outranks `info` here, so a logger at `'log'` still prints warnings and summaries while dropping the play-by-play. A fresh logger starts at `'error'`.
+Verbosity is one dial rather than a build-time constant. [`setLogLevel`](https://www.hyperfrontend.dev/docs/libraries/logging/#api-Logger-prop-setLogLevel) and [`getLogLevel`](https://www.hyperfrontend.dev/docs/libraries/logging/#api-Logger-prop-getLogLevel) read and write state shared by the whole logger, so an admin endpoint or a signal handler can open the tap on a running process. A [`LogLevel`](https://www.hyperfrontend.dev/docs/libraries/logging/#api-LogLevel) is one of `'none'`, `'error'`, `'warn'`, `'log'`, `'info'` or `'debug'`, and setting one admits it plus everything more severe. Note that [`log`](https://www.hyperfrontend.dev/docs/libraries/logging/#api-LogLevel) outranks [`info`](https://www.hyperfrontend.dev/docs/libraries/logging/#api-LogLevel) here, so a logger at `'log'` still prints warnings and summaries while dropping the play-by-play. A fresh logger starts at `'error'`.
 
-Two affordances do the structuring. [`channel`](https://www.hyperfrontend.dev/docs/libraries/logging/#api-Logger-prop-channel) returns a sub-logger that prepends `[prefix]` as its own leading argument; channels nest and join with a colon, so `logger.channel('release').channel('npm')` emits `[release:npm]`. [`timed`](https://www.hyperfrontend.dev/docs/libraries/logging/#api-Logger-prop-timed) and [`timedAsync`](https://www.hyperfrontend.dev/docs/libraries/logging/#api-Logger-prop-timedAsync) wrap a call and return whatever it returned, emitting `<label> completed in <n>ms` at debug on success and `<label> failed after <n>ms: <message>` at error on failure before rethrowing, so timing instrumentation never changes control flow. On a rejection `timedAsync` also sends the stack trace to debug.
+Two affordances do the structuring. [`channel`](https://www.hyperfrontend.dev/docs/libraries/logging/#api-Logger-prop-channel) returns a sub-logger that prepends `[prefix]` as its own leading argument; channels nest and join with a colon, so `logger.channel('release').channel('npm')` emits `[release:npm]`. [`timed`](https://www.hyperfrontend.dev/docs/libraries/logging/#api-Logger-prop-timed) and [`timedAsync`](https://www.hyperfrontend.dev/docs/libraries/logging/#api-Logger-prop-timedAsync) wrap a call and return whatever it returned, emitting `<label> completed in <n>ms` at debug on success and `<label> failed after <n>ms: <message>` at error on failure before rethrowing, so timing instrumentation never changes control flow. On a rejection [`timedAsync`](https://www.hyperfrontend.dev/docs/libraries/logging/#api-Logger-prop-timedAsync) also sends the stack trace to debug.
 
-Beside those sit two predicates and a lower-level piece: `isValidLogger` and `isValidLogLevel` for guarding values that arrive from configuration or a request body, and `createLogLevelConfig` when you want the priority machinery on its own without any sinks attached.
+Beside those sit two predicates and a lower-level piece: [`isValidLogger`](https://www.hyperfrontend.dev/docs/libraries/logging/#api-isValidLogger) and [`isValidLogLevel`](https://www.hyperfrontend.dev/docs/libraries/logging/#api-isValidLogLevel) for guarding values that arrive from configuration or a request body, and [`createLogLevelConfig`](https://www.hyperfrontend.dev/docs/libraries/logging/#api-createLogLevelConfig) when you want the priority machinery on its own without any sinks attached.
 
 Every type, parameter and return shape is in the [API reference](https://www.hyperfrontend.dev/docs/libraries/logging/#api-reference).
 
 ## Compatibility
 
-| Platform                      | Support |
-| ----------------------------- | :-----: |
-| Browser                       |   ✅    |
-| Node.js                       |   ✅    |
-| Web Workers                   |   ✅    |
-| Deno, Bun, Cloudflare Workers |   ✅    |
+<!-- hf:media start id="runtimes" scene="runtimes-logging" asset="runtimes" docs="#compatibility" alt="Runs in Node.js 18 or later, evergreen browsers and web workers" -->
+
+| Environment     | Supported |
+| --------------- | :-------: |
+| Node.js >= 18   |    ✅     |
+| Modern Browsers |    ✅     |
+| Web Workers     |    ✅     |
+
+<!-- hf:media end -->
 
 ### Output Formats
 
@@ -248,7 +250,7 @@ Every type, parameter and return shape is in the [API reference](https://www.hyp
 </script>
 ```
 
-**Global variable:** `HyperfrontendLogging`
+**Global variable:** [`HyperfrontendLogging`](https://www.hyperfrontend.dev/docs/libraries/logging/)
 
 ## Part of hyperfrontend
 

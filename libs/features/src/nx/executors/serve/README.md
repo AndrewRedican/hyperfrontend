@@ -1,6 +1,6 @@
 # serve
 
-Nx `serve` executor. A long-running async-iterator executor that starts the
+Nx [`serve`](https://www.hyperfrontend.dev/docs/libraries/features/cli/#api-runServe) executor. A long-running async-iterator executor that starts the
 hyperfrontend dev server by delegating to the SDK's headless `hf dev`, stays
 alive until a shutdown signal, then closes the servers gracefully. Registered via
 the package's `executors.json`. Despite the shared name, this executor is the
@@ -20,8 +20,8 @@ command, which is the production static server.
 }
 ```
 
-| Option   | Required | Description                                |
-| -------- | -------- | ------------------------------------------ |
-| `config` | no       | Path to the dev-server config object.      |
-| `apps`   | no       | Path to the dev-server apps array.         |
-| `port`   | no       | Port the dev server's debug UI listens on. |
+| Option                                                                                                                    | Required | Description                                |
+| ------------------------------------------------------------------------------------------------------------------------- | -------- | ------------------------------------------ |
+| [`config`](https://www.hyperfrontend.dev/docs/libraries/features/nx/executors/serve/#api-ServeExecutorSchema-prop-config) | no       | Path to the dev-server config object.      |
+| [`apps`](https://www.hyperfrontend.dev/docs/libraries/features/nx/executors/serve/#api-ServeExecutorSchema-prop-apps)     | no       | Path to the dev-server apps array.         |
+| [`port`](https://www.hyperfrontend.dev/docs/libraries/features/nx/executors/serve/#api-ServeExecutorSchema-prop-port)     | no       | Port the dev server's debug UI listens on. |

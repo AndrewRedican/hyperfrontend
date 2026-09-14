@@ -1,5 +1,6 @@
-import type { WalkEntry, WalkVisitor } from './walk'
-import { mkdirSync, writeFileSync, rmSync } from 'node:fs'
+import type { Tree } from '../../vfs'
+import type { WalkEntry, WalkOptions, WalkVisitor } from './walk'
+import { mkdirSync, writeFileSync, rmSync, symlinkSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { after as afterAll, before as beforeAll } from 'node:test'
 import { describe, expect, it } from '@hyperfrontend/testing'
@@ -10,6 +11,29 @@ const FIXTURES_DIR = resolve(import.meta.dirname, '../../../__fixtures__')
 const MINIMAL_PROJECT = resolve(FIXTURES_DIR, 'minimal-project')
 const MONOREPO = resolve(FIXTURES_DIR, 'monorepo')
 const TEST_DIR = join(import.meta.dirname, '__test_fixtures_walk__')
+const SYMLINK_DIR = join(import.meta.dirname, '__test_fixtures_walk_symlink__')
+
+/**
+ * Collects the relative path of every entry a walk visits, sorted so a suite can
+ * assert on the whole listing at once.
+ *
+ * @param startPath - Directory to walk
+ * @param options - Walk options forwarded verbatim
+ * @returns Sorted relative paths of the visited entries
+ */
+function collectRelativePaths(startPath: string, options?: WalkOptions): string[] {
+  const found: string[] = []
+
+  walkDirectory(
+    startPath,
+    (entry) => {
+      found.push(entry.relativePath)
+    },
+    options
+  )
+
+  return found.sort()
+}
 
 describe('walkDirectory', () => {
   it('walks the directory tree', () => {
@@ -175,6 +199,25 @@ describe('walkTree', () => {
     expect(entries.length).toBe(2)
   })
 
+  it('stops walking when the visitor stops inside a nested directory', () => {
+    const visited: string[] = []
+
+    walkTree(
+      createTree(MONOREPO),
+      '',
+      (entry) => {
+        visited.push(entry.relativePath)
+        if (entry.relativePath.includes('/')) {
+          return 'stop'
+        }
+      },
+      // why: the depth cap keeps the walk bounded even if the stop signal is ever dropped again.
+      { maxDepth: 3 }
+    )
+
+    expect(visited.filter((path) => path.includes('/'))).toHaveLength(1)
+  })
+
   it('filters hidden files by default', () => {
     const tree = createTree(MINIMAL_PROJECT)
     const entries: WalkEntry[] = []
@@ -273,24 +316,50 @@ describe('walkDirectory - edge cases', () => {
     expect(entries.some((e) => e.name === 'node_modules')).toBe(true)
   })
 
-  it('handles negation patterns in ignore', () => {
+  it('re-includes a path matched by a later negation pattern', () => {
     mkdirSync(join(TEST_DIR, 'negation-test'), { recursive: true })
-    mkdirSync(join(TEST_DIR, 'negation-test', 'logs'), { recursive: true })
-    writeFileSync(join(TEST_DIR, 'negation-test', '.gitignore'), 'logs\n!logs/important.log')
-    writeFileSync(join(TEST_DIR, 'negation-test', 'logs', 'debug.log'), 'debug')
-    writeFileSync(join(TEST_DIR, 'negation-test', 'logs', 'important.log'), 'important')
+    writeFileSync(join(TEST_DIR, 'negation-test', '.gitignore'), '*.log\n!keep.log')
+    writeFileSync(join(TEST_DIR, 'negation-test', 'debug.log'), 'debug')
+    writeFileSync(join(TEST_DIR, 'negation-test', 'keep.log'), 'keep')
+    writeFileSync(join(TEST_DIR, 'negation-test', 'index.ts'), 'export {}')
 
-    const entries: WalkEntry[] = []
-    const visitor: WalkVisitor = (entry) => {
-      entries.push(entry)
-    }
+    expect(collectRelativePaths(join(TEST_DIR, 'negation-test'), { includeHidden: true, respectGitignore: true })).toEqual([
+      '.gitignore',
+      'index.ts',
+      'keep.log',
+    ])
+  })
 
-    walkDirectory(join(TEST_DIR, 'negation-test'), visitor, {
-      includeHidden: true,
-      respectGitignore: true,
-    })
+  it('keeps unrelated entries when the ignore file holds a negation', () => {
+    mkdirSync(join(TEST_DIR, 'negation-keeps', 'dist'), { recursive: true })
+    mkdirSync(join(TEST_DIR, 'negation-keeps', 'src'), { recursive: true })
+    writeFileSync(join(TEST_DIR, 'negation-keeps', '.gitignore'), 'dist\n!dist/.gitkeep')
+    writeFileSync(join(TEST_DIR, 'negation-keeps', 'dist', '.gitkeep'), '')
+    writeFileSync(join(TEST_DIR, 'negation-keeps', 'package.json'), '{}')
+    writeFileSync(join(TEST_DIR, 'negation-keeps', 'src', 'index.ts'), 'export {}')
 
-    expect(entries.length).toBeGreaterThanOrEqual(0)
+    expect(collectRelativePaths(join(TEST_DIR, 'negation-keeps'), { respectGitignore: true })).toEqual([
+      'package.json',
+      'src',
+      'src/index.ts',
+    ])
+  })
+
+  it('ignores a directory named by a trailing-slash pattern', () => {
+    mkdirSync(join(TEST_DIR, 'dir-only-test', 'build'), { recursive: true })
+    writeFileSync(join(TEST_DIR, 'dir-only-test', '.gitignore'), 'build/')
+    writeFileSync(join(TEST_DIR, 'dir-only-test', 'build', 'out.js'), 'out')
+    writeFileSync(join(TEST_DIR, 'dir-only-test', 'index.ts'), 'export {}')
+
+    expect(collectRelativePaths(join(TEST_DIR, 'dir-only-test'), { respectGitignore: true })).toEqual(['index.ts'])
+  })
+
+  it('keeps a file whose name matches a trailing-slash pattern', () => {
+    mkdirSync(join(TEST_DIR, 'dir-only-file'), { recursive: true })
+    writeFileSync(join(TEST_DIR, 'dir-only-file', '.gitignore'), 'build/')
+    writeFileSync(join(TEST_DIR, 'dir-only-file', 'build'), 'a file, not a directory')
+
+    expect(collectRelativePaths(join(TEST_DIR, 'dir-only-file'), { respectGitignore: true })).toEqual(['build'])
   })
 
   it('handles patterns starting with slash', () => {
@@ -358,5 +427,95 @@ describe('walkDirectory - edge cases', () => {
     walkDirectory(join(TEST_DIR, 'undefined-return'), visitor)
 
     expect(entries.length).toBe(2)
+  })
+})
+
+describe('walkTree - error propagation', () => {
+  it('propagates an error the tree throws that is not a filesystem failure', () => {
+    const tree = createTree(MINIMAL_PROJECT)
+    const broken: Tree = {
+      ...tree,
+      children: () => {
+        throw new TypeError('isAbsolute$1 is not defined')
+      },
+    }
+
+    expect(() => walkTree(broken, '', () => undefined)).toThrow('isAbsolute$1 is not defined')
+  })
+
+  it('treats a filesystem failure from the tree as an empty directory', () => {
+    const tree = createTree(MINIMAL_PROJECT)
+    const failing: Tree = {
+      ...tree,
+      children: () => {
+        const error = new Error('ENOENT: no such file or directory')
+        ;(error as { code?: string }).code = 'ENOENT'
+        throw error
+      },
+    }
+
+    const entries: WalkEntry[] = []
+    walkTree(failing, '', (entry) => {
+      entries.push(entry)
+    })
+
+    expect(entries).toEqual([])
+  })
+})
+
+describe('walkTree - symlinked directories', () => {
+  beforeAll(() => {
+    rmSync(SYMLINK_DIR, { recursive: true, force: true })
+    mkdirSync(join(SYMLINK_DIR, 'src'), { recursive: true })
+    writeFileSync(join(SYMLINK_DIR, 'src', 'a.ts'), 'export {}')
+    symlinkSync(join(SYMLINK_DIR, 'src'), join(SYMLINK_DIR, 'link-dir'), 'dir')
+    symlinkSync('..', join(SYMLINK_DIR, 'src', 'loop'), 'dir')
+  })
+
+  afterAll(() => {
+    rmSync(SYMLINK_DIR, { recursive: true, force: true })
+  })
+
+  it('reports a directory symlink as a symlink', () => {
+    const entries: WalkEntry[] = []
+    walkTree(
+      createTree(SYMLINK_DIR),
+      '',
+      (entry) => {
+        entries.push(entry)
+      },
+      { maxDepth: 0 }
+    )
+
+    expect(entries).toEqual(expect.arrayContaining([expect.objectContaining({ name: 'link-dir', isSymlink: true })]))
+  })
+
+  it('reports a real directory as not a symlink', () => {
+    const entries: WalkEntry[] = []
+    walkTree(
+      createTree(SYMLINK_DIR),
+      '',
+      (entry) => {
+        entries.push(entry)
+      },
+      { maxDepth: 0 }
+    )
+
+    expect(entries).toEqual(expect.arrayContaining([expect.objectContaining({ name: 'src', isSymlink: false })]))
+  })
+
+  it('stops at a symlink instead of walking the loop behind it', () => {
+    const visited: string[] = []
+    walkTree(
+      createTree(SYMLINK_DIR),
+      '',
+      (entry) => {
+        visited.push(entry.relativePath)
+      },
+      // why: the depth cap keeps a regression bounded; without the symlink guard this tree doubles its matches at every extra level.
+      { maxDepth: 4 }
+    )
+
+    expect(visited.sort()).toEqual(['link-dir', 'src', 'src/a.ts', 'src/loop'])
   })
 })

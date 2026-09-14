@@ -92,7 +92,7 @@ Legend: ✅ full support, ⚠️ partial support, ❌ no support, ❓ nothing de
 | `@hyperfrontend/function-utils` | - |
 | `@hyperfrontend/immutable-api-utils` | - |
 | `@hyperfrontend/json-utils` | `@hyperfrontend/immutable-api-utils` |
-| `@hyperfrontend/list-utils` | `@hyperfrontend/data-utils`, `@hyperfrontend/immutable-api-utils` |
+| `@hyperfrontend/list-utils` | `@hyperfrontend/immutable-api-utils` |
 | `@hyperfrontend/logging` | `@hyperfrontend/data-utils`, `@hyperfrontend/function-utils`, `@hyperfrontend/immutable-api-utils` |
 | `@hyperfrontend/network-protocol` | `@hyperfrontend/cryptography`, `@hyperfrontend/data-utils`, `@hyperfrontend/immutable-api-utils`, `@hyperfrontend/json-utils`, `@hyperfrontend/logging`, `@hyperfrontend/random-generator-utils`, `@hyperfrontend/string-utils`, `@hyperfrontend/time-utils` |
 | `@hyperfrontend/nexus` | `@hyperfrontend/data-utils`, `@hyperfrontend/immutable-api-utils`, `@hyperfrontend/json-utils`, `@hyperfrontend/logging`, `@hyperfrontend/network-protocol` (peer), `@hyperfrontend/random-generator-utils` |
@@ -154,7 +154,6 @@ flowchart TB
     features --> ui_utils
     features --> versioning
     json_utils --> immutable_api_utils
-    list_utils --> data_utils
     list_utils --> immutable_api_utils
     logging --> data_utils
     logging --> function_utils
@@ -199,22 +198,22 @@ flowchart TB
 
 | Library | Version |
 | --- | --- |
-| `@hyperfrontend/builder` | `0.2.1` |
+| `@hyperfrontend/builder` | `0.2.2` |
 | `@hyperfrontend/cryptography` | `1.1.0` |
-| `@hyperfrontend/data-utils` | `1.0.0` |
-| `@hyperfrontend/features` | `0.10.0` |
-| `@hyperfrontend/function-utils` | `1.0.0` |
-| `@hyperfrontend/immutable-api-utils` | `1.0.0` |
-| `@hyperfrontend/json-utils` | `1.0.0` |
-| `@hyperfrontend/list-utils` | `0.1.0` |
-| `@hyperfrontend/logging` | `1.0.0` |
-| `@hyperfrontend/network-protocol` | `2.0.0` |
-| `@hyperfrontend/nexus` | `3.0.0` |
-| `@hyperfrontend/project-scope` | `0.2.5` |
-| `@hyperfrontend/questions` | `0.3.0` |
-| `@hyperfrontend/random-generator-utils` | `0.2.0` |
-| `@hyperfrontend/state-machine` | `0.2.0` |
-| `@hyperfrontend/string-utils` | `1.0.0` |
-| `@hyperfrontend/time-utils` | `1.0.0` |
-| `@hyperfrontend/ui-utils` | `0.0.8` |
-| `@hyperfrontend/versioning` | `0.8.0` |
+| `@hyperfrontend/data-utils` | `1.0.1` |
+| `@hyperfrontend/features` | `0.10.1` |
+| `@hyperfrontend/function-utils` | `1.0.1` |
+| `@hyperfrontend/immutable-api-utils` | `1.0.1` |
+| `@hyperfrontend/json-utils` | `1.0.1` |
+| `@hyperfrontend/list-utils` | `0.1.1` |
+| `@hyperfrontend/logging` | `1.0.1` |
+| `@hyperfrontend/network-protocol` | `2.0.1` |
+| `@hyperfrontend/nexus` | `3.0.1` |
+| `@hyperfrontend/project-scope` | `0.2.6` |
+| `@hyperfrontend/questions` | `0.3.1` |
+| `@hyperfrontend/random-generator-utils` | `0.2.1` |
+| `@hyperfrontend/state-machine` | `0.2.1` |
+| `@hyperfrontend/string-utils` | `1.0.1` |
+| `@hyperfrontend/time-utils` | `1.0.1` |
+| `@hyperfrontend/ui-utils` | `0.0.9` |
+| `@hyperfrontend/versioning` | `0.9.0` |

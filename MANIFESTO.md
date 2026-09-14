@@ -56,9 +56,12 @@ package with the contract inlined and a security envelope baked in, and serves b
 with a debug UI. An optional Nx adapter ships a `feature` generator and `build`/`serve` executors.
 
 ```bash
-npx @hyperfrontend/features init                # scaffold the feature glue into an app
-npx @hyperfrontend/features build --protocol v4 # generate + bundle a publishable shell package
-npx @hyperfrontend/features dev                 # serve apps with the debug UI
+# scaffold the feature glue into an app
+npx @hyperfrontend/features init
+# generate and bundle a publishable shell package
+npx @hyperfrontend/features build --protocol v4
+# serve apps with the debug UI
+npx @hyperfrontend/features dev
 ```
 
 The envelope is a deliberate choice rather than a default: a build refuses to run until it is told
@@ -90,7 +93,9 @@ const broker = createBroker({
   },
 })
 
-broker.addChannel('feature', featureWindow, { security: { protocol: 'v4', mode: 'fail-closed' } })
+broker.addChannel('feature', featureWindow, {
+  security: { protocol: 'v4', mode: 'fail-closed' },
+})
 ```
 
 **What this gives you:**

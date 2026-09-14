@@ -2,6 +2,7 @@ import type { Schema } from '../types/schema'
 import type { ValidationError, PatternSafetyChecker } from '../types/validation'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { entries } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
+import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 
 /**
  * Schema validator function type.
@@ -27,6 +28,8 @@ export interface ValidationContext {
   readonly strictPatterns: boolean
   /** Optional pattern safety checker for ReDoS detection */
   readonly patternSafetyChecker?: PatternSafetyChecker
+  /** `$ref` targets already followed at the current instance position; a repeat is a cycle that consumes no data */
+  readonly visitedRefs: ReadonlySet<string>
   /** Schema validator function (injected to avoid circular deps) */
   readonly validate: SchemaValidator
 }
@@ -72,12 +75,14 @@ export function createValidationContext(
     collectAllErrors,
     strictPatterns,
     patternSafetyChecker,
+    visitedRefs: createSet<string>(),
     validate: validator,
   }
 }
 
 /**
  * Creates a child context with updated path.
+ * Descending into a property or item consumes data, so the visited `$ref` set starts empty again.
  *
  * @param ctx - Parent context
  * @param segment - Path segment to append
@@ -96,6 +101,31 @@ export function pushPath(ctx: ValidationContext, segment: string | number): Vali
   return {
     ...ctx,
     path: `${ctx.path}/${escapedSegment}`,
+    visitedRefs: createSet<string>(),
+  }
+}
+
+/**
+ * Creates a context for one branch of a composition keyword (`anyOf`, `oneOf`, `not`).
+ * The branch keeps the parent's position, schema index, pattern options and visited `$ref` set,
+ * but collects its own errors and stops at the first one: only its pass/fail verdict matters.
+ *
+ * @param ctx - Parent context
+ * @returns New context that shares everything with the parent except its error list
+ * @example Probing a branch without polluting the parent's errors
+ * ```typescript
+ * const ctx = createValidationContext(schema, validate, true, true)
+ * const branchCtx = createBranchContext(ctx)
+ * // branchCtx.strictPatterns === true
+ * // branchCtx.errors !== ctx.errors
+ * // branchCtx.collectAllErrors === false
+ * ```
+ */
+export function createBranchContext(ctx: ValidationContext): ValidationContext {
+  return {
+    ...ctx,
+    errors: [],
+    collectAllErrors: false,
   }
 }
 

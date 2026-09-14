@@ -145,7 +145,11 @@ Uneven support, explained in a note:
 {
   "metadata": {
     "compatibility": {
-      "environments": { "node": "full", "browser": "full", "webWorker": "partial" },
+      "environments": {
+        "node": "full",
+        "browser": "full",
+        "webWorker": "partial"
+      },
       "note": "Support is per entry point: the host entry needs a DOM, the root entry runs anywhere."
     }
   }

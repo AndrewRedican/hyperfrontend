@@ -4,7 +4,7 @@ Runtime-agnostic helpers that work identically in browser and Node.js without to
 
 ## Overview
 
-The `common` entry point is reserved for utilities that are pure functions over plain values and therefore have no need to be split per-runtime. Today it exposes a single SHA-256 hash-string validator. Algorithm implementations, key derivation, and the vault live in the platform-specific `/browser` and `/node` entry points because they require a `SubtleCrypto` and secure RNG.
+The common entry point is reserved for utilities that are pure functions over plain values and therefore have no need to be split per-runtime. Today it exposes a single SHA-256 hash-string validator. Algorithm implementations, key derivation, and the vault live in the platform-specific [`/browser`](https://www.hyperfrontend.dev/docs/libraries/cryptography/browser/) and [`/node`](https://www.hyperfrontend.dev/docs/libraries/cryptography/node/) entry points because they require a `SubtleCrypto` and secure RNG.
 
 ## Usage
 

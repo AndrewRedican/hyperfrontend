@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.6](https://github.com/AndrewRedican/hyperfrontend/compare/0244581568624d41cfb65141f66003ecaea17718...adf0a4f77dece2be855e7ab88185a4fe84e7b16b) - 2026-09-14
+
+### Bug Fixes
+
+- stop walkTree at a directory symlink and validate symlinks on directory queries
+- reject a nul byte in any tree path before it is buffered
+- apply gitignore negation and directory-only patterns the way git does
+- let a walker swallow only filesystem failures
+- build core/logger as its own entry instead of a file module
+
 ## [0.2.5](https://github.com/AndrewRedican/hyperfrontend/compare/d07b3add2620b9c6e9ddcf48e01571b8788a3bc7...e2e420bc66425a7fbd7800b76537ee6df301855b) - 2026-09-11
 
 ### Bug Fixes

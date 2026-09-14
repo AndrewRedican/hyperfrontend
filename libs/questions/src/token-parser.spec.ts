@@ -62,6 +62,55 @@ describe('createTokenParser', () => {
     })
   })
 
+  describe('trailing line endings', () => {
+    it('splits a trailing carriage return off a printable run', () => {
+      expect(parser.feed('billing\r')).toEqual([
+        { type: TokenType.Paste, value: 'billing' },
+        { type: TokenType.Key, value: '\r' },
+      ])
+    })
+
+    it('splits a trailing carriage return off a single typed character', () => {
+      expect(parser.feed('l\r')).toEqual([
+        { type: TokenType.Key, value: 'l' },
+        { type: TokenType.Key, value: '\r' },
+      ])
+    })
+
+    it('reads a trailing line feed as Enter', () => {
+      expect(parser.feed('billing\n')).toEqual([
+        { type: TokenType.Paste, value: 'billing' },
+        { type: TokenType.Key, value: '\r' },
+      ])
+    })
+
+    it('reads a lone line feed as Enter', () => {
+      expect(parser.feed('\n')).toEqual([{ type: TokenType.Key, value: '\r' }])
+    })
+
+    it('collapses a carriage return and line feed pair into one Enter', () => {
+      expect(parser.feed('\r\n')).toEqual([{ type: TokenType.Key, value: '\r' }])
+    })
+
+    it('emits one Enter per blank line', () => {
+      expect(parser.feed('\n\n')).toEqual([
+        { type: TokenType.Key, value: '\r' },
+        { type: TokenType.Key, value: '\r' },
+      ])
+    })
+
+    it('keeps an interior carriage return in the body while peeling the trailing one', () => {
+      expect(parser.feed('a\rb\r')).toEqual([
+        { type: TokenType.Paste, value: 'a\rb' },
+        { type: TokenType.Key, value: '\r' },
+      ])
+    })
+
+    it('leaves a trailing carriage return inside a bracketed paste body', () => {
+      expect(parser.feed('\x1B[200~x\r\x1B[201~')).toEqual([{ type: TokenType.Paste, value: 'x\r' }])
+    })
+  })
+
   describe('Ctrl+C', () => {
     it('tokenizes a lone Ctrl+C as a key', () => {
       expect(parser.feed('\x03')).toEqual([{ type: TokenType.Key, value: '\x03' }])

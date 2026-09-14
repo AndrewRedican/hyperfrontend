@@ -1,7 +1,6 @@
 import type { Schema } from '../../types/schema'
 import type { ValidationContext } from '../context'
-import { defineProperty } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
-import { addError, createValidationContext, shouldContinue } from '../context'
+import { addError, createBranchContext, shouldContinue } from '../context'
 
 /**
  * Validates 'allOf' keyword - all schemas must match.
@@ -68,9 +67,7 @@ export function validateAnyOf(instance: unknown, schema: Schema, ctx: Validation
   }
 
   for (const subSchema of anyOf) {
-    const subCtx = createValidationContext(ctx.rootSchema, ctx.validate, false)
-    defineProperty(subCtx, 'path', { value: ctx.path, writable: false })
-    if (ctx.validate(instance, subSchema, subCtx)) {
+    if (ctx.validate(instance, subSchema, createBranchContext(ctx))) {
       return true
     }
   }
@@ -108,9 +105,7 @@ export function validateOneOf(instance: unknown, schema: Schema, ctx: Validation
   let matchCount = 0
 
   for (const subSchema of oneOf) {
-    const subCtx = createValidationContext(ctx.rootSchema, ctx.validate, false)
-    defineProperty(subCtx, 'path', { value: ctx.path, writable: false })
-    if (ctx.validate(instance, subSchema, subCtx)) {
+    if (ctx.validate(instance, subSchema, createBranchContext(ctx))) {
       matchCount++
       if (matchCount > 1) break
     }
@@ -151,10 +146,7 @@ export function validateNot(instance: unknown, schema: Schema, ctx: ValidationCo
     return true
   }
 
-  const subCtx = createValidationContext(ctx.rootSchema, ctx.validate, false)
-  defineProperty(subCtx, 'path', { value: ctx.path, writable: false })
-
-  if (ctx.validate(instance, not, subCtx)) {
+  if (ctx.validate(instance, not, createBranchContext(ctx))) {
     addError(ctx, 'Value should NOT match the schema', instance, 'not')
     return false
   }

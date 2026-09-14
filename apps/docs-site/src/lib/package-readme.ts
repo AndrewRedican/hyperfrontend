@@ -44,6 +44,15 @@ const CAPABILITIES_SUBSECTION_SLUGS = ['output-formats']
 /** The README sections the site renders somewhere other than in the document body. */
 const CLAIMED_SECTION_SLUGS = ['license', 'part-of-hyperfrontend']
 
+/** How the lede is wrapped: an alignment hint every markdown renderer keeps and every browser honours. */
+const LEDE_OPEN = '<div align="center">'
+
+/** @see {@link LEDE_OPEN} */
+const LEDE_CLOSE = '</div>'
+
+/** The characters a line starts with when it opens a block that is not a paragraph: a heading, a list, a quote, a table, a fence. */
+const BLOCK_OPENERS = '#-*>|`•'
+
 /**
  * Reduce a package README to what its documentation page actually shows.
  *
@@ -87,4 +96,45 @@ export function preparePackageReadme(markdown: string, claims: PackageReadmeClai
   const withoutArchitecture =
     claims.architecture === true ? dropSections(withFeatures, [ARCHITECTURE_SLUG], ARCHITECTURE_LEVEL) : withFeatures
   return { title, body: dropSections(withoutArchitecture, CLAIMED_SECTION_SLUGS) }
+}
+
+/**
+ * Centre the line a package README opens with, where it sits.
+ *
+ * Every package README leads with one sentence saying what the package is,
+ * below its title, its badges and its showcase and above its first section.
+ * On the package page that sentence is the only left-aligned thing between
+ * two centred visuals, so it is wrapped in an alignment hint the markdown
+ * pipeline keeps and the browser honours. The wrapper is a `div` with blank
+ * lines inside, which is the one raw-HTML shape that leaves the sentence's
+ * own markdown parsed, so a code span or a link in it still renders. The
+ * sentence itself is not moved and not rewritten: the source README stays as
+ * the author wrote it, and so does the text the search index reads.
+ *
+ * A document that opens with something other than a paragraph, a section
+ * heading or a list, has no lede and is returned as it is.
+ *
+ * @param markdown - The package README's body, title removed
+ * @returns The body with its opening paragraph centred
+ *
+ * @example Centring the sentence under the showcase
+ * ```ts
+ * centreLede('<p align="center"><img src="hero.gif"></p>\n\nOne line.\n\n## What is it?')
+ * // '<p align="center"><img src="hero.gif"></p>\n\n<div align="center">\n\nOne line.\n\n</div>\n\n## What is it?'
+ * ```
+ */
+export function centreLede(markdown: string): string {
+  const lines = markdown.split('\n')
+  const start = lines.findIndex((line) => {
+    const text = line.trim()
+    return text !== '' && !text.startsWith('<') && !text.startsWith('![')
+  })
+  if (start === -1 || BLOCK_OPENERS.includes((lines[start] ?? '').trim().charAt(0))) {
+    return markdown
+  }
+  let end = start
+  while (end < lines.length && (lines[end] ?? '').trim() !== '') {
+    end += 1
+  }
+  return [...lines.slice(0, start), LEDE_OPEN, '', ...lines.slice(start, end), '', LEDE_CLOSE, ...lines.slice(end)].join('\n')
 }

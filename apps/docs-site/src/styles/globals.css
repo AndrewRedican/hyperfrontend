@@ -11,10 +11,11 @@
      0 -  40  page content, the demo surfaces themselves, and demo-local
               floating controls (the showcase's ring and pause/skip, the
               demos-page host console cog)
+          45  scroll-to-top control on a long document
           50  site header (sticky)
           60  mobile navigation drawer
           80  share menu
-         100  skip link, diagram modal
+         100  skip link, media lightbox (diagrams, stills, charts)
          120  the demo deck's side dial
      140-150  consent banner and its preferences dialog
          160  search dialog
@@ -41,6 +42,8 @@
     --color-bg-secondary: theme('colors.slate.50');
     --color-text: theme('colors.slate.900');
     --color-text-secondary: theme('colors.slate.600');
+    /* why: the side padding of a code block is read in two places, the block itself and the compact width that adds it back, so it is one number rather than two that have to agree */
+    --code-pad-x: 1.125rem;
   }
 
   .dark {
@@ -56,6 +59,45 @@
 
   body {
     @apply bg-white text-slate-900 antialiased dark:bg-slate-900 dark:text-slate-100;
+  }
+
+  /* A heading is the one run of text on this site that is routinely a single
+     unbreakable word: a package name at forty pixels, an API symbol, a
+     command. Every heading here is also laid out as a flex row so its anchor
+     can sit beside it, and a flex item refuses to shrink below the width of
+     its longest word, so on a phone that word takes the whole page sideways
+     with it. `anywhere` rather than `break-word` because only `anywhere`
+     lowers the box's min-content size, which is the number the flex item is
+     refusing to go below; an ordinary heading with ordinary words is left
+     exactly as it was, since a break inside a word is taken only when no
+     other break would keep the line inside its box. */
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    overflow-wrap: anywhere;
+  }
+
+  /* Inline code is the other run of text that is routinely one word, and in
+     a reference it is routinely a long one: a path, a package subpath, six
+     event names joined with slashes. Given a break opportunity nowhere else,
+     it takes one inside the token rather than past the edge of the screen. A
+     block of code is unaffected, because a block never wraps at all: it keeps
+     its whitespace and scrolls, which is the behaviour set on `pre.shiki`. */
+  code {
+    overflow-wrap: anywhere;
+  }
+
+  /* And the page's own text, for the same reason: a reference description
+     that ends in a bare URL is a paragraph with one word wider than a phone.
+     The property inherits, so setting it on the page column reaches every
+     run of text a document renders, generated reference included, and it
+     changes nothing about a line that already fits: the break inside a word
+     is the breaker's last resort, not its first. */
+  main {
+    overflow-wrap: anywhere;
   }
 
   /* Global focus-visible styles for accessibility */
@@ -152,16 +194,27 @@
 
      What is not translucent is the text. Every alpha here is on the surface
      under it, never on the ink, because a code block that is pleasant to look
-     at and tiring to read is a failure at the only thing it is for. */
+     at and tiring to read is a failure at the only thing it is for.
+
+     The block never widens whatever holds it. Its own box is capped at the
+     width it is given and the sample scrolls inside it, which is the one
+     behaviour that keeps a phone's page the width of the phone: the viewport
+     sets the page, the page sets the column, the column sets the block, and
+     a line longer than the block moves under the reader's finger rather than
+     dragging the whole document sideways. Nothing wraps, because a wrapped
+     command is a different command. */
   pre.shiki {
     position: relative;
     isolation: isolate;
     margin: 0;
-    padding: 1rem 1.125rem;
+    padding: 1rem var(--code-pad-x);
+    max-width: 100%;
     border-radius: 0.625rem;
     overflow-x: auto;
     font-size: theme('fontSize.sm');
     line-height: 1.625;
+    /* why: the classification that sizes a block counts a tab as four columns, and the block has to draw what was counted */
+    tab-size: 4;
     border: 1px solid rgb(148 163 184 / 0.28);
     background-color: rgb(248 250 252 / 0.6);
     background-image:
@@ -281,14 +334,72 @@
     }
   }
 
+  /* Code on a phone.
+
+     Fourteen pixels of monospace on a 390px screen shows about forty
+     characters of a line before the block starts scrolling, and most lines in
+     this documentation are longer than that. The block steps down one stop on
+     the site's own type scale, to twelve pixels, which is a hair over 85% of
+     the desktop size: enough that a typical install command fits, not so
+     small that a reader has to lean in. The side padding tightens by the
+     same proportion so the extra width goes to the code rather than to the
+     frame around it. Inline code in prose is left alone; it sits inside a
+     sentence and takes the sentence's size. */
+  @media (max-width: 639px) {
+    :root {
+      --code-pad-x: 0.875rem;
+    }
+
+    pre.shiki {
+      font-size: theme('fontSize.xs');
+      padding-block: 0.875rem;
+    }
+  }
+
   /* Keep the <code> wrapper inside a highlighted <pre> visually flush so the
-     Shiki background and token colors are the only thing painting the block. */
+     Shiki background and token colors are the only thing painting the block.
+     Its size is the block's size, which is what lets the block alone decide
+     how large the code is on a phone. */
   .prose pre.shiki code {
     background-color: transparent;
     padding: 0;
     border-radius: 0;
     font-size: inherit;
     line-height: inherit;
+  }
+
+  /* Compact and full-width code.
+
+     A one-line install command and a forty-line module are both fenced code,
+     and rendering both across the whole column gives the command a great deal
+     of empty pane to sit in. Every block is therefore classified, from its
+     text alone and at render time, as either compact or full: compact when
+     the sample is short in both directions, full otherwise. Two modes, not a
+     width per block. Every compact block in a column is the same width, and
+     the page reads as a system rather than as a set of boxes each sized to
+     its own contents.
+
+     The compact width is half the column plus the block's own side padding,
+     so it is the code's text area that measures half the column, and the
+     column decides whether it is wide enough to be halved at all: the query
+     is on the document column, not the viewport, because the same viewport
+     holds a wider column with the navigation collapsed and a narrower one
+     with the index beside it. Below the threshold, and on every phone, a
+     compact block is simply a block. The container is the document column
+     itself, named where the shell renders it.
+
+     The classification lives in code-layout.ts, next to the numbers this
+     stylesheet pairs with: a compact block is one whose longest line fits in
+     half of a column at the threshold width in the site's monospace face. */
+  .doc-column {
+    container: doc-column / inline-size;
+  }
+
+  @container doc-column (min-width: 56rem) {
+    .prose pre.shiki[data-code-layout='compact'],
+    .code-block[data-code-layout='compact'] {
+      max-width: calc(50% + 2 * var(--code-pad-x));
+    }
   }
 
   /* The language a markdown block was fenced with, added by script from the
@@ -319,8 +430,1870 @@
   pre.shiki:hover .code-language,
   pre.shiki:focus-within .code-language,
   .group:hover > .code-language,
-  .group:focus-within > .code-language {
+  .group:focus-within > .code-language,
+  .group:hover .cycling-code > .code-language,
+  .group:focus-within .cycling-code > .code-language {
     opacity: 0;
+  }
+
+  /* The cursor at the end of a command being typed in a cycling block.
+
+     A block cursor the width of a character, in the block's own ink, so it
+     reads as a terminal's rather than as a text field's. It blinks while
+     the command holds, on a step so it is either there or not, and holds
+     still for a reader who has asked for less motion: the cursor is then a
+     mark at the end of the line and nothing more. */
+  .code-cursor {
+    display: inline-block;
+    width: 0.55em;
+    height: 1.05em;
+    margin-left: 0.08em;
+    vertical-align: -0.18em;
+    border-radius: 1px;
+    background-color: currentColor;
+    opacity: 0.75;
+    animation: code-cursor-blink 1.1s steps(2, jump-none) infinite;
+  }
+
+  /* why: a terminal's cursor holds solid while keys arrive and blinks once they stop */
+  .cycling-code[data-typing='true'] .code-cursor {
+    animation: none;
+  }
+
+  @keyframes code-cursor-blink {
+    from {
+      opacity: 0.75;
+    }
+    to {
+      opacity: 0;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .code-cursor {
+      animation: none;
+    }
+  }
+}
+
+@layer components {
+  /* A package card on the library index.
+
+     The same family as the code block above, and deliberately not the same
+     member of it. A code block is a pane the page shows through, because the
+     code is the densest thing on the page and an opaque slab would make it a
+     foreign object. A card is the opposite case: it sits on a spine drawn down
+     the middle of the page, and a card the spine shows through is a card with
+     a line through its title. So the surface keeps the pane's vocabulary, a
+     hairline of light along the top edge, a fill that thins as it descends,
+     a blur that softens whatever the atmosphere is doing behind it, and gives
+     up the pane's transparency: the alpha is high enough that a one-pixel
+     line at the ground's own contrast cannot be told from the surface, and
+     the blur takes what little would remain.
+
+     Nothing pointer-driven. A reader scans twenty cards and clicks one, and a
+     surface that answered every pass of the cursor would be twenty surfaces
+     shifting under a reader who is trying to read them. Hover is a border, a
+     lift, and a hair more ink in the fill, all of it on a short transition.
+
+     The package's own mark is drawn inside this surface, above it, so the
+     opacity here never touches it: the mark belongs to the card's own
+     composition, which is exactly what the spine does not. */
+  .package-card {
+    position: relative;
+    isolation: isolate;
+    border: 1px solid rgb(148 163 184 / 0.32);
+    background-color: rgb(255 255 255 / 0.92);
+    background-image: linear-gradient(to bottom, rgb(255 255 255 / 0.55), rgb(255 255 255 / 0) 58%);
+    -webkit-backdrop-filter: blur(14px) saturate(1.4);
+    backdrop-filter: blur(14px) saturate(1.4);
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.85),
+      0 1px 2px rgb(15 23 42 / 0.05);
+    transition:
+      border-color 200ms ease-out,
+      background-color 200ms ease-out,
+      box-shadow 200ms ease-out;
+  }
+
+  .package-card:hover {
+    border-color: rgb(59 130 246 / 0.5);
+    background-color: rgb(239 246 255 / 0.94);
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.9),
+      0 12px 32px -18px rgb(15 23 42 / 0.3);
+  }
+
+  .dark .package-card {
+    border-color: rgb(148 163 184 / 0.18);
+    /* why: a step above the page's slate-900 rather than on it, so a card is the nearer thing on a ground that lifts as the reader descends, and still dense enough that the spine behind it is gone */
+    background-color: rgb(24 33 52 / 0.92);
+    background-image: linear-gradient(to bottom, rgb(148 163 184 / 0.06), rgb(148 163 184 / 0) 58%);
+    box-shadow:
+      inset 0 1px 0 rgb(203 213 225 / 0.08),
+      0 1px 2px rgb(2 6 23 / 0.3);
+  }
+
+  .dark .package-card:hover {
+    border-color: rgb(96 165 250 / 0.45);
+    background-color: rgb(29 41 66 / 0.94);
+    box-shadow:
+      inset 0 1px 0 rgb(203 213 225 / 0.1),
+      0 14px 36px -18px rgb(2 6 23 / 0.7);
+  }
+
+  /* The apex carries the site's blue the way it always did, as a wash across
+     the fill rather than as a different surface. */
+  .package-card--apex {
+    border-color: rgb(59 130 246 / 0.35);
+    background-image: linear-gradient(135deg, rgb(219 234 254 / 0.6), rgb(255 255 255 / 0) 62%);
+  }
+
+  .package-card--apex:hover {
+    border-color: rgb(59 130 246 / 0.65);
+  }
+
+  .dark .package-card--apex {
+    border-color: rgb(96 165 250 / 0.28);
+    background-image: linear-gradient(135deg, rgb(37 99 235 / 0.22), rgb(148 163 184 / 0) 62%);
+  }
+
+  .dark .package-card--apex:hover {
+    border-color: rgb(96 165 250 / 0.55);
+  }
+
+  /* The whole card opens the package, and it does so through its heading's
+     link: that link's overlay is laid across the card, so the card is one tab
+     stop with one destination and no script. Focus on that link is drawn on
+     the card, where a reader's eye is, rather than on the two words of the
+     title. */
+  .package-card:has(.package-card__link:focus-visible) {
+    outline: 2px solid theme('colors.primary.500');
+    outline-offset: 2px;
+  }
+
+  .dark .package-card:has(.package-card__link:focus-visible) {
+    outline-color: theme('colors.primary.400');
+  }
+
+  .package-card__link:focus-visible {
+    outline: none;
+    box-shadow: none;
+  }
+
+  /* The overlay: the heading link's own box, stretched over the card. It is
+     the card's containing block that positions it, which is why the card is
+     the positioned ancestor and nothing between the two is. */
+  .package-card__link::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+  }
+
+  /* The one part of the card that goes somewhere else. It is stacked above the
+     overlay and takes its pointer events back, so the version opens the
+     release on npm and the rest of the card opens the package. */
+  .package-card__version {
+    z-index: 2;
+  }
+}
+
+@layer components {
+  /* A package's title on a phone.
+
+     The scope is fifteen characters every package shares, and at a title's
+     size on a narrow screen it is most of the line: the name that matters
+     ends up wrapped or broken under it. Below the first breakpoint the scope
+     is taken out of the flow and the package's own mark stands in for it,
+     the mark the navigation and the index already use, drawn at the
+     heading's own size so it reads as part of the title rather than as an
+     ornament beside it. The scope stays in the document for anyone reading
+     it rather than looking at it, so the heading is still the whole name.
+
+     The mark is sized in ems so it scales with whatever size the heading
+     takes, and dropped a fraction below the baseline so its centre sits on
+     the capitals' centre rather than on the line box's. */
+  .package-title {
+    display: inline;
+  }
+
+  .package-title__mark {
+    display: none;
+  }
+
+  @media (max-width: 639px) {
+    .package-title__mark {
+      display: inline-block;
+      width: 0.86em;
+      height: 0.86em;
+      margin-right: 0.28em;
+      vertical-align: -0.09em;
+      color: theme('colors.slate.700');
+    }
+
+    .dark .package-title__mark {
+      color: theme('colors.slate.200');
+    }
+
+    .package-title__scope {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border-width: 0;
+    }
+  }
+}
+
+@layer components {
+  /* The metadata pills under a package's title, and the ecosystem's under
+     the library index's.
+
+     One geometry for the whole family, set here rather than per pill, so a
+     version, a changelog link, a download count and a licence can never be
+     four slightly different heights. Two things made them different heights
+     before, and both are fixed at the root. A pill is inline-level inside a
+     list item, so it was placed on the item's baseline, and the version pill
+     is set in the monospace face whose baseline sits a pixel or two lower in
+     the same line box than the sans of the pill beside it: the items are
+     flex containers now, so a pill is placed by its box and not by its text.
+     And the text inside a pill is placed by its font's ascent and descent
+     rather than by its ink, so a mark centred on the line box sat a pixel
+     below the capitals beside it: the label is trimmed to its cap height
+     where the platform can trim, and the mark is centred on the trimmed box.
+     Where it cannot trim, the label falls back to ordinary centring, which
+     is what it always had. */
+  .metadata-strip {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .metadata-strip > li {
+    display: flex;
+    margin: 0;
+  }
+
+  .metadata-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    height: 1.5rem;
+    padding: 0 0.5rem;
+    border-width: 1px;
+    border-style: solid;
+    border-radius: 0.375rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    line-height: 1;
+    letter-spacing: 0.025em;
+    white-space: nowrap;
+    text-decoration: none;
+    transition:
+      border-color 150ms ease-out,
+      background-color 150ms ease-out;
+  }
+
+  .metadata-pill:focus-visible {
+    outline: none;
+  }
+
+  .metadata-pill--mono {
+    font-family: theme('fontFamily.mono');
+    letter-spacing: 0;
+  }
+
+  .metadata-pill__label {
+    display: block;
+    text-box-trim: trim-both;
+    text-box-edge: cap alphabetic;
+    text-box: trim-both cap alphabetic;
+  }
+
+  /* why: a mark is drawn on a 24 unit grid centred top to bottom, and its box is the cap height of the label plus a hair, so the two centres coincide */
+  .metadata-pill__mark {
+    display: block;
+    width: 0.875rem;
+    height: 0.875rem;
+    flex-shrink: 0;
+  }
+
+  .metadata-pill__mark > svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+}
+
+@layer components {
+  /* The downloads page: the ranking, the focused package, and the trend
+     grid.
+
+     One series everywhere, in the site's own blue, because every chart on
+     the page shows the same measure for a different package and a second
+     hue would claim a second meaning. A focused package is emphasized, not
+     recoloured: its bar keeps its blue while the others step back, its card
+     takes a rim, and its line is drawn a shade deeper. Every mark is thin
+     and every axis is recessive, so the data is the only loud thing on the
+     page. */
+  .downloads__controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+    margin-top: 2rem;
+  }
+
+  .downloads__heading {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0;
+    font-family: theme('fontFamily.display');
+    font-size: theme('fontSize.2xl');
+    font-weight: 700;
+    line-height: 1.3;
+    color: theme('colors.slate.900');
+  }
+
+  .dark .downloads__heading {
+    color: theme('colors.white');
+  }
+
+  .downloads__lede {
+    margin: 0.5rem 0 1.25rem;
+    color: theme('colors.slate.600');
+  }
+
+  .dark .downloads__lede {
+    color: theme('colors.slate.400');
+  }
+
+  /* The focused package's detail: the figures as a row of labelled values,
+     and a wide chart under them. */
+  .downloads__focus {
+    scroll-margin-top: 5rem;
+  }
+
+  .downloads__facts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem 2rem;
+    margin: 1rem 0 1.25rem;
+  }
+
+  .downloads__facts > div {
+    min-width: 0;
+  }
+
+  .downloads__facts dt {
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    color: theme('colors.slate.500');
+  }
+
+  .dark .downloads__facts dt {
+    color: theme('colors.slate.400');
+  }
+
+  .downloads__facts dd {
+    margin: 0.125rem 0 0;
+    font-size: theme('fontSize.xl');
+    font-weight: 600;
+    line-height: 1.3;
+    color: theme('colors.slate.900');
+  }
+
+  .dark .downloads__facts dd {
+    color: theme('colors.white');
+  }
+
+  /* The ranking: one row per package, the bar in a track between the name
+     and the value. Bars are capped at a comfortable thickness and rounded
+     only at the data end, and a surface gap keeps neighbours apart. */
+  .ranking {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .ranking__row + .ranking__row {
+    margin-top: 0.125rem;
+  }
+
+  .ranking__bar-button {
+    display: grid;
+    grid-template-columns: minmax(7.5rem, 11rem) minmax(0, 1fr) 3.5rem;
+    align-items: center;
+    column-gap: 0.75rem;
+    width: 100%;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.5rem;
+    text-align: left;
+    transition: background-color 150ms ease-out;
+  }
+
+  @media (max-width: 479px) {
+    .ranking__bar-button {
+      grid-template-columns: minmax(6rem, 8rem) minmax(0, 1fr) 3rem;
+      column-gap: 0.5rem;
+    }
+  }
+
+  .ranking__bar-button:hover {
+    background-color: rgb(241 245 249 / 0.7);
+  }
+
+  .dark .ranking__bar-button:hover {
+    background-color: rgb(30 41 59 / 0.5);
+  }
+
+  .ranking__bar-button:focus-visible {
+    outline: 2px solid theme('colors.primary.500');
+    outline-offset: 2px;
+  }
+
+  .ranking__name {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 0;
+    font-family: theme('fontFamily.mono');
+    font-size: 0.8125rem;
+    color: theme('colors.slate.700');
+  }
+
+  .dark .ranking__name {
+    color: theme('colors.slate.300');
+  }
+
+  .ranking__mark {
+    width: 1rem;
+    height: 1rem;
+    flex-shrink: 0;
+    color: theme('colors.slate.400');
+  }
+
+  .ranking__short {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .ranking__track {
+    display: block;
+    height: 0.875rem;
+    min-width: 0;
+  }
+
+  .ranking__bar {
+    display: block;
+    height: 100%;
+    min-width: 2px;
+    border-radius: 0 3px 3px 0;
+    background-color: theme('colors.primary.500');
+    transition:
+      opacity 200ms ease-out,
+      width 400ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .dark .ranking__bar {
+    background-color: theme('colors.primary.400');
+  }
+
+  .ranking__value {
+    font-family: theme('fontFamily.mono');
+    font-size: 0.8125rem;
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+    color: theme('colors.slate.700');
+  }
+
+  .dark .ranking__value {
+    color: theme('colors.slate.300');
+  }
+
+  .ranking--focused .ranking__row:not(.ranking__row--active) .ranking__bar {
+    opacity: 0.3;
+  }
+
+  .ranking__row--active .ranking__bar-button {
+    background-color: rgb(59 130 246 / 0.08);
+  }
+
+  .dark .ranking__row--active .ranking__bar-button {
+    background-color: rgb(96 165 250 / 0.12);
+  }
+
+  .ranking__row--active .ranking__name,
+  .ranking__row--active .ranking__value {
+    font-weight: 600;
+    color: theme('colors.slate.900');
+  }
+
+  .dark .ranking__row--active .ranking__name,
+  .dark .ranking__row--active .ranking__value {
+    color: theme('colors.white');
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ranking__bar {
+      transition: none;
+    }
+  }
+
+  /* The trend grid: as many cards per row as the column has room for,
+     three on a wide document, two on a laptop, one on a phone. */
+  .trend-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(16.5rem, 1fr));
+    gap: 0.875rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .trend-grid > li {
+    min-width: 0;
+  }
+
+  .trend-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    width: 100%;
+    padding: 0.75rem 0.875rem 0.625rem;
+    border: 1px solid rgb(148 163 184 / 0.32);
+    border-radius: 0.75rem;
+    background-color: rgb(255 255 255 / 0.7);
+    cursor: zoom-in;
+    text-align: left;
+    transition:
+      border-color 200ms ease-out,
+      box-shadow 200ms ease-out;
+  }
+
+  .dark .trend-card {
+    border-color: rgb(148 163 184 / 0.18);
+    background-color: rgb(24 33 52 / 0.6);
+  }
+
+  .trend-card:hover,
+  .trend-card:focus-visible {
+    outline: none;
+    border-color: rgb(59 130 246 / 0.5);
+    box-shadow: 0 12px 32px -18px rgb(15 23 42 / 0.3);
+  }
+
+  .dark .trend-card:hover,
+  .dark .trend-card:focus-visible {
+    border-color: rgb(96 165 250 / 0.45);
+    box-shadow: 0 14px 36px -18px rgb(2 6 23 / 0.7);
+  }
+
+  .trend-card--active {
+    border-color: rgb(59 130 246 / 0.6);
+    box-shadow: 0 0 0 3px rgb(59 130 246 / 0.15);
+  }
+
+  .dark .trend-card--active {
+    border-color: rgb(96 165 250 / 0.6);
+    box-shadow: 0 0 0 3px rgb(96 165 250 / 0.18);
+  }
+
+  .trend-card--wide {
+    padding: 1rem 1rem 0.75rem;
+  }
+
+  .trend-card__head {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 0;
+  }
+
+  .trend-card__mark {
+    width: 1rem;
+    height: 1rem;
+    flex-shrink: 0;
+    color: theme('colors.slate.400');
+  }
+
+  .trend-card__name {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-family: theme('fontFamily.mono');
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: theme('colors.slate.800');
+  }
+
+  .dark .trend-card__name {
+    color: theme('colors.slate.200');
+  }
+
+  .trend-card__total {
+    font-family: theme('fontFamily.mono');
+    font-size: 0.8125rem;
+    font-variant-numeric: tabular-nums;
+    color: theme('colors.slate.500');
+  }
+
+  .dark .trend-card__total {
+    color: theme('colors.slate.400');
+  }
+
+  .trend-card__foot {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.5rem;
+    font-size: 0.6875rem;
+    color: theme('colors.slate.400');
+  }
+
+  .dark .trend-card__foot {
+    color: theme('colors.slate.500');
+  }
+
+  /* The chart itself, drawn once and used at every size. The line is two
+     pixels whatever the box is scaled to, the wash is the hue at a tenth,
+     the end marker carries a ring of the surface so it stays legible over
+     the line, and the hairline that follows the pointer is the only thing
+     that moves. */
+  .trend-chart {
+    position: relative;
+    width: 100%;
+    --trend-hue: theme('colors.primary.500');
+    --trend-surface: theme('colors.white');
+  }
+
+  .dark .trend-chart {
+    --trend-hue: theme('colors.primary.400');
+    --trend-surface: theme('colors.slate.900');
+  }
+
+  .trend-chart--emphasized {
+    --trend-hue: theme('colors.primary.600');
+  }
+
+  .dark .trend-chart--emphasized {
+    --trend-hue: theme('colors.primary.300');
+  }
+
+  .trend-chart__svg {
+    display: block;
+    width: 100%;
+    height: auto;
+    overflow: visible;
+    touch-action: pan-y;
+  }
+
+  .trend-chart__area {
+    fill: var(--trend-hue);
+    fill-opacity: 0.1;
+  }
+
+  .trend-chart__line {
+    fill: none;
+    stroke: var(--trend-hue);
+    stroke-width: 2;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+    vector-effect: non-scaling-stroke;
+  }
+
+  .trend-chart__end {
+    fill: var(--trend-hue);
+    stroke: var(--trend-surface);
+    stroke-width: 2;
+    vector-effect: non-scaling-stroke;
+  }
+
+  .trend-chart__grid {
+    stroke: rgb(148 163 184 / 0.35);
+    stroke-width: 1;
+    vector-effect: non-scaling-stroke;
+  }
+
+  .trend-chart__tick {
+    font-family: theme('fontFamily.mono');
+    font-size: 12px;
+    fill: theme('colors.slate.500');
+  }
+
+  .dark .trend-chart__tick {
+    fill: theme('colors.slate.400');
+  }
+
+  .trend-chart__hairline {
+    stroke: rgb(100 116 139 / 0.6);
+    stroke-width: 1;
+    vector-effect: non-scaling-stroke;
+    pointer-events: none;
+  }
+
+  .trend-chart__cursor {
+    pointer-events: none;
+  }
+
+  /* The readout: the value first and strong, the bucket second and quiet,
+     both in the text colours. It sits above the plot at the hairline's x
+     and turns to face inward near either edge so it never leaves the card. */
+  .trend-chart__readout {
+    position: absolute;
+    top: -0.25rem;
+    display: flex;
+    flex-direction: column;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.375rem;
+    background-color: rgb(255 255 255 / 0.96);
+    border: 1px solid rgb(148 163 184 / 0.35);
+    box-shadow: 0 6px 16px -8px rgb(15 23 42 / 0.3);
+    font-size: 0.6875rem;
+    line-height: 1.3;
+    color: theme('colors.slate.500');
+    white-space: nowrap;
+    transform: translate(-50%, -100%);
+    pointer-events: none;
+  }
+
+  .dark .trend-chart__readout {
+    background-color: rgb(15 23 42 / 0.96);
+    border-color: rgb(148 163 184 / 0.25);
+    color: theme('colors.slate.400');
+  }
+
+  .trend-chart__readout > strong {
+    font-family: theme('fontFamily.mono');
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: theme('colors.slate.900');
+  }
+
+  .dark .trend-chart__readout > strong {
+    color: theme('colors.white');
+  }
+
+  .trend-chart--detailed .trend-chart__readout {
+    font-size: 0.8125rem;
+    padding: 0.375rem 0.625rem;
+  }
+
+  .trend-chart--detailed .trend-chart__readout > strong {
+    font-size: 1rem;
+  }
+
+  /* The expanded chart in the lightbox: a header naming the package and its
+     span, then the chart with axes, on the lightbox's own surface. */
+  .trend-expanded {
+    padding: 1.5rem 1.5rem 1rem;
+    background-color: theme('colors.white');
+  }
+
+  .dark .trend-expanded {
+    background-color: theme('colors.slate.900');
+  }
+
+  .trend-expanded__header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+  }
+
+  /* The methodology, folded under its heading until asked for. */
+  .methodology {
+    border-top: 1px solid theme('colors.slate.200');
+    padding-top: 1.5rem;
+  }
+
+  .dark .methodology {
+    border-top-color: theme('colors.slate.800');
+  }
+
+  .methodology__summary {
+    cursor: pointer;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    font-family: theme('fontFamily.display');
+    font-size: theme('fontSize.xl');
+    font-weight: 600;
+    color: theme('colors.slate.900');
+  }
+
+  .dark .methodology__summary {
+    color: theme('colors.white');
+  }
+
+  .methodology__summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .methodology__summary::before {
+    content: '';
+    width: 0.5rem;
+    height: 0.5rem;
+    border-right: 2px solid theme('colors.slate.400');
+    border-bottom: 2px solid theme('colors.slate.400');
+    transform: rotate(-45deg);
+    transition: transform 200ms ease-out;
+  }
+
+  .methodology[open] .methodology__summary::before {
+    transform: rotate(45deg);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .methodology__summary::before {
+      transition: none;
+    }
+  }
+
+  .methodology__summary:focus-visible {
+    outline: 2px solid theme('colors.primary.500');
+    outline-offset: 4px;
+    border-radius: 0.25rem;
+  }
+
+  /* The body runs the width of the page's own prose: unbounded until the
+     shell stops growing, then held to the document measure the column sets. */
+  .methodology__body {
+    max-width: var(--doc-measure, none);
+    margin-top: 1rem;
+    font-size: theme('fontSize.sm');
+    line-height: 1.75;
+    color: theme('colors.slate.600');
+  }
+
+  .dark .methodology__body {
+    color: theme('colors.slate.400');
+  }
+
+  .methodology__body > * + * {
+    margin-top: 0.875rem;
+  }
+
+  .methodology__body a {
+    color: theme('colors.primary.600');
+    text-decoration: none;
+  }
+
+  .methodology__body a:hover {
+    text-decoration: underline;
+  }
+
+  .dark .methodology__body a {
+    color: theme('colors.primary.400');
+  }
+
+  .methodology__thanks {
+    padding-top: 0.875rem;
+    border-top: 1px solid theme('colors.slate.200');
+  }
+
+  .dark .methodology__thanks {
+    border-top-color: theme('colors.slate.800');
+  }
+}
+
+@layer components {
+  /* The frame every embedded medium sits in.
+
+     The stage is sized by its aspect ratio alone, so the space a video, a
+     poster or a chart will take is taken before any of them arrive and the
+     page does not move when they do. Whatever is put on the stage fills
+     it, which is the one rule about media size and it is written here once.
+     The surface is the code block's pane, because a medium is the other
+     dense thing on a documentation page and reads as the same kind of
+     object. */
+  .media-frame {
+    margin: 1.5rem 0;
+  }
+
+  .media-frame__stage {
+    position: relative;
+    width: 100%;
+    max-width: 100%;
+    overflow: hidden;
+    border-radius: 0.625rem;
+    border: 1px solid rgb(148 163 184 / 0.28);
+    background-color: rgb(15 23 42 / 0.04);
+  }
+
+  .dark .media-frame__stage {
+    border-color: rgb(148 163 184 / 0.16);
+    background-color: rgb(2 6 23 / 0.35);
+  }
+
+  .media-frame__media {
+    position: absolute;
+    inset: 0;
+    display: block;
+    width: 100%;
+    height: 100%;
+    border: 0;
+    object-fit: contain;
+  }
+
+  .media-frame__caption {
+    margin-top: 0.625rem;
+    font-size: theme('fontSize.sm');
+    line-height: 1.6;
+    text-align: center;
+    color: theme('colors.slate.500');
+  }
+
+  .dark .media-frame__caption {
+    color: theme('colors.slate.400');
+  }
+
+  /* A third-party video before it is played: its own poster and a play
+     button, and no player until the button is pressed. */
+  .media-facade {
+    padding: 0;
+    cursor: pointer;
+    background-color: theme('colors.slate.900');
+  }
+
+  .media-facade__poster {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0.92;
+    transition: opacity 200ms ease-out;
+  }
+
+  .media-facade:hover .media-facade__poster,
+  .media-facade:focus-visible .media-facade__poster {
+    opacity: 1;
+  }
+
+  .media-facade__play {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    display: flex;
+    width: 4rem;
+    height: 4rem;
+    align-items: center;
+    justify-content: center;
+    border-radius: 9999px;
+    transform: translate(-50%, -50%);
+    color: theme('colors.white');
+    background-color: rgb(15 23 42 / 0.7);
+    box-shadow: 0 8px 24px -8px rgb(2 6 23 / 0.6);
+    transition:
+      transform 200ms ease-out,
+      background-color 200ms ease-out;
+  }
+
+  .media-facade__play > svg {
+    width: 2rem;
+    height: 2rem;
+    margin-left: 0.2rem;
+  }
+
+  .media-facade:hover .media-facade__play,
+  .media-facade:focus-visible .media-facade__play {
+    transform: translate(-50%, -50%) scale(1.06);
+    background-color: rgb(37 99 235 / 0.9);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .media-facade__poster,
+    .media-facade__play {
+      transition: none;
+    }
+
+    .media-facade:hover .media-facade__play {
+      transform: translate(-50%, -50%);
+    }
+  }
+}
+
+@layer components {
+  /* The way back to the top of a long document.
+
+     A small circle in the corner, glass like the rest of the site's chrome,
+     and subordinate to the content it floats over: a hairline, a faint
+     fill, a chevron in the secondary ink. It is in the document while the
+     page qualifies and merely invisible until the reader is far enough
+     down, so appearing is a fade and a few pixels of lift rather than a
+     layout change.
+
+     On hover and on focus the label unfolds to the left of the circle,
+     because the circle is pinned to the right edge and has nowhere else to
+     grow. The label's track goes from nothing to its own width, which is
+     what lets the pill widen without the width being known in advance.
+
+     The chevron does not bounce. The circle is a small stage with a little
+     perspective, and on hover the chevron pitches back on its own axis, top
+     edge toward the reader, the way a card tilts when it is lifted at one
+     end: it stays exactly where it was and gains a third dimension for a
+     moment. A reader who has asked for less motion gets the label and the
+     rim and no tilt. */
+  .scroll-to-top {
+    position: fixed;
+    right: max(1.25rem, env(safe-area-inset-right));
+    bottom: max(1.25rem, env(safe-area-inset-bottom));
+    z-index: 45;
+    display: flex;
+    align-items: center;
+    height: 2.75rem;
+    padding: 0 0.3125rem;
+    border: 1px solid rgb(148 163 184 / 0.4);
+    border-radius: 9999px;
+    color: theme('colors.slate.500');
+    background-color: rgb(255 255 255 / 0.72);
+    background-image: linear-gradient(to bottom, rgb(255 255 255 / 0.5), rgb(255 255 255 / 0) 60%);
+    -webkit-backdrop-filter: blur(14px) saturate(1.4);
+    backdrop-filter: blur(14px) saturate(1.4);
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.8),
+      0 8px 24px -12px rgb(15 23 42 / 0.35);
+    opacity: 0;
+    transform: translateY(0.5rem);
+    pointer-events: none;
+    transition:
+      opacity 220ms ease-out,
+      transform 220ms ease-out,
+      color 150ms ease-out,
+      border-color 150ms ease-out;
+  }
+
+  .dark .scroll-to-top {
+    border-color: rgb(148 163 184 / 0.25);
+    color: theme('colors.slate.400');
+    background-color: rgb(24 33 52 / 0.72);
+    background-image: linear-gradient(to bottom, rgb(148 163 184 / 0.08), rgb(148 163 184 / 0) 60%);
+    box-shadow:
+      inset 0 1px 0 rgb(203 213 225 / 0.1),
+      0 10px 28px -12px rgb(2 6 23 / 0.7);
+  }
+
+  .scroll-to-top[data-visible='true'] {
+    opacity: 1;
+    transform: none;
+    pointer-events: auto;
+  }
+
+  .scroll-to-top:hover,
+  .scroll-to-top:focus-visible {
+    color: theme('colors.slate.900');
+    border-color: rgb(59 130 246 / 0.5);
+  }
+
+  .dark .scroll-to-top:hover,
+  .dark .scroll-to-top:focus-visible {
+    color: theme('colors.white');
+    border-color: rgb(96 165 250 / 0.5);
+  }
+
+  .scroll-to-top:focus-visible {
+    outline: none;
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.8),
+      0 0 0 2px theme('colors.primary.500'),
+      0 8px 24px -12px rgb(15 23 42 / 0.35);
+  }
+
+  .scroll-to-top__label {
+    display: grid;
+    grid-template-columns: 0fr;
+    opacity: 0;
+    transition:
+      grid-template-columns 260ms cubic-bezier(0.22, 1, 0.36, 1),
+      opacity 200ms ease-out;
+  }
+
+  .scroll-to-top__label > span {
+    overflow: hidden;
+    padding-left: 0.5rem;
+    white-space: nowrap;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+  }
+
+  .scroll-to-top:hover .scroll-to-top__label,
+  .scroll-to-top:focus-visible .scroll-to-top__label {
+    grid-template-columns: 1fr;
+    opacity: 1;
+  }
+
+  .scroll-to-top:hover .scroll-to-top__label > span,
+  .scroll-to-top:focus-visible .scroll-to-top__label > span {
+    padding-right: 0.375rem;
+  }
+
+  .scroll-to-top__chevron {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    flex-shrink: 0;
+    perspective: 5rem;
+  }
+
+  .scroll-to-top__chevron > svg {
+    width: 1.25rem;
+    height: 1.25rem;
+    transform-origin: 50% 58%;
+    transform-style: preserve-3d;
+    transition: transform 320ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  .scroll-to-top:hover .scroll-to-top__chevron > svg,
+  .scroll-to-top:focus-visible .scroll-to-top__chevron > svg {
+    transform: rotateX(-38deg) translateZ(0.35rem);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .scroll-to-top,
+    .scroll-to-top__label,
+    .scroll-to-top__chevron > svg {
+      transition: none;
+    }
+
+    .scroll-to-top:hover .scroll-to-top__chevron > svg,
+    .scroll-to-top:focus-visible .scroll-to-top__chevron > svg {
+      transform: none;
+    }
+  }
+
+  @media print {
+    .scroll-to-top {
+      display: none;
+    }
+  }
+}
+
+@layer components {
+  /* A picture that can be inspected at its native size.
+
+     The mark is a class set by script on an image that has loaded larger
+     than the column draws it, so the affordance only ever appears where
+     expanding would show something. The cursor says so on hover; the rim is
+     the same lift a diagram gets, so the two read as one kind of thing; and
+     a keyboard reader gets the same rim on focus, since the image is a tab
+     stop while it is expandable.
+
+     The chip in the corner is drawn with the same expand glyph the diagram
+     overlay uses, positioned relative to the image itself through an outline
+     rather than a wrapper: an image in prose sits inside a paragraph, and
+     wrapping it would change the paragraph's layout. A background image on
+     the element cannot be placed over its own pixels, so the chip is the
+     cursor's job on a pointer and the rim's on a keyboard, and no chip is
+     drawn at all. */
+  .expandable-image {
+    cursor: zoom-in;
+    border-radius: 0.375rem;
+    transition:
+      box-shadow 180ms ease-out,
+      transform 180ms ease-out;
+  }
+
+  .expandable-image:hover,
+  .expandable-image:focus-visible {
+    outline: none;
+    box-shadow:
+      0 0 0 2px rgb(59 130 246 / 0.55),
+      0 12px 32px -18px rgb(15 23 42 / 0.45);
+  }
+
+  .dark .expandable-image:hover,
+  .dark .expandable-image:focus-visible {
+    box-shadow:
+      0 0 0 2px rgb(96 165 250 / 0.55),
+      0 14px 36px -18px rgb(2 6 23 / 0.8);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .expandable-image {
+      transition: none;
+    }
+  }
+}
+
+@layer components {
+  /* A package's release history, drawn down one rail.
+
+     The same family as the capabilities run further up a package's page: a
+     hairline behind a gutter, marks drawn straight on it. Here each mark is
+     a release, and what it looks like says how big a step the release was.
+     A patch is a small dot on the line; a minor is a larger filled one; a
+     major is a ring, larger again, that the line passes through; the first
+     release is a solid stop at the bottom, where the rail ends. A release
+     with a breaking change carries the mark in red whatever its step, so
+     a reader scanning the closed list finds the two things worth stopping
+     for, the majors and the breaks, without opening anything.
+
+     Every release is a native disclosure, so it opens and closes with the
+     keyboard and without a script, and the page's own script only decides
+     which ones start open. The summary is a grid: the mark in the gutter,
+     the version and the day, the facts about what the notes hold, and the
+     caret; on a phone the facts drop under the version rather than being
+     squeezed beside it. */
+  .changelog {
+    position: relative;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .changelog::before {
+    content: '';
+    position: absolute;
+    left: 0.6875rem;
+    top: 0.75rem;
+    bottom: 0.75rem;
+    width: 1px;
+    background-color: rgb(100 116 139 / 0.5);
+  }
+
+  .dark .changelog::before {
+    background-color: rgb(148 163 184 / 0.4);
+  }
+
+  .changelog__release {
+    position: relative;
+    margin: 0;
+  }
+
+  .changelog__release + .changelog__release {
+    margin-top: 0.25rem;
+  }
+
+  .changelog__details {
+    border-radius: 0.625rem;
+    transition: background-color 150ms ease-out;
+  }
+
+  .changelog__details[open] {
+    background-color: rgb(248 250 252 / 0.6);
+  }
+
+  .dark .changelog__details[open] {
+    background-color: rgb(30 41 59 / 0.35);
+  }
+
+  .changelog__summary {
+    display: grid;
+    grid-template-columns: 1.5rem minmax(0, 1fr) auto 1rem;
+    grid-template-areas: 'mark heading facts caret';
+    align-items: center;
+    column-gap: 0.75rem;
+    padding: 0.625rem 0.5rem 0.625rem 0;
+    border-radius: 0.625rem;
+    cursor: pointer;
+    list-style: none;
+    transition: background-color 150ms ease-out;
+  }
+
+  .changelog__summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .changelog__summary:hover {
+    background-color: rgb(241 245 249 / 0.7);
+  }
+
+  .dark .changelog__summary:hover {
+    background-color: rgb(30 41 59 / 0.5);
+  }
+
+  .changelog__summary:focus-visible {
+    outline: 2px solid theme('colors.primary.500');
+    outline-offset: 2px;
+  }
+
+  @media (max-width: 639px) {
+    .changelog__summary {
+      grid-template-columns: 1.5rem minmax(0, 1fr) 1rem;
+      grid-template-areas:
+        'mark heading caret'
+        'mark facts caret';
+      row-gap: 0.125rem;
+    }
+  }
+
+  /* The mark: a box the width of the gutter, with the release drawn in its
+     centre by a pseudo-element the step sizes. It is the one thing in the
+     summary that the rail's hairline has to be able to pass behind, which is
+     why the ring is a border rather than a fill. */
+  .changelog__marker {
+    grid-area: mark;
+    position: relative;
+    display: block;
+    width: 1.5rem;
+    height: 1.5rem;
+    align-self: center;
+  }
+
+  .changelog__marker::before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 9999px;
+    transform: translate(-50%, -50%);
+    background-color: theme('colors.slate.400');
+    box-shadow: 0 0 0 3px theme('colors.white');
+  }
+
+  .dark .changelog__marker::before {
+    background-color: theme('colors.slate.500');
+    box-shadow: 0 0 0 3px theme('colors.slate.900');
+  }
+
+  .changelog__release[data-step='minor'] .changelog__marker::before {
+    width: 0.75rem;
+    height: 0.75rem;
+    background-color: hsl(var(--page-accent, 217) 62% 48%);
+  }
+
+  .dark .changelog__release[data-step='minor'] .changelog__marker::before {
+    background-color: hsl(var(--page-accent, 217) 72% 66%);
+  }
+
+  .changelog__release[data-step='major'] .changelog__marker::before {
+    width: 1rem;
+    height: 1rem;
+    background-color: theme('colors.white');
+    border: 2.5px solid hsl(var(--page-accent, 217) 62% 44%);
+  }
+
+  .dark .changelog__release[data-step='major'] .changelog__marker::before {
+    background-color: theme('colors.slate.900');
+    border-color: hsl(var(--page-accent, 217) 72% 66%);
+  }
+
+  .changelog__release[data-step='initial'] .changelog__marker::before {
+    width: 0.75rem;
+    height: 0.75rem;
+    border-radius: 0.125rem;
+    background-color: theme('colors.slate.500');
+  }
+
+  .changelog__release[data-breaking] .changelog__marker::before {
+    background-color: theme('colors.red.600');
+    border-color: theme('colors.red.600');
+  }
+
+  .changelog__release[data-breaking][data-step='major'] .changelog__marker::before {
+    background-color: theme('colors.white');
+  }
+
+  .dark .changelog__release[data-breaking] .changelog__marker::before {
+    background-color: theme('colors.red.400');
+    border-color: theme('colors.red.400');
+  }
+
+  .dark .changelog__release[data-breaking][data-step='major'] .changelog__marker::before {
+    background-color: theme('colors.slate.900');
+  }
+
+  .changelog__heading {
+    grid-area: heading;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    column-gap: 0.75rem;
+    row-gap: 0.125rem;
+    min-width: 0;
+  }
+
+  .changelog__version {
+    font-family: theme('fontFamily.mono');
+    font-size: theme('fontSize.base');
+    font-weight: 600;
+    line-height: 1.5;
+    color: theme('colors.slate.900');
+  }
+
+  .dark .changelog__version {
+    color: theme('colors.white');
+  }
+
+  .changelog__release[data-step='major'] .changelog__version {
+    font-size: theme('fontSize.lg');
+  }
+
+  .changelog__date {
+    font-size: theme('fontSize.sm');
+    line-height: 1.5;
+    color: theme('colors.slate.500');
+  }
+
+  .dark .changelog__date {
+    color: theme('colors.slate.400');
+  }
+
+  .changelog__facts {
+    grid-area: facts;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.75rem;
+    line-height: 1.25;
+    color: theme('colors.slate.500');
+  }
+
+  .dark .changelog__facts {
+    color: theme('colors.slate.400');
+  }
+
+  .changelog__breaking,
+  .changelog__item-breaking {
+    display: inline-block;
+    padding: 0.125rem 0.375rem;
+    border-radius: 0.25rem;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: theme('colors.red.800');
+    background-color: rgb(153 27 27 / 0.08);
+  }
+
+  .dark .changelog__breaking,
+  .dark .changelog__item-breaking {
+    color: theme('colors.red.300');
+    background-color: rgb(248 113 113 / 0.12);
+  }
+
+  .changelog__caret {
+    grid-area: caret;
+    color: theme('colors.slate.400');
+    transition: transform 200ms ease-out;
+  }
+
+  .changelog__details[open] .changelog__caret {
+    transform: rotate(180deg);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .changelog__caret {
+      transition: none;
+    }
+  }
+
+  /* The notes, indented past the gutter so they hang off the release rather
+     than off the rail. */
+  .changelog__body {
+    padding: 0.25rem 1rem 1.125rem 2.25rem;
+  }
+
+  .changelog__section + .changelog__section {
+    margin-top: 0.875rem;
+  }
+
+  .changelog__section-title {
+    margin: 0 0 0.375rem;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: theme('colors.slate.500');
+  }
+
+  .dark .changelog__section-title {
+    color: theme('colors.slate.400');
+  }
+
+  .changelog__section[data-kind='breaking'] .changelog__section-title {
+    color: theme('colors.red.700');
+  }
+
+  .dark .changelog__section[data-kind='breaking'] .changelog__section-title {
+    color: theme('colors.red.300');
+  }
+
+  .changelog__items {
+    margin: 0;
+    padding: 0 0 0 1rem;
+    list-style: disc;
+  }
+
+  .changelog__item {
+    margin: 0.25rem 0;
+    font-size: theme('fontSize.sm');
+    line-height: 1.7;
+    color: theme('colors.slate.600');
+  }
+
+  .dark .changelog__item {
+    color: theme('colors.slate.300');
+  }
+
+  .changelog__item::marker {
+    color: theme('colors.slate.300');
+  }
+
+  .dark .changelog__item::marker {
+    color: theme('colors.slate.600');
+  }
+
+  .changelog__item > * + * {
+    margin-left: 0.375rem;
+  }
+
+  .changelog__item code,
+  .changelog__scope {
+    border-radius: 0.25rem;
+    background-color: theme('colors.slate.100');
+    padding: 0.0625rem 0.3125rem;
+    font-size: 0.8125em;
+    color: theme('colors.slate.700');
+  }
+
+  .dark .changelog__item code,
+  .dark .changelog__scope {
+    background-color: theme('colors.slate.800');
+    color: theme('colors.slate.300');
+  }
+
+  .changelog__scope {
+    font-weight: 500;
+  }
+
+  .changelog__item a {
+    color: theme('colors.primary.600');
+    text-decoration: none;
+  }
+
+  .changelog__item a:hover {
+    text-decoration: underline;
+  }
+
+  .dark .changelog__item a {
+    color: theme('colors.primary.400');
+  }
+
+  .changelog__compare {
+    display: inline-block;
+    margin-top: 0.875rem;
+    font-size: 0.75rem;
+    color: theme('colors.primary.600');
+    text-decoration: none;
+  }
+
+  .changelog__compare:hover {
+    text-decoration: underline;
+  }
+
+  .dark .changelog__compare {
+    color: theme('colors.primary.400');
+  }
+
+  /* The line above the title naming the package the history belongs to. */
+  .changelog-eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0 0 0.5rem;
+    font-size: theme('fontSize.sm');
+    color: theme('colors.slate.500');
+  }
+
+  .dark .changelog-eyebrow {
+    color: theme('colors.slate.400');
+  }
+
+  /* The filter row: the search takes the width, the dates take what they need,
+     and on a phone the dates drop under the search as a row of their own. */
+  .changelog-filters__row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 0.75rem;
+  }
+
+  .changelog-filters__dates {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .changelog-filters__date-label {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: theme('colors.slate.500');
+  }
+
+  .dark .changelog-filters__date-label {
+    color: theme('colors.slate.400');
+  }
+
+  .changelog-filters__status {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.25rem 0.75rem;
+    margin: 0.625rem 0 0;
+    font-size: 0.75rem;
+    color: theme('colors.slate.500');
+  }
+
+  .dark .changelog-filters__status {
+    color: theme('colors.slate.400');
+  }
+
+  .changelog-filters__reading code {
+    border-radius: 0.25rem;
+    background-color: theme('colors.slate.100');
+    padding: 0.0625rem 0.3125rem;
+    color: theme('colors.slate.700');
+  }
+
+  .dark .changelog-filters__reading code {
+    background-color: theme('colors.slate.800');
+    color: theme('colors.slate.300');
+  }
+
+  .changelog-filters__clear {
+    color: theme('colors.primary.600');
+    font-weight: 500;
+  }
+
+  .changelog-filters__clear:hover {
+    text-decoration: underline;
+  }
+
+  .dark .changelog-filters__clear {
+    color: theme('colors.primary.400');
+  }
+
+  /* The notice that npm is a release ahead of the page.
+
+     Celebratory in the way a good release note is: a party popper, a few
+     specks of confetti that are drawn once and stay where they land, and
+     a headline that names the version and links to it. Nothing moves except
+     a short fade as it arrives, and that is skipped for a reader who asked
+     for less motion. The disclosure under it explains the lag without taking
+     any room until it is asked to. */
+  .npm-latest-notice {
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.875rem;
+    margin-top: 1.25rem;
+    padding: 0.875rem 1rem;
+    border: 1px solid rgb(245 158 11 / 0.35);
+    border-radius: 0.75rem;
+    background-color: rgb(254 243 199 / 0.45);
+    background-image:
+      radial-gradient(circle at 14% 22%, rgb(244 63 94 / 0.55) 0 2px, transparent 2.5px),
+      radial-gradient(circle at 88% 18%, rgb(59 130 246 / 0.5) 0 2px, transparent 2.5px),
+      radial-gradient(circle at 76% 84%, rgb(16 185 129 / 0.55) 0 2px, transparent 2.5px),
+      radial-gradient(circle at 30% 88%, rgb(245 158 11 / 0.6) 0 2px, transparent 2.5px),
+      radial-gradient(circle at 56% 10%, rgb(168 85 247 / 0.5) 0 1.5px, transparent 2px),
+      radial-gradient(circle at 94% 60%, rgb(244 63 94 / 0.45) 0 1.5px, transparent 2px);
+    animation: npm-latest-notice-arrive 400ms ease-out both;
+  }
+
+  .dark .npm-latest-notice {
+    border-color: rgb(251 191 36 / 0.3);
+    background-color: rgb(120 53 15 / 0.18);
+  }
+
+  @keyframes npm-latest-notice-arrive {
+    from {
+      opacity: 0;
+      transform: translateY(-4px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .npm-latest-notice {
+      animation: none;
+    }
+  }
+
+  .npm-latest-notice__party {
+    flex-shrink: 0;
+    font-size: 1.375rem;
+    line-height: 1.4;
+  }
+
+  .npm-latest-notice__headline {
+    margin: 0;
+    font-size: theme('fontSize.sm');
+    line-height: 1.6;
+    font-weight: 500;
+    color: theme('colors.amber.900');
+  }
+
+  .dark .npm-latest-notice__headline {
+    color: theme('colors.amber.100');
+  }
+
+  .npm-latest-notice__version {
+    font-family: theme('fontFamily.mono');
+    font-weight: 600;
+    color: theme('colors.amber.900');
+    text-decoration: underline;
+    text-decoration-color: rgb(180 83 9 / 0.5);
+    text-underline-offset: 0.2em;
+  }
+
+  .npm-latest-notice__version:hover {
+    text-decoration-color: currentColor;
+  }
+
+  .dark .npm-latest-notice__version {
+    color: theme('colors.amber.100');
+    text-decoration-color: rgb(252 211 77 / 0.5);
+  }
+
+  .npm-latest-notice__details {
+    margin-top: 0.25rem;
+    font-size: 0.75rem;
+    line-height: 1.6;
+    color: theme('colors.amber.800');
+  }
+
+  .dark .npm-latest-notice__details {
+    color: theme('colors.amber.200');
+  }
+
+  .npm-latest-notice__details > summary {
+    cursor: pointer;
+    font-weight: 500;
+  }
+
+  .npm-latest-notice__details > p {
+    margin: 0.25rem 0 0;
+    max-width: 60ch;
+  }
+}
+
+@layer components {
+  /* A run of short commands, laid out as a cross-section rather than a stack.
+
+     Four one-line commands each spanning the whole column is four rows of
+     mostly empty pane. Two columns put them where the eye can take them in
+     together. What separates the cells is a hairline between the columns and
+     a hairline between the rows, and nothing around the outside: a border
+     around the run would be one more rectangle around rectangles, and the
+     commands are already rectangles. The horizontal room is a half again the
+     vertical, because the columns are what the eye crosses.
+
+     Below the two-column width it is a stack again, with the hairline kept
+     between the rows and the side room given back, so a phone reads a plain
+     list with a rule between each entry. */
+  .command-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .command-grid > * {
+    min-width: 0;
+    padding-block: 1rem;
+  }
+
+  .command-grid > *:first-child {
+    padding-top: 0;
+  }
+
+  .command-grid > * + * {
+    border-top: 1px solid theme('colors.slate.200');
+  }
+
+  .dark .command-grid > * + * {
+    border-top-color: theme('colors.slate.800');
+  }
+
+  @media (min-width: 640px) {
+    .command-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .command-grid > * {
+      padding-block: 1.25rem;
+    }
+
+    /* why: the rule between the rows is drawn by the row below it, so it is on every cell from the second row on, and no cell in the first row */
+    .command-grid > *:nth-child(-n + 2) {
+      border-top: 0;
+      padding-top: 0;
+    }
+
+    .command-grid > *:nth-child(odd) {
+      padding-right: 2rem;
+      border-right: 1px solid theme('colors.slate.200');
+    }
+
+    .dark .command-grid > *:nth-child(odd) {
+      border-right-color: theme('colors.slate.800');
+    }
+
+    .command-grid > *:nth-child(even) {
+      padding-left: 2rem;
+    }
+
+    /* why: a run with an odd count leaves the last row a lone cell, and a divider standing beside nothing is a divider to nowhere */
+    .command-grid > *:last-child:nth-child(odd) {
+      border-right: 0;
+    }
+  }
+}
+
+@layer components {
+  /* A number in a circle, marking a step.
+
+     The circle is a fixed box and the number is text, and text is placed in
+     a box by its font's ascent and descent, not by where its ink is. Fonts
+     disagree about that by a couple of pixels either way at this size, so a
+     digit that sits dead centre in one face sits visibly low in another, and
+     this site takes whatever sans the reader's platform offers. Trimming the
+     line box to the cap height puts the ink itself in the centre wherever it
+     is supported; where it is not, the number falls back to the ordinary
+     centring, which is what it always had. */
+  .step-marker {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    border-radius: 9999px;
+    font-weight: 600;
+    line-height: 1;
+    font-variant-numeric: lining-nums tabular-nums;
+    user-select: none;
+  }
+
+  /* why: the trim applies to the block that owns the line box, and inside a flex container that is the digit's own box rather than the container, so the digit is a block of its own */
+  .step-marker__digit {
+    display: block;
+    text-box-trim: trim-both;
+    text-box-edge: cap alphabetic;
+    text-box: trim-both cap alphabetic;
   }
 }
 
@@ -448,7 +2421,8 @@
 
   .key-features__item {
     display: grid;
-    grid-template-columns: 1.75rem 1fr;
+    /* why: a track that can shrink to nothing, so a long inline code in a label wraps on a narrow phone instead of widening the run and the page with it */
+    grid-template-columns: 1.75rem minmax(0, 1fr);
     align-items: baseline;
     margin: 0;
     padding: 0 0 1.125rem;
@@ -535,6 +2509,129 @@
 
   .dark .key-features a {
     color: theme('colors.primary.400');
+  }
+}
+
+@layer components {
+  /* The vocabulary on the core concepts page: a glossary drawn as the same
+     rail-and-marks run the package pages use for their capabilities, with one
+     difference that makes it a glossary. The term has a column of its own, so
+     the four words can be read down the page on their own before any of the
+     definitions are, and each definition starts on the same vertical line. */
+  .vocabulary {
+    position: relative;
+    margin: 1.25rem 0 0;
+    padding: 0;
+  }
+
+  .vocabulary::before {
+    content: '';
+    position: absolute;
+    left: 0.6875rem;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background-color: rgb(148 163 184 / 0.45);
+    -webkit-mask-image: linear-gradient(to bottom, transparent, #000 12%, #000 88%, transparent);
+    mask-image: linear-gradient(to bottom, transparent, #000 12%, #000 88%, transparent);
+  }
+
+  .dark .vocabulary::before {
+    background-color: rgb(148 163 184 / 0.3);
+  }
+
+  .vocabulary__entry {
+    display: grid;
+    grid-template-columns: 1.375rem minmax(0, 1fr);
+    grid-template-areas:
+      'mark term'
+      'mark definition';
+    column-gap: 0.875rem;
+    align-items: start;
+    margin: 0;
+    padding: 0 0 1.25rem;
+  }
+
+  .vocabulary__entry:last-child {
+    padding-bottom: 0;
+  }
+
+  @media (min-width: 640px) {
+    .vocabulary__entry {
+      grid-template-columns: 1.375rem 6.5rem minmax(0, 1fr);
+      grid-template-areas: 'mark term definition';
+      column-gap: 1rem;
+    }
+  }
+
+  /* The mark is a stroked drawing, so the rail would show through it; a ring
+     of the page's own ground lifts it off the line, the way a release marker
+     is lifted on a changelog. */
+  .vocabulary__mark {
+    grid-area: mark;
+    width: 1.375rem;
+    height: 1.375rem;
+    /* why: the drawing's optical centre sits a little above its box, and the term's first line a little below the row's top, so the mark is nudged to meet the term rather than the row */
+    transform: translateY(0.0625rem);
+    border-radius: 9999px;
+    background-color: theme('colors.white');
+    box-shadow: 0 0 0 3px theme('colors.white');
+    color: hsl(var(--page-accent, 217) 62% 40%);
+  }
+
+  .dark .vocabulary__mark {
+    background-color: theme('colors.slate.900');
+    box-shadow: 0 0 0 3px theme('colors.slate.900');
+    color: hsl(var(--page-accent, 217) 72% 68%);
+  }
+
+  .vocabulary__term {
+    grid-area: term;
+    margin: 0;
+    font-family: theme('fontFamily.display');
+    font-weight: 600;
+    line-height: 1.6;
+    color: theme('colors.slate.900');
+  }
+
+  .dark .vocabulary__term {
+    color: theme('colors.white');
+  }
+
+  /* A term is a word first and a link second: it keeps the heading colour and
+     only declares itself on hover, so the column reads as a glossary rather
+     than as a list of links. */
+  .vocabulary__link {
+    color: inherit;
+    text-decoration: none;
+    text-underline-offset: 0.2em;
+    text-decoration-color: hsl(var(--page-accent, 217) 62% 55%);
+  }
+
+  .vocabulary__link:hover {
+    color: theme('colors.primary.600');
+    text-decoration: underline;
+  }
+
+  .dark .vocabulary__link:hover {
+    color: theme('colors.primary.400');
+  }
+
+  .vocabulary__definition {
+    grid-area: definition;
+    margin: 0.125rem 0 0;
+    line-height: 1.7;
+    color: theme('colors.slate.600');
+  }
+
+  @media (min-width: 640px) {
+    .vocabulary__definition {
+      margin-top: 0;
+    }
+  }
+
+  .dark .vocabulary__definition {
+    color: theme('colors.slate.400');
   }
 }
 
@@ -657,6 +2754,13 @@
       --p: 0.55;
     }
   }
+
+  /* why: the environment is a screen's, and a printed record would carry a grain over every page for no reader's benefit */
+  @media print {
+    .page-atmosphere {
+      display: none;
+    }
+  }
 }
 
 @layer components {
@@ -695,24 +2799,18 @@
 
      Scoped to `.doc-measure` rather than applied to every `.prose` on the site
      because the article pages set their own, narrower, editorial width and
-     must not be pulled to this one. */
-  /* The other end of the same problem. A README's title is a package name, and
-     a package name is one unbreakable word set at forty pixels: on a phone it
-     is wider than the screen, and because the anchor link turns every heading
-     into a flex row, the word cannot shrink and takes the whole page sideways
-     with it. `anywhere` rather than `break-word` because only `anywhere`
-     lowers the box's min-content size, which is the number the flex item is
-     refusing to go below. */
-  .readme-content :is(h1, h2, h3, h4, h5, h6) {
-    overflow-wrap: anywhere;
-  }
+     must not be pulled to this one.
 
+     Both rules are written with `:where()` so they carry no specificity of
+     their own: they are the column's default, and a block with a width of its
+     own to state, such as a compact code sample, states it over them without
+     a contest. */
   @media (min-width: 1920px) {
     .doc-measure {
       --doc-measure: 58rem;
     }
 
-    .doc-measure .readme-content > .prose > * {
+    :where(.doc-measure .readme-content > .prose) > * {
       max-width: var(--doc-measure);
     }
 
@@ -720,9 +2818,119 @@
        whole column. A mermaid diagram needs no rule here: it is rendered as a
        sibling of the prose containers rather than inside one, so it already
        spans the column. */
-    .doc-measure .readme-content > .prose > :is(h1, h2, h3, h4, h5, h6, pre, table, figure, img, hr) {
+    :where(.doc-measure .readme-content > .prose) > :where(h1, h2, h3, h4, h5, h6, pre, table, .table-scroll, figure, img, hr) {
       max-width: none;
     }
+  }
+}
+
+@layer components {
+  /* A recording that has a version for each theme.
+
+     The markdown pipeline puts both variants in the page, one after the
+     other, and the theme class on the root decides which is drawn. Both are
+     lazy, and a lazy image that has no box is never fetched, so the page
+     downloads the one it shows and fetches the other only if the reader
+     switches. Each carries its drawn size, so the stage holds its shape
+     before either arrives and the theme switch moves nothing. */
+  .themed-media {
+    display: inline-block;
+    max-width: 100%;
+    line-height: 0;
+  }
+
+  .themed-media__dark {
+    display: none;
+  }
+
+  .dark .themed-media__dark {
+    display: inline;
+  }
+
+  .dark .themed-media__light {
+    display: none;
+  }
+
+  .themed-media img {
+    max-width: 100%;
+    height: auto;
+  }
+}
+
+@layer components {
+  /* A markdown table on a phone.
+
+     A reference table is the second thing on a documentation page, after a
+     long line of code, that is legitimately wider than a phone. It is not
+     asked to wrap: a table whose cells fold onto three lines each is harder to
+     read than one that scrolls. It is wrapped at render time in this box
+     instead, which is the width of its column and scrolls sideways when the
+     table inside is wider, so the table moves and the page does not. */
+  .table-scroll {
+    max-width: 100%;
+    overflow-x: auto;
+  }
+
+  /* The columns of a reference table.
+
+     The page lets any run of text break inside a word as a last resort, so a
+     long path in a paragraph never pushes a phone sideways. Inside a table that
+     last resort is the first thing the layout reaches for: a break anywhere
+     means a cell's narrowest possible width is one character, and the browser
+     hands every column's width to whichever cell has the most prose, breaking
+     `handleRequest` into three lines to do it. Cells keep ordinary wrapping
+     instead, so a column's floor is its longest word; a prose column still
+     folds at its spaces, an identifier stays whole, and a table that is then
+     wider than the page scrolls in its box rather than crushing itself.
+
+     A header is a label and a cell made only of code is a name, and neither is
+     read across two lines, so they are held to one; the pipeline marks the
+     code-only cells because the stylesheet cannot tell them apart. */
+  .prose th,
+  .prose td {
+    overflow-wrap: normal;
+  }
+
+  .prose th,
+  .prose td[data-cell='code'] {
+    white-space: nowrap;
+  }
+
+  /* On a phone the box is narrower than a sentence, and a prose cell given a
+     tenth of it folds into one word per line: a column of forty short lines
+     beside two identifiers. A floor on the prose cells makes the table wider
+     than the box instead, so it scrolls sideways as a table and each cell still
+     reads as a sentence. Only on a phone: on a laptop the column has room and
+     the floor would only force scrolling on a table that fit. */
+  @media (max-width: 640px) {
+    .prose td:not([data-cell='code']) {
+      min-width: 14rem;
+    }
+  }
+}
+
+@layer components {
+  /* A code span that is a link.
+
+     Package prose links the names it mentions to their reference, so most
+     code spans in a README are links, and a link a reader cannot tell from
+     the span beside it is a link nobody follows. The span keeps its chip, and
+     takes the link colour its typography would otherwise paint over, so the
+     names that lead somewhere read as the navigation they are. */
+  .readme-content .prose a > code,
+  .key-features a > code {
+    color: theme('colors.primary.700');
+  }
+
+  .dark .readme-content .prose a > code,
+  .dark .key-features a > code {
+    color: theme('colors.primary.300');
+  }
+
+  .readme-content .prose a:hover > code,
+  .key-features a:hover > code {
+    text-decoration: underline;
+    text-underline-offset: 0.15em;
   }
 }
 

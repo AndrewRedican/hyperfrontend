@@ -149,7 +149,9 @@ export interface Terminal {
  * switched to raw mode for the whole session (restored on `close`),
  * bracketed paste mode is enabled on TTY inputs, and resize events from the
  * output surface as resize tokens. Input chunks are tokenized by a
- * persistent listener so no chunk is lost between reads.
+ * persistent listener so no chunk is lost between reads. When the input
+ * ends, the session cancels and delivers a Ctrl+C key so a waiting read
+ * resolves.
  *
  * @param config - Terminal configuration options
  * @returns Terminal interface with read/write methods
@@ -220,6 +222,11 @@ export function createTerminal(config: TerminalConfig = {}): Terminal {
     deliver(freeze([freeze({ type: TokenType.Resize })]))
   }
 
+  const onEnd = (): void => {
+    // why: an ended input can never deliver another key, so a waiting prompt resolves through the cancellation branch instead of hanging
+    deliver(freeze([freeze({ type: TokenType.Key, value: Key.CtrlC })]))
+  }
+
   const openSession = (): void => {
     if (sessionActive) return
     sessionActive = true
@@ -229,6 +236,7 @@ export function createTerminal(config: TerminalConfig = {}): Terminal {
       write(Ansi.BracketedPasteOn)
     }
     input.on('data', onData)
+    input.once('end', onEnd)
     output.on('resize', onResize)
     input.resume()
   }
@@ -237,6 +245,7 @@ export function createTerminal(config: TerminalConfig = {}): Terminal {
     if (!sessionActive) return
     sessionActive = false
     input.removeListener('data', onData)
+    input.removeListener('end', onEnd)
     output.removeListener('resize', onResize)
     if (input.setRawMode) {
       write(Ansi.BracketedPasteOff)

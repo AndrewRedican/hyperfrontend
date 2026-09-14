@@ -1,11 +1,10 @@
-import type { FlowConfig, FlowEndpoint, FlowMessage, FlowTheme } from '../models/flow'
+import type { FlowConfig, FlowEndpoint, FlowMessage } from '../models/flow'
 import type { MediaProfile } from '../models/profile'
 import type { Stage } from '../models/stage'
+import type { MediaTheme } from '../models/theme'
 import { floor, max, min } from '@hyperfrontend/immutable-api-utils/built-in-copy/math'
 import { escapeHtml } from '../lib/escape-html'
 import { defineStage } from '../stage/define-stage'
-import { STAGE_ELEMENT_ID } from '../stage/document'
-import { resolveFlowTheme } from './themes'
 
 /** How long a message spends in flight when the scene names nothing. */
 const DEFAULT_FLIGHT_MS = 900
@@ -21,12 +20,6 @@ const MONO_RATIO = 0.62
 
 /** Advance width of one character, as a fraction of the font size, for the sans face. */
 const SANS_RATIO = 0.52
-
-/** The face labels and log lines are set in. */
-const FONT_STACK = "'Liberation Sans', 'DejaVu Sans', 'Inter', Helvetica, Arial, sans-serif"
-
-/** The face message names are set in, so a wire label reads as an identifier. */
-const MONO_STACK = "'Liberation Mono', 'DejaVu Sans Mono', 'JetBrains Mono', Menlo, monospace"
 
 /** Where a message is between its two endpoints, and how visible it is. */
 interface PacketPosition {
@@ -100,7 +93,7 @@ function flowMetrics(profile: MediaProfile, hasPhases: boolean): FlowMetrics {
     wirePx,
     logPx,
     titlePx: wide ? 18 : 15,
-    bodyPx: wide ? 13 : 11,
+    bodyPx: wide ? 13 : 12,
     linePx,
     logRows: max(1, floor(room / linePx) - 1),
     dotPx: wide ? 10 : 8,
@@ -182,8 +175,8 @@ function settledAt(config: FlowConfig): number {
  * @param side - Which half of the frame it occupies.
  * @returns Markup for the panel.
  */
-function renderPanel(endpoint: FlowEndpoint, theme: FlowTheme, lit: boolean, side: string): string {
-  const border = lit ? theme.panelActive : theme.panelBorder
+function renderPanel(endpoint: FlowEndpoint, theme: MediaTheme, lit: boolean, side: string): string {
+  const border = lit ? theme.borderActive : theme.border
   const subtitle = endpoint.subtitle === undefined ? '' : `<div class="f-sub">${escapeHtml(endpoint.subtitle)}</div>`
   const note = endpoint.note === undefined ? '' : `<div class="f-note">${escapeHtml(endpoint.note)}</div>`
   return `<div class="f-panel f-panel--${side}" style="border-color:${border}">
@@ -257,18 +250,21 @@ function phaseAt(config: FlowConfig, atMs: number): string {
  *
  * @param config - The diagram as the scene configured it.
  * @param profile - The presentation target being composed for.
+ * @param theme - The visual tokens this variant is drawn with.
  * @returns CSS for this diagram.
  */
-function flowStyles(config: FlowConfig, profile: MediaProfile): string {
-  const theme = resolveFlowTheme(config.theme)
+function flowStyles(config: FlowConfig, profile: MediaProfile, theme: MediaTheme): string {
   const metrics = flowMetrics(profile, (config.phases ?? []).length > 0)
   const wide = profile.width >= WIDE_ENOUGH
+  const finalLines = min(metrics.logRows, config.messages.length)
+  const finalPx = finalLines * metrics.linePx + (config.settled === undefined ? 0 : (wide ? 12 : 8) + metrics.linePx)
+  const roomPx = profile.height - metrics.padPx * 2 - metrics.logPx
+  const logOffset = max(0, floor((roomPx - finalPx) / 2))
   const tones = (['plain', 'muted', 'accent', 'success', 'warning'] as const)
     .map((tone) => `.f-tone--${tone} { color: ${theme.tones[tone]}; }`)
     .join('\n')
   return `
-#${STAGE_ELEMENT_ID} { background: ${theme.backdrop}; font-family: ${FONT_STACK}; color: ${theme.title}; }
-.f-stage { position: absolute; inset: ${metrics.padPx}px; }
+.f-stage { position: absolute; inset: ${metrics.padPx}px; color: ${theme.text.strong}; }
 .f-phase {
   position: absolute;
   left: 0;
@@ -277,30 +273,31 @@ function flowStyles(config: FlowConfig, profile: MediaProfile): string {
   font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: ${theme.phase};
+  color: ${theme.text.muted};
 }
 .f-panel {
   position: absolute;
   top: ${metrics.panelTopPx}px;
   width: ${metrics.panelPx}px;
   padding: ${wide ? 14 : 11}px ${wide ? 16 : 12}px;
-  border: 1px solid ${theme.panelBorder};
+  border: 1px solid ${theme.border};
   border-radius: ${wide ? 12 : 9}px;
-  background: ${theme.panel};
+  background: ${theme.surface};
+  box-shadow: ${theme.shadow};
   transition: none;
 }
 .f-panel--left { left: 0; }
 .f-panel--right { right: 0; text-align: right; }
 .f-title { font-size: ${metrics.titlePx}px; font-weight: 600; letter-spacing: -0.01em; }
-.f-sub { margin-top: 3px; font-size: ${metrics.titlePx - 5}px; color: ${theme.subtitle}; font-family: ${MONO_STACK}; }
-.f-note { margin-top: 2px; font-size: ${metrics.titlePx - 6}px; color: ${theme.tones.muted}; }
+.f-sub { margin-top: 3px; font-size: ${metrics.titlePx - 5}px; color: ${theme.text.muted}; font-family: ${theme.fonts.mono}; }
+.f-note { margin-top: 2px; font-size: ${metrics.titlePx - 6}px; color: ${theme.text.muted}; }
 .f-wire {
   position: absolute;
   left: ${metrics.panelPx}px;
   right: ${metrics.panelPx}px;
   top: ${metrics.wirePx}px;
   height: 1px;
-  background: ${theme.wire};
+  background: ${theme.border};
 }
 .f-packet {
   position: absolute;
@@ -316,8 +313,8 @@ function flowStyles(config: FlowConfig, profile: MediaProfile): string {
   height: ${metrics.dotPx}px;
   margin-left: ${-metrics.dotPx / 2}px;
   border-radius: 50%;
-  background: ${theme.packet};
-  box-shadow: 0 0 ${wide ? 14 : 10}px ${theme.packet};
+  background: ${theme.accent};
+  box-shadow: 0 0 ${wide ? 14 : 10}px ${theme.accent};
 }
 /* why: a repeating pulse is the same fact arriving again, so it is drawn as a smaller, quieter mark than the events either side of it */
 .f-dot--repeat {
@@ -334,33 +331,33 @@ function flowStyles(config: FlowConfig, profile: MediaProfile): string {
   transform: translateX(-50%);
   white-space: nowrap;
   text-align: center;
-  font-family: ${MONO_STACK};
+  font-family: ${theme.fonts.mono};
   font-size: ${metrics.bodyPx}px;
   color: ${theme.tones.accent};
 }
-.f-detail { margin-top: 1px; font-size: ${metrics.bodyPx - 2}px; color: ${theme.subtitle}; font-family: ${FONT_STACK}; }
+.f-detail { margin-top: 1px; font-size: ${metrics.bodyPx - 2}px; color: ${theme.text.muted}; font-family: ${theme.fonts.sans}; }
 /* why: an exchange of six messages in a frame sized for eleven leaves the log
    hugging the wire with a third of the frame empty under it, so the block is
-   centred in the room it has and the composition holds whatever length the
-   scene turns out to be */
+   centred in the room it has. It is centred where it will end, not where it is:
+   a log that re-centred itself on every arrival would move every line already
+   read, and a frame that shifts is a frame the encoder redraws whole */
 .f-log {
   position: absolute;
   left: 0;
   right: 0;
-  top: ${metrics.logPx}px;
+  top: ${metrics.logPx + logOffset}px;
   bottom: 0;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  font-family: ${MONO_STACK};
+  font-family: ${theme.fonts.mono};
   font-size: ${metrics.bodyPx}px;
   line-height: ${metrics.linePx}px;
 }
 .f-line { display: flex; gap: ${wide ? 10 : 7}px; align-items: baseline; }
-.f-arrow { color: ${theme.subtitle}; width: ${wide ? 22 : 17}px; flex: none; text-align: center; }
-.f-carries { color: ${theme.subtitle}; font-family: ${FONT_STACK}; font-size: ${metrics.bodyPx - 1}px; }
+.f-arrow { color: ${theme.text.muted}; width: ${wide ? 22 : 17}px; flex: none; text-align: center; }
+.f-carries { color: ${theme.text.muted}; font-family: ${theme.fonts.sans}; font-size: ${metrics.bodyPx - 1}px; }
 .f-count { color: ${theme.tones.muted}; }
-.f-settled { margin-top: ${wide ? 12 : 8}px; font-family: ${FONT_STACK}; color: ${theme.tones.success}; }
+.f-settled { margin-top: ${wide ? 12 : 8}px; font-family: ${theme.fonts.sans}; color: ${theme.tones.success}; }
 ${tones}
 `
 }
@@ -388,8 +385,7 @@ export const flowStage: Stage<FlowConfig> = defineStage<FlowConfig>({
     return settledAt(config) + (config.restMs ?? 1200)
   },
 
-  frame({ config, profile, atMs }): string {
-    const theme = resolveFlowTheme(config.theme)
+  frame({ config, profile, theme, atMs }): string {
     const metrics = flowMetrics(profile, (config.phases ?? []).length > 0)
     const messages = ordered(config)
     const flying = packetsAt(config, atMs)

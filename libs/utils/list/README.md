@@ -35,11 +35,8 @@
 
 <p align="center">
   <a href="https://www.hyperfrontend.dev/docs/libraries/utils/list/">
-    <img width="640" src="https://www.hyperfrontend.dev/media/list-utils-order/hero.gif" alt="Two side-by-side code panels type the same three pushes into a FIFO list and a LIFO list, then drain them: the left panel returns id 1, 2, 3 and the right returns 3, 2, 1, and both answer false when has() is called with a freshly written identical object">
+    <img width="640" height="360" src="https://www.hyperfrontend.dev/media/list-utils-order/hero.gif" alt="A tube open at both ends and a cup open only at the top, with the same three numbered discs dropped into each; three pulls take the discs out, the tube from its bottom and the cup from its top, and the exit rows read 1 2 3 under the tube and 3 2 1 beside the cup">
   </a>
-</p>
-<p align="center">
-  <sub>The same three objects into both list kinds. Only the order they come back out differs, and an object that merely looks like a member never was one.</sub>
 </p>
 
 Purpose-built collection utilities for queue management, filtering, and iteration patterns.
@@ -55,11 +52,11 @@ The library enforces immutability through frozen interfaces while maintaining hi
 
 ### Key Features
 
-- **FIFO and LIFO queues** with type-safe object tracking
-- **Value picker** for cyclical iteration (ideal for round-robin patterns)
-- **String sanitization** utilities (dedupe, trim, filter empty)
-- **Range generation** for loop-free number sequences
-- **Map utilities** for common Map operations
+- **[FIFO and LIFO queues](https://www.hyperfrontend.dev/docs/libraries/utils/list/#api-createFifoList)** with type-safe object tracking
+- **[Value picker](https://www.hyperfrontend.dev/docs/libraries/utils/list/#api-createValuePicker)** for cyclical iteration (ideal for round-robin patterns)
+- **[String sanitization](https://www.hyperfrontend.dev/docs/libraries/utils/list/#api-uniqueStrings)** utilities (dedupe, trim, filter empty)
+- **[Range generation](https://www.hyperfrontend.dev/docs/libraries/utils/list/#api-createRange)** for loop-free number sequences
+- **[Map utilities](https://www.hyperfrontend.dev/docs/libraries/utils/list/#api-getLastKeyInMap)** for common Map operations
 - **Zero dependencies** - Self-contained implementation with no third-party runtime dependencies
 
 ### Architecture Highlights
@@ -115,22 +112,25 @@ const cleaned = uniqueStrings(nonEmptyStrings(userInputs)) // ['  hello  ', 'wor
 
 ## API Overview
 
-Two ordered collections plus a few standalone helpers; the collections are the place to start. [`createFifoList`](https://www.hyperfrontend.dev/docs/libraries/utils/list/#api-createFifoList) and [`createLifoList`](https://www.hyperfrontend.dev/docs/libraries/utils/list/#api-createLifoList) each take no arguments, are generic over an object type, and return a frozen instance with the same fixed method surface: `push`, `pull`, `map`, `forEach`, `remove`, `has`, `size` and `clear`. Choosing one factory over the other decides which end `pull()` reads from and nothing else about the surrounding code. They diverge on one point, deliberately: pushing an item a FIFO list already holds throws, surfacing a queue that would otherwise take the same job twice, whereas a LIFO list ignores the duplicate and leaves the item where it already was.
+Two ordered collections plus a few standalone helpers; the collections are the place to start. [`createFifoList`](https://www.hyperfrontend.dev/docs/libraries/utils/list/#api-createFifoList) and [`createLifoList`](https://www.hyperfrontend.dev/docs/libraries/utils/list/#api-createLifoList) each take no arguments, are generic over an object type, and return a frozen instance with the same fixed method surface: [`push`](https://www.hyperfrontend.dev/docs/libraries/utils/list/#api-FifoList), [`pull`](https://www.hyperfrontend.dev/docs/libraries/utils/list/#api-FifoList), [`map`](https://www.hyperfrontend.dev/docs/libraries/utils/list/#api-FifoList), [`forEach`](https://www.hyperfrontend.dev/docs/libraries/utils/list/#api-FifoList), [`remove`](https://www.hyperfrontend.dev/docs/libraries/utils/list/#api-FifoList), [`has`](https://www.hyperfrontend.dev/docs/libraries/utils/list/#api-FifoList), [`size`](https://www.hyperfrontend.dev/docs/libraries/utils/list/#api-FifoList) and [`clear`](https://www.hyperfrontend.dev/docs/libraries/utils/list/#api-FifoList). Choosing one factory over the other decides which end `pull()` reads from and nothing else about the surrounding code. They diverge on one point, deliberately: pushing an item a FIFO list already holds throws, surfacing a queue that would otherwise take the same job twice, whereas a LIFO list ignores the duplicate and leaves the item where it already was.
 
 Both are backed by a `Set` of the references you pushed, which has two consequences to know before reaching for either. A primitive is rejected at runtime, not only by the type parameter. And membership is reference identity, so two structurally identical objects are two entries, and `has()` and `remove()` want back the exact reference you handed over.
 
-The helpers are independent of the lists and of each other. [`createValuePicker`](https://www.hyperfrontend.dev/docs/libraries/utils/list/#api-createValuePicker) wraps a non-empty string array in a `current()` and `next()` pair that cycles forever, while [`createRange`](https://www.hyperfrontend.dev/docs/libraries/utils/list/#api-createRange) returns an inclusive run of numbers. For string arrays, [`nonEmptyStrings`](https://www.hyperfrontend.dev/docs/libraries/utils/list/#api-nonEmptyStrings) drops null, undefined, empty and whitespace-only entries but returns the survivors exactly as they arrived: it tests `value.trim()`, it does not trim, so padded values come through padded and [`uniqueStrings`](https://www.hyperfrontend.dev/docs/libraries/utils/list/#api-uniqueStrings) then dedupes on exact string equality, which leaves `'  hello  '` and `'hello'` as two distinct results. The last helper, `getLastKeyInMap`, reads the most recently inserted key of a `Map`.
+The helpers are independent of the lists and of each other. [`createValuePicker`](https://www.hyperfrontend.dev/docs/libraries/utils/list/#api-createValuePicker) wraps a non-empty string array in a `current()` and `next()` pair that cycles forever, while [`createRange`](https://www.hyperfrontend.dev/docs/libraries/utils/list/#api-createRange) returns an inclusive run of numbers. For string arrays, [`nonEmptyStrings`](https://www.hyperfrontend.dev/docs/libraries/utils/list/#api-nonEmptyStrings) drops null, undefined, empty and whitespace-only entries but returns the survivors exactly as they arrived: it tests `value.trim()`, it does not trim, so padded values come through padded and [`uniqueStrings`](https://www.hyperfrontend.dev/docs/libraries/utils/list/#api-uniqueStrings) then dedupes on exact string equality, which leaves `'  hello  '` and `'hello'` as two distinct results. The last helper, [`getLastKeyInMap`](https://www.hyperfrontend.dev/docs/libraries/utils/list/#api-getLastKeyInMap), reads the most recently inserted key of a `Map`.
 
 Every signature, type parameter and thrown error is in the [API reference](https://www.hyperfrontend.dev/docs/libraries/utils/list/#api-reference).
 
 ## Compatibility
 
-| Platform                      | Support |
-| ----------------------------- | :-----: |
-| Browser                       |   ✅    |
-| Node.js                       |   ✅    |
-| Web Workers                   |   ✅    |
-| Deno, Bun, Cloudflare Workers |   ✅    |
+<!-- hf:media start id="runtimes" scene="runtimes-list-utils" asset="runtimes" docs="#compatibility" alt="Runs in Node.js 18 or later, evergreen browsers and web workers" -->
+
+| Environment     | Supported |
+| --------------- | :-------: |
+| Node.js >= 18   |    ✅     |
+| Modern Browsers |    ✅     |
+| Web Workers     |    ✅     |
+
+<!-- hf:media end -->
 
 ### Output Formats
 
@@ -155,7 +155,7 @@ Every signature, type parameter and thrown error is in the [API reference](https
 </script>
 ```
 
-**Global variable:** `HyperfrontendListUtils`
+**Global variable:** [`HyperfrontendListUtils`](https://www.hyperfrontend.dev/docs/libraries/utils/list/)
 
 ## Part of hyperfrontend
 

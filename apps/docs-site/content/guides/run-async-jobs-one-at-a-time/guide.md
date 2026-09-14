@@ -15,7 +15,11 @@ npm install @hyperfrontend/list-utils
 A [`FifoList`](/docs/libraries/utils/list#api-FifoList) holds objects and identifies them by reference, so make each job an object carrying everything needed to run it and to report on it later:
 
 ```js
-const createJob = (id, run) => ({ id, run, onError: (cause) => console.error(`${id} failed`, cause) })
+const createJob = (id, run) => ({
+  id,
+  run,
+  onError: (cause) => console.error(`${id} failed`, cause),
+})
 ```
 
 Holding the work as data rather than as a bare closure is what lets a later step find a specific job, ask whether it is queued, and take it back out.

@@ -5,7 +5,7 @@ import { after as afterAll, afterEach, before as beforeAll, beforeEach } from 'n
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { createBroker } from '../broker/factory'
 import { ACTION_TYPES } from '../types/action'
-import { createContractPair, createMockWindow, linkMockWindows, plaintextFramesTo, simulateMessage } from './test-utils'
+import { collectEvents, createContractPair, createMockWindow, linkMockWindows, plaintextFramesTo, simulateMessage } from './test-utils'
 
 describe('Connection Flow Integration', () => {
   let windowA: MockWindow
@@ -518,6 +518,22 @@ describe('Connection Flow Integration', () => {
       channelA.cancel()
 
       expect(brokerA.getChannel('to-b')).toBeDefined()
+    })
+
+    it('fires cancel exactly once on each side of one cancelled attempt', () => {
+      const { contractA, contractB } = createContractPair(['MSG'], ['ACK'])
+      const { channelA, channelB } = setupPair(contractA, contractB)
+
+      const cancelledA = collectEvents(channelA, ['cancel'])
+      const cancelledB = collectEvents(channelB, ['cancel'])
+
+      channelA.connect()
+      channelA.cancel()
+
+      expect({ initiator: cancelledA, responder: cancelledB }).toEqual({
+        initiator: [{ event: 'cancel', data: { notify: false } }],
+        responder: [{ event: 'cancel', data: { notify: true } }],
+      })
     })
   })
 

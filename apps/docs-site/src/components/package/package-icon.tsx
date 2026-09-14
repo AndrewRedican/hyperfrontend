@@ -31,6 +31,16 @@ const ICON_STROKE_WIDTH = 2
 /** How the one solid element a mark is allowed differs from the stroked ones. */
 const SOLID_ATTRS = { fill: 'currentColor', stroke: 'none' } as const
 
+/** Props for {@link MarkGlyph}. */
+export interface MarkGlyphProps {
+  /** The geometry to draw */
+  mark: PackageMark
+  /** Sizing and colour classes; the mark fills whatever box these give it */
+  className?: string
+  /** What a screen reader should call the mark, omitted when decorative */
+  label?: string
+}
+
 /**
  * One package's mark.
  *
@@ -50,8 +60,22 @@ const SOLID_ATTRS = { fill: 'currentColor', stroke: 'none' } as const
  * ```
  */
 export function PackageIcon({ packageName, className = 'h-6 w-6', label }: PackageIconProps) {
-  const mark: PackageMark = PACKAGE_MARKS[packageName] ?? FALLBACK_MARK
+  return <MarkGlyph mark={PACKAGE_MARKS[packageName] ?? FALLBACK_MARK} className={className} label={label} />
+}
 
+/**
+ * Any mark drawn in the family's grid, stroke and joins.
+ *
+ * The package icon is one caller; a concept that wants an identity in the same
+ * hand, without being a package, is another. Both go through here so the
+ * drawing surface is stated once.
+ * @param props - See {@link MarkGlyphProps}.
+ * @param props.mark - The geometry to draw
+ * @param props.className - Sizing and colour classes
+ * @param props.label - What a screen reader should call the mark, omitted when decorative
+ * @returns The mark.
+ */
+export function MarkGlyph({ mark, className = 'h-6 w-6', label }: MarkGlyphProps) {
   return (
     <svg
       viewBox={ICON_VIEW_BOX}

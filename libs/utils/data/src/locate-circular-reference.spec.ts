@@ -49,6 +49,68 @@ describe('locateCircularReference', () => {
   })
 })
 
+describe('locateCircularReference - with references shared between branches', () => {
+  it('returns an empty list when the same object is reachable through two keys', () => {
+    const shared = { v: 1 }
+    expect(locateCircularReference({ a: shared, b: shared }, '*')).toEqual([])
+  })
+
+  it('returns an empty list when the same object is reachable through two array items', () => {
+    const shared = { v: 1 }
+    expect(locateCircularReference([shared, shared], '*')).toEqual([])
+  })
+
+  it('reports the ancestor the cycle points at when a sibling subtree was visited first', () => {
+    const cycle: Record<string, unknown> = { x: { y: {} } }
+    cycle['e'] = { f: cycle }
+    expect(locateCircularReference({ d: cycle }, '*').map((reference) => reference.toString())).toEqual(['d·e·f → d'])
+  })
+
+  it('reports the depth of a cycle found after a sibling subtree was visited', () => {
+    const cycle: Record<string, unknown> = { x: { y: {} } }
+    cycle['e'] = { f: cycle }
+    expect(locateCircularReference({ d: cycle }, '*')[0].depth).toEqual(2)
+  })
+
+  it('reports a cycle that sits behind a shared reference', () => {
+    const shared: Record<string, unknown> = { v: 1 }
+    shared['self'] = shared
+    expect(locateCircularReference({ a: shared, b: shared }, '*').map((reference) => reference.toString())).toEqual([
+      'a·self → a',
+      'b·self → b',
+    ])
+  })
+})
+
+describe('locateCircularReference - with non-extensible input', () => {
+  it('returns an empty list for a frozen acyclic value', () => {
+    expect(locateCircularReference(Object.freeze({ a: Object.freeze({ b: 1 }) }), '*')).toEqual([])
+  })
+
+  it('returns an empty list for a sealed acyclic value', () => {
+    expect(locateCircularReference(Object.seal({ a: 1 }), '*')).toEqual([])
+  })
+
+  it('locates the cycle in a frozen value that contains itself', () => {
+    const target: Record<string, unknown> = { a: 1 }
+    target['self'] = target
+    Object.freeze(target)
+    expect(locateCircularReference(target, '*').map((reference) => reference.toString())).toEqual(['self → '])
+  })
+})
+
+describe('locateCircularReference - when reading a value throws', () => {
+  it('restores the configuration it turned on', () => {
+    const target = {
+      get explode(): unknown {
+        throw new Error('reader exploded')
+      },
+    }
+    expect(() => locateCircularReference(target)).toThrow('reader exploded')
+    expect(getConfig().detectCircularReferences).toBe(false)
+  })
+})
+
 describe('locateCircularReference - with extended iterable class types', () => {
   beforeEach(() => {
     registerIterableClass<Map<unknown, unknown>>(

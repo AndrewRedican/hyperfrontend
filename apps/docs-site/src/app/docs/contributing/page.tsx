@@ -1,11 +1,22 @@
 import type { Metadata } from 'next'
 import { Breadcrumb } from '@/components/breadcrumb'
 import { CodeBlock } from '@/components/code-block'
+import { CyclingCodeBlock } from '@/components/cycling-code-block'
+import { StepMarker } from '@/components/step-marker'
 
 export const metadata: Metadata = {
   title: 'Contributing',
   description: 'Guide to contributing to hyperfrontend: development setup, coding standards, and pull request guidelines.',
 }
+
+/**
+ * The command that serves each shipped demo, in the order the site lists them.
+ *
+ * Every demo project declares a `dev` target that builds the feature and
+ * serves it hosted, so `nx dev <project>` is the one command that runs any
+ * of them; the project names are the ones in each demo's `project.json`.
+ */
+const DEMO_DEV_COMMANDS = ['npx nx dev demo-clock', 'npx nx dev demo-heartbeat', 'npx nx dev demo-koi-pond']
 
 export default function ContributingPage() {
   return (
@@ -52,12 +63,11 @@ export default function ContributingPage() {
       {/* Getting Started */}
       <section className="mt-12">
         <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Getting Started</h2>
+        {/* why: the marker sits on the label's baseline, which puts the circle's centre on the label's cap height whatever face the platform draws it in; and each body is told to shrink, since a flex item will not go below its content unless told to and a long command would otherwise widen the step, the page, and the phone's viewport with it */}
         <ol className="mt-4 space-y-4 text-slate-600 dark:text-slate-400">
-          <li className="flex gap-3">
-            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary-100 text-sm font-semibold text-primary-700 dark:bg-primary-900/50 dark:text-primary-300">
-              1
-            </span>
-            <div>
+          <li className="flex items-baseline gap-3">
+            <StepMarker number={1} />
+            <div className="min-w-0 flex-1">
               <strong className="text-slate-900 dark:text-white">Fork the repository</strong>
               <p className="mt-1">
                 Create your own fork of{' '}
@@ -68,40 +78,30 @@ export default function ContributingPage() {
               </p>
             </div>
           </li>
-          <li className="flex gap-3">
-            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary-100 text-sm font-semibold text-primary-700 dark:bg-primary-900/50 dark:text-primary-300">
-              2
-            </span>
-            <div>
+          <li className="flex items-baseline gap-3">
+            <StepMarker number={2} />
+            <div className="min-w-0 flex-1">
               <strong className="text-slate-900 dark:text-white">Clone and install</strong>
-              <CodeBlock
-                code="git clone https://github.com/YOUR_USERNAME/hyperfrontend.git&#10;cd hyperfrontend&#10;npm install"
-              />
+              <CodeBlock code={'git clone https://github.com/YOUR_USERNAME/hyperfrontend.git\ncd hyperfrontend\nnpm install'} />
             </div>
           </li>
-          <li className="flex gap-3">
-            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary-100 text-sm font-semibold text-primary-700 dark:bg-primary-900/50 dark:text-primary-300">
-              3
-            </span>
-            <div>
+          <li className="flex items-baseline gap-3">
+            <StepMarker number={3} />
+            <div className="min-w-0 flex-1">
               <strong className="text-slate-900 dark:text-white">Create a branch</strong>
               <CodeBlock code="git checkout -b feat/your-feature-name" />
             </div>
           </li>
-          <li className="flex gap-3">
-            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary-100 text-sm font-semibold text-primary-700 dark:bg-primary-900/50 dark:text-primary-300">
-              4
-            </span>
-            <div>
+          <li className="flex items-baseline gap-3">
+            <StepMarker number={4} />
+            <div className="min-w-0 flex-1">
               <strong className="text-slate-900 dark:text-white">Make your changes</strong>
               <p className="mt-1">Write your code, add tests, and ensure all checks pass.</p>
             </div>
           </li>
-          <li className="flex gap-3">
-            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary-100 text-sm font-semibold text-primary-700 dark:bg-primary-900/50 dark:text-primary-300">
-              5
-            </span>
-            <div>
+          <li className="flex items-baseline gap-3">
+            <StepMarker number={5} />
+            <div className="min-w-0 flex-1">
               <strong className="text-slate-900 dark:text-white">Submit a pull request</strong>
               <p className="mt-1">Open a PR against the main branch with a clear description of your changes.</p>
             </div>
@@ -112,22 +112,24 @@ export default function ContributingPage() {
       {/* Development Commands */}
       <section className="mt-12">
         <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Development Commands</h2>
-        <div className="mt-4 space-y-4">
+        {/* why: four one-line commands are read side by side rather than as four full-width rows, and each block is told to fill its cell so the pair in a row line up whatever the classification would have made them */}
+        <div className="command-grid mt-4">
           <div>
             <h3 className="font-semibold text-slate-900 dark:text-white">Run tests</h3>
-            <CodeBlock code="npx nx run-many -t test" />
+            <CodeBlock code="npx nx run-many -t test" layout="full" />
           </div>
           <div>
             <h3 className="font-semibold text-slate-900 dark:text-white">Run linting</h3>
-            <CodeBlock code="npx nx run-many -t lint" />
+            <CodeBlock code="npx nx run-many -t lint" layout="full" />
           </div>
           <div>
             <h3 className="font-semibold text-slate-900 dark:text-white">Build all packages</h3>
-            <CodeBlock code="npx nx run-many -t build" />
+            <CodeBlock code="npx nx run-many -t build" layout="full" />
           </div>
           <div>
             <h3 className="font-semibold text-slate-900 dark:text-white">Run a specific demo</h3>
-            <CodeBlock code="npx nx serve chess" />
+            {/* why: the three shipped demos each serve through the same target, so the block types each project's command in turn rather than naming one and implying it is the only one */}
+            <CyclingCodeBlock commands={DEMO_DEV_COMMANDS} layout="full" />
           </div>
         </div>
       </section>

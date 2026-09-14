@@ -5,6 +5,7 @@ import type { GitCommit } from '../../git/models/commit'
 import type { FlowStep } from '../models/step'
 import type { FlowContext, ScopeFilteringConfig, ScopeFilteringStrategy } from '../models/types'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
+import { keys } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 
 import { buildSimpleProjectGraph, discoverNxProjects } from '@hyperfrontend/project-scope/nx'
@@ -16,6 +17,7 @@ import {
   deriveProjectScopes,
   toChangelogCommit,
 } from '../../commits/classify'
+import { COMMIT_TYPES } from '../../commits/models/commit-type'
 import { parseConventionalCommit } from '../../commits/parse/message'
 import { createStep } from '../models/step'
 import { DEFAULT_SCOPE_FILTERING_CONFIG } from '../models/types'
@@ -128,7 +130,8 @@ export function createAnalyzeCommitsStep(): FlowStep {
       }
       const strategy = resolveStrategy(scopeFilteringConfig.strategy ?? 'hybrid', rawCommits)
 
-      const releaseTypes = config.releaseTypes ?? ['feat', 'fix', 'perf', 'revert']
+      // why: a forced release names its bump itself, so the commits it lists are everything attributed to the package since the last release, not only the types that could have caused a bump; that is what lets a readme-only release say what changed
+      const releaseTypes = config.releaseAs === undefined ? (config.releaseTypes ?? ['feat', 'fix', 'perf', 'revert']) : keys(COMMIT_TYPES)
       const parsedCommits: CommitWithRaw[] = []
 
       for (const rawCommit of rawCommits) {

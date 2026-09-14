@@ -1,7 +1,7 @@
 {
   "name": "@hyperfrontend/json-utils",
-  "version": "1.0.0",
-  "description": "Zero-dependency JSON Schema validation and generation utilities for JSON Schema Draft v4.",
+  "version": "1.0.1",
+  "description": "Zero-dependency JSON Schema Draft v4 validation and schema generation utilities.",
   "license": "MIT",
   "sideEffects": false,
   "engines": {
@@ -31,6 +31,6 @@
     "functional"
   ],
   "dependencies": {
-    "@hyperfrontend/immutable-api-utils": "1.0.0"
+    "@hyperfrontend/immutable-api-utils": "1.0.1"
   }
 }

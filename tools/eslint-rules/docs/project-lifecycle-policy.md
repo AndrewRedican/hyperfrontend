@@ -116,7 +116,13 @@ A frozen project's `package.json` carrying a test runner:
 ```json
 {
   "metadata": { "lifecycle": { "state": "frozen" } },
-  "targets": { "install": {}, "dev": {}, "build": {}, "typecheck": {}, "audit": {} }
+  "targets": {
+    "install": {},
+    "dev": {},
+    "build": {},
+    "typecheck": {},
+    "audit": {}
+  }
 }
 ```
 

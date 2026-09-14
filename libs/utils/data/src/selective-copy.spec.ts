@@ -302,6 +302,63 @@ describe('selectiveCopy - with config detectCircularReferences:true', () => {
   })
 })
 
+describe('selectiveCopy - with references shared between branches', () => {
+  beforeEach(() => setConfig({ detectCircularReferences: true }))
+
+  afterEach(() => setConfig({ detectCircularReferences: false }))
+
+  it('copies a shared reference into both branches', () => {
+    const shared = { v: 1 }
+    expect(selectiveCopy({ a: shared, b: shared }).clone).toEqual({ a: { v: 1 }, b: { v: 1 } })
+  })
+
+  it('does not wire the second branch back to the clone', () => {
+    const shared = { v: 1 }
+    const clone = selectiveCopy({ a: shared, b: shared }).clone
+    expect(clone.b).not.toBe(clone)
+  })
+
+  it('produces a clone that can be serialized', () => {
+    const shared = { v: 1 }
+    const clone = selectiveCopy({ a: shared, b: shared }).clone
+    expect(JSON.stringify(clone)).toEqual('{"a":{"v":1},"b":{"v":1}}')
+  })
+
+  it('copies a shared reference held in two array items', () => {
+    const shared = { v: 1 }
+    expect(selectiveCopy([shared, shared]).clone).toEqual([{ v: 1 }, { v: 1 }])
+  })
+
+  it('still recreates a cycle that sits behind a shared reference', () => {
+    const shared: Record<string, unknown> = { v: 1 }
+    shared['self'] = shared
+    const clone = selectiveCopy({ a: shared, b: shared }).clone
+    expect(clone.b['self']).toBe(clone.b)
+  })
+})
+
+describe('selectiveCopy - with non-extensible input', () => {
+  beforeEach(() => setConfig({ detectCircularReferences: true }))
+
+  afterEach(() => setConfig({ detectCircularReferences: false }))
+
+  it('clones a frozen value', () => {
+    expect(selectiveCopy(Object.freeze({ a: Object.freeze({ b: 1 }) })).clone).toEqual({ a: { b: 1 } })
+  })
+
+  it('clones a sealed value', () => {
+    expect(selectiveCopy(Object.seal({ a: 1 })).clone).toEqual({ a: 1 })
+  })
+
+  it('recreates the cycle of a frozen value that contains itself', () => {
+    const target: Record<string, unknown> = { a: 1 }
+    target['self'] = target
+    Object.freeze(target)
+    const clone = selectiveCopy(target).clone
+    expect(clone['self']).toBe(clone)
+  })
+})
+
 describe('selectiveCopy - __proto__ pollution prevention (non-circular)', () => {
   beforeEach(() => setConfig({ detectCircularReferences: false }))
 

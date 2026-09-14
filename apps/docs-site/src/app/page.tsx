@@ -5,6 +5,7 @@ import { LandingHero } from '@/components/landing-hero'
 import { LandingLearnSection } from '@/components/landing-learn-section'
 import { LightWell } from '@/components/light-well'
 import { getAllLibraryData } from '@/lib/docs-loader'
+import { getDownloadsSnapshot } from '@/lib/downloads'
 import { FLAGSHIP_PACKAGE } from '@/lib/ecosystem'
 import { selectFeaturedPackages } from '@/lib/landing-highlights'
 
@@ -14,6 +15,7 @@ const NAMED_PACKAGE_COUNT = 8
 export default function HomePage() {
   const libraries = getAllLibraryData()
   const featuredPackages = selectFeaturedPackages(libraries, NAMED_PACKAGE_COUNT)
+  const downloads = getDownloadsSnapshot()
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -21,7 +23,7 @@ export default function HomePage() {
       <main id="main-content" className="flex-1">
         <DemoStageProvider>
           {/* Hero Section - 50/50 Split Layout */}
-          <LandingHero />
+          <LandingHero downloads={downloads === null ? null : { total: downloads.total, packages: downloads.packages.length }} />
 
           {/* Guides, tutorials, demos, and articles as four distinct destinations, in water lit by the staged demo */}
           <LightWell>

@@ -216,10 +216,12 @@ describe('generateShell', () => {
     )
   })
 
-  it('names the shell package after the feature with module type', () => {
-    expect(parse(stage().read('package.json', 'utf-8') ?? '')).toEqual(
-      expect.objectContaining({ name: 'clock-shell', version: '1.0.0', type: 'module' })
-    )
+  it('names the shell package after the feature', () => {
+    expect(parse(stage().read('package.json', 'utf-8') ?? '')).toEqual(expect.objectContaining({ name: 'clock-shell', version: '1.0.0' }))
+  })
+
+  it('declares no module type, so the published require entry stays CommonJS', () => {
+    expect(parse(stage().read('package.json', 'utf-8') ?? '')).not.toHaveProperty('type')
   })
 
   it('declares no dependencies in the shell package', () => {

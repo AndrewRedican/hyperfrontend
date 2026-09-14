@@ -28,7 +28,7 @@ export function addressPort(server: Server): number {
  * @param server - The server to start.
  * @param port - The requested port (`0` lets the OS choose, used in tests).
  * @param host - Optional interface to bind; every interface when omitted.
- * @returns A promise for the actually-bound port.
+ * @returns A promise for the actually-bound port, rejected with the bind error when the port cannot be taken.
  *
  * @example Listening on an OS-assigned port
  * ```typescript
@@ -36,12 +36,20 @@ export function addressPort(server: Server): number {
  * ```
  */
 export function listen(server: Server, port: number, host?: string): Promise<number> {
-  return createPromise((resolve) => {
+  return createPromise((resolve, reject) => {
+    // why: Node reports a refused bind (EADDRINUSE, EACCES) as an 'error' event on the server; with no listener it becomes an uncaught exception that bypasses the caller's own error handling and takes the process down.
+    const onFailedBind = (error: Error) => reject(error)
+    server.once('error', onFailedBind)
+    const onBound = () => {
+      // why: The bind is the only failure this handler answers for; leaving it attached would turn a later runtime error into a settled-promise no-op instead of the server's own 'error' path.
+      server.removeListener('error', onFailedBind)
+      resolve(addressPort(server))
+    }
     if (host === undefined) {
-      server.listen(port, () => resolve(addressPort(server)))
+      server.listen(port, onBound)
       return
     }
-    server.listen(port, host, () => resolve(addressPort(server)))
+    server.listen(port, host, onBound)
   })
 }
 

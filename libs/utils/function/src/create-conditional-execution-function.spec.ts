@@ -13,6 +13,19 @@ describe('createConditionalExecutionFunction', () => {
     expect(condition).toHaveBeenCalled()
   })
 
+  it('calls the wrapped function with the receiver it was invoked on', () => {
+    const host = {
+      value: 'host',
+      read: createConditionalExecutionFunction(
+        function (this: { value: string }) {
+          return this.value
+        },
+        () => true
+      ),
+    }
+    expect(host.read()).toBe('host')
+  })
+
   it('does not execute the function when the condition is false', () => {
     const testFunc = jest.fn((x: number) => x * 3)
     const condition = jest.fn(() => false)

@@ -131,6 +131,28 @@ export default function Page() { return null }`,
   },
   {
     code: `import type { Metadata } from 'next'
+import { getChangelogMetadata } from '@/lib/metadata'
+
+export function generateMetadata(): Metadata {
+  return getChangelogMetadata('versioning')
+}
+
+export default function Page() { return null }`,
+    filename: pageFile('docs/libraries/versioning/releases'),
+  },
+  {
+    code: `import type { Metadata } from 'next'
+import { getChangelogMetadata } from '@/lib/metadata'
+
+export function generateMetadata(): Metadata {
+  return getChangelogMetadata('data-utils')
+}
+
+export default function Page() { return null }`,
+    filename: pageFile('docs/libraries/utils/data/releases'),
+  },
+  {
+    code: `import type { Metadata } from 'next'
 import { getSubmoduleMetadata } from '@/lib/metadata'
 
 export function generateMetadata(): Metadata {
@@ -234,6 +256,39 @@ export default function Page() { return null }`,
  * client pages, placeholders, and mismatched helper arguments
  */
 const invalidCases: InvalidTestCase<MessageIds, TestOptions>[] = [
+  {
+    code: `export default function Page() { return null }`,
+    output: `import type { Metadata } from 'next'
+import { getChangelogMetadata } from '@/lib/metadata'
+
+export function generateMetadata(): Metadata {
+  return getChangelogMetadata('nexus')
+}
+
+export default function Page() { return null }`,
+    filename: pageFile('docs/libraries/nexus/releases'),
+    errors: [{ messageId: 'missingMetadata' }],
+  },
+  {
+    code: `import type { Metadata } from 'next'
+import { getChangelogMetadata } from '@/lib/metadata'
+
+export function generateMetadata(): Metadata {
+  return getChangelogMetadata('string')
+}
+
+export default function Page() { return null }`,
+    output: `import type { Metadata } from 'next'
+import { getChangelogMetadata } from '@/lib/metadata'
+
+export function generateMetadata(): Metadata {
+  return getChangelogMetadata('string-utils')
+}
+
+export default function Page() { return null }`,
+    filename: pageFile('docs/libraries/utils/string/releases'),
+    errors: [{ messageId: 'wrongMetadataArg', data: { property: 'slug', expected: "'string-utils'" } }],
+  },
   {
     code: `import { Breadcrumb } from '@/components/breadcrumb'
 import Link from 'next/link'

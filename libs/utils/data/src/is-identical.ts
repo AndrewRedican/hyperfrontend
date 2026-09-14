@@ -89,7 +89,10 @@ const isIdenticalForCircularReferencesRecursive = (
       continue
     }
     registerRefs()
-    if (!isIdenticalForCircularReferencesRecursive(nextA, nextB, ...stacks)) {
+    const identical = isIdenticalForCircularReferencesRecursive(nextA, nextB, ...stacks)
+    stacks[0].remove(nextA)
+    stacks[1].remove(nextB)
+    if (!identical) {
       clear()
       return false
     }
@@ -117,8 +120,11 @@ const isIdenticalForCircularReferencesRecursive = (
  */
 export const isIdentical = (targetA: unknown, targetB: unknown): boolean => {
   const targets = [targetA, targetB] as [UnknownIterable, UnknownIterable]
-  if (getConfig().detectCircularReferences) {
-    return isIdenticalForCircularReferencesRecursive(...targets, referenceStack(), referenceStack())
+  if (!getConfig().detectCircularReferences) return isIdenticalRecursive(...targets)
+  const stacks = [referenceStack(), referenceStack()]
+  try {
+    return isIdenticalForCircularReferencesRecursive(...targets, ...stacks)
+  } finally {
+    clearStacks(stacks)
   }
-  return isIdenticalRecursive(...targets)
 }

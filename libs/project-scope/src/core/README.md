@@ -1,6 +1,6 @@
 # Core Module
 
-The `core` module provides foundational utilities for file system operations, path manipulation, logging, caching, error handling, and pattern matching. These utilities are used throughout the library and are also available for consumers.
+The core module provides foundational utilities for file system operations, path manipulation, logging, caching, error handling, and pattern matching. These utilities are used throughout the library and are also available for consumers.
 
 ## Capabilities
 
@@ -42,24 +42,24 @@ if (exists('./config.json') && isFile('./config.json')) {
 
 #### Key Functions
 
-| Function                 | Description                               |
-| ------------------------ | ----------------------------------------- |
-| `readFileContent`        | Read file as string with encoding support |
-| `readFileBuffer`         | Read file as Buffer                       |
-| `readFileIfExists`       | Read file or return null                  |
-| `readJsonFile`           | Parse JSON file with type inference       |
-| `readJsonFileIfExists`   | Parse JSON file or return null            |
-| `writeFileContent`       | Write string to file                      |
-| `writeFileBuffer`        | Write Buffer to file                      |
-| `writeJsonFile`          | Serialize and write JSON                  |
-| `ensureDir`              | Create directory recursively              |
-| `readDirectory`          | List directory contents                   |
-| `readDirectoryRecursive` | List contents recursively                 |
-| `exists`                 | Check if path exists                      |
-| `isFile`                 | Check if path is a file                   |
-| `isDirectory`            | Check if path is a directory              |
-| `isSymlink`              | Check if path is a symlink                |
-| `getFileStat`            | Get detailed file statistics              |
+| Function                                                                                                                | Description                               |
+| ----------------------------------------------------------------------------------------------------------------------- | ----------------------------------------- |
+| [`readFileContent`](https://www.hyperfrontend.dev/docs/libraries/project-scope/core/#api-readFileContent)               | Read file as string with encoding support |
+| [`readFileBuffer`](https://www.hyperfrontend.dev/docs/libraries/project-scope/core/#api-readFileBuffer)                 | Read file as Buffer                       |
+| [`readFileIfExists`](https://www.hyperfrontend.dev/docs/libraries/project-scope/core/#api-readFileIfExists)             | Read file or return null                  |
+| [`readJsonFile`](https://www.hyperfrontend.dev/docs/libraries/project-scope/core/#api-readJsonFile)                     | Parse JSON file with type inference       |
+| [`readJsonFileIfExists`](https://www.hyperfrontend.dev/docs/libraries/project-scope/core/#api-readJsonFileIfExists)     | Parse JSON file or return null            |
+| [`writeFileContent`](https://www.hyperfrontend.dev/docs/libraries/project-scope/core/#api-writeFileContent)             | Write string to file                      |
+| [`writeFileBuffer`](https://www.hyperfrontend.dev/docs/libraries/project-scope/core/#api-writeFileBuffer)               | Write Buffer to file                      |
+| [`writeJsonFile`](https://www.hyperfrontend.dev/docs/libraries/project-scope/core/#api-writeJsonFile)                   | Serialize and write JSON                  |
+| [`ensureDir`](https://www.hyperfrontend.dev/docs/libraries/project-scope/core/#api-ensureDir)                           | Create directory recursively              |
+| [`readDirectory`](https://www.hyperfrontend.dev/docs/libraries/project-scope/core/#api-readDirectory)                   | List directory contents                   |
+| [`readDirectoryRecursive`](https://www.hyperfrontend.dev/docs/libraries/project-scope/core/#api-readDirectoryRecursive) | List contents recursively                 |
+| [`exists`](https://www.hyperfrontend.dev/docs/libraries/project-scope/core/#api-exists)                                 | Check if path exists                      |
+| [`isFile`](https://www.hyperfrontend.dev/docs/libraries/project-scope/core/#api-isFile)                                 | Check if path is a file                   |
+| [`isDirectory`](https://www.hyperfrontend.dev/docs/libraries/project-scope/core/#api-isDirectory)                       | Check if path is a directory              |
+| [`isSymlink`](https://www.hyperfrontend.dev/docs/libraries/project-scope/core/#api-isSymlink)                           | Check if path is a symlink                |
+| [`getFileStat`](https://www.hyperfrontend.dev/docs/libraries/project-scope/core/#api-getFileStat)                       | Get detailed file statistics              |
 
 ### Path Utilities (`path/`)
 

@@ -35,11 +35,8 @@
 
 <p align="center">
   <a href="https://www.hyperfrontend.dev/docs/libraries/utils/function/">
-    <img width="640" src="https://www.hyperfrontend.dev/media/function-utils-lanes/hero.gif" alt="Four terminal columns typing the same three calls: the unwrapped one throws on the second and stops, run-once returns its cached 1 three times, the conditional one prints undefined for the shut gate, and the error-ignoring one prints undefined and carries on">
+    <img width="640" height="360" src="https://www.hyperfrontend.dev/media/function-utils-lanes/hero.gif" alt="Four vertical lanes, each with a send box in the middle, and the same three numbered tokens dropped into all four at once while an online switch in the margin goes off for the second call: the bare lane throws and dies, the run-once lane sends its first token through and bypasses the rest with the cached 1, the conditional lane stops the second token at a shut gate and passes the third, and the error-ignoring lane absorbs the throw behind a shield and carries on">
   </a>
-</p>
-<p align="center">
-  <sub>One function, three calls, four columns. The second call fails, and what each wrapper does about it is the whole library.</sub>
 </p>
 
 Higher-order function utilities for behavioral modification and composition.
@@ -49,16 +46,16 @@ Higher-order function utilities for behavioral modification and composition.
 
 ## What is @hyperfrontend/function-utils?
 
-`@hyperfrontend/function-utils` provides lightweight functional wrappers that modify the execution behavior of functions without changing their signatures. The library focuses on common patterns like single-execution guarantees, conditional execution, error suppression, and no-op placeholders, all implemented as composable higher-order functions.
+[`@hyperfrontend/function-utils`](https://www.hyperfrontend.dev/docs/libraries/utils/function/) provides lightweight functional wrappers that modify the execution behavior of functions without changing their signatures. The library focuses on common patterns like single-execution guarantees, conditional execution, error suppression, and no-op placeholders, all implemented as composable higher-order functions.
 
 Each utility maintains the original function's type signature through generic constraints, ensuring type safety while adding behavioral modifications. The implementations use closure-based state management to track execution context (like memoized results or call counts) without external dependencies or complex class hierarchies.
 
 ### Key Features
 
-- **Run-once enforcement** - Memoize first result and prevent subsequent executions (lazy initialization, singleton setup)
-- **Conditional execution** - Guard function calls behind runtime predicates without inline conditionals
-- **Error suppression** - Silent exception handling for void functions where failures are acceptable
-- **No-op placeholder** - Type-safe no-operation function for default parameters and optional callbacks
+- **[Run-once enforcement](https://www.hyperfrontend.dev/docs/libraries/utils/function/#api-createRunOnceFunction)** - Memoize first result and prevent subsequent executions (lazy initialization, singleton setup)
+- **[Conditional execution](https://www.hyperfrontend.dev/docs/libraries/utils/function/#api-createConditionalExecutionFunction)** - Guard function calls behind runtime predicates without inline conditionals
+- **[Error suppression](https://www.hyperfrontend.dev/docs/libraries/utils/function/#api-createErrorIgnoringFunction)** - Silent exception handling for void functions where failures are acceptable
+- **[No-op placeholder](https://www.hyperfrontend.dev/docs/libraries/utils/function/#api-noop)** - Type-safe no-operation function for default parameters and optional callbacks
 - **Full type preservation** - Generic constraints maintain original function signatures through transformations
 - **Zero dependencies** - Self-contained higher-order functions with no external dependencies
 - **Minimal overhead** - Simple closure-based implementations with negligible performance impact
@@ -86,11 +83,11 @@ Some operations (analytics tracking, debug logging, experimental features) shoul
 
 ### 4. Foundation for Logger Error Handling
 
-The `@hyperfrontend/logging` library uses `createErrorIgnoringFunction()` and `createConditionalExecutionFunction()` extensively to prevent logging failures from crashing applications and to implement log level filtering. These utilities enable the logger to be resilient and configurable without defensive try-catch blocks throughout the logging implementation.
+The [`@hyperfrontend/logging`](https://www.hyperfrontend.dev/docs/libraries/logging/) library uses `createErrorIgnoringFunction()` and `createConditionalExecutionFunction()` extensively to prevent logging failures from crashing applications and to implement log level filtering. These utilities enable the logger to be resilient and configurable without defensive try-catch blocks throughout the logging implementation.
 
 ### 5. Type-Safe No-Op for Optional Callbacks
 
-Default parameters and optional callback patterns often require placeholder no-op functions. Using `() => {}` loses type information and creates subtle bugs when functions expect specific signatures. The `noop` utility provides a type-safe placeholder that accepts any arguments and returns void, working correctly as a default for any callback pattern.
+Default parameters and optional callback patterns often require placeholder no-op functions. Using `() => {}` loses type information and creates subtle bugs when functions expect specific signatures. The [`noop`](https://www.hyperfrontend.dev/docs/libraries/utils/function/#api-noop) utility provides a type-safe placeholder that accepts any arguments and returns void, working correctly as a default for any callback pattern.
 
 ## Installation
 
@@ -232,12 +229,15 @@ const result: number = addOnce(2, 3) // Type safe ✓
 
 ## Compatibility
 
-| Platform                      | Support |
-| ----------------------------- | :-----: |
-| Browser                       |   ✅    |
-| Node.js                       |   ✅    |
-| Web Workers                   |   ✅    |
-| Deno, Bun, Cloudflare Workers |   ✅    |
+<!-- hf:media start id="runtimes" scene="runtimes-function-utils" asset="runtimes" docs="#compatibility" alt="Runs in Node.js 18 or later, evergreen browsers and web workers" -->
+
+| Environment     | Supported |
+| --------------- | :-------: |
+| Node.js >= 18   |    ✅     |
+| Modern Browsers |    ✅     |
+| Web Workers     |    ✅     |
+
+<!-- hf:media end -->
 
 ### Output Formats
 
@@ -258,11 +258,12 @@ const result: number = addOnce(2, 3) // Type safe ✓
 <script src="https://cdn.jsdelivr.net/npm/@hyperfrontend/function-utils"></script>
 
 <script>
-  const { createRunOnceFunction, createErrorIgnoringFunction, noop } = HyperfrontendFunctionUtils
+  const { createRunOnceFunction, noop } = HyperfrontendFunctionUtils
+  const { createErrorIgnoringFunction } = HyperfrontendFunctionUtils
 </script>
 ```
 
-**Global variable:** `HyperfrontendFunctionUtils`
+**Global variable:** [`HyperfrontendFunctionUtils`](https://www.hyperfrontend.dev/docs/libraries/utils/function/)
 
 ### Dependencies
 

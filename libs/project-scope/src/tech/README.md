@@ -1,6 +1,6 @@
 # Tech Module
 
-The `tech` module provides comprehensive technology stack detection for JavaScript/TypeScript projects. It identifies frontend frameworks, backend frameworks, build tools, testing frameworks, type systems, linting tools, and legacy frameworks.
+The tech module provides comprehensive technology stack detection for JavaScript/TypeScript projects. It identifies frontend frameworks, backend frameworks, build tools, testing frameworks, type systems, linting tools, and legacy frameworks.
 
 ## Capabilities
 
@@ -84,15 +84,15 @@ for (const detector of frameworkDetectors) {
 
 #### Supported Frontend Frameworks
 
-| Framework | Meta-frameworks        | Detection Sources                 |
-| --------- | ---------------------- | --------------------------------- |
-| React     | Next.js, Gatsby, Remix | `react`, `react-dom` packages     |
-| Vue       | Nuxt                   | `vue` package, `.vue` files       |
-| Angular   |                        | `@angular/core` package           |
-| Svelte    | SvelteKit              | `svelte` package, `.svelte` files |
-| Solid     |                        | `solid-js` package                |
-| Qwik      |                        | `@builder.io/qwik` package        |
-| Astro     |                        | `astro` package                   |
+| Framework | Meta-frameworks        | Detection Sources                                                                                               |
+| --------- | ---------------------- | --------------------------------------------------------------------------------------------------------------- |
+| React     | Next.js, Gatsby, Remix | [`react`](https://www.npmjs.com/package/react), [`react-dom`](https://www.npmjs.com/package/react-dom) packages |
+| Vue       | Nuxt                   | [`vue`](https://www.npmjs.com/package/vue) package, `.vue` files                                                |
+| Angular   |                        | [`@angular/core`](https://www.npmjs.com/package/@angular/core) package                                          |
+| Svelte    | SvelteKit              | [`svelte`](https://www.npmjs.com/package/svelte) package, `.svelte` files                                       |
+| Solid     |                        | `solid-js` package                                                                                              |
+| Qwik      |                        | `@builder.io/qwik` package                                                                                      |
+| Astro     |                        | [`astro`](https://www.npmjs.com/package/astro) package                                                          |
 
 ### Backend Framework Detection
 
@@ -108,13 +108,13 @@ for (const detection of detections) {
 
 #### Supported Backend Frameworks
 
-| Framework | Type        | Detection Sources      |
-| --------- | ----------- | ---------------------- |
-| Express   | http-server | `express` package      |
-| NestJS    | framework   | `@nestjs/core` package |
-| Fastify   | http-server | `fastify` package      |
-| Koa       | http-server | `koa` package          |
-| Hono      | http-server | `hono` package         |
+| Framework | Type        | Detection Sources                                          |
+| --------- | ----------- | ---------------------------------------------------------- |
+| Express   | http-server | [`express`](https://www.npmjs.com/package/express) package |
+| NestJS    | framework   | `@nestjs/core` package                                     |
+| Fastify   | http-server | [`fastify`](https://www.npmjs.com/package/fastify) package |
+| Koa       | http-server | [`koa`](https://www.npmjs.com/package/koa) package         |
+| Hono      | http-server | [`hono`](https://www.npmjs.com/package/hono) package       |
 
 ### Build Tool Detection
 
@@ -131,15 +131,15 @@ for (const detector of buildToolDetectors) {
 
 #### Supported Build Tools
 
-| Tool    | Detection Sources                             |
-| ------- | --------------------------------------------- |
-| Webpack | `webpack` package, `webpack.config.*` files   |
-| Vite    | `vite` package, `vite.config.*` files         |
-| esbuild | `esbuild` package                             |
-| Rollup  | `rollup` package, `rollup.config.*` files     |
-| Parcel  | `parcel` package                              |
-| SWC     | `@swc/core` package                           |
-| Babel   | `@babel/core` package, `babel.config.*` files |
+| Tool    | Detection Sources                                                                    |
+| ------- | ------------------------------------------------------------------------------------ |
+| Webpack | [`webpack`](https://www.npmjs.com/package/webpack) package, `webpack.config.*` files |
+| Vite    | `vite` package, `vite.config.*` files                                                |
+| esbuild | [`esbuild`](https://www.npmjs.com/package/esbuild) package                           |
+| Rollup  | `rollup` package, `rollup.config.*` files                                            |
+| Parcel  | [`parcel`](https://www.npmjs.com/package/parcel) package                             |
+| SWC     | `@swc/core` package                                                                  |
+| Babel   | `@babel/core` package, `babel.config.*` files                                        |
 
 ### Testing Framework Detection
 
@@ -155,13 +155,13 @@ for (const test of tests) {
 
 #### Supported Testing Frameworks
 
-| Framework  | Type | Detection Sources                         |
-| ---------- | ---- | ----------------------------------------- |
-| Jest       | unit | `jest` package, `jest.config.*` files     |
-| Vitest     | unit | `vitest` package, `vitest.config.*` files |
-| Mocha      | unit | `mocha` package                           |
-| Cypress    | e2e  | `cypress` package, `cypress/` directory   |
-| Playwright | e2e  | `@playwright/test` package                |
+| Framework  | Type | Detection Sources                                                                 |
+| ---------- | ---- | --------------------------------------------------------------------------------- |
+| Jest       | unit | [`jest`](https://www.npmjs.com/package/jest) package, `jest.config.*` files       |
+| Vitest     | unit | [`vitest`](https://www.npmjs.com/package/vitest) package, `vitest.config.*` files |
+| Mocha      | unit | [`mocha`](https://www.npmjs.com/package/mocha) package                            |
+| Cypress    | e2e  | [`cypress`](https://www.npmjs.com/package/cypress) package, `cypress/` directory  |
+| Playwright | e2e  | `@playwright/test` package                                                        |
 
 ### Monorepo Tool Detection
 
@@ -178,13 +178,13 @@ for (const detector of monorepoDetectors) {
 
 #### Supported Monorepo Tools
 
-| Tool            | Detection Sources                  |
-| --------------- | ---------------------------------- |
-| NX              | `nx.json`, `@nx/workspace` package |
-| Turborepo       | `turbo.json`, `turbo` package      |
-| Lerna           | `lerna.json`, `lerna` package      |
-| Rush            | `rush.json`                        |
-| PNPM Workspaces | `pnpm-workspace.yaml`              |
+| Tool            | Detection Sources                                                    |
+| --------------- | -------------------------------------------------------------------- |
+| NX              | `nx.json`, `@nx/workspace` package                                   |
+| Turborepo       | `turbo.json`, [`turbo`](https://www.npmjs.com/package/turbo) package |
+| Lerna           | `lerna.json`, [`lerna`](https://www.npmjs.com/package/lerna) package |
+| Rush            | `rush.json`                                                          |
+| PNPM Workspaces | `pnpm-workspace.yaml`                                                |
 
 ## Detection Result Structure
 

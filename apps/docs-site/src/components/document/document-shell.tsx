@@ -3,6 +3,7 @@
 import type { DocumentDescriptor } from '@/lib/document-model'
 import type { MarkdownSection } from '@/lib/slug'
 import type { ReactNode } from 'react'
+import { DOC_COLUMN_CLASS } from '@/lib/doc-layout'
 import { MIN_INDEX_SECTIONS } from '@/lib/document-model'
 import { navVisibility } from '@/lib/nav-visibility'
 import { useId, useState } from 'react'
@@ -62,7 +63,8 @@ export function DocumentShell({ descriptor, sections = [], actions, note, childr
 
   return (
     <div className="flex gap-8">
-      <div className="min-w-0 flex-1">
+      {/* why: the column is what a code sample measures its width against, and beside the index it is narrower than the shell's own column */}
+      <div className={`min-w-0 flex-1 ${DOC_COLUMN_CLASS}`}>
         <DocumentToolbar sections={indexed} companion={companion} note={note} />
         {children}
       </div>

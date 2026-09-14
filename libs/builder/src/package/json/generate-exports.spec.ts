@@ -102,11 +102,28 @@ describe('generateExportsFromFormats', () => {
     expect(result['.']).toEqual({ types: './index.d.ts', import: './index.esm.js' })
   })
 
-  it('treats a conditional entry with no recognized conditions as a missing source path', () => {
+  it('omits a conditional entry with no recognized conditions instead of aliasing it to the root', () => {
     const srcPkg: PackageJson = { exports: { './weird': { browser: { import: './src/index.ts' } } } }
     const formats: FormatOutputs = { esm: [ROOT], cjs: [], iife: [], umd: [] }
     const result = generateExportsFromFormats(discovery, formats, srcPkg)
-    expect(result['./weird']).toEqual({ types: './index.d.ts', import: './index.esm.js' })
+    expect(result['./weird']).toBeUndefined()
+  })
+
+  it('omits a file-shaped source export instead of aliasing it to the root', () => {
+    const srcPkg: PackageJson = { exports: { '.': './src/index.ts', './utils': './src/utils.ts' } }
+    const formats: FormatOutputs = { esm: [ROOT], cjs: [ROOT], iife: [], umd: [] }
+    const result = generateExportsFromFormats(discovery, formats, srcPkg)
+    expect(result).toEqual({
+      './package.json': './package.json',
+      '.': { types: './index.d.ts', import: './index.esm.js', require: './index.cjs.js' },
+    })
+  })
+
+  it('omits a source export that points outside src/', () => {
+    const srcPkg: PackageJson = { exports: { './lib': './lib/index.js' } }
+    const formats: FormatOutputs = { esm: [ROOT], cjs: [ROOT], iife: [], umd: [] }
+    const result = generateExportsFromFormats(discovery, formats, srcPkg)
+    expect(result['./lib']).toBeUndefined()
   })
 
   it('skips the package.json self-reference when iterating source exports', () => {

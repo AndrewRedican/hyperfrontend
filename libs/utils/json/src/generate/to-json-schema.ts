@@ -112,7 +112,8 @@ function generateSchema(value: unknown, options: Required<GenerateOptions>): Sch
  * @returns An object JSON Schema
  */
 function generateObjectSchema(obj: Record<string, unknown>, options: Required<GenerateOptions>): Schema {
-  const keysList = keys(obj)
+  // why: keys that JSON.stringify drops cannot be required, and a parsed __proto__ key would rewrite the prototype of properties
+  const keysList = keys(obj).filter((key) => key !== '__proto__' && hasJsonRepresentation(obj[key]))
 
   // why: empty object edge case
   if (keysList.length === 0) {
@@ -141,6 +142,16 @@ function generateObjectSchema(obj: Record<string, unknown>, options: Required<Ge
   }
 
   return schema
+}
+
+/**
+ * Tells whether a value survives a round trip through JSON as a property value.
+ *
+ * @param value - Property value to check
+ * @returns false for undefined, functions and symbols, which JSON serialisation omits
+ */
+function hasJsonRepresentation(value: unknown): boolean {
+  return value !== undefined && typeof value !== 'function' && typeof value !== 'symbol'
 }
 
 /**

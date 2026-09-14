@@ -7,8 +7,9 @@ import { isInUnstableGitState } from '../version/lib/is-in-unstable-git-state'
 import { getLogger } from '../version/lib/logger'
 import { runVersionForProject } from '../version/lib/run-version-for-project'
 import { createBatchCommit } from './lib/create-batch-commit'
-import { getAffectedLibraries } from './lib/get-affected-libraries'
+import { getAffectedLibraries, hasVersionTarget } from './lib/get-affected-libraries'
 import { rollbackChanges } from './lib/rollback-changes'
+import { selectLibraries } from './lib/select-libraries'
 
 /** Options declared on the `version` target. */
 interface VersionTargetOptions {
@@ -56,7 +57,7 @@ export default async function versionBatchExecutor(
   context: ExecutorContext
 ): Promise<Pick<VersionBatchResult, 'success'>> {
   const workspaceRoot = context.root
-  const { base = 'origin/main', head = 'HEAD', dryRun = false, verbose = false } = options
+  const { base = 'origin/main', head = 'HEAD', dryRun = false, verbose = false, releaseAs, libraries } = options
 
   const versionTargetDefaults = context.nxJsonConfiguration?.targetDefaults?.['version'] as VersionTargetDefaults | undefined
   const scopeFiltering = options.scopeFiltering ?? versionTargetDefaults?.options?.scopeFiltering
@@ -94,17 +95,28 @@ export default async function versionBatchExecutor(
     const projectGraph = await createProjectGraphAsync()
     logger.debug(`Loaded project graph with ${keys(projectGraph.nodes).length} nodes`)
 
-    const affectedLibraries = await getAffectedLibraries(workspaceRoot, projectGraph, base, head)
+    // why: a forced bump names its libraries, so affected detection is not consulted for it
+    const affected = releaseAs === undefined ? await getAffectedLibraries(workspaceRoot, projectGraph, base, head) : []
+    const selection = selectLibraries(libraries, releaseAs, affected, (name) => hasVersionTarget(projectGraph, name))
+    if (selection.ok === false) {
+      logger.error(selection.reason)
+      return { success: false }
+    }
+    const affectedLibraries = selection.libraries
 
     if (affectedLibraries.length === 0) {
       logger.log('No affected libraries with version target found')
       return { success: true }
     }
 
-    logger.log(`Found ${affectedLibraries.length} affected libraries: ${affectedLibraries.join(', ')}`)
+    logger.log(
+      releaseAs === undefined
+        ? `Found ${affectedLibraries.length} affected libraries: ${affectedLibraries.join(', ')}`
+        : `Forcing a ${releaseAs} bump on ${affectedLibraries.length} libraries: ${affectedLibraries.join(', ')}`
+    )
 
     if (dryRun) {
-      logger.log('[dry-run] Would version the following libraries:')
+      logger.log(`[dry-run] Would version the following libraries${releaseAs === undefined ? '' : ` with a forced ${releaseAs} bump`}:`)
       for (const lib of affectedLibraries) {
         logger.log(`  - ${lib}`)
       }
@@ -141,6 +153,7 @@ export default async function versionBatchExecutor(
           quiet: !verbose,
           scopeFiltering,
           maxCommitFallback,
+          releaseAs,
         })
 
         if (result.success && result.bumped) {

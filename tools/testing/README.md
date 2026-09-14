@@ -70,7 +70,14 @@ gets a jsdom window copied onto the global before its suites run, and before its
 modules, which may therefore assume `document` exists.
 
 ```typescript
-environments: [{ name: 'browser', testMatch: ['src/**/*.spec.ts'], dom: true, setupFiles: ['test.setup.ts'] }]
+environments: [
+  {
+    name: 'browser',
+    testMatch: ['src/**/*.spec.ts'],
+    dom: true,
+    setupFiles: ['test.setup.ts'],
+  },
+]
 ```
 
 Only what jsdom owns is copied. The realm's own intrinsics stay, so `instanceof` keeps

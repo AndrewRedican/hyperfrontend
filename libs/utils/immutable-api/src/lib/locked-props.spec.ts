@@ -23,6 +23,25 @@ describe('lockedProps', () => {
     expect(Object.getOwnPropertyDescriptor(object, 'b')?.writable).toEqual(false)
   })
 
+  it('rejects a property named __proto__', () => {
+    const target = {}
+    expect(() => lockedProps(target, [['__proto__', { polluted: true }]])).toThrow(TypeError)
+    expect(() => lockedProps(target, [['__proto__', { polluted: true }]])).toThrow('Cannot lock a property named __proto__')
+  })
+
+  it('leaves the target untouched when rejecting __proto__', () => {
+    const target = {}
+    expect(() =>
+      lockedProps(target, [
+        ['safe', 1],
+        ['__proto__', { polluted: true }],
+      ])
+    ).toThrow(TypeError)
+    expect(Object.getPrototypeOf(target)).toBe(Object.prototype)
+    expect(Object.getOwnPropertyDescriptor(target, '__proto__')).toBeUndefined()
+    expect(Object.getOwnPropertyDescriptor(target, 'safe')).toBeUndefined()
+  })
+
   it('prevents property descriptors to be changed', () => {
     expect(Object.getOwnPropertyDescriptor(object, 'a')?.configurable).toEqual(false)
     expect(Object.getOwnPropertyDescriptor(object, 'b')?.configurable).toEqual(false)

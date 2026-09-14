@@ -12,8 +12,16 @@ describe('Log Level Configuration Tests', () => {
   })
 
   it('returns false for invalid log levels', () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    expect(isValidLogLevel('querty' as any)).toBe(false)
+    expect(isValidLogLevel('querty')).toBe(false)
+  })
+
+  it('returns false for a value that is not a string', () => {
+    expect(isValidLogLevel(42)).toBe(false)
+  })
+
+  it('narrows an unknown value to a log level', () => {
+    const level: unknown = 'debug'
+    expect(isValidLogLevel(level) ? createLogLevelConfig(level).getLogLevel() : 'not narrowed').toBe('debug')
   })
 
   describe('createLogLevelConfig', () => {
@@ -30,6 +38,13 @@ describe('Log Level Configuration Tests', () => {
     it('throws an error when created with an invalid log level', () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       expect(() => createLogLevelConfig('qwerty' as any)).toThrow(Error)
+    })
+
+    it('names the rejected value in the error thrown for an invalid log level', () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      expect(() => createLogLevelConfig('qwerty' as any)).toThrow(
+        "Cannot create log level configuration with invalid default level 'qwerty'."
+      )
     })
 
     it('returns an immutable log level configuration', () => {

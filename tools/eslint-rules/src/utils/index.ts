@@ -40,6 +40,7 @@ export {
   analyzeKeyFeatures,
   isFeatureBullet,
   parseFeatureBullet,
+  visibleLabel,
 } from './readme-key-features'
 export {
   findNxWorkspaceRoot,

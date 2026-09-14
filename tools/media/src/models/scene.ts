@@ -3,6 +3,7 @@ import type { Determinism, ReadyGate, RecordWindow, ServeSpec, Viewport } from '
 import type { GifOptions, StillFormat } from './encode'
 import type { MediaProfile, ProfileRef } from './profile'
 import type { Stage } from './stage'
+import type { MediaTheme, ThemeId, ThemeOverrides } from './theme'
 
 /** Kinds of artefact a scene can emit. */
 export type SceneOutput = 'gif' | 'still'
@@ -169,6 +170,25 @@ export interface ScriptedSceneInput<TConfig> extends SceneCommon {
   stage: Stage<TConfig>
   /** What this scene configures that stage with. */
   config: TConfig
+  /**
+   * The variants this scene is rendered in.
+   *
+   * Every variant the workspace configures, when omitted. A scene names a
+   * subset only when one of the looks genuinely cannot carry it, which should
+   * be rare: the point of a theme is that the same composition reads in all
+   * of them.
+   */
+  themes?: readonly ThemeId[]
+  /**
+   * The hue the ground behind this scene is tinted with, in degrees.
+   *
+   * The documentation site tints each package's pages with a hue of that
+   * package's own; a scene handed the same number takes the same tint, so an
+   * asset reads as belonging to the page it is embedded in.
+   */
+  hue?: number
+  /** Tokens this scene changes, for every variant or for one. */
+  themeOverrides?: ThemeOverrides
   /** Frames per second, when this scene wants a rate other than its profile's. */
   fps?: number
   /**
@@ -197,6 +217,12 @@ export interface ScriptedScene extends SceneCommon {
   profile: ProfileRef
   /** Name of the stage that draws it, recorded in the audit record. */
   stageId: string
+  /** The variants this scene is rendered in, or undefined for every configured one. */
+  themes?: readonly ThemeId[]
+  /** The hue the ground is tinted with, or undefined for the theme's own. */
+  hue?: number
+  /** Tokens this scene changes, for every variant or for one. */
+  themeOverrides?: ThemeOverrides
   /** Frames per second, when this scene wants a rate other than its profile's. */
   fps?: number
   /** Time held on the closing frame before the animation loops. */
@@ -205,9 +231,10 @@ export interface ScriptedScene extends SceneCommon {
    * The stage's stylesheet, with this scene's configuration already bound.
    *
    * @param profile - The presentation target being composed for.
+   * @param theme - The visual tokens this variant is drawn with.
    * @returns CSS, inlined into the page.
    */
-  styles: (profile: MediaProfile) => string
+  styles: (profile: MediaProfile, theme: MediaTheme) => string
   /**
    * How long the timeline runs, with this scene's configuration already bound.
    *
@@ -219,10 +246,11 @@ export interface ScriptedScene extends SceneCommon {
    * Markup for one instant, with this scene's configuration already bound.
    *
    * @param profile - The presentation target being composed for.
+   * @param theme - The visual tokens this variant is drawn with.
    * @param atMs - Offset from the start of the timeline.
    * @returns HTML placed inside the stage element.
    */
-  frame: (profile: MediaProfile, atMs: number) => string
+  frame: (profile: MediaProfile, theme: MediaTheme, atMs: number) => string
 }
 
 /** Any scene the recorder knows how to run. */

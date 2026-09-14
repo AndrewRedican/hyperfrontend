@@ -96,7 +96,7 @@ analytics.onActiveStatusChange((active) => {
 })
 ```
 
-Write the handler so that running it again with the same value is harmless, because a later subscriber arriving while the flag is up replays the current value to everyone already listening. Handlers that describe a state ("show the panel", "flush what is queued") satisfy that for free; one that increments a counter does not.
+A subscriber that arrives while the flag is already up is handed the current value on the spot, and it is the only handler that runs: the ones that registered earlier are not replayed to. Each handler therefore sees one call per real transition, plus a single catch-up call when it subscribed after the fact.
 
 ## 6. Read a flag when you only need the answer now
 

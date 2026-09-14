@@ -95,7 +95,7 @@ export async function recordBrowserScene(
         ? {}
         : { gif, encoder: outcome.encoder, toolVersions: outcome.toolVersions, bytes: outcome.bytes, frames: outcome.frames }),
       ...(stills.length === 0 ? {} : { stills }),
-      browser: { name: 'chromium', version: launched.browser.version(), executablePath: launched.executablePath },
+      browser: { name: 'chromium', version: launched.browser.version() },
       determinism: scene.determinism ?? {},
       console: session.consoleRecord,
     }

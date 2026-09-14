@@ -20,4 +20,24 @@ describe('randomExponential', () => {
   it('draws from the given source instead of the default', () => {
     expect(randomExponential(2, () => 0.5)).toBeCloseTo(Math.log(2) / 2, 10)
   })
+
+  it('rejects a lambda of zero', () => {
+    expect(() => randomExponential(0)).toThrow('Lambda must be a positive finite number.')
+  })
+
+  it('rejects a negative lambda', () => {
+    expect(() => randomExponential(-1)).toThrow('Lambda must be a positive finite number.')
+  })
+
+  it('rejects a NaN lambda', () => {
+    expect(() => randomExponential(Number.NaN)).toThrow('Lambda must be a positive finite number.')
+  })
+
+  it('rejects an infinite lambda', () => {
+    expect(() => randomExponential(Number.POSITIVE_INFINITY)).toThrow('Lambda must be a positive finite number.')
+  })
+
+  it('returns a positive zero at a unit draw of zero', () => {
+    expect(randomExponential(2, () => 0)).toBe(0)
+  })
 })

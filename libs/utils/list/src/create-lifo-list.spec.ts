@@ -21,6 +21,26 @@ describe('createLifoList', () => {
     it('throws an error for primitives', () => {
       expect(() => lifoList.push(5)).toThrow()
     })
+
+    it('throws an error for null', () => {
+      expect(() => lifoList.push(null)).toThrow()
+    })
+
+    it('accepts an array', () => {
+      lifoList.push([1, 2])
+      expect(lifoList.size()).toBe(1)
+    })
+
+    it('accepts a function', () => {
+      lifoList.push(() => undefined)
+      expect(lifoList.size()).toBe(1)
+    })
+
+    it('accepts a class instance', () => {
+      class Task {}
+      lifoList.push(new Task())
+      expect(lifoList.size()).toBe(1)
+    })
   })
 
   describe('pull()', () => {

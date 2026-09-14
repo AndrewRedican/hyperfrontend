@@ -1,13 +1,15 @@
 'use client'
 
 import type { EcosystemCard, EcosystemLevel, EcosystemLibrary, EcosystemEmphasis, EcosystemTier } from '@/lib/ecosystem'
+import type { SpineSegment } from '@/lib/ecosystem-spine'
 import { TrackedLink } from '@/components/analytics/tracked-link'
 import { Breadcrumb } from '@/components/breadcrumb'
 import { H1 } from '@/components/heading-with-anchor'
 import { PackageIcon } from '@/components/package/package-icon'
 import { buildEcosystem } from '@/lib/ecosystem'
+import { computeSpine } from '@/lib/ecosystem-spine'
 import Link from 'next/link'
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react'
 
 /** Props for {@link LibrariesPageContent}. */
 interface LibrariesPageContentProps {
@@ -54,8 +56,15 @@ const COLUMN_CLASSES = {
   3: 'grid-cols-1 sm:grid-cols-2 xl:grid-cols-3',
 } as const
 
-/** The shared card recipe, before the level's own weight is applied. */
-const CARD_BASE = 'group relative flex flex-col overflow-hidden border transition-colors'
+/** Attribute the spine finds the cards by, whatever level they sit on. */
+const CARD_ATTRIBUTE = 'data-ecosystem-card'
+
+/**
+ * The shared card recipe, before the level's own weight is applied. The
+ * surface itself is `package-card` in the stylesheet, where its glass lives
+ * beside the code block's.
+ */
+const CARD_BASE = 'group package-card flex flex-col overflow-hidden'
 
 /**
  * How a package's mark is drawn behind its card.
@@ -84,7 +93,8 @@ const CARD_MARK =
  *
  * Positioned against the card rather than laid out beside the title, so it
  * lands on the same corner whatever the title does: a package name that wraps
- * to two lines no longer drags it down the card with it.
+ * to two lines no longer drags it down the card with it. It is a cue for the
+ * direction the whole card goes in, not a control of its own.
  */
 const CARD_ARROW =
   'pointer-events-none absolute h-5 w-5 text-slate-400 transition-transform duration-200 group-hover:translate-x-1 group-hover:text-primary-500 dark:text-slate-500'
@@ -92,13 +102,13 @@ const CARD_ARROW =
 /**
  * The version, pinned to the card's bottom-right corner.
  *
- * It is a link to exactly this release on npm, so it sits above the heading's
- * card-covering overlay and takes its own pointer events back. That makes the
- * one part of the card that does not open the package the one part that says
- * where else it could go.
+ * It is a link to exactly this release on npm, so it is stacked above the
+ * heading's card-covering overlay and keeps its own pointer events. That makes
+ * the one part of the card that does not open the package the one part that
+ * says where else it could go.
  */
 const CARD_VERSION =
-  'absolute font-mono text-xs text-slate-400 transition-colors hover:text-primary-600 dark:text-slate-500 dark:hover:text-primary-400'
+  'package-card__version absolute font-mono text-xs text-slate-400 transition-colors hover:text-primary-600 dark:text-slate-500 dark:hover:text-primary-400'
 
 /** The class strings one level applies to its cards. */
 interface EmphasisStyle {
@@ -123,12 +133,12 @@ interface EmphasisStyle {
 /**
  * How a level's weight is drawn. Weight falls with altitude through size and
  * density alone: padding, type scale, and how much of a package the card says
- * out loud. Nothing below the apex changes color, so the descent reads as one
- * surface losing emphasis rather than as five different components.
+ * out loud. Nothing below the apex changes surface, so the descent reads as
+ * one material losing emphasis rather than as five different components.
  */
 const EMPHASIS_STYLES: Record<EcosystemEmphasis, EmphasisStyle> = {
   apex: {
-    card: `${CARD_BASE} rounded-xl border-primary-200 bg-gradient-to-br from-primary-50 to-white p-6 hover:border-primary-400 dark:border-primary-900 dark:from-primary-950/50 dark:to-slate-900 dark:hover:border-primary-700 sm:p-8`,
+    card: `${CARD_BASE} package-card--apex rounded-xl p-6 sm:p-8`,
     title:
       'font-display text-xl font-bold tracking-tight text-slate-900 group-hover:text-primary-600 dark:text-white dark:group-hover:text-primary-400 sm:text-2xl',
     description: 'mt-3 text-base text-slate-600 dark:text-slate-300',
@@ -139,7 +149,7 @@ const EMPHASIS_STYLES: Record<EcosystemEmphasis, EmphasisStyle> = {
     versionAt: 'right-6 bottom-6 sm:right-8 sm:bottom-8',
   },
   strong: {
-    card: `${CARD_BASE} rounded-lg border-slate-200 bg-white p-5 hover:border-primary-300 hover:bg-primary-50 dark:border-slate-700 dark:bg-slate-900 dark:hover:border-primary-700 dark:hover:bg-primary-950/30`,
+    card: `${CARD_BASE} rounded-lg p-5`,
     title:
       'font-mono text-base font-semibold text-slate-900 group-hover:text-primary-600 dark:text-white dark:group-hover:text-primary-400',
     description: 'mt-1.5 text-sm text-slate-600 dark:text-slate-400',
@@ -150,7 +160,7 @@ const EMPHASIS_STYLES: Record<EcosystemEmphasis, EmphasisStyle> = {
     versionAt: 'right-5 bottom-5',
   },
   medium: {
-    card: `${CARD_BASE} rounded-lg border-slate-200 bg-white p-4 hover:border-primary-300 hover:bg-primary-50 dark:border-slate-700 dark:bg-slate-900 dark:hover:border-primary-700 dark:hover:bg-primary-950/30`,
+    card: `${CARD_BASE} rounded-lg p-4`,
     title: 'font-mono text-sm font-semibold text-slate-900 group-hover:text-primary-600 dark:text-white dark:group-hover:text-primary-400',
     description: 'mt-1.5 text-sm text-slate-600 dark:text-slate-400',
     mark: 'right-0 h-14 w-14',
@@ -160,7 +170,7 @@ const EMPHASIS_STYLES: Record<EcosystemEmphasis, EmphasisStyle> = {
     versionAt: 'right-4 bottom-4',
   },
   soft: {
-    card: `${CARD_BASE} rounded-lg border-slate-200 bg-white p-4 hover:border-primary-300 hover:bg-primary-50 dark:border-slate-700 dark:bg-slate-900 dark:hover:border-primary-700 dark:hover:bg-primary-950/30`,
+    card: `${CARD_BASE} rounded-lg p-4`,
     title:
       'font-mono text-sm font-medium text-slate-800 group-hover:text-primary-600 dark:text-slate-200 dark:group-hover:text-primary-400',
     description: 'mt-1.5 line-clamp-3 text-sm text-slate-500 dark:text-slate-400',
@@ -179,8 +189,8 @@ const EMPHASIS_STYLES: Record<EcosystemEmphasis, EmphasisStyle> = {
  * because it is what a visitor came for, and every level below it is a step
  * further from that problem and closer to the machinery. The axis is an axis
  * of abstraction, not a dependency graph: nothing here claims that a package
- * imports the one above it, which is why no connector ever touches an
- * individual card.
+ * imports the one above it, which is why the spine is drawn from the
+ * flagship's lower edge to the last card in its path and never into one.
  *
  * Search filters the packages and rebuilds the hierarchy from what survives,
  * so a query narrows the map instead of replacing it with a flat list.
@@ -219,9 +229,6 @@ export function LibrariesPageContent({ libraries }: LibrariesPageContentProps) {
       <Breadcrumb />
 
       <H1 className="font-display text-4xl font-bold tracking-tight text-slate-900 dark:text-white">Libraries</H1>
-      <p className="mt-4 text-lg text-slate-600 dark:text-slate-400">
-        Every HyperFrontend package, ordered from the SDK you build against down to the primitives underneath.
-      </p>
 
       <div className="relative mt-8">
         <SearchIcon className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
@@ -247,44 +254,75 @@ export function LibrariesPageContent({ libraries }: LibrariesPageContentProps) {
       {levels.length === 0 ? (
         <p className="mt-12 py-12 text-center text-slate-500 dark:text-slate-400">No packages match your search. Try different keywords.</p>
       ) : (
-        <div className="relative mt-12">
-          {/* why: the axis is drawn once behind everything and interrupted by the opaque cards and level markers, so it reads as a spine threading the levels without ever pointing at a package. */}
-          <div aria-hidden="true" className="absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-slate-200 dark:bg-slate-800" />
-          <div className="relative space-y-12">
-            {levels.map((level) => (
-              <EcosystemLevelSection key={level.tier.id} level={level} />
-            ))}
-          </div>
-        </div>
+        <EcosystemMap levels={levels} />
       )}
-
-      <section className="mt-16 rounded-xl border border-slate-200 bg-slate-50 p-6 dark:border-slate-700 dark:bg-slate-800/50">
-        <h2 className="text-lg font-bold text-slate-900 dark:text-white">Generated Documentation</h2>
-        <p className="mt-2 text-slate-600 dark:text-slate-400">
-          Full API documentation is generated from TypeScript JSDoc comments using{' '}
-          <a
-            href="https://typedoc.org/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-primary-600 hover:underline dark:text-primary-400"
-          >
-            TypeDoc
-          </a>
-          . Each package includes inline documentation accessible via your IDE&apos;s IntelliSense.
-        </p>
-        <div className="mt-4">
-          <Link
-            href="https://github.com/AndrewRedican/hyperfrontend"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 text-sm font-medium text-primary-600 hover:underline dark:text-primary-400"
-          >
-            View source on GitHub
-            <ArrowRightIcon className="h-4 w-4" />
-          </Link>
-        </div>
-      </section>
     </>
+  )
+}
+
+/** Props for {@link EcosystemMap}. */
+interface EcosystemMapProps {
+  /** The levels with something on them, top to bottom */
+  levels: EcosystemLevel[]
+}
+
+/**
+ * The levels and the spine that threads them.
+ *
+ * The spine is measured rather than declared. Where it starts and stops
+ * depends on which card the axis meets last, and that depends on how many
+ * columns each level has at this width, how many packages are on it, and
+ * whether a search has thinned it: three things the layout knows and the
+ * markup does not. So the map reads its own cards after layout, hands their
+ * boxes to {@link computeSpine}, and draws the one segment it gets back. It
+ * re-reads whenever the map changes size, which is every case in which the
+ * answer could have changed, and it re-reads before paint so a reader never
+ * sees a spine that was right for a layout that is no longer there.
+ * @param props - See {@link EcosystemMapProps}.
+ * @param props.levels - The levels to draw
+ * @returns The rendered map
+ */
+function EcosystemMap({ levels }: EcosystemMapProps) {
+  const mapRef = useRef<HTMLDivElement>(null)
+  const [spine, setSpine] = useState<SpineSegment | null>(null)
+
+  useLayoutEffect(() => {
+    const map = mapRef.current
+    if (!map) return undefined
+
+    const measure = (): void => {
+      const frame = map.getBoundingClientRect()
+      const cards = [...map.querySelectorAll<HTMLElement>(`[${CARD_ATTRIBUTE}]`)].map((card) => {
+        const box = card.getBoundingClientRect()
+        return { top: box.top - frame.top, bottom: box.bottom - frame.top, left: box.left - frame.left, right: box.right - frame.left }
+      })
+      const next = computeSpine(cards, frame.width / 2)
+      // why: a resize that leaves the cards where they were must not re-render the map for nothing
+      setSpine((current) => (current?.top === next?.top && current?.height === next?.height ? current : next))
+    }
+
+    measure()
+    const observer = new ResizeObserver(measure)
+    observer.observe(map)
+    return () => observer.disconnect()
+  }, [levels])
+
+  return (
+    <div ref={mapRef} className="relative mt-12">
+      {/* why: the spine is drawn once behind everything, and its run is the measured distance from the flagship's lower edge to the last card on its path, so it reads as connecting cards rather than spanning a grid */}
+      {spine && (
+        <div
+          aria-hidden="true"
+          className="absolute left-1/2 w-px -translate-x-1/2 bg-slate-200 dark:bg-slate-800"
+          style={{ top: spine.top, height: spine.height }}
+        />
+      )}
+      <div className="relative space-y-12">
+        {levels.map((level) => (
+          <EcosystemLevelSection key={level.tier.id} level={level} />
+        ))}
+      </div>
+    </div>
   )
 }
 
@@ -293,7 +331,8 @@ export function LibrariesPageContent({ libraries }: LibrariesPageContentProps) {
  *
  * The marker is an opaque bead that breaks the spine, so the axis reads as a
  * sequence of named altitudes. The apex has no bead because nothing runs above
- * it to interrupt; it gets a plain eyebrow instead.
+ * it to interrupt; it gets a plain eyebrow instead, and the spine begins below
+ * its card rather than above its label.
  * @param props - Component props
  * @param props.level - The level to draw
  * @returns The rendered level
@@ -341,8 +380,16 @@ function levelHeadingId(tier: EcosystemTier): string {
 }
 
 /**
- * One package. The heading's link covers the card, so anywhere on it opens the
- * package, and the card stays a single tab stop with one destination.
+ * One package.
+ *
+ * The whole card opens the package, and it does so through one real link: the
+ * heading's, whose overlay the stylesheet stretches across the card. So the
+ * card is a single tab stop with a single destination, a middle click or a
+ * modifier click on any part of it opens the package in a new tab the way the
+ * browser does for any link, and focus is drawn around the card rather than
+ * around two words of title. The version in the corner is the one exception,
+ * a second link stacked above the overlay, because it goes somewhere else.
+ * Two links, never one inside the other.
  * @param props - Component props
  * @param props.card - The package to draw
  * @param props.emphasis - How much weight its level carries
@@ -353,23 +400,22 @@ function PackageCard({ card, emphasis }: PackageCardProps) {
   const isApex = emphasis === 'apex'
 
   return (
-    <article className={`${style.card} w-full`}>
+    <article className={`${style.card} w-full`} {...{ [CARD_ATTRIBUTE]: '' }}>
       {/* why: first in the DOM and unpositioned content after it, so the mark paints behind every line of the card without a z-index to keep in step with the rest of the site's layering */}
       <PackageIcon packageName={card.packageName} className={`${CARD_MARK} ${style.mark}`} />
 
-      <div className={`relative min-w-0 ${style.gutter}`}>
+      <div className={`min-w-0 ${style.gutter}`}>
         <h3 className={style.title}>
-          <Link href={card.href} className="after:absolute after:inset-0 after:content-['']">
+          <Link href={card.href} className="package-card__link">
             {isApex ? card.name : card.packageName}
           </Link>
         </h3>
         {isApex && <p className="mt-1 font-mono text-sm text-slate-500 dark:text-slate-400">{card.packageName}</p>}
       </div>
 
-      {card.description && <p className={`relative ${style.gutter} ${style.description}`}>{card.description}</p>}
+      {card.description && <p className={`${style.gutter} ${style.description}`}>{card.description}</p>}
 
-      {/* why: relative lifts this row above the heading link's card-covering overlay, so the pills are readable text rather than a shadowed strip. */}
-      <div className={`relative mt-auto flex flex-wrap items-center gap-1.5 pt-3 ${style.bottomGutter}`}>
+      <div className={`mt-auto flex flex-wrap items-center gap-1.5 pt-3 ${style.bottomGutter}`}>
         {card.topics.map((topic) => (
           <span key={topic} className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-600 dark:bg-slate-800 dark:text-slate-400">
             {topic}
@@ -377,7 +423,6 @@ function PackageCard({ card, emphasis }: PackageCardProps) {
         ))}
       </div>
 
-      {/* why: both controls come after the mark and after the heading's overlay, so they paint over the watermark and stay reachable, with no z-index of their own to keep in step with the site's layering */}
       <ArrowRightIcon className={`${CARD_ARROW} ${style.arrowAt}`} />
       <CardVersion card={card} className={`${CARD_VERSION} ${style.versionAt}`} />
     </article>

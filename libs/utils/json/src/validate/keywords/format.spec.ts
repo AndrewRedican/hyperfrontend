@@ -25,6 +25,22 @@ describe('validateFormat', () => {
       const schema: Schema = { format: 'email' }
       expect(validateFormat('not-an-email', schema, ctx)).toBe(false)
     })
+
+    it('returns true for a domain with more than two labels', () => {
+      const schema: Schema = { format: 'email' }
+      expect(validateFormat('user@mail.example.com', schema, ctx)).toBe(true)
+      expect(validateFormat('first.last@sub.dept.example.co.uk', schema, ctx)).toBe(true)
+    })
+
+    it('returns false for a domain without a dot', () => {
+      const schema: Schema = { format: 'email' }
+      expect(validateFormat('user@localhost', schema, ctx)).toBe(false)
+    })
+
+    it('returns false for a domain that ends with a dot', () => {
+      const schema: Schema = { format: 'email' }
+      expect(validateFormat('user@example.', schema, ctx)).toBe(false)
+    })
   })
 
   describe('date format', () => {

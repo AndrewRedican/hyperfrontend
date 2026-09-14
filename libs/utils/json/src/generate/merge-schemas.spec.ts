@@ -1,4 +1,6 @@
 import type { Schema } from '../types/schema'
+import { parse } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
+import { getPrototypeOf } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { describe, expect, it } from '@hyperfrontend/testing'
 import { mergeSchemas } from './merge-schemas'
 
@@ -70,6 +72,17 @@ describe('mergeSchemas', () => {
       const result = mergeSchemas(schemas)
 
       expect(result.required).toEqual(['a'])
+    })
+
+    it('skips a parsed __proto__ property instead of rewriting the merged prototype', () => {
+      const schemas: Schema[] = [
+        parse('{"type":"object","properties":{"__proto__":{"type":"string"},"a":{"type":"string"}}}') as Schema,
+        { type: 'object', properties: { a: { type: 'string' } } },
+      ]
+      const result = mergeSchemas(schemas)
+
+      expect(result).toEqual({ type: 'object', properties: { a: { type: 'string' } } })
+      expect(getPrototypeOf(result.properties)).toBe(getPrototypeOf({}))
     })
   })
 

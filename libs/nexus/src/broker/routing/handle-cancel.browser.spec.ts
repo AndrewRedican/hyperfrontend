@@ -153,7 +153,7 @@ describe('handleCancel', () => {
     }).not.toThrow()
   })
 
-  it('calls channel cancel method without notification', () => {
+  it('cancels without sending a CANCEL frame back and records that one arrived', () => {
     const channel = addChannel(mockBrokerState, registry, processManager, actions, 'test-channel', mockWindow)
     const processId = processManager.create(channel)
 
@@ -172,7 +172,25 @@ describe('handleCancel', () => {
 
     handleCancel(routingContext, message)
 
-    expect(cancelSpy).toHaveBeenCalledWith(false)
+    expect(cancelSpy).toHaveBeenCalledWith(false, true)
+  })
+
+  it('fires one cancel reporting that the counterpart asked for it', () => {
+    const channel = addChannel(mockBrokerState, registry, processManager, actions, 'test-channel', mockWindow)
+    const processId = processManager.create(channel)
+    const events = jest.fn()
+    channel.on((event, data) => events(event, data))
+
+    handleCancel(routingContext, {
+      data: {
+        type: '[nexus] connection-request-cancelled',
+        processId,
+        senderId: 'remote-broker-1',
+      } as IAction,
+      source: mockWindow,
+    } as MessageEvent<IAction>)
+
+    expect(events.mock.calls).toEqual([['cancel', { notify: true }]])
   })
 
   it('handles multiple cancellations', () => {
