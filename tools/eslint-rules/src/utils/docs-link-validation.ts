@@ -49,19 +49,40 @@ export interface BrokenLink {
  * @returns The anchor id.
  */
 export function headingSlug(heading: string): string {
-  const text = heading
-    .replace(/!\[([^\]]*)\]\([^)]*\)/g, '$1')
-    .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')
-    .replace(/`([^`]*)`/g, '$1')
-    .replace(/\*\*([^*]*)\*\*/g, '$1')
-    .replace(/\*([^*]*)\*/g, '$1')
-    .replace(/<[^>]*>/g, '')
+  const text = stripHtmlTags(
+    heading
+      .replace(/!\[([^\]]*)\]\([^)]*\)/g, '$1')
+      .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')
+      .replace(/`([^`]*)`/g, '$1')
+      .replace(/\*\*([^*]*)\*\*/g, '$1')
+      .replace(/\*([^*]*)\*/g, '$1')
+  )
   return text
     .toLowerCase()
     .replace(/[^a-z0-9\s-]/g, '')
     .replace(/\s+/g, '-')
     .replace(/-+/g, '-')
     .replace(/^-|-$/g, '')
+}
+
+/**
+ * Remove HTML tags and comments from heading text, whether or not they are
+ * terminated, the way the site does before it slugs a heading.
+ *
+ * @param text - Heading text that may carry inline HTML.
+ * @returns The text with every tag-like construct removed.
+ */
+function stripHtmlTags(text: string): string {
+  let current = text
+  let previous = ''
+
+  // why: one pass can splice a stray `<` onto the text behind a removed tag and form a new one, so it repeats to a fixed point
+  while (current !== previous) {
+    previous = current
+    current = current.replace(/<\/?[a-zA-Z!][^>]*>?/g, '')
+  }
+
+  return current
 }
 
 /**
