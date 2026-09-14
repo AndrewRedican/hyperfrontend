@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.0.9](https://github.com/AndrewRedican/hyperfrontend/compare/a638efc58ce78e9a84dd21992e7f5c675bd5e7f6...cb8fe35c1c582de8adc0baf6865d157d60bdd2fa) - 2026-09-14
+
+### Bug Fixes
+
+- give each entry its own declarations by moving the sources into the entry directories
+- reclaim a stylesheet label whose element left the document
+- escape the value of an attribute selector
+- stop the element poll before invoking a throwing onSuccess
+
 ## [0.0.8](https://github.com/AndrewRedican/hyperfrontend/compare/29dc54d58c2b3c8b8dd35f7c546ebc6cd9191f6e...7b6cf80e7cfba3085e9d938d6298f5775f3401eb) - 2026-09-03
 
 ### Bug Fixes

@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.0.1](https://github.com/AndrewRedican/hyperfrontend/compare/e25d9f8086e811f1bef3e27faa26c5154b35956d...cb8fe35c1c582de8adc0baf6865d157d60bdd2fa) - 2026-09-14
+
+### Bug Fixes
+
+- keep a queue draining after its handler rejects
+- validate the drop handler when a channel is created
+
 ## [2.0.0](https://github.com/AndrewRedican/hyperfrontend/compare/106ce4517092cdfa9f222b73d938d272c333d69b...c2798e1479f78d5909adb098595846152a6f9350) - 2026-09-07
 
 ### Breaking Changes

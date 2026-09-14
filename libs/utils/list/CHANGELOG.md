@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.1](https://github.com/AndrewRedican/hyperfrontend/compare/29dc54d58c2b3c8b8dd35f7c546ebc6cd9191f6e...cb8fe35c1c582de8adc0baf6865d157d60bdd2fa) - 2026-09-14
+
+### Bug Fixes
+
+- accept arrays, functions and class instances in fifo and lifo lists
+
 ## [0.1.0](https://github.com/AndrewRedican/hyperfrontend/compare/5f116abb8ba6355dfb283fa03b7481e5eb029480...cc16961a470190848f71a7cce41f7377bc4511a4) - 2026-08-25
 
 ### Breaking Changes

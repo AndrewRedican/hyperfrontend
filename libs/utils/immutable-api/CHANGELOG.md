@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.1](https://github.com/AndrewRedican/hyperfrontend/compare/106ce4517092cdfa9f222b73d938d272c333d69b...cb8fe35c1c582de8adc0baf6865d157d60bdd2fa) - 2026-09-14
+
+### Bug Fixes
+
+- reject a property named __proto__ instead of silently dropping it
+- keep a locked method callable on a frozen instance
+
 ## [1.0.0](https://github.com/AndrewRedican/hyperfrontend/compare/74110dd15151bfc8360ef4edcdb1086cb003c909...edc2540a3c15b6694864157d3729ceb1fffc5f3a) - 2026-08-31
 
 ### Features

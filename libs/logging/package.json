@@ -1,6 +1,6 @@
 {
   "name": "@hyperfrontend/logging",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Structured logging with configurable severity levels and error-resilient execution.",
   "license": "MIT",
   "sideEffects": false,
@@ -30,8 +30,8 @@
     "typescript"
   ],
   "dependencies": {
-    "@hyperfrontend/data-utils": "1.0.0",
-    "@hyperfrontend/function-utils": "1.0.0",
-    "@hyperfrontend/immutable-api-utils": "1.0.0"
+    "@hyperfrontend/data-utils": "1.0.1",
+    "@hyperfrontend/function-utils": "1.0.1",
+    "@hyperfrontend/immutable-api-utils": "1.0.1"
   }
 }

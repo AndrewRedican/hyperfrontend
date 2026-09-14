@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.2](https://github.com/AndrewRedican/hyperfrontend/compare/a638efc58ce78e9a84dd21992e7f5c675bd5e7f6...cb8fe35c1c582de8adc0baf6865d157d60bdd2fa) - 2026-09-14
+
+### Bug Fixes
+
+- bind a rollup-renamed import before looking its base name up by owner
+- strip the source-only manifest fields from the emitted package
+- omit a source export the build cannot map instead of aliasing it to the root
+- refuse to clean an output path outside the workspace
+
 ## [0.2.1](https://github.com/AndrewRedican/hyperfrontend/compare/725db1b4556be686fd460b69424229a7d5ac5a63...7b6cf80e7cfba3085e9d938d6298f5775f3401eb) - 2026-09-03
 
 ### Bug Fixes

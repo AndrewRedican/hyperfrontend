@@ -1,6 +1,6 @@
 {
   "name": "@hyperfrontend/immutable-api-utils",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Decorators and utilities for creating immutable, tamper-proof object APIs with built-in prototype pollution defense.",
   "license": "MIT",
   "sideEffects": false,

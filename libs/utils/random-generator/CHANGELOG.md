@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.1](https://github.com/AndrewRedican/hyperfrontend/compare/1da8d849d452d29d09852ff563c9bd3fee7fa9c3...cb8fe35c1c582de8adc0baf6865d157d60bdd2fa) - 2026-09-14
+
+### Bug Fixes
+
+- reject a min above max in the uniform and power-law draws
+- reject degenerate distribution parameters instead of drawing nan or infinity
+
 ## [0.2.0](https://github.com/AndrewRedican/hyperfrontend/compare/29dc54d58c2b3c8b8dd35f7c546ebc6cd9191f6e...f023a31421faf134805953fc5e3d74d291dd37c7) - 2026-09-08
 
 ### Features

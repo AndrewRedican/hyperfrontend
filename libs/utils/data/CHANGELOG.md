@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.1](https://github.com/AndrewRedican/hyperfrontend/compare/106ce4517092cdfa9f222b73d938d272c333d69b...cb8fe35c1c582de8adc0baf6865d157d60bdd2fa) - 2026-09-14
+
+### Bug Fixes
+
+- track visited references by identity and release them on the way back up
+- remove matching array entries back to front in removeKey
+- report a readable error when a value along the getValue path is not iterable
+
 ## [1.0.0](https://github.com/AndrewRedican/hyperfrontend/compare/5f116abb8ba6355dfb283fa03b7481e5eb029480...280a1dfa344bc5958940eabefdb385223f2a85a1) - 2026-08-31
 
 ### Features

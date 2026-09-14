@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.10.1](https://github.com/AndrewRedican/hyperfrontend/compare/1da8d849d452d29d09852ff563c9bd3fee7fa9c3...cb8fe35c1c582de8adc0baf6865d157d60bdd2fa) - 2026-09-14
+
+### Bug Fixes
+
+- reject a failed bind instead of crashing the process
+- resolve the display mode before tearing down the running session
+- judge the opener policy the served origin actually applies
+- declare no module type in the generated shell manifest
+
 ## [0.10.0](https://github.com/AndrewRedican/hyperfrontend/compare/e25d9f8086e811f1bef3e27faa26c5154b35956d...f023a31421faf134805953fc5e3d74d291dd37c7) - 2026-09-08
 
 ### Features

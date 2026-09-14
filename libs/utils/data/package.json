@@ -1,6 +1,6 @@
 {
   "name": "@hyperfrontend/data-utils",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Comprehensive data structure manipulation with circular reference handling and custom class support.",
   "license": "MIT",
   "sideEffects": false,
@@ -35,6 +35,6 @@
     "url": "https://github.com/sponsors/AndrewRedican"
   },
   "dependencies": {
-    "@hyperfrontend/immutable-api-utils": "1.0.0"
+    "@hyperfrontend/immutable-api-utils": "1.0.1"
   }
 }

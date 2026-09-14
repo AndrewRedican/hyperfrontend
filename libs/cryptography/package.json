@@ -35,11 +35,11 @@
     "security"
   ],
   "dependencies": {
-    "@hyperfrontend/data-utils": "1.0.0",
-    "@hyperfrontend/random-generator-utils": "0.2.0",
-    "@hyperfrontend/string-utils": "1.0.0",
-    "@hyperfrontend/time-utils": "1.0.0",
-    "@hyperfrontend/immutable-api-utils": "1.0.0"
+    "@hyperfrontend/data-utils": "1.0.1",
+    "@hyperfrontend/random-generator-utils": "0.2.1",
+    "@hyperfrontend/string-utils": "1.0.1",
+    "@hyperfrontend/time-utils": "1.0.1",
+    "@hyperfrontend/immutable-api-utils": "1.0.1"
   },
   "funding": {
     "type": "github",
