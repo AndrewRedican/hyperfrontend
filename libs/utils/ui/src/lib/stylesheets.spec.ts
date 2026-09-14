@@ -43,6 +43,16 @@ describe('addStylesheet function', () => {
     expect(() => addStylesheet(css, 'label')).toThrow()
     removeCallbacks.push(remove)
   })
+
+  it('reclaims a label whose stylesheet left the document by other means', () => {
+    const [styleElement] = addStylesheet('.test { color: red; }', 'stale-label')
+    styleElement.remove()
+
+    const [replacement, remove] = addStylesheet('.test { color: blue; }', 'stale-label')
+    removeCallbacks.push(remove)
+
+    expect(document.head.contains(replacement)).toBe(true)
+  })
 })
 
 describe('removeStylesheet function', () => {

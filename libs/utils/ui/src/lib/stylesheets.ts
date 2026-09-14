@@ -14,10 +14,13 @@ const stylesheetLabels = createWeakMap<HTMLStyleElement, string>()
 /**
  * Adds a new stylesheet to the document with optional label.
  *
+ * A label is only taken while its stylesheet is still in the document. If that element was
+ * removed by other means, the label is released and the new stylesheet takes it.
+ *
  * @param css - The CSS rules to be added in the new stylesheet
  * @param label - Optional label for the new stylesheet
  * @returns A tuple where the first item is the created HTMLStyleElement, and the second item is a cleanup function
- * @throws {Error} When css is not a string or StyleMap, is empty, or a stylesheet with the same label already exists
+ * @throws {Error} When css is not a string or StyleMap, is empty, or a live stylesheet with the same label already exists
  *
  * @example CSS string
  * ```typescript
@@ -48,7 +51,11 @@ export function addStylesheet(css: string | StyleMap, label?: string): [HTMLStyl
   }
 
   if (label && labels.has(label)) {
-    throw createError(`Stylesheet with label "${label}" already exists`)
+    if ((labeledStylesheets.get(label) as HTMLStyleElement).isConnected) {
+      throw createError(`Stylesheet with label "${label}" already exists`)
+    }
+    // why: the labelled element left the document by other means, so the reservation is stale and is released here.
+    removeStylesheet(label)
   }
 
   const style: HTMLStyleElement = document.createElement('style')
