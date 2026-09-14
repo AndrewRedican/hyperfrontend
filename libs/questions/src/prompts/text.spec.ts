@@ -154,6 +154,15 @@ describe('text', () => {
       expect(result.result).toBe(PromptResult.Cancelled)
       expect(result.value).toBeUndefined()
     })
+
+    it('returns cancelled result when the input ends', async () => {
+      const config = createConfig()
+      const promise = text(config)
+
+      input.end()
+
+      expect(await promise).toEqual({ result: PromptResult.Cancelled, value: undefined })
+    })
   })
 
   describe('editing', () => {
