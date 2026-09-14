@@ -101,6 +101,16 @@ export function validateAttributeSelector(attribute: string): void {
 }
 
 /**
+ * Escapes a value for use inside a quoted CSS attribute selector.
+ *
+ * @param value - The raw attribute value
+ * @returns The value with backslashes and double quotes escaped
+ */
+function escapeAttributeValue(value: string): string {
+  return value.replaceAll('\\', '\\\\').replaceAll('"', '\\"')
+}
+
+/**
  * Builder class for constructing CSS selectors with a fluent API.
  *
  * @example Building CSS selector with fluent API
@@ -161,6 +171,9 @@ export class CssSelector {
   /**
    * Appends an attribute selector to the current selector.
    *
+   * Backslashes and double quotes in the value are escaped, so any value produces a selector
+   * the DOM accepts. An empty string matches an empty attribute rather than mere presence.
+   *
    * @param attribute - The attribute name to select
    * @param value - Optional attribute value to match
    * @returns The CssSelector instance for method chaining
@@ -168,8 +181,8 @@ export class CssSelector {
    */
   public readonly attribute = (attribute: string, value?: string): CssSelector => {
     validateAttributeSelector(attribute)
-    if (value) {
-      this.selector += `[${attribute}="${value}"]`
+    if (value !== undefined) {
+      this.selector += `[${attribute}="${escapeAttributeValue(value)}"]`
     } else {
       this.selector += `[${attribute}]`
     }

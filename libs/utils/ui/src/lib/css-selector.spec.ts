@@ -60,6 +60,24 @@ describe('CssSelector', () => {
       expect(cssSelector.toString()).toBe('[disabled]')
     })
 
+    it('escapes a double quote in the attribute value', () => {
+      const cssSelector = new CssSelector('')
+      cssSelector.attribute('data-x', 'a"b')
+      expect(cssSelector.toString()).toBe('[data-x="a\\"b"]')
+    })
+
+    it('escapes a backslash in the attribute value', () => {
+      const cssSelector = new CssSelector('')
+      cssSelector.attribute('data-x', 'a\\b')
+      expect(cssSelector.toString()).toBe('[data-x="a\\\\b"]')
+    })
+
+    it('matches an empty value rather than mere presence', () => {
+      const cssSelector = new CssSelector('')
+      cssSelector.attribute('data-x', '')
+      expect(cssSelector.toString()).toBe('[data-x=""]')
+    })
+
     it('throws error for invalid attribute format', () => {
       const cssSelector = new CssSelector('')
       expect(() => cssSelector.attribute('invalid="test')).toThrow('Invalid Attribute name format.')
@@ -205,6 +223,16 @@ describe('selectByAttribute', () => {
   it('selects by attribute without a value', () => {
     const selector = selectByAttribute('disabled')
     expect(selector.toString()).toBe('[disabled]')
+  })
+
+  it('builds a selector the DOM accepts for a value containing a quote', () => {
+    const element = document.createElement('div')
+    element.setAttribute('data-x', 'a"b')
+    document.body.appendChild(element)
+
+    expect(document.querySelector(selectByAttribute('data-x', 'a"b').toString())).toBe(element)
+
+    element.remove()
   })
 })
 
