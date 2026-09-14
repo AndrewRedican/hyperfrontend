@@ -275,6 +275,60 @@ describe('isIdentical - with config detectCircularReferences:true', () => {
   })
 })
 
+describe('isIdentical - with references shared between branches', () => {
+  beforeEach(() => setConfig({ detectCircularReferences: true }))
+
+  afterEach(() => setConfig(configReset))
+
+  it('returns true when a shared reference is compared against two equal objects', () => {
+    const shared = { v: 1 }
+    expect(isIdentical({ a: shared, b: shared }, { a: { v: 1 }, b: { v: 1 } })).toEqual(true)
+  })
+
+  it('returns the same verdict as a comparison with detection off', () => {
+    const shared = { v: 1 }
+    setConfig(configReset)
+    const withDetectionOff = isIdentical({ a: shared, b: shared }, { a: { v: 1 }, b: { v: 1 } })
+    setConfig({ detectCircularReferences: true })
+    expect(isIdentical({ a: shared, b: shared }, { a: { v: 1 }, b: { v: 1 } })).toEqual(withDetectionOff)
+  })
+
+  it('returns false when only one side shares a reference between differing branches', () => {
+    const shared = { v: 1 }
+    expect(isIdentical({ a: shared, b: shared }, { a: { v: 1 }, b: { v: 2 } })).toEqual(false)
+  })
+
+  it('returns true when both sides share a reference between two array items', () => {
+    const [sharedA, sharedB] = [{ v: 1 }, { v: 1 }]
+    expect(isIdentical([sharedA, sharedA], [sharedB, sharedB])).toEqual(true)
+  })
+})
+
+describe('isIdentical - with non-extensible input', () => {
+  beforeEach(() => setConfig({ detectCircularReferences: true }))
+
+  afterEach(() => setConfig(configReset))
+
+  it('returns true for two frozen values with the same content', () => {
+    expect(isIdentical(Object.freeze({ a: Object.freeze({ b: 1 }) }), Object.freeze({ a: Object.freeze({ b: 1 }) }))).toEqual(true)
+  })
+
+  it('returns false for two frozen values with different content', () => {
+    expect(isIdentical(Object.freeze({ a: 1 }), Object.freeze({ a: 2 }))).toEqual(false)
+  })
+
+  it('returns true for two sealed values with the same content', () => {
+    expect(isIdentical(Object.seal({ a: 1 }), Object.seal({ a: 1 }))).toEqual(true)
+  })
+
+  it('returns true for two frozen values with the same self-reference', () => {
+    const [targetA, targetB] = [{ a: {} }, { a: {} }]
+    targetA.a = targetA
+    targetB.a = targetB
+    expect(isIdentical(Object.freeze(targetA), Object.freeze(targetB))).toEqual(true)
+  })
+})
+
 describe('isIdentical - with config detectCircularReferences:true, samePositionOfOwnProperties: true', () => {
   beforeEach(() =>
     setConfig({

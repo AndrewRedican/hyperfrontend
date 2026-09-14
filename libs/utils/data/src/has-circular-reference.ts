@@ -5,7 +5,7 @@ import { isIterableType } from './is-iterable-type'
 import { referenceStack } from './reference-stack'
 import { getConfig, setConfig } from './shared/consts'
 
-const hasCircularReferenceRecursive = (target: unknown, stack: ReferenceStack, root = false): boolean => {
+const hasCircularReferenceRecursive = (target: unknown, stack: ReferenceStack): boolean => {
   if (stack.exists(target)) return true
   const type = getType(target)
   if (!isIterableType(type)) return false
@@ -13,12 +13,13 @@ const hasCircularReferenceRecursive = (target: unknown, stack: ReferenceStack, r
   const { getKeys, read } = getIterableOperators(type)
   const keys = getKeys(target)
   const result = keys.some((key) => hasCircularReferenceRecursive(read(target, key), stack))
-  if (root) stack.clear()
+  stack.remove(target)
   return result
 }
 
 /**
  * Returns true for values that have circular references.
+ * A reference that is shared between two branches is not a cycle; only a value that contains itself is.
  * It supports other iterable data types, provided these have been made known using registerIterableClass.
  *
  * @param target - The value to check for circular references
@@ -37,9 +38,13 @@ export const hasCircularReference = (target: unknown): boolean => {
   if (!originalSupportStatus) {
     setConfig({ detectCircularReferences: true })
   }
-  const result = hasCircularReferenceRecursive(target, referenceStack(), true)
-  if (!originalSupportStatus) {
-    setConfig({ detectCircularReferences: false })
+  const stack = referenceStack()
+  try {
+    return hasCircularReferenceRecursive(target, stack)
+  } finally {
+    if (!originalSupportStatus) {
+      setConfig({ detectCircularReferences: false })
+    }
+    stack.clear()
   }
-  return result
 }

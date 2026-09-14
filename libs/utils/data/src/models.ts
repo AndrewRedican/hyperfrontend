@@ -101,7 +101,13 @@ export interface ReferenceStack {
   add: (reference: unknown) => void
 
   /**
-   * Empties the reference stack and removes any flags added.
+   * Removes a reference from the stack. Walkers call it once the reference's children have been
+   * visited, so the stack only ever holds the path from the root to the value being processed.
+   */
+  remove: (reference: unknown) => void
+
+  /**
+   * Empties the reference stack.
    */
   clear: () => void
 }

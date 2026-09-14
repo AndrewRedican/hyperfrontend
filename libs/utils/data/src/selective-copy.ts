@@ -130,6 +130,7 @@ export const selectiveCopyForCircularReferencesRecursive = <T extends Record<str
       ),
       nextKey
     )
+    stack.remove(nextTarget)
   }
   if (root) {
     circularRefs.forEach(({ startPath, destinationPath }) => {
@@ -204,20 +205,24 @@ export const selectiveCopy = <T = unknown>(target: T, options?: SelectiveCopyOpt
   }
   const skipped: DataPoint[] = []
   const recordSkip: DataPointOperation = (target, path, key, dataType) => skipped.push({ target, path, key, dataType })
-  let clone: T
-  if (getConfig().detectCircularReferences) {
-    clone = selectiveCopyForCircularReferencesRecursive(
+  if (!getConfig().detectCircularReferences) {
+    const clone = selectiveCopyRecursive(target as Record<string, unknown>, [], includeKey, skipFunctions, recordSkip) as T
+    return { clone, skipped }
+  }
+  const stack = referenceStack()
+  try {
+    const clone = selectiveCopyForCircularReferencesRecursive(
       target as Record<string, unknown>,
       [],
       includeKey,
       skipFunctions,
       recordSkip,
-      referenceStack(),
+      stack,
       [],
       true
     ) as T
-  } else {
-    clone = selectiveCopyRecursive(target as Record<string, unknown>, [], includeKey, skipFunctions, recordSkip) as T
+    return { clone, skipped }
+  } finally {
+    stack.clear()
   }
-  return { clone, skipped }
 }

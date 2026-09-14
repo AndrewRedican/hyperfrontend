@@ -101,23 +101,66 @@ describe('referenceStack', () => {
     })
   })
 
+  describe('remove', () => {
+    beforeEach(() => (stack = referenceStack()))
+
+    it('drops a reference that was registered in the stack', () => {
+      const value = {}
+      stack.add(value)
+      stack.remove(value)
+      expect(stack.exists(value)).toBe(false)
+    })
+
+    it('leaves the references that were not removed', () => {
+      const [a, b] = [{}, {}]
+      stack.add(a)
+      stack.add(b)
+      stack.remove(b)
+      expect(stack.exists(a)).toBe(true)
+    })
+
+    it('ignores a reference that was never registered', () => {
+      stack.add({})
+      stack.remove({})
+      expect(stack.size).toBe(1)
+    })
+
+    it('ignores a reference that is not iterable', () => {
+      stack.add({})
+      stack.remove(42)
+      expect(stack.size).toBe(1)
+    })
+
+    it('frees the index for the reference added next', () => {
+      const [a, b, c] = [{}, {}, {}]
+      stack.add(a)
+      stack.add(b)
+      stack.remove(b)
+      stack.add(c)
+      expect(stack.lastSeen(a)).toBe(-2)
+    })
+  })
+
   describe('clear', () => {
     beforeEach(() => (stack = referenceStack()))
 
-    it('clears the internal stack and remove any markers added', () => {
+    it('clears the internal stack', () => {
       const value = { a: { b: {} } }
       stack.add(value)
       stack.add(value.a)
       stack.add(value.a.b)
       expect(stack.size).toBe(3)
-      expect(Object.keys(value).some(isMarker)).toBe(true)
-      expect(Object.keys(value.a).some(isMarker)).toBe(true)
-      expect(Object.keys(value.a.b).some(isMarker)).toBe(true)
       stack.clear()
       expect(stack.size).toBe(0)
-      expect(Object.keys(value).some(isMarker)).toBe(false)
-      expect(Object.keys(value.a).some(isMarker)).toBe(false)
-      expect(Object.keys(value.a.b).some(isMarker)).toBe(false)
+    })
+
+    it('never writes a marker onto the references it tracks', () => {
+      const value = { a: { b: {} } }
+      stack.add(value)
+      stack.add(value.a)
+      stack.add(value.a.b)
+      stack.clear()
+      expect([value, value.a, value.a.b].flatMap((reference) => Object.keys(reference)).some(isMarker)).toBe(false)
     })
   })
 })

@@ -45,3 +45,31 @@ describe('getDepth - with config detectCircularReferences:true', () => {
     ])
   })
 })
+
+describe('getDepth - with references shared between branches', () => {
+  const shared = { v: 1 }
+
+  afterEach(() => setConfig({ detectCircularReferences: false }))
+
+  it('measures a shared reference on every branch that holds it', () => {
+    setConfig({ detectCircularReferences: true })
+    expect(getDepth({ a: shared, b: shared })).toEqual([
+      2,
+      [
+        ['a', 'v'],
+        ['b', 'v'],
+      ],
+    ])
+  })
+
+  it('measures the same depth as a measurement with detection off', () => {
+    const withDetectionOff = getDepth({ a: shared, b: shared })
+    setConfig({ detectCircularReferences: true })
+    expect(getDepth({ a: shared, b: shared })).toEqual(withDetectionOff)
+  })
+
+  it('measures a frozen value', () => {
+    setConfig({ detectCircularReferences: true })
+    expect(getDepth(Object.freeze({ a: Object.freeze({ b: 1 }) }))).toEqual([2, [['a', 'b']]])
+  })
+})

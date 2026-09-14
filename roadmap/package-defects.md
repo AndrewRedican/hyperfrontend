@@ -19,7 +19,6 @@ Reproduced on Node 24.18.1 against the versions named, 2026-08-25.
 | D-02 | package-e2e (all)                          | The ESM lane is not real ESM, so D-01 shipped unnoticed                 | high     |
 | D-03 | generated feature shells                   | `require()` resolves to an empty object                                 | high     |
 | D-04 | ui-utils                                   | No working TypeScript declarations                                      | high     |
-| D-05 | data-utils                                 | `hasCircularReference` false-positives on any shared reference          | high     |
 | D-06 | builder                                    | Emitted manifest inherits `scripts`, `devDependencies` and `type`       | medium   |
 | D-09 | logging                                    | A channel shares its level with its parent in both directions           | medium   |
 | D-10 | state-machine                              | Nothing makes `init` run once under concurrent callers                  | medium   |
@@ -114,28 +113,6 @@ error-`any`. This is also why nothing caught D-12 or the wrong element-creator e
 [style-a-widget-you-inject-into-someone-elses-page](../apps/docs-site/content/guides/style-a-widget-you-inject-into-someone-elses-page/guide.md)
 already does, by accident rather than by decision; leave it alone but do not treat it as
 precedent for a `ts` fence once the declarations work.
-
-## D-05 — `hasCircularReference` false-positives on any shared reference
-
-`data-utils@0.0.5`. The recursion tracks seen objects in a set it never pops, so a reference
-reached twice by different paths reads as a cycle.
-
-```js
-const shared = { v: 1 }
-hasCircularReference({ a: shared, b: shared }) // => true
-JSON.stringify({ a: shared, b: shared }) // works fine
-hasCircularReference([shared, shared]) // => true
-```
-
-A diamond is ordinary in real payloads (one config object referenced twice, a shared node in a
-tree), so the package's headline "is this safe to serialize" check rejects data
-`JSON.stringify` handles. Genuine cycles are still reported correctly, and acyclic trees with no
-sharing still return `false`.
-
-**Docs follow-up.** Blocks the planned "validate a payload is safe to serialize" guide outright:
-it would teach readers to reject valid payloads. It also weakens the shipped
-[fix-converting-circular-structure-to-json](../apps/docs-site/content/guides/fix-converting-circular-structure-to-json/guide.md)
-guide, which should be re-read against this once the fix lands.
 
 ## D-06 — the emitted manifest inherits `scripts`, `devDependencies` and `type`
 
