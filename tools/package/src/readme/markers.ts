@@ -6,8 +6,12 @@ import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
  * attributes. It hides on GitHub, on npm and on the documentation site, so a
  * reader of the source markdown sees the region's own content and nothing
  * else.
+ *
+ * The attribute list is captured greedily after one whitespace character,
+ * with whatever whitespace surrounds it, because a lazy capture between two
+ * whitespace runs backtracks polynomially on a line of many spaces.
  */
-const START_PATTERN = /^<!--\s*hf:media\s+start\s+(.*?)\s*-->\s*$/
+const START_PATTERN = /^<!--\s*hf:media\s+start\s(.*)-->\s*$/
 
 /** How a replacement region ends. */
 const END_PATTERN = /^<!--\s*hf:media\s+end\s*-->\s*$/
@@ -15,8 +19,14 @@ const END_PATTERN = /^<!--\s*hf:media\s+end\s*-->\s*$/
 /** Anything that looks like it wanted to be a directive, so a typo fails rather than hides. */
 const LOOKALIKE_PATTERN = /^<!--\s*hf:media\b/
 
-/** One `name="value"` pair, with a value that may not contain a double quote. */
-const ATTRIBUTE_PATTERN = /([a-z]+)="([^"]*)"/g
+/**
+ * One `name="value"` pair, with a value that may not contain a double quote.
+ *
+ * A pair is only read at the start of the list or after whitespace, so a name
+ * is tried once per word rather than once per letter, which is what keeps a
+ * long run of letters from backtracking quadratically.
+ */
+const ATTRIBUTE_PATTERN = /(?:^|\s)([a-z]+)="([^"]*)"/g
 
 /** The characters an identifier, a scene slug or an asset stem is made of. */
 const NAME_CHARACTERS = /^[a-z0-9-]+$/

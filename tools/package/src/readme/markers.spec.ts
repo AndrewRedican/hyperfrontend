@@ -117,6 +117,7 @@ describe('parseMarkers', () => {
       ['id="a" scene="s" alt="x" colour="red"', 'unknown attribute "colour"'],
       ['id="a" id="b" scene="s" alt="x"', 'given twice'],
       ['id="a" scene="s" alt="x" stray', 'name="value"'],
+      ['id="a"scene="s" alt="x"', 'name="value"'],
       ['scene="s" alt="x"', 'needs id="..."'],
       ['id="a" alt="x"', 'needs scene="..."'],
       ['id="a" scene="s"', 'needs alt="..."'],
