@@ -1,3 +1,5 @@
+import { parse, stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
+import { getPrototypeOf } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { describe, expect, it } from '@hyperfrontend/testing'
 import { validate } from '../validate/validate'
 import { toJsonSchema } from './to-json-schema'
@@ -87,6 +89,36 @@ describe('toJsonSchema', () => {
         required: ['name'],
         additionalProperties: false,
       })
+    })
+
+    it('omits keys whose values have no JSON representation', () => {
+      const data = { name: 'Alice', missing: undefined, handler: () => 0, tag: Symbol('tag') }
+
+      expect(toJsonSchema(data)).toEqual({ type: 'object', properties: { name: { type: 'string' } }, required: ['name'] })
+    })
+
+    it('treats an object holding only non-JSON values as empty', () => {
+      expect(toJsonSchema({ missing: undefined })).toEqual({ type: 'object' })
+    })
+
+    it('generates a schema that the JSON form of the sample satisfies', () => {
+      const data = { name: 'Alice', missing: undefined, handler: () => 0, nothing: null }
+      const schema = toJsonSchema(data)
+
+      expect(validate(parse(stringify(data)), schema).valid).toBe(true)
+    })
+
+    it('omits a parsed __proto__ key from properties and required', () => {
+      const data = parse('{"__proto__": {"x": 1}, "name": "Alice"}') as Record<string, unknown>
+
+      expect(toJsonSchema(data)).toEqual({ type: 'object', properties: { name: { type: 'string' } }, required: ['name'] })
+    })
+
+    it('leaves the prototype of properties untouched by a parsed __proto__ key', () => {
+      const data = parse('{"__proto__": {"x": 1}, "name": "Alice"}') as Record<string, unknown>
+      const schema = toJsonSchema(data)
+
+      expect(getPrototypeOf(schema.properties)).toBe(getPrototypeOf({}))
     })
   })
 
