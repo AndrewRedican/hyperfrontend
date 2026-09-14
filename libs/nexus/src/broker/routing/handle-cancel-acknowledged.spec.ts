@@ -108,7 +108,7 @@ describe('handleCancelAcknowledged', () => {
     }).not.toThrow()
   })
 
-  it('calls notifyEvent when channel has the method', () => {
+  it('fires no event, the cancel that sent the frame already did', () => {
     const channel = addChannel(mockBrokerState, registry, processManager, actions, 'test-channel', mockWindow)
     const processId = processManager.create(channel)
 
@@ -131,7 +131,7 @@ describe('handleCancelAcknowledged', () => {
 
     handleCancelAcknowledged(routingContext, message)
 
-    expect(notifyEventMock).toHaveBeenCalledWith('cancel', { notify: false })
+    expect(notifyEventMock).not.toHaveBeenCalled()
   })
 
   it('handles multiple cancel acknowledgements for different channels', () => {

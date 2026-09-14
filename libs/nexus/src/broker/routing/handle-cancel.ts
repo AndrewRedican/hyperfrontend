@@ -16,10 +16,11 @@ import { resolveChannel } from './resolve-channel'
  * - Ignores a CANCEL from an instance other than the counterpart this channel
  *   answered, so a frame left over from a reloaded document cannot abort the
  *   handshake that replaced it
- * - Cancels pending connection
+ * - Cancels pending connection, which fires the single 'cancel' lifecycle
+ *   event this side reports for the attempt, with `notify: true`: the
+ *   counterpart sent the CANCEL frame this handler is answering
  * - Sends CANCEL_CONNECTION_ACKNOWLEDGED response
  * - Terminates process
- * - Fires 'cancel' lifecycle event
  *
  * @example Cancellation flow during connection
  * Cancel flow (before connection completes):
@@ -39,7 +40,8 @@ export function handleCancel(context: RoutingContext, message: MessageEvent<IAct
     return
   }
 
-  channel.cancel(false)
+  // why: No CANCEL frame goes back, but one arrived, so the 'cancel' event still reports the counterpart as party to the cancellation rather than a teardown this side did alone.
+  channel.cancel(false, true)
 
   channel.sendAction({
     type: '[nexus] connection-request-cancelled-acknowledged',
@@ -48,6 +50,4 @@ export function handleCancel(context: RoutingContext, message: MessageEvent<IAct
   })
 
   processManager.remove(processId)
-
-  channel.notifyEvent('cancel', { notify: true })
 }

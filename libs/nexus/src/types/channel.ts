@@ -224,8 +224,14 @@ export interface ChannelHandle {
    * The channel stays registered and reconnectable.
    */
   endStaleSession(): void
-  /** Cancel pending connection */
-  cancel(notify?: boolean): void
+  /**
+   * Cancels a pending connection, firing the single 'cancel' event this side
+   * reports for the attempt.
+   *
+   * @param notify - Whether to send a CANCEL frame to the counterpart (default: true)
+   * @param peerCancelled - Whether this cancellation came from a CANCEL frame the counterpart sent, which the broker passes as `true` when it answers one (default: false, meaning this side cancelled)
+   */
+  cancel(notify?: boolean, peerCancelled?: boolean): void
   /** Immediately destroy channel */
   destroy(notify?: boolean): void
 

@@ -1,3 +1,4 @@
+import type { Mock } from '@hyperfrontend/testing'
 import type { IAction } from '../../types/action'
 import type { ChannelState } from '../../types/channel'
 import type { SecurityTransport } from '../../types/security'
@@ -111,16 +112,28 @@ describe('channel/lifecycle/cancel', () => {
     expect(mockChannel.createProcess).not.toHaveBeenCalled()
   })
 
-  it('notifies event subscribers', () => {
+  it('reports a cancellation this side initiated as not sent by the counterpart', () => {
     cancel(mockChannel)
 
-    expect(mockChannel.notifyEvent).toHaveBeenCalledWith('cancel')
+    expect(mockChannel.notifyEvent).toHaveBeenCalledWith('cancel', { notify: false })
   })
 
-  it('notifies event subscribers even when notify is false', () => {
+  it('reports a silent local teardown as not sent by the counterpart', () => {
     cancel(mockChannel, false)
 
-    expect(mockChannel.notifyEvent).toHaveBeenCalledWith('cancel')
+    expect(mockChannel.notifyEvent).toHaveBeenCalledWith('cancel', { notify: false })
+  })
+
+  it('reports a cancellation the counterpart sent as sent by the counterpart', () => {
+    cancel(mockChannel, false, true)
+
+    expect(mockChannel.notifyEvent).toHaveBeenCalledWith('cancel', { notify: true })
+  })
+
+  it('fires cancel once', () => {
+    cancel(mockChannel)
+
+    expect((mockChannel.notifyEvent as Mock).mock.calls).toEqual([['cancel', { notify: false }]])
   })
 
   it('disposes the security transport of a pending request', () => {

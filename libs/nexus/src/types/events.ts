@@ -61,10 +61,17 @@ export interface CloseEventData {
 }
 
 /**
- * Data payload for CANCEL event
+ * Data payload for CANCEL event.
+ *
+ * One cancelled attempt fires exactly one 'cancel' event on each side.
  */
 export interface CancelEventData {
-  /** Whether remote end was notified */
+  /**
+   * Whether the counterpart is the side that cancelled: `true` only on the
+   * side that received a CANCEL frame. A cancellation this side initiated
+   * reports `false`, whether or not it sent a frame, so a subscriber can tell
+   * the two apart.
+   */
   notify: boolean
 }
 

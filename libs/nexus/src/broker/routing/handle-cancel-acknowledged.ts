@@ -4,7 +4,7 @@ import type { RoutingContext } from './types'
 
 /**
  * Handles CANCEL_CONNECTION_ACKNOWLEDGED action.
- * Completes cancellation on initiator's side and notifies cancel event.
+ * Completes cancellation on the initiator's side.
  *
  * @param context - Routing context with state, registry, actions, and logger
  * @param message - Message event containing the CANCEL_CONNECTION_ACKNOWLEDGED action
@@ -12,13 +12,14 @@ import type { RoutingContext } from './types'
  * @remarks
  * Side Effects:
  * - Terminates the connection process
- * - Fires 'cancel' lifecycle event on initiator's side
+ * - Fires no lifecycle event: cancel() already fired the single 'cancel' this
+ *   side reports for the attempt when it sent the CANCEL frame
  *
  * @example Initiator-side cancellation acknowledgment
  * Cancellation acknowledgment (initiator side):
- * Initiator -> CANCEL_CONNECTION
+ * Initiator -> CANCEL_CONNECTION (fires 'cancel')
  * Initiator <- CANCEL_ACKNOWLEDGED (this handler)
- * Initiator fires 'cancel' event
+ * Initiator drops the process
  */
 export function handleCancelAcknowledged(context: RoutingContext, message: MessageEvent<IAction>): void {
   const { processManager } = context
@@ -32,6 +33,4 @@ export function handleCancelAcknowledged(context: RoutingContext, message: Messa
   }
 
   processManager.remove(processId)
-
-  channel.notifyEvent('cancel', { notify: false })
 }
