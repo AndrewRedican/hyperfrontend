@@ -40,6 +40,13 @@ describe('Log Level Configuration Tests', () => {
       expect(() => createLogLevelConfig('qwerty' as any)).toThrow(Error)
     })
 
+    it('names the rejected value in the error thrown for an invalid log level', () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      expect(() => createLogLevelConfig('qwerty' as any)).toThrow(
+        "Cannot create log level configuration with invalid default level 'qwerty'."
+      )
+    })
+
     it('returns an immutable log level configuration', () => {
       const config = createLogLevelConfig()
       expect(() => {

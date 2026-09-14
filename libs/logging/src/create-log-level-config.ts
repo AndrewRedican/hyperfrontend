@@ -83,7 +83,7 @@ export function isValidLogLevel(level: unknown): level is LogLevel {
  */
 export function createLogLevelConfig(level: LogLevel = 'error'): LogLevelConfig {
   if (!isValidLogLevel(level)) {
-    throw createError('Cannot create log level configuration with a valid default log level')
+    throw createError(`Cannot create log level configuration with invalid default level '${level}'. Expected levels are ${logLevels}.`)
   }
   const state: LogLevelState = { level }
   const getLogLevel: GetLogLevel = () => state.level
