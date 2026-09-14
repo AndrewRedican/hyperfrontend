@@ -104,8 +104,9 @@ export function getElementAsync(elementRefOrString: ElementRefOrString, options?
   function checkElement(): void {
     const element = getElement()
     if (element) {
-      invoke(onSuccess, element)
+      // why: the timers are cleared before the callback so a throwing onSuccess cannot leave the poll running.
       cleanup()
+      invoke(onSuccess, element)
     }
   }
 

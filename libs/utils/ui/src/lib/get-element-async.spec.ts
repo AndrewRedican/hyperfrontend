@@ -112,6 +112,22 @@ describe('getElementAsync', () => {
     expect(onFail).not.toHaveBeenCalled()
   })
 
+  it('calls a throwing onSuccess exactly once and stops polling', () => {
+    const mockElement = document.createElement('div')
+    mockQuerySelector.mockReturnValue(mockElement)
+    const onSuccess = jest.fn(() => {
+      throw new Error('onSuccess failed')
+    })
+
+    getElementAsync('.my-element', { duration: 1000, interval: 100, onSuccess })
+
+    // why: the callback throws out of the timer, so the first tick is advanced inside a guard.
+    expect(() => jest.advanceTimersByTime(100)).toThrow('onSuccess failed')
+    jest.advanceTimersByTime(2000)
+
+    expect(onSuccess).toHaveBeenCalledTimes(1)
+  })
+
   it('handles invocation with undefined callbacks', () => {
     const mockElement = document.createElement('div')
     mockQuerySelector.mockReturnValue(mockElement)
