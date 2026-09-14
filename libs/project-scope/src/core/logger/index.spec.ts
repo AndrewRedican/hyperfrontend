@@ -1,6 +1,6 @@
 import { beforeEach, afterEach } from 'node:test'
 import { describe, it, expect, jest } from '@hyperfrontend/testing'
-import { createScopedLogger, sanitize, logger, setGlobalLogLevel, getGlobalLogLevel, resetGlobalLogLevel } from './logger'
+import { createScopedLogger, sanitize, logger, setGlobalLogLevel, getGlobalLogLevel, resetGlobalLogLevel } from './index'
 
 describe('core/logger', () => {
   describe('sanitize', () => {

@@ -12,7 +12,7 @@
     "./core": "./src/core/index.js",
     "./core/encoding": "./src/core/encoding/index.js",
     "./core/fs": "./src/core/fs/index.js",
-    "./core/logger": "./src/core/logger.js",
+    "./core/logger": "./src/core/logger/index.js",
     "./core/path": "./src/core/path/index.js",
     "./core/platform": "./src/core/platform/index.js",
     "./heuristics": "./src/heuristics/index.js",

@@ -124,7 +124,7 @@
       "@hyperfrontend/project-scope/core": ["libs/project-scope/src/core/index.ts"],
       "@hyperfrontend/project-scope/core/encoding": ["libs/project-scope/src/core/encoding/index.ts"],
       "@hyperfrontend/project-scope/core/fs": ["libs/project-scope/src/core/fs/index.ts"],
-      "@hyperfrontend/project-scope/core/logger": ["libs/project-scope/src/core/logger.ts"],
+      "@hyperfrontend/project-scope/core/logger": ["libs/project-scope/src/core/logger/index.ts"],
       "@hyperfrontend/project-scope/core/path": ["libs/project-scope/src/core/path/index.ts"],
       "@hyperfrontend/project-scope/core/platform": ["libs/project-scope/src/core/platform/index.ts"],
       "@hyperfrontend/project-scope/heuristics": ["libs/project-scope/src/heuristics/index.ts"],
