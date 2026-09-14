@@ -1,6 +1,6 @@
 import type { BuildContext } from './models'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
-import { exists, join, relativePath, removeDirectory } from '@hyperfrontend/project-scope/core'
+import { exists, isAbsolute, relativePath, removeDirectory } from '@hyperfrontend/project-scope/core'
 
 /**
  * Empties a build's own output directory before emission so a build never
@@ -27,9 +27,10 @@ import { exists, join, relativePath, removeDirectory } from '@hyperfrontend/proj
  */
 export const cleanOutputPath = (context: BuildContext): void => {
   const { outputPath, workspaceRoot } = context
-  // why: outputPath is safe only when it sits strictly inside the workspace (so the path back up to workspaceRoot starts with `..`) and is not the bare dist root. That rejects the workspace root, any ancestor, `/`, and `<workspaceRoot>/dist`, leaving only a per-project subtree like dist/libs/<project> — so a clean can never widen to the whole repo or every library's output.
-  const insideWorkspace = relativePath(outputPath, workspaceRoot).startsWith('..')
-  if (!insideWorkspace || outputPath === join(workspaceRoot, 'dist')) {
+  // why: outputPath is safe only when the path from workspaceRoot down to it is a non-empty relative descent that never climbs out and is not the bare dist root. That rejects the workspace root (empty), any ancestor, sibling or unrelated directory (leading `..`, or another drive), and `<workspaceRoot>/dist`, leaving only a per-project subtree like dist/libs/<project>.
+  const descent = relativePath(workspaceRoot, outputPath)
+  const escapesWorkspace = descent === '' || descent === '..' || descent.startsWith('../') || isAbsolute(descent)
+  if (escapesWorkspace || descent === 'dist') {
     throw createError(
       `build: refusing to clean outputPath "${outputPath}" — a clean must target a single project's own output directory under dist/ (e.g. dist/libs/<project>), never the workspace root, an ancestor, or the bare dist/ root.`
     )
