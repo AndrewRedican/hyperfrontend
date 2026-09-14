@@ -8,6 +8,10 @@ import { createQueue } from './create-queue'
 describe('createQueue', () => {
   let processedMessages: any[] = []
   let messageProcessor: MessageHandler<any>
+  const rejectOnBoom: MessageHandler<any> = async (message) => {
+    if (message.id === 'boom') throw new Error('boom')
+    processedMessages.push(message)
+  }
 
   beforeEach(() => {
     processedMessages = []
@@ -159,5 +163,44 @@ describe('createQueue', () => {
 
     expect(processedMessages.length).toBe(3)
     expect(messageHandler.size()).toBe(0)
+  })
+
+  it('keeps draining after a handler rejects', async () => {
+    const messageHandler = createQueue(rejectOnBoom)
+    messageHandler.addMessage({ id: 'a' })
+    messageHandler.addMessage({ id: 'boom' })
+    messageHandler.addMessage({ id: 'c' })
+
+    await sleep(10)
+
+    expect(processedMessages).toEqual([{ id: 'a' }, { id: 'c' }])
+  })
+
+  it('reports an idle queue once a rejected handler settles', async () => {
+    const messageHandler = createQueue(rejectOnBoom)
+    messageHandler.addMessage({ id: 'boom' })
+
+    await sleep(10)
+
+    expect({ isRunning: messageHandler.isRunning(), currentMessage: messageHandler.currentMessage(), size: messageHandler.size() }).toEqual(
+      {
+        isRunning: false,
+        currentMessage: null,
+        size: 0,
+      }
+    )
+  })
+
+  it('resumes after a handler rejects', async () => {
+    const messageHandler = createQueue(rejectOnBoom, false)
+    messageHandler.addMessage({ id: 'boom' })
+    messageHandler.resume()
+    await sleep(10)
+
+    messageHandler.addMessage({ id: 'c' })
+    messageHandler.resume()
+    await sleep(10)
+
+    expect(processedMessages).toEqual([{ id: 'c' }])
   })
 })

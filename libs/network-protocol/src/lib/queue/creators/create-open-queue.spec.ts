@@ -7,6 +7,10 @@ import { createOpenQueue } from './create-open-queue'
 
 describe('createOpenQueue', () => {
   const label = 'open queue'
+  const invalid = { invalid: 'data' } as unknown as WirePacket
+  const throwingOnFail = () => {
+    throw new Error('consumer bug')
+  }
 
   it('opens a frame and hands the packet to onSuccess', async () => {
     const onSuccess = jest.fn()
@@ -19,7 +23,6 @@ describe('createOpenQueue', () => {
   it('reports a frame that is not wire bytes', async () => {
     const onFail = jest.fn()
     const queue = createOpenQueue(label, packetOpener, logger, jest.fn(), onFail)
-    const invalid = { invalid: 'data' } as unknown as WirePacket
     queue.addMessage(invalid)
     await sleep(50)
     expect(onFail).toHaveBeenCalledWith(invalid, 'Invalid frame ignored')
@@ -56,6 +59,31 @@ describe('createOpenQueue', () => {
     queue.addMessage(wirePacket)
     await sleep(50)
     expect(onFail).toHaveBeenCalledWith(wirePacket, expect.stringContaining('An unexpected error occurred'), expect.any(Error))
+  })
+
+  it('keeps draining after onFail throws', async () => {
+    const onSuccess = jest.fn()
+    const queue = createOpenQueue(label, packetOpener, logger, onSuccess, throwingOnFail)
+    queue.addMessage(invalid)
+    queue.addMessage(wirePacket)
+    await sleep(50)
+    expect(onSuccess).toHaveBeenCalledWith(unencryptedPacket)
+  })
+
+  it('reports a rejected frame to a throwing onFail once', async () => {
+    const onFail = jest.fn(throwingOnFail)
+    const queue = createOpenQueue(label, packetOpener, logger, jest.fn(), onFail)
+    queue.addMessage(invalid)
+    await sleep(50)
+    expect(onFail).toHaveBeenCalledTimes(1)
+  })
+
+  it('logs the error a throwing onFail raises', async () => {
+    const error = jest.fn()
+    const queue = createOpenQueue(label, packetOpener, { ...logger, error }, jest.fn(), throwingOnFail)
+    queue.addMessage(invalid)
+    await sleep(50)
+    expect(error).toHaveBeenCalledWith(`${label}: onFail threw. Error: consumer bug`)
   })
 
   it('throws when the arguments are invalid', () => {

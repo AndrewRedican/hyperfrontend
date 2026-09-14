@@ -1,5 +1,5 @@
 import type { UnencryptedPacket, WirePacket } from '../../packet/model'
-import type { OpenQueueCreater } from '../model'
+import type { OpenQueueCreater, QueueFailureHandler } from '../model'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { isValidUnencryptedPacket } from '../../packet/validations/is-valid-unencrypted-packet'
 import { isValidWirePacket } from '../../packet/validations/is-valid-wire-packet'
@@ -19,7 +19,7 @@ import { createQueue } from './create-queue'
  * @param open - The session's opener
  * @param logger - Logger instance for debug and error messages
  * @param onSuccess - Callback invoked with the opened plaintext packet
- * @param onFail - Callback invoked, with the reason and any thrown error, when a frame is rejected
+ * @param onFail - Callback invoked, with the reason and any thrown error, when a frame is rejected; a throw from it is logged and does not stop the queue
  * @returns A queue instance for opening frames
  *
  * @example Creating an open queue
@@ -34,12 +34,20 @@ export const createOpenQueue: OpenQueueCreater = (label, open, logger, onSuccess
     throw createError(errorMessage)
   }
   const { debug, log, warn, error } = logger
+  // why: onFail is the consumer's code; a throw there must not re-enter the outer catch, which would report the same frame twice, or reject the stage and stall the queue behind it.
+  const fail = (...report: Parameters<QueueFailureHandler>): void => {
+    try {
+      onFail(...report)
+    } catch (e) {
+      error(`${label}: onFail threw. ${e}`)
+    }
+  }
   const process = async (raw: WirePacket): Promise<void> => {
     try {
       debug(`${label}: Check frame is valid`)
       if (!isValidWirePacket(raw)) {
         log(`${label}: Invalid frame ignored`)
-        onFail(raw, 'Invalid frame ignored')
+        fail(raw, 'Invalid frame ignored')
         return
       }
       debug(`${label}: Open frame`)
@@ -48,19 +56,19 @@ export const createOpenQueue: OpenQueueCreater = (label, open, logger, onSuccess
         opened = await open(raw)
       } catch (e) {
         log(`${label}: ${(e as Error)?.message}`)
-        onFail(raw, `${(e as Error)?.message}`, e)
+        fail(raw, `${(e as Error)?.message}`, e)
         return
       }
       debug(`${label}: Check opened packet is valid`)
       if (!isValidUnencryptedPacket(opened)) {
         warn(`${label}: Opened packet is not valid`)
-        onFail(raw, 'Opened packet is not valid')
+        fail(raw, 'Opened packet is not valid')
         return
       }
       onSuccess(opened)
     } catch (e) {
       error(`An unexpected error occurred. ${e}`)
-      onFail(raw, `An unexpected error occurred. ${e}`, e)
+      fail(raw, `An unexpected error occurred. ${e}`, e)
     }
   }
   return createQueue<WirePacket>(process)
