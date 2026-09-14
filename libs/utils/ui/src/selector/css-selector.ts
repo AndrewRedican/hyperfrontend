@@ -1,4 +1,4 @@
-import type { HtmlTagName } from './html.model'
+import type { HtmlTagName } from '../element'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 
 /**

@@ -1,4 +1,4 @@
-import type { Style } from '../style'
+import type { Style } from './style.model'
 import { logger } from '@hyperfrontend/logging'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { cssObjectToString } from './css-object-to-string'

@@ -1,4 +1,4 @@
-import type { Style } from '../style'
+import type { Style } from './style.model'
 import { describe, expect, it } from '@hyperfrontend/testing'
 import { cssRule } from './css-rule'
 

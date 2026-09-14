@@ -17,5 +17,5 @@ export {
   selectById,
   selectByClass,
   selectByAttribute,
-} from '../lib/css-selector'
-export { isValidCssSelector } from '../lib/is-valid-css-selector'
+} from './css-selector'
+export { isValidCssSelector } from './is-valid-css-selector'

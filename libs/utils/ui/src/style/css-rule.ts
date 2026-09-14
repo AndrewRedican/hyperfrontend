@@ -1,8 +1,8 @@
-import type { Style } from '../style'
+import type { Style } from './style.model'
 import { getType } from '@hyperfrontend/data-utils'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
+import { isValidCssSelector } from '../selector'
 import { cssObjectToString } from './css-object-to-string'
-import { isValidCssSelector } from './is-valid-css-selector'
 
 /**
  * Generates a CSS rule string from a given selector and style declaration.

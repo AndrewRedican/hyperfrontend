@@ -2,8 +2,8 @@
 import type { StyleFn } from './component'
 import { beforeEach } from 'node:test'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
+import { span } from '../element'
 import { component } from './component'
-import { span } from './element-creators'
 
 describe('component', () => {
   let style: StyleFn

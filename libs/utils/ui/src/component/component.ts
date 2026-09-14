@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import type { ElementMethods } from './create-element'
+import type { ElementMethods } from '../element'
 import { getType } from '@hyperfrontend/data-utils'
 import { createRunOnceFunction } from '@hyperfrontend/function-utils'
 

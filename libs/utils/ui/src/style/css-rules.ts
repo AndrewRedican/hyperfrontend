@@ -1,4 +1,4 @@
-import type { StyleMap } from '../style'
+import type { StyleMap } from './style.model'
 import { getType } from '@hyperfrontend/data-utils'
 import { entries } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { cssRule } from './css-rule'
