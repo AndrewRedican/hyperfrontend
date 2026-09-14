@@ -55,7 +55,7 @@ A terminal prompting library built on functional programming principles. Create 
 - **[Type-Safe](https://www.hyperfrontend.dev/docs/libraries/questions/#api-PromptOutcome)**: Full TypeScript support with discriminated unions for prompt outcomes
 - **Zero External Dependencies**: Uses only Node.js built-ins and `@hyperfrontend` utilities
 - **[Searchable Multiselect](https://www.hyperfrontend.dev/docs/libraries/questions/#api-multiselect)**: Type-to-filter functionality for large option lists
-- **Clipboard Paste**: Bracketed paste mode on TTYs (with a multi-character-chunk fallback elsewhere); pasted text is sanitized and never auto-submits
+- **Clipboard Paste**: Bracketed paste mode on TTYs (with a multi-character-chunk fallback elsewhere); pasted text is sanitized, and a bracketed paste never auto-submits
 - **End of input is a cancellation**: when the input stream ends, a waiting prompt resolves as cancelled instead of waiting for a key that can never arrive
 - **Resize-Aware Rendering**: Prompts hard-wrap to the terminal width and repaint on resize, preserving value, cursor, selection, and validation state
 
@@ -161,7 +161,7 @@ Every config, option and outcome type is in the [API reference](https://www.hype
 
 <!-- hf:media end -->
 
-Prompts run on a TTY, where the session redraws when the terminal is resized, and on non-TTY streams such as tests and pipes. On TTY inputs a prompt session enables bracketed paste mode (`ESC[?2004h`) and restores it on close; terminals without bracketed paste still paste correctly because multi-character input chunks are treated as pastes. Single-line prompts collapse pasted newlines into spaces, so pasting can never submit a value.
+Prompts run on a TTY, where the session redraws when the terminal is resized, and on non-TTY streams such as tests and pipes. On TTY inputs a prompt session enables bracketed paste mode (`ESC[?2004h`) and restores it on close; terminals without bracketed paste still paste correctly because multi-character input chunks are treated as pastes. Single-line prompts collapse pasted newlines into spaces, so a bracketed paste can never submit a value. Where bracketed paste is unavailable, a chunk that ends in a line ending submits the text before it, which is how a line-buffered reader behaves and is what makes piped input work; line endings in the middle of such a chunk stay data.
 
 ### Output Formats
 

@@ -4,7 +4,8 @@
  * Handles bracketed paste bodies (accumulated across chunks between
  * `ESC[200~` and `ESC[201~`), escape-sequence keys, and printable runs.
  * A multi-character printable run outside bracketed paste is treated as a
- * paste from a terminal without bracketed-paste support.
+ * paste from a terminal without bracketed-paste support, and the run's
+ * trailing line endings become Enter keys.
  *
  * @internal
  */
@@ -14,6 +15,12 @@ import { Esc, matchAnsiSequence } from './ansi-text'
 
 /** Control character sent by Ctrl+C in raw mode. */
 const CtrlC = '\x03'
+
+/** Carriage return, the character every prompt reads as Enter. */
+const Enter = '\r'
+
+/** Line feed, which a pipe sends where a terminal sends a carriage return. */
+const LineFeed = '\n'
 
 /** Sequence a bracketed-paste-aware terminal sends before pasted content. */
 const PasteStart = '\x1B[200~'
@@ -130,7 +137,11 @@ function partialMarkerStart(data: string, from: number, marker: string): number 
  * trailing escape is likewise buffered (prompts do not act on a bare Escape
  * key, so delaying it until the next chunk is unobservable). Ctrl+C outside
  * a bracketed paste is always its own key token; inside a paste body it is
- * plain data.
+ * plain data. Outside a bracketed paste, the trailing run of carriage
+ * returns and line feeds is split off a printable run and emitted as one
+ * Enter key per line ending (`\r\n` counts once), so a single chunk
+ * carrying typed text and Enter submits; line endings inside the run stay
+ * data.
  *
  * @returns Stateful token parser
  *
@@ -199,9 +210,23 @@ export function createTokenParser(): TokenParser {
         end++
       }
       const run = data.slice(pos, end)
-      // why: raw mode delivers one keystroke per chunk, so a longer run means the terminal pasted without bracketed-paste support
-      tokens.push(run.length === 1 ? keyToken(run) : pasteToken(run))
       pos = end
+
+      let bodyEnd = run.length
+      // why: a chunk that ends in newlines carries a submit, so the newline run is peeled off the body before the body is classified
+      while (bodyEnd > 0 && (run.charAt(bodyEnd - 1) === Enter || run.charAt(bodyEnd - 1) === LineFeed)) {
+        bodyEnd--
+      }
+      const body = run.slice(0, bodyEnd)
+      if (body.length > 0) {
+        // why: raw mode delivers one keystroke per chunk, so a longer run means the terminal pasted without bracketed-paste support
+        tokens.push(body.length === 1 ? keyToken(body) : pasteToken(body))
+      }
+      for (let index = bodyEnd; index < run.length; index++) {
+        // why: CRLF is one Enter and a lone line feed is the Enter a pipe sends, matching how readline normalises line endings
+        if (run.charAt(index) === LineFeed && run.charAt(index - 1) === Enter) continue
+        tokens.push(keyToken(Enter))
+      }
     }
 
     return freeze(tokens)

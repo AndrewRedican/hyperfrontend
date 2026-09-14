@@ -24,7 +24,6 @@ Reproduced on Node 24.18.1 against the versions named, 2026-08-25.
 | D-10 | state-machine                              | Nothing makes `init` run once under concurrent callers                  | medium   |
 | D-11 | versioning                                 | `createIndependentFlow` cascade steps are no-op stubs reporting success | medium   |
 | D-12 | ui-utils                                   | `syncElementDimensions` copies the source's inline `position`           | low      |
-| D-14 | questions                                  | Enter sharing a write with typed text hangs the prompt silently         | low      |
 
 ---
 
@@ -214,19 +213,3 @@ option. **Pending a call on which of the three to take.**
 **Docs follow-up.** The planned element-tracking guide must tell the reader to set the overlay's
 `position` from their own stylesheet, and use `js` fences until D-04 is fixed. `onElementResize` and
 `getElementAsync` are sound and their examples are accurate.
-
-## D-14 — Enter sharing a write with typed text hangs the prompt silently
-
-`questions@0.3.0`. Keystrokes may share a chunk, but a chunk carrying both text and the Enter
-byte is never recognised as a submission: `input.write('billing\r')` leaves the prompt pending
-forever, with no error and no timeout. `input.write('billing')` followed by `input.write('\r')`
-works.
-
-The key codes themselves are not part of the published surface (`Key` is internal), so a
-consumer driving a prompt writes the escape sequences by hand.
-
-**Docs follow-up.** The shipped
-[test-interactive-prompts-without-a-terminal](../apps/docs-site/content/guides/test-interactive-prompts-without-a-terminal/guide.md)
-guide states the Enter rule and ships a `KEY` map the reader owns, so it is correct today. A
-`/testing` subpath exporting the key codes and a stream helper would let that guide delete its
-first step.

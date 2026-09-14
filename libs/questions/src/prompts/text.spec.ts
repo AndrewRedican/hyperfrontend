@@ -128,6 +128,24 @@ describe('text', () => {
       expect(result.result).toBe(PromptResult.Submitted)
       expect(result.value).toBe('default')
     })
+
+    it('submits text and Enter delivered in one chunk', async () => {
+      const config = createConfig()
+      const promise = text(config)
+
+      input.enqueueKeys(['billing\r'])
+
+      expect(await promise).toEqual({ result: PromptResult.Submitted, value: 'billing' })
+    })
+
+    it('submits a line ending in a line feed, the shape a pipe sends', async () => {
+      const config = createConfig()
+      const promise = text(config)
+
+      input.enqueueKeys(['billing\n'])
+
+      expect(await promise).toEqual({ result: PromptResult.Submitted, value: 'billing' })
+    })
   })
 
   describe('cancellation', () => {
