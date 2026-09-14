@@ -57,6 +57,7 @@ A terminal prompting library built on functional programming principles. Create 
 - **[Searchable Multiselect](https://www.hyperfrontend.dev/docs/libraries/questions/#api-multiselect)**: Type-to-filter functionality for large option lists
 - **Clipboard Paste**: Bracketed paste mode on TTYs (with a multi-character-chunk fallback elsewhere); pasted text is sanitized, and a bracketed paste never auto-submits
 - **End of input is a cancellation**: when the input stream ends, a waiting prompt resolves as cancelled instead of waiting for a key that can never arrive
+- **Unanswerable configurations throw**: a choice prompt with no choices, or a starting index outside its list, rejects with an error rather than painting a frame nothing can answer
 - **Resize-Aware Rendering**: Prompts hard-wrap to the terminal width and repaint on resize, preserving value, cursor, selection, and validation state
 
 ### Architecture Highlights

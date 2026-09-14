@@ -13,6 +13,7 @@ import { createScreen } from '../screen'
 import { createTerminal, Ansi, Key } from '../terminal'
 import { TokenType } from '../token-parser'
 import { PromptResult } from '../types'
+import { assertResolvableChoices } from './validate-choices'
 
 /**
  * Checks if an array includes a value.
@@ -363,6 +364,7 @@ function effectiveMaxVisible(term: Terminal, configured: number | undefined): nu
  *
  * @param config - Multiselect prompt configuration
  * @returns Promise resolving to array of selected values or cancellation
+ * @throws {Error} When `choices` is empty, or an `initial` entry is not a whole number inside the choice list
  *
  * @example Basic multiselect
  * ```typescript
@@ -400,6 +402,8 @@ function effectiveMaxVisible(term: Terminal, configured: number | undefined): nu
  * ```
  */
 export async function multiselect<T = string>(config: MultiselectConfig<T>): Promise<PromptOutcome<ReadonlyArray<T>>> {
+  assertResolvableChoices('multiselect', config.choices, config.initial ?? [])
+
   const term = createTerminal({ input: config.input, output: config.output })
   const screen = createScreen(term)
   let state = createInitialState(config)

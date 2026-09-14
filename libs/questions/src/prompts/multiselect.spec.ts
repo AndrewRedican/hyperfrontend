@@ -465,17 +465,15 @@ describe('multiselect', () => {
     })
   })
 
-  describe('empty state', () => {
-    it('handles empty choices array', async () => {
-      const config = createConfig({ choices: [] })
-      const promise = multiselect(config)
+  describe('configuration', () => {
+    it('rejects an empty choice list', async () => {
+      await expect(multiselect(createConfig({ choices: [] }))).rejects.toThrow('multiselect requires at least one choice')
+    })
 
-      input.enqueueKeys([Key.Enter])
-
-      const result = await promise
-
-      expect(result.result).toBe(PromptResult.Submitted)
-      expect(result.value).toEqual([])
+    it('rejects an initial index past the last choice', async () => {
+      await expect(multiselect(createConfig({ initial: [7] }))).rejects.toThrow(
+        'multiselect initial must be an index between 0 and 2, received 7'
+      )
     })
   })
 
