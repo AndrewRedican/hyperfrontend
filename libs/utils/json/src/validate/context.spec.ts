@@ -1,5 +1,6 @@
 import type { Schema } from '../types/schema'
 import type { SchemaValidator } from './context'
+import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { describe, expect, it } from '@hyperfrontend/testing'
 import { createValidationContext, pushPath, addError, shouldContinue } from './context'
 
@@ -59,6 +60,12 @@ describe('createValidationContext', () => {
     const ctx = createValidationContext(schema, mockValidator)
 
     expect(ctx.validate).toBe(mockValidator)
+  })
+
+  it('starts with no visited $ref targets', () => {
+    const ctx = createValidationContext({ type: 'string' }, mockValidator)
+
+    expect(ctx.visitedRefs.size).toBe(0)
   })
 })
 
@@ -122,6 +129,13 @@ describe('pushPath', () => {
     const childCtx = pushPath(ctx, 'prop')
 
     expect(childCtx.validate).toBe(mockValidator)
+  })
+
+  it('clears the visited $ref targets because descending consumes data', () => {
+    const ctx = { ...createValidationContext({ type: 'object' }, mockValidator), visitedRefs: createSet(['#']) }
+    const childCtx = pushPath(ctx, 'prop')
+
+    expect(childCtx.visitedRefs.size).toBe(0)
   })
 })
 

@@ -2,7 +2,8 @@ import type { Schema } from '../types/schema'
 import type { ValidationResult, ValidateOptions, PatternSafetyChecker } from '../types/validation'
 import type { ValidationContext } from './context'
 import { isArray } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
-import { createValidationContext, shouldContinue } from './context'
+import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
+import { addError, createValidationContext, shouldContinue } from './context'
 import { validateArrayBounds } from './keywords/array-bounds'
 import { validateAllOf, validateAnyOf, validateOneOf, validateNot } from './keywords/composition'
 import { validateDependencies } from './keywords/dependencies'
@@ -72,12 +73,18 @@ export function validate(instance: unknown, schema: Schema, options?: ValidateOp
  */
 export function validateSchema(instance: unknown, schema: Schema, ctx: ValidationContext): boolean {
   if (schema.$ref) {
+    // why: the same $ref at the same instance position can only recurse forever; report it instead
+    if (ctx.visitedRefs.has(schema.$ref)) {
+      addError(ctx, `Circular $ref with no progress: ${schema.$ref}`, instance, '$ref', { ref: schema.$ref })
+      return false
+    }
     const resolved = resolveRef(schema.$ref, ctx)
     // why: $ref resolution failures are tested in resolve-ref.spec.ts
     if (!resolved) {
       return true
     }
-    return validateSchema(instance, resolved, ctx)
+    // why: the set is copied, not mutated, so sibling branches at this position start from the parent's set
+    return validateSchema(instance, resolved, { ...ctx, visitedRefs: createSet([...ctx.visitedRefs, schema.$ref]) })
   }
 
   let valid = true
