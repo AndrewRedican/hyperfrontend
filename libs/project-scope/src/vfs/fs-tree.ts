@@ -339,6 +339,7 @@ export function createFsTree(root: string, options?: CreateTreeOptions): Tree {
 
     isDirectory(filePath: string): boolean {
       const normalPath = normalizeFilePath(filePath)
+      validateSymlink(normalPath)
 
       for (const [changedPath, change] of _changes) {
         if (change.type !== 'DELETE' && changedPath.startsWith(normalPath + '/')) {
@@ -357,6 +358,8 @@ export function createFsTree(root: string, options?: CreateTreeOptions): Tree {
 
     children(dirPath: string): string[] {
       const normalPath = normalizeFilePath(dirPath)
+      validateSymlink(normalPath)
+
       const childSet = createSet<string>()
 
       const absPath = absolutePath(normalPath)

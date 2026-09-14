@@ -1,6 +1,6 @@
 import type { Tree } from '../../vfs'
 import type { WalkEntry, WalkOptions, WalkVisitor } from './walk'
-import { mkdirSync, writeFileSync, rmSync } from 'node:fs'
+import { mkdirSync, writeFileSync, rmSync, symlinkSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { after as afterAll, before as beforeAll } from 'node:test'
 import { describe, expect, it } from '@hyperfrontend/testing'
@@ -11,6 +11,7 @@ const FIXTURES_DIR = resolve(import.meta.dirname, '../../../__fixtures__')
 const MINIMAL_PROJECT = resolve(FIXTURES_DIR, 'minimal-project')
 const MONOREPO = resolve(FIXTURES_DIR, 'monorepo')
 const TEST_DIR = join(import.meta.dirname, '__test_fixtures_walk__')
+const SYMLINK_DIR = join(import.meta.dirname, '__test_fixtures_walk_symlink__')
 
 /**
  * Collects the relative path of every entry a walk visits, sorted so a suite can
@@ -196,6 +197,25 @@ describe('walkTree', () => {
     walkTree(tree, '', visitor, { includeHidden: true })
 
     expect(entries.length).toBe(2)
+  })
+
+  it('stops walking when the visitor stops inside a nested directory', () => {
+    const visited: string[] = []
+
+    walkTree(
+      createTree(MONOREPO),
+      '',
+      (entry) => {
+        visited.push(entry.relativePath)
+        if (entry.relativePath.includes('/')) {
+          return 'stop'
+        }
+      },
+      // why: the depth cap keeps the walk bounded even if the stop signal is ever dropped again.
+      { maxDepth: 3 }
+    )
+
+    expect(visited.filter((path) => path.includes('/'))).toHaveLength(1)
   })
 
   it('filters hidden files by default', () => {
@@ -440,5 +460,62 @@ describe('walkTree - error propagation', () => {
     })
 
     expect(entries).toEqual([])
+  })
+})
+
+describe('walkTree - symlinked directories', () => {
+  beforeAll(() => {
+    rmSync(SYMLINK_DIR, { recursive: true, force: true })
+    mkdirSync(join(SYMLINK_DIR, 'src'), { recursive: true })
+    writeFileSync(join(SYMLINK_DIR, 'src', 'a.ts'), 'export {}')
+    symlinkSync(join(SYMLINK_DIR, 'src'), join(SYMLINK_DIR, 'link-dir'), 'dir')
+    symlinkSync('..', join(SYMLINK_DIR, 'src', 'loop'), 'dir')
+  })
+
+  afterAll(() => {
+    rmSync(SYMLINK_DIR, { recursive: true, force: true })
+  })
+
+  it('reports a directory symlink as a symlink', () => {
+    const entries: WalkEntry[] = []
+    walkTree(
+      createTree(SYMLINK_DIR),
+      '',
+      (entry) => {
+        entries.push(entry)
+      },
+      { maxDepth: 0 }
+    )
+
+    expect(entries).toEqual(expect.arrayContaining([expect.objectContaining({ name: 'link-dir', isSymlink: true })]))
+  })
+
+  it('reports a real directory as not a symlink', () => {
+    const entries: WalkEntry[] = []
+    walkTree(
+      createTree(SYMLINK_DIR),
+      '',
+      (entry) => {
+        entries.push(entry)
+      },
+      { maxDepth: 0 }
+    )
+
+    expect(entries).toEqual(expect.arrayContaining([expect.objectContaining({ name: 'src', isSymlink: false })]))
+  })
+
+  it('stops at a symlink instead of walking the loop behind it', () => {
+    const visited: string[] = []
+    walkTree(
+      createTree(SYMLINK_DIR),
+      '',
+      (entry) => {
+        visited.push(entry.relativePath)
+      },
+      // why: the depth cap keeps a regression bounded; without the symlink guard this tree doubles its matches at every extra level.
+      { maxDepth: 4 }
+    )
+
+    expect(visited.sort()).toEqual(['link-dir', 'src', 'src/a.ts', 'src/loop'])
   })
 })

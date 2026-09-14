@@ -307,6 +307,7 @@ export function walkTree(tree: Tree, startPath: string, visitor: WalkVisitor, op
       const entryRelativePath = relativePath ? `${relativePath}/${name}` : name
 
       const isFileEntry = tree.isFile(childPath)
+      const isSymlinkEntry = tree.isSymlink(childPath)
 
       const walkEntry: WalkEntry = {
         name,
@@ -314,7 +315,7 @@ export function walkTree(tree: Tree, startPath: string, visitor: WalkVisitor, op
         relativePath: entryRelativePath,
         isFile: isFileEntry,
         isDirectory: !isFileEntry,
-        isSymlink: false,
+        isSymlink: isSymlinkEntry,
         depth,
       }
 
@@ -328,7 +329,8 @@ export function walkTree(tree: Tree, startPath: string, visitor: WalkVisitor, op
         continue
       }
 
-      if (!isFileEntry) {
+      // why: a directory symlink can point back at an ancestor, so descending it never terminates; the link is reported and left unopened, which is what walkDirectory already does.
+      if (!isFileEntry && !isSymlinkEntry) {
         const shouldContinue = walk(childPath, entryRelativePath, depth + 1)
         if (!shouldContinue) {
           return false
