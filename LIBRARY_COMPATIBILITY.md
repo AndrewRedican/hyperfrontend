@@ -92,7 +92,7 @@ Legend: ✅ full support, ⚠️ partial support, ❌ no support, ❓ nothing de
 | `@hyperfrontend/function-utils` | - |
 | `@hyperfrontend/immutable-api-utils` | - |
 | `@hyperfrontend/json-utils` | `@hyperfrontend/immutable-api-utils` |
-| `@hyperfrontend/list-utils` | `@hyperfrontend/data-utils`, `@hyperfrontend/immutable-api-utils` |
+| `@hyperfrontend/list-utils` | `@hyperfrontend/immutable-api-utils` |
 | `@hyperfrontend/logging` | `@hyperfrontend/data-utils`, `@hyperfrontend/function-utils`, `@hyperfrontend/immutable-api-utils` |
 | `@hyperfrontend/network-protocol` | `@hyperfrontend/cryptography`, `@hyperfrontend/data-utils`, `@hyperfrontend/immutable-api-utils`, `@hyperfrontend/json-utils`, `@hyperfrontend/logging`, `@hyperfrontend/random-generator-utils`, `@hyperfrontend/string-utils`, `@hyperfrontend/time-utils` |
 | `@hyperfrontend/nexus` | `@hyperfrontend/data-utils`, `@hyperfrontend/immutable-api-utils`, `@hyperfrontend/json-utils`, `@hyperfrontend/logging`, `@hyperfrontend/network-protocol` (peer), `@hyperfrontend/random-generator-utils` |
@@ -154,7 +154,6 @@ flowchart TB
     features --> ui_utils
     features --> versioning
     json_utils --> immutable_api_utils
-    list_utils --> data_utils
     list_utils --> immutable_api_utils
     logging --> data_utils
     logging --> function_utils
