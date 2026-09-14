@@ -30,7 +30,6 @@
     "./package.json": "./package.json"
   },
   "dependencies": {
-    "@hyperfrontend/data-utils": "1.0.0",
     "@hyperfrontend/immutable-api-utils": "1.0.0"
   }
 }

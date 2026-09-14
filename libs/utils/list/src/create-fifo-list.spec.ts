@@ -22,6 +22,26 @@ describe('createFifoList', () => {
       expect(() => fifoList.push(5)).toThrow()
     })
 
+    it('throws an error for null', () => {
+      expect(() => fifoList.push(null)).toThrow()
+    })
+
+    it('accepts an array', () => {
+      fifoList.push([1, 2])
+      expect(fifoList.size()).toBe(1)
+    })
+
+    it('accepts a function', () => {
+      fifoList.push(() => undefined)
+      expect(fifoList.size()).toBe(1)
+    })
+
+    it('accepts a class instance', () => {
+      class Task {}
+      fifoList.push(new Task())
+      expect(fifoList.size()).toBe(1)
+    })
+
     it('throws an error for duplicate items', () => {
       const item = {}
       fifoList.push(item)
