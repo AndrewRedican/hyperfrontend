@@ -89,7 +89,7 @@ export async function fetchLatestPublication(
   transport: (url: string) => Promise<Response> = (url) => fetch(url)
 ): Promise<LatestPublication | null> {
   try {
-    const response = await transport(`${REGISTRY_API}/${packageName.replace('/', '%2F')}`)
+    const response = await transport(`${REGISTRY_API}/${packageName.replaceAll('/', '%2F')}`)
     if (!response.ok) return null
     return readLatestPublication(await response.json())
   } catch {

@@ -72,7 +72,7 @@ function sleepFor(ms: number): Promise<void> {
  * @returns The name with its slash percent-encoded, as npm expects
  */
 function encodePackage(packageName: string): string {
-  return packageName.replace('/', '%2F')
+  return packageName.replaceAll('/', '%2F')
 }
 
 /**
