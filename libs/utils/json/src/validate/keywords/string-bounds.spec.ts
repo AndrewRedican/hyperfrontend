@@ -20,6 +20,27 @@ describe('validateStringBounds', () => {
     expect(validateStringBounds('abc', schema, ctx)).toBe(false)
   })
 
+  describe('length by code point', () => {
+    it('counts an astral character once for maxLength', () => {
+      expect(validateStringBounds('😀', { maxLength: 1 }, ctx)).toBe(true)
+    })
+
+    it('reports the code point count as the actual length', () => {
+      const lengthCtx = { errors: [], collectAllErrors: true } as unknown as ValidationContext
+      validateStringBounds('😀', { minLength: 2 }, lengthCtx)
+
+      expect(lengthCtx.errors).toEqual([expect.objectContaining({ code: 'minLength', params: { limit: 2, actual: 1 } })])
+    })
+
+    it('counts a high surrogate followed by an ordinary character as two', () => {
+      expect(validateStringBounds('\uD83Da', { minLength: 2 }, ctx)).toBe(true)
+    })
+
+    it('counts a trailing lone surrogate as one', () => {
+      expect(validateStringBounds('a\uD83D', { maxLength: 2 }, ctx)).toBe(true)
+    })
+  })
+
   it('fails pattern mismatch', () => {
     const schema: Schema = { pattern: '^a' }
     expect(validateStringBounds('bc', schema, ctx)).toBe(false)
