@@ -13,64 +13,29 @@ about the documentation once it lands.
 
 Reproduced on Node 24.18.1 against the versions named, 2026-08-25.
 
-| #    | Package                                    | Defect                                                                  | Severity |
-| ---- | ------------------------------------------ | ----------------------------------------------------------------------- | -------- |
-| D-01 | builder / project-scope / network-protocol | Dedupe pass drops renamed builtin imports, breaking ESM output          | high     |
-| D-02 | package-e2e (all)                          | The ESM lane is not real ESM, so D-01 shipped unnoticed                 | high     |
-| D-03 | generated feature shells                   | `require()` resolves to an empty object                                 | high     |
-| D-04 | ui-utils                                   | No working TypeScript declarations                                      | high     |
-| D-09 | logging                                    | A channel shares its level with its parent in both directions           | medium   |
-| D-10 | state-machine                              | Nothing makes `init` run once under concurrent callers                  | medium   |
-| D-11 | versioning                                 | `createIndependentFlow` cascade steps are no-op stubs reporting success | medium   |
-| D-12 | ui-utils                                   | `syncElementDimensions` copies the source's inline `position`           | low      |
+| #    | Package                  | Defect                                                                  | Severity |
+| ---- | ------------------------ | ----------------------------------------------------------------------- | -------- |
+| D-02 | package-e2e (all)        | The ESM lane never calls anything, so call-time failures ship unseen    | high     |
+| D-03 | generated feature shells | `require()` resolves to an empty object                                 | high     |
+| D-04 | ui-utils                 | No working TypeScript declarations                                      | high     |
+| D-09 | logging                  | A channel shares its level with its parent in both directions           | medium   |
+| D-10 | state-machine            | Nothing makes `init` run once under concurrent callers                  | medium   |
+| D-11 | versioning               | `createIndependentFlow` cascade steps are no-op stubs reporting success | medium   |
+| D-12 | ui-utils                 | `syncElementDimensions` copies the source's inline `position`           | low      |
 
 ---
-
-## D-01 — the dedupe pass drops renamed builtin imports, breaking ESM output
-
-`builder@0.2.0`, `project-scope@0.2.4`, `network-protocol@0.2.1`. CJS is unaffected throughout.
-
-`libs/builder/src/bundle/dedupe/attribute-modules.ts:94` defines
-`baseName = (name) => name.replace(/\$\d+$/, '')`, and `extract-chunk.ts:115-120` resolves a
-reference through it. For `join$1` inside the module that itself exports `join`, the owner
-resolves to the module's own export, so the reference is treated as local and no import is
-emitted. Rollup renames a builtin import whenever it collides with a local name, so any module
-that re-exports a same-named helper loses its import.
-
-Reproduced, three shapes:
-
-- **project-scope** throws at call time. 19 root symbols raise `join$1 is not defined`, and the
-  whole VFS `Tree` surface raises `isAbsolute$1 is not defined`. All 30 subpaths import cleanly,
-  so narrowing the entry point is not a workaround; only `createRequire` is. Worse,
-  `findFilesInTree` and `walkTree` swallow the failure and return empty results:
-  `findFilesInTree(tree, '**/*.ts')` gives `[]` under ESM and `["src/index.ts"]` under CJS, with
-  no error either way.
-- **network-protocol** fails to link. 16 of 18 subpaths report that
-  `_shared/lib/data/creators/mocks/index.esm.js` provides no export named `data`, because that
-  extracted chunk is three lines long (`var id = "/v4"`) while eight sibling chunks import seven
-  names from it. Only `./security` and `./topic` load.
-- **builder** fails to link on 8 of 21 subpaths: the root and the three `./bin*` entries on a
-  `postject` named export, and the four `./bundle/*` entries on `__dirname is not defined` in ES
-  module scope.
-
-One fix in the dedupe pass (do not strip `$N` when the ref is a known import binding, or check
-`importBindings` before `ownerOf`) plus a rebuild and release of all three closes this.
-
-**Docs follow-up.** This is the single highest-leverage fix in the corpus: it unblocks the whole
-project-scope slate, the network-protocol slate, and the ESM half of the builder and versioning
-guides. Until it lands, no guide may show a plain `import` from these three packages. The shipped
-[read-another-tools-config-file](../apps/docs-site/content/guides/read-another-tools-config-file/guide.md)
-guide is unaffected because config detection and parsing do not route through the broken chunk.
 
 ## D-02 — the ESM package-e2e lane is not real ESM
 
 Every publishable library has an `esm` e2e config, and none of them proves the ESM entry works.
 `apps/package-e2e/project-scope/src/esm.spec.ts` asserts `expect(typeof X).toBe('function')` for
 each import and never calls anything, so a call-time `ReferenceError` is invisible. Separately,
-the lane runs under jest, whose module handling accepts subpaths that Node rejects outright:
-network-protocol's ESM spec passes green against the same tarball a plain `.mjs` import fails on.
+the lane's module handling accepts subpaths that Node rejects outright, so an ESM spec can pass
+green against a tarball a plain `.mjs` import fails on.
 
-That combination is why D-01 shipped across three packages.
+That combination is what let the dedupe defect ship across three packages: every affected entry
+linked cleanly and only threw when a function was actually called. One real call per suite that
+crosses a `_shared` chunk would have caught it.
 
 **Docs follow-up.** None directly, but until a real native-ESM smoke exists (a plain `.mjs` or
 `node --input-type=module` run against the packed tarball) every "verified against the published
