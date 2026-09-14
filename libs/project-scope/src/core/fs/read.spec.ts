@@ -3,7 +3,15 @@ import { mkdirSync, writeFileSync, rmSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { after as afterAll, before as beforeAll } from 'node:test'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
-import { readFileContent, readFileBuffer, readFileIfExists, readJsonFile, readJsonFileIfExists } from './read'
+import {
+  createFileSystemError,
+  isFileSystemError,
+  readFileContent,
+  readFileBuffer,
+  readFileIfExists,
+  readJsonFile,
+  readJsonFileIfExists,
+} from './read'
 
 // why: the module under test binds `readFileSync` when it links, so no property replacement on the namespace can reach it. Replacing the module is what makes the read failures reachable, and the replacement calls through until a test says otherwise.
 jest.mock('node:fs', () => {
@@ -180,6 +188,26 @@ describe('core/fs/read', () => {
 
     it('returns null when readJsonFileIfExists receives a NUL-poisoned path', () => {
       expect(readJsonFileIfExists(POISONED)).toBeNull()
+    })
+  })
+
+  describe('isFileSystemError', () => {
+    it('accepts a structured filesystem error', () => {
+      expect(isFileSystemError(createFileSystemError('gone', 'FS_NOT_FOUND', { path: 'x', operation: 'read' }))).toBe(true)
+    })
+
+    it('accepts a raw Node error carrying a string code', () => {
+      const error = new Error('ENOENT: no such file or directory')
+      ;(error as { code?: string }).code = 'ENOENT'
+      expect(isFileSystemError(error)).toBe(true)
+    })
+
+    it('rejects an error without a code', () => {
+      expect(isFileSystemError(new TypeError('join is not a function'))).toBe(false)
+    })
+
+    it('rejects a thrown value that is not an Error', () => {
+      expect(isFileSystemError('ENOENT')).toBe(false)
     })
   })
 })

@@ -1,6 +1,7 @@
 import type { Tree } from '../../vfs'
 import { join } from 'node:path'
 import { readDirectory, readFileIfExists } from '../../core/fs'
+import { isFileSystemError } from '../../core/fs/read'
 import { createScopedLogger } from '../../core/logger'
 import { matchGlobPattern } from '../../core/patterns/glob'
 
@@ -174,7 +175,11 @@ export function walkDirectory(startPath: string, visitor: WalkVisitor, options?:
     let entries
     try {
       entries = readDirectory(currentPath)
-    } catch {
+    } catch (error) {
+      // why: an unreadable directory yields no entries, but anything that is not a filesystem failure is a defect the caller must see.
+      if (!isFileSystemError(error)) {
+        throw error
+      }
       return true
     }
 
@@ -267,7 +272,11 @@ export function walkTree(tree: Tree, startPath: string, visitor: WalkVisitor, op
     let children: string[]
     try {
       children = tree.children(currentPath)
-    } catch {
+    } catch (error) {
+      // why: a missing directory yields no children, but a broken tree implementation or a root escape must reach the caller instead of reading as "empty".
+      if (!isFileSystemError(error)) {
+        throw error
+      }
       return true
     }
 

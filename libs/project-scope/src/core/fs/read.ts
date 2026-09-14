@@ -51,6 +51,40 @@ export function createFileSystemError(message: string, code: FileSystemErrorCode
 }
 
 /**
+ * Error object with optional code property.
+ */
+interface ErrorWithCode {
+  /** Error code (e.g., 'ENOENT') */
+  code?: string
+}
+
+/**
+ * Report whether a thrown value describes a filesystem failure.
+ *
+ * Both the structured errors this module raises and the raw errors Node throws
+ * carry a string `code`, so the presence of one separates "the filesystem said
+ * no" from a programmer error such as a `TypeError` or a `ReferenceError`. Code
+ * that treats an unreadable directory as empty can use this to keep swallowing
+ * the first kind while letting the second reach the caller.
+ *
+ * @param error - The value caught from a filesystem operation.
+ * @returns True when the value is an Error carrying a string `code`.
+ *
+ * @example Swallowing only filesystem failures
+ * ```typescript
+ * try {
+ *   entries = readDirectory(path)
+ * } catch (error) {
+ *   if (!isFileSystemError(error)) throw error
+ *   entries = []
+ * }
+ * ```
+ */
+export function isFileSystemError(error: unknown): boolean {
+  return error instanceof Error && typeof (error as Error & ErrorWithCode).code === 'string'
+}
+
+/**
  * Read file contents as string.
  *
  * @param filePath - Path to file
@@ -135,14 +169,6 @@ export function readFileIfExists(filePath: string, encoding: BufferEncoding = 'u
   } catch {
     return null
   }
-}
-
-/**
- * Error object with optional code property.
- */
-interface ErrorWithCode {
-  /** Error code (e.g., 'ENOENT') */
-  code?: string
 }
 
 /**

@@ -1,3 +1,4 @@
+import type { Tree } from '../../vfs'
 import type { WalkEntry, WalkVisitor } from './walk'
 import { mkdirSync, writeFileSync, rmSync } from 'node:fs'
 import { join, resolve } from 'node:path'
@@ -358,5 +359,38 @@ describe('walkDirectory - edge cases', () => {
     walkDirectory(join(TEST_DIR, 'undefined-return'), visitor)
 
     expect(entries.length).toBe(2)
+  })
+})
+
+describe('walkTree - error propagation', () => {
+  it('propagates an error the tree throws that is not a filesystem failure', () => {
+    const tree = createTree(MINIMAL_PROJECT)
+    const broken: Tree = {
+      ...tree,
+      children: () => {
+        throw new TypeError('isAbsolute$1 is not defined')
+      },
+    }
+
+    expect(() => walkTree(broken, '', () => undefined)).toThrow('isAbsolute$1 is not defined')
+  })
+
+  it('treats a filesystem failure from the tree as an empty directory', () => {
+    const tree = createTree(MINIMAL_PROJECT)
+    const failing: Tree = {
+      ...tree,
+      children: () => {
+        const error = new Error('ENOENT: no such file or directory')
+        ;(error as { code?: string }).code = 'ENOENT'
+        throw error
+      },
+    }
+
+    const entries: WalkEntry[] = []
+    walkTree(failing, '', (entry) => {
+      entries.push(entry)
+    })
+
+    expect(entries).toEqual([])
   })
 })
