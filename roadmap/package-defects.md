@@ -178,10 +178,8 @@ implying per-channel control. The shipped
 tutorial is accurate as written: it says a channel borrows the root's level and only ever calls
 `setLogLevel` on the root.
 
-Two smaller logging items in the same pass: `isValidLogLevel` types its parameter as `LogLevel`
-rather than `string` and is not a type predicate, so validating an untrusted value needs a cast;
-and the README's Winston adapter example binds five methods positionally in an order that drops
-an entire level.
+One smaller logging item in the same pass: the README's Winston adapter example binds five
+methods positionally in an order that drops an entire level.
 
 ## D-10 — lifecycle replay hits every handler, and nothing makes `init` run once
 
