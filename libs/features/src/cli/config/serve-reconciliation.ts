@@ -16,8 +16,11 @@ const SERVE_CONFIG_FILENAME = `${SERVE_CONFIG_BASENAME}.json`
 // note: The header an origin declares its opener policy in, lowercased for comparison.
 const OPENER_POLICY_HEADER = 'cross-origin-opener-policy'
 
-// note: The one opener-policy value that severs an incoming opener; `same-origin-allow-popups` governs windows the document opens, not the opener it keeps when it is opened.
-const SEVERING_POLICY = 'same-origin'
+// note: The one opener-policy value that keeps the opener of a window a cross-origin host opened; every other value, `same-origin-allow-popups` included, mismatches that opener's own `unsafe-none` and severs it.
+const KEPT_OPENER_POLICY = 'unsafe-none'
+
+// note: The opener policy the server expands a declared `isolation` into, ahead of the authored rules.
+const ISOLATION_OPENER_POLICY = 'same-origin'
 
 /**
  * Reads the serve config a build's output will carry, when the project authored one.
@@ -33,35 +36,38 @@ function readServeConfig(baseDir: string): ServeConfig | null {
 }
 
 /**
- * Finds the opener policy a header rule sets for every path.
+ * Reads the opener policy one header rule sets for every path.
  *
  * A rule bounded by a prefix or suffix is not read: it leaves the rest of the
  * origin uncovered, and the feature's own URL may sit outside it.
  *
- * @param rules - The authored header rules, when any.
- * @returns The opener-policy value applied site-wide, lowercased, or `undefined`.
+ * @param rule - One authored header rule.
+ * @returns The rule's opener-policy value, lowercased, or `undefined` when the rule is bounded or sets no opener policy.
  */
-function siteWideOpenerPolicy(rules: readonly ServeHeaderRule[] | undefined): string | undefined {
-  const unbounded = rules?.find((rule) => rule.prefix === undefined && rule.suffix === undefined)
-  if (unbounded === undefined) {
+function ruleOpenerPolicy(rule: ServeHeaderRule): string | undefined {
+  if (rule.prefix !== undefined || rule.suffix !== undefined) {
     return undefined
   }
-  const name = keys(unbounded.headers).find((header) => header.toLowerCase() === OPENER_POLICY_HEADER)
-  return name === undefined ? undefined : unbounded.headers[name]?.trim().toLowerCase()
+  const name = keys(rule.headers).find((header) => header.toLowerCase() === OPENER_POLICY_HEADER)
+  return name === undefined ? undefined : rule.headers[name]?.trim().toLowerCase()
 }
 
 /**
- * Reports whether a served origin severs the opener of a window a cross-origin
- * host opens onto it.
- *
- * Two spellings say the same thing: the declared `isolation` key, and a
- * hand-written opener policy on the rule covering every path.
+ * Computes the opener policy the served origin applies to every path, the way
+ * the server itself does: a declared `isolation` expands into a site-wide rule
+ * placed ahead of the authored ones, then every unbounded rule is folded in
+ * order with the last value winning. An explicit rule after the expansion is
+ * therefore the documented way to take the opener policy back.
  *
  * @param config - The project's serve config.
- * @returns `true` when the origin's opener policy severs a cross-origin opener.
+ * @returns The effective site-wide opener-policy value, lowercased, or `undefined` when the origin sets none.
  */
-function seversOpener(config: ServeConfig): boolean {
-  return config.isolation !== undefined || siteWideOpenerPolicy(config.headers) === SEVERING_POLICY
+function effectiveOpenerPolicy(config: ServeConfig): string | undefined {
+  let policy = config.isolation === undefined ? undefined : ISOLATION_OPENER_POLICY
+  for (const rule of config.headers ?? []) {
+    policy = ruleOpenerPolicy(rule) ?? policy
+  }
+  return policy
 }
 
 /**
@@ -88,7 +94,11 @@ export function reconcileServeIsolation(config: ResolvedFeatureConfig, sourcePat
     return null
   }
   const serveConfig = readServeConfig(dirname(sourcePath))
-  if (serveConfig === null || !seversOpener(serveConfig)) {
+  if (serveConfig === null) {
+    return null
+  }
+  const policy = effectiveOpenerPolicy(serveConfig)
+  if (policy === undefined || policy === KEPT_OPENER_POLICY) {
     return null
   }
   const unreachable = resolveDeclaredModes(config).filter((mode: DisplayMode) => WINDOWED_DISPLAY_MODES.includes(mode))
@@ -96,5 +106,5 @@ export function reconcileServeIsolation(config: ResolvedFeatureConfig, sourcePat
     return null
   }
   const named = unreachable.map((mode) => `"${mode}"`).join(' and ')
-  return `Warning: this feature composes ${named}, but its ${SERVE_CONFIG_FILENAME} makes the origin cross-origin isolated. A window a cross-origin host opens onto an isolated origin loses its opener as the document loads, so those modes will never complete a handshake. Declare "isolation" in the feature config to compose only the modes the origin can serve, or drop the isolation headers.\n`
+  return `Warning: this feature composes ${named}, but its ${SERVE_CONFIG_FILENAME} serves "Cross-Origin-Opener-Policy: ${policy}" on every path. A window a cross-origin host opens onto an origin whose opener policy is anything other than "${KEPT_OPENER_POLICY}" loses its opener as the document loads, so those modes will never complete a handshake. Declare "isolation" in the feature config to compose only the modes the origin can serve, or serve the feature's own paths with "Cross-Origin-Opener-Policy: ${KEPT_OPENER_POLICY}".\n`
 }
