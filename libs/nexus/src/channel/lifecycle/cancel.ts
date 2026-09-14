@@ -8,6 +8,7 @@ import { clearHandshakeTimers } from './handshake-timers'
  *
  * - If channel is closed, sends CANCEL_CONNECTION
  * - If channel is already open, calls disconnect instead
+ * - Drops the process of the request it abandons
  * - Fires the single 'cancel' event this side reports for the attempt,
  *   carrying whether the counterpart is the side that cancelled; the
  *   acknowledgement travelling either way fires nothing further
@@ -32,6 +33,11 @@ export function cancel(channel: ChannelInternals, notify = true, peerCancelled =
 
   clearHandshakeTimers(channel)
   dropSecurityTransport(channel)
+
+  // why: The abandoned request stays routable until its process is dropped, so a late ACCEPT would still resolve to this channel.
+  if (state.pendingProcessId !== null) {
+    channel.removeProcess(state.pendingProcessId)
+  }
 
   channel.updateState({ pendingProcessId: null, pendingAccept: null, scheduledActivation: null, negotiatedProtocol: null })
 

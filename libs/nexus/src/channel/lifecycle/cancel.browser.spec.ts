@@ -161,6 +161,20 @@ describe('channel/lifecycle/cancel', () => {
     expect(state).toEqual(expect.objectContaining({ pendingProcessId: null, pendingAccept: null, scheduledActivation: null }))
   })
 
+  it('drops the process of the request it abandons', () => {
+    state = { ...state, pendingProcessId: 'process-1' }
+
+    cancel(mockChannel, false)
+
+    expect(mockChannel.removeProcess).toHaveBeenCalledWith('process-1')
+  })
+
+  it('drops no process when no request was outstanding', () => {
+    cancel(mockChannel, false)
+
+    expect(mockChannel.removeProcess).not.toHaveBeenCalled()
+  })
+
   it('clears running handshake timers', () => {
     const onDeadline = jest.fn()
     startHandshakeTimers(mockChannel, { type: '[nexus] connection-request', senderId: 'broker-id' }, onDeadline)

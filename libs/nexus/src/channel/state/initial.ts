@@ -26,6 +26,7 @@ export function createInitialState(name: string, target: Window, settings: Parti
     // why: '*' means no expected origin, modeled as null (unpinned); a concrete settings origin pre-pins the channel before the first send.
     origin: settings.origin && settings.origin !== '*' ? settings.origin : null,
     active: false,
+    destroyed: false,
     connectTimestamp: null,
     contract: settings.contract ?? null,
     acceptedActions: freeze([]),

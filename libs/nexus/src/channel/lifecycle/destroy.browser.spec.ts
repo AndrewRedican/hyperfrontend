@@ -1,3 +1,4 @@
+import type { Mock } from '@hyperfrontend/testing'
 import type { IAction } from '../../types/action'
 import type { ChannelState } from '../../types/channel'
 import type { SecurityTransport } from '../../types/security'
@@ -5,6 +6,7 @@ import type { ChannelInternals } from '../types'
 import { after as afterAll, afterEach, before as beforeAll, beforeEach } from 'node:test'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { createInitialState } from '../state/initial'
+import { connect } from './connect'
 import { destroy } from './destroy'
 import { disconnect } from './disconnect'
 import { startHandshakeTimers } from './handshake-timers'
@@ -168,6 +170,45 @@ describe('channel/lifecycle/destroy', () => {
     expect(state).toEqual(
       expect.objectContaining({ pendingProcessId: null, pendingAccept: null, scheduledActivation: null, closingProcessId: null })
     )
+  })
+
+  it('drops every process the channel still tracked', () => {
+    state = {
+      ...state,
+      pendingProcessId: 'process-request',
+      pendingAccept: ['sender-1', 'https://example.com', contract, 'process-accept'],
+      scheduledActivation: ['sender-2', 'https://example.com', contract, 'process-scheduled'],
+      closingProcessId: 'process-close',
+    }
+
+    destroy(mockChannel)
+
+    expect((mockChannel.removeProcess as Mock).mock.calls).toEqual([
+      ['process-request'],
+      ['process-accept'],
+      ['process-scheduled'],
+      ['process-close'],
+    ])
+  })
+
+  it('drops no process when the channel tracked none', () => {
+    destroy(mockChannel)
+
+    expect(mockChannel.removeProcess).not.toHaveBeenCalled()
+  })
+
+  it('latches the channel as destroyed', () => {
+    destroy(mockChannel)
+
+    expect(state.destroyed).toBe(true)
+  })
+
+  it('starts no handshake when connect() is called afterwards', () => {
+    destroy(mockChannel, false)
+
+    connect(mockChannel)
+
+    expect(sentActions).toEqual([])
   })
 
   it('cancels the deadline of a polite close in flight', () => {

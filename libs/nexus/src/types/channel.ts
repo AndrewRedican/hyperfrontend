@@ -93,6 +93,8 @@ export interface ChannelState {
   readonly origin: string | null
   /** Whether channel is active/open */
   readonly active: boolean
+  /** Whether destroy() has torn the channel down; a destroyed channel never connects again */
+  readonly destroyed: boolean
   /** Timestamp when channel connected (null if not connected) */
   readonly connectTimestamp: number | null
   /** Channel contract (null before activation) */
