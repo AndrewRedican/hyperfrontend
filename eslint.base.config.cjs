@@ -253,6 +253,7 @@ module.exports = [
       'workspace/lib-pkg-description': 'error',
       'workspace/lib-pkg-package-json-export': 'error',
       'workspace/lib-pkg-bundle-entry': 'error',
+      'workspace/lib-pkg-exports-entry-shape': 'error',
       'workspace/lib-pkg-exports-exist': 'error',
       'workspace/lib-pkg-exports-js-only': 'error',
       'workspace/lib-pkg-no-main': 'error',
