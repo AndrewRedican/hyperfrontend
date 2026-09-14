@@ -106,6 +106,30 @@ export function pushPath(ctx: ValidationContext, segment: string | number): Vali
 }
 
 /**
+ * Creates a context for one branch of a composition keyword (`anyOf`, `oneOf`, `not`).
+ * The branch keeps the parent's position, schema index, pattern options and visited `$ref` set,
+ * but collects its own errors and stops at the first one: only its pass/fail verdict matters.
+ *
+ * @param ctx - Parent context
+ * @returns New context that shares everything with the parent except its error list
+ * @example Probing a branch without polluting the parent's errors
+ * ```typescript
+ * const ctx = createValidationContext(schema, validate, true, true)
+ * const branchCtx = createBranchContext(ctx)
+ * // branchCtx.strictPatterns === true
+ * // branchCtx.errors !== ctx.errors
+ * // branchCtx.collectAllErrors === false
+ * ```
+ */
+export function createBranchContext(ctx: ValidationContext): ValidationContext {
+  return {
+    ...ctx,
+    errors: [],
+    collectAllErrors: false,
+  }
+}
+
+/**
  * Adds a validation error to the context.
  *
  * @param ctx - Validation context
