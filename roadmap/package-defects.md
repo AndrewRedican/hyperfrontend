@@ -13,15 +13,14 @@ about the documentation once it lands.
 
 Reproduced on Node 24.18.1 against the versions named, 2026-08-25.
 
-| #    | Package                  | Defect                                                                  | Severity |
-| ---- | ------------------------ | ----------------------------------------------------------------------- | -------- |
-| D-02 | package-e2e (all)        | The ESM lane never calls anything, so call-time failures ship unseen    | high     |
-| D-03 | generated feature shells | `require()` resolves to an empty object                                 | high     |
-| D-04 | project-scope / builder  | Declaration alias cycle: one symbol left, and no builder-side guard     | medium   |
-| D-09 | logging                  | A channel shares its level with its parent in both directions           | medium   |
-| D-10 | state-machine            | Nothing makes `init` run once under concurrent callers                  | medium   |
-| D-11 | versioning               | `createIndependentFlow` cascade steps are no-op stubs reporting success | medium   |
-| D-12 | ui-utils                 | `syncElementDimensions` copies the source's inline `position`           | low      |
+| #    | Package                 | Defect                                                                  | Severity |
+| ---- | ----------------------- | ----------------------------------------------------------------------- | -------- |
+| D-02 | package-e2e (all)       | The ESM lane never calls anything, so call-time failures ship unseen    | high     |
+| D-04 | project-scope / builder | Declaration alias cycle: one symbol left, and no builder-side guard     | medium   |
+| D-09 | logging                 | A channel shares its level with its parent in both directions           | medium   |
+| D-10 | state-machine           | Nothing makes `init` run once under concurrent callers                  | medium   |
+| D-11 | versioning              | `createIndependentFlow` cascade steps are no-op stubs reporting success | medium   |
+| D-12 | ui-utils                | `syncElementDimensions` copies the source's inline `position`           | low      |
 
 ---
 
@@ -40,27 +39,6 @@ crosses a `_shared` chunk would have caught it.
 **Docs follow-up.** None directly, but until a real native-ESM smoke exists (a plain `.mjs` or
 `node --input-type=module` run against the packed tarball) every "verified against the published
 package" claim in an authored-lane guide has to be re-run by hand rather than trusted to CI.
-
-## D-03 — `require()` of a generated shell resolves to an empty object
-
-All three vendored shells (`demo-clock-shell@0.3.0`, `demo-heartbeat-shell@0.2.0`,
-`demo-koi-pond-shell@0.2.0`) declare `"type": "module"` while mapping `exports['.'].require` to
-`./index.cjs.js`. That file is genuine CommonJS (`'use strict'`, `exports.createFeatureShell =`),
-but the `.js` extension under `"type": "module"` makes Node parse it as ESM.
-
-`require('@hyperfrontend/demo-clock-shell')` does not throw. It returns `{}`, and
-`createFeatureShell` is `undefined`, so the failure surfaces later as a call on undefined, far
-from its cause. `import()` of the same package works and returns the factory. Confirmed on all
-three shells.
-
-This is the mirror of D-06: there an inherited `commonjs` breaks the ESM entry; here an emitted
-`module` breaks the CJS entry.
-
-**Docs follow-up.** Shapes the planned "embed a shell in a React/Next.js host" guide: a
-Pages-Router host, or any `require`-based path, cannot load a generated shell today. That guide
-must either wait for the fix or state the ESM-only constraint as a prerequisite. The shipped
-[embed-a-shipped-feature](../apps/docs-site/content/guides/embed-a-shipped-feature/guide.md)
-guide is unaffected because it imports.
 
 ## D-04 — the declaration alias cycle still reaches project-scope, and the builder has no guard
 
