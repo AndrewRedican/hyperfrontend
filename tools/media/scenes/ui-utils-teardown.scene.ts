@@ -25,7 +25,7 @@ const CYCLES = 6
  * because nothing in the naive version was ever given the means to. That is
  * the shape of every leak this package exists to make impossible: monotone.
  *
- * Verified against `libs/utils/ui/src/lib/stylesheets.ts`, where
+ * Verified against `libs/utils/ui/src/style/stylesheets.ts`, where
  * `addStylesheet(css, label?)` returns `[HTMLStyleElement, () => void]`, and
  * `libs/utils/ui/src/element/index.ts`, which exports `onElementResize`,
  * `getElementAsync` and `syncElementDimensions` beside it. The counts are what
