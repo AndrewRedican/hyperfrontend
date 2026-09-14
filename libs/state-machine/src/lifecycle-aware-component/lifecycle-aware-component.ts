@@ -96,7 +96,7 @@ export abstract class LifecycleAwareComponent {
   public onInitializingStatusChange(callback: InitializingChangeCallback): typeof this {
     this.initializingCallstack.add(callback)
     if (this.initializing) {
-      this.initializingCallstack.call(false, this.initializing)
+      callback(this.initializing)
     }
     return this
   }
@@ -104,7 +104,7 @@ export abstract class LifecycleAwareComponent {
   public onReadyStatusChange(callback: ReadyChangeCallback): typeof this {
     this.readyCallstack.add(callback)
     if (this.ready) {
-      this.readyCallstack.call(false, this.ready)
+      callback(this.ready)
     }
     return this
   }
@@ -112,7 +112,7 @@ export abstract class LifecycleAwareComponent {
   public onStartStatusChange(callback: StartingChangeCallback): typeof this {
     this.startingCallstack.add(callback)
     if (this.starting) {
-      this.startingCallstack.call(false, this.starting)
+      callback(this.starting)
     }
     return this
   }
@@ -120,7 +120,7 @@ export abstract class LifecycleAwareComponent {
   public onStopStatusChange(callback: StoppingChangeCallback): typeof this {
     this.stoppingCallstack.add(callback)
     if (this.stopping) {
-      this.stoppingCallstack.call(false, this.stopping)
+      callback(this.stopping)
     }
     return this
   }
@@ -128,7 +128,7 @@ export abstract class LifecycleAwareComponent {
   public onActiveStatusChange(callback: ActiveChangeCallback): typeof this {
     this.activeCallstack.add(callback)
     if (this.active) {
-      this.activeCallstack.call(false, this.active)
+      callback(this.active)
     }
     return this
   }

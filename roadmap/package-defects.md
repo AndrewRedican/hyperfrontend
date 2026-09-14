@@ -22,7 +22,7 @@ Reproduced on Node 24.18.1 against the versions named, 2026-08-25.
 | D-05 | data-utils                                 | `hasCircularReference` false-positives on any shared reference          | high     |
 | D-06 | builder                                    | Emitted manifest inherits `scripts`, `devDependencies` and `type`       | medium   |
 | D-09 | logging                                    | A channel shares its level with its parent in both directions           | medium   |
-| D-10 | state-machine                              | Lifecycle replay hits every handler; nothing makes `init` run once      | medium   |
+| D-10 | state-machine                              | Nothing makes `init` run once under concurrent callers                  | medium   |
 | D-11 | versioning                                 | `createIndependentFlow` cascade steps are no-op stubs reporting success | medium   |
 | D-12 | ui-utils                                   | `syncElementDimensions` copies the source's inline `position`           | low      |
 | D-14 | questions                                  | Enter sharing a write with typed text hangs the prompt silently         | low      |
@@ -181,15 +181,13 @@ tutorial is accurate as written: it says a channel borrows the root's level and 
 One smaller logging item in the same pass: the README's Winston adapter example binds five
 methods positionally in an order that drops an entire level.
 
-## D-10 — lifecycle replay hits every handler, and nothing makes `init` run once
+## D-10 — nothing makes `init` run once under concurrent callers
 
-`state-machine@0.2.0`, `LifecycleAwareComponent`.
+`state-machine@0.2.0`, `LifecycleAwareComponent`. The replay half of this entry is fixed: a
+handler registered while a flag is already `true` now receives the current value on its own,
+and handlers that registered earlier are no longer re-run.
 
-Registering a handler while a flag is already `true` replays the current value to the **entire**
-callstack, not just the new handler, so every previously registered handler runs again. A
-handler that describes a state is fine; one that counts or appends is not.
-
-Separately, nothing in the base class makes `init` idempotent under concurrent callers. A
+What remains is that nothing in the base class makes `init` idempotent under concurrent callers. A
 subclass that guards on `this.ready` still opens N resources for N callers that arrive during
 the setup await, because the flag only flips after it resolves. Every subclass has to memoize
 the in-flight promise itself.
@@ -199,10 +197,10 @@ subclass is a type error (`TS2425`); only the field form works.
 
 **Docs follow-up.** The shipped
 [make-a-service-safe-to-use-before-it-is-ready](../apps/docs-site/content/guides/make-a-service-safe-to-use-before-it-is-ready/guide.md)
-guide already teaches the field form, the in-flight promise, and idempotent handlers, and its
-examples are verified against 0.2.0. If the base class grows a concurrency guard, step 2 of that
-guide collapses to a much shorter one and should be rewritten rather than left teaching a
-workaround.
+guide teaches the field form and the in-flight promise, and its examples are verified against
+0.2.0. Its idempotent-handler advice comes out with the replay fix. If the base class grows a
+concurrency guard, step 2 of that guide collapses to a much shorter one and should be rewritten
+rather than left teaching a workaround.
 
 ## D-11 — `createIndependentFlow`'s cascade steps are no-op stubs
 
