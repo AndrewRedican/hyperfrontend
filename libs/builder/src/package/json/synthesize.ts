@@ -52,11 +52,19 @@ const synthesizeBinField = (bins: BinConfig[] | undefined): Record<string, strin
   return keys(next).length > 0 ? next : undefined
 }
 
+const stripSourceOnlyFields = (pkg: PackageJson): PackageJson => {
+  const next = { ...pkg }
+  // why: lifecycle scripts, dev-only dependency lists and a Corepack pin describe the source checkout, not the emitted package, and `type` would make Node misparse one of the side-by-side `.esm.js` / `.cjs.js` entries; stripping before inheritance lets an explicit `inheritFieldsFrom.fields` entry still bring one back.
+  for (const field of ['scripts', 'devDependencies', 'packageManager', 'type'] as const) delete next[field]
+  return next
+}
+
 /**
  * Composes the published `package.json` from the source manifest, the bundle-phase
  * outputs, and caller-supplied options.
  *
- * Pipeline order is: filter workspace deps → apply inherited fields → assemble
+ * Pipeline order is: filter workspace deps → strip the source-only fields
+ * (`scripts`, `devDependencies`, `packageManager`, `type`) → apply inherited fields → assemble
  * the new manifest with `sideEffects: false`, the regenerated `exports` map, and
  * resolved `main` / `module` / `types` pointers; CDN fields are appended only
  * when a UMD or IIFE bundle was emitted; the `bin` field is synthesized from
@@ -94,7 +102,7 @@ export const synthesizePackageJson = (
 
   const filtered = filterBundledDepsFromOutput(workspaceFiltered, ctx.bundledDeps)
 
-  const inherited = inheritFields(filtered, opts?.inheritFieldsFrom)
+  const inherited = inheritFields(stripSourceOnlyFields(filtered), opts?.inheritFieldsFrom)
   const exportsMap = generateExportsFromFormats(ctx.entryPointDiscovery, formatOutputs, srcPkg)
 
   const distPkg: PackageJson = {

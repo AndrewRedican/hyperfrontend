@@ -19,7 +19,6 @@ Reproduced on Node 24.18.1 against the versions named, 2026-08-25.
 | D-02 | package-e2e (all)                          | The ESM lane is not real ESM, so D-01 shipped unnoticed                 | high     |
 | D-03 | generated feature shells                   | `require()` resolves to an empty object                                 | high     |
 | D-04 | ui-utils                                   | No working TypeScript declarations                                      | high     |
-| D-06 | builder                                    | Emitted manifest inherits `scripts`, `devDependencies` and `type`       | medium   |
 | D-09 | logging                                    | A channel shares its level with its parent in both directions           | medium   |
 | D-10 | state-machine                              | Nothing makes `init` run once under concurrent callers                  | medium   |
 | D-11 | versioning                                 | `createIndependentFlow` cascade steps are no-op stubs reporting success | medium   |
@@ -112,26 +111,6 @@ error-`any`. This is also why nothing caught D-12 or the wrong element-creator e
 [style-a-widget-you-inject-into-someone-elses-page](../apps/docs-site/content/guides/style-a-widget-you-inject-into-someone-elses-page/guide.md)
 already does, by accident rather than by decision; leave it alone but do not treat it as
 precedent for a `ts` fence once the declarations work.
-
-## D-06 — the emitted manifest inherits `scripts`, `devDependencies` and `type`
-
-`builder@0.2.0`. The json phase deletes only `main`, `module`, `types` and `bin`
-(`libs/builder/src/package/json/synthesize.ts:114-129`); nothing removes lifecycle or
-module-resolution fields, so the source manifest's `scripts`, `devDependencies`,
-`packageManager` and `type` pass through to the published artifact. A `postinstall` therefore
-ships and executes on consumer install, and an inherited `"type": "commonjs"` makes the emitted
-ESM entry unusable.
-
-This repo's own packages are unaffected: no library manifest under `libs/` carries `scripts`,
-`devDependencies` or `type`, and no published `@hyperfrontend/*` package carries them either.
-The defect bites an external consumer, where a dev-only `postinstall` (`husky`,
-`patch-package`) is routine.
-
-**Docs follow-up.** The builder migration guide cannot teach `type` in a source manifest until
-this is fixed, and cannot promise a clean zero-config path. The shipped
-[publish-a-typescript-library-to-npm](../apps/docs-site/content/guides/publish-a-typescript-library-to-npm/guide.md)
-tutorial already shows the leak honestly in its manifest listing; that passage comes out when
-the fix ships.
 
 ## D-09 — a logging channel shares its level with its parent in both directions
 

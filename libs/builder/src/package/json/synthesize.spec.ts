@@ -160,6 +160,30 @@ describe('synthesizePackageJson', () => {
     expect(result.keywords).toEqual(['x'])
   })
 
+  it('strips scripts, devDependencies, packageManager and type while keeping the other source fields', () => {
+    const formats: FormatOutputs = { esm: [], cjs: [], iife: [], umd: [] }
+    const srcPkg: PackageJson = {
+      name: 'foo',
+      keywords: ['x'],
+      scripts: { postinstall: 'husky' },
+      devDependencies: { typescript: '^5.0.0' },
+      packageManager: 'pnpm@9.0.0',
+      type: 'module',
+    }
+    const { scripts, devDependencies, packageManager, type, keywords } = synthesizePackageJson(srcPkg, makeContext(), formats)
+    expect({ scripts, devDependencies, packageManager, type, keywords }).toEqual({ keywords: ['x'] })
+  })
+
+  it('keeps a stripped field when inheritFieldsFrom names it explicitly', () => {
+    const sourcePath = join(workspaceRoot, 'package.json')
+    writeFileSync(sourcePath, JSON.stringify({ packageManager: 'npm@11.0.0' }))
+    const formats: FormatOutputs = { esm: [], cjs: [], iife: [], umd: [] }
+    const result = synthesizePackageJson({ name: 'foo', packageManager: 'pnpm@9.0.0' }, makeContext(), formats, {
+      inheritFieldsFrom: { from: sourcePath, fields: ['packageManager'] },
+    })
+    expect(result.packageManager).toBe('npm@11.0.0')
+  })
+
   it('strips bundled deps from output dependencies when ctx.bundledDeps is non-empty', () => {
     const formats: FormatOutputs = { esm: [], cjs: [], iife: [], umd: [] }
     const ctx = { ...makeContext(), bundledDeps: ['rollup', 'postject'] }
