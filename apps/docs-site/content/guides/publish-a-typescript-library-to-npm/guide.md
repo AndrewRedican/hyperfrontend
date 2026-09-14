@@ -106,10 +106,6 @@ Open `dist/bytesize/package.json`:
   "description": "Format byte counts as human-readable strings.",
   "license": "MIT",
   "keywords": ["bytes", "format"],
-  "devDependencies": {
-    "@hyperfrontend/builder": "^0.2.0",
-    "typescript": "^7.0.2"
-  },
   "sideEffects": false,
   "exports": {
     "./package.json": "./package.json",
