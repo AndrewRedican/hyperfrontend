@@ -219,35 +219,43 @@ The profile reaches the stage, so a stage can show less at the smaller size rath
 
 ### The stages that ship
 
-| Stage            | Import                | Draws                                                                      |
-| ---------------- | --------------------- | -------------------------------------------------------------------------- |
-| `terminalStage`  | `src/terminal/stage`  | A terminal window playing a typed script                                   |
-| `flowStage`      | `src/flow/stage`      | Two endpoints exchanging messages over a wire                              |
-| `panelStage`     | `src/panel/stage`     | Columns of source and results, filling in over time                        |
-| `gaugeStage`     | `src/gauge/stage`     | Labelled quantities moving between stated values                           |
-| `byteStage`      | `src/byte/stage`      | A field of bytes assembling into labelled segments                         |
-| `scanStage`      | `src/scan/stage`      | A beam reading a file tree, with findings threaded back to their evidence  |
-| `dialStage`      | `src/dial/stage`      | Countdowns as rings draining, and a card that interrupts them              |
-| `lifecycleStage` | `src/lifecycle/stage` | A widget mounted and unmounted, on a page that lets go and one that cannot |
-| `sequenceStage`  | `src/sequence/stage`  | Two or three of the above as chapters of one story                         |
-| `bannerStage`    | `src/banner/stage`    | A package's identity strip for the top of its readme, as a slow loop       |
-| `matrixStage`    | `src/matrix/stage`    | Where a package runs, as a strip of cells                                  |
-| `graphStage`     | `src/graph/stage`     | An object graph walked to its leaves, lighting the edges that point back   |
-| `envelopeStage`  | `src/envelope/stage`  | A secret sealed into salt, IV, ciphertext and tag, and opened by its key   |
-| `forgeStage`     | `src/forge/stage`     | Source entries forged into formats, and the manifest wired to what landed  |
-| `embedStage`     | `src/embed/stage`     | A host page and the feature it seats: session, watchdog, flush window      |
-| `portsStage`     | `src/ports/stage`     | Two brokers with shaped slots; only a message that fits its slot gets in   |
-| `lanesStage`     | `src/lanes/stage`     | The same calls dropped into four lanes, each wrapper deciding their fate   |
-| `sealedStage`    | `src/sealed/stage`    | A pipe between two ends: hello, numbered sealed frames, a replay refused   |
-| `derivedStage`   | `src/derived/stage`   | Base lamps wired to derived names; an action flips lamps, names light      |
-| `transcodeStage` | `src/transcode/stage` | Text tiles dropping bytes that regroup into Base64, and back               |
-| `cascadeStage`   | `src/cascade/stage`   | One commit header, and everything a release derives from it, falling       |
-| `vaultStage`     | `src/vault/stage`     | Built-ins copied into a vault before an intruder rewrites the globals      |
-| `queueStage`     | `src/queue/stage`     | A tube and a cup: the same discs out oldest first, or newest first         |
-| `levelsStage`    | `src/levels/stage`    | A level knob filtering a fixed stream of log lines                         |
-| `galtonStage`    | `src/galton/stage`    | Grains falling into columns until two distributions show their shape       |
+| Stage              | Import                  | Draws                                                                           |
+| ------------------ | ----------------------- | ------------------------------------------------------------------------------- |
+| `terminalStage`    | `src/terminal/stage`    | A terminal window playing a typed script                                        |
+| `flowStage`        | `src/flow/stage`        | Two endpoints exchanging messages over a wire                                   |
+| `panelStage`       | `src/panel/stage`       | Columns of source and results, filling in over time                             |
+| `gaugeStage`       | `src/gauge/stage`       | Labelled quantities moving between stated values                                |
+| `byteStage`        | `src/byte/stage`        | A field of bytes assembling into labelled segments                              |
+| `scanStage`        | `src/scan/stage`        | A beam reading a file tree, with findings threaded back to their evidence       |
+| `dialStage`        | `src/dial/stage`        | Countdowns as rings draining, and a card that interrupts them                   |
+| `lifecycleStage`   | `src/lifecycle/stage`   | A widget mounted and unmounted, on a page that lets go and one that cannot      |
+| `sequenceStage`    | `src/sequence/stage`    | Two or three of the above as chapters of one story                              |
+| `bannerStage`      | `src/banner/stage`      | A package's identity strip for the top of its readme, as a slow loop            |
+| `matrixStage`      | `src/matrix/stage`      | Where a package runs, as a strip of cells                                       |
+| `graphStage`       | `src/graph/stage`       | An object graph walked to its leaves, lighting the edges that point back        |
+| `envelopeStage`    | `src/envelope/stage`    | A secret sealed into salt, IV, ciphertext and tag, and opened by its key        |
+| `forgeStage`       | `src/forge/stage`       | Source entries forged into formats, and the manifest wired to what landed       |
+| `embedStage`       | `src/embed/stage`       | A host page and the feature it seats: session, watchdog, flush window           |
+| `portsStage`       | `src/ports/stage`       | Two brokers with shaped slots; only a message that fits its slot gets in        |
+| `lanesStage`       | `src/lanes/stage`       | The same calls dropped into four lanes, each wrapper deciding their fate        |
+| `sealedStage`      | `src/sealed/stage`      | A pipe between two ends: hello, numbered sealed frames, a replay refused        |
+| `derivedStage`     | `src/derived/stage`     | Base lamps wired to derived names; an action flips lamps, names light           |
+| `transcodeStage`   | `src/transcode/stage`   | Text tiles dropping bytes that regroup into Base64, and back                    |
+| `cascadeStage`     | `src/cascade/stage`     | One commit header, and everything a release derives from it, falling            |
+| `vaultStage`       | `src/vault/stage`       | Built-ins copied into a vault before an intruder rewrites the globals           |
+| `queueStage`       | `src/queue/stage`       | A tube and a cup: the same discs out oldest first, or newest first              |
+| `levelsStage`      | `src/levels/stage`      | A level knob filtering a fixed stream of log lines                              |
+| `galtonStage`      | `src/galton/stage`      | Grains falling into columns until two distributions show their shape            |
+| `clocksStage`      | `src/clocks/stage`      | Timescales of different lengths converging on one point, as an article figure   |
+| `roadmapStage`     | `src/roadmap/stage`     | A year on one line: placeholders above it, what shipped hanging below           |
+| `ecosystemStage`   | `src/ecosystem/stage`   | Packages as chips, grouped by the need that produced them                       |
+| `loopStage`        | `src/loop/stage`        | A change going round human, model, rails and review, and becoming a rail        |
+| `seamStage`        | `src/seam/stage`        | A host, the shell it loads through, and the hostee inside the boundary          |
+| `negotiationStage` | `src/negotiation/stage` | Two channels on one clock: one that activates itself, one that handshakes       |
+| `projectionsStage` | `src/projections/stage` | One source thrown onto every surface documentation takes                        |
+| `agreementStage`   | `src/agreement/stage`   | Cohesion first beside isolation first, and where each makes agreement mandatory |
 
-None of them takes a colour. Each draws with the theme the recorder hands it, which is what lets one scene become three assets that differ in nothing but their palette.
+None of them takes a colour. Each draws with the theme the recorder hands it, which is what lets one scene become three assets that differ in nothing but their palette. The last eight are article figures rather than package showcases: they are composed against `articleProfile(height)` from `scenes/lib/article`, the width of the documentation site's article column at whatever height the diagram needs, and they share the `.fig-*` type scale in `src/stage/figure`. A figure that is one still lists `outputs: ['still']` and costs seconds; the two that move record a GIF and a poster.
 
 The first eleven are general: a terminal, a wire, columns of lines. The showcases at the top of each package readme are not drawn with them, because a showcase has to carry one idea in a few seconds and a general stage carries a transcript. Each showcase has a stage of its own under `src/`, named for the metaphor it draws (`graph`, `envelope`, `lanes`, `ports`, `queue`), and the table below lists them.
 

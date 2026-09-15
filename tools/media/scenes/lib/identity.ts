@@ -40,5 +40,24 @@ const identity = parse(readFileSync(join(WORKSPACE_ROOT, 'assets/brand/package-i
  */
 export function packageIdentity(name: string): IdentityEntry {
   const full = name.startsWith(SCOPE) ? name : `${SCOPE}${name}`
-  return identity.packages[full] ?? { hue: identity.fallbackHue, mark: identity.fallbackMark }
+  return identity.packages[full] ?? workspaceIdentity()
+}
+
+/**
+ * The hue and mark of the workspace itself, for a scene about the whole
+ * ecosystem rather than one package in it.
+ *
+ * The identity file's fallback is the workspace's own: the site's blue, and
+ * the cube the logo is drawn as. A figure that stands for hyperfrontend as a
+ * whole is drawn with these, so it reads as the site's rather than as any one
+ * package's.
+ *
+ * @returns The workspace's hue and mark.
+ * @example Tinting an article figure with the site's own hue
+ * ```ts
+ * const { hue, mark } = workspaceIdentity()
+ * ```
+ */
+export function workspaceIdentity(): IdentityEntry {
+  return { hue: identity.fallbackHue, mark: identity.fallbackMark }
 }

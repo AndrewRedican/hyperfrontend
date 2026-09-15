@@ -1,0 +1,73 @@
+{
+  "slug": "long-way-three-clocks",
+  "asset": "figure.webp",
+  "generatedAt": "2026-09-15T02:17:03.231Z",
+  "sceneHash": "e35deee8704ff939",
+  "sourceUrl": "stage:clocks",
+  "profile": {
+    "id": "article",
+    "intent": "the documentation site's article column",
+    "width": 832,
+    "height": 420,
+    "scale": 2,
+    "fps": 12
+  },
+  "viewport": {
+    "width": 832,
+    "height": 420
+  },
+  "record": {
+    "settleMs": 0,
+    "durationMs": 0
+  },
+  "startMs": 0,
+  "stills": [
+    {
+      "asset": "figure.webp",
+      "bytes": 32870,
+      "maxBytes": 120000
+    }
+  ],
+  "variants": [
+    {
+      "theme": "portable",
+      "stills": [
+        {
+          "asset": "figure.webp",
+          "bytes": 32870,
+          "maxBytes": 120000
+        }
+      ]
+    },
+    {
+      "theme": "dark",
+      "stills": [
+        {
+          "asset": "figure.dark.webp",
+          "bytes": 30672,
+          "maxBytes": 120000
+        }
+      ]
+    },
+    {
+      "theme": "light",
+      "stills": [
+        {
+          "asset": "figure.light.webp",
+          "bytes": 31666,
+          "maxBytes": 120000
+        }
+      ]
+    }
+  ],
+  "browser": {
+    "name": "chromium",
+    "version": "149.0.7827.55"
+  },
+  "determinism": {},
+  "console": {
+    "errors": 0,
+    "warnings": 0,
+    "pageErrors": 0
+  }
+}
