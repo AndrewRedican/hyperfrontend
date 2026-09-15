@@ -1,0 +1,73 @@
+{
+  "slug": "long-way-ecosystem",
+  "asset": "figure.webp",
+  "generatedAt": "2026-09-15T02:17:21.219Z",
+  "sceneHash": "3780bdc6b47d3d02",
+  "sourceUrl": "stage:ecosystem",
+  "profile": {
+    "id": "article",
+    "intent": "the documentation site's article column",
+    "width": 832,
+    "height": 590,
+    "scale": 2,
+    "fps": 12
+  },
+  "viewport": {
+    "width": 832,
+    "height": 590
+  },
+  "record": {
+    "settleMs": 0,
+    "durationMs": 0
+  },
+  "startMs": 0,
+  "stills": [
+    {
+      "asset": "figure.webp",
+      "bytes": 66048,
+      "maxBytes": 180000
+    }
+  ],
+  "variants": [
+    {
+      "theme": "portable",
+      "stills": [
+        {
+          "asset": "figure.webp",
+          "bytes": 66048,
+          "maxBytes": 180000
+        }
+      ]
+    },
+    {
+      "theme": "dark",
+      "stills": [
+        {
+          "asset": "figure.dark.webp",
+          "bytes": 63952,
+          "maxBytes": 180000
+        }
+      ]
+    },
+    {
+      "theme": "light",
+      "stills": [
+        {
+          "asset": "figure.light.webp",
+          "bytes": 66432,
+          "maxBytes": 180000
+        }
+      ]
+    }
+  ],
+  "browser": {
+    "name": "chromium",
+    "version": "149.0.7827.55"
+  },
+  "determinism": {},
+  "console": {
+    "errors": 0,
+    "warnings": 0,
+    "pageErrors": 0
+  }
+}

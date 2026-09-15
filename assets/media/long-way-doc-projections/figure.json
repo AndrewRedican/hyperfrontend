@@ -1,0 +1,73 @@
+{
+  "slug": "long-way-doc-projections",
+  "asset": "figure.webp",
+  "generatedAt": "2026-09-15T02:17:35.326Z",
+  "sceneHash": "c84b66dd02355454",
+  "sourceUrl": "stage:projections",
+  "profile": {
+    "id": "article",
+    "intent": "the documentation site's article column",
+    "width": 832,
+    "height": 520,
+    "scale": 2,
+    "fps": 12
+  },
+  "viewport": {
+    "width": 832,
+    "height": 520
+  },
+  "record": {
+    "settleMs": 0,
+    "durationMs": 0
+  },
+  "startMs": 0,
+  "stills": [
+    {
+      "asset": "figure.webp",
+      "bytes": 46428,
+      "maxBytes": 160000
+    }
+  ],
+  "variants": [
+    {
+      "theme": "portable",
+      "stills": [
+        {
+          "asset": "figure.webp",
+          "bytes": 46428,
+          "maxBytes": 160000
+        }
+      ]
+    },
+    {
+      "theme": "dark",
+      "stills": [
+        {
+          "asset": "figure.dark.webp",
+          "bytes": 45102,
+          "maxBytes": 160000
+        }
+      ]
+    },
+    {
+      "theme": "light",
+      "stills": [
+        {
+          "asset": "figure.light.webp",
+          "bytes": 48040,
+          "maxBytes": 160000
+        }
+      ]
+    }
+  ],
+  "browser": {
+    "name": "chromium",
+    "version": "149.0.7827.55"
+  },
+  "determinism": {},
+  "console": {
+    "errors": 0,
+    "warnings": 0,
+    "pageErrors": 0
+  }
+}

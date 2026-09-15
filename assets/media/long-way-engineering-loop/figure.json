@@ -1,0 +1,133 @@
+{
+  "slug": "long-way-engineering-loop",
+  "asset": "figure.gif",
+  "generatedAt": "2026-09-15T02:21:42.648Z",
+  "sceneHash": "3b1269de40af2f77",
+  "sourceUrl": "stage:loop",
+  "profile": {
+    "id": "article",
+    "intent": "the documentation site's article column",
+    "width": 832,
+    "height": 496,
+    "scale": 2,
+    "fps": 12
+  },
+  "viewport": {
+    "width": 832,
+    "height": 496
+  },
+  "record": {
+    "settleMs": 0,
+    "durationMs": 11400
+  },
+  "startMs": 0,
+  "gif": {
+    "width": 832,
+    "fps": 12,
+    "colours": 64,
+    "lossy": 60,
+    "dither": true,
+    "loop": 0,
+    "maxBytes": 1200000
+  },
+  "encoder": "sharp",
+  "toolVersions": [
+    {
+      "name": "sharp",
+      "version": "8.18.6"
+    }
+  ],
+  "bytes": 286105,
+  "frames": 116,
+  "stills": [
+    {
+      "asset": "poster.webp",
+      "bytes": 42992,
+      "maxBytes": 140000
+    }
+  ],
+  "variants": [
+    {
+      "theme": "portable",
+      "asset": "figure.gif",
+      "bytes": 286105,
+      "maxBytes": 1200000,
+      "frames": 116,
+      "gif": {
+        "width": 832,
+        "fps": 12,
+        "colours": 64,
+        "lossy": 60,
+        "dither": true,
+        "loop": 0,
+        "maxBytes": 1200000
+      },
+      "compromises": [],
+      "stills": [
+        {
+          "asset": "poster.webp",
+          "bytes": 42992,
+          "maxBytes": 140000
+        }
+      ]
+    },
+    {
+      "theme": "dark",
+      "asset": "figure.dark.gif",
+      "bytes": 317138,
+      "maxBytes": 1600000,
+      "frames": 116,
+      "gif": {
+        "width": 832,
+        "fps": 12,
+        "colours": 64,
+        "lossy": 60,
+        "dither": true,
+        "loop": 0,
+        "maxBytes": 1600000
+      },
+      "compromises": [],
+      "stills": [
+        {
+          "asset": "poster.dark.webp",
+          "bytes": 40530,
+          "maxBytes": 140000
+        }
+      ]
+    },
+    {
+      "theme": "light",
+      "asset": "figure.light.gif",
+      "bytes": 289477,
+      "maxBytes": 1600000,
+      "frames": 115,
+      "gif": {
+        "width": 832,
+        "fps": 12,
+        "colours": 64,
+        "lossy": 60,
+        "dither": true,
+        "loop": 0,
+        "maxBytes": 1600000
+      },
+      "compromises": [],
+      "stills": [
+        {
+          "asset": "poster.light.webp",
+          "bytes": 44622,
+          "maxBytes": 140000
+        }
+      ]
+    }
+  ],
+  "browser": {
+    "name": "chromium",
+    "version": "149.0.7827.55"
+  },
+  "determinism": {},
+  "console": {
+    "errors": 0,
+    "warnings": 0,
+    "pageErrors": 0
+  }
+}

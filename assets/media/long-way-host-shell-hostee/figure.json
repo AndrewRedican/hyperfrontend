@@ -1,0 +1,73 @@
+{
+  "slug": "long-way-host-shell-hostee",
+  "asset": "figure.webp",
+  "generatedAt": "2026-09-15T02:17:27.867Z",
+  "sceneHash": "e506ed045bc86624",
+  "sourceUrl": "stage:seam",
+  "profile": {
+    "id": "article",
+    "intent": "the documentation site's article column",
+    "width": 832,
+    "height": 464,
+    "scale": 2,
+    "fps": 12
+  },
+  "viewport": {
+    "width": 832,
+    "height": 464
+  },
+  "record": {
+    "settleMs": 0,
+    "durationMs": 0
+  },
+  "startMs": 0,
+  "stills": [
+    {
+      "asset": "figure.webp",
+      "bytes": 36692,
+      "maxBytes": 140000
+    }
+  ],
+  "variants": [
+    {
+      "theme": "portable",
+      "stills": [
+        {
+          "asset": "figure.webp",
+          "bytes": 36692,
+          "maxBytes": 140000
+        }
+      ]
+    },
+    {
+      "theme": "dark",
+      "stills": [
+        {
+          "asset": "figure.dark.webp",
+          "bytes": 35668,
+          "maxBytes": 140000
+        }
+      ]
+    },
+    {
+      "theme": "light",
+      "stills": [
+        {
+          "asset": "figure.light.webp",
+          "bytes": 39192,
+          "maxBytes": 140000
+        }
+      ]
+    }
+  ],
+  "browser": {
+    "name": "chromium",
+    "version": "149.0.7827.55"
+  },
+  "determinism": {},
+  "console": {
+    "errors": 0,
+    "warnings": 0,
+    "pageErrors": 0
+  }
+}
