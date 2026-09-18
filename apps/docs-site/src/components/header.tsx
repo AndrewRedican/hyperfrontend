@@ -30,7 +30,7 @@ export function Header({ width = docLayout.bar }: HeaderProps = {}) {
         </div>
 
         {/* why: One nav list feeds the header, the mobile menu, and the sitemap, so a new destination cannot reach one and miss the others */}
-        <nav className={`items-center gap-6 lg:gap-8 ${navVisibility.headerLinks}`}>
+        <nav aria-label="Main" className={`items-center gap-6 lg:gap-8 ${navVisibility.headerLinks}`}>
           {mainNavLinks.map((link) => (
             <NavLink key={link.href} href={link.href}>
               {link.slug}

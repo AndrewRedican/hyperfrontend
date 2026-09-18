@@ -159,10 +159,12 @@ export function Sidebar() {
         className={`border-r border-slate-200 pr-8 transition-all duration-300 ease-in-out dark:border-slate-700 ${isCollapsed ? 'w-0 overflow-hidden border-r-0 pr-0 opacity-0' : 'w-64 opacity-100'}`}
       >
         <SidebarContext.Provider value={contextValue}>
+          {/* why: a collapsed column is clipped to nothing but its links would still take focus; inert takes them out of the tab order along with the reading order */}
           <nav
             className="h-[calc(100vh-5rem)] w-64 shrink-0 overflow-y-auto py-10"
             aria-label="Documentation navigation"
             aria-hidden={isCollapsed}
+            inert={isCollapsed}
           >
             <ul className="mr-3 space-y-2" role="list">
               {navigation.map((item) => (
