@@ -234,15 +234,27 @@
      sets the page, the page sets the column, the column sets the block, and
      a line longer than the block moves under the reader's finger rather than
      dragging the whole document sideways. Nothing wraps, because a wrapped
-     command is a different command. */
+     command is a different command.
+
+     What scrolls is the inner `<code>`, not the pane. The pane carries the
+     controls pinned to its corner, the copy button and the language label,
+     and an absolutely positioned child of a scroll container travels with
+     the content it is scrolled over: pinned to the pane, the controls would
+     leave the corner the moment a reader scrolled a long line. So the pane
+     is a plain positioned box that never scrolls, its padding is carried by
+     the scroll box inside it so the sample still clips at the pane's edge
+     and the scrollbar still sits on its bottom edge, and the corner is a
+     corner of the viewport the reader is looking through. `overflow: clip`
+     rather than `hidden` on the pane, because `clip` rounds the scroll box
+     to the pane's corners without making the pane a scroll container. */
   pre.shiki {
     position: relative;
     isolation: isolate;
     margin: 0;
-    padding: 1rem var(--code-pad-x);
+    padding: 0;
     max-width: 100%;
     border-radius: 0.625rem;
-    overflow-x: auto;
+    overflow: clip;
     font-size: theme('fontSize.sm');
     line-height: 1.625;
     /* why: the classification that sizes a block counts a tab as four columns, and the block has to draw what was counted */
@@ -277,6 +289,13 @@
   pre.shiki,
   pre.shiki span {
     color: var(--shiki-light);
+  }
+
+  /* why: the scroll box of the pane, carrying the pane's padding so the sample clips at the pane's edge and stops a padding short of it at either end */
+  pre.shiki > code {
+    display: block;
+    overflow-x: auto;
+    padding: 1rem var(--code-pad-x);
   }
 
   .dark pre.shiki {
@@ -316,7 +335,7 @@
      itself. Not a transform, and not a pseudo-element either, and both of those
      are load-bearing decisions.
 
-     Not a transform, because the block is a scroll container with a copy
+     Not a transform, because the block holds a scroll box with a copy
      control pinned in its corner and a selection a reader drags across it.
      Rotating the element those live in moves all three: the control leaves the
      corner it was aimed at, the selection lands a line off, and the text loses
@@ -324,12 +343,10 @@
      pleasant to look at and tiring to read has failed at the only thing it is
      for.
 
-     And not a pseudo-element, because an absolutely positioned child of a
-     scroll container scrolls with the content. A block whose sample runs off
-     the right-hand edge would carry its light away with the code, leaving the
-     wash somewhere the pointer is not and the rim floating in the middle of the
-     pane. A background and an inset shadow are painted against the box instead
-     and stay where the box is.
+     And not a pseudo-element, because a layer of its own would have to be
+     kept behind the scroll box and in front of the pane, and a background
+     and an inset shadow are painted against the box itself and stay where
+     the box is with nothing to order.
 
      What the reader gets is four things moving together. A soft wash of the
      site's own blue centred on the pointer. A smaller magenta one that travels
@@ -384,6 +401,9 @@
 
     pre.shiki {
       font-size: theme('fontSize.xs');
+    }
+
+    pre.shiki > code {
       padding-block: 0.875rem;
     }
   }
@@ -394,10 +414,32 @@
      how large the code is on a phone. */
   .prose pre.shiki code {
     background-color: transparent;
-    padding: 0;
     border-radius: 0;
     font-size: inherit;
     line-height: inherit;
+  }
+
+  /* Inline code in prose: a chip a shade off the page, in the page's own
+     weight. Set here rather than as `prose-code` utilities on the renderer
+     because those reach the code inside a block too, and every one of them
+     then needs a second utility to take it back off the block; a rule that
+     names the span alone leaves the block to its own rules. */
+  .prose :not(pre) > code {
+    border-radius: 0.25rem;
+    background-color: theme('colors.slate.100');
+    padding: 0.125rem 0.375rem;
+    font-weight: 400;
+    color: theme('colors.slate.700');
+  }
+
+  .prose :not(pre) > code::before,
+  .prose :not(pre) > code::after {
+    content: none;
+  }
+
+  .dark .prose :not(pre) > code {
+    background-color: theme('colors.slate.800');
+    color: theme('colors.slate.300');
   }
 
   /* Compact and full-width code.
