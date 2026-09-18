@@ -78,10 +78,7 @@ export function ExampleBlock({ code, label }: ExampleBlockProps) {
           </button>
         </div>
         {highlightedHtml ? (
-          <div
-            className="overflow-hidden rounded-lg border border-slate-200 dark:border-slate-700"
-            dangerouslySetInnerHTML={{ __html: highlightedHtml }}
-          />
+          <div dangerouslySetInnerHTML={{ __html: highlightedHtml }} />
         ) : (
           <pre className="p-4 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 overflow-x-auto text-sm leading-relaxed">
             <code>{cleanCode}</code>

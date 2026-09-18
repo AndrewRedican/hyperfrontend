@@ -2993,6 +2993,81 @@
 }
 
 @layer components {
+  /* The generated reference's type scale.
+
+     A reference entry is a symbol, its kind, its signature or its members,
+     and a sentence about each: four ranks of text, and the ranks are what a
+     reader scans by. The ranks are set here rather than as utilities on the
+     components so the phone can restate them in one place: a symbol at
+     sixteen pixels of monospace on a 360px screen leaves thirty characters
+     to a line, and a signature that folds three times is harder to read than
+     one set a stop smaller that folds once. Everything code-like steps down
+     to the size a code block takes on the same screen, the symbol keeps one
+     stop over it, and the sentences keep their size, because prose is where
+     the folding belongs. The kind badge is a label and steps down with the
+     code-language label. */
+  .api-symbol {
+    font-family: theme('fontFamily.mono');
+    font-size: 1rem;
+    line-height: 1.75rem;
+    font-weight: 600;
+  }
+
+  .api-module {
+    font-family: theme('fontFamily.mono');
+    font-size: 0.875rem;
+    line-height: 1.5rem;
+    font-weight: 600;
+  }
+
+  .api-kind {
+    font-size: 0.75rem;
+    line-height: 1rem;
+  }
+
+  .api-table {
+    font-size: 0.875rem;
+    line-height: 1.5rem;
+  }
+
+  /* why: the same rule as a markdown reference table: a cell's floor is its longest word, so a parameter name is never broken to give a description column the width, and a table wider than its box scrolls in it instead */
+  .api-table :is(th, td) {
+    overflow-wrap: normal;
+  }
+
+  /* why: a code span in a JSDoc sentence takes the sentence's size the way one in a paragraph does, a shade under the words around it */
+  .description-markdown code {
+    font-size: 0.875em;
+  }
+
+  @media (max-width: 639px) {
+    :where(.api-reference, .scoped-api-reference) code {
+      font-size: 0.75rem;
+      line-height: 1.25rem;
+    }
+
+    .api-symbol {
+      font-size: 0.875rem;
+      line-height: 1.5rem;
+    }
+
+    .api-module {
+      font-size: 0.8125rem;
+      line-height: 1.25rem;
+    }
+
+    .api-kind {
+      font-size: 0.6875rem;
+    }
+
+    .api-table {
+      font-size: 0.8125rem;
+      line-height: 1.25rem;
+    }
+  }
+}
+
+@layer components {
   /* A code span that is a link.
 
      Package prose links the names it mentions to their reference, so most

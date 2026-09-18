@@ -93,6 +93,8 @@ interface DescriptionMarkdownProps {
   text: string
   /** Additional CSS classes */
   className?: string
+  /** Render as a span inside a line of other content, rather than as a block of its own */
+  inline?: boolean
 }
 
 /**
@@ -100,6 +102,7 @@ interface DescriptionMarkdownProps {
  * @param props - Component props
  * @param props.text - The markdown text to render
  * @param props.className - Additional CSS classes
+ * @param props.inline - Render as a span inside a line of other content
  * @returns React element or null if text is empty
  * @example
  * ```tsx
@@ -109,10 +112,14 @@ interface DescriptionMarkdownProps {
  * />
  * ```
  */
-export function DescriptionMarkdown({ text, className = '' }: DescriptionMarkdownProps) {
+export function DescriptionMarkdown({ text, className = '', inline = false }: DescriptionMarkdownProps) {
   if (!text) return null
 
   const html = simpleMarkdownToHtml(text)
 
+  // why: a description beside a property name is part of that line, and a block element inside it is not what the markup says it is
+  if (inline) {
+    return <span className={`description-markdown ${className}`} dangerouslySetInnerHTML={{ __html: html }} />
+  }
   return <div className={`description-markdown ${className}`} dangerouslySetInnerHTML={{ __html: html }} />
 }
