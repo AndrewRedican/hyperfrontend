@@ -3,7 +3,7 @@ import { AnchorLink } from '../anchor-link'
 import { H2 } from '../heading-with-anchor'
 import { FunctionSignature } from './function-signature'
 import { TypeDefinition } from './type-definition'
-import { buildNodeLookup, resolveReference } from './type-utils'
+import { buildNodeLookup, resolveUniqueExports } from './type-utils'
 import { ReflectionKind } from './types'
 
 interface ScopedApiReferenceProps {
@@ -50,8 +50,7 @@ function getScopedExports(data: TypeDocOutput, packageName: string, subpath: str
   )
   if (!moduleNode || !moduleNode.children) return null
 
-  const lookup = buildNodeLookup(data)
-  const resolved = moduleNode.children.map((child) => resolveReference(child, lookup))
+  const resolved = resolveUniqueExports(moduleNode.children, buildNodeLookup(data))
 
   return {
     functions: resolved.filter((node) => node.kind === ReflectionKind.Function),

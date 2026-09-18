@@ -1,5 +1,6 @@
 import type { TypeRef, TextBlock, Comment, TypeDocOutput, TypeDocNode } from './types'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
+import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { ReflectionKind } from './types'
 
 /** One run of rendered type text, optionally carrying a link target. */
@@ -296,6 +297,34 @@ export function resolveReference(node: TypeDocNode, lookup: Map<number, TypeDocN
     return lookup.get(node.target) ?? node
   }
   return node
+}
+
+/**
+ * Resolves a module's exports to their declarations, each declaration once.
+ *
+ * A module that exports a symbol both by name and as its default carries two
+ * references to one declaration, and a reference lists as its target: rendered
+ * as they come, the symbol appears twice under one module, with one anchor
+ * and one key between the two copies.
+ *
+ * @param exports - A module's child nodes, references included
+ * @param lookup - Map of node IDs to TypeDocNodes
+ * @returns The resolved declarations in export order, without repeats
+ * @example
+ * ```typescript
+ * resolveUniqueExports(moduleNode.children ?? [], buildNodeLookup(data))
+ * ```
+ */
+export function resolveUniqueExports(exports: TypeDocNode[], lookup: Map<number, TypeDocNode>): TypeDocNode[] {
+  const seen = createSet<number>()
+  const resolved: TypeDocNode[] = []
+  for (const node of exports) {
+    const declaration = resolveReference(node, lookup)
+    if (seen.has(declaration.id)) continue
+    seen.add(declaration.id)
+    resolved.push(declaration)
+  }
+  return resolved
 }
 
 /**

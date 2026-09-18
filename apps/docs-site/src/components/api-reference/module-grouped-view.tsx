@@ -9,7 +9,7 @@ import { CopyButton } from './copy-button'
 import { FunctionSignature } from './function-signature'
 import { HighlightMatch } from './highlight-match'
 import { TypeDefinition } from './type-definition'
-import { buildNodeLookup, getModuleDescription, resolveReference } from './type-utils'
+import { buildNodeLookup, getModuleDescription, resolveUniqueExports } from './type-utils'
 import { ReflectionKind } from './types'
 
 interface ModuleGroupedViewProps {
@@ -67,14 +67,12 @@ export function ModuleGroupedView({ data, searchQuery = '', initialHash }: Modul
 
     for (const child of data.children) {
       if (child.kind === ReflectionKind.Module && child.children) {
-        const exports = child.children
-          .map((c) => resolveReference(c, nodeLookup))
-          .filter((c) => {
-            if (searchQuery) {
-              return c.name.toLowerCase().includes(searchQuery.toLowerCase())
-            }
-            return true
-          })
+        const exports = resolveUniqueExports(child.children, nodeLookup).filter((c) => {
+          if (searchQuery) {
+            return c.name.toLowerCase().includes(searchQuery.toLowerCase())
+          }
+          return true
+        })
 
         if (exports.length > 0) {
           groups.push({
