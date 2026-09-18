@@ -1,15 +1,17 @@
 'use client'
 
+import type { ApiHeadingLevel } from './heading-level'
 import type { TypeDocOutput, TypeDocNode } from './types'
-import { useState, useMemo, useEffect, useCallback, useRef } from 'react'
+import { Fragment, useState, useMemo, useEffect, useCallback, useRef } from 'react'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { requestAnimationFrame, setTimeout } from '@hyperfrontend/immutable-api-utils/built-in-copy/timers'
 import { AnchorLink } from '../anchor-link'
 import { CopyButton } from './copy-button'
 import { FunctionSignature } from './function-signature'
+import { headingTag } from './heading-level'
 import { HighlightMatch } from './highlight-match'
 import { TypeDefinition } from './type-definition'
-import { buildNodeLookup, getModuleDescription, resolveReference } from './type-utils'
+import { buildNodeLookup, getModuleDescription, resolveUniqueExports } from './type-utils'
 import { ReflectionKind } from './types'
 
 interface ModuleGroupedViewProps {
@@ -67,14 +69,12 @@ export function ModuleGroupedView({ data, searchQuery = '', initialHash }: Modul
 
     for (const child of data.children) {
       if (child.kind === ReflectionKind.Module && child.children) {
-        const exports = child.children
-          .map((c) => resolveReference(c, nodeLookup))
-          .filter((c) => {
-            if (searchQuery) {
-              return c.name.toLowerCase().includes(searchQuery.toLowerCase())
-            }
-            return true
-          })
+        const exports = resolveUniqueExports(child.children, nodeLookup).filter((c) => {
+          if (searchQuery) {
+            return c.name.toLowerCase().includes(searchQuery.toLowerCase())
+          }
+          return true
+        })
 
         if (exports.length > 0) {
           groups.push({
@@ -215,7 +215,7 @@ export function ModuleGroupedView({ data, searchQuery = '', initialHash }: Modul
       {/* Module overview */}
       <div className="mb-6 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg">
         <div className="flex items-center justify-between mb-2">
-          <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300">Module Structure</h3>
+          <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">Module Structure</p>
           <div className="flex gap-2">
             <button
               onClick={expandAll}
@@ -252,36 +252,37 @@ export function ModuleGroupedView({ data, searchQuery = '', initialHash }: Modul
           const namespaces = module.exports.filter((e) => e.kind === ReflectionKind.Namespace)
           const fullImportPath = getFullImportPath(data.name, module.name)
           const importStatement = `import {} from '${fullImportPath}'`
+          const moduleId = `module-${module.name.replace(/\//g, '-')}`
 
           return (
-            <div
-              key={module.name}
-              className="border border-slate-200 dark:border-slate-700 rounded-lg overflow-hidden"
-              id={`module-${module.name.replace(/\//g, '-')}`}
-            >
-              {/* Module header (clickable) */}
+            <div key={module.name} className="border border-slate-200 dark:border-slate-700 rounded-lg overflow-hidden" id={moduleId}>
+              {/* why: the disclosure is a real button inside the module's heading, so it is operable without a role of its own and the copy control beside it is not nested inside another control; the bar around them still toggles on a pointer click so the whole row stays a target */}
               <div
-                role="button"
-                tabIndex={0}
-                onClick={() => toggleModule(module.name)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault()
-                    toggleModule(module.name)
-                  }
+                onClick={(event) => {
+                  if (event.target instanceof Element && event.target.closest('button, a')) return
+                  toggleModule(module.name)
                 }}
-                className="w-full px-4 py-3 flex items-center justify-between bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors cursor-pointer"
+                className="w-full px-4 py-3 flex flex-wrap items-start justify-between gap-x-3 gap-y-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors cursor-pointer"
               >
-                <div className="flex items-center gap-3">
-                  <ChevronIcon expanded={isExpanded} />
-                  <div className="text-left">
-                    <h4 className="font-mono text-sm font-semibold text-slate-900 dark:text-white">{fullImportPath}</h4>
-                    {module.description && (
-                      <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5 max-w-lg">{module.description}</p>
-                    )}
-                  </div>
+                {/* why: the badges and the copy control keep to a column beside the name where the row has room, and step under it as a row of their own where it does not, so the name is never squeezed to a word a line */}
+                <div className="min-w-0 flex-1 basis-56">
+                  <h3 className="api-module text-slate-900 dark:text-white">
+                    <button
+                      type="button"
+                      onClick={() => toggleModule(module.name)}
+                      aria-expanded={isExpanded}
+                      aria-controls={`${moduleId}-contents`}
+                      className="flex w-full items-center gap-3 text-left"
+                    >
+                      <ChevronIcon expanded={isExpanded} />
+                      <ImportPath path={fullImportPath} />
+                    </button>
+                  </h3>
+                  {module.description && (
+                    <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5 ml-7 max-w-lg">{module.description}</p>
+                  )}
                 </div>
-                <div className="flex flex-col items-end gap-2">
+                <div className="ml-auto flex shrink-0 flex-wrap items-center gap-2 sm:flex-col sm:items-end">
                   <ExportBadges
                     functions={functions.length}
                     classes={classes.length}
@@ -290,94 +291,94 @@ export function ModuleGroupedView({ data, searchQuery = '', initialHash }: Modul
                     variables={variables.length}
                     namespaces={namespaces.length}
                   />
-                  <div onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>
-                    <CopyButton text={importStatement} size="sm" />
-                  </div>
+                  <CopyButton text={importStatement} size="sm" />
                 </div>
               </div>
 
-              {/* Module contents (collapsible) */}
-              {isExpanded && (
-                <div className="p-4 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-700">
-                  {functions.length > 0 && (
-                    <div className="mb-6 last:mb-0">
-                      <h5 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-2">
-                        <span className="text-blue-500">ƒ</span> Functions
-                      </h5>
-                      <div className="divide-y divide-slate-200 dark:divide-slate-800">
-                        {functions.map((fn) => (
-                          <FunctionSignature key={fn.id} node={fn} searchQuery={searchQuery} />
-                        ))}
-                      </div>
+              {/* why: the contents are in the document whether or not the module is open, hidden rather than absent, so the reference is there for a crawler and for find-in-page and opening a module reveals rather than renders */}
+              <div
+                id={`${moduleId}-contents`}
+                hidden={!isExpanded}
+                className="p-4 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-700"
+              >
+                {functions.length > 0 && (
+                  <div className="mb-6 last:mb-0">
+                    <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-2">
+                      <span className="text-blue-500">ƒ</span> Functions
+                    </h4>
+                    <div className="divide-y divide-slate-200 dark:divide-slate-800">
+                      {functions.map((fn) => (
+                        <FunctionSignature key={fn.id} node={fn} searchQuery={searchQuery} level={5} />
+                      ))}
                     </div>
-                  )}
+                  </div>
+                )}
 
-                  {classes.length > 0 && (
-                    <div className="mb-6 last:mb-0">
-                      <h5 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-2">
-                        <span className="text-amber-500">◇</span> Classes
-                      </h5>
-                      <div className="divide-y divide-slate-200 dark:divide-slate-800">
-                        {classes.map((cls) => (
-                          <TypeDefinition key={cls.id} node={cls} searchQuery={searchQuery} />
-                        ))}
-                      </div>
+                {classes.length > 0 && (
+                  <div className="mb-6 last:mb-0">
+                    <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-2">
+                      <span className="text-amber-500">◇</span> Classes
+                    </h4>
+                    <div className="divide-y divide-slate-200 dark:divide-slate-800">
+                      {classes.map((cls) => (
+                        <TypeDefinition key={cls.id} node={cls} searchQuery={searchQuery} level={5} />
+                      ))}
                     </div>
-                  )}
+                  </div>
+                )}
 
-                  {interfaces.length > 0 && (
-                    <div className="mb-6 last:mb-0">
-                      <h5 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-2">
-                        <span className="text-purple-500">◈</span> Interfaces
-                      </h5>
-                      <div className="divide-y divide-slate-200 dark:divide-slate-800">
-                        {interfaces.map((iface) => (
-                          <TypeDefinition key={iface.id} node={iface} searchQuery={searchQuery} />
-                        ))}
-                      </div>
+                {interfaces.length > 0 && (
+                  <div className="mb-6 last:mb-0">
+                    <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-2">
+                      <span className="text-purple-500">◈</span> Interfaces
+                    </h4>
+                    <div className="divide-y divide-slate-200 dark:divide-slate-800">
+                      {interfaces.map((iface) => (
+                        <TypeDefinition key={iface.id} node={iface} searchQuery={searchQuery} level={5} />
+                      ))}
                     </div>
-                  )}
+                  </div>
+                )}
 
-                  {types.length > 0 && (
-                    <div className="mb-6 last:mb-0">
-                      <h5 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-2">
-                        <span className="text-teal-500">◆</span> Types
-                      </h5>
-                      <div className="divide-y divide-slate-200 dark:divide-slate-800">
-                        {types.map((type) => (
-                          <TypeDefinition key={type.id} node={type} searchQuery={searchQuery} />
-                        ))}
-                      </div>
+                {types.length > 0 && (
+                  <div className="mb-6 last:mb-0">
+                    <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-2">
+                      <span className="text-teal-500">◆</span> Types
+                    </h4>
+                    <div className="divide-y divide-slate-200 dark:divide-slate-800">
+                      {types.map((type) => (
+                        <TypeDefinition key={type.id} node={type} searchQuery={searchQuery} level={5} />
+                      ))}
                     </div>
-                  )}
+                  </div>
+                )}
 
-                  {variables.length > 0 && (
-                    <div className="mb-6 last:mb-0">
-                      <h5 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-2">
-                        <span className="text-green-500">●</span> Variables
-                      </h5>
-                      <div className="divide-y divide-slate-200 dark:divide-slate-800">
-                        {variables.map((v) => (
-                          <TypeDefinition key={v.id} node={v} searchQuery={searchQuery} />
-                        ))}
-                      </div>
+                {variables.length > 0 && (
+                  <div className="mb-6 last:mb-0">
+                    <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-2">
+                      <span className="text-green-500">●</span> Variables
+                    </h4>
+                    <div className="divide-y divide-slate-200 dark:divide-slate-800">
+                      {variables.map((v) => (
+                        <TypeDefinition key={v.id} node={v} searchQuery={searchQuery} level={5} />
+                      ))}
                     </div>
-                  )}
+                  </div>
+                )}
 
-                  {namespaces.length > 0 && (
-                    <div className="mb-6 last:mb-0">
-                      <h5 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-2">
-                        <span className="text-orange-500">⧫</span> Namespaces
-                      </h5>
-                      <div className="divide-y divide-slate-200 dark:divide-slate-800">
-                        {namespaces.map((ns) => (
-                          <NamespaceSection key={ns.id} node={ns} searchQuery={searchQuery} />
-                        ))}
-                      </div>
+                {namespaces.length > 0 && (
+                  <div className="mb-6 last:mb-0">
+                    <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-2">
+                      <span className="text-orange-500">⧫</span> Namespaces
+                    </h4>
+                    <div className="divide-y divide-slate-200 dark:divide-slate-800">
+                      {namespaces.map((ns) => (
+                        <NamespaceSection key={ns.id} node={ns} searchQuery={searchQuery} level={5} />
+                      ))}
                     </div>
-                  )}
-                </div>
-              )}
+                  </div>
+                )}
+              </div>
             </div>
           )
         })}
@@ -400,6 +401,40 @@ function formatModuleName(name: string): string {
         .join(' ')
     )
     .join(' / ')
+}
+
+/** Props for {@link ImportPath}. */
+interface ImportPathProps {
+  /** The full import specifier, e.g. `@hyperfrontend/network-protocol/browser/channel` */
+  path: string
+}
+
+/**
+ * An import path that folds at its own separators.
+ *
+ * A specifier is one word to the line breaker, so on a narrow screen it would
+ * be broken wherever the line happened to end. A break opportunity after each
+ * slash lets it fold segment by segment instead, and the segments stay whole.
+ * @param props - See {@link ImportPathProps}.
+ * @param props.path - The full import specifier
+ * @returns The path with a soft break after every separator
+ */
+function ImportPath({ path }: ImportPathProps) {
+  const segments = path.split('/')
+  return (
+    <span>
+      {segments.map((segment, index) => (
+        <Fragment key={index}>
+          {index > 0 ? (
+            <>
+              /<wbr />
+            </>
+          ) : null}
+          {segment}
+        </Fragment>
+      ))}
+    </span>
+  )
 }
 
 type ChevronIconProps = { expanded: boolean }
@@ -466,6 +501,8 @@ function ExportBadges({ functions, classes, interfaces, types, variables, namesp
 interface NamespaceSectionProps {
   node: TypeDocNode
   searchQuery?: string
+  /** Heading level of the namespace's own heading; its members sit one under it */
+  level?: ApiHeadingLevel
 }
 
 /**
@@ -474,9 +511,12 @@ interface NamespaceSectionProps {
  * @param root0
  * @param root0.node
  * @param root0.searchQuery
+ * @param root0.level
  */
-function NamespaceSection({ node, searchQuery = '' }: NamespaceSectionProps) {
+function NamespaceSection({ node, searchQuery = '', level = 3 }: NamespaceSectionProps) {
   const [isExpanded, setIsExpanded] = useState(false)
+  const Symbol = headingTag(level)
+  const contentsId = `api-${node.name}-members`
 
   const childCount = node.children?.length ?? 0
 
@@ -484,24 +524,29 @@ function NamespaceSection({ node, searchQuery = '' }: NamespaceSectionProps) {
     <div className="pt-8 pb-3 first:pt-0" id={`api-${node.name}`}>
       <div className="flex items-center gap-2 group">
         <AnchorLink id={`api-${node.name}`} />
-        <button onClick={() => setIsExpanded(!isExpanded)} className="flex-1 flex items-center justify-between text-left">
-          <div className="flex items-center gap-2">
+        {/* why: the disclosure is a button inside the namespace's heading, so the outline names the namespace and the control that opens it is operable as one */}
+        <Symbol className="api-symbol min-w-0 flex-1 text-slate-900 dark:text-white">
+          <button
+            type="button"
+            onClick={() => setIsExpanded(!isExpanded)}
+            aria-expanded={isExpanded}
+            aria-controls={contentsId}
+            className="flex w-full items-center gap-2 text-left"
+          >
             <ChevronIcon expanded={isExpanded} />
-            <code className="text-sm font-semibold text-slate-900 dark:text-white font-mono">
-              <HighlightMatch text={node.name} query={searchQuery} />
-            </code>
-            <span className="text-xs text-slate-500 dark:text-slate-400">({childCount} exports)</span>
-          </div>
-        </button>
+            <HighlightMatch text={node.name} query={searchQuery} />
+            <span className="text-xs font-normal text-slate-500 dark:text-slate-400">({childCount} exports)</span>
+          </button>
+        </Symbol>
       </div>
 
       {isExpanded && node.children && (
-        <div className="mt-3 ml-6 pl-4 border-l-2 border-slate-200 dark:border-slate-700">
+        <div id={contentsId} className="mt-3 ml-6 pl-4 border-l-2 border-slate-200 dark:border-slate-700">
           {node.children.map((child) => {
             if (child.kind === ReflectionKind.Function) {
-              return <FunctionSignature key={child.id} node={child} searchQuery={searchQuery} />
+              return <FunctionSignature key={child.id} node={child} searchQuery={searchQuery} level={level} />
             }
-            return <TypeDefinition key={child.id} node={child} searchQuery={searchQuery} />
+            return <TypeDefinition key={child.id} node={child} searchQuery={searchQuery} level={level} />
           })}
         </div>
       )}

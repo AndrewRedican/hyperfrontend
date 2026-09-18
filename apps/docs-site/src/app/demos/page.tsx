@@ -1,13 +1,14 @@
-import type { Metadata } from 'next'
 import { DemosGallery } from '@/components/demos/demos-gallery'
 import { Footer } from '@/components/footer'
 import { Header } from '@/components/header'
 import { DEMO_MANIFEST } from '@/lib/demo-manifest'
+import { getPageMetadata } from '@/lib/metadata'
 
-export const metadata: Metadata = {
+export const metadata = getPageMetadata({
   title: 'Live Demos',
   description: 'Interactive demonstrations of hyperfrontend micro-frontend architecture across frameworks and origin boundaries.',
-}
+  path: '/demos/',
+})
 
 /**
  * The demos page: the gallery deck with its floating host console.
@@ -17,7 +18,10 @@ export default function DemosPage() {
   return (
     <>
       <Header />
-      <main className="relative flex min-h-[calc(100vh-4rem)] flex-col items-center justify-center overflow-hidden px-4 py-16 sm:px-6 lg:px-8">
+      <main
+        id="main-content"
+        className="relative flex min-h-[calc(100vh-4rem)] flex-col items-center justify-center overflow-hidden px-4 py-16 sm:px-6 lg:px-8"
+      >
         <div className="relative mx-auto w-full max-w-5xl text-center">
           <h1 className="font-display text-4xl font-bold text-slate-900 dark:text-white">Live Demos</h1>
           {/* why: Vertical space is precious on narrow layouts — the preamble only earns its keep where the gallery has room to spare. */}

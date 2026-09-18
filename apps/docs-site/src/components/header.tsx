@@ -23,14 +23,15 @@ export function Header({ width = docLayout.bar }: HeaderProps = {}) {
       <div className={`flex h-16 items-center justify-between ${width} ${docLayout.gutter}`}>
         <div className="flex items-center gap-4">
           <MobileMenu />
-          <Link href="/" className="flex items-center gap-3">
+          {/* why: on the narrowest phones the wordmark and the controls beside it overlap, so the mark alone carries the brand there; the link's name is the wordmark either way */}
+          <Link href="/" className="flex items-center gap-3" aria-label="HyperFrontend home">
             <Logo className="h-8 w-8" />
-            <span className="font-display text-xl font-bold text-slate-900 dark:text-white">HyperFrontend</span>
+            <span className="hidden font-display text-xl font-bold text-slate-900 min-[360px]:inline dark:text-white">HyperFrontend</span>
           </Link>
         </div>
 
         {/* why: One nav list feeds the header, the mobile menu, and the sitemap, so a new destination cannot reach one and miss the others */}
-        <nav className={`items-center gap-6 lg:gap-8 ${navVisibility.headerLinks}`}>
+        <nav aria-label="Main" className={`items-center gap-6 lg:gap-8 ${navVisibility.headerLinks}`}>
           {mainNavLinks.map((link) => (
             <NavLink key={link.href} href={link.href}>
               {link.slug}

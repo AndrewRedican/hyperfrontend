@@ -2,12 +2,14 @@ import type { Metadata } from 'next'
 import { MarkdownDocPage } from '@/components/document/markdown-doc-page'
 import { Footer } from '@/components/footer'
 import { Header } from '@/components/header'
+import { JsonLd } from '@/components/json-ld'
 import { PageAtmosphere } from '@/components/page-atmosphere'
 import { ScrollToTop } from '@/components/scroll-to-top'
 import { ShareMenu } from '@/components/share/share-menu'
 import { formatArticleDate, getAllArticleSlugs, getArticle } from '@/lib/articles'
 import { documentSubject } from '@/lib/document-model'
 import { ARTICLES_FEED_ALTERNATE, DEFAULT_OG_IMAGE, DEFAULT_TWITTER_IMAGE, markdownAlternate } from '@/lib/metadata'
+import { SITE_URL } from '@/lib/site'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
@@ -84,6 +86,21 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
   return (
     <>
       <Header />
+      {/* why: a piece of writing with an author and dates is what search engines model as an Article, and every field here is one the frontmatter already carries */}
+      <JsonLd
+        data={{
+          '@context': 'https://schema.org',
+          '@type': 'Article',
+          headline: article.title,
+          description: article.description,
+          author: { '@type': 'Person', name: article.author },
+          datePublished: article.date,
+          ...(article.updated ? { dateModified: article.updated } : {}),
+          ...(article.heroImage ? { image: `${SITE_URL}${article.heroImage}` } : {}),
+          mainEntityOfPage: `${SITE_URL}/articles/${article.slug}/`,
+          ...(article.tags.length > 0 ? { keywords: article.tags.join(', ') } : {}),
+        }}
+      />
       {/* why: an article is read in its own narrower frame rather than the documentation shell, so the frame carries the environment the shell would */}
       <PageAtmosphere />
       <main id="main-content" className="mx-auto max-w-4xl px-4 py-16 sm:px-6 lg:px-8 rail:max-w-6xl">

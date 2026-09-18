@@ -36,4 +36,36 @@ describe('markdownToHtml', () => {
     },
     RENDER_TIMEOUT_MS
   )
+
+  it(
+    'marks an inline code span past the token length as one that may fold',
+    async () => {
+      const html = await markdownToHtml('Call `broker.setSecurityPolicy((event) => event.origin.endsWith(".example.com"))` once.')
+
+      expect(html).toContain('<code data-code-wrap="fold">')
+    },
+    RENDER_TIMEOUT_MS
+  )
+
+  it(
+    'leaves a short inline code span unmarked, so the stylesheet keeps it on one line',
+    async () => {
+      const html = await markdownToHtml('Call `createShell` once.')
+
+      expect(html).toContain('<code>createShell</code>')
+    },
+    RENDER_TIMEOUT_MS
+  )
+
+  it(
+    'never marks the code inside a fenced block, which scrolls rather than folds',
+    async () => {
+      const html = await markdownToHtml(
+        ['```bash', 'npm install @hyperfrontend/features @hyperfrontend/nexus @hyperfrontend/network-protocol', '```'].join('\n')
+      )
+
+      expect(html).not.toContain('data-code-wrap')
+    },
+    RENDER_TIMEOUT_MS
+  )
 })

@@ -513,6 +513,11 @@ export const docsNavigation: NavItem[] = [
     slug: 'Regarding AI',
     href: '/docs/regarding-ai',
   },
+  // why: the way to reach a person sits at the end of the project pages, where a reader who has run out of documentation is already looking; the footer carries the same link on every page outside the shell
+  {
+    slug: 'Support',
+    href: '/support',
+  },
 ]
 
 /** Suffix carried by every utility package slug, redundant once the entry sits under `Utils`. */

@@ -13,18 +13,22 @@ export function ThemeToggle() {
 
   if (!mounted) {
     return (
-      <button type="button" className="rounded-lg p-2 text-slate-500" aria-label="Toggle theme">
+      <button type="button" className="rounded-lg p-2 text-slate-500" aria-label="Theme">
         <SystemIcon className="h-5 w-5" />
       </button>
     )
   }
 
+  // why: the control cycles through three states with no visible text, so its name says which one is on and which comes next
+  const next = theme === 'dark' ? 'light' : theme === 'light' ? 'system' : 'dark'
+
   return (
     <button
       type="button"
       className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100"
-      onClick={() => setTheme(theme === 'dark' ? 'light' : theme === 'light' ? 'system' : 'dark')}
-      aria-label="Toggle theme"
+      onClick={() => setTheme(next)}
+      aria-label={`Theme: ${theme}. Switch to ${next}`}
+      title={`Theme: ${theme}. Switch to ${next}`}
     >
       {theme === 'dark' ? (
         <MoonIcon className="h-5 w-5" />

@@ -249,7 +249,7 @@ export function MobileMenu() {
       {mounted &&
         isOpen &&
         createPortal(
-          <div className={`fixed inset-0 top-16 z-[60] bg-white dark:bg-slate-900 ${navVisibility.drawer}`}>
+          <nav aria-label="Site menu" className={`fixed inset-0 top-16 z-[60] bg-white dark:bg-slate-900 ${navVisibility.drawer}`}>
             <div className="h-full overflow-y-auto px-4 pb-6 pt-4">
               {/* why: the drawer only ever renders below the breakpoint, where the header withholds these destinations, so it always carries them */}
               <div className="mb-6 border-b border-slate-200 pb-6 dark:border-slate-700">
@@ -293,7 +293,7 @@ export function MobileMenu() {
                 <ThemeToggle />
               </div>
             </div>
-          </div>,
+          </nav>,
           document.body
         )}
     </>

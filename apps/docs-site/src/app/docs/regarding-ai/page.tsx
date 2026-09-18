@@ -1,15 +1,15 @@
-import type { Metadata } from 'next'
 import { Breadcrumb } from '@/components/breadcrumb'
 import { MarkdownDocPage } from '@/components/document/markdown-doc-page'
 import { getRegardingAi } from '@/lib/docs-loader'
 import { documentSubject } from '@/lib/document-model'
-import { markdownAlternate } from '@/lib/metadata'
+import { getPageMetadata } from '@/lib/metadata'
 
-export const metadata: Metadata = {
+export const metadata = getPageMetadata({
   title: 'Regarding AI',
-  alternates: { canonical: '/docs/regarding-ai/', types: markdownAlternate('/docs/regarding-ai', 'Regarding AI') },
   description: 'How AI and LLMs are used in hyperfrontend development with a human-in-the-loop verification process.',
-}
+  path: '/docs/regarding-ai/',
+  markdown: true,
+})
 
 export default async function RegardingAiPage() {
   const content = getRegardingAi()

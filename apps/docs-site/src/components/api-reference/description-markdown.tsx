@@ -1,5 +1,7 @@
 'use client'
 
+import { CODE_WRAP_ATTRIBUTE, CODE_WRAP_FOLD, isFoldableCodeSpan } from '@/lib/code-span'
+
 /**
  * Simple markdown-to-HTML converter for JSDoc descriptions.
  * @param markdown - The markdown text to convert
@@ -11,7 +13,10 @@ function simpleMarkdownToHtml(markdown: string): string {
   let html = markdown.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 
   // why: inline code must be processed before bold/italic to avoid conflicts with backticks
-  html = html.replace(/`([^`]+)`/g, '<code class="text-sm bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded font-mono">$1</code>')
+  html = html.replace(/`([^`]+)`/g, (_, code: string) => {
+    const fold = isFoldableCodeSpan(code) ? ` ${CODE_WRAP_ATTRIBUTE}="${CODE_WRAP_FOLD}"` : ''
+    return `<code class="bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded"${fold}>${code}</code>`
+  })
 
   html = html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
 
@@ -88,6 +93,8 @@ interface DescriptionMarkdownProps {
   text: string
   /** Additional CSS classes */
   className?: string
+  /** Render as a span inside a line of other content, rather than as a block of its own */
+  inline?: boolean
 }
 
 /**
@@ -95,6 +102,7 @@ interface DescriptionMarkdownProps {
  * @param props - Component props
  * @param props.text - The markdown text to render
  * @param props.className - Additional CSS classes
+ * @param props.inline - Render as a span inside a line of other content
  * @returns React element or null if text is empty
  * @example
  * ```tsx
@@ -104,10 +112,14 @@ interface DescriptionMarkdownProps {
  * />
  * ```
  */
-export function DescriptionMarkdown({ text, className = '' }: DescriptionMarkdownProps) {
+export function DescriptionMarkdown({ text, className = '', inline = false }: DescriptionMarkdownProps) {
   if (!text) return null
 
   const html = simpleMarkdownToHtml(text)
 
+  // why: a description beside a property name is part of that line, and a block element inside it is not what the markup says it is
+  if (inline) {
+    return <span className={`description-markdown ${className}`} dangerouslySetInnerHTML={{ __html: html }} />
+  }
   return <div className={`description-markdown ${className}`} dangerouslySetInnerHTML={{ __html: html }} />
 }

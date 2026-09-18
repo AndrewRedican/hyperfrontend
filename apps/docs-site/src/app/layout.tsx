@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next'
 import { Analytics } from '@/components/analytics/analytics'
 import { CodeBlockLight } from '@/components/code-block-light'
 import { ConsentBanner } from '@/components/consent/consent-banner'
+import { DevHuntBanner } from '@/components/devhunt-banner'
 import { JsonLd } from '@/components/json-ld'
 import { ExpandableImages } from '@/components/media/expandable-images'
 import { ThemeProvider } from '@/components/theme-provider'
@@ -71,6 +72,10 @@ type RootLayoutProps = { children: React.ReactNode }
 export default function RootLayout({ children }: RootLayoutProps) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        {/* why: DevHunt's embed instructions place the banner script between the head tags; Next merges this head with the metadata it generates */}
+        <DevHuntBanner />
+      </head>
       <body>
         <ThemeScript />
         <a href="#main-content" className="skip-link">

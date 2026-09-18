@@ -1,9 +1,10 @@
 'use client'
 
 import type { ReactNode } from 'react'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useId, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { createObjectURL, revokeObjectURL } from '@hyperfrontend/immutable-api-utils/built-in-copy/url'
+import { useAnchoredPlacement } from '../../hooks/use-anchored-placement'
 import { generateSlug } from '../../lib/slug'
 import { CaretIcon, DownloadIcon, PrintIcon } from '../document/document-icons'
 
@@ -53,6 +54,9 @@ export function RecordActions({ buildRecord, generatedOn, label, onLabel }: Reco
   const [naming, setNaming] = useState(false)
   const [draft, setDraft] = useState('')
   const menuRef = useRef<HTMLDivElement>(null)
+  const panelRef = useRef<HTMLUListElement>(null)
+  const panelId = useId()
+  const placement = useAnchoredPlacement(menuOpen, menuRef, panelRef)
 
   useEffect(() => {
     if (!menuOpen) return
@@ -101,18 +105,23 @@ export function RecordActions({ buildRecord, generatedOn, label, onLabel }: Reco
       <button
         type="button"
         onClick={() => setMenuOpen((current) => !current)}
-        aria-haspopup="menu"
         aria-expanded={menuOpen}
-        className="inline-flex items-center gap-2 rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
+        aria-controls={panelId}
+        className="inline-flex items-center gap-2 whitespace-nowrap rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
       >
         Save as
         <CaretIcon className={`h-4 w-4 transition-transform ${menuOpen ? 'rotate-180' : ''}`} />
       </button>
 
+      {/* why: a disclosed list of two buttons rather than an ARIA menu, which would promise arrow-key navigation this control does not implement */}
       {menuOpen ? (
-        <div
-          role="menu"
-          className="absolute right-0 z-40 mt-2 w-40 overflow-hidden rounded-lg border border-slate-200 bg-white py-1 shadow-lg dark:border-slate-700 dark:bg-slate-900"
+        <ul
+          ref={panelRef}
+          id={panelId}
+          role="list"
+          aria-label="Save the record as"
+          style={placement.style}
+          className="absolute z-40 w-40 overflow-hidden rounded-lg border border-slate-200 bg-white py-1 shadow-lg dark:border-slate-700 dark:bg-slate-900"
         >
           <MenuItem onClick={chooseMarkdown} icon={<DownloadIcon className="h-4 w-4" />}>
             Markdown
@@ -120,7 +129,7 @@ export function RecordActions({ buildRecord, generatedOn, label, onLabel }: Reco
           <MenuItem onClick={choosePdf} icon={<PrintIcon className="h-4 w-4" />}>
             PDF
           </MenuItem>
-        </div>
+        </ul>
       ) : null}
 
       {naming
@@ -150,15 +159,16 @@ interface MenuItemProps {
  */
 function MenuItem({ onClick, icon, children }: MenuItemProps) {
   return (
-    <button
-      type="button"
-      role="menuitem"
-      onClick={onClick}
-      className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm text-slate-700 transition-colors hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800"
-    >
-      {icon}
-      {children}
-    </button>
+    <li>
+      <button
+        type="button"
+        onClick={onClick}
+        className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm text-slate-700 transition-colors hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800"
+      >
+        {icon}
+        {children}
+      </button>
+    </li>
   )
 }
 

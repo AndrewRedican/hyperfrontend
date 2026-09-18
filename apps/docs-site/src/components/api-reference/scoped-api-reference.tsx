@@ -3,7 +3,7 @@ import { AnchorLink } from '../anchor-link'
 import { H2 } from '../heading-with-anchor'
 import { FunctionSignature } from './function-signature'
 import { TypeDefinition } from './type-definition'
-import { buildNodeLookup, resolveReference } from './type-utils'
+import { buildNodeLookup, resolveUniqueExports } from './type-utils'
 import { ReflectionKind } from './types'
 
 interface ScopedApiReferenceProps {
@@ -50,8 +50,7 @@ function getScopedExports(data: TypeDocOutput, packageName: string, subpath: str
   )
   if (!moduleNode || !moduleNode.children) return null
 
-  const lookup = buildNodeLookup(data)
-  const resolved = moduleNode.children.map((child) => resolveReference(child, lookup))
+  const resolved = resolveUniqueExports(moduleNode.children, buildNodeLookup(data))
 
   return {
     functions: resolved.filter((node) => node.kind === ReflectionKind.Function),
@@ -80,15 +79,15 @@ function NamespaceListing({ node }: NamespaceListingProps) {
     <div className="pt-8 pb-3 first:pt-0" id={`api-${node.name}`}>
       <div className="flex items-center gap-2 group">
         <AnchorLink id={`api-${node.name}`} />
-        <code className="text-sm font-semibold text-slate-900 dark:text-white font-mono">{node.name}</code>
+        <h4 className="api-symbol min-w-0 text-slate-900 dark:text-white">{node.name}</h4>
         <span className="text-xs text-slate-500 dark:text-slate-400">({node.children.length} exports)</span>
       </div>
       <div className="mt-3 ml-4 pl-4 border-l-2 border-slate-200 dark:border-slate-700">
         {node.children.map((child) =>
           child.kind === ReflectionKind.Function ? (
-            <FunctionSignature key={child.id} node={child} />
+            <FunctionSignature key={child.id} node={child} level={4} />
           ) : (
-            <TypeDefinition key={child.id} node={child} />
+            <TypeDefinition key={child.id} node={child} level={4} />
           )
         )}
       </div>
@@ -208,7 +207,7 @@ export function ScopedApiReference({ data, packageName, subpath }: ScopedApiRefe
       {exports.functions.length > 0 && (
         <Section heading="Functions" iconClass="text-blue-500" icon="ƒ" anchor="functions">
           {exports.functions.map((node) => (
-            <FunctionSignature key={node.id} node={node} />
+            <FunctionSignature key={node.id} node={node} level={4} />
           ))}
         </Section>
       )}
@@ -216,7 +215,7 @@ export function ScopedApiReference({ data, packageName, subpath }: ScopedApiRefe
       {exports.classes.length > 0 && (
         <Section heading="Classes" iconClass="text-amber-500" icon="◇" anchor="classes">
           {exports.classes.map((node) => (
-            <TypeDefinition key={node.id} node={node} />
+            <TypeDefinition key={node.id} node={node} level={4} />
           ))}
         </Section>
       )}
@@ -224,7 +223,7 @@ export function ScopedApiReference({ data, packageName, subpath }: ScopedApiRefe
       {exports.interfaces.length > 0 && (
         <Section heading="Interfaces" iconClass="text-purple-500" icon="◈" anchor="interfaces">
           {exports.interfaces.map((node) => (
-            <TypeDefinition key={node.id} node={node} />
+            <TypeDefinition key={node.id} node={node} level={4} />
           ))}
         </Section>
       )}
@@ -232,7 +231,7 @@ export function ScopedApiReference({ data, packageName, subpath }: ScopedApiRefe
       {exports.types.length > 0 && (
         <Section heading="Types" iconClass="text-teal-500" icon="◆" anchor="types">
           {exports.types.map((node) => (
-            <TypeDefinition key={node.id} node={node} />
+            <TypeDefinition key={node.id} node={node} level={4} />
           ))}
         </Section>
       )}
@@ -240,7 +239,7 @@ export function ScopedApiReference({ data, packageName, subpath }: ScopedApiRefe
       {exports.variables.length > 0 && (
         <Section heading="Variables" iconClass="text-green-500" icon="●" anchor="variables">
           {exports.variables.map((node) => (
-            <TypeDefinition key={node.id} node={node} />
+            <TypeDefinition key={node.id} node={node} level={4} />
           ))}
         </Section>
       )}

@@ -1,22 +1,28 @@
 'use client'
 
+import type { ApiHeadingLevel } from './heading-level'
 import type { TypeSegment } from './type-utils'
 import type { TypeDocNode } from './types'
 import { AnchorLink } from '../anchor-link'
 import { useTypeLinkResolver } from './api-link-context'
 import { DescriptionMarkdown } from './description-markdown'
+import { headingTag } from './heading-level'
 import { HighlightMatch } from './highlight-match'
-import { TypeLink, TypeSegmentsText } from './type-link'
+import { TYPE_EXPRESSION_ATTRIBUTES, TypeLink, TypeSegmentsText } from './type-link'
 import { renderTypeSegments, getDescription } from './type-utils'
 import { ReflectionKind } from './types'
 
 interface TypeDefinitionProps {
   node: TypeDocNode
   searchQuery?: string
+  /** Heading level of the symbol's own heading, one under the section it is listed in; defaults to `h3` */
+  level?: ApiHeadingLevel
 }
 
-export function TypeDefinition({ node, searchQuery = '' }: TypeDefinitionProps) {
+export function TypeDefinition({ node, searchQuery = '', level = 3 }: TypeDefinitionProps) {
   const resolve = useTypeLinkResolver()
+  const Symbol = headingTag(level)
+  const Sub = headingTag((level + 1) as ApiHeadingLevel | 6)
   const description = getDescription(node.comment)
   const isInterface = node.kind === ReflectionKind.Interface
   const isTypeAlias = node.kind === ReflectionKind.TypeAlias
@@ -31,12 +37,12 @@ export function TypeDefinition({ node, searchQuery = '' }: TypeDefinitionProps) 
 
   return (
     <div className="pt-8 pb-4 first:pt-4 border-b border-slate-200 dark:border-slate-800 last:border-0" id={`api-${node.name}`}>
-      <div className="flex items-start gap-2 group">
+      <div className="flex flex-wrap items-start gap-2 group">
         <AnchorLink id={`api-${node.name}`} />
-        <span className={`px-2 py-0.5 text-xs font-medium rounded ${kindColor} shrink-0`}>{kindLabel}</span>
-        <h3 className="font-mono text-base font-semibold text-slate-900 dark:text-white flex-1">
+        <span className={`api-kind px-2 py-0.5 font-medium rounded ${kindColor} shrink-0`}>{kindLabel}</span>
+        <Symbol className="api-symbol min-w-0 flex-auto text-slate-900 dark:text-white">
           <HighlightMatch text={node.name} query={searchQuery} />
-        </h3>
+        </Symbol>
       </div>
 
       {description && <DescriptionMarkdown text={description} className="mt-2 text-sm text-slate-600 dark:text-slate-400" />}
@@ -44,7 +50,7 @@ export function TypeDefinition({ node, searchQuery = '' }: TypeDefinitionProps) 
       {/* For type aliases, show the type definition */}
       {isTypeAlias && node.type && (
         <div className="mt-3">
-          <code className="text-sm font-mono text-slate-700 dark:text-slate-300">
+          <code className="api-type text-slate-700 dark:text-slate-300" {...TYPE_EXPRESSION_ATTRIBUTES}>
             type {node.name} = <TypeLink type={node.type} />
           </code>
         </div>
@@ -53,7 +59,7 @@ export function TypeDefinition({ node, searchQuery = '' }: TypeDefinitionProps) 
       {/* For interfaces and classes, show properties */}
       {(isInterface || isClass) && node.children && node.children.length > 0 && (
         <div className="mt-4">
-          <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Properties</h4>
+          <Sub className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Properties</Sub>
           <div className="space-y-2">
             {node.children
               .filter((child) => child.kind === ReflectionKind.Property)
@@ -66,7 +72,7 @@ export function TypeDefinition({ node, searchQuery = '' }: TypeDefinitionProps) 
                 return (
                   <div key={property.id} id={propId} className="flex flex-wrap items-start gap-x-2 gap-y-1 text-sm">
                     <AnchorLink id={propId} />
-                    <code className="font-mono text-slate-900 dark:text-white">
+                    <code className="text-slate-900 dark:text-white">
                       {isReadonly && <span className="text-slate-400">readonly </span>}
                       {property.name}
                       {isOptional && <span className="text-slate-400">?</span>}
@@ -75,7 +81,7 @@ export function TypeDefinition({ node, searchQuery = '' }: TypeDefinitionProps) 
                     <TypeLink type={property.type} />
                     {propDescription && (
                       <span className="text-slate-500 ml-2">
-                        <DescriptionMarkdown text={propDescription} className="inline" />
+                        <DescriptionMarkdown text={propDescription} inline />
                       </span>
                     )}
                   </div>
@@ -88,7 +94,7 @@ export function TypeDefinition({ node, searchQuery = '' }: TypeDefinitionProps) 
       {/* For classes, show methods */}
       {isClass && node.children && node.children.filter((c) => c.kind === ReflectionKind.Method).length > 0 && (
         <div className="mt-4">
-          <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Methods</h4>
+          <Sub className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Methods</Sub>
           <div className="space-y-2">
             {node.children
               .filter((child) => child.kind === ReflectionKind.Method)
@@ -109,7 +115,7 @@ export function TypeDefinition({ node, searchQuery = '' }: TypeDefinitionProps) 
                   <div key={method.id} id={methodId} className="text-sm">
                     <div className="flex items-start gap-2">
                       <AnchorLink id={methodId} />
-                      <code className="min-w-0 break-words font-mono text-slate-900 dark:text-white">
+                      <code className="api-type min-w-0 text-slate-900 dark:text-white" {...TYPE_EXPRESSION_ATTRIBUTES}>
                         {method.name}(<TypeSegmentsText segments={paramSegments} />
                         ):{' '}
                         <span className="text-emerald-600 dark:text-emerald-400">

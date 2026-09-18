@@ -51,6 +51,7 @@ function injectCopyButtons(container: HTMLElement): () => void {
     btn.setAttribute('type', 'button')
     btn.setAttribute('aria-label', 'Copy code to clipboard')
     btn.className = [
+      'copy-control',
       'absolute',
       'right-2',
       'top-2',
@@ -308,11 +309,7 @@ export function ReadmeContent({ html, mermaidDiagrams, slots }: ReadmeContentPro
     prose-h3:text-xl prose-h3:font-semibold prose-h3:mt-8 prose-h3:mb-3
     prose-p:text-slate-600 dark:prose-p:text-slate-400 prose-p:leading-7
     prose-a:text-primary-600 dark:prose-a:text-primary-400 prose-a:no-underline hover:prose-a:underline
-    prose-code:rounded prose-code:bg-slate-100 prose-code:px-1.5 prose-code:py-0.5
-    prose-code:font-normal prose-code:text-slate-700 prose-code:before:content-none prose-code:after:content-none
-    dark:prose-code:bg-slate-800 dark:prose-code:text-slate-300
-    prose-pre:relative prose-pre:overflow-x-auto prose-pre:bg-transparent
-    [&_pre_code]:bg-transparent [&_pre_code]:p-0
+    prose-pre:relative prose-pre:bg-transparent
     prose-table:border prose-table:border-slate-200 dark:prose-table:border-slate-700
     prose-th:bg-slate-50 dark:prose-th:bg-slate-800 prose-th:px-4 prose-th:py-3 prose-th:text-left prose-th:font-semibold
     prose-td:px-4 prose-td:py-3 prose-td:border-t prose-td:border-slate-200 dark:prose-td:border-slate-700

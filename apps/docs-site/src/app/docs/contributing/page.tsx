@@ -1,13 +1,16 @@
-import type { Metadata } from 'next'
 import { Breadcrumb } from '@/components/breadcrumb'
 import { CodeBlock } from '@/components/code-block'
 import { CyclingCodeBlock } from '@/components/cycling-code-block'
 import { StepMarker } from '@/components/step-marker'
+import { getPageMetadata } from '@/lib/metadata'
+import { SUPPORT_ROUTE } from '@/lib/support'
+import Link from 'next/link'
 
-export const metadata: Metadata = {
+export const metadata = getPageMetadata({
   title: 'Contributing',
   description: 'Guide to contributing to hyperfrontend: development setup, coding standards, and pull request guidelines.',
-}
+  path: '/docs/contributing/',
+})
 
 /**
  * The command that serves each shipped demo, in the order the site lists them.
@@ -188,17 +191,13 @@ export default function ContributingPage() {
       {/* Questions */}
       <section className="mt-12">
         <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Questions?</h2>
+        {/* why: the repository has no discussions board, so the way to ask is the support page rather than a link that lands on a 404 */}
         <p className="mt-3 text-slate-600 dark:text-slate-400">
-          If you have questions or need help, feel free to{' '}
-          <a
-            href="https://github.com/AndrewRedican/hyperfrontend/discussions"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-primary-600 hover:underline dark:text-primary-400"
-          >
-            start a discussion
-          </a>{' '}
-          on GitHub.
+          If you have questions or need help,{' '}
+          <Link href={SUPPORT_ROUTE} className="text-primary-600 hover:underline dark:text-primary-400">
+            write to the project
+          </Link>
+          .
         </p>
       </section>
     </>

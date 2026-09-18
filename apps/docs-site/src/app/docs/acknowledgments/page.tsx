@@ -1,16 +1,16 @@
 import type { Contributor } from '@/lib/docs-loader'
-import type { Metadata } from 'next'
 import { Breadcrumb } from '@/components/breadcrumb'
 import { MarkdownDocPage } from '@/components/document/markdown-doc-page'
 import { getAcknowledgments, getContributors } from '@/lib/docs-loader'
 import { documentSubject } from '@/lib/document-model'
-import { markdownAlternate } from '@/lib/metadata'
+import { getPageMetadata } from '@/lib/metadata'
 
-export const metadata: Metadata = {
+export const metadata = getPageMetadata({
   title: 'Acknowledgments',
-  alternates: { canonical: '/docs/acknowledgments/', types: markdownAlternate('/docs/acknowledgments', 'Acknowledgments') },
   description: 'Credits and gratitude to supporters, contributors, and sources of inspiration for hyperfrontend.',
-}
+  path: '/docs/acknowledgments/',
+  markdown: true,
+})
 
 /** Display metadata (icon + label) for a contribution type */
 type ContributionEmoji = {

@@ -11,7 +11,7 @@ import { ApiSearchFilter, defaultFilters } from './api-search-filter'
 import { FunctionSignature } from './function-signature'
 import { ModuleGroupedView, hasModules } from './module-grouped-view'
 import { TypeDefinition } from './type-definition'
-import { TypeLink } from './type-link'
+import { TYPE_EXPRESSION_ATTRIBUTES, TypeLink } from './type-link'
 import { buildNodeLookup, resolveReference } from './type-utils'
 import { ReflectionKind } from './types'
 
@@ -190,8 +190,8 @@ export function ApiReference({ data }: ApiReferenceProps) {
 
       {/* Quick navigation */}
       {hasContent && (
-        <nav className="mb-6 pb-4 border-b border-slate-200 dark:border-slate-700">
-          <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Contents</h3>
+        <nav className="mb-6 pb-4 border-b border-slate-200 dark:border-slate-700" aria-label="API reference contents">
+          <p className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Contents</p>
           <div className="flex flex-wrap gap-2 text-sm">
             {filteredExports.functions.length > 0 && (
               <a href="#api-functions" className="text-primary-600 hover:underline dark:text-primary-400">
@@ -230,13 +230,13 @@ export function ApiReference({ data }: ApiReferenceProps) {
       {/* Functions */}
       {filteredExports.functions.length > 0 && (
         <section id="api-functions" className="mb-8">
-          <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+          <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
             <span className="text-blue-500">ƒ</span>
             Functions
-          </h2>
+          </h3>
           <div className="divide-y divide-slate-200 dark:divide-slate-800">
             {filteredExports.functions.map((fn) => (
-              <FunctionSignature key={fn.id} node={fn} />
+              <FunctionSignature key={fn.id} node={fn} level={4} />
             ))}
           </div>
         </section>
@@ -245,13 +245,13 @@ export function ApiReference({ data }: ApiReferenceProps) {
       {/* Classes */}
       {filteredExports.classes.length > 0 && (
         <section id="api-classes" className="mb-8">
-          <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+          <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
             <span className="text-amber-500">◇</span>
             Classes
-          </h2>
+          </h3>
           <div className="divide-y divide-slate-200 dark:divide-slate-800">
             {filteredExports.classes.map((cls) => (
-              <TypeDefinition key={cls.id} node={cls} />
+              <TypeDefinition key={cls.id} node={cls} level={4} />
             ))}
           </div>
         </section>
@@ -260,13 +260,13 @@ export function ApiReference({ data }: ApiReferenceProps) {
       {/* Interfaces */}
       {filteredExports.interfaces.length > 0 && (
         <section id="api-interfaces" className="mb-8">
-          <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+          <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
             <span className="text-purple-500">◈</span>
             Interfaces
-          </h2>
+          </h3>
           <div className="divide-y divide-slate-200 dark:divide-slate-800">
             {filteredExports.interfaces.map((iface) => (
-              <TypeDefinition key={iface.id} node={iface} />
+              <TypeDefinition key={iface.id} node={iface} level={4} />
             ))}
           </div>
         </section>
@@ -275,13 +275,13 @@ export function ApiReference({ data }: ApiReferenceProps) {
       {/* Type Aliases */}
       {filteredExports.typeAliases.length > 0 && (
         <section id="api-types" className="mb-8">
-          <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+          <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
             <span className="text-teal-500">◆</span>
             Types
-          </h2>
+          </h3>
           <div className="divide-y divide-slate-200 dark:divide-slate-800">
             {filteredExports.typeAliases.map((type) => (
-              <TypeDefinition key={type.id} node={type} />
+              <TypeDefinition key={type.id} node={type} level={4} />
             ))}
           </div>
         </section>
@@ -290,10 +290,10 @@ export function ApiReference({ data }: ApiReferenceProps) {
       {/* Variables/Constants */}
       {filteredExports.variables.length > 0 && (
         <section id="api-variables" className="mb-8">
-          <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+          <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
             <span className="text-green-500">●</span>
             Variables
-          </h2>
+          </h3>
           <div className="divide-y divide-slate-200 dark:divide-slate-800">
             {filteredExports.variables.map((variable) => (
               <VariableItem key={variable.id} node={variable} />
@@ -305,13 +305,13 @@ export function ApiReference({ data }: ApiReferenceProps) {
       {/* Enums */}
       {filteredExports.enums.length > 0 && (
         <section id="api-enums" className="mb-8">
-          <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+          <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
             <span className="text-orange-500">⬡</span>
             Enums
-          </h2>
+          </h3>
           <div className="divide-y divide-slate-200 dark:divide-slate-800">
             {filteredExports.enums.map((enumItem) => (
-              <TypeDefinition key={enumItem.id} node={enumItem} />
+              <TypeDefinition key={enumItem.id} node={enumItem} level={4} />
             ))}
           </div>
         </section>
@@ -330,10 +330,10 @@ function VariableItem({ node }: VariableItemProps) {
     <div className="pt-8 pb-4 first:pt-4" id={`api-${node.name}`}>
       <div className="flex items-start gap-2 group">
         <AnchorLink id={`api-${node.name}`} />
-        <span className="px-2 py-0.5 text-xs font-medium rounded bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-400">
+        <span className="api-kind px-2 py-0.5 font-medium rounded bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-400">
           const
         </span>
-        <code className="font-mono text-base font-semibold text-slate-900 dark:text-white">{node.name}</code>
+        <h4 className="api-symbol min-w-0 flex-auto text-slate-900 dark:text-white">{node.name}</h4>
       </div>
       {node.type && (
         <div className="mt-2 ml-16 text-sm">
@@ -343,7 +343,9 @@ function VariableItem({ node }: VariableItemProps) {
       {node.defaultValue && (
         <div className="mt-1 ml-16 text-sm">
           <span className="text-slate-500">Value:</span>{' '}
-          <code className="text-slate-700 dark:text-slate-300 font-mono">{node.defaultValue}</code>
+          <code className="api-type text-slate-700 dark:text-slate-300" {...TYPE_EXPRESSION_ATTRIBUTES}>
+            {node.defaultValue}
+          </code>
         </div>
       )}
     </div>

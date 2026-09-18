@@ -1,21 +1,21 @@
-import type { Metadata } from 'next'
 import { Breadcrumb } from '@/components/breadcrumb'
 import { DownloadsDashboard } from '@/components/downloads/downloads-dashboard'
 import { H1 } from '@/components/heading-with-anchor'
 import { formatArticleDate } from '@/lib/article-format'
 import { getDownloadsSnapshot } from '@/lib/downloads'
 import { DOWNLOADS_ROUTE, formatExactCount } from '@/lib/downloads-route'
+import { getPageMetadata } from '@/lib/metadata'
 import { REVALIDATION_DAYS } from '@/lib/npm-downloads/model'
 import { REPO_URL } from '@/lib/site'
 import Link from 'next/link'
 import { Suspense } from 'react'
 
-export const metadata: Metadata = {
+export const metadata = getPageMetadata({
   title: 'Downloads',
   description:
     'npm download history for every published HyperFrontend package: totals, rankings, and trends built from daily records collected from npm.',
-  alternates: { canonical: DOWNLOADS_ROUTE },
-}
+  path: DOWNLOADS_ROUTE,
+})
 
 /** Where the persisted history and the collector live, for readers who want to audit either. */
 const DATASET_URL = `${REPO_URL}/tree/main/apps/docs-site/data/npm-downloads`

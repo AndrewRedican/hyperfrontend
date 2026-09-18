@@ -1,17 +1,14 @@
-import type { Metadata } from 'next'
 import { ArticlesIndexList } from '@/components/articles/articles-index-list'
 import { DocsChrome } from '@/components/docs-chrome'
 import { getAllArticles } from '@/lib/articles'
-import { ARTICLES_FEED_ALTERNATE } from '@/lib/metadata'
+import { getPageMetadata } from '@/lib/metadata'
 
-export const metadata: Metadata = {
+export const metadata = getPageMetadata({
   title: 'Articles',
   description: 'Long-form writing on microfrontend architecture, integration boundaries, and the reasoning behind hyperfrontend.',
-  alternates: {
-    canonical: '/articles/',
-    types: ARTICLES_FEED_ALTERNATE,
-  },
-}
+  path: '/articles/',
+  feed: true,
+})
 
 export default function ArticlesPage() {
   const articles = getAllArticles()

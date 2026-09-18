@@ -1,15 +1,16 @@
-import type { Metadata } from 'next'
 import { Breadcrumb } from '@/components/breadcrumb'
 import { CodeBlock } from '@/components/code-block'
 import { DocsContentWrapper } from '@/components/docs-content-wrapper'
 import { H1, H2 } from '@/components/heading-with-anchor'
 import { StepMarker } from '@/components/step-marker'
+import { getPageMetadata } from '@/lib/metadata'
 import Link from 'next/link'
 
-export const metadata: Metadata = {
+export const metadata = getPageMetadata({
   title: 'Quick Start',
   description: 'Get a micro-frontend feature running in under 5 minutes with step-by-step setup guide.',
-}
+  path: '/docs/quick-start/',
+})
 
 export default function QuickStartPage() {
   return (

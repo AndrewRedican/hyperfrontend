@@ -71,7 +71,7 @@ export function DocumentActions({ descriptor }: DocumentActionsProps) {
 
   return (
     <div className="flex flex-col gap-0.5">
-      <button type="button" onClick={copy} disabled={copyState === 'working'} className={ACTION_CLASSES}>
+      <button type="button" onClick={copy} disabled={copyState === 'working'} className={`copy-control ${ACTION_CLASSES}`}>
         {copyState === 'copied' ? <CheckIcon className="h-4 w-4 text-green-600 dark:text-green-400" /> : <CopyIcon className="h-4 w-4" />}
         {COPY_LABELS[copyState]}
       </button>

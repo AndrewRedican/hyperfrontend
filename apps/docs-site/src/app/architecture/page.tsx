@@ -1,16 +1,16 @@
-import type { Metadata } from 'next'
 import { DocsChrome } from '@/components/docs-chrome'
 import { MarkdownDocPage } from '@/components/document/markdown-doc-page'
 import { getRootArchitecture } from '@/lib/docs-loader'
 import { documentSubject } from '@/lib/document-model'
-import { markdownAlternate } from '@/lib/metadata'
+import { getPageMetadata } from '@/lib/metadata'
 
-export const metadata: Metadata = {
+export const metadata = getPageMetadata({
   title: 'Architecture',
-  alternates: { canonical: '/architecture/', types: markdownAlternate('/architecture', 'Architecture') },
   description:
     'Layered architecture for runtime micro-frontend integration enabling frameworks to communicate through secure, contract-validated messaging.',
-}
+  path: '/architecture/',
+  markdown: true,
+})
 
 export default async function ArchitecturePage() {
   const content = getRootArchitecture()
