@@ -1,13 +1,14 @@
-import type { Metadata } from 'next'
 import { Breadcrumb } from '@/components/breadcrumb'
 import { CodeBlock } from '@/components/code-block'
 import { CyclingCodeBlock } from '@/components/cycling-code-block'
 import { StepMarker } from '@/components/step-marker'
+import { getPageMetadata } from '@/lib/metadata'
 
-export const metadata: Metadata = {
+export const metadata = getPageMetadata({
   title: 'Contributing',
   description: 'Guide to contributing to hyperfrontend: development setup, coding standards, and pull request guidelines.',
-}
+  path: '/docs/contributing/',
+})
 
 /**
  * The command that serves each shipped demo, in the order the site lists them.

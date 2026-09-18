@@ -171,6 +171,72 @@ function buildSocialMetadata(
   }
 }
 
+/** What a hand-authored page declares about itself. */
+export interface PageMetadataOptions {
+  /** Page title without the site suffix */
+  title: string
+  /** One or two sentences a search result or a share card shows under the title */
+  description: string
+  /** Site-relative route with a trailing slash, e.g. `/docs/quick-start/` */
+  path: string
+  /** Search keywords, for a page whose subject a reader would search for by other names */
+  keywords?: string[]
+  /** Whether the page is rendered from a markdown source, and so has a Markdown counterpart to advertise */
+  markdown?: boolean
+  /** Whether to advertise the articles feed from this page as well as from the home page */
+  feed?: boolean
+  /** Present when the page is a piece of writing, so it is shared as an article rather than as a website */
+  article?: SocialArticleOptions
+}
+
+/**
+ * Metadata for a page that declares its own title, description and route.
+ *
+ * The root layout carries the site's own Open Graph and Twitter cards, and a
+ * page that sets only a title and a description inherits those cards whole:
+ * shared, it presents as the home page rather than as itself, with the home
+ * page's title, blurb and URL. This composes the page's own card from what
+ * the page already says about itself, so every page describes itself
+ * externally the way it does in the tab.
+ *
+ * @param options - What the page declares about itself
+ * @param options.title - Page title without the site suffix
+ * @param options.description - The sentence a search result or a share card shows under the title
+ * @param options.path - Site-relative route with a trailing slash
+ * @param options.keywords - Search keywords, when a reader would look for the subject under other names
+ * @param options.markdown - Whether the page has a Markdown counterpart to advertise
+ * @param options.feed - Whether to advertise the articles feed from this page too
+ * @param options.article - Present when the page is shared as an article rather than as a website
+ * @returns Metadata with title, description, keywords, canonical, alternates, and social cards
+ *
+ * @example A hand-authored documentation page
+ * ```typescript
+ * export const metadata = getPageMetadata({
+ *   title: 'Quick Start',
+ *   description: 'Get a micro-frontend feature running in under 5 minutes.',
+ *   path: '/docs/quick-start/',
+ * })
+ * ```
+ */
+export function getPageMetadata({
+  title,
+  description,
+  path,
+  keywords,
+  markdown = false,
+  feed = false,
+  article,
+}: PageMetadataOptions): Metadata {
+  const social = buildSocialMetadata(title, description, path, article, markdown)
+  return {
+    title,
+    description,
+    ...(keywords ? { keywords } : {}),
+    ...social,
+    ...(feed ? { alternates: { ...social.alternates, types: { ...social.alternates?.types, ...ARTICLES_FEED_ALTERNATE } } } : {}),
+  }
+}
+
 /**
  * Generate metadata for a library documentation page.
  *

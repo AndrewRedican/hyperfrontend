@@ -1,15 +1,15 @@
-import type { Metadata } from 'next'
 import { Breadcrumb } from '@/components/breadcrumb'
 import { MarkdownDocPage } from '@/components/document/markdown-doc-page'
 import { getManifesto } from '@/lib/docs-loader'
 import { documentSubject } from '@/lib/document-model'
-import { markdownAlternate } from '@/lib/metadata'
+import { getPageMetadata } from '@/lib/metadata'
 
-export const metadata: Metadata = {
+export const metadata = getPageMetadata({
   title: 'Manifesto',
-  alternates: { canonical: '/docs/manifesto/', types: markdownAlternate('/docs/manifesto', 'Manifesto') },
   description: "The vision behind hyperfrontend: why it exists, where it's going, and what it won't build.",
-}
+  path: '/docs/manifesto/',
+  markdown: true,
+})
 
 export default async function ManifestoPage() {
   const content = getManifesto()

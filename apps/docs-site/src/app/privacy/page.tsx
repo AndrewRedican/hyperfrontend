@@ -1,13 +1,14 @@
-import type { Metadata } from 'next'
 import { ConsentSettingsButton } from '@/components/consent/consent-settings-button'
 import { Footer } from '@/components/footer'
 import { Header } from '@/components/header'
 import { GA_MEASUREMENT_ID, GOOGLE_ADS_ID } from '@/lib/analytics'
+import { getPageMetadata } from '@/lib/metadata'
 
-export const metadata: Metadata = {
+export const metadata = getPageMetadata({
   title: 'Privacy',
   description: 'What this site stores, which measurement runs, the consent categories that control it, and how to change your choices.',
-}
+  path: '/privacy/',
+})
 
 /** Styling for the privacy page's section headings. */
 const SECTION_HEADING = 'mt-10 font-display text-xl font-semibold text-slate-900 dark:text-white'

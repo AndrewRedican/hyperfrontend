@@ -1,14 +1,15 @@
-import type { Metadata } from 'next'
 import { Breadcrumb } from '@/components/breadcrumb'
 import { CodeBlock } from '@/components/code-block'
 import { DocsContentWrapper } from '@/components/docs-content-wrapper'
 import { H1, H2 } from '@/components/heading-with-anchor'
+import { getPageMetadata } from '@/lib/metadata'
 import Link from 'next/link'
 
-export const metadata: Metadata = {
+export const metadata = getPageMetadata({
   title: 'Getting Started',
   description: 'Set up hyperfrontend and create your first micro-frontend feature in minutes.',
-}
+  path: '/docs/',
+})
 
 export default function DocsPage() {
   return (

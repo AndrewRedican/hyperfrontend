@@ -1,13 +1,14 @@
-import type { Metadata } from 'next'
 import { DemosGallery } from '@/components/demos/demos-gallery'
 import { Footer } from '@/components/footer'
 import { Header } from '@/components/header'
 import { DEMO_MANIFEST } from '@/lib/demo-manifest'
+import { getPageMetadata } from '@/lib/metadata'
 
-export const metadata: Metadata = {
+export const metadata = getPageMetadata({
   title: 'Live Demos',
   description: 'Interactive demonstrations of hyperfrontend micro-frontend architecture across frameworks and origin boundaries.',
-}
+  path: '/demos/',
+})
 
 /**
  * The demos page: the gallery deck with its floating host console.

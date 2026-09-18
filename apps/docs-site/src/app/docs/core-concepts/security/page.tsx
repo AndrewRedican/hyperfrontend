@@ -1,15 +1,16 @@
-import type { Metadata } from 'next'
 import { Breadcrumb } from '@/components/breadcrumb'
 import { CodeBlock } from '@/components/code-block'
 import { DocsContentWrapper } from '@/components/docs-content-wrapper'
 import { H1, H2, H3 } from '@/components/heading-with-anchor'
+import { getPageMetadata } from '@/lib/metadata'
 import Link from 'next/link'
 
-export const metadata: Metadata = {
+export const metadata = getPageMetadata({
   title: 'Security Model',
   description:
     'The hyperfrontend trust model: who the adversary is, what the browser enforces, what the protocol enforces, what remains the operator’s job, and the status of every control.',
-}
+  path: '/docs/core-concepts/security/',
+})
 
 export default function SecurityModelPage() {
   return (
