@@ -80,24 +80,56 @@
     overflow-wrap: anywhere;
   }
 
-  /* Inline code is the other run of text that is routinely one word, and in
-     a reference it is routinely a long one: a path, a package subpath, six
-     event names joined with slashes. Given a break opportunity nowhere else,
-     it takes one inside the token rather than past the edge of the screen. A
-     block of code is unaffected, because a block never wraps at all: it keeps
-     its whitespace and scrolls, which is the behaviour set on `pre.shiki`. */
-  code {
+  /* The page's own text may break inside a word as a last resort: a reference
+     description that ends in a bare URL is a paragraph with one word wider
+     than a phone. The property inherits, so setting it on the page column
+     reaches every run of text a document renders, generated reference
+     included, and it changes nothing about a line that already fits: the
+     break inside a word is the breaker's last resort, not its first. */
+  main {
     overflow-wrap: anywhere;
   }
 
-  /* And the page's own text, for the same reason: a reference description
-     that ends in a bare URL is a paragraph with one word wider than a phone.
-     The property inherits, so setting it on the page column reaches every
-     run of text a document renders, generated reference included, and it
-     changes nothing about a line that already fits: the break inside a word
-     is the breaker's last resort, not its first. */
-  main {
+  /* Inline code is the one run of text that must not take that last resort.
+     A code span is a token: an identifier, a path, a command, a short
+     expression. Read across two lines it is a different token, and a break
+     inside a word of it is a break inside a name. So a span keeps to one line
+     and, failing that, keeps its words whole. The exception is a span that is
+     a line of code rather than a name, marked `data-code-wrap='fold'` where
+     it is rendered: the markdown pipeline marks a span past the length a
+     phone column holds, and the reference marks every type expression, since
+     a union listing twelve members or a whole statement folds at its own
+     spaces, and inside a word only when a single word is wider than the
+     column. A block of code is unaffected either way: a block never wraps at
+     all, it keeps its whitespace and scrolls, which is the behaviour set on
+     `pre.shiki`. The block's inner `<code>` is excluded here rather than the
+     block, because it is the block's scroll box and must keep its `pre`
+     whitespace. */
+  code {
+    overflow-wrap: normal;
+  }
+
+  :not(pre) > code {
+    white-space: nowrap;
+  }
+
+  :not(pre) > code[data-code-wrap='fold'] {
+    white-space: normal;
     overflow-wrap: anywhere;
+  }
+
+  /* why: inside a table cell the last resort would be the first thing reached for, a cell's floor collapsing to one character and the column with it; a folding span there keeps its words whole and the table scrolls in its box instead */
+  :is(th, td) code[data-code-wrap='fold'] {
+    overflow-wrap: normal;
+  }
+
+  /* A control's label is one visual unit. A button squeezed by a flex row
+     would otherwise inherit the page's last-resort break and read as two or
+     three fragments of a word; it keeps its words whole instead, and the row
+     around it is what gives way. */
+  button,
+  summary {
+    overflow-wrap: normal;
   }
 
   /* Global focus-visible styles for accessibility */

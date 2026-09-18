@@ -1,4 +1,5 @@
 import { codeLayoutTransformer } from '@/lib/code-layout'
+import { CODE_WRAP_ATTRIBUTE, CODE_WRAP_FOLD, isFoldableCodeSpan } from '@/lib/code-span'
 import { CODE_THEMES } from '@/lib/shiki-theme'
 import {
   findThemedVariants,
@@ -39,10 +40,12 @@ const CODE_CELL_ATTRIBUTE = 'data-cell'
  * text rather than a comment, so it still renders. Tables are wrapped in a
  * box that scrolls sideways, so a wide reference table moves on a phone and
  * the page does not, and a cell that holds nothing but code is marked so the
- * stylesheet can keep an identifier on one line. A picture that points at a committed media asset whose
- * record lists dark and light variants becomes a pair of images the
- * stylesheet chooses between by theme, so a light page never shows a dark
- * recording.
+ * stylesheet can keep an identifier on one line. An inline code span long
+ * enough to be a line of code rather than a name is marked so the stylesheet
+ * lets it fold, where every other span is held to one line. A picture that
+ * points at a committed media asset whose record lists dark and light
+ * variants becomes a pair of images the stylesheet chooses between by theme,
+ * so a light page never shows a dark recording.
  *
  * @param markdown - The markdown string to convert
  * @returns A promise that resolves to the HTML string
@@ -56,6 +59,7 @@ export async function markdownToHtml(markdown: string): Promise<string> {
     .use(rehypeRemoveComments)
     .use(rehypeScrollTables)
     .use(rehypeCodeCells)
+    .use(rehypeFoldableCodeSpans)
     .use(rehypeThemedMedia)
     .use(rehypeShiki, {
       themes: CODE_THEMES,
@@ -254,6 +258,58 @@ interface TextNode {
 }
 
 /**
+ * Rehype plugin that marks the inline code spans long enough to fold.
+ *
+ * The stylesheet holds every inline span to one line, because a span is a
+ * name and a name read across two lines is a different name. It cannot tell a
+ * name from a statement, and the tree can: a span past the length a phone
+ * column holds is a line of code, and is marked so the stylesheet lets it
+ * fold at its spaces. A span inside a highlighted block is left alone; the
+ * block scrolls and never wraps.
+ *
+ * @returns The tree transformer
+ */
+function rehypeFoldableCodeSpans(): (tree: WrappableNode) => void {
+  return (tree) => {
+    markFoldableCodeSpans(tree, false)
+  }
+}
+
+/**
+ * Mark every long inline code span beneath a node, in place.
+ *
+ * @param node - Node whose subtree is marked
+ * @param inBlock - Whether an ancestor is a `pre`, whose code is a block rather than a span
+ */
+function markFoldableCodeSpans(node: WrappableNode, inBlock: boolean): void {
+  if (!node.children) {
+    return
+  }
+  for (const child of node.children) {
+    if (child.type !== 'element') {
+      continue
+    }
+    if (child.tagName === 'code' && !inBlock && isFoldableCodeSpan(textOf(child))) {
+      child.properties = { ...child.properties, [CODE_WRAP_ATTRIBUTE]: CODE_WRAP_FOLD }
+    }
+    markFoldableCodeSpans(child, inBlock || child.tagName === 'pre')
+  }
+}
+
+/**
+ * The text a node renders, with its markup flattened away.
+ *
+ * @param node - The node to read
+ * @returns Its text content
+ */
+function textOf(node: WrappableNode): string {
+  if (node.type === 'text') {
+    return String((node as TextNode).value ?? '')
+  }
+  return (node.children ?? []).map(textOf).join('')
+}
+
+/**
  * Rehype plugin that swaps a themed media asset for the pair of images the
  * stylesheet chooses between.
  *
@@ -338,7 +394,8 @@ function swapThemedMedia(node: WrappableNode): void {
  * ```
  */
 export async function markdownToInlineHtml(markdown: string): Promise<string> {
-  const result = await remark().use(remarkGfm).use(remarkRehype).use(rehypeStringify).process(markdown)
+  // why: a sentence's code spans are held to one line by the same rule a document's are, so a long one is marked the same way
+  const result = await remark().use(remarkGfm).use(remarkRehype).use(rehypeFoldableCodeSpans).use(rehypeStringify).process(markdown)
   return result
     .toString()
     .trim()
