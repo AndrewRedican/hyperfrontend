@@ -1,9 +1,10 @@
 'use client'
 
 import { ShareTargetIcon } from '@/components/share/share-icons'
+import { useAnchoredPlacement } from '@/hooks/use-anchored-placement'
 import { trackShare } from '@/lib/analytics-events'
 import { buildShareDescriptor, buildShareTargets } from '@/lib/share'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import { clearTimeout, setTimeout } from '@hyperfrontend/immutable-api-utils/built-in-copy/timers'
 
 interface ShareMenuProps {
@@ -22,6 +23,9 @@ interface ShareMenuProps {
  * Works without the Web Share API (the native entry simply does not render),
  * closes on Escape, outside interaction, and activation, restoring focus to
  * the trigger, and keeps every target comfortably tappable on small screens.
+ * The panel is placed where it has room: it lines up with the trigger's right
+ * edge when that keeps it on screen, its left edge when only that does, and
+ * opens upward when the trigger sits at the bottom of the viewport.
  * @param props - Component props
  * @param props.path - Site-relative route of the page being shared
  * @param props.title - Page title
@@ -33,8 +37,11 @@ export function ShareMenu({ path, title, pageLine }: ShareMenuProps) {
   const [canNativeShare, setCanNativeShare] = useState(false)
   const [copied, setCopied] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
+  const panelRef = useRef<HTMLUListElement>(null)
   const triggerRef = useRef<HTMLButtonElement>(null)
   const firstItemRef = useRef<HTMLElement | null>(null)
+  const panelId = useId()
+  const placement = useAnchoredPlacement(open, containerRef, panelRef)
 
   const descriptor = buildShareDescriptor(path, title, pageLine)
 
@@ -105,62 +112,70 @@ export function ShareMenu({ path, title, pageLine }: ShareMenuProps) {
         type="button"
         onClick={() => setOpen((wasOpen) => !wasOpen)}
         aria-expanded={open}
-        aria-controls="share-menu-panel"
-        className="flex min-h-[36px] items-center gap-1.5 rounded-lg border border-slate-200 px-2.5 py-1.5 text-sm text-slate-600 transition-colors hover:border-slate-300 hover:text-slate-900 dark:border-slate-700 dark:text-slate-400 dark:hover:border-slate-600 dark:hover:text-slate-200"
+        aria-controls={panelId}
+        className="flex min-h-[36px] items-center gap-1.5 whitespace-nowrap rounded-lg border border-slate-200 px-2.5 py-1.5 text-sm text-slate-600 transition-colors hover:border-slate-300 hover:text-slate-900 dark:border-slate-700 dark:text-slate-400 dark:hover:border-slate-600 dark:hover:text-slate-200"
       >
         <ShareIcon className="h-4 w-4" />
         Share
       </button>
 
-      {/* why: The trigger sits at the right edge of its row on every page that mounts it, so anchoring the panel right keeps it on screen at 320px */}
+      {/* why: a plain list rather than an ARIA menu: every entry is a real link or button, so it needs no roving focus or arrow keys to be operable, and a menu role would promise both */}
       {open ? (
-        <div
-          id="share-menu-panel"
+        <ul
+          ref={panelRef}
+          id={panelId}
+          role="list"
           aria-label="Share this page"
-          className="absolute right-0 z-[80] mt-2 w-60 max-w-[calc(100vw-2rem)] overflow-hidden rounded-xl border border-slate-200 bg-white py-1 shadow-xl dark:border-slate-700 dark:bg-slate-900"
+          style={placement.style}
+          className="absolute z-[80] w-60 max-w-[calc(100vw-1rem)] overflow-hidden rounded-xl border border-slate-200 bg-white py-1 shadow-xl dark:border-slate-700 dark:bg-slate-900"
         >
           {canNativeShare ? (
-            <button
-              ref={(element) => {
-                firstItemRef.current = element
-              }}
-              type="button"
-              onClick={nativeShare}
-              className={itemClasses}
-            >
-              <DeviceIcon className="h-4 w-4 text-slate-400" />
-              Share via device…
-            </button>
+            <li>
+              <button
+                ref={(element) => {
+                  firstItemRef.current = element
+                }}
+                type="button"
+                onClick={nativeShare}
+                className={itemClasses}
+              >
+                <DeviceIcon className="h-4 w-4 text-slate-400" />
+                Share via device…
+              </button>
+            </li>
           ) : null}
           {buildShareTargets(descriptor).map((target, targetIndex) => (
-            <a
-              key={target.id}
-              ref={
-                !canNativeShare && targetIndex === 0
-                  ? (element) => {
-                      firstItemRef.current = element
-                    }
-                  : undefined
-              }
-              href={target.href}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() => {
-                trackShare(target.id, path)
-                close()
-              }}
-              className={itemClasses}
-            >
-              {/* why: The mark is decorative — the visible label beside it is what names the destination to every reader */}
-              <ShareTargetIcon id={target.id} className="h-4 w-4 text-slate-400" />
-              {target.label}
-            </a>
+            <li key={target.id}>
+              <a
+                ref={
+                  !canNativeShare && targetIndex === 0
+                    ? (element) => {
+                        firstItemRef.current = element
+                      }
+                    : undefined
+                }
+                href={target.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => {
+                  trackShare(target.id, path)
+                  close()
+                }}
+                className={itemClasses}
+              >
+                {/* why: The mark is decorative — the visible label beside it is what names the destination to every reader */}
+                <ShareTargetIcon id={target.id} className="h-4 w-4 text-slate-400" />
+                {target.label}
+              </a>
+            </li>
           ))}
-          <button type="button" onClick={copyLink} className={itemClasses}>
-            <LinkIcon className="h-4 w-4 text-slate-400" />
-            {copied ? 'Link copied ✓' : 'Copy link'}
-          </button>
-        </div>
+          <li>
+            <button type="button" onClick={copyLink} className={`copy-control ${itemClasses}`}>
+              <LinkIcon className="h-4 w-4 text-slate-400" />
+              {copied ? 'Link copied ✓' : 'Copy link'}
+            </button>
+          </li>
+        </ul>
       ) : null}
     </div>
   )
