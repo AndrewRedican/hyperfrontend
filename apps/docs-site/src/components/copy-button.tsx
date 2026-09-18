@@ -37,7 +37,7 @@ export function CopyButton({ code }: CopyButtonProps) {
       type="button"
       onClick={handleCopy}
       aria-label="Copy code to clipboard"
-      className={`absolute right-2 top-2 rounded px-2 py-1 text-xs font-medium transition-all
+      className={`copy-control absolute right-2 top-2 rounded px-2 py-1 text-xs font-medium transition-all
         opacity-0 group-hover:opacity-100 focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-primary-500
         ${copied ? 'bg-green-600 text-white' : 'bg-slate-700 text-slate-300 hover:bg-slate-600 hover:text-white'}`}
     >

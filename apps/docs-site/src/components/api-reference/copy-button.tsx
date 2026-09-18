@@ -52,8 +52,10 @@ export function CopyButton({ text, className = '', size = 'sm' }: CopyButtonProp
 
   return (
     <button
+      type="button"
       onClick={handleCopy}
       className={`
+        copy-control
         ${sizeClasses}
         rounded
         transition-all

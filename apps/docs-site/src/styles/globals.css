@@ -468,6 +468,15 @@
     opacity: 0;
   }
 
+  /* A control that copies something. Five surfaces draw one, from a code
+     block's corner to a module's header, and each is a word or two beside a
+     mark: the word is held to one line and the control to its own width, so
+     a row that runs out of room folds around it rather than folding it. */
+  .copy-control {
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
   /* The cursor at the end of a command being typed in a cycling block.
 
      A block cursor the width of a character, in the block's own ink, so it

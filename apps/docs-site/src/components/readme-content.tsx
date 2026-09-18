@@ -51,6 +51,7 @@ function injectCopyButtons(container: HTMLElement): () => void {
     btn.setAttribute('type', 'button')
     btn.setAttribute('aria-label', 'Copy code to clipboard')
     btn.className = [
+      'copy-control',
       'absolute',
       'right-2',
       'top-2',
