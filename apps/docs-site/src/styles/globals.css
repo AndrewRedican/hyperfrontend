@@ -3437,6 +3437,187 @@
   }
 }
 
+@layer components {
+  /* The support page.
+
+     One action and a short account of what it is for. The action sits in a
+     well: the same pane a code block is drawn as, lit from the top and
+     letting the atmosphere through, so the one control on the page is held
+     by a surface a reader has already learned means "this is the thing".
+     Inside it the control itself is solid, the site's blue, the one filled
+     shape on the page; the mark and the arrow move a little on hover, which
+     is as much motion as an invitation needs. The prompts below are the
+     rail-and-marks run the package pages use for their capabilities, so a
+     list of questions reads the same way a list of features does. */
+  .support-well {
+    position: relative;
+    isolation: isolate;
+    padding: 1.75rem 1.5rem;
+    border-radius: 1rem;
+    border: 1px solid rgb(148 163 184 / 0.28);
+    background-color: rgb(248 250 252 / 0.6);
+    background-image:
+      radial-gradient(28rem 16rem at 18% 0%, hsl(var(--page-accent, 217) 90% 60% / 0.14), transparent 70%),
+      linear-gradient(to bottom, rgb(255 255 255 / 0.4), rgb(255 255 255 / 0) 60%);
+    -webkit-backdrop-filter: blur(16px) saturate(1.5);
+    backdrop-filter: blur(16px) saturate(1.5);
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.75),
+      0 1px 2px rgb(15 23 42 / 0.06);
+  }
+
+  .dark .support-well {
+    border-color: rgb(148 163 184 / 0.16);
+    background-color: rgb(20 29 47 / 0.64);
+    background-image:
+      radial-gradient(28rem 16rem at 18% 0%, hsl(var(--page-accent, 217) 80% 62% / 0.14), transparent 70%),
+      linear-gradient(to bottom, rgb(148 163 184 / 0.05), rgb(148 163 184 / 0) 60%);
+    box-shadow:
+      inset 0 1px 0 rgb(203 213 225 / 0.07),
+      0 1px 3px rgb(2 6 23 / 0.45);
+  }
+
+  @media (min-width: 640px) {
+    .support-well {
+      padding: 2.25rem 2rem;
+    }
+  }
+
+  .support-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    max-width: 100%;
+    border-radius: 0.875rem;
+    background-color: theme('colors.primary.600');
+    padding: 0.875rem 1.375rem 0.875rem 1.125rem;
+    font-family: theme('fontFamily.display');
+    font-size: 1.0625rem;
+    font-weight: 600;
+    line-height: 1.5rem;
+    color: theme('colors.white');
+    box-shadow:
+      0 1px 2px rgb(15 23 42 / 0.2),
+      0 12px 28px -14px theme('colors.primary.600 / 70%');
+    transition:
+      background-color 150ms ease-out,
+      transform 200ms cubic-bezier(0.22, 1, 0.36, 1),
+      box-shadow 200ms ease-out;
+  }
+
+  .support-cta:hover {
+    background-color: theme('colors.primary.500');
+    transform: translateY(-1px);
+    box-shadow:
+      0 1px 2px rgb(15 23 42 / 0.2),
+      0 16px 32px -14px theme('colors.primary.600 / 80%');
+  }
+
+  .support-cta:active {
+    transform: translateY(0) scale(0.99);
+  }
+
+  .support-cta__mark {
+    width: 1.375rem;
+    height: 1.375rem;
+    flex-shrink: 0;
+    transition: transform 200ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .support-cta__label {
+    /* why: the label is one phrase and stays one, on a phone as on a laptop */
+    white-space: nowrap;
+  }
+
+  .support-cta__arrow {
+    display: inline-block;
+    transition: transform 200ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .support-cta:hover .support-cta__mark {
+    transform: translateY(-1px) rotate(-6deg);
+  }
+
+  .support-cta:hover .support-cta__arrow {
+    transform: translateX(0.25rem);
+  }
+
+  .support-well__address {
+    margin: 1rem 0 0;
+    font-size: 0.875rem;
+    line-height: 1.5rem;
+    color: theme('colors.slate.600');
+  }
+
+  .dark .support-well__address {
+    color: theme('colors.slate.400');
+  }
+
+  .support-prompts {
+    position: relative;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .support-prompts::before {
+    content: '';
+    position: absolute;
+    left: 0.4375rem;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background-color: rgb(148 163 184 / 0.45);
+    -webkit-mask-image: linear-gradient(to bottom, transparent, #000 12%, #000 88%, transparent);
+    mask-image: linear-gradient(to bottom, transparent, #000 12%, #000 88%, transparent);
+  }
+
+  .dark .support-prompts::before {
+    background-color: rgb(148 163 184 / 0.3);
+  }
+
+  .support-prompt {
+    display: grid;
+    grid-template-columns: 1.75rem minmax(0, 1fr);
+    align-items: start;
+    padding: 0 0 1.25rem;
+  }
+
+  .support-prompt:last-child {
+    padding-bottom: 0;
+  }
+
+  /* why: a ring on the rail rather than a disc, for the same reason the capability marks are stroked: a fill would need a colour that is right against a gradient in one place only */
+  .support-prompt__mark {
+    grid-column: 1;
+    margin-top: 0.5rem;
+    width: 0.9375rem;
+    height: 0.9375rem;
+    border-radius: 9999px;
+    border: 1.5px solid hsl(var(--page-accent, 217) 62% 40%);
+    background-color: theme('colors.white');
+  }
+
+  .dark .support-prompt__mark {
+    border-color: hsl(var(--page-accent, 217) 72% 68%);
+    background-color: theme('colors.slate.900');
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .support-cta,
+    .support-cta__mark,
+    .support-cta__arrow {
+      transition: none;
+    }
+
+    .support-cta:hover,
+    .support-cta:hover .support-cta__mark,
+    .support-cta:hover .support-cta__arrow {
+      transform: none;
+    }
+  }
+}
+
 @layer utilities {
   /* Subtle glow effect */
   .glow-primary {

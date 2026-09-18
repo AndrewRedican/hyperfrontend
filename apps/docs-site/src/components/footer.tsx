@@ -3,6 +3,7 @@ import { ConsentSettingsButton } from '@/components/consent/consent-settings-but
 import Link from 'next/link'
 import { createDate } from '@hyperfrontend/immutable-api-utils/built-in-copy/date'
 import { docLayout } from '../lib/doc-layout'
+import { SUPPORT_ROUTE } from '../lib/support'
 
 const FOOTER_LINK_CLASSES = 'text-sm text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'
 
@@ -51,6 +52,9 @@ export function Footer({ width = docLayout.bar }: FooterProps = {}) {
             <a href="/llms.txt" className={FOOTER_LINK_CLASSES}>
               Docs for LLMs
             </a>
+            <Link href={SUPPORT_ROUTE} className={FOOTER_LINK_CLASSES}>
+              Support
+            </Link>
             <Link href="/privacy" className={FOOTER_LINK_CLASSES}>
               Privacy
             </Link>

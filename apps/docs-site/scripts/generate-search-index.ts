@@ -10,6 +10,7 @@ import { libraryRoute } from '../src/lib/library-routes'
 import { docsNavigation, mainNavLinks } from '../src/lib/navigation'
 import { preparePackageReadme } from '../src/lib/package-readme'
 import { extractMarkdownSections } from '../src/lib/slug'
+import { SUPPORT_ROUTE } from '../src/lib/support'
 
 const OUTPUT_DIR = resolve(__dirname, '../.generated')
 const PUBLIC_INDEX = resolve(__dirname, '../public/search-index.json')
@@ -273,6 +274,16 @@ function generateSearchIndex(): void {
       'iframe',
       'should I use microfrontends',
     ],
+  })
+
+  // why: the navigation names the page in one word, and the words a reader reaches for when they want a person (contact, help, email) are not that word
+  seen.add(SUPPORT_ROUTE.replace(/\/$/, ''))
+  documents.push({
+    url: SUPPORT_ROUTE.replace(/\/$/, ''),
+    title: 'Support',
+    kind: 'page',
+    description: 'Write to the project with a question, feedback, or a request for help, and see the ways to support it back',
+    terms: ['contact', 'help', 'email', 'mail', 'question', 'feedback', 'get help', 'contribute'],
   })
 
   collectNavDocuments(docsNavigation as NavNode[], seen, undefined, documents)

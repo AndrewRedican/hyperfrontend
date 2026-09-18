@@ -17,3 +17,12 @@ export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.hyperfr
  * and source links compose onto it so the coordinates live in one place.
  */
 export const REPO_URL = 'https://github.com/AndrewRedican/hyperfrontend'
+
+/**
+ * The address the support page invites readers to write to.
+ *
+ */
+export const SUPPORT_EMAIL = 'support@hyperfrontend.dev'
+
+/** Subject a support mail opens with, so a message arrives already identifiable. */
+export const SUPPORT_MAIL_SUBJECT = 'HyperFrontend question'
