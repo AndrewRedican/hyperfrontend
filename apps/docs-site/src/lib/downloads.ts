@@ -41,6 +41,21 @@ export interface DownloadsSnapshot {
   total: number
 }
 
+/**
+ * What the published site says about the history it was built from, for the
+ * scheduled freshness check to read.
+ */
+export interface DownloadsFreshness {
+  /** The newest day npm had finished counting when the history was refreshed, or null before any history exists */
+  frontier: Day | null
+  /** When the history was refreshed, as an ISO timestamp, or null before any history exists */
+  refreshedAt: string | null
+  /** How many packages the history covers */
+  packages: number
+  /** Raw npm downloads summed across every tracked package */
+  total: number
+}
+
 /** The snapshot, built once for the life of the build. */
 let snapshotCache: DownloadsSnapshot | null = null
 
@@ -101,4 +116,24 @@ export function getDownloadsSnapshot(): DownloadsSnapshot | null {
  */
 export function getPackageDownloads(packageName: string): PackageDownloads | null {
   return getDownloadsSnapshot()?.packages.find((entry) => entry.package === packageName) ?? null
+}
+
+/**
+ * The freshness of the history this build was made from.
+ *
+ * Served as JSON beside the downloads page, so a check running outside the
+ * site can tell which day the published pages are counted through without
+ * parsing them.
+ *
+ * @returns The frontier, the refresh time, and the totals behind them
+ *
+ * @example
+ * ```typescript
+ * getDownloadsFreshness().frontier // '2026-09-18'
+ * ```
+ */
+export function getDownloadsFreshness(): DownloadsFreshness {
+  const snapshot = getDownloadsSnapshot()
+  if (snapshot === null) return { frontier: null, refreshedAt: null, packages: 0, total: 0 }
+  return { frontier: snapshot.frontier, refreshedAt: snapshot.refreshedAt, packages: snapshot.packages.length, total: snapshot.total }
 }

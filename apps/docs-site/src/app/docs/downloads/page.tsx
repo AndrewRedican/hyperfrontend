@@ -67,10 +67,12 @@ export default function DownloadsPage() {
             is kept.
           </p>
           <p>
-            The daily records are committed to the repository, one file per package, and the site is built from those files without asking
-            npm at build time or while being read. A refresh appends the days npm has counted since the last one, and re-reads the most
-            recent {REVALIDATION_DAYS} days because npm&apos;s latest counts can still settle; older days are never requested again. So a
-            total is reproducible from the records at the commit a page was built from, and anyone can audit both the{' '}
+            The daily records are committed to the repository, one file per package, and the site is built from those files rather than read
+            live. A refresh appends the days npm has counted since the last one, and re-reads the most recent {REVALIDATION_DAYS} days
+            because npm&apos;s latest counts can still settle; older days are never requested again. The production build runs that same
+            refresh first, so the published page extends the committed records with the days counted since they were committed, and a daily
+            check rebuilds it only when npm has counted a day it does not yet show. So a total is reproducible from the committed records
+            plus npm&apos;s own counts for the days after them, and anyone can audit both the{' '}
             <a href={DATASET_URL} target="_blank" rel="noopener noreferrer">
               data
             </a>{' '}

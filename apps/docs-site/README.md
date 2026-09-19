@@ -48,8 +48,9 @@ apps/docs-site/
 ├── data/
 │   └── npm-downloads/       # Committed daily npm download history (NDJSON per package)
 ├── scripts/
+│   ├── check-downloads-freshness.mjs  # Compares the published downloads frontier with npm's
 │   ├── generate-docs.ts     # Content generation pipeline
-│   ├── refresh-npm-downloads.ts  # Refreshes data/npm-downloads from npm, on demand
+│   ├── refresh-npm-downloads.ts  # Refreshes data/npm-downloads from npm, on demand or in a production build
 │   └── validate-links.ts    # Build-time link validation
 ├── src/
 │   ├── app/                 # Next.js App Router pages
@@ -257,10 +258,12 @@ a release has been published that this build does not describe yet.
 `/docs/downloads`, the download pills on package pages, and the ecosystem badge on the landing
 page read a committed dataset under `data/npm-downloads/`: one newline-delimited JSON file per
 published package, one line per UTC day, plus a `manifest.json` recording the newest day npm
-had counted and when the dataset was last refreshed. The build never asks npm; it is a
-function of the committed files.
+had counted and when the dataset was last refreshed. A local or CI build never asks npm; it is
+a function of the committed files. A Vercel production build is the one exception, described
+under [Deployment](#deployment): it first extends the committed history with the days npm has
+counted since, so the published page is current without a commit for every day.
 
-The dataset is refreshed on purpose, not as part of a build:
+The committed dataset is refreshed on purpose, not as part of a build:
 
 ```bash
 npm run refresh-downloads            # or: npx nx run docs-site:refresh-downloads
@@ -508,6 +511,32 @@ Deployed to **Vercel** with automatic deployments on push to `main`.
 ### Build Output
 
 Static export to `out/` directory for Vercel deployment.
+
+### Download statistics on production
+
+The `build` script starts with `refresh-downloads --deployment`, which does nothing unless
+`VERCEL_ENV` is `production`. In a production build it asks npm for the days it has counted
+since the committed dataset's frontier (the same bounded, validated requests the collector
+always makes, forced so a same-day skip cannot leave a deploy stale), and the build then reads
+the extended history. A refresh that fails leaves the committed files as they are and lets the
+build continue with a warning, so npm being unreachable costs freshness, never the deploy, and
+the page still states exactly the day it is counted through. Preview builds, CI builds and
+local builds skip the step and render the committed history.
+
+A merge to `main` therefore deploys current statistics on its own. Between merges, the
+[downloads workflow](../../.github/workflows/downloads-freshness.yml) runs once a day: it reads
+`/docs/downloads/snapshot.json`, the frontier the published site was built with, compares it
+with the newest day npm reports for a published package, and when npm is ahead posts to a
+Vercel deploy hook so a production build fetches the missing days. When the two agree it does
+nothing, so no build or deployment happens merely because the schedule fired. The hook URL
+lives in the repository secret `VERCEL_DEPLOY_HOOK_URL` (Vercel project settings, Git, Deploy
+Hooks, for the production branch); without it the workflow fails with that instruction on the
+day it first finds the site stale. Run the same comparison locally with
+`node scripts/check-downloads-freshness.mjs`.
+
+The committed dataset is the durable record and the base every build starts from; extend it
+with `npm run refresh-downloads` and commit the result whenever the tail of days a production
+build fetches is worth folding back into the repository.
 
 ---
 
