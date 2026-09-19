@@ -169,7 +169,8 @@ export function ecosystemLayout(config: EcosystemConfig, profile: MediaProfile):
   const hubPx = metrics.monoPx + 3
   const markPx = 16
   const centreX = profile.width / 2
-  const hubY = metrics.insetPx + 98
+  // why: a figure with no caption and no note has nothing above the hub to make room for, so the hub rises and the frame can be that much shorter
+  const hubY = metrics.insetPx + (config.caption === '' && config.note === '' ? 44 : 98)
   const spineTop = hubY + HUB_H / 2 + 44
   const sideTop = hubY + 32
   const sideW = 262

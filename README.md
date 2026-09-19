@@ -1,342 +1,165 @@
-# hyperfrontend
-
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="https://github.com/AndrewRedican/hyperfrontend/blob/main/assets/logo/hf-dark.svg?raw=true">
-    <img width="220" src="https://github.com/AndrewRedican/hyperfrontend/blob/main/assets/logo/hf-light.svg?raw=true" alt="HyperFrontend">
+    <img width="160" src="https://github.com/AndrewRedican/hyperfrontend/blob/main/assets/logo/hf-light.svg?raw=true" alt="The hyperfrontend cube">
   </picture>
 </p>
+
+<h1 align="center">hyperfrontend</h1>
+
 <p align="center">
-  A hybrid <a href="https://en.wikipedia.org/wiki/Micro_frontend">micro-frontend</a> pattern to embed live web applications with communication protocols, lifecycle, and contract standards
+  Compose web apps built on different stacks into one product at run time, over a typed, secured channel.
 </p>
 
 <p align="center">
-  <a href="https://www.hyperfrontend.dev">Docs</a> |
-  <a href="https://github.com/AndrewRedican/hyperfrontend/blob/main/MANIFESTO.md">Manifesto</a> |
-  <a href="https://github.com/AndrewRedican/hyperfrontend/blob/main/README.md#installation">Installation</a> |
-  <a href="https://github.com/AndrewRedican/hyperfrontend/blob/main/README.md#quick-start">Quick Start</a> |
-  <a href="https://github.com/AndrewRedican/hyperfrontend/blob/main/ARCHITECTURE.md">Architecture</a> |
-  <a href="https://github.com/AndrewRedican/hyperfrontend/blob/main/README.md#live-demos">Live Demos</a> |
-  <a href="https://github.com/AndrewRedican/hyperfrontend/blob/main/ACKNOWLEDGMENTS.md">Acknowledgments</a>
+  <a href="https://www.hyperfrontend.dev">Docs</a> ·
+  <a href="#get-started">Get started</a> ·
+  <a href="#how-it-works">How it works</a> ·
+  <a href="https://www.hyperfrontend.dev/demos/">Demos</a> ·
+  <a href="#packages">Packages</a> ·
+  <a href="MANIFESTO.md">Manifesto</a>
 </p>
 
 <p align="center">
   <a href="https://github.com/AndrewRedican/hyperfrontend/actions/workflows/ci-main.yml">
-    <img src="https://img.shields.io/github/actions/workflow/status/AndrewRedican/hyperfrontend/ci-main.yml?style=flat-square&logo=github&label=build" alt="Build Status">
+    <img src="https://img.shields.io/github/actions/workflow/status/AndrewRedican/hyperfrontend/ci-main.yml?style=flat-square&labelColor=161b26&logo=github&logoColor=white&label=build" alt="Build status of the main branch">
   </a>
   <a href="https://codecov.io/gh/AndrewRedican/hyperfrontend">
-    <img src="https://img.shields.io/codecov/c/github/AndrewRedican/hyperfrontend?style=flat-square&logo=codecov" alt="Coverage">
+    <img src="https://img.shields.io/codecov/c/github/AndrewRedican/hyperfrontend?style=flat-square&labelColor=161b26&logo=codecov&logoColor=white" alt="Test coverage">
   </a>
-  <a href="https://github.com/sponsors/AndrewRedican">
-    <img src="https://img.shields.io/badge/Sponsor-❤️-ff69b4?style=flat-square" alt="Sponsor">
+  <a href="https://www.npmjs.com/package/@hyperfrontend/features">
+    <img src="https://img.shields.io/npm/v/@hyperfrontend/features?style=flat-square&labelColor=161b26&color=7db8ff&logo=npm&logoColor=white&label=%40hyperfrontend%2Ffeatures" alt="Latest version of @hyperfrontend/features on npm">
   </a>
-  <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-  <a href="#contributors">
-    <img src="https://img.shields.io/github/all-contributors/AndrewRedican/hyperfrontend?color=ee8449&style=flat-square" alt="All Contributors">
-  </a>
-  <!-- ALL-CONTRIBUTORS-BADGE:END -->
-  <a href="https://github.com/AndrewRedican/hyperfrontend/blob/main/LICENSE.md">
-    <img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="License">
+  <a href="LICENSE.md">
+    <img src="https://img.shields.io/badge/license-MIT-7db8ff?style=flat-square&labelColor=161b26" alt="MIT license">
   </a>
 </p>
 
----
+<p align="center">
+  <a href="https://www.hyperfrontend.dev/docs/libraries/features/">
+    <img width="832" src="https://github.com/AndrewRedican/hyperfrontend/blob/main/assets/media/readme-compose/hero.gif?raw=true" alt="A host page with three empty slots. Three application windows, a React one, an Angular one and a jQuery one, each served from its own address, slide in from the right and seat into the slots one after another; a wire draws from the host's hub to each seated window, and named messages such as order-placed cross the wires in both directions. Each window keeps its own chrome and origin inside the host, and a faint outline stays at its original address.">
+  </a>
+</p>
 
-Look, nobody cares what framework you're using. [React](https://react.dev/), [Angular](https://angular.dev/), [Vue](https://vuejs.org/), that [jQuery](https://jquery.com/) thing from 2014. Whatever. You just want to ship the damn thing and go home.
+Your React app, the Angular one next door, and that jQuery thing from 2014 can share a page without sharing a build. Each stays its own deployment at its own origin. The host installs one shell package and talks to it over a typed contract, sealed with per-session keys when the payload matters. That is [`@hyperfrontend/features`](https://www.hyperfrontend.dev/docs/libraries/features/): the SDK, the `hf` CLI and the dev server.
 
-Hyperfrontend lets you **compose your existing apps together securely**, like Lego bricks. No rewrites. No "let's align on a shared component library" meetings. Just plug it in and _it works_.
+## How it works
 
-Display another app inside yours with a native look and feel: embed it seamlessly inline, throw it in a modal, pop it out in a new window, open a new tab. Your call. And you don't have to roll your own glue code to make them talk to each other.
+<p align="center">
+  <a href="https://www.hyperfrontend.dev/architecture">
+    <img width="832" src="https://github.com/AndrewRedican/hyperfrontend/blob/main/assets/media/readme-anatomy/figure.png?raw=true" alt="A host application at app.example.com loads a feature shell, which draws an isolation boundary, a browsing context, around the feature application served from checkout.team-b.dev; contract messages cross between them. Four numbered ideas: runtime loading, isolation boundary, typed validated contract, independent deployment. Below, a cross-section of the channel shows its layers: features for the shell, display modes and session lifecycle; nexus for the handshake, contract and heartbeat; network-protocol for the sealed session envelope; cryptography for AES-GCM, ECDH and HKDF at the core.">
+  </a>
+</p>
 
-Need to pass sensitive stuff between apps? Transactions, [PII](https://en.wikipedia.org/wiki/Personal_data), [auth tokens](https://en.wikipedia.org/wiki/Access_token)? Opt into the **encrypted messaging protocol**. It's built to stop [man-in-the-middle](https://en.wikipedia.org/wiki/Man-in-the-middle_attack) snooping and limit [XSS](https://en.wikipedia.org/wiki/Cross-site_scripting) blast radius. Not just "button clicked" events, but the stuff that actually matters.
+The [architecture guide](ARCHITECTURE.md) walks the seam in depth: the handshake, the four-state liveness watchdog, and the polite teardown. The [security model](https://www.hyperfrontend.dev/docs/core-concepts/security) says what the sealed envelope is worth against which adversary, and which controls stay yours.
 
-> Want the full picture? The [Manifesto](MANIFESTO.md) digs into the _why_ behind all of this.
-
----
+## See it running
 
 <p align="center">
   <a href="https://www.hyperfrontend.dev/demos/#koi-pond">
-    <img width="560" height="315" src="https://www.hyperfrontend.dev/media/koi-pond/hero-clip.gif" alt="Eight koi swimming in a single pond, each one rendered by a different framework app">
+    <img width="560" height="315" src="https://github.com/AndrewRedican/hyperfrontend/blob/main/assets/media/koi-pond/hero-clip.gif?raw=true" alt="Eight koi swimming in a single pond, each one rendered by a different framework app">
   </a>
 </p>
 
-## What is a Hyperfrontend Feature?
+Eight koi, eight frameworks, eight separately deployed apps, one pond. The [gallery](https://www.hyperfrontend.dev/demos/) also runs [Clock](https://www.hyperfrontend.dev/demos/#clock), a Vue timepiece in a React host across a cross-site boundary, and [Heartbeat](https://www.hyperfrontend.dev/demos/#heartbeat), liveness and latency, and what a host should do when a feature stops answering.
 
-A **hyperfrontend feature** is your standalone frontend app, whether it was written ten years ago or last month. It could be React, Angular, Vue, Svelte, vanilla JS... doesn't matter. It manages its own state, handles its own auth, talks to its own backend. It's _yours_.
-
-The difference? Now it can be plugged into other apps (or have other apps plugged into it) without anyone having to rewrite anything.
-
-Think of it as combining the best of [micro-frontends](https://en.wikipedia.org/wiki/Micro_frontend) and embeddable components:
-
-```mermaid
----
-config:
-  theme: base
-  themeVariables:
-    fontSize: 12px
----
-flowchart LR
-    subgraph MF["🧩 Micro-Frontend Traits"]
-        direction TB
-        M1["Independent deployment"]
-        M2["Own tech stack"]
-        M3["Team autonomy"]
-        M4["Separate releases"]
-    end
-
-    subgraph CP["📦 Component Traits"]
-        direction TB
-        C1["Embeddable"]
-        C2["Defined API"]
-        C3["Lifecycle hooks"]
-        C4["Host integration"]
-    end
-
-    subgraph HF["⚡ Hyperfrontend Feature"]
-        direction TB
-        H1["🔒 Iframe isolation"]
-        H2["📨 Contract messaging"]
-        H3["⚡ Runtime loading"]
-        H4["🔐 Optional encryption"]
-    end
-
-    MF -.->|combines| HF
-    CP -.->|combines| HF
-
-    style MF fill:#e1f5fe,stroke:#01579b,stroke-width:2px
-    style CP fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
-    style HF fill:#fff3e0,stroke:#e65100,stroke-width:3px
-```
-
-**Not a feature:** UI components, shared libraries, SPA routes, or [monolithic](https://en.wikipedia.org/wiki/Monolithic_application) frontends.
-
-## How It Works
-
-Each hyperfrontend feature uses the standard communication protocol provided by the **[@hyperfrontend/nexus](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/nexus)** library. This enables:
-
-- **Contract-validated messaging** - Features define clear interfaces specifying emitted and accepted message types
-- **Broker-channel architecture** - A TCP-like protocol over the browser's postMessage API routes messages between contexts
-- **Iframe-based isolation** - Each feature operates in its own browser context with true security boundaries
-
-For a deep dive into how the libraries compose together, see the **[Architecture Guide](ARCHITECTURE.md)**.
-
-The **[@hyperfrontend/features](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/features)** package — an SDK, CLI, and dev server — helps you:
-
-1. **Transform existing web apps** into hyperfrontend features by adding the necessary configuration
-2. **Generate shell packages** that know how to load your frontend app at runtime
-3. **Consume features** in host applications with typed bindings
-
-Each feature gets an accompanying **shell package** that is:
-
-- Self-contained with no external dependencies
-- Installable as an npm package, in ESM or CommonJS form
-- Responsible for loading and initializing the feature at runtime
-
-This architecture enables you to compose applications from independently developed and deployed features, enabling true micro-frontend modularity.
-
-## Why Hyperfrontend?
-
-### Free Teams from Deployment Coordination
-
-Hyperfrontend eliminates the need for teams to coordinate deployments, especially critical for organizations with:
-
-- **Global teams** spanning multiple timezones
-- **Different priorities and roadmaps** for each team
-- **Varied technical capabilities** and framework preferences
-
-Each feature is independently deployable - no more waiting for other teams to merge, test, or deploy before shipping your updates.
-
-### Protect Against Version Thrashing
-
-Traditional build-time integration creates tight coupling that leads to:
-
-- Dependency conflicts when teams upgrade at different rates
-- Breaking changes that cascade across the entire application
-- Forced upgrades that consume valuable development time
-
-Hyperfrontend's runtime integration approach isolates each feature's dependencies, allowing teams to:
-
-- Upgrade frameworks on their own schedule
-- Use different versions of the same library across features
-- Deploy updates without breaking other features
-
-### Modernize Without Expensive Rewrites
-
-Hyperfrontend makes existing brownfield or mature projects easily consumable:
-
-- **Wrap legacy applications** as features without rewriting them
-- **Incrementally modernize** - replace features one at a time
-- **Mix old and new** - run legacy AngularJS alongside modern React
-- **Preserve investments** - keep working code working while evolving
-
-The shell package defines a clear interface to interact with each feature, abstracting away the complexity of frontend coordination regardless of the underlying technology.
-
-### Still Modern and Developer-Friendly
-
-Despite its flexibility, hyperfrontend caters to modern frontend setups:
-
-- Full TypeScript support with type-safe contracts
-- Works with all modern build tools (Vite, Webpack, Rollup, etc.)
-- Compatible with SSR and static site generation
-- CLI to scaffold, build, and serve features, with optional Nx generators and executors
-- Standard npm packages, published in ESM and CommonJS form
-
-## Key Capabilities
-
-- Framework-agnostic micro-frontend architecture
-- Standardized communication via the browser's postMessage API (iframes, windows, tabs, web workers)
-- Lifecycle management for embedded applications
-- Contract-based integration with JSON Schema validation
-- Broker-channel message routing with optional encryption
-- Cross-stack compatibility (React, Vue, Angular, Svelte, vanilla JS)
-- Self-contained shell packages with all dependencies bundled in
-- Shells published as ESM and CommonJS; the libraries themselves also ship IIFE and UMD builds for CDN use
-
-## Installation
-
-Install the package:
+## Get started
 
 ```bash
 npm install @hyperfrontend/features
 ```
 
-## Quick Start
+A feature declares what it sends and accepts; a host mounts it and gets a typed handle back:
 
-Four words recur below. The **host** is the application providing the containing product surface; the **hostee** is the application loaded inside it (the one hosted, as in _employee_). A **feature** is a hostee viewed as a product unit, and its **shell** is the package it ships so a host can embed it. See [Core Concepts](https://www.hyperfrontend.dev/docs/core-concepts) for the full vocabulary.
+```typescript
+// In the feature app, from '@hyperfrontend/features/hostee'
+const feature = createFeature({ name: 'checkout', contract })
+await feature.ready()
+feature.send('order-placed', { id: 'A-1094' })
 
-The bundled `hf` CLI drives the workflow. Run it with `npx @hyperfrontend/features <command>`.
+// In the host app, from '@hyperfrontend/features/host'
+const checkout = createShell({ modes: { dialog: mountDialog }, url: 'https://checkout.example.com' })
+checkout.on('order-placed', (order) => showReceipt(order))
+checkout.open({ displayMode: DisplayMode.Dialog })
+```
 
-### Creating a Feature
-
-Initialize an existing application as a hyperfrontend feature:
+The bundled `hf` CLI turns an existing app into a feature and packs the shell a host installs:
 
 ```bash
+# scaffold the feature side into an existing app
 npx @hyperfrontend/features init
-```
-
-This scaffolds the hostee glue module into your app and wires it into the entry file. You declare the feature's contract (the actions it emits and accepts) alongside it.
-
-### Building a Feature
-
-Generate and bundle a self-contained shell package that any host can install:
-
-```bash
+# bundle a self-contained shell package, with the security envelope baked in
 npx @hyperfrontend/features build --protocol v4
-```
-
-The CLI generates the shell package, inlines the contract, bundles every dependency into it, and packs a publishable tarball with typed bindings. The host installs one package and takes on no transitive dependencies. The security envelope is an explicit choice: pass `--protocol v3` (ephemeral session keys) or `--protocol v4` (session keys bound to a pre-shared key of at least 16 characters, supplied at runtime as `sharedKey`), or declare `protocol` in the feature config, and the build bakes it in as the shell's default.
-
-### Testing Your Feature
-
-Serve your apps with the debug UI to interact with your feature in isolation:
-
-```bash
+# serve both sides locally, with a debug UI for the traffic between them
 npx @hyperfrontend/features dev
 ```
 
-This starts one static server per app plus an in-browser debug UI for inspecting host/hostee message traffic, display modes, resizing, and the security envelope.
+Start with [Core Concepts](https://www.hyperfrontend.dev/docs/core-concepts), then the [guides and tutorials](https://www.hyperfrontend.dev/docs/guides/), each one verified against code that runs. Every option, handle and payload type is in the [API reference](https://www.hyperfrontend.dev/docs/libraries/features/#api-reference). Not sure the pattern fits your case? Take the [fit assessment](https://www.hyperfrontend.dev/docs/is-hyperfrontend-right-for-you).
 
-> **Using Nx?** The package also ships a `feature` generator and `build`/`serve` executors (`npx nx add @hyperfrontend/features`) to streamline integration in an Nx workspace.
+## Packages
 
-## Live Demos
+<p align="center">
+  <a href="https://www.hyperfrontend.dev/docs/libraries/">
+    <img width="832" src="https://github.com/AndrewRedican/hyperfrontend/blob/main/assets/media/readme-ecosystem/figure.png?raw=true" alt="The published packages as a map: features at the top; nexus and network-protocol under it as cross-window messaging, with an arrow from network-protocol to cryptography, which seals the channel; cryptography, state-machine and logging grouped as packages that stand on their own; builder, which packs the shell, versioning, project-scope and questions grouped as build and release tooling; and nine utilities along the foot, from json-utils to function-utils.">
+  </a>
+</p>
 
-Browse the interactive gallery at [hyperfrontend.dev/demos](https://www.hyperfrontend.dev/demos/). Each link below opens the carousel directly on that demo.
+Every package is published on its own and documented on the [libraries index](https://www.hyperfrontend.dev/docs/libraries/), the flagship first and the single-purpose utilities last. The ones under the flagship exist because it needed them, and each one solves a problem an application has whether or not it is a micro-frontend.
 
-| Demo                                                        | Description                                                                                    |
-| ----------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| [Clock](https://www.hyperfrontend.dev/demos/#clock)         | A Vue 3 timepiece in a React host across a cross-site boundary: every flip is contract traffic |
-| [Heartbeat](https://www.hyperfrontend.dev/demos/#heartbeat) | Liveness, latency, and what a host should do when a feature stops answering                    |
-| [Koi Pond](https://www.hyperfrontend.dev/demos/#koi-pond)   | Eight koi, eight frameworks, eight separate apps: composited into one continuous scene         |
+<details>
+<summary>All nineteen packages</summary>
 
-In planning, listed in the gallery but not yet running: Chess (two boards negotiating shared
-state through the host), Events (a swarm of producers and consumers across origins), File Share
-(chunking, progress, and back-pressure across the boundary), and Views (one feature in embedded,
-dialog, popup, and standalone modes).
+| npm                                                                                                                           | What it does                                                                                                                                                              |
+| ----------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [@hyperfrontend/features](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/features)                             | The SDK, CLI and dev server: embed another team's app over a typed, supervised channel · [docs](https://www.hyperfrontend.dev/docs/libraries/features/)                   |
+| [@hyperfrontend/nexus](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/nexus)                                   | Contract-validated messaging between windows, frames and workers, over a real handshake · [docs](https://www.hyperfrontend.dev/docs/libraries/nexus/)                     |
+| [@hyperfrontend/network-protocol](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/network-protocol)             | A session-keyed, replay-proof envelope for cross-window messages, on any transport · [docs](https://www.hyperfrontend.dev/docs/libraries/network-protocol/)               |
+| [@hyperfrontend/builder](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/builder)                               | Bundles a TypeScript library into ESM, CJS, IIFE and UMD, and writes the manifest that ships with it · [docs](https://www.hyperfrontend.dev/docs/libraries/builder/)      |
+| [@hyperfrontend/versioning](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/versioning)                         | From conventional commits to the bump, the version and the changelog entry · [docs](https://www.hyperfrontend.dev/docs/libraries/versioning/)                             |
+| [@hyperfrontend/project-scope](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/project-scope)                   | Reads a repository it has never seen, scores what it finds, and stages writes until you commit them · [docs](https://www.hyperfrontend.dev/docs/libraries/project-scope/) |
+| [@hyperfrontend/questions](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/questions)                           | Terminal prompts that return a value, never an exception · [docs](https://www.hyperfrontend.dev/docs/libraries/questions/)                                                |
+| [@hyperfrontend/json-utils](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/utils/json)                         | JSON Schema validation that reports every violation at once, with the pointer that found it · [docs](https://www.hyperfrontend.dev/docs/libraries/utils/json/)            |
+| [@hyperfrontend/ui-utils](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/utils/ui)                             | DOM utilities that hand back their own teardown: styles, gestures, element lifecycle, colour · [docs](https://www.hyperfrontend.dev/docs/libraries/utils/ui/)             |
+| [@hyperfrontend/immutable-api-utils](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/utils/immutable-api)       | Built-ins captured before untrusted code runs, and objects nothing can tamper with after · [docs](https://www.hyperfrontend.dev/docs/libraries/utils/immutable-api/)      |
+| [@hyperfrontend/state-machine](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/state-machine)                   | The lifecycle of an async operation as a store, with the states a lone isLoading cannot tell apart · [docs](https://www.hyperfrontend.dev/docs/libraries/state-machine/)  |
+| [@hyperfrontend/logging](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/logging)                               | Structured, levelled logging with channels and timers · [docs](https://www.hyperfrontend.dev/docs/libraries/logging/)                                                     |
+| [@hyperfrontend/cryptography](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/cryptography)                     | Password and key encryption with one call, the same in the browser and in Node.js · [docs](https://www.hyperfrontend.dev/docs/libraries/cryptography/)                    |
+| [@hyperfrontend/data-utils](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/utils/data)                         | Walk, compare and repair data structures, circular references included · [docs](https://www.hyperfrontend.dev/docs/libraries/utils/data/)                                 |
+| [@hyperfrontend/time-utils](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/utils/time)                         | Timers that can be paused and resumed, intervals, and time normalisation · [docs](https://www.hyperfrontend.dev/docs/libraries/utils/time/)                               |
+| [@hyperfrontend/random-generator-utils](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/utils/random-generator) | Seeded, reproducible random draws from real distributions, plus UUIDs · [docs](https://www.hyperfrontend.dev/docs/libraries/utils/random-generator/)                      |
+| [@hyperfrontend/string-utils](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/utils/string)                     | Base64 and friends that encode UTF-8 first, identical in the browser and in Node.js · [docs](https://www.hyperfrontend.dev/docs/libraries/utils/string/)                  |
+| [@hyperfrontend/list-utils](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/utils/list)                         | FIFO and LIFO lists of objects held by reference, with the filtering and iteration to match · [docs](https://www.hyperfrontend.dev/docs/libraries/utils/list/)            |
+| [@hyperfrontend/function-utils](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/utils/function)                 | Wrappers that change what a call does without changing what it looks like · [docs](https://www.hyperfrontend.dev/docs/libraries/utils/function/)                          |
 
-## Main Packages
-
-| Package                                                                                           | Description                                                                                                                                                                   |
-| ------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [@hyperfrontend/builder](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/builder)   | Composable, vendor-neutral build toolkit for TypeScript libraries, JS bins, and Node SEA native binaries · [📖 docs](https://www.hyperfrontend.dev/docs/libraries/builder/)   |
-| [@hyperfrontend/features](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/features) | SDK, CLI, and dev server for building, embedding, and orchestrating hyperfrontend micro-frontend features · [📖 docs](https://www.hyperfrontend.dev/docs/libraries/features/) |
-| [@hyperfrontend/nexus](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/nexus)       | Cross-window communication with contracts, lifecycle management, and security · [📖 docs](https://www.hyperfrontend.dev/docs/libraries/nexus/)                                |
-
-## Internal Packages
-
-| Package                                                                                                        | Description                                                                                                                                                                  |
-| -------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [cryptography](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/cryptography)                     | Cryptography utilities for browser and Node.js environments · [📖 docs](https://www.hyperfrontend.dev/docs/libraries/cryptography/)                                          |
-| [data-utils](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/utils/data)                         | Data manipulation and transformation utilities · [📖 docs](https://www.hyperfrontend.dev/docs/libraries/utils/data/)                                                         |
-| [function-utils](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/utils/function)                 | Function composition and manipulation utilities · [📖 docs](https://www.hyperfrontend.dev/docs/libraries/utils/function/)                                                    |
-| [immutable-api-utils](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/utils/immutable-api)       | Immutable API utilities for functional programming · [📖 docs](https://www.hyperfrontend.dev/docs/libraries/utils/immutable-api/)                                            |
-| [json-utils](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/utils/json)                         | Zero-dependency JSON Schema Draft v4 validation and schema generation · [📖 docs](https://www.hyperfrontend.dev/docs/libraries/utils/json/)                                  |
-| [list-utils](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/utils/list)                         | List and array manipulation utilities · [📖 docs](https://www.hyperfrontend.dev/docs/libraries/utils/list/)                                                                  |
-| [logging](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/logging)                               | Structured logging utilities for applications · [📖 docs](https://www.hyperfrontend.dev/docs/libraries/logging/)                                                             |
-| [network-protocol](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/network-protocol)             | Network protocol implementation with channels, routing, and security · [📖 docs](https://www.hyperfrontend.dev/docs/libraries/network-protocol/)                             |
-| [project-scope](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/project-scope)                   | Project analysis, technology stack detection, and transactional virtual file system · [📖 docs](https://www.hyperfrontend.dev/docs/libraries/project-scope/)                 |
-| [questions](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/questions)                           | Terminal prompting library with composable, functional API · [📖 docs](https://www.hyperfrontend.dev/docs/libraries/questions/)                                              |
-| [random-generator-utils](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/utils/random-generator) | Random number and data generation utilities · [📖 docs](https://www.hyperfrontend.dev/docs/libraries/utils/random-generator/)                                                |
-| [state-machine](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/state-machine)                   | State machine implementation with lifecycle management, actions, and reducers · [📖 docs](https://www.hyperfrontend.dev/docs/libraries/state-machine/)                       |
-| [string-utils](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/utils/string)                     | String manipulation utilities for browser and Node.js environments · [📖 docs](https://www.hyperfrontend.dev/docs/libraries/utils/string/)                                   |
-| [time-utils](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/utils/time)                         | Time and date manipulation utilities · [📖 docs](https://www.hyperfrontend.dev/docs/libraries/utils/time/)                                                                   |
-| [ui-utils](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/utils/ui)                             | UI utilities for elements, events, styling, and mobile interactions · [📖 docs](https://www.hyperfrontend.dev/docs/libraries/utils/ui/)                                      |
-| [versioning](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/versioning)                         | One-stop commit lifecycle: `cz` author bin, `cl` validator bin, changelog parsing, semver release flow · [📖 docs](https://www.hyperfrontend.dev/docs/libraries/versioning/) |
-| [web-worker](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/web-worker)                         | Web Worker utilities and abstractions · [📖 docs](https://www.hyperfrontend.dev/docs/libraries/web-worker/)                                                                  |
+</details>
 
 ## Documentation
 
-The documentation site is live at [hyperfrontend.dev](https://www.hyperfrontend.dev), and it keeps growing.
-
-**What's there now:**
-
-- **Complete API reference**: generated from the source of every library, with TypeScript types, parameters, and examples
-- **Architecture guides**: how the libraries compose, and why the seams sit where they do
-- **Guides**: [task-focused tutorials and how-to recipes](https://www.hyperfrontend.dev/docs/guides/), each one verified against code that really runs
-- **Demos gallery**: [every demo listed above](https://www.hyperfrontend.dev/demos/), live and interactive
-- **Articles**: longer pieces on the ideas behind the project, with an [Atom feed](https://www.hyperfrontend.dev/feed.xml) if you'd rather subscribe
-- **Site-wide search**: deterministic, local to the site, no third-party service. Press Ctrl/Cmd+K
-- **Interactive code examples**: syntax-highlighted, copyable snippets
-
-**Also in this repo:**
-
-- Each library has a detailed README with installation, usage, and architecture information
-- See the [Main Packages](#main-packages) and [Internal Packages](#internal-packages) tables above for links
-- [Architecture Guide](ARCHITECTURE.md) explains how the libraries compose together
-- [Library Compatibility Matrix](LIBRARY_COMPATIBILITY.md) states where every package runs, what it publishes, and what it depends on, generated from each package's own manifests
-- [Manifesto](MANIFESTO.md) explains the project's philosophy and scope
-
-For the documentation roadmap, see [roadmap/docs-site-action-plan.md](roadmap/docs-site-action-plan.md).
+- [hyperfrontend.dev](https://www.hyperfrontend.dev): the API reference generated from every library, the guides, the demos, site-wide search, and the [articles](https://www.hyperfrontend.dev/articles/) with an [Atom feed](https://www.hyperfrontend.dev/feed.xml)
+- [Architecture](ARCHITECTURE.md): how the libraries compose, and why the seams sit where they do
+- [Library compatibility](LIBRARY_COMPATIBILITY.md): where every package runs and what it publishes, generated from the manifests
+- [Manifesto](MANIFESTO.md): why this exists, where it is going, and what it will not build
+- [Acknowledgments](ACKNOWLEDGMENTS.md): the humans behind the code
 
 ## Contributing
 
-We welcome contributions! Please read our [Contributing Guide](CONTRIBUTING.md) for details on:
-
-- Setting up your development environment (we recommend using GitHub Codespaces!)
-- Our code of conduct and contribution process
-- How to submit pull requests
-- Coding standards and commit message guidelines
-
-If you plan to use LLM assistance, see [REGARDING_AI.md](REGARDING_AI.md) for how AI tooling is used in this project.
-
-**Important**: All contributors must sign our [Contributor License Agreement (CLA)](CONTRIBUTING.md#contributor-license-agreement-cla) before pull requests can be merged.
+Read the [contributing guide](CONTRIBUTING.md) for the development setup (GitHub Codespaces works out of the box), the contribution process, and the coding and commit conventions. Every contributor signs the [Contributor License Agreement](CONTRIBUTING.md#contributor-license-agreement-cla) before a pull request can merge. If you use LLM assistance, [REGARDING_AI.md](REGARDING_AI.md) describes how AI tooling is used here.
 
 ## Security
 
-If you discover a security vulnerability, please follow our responsible disclosure process outlined in our [Security Policy](SECURITY.md). Do not report security issues through public GitHub issues.
+Report vulnerabilities through the [security policy](SECURITY.md), never through a public issue.
 
-## Support & Funding
+## Support
 
-If you find hyperfrontend useful, please consider supporting the project:
-
-- ⭐ [Star the repository](https://github.com/AndrewRedican/hyperfrontend)
-- 💖 [Sponsor on GitHub](https://github.com/sponsors/AndrewRedican)
-- 📣 [Share on X](https://twitter.com/intent/tweet?text=Check%20out%20hyperfrontend%20-%20a%20hybrid%20micro-frontend%20pattern%20for%20embedding%20live%20web%20apps%20with%20communication%20protocols%20and%20lifecycle%20management&url=https://github.com/AndrewRedican/hyperfrontend)
-
-See [FUNDING.md](FUNDING.md) for more ways to support the project.
+Star the repository, [write to the project](https://www.hyperfrontend.dev/support/) with a question, or see [FUNDING.md](FUNDING.md) for ways to support the work.
 
 ## Contributors
 
-Thanks to these wonderful people who have contributed to hyperfrontend:
+<!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
+
+[![All Contributors](https://img.shields.io/github/all-contributors/AndrewRedican/hyperfrontend?color=ee8449&style=flat-square&labelColor=161b26)](#contributors)
+
+<!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 <!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
 <!-- prettier-ignore-start -->
@@ -364,12 +187,8 @@ Thanks to these wonderful people who have contributed to hyperfrontend:
 
 <!-- ALL-CONTRIBUTORS-LIST:END -->
 
-This project follows the [all-contributors](https://allcontributors.org) specification. Contributions of any kind are welcome!
-
-## Acknowledgments
-
-This project wouldn't exist without the support of many people: family, friends, mentors, and the broader open source community. Read the full [Acknowledgments](ACKNOWLEDGMENTS.md) to learn about the humans behind the code.
+This project follows the [all-contributors](https://allcontributors.org) specification. Contributions of any kind are welcome.
 
 ## License
 
-See [LICENSE.md](LICENSE.md) file for details.
+[MIT](LICENSE.md)

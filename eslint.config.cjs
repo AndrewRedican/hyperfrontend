@@ -159,7 +159,8 @@ module.exports = [
     },
     language: 'markdown/gfm',
     rules: {
-      'workspace/root-readme-packages': 'error',
+      // why: the root readme is a landing page that lists every package under one heading, flagship first, rather than sorting them into main and internal
+      'workspace/root-readme-packages': ['error', { sections: ['Packages'] }],
     },
   },
   {

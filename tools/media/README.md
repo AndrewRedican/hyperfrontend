@@ -246,6 +246,8 @@ The profile reaches the stage, so a stage can show less at the smaller size rath
 | `queueStage`       | `src/queue/stage`       | A tube and a cup: the same discs out oldest first, or newest first              |
 | `levelsStage`      | `src/levels/stage`      | A level knob filtering a fixed stream of log lines                              |
 | `galtonStage`      | `src/galton/stage`      | Grains falling into columns until two distributions show their shape            |
+| `composeStage`     | `src/compose/stage`     | Apps on different stacks, each at its own origin, seating into one host page    |
+| `anatomyStage`     | `src/anatomy/stage`     | The host and hostee seam, and a cross-section of the channel between them       |
 | `clocksStage`      | `src/clocks/stage`      | Timescales of different lengths converging on one point, as an article figure   |
 | `roadmapStage`     | `src/roadmap/stage`     | A year on one line: placeholders above it, what shipped hanging below           |
 | `ecosystemStage`   | `src/ecosystem/stage`   | Packages as chips, grouped by the need that produced them                       |
@@ -256,6 +258,8 @@ The profile reaches the stage, so a stage can show less at the smaller size rath
 | `agreementStage`   | `src/agreement/stage`   | Cohesion first beside isolation first, and where each makes agreement mandatory |
 
 None of them takes a colour. Each draws with the theme the recorder hands it, which is what lets one scene become three assets that differ in nothing but their palette. The last eight are article figures rather than package showcases: they are composed against `articleProfile(height)` from `scenes/lib/article`, the width of the documentation site's article column at whatever height the diagram needs, and they share the `.fig-*` type scale in `src/stage/figure`. A figure that is one still lists `outputs: ['still']` and costs seconds; the two that move record a GIF and a poster.
+
+The two before them, `composeStage` and `anatomyStage`, draw the repository's root readme, together with `ecosystemStage` given no header. Their scenes are the `readme-*` files, composed against `readmeProfile(height)` from `scenes/lib/readme`, the width of the readme's column on GitHub, and recorded in the portable theme only, because the readme is rendered on a page whose theme nobody here controls. They are regenerated the same way as everything else, one scene at a time, and never by a build.
 
 The first eleven are general: a terminal, a wire, columns of lines. The showcases at the top of each package readme are not drawn with them, because a showcase has to carry one idea in a few seconds and a general stage carries a transcript. Each showcase has a stage of its own under `src/`, named for the metaphor it draws (`graph`, `envelope`, `lanes`, `ports`, `queue`), and the table below lists them.
 

@@ -127,6 +127,32 @@ This directory contains the CI/CD workflows for the hyperfrontend monorepo.
 
 - `build`: Typecheck, build, test with coverage upload to Codecov
 
+### Downloads Freshness ([downloads-freshness.yml](./downloads-freshness.yml))
+
+**Trigger**:
+
+- Daily schedule (13:20 UTC)
+- Manual dispatch
+
+**Purpose**: Keep the documentation site's npm download statistics current without committing data
+
+**How it works**:
+
+1. Reads `/docs/downloads/snapshot.json` from the published site, which states the newest npm day the site was built with
+2. Asks npm which day it has most recently counted
+3. When npm is ahead, posts to the Vercel deploy hook in the `VERCEL_DEPLOY_HOOK_URL` secret; the production build fetches the missing days itself (`apps/docs-site/README.md`, Deployment)
+4. When the two agree, ends without building or deploying anything
+
+**Features**:
+
+- No install: a dependency-free Node script makes the two requests
+- Read-only repository permissions; no commits, so no workflow or deployment loop
+- Fails loudly when the site or npm cannot be reached, or when the hook secret is missing on the day it is needed
+
+**Jobs**:
+
+- `freshness`: Compares the published frontier with npm's and triggers a production build only when they differ
+
 ### Security Scanning ([security-scan.yml](./security-scan.yml))
 
 **Trigger**:
