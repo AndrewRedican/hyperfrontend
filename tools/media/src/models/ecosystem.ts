@@ -28,11 +28,11 @@ export interface EcosystemEdge {
 
 /** Everything a scene tells the ecosystem stage. */
 export interface EcosystemConfig {
-  /** The small capitals at the top left of the figure. */
+  /** The small capitals at the top left of the figure, or an empty string for none. */
   caption: string
-  /** The line under the caption. */
+  /** The line under the caption, or an empty string for none. */
   note: string
-  /** When the count was taken, set small at the top right. */
+  /** When the count was taken, set small at the top right, or an empty string for none. */
   stamp: string
   /** The package at the centre, drawn larger than the rest. */
   hub: EcosystemChip

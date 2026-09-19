@@ -125,11 +125,23 @@ export const ecosystemStage: Stage<EcosystemConfig> = defineStage<EcosystemConfi
     const metrics = figureMetrics(profile)
     const layout = ecosystemLayout(config, profile)
     const edges = config.edges.map((edge) => renderEdge(edge, layout)).join('')
+    const caption =
+      config.caption === ''
+        ? ''
+        : `<text class="fig-caps" x="${metrics.insetPx}" y="${metrics.insetPx + 20}">${escapeHtml(config.caption)}</text>`
+    const note =
+      config.note === ''
+        ? ''
+        : `<text class="fig-plain" x="${metrics.insetPx}" y="${metrics.insetPx + 40}">${escapeHtml(config.note)}</text>`
+    const stamp =
+      config.stamp === ''
+        ? ''
+        : `<text class="fig-mono" x="${profile.width - metrics.insetPx}" y="${metrics.insetPx + 20}" text-anchor="end">${escapeHtml(config.stamp)}</text>`
     return `<div class="fig-frame">
       <svg class="fig-svg" viewBox="0 0 ${profile.width} ${profile.height}" width="${profile.width}" height="${profile.height}" aria-hidden="true">
-        <text class="fig-caps" x="${metrics.insetPx}" y="${metrics.insetPx + 20}">${escapeHtml(config.caption)}</text>
-        <text class="fig-plain" x="${metrics.insetPx}" y="${metrics.insetPx + 40}">${escapeHtml(config.note)}</text>
-        <text class="fig-mono" x="${profile.width - metrics.insetPx}" y="${metrics.insetPx + 20}" text-anchor="end">${escapeHtml(config.stamp)}</text>
+        ${caption}
+        ${note}
+        ${stamp}
         ${renderCluster(layout.left, layout, theme)}
         ${renderCluster(layout.right, layout, theme)}
         ${renderCluster(layout.foot, layout, theme)}
