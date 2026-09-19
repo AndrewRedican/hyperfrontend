@@ -2,7 +2,7 @@ import { join } from 'node:path'
 import { after as afterAll } from 'node:test'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { createTempWorkspaceManager } from '../testing'
-import rule, { extractMentionedPaths, parseReadmeSections, RULE_NAME } from './root-readme-packages'
+import rule, { DEFAULT_SECTIONS, extractMentionedPaths, parseReadmeSections, RULE_NAME } from './root-readme-packages'
 
 const manager = createTempWorkspaceManager()
 
@@ -118,8 +118,11 @@ describe('root-readme-packages', () => {
     it('has all required message IDs', () => {
       const messageIds = Object.keys(rule.meta?.messages ?? {})
       expect(messageIds).toContain('missingPackage')
-      expect(messageIds).toContain('missingMainPackagesSection')
-      expect(messageIds).toContain('missingInternalPackagesSection')
+      expect(messageIds).toContain('missingSection')
+    })
+
+    it('lists the packages under the two historical sections by default', () => {
+      expect(DEFAULT_SECTIONS).toEqual(['Main Packages', 'Internal Packages'])
     })
   })
 
@@ -279,6 +282,7 @@ Content.
       const reportMock = jest.fn()
       const context = {
         filename: join(workspaceDir, 'README.md'),
+        options: [],
         sourceCode: {
           getText: () => `# README
 
@@ -296,7 +300,9 @@ Content.
       // @ts-expect-error - partial mock
       handler['root']?.(mockNode)
 
-      expect(reportMock).toHaveBeenCalledWith(expect.objectContaining({ messageId: 'missingMainPackagesSection' }))
+      expect(reportMock).toHaveBeenCalledWith(
+        expect.objectContaining({ messageId: 'missingSection', data: expect.objectContaining({ title: 'Main Packages' }) })
+      )
     })
 
     it('reports missing Internal Packages section', () => {
@@ -304,6 +310,7 @@ Content.
       const reportMock = jest.fn()
       const context = {
         filename: join(workspaceDir, 'README.md'),
+        options: [],
         sourceCode: {
           getText: () => `# README
 
@@ -321,7 +328,81 @@ Content.
       // @ts-expect-error - partial mock
       handler['root']?.(mockNode)
 
-      expect(reportMock).toHaveBeenCalledWith(expect.objectContaining({ messageId: 'missingInternalPackagesSection' }))
+      expect(reportMock).toHaveBeenCalledWith(
+        expect.objectContaining({ messageId: 'missingSection', data: expect.objectContaining({ title: 'Internal Packages' }) })
+      )
+    })
+
+    it('does not look for packages until every configured section exists', () => {
+      const workspaceDir = createTempWorkspace({
+        libs: [{ name: 'logging', projectJson: PUBLISHABLE_PROJECT_JSON, packageJson: { name: '@hyperfrontend/logging' } }],
+      })
+      const reportMock = jest.fn()
+      const context = {
+        filename: join(workspaceDir, 'README.md'),
+        options: [],
+        sourceCode: { getText: () => '# README\n' },
+        report: reportMock,
+      }
+      // @ts-expect-error - partial mock
+      const handler = rule.create(context)
+      // @ts-expect-error - partial mock
+      handler['root']?.({ type: 'root' })
+
+      expect(reportMock).toHaveBeenCalledTimes(2)
+      expect(reportMock).not.toHaveBeenCalledWith(expect.objectContaining({ messageId: 'missingPackage' }))
+    })
+
+    it('accepts a single configured section in place of the two defaults', () => {
+      const workspaceDir = createTempWorkspace({
+        libs: [{ name: 'logging', projectJson: PUBLISHABLE_PROJECT_JSON, packageJson: { name: '@hyperfrontend/logging' } }],
+      })
+      const reportMock = jest.fn()
+      const context = {
+        filename: join(workspaceDir, 'README.md'),
+        options: [{ sections: ['Packages'] }],
+        sourceCode: {
+          getText: () => `# README
+
+## Packages
+
+| Package | Does |
+| ------- | ---- |
+| [logging](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/logging) | Logs |
+`,
+        },
+        report: reportMock,
+      }
+      // @ts-expect-error - partial mock
+      const handler = rule.create(context)
+      // @ts-expect-error - partial mock
+      handler['root']?.({ type: 'root' })
+
+      expect(reportMock).not.toHaveBeenCalled()
+    })
+
+    it('names the configured sections when a package is missing from all of them', () => {
+      const workspaceDir = createTempWorkspace({
+        libs: [{ name: 'logging', projectJson: PUBLISHABLE_PROJECT_JSON, packageJson: { name: '@hyperfrontend/logging' } }],
+      })
+      const reportMock = jest.fn()
+      const context = {
+        filename: join(workspaceDir, 'README.md'),
+        options: [{ sections: ['Packages'] }],
+        sourceCode: { getText: () => '# README\n\n## Packages\n\nNothing listed.\n' },
+        report: reportMock,
+      }
+      // @ts-expect-error - partial mock
+      const handler = rule.create(context)
+      // @ts-expect-error - partial mock
+      handler['root']?.({ type: 'root' })
+
+      expect(reportMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          messageId: 'missingPackage',
+          data: expect.objectContaining({ path: 'libs/logging', sections: "'Packages'" }),
+        })
+      )
     })
 
     it('reports missing publishable library', () => {
@@ -337,6 +418,7 @@ Content.
       const reportMock = jest.fn()
       const context = {
         filename: join(workspaceDir, 'README.md'),
+        options: [],
         sourceCode: {
           getText: () => createValidReadme([], []),
         },
@@ -369,6 +451,7 @@ Content.
       const reportMock = jest.fn()
       const context = {
         filename: join(workspaceDir, 'README.md'),
+        options: [],
         sourceCode: {
           getText: () => createValidReadme([], ['libs/logging']),
         },
@@ -395,6 +478,7 @@ Content.
       const reportMock = jest.fn()
       const context = {
         filename: join(workspaceDir, 'README.md'),
+        options: [],
         sourceCode: {
           getText: () => createValidReadme([], []),
         },
@@ -421,6 +505,7 @@ Content.
       const reportMock = jest.fn()
       const context = {
         filename: join(workspace.root, 'README.md'),
+        options: [],
         sourceCode: {
           getText: () => createValidReadme([], []),
         },
@@ -453,6 +538,7 @@ Content.
       const reportMock = jest.fn()
       const context = {
         filename: join(workspaceDir, 'README.md'),
+        options: [],
         sourceCode: {
           getText: () => createValidReadme([], []),
         },
@@ -484,6 +570,7 @@ Content.
       const reportMock = jest.fn()
       const context = {
         filename: join(workspaceDir, 'README.md'),
+        options: [],
         sourceCode: {
           getText: () => createValidReadme([], []),
         },
@@ -515,6 +602,7 @@ Content.
       const reportMock = jest.fn()
       const context = {
         filename: join(workspace.root, 'README.md'),
+        options: [],
         sourceCode: {
           getText: () => createValidReadme([], []),
         },

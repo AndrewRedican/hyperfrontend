@@ -1,10 +1,10 @@
 # root-readme-packages
 
-Ensure root README.md lists all publishable library projects in Main Packages or Internal Packages sections.
+Ensure root README.md lists all publishable library projects in its package sections.
 
 ## Rule Details
 
-This rule validates that the root workspace README.md includes all publishable library projects from `libs/` and `plugins/` folders in either the "Main Packages" or "Internal Packages" section.
+This rule validates that the root workspace README.md links every publishable library project from `libs/` and `plugins/` from one of its package sections. By default those are the "Main Packages" and "Internal Packages" sections; the `sections` option names other level-two headings instead, for a README that lists its packages under one heading.
 
 ### What is a Publishable Library?
 
@@ -16,15 +16,27 @@ A project is considered a publishable library if:
 
 ### Required Sections
 
-The root README.md must have:
+The root README.md must have every configured section. With no options, that is:
 
 - `## Main Packages` - For primary user-facing packages
 - `## Internal Packages` - For internal/utility packages
 
-Each publishable library must appear in one of these sections with a GitHub link in the format:
+Each publishable library must appear in one of the configured sections with a GitHub link in the format:
 
 ```markdown
 | [package-name](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/package-name) | Description |
+```
+
+The link may sit anywhere in the section, a collapsed `<details>` block included; only the level-two heading that opens the section is fixed.
+
+## Options
+
+| Option     | Type       | Default                                  | Description                                                           |
+| ---------- | ---------- | ---------------------------------------- | --------------------------------------------------------------------- |
+| `sections` | `string[]` | `['Main Packages', 'Internal Packages']` | Level-two headings that together must link every publishable library. |
+
+```js
+'workspace/root-readme-packages': ['error', { sections: ['Packages'] }]
 ```
 
 ### Why?

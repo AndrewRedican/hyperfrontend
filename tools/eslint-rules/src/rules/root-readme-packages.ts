@@ -16,6 +16,19 @@ export const RULE_NAME = 'root-readme-packages'
 const LIBRARY_FOLDERS = ['libs', 'plugins'] as const
 
 /**
+ * The level-two headings the packages are listed under when the configuration names none.
+ */
+export const DEFAULT_SECTIONS: readonly string[] = ['Main Packages', 'Internal Packages']
+
+/**
+ * Options for the root-readme-packages rule.
+ */
+export interface RootReadmePackagesOptions {
+  /** Titles of the level-two sections that together must link every publishable library. */
+  sections?: readonly string[]
+}
+
+/**
  * Represents a publishable library project.
  */
 export interface PublishableLibrary {
@@ -200,15 +213,25 @@ const rule: Rule.RuleModule = {
   meta: {
     type: 'problem',
     docs: {
-      description: 'Ensure root README.md lists all publishable library projects in Main Packages or Internal Packages sections',
+      description: 'Ensure root README.md lists all publishable library projects in its package sections',
       url: 'https://github.com/AndrewRedican/hyperfrontend/blob/main/tools/eslint-rules/docs/root-readme-packages.md',
     },
-    schema: [],
+    schema: [
+      {
+        type: 'object',
+        properties: {
+          sections: {
+            type: 'array',
+            items: { type: 'string' },
+            minItems: 1,
+          },
+        },
+        additionalProperties: false,
+      },
+    ],
     messages: {
-      missingPackage:
-        "Publishable library '{{ name }}' ({{ path }}) is not listed in either 'Main Packages' or 'Internal Packages' section",
-      missingMainPackagesSection: "Root README.md must have a '## Main Packages' section",
-      missingInternalPackagesSection: "Root README.md must have a '## Internal Packages' section",
+      missingPackage: "Publishable library '{{ name }}' ({{ path }}) is not listed in any of these sections: {{ sections }}",
+      missingSection: "Root README.md must have a '## {{ title }}' section",
     },
   },
 
@@ -227,37 +250,35 @@ const rule: Rule.RuleModule = {
       return {}
     }
 
+    const options = (context.options[0] ?? {}) as RootReadmePackagesOptions
+    const titles = options.sections ?? DEFAULT_SECTIONS
+
     return {
       root(node: Rule.Node) {
         const sourceCode = context.sourceCode
         const content = sourceCode.getText()
 
         const sections = parseReadmeSections(content)
+        const present: ReadmeSection[] = []
 
-        const mainPackagesSection = sections.get('Main Packages')
-        const internalPackagesSection = sections.get('Internal Packages')
-
-        if (!mainPackagesSection) {
-          context.report({
-            node,
-            messageId: 'missingMainPackagesSection',
-          })
+        for (const title of titles) {
+          const section = sections.get(title)
+          if (section) {
+            present.push(section)
+          } else {
+            context.report({
+              node,
+              messageId: 'missingSection',
+              data: { title },
+            })
+          }
         }
 
-        if (!internalPackagesSection) {
-          context.report({
-            node,
-            messageId: 'missingInternalPackagesSection',
-          })
-        }
-
-        if (!mainPackagesSection || !internalPackagesSection) {
+        if (present.length !== titles.length) {
           return
         }
 
-        const mainPaths = extractMentionedPaths(mainPackagesSection.content)
-        const internalPaths = extractMentionedPaths(internalPackagesSection.content)
-        const allMentionedPaths = createSet([...mainPaths, ...internalPaths])
+        const allMentionedPaths = createSet(present.flatMap((section) => extractMentionedPaths(section.content)))
 
         const publishableLibraries: PublishableLibrary[] = []
 
@@ -274,6 +295,7 @@ const rule: Rule.RuleModule = {
               data: {
                 name: lib.packageName ?? lib.name,
                 path: lib.relativePath,
+                sections: titles.map((title) => `'${title}'`).join(', '),
               },
             })
           }
