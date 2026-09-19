@@ -1,0 +1,53 @@
+{
+  "slug": "readme-anatomy",
+  "asset": "figure.png",
+  "generatedAt": "2026-09-19T12:33:27.755Z",
+  "sceneHash": "9cd37e430c371157",
+  "sourceUrl": "stage:anatomy",
+  "profile": {
+    "id": "readme",
+    "intent": "the repository readme on GitHub, at a laptop's width",
+    "width": 832,
+    "height": 624,
+    "scale": 2,
+    "fps": 12
+  },
+  "viewport": {
+    "width": 832,
+    "height": 624
+  },
+  "record": {
+    "settleMs": 0,
+    "durationMs": 0
+  },
+  "startMs": 0,
+  "stills": [
+    {
+      "asset": "figure.png",
+      "bytes": 58506,
+      "maxBytes": 220000
+    }
+  ],
+  "variants": [
+    {
+      "theme": "portable",
+      "stills": [
+        {
+          "asset": "figure.png",
+          "bytes": 58506,
+          "maxBytes": 220000
+        }
+      ]
+    }
+  ],
+  "browser": {
+    "name": "chromium",
+    "version": "149.0.7827.55"
+  },
+  "determinism": {},
+  "console": {
+    "errors": 0,
+    "warnings": 0,
+    "pageErrors": 0
+  }
+}

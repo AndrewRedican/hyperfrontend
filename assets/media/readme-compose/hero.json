@@ -1,0 +1,85 @@
+{
+  "slug": "readme-compose",
+  "asset": "hero.gif",
+  "generatedAt": "2026-09-19T12:33:23.495Z",
+  "sceneHash": "21d73d62c26db0b3",
+  "sourceUrl": "stage:compose",
+  "profile": {
+    "id": "readme",
+    "intent": "the repository readme on GitHub, at a laptop's width",
+    "width": 832,
+    "height": 468,
+    "scale": 2,
+    "fps": 12
+  },
+  "viewport": {
+    "width": 832,
+    "height": 468
+  },
+  "record": {
+    "settleMs": 0,
+    "durationMs": 10200
+  },
+  "startMs": 0,
+  "gif": {
+    "width": 832,
+    "fps": 12,
+    "colours": 96,
+    "lossy": 30,
+    "dither": true,
+    "loop": 0,
+    "maxBytes": 1200000
+  },
+  "encoder": "sharp",
+  "toolVersions": [
+    {
+      "name": "sharp",
+      "version": "8.18.6"
+    }
+  ],
+  "bytes": 421906,
+  "frames": 102,
+  "stills": [
+    {
+      "asset": "poster.png",
+      "bytes": 32128,
+      "maxBytes": 160000
+    }
+  ],
+  "variants": [
+    {
+      "theme": "portable",
+      "asset": "hero.gif",
+      "bytes": 421906,
+      "maxBytes": 1200000,
+      "frames": 102,
+      "gif": {
+        "width": 832,
+        "fps": 12,
+        "colours": 96,
+        "lossy": 30,
+        "dither": true,
+        "loop": 0,
+        "maxBytes": 1200000
+      },
+      "compromises": [],
+      "stills": [
+        {
+          "asset": "poster.png",
+          "bytes": 32128,
+          "maxBytes": 160000
+        }
+      ]
+    }
+  ],
+  "browser": {
+    "name": "chromium",
+    "version": "149.0.7827.55"
+  },
+  "determinism": {},
+  "console": {
+    "errors": 0,
+    "warnings": 0,
+    "pageErrors": 0
+  }
+}
