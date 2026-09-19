@@ -1,0 +1,60 @@
+name: downloads
+
+on:
+  schedule:
+    # Daily, early afternoon UTC: npm publishes a day's counts during the following
+    # UTC day, so by then yesterday is usually counted and the check finds it the
+    # day it appears rather than the day after.
+    - cron: '20 13 * * *'
+  workflow_dispatch:
+
+# Read-only: nothing here writes to the repository. A stale site is refreshed by
+# asking Vercel for a production build, which fetches the missing days itself.
+permissions:
+  contents: read
+
+# One check at a time, and never cancel one that is already deciding.
+concurrency:
+  group: downloads-freshness
+  cancel-in-progress: false
+
+jobs:
+  freshness:
+    name: freshness
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
+        with:
+          node-version-file: '.nvmrc'
+
+      - name: Compare the published history with npm
+        id: compare
+        # No install: the script has no dependencies, so the check costs two requests.
+        run: node apps/docs-site/scripts/check-downloads-freshness.mjs
+
+      - name: Trigger a production build
+        if: steps.compare.outputs.stale == 'true'
+        env:
+          DEPLOY_HOOK_URL: ${{ secrets.VERCEL_DEPLOY_HOOK_URL }}
+          COUNTED: ${{ steps.compare.outputs.counted }}
+          SERVED: ${{ steps.compare.outputs.served }}
+        run: |
+          if [ -z "$DEPLOY_HOOK_URL" ]; then
+            echo "::error::npm has counted through $COUNTED but the site is counted through $SERVED, and VERCEL_DEPLOY_HOOK_URL is not set. Create a deploy hook for the production branch in the Vercel project settings and store its URL as that repository secret."
+            exit 1
+          fi
+          # The hook builds the production branch as it is; the build fetches the
+          # missing days itself, and Vercel's Git integration is not involved, so
+          # this cannot start a second deployment or trigger another workflow.
+          curl --fail --silent --show-error --max-time 30 --request POST "$DEPLOY_HOOK_URL" --output /dev/null
+          echo "::notice::Triggered a production build: npm has counted through $COUNTED and the site was counted through $SERVED."
+
+      - name: Report an up-to-date site
+        if: steps.compare.outputs.stale != 'true'
+        env:
+          SERVED: ${{ steps.compare.outputs.served }}
+        run: echo "::notice::The site is counted through $SERVED, which is as far as npm has counted; nothing to deploy."
