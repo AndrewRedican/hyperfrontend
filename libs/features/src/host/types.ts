@@ -138,6 +138,12 @@ export interface MountResult {
    * person closing the window takes far longer.
    */
   whenLost?(onLost: (elapsedMs: number) => void): () => void
+  /**
+   * Reports whether the mounted frame provably no longer exists: the iframe
+   * left the document, or the window was closed. The shell reads it when the
+   * watchdog gives up on the feature; unset reads as present.
+   */
+  isGone?(): boolean
   /** Removes any DOM or closes any window created by the mount, stopping any observation it started. */
   cleanup(): void
 }

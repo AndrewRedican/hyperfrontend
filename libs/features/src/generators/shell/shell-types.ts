@@ -62,6 +62,12 @@ export interface FeatureUnresponsiveInfo {
   lastBeatAt: number | null
   /** The display mode the unresponsive feature was using. */
   displayMode: FeatureDisplayMode
+  /**
+   * \`gone\` when the frame provably no longer exists (its iframe left the page
+   * or its window was closed); \`present\` otherwise, which includes a frame
+   * whose process the browser killed, since no web API reports that.
+   */
+  frame: 'present' | 'gone'
   /** Closes the feature gracefully. */
   close(): void
   /** Closes the feature and releases all resources. */
@@ -244,6 +250,8 @@ export interface FeatureUnresponsiveError {
   lastBeatAt: number | null
   /** The display mode the unresponsive feature was using. */
   displayMode: FeatureDisplayMode
+  /** Whether the frame still exists; \`gone\` only when its iframe left the page or its window was closed. */
+  frame: 'present' | 'gone'
 }
 
 /** Error payload emitted when the display mode could not produce a feature window (e.g. a blocked popup). */

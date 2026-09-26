@@ -3,7 +3,7 @@ import type { EventEmitter } from '../shared/event-emitter'
 import type { DismissPayload } from '../shared/presentation'
 import type { ExperiencePlugin, ExperiencePluginContext, FeatureContract, SecurityProtocol, ShellOptions } from '../shared/types'
 import type { HeartbeatMonitor, HeartbeatStatus } from './heartbeat'
-import type { DisplayModeMount, ShellHandle } from './types'
+import type { DisplayModeMount, MountResult, ShellHandle } from './types'
 import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { promiseResolve } from '@hyperfrontend/immutable-api-utils/built-in-copy/promise'
 import { createURL } from '@hyperfrontend/immutable-api-utils/built-in-copy/url'
@@ -238,15 +238,16 @@ export function createShellHandle(
     runCleanup()
   }
 
-  const applyUnresponsive = (options: ShellOptions, missedBeats: number, lastBeatAt: number | null) => {
+  const applyUnresponsive = (options: ShellOptions, mounted: MountResult, missedBeats: number, lastBeatAt: number | null) => {
     const policy = options.onUnresponsive ?? 'emit'
     const displayMode = options.displayMode ?? DisplayMode.Embedded
+    const frame = mounted.isGone?.() === true ? 'gone' : 'present'
     if (typeof policy === 'function') {
-      policy({ missedBeats, lastBeatAt, displayMode, close, destroy })
+      policy({ missedBeats, lastBeatAt, displayMode, frame, close, destroy })
       return
     }
     // why: The reason field is the discriminator embedders switch on, so the unresponsive signal carries the same structured shape as the open-timeout error.
-    emitter.emit('error', { reason: 'unresponsive', missedBeats, lastBeatAt, displayMode })
+    emitter.emit('error', { reason: 'unresponsive', missedBeats, lastBeatAt, displayMode, frame })
     if (policy === 'unmount') {
       destroy()
     }
@@ -310,7 +311,7 @@ export function createShellHandle(
     // why: Queued before connect so the presentation announcement is the first message the feature receives after open — ahead of any consumer send issued in the meantime.
     announcePresent()
     const activeMonitor = wiring.createHeartbeatMonitor(
-      (missedBeats, lastBeatAt) => applyUnresponsive(options, missedBeats, lastBeatAt),
+      (missedBeats, lastBeatAt) => applyUnresponsive(options, result, missedBeats, lastBeatAt),
       (status) => emitter.emit('status', status)
     )
     monitor = activeMonitor

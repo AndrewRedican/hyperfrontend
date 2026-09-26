@@ -177,3 +177,24 @@ export function frameReadiness(iframe: HTMLIFrameElement, url: string): ((begin:
     }
   }
 }
+
+/**
+ * Reports whether a feature iframe provably no longer hosts a document: it
+ * was taken out of the page, which discards its browsing context.
+ *
+ * A frame whose renderer process died is not reported: the element and its
+ * window proxy outlive the process, and no web API tells the embedder.
+ *
+ * @param iframe - The feature frame created for a mount.
+ * @returns The mount's gone probe for the frame.
+ *
+ * @example Reporting a frame the page removed
+ * ```typescript
+ * const isGone = frameGone(iframe)
+ * iframe.remove()
+ * isGone() // true
+ * ```
+ */
+export function frameGone(iframe: HTMLIFrameElement): () => boolean {
+  return () => !iframe.isConnected || iframe.contentWindow === null
+}

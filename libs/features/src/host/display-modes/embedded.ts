@@ -3,7 +3,7 @@ import type { ShellOptions } from '../../shared/types'
 import type { DisplayModeMount } from '../types'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { DisplayMode } from '../../shared/types'
-import { createFeatureIframe, frameReadiness, resolveContainer } from '../iframe'
+import { createFeatureIframe, frameGone, frameReadiness, resolveContainer } from '../iframe'
 import { createContainerReporter, measureContentBox } from '../sizing'
 
 /**
@@ -42,7 +42,7 @@ function resolveFixedSize(options: ShellOptions): ResolvedSize | null {
  *
  * @param context - Inputs the shell passes to this display mode.
  * @param context.options - The merged shell options.
- * @returns The iframe content window, the iframe as the mounted element, the presentation announcement, the viewport reporter (container-driven sizing only), and the reveal/teardown hooks.
+ * @returns The iframe content window, the iframe as the mounted element, the presentation announcement, the viewport reporter (container-driven sizing only), the gone probe, and the reveal/teardown hooks.
  *
  * @example Mounting embedded
  * ```typescript
@@ -67,6 +67,7 @@ export const mountEmbedded: DisplayModeMount = ({ options }) => {
     present: { mode: DisplayMode.Embedded, viewport: viewport ? viewport.current() : { width: measured.width, height: measured.height } },
     viewport,
     whenReady: frameReadiness(iframe, options.url ?? ''),
+    isGone: frameGone(iframe),
     reveal: () => {
       iframe.style.visibility = 'visible'
     },

@@ -36,6 +36,7 @@ export type {
   SandboxOptions,
   SecurityProtocol,
   ShellOptions,
+  UnresponsiveFrame,
   UnresponsiveInfo,
   UnresponsivePolicy,
   WindowedDisplayMode,

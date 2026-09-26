@@ -147,6 +147,19 @@ export interface SandboxOptions {
 }
 
 /**
+ * What the host can see of a silent feature's frame when the watchdog gives up on it.
+ *
+ * - `gone`: the frame provably no longer exists: its iframe was taken out of
+ *   the document, or its window was closed. The silence is final, and nothing
+ *   the shell did caused it.
+ * - `present`: the frame is still there, so the silence is either a stall that
+ *   may end or a death the browser does not disclose. A frame whose renderer
+ *   process the browser or the operating system killed reads `present`, because
+ *   no web API reports that to the embedding page; only time tells the two apart.
+ */
+export type UnresponsiveFrame = 'present' | 'gone'
+
+/**
  * Context passed to an {@link UnresponsivePolicy} callback when a feature stops beating.
  */
 export interface UnresponsiveInfo {
@@ -156,6 +169,8 @@ export interface UnresponsiveInfo {
   lastBeatAt: number | null
   /** The display mode the unresponsive feature was using. */
   displayMode: DisplayMode
+  /** Whether the feature's frame still exists; see {@link UnresponsiveFrame}. */
+  frame: UnresponsiveFrame
   /** Closes the feature gracefully. */
   close(): void
   /** Closes the feature and releases all resources. */
@@ -165,7 +180,7 @@ export interface UnresponsiveInfo {
 /**
  * What the host does when a feature misses too many heartbeats while visible.
  *
- * `emit` (the default) emits an `error` carrying `{ reason: 'unresponsive', missedBeats, lastBeatAt, displayMode }`;
+ * `emit` (the default) emits an `error` carrying `{ reason: 'unresponsive', missedBeats, lastBeatAt, displayMode, frame }`;
  * `unmount` also tears the feature down after emitting the same error; a
  * callback takes over handling entirely with the {@link UnresponsiveInfo}.
  * The policy runs once per `suspect` episode: a recovering beat returns the feature

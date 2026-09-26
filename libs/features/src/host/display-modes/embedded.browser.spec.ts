@@ -79,6 +79,13 @@ describe('mountEmbedded', () => {
     expect(report).not.toHaveBeenCalled()
   })
 
+  it('reports the frame gone once it leaves the page', () => {
+    const { result } = mount({})
+    expect(result.isGone?.()).toBe(false)
+    result.cleanup()
+    expect(result.isGone?.()).toBe(true)
+  })
+
   it('removes the iframe on cleanup', () => {
     const { container, result } = mount({})
     result.cleanup()

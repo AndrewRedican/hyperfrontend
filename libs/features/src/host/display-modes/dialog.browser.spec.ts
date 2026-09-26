@@ -151,6 +151,13 @@ describe('mountDialog', () => {
     expect(requestClose).not.toHaveBeenCalled()
   })
 
+  it('reports the pane gone once it leaves the page', () => {
+    const { result } = mount({})
+    expect(result.isGone?.()).toBe(false)
+    result.cleanup()
+    expect(result.isGone?.()).toBe(true)
+  })
+
   it('removes the pane iframe on cleanup', () => {
     const { result } = mount({})
     result.cleanup()

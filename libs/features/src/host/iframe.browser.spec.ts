@@ -1,6 +1,6 @@
 import { afterEach } from 'node:test'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
-import { createFeatureIframe, frameReadiness, resolveContainer } from './iframe'
+import { createFeatureIframe, frameGone, frameReadiness, resolveContainer } from './iframe'
 
 describe('resolveContainer', () => {
   afterEach(() => {
@@ -135,5 +135,25 @@ describe('frameReadiness', () => {
     cancel?.()
     iframe.dispatchEvent(new Event('load'))
     expect(begin).not.toHaveBeenCalled()
+  })
+})
+
+describe('frameGone', () => {
+  afterEach(() => {
+    document.body.innerHTML = ''
+  })
+
+  it('reads present while the frame is in the page', () => {
+    const iframe = document.createElement('iframe')
+    document.body.appendChild(iframe)
+    expect(frameGone(iframe)()).toBe(false)
+  })
+
+  it('reads gone once the frame leaves the page', () => {
+    const iframe = document.createElement('iframe')
+    document.body.appendChild(iframe)
+    const isGone = frameGone(iframe)
+    iframe.remove()
+    expect(isGone()).toBe(true)
   })
 })

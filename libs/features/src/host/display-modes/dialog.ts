@@ -2,7 +2,7 @@ import type { DialogBoxSize, PresentPayload } from '../../shared/presentation'
 import type { ShellOptions } from '../../shared/types'
 import type { DisplayModeMount } from '../types'
 import { DisplayMode } from '../../shared/types'
-import { createFeatureIframe, frameReadiness } from '../iframe'
+import { createFeatureIframe, frameGone, frameReadiness } from '../iframe'
 import { createObserverReporter } from '../sizing'
 
 // note: The pane carries no host-drawn visuals — the feature draws the dialog box and backdrop inside it, so an opaque background or a host-side close button here would fight the feature's own design.
@@ -43,7 +43,7 @@ function buildDialogPresent(options: ShellOptions): PresentPayload {
  * @param context - Inputs the shell passes to this display mode.
  * @param context.options - The merged shell options.
  * @param context.requestClose - Requests the shell close itself.
- * @returns The iframe content window, the pane as the mounted element, the presentation announcement, the viewport reporter, and the reveal/teardown hooks.
+ * @returns The iframe content window, the pane as the mounted element, the presentation announcement, the viewport reporter, the gone probe, and the reveal/teardown hooks.
  *
  * @example Mounting a dialog
  * ```typescript
@@ -73,6 +73,7 @@ export const mountDialog: DisplayModeMount = ({ options, requestClose }) => {
     present,
     viewport,
     whenReady: frameReadiness(iframe, options.url ?? ''),
+    isGone: frameGone(iframe),
     reveal: () => {
       iframe.style.visibility = 'visible'
     },

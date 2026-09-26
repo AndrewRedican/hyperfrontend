@@ -649,11 +649,11 @@ describe('createShellHandle', () => {
 
   it('emits a structured unresponsive error when the feature stops beating by default', () => {
     const ctx = setup()
-    const handler = jest.fn()
-    ctx.handle.on('error', handler)
+    const fn = jest.fn()
+    ctx.handle.on('error', fn)
     ctx.handle.open()
     ctx.triggerUnresponsive(3, null)
-    expect(handler).toHaveBeenCalledWith({ reason: 'unresponsive', missedBeats: 3, lastBeatAt: null, displayMode: 'embedded' })
+    expect(fn).toHaveBeenCalledWith({ reason: 'unresponsive', missedBeats: 3, lastBeatAt: null, displayMode: 'embedded', frame: 'present' })
   })
 
   it('carries the last beat timestamp and display mode in the unresponsive error', () => {

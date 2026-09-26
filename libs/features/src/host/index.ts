@@ -16,6 +16,7 @@ export type {
   SandboxOptions,
   SecurityProtocol,
   ShellOptions,
+  UnresponsiveFrame,
   UnresponsiveInfo,
   UnresponsivePolicy,
 } from '../shared/types'
