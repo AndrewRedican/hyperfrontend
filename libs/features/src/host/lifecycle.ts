@@ -3,6 +3,7 @@ import type { EventEmitter } from '../shared/event-emitter'
 import type { DismissPayload } from '../shared/presentation'
 import type { ExperiencePlugin, ExperiencePluginContext, FeatureContract, SecurityProtocol, ShellOptions } from '../shared/types'
 import type { HeartbeatMonitor, HeartbeatStatus } from './heartbeat'
+import type { ResolvedReopenOptions, Revival } from './revival'
 import type { DisplayModeMount, MountResult, ShellHandle } from './types'
 import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { promiseResolve } from '@hyperfrontend/immutable-api-utils/built-in-copy/promise'
@@ -10,6 +11,7 @@ import { createURL } from '@hyperfrontend/immutable-api-utils/built-in-copy/url'
 import { buildChannelSettings, createMessagingCore, wireChannelEvents } from '../shared/channel-wiring'
 import { ControlType } from '../shared/control'
 import { DisplayMode } from '../shared/types'
+import { createRevival, resolveReopenPolicy } from './revival'
 
 // note: All DOM/window work lives in the injected mount functions, so this wiring stays DOM-free and exercisable with mock collaborators.
 
@@ -139,6 +141,7 @@ export function createShellHandle(
   let plugins: ActivePlugins | null = null
   let pendingUnmount: Promise<void> | null = null
   let queuedOpen: (() => void) | null = null
+  let revival: Revival | null = null
   // why: One messaging core outlives every open/close cycle so handlers registered before the first open (or across reopens) keep answering feature requests.
   const messaging = createMessagingCore({
     origin: 'host',
@@ -215,7 +218,7 @@ export function createShellHandle(
     runCleanup()
   }
 
-  const destroy = () => {
+  const teardown = () => {
     messaging.requests.rejectAll('The shell was destroyed before the feature responded.')
     queuedOpen = null
     if (pendingUnmount) {
@@ -230,7 +233,19 @@ export function createShellHandle(
     releaseChannelAndCleanup()
   }
 
+  const standDown = () => {
+    revival?.dispose()
+    revival = null
+  }
+
+  // why: Every teardown the host asks for, and every failure no reopen can mend, ends the revival first; only the shell's own replacement of a dead mount tears down without it.
+  const destroy = () => {
+    standDown()
+    teardown()
+  }
+
   const close = () => {
+    standDown()
     if (channel) {
       channel.disconnect()
       return
@@ -248,9 +263,15 @@ export function createShellHandle(
     }
     // why: The reason field is the discriminator embedders switch on, so the unresponsive signal carries the same structured shape as the open-timeout error.
     emitter.emit('error', { reason: 'unresponsive', missedBeats, lastBeatAt, displayMode, frame })
-    if (policy === 'unmount') {
-      destroy()
+    if (policy === 'emit') {
+      return
     }
+    // why: A frame the page took out or a window the visitor closed was removed on purpose, and bringing it back would undo that; the revival exists for the frames the browser takes.
+    if (policy === 'unmount' || frame === 'gone') {
+      destroy()
+      return
+    }
+    revival?.unresponsive()
   }
 
   const applyDismiss = (options: ShellOptions, data: unknown) => {
@@ -275,19 +296,18 @@ export function createShellHandle(
     }
   }
 
-  const open = (overrides?: Partial<ShellOptions>) => {
-    const options = { ...baseOptions, ...overrides } as ShellOptions
+  const mountFeature = (options: ShellOptions, mount: DisplayModeMount) => {
     const displayMode = options.displayMode ?? DisplayMode.Embedded
-    // why: The mode lookup is a pure read that throws for a mode the shell was not composed with; resolving it before the teardown leaves a rejected call with the running session intact.
-    const mount = wiring.selectMount(displayMode)
-    destroy()
+    teardown()
     if (pendingUnmount) {
-      queuedOpen = () => open(overrides)
+      queuedOpen = () => mountFeature(options, mount)
       return
     }
     const result = mount({ options, requestClose: close })
     cleanup = result.cleanup
     if (result.target === null) {
+      // why: A window the browser refused to open will be refused again: a reopen runs on a timer, with no user gesture behind it.
+      standDown()
       emitter.emit('error', { reason: 'open-failed', displayMode })
       return
     }
@@ -319,7 +339,11 @@ export function createShellHandle(
     // why: Either page being hidden throttles its timers, so the watchdog must treat silence as unobservable rather than as a dead feature.
     let selfHidden = false
     let peerHidden = false
-    const applyObservability = () => activeMonitor.setObservable(!selfHidden && !peerHidden)
+    const applyObservability = () => {
+      const observable = !selfHidden && !peerHidden
+      activeMonitor.setObservable(observable)
+      revival?.setObservable(observable)
+    }
     // why: An in-document frame's visibility is the browser's copy of this page's, so it cannot honestly still be hidden once this page is not — and a frame the browser killed while this page sat in the background can never send the report that clears the flag. Leaving it set pins the watchdog at `unobservable` for the rest of the session, blind to the one failure it exists to catch. A live frame re-reports within a message of this, so the flag costs nothing to drop; a feature in its own window really can be hidden while this page is not, and its report stands.
     visibilityTeardown = wiring.observeVisibility((hidden) => {
       selfHidden = hidden
@@ -332,6 +356,7 @@ export function createShellHandle(
     let stopTargetWatch: (() => void) | null = null
     channel.on('open', () => {
       opened = true
+      revival?.opened()
       emitter.emit('open')
       // why: The watch exists to cut short a handshake that can never complete; once the session is open the window's fate is the heartbeat's business, and a user closing a popup is not an error.
       stopTargetWatch?.()
@@ -368,6 +393,8 @@ export function createShellHandle(
         announcePresent()
         return
       }
+      // why: The session ended in an exchange both sides took part in, which is not a death; there is nothing to bring back.
+      standDown()
       emitter.emit('close')
       stopMonitor()
       if (pendingUnmount) {
@@ -381,9 +408,10 @@ export function createShellHandle(
       runCleanup()
     })
     activeChannel.on('connect-timeout', (data) => {
-      // why: The feature never completed the handshake — tear the mount down and surface a distinguishable payload for fallback/retry UI.
-      destroy()
+      // why: The feature never completed the handshake — tear the mount down and surface a distinguishable payload for fallback/retry UI. A reopened session that never answers is the device killing the frame again, so the revival counts it as the next death.
+      teardown()
       emitter.emit('error', { reason: 'open-timeout', elapsedMs: data.elapsedMs, displayMode })
+      revival?.connectFailed()
     })
     activeChannel.onMessage(
       messaging.createRouter((type, data) => {
@@ -432,6 +460,40 @@ export function createShellHandle(
     } else {
       activeChannel.connect()
     }
+  }
+
+  const beginRevival = (options: ShellOptions, reopenOptions: ResolvedReopenOptions, mount: DisplayModeMount) => {
+    const displayMode = options.displayMode ?? DisplayMode.Embedded
+    revival = createRevival(reopenOptions, {
+      isHealthy: () => monitor?.getStatus().state === 'healthy',
+      reopen: (attempt, attempts) => {
+        emitter.emit('reopen', { attempt, attempts, displayMode })
+        try {
+          mountFeature(options, mount)
+        } catch (error) {
+          // why: The mount runs on a timer here, far from the call that configured it, so a mount that can no longer succeed (its container gone from the page, say) surfaces as an error event instead of an uncaught exception.
+          destroy()
+          emitError(error)
+        }
+      },
+      giveUp: (attempts) => {
+        destroy()
+        emitter.emit('error', { reason: 'reopen-exhausted', attempts, displayMode })
+      },
+    })
+  }
+
+  const open = (overrides?: Partial<ShellOptions>) => {
+    const options = { ...baseOptions, ...overrides } as ShellOptions
+    // why: The mode lookup and the policy check are pure reads that throw for a mode the shell was not composed with or an out-of-range tuning; resolving both before the teardown leaves a rejected call with the running session intact.
+    const mount = wiring.selectMount(options.displayMode ?? DisplayMode.Embedded)
+    const reopenOptions = resolveReopenPolicy(options.onUnresponsive)
+    // why: A host that opens the feature itself starts over, so whatever episode the previous session was in ends with it and the fresh session gets the whole budget.
+    standDown()
+    if (reopenOptions) {
+      beginRevival(options, reopenOptions, mount)
+    }
+    mountFeature(options, mount)
   }
 
   return freeze({

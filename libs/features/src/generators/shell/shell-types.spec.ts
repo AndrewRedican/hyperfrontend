@@ -187,12 +187,14 @@ describe('buildShellTypes', () => {
   })
 
   it('adds dismiss to the lifecycle union when dialog is declared', () => {
-    expect(buildShellTypes(contract, ['dialog'])).toContain("'open' | 'closing' | 'close' | 'error' | 'status' | 'dirty-state' | 'dismiss'")
+    expect(buildShellTypes(contract, ['dialog'])).toContain(
+      "'open' | 'closing' | 'close' | 'error' | 'status' | 'dirty-state' | 'reopen' | 'dismiss'"
+    )
   })
 
   it('keeps dismiss out of the lifecycle union without dialog', () => {
     const types = buildShellTypes(contract, ['embedded'])
-    expect(types).toContain("'open' | 'closing' | 'close' | 'error' | 'status' | 'dirty-state', handler")
+    expect(types).toContain("'open' | 'closing' | 'close' | 'error' | 'status' | 'dirty-state' | 'reopen', handler")
     expect(types).not.toContain("'dismiss'")
   })
 })

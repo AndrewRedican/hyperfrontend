@@ -178,6 +178,47 @@ export interface UnresponsiveInfo {
 }
 
 /**
+ * Tuning for the `reopen` {@link UnresponsivePolicy}: how patiently, how often,
+ * and how many times the shell brings back a feature whose frame went silent.
+ *
+ * One episode starts at the first verdict and keeps counting while the feature
+ * keeps dying; a reopened session that stays open for `stableMs` ends the
+ * episode and restores the full budget.
+ */
+export interface ReopenOptions {
+  /**
+   * Milliseconds a verdict must stand before the first reopen; defaults to
+   * 4000. A frame that beats again within the grace was stalled, not dead, and
+   * keeps its session. Each further reopen in the same episode waits `backoff`
+   * times longer than the one before.
+   */
+  graceMs?: number
+  /** Factor each further grace in the same episode grows by; at least 1, defaults to 3. */
+  backoff?: number
+  /**
+   * Reopens one episode may spend; a positive integer, defaults to 3. A feature
+   * still silent after the last one is torn down and an `error` with
+   * `reason: 'reopen-exhausted'` is emitted.
+   */
+  attempts?: number
+  /** Milliseconds a reopened session must stay open before the episode ends and the budget is restored; defaults to 60000. */
+  stableMs?: number
+}
+
+/**
+ * The tuned form of the `reopen` {@link UnresponsivePolicy}.
+ *
+ * @example Reviving a feature with a longer grace and a smaller budget
+ * ```typescript
+ * createShell({ modes, container: '#clock', url, onUnresponsive: { reopen: { graceMs: 8000, attempts: 2 } } })
+ * ```
+ */
+export interface ReopenPolicy {
+  /** The revival tuning; every omitted field takes its default. */
+  reopen: ReopenOptions
+}
+
+/**
  * What the host does when a feature misses too many heartbeats while visible.
  *
  * `emit` (the default) emits an `error` carrying `{ reason: 'unresponsive', missedBeats, lastBeatAt, displayMode, frame }`;
@@ -186,8 +227,22 @@ export interface UnresponsiveInfo {
  * The policy runs once per `suspect` episode: a recovering beat returns the feature
  * to `healthy` and re-arms it. Hidden pages and freshly resumed watching both
  * read `unobservable`: silence is weak evidence until a beat earns `healthy`.
+ *
+ * `reopen` (or a {@link ReopenPolicy} to tune it)
+ * emits the same error, then brings the feature back if its silence outlasts a
+ * grace period: the mount, crash placeholder included, is replaced by a fresh
+ * one opened with the same options, and a `reopen` event carrying
+ * `{ attempt, attempts, displayMode }` announces each attempt. Nothing is
+ * reopened into a hidden page; the attempt waits for the page to be watched
+ * again, then allows a fresh grace. A reopened session that never completes
+ * its handshake counts as another death in the same episode. The policy
+ * stands down when the frame is `gone` (the feature is torn down instead,
+ * since the page or the visitor removed it), when the host calls `close`,
+ * `destroy`, or `open` itself, when the feature closes the session, and when
+ * a reopen fails in a way another attempt cannot mend (a refused window, a
+ * denied handshake, or a mount that throws).
  */
-export type UnresponsivePolicy = 'emit' | 'unmount' | ((info: UnresponsiveInfo) => void)
+export type UnresponsivePolicy = 'emit' | 'unmount' | 'reopen' | ReopenPolicy | ((info: UnresponsiveInfo) => void)
 
 /**
  * Description of a single action a feature can emit or accept.

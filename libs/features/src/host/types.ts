@@ -82,11 +82,13 @@ export interface ShellHandle {
   handle(type: string, handler: RequestHandler): () => void
   /**
    * Subscribes to feature messages or lifecycle events (`open`, `closing`,
-   * `close`, `error`, `status`, `dirty-state`, `dismiss`).
+   * `close`, `error`, `status`, `dirty-state`, `reopen`, `dismiss`).
    *
    * `status` fires on every liveness transition with a heartbeat snapshot
    * (`healthy`, `unobservable`, `suspect`, or `gone`). `dirty-state` fires
-   * when the feature declares or clears unsaved work. `closing` announces a
+   * when the feature declares or clears unsaved work. `reopen` fires with
+   * `{ attempt, attempts, displayMode }` as the `reopen` unresponsive policy
+   * replaces a silent feature's mount. `closing` announces a
    * polite teardown while the channel still delivers. `dismiss` fires with
    * `{ source: 'backdrop' }` when a dialog backdrop interaction occurs and
    * `dialogBackdrop` is set to `event`.

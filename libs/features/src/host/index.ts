@@ -13,6 +13,8 @@ export type {
   DismissSource,
   FeatureContract,
   FeaturePermission,
+  ReopenOptions,
+  ReopenPolicy,
   SandboxOptions,
   SecurityProtocol,
   ShellOptions,

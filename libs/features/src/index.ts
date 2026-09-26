@@ -31,6 +31,8 @@ export type {
   FramedDisplayConfig,
   FramedDisplayMode,
   PopupWindowConfig,
+  ReopenOptions,
+  ReopenPolicy,
   ResolvedFeatureConfig,
   SameOriginIsolation,
   SandboxOptions,

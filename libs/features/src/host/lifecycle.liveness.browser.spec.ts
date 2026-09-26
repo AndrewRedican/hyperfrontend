@@ -1,5 +1,5 @@
 import type { BrokerHandle, ChannelHandle } from '@hyperfrontend/nexus'
-import type { ShellOptions } from '../shared/types'
+import type { ShellOptions, UnresponsivePolicy } from '../shared/types'
 import type { MountResult } from './types'
 import { afterEach, beforeEach } from 'node:test'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
@@ -54,9 +54,10 @@ function setPageVisibility(value: 'visible' | 'hidden'): void {
  * Builds a shell wired to the real watchdog and the real visibility observer,
  * mounted as an in-document frame.
  *
- * @returns The handle, its channel double, and the errors it emitted.
+ * @param onUnresponsive - The shell's unresponsive policy; the SDK default when omitted.
+ * @returns The handle, its channel double, its mount, and the errors, states, and reopens it emitted.
  */
-function setup() {
+function setup(onUnresponsive?: UnresponsivePolicy) {
   const mock = createMockChannel()
   const broker = { addChannel: jest.fn(() => mock.channel) } as unknown as BrokerHandle
   const frame = document.createElement('iframe')
@@ -66,7 +67,9 @@ function setup() {
   emitter.on('error', (error) => errors.push(error))
   const states: string[] = []
   emitter.on('status', (status) => states.push((status as { state: string }).state))
-  const handle = createShellHandle(broker, { container: '#shell' } as ShellOptions, emitter, {
+  const reopens: unknown[] = []
+  emitter.on('reopen', (data) => reopens.push(data))
+  const handle = createShellHandle(broker, { container: '#shell', onUnresponsive } as ShellOptions, emitter, {
     contract: { emitted: [], accepted: [] },
     selectMount: jest.fn(() => mount),
     registerSecurity: jest.fn(() => undefined),
@@ -75,7 +78,7 @@ function setup() {
   })
   handle.open()
   mock.trigger('open')
-  return { handle, mock, errors, states }
+  return { handle, mock, mount, errors, states, reopens }
 }
 
 // why: This is the failure the whole observability latch exists around, exercised end to end: a frame the browser kills while the tab is in the background can never send the report that says it is visible again, so a host that waits for one waits forever. Every piece has to agree for the verdict to arrive — the lifecycle dropping a report it can no longer believe, and the watchdog refusing to call anything healthy it has not heard from.
@@ -135,5 +138,44 @@ describe('a feature frame that survives the tab going away', () => {
     jest.advanceTimersByTime(2000)
     expect(ctx.errors).toHaveLength(0)
     expect(ctx.states).toEqual(['healthy', 'unobservable', 'healthy'])
+  })
+})
+
+// why: The same death, with the host asking the shell to heal it: every clock involved is the real one, so the grace, the hidden-page hold, and the watchdog's refusal to call a silent frame healthy all have to line up for the feature to come back exactly once.
+describe('a killed feature frame under the reopen policy', () => {
+  beforeEach(() => {
+    jest.useFakeTimers()
+  })
+
+  afterEach(() => {
+    jest.useRealTimers()
+    Reflect.deleteProperty(document, 'visibilityState')
+  })
+
+  it('is replaced once the verdict outlasts the grace after the tab comes back', () => {
+    const ctx = setup('reopen')
+    ctx.mock.triggerMessage('__hf:beat')
+    setPageVisibility('hidden')
+    ctx.mock.triggerMessage('__hf:visibility', { hidden: true })
+    setPageVisibility('visible')
+    jest.advanceTimersByTime(3000)
+    expect(ctx.errors).toEqual([expect.objectContaining({ reason: 'unresponsive', frame: 'present' })])
+    jest.advanceTimersByTime(3999)
+    expect(ctx.reopens).toEqual([])
+    jest.advanceTimersByTime(1)
+    expect(ctx.reopens).toEqual([{ attempt: 1, attempts: 3, displayMode: 'embedded' }])
+    expect(ctx.mount).toHaveBeenCalledTimes(2)
+  })
+
+  it('waits for the tab to come back before replacing a frame that died in view', () => {
+    const ctx = setup('reopen')
+    ctx.mock.triggerMessage('__hf:beat')
+    jest.advanceTimersByTime(3000)
+    setPageVisibility('hidden')
+    jest.advanceTimersByTime(60_000)
+    expect(ctx.reopens).toEqual([])
+    setPageVisibility('visible')
+    jest.advanceTimersByTime(4000)
+    expect(ctx.reopens).toHaveLength(1)
   })
 })
