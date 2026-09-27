@@ -58,6 +58,13 @@ describe('mountDialog', () => {
     expect(iframe.style.visibility).toBe('visible')
   })
 
+  it('hides the revealed pane again when the shell conceals it', () => {
+    const { result, iframe } = mount({})
+    result.reveal?.()
+    result.conceal?.()
+    expect(iframe.style.visibility).toBe('hidden')
+  })
+
   it('loads the provided url into the pane iframe', () => {
     expect(mount({}).iframe.src).toBe('https://feature.example/')
   })
@@ -149,6 +156,13 @@ describe('mountDialog', () => {
     const { requestClose } = mount({ closeOnEscape: false })
     document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))
     expect(requestClose).not.toHaveBeenCalled()
+  })
+
+  it('reports the pane gone once it leaves the page', () => {
+    const { result } = mount({})
+    expect(result.isGone?.()).toBe(false)
+    result.cleanup()
+    expect(result.isGone?.()).toBe(true)
   })
 
   it('removes the pane iframe on cleanup', () => {

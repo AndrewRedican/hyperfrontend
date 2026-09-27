@@ -62,10 +62,36 @@ export interface FeatureUnresponsiveInfo {
   lastBeatAt: number | null
   /** The display mode the unresponsive feature was using. */
   displayMode: FeatureDisplayMode
+  /**
+   * \`gone\` when the frame provably no longer exists (its iframe left the page
+   * or its window was closed); \`present\` otherwise, which includes a frame
+   * whose process the browser killed, since no web API reports that.
+   */
+  frame: 'present' | 'gone'
+  /** Hides the feature's frame until it beats again or the next session opens; does nothing without an in-document frame. */
+  conceal(): void
   /** Closes the feature gracefully. */
   close(): void
   /** Closes the feature and releases all resources. */
   destroy(): void
+}
+
+/** Tuning for the \`reopen\` unresponsive policy; one episode runs from the first verdict until a reopened session stays open for \`stableMs\`. */
+export interface FeatureReopenOptions {
+  /** Milliseconds a verdict must stand before the first reopen; defaults to 4000. A frame that beats again within it keeps its session. */
+  graceMs?: number
+  /** Factor each further grace in the same episode grows by; at least 1, defaults to 3. */
+  backoff?: number
+  /** Reopens one episode may spend before the shell tears the feature down; a positive integer, defaults to 3. */
+  attempts?: number
+  /** Milliseconds a reopened session must stay open to restore the budget; defaults to 60000. */
+  stableMs?: number
+}
+
+/** The tuned form of the \`reopen\` unresponsive policy. */
+export interface FeatureReopenPolicy {
+  /** The revival tuning; every omitted field takes its default. */
+  reopen: FeatureReopenOptions
 }`
 
 /**
@@ -165,8 +191,20 @@ function buildOptionMembers(flags: ModeFlags): string[] {
     )
   }
   members.push(
-    `  /** How the host reacts when the feature stops responding; defaults to \`emit\`. */
-  onUnresponsive?: 'emit' | 'unmount' | ((info: FeatureUnresponsiveInfo) => void)`,
+    `  /**
+   * How the host reacts when the feature stops responding; defaults to \`emit\`.
+   * \`reopen\` (or \`{ reopen: options }\`) brings back a feature whose silence
+   * outlasts a grace period, announcing each attempt with a \`reopen\` event.
+   */
+  onUnresponsive?: 'emit' | 'unmount' | 'reopen' | FeatureReopenPolicy | ((info: FeatureUnresponsiveInfo) => void)`
+  )
+  if (flags.framed) {
+    members.push(
+      `  /** Whether the shell hides the frame on the unresponsive verdict until it beats again; defaults to \`false\`. */
+  concealUnresponsive?: boolean`
+    )
+  }
+  members.push(
     `  /** Security envelope to negotiate; defaults to the protocol baked in from the feature's build. */
   protocol?: FeatureSecurityProtocol`,
     `  /** Pre-shared key the \`v4\` protocol binds the session to; at least 16 characters, always supplied by the host, never baked into the shell. */
@@ -194,7 +232,7 @@ function buildOptionMembers(flags: ModeFlags): string[] {
  * @returns The static type declarations for the shell.
  */
 function buildStaticTypes(flags: ModeFlags): string {
-  const lifecycleEvents = ['open', 'closing', 'close', 'error', 'status', 'dirty-state', ...(flags.dialog ? ['dismiss'] : [])]
+  const lifecycleEvents = ['open', 'closing', 'close', 'error', 'status', 'dirty-state', 'reopen', ...(flags.dialog ? ['dismiss'] : [])]
   const positionType = `/** Where a positioned box sits inside its available area; \`center\` is the default. */
 export type FeatureBoxPosition =
   | 'center'
@@ -243,6 +281,28 @@ export interface FeatureUnresponsiveError {
   /** Timestamp (ms) of the last heartbeat received, or \`null\` if none ever arrived. */
   lastBeatAt: number | null
   /** The display mode the unresponsive feature was using. */
+  displayMode: FeatureDisplayMode
+  /** Whether the frame still exists; \`gone\` only when its iframe left the page or its window was closed. */
+  frame: 'present' | 'gone'
+}
+
+/** Error payload emitted when the \`reopen\` policy spent its attempts and tore the feature down. */
+export interface FeatureReopenExhaustedError {
+  /** Discriminates the reopen-exhausted error from other \`error\` payloads. */
+  reason: 'reopen-exhausted'
+  /** The reopens the episode spent. */
+  attempts: number
+  /** The display mode the feature was being surfaced in. */
+  displayMode: FeatureDisplayMode
+}
+
+/** Payload of the \`reopen\` lifecycle event, emitted as the \`reopen\` policy replaces a silent feature's mount. */
+export interface FeatureReopenEvent {
+  /** The 1-based attempt this reopen spends. */
+  attempt: number
+  /** The episode's whole budget. */
+  attempts: number
+  /** The display mode the feature is reopened in. */
   displayMode: FeatureDisplayMode
 }
 

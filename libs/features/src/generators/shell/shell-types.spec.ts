@@ -115,6 +115,7 @@ describe('buildShellTypes', () => {
     expect(types).not.toContain('sandbox')
     expect(types).not.toContain('permissions')
     expect(types).not.toContain('container')
+    expect(types).not.toContain('concealUnresponsive')
   })
 
   it('emits the frame surface when an iframe mode is declared', () => {
@@ -122,6 +123,11 @@ describe('buildShellTypes', () => {
     expect(types).toContain('export interface FeatureSandboxOptions {')
     expect(types).toContain('sandbox?: boolean | FeatureSandboxOptions')
     expect(types).toContain('permissions?: readonly string[]')
+    expect(types).toContain('concealUnresponsive?: boolean')
+  })
+
+  it('lets an unresponsive callback conceal the frame', () => {
+    expect(buildShellTypes(contract, ['embedded'])).toContain('  conceal(): void\n  /** Closes the feature gracefully. */')
   })
 
   it('requires container when embedded is the first declared mode', () => {
@@ -187,12 +193,14 @@ describe('buildShellTypes', () => {
   })
 
   it('adds dismiss to the lifecycle union when dialog is declared', () => {
-    expect(buildShellTypes(contract, ['dialog'])).toContain("'open' | 'closing' | 'close' | 'error' | 'status' | 'dirty-state' | 'dismiss'")
+    expect(buildShellTypes(contract, ['dialog'])).toContain(
+      "'open' | 'closing' | 'close' | 'error' | 'status' | 'dirty-state' | 'reopen' | 'dismiss'"
+    )
   })
 
   it('keeps dismiss out of the lifecycle union without dialog', () => {
     const types = buildShellTypes(contract, ['embedded'])
-    expect(types).toContain("'open' | 'closing' | 'close' | 'error' | 'status' | 'dirty-state', handler")
+    expect(types).toContain("'open' | 'closing' | 'close' | 'error' | 'status' | 'dirty-state' | 'reopen', handler")
     expect(types).not.toContain("'dismiss'")
   })
 })

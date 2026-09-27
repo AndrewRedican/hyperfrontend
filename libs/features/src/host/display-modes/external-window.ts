@@ -68,6 +68,7 @@ export function openExternalWindow(url: string, features?: string): Omit<MountRe
         }, LOST_POLL_MS)
         return () => clearInterval(poll)
       },
+      isGone: () => opened.closed,
     }),
     cleanup: () => {
       if (opened && !opened.closed) {

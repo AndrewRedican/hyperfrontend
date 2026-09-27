@@ -82,11 +82,13 @@ export interface ShellHandle {
   handle(type: string, handler: RequestHandler): () => void
   /**
    * Subscribes to feature messages or lifecycle events (`open`, `closing`,
-   * `close`, `error`, `status`, `dirty-state`, `dismiss`).
+   * `close`, `error`, `status`, `dirty-state`, `reopen`, `dismiss`).
    *
    * `status` fires on every liveness transition with a heartbeat snapshot
    * (`healthy`, `unobservable`, `suspect`, or `gone`). `dirty-state` fires
-   * when the feature declares or clears unsaved work. `closing` announces a
+   * when the feature declares or clears unsaved work. `reopen` fires with
+   * `{ attempt, attempts, displayMode }` as the `reopen` unresponsive policy
+   * replaces a silent feature's mount. `closing` announces a
    * polite teardown while the channel still delivers. `dismiss` fires with
    * `{ source: 'backdrop' }` when a dialog backdrop interaction occurs and
    * `dialogBackdrop` is set to `event`.
@@ -121,6 +123,8 @@ export interface MountResult {
   viewport?: ViewportReporter
   /** Makes the mounted frame visible; the shell calls it once the session opens, so a frame never appears before the feature is ready. */
   reveal?(): void
+  /** Hides the frame again on the unresponsive verdict when the host asked for concealment; unset for modes with no in-document frame. */
+  conceal?(): void
   /**
    * Defers the connection handshake until the mounted frame can receive it,
    * invoking `begin` at that moment; returns a cancel hook for teardown before
@@ -138,6 +142,12 @@ export interface MountResult {
    * person closing the window takes far longer.
    */
   whenLost?(onLost: (elapsedMs: number) => void): () => void
+  /**
+   * Reports whether the mounted frame provably no longer exists: the iframe
+   * left the document, or the window was closed. The shell reads it when the
+   * watchdog gives up on the feature; unset reads as present.
+   */
+  isGone?(): boolean
   /** Removes any DOM or closes any window created by the mount, stopping any observation it started. */
   cleanup(): void
 }

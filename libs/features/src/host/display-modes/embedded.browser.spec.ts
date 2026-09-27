@@ -65,6 +65,13 @@ describe('mountEmbedded', () => {
     expect(container.querySelector('iframe')?.style.visibility).toBe('visible')
   })
 
+  it('hides the revealed iframe again when the shell conceals it', () => {
+    const { container, result } = mount({})
+    result.reveal?.()
+    result.conceal?.()
+    expect(container.querySelector('iframe')?.style.visibility).toBe('hidden')
+  })
+
   it('reports the container size through the viewport reporter', () => {
     const report = jest.fn()
     const { container, result } = mount({})
@@ -77,6 +84,13 @@ describe('mountEmbedded', () => {
     const report = jest.fn()
     mount({}).result.viewport?.start(report)
     expect(report).not.toHaveBeenCalled()
+  })
+
+  it('reports the frame gone once it leaves the page', () => {
+    const { result } = mount({})
+    expect(result.isGone?.()).toBe(false)
+    result.cleanup()
+    expect(result.isGone?.()).toBe(true)
   })
 
   it('removes the iframe on cleanup', () => {

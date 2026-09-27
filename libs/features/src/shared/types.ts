@@ -147,6 +147,19 @@ export interface SandboxOptions {
 }
 
 /**
+ * What the host can see of a silent feature's frame when the watchdog gives up on it.
+ *
+ * - `gone`: the frame provably no longer exists: its iframe was taken out of
+ *   the document, or its window was closed. The silence is final, and nothing
+ *   the shell did caused it.
+ * - `present`: the frame is still there, so the silence is either a stall that
+ *   may end or a death the browser does not disclose. A frame whose renderer
+ *   process the browser or the operating system killed reads `present`, because
+ *   no web API reports that to the embedding page; only time tells the two apart.
+ */
+export type UnresponsiveFrame = 'present' | 'gone'
+
+/**
  * Context passed to an {@link UnresponsivePolicy} callback when a feature stops beating.
  */
 export interface UnresponsiveInfo {
@@ -156,6 +169,10 @@ export interface UnresponsiveInfo {
   lastBeatAt: number | null
   /** The display mode the unresponsive feature was using. */
   displayMode: DisplayMode
+  /** Whether the feature's frame still exists; see {@link UnresponsiveFrame}. */
+  frame: UnresponsiveFrame
+  /** Hides the frame as {@link ShellOptions.concealUnresponsive} does; a no-op once the frame has beaten again. */
+  conceal(): void
   /** Closes the feature gracefully. */
   close(): void
   /** Closes the feature and releases all resources. */
@@ -163,16 +180,71 @@ export interface UnresponsiveInfo {
 }
 
 /**
+ * Tuning for the `reopen` {@link UnresponsivePolicy}: how patiently, how often,
+ * and how many times the shell brings back a feature whose frame went silent.
+ *
+ * One episode starts at the first verdict and keeps counting while the feature
+ * keeps dying; a reopened session that stays open for `stableMs` ends the
+ * episode and restores the full budget.
+ */
+export interface ReopenOptions {
+  /**
+   * Milliseconds a verdict must stand before the first reopen; defaults to
+   * 4000. A frame that beats again within the grace was stalled, not dead, and
+   * keeps its session. Each further reopen in the same episode waits `backoff`
+   * times longer than the one before.
+   */
+  graceMs?: number
+  /** Factor each further grace in the same episode grows by; at least 1, defaults to 3. */
+  backoff?: number
+  /**
+   * Reopens one episode may spend; a positive integer, defaults to 3. A feature
+   * still silent after the last one is torn down and an `error` with
+   * `reason: 'reopen-exhausted'` is emitted.
+   */
+  attempts?: number
+  /** Milliseconds a reopened session must stay open before the episode ends and the budget is restored; defaults to 60000. */
+  stableMs?: number
+}
+
+/**
+ * The tuned form of the `reopen` {@link UnresponsivePolicy}.
+ *
+ * @example Reviving a feature with a longer grace and a smaller budget
+ * ```typescript
+ * createShell({ modes, container: '#clock', url, onUnresponsive: { reopen: { graceMs: 8000, attempts: 2 } } })
+ * ```
+ */
+export interface ReopenPolicy {
+  /** The revival tuning; every omitted field takes its default. */
+  reopen: ReopenOptions
+}
+
+/**
  * What the host does when a feature misses too many heartbeats while visible.
  *
- * `emit` (the default) emits an `error` carrying `{ reason: 'unresponsive', missedBeats, lastBeatAt, displayMode }`;
+ * `emit` (the default) emits an `error` carrying `{ reason: 'unresponsive', missedBeats, lastBeatAt, displayMode, frame }`;
  * `unmount` also tears the feature down after emitting the same error; a
  * callback takes over handling entirely with the {@link UnresponsiveInfo}.
  * The policy runs once per `suspect` episode: a recovering beat returns the feature
  * to `healthy` and re-arms it. Hidden pages and freshly resumed watching both
  * read `unobservable`: silence is weak evidence until a beat earns `healthy`.
+ *
+ * `reopen` (or a {@link ReopenPolicy} to tune it)
+ * emits the same error, then brings the feature back if its silence outlasts a
+ * grace period: the mount, crash placeholder included, is replaced by a fresh
+ * one opened with the same options, and a `reopen` event carrying
+ * `{ attempt, attempts, displayMode }` announces each attempt. Nothing is
+ * reopened into a hidden page; the attempt waits for the page to be watched
+ * again, then allows a fresh grace. A reopened session that never completes
+ * its handshake counts as another death in the same episode. The policy
+ * stands down when the frame is `gone` (the feature is torn down instead,
+ * since the page or the visitor removed it), when the host calls `close`,
+ * `destroy`, or `open` itself, when the feature closes the session, and when
+ * a reopen fails in a way another attempt cannot mend (a refused window, a
+ * denied handshake, or a mount that throws).
  */
-export type UnresponsivePolicy = 'emit' | 'unmount' | ((info: UnresponsiveInfo) => void)
+export type UnresponsivePolicy = 'emit' | 'unmount' | 'reopen' | ReopenPolicy | ((info: UnresponsiveInfo) => void)
 
 /**
  * Description of a single action a feature can emit or accept.
@@ -333,6 +405,16 @@ export interface ShellOptions {
   sandbox?: boolean | SandboxOptions
   /** How the host reacts when the feature stops responding; defaults to `emit`. */
   onUnresponsive?: UnresponsivePolicy
+  /**
+   * Whether the shell hides the feature's frame on the unresponsive verdict;
+   * defaults to `false`. The frame stays mounted with its session open, and
+   * its next beat or the next session to open shows it again. This keeps the
+   * browser's crash placeholder for a dead frame off your page, but a frame
+   * that merely stalls past the miss budget also disappears until it beats
+   * again. Applies to the iframe modes (`embedded`, `dialog`) with any
+   * {@link UnresponsivePolicy}.
+   */
+  concealUnresponsive?: boolean
   /**
    * Whether Escape closes the dialog; defaults to `true`. Enforced on both
    * sides of the boundary: the host listens in its own document, and the

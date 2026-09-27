@@ -647,15 +647,6 @@ describe('createShellHandle', () => {
     expect(ctx.monitor.stop).toHaveBeenCalledTimes(1)
   })
 
-  it('emits a structured unresponsive error when the feature stops beating by default', () => {
-    const ctx = setup()
-    const handler = jest.fn()
-    ctx.handle.on('error', handler)
-    ctx.handle.open()
-    ctx.triggerUnresponsive(3, null)
-    expect(handler).toHaveBeenCalledWith({ reason: 'unresponsive', missedBeats: 3, lastBeatAt: null, displayMode: 'embedded' })
-  })
-
   it('carries the last beat timestamp and display mode in the unresponsive error', () => {
     const ctx = setup()
     const handler = jest.fn()

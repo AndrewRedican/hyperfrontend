@@ -13,9 +13,12 @@ export type {
   DismissSource,
   FeatureContract,
   FeaturePermission,
+  ReopenOptions,
+  ReopenPolicy,
   SandboxOptions,
   SecurityProtocol,
   ShellOptions,
+  UnresponsiveFrame,
   UnresponsiveInfo,
   UnresponsivePolicy,
 } from '../shared/types'

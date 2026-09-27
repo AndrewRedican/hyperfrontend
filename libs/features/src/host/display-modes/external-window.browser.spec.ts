@@ -29,6 +29,20 @@ describe('openExternalWindow', () => {
     expect(openExternalWindow('https://feature.example/').element).toBeUndefined()
   })
 
+  it('reports the window gone once it is closed', () => {
+    const opened = { closed: false, close: jest.fn() }
+    jest.spyOn(window, 'open').mockReturnValue(opened as unknown as Window)
+    const { isGone } = openExternalWindow('https://feature.example/')
+    expect(isGone?.()).toBe(false)
+    opened.closed = true
+    expect(isGone?.()).toBe(true)
+  })
+
+  it('offers no gone probe when the window was blocked', () => {
+    jest.spyOn(window, 'open').mockReturnValue(null)
+    expect(openExternalWindow('https://feature.example/').isGone).toBeUndefined()
+  })
+
   it('closes a still-open window on cleanup', () => {
     const close = jest.fn()
     jest.spyOn(window, 'open').mockReturnValue({ closed: false, close } as unknown as Window)
