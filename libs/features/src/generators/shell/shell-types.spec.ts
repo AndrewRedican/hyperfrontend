@@ -115,6 +115,7 @@ describe('buildShellTypes', () => {
     expect(types).not.toContain('sandbox')
     expect(types).not.toContain('permissions')
     expect(types).not.toContain('container')
+    expect(types).not.toContain('concealUnresponsive')
   })
 
   it('emits the frame surface when an iframe mode is declared', () => {
@@ -122,6 +123,11 @@ describe('buildShellTypes', () => {
     expect(types).toContain('export interface FeatureSandboxOptions {')
     expect(types).toContain('sandbox?: boolean | FeatureSandboxOptions')
     expect(types).toContain('permissions?: readonly string[]')
+    expect(types).toContain('concealUnresponsive?: boolean')
+  })
+
+  it('lets an unresponsive callback conceal the frame', () => {
+    expect(buildShellTypes(contract, ['embedded'])).toContain('  conceal(): void\n  /** Closes the feature gracefully. */')
   })
 
   it('requires container when embedded is the first declared mode', () => {

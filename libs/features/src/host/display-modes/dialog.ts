@@ -43,7 +43,7 @@ function buildDialogPresent(options: ShellOptions): PresentPayload {
  * @param context - Inputs the shell passes to this display mode.
  * @param context.options - The merged shell options.
  * @param context.requestClose - Requests the shell close itself.
- * @returns The iframe content window, the pane as the mounted element, the presentation announcement, the viewport reporter, the gone probe, and the reveal/teardown hooks.
+ * @returns The iframe content window, the pane as the mounted element, the presentation announcement, the viewport reporter, the gone probe, and the reveal/conceal/teardown hooks.
  *
  * @example Mounting a dialog
  * ```typescript
@@ -76,6 +76,9 @@ export const mountDialog: DisplayModeMount = ({ options, requestClose }) => {
     isGone: frameGone(iframe),
     reveal: () => {
       iframe.style.visibility = 'visible'
+    },
+    conceal: () => {
+      iframe.style.visibility = 'hidden'
     },
     cleanup: () => {
       document.removeEventListener('keydown', onKeydown)

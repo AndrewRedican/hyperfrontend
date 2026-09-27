@@ -42,7 +42,7 @@ function resolveFixedSize(options: ShellOptions): ResolvedSize | null {
  *
  * @param context - Inputs the shell passes to this display mode.
  * @param context.options - The merged shell options.
- * @returns The iframe content window, the iframe as the mounted element, the presentation announcement, the viewport reporter (container-driven sizing only), the gone probe, and the reveal/teardown hooks.
+ * @returns The iframe content window, the iframe as the mounted element, the presentation announcement, the viewport reporter (container-driven sizing only), the gone probe, and the reveal/conceal/teardown hooks.
  *
  * @example Mounting embedded
  * ```typescript
@@ -70,6 +70,9 @@ export const mountEmbedded: DisplayModeMount = ({ options }) => {
     isGone: frameGone(iframe),
     reveal: () => {
       iframe.style.visibility = 'visible'
+    },
+    conceal: () => {
+      iframe.style.visibility = 'hidden'
     },
     cleanup: () => {
       viewport?.stop()

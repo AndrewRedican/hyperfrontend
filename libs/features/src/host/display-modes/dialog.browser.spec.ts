@@ -58,6 +58,13 @@ describe('mountDialog', () => {
     expect(iframe.style.visibility).toBe('visible')
   })
 
+  it('hides the revealed pane again when the shell conceals it', () => {
+    const { result, iframe } = mount({})
+    result.reveal?.()
+    result.conceal?.()
+    expect(iframe.style.visibility).toBe('hidden')
+  })
+
   it('loads the provided url into the pane iframe', () => {
     expect(mount({}).iframe.src).toBe('https://feature.example/')
   })

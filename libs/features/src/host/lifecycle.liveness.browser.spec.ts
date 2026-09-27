@@ -55,13 +55,27 @@ function setPageVisibility(value: 'visible' | 'hidden'): void {
  * mounted as an in-document frame.
  *
  * @param onUnresponsive - The shell's unresponsive policy; the SDK default when omitted.
- * @returns The handle, its channel double, its mount, and the errors, states, and reopens it emitted.
+ * @param concealUnresponsive - Whether the shell hides the frame while it is silent.
+ * @returns The handle, its channel double, its mount and frame, and the errors, states, and reopens it emitted.
  */
-function setup(onUnresponsive?: UnresponsivePolicy) {
+function setup(onUnresponsive?: UnresponsivePolicy, concealUnresponsive?: boolean) {
   const mock = createMockChannel()
   const broker = { addChannel: jest.fn(() => mock.channel) } as unknown as BrokerHandle
   const frame = document.createElement('iframe')
-  const mount = jest.fn((): MountResult => ({ target: TARGET, element: frame, present: { mode: 'embedded' }, cleanup: jest.fn() }))
+  const mount = jest.fn(
+    (): MountResult => ({
+      target: TARGET,
+      element: frame,
+      present: { mode: 'embedded' },
+      reveal: () => {
+        frame.style.visibility = 'visible'
+      },
+      conceal: () => {
+        frame.style.visibility = 'hidden'
+      },
+      cleanup: jest.fn(),
+    })
+  )
   const emitter = createEventEmitter()
   const errors: unknown[] = []
   emitter.on('error', (error) => errors.push(error))
@@ -69,7 +83,7 @@ function setup(onUnresponsive?: UnresponsivePolicy) {
   emitter.on('status', (status) => states.push((status as { state: string }).state))
   const reopens: unknown[] = []
   emitter.on('reopen', (data) => reopens.push(data))
-  const handle = createShellHandle(broker, { container: '#shell', onUnresponsive } as ShellOptions, emitter, {
+  const handle = createShellHandle(broker, { container: '#shell', onUnresponsive, concealUnresponsive } as ShellOptions, emitter, {
     contract: { emitted: [], accepted: [] },
     selectMount: jest.fn(() => mount),
     registerSecurity: jest.fn(() => undefined),
@@ -78,7 +92,7 @@ function setup(onUnresponsive?: UnresponsivePolicy) {
   })
   handle.open()
   mock.trigger('open')
-  return { handle, mock, mount, errors, states, reopens }
+  return { handle, mock, mount, frame, errors, states, reopens }
 }
 
 // why: This is the failure the whole observability latch exists around, exercised end to end: a frame the browser kills while the tab is in the background can never send the report that says it is visible again, so a host that waits for one waits forever. Every piece has to agree for the verdict to arrive — the lifecycle dropping a report it can no longer believe, and the watchdog refusing to call anything healthy it has not heard from.
@@ -177,5 +191,42 @@ describe('a killed feature frame under the reopen policy', () => {
     setPageVisibility('visible')
     jest.advanceTimersByTime(4000)
     expect(ctx.reopens).toHaveLength(1)
+  })
+})
+
+// why: Concealment keys off the watchdog's verdict, which cannot tell a dead frame from a starved one, so both halves have to hold with the real clock: a frame that only stalled comes back the moment it beats, and a frame that stays silent is never shown again before its replacement opens.
+describe('a silent feature frame the host asked to conceal', () => {
+  beforeEach(() => {
+    jest.useFakeTimers()
+  })
+
+  afterEach(() => {
+    jest.useRealTimers()
+  })
+
+  it('disappears on the verdict and returns with its next beat', () => {
+    const ctx = setup(undefined, true)
+    ctx.mock.triggerMessage('__hf:beat')
+    expect(ctx.frame.style.visibility).toBe('visible')
+    jest.advanceTimersByTime(3000)
+    expect(ctx.states).toEqual(['healthy', 'suspect'])
+    expect(ctx.frame.style.visibility).toBe('hidden')
+    ctx.mock.triggerMessage('__hf:beat')
+    expect(ctx.frame.style.visibility).toBe('visible')
+  })
+
+  it('stays hidden through the reopen grace until its replacement opens', () => {
+    const ctx = setup('reopen', true)
+    ctx.mock.triggerMessage('__hf:beat')
+    jest.advanceTimersByTime(3000)
+    expect(ctx.frame.style.visibility).toBe('hidden')
+    jest.advanceTimersByTime(3999)
+    expect(ctx.reopens).toEqual([])
+    expect(ctx.frame.style.visibility).toBe('hidden')
+    jest.advanceTimersByTime(1)
+    expect(ctx.reopens).toHaveLength(1)
+    expect(ctx.frame.style.visibility).toBe('hidden')
+    ctx.mock.trigger('open')
+    expect(ctx.frame.style.visibility).toBe('visible')
   })
 })

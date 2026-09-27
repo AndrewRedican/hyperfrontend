@@ -123,6 +123,8 @@ export interface MountResult {
   viewport?: ViewportReporter
   /** Makes the mounted frame visible; the shell calls it once the session opens, so a frame never appears before the feature is ready. */
   reveal?(): void
+  /** Hides the frame again on the unresponsive verdict when the host asked for concealment; unset for modes with no in-document frame. */
+  conceal?(): void
   /**
    * Defers the connection handshake until the mounted frame can receive it,
    * invoking `begin` at that moment; returns a cancel hook for teardown before

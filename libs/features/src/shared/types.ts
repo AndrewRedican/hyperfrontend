@@ -171,6 +171,8 @@ export interface UnresponsiveInfo {
   displayMode: DisplayMode
   /** Whether the feature's frame still exists; see {@link UnresponsiveFrame}. */
   frame: UnresponsiveFrame
+  /** Hides the frame as {@link ShellOptions.concealUnresponsive} does; a no-op once the frame has beaten again. */
+  conceal(): void
   /** Closes the feature gracefully. */
   close(): void
   /** Closes the feature and releases all resources. */
@@ -403,6 +405,16 @@ export interface ShellOptions {
   sandbox?: boolean | SandboxOptions
   /** How the host reacts when the feature stops responding; defaults to `emit`. */
   onUnresponsive?: UnresponsivePolicy
+  /**
+   * Whether the shell hides the feature's frame on the unresponsive verdict;
+   * defaults to `false`. The frame stays mounted with its session open, and
+   * its next beat or the next session to open shows it again. This keeps the
+   * browser's crash placeholder for a dead frame off your page, but a frame
+   * that merely stalls past the miss budget also disappears until it beats
+   * again. Applies to the iframe modes (`embedded`, `dialog`) with any
+   * {@link UnresponsivePolicy}.
+   */
+  concealUnresponsive?: boolean
   /**
    * Whether Escape closes the dialog; defaults to `true`. Enforced on both
    * sides of the boundary: the host listens in its own document, and the

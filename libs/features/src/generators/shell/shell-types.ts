@@ -68,6 +68,8 @@ export interface FeatureUnresponsiveInfo {
    * whose process the browser killed, since no web API reports that.
    */
   frame: 'present' | 'gone'
+  /** Hides the feature's frame until it beats again or the next session opens; does nothing without an in-document frame. */
+  conceal(): void
   /** Closes the feature gracefully. */
   close(): void
   /** Closes the feature and releases all resources. */
@@ -194,7 +196,15 @@ function buildOptionMembers(flags: ModeFlags): string[] {
    * \`reopen\` (or \`{ reopen: options }\`) brings back a feature whose silence
    * outlasts a grace period, announcing each attempt with a \`reopen\` event.
    */
-  onUnresponsive?: 'emit' | 'unmount' | 'reopen' | FeatureReopenPolicy | ((info: FeatureUnresponsiveInfo) => void)`,
+  onUnresponsive?: 'emit' | 'unmount' | 'reopen' | FeatureReopenPolicy | ((info: FeatureUnresponsiveInfo) => void)`
+  )
+  if (flags.framed) {
+    members.push(
+      `  /** Whether the shell hides the frame on the unresponsive verdict until it beats again; defaults to \`false\`. */
+  concealUnresponsive?: boolean`
+    )
+  }
+  members.push(
     `  /** Security envelope to negotiate; defaults to the protocol baked in from the feature's build. */
   protocol?: FeatureSecurityProtocol`,
     `  /** Pre-shared key the \`v4\` protocol binds the session to; at least 16 characters, always supplied by the host, never baked into the shell. */

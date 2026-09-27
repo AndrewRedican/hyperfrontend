@@ -2,9 +2,9 @@ import type { BrokerHandle, ChannelHandle } from '@hyperfrontend/nexus'
 import type { EventEmitter } from '../shared/event-emitter'
 import type { DismissPayload } from '../shared/presentation'
 import type { ExperiencePlugin, ExperiencePluginContext, FeatureContract, SecurityProtocol, ShellOptions } from '../shared/types'
-import type { HeartbeatMonitor, HeartbeatStatus } from './heartbeat'
+import type { HeartbeatMonitor, HeartbeatState, HeartbeatStatus } from './heartbeat'
 import type { ResolvedReopenOptions, Revival } from './revival'
-import type { DisplayModeMount, MountResult, ShellHandle } from './types'
+import type { DisplayModeMount, ShellHandle } from './types'
 import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { promiseResolve } from '@hyperfrontend/immutable-api-utils/built-in-copy/promise'
 import { createURL } from '@hyperfrontend/immutable-api-utils/built-in-copy/url'
@@ -96,6 +96,16 @@ interface ControlFlagPayload {
   hidden?: unknown
   /** Hostee-declared unsaved-work flag on a dirty report. */
   dirty?: unknown
+}
+
+/**
+ * What the unresponsive verdict can see of the current session's frame, and do to it.
+ */
+interface SessionFrame {
+  /** Whether the frame provably no longer exists. */
+  isGone(): boolean
+  /** Hides the frame until it beats again or the next session opens. */
+  conceal(): void
 }
 
 /**
@@ -253,12 +263,16 @@ export function createShellHandle(
     runCleanup()
   }
 
-  const applyUnresponsive = (options: ShellOptions, mounted: MountResult, missedBeats: number, lastBeatAt: number | null) => {
+  const applyUnresponsive = (options: ShellOptions, mounted: SessionFrame, missedBeats: number, lastBeatAt: number | null) => {
     const policy = options.onUnresponsive ?? 'emit'
     const displayMode = options.displayMode ?? DisplayMode.Embedded
-    const frame = mounted.isGone?.() === true ? 'gone' : 'present'
+    const frame = mounted.isGone() ? 'gone' : 'present'
+    // why: Hidden before the policy runs, so no error handler or callback sees the placeholder still on the page.
+    if (options.concealUnresponsive === true) {
+      mounted.conceal()
+    }
     if (typeof policy === 'function') {
-      policy({ missedBeats, lastBeatAt, displayMode, frame, close, destroy })
+      policy({ missedBeats, lastBeatAt, displayMode, frame, conceal: mounted.conceal, close, destroy })
       return
     }
     // why: The reason field is the discriminator embedders switch on, so the unresponsive signal carries the same structured shape as the open-timeout error.
@@ -330,9 +344,32 @@ export function createShellHandle(
       activeChannel.send(ControlType.Present, result.viewport ? { ...result.present, viewport: result.viewport.current() } : result.present)
     // why: Queued before connect so the presentation announcement is the first message the feature receives after open — ahead of any consumer send issued in the meantime.
     announcePresent()
+    // why: Only a beat or a session opening reveals a concealed frame, so a frame that has already beaten again must not be concealed.
+    let judged: HeartbeatState = 'gone'
+    let concealed = false
+    const sessionFrame: SessionFrame = {
+      isGone: () => result.isGone?.() === true,
+      conceal: () => {
+        if (concealed || judged === 'healthy' || result.conceal === undefined) {
+          return
+        }
+        concealed = true
+        result.conceal()
+      },
+    }
+    const revealFrame = () => {
+      concealed = false
+      result.reveal?.()
+    }
     const activeMonitor = wiring.createHeartbeatMonitor(
-      (missedBeats, lastBeatAt) => applyUnresponsive(options, result, missedBeats, lastBeatAt),
-      (status) => emitter.emit('status', status)
+      (missedBeats, lastBeatAt) => applyUnresponsive(options, sessionFrame, missedBeats, lastBeatAt),
+      (status) => {
+        judged = status.state
+        if (concealed && status.state === 'healthy') {
+          revealFrame()
+        }
+        emitter.emit('status', status)
+      }
     )
     monitor = activeMonitor
     dirty = false
@@ -363,7 +400,7 @@ export function createShellHandle(
       stopTargetWatch = null
       activeMonitor.start()
       // why: A mounted frame is not a displayed one — it stays hidden until the session opens, so the user never sees (or clicks into) a frame whose feature is not ready.
-      result.reveal?.()
+      revealFrame()
       // why: The presentation announcement already carried the initial size, so the reporter forwards only changes from here on.
       result.viewport?.start((size) => activeChannel.send(ControlType.Viewport, size))
     })
