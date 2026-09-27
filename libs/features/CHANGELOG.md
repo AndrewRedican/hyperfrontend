@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.11.0](https://github.com/AndrewRedican/hyperfrontend/compare/41325ecf9b3f15f597cddadd5fbe6ab68f59eab7...0b29046380fe4d229ccd9fdaa2e9531c079c688a) - 2026-09-27
+
+### Features
+
+- conceal an unresponsive feature's frame when the host asks
+- revive an unresponsive feature with the reopen policy
+- report whether an unresponsive feature's frame is gone
+
 ## [0.10.1](https://github.com/AndrewRedican/hyperfrontend/compare/1da8d849d452d29d09852ff563c9bd3fee7fa9c3...adf0a4f77dece2be855e7ab88185a4fe84e7b16b) - 2026-09-14
 
 ### Bug Fixes
