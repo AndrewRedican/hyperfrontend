@@ -168,7 +168,8 @@ Fish sizing: `FISH_LENGTH_RATIO` 0.36 of the world's shorter axis (clamp 130..56
 ## Gotchas
 
 - **Framing**: a koi is mounted ONLY from its directory URL `fish-<fw>/` — its assets are relative, so a host that rewrites `…/index.html` to an extensionless path drops the document a directory up and every asset 404s (this blanked the shoal in production once). Needs features ≥0.6.0 for directory URLs; the `hosted` flag needs ≥0.8.0.
-- **F-011** (v1 message collapse across concurrent channels; inner channels drop v1) is answered by the v3/v4 session envelope in features 0.9.0. F-010/F-015/F-016 shipped in features 0.7.1; F-018/F-019 (gallery-side revival) and F-020/F-021 (`hosted`, visibility latch) are answered in the docs-site embed and features 0.8.0. The koi host pins the debug UI with `debug.port: 4290` in `hf-dev.config.ts`.
+- **Frame revival and concealment are hand-rolled** (`scene/resurrection.ts`, `setLayerPresent` in `scene/stage.ts`) because the vendored fish shells bundle an older SDK. The SDK's `onUnresponsive: 'reopen'` and `concealUnresponsive` replace them once the shells are repacked on a release that has them.
+- **Debug UI port**: the koi host pins it with `debug.port: 4290` in `hf-dev.config.ts`.
 - **Per-fish three.js** (~180 kB gzip each): inherent to independent apps; a shared chunk breaks the isolation the demo proves. Curtain covers the load. Not a bug.
 - **Unit tests live in `demo-koi-lib` and `demo-koi-pond` only.** The eight `fish-*` apps carry no vitest, no `test` target, and no test devDeps by design. Do not add unit tests back to a fish app. Keep the lib's specs mutation-proven (disable avoidance → boundary specs fail) across all seeds, and never write `?.foo()).not.toBe(null)` (passes on absent nodes). Canvas grammar is asserted through `scene/__tests__/overlay-recorder.ts`, a recording 2D context.
 - **Devcontainer**: ten `npm install`s at `parallel:1`; full `nx lint docs-site` can SIGKILL — lint targeted file lists (`npx eslint <files>`).
@@ -178,6 +179,6 @@ Fish sizing: `FISH_LENGTH_RATIO` 0.36 of the world's shorter axis (clamp 130..56
 - [ ] Edited `lib/src`? → `demo-koi-lib:refresh` then `:verify`
 - [ ] Changed the inner contract or a fish `feature.config.ts`? → the bump pipeline above, tarballs + package.json + lock together
 - [ ] Scope = Nx project name; one project per commit; no version/changelog/tag files
-- [ ] Comments never cite finding IDs / roadmap docs; shipped prose is present-state and em-dash-free in READMEs and JSDoc
+- [ ] Comments cite no roadmap docs or tracking IDs; shipped prose is present-state and em-dash-free in READMEs and JSDoc
 - [ ] `npx nx run-many -t test build lint typecheck -p demo-koi-*` green
 - [ ] Serving built site by hand → `http-server`, never `serve -s`
