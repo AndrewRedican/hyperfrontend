@@ -15,12 +15,12 @@ const code = await runFeaturesCli({
 
 ## Commands
 
-| Command                                                                            | Purpose                                                                                                    |
-| ---------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| [`init`](https://www.hyperfrontend.dev/docs/libraries/features/cli/#api-runInit)   | Scaffolds the glue module, config, and contract types, then wires the entry import idempotently.           |
-| [`build`](https://www.hyperfrontend.dev/docs/libraries/features/cli/#api-runBuild) | Resolves `feature.config.*`, generates the shell package, bundles it, and packs a publishable tarball.     |
-| [`dev`](https://www.hyperfrontend.dev/docs/libraries/features/cli/#api-runDev)     | Resolves `hf-dev.config.*` and starts the dev server: one static server per app plus the debug UI.         |
-| [`serve`](https://www.hyperfrontend.dev/docs/libraries/features/cli/#api-runServe) | Resolves `hf-serve.config.*` and serves a built site for production: compression, ETags, and header rules. |
+| Command                                                                            | Purpose                                                                                                                                  |
+| ---------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| [`init`](https://www.hyperfrontend.dev/docs/libraries/features/cli/#api-runInit)   | Scaffolds the glue module, config, and contract types, then wires the entry import idempotently.                                         |
+| [`build`](https://www.hyperfrontend.dev/docs/libraries/features/cli/#api-runBuild) | Resolves `feature.config.*`, generates the shell package, bundles it, packs a publishable tarball, and replaces `--out` with the result. |
+| [`dev`](https://www.hyperfrontend.dev/docs/libraries/features/cli/#api-runDev)     | Resolves `hf-dev.config.*` and starts the dev server: one static server per app plus the debug UI.                                       |
+| [`serve`](https://www.hyperfrontend.dev/docs/libraries/features/cli/#api-runServe) | Resolves `hf-serve.config.*` and serves a built site for production: compression, ETags, and header rules.                               |
 
 <p align="center">
   <a href="https://www.hyperfrontend.dev/docs/libraries/features/cli/">
@@ -35,6 +35,11 @@ const code = await runFeaturesCli({
 Every scalar `feature.config.*` key has a matching flag (`--name`, `--version`, `--protocol`, `--out`, `--url`; the serve config exposes `--root`/`--port`/`--host`, with header rules file-only), objects are
 passed as path strings (`--contract`, `--config`), precedence is `defaults < config file < flags`, and
 `--ci`/`--yes` run headlessly (erroring on any unresolved required key).
+
+`--out` (default `dist/<name>-shell`) may point anywhere, a shared `dist/` beside the project included, but
+[`build`](https://www.hyperfrontend.dev/docs/libraries/features/cli/#api-runBuild) must be able to own it: a directory that does not exist yet, is empty, or holds a shell a previous
+build wrote. The project directory, its ancestors, and any directory holding other files are refused before the
+build starts, so a stray flag can never empty a source tree.
 
 [`serve`](https://www.hyperfrontend.dev/docs/libraries/features/cli/#api-runServe) selects its config in its own order: `--config` names the file explicitly; otherwise, when `--root`
 is given, an `hf-serve.config.json` carried inside the served artifact (`<root>/hf-serve.config.json`: JSON

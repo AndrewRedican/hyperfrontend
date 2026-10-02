@@ -1,18 +1,23 @@
 import type { BuildConfig } from '@hyperfrontend/builder/models'
 import type { CliFlags } from '../args'
 import { execFileSync } from 'node:child_process'
-import { isAbsolute, join, resolve } from 'node:path'
+import { cpSync } from 'node:fs'
+import { dirname, isAbsolute, join, resolve } from 'node:path'
 import { build } from '@hyperfrontend/builder'
 import { isArray } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
+import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 import {
   createDirectory,
+  exists,
+  readDirectory,
   readFileContent,
   readJsonFileIfExists,
   removeDirectory,
   writeFileContent,
   writeJsonFile,
 } from '@hyperfrontend/project-scope/core/fs'
+import { isWithinRoot } from '@hyperfrontend/project-scope/core/path'
 import { commitChanges, createTree } from '@hyperfrontend/project-scope/vfs'
 import { generateShell } from '../../generators/shell/generate-shell'
 import { resolveBuildConfig } from '../config/resolve'
@@ -21,6 +26,7 @@ import { EXIT_ERROR, EXIT_OK } from '../exit-codes'
 import { normalizeDeclarationMaps } from './normalize-declaration-maps'
 
 const DEFAULT_OUT = 'dist'
+const SHELL_GENERATOR = '@hyperfrontend/features'
 
 /** Inputs handed to the builder for a single shell build. */
 export interface BuildRunnerInput {
@@ -98,8 +104,13 @@ function defaultPackTarball(packageDir: string): string {
 /**
  * Builds the shell: resolve config → generate the shell package into a
  * hidden staging dir inside the project → bundle via the builder → pack a
- * tarball into `--out`. A `v3`/`v4` security protocol is required for production
- * output; an explicit `--protocol none` builds only when paired with
+ * tarball → replace `--out` with the result. `--out` (default
+ * `dist/<name>-shell`) may sit anywhere, a shared `dist/` beside the project
+ * included, but the build must be able to own it: a directory that does not
+ * exist, is empty, or holds a shell this CLI built earlier. The project
+ * directory, its ancestors, and any directory holding other files are refused
+ * before the build starts. A `v3`/`v4` security protocol is required for
+ * production output; an explicit `--protocol none` builds only when paired with
  * `--allow-open`, acknowledging the open channel. The staging dir is always
  * removed.
  *
@@ -140,8 +151,9 @@ export async function runBuild(options: RunBuildOptions): Promise<number> {
       stderr.write("Warning: building an open shell (protocol 'none'); the channel carries no security envelope.\n")
     }
 
-    // why: The default output nests per shell so the builder's clean step only ever empties this shell's own directory, never a shared dist/ root.
     const out = toAbsolute(cwd, flags.out ?? join(DEFAULT_OUT, `${config.name}-shell`))
+    // why: Replacing --out is the one destructive step of a build, so an unusable target is refused before any work starts, and a dry run reports it the same way.
+    assertOwnableOutput(out, cwd)
     if (flags.dryRun) {
       stdout.write(`Would build "${config.name}" → ${out} [dry run]\n`)
       return EXIT_OK
@@ -155,12 +167,16 @@ export async function runBuild(options: RunBuildOptions): Promise<number> {
     tree.write('tsconfig.lib.json', buildTsConfig())
     commitChanges(tree)
 
+    // why: The builder empties its output before emitting and only trusts a path inside the workspace it is given, which for a shell build is the consumer project. Emitting into the staging dir keeps that clean step inside a directory this build created, so --out may name any directory the consumer chooses, a shared dist/ beside the project included.
+    const staged = join(tempDir, 'dist')
+    createDirectory(staged, { recursive: true })
     // why: The consumer project is the workspace — it holds node_modules (so the SDK bundles in) and the TypeScript binary the declaration pass spawns.
-    await runBuilder({ projectRoot: tempDir, workspaceRoot: cwd, outputPath: out })
+    await runBuilder({ projectRoot: tempDir, workspaceRoot: cwd, outputPath: staged })
     // why: The staging dir name embeds the PID, so the emitted declaration maps are rewritten to stable feature-derived paths — repacking an unchanged feature stays byte-identical.
-    normalizeDeclarationMaps(out, config.name, (message) => stderr.write(message))
-    publishSidecars(tempDir, out)
-    const tarball = packTarball(out)
+    normalizeDeclarationMaps(staged, config.name, (message) => stderr.write(message))
+    publishSidecars(tempDir, staged)
+    const tarball = packTarball(staged)
+    deliverShell(staged, out, cwd)
     stdout.write(`Built "${config.name}" → ${out}\n${tarball ? `Packed ${tarball}\n` : ''}`)
     return EXIT_OK
   } catch (error) {
@@ -169,6 +185,57 @@ export async function runBuild(options: RunBuildOptions): Promise<number> {
   } finally {
     if (tempDir !== null) removeDirectory(tempDir, { recursive: true, force: true })
   }
+}
+
+/**
+ * Reports whether a directory holds a shell this CLI built earlier: its
+ * `metadata.json` names the SDK as its generator.
+ *
+ * @param dir - The directory to inspect.
+ * @returns True when the directory is a previous shell build.
+ */
+function isShellOutput(dir: string): boolean {
+  const metadata = readJsonFileIfExists<Record<string, unknown>>(join(dir, 'metadata.json'))
+  return metadata !== null && metadata['generatedBy'] === SHELL_GENERATOR
+}
+
+/**
+ * Refuses an output directory the build may not replace. A target qualifies
+ * only when the build can own it outright: it does not exist yet, it is
+ * empty, or it holds a shell this CLI built earlier. The consumer project and
+ * every directory above it are refused regardless of content, and so is any
+ * directory holding files the CLI did not write, wherever it sits.
+ *
+ * @param out - Absolute output directory.
+ * @param cwd - Absolute consumer project directory.
+ * @throws {Error} When `out` contains the project or holds foreign files.
+ */
+function assertOwnableOutput(out: string, cwd: string): void {
+  if (isWithinRoot(out, cwd)) {
+    throw createError(
+      `build: --out "${out}" contains the project itself. Point --out at a directory the shell can own, such as dist/<name>-shell.`
+    )
+  }
+  if (!exists(out) || readDirectory(out).length === 0 || isShellOutput(out)) return
+  throw createError(
+    `build: --out "${out}" holds files hf build did not write. Point --out at a new or empty directory, or remove it first.`
+  )
+}
+
+/**
+ * Replaces `out` with the staged, packed shell. The ownership check runs
+ * again so a directory that gained foreign files during the build is still
+ * refused rather than removed.
+ *
+ * @param staged - The built package directory inside the staging dir.
+ * @param out - Absolute output directory to replace.
+ * @param cwd - Absolute consumer project directory.
+ */
+function deliverShell(staged: string, out: string, cwd: string): void {
+  assertOwnableOutput(out, cwd)
+  removeDirectory(out, { recursive: true, force: true })
+  createDirectory(dirname(out), { recursive: true })
+  cpSync(staged, out, { recursive: true })
 }
 
 /**
