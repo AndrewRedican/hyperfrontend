@@ -60,6 +60,11 @@
       "type": "boolean",
       "default": false,
       "description": "Enable verbose/debug logging for build diagnostics."
+    },
+    "clean": {
+      "type": "boolean",
+      "default": true,
+      "description": "Empty the output directory before emitting. Only an empty directory or a previous build of this package is removed; set false when several builds share one output directory."
     }
   },
   "definitions": {

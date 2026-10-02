@@ -1,7 +1,7 @@
 import type { Mock, Mocked } from '@hyperfrontend/testing'
 import type { MemoryMonitor } from './memory/monitor'
 import type { BinConfig, BinOutput, BuildConfig, EntryPoint, EntryPointDiscovery, FormatOutputs } from './models'
-import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join as nodeJoin } from 'node:path'
 import { afterEach, beforeEach } from 'node:test'
@@ -11,6 +11,7 @@ import { runBinPhase } from './bin/run-bin-phase'
 import { build, createBuildContext } from './build'
 import { discoverEntries } from './bundle/entries/discover-entries'
 import { runBundlePhase } from './bundle/run-bundle-phase'
+import { assertOutputPathClearOfInputs, cleanOutputPath } from './clean-output'
 import { createMemoryMonitor } from './memory/monitor'
 import { finalizeFilesAllowlist } from './package/finalize-files'
 import { runPackagePhase } from './package/run-package-phase'
@@ -20,6 +21,7 @@ jest.mock('./package/finalize-files', () => ({ finalizeFilesAllowlist: jest.fn()
 jest.mock('./bin/run-bin-phase', () => ({ runBinPhase: jest.fn() }))
 jest.mock('./bundle/entries/discover-entries', () => ({ discoverEntries: jest.fn() }))
 jest.mock('./memory/monitor', () => ({ createMemoryMonitor: jest.fn() }))
+jest.mock('./clean-output', () => ({ assertOutputPathClearOfInputs: jest.fn(), cleanOutputPath: jest.fn() }))
 
 const ROOT_ENTRY: EntryPoint = { exportPath: '.', srcPath: '', inputFile: '/abs/repo/libs/foo/src/index.ts', isRoot: true }
 const DISCOVERY: EntryPointDiscovery = {
@@ -48,6 +50,8 @@ beforeEach(() => {
   ;(finalizeFilesAllowlist as Mock).mockReset()
   ;(runBinPhase as Mock).mockReset().mockResolvedValue([])
   ;(createMemoryMonitor as Mock).mockReset()
+  ;(assertOutputPathClearOfInputs as Mock).mockReset()
+  ;(cleanOutputPath as Mock).mockReset()
 })
 
 describe('createBuildContext', () => {
@@ -356,37 +360,60 @@ describe('build', () => {
   })
 
   describe('output cleaning', () => {
-    let workspaceRoot: string
-    let outDir: string
-
-    beforeEach(() => {
-      workspaceRoot = mkdtempSync(nodeJoin(tmpdir(), 'builder-build-clean-'))
-      outDir = nodeJoin(workspaceRoot, 'dist', 'libs', 'foo')
-      mkdirSync(outDir, { recursive: true })
+    it('checks the output against the build inputs before cleaning it', async () => {
+      const callOrder: string[] = []
+      ;(assertOutputPathClearOfInputs as Mock).mockImplementationOnce(() => {
+        callOrder.push('inputs')
+      })
+      ;(cleanOutputPath as Mock).mockImplementationOnce(() => {
+        callOrder.push('clean')
+      })
+      await build(baseConfig())
+      expect(callOrder).toEqual(['inputs', 'clean'])
     })
 
-    afterEach(() => {
-      rmSync(workspaceRoot, { recursive: true, force: true })
-    })
-
-    it('empties the project output directory before any phase runs, so stale artifacts do not survive', async () => {
-      const stale = nodeJoin(outDir, 'index.cjs.js.map')
-      writeFileSync(stale, '{}')
+    it('cleans the output before the first emitting phase, so stale artifacts never survive', async () => {
+      const callOrder: string[] = []
+      ;(cleanOutputPath as Mock).mockImplementationOnce(() => {
+        callOrder.push('clean')
+      })
       ;(runBundlePhase as Mock).mockImplementationOnce(async () => {
-        // why: clean must run before the first emitting phase, so by the time the bundle phase starts the stale file is already gone.
-        expect(existsSync(stale)).toBe(false)
+        callOrder.push('bundle')
         return EMPTY_FORMATS
       })
-      await build({ projectRoot: nodeJoin(workspaceRoot, 'libs', 'foo'), workspaceRoot, outputPath: outDir })
-      expect(existsSync(stale)).toBe(false)
+      await build(baseConfig())
+      expect(callOrder).toEqual(['clean', 'bundle'])
     })
 
-    it('leaves a sibling project output under the shared dist/ untouched', async () => {
-      const sibling = nodeJoin(workspaceRoot, 'dist', 'libs', 'bar', 'index.cjs.js')
-      mkdirSync(nodeJoin(sibling, '..'), { recursive: true })
-      writeFileSync(sibling, 'x')
-      await build({ projectRoot: nodeJoin(workspaceRoot, 'libs', 'foo'), workspaceRoot, outputPath: outDir })
-      expect(existsSync(sibling)).toBe(true)
+    it('cleans the resolved output path', async () => {
+      await build(baseConfig())
+      expect(cleanOutputPath).toHaveBeenCalledWith(expect.objectContaining({ outputPath: '/abs/repo/dist/libs/foo' }))
+    })
+
+    it('skips the clean when the config opts out', async () => {
+      await build({ ...baseConfig(), clean: false })
+      expect(cleanOutputPath).not.toHaveBeenCalled()
+    })
+
+    it('still checks the output against the build inputs when the clean is skipped', async () => {
+      await build({ ...baseConfig(), clean: false })
+      expect(assertOutputPathClearOfInputs).toHaveBeenCalledWith(expect.objectContaining({ outputPath: '/abs/repo/dist/libs/foo' }))
+    })
+
+    it('surfaces a refused output path', async () => {
+      const refused = new Error('refused')
+      ;(assertOutputPathClearOfInputs as Mock).mockImplementationOnce(() => {
+        throw refused
+      })
+      await expect(build(baseConfig())).rejects.toBe(refused)
+    })
+
+    it('runs no phase once the output path is refused', async () => {
+      ;(assertOutputPathClearOfInputs as Mock).mockImplementationOnce(() => {
+        throw new Error('refused')
+      })
+      await build(baseConfig()).catch(() => undefined)
+      expect(runBundlePhase).not.toHaveBeenCalled()
     })
   })
 })

@@ -2,6 +2,12 @@ import type { EntryPoint, EntryPointCategory, EntryPointDiscovery, EntryPointPla
 import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { exists, isDirectory, join, readDirectory } from '@hyperfrontend/project-scope/core'
 
+/**
+ * Directory under the project root that holds every source the builder reads:
+ * entry discovery walks it, and no build output may ever land inside it.
+ */
+export const SOURCE_DIR = 'src'
+
 const PLATFORM_DIRS = freeze(['browser', 'node'] as const)
 
 const isPlatformDir = (name: string): name is EntryPointPlatform => (PLATFORM_DIRS as readonly string[]).includes(name)
@@ -76,7 +82,7 @@ const categorize = (hasRootEntry: boolean, platformEntries: EntryPoint[], featur
  * ```
  */
 export const discoverEntries = (projectRoot: string): EntryPointDiscovery => {
-  const srcPath = join(projectRoot, 'src')
+  const srcPath = join(projectRoot, SOURCE_DIR)
   const entryPoints: EntryPoint[] = []
   const rootIndexPath = join(srcPath, 'index.ts')
   const hasRootEntry = exists(rootIndexPath)

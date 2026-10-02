@@ -210,7 +210,8 @@ sequenceDiagram
     Ctx->>Ctx: resolve bundled + workspace deps
     Ctx-->>Build: BuildContext
 
-    Build->>Build: cleanOutputPath(ctx)
+    Build->>Build: assertOutputPathClearOfInputs(ctx)
+    Build->>Build: cleanOutputPath(ctx) unless clean: false
     Build->>Bundle: runBundlePhase(ctx, config, monitor)
     Bundle-->>Build: FormatOutputs
     Build->>Build: recover()

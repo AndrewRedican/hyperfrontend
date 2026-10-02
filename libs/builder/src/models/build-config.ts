@@ -219,6 +219,16 @@ export interface BuildConfig {
   workspaceRoot: string
   /** Absolute output directory. Defaults to `<workspaceRoot>/dist/<projectRelativePath>`. */
   outputPath?: string
+  /**
+   * Empty `outputPath` before emitting, so nothing from an earlier build
+   * survives (a stale `*.js.map`, a chunk for a since-renamed entry). Defaults
+   * to `true`. The clean removes only a directory that is empty or holds a
+   * previous build of this package, recognised by the `package.json` it left
+   * behind, and refuses anything else wherever it sits. Set `false` when several
+   * builds, or other tools, accumulate output in one directory. Emitting onto
+   * the project's own sources is refused either way.
+   */
+  clean?: boolean
   /** Path to the project's tsconfig used for declarations. Defaults to `<projectRoot>/tsconfig.lib.json`. */
   tsConfig?: string
   /** Workspace-package predicate; when omitted the bundler treats every dep as external. */
