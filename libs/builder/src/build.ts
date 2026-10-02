@@ -21,7 +21,7 @@ import { resolveBundledDeps } from './bundle/dependencies/resolve-bundled-deps'
 import { resolveWorkspaceBundledDeps } from './bundle/dependencies/resolve-workspace-bundled-deps'
 import { discoverEntries } from './bundle/entries/discover-entries'
 import { runBundlePhase } from './bundle/run-bundle-phase'
-import { cleanOutputPath } from './clean-output'
+import { assertOutputPathClearOfInputs, cleanOutputPath } from './clean-output'
 import { createMemoryMonitor } from './memory/monitor'
 import { recover } from './memory/recover'
 import { finalizeFilesAllowlist } from './package/finalize-files'
@@ -183,8 +183,10 @@ export const build = async (config: BuildConfig): Promise<BuildResult> => {
   const monitor = resolveMonitor(config)
   monitor?.logDebug('build:start')
   try {
-    // why: empty this project's own output directory up front so the build never inherits stale artifacts from a previous run (e.g. *.js.map left after sourcemaps were disabled, or chunks from since-renamed entries); cleanOutputPath is scoped + guarded to dist/<project> so it can never widen to the whole dist/ or the repo.
-    cleanOutputPath(ctx)
+    // why: no output may land on the project's own sources, whether or not it is cleaned first, so the overlap check runs before either the clean or the first emitting phase.
+    assertOutputPathClearOfInputs(ctx)
+    // why: empty this project's own output directory up front so the build never inherits stale artifacts from a previous run (e.g. *.js.map left after sourcemaps were disabled, or chunks from since-renamed entries); cleanOutputPath removes only an output it recognises as this package's own. `clean: false` keeps the directory for consumers who accumulate several builds, or other tools' output, in one place.
+    if (config.clean !== false) cleanOutputPath(ctx)
     monitor?.check('clean:end')
     const formatOutputs = await runBundlePhase(ctx, config, monitor)
     monitor?.check('bundle:end')
