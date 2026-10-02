@@ -50,6 +50,8 @@ export interface BuildExecutorOptions {
   dedupeSharedInternals?: boolean
   /** Enable verbose / debug logging. */
   verbose?: boolean
+  /** Empty the output directory before emitting. Defaults to enabled; only an empty directory or a previous build of this package is removed. */
+  clean?: boolean
 }
 
 const substituteProjectRoot = (template: string, projectRelativePath: string): string =>
@@ -106,6 +108,7 @@ const runExecutor: PromiseExecutor<BuildExecutorOptions> = async (options, conte
     thirdPartyLicenses: true,
     memoryMonitor: MEMORY_THRESHOLDS,
     verbose: options.verbose,
+    clean: options.clean,
   }
 
   try {
