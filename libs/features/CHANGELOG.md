@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.11.1](https://github.com/AndrewRedican/hyperfrontend/compare/1d0a199aea462d6fe6bd1f889191274026d1d896...71e592e14d75e2126a83e5aed99d47bf29fd53e5) - 2026-10-02
+
+### Bug Fixes
+
+- deliver the shell to any --out the build can own
+
 ## [0.11.0](https://github.com/AndrewRedican/hyperfrontend/compare/41325ecf9b3f15f597cddadd5fbe6ab68f59eab7...0b29046380fe4d229ccd9fdaa2e9531c079c688a) - 2026-09-27
 
 ### Features

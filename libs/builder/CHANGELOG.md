@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.3.0](https://github.com/AndrewRedican/hyperfrontend/compare/41325ecf9b3f15f597cddadd5fbe6ab68f59eab7...71e592e14d75e2126a83e5aed99d47bf29fd53e5) - 2026-10-02
+
+### Features
+
+- clean only an owned output and add the clean option
+
 ## [0.2.2](https://github.com/AndrewRedican/hyperfrontend/compare/a638efc58ce78e9a84dd21992e7f5c675bd5e7f6...adf0a4f77dece2be855e7ab88185a4fe84e7b16b) - 2026-09-14
 
 ### Bug Fixes

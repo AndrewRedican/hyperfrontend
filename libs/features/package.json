@@ -1,11 +1,11 @@
 {
   "name": "@hyperfrontend/features",
-  "version": "0.11.0",
+  "version": "0.11.1",
   "description": "SDK, CLI, and dev server for building, embedding, and orchestrating hyperfrontend micro-frontend features.",
   "license": "MIT",
   "sideEffects": false,
   "dependencies": {
-    "@hyperfrontend/builder": "0.2.2",
+    "@hyperfrontend/builder": "0.3.0",
     "@hyperfrontend/immutable-api-utils": "1.0.1",
     "@hyperfrontend/json-utils": "1.0.1",
     "@hyperfrontend/network-protocol": "2.0.1",
