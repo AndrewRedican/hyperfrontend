@@ -66,6 +66,10 @@ interface KoiShellMountOptions {
   container: HTMLElement
   /** Milliseconds to wait for the koi's handshake before giving up. */
   openTimeoutMs: number
+  /** What the SDK does with a koi whose frame stops answering; `reopen` replaces the mount after a grace period. */
+  onUnresponsive: 'reopen'
+  /** Whether the SDK hides an unresponsive koi's frame until it beats again or its replacement opens. */
+  concealUnresponsive: boolean
   /** Composed-deployment override of the shell's baked app URL. */
   url?: string
 }
@@ -147,6 +151,9 @@ export function openInstance(stage: PondStage, framework: KoiFramework, ordinal:
     container: layer,
     // why: Several handshakes queue behind one another on a cold load, and the ten-second default times the last of them out.
     openTimeoutMs: OPEN_TIMEOUT_MS,
+    // why: A phone may kill any frame it likes, and a killed frame never says so; reopening one whose silence outlasts the SDK's grace turns that from a permanent hole in the shoal into a pause, and concealing it from the verdict keeps the browser's crash placeholder off the water while it waits.
+    onUnresponsive: 'reopen',
+    concealUnresponsive: true,
     ...(COMPOSED_DEPLOYMENT && { url: fishHomeUrl(framework) }),
   })
   return { id, framework, ordinal, layer, shell }

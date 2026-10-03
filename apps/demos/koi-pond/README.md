@@ -77,7 +77,7 @@ Two more claims run alongside it:
   `host/src/scene/koi-sessions.ts`); provisioning the per-koi services and flipping that
   flag is the whole migration to separate origins.
 - **Every session is an instance.** The host keys layers, roster rows, relay membership,
-  depth slots, retries, resurrection budgets, and held chrome by a `framework:ordinal`
+  depth slots, open retries, revival state, and held chrome by a `framework:ordinal`
   instance id, never by framework. That is what lets two React koi swim in one pond as two
   animals: they are dealt different variant seeds, so they are the same species in the
   same colours wearing different bodies, and they avoid each other like any other pair.
@@ -393,7 +393,7 @@ overrides an earlier one, one header at a time.
 ```bash
 npx nx run demo-koi-workbench:dev      # the model workbench on :4283, with HMR onto lib/src
 npx nx test demo-koi-lib               # the model, motion, runtime, geometry and contract specs
-npx nx test demo-koi-pond              # the scene, panel, overlay, resurrection and vitals specs
+npx nx test demo-koi-pond              # the scene, panel, overlay and vitals specs
 npx nx run demo-koi-lib:build          # emit the published surface into lib/dist
 npx nx run demo-koi-lib:refresh        # rebuild + repack the shared lib into every consumer
 npx nx run demo-koi-lib:verify         # fail loudly when the tarball or a consumer lock has drifted
@@ -431,8 +431,9 @@ A few constraints the scene depends on:
   host lifts the curtain when the last of the opening shoal lands, or at a deadline so an
   unreachable fish cannot hold the pond dark.
 - **A dead frame is healed, not left standing.** A browser that kills a koi's frame repaints it
-  with its own crash tile, which no host page can style. A session whose unresponsive verdict
-  outlives its grace is destroyed (which takes the tile with it) and reopened on a backoff, on a
-  bounded budget, and never into a hidden page.
+  with its own crash tile, which no host page can style. Every session opens with the SDK's
+  `reopen` policy and `concealUnresponsive`: the frame is hidden from the unresponsive verdict, and
+  a silence that outlives its grace is replaced by a fresh mount on a backoff, on a bounded budget,
+  and never into a hidden page. A koi the budget gives up on stays on the roster, shown offline.
 - **`KOI_FRAMEWORKS` and every trait band are append-only.** A koi's list position is its seed, so
   reordering the list re-rolls every fish in the pond.
