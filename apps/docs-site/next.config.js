@@ -22,9 +22,6 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
   // Allow Codespaces proxy
   allowedDevOrigins: ['*.app.github.dev'],
   // Static export has no request pipeline to attach headers to, so this runs only for the local server build
