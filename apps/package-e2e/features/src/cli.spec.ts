@@ -288,6 +288,11 @@ export default contract
       expect(outFiles).toEqual(expect.arrayContaining([expect.stringMatching(/\.tgz$/)]))
     })
 
+    it('publishes a root export resolving to the built entry in every format', () => {
+      const manifest = JSON.parse(readFileSync(join(outDir, 'package.json'), 'utf8')) as { exports?: Record<string, unknown> }
+      expect(manifest.exports?.['.']).toEqual({ types: './index.d.ts', import: './index.esm.js', require: './index.cjs.js' })
+    })
+
     it('emits JavaScript free of raw `import type` statements', () => {
       const withImportType = outFiles
         .filter((file) => file.endsWith('.js'))
