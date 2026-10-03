@@ -70,7 +70,7 @@
     },
     "audit": {
       "cache": true,
-      "inputs": ["dependencyState"],
+      "inputs": ["dependencyState", { "runtime": "date -u +%F" }],
       "executor": "nx:run-commands",
       "options": {
         "command": "npm audit --audit-level=high",
