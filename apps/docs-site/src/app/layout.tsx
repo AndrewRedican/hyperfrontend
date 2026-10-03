@@ -72,15 +72,12 @@ type RootLayoutProps = { children: React.ReactNode }
 export default function RootLayout({ children }: RootLayoutProps) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <head>
-        {/* why: DevHunt's embed instructions place the banner script between the head tags; Next merges this head with the metadata it generates */}
-        <DevHuntBanner />
-      </head>
       <body>
         <ThemeScript />
         <a href="#main-content" className="skip-link">
           Skip to content
         </a>
+        <DevHuntBanner />
         <JsonLd
           data={{
             '@context': 'https://schema.org',
