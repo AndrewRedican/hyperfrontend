@@ -9,6 +9,7 @@ import { stage, amendCommitNoEdit } from '@hyperfrontend/versioning/git/operatio
 import { isInUnstableGitState } from './is-in-unstable-git-state'
 import { isVersionCommit } from './is-version-commit'
 import { getLogger } from './logger'
+import { refreshCompatibilityMatrix } from './refresh-compatibility-matrix'
 import { updateDependentVersions } from './update-dependent-versions'
 import { updateE2eDependencies } from './update-e2e-dependencies'
 
@@ -270,6 +271,9 @@ export async function runVersionForProject(options: RunVersionOptions): Promise<
     }
   }
 
+  // why: Everything the bump obliges beyond the package's own files is gathered here and committed with it: the pins of its dependents, and the compatibility document that embeds every package's version.
+  const followUpFiles: string[] = []
+
   if (updateDependents) {
     const pkg = readPackageJsonIfExists(packageJsonPath)
     const packageName = pkg?.name ?? null
@@ -279,7 +283,6 @@ export async function runVersionForProject(options: RunVersionOptions): Promise<
     if (packageName && newVersion !== '0.0.0') {
       const updatedFiles = updateDependentVersions(packageName, newVersion, workspaceRoot, packageJsonPath, dryRun)
       const e2eUpdatedFiles = updateE2eDependencies(packageName, newVersion, workspaceRoot, dryRun)
-      const allUpdatedFiles = [...updatedFiles, ...e2eUpdatedFiles]
 
       if (updatedFiles.length > 0) {
         logger.info(`Updated dependency version in ${updatedFiles.length} library package(s):`)
@@ -295,19 +298,27 @@ export async function runVersionForProject(options: RunVersionOptions): Promise<
         }
       }
 
-      if (allUpdatedFiles.length > 0) {
-        modifiedFiles.push(...allUpdatedFiles)
+      followUpFiles.push(...updatedFiles, ...e2eUpdatedFiles)
+    }
+  }
 
-        if (!dryRun && !skipCommit) {
-          logger.debug('Staging and amending commit with dependency updates')
-          try {
-            stage(allUpdatedFiles, { cwd: workspaceRoot })
-            amendCommitNoEdit({ cwd: workspaceRoot })
-            logger.info('Amended commit to include dependency updates')
-          } catch (error) {
-            logger.warn(`Could not amend commit with dependency updates: ${error}`)
-          }
-        }
+  const matrixFiles = refreshCompatibilityMatrix(workspaceRoot, dryRun)
+  if (matrixFiles.length > 0) {
+    logger.info(`Refreshed ${matrixFiles.join(', ')}`)
+    followUpFiles.push(...matrixFiles)
+  }
+
+  if (followUpFiles.length > 0) {
+    modifiedFiles.push(...followUpFiles)
+
+    if (!dryRun && !skipCommit) {
+      logger.debug('Staging and amending commit with the follow-up files')
+      try {
+        stage(followUpFiles, { cwd: workspaceRoot })
+        amendCommitNoEdit({ cwd: workspaceRoot })
+        logger.info('Amended commit to include the follow-up files')
+      } catch (error) {
+        logger.warn(`Could not amend commit with the follow-up files: ${error}`)
       }
     }
   }
