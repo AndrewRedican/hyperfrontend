@@ -71,6 +71,7 @@ function injectCopyButtons(container: HTMLElement): () => void {
       'focus:ring-2',
       'focus:ring-primary-500',
       'group-hover:opacity-100',
+      '[@media(hover:none)]:opacity-100',
     ].join(' ')
     btn.textContent = 'Copy'
 
@@ -138,6 +139,7 @@ function injectHeadingAnchors(container: HTMLElement, slugger: (text: string) =>
     anchor.className = [
       'opacity-0',
       'group-hover:opacity-100',
+      '[@media(hover:none)]:opacity-100',
       'transition-opacity',
       'duration-200',
       'text-slate-400',
