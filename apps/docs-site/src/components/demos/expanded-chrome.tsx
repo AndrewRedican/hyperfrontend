@@ -21,7 +21,7 @@ export function ExpandButton({ title, onExpand }: ExpandButtonProps) {
       onClick={onExpand}
       // why: A hosting surface may pointer-capture presses on its container (the deck's drag machinery); without stopping propagation the capture retargets the click and the button never fires.
       onPointerDown={(event) => event.stopPropagation()}
-      className="absolute bottom-3 left-1/2 z-20 -translate-x-1/2 rounded-full bg-slate-900/70 px-3.5 py-1.5 text-xs font-medium text-white backdrop-blur-sm transition-colors hover:bg-slate-900/90"
+      className="absolute bottom-3 left-1/2 z-20 -translate-x-1/2 rounded-full bg-slate-900/70 px-3.5 py-1.5 text-xs font-medium text-white backdrop-blur-xs transition-colors hover:bg-slate-900/90"
       aria-label={`Expand the ${title} demo over the page`}
     >
       Click to expand ⤢
@@ -57,7 +57,7 @@ export function ExpandedChrome({ title, onCollapse, onNeighbor }: ExpandedChrome
         type="button"
         onClick={onCollapse}
         onPointerDown={keep}
-        className="pointer-events-auto absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full bg-slate-900/70 text-white backdrop-blur-sm transition-colors hover:bg-slate-900/90"
+        className="pointer-events-auto absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full bg-slate-900/70 text-white backdrop-blur-xs transition-colors hover:bg-slate-900/90"
         aria-label={`Close the expanded ${title} demo`}
       >
         ✕
@@ -70,7 +70,7 @@ export function ExpandedChrome({ title, onCollapse, onNeighbor }: ExpandedChrome
             type="button"
             onClick={() => onNeighbor(-1)}
             onPointerDown={keep}
-            className="pointer-events-auto absolute left-4 top-1/2 hidden h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-slate-900/70 text-white backdrop-blur-sm transition-colors hover:bg-slate-900/90 sm:flex"
+            className="pointer-events-auto absolute left-4 top-1/2 hidden h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-slate-900/70 text-white backdrop-blur-xs transition-colors hover:bg-slate-900/90 sm:flex"
             aria-label="Previous demo"
           >
             ←
@@ -79,7 +79,7 @@ export function ExpandedChrome({ title, onCollapse, onNeighbor }: ExpandedChrome
             type="button"
             onClick={() => onNeighbor(1)}
             onPointerDown={keep}
-            className="pointer-events-auto absolute right-4 top-1/2 hidden h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-slate-900/70 text-white backdrop-blur-sm transition-colors hover:bg-slate-900/90 sm:flex"
+            className="pointer-events-auto absolute right-4 top-1/2 hidden h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-slate-900/70 text-white backdrop-blur-xs transition-colors hover:bg-slate-900/90 sm:flex"
             aria-label="Next demo"
           >
             →

@@ -18,7 +18,7 @@ export interface HeaderProps {
 
 export function Header({ width = docLayout.bar }: HeaderProps = {}) {
   return (
-    <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/80 backdrop-blur-sm dark:border-slate-800 dark:bg-slate-900/80">
+    <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/80 backdrop-blur-xs dark:border-slate-800 dark:bg-slate-900/80">
       {/* note: The bar tracks the width of the page beneath it, or the logo and the search control stop lining up with the content they sit above. */}
       <div className={`flex h-16 items-center justify-between ${width} ${docLayout.gutter}`}>
         <div className="flex items-center gap-4">

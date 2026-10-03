@@ -15,7 +15,7 @@ function simpleMarkdownToHtml(markdown: string): string {
   // why: inline code must be processed before bold/italic to avoid conflicts with backticks
   html = html.replace(/`([^`]+)`/g, (_, code: string) => {
     const fold = isFoldableCodeSpan(code) ? ` ${CODE_WRAP_ATTRIBUTE}="${CODE_WRAP_FOLD}"` : ''
-    return `<code class="bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded"${fold}>${code}</code>`
+    return `<code class="bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded-sm"${fold}>${code}</code>`
   })
 
   html = html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')

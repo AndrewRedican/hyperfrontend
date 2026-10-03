@@ -6,7 +6,7 @@ export function Hero() {
       <HeroBackground />
       <div className="relative mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8 lg:py-32">
         <div className="mx-auto max-w-3xl text-center">
-          <h1 className="bg-gradient-to-r from-indigo-200 via-sky-400 to-indigo-200 bg-clip-text font-display text-4xl font-bold tracking-tight text-transparent sm:text-5xl lg:text-6xl">
+          <h1 className="bg-linear-to-r from-indigo-200 via-sky-400 to-indigo-200 bg-clip-text font-display text-4xl font-bold tracking-tight text-transparent sm:text-5xl lg:text-6xl">
             Micro-frontends without the headache
           </h1>
           <p className="mt-6 text-lg text-slate-400 sm:text-xl">

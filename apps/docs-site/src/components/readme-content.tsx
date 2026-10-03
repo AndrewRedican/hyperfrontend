@@ -55,7 +55,7 @@ function injectCopyButtons(container: HTMLElement): () => void {
       'absolute',
       'right-2',
       'top-2',
-      'rounded',
+      'rounded-sm',
       'bg-slate-700',
       'px-2',
       'py-1',
@@ -67,7 +67,7 @@ function injectCopyButtons(container: HTMLElement): () => void {
       'hover:bg-slate-600',
       'hover:text-white',
       'focus:opacity-100',
-      'focus:outline-none',
+      'focus:outline-hidden',
       'focus:ring-2',
       'focus:ring-primary-500',
       'group-hover:opacity-100',
@@ -310,7 +310,7 @@ export function ReadmeContent({ html, mermaidDiagrams, slots }: ReadmeContentPro
     prose-h2:text-2xl prose-h2:font-bold prose-h2:mt-10 prose-h2:mb-4
     prose-h3:text-xl prose-h3:font-semibold prose-h3:mt-8 prose-h3:mb-3
     prose-p:text-slate-600 dark:prose-p:text-slate-400 prose-p:leading-7
-    prose-a:text-primary-600 dark:prose-a:text-primary-400 prose-a:no-underline hover:prose-a:underline
+    prose-a:text-primary-600 dark:prose-a:text-primary-400 prose-a:no-underline prose-a:hover:underline
     prose-pre:relative prose-pre:bg-transparent
     prose-table:border prose-table:border-slate-200 dark:prose-table:border-slate-700
     prose-th:bg-slate-50 dark:prose-th:bg-slate-800 prose-th:px-4 prose-th:py-3 prose-th:text-left prose-th:font-semibold

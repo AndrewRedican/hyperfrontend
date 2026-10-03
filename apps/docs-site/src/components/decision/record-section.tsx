@@ -73,7 +73,7 @@ export function RecordSection({ id, title, defaultOpen = false, children }: Reco
         >
           <ToggleIcon
             open={open}
-            className="h-5 w-5 shrink-0 rounded border border-slate-300 p-0.5 text-slate-500 transition-colors group-hover:border-primary-500 group-hover:text-primary-600 dark:border-slate-600 dark:text-slate-400 dark:group-hover:border-primary-400 dark:group-hover:text-primary-300"
+            className="h-5 w-5 shrink-0 rounded-sm border border-slate-300 p-0.5 text-slate-500 transition-colors group-hover:border-primary-500 group-hover:text-primary-600 dark:border-slate-600 dark:text-slate-400 dark:group-hover:border-primary-400 dark:group-hover:text-primary-300"
           />
           <span className="min-w-0">{title}</span>
         </button>

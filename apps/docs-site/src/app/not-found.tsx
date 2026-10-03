@@ -104,7 +104,7 @@ export default function NotFound() {
           {/* Path display for context */}
           <div className="mt-8">
             <p className="text-xs text-slate-400 dark:text-slate-500">
-              Requested path: <code className="rounded bg-slate-100 px-1.5 py-0.5 dark:bg-slate-800">{pathname}</code>
+              Requested path: <code className="rounded-sm bg-slate-100 px-1.5 py-0.5 dark:bg-slate-800">{pathname}</code>
             </p>
           </div>
         </div>
@@ -226,7 +226,7 @@ function SuggestionCard({ suggestion }: SuggestionCardProps) {
         </h3>
         <p className="text-sm text-slate-500 dark:text-slate-400">{suggestion.description}</p>
       </div>
-      <ArrowRightIcon className="h-5 w-5 flex-shrink-0 text-slate-400 transition-transform group-hover:translate-x-1 group-hover:text-primary-500 dark:text-slate-500" />
+      <ArrowRightIcon className="h-5 w-5 shrink-0 text-slate-400 transition-transform group-hover:translate-x-1 group-hover:text-primary-500 dark:text-slate-500" />
     </Link>
   )
 }

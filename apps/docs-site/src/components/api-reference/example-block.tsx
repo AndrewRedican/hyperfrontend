@@ -71,7 +71,7 @@ export function ExampleBlock({ code, label }: ExampleBlockProps) {
           <button
             type="button"
             onClick={handleCopy}
-            className="copy-control px-2 py-1 text-xs bg-slate-700 hover:bg-slate-600 text-slate-200 rounded transition-colors"
+            className="copy-control px-2 py-1 text-xs bg-slate-700 hover:bg-slate-600 text-slate-200 rounded-sm transition-colors"
             aria-label="Copy code"
           >
             {copied ? 'Copied!' : 'Copy'}

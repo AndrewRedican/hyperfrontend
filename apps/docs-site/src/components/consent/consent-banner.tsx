@@ -87,7 +87,7 @@ export function ConsentBanner() {
         <div
           role="region"
           aria-label="Privacy choices"
-          className="fixed inset-x-0 bottom-0 z-[140] border-t border-slate-200 bg-white/95 p-4 shadow-lg backdrop-blur-sm dark:border-slate-700 dark:bg-slate-900/95"
+          className="fixed inset-x-0 bottom-0 z-140 border-t border-slate-200 bg-white/95 p-4 shadow-lg backdrop-blur-xs dark:border-slate-700 dark:bg-slate-900/95"
         >
           <div className="mx-auto flex max-w-5xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-sm text-slate-600 dark:text-slate-300">
@@ -112,14 +112,14 @@ export function ConsentBanner() {
         </div>
       ) : null}
       {preferencesOpen ? (
-        <div className="fixed inset-0 z-[150] flex items-end justify-center bg-black/50 p-4 backdrop-blur-sm sm:items-center">
+        <div className="fixed inset-0 z-150 flex items-end justify-center bg-black/50 p-4 backdrop-blur-xs sm:items-center">
           <div
             ref={dialogRef}
             role="dialog"
             aria-modal="true"
             aria-label="Privacy preferences"
             tabIndex={-1}
-            className="w-full max-w-lg rounded-2xl border border-slate-200 bg-white p-6 shadow-xl outline-none dark:border-slate-700 dark:bg-slate-900"
+            className="w-full max-w-lg rounded-2xl border border-slate-200 bg-white p-6 shadow-xl outline-hidden dark:border-slate-700 dark:bg-slate-900"
           >
             <h2 className="font-display text-lg font-semibold text-slate-900 dark:text-white">Privacy preferences</h2>
             <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">

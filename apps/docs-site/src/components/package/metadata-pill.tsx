@@ -33,16 +33,16 @@ export interface MetadataPillProps {
 /** The colour classes each tone applies on top of the shared geometry. */
 const TONE_CLASSES: Record<PillTone, string> = {
   license:
-    'border-red-800/25 bg-red-800/[0.07] text-red-800 hover:border-red-800/40 hover:bg-red-800/[0.12] dark:border-red-400/25 dark:bg-red-400/10 dark:text-red-300 dark:hover:border-red-400/40 dark:hover:bg-red-400/[0.18]',
+    'border-red-800/25 bg-red-800/[0.07] text-red-800 hover:border-red-800/40 hover:bg-red-800/12 dark:border-red-400/25 dark:bg-red-400/10 dark:text-red-300 dark:hover:border-red-400/40 dark:hover:bg-red-400/18',
   stable:
-    'border-primary-500/30 bg-primary-500/10 text-primary-700 hover:border-primary-500/50 hover:bg-primary-500/[0.18] dark:border-primary-400/30 dark:bg-primary-400/10 dark:text-primary-300 dark:hover:border-primary-400/50 dark:hover:bg-primary-400/[0.18]',
+    'border-primary-500/30 bg-primary-500/10 text-primary-700 hover:border-primary-500/50 hover:bg-primary-500/18 dark:border-primary-400/30 dark:bg-primary-400/10 dark:text-primary-300 dark:hover:border-primary-400/50 dark:hover:bg-primary-400/18',
   prerelease:
-    'border-violet-500/30 bg-violet-500/10 text-violet-700 hover:border-violet-500/50 hover:bg-violet-500/[0.18] dark:border-violet-400/30 dark:bg-violet-400/10 dark:text-violet-300 dark:hover:border-violet-400/50 dark:hover:bg-violet-400/[0.18]',
+    'border-violet-500/30 bg-violet-500/10 text-violet-700 hover:border-violet-500/50 hover:bg-violet-500/18 dark:border-violet-400/30 dark:bg-violet-400/10 dark:text-violet-300 dark:hover:border-violet-400/50 dark:hover:bg-violet-400/18',
   neutral:
-    'border-slate-500/25 bg-slate-500/[0.08] text-slate-700 hover:border-slate-500/45 hover:bg-slate-500/[0.14] dark:border-slate-400/25 dark:bg-slate-400/10 dark:text-slate-300 dark:hover:border-slate-400/45 dark:hover:bg-slate-400/[0.18]',
+    'border-slate-500/25 bg-slate-500/8 text-slate-700 hover:border-slate-500/45 hover:bg-slate-500/[0.14] dark:border-slate-400/25 dark:bg-slate-400/10 dark:text-slate-300 dark:hover:border-slate-400/45 dark:hover:bg-slate-400/18',
   muted: 'border-dashed border-slate-300 text-slate-500 dark:border-slate-600 dark:text-slate-400',
   accent:
-    'border-teal-600/30 bg-teal-600/[0.08] text-teal-800 hover:border-teal-600/50 hover:bg-teal-600/[0.14] dark:border-teal-400/30 dark:bg-teal-400/10 dark:text-teal-300 dark:hover:border-teal-400/50 dark:hover:bg-teal-400/[0.18]',
+    'border-teal-600/30 bg-teal-600/8 text-teal-800 hover:border-teal-600/50 hover:bg-teal-600/[0.14] dark:border-teal-400/30 dark:bg-teal-400/10 dark:text-teal-300 dark:hover:border-teal-400/50 dark:hover:bg-teal-400/18',
 }
 
 /**

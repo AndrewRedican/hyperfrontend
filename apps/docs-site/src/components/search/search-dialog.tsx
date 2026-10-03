@@ -93,7 +93,7 @@ export function SearchControl() {
       >
         <SearchIcon className="h-4 w-4" />
         <span className="hidden sm:inline">Search</span>
-        <kbd className="hidden rounded border border-slate-200 px-1.5 py-0.5 text-[10px] font-medium text-slate-400 dark:border-slate-700 dark:text-slate-500 md:inline">
+        <kbd className="hidden rounded-sm border border-slate-200 px-1.5 py-0.5 text-[10px] font-medium text-slate-400 dark:border-slate-700 dark:text-slate-500 md:inline">
           ⌘K
         </kbd>
       </button>
@@ -200,7 +200,7 @@ function SearchDialog({ onClose }: SearchDialogProps) {
       onMouseDown={(event) => {
         if (event.target === backdropRef.current) onClose()
       }}
-      className="fixed inset-0 z-[160] flex items-start justify-center bg-slate-900/50 p-4 pt-[12vh] backdrop-blur-sm sm:pt-[18vh]"
+      className="fixed inset-0 z-160 flex items-start justify-center bg-slate-900/50 p-4 pt-[12vh] backdrop-blur-xs sm:pt-[18vh]"
     >
       <div
         ref={dialogRef}
@@ -223,7 +223,7 @@ function SearchDialog({ onClose }: SearchDialogProps) {
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             onKeyDown={onKeyDown}
-            className="w-full bg-transparent py-3.5 text-sm text-slate-900 placeholder-slate-400 outline-none dark:text-white dark:placeholder-slate-500"
+            className="w-full bg-transparent py-3.5 text-sm text-slate-900 placeholder-slate-400 outline-hidden dark:text-white dark:placeholder-slate-500"
           />
         </div>
 
@@ -288,7 +288,7 @@ function SearchDialog({ onClose }: SearchDialogProps) {
                 onClose()
               }
             }}
-            className="rounded px-2 py-1 hover:text-slate-600 dark:hover:text-slate-300"
+            className="rounded-sm px-2 py-1 hover:text-slate-600 dark:hover:text-slate-300"
           >
             Close
           </button>

@@ -226,7 +226,7 @@ function withCodeSpans(note: string): ReactNode[] {
     index % 2 === 1 ? (
       <code
         key={index}
-        className="rounded bg-slate-100 px-1 font-mono text-[0.6875rem] text-slate-700 dark:bg-slate-800 dark:text-slate-300"
+        className="rounded-sm bg-slate-100 px-1 font-mono text-[0.6875rem] text-slate-700 dark:bg-slate-800 dark:text-slate-300"
       >
         {piece}
       </code>

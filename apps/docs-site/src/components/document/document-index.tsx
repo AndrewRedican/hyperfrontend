@@ -124,7 +124,7 @@ export function DocumentIndex({ sections, onNavigate }: DocumentIndexProps) {
                   aria-expanded={open}
                   aria-controls={panelId}
                   aria-label={`${open ? 'Collapse' : 'Expand'} ${section.title}`}
-                  className="shrink-0 rounded p-1 text-slate-400 transition-colors hover:text-slate-900 dark:text-slate-500 dark:hover:text-slate-100"
+                  className="shrink-0 rounded-sm p-1 text-slate-400 transition-colors hover:text-slate-900 dark:text-slate-500 dark:hover:text-slate-100"
                 >
                   <CaretIcon className={`h-3 w-3 transition-transform ${open ? '' : '-rotate-90'}`} />
                 </button>

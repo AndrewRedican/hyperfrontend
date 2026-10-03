@@ -467,30 +467,32 @@ function ExportBadges({ functions, classes, interfaces, types, variables, namesp
   return (
     <div className="flex flex-wrap gap-1">
       {functions > 0 && (
-        <span className="px-1.5 py-0.5 text-xs rounded bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-400">
+        <span className="px-1.5 py-0.5 text-xs rounded-sm bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-400">
           {functions} fn
         </span>
       )}
       {classes > 0 && (
-        <span className="px-1.5 py-0.5 text-xs rounded bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-400">
+        <span className="px-1.5 py-0.5 text-xs rounded-sm bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-400">
           {classes} cls
         </span>
       )}
       {interfaces > 0 && (
-        <span className="px-1.5 py-0.5 text-xs rounded bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-400">
+        <span className="px-1.5 py-0.5 text-xs rounded-sm bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-400">
           {interfaces} int
         </span>
       )}
       {types > 0 && (
-        <span className="px-1.5 py-0.5 text-xs rounded bg-teal-100 text-teal-700 dark:bg-teal-900/50 dark:text-teal-400">{types} type</span>
+        <span className="px-1.5 py-0.5 text-xs rounded-sm bg-teal-100 text-teal-700 dark:bg-teal-900/50 dark:text-teal-400">
+          {types} type
+        </span>
       )}
       {variables > 0 && (
-        <span className="px-1.5 py-0.5 text-xs rounded bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-400">
+        <span className="px-1.5 py-0.5 text-xs rounded-sm bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-400">
           {variables} var
         </span>
       )}
       {namespaces > 0 && (
-        <span className="px-1.5 py-0.5 text-xs rounded bg-orange-100 text-orange-700 dark:bg-orange-900/50 dark:text-orange-400">
+        <span className="px-1.5 py-0.5 text-xs rounded-sm bg-orange-100 text-orange-700 dark:bg-orange-900/50 dark:text-orange-400">
           {namespaces} ns
         </span>
       )}

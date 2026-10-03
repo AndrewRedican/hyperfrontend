@@ -29,7 +29,7 @@ export default function DocsPage() {
         className="mt-8 flex flex-col gap-4 overflow-hidden rounded-xl border border-primary-200 bg-primary-50/60 transition-colors hover:border-primary-400 hover:bg-primary-50 dark:border-primary-900 dark:bg-primary-950/30 dark:hover:border-primary-700 dark:hover:bg-primary-950/50 sm:flex-row sm:items-stretch sm:gap-6"
       >
         <span className="flex shrink-0 items-stretch justify-center bg-primary-100 px-6 py-5 dark:bg-primary-900/40 sm:py-6">
-          <CompassIcon className="h-16 w-16 self-center text-primary-600 dark:text-primary-400 sm:h-auto sm:w-auto sm:min-h-[6.5rem] sm:self-stretch" />
+          <CompassIcon className="h-16 w-16 self-center text-primary-600 dark:text-primary-400 sm:h-auto sm:w-auto sm:min-h-26 sm:self-stretch" />
         </span>
         <span className="block min-w-0 flex-1 px-6 pb-5 sm:py-6 sm:pl-0 sm:pr-7">
           <span className="block font-semibold text-slate-900 dark:text-white">First, check this is the right fit</span>
@@ -62,8 +62,8 @@ export default function DocsPage() {
         <p className="mt-3 text-slate-600 dark:text-slate-400">Install the package:</p>
         <CodeBlock language="bash" code="npm install @hyperfrontend/features" />
         <p className="mt-4 text-sm text-slate-500 dark:text-slate-400">
-          It bundles <code className="rounded bg-slate-100 px-1 py-0.5 dark:bg-slate-800">@hyperfrontend/nexus</code> and its other direct
-          dependencies, so your app takes on no transitive install burden.
+          It bundles <code className="rounded-sm bg-slate-100 px-1 py-0.5 dark:bg-slate-800">@hyperfrontend/nexus</code> and its other
+          direct dependencies, so your app takes on no transitive install burden.
         </p>
       </section>
 

@@ -201,7 +201,7 @@ function NameDialog({ value, onChange, onConfirm, onCancel }: NameDialogProps) {
       onClick={(event) => {
         if (event.target === backdropRef.current) onCancel()
       }}
-      className="fixed inset-0 z-[160] flex items-start justify-center bg-slate-900/50 p-4 pt-[18vh] backdrop-blur-sm"
+      className="fixed inset-0 z-160 flex items-start justify-center bg-slate-900/50 p-4 pt-[18vh] backdrop-blur-xs"
     >
       <form
         role="dialog"
@@ -226,7 +226,7 @@ function NameDialog({ value, onChange, onConfirm, onCancel }: NameDialogProps) {
           value={value}
           onChange={(event) => onChange(event.target.value)}
           placeholder="Checkout platform, Q3"
-          className="mt-4 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-slate-700 dark:bg-slate-950 dark:text-white dark:placeholder:text-slate-600"
+          className="mt-4 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-primary-500 focus:outline-hidden focus:ring-1 focus:ring-primary-500 dark:border-slate-700 dark:bg-slate-950 dark:text-white dark:placeholder:text-slate-600"
         />
         <div className="mt-5 flex items-center justify-end gap-4">
           <button

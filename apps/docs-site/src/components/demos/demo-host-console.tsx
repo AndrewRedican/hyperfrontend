@@ -67,7 +67,7 @@ const EVENT_CAP = 30
 
 /** Custom scrollbar treatment for the expanded event log. */
 const SCROLLBAR_CLASSES =
-  '[scrollbar-width:thin] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-300 dark:[&::-webkit-scrollbar-thumb]:bg-slate-600'
+  'scrollbar-thin [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-300 dark:[&::-webkit-scrollbar-thumb]:bg-slate-600'
 
 /** The contract-specific action section each live demo contributes to the console. */
 const DEMO_ACTIONS: Record<string, ComponentType<DemoConsoleActionsProps> | undefined> = {
@@ -384,7 +384,7 @@ export function DemoHostConsole({ entry, shell, floating, overlaid = false }: De
   // why: The expanded overlay is a fixed layer stacked above the whole deck (200), so over it the same widget has to outrank the overlay to stay operable at all — pinned to the viewport, because the page's scroll is locked while a demo owns the screen and an anchor inside the deck could be locked off-screen; it takes the corner opposite the overlay's own close control.
   return (
     <section
-      className={`pointer-events-none flex flex-col ${overlaid ? 'fixed left-2 top-2 z-[210] items-start' : 'absolute right-2 top-2 z-30 items-end'}`}
+      className={`pointer-events-none flex flex-col ${overlaid ? 'fixed left-2 top-2 z-210 items-start' : 'absolute right-2 top-2 z-30 items-end'}`}
     >
       <button
         type="button"
@@ -392,7 +392,7 @@ export function DemoHostConsole({ entry, shell, floating, overlaid = false }: De
         aria-expanded={open}
         aria-label={open ? 'Collapse the host console' : 'Expand the host console'}
         title={`Host console — session: ${session}`}
-        className={`pointer-events-auto relative flex items-center gap-2 rounded-full border border-slate-200 bg-white/80 text-slate-500 shadow-md backdrop-blur-sm transition-colors hover:text-primary-600 dark:border-slate-700 dark:bg-slate-900/80 dark:text-slate-400 dark:hover:text-primary-400 ${overlaid ? 'px-3 py-2 shadow-lg' : 'p-2'}`}
+        className={`pointer-events-auto relative flex items-center gap-2 rounded-full border border-slate-200 bg-white/80 text-slate-500 shadow-md backdrop-blur-xs transition-colors hover:text-primary-600 dark:border-slate-700 dark:bg-slate-900/80 dark:text-slate-400 dark:hover:text-primary-400 ${overlaid ? 'px-3 py-2 shadow-lg' : 'p-2'}`}
       >
         <CogIcon className="h-5 w-5" />
         {/* why: Floating over a live scene, an unlabelled cog reads as part of the scene; naming it is what makes it findable as the host's own console. */}

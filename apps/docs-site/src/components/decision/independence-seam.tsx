@@ -121,7 +121,7 @@ function Placeholder({ placeholder, assessmentRoute, className }: PlaceholderPro
     <Link
       href={`${assessmentRoute}?question=${encodeURIComponent(placeholder.questionId)}`}
       aria-label={placeholder.accessibleName}
-      className={`${shell} block border-slate-300 text-slate-600 hover:border-slate-500 hover:text-slate-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-500 dark:border-slate-600 dark:text-slate-300 dark:hover:border-slate-400 dark:hover:text-white`}
+      className={`${shell} block border-slate-300 text-slate-600 hover:border-slate-500 hover:text-slate-900 focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-500 dark:border-slate-600 dark:text-slate-300 dark:hover:border-slate-400 dark:hover:text-white`}
     >
       {placeholder.prompt}
       <span className="mt-1 block font-medium text-primary-700 dark:text-primary-300">Answer question {placeholder.questionNumber}</span>
@@ -309,7 +309,7 @@ function Band({ number, title, rail, provenance, assessmentRoute, children }: Ba
                 key={chip.questionId}
                 href={`${assessmentRoute}?question=${encodeURIComponent(chip.questionId)}`}
                 aria-label={`Question ${chip.questionNumber} is not answered. Answer it.`}
-                className="rounded-md border border-dotted border-slate-300 px-2 py-1 text-[11px] text-slate-500 hover:border-slate-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-500 dark:border-slate-600 dark:text-slate-400 dark:hover:border-slate-400"
+                className="rounded-md border border-dotted border-slate-300 px-2 py-1 text-[11px] text-slate-500 hover:border-slate-500 focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-500 dark:border-slate-600 dark:text-slate-400 dark:hover:border-slate-400"
               >
                 Q{chip.questionNumber}: not asked yet
               </Link>
@@ -345,7 +345,7 @@ function BandChevron({ className }: BandChevronProps) {
 function pageShapeOf(topology: DeliveryTopology): ReactNode {
   const { divider, shape } = topology.surface
   const region = 'flex flex-1 items-center justify-center rounded-md p-2 text-center text-[11px]'
-  const frame = 'aspect-[16/10] w-full max-w-sm rounded-lg border border-slate-300 p-2 dark:border-slate-600'
+  const frame = 'aspect-16/10 w-full max-w-sm rounded-lg border border-slate-300 p-2 dark:border-slate-600'
   if (shape === 'page-per-team') {
     return (
       <div className="flex flex-col items-center justify-center gap-2 sm:flex-row">

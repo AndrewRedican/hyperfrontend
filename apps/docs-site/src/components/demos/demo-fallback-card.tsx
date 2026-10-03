@@ -231,13 +231,13 @@ export function DemoFallbackCard({ entry, status = 'planned' }: DemoFallbackCard
   const bare = isBareDemoCard(entry.slug)
   return (
     <div
-      className={`relative h-full w-full overflow-hidden rounded-2xl ${bare ? '' : `border bg-gradient-to-br ${previewed ? '' : 'opacity-80'} ${theme.surface}`}`}
+      className={`relative h-full w-full overflow-hidden rounded-2xl ${bare ? '' : `border bg-linear-to-br ${previewed ? '' : 'opacity-80'} ${theme.surface}`}`}
     >
       {/* note: the dot grid is the texture of an empty card; a card holding a photograph of its demo has no emptiness to texture. */}
       {previewed ? (
         <DemoPreviewFrame slug={entry.slug} theme={theme} connecting={status === 'connecting'} />
       ) : (
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,rgba(0,0,0,0.03)_1px,transparent_0)] bg-[length:24px_24px] dark:bg-[radial-gradient(circle_at_1px_1px,rgba(255,255,255,0.03)_1px,transparent_0)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,rgba(0,0,0,0.03)_1px,transparent_0)] bg-size-[24px_24px] dark:bg-[radial-gradient(circle_at_1px_1px,rgba(255,255,255,0.03)_1px,transparent_0)]" />
       )}
       <span className="absolute right-4 top-3 font-mono text-[10px] uppercase tracking-widest text-slate-400 dark:text-slate-500">
         {CORNER_LABELS[status]}
@@ -246,7 +246,7 @@ export function DemoFallbackCard({ entry, status = 'planned' }: DemoFallbackCard
         // why: the picture names the demo, so repeating the name under it says nothing the card is not already saying; only the status the still cannot show is left, at the foot of the picture rather than over the middle of it.
         // why: the scrim carries the pills over an opaque still; a bare card has the page behind it and the pills already carry their own fills, so laying a white wash over it would put back the surface the card just dropped.
         <div
-          className={`absolute inset-x-0 bottom-0 flex flex-col items-center gap-2 p-4 text-center ${bare ? '' : 'bg-gradient-to-t from-white/95 via-white/75 to-transparent pt-12 dark:from-slate-950/95 dark:via-slate-950/70'}`}
+          className={`absolute inset-x-0 bottom-0 flex flex-col items-center gap-2 p-4 text-center ${bare ? '' : 'bg-linear-to-t from-white/95 via-white/75 to-transparent pt-12 dark:from-slate-950/95 dark:via-slate-950/70'}`}
         >
           <StatusPills entry={entry} status={status} theme={theme} />
         </div>

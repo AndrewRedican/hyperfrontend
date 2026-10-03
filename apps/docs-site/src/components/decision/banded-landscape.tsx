@@ -104,29 +104,29 @@ interface CardProps {
 }
 
 const GRID_TRACKS =
-  '[@container_(min-width:600px)]:grid [@container_(min-width:600px)]:[grid-template-columns:132px_minmax(0,1fr)_12px_minmax(0,1fr)_minmax(0,1fr)] [@container_(min-width:600px)]:[column-gap:0px] [@container_(min-width:600px)]:[row-gap:16px] [@container_(min-width:600px)]:items-start'
+  '[@container_(min-width:600px)]:grid [@container_(min-width:600px)]:grid-cols-[132px_minmax(0,1fr)_12px_minmax(0,1fr)_minmax(0,1fr)] [@container_(min-width:600px)]:gap-x-0 [@container_(min-width:600px)]:gap-y-[16px] [@container_(min-width:600px)]:items-start'
 // why: sticky positions against the page scroller rather than the figure, so at narrow widths the band headers floated over the cards below them; block flow cannot overlap
 const STICKY_BAND =
   '[@container_(max-width:599px)]:mt-6 [@container_(max-width:599px)]:border-t [@container_(max-width:599px)]:border-slate-200 dark:[@container_(max-width:599px)]:border-slate-800 [@container_(max-width:599px)]:pt-3'
 const COLUMN_PLACEMENT: Record<string, string> = {
-  'x-a': 'mx-2 [grid-column:2]',
-  'x-b': 'mx-2 [grid-column:4]',
-  'x-c': 'mx-2 [grid-column:5]',
+  'x-a': 'mx-2 col-2',
+  'x-b': 'mx-2 col-4',
+  'x-c': 'mx-2 col-5',
 }
 const ROW_PLACEMENT: Record<string, string> = {
-  'y-r1': '[grid-row:3]',
-  'y-r2': '[grid-row:4]',
-  'y-r3': '[grid-row:5]',
+  'y-r1': 'row-3',
+  'y-r2': 'row-4',
+  'y-r3': 'row-5',
 }
 const ORDER_CARDS = [
-  '[@container_(max-width:599px)]:[order:2]',
-  '[@container_(max-width:599px)]:[order:4]',
-  '[@container_(max-width:599px)]:[order:6]',
+  '[@container_(max-width:599px)]:order-2',
+  '[@container_(max-width:599px)]:order-4',
+  '[@container_(max-width:599px)]:order-6',
 ]
 const ORDER_HEADINGS = [
-  '[@container_(max-width:599px)]:[order:1]',
-  '[@container_(max-width:599px)]:[order:3]',
-  '[@container_(max-width:599px)]:[order:5]',
+  '[@container_(max-width:599px)]:order-1',
+  '[@container_(max-width:599px)]:order-3',
+  '[@container_(max-width:599px)]:order-5',
 ]
 const ANSWER_GROUPS = ['Still standing', 'One constraint away', 'Ruled out several times over']
 const RULER_TIER = 'hidden [@container_(min-width:720px)]:block'
@@ -138,9 +138,9 @@ const COST_TIER = 'mt-2 hidden text-[11px] leading-snug text-slate-500 [@contain
 const CARD_BASE = 'break-inside-avoid rounded-lg border-l-4 p-3 transition-opacity motion-reduce:transition-none'
 const CARD_LIVE = 'border border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-900/40'
 const CARD_CLOSED = 'border border-dashed border-slate-300 bg-transparent opacity-80 dark:border-slate-700'
-const BADGE = 'inline-block rounded px-1.5 py-0.5 text-[11px] font-medium'
+const BADGE = 'inline-block rounded-sm px-1.5 py-0.5 text-[11px] font-medium'
 const SMALL_BUTTON =
-  'rounded border border-slate-200 px-1.5 py-0.5 text-[11px] text-slate-600 hover:border-primary-400 dark:border-slate-700 dark:text-slate-300 dark:hover:border-primary-500'
+  'rounded-sm border border-slate-200 px-1.5 py-0.5 text-[11px] text-slate-600 hover:border-primary-400 dark:border-slate-700 dark:text-slate-300 dark:hover:border-primary-500'
 
 /**
  * Resolves how the answers left each family, so a card behind one answer can be told apart
@@ -237,7 +237,7 @@ function BandHeader({ band, id, axis, live, className }: BandHeaderProps) {
  */
 function MemberChip({ family, ruledOutBy, onSelect }: MemberChipProps) {
   const note = memberNoteFor(family.id)
-  const shell = 'block w-full rounded border border-slate-200 px-1.5 py-1 text-left text-[12px] leading-snug dark:border-slate-800'
+  const shell = 'block w-full rounded-sm border border-slate-200 px-1.5 py-1 text-left text-[12px] leading-snug dark:border-slate-800'
   const body = (
     <>
       <span className={ruledOutBy ? 'text-slate-500 dark:text-slate-400' : 'text-slate-700 dark:text-slate-200'}>
@@ -288,7 +288,7 @@ function Card({ card, verdict, reasons, open, matched, uid, order, onToggle, onP
   const kind = microfrontend ? 'border-l-emerald-600 dark:border-l-emerald-400' : 'border-l-slate-400 dark:border-l-slate-500'
   const accent = verdict.state === 'closed' ? 'border-l-slate-300 dark:border-l-slate-700' : kind
   const ring = hyperfrontend ? 'ring-2 ring-primary-500 dark:ring-primary-400' : ''
-  const flash = matched ? 'outline outline-2 outline-offset-2 outline-amber-500 dark:outline-amber-400' : ''
+  const flash = matched ? 'outline-solid outline-2 outline-offset-2 outline-amber-500 dark:outline-amber-400' : ''
   const chips = open ? CHIPS_OPEN : card.members.length > 1 ? CHIPS_CLUSTER : CHIPS_SOLO
   const fit = verdict.state === 'closed' ? 'ruled out' : verdict.state === 'partly' ? 'partly ruled out' : 'still fits'
   const plural = card.members.length === 1 ? 'approach' : 'approaches'
@@ -467,7 +467,7 @@ export function BandedLandscape({ result, onSelect }: BandedLandscapeProps) {
       : `${closed.map((band) => `${band.label} is now closed.`).join(' ')} ${result.eliminated.length} approaches ruled out. ${result.surviving.length} still fit, in ${openCells.length} of ${COLUMN_BANDS.length * ROW_BANDS.length} combinations.`.trim()
 
   return (
-    <figure className="not-prose mt-6 [container-type:inline-size]">
+    <figure className="not-prose mt-6 @container">
       <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
         <div className="min-w-0">
           <p className="text-sm font-medium text-slate-900 dark:text-white">{framing}</p>
@@ -481,7 +481,7 @@ export function BandedLandscape({ result, onSelect }: BandedLandscapeProps) {
             type="search"
             value={filter}
             onChange={(event) => setFilter(event.target.value)}
-            className="w-40 rounded border border-slate-300 bg-white px-2 py-1 text-xs text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-white"
+            className="w-40 rounded-sm border border-slate-300 bg-white px-2 py-1 text-xs text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-white"
           />
         </label>
       </div>
@@ -494,9 +494,7 @@ export function BandedLandscape({ result, onSelect }: BandedLandscapeProps) {
           openButton.current?.focus()
         }}
       >
-        <div
-          className={`${RULER_TIER} relative mx-2 mb-1 h-3 border-b border-slate-200 [grid-column:2/-1] [grid-row:1] dark:border-slate-800`}
-        >
+        <div className={`${RULER_TIER} relative mx-2 mb-1 h-3 border-b border-slate-200 col-[2/-1] row-1 dark:border-slate-800`}>
           {families.map((family) => (
             <span
               key={family.id}
@@ -505,7 +503,7 @@ export function BandedLandscape({ result, onSelect }: BandedLandscapeProps) {
             />
           ))}
         </div>
-        <div className={`${RULER_TIER} relative mr-2 w-px self-stretch justify-self-end [grid-column:1] [grid-row:3/span_3]`}>
+        <div className={`${RULER_TIER} relative mr-2 w-px self-stretch justify-self-end col-1 row-[3/span_3]`}>
           {families.map((family) => (
             <span
               key={family.id}
@@ -521,7 +519,7 @@ export function BandedLandscape({ result, onSelect }: BandedLandscapeProps) {
             id={`${uid}-${band.id}`}
             axis="Y"
             live={liveIn(band)}
-            className={`mr-2 hidden pr-3 [grid-column:1] [@container_(min-width:600px)]:block ${ROW_PLACEMENT[band.id]}`}
+            className={`mr-2 hidden pr-3 col-1 [@container_(min-width:600px)]:block ${ROW_PLACEMENT[band.id]}`}
           />
         ))}
 
@@ -532,7 +530,7 @@ export function BandedLandscape({ result, onSelect }: BandedLandscapeProps) {
               id={`${uid}-${column.band.id}`}
               axis="X"
               live={liveIn(column.band)}
-              className={`${byAnswers ? 'hidden [@container_(min-width:600px)]:block' : `block ${STICKY_BAND}`} mb-2 py-2 [grid-row:2] ${COLUMN_PLACEMENT[column.band.id]}`}
+              className={`${byAnswers ? 'hidden [@container_(min-width:600px)]:block' : `block ${STICKY_BAND}`} mb-2 py-2 row-2 ${COLUMN_PLACEMENT[column.band.id]}`}
             />
             {column.cells.map((cell) => (
               <section
@@ -577,7 +575,7 @@ export function BandedLandscape({ result, onSelect }: BandedLandscapeProps) {
             </p>
             {column.band.id === COLUMN_BANDS[0].id ? (
               <div
-                className={`${byAnswers ? 'hidden [@container_(min-width:600px)]:block' : 'block'} my-3 border-y-4 border-double border-slate-400 py-2 [grid-column:3] [grid-row:2/span_4] [@container_(min-width:600px)]:my-0 [@container_(min-width:600px)]:ml-1 [@container_(min-width:600px)]:h-full [@container_(min-width:600px)]:border-y-0 [@container_(min-width:600px)]:border-l-4 [@container_(min-width:600px)]:py-0 dark:border-slate-500`}
+                className={`${byAnswers ? 'hidden [@container_(min-width:600px)]:block' : 'block'} my-3 border-y-4 border-double border-slate-400 py-2 col-3 row-[2/span_4] [@container_(min-width:600px)]:my-0 [@container_(min-width:600px)]:ml-1 [@container_(min-width:600px)]:h-full [@container_(min-width:600px)]:border-y-0 [@container_(min-width:600px)]:border-l-4 [@container_(min-width:600px)]:py-0 dark:border-slate-500`}
               >
                 <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-600 [@container_(min-width:600px)]:hidden dark:text-slate-300">
                   The cliff: no gradual path. Crossing here flips contract drift from structurally impossible to permanent, in one step.
