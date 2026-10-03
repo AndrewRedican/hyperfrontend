@@ -118,9 +118,9 @@ export default function CoreConceptsPage() {
         <H2 className="text-2xl font-bold text-slate-900 dark:text-white">Contracts</H2>
         <p className="mt-3 text-slate-600 dark:text-slate-400">
           <strong className="text-slate-900 dark:text-white">Contracts</strong> define the messages a feature can send and receive. They
-          specify <code className="rounded bg-slate-100 px-1 py-0.5 text-slate-700 dark:bg-slate-800 dark:text-slate-300">emitted</code>{' '}
+          specify <code className="rounded-sm bg-slate-100 px-1 py-0.5 text-slate-700 dark:bg-slate-800 dark:text-slate-300">emitted</code>{' '}
           actions (messages this context sends) and{' '}
-          <code className="rounded bg-slate-100 px-1 py-0.5 text-slate-700 dark:bg-slate-800 dark:text-slate-300">accepted</code> actions
+          <code className="rounded-sm bg-slate-100 px-1 py-0.5 text-slate-700 dark:bg-slate-800 dark:text-slate-300">accepted</code> actions
           (messages this context receives), with optional JSON Schema validation.
         </p>
         <CodeBlock

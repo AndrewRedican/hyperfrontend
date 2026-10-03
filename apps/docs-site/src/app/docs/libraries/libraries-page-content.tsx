@@ -238,7 +238,7 @@ export function LibrariesPageContent({ libraries }: LibrariesPageContentProps) {
           onChange={handleSearchChange}
           placeholder="Search packages by name, description, or keyword..."
           aria-label="Search packages"
-          className="w-full rounded-lg border border-slate-200 bg-white py-3 pl-10 pr-10 text-sm text-slate-900 placeholder-slate-400 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-primary-500 dark:border-slate-700 dark:bg-slate-900 dark:text-white"
+          className="w-full rounded-lg border border-slate-200 bg-white py-3 pl-10 pr-10 text-sm text-slate-900 placeholder-slate-400 focus:border-transparent focus:outline-hidden focus:ring-2 focus:ring-primary-500 dark:border-slate-700 dark:bg-slate-900 dark:text-white"
         />
         {searchQuery && (
           <button

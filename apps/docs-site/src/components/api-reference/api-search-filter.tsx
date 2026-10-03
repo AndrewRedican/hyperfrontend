@@ -91,7 +91,7 @@ export function ApiSearchFilter({ onSearch, onFilterChange, counts }: ApiSearchF
           value={query}
           onChange={handleSearchChange}
           placeholder="Search API..."
-          className="w-full pl-10 pr-10 py-2 text-sm border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+          className="w-full pl-10 pr-10 py-2 text-sm border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-hidden focus:ring-2 focus:ring-primary-500 focus:border-transparent"
         />
         {query && (
           <button
@@ -176,7 +176,7 @@ function FilterButton({ active, onClick, color, children }: FilterButtonProps) {
   }
 
   return (
-    <button onClick={onClick} className={`px-2 py-0.5 text-xs font-medium rounded border transition-colors ${colorClasses[color]}`}>
+    <button onClick={onClick} className={`px-2 py-0.5 text-xs font-medium rounded-sm border transition-colors ${colorClasses[color]}`}>
       {children}
     </button>
   )

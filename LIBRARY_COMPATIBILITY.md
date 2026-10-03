@@ -201,7 +201,7 @@ flowchart TB
 | `@hyperfrontend/builder` | `0.3.0` |
 | `@hyperfrontend/cryptography` | `1.1.0` |
 | `@hyperfrontend/data-utils` | `1.0.1` |
-| `@hyperfrontend/features` | `0.11.1` |
+| `@hyperfrontend/features` | `0.11.2` |
 | `@hyperfrontend/function-utils` | `1.0.1` |
 | `@hyperfrontend/immutable-api-utils` | `1.0.1` |
 | `@hyperfrontend/json-utils` | `1.0.1` |

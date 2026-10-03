@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.11.2](https://github.com/AndrewRedican/hyperfrontend/compare/f65ad13fb8e8290b672395bad080716f97b8c849...93c710ebed44ae1c891f829cbc8860547bb1c287) - 2026-10-03
+
+### Bug Fixes
+
+- declare the shell source entry as its root export
+
 ## [0.11.1](https://github.com/AndrewRedican/hyperfrontend/compare/1d0a199aea462d6fe6bd1f889191274026d1d896...5c5b6e17fffdbb24234b5eaf5929d48f6d036e32) - 2026-10-02
 
 ### Bug Fixes

@@ -110,7 +110,7 @@ export function Questionnaire({ resultRoute }: QuestionnaireProps) {
 
   return (
     <div className="mt-8">
-      <div className="rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900/40">
+      <div className="rounded-2xl border border-slate-200 bg-white shadow-xs dark:border-slate-800 dark:bg-slate-900/40">
         <div className="flex items-center gap-4 border-b border-slate-200 p-5 dark:border-slate-800">
           <ProgressRing value={answeredCount} total={max(sequence.length, answeredCount)} label="Assessment progress" />
           <p className="min-w-0 flex-1 text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
@@ -129,7 +129,7 @@ export function Questionnaire({ resultRoute }: QuestionnaireProps) {
 
         {everythingAnswered && position >= sequence.length - 1 ? (
           <div className="p-8 text-center">
-            <h2 ref={headingRef} tabIndex={-1} className="text-xl font-bold text-slate-900 outline-none dark:text-white">
+            <h2 ref={headingRef} tabIndex={-1} className="text-xl font-bold text-slate-900 outline-hidden dark:text-white">
               That is everything we need
             </h2>
             <p className="mx-auto mt-2 max-w-md text-sm text-slate-600 dark:text-slate-400">
@@ -153,7 +153,7 @@ export function Questionnaire({ resultRoute }: QuestionnaireProps) {
             <h2
               ref={headingRef}
               tabIndex={-1}
-              className="text-lg font-semibold leading-snug text-slate-900 outline-none dark:text-white sm:text-xl"
+              className="text-lg font-semibold leading-snug text-slate-900 outline-hidden dark:text-white sm:text-xl"
             >
               {question.prompt}
             </h2>

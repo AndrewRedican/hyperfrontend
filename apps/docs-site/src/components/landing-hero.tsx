@@ -28,9 +28,9 @@ export interface LandingHeroProps {
 export function LandingHero({ downloads }: LandingHeroProps) {
   const { activeDemo, setActiveDemo } = useDemoStage()
   return (
-    <section className="relative min-h-[calc(100vh-4rem)] overflow-hidden bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-900 dark:via-slate-900 dark:to-slate-800">
+    <section className="relative min-h-[calc(100vh-4rem)] overflow-hidden bg-linear-to-br from-slate-50 via-white to-slate-100 dark:from-slate-900 dark:via-slate-900 dark:to-slate-800">
       {/* Subtle background pattern */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,rgba(0,0,0,0.03)_1px,transparent_0)] bg-[length:24px_24px] dark:bg-[radial-gradient(circle_at_1px_1px,rgba(255,255,255,0.03)_1px,transparent_0)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,rgba(0,0,0,0.03)_1px,transparent_0)] bg-size-[24px_24px] dark:bg-[radial-gradient(circle_at_1px_1px,rgba(255,255,255,0.03)_1px,transparent_0)]" />
 
       {/* Composability matrix — a 4D micro-frontend lattice diving through nested layers, tinted toward the staged demo's ambient hue */}
       <TesseractBackground dive accent={activeDemo ? getDemoTheme(activeDemo.slug).accent : undefined} />

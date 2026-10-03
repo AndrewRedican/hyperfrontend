@@ -103,7 +103,7 @@ export function ShareMenu({ path, title, pageLine }: ShareMenuProps) {
   }
 
   const itemClasses =
-    'flex min-h-[44px] w-full items-center gap-3 px-4 text-left text-sm text-slate-700 hover:bg-slate-50 focus:bg-slate-50 focus:outline-none dark:text-slate-300 dark:hover:bg-slate-800 dark:focus:bg-slate-800'
+    'flex min-h-[44px] w-full items-center gap-3 px-4 text-left text-sm text-slate-700 hover:bg-slate-50 focus:bg-slate-50 focus:outline-hidden dark:text-slate-300 dark:hover:bg-slate-800 dark:focus:bg-slate-800'
 
   return (
     <div ref={containerRef} className="relative inline-block">
@@ -127,7 +127,7 @@ export function ShareMenu({ path, title, pageLine }: ShareMenuProps) {
           role="list"
           aria-label="Share this page"
           style={placement.style}
-          className="absolute z-[80] w-60 max-w-[calc(100vw-1rem)] overflow-hidden rounded-xl border border-slate-200 bg-white py-1 shadow-xl dark:border-slate-700 dark:bg-slate-900"
+          className="absolute z-80 w-60 max-w-[calc(100vw-1rem)] overflow-hidden rounded-xl border border-slate-200 bg-white py-1 shadow-xl dark:border-slate-700 dark:bg-slate-900"
         >
           {canNativeShare ? (
             <li>

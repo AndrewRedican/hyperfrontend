@@ -106,8 +106,9 @@ function buildShellPackageJson(config: ResolvedFeatureConfig): string {
     name: `${config.name}-shell`,
     version: config.version,
     sideEffects: false,
+    // why: The builder reads a source manifest's exports as source entries and maps each onto what it emitted for that module, omitting any key whose path is not a `./src/…/index` module; declaring the staged entry here is what gives the published shell its root export.
     exports: {
-      '.': { types: './dist/index.d.ts', import: './dist/index.js' },
+      '.': `./${ENTRY_PATH}`,
       './package.json': './package.json',
     },
   }

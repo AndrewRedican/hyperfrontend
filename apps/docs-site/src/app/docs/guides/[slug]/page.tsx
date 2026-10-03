@@ -113,7 +113,7 @@ export default async function GuidePage({ params }: GuidePageProps) {
                   {prerequisiteKnowledge.map((item) => (
                     <li
                       key={item}
-                      className="[&_a:hover]:underline [&_a]:text-primary-600 dark:[&_a]:text-primary-400 [&_code]:rounded [&_code]:bg-slate-200/70 [&_code]:px-1 [&_code]:py-0.5 [&_code]:font-mono [&_code]:text-xs dark:[&_code]:bg-slate-700/70"
+                      className="[&_a:hover]:underline [&_a]:text-primary-600 dark:[&_a]:text-primary-400 [&_code]:rounded-sm [&_code]:bg-slate-200/70 [&_code]:px-1 [&_code]:py-0.5 [&_code]:font-mono [&_code]:text-xs dark:[&_code]:bg-slate-700/70"
                       dangerouslySetInnerHTML={{ __html: item }}
                     />
                   ))}

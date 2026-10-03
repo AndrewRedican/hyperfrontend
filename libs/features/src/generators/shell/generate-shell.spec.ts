@@ -220,6 +220,12 @@ describe('generateShell', () => {
     expect(parse(stage().read('package.json', 'utf-8') ?? '')).toEqual(expect.objectContaining({ name: 'clock-shell', version: '1.0.0' }))
   })
 
+  it('declares the staged source entry as the root export the builder maps onto its bundles', () => {
+    expect(parse(stage().read('package.json', 'utf-8') ?? '')).toEqual(
+      expect.objectContaining({ exports: { '.': './src/index.ts', './package.json': './package.json' } })
+    )
+  })
+
   it('declares no module type, so the published require entry stays CommonJS', () => {
     expect(parse(stage().read('package.json', 'utf-8') ?? '')).not.toHaveProperty('type')
   })

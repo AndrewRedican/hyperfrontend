@@ -122,7 +122,7 @@ export function DownloadsDashboard({ snapshot }: DownloadsDashboardProps) {
           id="downloads-focus"
           value={focused ?? ''}
           onChange={(event) => setFocus(event.target.value === '' ? null : event.target.value)}
-          className="h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-primary-500 dark:border-slate-700 dark:bg-slate-900 dark:text-white"
+          className="h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 focus:border-transparent focus:outline-hidden focus:ring-2 focus:ring-primary-500 dark:border-slate-700 dark:bg-slate-900 dark:text-white"
         >
           <option value="">Whole ecosystem</option>
           {snapshot.packages.map((entry) => (

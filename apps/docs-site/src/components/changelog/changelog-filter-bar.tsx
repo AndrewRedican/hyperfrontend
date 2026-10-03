@@ -18,7 +18,7 @@ export interface ChangelogFilterBarProps {
 
 /** The shared look of the three fields. */
 const FIELD_CLASSES =
-  'h-10 rounded-lg border border-slate-200 bg-white text-sm text-slate-900 placeholder-slate-400 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-primary-500 dark:border-slate-700 dark:bg-slate-900 dark:text-white'
+  'h-10 rounded-lg border border-slate-200 bg-white text-sm text-slate-900 placeholder-slate-400 focus:border-transparent focus:outline-hidden focus:ring-2 focus:ring-primary-500 dark:border-slate-700 dark:bg-slate-900 dark:text-white'
 
 /**
  * One row of controls over a release history: a search that reads words and

@@ -39,7 +39,7 @@ export function HighlightMatch({ text, query }: HighlightMatchProps) {
     <>
       {parts.map((part, i) =>
         part.toLowerCase() === trimmed.toLowerCase() ? (
-          <mark key={i} className="bg-yellow-200 dark:bg-yellow-800 rounded-sm px-0.5">
+          <mark key={i} className="bg-yellow-200 dark:bg-yellow-800 rounded-xs px-0.5">
             {part}
           </mark>
         ) : (

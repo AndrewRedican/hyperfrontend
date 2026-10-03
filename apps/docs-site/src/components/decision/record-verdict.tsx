@@ -75,9 +75,9 @@ export function RecordVerdict({ result }: RecordVerdictProps) {
         {/* why: the mark fills the container height on wide screens so the verdict reads before any text does, and caps to a badge on narrow ones */}
         <div className={`flex shrink-0 items-stretch justify-center px-6 py-5 sm:py-6 ${palette.panel}`}>
           {tone === 'blocked' ? (
-            <WarningIcon className={`h-14 w-14 self-center sm:h-auto sm:min-h-[7.5rem] sm:w-20 sm:self-stretch ${palette.icon}`} />
+            <WarningIcon className={`h-14 w-14 self-center sm:h-auto sm:min-h-30 sm:w-20 sm:self-stretch ${palette.icon}`} />
           ) : (
-            <TickIcon className={`h-14 w-14 self-center sm:h-auto sm:min-h-[7.5rem] sm:w-20 sm:self-stretch ${palette.icon}`} />
+            <TickIcon className={`h-14 w-14 self-center sm:h-auto sm:min-h-30 sm:w-20 sm:self-stretch ${palette.icon}`} />
           )}
         </div>
         <div className="min-w-0 flex-1 px-6 py-5 sm:pl-0 sm:pr-7">

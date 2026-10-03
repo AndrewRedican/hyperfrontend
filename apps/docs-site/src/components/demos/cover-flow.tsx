@@ -299,7 +299,7 @@ export function CoverFlow({ entries, onShell, onCentered, onExpandedChange }: Co
         aria-roledescription="carousel"
         aria-label="Demo gallery"
         tabIndex={0}
-        className={`relative w-full select-none outline-none focus-visible:ring-2 focus-visible:ring-primary-500 ${vertical ? 'h-[30rem]' : 'h-96 touch-none'}`}
+        className={`relative w-full select-none outline-hidden focus-visible:ring-2 focus-visible:ring-primary-500 ${vertical ? 'h-120' : 'h-96 touch-none'}`}
         // why: Perspective makes this container the containing block for fixed descendants, so it has to lift while the centered card is stretched over the viewport.
         style={expanded ? undefined : { perspective: '1200px' }}
         onPointerDown={onPointerDown}
@@ -406,7 +406,7 @@ function AmbientGlow({ entries, position }: AmbientGlowProps) {
         return (
           <div key={entry.slug} className="absolute left-1/2 top-1/2" style={{ opacity: strength }}>
             <div
-              className={`absolute h-[24rem] w-[24rem] -translate-x-1/2 -translate-y-1/2 rounded-full blur-3xl sm:h-[28rem] sm:w-[36rem] ${theme.glowOuter}`}
+              className={`absolute h-96 w-[24rem] -translate-x-1/2 -translate-y-1/2 rounded-full blur-3xl sm:h-112 sm:w-xl ${theme.glowOuter}`}
             />
             <div
               className={`absolute h-56 w-56 -translate-x-1/2 -translate-y-1/2 rounded-full blur-2xl sm:h-72 sm:w-72 ${theme.glowCore}`}
@@ -480,7 +480,7 @@ function CoverFlowCard({
     : `translate(-50%, -50%) translateX(${translate}%) rotateY(${max(-38, min(38, -offset * 32))}deg) translateZ(${-distance * 140}px)`
   return (
     <div
-      className={expanded ? 'fixed inset-0 z-[200]' : 'absolute left-1/2 top-1/2 aspect-square w-72 sm:w-80'}
+      className={expanded ? 'fixed inset-0 z-200' : 'absolute left-1/2 top-1/2 aspect-square w-72 sm:w-80'}
       style={
         expanded
           ? undefined
@@ -576,7 +576,7 @@ function PagerFallback({ entries, index, live, onSelect, onShell }: PagerFallbac
       <div className="relative aspect-square w-72 sm:w-80">
         <div
           aria-hidden
-          className={`pointer-events-none absolute left-1/2 top-1/2 h-[22rem] w-[22rem] -translate-x-1/2 -translate-y-1/2 rounded-full blur-3xl ${getDemoTheme(entry.slug).glowOuter}`}
+          className={`pointer-events-none absolute left-1/2 top-1/2 h-88 w-88 -translate-x-1/2 -translate-y-1/2 rounded-full blur-3xl ${getDemoTheme(entry.slug).glowOuter}`}
         />
         {live && entry.featureUrl ? (
           <div className="relative h-full w-full overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-700">

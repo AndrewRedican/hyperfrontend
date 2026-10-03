@@ -94,7 +94,7 @@ export function GuideFilterBar({ filter, packageOptions, presentTypes, resultCou
           onChange={(event) => setDraft(event.target.value)}
           placeholder="Search guides by title, package, or what they cover"
           aria-label="Search guides"
-          className="w-full rounded-lg border border-slate-200 bg-white py-2.5 pl-10 pr-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-200 dark:border-slate-700 dark:bg-slate-900 dark:text-white dark:placeholder:text-slate-500 dark:focus:border-primary-600 dark:focus:ring-primary-900"
+          className="w-full rounded-lg border border-slate-200 bg-white py-2.5 pl-10 pr-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-primary-400 focus:outline-hidden focus:ring-2 focus:ring-primary-200 dark:border-slate-700 dark:bg-slate-900 dark:text-white dark:placeholder:text-slate-500 dark:focus:border-primary-600 dark:focus:ring-primary-900"
         />
       </div>
 

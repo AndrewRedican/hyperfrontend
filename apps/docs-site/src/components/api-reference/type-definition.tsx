@@ -39,7 +39,7 @@ export function TypeDefinition({ node, searchQuery = '', level = 3 }: TypeDefini
     <div className="pt-8 pb-4 first:pt-4 border-b border-slate-200 dark:border-slate-800 last:border-0" id={`api-${node.name}`}>
       <div className="flex flex-wrap items-start gap-2 group">
         <AnchorLink id={`api-${node.name}`} />
-        <span className={`api-kind px-2 py-0.5 font-medium rounded ${kindColor} shrink-0`}>{kindLabel}</span>
+        <span className={`api-kind px-2 py-0.5 font-medium rounded-sm ${kindColor} shrink-0`}>{kindLabel}</span>
         <Symbol className="api-symbol min-w-0 flex-auto text-slate-900 dark:text-white">
           <HighlightMatch text={node.name} query={searchQuery} />
         </Symbol>

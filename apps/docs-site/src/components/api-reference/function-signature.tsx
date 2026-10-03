@@ -47,7 +47,7 @@ export function FunctionSignature({ node, searchQuery = '', level = 3 }: Functio
       {/* why: the row folds rather than squeezes, so a signature wider than the room beside its badge drops under the badge with the whole column to fold in, and its name stays whole */}
       <div className="flex flex-wrap items-start gap-2 group">
         <AnchorLink id={`api-${node.name}`} />
-        <span className="api-kind px-2 py-0.5 font-medium rounded bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-400 shrink-0">
+        <span className="api-kind px-2 py-0.5 font-medium rounded-sm bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-400 shrink-0">
           function
         </span>
         {/* why: a signature folds at its own spaces; breaking it anywhere split identifiers across lines */}

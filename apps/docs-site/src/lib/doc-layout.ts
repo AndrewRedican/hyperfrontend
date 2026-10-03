@@ -2,7 +2,7 @@ import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 
 /**
  * Viewport width, in pixels, at or above which the documentation shell stops
- * growing. Matches the `ultra` screen in the Tailwind config.
+ * growing. Matches the `--breakpoint-ultra` theme variable in `globals.css`.
  *
  * Past this width a page gains nothing from spreading further: the reading
  * measure is already set, and a code block or a table wider than this is

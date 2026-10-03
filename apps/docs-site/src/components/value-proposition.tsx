@@ -379,7 +379,7 @@ export function ValueProposition({ downloads }: ValuePropositionProps) {
         {/* Left arrow - visible only on larger screens */}
         <button
           onClick={goToPrevious}
-          className="absolute -left-10 top-1/2 hidden -translate-y-1/2 rounded-full p-1.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 dark:hover:bg-slate-800 dark:hover:text-slate-300 lg:block"
+          className="absolute -left-10 top-1/2 hidden -translate-y-1/2 rounded-full p-1.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-primary-500 dark:hover:bg-slate-800 dark:hover:text-slate-300 lg:block"
           aria-label="Previous benefit"
         >
           <ChevronLeftIcon className="h-5 w-5" />
@@ -388,7 +388,7 @@ export function ValueProposition({ downloads }: ValuePropositionProps) {
         {/* Right arrow - visible only on larger screens */}
         <button
           onClick={goToNext}
-          className="absolute -right-10 top-1/2 hidden -translate-y-1/2 rounded-full p-1.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 dark:hover:bg-slate-800 dark:hover:text-slate-300 lg:block"
+          className="absolute -right-10 top-1/2 hidden -translate-y-1/2 rounded-full p-1.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-primary-500 dark:hover:bg-slate-800 dark:hover:text-slate-300 lg:block"
           aria-label="Next benefit"
         >
           <ChevronRightIcon className="h-5 w-5" />
@@ -399,7 +399,7 @@ export function ValueProposition({ downloads }: ValuePropositionProps) {
 
         {/* Narrative content with fixed height to prevent layout shift */}
         <div
-          className={`flex h-[6.5rem] items-center transition-opacity duration-300 sm:h-[5rem] lg:h-[4.5rem] ${isTransitioning ? 'opacity-0' : 'opacity-100'}`}
+          className={`flex h-26 items-center transition-opacity duration-300 sm:h-20 lg:h-18 ${isTransitioning ? 'opacity-0' : 'opacity-100'}`}
         >
           <p className="line-clamp-4 text-base leading-relaxed text-slate-600 dark:text-slate-400">{renderNarrative(current)}</p>
         </div>
@@ -415,7 +415,7 @@ export function ValueProposition({ downloads }: ValuePropositionProps) {
             <button
               key={i}
               onClick={() => goToSlide(i)}
-              className={`h-1.5 rounded-full transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 ${
+              className={`h-1.5 rounded-full transition-all focus:outline-hidden focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 ${
                 i === currentSet ? 'w-4 bg-primary-500' : 'w-1.5 bg-slate-300 hover:bg-slate-400 dark:bg-slate-600 dark:hover:bg-slate-500'
               }`}
               aria-label={`View benefit ${i + 1}`}
@@ -542,7 +542,7 @@ function InstallCommand() {
         <code className="text-slate-700 dark:text-slate-300">npm install @hyperfrontend/features</code>
         <button
           onClick={handleCopy}
-          className="ml-2 rounded p-1 text-slate-400 transition-colors hover:bg-slate-200 hover:text-slate-600 dark:hover:bg-slate-700 dark:hover:text-slate-300"
+          className="ml-2 rounded-sm p-1 text-slate-400 transition-colors hover:bg-slate-200 hover:text-slate-600 dark:hover:bg-slate-700 dark:hover:text-slate-300"
           aria-label="Copy to clipboard"
         >
           {copied ? <CheckIcon className="h-4 w-4 text-green-500" /> : <CopyIcon className="h-4 w-4" />}

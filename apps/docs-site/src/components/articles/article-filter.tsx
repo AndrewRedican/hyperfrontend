@@ -123,7 +123,7 @@ export function ArticleFilter({ terms, selected, onChange }: ArticleFilterProps)
       {/* why: the border belongs to the whole field, chips included, and a click anywhere in it goes to the text input, which is what makes the chips read as being inside one control */}
       <div
         onClick={() => inputRef.current?.focus()}
-        className="flex min-h-[2.75rem] flex-wrap items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-sm transition-colors focus-within:border-primary-500 focus-within:ring-2 focus-within:ring-primary-500 dark:border-slate-700 dark:bg-slate-900"
+        className="flex min-h-11 flex-wrap items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-sm transition-colors focus-within:border-primary-500 focus-within:ring-2 focus-within:ring-primary-500 dark:border-slate-700 dark:bg-slate-900"
       >
         <FilterIcon className="ml-1 h-4 w-4 shrink-0 text-slate-400" />
         {chips.map((term) => (
@@ -164,7 +164,7 @@ export function ArticleFilter({ terms, selected, onChange }: ArticleFilterProps)
           }}
           onFocus={() => setOpen(true)}
           onKeyDown={handleKeyDown}
-          className="min-w-[8rem] flex-1 bg-transparent px-1 py-1 text-sm text-slate-900 placeholder-slate-400 focus:outline-none dark:text-white"
+          className="min-w-32 flex-1 bg-transparent px-1 py-1 text-sm text-slate-900 placeholder-slate-400 focus:outline-hidden dark:text-white"
         />
         {selected.length > 0 ? (
           <button

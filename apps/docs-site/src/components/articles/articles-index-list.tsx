@@ -117,7 +117,7 @@ function ArticleCard({ article }: ArticleCardProps) {
       className="group overflow-hidden rounded-xl border border-slate-200 bg-white transition-shadow hover:shadow-lg dark:border-slate-800 dark:bg-slate-900"
     >
       {article.heroImage ? (
-        <img src={article.heroImage} alt="" className="aspect-[2/1] w-full object-cover sm:aspect-[3/1]" loading="lazy" />
+        <img src={article.heroImage} alt="" className="aspect-2/1 w-full object-cover sm:aspect-3/1" loading="lazy" />
       ) : null}
       <div className="p-6 sm:p-8">
         <div className="flex flex-wrap items-center gap-2">

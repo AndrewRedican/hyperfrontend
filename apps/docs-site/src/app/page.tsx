@@ -38,7 +38,7 @@ export default function HomePage() {
               <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-3xl">How it works</h2>
               <p className="mt-4 text-base text-slate-600 dark:text-slate-400">
                 Each feature operates in its own iframe with standardized communication via the{' '}
-                <code className="rounded bg-slate-100 px-1.5 py-0.5 font-mono text-sm dark:bg-slate-800">@hyperfrontend/nexus</code>{' '}
+                <code className="rounded-sm bg-slate-100 px-1.5 py-0.5 font-mono text-sm dark:bg-slate-800">@hyperfrontend/nexus</code>{' '}
                 library. Messages are routed through a broker-channel architecture with optional encryption.
               </p>
             </div>

@@ -9,7 +9,7 @@ export const NAV_BREAKPOINT = 1024
 
 /**
  * Viewport width, in pixels, at or above which a document's index stands beside
- * it as a third column. Matches the `rail` screen in the Tailwind config.
+ * it as a third column. Matches the `--breakpoint-rail` theme variable in `globals.css`.
  *
  * The docs shell is capped at `max-w-7xl`, so a third column is taken out of
  * the document's own width rather than added beside it. Below this width the

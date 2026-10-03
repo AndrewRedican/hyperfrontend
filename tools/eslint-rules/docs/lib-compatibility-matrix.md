@@ -4,7 +4,9 @@ Own the whole of the root `LIBRARY_COMPATIBILITY.md`, generating it from each pa
 
 ## Rule Details
 
-The compatibility matrix is a generated document, not a hand-maintained one. This rule derives the document the workspace should hold, compares it with the file on disk, and reports one error when the two differ. The report carries a fix that replaces the entire file, so `nx lint:all` (or `nx lint @hyperfrontend/workspace --fix`) regenerates it and the document cannot drift.
+The compatibility matrix is a generated document, not a hand-maintained one. This rule derives the document the workspace should hold (through `buildCompatibilityDocument` from `@hyperfrontend/workspace`, the one generator every consumer shares), compares it with the file on disk, and reports one error when the two differ. The report carries a fix that replaces the entire file, so `nx lint:all` (or `nx lint @hyperfrontend/workspace --fix`) regenerates it after a hand edit to a manifest.
+
+A version bump edits manifests after lint has run, so the version flow regenerates the document itself through the same generator and commits it with the bump. The rule is the check; the version flow is the other writer. Neither leaves the document a bump behind.
 
 The rule only runs on a file named `LIBRARY_COMPATIBILITY.md` that sits in the Nx workspace root. A copy anywhere else is ignored.
 

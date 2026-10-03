@@ -67,11 +67,11 @@ export function ExampleBlock({ code, label }: ExampleBlockProps) {
     <div className="mt-3 relative group">
       {label && <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">{label}</p>}
       <div className="relative">
-        <div className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 [@media(hover:none)]:opacity-100 transition-opacity">
           <button
             type="button"
             onClick={handleCopy}
-            className="copy-control px-2 py-1 text-xs bg-slate-700 hover:bg-slate-600 text-slate-200 rounded transition-colors"
+            className="copy-control px-2 py-1 text-xs bg-slate-700 hover:bg-slate-600 text-slate-200 rounded-sm transition-colors"
             aria-label="Copy code"
           >
             {copied ? 'Copied!' : 'Copy'}

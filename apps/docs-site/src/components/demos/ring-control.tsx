@@ -61,7 +61,7 @@ export function RingControl({ titles, position, centered, onBegin, onMove, onEnd
       aria-valuenow={centered}
       aria-valuetext={titles[centered]}
       tabIndex={0}
-      className="absolute right-0 top-1/2 z-[120] h-56 w-10 -translate-y-1/2 cursor-ns-resize touch-none outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+      className="absolute right-0 top-1/2 z-120 h-56 w-10 -translate-y-1/2 cursor-ns-resize touch-none outline-hidden focus-visible:ring-2 focus-visible:ring-primary-500"
       onPointerDown={onBegin}
       onPointerMove={onMove}
       onPointerUp={onEnd}

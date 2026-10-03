@@ -184,7 +184,7 @@ export function DemoShowcase({ entries, cycleDuration = 20000, fastForwardDurati
         {/* why: A z-index makes it a stacking context too, which would trap the stretched layer inside this card's depth — the site header would paint over the scene and over its own close control, with no way out on a device that has no Escape key. */}
         <div
           className={`relative flex flex-col items-center justify-center gap-4 rounded-2xl bg-slate-900/5 p-6 dark:bg-white/5 lg:p-8 ${
-            expanded ? '' : 'z-10 backdrop-blur-sm'
+            expanded ? '' : 'z-10 backdrop-blur-xs'
           }`}
         >
           {/* note: Only the staged layer mounts its live embed — losing the stage unmounts it, so its session tears down gracefully instead of running off-screen. */}
@@ -198,7 +198,7 @@ export function DemoShowcase({ entries, cycleDuration = 20000, fastForwardDurati
                   inert={!staged}
                   className={
                     overlay
-                      ? 'fixed inset-0 z-[200]'
+                      ? 'fixed inset-0 z-200'
                       : `absolute inset-0 transition-opacity duration-500 ${staged ? 'opacity-100' : 'pointer-events-none opacity-0'}`
                   }
                 >
@@ -224,7 +224,7 @@ export function DemoShowcase({ entries, cycleDuration = 20000, fastForwardDurati
               )
             })}
           </div>
-          <div className="flex min-h-[4.5rem] w-full max-w-md flex-col items-center justify-center text-center">
+          <div className="flex min-h-18 w-full max-w-md flex-col items-center justify-center text-center">
             {active.featureUrl ? (
               <p className="text-xs text-slate-600 dark:text-slate-400">
                 {embedStatus === 'live' ? (
@@ -306,7 +306,7 @@ function ShowcaseAmbient({ entries, activeIndex }: ShowcaseAmbientProps) {
             className={`absolute left-1/2 top-1/2 transition-opacity duration-1000 ${index === activeIndex ? 'opacity-100' : 'opacity-0'}`}
           >
             <div
-              className={`absolute h-[24rem] w-[24rem] -translate-x-1/2 -translate-y-1/2 rounded-full blur-3xl sm:h-[28rem] sm:w-[36rem] ${theme.glowOuter}`}
+              className={`absolute h-96 w-[24rem] -translate-x-1/2 -translate-y-1/2 rounded-full blur-3xl sm:h-112 sm:w-xl ${theme.glowOuter}`}
             />
             <div
               className={`absolute h-56 w-56 -translate-x-1/2 -translate-y-1/2 rounded-full blur-2xl sm:h-72 sm:w-72 ${theme.glowCore}`}
@@ -320,7 +320,7 @@ function ShowcaseAmbient({ entries, activeIndex }: ShowcaseAmbientProps) {
 
 /** Shared styling for the showcase's floating control buttons. */
 const CONTROL_BUTTON_CLASSES =
-  'rounded-full bg-white/10 p-2 text-slate-500 backdrop-blur-sm transition-all hover:bg-white/20 hover:text-slate-700 dark:bg-slate-800/50 dark:text-slate-400 dark:hover:bg-slate-700/50 dark:hover:text-slate-200'
+  'rounded-full bg-white/10 p-2 text-slate-500 backdrop-blur-xs transition-all hover:bg-white/20 hover:text-slate-700 dark:bg-slate-800/50 dark:text-slate-400 dark:hover:bg-slate-700/50 dark:hover:text-slate-200'
 
 /** The gallery link every showcase caption ends with. */
 function AllDemosLink() {

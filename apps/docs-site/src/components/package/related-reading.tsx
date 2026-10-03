@@ -90,7 +90,7 @@ function RelatedCard({ entry }: RelatedCardProps) {
       className="group w-full rounded-lg border border-slate-200 bg-white p-4 transition-colors hover:border-primary-300 hover:bg-primary-50 dark:border-slate-700 dark:bg-slate-900 dark:hover:border-primary-700 dark:hover:bg-primary-950/30"
     >
       <span className="text-[0.6875rem] font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-500">{entry.kind}</span>
-      <h3 className="mt-1 break-words font-semibold text-slate-900 group-hover:text-primary-600 dark:text-white dark:group-hover:text-primary-400">
+      <h3 className="mt-1 wrap-break-word font-semibold text-slate-900 group-hover:text-primary-600 dark:text-white dark:group-hover:text-primary-400">
         {entry.title}
       </h3>
       {/* why: a guide states its reader problem in a sentence or three, and a grid of cards is for choosing between destinations rather than reading them; three lines is enough to choose by and keeps the rows even */}

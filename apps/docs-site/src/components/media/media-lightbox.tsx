@@ -462,7 +462,7 @@ export function MediaLightbox({ media, label, onClose, isOpen }: MediaLightboxPr
     <div
       ref={backdropRef}
       onClick={handleBackdropClick}
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm"
+      className="fixed inset-0 z-100 flex items-center justify-center bg-black/60 backdrop-blur-xs"
       role="dialog"
       aria-modal="true"
       aria-label={label}
@@ -507,8 +507,8 @@ export function MediaLightbox({ media, label, onClose, isOpen }: MediaLightboxPr
         id="media-lightbox-hint"
         className="pointer-events-none absolute bottom-4 left-1/2 z-10 -translate-x-1/2 whitespace-nowrap rounded-full bg-black/50 px-4 py-2 text-sm text-white/80"
       >
-        Drag to pan · <kbd className="rounded bg-white/20 px-1.5 py-0.5 font-mono text-xs">Ctrl</kbd>+scroll to zoom ·{' '}
-        <kbd className="rounded bg-white/20 px-1.5 py-0.5 font-mono text-xs">Esc</kbd> to close
+        Drag to pan · <kbd className="rounded-sm bg-white/20 px-1.5 py-0.5 font-mono text-xs">Ctrl</kbd>+scroll to zoom ·{' '}
+        <kbd className="rounded-sm bg-white/20 px-1.5 py-0.5 font-mono text-xs">Esc</kbd> to close
       </div>
 
       {/* The canvas the media is zoomed and panned inside */}
