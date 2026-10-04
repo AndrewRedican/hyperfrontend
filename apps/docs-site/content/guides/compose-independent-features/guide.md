@@ -68,7 +68,7 @@ Scope every reaction to the one feature. Independent sessions share no bundle, n
 
 <!-- snippet: survive-close -->
 
-Retry [`error`](/docs/libraries/features/host#api) with `reason: 'open-timeout'`, and only that one: a session that opened and merely went quiet is still someone's live screen.
+The [`onUnresponsive`](/docs/libraries/features/host#api-ShellOptions-prop-onUnresponsive) `'reopen'` policy in the open above replaces a frame that stops answering, and [`concealUnresponsive`](/docs/libraries/features/host#api-ShellOptions-prop-concealUnresponsive) hides it until then. Retry [`error`](/docs/libraries/features/host#api) with `reason: 'open-timeout'` yourself, and only on a first open: a timeout after a `reopen` event is the SDK's to count.
 
 <!-- snippet: retry-open -->
 

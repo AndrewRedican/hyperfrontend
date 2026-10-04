@@ -40,7 +40,9 @@ Create the shell against a [`container`](/docs/libraries/features/host#api-Shell
 
 <!-- snippet: open-and-observe -->
 
-Three calls are yours rather than the SDK's: ignore [`suspect`](/docs/libraries/features/host#api-HeartbeatState) while product traffic still arrives, report a mid-session `close` as connecting rather than offline (it is usually the feature reloading), and treat `error` with [`reason: 'open-timeout'`](/docs/libraries/features/host#api) as terminal.
+Pass [`onUnresponsive: 'reopen'`](/docs/libraries/features/host#api-ShellOptions-prop-onUnresponsive) and the SDK replaces a frame that stops answering, on a backoff and a bounded budget.
+
+Four calls are yours rather than the SDK's: ignore [`suspect`](/docs/libraries/features/host#api-HeartbeatState) while product traffic still arrives, report a `reopen` (and the `gone` status that follows it) as connecting, report a mid-session `close` as connecting rather than offline (it is usually the feature reloading), and treat `error` with [`reason: 'open-timeout'`](/docs/libraries/features/host#api) or `'reopen-exhausted'` as terminal.
 
 ## 6. Reveal the frame on the first proof event
 

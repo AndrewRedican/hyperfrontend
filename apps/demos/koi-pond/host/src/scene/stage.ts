@@ -158,12 +158,12 @@ export function setLayerDepth(stage: PondStage, id: KoiInstanceId, level: number
 /**
  * Shows or hides one koi's layer.
  *
- * A koi whose session has stopped answering is not in the scene any more, and
- * its frame is no longer the host's to trust: a document the browser has given
- * up on is painted with the browser's own placeholder, which is opaque and
- * knows nothing about water. Standing the layer down is what keeps a lost koi
- * from leaving a hole in the pond; its own reveal on the next handshake brings
- * it back.
+ * A koi whose session is not answering is not in the scene, and its frame is
+ * not the host's to trust. The SDK hides a frame it has judged unresponsive,
+ * but a mount the pond reopens after a timed-out handshake shows whatever it
+ * paints before its handshake lands, and a document the browser has given up
+ * on is painted with the browser's own opaque placeholder. Standing the layer
+ * down covers every such frame until its next handshake brings the koi back.
  *
  * @param stage - The pond stage.
  * @param id - Which koi.

@@ -24,7 +24,6 @@ import { createInteractionsPainter } from './interactions'
 import { fishHomeUrl, identityFor, openInstance } from './koi-sessions'
 import { createFrameLoop } from './raf-loop'
 import { createRelay } from './relay'
-import { createResurrection } from './resurrection'
 import { acceptsRipple, addRipple, advanceRipples, createRippleField } from './ripples'
 import { createShoalPanel } from './roster'
 import { createSelectionChrome } from './selection'
@@ -208,6 +207,16 @@ interface ErrorReport {
   missedBeats?: number
   /** How long the handshake was waited for before it was given up, in milliseconds. */
   elapsedMs?: number
+  /** How many reopens the SDK spent before it gave the koi up. */
+  attempts?: number
+}
+
+/** What the SDK says as it replaces a silent koi's mount. */
+interface ReopenReport {
+  /** The 1-based attempt this reopen spends. */
+  attempt?: number
+  /** The attempts one episode may spend. */
+  attempts?: number
 }
 
 /** A koi asking for a place in the depth spread. */
@@ -290,6 +299,8 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondSceneHandle
   const pointer = { x: 0, y: 0, fresh: false }
   const inspected = new Set<KoiInstanceId>()
   const retries = new Map<KoiInstanceId, number>()
+  // why: Which koi the SDK is in the middle of bringing back. A reopen whose handshake times out already counts as its next death, and the pond's own retry answering it as well would hand the SDK a fresh budget each time, so a device that keeps killing the frame would never be let go.
+  const reviving = new Set<KoiInstanceId>()
   // why: Which koi are actually answering right now — not merely which ones once opened. A frame the browser has given up on still exists, and everything the pond shows about a koi has to follow this one set or the scene starts claiming fish it has lost.
   const present = new Set<KoiInstanceId>()
 
@@ -301,16 +312,6 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondSceneHandle
   const leaving = new Set<KoiInstanceId>()
   const device = readDeviceProfile()
   const chrome = createSelectionChrome(root)
-  // why: The browser may kill any frame it likes on a phone; the resurrection is what turns that from a permanent hole in the shoal into a pause.
-  const resurrection = createResurrection({
-    isPresent: (id) => present.has(id),
-    // why: The policy reads the pond's own answer about visibility rather than the document's, so a page that recovered without saying so does not leave a reopen waiting forever.
-    isHidden: () => visibility.hidden,
-    reopen: (id) => {
-      sessions.get(id)?.shell.open()
-    },
-    note: (id, kind, detail) => hooks.onDiagnostic?.(id, `revive:${kind}`, detail),
-  })
   const diagnostics = createInteractionsPainter(stage.interactions)
   let showInteractions = false
 
@@ -580,7 +581,7 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondSceneHandle
       }
       setLayerDepth(stage, id, director.settledLevel(id))
       setPresent(id, true)
-      resurrection.opened(id)
+      reviving.delete(id)
       // why: A handshake that landed makes past timeouts history — the retry budget guards one opening episode, not the whole page, or a koi revived after a slow boot would have nothing left.
       retries.delete(id)
       hooks.onDiagnostic?.(id, 'open')
@@ -612,7 +613,13 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondSceneHandle
     })
     // ref: [guide:compose-independent-features/survive-close] end
 
-    // why: The reopen policies listen separately: the guide-marked retry below answers a handshake that never landed, while the resurrection answers a frame that died mid-run and owes a live one the grace to speak again first. Subscribed ahead of the retry so the budget it reads is the one the retry is about to decide with.
+    // why: The SDK brings back a koi whose frame died mid-run and decides on its own when to stop insisting; the pond only records what it did, and the guide-marked retry below answers the one case it leaves to the host, a first handshake that never landed.
+    shell.on('reopen', (data: unknown) => {
+      const reopen = data as ReopenReport
+      reviving.add(id)
+      hooks.onDiagnostic?.(id, 'revive:reopened', `attempt ${reopen?.attempt ?? '?'} of ${reopen?.attempts ?? '?'}`)
+    })
+
     shell.on('error', (data: unknown) => {
       const error = data as ErrorReport
       const detail =
@@ -622,12 +629,9 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondSceneHandle
             ? `after ${Math.round(error.elapsedMs)}ms`
             : undefined
       hooks.onDiagnostic?.(id, `error:${error?.reason ?? 'unknown'}`, detail)
-      if (error?.reason === 'unresponsive') {
-        resurrection.frameDied(id)
-      }
-      // why: A reopen whose handshake times out after the retry budget is spent would otherwise strand the koi between the two policies — the retry declines and no watchdog exists to speak again. Handing the death to the resurrection lets its own budget decide when to stop insisting.
-      if (error?.reason === 'open-timeout' && (retries.get(id) ?? 0) >= OPEN_RETRIES) {
-        resurrection.frameDied(id)
+      if (error?.reason === 'reopen-exhausted') {
+        // why: The SDK has torn the mount down, so the koi stays on the roster offline: its panel row says so, and the visitor decides whether to remove it.
+        hooks.onDiagnostic?.(id, 'revive:exhausted', `after ${error.attempts ?? '?'} attempts`)
       }
     })
 
@@ -639,10 +643,10 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondSceneHandle
     shell.on('error', (data: unknown) => {
       // why: A koi that never answers must not hold the pond dark behind a curtain waiting for it.
       setCurtain(stage, true)
-      // why: Whatever went wrong, the frame is no longer showing a koi — it waits for a handshake to earn its place back.
+      // why: Whatever went wrong, the frame is no longer showing a koi: it waits for a handshake to earn its place back.
       setPresent(id, false)
-      // why: A timed-out handshake leaves a destroyed mount and the SDK never retries — on a slow device the heavy apps race one deadline, and without this a loser is simply a fish that never existed. Only the timeout is retried; an unresponsive session may still be alive, and must not be torn down under its visitor.
-      if ((data as ErrorReport)?.reason === 'open-timeout' && (retries.get(id) ?? 0) < OPEN_RETRIES) {
+      // why: A first handshake that times out leaves a destroyed mount the SDK never retries, so a slow device would simply lose that koi. A timeout after the SDK's own reopen is its to count.
+      if ((data as ErrorReport)?.reason === 'open-timeout' && !reviving.has(id) && (retries.get(id) ?? 0) < OPEN_RETRIES) {
         retries.set(id, (retries.get(id) ?? 0) + 1)
         window.setTimeout(() => {
           // why: The roster may have let this koi go while the retry waited; reopening a removed session would mount a frame into a layer the pond already tore down.
@@ -759,8 +763,8 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondSceneHandle
     }
     sessions.delete(id)
     leaving.add(id)
-    // why: The roster no longer wants this koi, so a revive still pending for it must die with it — the policy only governs instances the roster still wants.
-    resurrection.forget(id)
+    // why: The polite close below stands the SDK's revival down, and a twin later re-added under this id starts with no history.
+    reviving.delete(id)
     retries.delete(id)
     setPresent(id, false)
     for (const moved of director.remove(id, Date.now())) {
@@ -1022,7 +1026,6 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondSceneHandle
           waterLost()
         }
         loop.start()
-        resurrection.pageVisible()
       }
       for (const session of sessions.values()) {
         session.shell.send('sleep', { paused })
