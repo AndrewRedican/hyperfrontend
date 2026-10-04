@@ -4,10 +4,10 @@
   "description": "Nx plugin providing build executors for hyperfrontend library packages.",
   "private": true,
   "dependencies": {
-    "@hyperfrontend/builder": "0.4.0"
+    "@hyperfrontend/builder": "0.4.1"
   },
   "devDependencies": {
-    "@hyperfrontend/project-scope": "0.2.6",
+    "@hyperfrontend/project-scope": "0.2.7",
     "@nx/devkit": "22.3.3",
     "@types/node": "25.3.3",
     "jest": "30.2.0",

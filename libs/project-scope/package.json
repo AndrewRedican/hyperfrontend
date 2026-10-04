@@ -1,6 +1,6 @@
 {
   "name": "@hyperfrontend/project-scope",
-  "version": "0.2.6",
+  "version": "0.2.7",
   "description": "Comprehensive project analysis, technology stack detection, and transactional virtual file system for Node.js tooling.",
   "dependencies": {
     "@hyperfrontend/immutable-api-utils": "1.0.1",

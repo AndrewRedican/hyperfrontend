@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.11.3](https://github.com/AndrewRedican/hyperfrontend/compare/b12f6f1097dfaa1e79fe4e49c669618f7e980857...9cb8baf39ab84f10d5585969ad5afb8bd299def0) - 2026-10-04
+
+### Bug Fixes
+
+- read the packed tarball name from crlf output
+- keep crlf line endings in wired entry files
+- spawn package managers through a shell on windows
+
 ## [0.11.2](https://github.com/AndrewRedican/hyperfrontend/compare/f65ad13fb8e8290b672395bad080716f97b8c849...93c710ebed44ae1c891f829cbc8860547bb1c287) - 2026-10-03
 
 ### Bug Fixes

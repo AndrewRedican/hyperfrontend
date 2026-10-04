@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.1](https://github.com/AndrewRedican/hyperfrontend/compare/3475cc3f9d8075353173717ca5d15eecb9041924...9cb8baf39ab84f10d5585969ad5afb8bd299def0) - 2026-10-04
+
+### Bug Fixes
+
+- split worker stderr on crlf line endings
+- rewrite only native separators to forward slashes
+- walk up to package.json from native windows paths
+- guard bundled deps against native windows paths
+
 ## [0.4.0](https://github.com/AndrewRedican/hyperfrontend/compare/f65ad13fb8e8290b672395bad080716f97b8c849...8bb06270342477b052ffe0afc6ef758aa70dfcdf) - 2026-10-04
 
 ### Breaking Changes

@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.9.1](https://github.com/AndrewRedican/hyperfrontend/compare/41325ecf9b3f15f597cddadd5fbe6ab68f59eab7...9cb8baf39ab84f10d5585969ad5afb8bd299def0) - 2026-10-04
+
+### Bug Fixes
+
+- handle crlf commit messages and command output
+- spawn npm through a shell on windows
+- find tree changelogs from native windows paths
+- pick the default scope from native windows paths
+- resolve project roots and commit paths on windows
+
 ## [0.9.0](https://github.com/AndrewRedican/hyperfrontend/compare/a638efc58ce78e9a84dd21992e7f5c675bd5e7f6...adf0a4f77dece2be855e7ab88185a4fe84e7b16b) - 2026-09-14
 
 ### Features
