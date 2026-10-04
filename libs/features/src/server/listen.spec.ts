@@ -1,5 +1,7 @@
 import type { Server } from 'node:http'
 import { createServer } from 'node:http'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import { describe, expect, it } from '@hyperfrontend/testing'
 import { addressPort, closeServer, listen } from './listen'
 
@@ -81,6 +83,8 @@ describe('addressPort', () => {
   })
 
   it('throws when the server is bound to a pipe rather than a port', () => {
-    expect(() => addressPort({ address: () => '/tmp/hf.sock' } as unknown as Server)).toThrow('failed to report a listening port')
+    expect(() => addressPort({ address: () => join(tmpdir(), 'hf.sock') } as unknown as Server)).toThrow(
+      'failed to report a listening port'
+    )
   })
 })
