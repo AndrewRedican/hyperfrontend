@@ -13,8 +13,10 @@ const config: TestConfig = {
   coverageExclude: [
     // why: a re-export barrel has no behaviour of its own; every symbol it names is covered where it is defined.
     'src/**/index.ts',
+    // why: a type-only module erases to nothing at runtime, so no test can load it and there is nothing to measure.
+    'src/rules/lib-cross-platform/types.ts',
   ],
-  coverageThresholds: { lines: 96, branches: 88, functions: 99 },
+  coverageThresholds: { lines: 98, branches: 92, functions: 99 },
 }
 
 export default config
