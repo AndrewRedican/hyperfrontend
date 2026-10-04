@@ -72,7 +72,7 @@ const rule: Rule.RuleModule = {
     schema: [],
     messages: {
       notAnEntryModule:
-        "Export path '{{ path }}' is not an entry module. Point it at './src/index.<ext>' or './src/<dir>/index.<ext>': the build discovers entries only there, and a subpath mapped anywhere else is dropped from the published exports.",
+        "Export path '{{ path }}' is not an entry module. Point it at './src/index.<ext>' or './src/<dir>/index.<ext>': the build discovers entries only there, and fails on a subpath mapped anywhere else.",
     },
   },
 
