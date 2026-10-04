@@ -151,7 +151,7 @@ export function openInstance(stage: PondStage, framework: KoiFramework, ordinal:
     container: layer,
     // why: Several handshakes queue behind one another on a cold load, and the ten-second default times the last of them out.
     openTimeoutMs: OPEN_TIMEOUT_MS,
-    // why: A phone may kill any frame it likes, and a killed frame never says so; reopening one whose silence outlasts the SDK's grace turns that from a permanent hole in the shoal into a pause, and concealing it from the verdict keeps the browser's crash placeholder off the water while it waits.
+    // why: A frame the browser kills never says so; reopening it after the SDK's grace turns a hole in the shoal into a pause, and concealing it keeps the crash placeholder off the water.
     onUnresponsive: 'reopen',
     concealUnresponsive: true,
     ...(COMPOSED_DEPLOYMENT && { url: fishHomeUrl(framework) }),

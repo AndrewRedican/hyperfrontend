@@ -645,7 +645,7 @@ export function createPond(root: HTMLElement, hooks: PondHooks): PondSceneHandle
       setCurtain(stage, true)
       // why: Whatever went wrong, the frame is no longer showing a koi: it waits for a handshake to earn its place back.
       setPresent(id, false)
-      // why: A first handshake that times out leaves a destroyed mount the SDK never retries: on a slow device the heavy apps race one deadline, and without this a loser is simply a fish that never existed. Only that timeout is retried: a reopen the SDK started is its own to count, and an unresponsive session may still be alive and must not be torn down under its visitor.
+      // why: A first handshake that times out leaves a destroyed mount the SDK never retries, so a slow device would simply lose that koi. A timeout after the SDK's own reopen is its to count.
       if ((data as ErrorReport)?.reason === 'open-timeout' && !reviving.has(id) && (retries.get(id) ?? 0) < OPEN_RETRIES) {
         retries.set(id, (retries.get(id) ?? 0) + 1)
         window.setTimeout(() => {
