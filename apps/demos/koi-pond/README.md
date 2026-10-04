@@ -392,8 +392,6 @@ overrides an earlier one, one header at a time.
 
 ```bash
 npx nx run demo-koi-workbench:dev      # the model workbench on :4283, with HMR onto lib/src
-npx nx test demo-koi-lib               # the model, motion, runtime, geometry and contract specs
-npx nx test demo-koi-pond              # the scene, panel, overlay and vitals specs
 npx nx run demo-koi-lib:build          # emit the published surface into lib/dist
 npx nx run demo-koi-lib:refresh        # rebuild + repack the shared lib into every consumer
 npx nx run demo-koi-lib:verify         # fail loudly when the tarball or a consumer lock has drifted
