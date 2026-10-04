@@ -166,19 +166,19 @@ function controlHandler(
   deps: StaticHandlerDeps
 ): (req: IncomingMessage, res: ServerResponse) => void {
   return (req, res) => {
-    const path = requestPath(req.url)
-    if (path === '/') {
+    const urlPath = requestPath(req.url)
+    if (urlPath === '/') {
       serveDebugIndex(assetRoot, manifest, res, deps)
       return
     }
-    if (path === '/__apps') {
+    if (urlPath === '/__apps') {
       res.statusCode = 200
       res.setHeader('Content-Type', 'application/json; charset=utf-8')
       res.end(stringify(manifest))
       return
     }
-    if (path.startsWith(`${DEBUG_PREFIX}/`)) {
-      serveFile(assetRoot, path.slice(DEBUG_PREFIX.length), res, deps)
+    if (urlPath.startsWith(`${DEBUG_PREFIX}/`)) {
+      serveFile(assetRoot, urlPath.slice(DEBUG_PREFIX.length), res, deps)
       return
     }
     res.statusCode = 404
