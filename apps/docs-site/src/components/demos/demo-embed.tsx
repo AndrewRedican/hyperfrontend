@@ -106,7 +106,7 @@ export function DemoEmbed({ entry, className, frameless, onStatus, onShell }: De
     apply('connecting')
 
     // ref: [guide:embed-a-shipped-feature/open-and-observe] start
-    // why: The browser may kill any frame it likes on a phone and leaves the corpse mounted under its own crash tile. The SDK's reopen policy waits out the grace a merely starved frame would need to speak again, then empties the mount and opens the session in its place, on a bounded budget.
+    // why: A frame the browser kills stays mounted under its crash tile; the reopen policy replaces it after a grace, on a bounded budget.
     const shell = wiring.createShell({ container: element, url: featureUrl, onUnresponsive: 'reopen' })
     let reviving = false
     const subscriptions = [
@@ -128,7 +128,7 @@ export function DemoEmbed({ entry, className, frameless, onStatus, onShell }: De
       }),
       // why: The status payload is the watchdog snapshot object, not a bare state string.
       // why: `suspect` alone never demotes — a session whose product traffic still flows is visibly alive, and demoting on it makes the embed blink out for one beat interval before the next proof event restores it.
-      // why: The watchdog also stops as the SDK tears a dead mount down for its replacement; that `gone` is a reopen in progress, not a session lost.
+      // why: A reopen tears the dead mount down, which reports `gone`; that is a reopen in progress, not a lost session.
       shell.on('status', (data) => {
         const state = isRecord(data) ? data['state'] : undefined
         if (state === 'healthy') {
@@ -143,7 +143,7 @@ export function DemoEmbed({ entry, className, frameless, onStatus, onShell }: De
         apply('connecting')
         armDeadline()
       }),
-      // why: A handshake that never lands and a revival budget spent are the two ends the SDK leaves to the host; the card keeps the space for both.
+      // why: A handshake that never lands and a spent revival budget are the two ends the SDK leaves to the host.
       shell.on('error', (data) => {
         const reason = isRecord(data) ? data['reason'] : undefined
         if (reason === 'open-timeout' || reason === 'reopen-exhausted') {
