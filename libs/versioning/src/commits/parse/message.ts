@@ -160,7 +160,7 @@ export function isConventionalCommit(message: string): boolean {
     return false
   }
 
-  const firstLine = message.split('\n')[0] ?? ''
+  const firstLine = message.split(/\r?\n/)[0] ?? ''
   const header = parseHeader(firstLine)
 
   if (!header.type || !header.subject) {

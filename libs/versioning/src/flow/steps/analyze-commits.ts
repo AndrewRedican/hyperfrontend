@@ -144,7 +144,7 @@ export function createAnalyzeCommitsStep(): FlowStep {
               hash: rawCommit.hash,
               shortHash: rawCommit.hash.slice(0, 7),
               message: rawCommit.message,
-              subject: parsed.subject ?? rawCommit.message.split('\n')[0],
+              subject: parsed.subject ?? rawCommit.message.split(/\r?\n/)[0],
               body: parsed.body ?? '',
               authorName: '',
               authorEmail: '',

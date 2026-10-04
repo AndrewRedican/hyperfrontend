@@ -95,7 +95,7 @@ export function getRefs(options: GitCommandOptions): readonly GitRef[] {
     })
 
     const refs: GitRef[] = []
-    const lines = output.split('\n')
+    const lines = output.split(/\r?\n/)
 
     for (const line of lines) {
       const trimmed = line.trim()

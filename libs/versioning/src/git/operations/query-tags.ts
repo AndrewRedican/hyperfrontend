@@ -71,7 +71,7 @@ export function getTags(options: ListTagsOptions = {}): readonly GitTag[] {
     })
 
     const tagNames = output
-      .split('\n')
+      .split(/\r?\n/)
       .map((line) => line.trim())
       .filter((line) => line.length > 0)
 
@@ -173,7 +173,7 @@ interface ParsedAnnotatedTagInfo {
  * @returns Parsed info
  */
 function parseAnnotatedTagInfo(info: string): ParsedAnnotatedTagInfo {
-  const lines = info.split('\n')
+  const lines = info.split(/\r?\n/)
   let taggerName = ''
   let taggerEmail = ''
   let tagDate = ''
