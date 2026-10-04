@@ -141,7 +141,7 @@ const runOne = (job: PrePassJob, reportPath: string, options: RunPrePassOptions)
     })
     child.on('exit', (code) => {
       if (code !== 0) {
-        const tail = capturedStderr.trim().split('\n').slice(-10).join('\n')
+        const tail = capturedStderr.trim().split(/\r?\n/).slice(-10).join('\n')
         reject(createError(`pre-pass worker for ${job.dep} (${job.kind}/${job.format}) exited with code ${code}\n${tail}`))
         return
       }

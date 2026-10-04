@@ -1,5 +1,5 @@
 import type { Plugin } from 'rollup'
-import { isAbsolute as nodeIsAbsolute, resolve as nodeResolve } from 'node:path'
+import { isAbsolute as nodeIsAbsolute, posix, resolve as nodeResolve } from 'node:path'
 import { join, normalizeToForwardSlashes } from '../fs/posix-path'
 
 /**
@@ -57,7 +57,7 @@ const siblingDir = (sibling: SiblingEntry): string => stripTrailingSlash(dirname
 const startsWithDir = (resolved: string, dir: string): boolean => {
   const normalizedResolved = normalizeToForwardSlashes(resolved)
   if (normalizedResolved === dir) return true
-  return normalizedResolved.startsWith(`${dir}/`)
+  return normalizedResolved.startsWith(`${dir}${posix.sep}`)
 }
 
 /**
@@ -110,8 +110,8 @@ export const findOwningSibling = (absolutePath: string, siblings: SiblingEntry[]
 export const computeSiblingSpecifier = (selfDtsPath: string, sibling: SiblingEntry): string => {
   const fromDir = dirnameOf(selfDtsPath)
   const toDir = siblingDir(sibling)
-  const fromSegments = fromDir.split('/').filter((s) => s.length > 0)
-  const toSegments = toDir.split('/').filter((s) => s.length > 0)
+  const fromSegments = fromDir.split(posix.sep).filter((s) => s.length > 0)
+  const toSegments = toDir.split(posix.sep).filter((s) => s.length > 0)
   let common = 0
   while (common < fromSegments.length && common < toSegments.length && fromSegments[common] === toSegments[common]) {
     common += 1

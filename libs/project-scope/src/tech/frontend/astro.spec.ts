@@ -1,5 +1,6 @@
 import type { MockedFunction } from '@hyperfrontend/testing'
 import type { PackageJson } from '../../project/package'
+import { join } from 'node:path'
 import { beforeEach } from 'node:test'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import * as fs from '../../core/fs'
@@ -62,7 +63,7 @@ describe('astroDetector', () => {
 
   it('increases confidence with src/pages directory', () => {
     mockExists.mockImplementation((path: string) => {
-      return path.includes('src/pages') || path.endsWith('pages')
+      return path.includes(join('src', 'pages')) || path.endsWith('pages')
     })
 
     const pkg: PackageJson = {

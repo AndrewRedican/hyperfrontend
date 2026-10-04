@@ -60,19 +60,19 @@ export interface ResolveDepEntryOptions {
 const ROOTS = (projectRoot: string, workspaceRoot: string): string[] => [projectRoot, workspaceRoot]
 
 const findPackageJsonByWalkingUp = (entryPath: string, dep: string): string | undefined => {
-  const segments = entryPath.split('/')
-  for (let i = segments.length - 1; i > 0; i--) {
-    const prefix = segments.slice(0, i).join('/')
-    const candidate = `${prefix}/package.json`
-    if (!exists(candidate)) continue
-    try {
-      const meta = readJsonFileIfExists<MinimalPackageJson>(candidate)
-      if (meta?.name === dep) return candidate
-    } catch {
-      // fall through
+  // why: `require.resolve` returns a native path, which a `/` split leaves whole on Windows; dirname walks it on every platform.
+  for (let dir = dirname(entryPath); ; dir = dirname(dir)) {
+    const candidate = join(dir, 'package.json')
+    if (exists(candidate)) {
+      try {
+        const meta = readJsonFileIfExists<MinimalPackageJson>(candidate)
+        if (meta?.name === dep) return candidate
+      } catch {
+        // fall through
+      }
     }
+    if (dirname(dir) === dir) return undefined
   }
-  return undefined
 }
 
 const findPackageJsonViaRequire = (dep: string, fromRoots: string[]): string | undefined => {

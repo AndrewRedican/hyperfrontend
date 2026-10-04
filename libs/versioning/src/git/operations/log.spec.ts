@@ -1,5 +1,7 @@
 import type { MockedFunction } from '@hyperfrontend/testing'
 import { execFileSync } from 'node:child_process'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import { beforeEach } from 'node:test'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import {
@@ -19,6 +21,7 @@ jest.mock('node:child_process')
 
 const mockExecFileSync = execFileSync as MockedFunction<typeof execFileSync>
 
+const REPO_PATH = join(tmpdir(), 'repo')
 const RECORD_SEPARATOR = '\x1e'
 const FIELD_SEPARATOR = '\x00'
 
@@ -268,9 +271,9 @@ describe('getCommitLog', () => {
   it('uses custom cwd', () => {
     mockExecFileSync.mockReturnValue('')
 
-    getCommitLog({ cwd: '/tmp/repo' })
+    getCommitLog({ cwd: REPO_PATH })
 
-    expect(mockExecFileSync).toHaveBeenCalledWith('git', expect.any(Array), expect.objectContaining({ cwd: '/tmp/repo' }))
+    expect(mockExecFileSync).toHaveBeenCalledWith('git', expect.any(Array), expect.objectContaining({ cwd: REPO_PATH }))
   })
 
   it('uses custom timeout', () => {
@@ -434,9 +437,9 @@ describe('commitExists', () => {
   it('uses custom cwd', () => {
     mockExecFileSync.mockReturnValue('commit')
 
-    commitExists('abc123', { cwd: '/tmp/repo' })
+    commitExists('abc123', { cwd: REPO_PATH })
 
-    expect(mockExecFileSync).toHaveBeenCalledWith('git', expect.any(Array), expect.objectContaining({ cwd: '/tmp/repo' }))
+    expect(mockExecFileSync).toHaveBeenCalledWith('git', expect.any(Array), expect.objectContaining({ cwd: REPO_PATH }))
   })
 
   it('uses custom timeout', () => {
@@ -487,9 +490,9 @@ describe('commitReachableFromHead', () => {
   it('uses custom cwd', () => {
     mockExecFileSync.mockReturnValue('')
 
-    commitReachableFromHead('abc123', { cwd: '/tmp/repo' })
+    commitReachableFromHead('abc123', { cwd: REPO_PATH })
 
-    expect(mockExecFileSync).toHaveBeenCalledWith('git', expect.any(Array), expect.objectContaining({ cwd: '/tmp/repo' }))
+    expect(mockExecFileSync).toHaveBeenCalledWith('git', expect.any(Array), expect.objectContaining({ cwd: REPO_PATH }))
   })
 
   it('uses custom timeout', () => {

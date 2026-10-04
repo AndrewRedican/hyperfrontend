@@ -200,7 +200,7 @@ describe('vfs/diff', () => {
         deletions: 1,
       }
       const formatted = formatUnifiedDiff(fileDiff)
-      const lines = formatted.split('\n')
+      const lines = formatted.split(/\r?\n/)
 
       const contentLines = lines.slice(3)
       expect(contentLines.some((l) => l.startsWith(' context line'))).toBe(true)

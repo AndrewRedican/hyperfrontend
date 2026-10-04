@@ -1,4 +1,5 @@
 import type { MockedFunction } from '@hyperfrontend/testing'
+import { sep } from 'node:path'
 import { beforeEach } from 'node:test'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import * as fs from '../../core/fs'
@@ -73,7 +74,7 @@ describe('cypressDetector', () => {
 
   it('increases confidence with cypress directory', () => {
     mockExists.mockImplementation((path: string) => {
-      return path.endsWith('cypress') || path.includes('/cypress')
+      return path.endsWith('cypress') || path.includes(`${sep}cypress`)
     })
 
     const result = cypressDetector(mockProjectPath, {
@@ -97,7 +98,7 @@ describe('cypressDetector', () => {
 
   it('has maximum confidence with all indicators', () => {
     mockExists.mockImplementation((path: string) => {
-      return path.includes('cypress.config.ts') || path.endsWith('cypress') || path.includes('/cypress')
+      return path.includes('cypress.config.ts') || path.endsWith('cypress') || path.includes(`${sep}cypress`)
     })
 
     const result = cypressDetector(mockProjectPath, {

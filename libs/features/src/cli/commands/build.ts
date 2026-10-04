@@ -96,9 +96,10 @@ async function defaultRunBuilder(input: BuildRunnerInput): Promise<void> {
  * @returns The created tarball's filename.
  */
 function defaultPackTarball(packageDir: string): string {
-  const output = execFileSync('npm', ['pack'], { cwd: packageDir, encoding: 'utf-8' })
+  // why: npm is a .cmd shim on Windows, which Node only spawns through a shell.
+  const output = execFileSync('npm', ['pack'], { cwd: packageDir, encoding: 'utf-8', shell: process.platform === 'win32' })
   // why: split always yields at least one element, so pop() is never undefined
-  return output.trim().split('\n').pop() ?? ''
+  return output.trim().split(/\r?\n/).pop() ?? ''
 }
 
 /**

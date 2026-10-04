@@ -1,6 +1,7 @@
 import type { VersionFlow } from '../models/flow'
 import type { FlowStep } from '../models/step'
 import type { FlowConfig } from '../models/types'
+import { join } from 'node:path'
 import { parse, stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 import { createFlow } from '../models/flow'
 import { createStep, createSkippedResult } from '../models/step'
@@ -55,7 +56,7 @@ export function createSyncAllPackagesStep(): FlowStep {
         return createSkippedResult('No version bump needed')
       }
 
-      const rootPackageJson = `${workspaceRoot}/package.json`
+      const rootPackageJson = join(workspaceRoot, 'package.json')
       const modifiedFiles: string[] = []
 
       try {

@@ -37,12 +37,12 @@ describe('insertFeatureImport', () => {
 
     it('keeps a shebang on the first line', () => {
       const { content } = insertFeatureImport('#!/usr/bin/env node\nconst x = 1\n', SPECIFIER)
-      expect(content.split('\n')[0]).toBe('#!/usr/bin/env node')
+      expect(content.split(/\r?\n/)[0]).toBe('#!/usr/bin/env node')
     })
 
     it('inserts the block directly below a shebang', () => {
       const { content } = insertFeatureImport('#!/usr/bin/env node\nconst x = 1\n', SPECIFIER)
-      expect(content.split('\n')[1]).toBe(BEGIN_LINE)
+      expect(content.split(/\r?\n/)[1]).toBe(BEGIN_LINE)
     })
 
     it("keeps a 'use client' directive above the block", () => {
@@ -57,7 +57,7 @@ describe('insertFeatureImport', () => {
 
     it('inserts below both a shebang and a directive prologue', () => {
       const { content } = insertFeatureImport("#!/usr/bin/env node\n'use strict'\nconst a = 1\n", SPECIFIER)
-      expect(content.split('\n').slice(0, 3)).toEqual(['#!/usr/bin/env node', "'use strict'", BEGIN_LINE])
+      expect(content.split(/\r?\n/).slice(0, 3)).toEqual(['#!/usr/bin/env node', "'use strict'", BEGIN_LINE])
     })
 
     it('keeps a directive below a leading line comment above the block', () => {
@@ -131,6 +131,38 @@ describe('insertFeatureImport', () => {
         content: `${BEGIN_LINE}\n${IMPORT_LINE}\n${END_LINE}\nconst y = 2\n`,
         changed: true,
       })
+    })
+  })
+
+  describe('CRLF entry files', () => {
+    it('inserts a fresh block with the CRLF endings the file already uses', () => {
+      expect(insertFeatureImport("'use client'\r\nconst x = 1\r\n", SPECIFIER)).toEqual({
+        content: `'use client'\r\n${BEGIN_LINE}\r\n${IMPORT_LINE}\r\n${END_LINE}\r\n\r\nconst x = 1\r\n`,
+        changed: true,
+      })
+    })
+
+    it('leaves a canonical block untouched', () => {
+      const source = `${BEGIN_LINE}\r\n${IMPORT_LINE}\r\n${END_LINE}\r\nconst y = 2\r\n`
+      expect(insertFeatureImport(source, SPECIFIER)).toEqual({ content: source, changed: false })
+    })
+
+    it('regenerates a stale import without changing the line endings', () => {
+      expect(insertFeatureImport(`${BEGIN_LINE}\r\nimport './old-glue'\r\n${END_LINE}\r\nconst y = 2\r\n`, SPECIFIER).content).toBe(
+        `${BEGIN_LINE}\r\n${IMPORT_LINE}\r\n${END_LINE}\r\nconst y = 2\r\n`
+      )
+    })
+
+    it('restores a lost end marker without changing the line endings', () => {
+      expect(insertFeatureImport(`${BEGIN_LINE}\r\n${IMPORT_LINE}\r\nconst y = 2\r\n`, SPECIFIER).content).toBe(
+        `${BEGIN_LINE}\r\n${IMPORT_LINE}\r\n${END_LINE}\r\nconst y = 2\r\n`
+      )
+    })
+
+    it('restores a lost begin marker without changing the line endings', () => {
+      expect(insertFeatureImport(`${IMPORT_LINE}\r\n${END_LINE}\r\nconst y = 2\r\n`, SPECIFIER).content).toBe(
+        `${BEGIN_LINE}\r\n${IMPORT_LINE}\r\n${END_LINE}\r\nconst y = 2\r\n`
+      )
     })
   })
 

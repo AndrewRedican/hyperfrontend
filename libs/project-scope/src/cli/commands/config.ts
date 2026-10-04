@@ -138,7 +138,7 @@ function formatConfigText(configs: DetectedConfig[], rootPath: string, showConte
           if (parsed.data) {
             const contentStr = stringify(parsed.data, null, 2)
             const indented = contentStr
-              .split('\n')
+              .split(/\r?\n/)
               .map((line) => `      ${line}`)
               .join('\n')
             lines.push('    Contents:')
@@ -146,7 +146,7 @@ function formatConfigText(configs: DetectedConfig[], rootPath: string, showConte
           } else if (parsed.raw) {
             const preview = parsed.raw.slice(0, 500)
             const indented = preview
-              .split('\n')
+              .split(/\r?\n/)
               .slice(0, 10)
               .map((line) => `      ${line}`)
               .join('\n')

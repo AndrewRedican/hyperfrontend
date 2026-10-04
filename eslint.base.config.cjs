@@ -244,6 +244,14 @@ module.exports = [
     },
   },
   {
+    files: ['**/*.ts'],
+    ignores: ['**/test.setup.ts'],
+    rules: {
+      // why: specs are included so the suite is ready for a Windows CI leg; the rule itself skips anything outside a publishable library
+      'workspace/lib-cross-platform': 'error',
+    },
+  },
+  {
     files: ['**/package.json'],
     languageOptions: {
       parser: require('jsonc-eslint-parser'),

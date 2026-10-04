@@ -1,5 +1,6 @@
 import type { Tree, FileChange, WriteOptions, CreateTreeOptions, ModeType } from './types'
 import { readFileSync, lstatSync, readlinkSync } from 'node:fs'
+import { posix } from 'node:path'
 import { from as arrayFrom } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
@@ -71,7 +72,7 @@ export function createFsTree(root: string, options?: CreateTreeOptions): Tree {
     const normalized = isAbsolute(filePath) ? relativePath(_root, filePath) : normalizePath(filePath)
 
     const absoluteResolved = resolvePath(_root, normalized)
-    if (!absoluteResolved.startsWith(_root + '/') && absoluteResolved !== _root) {
+    if (!absoluteResolved.startsWith(_root + posix.sep) && absoluteResolved !== _root) {
       throw createError(`Path escapes tree root: ${filePath}`)
     }
 
@@ -147,7 +148,7 @@ export function createFsTree(root: string, options?: CreateTreeOptions): Tree {
 
       const normalizedTarget = normalizePath(targetAbsolute)
 
-      if (!normalizedTarget.startsWith(_root + '/') && normalizedTarget !== _root) {
+      if (!normalizedTarget.startsWith(_root + posix.sep) && normalizedTarget !== _root) {
         throw createError(`Symlink target escapes tree root: ${normalPath} -> ${target}`)
       }
     } catch (error) {
@@ -282,7 +283,7 @@ export function createFsTree(root: string, options?: CreateTreeOptions): Tree {
       }
 
       for (const [changedPath, record] of _changes) {
-        if (record.type !== 'DELETE' && changedPath.startsWith(normalPath + '/')) {
+        if (record.type !== 'DELETE' && changedPath.startsWith(normalPath + posix.sep)) {
           return true
         }
       }
@@ -342,7 +343,7 @@ export function createFsTree(root: string, options?: CreateTreeOptions): Tree {
       validateSymlink(normalPath)
 
       for (const [changedPath, change] of _changes) {
-        if (change.type !== 'DELETE' && changedPath.startsWith(normalPath + '/')) {
+        if (change.type !== 'DELETE' && changedPath.startsWith(normalPath + posix.sep)) {
           return true
         }
       }
@@ -374,12 +375,12 @@ export function createFsTree(root: string, options?: CreateTreeOptions): Tree {
         // Directory doesn't exist on disk
       }
 
-      const prefix = normalPath === '.' || normalPath === '' ? '' : normalPath + '/'
+      const prefix = normalPath === '.' || normalPath === '' ? '' : normalPath + posix.sep
 
       for (const [changedPath, change] of _changes) {
         if (prefix === '') {
-          const childName = changedPath.split('/')[0]
-          if (change.type === 'DELETE' && !changedPath.includes('/')) {
+          const childName = changedPath.split(posix.sep)[0]
+          if (change.type === 'DELETE' && !changedPath.includes(posix.sep)) {
             childSet.delete(childName)
           } else if (change.type !== 'DELETE') {
             childSet.add(childName)
@@ -392,10 +393,10 @@ export function createFsTree(root: string, options?: CreateTreeOptions): Tree {
         }
 
         const relativePath = changedPath.slice(prefix.length)
-        const childName = relativePath.split('/')[0]
+        const childName = relativePath.split(posix.sep)[0]
 
         if (change.type === 'DELETE') {
-          if (!relativePath.includes('/')) {
+          if (!relativePath.includes(posix.sep)) {
             childSet.delete(childName)
           }
         } else {

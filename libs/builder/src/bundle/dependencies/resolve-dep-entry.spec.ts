@@ -1,6 +1,6 @@
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { join } from 'node:path'
+import { join, sep } from 'node:path'
 import { afterEach, beforeEach } from 'node:test'
 import { describe, expect, it } from '@hyperfrontend/testing'
 import { resolveDepEntry } from './resolve-dep-entry'
@@ -23,7 +23,7 @@ describe('resolveDepEntry', () => {
     writeFileSync(join(depDir, 'package.json'), JSON.stringify(pkg))
     for (const f of files) {
       const filePath = join(depDir, f)
-      mkdirSync(filePath.substring(0, filePath.lastIndexOf('/')), { recursive: true })
+      mkdirSync(filePath.substring(0, filePath.lastIndexOf(sep)), { recursive: true })
       writeFileSync(filePath, '')
     }
     mkdirSync(projectRoot, { recursive: true })

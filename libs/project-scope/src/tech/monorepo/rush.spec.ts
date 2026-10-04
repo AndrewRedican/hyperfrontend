@@ -1,4 +1,5 @@
 import type { MockedFunction } from '@hyperfrontend/testing'
+import { join } from 'node:path'
 import { beforeEach } from 'node:test'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import * as fs from '../../core/fs'
@@ -56,7 +57,7 @@ describe('rushDetector', () => {
 
   it('increases confidence with common/config/rush directory', () => {
     mockExists.mockImplementation((path: string) => {
-      return path.includes('rush.json') || path.includes('common/config/rush')
+      return path.includes('rush.json') || path.includes(join('common', 'config', 'rush'))
     })
 
     const result = rushDetector(mockProjectPath, { name: 'test-project' })

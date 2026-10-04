@@ -3,6 +3,7 @@ import type { ChangelogSectionType } from '../../changelog/models/section'
 import type { ClassifiedCommit } from '../../commits/classify'
 import type { ConventionalCommit } from '../../commits/models/conventional'
 import type { FlowStep } from '../models/step'
+import { join } from 'node:path'
 import { createDate } from '@hyperfrontend/immutable-api-utils/built-in-copy/date'
 import { serializeChangelog, parseChangelog, addEntry, removeEntries } from '../../changelog'
 import { createChangelogEntry, createChangelogItem, createChangelogSection } from '../../changelog/models/entry'
@@ -466,7 +467,7 @@ export function createWriteChangelogStep(): FlowStep {
       }
 
       const changelogFileName = config.changelogFileName ?? DEFAULT_CHANGELOG_FILENAME
-      const changelogPath = `${projectRoot}/${changelogFileName}`
+      const changelogPath = join(projectRoot, changelogFileName)
       const backupPath = changelogPath.replace('.md', '.backup.md')
       const shouldBackup = config.backupChangelog && tree.exists(changelogPath) && tree.isFile(changelogPath)
       let existingContent = ''

@@ -116,7 +116,7 @@ export function getStatus(options: GitStatusOptions = {}): RepositoryStatus {
  * @returns Parsed status
  */
 function parseStatus(output: string): RepositoryStatus {
-  const lines = output.split('\n')
+  const lines = output.split(/\r?\n/)
 
   let branch: string | null = null
   let detached = false

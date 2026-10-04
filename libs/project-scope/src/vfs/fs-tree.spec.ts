@@ -1,6 +1,7 @@
 import type { FileChange } from './types'
 import { mkdirSync, writeFileSync, rmSync, symlinkSync } from 'node:fs'
-import { join } from 'node:path'
+import { tmpdir } from 'node:os'
+import { join, sep } from 'node:path'
 import { after as afterAll, before as beforeAll } from 'node:test'
 import { describe, expect, it } from '@hyperfrontend/testing'
 import { createFsTree } from './fs-tree'
@@ -30,7 +31,7 @@ describe('vfs/FsTree', () => {
     })
 
     it('normalizes root path', () => {
-      const tree = createFsTree(TEST_DIR + '/')
+      const tree = createFsTree(TEST_DIR + sep)
       expect(tree.root).toBe(TEST_DIR)
     })
   })
@@ -479,7 +480,7 @@ describe('vfs/FsTree', () => {
 
       it('throws error when writing to absolute path outside root', () => {
         const tree = createFsTree(TEST_DIR)
-        expect(() => tree.write('/tmp/malicious.txt', 'bad content')).toThrow('Path escapes tree root')
+        expect(() => tree.write(join(tmpdir(), 'malicious.txt'), 'bad content')).toThrow('Path escapes tree root')
       })
 
       it('prevents nested path traversal in write', () => {

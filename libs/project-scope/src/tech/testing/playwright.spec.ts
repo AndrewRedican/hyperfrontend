@@ -1,4 +1,5 @@
 import type { MockedFunction } from '@hyperfrontend/testing'
+import { sep } from 'node:path'
 import { beforeEach } from 'node:test'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import * as fs from '../../core/fs'
@@ -85,7 +86,7 @@ describe('playwrightDetector', () => {
 
   it('increases confidence with e2e directory', () => {
     mockExists.mockImplementation((path: string) => {
-      return path.endsWith('e2e') || path.includes('/e2e')
+      return path.endsWith('e2e') || path.includes(`${sep}e2e`)
     })
 
     const result = playwrightDetector(mockProjectPath, {
@@ -99,7 +100,7 @@ describe('playwrightDetector', () => {
 
   it('increases confidence with tests directory', () => {
     mockExists.mockImplementation((path: string) => {
-      return path.endsWith('tests') || path.includes('/tests')
+      return path.endsWith('tests') || path.includes(`${sep}tests`)
     })
 
     const result = playwrightDetector(mockProjectPath, {
@@ -123,7 +124,7 @@ describe('playwrightDetector', () => {
 
   it('has maximum confidence with all indicators', () => {
     mockExists.mockImplementation((path: string) => {
-      return path.includes('playwright.config.ts') || path.endsWith('e2e') || path.includes('/e2e')
+      return path.includes('playwright.config.ts') || path.endsWith('e2e') || path.includes(`${sep}e2e`)
     })
 
     const result = playwrightDetector(mockProjectPath, {

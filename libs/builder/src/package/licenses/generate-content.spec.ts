@@ -24,7 +24,7 @@ describe('generateThirdPartyLicensesContent', () => {
       { name: 'a', licenseType: 'MIT', licenseUrl: null },
       { name: 'b', licenseType: 'MIT', licenseUrl: null },
     ])
-    const lines = md.split('\n')
+    const lines = md.split(/\r?\n/)
     const aIdx = lines.findIndex((l) => l.includes('`a`'))
     const bIdx = lines.findIndex((l) => l.includes('`b`'))
     expect(aIdx).toBeLessThan(bIdx)

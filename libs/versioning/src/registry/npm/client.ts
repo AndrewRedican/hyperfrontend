@@ -105,6 +105,8 @@ async function getLatestVersion(state: NpmRegistryState, packageName: string): P
       encoding: 'utf-8',
       timeout: state.config.timeout,
       stdio: ['pipe', 'pipe', 'pipe'],
+      // why: npm is a .cmd shim on Windows, which Node only spawns through a shell.
+      shell: process.platform === 'win32',
     }).trim()
 
     const version = result || null
@@ -163,6 +165,7 @@ async function isVersionPublished(state: NpmRegistryState, packageName: string, 
       encoding: 'utf-8',
       timeout: state.config.timeout,
       stdio: ['pipe', 'pipe', 'pipe'],
+      shell: process.platform === 'win32',
     }).trim()
 
     const published = result === version
@@ -193,6 +196,7 @@ async function getPackageInfo(state: NpmRegistryState, packageName: string): Pro
       encoding: 'utf-8',
       timeout: state.config.timeout,
       stdio: ['pipe', 'pipe', 'pipe'],
+      shell: process.platform === 'win32',
       maxBuffer: 10 * 1024 * 1024,
     })
 
@@ -245,6 +249,7 @@ async function getVersionInfo(state: NpmRegistryState, packageName: string, vers
       encoding: 'utf-8',
       timeout: state.config.timeout,
       stdio: ['pipe', 'pipe', 'pipe'],
+      shell: process.platform === 'win32',
       maxBuffer: 5 * 1024 * 1024,
     })
 
@@ -292,6 +297,7 @@ async function listVersions(state: NpmRegistryState, packageName: string): Promi
       encoding: 'utf-8',
       timeout: state.config.timeout,
       stdio: ['pipe', 'pipe', 'pipe'],
+      shell: process.platform === 'win32',
     })
 
     const versions = parse(result)

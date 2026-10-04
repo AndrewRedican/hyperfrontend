@@ -1,4 +1,5 @@
 import type { FlowStep } from '../models/step'
+import { join } from 'node:path'
 import { parse } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 import { createStep } from '../models/step'
 
@@ -42,7 +43,7 @@ export function createFetchRegistryStep(): FlowStep {
   return createStep(FETCH_REGISTRY_STEP_ID, 'Fetch Registry Version', async (ctx) => {
     const { registry, tree, projectRoot, packageName, logger } = ctx
 
-    const packageJsonPath = `${projectRoot}/package.json`
+    const packageJsonPath = join(projectRoot, 'package.json')
     let currentVersion = '0.0.0'
 
     try {

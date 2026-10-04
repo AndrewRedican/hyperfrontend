@@ -38,7 +38,7 @@ describe('findProjectRoot', () => {
   })
 
   it('returns null for non-existent path', () => {
-    const result = findProjectRoot('/tmp/non-existent-project')
+    const result = findProjectRoot(join(tmpdir(), 'non-existent-project'))
 
     expect(result).toBeNull()
   })
@@ -124,7 +124,7 @@ describe('findWorkspaceRoot', () => {
   })
 
   it('returns null when no workspace root can be found', () => {
-    const result = findWorkspaceRoot('/tmp')
+    const result = findWorkspaceRoot(tmpdir())
 
     expect(result).toBeNull()
   })
@@ -190,7 +190,7 @@ describe('findRootDirectory', () => {
   })
 
   it('returns null when no markers found', () => {
-    const result = findRootDirectory('/tmp', ['non-existent-marker-file.xyz'])
+    const result = findRootDirectory(tmpdir(), ['non-existent-marker-file.xyz'])
 
     expect(result).toBeNull()
   })
@@ -210,7 +210,7 @@ describe('findGitRoot', () => {
   })
 
   it('returns null when no .git directory', () => {
-    const result = findGitRoot('/tmp')
+    const result = findGitRoot(tmpdir())
 
     expect(result).toBeNull()
   })
@@ -230,7 +230,7 @@ describe('findNearestPackageJson', () => {
   })
 
   it('returns null when no package.json found', () => {
-    const result = findNearestPackageJson('/tmp')
+    const result = findNearestPackageJson(tmpdir())
 
     expect(result).toBeNull()
   })

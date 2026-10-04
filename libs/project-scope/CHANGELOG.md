@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.7](https://github.com/AndrewRedican/hyperfrontend/compare/41325ecf9b3f15f597cddadd5fbe6ab68f59eab7...9cb8baf39ab84f10d5585969ad5afb8bd299def0) - 2026-10-04
+
+### Bug Fixes
+
+- handle crlf line endings when splitting text
+- match globs against native windows paths
+- report relative paths with posix separators
+
 ## [0.2.6](https://github.com/AndrewRedican/hyperfrontend/compare/0244581568624d41cfb65141f66003ecaea17718...adf0a4f77dece2be855e7ab88185a4fe84e7b16b) - 2026-09-14
 
 ### Bug Fixes

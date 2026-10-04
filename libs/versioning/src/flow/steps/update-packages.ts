@@ -1,4 +1,5 @@
 import type { FlowStep } from '../models/step'
+import { join } from 'node:path'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { changeJsonFile } from '../../utils/change-json-file'
 import { createStep, createSkippedResult } from '../models/step'
@@ -47,7 +48,7 @@ export function createUpdatePackageStep(): FlowStep {
         return createSkippedResult('No version bump needed')
       }
 
-      const packageJsonPath = `${projectRoot}/package.json`
+      const packageJsonPath = join(projectRoot, 'package.json')
       logger.debug(`Updating package.json at: ${packageJsonPath}`)
 
       try {

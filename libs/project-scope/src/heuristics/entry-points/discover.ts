@@ -1,5 +1,5 @@
 import type { EntryPointInfo } from '../../models'
-import { join } from 'node:path'
+import { join, posix } from 'node:path'
 import { entries } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { createCache } from '../../core/cache'
 import { exists } from '../../core/fs'
@@ -300,7 +300,7 @@ export function discoverEntryPoints(projectPath: string, options?: DiscoverEntry
           maxDepth: options?.maxDepth ?? 5,
         })
         for (const file of pageFiles.slice(0, 10)) {
-          if (!file.includes('_app') && !file.includes('_document') && !file.includes('api/')) {
+          if (!file.includes('_app') && !file.includes('_document') && !file.includes(`api${posix.sep}`)) {
             extendedEntryPoints.push({
               path: file,
               type: 'app',

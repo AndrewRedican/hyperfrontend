@@ -104,11 +104,12 @@ function insertionIndex(lines: readonly string[]): number {
  *
  * @param lines - The entry-file lines.
  * @param importSpecifier - The relative specifier of the scaffolded glue module.
+ * @param eol - The line ending the entry file already uses.
  * @returns The changed content.
  */
-function insertBlock(lines: readonly string[], importSpecifier: string): MarkerInsertion {
+function insertBlock(lines: readonly string[], importSpecifier: string, eol: string): MarkerInsertion {
   const index = insertionIndex(lines)
-  const content = [...lines.slice(0, index), BEGIN_LINE, glueImportLine(importSpecifier), END_LINE, '', ...lines.slice(index)].join('\n')
+  const content = [...lines.slice(0, index), BEGIN_LINE, glueImportLine(importSpecifier), END_LINE, '', ...lines.slice(index)].join(eol)
   return { content, changed: true }
 }
 
@@ -120,10 +121,18 @@ function insertBlock(lines: readonly string[], importSpecifier: string): MarkerI
  * @param begin - Index of the begin marker line.
  * @param end - Index of the end marker line.
  * @param importSpecifier - The relative specifier of the scaffolded glue module.
+ * @param eol - The line ending the entry file already uses.
  * @returns The regenerated content, reported unchanged when already canonical.
  * @throws {Error} When the end marker precedes the begin marker.
  */
-function regenerateBlock(source: string, lines: readonly string[], begin: number, end: number, importSpecifier: string): MarkerInsertion {
+function regenerateBlock(
+  source: string,
+  lines: readonly string[],
+  begin: number,
+  end: number,
+  importSpecifier: string,
+  eol: string
+): MarkerInsertion {
   if (end < begin) {
     throw createError(
       `the '${END_LINE}' end marker appears before its '// <hf:feature>' begin marker — reorder the two marker lines so the begin marker comes first, then re-run.`
@@ -134,7 +143,7 @@ function regenerateBlock(source: string, lines: readonly string[], begin: number
   if (interior.length === 1 && interior[0] === importLine) {
     return { content: source, changed: false }
   }
-  return { content: [...lines.slice(0, begin + 1), importLine, ...lines.slice(end)].join('\n'), changed: true }
+  return { content: [...lines.slice(0, begin + 1), importLine, ...lines.slice(end)].join(eol), changed: true }
 }
 
 /**
@@ -144,17 +153,18 @@ function regenerateBlock(source: string, lines: readonly string[], begin: number
  * @param lines - The entry-file lines.
  * @param begin - Index of the begin marker line.
  * @param importSpecifier - The relative specifier of the scaffolded glue module.
+ * @param eol - The line ending the entry file already uses.
  * @returns The repaired content.
  * @throws {Error} When the line below the begin marker is not the managed import.
  */
-function repairMissingEnd(lines: readonly string[], begin: number, importSpecifier: string): MarkerInsertion {
+function repairMissingEnd(lines: readonly string[], begin: number, importSpecifier: string, eol: string): MarkerInsertion {
   const [below] = lines.slice(begin + 1, begin + 2)
   if (below !== glueImportLine(importSpecifier)) {
     throw createError(
       `found a '// <hf:feature>' begin marker without a matching '${END_LINE}' end marker — add a '${END_LINE}' line directly after the managed glue import, or delete the begin marker line, then re-run.`
     )
   }
-  return { content: [...lines.slice(0, begin + 2), END_LINE, ...lines.slice(begin + 2)].join('\n'), changed: true }
+  return { content: [...lines.slice(0, begin + 2), END_LINE, ...lines.slice(begin + 2)].join(eol), changed: true }
 }
 
 /**
@@ -164,17 +174,18 @@ function repairMissingEnd(lines: readonly string[], begin: number, importSpecifi
  * @param lines - The entry-file lines.
  * @param end - Index of the end marker line.
  * @param importSpecifier - The relative specifier of the scaffolded glue module.
+ * @param eol - The line ending the entry file already uses.
  * @returns The repaired content.
  * @throws {Error} When the line above the end marker is not the managed import.
  */
-function repairMissingBegin(lines: readonly string[], end: number, importSpecifier: string): MarkerInsertion {
+function repairMissingBegin(lines: readonly string[], end: number, importSpecifier: string, eol: string): MarkerInsertion {
   const [above] = lines.slice(end - 1, end)
   if (above !== glueImportLine(importSpecifier)) {
     throw createError(
       `found a '${END_LINE}' end marker without a matching '// <hf:feature>' begin marker — add a '// <hf:feature>' begin marker line directly above the managed glue import, or delete the end marker line, then re-run.`
     )
   }
-  return { content: [...lines.slice(0, end - 1), BEGIN_LINE, ...lines.slice(end - 1)].join('\n'), changed: true }
+  return { content: [...lines.slice(0, end - 1), BEGIN_LINE, ...lines.slice(end - 1)].join(eol), changed: true }
 }
 
 /**
@@ -199,7 +210,9 @@ function repairMissingBegin(lines: readonly string[], end: number, importSpecifi
  * ```
  */
 export function insertFeatureImport(source: string, importSpecifier: string): MarkerInsertion {
-  const lines = source.split('\n')
+  // why: an entry file saved with CRLF endings keeps them; the lines outside the markers are user-owned.
+  const eol = source.includes('\r\n') ? '\r\n' : '\n'
+  const lines = source.split(/\r?\n/)
   const begins = markerIndexes(lines, BEGIN_PATTERN)
   const ends = markerIndexes(lines, END_PATTERN)
   if (begins.length > 1 || ends.length > 1) {
@@ -209,8 +222,8 @@ export function insertFeatureImport(source: string, importSpecifier: string): Ma
   }
   const [begin] = begins
   const [end] = ends
-  if (begin !== undefined && end !== undefined) return regenerateBlock(source, lines, begin, end, importSpecifier)
-  if (begin !== undefined) return repairMissingEnd(lines, begin, importSpecifier)
-  if (end !== undefined) return repairMissingBegin(lines, end, importSpecifier)
-  return insertBlock(lines, importSpecifier)
+  if (begin !== undefined && end !== undefined) return regenerateBlock(source, lines, begin, end, importSpecifier, eol)
+  if (begin !== undefined) return repairMissingEnd(lines, begin, importSpecifier, eol)
+  if (end !== undefined) return repairMissingBegin(lines, end, importSpecifier, eol)
+  return insertBlock(lines, importSpecifier, eol)
 }

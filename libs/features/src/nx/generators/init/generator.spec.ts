@@ -63,7 +63,11 @@ describe('initGenerator', () => {
     const callback = await initGenerator(tree, {})
     expect(execFileSyncMock).not.toHaveBeenCalled()
     await callback()
-    expect(execFileSyncMock).toHaveBeenCalledWith('yarn', ['install'], { cwd: '/ws', stdio: 'inherit' })
+    expect(execFileSyncMock).toHaveBeenCalledWith('yarn', ['install'], {
+      cwd: '/ws',
+      stdio: 'inherit',
+      shell: process.platform === 'win32',
+    })
   })
 
   it('awaits devkit formatFiles in the generator body and installs through installPackagesTask', async () => {
@@ -90,7 +94,7 @@ describe('initGenerator', () => {
     loadDevkitMock.mockReturnValue({})
     const callback = await initGenerator(createTree(UNDECLARED_MANIFEST), {})
     await callback()
-    expect(execFileSyncMock).toHaveBeenCalledWith('npm', ['install'], { cwd: '/ws', stdio: 'inherit' })
+    expect(execFileSyncMock).toHaveBeenCalledWith('npm', ['install'], { cwd: '/ws', stdio: 'inherit', shell: process.platform === 'win32' })
   })
 
   it('returns a callback that installs nothing when the manifest already declares the SDK', async () => {
@@ -108,7 +112,7 @@ describe('initGenerator', () => {
   it('installs when keepExistingVersions is false re-pins an existing declaration', async () => {
     const callback = await initGenerator(createTree(DECLARED_MANIFEST), { keepExistingVersions: false })
     await callback()
-    expect(execFileSyncMock).toHaveBeenCalledWith('npm', ['install'], { cwd: '/ws', stdio: 'inherit' })
+    expect(execFileSyncMock).toHaveBeenCalledWith('npm', ['install'], { cwd: '/ws', stdio: 'inherit', shell: process.platform === 'win32' })
   })
 
   it('warns with the exact remediation when the platform binding candidates cannot resolve', async () => {

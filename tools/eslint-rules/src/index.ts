@@ -15,6 +15,7 @@ import jestMockAfterImports, { RULE_NAME as JEST_MOCK_AFTER_IMPORTS } from './ru
 import libBuilderImplicitDependency, { RULE_NAME as LIB_BUILDER_IMPLICIT_DEPENDENCY } from './rules/lib-builder-implicit-dependency'
 import libCiWorkflows, { RULE_NAME as LIB_CI_WORKFLOWS } from './rules/lib-ci-workflows'
 import libCompatibilityMatrix, { RULE_NAME as LIB_COMPATIBILITY_MATRIX } from './rules/lib-compatibility-matrix'
+import libCrossPlatform, { RULE_NAME as LIB_CROSS_PLATFORM } from './rules/lib-cross-platform'
 import libE2eProjectRequired, { RULE_NAME as LIB_E2E_PROJECT_REQUIRED } from './rules/lib-e2e-project-required'
 import libEntryExportSpacing, { RULE_NAME as LIB_ENTRY_EXPORT_SPACING } from './rules/lib-entry-export-spacing'
 import libInlineCodeLinks, { RULE_NAME as LIB_INLINE_CODE_LINKS } from './rules/lib-inline-code-links'
@@ -89,6 +90,7 @@ export const rules: ESLint.Plugin['rules'] = {
   [ESCAPE_PACKAGE_TAGS]: escapePackageTags as unknown as Rule.RuleModule,
   [EXPORT_ORDER]: exportOrder as unknown as Rule.RuleModule,
   [LIB_COMPATIBILITY_MATRIX]: libCompatibilityMatrix as unknown as Rule.RuleModule,
+  [LIB_CROSS_PLATFORM]: libCrossPlatform as unknown as Rule.RuleModule,
   [LIB_ENTRY_EXPORT_SPACING]: libEntryExportSpacing as unknown as Rule.RuleModule,
   [LIB_INLINE_CODE_LINKS]: libInlineCodeLinks as unknown as Rule.RuleModule,
   [IMPORT_ORDER]: importOrder as unknown as Rule.RuleModule,

@@ -105,7 +105,7 @@ const runOne = (job: InjectWorkerJob, options: DispatchInjectWorkerOptions, labe
     })
     child.on('exit', (code) => {
       if (code !== 0) {
-        const tail = capturedStderr.trim().split('\n').slice(-10).join('\n')
+        const tail = capturedStderr.trim().split(/\r?\n/).slice(-10).join('\n')
         reject(createError(`inject worker for ${label} exited with code ${code}\n${tail}`))
         return
       }

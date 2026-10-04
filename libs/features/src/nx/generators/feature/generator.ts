@@ -1,6 +1,6 @@
 import type { Tree as ScaffoldTree, WriteOptions } from '@hyperfrontend/project-scope/vfs'
 import type { GeneratorCallback, Tree } from '../../model'
-import { isAbsolute, join, relative } from 'node:path'
+import { isAbsolute, join, relative, sep, posix } from 'node:path'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { Mode } from '@hyperfrontend/project-scope/vfs'
 import { EXIT_OK, runInit } from '../../../cli'
@@ -44,7 +44,7 @@ interface WriteTally {
 function toTreePath(workspaceRoot: string, scaffoldRoot: string, filePath: string): string {
   // why: join concatenates an absolute second segment instead of resolving it, so absolute SDK paths (e.g. an absolute --contract) must bypass the scaffold root.
   const absolute = isAbsolute(filePath) ? filePath : join(scaffoldRoot, filePath)
-  return relative(workspaceRoot, absolute).split('\\').join('/')
+  return relative(workspaceRoot, absolute).split(sep).join(posix.sep)
 }
 
 /**

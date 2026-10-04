@@ -1,17 +1,20 @@
-import { join as nodeJoin } from 'node:path'
+import { join as nodeJoin, sep, posix } from 'node:path'
 
 /**
- * POSIX-normalises a path so all separators are `/`.
+ * POSIX-normalises a native path so all separators are `/`.
  *
- * @param value - Raw path that may contain backslashes (Windows) or forward slashes.
- * @returns Path with all separators normalized to `/`.
+ * Only the platform's own separator is rewritten: on POSIX a backslash is a
+ * legal file-name character and is kept.
  *
- * @example Normalising a Windows-style path
+ * @param value - Native path, with backslash separators on Windows.
+ * @returns The path with every native separator replaced by `/`.
+ *
+ * @example Normalising a native Windows path
  * ```typescript
- * normalizeToForwardSlashes('a\\b\\index.d.ts') // => 'a/b/index.d.ts'
+ * normalizeToForwardSlashes('a\\b\\index.d.ts') // => 'a/b/index.d.ts' on Windows
  * ```
  */
-export const normalizeToForwardSlashes = (value: string): string => value.replace(/\\/g, '/')
+export const normalizeToForwardSlashes = (value: string): string => value.split(sep).join(posix.sep)
 
 /**
  * POSIX-style path joiner: joins segments via `node:path` then normalizes all

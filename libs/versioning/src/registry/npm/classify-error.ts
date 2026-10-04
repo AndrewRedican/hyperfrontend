@@ -106,7 +106,7 @@ export function classifyNpmError(error: unknown): NpmLookupFailure {
     return { kind: 'unavailable', reason: 'rate-limit', detail: 'E429' }
   }
 
-  const firstLine = stderr.split('\n').find((line) => line.trim() !== '') ?? 'no diagnostic output'
+  const firstLine = stderr.split(/\r?\n/).find((line) => line.trim() !== '') ?? 'no diagnostic output'
 
   return { kind: 'unavailable', reason: 'unknown', detail: firstLine.trim() }
 }

@@ -163,7 +163,7 @@ describe('core/platform/detect with mocked platforms', () => {
       jest.doMock('node:os', () => ({
         platform: jest.fn(() => 'freebsd'),
         arch: jest.fn(() => 'x64'),
-        tmpdir: jest.fn(() => '/tmp'),
+        tmpdir: jest.fn(() => '/var/tmp'),
       }))
       const { getPlatformInfo: getInfo } = await import('./detect')
       const info = getInfo()
@@ -181,7 +181,7 @@ describe('core/platform/detect with mocked platforms', () => {
       jest.doMock('node:os', () => ({
         platform: jest.fn(() => 'sunos'),
         arch: jest.fn(() => 'x64'),
-        tmpdir: jest.fn(() => '/tmp'),
+        tmpdir: jest.fn(() => '/var/tmp'),
       }))
       const { getPlatformInfo: getInfo } = await import('./detect')
       const info = getInfo()
@@ -198,7 +198,7 @@ describe('core/platform/detect with mocked platforms', () => {
       jest.doMock('node:os', () => ({
         platform: jest.fn(() => 'aix'),
         arch: jest.fn(() => 'ppc64'),
-        tmpdir: jest.fn(() => '/tmp'),
+        tmpdir: jest.fn(() => '/var/tmp'),
       }))
       const { getPlatformInfo: getInfo } = await import('./detect')
       const info = getInfo()
@@ -215,7 +215,7 @@ describe('core/platform/detect with mocked platforms', () => {
       jest.doMock('node:os', () => ({
         platform: jest.fn(() => 'haiku' as NodeJS.Platform),
         arch: jest.fn(() => 'x64'),
-        tmpdir: jest.fn(() => '/tmp'),
+        tmpdir: jest.fn(() => '/var/tmp'),
       }))
       const { getPlatformInfo: getInfo } = await import('./detect')
       const info = getInfo()
