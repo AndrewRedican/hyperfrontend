@@ -1,4 +1,5 @@
 import type { DiscoveredScope } from './scope-discovery'
+import { sep } from 'node:path'
 
 /**
  * Computes the default scope to pre-select in the `scope` step.
@@ -58,7 +59,7 @@ export function defaultScope(candidates: readonly DiscoveredScope[]): string | u
  * @returns True when every other path sits beneath `candidate.path`
  */
 function isAncestorOfAll(candidate: DiscoveredScope, all: readonly DiscoveredScope[]): boolean {
-  const prefix = candidate.path.endsWith('/') ? candidate.path : `${candidate.path}/`
+  const prefix = candidate.path.endsWith(sep) ? candidate.path : `${candidate.path}${sep}`
   for (const other of all) {
     if (other === candidate) continue
     if (!other.path.startsWith(prefix)) return false
