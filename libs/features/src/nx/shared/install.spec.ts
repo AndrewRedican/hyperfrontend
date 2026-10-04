@@ -41,12 +41,16 @@ describe('installPackages', () => {
 
   it('runs the detected package manager install at the tree root with inherited stdio', () => {
     installPackages(createTree(['yarn.lock']))
-    expect(execFileSyncMock).toHaveBeenCalledWith('yarn', ['install'], { cwd: '/ws', stdio: 'inherit' })
+    expect(execFileSyncMock).toHaveBeenCalledWith('yarn', ['install'], {
+      cwd: '/ws',
+      stdio: 'inherit',
+      shell: process.platform === 'win32',
+    })
   })
 
   it('defaults to npm when no lockfile is present', () => {
     installPackages(createTree([]))
-    expect(execFileSyncMock).toHaveBeenCalledWith('npm', ['install'], { cwd: '/ws', stdio: 'inherit' })
+    expect(execFileSyncMock).toHaveBeenCalledWith('npm', ['install'], { cwd: '/ws', stdio: 'inherit', shell: process.platform === 'win32' })
   })
 
   it('names the manual command and the already-written declaration when the install fails', () => {
