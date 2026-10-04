@@ -305,6 +305,83 @@ export default contract
       expect(declaration).toBeDefined()
       expect(readFileSync(join(outDir, declaration as string), 'utf8')).toContain("export type FeatureDisplayMode = 'embedded' | 'dialog'")
     })
+
+    describe('installed into an isolated consumer', () => {
+      let consumerDir: string
+
+      beforeAll(
+        () => {
+          const tarball = outFiles.find((file) => file.endsWith('.tgz'))
+          consumerDir = mkdtempSync(join(tmpdir(), 'hf-shell-consumer-'))
+          writeFileSync(join(consumerDir, 'package.json'), `${JSON.stringify({ name: 'shell-consumer', private: true, type: 'module' })}\n`)
+          // why: The consumer gets the packed tarball and nothing else, no SDK and no linked node_modules, so every import below resolves through the shell's own published exports map the way it does for an external install.
+          execFileSync('npm', ['install', '--no-audit', '--no-fund', '--ignore-scripts', join(outDir, tarball as string)], {
+            cwd: consumerDir,
+            stdio: 'pipe',
+          })
+          writeFileSync(
+            join(consumerDir, 'consumer.ts'),
+            `import { createFeatureShell } from 'e2e-widget-shell'
+import type { FeatureDisplayMode, FeatureShellHandle, FeatureShellOptions } from 'e2e-widget-shell'
+
+const options: FeatureShellOptions = { container: '#widget' }
+const mode: FeatureDisplayMode = 'dialog'
+export const shell: FeatureShellHandle = createFeatureShell(options)
+export { mode }
+`
+          )
+        },
+        { timeout: 120000 }
+      )
+
+      afterAll(() => {
+        rmSync(consumerDir, { recursive: true, force: true })
+      })
+
+      it('imports createFeatureShell from the package root as ESM', () => {
+        const output = execFileSync(
+          'node',
+          ['--input-type=module', '-e', "const m = await import('e2e-widget-shell'); process.stdout.write(typeof m.createFeatureShell)"],
+          {
+            cwd: consumerDir,
+            encoding: 'utf8',
+          }
+        )
+        expect(output).toBe('function')
+      })
+
+      it('requires createFeatureShell from the package root as CommonJS', () => {
+        const output = execFileSync(
+          'node',
+          ['--input-type=commonjs', '-e', "process.stdout.write(typeof require('e2e-widget-shell').createFeatureShell)"],
+          {
+            cwd: consumerDir,
+            encoding: 'utf8',
+          }
+        )
+        expect(output).toBe('function')
+      })
+
+      it('typechecks the documented root import and its types under nodenext resolution', () => {
+        const checked = spawnSync(
+          'node',
+          [
+            require.resolve('typescript/bin/tsc'),
+            '--noEmit',
+            '--strict',
+            '--module',
+            'nodenext',
+            '--moduleResolution',
+            'nodenext',
+            '--lib',
+            'es2022,dom',
+            'consumer.ts',
+          ],
+          { cwd: consumerDir, encoding: 'utf8' }
+        )
+        expect({ status: checked.status, output: checked.stdout }).toEqual({ status: 0, output: '' })
+      })
+    })
   })
 })
 
