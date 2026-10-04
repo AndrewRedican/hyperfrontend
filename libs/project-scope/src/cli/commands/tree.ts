@@ -1,6 +1,6 @@
 import type { WalkEntry } from '../../project/traversal'
 import type { Command, CommandResult, GlobalOptions, OutputFormat } from '../types'
-import { basename, resolve } from 'node:path'
+import { basename, posix, resolve } from 'node:path'
 import { parseArgs } from 'node:util'
 import { stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
@@ -117,9 +117,9 @@ function buildTree(rootPath: string, walkEntries: WalkEntry[], options: TreeComm
       }
     }
 
-    const parts = entry.relativePath.split('/')
+    const parts = entry.relativePath.split(posix.sep)
     parts.pop()
-    const parentPath = parts.join('/') || '.'
+    const parentPath = parts.join(posix.sep) || '.'
     const parent = nodeMap.get(parentPath)
 
     if (parent) {

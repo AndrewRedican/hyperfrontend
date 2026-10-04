@@ -1,4 +1,4 @@
-import { normalize, sep } from 'node:path'
+import { normalize, sep, posix } from 'node:path'
 
 /**
  * Normalize path separators to forward slashes.
@@ -15,7 +15,7 @@ import { normalize, sep } from 'node:path'
 export function normalizePath(filePath: string): string {
   if (!filePath) return ''
   const normalized = normalize(filePath)
-  return sep === '\\' ? normalized.replace(/\\/g, '/') : normalized
+  return sep === '\\' ? normalized.split(sep).join(posix.sep) : normalized
 }
 
 /**
@@ -33,7 +33,7 @@ export function normalizePath(filePath: string): string {
  */
 export function normalizeToForwardSlashes(filePath: string): string {
   if (!filePath) return ''
-  return normalize(filePath).split(sep).join('/')
+  return normalize(filePath).split(sep).join(posix.sep)
 }
 
 /**

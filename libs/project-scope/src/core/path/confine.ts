@@ -1,5 +1,5 @@
 import { existsSync, realpathSync } from 'node:fs'
-import { resolve } from 'node:path'
+import { posix, resolve } from 'node:path'
 import { normalizePath, removeTrailingSlash } from './normalize'
 
 /**
@@ -14,7 +14,7 @@ import { normalizePath, removeTrailingSlash } from './normalize'
  */
 function contains(root: string, path: string): boolean {
   const base = removeTrailingSlash(root)
-  return path === base || path.startsWith(`${base}/`)
+  return path === base || path.startsWith(`${base}${posix.sep}`)
 }
 
 /**

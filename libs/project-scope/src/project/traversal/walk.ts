@@ -1,5 +1,5 @@
 import type { Tree } from '../../vfs'
-import { join } from 'node:path'
+import { join, posix } from 'node:path'
 import { readDirectory, readFileIfExists } from '../../core/fs'
 import { isFileSystemError } from '../../core/fs/read'
 import { createScopedLogger } from '../../core/logger'
@@ -130,7 +130,7 @@ function matchPattern(path: string, pattern: string, isDirectoryEntry: boolean):
 
   const matchesFullPath = matchGlobPattern(path, actualPattern) || matchGlobPattern(path, `**/${actualPattern}`)
 
-  const matchesSegment = path.split('/').some((segment) => matchGlobPattern(segment, actualPattern))
+  const matchesSegment = path.split(posix.sep).some((segment) => matchGlobPattern(segment, actualPattern))
 
   return matchesFullPath || matchesSegment
 }
@@ -206,7 +206,7 @@ export function walkDirectory(startPath: string, visitor: WalkVisitor, options?:
         continue
       }
 
-      const entryRelativePath = relativePath ? `${relativePath}/${entry.name}` : entry.name
+      const entryRelativePath = relativePath ? posix.join(relativePath, entry.name) : entry.name
 
       if (matchesIgnorePattern(entryRelativePath, allIgnorePatterns, entry.isDirectory)) {
         continue
@@ -303,8 +303,8 @@ export function walkTree(tree: Tree, startPath: string, visitor: WalkVisitor, op
         continue
       }
 
-      const childPath = currentPath ? `${currentPath}/${name}` : name
-      const entryRelativePath = relativePath ? `${relativePath}/${name}` : name
+      const childPath = currentPath ? posix.join(currentPath, name) : name
+      const entryRelativePath = relativePath ? posix.join(relativePath, name) : name
 
       const isFileEntry = tree.isFile(childPath)
       const isSymlinkEntry = tree.isSymlink(childPath)
