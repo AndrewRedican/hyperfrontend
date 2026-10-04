@@ -1,5 +1,6 @@
 import type { MockedFunction } from '@hyperfrontend/testing'
 import type { PackageJson } from '../../project/package'
+import { sep } from 'node:path'
 import { beforeEach } from 'node:test'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import * as fs from '../../core/fs'
@@ -73,7 +74,7 @@ describe('nuxtDetector', () => {
 
   it('increases confidence with pages directory', () => {
     mockExists.mockImplementation((path: string) => {
-      return path.endsWith('/pages')
+      return path.endsWith(`${sep}pages`)
     })
 
     const pkg: PackageJson = {
@@ -87,7 +88,7 @@ describe('nuxtDetector', () => {
 
   it('caps confidence at 100', () => {
     mockExists.mockImplementation((path: string) => {
-      return path.includes('nuxt.config.js') || path.endsWith('/pages')
+      return path.includes('nuxt.config.js') || path.endsWith(`${sep}pages`)
     })
 
     const pkg: PackageJson = {

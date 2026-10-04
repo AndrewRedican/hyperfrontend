@@ -1,5 +1,6 @@
 import type { MockedFunction } from '@hyperfrontend/testing'
 import type { PackageJson } from '../../project/package'
+import { join, sep } from 'node:path'
 import { beforeEach } from 'node:test'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import * as fs from '../../core/fs'
@@ -76,7 +77,7 @@ describe('nextjsDetector', () => {
 
   it('increases confidence with pages directory', () => {
     mockExists.mockImplementation((path: string) => {
-      return path.endsWith('/pages')
+      return path.endsWith(`${sep}pages`)
     })
 
     const pkg: PackageJson = {
@@ -90,7 +91,7 @@ describe('nextjsDetector', () => {
 
   it('increases confidence with app directory', () => {
     mockExists.mockImplementation((path: string) => {
-      return path.endsWith('/app')
+      return path.endsWith(`${sep}app`)
     })
 
     const pkg: PackageJson = {
@@ -103,7 +104,7 @@ describe('nextjsDetector', () => {
 
   it('increases confidence with src/pages directory', () => {
     mockExists.mockImplementation((path: string) => {
-      return path.includes('src/pages')
+      return path.includes(join('src', 'pages'))
     })
 
     const pkg: PackageJson = {
@@ -116,7 +117,7 @@ describe('nextjsDetector', () => {
 
   it('increases confidence with src/app directory', () => {
     mockExists.mockImplementation((path: string) => {
-      return path.includes('src/app')
+      return path.includes(join('src', 'app'))
     })
 
     const pkg: PackageJson = {
@@ -129,7 +130,7 @@ describe('nextjsDetector', () => {
 
   it('caps confidence at 100', () => {
     mockExists.mockImplementation((path: string) => {
-      return path.includes('next.config.js') || path.endsWith('/pages')
+      return path.includes('next.config.js') || path.endsWith(`${sep}pages`)
     })
 
     const pkg: PackageJson = {

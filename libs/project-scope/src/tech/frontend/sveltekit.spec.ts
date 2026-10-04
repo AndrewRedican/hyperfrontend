@@ -1,5 +1,6 @@
 import type { MockedFunction } from '@hyperfrontend/testing'
 import type { PackageJson } from '../../project/package'
+import { join } from 'node:path'
 import { beforeEach } from 'node:test'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import * as fs from '../../core/fs'
@@ -49,7 +50,7 @@ describe('sveltekitDetector', () => {
 
   it('increases confidence with src/routes directory', () => {
     mockExists.mockImplementation((path: string) => {
-      return path.includes('src/routes') || path.endsWith('routes')
+      return path.includes(join('src', 'routes')) || path.endsWith('routes')
     })
 
     const pkg: PackageJson = {

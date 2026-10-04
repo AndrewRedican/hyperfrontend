@@ -1,7 +1,7 @@
 import type { Tree } from '../../vfs'
 import type { WalkEntry, WalkOptions, WalkVisitor } from './walk'
 import { mkdirSync, writeFileSync, rmSync, symlinkSync } from 'node:fs'
-import { join, resolve } from 'node:path'
+import { join, posix, resolve } from 'node:path'
 import { after as afterAll, before as beforeAll } from 'node:test'
 import { describe, expect, it } from '@hyperfrontend/testing'
 import { createTree } from '../../vfs'
@@ -95,7 +95,7 @@ describe('walkDirectory', () => {
 
     walkDirectory(MINIMAL_PROJECT, visitor, { includeHidden: true })
 
-    const hasSrcChildren = entries.some((e) => e.relativePath.startsWith('src/'))
+    const hasSrcChildren = entries.some((e) => e.relativePath.startsWith(`src${posix.sep}`))
     expect(hasSrcChildren).toBe(false)
   })
 
@@ -180,7 +180,7 @@ describe('walkTree', () => {
 
     walkTree(tree, '', visitor, { includeHidden: true })
 
-    const hasSrcChildren = entries.some((e) => e.relativePath.startsWith('src/'))
+    const hasSrcChildren = entries.some((e) => e.relativePath.startsWith(`src${posix.sep}`))
     expect(hasSrcChildren).toBe(false)
   })
 
@@ -207,7 +207,7 @@ describe('walkTree', () => {
       '',
       (entry) => {
         visited.push(entry.relativePath)
-        if (entry.relativePath.includes('/')) {
+        if (entry.relativePath.includes(posix.sep)) {
           return 'stop'
         }
       },
@@ -215,7 +215,7 @@ describe('walkTree', () => {
       { maxDepth: 3 }
     )
 
-    expect(visited.filter((path) => path.includes('/'))).toHaveLength(1)
+    expect(visited.filter((path) => path.includes(posix.sep))).toHaveLength(1)
   })
 
   it('filters hidden files by default', () => {

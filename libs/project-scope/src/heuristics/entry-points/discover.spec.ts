@@ -1,4 +1,4 @@
-import { resolve } from 'node:path'
+import { posix, resolve } from 'node:path'
 import { beforeEach } from 'node:test'
 import { describe, expect, it } from '@hyperfrontend/testing'
 import { discoverEntryPoints, clearEntryPointCache, ENTRY_POINT_PATTERNS } from './discover'
@@ -189,9 +189,9 @@ describe('discoverEntryPoints', () => {
       it('discovers page entries excluding _app, _document, and api routes', () => {
         const result = discoverEntryPoints(NEXTJS_APP, { includeFrameworkEntries: true })
 
-        const pageEntries = result.filter((e) => e.path.includes('pages/'))
+        const pageEntries = result.filter((e) => e.path.includes(`pages${posix.sep}`))
         const appEntry = pageEntries.find((e) => e.path.includes('_app'))
-        const apiEntry = pageEntries.find((e) => e.path.includes('api/'))
+        const apiEntry = pageEntries.find((e) => e.path.includes(`api${posix.sep}`))
 
         expect(pageEntries.length).toBeGreaterThan(0)
         expect(appEntry).toBeUndefined()
@@ -231,7 +231,7 @@ describe('discoverEntryPoints', () => {
       it('does not include framework-specific entries', () => {
         const result = discoverEntryPoints(NEXTJS_APP, { includeFrameworkEntries: false })
 
-        const pageEntries = result.filter((e) => e.path.includes('pages/'))
+        const pageEntries = result.filter((e) => e.path.includes(`pages${posix.sep}`))
         expect(pageEntries.length).toBe(0)
       })
     })

@@ -1,5 +1,6 @@
 import type { MockedFunction } from '@hyperfrontend/testing'
 import type { PackageJson } from '../../project/package'
+import { join } from 'node:path'
 import { beforeEach } from 'node:test'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import * as fs from '../../core/fs'
@@ -61,7 +62,7 @@ describe('svelteDetector', () => {
 
   it('increases confidence with .svelte files in src', () => {
     mockExists.mockImplementation((path: string) => {
-      return path.includes('App.svelte') || path.includes('src/routes')
+      return path.includes('App.svelte') || path.includes(join('src', 'routes'))
     })
 
     const pkg: PackageJson = {

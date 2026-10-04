@@ -1,5 +1,5 @@
 import { mkdirSync, writeFileSync, rmSync } from 'node:fs'
-import { join } from 'node:path'
+import { join, sep } from 'node:path'
 import { after as afterAll, before as beforeAll } from 'node:test'
 import { describe, expect, it } from '@hyperfrontend/testing'
 import { createTree, createTreeFromDisk } from './factory'
@@ -45,7 +45,7 @@ describe('vfs/factory', () => {
     })
 
     it('normalizes path with trailing slash', () => {
-      const tree = createTree(TEST_DIR + '/')
+      const tree = createTree(TEST_DIR + sep)
       expect(tree.root).toBe(TEST_DIR)
     })
   })

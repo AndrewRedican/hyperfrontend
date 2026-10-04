@@ -1,6 +1,6 @@
 import { mkdtempSync, rmSync, writeFileSync, mkdirSync, existsSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { join, parse } from 'node:path'
+import { basename, join, parse } from 'node:path'
 import { beforeEach, afterEach } from 'node:test'
 import { describe, it, expect } from '@hyperfrontend/testing'
 import { traverseUpward, locateByMarkers, findUpwardWhere } from './traversal'
@@ -115,9 +115,7 @@ describe('core/fs/traversal', () => {
 
     it('works with custom test logic', () => {
       const result = findUpwardWhere(deepDir, (dir) => {
-        const parts = dir.split('/')
-        const basename = parts[parts.length - 1]
-        return basename === 'level1'
+        return basename(dir) === 'level1'
       })
       expect(result).toBe(join(tempDir, 'level1'))
     })
