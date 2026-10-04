@@ -1,5 +1,5 @@
 import type { IsWorkspacePackagePredicate, PackageJson, WorkspaceDepHoistPolicy } from '../../models'
-import { isAbsolute as nodeIsAbsolute, resolve as nodeResolve } from 'node:path'
+import { dirname, isAbsolute as nodeIsAbsolute, resolve as nodeResolve } from 'node:path'
 import { from } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
@@ -196,11 +196,9 @@ const firstResolvable = (paths: string[]): string | undefined => {
  * @returns The dep's project-root directory, or `undefined` when no `package.json` ancestor exists.
  */
 const findOwningProjectRoot = (fromPath: string): string | undefined => {
-  const normalized = normalizeToForwardSlashes(fromPath)
-  const segments = normalized.split('/').filter((s) => s.length > 0)
-  for (let i = segments.length; i > 0; i--) {
-    const candidateDir = `/${segments.slice(0, i).join('/')}`
-    if (exists(`${candidateDir}/package.json`)) return candidateDir
+  // why: walking with dirname keeps the drive root of a Windows path, which rebuilding the path from `/`-split segments loses.
+  for (let dir = fromPath; dirname(dir) !== dir; dir = dirname(dir)) {
+    if (exists(join(dir, 'package.json'))) return dir
   }
   return undefined
 }
