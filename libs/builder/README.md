@@ -144,7 +144,11 @@ yourself, so [`runBundlePhase`](https://www.hyperfrontend.dev/docs/libraries/bui
 
 Most of that work is discovery rather than declaration, which is why the config stays small. Entry points come from the folder layout:
 [`discoverEntries`](https://www.hyperfrontend.dev/docs/libraries/builder/bundle/entries/#api-discoverEntries) walks `src/`, and every directory holding an `index.ts`
-becomes a published subpath, so adding an entry point is adding a folder. The seams that could have hard-coded a workspace are plain predicate functions instead:
+(at most three levels deep) is built as an entry. An entry is published only when the source manifest's
+[`exports`](https://www.hyperfrontend.dev/docs/libraries/builder/models/#api-PackageJson-prop-exports) declares it, as `"./<dir>": "./src/<dir>/index.ts"`, so adding an
+entry point is adding a folder and declaring it; with no exports map, only the root entry is published. A declared subpath the build cannot publish fails the build.
+
+The seams that could have hard-coded a workspace are plain predicate functions instead:
 [`isWorkspacePackage`](https://www.hyperfrontend.dev/docs/libraries/builder/models/#api-BuildConfig-prop-isWorkspacePackage) is a `(name: string) => boolean`, with
 [`byPrefix`](https://www.hyperfrontend.dev/docs/libraries/builder/presets/#api-byPrefix) and
 [`byNames`](https://www.hyperfrontend.dev/docs/libraries/builder/presets/#api-byNames) as conveniences for the two common answers and a closure of your own just as

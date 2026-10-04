@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.0](https://github.com/AndrewRedican/hyperfrontend/compare/f65ad13fb8e8290b672395bad080716f97b8c849...8bb06270342477b052ffe0afc6ef758aa70dfcdf) - 2026-10-04
+
+### Breaking Changes
+
+- **BREAKING** fail the build on a declared export it cannot publish
+
+### Bug Fixes
+
+- **BREAKING** fail the build on a declared export it cannot publish
+
 ## [0.3.0](https://github.com/AndrewRedican/hyperfrontend/compare/41325ecf9b3f15f597cddadd5fbe6ab68f59eab7...5c5b6e17fffdbb24234b5eaf5929d48f6d036e32) - 2026-10-02
 
 ### Features
