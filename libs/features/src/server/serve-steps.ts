@@ -2,7 +2,7 @@ import type { FileStats } from '@hyperfrontend/project-scope/core/fs'
 import type { ServeHeaderRule } from '../shared/serve-types'
 import type { ResolvedServeConfig } from './serve-config'
 import type { ServeStep, ServeStepContext, StaticRequest, StaticResponse } from './serve-pipeline'
-import { join, relative, sep } from 'node:path'
+import { join, relative, sep, posix } from 'node:path'
 import { keys } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { getFileStat, isFile as isFileOnDisk, readFileBuffer } from '@hyperfrontend/project-scope/core/fs'
 import { buildCompressionStep } from './serve-compression'
@@ -74,7 +74,7 @@ function buildHeaderRulesStep(config: ResolvedServeConfig): ServeStep {
     if (config.headers.length === 0) {
       return response
     }
-    const resolved = context.filePath === undefined ? undefined : `/${relative(config.root, context.filePath).split(sep).join('/')}`
+    const resolved = context.filePath === undefined ? undefined : `/${relative(config.root, context.filePath).split(sep).join(posix.sep)}`
     const path = resolved ?? requestPath(request.url)
     const merged: Record<string, string> = { ...response.headers }
     for (const rule of config.headers) {

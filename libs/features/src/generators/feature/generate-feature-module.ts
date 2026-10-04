@@ -1,6 +1,6 @@
 import type { Tree } from '@hyperfrontend/project-scope/vfs'
 import type { FeatureContract, ResolvedFeatureConfig } from '../../shared/types'
-import { dirname, isAbsolute, join, relative } from 'node:path'
+import { dirname, isAbsolute, join, relative, sep, posix } from 'node:path'
 import { canonicalVersion } from '../shared/canonical-version'
 
 // note: Machine-owned only while pristine; re-runs never clobber handlers the author has filled in.
@@ -18,11 +18,15 @@ export type FeatureModuleOutcome = 'created' | 'kept' | 'updated'
  * @returns A POSIX-style relative specifier suitable for an `import` statement.
  */
 function toContractImportPath(contractPath: string, treeRoot: string): string {
-  const withoutExtension = contractPath.replace(/\.(json|ts|js)$/, '')
+  // why: the config may have been written on another OS, so either separator in it means a directory boundary here.
+  const withoutExtension = contractPath
+    .split(/[/\\]/)
+    .join(sep)
+    .replace(/\.(json|ts|js)$/, '')
   const target = isAbsolute(withoutExtension) ? withoutExtension : join(treeRoot, withoutExtension)
   const specifier = relative(join(treeRoot, dirname(MODULE_PATH)), target)
-    .split('\\')
-    .join('/')
+    .split(sep)
+    .join(posix.sep)
   return specifier.startsWith('.') ? specifier : `./${specifier}`
 }
 

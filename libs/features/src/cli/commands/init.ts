@@ -2,7 +2,7 @@ import type { Tree } from '@hyperfrontend/project-scope/vfs'
 import type { FeatureContract, ResolvedFeatureConfig } from '../../shared/types'
 import type { CliFlags } from '../args'
 import type { MarkerInsertion } from '../insert-marker'
-import { dirname, isAbsolute, relative, resolve } from 'node:path'
+import { dirname, isAbsolute, relative, resolve, sep, posix } from 'node:path'
 import { isArray } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { parse, stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
@@ -70,7 +70,7 @@ function toAbsolute(base: string, path: string): string {
  * @returns The base-relative POSIX path.
  */
 function toRelativePosix(base: string, absolutePath: string): string {
-  return relative(base, absolutePath).split('\\').join('/')
+  return relative(base, absolutePath).split(sep).join(posix.sep)
 }
 
 /**
