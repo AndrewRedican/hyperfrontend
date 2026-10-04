@@ -40,7 +40,9 @@ Create the shell against a [`container`](/docs/libraries/features/host#api-Shell
 
 <!-- snippet: open-and-observe -->
 
-Three calls are yours rather than the SDK's: ignore [`suspect`](/docs/libraries/features/host#api-HeartbeatState) while product traffic still arrives, report a mid-session `close` as connecting rather than offline (it is usually the feature reloading), and treat `error` with [`reason: 'open-timeout'`](/docs/libraries/features/host#api) as terminal.
+A phone may kill the frame without a word, and the browser repaints it with its own crash tile. [`onUnresponsive: 'reopen'`](/docs/libraries/features/host#api-ShellOptions-prop-onUnresponsive) hands that case to the SDK: it waits out the grace a merely starved frame would need to speak again, then replaces the mount on a backoff and a bounded budget, announcing each attempt with a `reopen` event and giving up with `error` `reason: 'reopen-exhausted'`.
+
+Four calls are yours rather than the SDK's: ignore [`suspect`](/docs/libraries/features/host#api-HeartbeatState) while product traffic still arrives, report a `reopen` as connecting (and ignore the `gone` status the SDK emits as it tears the dead mount down), report a mid-session `close` as connecting rather than offline (it is usually the feature reloading), and treat `error` with [`reason: 'open-timeout'`](/docs/libraries/features/host#api) or `reason: 'reopen-exhausted'` as terminal.
 
 ## 6. Reveal the frame on the first proof event
 
