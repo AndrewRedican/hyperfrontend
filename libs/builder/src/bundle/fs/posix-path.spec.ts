@@ -1,9 +1,10 @@
+import { sep } from 'node:path'
 import { describe, expect, it } from '@hyperfrontend/testing'
 import { join, normalizeToForwardSlashes } from './posix-path'
 
 describe('normalizeToForwardSlashes', () => {
-  it('rewrites backslashes to forward slashes', () => {
-    expect(normalizeToForwardSlashes('a\\b\\index.d.ts')).toBe('a/b/index.d.ts')
+  it('rewrites native separators to forward slashes', () => {
+    expect(normalizeToForwardSlashes(['a', 'b', 'index.d.ts'].join(sep))).toBe('a/b/index.d.ts')
   })
 
   it('leaves an already-POSIX path untouched', () => {
