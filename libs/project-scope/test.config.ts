@@ -18,7 +18,7 @@ const config: TestConfig = {
     'src/cli/types.ts',
     'src/tech/*/types.ts',
   ],
-  coverageThresholds: { lines: 98, branches: 93, functions: 98 },
+  coverageThresholds: { lines: 99, branches: 94, functions: 99 },
 }
 
 export default config
