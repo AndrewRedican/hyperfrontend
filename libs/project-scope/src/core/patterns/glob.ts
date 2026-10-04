@@ -23,7 +23,8 @@
  * ```
  */
 export function matchGlobPattern(path: string, pattern: string): boolean {
-  return matchSegments(path.split('/'), pattern.split('/'), 0, 0)
+  // why: the path may be native on Windows, so it splits on either separator; a pattern splits on `/` alone, because a backslash in glob syntax is an escape.
+  return matchSegments(path.split(/[/\\]/), pattern.split('/'), 0, 0)
 }
 
 /**
