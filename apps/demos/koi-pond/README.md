@@ -430,8 +430,8 @@ A few constraints the scene depends on:
   unreachable fish cannot hold the pond dark.
 - **A dead frame is healed, not left standing.** A browser that kills a koi's frame repaints it
   with its own crash tile, which no host page can style. Every session opens with the SDK's
-  `reopen` policy and `concealUnresponsive`: the frame is hidden from the unresponsive verdict, and
-  a silence that outlives its grace is replaced by a fresh mount on a backoff, on a bounded budget,
-  and never into a hidden page. A koi the budget gives up on stays on the roster, shown offline.
+  `reopen` policy and `concealUnresponsive`: the dead frame is hidden, then replaced on a backoff
+  and a bounded budget, never into a hidden page. A koi the budget gives up on stays on the roster,
+  shown offline.
 - **`KOI_FRAMEWORKS` and every trait band are append-only.** A koi's list position is its seed, so
   reordering the list re-rolls every fish in the pond.
