@@ -1,4 +1,5 @@
 import type { Tree } from '@hyperfrontend/project-scope/vfs'
+import { posix } from 'node:path'
 import { beforeEach } from 'node:test'
 import * as projectScopeFs from '@hyperfrontend/project-scope/core/fs'
 import * as projectScopePackage from '@hyperfrontend/project-scope/project/package'
@@ -387,7 +388,7 @@ describe('discoverPackages with VFS tree', () => {
       return encoding ? content : Buffer.from(content)
     }),
     exists: jest.fn((path: string) => files[path] !== undefined),
-    isFile: jest.fn((path: string) => files[path] !== undefined && !path.endsWith('/')),
+    isFile: jest.fn((path: string) => files[path] !== undefined && !path.endsWith(posix.sep)),
     children: jest.fn(),
     write: jest.fn(),
     delete: jest.fn(),

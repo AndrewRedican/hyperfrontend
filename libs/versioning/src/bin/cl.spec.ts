@@ -1,5 +1,7 @@
 import type { LoadCommitConfigOptions, LoadedCommitConfig } from '../commits/author/config-loader/load'
 import type { Ruleset, ValidationResult } from '../commits/validate/models/ruleset'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import { PassThrough } from 'node:stream'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { describe, expect, it } from '@hyperfrontend/testing'
@@ -32,18 +34,22 @@ function stubLoad(capture: { options?: LoadCommitConfigOptions }): (options: Loa
   }
 }
 
+const MESSAGE_PATH = join(tmpdir(), 'msg.txt')
+const OTHER_PATH = join(tmpdir(), 'other.txt')
+const MISSING_PATH = join(tmpdir(), 'missing.txt')
+
 describe('parseClArgs', () => {
   it('captures the message path positional', () => {
     expect(parseClArgs(['.git/COMMIT_EDITMSG'])).toEqual({ messagePath: '.git/COMMIT_EDITMSG' })
   })
 
   it('captures --config alongside the positional in any order', () => {
-    expect(parseClArgs(['--config', 'c.cjs', '/tmp/msg.txt'])).toEqual({ messagePath: '/tmp/msg.txt', configPath: 'c.cjs' })
-    expect(parseClArgs(['/tmp/msg.txt', '--config', 'c.cjs'])).toEqual({ messagePath: '/tmp/msg.txt', configPath: 'c.cjs' })
+    expect(parseClArgs(['--config', 'c.cjs', MESSAGE_PATH])).toEqual({ messagePath: MESSAGE_PATH, configPath: 'c.cjs' })
+    expect(parseClArgs([MESSAGE_PATH, '--config', 'c.cjs'])).toEqual({ messagePath: MESSAGE_PATH, configPath: 'c.cjs' })
   })
 
   it('captures --cwd alongside the positional', () => {
-    expect(parseClArgs(['--cwd', '/repo', '/tmp/msg.txt'])).toEqual({ messagePath: '/tmp/msg.txt', cwdOverride: '/repo' })
+    expect(parseClArgs(['--cwd', '/repo', MESSAGE_PATH])).toEqual({ messagePath: MESSAGE_PATH, cwdOverride: '/repo' })
   })
 
   it('throws when no positional is supplied', () => {
@@ -59,11 +65,11 @@ describe('parseClArgs', () => {
   })
 
   it('throws on unknown flags', () => {
-    expect(() => parseClArgs(['--bogus', '/tmp/msg.txt'])).toThrow(/Unknown argument: --bogus/)
+    expect(() => parseClArgs(['--bogus', MESSAGE_PATH])).toThrow(/Unknown argument: --bogus/)
   })
 
   it('throws when more than one positional is supplied', () => {
-    expect(() => parseClArgs(['/tmp/msg.txt', '/tmp/other.txt'])).toThrow(/Unexpected extra argument/)
+    expect(() => parseClArgs([MESSAGE_PATH, OTHER_PATH])).toThrow(/Unexpected extra argument/)
   })
 })
 
@@ -96,7 +102,7 @@ describe('runCl', () => {
   it('returns 0 and writes nothing when the message is valid', async () => {
     const stderr = new PassThrough()
     const code = await runCl({
-      argv: ['/tmp/msg.txt'],
+      argv: [MESSAGE_PATH],
       cwd: '/repo',
       stderr,
       loadConfig: stubLoad({}),
@@ -111,7 +117,7 @@ describe('runCl', () => {
   it('writes warnings even when the result is valid', async () => {
     const stderr = new PassThrough()
     const code = await runCl({
-      argv: ['/tmp/msg.txt'],
+      argv: [MESSAGE_PATH],
       cwd: '/repo',
       stderr,
       loadConfig: stubLoad({}),
@@ -130,7 +136,7 @@ describe('runCl', () => {
   it('returns 1 and writes the report when the message is invalid', async () => {
     const stderr = new PassThrough()
     const code = await runCl({
-      argv: ['/tmp/msg.txt'],
+      argv: [MESSAGE_PATH],
       cwd: '/repo',
       stderr,
       loadConfig: stubLoad({}),
@@ -164,7 +170,7 @@ describe('runCl', () => {
   it('returns 1 when reading the message file fails', async () => {
     const stderr = new PassThrough()
     const code = await runCl({
-      argv: ['/tmp/missing.txt'],
+      argv: [MISSING_PATH],
       cwd: '/repo',
       stderr,
       loadConfig: stubLoad({}),
@@ -181,7 +187,7 @@ describe('runCl', () => {
   it('stringifies non-Error throws from readMessage', async () => {
     const stderr = new PassThrough()
     const code = await runCl({
-      argv: ['/tmp/missing.txt'],
+      argv: [MISSING_PATH],
       cwd: '/repo',
       stderr,
       loadConfig: stubLoad({}),
@@ -198,7 +204,7 @@ describe('runCl', () => {
   it('returns 1 when config loading fails', async () => {
     const stderr = new PassThrough()
     const code = await runCl({
-      argv: ['/tmp/msg.txt'],
+      argv: [MESSAGE_PATH],
       cwd: '/repo',
       stderr,
       loadConfig: async () => {
@@ -215,7 +221,7 @@ describe('runCl', () => {
   it('stringifies non-Error throws from loadConfig', async () => {
     const stderr = new PassThrough()
     const code = await runCl({
-      argv: ['/tmp/msg.txt'],
+      argv: [MESSAGE_PATH],
       cwd: '/repo',
       stderr,
       loadConfig: async () => {
@@ -234,7 +240,7 @@ describe('runCl', () => {
     const capture = { options: undefined as LoadCommitConfigOptions | undefined }
 
     await runCl({
-      argv: ['/tmp/msg.txt', '--config', './cfg.cjs', '--cwd', '/work'],
+      argv: [MESSAGE_PATH, '--config', './cfg.cjs', '--cwd', '/work'],
       cwd: '/ignored',
       stderr,
       loadConfig: stubLoad(capture),
@@ -251,7 +257,7 @@ describe('runCl', () => {
     let seenRuleset: Ruleset | undefined
 
     await runCl({
-      argv: ['/tmp/msg.txt'],
+      argv: [MESSAGE_PATH],
       cwd: '/repo',
       stderr,
       loadConfig: async () => ({ config: { validateRuleset: customRuleset } }),

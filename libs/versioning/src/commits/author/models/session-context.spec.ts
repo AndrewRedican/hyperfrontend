@@ -1,4 +1,5 @@
 import type { SessionConfig } from './session-config'
+import { tmpdir } from 'node:os'
 import { describe, expect, it } from '@hyperfrontend/testing'
 import { conventionalPreset } from '../../validate/presets/conventional'
 import { DEFAULT_IMPERATIVE_WORDLIST } from '../../validate/rules/imperative-mood'
@@ -10,7 +11,7 @@ function baseConfig(): SessionConfig {
     scopeOptional: false,
     scopeMulti: false,
     stagedPathsProvider: () => [],
-    cwd: '/tmp',
+    cwd: tmpdir(),
     headerMaxLength: 72,
     imperativeWordlist: DEFAULT_IMPERATIVE_WORDLIST,
     skipCommit: true,
@@ -24,7 +25,7 @@ describe('createSessionContext', () => {
       draft: {},
       candidateScopes: [],
       defaultScope: undefined,
-      config: expect.objectContaining({ cwd: '/tmp' }),
+      config: expect.objectContaining({ cwd: tmpdir() }),
     })
   })
 })

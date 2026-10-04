@@ -1,4 +1,5 @@
 import type { SessionConfig } from '../models/session-config'
+import { tmpdir } from 'node:os'
 import { conventionalPreset } from '../../validate/presets/conventional'
 import { DEFAULT_IMPERATIVE_WORDLIST } from '../../validate/rules/imperative-mood'
 
@@ -28,7 +29,7 @@ export function createTestConfig(overrides: Partial<SessionConfig> = {}): Sessio
     scopeOptional: false,
     scopeMulti: false,
     stagedPathsProvider: () => [],
-    cwd: '/tmp',
+    cwd: tmpdir(),
     headerMaxLength: 72,
     imperativeWordlist: DEFAULT_IMPERATIVE_WORDLIST,
     skipCommit: true,

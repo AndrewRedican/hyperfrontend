@@ -1,4 +1,4 @@
-import { resolve } from 'node:path'
+import { resolve, join } from 'node:path'
 import { describe, expect, it } from '@hyperfrontend/testing'
 import { discoverScopes } from './scope-discovery'
 
@@ -10,7 +10,7 @@ describe('discoverScopes', () => {
   })
 
   it('resolves a staged file to its owning project.json name', () => {
-    expect(discoverScopes(['alpha/src/index.ts'], { cwd: fixturesRoot })).toEqual([{ name: 'alpha', path: `${fixturesRoot}/alpha` }])
+    expect(discoverScopes(['alpha/src/index.ts'], { cwd: fixturesRoot })).toEqual([{ name: 'alpha', path: join(fixturesRoot, 'alpha') }])
   })
 
   it('deduplicates paths that map to the same project root', () => {
@@ -48,8 +48,8 @@ describe('discoverScopes', () => {
   })
 
   it('accepts absolute staged paths', () => {
-    expect(discoverScopes([`${fixturesRoot}/alpha/src/index.ts`], { cwd: '/unused' })).toEqual([
-      { name: 'alpha', path: `${fixturesRoot}/alpha` },
+    expect(discoverScopes([join(fixturesRoot, 'alpha', 'src', 'index.ts')], { cwd: '/unused' })).toEqual([
+      { name: 'alpha', path: join(fixturesRoot, 'alpha') },
     ])
   })
 })
