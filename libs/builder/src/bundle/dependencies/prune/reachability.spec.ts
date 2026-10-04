@@ -1,6 +1,6 @@
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { join, relative } from 'node:path'
+import { join, relative, sep, posix } from 'node:path'
 import { afterEach, beforeEach } from 'node:test'
 import { describe, expect, it } from '@hyperfrontend/testing'
 import { computeReachable } from './reachability'
@@ -25,7 +25,7 @@ describe('computeReachable', () => {
     rmSync(root, { recursive: true, force: true })
   })
 
-  const reachableRel = (set: Set<string>): string[] => [...set].map((p) => relative(root, p)).sort()
+  const reachableRel = (set: Set<string>): string[] => [...set].map((p) => relative(root, p).split(sep).join(posix.sep)).sort()
 
   it('follows chunk → chunk edges transitively and skips unreferenced chunks', () => {
     const entry = write(root, 'index.esm.js', "import {a} from './_dependencies/a/index.esm.js'")

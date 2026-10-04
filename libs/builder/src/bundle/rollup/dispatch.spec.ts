@@ -5,7 +5,7 @@ import { spawn } from 'node:child_process'
 import { EventEmitter } from 'node:events'
 import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { join } from 'node:path'
+import { dirname, join } from 'node:path'
 import { afterEach, beforeEach } from 'node:test'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { dispatchRollupWorker, resolveDefaultRollupWorkerPath } from './dispatch'
@@ -183,7 +183,7 @@ describe('dispatchRollupWorker', () => {
     captureSpawn(records)
     const promise = dispatchRollupWorker(baseDescriptor(), { workerPath: '/abs/worker.cjs.js' })
     await tick()
-    const reportDir = (records[0] as SpawnRecord).reportPath.substring(0, (records[0] as SpawnRecord).reportPath.lastIndexOf('/'))
+    const reportDir = dirname((records[0] as SpawnRecord).reportPath)
     ;(records[0] as SpawnRecord).child.emit('exit', 2)
     await expect(promise).rejects.toThrow()
     expect(existsSync(reportDir)).toBe(false)
