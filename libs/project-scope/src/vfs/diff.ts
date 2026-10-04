@@ -154,7 +154,7 @@ function operationsToDiffLines(operations: LcsOperation[], contextLines: number)
 function bufferToLines(content: Buffer | undefined): string[] {
   if (!content) return []
   const text = content.toString('utf-8')
-  return text.split('\n')
+  return text.split(/\r?\n/)
 }
 
 /**

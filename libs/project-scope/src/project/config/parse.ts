@@ -152,7 +152,7 @@ function stripJsonComments(content: string): string {
  * @returns Object representation of the YAML key-value pairs
  */
 function parseSimpleYaml(content: string): Record<string, unknown> {
-  const lines = content.split('\n')
+  const lines = content.split(/\r?\n/)
   const result: Record<string, unknown> = {}
 
   for (const line of lines) {
@@ -195,7 +195,7 @@ function parseIniConfig(content: string): Record<string, unknown> {
   const result: Record<string, unknown> = {}
   let currentSection = ''
 
-  for (const line of content.split('\n')) {
+  for (const line of content.split(/\r?\n/)) {
     const trimmed = line.trim()
 
     if (!trimmed || trimmed.startsWith('#') || trimmed.startsWith(';')) {
@@ -235,7 +235,7 @@ function parseIniConfig(content: string): Record<string, unknown> {
 function parseDotenv(content: string): Record<string, unknown> {
   const result: Record<string, unknown> = {}
 
-  for (const line of content.split('\n')) {
+  for (const line of content.split(/\r?\n/)) {
     const trimmed = line.trim()
 
     if (!trimmed || trimmed.startsWith('#')) {

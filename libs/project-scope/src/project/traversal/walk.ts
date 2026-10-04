@@ -64,7 +64,7 @@ function loadGitignorePatterns(startPath: string): string[] {
   const gitignorePath = join(startPath, '.gitignore')
   const content = readFileIfExists(gitignorePath)
   if (content) {
-    const lines = content.split('\n')
+    const lines = content.split(/\r?\n/)
     for (const line of lines) {
       const trimmed = line.trim()
       if (trimmed && !trimmed.startsWith('#')) {
