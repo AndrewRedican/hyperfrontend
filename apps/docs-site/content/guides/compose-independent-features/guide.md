@@ -68,7 +68,7 @@ Scope every reaction to the one feature. Independent sessions share no bundle, n
 
 <!-- snippet: survive-close -->
 
-A session whose frame dies mid-run is the SDK's to bring back: the [`onUnresponsive`](/docs/libraries/features/host#api-ShellOptions-prop-onUnresponsive) `'reopen'` policy set in the open above replaces a mount whose silence outlives a grace period, on a bounded budget, and [`concealUnresponsive`](/docs/libraries/features/host#api-ShellOptions-prop-concealUnresponsive) hides the browser's crash placeholder while it waits. Retry [`error`](/docs/libraries/features/host#api) with `reason: 'open-timeout'` yourself, and only for a first open: a reopen the SDK started (announced by its `reopen` event) already counts its own timeouts, and a session that opened and merely went quiet is still someone's live screen.
+The [`onUnresponsive`](/docs/libraries/features/host#api-ShellOptions-prop-onUnresponsive) `'reopen'` policy in the open above replaces a frame that stops answering, and [`concealUnresponsive`](/docs/libraries/features/host#api-ShellOptions-prop-concealUnresponsive) hides it until then. Retry [`error`](/docs/libraries/features/host#api) with `reason: 'open-timeout'` yourself, and only on a first open: a timeout after a `reopen` event is the SDK's to count.
 
 <!-- snippet: retry-open -->
 
