@@ -43,6 +43,8 @@ export interface DemoShellMountOptions {
   url: string
   /** Windowed display mode for extra console sessions; omitted for the embedded default. */
   displayMode?: 'dialog' | 'popup'
+  /** What the SDK does with a feature whose frame stops answering; `reopen` replaces the mount after a grace period. */
+  onUnresponsive?: 'reopen'
 }
 
 /** Per-demo wiring: how the gallery creates and reads a demo's generated shell. */
