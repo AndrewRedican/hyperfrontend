@@ -1,6 +1,7 @@
 import type { RepositoryConfig } from '../../repository/models/repository-config'
 import type { RepositoryInferenceSource, RepositoryResolution } from '../../repository/models/resolution'
 import type { FlowStep } from '../models/step'
+import { join } from 'node:path'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { isRepositoryConfig } from '../../repository/models/repository-config'
 import { isRepositoryResolution, DEFAULT_INFERENCE_ORDER } from '../../repository/models/resolution'
@@ -244,7 +245,7 @@ function inferFromPackageJson(
   projectRoot: string,
   logger: import('@hyperfrontend/logging').Logger
 ): RepositoryConfig | null {
-  const packageJsonPath = `${projectRoot}/package.json`
+  const packageJsonPath = join(projectRoot, 'package.json')
 
   if (!tree.isFile(packageJsonPath)) {
     logger.debug(`package.json not found or not a file at ${packageJsonPath}`)

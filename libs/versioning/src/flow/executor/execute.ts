@@ -4,6 +4,7 @@ import type { GitClient } from '../../git/factory'
 import type { Registry } from '../../registry/models/registry'
 import type { VersionFlow } from '../models/flow'
 import type { FileChangeInfo, FlowConfig, FlowContext, FlowResult, FlowState, FlowStatus, FlowStepResultWithId } from '../models/types'
+import { isAbsolute, join } from 'node:path'
 import { dateNow } from '@hyperfrontend/immutable-api-utils/built-in-copy/date'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { parse } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
@@ -112,7 +113,7 @@ function discoverProjectRoot(
   tree?: Tree
 ): ProjectRootResolution | null {
   if (providedRoot) {
-    const projectRoot = providedRoot.startsWith(workspaceRoot) ? providedRoot : `${workspaceRoot}/${providedRoot}`
+    const projectRoot = isAbsolute(providedRoot) ? providedRoot : join(workspaceRoot, providedRoot)
     logger.debug(`Using provided project root: ${providedRoot}`)
     return { projectRoot, source: 'provided' }
   }
@@ -123,7 +124,7 @@ function discoverProjectRoot(
       const nxProjects = discoverNxProjects(workspaceRoot)
       const nxConfig = nxProjects.get(projectName)
       if (nxConfig?.root) {
-        const projectRoot = `${workspaceRoot}/${nxConfig.root}`
+        const projectRoot = join(workspaceRoot, nxConfig.root)
         logger.debug(`Discovered project root via Nx: ${nxConfig.root}`)
         return { projectRoot, source: 'nx-discovery' }
       }
@@ -161,7 +162,7 @@ function discoverProjectRoot(
  * @returns Package name from package.json
  */
 function resolvePackageName(tree: Tree, projectRoot: string, logger: Logger): string {
-  const packageJsonPath = `${projectRoot}/package.json`
+  const packageJsonPath = join(projectRoot, 'package.json')
 
   try {
     const content = tree.read(packageJsonPath, 'utf-8')
@@ -277,7 +278,7 @@ export async function executeFlow(
 
   const { projectRoot, source: projectRootSource } = resolution
 
-  const packageJsonPath = `${projectRoot}/package.json`
+  const packageJsonPath = join(projectRoot, 'package.json')
   if (!tree.isFile(packageJsonPath)) {
     const errorMsg =
       `Project root validation failed: ${packageJsonPath} does not exist or is not a file. ` +
