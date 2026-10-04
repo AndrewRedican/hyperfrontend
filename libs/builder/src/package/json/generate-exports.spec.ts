@@ -62,10 +62,18 @@ describe('generateExportsFromFormats', () => {
     })
   })
 
-  it('omits source-declared exports that have no matching format output', () => {
+  it('fails a source-declared export that has no matching format output', () => {
     const srcPkg: PackageJson = { exports: { './missing': './src/missing/index.ts' } }
-    const result = generateExportsFromFormats(discovery, noBundles, srcPkg)
-    expect(result['./missing']).toBeUndefined()
+    expect(() => generateExportsFromFormats(discovery, noBundles, srcPkg)).toThrow(
+      /"\.\/missing": entry \.\/src\/missing\/index\.ts produced no ESM or CJS output/
+    )
+  })
+
+  it('fails a declared root export whose root entry produced no ESM or CJS output', () => {
+    const srcPkg: PackageJson = { exports: { '.': './src/index.ts' } }
+    expect(() => generateExportsFromFormats(discovery, noBundles, srcPkg)).toThrow(
+      /"\.": entry \.\/src\/index\.ts produced no ESM or CJS output/
+    )
   })
 
   it('emits ESM-only entries when CJS was not produced', () => {
@@ -102,28 +110,38 @@ describe('generateExportsFromFormats', () => {
     expect(result['.']).toEqual({ types: './index.d.ts', import: './index.esm.js' })
   })
 
-  it('omits a conditional entry with no recognized conditions instead of aliasing it to the root', () => {
+  it('fails a conditional entry with no recognized conditions instead of aliasing it to the root', () => {
     const srcPkg: PackageJson = { exports: { './weird': { browser: { import: './src/index.ts' } } } }
     const formats: FormatOutputs = { esm: [ROOT], cjs: [], iife: [], umd: [] }
-    const result = generateExportsFromFormats(discovery, formats, srcPkg)
-    expect(result['./weird']).toBeUndefined()
+    expect(() => generateExportsFromFormats(discovery, formats, srcPkg)).toThrow(/"\.\/weird": .* is not an entry module/)
   })
 
-  it('omits a file-shaped source export instead of aliasing it to the root', () => {
+  it('fails a nested conditional entry instead of crashing on it', () => {
+    const srcPkg: PackageJson = { exports: { '.': { import: { types: './src/index.d.ts', default: './src/index.ts' } } } }
+    const formats: FormatOutputs = { esm: [ROOT], cjs: [ROOT], iife: [], umd: [] }
+    expect(() => generateExportsFromFormats(discovery, formats, srcPkg)).toThrow(/"\.": .* is not an entry module/)
+  })
+
+  it('fails a file-shaped source export instead of aliasing it to the root', () => {
     const srcPkg: PackageJson = { exports: { '.': './src/index.ts', './utils': './src/utils.ts' } }
     const formats: FormatOutputs = { esm: [ROOT], cjs: [ROOT], iife: [], umd: [] }
-    const result = generateExportsFromFormats(discovery, formats, srcPkg)
-    expect(result).toEqual({
-      './package.json': './package.json',
-      '.': { types: './index.d.ts', import: './index.esm.js', require: './index.cjs.js' },
-    })
+    expect(() => generateExportsFromFormats(discovery, formats, srcPkg)).toThrow(
+      /"\.\/utils": "\.\/src\/utils\.ts" is not an entry module\. Only \.\/src\/index\.ts and \.\/src\/<dir>\/index\.ts/
+    )
   })
 
-  it('omits a source export that points outside src/', () => {
+  it('fails a source export that points outside src/', () => {
     const srcPkg: PackageJson = { exports: { './lib': './lib/index.js' } }
     const formats: FormatOutputs = { esm: [ROOT], cjs: [ROOT], iife: [], umd: [] }
-    const result = generateExportsFromFormats(discovery, formats, srcPkg)
-    expect(result['./lib']).toBeUndefined()
+    expect(() => generateExportsFromFormats(discovery, formats, srcPkg)).toThrow(/"\.\/lib": "\.\/lib\/index\.js" is not an entry module/)
+  })
+
+  it('reports every unpublishable declared export in one error', () => {
+    const srcPkg: PackageJson = { exports: { '.': './src/index.ts', './utils': './src/utils.ts', './missing': './src/missing/index.ts' } }
+    const formats: FormatOutputs = { esm: [ROOT], cjs: [ROOT], iife: [], umd: [] }
+    expect(() => generateExportsFromFormats(discovery, formats, srcPkg)).toThrow(
+      /^2 declared export\(s\) .*\n {2}"\.\/utils": .*\n {2}"\.\/missing": /s
+    )
   })
 
   it('skips the package.json self-reference when iterating source exports', () => {
