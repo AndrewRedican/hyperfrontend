@@ -1,5 +1,5 @@
 import type { DependencyGraph, DependencyNode } from '../../models'
-import { join, dirname, relative, resolve } from 'node:path'
+import { join, dirname, relative, resolve, sep, posix } from 'node:path'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { keys } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
@@ -110,13 +110,13 @@ function resolveImportPath(importPath: string, fromFile: string, projectPath: st
 
   if (exists(absolutePath)) {
     if (isFile(absolutePath)) {
-      return relative(projectPath, absolutePath)
+      return relative(projectPath, absolutePath).split(sep).join(posix.sep)
     }
     if (isDirectory(absolutePath)) {
       for (const ext of extensions) {
         const indexPath = join(absolutePath, `index${ext}`)
         if (exists(indexPath) && isFile(indexPath)) {
-          return relative(projectPath, indexPath)
+          return relative(projectPath, indexPath).split(sep).join(posix.sep)
         }
       }
     }
@@ -125,7 +125,7 @@ function resolveImportPath(importPath: string, fromFile: string, projectPath: st
   for (const ext of extensions) {
     const pathWithExt = absolutePath + ext
     if (exists(pathWithExt) && isFile(pathWithExt)) {
-      return relative(projectPath, pathWithExt)
+      return relative(projectPath, pathWithExt).split(sep).join(posix.sep)
     }
   }
 
@@ -219,7 +219,7 @@ export function buildDependencyGraph(projectPath: string, options?: BuildGraphOp
   }
 
   for (const file of sourceFiles) {
-    const relativePath = relative(projectPath, file)
+    const relativePath = relative(projectPath, file).split(sep).join(posix.sep)
     nodes.set(relativePath, {
       id: relativePath,
       path: relativePath,
@@ -230,7 +230,7 @@ export function buildDependencyGraph(projectPath: string, options?: BuildGraphOp
   }
 
   for (const file of sourceFiles) {
-    const relativePath = relative(projectPath, file)
+    const relativePath = relative(projectPath, file).split(sep).join(posix.sep)
     const node = nodes.get(relativePath)
     if (!node) continue
 
