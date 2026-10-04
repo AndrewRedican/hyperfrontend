@@ -95,7 +95,7 @@ const buildEntryPlugins = (job: RollupBuildDescriptor, format: 'esm' | 'cjs'): P
           tsconfig: job.tsConfigPath,
           declaration: false,
           declarationMap: false,
-          rootDir: `${job.projectRoot}/src`,
+          rootDir: join(job.projectRoot, 'src'),
           outDir: job.outputDir,
           sourceMap: job.sourcemap,
           compilerOptions: { paths: {} },

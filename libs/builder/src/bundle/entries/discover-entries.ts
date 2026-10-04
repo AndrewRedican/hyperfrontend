@@ -1,4 +1,5 @@
 import type { EntryPoint, EntryPointCategory, EntryPointDiscovery, EntryPointPlatform } from '../../models'
+import { posix } from 'node:path'
 import { freeze } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { exists, isDirectory, join, readDirectory } from '@hyperfrontend/project-scope/core'
 
@@ -29,10 +30,10 @@ const recurseEntries = (basePath: string, relativePath: string, maxDepth: number
   const entries: EntryPoint[] = []
   for (const subdir of getSubdirectories(currentPath)) {
     const subdirPath = join(currentPath, subdir)
-    const subdirRelative = relativePath ? `${relativePath}/${subdir}` : subdir
+    const subdirRelative = relativePath ? posix.join(relativePath, subdir) : subdir
 
     if (hasIndexFile(subdirPath)) {
-      const firstSegment = subdirRelative.split('/')[0] as string
+      const firstSegment = subdirRelative.split(posix.sep)[0] as string
       const platform = isPlatformDir(subdir) ? subdir : isPlatformDir(firstSegment) ? firstSegment : undefined
       entries.push({
         exportPath: `./${subdirRelative}`,
@@ -51,7 +52,7 @@ const recurseEntries = (basePath: string, relativePath: string, maxDepth: number
 const categorize = (hasRootEntry: boolean, platformEntries: EntryPoint[], featureEntries: EntryPoint[]): EntryPointCategory => {
   const hasPlatform = platformEntries.length > 0
   const hasFeature = featureEntries.length > 0
-  const hasNestedPlatform = platformEntries.some((e) => e.srcPath.includes('/'))
+  const hasNestedPlatform = platformEntries.some((e) => e.srcPath.includes(posix.sep))
 
   if (hasRootEntry && !hasPlatform && !hasFeature) return 'root'
   if (!hasRootEntry && hasPlatform && !hasFeature && !hasNestedPlatform) return 'platform'
@@ -98,7 +99,7 @@ export const discoverEntries = (projectRoot: string): EntryPointDiscovery => {
 
   entryPoints.push(...recurseEntries(srcPath, '', 3))
 
-  const firstSegmentOf = (entry: EntryPoint): string => entry.srcPath.split('/')[0] as string
+  const firstSegmentOf = (entry: EntryPoint): string => entry.srcPath.split(posix.sep)[0] as string
   const platformEntries = entryPoints.filter((e) => !e.isRoot && isPlatformDir(firstSegmentOf(e)))
   const featureEntries = entryPoints.filter((e) => !e.isRoot && !isPlatformDir(firstSegmentOf(e)))
 
