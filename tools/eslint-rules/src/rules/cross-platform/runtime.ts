@@ -2,11 +2,11 @@ import type { TSESLint, TSESTree } from '@typescript-eslint/utils'
 import type { CheckContext, MessageIds } from './types'
 import { AST_NODE_TYPES } from '@typescript-eslint/utils'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
-import { isImportMeta, methodName, propertyName, stringValue, unwrap } from './ast'
-import { knownValueOf, referenceOf } from './bindings'
+import { calleeName, isImportMeta, methodName, propertyName, regexOf, stringValue, unwrap } from './ast'
+import { knownValueOf, referenceOf, variableOf } from './bindings'
 import { planImports } from './imports'
 import { fixWith, reportTiered } from './report'
-import { expressionSource } from './segments'
+import { expressionSource, piecesOf } from './segments'
 
 /**
  * `node:child_process` functions that spawn a file without a shell by default.
@@ -114,26 +114,100 @@ function isPackageManagerName(name: string): boolean {
 }
 
 /**
- * Works out whether a spawned command is a Windows `.cmd` shim.
+ * `node:path` functions that build a path out of the segments they are given.
+ */
+const PATH_BUILDERS: readonly string[] = ['join', 'resolve']
+
+/**
+ * The directory npm fills with launchers: shell scripts on POSIX, `.cmd` files on Windows.
+ */
+const BIN_DIRECTORY = '.bin'
+
+/**
+ * A spawned command that cannot start on Windows without a shell.
+ */
+interface ShimFinding {
+  /** Which message describes the problem. */
+  messageId: 'shellShim' | 'binShim' | 'splitCommand'
+  /** The command as written. */
+  command: string
+}
+
+/**
+ * Reads the launcher a path into `node_modules/.bin` names, whether the path is built by
+ * `join()` or `resolve()`, a template, a `+` chain, or written out.
+ *
+ * @param expr - The command expression.
+ * @returns The launcher's name, or null when the expression is not a path into `.bin`.
+ */
+function binCommandOf(expr: TSESTree.Node): string | null {
+  let texts: (string | null)[]
+  if (expr.type !== AST_NODE_TYPES.CallExpression) texts = piecesOf(expr).map((piece) => (piece.kind === 'text' ? piece.value : null))
+  else if (PATH_BUILDERS.includes(calleeName(expr) ?? '')) texts = expr.arguments.map((arg) => stringValue(arg))
+  else return null
+  const segments = texts.flatMap((text) => (text === null ? [null] : text.split('/').filter((segment) => segment.length > 0)))
+  const [directory, command] = segments.slice(-2)
+  return directory === BIN_DIRECTORY && typeof command === 'string' ? command : null
+}
+
+/**
+ * Tests whether a node splits a command line into words: `line.split(' ')` or a split on a regex.
+ *
+ * @param node - The node to test, or null.
+ * @returns True for such a split call.
+ */
+function isCommandLineSplit(node: TSESTree.Node | null): boolean {
+  if (!node || methodName(node) !== 'split') return false
+  const [separator] = (unwrap(node) as TSESTree.CallExpression).arguments
+  return stringValue(separator) === ' ' || regexOf(separator) !== null
+}
+
+/**
+ * Tests whether an expression is the first word of a split command line: `line.split(' ')[0]`,
+ * the same through a variable, or the first name of `const [file, ...args] = line.split(' ')`.
+ *
+ * @param expr - The command expression.
+ * @param check - The check context.
+ * @returns True when the command is whatever word a command line starts with.
+ */
+function isSplitCommandHead(expr: TSESTree.Node, check: CheckContext): boolean {
+  if (expr.type === AST_NODE_TYPES.MemberExpression) {
+    if (!expr.computed || expr.property.type !== AST_NODE_TYPES.Literal || expr.property.value !== 0) return false
+    const list = unwrap(expr.object)
+    return isCommandLineSplit(list.type === AST_NODE_TYPES.Identifier ? knownValueOf(list, check.sourceCode) : list)
+  }
+  if (expr.type !== AST_NODE_TYPES.Identifier) return false
+  const declarator = variableOf(expr, check.sourceCode)?.defs[0].node
+  if (declarator?.type !== AST_NODE_TYPES.VariableDeclarator || declarator.id.type !== AST_NODE_TYPES.ArrayPattern) return false
+  const [first] = declarator.id.elements
+  return first?.type === AST_NODE_TYPES.Identifier && first.name === expr.name && isCommandLineSplit(declarator.init)
+}
+
+/**
+ * Works out whether a spawned command needs a shell on Windows: a known `.cmd` shim, a
+ * launcher under `node_modules/.bin`, or the first word of a split command line.
  *
  * @param arg - The command argument.
  * @param check - The check context.
  * @param hops - Variable hops followed so far.
- * @returns The command as written, or null when it is not a known shim.
+ * @returns The finding, or null when the command is not known to need a shell.
  */
-function shimCommandOf(arg: TSESTree.Node | undefined, check: CheckContext, hops = 0): string | null {
+function shimFindingOf(arg: TSESTree.Node | undefined, check: CheckContext, hops = 0): ShimFinding | null {
   if (!arg) return null
   const expr = unwrap(arg)
   const value = stringValue(expr)
-  if (value !== null) return check.shimCommands.has(value) ? value : null
+  if (value !== null && check.shimCommands.has(value)) return { messageId: 'shellShim', command: value }
+  const binCommand = binCommandOf(expr)
+  if (binCommand !== null) return { messageId: 'binShim', command: binCommand }
   if (expr.type === AST_NODE_TYPES.ConditionalExpression)
-    return shimCommandOf(expr.consequent, check, hops) ?? shimCommandOf(expr.alternate, check, hops)
+    return shimFindingOf(expr.consequent, check, hops) ?? shimFindingOf(expr.alternate, check, hops)
   let name: string | null = null
   if (expr.type === AST_NODE_TYPES.Identifier) name = expr.name
   else if (expr.type === AST_NODE_TYPES.MemberExpression) name = propertyName(expr)
-  if (name !== null && isPackageManagerName(name)) return name
+  if (name !== null && isPackageManagerName(name)) return { messageId: 'shellShim', command: name }
+  if (isSplitCommandHead(expr, check)) return { messageId: 'splitCommand', command: check.sourceCode.getText(expr) }
   const known = expr.type === AST_NODE_TYPES.Identifier && hops < MAX_HOPS ? knownValueOf(expr, check.sourceCode) : null
-  return known ? shimCommandOf(known, check, hops + 1) : null
+  return known ? shimFindingOf(known, check, hops + 1) : null
 }
 
 /**
@@ -163,8 +237,9 @@ function shellFix(call: TSESTree.CallExpression, options: TSESTree.ObjectExpress
 }
 
 /**
- * Reports spawning a `.cmd` shim like `npm` without a shell, which fails with ENOENT or EINVAL
- * on Windows. Calls whose options are not an inline literal are left alone.
+ * Reports spawning a `.cmd` shim without a shell, which fails with ENOENT or EINVAL on Windows:
+ * a command like `npm`, a launcher under `node_modules/.bin`, or the first word of a split
+ * command line. Calls whose options are not an inline literal are left alone.
  *
  * @param check - The check context.
  * @param call - A call expression.
@@ -172,9 +247,9 @@ function shellFix(call: TSESTree.CallExpression, options: TSESTree.ObjectExpress
 export function checkShellShim(check: CheckContext, call: TSESTree.CallExpression): void {
   const reference = referenceOf(call.callee, check.binding)
   if (reference?.module !== 'child_process' || !SPAWNERS.includes(reference.name)) return
-  const command = shimCommandOf(call.arguments[0], check)
+  const finding = shimFindingOf(call.arguments[0], check)
   const rest = call.arguments.slice(1)
-  if (command === null || rest.some((arg) => arg.type === AST_NODE_TYPES.SpreadElement)) return
+  if (finding === null || rest.some((arg) => arg.type === AST_NODE_TYPES.SpreadElement)) return
   const options = rest.find((arg): arg is TSESTree.ObjectExpression => arg.type === AST_NODE_TYPES.ObjectExpression)
   const handled = options
     ? options.properties.some((property) => property.type === AST_NODE_TYPES.SpreadElement || staticKey(property) === 'shell')
@@ -182,9 +257,10 @@ export function checkShellShim(check: CheckContext, call: TSESTree.CallExpressio
   if (handled) return
   check.context.report({
     node: call,
-    messageId: 'shellShim',
-    data: { command },
-    suggest: [{ messageId: 'useShellOnWindows', fix: shellFix(call, options) }],
+    messageId: finding.messageId,
+    data: { command: finding.command },
+    // why: a shell splits a path or command line that contains a space, so only a bare command name gets the shell suggestion
+    suggest: finding.messageId === 'shellShim' ? [{ messageId: 'useShellOnWindows', fix: shellFix(call, options) }] : [],
   })
 }
 

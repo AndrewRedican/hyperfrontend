@@ -29,7 +29,7 @@ Portable values are never reported.
 - **`relative()` output leaks.** A native relative path stored as an Nx `root`, a map key, or returned data differs per OS, so the same workspace produces different results on Windows.
 - **Dynamic `import()` takes URLs.** `import('C:\\x\\y.js')` parses `c:` as a URL scheme and fails.
 - **`URL.pathname` is not a path.** On Windows it is `/C:/x` with percent-encoding.
-- **`npm` is a `.cmd` shim on Windows.** Since the fix for CVE-2024-27980, Node refuses to spawn `.cmd` and `.bat` files without a shell (EINVAL), and without one the shim is not found at all (ENOENT).
+- **`npm` is a `.cmd` shim on Windows.** Since the fix for CVE-2024-27980, Node refuses to spawn `.cmd` and `.bat` files without a shell (EINVAL), and without one the shim is not found at all (ENOENT). Every launcher in `node_modules/.bin` is the same kind of file.
 - **Files checked out with CRLF.** `split('\n')` leaves a trailing `\r` on every line.
 
 ## Checks
@@ -159,6 +159,32 @@ execFileSync('npm', ['pack'], {
 })
 ```
 
+### `binShim`
+
+The same spawn functions launching a file under `node_modules/.bin`, whether the path is built with `join()` or `resolve()`, a template, a `+` chain, or written out, and whether it is passed directly or through a `const`. Those launchers are shell scripts on POSIX and `.cmd` shims on Windows. There is no shell suggestion, because a shell splits an absolute path that contains a space, such as `C:\Users\Jane Doe\repo\node_modules\.bin\tsc`. Run the package's own entry script on the current Node binary instead. Calls that already pass a `shell` option are left alone.
+
+```typescript
+// ❌
+execFileSync(join(workspaceRoot, 'node_modules', '.bin', 'tsc'), ['--noEmit'])
+
+// ✅
+const tscScript = createRequire(join(workspaceRoot, 'package.json')).resolve('typescript/bin/tsc')
+execFileSync(process.execPath, [tscScript, '--noEmit'])
+```
+
+### `splitCommand`
+
+The same spawn functions launching the first word of a command line split on a space or a regex: `line.split(' ')[0]`, the same through a variable, or the first name of `const [file, ...args] = line.split(' ')`. Whatever the line starts with is launched without a shell, and in practice that is `npm` or `npx`. Run the whole line through a shell, which is also what keeps its quoting intact.
+
+```typescript
+// ❌
+const [file, ...args] = command.split(' ')
+execFileSync(file, args, { cwd })
+
+// ✅
+execFileSync(command, { cwd, shell: true })
+```
+
 ### `lineSplit`
 
 `split('\n')` or `split('\r\n')` on text that may come from a CRLF checkout.
@@ -196,6 +222,7 @@ Every fix references `node:` exports the way the file already does: a named impo
 - Building a relative import specifier: `relative(from, to).split(sep).join(posix.sep)`, then prefix `./` when the result does not start with `.`.
 - Locating the running module: `fileURLToPath(import.meta.url)` or `__dirname`.
 - Importing a file computed at runtime: `import(pathToFileURL(absolutePath).href)`.
+- Running a dependency's command-line tool: `execFileSync(process.execPath, [require.resolve('typescript/bin/tsc'), ...args])`.
 - Splitting a path whose platform is unknown: `split(/[/\\]/)`.
 
 ## Options

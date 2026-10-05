@@ -14,6 +14,8 @@ export type MessageIds =
   | 'nativeImport'
   | 'urlPathname'
   | 'shellShim'
+  | 'binShim'
+  | 'splitCommand'
   | 'lineSplit'
   | 'hardcodedTmp'
   | 'treatAsNative'
