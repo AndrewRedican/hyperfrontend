@@ -34,9 +34,11 @@ if (tarballs.length === 0) {
 
 // why: The leading `./` is load-bearing — npm reads a bare `vendor/x.tgz` as a git shorthand and tries to clone it from GitHub.
 // why: One install call for all of them keeps the lockfile resolution consistent; installing them one at a time rewrites the tree once per shell.
-execFileSync('npm', ['install', ...tarballs.map((name) => `./${join('vendor', name)}`), '--no-audit', '--no-fund'], {
+// why: `npm` is a .cmd shim on Windows, which only a shell can launch; the arguments are relative and hold no spaces, so the shell cannot split them.
+execFileSync('npm', ['install', ...tarballs.map((name) => `./vendor/${name}`), '--no-audit', '--no-fund'], {
   cwd: SITE_ROOT,
   stdio: 'inherit',
+  shell: process.platform === 'win32',
 })
 
 process.stdout.write(`Installed ${tarballs.length} vendored shell tarball(s)\n`)
