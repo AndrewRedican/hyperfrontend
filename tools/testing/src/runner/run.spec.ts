@@ -202,7 +202,7 @@ it('triples', () => {
     )
 
     const named = readFileSync(join(fixture.coverageDir, 'lcov.info'), 'utf8')
-      .split('\n')
+      .split(/\r?\n/)
       .filter((line) => line.startsWith('SF:'))
       .map((line) => line.slice(line.lastIndexOf('/') + 1))
     assert.deepEqual(named, ['double.ts', 'other.ts'])

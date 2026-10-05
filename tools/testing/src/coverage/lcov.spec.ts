@@ -159,7 +159,7 @@ describe('renderLcov', () => {
   it('orders records by path and lines by number', () => {
     const rendered = renderLcov(mergeLcov([writeReport('SF:src/b.ts\nDA:9,1\nDA:2,1\nend_of_record\nSF:src/a.ts\nDA:1,1\nend_of_record\n')]).values())
     assert.deepEqual(
-      rendered.split('\n').filter((line) => line.startsWith('SF:') || line.startsWith('DA:')),
+      rendered.split(/\r?\n/).filter((line) => line.startsWith('SF:') || line.startsWith('DA:')),
       ['SF:src/a.ts', 'DA:1,1', 'SF:src/b.ts', 'DA:2,1', 'DA:9,1']
     )
   })
