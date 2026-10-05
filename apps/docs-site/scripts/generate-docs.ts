@@ -136,13 +136,13 @@ function discoverEntryPointsFromPackageJson(libPath: string): string[] {
 /**
  * Converts a JavaScript path from package.json to a TypeScript source
  *
- * @param jsPath - JavaScript path (e.g., "./src/browser/index.js")
+ * @param jsEntry - JavaScript entry (e.g., "./src/browser/index.js")
  * @returns TypeScript path (e.g., "src/browser/index.ts") or null if invalid
  */
-function convertJsPathToTs(jsPath: string): string | null {
-  if (!jsPath) return null
+function convertJsPathToTs(jsEntry: string): string | null {
+  if (!jsEntry) return null
 
-  let normalized = jsPath.replace(/^\.\//, '')
+  let normalized = jsEntry.replace(/^\.\//, '')
 
   if (normalized.endsWith('.json')) {
     return null
@@ -260,13 +260,13 @@ const LIBRARY_SLUGS: Record<string, string> = {
 }
 
 /**
- * Normalize a relative path by removing leading `./` and `../` segments.
+ * Normalize a relative link target by removing leading `./` and `../` segments.
  *
- * @param path - The path to normalize
+ * @param target - The link target to normalize
  * @returns The normalized filename (basename)
  */
-function normalizeRelativePath(path: string): string {
-  let normalized = path
+function normalizeRelativeLink(target: string): string {
+  let normalized = target
   if (normalized.startsWith('./')) {
     normalized = normalized.slice(2)
   }
@@ -323,8 +323,8 @@ function extractMarkdownLink(segment: string): MarkdownLinkResult | null {
  * @returns Object with transformed URL (or null to remove the link entirely)
  */
 function transformLinkUrl(url: string, sourceContext: 'root' | 'library', librarySlug?: string): TransformLinkResult {
-  const { path, anchor } = splitAnchor(url)
-  const normalized = normalizeRelativePath(path)
+  const { path: target, anchor } = splitAnchor(url)
+  const normalized = normalizeRelativeLink(target)
 
   // why: A library's own README.md and ARCHITECTURE.md share their filenames with the workspace-root documents; without the slug they would resolve to the site's root pages instead of this library's.
   if (sourceContext === 'library' && librarySlug) {

@@ -60,15 +60,15 @@ function resolveTarget(target: string, markdownRoutes: Set<string>): string {
   const sitePath = toSitePath(target)
   if (!sitePath) return target
 
-  const [path, hash] = sitePath.split('#')
-  const route = path.replace(/\/$/, '')
+  const [pathname, hash] = sitePath.split('#')
+  const route = pathname.replace(/\/$/, '')
 
   if (markdownRoutes.has(route) && !hash) {
     return markdownUrlFor(route)
   }
 
   // why: an anchor addresses a heading on the rendered page, and assets address themselves; both keep the page URL, normalised to the trailing-slash form the site serves
-  const canonical = /\.[a-z0-9]+$/i.test(path) ? path : `${route}/`
+  const canonical = /\.[a-z0-9]+$/i.test(pathname) ? pathname : `${route}/`
   return hash ? `${absoluteUrl(canonical)}#${hash}` : absoluteUrl(canonical)
 }
 
