@@ -261,7 +261,7 @@ Every fix references `node:` exports the way the file already does: a named impo
         }
       ],
       "shimCommands": ["npm", "npx", "pnpm", "yarn"],
-      "include": [{ "publishableLibraries": true }, { "files": ["tools/**", "apps/package-e2e/**"] }]
+      "include": [{ "publishableLibraries": true }, { "files": ["tools/**", "apps/package-e2e/**", "apps/docs-site/scripts/**"] }]
     }
   ]
 }
@@ -286,6 +286,6 @@ Defaults to `[{ "publishableLibraries": true }]`. Passing the option replaces th
 
 ## Scope
 
-This workspace runs the rule as an error on every `.ts` file of a publishable library and every `.ts` file under `tools/` and `apps/package-e2e/`, specs included. Without an `include` option, only publishable libraries are checked. Autofixes apply only on an explicit `--fix`, which `lint:all` passes.
+This workspace runs the rule as an error on every `.ts` and `.mjs` file of a publishable library and every such file under `tools/`, `apps/package-e2e/`, and `apps/docs-site/scripts/`, specs included. Without an `include` option, only publishable libraries are checked. Autofixes apply only on an explicit `--fix`, which `lint:all` passes.
 
 Two checks were considered and left out. Asserting `expect(join(a, b)).toBe('a/b')` is a Windows failure in tests, but the code under test hides where the value came from. Case-insensitive path comparison matters on Windows and macOS, but nothing in the source says which comparisons are about paths.
