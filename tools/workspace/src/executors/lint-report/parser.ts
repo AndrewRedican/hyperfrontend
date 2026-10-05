@@ -17,7 +17,7 @@ const ANSI_PATTERN = /\x1B\[[0-9;]{0,20}[a-zA-Z]/g
  * @param str - Input string with potential ANSI codes
  * @returns Clean string without ANSI codes
  */
-function stripAnsi(str: string): string {
+export function stripAnsi(str: string): string {
   return str.replace(ANSI_PATTERN, '')
 }
 
