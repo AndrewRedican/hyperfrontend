@@ -247,8 +247,11 @@ module.exports = [
     files: ['**/*.ts'],
     ignores: ['**/test.setup.ts'],
     rules: {
-      // why: specs are included so the suite is ready for a Windows CI leg; the rule itself skips anything outside a publishable library
-      'workspace/lib-cross-platform': 'error',
+      // why: publishable libraries ship to Windows consumers, and a future Windows CI leg will run the tools and the package e2e suites, so their sources and specs are both checked
+      'workspace/lib-cross-platform': [
+        'error',
+        { include: [{ publishableLibraries: true }, { files: ['tools/**', 'apps/package-e2e/**'] }] },
+      ],
     },
   },
   {
