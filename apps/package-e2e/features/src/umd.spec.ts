@@ -4,13 +4,13 @@
  * stay callable on a page without cross-origin isolation.
  */
 
-import { resolve } from 'node:path'
+import { resolve, join } from 'node:path'
 import { before as beforeAll, after as afterAll } from 'node:test'
 import { describe, it, expect } from '@hyperfrontend/testing'
 import { executeBundleInWindow, loadBundleCode } from '../../shared/helpers'
 
 const umdBundle = (dir: string, minified = false): string =>
-  resolve(process.cwd(), `dist/libs/features/bundle/${dir}/index.umd${minified ? '.min' : ''}.js`)
+  resolve(process.cwd(), join('dist', 'libs', 'features', 'bundle', dir, `index.umd${minified ? '.min' : ''}.js`))
 
 const bundles: ReadonlyArray<readonly [string, string, string]> = [
   ['host', 'HyperfrontendFeaturesHost', 'createShell'],

@@ -318,6 +318,7 @@ export default contract
           execFileSync('npm', ['install', '--no-audit', '--no-fund', '--ignore-scripts', join(outDir, tarball as string)], {
             cwd: consumerDir,
             stdio: 'pipe',
+            shell: process.platform === 'win32',
           })
           writeFileSync(
             join(consumerDir, 'consumer.ts'),

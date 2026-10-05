@@ -161,7 +161,12 @@ function resolveTarball(): PackedTarball {
     throw new Error(`No staged tarball in ${packsDir} and no built dist at ${distDir}; build lib-features first.`)
   }
   // how: Mirrors the @hyperfrontend/package:e2e executor — npm pack inside dist, then stage the tarball under tmp/e2e-packs.
-  const packed = execFileSync('npm', ['pack', '--json'], { cwd: distDir, encoding: 'utf8', timeout: 120000 })
+  const packed = execFileSync('npm', ['pack', '--json'], {
+    cwd: distDir,
+    encoding: 'utf8',
+    timeout: 120000,
+    shell: process.platform === 'win32',
+  })
   const filename = (JSON.parse(packed) as NpmPackReport[])[0].filename as string
   const match = filename.match(TARBALL_PATTERN)
   if (match === null) {
@@ -201,7 +206,7 @@ export function createConsumerWorkspace(prefix: string): ConsumerWorkspace {
       '--nxCloud=skip',
       '--skipGit',
     ],
-    { cwd: workRoot, env: scratchEnv(), encoding: 'utf8', timeout: WORKSPACE_CREATE_TIMEOUT }
+    { cwd: workRoot, env: scratchEnv(), encoding: 'utf8', timeout: WORKSPACE_CREATE_TIMEOUT, shell: process.platform === 'win32' }
   )
   const pristineDir = join(workRoot, 'consumer')
   // how: `nx add <pkg>` installs the plugin as a devDependency before invoking its init generator; installing the tarball the same way reproduces that starting state.
@@ -210,6 +215,7 @@ export function createConsumerWorkspace(prefix: string): ConsumerWorkspace {
     env: scratchEnv(),
     encoding: 'utf8',
     timeout: TARBALL_INSTALL_TIMEOUT,
+    shell: process.platform === 'win32',
   })
   return { workRoot, pristineDir, packedVersion: tarball.version }
 }
@@ -228,6 +234,7 @@ export function runNx(workspaceDir: string, args: readonly string[], timeout: nu
     env: scratchEnv(),
     encoding: 'utf8',
     timeout,
+    shell: process.platform === 'win32',
   })
   const failure = spawned.error === undefined ? '' : `\nspawn error: ${String(spawned.error)}`
   // why: Colors are disabled via the environment, and stripping guards against any child that styles its output regardless.
