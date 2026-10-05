@@ -262,6 +262,7 @@ ruleTester.run(`${RULE_NAME} runtime`, rule, {
       errors: [
         {
           messageId: 'hardcodedTmp',
+          // eslint-disable-next-line workspace/lib-cross-platform -- the expected message names the POSIX path the rule reports
           data: { path: '/tmp' },
           suggestions: [
             { messageId: 'useOsPath', data: { replacement: 'tmpdir()' }, output: "import { tmpdir } from 'node:os'\nconst dir = tmpdir()" },
@@ -276,6 +277,7 @@ ruleTester.run(`${RULE_NAME} runtime`, rule, {
       errors: [
         {
           messageId: 'hardcodedTmp',
+          // eslint-disable-next-line workspace/lib-cross-platform -- the expected message names the POSIX path the rule reports
           data: { path: '/dev/null' },
           suggestions: [{ messageId: 'useOsPath', output: "import os from 'node:os'\nconst a = os.devNull\nconst b = `/dev/null`" }],
         },

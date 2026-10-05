@@ -1,6 +1,6 @@
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { join } from 'node:path'
+import { dirname, join } from 'node:path'
 import { stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 import { entries } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { createRuleLogger } from '../utils/logger'
@@ -172,7 +172,7 @@ export function createTempWorkspace(config: TempWorkspaceConfig = {}): TempWorks
 
   const writeFile = (relativePath: string, content: string): void => {
     const fullPath = join(root, relativePath)
-    const dirPath = join(root, relativePath.split('/').slice(0, -1).join('/'))
+    const dirPath = dirname(fullPath)
 
     if (dirPath !== root) {
       mkdirSync(dirPath, { recursive: true, mode: 0o700 })

@@ -1,3 +1,4 @@
+import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { after as afterAll } from 'node:test'
 import { createTempWorkspaceManager, createTypeScriptRuleTester, PUBLISHABLE_LIBRARY_PROJECT_JSON } from '../testing'
@@ -628,7 +629,7 @@ function createNonStandardExportKeyCase() {
 function createNoProjectRootCase() {
   return {
     code: 'export const foo = 1;',
-    filename: '/tmp/random/src/index.ts',
+    filename: join(tmpdir(), 'random', 'src', 'index.ts'),
   }
 }
 

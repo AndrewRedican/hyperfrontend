@@ -1,4 +1,5 @@
 import type { InvalidTestCase, ValidTestCase } from '@typescript-eslint/rule-tester'
+import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { after as afterAll } from 'node:test'
 import { createTempWorkspaceManager, createTypeScriptRuleTester } from '../testing'
@@ -451,7 +452,7 @@ function createNoProjectRootCase(): ValidTestCase<TestOptions> {
   return {
     name: 'ignores index.ts files outside project root',
     code: `export * from './foo'`,
-    filename: '/tmp/random/index.ts',
+    filename: join(tmpdir(), 'random', 'index.ts'),
   }
 }
 

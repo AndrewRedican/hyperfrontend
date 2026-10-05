@@ -1,4 +1,4 @@
-import { join } from 'node:path'
+import { join, posix } from 'node:path'
 import { after as afterAll } from 'node:test'
 import { describe, expect, it } from '@hyperfrontend/testing'
 import { createJsonRuleTester, createTempWorkspaceManager } from '../testing'
@@ -49,7 +49,7 @@ function createProject(config: { projectJson: object; packageJson?: object; extr
     files['apps/demo/package.json'] = JSON.stringify(config.packageJson, null, 2)
   }
   for (const [path, contents] of Object.entries(config.extraFiles ?? {})) {
-    files[`apps/demo/${path}`] = contents
+    files[posix.join('apps', 'demo', path)] = contents
   }
   return join(manager.create({ files }).root, 'apps', 'demo')
 }

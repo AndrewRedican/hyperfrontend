@@ -1,4 +1,5 @@
 import type { ArrayExpression, Identifier, Literal, ObjectExpression, Property, SpreadElement } from 'estree'
+import { posix, join } from 'node:path'
 import { after as afterAll } from 'node:test'
 import { RuleTester } from 'eslint'
 import { describe, expect, it } from '@hyperfrontend/testing'
@@ -58,17 +59,17 @@ function createTempWorkspace(config: WorkspaceFixtureConfig): string {
         }
         exportsValue = exportsMap
       }
-      const pkg: Record<string, unknown> = { name: `@hyperfrontend/${library.root.split('/').pop() ?? 'lib'}` }
+      const pkg: Record<string, unknown> = { name: `@hyperfrontend/${library.root.split(posix.sep).pop() ?? 'lib'}` }
       if (exportsValue !== null) {
         pkg.exports = exportsValue
       }
-      files[`${library.root}/package.json`] = JSON.stringify(pkg, null, 2)
+      files[posix.join(library.root, 'package.json')] = JSON.stringify(pkg, null, 2)
     }
   }
 
   if (config.pageDirs) {
     for (const dir of config.pageDirs) {
-      files[`${dir}/page.tsx`] = 'export default function Page() { return null }'
+      files[posix.join(dir, 'page.tsx')] = 'export default function Page() { return null }'
     }
   }
 
@@ -608,7 +609,7 @@ describe('docs-site-secondary-entries', () => {
           code: createContentTsCode([{ name: 'Nexus', slug: 'nexus', readmePath: 'libs/nexus/README.md', category: 'core' }]),
           filename: (() => {
             const dir = createTempWorkspace({})
-            return `${dir}/apps/docs-site/src/lib/other-file.ts`
+            return join(dir, 'apps', 'docs-site', 'src', 'lib', 'other-file.ts')
           })(),
         },
         {
@@ -616,7 +617,7 @@ describe('docs-site-secondary-entries', () => {
           code: createContentTsCode([{ name: 'Nexus', slug: 'nexus', readmePath: 'libs/nexus/README.md', category: 'core' }]),
           filename: (() => {
             const dir = createTempWorkspace({})
-            return `${dir}/apps/other-app/src/lib/content.ts`
+            return join(dir, 'apps', 'other-app', 'src', 'lib', 'content.ts')
           })(),
         },
         {
@@ -624,7 +625,7 @@ describe('docs-site-secondary-entries', () => {
           code: createContentTsCode([{ name: 'Nexus', slug: 'nexus', readmePath: 'libs/nexus/README.md', category: 'core' }]),
           filename: (() => {
             const dir = createTempWorkspace({})
-            return `${dir}/content.ts`
+            return join(dir, 'content.ts')
           })(),
         },
         {
@@ -641,7 +642,7 @@ describe('docs-site-secondary-entries', () => {
             const dir = createTempWorkspace({
               libraries: [{ root: 'libs/versioning', subpaths: ['commits/parse'] }],
             })
-            return `${dir}/apps/docs-site/src/lib/content.ts`
+            return join(dir, 'apps', 'docs-site', 'src', 'lib', 'content.ts')
           })(),
         },
         {
@@ -658,7 +659,7 @@ describe('docs-site-secondary-entries', () => {
             const dir = createTempWorkspace({
               libraries: [{ root: 'libs/versioning', subpaths: ['commits/parse'] }],
             })
-            return `${dir}/apps/docs-site/src/lib/content.ts`
+            return join(dir, 'apps', 'docs-site', 'src', 'lib', 'content.ts')
           })(),
         },
         {
@@ -675,7 +676,7 @@ describe('docs-site-secondary-entries', () => {
             const dir = createTempWorkspace({
               libraries: [{ root: 'libs/versioning', subpaths: ['commits/parse'] }],
             })
-            return `${dir}/apps/docs-site/src/lib/content.ts`
+            return join(dir, 'apps', 'docs-site', 'src', 'lib', 'content.ts')
           })(),
         },
         {
@@ -683,7 +684,7 @@ describe('docs-site-secondary-entries', () => {
           code: `export const LIBRARIES = 'not-an-array'`,
           filename: (() => {
             const dir = createTempWorkspace({})
-            return `${dir}/apps/docs-site/src/lib/content.ts`
+            return join(dir, 'apps', 'docs-site', 'src', 'lib', 'content.ts')
           })(),
         },
         {
@@ -696,7 +697,7 @@ describe('docs-site-secondary-entries', () => {
               libraries: [],
               navigationHrefs: [],
             })
-            return `${dir}/apps/docs-site/src/lib/content.ts`
+            return join(dir, 'apps', 'docs-site', 'src', 'lib', 'content.ts')
           })(),
         },
         {
@@ -709,7 +710,7 @@ describe('docs-site-secondary-entries', () => {
               libraries: [{ root: 'libs/versioning', subpaths: [], rawExports: null }],
               navigationHrefs: [],
             })
-            return `${dir}/apps/docs-site/src/lib/content.ts`
+            return join(dir, 'apps', 'docs-site', 'src', 'lib', 'content.ts')
           })(),
         },
         {
@@ -722,7 +723,7 @@ describe('docs-site-secondary-entries', () => {
               libraries: [{ root: 'libs/versioning', subpaths: [], rawExports: './src/index.js' }],
               navigationHrefs: [],
             })
-            return `${dir}/apps/docs-site/src/lib/content.ts`
+            return join(dir, 'apps', 'docs-site', 'src', 'lib', 'content.ts')
           })(),
         },
         {
@@ -741,7 +742,7 @@ describe('docs-site-secondary-entries', () => {
               ],
               navigationHrefs: [],
             })
-            return `${dir}/apps/docs-site/src/lib/content.ts`
+            return join(dir, 'apps', 'docs-site', 'src', 'lib', 'content.ts')
           })(),
         },
         {
@@ -758,7 +759,7 @@ describe('docs-site-secondary-entries', () => {
               ],
               navigationHrefs: ['/docs/libraries/versioning/commits/parse', '/docs/libraries/versioning/semver/format'],
             })
-            return `${dir}/apps/docs-site/src/lib/content.ts`
+            return join(dir, 'apps', 'docs-site', 'src', 'lib', 'content.ts')
           })(),
         },
         {
@@ -772,7 +773,7 @@ describe('docs-site-secondary-entries', () => {
               pageDirs: ['apps/docs-site/src/app/docs/plugins/features/core'],
               navigationHrefs: ['/docs/plugins/features/core'],
             })
-            return `${dir}/apps/docs-site/src/lib/content.ts`
+            return join(dir, 'apps', 'docs-site', 'src', 'lib', 'content.ts')
           })(),
         },
         {
@@ -794,7 +795,7 @@ describe('docs-site-secondary-entries', () => {
               ],
               navigationHrefs: [],
             })
-            return `${dir}/apps/docs-site/src/lib/content.ts`
+            return join(dir, 'apps', 'docs-site', 'src', 'lib', 'content.ts')
           })(),
         },
         {
@@ -807,7 +808,7 @@ describe('docs-site-secondary-entries', () => {
               libraries: [{ root: 'libs/versioning', subpaths: ['commits/parse'] }],
               pageDirs: ['apps/docs-site/src/app/docs/libraries/versioning/commits/parse'],
             })
-            return `${dir}/apps/docs-site/src/lib/content.ts`
+            return join(dir, 'apps', 'docs-site', 'src', 'lib', 'content.ts')
           })(),
         },
       ],
@@ -823,7 +824,7 @@ describe('docs-site-secondary-entries', () => {
               pageDirs: [],
               navigationHrefs: ['/docs/libraries/versioning/commits/parse'],
             })
-            return `${dir}/apps/docs-site/src/lib/content.ts`
+            return join(dir, 'apps', 'docs-site', 'src', 'lib', 'content.ts')
           })(),
           errors: [
             {
@@ -847,7 +848,7 @@ describe('docs-site-secondary-entries', () => {
               pageDirs: ['apps/docs-site/src/app/docs/libraries/versioning/commits/parse'],
               navigationHrefs: [],
             })
-            return `${dir}/apps/docs-site/src/lib/content.ts`
+            return join(dir, 'apps', 'docs-site', 'src', 'lib', 'content.ts')
           })(),
           errors: [
             {
@@ -871,7 +872,7 @@ describe('docs-site-secondary-entries', () => {
               pageDirs: [],
               navigationHrefs: [],
             })
-            return `${dir}/apps/docs-site/src/lib/content.ts`
+            return join(dir, 'apps', 'docs-site', 'src', 'lib', 'content.ts')
           })(),
           errors: [
             {
@@ -903,7 +904,7 @@ describe('docs-site-secondary-entries', () => {
               pageDirs: [],
               navigationHrefs: [],
             })
-            return `${dir}/apps/docs-site/src/lib/content.ts`
+            return join(dir, 'apps', 'docs-site', 'src', 'lib', 'content.ts')
           })(),
           errors: [
             {
@@ -939,7 +940,7 @@ describe('docs-site-secondary-entries', () => {
               pageDirs: ['apps/docs-site/src/app/docs/libraries/versioning/commits/parse'],
               navigationHrefs: ['/docs/libraries/versioning/commits/parse'],
             })
-            return `${dir}/apps/docs-site/src/lib/content.ts`
+            return join(dir, 'apps', 'docs-site', 'src', 'lib', 'content.ts')
           })(),
           errors: [
             {

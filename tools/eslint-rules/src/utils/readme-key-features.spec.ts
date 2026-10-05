@@ -28,7 +28,7 @@ function validBullet(index: number): string {
  * @returns Every problem the analysis found.
  */
 function analyzeBody(body: string): KeyFeaturesProblem[] {
-  const lines = ['### Key Features', '', ...body.split('\n'), '', '### Next']
+  const lines = ['### Key Features', '', ...body.split(/\r?\n/), '', '### Next']
   return analyzeKeyFeatures(lines, { startLine: 1, endLine: lines.length - 1 })
 }
 

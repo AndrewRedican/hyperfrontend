@@ -1,4 +1,5 @@
 import type { ArrayExpression, Identifier, Literal, ObjectExpression, Property } from 'estree'
+import { posix, join } from 'node:path'
 import { after as afterAll } from 'node:test'
 import { RuleTester } from 'eslint'
 import { describe, expect, it } from '@hyperfrontend/testing'
@@ -36,11 +37,15 @@ function createTempWorkspace(config: {
   }
 
   for (const lib of config.libraries) {
-    files[`${lib.srcPath}/project.json`] = JSON.stringify({ projectType: 'library', targets: { build: {}, publish: {} } }, null, 2)
-    files[`${lib.srcPath}/package.json`] = JSON.stringify({ name: `@hyperfrontend/${lib.slug.replace('/', '-')}` }, null, 2)
+    files[posix.join(lib.srcPath, 'project.json')] = JSON.stringify(
+      { projectType: 'library', targets: { build: {}, publish: {} } },
+      null,
+      2
+    )
+    files[posix.join(lib.srcPath, 'package.json')] = JSON.stringify({ name: `@hyperfrontend/${lib.slug.replace('/', '-')}` }, null, 2)
 
     for (const mdFile of lib.markdownFiles) {
-      files[`${lib.srcPath}/${mdFile}`] = `# ${mdFile}`
+      files[posix.join(lib.srcPath, mdFile)] = `# ${mdFile}`
     }
   }
 
@@ -606,7 +611,7 @@ describe('docs-site-library-docs', () => {
         ],
       })
 
-      const result = getLibraryMarkdownFiles(`${workspaceRoot}/libs/test-lib`)
+      const result = getLibraryMarkdownFiles(join(workspaceRoot, 'libs', 'test-lib'))
       expect(result).toEqual([expect.objectContaining({ relativePath: 'README.md', isMainPage: true, routeSlug: '' })])
     })
 
@@ -622,7 +627,7 @@ describe('docs-site-library-docs', () => {
         ],
       })
 
-      const result = getLibraryMarkdownFiles(`${workspaceRoot}/libs/test-lib`)
+      const result = getLibraryMarkdownFiles(join(workspaceRoot, 'libs', 'test-lib'))
       expect(result).toContainEqual(expect.objectContaining({ relativePath: 'ARCHITECTURE.md', routeSlug: 'architecture' }))
     })
 
@@ -638,7 +643,7 @@ describe('docs-site-library-docs', () => {
         ],
       })
 
-      const result = getLibraryMarkdownFiles(`${workspaceRoot}/libs/test-lib`)
+      const result = getLibraryMarkdownFiles(join(workspaceRoot, 'libs', 'test-lib'))
       expect(result).toContainEqual(expect.objectContaining({ relativePath: 'src/core/README.md', routeSlug: 'core' }))
       expect(result).toContainEqual(expect.objectContaining({ relativePath: 'src/utils/README.md', routeSlug: 'utils' }))
     })
@@ -655,7 +660,7 @@ describe('docs-site-library-docs', () => {
         ],
       })
 
-      const result = getLibraryMarkdownFiles(`${workspaceRoot}/libs/test-lib`)
+      const result = getLibraryMarkdownFiles(join(workspaceRoot, 'libs', 'test-lib'))
       expect(result).not.toContainEqual(expect.objectContaining({ relativePath: 'CHANGELOG.md' }))
     })
 
@@ -671,7 +676,7 @@ describe('docs-site-library-docs', () => {
         ],
       })
 
-      const result = getLibraryMarkdownFiles(`${workspaceRoot}/libs/test-lib`)
+      const result = getLibraryMarkdownFiles(join(workspaceRoot, 'libs', 'test-lib'))
       expect(result).not.toContainEqual(expect.objectContaining({ relativePath: 'LICENSE.md' }))
     })
 
@@ -687,7 +692,7 @@ describe('docs-site-library-docs', () => {
         ],
       })
 
-      const result = getLibraryMarkdownFiles(`${workspaceRoot}/libs/test-lib`)
+      const result = getLibraryMarkdownFiles(join(workspaceRoot, 'libs', 'test-lib'))
       expect(result).not.toContainEqual(expect.objectContaining({ relativePath: 'CONTRIBUTING.md' }))
     })
 
@@ -703,7 +708,7 @@ describe('docs-site-library-docs', () => {
         ],
       })
 
-      const result = getLibraryMarkdownFiles(`${workspaceRoot}/libs/test-lib`)
+      const result = getLibraryMarkdownFiles(join(workspaceRoot, 'libs', 'test-lib'))
       expect(result).not.toContainEqual(expect.objectContaining({ relativePath: 'CODE_OF_CONDUCT.md' }))
     })
 
@@ -724,7 +729,7 @@ describe('docs-site-library-docs', () => {
         ],
       })
 
-      const result = getLibraryMarkdownFiles(`${workspaceRoot}/libs/test-lib`)
+      const result = getLibraryMarkdownFiles(join(workspaceRoot, 'libs', 'test-lib'))
       expect(result).toHaveLength(1)
       expect(result).not.toContainEqual(expect.objectContaining({ relativePath: 'node_modules/some-package/README.md' }))
     })
@@ -741,7 +746,7 @@ describe('docs-site-library-docs', () => {
         ],
       })
 
-      const result = getLibraryMarkdownFiles(`${workspaceRoot}/libs/test-lib`)
+      const result = getLibraryMarkdownFiles(join(workspaceRoot, 'libs', 'test-lib'))
       expect(result).toHaveLength(1)
       expect(result).not.toContainEqual(expect.objectContaining({ relativePath: 'dist/README.md' }))
     })
@@ -758,7 +763,7 @@ describe('docs-site-library-docs', () => {
         ],
       })
 
-      const result = getLibraryMarkdownFiles(`${workspaceRoot}/libs/test-lib`)
+      const result = getLibraryMarkdownFiles(join(workspaceRoot, 'libs', 'test-lib'))
       expect(result).toHaveLength(1)
       expect(result).not.toContainEqual(expect.objectContaining({ relativePath: 'coverage/README.md' }))
     })
@@ -775,7 +780,7 @@ describe('docs-site-library-docs', () => {
         ],
       })
 
-      const result = getLibraryMarkdownFiles(`${workspaceRoot}/libs/test-lib`)
+      const result = getLibraryMarkdownFiles(join(workspaceRoot, 'libs', 'test-lib'))
       expect(result).toHaveLength(1)
       expect(result).not.toContainEqual(expect.objectContaining({ relativePath: '.nx/README.md' }))
     })
@@ -792,7 +797,7 @@ describe('docs-site-library-docs', () => {
         ],
       })
 
-      const result = getLibraryMarkdownFiles(`${workspaceRoot}/libs/test-lib`)
+      const result = getLibraryMarkdownFiles(join(workspaceRoot, 'libs', 'test-lib'))
       expect(result).toHaveLength(1)
       expect(result).not.toContainEqual(expect.objectContaining({ relativePath: '.git/README.md' }))
     })
@@ -826,7 +831,7 @@ describe('docs-site-library-docs', () => {
                 'apps/docs-site/src/app/docs/libraries/nexus/architecture/page.tsx',
               ],
             })
-            return `${workspaceRoot}/apps/docs-site/src/lib/content.ts`
+            return join(workspaceRoot, 'apps', 'docs-site', 'src', 'lib', 'content.ts')
           })(),
         },
         {
@@ -844,7 +849,7 @@ describe('docs-site-library-docs', () => {
               ],
               existingPages: ['apps/docs-site/src/app/docs/libraries/simple/page.tsx'],
             })
-            return `${workspaceRoot}/apps/docs-site/src/lib/content.ts`
+            return join(workspaceRoot, 'apps', 'docs-site', 'src', 'lib', 'content.ts')
           })(),
         },
         {
@@ -861,7 +866,7 @@ describe('docs-site-library-docs', () => {
                 },
               ],
             })
-            return `${workspaceRoot}/apps/docs-site/src/lib/other-file.ts`
+            return join(workspaceRoot, 'apps', 'docs-site', 'src', 'lib', 'other-file.ts')
           })(),
         },
         {
@@ -887,7 +892,7 @@ describe('docs-site-library-docs', () => {
                 },
               ],
             })
-            return `${workspaceRoot}/apps/docs-site/src/lib/content.ts`
+            return join(workspaceRoot, 'apps', 'docs-site', 'src', 'lib', 'content.ts')
           })(),
         },
         {
@@ -913,7 +918,7 @@ describe('docs-site-library-docs', () => {
                 },
               ],
             })
-            return `${workspaceRoot}/apps/docs-site/src/lib/content.ts`
+            return join(workspaceRoot, 'apps', 'docs-site', 'src', 'lib', 'content.ts')
           })(),
         },
         {
@@ -939,7 +944,7 @@ describe('docs-site-library-docs', () => {
                 },
               ],
             })
-            return `${workspaceRoot}/apps/docs-site/src/lib/content.ts`
+            return join(workspaceRoot, 'apps', 'docs-site', 'src', 'lib', 'content.ts')
           })(),
         },
         {
@@ -956,7 +961,7 @@ describe('docs-site-library-docs', () => {
                 },
               ],
             })
-            return `${workspaceRoot}/apps/docs-site/src/lib/content.ts`
+            return join(workspaceRoot, 'apps', 'docs-site', 'src', 'lib', 'content.ts')
           })(),
         },
         {
@@ -982,7 +987,7 @@ describe('docs-site-library-docs', () => {
                 },
               ],
             })
-            return `${workspaceRoot}/apps/docs-site/src/lib/content.ts`
+            return join(workspaceRoot, 'apps', 'docs-site', 'src', 'lib', 'content.ts')
           })(),
         },
         {
@@ -999,7 +1004,7 @@ describe('docs-site-library-docs', () => {
                 },
               ],
             })
-            return `${workspaceRoot}/apps/docs-site/src/lib/content.ts`
+            return join(workspaceRoot, 'apps', 'docs-site', 'src', 'lib', 'content.ts')
           })(),
         },
         {
@@ -1016,7 +1021,7 @@ describe('docs-site-library-docs', () => {
                 },
               ],
             })
-            return `${workspaceRoot}/apps/docs-site/src/lib/content.ts`
+            return join(workspaceRoot, 'apps', 'docs-site', 'src', 'lib', 'content.ts')
           })(),
         },
       ],
@@ -1036,7 +1041,7 @@ describe('docs-site-library-docs', () => {
               ],
               existingPages: ['apps/docs-site/src/app/docs/libraries/nexus/page.tsx'],
             })
-            return `${workspaceRoot}/apps/docs-site/src/lib/content.ts`
+            return join(workspaceRoot, 'apps', 'docs-site', 'src', 'lib', 'content.ts')
           })(),
           errors: [
             {
@@ -1066,7 +1071,7 @@ describe('docs-site-library-docs', () => {
               ],
               existingPages: ['apps/docs-site/src/app/docs/libraries/project-scope/page.tsx'],
             })
-            return `${workspaceRoot}/apps/docs-site/src/lib/content.ts`
+            return join(workspaceRoot, 'apps', 'docs-site', 'src', 'lib', 'content.ts')
           })(),
           errors: [
             {
@@ -1094,7 +1099,7 @@ describe('docs-site-library-docs', () => {
               ],
               existingPages: [],
             })
-            return `${workspaceRoot}/apps/docs-site/src/lib/content.ts`
+            return join(workspaceRoot, 'apps', 'docs-site', 'src', 'lib', 'content.ts')
           })(),
           errors: [
             {
@@ -1122,7 +1127,7 @@ describe('docs-site-library-docs', () => {
               ],
               existingPages: [],
             })
-            return `${workspaceRoot}/apps/docs-site/src/lib/content.ts`
+            return join(workspaceRoot, 'apps', 'docs-site', 'src', 'lib', 'content.ts')
           })(),
           errors: [{ messageId: 'missingDocPage' }, { messageId: 'missingDocPage' }, { messageId: 'missingDocPage' }],
         },
@@ -1141,7 +1146,7 @@ describe('docs-site-library-docs', () => {
               ],
               existingPages: [],
             })
-            return `${workspaceRoot}/apps/docs-site/src/lib/content.ts`
+            return join(workspaceRoot, 'apps', 'docs-site', 'src', 'lib', 'content.ts')
           })(),
           errors: [
             {

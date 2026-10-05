@@ -31,7 +31,7 @@ function createMockComment(
 function createMockSourceCode(text: string, lines?: string[]): SourceCode {
   return {
     getText: () => text,
-    getLines: () => lines ?? text.split('\n'),
+    getLines: () => lines ?? text.split(/\r?\n/),
   } as unknown as SourceCode
 }
 
