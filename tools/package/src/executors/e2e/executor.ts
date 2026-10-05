@@ -46,6 +46,7 @@ function packPackage(distPath: string, workspaceRoot: string): string {
     cwd: distPath,
     encoding: 'utf-8',
     stdio: ['pipe', 'pipe', 'pipe'],
+    shell: process.platform === 'win32',
   })
 
   const packResult = parse(result)
@@ -79,6 +80,7 @@ function installTarball(tarballPath: string, testDir: string): void {
     cwd: testDir,
     encoding: 'utf-8',
     stdio: 'inherit',
+    shell: process.platform === 'win32',
   })
 
   logger.info(`Installation complete`)
