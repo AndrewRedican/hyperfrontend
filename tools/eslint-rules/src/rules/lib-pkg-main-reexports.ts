@@ -1,6 +1,6 @@
 import type { TSESTree } from '@typescript-eslint/utils'
 import type { PackageJson } from '../utils/nx-project'
-import { dirname, join, resolve } from 'node:path'
+import { dirname, join, posix, resolve } from 'node:path'
 import { ESLintUtils } from '@typescript-eslint/utils'
 import { keys } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
@@ -161,7 +161,7 @@ function isMainEntryPoint(filename: string, projectRoot: string, exports: Record
   const mainPath = resolveExportPath(mainExport)
   if (!mainPath) return false
 
-  const sourcePath = mainPath.replace(/^\.\//, '').replace(/\.(m?js|cjs)$/, '.ts')
+  const sourcePath = posix.normalize(mainPath).replace(/\.(m?js|cjs)$/, '.ts')
   const expectedPath = resolve(projectRoot, sourcePath)
 
   return resolve(filename) === expectedPath

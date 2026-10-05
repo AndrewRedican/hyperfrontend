@@ -1,6 +1,6 @@
 import type { TSESTree } from '@typescript-eslint/utils'
 import type { PackageJson } from '../utils/nx-project'
-import { dirname, join, resolve } from 'node:path'
+import { basename, dirname, join, posix, resolve } from 'node:path'
 import { ESLintUtils } from '@typescript-eslint/utils'
 import { values } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
@@ -48,7 +48,7 @@ function getEntryPointPaths(projectRoot: string, packageJson: PackageJson): stri
     for (const exportValue of values(packageJson.exports)) {
       const resolvedPath = resolveExportValue(exportValue)
       if (resolvedPath && !resolvedPath.endsWith('package.json')) {
-        const sourcePath = resolvedPath.replace(/^\.\//, '').replace(/\.(js|cjs|mjs)$/, '.ts')
+        const sourcePath = posix.normalize(resolvedPath).replace(/\.(js|cjs|mjs)$/, '.ts')
         entryPoints.push(join(projectRoot, sourcePath))
       }
     }
@@ -311,7 +311,7 @@ const rule = ESLintUtils.RuleCreator(
     const minSubstantiveWords = options?.minSubstantiveWords ?? DEFAULT_MIN_SUBSTANTIVE_WORDS
     const filename = context.filename
 
-    if (!filename.endsWith('/index.ts') && !filename.endsWith('\\index.ts')) {
+    if (basename(filename) !== 'index.ts') {
       return {}
     }
 

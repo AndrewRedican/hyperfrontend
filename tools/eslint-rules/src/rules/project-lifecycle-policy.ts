@@ -1,6 +1,6 @@
 import type { Rule } from 'eslint'
 import type { JSONNode, JSONProperty } from 'jsonc-eslint-parser/lib/parser/ast'
-import { basename, dirname, join } from 'node:path'
+import { basename, dirname, join, posix } from 'node:path'
 import { isDirectory, readDirectory, readJsonFileIfExists } from '../utils'
 
 /**
@@ -124,7 +124,7 @@ function matchSegments(pathSegments: string[], patternSegments: string[], pathIn
  * @returns True when the glob matches the path.
  */
 export function matchesGlob(relativePath: string, pattern: string): boolean {
-  return matchSegments(relativePath.split('/'), pattern.split('/'), 0, 0)
+  return matchSegments(relativePath.split(posix.sep), pattern.split('/'), 0, 0)
 }
 
 /**

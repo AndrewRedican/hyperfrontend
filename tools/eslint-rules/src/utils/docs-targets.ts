@@ -14,7 +14,7 @@
 
 import type { DocsSymbol, SourceCache } from './docs-targets-source'
 import { statSync } from 'node:fs'
-import { dirname, join, relative, sep } from 'node:path'
+import { dirname, join, relative, sep, posix } from 'node:path'
 import { isArray } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
 import { parse } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
@@ -104,7 +104,7 @@ function dynamicSlug(path: string, prefix: string): string | null {
     return null
   }
   const slug = path.slice(prefix.length)
-  return slug !== '' && !slug.includes('/') ? slug : null
+  return slug !== '' && !slug.includes(posix.sep) ? slug : null
 }
 
 /** Directories a package's source walk never enters. */
@@ -496,7 +496,7 @@ export function markdownOfRoute(index: DocsTargetIndex, route: string): string |
     if (path === `${base}/architecture`) {
       return join(pkg.root, 'ARCHITECTURE.md')
     }
-    if (path.startsWith(`${base}/`)) {
+    if (path.startsWith(`${base}${posix.sep}`)) {
       const subpath = path.slice(base.length + 1)
       for (const candidate of [join(pkg.root, 'src', subpath, 'README.md'), join(pkg.root, 'src/lib', subpath, 'README.md')]) {
         if (exists(candidate)) {
@@ -538,7 +538,7 @@ export function entryOfRoute(index: DocsTargetIndex, route: string): RouteOwner 
     if (path === base) {
       return { pkg, entry: null }
     }
-    if (path.startsWith(`${base}/`)) {
+    if (path.startsWith(`${base}${posix.sep}`)) {
       const entry = pkg.entries.get(path.slice(base.length + 1))
       return { pkg, entry: entry ?? null }
     }

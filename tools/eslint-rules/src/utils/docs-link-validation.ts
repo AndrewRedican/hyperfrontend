@@ -11,7 +11,7 @@
 
 import type { LinkOrigins } from './docs-links'
 import type { DocsTargetIndex } from './docs-targets'
-import { dirname, join, relative } from 'node:path'
+import { dirname, join, relative, posix } from 'node:path'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { createURL } from '@hyperfrontend/immutable-api-utils/built-in-copy/url'
 import { API_ANCHOR_PREFIX, PROPERTY_ANCHOR_INFIX } from './docs-links'
@@ -192,7 +192,7 @@ function checkSiteLink(index: DocsTargetIndex, url: URL): LinkVerdict {
  */
 function checkRepositoryLink(index: DocsTargetIndex, url: URL, repoUrl: string): LinkVerdict {
   const repoPath = createURL(repoUrl).pathname.replace(/\/$/, '')
-  if (!url.pathname.startsWith(`${repoPath}/`)) {
+  if (!url.pathname.startsWith(`${repoPath}${posix.sep}`)) {
     return { ok: true }
   }
   // why: after the repository come the view, the branch and the path, and only the view and the path say anything about the workspace
