@@ -58,7 +58,7 @@ export function hasLanguageIdentifier(line: string): boolean {
  * @returns An array of detected unlabeled code blocks.
  */
 export function detectUnlabeledCodeBlocks(content: string): UnlabeledCodeBlock[] {
-  const lines = content.split('\n')
+  const lines = content.split(/\r?\n/)
   const blocks: UnlabeledCodeBlock[] = []
 
   let inCodeBlock = false

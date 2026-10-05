@@ -142,7 +142,7 @@ function findPublishableLibraries(baseDir: string, workspaceRoot: string, result
  */
 export function extractMentionedPaths(sectionContent: string): string[] {
   const paths: string[] = []
-  const lines = sectionContent.split('\n')
+  const lines = sectionContent.split(/\r?\n/)
 
   for (const line of lines) {
     if (line.startsWith('|--') || line.startsWith('| --') || line.includes('Package') || line.includes('Description')) {
@@ -176,7 +176,7 @@ export function extractMentionedPaths(sectionContent: string): string[] {
  */
 export function parseReadmeSections(content: string): Map<string, ReadmeSection> {
   const sections = createMap<string, ReadmeSection>()
-  const lines = content.split('\n')
+  const lines = content.split(/\r?\n/)
   let currentSection: SectionParseState | null = null
 
   for (let i = 0; i < lines.length; i++) {

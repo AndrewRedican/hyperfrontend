@@ -212,7 +212,7 @@ function candidatesElsewhere(
   const considered = declared.length > 0 ? declared : foreign
   const parents = createSet(considered.map((hit) => `${hit.pkg.name}\n${hit.parent.name}`))
   for (const key of parents) {
-    const [pkgName, parent] = key.split('\n') as [string, string]
+    const [pkgName, parent] = key.split(/\r?\n/) as [string, string]
     const siblings = considered.filter((hit) => hit.pkg.name === pkgName && hit.parent.name === parent)
     candidates.push(`${parent} (${pkgName}): ${symbolUrl(origins, (siblings[0] as MemberHit).pkg, siblings, parent)}`)
   }

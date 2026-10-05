@@ -180,7 +180,7 @@ function stemmedWords(text: string): string[] {
  */
 function moduleDescription(comment: string): string {
   const text = comment
-    .split('\n')
+    .split(/\r?\n/)
     .map((line) => line.replace(/^\s*\*+\s?/, ''))
     .join('\n')
   const tag = BLOCK_TAG.exec(text)

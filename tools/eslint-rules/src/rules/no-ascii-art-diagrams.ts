@@ -200,7 +200,7 @@ export function isBoxStructure(lines: string[]): boolean {
  * @returns An array of detected ASCII art blocks.
  */
 export function detectAsciiArtDiagrams(content: string): AsciiArtBlock[] {
-  const lines = content.split('\n')
+  const lines = content.split(/\r?\n/)
   const blocks: AsciiArtBlock[] = []
 
   let inCodeBlock = false

@@ -95,7 +95,7 @@ function stripHtmlTags(text: string): string {
 export function headingAnchors(markdown: string): Set<string> {
   const anchors = createSet<string>()
   let inFence = false
-  for (const line of markdown.split('\n')) {
+  for (const line of markdown.split(/\r?\n/)) {
     if (line.trimStart().startsWith('```') || line.trimStart().startsWith('~~~')) {
       inFence = !inFence
       continue

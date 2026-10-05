@@ -297,7 +297,7 @@ export function findWideLines(code: string, lang: string, minLineLength: number,
   if (OUTPUT_LANGUAGES.has(lang)) return []
 
   const wide: WideLine[] = []
-  const lines = code.split('\n')
+  const lines = code.split(/\r?\n/)
 
   for (let index = 0; index < lines.length; index++) {
     const line = lines[index] as string

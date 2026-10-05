@@ -262,7 +262,7 @@ export function isDecorativeHeaderComment(comment: TSESTree.Comment, sourceCode:
   }
 
   // note: Check if it looks like a header comment (typically multi-line with prose)
-  const lines = comment.value.split('\n')
+  const lines = comment.value.split(/\r?\n/)
   if (lines.length < 2) return false
 
   // note: A decorative header typically has prose content without meaningful tags

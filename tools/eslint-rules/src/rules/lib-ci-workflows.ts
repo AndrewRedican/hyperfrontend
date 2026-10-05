@@ -141,7 +141,7 @@ function findPublishableLibraries(baseDir: string, workspaceRoot: string, result
  * @returns True if the path filter exists.
  */
 export function hasPathFilter(content: string, coverageFlag: string, relativePath: string): boolean {
-  const lines = content.split('\n')
+  const lines = content.split(/\r?\n/)
   const filterPattern = `${coverageFlag}:`
   const pathPattern = `'${relativePath}/**'`
 
@@ -170,7 +170,7 @@ export function hasPathFilter(content: string, coverageFlag: string, relativePat
  * @returns True if the matrix entry exists.
  */
 export function hasMatrixEntry(content: string, projectName: string, coverageFlag: string, relativePath: string): boolean {
-  const lines = content.split('\n')
+  const lines = content.split(/\r?\n/)
 
   for (const line of lines) {
     const trimmed = line.trim()
