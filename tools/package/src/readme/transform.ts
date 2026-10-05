@@ -240,7 +240,7 @@ export function transformReadme(source: string, options: TransformOptions): Tran
     throw createError(`The readme's media directives could not be read:\n${listed}`)
   }
 
-  const lines = source.split('\n')
+  const lines = source.split(/\r?\n/)
   const replacements: Replacement[] = []
   const blocks = createMap<number, PendingBlock>()
   if (options.banner !== undefined) {

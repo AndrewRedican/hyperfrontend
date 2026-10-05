@@ -203,7 +203,7 @@ function toDirective(attributes: ReadonlyMap<string, string>, startLine: number,
  * ```
  */
 export function parseMarkers(markdown: string): ParsedMarkers {
-  const lines = markdown.split('\n')
+  const lines = markdown.split(/\r?\n/)
   const directives: MediaDirective[] = []
   const problems: MarkerProblem[] = []
   const seen = createSet<string>()

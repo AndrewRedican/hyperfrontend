@@ -110,7 +110,7 @@ describe('transformReadme', () => {
 
   it('opens with the banner in place of the title, linked to the landing page, and lists it first', () => {
     const { markdown, replacements } = transformReadme(SOURCE, { docsLanding: LANDING, catalog, banner: BANNER })
-    expect({ opening: markdown.split('\n').slice(0, 7), replacements }).toEqual({
+    expect({ opening: markdown.split(/\r?\n/).slice(0, 7), replacements }).toEqual({
       opening: [...BANNER_FIGURE, '', 'Intro prose.'],
       replacements: [
         expect.objectContaining({ id: 'banner', before: '# @hyperfrontend/builder', after: BANNER_FIGURE.join('\n'), docs: LANDING }),
@@ -121,7 +121,7 @@ describe('transformReadme', () => {
 
   it('takes the first title outside a fence', () => {
     const fenced = ['```bash', '# not a title', '```', '', '# @hyperfrontend/builder', '', 'Prose.'].join('\n')
-    const titled = transformReadme(fenced, { docsLanding: LANDING, catalog, banner: BANNER }).markdown.split('\n')
+    const titled = transformReadme(fenced, { docsLanding: LANDING, catalog, banner: BANNER }).markdown.split(/\r?\n/)
     expect([titled[0], titled[1], titled[4]]).toEqual(['```bash', '# not a title', '<p align="center">'])
   })
 
