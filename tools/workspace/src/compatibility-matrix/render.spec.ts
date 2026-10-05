@@ -41,7 +41,7 @@ describe('renderCompatibilityDocument', () => {
 
   it('opens with the title and the generated-document note', () => {
     const document = buildCompatibilityDocument(workspaceWithTwoLibraries())
-    const lines = document.split('\n')
+    const lines = document.split(/\r?\n/)
 
     expect(lines[0]).toBe('# Library Compatibility Matrix')
     expect(lines[2]).toContain('> Generated from each')
@@ -56,7 +56,7 @@ describe('renderCompatibilityDocument', () => {
 
   it('renders every section in order', () => {
     const document = buildCompatibilityDocument(workspaceWithTwoLibraries())
-    const headings = document.split('\n').filter((line) => line.startsWith('## '))
+    const headings = document.split(/\r?\n/).filter((line) => line.startsWith('## '))
 
     expect(headings).toEqual([
       '## Platform Support',
@@ -283,7 +283,7 @@ describe('renderCompatibilityDocument', () => {
 
   it('gives every fenced block a language', () => {
     const document = buildCompatibilityDocument(workspaceWithTwoLibraries())
-    const fences = document.split('\n').filter((line) => line.startsWith('```'))
+    const fences = document.split(/\r?\n/).filter((line) => line.startsWith('```'))
 
     expect(fences).toEqual(['```mermaid', '```'])
   })

@@ -1,6 +1,6 @@
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { dirname, join } from 'node:path'
+import { dirname, join, posix } from 'node:path'
 import { stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 import { entries } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 
@@ -84,10 +84,10 @@ export function createWorkspace(libraries: LibraryFixture[], extraFiles: Record<
   const files: Record<string, string> = { 'nx.json': stringify({ version: 2 }, null, 2), ...extraFiles }
 
   for (const library of libraries) {
-    files[`${library.path}/project.json`] = stringify(library.projectJson, null, 2)
+    files[posix.join(library.path, 'project.json')] = stringify(library.projectJson, null, 2)
 
     if (library.packageJson) {
-      files[`${library.path}/package.json`] = stringify(library.packageJson, null, 2)
+      files[posix.join(library.path, 'package.json')] = stringify(library.packageJson, null, 2)
     }
   }
 
