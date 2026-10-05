@@ -15,7 +15,7 @@ const BUNDLED_FFMPEG_NAMES: readonly string[] = ['ffmpeg-linux', 'ffmpeg-mac', '
  */
 export function readVersion(command: string, versionFlag: string): string {
   try {
-    return execFileSync(command, [versionFlag], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).split('\n')[0] ?? ''
+    return execFileSync(command, [versionFlag], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).split(/\r?\n/)[0] ?? ''
   } catch {
     return ''
   }
