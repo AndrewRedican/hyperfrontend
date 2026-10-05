@@ -5,8 +5,8 @@ import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/er
 import { createPromise } from '@hyperfrontend/immutable-api-utils/built-in-copy/promise'
 import { clearInterval, setInterval } from '@hyperfrontend/immutable-api-utils/built-in-copy/timers'
 import { logger } from '@hyperfrontend/logging'
-import { join } from '@hyperfrontend/project-scope/core/path'
 import { flattenDeclarationPaths } from './flatten-paths'
+import { resolveTscScript } from './resolve-tsc-script'
 
 const log = logger.channel('builder:bundle:declarations')
 
@@ -33,10 +33,10 @@ const startHeartbeat = (label: string, startedAt: number): ReturnType<typeof set
     log.info(`${label} still running: elapsed=${elapsedSec}s parent heap=${formatMB(usage.heapUsed)}MB rss=${formatMB(usage.rss)}MB`)
   }, HEARTBEAT_INTERVAL_MS)
 
-const runTsc = (tscPath: string, args: string[], cwd: string): Promise<GenerateDeclarationsResult> =>
+const runTsc = (tscScript: string, args: string[], cwd: string): Promise<GenerateDeclarationsResult> =>
   createPromise<GenerateDeclarationsResult>((resolve, reject) => {
     const startedAt = dateNow()
-    const child = spawn(tscPath, args, { cwd, stdio: ['ignore', 'pipe', 'pipe'] })
+    const child = spawn(process.execPath, [tscScript, ...args], { cwd, stdio: ['ignore', 'pipe', 'pipe'] })
     log.info(`tsc spawned: pid=${child.pid ?? 'unknown'}`)
     log.debug(`tsc args: ${args.join(' ')}`)
     const heartbeat = startHeartbeat('tsc', startedAt)
@@ -72,7 +72,8 @@ const runTsc = (tscPath: string, args: string[], cwd: string): Promise<GenerateD
 
 /**
  * Generates `.d.ts` and `.d.ts.map` files for every entry point in the project
- * by spawning the workspace-local TypeScript compiler.
+ * by running the workspace-local TypeScript compiler's entry script on the current Node binary,
+ * which needs neither a shell nor the platform-specific `node_modules/.bin` shim.
  *
  * After tsc finishes, calls `flattenDeclarationPaths` to relocate the nested
  * `dist/<lib>/libs/<lib>/src/...` structure that tsc emits with `baseUrl=workspaceRoot`
@@ -81,7 +82,7 @@ const runTsc = (tscPath: string, args: string[], cwd: string): Promise<GenerateD
  * @param context - Resolved build context. Provides project root, output path, tsconfig path,
  * workspace root, and entry point discovery for the flatten step.
  * @returns Promise resolving with tsc's exit status, captured stdout, and captured stderr.
- * @throws {Error} When tsc exits with a non-zero status or fails to spawn.
+ * @throws {Error} When TypeScript cannot be resolved from the workspace root, or tsc exits with a non-zero status or fails to spawn.
  *
  * @example Generating declarations as part of a custom build
  * ```typescript
@@ -93,7 +94,7 @@ export const generateDeclarations = async (context: BuildContext): Promise<Gener
   log.info('generating typescript declarations')
   const usage = process.memoryUsage()
   log.info(`pre-tsc memory: parent heap=${formatMB(usage.heapUsed)}MB rss=${formatMB(usage.rss)}MB`)
-  const tscPath = join(context.workspaceRoot, 'node_modules', '.bin', 'tsc')
+  const tscScript = resolveTscScript(context.workspaceRoot)
   const args = [
     '--project',
     context.tsConfigPath,
@@ -106,7 +107,7 @@ export const generateDeclarations = async (context: BuildContext): Promise<Gener
     context.outputPath,
   ]
 
-  const result = await runTsc(tscPath, args, context.projectRoot)
+  const result = await runTsc(tscScript, args, context.projectRoot)
   log.info('flattening declaration paths')
   const flattenStart = dateNow()
   flattenDeclarationPaths(context)

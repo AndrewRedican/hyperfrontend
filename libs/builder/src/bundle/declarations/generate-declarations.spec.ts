@@ -8,6 +8,7 @@ import { __mockChannel } from '@hyperfrontend/logging'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { flattenDeclarationPaths } from './flatten-paths'
 import { generateDeclarations } from './generate-declarations'
+import { resolveTscScript } from './resolve-tsc-script'
 jest.mock('@hyperfrontend/logging', () => {
   const actual = jest.requireActual('@hyperfrontend/logging')
   const mockChannel = { error: jest.fn(), warn: jest.fn(), info: jest.fn(), debug: jest.fn(), log: jest.fn() }
@@ -22,6 +23,7 @@ jest.mock('@hyperfrontend/immutable-api-utils/built-in-copy/timers', () => ({
   clearInterval: jest.fn(),
 }))
 jest.mock('node:child_process', () => ({ spawn: jest.fn() }))
+jest.mock('./resolve-tsc-script', () => ({ resolveTscScript: jest.fn() }))
 jest.mock('./flatten-paths', () => ({ flattenDeclarationPaths: jest.fn() }))
 
 interface FakeChild extends EventEmitter {
@@ -53,6 +55,8 @@ const makeContext = (): BuildContext => ({
   startedAt: 0,
 })
 
+const TSC_SCRIPT = '/abs/repo/node_modules/typescript/bin/tsc'
+
 const tick = () => new Promise<void>((resolve) => setImmediate(resolve))
 
 const mockChannel = __mockChannel as {
@@ -65,6 +69,7 @@ const mockChannel = __mockChannel as {
 
 beforeEach(() => {
   ;(spawn as Mock).mockReset()
+  ;(resolveTscScript as Mock).mockReset().mockReturnValue(TSC_SCRIPT)
   ;(flattenDeclarationPaths as Mock).mockReset()
   ;(setInterval as Mock).mockReset().mockReturnValue('fake-interval-id')
   ;(clearInterval as Mock).mockReset()
@@ -76,7 +81,7 @@ beforeEach(() => {
 })
 
 describe('generateDeclarations', () => {
-  it('spawns the workspace-local tsc binary with the declaration emission flags', async () => {
+  it('runs the workspace-local tsc entry script on the current node binary with the declaration emission flags', async () => {
     const child = makeFakeChild()
     ;(spawn as Mock).mockReturnValue(child)
     const promise = generateDeclarations(makeContext())
@@ -84,16 +89,50 @@ describe('generateDeclarations', () => {
     child.emit('close', 0)
     await promise
     expect(spawn).toHaveBeenCalledWith(
-      '/abs/repo/node_modules/.bin/tsc',
-      expect.arrayContaining([
+      process.execPath,
+      [
+        TSC_SCRIPT,
         '--project',
         '/abs/libs/foo/tsconfig.lib.json',
+        '--noEmit',
+        'false',
         '--emitDeclarationOnly',
         '--declaration',
         '--declarationMap',
-      ]),
+        '--outDir',
+        '/abs/dist/libs/foo',
+      ],
       expect.objectContaining({ cwd: '/abs/libs/foo', stdio: ['ignore', 'pipe', 'pipe'] })
     )
+  })
+
+  it('resolves the tsc entry script from the workspace root rather than a node_modules/.bin shim', async () => {
+    const child = makeFakeChild()
+    ;(spawn as Mock).mockReturnValue(child)
+    const promise = generateDeclarations(makeContext())
+    await tick()
+    child.emit('close', 0)
+    await promise
+    expect(resolveTscScript).toHaveBeenCalledWith('/abs/repo')
+  })
+
+  it('spawns without a shell so arguments containing spaces stay intact', async () => {
+    const child = makeFakeChild()
+    ;(spawn as Mock).mockReturnValue(child)
+    const promise = generateDeclarations(makeContext())
+    await tick()
+    child.emit('close', 0)
+    await promise
+    expect((spawn as Mock).mock.calls[0]?.[2]).not.toHaveProperty('shell')
+  })
+
+  it('rejects without spawning when typescript cannot be resolved from the workspace root', async () => {
+    const resolveError = new Error("Cannot find module 'typescript/bin/tsc'")
+    ;(resolveTscScript as Mock).mockImplementation(() => {
+      throw resolveError
+    })
+    await expect(generateDeclarations(makeContext())).rejects.toBe(resolveError)
+    expect(spawn).not.toHaveBeenCalled()
   })
 
   it('flattens declaration paths after a successful tsc run', async () => {

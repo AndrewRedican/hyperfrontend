@@ -94,9 +94,10 @@ npm install --save-dev @hyperfrontend/builder
 
 [`typescript`](https://www.npmjs.com/package/typescript) is a regular dependency of the builder, not a peer: installing the
 builder installs a compiler, and the published manifest declares no
-[`peerDependencies`](https://www.hyperfrontend.dev/docs/libraries/builder/models/#api-PackageJson-prop-peerDependencies) at all. Declaration emit spawns the workspace's own
-`node_modules/.bin/tsc`, so when your project already depends on TypeScript that
-is the compiler that runs. The builder is built against **TypeScript >= 5.9**.
+[`peerDependencies`](https://www.hyperfrontend.dev/docs/libraries/builder/models/#api-PackageJson-prop-peerDependencies) at all. Declaration emit runs the `tsc` entry script of
+the TypeScript resolved from your workspace root on the current Node binary, so
+when your project already depends on TypeScript that is the compiler that runs,
+on Windows as well as POSIX systems. The builder is built against **TypeScript >= 5.9**.
 
 ## Quick Start
 
