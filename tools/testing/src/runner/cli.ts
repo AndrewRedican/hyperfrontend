@@ -1,5 +1,6 @@
 import type { TestConfig } from './config'
 import { resolve } from 'node:path'
+import { pathToFileURL } from 'node:url'
 import { runProjectTests } from './run'
 
 /**
@@ -46,7 +47,7 @@ function parseArguments(argv: string[]): CliArguments {
  */
 async function main(): Promise<void> {
   const args = parseArguments(process.argv.slice(2))
-  const loaded = (await import(args.configPath)) as TestConfigModule
+  const loaded = (await import(pathToFileURL(args.configPath).href)) as TestConfigModule
   const config = loaded.default
 
   if (!config) throw new Error(`${args.configPath} has no default export`)
