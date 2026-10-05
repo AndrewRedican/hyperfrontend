@@ -7,7 +7,16 @@ import { checkPosixConversion, checkRelativeEscapes } from './cross-platform/con
 import { createClassifier, tierOfDomain } from './cross-platform/domain'
 import { DEFAULT_INCLUDE, isIncluded } from './cross-platform/include'
 import { importsNodeModule, isNodeCapableProject } from './cross-platform/node-project'
-import { checkHardcodedTmp, checkLineSplit, checkNativeImport, checkShellShim, checkUrlPathname } from './cross-platform/runtime'
+import {
+  checkHardcodedTmp,
+  checkLineSplit,
+  checkNativeImport,
+  checkNativeRegister,
+  checkShellShim,
+  checkSpecifierFlagList,
+  checkSpecifierFlagTemplate,
+  checkUrlPathname,
+} from './cross-platform/runtime'
 import { checkDriveLetterLoss, checkSeparatorJoin, checkSeparatorMethod } from './cross-platform/separators'
 
 /**
@@ -77,7 +86,7 @@ const rule = ESLintUtils.RuleCreator(
     type: 'problem',
     docs: {
       description:
-        'Keep publishable libraries, and any other files the include option selects, working on Windows: path separators, absolute paths, dynamic imports, .cmd shims, and CRLF text',
+        'Keep publishable libraries, and any other files the include option selects, working on Windows: path separators, absolute paths, module specifiers, .cmd shims, and CRLF text',
     },
     fixable: 'code',
     hasSuggestions: true,
@@ -146,6 +155,8 @@ const rule = ESLintUtils.RuleCreator(
         'Convert native paths to POSIX with `.split(sep).join(posix.sep)`. This spelling also rewrites backslashes on POSIX, where they are legal file-name characters.',
       nativeImport:
         "`import()` of a native path fails on Windows, where 'C:\\x' parses as a URL with scheme 'c:'. Import `pathToFileURL(path).href` from node:url instead.",
+      nativeSpecifier:
+        "`{{ target }}` takes a module specifier, and a native path fails on Windows, where 'C:\\x' parses as a URL with scheme 'c:'. Pass `pathToFileURL(path).href` from node:url instead.",
       urlPathname: "`.pathname` of a module URL is '/C:/x' with percent-encoding on Windows. Use `fileURLToPath()` from node:url.",
       shellShim:
         "'{{ command }}' is a .cmd shim on Windows and cannot be spawned without a shell (ENOENT or EINVAL). Pass `shell: process.platform === 'win32'` and keep its arguments free of spaces and shell metacharacters.",
@@ -193,8 +204,14 @@ const rule = ESLintUtils.RuleCreator(
         checkPosixConversion(check, node)
         checkShellShim(check, node)
         checkLineSplit(check, node)
+        checkNativeRegister(check, node)
+        checkSpecifierFlagList(check, node)
+      },
+      ArrayExpression(node) {
+        checkSpecifierFlagList(check, node)
       },
       TemplateLiteral(node) {
+        checkSpecifierFlagTemplate(check, node)
         checkSeparatorJoin(check, node)
         checkDriveLetterLoss(check, node)
         checkHardcodedTmp(check, node)

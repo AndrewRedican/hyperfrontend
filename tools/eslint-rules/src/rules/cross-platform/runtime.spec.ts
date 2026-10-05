@@ -101,6 +101,32 @@ ruleTester.run(`${RULE_NAME} runtime`, rule, {
       filename: files.node,
     },
     {
+      name: 'allows specifier flags followed by specifiers, file URLs, or nothing',
+      code: [
+        "import { register } from 'node:module'",
+        "import { join } from 'node:path'",
+        "import { pathToFileURL } from 'node:url'",
+        "const a = ['--import', './register.mjs', '--test-reporter', 'lcov', '--import']",
+        "const b = ['--import', pathToFileURL(join(root, 'x.js')).href]",
+        "const c = ['--require', join(root, 'x.js'), '--import', ...rest]",
+        "const d = [, '--import', specifier]",
+        "args.push('--loader', 'tsx')",
+        "args.concat('--import', join(root, 'x.js'))",
+        "push('--import', join(root, 'x.js'))",
+        'const e = `--import=${pathToFileURL(join(root, "x.js")).href}`',
+        'const f = `--import=${join(root, "x.js")}.js`',
+        'const g = `--require=${join(root, "x.js")}`',
+        'const h = `${a}--import=${join(root, "x.js")}`',
+        'const i = `--import=`',
+        "register('./hooks.mjs', import.meta.url)",
+        "register(pathToFileURL(join(root, 'hooks.mjs')).href)",
+        'register()',
+        'register(...rest)',
+        "other.register(join(root, 'hooks.mjs'))",
+      ].join('\n'),
+      filename: files.node,
+    },
+    {
       name: 'ignores spawn-named functions from other modules',
       code: "import { spawn } from './process'\nspawn('npm', [])",
       filename: files.node,
@@ -317,6 +343,70 @@ ruleTester.run(`${RULE_NAME} runtime`, rule, {
         { messageId: 'splitCommand', data: { command: 'cmd' }, suggestions: [] },
         { messageId: 'splitCommand', data: { command: "line.split(' ')[0]" }, suggestions: [] },
         { messageId: 'splitCommand', data: { command: 'words[0]' }, suggestions: [] },
+      ],
+      filename: files.node,
+    },
+    {
+      name: 'fixes native paths that follow a specifier flag to file URLs',
+      code: [
+        "import { join } from 'node:path'",
+        "import { pathToFileURL } from 'node:url'",
+        "const a = ['--import', join(root, 'register.ts'), '--test']",
+        "args.push('--test-reporter', join(root, 'reporter.ts'))",
+        "args.unshift('--loader', process.cwd())",
+        'const b = `--experimental-loader=${join(root, "loader.mjs")}`',
+      ].join('\n'),
+      output: [
+        "import { join } from 'node:path'",
+        "import { pathToFileURL } from 'node:url'",
+        "const a = ['--import', pathToFileURL(join(root, 'register.ts')).href, '--test']",
+        "args.push('--test-reporter', pathToFileURL(join(root, 'reporter.ts')).href)",
+        "args.unshift('--loader', pathToFileURL(process.cwd()).href)",
+        'const b = `--experimental-loader=${pathToFileURL(join(root, "loader.mjs")).href}`',
+      ].join('\n'),
+      errors: [
+        { messageId: 'nativeSpecifier', data: { target: '--import' } },
+        { messageId: 'nativeSpecifier', data: { target: '--test-reporter' } },
+        { messageId: 'nativeSpecifier', data: { target: '--loader' } },
+        { messageId: 'nativeSpecifier', data: { target: '--experimental-loader' } },
+      ],
+      filename: files.node,
+    },
+    {
+      name: 'suggests a file URL for a path-like name after a specifier flag',
+      code: "const argv = ['--import', setupFile]",
+      errors: [
+        {
+          messageId: 'nativeSpecifier',
+          data: { target: '--import' },
+          suggestions: [
+            {
+              messageId: 'treatAsNative',
+              output: "import { pathToFileURL } from 'node:url'\nconst argv = ['--import', pathToFileURL(setupFile).href]",
+            },
+          ],
+        },
+      ],
+      filename: files.node,
+    },
+    {
+      name: 'fixes a native path registered as module hooks to a file URL',
+      code: "import module, { register } from 'node:module'\nimport { join } from 'node:path'\nregister(join(root, 'hooks.mjs'))\nmodule.register(hooksPath, parent)",
+      output:
+        "import module, { register } from 'node:module'\nimport { join } from 'node:path'\nimport { pathToFileURL } from 'node:url'\nregister(pathToFileURL(join(root, 'hooks.mjs')).href)\nmodule.register(hooksPath, parent)",
+      errors: [
+        { messageId: 'nativeSpecifier', data: { target: 'register()' } },
+        {
+          messageId: 'nativeSpecifier',
+          data: { target: 'register()' },
+          suggestions: [
+            {
+              messageId: 'treatAsNative',
+              output:
+                "import module, { register } from 'node:module'\nimport { join } from 'node:path'\nimport { pathToFileURL } from 'node:url'\nregister(join(root, 'hooks.mjs'))\nmodule.register(pathToFileURL(hooksPath).href, parent)",
+            },
+          ],
+        },
       ],
       filename: files.node,
     },

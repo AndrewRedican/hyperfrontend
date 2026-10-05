@@ -1,6 +1,6 @@
 # cross-platform
 
-Keep publishable libraries, and any other files the `include` option selects, working on Windows: path separators, absolute-path tests, dynamic imports of file paths, `.cmd` shims, and CRLF text.
+Keep publishable libraries, and any other files the `include` option selects, working on Windows: path separators, absolute-path tests, file paths used as module specifiers, `.cmd` shims, and CRLF text.
 
 ## Rule Details
 
@@ -27,7 +27,7 @@ Portable values are never reported.
 - **`/` is not the separator on Windows.** `join('a', 'b')` returns `a\b`, so `split('/')`, `startsWith(`${dir}/`)`, and `${dir}/x` silently stop matching or produce mixed paths.
 - **Windows absolute paths start with a drive.** `C:\x` never starts with `/`, and rebuilding a path as `'/' + segments.join('/')` produces `/C:/x`.
 - **`relative()` output leaks.** A native relative path stored as an Nx `root`, a map key, or returned data differs per OS, so the same workspace produces different results on Windows.
-- **Dynamic `import()` takes URLs.** `import('C:\\x\\y.js')` parses `c:` as a URL scheme and fails.
+- **Module specifiers are URLs.** `import('C:\\x\\y.js')` parses `c:` as a URL scheme and fails, and so does the same path given to `node --import`, `--loader`, `--test-reporter`, or `register()`.
 - **`URL.pathname` is not a path.** On Windows it is `/C:/x` with percent-encoding.
 - **`npm` is a `.cmd` shim on Windows.** Since the fix for CVE-2024-27980, Node refuses to spawn `.cmd` and `.bat` files without a shell (EINVAL), and without one the shim is not found at all (ENOENT). Every launcher in `node_modules/.bin` is the same kind of file.
 - **Files checked out with CRLF.** `split('\n')` leaves a trailing `\r` on every line.
@@ -130,6 +130,26 @@ await import(join(distDir, 'index.js'))
 await import(pathToFileURL(join(distDir, 'index.js')).href)
 ```
 
+### `nativeSpecifier`
+
+A native path in the other places Node expects a module specifier:
+
+- after `--import`, `--loader`, `--experimental-loader`, or `--test-reporter` in an array literal or in the arguments of `push` and `unshift`;
+- interpolated straight after one of those flags, as in `--import=${path}`;
+- as the first argument of `register()` from `node:module`.
+
+The fix and the two confidence tiers are the same as for `nativeImport`.
+
+```typescript
+// ❌
+const argv = ['--import', join(root, 'register.ts'), `--test-reporter=${join(root, 'reporter.ts')}`]
+register(join(root, 'hooks.mjs'))
+
+// ✅
+const argv = ['--import', pathToFileURL(join(root, 'register.ts')).href, `--test-reporter=${pathToFileURL(join(root, 'reporter.ts')).href}`]
+register(pathToFileURL(join(root, 'hooks.mjs')).href)
+```
+
 ### `urlPathname`
 
 `.pathname` read off `new URL(..., import.meta.url)`, directly or through a variable.
@@ -222,6 +242,7 @@ Every fix references `node:` exports the way the file already does: a named impo
 - Building a relative import specifier: `relative(from, to).split(sep).join(posix.sep)`, then prefix `./` when the result does not start with `.`.
 - Locating the running module: `fileURLToPath(import.meta.url)` or `__dirname`.
 - Importing a file computed at runtime: `import(pathToFileURL(absolutePath).href)`.
+- Preloading a file computed at runtime: `['--import', pathToFileURL(absolutePath).href]`.
 - Running a dependency's command-line tool: `execFileSync(process.execPath, [require.resolve('typescript/bin/tsc'), ...args])`.
 - Splitting a path whose platform is unknown: `split(/[/\\]/)`.
 

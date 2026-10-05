@@ -12,6 +12,7 @@ export type MessageIds =
   | 'driveLetterLoss'
   | 'posixConversion'
   | 'nativeImport'
+  | 'nativeSpecifier'
   | 'urlPathname'
   | 'shellShim'
   | 'binShim'

@@ -1,5 +1,6 @@
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils'
-import type { CheckContext, MessageIds } from './types'
+import type { FlavourEdit } from './report'
+import type { CheckContext, Flavour, MessageIds } from './types'
 import { AST_NODE_TYPES } from '@typescript-eslint/utils'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { calleeName, isImportMeta, methodName, propertyName, regexOf, stringValue, unwrap } from './ast'
@@ -49,6 +50,44 @@ const OS_REPLACEMENTS = createMap<string, readonly [string, string]>([
 const MAX_HOPS = 8
 
 /**
+ * `node` flags whose value is a module specifier, so an absolute Windows path parses as a URL.
+ */
+const SPECIFIER_FLAGS: readonly string[] = ['--import', '--loader', '--experimental-loader', '--test-reporter']
+
+/**
+ * Array methods that add the arguments they are given to an argument list.
+ */
+const LIST_ADDERS: readonly string[] = ['push', 'unshift']
+
+/**
+ * Reports a native path used where Node expects a module specifier, which Windows rejects
+ * because `C:\x` parses as a URL with scheme `c:`.
+ *
+ * @param check - The check context.
+ * @param node - The node to report.
+ * @param source - The expression holding the specifier.
+ * @param messageId - The finding's message.
+ * @param data - Placeholder values for the message.
+ */
+function reportNativeSpecifier(
+  check: CheckContext,
+  node: TSESTree.Node,
+  source: TSESTree.Node,
+  messageId: MessageIds,
+  data?: Record<string, string>
+): void {
+  const tier = check.tierOf(source)
+  if (tier === 0) return
+  const build = (flavour: Flavour): FlavourEdit | null => {
+    const plan = flavour === 'native' ? planImports(check.sourceCode, node, [['url', 'pathToFileURL']]) : null
+    if (!plan) return null
+    const replacement = `${plan.texts[0]}(${expressionSource(source, check.sourceCode)}).href`
+    return { replacement, fix: fixWith(plan, (fixer) => fixer.replaceText(source, replacement)) }
+  }
+  reportTiered(check, node, messageId, tier, build, data)
+}
+
+/**
  * Reports a dynamic `import()` of a native path, which Windows rejects because `C:\x` parses
  * as a URL with scheme `c:`.
  *
@@ -56,14 +95,53 @@ const MAX_HOPS = 8
  * @param node - The import expression.
  */
 export function checkNativeImport(check: CheckContext, node: TSESTree.ImportExpression): void {
-  const tier = check.tierOf(node.source)
-  if (tier === 0) return
-  reportTiered(check, node, 'nativeImport', tier, (flavour) => {
-    const plan = flavour === 'native' ? planImports(check.sourceCode, node, [['url', 'pathToFileURL']]) : null
-    if (!plan) return null
-    const replacement = `${plan.texts[0]}(${expressionSource(node.source, check.sourceCode)}).href`
-    return { replacement, fix: fixWith(plan, (fixer) => fixer.replaceText(node.source, replacement)) }
+  reportNativeSpecifier(check, node, node.source, 'nativeImport')
+}
+
+/**
+ * Reports a native path passed to `register()` from `node:module`, which resolves its first
+ * argument as a module specifier.
+ *
+ * @param check - The check context.
+ * @param call - A call expression.
+ */
+export function checkNativeRegister(check: CheckContext, call: TSESTree.CallExpression): void {
+  const [specifier] = call.arguments
+  if (!specifier || specifier.type === AST_NODE_TYPES.SpreadElement) return
+  const reference = referenceOf(call.callee, check.binding)
+  if (reference?.module !== 'module' || reference.name !== 'register') return
+  reportNativeSpecifier(check, specifier, specifier, 'nativeSpecifier', { target: 'register()' })
+}
+
+/**
+ * Reports a native path that follows a specifier flag such as `--import` in a list of `node`
+ * arguments: an array literal, or the arguments of `push` and `unshift`.
+ *
+ * @param check - The check context.
+ * @param node - An array literal or a call expression.
+ */
+export function checkSpecifierFlagList(check: CheckContext, node: TSESTree.ArrayExpression | TSESTree.CallExpression): void {
+  if (node.type === AST_NODE_TYPES.CallExpression && !LIST_ADDERS.includes(methodName(node) ?? '')) return
+  const items = node.type === AST_NODE_TYPES.ArrayExpression ? node.elements : node.arguments
+  items.forEach((item, index) => {
+    const flag = stringValue(item ?? undefined)
+    const value = items[index + 1]
+    if (flag === null || !SPECIFIER_FLAGS.includes(flag) || !value || value.type === AST_NODE_TYPES.SpreadElement) return
+    reportNativeSpecifier(check, value, value, 'nativeSpecifier', { target: flag })
   })
+}
+
+/**
+ * Reports a native path interpolated straight after a specifier flag, as in `--import=${path}`.
+ *
+ * @param check - The check context.
+ * @param template - A template literal.
+ */
+export function checkSpecifierFlagTemplate(check: CheckContext, template: TSESTree.TemplateLiteral): void {
+  const [head, tail] = template.quasis
+  if (template.expressions.length !== 1 || tail.value.cooked !== '') return
+  const flag = SPECIFIER_FLAGS.find((candidate) => head.value.cooked === `${candidate}=`)
+  if (flag) reportNativeSpecifier(check, template.expressions[0], template.expressions[0], 'nativeSpecifier', { target: flag })
 }
 
 /**
