@@ -1,7 +1,7 @@
 import type { TestConfig } from './config'
 import { spawnSync } from 'node:child_process'
 import { existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs'
-import { relative, resolve } from 'node:path'
+import { relative, resolve, sep, posix } from 'node:path'
 import { findUnmeasuredFiles } from '../coverage/completeness'
 import { findThresholdShortfalls, renderCoverageTable } from '../coverage/gate'
 import { mergeLcov, renderLcov } from '../coverage/lcov'
@@ -80,7 +80,12 @@ export function runProjectTests(config: TestConfig, context: RunContext): RunOut
   // why: coverage services match a report's paths against the repository tree, so the merged report names files from the workspace root rather than the project.
   writeFileSync(
     resolve(context.coverageDir, 'lcov.info'),
-    renderLcov(measured.map((file) => ({ ...file, path: relative(context.workspaceRoot, resolve(context.projectRoot, file.path)) })))
+    renderLcov(
+      measured.map((file) => ({
+        ...file,
+        path: relative(context.workspaceRoot, resolve(context.projectRoot, file.path)).split(sep).join(posix.sep),
+      }))
+    )
   )
   failures.push(...findThresholdShortfalls(measured, resolved.coverageThresholds))
 

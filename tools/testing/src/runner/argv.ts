@@ -1,6 +1,6 @@
 import type { TestConfig, TestEnvironment } from './config'
 import { globSync } from 'node:fs'
-import { relative, resolve } from 'node:path'
+import { relative, resolve, sep, posix } from 'node:path'
 
 /**
  * Everything needed to build one `node --test` invocation.
@@ -60,7 +60,7 @@ export function buildRunPlan(
     ...selectSpecFiles(environment, projectRoot),
   ]
 
-  return { environment, argv, lcovPath: relative(projectRoot, lcovPath) }
+  return { environment, argv, lcovPath: relative(projectRoot, lcovPath).split(sep).join(posix.sep) }
 }
 
 /**
