@@ -1,5 +1,5 @@
 import type { Rule } from 'eslint'
-import { dirname } from 'node:path'
+import { basename, dirname } from 'node:path'
 import { createURL } from '@hyperfrontend/immutable-api-utils/built-in-copy/url'
 import { isPublishableLibrary, readPackageJson } from '../utils/nx-project'
 import { analyzeKeyFeatures } from '../utils/readme-key-features'
@@ -489,7 +489,7 @@ const rule: Rule.RuleModule = {
 
   create(context) {
     const filePath = context.filename
-    const fileName = filePath.split('/').pop()
+    const fileName = basename(filePath)
 
     if (fileName !== 'README.md') {
       return {}

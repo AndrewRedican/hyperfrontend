@@ -1,4 +1,4 @@
-import { join } from 'node:path'
+import { basename, join } from 'node:path'
 import { exists, isDirectory, readDirectory, readJsonFileIfExists } from './fs'
 import { createRuleLogger } from './logger'
 
@@ -221,7 +221,7 @@ export function getAllPublishableLibraries(workspaceRoot: string, libsDir = 'lib
       continue
     }
 
-    const name = packageJson?.name ?? dir.split('/').pop() ?? 'unknown'
+    const name = packageJson?.name ?? (basename(dir) || 'unknown')
 
     libraries.push({
       name,

@@ -1,5 +1,6 @@
 import type { TSESTree } from '@typescript-eslint/utils'
 import type { SourceCode } from '@typescript-eslint/utils/ts-eslint'
+import { basename } from 'node:path'
 
 /**
  * Common JSDoc tags that indicate legitimate documentation rather than decorative comments.
@@ -430,7 +431,7 @@ export function isConfigFile(filePath: string): boolean {
     'lefthook',
   ]
 
-  const fileName = filePath.split('/').pop()?.toLowerCase() || ''
+  const fileName = basename(filePath).toLowerCase()
 
   for (const pattern of configPatterns) {
     if (fileName.includes(pattern.toLowerCase())) {

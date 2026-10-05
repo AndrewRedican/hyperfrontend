@@ -12,7 +12,7 @@
  */
 
 import type { DocsEntry, DocsPackage, DocsTargetIndex, MemberHit, SymbolHit } from './docs-targets'
-import { relative } from 'node:path'
+import { relative, sep, posix } from 'node:path'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { exemptionOf } from './docs-link-values'
 import { entryOfFile, packageOfFile, routeExists } from './docs-targets'
@@ -233,7 +233,7 @@ function resolveDeclaration(index: DocsTargetIndex, origins: LinkOrigins, owner:
   if (files.length === 0) {
     return null
   }
-  const urls = files.map((file) => `${origins.repoUrl}/blob/main/${relative(index.workspaceRoot, file).split('\\').join('/')}`)
+  const urls = files.map((file) => `${origins.repoUrl}/blob/main/${relative(index.workspaceRoot, file).split(sep).join(posix.sep)}`)
   if (urls.length === 1) {
     return { kind: 'resolved', target: 'declaration', url: urls[0] as string }
   }

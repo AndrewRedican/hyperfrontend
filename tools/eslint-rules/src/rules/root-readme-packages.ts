@@ -1,6 +1,6 @@
 import type { Rule } from 'eslint'
 import type { ProjectJson } from '../utils/nx-project'
-import { basename, dirname, join } from 'node:path'
+import { basename, dirname, join, posix, relative, sep } from 'node:path'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { exists, findNxWorkspaceRoot, isDirectory, isPublishableLibraryDir, readDirectory, readJsonFileIfExists } from '../utils'
@@ -99,7 +99,7 @@ function findPublishableLibraries(baseDir: string, workspaceRoot: string, result
   }
 
   if (isPublishableLibraryDir(baseDir)) {
-    const relativePath = baseDir.slice(workspaceRoot.length + 1)
+    const relativePath = relative(workspaceRoot, baseDir).split(sep).join(posix.sep)
     const projectJsonPath = join(baseDir, 'project.json')
     const packageJsonPath = join(baseDir, 'package.json')
 
@@ -158,7 +158,7 @@ export function extractMentionedPaths(sectionContent: string): string[] {
 
       if (endIndex !== -1) {
         const path = afterBlobMain.slice(0, endIndex)
-        if (path.startsWith('libs/') || path.startsWith('plugins/')) {
+        if (path.startsWith(`libs${posix.sep}`) || path.startsWith(`plugins${posix.sep}`)) {
           paths.push(path)
         }
       }

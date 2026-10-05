@@ -1,6 +1,6 @@
 import type { Rule } from 'eslint'
 import type { ArrayExpression, Identifier, Node, ObjectExpression, Property, VariableDeclaration, VariableDeclarator } from 'estree'
-import { basename, dirname, join } from 'node:path'
+import { basename, dirname, join, sep } from 'node:path'
 import { keys } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { exists, findNxWorkspaceRoot, readFileIfExists, readJsonFileIfExists } from '../utils'
 
@@ -224,7 +224,7 @@ const rule: Rule.RuleModule = {
     const filePath = context.filename
     const fileName = basename(filePath)
     const fileDir = dirname(filePath)
-    const dirParts = fileDir.split('/')
+    const dirParts = fileDir.split(sep)
 
     const isContentTs = fileName === 'content.ts' && checkPathSuffix(dirParts, ['apps', 'docs-site', 'src', 'lib'])
 

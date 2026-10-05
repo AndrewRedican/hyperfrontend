@@ -1,7 +1,7 @@
 import type { Rule } from 'eslint'
 import type { JSONNode } from 'jsonc-eslint-parser/lib/parser/ast'
 import type { PackageJson } from '../utils/nx-project'
-import { dirname, join, relative } from 'node:path'
+import { basename, dirname, join, posix, relative, sep } from 'node:path'
 import { from } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { entries, values } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
@@ -83,7 +83,7 @@ function resolveExportToSourcePath(exportPath: string, projectDir: string, works
   const absolutePath = join(projectDir, normalizedPath)
 
   if (exists(absolutePath)) {
-    return relative(workspaceRoot, absolutePath)
+    return relative(workspaceRoot, absolutePath).split(sep).join(posix.sep)
   }
 
   const mtsPath = absolutePath.replace(/\.ts$/, '.mts')
@@ -91,11 +91,11 @@ function resolveExportToSourcePath(exportPath: string, projectDir: string, works
 
   // why: mts fallback tested via dedicated test
   if (exists(mtsPath)) {
-    return relative(workspaceRoot, mtsPath)
+    return relative(workspaceRoot, mtsPath).split(sep).join(posix.sep)
   }
   // why: cts fallback tested via dedicated test
   if (exists(ctsPath)) {
-    return relative(workspaceRoot, ctsPath)
+    return relative(workspaceRoot, ctsPath).split(sep).join(posix.sep)
   }
 
   return null
@@ -154,7 +154,7 @@ function getLibraryEntryPoints(projectDir: string, workspaceRoot: string): Entry
     } else {
       // Remove leading ./ from export key
       const subPath = exportKey.startsWith('./') ? exportKey.slice(2) : exportKey
-      pathAlias = `${packageName}/${subPath}`
+      pathAlias = posix.join(packageName, subPath)
     }
 
     mappings.push({
@@ -272,7 +272,7 @@ const rule: Rule.RuleModule = {
     const filePath = context.filename
 
     // Only run on tsconfig.base.json at the workspace root
-    const fileName = filePath.split('/').pop()
+    const fileName = basename(filePath)
     if (fileName !== 'tsconfig.base.json') {
       return {}
     }
@@ -296,7 +296,7 @@ const rule: Rule.RuleModule = {
      * @returns True if the path matches an exclude pattern
      */
     const isExcludedPath = (relativePath: string): boolean => {
-      const pathSegments = relativePath.split('/')
+      const pathSegments = relativePath.split(posix.sep)
       for (const pattern of excludePatterns) {
         if (pathSegments.includes(pattern)) {
           return true
@@ -313,7 +313,7 @@ const rule: Rule.RuleModule = {
 
       // Filter out excluded directories
       for (const foundDir of foundDirs) {
-        const relativePath = relative(workspaceRoot, foundDir)
+        const relativePath = relative(workspaceRoot, foundDir).split(sep).join(posix.sep)
         if (!isExcludedPath(relativePath)) {
           libraryDirs.push(foundDir)
         }
