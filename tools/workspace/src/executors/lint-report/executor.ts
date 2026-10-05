@@ -64,6 +64,7 @@ export default async function lintReportExecutor(options: LintReportExecutorOpti
       encoding: 'utf8',
       maxBuffer: 64 * 1024 * 1024,
       cwd: context.root,
+      shell: process.platform === 'win32',
     })
   } catch (err: unknown) {
     const execError = err as ExecError
