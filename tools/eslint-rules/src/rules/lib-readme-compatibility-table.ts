@@ -13,6 +13,9 @@ const COMPATIBILITY_HEADING = '## Compatibility'
 /** The first column's header. */
 const ENVIRONMENT_HEADER = 'Environment'
 
+/** Character code of the `\r` that opens a CRLF line break. */
+const CARRIAGE_RETURN = 13
+
 /**
  * The runtimes the table lists, in the order the documentation site draws
  * them, each with the label its row carries.
@@ -122,7 +125,8 @@ const rule: Rule.RuleModule = {
 
     return {
       root(node: Rule.Node) {
-        const lines = context.sourceCode.getText().split('\n')
+        const text = context.sourceCode.getText()
+        const lines = text.split(/\r?\n/)
         const heading = lines.findIndex((line) => line.startsWith(COMPATIBILITY_HEADING))
         if (heading === -1) {
           return
@@ -145,13 +149,22 @@ const rule: Rule.RuleModule = {
         if (sameTable(lines.slice(start, stop), expected)) {
           return
         }
-        // why: a fix replaces a character range, so each line's offset is the length of everything before it plus one newline per line
-        const offsets = lines.reduce<number[]>((acc, line) => [...acc, (acc.at(-1) ?? 0) + line.length + 1], [0])
+        // why: a fix replaces a character range, so each line's offset is where it starts in the source, after a one- or two-character line break
+        const offsets = lines.reduce<number[]>(
+          (acc, line) => {
+            const end = (acc.at(-1) ?? 0) + line.length
+            return [...acc, end + (text.charCodeAt(end) === CARRIAGE_RETURN ? 2 : 1)]
+          },
+          [0]
+        )
+        const eol = text.includes('\r\n') ? '\r\n' : '\n'
+        const lastRow = lines[stop - 1] ?? ''
+        const tableEnd = (offsets[stop - 1] ?? 0) + lastRow.length
         context.report({
           node,
-          loc: { start: { line: start + 1, column: 0 }, end: { line: stop, column: (lines[stop - 1] ?? '').length } },
+          loc: { start: { line: start + 1, column: 0 }, end: { line: stop, column: lastRow.length } },
           messageId: 'tableDrift',
-          fix: (fixer) => fixer.replaceTextRange([offsets[start] ?? 0, (offsets[stop] ?? 0) - 1], expected.join('\n')),
+          fix: (fixer) => fixer.replaceTextRange([offsets[start] ?? 0, tableEnd], expected.join(eol)),
         })
       },
     }
