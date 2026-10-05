@@ -34,7 +34,7 @@ export function parseLintOutput(raw: string, workspaceRoot: string): LintEntry[]
   const entries: LintEntry[] = []
   let currentFile: string | null = null
 
-  for (const line of stripped.split('\n')) {
+  for (const line of stripped.split(/\r?\n/)) {
     const trimmed = line.trim()
     if (!trimmed) continue
 
