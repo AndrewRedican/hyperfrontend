@@ -2,10 +2,10 @@ import type { CheckContext, MessageIds, PathHelperModule, RuleOptions } from './
 import { dirname } from 'node:path'
 import { ESLintUtils } from '@typescript-eslint/utils'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
-import { isPublishableLibrary } from '../utils/nx-project'
 import { findProjectRoot, findWorkspaceRoot } from '../utils/workspace'
 import { checkPosixConversion, checkRelativeEscapes } from './lib-cross-platform/conversions'
 import { createClassifier, tierOfDomain } from './lib-cross-platform/domain'
+import { DEFAULT_INCLUDE, isIncluded } from './lib-cross-platform/include'
 import { importsNodeModule, isNodeCapableProject } from './lib-cross-platform/node-project'
 import { checkHardcodedTmp, checkLineSplit, checkNativeImport, checkShellShim, checkUrlPathname } from './lib-cross-platform/runtime'
 import { checkDriveLetterLoss, checkSeparatorJoin, checkSeparatorMethod } from './lib-cross-platform/separators'
@@ -77,7 +77,7 @@ const rule = ESLintUtils.RuleCreator(
     type: 'problem',
     docs: {
       description:
-        'Keep publishable libraries working on Windows: path separators, absolute paths, dynamic imports, .cmd shims, and CRLF text',
+        'Keep publishable libraries, and any other files the include option selects, working on Windows: path separators, absolute paths, dynamic imports, .cmd shims, and CRLF text',
     },
     fixable: 'code',
     hasSuggestions: true,
@@ -103,6 +103,30 @@ const rule = ESLintUtils.RuleCreator(
             type: 'array',
             items: { type: 'string' },
             description: 'Commands that are .cmd shims on Windows and need a shell to spawn.',
+          },
+          include: {
+            type: 'array',
+            description: 'The files the rule checks. Each entry adds files; a file is checked when any entry selects it.',
+            items: {
+              oneOf: [
+                {
+                  type: 'object',
+                  properties: {
+                    publishableLibraries: { type: 'boolean', enum: [true], description: 'Select every file of a publishable library.' },
+                  },
+                  required: ['publishableLibraries'],
+                  additionalProperties: false,
+                },
+                {
+                  type: 'object',
+                  properties: {
+                    files: { type: 'array', items: { type: 'string' }, minItems: 1, description: 'Workspace-relative globs.' },
+                  },
+                  required: ['files'],
+                  additionalProperties: false,
+                },
+              ],
+            },
           },
         },
         additionalProperties: false,
@@ -133,13 +157,16 @@ const rule = ESLintUtils.RuleCreator(
       useOsPath: 'Use `{{ replacement }}` from node:os',
     },
   },
-  defaultOptions: [{ helpers: DEFAULT_HELPERS, shimCommands: DEFAULT_SHIM_COMMANDS }],
+  defaultOptions: [{ helpers: DEFAULT_HELPERS, shimCommands: DEFAULT_SHIM_COMMANDS, include: [...DEFAULT_INCLUDE] }],
   create(context, [options]) {
     const projectRoot = findProjectRoot(dirname(context.filename))
-    if (!projectRoot || !isPublishableLibrary(projectRoot)) return {}
+    if (!projectRoot) return {}
+    const workspaceRoot = findWorkspaceRoot(projectRoot)
+    // why: defaultOptions always supplies include, so the fallback is unreachable
+    if (!isIncluded(context.filename, projectRoot, workspaceRoot, options?.include ?? DEFAULT_INCLUDE)) return {}
 
     const sourceCode = context.sourceCode
-    const binding = { sourceCode, filename: context.filename, workspaceRoot: findWorkspaceRoot(projectRoot) }
+    const binding = { sourceCode, filename: context.filename, workspaceRoot }
     const helpers = options?.helpers ?? DEFAULT_HELPERS
     const classify = createClassifier(binding, helpers)
     const nodeCapable = isNodeCapableProject(projectRoot)

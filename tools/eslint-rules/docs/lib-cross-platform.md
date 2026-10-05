@@ -1,10 +1,10 @@
 # lib-cross-platform
 
-Keep publishable libraries working on Windows: path separators, absolute-path tests, dynamic imports of file paths, `.cmd` shims, and CRLF text.
+Keep publishable libraries, and any other files the `include` option selects, working on Windows: path separators, absolute-path tests, dynamic imports of file paths, `.cmd` shims, and CRLF text.
 
 ## Rule Details
 
-The libraries are developed and tested on Linux, but many consumers run them on Windows. Most Windows breakage sits where a string crosses between two separator conventions, so the rule tracks where each string value comes from and reports only the crossings.
+The libraries are developed and tested on Linux, but many consumers run them on Windows, and so will a Windows CI leg running the workspace tooling. Most Windows breakage sits where a string crosses between two separator conventions, so the rule tracks where each string value comes from and reports only the crossings.
 
 | Domain   | Separator              | Produced by                                                                                                                                                                                                                                                                        |
 | -------- | ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -212,7 +212,8 @@ Every fix references `node:` exports the way the file already does: a named impo
           "portable": ["joinPath", "normalizePath"]
         }
       ],
-      "shimCommands": ["npm", "npx", "pnpm", "yarn"]
+      "shimCommands": ["npm", "npx", "pnpm", "yarn"],
+      "include": [{ "publishableLibraries": true }, { "files": ["tools/**", "apps/package-e2e/**"] }]
     }
   ]
 }
@@ -226,8 +227,17 @@ Path helpers outside `node:path` whose output domain the rule should trust. `mod
 
 Commands that are `.cmd` shims on Windows. Defaults to `npm`, `npx`, `pnpm`, `pnpx`, `yarn`, `yarnpkg`, `corepack`, `nx`, `tsc`, `eslint`, `prettier`, `vite`, `vitest`, `jest`, and `rollup`. Passing the option replaces the defaults.
 
+### `include`
+
+The files the rule checks, as a list of selectors. Each entry adds files and none narrows another, so a file is checked when any entry selects it.
+
+- `{ "publishableLibraries": true }` selects every file of a publishable library, meaning a `library` project with both a `build` and a `publish` target.
+- `{ "files": [...] }` selects every file matching one of its workspace-relative globs, matched with `posix.matchesGlob` from `node:path`.
+
+Defaults to `[{ "publishableLibraries": true }]`. Passing the option replaces the default, so a list without the `publishableLibraries` entry stops checking publishable libraries. The rule matches globs against the workspace root rather than the ESLint config's location, so one setting in a shared base config selects the same files whichever project's lint target runs it.
+
 ## Scope
 
-The rule runs on every `.ts` file of a publishable library, specs included, as an error. Autofixes apply only on an explicit `--fix`, which `lint:all` passes.
+This workspace runs the rule as an error on every `.ts` file of a publishable library and every `.ts` file under `tools/` and `apps/package-e2e/`, specs included. Without an `include` option, only publishable libraries are checked. Autofixes apply only on an explicit `--fix`, which `lint:all` passes.
 
 Two checks were considered and left out. Asserting `expect(join(a, b)).toBe('a/b')` is a Windows failure in tests, but the code under test hides where the value came from. Case-insensitive path comparison matters on Windows and macOS, but nothing in the source says which comparisons are about paths.

@@ -37,6 +37,27 @@ export interface PathHelperModule {
 }
 
 /**
+ * Selects every file of a publishable library: a `library` project with both a `build` and a `publish` target.
+ */
+export interface PublishableLibrariesSelector {
+  /** Always `true`; leave the selector out of `include` to stop checking publishable libraries. */
+  publishableLibraries: true
+}
+
+/**
+ * Selects the files that match any of its globs.
+ */
+export interface FilesSelector {
+  /** Workspace-relative globs, such as `tools/**`. */
+  files: string[]
+}
+
+/**
+ * One entry of the `include` option. Entries never narrow each other: a file is checked when any entry selects it.
+ */
+export type IncludeSelector = PublishableLibrariesSelector | FilesSelector
+
+/**
  * Options accepted by lib-cross-platform.
  */
 export interface RuleOptions {
@@ -44,6 +65,8 @@ export interface RuleOptions {
   helpers?: PathHelperModule[]
   /** Commands that are `.cmd` shims on Windows and cannot be spawned without a shell. */
   shimCommands?: string[]
+  /** The files the rule checks: every file any entry selects. */
+  include?: IncludeSelector[]
 }
 
 /**
