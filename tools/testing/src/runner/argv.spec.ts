@@ -4,7 +4,8 @@ import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { describe, it } from 'node:test'
-import { buildRunPlan, selectSpecFiles, serialiseModuleMap, serialiseSetupFiles, setupPaths } from './argv'
+import { pathToFileURL } from 'node:url'
+import { buildRunPlan, moduleUrl, selectSpecFiles, serialiseModuleMap, serialiseSetupFiles, setupPaths } from './argv'
 import { BASELINE_COVERAGE_EXCLUDE, withDefaults } from './config'
 
 const WORKSPACE = '/workspace'
@@ -60,7 +61,7 @@ describe('withDefaults', () => {
 
 describe('buildRunPlan', () => {
   it('imports the resolution hooks before anything else', () => {
-    assert.deepEqual(planArgs(SINGLE).slice(1, 3), ['--import', `${WORKSPACE}/tools/testing/src/hooks/register.ts`])
+    assert.deepEqual(planArgs(SINGLE).slice(1, 3), ['--import', pathToFileURL(`${WORKSPACE}/tools/testing/src/hooks/register.ts`).href])
   })
 
   it('silences the warning Node raises for every typeless TypeScript file', () => {
@@ -93,7 +94,10 @@ describe('buildRunPlan', () => {
   })
 
   it('reports through the runner own reporter so Node coverage summary is held back', () => {
-    assert.equal(planArgs(SINGLE).includes(`--test-reporter=${WORKSPACE}/tools/testing/src/runner/reporter.ts`), true)
+    assert.equal(
+      planArgs(SINGLE).includes(`--test-reporter=${pathToFileURL(`${WORKSPACE}/tools/testing/src/runner/reporter.ts`).href}`),
+      true
+    )
   })
 
   it('imports each setup file', () => {
@@ -101,7 +105,7 @@ describe('buildRunPlan', () => {
       ...SINGLE,
       environments: [{ name: 'node', testMatch: ['src/**/*.spec.ts'], setupFiles: ['test.setup.ts'] }],
     })
-    assert.equal(args.includes(`${PROJECT}/test.setup.ts`), true)
+    assert.equal(args.includes(pathToFileURL(`${PROJECT}/test.setup.ts`).href), true)
   })
 
   it('ends with the test globs', () => {
@@ -157,7 +161,7 @@ describe('buildRunPlan', () => {
   })
 
   it('leaves the DOM out of an environment that did not ask for one', () => {
-    assert.equal(planArgs(SINGLE).includes(`${WORKSPACE}/tools/testing/src/environment/dom.ts`), false)
+    assert.equal(planArgs(SINGLE).includes(pathToFileURL(`${WORKSPACE}/tools/testing/src/environment/dom.ts`).href), false)
   })
 
   it('installs a DOM after the hooks and before the setup files', () => {
@@ -167,12 +171,33 @@ describe('buildRunPlan', () => {
     })
     assert.deepEqual(args.slice(1, 7), [
       '--import',
-      `${WORKSPACE}/tools/testing/src/hooks/register.ts`,
+      pathToFileURL(`${WORKSPACE}/tools/testing/src/hooks/register.ts`).href,
       '--import',
-      `${WORKSPACE}/tools/testing/src/environment/dom.ts`,
+      pathToFileURL(`${WORKSPACE}/tools/testing/src/environment/dom.ts`).href,
       '--import',
-      `${PROJECT}/test.setup.ts`,
+      pathToFileURL(`${PROJECT}/test.setup.ts`).href,
     ])
+  })
+})
+
+describe('moduleUrl', () => {
+  it('renders a path as a file URL, which Node loads where a drive-letter path would not parse', () => {
+    assert.equal(moduleUrl(PROJECT), pathToFileURL(PROJECT).href)
+    assert.equal(moduleUrl(PROJECT).startsWith('file:///'), true)
+  })
+
+  it('passes no bare absolute path to a preload or reporter flag', () => {
+    const args = planArgs({
+      ...SINGLE,
+      environments: [{ name: 'browser', testMatch: ['src/**/*.spec.ts'], dom: true, setupFiles: ['test.setup.ts'] }],
+    })
+    const preloads = args.filter((_, index) => args[index - 1] === '--import')
+    const reporters = args.filter((arg) => arg.startsWith('--test-reporter=')).map((arg) => arg.slice('--test-reporter='.length))
+    assert.equal(preloads.length, 3)
+    assert.deepEqual(
+      [...preloads, ...reporters].filter((value) => value !== 'lcov' && !value.startsWith('file:///')),
+      []
+    )
   })
 })
 
