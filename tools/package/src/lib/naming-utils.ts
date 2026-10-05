@@ -1,3 +1,4 @@
+import { posix } from 'node:path'
 import { names } from '@nx/devkit'
 
 /**
@@ -7,7 +8,7 @@ import { names } from '@nx/devkit'
  * @returns The last segment of the path
  */
 export function getDirectoryName(path: string): string {
-  const segments = path.split('/').filter(Boolean)
+  const segments = path.split(posix.sep).filter(Boolean)
   return segments[segments.length - 1] || ''
 }
 
@@ -18,7 +19,7 @@ export function getDirectoryName(path: string): string {
  * @returns The derived project name (e.g., 'lib-data-utils')
  */
 export function deriveProjectNameFromPath(projectRoot: string): string {
-  const parts = projectRoot.split('/').filter(Boolean)
+  const parts = projectRoot.split(posix.sep).filter(Boolean)
 
   if (parts[0] === 'libs') {
     if (parts.length === 2) {

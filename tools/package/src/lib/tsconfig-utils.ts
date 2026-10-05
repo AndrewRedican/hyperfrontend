@@ -1,4 +1,5 @@
 import type { Tree } from '@nx/devkit'
+import { posix } from 'node:path'
 import { updateJson } from '@nx/devkit'
 import { entries, keys } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 
@@ -66,7 +67,7 @@ export function addTsConfigPath(tree: Tree, options: AddPathOptions): void {
   updateJson(tree, 'tsconfig.base.json', (json) => {
     const paths = json.compilerOptions?.paths ?? {}
 
-    paths[options.packageName] = [`${options.projectRoot}/src/index.ts`]
+    paths[options.packageName] = [posix.join(options.projectRoot, 'src', 'index.ts')]
 
     json.compilerOptions = {
       ...json.compilerOptions,

@@ -1,4 +1,5 @@
 import type { Tree } from '@nx/devkit'
+import { posix } from 'node:path'
 import { joinPathFragments, updateJson } from '@nx/devkit'
 import { isArray } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
 import { replaceDescriptionPackageName } from './json-updaters'
@@ -84,7 +85,7 @@ export function checkE2EProject(tree: Tree, options: E2ECheckOptions): void {
   logger.warn('=== E2E Project Folder Move Required ===')
   logger.warn(`E2E project files updated in: ${currentE2ERoot}`)
   logger.warn(`Please move the folder to match the new name:`)
-  logger.warn(`  nx generate @hyperfrontend/package:move e2e-${currentLibName} ${newE2ERoot.replace(`/${newLibName}`, '')}`)
+  logger.warn(`  nx generate @hyperfrontend/package:move e2e-${currentLibName} ${newE2ERoot.replace(`${posix.sep}${newLibName}`, '')}`)
   logger.warn(`  (or manually: mv ${currentE2ERoot} ${newE2ERoot})`)
   logger.warn('')
 }
