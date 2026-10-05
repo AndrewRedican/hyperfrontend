@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { existsSync, readFileSync, readdirSync } from 'node:fs'
-import { resolve, join, dirname, relative } from 'node:path'
+import { resolve, join, dirname, relative, sep, posix } from 'node:path'
 import { glob } from 'glob'
 import { isArray } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
 import { parse } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
@@ -424,7 +424,7 @@ function validateApiSources(): LinkValidationResult[] {
 
         if (targetPath !== undefined && !existsSync(join(WORKSPACE_ROOT, targetPath))) {
           results.push({
-            file: relative(WORKSPACE_ROOT, bundlePath),
+            file: relative(WORKSPACE_ROOT, bundlePath).split(sep).join(posix.sep),
             line: typeof record['line'] === 'number' ? record['line'] : 0,
             link: url,
             status: 'broken',
@@ -477,7 +477,7 @@ async function validateLinks(): Promise<ValidationSummary> {
 
   for (const file of allFiles) {
     const results = validateFile(file)
-    const relativePath = relative(WORKSPACE_ROOT, file)
+    const relativePath = relative(WORKSPACE_ROOT, file).split(sep).join(posix.sep)
 
     for (const result of results) {
       summary.totalLinks++
