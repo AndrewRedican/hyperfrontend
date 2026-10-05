@@ -1,4 +1,4 @@
-# lib-cross-platform
+# cross-platform
 
 Keep publishable libraries, and any other files the `include` option selects, working on Windows: path separators, absolute-path tests, dynamic imports of file paths, `.cmd` shims, and CRLF text.
 
@@ -202,7 +202,7 @@ Every fix references `node:` exports the way the file already does: a named impo
 
 ```json
 {
-  "workspace/lib-cross-platform": [
+  "workspace/cross-platform": [
     "error",
     {
       "helpers": [

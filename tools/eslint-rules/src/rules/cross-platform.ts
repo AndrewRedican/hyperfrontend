@@ -1,19 +1,19 @@
-import type { CheckContext, MessageIds, PathHelperModule, RuleOptions } from './lib-cross-platform/types'
+import type { CheckContext, MessageIds, PathHelperModule, RuleOptions } from './cross-platform/types'
 import { dirname } from 'node:path'
 import { ESLintUtils } from '@typescript-eslint/utils'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { findProjectRoot, findWorkspaceRoot } from '../utils/workspace'
-import { checkPosixConversion, checkRelativeEscapes } from './lib-cross-platform/conversions'
-import { createClassifier, tierOfDomain } from './lib-cross-platform/domain'
-import { DEFAULT_INCLUDE, isIncluded } from './lib-cross-platform/include'
-import { importsNodeModule, isNodeCapableProject } from './lib-cross-platform/node-project'
-import { checkHardcodedTmp, checkLineSplit, checkNativeImport, checkShellShim, checkUrlPathname } from './lib-cross-platform/runtime'
-import { checkDriveLetterLoss, checkSeparatorJoin, checkSeparatorMethod } from './lib-cross-platform/separators'
+import { checkPosixConversion, checkRelativeEscapes } from './cross-platform/conversions'
+import { createClassifier, tierOfDomain } from './cross-platform/domain'
+import { DEFAULT_INCLUDE, isIncluded } from './cross-platform/include'
+import { importsNodeModule, isNodeCapableProject } from './cross-platform/node-project'
+import { checkHardcodedTmp, checkLineSplit, checkNativeImport, checkShellShim, checkUrlPathname } from './cross-platform/runtime'
+import { checkDriveLetterLoss, checkSeparatorJoin, checkSeparatorMethod } from './cross-platform/separators'
 
 /**
- * Rule identifier for the lib-cross-platform rule.
+ * Rule identifier for the cross-platform rule.
  */
-export const RULE_NAME = 'lib-cross-platform'
+export const RULE_NAME = 'cross-platform'
 
 /**
  * Exports of `@hyperfrontend/project-scope/core` whose output is native.
@@ -67,7 +67,7 @@ const DEFAULT_SHIM_COMMANDS = [
 ]
 
 /**
- * Creates the lib-cross-platform ESLint rule.
+ * Creates the cross-platform ESLint rule.
  */
 const rule = ESLintUtils.RuleCreator(
   (name) => `https://github.com/AndrewRedican/hyperfrontend/blob/main/tools/eslint-rules/docs/${name}.md`

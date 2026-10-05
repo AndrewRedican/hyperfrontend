@@ -3,7 +3,7 @@ import { stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json
 import { APPLICATION_PROJECT_JSON, NON_PUBLISHABLE_LIBRARY_PROJECT_JSON, PUBLISHABLE_LIBRARY_PROJECT_JSON } from '../../testing'
 
 /**
- * Files to lint, one per kind of project lib-cross-platform treats differently.
+ * Files to lint, one per kind of project cross-platform treats differently.
  */
 export interface CrossPlatformFiles {
   /** A file in a publishable library whose runtime sources import from `node:`. */
@@ -17,7 +17,7 @@ export interface CrossPlatformFiles {
 }
 
 /**
- * Creates the temporary projects the lib-cross-platform specs lint against. The browser
+ * Creates the temporary projects the cross-platform specs lint against. The browser
  * project carries `node:` imports only where they must not count: specs, setup, fixtures,
  * declarations, and `node_modules`.
  *

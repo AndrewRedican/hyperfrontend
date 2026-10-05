@@ -2,7 +2,7 @@ import type { TSESLint, TSESTree } from '@typescript-eslint/utils'
 import type { BindingContext } from './bindings'
 
 /**
- * Message identifiers reported by lib-cross-platform, including its suggestion messages.
+ * Message identifiers reported by cross-platform, including its suggestion messages.
  */
 export type MessageIds =
   | 'separatorLiteral'
@@ -58,7 +58,7 @@ export interface FilesSelector {
 export type IncludeSelector = PublishableLibrariesSelector | FilesSelector
 
 /**
- * Options accepted by lib-cross-platform.
+ * Options accepted by cross-platform.
  */
 export interface RuleOptions {
   /** Path helpers outside `node:path` whose output domain the rule should trust. */
@@ -99,7 +99,7 @@ export type Tier = 0 | 1 | 2
 export type Flavour = 'native' | 'portable'
 
 /**
- * The rule context lib-cross-platform runs with.
+ * The rule context cross-platform runs with.
  */
 export type RuleContext = Readonly<TSESLint.RuleContext<MessageIds, [RuleOptions?]>>
 

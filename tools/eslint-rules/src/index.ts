@@ -1,6 +1,7 @@
 import type { ESLint, Rule } from 'eslint'
 import assertiveTestNames, { RULE_NAME as ASSERTIVE_TEST_NAMES } from './rules/assertive-test-names'
 import codeblockLineWidth, { RULE_NAME as CODEBLOCK_LINE_WIDTH } from './rules/codeblock-line-width'
+import crossPlatform, { RULE_NAME as CROSS_PLATFORM } from './rules/cross-platform'
 import deepestImportPath, { RULE_NAME as DEEPEST_IMPORT_PATH } from './rules/deepest-import-path'
 import deployStaticHeaders, { RULE_NAME as DEPLOY_STATIC_HEADERS } from './rules/deploy-static-headers'
 import docsSiteLibraries, { RULE_NAME as DOCS_SITE_LIBRARIES } from './rules/docs-site-libraries'
@@ -15,7 +16,6 @@ import jestMockAfterImports, { RULE_NAME as JEST_MOCK_AFTER_IMPORTS } from './ru
 import libBuilderImplicitDependency, { RULE_NAME as LIB_BUILDER_IMPLICIT_DEPENDENCY } from './rules/lib-builder-implicit-dependency'
 import libCiWorkflows, { RULE_NAME as LIB_CI_WORKFLOWS } from './rules/lib-ci-workflows'
 import libCompatibilityMatrix, { RULE_NAME as LIB_COMPATIBILITY_MATRIX } from './rules/lib-compatibility-matrix'
-import libCrossPlatform, { RULE_NAME as LIB_CROSS_PLATFORM } from './rules/lib-cross-platform'
 import libE2eProjectRequired, { RULE_NAME as LIB_E2E_PROJECT_REQUIRED } from './rules/lib-e2e-project-required'
 import libEntryExportSpacing, { RULE_NAME as LIB_ENTRY_EXPORT_SPACING } from './rules/lib-entry-export-spacing'
 import libInlineCodeLinks, { RULE_NAME as LIB_INLINE_CODE_LINKS } from './rules/lib-inline-code-links'
@@ -80,6 +80,7 @@ import rootReadmePackages, { RULE_NAME as ROOT_README_PACKAGES } from './rules/r
 export const rules: ESLint.Plugin['rules'] = {
   [ASSERTIVE_TEST_NAMES]: assertiveTestNames as unknown as Rule.RuleModule,
   [CODEBLOCK_LINE_WIDTH]: codeblockLineWidth as unknown as Rule.RuleModule,
+  [CROSS_PLATFORM]: crossPlatform as unknown as Rule.RuleModule,
   [DEEPEST_IMPORT_PATH]: deepestImportPath as unknown as Rule.RuleModule,
   [DEPLOY_STATIC_HEADERS]: deployStaticHeaders as unknown as Rule.RuleModule,
   [DOCS_SITE_LIBRARIES]: docsSiteLibraries as unknown as Rule.RuleModule,
@@ -90,7 +91,6 @@ export const rules: ESLint.Plugin['rules'] = {
   [ESCAPE_PACKAGE_TAGS]: escapePackageTags as unknown as Rule.RuleModule,
   [EXPORT_ORDER]: exportOrder as unknown as Rule.RuleModule,
   [LIB_COMPATIBILITY_MATRIX]: libCompatibilityMatrix as unknown as Rule.RuleModule,
-  [LIB_CROSS_PLATFORM]: libCrossPlatform as unknown as Rule.RuleModule,
   [LIB_ENTRY_EXPORT_SPACING]: libEntryExportSpacing as unknown as Rule.RuleModule,
   [LIB_INLINE_CODE_LINKS]: libInlineCodeLinks as unknown as Rule.RuleModule,
   [IMPORT_ORDER]: importOrder as unknown as Rule.RuleModule,

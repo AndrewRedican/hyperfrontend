@@ -26,13 +26,13 @@ const SPECIFIER_METHODS: readonly string[] = ['mock', 'doMock', 'unmock', 'requi
 /**
  * The POSIX temporary directory, which does not exist on Windows.
  */
-// eslint-disable-next-line workspace/lib-cross-platform -- the rule reports this path, so it has to name it
+// eslint-disable-next-line workspace/cross-platform -- the rule reports this path, so it has to name it
 const TMP = '/tmp'
 
 /**
  * The POSIX null device, which Windows names `NUL`.
  */
-// eslint-disable-next-line workspace/lib-cross-platform -- the rule reports this path, so it has to name it
+// eslint-disable-next-line workspace/cross-platform -- the rule reports this path, so it has to name it
 const DEV_NULL = '/dev/null'
 
 /**

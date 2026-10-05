@@ -1,7 +1,7 @@
 import { after as afterAll } from 'node:test'
 import { createTempWorkspaceManager, createTypeScriptRuleTester } from '../testing'
-import rule, { RULE_NAME } from './lib-cross-platform'
-import { createCrossPlatformFiles } from './lib-cross-platform/test-workspaces'
+import rule, { RULE_NAME } from './cross-platform'
+import { createCrossPlatformFiles } from './cross-platform/test-workspaces'
 
 const manager = createTempWorkspaceManager()
 
