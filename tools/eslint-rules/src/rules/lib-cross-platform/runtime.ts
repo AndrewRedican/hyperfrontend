@@ -24,11 +24,23 @@ const SHELL_OPTION = "shell: process.platform === 'win32'"
 const SPECIFIER_METHODS: readonly string[] = ['mock', 'doMock', 'unmock', 'requireActual', 'requireMock', 'resolve']
 
 /**
+ * The POSIX temporary directory, which does not exist on Windows.
+ */
+// eslint-disable-next-line workspace/lib-cross-platform -- the rule reports this path, so it has to name it
+const TMP = '/tmp'
+
+/**
+ * The POSIX null device, which Windows names `NUL`.
+ */
+// eslint-disable-next-line workspace/lib-cross-platform -- the rule reports this path, so it has to name it
+const DEV_NULL = '/dev/null'
+
+/**
  * Exact paths with a portable `node:os` replacement, as `[export, call suffix]`.
  */
 const OS_REPLACEMENTS = createMap<string, readonly [string, string]>([
-  ['/tmp', ['tmpdir', '()']],
-  ['/dev/null', ['devNull', '']],
+  [TMP, ['tmpdir', '()']],
+  [DEV_NULL, ['devNull', '']],
 ])
 
 /**
@@ -248,13 +260,13 @@ export function checkHardcodedTmp(check: CheckContext, node: TSESTree.Literal | 
   const head = node.type === AST_NODE_TYPES.TemplateLiteral ? node.quasis[0].value.cooked : stringValue(node)
   const exact = node.type === AST_NODE_TYPES.Literal || node.expressions.length === 0
   if (head === null || isSpecifierPosition(node)) return
-  const isTmp = head === '/tmp' || head.startsWith('/tmp/')
-  if (!isTmp && !(exact && head === '/dev/null')) return
+  const isTmp = head === TMP || head.startsWith(`${TMP}/`)
+  if (!isTmp && !(exact && head === DEV_NULL)) return
   const osReplacement = exact ? OS_REPLACEMENTS.get(head) : undefined
   check.context.report({
     node,
     messageId: 'hardcodedTmp',
-    data: { path: isTmp ? '/tmp' : '/dev/null' },
+    data: { path: isTmp ? TMP : DEV_NULL },
     suggest: osReplacement ? osSuggestion(check, node, osReplacement) : [],
   })
 }
