@@ -100,7 +100,7 @@ interface ExtractedLink {
  */
 function extractLinks(content: string): ExtractedLink[] {
   const links: ExtractedLink[] = []
-  const lines = content.split('\n')
+  const lines = content.split(/\r?\n/)
 
   // why: a destination may be wrapped in angle brackets so it can carry parentheses of its own, and the brackets are not part of the URL
   const markdownLinkPattern = /\[([^\]]*)\]\((<[^>]*>|[^)]+)\)/g

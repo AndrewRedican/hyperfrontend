@@ -404,7 +404,7 @@ function transformLinkUrl(url: string, sourceContext: 'root' | 'library', librar
  */
 function transformLinks(content: string, sourceContext: 'root' | 'library', librarySlug?: string): string {
   const transformed = content
-    .split('\n')
+    .split(/\r?\n/)
     .filter((line) => !(line.includes('👉 See') && containsDocsUrl(line)))
     .join('\n')
 

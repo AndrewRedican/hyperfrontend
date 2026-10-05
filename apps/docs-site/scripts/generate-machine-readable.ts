@@ -143,7 +143,7 @@ function publishBody(markdown: string, markdownRoutes: Set<string>): string {
   let inFence = false
   let inComment = false
 
-  for (const line of markdown.split('\n')) {
+  for (const line of markdown.split(/\r?\n/)) {
     // why: a fence marker reached inside a comment is commented-out text, not the start of a code block
     if (!inComment && line.trimStart().startsWith('```')) {
       inFence = !inFence
