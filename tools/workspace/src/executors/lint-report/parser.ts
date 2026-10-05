@@ -1,4 +1,5 @@
 import type { FileStats, LegendEntry, LintEntry } from './types'
+import { posix, sep } from 'node:path'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { parseInt } from '@hyperfrontend/immutable-api-utils/built-in-copy/number'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
@@ -71,6 +72,70 @@ export function parseLintOutput(raw: string, workspaceRoot: string): LintEntry[]
   }
 
   return entries
+}
+
+/**
+ * Read the projects whose lint task Nx listed as failed.
+ *
+ * @param raw - Raw lint output from nx
+ * @returns Project names in the order Nx listed them
+ */
+export function parseFailedProjects(raw: string): string[] {
+  const projects = createSet<string>()
+
+  for (const line of stripAnsi(raw).split(/\r?\n/)) {
+    const match = line.trim().match(/^- (\S+):lint$/)
+    if (match?.[1] !== undefined) projects.add(match[1])
+  }
+
+  return [...projects]
+}
+
+/**
+ * Find the project owning a file: the one with the deepest root containing it.
+ *
+ * @param file - File path relative to the workspace root
+ * @param projectRoots - Map of project name to its root relative to the workspace root
+ * @returns Owning project name, or null when no project contains the file
+ */
+function findOwner(file: string, projectRoots: Map<string, string>): string | null {
+  const normalized = file.split(sep).join(posix.sep)
+  let owner: string | null = null
+  let depth = -1
+
+  for (const [project, root] of projectRoots) {
+    const contains = !posix.relative(root, normalized).startsWith('..')
+    const rootDepth = root === '.' ? 0 : root.length
+    if (contains && rootDepth > depth) {
+      owner = project
+      depth = rootDepth
+    }
+  }
+
+  return owner
+}
+
+/**
+ * Select the failed projects that own none of the parsed ESLint errors.
+ *
+ * A lint task that fails without a single error to show for it did not lint:
+ * ESLint or a rule threw, or the process was killed.
+ *
+ * @param failedProjects - Projects whose lint task failed
+ * @param entries - Parsed lint entries
+ * @param projectRoots - Map of project name to its root relative to the workspace root
+ * @returns Failed projects without any error entry
+ */
+export function findCrashSuspects(failedProjects: string[], entries: LintEntry[], projectRoots: Map<string, string>): string[] {
+  const withErrors = createSet<string>()
+
+  for (const e of entries) {
+    if (e.severity !== 'error') continue
+    const owner = findOwner(e.file, projectRoots)
+    if (owner !== null) withErrors.add(owner)
+  }
+
+  return failedProjects.filter((project) => !withErrors.has(project))
 }
 
 /**

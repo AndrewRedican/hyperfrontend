@@ -54,3 +54,17 @@ export interface FileStats {
   /**  Grouped entries by code.  */
   codeGroups: Map<string, number[]>
 }
+
+/**
+ * Project whose lint task failed without reporting any ESLint error.
+ */
+export interface CrashedProject {
+  /** Nx project name. */
+  project: string
+
+  /** Phrase describing how the lint command ended, null when the project was not rerun on its own. */
+  failure: string | null
+
+  /** Tail of the output of the project's own lint run, null when the project was not rerun on its own. */
+  tail: string | null
+}
