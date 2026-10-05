@@ -7,6 +7,7 @@
  * @module utils/workspace
  */
 
+import { isAbsolute, relative, sep } from 'node:path'
 import { findUpwardWhere } from '@hyperfrontend/project-scope/core/fs'
 import {
   findProjectRoot as projectScopeFindProjectRoot,
@@ -96,10 +97,8 @@ export function findNxWorkspaceRoot(startPath: string): string | null {
  * @returns True if targetPath is within workspaceRoot
  */
 export function isWithinWorkspace(targetPath: string, workspaceRoot: string): boolean {
-  const normalizedTarget = targetPath.split('/').join('/')
-  const normalizedRoot = workspaceRoot.split('/').join('/')
-
-  return normalizedTarget.startsWith(normalizedRoot)
+  const fromRoot = relative(workspaceRoot, targetPath)
+  return fromRoot !== '..' && !fromRoot.startsWith(`..${sep}`) && !isAbsolute(fromRoot)
 }
 
 /**
