@@ -55,7 +55,7 @@ export default async function installExecutor(options: InstallExecutorOptions, c
   delete env['npm_config_engine_strict']
 
   try {
-    execFileSync('npm', args, { cwd, stdio: 'inherit', env })
+    execFileSync('npm', args, { cwd, stdio: 'inherit', env, shell: process.platform === 'win32' })
     logger.info(`Dependencies installed for ${projectName}`)
     return { success: true }
   } catch {
