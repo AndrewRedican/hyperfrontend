@@ -48,7 +48,8 @@ const DOCS_SITE_ROOT = resolve(__dirname, '..')
 const OUTPUT_DIR = resolve(__dirname, '../.generated')
 const DOCS_OUTPUT = join(OUTPUT_DIR, 'docs')
 const API_OUTPUT = join(OUTPUT_DIR, 'api')
-const TYPEDOC_BIN = join(DOCS_SITE_ROOT, 'node_modules', '.bin', 'typedoc')
+// why: the launcher in node_modules/.bin is a shell script on POSIX and a .cmd shim on Windows, so TypeDoc's own entry script runs on the current Node binary instead
+const TYPEDOC_SCRIPT = join(DOCS_SITE_ROOT, 'node_modules', 'typedoc', 'bin', 'typedoc')
 
 /** Configuration for a library to document */
 interface LibraryConfig {
@@ -585,7 +586,7 @@ function generateTypeDoc(lib: LibraryConfig): boolean {
     args.push(...entryPoints)
 
     logger.log(`  → Running TypeDoc for ${lib.name} (${discoveredEntryPoints.length} entry points)`)
-    execFileSync(TYPEDOC_BIN, args, { cwd: WORKSPACE_ROOT, stdio: 'pipe' })
+    execFileSync(process.execPath, [TYPEDOC_SCRIPT, ...args], { cwd: WORKSPACE_ROOT, stdio: 'pipe' })
     stripExternalSourceUrls(outputPath)
     return true
   } catch (error) {
