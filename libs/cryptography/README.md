@@ -178,8 +178,8 @@ Every signature, option type and thrown error is in the [API reference](https://
 
 | Format | File                       | Tree-Shakeable |
 | ------ | -------------------------- | :------------: |
-| ESM    | `index.esm.js`             |       ✅       |
-| CJS    | `index.cjs.js`             |       ❌       |
+| ESM    | `index.mjs`                |       ✅       |
+| CJS    | `index.cjs`                |       ❌       |
 | IIFE   | `bundle/index.iife.min.js` |       ❌       |
 | UMD    | `bundle/index.umd.min.js`  |       ❌       |
 
