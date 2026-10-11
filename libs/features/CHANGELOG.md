@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.11.4](https://github.com/AndrewRedican/hyperfrontend/compare/5a49a82851e6018aa9921fd9b0d94fb5d025220f...025e878e6dc81d0feabb3c89fff07144f86fb295) - 2026-10-11
+
+### Bug Fixes
+
+- point the nx plugin manifests at the index.cjs implementations
+
 ## [0.11.3](https://github.com/AndrewRedican/hyperfrontend/compare/b12f6f1097dfaa1e79fe4e49c669618f7e980857...9cb8baf39ab84f10d5585969ad5afb8bd299def0) - 2026-10-04
 
 ### Bug Fixes

@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.5.0](https://github.com/AndrewRedican/hyperfrontend/compare/5a49a82851e6018aa9921fd9b0d94fb5d025220f...025e878e6dc81d0feabb3c89fff07144f86fb295) - 2026-10-11
+
+### Breaking Changes
+
+- **BREAKING** stop loading the rollup worker from the bundle/rollup entry
+- **BREAKING** emit index.mjs and index.cjs for module outputs
+
+### Features
+
+- **BREAKING** emit index.mjs and index.cjs for module outputs
+
+### Bug Fixes
+
+- keep core modules external without module.isBuiltin
+- **BREAKING** stop loading the rollup worker from the bundle/rollup entry
+- expose the crypto global to the rollup worker on node 18
+- run the tsc entry script on node for declaration emit
+
 ## [0.4.1](https://github.com/AndrewRedican/hyperfrontend/compare/3475cc3f9d8075353173717ca5d15eecb9041924...9cb8baf39ab84f10d5585969ad5afb8bd299def0) - 2026-10-04
 
 ### Bug Fixes
