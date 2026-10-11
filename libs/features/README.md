@@ -211,8 +211,8 @@ Support is per entry point. [`/host`](https://www.hyperfrontend.dev/docs/librari
 
 | Format | File                              | Tree-Shakeable |
 | ------ | --------------------------------- | :------------: |
-| ESM    | `index.esm.js`                    |       ✅       |
-| CJS    | `index.cjs.js`                    |       ❌       |
+| ESM    | `index.mjs`                       |       ✅       |
+| CJS    | `index.cjs`                       |       ❌       |
 | IIFE   | `bundle/host/index.iife.min.js`   |       ❌       |
 | UMD    | `bundle/host/index.umd.min.js`    |       ❌       |
 | IIFE   | `bundle/hostee/index.iife.min.js` |       ❌       |
