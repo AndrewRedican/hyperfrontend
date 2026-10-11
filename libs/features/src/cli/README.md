@@ -36,6 +36,8 @@ Every scalar `feature.config.*` key has a matching flag (`--name`, `--version`, 
 passed as path strings (`--contract`, `--config`), precedence is `defaults < config file < flags`, and
 `--ci`/`--yes` run headlessly (erroring on any unresolved required key).
 
+A TypeScript config or contract relies on the runtime stripping its types, so it needs Node.js 23.6 or later, or 22.6 with `--experimental-strip-types`, and erasable syntax only (no enums, namespaces or parameter properties). JSON and JavaScript files load on every Node.js the package supports.
+
 `--out` (default `dist/<name>-shell`) may point anywhere, a shared `dist/` beside the project included, but
 [`build`](https://www.hyperfrontend.dev/docs/libraries/features/cli/#api-runBuild) must be able to own it: a directory that does not exist yet, is empty, or holds a shell a previous
 build wrote. The project directory, its ancestors, and any directory holding other files are refused before the

@@ -12,7 +12,7 @@
         "browser": "full",
         "webWorker": "partial"
       },
-      "note": "Support is per entry point: `/host` and `/hostee` are browser runtimes, `/cli`, `/server`, and `/generators` are Node-only, and the root entry is DOM-free and runs anywhere."
+      "note": "Support is per entry point: `/host` and `/hostee` are browser runtimes, `/cli`, `/server`, and `/generators` are Node-only, and the root entry is DOM-free and runs anywhere. TypeScript `feature.config.*` and `*.contract.*` files need Node.js 23.6+ (22.6+ with `--experimental-strip-types`); JSON and JavaScript files load on every supported Node.js."
     }
   },
   "targets": {
