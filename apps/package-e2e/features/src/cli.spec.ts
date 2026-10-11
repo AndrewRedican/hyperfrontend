@@ -290,7 +290,7 @@ export default contract
 
     it('publishes a root export resolving to the built entry in every format', () => {
       const manifest = JSON.parse(readFileSync(join(outDir, 'package.json'), 'utf8')) as { exports?: Record<string, unknown> }
-      expect(manifest.exports?.['.']).toEqual({ types: './index.d.ts', import: './index.esm.js', require: './index.cjs.js' })
+      expect(manifest.exports?.['.']).toEqual({ types: './index.d.ts', import: './index.mjs', require: './index.cjs' })
     })
 
     it('emits JavaScript free of raw `import type` statements', () => {
