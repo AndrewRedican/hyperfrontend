@@ -233,6 +233,9 @@ Every `//` comment must use a recognized prefix or be a tooling directive:
 | `fixme:`   |
 | `note:`    |
 | `ref:`     |
+| `compat:`  |
+
+`compat:` marks code kept only for a runtime below a bound, written as `// compat: node<22 <reason>` so `grep -rn "compat: node<"` lists every shim a raised floor retires.
 
 ```typescript
 // ❌
