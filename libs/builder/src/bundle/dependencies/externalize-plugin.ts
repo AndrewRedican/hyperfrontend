@@ -1,9 +1,9 @@
 /* eslint-disable workspace/no-unsafe-builtin-methods -- worker bootstraps via @swc-node/register before workspace packages are loadable */
 import type { Plugin } from 'rollup'
 import type { WorkspaceBundledDep } from '../../models'
-import { isBuiltin } from 'node:module'
 import { relative } from 'node:path'
 import { join, normalizeToForwardSlashes } from '../fs/posix-path'
+import { isNodeBuiltin } from './is-node-builtin'
 
 /**
  * Format produced by the rollup invocation that uses the plugin.
@@ -192,7 +192,7 @@ export const createExternalizeBundledDepsPlugin = (options: ExternalizeBundledDe
      * @returns External resolution targeting the matching `_dependencies/` chunk, or `null`.
      */
     resolveId(source: string): ExternalResolution | null {
-      if (source.startsWith('node:') || isBuiltin(source)) {
+      if (isNodeBuiltin(source)) {
         return { id: source, external: true }
       }
       const workspaceMatch = resolveWorkspaceMatch(source, workspaceRoutes, depsRoot, entryOutDir, format)
