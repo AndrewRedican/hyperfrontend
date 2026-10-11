@@ -100,7 +100,7 @@ npm install @hyperfrontend/cryptography
 - **npm:** 8.0.0 or higher
 - **Browser:** Modern browsers with Web Crypto API support
 
-> **Note:** The [`/node`](https://www.hyperfrontend.dev/docs/libraries/cryptography/node/) entry point uses `webcrypto.subtle` which was experimental in Node.js 18.x. For production use with the Node.js entry point, Node.js 19+ is recommended for stable crypto APIs.
+> **Note:** The [`/node`](https://www.hyperfrontend.dev/docs/libraries/cryptography/node/) entry point uses `webcrypto.subtle` which was experimental in Node.js 18.x. For production use with the Node.js entry point, Node.js 19+ is recommended for stable crypto APIs. The [`/browser`](https://www.hyperfrontend.dev/docs/libraries/cryptography/browser/) entry point reads `globalThis.crypto` at first use rather than at import, so it loads on Node.js 18 and only needs that global (Node.js 19+, or 18 with `--experimental-global-webcrypto`) when a primitive runs.
 
 ## Quick Start
 

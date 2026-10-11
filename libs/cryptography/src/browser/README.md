@@ -24,6 +24,6 @@ const digest = await createHash('payload') // 64-char hex SHA-256
 
 ## Notes
 
-- `subtle` resolves to `globalThis.crypto.subtle`; a secure context (HTTPS or localhost) is required.
+- `subtle` resolves to `globalThis.crypto.subtle` on each use rather than at import, so the entry loads on runtimes without the global (Node.js 18 without `--experimental-global-webcrypto`) and throws a descriptive error when a primitive runs there; a secure context (HTTPS or localhost) is required.
 - [`getRandomValues`](https://www.hyperfrontend.dev/docs/libraries/cryptography/browser/#api-getRandomValues) is backed by `crypto.getRandomValues` and throws when called with a zero byte length.
 - Algorithm choices (AES-GCM, PBKDF2 with 100,000 iterations, SHA-256 default) live in the shared core and cannot be overridden per call.
