@@ -277,7 +277,7 @@ export default contract
     })
 
     it('emits compiled JavaScript into the out directory', () => {
-      expect(outFiles).toEqual(expect.arrayContaining([expect.stringMatching(/\.js$/)]))
+      expect(outFiles).toEqual(expect.arrayContaining([expect.stringMatching(/\.[cm]js$/)]))
     })
 
     it('emits TypeScript declarations into the out directory', () => {
@@ -295,7 +295,7 @@ export default contract
 
     it('emits JavaScript free of raw `import type` statements', () => {
       const withImportType = outFiles
-        .filter((file) => file.endsWith('.js'))
+        .filter((file) => /\.[cm]js$/.test(file))
         .filter((file) => readFileSync(join(outDir, file), 'utf8').includes('import type'))
       expect(withImportType).toEqual([])
     })
