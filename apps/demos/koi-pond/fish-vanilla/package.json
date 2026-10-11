@@ -22,9 +22,14 @@
     "@types/three": "0.185.4",
     "npm-run-all2": "9.0.3",
     "typescript": "6.0.3",
-    "vite": "8.2.1"
+    "vite": "8.3.4"
   },
   "engines": {
     "node": "^22.18.0 || >=24.12.0"
+  },
+  "overrides": {
+    "npm-run-all2": {
+      "shell-quote": "1.12.0"
+    }
   }
 }
