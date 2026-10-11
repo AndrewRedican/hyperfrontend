@@ -1,12 +1,12 @@
 import type { WalkEntry } from '../../project/traversal'
 import type { Command, CommandResult, GlobalOptions, OutputFormat } from '../types'
 import { basename, posix, resolve } from 'node:path'
-import { parseArgs } from 'node:util'
 import { stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { parseInt as safeParseInt } from '@hyperfrontend/immutable-api-utils/built-in-copy/number'
 import { getFileStat } from '../../core/fs'
 import { walkDirectory } from '../../project/traversal'
+import { parseArgs } from '../parse-args'
 
 /**
  * Configuration options for the tree command.

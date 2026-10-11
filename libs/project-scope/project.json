@@ -11,7 +11,8 @@
         "node": "full",
         "browser": "none",
         "webWorker": "none"
-      }
+      },
+      "note": "`/cli` parses arguments with `util.parseArgs`, so it needs Node.js 18.3+; every other entry runs on 18.0."
     }
   },
   "targets": {

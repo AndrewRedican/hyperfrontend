@@ -2,11 +2,11 @@ import type { AnalyzeOptions } from '../../analyze'
 import type { AnalysisResult } from '../../models'
 import type { Command, CommandResult, GlobalOptions, OutputFormat } from '../types'
 import { resolve } from 'node:path'
-import { parseArgs } from 'node:util'
 import { isArray } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
 import { stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 import { entries } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { analyzeProject } from '../../analyze'
+import { parseArgs } from '../parse-args'
 
 /**
  * Options for the analyze CLI command.

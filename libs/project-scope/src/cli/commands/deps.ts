@@ -1,11 +1,11 @@
 import type { AllDependencies, DependencyMap } from '../../project/package/dependencies'
 import type { Command, CommandResult, GlobalOptions, OutputFormat } from '../types'
 import { resolve } from 'node:path'
-import { parseArgs } from 'node:util'
 import { stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 import { min } from '@hyperfrontend/immutable-api-utils/built-in-copy/math'
 import { entries, keys } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { getDependencies, readPackageJson } from '../../project/package'
+import { parseArgs } from '../parse-args'
 
 /**
  * Options for the deps command.

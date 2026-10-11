@@ -13,6 +13,8 @@ project-scope --help
 project-scope <command> --help
 ```
 
+Arguments are parsed with Node's `util.parseArgs`, so this entry needs Node.js 18.3 or later.
+
 ## Commands
 
 ### `analyze`
