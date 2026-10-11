@@ -345,8 +345,8 @@ Every option, type and validator is in the [API reference](https://www.hyperfron
 
 | Format | File                                                         | Tree-Shakeable |
 | ------ | ------------------------------------------------------------ | :------------: |
-| ESM    | `index.esm.js` under each entry                              |       ✅       |
-| CJS    | `index.cjs.js` under each entry                              |       ❌       |
+| ESM    | `index.mjs` under each entry                                 |       ✅       |
+| CJS    | `index.cjs` under each entry                                 |       ❌       |
 | IIFE   | `bundle/v3/index.iife.min.js`, `bundle/v4/index.iife.min.js` |       ❌       |
 | UMD    | `bundle/v3/index.umd.min.js`, `bundle/v4/index.umd.min.js`   |       ❌       |
 
