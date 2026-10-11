@@ -120,9 +120,11 @@ export const TOOLING_DIRECTIVE_PATTERNS = [
 
 /**
  * Allowed hint prefixes for inline comments (case-insensitive).
- * The prefix must be followed by a colon.
+ * The prefix must be followed by a colon. `compat:` marks code that exists only
+ * for a runtime below a stated bound (`compat: node<22 ...`), so the shims a
+ * raised floor makes obsolete can be found again.
  */
-export const ALLOWED_HINT_PREFIXES = ['why', 'how', 'context', 'magic', 'todo', 'fixme', 'note', 'ref']
+export const ALLOWED_HINT_PREFIXES = ['why', 'how', 'context', 'magic', 'todo', 'fixme', 'note', 'ref', 'compat']
 
 /**
  * Checks if comment content contains a valid JSDoc tag.
