@@ -208,10 +208,10 @@ Every export, option and return type is in the [API reference](https://www.hyper
 
 ### Output Formats
 
-| Format | File           | Tree-Shakeable |
-| ------ | -------------- | :------------: |
-| ESM    | `index.esm.js` |       ✅       |
-| CJS    | `index.cjs.js` |       ❌       |
+| Format | File        | Tree-Shakeable |
+| ------ | ----------- | :------------: |
+| ESM    | `index.mjs` |       ✅       |
+| CJS    | `index.cjs` |       ❌       |
 
 ## Part of hyperfrontend
 
