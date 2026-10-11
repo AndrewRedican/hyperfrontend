@@ -44,7 +44,7 @@ const REPORT_DIR_PREFIX = 'hf-builder-rollup-'
 /** Node flag that exposes the Web Crypto `crypto` global on runtimes that still hide it (Node 18). */
 const GLOBAL_WEBCRYPTO_FLAG = '--experimental-global-webcrypto'
 
-// why: the worker's bundled terser plugin reads the `crypto` global while loading (serialize-javascript derives its placeholder id from it), so on a Node without that global the worker would die before its first job; the flag is only passed where it is needed because a future Node may drop it.
+// compat: node<20 the worker's bundled terser plugin reads the `crypto` global while loading (serialize-javascript derives its placeholder id from it) and Node 18 only has that global behind this flag, so the flag is passed only where the spawning Node lacks the global; drop the flag and this check once the floor passes, since a future Node may remove it
 const webCryptoExecArgv = (): string[] => (typeof globalThis.crypto === 'undefined' ? [GLOBAL_WEBCRYPTO_FLAG] : [])
 
 /**

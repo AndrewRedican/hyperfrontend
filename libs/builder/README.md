@@ -172,7 +172,7 @@ Every config field, phase signature and result type is in the [API reference](ht
 ## Compatibility
 
 [`@hyperfrontend/builder`](https://www.hyperfrontend.dev/docs/libraries/builder/) is a build-time tool that runs on Node.js. It is not
-intended for browser, Web Worker, or CDN runtimes, and it needs npm 8 or later.
+intended for browser, Web Worker, or CDN runtimes, and it needs npm 8 or later. Node.js 18 runs `hf-build` as is: the rollup worker it spawns receives `--experimental-global-webcrypto` whenever the spawning Node.js lacks the `crypto` global, and only a direct import of the [`/bundle/rollup/worker`](https://www.hyperfrontend.dev/docs/libraries/builder/bundle/rollup/worker/) entry on Node.js 18 has to pass that flag itself.
 
 <!-- hf:media start id="runtimes" scene="runtimes-builder" asset="runtimes" docs="#compatibility" alt="Runs in Node.js 18 or later; not a target for evergreen browsers and web workers" -->
 

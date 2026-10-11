@@ -11,7 +11,8 @@
         "node": "full",
         "browser": "none",
         "webWorker": "none"
-      }
+      },
+      "note": "Node.js 18 needs `--experimental-global-webcrypto` only to import `/bundle/rollup/worker` directly; `hf-build` passes it to the worker it spawns."
     }
   },
   "targets": {
