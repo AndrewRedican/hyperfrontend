@@ -21,8 +21,8 @@ const identity = packageIdentity('builder')
  * anyone; it is what is on disk, reflected.
  *
  * Every file name is what the builder emits, verified on 2026-09-12 against
- * `libs/builder/src/bundle/rollup/worker/job-runner.ts` (`index.esm.js`,
- * `index.cjs.js`, and the `.min.js` twins of the IIFE and UMD bundles, which
+ * `libs/builder/src/bundle/rollup/worker/job-runner.ts` (`index.mjs`,
+ * `index.cjs`, and the `.min.js` twins of the IIFE and UMD bundles, which
  * land because `minify` defaults on in `descriptor.ts`),
  * `libs/builder/src/bundle/run-bundle-phase.ts` (the `bundle/` directory and
  * the one-entry-per-worker loop), `libs/builder/src/package/json/generate-exports.ts`
@@ -49,8 +49,8 @@ export default defineScriptedScene({
       {
         name: 'index.ts',
         outputs: [
-          { name: 'index.esm.js', format: 'esm', keys: ['exports'] },
-          { name: 'index.cjs.js', format: 'cjs', keys: ['exports', 'main'] },
+          { name: 'index.mjs', format: 'esm', keys: ['exports'] },
+          { name: 'index.cjs', format: 'cjs', keys: ['exports', 'main'] },
           { name: 'index.d.ts', format: 'dts', keys: ['exports', 'types'] },
           { name: 'bundle/index.iife.min.js', format: 'iife', keys: [] },
           { name: 'bundle/index.umd.min.js', format: 'umd', keys: [] },
@@ -59,8 +59,8 @@ export default defineScriptedScene({
       {
         name: 'models/index.ts',
         outputs: [
-          { name: 'models/index.esm.js', format: 'esm', keys: ['exports'] },
-          { name: 'models/index.cjs.js', format: 'cjs', keys: ['exports'] },
+          { name: 'models/index.mjs', format: 'esm', keys: ['exports'] },
+          { name: 'models/index.cjs', format: 'cjs', keys: ['exports'] },
           { name: 'models/index.d.ts', format: 'dts', keys: ['exports'] },
         ],
       },
