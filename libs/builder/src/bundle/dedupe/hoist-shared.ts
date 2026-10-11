@@ -131,7 +131,7 @@ const processFormat = (context: BuildContext, owners: OwnerIndex, format: ChunkF
 
 /**
  * Lifts first-party modules that are inlined into multiple entry bundles into
- * shared `_shared/<srcPath>/index.<fmt>.js` chunks and rewrites every consuming
+ * shared `_shared/<srcPath>/index.mjs` / `index.cjs` chunks and rewrites every consuming
  * entry to import them.
  *
  * Runs as an additive post-emit pass over the already-bundled `esm` and `cjs`

@@ -49,7 +49,7 @@ beforeEach(() => {
   ;(runPrePass as Mock).mockClear()
   ;(resolveDefaultWorkerPath as Mock)
     .mockReset()
-    .mockReturnValue({ path: '/abs/dist/libs/builder/bundle/dependencies/worker/index.cjs.js', execArgv: [] })
+    .mockReturnValue({ path: '/abs/dist/libs/builder/bundle/dependencies/worker/index.cjs', execArgv: [] })
   ;(exists as Mock).mockReset().mockReturnValue(true)
 })
 

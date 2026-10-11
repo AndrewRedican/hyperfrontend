@@ -163,7 +163,7 @@ const matchesAnyExactSpecifier = (id: string, specifiers: string[] | undefined):
  * Mirrors `ALWAYS_EXTERNAL_TYPE_DEPS` for the JS half. `typescript` is permanent
  * consumer-supplied: both `@rollup/plugin-typescript` and `rollup-plugin-dts`
  * follow `require('typescript')` into the compiler; without this gate, ~30 MB
- * of typescript bytecode ends up inlined into `_dependencies/<plugin>/index.<fmt>.js`.
+ * of typescript bytecode ends up inlined into `_dependencies/<plugin>/index.mjs` / `index.cjs`.
  */
 const ALWAYS_EXTERNAL_JS_DEPS = new Set<string>(['typescript'])
 

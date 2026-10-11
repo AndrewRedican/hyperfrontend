@@ -36,7 +36,7 @@ const log = logger.channel('builder:bundle:dependencies:prune')
  *
  * @example Reachability from an ESM entry chunk
  * ```typescript
- * const live = computeReachable(['/dist/libs/foo/index.esm.js'], '/dist/libs/foo/_dependencies')
+ * const live = computeReachable(['/dist/libs/foo/index.mjs'], '/dist/libs/foo/_dependencies')
  * if (live && !live.has(orphanChunk)) unlinkSync(orphanChunk)
  * ```
  */

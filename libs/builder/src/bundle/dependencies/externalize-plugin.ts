@@ -14,8 +14,8 @@ import { join, normalizeToForwardSlashes } from '../fs/posix-path'
 export type ExternalizeFormat = 'esm' | 'cjs' | 'dts'
 
 const indexFileNameForFormat = (format: ExternalizeFormat): string => {
-  if (format === 'esm') return 'index.esm.js'
-  if (format === 'cjs') return 'index.cjs.js'
+  if (format === 'esm') return 'index.mjs'
+  if (format === 'cjs') return 'index.cjs'
   return 'index.d.ts'
 }
 
@@ -30,8 +30,8 @@ const indexFileNameForFormat = (format: ExternalizeFormat): string => {
  *
  * @example Computing the relative path to a bundled dep
  * ```typescript
- * relativeImport('/abs/dist/libs/foo/bundle/rollup', '/abs/dist/libs/foo/_dependencies/rollup/index.esm.js')
- * // => '../../_dependencies/rollup/index.esm.js'
+ * relativeImport('/abs/dist/libs/foo/bundle/rollup', '/abs/dist/libs/foo/_dependencies/rollup/index.mjs')
+ * // => '../../_dependencies/rollup/index.mjs'
  * ```
  */
 export const relativeImport = (fromDir: string, toFile: string): string => {

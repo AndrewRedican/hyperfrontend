@@ -60,63 +60,63 @@ describe('collectImportEdges (esm)', () => {
 
 describe('collectImportEdges (cjs)', () => {
   it('records a side-effect-only require with an empty demand', () => {
-    expect(edgesObj("require('./x.cjs.js')", 'cjs')).toEqual({ [target('./x.cjs.js')]: [] })
+    expect(edgesObj("require('./x.cjs')", 'cjs')).toEqual({ [target('./x.cjs')]: [] })
   })
 
   it('collects member accesses on a namespace require binding', () => {
-    expect(edgesObj("var ns = require('./x.cjs.js'); ns.foo(); ns.bar", 'cjs')).toEqual({ [target('./x.cjs.js')]: ['bar', 'foo'] })
+    expect(edgesObj("var ns = require('./x.cjs'); ns.foo(); ns.bar", 'cjs')).toEqual({ [target('./x.cjs')]: ['bar', 'foo'] })
   })
 
   it('collects a string-literal element access on a namespace binding', () => {
-    expect(edgesObj("var ns = require('./x.cjs.js'); ns['foo']", 'cjs')).toEqual({ [target('./x.cjs.js')]: ['foo'] })
+    expect(edgesObj("var ns = require('./x.cjs'); ns['foo']", 'cjs')).toEqual({ [target('./x.cjs')]: ['foo'] })
   })
 
   it('bails to all for a computed element access on a namespace binding', () => {
-    expect(edgesObj('var ns = require("./x.cjs.js"); ns[k]', 'cjs')).toEqual({ [target('./x.cjs.js')]: 'all' })
+    expect(edgesObj('var ns = require("./x.cjs"); ns[k]', 'cjs')).toEqual({ [target('./x.cjs')]: 'all' })
   })
 
   it('bails to all when a namespace binding is used wholesale', () => {
-    expect(edgesObj("var ns = require('./x.cjs.js'); use(ns)", 'cjs')).toEqual({ [target('./x.cjs.js')]: 'all' })
+    expect(edgesObj("var ns = require('./x.cjs'); use(ns)", 'cjs')).toEqual({ [target('./x.cjs')]: 'all' })
   })
 
   it('ignores the binding name appearing as another object property key', () => {
-    expect(edgesObj("var ns = require('./x.cjs.js'); other.ns", 'cjs')).toEqual({})
+    expect(edgesObj("var ns = require('./x.cjs'); other.ns", 'cjs')).toEqual({})
   })
 
   it('collects names from a destructured require', () => {
-    expect(edgesObj("var { a, b } = require('./x.cjs.js')", 'cjs')).toEqual({ [target('./x.cjs.js')]: ['a', 'b'] })
+    expect(edgesObj("var { a, b } = require('./x.cjs')", 'cjs')).toEqual({ [target('./x.cjs')]: ['a', 'b'] })
   })
 
   it('collects the source key from a renamed destructured require', () => {
-    expect(edgesObj("var { a: x } = require('./x.cjs.js')", 'cjs')).toEqual({ [target('./x.cjs.js')]: ['a'] })
+    expect(edgesObj("var { a: x } = require('./x.cjs')", 'cjs')).toEqual({ [target('./x.cjs')]: ['a'] })
   })
 
   it('bails to all for a rest element in a destructured require', () => {
-    expect(edgesObj("var { ...rest } = require('./x.cjs.js')", 'cjs')).toEqual({ [target('./x.cjs.js')]: 'all' })
+    expect(edgesObj("var { ...rest } = require('./x.cjs')", 'cjs')).toEqual({ [target('./x.cjs')]: 'all' })
   })
 
   it('bails to all for a computed key in a destructured require', () => {
-    expect(edgesObj("var { ['a']: x } = require('./x.cjs.js')", 'cjs')).toEqual({ [target('./x.cjs.js')]: 'all' })
+    expect(edgesObj("var { ['a']: x } = require('./x.cjs')", 'cjs')).toEqual({ [target('./x.cjs')]: 'all' })
   })
 
   it('bails to all for an array-destructured require', () => {
-    expect(edgesObj("var [a] = require('./x.cjs.js')", 'cjs')).toEqual({ [target('./x.cjs.js')]: 'all' })
+    expect(edgesObj("var [a] = require('./x.cjs')", 'cjs')).toEqual({ [target('./x.cjs')]: 'all' })
   })
 
   it('collects a direct property access on the require call', () => {
-    expect(edgesObj("var x = require('./x.cjs.js').foo", 'cjs')).toEqual({ [target('./x.cjs.js')]: ['foo'] })
+    expect(edgesObj("var x = require('./x.cjs').foo", 'cjs')).toEqual({ [target('./x.cjs')]: ['foo'] })
   })
 
   it('bails to all for a string-literal element access on the require call', () => {
-    expect(edgesObj("var x = require('./x.cjs.js')['foo']", 'cjs')).toEqual({ [target('./x.cjs.js')]: 'all' })
+    expect(edgesObj("var x = require('./x.cjs')['foo']", 'cjs')).toEqual({ [target('./x.cjs')]: 'all' })
   })
 
   it('bails to all for a computed element access on the require call', () => {
-    expect(edgesObj("var x = require('./x.cjs.js')[k]", 'cjs')).toEqual({ [target('./x.cjs.js')]: 'all' })
+    expect(edgesObj("var x = require('./x.cjs')[k]", 'cjs')).toEqual({ [target('./x.cjs')]: 'all' })
   })
 
   it('bails to all when require is used as a call argument', () => {
-    expect(edgesObj("register(require('./x.cjs.js'))", 'cjs')).toEqual({ [target('./x.cjs.js')]: 'all' })
+    expect(edgesObj("register(require('./x.cjs'))", 'cjs')).toEqual({ [target('./x.cjs')]: 'all' })
   })
 
   it('ignores a non-relative require specifier', () => {

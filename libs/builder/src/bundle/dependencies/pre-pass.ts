@@ -180,7 +180,7 @@ const readReport = (reportPath: string, job: PrePassJob): PrePassResult => {
  * builder module: ascends from the module's own directory to the builder package
  * root and returns the worker at `bundle/dependencies/worker`. This works whether
  * the builder runs from its built dist, an installed `node_modules` copy, or
- * melded into a host bundle under `_dependencies/`. The compiled `index.cjs.js`
+ * melded into a host bundle under `_dependencies/`. The compiled `index.cjs`
  * is preferred; an `index.ts` sibling resolves with the `@swc-node/register`
  * loader for source-mode bootstrap.
  *
@@ -215,7 +215,7 @@ export const resolveDefaultWorkerPath = (startDir?: string): WorkerInvocation | 
  *
  * @example Pre-passing rollup and one of its plugins
  * ```typescript
- * const results = await runPrePass(jobs, { workerPath: '/abs/dist/libs/builder/bundle/dependencies/worker.cjs.js' })
+ * const results = await runPrePass(jobs, { workerPath: '/abs/dist/libs/builder/bundle/dependencies/worker.cjs' })
  * ```
  */
 export const runPrePass = async (jobs: PrePassJob[], options: RunPrePassOptions): Promise<PrePassResult[]> => {

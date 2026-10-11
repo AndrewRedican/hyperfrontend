@@ -40,11 +40,11 @@ export const synthesizeMissingExportsPass = (context: BuildContext, depsRoot: st
   const result: MissingExportsPassResult = { namedExportsSynthesized: 0 }
   if (!exists(depsRoot)) return result
   const chunks: string[] = []
-  walkFiles(depsRoot, (name) => name === 'index.esm.js', chunks)
+  walkFiles(depsRoot, (name) => name === 'index.mjs', chunks)
   if (chunks.length === 0) return result
   const demand = createMap<string, Set<string>>()
   for (const chunk of chunks) demand.set(chunk, createSet<string>([]))
-  for (const importer of [...collectEntryFiles(context, depsRoot, ['index.esm.js']), ...chunks]) {
+  for (const importer of [...collectEntryFiles(context, depsRoot, ['index.mjs']), ...chunks]) {
     for (const [target, usage] of collectImportEdges(readFileContent(importer), getDirname(importer), 'esm')) {
       const named = demand.get(target)
       if (named === undefined || usage === 'all') continue

@@ -46,7 +46,7 @@ describe('fingerprintOf', () => {
 
 describe('chunkFileName', () => {
   it('names the CJS chunk file', () => {
-    expect(chunkFileName('cjs')).toBe('index.cjs.js')
+    expect(chunkFileName('cjs')).toBe('index.cjs')
   })
 })
 

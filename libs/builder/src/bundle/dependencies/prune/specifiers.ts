@@ -30,7 +30,7 @@ const collectInto = (source: string, re: RegExp, specifiers: Set<string>): void 
  *
  * @example Extracting the sibling chunks a CJS chunk requires
  * ```typescript
- * collectChunkSpecifiers("require('../shared/index.cjs.js')") // => ['../shared/index.cjs.js']
+ * collectChunkSpecifiers("require('../shared/index.cjs')") // => ['../shared/index.cjs']
  * ```
  */
 export const collectChunkSpecifiers = (source: string): string[] => {

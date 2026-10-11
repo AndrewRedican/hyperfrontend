@@ -8,7 +8,7 @@ import { dispatchRollupWorker, resolveDefaultRollupWorkerPath } from '../../bund
 import { buildJsBin } from './build-bin'
 jest.mock('../../bundle/rollup/dispatch', () => ({
   dispatchRollupWorker: jest.fn().mockResolvedValue(undefined),
-  resolveDefaultRollupWorkerPath: jest.fn(() => ({ path: '/abs/repo/dist/libs/builder/bundle/rollup/worker/index.cjs.js', execArgv: [] })),
+  resolveDefaultRollupWorkerPath: jest.fn(() => ({ path: '/abs/repo/dist/libs/builder/bundle/rollup/worker/index.cjs', execArgv: [] })),
 }))
 jest.mock('@hyperfrontend/project-scope/core', () => {
   const actual = jest.requireActual('@hyperfrontend/project-scope/core')
@@ -34,7 +34,7 @@ const makeContext = (overrides: Partial<BuildContext> = {}): BuildContext => ({
 beforeEach(() => {
   ;(dispatchRollupWorker as Mock).mockClear()
   ;(resolveDefaultRollupWorkerPath as Mock).mockClear().mockReturnValue({
-    path: '/abs/repo/dist/libs/builder/bundle/rollup/worker/index.cjs.js',
+    path: '/abs/repo/dist/libs/builder/bundle/rollup/worker/index.cjs',
     execArgv: [],
   })
   ;(ensureDir as Mock).mockClear()
@@ -59,10 +59,10 @@ describe('buildJsBin', () => {
     expect(result).toEqual([{ name: 'cz', kind: 'esm', outputPath: '/abs/dist/libs/foo/bin/cz.mjs' }])
   })
 
-  it('emits both CJS (`<name>.cjs.js`) and ESM (`<name>.mjs`) when an array of formats is declared', async () => {
+  it('emits both CJS (`<name>.cjs`) and ESM (`<name>.mjs`) when an array of formats is declared', async () => {
     const result = await buildJsBin({ name: 'hf-build', format: ['cjs', 'esm'] } as BinConfig, makeContext())
     expect(result).toEqual([
-      { name: 'hf-build', kind: 'cjs', outputPath: '/abs/dist/libs/foo/bin/hf-build.cjs.js' },
+      { name: 'hf-build', kind: 'cjs', outputPath: '/abs/dist/libs/foo/bin/hf-build.cjs' },
       { name: 'hf-build', kind: 'esm', outputPath: '/abs/dist/libs/foo/bin/hf-build.mjs' },
     ])
   })
@@ -74,7 +74,7 @@ describe('buildJsBin', () => {
     const esm = dispatchedDescriptor(1)
     expect(cjs.format).toBe('cjs')
     expect(cjs.inputFile).toBe('/abs/libs/foo/src/bin/hf-build.ts')
-    expect(cjs.bin?.outputFile).toBe('/abs/dist/libs/foo/bin/hf-build.cjs.js')
+    expect(cjs.bin?.outputFile).toBe('/abs/dist/libs/foo/bin/hf-build.cjs')
     expect(cjs.bin?.banner).toBe('#!/usr/bin/env node')
     expect(cjs.bin?.chmod).toBe(0o755)
     expect(esm.format).toBe('esm')

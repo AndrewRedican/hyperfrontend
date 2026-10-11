@@ -46,7 +46,7 @@ const REPORT_DIR_PREFIX = 'hf-builder-rollup-'
  * module: ascends from the module's own directory to the builder package root
  * and returns the worker at `bundle/rollup/worker`. This works whether the
  * builder runs from its built dist, an installed `node_modules` copy, or melded
- * into a host bundle under `_dependencies/`. The compiled `index.cjs.js` is
+ * into a host bundle under `_dependencies/`. The compiled `index.cjs` is
  * preferred; an `index.ts` sibling resolves with the `@swc-node/register` loader
  * for source-mode bootstrap.
  *
@@ -123,7 +123,7 @@ const readReport = (reportPath: string, label: string): RollupWorkerReport => {
  *
  * @example Dispatching a single ESM build
  * ```typescript
- * const report = await dispatchRollupWorker(descriptor, { workerPath: '/abs/dist/.../worker.cjs.js' })
+ * const report = await dispatchRollupWorker(descriptor, { workerPath: '/abs/dist/.../worker.cjs' })
  * ```
  */
 export const dispatchRollupWorker = async (

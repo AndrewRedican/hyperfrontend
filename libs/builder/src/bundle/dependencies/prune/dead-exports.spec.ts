@@ -90,14 +90,14 @@ describe('stripDeadExports', () => {
   })
 
   it('drops a whole import statement left unreferenced after a removal', () => {
-    expect(stripDeadExports("import { dep } from './d/index.esm.js';\nconst a = dep;\nexport { a };", 'esm', keepOf())?.code).not.toContain(
+    expect(stripDeadExports("import { dep } from './d/index.mjs';\nconst a = dep;\nexport { a };", 'esm', keepOf())?.code).not.toContain(
       'import'
     )
   })
 
   it('narrows a partially-used named import to the surviving binding', () => {
-    const source = "import { keep1, drop1 } from './d/index.esm.js';\nconst x = keep1;\nconst y = drop1;\nexport { x, y };"
-    expect(stripDeadExports(source, 'esm', keepOf('x'))?.code).toContain("import { keep1 } from './d/index.esm.js';")
+    const source = "import { keep1, drop1 } from './d/index.mjs';\nconst x = keep1;\nconst y = drop1;\nexport { x, y };"
+    expect(stripDeadExports(source, 'esm', keepOf('x'))?.code).toContain("import { keep1 } from './d/index.mjs';")
   })
 
   it('collapses blank-line runs left by splicing', () => {
@@ -110,7 +110,7 @@ describe('stripDeadExports', () => {
   })
 
   it('drops an unused cjs require statement after stripping its only consumer', () => {
-    const source = "'use strict';\nvar dep = require('./d/index.cjs.js');\nconst a = dep.foo;\nexports.a = a;"
+    const source = "'use strict';\nvar dep = require('./d/index.cjs');\nconst a = dep.foo;\nexports.a = a;"
     expect(stripDeadExports(source, 'cjs', keepOf())?.code).not.toContain('require')
   })
 
@@ -141,7 +141,7 @@ describe('stripDeadExports', () => {
 
   it('keeps a cjs require still consumed by a surviving declaration', () => {
     const source =
-      "'use strict';\nvar dep = require('./d/index.cjs.js');\nconst kept = dep.foo;\nconst dead = 1;\nexports.kept = kept;\nexports.dead = dead;"
+      "'use strict';\nvar dep = require('./d/index.cjs');\nconst kept = dep.foo;\nconst dead = 1;\nexports.kept = kept;\nexports.dead = dead;"
     expect(stripDeadExports(source, 'cjs', keepOf('kept'))?.code).toContain('require')
   })
 

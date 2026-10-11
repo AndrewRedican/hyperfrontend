@@ -13,7 +13,7 @@ describe('isUnderDir', () => {
   })
 
   it('rejects a path outside the directory', () => {
-    expect(isUnderDir('/abs/out/index.esm.js', DIR)).toBe(false)
+    expect(isUnderDir('/abs/out/index.mjs', DIR)).toBe(false)
   })
 
   it('rejects a sibling sharing the directory name as a prefix', () => {

@@ -68,9 +68,9 @@ describe('resolveModuleRefs', () => {
         'const a = () => tag();',
         ownersOf([['a', 'me']]),
         'me',
-        "import { tag } from './_dependencies/d/index.esm.js';\nconst a = () => tag();"
+        "import { tag } from './_dependencies/d/index.mjs';\nconst a = () => tag();"
       ).depImports
-    ).toEqual([{ ref: 'tag', binding: { specifier: './_dependencies/d/index.esm.js', kind: 'named', imported: 'tag' } }])
+    ).toEqual([{ ref: 'tag', binding: { specifier: './_dependencies/d/index.mjs', kind: 'named', imported: 'tag' } }])
   })
 
   it('flags an inlined, unattributable top-level binding as unresolved', () => {

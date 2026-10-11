@@ -306,8 +306,8 @@ const scanNamespaceBindingUse = (
  *
  * @example Reading two slots off an imported namespace
  * ```typescript
- * collectNamespaceUsage("import { SafeObject } from './d/index.esm.js';\nSafeObject.freeze(x);\nSafeObject.keys(y);", '/dist/libs/foo', 'esm')
- * // => Map { '/dist/libs/foo/d/index.esm.js' => { bailAll: false, perName: { SafeObject: { freeze, keys } } } }
+ * collectNamespaceUsage("import { SafeObject } from './d/index.mjs';\nSafeObject.freeze(x);\nSafeObject.keys(y);", '/dist/libs/foo', 'esm')
+ * // => Map { '/dist/libs/foo/d/index.mjs' => { bailAll: false, perName: { SafeObject: { freeze, keys } } } }
  * ```
  */
 export const collectNamespaceUsage = (source: string, importerDir: string, format: ChunkFormat): Map<string, NamespaceTargetUsage> => {

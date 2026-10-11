@@ -1,6 +1,6 @@
 # dedupe
 
-Shared-first-party dedupe: an additive post-emit pass that lifts first-party modules inlined into multiple per-entry bundles into shared `_shared/<srcPath>/index.<fmt>.js` chunks and rewrites each consuming entry to import them. Runs over the already-bundled [`esm`](https://www.hyperfrontend.dev/docs/libraries/builder/models/#api-BuildConfig-prop-esm)/[`cjs`](https://www.hyperfrontend.dev/docs/libraries/builder/models/#api-BuildConfig-prop-cjs) outputs only, leaving per-entry isolated bundling intact.
+Shared-first-party dedupe: an additive post-emit pass that lifts first-party modules inlined into multiple per-entry bundles into shared `_shared/<srcPath>/index.mjs` and `index.cjs` chunks and rewrites each consuming entry to import them. Runs over the already-bundled [`esm`](https://www.hyperfrontend.dev/docs/libraries/builder/models/#api-BuildConfig-prop-esm)/[`cjs`](https://www.hyperfrontend.dev/docs/libraries/builder/models/#api-BuildConfig-prop-cjs) outputs only, leaving per-entry isolated bundling intact.
 
 `hoistSharedFirstParty(...)` is the entry point. It only hoists copies that [`planHoists`](https://www.hyperfrontend.dev/docs/libraries/builder/bundle/dedupe/#api-planHoists) proves safe — structurally identical, references resolvable, and initialization cycle-free — so the worst case is output identical to the input.
 

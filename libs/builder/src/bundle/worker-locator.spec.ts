@@ -43,7 +43,7 @@ describe('ascendForWorker', () => {
   })
 
   it('returns the compiled worker when present at the offset', () => {
-    const path = writeWorkerAt(root, ...OFFSET, 'index.cjs.js')
+    const path = writeWorkerAt(root, ...OFFSET, 'index.cjs')
     expect(ascendForWorker(OFFSET, root)).toEqual({ path, execArgv: [] })
   })
 
@@ -53,22 +53,22 @@ describe('ascendForWorker', () => {
   })
 
   it('prefers the compiled worker over the source sibling', () => {
-    const compiled = writeWorkerAt(root, ...OFFSET, 'index.cjs.js')
+    const compiled = writeWorkerAt(root, ...OFFSET, 'index.cjs')
     writeWorkerAt(root, ...OFFSET, 'index.ts')
     expect(ascendForWorker(OFFSET, root)).toEqual({ path: compiled, execArgv: [] })
   })
 
   it('ascends from a nested start directory to a worker in an ancestor', () => {
-    const path = writeWorkerAt(root, ...OFFSET, 'index.cjs.js')
+    const path = writeWorkerAt(root, ...OFFSET, 'index.cjs')
     const nested = join(root, 'a', 'b', 'c')
     mkdirSync(nested, { recursive: true })
     expect(ascendForWorker(OFFSET, nested)).toEqual({ path, execArgv: [] })
   })
 
   it('returns the deepest matching ancestor', () => {
-    writeWorkerAt(root, ...OFFSET, 'index.cjs.js')
+    writeWorkerAt(root, ...OFFSET, 'index.cjs')
     const deepRoot = join(root, 'nested')
-    const deepPath = writeWorkerAt(deepRoot, ...OFFSET, 'index.cjs.js')
+    const deepPath = writeWorkerAt(deepRoot, ...OFFSET, 'index.cjs')
     expect(ascendForWorker(OFFSET, join(deepRoot, 'a', 'b'))).toEqual({ path: deepPath, execArgv: [] })
   })
 })

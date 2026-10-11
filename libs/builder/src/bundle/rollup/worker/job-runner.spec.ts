@@ -75,7 +75,7 @@ describe('runRollupWorkerJob', () => {
     expect(report.durationMs).toBeGreaterThanOrEqual(0)
     const persisted = JSON.parse(readFileSync(reportPath, 'utf8'))
     expect(persisted.outputSize).toBe(report.outputSize)
-    expect(readFileSync(join(outputDir, 'index.esm.js'), 'utf8')).toContain('42')
+    expect(readFileSync(join(outputDir, 'index.mjs'), 'utf8')).toContain('42')
   })
 
   it('writes a CJS bundle when format is cjs', async () => {
@@ -84,7 +84,7 @@ describe('runRollupWorkerJob', () => {
     const outputDir = join(root, 'out')
     const reportPath = join(root, 'report.json')
     await runRollupWorkerJob(baseDescriptor({ format: 'cjs', inputFile, outputDir, sourcemap: false, tsConfigPath, reportPath }))
-    const contents = readFileSync(join(outputDir, 'index.cjs.js'), 'utf8')
+    const contents = readFileSync(join(outputDir, 'index.cjs'), 'utf8')
     expect(contents).toContain("'use strict'")
   })
 
@@ -104,7 +104,7 @@ describe('runRollupWorkerJob', () => {
         external: ['other-dep'],
       })
     )
-    const contents = readFileSync(join(outputDir, 'index.esm.js'), 'utf8')
+    const contents = readFileSync(join(outputDir, 'index.mjs'), 'utf8')
     expect(contents).toMatch(/from\s+["']other-dep["']/)
   })
 
@@ -156,7 +156,7 @@ describe('runRollupWorkerJob', () => {
         workspaceRoutes: [{ packageName: '@scope/pkg', policy: 'whole-surface' }],
       })
     )
-    expect(readFileSync(join(outputDir, 'index.esm.js'), 'utf8')).toMatch(/from\s+["']@other\/pkg["']/)
+    expect(readFileSync(join(outputDir, 'index.mjs'), 'utf8')).toMatch(/from\s+["']@other\/pkg["']/)
   })
 
   it('routes bundled-dep imports through the externalize plugin when configured', async () => {
@@ -176,8 +176,8 @@ describe('runRollupWorkerJob', () => {
         bundledDepsPlugin: { deps: ['rollup'], depsRoot },
       })
     )
-    const contents = readFileSync(join(outputDir, 'index.esm.js'), 'utf8')
-    expect(contents).toMatch(/_dependencies\/rollup\/index\.esm\.js/)
+    const contents = readFileSync(join(outputDir, 'index.mjs'), 'utf8')
+    expect(contents).toMatch(/_dependencies\/rollup\/index\.mjs/)
   })
 
   it('emits a runnable CJS bundle when an externalized dep uses pre-pass named-form exports (default + named with __esModule)', async () => {
@@ -185,7 +185,7 @@ describe('runRollupWorkerJob', () => {
     const depDir = join(depsRoot, 'fake-dep')
     mkdirSync(depDir, { recursive: true })
     writeFileSync(
-      join(depDir, 'index.cjs.js'),
+      join(depDir, 'index.cjs'),
       [
         "'use strict';",
         "Object.defineProperty(exports, '__esModule', { value: true });",
@@ -209,17 +209,14 @@ describe('runRollupWorkerJob', () => {
         bundledDepsPlugin: { deps: ['fake-dep'], depsRoot },
       })
     )
-    expect(createRequire(import.meta.url)(join(outputDir, 'index.cjs.js'))).toBe(42)
+    expect(createRequire(import.meta.url)(join(outputDir, 'index.cjs'))).toBe(42)
   })
 
   it('emits const (not var) require bindings for externalized deps in CJS output', async () => {
     const depsRoot = join(root, '_dependencies')
     const depDir = join(depsRoot, 'fake-dep')
     mkdirSync(depDir, { recursive: true })
-    writeFileSync(
-      join(depDir, 'index.cjs.js'),
-      ["'use strict';", 'function fakeDep() { return 5 }', 'exports.fakeDep = fakeDep;'].join('\n')
-    )
+    writeFileSync(join(depDir, 'index.cjs'), ["'use strict';", 'function fakeDep() { return 5 }', 'exports.fakeDep = fakeDep;'].join('\n'))
     const inputFile = writeSrc('input.ts', "import { fakeDep } from 'fake-dep'\nexport const value = fakeDep()\n")
     const tsConfigPath = writeTsconfig()
     const outputDir = join(root, 'out')
@@ -235,7 +232,7 @@ describe('runRollupWorkerJob', () => {
         bundledDepsPlugin: { deps: ['fake-dep'], depsRoot },
       })
     )
-    const contents = readFileSync(join(outputDir, 'index.cjs.js'), 'utf8')
+    const contents = readFileSync(join(outputDir, 'index.cjs'), 'utf8')
     expect(contents).toMatch(/const \w+ = require\(/)
     expect(contents).not.toMatch(/^var \w+ = require\(/m)
   })
@@ -255,7 +252,7 @@ describe('runRollupWorkerJob', () => {
         bundleWorkspaceDeps: true,
       })
     )
-    expect(readFileSync(join(outputDir, 'index.esm.js'), 'utf8')).toContain('41')
+    expect(readFileSync(join(outputDir, 'index.mjs'), 'utf8')).toContain('41')
   })
 
   it('compiles TS-only syntax into an IIFE bundle when sources live outside the process cwd', async () => {
@@ -419,8 +416,8 @@ describe('runRollupWorkerJob', () => {
         workspaceRoutes: [{ packageName: '@hyperfrontend/logging', policy: 'whole-surface' }],
       })
     )
-    const contents = readFileSync(join(outputDir, 'index.esm.js'), 'utf8')
-    expect(contents).toMatch(/_dependencies\/@hyperfrontend\/logging\/index\.esm\.js/)
+    const contents = readFileSync(join(outputDir, 'index.mjs'), 'utf8')
+    expect(contents).toMatch(/_dependencies\/@hyperfrontend\/logging\/index\.mjs/)
   })
 
   it('routes sub-path workspace specifiers exactly when policy is sub-path', async () => {
@@ -450,8 +447,8 @@ describe('runRollupWorkerJob', () => {
         ],
       })
     )
-    const contents = readFileSync(join(outputDir, 'index.esm.js'), 'utf8')
-    expect(contents).toMatch(/_dependencies\/@hyperfrontend\/immutable-api-utils\/built-in-copy\/date\/index\.esm\.js/)
+    const contents = readFileSync(join(outputDir, 'index.mjs'), 'utf8')
+    expect(contents).toMatch(/_dependencies\/@hyperfrontend\/immutable-api-utils\/built-in-copy\/date\/index\.mjs/)
   })
 
   it('writes only the unminified UMD output when minify is disabled', async () => {

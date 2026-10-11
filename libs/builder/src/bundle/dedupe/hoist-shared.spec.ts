@@ -65,23 +65,23 @@ describe('hoistSharedFirstParty', () => {
     writeSrc('greet/greet.ts', "export const greet = (): string => 'x'\n")
     writeSrc('index.ts', "export * from './base/base'\nexport * from './greet/greet'\n")
     writeSrc('greet/index.ts', "export * from '../base/base'\nexport * from './greet'\n")
-    write('_dependencies/dep/index.esm.js', "const tag = (s) => '[' + s + ']';\nexport { tag };\n")
-    write('_dependencies/dep/index.cjs.js', "'use strict';\nconst tag = (s) => '[' + s + ']';\nexports.tag = tag;\n")
+    write('_dependencies/dep/index.mjs', "const tag = (s) => '[' + s + ']';\nexport { tag };\n")
+    write('_dependencies/dep/index.cjs', "'use strict';\nconst tag = (s) => '[' + s + ']';\nexports.tag = tag;\n")
     write(
-      'index.esm.js',
-      "import { tag } from './_dependencies/dep/index.esm.js';\nconst BASE = 'b';\nconst greet = (n) => tag(BASE + n);\nexport { BASE, greet };\n"
+      'index.mjs',
+      "import { tag } from './_dependencies/dep/index.mjs';\nconst BASE = 'b';\nconst greet = (n) => tag(BASE + n);\nexport { BASE, greet };\n"
     )
     write(
-      'index.cjs.js',
-      "'use strict';\nvar dep = require('./_dependencies/dep/index.cjs.js');\nconst BASE = 'b';\nconst greet = (n) => dep.tag(BASE + n);\nexports.BASE = BASE;\nexports.greet = greet;\n"
+      'index.cjs',
+      "'use strict';\nvar dep = require('./_dependencies/dep/index.cjs');\nconst BASE = 'b';\nconst greet = (n) => dep.tag(BASE + n);\nexports.BASE = BASE;\nexports.greet = greet;\n"
     )
     write(
-      'greet/index.esm.js',
-      "import { tag } from '../_dependencies/dep/index.esm.js';\nconst BASE = 'b';\nconst greet = (n) => tag(BASE + n);\nexport { greet };\n"
+      'greet/index.mjs',
+      "import { tag } from '../_dependencies/dep/index.mjs';\nconst BASE = 'b';\nconst greet = (n) => tag(BASE + n);\nexport { greet };\n"
     )
     write(
-      'greet/index.cjs.js',
-      "'use strict';\nvar dep = require('../_dependencies/dep/index.cjs.js');\nconst BASE = 'b';\nconst greet = (n) => dep.tag(BASE + n);\nexports.greet = greet;\n"
+      'greet/index.cjs',
+      "'use strict';\nvar dep = require('../_dependencies/dep/index.cjs');\nconst BASE = 'b';\nconst greet = (n) => dep.tag(BASE + n);\nexports.greet = greet;\n"
     )
   })
 
@@ -92,12 +92,9 @@ describe('hoistSharedFirstParty', () => {
   it('writes a shared chunk for every hotspot module per format', () => {
     hoistSharedFirstParty(context())
     expect(
-      [
-        '_shared/base/base/index.esm.js',
-        '_shared/base/base/index.cjs.js',
-        '_shared/greet/greet/index.esm.js',
-        '_shared/greet/greet/index.cjs.js',
-      ].map((relPath) => existsSync(join(outputPath, relPath)))
+      ['_shared/base/base/index.mjs', '_shared/base/base/index.cjs', '_shared/greet/greet/index.mjs', '_shared/greet/greet/index.cjs'].map(
+        (relPath) => existsSync(join(outputPath, relPath))
+      )
     ).toEqual([true, true, true, true])
   })
 
@@ -107,29 +104,29 @@ describe('hoistSharedFirstParty', () => {
 
   it('splices the hoisted declaration out of the consuming entry', () => {
     hoistSharedFirstParty(context())
-    expect(readFileSync(join(outputPath, 'index.esm.js'), 'utf8')).not.toContain('const greet =')
+    expect(readFileSync(join(outputPath, 'index.mjs'), 'utf8')).not.toContain('const greet =')
   })
 
   it('imports the hoisted module into the consuming entry', () => {
     hoistSharedFirstParty(context())
-    expect(readFileSync(join(outputPath, 'index.esm.js'), 'utf8')).toContain("from './_shared/greet/greet/index.esm.js'")
+    expect(readFileSync(join(outputPath, 'index.mjs'), 'utf8')).toContain("from './_shared/greet/greet/index.mjs'")
   })
 
   it('resolves the cross-module reference from inside the shared chunk', () => {
     hoistSharedFirstParty(context())
-    expect(readFileSync(join(outputPath, '_shared/greet/greet/index.esm.js'), 'utf8')).toContain("from '../../base/base/index.esm.js'")
+    expect(readFileSync(join(outputPath, '_shared/greet/greet/index.mjs'), 'utf8')).toContain("from '../../base/base/index.mjs'")
   })
 
   it('keeps the published export surface intact', () => {
     hoistSharedFirstParty(context())
-    expect(readFileSync(join(outputPath, 'index.esm.js'), 'utf8')).toContain('export { BASE, greet };')
+    expect(readFileSync(join(outputPath, 'index.mjs'), 'utf8')).toContain('export { BASE, greet };')
   })
 
   it('produces a CJS root entry that still computes through the shared chunks', () => {
     hoistSharedFirstParty(context())
     const out = execFileSync('node', [
       '-e',
-      `const m = require(${JSON.stringify(join(outputPath, 'index.cjs.js'))}); process.stdout.write(m.greet('y') + ':' + m.BASE)`,
+      `const m = require(${JSON.stringify(join(outputPath, 'index.cjs'))}); process.stdout.write(m.greet('y') + ':' + m.BASE)`,
     ])
     expect(out.toString()).toBe('[by]:b')
   })
@@ -137,7 +134,7 @@ describe('hoistSharedFirstParty', () => {
   it('produces an ESM root entry that still computes through the shared chunks', () => {
     hoistSharedFirstParty(context())
     write('package.json', '{ "type": "module" }')
-    const url = `file://${join(outputPath, 'index.esm.js')}`
+    const url = `file://${join(outputPath, 'index.mjs')}`
     const out = execFileSync('node', [
       '--input-type=module',
       '-e',
@@ -176,24 +173,24 @@ describe('hoistSharedFirstParty', () => {
       writeSrc('solo/index.ts', "export * from './solo'\n")
       // why: greet now pulls a bare, node-builtin specifier so the chunk's dependency edge passes through verbatim instead of being recomputed.
       write(
-        'index.esm.js',
+        'index.mjs',
         "import { sep } from 'node:path';\nconst BASE = 'b';\nconst greet = (n) => sep + BASE + n;\nexport { BASE, greet };\n"
       )
       write(
-        'greet/index.esm.js',
+        'greet/index.mjs',
         "import { sep } from 'node:path';\nconst BASE = 'b';\nconst greet = (n) => sep + BASE + n;\nexport { greet };\n"
       )
-      write('solo/index.esm.js', "const solo = () => 's';\nexport { solo };\n")
+      write('solo/index.mjs', "const solo = () => 's';\nexport { solo };\n")
     })
 
     it('passes a bare dependency specifier through to the shared chunk unchanged', () => {
       hoistSharedFirstParty(context([rootEntry(), greetEntry(), soloEntry()]))
-      expect(readFileSync(join(outputPath, '_shared/greet/greet/index.esm.js'), 'utf8')).toContain("import { sep } from 'node:path';")
+      expect(readFileSync(join(outputPath, '_shared/greet/greet/index.mjs'), 'utf8')).toContain("import { sep } from 'node:path';")
     })
 
     it('leaves an entry with no hoistable module untouched', () => {
       hoistSharedFirstParty(context([rootEntry(), greetEntry(), soloEntry()]))
-      expect(readFileSync(join(outputPath, 'solo/index.esm.js'), 'utf8')).toBe("const solo = () => 's';\nexport { solo };\n")
+      expect(readFileSync(join(outputPath, 'solo/index.mjs'), 'utf8')).toBe("const solo = () => 's';\nexport { solo };\n")
     })
   })
 
@@ -203,25 +200,22 @@ describe('hoistSharedFirstParty', () => {
       writeSrc('util/util.ts', 'export const util = (n) => n\n')
       writeSrc('index.ts', "export * from './util/util'\n")
       writeSrc('greet/index.ts', "export * from '../util/util'\n")
-      write('index.esm.js', "import { tag } from './_dependencies/dep/index.esm.js';\nconst util = (n) => tag(n);\nexport { util };\n")
+      write('index.mjs', "import { tag } from './_dependencies/dep/index.mjs';\nconst util = (n) => tag(n);\nexport { util };\n")
+      write('greet/index.mjs', "import { tag } from '../_dependencies/dep/index.mjs';\nconst util = (n) => tag(n);\nexport { util };\n")
       write(
-        'greet/index.esm.js',
-        "import { tag } from '../_dependencies/dep/index.esm.js';\nconst util = (n) => tag(n);\nexport { util };\n"
+        'index.cjs',
+        "'use strict';\nvar dep_cjs_js$2 = require('./_dependencies/dep/index.cjs');\nconst util = (n) => dep_cjs_js$2.tag(n);\nexports.util = util;\n"
       )
       write(
-        'index.cjs.js',
-        "'use strict';\nvar dep_cjs_js$2 = require('./_dependencies/dep/index.cjs.js');\nconst util = (n) => dep_cjs_js$2.tag(n);\nexports.util = util;\n"
-      )
-      write(
-        'greet/index.cjs.js',
-        "'use strict';\nvar dep_cjs_js$1 = require('../_dependencies/dep/index.cjs.js');\nconst util = (n) => dep_cjs_js$1.tag(n);\nexports.util = util;\n"
+        'greet/index.cjs',
+        "'use strict';\nvar dep_cjs_js$1 = require('../_dependencies/dep/index.cjs');\nconst util = (n) => dep_cjs_js$1.tag(n);\nexports.util = util;\n"
       )
     })
 
     it('hoists the module symmetrically in both formats despite the rename divergence', () => {
       hoistSharedFirstParty(context())
       expect(
-        ['_shared/util/util/index.esm.js', '_shared/util/util/index.cjs.js'].map((relPath) => existsSync(join(outputPath, relPath)))
+        ['_shared/util/util/index.mjs', '_shared/util/util/index.cjs'].map((relPath) => existsSync(join(outputPath, relPath)))
       ).toEqual([true, true])
     })
 
@@ -229,7 +223,7 @@ describe('hoistSharedFirstParty', () => {
       hoistSharedFirstParty(context())
       const out = execFileSync('node', [
         '-e',
-        `const m = require(${JSON.stringify(join(outputPath, 'index.cjs.js'))}); process.stdout.write(m.util('y'))`,
+        `const m = require(${JSON.stringify(join(outputPath, 'index.cjs'))}); process.stdout.write(m.util('y'))`,
       ])
       expect(out.toString()).toBe('[y]')
     })
@@ -237,7 +231,7 @@ describe('hoistSharedFirstParty', () => {
     it('produces an ESM root entry that loads through the shared chunk', () => {
       hoistSharedFirstParty(context())
       write('package.json', '{ "type": "module" }')
-      const url = `file://${join(outputPath, 'index.esm.js')}`
+      const url = `file://${join(outputPath, 'index.mjs')}`
       const out = execFileSync('node', [
         '--input-type=module',
         '-e',
@@ -259,23 +253,21 @@ describe('hoistSharedFirstParty', () => {
       const esm = "import { join as join$1 } from 'node:path';\nfunction join(...p) { return join$1(...p) }\nexport { join };\n"
       const cjs =
         "'use strict';\nvar node_path = require('node:path');\nfunction join(...p) { return node_path.join(...p) }\nexports.join = join;\n"
-      write('index.esm.js', esm)
-      write('greet/index.esm.js', esm)
-      write('index.cjs.js', cjs)
-      write('greet/index.cjs.js', cjs)
+      write('index.mjs', esm)
+      write('greet/index.mjs', esm)
+      write('index.cjs', cjs)
+      write('greet/index.cjs', cjs)
     })
 
     it('keeps the renamed builtin import in the shared chunk', () => {
       hoistSharedFirstParty(context())
-      expect(readFileSync(join(outputPath, '_shared/join/join/index.esm.js'), 'utf8')).toContain(
-        "import { join as join$1 } from 'node:path';"
-      )
+      expect(readFileSync(join(outputPath, '_shared/join/join/index.mjs'), 'utf8')).toContain("import { join as join$1 } from 'node:path';")
     })
 
     it('produces an ESM root entry that calls through the shared chunk', () => {
       hoistSharedFirstParty(context())
       write('package.json', '{ "type": "module" }')
-      const url = `file://${join(outputPath, 'index.esm.js')}`
+      const url = `file://${join(outputPath, 'index.mjs')}`
       const out = execFileSync('node', [
         '--input-type=module',
         '-e',
@@ -296,31 +288,31 @@ describe('hoistSharedFirstParty', () => {
       writeSrc('free/free.ts', 'export const freeVal = 41\n')
       writeSrc('index.ts', "export * from './cyc-a/cyc-a'\nexport * from './cyc-b/cyc-b'\nexport * from './free/free'\n")
       writeSrc('greet/index.ts', "export * from '../free/free'\n")
-      write('index.esm.js', cyclic('', 'export { cycA, freeVal };\n'))
-      write('greet/index.esm.js', cyclic('', 'export { freeVal };\n'))
-      write('index.cjs.js', cyclic("'use strict';\n", 'exports.cycA = cycA;\nexports.freeVal = freeVal;\n'))
-      write('greet/index.cjs.js', cyclic("'use strict';\n", 'exports.freeVal = freeVal;\n'))
+      write('index.mjs', cyclic('', 'export { cycA, freeVal };\n'))
+      write('greet/index.mjs', cyclic('', 'export { freeVal };\n'))
+      write('index.cjs', cyclic("'use strict';\n", 'exports.cycA = cycA;\nexports.freeVal = freeVal;\n'))
+      write('greet/index.cjs', cyclic("'use strict';\n", 'exports.freeVal = freeVal;\n'))
     })
 
     it('hoists the acyclic module but leaves the cyclic modules inlined', () => {
       hoistSharedFirstParty(context())
       expect([
-        existsSync(join(outputPath, '_shared/free/free/index.esm.js')),
-        existsSync(join(outputPath, '_shared/cyc-a/cyc-a/index.esm.js')),
-        existsSync(join(outputPath, '_shared/cyc-b/cyc-b/index.esm.js')),
+        existsSync(join(outputPath, '_shared/free/free/index.mjs')),
+        existsSync(join(outputPath, '_shared/cyc-a/cyc-a/index.mjs')),
+        existsSync(join(outputPath, '_shared/cyc-b/cyc-b/index.mjs')),
       ]).toEqual([true, false, false])
     })
 
     it('keeps the cyclic declarations inlined in the rewritten entry', () => {
       hoistSharedFirstParty(context())
-      expect(readFileSync(join(outputPath, 'index.esm.js'), 'utf8')).toContain('const cycA = () => cycB;')
+      expect(readFileSync(join(outputPath, 'index.mjs'), 'utf8')).toContain('const cycA = () => cycB;')
     })
 
     it('produces a CJS root entry that loads through the partial hoist', () => {
       hoistSharedFirstParty(context())
       const out = execFileSync('node', [
         '-e',
-        `const m = require(${JSON.stringify(join(outputPath, 'index.cjs.js'))}); process.stdout.write(m.freeVal + ':' + typeof m.cycA)`,
+        `const m = require(${JSON.stringify(join(outputPath, 'index.cjs'))}); process.stdout.write(m.freeVal + ':' + typeof m.cycA)`,
       ])
       expect(out.toString()).toBe('41:function')
     })
@@ -328,7 +320,7 @@ describe('hoistSharedFirstParty', () => {
     it('produces an ESM root entry that loads through the partial hoist', () => {
       hoistSharedFirstParty(context())
       write('package.json', '{ "type": "module" }')
-      const url = `file://${join(outputPath, 'index.esm.js')}`
+      const url = `file://${join(outputPath, 'index.mjs')}`
       const out = execFileSync('node', [
         '--input-type=module',
         '-e',

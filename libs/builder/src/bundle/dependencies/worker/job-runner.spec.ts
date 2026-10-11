@@ -47,7 +47,7 @@ describe('runPrePassWorkerJob', () => {
 
   it('writes a CJS bundle when format is "cjs"', async () => {
     const inputPath = writeSrc('input.mjs', 'export const value = 7\n')
-    const outputPath = join(root, 'out.cjs.js')
+    const outputPath = join(root, 'out.cjs')
     const reportPath = join(root, 'report.json')
     await runPrePassWorkerJob({
       kind: 'js',
@@ -154,7 +154,7 @@ describe('runPrePassWorkerJob', () => {
 
   it('externalizes "typescript/lib/foo" subpath imports from the JS pre-pass', async () => {
     const inputPath = writeSrc('input.mjs', "import ts from 'typescript/lib/typescript'\nexport default ts\n")
-    const outputPath = join(root, 'out.cjs.js')
+    const outputPath = join(root, 'out.cjs')
     const reportPath = join(root, 'report.json')
     await runPrePassWorkerJob({
       kind: 'js',
@@ -373,7 +373,7 @@ describe('runPrePassWorkerJob', () => {
   it('rewrites cross-bundled-dep imports to relative paths under depsRoot when npmDeps is non-empty (js kind)', async () => {
     const inputPath = writeSrc('input.mjs', "import other from 'other-dep'\nexport default other\n")
     const depsRoot = join(root, '_dependencies')
-    const outputPath = join(depsRoot, 'fixture', 'index.esm.js')
+    const outputPath = join(depsRoot, 'fixture', 'index.mjs')
     const reportPath = join(root, 'report.json')
     await runPrePassWorkerJob({
       kind: 'js',
@@ -388,7 +388,7 @@ describe('runPrePassWorkerJob', () => {
       depsRoot,
     })
     const contents = readFileSync(outputPath, 'utf8')
-    expect(contents).toMatch(/from\s+["']\.\.\/other-dep\/index\.esm\.js["']/)
+    expect(contents).toMatch(/from\s+["']\.\.\/other-dep\/index\.mjs["']/)
   })
 
   it('rewrites whole-surface workspace specifiers to relative chunk paths in workspace-js jobs', async () => {
@@ -401,7 +401,7 @@ describe('runPrePassWorkerJob', () => {
       })
     )
     const depsRoot = join(root, '_dependencies')
-    const outputPath = join(depsRoot, '@hyperfrontend', 'logging', 'index.cjs.js')
+    const outputPath = join(depsRoot, '@hyperfrontend', 'logging', 'index.cjs')
     const reportPath = join(root, 'report.json')
     await runPrePassWorkerJob({
       kind: 'workspace-js',
@@ -418,7 +418,7 @@ describe('runPrePassWorkerJob', () => {
       depsRoot,
     })
     const contents = readFileSync(outputPath, 'utf8')
-    expect(contents).toMatch(/require\(["']\.\/index\.cjs\.js["']\)/)
+    expect(contents).toMatch(/require\(["']\.\/index\.cjs["']\)/)
   })
 
   it('rewrites sub-path workspace specifiers to relative sibling chunks (workspace-js, sub-path policy)', async () => {
@@ -434,7 +434,7 @@ describe('runPrePassWorkerJob', () => {
       })
     )
     const depsRoot = join(root, '_dependencies')
-    const outputPath = join(depsRoot, '@hyperfrontend', 'immutable-api-utils', 'built-in-copy', 'array', 'index.cjs.js')
+    const outputPath = join(depsRoot, '@hyperfrontend', 'immutable-api-utils', 'built-in-copy', 'array', 'index.cjs')
     const reportPath = join(root, 'report.json')
     await runPrePassWorkerJob({
       kind: 'workspace-js',
@@ -457,7 +457,7 @@ describe('runPrePassWorkerJob', () => {
       depsRoot,
     })
     const contents = readFileSync(outputPath, 'utf8')
-    expect(contents).toMatch(/require\(["']\.\.\/date\/index\.cjs\.js["']\)/)
+    expect(contents).toMatch(/require\(["']\.\.\/date\/index\.cjs["']\)/)
   })
 })
 

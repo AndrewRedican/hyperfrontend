@@ -36,7 +36,7 @@ export interface SynthesizePackageJsonOptions {
 
 const resolveBinRelativePath = (name: string, formats: BinScriptFormat[]): string => {
   if (formats.includes('cjs')) {
-    return formats.length === 1 ? `./bin/${name}.js` : `./bin/${name}.cjs.js`
+    return formats.length === 1 ? `./bin/${name}.js` : `./bin/${name}.cjs`
   }
   return `./bin/${name}.mjs`
 }
@@ -54,7 +54,7 @@ const synthesizeBinField = (bins: BinConfig[] | undefined): Record<string, strin
 
 const stripSourceOnlyFields = (pkg: PackageJson): PackageJson => {
   const next = { ...pkg }
-  // why: lifecycle scripts, dev-only dependency lists and a Corepack pin describe the source checkout, not the emitted package, and `type` would make Node misparse one of the side-by-side `.esm.js` / `.cjs.js` entries; stripping before inheritance lets an explicit `inheritFieldsFrom.fields` entry still bring one back.
+  // why: lifecycle scripts, dev-only dependency lists and a Corepack pin describe the source checkout, not the emitted package, and `type` would make Node misparse the side-by-side `.cjs` entries as ES modules; stripping before inheritance lets an explicit `inheritFieldsFrom.fields` entry still bring one back.
   for (const field of ['scripts', 'devDependencies', 'packageManager', 'type'] as const) delete next[field]
   return next
 }
@@ -115,8 +115,8 @@ export const synthesizePackageJson = (
   const hasCjs = formatOutputs.cjs.some((e) => e.isRoot)
 
   if (ctx.entryPointDiscovery.hasRootEntry && (hasEsm || hasCjs)) {
-    if (hasCjs) distPkg.main = './index.cjs.js'
-    if (hasEsm) distPkg.module = './index.esm.js'
+    if (hasCjs) distPkg.main = './index.cjs'
+    if (hasEsm) distPkg.module = './index.mjs'
     distPkg.types = './index.d.ts'
   } else {
     delete distPkg.main

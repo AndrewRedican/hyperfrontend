@@ -2,8 +2,8 @@ import { describe, expect, it } from '@hyperfrontend/testing'
 import { parseEntry } from './attribute-modules'
 import { rewriteEntry } from './rewrite-entry'
 
-const SHARED = './_shared/greet/greet/index.esm.js'
-const SHARED_CJS = './_shared/greet/greet/index.cjs.js'
+const SHARED = './_shared/greet/greet/index.mjs'
+const SHARED_CJS = './_shared/greet/greet/index.cjs'
 
 describe('rewriteEntry', () => {
   it('returns the source unchanged when there are no hoists', () => {
@@ -19,7 +19,7 @@ describe('rewriteEntry', () => {
   it('inserts the ESM import after the entry header', () => {
     const parsed = parseEntry("import { tag } from './d.js';\nconst greet = (n) => tag(n);\nexport { greet };\n", 'esm')
     expect(rewriteEntry(parsed, [{ decls: parsed.decls, specifier: SHARED }], 'esm')).toContain(
-      "import { tag } from './d.js';\nimport { greet } from './_shared/greet/greet/index.esm.js';"
+      "import { tag } from './d.js';\nimport { greet } from './_shared/greet/greet/index.mjs';"
     )
   })
 
@@ -80,11 +80,11 @@ describe('rewriteEntry', () => {
     const rewritten = rewriteEntry(
       parsed,
       [
-        { decls: [parsed.decls[0]], specifier: './_shared/a/index.esm.js' },
-        { decls: [parsed.decls[1]], specifier: './_shared/b/index.esm.js' },
+        { decls: [parsed.decls[0]], specifier: './_shared/a/index.mjs' },
+        { decls: [parsed.decls[1]], specifier: './_shared/b/index.mjs' },
       ],
       'esm'
     )
-    expect(rewritten).toContain("import { a } from './_shared/a/index.esm.js';\nimport { b } from './_shared/b/index.esm.js';")
+    expect(rewritten).toContain("import { a } from './_shared/a/index.mjs';\nimport { b } from './_shared/b/index.mjs';")
   })
 })

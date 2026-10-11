@@ -11,12 +11,12 @@ const callResolveId = (plugin: Plugin, source: string): { id: string; external: 
 
 describe('relativeImport', () => {
   it('produces a leading "./" for sibling targets', () => {
-    expect(relativeImport('/abs/dist/libs/foo', '/abs/dist/libs/foo/index.esm.js')).toBe('./index.esm.js')
+    expect(relativeImport('/abs/dist/libs/foo', '/abs/dist/libs/foo/index.mjs')).toBe('./index.mjs')
   })
 
   it('uses parent-walk segments for deeper-from / shallower-to pairs', () => {
-    expect(relativeImport('/abs/dist/libs/foo/bundle/rollup', '/abs/dist/libs/foo/_dependencies/rollup/index.esm.js')).toBe(
-      '../../_dependencies/rollup/index.esm.js'
+    expect(relativeImport('/abs/dist/libs/foo/bundle/rollup', '/abs/dist/libs/foo/_dependencies/rollup/index.mjs')).toBe(
+      '../../_dependencies/rollup/index.mjs'
     )
   })
 
@@ -51,7 +51,7 @@ describe('createExternalizeBundledDepsPlugin', () => {
   it('rewrites bundled-dep imports to the matching ESM artifact', () => {
     const plugin = createExternalizeBundledDepsPlugin({ ...baseOptions, format: 'esm' })
     expect(callResolveId(plugin, 'rollup')).toEqual({
-      id: '../../_dependencies/rollup/index.esm.js',
+      id: '../../_dependencies/rollup/index.mjs',
       external: true,
     })
   })
@@ -59,7 +59,7 @@ describe('createExternalizeBundledDepsPlugin', () => {
   it('rewrites bundled-dep imports to the matching CJS artifact', () => {
     const plugin = createExternalizeBundledDepsPlugin({ ...baseOptions, format: 'cjs' })
     expect(callResolveId(plugin, 'rollup')).toEqual({
-      id: '../../_dependencies/rollup/index.cjs.js',
+      id: '../../_dependencies/rollup/index.cjs',
       external: true,
     })
   })
@@ -75,7 +75,7 @@ describe('createExternalizeBundledDepsPlugin', () => {
   it('rewrites scoped package imports', () => {
     const plugin = createExternalizeBundledDepsPlugin({ ...baseOptions, format: 'esm' })
     expect(callResolveId(plugin, '@rollup/plugin-typescript')).toEqual({
-      id: '../../_dependencies/@rollup/plugin-typescript/index.esm.js',
+      id: '../../_dependencies/@rollup/plugin-typescript/index.mjs',
       external: true,
     })
   })
@@ -83,7 +83,7 @@ describe('createExternalizeBundledDepsPlugin', () => {
   it('rewrites subpath imports', () => {
     const plugin = createExternalizeBundledDepsPlugin({ ...baseOptions, format: 'esm' })
     expect(callResolveId(plugin, 'rollup/loadConfigFile')).toEqual({
-      id: '../../_dependencies/rollup/index.esm.js',
+      id: '../../_dependencies/rollup/index.mjs',
       external: true,
     })
   })
@@ -106,7 +106,7 @@ describe('createExternalizeBundledDepsPlugin', () => {
       format: 'esm',
     })
     expect(callResolveId(plugin, 'rollup')).toEqual({
-      id: './_dependencies/rollup/index.esm.js',
+      id: './_dependencies/rollup/index.mjs',
       external: true,
     })
   })
@@ -118,7 +118,7 @@ describe('createExternalizeBundledDepsPlugin', () => {
       workspaceRoutes: [{ packageName: '@hyperfrontend/logging', policy: 'whole-surface' }],
     })
     expect(callResolveId(plugin, '@hyperfrontend/logging')).toEqual({
-      id: '../../_dependencies/@hyperfrontend/logging/index.esm.js',
+      id: '../../_dependencies/@hyperfrontend/logging/index.mjs',
       external: true,
     })
   })
@@ -130,7 +130,7 @@ describe('createExternalizeBundledDepsPlugin', () => {
       workspaceRoutes: [{ packageName: '@hyperfrontend/project-scope', policy: 'whole-surface' }],
     })
     expect(callResolveId(plugin, '@hyperfrontend/project-scope/core/fs')).toEqual({
-      id: '../../_dependencies/@hyperfrontend/project-scope/index.cjs.js',
+      id: '../../_dependencies/@hyperfrontend/project-scope/index.cjs',
       external: true,
     })
   })
@@ -148,7 +148,7 @@ describe('createExternalizeBundledDepsPlugin', () => {
       ],
     })
     expect(callResolveId(plugin, '@hyperfrontend/immutable-api-utils/built-in-copy/array')).toEqual({
-      id: '../../_dependencies/@hyperfrontend/immutable-api-utils/built-in-copy/array/index.esm.js',
+      id: '../../_dependencies/@hyperfrontend/immutable-api-utils/built-in-copy/array/index.mjs',
       external: true,
     })
   })

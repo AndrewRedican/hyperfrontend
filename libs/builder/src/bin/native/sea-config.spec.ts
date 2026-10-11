@@ -4,11 +4,11 @@ import { generateSeaConfig } from './sea-config'
 describe('generateSeaConfig', () => {
   it('returns a document with main, output, and disableExperimentalSEAWarning', () => {
     const doc = generateSeaConfig({
-      mainPath: '/abs/dist/libs/builder/bin/hf-build.cjs.js',
+      mainPath: '/abs/dist/libs/builder/bin/hf-build.cjs',
       outputPath: '/abs/dist/libs/builder/bin/hf-build.sea-prep.blob',
     })
     expect(doc).toEqual({
-      main: '/abs/dist/libs/builder/bin/hf-build.cjs.js',
+      main: '/abs/dist/libs/builder/bin/hf-build.cjs',
       output: '/abs/dist/libs/builder/bin/hf-build.sea-prep.blob',
       disableExperimentalSEAWarning: true,
     })

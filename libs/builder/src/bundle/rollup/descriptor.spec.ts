@@ -312,10 +312,10 @@ describe('toBinBuildDescriptor', () => {
     expect(descriptor.bin?.footer).toContain('await import(import.meta.url)')
   })
 
-  it('uses `<name>.cjs.js` for the CJS output when ESM is also requested', () => {
+  it('uses `<name>.cjs` for the CJS output when ESM is also requested', () => {
     const bin: BinConfig = { name: 'hf-build', format: ['cjs', 'esm'] }
     const descriptor = toBinBuildDescriptor(bin, makeContext(), 'cjs', ['cjs', 'esm'], REPORT_PATH)
-    expect(descriptor.bin?.outputFile).toBe('/abs/dist/libs/foo/bin/hf-build.cjs.js')
+    expect(descriptor.bin?.outputFile).toBe('/abs/dist/libs/foo/bin/hf-build.cjs')
   })
 
   it('honors a per-bin bootstrap override on the descriptor footer', () => {

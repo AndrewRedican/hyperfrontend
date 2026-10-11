@@ -33,8 +33,8 @@ export const parseChunk = (source: string): ts.SourceFile =>
  *
  * @example Resolving a sibling chunk reference
  * ```typescript
- * resolveRelativeTarget('/dist/libs/foo/_dependencies/a', '../b/index.esm.js')
- * // => '/dist/libs/foo/_dependencies/b/index.esm.js'
+ * resolveRelativeTarget('/dist/libs/foo/_dependencies/a', '../b/index.mjs')
+ * // => '/dist/libs/foo/_dependencies/b/index.mjs'
  * ```
  */
 export const resolveRelativeTarget = (importerDir: string, specifier: string): string | null =>
@@ -49,8 +49,8 @@ export const resolveRelativeTarget = (importerDir: string, specifier: string): s
  *
  * @example Extracting a CJS chunk dependency
  * ```typescript
- * // for the call node in `var x = require('./dep/index.cjs.js')`
- * getRequireSpecifier(callNode) // => './dep/index.cjs.js'
+ * // for the call node in `var x = require('./dep/index.cjs')`
+ * getRequireSpecifier(callNode) // => './dep/index.cjs'
  * ```
  */
 export const getRequireSpecifier = (node: ts.Node): string | null => {
@@ -140,7 +140,7 @@ export type RequireBindingShape =
  *
  * @example A destructured require
  * ```typescript
- * // for the call in `var { a, b } = require('./x.cjs.js')`
+ * // for the call in `var { a, b } = require('./x.cjs')`
  * classifyRequireBinding(call) // => { kind: 'destructure', pattern: … }
  * ```
  */

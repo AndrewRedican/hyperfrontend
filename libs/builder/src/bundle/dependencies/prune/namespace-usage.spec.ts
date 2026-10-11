@@ -5,9 +5,9 @@ import { describe, expect, it } from '@hyperfrontend/testing'
 import { parseChunk } from './ast-utils'
 import { classifyNamespaceUse, collectNamespaceUsage, mergeDemand } from './namespace-usage'
 
-const TARGET = '/p/d/index.esm.js'
+const TARGET = '/p/d/index.mjs'
 
-// context: serialize the usage of the single `./d/index.esm.js` target into a comparable shape.
+// context: serialize the usage of the single `./d/index.mjs` target into a comparable shape.
 const usageOf = (source: string): 'absent' | 'bailAll' | Record<string, 'all' | string[]> => {
   const target = collectNamespaceUsage(source, '/p', 'esm').get(TARGET)
   if (!target) return 'absent'
@@ -17,7 +17,7 @@ const usageOf = (source: string): 'absent' | 'bailAll' | Record<string, 'all' | 
   return out
 }
 
-const importNs = (use: string): string => `import { SafeObject } from './d/index.esm.js';\n${use}`
+const importNs = (use: string): string => `import { SafeObject } from './d/index.mjs';\n${use}`
 
 describe('collectNamespaceUsage', () => {
   it('records a static property read of a named import', () => {
@@ -29,7 +29,7 @@ describe('collectNamespaceUsage', () => {
   })
 
   it('tracks reads through an import alias', () => {
-    expect(usageOf("import { SafeObject as S } from './d/index.esm.js';\nS.keys(y);")).toEqual({ SafeObject: ['keys'] })
+    expect(usageOf("import { SafeObject as S } from './d/index.mjs';\nS.keys(y);")).toEqual({ SafeObject: ['keys'] })
   })
 
   it('records a string element-access read', () => {
@@ -53,7 +53,7 @@ describe('collectNamespaceUsage', () => {
   })
 
   it('ignores the binding occurrence and an unused import yields no demand', () => {
-    expect(usageOf("import { SafeObject } from './d/index.esm.js';\nconst x = 1;")).toEqual({})
+    expect(usageOf("import { SafeObject } from './d/index.mjs';\nconst x = 1;")).toEqual({})
   })
 
   it('ignores the namespace name sitting as another object member', () => {
@@ -65,27 +65,27 @@ describe('collectNamespaceUsage', () => {
   })
 
   it('marks the target wholesale for a namespace import', () => {
-    expect(usageOf("import * as ns from './d/index.esm.js';\nns.SafeObject;")).toBe('bailAll')
+    expect(usageOf("import * as ns from './d/index.mjs';\nns.SafeObject;")).toBe('bailAll')
   })
 
   it('marks the target wholesale for a default import', () => {
-    expect(usageOf("import d from './d/index.esm.js';\nd.SafeObject;")).toBe('bailAll')
+    expect(usageOf("import d from './d/index.mjs';\nd.SafeObject;")).toBe('bailAll')
   })
 
   it('marks the re-exported name wholesale for a re-export with a specifier', () => {
-    expect(usageOf("export { SafeObject } from './d/index.esm.js';")).toEqual({ SafeObject: 'all' })
+    expect(usageOf("export { SafeObject } from './d/index.mjs';")).toEqual({ SafeObject: 'all' })
   })
 
   it('marks the source name wholesale for an aliased re-export with a specifier', () => {
-    expect(usageOf("export { SafeObject as Alias } from './d/index.esm.js';")).toEqual({ SafeObject: 'all' })
+    expect(usageOf("export { SafeObject as Alias } from './d/index.mjs';")).toEqual({ SafeObject: 'all' })
   })
 
   it('marks the target wholesale for an export-star', () => {
-    expect(usageOf("export * from './d/index.esm.js';")).toBe('bailAll')
+    expect(usageOf("export * from './d/index.mjs';")).toBe('bailAll')
   })
 
   it('omits a side-effect-only import that binds nothing', () => {
-    expect(usageOf("import './d/index.esm.js';")).toBe('absent')
+    expect(usageOf("import './d/index.mjs';")).toBe('absent')
   })
 
   it('ignores a non-relative bare import', () => {
@@ -101,7 +101,7 @@ describe('collectNamespaceUsage', () => {
   })
 })
 
-const TARGET_CJS = '/p/d/index.cjs.js'
+const TARGET_CJS = '/p/d/index.cjs'
 
 const usageOfCjs = (source: string): 'absent' | 'bailAll' | Record<string, 'all' | string[]> => {
   const target = collectNamespaceUsage(source, '/p', 'cjs').get(TARGET_CJS)
@@ -112,11 +112,11 @@ const usageOfCjs = (source: string): 'absent' | 'bailAll' | Record<string, 'all'
   return out
 }
 
-const requireNs = (use: string): string => `var dep = require('./d/index.cjs.js');\n${use}`
+const requireNs = (use: string): string => `var dep = require('./d/index.cjs');\n${use}`
 
 describe('collectNamespaceUsage (CJS)', () => {
   it('records a side-effect-only require as reached with no property demand', () => {
-    expect(usageOfCjs("require('./d/index.cjs.js');")).toEqual({})
+    expect(usageOfCjs("require('./d/index.cjs');")).toEqual({})
   })
 
   it('records a two-level property read off a whole-module require binding', () => {
@@ -152,39 +152,39 @@ describe('collectNamespaceUsage (CJS)', () => {
   })
 
   it('tracks a destructured require binding one-level', () => {
-    expect(usageOfCjs("var { SafeObject } = require('./d/index.cjs.js');\nSafeObject.freeze(x);")).toEqual({ SafeObject: ['freeze'] })
+    expect(usageOfCjs("var { SafeObject } = require('./d/index.cjs');\nSafeObject.freeze(x);")).toEqual({ SafeObject: ['freeze'] })
   })
 
   it('tracks an aliased destructured require binding', () => {
-    expect(usageOfCjs("var { SafeObject: S } = require('./d/index.cjs.js');\nS.keys(y);")).toEqual({ SafeObject: ['keys'] })
+    expect(usageOfCjs("var { SafeObject: S } = require('./d/index.cjs');\nS.keys(y);")).toEqual({ SafeObject: ['keys'] })
   })
 
   it('bails the whole target on a rest destructure', () => {
-    expect(usageOfCjs("var { ...rest } = require('./d/index.cjs.js');\nrest.SafeObject.freeze(x);")).toBe('bailAll')
+    expect(usageOfCjs("var { ...rest } = require('./d/index.cjs');\nrest.SafeObject.freeze(x);")).toBe('bailAll')
   })
 
   it('records an inline require member read', () => {
-    expect(usageOfCjs("require('./d/index.cjs.js').SafeObject.freeze(x);")).toEqual({ SafeObject: ['freeze'] })
+    expect(usageOfCjs("require('./d/index.cjs').SafeObject.freeze(x);")).toEqual({ SafeObject: ['freeze'] })
   })
 
   it('records an inline require string element-access member read', () => {
-    expect(usageOfCjs("require('./d/index.cjs.js')['SafeObject'].freeze(x);")).toEqual({ SafeObject: ['freeze'] })
+    expect(usageOfCjs("require('./d/index.cjs')['SafeObject'].freeze(x);")).toEqual({ SafeObject: ['freeze'] })
   })
 
   it('bails the whole target on a nested destructure binding', () => {
-    expect(usageOfCjs("var { SafeObject: { freeze } } = require('./d/index.cjs.js');\nfreeze(x);")).toBe('bailAll')
+    expect(usageOfCjs("var { SafeObject: { freeze } } = require('./d/index.cjs');\nfreeze(x);")).toBe('bailAll')
   })
 
   it('bails the whole target on an array-destructured require binding', () => {
-    expect(usageOfCjs("var [first] = require('./d/index.cjs.js');\nfirst.freeze(x);")).toBe('bailAll')
+    expect(usageOfCjs("var [first] = require('./d/index.cjs');\nfirst.freeze(x);")).toBe('bailAll')
   })
 
   it('bails the whole target on an inline dynamic require member', () => {
-    expect(usageOfCjs("require('./d/index.cjs.js')[k].freeze(x);")).toBe('bailAll')
+    expect(usageOfCjs("require('./d/index.cjs')[k].freeze(x);")).toBe('bailAll')
   })
 
   it('bails the whole target when require escapes into a call argument', () => {
-    expect(usageOfCjs("use(require('./d/index.cjs.js'));")).toBe('bailAll')
+    expect(usageOfCjs("use(require('./d/index.cjs'));")).toBe('bailAll')
   })
 
   it('ignores a require with a non-relative specifier', () => {

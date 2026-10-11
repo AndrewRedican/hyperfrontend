@@ -28,34 +28,34 @@ describe('computeReachable', () => {
   const reachableRel = (set: Set<string>): string[] => [...set].map((p) => relative(root, p).split(sep).join(posix.sep)).sort()
 
   it('follows chunk → chunk edges transitively and skips unreferenced chunks', () => {
-    const entry = write(root, 'index.esm.js', "import {a} from './_dependencies/a/index.esm.js'")
-    write(root, '_dependencies/a/index.esm.js', "import {b} from '../b/index.esm.js'")
-    write(root, '_dependencies/b/index.esm.js', 'export const b = 1')
-    write(root, '_dependencies/c/index.esm.js', 'export const c = 1')
+    const entry = write(root, 'index.mjs', "import {a} from './_dependencies/a/index.mjs'")
+    write(root, '_dependencies/a/index.mjs', "import {b} from '../b/index.mjs'")
+    write(root, '_dependencies/b/index.mjs', 'export const b = 1')
+    write(root, '_dependencies/c/index.mjs', 'export const c = 1')
     const result = computeReachable([entry], depsRoot)
-    expect(reachableRel(result as Set<string>)).toEqual(['_dependencies/a/index.esm.js', '_dependencies/b/index.esm.js', 'index.esm.js'])
+    expect(reachableRel(result as Set<string>)).toEqual(['_dependencies/a/index.mjs', '_dependencies/b/index.mjs', 'index.mjs'])
   })
 
   it('ignores edges that resolve outside the dependencies root', () => {
-    const entry = write(root, 'index.esm.js', "import {x} from './sibling.esm.js'")
+    const entry = write(root, 'index.mjs', "import {x} from './sibling.esm.js'")
     write(root, 'sibling.esm.js', 'export const x = 1')
     const result = computeReachable([entry], depsRoot)
-    expect(reachableRel(result as Set<string>)).toEqual(['index.esm.js'])
+    expect(reachableRel(result as Set<string>)).toEqual(['index.mjs'])
   })
 
   it('returns null when a reached _dependencies/ chunk contains a dynamic specifier', () => {
-    const entry = write(root, 'index.esm.js', "import {a} from './_dependencies/a/index.esm.js'")
-    write(root, '_dependencies/a/index.esm.js', 'const m = require(name)')
+    const entry = write(root, 'index.mjs', "import {a} from './_dependencies/a/index.mjs'")
+    write(root, '_dependencies/a/index.mjs', 'const m = require(name)')
     expect(computeReachable([entry], depsRoot)).toBeNull()
   })
 
   it('does not bail on a dynamic specifier in a first-party root and still skips unreferenced chunks', () => {
     // why: a runtime `import(<expr>)` in first-party entry code targets external/user paths, never a bundled dep chunk, so it must not disable the sweep — otherwise emptied, unreferenced dep chunks are stranded.
-    const entry = write(root, 'index.esm.js', "import {a} from './_dependencies/a/index.esm.js'\nconst c = await import(userUrl)")
-    write(root, '_dependencies/a/index.esm.js', 'export const a = 1')
-    write(root, '_dependencies/dead/index.esm.js', 'export const dead = 1')
+    const entry = write(root, 'index.mjs', "import {a} from './_dependencies/a/index.mjs'\nconst c = await import(userUrl)")
+    write(root, '_dependencies/a/index.mjs', 'export const a = 1')
+    write(root, '_dependencies/dead/index.mjs', 'export const dead = 1')
     const result = computeReachable([entry], depsRoot)
-    expect(reachableRel(result as Set<string>)).toEqual(['_dependencies/a/index.esm.js', 'index.esm.js'])
+    expect(reachableRel(result as Set<string>)).toEqual(['_dependencies/a/index.mjs', 'index.mjs'])
   })
 
   it('skips root files that do not exist on disk', () => {
@@ -64,16 +64,16 @@ describe('computeReachable', () => {
   })
 
   it('terminates on cyclic chunk references without revisiting', () => {
-    const entry = write(root, 'index.esm.js', "import {a} from './_dependencies/a/index.esm.js'")
-    write(root, '_dependencies/a/index.esm.js', "import {b} from '../b/index.esm.js'")
-    write(root, '_dependencies/b/index.esm.js', "import {a} from '../a/index.esm.js'")
+    const entry = write(root, 'index.mjs', "import {a} from './_dependencies/a/index.mjs'")
+    write(root, '_dependencies/a/index.mjs', "import {b} from '../b/index.mjs'")
+    write(root, '_dependencies/b/index.mjs', "import {a} from '../a/index.mjs'")
     const result = computeReachable([entry], depsRoot)
-    expect(reachableRel(result as Set<string>)).toEqual(['_dependencies/a/index.esm.js', '_dependencies/b/index.esm.js', 'index.esm.js'])
+    expect(reachableRel(result as Set<string>)).toEqual(['_dependencies/a/index.mjs', '_dependencies/b/index.mjs', 'index.mjs'])
   })
 
   it('does not enqueue a duplicate root twice', () => {
-    const entry = write(root, 'index.esm.js', 'export const x = 1')
+    const entry = write(root, 'index.mjs', 'export const x = 1')
     const result = computeReachable([entry, entry], depsRoot)
-    expect(reachableRel(result as Set<string>)).toEqual(['index.esm.js'])
+    expect(reachableRel(result as Set<string>)).toEqual(['index.mjs'])
   })
 })

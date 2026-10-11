@@ -173,7 +173,7 @@ const BIN_FILE_MODE = 0o755
 
 const resolveBinOutputFile = (binDir: string, name: string, format: BinScriptFormat, formats: BinScriptFormat[]): string => {
   if (format === 'esm') return join(binDir, `${name}.mjs`)
-  return formats.length === 1 ? join(binDir, `${name}.js`) : join(binDir, `${name}.cjs.js`)
+  return formats.length === 1 ? join(binDir, `${name}.js`) : join(binDir, `${name}.cjs`)
 }
 
 const resolveBinFooter = (bin: BinConfig, format: BinScriptFormat): string =>
@@ -189,7 +189,7 @@ const resolveBinFooter = (bin: BinConfig, format: BinScriptFormat): string =>
  * Output naming convention:
  * - ESM: `<name>.mjs`
  * - CJS only: `<name>.js`
- * - CJS alongside ESM: `<name>.cjs.js`
+ * - CJS alongside ESM: `<name>.cjs`
  *
  * @param bin - Bin declaration including name, runner, and per-bin bootstrap override.
  * @param context - Resolved build context.

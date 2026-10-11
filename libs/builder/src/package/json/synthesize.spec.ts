@@ -63,15 +63,15 @@ describe('synthesizePackageJson', () => {
     const result = synthesizePackageJson({ name: 'foo' }, makeContext(), formats)
     expect(result.exports).toEqual({
       './package.json': './package.json',
-      '.': { types: './index.d.ts', import: './index.esm.js', require: './index.cjs.js' },
+      '.': { types: './index.d.ts', import: './index.mjs', require: './index.cjs' },
     })
   })
 
   it('emits main / module / types pointers when a root entry was bundled', () => {
     const formats: FormatOutputs = { esm: [ROOT], cjs: [ROOT], iife: [], umd: [] }
     const result = synthesizePackageJson({ name: 'foo' }, makeContext(), formats)
-    expect(result.main).toBe('./index.cjs.js')
-    expect(result.module).toBe('./index.esm.js')
+    expect(result.main).toBe('./index.cjs')
+    expect(result.module).toBe('./index.mjs')
     expect(result.types).toBe('./index.d.ts')
   })
 
@@ -79,14 +79,14 @@ describe('synthesizePackageJson', () => {
     const formats: FormatOutputs = { esm: [], cjs: [ROOT], iife: [], umd: [] }
     const result = synthesizePackageJson({ name: 'foo' }, makeContext(), formats)
     expect(result.module).toBeUndefined()
-    expect(result.main).toBe('./index.cjs.js')
+    expect(result.main).toBe('./index.cjs')
   })
 
   it('omits the main field when no CJS root output was produced', () => {
     const formats: FormatOutputs = { esm: [ROOT], cjs: [], iife: [], umd: [] }
     const result = synthesizePackageJson({ name: 'foo' }, makeContext(), formats)
     expect(result.main).toBeUndefined()
-    expect(result.module).toBe('./index.esm.js')
+    expect(result.module).toBe('./index.mjs')
   })
 
   it('removes inherited main / module / types when no root entry exists', () => {
@@ -206,12 +206,12 @@ describe('synthesizePackageJson', () => {
     expect(result.bin).toEqual({ 'hf-build': './bin/hf-build.js' })
   })
 
-  it('uses the .cjs.js suffix when both CJS and ESM are requested', () => {
+  it('uses the .cjs suffix when both CJS and ESM are requested', () => {
     const formats: FormatOutputs = { esm: [], cjs: [], iife: [], umd: [] }
     const result = synthesizePackageJson({ name: 'foo' }, makeContext(), formats, {
       bins: [{ name: 'hf-build', format: ['cjs', 'esm'] }],
     })
-    expect(result.bin).toEqual({ 'hf-build': './bin/hf-build.cjs.js' })
+    expect(result.bin).toEqual({ 'hf-build': './bin/hf-build.cjs' })
   })
 
   it('points an ESM-only bin at the .mjs output', () => {

@@ -74,7 +74,7 @@ const collectIdentifierNames = (source: string): Set<string> => {
  *
  * @example Rewriting an entry to import a shared module
  * ```typescript
- * const rewritten = rewriteEntry(parseEntry(source, 'esm'), [{ decls, specifier: './_shared/state/index.esm.js' }], 'esm')
+ * const rewritten = rewriteEntry(parseEntry(source, 'esm'), [{ decls, specifier: './_shared/state/index.mjs' }], 'esm')
  * ```
  */
 export const rewriteEntry = (parsed: ParsedEntry, hoists: EntryHoist[], format: ChunkFormat): string => {

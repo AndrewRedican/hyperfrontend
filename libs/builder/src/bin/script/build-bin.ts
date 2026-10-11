@@ -33,7 +33,7 @@ const resolveWorkerOrThrow = (): RollupWorkerInvocation => {
  * Output naming follows the convention:
  * - ESM: `<name>.mjs`
  * - CJS only: `<name>.js`
- * - CJS alongside ESM: `<name>.cjs.js`
+ * - CJS alongside ESM: `<name>.cjs`
  *
  * Workspace dependencies are always inlined into bin bundles: bins are intended
  * to ship as self-contained executable scripts.

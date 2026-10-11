@@ -77,7 +77,7 @@ describe('dispatchRollupWorker', () => {
     const records: SpawnRecord[] = []
     captureSpawn(records)
     const descriptor = baseDescriptor()
-    const promise = dispatchRollupWorker(descriptor, { workerPath: '/abs/worker.cjs.js' })
+    const promise = dispatchRollupWorker(descriptor, { workerPath: '/abs/worker.cjs' })
     await tick()
     expect(records).toHaveLength(1)
     writeReport((records[0] as SpawnRecord).reportPath, { outputSize: 100, endHeapMB: 1.5, endRssMB: 50, durationMs: 25 })
@@ -90,7 +90,7 @@ describe('dispatchRollupWorker', () => {
     const records: SpawnRecord[] = []
     captureSpawn(records)
     const descriptor = baseDescriptor({ reportPath: '/abs/orig.json' })
-    const promise = dispatchRollupWorker(descriptor, { workerPath: '/abs/worker.cjs.js' })
+    const promise = dispatchRollupWorker(descriptor, { workerPath: '/abs/worker.cjs' })
     await tick()
     expect((records[0] as SpawnRecord).descriptor.reportPath).not.toBe('/abs/orig.json')
     expect((records[0] as SpawnRecord).descriptor.reportPath).toContain('hf-builder-rollup-')
@@ -102,7 +102,7 @@ describe('dispatchRollupWorker', () => {
   it('rejects when the worker exits with a non-zero code and includes the captured stderr tail', async () => {
     const records: SpawnRecord[] = []
     captureSpawn(records)
-    const promise = dispatchRollupWorker(baseDescriptor(), { workerPath: '/abs/worker.cjs.js' })
+    const promise = dispatchRollupWorker(baseDescriptor(), { workerPath: '/abs/worker.cjs' })
     await tick()
     ;(records[0] as SpawnRecord).child.stderr.emit('data', Buffer.from('boom oh no\n'))
     ;(records[0] as SpawnRecord).child.emit('exit', 1)
@@ -112,7 +112,7 @@ describe('dispatchRollupWorker', () => {
   it('rejects when the worker reports a spawn error', async () => {
     const records: SpawnRecord[] = []
     captureSpawn(records)
-    const promise = dispatchRollupWorker(baseDescriptor(), { workerPath: '/abs/worker.cjs.js' })
+    const promise = dispatchRollupWorker(baseDescriptor(), { workerPath: '/abs/worker.cjs' })
     await tick()
     ;(records[0] as SpawnRecord).child.emit('error', new Error('ENOENT'))
     await expect(promise).rejects.toThrow(/failed to spawn: ENOENT/)
@@ -121,7 +121,7 @@ describe('dispatchRollupWorker', () => {
   it('rejects when the worker exits cleanly but writes no report', async () => {
     const records: SpawnRecord[] = []
     captureSpawn(records)
-    const promise = dispatchRollupWorker(baseDescriptor(), { workerPath: '/abs/worker.cjs.js' })
+    const promise = dispatchRollupWorker(baseDescriptor(), { workerPath: '/abs/worker.cjs' })
     await tick()
     ;(records[0] as SpawnRecord).child.emit('exit', 0)
     await expect(promise).rejects.toThrow(/did not write a report/)
@@ -131,13 +131,13 @@ describe('dispatchRollupWorker', () => {
     const records: SpawnRecord[] = []
     captureSpawn(records)
     const promise = dispatchRollupWorker(baseDescriptor(), {
-      workerPath: '/abs/worker.cjs.js',
+      workerPath: '/abs/worker.cjs',
       execPath: '/usr/bin/custom-node',
       execArgv: ['--require', '@swc-node/register'],
     })
     await tick()
     expect((records[0] as SpawnRecord).execPath).toBe('/usr/bin/custom-node')
-    expect((records[0] as SpawnRecord).args.slice(0, 3)).toEqual(['--require', '@swc-node/register', '/abs/worker.cjs.js'])
+    expect((records[0] as SpawnRecord).args.slice(0, 3)).toEqual(['--require', '@swc-node/register', '/abs/worker.cjs'])
     writeReport((records[0] as SpawnRecord).reportPath, { outputSize: 1, endHeapMB: 1, endRssMB: 1, durationMs: 1 })
     ;(records[0] as SpawnRecord).child.emit('exit', 0)
     await promise
@@ -158,7 +158,7 @@ describe('dispatchRollupWorker', () => {
     const records: SpawnRecord[] = []
     captureSpawn(records)
     const promise = dispatchRollupWorker(baseDescriptor(), {
-      workerPath: '/abs/worker.cjs.js',
+      workerPath: '/abs/worker.cjs',
       monitor,
       label: 'esm:0/1:.',
     })
@@ -172,7 +172,7 @@ describe('dispatchRollupWorker', () => {
   it('falls back to a format+inputFile label when no explicit label is supplied', async () => {
     const records: SpawnRecord[] = []
     captureSpawn(records)
-    const promise = dispatchRollupWorker(baseDescriptor(), { workerPath: '/abs/worker.cjs.js' })
+    const promise = dispatchRollupWorker(baseDescriptor(), { workerPath: '/abs/worker.cjs' })
     await tick()
     ;(records[0] as SpawnRecord).child.emit('exit', 1)
     await expect(promise).rejects.toThrow(/rollup worker for esm:\/abs\/libs\/foo\/src\/index\.ts/)
@@ -181,7 +181,7 @@ describe('dispatchRollupWorker', () => {
   it('cleans up the temporary report directory even when the job fails', async () => {
     const records: SpawnRecord[] = []
     captureSpawn(records)
-    const promise = dispatchRollupWorker(baseDescriptor(), { workerPath: '/abs/worker.cjs.js' })
+    const promise = dispatchRollupWorker(baseDescriptor(), { workerPath: '/abs/worker.cjs' })
     await tick()
     const reportDir = dirname((records[0] as SpawnRecord).reportPath)
     ;(records[0] as SpawnRecord).child.emit('exit', 2)
@@ -193,7 +193,7 @@ describe('dispatchRollupWorker', () => {
     const records: SpawnRecord[] = []
     captureSpawn(records)
     const writeSpy = jest.spyOn(process.stdout, 'write').mockImplementation(() => true)
-    const promise = dispatchRollupWorker(baseDescriptor(), { workerPath: '/abs/worker.cjs.js' })
+    const promise = dispatchRollupWorker(baseDescriptor(), { workerPath: '/abs/worker.cjs' })
     await tick()
     ;(records[0] as SpawnRecord).child.stdout.emit('data', Buffer.from('child output\n'))
     writeReport((records[0] as SpawnRecord).reportPath, { outputSize: 1, endHeapMB: 1, endRssMB: 1, durationMs: 1 })
@@ -207,7 +207,7 @@ describe('dispatchRollupWorker', () => {
     const records: SpawnRecord[] = []
     captureSpawn(records)
     const writeSpy = jest.spyOn(process.stderr, 'write').mockImplementation(() => true)
-    const promise = dispatchRollupWorker(baseDescriptor(), { workerPath: '/abs/worker.cjs.js' })
+    const promise = dispatchRollupWorker(baseDescriptor(), { workerPath: '/abs/worker.cjs' })
     await tick()
     ;(records[0] as SpawnRecord).child.stderr.emit('data', 'string chunk\n')
     writeReport((records[0] as SpawnRecord).reportPath, { outputSize: 1, endHeapMB: 1, endRssMB: 1, durationMs: 1 })
@@ -232,7 +232,7 @@ describe('resolveDefaultRollupWorkerPath', () => {
   it('resolves the worker at the bundle/rollup/worker offset beside the builder', () => {
     const targetDir = join(root, 'bundle', 'rollup', 'worker')
     mkdirSync(targetDir, { recursive: true })
-    const path = join(targetDir, 'index.cjs.js')
+    const path = join(targetDir, 'index.cjs')
     writeFileSync(path, '/* fake worker */', { flag: 'w' })
     expect(resolveDefaultRollupWorkerPath(root)).toEqual({ path, execArgv: [] })
   })

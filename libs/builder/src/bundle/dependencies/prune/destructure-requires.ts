@@ -152,8 +152,8 @@ const allocateLocal = (exported: string, taken: Set<string>): string => {
  *
  * @example Destructuring a single-member require
  * ```typescript
- * destructureRequires("const m = require('./math/index.cjs.js');\nm.abs(x);", '/d/p', () => true)
- * // => { code: "const { abs } = require('./math/index.cjs.js');\nabs(x);", rewrittenBindings: 1 }
+ * destructureRequires("const m = require('./math/index.cjs');\nm.abs(x);", '/d/p', () => true)
+ * // => { code: "const { abs } = require('./math/index.cjs');\nabs(x);", rewrittenBindings: 1 }
  * ```
  */
 export const destructureRequires = (

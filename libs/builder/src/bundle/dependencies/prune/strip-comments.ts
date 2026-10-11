@@ -192,7 +192,7 @@ export const stripCommentsPass = (depsRoot: string): CommentStripResult => {
   const result: CommentStripResult = { commentBytesRemoved: 0 }
   if (!exists(depsRoot)) return result
   const chunks: string[] = []
-  walkFiles(depsRoot, (name) => name === 'index.esm.js' || name === 'index.cjs.js', chunks)
+  walkFiles(depsRoot, (name) => name === 'index.mjs' || name === 'index.cjs', chunks)
   for (const chunk of chunks) {
     const source = readFileContent(chunk)
     const stripped = stripComments(source)

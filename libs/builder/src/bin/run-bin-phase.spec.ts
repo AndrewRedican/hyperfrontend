@@ -57,7 +57,7 @@ describe('runBinPhase', () => {
   })
 
   it('flattens multi-format output arrays returned by buildJsBin', async () => {
-    const cjs: BinOutput = { name: 'hf', kind: 'cjs', outputPath: '/abs/dist/libs/foo/bin/hf.cjs.js' }
+    const cjs: BinOutput = { name: 'hf', kind: 'cjs', outputPath: '/abs/dist/libs/foo/bin/hf.cjs' }
     const esm: BinOutput = { name: 'hf', kind: 'esm', outputPath: '/abs/dist/libs/foo/bin/hf.mjs' }
     ;(buildJsBin as Mock).mockResolvedValueOnce([cjs, esm])
     const result = await runBinPhase(makeContext(), [{ name: 'hf', format: ['cjs', 'esm'] }] as BinConfig[])

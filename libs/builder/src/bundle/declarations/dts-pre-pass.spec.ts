@@ -38,7 +38,7 @@ beforeEach(() => {
   ;(runPrePass as Mock).mockClear()
   ;(resolveDefaultWorkerPath as Mock)
     .mockReset()
-    .mockReturnValue({ path: '/abs/dist/libs/builder/bundle/dependencies/worker/index.cjs.js', execArgv: [] })
+    .mockReturnValue({ path: '/abs/dist/libs/builder/bundle/dependencies/worker/index.cjs', execArgv: [] })
 })
 
 describe('runDtsPrePass', () => {
@@ -62,7 +62,7 @@ describe('runDtsPrePass', () => {
     expect(jobs[1].outputPath).toMatch(/_dependencies\/postject\/index\.d\.ts$/)
     expect(jobs[0].otherDeps).toEqual(['postject'])
     expect(jobs[1].otherDeps).toEqual(['rollup'])
-    expect(options.workerPath).toBe('/abs/dist/libs/builder/bundle/dependencies/worker/index.cjs.js')
+    expect(options.workerPath).toBe('/abs/dist/libs/builder/bundle/dependencies/worker/index.cjs')
   })
 
   it('threads the optional memory monitor through to runPrePass', async () => {

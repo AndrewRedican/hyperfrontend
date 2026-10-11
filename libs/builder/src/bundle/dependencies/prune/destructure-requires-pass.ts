@@ -11,7 +11,7 @@ import { hasDynamicSpecifier } from './specifiers'
 
 const log = logger.channel('builder:bundle:dependencies:prune')
 
-const CJS_CHUNK = 'index.cjs.js'
+const CJS_CHUNK = 'index.cjs'
 
 /** A node on the explicit Tarjan work stack, tracking its position in its neighbor list. */
 interface TarjanFrame {
