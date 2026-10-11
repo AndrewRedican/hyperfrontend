@@ -30,7 +30,11 @@ Legend: ✅ full support, ⚠️ partial support, ❌ no support, ❓ nothing de
 
 **Notes**
 
-- `@hyperfrontend/features`: Support is per entry point: `/host` and `/hostee` are browser runtimes, `/cli`, `/server`, and `/generators` are Node-only, and the root entry is DOM-free and runs anywhere.
+- `@hyperfrontend/builder`: Node.js 18 needs `--experimental-global-webcrypto` only to import `/bundle/rollup/worker` directly; `hf-build` passes it to the worker it spawns.
+- `@hyperfrontend/cryptography`: `/browser` reads `globalThis.crypto` at first use; on Node.js that needs 19+ or 18 with `--experimental-global-webcrypto`.
+- `@hyperfrontend/features`: Support is per entry point: `/host` and `/hostee` are browser runtimes, `/cli`, `/server`, and `/generators` are Node-only, and the root entry is DOM-free and runs anywhere. TypeScript `feature.config.*` and `*.contract.*` files need Node.js 23.6+ (22.6+ with `--experimental-strip-types`); JSON and JavaScript files load on every supported Node.js.
+- `@hyperfrontend/immutable-api-utils`: `built-in-copy/websocket` loads without a `WebSocket` global (Node.js before 22); only construction throws there.
+- `@hyperfrontend/project-scope`: `/cli` parses arguments with `util.parseArgs`, so it needs Node.js 18.3+; every other entry runs on 18.0.
 - `@hyperfrontend/ui-utils`: Some utilities require browser APIs; check individual exports.
 
 ## Output Formats
