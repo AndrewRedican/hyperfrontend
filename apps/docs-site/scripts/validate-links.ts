@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { existsSync, readFileSync, readdirSync } from 'node:fs'
-import { resolve, join, dirname, relative } from 'node:path'
+import { resolve, join, dirname, relative, sep, posix } from 'node:path'
 import { glob } from 'glob'
 import { isArray } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
 import { parse } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
@@ -28,7 +28,7 @@ const GENERATED_API_DIR = join(GENERATED_DIR, 'api')
  * @param kind - `blob` for a file link, `tree` for a directory link
  * @returns The workspace-relative path, or undefined if the URL is not one of ours
  */
-function repoRelativePath(link: string, kind: 'blob' | 'tree'): string | undefined {
+function repoUrlPath(link: string, kind: 'blob' | 'tree'): string | undefined {
   const prefix = `${REPO_URL}/${kind}/`
 
   if (!link.startsWith(prefix)) {
@@ -100,7 +100,7 @@ interface ExtractedLink {
  */
 function extractLinks(content: string): ExtractedLink[] {
   const links: ExtractedLink[] = []
-  const lines = content.split('\n')
+  const lines = content.split(/\r?\n/)
 
   // why: a destination may be wrapped in angle brackets so it can carry parentheses of its own, and the brackets are not part of the URL
   const markdownLinkPattern = /\[([^\]]*)\]\((<[^>]*>|[^)]+)\)/g
@@ -170,10 +170,10 @@ interface TransformResult {
  * @returns Object with transformed flag, original URL, and optional docs site path
  */
 function transformGitHubUrl(link: string): TransformResult {
-  const targetPath = repoRelativePath(link, 'blob') ?? repoRelativePath(link, 'tree')
+  const repoTarget = repoUrlPath(link, 'blob') ?? repoUrlPath(link, 'tree')
 
-  if (targetPath !== undefined && targetPath.startsWith('libs/')) {
-    const libPath = targetPath.replace(/^libs\//, '').split('/')[0]
+  if (repoTarget !== undefined && repoTarget.startsWith('libs/')) {
+    const libPath = repoTarget.replace(/^libs\//, '').split('/')[0]
     return {
       transformed: true,
       url: link,
@@ -216,11 +216,11 @@ function publicAssetExists(link: string): boolean {
   if (!link.startsWith('/')) {
     return false
   }
-  const path = link.split('#')[0]
-  if (path.startsWith('/media/')) {
-    return existsSync(join(WORKSPACE_ROOT, 'assets', path.replace(/^\//, '')))
+  const pathname = link.split('#')[0]
+  if (pathname.startsWith('/media/')) {
+    return existsSync(join(WORKSPACE_ROOT, 'assets', pathname.replace(/^\//, '')))
   }
-  return existsSync(join(DOCS_SITE_ROOT, 'public', path))
+  return existsSync(join(DOCS_SITE_ROOT, 'public', pathname))
 }
 
 /**
@@ -420,11 +420,11 @@ function validateApiSources(): LinkValidationResult[] {
 
       if (typeof url === 'string' && typeof record['fileName'] === 'string' && !seen.has(url)) {
         seen.add(url)
-        const targetPath = repoRelativePath(url, 'blob')
+        const targetPath = repoUrlPath(url, 'blob')
 
         if (targetPath !== undefined && !existsSync(join(WORKSPACE_ROOT, targetPath))) {
           results.push({
-            file: relative(WORKSPACE_ROOT, bundlePath),
+            file: relative(WORKSPACE_ROOT, bundlePath).split(sep).join(posix.sep),
             line: typeof record['line'] === 'number' ? record['line'] : 0,
             link: url,
             status: 'broken',
@@ -477,7 +477,7 @@ async function validateLinks(): Promise<ValidationSummary> {
 
   for (const file of allFiles) {
     const results = validateFile(file)
-    const relativePath = relative(WORKSPACE_ROOT, file)
+    const relativePath = relative(WORKSPACE_ROOT, file).split(sep).join(posix.sep)
 
     for (const result of results) {
       summary.totalLinks++

@@ -112,6 +112,18 @@ describe('isWithinWorkspace', () => {
   it('returns false for paths outside workspace', () => {
     expect(isWithinWorkspace('/other/path', '/workspace')).toBe(false)
   })
+
+  it('returns true for the workspace root itself', () => {
+    expect(isWithinWorkspace('/workspace', '/workspace')).toBe(true)
+  })
+
+  it('returns false for a sibling whose name starts with the workspace name', () => {
+    expect(isWithinWorkspace('/workspace-other/libs/my-lib', '/workspace')).toBe(false)
+  })
+
+  it('returns false for a sibling directory reached through a parent segment', () => {
+    expect(isWithinWorkspace('/workspace/../other', '/workspace')).toBe(false)
+  })
 })
 
 describe('findRootDirectory', () => {

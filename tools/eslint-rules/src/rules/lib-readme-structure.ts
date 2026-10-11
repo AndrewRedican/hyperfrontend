@@ -1,5 +1,5 @@
 import type { Rule } from 'eslint'
-import { dirname } from 'node:path'
+import { basename, dirname } from 'node:path'
 import { createURL } from '@hyperfrontend/immutable-api-utils/built-in-copy/url'
 import { isPublishableLibrary, readPackageJson } from '../utils/nx-project'
 import { analyzeKeyFeatures } from '../utils/readme-key-features'
@@ -182,7 +182,7 @@ export interface BadgesBlockInfo {
  * @returns An array of parsed sections.
  */
 export function parseMarkdownSections(content: string): ParsedSection[] {
-  const lines = content.split('\n')
+  const lines = content.split(/\r?\n/)
   const sections: ParsedSection[] = []
 
   for (let i = 0; i < lines.length; i++) {
@@ -242,7 +242,7 @@ function containsAnyBadge(block: string): boolean {
  * @returns Each centered block, in document order.
  */
 export function collectCenteredBlocks(content: string): BadgesBlockInfo[] {
-  const lines = content.split('\n')
+  const lines = content.split(/\r?\n/)
   const blocks: BadgesBlockInfo[] = []
   let inBlock = false
   let startLine = -1
@@ -311,7 +311,7 @@ export interface TitleInfo {
  * @returns The title and its line number, or null if not found.
  */
 export function extractTitle(content: string): TitleInfo | null {
-  const lines = content.split('\n')
+  const lines = content.split(/\r?\n/)
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i] as string
@@ -345,7 +345,7 @@ export interface DescriptionInfo {
  * @returns The description and its line number, or null if not found.
  */
 export function extractShortDescription(content: string, badgesEndLine: number): DescriptionInfo | null {
-  const lines = content.split('\n')
+  const lines = content.split(/\r?\n/)
 
   for (let i = badgesEndLine; i < lines.length; i++) {
     const line = (lines[i] as string).trim()
@@ -397,7 +397,7 @@ interface FoundSectionEntry {
  * @returns The documentation link info, or null if not found.
  */
 export function extractDocumentationLink(content: string): DocLinkInfo | null {
-  const lines = content.split('\n')
+  const lines = content.split(/\r?\n/)
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i] as string
@@ -433,7 +433,7 @@ export function collectSubsections(sections: ParsedSection[], parent: ParsedSect
  * @returns The guides link info, or null if not found.
  */
 export function extractGuidesLink(content: string, packageName: string): DocLinkInfo | null {
-  const lines = content.split('\n')
+  const lines = content.split(/\r?\n/)
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i] as string
@@ -489,7 +489,7 @@ const rule: Rule.RuleModule = {
 
   create(context) {
     const filePath = context.filename
-    const fileName = filePath.split('/').pop()
+    const fileName = basename(filePath)
 
     if (fileName !== 'README.md') {
       return {}
@@ -638,7 +638,7 @@ const rule: Rule.RuleModule = {
           : undefined
 
         if (keyFeaturesSection) {
-          const hasKeyFeaturesBullets = keyFeaturesSection.content.split('\n').some((line) => line.trimStart().startsWith('- **'))
+          const hasKeyFeaturesBullets = keyFeaturesSection.content.split(/\r?\n/).some((line) => line.trimStart().startsWith('- **'))
           if (!hasKeyFeaturesBullets) {
             context.report({
               node,
@@ -647,7 +647,7 @@ const rule: Rule.RuleModule = {
           }
 
           // why: the site renders each label as the feature's name and the text after it as the reason it matters, so the list's shape is the contract, not just its presence
-          for (const problem of analyzeKeyFeatures(content.split('\n'), keyFeaturesSection)) {
+          for (const problem of analyzeKeyFeatures(content.split(/\r?\n/), keyFeaturesSection)) {
             context.report({
               node,
               loc: { line: problem.line, column: 0 },

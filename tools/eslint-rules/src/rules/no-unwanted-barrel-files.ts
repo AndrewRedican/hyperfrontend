@@ -1,6 +1,6 @@
 import type { TSESTree } from '@typescript-eslint/utils'
 import type { PackageJson } from '../utils/nx-project'
-import { dirname, join, relative, resolve } from 'node:path'
+import { basename, dirname, join, posix, relative, resolve, sep } from 'node:path'
 import { ESLintUtils } from '@typescript-eslint/utils'
 import { entries, keys, values } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { readJsonFileIfExists } from '../utils/fs'
@@ -46,7 +46,7 @@ function getAllowedIndexPaths(projectRoot: string, packageJson: PackageJson): st
     for (const exportValue of values(packageJson.exports)) {
       const resolvedPath = resolveExportValue(exportValue)
       if (resolvedPath) {
-        const sourcePath = resolvedPath.replace(/^\.\//, '').replace(/\.(js|cjs|mjs)$/, '.ts')
+        const sourcePath = posix.normalize(resolvedPath).replace(/\.(js|cjs|mjs)$/, '.ts')
         allowed.push(join(projectRoot, sourcePath))
       }
     }
@@ -101,7 +101,7 @@ const rule = ESLintUtils.RuleCreator(
   create(context) {
     const filename = context.filename
 
-    if (!filename.endsWith('/index.ts') && !filename.endsWith('\\index.ts')) {
+    if (basename(filename) !== 'index.ts') {
       return {}
     }
 
@@ -128,7 +128,7 @@ const rule = ESLintUtils.RuleCreator(
       return {}
     }
 
-    const relativePath = relative(projectRoot, filename)
+    const relativePath = relative(projectRoot, filename).split(sep).join(posix.sep)
     const details = buildErrorDetails(packageJson)
 
     return {

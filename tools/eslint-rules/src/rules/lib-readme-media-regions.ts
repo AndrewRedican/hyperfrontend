@@ -170,7 +170,7 @@ const rule: Rule.RuleModule = {
     return {
       root(node: Rule.Node) {
         const text = context.sourceCode.getText()
-        const lines = text.split('\n')
+        const lines = text.split(/\r?\n/)
         const report = (messageId: string, line: number, data: Record<string, string>): void => {
           context.report({
             node,

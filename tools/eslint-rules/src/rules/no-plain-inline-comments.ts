@@ -46,7 +46,7 @@ export default createRule<[], MessageIds>({
     schema: [],
     messages: {
       noPlainInlineComments:
-        'Plain inline comments are not allowed. Use an allowed hint prefix (why:, how:, context:, magic:, todo:, fixme:, note:, ref:) or a tooling directive.',
+        'Plain inline comments are not allowed. Use an allowed hint prefix (why:, how:, context:, magic:, todo:, fixme:, note:, ref:, compat:) or a tooling directive.',
     },
   },
   defaultOptions: [],

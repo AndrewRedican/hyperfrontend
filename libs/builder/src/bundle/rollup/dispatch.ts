@@ -41,12 +41,18 @@ export interface RollupWorkerInvocation {
 
 const REPORT_DIR_PREFIX = 'hf-builder-rollup-'
 
+/** Node flag that exposes the Web Crypto `crypto` global on runtimes that still hide it (Node 18). */
+const GLOBAL_WEBCRYPTO_FLAG = '--experimental-global-webcrypto'
+
+// compat: node<20 the worker's bundled terser plugin reads the `crypto` global while loading (serialize-javascript derives its placeholder id from it) and Node 18 only has that global behind this flag, so the flag is passed only where the spawning Node lacks the global; drop the flag and this check once the floor passes, since a future Node may remove it
+const webCryptoExecArgv = (): string[] => (typeof globalThis.crypto === 'undefined' ? [GLOBAL_WEBCRYPTO_FLAG] : [])
+
 /**
  * Resolves the rollup worker by self-locating it beside the running builder
  * module: ascends from the module's own directory to the builder package root
  * and returns the worker at `bundle/rollup/worker`. This works whether the
  * builder runs from its built dist, an installed `node_modules` copy, or melded
- * into a host bundle under `_dependencies/`. The compiled `index.cjs.js` is
+ * into a host bundle under `_dependencies/`. The compiled `index.cjs` is
  * preferred; an `index.ts` sibling resolves with the `@swc-node/register` loader
  * for source-mode bootstrap.
  *
@@ -72,7 +78,7 @@ const reportPathFor = (reportDir: string, descriptor: RollupBuildDescriptor): st
 const runOne = (descriptor: RollupBuildDescriptor, options: DispatchRollupWorkerOptions, label: string): Promise<void> =>
   createPromise<void>((resolve, reject) => {
     const execPath = options.execPath ?? process.execPath
-    const argv = [...(options.execArgv ?? []), options.workerPath, stringify(descriptor)]
+    const argv = [...webCryptoExecArgv(), ...(options.execArgv ?? []), options.workerPath, stringify(descriptor)]
     const child = spawn(execPath, argv, { stdio: ['ignore', 'pipe', 'pipe'] })
     let capturedStderr = ''
     child.stdout?.on('data', (chunk: Buffer | string) => {
@@ -123,7 +129,7 @@ const readReport = (reportPath: string, label: string): RollupWorkerReport => {
  *
  * @example Dispatching a single ESM build
  * ```typescript
- * const report = await dispatchRollupWorker(descriptor, { workerPath: '/abs/dist/.../worker.cjs.js' })
+ * const report = await dispatchRollupWorker(descriptor, { workerPath: '/abs/dist/.../worker.cjs' })
  * ```
  */
 export const dispatchRollupWorker = async (

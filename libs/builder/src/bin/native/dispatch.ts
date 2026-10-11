@@ -51,8 +51,8 @@ const swcNodeAvailable = (workspaceRoot: string): boolean =>
  * the first time and the dist worker doesn't exist yet).
  *
  * Looks at, in order:
- * 1. `<workspaceRoot>/dist/libs/builder/bin/native/worker/index.cjs.js`
- * 2. `<workspaceRoot>/node_modules/@hyperfrontend/builder/bin/native/worker/index.cjs.js`
+ * 1. `<workspaceRoot>/dist/libs/builder/bin/native/worker/index.cjs`
+ * 2. `<workspaceRoot>/node_modules/@hyperfrontend/builder/bin/native/worker/index.cjs`
  * 3. `<workspaceRoot>/libs/builder/src/bin/native/worker/index.ts` (with `--require \@swc-node/register`)
  *
  * @param workspaceRoot - Absolute workspace root.
@@ -66,8 +66,8 @@ const swcNodeAvailable = (workspaceRoot: string): boolean =>
  */
 export const resolveDefaultInjectWorkerPath = (workspaceRoot: string): InjectWorkerInvocation | undefined => {
   const distCandidates = [
-    join(workspaceRoot, 'dist', 'libs', 'builder', 'bin', 'native', 'worker', 'index.cjs.js'),
-    join(workspaceRoot, 'node_modules', '@hyperfrontend', 'builder', 'bin', 'native', 'worker', 'index.cjs.js'),
+    join(workspaceRoot, 'dist', 'libs', 'builder', 'bin', 'native', 'worker', 'index.cjs'),
+    join(workspaceRoot, 'node_modules', '@hyperfrontend', 'builder', 'bin', 'native', 'worker', 'index.cjs'),
   ]
   for (const path of distCandidates) {
     if (existsSync(path)) return { path, execArgv: [] }
@@ -142,7 +142,7 @@ const readReport = (reportPath: string, label: string): InjectWorkerReport => {
  * ```typescript
  * const report = await dispatchInjectWorker(
  *   { hostBinary, outputBinary, blobPath, resourceName, machoSegmentName, sentinelFuse, reportPath: '' },
- *   { workerPath: '/abs/dist/.../worker.cjs.js', label: 'hf-build' }
+ *   { workerPath: '/abs/dist/.../worker.cjs', label: 'hf-build' }
  * )
  * ```
  */

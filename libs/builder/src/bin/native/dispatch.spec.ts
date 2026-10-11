@@ -69,7 +69,7 @@ describe('dispatchInjectWorker', () => {
   it('forks the worker, reads the JSON report, and resolves with the parsed value', async () => {
     const records: SpawnRecord[] = []
     captureSpawn(records)
-    const promise = dispatchInjectWorker(baseJob(), { workerPath: '/abs/worker.cjs.js' })
+    const promise = dispatchInjectWorker(baseJob(), { workerPath: '/abs/worker.cjs' })
     await tick()
     expect(records).toHaveLength(1)
     writeReport((records[0] as SpawnRecord).reportPath, { outputSize: 138_000_000, endHeapMB: 220, endRssMB: 480, durationMs: 1200 })
@@ -81,7 +81,7 @@ describe('dispatchInjectWorker', () => {
   it('overwrites the job reportPath with a temp-dir path before forking', async () => {
     const records: SpawnRecord[] = []
     captureSpawn(records)
-    const promise = dispatchInjectWorker(baseJob({ reportPath: '/abs/orig.json' }), { workerPath: '/abs/worker.cjs.js' })
+    const promise = dispatchInjectWorker(baseJob({ reportPath: '/abs/orig.json' }), { workerPath: '/abs/worker.cjs' })
     await tick()
     expect((records[0] as SpawnRecord).job.reportPath).not.toBe('/abs/orig.json')
     expect((records[0] as SpawnRecord).job.reportPath).toContain('hf-builder-inject-')
@@ -93,7 +93,7 @@ describe('dispatchInjectWorker', () => {
   it('rejects when the worker exits with a non-zero code and includes the captured stderr tail', async () => {
     const records: SpawnRecord[] = []
     captureSpawn(records)
-    const promise = dispatchInjectWorker(baseJob(), { workerPath: '/abs/worker.cjs.js' })
+    const promise = dispatchInjectWorker(baseJob(), { workerPath: '/abs/worker.cjs' })
     await tick()
     ;(records[0] as SpawnRecord).child.stderr.emit('data', Buffer.from('boom oh no\n'))
     ;(records[0] as SpawnRecord).child.emit('exit', 1)
@@ -103,7 +103,7 @@ describe('dispatchInjectWorker', () => {
   it('rejects when the worker reports a spawn error', async () => {
     const records: SpawnRecord[] = []
     captureSpawn(records)
-    const promise = dispatchInjectWorker(baseJob(), { workerPath: '/abs/worker.cjs.js' })
+    const promise = dispatchInjectWorker(baseJob(), { workerPath: '/abs/worker.cjs' })
     await tick()
     ;(records[0] as SpawnRecord).child.emit('error', new Error('ENOENT'))
     await expect(promise).rejects.toThrow(/failed to spawn: ENOENT/)
@@ -112,7 +112,7 @@ describe('dispatchInjectWorker', () => {
   it('rejects when the worker exits cleanly but writes no report', async () => {
     const records: SpawnRecord[] = []
     captureSpawn(records)
-    const promise = dispatchInjectWorker(baseJob(), { workerPath: '/abs/worker.cjs.js' })
+    const promise = dispatchInjectWorker(baseJob(), { workerPath: '/abs/worker.cjs' })
     await tick()
     ;(records[0] as SpawnRecord).child.emit('exit', 0)
     await expect(promise).rejects.toThrow(/did not write a report/)
@@ -122,13 +122,13 @@ describe('dispatchInjectWorker', () => {
     const records: SpawnRecord[] = []
     captureSpawn(records)
     const promise = dispatchInjectWorker(baseJob(), {
-      workerPath: '/abs/worker.cjs.js',
+      workerPath: '/abs/worker.cjs',
       execPath: '/usr/bin/custom-node',
       execArgv: ['--require', '@swc-node/register'],
     })
     await tick()
     expect((records[0] as SpawnRecord).execPath).toBe('/usr/bin/custom-node')
-    expect((records[0] as SpawnRecord).args.slice(0, 3)).toEqual(['--require', '@swc-node/register', '/abs/worker.cjs.js'])
+    expect((records[0] as SpawnRecord).args.slice(0, 3)).toEqual(['--require', '@swc-node/register', '/abs/worker.cjs'])
     writeReport((records[0] as SpawnRecord).reportPath, { outputSize: 1, endHeapMB: 1, endRssMB: 1, durationMs: 1 })
     ;(records[0] as SpawnRecord).child.emit('exit', 0)
     await promise
@@ -149,7 +149,7 @@ describe('dispatchInjectWorker', () => {
     const records: SpawnRecord[] = []
     captureSpawn(records)
     const promise = dispatchInjectWorker(baseJob(), {
-      workerPath: '/abs/worker.cjs.js',
+      workerPath: '/abs/worker.cjs',
       monitor,
       label: 'hf-build',
     })
@@ -163,7 +163,7 @@ describe('dispatchInjectWorker', () => {
   it('falls back to outputBinary as the label when no explicit label is supplied', async () => {
     const records: SpawnRecord[] = []
     captureSpawn(records)
-    const promise = dispatchInjectWorker(baseJob(), { workerPath: '/abs/worker.cjs.js' })
+    const promise = dispatchInjectWorker(baseJob(), { workerPath: '/abs/worker.cjs' })
     await tick()
     ;(records[0] as SpawnRecord).child.emit('exit', 1)
     await expect(promise).rejects.toThrow(/inject worker for \/abs\/dist\/libs\/builder\/bin\/hf-build\.linux-x64/)
@@ -172,7 +172,7 @@ describe('dispatchInjectWorker', () => {
   it('cleans up the temporary report directory even when the job fails', async () => {
     const records: SpawnRecord[] = []
     captureSpawn(records)
-    const promise = dispatchInjectWorker(baseJob(), { workerPath: '/abs/worker.cjs.js' })
+    const promise = dispatchInjectWorker(baseJob(), { workerPath: '/abs/worker.cjs' })
     await tick()
     const reportDir = dirname((records[0] as SpawnRecord).reportPath)
     ;(records[0] as SpawnRecord).child.emit('exit', 2)
@@ -184,7 +184,7 @@ describe('dispatchInjectWorker', () => {
     const records: SpawnRecord[] = []
     captureSpawn(records)
     const writeSpy = jest.spyOn(process.stdout, 'write').mockImplementation(() => true)
-    const promise = dispatchInjectWorker(baseJob(), { workerPath: '/abs/worker.cjs.js' })
+    const promise = dispatchInjectWorker(baseJob(), { workerPath: '/abs/worker.cjs' })
     await tick()
     ;(records[0] as SpawnRecord).child.stdout.emit('data', Buffer.from('child output\n'))
     writeReport((records[0] as SpawnRecord).reportPath, { outputSize: 1, endHeapMB: 1, endRssMB: 1, durationMs: 1 })
@@ -198,7 +198,7 @@ describe('dispatchInjectWorker', () => {
     const records: SpawnRecord[] = []
     captureSpawn(records)
     const writeSpy = jest.spyOn(process.stderr, 'write').mockImplementation(() => true)
-    const promise = dispatchInjectWorker(baseJob(), { workerPath: '/abs/worker.cjs.js' })
+    const promise = dispatchInjectWorker(baseJob(), { workerPath: '/abs/worker.cjs' })
     await tick()
     ;(records[0] as SpawnRecord).child.stderr.emit('data', 'string chunk\n')
     writeReport((records[0] as SpawnRecord).reportPath, { outputSize: 1, endHeapMB: 1, endRssMB: 1, durationMs: 1 })
@@ -233,14 +233,14 @@ describe('resolveDefaultInjectWorkerPath', () => {
   it('returns the dist path when the dist worker exists', () => {
     const targetDir = join(root, 'dist', 'libs', 'builder', 'bin', 'native', 'worker')
     mkdirSync(targetDir, { recursive: true })
-    const path = writeWorkerAt('dist/libs/builder/bin/native/worker/index.cjs.js')
+    const path = writeWorkerAt('dist/libs/builder/bin/native/worker/index.cjs')
     expect(resolveDefaultInjectWorkerPath(root)).toEqual({ path, execArgv: [] })
   })
 
   it('falls back to node_modules when the dist worker is missing', () => {
     const targetDir = join(root, 'node_modules', '@hyperfrontend', 'builder', 'bin', 'native', 'worker')
     mkdirSync(targetDir, { recursive: true })
-    const path = writeWorkerAt('node_modules/@hyperfrontend/builder/bin/native/worker/index.cjs.js')
+    const path = writeWorkerAt('node_modules/@hyperfrontend/builder/bin/native/worker/index.cjs')
     expect(resolveDefaultInjectWorkerPath(root)).toEqual({ path, execArgv: [] })
   })
 
@@ -249,8 +249,8 @@ describe('resolveDefaultInjectWorkerPath', () => {
     const nmDir = join(root, 'node_modules', '@hyperfrontend', 'builder', 'bin', 'native', 'worker')
     mkdirSync(distDir, { recursive: true })
     mkdirSync(nmDir, { recursive: true })
-    const distPath = writeWorkerAt('dist/libs/builder/bin/native/worker/index.cjs.js')
-    writeWorkerAt('node_modules/@hyperfrontend/builder/bin/native/worker/index.cjs.js')
+    const distPath = writeWorkerAt('dist/libs/builder/bin/native/worker/index.cjs')
+    writeWorkerAt('node_modules/@hyperfrontend/builder/bin/native/worker/index.cjs')
     expect(resolveDefaultInjectWorkerPath(root)).toEqual({ path: distPath, execArgv: [] })
   })
 

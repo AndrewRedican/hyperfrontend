@@ -2,7 +2,7 @@ import type { TSESLint, TSESTree } from '@typescript-eslint/utils'
 import type { BindingContext } from './bindings'
 
 /**
- * Message identifiers reported by lib-cross-platform, including its suggestion messages.
+ * Message identifiers reported by cross-platform, including its suggestion messages.
  */
 export type MessageIds =
   | 'separatorLiteral'
@@ -12,8 +12,11 @@ export type MessageIds =
   | 'driveLetterLoss'
   | 'posixConversion'
   | 'nativeImport'
+  | 'nativeSpecifier'
   | 'urlPathname'
   | 'shellShim'
+  | 'binShim'
+  | 'splitCommand'
   | 'lineSplit'
   | 'hardcodedTmp'
   | 'treatAsNative'
@@ -37,13 +40,36 @@ export interface PathHelperModule {
 }
 
 /**
- * Options accepted by lib-cross-platform.
+ * Selects every file of a publishable library: a `library` project with both a `build` and a `publish` target.
+ */
+export interface PublishableLibrariesSelector {
+  /** Always `true`; leave the selector out of `include` to stop checking publishable libraries. */
+  publishableLibraries: true
+}
+
+/**
+ * Selects the files that match any of its globs.
+ */
+export interface FilesSelector {
+  /** Workspace-relative globs, such as `tools/**`. */
+  files: string[]
+}
+
+/**
+ * One entry of the `include` option. Entries never narrow each other: a file is checked when any entry selects it.
+ */
+export type IncludeSelector = PublishableLibrariesSelector | FilesSelector
+
+/**
+ * Options accepted by cross-platform.
  */
 export interface RuleOptions {
   /** Path helpers outside `node:path` whose output domain the rule should trust. */
   helpers?: PathHelperModule[]
   /** Commands that are `.cmd` shims on Windows and cannot be spawned without a shell. */
   shimCommands?: string[]
+  /** The files the rule checks: every file any entry selects. */
+  include?: IncludeSelector[]
 }
 
 /**
@@ -76,7 +102,7 @@ export type Tier = 0 | 1 | 2
 export type Flavour = 'native' | 'portable'
 
 /**
- * The rule context lib-cross-platform runs with.
+ * The rule context cross-platform runs with.
  */
 export type RuleContext = Readonly<TSESLint.RuleContext<MessageIds, [RuleOptions?]>>
 

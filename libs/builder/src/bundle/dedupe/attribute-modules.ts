@@ -78,7 +78,7 @@ export interface ParsedEntry {
 }
 
 /** Per-format output chunk file name, mirroring the bundler's entry naming. */
-const CHUNK_FILE: Readonly<Record<ChunkFormat, string>> = { esm: 'index.esm.js', cjs: 'index.cjs.js' }
+const CHUNK_FILE: Readonly<Record<ChunkFormat, string>> = { esm: 'index.mjs', cjs: 'index.cjs' }
 
 /**
  * Strips rollup's `$N` collision-rename suffix from a local name, yielding the
@@ -132,11 +132,11 @@ export const fingerprintOf = (statement: ts.Statement, sourceFile: ts.SourceFile
  * Resolves a hoisted module's chunk file name for a format.
  *
  * @param format - Output module format.
- * @returns The per-entry chunk file name (`index.esm.js` / `index.cjs.js`).
+ * @returns The per-entry chunk file name (`index.mjs` / `index.cjs`).
  *
  * @example Naming the CJS chunk
  * ```typescript
- * chunkFileName('cjs') // => 'index.cjs.js'
+ * chunkFileName('cjs') // => 'index.cjs'
  * ```
  */
 export const chunkFileName = (format: ChunkFormat): string => CHUNK_FILE[format]
@@ -241,7 +241,7 @@ const isExportSurface = (statement: ts.Statement, format: ChunkFormat): boolean 
  *
  * @example Modeling an ESM entry bundle
  * ```typescript
- * const parsed = parseEntry("import { x } from './_dependencies/a/index.esm.js'\nclass C {}", 'esm')
+ * const parsed = parseEntry("import { x } from './_dependencies/a/index.mjs'\nclass C {}", 'esm')
  * ```
  */
 export const parseEntry = (source: string, format: ChunkFormat): ParsedEntry => {

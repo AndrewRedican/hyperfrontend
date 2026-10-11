@@ -64,15 +64,15 @@ describe('pruneOrphanDeclarations', () => {
     expect(namesIn(dir)).toEqual(['index.d.ts', 'index.d.ts.map'])
   })
 
-  it('does not touch non-d.ts files like index.cjs.js or index.esm.js', () => {
+  it('does not touch non-d.ts files like index.cjs or index.mjs', () => {
     const dir = join(outputPath, 'bundle')
     mkdirSync(dir, { recursive: true })
     writeFileSync(join(dir, 'index.d.ts'), '')
-    writeFileSync(join(dir, 'index.cjs.js'), '')
-    writeFileSync(join(dir, 'index.esm.js'), '')
+    writeFileSync(join(dir, 'index.cjs'), '')
+    writeFileSync(join(dir, 'index.mjs'), '')
     writeFileSync(join(dir, 'helper.d.ts'), '')
     pruneOrphanDeclarations(makeContext(outputPath, [BUNDLE_ENTRY]))
-    expect(namesIn(dir)).toEqual(['index.cjs.js', 'index.d.ts', 'index.esm.js'])
+    expect(namesIn(dir)).toEqual(['index.cjs', 'index.d.ts', 'index.mjs'])
   })
 
   it('recurses into internal subdirectories, pruning unreachable orphans', () => {

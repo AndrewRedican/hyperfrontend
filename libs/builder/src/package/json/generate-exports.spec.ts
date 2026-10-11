@@ -30,7 +30,7 @@ describe('generateExportsFromFormats', () => {
   it('falls back to a root export when srcPkg has no exports map', () => {
     const formats: FormatOutputs = { esm: [ROOT], cjs: [ROOT], iife: [], umd: [] }
     const result = generateExportsFromFormats(discovery, formats)
-    expect(result['.']).toEqual({ types: './index.d.ts', import: './index.esm.js', require: './index.cjs.js' })
+    expect(result['.']).toEqual({ types: './index.d.ts', import: './index.mjs', require: './index.cjs' })
   })
 
   it('skips the root fallback when discovery has no root entry', () => {
@@ -54,11 +54,11 @@ describe('generateExportsFromFormats', () => {
     }
     const formats: FormatOutputs = { esm: [ROOT, BROWSER], cjs: [ROOT, BROWSER], iife: [], umd: [] }
     const result = generateExportsFromFormats(discovery, formats, srcPkg)
-    expect(result['.']).toEqual({ types: './index.d.ts', import: './index.esm.js', require: './index.cjs.js' })
+    expect(result['.']).toEqual({ types: './index.d.ts', import: './index.mjs', require: './index.cjs' })
     expect(result['./browser']).toEqual({
       types: './browser/index.d.ts',
-      import: './browser/index.esm.js',
-      require: './browser/index.cjs.js',
+      import: './browser/index.mjs',
+      require: './browser/index.cjs',
     })
   })
 
@@ -79,13 +79,13 @@ describe('generateExportsFromFormats', () => {
   it('emits ESM-only entries when CJS was not produced', () => {
     const formats: FormatOutputs = { esm: [ROOT], cjs: [], iife: [], umd: [] }
     const result = generateExportsFromFormats(discovery, formats)
-    expect(result['.']).toEqual({ types: './index.d.ts', import: './index.esm.js' })
+    expect(result['.']).toEqual({ types: './index.d.ts', import: './index.mjs' })
   })
 
   it('emits CJS-only entries when ESM was not produced', () => {
     const formats: FormatOutputs = { esm: [], cjs: [ROOT], iife: [], umd: [] }
     const result = generateExportsFromFormats(discovery, formats)
-    expect(result['.']).toEqual({ types: './index.d.ts', require: './index.cjs.js' })
+    expect(result['.']).toEqual({ types: './index.d.ts', require: './index.cjs' })
   })
 
   it('extracts the output dir from a conditional source-export value', () => {
@@ -98,8 +98,8 @@ describe('generateExportsFromFormats', () => {
     const result = generateExportsFromFormats(discovery, formats, srcPkg)
     expect(result['./browser']).toEqual({
       types: './browser/index.d.ts',
-      import: './browser/index.esm.js',
-      require: './browser/index.cjs.js',
+      import: './browser/index.mjs',
+      require: './browser/index.cjs',
     })
   })
 
@@ -107,7 +107,7 @@ describe('generateExportsFromFormats', () => {
     const srcPkg: PackageJson = { exports: { '.': { default: './src/index.ts' } } }
     const formats: FormatOutputs = { esm: [ROOT], cjs: [], iife: [], umd: [] }
     const result = generateExportsFromFormats(discovery, formats, srcPkg)
-    expect(result['.']).toEqual({ types: './index.d.ts', import: './index.esm.js' })
+    expect(result['.']).toEqual({ types: './index.d.ts', import: './index.mjs' })
   })
 
   it('fails a conditional entry with no recognized conditions instead of aliasing it to the root', () => {

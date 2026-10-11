@@ -1,10 +1,10 @@
 import type { ConfigType, DetectedConfig } from '../../project/config'
 import type { Command, CommandResult, GlobalOptions, OutputFormat } from '../types'
 import { join, resolve } from 'node:path'
-import { parseArgs } from 'node:util'
 import { stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 import { entries, keys } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { detectConfigs, CONFIG_PATTERNS, parseConfig } from '../../project/config'
+import { parseArgs } from '../parse-args'
 
 /**
  * Options for the config CLI command.

@@ -228,8 +228,8 @@ Every setting, event payload, deny reason and security type is in the [API refer
 
 | Format | File                       | Tree-Shakeable |
 | ------ | -------------------------- | :------------: |
-| ESM    | `index.esm.js`             |       ✅       |
-| CJS    | `index.cjs.js`             |       ❌       |
+| ESM    | `index.mjs`                |       ✅       |
+| CJS    | `index.cjs`                |       ❌       |
 | IIFE   | `bundle/index.iife.min.js` |       ❌       |
 | UMD    | `bundle/index.umd.min.js`  |       ❌       |
 

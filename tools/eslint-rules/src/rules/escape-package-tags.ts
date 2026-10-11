@@ -46,6 +46,7 @@ export interface BarePackageTag {
 const ASTERISK = 42
 const AT_SIGN = 64
 const BACKSLASH = 92
+const CARRIAGE_RETURN = 13
 const DOT = 46
 const HYPHEN = 45
 const SLASH = 47
@@ -218,17 +219,20 @@ function isCodeFence(content: string): boolean {
  */
 export function findBarePackageTags(commentValue: string, prefixes: readonly string[]): BarePackageTag[] {
   const results: BarePackageTag[] = []
-  const lines = commentValue.split('\n')
+  const lines = commentValue.split(/\r?\n/)
 
   let offset = 0
   let insideFence = false
+  // why: the lines were split on either ending, so a line is followed by one or two characters of line break in the comment
+  const nextLineStart = (line: string): number =>
+    offset + line.length + (commentValue.charCodeAt(offset + line.length) === CARRIAGE_RETURN ? 2 : 1)
 
   for (const line of lines) {
     const content = line.slice(findContentStart(line))
 
     if (isCodeFence(content)) {
       insideFence = !insideFence
-      offset += line.length + 1
+      offset = nextLineStart(line)
       continue
     }
 
@@ -245,7 +249,7 @@ export function findBarePackageTags(commentValue: string, prefixes: readonly str
       }
     }
 
-    offset += line.length + 1
+    offset = nextLineStart(line)
   }
 
   return results

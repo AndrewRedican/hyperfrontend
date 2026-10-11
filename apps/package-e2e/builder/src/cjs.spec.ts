@@ -62,7 +62,7 @@ describe('@hyperfrontend/builder CJS', () => {
     const pkg = require('@hyperfrontend/builder/package.json')
     const packageDir = dirname(require.resolve('@hyperfrontend/builder/package.json'))
     const binPath = join(packageDir, pkg.bin['hf-build'])
-    const firstLine = readFileSync(binPath, 'utf8').split('\n', 1)[0]
+    const firstLine = readFileSync(binPath, 'utf8').split(/\r?\n/, 1)[0]
     expect(firstLine).toBe('#!/usr/bin/env node')
   })
 

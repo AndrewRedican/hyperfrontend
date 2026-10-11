@@ -25,8 +25,8 @@ interface FormatTarget {
 }
 
 const FORMAT_FILES: ReadonlyArray<FormatTarget> = [
-  { format: 'esm', fileName: 'index.esm.js' },
-  { format: 'cjs', fileName: 'index.cjs.js' },
+  { format: 'esm', fileName: 'index.mjs' },
+  { format: 'cjs', fileName: 'index.cjs' },
 ]
 
 /**

@@ -136,7 +136,7 @@ const buildEntryOutput = (job: RollupBuildDescriptor, format: 'esm' | 'cjs'): Ou
       ...(format === 'cjs' && { interop: 'compat' as const }),
     }
   }
-  const filename = format === 'esm' ? 'index.esm.js' : 'index.cjs.js'
+  const filename = format === 'esm' ? 'index.mjs' : 'index.cjs'
   return {
     file: join(job.outputDir, filename),
     format,

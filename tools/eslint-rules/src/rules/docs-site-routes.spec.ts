@@ -1,4 +1,5 @@
 import type { ArrayExpression, Identifier, Literal, ObjectExpression, Property, SpreadElement } from 'estree'
+import { join } from 'node:path'
 import { after as afterAll } from 'node:test'
 import { RuleTester } from 'eslint'
 import { describe, expect, it } from '@hyperfrontend/testing'
@@ -501,7 +502,7 @@ describe('docs-site-routes', () => {
           code: createContentTsCode([{ name: 'Nexus', slug: 'nexus', category: 'core' }]),
           filename: (() => {
             const dir = createTempWorkspace({})
-            return `${dir}/apps/docs-site/src/lib/other-file.ts`
+            return join(dir, 'apps', 'docs-site', 'src', 'lib', 'other-file.ts')
           })(),
         },
         {
@@ -518,7 +519,7 @@ describe('docs-site-routes', () => {
 ]`,
           filename: (() => {
             const dir = createTempWorkspace({})
-            return `${dir}/apps/docs-site/src/lib/content.ts`
+            return join(dir, 'apps', 'docs-site', 'src', 'lib', 'content.ts')
           })(),
         },
         {
@@ -535,7 +536,7 @@ describe('docs-site-routes', () => {
 ]`,
           filename: (() => {
             const dir = createTempWorkspace({})
-            return `${dir}/apps/docs-site/src/lib/content.ts`
+            return join(dir, 'apps', 'docs-site', 'src', 'lib', 'content.ts')
           })(),
         },
         {
@@ -552,7 +553,7 @@ describe('docs-site-routes', () => {
 ]`,
           filename: (() => {
             const dir = createTempWorkspace({})
-            return `${dir}/apps/docs-site/src/lib/content.ts`
+            return join(dir, 'apps', 'docs-site', 'src', 'lib', 'content.ts')
           })(),
         },
         {
@@ -560,7 +561,7 @@ describe('docs-site-routes', () => {
           code: `export const LIBRARIES = 'not-an-array'`,
           filename: (() => {
             const dir = createTempWorkspace({})
-            return `${dir}/apps/docs-site/src/lib/content.ts`
+            return join(dir, 'apps', 'docs-site', 'src', 'lib', 'content.ts')
           })(),
         },
         {
@@ -571,7 +572,7 @@ describe('docs-site-routes', () => {
           ]),
           filename: (() => {
             const dir = createTempWorkspace({ routes: ['nexus', 'logging'] })
-            return `${dir}/apps/docs-site/src/lib/content.ts`
+            return join(dir, 'apps', 'docs-site', 'src', 'lib', 'content.ts')
           })(),
         },
         {
@@ -579,7 +580,7 @@ describe('docs-site-routes', () => {
           code: createContentTsCode([{ name: 'Features Plugin', slug: 'features', category: 'plugin' }]),
           filename: (() => {
             const dir = createTempWorkspace({ pluginRoutes: ['features'] })
-            return `${dir}/apps/docs-site/src/lib/content.ts`
+            return join(dir, 'apps', 'docs-site', 'src', 'lib', 'content.ts')
           })(),
         },
         {
@@ -590,7 +591,7 @@ describe('docs-site-routes', () => {
           ]),
           filename: (() => {
             const dir = createTempWorkspace({ routes: ['utils/data', 'utils/string'] })
-            return `${dir}/apps/docs-site/src/lib/content.ts`
+            return join(dir, 'apps', 'docs-site', 'src', 'lib', 'content.ts')
           })(),
         },
         {
@@ -598,7 +599,7 @@ describe('docs-site-routes', () => {
           code: createContentTsCode([{ name: 'Nexus', slug: 'nexus', category: 'core' }]),
           filename: (() => {
             const dir = createTempWorkspace({})
-            return `${dir}/apps/other-app/src/lib/content.ts`
+            return join(dir, 'apps', 'other-app', 'src', 'lib', 'content.ts')
           })(),
         },
         {
@@ -606,7 +607,7 @@ describe('docs-site-routes', () => {
           code: createContentTsCode([{ name: 'Nexus', slug: 'nexus', category: 'core' }]),
           filename: (() => {
             const dir = createTempWorkspace({})
-            return `${dir}/content.ts`
+            return join(dir, 'content.ts')
           })(),
         },
         {
@@ -622,7 +623,7 @@ describe('docs-site-routes', () => {
               generateDocsPackageNames: ['@hyperfrontend/nexus', '@hyperfrontend/questions'],
               librarySlugs: ['nexus', 'questions'],
             })
-            return `${dir}/apps/docs-site/src/lib/content.ts`
+            return join(dir, 'apps', 'docs-site', 'src', 'lib', 'content.ts')
           })(),
         },
         {
@@ -634,7 +635,7 @@ describe('docs-site-routes', () => {
               navigationHrefs: ['/docs/plugins/features'],
               generateDocsPackageNames: ['@hyperfrontend/features'],
             })
-            return `${dir}/apps/docs-site/src/lib/content.ts`
+            return join(dir, 'apps', 'docs-site', 'src', 'lib', 'content.ts')
           })(),
         },
         {
@@ -647,7 +648,7 @@ describe('docs-site-routes', () => {
               generateDocsPackageNames: ['@hyperfrontend/utils-data'],
               librarySlugs: [],
             })
-            return `${dir}/apps/docs-site/src/lib/content.ts`
+            return join(dir, 'apps', 'docs-site', 'src', 'lib', 'content.ts')
           })(),
         },
         {
@@ -660,7 +661,7 @@ describe('docs-site-routes', () => {
               generateDocsPackageNames: ['@hyperfrontend/state-machine'],
               librarySlugs: ['state-machine'],
             })
-            return `${dir}/apps/docs-site/src/lib/content.ts`
+            return join(dir, 'apps', 'docs-site', 'src', 'lib', 'content.ts')
           })(),
         },
       ],
@@ -670,7 +671,7 @@ describe('docs-site-routes', () => {
           code: createContentTsCode([{ name: 'Nexus', slug: 'nexus', category: 'core' }]),
           filename: (() => {
             const dir = createTempWorkspace({ routes: [] })
-            return `${dir}/apps/docs-site/src/lib/content.ts`
+            return join(dir, 'apps', 'docs-site', 'src', 'lib', 'content.ts')
           })(),
           errors: [
             {
@@ -688,7 +689,7 @@ describe('docs-site-routes', () => {
           code: createContentTsCode([{ name: 'Features Plugin', slug: 'features', category: 'plugin' }]),
           filename: (() => {
             const dir = createTempWorkspace({ pluginRoutes: [] })
-            return `${dir}/apps/docs-site/src/lib/content.ts`
+            return join(dir, 'apps', 'docs-site', 'src', 'lib', 'content.ts')
           })(),
           errors: [
             {
@@ -710,7 +711,7 @@ describe('docs-site-routes', () => {
           ]),
           filename: (() => {
             const dir = createTempWorkspace({ routes: ['nexus'] })
-            return `${dir}/apps/docs-site/src/lib/content.ts`
+            return join(dir, 'apps', 'docs-site', 'src', 'lib', 'content.ts')
           })(),
           errors: [
             {
@@ -736,7 +737,7 @@ describe('docs-site-routes', () => {
           code: createContentTsCode([{ name: 'Data Utils', slug: 'utils/data', category: 'utils' }]),
           filename: (() => {
             const dir = createTempWorkspace({ routes: [] })
-            return `${dir}/apps/docs-site/src/lib/content.ts`
+            return join(dir, 'apps', 'docs-site', 'src', 'lib', 'content.ts')
           })(),
           errors: [
             {
@@ -759,7 +760,7 @@ describe('docs-site-routes', () => {
               generateDocsPackageNames: ['@hyperfrontend/nexus'],
               librarySlugs: ['nexus'],
             })
-            return `${dir}/apps/docs-site/src/lib/content.ts`
+            return join(dir, 'apps', 'docs-site', 'src', 'lib', 'content.ts')
           })(),
           errors: [
             {
@@ -782,7 +783,7 @@ describe('docs-site-routes', () => {
               generateDocsPackageNames: ['@hyperfrontend/questions'],
               librarySlugs: ['questions'],
             })
-            return `${dir}/apps/docs-site/src/lib/content.ts`
+            return join(dir, 'apps', 'docs-site', 'src', 'lib', 'content.ts')
           })(),
           errors: [
             {
@@ -804,7 +805,7 @@ describe('docs-site-routes', () => {
               navigationHrefs: [],
               generateDocsPackageNames: ['@hyperfrontend/features'],
             })
-            return `${dir}/apps/docs-site/src/lib/content.ts`
+            return join(dir, 'apps', 'docs-site', 'src', 'lib', 'content.ts')
           })(),
           errors: [
             {
@@ -827,7 +828,7 @@ describe('docs-site-routes', () => {
               generateDocsPackageNames: [],
               librarySlugs: ['nexus'],
             })
-            return `${dir}/apps/docs-site/src/lib/content.ts`
+            return join(dir, 'apps', 'docs-site', 'src', 'lib', 'content.ts')
           })(),
           errors: [
             {
@@ -849,7 +850,7 @@ describe('docs-site-routes', () => {
               generateDocsPackageNames: ['@hyperfrontend/nexus'],
               librarySlugs: [],
             })
-            return `${dir}/apps/docs-site/src/lib/content.ts`
+            return join(dir, 'apps', 'docs-site', 'src', 'lib', 'content.ts')
           })(),
           errors: [
             {
@@ -871,7 +872,7 @@ describe('docs-site-routes', () => {
               generateDocsPackageNames: ['@hyperfrontend/questions'],
               librarySlugs: [],
             })
-            return `${dir}/apps/docs-site/src/lib/content.ts`
+            return join(dir, 'apps', 'docs-site', 'src', 'lib', 'content.ts')
           })(),
           errors: [
             {
@@ -893,7 +894,7 @@ describe('docs-site-routes', () => {
               generateDocsPackageNames: ['@hyperfrontend/state-machine'],
               librarySlugs: [],
             })
-            return `${dir}/apps/docs-site/src/lib/content.ts`
+            return join(dir, 'apps', 'docs-site', 'src', 'lib', 'content.ts')
           })(),
           errors: [
             {
@@ -915,7 +916,7 @@ describe('docs-site-routes', () => {
               generateDocsPackageNames: ['@hyperfrontend/utils-data'],
               librarySlugs: [],
             })
-            return `${dir}/apps/docs-site/src/lib/content.ts`
+            return join(dir, 'apps', 'docs-site', 'src', 'lib', 'content.ts')
           })(),
           errors: [
             {

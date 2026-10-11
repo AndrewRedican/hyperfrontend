@@ -69,64 +69,64 @@ describe('pruneOrphanChunks', () => {
   })
 
   it('deletes an esm chunk the entry never reaches and keeps the reachable one', () => {
-    write('index.esm.js', "import {a} from './_dependencies/live/index.esm.js'")
-    write('_dependencies/live/index.esm.js', 'export const a = 1')
-    write('_dependencies/orphan/index.esm.js', 'export const b = 1')
+    write('index.mjs', "import {a} from './_dependencies/live/index.mjs'")
+    write('_dependencies/live/index.mjs', 'export const a = 1')
+    write('_dependencies/orphan/index.mjs', 'export const b = 1')
     pruneOrphanChunks(makeContext(outputPath), depsRoot)
-    expect(listDeps('index.esm.js')).toEqual(['live/index.esm.js'])
+    expect(listDeps('index.mjs')).toEqual(['live/index.mjs'])
   })
 
   it('deletes a cjs chunk the entry never reaches', () => {
-    write('index.cjs.js', "var a = require('./_dependencies/live/index.cjs.js')")
-    write('_dependencies/live/index.cjs.js', 'exports.a = 1')
-    write('_dependencies/orphan/index.cjs.js', 'exports.b = 1')
+    write('index.cjs', "var a = require('./_dependencies/live/index.cjs')")
+    write('_dependencies/live/index.cjs', 'exports.a = 1')
+    write('_dependencies/orphan/index.cjs', 'exports.b = 1')
     pruneOrphanChunks(makeContext(outputPath), depsRoot)
-    expect(listDeps('index.cjs.js')).toEqual(['live/index.cjs.js'])
+    expect(listDeps('index.cjs')).toEqual(['live/index.cjs'])
   })
 
-  it('removes the .js.map sibling alongside an orphan chunk and counts both', () => {
-    write('index.esm.js', 'export const a = 1')
-    write('_dependencies/orphan/index.esm.js', 'export const b = 1')
-    write('_dependencies/orphan/index.esm.js.map', '{}')
+  it('removes the .map sibling alongside an orphan chunk and counts both', () => {
+    write('index.mjs', 'export const a = 1')
+    write('_dependencies/orphan/index.mjs', 'export const b = 1')
+    write('_dependencies/orphan/index.mjs.map', '{}')
     const result = pruneOrphanChunks(makeContext(outputPath), depsRoot)
     expect(result.orphanFilesRemoved).toBe(2)
   })
 
   it('reports the reclaimed byte total for removed files', () => {
-    write('index.esm.js', 'export const a = 1')
-    write('_dependencies/orphan/index.esm.js', 'abcde')
+    write('index.mjs', 'export const a = 1')
+    write('_dependencies/orphan/index.mjs', 'abcde')
     const result = pruneOrphanChunks(makeContext(outputPath), depsRoot)
     expect(result.bytesRemoved).toBe(5)
   })
 
   it('keeps every chunk when a reached chunk has a dynamic specifier', () => {
-    write('index.esm.js', "import {a} from './_dependencies/dyn/index.esm.js'")
-    write('_dependencies/dyn/index.esm.js', 'const m = require(name)')
-    write('_dependencies/orphan/index.esm.js', 'export const b = 1')
+    write('index.mjs', "import {a} from './_dependencies/dyn/index.mjs'")
+    write('_dependencies/dyn/index.mjs', 'const m = require(name)')
+    write('_dependencies/orphan/index.mjs', 'export const b = 1')
     pruneOrphanChunks(makeContext(outputPath), depsRoot)
-    expect(listDeps('index.esm.js')).toEqual(['dyn/index.esm.js', 'orphan/index.esm.js'])
+    expect(listDeps('index.mjs')).toEqual(['dyn/index.mjs', 'orphan/index.mjs'])
   })
 
   it('reports zero removals on a dynamic-specifier bail', () => {
-    write('index.esm.js', "import {a} from './_dependencies/dyn/index.esm.js'")
-    write('_dependencies/dyn/index.esm.js', 'const m = require(name)')
-    write('_dependencies/orphan/index.esm.js', 'export const b = 1')
+    write('index.mjs', "import {a} from './_dependencies/dyn/index.mjs'")
+    write('_dependencies/dyn/index.mjs', 'const m = require(name)')
+    write('_dependencies/orphan/index.mjs', 'export const b = 1')
     expect(pruneOrphanChunks(makeContext(outputPath), depsRoot)).toEqual({ orphanFilesRemoved: 0, bytesRemoved: 0 })
   })
 
   it('deletes an orphan d.ts when its js sibling was also pruned', () => {
-    write('index.esm.js', 'export const a = 1')
+    write('index.mjs', 'export const a = 1')
     write('index.d.ts', 'export declare const a: number')
-    write('_dependencies/orphan/index.esm.js', 'export const b = 1')
+    write('_dependencies/orphan/index.mjs', 'export const b = 1')
     write('_dependencies/orphan/index.d.ts', 'export declare const b: number')
     pruneOrphanChunks(makeContext(outputPath), depsRoot)
     expect(listDeps('index.d.ts')).toEqual([])
   })
 
   it('deletes a dep d.ts the entry d.ts never references even when its runtime sibling survived the js sweep', () => {
-    write('index.esm.js', "import {a} from './_dependencies/live/index.esm.js'")
+    write('index.mjs', "import {a} from './_dependencies/live/index.mjs'")
     write('index.d.ts', 'export declare const a: number')
-    write('_dependencies/live/index.esm.js', 'export const a = 1')
+    write('_dependencies/live/index.mjs', 'export const a = 1')
     write('_dependencies/live/index.d.ts', 'export declare const a: number')
     pruneOrphanChunks(makeContext(outputPath), depsRoot)
     expect(listDeps('index.d.ts')).toEqual([])
@@ -166,7 +166,7 @@ describe('pruneOrphanChunks', () => {
   })
 
   it('keeps every dep d.ts when a reached dep d.ts chunk bails on a dynamic specifier', () => {
-    write('index.esm.js', 'export const a = 1')
+    write('index.mjs', 'export const a = 1')
     write('index.d.ts', "import {A} from './_dependencies/a/index.js'")
     write('_dependencies/a/index.d.ts', 'const lazy = import(typeName)\nexport declare const A: number')
     write('_dependencies/orphan/index.d.ts', 'export declare const b: number')
@@ -176,7 +176,7 @@ describe('pruneOrphanChunks', () => {
 
   it('does not bail on a dynamic specifier in a first-party root d.ts and still prunes orphan dep d.ts', () => {
     // why: the bail guards intra-`_dependencies/` edges only; a dynamic specifier in a first-party root must not strand orphan dep d.ts files.
-    write('index.esm.js', 'export const a = 1')
+    write('index.mjs', 'export const a = 1')
     write('index.d.ts', 'const lazy = import(typeName)')
     write('_dependencies/orphan/index.d.ts', 'export declare const b: number')
     pruneOrphanChunks(makeContext(outputPath), depsRoot)
@@ -184,34 +184,34 @@ describe('pruneOrphanChunks', () => {
   })
 
   it('removes directories left empty after pruning', () => {
-    write('index.esm.js', 'export const a = 1')
-    write('_dependencies/orphan/index.esm.js', 'export const b = 1')
+    write('index.mjs', 'export const a = 1')
+    write('_dependencies/orphan/index.mjs', 'export const b = 1')
     pruneOrphanChunks(makeContext(outputPath), depsRoot)
     expect(existsSync(join(depsRoot, 'orphan'))).toBe(false)
   })
 
   it('recursively removes nested directory trees left empty after pruning', () => {
-    write('index.esm.js', 'export const a = 1')
-    write('_dependencies/@scope/pkg/sub/index.esm.js', 'export const b = 1')
+    write('index.mjs', 'export const a = 1')
+    write('_dependencies/@scope/pkg/sub/index.mjs', 'export const b = 1')
     pruneOrphanChunks(makeContext(outputPath), depsRoot)
     expect(existsSync(join(depsRoot, '@scope'))).toBe(false)
   })
 
   it('keeps a parent directory that still holds a surviving chunk after pruning a sibling', () => {
-    write('index.esm.js', "import {a} from './_dependencies/@scope/live/index.esm.js'")
-    write('_dependencies/@scope/live/index.esm.js', 'export const a = 1')
-    write('_dependencies/@scope/orphan/index.esm.js', 'export const b = 1')
+    write('index.mjs', "import {a} from './_dependencies/@scope/live/index.mjs'")
+    write('_dependencies/@scope/live/index.mjs', 'export const a = 1')
+    write('_dependencies/@scope/orphan/index.mjs', 'export const b = 1')
     pruneOrphanChunks(makeContext(outputPath), depsRoot)
-    expect(existsSync(join(depsRoot, '@scope/live/index.esm.js'))).toBe(true)
+    expect(existsSync(join(depsRoot, '@scope/live/index.mjs'))).toBe(true)
   })
 
   it('skips stray entry directories at or inside the dependencies root when collecting roots', () => {
     const atRoot: EntryPoint = { exportPath: './_dependencies', srcPath: '_dependencies', inputFile: '/x', isRoot: false }
     const underRoot: EntryPoint = { exportPath: './_dependencies/x', srcPath: '_dependencies/x', inputFile: '/x', isRoot: false }
-    write('index.esm.js', "import {a} from './_dependencies/live/index.esm.js'")
-    write('_dependencies/live/index.esm.js', 'export const a = 1')
-    write('_dependencies/orphan/index.esm.js', 'export const b = 1')
+    write('index.mjs', "import {a} from './_dependencies/live/index.mjs'")
+    write('_dependencies/live/index.mjs', 'export const a = 1')
+    write('_dependencies/orphan/index.mjs', 'export const b = 1')
     pruneOrphanChunks(makeContext(outputPath, [ROOT_ENTRY, atRoot, underRoot]), depsRoot)
-    expect(listDeps('index.esm.js')).toEqual(['live/index.esm.js'])
+    expect(listDeps('index.mjs')).toEqual(['live/index.mjs'])
   })
 })

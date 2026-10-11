@@ -277,7 +277,7 @@ export default contract
     })
 
     it('emits compiled JavaScript into the out directory', () => {
-      expect(outFiles).toEqual(expect.arrayContaining([expect.stringMatching(/\.js$/)]))
+      expect(outFiles).toEqual(expect.arrayContaining([expect.stringMatching(/\.[cm]js$/)]))
     })
 
     it('emits TypeScript declarations into the out directory', () => {
@@ -290,12 +290,12 @@ export default contract
 
     it('publishes a root export resolving to the built entry in every format', () => {
       const manifest = JSON.parse(readFileSync(join(outDir, 'package.json'), 'utf8')) as { exports?: Record<string, unknown> }
-      expect(manifest.exports?.['.']).toEqual({ types: './index.d.ts', import: './index.esm.js', require: './index.cjs.js' })
+      expect(manifest.exports?.['.']).toEqual({ types: './index.d.ts', import: './index.mjs', require: './index.cjs' })
     })
 
     it('emits JavaScript free of raw `import type` statements', () => {
       const withImportType = outFiles
-        .filter((file) => file.endsWith('.js'))
+        .filter((file) => /\.[cm]js$/.test(file))
         .filter((file) => readFileSync(join(outDir, file), 'utf8').includes('import type'))
       expect(withImportType).toEqual([])
     })
@@ -318,6 +318,7 @@ export default contract
           execFileSync('npm', ['install', '--no-audit', '--no-fund', '--ignore-scripts', join(outDir, tarball as string)], {
             cwd: consumerDir,
             stdio: 'pipe',
+            shell: process.platform === 'win32',
           })
           writeFileSync(
             join(consumerDir, 'consumer.ts'),

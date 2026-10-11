@@ -1,20 +1,23 @@
 import type { TempWorkspaceManager } from '../../testing'
-import { NON_PUBLISHABLE_LIBRARY_PROJECT_JSON, PUBLISHABLE_LIBRARY_PROJECT_JSON } from '../../testing'
+import { stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
+import { APPLICATION_PROJECT_JSON, NON_PUBLISHABLE_LIBRARY_PROJECT_JSON, PUBLISHABLE_LIBRARY_PROJECT_JSON } from '../../testing'
 
 /**
- * Files to lint, one per kind of project lib-cross-platform treats differently.
+ * Files to lint, one per kind of project cross-platform treats differently.
  */
 export interface CrossPlatformFiles {
   /** A file in a publishable library whose runtime sources import from `node:`. */
   node: string
   /** A file in a publishable library whose runtime sources never import from `node:`. */
   browser: string
-  /** A file in a library that is not published. */
+  /** A file in a library that is not published, with no workspace root above it. */
   unpublished: string
+  /** A file in an application project at `tools/app` inside a workspace. */
+  tool: string
 }
 
 /**
- * Creates the temporary projects the lib-cross-platform specs lint against. The browser
+ * Creates the temporary projects the cross-platform specs lint against. The browser
  * project carries `node:` imports only where they must not count: specs, setup, fixtures,
  * declarations, and `node_modules`.
  *
@@ -47,5 +50,13 @@ export function createCrossPlatformFiles(manager: TempWorkspaceManager): CrossPl
     },
   })
   const unpublished = manager.create({ projectJson: NON_PUBLISHABLE_LIBRARY_PROJECT_JSON, files: { 'src/runtime.ts': nodeImport } })
-  return { node: node.getPath('src/file.ts'), browser: browser.getPath('src/file.ts'), unpublished: unpublished.getPath('src/file.ts') }
+  const workspace = manager.create({
+    files: { 'nx.json': '{}', 'tools/app/project.json': stringify(APPLICATION_PROJECT_JSON), 'tools/app/src/runtime.ts': nodeImport },
+  })
+  return {
+    node: node.getPath('src/file.ts'),
+    browser: browser.getPath('src/file.ts'),
+    unpublished: unpublished.getPath('src/file.ts'),
+    tool: workspace.getPath('tools/app/src/file.ts'),
+  }
 }

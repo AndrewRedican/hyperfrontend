@@ -65,7 +65,7 @@ function normalizeHeadingText(text: string): string {
  * inspectReadmeContent('# parse\n\nParses commits.\n', 'parse')
  */
 export function inspectReadmeContent(content: string, expectedModuleName: string): ReadmeContentCheck {
-  const lines = content.split('\n')
+  const lines = content.split(/\r?\n/)
   const headingLine = lines.find((line) => line.startsWith('# '))
 
   if (headingLine === undefined) {

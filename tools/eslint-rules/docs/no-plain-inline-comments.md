@@ -23,6 +23,9 @@ The goal is to encourage intentional, categorized comments that provide genuine 
 | `fixme:`   | Marks a known defect                                  |
 | `note:`    | A general callout that doesn't fit other categories   |
 | `ref:`     | Links to an external resource, ticket, or spec        |
+| `compat:`  | Marks a shim kept only for a runtime below a bound    |
+
+A `compat:` comment names the runtime and the bound the shim is for, then why it exists: `compat: node<22 the WebSocket global arrived in Node 22`. The bound is the first version at which the shim can go, so `grep -rn "compat: node<"` lists every shim a raised Node floor would retire.
 
 ### Recognized Tooling Directives
 
@@ -72,6 +75,9 @@ function process() {}
 
 // ref: https://github.com/org/repo/issues/123
 function workaround() {}
+
+// compat: node<22 the WebSocket global arrived in Node 22, so older runtimes get the spec constants
+const CONNECTING = globalThis.WebSocket?.CONNECTING ?? 0
 
 // @ts-expect-error - legacy API returns any
 const result = legacyCall()

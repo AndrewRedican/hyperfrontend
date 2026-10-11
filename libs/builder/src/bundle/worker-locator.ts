@@ -17,7 +17,7 @@ export interface WorkerInvocation {
 }
 
 const probeDir = (dir: string, offset: readonly string[]): WorkerInvocation | undefined => {
-  const compiled = join(dir, ...offset, 'index.cjs.js')
+  const compiled = join(dir, ...offset, 'index.cjs')
   if (existsSync(compiled)) return { path: compiled, execArgv: [] }
   const source = join(dir, ...offset, 'index.ts')
   if (existsSync(source)) return { path: source, execArgv: ['--require', SWC_NODE_REGISTER] }
@@ -50,7 +50,7 @@ export const currentModuleDir = (): string => {
 /**
  * Locate a builder worker entry by ascending from a start directory toward the
  * filesystem root, returning the first ancestor at which the worker exists at the
- * given in-package offset. The compiled `index.cjs.js` is preferred; an `index.ts`
+ * given in-package offset. The compiled `index.cjs` is preferred; an `index.ts`
  * sibling (source-mode bootstrap) resolves with the swc loader attached.
  *
  * The worker ships inside the builder's own package, so resolving relative to the

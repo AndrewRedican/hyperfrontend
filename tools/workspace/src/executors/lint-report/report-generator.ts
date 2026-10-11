@@ -1,4 +1,4 @@
-import type { FileStats, LegendEntry } from './types'
+import type { CrashedProject, FileStats, LegendEntry } from './types'
 import { existsSync } from 'node:fs'
 import { join } from 'node:path'
 import { min } from '@hyperfrontend/immutable-api-utils/built-in-copy/math'
@@ -124,6 +124,40 @@ export interface ReportConfig {
    * Workspace root path.
    */
   workspaceRoot: string
+
+  /**
+   * Projects whose lint task failed without reporting any ESLint error.
+   */
+  crashes?: CrashedProject[]
+}
+
+/**
+ * Render the projects whose lint run crashed.
+ *
+ * @param out - Output array to append to
+ * @param crashes - Crashed projects
+ */
+function renderCrashes(out: string[], crashes: CrashedProject[]): void {
+  out.push('## Crashed Projects')
+  out.push('')
+  out.push('Lint did not complete for these projects, so the findings below do not cover them.')
+  out.push('A crash is ESLint or a rule throwing, an out-of-memory kill or a launch failure. Fix the cause, not a file.')
+  out.push('')
+
+  for (const { project, failure, tail } of crashes) {
+    if (failure === null || tail === null) {
+      out.push(`**${project}** failed without reporting an ESLint error (not rerun on its own)`)
+      out.push('')
+      continue
+    }
+
+    out.push(`**${project}** \`npx nx run ${project}:lint --fix\` ${failure}`)
+    out.push('')
+    out.push('```')
+    out.push(tail || '(no output captured)')
+    out.push('```')
+    out.push('')
+  }
 }
 
 /**
@@ -148,8 +182,12 @@ export function generateReport(legendList: LegendEntry[], fileMap: Map<string, F
 
   out.push('# Lint Report')
   out.push('')
-  out.push(`**Summary:** ${totalErrors} errors across ${filesWithErrors} files, ${totalWarnings} warnings.`)
+  const crashes = config.crashes ?? []
+  const crashSummary = crashes.length > 0 ? ` ${crashes.length} projects crashed before lint completed.` : ''
+  out.push(`**Summary:** ${totalErrors} errors across ${filesWithErrors} files, ${totalWarnings} warnings.${crashSummary}`)
   out.push('')
+
+  if (crashes.length > 0) renderCrashes(out, crashes)
 
   out.push('## Instructions')
   out.push('')

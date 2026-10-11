@@ -40,7 +40,7 @@ type ExampleLabelInfo = {
  */
 function analyzeExampleLabels(comment: string): Array<ExampleLabelInfo> {
   const results: Array<ExampleLabelInfo> = []
-  const lines = comment.split('\n')
+  const lines = comment.split(/\r?\n/)
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i]

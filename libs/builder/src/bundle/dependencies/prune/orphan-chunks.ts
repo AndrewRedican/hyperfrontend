@@ -26,12 +26,12 @@ export interface OrphanPruneResult {
  * @param context - Resolved build context supplying the entry points.
  * @param depsRoot - Absolute path to the `_dependencies/` directory.
  * @param fileNames - Output file names to look for in each entry directory
- * (e.g. `['index.esm.js']`).
+ * (e.g. `['index.mjs']`).
  * @returns Absolute paths of every entry file that exists on disk.
  *
  * @example Collecting ESM entry roots
  * ```typescript
- * const roots = collectEntryFiles(context, depsRoot, ['index.esm.js'])
+ * const roots = collectEntryFiles(context, depsRoot, ['index.mjs'])
  * ```
  */
 export const collectEntryFiles = (context: BuildContext, depsRoot: string, fileNames: string[]): string[] => {
@@ -59,7 +59,7 @@ export const collectEntryFiles = (context: BuildContext, depsRoot: string, fileN
  * @example Gathering every ESM chunk
  * ```typescript
  * const chunks: string[] = []
- * walkFiles(depsRoot, (name) => name === 'index.esm.js', chunks)
+ * walkFiles(depsRoot, (name) => name === 'index.mjs', chunks)
  * ```
  */
 export const walkFiles = (dir: string, matches: (name: string) => boolean, acc: string[]): void => {
@@ -85,10 +85,10 @@ const unlinkWithMap = (path: string): OrphanPruneResult => {
 }
 
 const pruneJsOrphans = (context: BuildContext, depsRoot: string): OrphanPruneResult => {
-  const roots = collectEntryFiles(context, depsRoot, ['index.esm.js', 'index.cjs.js'])
+  const roots = collectEntryFiles(context, depsRoot, ['index.mjs', 'index.cjs'])
   const reachable = computeReachable(roots, depsRoot)
   const chunks: string[] = []
-  walkFiles(depsRoot, (name) => name === 'index.esm.js' || name === 'index.cjs.js', chunks)
+  walkFiles(depsRoot, (name) => name === 'index.mjs' || name === 'index.cjs', chunks)
   // why: a dynamic-specifier bail keeps every chunk.
   if (reachable === null) return { orphanFilesRemoved: 0, bytesRemoved: 0 }
   let orphanFilesRemoved = 0
@@ -102,8 +102,8 @@ const pruneJsOrphans = (context: BuildContext, depsRoot: string): OrphanPruneRes
   return { orphanFilesRemoved, bytesRemoved }
 }
 
-// why: declaration specifiers carry the runtime extension (`'.../index.js'`, also `.esm.js`/`.cjs.js`); a d.ts type-reference resolves to the sibling `index.d.ts`, so the type-graph walk must rewrite the target before visiting it.
-const toDtsTarget = (target: string): string => target.replace(/(?:\.esm|\.cjs)?\.[mc]?js$/, '.d.ts')
+// why: declaration specifiers carry the runtime extension (`'.../index.js'`, also `.mjs`/`.cjs`); a d.ts type-reference resolves to the sibling `index.d.ts`, so the type-graph walk must rewrite the target before visiting it.
+const toDtsTarget = (target: string): string => target.replace(/\.[mc]?js$/, '.d.ts')
 
 const pruneDtsOrphans = (context: BuildContext, depsRoot: string): OrphanPruneResult => {
   const roots = collectEntryFiles(context, depsRoot, ['index.d.ts'])
@@ -129,7 +129,7 @@ const pruneDtsOrphans = (context: BuildContext, depsRoot: string): OrphanPruneRe
  * reaches.
  *
  * Runs reachability from the package's own entry output chunks over the
- * `_dependencies/` JS graph, unlinks every `index.{esm,cjs}.js` (and `.map`
+ * `_dependencies/` JS graph, unlinks every `index.mjs` / `index.cjs` (and `.map`
  * sibling) that is unreachable, then applies the d.ts retention rule: a dep's
  * `index.d.ts` is kept only when it is reachable from an entry's `.d.ts` graph.
  * Entry `index.d.ts` are self-contained (dts-per-entry), so dep types no entry

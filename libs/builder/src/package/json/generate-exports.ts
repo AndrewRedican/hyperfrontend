@@ -19,8 +19,8 @@ interface ExportEntry {
 const createExportEntry = (outputDir: string, hasEsm: boolean, hasCjs: boolean): ExportEntry => {
   const prefix = outputDir ? `./${outputDir}` : '.'
   const entry: ExportEntry = { types: `${prefix}/index.d.ts` }
-  if (hasEsm) entry.import = `${prefix}/index.esm.js`
-  if (hasCjs) entry.require = `${prefix}/index.cjs.js`
+  if (hasEsm) entry.import = `${prefix}/index.mjs`
+  if (hasCjs) entry.require = `${prefix}/index.cjs`
   return entry
 }
 

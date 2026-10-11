@@ -1,4 +1,5 @@
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils'
+import { posix, sep } from 'node:path'
 import { ESLintUtils } from '@typescript-eslint/utils'
 
 /**
@@ -53,7 +54,7 @@ interface HelperImportLookup {
  * root page), or null when the file is not an app router page.
  */
 function routeFromFilename(filename: string): string | null {
-  const normalized = filename.split('\\').join('/')
+  const normalized = filename.split(sep).join(posix.sep)
   const marker = '/src/app/'
   const markerIndex = normalized.lastIndexOf(marker)
   if (markerIndex === -1 || !normalized.endsWith('/page.tsx')) {

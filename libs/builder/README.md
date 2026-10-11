@@ -94,9 +94,10 @@ npm install --save-dev @hyperfrontend/builder
 
 [`typescript`](https://www.npmjs.com/package/typescript) is a regular dependency of the builder, not a peer: installing the
 builder installs a compiler, and the published manifest declares no
-[`peerDependencies`](https://www.hyperfrontend.dev/docs/libraries/builder/models/#api-PackageJson-prop-peerDependencies) at all. Declaration emit spawns the workspace's own
-`node_modules/.bin/tsc`, so when your project already depends on TypeScript that
-is the compiler that runs. The builder is built against **TypeScript >= 5.9**.
+[`peerDependencies`](https://www.hyperfrontend.dev/docs/libraries/builder/models/#api-PackageJson-prop-peerDependencies) at all. Declaration emit runs the `tsc` entry script of
+the TypeScript resolved from your workspace root on the current Node binary, so
+when your project already depends on TypeScript that is the compiler that runs,
+on Windows as well as POSIX systems. The builder is built against **TypeScript >= 5.9**.
 
 ## Quick Start
 
@@ -171,7 +172,7 @@ Every config field, phase signature and result type is in the [API reference](ht
 ## Compatibility
 
 [`@hyperfrontend/builder`](https://www.hyperfrontend.dev/docs/libraries/builder/) is a build-time tool that runs on Node.js. It is not
-intended for browser, Web Worker, or CDN runtimes, and it needs npm 8 or later.
+intended for browser, Web Worker, or CDN runtimes, and it needs npm 8 or later. Node.js 18 runs `hf-build` as is: the rollup worker it spawns receives `--experimental-global-webcrypto` whenever the spawning Node.js lacks the `crypto` global, and only a direct import of the [`/bundle/rollup/worker`](https://www.hyperfrontend.dev/docs/libraries/builder/bundle/rollup/worker/) entry on Node.js 18 has to pass that flag itself.
 
 <!-- hf:media start id="runtimes" scene="runtimes-builder" asset="runtimes" docs="#compatibility" alt="Runs in Node.js 18 or later; not a target for evergreen browsers and web workers" -->
 
@@ -185,10 +186,10 @@ intended for browser, Web Worker, or CDN runtimes, and it needs npm 8 or later.
 
 ### Output Formats
 
-| Format | File           | Tree-Shakeable |
-| ------ | -------------- | :------------: |
-| ESM    | `index.esm.js` |       ✅       |
-| CJS    | `index.cjs.js` |       ❌       |
+| Format | File        | Tree-Shakeable |
+| ------ | ----------- | :------------: |
+| ESM    | `index.mjs` |       ✅       |
+| CJS    | `index.cjs` |       ❌       |
 
 The package installs the `hf-build` command, and ships Node SEA native binaries alongside it for `linux-x64`, `linux-arm64`, `darwin-x64`, `darwin-arm64`, and `win32-x64`.
 

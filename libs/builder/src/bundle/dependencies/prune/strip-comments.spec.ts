@@ -158,16 +158,16 @@ describe('stripCommentsPass', () => {
   })
 
   it('strips ordinary comments from ESM and CJS chunks and counts the bytes', () => {
-    write('a/index.esm.js', '/** doc */\nexport const a = 1;')
-    write('a/index.cjs.js', '/** doc */\nexports.a = 1;')
+    write('a/index.mjs', '/** doc */\nexport const a = 1;')
+    write('a/index.cjs', '/** doc */\nexports.a = 1;')
     const result = stripCommentsPass(depsRoot())
     expect(result.commentBytesRemoved).toBe(Buffer.byteLength('/** doc */\n') * 2)
-    expect(read('a/index.esm.js')).toBe('export const a = 1;')
-    expect(read('a/index.cjs.js')).toBe('exports.a = 1;')
+    expect(read('a/index.mjs')).toBe('export const a = 1;')
+    expect(read('a/index.cjs')).toBe('exports.a = 1;')
   })
 
   it('ignores non-chunk files and chunks with nothing removable', () => {
-    write('a/index.esm.js', 'export const a = 1;')
+    write('a/index.mjs', 'export const a = 1;')
     write('a/index.d.ts', '/** kept */\nexport declare const a: number;')
     write('keep.txt', '// not a chunk')
     expect(stripCommentsPass(depsRoot())).toEqual({ commentBytesRemoved: 0 })
@@ -175,7 +175,7 @@ describe('stripCommentsPass', () => {
   })
 
   it('is idempotent across two passes over the same tree', () => {
-    write('a/index.esm.js', '/** doc */\nexport const a = 1;')
+    write('a/index.mjs', '/** doc */\nexport const a = 1;')
     expect(stripCommentsPass(depsRoot()).commentBytesRemoved).toBeGreaterThan(0)
     expect(stripCommentsPass(depsRoot())).toEqual({ commentBytesRemoved: 0 })
   })

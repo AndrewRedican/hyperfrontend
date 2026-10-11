@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.8](https://github.com/AndrewRedican/hyperfrontend/compare/5a49a82851e6018aa9921fd9b0d94fb5d025220f...793105a4c3e18eaa043e6b7307f95ba143b9fdcf) - 2026-10-11
+
+### Bug Fixes
+
+- link the cli entry on node 18 without util.parseArgs
+
 ## [0.2.7](https://github.com/AndrewRedican/hyperfrontend/compare/41325ecf9b3f15f597cddadd5fbe6ab68f59eab7...9cb8baf39ab84f10d5585969ad5afb8bd299def0) - 2026-10-04
 
 ### Bug Fixes

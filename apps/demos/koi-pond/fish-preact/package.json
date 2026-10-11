@@ -13,7 +13,7 @@
   },
   "dependencies": {
     "@hyperfrontend/demo-koi-lib": "file:../vendor/hyperfrontend-demo-koi-lib-0.1.0.tgz",
-    "@hyperfrontend/features": "0.11.2",
+    "@hyperfrontend/features": "0.11.3",
     "preact": "10.29.8",
     "three": "0.185.1"
   },
@@ -24,9 +24,14 @@
     "@types/three": "0.185.4",
     "npm-run-all2": "9.0.3",
     "typescript": "6.0.3",
-    "vite": "8.2.1"
+    "vite": "8.3.4"
   },
   "engines": {
     "node": "^22.18.0 || >=24.12.0"
+  },
+  "overrides": {
+    "npm-run-all2": {
+      "shell-quote": "1.12.0"
+    }
   }
 }

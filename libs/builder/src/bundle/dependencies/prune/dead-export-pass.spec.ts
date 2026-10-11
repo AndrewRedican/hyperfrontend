@@ -58,68 +58,65 @@ describe('stripDeadExportsPass', () => {
   })
 
   it('reports the count of exports stripped from a surviving chunk', () => {
-    write('index.esm.js', "import { getType } from './_dependencies/d/index.esm.js'")
-    write('_dependencies/d/index.esm.js', 'const getType = 1;\nconst unused = 2;\nexport { getType, unused };')
+    write('index.mjs', "import { getType } from './_dependencies/d/index.mjs'")
+    write('_dependencies/d/index.mjs', 'const getType = 1;\nconst unused = 2;\nexport { getType, unused };')
     expect(stripDeadExportsPass(makeContext(outputPath), depsRoot).deadExportsRemoved).toBe(1)
   })
 
   it('removes the dead export from the chunk on disk', () => {
-    write('index.esm.js', "import { getType } from './_dependencies/d/index.esm.js'")
-    write('_dependencies/d/index.esm.js', 'const getType = 1;\nconst unused = 2;\nexport { getType, unused };')
+    write('index.mjs', "import { getType } from './_dependencies/d/index.mjs'")
+    write('_dependencies/d/index.mjs', 'const getType = 1;\nconst unused = 2;\nexport { getType, unused };')
     stripDeadExportsPass(makeContext(outputPath), depsRoot)
-    expect(read('_dependencies/d/index.esm.js')).not.toContain('unused')
+    expect(read('_dependencies/d/index.mjs')).not.toContain('unused')
   })
 
   it('propagates a newly-dead export across chunks over successive iterations', () => {
-    write('index.esm.js', "import { used } from './_dependencies/a/index.esm.js'")
+    write('index.mjs', "import { used } from './_dependencies/a/index.mjs'")
     write(
-      '_dependencies/a/index.esm.js',
-      "import { needed, notNeeded } from '../b/index.esm.js';\nconst used = needed;\nconst dead = notNeeded;\nexport { used, dead };"
+      '_dependencies/a/index.mjs',
+      "import { needed, notNeeded } from '../b/index.mjs';\nconst used = needed;\nconst dead = notNeeded;\nexport { used, dead };"
     )
-    write('_dependencies/b/index.esm.js', 'const needed = 1;\nconst notNeeded = 2;\nexport { needed, notNeeded };')
+    write('_dependencies/b/index.mjs', 'const needed = 1;\nconst notNeeded = 2;\nexport { needed, notNeeded };')
     stripDeadExportsPass(makeContext(outputPath), depsRoot)
-    expect(read('_dependencies/b/index.esm.js')).not.toContain('notNeeded')
+    expect(read('_dependencies/b/index.mjs')).not.toContain('notNeeded')
   })
 
   it('strips a dead cjs export demanded by no requirer', () => {
-    write('index.cjs.js', "var dep = require('./_dependencies/d/index.cjs.js');\ndep.getType;")
+    write('index.cjs', "var dep = require('./_dependencies/d/index.cjs');\ndep.getType;")
     write(
-      '_dependencies/d/index.cjs.js',
+      '_dependencies/d/index.cjs',
       "'use strict';\nconst getType = 1;\nconst unused = 2;\nexports.getType = getType;\nexports.unused = unused;"
     )
     stripDeadExportsPass(makeContext(outputPath), depsRoot)
-    expect(read('_dependencies/d/index.cjs.js')).not.toContain('exports.unused')
+    expect(read('_dependencies/d/index.cjs')).not.toContain('exports.unused')
   })
 
   it('leaves a chunk untouched when an importer consumes it wholesale', () => {
-    write('index.esm.js', "import * as everything from './_dependencies/d/index.esm.js'")
-    write('_dependencies/d/index.esm.js', 'const a = 1;\nconst b = 2;\nexport { a, b };')
+    write('index.mjs', "import * as everything from './_dependencies/d/index.mjs'")
+    write('_dependencies/d/index.mjs', 'const a = 1;\nconst b = 2;\nexport { a, b };')
     stripDeadExportsPass(makeContext(outputPath), depsRoot)
-    expect(read('_dependencies/d/index.esm.js')).toContain('const b = 2;')
+    expect(read('_dependencies/d/index.mjs')).toContain('const b = 2;')
   })
 
   it('keeps every export when one importer demands all even though another names a subset', () => {
-    write(
-      'index.esm.js',
-      "import * as everything from './_dependencies/d/index.esm.js';\nimport { x } from './_dependencies/e/index.esm.js'"
-    )
-    write('_dependencies/d/index.esm.js', 'const a = 1;\nconst b = 2;\nexport { a, b };')
-    write('_dependencies/e/index.esm.js', "import { a } from '../d/index.esm.js';\nconst x = a;\nexport { x };")
+    write('index.mjs', "import * as everything from './_dependencies/d/index.mjs';\nimport { x } from './_dependencies/e/index.mjs'")
+    write('_dependencies/d/index.mjs', 'const a = 1;\nconst b = 2;\nexport { a, b };')
+    write('_dependencies/e/index.mjs', "import { a } from '../d/index.mjs';\nconst x = a;\nexport { x };")
     stripDeadExportsPass(makeContext(outputPath), depsRoot)
-    expect(read('_dependencies/d/index.esm.js')).toContain('const b = 2;')
+    expect(read('_dependencies/d/index.mjs')).toContain('const b = 2;')
   })
 
   it('ignores importer edges that resolve outside the dependency chunk set', () => {
-    write('index.esm.js', "import { z } from './helper.esm.js';\nimport { keep } from './_dependencies/d/index.esm.js'")
+    write('index.mjs', "import { z } from './helper.esm.js';\nimport { keep } from './_dependencies/d/index.mjs'")
     write('helper.esm.js', 'export const z = 1;')
-    write('_dependencies/d/index.esm.js', 'const keep = 1;\nconst gone = 2;\nexport { keep, gone };')
+    write('_dependencies/d/index.mjs', 'const keep = 1;\nconst gone = 2;\nexport { keep, gone };')
     stripDeadExportsPass(makeContext(outputPath), depsRoot)
-    expect(read('_dependencies/d/index.esm.js')).not.toContain('gone')
+    expect(read('_dependencies/d/index.mjs')).not.toContain('gone')
   })
 
   it('makes no change when every export is demanded', () => {
-    write('index.esm.js', "import { a, b } from './_dependencies/d/index.esm.js'")
-    write('_dependencies/d/index.esm.js', 'const a = 1;\nconst b = 2;\nexport { a, b };')
+    write('index.mjs', "import { a, b } from './_dependencies/d/index.mjs'")
+    write('_dependencies/d/index.mjs', 'const a = 1;\nconst b = 2;\nexport { a, b };')
     expect(stripDeadExportsPass(makeContext(outputPath), depsRoot).deadExportsRemoved).toBe(0)
   })
 })

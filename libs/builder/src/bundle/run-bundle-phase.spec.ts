@@ -64,7 +64,7 @@ const DISCOVERY: EntryPointDiscovery = {
   featureEntries: [],
 }
 
-const ROLLUP_WORKER_PATH = '/abs/dist/libs/builder/bundle/rollup/worker/index.cjs.js'
+const ROLLUP_WORKER_PATH = '/abs/dist/libs/builder/bundle/rollup/worker/index.cjs'
 
 // why: casting in statement position needs a leading semicolon, an ASI hazard static analysis rejects.
 const asMock = (fn: unknown): Mock => fn as Mock
@@ -97,7 +97,7 @@ beforeEach(() => {
   asMock(stripBundleCommentsPass).mockClear()
   asMock(resolveDefaultWorkerPath)
     .mockReset()
-    .mockReturnValue({ path: '/abs/dist/libs/builder/bundle/dependencies/worker/index.cjs.js', execArgv: [] })
+    .mockReturnValue({ path: '/abs/dist/libs/builder/bundle/dependencies/worker/index.cjs', execArgv: [] })
   asMock(resolveDefaultRollupWorkerPath).mockReset().mockReturnValue({ path: ROLLUP_WORKER_PATH, execArgv: [] })
 })
 
@@ -339,7 +339,7 @@ describe('runBundlePhase', () => {
     const [jobs, options] = (runPrePass as Mock).mock.calls[0]
     expect(jobs).toHaveLength(4)
     expect(jobs.every((j: { kind: string }) => j.kind === 'js')).toBe(true)
-    expect(options.workerPath).toBe('/abs/dist/libs/builder/bundle/dependencies/worker/index.cjs.js')
+    expect(options.workerPath).toBe('/abs/dist/libs/builder/bundle/dependencies/worker/index.cjs')
   })
 
   it('throws a context-rich error when the pre-pass worker cannot be located', async () => {

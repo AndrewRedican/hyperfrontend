@@ -15,7 +15,7 @@
     "dev:hosted": "run-p build:watch hf:dev"
   },
   "dependencies": {
-    "@hyperfrontend/features": "0.11.2",
+    "@hyperfrontend/features": "0.11.3",
     "@hyperfrontend/random-generator-utils": "0.2.1",
     "react": "19.2.8",
     "react-dom": "19.2.8"
@@ -28,9 +28,14 @@
     "@vitejs/plugin-react": "6.0.5",
     "npm-run-all2": "9.0.3",
     "typescript": "6.0.3",
-    "vite": "8.2.1"
+    "vite": "8.3.4"
   },
   "engines": {
     "node": "^22.18.0 || >=24.12.0"
+  },
+  "overrides": {
+    "npm-run-all2": {
+      "shell-quote": "1.12.0"
+    }
   }
 }

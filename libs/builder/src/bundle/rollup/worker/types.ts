@@ -38,7 +38,7 @@ export interface RollupWorkerBundleOutput {
  * `package.json#bin` executable script.
  *
  * When set, the worker writes the bundle to {@link outputFile} (instead of the
- * format's default `index.<fmt>.js` filename), prepends the {@link banner} and
+ * format's default `index.mjs` / `index.cjs` filename), prepends the {@link banner} and
  * appends the {@link footer}, and applies {@link chmod} to the produced file so
  * the npm bin symlink is invokable.
  */

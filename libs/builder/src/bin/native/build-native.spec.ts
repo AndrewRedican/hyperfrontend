@@ -31,7 +31,7 @@ jest.mock('./codesign', () => ({ removeCodesign: jest.fn() }))
 jest.mock('./host-binary', () => ({ resolveHostBinary: jest.fn() }))
 jest.mock('./dispatch', () => ({
   dispatchInjectWorker: jest.fn().mockResolvedValue({ outputSize: 138_000_000, endHeapMB: 220, endRssMB: 480, durationMs: 1234 }),
-  resolveDefaultInjectWorkerPath: jest.fn(() => ({ path: '/abs/repo/dist/libs/builder/bin/native/worker/index.cjs.js', execArgv: [] })),
+  resolveDefaultInjectWorkerPath: jest.fn(() => ({ path: '/abs/repo/dist/libs/builder/bin/native/worker/index.cjs', execArgv: [] })),
 }))
 jest.mock('./platform-check', () => ({
   currentPlatformMatches: jest.fn(),
@@ -76,7 +76,7 @@ beforeEach(() => {
     .mockReset()
     .mockResolvedValue({ outputSize: 138_000_000, endHeapMB: 220, endRssMB: 480, durationMs: 1234 })
   ;(resolveDefaultInjectWorkerPath as Mock).mockReset().mockReturnValue({
-    path: '/abs/repo/dist/libs/builder/bin/native/worker/index.cjs.js',
+    path: '/abs/repo/dist/libs/builder/bin/native/worker/index.cjs',
     execArgv: [],
   })
   ;(currentPlatformMatches as Mock).mockReset().mockReturnValue(true)
@@ -112,7 +112,7 @@ describe('buildNativeBin', () => {
       buildNativeBin({
         bin: { name: 'dual', format: ['esm', 'cjs'], sea: { platforms: ['linux-x64'] } },
         ctx: makeContext(),
-        cjsOutputPath: '/abs/dist/libs/builder/bin/dual.cjs.js',
+        cjsOutputPath: '/abs/dist/libs/builder/bin/dual.cjs',
       })
     ).resolves.toBeDefined()
   })
@@ -179,7 +179,7 @@ describe('buildNativeBin', () => {
         reportPath: '',
       },
       expect.objectContaining({
-        workerPath: '/abs/repo/dist/libs/builder/bin/native/worker/index.cjs.js',
+        workerPath: '/abs/repo/dist/libs/builder/bin/native/worker/index.cjs',
         execArgv: [],
         label: 'hf-build',
       })

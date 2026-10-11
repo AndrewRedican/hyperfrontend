@@ -1111,7 +1111,7 @@ ${VALID_KEY_FEATURES}`
     it('points a Key Features report at the line the problem sits on', () => {
       const bareLabel = '- **Tree shakeable**'
       const content = createReadmeWithKeyFeatures(`${VALID_KEY_FEATURES}\n${bareLabel}`)
-      const expectedLine = content.split('\n').indexOf(bareLabel) + 1
+      const expectedLine = content.split(/\r?\n/).indexOf(bareLabel) + 1
       const reports = collectReports(content).filter((report) => report.messageId === 'keyFeatureMissingDescription')
 
       expect(reports[0]?.loc).toEqual({ line: expectedLine, column: 0 })

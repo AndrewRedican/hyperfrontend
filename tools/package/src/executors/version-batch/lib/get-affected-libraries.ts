@@ -1,4 +1,5 @@
 import type { ProjectGraph } from '@nx/devkit'
+import { posix } from 'node:path'
 import { from } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
 import { entries } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
@@ -67,14 +68,14 @@ export function hasVersionTarget(projectGraph: ProjectGraph, projectName: string
  * @returns Project name or null if not found
  */
 function findProjectForFile(filePath: string, projectGraph: ProjectGraph): string | null {
-  const normalizedPath = filePath.replace(/\\/g, '/')
+  const normalizedPath = filePath.split(/[/\\]/).join('/')
 
   const projects = entries(projectGraph.nodes)
     .map(([name, node]) => ({
       name,
       root: node.data.root,
     }))
-    .filter((p) => normalizedPath.startsWith(p.root + '/') || normalizedPath === p.root)
+    .filter((p) => normalizedPath.startsWith(p.root + posix.sep) || normalizedPath === p.root)
     .sort((a, b) => b.root.length - a.root.length)
 
   return projects.length > 0 ? projects[0].name : null

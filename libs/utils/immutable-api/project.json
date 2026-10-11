@@ -11,7 +11,8 @@
         "node": "full",
         "browser": "full",
         "webWorker": "full"
-      }
+      },
+      "note": "`built-in-copy/websocket` loads without a `WebSocket` global (Node.js before 22); only construction throws there."
     }
   },
   "targets": {

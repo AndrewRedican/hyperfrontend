@@ -67,7 +67,7 @@ export function mergeLcov(lcovPaths: readonly string[]): Map<string, FileCoverag
 
   for (const lcovPath of lcovPaths) {
     for (const record of readFileSync(lcovPath, 'utf8').split('end_of_record')) {
-      mergeRecord(files, record.split('\n').map((line) => line.trim()))
+      mergeRecord(files, record.split(/\r?\n/).map((line) => line.trim()))
     }
   }
 

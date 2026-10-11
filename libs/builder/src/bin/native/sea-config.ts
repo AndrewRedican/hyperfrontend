@@ -38,7 +38,7 @@ export interface SeaConfigDocument {
  * @example Generating a SEA config for a bin
  * ```typescript
  * const config = generateSeaConfig({
- *   mainPath: '/abs/dist/libs/builder/bin/hf-build.cjs.js',
+ *   mainPath: '/abs/dist/libs/builder/bin/hf-build.cjs',
  *   outputPath: '/abs/dist/libs/builder/bin/hf-build.sea-prep.blob',
  * })
  * ```

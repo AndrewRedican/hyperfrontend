@@ -32,11 +32,11 @@ describe('cleanOutputPath', () => {
     const target = join(workspaceRoot, 'dist', 'libs', 'foo')
     const sibling = join(workspaceRoot, 'dist', 'libs', 'bar')
     writeManifest(target, '@scope/foo')
-    writeFileSync(join(target, 'index.cjs.js.map'), '{}')
+    writeFileSync(join(target, 'index.cjs.map'), '{}')
     writeManifest(sibling, '@scope/bar')
     cleanOutputPath(ctx(target, workspaceRoot))
     // why: the clean is scoped to one project, so a sibling library's output under the shared dist/ must survive.
-    expect({ stale: existsSync(join(target, 'index.cjs.js.map')), sibling: existsSync(sibling) }).toEqual({ stale: false, sibling: true })
+    expect({ stale: existsSync(join(target, 'index.cjs.map')), sibling: existsSync(sibling) }).toEqual({ stale: false, sibling: true })
   })
 
   it('creates a missing output directory (e.g. the first build)', () => {
@@ -60,9 +60,9 @@ describe('cleanOutputPath', () => {
   it('recognises an output a previous build left before writing its real manifest', () => {
     const target = join(workspaceRoot, 'dist', 'libs', 'foo')
     cleanOutputPath(ctx(target, workspaceRoot))
-    writeFileSync(join(target, 'index.esm.js'), 'partial')
+    writeFileSync(join(target, 'index.mjs'), 'partial')
     cleanOutputPath(ctx(target, workspaceRoot))
-    expect(existsSync(join(target, 'index.esm.js'))).toBe(false)
+    expect(existsSync(join(target, 'index.mjs'))).toBe(false)
   })
 
   it('skips the stamp when the project manifest names nothing', () => {

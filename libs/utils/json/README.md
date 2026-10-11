@@ -307,8 +307,8 @@ const result = checkPatternSafety('(a+)+')
 
 | Format | File                       | Tree-Shakeable |
 | ------ | -------------------------- | :------------: |
-| ESM    | `index.esm.js`             |       ✅       |
-| CJS    | `index.cjs.js`             |       ❌       |
+| ESM    | `index.mjs`                |       ✅       |
+| CJS    | `index.cjs`                |       ❌       |
 | IIFE   | `bundle/index.iife.min.js` |       ❌       |
 | UMD    | `bundle/index.umd.min.js`  |       ❌       |
 

@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.1.1](https://github.com/AndrewRedican/hyperfrontend/compare/e25d9f8086e811f1bef3e27faa26c5154b35956d...793105a4c3e18eaa043e6b7307f95ba143b9fdcf) - 2026-10-11
+
+### Bug Fixes
+
+- read the web crypto subtle global at first use
+
 ## [1.1.0](https://github.com/AndrewRedican/hyperfrontend/compare/106ce4517092cdfa9f222b73d938d272c333d69b...c2798e1479f78d5909adb098595846152a6f9350) - 2026-09-07
 
 ### Features

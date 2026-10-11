@@ -1,6 +1,5 @@
-import { existsSync, readFileSync } from 'node:fs'
+import { existsSync } from 'node:fs'
 import { resolve, join } from 'node:path'
-import matter from 'gray-matter'
 
 const WORKSPACE_ROOT = resolve(process.cwd(), '../..')
 
@@ -205,18 +204,6 @@ export const LIBRARIES: LibraryInfo[] = [
 ]
 
 /**
- * Parsed markdown file with frontmatter data extracted.
- */
-export interface ParsedMarkdown {
-  /** Markdown content without frontmatter */
-  content: string
-  /** Frontmatter data as key-value pairs */
-  data: Record<string, unknown>
-  /** Original file content including frontmatter */
-  rawContent: string
-}
-
-/**
  * Extracted section from markdown content.
  */
 export interface ExtractedSection {
@@ -242,29 +229,6 @@ interface SectionBuilder {
   content: string[]
   /** URL anchor slug */
   anchor: string
-}
-
-/**
- * Read and parse a markdown file with frontmatter
- *
- * @param relativePath - The relative path to the markdown file from workspace root
- * @returns The parsed markdown file with content, data, and raw content, or null if not found
- */
-export function parseMarkdownFile(relativePath: string): ParsedMarkdown | null {
-  const fullPath = join(WORKSPACE_ROOT, relativePath)
-
-  if (!existsSync(fullPath)) {
-    return null
-  }
-
-  const fileContents = readFileSync(fullPath, 'utf8')
-  const { content, data } = matter(fileContents)
-
-  return {
-    content,
-    data,
-    rawContent: fileContents,
-  }
 }
 
 /**

@@ -42,14 +42,14 @@ export default async function buildExecutor(
   }
 
   const command = options.command ?? 'npm run build'
-  const [cmd, ...args] = command.split(' ')
 
   logger.info(`Building ${projectName}...`)
   logger.info(`  Running: ${command}`)
   logger.info(`  In: ${cwd}`)
 
   try {
-    execFileSync(cmd, args, { cwd, stdio: 'inherit' })
+    // why: the command is a whole command line, and `npm` is a .cmd shim on Windows that only a shell can launch
+    execFileSync(command, { cwd, stdio: 'inherit', shell: true })
     logger.info(`Build completed for ${projectName}`)
     return { success: true }
   } catch {

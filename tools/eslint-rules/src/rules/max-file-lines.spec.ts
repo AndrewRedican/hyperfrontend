@@ -17,7 +17,7 @@ function generateCode(lines: number, functionCount: number): string {
   }
 
   const functionsCode = functions.join('\n')
-  const currentLines = functionsCode.split('\n').length
+  const currentLines = functionsCode.split(/\r?\n/).length
   const paddingNeeded = lines - currentLines
 
   if (paddingNeeded <= 0) {
@@ -42,7 +42,7 @@ function generateArrowFunctionCode(lines: number, functionCount: number): string
   }
 
   const functionsCode = functions.join('\n')
-  const currentLines = functionsCode.split('\n').length
+  const currentLines = functionsCode.split(/\r?\n/).length
   const paddingNeeded = lines - currentLines
 
   if (paddingNeeded <= 0) {
@@ -67,7 +67,7 @@ function generateClassCode(lines: number, methodCount: number): string {
   }
 
   const classCode = `class MyClass {\n${methods.join('\n')}\n}`
-  const currentLines = classCode.split('\n').length
+  const currentLines = classCode.split(/\r?\n/).length
   const paddingNeeded = lines - currentLines
 
   if (paddingNeeded <= 0) {

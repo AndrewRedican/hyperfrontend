@@ -1,6 +1,7 @@
 import type { TestConfig, TestEnvironment } from './config'
 import { globSync } from 'node:fs'
-import { relative, resolve } from 'node:path'
+import { relative, resolve, sep, posix } from 'node:path'
+import { pathToFileURL } from 'node:url'
 
 /**
  * Everything needed to build one `node --test` invocation.
@@ -36,16 +37,16 @@ export function buildRunPlan(
 ): RunPlan {
   // why: `lcov.info` is reserved for the merged report the runner writes afterwards, so the raw report an environment produces is always named after it.
   const lcovPath = resolve(coverageDir, `lcov.${environment.name}.info`)
-  const hookPath = resolve(workspaceRoot, 'tools/testing/src/hooks/register.ts')
 
   const argv = [
     // why: every file the runner loads is TypeScript, which carries no module type of its own, and Node would warn once per file about inferring one.
     '--disable-warning=MODULE_TYPELESS_PACKAGE_JSON',
+    // why: Node reads a preload or reporter value as a module specifier, and a Windows absolute path parses as a URL whose scheme is the drive letter.
     '--import',
-    hookPath,
+    moduleUrl(resolve(workspaceRoot, 'tools/testing/src/hooks/register.ts')),
     // why: the DOM lands before the project's own setup files, so a setup file may assume `document` exists, and after the hooks, which it needs to resolve its own imports.
-    ...(environment.dom ? ['--import', resolve(workspaceRoot, 'tools/testing/src/environment/dom.ts')] : []),
-    ...setupPaths(environment, projectRoot).flatMap((setup) => ['--import', setup]),
+    ...(environment.dom ? ['--import', moduleUrl(resolve(workspaceRoot, 'tools/testing/src/environment/dom.ts'))] : []),
+    ...setupPaths(environment, projectRoot).flatMap((setup) => ['--import', moduleUrl(setup)]),
     '--test',
     `--test-timeout=${config.testTimeout ?? 30_000}`,
     '--experimental-test-coverage',
@@ -53,14 +54,24 @@ export function buildRunPlan(
     ...(config.coverageExclude ?? []).map((pattern) => `--test-coverage-exclude=${pattern}`),
     ...(environment.testIgnore ?? []).map((pattern) => `--test-coverage-exclude=${pattern}`),
     // why: the thresholds are checked against the merged report instead, because Node counts a module evaluated twice as two files.
-    `--test-reporter=${resolve(workspaceRoot, 'tools/testing/src/runner/reporter.ts')}`,
+    `--test-reporter=${moduleUrl(resolve(workspaceRoot, 'tools/testing/src/runner/reporter.ts'))}`,
     '--test-reporter-destination=stdout',
     '--test-reporter=lcov',
     `--test-reporter-destination=${lcovPath}`,
     ...selectSpecFiles(environment, projectRoot),
   ]
 
-  return { environment, argv, lcovPath: relative(projectRoot, lcovPath) }
+  return { environment, argv, lcovPath: relative(projectRoot, lcovPath).split(sep).join(posix.sep) }
+}
+
+/**
+ * Renders an absolute path as the `file:` URL Node loads on every platform.
+ *
+ * @param path - Absolute path to a module.
+ * @returns A `file:` address Node accepts as a specifier.
+ */
+export function moduleUrl(path: string): string {
+  return pathToFileURL(path).href
 }
 
 /**

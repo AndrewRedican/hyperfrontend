@@ -205,14 +205,14 @@ Every option, handle, contract and payload type is in the [API reference](https:
 
 <!-- hf:media end -->
 
-Support is per entry point. [`/host`](https://www.hyperfrontend.dev/docs/libraries/features/host/) and [`/hostee`](https://www.hyperfrontend.dev/docs/libraries/features/hostee/) are browser runtimes, [`/cli`](https://www.hyperfrontend.dev/docs/libraries/features/cli/), [`/server`](https://www.hyperfrontend.dev/docs/libraries/features/server/), and [`/generators`](https://www.hyperfrontend.dev/docs/libraries/features/generators/) are Node-only, and the root entry is DOM-free and runs anywhere.
+Support is per entry point. [`/host`](https://www.hyperfrontend.dev/docs/libraries/features/host/) and [`/hostee`](https://www.hyperfrontend.dev/docs/libraries/features/hostee/) are browser runtimes, [`/cli`](https://www.hyperfrontend.dev/docs/libraries/features/cli/), [`/server`](https://www.hyperfrontend.dev/docs/libraries/features/server/), and [`/generators`](https://www.hyperfrontend.dev/docs/libraries/features/generators/) are Node-only, and the root entry is DOM-free and runs anywhere. Every entry loads on Node.js 18, with one version note: a `feature.config.ts` or `*.contract.ts` file is imported natively, so authoring them in TypeScript needs Node.js 23.6 or later (22.6 with `--experimental-strip-types`), while JSON and JavaScript files have no floor of their own.
 
 ### Output Formats
 
 | Format | File                              | Tree-Shakeable |
 | ------ | --------------------------------- | :------------: |
-| ESM    | `index.esm.js`                    |       ✅       |
-| CJS    | `index.cjs.js`                    |       ❌       |
+| ESM    | `index.mjs`                       |       ✅       |
+| CJS    | `index.cjs`                       |       ❌       |
 | IIFE   | `bundle/host/index.iife.min.js`   |       ❌       |
 | UMD    | `bundle/host/index.umd.min.js`    |       ❌       |
 | IIFE   | `bundle/hostee/index.iife.min.js` |       ❌       |

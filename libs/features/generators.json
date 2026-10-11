@@ -2,12 +2,12 @@
   "$schema": "https://raw.githubusercontent.com/nrwl/nx/master/packages/nx/schemas/generators.schema.json",
   "generators": {
     "feature": {
-      "factory": "./nx/generators/feature/index.cjs.js",
+      "factory": "./nx/generators/feature/index.cjs",
       "schema": "./nx/generators/feature/schema.json",
       "description": "Scaffold a hyperfrontend feature via the SDK."
     },
     "init": {
-      "factory": "./nx/generators/init/index.cjs.js",
+      "factory": "./nx/generators/init/index.cjs",
       "schema": "./nx/generators/init/schema.json",
       "description": "Ensure @hyperfrontend/features is declared in the workspace; runs via nx add."
     }

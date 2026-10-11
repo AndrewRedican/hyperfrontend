@@ -51,5 +51,10 @@
     "three": {
       "optional": true
     }
+  },
+  "overrides": {
+    "npm-run-all2": {
+      "shell-quote": "1.12.0"
+    }
   }
 }

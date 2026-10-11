@@ -27,6 +27,7 @@ This directory contains the CI/CD workflows for the hyperfrontend monorepo.
 - `build`: Build with artifact upload (affected only)
 - `test`: Testing with coverage upload (affected only)
 - `e2e`: E2E tests (affected only)
+- `node-floor`: Loads every built package entry on the Node.js floor the packages declare (affected only)
 - `ci-status`: Aggregates results and provides final status
 - `version-check`: Validates version bumps were applied locally (runs after ci-status)
 
@@ -53,6 +54,7 @@ This directory contains the CI/CD workflows for the hyperfrontend monorepo.
 - `build`: Build with artifact upload (all projects)
 - `test`: Testing with coverage thresholds (all projects)
 - `e2e`: E2E tests (all projects)
+- `node-floor`: Loads every built package entry on the Node.js floor the packages declare (all projects)
 - `ci-status`: Aggregates results and provides final status
 - `push-tags`: Creates and pushes version tags
 - `publish`: Publishes affected libraries to npm

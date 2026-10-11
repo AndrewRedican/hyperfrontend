@@ -14,4 +14,3 @@ export type {
 } from './worker/types'
 export { toBinBuildDescriptor, toCjsBuildDescriptor, toEsmBuildDescriptor, toIifeBuildDescriptor, toUmdBuildDescriptor } from './descriptor'
 export { dispatchRollupWorker, resolveDefaultRollupWorkerPath } from './dispatch'
-export { runRollupWorkerJob } from './worker'

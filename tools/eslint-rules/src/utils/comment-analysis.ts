@@ -1,5 +1,6 @@
 import type { TSESTree } from '@typescript-eslint/utils'
 import type { SourceCode } from '@typescript-eslint/utils/ts-eslint'
+import { basename } from 'node:path'
 
 /**
  * Common JSDoc tags that indicate legitimate documentation rather than decorative comments.
@@ -119,9 +120,11 @@ export const TOOLING_DIRECTIVE_PATTERNS = [
 
 /**
  * Allowed hint prefixes for inline comments (case-insensitive).
- * The prefix must be followed by a colon.
+ * The prefix must be followed by a colon. `compat:` marks code that exists only
+ * for a runtime below a stated bound (`compat: node<22 ...`), so the shims a
+ * raised floor makes obsolete can be found again.
  */
-export const ALLOWED_HINT_PREFIXES = ['why', 'how', 'context', 'magic', 'todo', 'fixme', 'note', 'ref']
+export const ALLOWED_HINT_PREFIXES = ['why', 'how', 'context', 'magic', 'todo', 'fixme', 'note', 'ref', 'compat']
 
 /**
  * Checks if comment content contains a valid JSDoc tag.
@@ -262,7 +265,7 @@ export function isDecorativeHeaderComment(comment: TSESTree.Comment, sourceCode:
   }
 
   // note: Check if it looks like a header comment (typically multi-line with prose)
-  const lines = comment.value.split('\n')
+  const lines = comment.value.split(/\r?\n/)
   if (lines.length < 2) return false
 
   // note: A decorative header typically has prose content without meaningful tags
@@ -430,7 +433,7 @@ export function isConfigFile(filePath: string): boolean {
     'lefthook',
   ]
 
-  const fileName = filePath.split('/').pop()?.toLowerCase() || ''
+  const fileName = basename(filePath).toLowerCase()
 
   for (const pattern of configPatterns) {
     if (fileName.includes(pattern.toLowerCase())) {

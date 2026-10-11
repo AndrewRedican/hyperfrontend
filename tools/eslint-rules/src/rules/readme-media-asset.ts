@@ -92,7 +92,7 @@ export function isThemedVariantUrl(url: string): boolean {
  */
 export function detectMediaReferences(content: string): MediaReference[] {
   const references: MediaReference[] = []
-  const lines = content.split('\n')
+  const lines = content.split(/\r?\n/)
   let inCodeBlock = false
 
   for (let i = 0; i < lines.length; i++) {

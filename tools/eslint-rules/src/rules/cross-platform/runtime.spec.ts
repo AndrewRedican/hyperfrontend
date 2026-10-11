@@ -1,6 +1,6 @@
 import { after as afterAll } from 'node:test'
 import { createTempWorkspaceManager, createTypeScriptRuleTester } from '../../testing'
-import rule, { RULE_NAME } from '../lib-cross-platform'
+import rule, { RULE_NAME } from '../cross-platform'
 import { createCrossPlatformFiles } from './test-workspaces'
 
 const manager = createTempWorkspaceManager()
@@ -66,6 +66,63 @@ ruleTester.run(`${RULE_NAME} runtime`, rule, {
         'spawn(command, [])',
         "spawn(isWindows ? 'git.exe' : 'git', [])",
         'spawn(config.binary, [])',
+      ].join('\n'),
+      filename: files.node,
+    },
+    {
+      name: 'allows spawns of entry scripts, other paths, and split lines that are not commands',
+      code: [
+        "import { execFileSync, spawn } from 'node:child_process'",
+        "import { join } from 'node:path'",
+        "execFileSync(process.execPath, [require.resolve('typescript/bin/tsc'), '--noEmit'])",
+        "spawn(join(root, 'node_modules', '.bin'), [])",
+        "spawn(join(root, 'bin', 'tool'), [])",
+        "spawn(locate(root, '.bin', 'tsc'), [])",
+        "spawn(join(root, '.bin', name), [])",
+        "spawn('.bin/' + name, [])",
+        "spawn(join(root, 'node_modules', '.bin', 'tsc'), [], { shell: true })",
+        "const [first, second] = line.split(' ')",
+        'spawn(second, [])',
+        "const [word] = line.split(',')",
+        'spawn(word, [])',
+        'const [head] = words',
+        'spawn(head, [])',
+        'const [, later] = line.split(/\\s+/)',
+        'spawn(later, [])',
+        "spawn(line.split(' ')[1], [])",
+        "spawn(line.split(' ')[index], [])",
+        'spawn(words[0], [])',
+        "spawn(line.split(' ').length, [])",
+        "const { file } = line.split(' ')",
+        'spawn(file, [])',
+        'spawn(spawn, [])',
+        'spawn(factory()(), [])',
+      ].join('\n'),
+      filename: files.node,
+    },
+    {
+      name: 'allows specifier flags followed by specifiers, file URLs, or nothing',
+      code: [
+        "import { register } from 'node:module'",
+        "import { join } from 'node:path'",
+        "import { pathToFileURL } from 'node:url'",
+        "const a = ['--import', './register.mjs', '--test-reporter', 'lcov', '--import']",
+        "const b = ['--import', pathToFileURL(join(root, 'x.js')).href]",
+        "const c = ['--require', join(root, 'x.js'), '--import', ...rest]",
+        "const d = [, '--import', specifier]",
+        "args.push('--loader', 'tsx')",
+        "args.concat('--import', join(root, 'x.js'))",
+        "push('--import', join(root, 'x.js'))",
+        'const e = `--import=${pathToFileURL(join(root, "x.js")).href}`',
+        'const f = `--import=${join(root, "x.js")}.js`',
+        'const g = `--require=${join(root, "x.js")}`',
+        'const h = `${a}--import=${join(root, "x.js")}`',
+        'const i = `--import=`',
+        "register('./hooks.mjs', import.meta.url)",
+        "register(pathToFileURL(join(root, 'hooks.mjs')).href)",
+        'register()',
+        'register(...rest)',
+        "other.register(join(root, 'hooks.mjs'))",
       ].join('\n'),
       filename: files.node,
     },
@@ -250,6 +307,110 @@ ruleTester.run(`${RULE_NAME} runtime`, rule, {
       filename: files.node,
     },
     {
+      name: 'reports launchers under node_modules/.bin without a shell suggestion',
+      code: [
+        "import { execFileSync, spawn } from 'node:child_process'",
+        "import { join, resolve } from 'node:path'",
+        "const tscPath = join(workspaceRoot, 'node_modules', '.bin', 'tsc')",
+        "execFileSync(tscPath, ['--noEmit'], { cwd })",
+        "spawn(resolve(root, 'node_modules/.bin/typedoc'), [])",
+        'spawn(`${prefix}/node_modules/.bin/eslint`, [])',
+        "spawn(prefix + '/node_modules/.bin/' + 'vite', [])",
+        "spawn('./node_modules/.bin/rollup', [])",
+        "spawn(win ? join(bin, '.bin', 'tool.cmd') : join(bin, '.bin', 'tool'), [])",
+      ].join('\n'),
+      errors: [
+        { messageId: 'binShim', data: { command: 'tsc' }, suggestions: [] },
+        { messageId: 'binShim', data: { command: 'typedoc' }, suggestions: [] },
+        { messageId: 'binShim', data: { command: 'eslint' }, suggestions: [] },
+        { messageId: 'binShim', data: { command: 'vite' }, suggestions: [] },
+        { messageId: 'binShim', data: { command: 'rollup' }, suggestions: [] },
+        { messageId: 'binShim', data: { command: 'tool.cmd' }, suggestions: [] },
+      ],
+      filename: files.node,
+    },
+    {
+      name: 'reports the first word of a split command line without a shell suggestion',
+      code: [
+        "import { execFileSync, spawn } from 'node:child_process'",
+        "const [cmd, ...args] = command.split(' ')",
+        "execFileSync(cmd, args, { cwd, stdio: 'inherit' })",
+        "spawn(line.split(' ')[0], [])",
+        'const words = line.split(/\\s+/)',
+        'spawn(words[0], [])',
+      ].join('\n'),
+      errors: [
+        { messageId: 'splitCommand', data: { command: 'cmd' }, suggestions: [] },
+        { messageId: 'splitCommand', data: { command: "line.split(' ')[0]" }, suggestions: [] },
+        { messageId: 'splitCommand', data: { command: 'words[0]' }, suggestions: [] },
+      ],
+      filename: files.node,
+    },
+    {
+      name: 'fixes native paths that follow a specifier flag to file URLs',
+      code: [
+        "import { join } from 'node:path'",
+        "import { pathToFileURL } from 'node:url'",
+        "const a = ['--import', join(root, 'register.ts'), '--test']",
+        "args.push('--test-reporter', join(root, 'reporter.ts'))",
+        "args.unshift('--loader', process.cwd())",
+        'const b = `--experimental-loader=${join(root, "loader.mjs")}`',
+      ].join('\n'),
+      output: [
+        "import { join } from 'node:path'",
+        "import { pathToFileURL } from 'node:url'",
+        "const a = ['--import', pathToFileURL(join(root, 'register.ts')).href, '--test']",
+        "args.push('--test-reporter', pathToFileURL(join(root, 'reporter.ts')).href)",
+        "args.unshift('--loader', pathToFileURL(process.cwd()).href)",
+        'const b = `--experimental-loader=${pathToFileURL(join(root, "loader.mjs")).href}`',
+      ].join('\n'),
+      errors: [
+        { messageId: 'nativeSpecifier', data: { target: '--import' } },
+        { messageId: 'nativeSpecifier', data: { target: '--test-reporter' } },
+        { messageId: 'nativeSpecifier', data: { target: '--loader' } },
+        { messageId: 'nativeSpecifier', data: { target: '--experimental-loader' } },
+      ],
+      filename: files.node,
+    },
+    {
+      name: 'suggests a file URL for a path-like name after a specifier flag',
+      code: "const argv = ['--import', setupFile]",
+      errors: [
+        {
+          messageId: 'nativeSpecifier',
+          data: { target: '--import' },
+          suggestions: [
+            {
+              messageId: 'treatAsNative',
+              output: "import { pathToFileURL } from 'node:url'\nconst argv = ['--import', pathToFileURL(setupFile).href]",
+            },
+          ],
+        },
+      ],
+      filename: files.node,
+    },
+    {
+      name: 'fixes a native path registered as module hooks to a file URL',
+      code: "import module, { register } from 'node:module'\nimport { join } from 'node:path'\nregister(join(root, 'hooks.mjs'))\nmodule.register(hooksPath, parent)",
+      output:
+        "import module, { register } from 'node:module'\nimport { join } from 'node:path'\nimport { pathToFileURL } from 'node:url'\nregister(pathToFileURL(join(root, 'hooks.mjs')).href)\nmodule.register(hooksPath, parent)",
+      errors: [
+        { messageId: 'nativeSpecifier', data: { target: 'register()' } },
+        {
+          messageId: 'nativeSpecifier',
+          data: { target: 'register()' },
+          suggestions: [
+            {
+              messageId: 'treatAsNative',
+              output:
+                "import module, { register } from 'node:module'\nimport { join } from 'node:path'\nimport { pathToFileURL } from 'node:url'\nregister(join(root, 'hooks.mjs'))\nmodule.register(pathToFileURL(hooksPath).href, parent)",
+            },
+          ],
+        },
+      ],
+      filename: files.node,
+    },
+    {
       name: 'fixes a split on a bare line feed or CRLF',
       code: "const a = text.split('\\n')\nconst b = text.split(`\\r\\n`)",
       output: 'const a = text.split(/\\r?\\n/)\nconst b = text.split(/\\r?\\n/)',
@@ -262,6 +423,7 @@ ruleTester.run(`${RULE_NAME} runtime`, rule, {
       errors: [
         {
           messageId: 'hardcodedTmp',
+          // eslint-disable-next-line workspace/cross-platform -- the expected message names the POSIX path the rule reports
           data: { path: '/tmp' },
           suggestions: [
             { messageId: 'useOsPath', data: { replacement: 'tmpdir()' }, output: "import { tmpdir } from 'node:os'\nconst dir = tmpdir()" },
@@ -276,6 +438,7 @@ ruleTester.run(`${RULE_NAME} runtime`, rule, {
       errors: [
         {
           messageId: 'hardcodedTmp',
+          // eslint-disable-next-line workspace/cross-platform -- the expected message names the POSIX path the rule reports
           data: { path: '/dev/null' },
           suggestions: [{ messageId: 'useOsPath', output: "import os from 'node:os'\nconst a = os.devNull\nconst b = `/dev/null`" }],
         },

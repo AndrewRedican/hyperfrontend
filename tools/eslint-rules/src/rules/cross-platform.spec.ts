@@ -1,13 +1,15 @@
 import { after as afterAll } from 'node:test'
 import { createTempWorkspaceManager, createTypeScriptRuleTester } from '../testing'
-import rule, { RULE_NAME } from './lib-cross-platform'
-import { createCrossPlatformFiles } from './lib-cross-platform/test-workspaces'
+import rule, { RULE_NAME } from './cross-platform'
+import { createCrossPlatformFiles } from './cross-platform/test-workspaces'
 
 const manager = createTempWorkspaceManager()
 
 afterAll(() => manager.cleanupAll())
 
 const files = createCrossPlatformFiles(manager)
+
+const projectless = manager.create().getPath('src/file.ts')
 
 const ruleTester = createTypeScriptRuleTester()
 
@@ -17,6 +19,35 @@ ruleTester.run(RULE_NAME, rule, {
       name: 'ignores libraries that are not published',
       code: "import { join } from 'node:path'\njoin(a, b).split('/')",
       filename: files.unpublished,
+    },
+    {
+      name: 'ignores a file no project owns',
+      code: "import { join } from 'node:path'\njoin(a, b).split('/')",
+      filename: projectless,
+      options: [{ include: [{ files: ['**'] }] }],
+    },
+    {
+      name: 'ignores a project the default include leaves out',
+      code: "import { join } from 'node:path'\njoin(a, b).split('/')",
+      filename: files.tool,
+    },
+    {
+      name: 'ignores a project no files glob selects',
+      code: "import { join } from 'node:path'\njoin(a, b).split('/')",
+      filename: files.tool,
+      options: [{ include: [{ files: ['apps/**'] }] }],
+    },
+    {
+      name: 'ignores files globs when no workspace root is found',
+      code: "import { join } from 'node:path'\njoin(a, b).split('/')",
+      filename: files.unpublished,
+      options: [{ include: [{ files: ['**'] }] }],
+    },
+    {
+      name: 'ignores publishable libraries when include leaves their selector out',
+      code: "import { join } from 'node:path'\njoin(a, b).split('/')",
+      filename: files.node,
+      options: [{ include: [{ files: ['tools/**'] }] }],
     },
     {
       name: 'allows a slash matched against a portable path',
@@ -102,6 +133,30 @@ ruleTester.run(RULE_NAME, rule, {
     },
   ],
   invalid: [
+    {
+      name: 'checks a project a files glob selects',
+      code: "import { join } from 'node:path'\njoin(a, b).split('/')",
+      output: "import { join, sep } from 'node:path'\njoin(a, b).split(sep)",
+      errors: [{ messageId: 'separatorLiteral', data: { method: 'split' } }],
+      filename: files.tool,
+      options: [{ include: [{ files: ['tools/**'] }] }],
+    },
+    {
+      name: 'keeps checking publishable libraries beside a files entry',
+      code: "import { join } from 'node:path'\njoin(a, b).split('/')",
+      output: "import { join, sep } from 'node:path'\njoin(a, b).split(sep)",
+      errors: [{ messageId: 'separatorLiteral', data: { method: 'split' } }],
+      filename: files.node,
+      options: [{ include: [{ publishableLibraries: true }, { files: ['tools/**'] }] }],
+    },
+    {
+      name: 'checks a files glob beside the publishable libraries selector',
+      code: "import { join } from 'node:path'\njoin(a, b).split('/')",
+      output: "import { join, sep } from 'node:path'\njoin(a, b).split(sep)",
+      errors: [{ messageId: 'separatorLiteral', data: { method: 'split' } }],
+      filename: files.tool,
+      options: [{ include: [{ publishableLibraries: true }, { files: ['tools/**'] }] }],
+    },
     {
       name: 'fixes a slash split on a native path to sep',
       code: "import { join } from 'node:path'\njoin(a, b).split('/')",

@@ -15,7 +15,7 @@ describe('parseChunk', () => {
 
 describe('resolveRelativeTarget', () => {
   it('joins a relative specifier against the importer directory', () => {
-    expect(resolveRelativeTarget('/dist/libs/foo/_dependencies/a', '../b/index.esm.js')).toBe('/dist/libs/foo/_dependencies/b/index.esm.js')
+    expect(resolveRelativeTarget('/dist/libs/foo/_dependencies/a', '../b/index.mjs')).toBe('/dist/libs/foo/_dependencies/b/index.mjs')
   })
 
   it('returns null for a non-relative specifier', () => {
@@ -25,7 +25,7 @@ describe('resolveRelativeTarget', () => {
 
 describe('getRequireSpecifier', () => {
   it('returns the specifier of a literal require call', () => {
-    expect(getRequireSpecifier(firstExpression("require('./dep/index.cjs.js')"))).toBe('./dep/index.cjs.js')
+    expect(getRequireSpecifier(firstExpression("require('./dep/index.cjs')"))).toBe('./dep/index.cjs')
   })
 
   it('returns null when the node is not a call expression', () => {

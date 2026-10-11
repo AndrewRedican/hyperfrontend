@@ -1,3 +1,4 @@
+import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { after as afterAll } from 'node:test'
 import { describe } from '@hyperfrontend/testing'
@@ -201,7 +202,7 @@ describe('lib-tsconfig-paths', () => {
           2
         ),
         options: [{ libraryDirectories: ['libs'] }],
-        filename: '/tmp/other-tsconfig.json',
+        filename: join(tmpdir(), 'other-tsconfig.json'),
       },
       {
         name: 'ignores package.json self-references',

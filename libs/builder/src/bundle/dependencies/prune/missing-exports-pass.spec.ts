@@ -72,37 +72,37 @@ describe('synthesizeMissingExportsPass', () => {
   })
 
   it('synthesizes a named export an entry demands from an interop wrapper', () => {
-    write('_dependencies/postject/index.esm.js', WRAPPER)
-    write('index.esm.js', "import { inject } from './_dependencies/postject/index.esm.js';\nexport const run = () => inject();\n")
+    write('_dependencies/postject/index.mjs', WRAPPER)
+    write('index.mjs', "import { inject } from './_dependencies/postject/index.mjs';\nexport const run = () => inject();\n")
     expect(synthesizeMissingExportsPass(makeContext(outputPath), depsRoot)).toEqual({ namedExportsSynthesized: 1 })
   })
 
   it('appends the synthesized binding to the wrapper chunk', () => {
-    write('_dependencies/postject/index.esm.js', WRAPPER)
-    write('index.esm.js', "import { inject } from './_dependencies/postject/index.esm.js';\nexport const run = () => inject();\n")
+    write('_dependencies/postject/index.mjs', WRAPPER)
+    write('index.mjs', "import { inject } from './_dependencies/postject/index.mjs';\nexport const run = () => inject();\n")
     synthesizeMissingExportsPass(makeContext(outputPath), depsRoot)
-    expect(read('_dependencies/postject/index.esm.js')).toContain('export { inject$1 as inject };')
+    expect(read('_dependencies/postject/index.mjs')).toContain('export { inject$1 as inject };')
   })
 
   it('collects demand from sibling dependency chunks as importers', () => {
-    write('_dependencies/postject/index.esm.js', WRAPPER)
+    write('_dependencies/postject/index.mjs', WRAPPER)
     write(
-      '_dependencies/other/index.esm.js',
-      "import { inject } from '../postject/index.esm.js';\nconst use = () => inject();\nexport { use };\n"
+      '_dependencies/other/index.mjs',
+      "import { inject } from '../postject/index.mjs';\nconst use = () => inject();\nexport { use };\n"
     )
     expect(synthesizeMissingExportsPass(makeContext(outputPath), depsRoot)).toEqual({ namedExportsSynthesized: 1 })
   })
 
   it('treats wholesale namespace demand as needing no synthesis', () => {
-    write('_dependencies/postject/index.esm.js', WRAPPER)
-    write('index.esm.js', "import * as postject from './_dependencies/postject/index.esm.js';\nexport const run = () => postject;\n")
+    write('_dependencies/postject/index.mjs', WRAPPER)
+    write('index.mjs', "import * as postject from './_dependencies/postject/index.mjs';\nexport const run = () => postject;\n")
     expect(synthesizeMissingExportsPass(makeContext(outputPath), depsRoot)).toEqual({ namedExportsSynthesized: 0 })
   })
 
   it('leaves a chunk untouched when its exports satisfy the demand', () => {
-    write('_dependencies/tool/index.esm.js', 'const run = () => 1;\nexport { run };\n')
-    write('index.esm.js', "import { run } from './_dependencies/tool/index.esm.js';\nexport const go = () => run();\n")
+    write('_dependencies/tool/index.mjs', 'const run = () => 1;\nexport { run };\n')
+    write('index.mjs', "import { run } from './_dependencies/tool/index.mjs';\nexport const go = () => run();\n")
     synthesizeMissingExportsPass(makeContext(outputPath), depsRoot)
-    expect(read('_dependencies/tool/index.esm.js')).toBe('const run = () => 1;\nexport { run };\n')
+    expect(read('_dependencies/tool/index.mjs')).toBe('const run = () => 1;\nexport { run };\n')
   })
 })

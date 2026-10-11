@@ -170,10 +170,10 @@ Every model, option, step and outcome type is in the [API reference](https://www
 
 ### Output Formats
 
-| Format | File           | Tree-Shakeable |
-| ------ | -------------- | :------------: |
-| ESM    | `index.esm.js` |       ✅       |
-| CJS    | `index.cjs.js` |       ❌       |
+| Format | File        | Tree-Shakeable |
+| ------ | ----------- | :------------: |
+| ESM    | `index.mjs` |       ✅       |
+| CJS    | `index.cjs` |       ❌       |
 
 ## Security
 

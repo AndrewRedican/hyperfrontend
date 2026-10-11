@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict'
+import { join } from 'node:path'
 import { describe, it } from 'node:test'
 import { firstExistingFile, loadAliases, resolveAlias } from './paths'
 
@@ -27,20 +28,26 @@ describe('loadAliases', () => {
 
 describe('firstExistingFile', () => {
   it('returns a path that already carries an extension', () => {
-    const target = `${WORKSPACE_ROOT}/tools/testing/src/hooks/paths.ts`
+    const target = join(WORKSPACE_ROOT, 'tools', 'testing', 'src', 'hooks', 'paths.ts')
     assert.equal(firstExistingFile(target), target)
   })
 
   it('appends a TypeScript extension to an extensionless path', () => {
-    assert.equal(firstExistingFile(`${WORKSPACE_ROOT}/tools/testing/src/hooks/paths`), `${WORKSPACE_ROOT}/tools/testing/src/hooks/paths.ts`)
+    assert.equal(
+      firstExistingFile(join(WORKSPACE_ROOT, 'tools', 'testing', 'src', 'hooks', 'paths')),
+      join(WORKSPACE_ROOT, 'tools', 'testing', 'src', 'hooks', 'paths.ts')
+    )
   })
 
   it('resolves a directory to its index module', () => {
-    assert.equal(firstExistingFile(`${WORKSPACE_ROOT}/tools/testing/src`), `${WORKSPACE_ROOT}/tools/testing/src/index.ts`)
+    assert.equal(
+      firstExistingFile(join(WORKSPACE_ROOT, 'tools', 'testing', 'src')),
+      join(WORKSPACE_ROOT, 'tools', 'testing', 'src', 'index.ts')
+    )
   })
 
   it('returns null when nothing matches', () => {
-    assert.equal(firstExistingFile(`${WORKSPACE_ROOT}/tools/testing/src/hooks/absent`), null)
+    assert.equal(firstExistingFile(join(WORKSPACE_ROOT, 'tools', 'testing', 'src', 'hooks', 'absent')), null)
   })
 })
 
@@ -48,14 +55,14 @@ describe('resolveAlias', () => {
   it('maps an exact workspace alias to its source file', () => {
     assert.equal(
       resolveAlias('@hyperfrontend/testing', loadAliases(WORKSPACE_ROOT), WORKSPACE_ROOT),
-      `${WORKSPACE_ROOT}/tools/testing/src/index.ts`
+      join(WORKSPACE_ROOT, 'tools', 'testing', 'src', 'index.ts')
     )
   })
 
   it('maps a wildcard alias through its subpath', () => {
     assert.equal(
       resolveAlias('@hyperfrontend/immutable-api-utils/built-in-copy/object', loadAliases(WORKSPACE_ROOT), WORKSPACE_ROOT),
-      `${WORKSPACE_ROOT}/libs/utils/immutable-api/src/built-in-copy/object/index.ts`
+      join(WORKSPACE_ROOT, 'libs', 'utils', 'immutable-api', 'src', 'built-in-copy', 'object', 'index.ts')
     )
   })
 

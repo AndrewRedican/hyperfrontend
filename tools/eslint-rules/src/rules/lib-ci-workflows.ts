@@ -1,5 +1,5 @@
 import type { Rule } from 'eslint'
-import { basename, dirname, join } from 'node:path'
+import { basename, dirname, join, posix, relative, sep } from 'node:path'
 import { min } from '@hyperfrontend/immutable-api-utils/built-in-copy/math'
 import {
   exists,
@@ -73,7 +73,7 @@ type WithProjectName = {
  * @returns The coverage flag name.
  */
 export function deriveCoverageFlag(relativePath: string): string {
-  const parts = relativePath.split('/')
+  const parts = relativePath.split(posix.sep)
 
   if (parts.length >= 3 && parts[0] === 'libs' && parts[1] === 'utils') {
     const utilName = parts[2] as string
@@ -100,7 +100,7 @@ function findPublishableLibraries(baseDir: string, workspaceRoot: string, result
   }
 
   if (isPublishableLibraryDir(baseDir)) {
-    const relativePath = baseDir.slice(workspaceRoot.length + 1)
+    const relativePath = relative(workspaceRoot, baseDir).split(sep).join(posix.sep)
     const projectJsonPath = join(baseDir, 'project.json')
     const projectJson = readJsonFileIfExists<ProjectJson & WithProjectName>(projectJsonPath)
 
@@ -141,9 +141,9 @@ function findPublishableLibraries(baseDir: string, workspaceRoot: string, result
  * @returns True if the path filter exists.
  */
 export function hasPathFilter(content: string, coverageFlag: string, relativePath: string): boolean {
-  const lines = content.split('\n')
+  const lines = content.split(/\r?\n/)
   const filterPattern = `${coverageFlag}:`
-  const pathPattern = `'${relativePath}/**'`
+  const pathPattern = `'${posix.join(relativePath, '**')}'`
 
   for (let i = 0; i < lines.length; i++) {
     const line = (lines[i] as string).trim()
@@ -170,7 +170,7 @@ export function hasPathFilter(content: string, coverageFlag: string, relativePat
  * @returns True if the matrix entry exists.
  */
 export function hasMatrixEntry(content: string, projectName: string, coverageFlag: string, relativePath: string): boolean {
-  const lines = content.split('\n')
+  const lines = content.split(/\r?\n/)
 
   for (const line of lines) {
     const trimmed = line.trim()

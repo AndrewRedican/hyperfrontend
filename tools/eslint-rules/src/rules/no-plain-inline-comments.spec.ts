@@ -50,6 +50,10 @@ const testHelper = {}`,
 function workaround() {}`,
   },
   {
+    code: `// compat: node<22 the WebSocket global arrived in Node 22
+const CONNECTING = 0`,
+  },
+  {
     code: `// WHY: Uppercase is also allowed
 const x = 1`,
   },

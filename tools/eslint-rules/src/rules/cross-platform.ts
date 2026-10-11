@@ -1,19 +1,28 @@
-import type { CheckContext, MessageIds, PathHelperModule, RuleOptions } from './lib-cross-platform/types'
+import type { CheckContext, MessageIds, PathHelperModule, RuleOptions } from './cross-platform/types'
 import { dirname } from 'node:path'
 import { ESLintUtils } from '@typescript-eslint/utils'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
-import { isPublishableLibrary } from '../utils/nx-project'
 import { findProjectRoot, findWorkspaceRoot } from '../utils/workspace'
-import { checkPosixConversion, checkRelativeEscapes } from './lib-cross-platform/conversions'
-import { createClassifier, tierOfDomain } from './lib-cross-platform/domain'
-import { importsNodeModule, isNodeCapableProject } from './lib-cross-platform/node-project'
-import { checkHardcodedTmp, checkLineSplit, checkNativeImport, checkShellShim, checkUrlPathname } from './lib-cross-platform/runtime'
-import { checkDriveLetterLoss, checkSeparatorJoin, checkSeparatorMethod } from './lib-cross-platform/separators'
+import { checkPosixConversion, checkRelativeEscapes } from './cross-platform/conversions'
+import { createClassifier, tierOfDomain } from './cross-platform/domain'
+import { DEFAULT_INCLUDE, isIncluded } from './cross-platform/include'
+import { importsNodeModule, isNodeCapableProject } from './cross-platform/node-project'
+import {
+  checkHardcodedTmp,
+  checkLineSplit,
+  checkNativeImport,
+  checkNativeRegister,
+  checkShellShim,
+  checkSpecifierFlagList,
+  checkSpecifierFlagTemplate,
+  checkUrlPathname,
+} from './cross-platform/runtime'
+import { checkDriveLetterLoss, checkSeparatorJoin, checkSeparatorMethod } from './cross-platform/separators'
 
 /**
- * Rule identifier for the lib-cross-platform rule.
+ * Rule identifier for the cross-platform rule.
  */
-export const RULE_NAME = 'lib-cross-platform'
+export const RULE_NAME = 'cross-platform'
 
 /**
  * Exports of `@hyperfrontend/project-scope/core` whose output is native.
@@ -67,7 +76,7 @@ const DEFAULT_SHIM_COMMANDS = [
 ]
 
 /**
- * Creates the lib-cross-platform ESLint rule.
+ * Creates the cross-platform ESLint rule.
  */
 const rule = ESLintUtils.RuleCreator(
   (name) => `https://github.com/AndrewRedican/hyperfrontend/blob/main/tools/eslint-rules/docs/${name}.md`
@@ -77,7 +86,7 @@ const rule = ESLintUtils.RuleCreator(
     type: 'problem',
     docs: {
       description:
-        'Keep publishable libraries working on Windows: path separators, absolute paths, dynamic imports, .cmd shims, and CRLF text',
+        'Keep publishable libraries, and any other files the include option selects, working on Windows: path separators, absolute paths, module specifiers, .cmd shims, and CRLF text',
     },
     fixable: 'code',
     hasSuggestions: true,
@@ -104,6 +113,30 @@ const rule = ESLintUtils.RuleCreator(
             items: { type: 'string' },
             description: 'Commands that are .cmd shims on Windows and need a shell to spawn.',
           },
+          include: {
+            type: 'array',
+            description: 'The files the rule checks. Each entry adds files; a file is checked when any entry selects it.',
+            items: {
+              oneOf: [
+                {
+                  type: 'object',
+                  properties: {
+                    publishableLibraries: { type: 'boolean', enum: [true], description: 'Select every file of a publishable library.' },
+                  },
+                  required: ['publishableLibraries'],
+                  additionalProperties: false,
+                },
+                {
+                  type: 'object',
+                  properties: {
+                    files: { type: 'array', items: { type: 'string' }, minItems: 1, description: 'Workspace-relative globs.' },
+                  },
+                  required: ['files'],
+                  additionalProperties: false,
+                },
+              ],
+            },
+          },
         },
         additionalProperties: false,
       },
@@ -122,9 +155,15 @@ const rule = ESLintUtils.RuleCreator(
         'Convert native paths to POSIX with `.split(sep).join(posix.sep)`. This spelling also rewrites backslashes on POSIX, where they are legal file-name characters.',
       nativeImport:
         "`import()` of a native path fails on Windows, where 'C:\\x' parses as a URL with scheme 'c:'. Import `pathToFileURL(path).href` from node:url instead.",
+      nativeSpecifier:
+        "`{{ target }}` takes a module specifier, and a native path fails on Windows, where 'C:\\x' parses as a URL with scheme 'c:'. Pass `pathToFileURL(path).href` from node:url instead.",
       urlPathname: "`.pathname` of a module URL is '/C:/x' with percent-encoding on Windows. Use `fileURLToPath()` from node:url.",
       shellShim:
         "'{{ command }}' is a .cmd shim on Windows and cannot be spawned without a shell (ENOENT or EINVAL). Pass `shell: process.platform === 'win32'` and keep its arguments free of spaces and shell metacharacters.",
+      binShim:
+        "'{{ command }}' under node_modules/.bin is a shell script on POSIX and a .cmd shim on Windows, which cannot be spawned without a shell (ENOENT or EINVAL), and a shell splits a path that contains a space. Spawn `process.execPath` with the package's entry script, resolved with `require.resolve()`.",
+      splitCommand:
+        '`{{ command }}` is the first word of a split command line, and a .cmd shim such as `npm` cannot be spawned without a shell on Windows (ENOENT or EINVAL). Run the whole line through a shell: `execFileSync(line, { shell: true })`.',
       lineSplit: "Splitting on a bare line feed leaves '\\r' on every line of a CRLF file. Split on `/\\r?\\n/`.",
       hardcodedTmp: "'{{ path }}' does not exist on Windows. Use `tmpdir()` or `devNull` from node:os.",
       treatAsNative: 'Treat it as a native OS path: `{{ replacement }}`',
@@ -133,13 +172,16 @@ const rule = ESLintUtils.RuleCreator(
       useOsPath: 'Use `{{ replacement }}` from node:os',
     },
   },
-  defaultOptions: [{ helpers: DEFAULT_HELPERS, shimCommands: DEFAULT_SHIM_COMMANDS }],
+  defaultOptions: [{ helpers: DEFAULT_HELPERS, shimCommands: DEFAULT_SHIM_COMMANDS, include: [...DEFAULT_INCLUDE] }],
   create(context, [options]) {
     const projectRoot = findProjectRoot(dirname(context.filename))
-    if (!projectRoot || !isPublishableLibrary(projectRoot)) return {}
+    if (!projectRoot) return {}
+    const workspaceRoot = findWorkspaceRoot(projectRoot)
+    // why: defaultOptions always supplies include, so the fallback is unreachable
+    if (!isIncluded(context.filename, projectRoot, workspaceRoot, options?.include ?? DEFAULT_INCLUDE)) return {}
 
     const sourceCode = context.sourceCode
-    const binding = { sourceCode, filename: context.filename, workspaceRoot: findWorkspaceRoot(projectRoot) }
+    const binding = { sourceCode, filename: context.filename, workspaceRoot }
     const helpers = options?.helpers ?? DEFAULT_HELPERS
     const classify = createClassifier(binding, helpers)
     const nodeCapable = isNodeCapableProject(projectRoot)
@@ -162,8 +204,14 @@ const rule = ESLintUtils.RuleCreator(
         checkPosixConversion(check, node)
         checkShellShim(check, node)
         checkLineSplit(check, node)
+        checkNativeRegister(check, node)
+        checkSpecifierFlagList(check, node)
+      },
+      ArrayExpression(node) {
+        checkSpecifierFlagList(check, node)
       },
       TemplateLiteral(node) {
+        checkSpecifierFlagTemplate(check, node)
         checkSeparatorJoin(check, node)
         checkDriveLetterLoss(check, node)
         checkHardcodedTmp(check, node)

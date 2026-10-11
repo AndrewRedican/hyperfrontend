@@ -1,10 +1,10 @@
-# lib-cross-platform
+# cross-platform
 
-Keep publishable libraries working on Windows: path separators, absolute-path tests, dynamic imports of file paths, `.cmd` shims, and CRLF text.
+Keep publishable libraries, and any other files the `include` option selects, working on Windows: path separators, absolute-path tests, file paths used as module specifiers, `.cmd` shims, and CRLF text.
 
 ## Rule Details
 
-The libraries are developed and tested on Linux, but many consumers run them on Windows. Most Windows breakage sits where a string crosses between two separator conventions, so the rule tracks where each string value comes from and reports only the crossings.
+The libraries are developed and tested on Linux, but many consumers run them on Windows, and so will a Windows CI leg running the workspace tooling. Most Windows breakage sits where a string crosses between two separator conventions, so the rule tracks where each string value comes from and reports only the crossings.
 
 | Domain   | Separator              | Produced by                                                                                                                                                                                                                                                                        |
 | -------- | ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -27,9 +27,9 @@ Portable values are never reported.
 - **`/` is not the separator on Windows.** `join('a', 'b')` returns `a\b`, so `split('/')`, `startsWith(`${dir}/`)`, and `${dir}/x` silently stop matching or produce mixed paths.
 - **Windows absolute paths start with a drive.** `C:\x` never starts with `/`, and rebuilding a path as `'/' + segments.join('/')` produces `/C:/x`.
 - **`relative()` output leaks.** A native relative path stored as an Nx `root`, a map key, or returned data differs per OS, so the same workspace produces different results on Windows.
-- **Dynamic `import()` takes URLs.** `import('C:\\x\\y.js')` parses `c:` as a URL scheme and fails.
+- **Module specifiers are URLs.** `import('C:\\x\\y.js')` parses `c:` as a URL scheme and fails, and so does the same path given to `node --import`, `--loader`, `--test-reporter`, or `register()`.
 - **`URL.pathname` is not a path.** On Windows it is `/C:/x` with percent-encoding.
-- **`npm` is a `.cmd` shim on Windows.** Since the fix for CVE-2024-27980, Node refuses to spawn `.cmd` and `.bat` files without a shell (EINVAL), and without one the shim is not found at all (ENOENT).
+- **`npm` is a `.cmd` shim on Windows.** Since the fix for CVE-2024-27980, Node refuses to spawn `.cmd` and `.bat` files without a shell (EINVAL), and without one the shim is not found at all (ENOENT). Every launcher in `node_modules/.bin` is the same kind of file.
 - **Files checked out with CRLF.** `split('\n')` leaves a trailing `\r` on every line.
 
 ## Checks
@@ -130,6 +130,26 @@ await import(join(distDir, 'index.js'))
 await import(pathToFileURL(join(distDir, 'index.js')).href)
 ```
 
+### `nativeSpecifier`
+
+A native path in the other places Node expects a module specifier:
+
+- after `--import`, `--loader`, `--experimental-loader`, or `--test-reporter` in an array literal or in the arguments of `push` and `unshift`;
+- interpolated straight after one of those flags, as in `--import=${path}`;
+- as the first argument of `register()` from `node:module`.
+
+The fix and the two confidence tiers are the same as for `nativeImport`.
+
+```typescript
+// ❌
+const argv = ['--import', join(root, 'register.ts'), `--test-reporter=${join(root, 'reporter.ts')}`]
+register(join(root, 'hooks.mjs'))
+
+// ✅
+const argv = ['--import', pathToFileURL(join(root, 'register.ts')).href, `--test-reporter=${pathToFileURL(join(root, 'reporter.ts')).href}`]
+register(pathToFileURL(join(root, 'hooks.mjs')).href)
+```
+
 ### `urlPathname`
 
 `.pathname` read off `new URL(..., import.meta.url)`, directly or through a variable.
@@ -157,6 +177,32 @@ execFileSync('npm', ['pack'], {
   cwd: packageDir,
   shell: process.platform === 'win32',
 })
+```
+
+### `binShim`
+
+The same spawn functions launching a file under `node_modules/.bin`, whether the path is built with `join()` or `resolve()`, a template, a `+` chain, or written out, and whether it is passed directly or through a `const`. Those launchers are shell scripts on POSIX and `.cmd` shims on Windows. There is no shell suggestion, because a shell splits an absolute path that contains a space, such as `C:\Users\Jane Doe\repo\node_modules\.bin\tsc`. Run the package's own entry script on the current Node binary instead. Calls that already pass a `shell` option are left alone.
+
+```typescript
+// ❌
+execFileSync(join(workspaceRoot, 'node_modules', '.bin', 'tsc'), ['--noEmit'])
+
+// ✅
+const tscScript = createRequire(join(workspaceRoot, 'package.json')).resolve('typescript/bin/tsc')
+execFileSync(process.execPath, [tscScript, '--noEmit'])
+```
+
+### `splitCommand`
+
+The same spawn functions launching the first word of a command line split on a space or a regex: `line.split(' ')[0]`, the same through a variable, or the first name of `const [file, ...args] = line.split(' ')`. Whatever the line starts with is launched without a shell, and in practice that is `npm` or `npx`. Run the whole line through a shell, which is also what keeps its quoting intact.
+
+```typescript
+// ❌
+const [file, ...args] = command.split(' ')
+execFileSync(file, args, { cwd })
+
+// ✅
+execFileSync(command, { cwd, shell: true })
 ```
 
 ### `lineSplit`
@@ -196,13 +242,15 @@ Every fix references `node:` exports the way the file already does: a named impo
 - Building a relative import specifier: `relative(from, to).split(sep).join(posix.sep)`, then prefix `./` when the result does not start with `.`.
 - Locating the running module: `fileURLToPath(import.meta.url)` or `__dirname`.
 - Importing a file computed at runtime: `import(pathToFileURL(absolutePath).href)`.
+- Preloading a file computed at runtime: `['--import', pathToFileURL(absolutePath).href]`.
+- Running a dependency's command-line tool: `execFileSync(process.execPath, [require.resolve('typescript/bin/tsc'), ...args])`.
 - Splitting a path whose platform is unknown: `split(/[/\\]/)`.
 
 ## Options
 
 ```json
 {
-  "workspace/lib-cross-platform": [
+  "workspace/cross-platform": [
     "error",
     {
       "helpers": [
@@ -212,7 +260,8 @@ Every fix references `node:` exports the way the file already does: a named impo
           "portable": ["joinPath", "normalizePath"]
         }
       ],
-      "shimCommands": ["npm", "npx", "pnpm", "yarn"]
+      "shimCommands": ["npm", "npx", "pnpm", "yarn"],
+      "include": [{ "publishableLibraries": true }, { "files": ["tools/**", "apps/package-e2e/**", "apps/docs-site/scripts/**"] }]
     }
   ]
 }
@@ -226,8 +275,17 @@ Path helpers outside `node:path` whose output domain the rule should trust. `mod
 
 Commands that are `.cmd` shims on Windows. Defaults to `npm`, `npx`, `pnpm`, `pnpx`, `yarn`, `yarnpkg`, `corepack`, `nx`, `tsc`, `eslint`, `prettier`, `vite`, `vitest`, `jest`, and `rollup`. Passing the option replaces the defaults.
 
+### `include`
+
+The files the rule checks, as a list of selectors. Each entry adds files and none narrows another, so a file is checked when any entry selects it.
+
+- `{ "publishableLibraries": true }` selects every file of a publishable library, meaning a `library` project with both a `build` and a `publish` target.
+- `{ "files": [...] }` selects every file matching one of its workspace-relative globs, matched with `posix.matchesGlob` from `node:path`.
+
+Defaults to `[{ "publishableLibraries": true }]`. Passing the option replaces the default, so a list without the `publishableLibraries` entry stops checking publishable libraries. The rule matches globs against the workspace root rather than the ESLint config's location, so one setting in a shared base config selects the same files whichever project's lint target runs it.
+
 ## Scope
 
-The rule runs on every `.ts` file of a publishable library, specs included, as an error. Autofixes apply only on an explicit `--fix`, which `lint:all` passes.
+This workspace runs the rule as an error on every `.ts` and `.mjs` file of a publishable library and every such file under `tools/`, `apps/package-e2e/`, and `apps/docs-site/scripts/`, specs included. Without an `include` option, only publishable libraries are checked. Autofixes apply only on an explicit `--fix`, which `lint:all` passes.
 
 Two checks were considered and left out. Asserting `expect(join(a, b)).toBe('a/b')` is a Windows failure in tests, but the code under test hides where the value came from. Case-insensitive path comparison matters on Windows and macOS, but nothing in the source says which comparisons are about paths.

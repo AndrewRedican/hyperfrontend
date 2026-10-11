@@ -166,6 +166,12 @@ describe('lib-readme-compatibility-table', () => {
       expect(lint(createWorkspace(readme(drifted)))).toEqual([{ messageId: 'tableDrift', fixed: readme(EXPECTED) }])
     })
 
+    it('replaces a drifted table in a CRLF readme and keeps its line endings', () => {
+      const drifted = ['| Platform | Support |', '| --- | :-: |', '| Browser | ✅ |', '| Deno | ✅ |']
+      const crlf = (markdown: string): string => markdown.replaceAll('\n', '\r\n')
+      expect(lint(createWorkspace(crlf(readme(drifted))))).toEqual([{ messageId: 'tableDrift', fixed: crlf(readme(EXPECTED)) }])
+    })
+
     it('replaces a table that runs to the end of the file, and reads no floor from a manifest without engines', () => {
       const workspace = createWorkspace(readme(['| x |'], false), {
         'libs/alpha/package.json': stringify({ name: '@hyperfrontend/alpha' }),

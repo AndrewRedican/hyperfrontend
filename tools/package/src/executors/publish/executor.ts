@@ -160,6 +160,7 @@ export default async function publishExecutor(options: PublishExecutorOptions, c
         encoding: 'utf-8',
         cwd: distPath,
         stdio: ['pipe', 'pipe', 'pipe'],
+        shell: process.platform === 'win32',
       }).trim()
 
       if (npmViewResult === packageVersion) {
@@ -190,6 +191,7 @@ export default async function publishExecutor(options: PublishExecutorOptions, c
       cwd: distPath,
       encoding: 'utf-8',
       stdio: 'pipe',
+      shell: process.platform === 'win32',
     })
 
     if (output) {

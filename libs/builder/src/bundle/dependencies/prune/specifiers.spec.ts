@@ -3,19 +3,19 @@ import { collectChunkSpecifiers, hasDynamicSpecifier } from './specifiers'
 
 describe('collectChunkSpecifiers', () => {
   it('extracts relative ESM import specifiers', () => {
-    expect(collectChunkSpecifiers("import { a } from './sib/index.esm.js'")).toEqual(['./sib/index.esm.js'])
+    expect(collectChunkSpecifiers("import { a } from './sib/index.mjs'")).toEqual(['./sib/index.mjs'])
   })
 
   it('extracts relative ESM re-export specifiers', () => {
-    expect(collectChunkSpecifiers("export { a } from '../shared/index.esm.js'")).toEqual(['../shared/index.esm.js'])
+    expect(collectChunkSpecifiers("export { a } from '../shared/index.mjs'")).toEqual(['../shared/index.mjs'])
   })
 
   it('extracts relative CJS require specifiers', () => {
-    expect(collectChunkSpecifiers("var x = require('./dep/index.cjs.js')")).toEqual(['./dep/index.cjs.js'])
+    expect(collectChunkSpecifiers("var x = require('./dep/index.cjs')")).toEqual(['./dep/index.cjs'])
   })
 
   it('extracts relative literal dynamic import specifiers', () => {
-    expect(collectChunkSpecifiers("import('./lazy/index.esm.js')")).toEqual(['./lazy/index.esm.js'])
+    expect(collectChunkSpecifiers("import('./lazy/index.mjs')")).toEqual(['./lazy/index.mjs'])
   })
 
   it('ignores bare (non-relative) specifiers', () => {
@@ -41,11 +41,11 @@ describe('hasDynamicSpecifier', () => {
   })
 
   it('does not flag a single-quoted literal require', () => {
-    expect(hasDynamicSpecifier("require('./index.cjs.js')")).toBe(false)
+    expect(hasDynamicSpecifier("require('./index.cjs')")).toBe(false)
   })
 
   it('does not flag a double-quoted literal dynamic import', () => {
-    expect(hasDynamicSpecifier('import("./index.esm.js")')).toBe(false)
+    expect(hasDynamicSpecifier('import("./index.mjs")')).toBe(false)
   })
 
   it('flags a literal concatenated with an expression', () => {
@@ -53,11 +53,11 @@ describe('hasDynamicSpecifier', () => {
   })
 
   it('does not flag a literal with surrounding whitespace before the close paren', () => {
-    expect(hasDynamicSpecifier("require( './index.cjs.js' )")).toBe(false)
+    expect(hasDynamicSpecifier("require( './index.cjs' )")).toBe(false)
   })
 
   it('does not flag a literal containing an escaped character', () => {
-    expect(hasDynamicSpecifier("require('./a\\tb/index.cjs.js')")).toBe(false)
+    expect(hasDynamicSpecifier("require('./a\\tb/index.cjs')")).toBe(false)
   })
 
   it('flags an unterminated string argument', () => {

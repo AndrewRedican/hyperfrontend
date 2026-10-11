@@ -168,8 +168,8 @@ const collectCjsEdges = (sourceFile: ts.SourceFile, importerDir: string, edges: 
  *
  * @example Edges of an ESM entry
  * ```typescript
- * collectImportEdges("import { getType } from './_dependencies/x/index.esm.js'", '/dist/libs/foo', 'esm')
- * // => Map { '/dist/libs/foo/_dependencies/x/index.esm.js' => Set { 'getType' } }
+ * collectImportEdges("import { getType } from './_dependencies/x/index.mjs'", '/dist/libs/foo', 'esm')
+ * // => Map { '/dist/libs/foo/_dependencies/x/index.mjs' => Set { 'getType' } }
  * ```
  */
 export const collectImportEdges = (source: string, importerDir: string, format: ChunkFormat): Map<string, ImportUsage> => {

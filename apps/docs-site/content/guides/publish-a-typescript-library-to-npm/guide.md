@@ -86,8 +86,8 @@ A successful build is quiet. Pass `--verbose` to watch each phase report its pro
 
 ```text
 dist/bytesize/
-  index.cjs.js
-  index.esm.js
+  index.cjs
+  index.mjs
   index.d.ts
   index.d.ts.map
   package.json
@@ -99,6 +99,7 @@ One source file, both module formats, and declarations, out of a config that nam
 
 Open `dist/bytesize/package.json`:
 
+<!-- prettier-ignore -->
 ```json
 {
   "name": "bytesize",
@@ -111,14 +112,20 @@ Open `dist/bytesize/package.json`:
     "./package.json": "./package.json",
     ".": {
       "types": "./index.d.ts",
-      "import": "./index.esm.js",
-      "require": "./index.cjs.js"
+      "import": "./index.mjs",
+      "require": "./index.cjs"
     }
   },
-  "main": "./index.cjs.js",
-  "module": "./index.esm.js",
+  "main": "./index.cjs",
+  "module": "./index.mjs",
   "types": "./index.d.ts",
-  "files": ["**/index.*", "**/index.d.ts", "!**/*.js.map"]
+  "files": [
+    "**/index.*",
+    "**/index.d.ts",
+    "!**/*.js.map",
+    "!**/*.mjs.map",
+    "!**/*.cjs.map"
+  ]
 }
 ```
 

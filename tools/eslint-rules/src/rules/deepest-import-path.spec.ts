@@ -1,3 +1,4 @@
+import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { after as afterAll, beforeEach } from 'node:test'
 import { describe } from '@hyperfrontend/testing'
@@ -657,7 +658,7 @@ describe('deepest-import-path', () => {
         {
           name: 'handles missing workspace root gracefully',
           code: `import { foo } from '@hyperfrontend/package'`,
-          filename: '/tmp/orphan-file.ts',
+          filename: join(tmpdir(), 'orphan-file.ts'),
         },
 
         {

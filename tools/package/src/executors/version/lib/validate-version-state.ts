@@ -306,7 +306,7 @@ export function formatValidationResult(result: VersionValidationResult): string 
       if (result.discrepancies.length > 0) {
         lines.push(
           result.discrepancies[0].remedy
-            .split('\n')
+            .split(/\r?\n/)
             .map((l) => `  ${l}`)
             .join('\n')
         )

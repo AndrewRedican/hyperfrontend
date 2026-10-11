@@ -1,4 +1,4 @@
-import { join } from 'node:path'
+import { join, posix } from 'node:path'
 import { after as afterAll } from 'node:test'
 import { stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 import { keys } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
@@ -62,10 +62,10 @@ function createWorkspace(libraries: LibraryFixture[], extraFiles: Record<string,
   const files: Record<string, string> = { 'nx.json': stringify({ version: 2 }, null, 2), ...extraFiles }
 
   for (const library of libraries) {
-    files[`${library.path}/project.json`] = stringify(library.projectJson, null, 2)
+    files[posix.join(library.path, 'project.json')] = stringify(library.projectJson, null, 2)
 
     if (library.packageJson) {
-      files[`${library.path}/package.json`] = stringify(library.packageJson, null, 2)
+      files[posix.join(library.path, 'package.json')] = stringify(library.packageJson, null, 2)
     }
   }
 

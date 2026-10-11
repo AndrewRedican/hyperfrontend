@@ -166,10 +166,10 @@ Prompts run on a TTY, where the session redraws when the terminal is resized, an
 
 ### Output Formats
 
-| Format | File           | Tree-Shakeable |
-| ------ | -------------- | :------------: |
-| ESM    | `index.esm.js` |       ✅       |
-| CJS    | `index.cjs.js` |       ❌       |
+| Format | File        | Tree-Shakeable |
+| ------ | ----------- | :------------: |
+| ESM    | `index.mjs` |       ✅       |
+| CJS    | `index.cjs` |       ❌       |
 
 No browser bundle is published: the library drives a terminal, so an IIFE or UMD build would have nothing to run against.
 

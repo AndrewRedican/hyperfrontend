@@ -25,7 +25,7 @@ const isMainModule = (): boolean => {
     return true
   }
   const argv1 = process.argv[1] ?? ''
-  return argv1.endsWith('index.cjs.js') || argv1.endsWith('index.esm.js') || argv1.endsWith('index.ts') || argv1.endsWith('index.js')
+  return argv1.endsWith('index.cjs') || argv1.endsWith('index.mjs') || argv1.endsWith('index.ts') || argv1.endsWith('index.js')
 }
 
 if (isMainModule()) {

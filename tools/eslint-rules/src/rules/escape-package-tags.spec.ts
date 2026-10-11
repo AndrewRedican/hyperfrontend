@@ -135,6 +135,15 @@ describe('findBareTagsOnLine', () => {
 })
 
 describe('findBarePackageTags', () => {
+  it('reports a reference at its true offset in a CRLF comment', () => {
+    const value = '*\r\n * intro\r\n * tests @hyperfrontend/nexus\r\n '
+    const start = value.indexOf('@hyperfrontend')
+
+    expect(findBarePackageTags(value, PREFIXES)).toEqual([
+      { start, end: start + '@hyperfrontend/nexus'.length, specifier: '@hyperfrontend/nexus' },
+    ])
+  })
+
   it('reports a reference in the description', () => {
     const value = '*\n * tests @hyperfrontend/nexus\n '
     const start = value.indexOf('@hyperfrontend')

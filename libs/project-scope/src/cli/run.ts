@@ -1,5 +1,4 @@
 import type { Command, CommandResult, GlobalOptions } from './types'
-import { parseArgs } from 'node:util'
 import { error as consoleError, log as consoleLog } from '@hyperfrontend/immutable-api-utils/built-in-copy/console'
 import { createLogger } from '@hyperfrontend/logging'
 import { createScopedLogger, setGlobalLogLevel } from '../core/logger'
@@ -7,6 +6,7 @@ import { analyzeCommandDef } from './commands/analyze'
 import { configCommandDef } from './commands/config'
 import { depsCommandDef } from './commands/deps'
 import { treeCommandDef } from './commands/tree'
+import { parseArgs } from './parse-args'
 
 /** Logger for CLI operations */
 const cliLogger = createScopedLogger('project-scope:cli')

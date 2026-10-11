@@ -268,7 +268,7 @@ const isRequireVarStatement = (statement: ts.Statement): boolean =>
  *
  * @example Bindings of a destructured require
  * ```typescript
- * // for `var { a, b } = require('./x.cjs.js')`
+ * // for `var { a, b } = require('./x.cjs')`
  * requireBindingLocals(statement) // => ['a', 'b']
  * ```
  */

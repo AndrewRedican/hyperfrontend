@@ -184,7 +184,7 @@ function verifyApis(meta: GuideMeta, unit: GuideUnit, libraries: LibrarySource[]
  */
 function parseRegions(sourceRelPath: string, slug: string, errors: string[]): Map<string, SnippetRegion> {
   const regions = createMap<string, SnippetRegion>()
-  const lines = readFileSync(join(WORKSPACE_ROOT, sourceRelPath), 'utf-8').split('\n')
+  const lines = readFileSync(join(WORKSPACE_ROOT, sourceRelPath), 'utf-8').split(/\r?\n/)
   const marker = /\/\/\s*ref:\s*\[guide:([a-z0-9-]+)\/([a-z0-9-]+)\]\s*(start|end)\s*$/
   const open = createMap<string, number>()
 

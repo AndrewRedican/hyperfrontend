@@ -236,7 +236,7 @@ const collectMatchingSpecifiers = (packageName: string, mappings: Map<string, st
 
 /**
  * Resolves the list of workspace `@hyperfrontend/*` deps that should be hoisted
- * into `_dependencies/<name>(/<sub>)?/index.<ext>.js`.
+ * into `_dependencies/<name>(/<sub>)?/index.mjs` or `index.cjs`.
  *
  * Algorithm:
  * 1. Read the project's `package.json#dependencies`, retain entries matching

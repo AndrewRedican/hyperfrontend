@@ -3,6 +3,7 @@ import type { E2eExecutorOptions } from './schema'
 import { execFileSync } from 'node:child_process'
 import { existsSync, readFileSync, unlinkSync, mkdirSync, renameSync } from 'node:fs'
 import { join } from 'node:path'
+import { pathToFileURL } from 'node:url'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { parse, stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 import { logger } from '../../lib/logger'
@@ -46,6 +47,7 @@ function packPackage(distPath: string, workspaceRoot: string): string {
     cwd: distPath,
     encoding: 'utf-8',
     stdio: ['pipe', 'pipe', 'pipe'],
+    shell: process.platform === 'win32',
   })
 
   const packResult = parse(result)
@@ -79,6 +81,7 @@ function installTarball(tarballPath: string, testDir: string): void {
     cwd: testDir,
     encoding: 'utf-8',
     stdio: 'inherit',
+    shell: process.platform === 'win32',
   })
 
   logger.info(`Installation complete`)
@@ -137,9 +140,10 @@ function runNodeTests(testDir: string, format: string, workspaceRoot: string): b
 
   const argv = [
     '--disable-warning=MODULE_TYPELESS_PACKAGE_JSON',
+    // why: Node reads a preload value as a module specifier, and a Windows absolute path parses as a URL whose scheme is the drive letter.
     '--import',
-    join(workspaceRoot, 'tools/testing/src/hooks/register.ts'),
-    ...(run.dom ? ['--import', join(workspaceRoot, 'tools/testing/src/environment/dom.ts')] : []),
+    pathToFileURL(join(workspaceRoot, 'tools/testing/src/hooks/register.ts')).href,
+    ...(run.dom ? ['--import', pathToFileURL(join(workspaceRoot, 'tools/testing/src/environment/dom.ts')).href] : []),
     '--test',
     `--test-timeout=${run.timeoutMs}`,
     ...specs,

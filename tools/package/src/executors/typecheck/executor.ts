@@ -2,6 +2,7 @@ import type { ExecutorContext, PromiseExecutor } from '@nx/devkit'
 import type { TypecheckExecutorOptions } from './schema'
 import { execFileSync } from 'node:child_process'
 import { existsSync } from 'node:fs'
+import { createRequire } from 'node:module'
 import { join } from 'node:path'
 import { logger } from '../../lib/logger'
 
@@ -39,9 +40,12 @@ export default async function typecheckExecutor(options: TypecheckExecutorOption
     return { success: false }
   }
 
-  const tscPath = join(workspaceRoot, 'node_modules', '.bin', 'tsc')
-  if (!existsSync(tscPath)) {
-    logger.error(`TypeScript compiler not found at: ${tscPath}`)
+  // why: the launcher in node_modules/.bin is a shell script on POSIX and a .cmd shim on Windows, so the compiler's own entry script runs on the current Node binary instead
+  let tscScript: string
+  try {
+    tscScript = createRequire(join(workspaceRoot, 'package.json')).resolve('typescript/bin/tsc')
+  } catch {
+    logger.error(`TypeScript compiler not found from: ${workspaceRoot}`)
     logger.error('Please run npm install to ensure TypeScript is installed.')
     return { success: false }
   }
@@ -50,7 +54,7 @@ export default async function typecheckExecutor(options: TypecheckExecutorOption
   logger.info(`  Using config: ${tsConfigPath}`)
 
   try {
-    execFileSync(tscPath, ['--noEmit', '-p', tsConfigPath], {
+    execFileSync(process.execPath, [tscScript, '--noEmit', '-p', tsConfigPath], {
       cwd: workspaceRoot,
       stdio: 'inherit',
       encoding: 'utf-8',

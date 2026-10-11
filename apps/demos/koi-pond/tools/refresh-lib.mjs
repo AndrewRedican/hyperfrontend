@@ -31,6 +31,21 @@ const TARBALL_PREFIX = 'hyperfrontend-demo-koi-lib-'
 /** Every project that takes the koi lib as a `file:` dependency, in refresh order. */
 const CONSUMERS = ['host', 'fish-vanilla', 'fish-react', 'fish-vue', 'fish-svelte', 'fish-solid', 'fish-preact', 'fish-lit', 'fish-angular']
 
+const WINDOWS = process.platform === 'win32'
+
+/**
+ * Runs npm with the given arguments.
+ *
+ * @param {string[]} args - Arguments to pass to npm.
+ * @param {import('node:child_process').ExecFileSyncOptions} options - Options for the child process.
+ * @returns {string | Buffer} What npm wrote to stdout, as a string when an encoding is given.
+ */
+function npm(args, options) {
+  // why: `npm` is a .cmd shim on Windows, which only a shell can launch, and the shell splits an unquoted argument at every space, as in a temp directory under `C:\Users\Jane Doe`.
+  const shellArgs = WINDOWS ? args.map((arg) => (arg.includes(' ') ? `"${arg}"` : arg)) : args
+  return execFileSync('npm', shellArgs, { ...options, shell: WINDOWS })
+}
+
 /**
  * Lists the koi-lib tarballs sitting in the shared vendor directory.
  *
@@ -65,10 +80,10 @@ function packInto(dir) {
   mkdirSync(dir, { recursive: true })
   // why: tsc leaves the output of a deleted source file behind, and npm pack ships whatever is in the directory; building from empty is what keeps a retired module out of the tarball and makes a local check match a clean checkout's.
   rmSync(join(LIB_DIR, 'dist'), { recursive: true, force: true })
-  execFileSync('npm', ['run', 'build'], { cwd: LIB_DIR, stdio: 'inherit' })
+  npm(['run', 'build'], { cwd: LIB_DIR, stdio: 'inherit' })
   // why: Packing outside the package directory keeps the previous tarball from being swept into the next one.
-  const output = execFileSync('npm', ['pack', '--pack-destination', dir], { cwd: LIB_DIR, encoding: 'utf-8' })
-  return output.trim().split('\n').pop()
+  const output = npm(['pack', '--pack-destination', dir], { cwd: LIB_DIR, encoding: 'utf-8' })
+  return output.trim().split(/\r?\n/).pop()
 }
 
 /**
@@ -128,7 +143,7 @@ function packedPaths(file) {
   return new Set(
     listing
       .trim()
-      .split('\n')
+      .split(/\r?\n/)
       .map((entry) => entry.slice('package/'.length))
   )
 }
@@ -144,7 +159,7 @@ function refresh() {
   const tarball = packInto(VENDOR_DIR)
   const consumers = presentConsumers()
   for (const consumer of consumers) {
-    execFileSync('npm', ['install', join('..', 'vendor', tarball), '--no-audit', '--no-fund'], {
+    npm(['install', `../vendor/${tarball}`, '--no-audit', '--no-fund'], {
       cwd: join(POND_ROOT, consumer),
       stdio: 'inherit',
     })

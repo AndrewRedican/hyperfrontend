@@ -96,7 +96,7 @@ export const shimCjsGlobalsPass = (depsRoot: string): CjsGlobalsPassResult => {
   const result: CjsGlobalsPassResult = { chunksShimmed: 0 }
   if (!exists(depsRoot)) return result
   const chunks: string[] = []
-  walkFiles(depsRoot, (name) => name === 'index.esm.js', chunks)
+  walkFiles(depsRoot, (name) => name === 'index.mjs', chunks)
   for (const chunk of chunks) {
     const source = readFileContent(chunk)
     const sourceFile = parseChunk(source)

@@ -271,8 +271,8 @@ Every action, selector, event name, and type is in the [API reference](https://w
 
 | Format | File                       | Tree-Shakeable |
 | ------ | -------------------------- | :------------: |
-| ESM    | `index.esm.js`             |       ✅       |
-| CJS    | `index.cjs.js`             |       ❌       |
+| ESM    | `index.mjs`                |       ✅       |
+| CJS    | `index.cjs`                |       ❌       |
 | IIFE   | `bundle/index.iife.min.js` |       ❌       |
 | UMD    | `bundle/index.umd.min.js`  |       ❌       |
 
