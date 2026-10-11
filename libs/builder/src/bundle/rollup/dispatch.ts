@@ -41,6 +41,12 @@ export interface RollupWorkerInvocation {
 
 const REPORT_DIR_PREFIX = 'hf-builder-rollup-'
 
+/** Node flag that exposes the Web Crypto `crypto` global on runtimes that still hide it (Node 18). */
+const GLOBAL_WEBCRYPTO_FLAG = '--experimental-global-webcrypto'
+
+// why: the worker's bundled terser plugin reads the `crypto` global while loading (serialize-javascript derives its placeholder id from it), so on a Node without that global the worker would die before its first job; the flag is only passed where it is needed because a future Node may drop it.
+const webCryptoExecArgv = (): string[] => (typeof globalThis.crypto === 'undefined' ? [GLOBAL_WEBCRYPTO_FLAG] : [])
+
 /**
  * Resolves the rollup worker by self-locating it beside the running builder
  * module: ascends from the module's own directory to the builder package root
@@ -72,7 +78,7 @@ const reportPathFor = (reportDir: string, descriptor: RollupBuildDescriptor): st
 const runOne = (descriptor: RollupBuildDescriptor, options: DispatchRollupWorkerOptions, label: string): Promise<void> =>
   createPromise<void>((resolve, reject) => {
     const execPath = options.execPath ?? process.execPath
-    const argv = [...(options.execArgv ?? []), options.workerPath, stringify(descriptor)]
+    const argv = [...webCryptoExecArgv(), ...(options.execArgv ?? []), options.workerPath, stringify(descriptor)]
     const child = spawn(execPath, argv, { stdio: ['ignore', 'pipe', 'pipe'] })
     let capturedStderr = ''
     child.stdout?.on('data', (chunk: Buffer | string) => {

@@ -143,6 +143,42 @@ describe('dispatchRollupWorker', () => {
     await promise
   })
 
+  it('spawns the worker without the webcrypto flag when the crypto global is present', async () => {
+    const records: SpawnRecord[] = []
+    captureSpawn(records)
+    const promise = dispatchRollupWorker(baseDescriptor(), { workerPath: '/abs/worker.cjs' })
+    await tick()
+    expect((records[0] as SpawnRecord).args[0]).toBe('/abs/worker.cjs')
+    writeReport((records[0] as SpawnRecord).reportPath, { outputSize: 1, endHeapMB: 1, endRssMB: 1, durationMs: 1 })
+    ;(records[0] as SpawnRecord).child.emit('exit', 0)
+    await promise
+  })
+
+  it('prepends --experimental-global-webcrypto when the running Node has no crypto global', async () => {
+    const original = Object.getOwnPropertyDescriptor(globalThis, 'crypto') as PropertyDescriptor
+    Object.defineProperty(globalThis, 'crypto', { value: undefined, configurable: true })
+    try {
+      const records: SpawnRecord[] = []
+      captureSpawn(records)
+      const promise = dispatchRollupWorker(baseDescriptor(), {
+        workerPath: '/abs/worker.cjs',
+        execArgv: ['--require', '@swc-node/register'],
+      })
+      await tick()
+      expect((records[0] as SpawnRecord).args.slice(0, 4)).toEqual([
+        '--experimental-global-webcrypto',
+        '--require',
+        '@swc-node/register',
+        '/abs/worker.cjs',
+      ])
+      writeReport((records[0] as SpawnRecord).reportPath, { outputSize: 1, endHeapMB: 1, endRssMB: 1, durationMs: 1 })
+      ;(records[0] as SpawnRecord).child.emit('exit', 0)
+      await promise
+    } finally {
+      Object.defineProperty(globalThis, 'crypto', original)
+    }
+  })
+
   it('invokes the optional memory monitor before and after the dispatched job using the supplied label', async () => {
     const checks: string[] = []
     const monitor: MemoryMonitor = {
