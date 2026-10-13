@@ -43,6 +43,7 @@ const PROJECT_SCOPE_PORTABLE = [
   'resolveFromWorkspace',
   'resolveRealPath',
   'offsetFromRoot',
+  'workspaceRelativePath',
 ]
 
 /**
@@ -52,6 +53,7 @@ const DEFAULT_HELPERS: PathHelperModule[] = [
   { module: '@hyperfrontend/project-scope/core', native: PROJECT_SCOPE_NATIVE, portable: PROJECT_SCOPE_PORTABLE },
   { module: 'libs/project-scope/src/core', native: PROJECT_SCOPE_NATIVE, portable: PROJECT_SCOPE_PORTABLE },
   { module: 'libs/builder/src/bundle/fs/posix-path', portable: ['join', 'normalizeToForwardSlashes'] },
+  { module: 'tools/testing/src/runner/portable-paths', portable: ['normalizePath', 'relativePath', 'workspaceRelativePath'] },
 ]
 
 /**
@@ -143,16 +145,16 @@ const rule = ESLintUtils.RuleCreator(
     ],
     messages: {
       separatorLiteral:
-        "`.{{ method }}()` matches a hardcoded '/' against a native path, which uses '\\' on Windows. Match `sep` from node:path, or convert the path with `.split(sep).join(posix.sep)` first.",
+        "`.{{ method }}()` matches a hardcoded '/' against a native path, which uses '\\' on Windows. Match `sep` from node:path, or convert the path first with `normalizePath` from @hyperfrontend/project-scope/core/path, or `.split(sep).join(posix.sep)` where that package cannot be imported.",
       absoluteCheck: "`startsWith('/')` never matches a Windows absolute path such as 'C:\\x'. Use `isAbsolute()` from node:path.",
       separatorJoin:
         "A native path is joined to more segments with a hardcoded '/', which mixes separators on Windows. Use `join()` from node:path, or `posix.join()` when the value is a portable path.",
       relativeEscapes:
-        '`relative()` returns backslashes on Windows, and this result leaves as data (a key, an Nx root, a stored or returned value). Convert it with `.split(sep).join(posix.sep)`.',
+        '`relative()` returns backslashes on Windows, and this result leaves as data (a key, an Nx root, a stored or returned value). Convert it with `relativePath` or `workspaceRelativePath` from @hyperfrontend/project-scope/core/path, or `.split(sep).join(posix.sep)` where that package cannot be imported.',
       driveLetterLoss:
         "Rebuilding an absolute path as '/' plus joined segments drops the drive on Windows: 'C:\\x' becomes '/C:/x'. Walk up with `dirname()` instead.",
       posixConversion:
-        'Convert native paths to POSIX with `.split(sep).join(posix.sep)`. This spelling also rewrites backslashes on POSIX, where they are legal file-name characters.',
+        'Convert native paths to POSIX with `normalizePath` from @hyperfrontend/project-scope/core/path, or `.split(sep).join(posix.sep)` where that package cannot be imported. This spelling also rewrites backslashes on POSIX, where they are legal file-name characters.',
       nativeImport:
         "`import()` of a native path fails on Windows, where 'C:\\x' parses as a URL with scheme 'c:'. Import `pathToFileURL(path).href` from node:url instead.",
       nativeSpecifier:
