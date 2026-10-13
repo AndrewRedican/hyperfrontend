@@ -185,6 +185,17 @@ function resolveTarball(): PackedTarball {
 }
 
 /**
+ * Quotes arguments a Windows shell would otherwise split at their spaces.
+ *
+ * @param args - The arguments as the child should receive them.
+ * @returns The arguments to hand `execFileSync`, quoted only where a shell is in the way.
+ */
+function shellSafe(args: readonly string[]): string[] {
+  // why: `npm` and `npx` are .cmd shims on Windows, which only a shell can launch, and the shell splits an unquoted argument at every space, as in a temp directory under `C:\Users\Jane Doe`.
+  return process.platform === 'win32' ? args.map((arg) => (arg.includes(' ') ? `"${arg}"` : arg)) : [...args]
+}
+
+/**
  * Creates a pristine consumer workspace and installs the packed tarball into it.
  *
  * @param prefix - Unique mkdtemp prefix so parallel suites never share a scratch root.
@@ -210,7 +221,7 @@ export function createConsumerWorkspace(prefix: string): ConsumerWorkspace {
   )
   const pristineDir = join(workRoot, 'consumer')
   // how: `nx add <pkg>` installs the plugin as a devDependency before invoking its init generator; installing the tarball the same way reproduces that starting state.
-  execFileSync('npm', ['install', '--save-dev', tarball.tarballPath], {
+  execFileSync('npm', shellSafe(['install', '--save-dev', tarball.tarballPath]), {
     cwd: pristineDir,
     env: scratchEnv(),
     encoding: 'utf8',
@@ -229,7 +240,7 @@ export function createConsumerWorkspace(prefix: string): ConsumerWorkspace {
  * @returns The exit status and combined stdout/stderr, stripped of ANSI sequences.
  */
 export function runNx(workspaceDir: string, args: readonly string[], timeout: number = NX_COMMAND_TIMEOUT): NxRunResult {
-  const spawned = spawnSync('npx', ['nx', ...args], {
+  const spawned = spawnSync('npx', shellSafe(['nx', ...args]), {
     cwd: workspaceDir,
     env: scratchEnv(),
     encoding: 'utf8',
