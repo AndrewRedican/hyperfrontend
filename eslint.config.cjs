@@ -136,7 +136,7 @@ module.exports = [
   },
   {
     // context: the package-e2e support helpers run inside scratch consumer workspaces where the @hyperfrontend built-in-copy replacements are not installed and no tsconfig path maps them, so the safe spellings cannot resolve.
-    files: ['apps/package-e2e/**/src/support/**/*.ts'],
+    files: ['apps/package-e2e/**/src/support/**/*.ts', 'apps/package-e2e/shared/**/*.ts'],
     rules: {
       'workspace/no-unsafe-builtin-methods': 'off',
     },

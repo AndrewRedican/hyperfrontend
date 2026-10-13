@@ -20,6 +20,7 @@
         "{workspaceRoot}/plugins/**/project.json",
         "{workspaceRoot}/apps/**/project.json",
         "{workspaceRoot}/apps/**/package.json",
+        "{workspaceRoot}/apps/package-e2e/shared/**/*",
         "{workspaceRoot}/.devcontainer/devcontainer.json"
       ],
       "options": {
@@ -35,7 +36,8 @@
           "apps/*/*/*/project.json",
           "apps/*/package.json",
           "apps/*/*/package.json",
-          "apps/*/*/*/package.json"
+          "apps/*/*/*/package.json",
+          "apps/package-e2e/shared"
         ],
         "maxWarnings": 0,
         "errorOnUnmatchedPattern": false
