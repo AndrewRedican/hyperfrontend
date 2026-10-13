@@ -23,7 +23,7 @@
     "@hyperfrontend/logging": "1.0.0",
     "@hyperfrontend/time-utils": "1.0.0",
     "glob": "10.5.0",
-    "mermaid": "11.16.1",
+    "mermaid": "12.2.0",
     "next": "16.3.8",
     "react": "19.2.8",
     "react-dom": "19.2.8"
