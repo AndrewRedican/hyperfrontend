@@ -1,8 +1,9 @@
 import type { FileStats, LegendEntry, LintEntry } from './types'
-import { posix, sep } from 'node:path'
+import { posix } from 'node:path'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { parseInt } from '@hyperfrontend/immutable-api-utils/built-in-copy/number'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
+import { normalizePath } from '@hyperfrontend/project-scope/core/path'
 
 /**
  * Pattern to match ANSI escape sequences (bounded for safety).
@@ -99,7 +100,7 @@ export function parseFailedProjects(raw: string): string[] {
  * @returns Owning project name, or null when no project contains the file
  */
 function findOwner(file: string, projectRoots: Map<string, string>): string | null {
-  const normalized = file.split(sep).join(posix.sep)
+  const normalized = normalizePath(file)
   let owner: string | null = null
   let depth = -1
 
