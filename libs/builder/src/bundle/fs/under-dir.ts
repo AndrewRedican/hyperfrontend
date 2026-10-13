@@ -1,4 +1,4 @@
-import { posix, sep } from 'node:path'
+import { normalizeToForwardSlashes } from './posix-path'
 
 /**
  * Tests whether `path` is `dir` itself or lies anywhere beneath it.
@@ -19,7 +19,7 @@ import { posix, sep } from 'node:path'
  * ```
  */
 export const isUnderDir = (path: string, dir: string): boolean => {
-  const target = path.split(sep).join(posix.sep)
-  const root = dir.split(sep).join(posix.sep)
+  const target = normalizeToForwardSlashes(path)
+  const root = normalizeToForwardSlashes(dir)
   return target === root || target.startsWith(`${root}/`)
 }

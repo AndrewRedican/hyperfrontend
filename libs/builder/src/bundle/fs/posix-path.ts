@@ -1,5 +1,7 @@
 import { join as nodeJoin, sep, posix } from 'node:path'
 
+// ref: portable-path mirror of normalizePath and joinPath from @hyperfrontend/project-scope/core/path; worker-reachable modules bootstrap before workspace packages load, so this copy stays dependency-free
+
 /**
  * POSIX-normalises a native path so all separators are `/`.
  *
