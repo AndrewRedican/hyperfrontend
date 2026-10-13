@@ -2,7 +2,6 @@ import type { Metadata, Viewport } from 'next'
 import { Analytics } from '@/components/analytics/analytics'
 import { CodeBlockLight } from '@/components/code-block-light'
 import { ConsentBanner } from '@/components/consent/consent-banner'
-import { DevHuntBanner } from '@/components/devhunt-banner'
 import { JsonLd } from '@/components/json-ld'
 import { ExpandableImages } from '@/components/media/expandable-images'
 import { ThemeProvider } from '@/components/theme-provider'
@@ -77,7 +76,6 @@ export default function RootLayout({ children }: RootLayoutProps) {
         <a href="#main-content" className="skip-link">
           Skip to content
         </a>
-        <DevHuntBanner />
         <JsonLd
           data={{
             '@context': 'https://schema.org',
