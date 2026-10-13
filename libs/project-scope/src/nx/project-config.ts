@@ -1,8 +1,9 @@
-import { join, relative, basename, sep, posix } from 'node:path'
+import { join, relative, basename } from 'node:path'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { entries } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { exists, isDirectory, readDirectory, readJsonFileIfExists } from '../core/fs'
 import { createScopedLogger } from '../core/logger'
+import { workspaceRelativePath } from '../core/path'
 import { readPackageJsonIfExists } from '../project/package'
 import { getNxWorkspaceInfo, isNxProject, NX_PROJECT_FILE } from './detect'
 
@@ -158,7 +159,7 @@ export function getProjectConfig(projectPath: string, workspacePath: string): Nx
     nxConfigLogger.debug('Using project.json config', { projectPath, name: projectJson.name })
     return {
       ...projectJson,
-      root: projectJson.root ?? relative(workspacePath, projectPath).split(sep).join(posix.sep),
+      root: projectJson.root ?? workspaceRelativePath(workspacePath, projectPath),
     }
   }
 
@@ -169,7 +170,7 @@ export function getProjectConfig(projectPath: string, workspacePath: string): Nx
     const nxConfig = packageJson['nx'] as Record<string, unknown>
     return {
       name: packageJson.name,
-      root: relative(workspacePath, projectPath).split(sep).join(posix.sep),
+      root: workspaceRelativePath(workspacePath, projectPath),
       ...nxConfig,
     }
   }
@@ -214,7 +215,7 @@ function scanForProjects(
             projects.set(name, {
               ...config,
               name,
-              root: relative(workspacePath, fullPath).split(sep).join(posix.sep),
+              root: workspaceRelativePath(workspacePath, fullPath),
             })
           }
         }
