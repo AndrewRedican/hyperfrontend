@@ -61,7 +61,7 @@ function createTempWorkspace(config: WorkspaceFixtureConfig): string {
       }
       const pkg: Record<string, unknown> = { name: `@hyperfrontend/${library.root.split(posix.sep).pop() ?? 'lib'}` }
       if (exportsValue !== null) {
-        pkg.exports = exportsValue
+        pkg['exports'] = exportsValue
       }
       files[posix.join(library.root, 'package.json')] = JSON.stringify(pkg, null, 2)
     }
