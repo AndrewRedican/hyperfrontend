@@ -221,7 +221,7 @@ describe('lib-inline-code-links', () => {
       const workspace = createWorkspace()
       resetDocsTargetIndex()
       const text =
-        '## The `createShell` factory\n\n```ts\ncreateShell()\n```\n\nPass `true`, run `npx cz`, ship `index.esm.js`, set `--root`.\n'
+        '## The `createShell` factory\n\n```ts\ncreateShell()\n```\n\nPass `true`, run `npx cz`, ship `index.mjs`, set `--root`.\n'
 
       expect(lintMarkdown(text, join(workspace.root, 'libs/alpha/README.md'))).toEqual([])
     })
