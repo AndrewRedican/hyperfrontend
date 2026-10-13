@@ -1,5 +1,5 @@
 import { readFileSync, statSync } from 'node:fs'
-import { resolve } from 'node:path'
+import { resolve, sep } from 'node:path'
 
 /**
  * A `tsconfig.base.json` path alias with its wildcard prefix pre-computed.
@@ -26,7 +26,7 @@ export type AliasTable = {
  * already-complete path through untouched; `.js` comes last so a compiled sibling never
  * wins over the TypeScript source the runner is meant to execute.
  */
-const CANDIDATE_SUFFIXES = ['', '.ts', '.tsx', '.mts', '.cts', '/index.ts', '/index.tsx', '.js']
+const CANDIDATE_SUFFIXES = ['', '.ts', '.tsx', '.mts', '.cts', `${sep}index.ts`, `${sep}index.tsx`, '.js']
 
 /**
  * Pre-splits declared path aliases into exact and wildcard forms.
