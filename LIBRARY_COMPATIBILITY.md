@@ -202,7 +202,7 @@ flowchart TB
 
 | Library | Version |
 | --- | --- |
-| `@hyperfrontend/builder` | `0.5.0` |
+| `@hyperfrontend/builder` | `0.5.1` |
 | `@hyperfrontend/cryptography` | `1.1.1` |
 | `@hyperfrontend/data-utils` | `1.0.1` |
 | `@hyperfrontend/features` | `0.11.4` |
@@ -213,7 +213,7 @@ flowchart TB
 | `@hyperfrontend/logging` | `1.0.1` |
 | `@hyperfrontend/network-protocol` | `2.0.1` |
 | `@hyperfrontend/nexus` | `3.0.1` |
-| `@hyperfrontend/project-scope` | `0.2.8` |
+| `@hyperfrontend/project-scope` | `0.2.9` |
 | `@hyperfrontend/questions` | `0.3.1` |
 | `@hyperfrontend/random-generator-utils` | `0.2.1` |
 | `@hyperfrontend/state-machine` | `0.2.1` |
