@@ -34,13 +34,29 @@ const importMatchesWorkspaceRoute = (id: string | undefined, routes: WorkspaceBu
   return false
 }
 
-const onWarnEntry = (warning: RollupLog, defaultHandler: (w: RollupLog) => void, workspaceRoutes: WorkspaceBundledDepRoute[]): void => {
+/** A TypeScript diagnostic code as the typescript plugin prints it. */
+const TS_DIAGNOSTIC_CODE = /\bTS\d{4,5}\b/
+
+/**
+ * Whether the typescript plugin may keep the tsconfig path mappings for this job. When it may not,
+ * every workspace import is unresolved inside its type program and its diagnostics describe that
+ * incomplete program rather than the sources.
+ *
+ * @param job - The entry build being prepared.
+ * @returns True when the plugin resolves workspace imports itself.
+ */
+const usesBaseUrlMapping = (job: RollupBuildDescriptor): boolean => job.bundleWorkspaceDeps && job.workspaceRoutes.length === 0
+
+const onWarnEntry = (warning: RollupLog, defaultHandler: (w: RollupLog) => void, job: RollupBuildDescriptor): void => {
+  const workspaceRoutes = job.workspaceRoutes
   // why: under bundleAllDeps the externalize plugin is the sole owner of workspace-dep resolution; an unresolved import of a routed package means it slipped past routing and would ship as a bare external specifier — fail loud rather than emit a broken artifact.
   if (warning.code === 'UNRESOLVED_IMPORT' && importMatchesWorkspaceRoute(warning.exporter, workspaceRoutes)) {
     throw new Error(
       `bundle: workspace import "${warning.exporter}" was not routed into _dependencies/ and would leak as an external import. Confirm it is declared in package.json#dependencies and mapped in tsconfig paths; subpath-only packages require a 'sub-path' workspaceDepPolicy entry.`
     )
   }
+  // why: with path mappings blanked, TS2307 fires for every workspace import and the knock-on errors it causes (a lost narrowing, an any-typed guard) are just as false, so type errors are left to the typecheck target, which sees the whole program.
+  if (warning.plugin === 'typescript' && !usesBaseUrlMapping(job) && TS_DIAGNOSTIC_CODE.test(warning.message ?? '')) return
   if (warning.plugin === 'typescript' && warning.message?.includes('TS2307')) return
   if (warning.code === 'EMPTY_BUNDLE') return
   defaultHandler(warning)
@@ -60,7 +76,6 @@ const buildExternalPredicate = (externals: string[]): ((id: string) => boolean) 
 
 const buildEntryPlugins = (job: RollupBuildDescriptor, format: 'esm' | 'cjs'): Plugin[] => {
   const plugins: Plugin[] = []
-  const hasWorkspaceRoutes = job.workspaceRoutes.length > 0
   if (job.bundledDepsPlugin) {
     plugins.push(
       createExternalizeBundledDepsPlugin({
@@ -73,7 +88,7 @@ const buildEntryPlugins = (job: RollupBuildDescriptor, format: 'esm' | 'cjs'): P
     )
   }
   // why: when workspaceRoutes is populated, the externalize plugin owns @hyperfrontend/* resolution; the typescript plugin's baseUrl path-mapping must not preempt it. Falling through to the paths:{} branch lets externalize win.
-  const useBaseUrlMapping = job.bundleWorkspaceDeps && !hasWorkspaceRoutes
+  const useBaseUrlMapping = usesBaseUrlMapping(job)
   plugins.push(
     json() as Plugin,
     nodeResolve({ extensions: ['.ts', '.js'] }) as Plugin,
@@ -98,6 +113,8 @@ const buildEntryPlugins = (job: RollupBuildDescriptor, format: 'esm' | 'cjs'): P
           rootDir: join(job.projectRoot, 'src'),
           outDir: job.outputDir,
           sourceMap: job.sourcemap,
+          // why: without an explicit anchor the plugin resolves its include filter against process.cwd(); the worker inherits the caller's cwd, so sources outside it would silently skip the TS transform and reach rollup as raw TypeScript.
+          filterRoot: job.workspaceRoot,
           compilerOptions: { paths: {} },
         }) as Plugin)
   )
@@ -150,7 +167,7 @@ const buildEsmJob = (job: RollupBuildDescriptor): PreparedRollupJob => ({
   config: {
     input: job.inputFile,
     external: buildExternalPredicate(job.external),
-    onwarn: (warning, defaultHandler) => onWarnEntry(warning, defaultHandler, job.workspaceRoutes),
+    onwarn: (warning, defaultHandler) => onWarnEntry(warning, defaultHandler, job),
     plugins: buildEntryPlugins(job, 'esm'),
   },
   outputs: [buildEntryOutput(job, 'esm')],
@@ -160,7 +177,7 @@ const buildCjsJob = (job: RollupBuildDescriptor): PreparedRollupJob => ({
   config: {
     input: job.inputFile,
     external: buildExternalPredicate(job.external),
-    onwarn: (warning, defaultHandler) => onWarnEntry(warning, defaultHandler, job.workspaceRoutes),
+    onwarn: (warning, defaultHandler) => onWarnEntry(warning, defaultHandler, job),
     plugins: buildEntryPlugins(job, 'cjs'),
   },
   outputs: [buildEntryOutput(job, 'cjs')],
