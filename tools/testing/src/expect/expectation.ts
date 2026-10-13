@@ -5,9 +5,11 @@ import { formatValue } from './format'
 import { MATCHERS } from './matchers'
 
 /**
- * What `toThrow` accepts as a description of the expected error.
+ * What `toThrow` accepts as a description of the expected error: a message fragment, a
+ * pattern, an error to compare messages with, an error class, or a shape the thrown value
+ * must contain.
  */
-export type ThrowExpectation = string | RegExp | Error | (new (...args: any[]) => Error) | undefined
+export type ThrowExpectation = string | RegExp | Error | (new (...args: any[]) => Error) | Record<string, unknown> | undefined
 
 /**
  * The synchronous assertion surface. Matcher arguments are deliberately loose, mirroring

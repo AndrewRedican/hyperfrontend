@@ -1,6 +1,6 @@
 import type { AccessType } from './spy'
 import type { FakeTimerOptions } from './timers'
-import type { MockFn } from './types'
+import type { MockedValue, MockFn } from './types'
 import { createRequire } from 'node:module'
 import { advanceGeneration } from '../hooks/generation'
 import { mockContext, registerRuntimeMock, resolveActualUrl } from '../hooks/mock-registry'
@@ -22,7 +22,7 @@ export type JestApi = {
   /** Replaces a method or accessor with a mock that calls through by default. */
   spyOn(target: object, key: PropertyKey, accessType?: AccessType): MockFn
   /** Returns its argument, narrowing it to a mock for the type checker. */
-  mocked<TValue>(value: TValue): TValue
+  mocked<TValue>(value: TValue): MockedValue<TValue>
   /** Clears recorded calls on every mock. */
   clearAllMocks(): JestApi
   /** Clears calls and drops implementations on every mock. */
@@ -65,7 +65,7 @@ export type JestApi = {
 export const jest: JestApi = {
   fn: createMockFn,
   spyOn: createSpy,
-  mocked: (value) => value,
+  mocked: (value) => value as MockedValue<typeof value>,
   clearAllMocks: () => {
     clearAllMocks()
     return jest
