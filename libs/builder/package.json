@@ -6,7 +6,7 @@
   "dependencies": {
     "@hyperfrontend/logging": "1.0.1",
     "@hyperfrontend/immutable-api-utils": "1.0.2",
-    "@hyperfrontend/project-scope": "0.2.9",
+    "@hyperfrontend/project-scope": "0.3.0",
     "@hyperfrontend/versioning": "0.9.1",
     "@rollup/plugin-commonjs": "29.0.0",
     "@rollup/plugin-json": "6.1.0",

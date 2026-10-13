@@ -2,7 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
-## [0.2.9](https://github.com/AndrewRedican/hyperfrontend/compare/5d6aaa1c9353303f77b6ac186afba9720b948d84...5cb7f830971abde1becf93ddc91e78008d8ccd92) - 2026-10-13
+## [0.3.0](https://github.com/AndrewRedican/hyperfrontend/compare/5d6aaa1c9353303f77b6ac186afba9720b948d84...55510a6f38238473bdec36d18eef7e38b60fac0d) - 2026-10-13
+
+### Features
+
+- add workspaceRelativePath and document the portable path convention
 
 ### Bug Fixes
 
