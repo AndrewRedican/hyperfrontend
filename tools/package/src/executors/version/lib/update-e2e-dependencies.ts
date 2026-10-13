@@ -1,4 +1,5 @@
-import { join, relative, sep, posix } from 'node:path'
+import { join } from 'node:path'
+import { workspaceRelativePath } from '@hyperfrontend/project-scope/core/path'
 import { getProductionDependencies, readPackageJsonIfExists } from '@hyperfrontend/project-scope/project/package'
 import { findFiles } from '@hyperfrontend/project-scope/project/traversal'
 import { getLogger } from './logger'
@@ -11,8 +12,7 @@ import { replaceTgzReference } from './replace-dependency-version'
  * @param workspaceRoot - The workspace root directory to make the path relative to
  * @returns The relative path, or '.' if the path equals the workspace root
  */
-const toRelative = (absolutePath: string, workspaceRoot: string): string =>
-  relative(workspaceRoot, absolutePath).split(sep).join(posix.sep) || '.'
+const toRelative = (absolutePath: string, workspaceRoot: string): string => workspaceRelativePath(workspaceRoot, absolutePath) || '.'
 
 /**
  * Checks if a dependency value is a file: reference to a tgz with the expected prefix.
@@ -85,7 +85,7 @@ export function updateE2eDependencies(packageName: string, newVersion: string, w
       if (typeof currentValue === 'string' && isTgzDependency(currentValue, tgzPrefix)) {
         const newValue = updateTgzInValue(currentValue, tgzPrefix, newTgzName)
         if (newValue !== currentValue) {
-          const relativePath = relative(workspaceRoot, packageJsonPath).split(sep).join(posix.sep)
+          const relativePath = workspaceRelativePath(workspaceRoot, packageJsonPath)
           logger.item(`  updating tgz reference from "${currentValue}" to "${newValue}"`)
           if (!dryRun) {
             replaceTgzReference(packageJsonPath, packageName, tgzPrefix, newTgzName)
