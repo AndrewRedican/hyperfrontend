@@ -2,10 +2,11 @@ import type { Tree } from '@hyperfrontend/project-scope/vfs'
 import type { FeatureContract, ResolvedFeatureConfig } from '../../shared/types'
 import type { CliFlags } from '../args'
 import type { MarkerInsertion } from '../insert-marker'
-import { dirname, isAbsolute, relative, resolve, sep, posix } from 'node:path'
+import { dirname, isAbsolute, resolve } from 'node:path'
 import { isArray } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { parse, stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
+import { relativePath } from '@hyperfrontend/project-scope/core/path'
 import { discoverEntryPoints } from '@hyperfrontend/project-scope/heuristics/entry-points'
 import { commitChanges, createTree } from '@hyperfrontend/project-scope/vfs'
 import { generateContractTypes } from '../../generators/contract/generate-types'
@@ -63,17 +64,6 @@ function toAbsolute(base: string, path: string): string {
 }
 
 /**
- * Converts an absolute path to a POSIX-style path relative to a base.
- *
- * @param base - Absolute base directory.
- * @param absolutePath - The absolute path to relativize.
- * @returns The base-relative POSIX path.
- */
-function toRelativePosix(base: string, absolutePath: string): string {
-  return relative(base, absolutePath).split(sep).join(posix.sep)
-}
-
-/**
  * Default contract loader: tiered-load then runtime-validate.
  *
  * @param absolutePath - Absolute path to the contract file.
@@ -92,7 +82,7 @@ async function defaultLoadContract(absolutePath: string): Promise<FeatureContrac
 function defaultDiscoverEntries(directory: string): readonly string[] {
   return discoverEntryPoints(directory)
     .filter((entry) => entry.type !== 'test')
-    .map((entry) => toRelativePosix(directory, toAbsolute(directory, entry.path)))
+    .map((entry) => relativePath(directory, toAbsolute(directory, entry.path)))
 }
 
 /**
@@ -207,10 +197,10 @@ function stageConfig(tree: Tree, config: ResolvedFeatureConfig, existing: Record
  * @throws {Error} When the entry's marker block is damaged beyond unambiguous repair.
  */
 function wireEntry(tree: Tree, cwd: string, entry: string): 'kept' | 'missing' | 'wired' {
-  const entryRel = toRelativePosix(cwd, toAbsolute(cwd, entry))
+  const entryRel = relativePath(cwd, toAbsolute(cwd, entry))
   const content = tree.read(entryRel, 'utf-8')
   if (content === null) return 'missing'
-  const glueRelative = toRelativePosix(dirname(toAbsolute(cwd, entryRel)), toAbsolute(cwd, GLUE_MODULE))
+  const glueRelative = relativePath(dirname(toAbsolute(cwd, entryRel)), toAbsolute(cwd, GLUE_MODULE))
   const specifier = glueRelative.startsWith('.') ? glueRelative : `./${glueRelative}`
   let result: MarkerInsertion
   try {
