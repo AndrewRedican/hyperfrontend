@@ -1,7 +1,14 @@
 import { normalize, sep, posix } from 'node:path'
 
+// ref: portable-path mirror copies of these helpers live where this package cannot be imported; grep "portable-path mirror" to find every one
+
 /**
- * Normalize path separators to forward slashes.
+ * Converts a native path to its portable spelling, with `/` as the only separator.
+ *
+ * Portable paths are for values that act as data: keys, configuration, messages and globs.
+ * Keep native paths for file-system calls, and rebuild them with `join` when a portable
+ * path has to reach the disk. Only the platform separator is rewritten, so a backslash
+ * in a POSIX file name is kept.
  *
  * @param filePath - Path to normalize
  * @returns Normalized path with forward slashes
