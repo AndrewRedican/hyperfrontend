@@ -162,6 +162,7 @@ export const dispatchInjectWorker = async (job: InjectWorkerJob, options: Dispat
     options.monitor?.check(`bin:native:dispatch:${label}:end`)
     return report
   } finally {
-    rmSync(reportDir, { recursive: true, force: true })
+    // why: on Windows an antivirus or indexer can still hold a just-written report file, which surfaces as a transient EBUSY/EPERM that a short retry absorbs
+    rmSync(reportDir, { recursive: true, force: true, maxRetries: 3, retryDelay: 100 })
   }
 }
