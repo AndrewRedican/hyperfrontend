@@ -1,6 +1,7 @@
 import type { Rule } from 'eslint'
 import type { JSONNode, JSONProperty } from 'jsonc-eslint-parser/lib/parser/ast'
-import { basename, dirname, join } from 'node:path'
+import { basename, dirname } from 'node:path'
+import { joinPath } from '@hyperfrontend/project-scope/core/path'
 import { exists, isPublishableLibrary, readFileIfExists } from '../utils'
 
 /**
@@ -30,7 +31,7 @@ export interface ReadmeContentCheck {
  * // 'libs/versioning/src/commits/parse/README.md'
  */
 export function getExpectedReadmePath(projectRoot: string, subpath: string): string {
-  return join(projectRoot, 'src', subpath, 'README.md')
+  return joinPath(projectRoot, 'src', subpath, 'README.md')
 }
 
 /**

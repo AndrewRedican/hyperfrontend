@@ -2,6 +2,7 @@ import type { Rule } from 'eslint'
 import type { ArrayExpression, Identifier, Node, VariableDeclaration, VariableDeclarator } from 'estree'
 import { basename, dirname, join, sep } from 'node:path'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
+import { workspaceRelativePath } from '@hyperfrontend/project-scope/core/path'
 import {
   exists,
   findNxWorkspaceRoot,
@@ -83,7 +84,7 @@ function findPublishableLibraries(baseDir: string, workspaceRoot: string, result
   }
 
   if (isPublishableLibraryDir(baseDir)) {
-    const relativePath = baseDir.slice(workspaceRoot.length + 1)
+    const relativePath = workspaceRelativePath(workspaceRoot, baseDir)
     const packageName = getPackageName(baseDir)
 
     if (packageName) {
