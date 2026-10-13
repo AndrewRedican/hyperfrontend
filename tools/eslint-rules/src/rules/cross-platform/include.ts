@@ -1,5 +1,6 @@
 import type { IncludeSelector } from './types'
-import { posix, relative, sep } from 'node:path'
+import { posix } from 'node:path'
+import { workspaceRelativePath } from '@hyperfrontend/project-scope/core/path'
 import { isPublishableLibrary } from '../../utils/nx-project'
 
 /**
@@ -28,7 +29,7 @@ export function isIncluded(
   workspaceRoot: string | null,
   include: readonly IncludeSelector[]
 ): boolean {
-  const file = workspaceRoot === null ? null : relative(workspaceRoot, filename).split(sep).join(posix.sep)
+  const file = workspaceRoot === null ? null : workspaceRelativePath(workspaceRoot, filename)
   return include.some((selector) =>
     'files' in selector
       ? file !== null && selector.files.some((pattern) => posix.matchesGlob(file, pattern))

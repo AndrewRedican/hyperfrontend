@@ -1,8 +1,9 @@
 import type { TSESTree } from '@typescript-eslint/utils'
 import type { PackageJson } from '../utils/nx-project'
-import { basename, dirname, join, posix, relative, resolve, sep } from 'node:path'
+import { basename, dirname, join, posix, resolve } from 'node:path'
 import { ESLintUtils } from '@typescript-eslint/utils'
 import { entries, keys, values } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
+import { relativePath as relativePathFrom } from '@hyperfrontend/project-scope/core/path'
 import { readJsonFileIfExists } from '../utils/fs'
 import { isPublishableLibrary } from '../utils/nx-project'
 import { findProjectRoot } from '../utils/workspace'
@@ -128,7 +129,7 @@ const rule = ESLintUtils.RuleCreator(
       return {}
     }
 
-    const relativePath = relative(projectRoot, filename).split(sep).join(posix.sep)
+    const relativePath = relativePathFrom(projectRoot, filename)
     const details = buildErrorDetails(packageJson)
 
     return {

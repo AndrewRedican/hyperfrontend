@@ -1,11 +1,12 @@
 import type { Rule } from 'eslint'
 import type { JSONNode } from 'jsonc-eslint-parser/lib/parser/ast'
 import type { PackageJson } from '../utils/nx-project'
-import { basename, dirname, join, posix, relative, sep } from 'node:path'
+import { basename, dirname, join, posix } from 'node:path'
 import { from } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { entries, values } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
+import { workspaceRelativePath } from '@hyperfrontend/project-scope/core/path'
 import { exists, findLibraryDirectories, readJsonFileIfExists } from '../utils'
 
 /**
@@ -83,7 +84,7 @@ function resolveExportToSourcePath(exportPath: string, projectDir: string, works
   const absolutePath = join(projectDir, normalizedPath)
 
   if (exists(absolutePath)) {
-    return relative(workspaceRoot, absolutePath).split(sep).join(posix.sep)
+    return workspaceRelativePath(workspaceRoot, absolutePath)
   }
 
   const mtsPath = absolutePath.replace(/\.ts$/, '.mts')
@@ -91,11 +92,11 @@ function resolveExportToSourcePath(exportPath: string, projectDir: string, works
 
   // why: mts fallback tested via dedicated test
   if (exists(mtsPath)) {
-    return relative(workspaceRoot, mtsPath).split(sep).join(posix.sep)
+    return workspaceRelativePath(workspaceRoot, mtsPath)
   }
   // why: cts fallback tested via dedicated test
   if (exists(ctsPath)) {
-    return relative(workspaceRoot, ctsPath).split(sep).join(posix.sep)
+    return workspaceRelativePath(workspaceRoot, ctsPath)
   }
 
   return null
@@ -313,7 +314,7 @@ const rule: Rule.RuleModule = {
 
       // Filter out excluded directories
       for (const foundDir of foundDirs) {
-        const relativePath = relative(workspaceRoot, foundDir).split(sep).join(posix.sep)
+        const relativePath = workspaceRelativePath(workspaceRoot, foundDir)
         if (!isExcludedPath(relativePath)) {
           libraryDirs.push(foundDir)
         }

@@ -1,6 +1,7 @@
 import type { TSESTree } from '@typescript-eslint/utils'
-import { dirname, posix, relative, resolve, sep } from 'node:path'
+import { dirname, resolve } from 'node:path'
 import { ASTUtils, AST_NODE_TYPES, TSESLint } from '@typescript-eslint/utils'
+import { normalizePath, workspaceRelativePath } from '@hyperfrontend/project-scope/core/path'
 import { propertyName, unwrap } from './ast'
 
 /**
@@ -54,7 +55,7 @@ export function moduleKeyOf(specifier: string, binding: BindingContext): string 
   if (specifier.startsWith('node:')) return specifier.slice('node:'.length)
   if (!specifier.startsWith('.')) return specifier
   const absolute = resolve(dirname(binding.filename), specifier)
-  return (binding.workspaceRoot ? relative(binding.workspaceRoot, absolute) : absolute).split(sep).join(posix.sep)
+  return binding.workspaceRoot ? workspaceRelativePath(binding.workspaceRoot, absolute) : normalizePath(absolute)
 }
 
 /**
