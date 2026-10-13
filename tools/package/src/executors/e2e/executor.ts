@@ -69,6 +69,17 @@ function packPackage(distPath: string, workspaceRoot: string): string {
 }
 
 /**
+ * Quotes arguments a Windows shell would otherwise split at their spaces.
+ *
+ * @param args - The arguments as the child should receive them.
+ * @returns The arguments to hand `execFileSync`, quoted only where a shell is in the way.
+ */
+function shellSafe(args: readonly string[]): string[] {
+  // why: `npm` and `npx` are .cmd shims on Windows, which only a shell can launch, and the shell splits an unquoted argument at every space, as in a temp directory under `C:\Users\Jane Doe`.
+  return process.platform === 'win32' ? args.map((arg) => (arg.includes(' ') ? `"${arg}"` : arg)) : [...args]
+}
+
+/**
  * Installs the tarball in the test project directory.
  *
  * @param tarballPath - The full path to the tarball file
@@ -77,7 +88,7 @@ function packPackage(distPath: string, workspaceRoot: string): string {
 function installTarball(tarballPath: string, testDir: string): void {
   logger.info(`Installing ${tarballPath} in ${testDir}`)
 
-  execFileSync('npm', ['install', tarballPath, '--save-exact'], {
+  execFileSync('npm', shellSafe(['install', tarballPath, '--save-exact']), {
     cwd: testDir,
     encoding: 'utf-8',
     stdio: 'inherit',
