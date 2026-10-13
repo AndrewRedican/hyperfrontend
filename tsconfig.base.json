@@ -9,6 +9,7 @@
     "moduleResolution": "bundler",
     "importHelpers": false,
     "noEmit": true,
+    "rewriteRelativeImportExtensions": true,
     "isolatedModules": true,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
