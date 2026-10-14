@@ -1,4 +1,5 @@
 import type ts from 'typescript'
+import { normalizeToNative } from '@hyperfrontend/project-scope/core/path'
 import { describe, expect, it } from '@hyperfrontend/testing'
 import { getRequireSpecifier, parseChunk, resolveRelativeTarget } from './ast-utils'
 
@@ -15,7 +16,9 @@ describe('parseChunk', () => {
 
 describe('resolveRelativeTarget', () => {
   it('joins a relative specifier against the importer directory', () => {
-    expect(resolveRelativeTarget('/dist/libs/foo/_dependencies/a', '../b/index.mjs')).toBe('/dist/libs/foo/_dependencies/b/index.mjs')
+    expect(resolveRelativeTarget('/dist/libs/foo/_dependencies/a', '../b/index.mjs')).toBe(
+      normalizeToNative('/dist/libs/foo/_dependencies/b/index.mjs')
+    )
   })
 
   it('returns null for a non-relative specifier', () => {

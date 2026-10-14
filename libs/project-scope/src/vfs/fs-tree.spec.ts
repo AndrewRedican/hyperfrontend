@@ -4,6 +4,7 @@ import { tmpdir } from 'node:os'
 import { join, sep } from 'node:path'
 import { after as afterAll, before as beforeAll } from 'node:test'
 import { describe, expect, it } from '@hyperfrontend/testing'
+import { normalizePath } from '../core/path'
 import { createFsTree } from './fs-tree'
 import { Mode } from './types'
 
@@ -27,12 +28,12 @@ describe('vfs/FsTree', () => {
   describe('constructor', () => {
     it('creates tree with root path', () => {
       const tree = createFsTree(TEST_DIR)
-      expect(tree.root).toBe(TEST_DIR)
+      expect(tree.root).toBe(normalizePath(TEST_DIR))
     })
 
     it('normalizes root path', () => {
       const tree = createFsTree(TEST_DIR + sep)
-      expect(tree.root).toBe(TEST_DIR)
+      expect(tree.root).toBe(normalizePath(TEST_DIR))
     })
   })
 

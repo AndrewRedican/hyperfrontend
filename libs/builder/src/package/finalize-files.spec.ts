@@ -2,6 +2,7 @@ import type { Mock } from '@hyperfrontend/testing'
 import type { BuildConfig, BuildContext, PackageJson } from '../models'
 import { beforeEach } from 'node:test'
 import { readJsonFile } from '@hyperfrontend/project-scope/core'
+import { normalizeToNative } from '@hyperfrontend/project-scope/core/path'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { finalizeFilesAllowlist } from './finalize-files'
 import { reflectFilesAllowlist } from './json/reflect-files-allowlist'
@@ -41,7 +42,7 @@ describe('finalizeFilesAllowlist', () => {
   it('reflects the allowlist from the output tree and writes it back onto the dist manifest', () => {
     finalizeFilesAllowlist(makeContext(), baseConfig)
     expect(reflectFilesAllowlist).toHaveBeenCalledWith('/abs/dist/libs/foo')
-    expect(readJsonFile).toHaveBeenCalledWith('/abs/dist/libs/foo/package.json')
+    expect(readJsonFile).toHaveBeenCalledWith(normalizeToNative('/abs/dist/libs/foo/package.json'))
     expect(writeOutputPackageJson).toHaveBeenCalledWith('/abs/dist/libs/foo', {
       name: 'foo',
       files: ['**/index.*', '**/index.d.ts', 'README.md'],

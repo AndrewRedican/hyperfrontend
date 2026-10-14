@@ -1,6 +1,6 @@
 import type { BinConfig, BinScriptFormat, BuildContext, CjsConfig, EntryPoint, EsmConfig, IifeConfig, UmdConfig } from '../../models'
 import type { RollupBuildDescriptor } from './worker/types'
-import { getDirname, join } from '@hyperfrontend/project-scope/core/path'
+import { join } from '@hyperfrontend/project-scope/core/path'
 import { defaultBootstrap } from '../../bin/script/bootstrap-footer'
 import { buildWorkspaceRoutes } from '../dependencies/externalize-plugin'
 import { resolveExternals } from '../externals/resolve-externals'
@@ -219,7 +219,7 @@ export const toBinBuildDescriptor = (
   return {
     format,
     inputFile,
-    outputDir: getDirname(outputFile),
+    outputDir: binDir,
     external: [],
     sourcemap: false,
     bundledDepsPlugin: useExternalizePlugin ? { deps: context.bundledDeps, depsRoot: bundledDepsRoot } : null,

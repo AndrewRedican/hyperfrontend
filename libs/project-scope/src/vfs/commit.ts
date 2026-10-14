@@ -102,7 +102,8 @@ export function commitChanges(tree: Tree, options?: CommitOptions): CommitResult
             try {
               unlinkSync(absPath)
             } catch {
-              rmSync(absPath, { recursive: true })
+              // why: on Windows an antivirus or indexer can still hold a file inside the directory, which surfaces as a transient EBUSY/EPERM that a short retry absorbs
+              rmSync(absPath, { recursive: true, maxRetries: 3, retryDelay: 100 })
             }
           }
           result.deleted++

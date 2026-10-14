@@ -273,7 +273,7 @@ describe('hoistSharedFirstParty', () => {
         '-e',
         `const m = await import(${JSON.stringify(url)}); process.stdout.write(m.join('a', 'b'))`,
       ])
-      expect(out.toString()).toBe('a/b')
+      expect(out.toString()).toBe(join('a', 'b'))
     })
   })
 

@@ -5,6 +5,7 @@ import type { Registry } from '../../registry/models/registry'
 import type { RepositoryConfig } from '../../repository/models/repository-config'
 import type { RepositoryResolution } from '../../repository/models/resolution'
 import type { FlowConfig, FlowContext, FlowState } from '../models/types'
+import { normalizePath, normalizeToNative } from '@hyperfrontend/project-scope/core/path'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { createResolveRepositoryStep, RESOLVE_REPOSITORY_STEP_ID } from './resolve-repository'
 
@@ -19,22 +20,23 @@ function createMockLogger(): Logger {
 }
 
 function createMockTree(files: Record<string, string> = {}): Tree {
-  const fileSystem = new Map(Object.entries(files))
+  // why: the real tree keys every path portably, so the native joins the step hands it must land on the POSIX seeds.
+  const fileSystem = new Map(Object.entries(files).map(([filePath, content]) => [normalizePath(filePath), content]))
 
   return {
     root: '/workspace',
     read(filePath: string, encoding?: string) {
-      const content = fileSystem.get(filePath)
+      const content = fileSystem.get(normalizePath(filePath))
       if (content === undefined) {
         return null
       }
       return encoding ? content : Buffer.from(content)
     },
     write: jest.fn(),
-    exists: (path: string) => fileSystem.has(path),
+    exists: (path: string) => fileSystem.has(normalizePath(path)),
     delete: jest.fn(),
     rename: jest.fn(),
-    isFile: (path: string) => fileSystem.has(path),
+    isFile: (path: string) => fileSystem.has(normalizePath(path)),
     children: () => [],
     listChanges: () => [],
   } as unknown as Tree
@@ -665,7 +667,9 @@ describe('resolve-repository step', () => {
         const step = createResolveRepositoryStep()
         await step.execute(ctx)
 
-        expect(logger.debug).toHaveBeenCalledWith('package.json not found or not a file at /workspace/libs/test/package.json')
+        expect(logger.debug).toHaveBeenCalledWith(
+          `package.json not found or not a file at ${normalizeToNative('/workspace/libs/test/package.json')}`
+        )
       })
 
       it('logs debug when successfully inferring from source', async () => {

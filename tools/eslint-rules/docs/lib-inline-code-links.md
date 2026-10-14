@@ -79,7 +79,7 @@ Nothing in the package exports those names. The message says so, lists what othe
 ```markdown
 Hand [`createShell`](https://www.hyperfrontend.dev/docs/libraries/features/host/#api-createShell) a feature URL.
 Every drop is reported through [`onDrop`](https://www.hyperfrontend.dev/docs/libraries/network-protocol/#api-ChannelOptions-prop-onDrop).
-The default is `true`, the file is `index.esm.js`, and the flag is `--protocol v4`.
+The default is `true`, the file is `index.mjs`, and the flag is `--protocol v4`.
 ```
 
 The last line carries three values and no names, and is left alone.

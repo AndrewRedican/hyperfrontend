@@ -4,7 +4,7 @@ import { createRequire } from 'node:module'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, beforeEach } from 'node:test'
-import { describe, expect, it } from '@hyperfrontend/testing'
+import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { runRollupWorkerJob } from './job-runner'
 
 describe('runRollupWorkerJob', () => {
@@ -157,6 +157,45 @@ describe('runRollupWorkerJob', () => {
       })
     )
     expect(readFileSync(join(outputDir, 'index.mjs'), 'utf8')).toMatch(/from\s+["']@other\/pkg["']/)
+  })
+
+  it('drops type diagnostics computed without path mappings, where a workspace import cannot resolve', async () => {
+    const inputFile = writeSrc(
+      'input.ts',
+      "import { isArray } from '@other/pkg'\nexport const joined = (value: unknown): string => (isArray(value) ? value.join(',') : '')\n"
+    )
+    const tsConfigPath = writeTsconfig()
+    const outputDir = join(root, 'out')
+    const warn = jest.spyOn(console, 'warn').mockImplementation(() => undefined)
+    try {
+      await runRollupWorkerJob(baseDescriptor({ format: 'esm', inputFile, outputDir, tsConfigPath, reportPath: join(root, 'report.json') }))
+    } finally {
+      warn.mockRestore()
+    }
+    expect(readFileSync(join(outputDir, 'index.mjs'), 'utf8')).toContain('isArray(value)')
+    expect(warn.mock.calls.flat().filter((entry) => /TS\d{4,5}/.test(String(entry)))).toEqual([])
+  })
+
+  it('keeps type diagnostics when the typescript plugin resolves workspace imports itself', async () => {
+    const inputFile = writeSrc('input.ts', "export const count: number = 'one'\n")
+    const tsConfigPath = writeTsconfig()
+    const outputDir = join(root, 'out')
+    const warn = jest.spyOn(console, 'warn').mockImplementation(() => undefined)
+    try {
+      await runRollupWorkerJob(
+        baseDescriptor({
+          format: 'esm',
+          inputFile,
+          outputDir,
+          tsConfigPath,
+          reportPath: join(root, 'report.json'),
+          bundleWorkspaceDeps: true,
+        })
+      )
+    } finally {
+      warn.mockRestore()
+    }
+    expect(warn.mock.calls.flat().some((entry) => /TS2322/.test(String(entry)))).toBe(true)
   })
 
   it('routes bundled-dep imports through the externalize plugin when configured', async () => {
@@ -365,7 +404,8 @@ describe('runRollupWorkerJob', () => {
     expect(contents.startsWith('#!/usr/bin/env node')).toBe(true)
     expect(contents).toContain('// bootstrap-footer')
     const mode = statSync(outputFile).mode & 0o777
-    expect(mode).toBe(0o755)
+    // why: Windows has no execute bit, so chmod leaves the file at its writable default.
+    expect(mode).toBe(process.platform === 'win32' ? 0o666 : 0o755)
   })
 
   it('writes a bin ESM bundle to bin.outputFile when format is esm', async () => {

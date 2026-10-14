@@ -1,11 +1,12 @@
 import type { PropDemand } from './namespace-usage'
 import ts from 'typescript'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
+import { normalizeToNative } from '@hyperfrontend/project-scope/core/path'
 import { describe, expect, it } from '@hyperfrontend/testing'
 import { parseChunk } from './ast-utils'
 import { classifyNamespaceUse, collectNamespaceUsage, mergeDemand } from './namespace-usage'
 
-const TARGET = '/p/d/index.mjs'
+const TARGET = normalizeToNative('/p/d/index.mjs')
 
 // context: serialize the usage of the single `./d/index.mjs` target into a comparable shape.
 const usageOf = (source: string): 'absent' | 'bailAll' | Record<string, 'all' | string[]> => {
@@ -101,7 +102,7 @@ describe('collectNamespaceUsage', () => {
   })
 })
 
-const TARGET_CJS = '/p/d/index.cjs'
+const TARGET_CJS = normalizeToNative('/p/d/index.cjs')
 
 const usageOfCjs = (source: string): 'absent' | 'bailAll' | Record<string, 'all' | string[]> => {
   const target = collectNamespaceUsage(source, '/p', 'cjs').get(TARGET_CJS)

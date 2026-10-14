@@ -45,8 +45,9 @@ describe('core/fs/traversal', () => {
     })
 
     it('checks root directory', () => {
-      const result = traverseUpward(tempDir, (dir) => dir.includes('tmp') || dir.includes('temp'))
-      expect(result).toBeTruthy()
+      // why: the temp root is spelled differently per platform (Temp on Windows), so the predicate recognises the fixture directory by its own name
+      const result = traverseUpward(tempDir, (dir) => basename(dir).startsWith('traversal-test-'))
+      expect(result).toBe(tempDir)
     })
 
     it('stops at first match', () => {

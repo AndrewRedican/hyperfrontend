@@ -4,11 +4,11 @@ import type { GitClient } from '../../git/factory'
 import type { GitCommit } from '../../git/models/commit'
 import type { FlowStep } from '../models/step'
 import type { FlowContext, ScopeFilteringConfig, ScopeFilteringStrategy } from '../models/types'
-import { isAbsolute, posix, relative, sep } from 'node:path'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { keys } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 
+import { workspaceRelativePath } from '@hyperfrontend/project-scope/core/path'
 import { buildSimpleProjectGraph, discoverNxProjects } from '@hyperfrontend/project-scope/nx'
 import {
   buildInfrastructureMatcher,
@@ -308,8 +308,7 @@ function applyStrategyFilter(
  */
 function getRelativePath(workspaceRoot: string, projectRoot: string): string {
   // why: git reports file paths with `/` on every platform, so the project prefix they are matched against must use it too.
-  const relativeRoot = isAbsolute(projectRoot) ? relative(workspaceRoot, projectRoot) : projectRoot
-  return relativeRoot.split(sep).join(posix.sep)
+  return workspaceRelativePath(workspaceRoot, projectRoot)
 }
 
 /**

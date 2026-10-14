@@ -6,7 +6,7 @@ import type { StaticServeDeps, StaticServerHandle } from './static-serve'
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { createServer, get } from 'node:http'
 import { tmpdir } from 'node:os'
-import { join } from 'node:path'
+import { join, resolve } from 'node:path'
 import { afterEach, beforeEach } from 'node:test'
 import { gunzipSync } from 'node:zlib'
 import { describe, expect, it } from '@hyperfrontend/testing'
@@ -41,8 +41,14 @@ const fakeRes = (): FakeResponse => {
 const fakeReq = (over: { method?: string; url?: string; headers?: IncomingHttpHeaders } = {}): IncomingMessage =>
   ({ headers: {}, ...over }) as unknown as IncomingMessage
 
+// why: Resolve gives the fixture root the drive Windows prefixes onto every path the pipeline builds, so the served-bytes expectations below compare like for like.
+const ROOT = resolve('/site')
+
+// how: The read stub echoes the native path it was handed, so the expected body is joined the way the file step joins it.
+const bytesOf = (...segments: string[]): string => `bytes:${join(ROOT, ...segments)}`
+
 const config = (over: Partial<ResolvedServeConfig> = {}): ResolvedServeConfig => ({
-  root: '/site',
+  root: ROOT,
   port: 0,
   headers: [],
   log: false,
@@ -74,8 +80,8 @@ describe('createServeListener', () => {
     expect({ status: out.statusCode, type: out.headers['Content-Type'], length: out.headers['Content-Length'], body: out.body }).toEqual({
       status: 200,
       type: 'text/javascript; charset=utf-8',
-      length: '18',
-      body: 'bytes:/site/app.js',
+      length: String(bytesOf('app.js').length),
+      body: bytesOf('app.js'),
     })
   })
 
@@ -85,7 +91,7 @@ describe('createServeListener', () => {
     expect({ status: out.statusCode, type: out.headers['Content-Type'], length: out.headers['Content-Length'], body: out.body }).toEqual({
       status: 200,
       type: 'text/javascript; charset=utf-8',
-      length: '18',
+      length: String(bytesOf('app.js').length),
       body: '',
     })
   })
@@ -99,13 +105,13 @@ describe('createServeListener', () => {
   it('treats a missing method as GET', () => {
     const out = fakeRes()
     createServeListener(config(), fsDeps())(fakeReq({ url: '/app.js' }), out.res)
-    expect({ status: out.statusCode, body: out.body }).toEqual({ status: 200, body: 'bytes:/site/app.js' })
+    expect({ status: out.statusCode, body: out.body }).toEqual({ status: 200, body: bytesOf('app.js') })
   })
 
   it('defaults a missing url to the root index', () => {
     const out = fakeRes()
     createServeListener(config(), fsDeps())(fakeReq({ method: 'GET' }), out.res)
-    expect(out.body).toBe('bytes:/site/index.html')
+    expect(out.body).toBe(bytesOf('index.html'))
   })
 
   it('lets a custom step answer before the built-ins', () => {
@@ -130,7 +136,7 @@ describe('createServeListener', () => {
     expect({ status: out.statusCode, custom: out.headers['X-Custom'], body: out.body }).toEqual({
       status: 200,
       custom: 'decorated',
-      body: 'bytes:/site/app.js',
+      body: bytesOf('app.js'),
     })
   })
 

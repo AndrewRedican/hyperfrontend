@@ -1,4 +1,4 @@
-import { resolve } from 'node:path'
+import { isAbsolute, resolve } from 'node:path'
 import { describe, expect, it } from '@hyperfrontend/testing'
 import { createTree } from '../../vfs'
 import { findFiles, findFilesInTree, findDirectories } from './search'
@@ -44,7 +44,7 @@ describe('findFiles', () => {
       absolutePaths: true,
     })
 
-    expect(results.every((f) => f.startsWith('/'))).toBe(true)
+    expect(results.every((f) => isAbsolute(f))).toBe(true)
     expect(results.some((f) => f.includes(MINIMAL_PROJECT))).toBe(true)
   })
 
@@ -91,7 +91,7 @@ describe('findDirectories', () => {
       absolutePaths: true,
     })
 
-    expect(results.every((d) => d.startsWith('/'))).toBe(true)
+    expect(results.every((d) => isAbsolute(d))).toBe(true)
   })
 
   it('respects maxResults option', () => {

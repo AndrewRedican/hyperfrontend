@@ -5,7 +5,16 @@ import { findProjectChangelogInTree } from './discover-changelogs'
 // why: a native project path only carries backslashes when the module links against the win32 flavour of node:path.
 jest.mock('node:path', () => {
   const { win32 } = jest.requireActual<typeof import('node:path')>('node:path')
-  return { isAbsolute: win32.isAbsolute, join: win32.join, posix: win32.posix, relative: win32.relative, sep: win32.sep }
+  // why: the tree path is derived by project-scope's workspaceRelativePath, which resolves and normalizes before it converts.
+  return {
+    isAbsolute: win32.isAbsolute,
+    join: win32.join,
+    normalize: win32.normalize,
+    posix: win32.posix,
+    relative: win32.relative,
+    resolve: win32.resolve,
+    sep: win32.sep,
+  }
 })
 
 describe('findProjectChangelogInTree on Windows', () => {

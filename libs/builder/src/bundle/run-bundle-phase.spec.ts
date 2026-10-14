@@ -2,6 +2,7 @@ import type { Mock } from '@hyperfrontend/testing'
 import type { BuildConfig, BuildContext, EntryPoint, EntryPointDiscovery } from '../models'
 import { beforeEach } from 'node:test'
 import { ensureDir } from '@hyperfrontend/project-scope/core'
+import { normalizeToNative } from '@hyperfrontend/project-scope/core/path'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { runDtsPerEntry } from './declarations/dts-per-entry'
 import { runDtsPrePass } from './declarations/dts-pre-pass'
@@ -146,7 +147,7 @@ describe('runBundlePhase', () => {
       iife: { globalName: 'MyLib', entry: '.' },
     } as BuildConfig)
     expect(result.iife).toEqual([expect.objectContaining({ entries: [expect.objectContaining({ exportPath: '.' })] })])
-    expect(ensureDir).toHaveBeenCalledWith('/abs/dist/libs/foo/bundle')
+    expect(ensureDir).toHaveBeenCalledWith(normalizeToNative('/abs/dist/libs/foo/bundle'))
   })
 
   it('skips IIFE bookkeeping when no entry resolves', async () => {
@@ -182,7 +183,7 @@ describe('runBundlePhase', () => {
       workspaceRoot: '',
       iife: { globalName: 'MyLib', entry: '.', output: 'iife-bundle' },
     } as BuildConfig)
-    expect(ensureDir).toHaveBeenCalledWith('/abs/dist/libs/foo/iife-bundle')
+    expect(ensureDir).toHaveBeenCalledWith(normalizeToNative('/abs/dist/libs/foo/iife-bundle'))
   })
 
   it('runs the bundle comment strip once with the output path and the recorded format outputs', async () => {
@@ -479,7 +480,7 @@ describe('runBundlePhase', () => {
     const jobs = (runPrePass as Mock).mock.calls[0][0]
     const npmJobs = jobs.filter((j: { kind: string }) => j.kind === 'js')
     expect(npmJobs).toHaveLength(2)
-    expect(npmJobs[0].depsRoot).toBe('/abs/dist/libs/foo/_dependencies')
+    expect(npmJobs[0].depsRoot).toBe(normalizeToNative('/abs/dist/libs/foo/_dependencies'))
     expect(npmJobs[0].dep).toBe('rollup')
     expect(npmJobs[0].npmDeps).toEqual(['postject'])
     expect(npmJobs[0].workspaceRoutes).toEqual([{ packageName: '@hyperfrontend/logging', policy: 'whole-surface' }])
@@ -518,7 +519,7 @@ describe('runBundlePhase', () => {
     const workspaceJobs = jobs.filter((j: { kind: string }) => j.kind === 'workspace-js')
     expect(workspaceJobs).toHaveLength(2)
     expect(workspaceJobs[0].dep).toBe('@hyperfrontend/logging')
-    expect(workspaceJobs[0].depsRoot).toBe('/abs/dist/libs/foo/_dependencies')
+    expect(workspaceJobs[0].depsRoot).toBe(normalizeToNative('/abs/dist/libs/foo/_dependencies'))
     expect(workspaceJobs[0].npmDeps).toEqual(['rollup'])
     expect(workspaceJobs[0].workspaceRoutes).toEqual([{ packageName: '@hyperfrontend/project-scope', policy: 'whole-surface' }])
     expect(workspaceJobs[1].dep).toBe('@hyperfrontend/project-scope')

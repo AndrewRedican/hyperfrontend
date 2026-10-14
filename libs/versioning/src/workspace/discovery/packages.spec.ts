@@ -2,6 +2,7 @@ import type { Tree } from '@hyperfrontend/project-scope/vfs'
 import { posix } from 'node:path'
 import { beforeEach } from 'node:test'
 import * as projectScopeFs from '@hyperfrontend/project-scope/core/fs'
+import { normalizeToNative } from '@hyperfrontend/project-scope/core/path'
 import * as projectScopePackage from '@hyperfrontend/project-scope/project/package'
 import * as projectScopeRoot from '@hyperfrontend/project-scope/project/root'
 import * as projectScopeTraversal from '@hyperfrontend/project-scope/project/traversal'
@@ -60,7 +61,7 @@ describe('discoverProject', () => {
 
     const project = discoverProject('/workspace/libs/my-package')
 
-    expect(project?.packageJsonPath).toBe('/workspace/libs/my-package/package.json')
+    expect(project?.packageJsonPath).toBe(normalizeToNative('/workspace/libs/my-package/package.json'))
   })
 
   it('preserves packageJson object', () => {
@@ -316,7 +317,7 @@ describe('discoverPackages', () => {
 
     const result = discoverPackages({ includeChangelogs: true })
 
-    expect(result.projects).toEqual([expect.objectContaining({ changelogPath: '/workspace/libs/lib-a/CHANGELOG.md' })])
+    expect(result.projects).toEqual([expect.objectContaining({ changelogPath: normalizeToNative('/workspace/libs/lib-a/CHANGELOG.md') })])
   })
 
   it('tracks internalDependencies correctly', () => {

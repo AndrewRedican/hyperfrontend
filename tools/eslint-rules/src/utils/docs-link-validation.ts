@@ -11,9 +11,10 @@
 
 import type { LinkOrigins } from './docs-links'
 import type { DocsTargetIndex } from './docs-targets'
-import { dirname, join, relative, posix } from 'node:path'
+import { dirname, join, posix } from 'node:path'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { createURL } from '@hyperfrontend/immutable-api-utils/built-in-copy/url'
+import { workspaceRelativePath } from '@hyperfrontend/project-scope/core/path'
 import { API_ANCHOR_PREFIX, PROPERTY_ANCHOR_INFIX } from './docs-links'
 import { entryOfRoute, markdownOfRoute, routeExists } from './docs-targets'
 import { exists, isDirectory, readFileIfExists } from './fs'
@@ -159,11 +160,11 @@ function checkAnchor(index: DocsTargetIndex, route: string, anchor: string): Lin
   }
   const text = readFileIfExists(markdown)
   if (text === null) {
-    return { ok: false, reason: `${route} renders ${relative(index.workspaceRoot, markdown)}, which does not exist` }
+    return { ok: false, reason: `${route} renders ${workspaceRelativePath(index.workspaceRoot, markdown)}, which does not exist` }
   }
   return headingAnchors(text).has(anchor)
     ? { ok: true }
-    : { ok: false, reason: `${relative(index.workspaceRoot, markdown)} has no heading with the anchor '${anchor}'` }
+    : { ok: false, reason: `${workspaceRelativePath(index.workspaceRoot, markdown)} has no heading with the anchor '${anchor}'` }
 }
 
 /**
@@ -202,10 +203,13 @@ function checkRepositoryLink(index: DocsTargetIndex, url: URL, repoUrl: string):
   }
   const target = join(index.workspaceRoot, segments.join('/'))
   if (!exists(target)) {
-    return { ok: false, reason: `the repository has no file at ${relative(index.workspaceRoot, target)}` }
+    return { ok: false, reason: `the repository has no file at ${workspaceRelativePath(index.workspaceRoot, target)}` }
   }
   if (view === 'blob' && isDirectory(target)) {
-    return { ok: false, reason: `${relative(index.workspaceRoot, target)} is a directory; link it with /tree/ rather than /blob/` }
+    return {
+      ok: false,
+      reason: `${workspaceRelativePath(index.workspaceRoot, target)} is a directory; link it with /tree/ rather than /blob/`,
+    }
   }
   return { ok: true }
 }
@@ -259,12 +263,12 @@ export function validateLink(index: DocsTargetIndex, origins: LinkOrigins, href:
   const [path, anchor] = href.split('#') as [string, string | undefined]
   const target = join(dirname(file), path)
   if (!exists(target)) {
-    return { ok: false, reason: `${relative(index.workspaceRoot, target)} does not exist` }
+    return { ok: false, reason: `${workspaceRelativePath(index.workspaceRoot, target)} does not exist` }
   }
   if (anchor !== undefined && anchor !== '' && !isDirectory(target)) {
     const text = readFileIfExists(target) ?? ''
     if (!headingAnchors(text).has(anchor)) {
-      return { ok: false, reason: `${relative(index.workspaceRoot, target)} has no heading with the anchor '${anchor}'` }
+      return { ok: false, reason: `${workspaceRelativePath(index.workspaceRoot, target)} has no heading with the anchor '${anchor}'` }
     }
   }
   return { ok: true }

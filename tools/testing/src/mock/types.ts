@@ -89,6 +89,11 @@ export type Mocked<TTarget> = {
 } & TTarget
 
 /**
+ * What `jest.mocked` hands back: a function becomes its mocked signature, anything else an object of mocked members.
+ */
+export type MockedValue<TValue> = TValue extends (...args: any[]) => any ? MockedFunction<TValue> : Mocked<TValue>
+
+/**
  * Reports whether a value is a mock created by this runtime.
  *
  * @param value - The value to test.

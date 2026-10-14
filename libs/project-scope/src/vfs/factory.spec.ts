@@ -2,6 +2,7 @@ import { mkdirSync, writeFileSync, rmSync } from 'node:fs'
 import { join, sep } from 'node:path'
 import { after as afterAll, before as beforeAll } from 'node:test'
 import { describe, expect, it } from '@hyperfrontend/testing'
+import { normalizePath } from '../core/path'
 import { createTree, createTreeFromDisk } from './factory'
 
 const TEST_DIR = join(import.meta.dirname, '__test_fixtures_factory__')
@@ -27,7 +28,7 @@ describe('vfs/factory', () => {
 
     it('sets root correctly', () => {
       const tree = createTree(TEST_DIR)
-      expect(tree.root).toBe(TEST_DIR)
+      expect(tree.root).toBe(normalizePath(TEST_DIR))
     })
 
     it('throws for non-existent directory', () => {
@@ -46,7 +47,7 @@ describe('vfs/factory', () => {
 
     it('normalizes path with trailing slash', () => {
       const tree = createTree(TEST_DIR + sep)
-      expect(tree.root).toBe(TEST_DIR)
+      expect(tree.root).toBe(normalizePath(TEST_DIR))
     })
   })
 

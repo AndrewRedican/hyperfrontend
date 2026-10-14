@@ -225,6 +225,36 @@ jobs:
       - name: Load every built package entry on the floor Node.js
         run: node tools/workspace/scripts/probe-node-floor.mjs
 
+  windows:
+    name: windows
+    runs-on: windows-latest
+    needs: [setup, version-check]
+    if: always() && needs.setup.outputs.has-affected == 'true' && needs.version-check.result == 'success'
+    # why: nothing has run on Windows before this leg, so it reports without blocking the gate until it is green; promote it into ci-status once it is.
+    continue-on-error: true
+    timeout-minutes: 90
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Keep line endings as committed
+        run: git config --global core.autocrlf false
+
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Setup monorepo
+        uses: ./.github/actions/setup-monorepo
+
+      - name: Typecheck the libraries and tools
+        run: CI=1 npx nx run-many -t typecheck --projects="lib-*,tool-*,eslint-rules" --parallel=1
+
+      - name: Lint every project
+        run: CI=1 npx nx lint:all
+
+      - name: Test the libraries and tools
+        run: CI=1 npx nx run-many -t test --projects="lib-*,tool-*,eslint-rules" --parallel=1
+
   ci-status:
     name: status
     runs-on: ubuntu-latest

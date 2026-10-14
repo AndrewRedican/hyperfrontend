@@ -2,8 +2,9 @@ import type { TestConfig } from './config'
 import assert from 'node:assert/strict'
 import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { join, relative } from 'node:path'
+import { join } from 'node:path'
 import { describe, it } from 'node:test'
+import { workspaceRelativePath } from './portable-paths'
 import { runProjectTests } from './run'
 
 const WORKSPACE_ROOT = process.env['HF_TEST_WORKSPACE_ROOT'] ?? process.cwd()
@@ -83,7 +84,7 @@ describe('runProjectTests', () => {
     run(fixture)
     assert.equal(
       readFileSync(join(fixture.coverageDir, 'lcov.info'), 'utf8').includes(
-        `SF:${relative(WORKSPACE_ROOT, join(fixture.projectRoot, 'src/double.ts'))}\n`
+        `SF:${workspaceRelativePath(WORKSPACE_ROOT, join(fixture.projectRoot, 'src/double.ts'))}\n`
       ),
       true
     )

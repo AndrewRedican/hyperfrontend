@@ -1,7 +1,8 @@
 import type { TestConfig, TestEnvironment } from './config'
 import { globSync } from 'node:fs'
-import { relative, resolve, sep, posix } from 'node:path'
+import { resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
+import { normalizePath, relativePath } from './portable-paths'
 
 /**
  * Everything needed to build one `node --test` invocation.
@@ -61,7 +62,7 @@ export function buildRunPlan(
     ...selectSpecFiles(environment, projectRoot),
   ]
 
-  return { environment, argv, lcovPath: relative(projectRoot, lcovPath).split(sep).join(posix.sep) }
+  return { environment, argv, lcovPath: relativePath(projectRoot, lcovPath) }
 }
 
 /**
@@ -90,7 +91,8 @@ export function moduleUrl(path: string): string {
 export function selectSpecFiles(environment: TestEnvironment, projectRoot: string): string[] {
   if (!environment.testIgnore?.length) return environment.testMatch
 
-  const selected = globSync(environment.testMatch, { cwd: projectRoot, exclude: environment.testIgnore }).sort()
+  // why: Node reads these arguments as globs, where only `/` means the same thing on every platform.
+  const selected = globSync(environment.testMatch, { cwd: projectRoot, exclude: environment.testIgnore }).map(normalizePath).sort()
   // why: Node given no files at all falls back to discovering them itself, which would silently run the very files the environment excluded.
   if (selected.length === 0) throw new Error(`environment "${environment.name}" matched no spec files`)
 

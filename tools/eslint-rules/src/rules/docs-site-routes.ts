@@ -1,6 +1,7 @@
 import type { Rule } from 'eslint'
 import type { ArrayExpression, Identifier, Node, ObjectExpression, Property, VariableDeclaration, VariableDeclarator } from 'estree'
 import { basename, dirname, join, sep } from 'node:path'
+import { joinPath } from '@hyperfrontend/project-scope/core/path'
 import { exists, findNxWorkspaceRoot, readFileIfExists } from '../utils'
 
 /**
@@ -118,7 +119,7 @@ export function extractLibraryEntries(arrayExpression: ArrayExpression): Library
  */
 export function getExpectedRouteDir(slug: string, category: LibraryEntry['category']): string {
   const baseDir = category === 'plugin' ? 'apps/docs-site/src/app/docs/plugins' : 'apps/docs-site/src/app/docs/libraries'
-  return join(baseDir, slug)
+  return joinPath(baseDir, slug)
 }
 
 /**
@@ -227,7 +228,7 @@ const rule: Rule.RuleModule = {
                 data: {
                   name: entry.name,
                   slug: entry.slug,
-                  expectedPath: join(routeDir, 'page.tsx'),
+                  expectedPath: joinPath(routeDir, 'page.tsx'),
                 },
               })
             }

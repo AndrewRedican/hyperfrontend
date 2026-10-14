@@ -2,7 +2,7 @@ import type { TestConfig } from './config'
 import assert from 'node:assert/strict'
 import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { join } from 'node:path'
+import { join, resolve } from 'node:path'
 import { describe, it } from 'node:test'
 import { pathToFileURL } from 'node:url'
 import { buildRunPlan, moduleUrl, selectSpecFiles, serialiseModuleMap, serialiseSetupFiles, setupPaths } from './argv'
@@ -227,7 +227,9 @@ describe('setupPaths', () => {
   })
 
   it('anchors each setup file to the project root', () => {
-    assert.deepEqual(setupPaths({ name: 'node', testMatch: [], setupFiles: ['test.setup.ts'] }, PROJECT), [`${PROJECT}/test.setup.ts`])
+    assert.deepEqual(setupPaths({ name: 'node', testMatch: [], setupFiles: ['test.setup.ts'] }, PROJECT), [
+      resolve(PROJECT, 'test.setup.ts'),
+    ])
   })
 })
 
@@ -239,7 +241,7 @@ describe('serialiseSetupFiles', () => {
   it('renders the absolute path of each setup file', () => {
     assert.equal(
       serialiseSetupFiles({ name: 'node', testMatch: [], setupFiles: ['test.setup.ts'] }, PROJECT),
-      JSON.stringify([`${PROJECT}/test.setup.ts`])
+      JSON.stringify([resolve(PROJECT, 'test.setup.ts')])
     )
   })
 })

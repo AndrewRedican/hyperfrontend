@@ -1,8 +1,9 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { join } from 'node:path'
+import { join, resolve, sep } from 'node:path'
 import { afterEach, beforeEach } from 'node:test'
+import { normalizePath } from '@hyperfrontend/project-scope/core/path'
 import { describe, expect, it } from '@hyperfrontend/testing'
 import { confineDecodedPath, createStaticHandler, decodeRequestPath, requestPath, serveFile } from './static-handler'
 
@@ -32,6 +33,12 @@ const fakeRes = (): FakeResponse => {
   return state
 }
 
+// why: Resolve gives the fixture root the drive Windows prefixes onto every path the handler builds, so the served-path expectations below compare like for like.
+const ROOT = resolve('/srv')
+
+// how: The handler returns native paths, so an expected file path is joined the way the handler joins it.
+const at = (...segments: string[]): string => join(ROOT, ...segments)
+
 const deps = (exists: (path: string) => boolean) => ({ isFile: exists, readFile: (path: string) => Buffer.from(`bytes:${path}`) })
 
 // note: Stands in for a directory on disk — the directory path itself is not a file, the index inside it is.
@@ -41,7 +48,7 @@ describe('serveFile', () => {
   it('serves the index for the root path', () => {
     const out = fakeRes()
     serveFile(
-      '/srv',
+      ROOT,
       '/',
       out.res,
       deps(() => true)
@@ -49,14 +56,14 @@ describe('serveFile', () => {
     expect({ status: out.statusCode, type: out.headers['Content-Type'], body: out.body }).toEqual({
       status: 200,
       type: 'text/html; charset=utf-8',
-      body: 'bytes:/srv/index.html',
+      body: `bytes:${at('index.html')}`,
     })
   })
 
   it('maps a known extension to its content type', () => {
     const out = fakeRes()
     serveFile(
-      '/srv',
+      ROOT,
       '/app.js',
       out.res,
       deps(() => true)
@@ -67,7 +74,7 @@ describe('serveFile', () => {
   it('falls back to octet-stream for an unknown extension', () => {
     const out = fakeRes()
     serveFile(
-      '/srv',
+      ROOT,
       '/data.xyz',
       out.res,
       deps(() => true)
@@ -78,18 +85,18 @@ describe('serveFile', () => {
   it('strips the query string before resolving', () => {
     const out = fakeRes()
     serveFile(
-      '/srv',
+      ROOT,
       '/app.js?v=2',
       out.res,
       deps(() => true)
     )
-    expect(out.body).toBe('bytes:/srv/app.js')
+    expect(out.body).toBe(`bytes:${at('app.js')}`)
   })
 
   it('allows a path that resolves to the root itself', () => {
     const out = fakeRes()
     serveFile(
-      '/srv',
+      ROOT,
       '//',
       out.res,
       deps(() => true)
@@ -100,7 +107,7 @@ describe('serveFile', () => {
   it('returns 404 when the file is missing', () => {
     const out = fakeRes()
     serveFile(
-      '/srv',
+      ROOT,
       '/missing.js',
       out.res,
       deps(() => false)
@@ -111,7 +118,7 @@ describe('serveFile', () => {
   it('serves the directory index for a nested directory url', () => {
     const out = fakeRes()
     serveFile(
-      '/srv',
+      ROOT,
       '/host/',
       out.res,
       deps(() => true)
@@ -119,13 +126,13 @@ describe('serveFile', () => {
     expect({ status: out.statusCode, type: out.headers['Content-Type'], body: out.body }).toEqual({
       status: 200,
       type: 'text/html; charset=utf-8',
-      body: 'bytes:/srv/host/index.html',
+      body: `bytes:${at('host', 'index.html')}`,
     })
   })
 
   it('redirects an unslashed directory url to its slashed form', () => {
     const out = fakeRes()
-    serveFile('/srv', '/host', out.res, deps(hasIndexOnly))
+    serveFile(ROOT, '/host', out.res, deps(hasIndexOnly))
     expect({ status: out.statusCode, location: out.headers['Location'], body: out.body }).toEqual({
       status: 301,
       location: '/host/',
@@ -135,13 +142,13 @@ describe('serveFile', () => {
 
   it('keeps the query string on the directory redirect', () => {
     const out = fakeRes()
-    serveFile('/srv', '/host?debug=1', out.res, deps(hasIndexOnly))
+    serveFile(ROOT, '/host?debug=1', out.res, deps(hasIndexOnly))
     expect(out.headers['Location']).toBe('/host/?debug=1')
   })
 
   it('redirects to the resolved directory, never to an authority the request smuggled in', () => {
     const out = fakeRes()
-    serveFile('/srv', '//evil.example/../host', out.res, deps(hasIndexOnly))
+    serveFile(ROOT, '//evil.example/../host', out.res, deps(hasIndexOnly))
     expect({ status: out.statusCode, location: out.headers['Location'] }).toEqual({ status: 301, location: '/host/' })
   })
 
@@ -152,14 +159,14 @@ describe('serveFile', () => {
     ['//evil.example/../host?debug=1', '/host/?debug=1'],
   ])('resolves %s to a root-relative redirect', (urlPath, expected) => {
     const out = fakeRes()
-    serveFile('/srv', urlPath, out.res, deps(hasIndexOnly))
+    serveFile(ROOT, urlPath, out.res, deps(hasIndexOnly))
     expect(out.headers['Location']).toBe(expected)
   })
 
   it('never emits a protocol-relative location a browser would read as another origin', () => {
     for (const urlPath of ['//evil.example/../host', '//host', '///host', '/host/../host', '']) {
       const out = fakeRes()
-      serveFile('/srv', urlPath, out.res, deps(hasIndexOnly))
+      serveFile(ROOT, urlPath, out.res, deps(hasIndexOnly))
       const location = out.headers['Location']
       if (location === undefined) {
         continue
@@ -171,14 +178,14 @@ describe('serveFile', () => {
 
   it('percent-encodes a resolved segment rather than reflecting the raw request', () => {
     const out = fakeRes()
-    serveFile('/srv', '/a b', out.res, deps(hasIndexOnly))
+    serveFile(ROOT, '/a b', out.res, deps(hasIndexOnly))
     expect(out.headers['Location']).toBe('/a%20b/')
   })
 
   it('returns 404 for a directory url with no index', () => {
     const out = fakeRes()
     serveFile(
-      '/srv',
+      ROOT,
       '/host/',
       out.res,
       deps(() => false)
@@ -189,7 +196,7 @@ describe('serveFile', () => {
   it('returns 404 rather than redirecting when the directory has no index', () => {
     const out = fakeRes()
     serveFile(
-      '/srv',
+      ROOT,
       '/host',
       out.res,
       deps(() => false)
@@ -200,7 +207,7 @@ describe('serveFile', () => {
   it('returns 403 on a traversal attempt', () => {
     const out = fakeRes()
     serveFile(
-      '/srv',
+      ROOT,
       '/../secret',
       out.res,
       deps(() => true)
@@ -211,7 +218,7 @@ describe('serveFile', () => {
   it('returns 403 for a malformed percent-encoding', () => {
     const out = fakeRes()
     serveFile(
-      '/srv',
+      ROOT,
       '/%',
       out.res,
       deps(() => true)
@@ -238,19 +245,19 @@ describe('createStaticHandler', () => {
   it('serves the requested url', () => {
     const out = fakeRes()
     createStaticHandler(
-      '/srv',
+      ROOT,
       deps(() => true)
     )({ url: '/app.js' } as IncomingMessage, out.res)
-    expect(out.body).toBe('bytes:/srv/app.js')
+    expect(out.body).toBe(`bytes:${at('app.js')}`)
   })
 
   it('defaults a missing url to the index', () => {
     const out = fakeRes()
     createStaticHandler(
-      '/srv',
+      ROOT,
       deps(() => true)
     )({} as IncomingMessage, out.res)
-    expect(out.body).toBe('bytes:/srv/index.html')
+    expect(out.body).toBe(`bytes:${at('index.html')}`)
   })
 })
 
@@ -307,14 +314,28 @@ describe('decodeRequestPath', () => {
 
 describe('confineDecodedPath', () => {
   it('confines a path inside the root', () => {
-    expect(confineDecodedPath('/srv', '/app.js')).toBe('/srv/app.js')
+    expect(confineDecodedPath(ROOT, '/app.js')).toBe(at('app.js'))
   })
 
   it('rejects a path that escapes the root', () => {
-    expect(confineDecodedPath('/srv', '/../secret')).toBeNull()
+    expect(confineDecodedPath(ROOT, '/../secret')).toBeNull()
   })
 
   it('allows the root itself', () => {
-    expect(confineDecodedPath('/srv', '/')).toBe('/srv')
+    expect(confineDecodedPath(ROOT, '/')).toBe(ROOT)
+  })
+
+  it('confines against a root spelled with a trailing slash', () => {
+    // why: A root such as `--root /abs/site/` must serve the same files as its canonical spelling instead of refusing every request.
+    expect(confineDecodedPath(`${ROOT}${sep}`, '/app.js')).toBe(at('app.js'))
+  })
+
+  it('confines against a root spelled with forward slashes', () => {
+    expect(confineDecodedPath(normalizePath(ROOT), '/app.js')).toBe(at('app.js'))
+  })
+
+  it('resolves a leading backslash relative to the root', () => {
+    // why: Windows reads a leading backslash as a drive-rooted path, which would escape the root; stripping it keeps the request confined on every platform.
+    expect(confineDecodedPath(ROOT, '\\app.js')).toBe(at('app.js'))
   })
 })

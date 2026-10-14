@@ -2,11 +2,21 @@ import type { ResolvedMediaConfig, VariantSpec } from '../../models/config'
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 import { stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 
-/** Absolute path of the recorder's source, which fixture scenes import by path. */
+/** Absolute path of the recorder's source, which fixture scenes import by address. */
 const SRC = resolve(fileURLToPath(import.meta.url), '../../..')
+
+/**
+ * The `file:` address of one recorder module, for a fixture's import specifier.
+ *
+ * @param segments - Path segments under the recorder's source directory.
+ * @returns The address Node's loader accepts on every platform; a native absolute path is read as a URL scheme on Windows.
+ */
+function sourceUrl(...segments: readonly string[]): string {
+  return pathToFileURL(join(SRC, ...segments)).href
+}
 
 /** The variant under the bare name, held to a budget small enough for a spec to breach. */
 export const PORTABLE_VARIANT: VariantSpec = { theme: 'portable', suffix: '', intent: 'anywhere', gif: { maxBytes: 4_096 } }
@@ -61,12 +71,12 @@ export interface SceneWorkspace {
 }
 
 /**
- * The head of a scene module: the recorder imported by absolute path, because
- * a fixture lives outside the package and has no relative route to it, and a
+ * The head of a scene module: the recorder imported by file URL, because a
+ * fixture lives outside the package and has no relative route to it, and a
  * one-second stage that draws its moment.
  */
-const SCENE_HEAD = `import { defineScriptedScene } from '${SRC}/scene/define-scene.ts'
-import { defineStage } from '${SRC}/stage/define-stage.ts'
+const SCENE_HEAD = `import { defineScriptedScene } from '${sourceUrl('scene', 'define-scene.ts')}'
+import { defineStage } from '${sourceUrl('stage', 'define-stage.ts')}'
 
 const stage = defineStage({
   id: 'dot',
@@ -99,7 +109,7 @@ export default defineScriptedScene({
  * @returns TypeScript source for the scene file.
  */
 export function browserSceneSource(fields: string): string {
-  return `import { defineBrowserScene } from '${SRC}/scene/define-scene.ts'
+  return `import { defineBrowserScene } from '${sourceUrl('scene', 'define-scene.ts')}'
 
 export default defineBrowserScene({
   ${fields}

@@ -4,6 +4,7 @@ import type { Mock } from '@hyperfrontend/testing'
 import type { GitClient } from '../../git/factory'
 import type { Registry } from '../../registry/models/registry'
 import type { FlowConfig, FlowContext, FlowState } from '../models/types'
+import { normalizePath, normalizeToNative } from '@hyperfrontend/project-scope/core/path'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { createUpdatePackageStep, createCascadeDependenciesStep, UPDATE_PACKAGES_STEP_ID } from './update-packages'
 
@@ -24,7 +25,8 @@ interface MockTreeOptions {
 
 function createMockTree(options: MockTreeOptions = {}): Tree {
   const { readFails = false } = options
-  const files = new Map(Object.entries(options.files ?? {}))
+  // why: the real tree keys every path portably, so the native joins the step hands it must land on the POSIX seeds.
+  const files = new Map(Object.entries(options.files ?? {}).map(([path, content]) => [normalizePath(path), content]))
 
   const tree = {
     root: '/workspace',
@@ -32,19 +34,19 @@ function createMockTree(options: MockTreeOptions = {}): Tree {
       if (readFails) {
         throw new Error('Mock read failed')
       }
-      const content = files.get(path)
+      const content = files.get(normalizePath(path))
       if (content === undefined) {
         return null
       }
       return encoding ? content : Buffer.from(content)
     },
     write: jest.fn((path: string, content: string) => {
-      files.set(path, content)
+      files.set(normalizePath(path), content)
     }),
-    exists: (path: string) => files.has(path),
+    exists: (path: string) => files.has(normalizePath(path)),
     delete: jest.fn(),
     rename: jest.fn(),
-    isFile: (path: string) => files.has(path),
+    isFile: (path: string) => files.has(normalizePath(path)),
     children: () => [],
     listChanges: () => [],
     changeFile: (path: string, transform: (content: Buffer) => Buffer) => {
@@ -256,7 +258,10 @@ describe('Update Packages Step', () => {
       const result = await step.execute(ctx)
 
       expect(result.status).toBe('success')
-      expect(tree.write).toHaveBeenCalledWith('/workspace/libs/test/package.json', expect.stringContaining('"version": "1.1.0"'))
+      expect(tree.write).toHaveBeenCalledWith(
+        normalizeToNative('/workspace/libs/test/package.json'),
+        expect.stringContaining('"version": "1.1.0"')
+      )
     })
 
     it('preserves other package.json fields', async () => {
@@ -304,7 +309,7 @@ describe('Update Packages Step', () => {
 
       const result = await step.execute(ctx)
 
-      expect(result.stateUpdates?.modifiedFiles).toContain('/workspace/libs/test/package.json')
+      expect(result.stateUpdates?.modifiedFiles).toContain(normalizeToNative('/workspace/libs/test/package.json'))
     })
 
     it('preserves existing modified files', async () => {
@@ -326,7 +331,7 @@ describe('Update Packages Step', () => {
       const result = await step.execute(ctx)
 
       expect(result.stateUpdates?.modifiedFiles).toContain('/workspace/libs/test/CHANGELOG.md')
-      expect(result.stateUpdates?.modifiedFiles).toContain('/workspace/libs/test/package.json')
+      expect(result.stateUpdates?.modifiedFiles).toContain(normalizeToNative('/workspace/libs/test/package.json'))
     })
 
     it('logs version update', async () => {

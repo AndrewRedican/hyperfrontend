@@ -1,5 +1,6 @@
 import type { Tree } from '@hyperfrontend/project-scope/vfs'
 import type { FlowContext } from '../models/types'
+import { normalizePath, normalizeToNative } from '@hyperfrontend/project-scope/core/path'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import {
   createMockChangelogEntry,
@@ -115,7 +116,7 @@ describe('Write Changelog Step', () => {
 
       const result = await step.execute(ctx)
 
-      expect(result.stateUpdates?.modifiedFiles).toContain('/workspace/libs/test/CHANGELOG.md')
+      expect(result.stateUpdates?.modifiedFiles).toContain(normalizeToNative('/workspace/libs/test/CHANGELOG.md'))
     })
   })
 
@@ -170,7 +171,7 @@ describe('Write Changelog Step', () => {
       const result = await step.execute(ctx)
 
       expect(result.stateUpdates?.modifiedFiles).toContain('/workspace/libs/test/package.json')
-      expect(result.stateUpdates?.modifiedFiles).toContain('/workspace/libs/test/CHANGELOG.md')
+      expect(result.stateUpdates?.modifiedFiles).toContain(normalizeToNative('/workspace/libs/test/CHANGELOG.md'))
     })
   })
 
@@ -240,8 +241,8 @@ describe('Write Changelog Step', () => {
       const result = await step.execute(ctx)
 
       expect(result.status).toBe('success')
-      expect(tree.write).toHaveBeenCalledWith('/workspace/libs/test/HISTORY.md', expect.any(String))
-      expect(result.stateUpdates?.modifiedFiles).toContain('/workspace/libs/test/HISTORY.md')
+      expect(tree.write).toHaveBeenCalledWith(normalizeToNative('/workspace/libs/test/HISTORY.md'), expect.any(String))
+      expect(result.stateUpdates?.modifiedFiles).toContain(normalizeToNative('/workspace/libs/test/HISTORY.md'))
       expect(result.message).toContain('Created HISTORY.md')
     })
 
@@ -276,7 +277,7 @@ describe('Write Changelog Step', () => {
       const result = await step.execute(ctx)
 
       expect(result.status).toBe('success')
-      expect(tree.write).toHaveBeenCalledWith('/workspace/libs/test/RELEASES.md', expect.any(String))
+      expect(tree.write).toHaveBeenCalledWith(normalizeToNative('/workspace/libs/test/RELEASES.md'), expect.any(String))
       expect(result.message).toContain('Updated RELEASES.md')
     })
 
@@ -295,7 +296,7 @@ describe('Write Changelog Step', () => {
       const result = await step.execute(ctx)
 
       expect(result.status).toBe('success')
-      expect(tree.write).toHaveBeenCalledWith('/workspace/libs/test/CHANGELOG.md', expect.any(String))
+      expect(tree.write).toHaveBeenCalledWith(normalizeToNative('/workspace/libs/test/CHANGELOG.md'), expect.any(String))
     })
   })
 
@@ -329,7 +330,10 @@ describe('Write Changelog Step', () => {
       const result = await step.execute(ctx)
 
       expect(result.status).toBe('success')
-      expect(tree.rename).toHaveBeenCalledWith('/workspace/libs/test/CHANGELOG.md', '/workspace/libs/test/CHANGELOG.backup.md')
+      expect(tree.rename).toHaveBeenCalledWith(
+        normalizeToNative('/workspace/libs/test/CHANGELOG.md'),
+        normalizeToNative('/workspace/libs/test/CHANGELOG.backup.md')
+      )
     })
 
     it('deletes backup after successful write', async () => {
@@ -346,12 +350,12 @@ describe('Write Changelog Step', () => {
       const tree = createMockTree({ files })
       const originalExists = tree.exists.bind(tree)
       tree.exists = jest.fn((path: string) => {
-        if (path === '/workspace/libs/test/CHANGELOG.backup.md') return true
+        if (normalizePath(path) === '/workspace/libs/test/CHANGELOG.backup.md') return true
         return originalExists(path)
       })
       const originalRead = tree.read.bind(tree)
       tree.read = jest.fn((path: string, encoding?: string) => {
-        if (path === '/workspace/libs/test/CHANGELOG.backup.md') {
+        if (normalizePath(path) === '/workspace/libs/test/CHANGELOG.backup.md') {
           return encoding ? existingChangelog : Buffer.from(existingChangelog)
         }
         return originalRead(path, encoding as BufferEncoding)
@@ -374,7 +378,7 @@ describe('Write Changelog Step', () => {
       const result = await step.execute(ctx)
 
       expect(result.status).toBe('success')
-      expect(tree.delete).toHaveBeenCalledWith('/workspace/libs/test/CHANGELOG.backup.md')
+      expect(tree.delete).toHaveBeenCalledWith(normalizeToNative('/workspace/libs/test/CHANGELOG.backup.md'))
     })
 
     it('does not create backup when backupChangelog disabled', async () => {

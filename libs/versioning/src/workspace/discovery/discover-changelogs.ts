@@ -1,7 +1,8 @@
 import type { Tree } from '@hyperfrontend/project-scope/vfs'
-import { basename, dirname, isAbsolute, join, posix, relative, sep } from 'node:path'
+import { basename, dirname, join, posix } from 'node:path'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { exists } from '@hyperfrontend/project-scope/core/fs'
+import { workspaceRelativePath } from '@hyperfrontend/project-scope/core/path'
 import { findFiles } from '@hyperfrontend/project-scope/project/traversal'
 
 /**
@@ -156,7 +157,7 @@ export function findChangelogsInTree(tree: Tree, packages: readonly PackageInfo[
  */
 export function findProjectChangelogInTree(tree: Tree, projectPath: string): string | null {
   // why: tree paths are root-relative and use `/`, while projectPath may be a native absolute path that a string prefix test against the tree root misses on Windows.
-  const treePath = (isAbsolute(projectPath) ? relative(tree.root, projectPath) : projectPath).split(sep).join(posix.sep)
+  const treePath = workspaceRelativePath(tree.root, projectPath)
 
   for (const name of CHANGELOG_NAMES) {
     if (tree.isFile(treePath ? posix.join(treePath, name) : name)) {

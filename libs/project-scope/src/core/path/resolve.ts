@@ -77,6 +77,31 @@ export function relativePath(from: string, to: string): string {
 }
 
 /**
+ * Converts a path into its workspace-relative portable form.
+ *
+ * An absolute path is made relative to the workspace root, and a relative path is taken as
+ * already relative to it. The result uses `/` on every platform, so it can serve as a key,
+ * a configuration value or a message, and it is empty for the root itself. Rebuild a native
+ * path with `join` before touching the file system.
+ *
+ * @param workspaceRoot - Absolute path of the workspace root
+ * @param filePath - Absolute path, or a path relative to the workspace root
+ * @returns The workspace-relative path with forward slashes
+ *
+ * @example Deriving a project root from a native path
+ * ```typescript
+ * workspaceRelativePath('C:\\repo', 'C:\\repo\\libs\\nexus')
+ * // => 'libs/nexus'
+ *
+ * workspaceRelativePath('/repo', 'libs/nexus')
+ * // => 'libs/nexus'
+ * ```
+ */
+export function workspaceRelativePath(workspaceRoot: string, filePath: string): string {
+  return normalizePath(relative(workspaceRoot, resolve(workspaceRoot, filePath)))
+}
+
+/**
  * Join path segments.
  *
  * @param segments - Path segments to join

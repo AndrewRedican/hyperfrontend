@@ -1,5 +1,6 @@
 import { TrackedLink } from '@/components/analytics/tracked-link'
 import { ConsentSettingsButton } from '@/components/consent/consent-settings-button'
+import { DevHuntBadge } from '@/components/devhunt-badge'
 import Link from 'next/link'
 import { createDate } from '@hyperfrontend/immutable-api-utils/built-in-copy/date'
 import { docLayout } from '../lib/doc-layout'
@@ -21,18 +22,21 @@ export function Footer({ width = docLayout.bar }: FooterProps = {}) {
     <footer className="border-t border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-900">
       <div className={`py-12 ${width} ${docLayout.gutter}`}>
         <div className="flex flex-col items-center justify-between gap-6 sm:flex-row">
-          <p className="text-sm text-slate-500 dark:text-slate-400">
-            &copy; {createDate().getFullYear()} HyperFrontend.{' '}
-            <a
-              href="https://github.com/AndrewRedican/hyperfrontend/blob/main/LICENSE.md"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:text-slate-900 hover:underline dark:hover:text-white"
-            >
-              MIT License
-            </a>
-            .
-          </p>
+          <div className="flex flex-col items-center gap-4 sm:items-start">
+            <p className="text-sm text-slate-500 dark:text-slate-400">
+              &copy; {createDate().getFullYear()} HyperFrontend.{' '}
+              <a
+                href="https://github.com/AndrewRedican/hyperfrontend/blob/main/LICENSE.md"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-slate-900 hover:underline dark:hover:text-white"
+              >
+                MIT License
+              </a>
+              .
+            </p>
+            <DevHuntBadge />
+          </div>
           <div className="flex flex-wrap items-center justify-center gap-6">
             <TrackedLink
               href="https://github.com/AndrewRedican/hyperfrontend"

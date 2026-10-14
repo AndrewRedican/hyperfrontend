@@ -202,10 +202,10 @@ flowchart TB
 
 | Library | Version |
 | --- | --- |
-| `@hyperfrontend/builder` | `0.5.0` |
+| `@hyperfrontend/builder` | `0.5.1` |
 | `@hyperfrontend/cryptography` | `1.1.1` |
 | `@hyperfrontend/data-utils` | `1.0.1` |
-| `@hyperfrontend/features` | `0.11.4` |
+| `@hyperfrontend/features` | `0.11.5` |
 | `@hyperfrontend/function-utils` | `1.0.1` |
 | `@hyperfrontend/immutable-api-utils` | `1.0.2` |
 | `@hyperfrontend/json-utils` | `1.0.1` |
@@ -213,11 +213,11 @@ flowchart TB
 | `@hyperfrontend/logging` | `1.0.1` |
 | `@hyperfrontend/network-protocol` | `2.0.1` |
 | `@hyperfrontend/nexus` | `3.0.1` |
-| `@hyperfrontend/project-scope` | `0.2.8` |
+| `@hyperfrontend/project-scope` | `0.3.0` |
 | `@hyperfrontend/questions` | `0.3.1` |
 | `@hyperfrontend/random-generator-utils` | `0.2.1` |
 | `@hyperfrontend/state-machine` | `0.2.1` |
 | `@hyperfrontend/string-utils` | `1.0.1` |
 | `@hyperfrontend/time-utils` | `1.0.1` |
 | `@hyperfrontend/ui-utils` | `0.0.9` |
-| `@hyperfrontend/versioning` | `0.9.1` |
+| `@hyperfrontend/versioning` | `0.9.2` |

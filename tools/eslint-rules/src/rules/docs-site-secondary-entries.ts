@@ -2,6 +2,7 @@ import type { Rule } from 'eslint'
 import type { ArrayExpression, Identifier, Node, ObjectExpression, Property, VariableDeclaration, VariableDeclarator } from 'estree'
 import { basename, dirname, join, sep } from 'node:path'
 import { keys } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
+import { joinPath } from '@hyperfrontend/project-scope/core/path'
 import { exists, findNxWorkspaceRoot, readFileIfExists, readJsonFileIfExists } from '../utils'
 
 /**
@@ -172,7 +173,7 @@ export function extractSecondaryEntrySubpaths(packageJson: PackageJson | null): 
  */
 export function getExpectedSecondaryRouteDir(slug: string, category: LibraryCategory, subpath: string): string {
   const baseDir = category === 'plugin' ? 'apps/docs-site/src/app/docs/plugins' : 'apps/docs-site/src/app/docs/libraries'
-  return join(baseDir, slug, subpath)
+  return joinPath(baseDir, slug, subpath)
 }
 
 /**
@@ -286,7 +287,7 @@ const rule: Rule.RuleModule = {
                   data: {
                     name: entry.name,
                     subpath,
-                    expectedPath: join(routeDir, 'page.tsx'),
+                    expectedPath: joinPath(routeDir, 'page.tsx'),
                   },
                 })
               }

@@ -3,6 +3,7 @@ import { existsSync, mkdirSync, mkdtempSync, readdirSync, rmSync, writeFileSync 
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, beforeEach } from 'node:test'
+import { normalizePath } from '@hyperfrontend/project-scope/core/path'
 import { describe, expect, it } from '@hyperfrontend/testing'
 import { pruneOrphanChunks } from './orphan-chunks'
 
@@ -54,7 +55,7 @@ describe('pruneOrphanChunks', () => {
   const listDeps = (suffix: string): string[] =>
     existsSync(depsRoot)
       ? readdirSync(depsRoot, { recursive: true })
-          .map(String)
+          .map((entry) => normalizePath(String(entry)))
           .filter((p) => p.endsWith(suffix))
           .sort()
       : []

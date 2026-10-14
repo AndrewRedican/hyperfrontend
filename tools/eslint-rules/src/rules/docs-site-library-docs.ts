@@ -1,7 +1,8 @@
 import type { Rule } from 'eslint'
 import type { ArrayExpression, Identifier, Node, ObjectExpression, Property, VariableDeclaration, VariableDeclarator } from 'estree'
-import { basename, dirname, join, relative, sep } from 'node:path'
+import { basename, dirname, join, sep } from 'node:path'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
+import { joinPath, relativePath as relativePathFrom } from '@hyperfrontend/project-scope/core/path'
 import { exists, findNxWorkspaceRoot, isDirectory, readDirectory } from '../utils'
 
 /**
@@ -165,7 +166,7 @@ function findMarkdownFiles(dirPath: string, libraryRoot: string, results: Markdo
     if (isDirectory(entryPath)) {
       findMarkdownFiles(entryPath, libraryRoot, results)
     } else if (entry.endsWith('.md') && !EXCLUDED_MARKDOWN_FILES.has(entry)) {
-      const relativePath = relative(libraryRoot, entryPath)
+      const relativePath = relativePathFrom(libraryRoot, entryPath)
       results.push(createMarkdownFileEntry(entryPath, relativePath))
     }
   }
@@ -281,10 +282,10 @@ export function getExpectedPagePath(slug: string, category: LibraryEntry['catego
   const baseDir = category === 'plugin' ? 'apps/docs-site/src/app/docs/plugins' : 'apps/docs-site/src/app/docs/libraries'
 
   if (markdownFile.isMainPage) {
-    return join(baseDir, slug, 'page.tsx')
+    return joinPath(baseDir, slug, 'page.tsx')
   }
 
-  return join(baseDir, slug, markdownFile.routeSlug, 'page.tsx')
+  return joinPath(baseDir, slug, markdownFile.routeSlug, 'page.tsx')
 }
 
 /**

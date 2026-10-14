@@ -1,12 +1,13 @@
 import type { TestConfig } from './config'
 import { spawnSync } from 'node:child_process'
 import { existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs'
-import { relative, resolve, sep, posix } from 'node:path'
+import { resolve } from 'node:path'
 import { findUnmeasuredFiles } from '../coverage/completeness'
 import { findThresholdShortfalls, renderCoverageTable } from '../coverage/gate'
 import { mergeLcov, renderLcov } from '../coverage/lcov'
 import { buildRunPlan, serialiseModuleMap, serialiseSetupFiles } from './argv'
 import { withDefaults } from './config'
+import { normalizePath, workspaceRelativePath } from './portable-paths'
 
 /**
  * Where a run happens and what it reports against.
@@ -75,7 +76,8 @@ export function runProjectTests(config: TestConfig, context: RunContext): RunOut
   }
 
   // why: the reports are merged rather than read one at a time, because a module evaluated again after `jest.resetModules` is a separate file to Node and one file to the gate.
-  const measured = [...mergeLcov(reports).values()]
+  // why: Node names each file with the platform separator, and the table, the gate and the merged report all treat the path as a key, so it is made portable once here.
+  const measured = [...mergeLcov(reports).values()].map((file) => ({ ...file, path: normalizePath(file.path) }))
 
   // why: coverage services match a report's paths against the repository tree, so the merged report names files from the workspace root rather than the project.
   writeFileSync(
@@ -83,7 +85,7 @@ export function runProjectTests(config: TestConfig, context: RunContext): RunOut
     renderLcov(
       measured.map((file) => ({
         ...file,
-        path: relative(context.workspaceRoot, resolve(context.projectRoot, file.path)).split(sep).join(posix.sep),
+        path: workspaceRelativePath(context.workspaceRoot, resolve(context.projectRoot, file.path)),
       }))
     )
   )

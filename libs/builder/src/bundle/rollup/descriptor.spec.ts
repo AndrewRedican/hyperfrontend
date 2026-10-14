@@ -3,6 +3,7 @@ import type { BinConfig, BuildContext, CjsConfig, EntryPoint, EsmConfig, IifeCon
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { beforeEach } from 'node:test'
+import { normalizeToNative } from '@hyperfrontend/project-scope/core/path'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { resolveExternals } from '../externals/resolve-externals'
 import { toBinBuildDescriptor, toCjsBuildDescriptor, toEsmBuildDescriptor, toIifeBuildDescriptor, toUmdBuildDescriptor } from './descriptor'
@@ -65,7 +66,7 @@ describe('toEsmBuildDescriptor', () => {
   it('places sub-entry output under the entry srcPath', () => {
     const config: EsmConfig = { bundleWorkspaceDeps: false }
     const descriptor = toEsmBuildDescriptor(SUB_ENTRY, config, makeContext(), REPORT_PATH)
-    expect(descriptor.outputDir).toBe('/abs/dist/libs/foo/sub')
+    expect(descriptor.outputDir).toBe(normalizeToNative('/abs/dist/libs/foo/sub'))
   })
 
   it('defaults sourcemap off and opts in only when config.sourcemap is true', () => {
@@ -79,7 +80,10 @@ describe('toEsmBuildDescriptor', () => {
     const config: EsmConfig = { bundleWorkspaceDeps: false, bundleAllDeps: true }
     const ctx = makeContext({ bundledDeps: ['rollup', 'postject'] })
     const descriptor = toEsmBuildDescriptor(ROOT_ENTRY, config, ctx, REPORT_PATH)
-    expect(descriptor.bundledDepsPlugin).toEqual({ deps: ['rollup', 'postject'], depsRoot: '/abs/dist/libs/foo/_dependencies' })
+    expect(descriptor.bundledDepsPlugin).toEqual({
+      deps: ['rollup', 'postject'],
+      depsRoot: normalizeToNative('/abs/dist/libs/foo/_dependencies'),
+    })
   })
 
   it('omits the bundledDepsPlugin entry when bundleAllDeps is on but bundledDeps is empty', () => {
@@ -94,7 +98,7 @@ describe('toEsmBuildDescriptor', () => {
     const ctx = makeContext({ external: ['global-ext'], isWorkspacePackage })
     toEsmBuildDescriptor(ROOT_ENTRY, config, ctx, REPORT_PATH)
     expect(resolveExternals).toHaveBeenCalledWith({
-      packageJsonPath: '/abs/libs/foo/package.json',
+      packageJsonPath: normalizeToNative('/abs/libs/foo/package.json'),
       additional: ['global-ext', 'extra'],
       isWorkspacePackage,
       bundleWorkspaceDeps: true,
@@ -172,7 +176,7 @@ describe('toEsmBuildDescriptor', () => {
       ],
     })
     const descriptor = toEsmBuildDescriptor(ROOT_ENTRY, config, ctx, REPORT_PATH)
-    expect(descriptor.bundledDepsPlugin).toEqual({ deps: [], depsRoot: '/abs/dist/libs/foo/_dependencies' })
+    expect(descriptor.bundledDepsPlugin).toEqual({ deps: [], depsRoot: normalizeToNative('/abs/dist/libs/foo/_dependencies') })
   })
 
   it('defaults bundleWorkspaceDeps to true when omitted, on both the descriptor and the resolveExternals input', () => {
@@ -196,7 +200,7 @@ describe('toCjsBuildDescriptor', () => {
     const config: CjsConfig = { bundleWorkspaceDeps: false, bundleAllDeps: true }
     const ctx = makeContext({ bundledDeps: ['rollup'] })
     const descriptor = toCjsBuildDescriptor(ROOT_ENTRY, config, ctx, REPORT_PATH)
-    expect(descriptor.bundledDepsPlugin).toEqual({ deps: ['rollup'], depsRoot: '/abs/dist/libs/foo/_dependencies' })
+    expect(descriptor.bundledDepsPlugin).toEqual({ deps: ['rollup'], depsRoot: normalizeToNative('/abs/dist/libs/foo/_dependencies') })
   })
 
   it('defaults sourcemap off and opts in only when config.sourcemap is true', () => {
@@ -218,7 +222,7 @@ describe('toIifeBuildDescriptor', () => {
     const config: IifeConfig = { globalName: 'MyLib' }
     const descriptor = toIifeBuildDescriptor(ROOT_ENTRY, config, makeContext(), REPORT_PATH)
     expect(descriptor.format).toBe('iife')
-    expect(descriptor.outputDir).toBe('/abs/dist/libs/foo/bundle')
+    expect(descriptor.outputDir).toBe(normalizeToNative('/abs/dist/libs/foo/bundle'))
     expect(descriptor.external).toEqual([])
     expect(descriptor.bundle).toEqual({ globalName: 'MyLib', minify: true, globals: undefined })
   })
@@ -226,7 +230,7 @@ describe('toIifeBuildDescriptor', () => {
   it('honors the per-format output override', () => {
     const config: IifeConfig = { globalName: 'MyLib', output: 'iife-bundle' }
     const descriptor = toIifeBuildDescriptor(ROOT_ENTRY, config, makeContext(), REPORT_PATH)
-    expect(descriptor.outputDir).toBe('/abs/dist/libs/foo/iife-bundle')
+    expect(descriptor.outputDir).toBe(normalizeToNative('/abs/dist/libs/foo/iife-bundle'))
   })
 
   it('passes through external + globals when supplied', () => {
@@ -260,7 +264,7 @@ describe('toUmdBuildDescriptor', () => {
     const config: UmdConfig = { globalName: 'MyLib', amdId: 'mylib' }
     const descriptor = toUmdBuildDescriptor(ROOT_ENTRY, config, makeContext(), REPORT_PATH)
     expect(descriptor.format).toBe('umd')
-    expect(descriptor.outputDir).toBe('/abs/dist/libs/foo/bundle')
+    expect(descriptor.outputDir).toBe(normalizeToNative('/abs/dist/libs/foo/bundle'))
     expect(descriptor.bundle).toEqual({ globalName: 'MyLib', minify: true, globals: undefined, amdId: 'mylib' })
   })
 
@@ -288,14 +292,14 @@ describe('toBinBuildDescriptor', () => {
     const bin: BinConfig = { name: 'cz', format: 'cjs', runner: 'runCz' }
     const descriptor = toBinBuildDescriptor(bin, makeContext(), 'cjs', ['cjs'], REPORT_PATH)
     expect(descriptor.format).toBe('cjs')
-    expect(descriptor.inputFile).toBe('/abs/libs/foo/src/bin/cz.ts')
-    expect(descriptor.outputDir).toBe('/abs/dist/libs/foo/bin')
+    expect(descriptor.inputFile).toBe(normalizeToNative('/abs/libs/foo/src/bin/cz.ts'))
+    expect(descriptor.outputDir).toBe(normalizeToNative('/abs/dist/libs/foo/bin'))
     expect(descriptor.external).toEqual([])
     expect(descriptor.sourcemap).toBe(false)
     expect(descriptor.bundleWorkspaceDeps).toBe(true)
     expect(descriptor.bundle).toBeNull()
     expect(descriptor.bin).toEqual({
-      outputFile: '/abs/dist/libs/foo/bin/cz.js',
+      outputFile: normalizeToNative('/abs/dist/libs/foo/bin/cz.js'),
       banner: '#!/usr/bin/env node',
       footer: expect.stringContaining('runCz('),
       exports: 'named',
@@ -308,14 +312,14 @@ describe('toBinBuildDescriptor', () => {
     const bin: BinConfig = { name: 'cz', format: 'esm' }
     const descriptor = toBinBuildDescriptor(bin, makeContext(), 'esm', ['esm'], REPORT_PATH)
     expect(descriptor.format).toBe('esm')
-    expect(descriptor.bin?.outputFile).toBe('/abs/dist/libs/foo/bin/cz.mjs')
+    expect(descriptor.bin?.outputFile).toBe(normalizeToNative('/abs/dist/libs/foo/bin/cz.mjs'))
     expect(descriptor.bin?.footer).toContain('await import(import.meta.url)')
   })
 
   it('uses `<name>.cjs` for the CJS output when ESM is also requested', () => {
     const bin: BinConfig = { name: 'hf-build', format: ['cjs', 'esm'] }
     const descriptor = toBinBuildDescriptor(bin, makeContext(), 'cjs', ['cjs', 'esm'], REPORT_PATH)
-    expect(descriptor.bin?.outputFile).toBe('/abs/dist/libs/foo/bin/hf-build.cjs')
+    expect(descriptor.bin?.outputFile).toBe(normalizeToNative('/abs/dist/libs/foo/bin/hf-build.cjs'))
   })
 
   it('honors a per-bin bootstrap override on the descriptor footer', () => {
@@ -330,7 +334,7 @@ describe('toBinBuildDescriptor', () => {
     const descriptor = toBinBuildDescriptor(bin, ctx, 'cjs', ['cjs'], REPORT_PATH)
     expect(descriptor.bundledDepsPlugin).toEqual({
       deps: ['rollup', 'terser'],
-      depsRoot: '/abs/dist/libs/foo/_dependencies',
+      depsRoot: normalizeToNative('/abs/dist/libs/foo/_dependencies'),
     })
   })
 
@@ -373,6 +377,6 @@ describe('toBinBuildDescriptor', () => {
       ],
     })
     const descriptor = toBinBuildDescriptor(bin, ctx, 'cjs', ['cjs'], REPORT_PATH)
-    expect(descriptor.bundledDepsPlugin).toEqual({ deps: [], depsRoot: '/abs/dist/libs/foo/_dependencies' })
+    expect(descriptor.bundledDepsPlugin).toEqual({ deps: [], depsRoot: normalizeToNative('/abs/dist/libs/foo/_dependencies') })
   })
 })

@@ -153,7 +153,7 @@ describe('docs-links', () => {
         ['-h', 'flag'],
         ['npx cz', 'command'],
         ['hf', 'command'],
-        ['index.esm.js', 'file'],
+        ['index.mjs', 'file'],
         ['feature.config.json', 'file'],
         ['./src', 'path'],
         ['src/', 'path'],

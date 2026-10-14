@@ -1,6 +1,7 @@
 import type { Rule } from 'eslint'
-import { basename, dirname, join, posix, relative, sep } from 'node:path'
+import { basename, dirname, join, posix } from 'node:path'
 import { min } from '@hyperfrontend/immutable-api-utils/built-in-copy/math'
+import { workspaceRelativePath } from '@hyperfrontend/project-scope/core/path'
 import {
   exists,
   findNxWorkspaceRoot,
@@ -100,7 +101,7 @@ function findPublishableLibraries(baseDir: string, workspaceRoot: string, result
   }
 
   if (isPublishableLibraryDir(baseDir)) {
-    const relativePath = relative(workspaceRoot, baseDir).split(sep).join(posix.sep)
+    const relativePath = workspaceRelativePath(workspaceRoot, baseDir)
     const projectJsonPath = join(baseDir, 'project.json')
     const projectJson = readJsonFileIfExists<ProjectJson & WithProjectName>(projectJsonPath)
 

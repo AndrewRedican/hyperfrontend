@@ -1,3 +1,4 @@
+import { normalizeToNative } from '@hyperfrontend/project-scope/core/path'
 import { describe, expect, it } from '@hyperfrontend/testing'
 import { resolveProjectCwd } from './context'
 
@@ -9,7 +10,7 @@ describe('resolveProjectCwd', () => {
         projectName: 'lib-a',
         projectsConfigurations: { projects: { 'lib-a': { root: 'libs/a' } } },
       })
-    ).toBe('/ws/libs/a')
+    ).toBe(normalizeToNative('/ws/libs/a'))
   })
 
   it('throws when no project name is present', () => {

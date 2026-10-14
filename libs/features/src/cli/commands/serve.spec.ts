@@ -5,7 +5,7 @@ import type { RunServeOptions } from './serve'
 import { mkdtempSync, rmSync } from 'node:fs'
 import { createServer } from 'node:http'
 import { tmpdir } from 'node:os'
-import { join } from 'node:path'
+import { join, resolve } from 'node:path'
 import { afterEach } from 'node:test'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { closeServer, listen } from '../../server/listen'
@@ -118,7 +118,7 @@ describe('runServe', () => {
   it('resolves a relative --cwd against the working directory', async () => {
     const resolveConfig = jest.fn(() => Promise.resolve(config))
     await runServe(deps({ cwd: '/root', flags: mkFlags({ cwd: 'sub' }), resolveConfig }))
-    expect(resolveConfig).toHaveBeenCalledWith(expect.objectContaining({ cwd: '/root/sub' }))
+    expect(resolveConfig).toHaveBeenCalledWith(expect.objectContaining({ cwd: resolve('/root/sub') }))
   })
 
   it('uses the working directory unchanged when --cwd is absent', async () => {

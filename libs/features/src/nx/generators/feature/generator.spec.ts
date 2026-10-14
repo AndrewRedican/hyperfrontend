@@ -1,5 +1,6 @@
 import type { Tree } from '../../model'
 import { beforeEach } from 'node:test'
+import { normalizeToNative } from '@hyperfrontend/project-scope/core/path'
 import { Mode } from '@hyperfrontend/project-scope/vfs'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { runInit } from '../../../cli'
@@ -63,7 +64,7 @@ describe('featureGenerator', () => {
     await featureGenerator(createTree(), { ...baseOptions, directory: 'apps/clock' })
     expect(runInitMock).toHaveBeenCalledWith(
       expect.objectContaining({
-        cwd: '/ws/apps/clock',
+        cwd: normalizeToNative('/ws/apps/clock'),
         flags: expect.objectContaining({ name: 'clock', contract: './c.json', entry: './src/main.ts', ci: true }),
       })
     )
@@ -71,7 +72,7 @@ describe('featureGenerator', () => {
 
   it('defaults the directory to the workspace root', async () => {
     await featureGenerator(createTree(), baseOptions)
-    expect(runInitMock).toHaveBeenCalledWith(expect.objectContaining({ cwd: '/ws' }))
+    expect(runInitMock).toHaveBeenCalledWith(expect.objectContaining({ cwd: normalizeToNative('/ws') }))
   })
 
   it('stages scaffold writes into the Nx tree and honors skip-if-exists', async () => {
@@ -83,7 +84,7 @@ describe('featureGenerator', () => {
         return 1
       }
       const scaffold = createTreeFn(options.cwd)
-      expect(scaffold.root).toBe('/ws/apps/clock')
+      expect(scaffold.root).toBe(normalizeToNative('/ws/apps/clock'))
       expect(scaffold.exists('feature.config.json')).toBe(true)
       expect(scaffold.exists('src/hyperfrontend.feature.ts')).toBe(false)
       scaffold.write('src/hyperfrontend.feature.ts', 'glue', { mode: Mode.SkipIfExists })

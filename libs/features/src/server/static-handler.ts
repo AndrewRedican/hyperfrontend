@@ -100,6 +100,11 @@ export function decodeRequestPath(path: string): string | null {
  * Confines an already-decoded request path to an absolute path under `root`,
  * rejecting any path that escapes the root via `..`.
  *
+ * The root is normalised before the comparison, so a root spelled with a
+ * trailing slash or with forward slashes on Windows confines the same files
+ * as its canonical spelling. Leading slashes and backslashes are stripped
+ * from the request path first, so it is always resolved relative to the root.
+ *
  * @param root - The absolute directory the path is confined to.
  * @param decoded - The percent-decoded request path, query string stripped.
  * @returns The confined absolute path, or `null` when the path escapes `root`.
@@ -110,8 +115,11 @@ export function decodeRequestPath(path: string): string | null {
  * ```
  */
 export function confineDecodedPath(root: string, decoded: string): string | null {
-  const candidate = resolve(root, normalize(decoded.replace(/^\/+/, '')))
-  return candidate === root || candidate.startsWith(`${root}${sep}`) ? candidate : null
+  // why: The prefix test below is textual, so the root must carry the native separators and no trailing slash that resolve gives the candidate.
+  const base = resolve(root)
+  // why: Leading separators of either kind are stripped so the request path is always resolved relative to the root; on Windows a leading backslash would otherwise read as a drive-rooted absolute path.
+  const candidate = resolve(base, normalize(decoded.replace(/^[/\\]+/, '')))
+  return candidate === base || candidate.startsWith(`${base}${sep}`) ? candidate : null
 }
 
 /**

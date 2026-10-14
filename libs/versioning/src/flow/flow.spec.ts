@@ -3,6 +3,7 @@ import type { ConventionalCommit } from '../commits/models/conventional'
 import type { GitClient } from '../git/factory'
 import type { Registry } from '../registry/models/registry'
 import type { FlowPreset } from './factory'
+import { normalizePath, normalizeToNative } from '@hyperfrontend/project-scope/core/path'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { executeFlow, dryRun, validateFlow } from './executor/execute'
 import { createVersionFlow, createDryRunFlow, getAvailablePresets, getPresetDescription } from './factory'
@@ -18,35 +19,36 @@ import {
 import { createSyncedFlow, createSyncAllPackagesStep, createCombinedChangelogStep, createFixedVersionFlow } from './presets/synced'
 
 function createMockTree(files: Record<string, string> = {}): Tree {
-  const fileSystem = new Map(Object.entries(files))
+  // why: the real tree keys every path portably, so the native joins the flow hands it must land on the POSIX seeds.
+  const fileSystem = new Map(Object.entries(files).map(([filePath, content]) => [normalizePath(filePath), content]))
 
   const tree = {
     root: '/workspace',
     read(filePath: string, encoding?: string) {
-      const content = fileSystem.get(filePath)
+      const content = fileSystem.get(normalizePath(filePath))
       if (content === undefined) {
         return null
       }
       return encoding ? content : Buffer.from(content)
     },
     write(filePath: string, content: string | Buffer) {
-      fileSystem.set(filePath, typeof content === 'string' ? content : content.toString())
+      fileSystem.set(normalizePath(filePath), typeof content === 'string' ? content : content.toString())
     },
     exists(filePath: string) {
-      return fileSystem.has(filePath)
+      return fileSystem.has(normalizePath(filePath))
     },
     delete(filePath: string) {
-      fileSystem.delete(filePath)
+      fileSystem.delete(normalizePath(filePath))
     },
     rename(from: string, to: string) {
-      const content = fileSystem.get(from)
+      const content = fileSystem.get(normalizePath(from))
       if (content !== undefined) {
-        fileSystem.set(to, content)
-        fileSystem.delete(from)
+        fileSystem.set(normalizePath(to), content)
+        fileSystem.delete(normalizePath(from))
       }
     },
     isFile(filePath: string) {
-      return fileSystem.has(filePath)
+      return fileSystem.has(normalizePath(filePath))
     },
     children() {
       return []
@@ -804,7 +806,7 @@ describe('Synced Flow Steps', () => {
 
       expect(result.status).toBe('success')
       expect(result.message).toContain('Synced')
-      expect(result.stateUpdates?.modifiedFiles).toContain('/workspace/package.json')
+      expect(result.stateUpdates?.modifiedFiles).toContain(normalizeToNative('/workspace/package.json'))
     })
 
     it('handles missing root package.json gracefully', async () => {

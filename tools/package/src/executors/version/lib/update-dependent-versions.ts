@@ -1,6 +1,7 @@
 import { existsSync } from 'node:fs'
-import { dirname, relative, join, sep, posix } from 'node:path'
+import { dirname, join } from 'node:path'
 import { entries } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
+import { workspaceRelativePath } from '@hyperfrontend/project-scope/core/path'
 import { getDependencies, readPackageJsonIfExists } from '@hyperfrontend/project-scope/project/package'
 import { findFiles } from '@hyperfrontend/project-scope/project/traversal'
 import { getLogger } from './logger'
@@ -13,8 +14,7 @@ import { replaceDependencyVersion } from './replace-dependency-version'
  * @param workspaceRoot - The workspace root directory to make the path relative to
  * @returns The relative path, or '.' if the path equals the workspace root
  */
-const toRelative = (absolutePath: string, workspaceRoot: string): string =>
-  relative(workspaceRoot, absolutePath).split(sep).join(posix.sep) || '.'
+const toRelative = (absolutePath: string, workspaceRoot: string): string => workspaceRelativePath(workspaceRoot, absolutePath) || '.'
 
 /**
  * Updates dependency version references in workspace packages.
@@ -71,7 +71,7 @@ export function updateDependentVersions(
       }
 
       logger.item(`"${rel(packageJsonPath)}"`)
-      const relativePath = relative(workspaceRoot, packageJsonPath).split(sep).join(posix.sep)
+      const relativePath = workspaceRelativePath(workspaceRoot, packageJsonPath)
 
       const sections = getDependencies(pkg)
       const staleSections = entries(sections).filter(([, deps]) => {

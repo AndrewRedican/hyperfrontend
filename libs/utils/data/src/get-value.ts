@@ -57,7 +57,7 @@ export const getValue = <T = unknown>(target: unknown, path: [string, ...string[
         )
       }
       scopeOperators = getIterableOperators(scopeType)
-      if (scopeIterable && !scopeOperators.getKeys(scope).includes(key) && hasOnMissingKeyDefault) {
+      if (!scopeOperators.getKeys(scope).includes(key) && hasOnMissingKeyDefault) {
         scope = defaultValue.onMissingKey
         break
       }

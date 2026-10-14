@@ -1,8 +1,8 @@
 {
   "slug": "builder-manifest",
   "asset": "hero.gif",
-  "generatedAt": "2026-09-12T20:24:14.396Z",
-  "sceneHash": "01907aa8ed6046b9",
+  "generatedAt": "2026-10-13T20:02:52.481Z",
+  "sceneHash": "9fddf15152472454",
   "sourceUrl": "stage:forge",
   "profile": {
     "id": "compact",
@@ -34,15 +34,15 @@
   "toolVersions": [
     {
       "name": "sharp",
-      "version": "8.18.6"
+      "version": "8.18.7"
     }
   ],
-  "bytes": 296327,
+  "bytes": 293438,
   "frames": 89,
   "stills": [
     {
       "asset": "poster.webp",
-      "bytes": 38518,
+      "bytes": 37698,
       "maxBytes": 70000
     }
   ],
@@ -50,7 +50,7 @@
     {
       "theme": "portable",
       "asset": "hero.gif",
-      "bytes": 296327,
+      "bytes": 293438,
       "maxBytes": 1200000,
       "frames": 89,
       "gif": {
@@ -66,7 +66,7 @@
       "stills": [
         {
           "asset": "poster.webp",
-          "bytes": 38518,
+          "bytes": 37698,
           "maxBytes": 70000
         }
       ]
@@ -74,7 +74,7 @@
     {
       "theme": "dark",
       "asset": "hero.dark.gif",
-      "bytes": 304120,
+      "bytes": 301847,
       "maxBytes": 900000,
       "frames": 89,
       "gif": {
@@ -90,7 +90,7 @@
       "stills": [
         {
           "asset": "poster.dark.webp",
-          "bytes": 34956,
+          "bytes": 34006,
           "maxBytes": 70000
         }
       ]
@@ -98,9 +98,9 @@
     {
       "theme": "light",
       "asset": "hero.light.gif",
-      "bytes": 288516,
+      "bytes": 283042,
       "maxBytes": 900000,
-      "frames": 91,
+      "frames": 89,
       "gif": {
         "width": 640,
         "fps": 12,
@@ -114,7 +114,7 @@
       "stills": [
         {
           "asset": "poster.light.webp",
-          "bytes": 37898,
+          "bytes": 37098,
           "maxBytes": 70000
         }
       ]

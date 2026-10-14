@@ -188,7 +188,7 @@ describe('readme-key-features', () => {
 
     it('shortens a long offending line so the message stays readable', () => {
       const body = `${'A lead-in sentence that runs well past the length a message can quote. '.repeat(2)}\n\n${[validBullet(1), validBullet(2), validBullet(3)].join('\n')}`
-      const quoted = analyzeBody(body)[0]?.data.line ?? ''
+      const quoted = analyzeBody(body)[0]?.data['line'] ?? ''
 
       expect(quoted.endsWith('...')).toBe(true)
       expect(quoted.length).toBeLessThanOrEqual(63)

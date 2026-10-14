@@ -36,6 +36,15 @@
 </p>
 
 <p align="center">
+  <a href="https://devhunt.org/tool/hyperfrontend" title="hyperfrontend on DevHunt">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="https://devhunt.org/badge/hyperfrontend.svg">
+      <img width="220" height="54" src="https://devhunt.org/badge/hyperfrontend.svg?theme=light" alt="hyperfrontend: #1 Dev Tool of the Week on DevHunt">
+    </picture>
+  </a>
+</p>
+
+<p align="center">
   <a href="https://www.hyperfrontend.dev/docs/libraries/features/">
     <img width="832" src="https://github.com/AndrewRedican/hyperfrontend/blob/main/assets/media/readme-compose/hero.gif?raw=true" alt="A host page with three empty slots. Three application windows, a React one, an Angular one and a jQuery one, each served from its own address, slide in from the right and seat into the slots one after another; a wire draws from the host's hub to each seated window, and named messages such as order-placed cross the wires in both directions. Each window keeps its own chrome and origin inside the host, and a faint outline stays at its original address.">
   </a>

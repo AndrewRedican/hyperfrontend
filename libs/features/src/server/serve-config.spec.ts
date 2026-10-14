@@ -2,7 +2,7 @@ import type { CliFlags } from '../cli/args'
 import type { ResolveServeConfigOptions } from './serve-config'
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { join } from 'node:path'
+import { join, resolve } from 'node:path'
 import { afterEach, beforeEach } from 'node:test'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { resolveServeConfig, validateHeaderRule, validateServeConfig } from './serve-config'
@@ -129,7 +129,7 @@ describe('resolveServeConfig', () => {
   it('resolves a relative --config path against the working directory', async () => {
     const loadConfig = jest.fn(() => Promise.resolve({}))
     await resolveServeConfig(opts({ flags: mkFlags({ config: 'conf/hf-serve.config.json' }), loadConfig }))
-    expect(loadConfig).toHaveBeenCalledWith('/project/conf/hf-serve.config.json')
+    expect(loadConfig).toHaveBeenCalledWith(resolve('/project/conf/hf-serve.config.json'))
   })
 
   it('loads the artifact-carried config inside --root without discovery', async () => {
@@ -138,8 +138,8 @@ describe('resolveServeConfig', () => {
     const resolved = await resolveServeConfig(opts({ flags: mkFlags({ root: './site' }), discover, loadConfig }))
     expect({ discovered: discover.mock.calls.length, loaded: loadConfig.mock.calls, sourcePath: resolved.sourcePath }).toEqual({
       discovered: 0,
-      loaded: [['/project/site/hf-serve.config.json']],
-      sourcePath: '/project/site/hf-serve.config.json',
+      loaded: [[resolve('/project/site/hf-serve.config.json')]],
+      sourcePath: resolve('/project/site/hf-serve.config.json'),
     })
   })
 
@@ -147,7 +147,7 @@ describe('resolveServeConfig', () => {
     const discover = jest.fn(() => '/project/hf-serve.config.json')
     const loadConfig = jest.fn(() => Promise.resolve({}))
     await resolveServeConfig(
-      opts({ flags: mkFlags({ root: '/site' }), exists: (path) => path !== '/site/hf-serve.config.json', discover, loadConfig })
+      opts({ flags: mkFlags({ root: '/site' }), exists: (path) => path !== join('/site', 'hf-serve.config.json'), discover, loadConfig })
     )
     expect({ discovered: discover.mock.calls, loaded: loadConfig.mock.calls }).toEqual({
       discovered: [['/project', 'hf-serve.config']],
@@ -168,7 +168,7 @@ describe('resolveServeConfig', () => {
     const resolved = await resolveServeConfig(
       opts({
         flags: mkFlags({ root: '/flag-root' }),
-        exists: (path) => path !== '/flag-root/hf-serve.config.json',
+        exists: (path) => path !== join('/flag-root', 'hf-serve.config.json'),
         loadConfig: () => Promise.resolve({ root: './config-root' }),
       })
     )
@@ -179,7 +179,7 @@ describe('resolveServeConfig', () => {
     const resolved = await resolveServeConfig(
       opts({ discover: () => '/elsewhere/hf-serve.config.json', loadConfig: () => Promise.resolve({ root: './site' }) })
     )
-    expect(resolved.root).toBe('/elsewhere/site')
+    expect(resolved.root).toBe(resolve('/elsewhere/site'))
   })
 
   it('throws when the serve root does not exist', async () => {

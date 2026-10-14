@@ -268,7 +268,22 @@ describe('project-lifecycle-policy', () => {
           createProject({ projectJson: { metadata: { lifecycle: { state: 'frozen' } }, targets: { publish: {} } } }),
           'project.json'
         ),
-        errors: [{ messageId: 'publishingTarget', data: { state: 'frozen', name: 'publish' }, suggestions: 1 }],
+        errors: [
+          {
+            messageId: 'publishingTarget',
+            data: { state: 'frozen', name: 'publish' },
+            suggestions: [
+              {
+                messageId: 'removeProperty',
+                data: { name: 'publish' },
+                output: JSON.stringify({ metadata: { lifecycle: { state: 'frozen' } }, targets: { publish: {} } }, null, 2).replace(
+                  '"publish": {}',
+                  ''
+                ),
+              },
+            ],
+          },
+        ],
       },
       {
         name: 'reports every target when the policy forbids all of them',
@@ -279,8 +294,32 @@ describe('project-lifecycle-policy', () => {
           'project.json'
         ),
         errors: [
-          { messageId: 'forbiddenTarget', data: { state: 'planned', name: 'build' }, suggestions: 1 },
-          { messageId: 'forbiddenTarget', data: { state: 'planned', name: 'lint' }, suggestions: 1 },
+          {
+            messageId: 'forbiddenTarget',
+            data: { state: 'planned', name: 'build' },
+            suggestions: [
+              {
+                messageId: 'removeProperty',
+                data: { name: 'build' },
+                output: JSON.stringify(
+                  { metadata: { lifecycle: { state: 'planned' } }, targets: { build: {}, lint: {} } },
+                  null,
+                  2
+                ).replace('"build": {},', ''),
+              },
+            ],
+          },
+          {
+            messageId: 'forbiddenTarget',
+            data: { state: 'planned', name: 'lint' },
+            suggestions: [
+              {
+                messageId: 'removeProperty',
+                data: { name: 'lint' },
+                output: JSON.stringify({ metadata: { lifecycle: { state: 'planned' } }, targets: { build: {} } }, null, 2),
+              },
+            ],
+          },
         ],
       },
       {
@@ -379,7 +418,15 @@ describe('project-lifecycle-policy', () => {
           createProject({ projectJson: frozenProject, packageJson: { private: true, publishConfig: { access: 'public' } } }),
           'package.json'
         ),
-        errors: [{ messageId: 'forbiddenPublishConfig', data: { state: 'frozen', name: 'publishConfig' }, suggestions: 1 }],
+        errors: [
+          {
+            messageId: 'forbiddenPublishConfig',
+            data: { state: 'frozen', name: 'publishConfig' },
+            suggestions: [
+              { messageId: 'removeProperty', data: { name: 'publishConfig' }, output: JSON.stringify({ private: true }, null, 2) },
+            ],
+          },
+        ],
       },
       {
         name: 'reports a package.json that declares no private field at all',

@@ -1,11 +1,11 @@
 import type { DependencyGraph, DependencyNode } from '../../models'
-import { join, dirname, relative, resolve, sep, posix } from 'node:path'
+import { join, dirname, resolve } from 'node:path'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { keys } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { exists, isFile, isDirectory, readDirectory, readFileContent } from '../../core/fs'
 import { createScopedLogger } from '../../core/logger'
-import { isWithinRoot } from '../../core/path'
+import { isWithinRoot, relativePath } from '../../core/path'
 import { readPackageJsonIfExists } from '../../project/package'
 
 const depsLogger = createScopedLogger('project-scope:heuristics:deps')
@@ -110,13 +110,13 @@ function resolveImportPath(importPath: string, fromFile: string, projectPath: st
 
   if (exists(absolutePath)) {
     if (isFile(absolutePath)) {
-      return relative(projectPath, absolutePath).split(sep).join(posix.sep)
+      return relativePath(projectPath, absolutePath)
     }
     if (isDirectory(absolutePath)) {
       for (const ext of extensions) {
         const indexPath = join(absolutePath, `index${ext}`)
         if (exists(indexPath) && isFile(indexPath)) {
-          return relative(projectPath, indexPath).split(sep).join(posix.sep)
+          return relativePath(projectPath, indexPath)
         }
       }
     }
@@ -125,7 +125,7 @@ function resolveImportPath(importPath: string, fromFile: string, projectPath: st
   for (const ext of extensions) {
     const pathWithExt = absolutePath + ext
     if (exists(pathWithExt) && isFile(pathWithExt)) {
-      return relative(projectPath, pathWithExt).split(sep).join(posix.sep)
+      return relativePath(projectPath, pathWithExt)
     }
   }
 
@@ -219,19 +219,19 @@ export function buildDependencyGraph(projectPath: string, options?: BuildGraphOp
   }
 
   for (const file of sourceFiles) {
-    const relativePath = relative(projectPath, file).split(sep).join(posix.sep)
-    nodes.set(relativePath, {
-      id: relativePath,
-      path: relativePath,
+    const nodePath = relativePath(projectPath, file)
+    nodes.set(nodePath, {
+      id: nodePath,
+      path: nodePath,
       dependencies: [],
       dependents: [],
     })
-    incomingEdges.set(relativePath, createSet<string>())
+    incomingEdges.set(nodePath, createSet<string>())
   }
 
   for (const file of sourceFiles) {
-    const relativePath = relative(projectPath, file).split(sep).join(posix.sep)
-    const node = nodes.get(relativePath)
+    const nodePath = relativePath(projectPath, file)
+    const node = nodes.get(nodePath)
     if (!node) continue
 
     try {
@@ -248,12 +248,12 @@ export function buildDependencyGraph(projectPath: string, options?: BuildGraphOp
 
           const incoming = incomingEdges.get(resolved)
           if (incoming) {
-            incoming.add(relativePath)
+            incoming.add(nodePath)
           }
 
           const dependentNode = nodes.get(resolved)
-          if (dependentNode && !dependentNode.dependents.includes(relativePath)) {
-            dependentNode.dependents.push(relativePath)
+          if (dependentNode && !dependentNode.dependents.includes(nodePath)) {
+            dependentNode.dependents.push(nodePath)
           }
         } else if (includeExternal && !importPath.startsWith('.')) {
           if (!node.dependencies.includes(importPath)) {

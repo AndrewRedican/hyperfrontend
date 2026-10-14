@@ -2,6 +2,7 @@ import type { Mock } from '@hyperfrontend/testing'
 import type { BuildContext, EntryPoint, EntryPointDiscovery } from '../../models'
 import { beforeEach } from 'node:test'
 import { exists } from '@hyperfrontend/project-scope/core/fs'
+import { normalizeToNative } from '@hyperfrontend/project-scope/core/path'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { resolveDefaultWorkerPath, runPrePass } from '../dependencies/pre-pass'
 import { runDtsPerEntry } from './dts-per-entry'
@@ -151,7 +152,7 @@ describe('runDtsPerEntry', () => {
     const jobs = (runPrePass as Mock).mock.calls[0][0]
     expect(jobs).toHaveLength(2)
     for (const job of jobs) {
-      expect(job.depsRoot).toBe('/abs/dist/libs/foo/_dependencies')
+      expect(job.depsRoot).toBe(normalizeToNative('/abs/dist/libs/foo/_dependencies'))
       expect(job.npmDeps).toEqual(['rollup', 'postject'])
       expect(job.workspaceRoutes).toEqual([
         { packageName: '@hyperfrontend/logging', policy: 'whole-surface' },

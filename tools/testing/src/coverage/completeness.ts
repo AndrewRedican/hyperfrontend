@@ -1,6 +1,7 @@
 import type { FileCoverage } from './lcov.ts'
 import { globSync } from 'node:fs'
-import { relative, resolve, sep, posix } from 'node:path'
+import { resolve } from 'node:path'
+import { relativePath } from '../runner/portable-paths'
 
 /**
  * The outcome of comparing the coverage report against the files that should be in it.
@@ -33,7 +34,7 @@ export function findUnmeasuredFiles(measured: readonly FileCoverage[], projectRo
   const missing = expected
     .map((entry) => resolve(projectRoot, entry))
     .filter((absolute) => !reported.has(absolute))
-    .map((absolute) => relative(projectRoot, absolute).split(sep).join(posix.sep))
+    .map((absolute) => relativePath(projectRoot, absolute))
     .sort()
 
   return { missing, covered: reported.size }

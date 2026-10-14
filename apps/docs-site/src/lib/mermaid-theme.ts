@@ -198,6 +198,9 @@ export function createMermaidConfig(theme: 'light' | 'dark'): MermaidConfig {
   return {
     startOnLoad: false,
     theme: 'base',
+    // why: mermaid 12 defaults to ELK layout and the neo look, which re-lay out and restyle every diagram away from the palette tuned below
+    layout: 'dagre',
+    look: 'classic',
     themeVariables: getThemeVariables(theme),
     flowchart: {
       htmlLabels: true,

@@ -10,7 +10,7 @@ The libraries are developed and tested on Linux, but many consumers run them on 
 | -------- | ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | native   | `sep` (`\` on Windows) | `node:path` `join`, `resolve`, `normalize`, `dirname`, `format`, `toNamespacedPath`; `process.cwd()`; `tmpdir()`, `homedir()`; `fileURLToPath()`; `realpathSync()`, `mkdtempSync()`; `require.resolve()`; `__dirname`, `__filename`; `import.meta.dirname`, `import.meta.filename` |
 | relative | `sep`                  | `node:path` `relative()`                                                                                                                                                                                                                                                           |
-| portable | always `/`             | `node:path/posix` and `posix.*`; string literals; `x.split(sep).join(posix.sep)`; templates and concatenations of portable parts; strings starting `./` or `../`                                                                                                                   |
+| portable | always `/`             | `node:path/posix` and `posix.*`; string literals; the portable helpers of `@hyperfrontend/project-scope/core/path`; `x.split(sep).join(posix.sep)`; templates and concatenations of portable parts; strings starting `./` or `../`                                                 |
 | unknown  | could be either        | parameters, imports from other modules, destructured values, anything else                                                                                                                                                                                                         |
 
 The rule follows `const` initialisers, single-assignment `let`, conditionals, `||` and `??` fallbacks, templates, `+` chains, and the string methods `slice`, `substring`, `trim*`, and `toLowerCase`. It stops after eight variable hops.
@@ -108,7 +108,7 @@ for (let dir = start; dir !== dirname(dir); dir = dirname(dir)) {
 
 ### `posixConversion`
 
-Any native-to-POSIX conversion except `x.split(sep).join(posix.sep)`: `.replace(/\\/g, '/')`, `.replaceAll('\\', '/')`, `.split('\\').join('/')`, `.split(sep).join('/')`, and `.split('\\').join(posix.sep)`. The other spellings also rewrite backslashes on POSIX, where they are legal file-name characters. Character classes that match either separator, such as `/[\\/]/g`, normalise input whose platform is unknown and are not reported. The autofix applies only in files that already import a `node:` module.
+Any native-to-POSIX conversion except `x.split(sep).join(posix.sep)`: `.replace(/\\/g, '/')`, `.replaceAll('\\', '/')`, `.split('\\').join('/')`, `.split(sep).join('/')`, and `.split('\\').join(posix.sep)`. The other spellings also rewrite backslashes on POSIX, where they are legal file-name characters. Prefer `normalizePath`, `relativePath` and `workspaceRelativePath` from `@hyperfrontend/project-scope/core/path`; the inline spelling is for the few modules that cannot import that package, which carry a local copy marked `portable-path mirror`. Character classes that match either separator, such as `/[\\/]/g`, normalise input whose platform is unknown and are not reported. The autofix applies only in files that already import a `node:` module.
 
 ```typescript
 // ❌
@@ -239,7 +239,8 @@ Every fix references `node:` exports the way the file already does: a named impo
 
 - Containment test on native paths: compare against `${root}${sep}`, or normalise both sides to POSIX before testing `${base}/`.
 - Building a URL from a native relative path: `rel.split(sep).map(encodeURIComponent).join('/')`.
-- Building a relative import specifier: `relative(from, to).split(sep).join(posix.sep)`, then prefix `./` when the result does not start with `.`.
+- Building a relative import specifier: `relativePath(from, to)` from `@hyperfrontend/project-scope/core/path`, then prefix `./` when the result does not start with `.`.
+- Reporting or storing a path: `workspaceRelativePath(workspaceRoot, path)`, which accepts an absolute or an already relative path and returns the workspace-relative portable form.
 - Locating the running module: `fileURLToPath(import.meta.url)` or `__dirname`.
 - Importing a file computed at runtime: `import(pathToFileURL(absolutePath).href)`.
 - Preloading a file computed at runtime: `['--import', pathToFileURL(absolutePath).href]`.
@@ -269,7 +270,7 @@ Every fix references `node:` exports the way the file already does: a named impo
 
 ### `helpers`
 
-Path helpers outside `node:path` whose output domain the rule should trust. `module` is a bare specifier, or a workspace-relative source path for relative imports, and matches deeper paths too. The defaults cover `@hyperfrontend/project-scope/core` (also as `libs/project-scope/src/core`), where `join` and `normalizeToNative` return native paths and `normalizePath`, `normalizeToForwardSlashes`, `joinPath`, `joinPosix`, `getDirname`, `relativePath`, `resolvePath`, `resolveFromWorkspace`, `resolveRealPath`, and `offsetFromRoot` return portable ones, and the builder's `libs/builder/src/bundle/fs/posix-path`, whose `join` and `normalizeToForwardSlashes` are portable. Passing the option replaces the defaults.
+Path helpers outside `node:path` whose output domain the rule should trust. `module` is a bare specifier, or a workspace-relative source path for relative imports, and matches deeper paths too. The defaults cover `@hyperfrontend/project-scope/core` (also as `libs/project-scope/src/core`), where `join` and `normalizeToNative` return native paths and `normalizePath`, `normalizeToForwardSlashes`, `joinPath`, `joinPosix`, `getDirname`, `relativePath`, `workspaceRelativePath`, `resolvePath`, `resolveFromWorkspace`, `resolveRealPath`, and `offsetFromRoot` return portable ones, plus the two dependency-free mirrors: the builder's `libs/builder/src/bundle/fs/posix-path`, whose `join` and `normalizeToForwardSlashes` are portable, and the test runner's `tools/testing/src/runner/portable-paths`, whose `normalizePath`, `relativePath` and `workspaceRelativePath` are portable. Passing the option replaces the defaults.
 
 ### `shimCommands`
 

@@ -1,5 +1,6 @@
 import { beforeEach } from 'node:test'
 import * as projectScopeFs from '@hyperfrontend/project-scope/core/fs'
+import { normalizeToNative } from '@hyperfrontend/project-scope/core/path'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { getExpectedChangelogPath, hasChangelog } from './changelog-path'
 
@@ -10,27 +11,27 @@ jest.mock('@hyperfrontend/project-scope/core/fs', () => ({
 describe('getExpectedChangelogPath', () => {
   it('returns path with CHANGELOG.md', () => {
     const path = getExpectedChangelogPath('/workspace/libs/my-lib')
-    expect(path).toBe('/workspace/libs/my-lib/CHANGELOG.md')
+    expect(path).toBe(normalizeToNative('/workspace/libs/my-lib/CHANGELOG.md'))
   })
 
   it('handles trailing slash', () => {
     const path = getExpectedChangelogPath('/workspace/libs/my-lib/')
-    expect(path).toBe('/workspace/libs/my-lib/CHANGELOG.md')
+    expect(path).toBe(normalizeToNative('/workspace/libs/my-lib/CHANGELOG.md'))
   })
 
   it('handles relative paths', () => {
     const path = getExpectedChangelogPath('./libs/my-lib')
-    expect(path).toBe('libs/my-lib/CHANGELOG.md')
+    expect(path).toBe(normalizeToNative('libs/my-lib/CHANGELOG.md'))
   })
 
   it('uses custom fileName when provided', () => {
     const path = getExpectedChangelogPath('/workspace/libs/my-lib', 'HISTORY.md')
-    expect(path).toBe('/workspace/libs/my-lib/HISTORY.md')
+    expect(path).toBe(normalizeToNative('/workspace/libs/my-lib/HISTORY.md'))
   })
 
   it('uses DEFAULT_CHANGELOG_FILENAME when no fileName provided', () => {
     const path = getExpectedChangelogPath('/workspace/libs/my-lib')
-    expect(path).toBe('/workspace/libs/my-lib/CHANGELOG.md')
+    expect(path).toBe(normalizeToNative('/workspace/libs/my-lib/CHANGELOG.md'))
   })
 })
 

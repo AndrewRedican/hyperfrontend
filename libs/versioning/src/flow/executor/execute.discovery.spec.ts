@@ -3,6 +3,7 @@ import type { GitClient } from '../../git/factory'
 import type { Registry } from '../../registry/models/registry'
 import type { FlowContext } from '../models/types'
 import { beforeEach } from 'node:test'
+import { normalizeToNative } from '@hyperfrontend/project-scope/core/path'
 import * as projectScopeNx from '@hyperfrontend/project-scope/nx'
 import * as projectScopeVfs from '@hyperfrontend/project-scope/vfs'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
@@ -267,7 +268,7 @@ describe('executeFlow - discoverProjectRoot behavior', () => {
       projectRoot: 'libs/utils/immutable-api',
     })
 
-    expect(capturedProjectRoot).toBe('/workspace/libs/utils/immutable-api')
+    expect(capturedProjectRoot).toBe(normalizeToNative('/workspace/libs/utils/immutable-api'))
   })
 
   it('uses provided projectRoot option (absolute path)', async () => {

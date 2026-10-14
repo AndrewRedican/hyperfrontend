@@ -4,6 +4,7 @@ import { unlinkSync } from 'node:fs'
 import { beforeEach } from 'node:test'
 import { __mockChannel } from '@hyperfrontend/logging'
 import { ensureDir, exists, writeJsonFile } from '@hyperfrontend/project-scope/core'
+import { normalizeToNative } from '@hyperfrontend/project-scope/core/path'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { buildNativeBin } from './build-native'
 import { removeCodesign } from './codesign'
@@ -128,23 +129,23 @@ describe('buildNativeBin', () => {
 
   it('ensures the bin directory exists before generating the SEA config', async () => {
     await buildNativeBin({ bin: seaBin, ctx: makeContext(), cjsOutputPath: '/abs/dist/libs/builder/bin/hf-build.js' })
-    expect(ensureDir).toHaveBeenCalledWith('/abs/dist/libs/builder/bin')
+    expect(ensureDir).toHaveBeenCalledWith(normalizeToNative('/abs/dist/libs/builder/bin'))
   })
 
   it('writes the SEA config JSON to <binDir>/<name>.sea-config.json', async () => {
     await buildNativeBin({ bin: seaBin, ctx: makeContext(), cjsOutputPath: '/abs/dist/libs/builder/bin/hf-build.js' })
-    expect(writeJsonFile).toHaveBeenCalledWith('/abs/dist/libs/builder/bin/hf-build.sea-config.json', expect.any(Object))
+    expect(writeJsonFile).toHaveBeenCalledWith(normalizeToNative('/abs/dist/libs/builder/bin/hf-build.sea-config.json'), expect.any(Object))
     expect(generateSeaConfig).toHaveBeenCalledWith({
       mainPath: '/abs/dist/libs/builder/bin/hf-build.js',
-      outputPath: '/abs/dist/libs/builder/bin/hf-build.sea-prep.blob',
+      outputPath: normalizeToNative('/abs/dist/libs/builder/bin/hf-build.sea-prep.blob'),
     })
   })
 
   it('runs generateSeaBlob with the resolved config and blob paths', async () => {
     await buildNativeBin({ bin: seaBin, ctx: makeContext(), cjsOutputPath: '/abs/dist/libs/builder/bin/hf-build.js' })
     expect(generateSeaBlob).toHaveBeenCalledWith({
-      seaConfigPath: '/abs/dist/libs/builder/bin/hf-build.sea-config.json',
-      outputBlobPath: '/abs/dist/libs/builder/bin/hf-build.sea-prep.blob',
+      seaConfigPath: normalizeToNative('/abs/dist/libs/builder/bin/hf-build.sea-config.json'),
+      outputBlobPath: normalizeToNative('/abs/dist/libs/builder/bin/hf-build.sea-prep.blob'),
     })
   })
 
@@ -171,8 +172,8 @@ describe('buildNativeBin', () => {
     expect(dispatchInjectWorker).toHaveBeenCalledWith(
       {
         hostBinary: '/opt/node',
-        outputBinary: '/abs/dist/libs/builder/bin/hf-build.linux-x64',
-        blobPath: '/abs/dist/libs/builder/bin/hf-build.sea-prep.blob',
+        outputBinary: normalizeToNative('/abs/dist/libs/builder/bin/hf-build.linux-x64'),
+        blobPath: normalizeToNative('/abs/dist/libs/builder/bin/hf-build.sea-prep.blob'),
         resourceName: NODE_SEA_RESOURCE_NAME,
         machoSegmentName: NODE_SEA_MACHO_SEGMENT,
         sentinelFuse: NODE_SEA_FUSE,
@@ -209,19 +210,19 @@ describe('buildNativeBin', () => {
       cjsOutputPath: '/abs/dist/libs/builder/bin/hf-build.js',
     })
     const call = (dispatchInjectWorker as Mock).mock.calls[0][0]
-    expect(call.outputBinary).toBe('/abs/dist/libs/builder/bin/hf-build.win32-x64.exe')
+    expect(call.outputBinary).toBe(normalizeToNative('/abs/dist/libs/builder/bin/hf-build.win32-x64.exe'))
   })
 
   it('strips the macOS code signature after injection', async () => {
     await buildNativeBin({ bin: seaBin, ctx: makeContext(), cjsOutputPath: '/abs/dist/libs/builder/bin/hf-build.js' })
-    expect(removeCodesign).toHaveBeenCalledWith({ binary: '/abs/dist/libs/builder/bin/hf-build.linux-x64' })
+    expect(removeCodesign).toHaveBeenCalledWith({ binary: normalizeToNative('/abs/dist/libs/builder/bin/hf-build.linux-x64') })
   })
 
   it('deletes the SEA config JSON and prep blob intermediates after the binary is produced', async () => {
     await buildNativeBin({ bin: seaBin, ctx: makeContext(), cjsOutputPath: '/abs/dist/libs/builder/bin/hf-build.js' })
     expect((unlinkSync as Mock).mock.calls).toEqual([
-      ['/abs/dist/libs/builder/bin/hf-build.sea-config.json'],
-      ['/abs/dist/libs/builder/bin/hf-build.sea-prep.blob'],
+      [normalizeToNative('/abs/dist/libs/builder/bin/hf-build.sea-config.json')],
+      [normalizeToNative('/abs/dist/libs/builder/bin/hf-build.sea-prep.blob')],
     ])
   })
 
@@ -237,7 +238,7 @@ describe('buildNativeBin', () => {
       {
         name: 'hf-build',
         kind: 'native',
-        outputPath: '/abs/dist/libs/builder/bin/hf-build.linux-x64',
+        outputPath: normalizeToNative('/abs/dist/libs/builder/bin/hf-build.linux-x64'),
         platform: 'linux-x64',
       },
     ])

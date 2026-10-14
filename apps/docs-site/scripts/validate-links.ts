@@ -17,6 +17,18 @@ const GENERATED_DIR = join(DOCS_SITE_ROOT, '.generated')
 const SRC_DIR = join(DOCS_SITE_ROOT, 'src')
 const GENERATED_API_DIR = join(GENERATED_DIR, 'api')
 
+// ref: portable-path mirror of workspaceRelativePath from @hyperfrontend/project-scope/core/path; the docs site installs only published packages, so this script keeps its own copy
+
+/**
+ * Converts an absolute path into its workspace-relative portable form.
+ *
+ * @param file - Absolute path inside the workspace.
+ * @returns The path from the workspace root with forward slashes.
+ */
+function workspaceRelativePath(file: string): string {
+  return relative(WORKSPACE_ROOT, file).split(sep).join(posix.sep)
+}
+
 /**
  * Extracts the workspace-relative path a repository URL points at.
  *
@@ -424,7 +436,7 @@ function validateApiSources(): LinkValidationResult[] {
 
         if (targetPath !== undefined && !existsSync(join(WORKSPACE_ROOT, targetPath))) {
           results.push({
-            file: relative(WORKSPACE_ROOT, bundlePath).split(sep).join(posix.sep),
+            file: workspaceRelativePath(bundlePath),
             line: typeof record['line'] === 'number' ? record['line'] : 0,
             link: url,
             status: 'broken',
@@ -477,7 +489,7 @@ async function validateLinks(): Promise<ValidationSummary> {
 
   for (const file of allFiles) {
     const results = validateFile(file)
-    const relativePath = relative(WORKSPACE_ROOT, file).split(sep).join(posix.sep)
+    const relativePath = workspaceRelativePath(file)
 
     for (const result of results) {
       summary.totalLinks++

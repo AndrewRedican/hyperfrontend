@@ -1,12 +1,12 @@
 import type { IsWorkspacePackagePredicate, PackageJson, WorkspaceDepHoistPolicy } from '../../models'
-import { dirname, isAbsolute as nodeIsAbsolute, resolve as nodeResolve } from 'node:path'
+import { dirname, isAbsolute as nodeIsAbsolute, normalize, resolve as nodeResolve } from 'node:path'
 import { from } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { keys } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { exists, readJsonFile, readJsonFileIfExists } from '@hyperfrontend/project-scope/core/fs'
-import { join, normalizeToForwardSlashes } from '@hyperfrontend/project-scope/core/path'
+import { join } from '@hyperfrontend/project-scope/core/path'
 
 /**
  * Resolved workspace-dep pre-pass entry.
@@ -67,16 +67,9 @@ interface TsConfigFragment {
 
 const readPkg = (packageJsonPath: string): PackageJson => (exists(packageJsonPath) ? readJsonFile<PackageJson>(packageJsonPath) : {})
 
-const dirnameOf = (filePath: string): string => {
-  const normalized = normalizeToForwardSlashes(filePath)
-  const idx = normalized.lastIndexOf('/')
-  return idx <= 0 ? normalized : normalized.slice(0, idx)
-}
-
-const absolutize = (relativeTo: string, value: string): string => {
-  if (nodeIsAbsolute(value)) return normalizeToForwardSlashes(value)
-  return normalizeToForwardSlashes(nodeResolve(relativeTo, value))
-}
+// why: these paths reach rollup and tsc as inputs, so they stay native, and `resolve` keeps the drive root of a Windows path that rebuilding from `/`-split segments would lose.
+const absolutize = (relativeTo: string, value: string): string =>
+  nodeIsAbsolute(value) ? normalize(value) : nodeResolve(relativeTo, value)
 
 /**
  * Reads a tsconfig and follows its `extends` chain to merge `compilerOptions.paths`.
@@ -99,12 +92,12 @@ const readTsconfigPaths = (tsconfigPath: string, visited: Set<string> = createSe
   const fragment = readJsonFileIfExists<TsConfigFragment>(tsconfigPath)
   if (!fragment) return result
   if (fragment.extends) {
-    const extendsPath = absolutize(dirnameOf(tsconfigPath), fragment.extends)
+    const extendsPath = absolutize(dirname(tsconfigPath), fragment.extends)
     const extendsResolved = extendsPath.endsWith('.json') ? extendsPath : `${extendsPath}.json`
     const inherited = readTsconfigPaths(extendsResolved, visited)
     for (const [key, paths] of inherited) result.set(key, paths)
   }
-  const localBaseUrl = absolutize(dirnameOf(tsconfigPath), fragment.compilerOptions?.baseUrl ?? '.')
+  const localBaseUrl = absolutize(dirname(tsconfigPath), fragment.compilerOptions?.baseUrl ?? '.')
   const localPaths = fragment.compilerOptions?.paths ?? {}
   for (const key of keys(localPaths)) {
     const list = (localPaths[key] ?? []).map((rel) => absolutize(localBaseUrl, rel))
