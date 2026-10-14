@@ -101,7 +101,9 @@ describe('vfs/commit', () => {
       commitChanges(tree)
 
       const stat = statSync(join(TEST_DIR, 'script.sh'))
-      expect(stat.mode & 0o111).toBeGreaterThan(0)
+      // why: Windows has no execute bit, so chmod 0o755 reads back as 0o666 there
+      const expectedMode = process.platform === 'win32' ? 0o666 : 0o755
+      expect(stat.mode & 0o777).toBe(expectedMode)
     })
   })
 

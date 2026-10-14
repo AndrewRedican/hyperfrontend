@@ -1,7 +1,8 @@
 import { mkdirSync, writeFileSync, rmSync, symlinkSync } from 'node:fs'
-import { join } from 'node:path'
+import { join, resolve } from 'node:path'
 import { after as afterAll, before as beforeAll } from 'node:test'
 import { describe, expect, it } from '@hyperfrontend/testing'
+import { normalizePath } from './normalize'
 import {
   resolvePath,
   resolveFromWorkspace,
@@ -34,19 +35,21 @@ describe('core/path/resolve', () => {
   describe('resolvePath', () => {
     it('resolves to absolute path', () => {
       const result = resolvePath('a', 'b', 'c')
-      expect(result).toMatch(/^\//)
+      expect(isAbsolute(result)).toBe(true)
+      expect(result).toBe(normalizePath(resolve('a', 'b', 'c')))
     })
 
     it('resolves with cwd', () => {
       const result = resolvePath('.')
-      expect(result).toBe(process.cwd())
+      expect(result).toBe(normalizePath(process.cwd()))
     })
   })
 
   describe('resolveFromWorkspace', () => {
     it('resolves relative to workspace root', () => {
       const result = resolveFromWorkspace('/workspace', 'src', 'index.ts')
-      expect(result).toBe('/workspace/src/index.ts')
+      // why: resolve prefixes a rootless path with the drive on Windows, so the expected root carries the same prefix
+      expect(result).toBe(`${normalizePath(resolve('/workspace'))}/src/index.ts`)
     })
   })
 
