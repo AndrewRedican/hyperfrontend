@@ -299,7 +299,7 @@ describe('toBinBuildDescriptor', () => {
     expect(descriptor.bundleWorkspaceDeps).toBe(true)
     expect(descriptor.bundle).toBeNull()
     expect(descriptor.bin).toEqual({
-      outputFile: '/abs/dist/libs/foo/bin/cz.js',
+      outputFile: normalizeToNative('/abs/dist/libs/foo/bin/cz.js'),
       banner: '#!/usr/bin/env node',
       footer: expect.stringContaining('runCz('),
       exports: 'named',
