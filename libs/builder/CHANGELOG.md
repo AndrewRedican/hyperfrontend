@@ -2,10 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
-## [0.5.1](https://github.com/AndrewRedican/hyperfrontend/compare/5d6aaa1c9353303f77b6ac186afba9720b948d84...55510a6f38238473bdec36d18eef7e38b60fac0d) - 2026-10-13
+## [0.5.1](https://github.com/AndrewRedican/hyperfrontend/compare/5d6aaa1c9353303f77b6ac186afba9720b948d84...e193990c0efb7e2976aa6668e6db6dcc8cd6bb47) - 2026-10-14
 
 ### Bug Fixes
 
+- keep resolved workspace dependency paths native
 - drop type diagnostics computed without path mappings
 - retry report directory removal on transient windows locks
 
