@@ -1,7 +1,7 @@
 import { execFileSync } from 'node:child_process'
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { join } from 'node:path'
+import { join, sep } from 'node:path'
 import { afterEach, beforeEach } from 'node:test'
 import { describe, expect, it } from '@hyperfrontend/testing'
 import { shimCjsGlobalsPass } from './cjs-globals-pass'
@@ -57,7 +57,7 @@ describe('shimCjsGlobalsPass', () => {
       '-e',
       `const m = await import(${JSON.stringify(`file://${chunk}`)}); process.stdout.write(m.sep + '|' + (m.where.length > 0))`,
     ])
-    expect(out.toString()).toBe('/|true')
+    expect(out.toString()).toBe(`${sep}|true`)
   })
 
   it('aliases the shim helpers around a chunk that already uses their names', () => {

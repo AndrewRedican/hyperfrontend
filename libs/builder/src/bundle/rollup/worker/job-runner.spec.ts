@@ -404,7 +404,8 @@ describe('runRollupWorkerJob', () => {
     expect(contents.startsWith('#!/usr/bin/env node')).toBe(true)
     expect(contents).toContain('// bootstrap-footer')
     const mode = statSync(outputFile).mode & 0o777
-    expect(mode).toBe(0o755)
+    // why: Windows has no execute bit, so chmod leaves the file at its writable default.
+    expect(mode).toBe(process.platform === 'win32' ? 0o666 : 0o755)
   })
 
   it('writes a bin ESM bundle to bin.outputFile when format is esm', async () => {

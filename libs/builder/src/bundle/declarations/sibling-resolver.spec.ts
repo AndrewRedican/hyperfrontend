@@ -1,5 +1,6 @@
 import type { Plugin } from 'rollup'
 import type { SiblingEntry } from './sibling-resolver'
+import { resolve } from 'node:path'
 import { describe, expect, it } from '@hyperfrontend/testing'
 import { computeSiblingSpecifier, createSiblingExternalizePlugin, dtsPathFor, filterSiblings, findOwningSibling } from './sibling-resolver'
 
@@ -66,16 +67,16 @@ describe('computeSiblingSpecifier', () => {
 describe('createSiblingExternalizePlugin', () => {
   const baseInput = {
     selfSrcPath: 'bundle',
-    selfDtsPath: '/abs/dist/libs/foo/bundle/index.d.ts',
+    selfDtsPath: resolve('/abs/dist/libs/foo/bundle/index.d.ts'),
     siblings: [
-      { srcPath: 'models', indexDtsPath: '/abs/dist/libs/foo/models/index.d.ts' },
-      { srcPath: 'package', indexDtsPath: '/abs/dist/libs/foo/package/index.d.ts' },
+      { srcPath: 'models', indexDtsPath: resolve('/abs/dist/libs/foo/models/index.d.ts') },
+      { srcPath: 'package', indexDtsPath: resolve('/abs/dist/libs/foo/package/index.d.ts') },
     ],
   }
 
   it('externalizes a sibling import expressed as a relative specifier', () => {
     const plugin = createSiblingExternalizePlugin(baseInput)
-    expect(callResolveId(plugin, '../models', '/abs/dist/libs/foo/bundle/index.d.ts')).toEqual({
+    expect(callResolveId(plugin, '../models', resolve('/abs/dist/libs/foo/bundle/index.d.ts'))).toEqual({
       id: '../models',
       external: true,
     })
@@ -83,7 +84,7 @@ describe('createSiblingExternalizePlugin', () => {
 
   it('externalizes a sibling import expressed as an absolute path', () => {
     const plugin = createSiblingExternalizePlugin(baseInput)
-    expect(callResolveId(plugin, '/abs/dist/libs/foo/models/index.d.ts')).toEqual({
+    expect(callResolveId(plugin, resolve('/abs/dist/libs/foo/models/index.d.ts'))).toEqual({
       id: '../models',
       external: true,
     })
@@ -91,7 +92,7 @@ describe('createSiblingExternalizePlugin', () => {
 
   it('externalizes references to a sibling sub-file (e.g. models/build-config)', () => {
     const plugin = createSiblingExternalizePlugin(baseInput)
-    expect(callResolveId(plugin, '../models/build-config', '/abs/dist/libs/foo/bundle/index.d.ts')).toEqual({
+    expect(callResolveId(plugin, '../models/build-config', resolve('/abs/dist/libs/foo/bundle/index.d.ts'))).toEqual({
       id: '../models',
       external: true,
     })
@@ -99,43 +100,43 @@ describe('createSiblingExternalizePlugin', () => {
 
   it('returns null for self-imports so they stay inlined', () => {
     const plugin = createSiblingExternalizePlugin(baseInput)
-    expect(callResolveId(plugin, './sub-helper', '/abs/dist/libs/foo/bundle/index.d.ts')).toBeNull()
+    expect(callResolveId(plugin, './sub-helper', resolve('/abs/dist/libs/foo/bundle/index.d.ts'))).toBeNull()
   })
 
   it('returns null for paths that do not resolve into any sibling', () => {
     const plugin = createSiblingExternalizePlugin(baseInput)
-    expect(callResolveId(plugin, 'rollup', '/abs/dist/libs/foo/bundle/index.d.ts')).toBeNull()
+    expect(callResolveId(plugin, 'rollup', resolve('/abs/dist/libs/foo/bundle/index.d.ts'))).toBeNull()
   })
 
   it('returns null when the resolved path equals the current entry', () => {
     const plugin = createSiblingExternalizePlugin(baseInput)
-    expect(callResolveId(plugin, '/abs/dist/libs/foo/bundle/index.d.ts')).toBeNull()
+    expect(callResolveId(plugin, resolve('/abs/dist/libs/foo/bundle/index.d.ts'))).toBeNull()
   })
 
   it('returns null when there are no siblings', () => {
     const plugin = createSiblingExternalizePlugin({ ...baseInput, siblings: [] })
-    expect(callResolveId(plugin, '../models', '/abs/dist/libs/foo/bundle/index.d.ts')).toBeNull()
+    expect(callResolveId(plugin, '../models', resolve('/abs/dist/libs/foo/bundle/index.d.ts'))).toBeNull()
   })
 
   it('returns null when the path resolves into the current entry, even if a sibling directory prefix-matches it', () => {
     const plugin = createSiblingExternalizePlugin({
       selfSrcPath: 'bin',
-      selfDtsPath: '/abs/dist/libs/foo/bin/index.d.ts',
+      selfDtsPath: resolve('/abs/dist/libs/foo/bin/index.d.ts'),
       siblings: [
-        { srcPath: '', indexDtsPath: '/abs/dist/libs/foo/index.d.ts' },
-        { srcPath: 'bin/native', indexDtsPath: '/abs/dist/libs/foo/bin/native/index.d.ts' },
+        { srcPath: '', indexDtsPath: resolve('/abs/dist/libs/foo/index.d.ts') },
+        { srcPath: 'bin/native', indexDtsPath: resolve('/abs/dist/libs/foo/bin/native/index.d.ts') },
       ],
     })
-    expect(callResolveId(plugin, '/abs/dist/libs/foo/bin/index.d.ts')).toBeNull()
+    expect(callResolveId(plugin, resolve('/abs/dist/libs/foo/bin/index.d.ts'))).toBeNull()
   })
 
   it('returns null for paths inside the current entry directory even when root sibling prefix-matches', () => {
     const plugin = createSiblingExternalizePlugin({
       selfSrcPath: 'bin',
-      selfDtsPath: '/abs/dist/libs/foo/bin/index.d.ts',
-      siblings: [{ srcPath: '', indexDtsPath: '/abs/dist/libs/foo/index.d.ts' }],
+      selfDtsPath: resolve('/abs/dist/libs/foo/bin/index.d.ts'),
+      siblings: [{ srcPath: '', indexDtsPath: resolve('/abs/dist/libs/foo/index.d.ts') }],
     })
-    expect(callResolveId(plugin, '/abs/dist/libs/foo/bin/script.d.ts')).toBeNull()
+    expect(callResolveId(plugin, resolve('/abs/dist/libs/foo/bin/script.d.ts'))).toBeNull()
   })
 
   it('falls back to the importer-relative resolution when no importer is supplied', () => {
@@ -146,13 +147,13 @@ describe('createSiblingExternalizePlugin', () => {
   it('handles nested-entry pairings (longest-prefix wins)', () => {
     const plugin = createSiblingExternalizePlugin({
       selfSrcPath: 'bundle',
-      selfDtsPath: '/abs/dist/libs/foo/bundle/index.d.ts',
+      selfDtsPath: resolve('/abs/dist/libs/foo/bundle/index.d.ts'),
       siblings: [
-        { srcPath: 'bundle/declarations', indexDtsPath: '/abs/dist/libs/foo/bundle/declarations/index.d.ts' },
-        { srcPath: 'models', indexDtsPath: '/abs/dist/libs/foo/models/index.d.ts' },
+        { srcPath: 'bundle/declarations', indexDtsPath: resolve('/abs/dist/libs/foo/bundle/declarations/index.d.ts') },
+        { srcPath: 'models', indexDtsPath: resolve('/abs/dist/libs/foo/models/index.d.ts') },
       ],
     })
-    expect(callResolveId(plugin, './declarations/dts-per-entry', '/abs/dist/libs/foo/bundle/index.d.ts')).toEqual({
+    expect(callResolveId(plugin, './declarations/dts-per-entry', resolve('/abs/dist/libs/foo/bundle/index.d.ts'))).toEqual({
       id: './declarations',
       external: true,
     })

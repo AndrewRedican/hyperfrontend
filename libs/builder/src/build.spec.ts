@@ -6,6 +6,7 @@ import { tmpdir } from 'node:os'
 import { join as nodeJoin } from 'node:path'
 import { afterEach, beforeEach } from 'node:test'
 import { logger } from '@hyperfrontend/logging'
+import { normalizeToNative } from '@hyperfrontend/project-scope/core/path'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { runBinPhase } from './bin/run-bin-phase'
 import { build, createBuildContext } from './build'
@@ -62,7 +63,7 @@ describe('createBuildContext', () => {
 
   it('defaults outputPath to <workspaceRoot>/dist/<projectRelativePath>', () => {
     const ctx = createBuildContext(baseConfig())
-    expect(ctx.outputPath).toBe('/abs/repo/dist/libs/foo')
+    expect(ctx.outputPath).toBe(normalizeToNative('/abs/repo/dist/libs/foo'))
   })
 
   it('honors an explicit outputPath override', () => {
@@ -72,7 +73,7 @@ describe('createBuildContext', () => {
 
   it('defaults tsConfigPath to <projectRoot>/tsconfig.lib.json', () => {
     const ctx = createBuildContext(baseConfig())
-    expect(ctx.tsConfigPath).toBe('/abs/repo/libs/foo/tsconfig.lib.json')
+    expect(ctx.tsConfigPath).toBe(normalizeToNative('/abs/repo/libs/foo/tsconfig.lib.json'))
   })
 
   it('honors an explicit tsConfig override', () => {
@@ -387,7 +388,7 @@ describe('build', () => {
 
     it('cleans the resolved output path', async () => {
       await build(baseConfig())
-      expect(cleanOutputPath).toHaveBeenCalledWith(expect.objectContaining({ outputPath: '/abs/repo/dist/libs/foo' }))
+      expect(cleanOutputPath).toHaveBeenCalledWith(expect.objectContaining({ outputPath: normalizeToNative('/abs/repo/dist/libs/foo') }))
     })
 
     it('skips the clean when the config opts out', async () => {
@@ -397,7 +398,9 @@ describe('build', () => {
 
     it('still checks the output against the build inputs when the clean is skipped', async () => {
       await build({ ...baseConfig(), clean: false })
-      expect(assertOutputPathClearOfInputs).toHaveBeenCalledWith(expect.objectContaining({ outputPath: '/abs/repo/dist/libs/foo' }))
+      expect(assertOutputPathClearOfInputs).toHaveBeenCalledWith(
+        expect.objectContaining({ outputPath: normalizeToNative('/abs/repo/dist/libs/foo') })
+      )
     })
 
     it('surfaces a refused output path', async () => {

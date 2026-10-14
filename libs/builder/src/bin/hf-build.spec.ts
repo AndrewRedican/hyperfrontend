@@ -1,5 +1,6 @@
 import type { Mock } from '@hyperfrontend/testing'
 import type { BuildConfig, BuildResult, FormatOutputs } from '../models'
+import { join } from 'node:path'
 import { PassThrough } from 'node:stream'
 import { beforeEach } from 'node:test'
 import { readJsonFile } from '@hyperfrontend/project-scope/core'
@@ -104,7 +105,7 @@ describe('runHfBuild', () => {
   it('reads the default config from <cwd>/builder.config.json', async () => {
     const stderr = new PassThrough()
     await runHfBuild({ argv: [], cwd: '/repo', stderr })
-    expect(readJsonFile).toHaveBeenCalledWith(`/repo/${HF_BUILD_DEFAULT_CONFIG_NAME}`)
+    expect(readJsonFile).toHaveBeenCalledWith(join('/repo', HF_BUILD_DEFAULT_CONFIG_NAME))
   })
 
   it('honors --config to override the config file path', async () => {
@@ -116,7 +117,7 @@ describe('runHfBuild', () => {
   it('honors --cwd when resolving the default config path', async () => {
     const stderr = new PassThrough()
     await runHfBuild({ argv: ['--cwd', '/elsewhere'], cwd: '/repo', stderr })
-    expect(readJsonFile).toHaveBeenCalledWith(`/elsewhere/${HF_BUILD_DEFAULT_CONFIG_NAME}`)
+    expect(readJsonFile).toHaveBeenCalledWith(join('/elsewhere', HF_BUILD_DEFAULT_CONFIG_NAME))
   })
 
   it('forwards the parsed config to build()', async () => {

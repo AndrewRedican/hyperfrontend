@@ -3,6 +3,7 @@ import type { RollupBuildDescriptor } from '../../bundle/rollup/worker/types'
 import type { BinConfig, BuildContext } from '../../models'
 import { beforeEach } from 'node:test'
 import { ensureDir } from '@hyperfrontend/project-scope/core'
+import { normalizeToNative } from '@hyperfrontend/project-scope/core/path'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { dispatchRollupWorker, resolveDefaultRollupWorkerPath } from '../../bundle/rollup/dispatch'
 import { buildJsBin } from './build-bin'
@@ -46,24 +47,24 @@ const dispatchedDescriptor = (callIndex: number): RollupBuildDescriptor =>
 describe('buildJsBin', () => {
   it('ensures the bin output directory exists before dispatching', async () => {
     await buildJsBin({ name: 'cz', format: 'cjs' } as BinConfig, makeContext())
-    expect(ensureDir).toHaveBeenCalledWith('/abs/dist/libs/foo/bin')
+    expect(ensureDir).toHaveBeenCalledWith(normalizeToNative('/abs/dist/libs/foo/bin'))
   })
 
   it('emits a single CJS output as `<name>.js` when only CJS is declared', async () => {
     const result = await buildJsBin({ name: 'cz', format: 'cjs', runner: 'runCz' } as BinConfig, makeContext())
-    expect(result).toEqual([{ name: 'cz', kind: 'cjs', outputPath: '/abs/dist/libs/foo/bin/cz.js' }])
+    expect(result).toEqual([{ name: 'cz', kind: 'cjs', outputPath: normalizeToNative('/abs/dist/libs/foo/bin/cz.js') }])
   })
 
   it('emits an ESM output as `<name>.mjs`', async () => {
     const result = await buildJsBin({ name: 'cz', format: 'esm', runner: 'runCz' } as BinConfig, makeContext())
-    expect(result).toEqual([{ name: 'cz', kind: 'esm', outputPath: '/abs/dist/libs/foo/bin/cz.mjs' }])
+    expect(result).toEqual([{ name: 'cz', kind: 'esm', outputPath: normalizeToNative('/abs/dist/libs/foo/bin/cz.mjs') }])
   })
 
   it('emits both CJS (`<name>.cjs`) and ESM (`<name>.mjs`) when an array of formats is declared', async () => {
     const result = await buildJsBin({ name: 'hf-build', format: ['cjs', 'esm'] } as BinConfig, makeContext())
     expect(result).toEqual([
-      { name: 'hf-build', kind: 'cjs', outputPath: '/abs/dist/libs/foo/bin/hf-build.cjs' },
-      { name: 'hf-build', kind: 'esm', outputPath: '/abs/dist/libs/foo/bin/hf-build.mjs' },
+      { name: 'hf-build', kind: 'cjs', outputPath: normalizeToNative('/abs/dist/libs/foo/bin/hf-build.cjs') },
+      { name: 'hf-build', kind: 'esm', outputPath: normalizeToNative('/abs/dist/libs/foo/bin/hf-build.mjs') },
     ])
   })
 
@@ -73,12 +74,12 @@ describe('buildJsBin', () => {
     const cjs = dispatchedDescriptor(0)
     const esm = dispatchedDescriptor(1)
     expect(cjs.format).toBe('cjs')
-    expect(cjs.inputFile).toBe('/abs/libs/foo/src/bin/hf-build.ts')
-    expect(cjs.bin?.outputFile).toBe('/abs/dist/libs/foo/bin/hf-build.cjs')
+    expect(cjs.inputFile).toBe(normalizeToNative('/abs/libs/foo/src/bin/hf-build.ts'))
+    expect(cjs.bin?.outputFile).toBe(normalizeToNative('/abs/dist/libs/foo/bin/hf-build.cjs'))
     expect(cjs.bin?.banner).toBe('#!/usr/bin/env node')
     expect(cjs.bin?.chmod).toBe(0o755)
     expect(esm.format).toBe('esm')
-    expect(esm.bin?.outputFile).toBe('/abs/dist/libs/foo/bin/hf-build.mjs')
+    expect(esm.bin?.outputFile).toBe(normalizeToNative('/abs/dist/libs/foo/bin/hf-build.mjs'))
   })
 
   it('labels the dispatch invocation with `bin:<name>:<format>` for traceability', async () => {
