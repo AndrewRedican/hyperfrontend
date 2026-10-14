@@ -7,6 +7,7 @@ import type { Registry } from '../../../registry/models/registry'
 import type { FlowConfig, FlowContext, FlowState } from '../../models/types'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { entries } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
+import { normalizePath } from '@hyperfrontend/project-scope/core/path'
 import { jest } from '@hyperfrontend/testing'
 
 /** Seed files for the in-memory tree the changelog steps read and write. */
@@ -53,24 +54,25 @@ export function createMockLogger(): Logger {
  * ```
  */
 export function createMockTree(options: MockTreeOptions = {}): Tree {
-  const files = createMap<string, string>(entries(options.files ?? {}))
+  // why: the real tree keys every path portably, so the native joins the steps hand it must land on the POSIX seeds.
+  const files = createMap<string, string>(entries(options.files ?? {}).map(([path, content]) => [normalizePath(path), content] as const))
 
   return {
     root: '/workspace',
     read(path: string, encoding?: string) {
-      const content = files.get(path)
+      const content = files.get(normalizePath(path))
       if (content === undefined) {
         return null
       }
       return encoding ? content : Buffer.from(content)
     },
     write: jest.fn((path: string, content: string) => {
-      files.set(path, content)
+      files.set(normalizePath(path), content)
     }),
-    exists: (path: string) => files.has(path),
+    exists: (path: string) => files.has(normalizePath(path)),
     delete: jest.fn(),
     rename: jest.fn(),
-    isFile: (path: string) => files.has(path),
+    isFile: (path: string) => files.has(normalizePath(path)),
     children: () => [],
     listChanges: () => [],
   } as unknown as Tree

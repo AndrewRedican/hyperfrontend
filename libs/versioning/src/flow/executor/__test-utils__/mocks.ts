@@ -6,6 +6,7 @@ import { createDate } from '@hyperfrontend/immutable-api-utils/built-in-copy/dat
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { entries } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
+import { normalizePath } from '@hyperfrontend/project-scope/core/path'
 import { jest } from '@hyperfrontend/testing'
 
 /** A pending virtual file system change reported by the mock tree. */
@@ -30,36 +31,37 @@ export interface MockFileChange {
  * ```
  */
 export function createMockTree(files: Record<string, string> = {}, changes: MockFileChange[] = []): Tree {
-  const fileSystem = createMap(entries(files))
+  // why: the real tree keys every path portably, so the native joins the flow hands it must land on the POSIX seeds.
+  const fileSystem = createMap(entries(files).map(([filePath, content]) => [normalizePath(filePath), content] as const))
   let pendingChanges = [...changes]
 
   const tree = {
     root: '/workspace',
     read(filePath: string, encoding?: string) {
-      const content = fileSystem.get(filePath)
+      const content = fileSystem.get(normalizePath(filePath))
       if (content === undefined) {
         return null
       }
       return encoding ? content : Buffer.from(content)
     },
     write(filePath: string, content: string | Buffer) {
-      fileSystem.set(filePath, typeof content === 'string' ? content : content.toString())
+      fileSystem.set(normalizePath(filePath), typeof content === 'string' ? content : content.toString())
     },
     exists(filePath: string) {
-      return fileSystem.has(filePath)
+      return fileSystem.has(normalizePath(filePath))
     },
     delete(filePath: string) {
-      fileSystem.delete(filePath)
+      fileSystem.delete(normalizePath(filePath))
     },
     rename(from: string, to: string) {
-      const content = fileSystem.get(from)
+      const content = fileSystem.get(normalizePath(from))
       if (content !== undefined) {
-        fileSystem.set(to, content)
-        fileSystem.delete(from)
+        fileSystem.set(normalizePath(to), content)
+        fileSystem.delete(normalizePath(from))
       }
     },
     isFile(filePath: string) {
-      return fileSystem.has(filePath)
+      return fileSystem.has(normalizePath(filePath))
     },
     children() {
       return []

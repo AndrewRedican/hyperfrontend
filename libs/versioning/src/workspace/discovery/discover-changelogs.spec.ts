@@ -1,6 +1,7 @@
 import type { Tree } from '@hyperfrontend/project-scope/vfs'
 import { beforeEach } from 'node:test'
 import * as projectScopeFs from '@hyperfrontend/project-scope/core/fs'
+import { normalizeToNative } from '@hyperfrontend/project-scope/core/path'
 import * as projectScopeTraversal from '@hyperfrontend/project-scope/project/traversal'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import {
@@ -46,32 +47,32 @@ describe('findProjectChangelog', () => {
 
   it('finds CHANGELOG.md when it exists', () => {
     projectScopeFs.exists.mockImplementation((path: string) => {
-      return path === '/workspace/libs/my-lib/CHANGELOG.md'
+      return path === normalizeToNative('/workspace/libs/my-lib/CHANGELOG.md')
     })
 
     const result = findProjectChangelog('/workspace/libs/my-lib')
 
-    expect(result).toBe('/workspace/libs/my-lib/CHANGELOG.md')
+    expect(result).toBe(normalizeToNative('/workspace/libs/my-lib/CHANGELOG.md'))
   })
 
   it('finds Changelog.md as fallback', () => {
     projectScopeFs.exists.mockImplementation((path: string) => {
-      return path === '/workspace/libs/my-lib/Changelog.md'
+      return path === normalizeToNative('/workspace/libs/my-lib/Changelog.md')
     })
 
     const result = findProjectChangelog('/workspace/libs/my-lib')
 
-    expect(result).toBe('/workspace/libs/my-lib/Changelog.md')
+    expect(result).toBe(normalizeToNative('/workspace/libs/my-lib/Changelog.md'))
   })
 
   it('finds HISTORY.md as fallback', () => {
     projectScopeFs.exists.mockImplementation((path: string) => {
-      return path === '/workspace/libs/my-lib/HISTORY.md'
+      return path === normalizeToNative('/workspace/libs/my-lib/HISTORY.md')
     })
 
     const result = findProjectChangelog('/workspace/libs/my-lib')
 
-    expect(result).toBe('/workspace/libs/my-lib/HISTORY.md')
+    expect(result).toBe(normalizeToNative('/workspace/libs/my-lib/HISTORY.md'))
   })
 
   it('returns null when no changelog exists', () => {
@@ -89,7 +90,7 @@ describe('findProjectChangelog', () => {
 
     const result = findProjectChangelog('/workspace/libs/my-lib')
 
-    expect(result).toBe('/workspace/libs/my-lib/CHANGELOG.md')
+    expect(result).toBe(normalizeToNative('/workspace/libs/my-lib/CHANGELOG.md'))
   })
 })
 
@@ -111,8 +112,8 @@ describe('findChangelogs', () => {
     const result = findChangelogs('/workspace', packages)
 
     expect(result.size).toBe(2)
-    expect(result.get('/workspace/libs/lib-a')).toBe('/workspace/libs/lib-a/CHANGELOG.md')
-    expect(result.get('/workspace/libs/lib-b')).toBe('/workspace/libs/lib-b/CHANGELOG.md')
+    expect(result.get('/workspace/libs/lib-a')).toBe(normalizeToNative('/workspace/libs/lib-a/CHANGELOG.md'))
+    expect(result.get('/workspace/libs/lib-b')).toBe(normalizeToNative('/workspace/libs/lib-b/CHANGELOG.md'))
   })
 
   it('skips packages without changelog', () => {
@@ -153,7 +154,7 @@ describe('discoverAllChangelogs', () => {
       expect.arrayContaining([
         expect.objectContaining({
           relativePath: 'libs/lib-a/CHANGELOG.md',
-          path: '/workspace/libs/lib-a/CHANGELOG.md',
+          path: normalizeToNative('/workspace/libs/lib-a/CHANGELOG.md'),
           filename: 'CHANGELOG.md',
         }),
         expect.any(Object),
@@ -166,7 +167,7 @@ describe('discoverAllChangelogs', () => {
 
     const result = discoverAllChangelogs('/workspace')
 
-    expect(result?.[0]).toEqual(expect.objectContaining({ projectPath: '/workspace/packages/my-package' }))
+    expect(result?.[0]).toEqual(expect.objectContaining({ projectPath: normalizeToNative('/workspace/packages/my-package') }))
   })
 
   it('returns empty array when no changelogs found', () => {
@@ -216,7 +217,7 @@ describe('findProjectChangelogInTree', () => {
 
     const result = findProjectChangelogInTree(tree as Tree, '/workspace/libs/my-lib')
 
-    expect(result).toBe('/workspace/libs/my-lib/CHANGELOG.md')
+    expect(result).toBe(normalizeToNative('/workspace/libs/my-lib/CHANGELOG.md'))
     expect(tree.isFile).toHaveBeenCalledWith('libs/my-lib/CHANGELOG.md')
   })
 
@@ -225,7 +226,7 @@ describe('findProjectChangelogInTree', () => {
 
     const result = findProjectChangelogInTree(tree as Tree, '/workspace/libs/my-lib')
 
-    expect(result).toBe('/workspace/libs/my-lib/Changelog.md')
+    expect(result).toBe(normalizeToNative('/workspace/libs/my-lib/Changelog.md'))
   })
 
   it('returns null when no changelog exists in tree', () => {
@@ -241,7 +242,7 @@ describe('findProjectChangelogInTree', () => {
 
     const result = findProjectChangelogInTree(tree as Tree, 'libs/my-lib')
 
-    expect(result).toBe('libs/my-lib/CHANGELOG.md')
+    expect(result).toBe(normalizeToNative('libs/my-lib/CHANGELOG.md'))
   })
 
   it('finds changelog created in tree but not on disk', () => {
@@ -249,7 +250,7 @@ describe('findProjectChangelogInTree', () => {
 
     const result = findProjectChangelogInTree(tree as Tree, '/workspace/libs/new-package')
 
-    expect(result).toBe('/workspace/libs/new-package/CHANGELOG.md')
+    expect(result).toBe(normalizeToNative('/workspace/libs/new-package/CHANGELOG.md'))
   })
 })
 
@@ -282,8 +283,8 @@ describe('findChangelogsInTree', () => {
     const result = findChangelogsInTree(tree as Tree, packages)
 
     expect(result.size).toBe(2)
-    expect(result.get('/workspace/libs/lib-a')).toBe('/workspace/libs/lib-a/CHANGELOG.md')
-    expect(result.get('/workspace/libs/lib-b')).toBe('/workspace/libs/lib-b/CHANGELOG.md')
+    expect(result.get('/workspace/libs/lib-a')).toBe(normalizeToNative('/workspace/libs/lib-a/CHANGELOG.md'))
+    expect(result.get('/workspace/libs/lib-b')).toBe(normalizeToNative('/workspace/libs/lib-b/CHANGELOG.md'))
   })
 
   it('skips packages without changelog in tree', () => {

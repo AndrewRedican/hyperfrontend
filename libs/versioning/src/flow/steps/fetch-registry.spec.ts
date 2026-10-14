@@ -3,6 +3,7 @@ import type { Tree } from '@hyperfrontend/project-scope/vfs'
 import type { GitClient } from '../../git/factory'
 import type { Registry } from '../../registry/models/registry'
 import type { FlowConfig, FlowContext, FlowState } from '../models/types'
+import { normalizePath } from '@hyperfrontend/project-scope/core/path'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { createFetchRegistryStep, FETCH_REGISTRY_STEP_ID } from './fetch-registry'
 
@@ -17,7 +18,8 @@ function createMockLogger(): Logger {
 }
 
 function createMockTree(files: Record<string, string> = {}, throwOnRead = false): Tree {
-  const fileSystem = new Map(Object.entries(files))
+  // why: the real tree keys every path portably, so the native joins the step hands it must land on the POSIX seeds.
+  const fileSystem = new Map(Object.entries(files).map(([filePath, content]) => [normalizePath(filePath), content]))
 
   return {
     root: '/workspace',
@@ -25,17 +27,17 @@ function createMockTree(files: Record<string, string> = {}, throwOnRead = false)
       if (throwOnRead) {
         throw new Error('Simulated read error')
       }
-      const content = fileSystem.get(filePath)
+      const content = fileSystem.get(normalizePath(filePath))
       if (content === undefined) {
         return null
       }
       return encoding ? content : Buffer.from(content)
     },
     write: jest.fn(),
-    exists: (path: string) => fileSystem.has(path),
+    exists: (path: string) => fileSystem.has(normalizePath(path)),
     delete: jest.fn(),
     rename: jest.fn(),
-    isFile: (path: string) => fileSystem.has(path),
+    isFile: (path: string) => fileSystem.has(normalizePath(path)),
     children: () => [],
     listChanges: () => [],
   } as unknown as Tree

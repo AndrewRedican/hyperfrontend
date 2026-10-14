@@ -1,6 +1,7 @@
 import type { MockedFunction } from '@hyperfrontend/testing'
 import * as childProcess from 'node:child_process'
 import { beforeEach } from 'node:test'
+import { normalizeToNative } from '@hyperfrontend/project-scope/core/path'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { getStagedPaths } from './staged-paths'
 
@@ -26,12 +27,15 @@ describe('getStagedPaths', () => {
 
   it('anchors each NUL-terminated entry at the repository root', () => {
     mockGit('/repo\n', 'libs/a/index.ts\0libs/b/index.ts\0')
-    expect(getStagedPaths({ cwd: '/repo' })).toEqual(['/repo/libs/a/index.ts', '/repo/libs/b/index.ts'])
+    expect(getStagedPaths({ cwd: '/repo' })).toEqual([
+      normalizeToNative('/repo/libs/a/index.ts'),
+      normalizeToNative('/repo/libs/b/index.ts'),
+    ])
   })
 
   it('returns root-anchored paths when invoked from a subdirectory', () => {
     mockGit('/repo\n', 'libs/a/index.ts\0')
-    expect(getStagedPaths({ cwd: '/repo/apps/demo' })).toEqual(['/repo/libs/a/index.ts'])
+    expect(getStagedPaths({ cwd: '/repo/apps/demo' })).toEqual([normalizeToNative('/repo/libs/a/index.ts')])
     expect(execFileSync).toHaveBeenCalledWith('git', ['rev-parse', '--show-toplevel'], expect.objectContaining({ cwd: '/repo/apps/demo' }))
   })
 
@@ -42,7 +46,7 @@ describe('getStagedPaths', () => {
 
   it('handles trailing content with no terminator', () => {
     mockGit('/repo\n', 'libs/a/index.ts')
-    expect(getStagedPaths({ cwd: '/repo' })).toEqual(['/repo/libs/a/index.ts'])
+    expect(getStagedPaths({ cwd: '/repo' })).toEqual([normalizeToNative('/repo/libs/a/index.ts')])
   })
 
   it('wraps git errors with a descriptive message', () => {
