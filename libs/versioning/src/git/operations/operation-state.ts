@@ -1,7 +1,7 @@
 import type { GitCommitOptions } from './commit'
 import { execFileSync } from 'node:child_process'
 import { existsSync } from 'node:fs'
-import { join } from 'node:path'
+import { resolve } from 'node:path'
 import { DEFAULT_COMMIT_OPTIONS } from './commit'
 
 /**
@@ -93,9 +93,10 @@ export function getOperationState(options: GitOperationStateOptions = {}): GitOp
     }).trim()
 
     const basePath = opts.cwd ?? process.cwd()
-    const rebaseMerge = existsSync(join(basePath, gitDir, 'rebase-merge'))
-    const rebaseApply = existsSync(join(basePath, gitDir, 'rebase-apply'))
-    const mergeHead = existsSync(join(basePath, gitDir, 'MERGE_HEAD'))
+    // why: git prints the worktree git dir as an absolute path, which resolve honours while join would nest it under cwd.
+    const rebaseMerge = existsSync(resolve(basePath, gitDir, 'rebase-merge'))
+    const rebaseApply = existsSync(resolve(basePath, gitDir, 'rebase-apply'))
+    const mergeHead = existsSync(resolve(basePath, gitDir, 'MERGE_HEAD'))
 
     let reason: GitOperationStateReason | null = null
     if (rebaseMerge) reason = 'rebase-interactive'

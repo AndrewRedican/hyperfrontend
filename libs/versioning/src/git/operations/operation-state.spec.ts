@@ -1,6 +1,7 @@
 import type { MockedFunction } from '@hyperfrontend/testing'
 import { execFileSync } from 'node:child_process'
 import { existsSync } from 'node:fs'
+import { resolve } from 'node:path'
 import { beforeEach } from 'node:test'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { getOperationState, isOperationInProgress, DEFAULT_OPERATION_STATE_OPTIONS } from './operation-state'
@@ -152,8 +153,9 @@ describe('getOperationState', () => {
   describe('worktree support', () => {
     it('uses git dir path from rev-parse for worktree', () => {
       mockExecFileSync.mockReturnValue('/path/to/main/.git/worktrees/feature\n')
+      // why: the probe must land on the absolute git dir itself, not nested under the worktree cwd, on every platform.
       mockExistsSync.mockImplementation((path) => {
-        return String(path).includes('/path/to/main/.git/worktrees/feature/rebase-merge')
+        return String(path) === resolve('/path/to/main/.git/worktrees/feature', 'rebase-merge')
       })
 
       const state = getOperationState({ cwd: '/path/to/worktree' })
