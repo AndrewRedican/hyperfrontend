@@ -2,7 +2,7 @@ import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { after as afterAll } from 'node:test'
-import { fileURLToPath } from 'node:url'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 import { describe, expect, it } from '@hyperfrontend/testing'
 import { loadConfig, validateVariants } from './load-config'
 
@@ -24,7 +24,8 @@ function configFile(body: string): string {
   const root = mkdtempSync(join(tmpdir(), 'media-config-'))
   roots.push(root)
   const filePath = join(root, 'media.config.ts')
-  const defineConfig = resolve(fileURLToPath(import.meta.url), '../define-config.ts')
+  // why: the fixture imports the recorder by file URL; a native absolute path reads as a URL scheme on Windows
+  const defineConfig = pathToFileURL(resolve(fileURLToPath(import.meta.url), '../define-config.ts')).href
   writeFileSync(filePath, `import { defineConfig } from '${defineConfig}'\nexport default defineConfig(${body})\n`)
   return filePath
 }
