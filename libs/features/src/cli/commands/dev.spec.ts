@@ -2,6 +2,7 @@ import type { ResolvedDevConfig } from '../../server/config'
 import type { DevServerHandle } from '../../server/dev-server'
 import type { CliFlags } from '../args'
 import type { RunDevOptions } from './dev'
+import { resolve } from 'node:path'
 import { afterEach } from 'node:test'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { runDev } from './dev'
@@ -114,7 +115,7 @@ describe('runDev', () => {
   it('resolves a relative --cwd against the working directory', async () => {
     const resolveConfig = jest.fn(() => Promise.resolve(config))
     await runDev(deps({ cwd: '/root', flags: mkFlags({ cwd: 'sub' }), resolveConfig }))
-    expect(resolveConfig).toHaveBeenCalledWith(expect.objectContaining({ cwd: '/root/sub' }))
+    expect(resolveConfig).toHaveBeenCalledWith(expect.objectContaining({ cwd: resolve('/root/sub') }))
   })
 
   it('reports a resolution error and exits non-zero', async () => {

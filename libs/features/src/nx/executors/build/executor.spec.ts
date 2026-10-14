@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { beforeEach } from 'node:test'
 import { parse } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
+import { normalizeToNative } from '@hyperfrontend/project-scope/core/path'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { runBuild } from '../../../cli'
 import { warnIfRollupBindingMissing } from '../../shared/rollup-binding'
@@ -38,7 +39,7 @@ describe('runBuildExecutor', () => {
   it('runs against the resolved project cwd', async () => {
     runBuildMock.mockResolvedValue(0)
     await runBuildExecutor({}, context)
-    expect(runBuildMock).toHaveBeenCalledWith(expect.objectContaining({ cwd: '/ws/libs/a' }))
+    expect(runBuildMock).toHaveBeenCalledWith(expect.objectContaining({ cwd: normalizeToNative('/ws/libs/a') }))
   })
 
   it('forwards the allow-open acknowledgement to the SDK build', async () => {

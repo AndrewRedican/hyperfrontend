@@ -1,5 +1,6 @@
 import type { CliFlags } from '../cli/args'
 import type { ResolveDevConfigOptions } from './config'
+import { resolve } from 'node:path'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { resolveDevConfig, validateApps, validateDevApp, validateDevConfig } from './config'
 
@@ -84,7 +85,7 @@ describe('validateDevConfig', () => {
 describe('resolveDevConfig', () => {
   it('resolves outputDir against the config directory', async () => {
     const resolved = await resolveDevConfig(opts({}))
-    expect(resolved.apps).toEqual([expect.objectContaining({ name: 'clock', outputDir: '/project/dist' })])
+    expect(resolved.apps).toEqual([expect.objectContaining({ name: 'clock', outputDir: resolve('/project/dist') })])
   })
 
   it('auto-assigns ports from 3000 for unported apps', async () => {
@@ -141,7 +142,7 @@ describe('resolveDevConfig', () => {
         path.endsWith('apps.json') ? [{ name: 'fromFlag', outputDir: './out' }] : { apps: [{ name: 'base', outputDir: './base' }] }
       )
     const resolved = await resolveDevConfig(opts({ flags: mkFlags({ apps: '/abs/apps.json' }), loadConfig }))
-    expect(resolved.apps).toEqual([expect.objectContaining({ name: 'fromFlag', outputDir: '/abs/out' })])
+    expect(resolved.apps).toEqual([expect.objectContaining({ name: 'fromFlag', outputDir: resolve('/abs/out') })])
   })
 
   it('overrides the debug port from --port', async () => {

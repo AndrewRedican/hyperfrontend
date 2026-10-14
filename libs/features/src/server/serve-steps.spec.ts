@@ -4,7 +4,7 @@ import type { ServeStep, StaticRequest, StaticResponse } from './serve-pipeline'
 import type { ServeStepDeps } from './serve-steps'
 import { mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { join } from 'node:path'
+import { join, resolve } from 'node:path'
 import { afterEach, beforeEach } from 'node:test'
 import { brotliDecompressSync, gunzipSync } from 'node:zlib'
 import { describe, expect, it } from '@hyperfrontend/testing'
@@ -12,7 +12,11 @@ import { negotiateEncoding } from './serve-compression'
 import { runSteps } from './serve-pipeline'
 import { buildServeSteps } from './serve-steps'
 
-const ROOT = '/site'
+// why: Resolve gives the fixture root the drive Windows prefixes onto every path the file step builds, so the in-memory file map is keyed the way the step looks files up.
+const ROOT = resolve('/site')
+
+// how: The file step reaches files with native paths, so every fixture key is joined the way the step joins it.
+const at = (...segments: string[]): string => join(ROOT, ...segments)
 
 const BIG = 'x'.repeat(2048)
 
@@ -43,15 +47,15 @@ const fileDeps = (files: Record<string, FakeFile>): ServeStepDeps => ({
 })
 
 const siteFiles = (): Record<string, FakeFile> => ({
-  [`${ROOT}/index.html`]: { body: '<html>home</html>', mtime: 4096 },
-  [`${ROOT}/hello.txt`]: { body: 'hello', mtime: 4096 },
-  [`${ROOT}/big.txt`]: { body: BIG, mtime: 4096 },
-  [`${ROOT}/big.png`]: { body: 'p'.repeat(2048), mtime: 4096 },
-  [`${ROOT}/big.json`]: { body: 'j'.repeat(2048), mtime: 4096 },
-  [`${ROOT}/big.svg`]: { body: 's'.repeat(2048), mtime: 4096 },
-  [`${ROOT}/big.xml`]: { body: 'm'.repeat(2048), mtime: 4096 },
-  [`${ROOT}/sub/index.html`]: { body: '<html>sub</html>', mtime: 4096 },
-  [`${ROOT}/sub/notes.txt`]: { body: 'notes', mtime: 4096 },
+  [at('index.html')]: { body: '<html>home</html>', mtime: 4096 },
+  [at('hello.txt')]: { body: 'hello', mtime: 4096 },
+  [at('big.txt')]: { body: BIG, mtime: 4096 },
+  [at('big.png')]: { body: 'p'.repeat(2048), mtime: 4096 },
+  [at('big.json')]: { body: 'j'.repeat(2048), mtime: 4096 },
+  [at('big.svg')]: { body: 's'.repeat(2048), mtime: 4096 },
+  [at('big.xml')]: { body: 'm'.repeat(2048), mtime: 4096 },
+  [at('sub', 'index.html')]: { body: '<html>sub</html>', mtime: 4096 },
+  [at('sub', 'notes.txt')]: { body: 'notes', mtime: 4096 },
 })
 
 const makeConfig = (overrides: Partial<ResolvedServeConfig> = {}): ResolvedServeConfig => ({
@@ -370,7 +374,7 @@ describe('compression', () => {
     const files = siteFiles()
     const steps = buildServeSteps(config, fileDeps(files))
     const first = runSteps(steps, get('/big.txt', acceptAll), { config })
-    files[`${ROOT}/big.txt`] = { body: 'y'.repeat(2048), mtime: 8192 }
+    files[at('big.txt')] = { body: 'y'.repeat(2048), mtime: 8192 }
     const second = runSteps(steps, get('/big.txt', acceptAll), { config })
     expect({ sameBuffer: first.body === second.body, inflated: brotliDecompressSync(second.body as Buffer).toString() }).toEqual({
       sameBuffer: false,
@@ -380,7 +384,7 @@ describe('compression', () => {
 
   it('compresses fresh each time when the custom response carries no etag', () => {
     const terminal: ServeStep = (_request, context) => {
-      context.filePath = `${ROOT}/big.txt`
+      context.filePath = at('big.txt')
       return { status: 200, headers: { 'Content-Type': 'text/plain' }, body: Buffer.from(BIG) }
     }
     const steps = compressionAnd(terminal)
