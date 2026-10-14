@@ -2,10 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
-## [0.5.1](https://github.com/AndrewRedican/hyperfrontend/compare/5d6aaa1c9353303f77b6ac186afba9720b948d84...8e13c0721377de442ae17f7fad5cb840d60074b9) - 2026-10-14
+## [0.5.1](https://github.com/AndrewRedican/hyperfrontend/compare/5d6aaa1c9353303f77b6ac186afba9720b948d84...1748dba8d3026a789693eb0ad3664c1d0d64a6de) - 2026-10-14
 
 ### Bug Fixes
 
+- build the bin descriptor's output dir natively
 - keep resolved workspace dependency paths native
 - drop type diagnostics computed without path mappings
 - retry report directory removal on transient windows locks
