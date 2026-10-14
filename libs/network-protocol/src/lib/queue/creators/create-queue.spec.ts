@@ -2,21 +2,40 @@
 import type { MessageHandler } from '../model'
 import { beforeEach } from 'node:test'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
-import { sleep } from '@hyperfrontend/time-utils'
 import { createQueue } from './create-queue'
+
+// why: the queue advances on promise settlement alone, so one macrotask hop runs after every microtask its chain queued and lands on a state nothing changes until the test acts again.
+const settle = (): Promise<void> => new Promise((resolve) => setImmediate(resolve))
 
 describe('createQueue', () => {
   let processedMessages: any[] = []
+  let gates: Array<() => void> = []
   let messageProcessor: MessageHandler<any>
   const rejectOnBoom: MessageHandler<any> = async (message) => {
     if (message.id === 'boom') throw new Error('boom')
     processedMessages.push(message)
   }
 
+  // how: opens the gate of the handler call that has waited longest, so it records its message and settles, then yields so the queue has reacted before the test looks.
+  const release = async (): Promise<void> => {
+    const open = gates.shift()
+    if (!open) throw new Error('no handler call is waiting at a gate')
+    open()
+    await settle()
+  }
+
+  const drain = async (count: number): Promise<void> => {
+    for (let index = 0; index < count; index += 1) await release()
+  }
+
   beforeEach(() => {
     processedMessages = []
+    gates = []
+    // why: a handler parked at a gate keeps the queue mid-message for exactly as long as the test needs, where a timed sleep raced the test's own clock on a slow runner.
     messageProcessor = jest.fn(async (message) => {
-      await sleep(50)
+      await new Promise<void>((open) => {
+        gates.push(open)
+      })
       processedMessages.push(message)
     })
     jest.clearAllMocks()
@@ -28,7 +47,9 @@ describe('createQueue', () => {
     messageHandler.addMessage({ id: 2 })
 
     messageHandler.resume()
-    await sleep(2 * 50 + 10)
+    expect(messageProcessor).toHaveBeenCalledTimes(1)
+
+    await drain(2)
 
     expect(messageProcessor).toHaveBeenCalledTimes(2)
     expect(processedMessages[0]).toEqual({ id: 1 })
@@ -42,16 +63,22 @@ describe('createQueue', () => {
     messageHandler.addMessage({ id: 3 })
 
     messageHandler.resume()
-    await sleep(3 * 50 + 20)
+    expect(messageProcessor).toHaveBeenCalledTimes(1)
 
+    await release()
+    expect(messageProcessor).toHaveBeenCalledTimes(2)
+
+    await release()
     expect(messageProcessor).toHaveBeenCalledTimes(3)
+
+    await release()
     expect(processedMessages).toEqual([{ id: 1 }, { id: 2 }, { id: 3 }])
   })
 
   it('does not process when queue is empty', async () => {
     createQueue(messageProcessor)
 
-    await new Promise((resolve) => setTimeout(resolve, 0))
+    await settle()
 
     expect(messageProcessor).not.toHaveBeenCalled()
   })
@@ -79,17 +106,19 @@ describe('createQueue', () => {
 
     messageHandler.stop()
     messageHandler.resume()
-    await sleep(2 * 50)
+    await drain(2)
 
     expect(messageProcessor).toHaveBeenCalledTimes(2)
   })
 
-  it('returns correct queue size', () => {
+  it('returns correct queue size', async () => {
     const messageHandler = createQueue(messageProcessor, false)
     expect(messageHandler.size()).toEqual(0)
     messageHandler.addMessage({ id: 1 })
     expect(messageHandler.size()).toEqual(1)
     messageHandler.resume()
+    await release()
+    expect(messageHandler.size()).toEqual(0)
   })
 
   it('returns current message correctly', async () => {
@@ -100,10 +129,12 @@ describe('createQueue', () => {
     expect(messageHandler.currentMessage()).toBeNull()
 
     messageHandler.resume()
-    await sleep(10)
     expect(messageHandler.currentMessage()).toEqual({ id: 1 })
 
-    await sleep(100)
+    await release()
+    expect(messageHandler.currentMessage()).toEqual({ id: 2 })
+
+    await release()
     expect(messageHandler.currentMessage()).toBeNull()
     expect(messageHandler.size()).toEqual(0)
   })
@@ -113,17 +144,20 @@ describe('createQueue', () => {
     messageHandler.addMessage({ id: 1 })
 
     messageHandler.resume()
-    await sleep(10)
-
     messageHandler.stop()
 
     messageHandler.addMessage({ id: 2 })
     messageHandler.addMessage({ id: 3 })
 
-    expect(messageHandler.size()).toBeGreaterThan(0)
+    // how: the message in flight when stop was called still completes, then the loop halts with the two later ones pending.
+    await release()
+    expect(messageHandler.isRunning()).toBe(false)
+    expect(messageHandler.currentMessage()).toBeNull()
+    expect(messageHandler.size()).toBe(2)
+    expect(processedMessages).toEqual([{ id: 1 }])
 
     messageHandler.resume()
-    await sleep(3 * 50 + 20)
+    await drain(2)
 
     expect(processedMessages.length).toBe(3)
     expect(messageHandler.size()).toBe(0)
@@ -143,7 +177,7 @@ describe('createQueue', () => {
     messageHandler.resume()
     messageHandler.resume()
 
-    await sleep(50 + 10)
+    await release()
 
     expect(messageProcessor).toHaveBeenCalledTimes(1)
   })
@@ -152,14 +186,12 @@ describe('createQueue', () => {
     const messageHandler = createQueue(messageProcessor, true)
     messageHandler.addMessage({ id: 1 })
 
-    await sleep(10)
-
     messageHandler.stop()
     messageHandler.addMessage({ id: 2 })
     messageHandler.addMessage({ id: 3 })
     messageHandler.resume()
 
-    await sleep(3 * 50 + 50)
+    await drain(3)
 
     expect(processedMessages.length).toBe(3)
     expect(messageHandler.size()).toBe(0)
@@ -171,7 +203,7 @@ describe('createQueue', () => {
     messageHandler.addMessage({ id: 'boom' })
     messageHandler.addMessage({ id: 'c' })
 
-    await sleep(10)
+    await settle()
 
     expect(processedMessages).toEqual([{ id: 'a' }, { id: 'c' }])
   })
@@ -180,7 +212,7 @@ describe('createQueue', () => {
     const messageHandler = createQueue(rejectOnBoom)
     messageHandler.addMessage({ id: 'boom' })
 
-    await sleep(10)
+    await settle()
 
     expect({ isRunning: messageHandler.isRunning(), currentMessage: messageHandler.currentMessage(), size: messageHandler.size() }).toEqual(
       {
@@ -195,11 +227,11 @@ describe('createQueue', () => {
     const messageHandler = createQueue(rejectOnBoom, false)
     messageHandler.addMessage({ id: 'boom' })
     messageHandler.resume()
-    await sleep(10)
+    await settle()
 
     messageHandler.addMessage({ id: 'c' })
     messageHandler.resume()
-    await sleep(10)
+    await settle()
 
     expect(processedMessages).toEqual([{ id: 'c' }])
   })
