@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.9.2](https://github.com/AndrewRedican/hyperfrontend/compare/5a49a82851e6018aa9921fd9b0d94fb5d025220f...8e13c0721377de442ae17f7fad5cb840d60074b9) - 2026-10-14
+
+### Bug Fixes
+
+- resolve an absolute worktree git dir instead of nesting it under cwd
+
 ## [0.9.1](https://github.com/AndrewRedican/hyperfrontend/compare/41325ecf9b3f15f597cddadd5fbe6ab68f59eab7...9cb8baf39ab84f10d5585969ad5afb8bd299def0) - 2026-10-04
 
 ### Bug Fixes

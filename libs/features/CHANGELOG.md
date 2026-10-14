@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.11.5](https://github.com/AndrewRedican/hyperfrontend/compare/5d6aaa1c9353303f77b6ac186afba9720b948d84...8e13c0721377de442ae17f7fad5cb840d60074b9) - 2026-10-14
+
+### Bug Fixes
+
+- canonicalise the static root before confining request paths
+
 ## [0.11.4](https://github.com/AndrewRedican/hyperfrontend/compare/5a49a82851e6018aa9921fd9b0d94fb5d025220f...793105a4c3e18eaa043e6b7307f95ba143b9fdcf) - 2026-10-11
 
 ### Bug Fixes
