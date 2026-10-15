@@ -77,9 +77,29 @@ const ALIAS_FILE = 'tsconfig.base.json'
  * ```
  */
 export function loadAliases(workspaceRoot: string): AliasTable {
-  const aliasFile = resolve(workspaceRoot, ALIAS_FILE)
-  if (!statSync(aliasFile, { throwIfNoEntry: false })?.isFile()) return aliasTable({})
-  return aliasTable(JSON.parse(readFileSync(aliasFile, 'utf8')).compilerOptions?.paths ?? {})
+  const text = readAliasFile(resolve(workspaceRoot, ALIAS_FILE))
+  return aliasTable(text === null ? {} : (JSON.parse(text).compilerOptions?.paths ?? {}))
+}
+
+/**
+ * The read failures that mean the workspace has no alias file, rather than one that cannot be read.
+ */
+const NO_ALIAS_FILE = new Set(['ENOENT', 'ENOTDIR', 'EISDIR'])
+
+/**
+ * Reads the alias file in one step, so nothing can replace it between a check and the read.
+ *
+ * @param aliasFile - Absolute path to the alias file.
+ * @returns The file's text, or null when there is no file at that path.
+ * @throws {Error} When the file exists but cannot be read.
+ */
+function readAliasFile(aliasFile: string): string | null {
+  try {
+    return readFileSync(aliasFile, 'utf8')
+  } catch (error) {
+    if (NO_ALIAS_FILE.has((error as NodeJS.ErrnoException).code as string)) return null
+    throw error
+  }
 }
 
 /**

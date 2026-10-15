@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import { mkdtempSync } from 'node:fs'
+import { mkdirSync, mkdtempSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { describe, it } from 'node:test'
@@ -15,6 +15,16 @@ describe('loadAliases', () => {
   it('declares no alias for a workspace without a tsconfig.base.json', () => {
     const table = loadAliases(mkdtempSync(join(tmpdir(), 'hf-aliases-')))
     assert.deepEqual({ exact: table.exact.size, wildcards: table.wildcards.length }, { exact: 0, wildcards: 0 })
+  })
+
+  it('declares no alias when tsconfig.base.json is a directory', () => {
+    const root = mkdtempSync(join(tmpdir(), 'hf-aliases-'))
+    mkdirSync(join(root, 'tsconfig.base.json'))
+    assert.equal(loadAliases(root).exact.size, 0)
+  })
+
+  it('raises a failure to read that is not a missing file', () => {
+    assert.throws(() => loadAliases('/repo\0'), { code: 'ERR_INVALID_ARG_VALUE' })
   })
 
   it('collects the wildcard aliases separately', () => {
