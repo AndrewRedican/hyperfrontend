@@ -305,8 +305,10 @@ function pathExists(targetPath: string): boolean {
 const MODULE_KIND = 2
 const CLASS_KIND = 128
 const INTERFACE_KIND = 256
+const CONSTRUCTOR_KIND = 512
 const PROPERTY_KIND = 1024
 const METHOD_KIND = 2048
+const ACCESSOR_KIND = 262144
 const REFERENCE_KIND = 4194304
 
 /** The prefix every symbol anchor on a reference page carries. */
@@ -364,10 +366,11 @@ const bundleAnchors = createMap<string, Map<string, ModuleAnchors> | null>()
  * Collect the anchors a module's reference page renders.
  *
  * Mirrors the site's reference components: every export gets `api-<name>`,
- * and an interface or class also anchors each property as
- * `api-<Parent>-prop-<member>` and, for a class, each method as
- * `api-<Parent>-method-<member>`. A type alias renders its members inline
- * with no anchor of their own, so a link to one of those lands on the alias.
+ * and an interface or class also anchors each property and accessor as
+ * `api-<Parent>-prop-<member>`, each method as `api-<Parent>-method-<member>`
+ * and, for a class, its constructor as `api-<Parent>-constructor`. A type
+ * alias renders its members inline with no anchor of their own, so a link to
+ * one of those lands on the alias.
  *
  * A module re-exporting a symbol declared elsewhere lists a reference to it,
  * and the page renders the declaration the reference points at, so the
@@ -388,8 +391,9 @@ function collectModuleAnchors(exports: Reflection[], lookup: Map<number, Reflect
     if (node.kind !== INTERFACE_KIND && node.kind !== CLASS_KIND) continue
     for (const child of node.children ?? []) {
       if (typeof child.name !== 'string') continue
-      if (child.kind === PROPERTY_KIND) members.add(`${API_ANCHOR_PREFIX}${node.name}-prop-${child.name}`)
-      if (child.kind === METHOD_KIND && node.kind === CLASS_KIND) members.add(`${API_ANCHOR_PREFIX}${node.name}-method-${child.name}`)
+      if (child.kind === PROPERTY_KIND || child.kind === ACCESSOR_KIND) members.add(`${API_ANCHOR_PREFIX}${node.name}-prop-${child.name}`)
+      if (child.kind === METHOD_KIND) members.add(`${API_ANCHOR_PREFIX}${node.name}-method-${child.name}`)
+      if (child.kind === CONSTRUCTOR_KIND) members.add(`${API_ANCHOR_PREFIX}${node.name}-constructor`)
     }
   }
 

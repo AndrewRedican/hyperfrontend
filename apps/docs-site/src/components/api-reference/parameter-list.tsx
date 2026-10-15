@@ -14,11 +14,13 @@ interface ParameterListProps {
   parentName?: string
   /** Heading level of the symbol the parameters belong to; the list's own heading sits one under it */
   level?: ApiHeadingLevel
+  /** Draw the caption as a plain label rather than a heading, for a member whose own entry is not a section of the outline */
+  caption?: 'heading' | 'label'
 }
 
-export function ParameterList({ parameters, paramDescriptions = {}, parentName, level = 3 }: ParameterListProps) {
+export function ParameterList({ parameters, paramDescriptions = {}, parentName, level = 3, caption = 'heading' }: ParameterListProps) {
   if (parameters.length === 0) return null
-  const Sub = headingTag((level + 1) as ApiHeadingLevel | 6)
+  const Sub = caption === 'label' ? 'p' : headingTag((level + 1) as ApiHeadingLevel | 6)
 
   return (
     <div className="mt-4">
