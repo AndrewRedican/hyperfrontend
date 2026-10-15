@@ -110,9 +110,7 @@ describe('no-ascii-art-diagrams', () => {
     })
 
     it('has all required message IDs', () => {
-      const messageIds = Object.keys(rule.meta?.messages ?? {})
-      expect(messageIds).toContain('noAsciiArtInReadme')
-      expect(messageIds).toContain('noAsciiArtInDocs')
+      expect(Object.keys(rule.meta?.messages ?? {})).toEqual(expect.arrayContaining(['noAsciiArtInReadme', 'noAsciiArtInDocs']))
     })
   })
 

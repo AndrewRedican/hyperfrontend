@@ -139,9 +139,7 @@ describe('docs-site-libraries', () => {
     })
 
     it('has all required message IDs', () => {
-      const messageIds = Object.keys(rule.meta?.messages ?? {})
-      expect(messageIds).toContain('missingLibrary')
-      expect(messageIds).toContain('missingFromEcosystem')
+      expect(Object.keys(rule.meta?.messages ?? {})).toEqual(expect.arrayContaining(['missingLibrary', 'missingFromEcosystem']))
     })
   })
 
@@ -248,13 +246,11 @@ describe('docs-site-libraries', () => {
         ],
       })
 
-      const result = getAllPublishableLibraries(workspaceDir)
-      expect(result).toHaveLength(3)
-
-      const packageNames = result.map((lib) => lib.packageName)
-      expect(packageNames).toContain('@hyperfrontend/logging')
-      expect(packageNames).toContain('@hyperfrontend/nexus')
-      expect(packageNames).toContain('@hyperfrontend/features')
+      expect(getAllPublishableLibraries(workspaceDir).map((lib) => lib.packageName)).toEqual([
+        '@hyperfrontend/features',
+        '@hyperfrontend/logging',
+        '@hyperfrontend/nexus',
+      ])
     })
   })
 
@@ -297,10 +293,7 @@ describe('docs-site-libraries', () => {
     it('extracts package names from array expression', () => {
       const arrayNode = createMockArrayExpression(['@hyperfrontend/nexus', '@hyperfrontend/logging'])
 
-      const result = extractPackageNamesFromArray(arrayNode)
-      expect(result.size).toBe(2)
-      expect(result.has('@hyperfrontend/nexus')).toBe(true)
-      expect(result.has('@hyperfrontend/logging')).toBe(true)
+      expect([...extractPackageNamesFromArray(arrayNode)]).toEqual(['@hyperfrontend/nexus', '@hyperfrontend/logging'])
     })
 
     it('handles empty array', () => {
@@ -334,9 +327,7 @@ describe('docs-site-libraries', () => {
         ],
       } as ArrayExpression
 
-      const result = extractPackageNamesFromArray(arrayNode)
-      expect(result.size).toBe(1)
-      expect(result.has('@hyperfrontend/nexus')).toBe(true)
+      expect([...extractPackageNamesFromArray(arrayNode)]).toEqual(['@hyperfrontend/nexus'])
     })
 
     it('ignores properties that are not packageName', () => {
@@ -407,9 +398,7 @@ describe('docs-site-libraries', () => {
         ],
       } as ArrayExpression
 
-      const result = extractPackageNamesFromArray(arrayNode)
-      expect(result.size).toBe(1)
-      expect(result.has('@hyperfrontend/nexus')).toBe(true)
+      expect([...extractPackageNamesFromArray(arrayNode)]).toEqual(['@hyperfrontend/nexus'])
     })
 
     it('handles null elements in array', () => {

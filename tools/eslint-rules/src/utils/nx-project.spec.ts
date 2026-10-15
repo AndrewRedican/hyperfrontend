@@ -143,9 +143,7 @@ describe('findLibraryDirectories', () => {
 
     const result = findLibraryDirectories(workspace.getPath('libs'))
 
-    expect(result).toHaveLength(2)
-    expect(result).toContain(workspace.getPath('libs/lib-a'))
-    expect(result).toContain(workspace.getPath('libs/lib-b'))
+    expect([...result].sort()).toEqual([workspace.getPath('libs/lib-a'), workspace.getPath('libs/lib-b')])
   })
 
   it('returns empty array when path is not a directory', () => {
@@ -178,8 +176,7 @@ describe('findLibraryDirectories', () => {
 
     const result = findLibraryDirectories(workspace.root)
 
-    expect(result).toHaveLength(1)
-    expect(result[0]).toContain('valid')
+    expect(result).toEqual([workspace.getPath('libs/valid')])
   })
 
   it('recursively searches subdirectories without project.json', () => {
@@ -192,9 +189,7 @@ describe('findLibraryDirectories', () => {
 
     const result = findLibraryDirectories(workspace.getPath('packages'))
 
-    expect(result).toHaveLength(2)
-    expect(result).toContain(workspace.getPath('packages/scope/lib-a'))
-    expect(result).toContain(workspace.getPath('packages/scope/lib-b'))
+    expect([...result].sort()).toEqual([workspace.getPath('packages/scope/lib-a'), workspace.getPath('packages/scope/lib-b')])
   })
 
   it('skips files in the directory', () => {
@@ -207,8 +202,7 @@ describe('findLibraryDirectories', () => {
 
     const result = findLibraryDirectories(workspace.getPath('libs'))
 
-    expect(result).toHaveLength(1)
-    expect(result[0]).toContain('lib-a')
+    expect(result).toEqual([workspace.getPath('libs/lib-a')])
   })
 })
 
@@ -229,8 +223,7 @@ describe('findPublishableLibraryDirectories', () => {
 
     const result = findPublishableLibraryDirectories(workspace.getPath('libs'))
 
-    expect(result).toHaveLength(1)
-    expect(result[0]).toContain('pub-lib')
+    expect(result).toEqual([workspace.getPath('libs/pub-lib')])
   })
 })
 
@@ -251,9 +244,7 @@ describe('getAllPublishableLibraries', () => {
 
     const result = getAllPublishableLibraries(workspace.root)
 
-    expect(result).toHaveLength(1)
-    expect(result[0].name).toBe('@test/my-lib')
-    expect(result[0].packageJson?.version).toBe('1.0.0')
+    expect(result).toEqual([expect.objectContaining({ name: '@test/my-lib', packageJson: expect.objectContaining({ version: '1.0.0' }) })])
   })
 
   it('returns empty array when libs directory does not exist', () => {
@@ -279,8 +270,7 @@ describe('getAllPublishableLibraries', () => {
 
     const result = getAllPublishableLibraries(workspace.root)
 
-    expect(result).toHaveLength(1)
-    expect(result[0].name).toBe('my-lib')
+    expect(result).toEqual([expect.objectContaining({ name: 'my-lib' })])
   })
 
   it('uses directory name when package.json does not exist', () => {
@@ -295,9 +285,7 @@ describe('getAllPublishableLibraries', () => {
 
     const result = getAllPublishableLibraries(workspace.root)
 
-    expect(result).toHaveLength(1)
-    expect(result[0].name).toBe('standalone-lib')
-    expect(result[0].packageJson).toBeNull()
+    expect(result).toEqual([expect.objectContaining({ name: 'standalone-lib', packageJson: null })])
   })
 
   it('supports custom libs directory', () => {
@@ -312,8 +300,7 @@ describe('getAllPublishableLibraries', () => {
 
     const result = getAllPublishableLibraries(workspace.root, 'packages')
 
-    expect(result).toHaveLength(1)
-    expect(result[0].name).toBe('my-lib')
+    expect(result).toEqual([expect.objectContaining({ name: 'my-lib' })])
   })
 })
 

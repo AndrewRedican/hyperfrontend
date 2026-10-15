@@ -1,3 +1,4 @@
+import type { ParsedSection } from './lib-readme-structure'
 import { join } from 'node:path'
 import { after as afterAll } from 'node:test'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
@@ -227,26 +228,29 @@ describe('lib-readme-structure', () => {
     })
 
     it('has all required message IDs', () => {
-      const messageIds = Object.keys(rule.meta?.messages ?? {})
-      expect(messageIds).toContain('missingTitle')
-      expect(messageIds).toContain('invalidTitleFormat')
-      expect(messageIds).toContain('missingBadgesBlock')
-      expect(messageIds).toContain('missingBadge')
-      expect(messageIds).toContain('missingShortDescription')
-      expect(messageIds).toContain('missingDocumentationLink')
-      expect(messageIds).toContain('missingGuidesLink')
-      expect(messageIds).toContain('missingSection')
-      expect(messageIds).toContain('emptySectionContent')
-      expect(messageIds).toContain('sectionOutOfOrder')
-      expect(messageIds).toContain('missingSubsection')
-      expect(messageIds).toContain('missingKeyFeaturesList')
-      expect(messageIds).toContain('keyFeaturesNotAList')
-      expect(messageIds).toContain('keyFeatureMissingLabel')
-      expect(messageIds).toContain('keyFeatureMissingDescription')
-      expect(messageIds).toContain('keyFeatureLabelTooLong')
-      expect(messageIds).toContain('keyFeatureDescriptionTooShort')
-      expect(messageIds).toContain('keyFeaturesTooFew')
-      expect(messageIds).toContain('keyFeaturesTooMany')
+      expect(Object.keys(rule.meta?.messages ?? {})).toEqual(
+        expect.arrayContaining([
+          'missingTitle',
+          'invalidTitleFormat',
+          'missingBadgesBlock',
+          'missingBadge',
+          'missingShortDescription',
+          'missingDocumentationLink',
+          'missingGuidesLink',
+          'missingSection',
+          'emptySectionContent',
+          'sectionOutOfOrder',
+          'missingSubsection',
+          'missingKeyFeaturesList',
+          'keyFeaturesNotAList',
+          'keyFeatureMissingLabel',
+          'keyFeatureMissingDescription',
+          'keyFeatureLabelTooLong',
+          'keyFeatureDescriptionTooShort',
+          'keyFeaturesTooFew',
+          'keyFeaturesTooMany',
+        ])
+      )
     })
   })
 
@@ -285,10 +289,11 @@ describe('lib-readme-structure', () => {
 </p>
 
 Content here`
-      const result = extractBadgesBlock(content)
-      expect(result).not.toBeNull()
-      expect(result?.block).toContain('badge1.svg')
-      expect(result?.startLine).toBe(3)
+      expect(extractBadgesBlock(content)).toEqual({
+        block: '<p align="center">\n  <img src="badge1.svg" alt="Badge 1">\n</p>',
+        startLine: 3,
+        endLine: 5,
+      })
     })
 
     it('extracts multiple consecutive badges blocks', () => {
@@ -302,10 +307,12 @@ Content here`
 </p>
 
 Content here`
-      const result = extractBadgesBlock(content)
-      expect(result).not.toBeNull()
-      expect(result?.block).toContain('badge1.svg')
-      expect(result?.block).toContain('badge2.svg')
+      expect(extractBadgesBlock(content)).toEqual({
+        block:
+          '<p align="center">\n  <img src="badge1.svg" alt="Badge 1">\n</p>\n<p align="center">\n  <img src="badge2.svg" alt="Badge 2">\n</p>',
+        startLine: 3,
+        endLine: 8,
+      })
     })
 
     it('returns null when no badges block', () => {
@@ -482,13 +489,12 @@ Content 1.1
 ## Section 2
 
 Content 2`
-      const sections = parseMarkdownSections(content)
-
-      expect(sections).toHaveLength(4)
-      expect(sections[0]).toMatchObject({ level: 1, title: 'Title' })
-      expect(sections[1]).toMatchObject({ level: 2, title: 'Section 1' })
-      expect(sections[2]).toMatchObject({ level: 3, title: 'Subsection 1.1' })
-      expect(sections[3]).toMatchObject({ level: 2, title: 'Section 2' })
+      expect(parseMarkdownSections(content)).toMatchObject([
+        { level: 1, title: 'Title' },
+        { level: 2, title: 'Section 1' },
+        { level: 3, title: 'Subsection 1.1' },
+        { level: 2, title: 'Section 2' },
+      ])
     })
 
     it('extracts section content', () => {
@@ -510,14 +516,27 @@ Line 2
 ## Section 1
 Content
 ## Section 2`
-      const sections = parseMarkdownSections(content)
+      expect(parseMarkdownSections(content)).toMatchObject([
+        { startLine: 1, endLine: 4 },
+        { startLine: 2, endLine: 3 },
+        { startLine: 4, endLine: 4 },
+      ])
+    })
 
-      expect(sections[0].startLine).toBe(1)
-      expect(sections[0].endLine).toBe(4)
-      expect(sections[1].startLine).toBe(2)
-      expect(sections[1].endLine).toBe(3)
-      expect(sections[2].startLine).toBe(4)
-      expect(sections[2].endLine).toBe(4)
+    it('parses the parent section ahead of its children', () => {
+      const content = `## Parent Section
+
+### Child 1
+
+Content 1
+
+### Child 2
+
+Content 2
+
+## Next Parent`
+
+      expect(parseMarkdownSections(content)[0]).toMatchObject({ title: 'Parent Section', level: 2 })
     })
 
     it('includes subsections within parent endLine', () => {
@@ -532,31 +551,28 @@ Content 1
 Content 2
 
 ## Next Parent`
-      const sections = parseMarkdownSections(content)
+      const [parent, child1, child2] = parseMarkdownSections(content)
+      const insideParent = (child: ParsedSection) => child.startLine > parent.startLine && child.startLine < parent.endLine
 
-      const parent = sections[0]
-      expect(parent.title).toBe('Parent Section')
-      expect(parent.level).toBe(2)
-
-      const child1 = sections[1]
-      const child2 = sections[2]
-
-      expect(child1.startLine).toBeGreaterThan(parent.startLine)
-      expect(child1.startLine).toBeLessThan(parent.endLine)
-      expect(child2.startLine).toBeGreaterThan(parent.startLine)
-      expect(child2.startLine).toBeLessThan(parent.endLine)
+      expect([child1, child2].map((child) => ({ title: child.title, insideParent: insideParent(child) }))).toEqual([
+        { title: 'Child 1', insideParent: true },
+        { title: 'Child 2', insideParent: true },
+      ])
     })
   })
 
   describe('REQUIRED_SECTIONS', () => {
     it('has all required sections defined', () => {
-      const sectionNames = REQUIRED_SECTIONS.map((s) => s.name)
-      expect(sectionNames).toContain('What is @hyperfrontend/<name>?')
-      expect(sectionNames).toContain('Why Use @hyperfrontend/<name>?')
-      expect(sectionNames).toContain('Installation')
-      expect(sectionNames).toContain('Quick Start')
-      expect(sectionNames).toContain('API Overview')
-      expect(sectionNames).toContain('Compatibility')
+      expect(REQUIRED_SECTIONS.map((s) => s.name)).toEqual(
+        expect.arrayContaining([
+          'What is @hyperfrontend/<name>?',
+          'Why Use @hyperfrontend/<name>?',
+          'Installation',
+          'Quick Start',
+          'API Overview',
+          'Compatibility',
+        ])
+      )
     })
 
     it('all sections are level 2', () => {
@@ -586,17 +602,20 @@ Content 2
 
   describe('REQUIRED_BADGES', () => {
     it('has all required badges defined', () => {
-      const badgeNames = REQUIRED_BADGES.map((b) => b.name)
-      expect(badgeNames).toContain('Build badge')
-      expect(badgeNames).toContain('Coverage badge')
-      expect(badgeNames).toContain('npm version badge')
-      expect(badgeNames).toContain('Bundle size badge')
-      expect(badgeNames).toContain('Contributors badge')
-      expect(badgeNames).toContain('License badge')
-      expect(badgeNames).toContain('npm downloads badge')
-      expect(badgeNames).toContain('GitHub stars badge')
-      expect(badgeNames).toContain('Node version badge')
-      expect(badgeNames).toContain('Tree-shakeable badge')
+      expect(REQUIRED_BADGES.map((b) => b.name)).toEqual(
+        expect.arrayContaining([
+          'Build badge',
+          'Coverage badge',
+          'npm version badge',
+          'Bundle size badge',
+          'Contributors badge',
+          'License badge',
+          'npm downloads badge',
+          'GitHub stars badge',
+          'Node version badge',
+          'Tree-shakeable badge',
+        ])
+      )
     })
 
     it('badge patterns match valid badge URLs', () => {
@@ -936,8 +955,8 @@ Compatible.
       listener.root?.(mockNode)
 
       const subCalls = reportMock.mock.calls.filter((call) => call[0].messageId === 'missingSubsection')
-      expect(subCalls.length).toBe(1)
-      expect(subCalls[0]?.[0].data).toEqual({ subsection: 'Key Features', parent: 'What is @hyperfrontend/test?' })
+
+      expect(subCalls.map((call) => call[0].data)).toEqual([{ subsection: 'Key Features', parent: 'What is @hyperfrontend/test?' }])
     })
 
     it('reports missing key features bullet list', () => {
@@ -1032,69 +1051,54 @@ Compatible.
       const features = `This package offers:
 
 ${VALID_KEY_FEATURES}`
-      const reports = collectKeyFeatureReports(features)
-
-      expect(reports).toHaveLength(1)
-      expect(reports[0]).toMatchObject({ messageId: 'keyFeaturesNotAList', data: { line: 'This package offers:' } })
+      expect(collectKeyFeatureReports(features)).toMatchObject([
+        { messageId: 'keyFeaturesNotAList', data: { line: 'This package offers:' } },
+      ])
     })
 
     it('reports a nested bullet under a key feature', () => {
       const features = `${VALID_KEY_FEATURES}
   - a detail hanging off the last feature`
-      const reports = collectKeyFeatureReports(features)
-
-      expect(reports).toHaveLength(1)
-      expect(reports[0]).toMatchObject({ messageId: 'keyFeaturesNotAList', data: { line: '- a detail hanging off the last feature' } })
+      expect(collectKeyFeatureReports(features)).toMatchObject([
+        { messageId: 'keyFeaturesNotAList', data: { line: '- a detail hanging off the last feature' } },
+      ])
     })
 
     it('reports a key feature that opens with no bold label', () => {
       const features = `${VALID_KEY_FEATURES}
 - runs everywhere the platform runs, with no configuration`
-      const reports = collectKeyFeatureReports(features)
-
-      expect(reports).toHaveLength(1)
-      expect(reports[0]).toMatchObject({
-        messageId: 'keyFeatureMissingLabel',
-        data: { feature: 'runs everywhere the platform runs, with no configuration' },
-      })
+      expect(collectKeyFeatureReports(features)).toMatchObject([
+        { messageId: 'keyFeatureMissingLabel', data: { feature: 'runs everywhere the platform runs, with no configuration' } },
+      ])
     })
 
     it('reports a key feature that is a bare label', () => {
       const features = `${VALID_KEY_FEATURES}
 - **Tree shakeable**`
-      const reports = collectKeyFeatureReports(features)
-
-      expect(reports).toHaveLength(1)
-      expect(reports[0]).toMatchObject({ messageId: 'keyFeatureMissingDescription', data: { feature: 'Tree shakeable' } })
+      expect(collectKeyFeatureReports(features)).toMatchObject([
+        { messageId: 'keyFeatureMissingDescription', data: { feature: 'Tree shakeable' } },
+      ])
     })
 
     it('reports a key feature label that has grown into a sentence', () => {
       const features = `${VALID_KEY_FEATURES}
 - **Everything this package does for you and then some more** - with an explanation after it`
-      const reports = collectKeyFeatureReports(features)
-
-      expect(reports).toHaveLength(1)
-      expect(reports[0]).toMatchObject({ messageId: 'keyFeatureLabelTooLong', data: { characters: '55', maximum: '48' } })
+      expect(collectKeyFeatureReports(features)).toMatchObject([
+        { messageId: 'keyFeatureLabelTooLong', data: { characters: '55', maximum: '48' } },
+      ])
     })
 
     it('reports a key feature whose explanation restates its label', () => {
       const features = `${VALID_KEY_FEATURES}
 - **Fast** - it is fast`
-      const reports = collectKeyFeatureReports(features)
-
-      expect(reports).toHaveLength(1)
-      expect(reports[0]).toMatchObject({
-        messageId: 'keyFeatureDescriptionTooShort',
-        data: { feature: 'Fast', characters: '10', minimum: '20' },
-      })
+      expect(collectKeyFeatureReports(features)).toMatchObject([
+        { messageId: 'keyFeatureDescriptionTooShort', data: { feature: 'Fast', characters: '10', minimum: '20' } },
+      ])
     })
 
     it('reports a Key Features list too short to summarise a package', () => {
       const features = '- **Feature One** - Description of the first feature and what it does for you'
-      const reports = collectKeyFeatureReports(features)
-
-      expect(reports).toHaveLength(1)
-      expect(reports[0]).toMatchObject({ messageId: 'keyFeaturesTooFew', data: { count: '1', minimum: '3' } })
+      expect(collectKeyFeatureReports(features)).toMatchObject([{ messageId: 'keyFeaturesTooFew', data: { count: '1', minimum: '3' } }])
     })
 
     it('reports a Key Features list longer than a reader takes in', () => {
@@ -1102,10 +1106,9 @@ ${VALID_KEY_FEATURES}`
       for (let index = 1; index <= 13; index++) {
         bullets.push(`- **Feature ${index}** - Description of a feature and what it does for you`)
       }
-      const reports = collectKeyFeatureReports(bullets.join('\n'))
-
-      expect(reports).toHaveLength(1)
-      expect(reports[0]).toMatchObject({ messageId: 'keyFeaturesTooMany', data: { count: '13', maximum: '12' } })
+      expect(collectKeyFeatureReports(bullets.join('\n'))).toMatchObject([
+        { messageId: 'keyFeaturesTooMany', data: { count: '13', maximum: '12' } },
+      ])
     })
 
     it('points a Key Features report at the line the problem sits on', () => {

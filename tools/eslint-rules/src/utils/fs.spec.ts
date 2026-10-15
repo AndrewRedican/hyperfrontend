@@ -146,10 +146,6 @@ describe('readDirectory', () => {
       },
     })
 
-    const entries = readDirectory(workspace.root)
-
-    expect(entries).toContain('file1.ts')
-    expect(entries).toContain('file2.ts')
-    expect(entries).toContain('src')
+    expect(readDirectory(workspace.root)).toEqual(expect.arrayContaining(['file1.ts', 'file2.ts', 'src']))
   })
 })

@@ -116,9 +116,7 @@ describe('root-readme-packages', () => {
     })
 
     it('has all required message IDs', () => {
-      const messageIds = Object.keys(rule.meta?.messages ?? {})
-      expect(messageIds).toContain('missingPackage')
-      expect(messageIds).toContain('missingSection')
+      expect(Object.keys(rule.meta?.messages ?? {})).toEqual(expect.arrayContaining(['missingPackage', 'missingSection']))
     })
 
     it('lists the packages under the two historical sections by default', () => {
@@ -133,10 +131,7 @@ describe('root-readme-packages', () => {
 | [logging](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/logging) | A logging library |
 | [nexus](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/nexus) | Core nexus library |`
 
-      const paths = extractMentionedPaths(content)
-      expect(paths).toContain('libs/logging')
-      expect(paths).toContain('libs/nexus')
-      expect(paths).toHaveLength(2)
+      expect(extractMentionedPaths(content)).toEqual(['libs/logging', 'libs/nexus'])
     })
 
     it('extracts paths from plugins folder', () => {
@@ -144,9 +139,7 @@ describe('root-readme-packages', () => {
 | ------- | ----------- |
 | [@hyperfrontend/features](https://github.com/AndrewRedican/hyperfrontend/blob/main/plugins/features) | Nx plugin |`
 
-      const paths = extractMentionedPaths(content)
-      expect(paths).toContain('plugins/features')
-      expect(paths).toHaveLength(1)
+      expect(extractMentionedPaths(content)).toEqual(['plugins/features'])
     })
 
     it('ignores table header and separator rows', () => {
@@ -154,9 +147,7 @@ describe('root-readme-packages', () => {
 |---------|-------------|
 | [lib](https://github.com/AndrewRedican/hyperfrontend/blob/main/libs/test) | Test |`
 
-      const paths = extractMentionedPaths(content)
-      expect(paths).toContain('libs/test')
-      expect(paths).toHaveLength(1)
+      expect(extractMentionedPaths(content)).toEqual(['libs/test'])
     })
 
     it('ignores paths not in libs/ or plugins/', () => {
@@ -192,7 +183,7 @@ describe('root-readme-packages', () => {
   })
 
   describe('parseReadmeSections', () => {
-    it('parses level 2 sections correctly', () => {
+    it('parses level 2 headings as sections', () => {
       const content = `# Title
 
 ## Section One
@@ -203,11 +194,23 @@ Content for section one.
 
 Content for section two.
 `
-      const sections = parseReadmeSections(content)
 
-      expect(sections.has('Section One')).toBe(true)
-      expect(sections.has('Section Two')).toBe(true)
-      expect(sections.get('Section One')?.content).toContain('Content for section one')
+      expect([...parseReadmeSections(content).keys()]).toEqual(['Section One', 'Section Two'])
+    })
+
+    it('keeps the content under a level 2 section', () => {
+      const content = `# Title
+
+## Section One
+
+Content for section one.
+
+## Section Two
+
+Content for section two.
+`
+
+      expect(parseReadmeSections(content).get('Section One')?.content).toContain('Content for section one')
     })
 
     it('ignores level 3 headings as section starts', () => {
@@ -221,11 +224,7 @@ Content here.
 
 More content.
 `
-      const sections = parseReadmeSections(content)
-
-      expect(sections.has('Main Section')).toBe(true)
-      expect(sections.has('Another Section')).toBe(true)
-      expect(sections.has('Subsection')).toBe(false)
+      expect([...parseReadmeSections(content).keys()]).toEqual(['Main Section', 'Another Section'])
     })
 
     it('handles content before any section', () => {
@@ -349,8 +348,7 @@ Content.
       // @ts-expect-error - partial mock
       handler['root']?.({ type: 'root' })
 
-      expect(reportMock).toHaveBeenCalledTimes(2)
-      expect(reportMock).not.toHaveBeenCalledWith(expect.objectContaining({ messageId: 'missingPackage' }))
+      expect(reportMock.mock.calls.map((call) => call[0].messageId)).toEqual(['missingSection', 'missingSection'])
     })
 
     it('accepts a single configured section in place of the two defaults', () => {

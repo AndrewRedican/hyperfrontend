@@ -165,8 +165,7 @@ describe('readme-paragraph-length', () => {
 
     it('names both placeholders in the message', () => {
       const message = rule.meta?.messages?.['paragraphTooLong'] ?? ''
-      expect(message).toContain('{{characters}}')
-      expect(message).toContain('{{maximum}}')
+      expect(['{{characters}}', '{{maximum}}'].filter((placeholder) => !message.includes(placeholder))).toEqual([])
     })
 
     it('asks for clearer prose rather than an arbitrary break', () => {
@@ -410,27 +409,23 @@ describe('readme-paragraph-length', () => {
       const listener = rule.create(context) as unknown as ListenerMap
       listener['paragraph']?.({ type: 'paragraph', children: [{ type: 'text', value: LONG }] })
 
-      expect(reports).toHaveLength(1)
-      expect(reports[0]?.loc).toBeUndefined()
-      expect(reports[0]?.messageId).toBe('paragraphTooLong')
-      expect(reports[0]?.data?.characters).toBe('760')
+      // why: an exact descriptor is what proves the report carries no loc
+      expect(reports).toEqual([{ node: expect.anything(), messageId: 'paragraphTooLong', data: { characters: '760', maximum: '700' } }])
     })
   })
 
   describe('measuring real markdown', () => {
     it('reports a paragraph past the default threshold', () => {
-      const reports = lintMarkdown(`# Title\n\n${LONG}\n`)
-      expect(reports).toHaveLength(1)
-      expect(reports[0]?.messageId).toBe('paragraphTooLong')
-      expect(reports[0]?.data?.characters).toBe('760')
-      expect(reports[0]?.data?.maximum).toBe('700')
+      expect(lintMarkdown(`# Title\n\n${LONG}\n`)).toMatchObject([
+        { messageId: 'paragraphTooLong', data: { characters: '760', maximum: '700' } },
+      ])
     })
 
     it('reports the paragraph at its own position, not line one', () => {
-      const reports = lintMarkdown(`# Title\n\nA short opening.\n\n${LONG}\n`)
-      expect(reports[0]?.loc?.start.line).toBe(5)
-      expect(reports[0]?.loc?.start.column).toBe(0)
-      expect(reports[0]?.loc?.end.line).toBe(5)
+      expect(lintMarkdown(`# Title\n\nA short opening.\n\n${LONG}\n`)[0]?.loc).toMatchObject({
+        start: { line: 5, column: 0 },
+        end: { line: 5 },
+      })
     })
 
     it('does not report ordinary prose', () => {
@@ -442,15 +437,11 @@ describe('readme-paragraph-length', () => {
     })
 
     it('reports a paragraph one character past the threshold', () => {
-      const reports = lintMarkdown(`${prose(701)}\n`)
-      expect(reports).toHaveLength(1)
-      expect(reports[0]?.data?.characters).toBe('701')
+      expect(lintMarkdown(`${prose(701)}\n`)).toMatchObject([{ data: { characters: '701' } }])
     })
 
     it('measures a wrapped paragraph the same as an unwrapped one', () => {
-      const reports = lintMarkdown(`${LONG.split(' ').join('\n')}\n`)
-      expect(reports).toHaveLength(1)
-      expect(reports[0]?.data?.characters).toBe('760')
+      expect(lintMarkdown(`${LONG.split(' ').join('\n')}\n`)).toMatchObject([{ data: { characters: '760' } }])
     })
 
     it('does not let a long url push a paragraph over the line', () => {
@@ -467,22 +458,15 @@ describe('readme-paragraph-length', () => {
     })
 
     it('counts inline code as prose', () => {
-      const reports = lintMarkdown(`${prose(600)} \`${prose(150)}\`\n`)
-      expect(reports).toHaveLength(1)
-      expect(reports[0]?.data?.characters).toBe('751')
+      expect(lintMarkdown(`${prose(600)} \`${prose(150)}\`\n`)).toMatchObject([{ data: { characters: '751' } }])
     })
 
     it('counts emphasised and bold runs as prose', () => {
-      const reports = lintMarkdown(`${prose(600)} **${prose(80)}** _${prose(80)}_\n`)
-      expect(reports).toHaveLength(1)
-      expect(reports[0]?.data?.characters).toBe('762')
+      expect(lintMarkdown(`${prose(600)} **${prose(80)}** _${prose(80)}_\n`)).toMatchObject([{ data: { characters: '762' } }])
     })
 
     it('reports every offending paragraph in a file', () => {
-      const reports = lintMarkdown(`${LONG}\n\n${SHORT}\n\n${prose(900)}\n`)
-      expect(reports).toHaveLength(2)
-      expect(reports[0]?.data?.characters).toBe('760')
-      expect(reports[1]?.data?.characters).toBe('900')
+      expect(lintMarkdown(`${LONG}\n\n${SHORT}\n\n${prose(900)}\n`).map((report) => report.data?.characters)).toEqual(['760', '900'])
     })
   })
 
@@ -550,10 +534,7 @@ describe('readme-paragraph-length', () => {
 
   describe('the maxCharacters option', () => {
     it('reports against a lowered threshold', () => {
-      const reports = lintMarkdown(`${prose(200)}\n`, { maxCharacters: 150 })
-      expect(reports).toHaveLength(1)
-      expect(reports[0]?.data?.maximum).toBe('150')
-      expect(reports[0]?.data?.characters).toBe('200')
+      expect(lintMarkdown(`${prose(200)}\n`, { maxCharacters: 150 })).toMatchObject([{ data: { maximum: '150', characters: '200' } }])
     })
 
     it('stays quiet under a raised threshold', () => {

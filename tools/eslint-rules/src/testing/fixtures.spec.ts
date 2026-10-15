@@ -12,14 +12,17 @@ import {
 
 describe('Project.json fixtures', () => {
   it('PUBLISHABLE_LIBRARY_PROJECT_JSON is a valid publishable library', () => {
-    expect(PUBLISHABLE_LIBRARY_PROJECT_JSON.projectType).toBe('library')
-    expect(PUBLISHABLE_LIBRARY_PROJECT_JSON.targets).toHaveProperty('build')
-    expect(PUBLISHABLE_LIBRARY_PROJECT_JSON.targets).toHaveProperty('publish')
+    expect(PUBLISHABLE_LIBRARY_PROJECT_JSON).toMatchObject({
+      projectType: 'library',
+      targets: { build: expect.anything(), publish: expect.anything() },
+    })
+  })
+
+  it('NON_PUBLISHABLE_LIBRARY_PROJECT_JSON is a library with a build target', () => {
+    expect(NON_PUBLISHABLE_LIBRARY_PROJECT_JSON).toMatchObject({ projectType: 'library', targets: { build: expect.anything() } })
   })
 
   it('NON_PUBLISHABLE_LIBRARY_PROJECT_JSON does not have publish target', () => {
-    expect(NON_PUBLISHABLE_LIBRARY_PROJECT_JSON.projectType).toBe('library')
-    expect(NON_PUBLISHABLE_LIBRARY_PROJECT_JSON.targets).toHaveProperty('build')
     expect(NON_PUBLISHABLE_LIBRARY_PROJECT_JSON.targets).not.toHaveProperty('publish')
   })
 
@@ -31,36 +34,31 @@ describe('Project.json fixtures', () => {
 describe('Package.json fixtures', () => {
   it('PUBLISHABLE_PACKAGE_JSON has exports field', () => {
     expect(PUBLISHABLE_PACKAGE_JSON.exports).toBeDefined()
+  })
+
+  it('PUBLISHABLE_PACKAGE_JSON is scoped under @hyperfrontend', () => {
     expect(PUBLISHABLE_PACKAGE_JSON.name).toMatch(/^@hyperfrontend\//)
   })
 
   it('MINIMAL_PACKAGE_JSON has only name and version', () => {
-    expect(Object.keys(MINIMAL_PACKAGE_JSON)).toContain('name')
-    expect(Object.keys(MINIMAL_PACKAGE_JSON)).toContain('version')
+    expect(Object.keys(MINIMAL_PACKAGE_JSON)).toEqual(['name', 'version'])
   })
 })
 
 describe('Factory functions', () => {
   it('createPublishableProjectJson allows overrides', () => {
-    const result = createPublishableProjectJson({ tags: ['custom'] })
-
-    expect(result.projectType).toBe('library')
-    expect(result.tags).toEqual(['custom'])
-    expect(result.targets).toHaveProperty('build')
-    expect(result.targets).toHaveProperty('publish')
+    expect(createPublishableProjectJson({ tags: ['custom'] })).toMatchObject({
+      projectType: 'library',
+      tags: ['custom'],
+      targets: { build: expect.anything(), publish: expect.anything() },
+    })
   })
 
   it('createPackageJson allows overrides', () => {
-    const result = createPackageJson({ name: '@custom/lib' })
-
-    expect(result.name).toBe('@custom/lib')
-    expect(result.exports).toBeDefined()
+    expect(createPackageJson({ name: '@custom/lib' })).toMatchObject({ name: '@custom/lib', exports: expect.anything() })
   })
 
   it('createNamedPackageJson sets name correctly', () => {
-    const result = createNamedPackageJson('@test/my-lib')
-
-    expect(result.name).toBe('@test/my-lib')
-    expect(result.version).toBeDefined()
+    expect(createNamedPackageJson('@test/my-lib')).toMatchObject({ name: '@test/my-lib', version: expect.anything() })
   })
 })

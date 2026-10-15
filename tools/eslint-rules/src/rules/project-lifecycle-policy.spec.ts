@@ -72,6 +72,9 @@ describe('project-lifecycle-policy', () => {
   describe('matchesWildcard', () => {
     it('matches an exact name when the pattern carries no wildcard', () => {
       expect(matchesWildcard('lint', 'lint')).toBe(true)
+    })
+
+    it('rejects a different name when the pattern carries no wildcard', () => {
       expect(matchesWildcard('lint', 'test')).toBe(false)
     })
 
@@ -81,11 +84,17 @@ describe('project-lifecycle-policy', () => {
 
     it('anchors a trailing wildcard to the prefix', () => {
       expect(matchesWildcard('lint:eslint', 'lint:*')).toBe(true)
+    })
+
+    it('rejects a value that misses the prefix before a trailing wildcard', () => {
       expect(matchesWildcard('build:watch', 'lint:*')).toBe(false)
     })
 
     it('anchors a leading wildcard to the suffix', () => {
       expect(matchesWildcard('@vitest/eslint-plugin', '*plugin')).toBe(true)
+    })
+
+    it('rejects a value that misses the suffix after a leading wildcard', () => {
       expect(matchesWildcard('@vitest/coverage', '*plugin')).toBe(false)
     })
 
@@ -95,6 +104,9 @@ describe('project-lifecycle-policy', () => {
 
     it('matches a middle segment between two wildcards', () => {
       expect(matchesWildcard('@scope/eslint-plugin-thing', '*eslint*thing')).toBe(true)
+    })
+
+    it('rejects a value that lacks the middle segment between two wildcards', () => {
       expect(matchesWildcard('@scope/other-plugin', '*eslint*thing')).toBe(false)
     })
 
@@ -112,13 +124,19 @@ describe('project-lifecycle-policy', () => {
       expect(matchesGlob('eslint.config.ts', 'eslint.config.*')).toBe(true)
     })
 
-    it('spans any number of directories with a double star', () => {
+    it('spans several directories with a double star', () => {
       expect(matchesGlob('src/deep/nested/thing.spec.ts', '**/*.spec.*')).toBe(true)
+    })
+
+    it('spans no directory at all with a double star', () => {
       expect(matchesGlob('thing.spec.ts', '**/*.spec.*')).toBe(true)
     })
 
     it('spans exactly one segment with a single star', () => {
       expect(matchesGlob('src/main.ts', 'src/*')).toBe(true)
+    })
+
+    it('does not span a second segment with a single star', () => {
       expect(matchesGlob('src/deep/main.ts', 'src/*')).toBe(false)
     })
 

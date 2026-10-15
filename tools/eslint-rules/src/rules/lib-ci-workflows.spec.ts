@@ -152,13 +152,16 @@ describe('lib-ci-workflows', () => {
     })
 
     it('has all required message IDs', () => {
-      const messageIds = Object.keys(rule.meta?.messages ?? {})
-      expect(messageIds).toContain('missingPathFilter')
-      expect(messageIds).toContain('missingMatrixEntry')
-      expect(messageIds).toContain('missingStatusWorkflow')
-      expect(messageIds).toContain('missingCoverageEntry')
-      expect(messageIds).toContain('missingCiLibrariesFile')
-      expect(messageIds).toContain('missingCiMainFile')
+      expect(Object.keys(rule.meta?.messages ?? {})).toEqual(
+        expect.arrayContaining([
+          'missingPathFilter',
+          'missingMatrixEntry',
+          'missingStatusWorkflow',
+          'missingCoverageEntry',
+          'missingCiLibrariesFile',
+          'missingCiMainFile',
+        ])
+      )
     })
   })
 

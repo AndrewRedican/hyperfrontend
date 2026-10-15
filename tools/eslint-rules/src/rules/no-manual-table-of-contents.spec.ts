@@ -87,15 +87,21 @@ describe('no-manual-table-of-contents', () => {
     })
 
     it('is a problem with no options', () => {
-      expect(rule.meta?.type).toBe('problem')
-      expect(rule.meta?.schema).toEqual([])
+      expect(rule.meta).toEqual(expect.objectContaining({ type: 'problem', schema: [] }))
     })
 
     it('tells the reader why, what to do, and what not to do', () => {
       const message = rule.meta?.messages?.['manualTableOfContents'] ?? ''
-      expect(message).toContain('documentation site generates on-page navigation')
-      expect(message).toContain('remove the heading and the list under it')
-      expect(message).toContain('rather than disabling this rule or hiding the section in the renderer')
+      const fragments = [
+        'documentation site generates on-page navigation',
+        'remove the heading and the list under it',
+        'rather than disabling this rule or hiding the section in the renderer',
+      ]
+
+      expect(fragments.filter((fragment) => !message.includes(fragment))).toEqual([])
+    })
+
+    it('declares a single message', () => {
       expect(keys(rule.meta?.messages ?? {})).toEqual(['manualTableOfContents'])
     })
 
@@ -168,14 +174,19 @@ describe('no-manual-table-of-contents', () => {
   })
 
   describe('isLibraryMarkdown', () => {
-    it('accepts markdown under libs and rejects markdown elsewhere', () => {
+    it('accepts markdown under libs', () => {
       expect(isLibraryMarkdown(workspace.getPath('libs/thing/ARCHITECTURE.md'))).toBe(true)
-      expect(isLibraryMarkdown(workspace.getPath('apps/site/README.md'))).toBe(false)
-      expect(isLibraryMarkdown(workspace.getPath('README.md'))).toBe(false)
     })
 
-    it('rejects files that are not markdown, and files outside any workspace', () => {
+    it.each(['apps/site/README.md', 'README.md'])('rejects markdown elsewhere, such as %s', (path: string) => {
+      expect(isLibraryMarkdown(workspace.getPath(path))).toBe(false)
+    })
+
+    it('rejects files that are not markdown', () => {
       expect(isLibraryMarkdown(workspace.getPath('libs/thing/src/index.ts'))).toBe(false)
+    })
+
+    it('rejects files outside any workspace', () => {
       expect(isLibraryMarkdown('/definitely/not/a/workspace/libs/x/README.md')).toBe(false)
     })
   })
@@ -185,8 +196,11 @@ describe('no-manual-table-of-contents', () => {
       const reports = lintMarkdown(
         ['# Title', '', '## Table of Contents', '', '1. [A](#a)', '', '### Index', '', '#### Contents', '', '## A'].join('\n')
       )
-      expect(reports.map((report) => report.data?.heading)).toEqual(['Table of Contents', 'Index', 'Contents'])
-      expect(reports.every((report) => report.messageId === 'manualTableOfContents')).toBe(true)
+      expect(reports).toMatchObject([
+        { messageId: 'manualTableOfContents', data: { heading: 'Table of Contents' } },
+        { messageId: 'manualTableOfContents', data: { heading: 'Index' } },
+        { messageId: 'manualTableOfContents', data: { heading: 'Contents' } },
+      ])
     })
 
     it('reads headings structurally, so a list or prose mentioning the words is not a heading', () => {
@@ -210,9 +224,8 @@ describe('no-manual-table-of-contents', () => {
       expect(lintMarkdown(['## Index Signatures', '', '## Content Security Policy', '', '## Indexing'].join('\n'))).toEqual([])
     })
 
-    it('does nothing outside the libraries directory', () => {
-      expect(lintMarkdown('## Table of Contents', workspace.getPath('apps/site/README.md'))).toEqual([])
-      expect(lintMarkdown('## Table of Contents', workspace.getPath('README.md'))).toEqual([])
+    it.each(['apps/site/README.md', 'README.md'])('does nothing outside the libraries directory, such as in %s', (path: string) => {
+      expect(lintMarkdown('## Table of Contents', workspace.getPath(path))).toEqual([])
     })
   })
 })

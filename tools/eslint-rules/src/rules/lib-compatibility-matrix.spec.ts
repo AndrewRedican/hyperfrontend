@@ -208,10 +208,7 @@ describe('lib-compatibility-matrix', () => {
         },
       ])
 
-      const reported = lintDocument(root, '# Library Compatibility Matrix\n\nHand written.\n')
-
-      expect(reported.length).toBe(1)
-      expect(reported[0]?.messageId).toBe('staleMatrix')
+      expect(lintDocument(root, '# Library Compatibility Matrix\n\nHand written.\n')).toMatchObject([{ messageId: 'staleMatrix' }])
     })
 
     it('reports a stale matrix when a single version drifted', () => {
@@ -240,8 +237,7 @@ describe('lib-compatibility-matrix', () => {
       const reported = lintDocument(root, drifted)
       const fix = reported[0]?.fix({ replaceTextRange: (range: number[], text: string) => ({ range, text }) })
 
-      expect(fix?.range).toEqual([0, drifted.length])
-      expect(fix?.text).toBe(buildCompatibilityDocument(root))
+      expect(fix).toEqual({ range: [0, drifted.length], text: buildCompatibilityDocument(root) })
     })
   })
 })

@@ -17,7 +17,6 @@ describe('createTempWorkspace', () => {
     const workspace = createTempWorkspace()
     workspaces.push(workspace)
 
-    expect(existsSync(workspace.root)).toBe(true)
     expect(statSync(workspace.root).isDirectory()).toBe(true)
   })
 
@@ -56,34 +55,32 @@ describe('createTempWorkspace', () => {
   })
 
   it('writes additional files with nested directories', () => {
-    const workspace = createTempWorkspace({
-      files: {
-        'src/index.ts': 'export const foo = 1',
-        'src/utils/helper.ts': 'export function helper() {}',
-      },
-    })
+    const files = {
+      'src/index.ts': 'export const foo = 1',
+      'src/utils/helper.ts': 'export function helper() {}',
+    }
+    const workspace = createTempWorkspace({ files })
     workspaces.push(workspace)
 
-    expect(readFileSync(join(workspace.root, 'src/index.ts'), 'utf-8')).toBe('export const foo = 1')
-    expect(readFileSync(join(workspace.root, 'src/utils/helper.ts'), 'utf-8')).toBe('export function helper() {}')
+    expect({
+      'src/index.ts': readFileSync(join(workspace.root, 'src/index.ts'), 'utf-8'),
+      'src/utils/helper.ts': readFileSync(join(workspace.root, 'src/utils/helper.ts'), 'utf-8'),
+    }).toEqual(files)
   })
 
   it('creates additional directories', () => {
-    const workspace = createTempWorkspace({
-      directories: ['dist', 'docs/api'],
-    })
+    const directories = ['dist', 'docs/api']
+    const workspace = createTempWorkspace({ directories })
     workspaces.push(workspace)
 
-    expect(existsSync(join(workspace.root, 'dist'))).toBe(true)
-    expect(existsSync(join(workspace.root, 'docs/api'))).toBe(true)
+    expect(directories.filter((directory) => !existsSync(join(workspace.root, directory)))).toEqual([])
   })
 
-  it('returns correct paths via getPath()', () => {
+  it.each(['package.json', 'src/index.ts'])('resolves %s under the root via getPath()', (relativePath: string) => {
     const workspace = createTempWorkspace()
     workspaces.push(workspace)
 
-    expect(workspace.getPath('package.json')).toBe(join(workspace.root, 'package.json'))
-    expect(workspace.getPath('src/index.ts')).toBe(join(workspace.root, 'src/index.ts'))
+    expect(workspace.getPath(relativePath)).toBe(join(workspace.root, relativePath))
   })
 
   it('allows writing files after creation', () => {
@@ -131,31 +128,45 @@ describe('createTempWorkspace', () => {
 })
 
 describe('createTempWorkspaceManager', () => {
-  it('creates workspaces and tracks them', () => {
+  it('tracks every workspace it creates', () => {
     const manager = createTempWorkspaceManager()
 
-    const ws1 = manager.create()
-    const ws2 = manager.create()
+    manager.create()
+    manager.create()
 
     expect(manager.count).toBe(2)
-    expect(existsSync(ws1.root)).toBe(true)
-    expect(existsSync(ws2.root)).toBe(true)
 
     manager.cleanupAll()
   })
 
-  it('cleans up all tracked workspaces', () => {
+  it('creates each tracked workspace on disk', () => {
     const manager = createTempWorkspaceManager()
 
-    const ws1 = manager.create()
-    const ws2 = manager.create()
-    const root1 = ws1.root
-    const root2 = ws2.root
+    const created = [manager.create(), manager.create()]
+
+    expect(created.filter((workspace) => !existsSync(workspace.root))).toEqual([])
+
+    manager.cleanupAll()
+  })
+
+  it('removes every tracked workspace from disk on cleanupAll()', () => {
+    const manager = createTempWorkspaceManager()
+
+    const roots = [manager.create().root, manager.create().root]
 
     manager.cleanupAll()
 
-    expect(existsSync(root1)).toBe(false)
-    expect(existsSync(root2)).toBe(false)
+    expect(roots.filter((root) => existsSync(root))).toEqual([])
+  })
+
+  it('tracks nothing once cleanupAll() has run', () => {
+    const manager = createTempWorkspaceManager()
+
+    manager.create()
+    manager.create()
+
+    manager.cleanupAll()
+
     expect(manager.count).toBe(0)
   })
 

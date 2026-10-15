@@ -332,9 +332,7 @@ describe('docs-site-library-docs', () => {
         ],
       }
 
-      const result = extractLibraryEntries(arrayNode)
-      expect(result).toHaveLength(1)
-      expect(result.at(0)?.slug).toBe('complete')
+      expect(extractLibraryEntries(arrayNode)).toMatchObject([{ slug: 'complete' }])
     })
 
     it('handles null elements in array', () => {
@@ -352,9 +350,7 @@ describe('docs-site-library-docs', () => {
         ],
       }
 
-      const result = extractLibraryEntries(arrayNode)
-      expect(result).toHaveLength(1)
-      expect(result.at(0)?.slug).toBe('valid')
+      expect(extractLibraryEntries(arrayNode)).toMatchObject([{ slug: 'valid' }])
     })
 
     it('handles SpreadElement in array (non-ObjectExpression)', () => {
@@ -371,9 +367,7 @@ describe('docs-site-library-docs', () => {
         ],
       }
 
-      const result = extractLibraryEntries(arrayNode)
-      expect(result).toHaveLength(1)
-      expect(result.at(0)?.slug).toBe('valid')
+      expect(extractLibraryEntries(arrayNode)).toMatchObject([{ slug: 'valid' }])
     })
 
     it('handles SpreadElement in object properties', () => {
@@ -425,9 +419,7 @@ describe('docs-site-library-docs', () => {
         elements: [objectWithSpread],
       }
 
-      const result = extractLibraryEntries(arrayNode)
-      expect(result).toHaveLength(1)
-      expect(result.at(0)?.slug).toBe('test')
+      expect(extractLibraryEntries(arrayNode)).toMatchObject([{ slug: 'test' }])
     })
 
     it('handles Literal keys in object properties', () => {
@@ -478,9 +470,7 @@ describe('docs-site-library-docs', () => {
         elements: [objectWithLiteralKey],
       }
 
-      const result = extractLibraryEntries(arrayNode)
-      expect(result).toHaveLength(1)
-      expect(result.at(0)?.slug).toBe('test')
+      expect(extractLibraryEntries(arrayNode)).toMatchObject([{ slug: 'test' }])
     })
 
     it('ignores properties with non-string/identifier keys', () => {
@@ -540,9 +530,7 @@ describe('docs-site-library-docs', () => {
         elements: [objectWithNumericKey],
       }
 
-      const result = extractLibraryEntries(arrayNode)
-      expect(result).toHaveLength(1)
-      expect(result.at(0)?.slug).toBe('test')
+      expect(extractLibraryEntries(arrayNode)).toMatchObject([{ slug: 'test' }])
     })
 
     it('ignores entries with non-string property values', () => {
@@ -643,9 +631,12 @@ describe('docs-site-library-docs', () => {
         ],
       })
 
-      const result = getLibraryMarkdownFiles(join(workspaceRoot, 'libs', 'test-lib'))
-      expect(result).toContainEqual(expect.objectContaining({ relativePath: 'src/core/README.md', routeSlug: 'core' }))
-      expect(result).toContainEqual(expect.objectContaining({ relativePath: 'src/utils/README.md', routeSlug: 'utils' }))
+      expect(getLibraryMarkdownFiles(join(workspaceRoot, 'libs', 'test-lib'))).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ relativePath: 'src/core/README.md', routeSlug: 'core' }),
+          expect.objectContaining({ relativePath: 'src/utils/README.md', routeSlug: 'utils' }),
+        ])
+      )
     })
 
     it('excludes CHANGELOG.md files', () => {
@@ -729,9 +720,7 @@ describe('docs-site-library-docs', () => {
         ],
       })
 
-      const result = getLibraryMarkdownFiles(join(workspaceRoot, 'libs', 'test-lib'))
-      expect(result).toHaveLength(1)
-      expect(result).not.toContainEqual(expect.objectContaining({ relativePath: 'node_modules/some-package/README.md' }))
+      expect(getLibraryMarkdownFiles(join(workspaceRoot, 'libs', 'test-lib'))).toMatchObject([{ relativePath: 'README.md' }])
     })
 
     it('skips dist directory', () => {
@@ -746,9 +735,7 @@ describe('docs-site-library-docs', () => {
         ],
       })
 
-      const result = getLibraryMarkdownFiles(join(workspaceRoot, 'libs', 'test-lib'))
-      expect(result).toHaveLength(1)
-      expect(result).not.toContainEqual(expect.objectContaining({ relativePath: 'dist/README.md' }))
+      expect(getLibraryMarkdownFiles(join(workspaceRoot, 'libs', 'test-lib'))).toMatchObject([{ relativePath: 'README.md' }])
     })
 
     it('skips coverage directory', () => {
@@ -763,9 +750,7 @@ describe('docs-site-library-docs', () => {
         ],
       })
 
-      const result = getLibraryMarkdownFiles(join(workspaceRoot, 'libs', 'test-lib'))
-      expect(result).toHaveLength(1)
-      expect(result).not.toContainEqual(expect.objectContaining({ relativePath: 'coverage/README.md' }))
+      expect(getLibraryMarkdownFiles(join(workspaceRoot, 'libs', 'test-lib'))).toMatchObject([{ relativePath: 'README.md' }])
     })
 
     it('skips .nx directory', () => {
@@ -780,9 +765,7 @@ describe('docs-site-library-docs', () => {
         ],
       })
 
-      const result = getLibraryMarkdownFiles(join(workspaceRoot, 'libs', 'test-lib'))
-      expect(result).toHaveLength(1)
-      expect(result).not.toContainEqual(expect.objectContaining({ relativePath: '.nx/README.md' }))
+      expect(getLibraryMarkdownFiles(join(workspaceRoot, 'libs', 'test-lib'))).toMatchObject([{ relativePath: 'README.md' }])
     })
 
     it('skips .git directory', () => {
@@ -797,9 +780,7 @@ describe('docs-site-library-docs', () => {
         ],
       })
 
-      const result = getLibraryMarkdownFiles(join(workspaceRoot, 'libs', 'test-lib'))
-      expect(result).toHaveLength(1)
-      expect(result).not.toContainEqual(expect.objectContaining({ relativePath: '.git/README.md' }))
+      expect(getLibraryMarkdownFiles(join(workspaceRoot, 'libs', 'test-lib'))).toMatchObject([{ relativePath: 'README.md' }])
     })
   })
 

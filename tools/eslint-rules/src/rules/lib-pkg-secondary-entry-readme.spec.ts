@@ -88,10 +88,9 @@ describe('lib-pkg-secondary-entry-readme', () => {
     })
 
     it('declares the three required message IDs', () => {
-      const messageIds = Object.keys(rule.meta?.messages ?? {})
-      expect(messageIds).toContain('missingSecondaryReadme')
-      expect(messageIds).toContain('missingReadmeHeading')
-      expect(messageIds).toContain('missingReadmeDescription')
+      expect(Object.keys(rule.meta?.messages ?? {})).toEqual(
+        expect.arrayContaining(['missingSecondaryReadme', 'missingReadmeHeading', 'missingReadmeDescription'])
+      )
     })
   })
 
