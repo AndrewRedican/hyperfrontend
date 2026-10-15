@@ -1,5 +1,6 @@
 const nx = require('@nx/eslint-plugin')
 const eslintRules = require('./tools/eslint-rules/src/index.ts')
+const { REQUIRE_JSDOC_OPTIONS } = require('./tools/eslint-rules/src/base-config/require-jsdoc.ts')
 
 /**
  * Package scope prefixes that must never appear bare in a JSDoc description. `workspace/escape-package-tags`
@@ -100,23 +101,7 @@ module.exports = [
   {
     files: ['**/*.ts'],
     rules: {
-      'jsdoc/require-jsdoc': [
-        'error',
-        {
-          contexts: [
-            'ExportNamedDeclaration > FunctionDeclaration',
-            'ExportDefaultDeclaration > FunctionDeclaration',
-            'ExportNamedDeclaration > ClassDeclaration',
-            'ExportDefaultDeclaration > ClassDeclaration',
-            'ExportNamedDeclaration > VariableDeclaration > VariableDeclarator > ArrowFunctionExpression',
-            'ExportNamedDeclaration > VariableDeclaration > VariableDeclarator > FunctionExpression',
-            'TSInterfaceDeclaration',
-            'TSTypeAliasDeclaration',
-            'TSPropertySignature',
-            'TSMethodSignature',
-          ],
-        },
-      ],
+      'jsdoc/require-jsdoc': ['error', REQUIRE_JSDOC_OPTIONS],
       'jsdoc/require-param-description': 'error',
       'jsdoc/require-returns-description': 'error',
       'jsdoc/require-returns': 'error',
