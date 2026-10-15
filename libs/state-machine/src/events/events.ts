@@ -1,4 +1,4 @@
-import type { Event, DerivedState } from '../models'
+import type { Action, Event, DerivedState } from '../models'
 import type { StateChangeHandler } from '../state-change/state-change.model'
 import type { DataPointSelector, EventHandler } from './events.model'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
@@ -27,6 +27,16 @@ export class Events {
     this.store.subscribe((state) => this.change.addItem(derivedState(state)))
   }
 
+  /**
+   * Registers a handler for one event name.
+   *
+   * The handler runs each time the matching derived-state flag turns on, so it fires on
+   * every transition into that state rather than once. Registration is additive: a handler
+   * registered twice runs twice, and nothing is deduplicated.
+   *
+   * @param event - Which state transition to listen for, one of the `event` constants
+   * @param eventHandler - Called with the event name, the state after the transition and the state before it
+   */
   public readonly on = (event: Event, eventHandler: EventHandler): void => {
     this.eventHandlers.add([event, eventHandler])
   }
@@ -58,7 +68,17 @@ export class Events {
     }
   }
 
-  public readonly dispatch: Store['dispatch'] = (action) => {
+  /**
+   * Reduces an action into the internal store and dispatches the events the resulting
+   * state change implies.
+   *
+   * Handlers run synchronously before this call returns, once for every event whose flag
+   * went from off to on, in the order the events are declared and then in registration
+   * order. An action that leaves the derived state unchanged fires nothing.
+   *
+   * @param action - The action to reduce, as produced by the action creators
+   */
+  public readonly dispatch = (action: Action): void => {
     this.store.dispatch(action)
   }
 }
