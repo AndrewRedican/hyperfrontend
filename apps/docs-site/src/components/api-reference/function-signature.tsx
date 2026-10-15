@@ -1,7 +1,6 @@
 'use client'
 
 import type { ApiHeadingLevel } from './heading-level'
-import type { TypeSegment } from './type-utils'
 import type { TypeDocNode } from './types'
 import { AnchorLink } from '../anchor-link'
 import { useTypeLinkResolver } from './api-link-context'
@@ -11,7 +10,7 @@ import { headingTag } from './heading-level'
 import { HighlightMatch } from './highlight-match'
 import { ParameterList } from './parameter-list'
 import { TypeLink, TypeSegmentsText } from './type-link'
-import { renderTypeSegments, getDescription, getReturnsDescription, getExamples, getParamDescriptions } from './type-utils'
+import { getDescription, getReturnsDescription, getExamples, getParamDescriptions, signatureSegments } from './type-utils'
 
 interface FunctionSignatureProps {
   node: TypeDocNode
@@ -32,15 +31,7 @@ export function FunctionSignature({ node, searchQuery = '', level = 3 }: Functio
   const examples = getExamples(signature.comment)
   const paramDescriptions = getParamDescriptions(signature.comment)
 
-  const typeParams = signature.typeParameters?.map((tp) => tp.name).join(', ')
-  const signatureSegments: TypeSegment[] = [{ text: `${typeParams ? `<${typeParams}>` : ''}(` }]
-  signature.parameters?.forEach((p, index) => {
-    const optional = p.flags?.isOptional ? '?' : ''
-    const rest = p.flags?.isRest ? '...' : ''
-    if (index > 0) signatureSegments.push({ text: ', ' })
-    signatureSegments.push({ text: `${rest}${p.name}${optional}: ` }, ...renderTypeSegments(p.type, resolve))
-  })
-  signatureSegments.push({ text: '): ' }, ...renderTypeSegments(signature.type, resolve))
+  const segments = signatureSegments(signature, resolve)
 
   return (
     <div className="pt-8 pb-4 first:pt-4 border-b border-slate-200 dark:border-slate-800 last:border-0" id={`api-${node.name}`}>
@@ -53,7 +44,7 @@ export function FunctionSignature({ node, searchQuery = '', level = 3 }: Functio
         {/* why: a signature folds at its own spaces; breaking it anywhere split identifiers across lines */}
         <Symbol className="api-symbol min-w-0 flex-auto text-slate-900 dark:text-white">
           <HighlightMatch text={node.name} query={searchQuery} />
-          <TypeSegmentsText segments={signatureSegments} />
+          <TypeSegmentsText segments={segments} />
         </Symbol>
       </div>
 

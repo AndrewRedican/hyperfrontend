@@ -42,6 +42,10 @@ export interface TypeDocNode {
   comment?: Comment
   /** Target node ID for 'reference' variant (re-exported symbols) */
   target?: number
+  /** Getter signature of an accessor member */
+  getSignature?: Signature
+  /** Setter signature of an accessor member */
+  setSignature?: Signature
 }
 
 /** Function or method signature */

@@ -1,9 +1,10 @@
+import type { KindGroups } from './api-exports'
 import type { TypeDocNode, TypeDocOutput } from './types'
 import { AnchorLink } from '../anchor-link'
 import { H2 } from '../heading-with-anchor'
+import { countGroups, groupByKind, scopedExports } from './api-exports'
 import { FunctionSignature } from './function-signature'
 import { TypeDefinition } from './type-definition'
-import { buildNodeLookup, resolveUniqueExports } from './type-utils'
 import { ReflectionKind } from './types'
 
 interface ScopedApiReferenceProps {
@@ -15,51 +16,16 @@ interface ScopedApiReferenceProps {
   subpath: string
 }
 
-interface ScopedExports {
-  /** Function declarations exported by the module */
-  functions: TypeDocNode[]
-  /** Class declarations exported by the module */
-  classes: TypeDocNode[]
-  /** Interface declarations exported by the module */
-  interfaces: TypeDocNode[]
-  /** Type alias declarations exported by the module */
-  types: TypeDocNode[]
-  /** Variable/constant declarations exported by the module */
-  variables: TypeDocNode[]
-  /** Namespace declarations exported by the module */
-  namespaces: TypeDocNode[]
-}
-
 /**
- * Locates the TypeDoc Module node for a given subpath and groups its exports.
- *
- * TypeDoc names secondary-entrypoint modules using the full package-qualified path
- * (e.g., `@hyperfrontend/versioning/commits/parse`). We match either that fully-qualified
- * form or the bare subpath, so the function works against both naming conventions.
+ * Locates the TypeDoc Module node for a given subpath and groups its exports by kind.
  * @param data - The TypeDoc output for the library.
  * @param packageName - The library's npm package name.
  * @param subpath - The secondary entrypoint subpath to resolve.
  * @returns The grouped exports, or null when the module is not present.
  */
-function getScopedExports(data: TypeDocOutput, packageName: string, subpath: string): ScopedExports | null {
-  if (!data.children) return null
-
-  const qualified = `${packageName}/${subpath}`
-  const moduleNode = data.children.find(
-    (child) => child.kind === ReflectionKind.Module && (child.name === qualified || child.name === subpath)
-  )
-  if (!moduleNode || !moduleNode.children) return null
-
-  const resolved = resolveUniqueExports(moduleNode.children, buildNodeLookup(data))
-
-  return {
-    functions: resolved.filter((node) => node.kind === ReflectionKind.Function),
-    classes: resolved.filter((node) => node.kind === ReflectionKind.Class),
-    interfaces: resolved.filter((node) => node.kind === ReflectionKind.Interface),
-    types: resolved.filter((node) => node.kind === ReflectionKind.TypeAlias),
-    variables: resolved.filter((node) => node.kind === ReflectionKind.Variable),
-    namespaces: resolved.filter((node) => node.kind === ReflectionKind.Namespace),
-  }
+function getScopedExports(data: TypeDocOutput, packageName: string, subpath: string): KindGroups | null {
+  const exports = scopedExports(data, packageName, subpath)
+  return exports === null ? null : groupByKind(exports)
 }
 
 interface NamespaceListingProps {
@@ -145,23 +111,7 @@ function Section({ heading, iconClass, icon, anchor, children }: SectionProps) {
  */
 export function hasScopedApiReference(data: TypeDocOutput, packageName: string, subpath: string): boolean {
   const exports = getScopedExports(data, packageName, subpath)
-  return exports !== null && countExports(exports) > 0
-}
-
-/**
- * Total number of symbols a scoped module exports, across every kind.
- * @param exports - The grouped exports
- * @returns The count
- */
-function countExports(exports: ScopedExports): number {
-  return (
-    exports.functions.length +
-    exports.classes.length +
-    exports.interfaces.length +
-    exports.types.length +
-    exports.variables.length +
-    exports.namespaces.length
-  )
+  return exports !== null && countGroups(exports) > 0
 }
 
 /**
@@ -190,7 +140,7 @@ export function ScopedApiReference({ data, packageName, subpath }: ScopedApiRefe
     )
   }
 
-  if (countExports(exports) === 0) {
+  if (countGroups(exports) === 0) {
     return <div className="text-sm text-slate-500 dark:text-slate-400 py-4 italic">No exported symbols in this module.</div>
   }
 
@@ -239,6 +189,14 @@ export function ScopedApiReference({ data, packageName, subpath }: ScopedApiRefe
       {exports.variables.length > 0 && (
         <Section heading="Variables" iconClass="text-green-500" icon="●" anchor="variables">
           {exports.variables.map((node) => (
+            <TypeDefinition key={node.id} node={node} level={4} />
+          ))}
+        </Section>
+      )}
+
+      {exports.enums.length > 0 && (
+        <Section heading="Enums" iconClass="text-orange-500" icon="⬡" anchor="enums">
+          {exports.enums.map((node) => (
             <TypeDefinition key={node.id} node={node} level={4} />
           ))}
         </Section>
