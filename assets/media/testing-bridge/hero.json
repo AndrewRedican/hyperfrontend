@@ -1,0 +1,133 @@
+{
+  "slug": "testing-bridge",
+  "asset": "hero.gif",
+  "generatedAt": "2026-10-14T22:37:36.885Z",
+  "sceneHash": "bbc927f977c0725d",
+  "sourceUrl": "stage:bridge",
+  "profile": {
+    "id": "compact",
+    "intent": "the width every package readme is displayed at: npm, GitHub and the documentation site alike",
+    "width": 640,
+    "height": 360,
+    "scale": 2,
+    "fps": 12
+  },
+  "viewport": {
+    "width": 640,
+    "height": 360
+  },
+  "record": {
+    "settleMs": 0,
+    "durationMs": 10775.882352941177
+  },
+  "startMs": 0,
+  "gif": {
+    "width": 640,
+    "fps": 12,
+    "colours": 56,
+    "lossy": 45,
+    "dither": true,
+    "loop": 0,
+    "maxBytes": 1200000
+  },
+  "encoder": "sharp",
+  "toolVersions": [
+    {
+      "name": "sharp",
+      "version": "8.18.7"
+    }
+  ],
+  "bytes": 218893,
+  "frames": 111,
+  "stills": [
+    {
+      "asset": "poster.webp",
+      "bytes": 38586,
+      "maxBytes": 70000
+    }
+  ],
+  "variants": [
+    {
+      "theme": "portable",
+      "asset": "hero.gif",
+      "bytes": 218893,
+      "maxBytes": 1200000,
+      "frames": 111,
+      "gif": {
+        "width": 640,
+        "fps": 12,
+        "colours": 56,
+        "lossy": 45,
+        "dither": true,
+        "loop": 0,
+        "maxBytes": 1200000
+      },
+      "compromises": [],
+      "stills": [
+        {
+          "asset": "poster.webp",
+          "bytes": 38586,
+          "maxBytes": 70000
+        }
+      ]
+    },
+    {
+      "theme": "dark",
+      "asset": "hero.dark.gif",
+      "bytes": 221101,
+      "maxBytes": 900000,
+      "frames": 110,
+      "gif": {
+        "width": 640,
+        "fps": 12,
+        "colours": 56,
+        "lossy": 45,
+        "dither": true,
+        "loop": 0,
+        "maxBytes": 900000
+      },
+      "compromises": [],
+      "stills": [
+        {
+          "asset": "poster.dark.webp",
+          "bytes": 38088,
+          "maxBytes": 70000
+        }
+      ]
+    },
+    {
+      "theme": "light",
+      "asset": "hero.light.gif",
+      "bytes": 210549,
+      "maxBytes": 900000,
+      "frames": 110,
+      "gif": {
+        "width": 640,
+        "fps": 12,
+        "colours": 56,
+        "lossy": 45,
+        "dither": true,
+        "loop": 0,
+        "maxBytes": 900000
+      },
+      "compromises": [],
+      "stills": [
+        {
+          "asset": "poster.light.webp",
+          "bytes": 41780,
+          "maxBytes": 70000
+        }
+      ]
+    }
+  ],
+  "browser": {
+    "name": "chromium",
+    "version": "149.0.7827.55"
+  },
+  "determinism": {},
+  "console": {
+    "errors": 0,
+    "warnings": 0,
+    "pageErrors": 0
+  }
+}
