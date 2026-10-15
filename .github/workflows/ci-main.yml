@@ -154,6 +154,7 @@ jobs:
             "project-scope:libs/project-scope"
             "questions:libs/questions"
             "state-machine:libs/state-machine"
+            "testing:libs/testing"
             "versioning:libs/versioning"
             "data-utils:libs/utils/data"
             "function-utils:libs/utils/function"
