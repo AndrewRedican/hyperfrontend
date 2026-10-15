@@ -22,11 +22,18 @@ export type ValidationErrorJSON = {
  * ```
  */
 export class ValidationError extends Error {
+  /** Fixed discriminator, so a handler can tell this error apart by name where `instanceof` is unreliable. */
   override readonly name = 'ValidationError'
 
   /** Every validation failure the check collected. */
   readonly errors: IValidationError[]
 
+  /**
+   * Builds the error with the failures that caused it.
+   *
+   * @param message - What went wrong, in words
+   * @param errors - Every validation failure the check collected; none when the message says it all
+   */
   constructor(message: string, errors: IValidationError[] = []) {
     super(message)
     this.errors = errors

@@ -23,6 +23,7 @@ export type ConnectionErrorJSON = {
  * ```
  */
 export class ConnectionError extends Error {
+  /** Fixed discriminator, so a handler can tell this error apart by name where `instanceof` is unreliable. */
   override readonly name = 'ConnectionError'
 
   /** Identifier of the channel the failure happened on. */
@@ -31,6 +32,13 @@ export class ConnectionError extends Error {
   /** Origin the channel was talking to. */
   readonly origin?: string
 
+  /**
+   * Builds the error with the connection it describes.
+   *
+   * @param message - What went wrong, in words
+   * @param channelId - Identifier of the channel the failure happened on, when one was involved
+   * @param origin - Origin the channel was talking to, when known
+   */
   constructor(message: string, channelId?: string, origin?: string) {
     super(message)
     this.channelId = channelId
