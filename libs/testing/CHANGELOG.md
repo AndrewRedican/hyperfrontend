@@ -7,3 +7,7 @@ All notable changes to this project will be documented in this file.
 ### Features
 
 - promote the test runtime to the publishable @hyperfrontend/testing package
+
+### Bug Fixes
+
+- read the alias file in one step instead of checking it first
