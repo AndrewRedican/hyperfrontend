@@ -37,13 +37,24 @@ describe('vitestDetector', () => {
       devDependencies: { vitest: '^1.0.0' },
     })
 
-    expect(result).not.toBeNull()
-    expect(result?.id).toBe('vitest')
-    expect(result?.name).toBe('Vitest')
-    expect(result?.type).toBe('unit')
-    expect(result?.version).toBe('1.0.0')
+    expect(result).toEqual(
+      expect.objectContaining({
+        id: 'vitest',
+        name: 'Vitest',
+        type: 'unit',
+        version: '1.0.0',
+        detectedFrom: expect.arrayContaining([{ type: 'package.json', field: 'dependencies.vitest' }]),
+      })
+    )
+  })
+
+  it('scores a vitest dependency above zero', () => {
+    const result = vitestDetector(mockProjectPath, {
+      name: 'test-project',
+      devDependencies: { vitest: '^1.0.0' },
+    })
+
     expect(result?.confidence).toBeGreaterThan(0)
-    expect(result?.detectedFrom).toEqual(expect.arrayContaining([{ type: 'package.json', field: 'dependencies.vitest' }]))
   })
 
   it('detects vitest from test script', () => {
@@ -67,6 +78,18 @@ describe('vitestDetector', () => {
     })
 
     expect(result?.confidence).toBeGreaterThanOrEqual(95)
+  })
+
+  it('records vitest.config.ts as the config path', () => {
+    mockExists.mockImplementation((path: string) => {
+      return path.includes('vitest.config.ts')
+    })
+
+    const result = vitestDetector(mockProjectPath, {
+      name: 'test-project',
+      devDependencies: { vitest: '^1.0.0' },
+    })
+
     expect(result?.configPath).toBe('vitest.config.ts')
   })
 
@@ -80,8 +103,20 @@ describe('vitestDetector', () => {
       devDependencies: { vitest: '^1.0.0' },
     })
 
+    expect(result?.detectedFrom).toEqual(expect.arrayContaining([expect.objectContaining({ path: 'vite.config.*' })]))
+  })
+
+  it('scores a vite.config without a vitest config at least 75', () => {
+    mockExists.mockImplementation((path: string) => {
+      return path.includes('vite.config.ts')
+    })
+
+    const result = vitestDetector(mockProjectPath, {
+      name: 'test-project',
+      devDependencies: { vitest: '^1.0.0' },
+    })
+
     expect(result?.confidence).toBeGreaterThanOrEqual(75)
-    expect(result?.detectedFrom.some((s) => s.path === 'vite.config.*')).toBe(true)
   })
 
   it('detects vitest configured in vite.config.js', () => {

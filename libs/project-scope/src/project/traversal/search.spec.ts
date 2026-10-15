@@ -1,4 +1,4 @@
-import { isAbsolute, resolve } from 'node:path'
+import { isAbsolute, join, resolve } from 'node:path'
 import { describe, expect, it } from '@hyperfrontend/testing'
 import { createTree } from '../../vfs'
 import { findFiles, findFilesInTree, findDirectories } from './search'
@@ -11,22 +11,19 @@ describe('findFiles', () => {
   it('finds files matching a single pattern', () => {
     const results = findFiles(MINIMAL_PROJECT, '*.json', { includeHidden: true })
 
-    expect(results).toContain('package.json')
-    expect(results).toContain('tsconfig.json')
+    expect(results).toEqual(expect.arrayContaining(['package.json', 'tsconfig.json']))
   })
 
   it('finds files matching multiple patterns', () => {
     const results = findFiles(MINIMAL_PROJECT, ['*.json', '**/*.ts'], { includeHidden: true })
 
-    expect(results).toContain('package.json')
-    expect(results.some((f) => f.endsWith('.ts'))).toBe(true)
+    expect(results).toEqual(expect.arrayContaining(['package.json', expect.stringMatching(/\.ts$/)]))
   })
 
   it('finds files with glob patterns', () => {
     const results = findFiles(MINIMAL_PROJECT, 'src/*.ts', { includeHidden: true })
 
-    expect(results).toContain('src/index.ts')
-    expect(results).toContain('src/utils.ts')
+    expect(results).toEqual(expect.arrayContaining(['src/index.ts', 'src/utils.ts']))
   })
 
   it('respects maxResults option', () => {
@@ -44,8 +41,7 @@ describe('findFiles', () => {
       absolutePaths: true,
     })
 
-    expect(results.every((f) => isAbsolute(f))).toBe(true)
-    expect(results.some((f) => f.includes(MINIMAL_PROJECT))).toBe(true)
+    expect(results.sort()).toEqual([join(MINIMAL_PROJECT, 'package.json'), join(MINIMAL_PROJECT, 'tsconfig.json')])
   })
 
   it('finds files in nested directories', () => {
@@ -60,8 +56,7 @@ describe('findFilesInTree', () => {
     const tree = createTree(MINIMAL_PROJECT)
     const results = findFilesInTree(tree, '*.json', { includeHidden: true })
 
-    expect(results).toContain('package.json')
-    expect(results).toContain('tsconfig.json')
+    expect(results).toEqual(expect.arrayContaining(['package.json', 'tsconfig.json']))
   })
 
   it('finds files with glob patterns in tree', () => {

@@ -47,9 +47,7 @@ describe('core/path/join', () => {
     })
 
     it('does not use backslashes on any platform', () => {
-      const result = joinPosix('a', 'b', 'c')
-      expect(result).not.toContain('\\')
-      expect(result).toBe('a/b/c')
+      expect(joinPosix('a', 'b', 'c')).toBe('a/b/c')
     })
   })
 })

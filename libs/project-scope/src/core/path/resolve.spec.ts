@@ -34,9 +34,7 @@ describe('core/path/resolve', () => {
 
   describe('resolvePath', () => {
     it('resolves to absolute path', () => {
-      const result = resolvePath('a', 'b', 'c')
-      expect(isAbsolute(result)).toBe(true)
-      expect(result).toBe(normalizePath(resolve('a', 'b', 'c')))
+      expect(resolvePath('a', 'b', 'c')).toBe(normalizePath(resolve('a', 'b', 'c')))
     })
 
     it('resolves with cwd', () => {
@@ -55,9 +53,7 @@ describe('core/path/resolve', () => {
 
   describe('resolveRealPath', () => {
     it('returns real path for existing file', () => {
-      const result = resolveRealPath(join(TEST_DIR, 'file.txt'))
-      expect(result).not.toBeNull()
-      expect(result).toContain('file.txt')
+      expect(resolveRealPath(join(TEST_DIR, 'file.txt'))).toContain('file.txt')
     })
 
     it('returns null for missing file', () => {

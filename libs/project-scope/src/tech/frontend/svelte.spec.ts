@@ -29,8 +29,15 @@ describe('svelteDetector', () => {
     }
     const result = svelteDetector('/some/path', pkg)
 
-    expect(result).not.toBeNull()
-    expect(result?.id).toBe('svelte')
+    expect(result).toEqual(expect.objectContaining({ id: 'svelte' }))
+  })
+
+  it('scores a svelte dependency at least 70', () => {
+    const pkg: PackageJson = {
+      devDependencies: { svelte: '^4.0.0' },
+    }
+    const result = svelteDetector('/some/path', pkg)
+
     expect(result?.confidence).toBeGreaterThanOrEqual(70)
   })
 
@@ -57,7 +64,19 @@ describe('svelteDetector', () => {
     const result = svelteDetector('/some/path', pkg)
 
     expect(result?.confidence).toBeGreaterThanOrEqual(90)
-    expect(result?.detectedFrom.some((s) => s.path === 'svelte.config.js')).toBe(true)
+  })
+
+  it('records svelte.config.js as a detection source', () => {
+    mockExists.mockImplementation((path: string) => {
+      return path.includes('svelte.config.js')
+    })
+
+    const pkg: PackageJson = {
+      devDependencies: { svelte: '^4.0.0' },
+    }
+    const result = svelteDetector('/some/path', pkg)
+
+    expect(result?.detectedFrom).toEqual(expect.arrayContaining([expect.objectContaining({ path: 'svelte.config.js' })]))
   })
 
   it('increases confidence with .svelte files in src', () => {
@@ -71,7 +90,19 @@ describe('svelteDetector', () => {
     const result = svelteDetector('/some/path', pkg)
 
     expect(result?.confidence).toBeGreaterThanOrEqual(80)
-    expect(result?.detectedFrom.some((s) => s.path === 'src/*.svelte or src/routes/')).toBe(true)
+  })
+
+  it('records .svelte files in src as a detection source', () => {
+    mockExists.mockImplementation((path: string) => {
+      return path.includes('App.svelte') || path.includes(join('src', 'routes'))
+    })
+
+    const pkg: PackageJson = {
+      devDependencies: { svelte: '^4.0.0' },
+    }
+    const result = svelteDetector('/some/path', pkg)
+
+    expect(result?.detectedFrom).toEqual(expect.arrayContaining([expect.objectContaining({ path: 'src/*.svelte or src/routes/' })]))
   })
 
   it('has maximum confidence with all indicators', () => {

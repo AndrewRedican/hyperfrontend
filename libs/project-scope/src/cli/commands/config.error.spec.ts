@@ -46,8 +46,7 @@ describe('configCommand error branches', () => {
 
       const result = configCommand({ path: MINIMAL_PROJECT, showContents: true })
 
-      expect(result.exitCode).toBe(0)
-      expect(result.output).toContain('[Unable to read contents]')
+      expect(result).toEqual({ exitCode: 0, output: expect.stringContaining('    [Unable to read contents]\n') })
     })
   })
 
@@ -63,13 +62,9 @@ describe('configCommand error branches', () => {
 
       const result = configCommand({ path: MINIMAL_PROJECT, showContents: true, format: 'json' })
 
-      expect(result.exitCode).toBe(0)
-      const parsed = JSON.parse(result.output as string)
-      expect(Array.isArray(parsed)).toBe(true)
-
-      const errorConfig = parsed.find((c: Record<string, unknown>) => c['error'] === 'Unable to parse')
-      expect(errorConfig).toBeDefined()
-      expect(errorConfig['contents']).toBeNull()
+      expect(JSON.parse(result.output as string)).toEqual(
+        expect.arrayContaining([expect.objectContaining({ error: 'Unable to parse', contents: null })])
+      )
     })
   })
 
@@ -81,9 +76,7 @@ describe('configCommand error branches', () => {
 
       const result = configCommand({ path: MINIMAL_PROJECT })
 
-      expect(result.exitCode).toBe(1)
-      expect(result.error).toContain('Config inspection failed')
-      expect(result.error).toContain('Failed to scan directory')
+      expect(result).toEqual({ exitCode: 1, error: 'Config inspection failed: Failed to scan directory' })
     })
 
     it('handles non-Error exceptions in configCommand', () => {
@@ -93,9 +86,7 @@ describe('configCommand error branches', () => {
 
       const result = configCommand({ path: MINIMAL_PROJECT })
 
-      expect(result.exitCode).toBe(1)
-      expect(result.error).toContain('Config inspection failed')
-      expect(result.error).toContain('String error message')
+      expect(result).toEqual({ exitCode: 1, error: 'Config inspection failed: String error message' })
     })
   })
 })

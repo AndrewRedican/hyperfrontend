@@ -14,8 +14,7 @@ describe('readPackageJson', () => {
   it('reads package.json from directory', () => {
     const pkg = readPackageJson(MINIMAL_PROJECT)
 
-    expect(pkg.name).toBe('minimal-test-project')
-    expect(pkg.version).toBe('1.0.0')
+    expect(pkg).toEqual(expect.objectContaining({ name: 'minimal-test-project', version: '1.0.0' }))
   })
 
   it('reads package.json from direct path', () => {
@@ -27,30 +26,25 @@ describe('readPackageJson', () => {
   it('parses dependencies', () => {
     const pkg = readPackageJson(MINIMAL_PROJECT)
 
-    expect(pkg.dependencies).toBeDefined()
-    expect(pkg.dependencies?.['lodash']).toBe('^4.17.21')
+    expect(pkg.dependencies).toEqual(expect.objectContaining({ lodash: '^4.17.21' }))
   })
 
   it('parses devDependencies', () => {
     const pkg = readPackageJson(MINIMAL_PROJECT)
 
-    expect(pkg.devDependencies).toBeDefined()
-    expect(pkg.devDependencies?.['typescript']).toBe('^5.0.0')
+    expect(pkg.devDependencies).toEqual(expect.objectContaining({ typescript: '^5.0.0' }))
   })
 
   it('parses peerDependencies', () => {
     const pkg = readPackageJson(MINIMAL_PROJECT)
 
-    expect(pkg.peerDependencies).toBeDefined()
-    expect(pkg.peerDependencies?.['react']).toBe('^18.0.0')
+    expect(pkg.peerDependencies).toEqual(expect.objectContaining({ react: '^18.0.0' }))
   })
 
   it('parses scripts', () => {
     const pkg = readPackageJson(MINIMAL_PROJECT)
 
-    expect(pkg.scripts).toBeDefined()
-    expect(pkg.scripts?.['test']).toBe('jest')
-    expect(pkg.scripts?.['build']).toBe('tsc')
+    expect(pkg.scripts).toEqual(expect.objectContaining({ test: 'jest', build: 'tsc' }))
   })
 
   it('throws error for non-existent file', () => {
@@ -60,9 +54,7 @@ describe('readPackageJson', () => {
   it('reads monorepo workspaces', () => {
     const pkg = readPackageJson(MONOREPO)
 
-    expect(pkg.workspaces).toBeDefined()
-    expect(Array.isArray(pkg.workspaces)).toBe(true)
-    expect(pkg.workspaces).toContain('packages/*')
+    expect(pkg.workspaces).toEqual(expect.arrayContaining(['packages/*']))
   })
 })
 
@@ -70,8 +62,7 @@ describe('readPackageJsonIfExists', () => {
   it('returns package.json for existing project', () => {
     const pkg = readPackageJsonIfExists(MINIMAL_PROJECT)
 
-    expect(pkg).not.toBeNull()
-    expect(pkg?.name).toBe('minimal-test-project')
+    expect(pkg).toEqual(expect.objectContaining({ name: 'minimal-test-project' }))
   })
 
   it('returns null for non-existent directory', () => {
@@ -141,16 +132,14 @@ describe('readPackageJson - validation edge cases', () => {
   it('handles package.json that is an array by preserving array properties', () => {
     writeFileSync(join(TEST_DIR, 'package.json'), '[]')
     const pkg = readPackageJson(TEST_DIR)
-    expect(pkg.name).toBeUndefined()
-    expect(pkg.version).toBeUndefined()
+    expect(pkg).toEqual(expect.objectContaining({ name: undefined, version: undefined }))
   })
 
   it('handles package.json with missing name field', () => {
     writeFileSync(join(TEST_DIR, 'package.json'), JSON.stringify({ version: '1.0.0' }))
     const pkg = readPackageJson(TEST_DIR)
 
-    expect(pkg.name).toBeUndefined()
-    expect(pkg.version).toBe('1.0.0')
+    expect(pkg).toEqual(expect.objectContaining({ name: undefined, version: '1.0.0' }))
   })
 
   it('handles package.json with non-string name field', () => {

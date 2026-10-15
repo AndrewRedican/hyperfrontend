@@ -28,8 +28,15 @@ describe('qwikDetector', () => {
     }
     const result = qwikDetector('/some/path', pkg)
 
-    expect(result).not.toBeNull()
-    expect(result?.id).toBe('qwik')
+    expect(result).toEqual(expect.objectContaining({ id: 'qwik' }))
+  })
+
+  it('scores @builder.io/qwik at least 70', () => {
+    const pkg: PackageJson = {
+      dependencies: { '@builder.io/qwik': '^1.0.0' },
+    }
+    const result = qwikDetector('/some/path', pkg)
+
     expect(result?.confidence).toBeGreaterThanOrEqual(70)
   })
 
@@ -43,7 +50,18 @@ describe('qwikDetector', () => {
     const result = qwikDetector('/some/path', pkg)
 
     expect(result?.confidence).toBeGreaterThanOrEqual(90)
-    expect(result?.detectedFrom.some((s) => s.field === 'dependencies.@builder.io/qwik-city')).toBe(true)
+  })
+
+  it('records @builder.io/qwik-city as a detection source', () => {
+    const pkg: PackageJson = {
+      dependencies: {
+        '@builder.io/qwik': '^1.0.0',
+        '@builder.io/qwik-city': '^1.0.0',
+      },
+    }
+    const result = qwikDetector('/some/path', pkg)
+
+    expect(result?.detectedFrom).toEqual(expect.arrayContaining([expect.objectContaining({ field: 'dependencies.@builder.io/qwik-city' })]))
   })
 
   it('increases confidence with qwik.config.ts', () => {
@@ -57,7 +75,19 @@ describe('qwikDetector', () => {
     const result = qwikDetector('/some/path', pkg)
 
     expect(result?.confidence).toBeGreaterThanOrEqual(80)
-    expect(result?.detectedFrom.some((s) => s.path === 'qwik.config.*')).toBe(true)
+  })
+
+  it('records qwik.config.ts as a detection source', () => {
+    mockExists.mockImplementation((path: string) => {
+      return path.includes('qwik.config.ts')
+    })
+
+    const pkg: PackageJson = {
+      dependencies: { '@builder.io/qwik': '^1.0.0' },
+    }
+    const result = qwikDetector('/some/path', pkg)
+
+    expect(result?.detectedFrom).toEqual(expect.arrayContaining([expect.objectContaining({ path: 'qwik.config.*' })]))
   })
 
   it('increases confidence with qwik.config.js', () => {

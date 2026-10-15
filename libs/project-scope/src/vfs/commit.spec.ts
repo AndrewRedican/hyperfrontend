@@ -28,34 +28,48 @@ describe('vfs/commit', () => {
   })
 
   describe('commitChanges', () => {
-    it('creates new files on disk', () => {
+    it('tallies a single creation', () => {
       const tree = createFsTree(TEST_DIR)
       tree.write('new-file.txt', 'new content')
-      const result = commitChanges(tree)
 
-      expect(result.created).toBe(1)
-      expect(result.updated).toBe(0)
-      expect(result.deleted).toBe(0)
-      expect(existsSync(join(TEST_DIR, 'new-file.txt'))).toBe(true)
+      expect(commitChanges(tree)).toEqual(expect.objectContaining({ created: 1, updated: 0, deleted: 0 }))
+    })
+
+    it('writes the created file to disk', () => {
+      const tree = createFsTree(TEST_DIR)
+      tree.write('new-file.txt', 'new content')
+      commitChanges(tree)
+
       expect(readFileSync(join(TEST_DIR, 'new-file.txt'), 'utf-8')).toBe('new content')
     })
 
-    it('updates existing files on disk', () => {
+    it('tallies a single update', () => {
       const tree = createFsTree(TEST_DIR)
       tree.write('package.json', '{"updated": true}')
-      const result = commitChanges(tree)
 
-      expect(result.created).toBe(0)
-      expect(result.updated).toBe(1)
+      expect(commitChanges(tree)).toEqual(expect.objectContaining({ created: 0, updated: 1 }))
+    })
+
+    it('writes the updated content to disk', () => {
+      const tree = createFsTree(TEST_DIR)
+      tree.write('package.json', '{"updated": true}')
+      commitChanges(tree)
+
       expect(readFileSync(join(TEST_DIR, 'package.json'), 'utf-8')).toBe('{"updated": true}')
     })
 
-    it('deletes files from disk', () => {
+    it('tallies a single deletion', () => {
       const tree = createFsTree(TEST_DIR)
       tree.delete('package.json')
-      const result = commitChanges(tree)
 
-      expect(result.deleted).toBe(1)
+      expect(commitChanges(tree).deleted).toBe(1)
+    })
+
+    it('removes the deleted file from disk', () => {
+      const tree = createFsTree(TEST_DIR)
+      tree.delete('package.json')
+      commitChanges(tree)
+
       expect(existsSync(join(TEST_DIR, 'package.json'))).toBe(false)
     })
 
@@ -67,17 +81,22 @@ describe('vfs/commit', () => {
       expect(existsSync(join(TEST_DIR, 'deep', 'nested', 'path', 'file.txt'))).toBe(true)
     })
 
-    it('handles multiple changes', () => {
+    it('tallies one change of each type', () => {
       const tree = createFsTree(TEST_DIR)
       tree.write('new.txt', 'new')
       tree.write('package.json', 'updated')
       tree.delete('src/index.ts')
-      const result = commitChanges(tree)
 
-      expect(result.created).toBe(1)
-      expect(result.updated).toBe(1)
-      expect(result.deleted).toBe(1)
-      expect(result.changes).toHaveLength(3)
+      expect(commitChanges(tree)).toEqual(expect.objectContaining({ created: 1, updated: 1, deleted: 1 }))
+    })
+
+    it('lists every applied change', () => {
+      const tree = createFsTree(TEST_DIR)
+      tree.write('new.txt', 'new')
+      tree.write('package.json', 'updated')
+      tree.delete('src/index.ts')
+
+      expect(commitChanges(tree).changes).toHaveLength(3)
     })
 
     it('clears changes after commit', () => {
@@ -108,26 +127,39 @@ describe('vfs/commit', () => {
   })
 
   describe('commitChanges dry run', () => {
-    it('reports changes without writing', () => {
+    it('reports the pending changes as a dry run', () => {
       const tree = createFsTree(TEST_DIR)
       tree.write('new-file.txt', 'content')
       tree.delete('package.json')
-      const result = commitChanges(tree, { dryRun: true })
 
-      expect(result.dryRun).toBe(true)
-      expect(result.created).toBe(1)
-      expect(result.deleted).toBe(1)
-      expect(existsSync(join(TEST_DIR, 'new-file.txt'))).toBe(false)
-      expect(existsSync(join(TEST_DIR, 'package.json'))).toBe(true)
+      expect(commitChanges(tree, { dryRun: true })).toEqual(expect.objectContaining({ dryRun: true, created: 1, deleted: 1 }))
     })
 
-    it('reports updates in dry run', () => {
+    it('leaves the disk untouched', () => {
+      const tree = createFsTree(TEST_DIR)
+      tree.write('new-file.txt', 'content')
+      tree.delete('package.json')
+      commitChanges(tree, { dryRun: true })
+
+      const onDisk = {
+        'new-file.txt': existsSync(join(TEST_DIR, 'new-file.txt')),
+        'package.json': existsSync(join(TEST_DIR, 'package.json')),
+      }
+      expect(onDisk).toEqual({ 'new-file.txt': false, 'package.json': true })
+    })
+
+    it('reports the pending update as a dry run', () => {
       const tree = createFsTree(TEST_DIR)
       tree.write('package.json', '{"updated": true}')
-      const result = commitChanges(tree, { dryRun: true })
 
-      expect(result.dryRun).toBe(true)
-      expect(result.updated).toBe(1)
+      expect(commitChanges(tree, { dryRun: true })).toEqual(expect.objectContaining({ dryRun: true, updated: 1 }))
+    })
+
+    it('does not write the update to disk', () => {
+      const tree = createFsTree(TEST_DIR)
+      tree.write('package.json', '{"updated": true}')
+      commitChanges(tree, { dryRun: true })
+
       expect(readFileSync(join(TEST_DIR, 'package.json'), 'utf-8')).toContain('test')
     })
 
@@ -162,41 +194,49 @@ describe('vfs/commit', () => {
     it('restores disk state visibility', () => {
       const tree = createFsTree(TEST_DIR)
       tree.delete('package.json')
-      expect(tree.exists('package.json')).toBe(false)
+      const visible = [tree.exists('package.json')]
 
       rollbackChanges(tree)
-      expect(tree.exists('package.json')).toBe(true)
+      visible.push(tree.exists('package.json'))
+
+      expect(visible).toEqual([false, true])
     })
 
     it('removes buffered writes', () => {
       const tree = createFsTree(TEST_DIR)
       tree.write('new.txt', 'content')
-      expect(tree.exists('new.txt')).toBe(true)
+      const visible = [tree.exists('new.txt')]
 
       rollbackChanges(tree)
-      expect(tree.exists('new.txt')).toBe(false)
+      visible.push(tree.exists('new.txt'))
+
+      expect(visible).toEqual([true, false])
     })
   })
 
   describe('edge cases', () => {
     it('handles empty changes', () => {
       const tree = createFsTree(TEST_DIR)
-      const result = commitChanges(tree)
-      expect(result.created).toBe(0)
-      expect(result.updated).toBe(0)
-      expect(result.deleted).toBe(0)
-      expect(result.changes).toEqual([])
+      expect(commitChanges(tree)).toEqual({ created: 0, updated: 0, deleted: 0, changes: [], dryRun: false })
     })
 
-    it('handles rename via delete and create', () => {
+    it('tallies a rename as one deletion and one creation', () => {
       const tree = createFsTree(TEST_DIR)
       tree.rename('package.json', 'pkg.json')
-      const result = commitChanges(tree)
 
-      expect(result.created).toBe(1)
-      expect(result.deleted).toBe(1)
-      expect(existsSync(join(TEST_DIR, 'package.json'))).toBe(false)
-      expect(existsSync(join(TEST_DIR, 'pkg.json'))).toBe(true)
+      expect(commitChanges(tree)).toEqual(expect.objectContaining({ created: 1, deleted: 1 }))
+    })
+
+    it('moves the renamed file on disk', () => {
+      const tree = createFsTree(TEST_DIR)
+      tree.rename('package.json', 'pkg.json')
+      commitChanges(tree)
+
+      const onDisk = {
+        'package.json': existsSync(join(TEST_DIR, 'package.json')),
+        'pkg.json': existsSync(join(TEST_DIR, 'pkg.json')),
+      }
+      expect(onDisk).toEqual({ 'package.json': false, 'pkg.json': true })
     })
 
     it('handles binary content', () => {
@@ -209,15 +249,24 @@ describe('vfs/commit', () => {
       expect(content).toEqual(buffer)
     })
 
-    it('handles directory deletion', () => {
+    it('tallies a directory deletion once', () => {
       mkdirSync(join(TEST_DIR, 'to-delete'), { recursive: true })
       writeFileSync(join(TEST_DIR, 'to-delete', 'file.txt'), 'content')
 
       const tree = createFsTree(TEST_DIR)
       tree.delete('to-delete')
-      const result = commitChanges(tree)
 
-      expect(result.deleted).toBe(1)
+      expect(commitChanges(tree).deleted).toBe(1)
+    })
+
+    it('removes the deleted directory from disk', () => {
+      mkdirSync(join(TEST_DIR, 'to-delete'), { recursive: true })
+      writeFileSync(join(TEST_DIR, 'to-delete', 'file.txt'), 'content')
+
+      const tree = createFsTree(TEST_DIR)
+      tree.delete('to-delete')
+      commitChanges(tree)
+
       expect(existsSync(join(TEST_DIR, 'to-delete'))).toBe(false)
     })
 
@@ -244,13 +293,20 @@ describe('vfs/commit', () => {
       expect(() => commitChanges(tree)).toThrow(/Failed to update blocker-file/)
     })
 
-    it('handles DELETE change where unlinkSync succeeds for regular file', () => {
+    it('tallies the deletion of a regular file where unlinkSync succeeds', () => {
       writeFileSync(join(TEST_DIR, 'regular-file.txt'), 'content')
       const tree = createFsTree(TEST_DIR)
       tree.delete('regular-file.txt')
-      const result = commitChanges(tree)
 
-      expect(result.deleted).toBe(1)
+      expect(commitChanges(tree).deleted).toBe(1)
+    })
+
+    it('unlinks a regular file from disk where unlinkSync succeeds', () => {
+      writeFileSync(join(TEST_DIR, 'regular-file.txt'), 'content')
+      const tree = createFsTree(TEST_DIR)
+      tree.delete('regular-file.txt')
+      commitChanges(tree)
+
       expect(existsSync(join(TEST_DIR, 'regular-file.txt'))).toBe(false)
     })
 

@@ -38,13 +38,24 @@ describe('cypressDetector', () => {
       devDependencies: { cypress: '^13.0.0' },
     })
 
-    expect(result).not.toBeNull()
-    expect(result?.id).toBe('cypress')
-    expect(result?.name).toBe('Cypress')
-    expect(result?.type).toBe('e2e')
-    expect(result?.version).toBe('13.0.0')
+    expect(result).toEqual(
+      expect.objectContaining({
+        id: 'cypress',
+        name: 'Cypress',
+        type: 'e2e',
+        version: '13.0.0',
+        detectedFrom: expect.arrayContaining([{ type: 'package.json', field: 'dependencies.cypress' }]),
+      })
+    )
+  })
+
+  it('scores a cypress dependency above zero', () => {
+    const result = cypressDetector(mockProjectPath, {
+      name: 'test-project',
+      devDependencies: { cypress: '^13.0.0' },
+    })
+
     expect(result?.confidence).toBeGreaterThan(0)
-    expect(result?.detectedFrom).toEqual(expect.arrayContaining([{ type: 'package.json', field: 'dependencies.cypress' }]))
   })
 
   it('detects cypress from e2e script', () => {
@@ -68,8 +79,24 @@ describe('cypressDetector', () => {
     })
 
     expect(result?.confidence).toBeGreaterThanOrEqual(90)
-    expect(result?.configPath).toBe('cypress.config.ts')
-    expect(result?.detectedFrom.some((s) => s.path === 'cypress.config.ts')).toBe(true)
+  })
+
+  it('records cypress.config.ts as the config path and a detection source', () => {
+    mockExists.mockImplementation((path: string) => {
+      return path.includes('cypress.config.ts')
+    })
+
+    const result = cypressDetector(mockProjectPath, {
+      name: 'test-project',
+      devDependencies: { cypress: '^13.0.0' },
+    })
+
+    expect(result).toEqual(
+      expect.objectContaining({
+        configPath: 'cypress.config.ts',
+        detectedFrom: expect.arrayContaining([expect.objectContaining({ path: 'cypress.config.ts' })]),
+      })
+    )
   })
 
   it('increases confidence with cypress directory', () => {
@@ -83,7 +110,19 @@ describe('cypressDetector', () => {
     })
 
     expect(result?.confidence).toBeGreaterThanOrEqual(70)
-    expect(result?.detectedFrom.some((s) => s.path === 'cypress/')).toBe(true)
+  })
+
+  it('records the cypress directory as a detection source', () => {
+    mockExists.mockImplementation((path: string) => {
+      return path.endsWith('cypress') || path.includes(`${sep}cypress`)
+    })
+
+    const result = cypressDetector(mockProjectPath, {
+      name: 'test-project',
+      devDependencies: { cypress: '^13.0.0' },
+    })
+
+    expect(result?.detectedFrom).toEqual(expect.arrayContaining([expect.objectContaining({ path: 'cypress/' })]))
   })
 
   it('detects from test:e2e script', () => {

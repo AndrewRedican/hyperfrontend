@@ -17,9 +17,7 @@ describe('detectFrontendFrameworks', () => {
     }
     const result = detectFrontendFrameworks('/some/path', pkg)
 
-    expect(result.length).toBeGreaterThanOrEqual(2)
-    expect(result.some((r) => r.id === 'react')).toBe(true)
-    expect(result.some((r) => r.id === 'nextjs')).toBe(true)
+    expect(result.map((framework) => framework.id)).toEqual(expect.arrayContaining(['react', 'nextjs']))
   })
 
   it('sorts results by confidence', () => {
@@ -40,16 +38,32 @@ describe('detectFrontendFrameworks', () => {
 
 describe('frameworkDetectors', () => {
   it('exports array of all detectors', () => {
-    expect(frameworkDetectors).toBeInstanceOf(Array)
-    expect(frameworkDetectors.length).toBe(12)
+    expect(frameworkDetectors.map((detector) => detector.id)).toEqual([
+      'react',
+      'nextjs',
+      'remix',
+      'gatsby',
+      'vue',
+      'nuxt',
+      'angular',
+      'svelte',
+      'sveltekit',
+      'solid',
+      'qwik',
+      'astro',
+    ])
   })
 
   it('each detector has required properties', () => {
     for (const detector of frameworkDetectors) {
-      expect(detector.id).toBeDefined()
-      expect(detector.name).toBeDefined()
-      expect(detector.category).toBeDefined()
-      expect(typeof detector.detect).toBe('function')
+      expect(detector).toEqual(
+        expect.objectContaining({
+          id: expect.any(String),
+          name: expect.any(String),
+          category: expect.any(String),
+          detect: expect.any(Function),
+        })
+      )
     }
   })
 })

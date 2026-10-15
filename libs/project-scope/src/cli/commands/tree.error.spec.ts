@@ -62,9 +62,7 @@ describe('treeCommand error branches', () => {
 
       const result = treeCommand({ path: MINIMAL_PROJECT })
 
-      expect(result.exitCode).toBe(1)
-      expect(result.error).toContain('Tree failed')
-      expect(result.error).toContain('Directory traversal failed')
+      expect(result).toEqual({ exitCode: 1, error: 'Tree failed: Directory traversal failed' })
     })
 
     it('handles non-Error exceptions in treeCommand', () => {
@@ -74,9 +72,7 @@ describe('treeCommand error branches', () => {
 
       const result = treeCommand({ path: MINIMAL_PROJECT })
 
-      expect(result.exitCode).toBe(1)
-      expect(result.error).toContain('Tree failed')
-      expect(result.error).toContain('String error in traversal')
+      expect(result).toEqual({ exitCode: 1, error: 'Tree failed: String error in traversal' })
     })
   })
 
@@ -93,8 +89,7 @@ describe('treeCommand error branches', () => {
 
       const result = treeCommand({ path: MINIMAL_PROJECT, showSize: true })
 
-      expect(result.exitCode).toBe(0)
-      expect(result.output).toBeDefined()
+      expect(result).toEqual({ exitCode: 0, output: expect.any(String) })
       // Note: The actual formatting depends on which files are traversed
     })
 
@@ -103,8 +98,7 @@ describe('treeCommand error branches', () => {
 
       const result = treeCommand({ path: MINIMAL_PROJECT, showSize: true })
 
-      expect(result.exitCode).toBe(0)
-      expect(result.output).toContain('0B')
+      expect(result).toEqual({ exitCode: 0, output: expect.stringContaining('[0B]') })
     })
 
     it('shows KB for files in kilobyte range', () => {
@@ -112,8 +106,7 @@ describe('treeCommand error branches', () => {
 
       const result = treeCommand({ path: MINIMAL_PROJECT, showSize: true })
 
-      expect(result.exitCode).toBe(0)
-      expect(result.output).toContain('2.0K')
+      expect(result).toEqual({ exitCode: 0, output: expect.stringContaining('[2.0K]') })
     })
 
     it('shows MB for files in megabyte range', () => {
@@ -121,8 +114,7 @@ describe('treeCommand error branches', () => {
 
       const result = treeCommand({ path: MINIMAL_PROJECT, showSize: true })
 
-      expect(result.exitCode).toBe(0)
-      expect(result.output).toContain('5.0M')
+      expect(result).toEqual({ exitCode: 0, output: expect.stringContaining('[5.0M]') })
     })
 
     it('shows GB for files in gigabyte range', () => {
@@ -130,8 +122,7 @@ describe('treeCommand error branches', () => {
 
       const result = treeCommand({ path: MINIMAL_PROJECT, showSize: true })
 
-      expect(result.exitCode).toBe(0)
-      expect(result.output).toContain('2.0G')
+      expect(result).toEqual({ exitCode: 0, output: expect.stringContaining('[2.0G]') })
     })
   })
 })

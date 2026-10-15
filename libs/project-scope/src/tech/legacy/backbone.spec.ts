@@ -19,11 +19,15 @@ describe('backboneDetector', () => {
       dependencies: { backbone: '^1.4.0' },
     })
 
-    expect(result).not.toBeNull()
-    expect(result?.id).toBe('backbone')
-    expect(result?.name).toBe('Backbone.js')
-    expect(result?.category).toBe('legacy-frontend')
-    expect(result?.version).toBe('1.4.0')
+    expect(result).toEqual(expect.objectContaining({ id: 'backbone', name: 'Backbone.js', category: 'legacy-frontend', version: '1.4.0' }))
+  })
+
+  it('scores a backbone dependency above zero', () => {
+    const result = backboneDetector(mockProjectPath, {
+      name: 'test-project',
+      dependencies: { backbone: '^1.4.0' },
+    })
+
     expect(result?.confidence).toBeGreaterThan(0)
   })
 
@@ -39,7 +43,15 @@ describe('backboneDetector', () => {
     })
 
     expect(withUnderscore?.confidence).toBeGreaterThan(withoutUnderscore?.confidence ?? 0)
-    expect(withUnderscore?.detectedFrom.some((s) => s.field === 'dependencies.underscore')).toBe(true)
+  })
+
+  it('records underscore as a detection source', () => {
+    const result = backboneDetector(mockProjectPath, {
+      name: 'test-project',
+      dependencies: { backbone: '^1.4.0', underscore: '^1.13.0' },
+    })
+
+    expect(result?.detectedFrom).toEqual(expect.arrayContaining([expect.objectContaining({ field: 'dependencies.underscore' })]))
   })
 
   it('increases confidence with lodash (underscore alternative)', () => {
@@ -49,7 +61,15 @@ describe('backboneDetector', () => {
     })
 
     expect(result?.confidence).toBeGreaterThanOrEqual(75)
-    expect(result?.detectedFrom.some((s) => s.field === 'dependencies.lodash')).toBe(true)
+  })
+
+  it('records lodash as a detection source', () => {
+    const result = backboneDetector(mockProjectPath, {
+      name: 'test-project',
+      dependencies: { backbone: '^1.4.0', lodash: '^4.17.0' },
+    })
+
+    expect(result?.detectedFrom).toEqual(expect.arrayContaining([expect.objectContaining({ field: 'dependencies.lodash' })]))
   })
 
   it('increases confidence with backbone.marionette', () => {
@@ -59,7 +79,15 @@ describe('backboneDetector', () => {
     })
 
     expect(result?.confidence).toBeGreaterThanOrEqual(80)
-    expect(result?.detectedFrom.some((s) => s.field === 'dependencies.backbone.marionette')).toBe(true)
+  })
+
+  it('records backbone.marionette as a detection source', () => {
+    const result = backboneDetector(mockProjectPath, {
+      name: 'test-project',
+      dependencies: { backbone: '^1.4.0', 'backbone.marionette': '^4.0.0' },
+    })
+
+    expect(result?.detectedFrom).toEqual(expect.arrayContaining([expect.objectContaining({ field: 'dependencies.backbone.marionette' })]))
   })
 
   it('increases confidence with marionette package name', () => {

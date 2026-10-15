@@ -29,8 +29,15 @@ describe('nuxtDetector', () => {
     }
     const result = nuxtDetector('/some/path', pkg)
 
-    expect(result).not.toBeNull()
-    expect(result?.id).toBe('nuxt')
+    expect(result).toEqual(expect.objectContaining({ id: 'nuxt' }))
+  })
+
+  it('scores a nuxt dependency at least 70', () => {
+    const pkg: PackageJson = {
+      dependencies: { nuxt: '^3.0.0' },
+    }
+    const result = nuxtDetector('/some/path', pkg)
+
     expect(result?.confidence).toBeGreaterThanOrEqual(70)
   })
 
@@ -40,9 +47,7 @@ describe('nuxtDetector', () => {
     }
     const result = nuxtDetector('/some/path', pkg)
 
-    expect(result).not.toBeNull()
-    expect(result?.id).toBe('nuxt')
-    expect(result?.version).toBe('3.0.0')
+    expect(result).toEqual(expect.objectContaining({ id: 'nuxt', version: '3.0.0' }))
   })
 
   it('increases confidence with nuxt.config.js', () => {
@@ -56,7 +61,19 @@ describe('nuxtDetector', () => {
     const result = nuxtDetector('/some/path', pkg)
 
     expect(result?.confidence).toBeGreaterThanOrEqual(95)
-    expect(result?.detectedFrom.some((s) => s.path === 'nuxt.config.*')).toBe(true)
+  })
+
+  it('records nuxt.config.js as a detection source', () => {
+    mockExists.mockImplementation((path: string) => {
+      return path.includes('nuxt.config.js')
+    })
+
+    const pkg: PackageJson = {
+      dependencies: { nuxt: '^3.0.0' },
+    }
+    const result = nuxtDetector('/some/path', pkg)
+
+    expect(result?.detectedFrom).toEqual(expect.arrayContaining([expect.objectContaining({ path: 'nuxt.config.*' })]))
   })
 
   it('increases confidence with nuxt.config.ts', () => {
@@ -83,7 +100,19 @@ describe('nuxtDetector', () => {
     const result = nuxtDetector('/some/path', pkg)
 
     expect(result?.confidence).toBeGreaterThanOrEqual(75)
-    expect(result?.detectedFrom.some((s) => s.path === 'pages/')).toBe(true)
+  })
+
+  it('records the pages directory as a detection source', () => {
+    mockExists.mockImplementation((path: string) => {
+      return path.endsWith(`${sep}pages`)
+    })
+
+    const pkg: PackageJson = {
+      dependencies: { nuxt: '^3.0.0' },
+    }
+    const result = nuxtDetector('/some/path', pkg)
+
+    expect(result?.detectedFrom).toEqual(expect.arrayContaining([expect.objectContaining({ path: 'pages/' })]))
   })
 
   it('caps confidence at 100', () => {

@@ -28,17 +28,18 @@ describe('getDependencies', () => {
       optionalDependencies: { fsevents: '*' },
     }
     const deps = getDependencies(pkg)
-    expect(deps.dependencies).toEqual({ react: '^18.0.0' })
-    expect(deps.devDependencies).toEqual({ jest: '^29.0.0' })
-    expect(deps.peerDependencies).toEqual({ react: '^18.0.0' })
-    expect(deps.optionalDependencies).toEqual({ fsevents: '*' })
+    expect(deps).toEqual({
+      dependencies: { react: '^18.0.0' },
+      devDependencies: { jest: '^29.0.0' },
+      peerDependencies: { react: '^18.0.0' },
+      optionalDependencies: { fsevents: '*' },
+    })
   })
 
   it('handles missing dependency fields', () => {
     const pkg: PackageJson = {}
     const deps = getDependencies(pkg)
-    expect(deps.dependencies).toEqual({})
-    expect(deps.devDependencies).toEqual({})
+    expect(deps).toEqual({ dependencies: {}, devDependencies: {}, peerDependencies: {}, optionalDependencies: {} })
   })
 })
 
@@ -94,9 +95,7 @@ describe('getAllDependencies', () => {
     }
     const deps = getAllDependencies(pkg)
 
-    expect(deps['react']).toBe('^18.0.0')
-    expect(deps['jest']).toBe('^29.0.0')
-    expect(deps['lodash']).toBe('^4.0.0')
+    expect(deps).toEqual({ react: '^18.0.0', jest: '^29.0.0', lodash: '^4.0.0' })
   })
 })
 
@@ -118,8 +117,10 @@ describe('hasDependency', () => {
 
   it('filters by specific dependency types', () => {
     const pkg: PackageJson = { devDependencies: { jest: '^29.0.0' } }
-    expect(hasDependency(pkg, 'jest', ['dependencies'])).toBe(false)
-    expect(hasDependency(pkg, 'jest', ['devDependencies'])).toBe(true)
+    expect({
+      production: hasDependency(pkg, 'jest', ['dependencies']),
+      development: hasDependency(pkg, 'jest', ['devDependencies']),
+    }).toEqual({ production: false, development: true })
   })
 })
 

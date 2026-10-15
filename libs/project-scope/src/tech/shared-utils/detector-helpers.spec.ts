@@ -55,13 +55,15 @@ describe('collectAllDependencies', () => {
 })
 
 describe('parseVersionString', () => {
-  it('removes semver prefixes', () => {
-    expect(parseVersionString('^18.0.0')).toBe('18.0.0')
-    expect(parseVersionString('~4.5.6')).toBe('4.5.6')
-    expect(parseVersionString('>=4.0.0')).toBe('4.0.0')
-    expect(parseVersionString('>3.0.0')).toBe('3.0.0')
-    expect(parseVersionString('<=2.0.0')).toBe('2.0.0')
-    expect(parseVersionString('<1.0.0')).toBe('1.0.0')
+  it.each([
+    ['^18.0.0', '18.0.0'],
+    ['~4.5.6', '4.5.6'],
+    ['>=4.0.0', '4.0.0'],
+    ['>3.0.0', '3.0.0'],
+    ['<=2.0.0', '2.0.0'],
+    ['<1.0.0', '1.0.0'],
+  ])('removes the semver prefix from %s', (input, expected) => {
+    expect(parseVersionString(input)).toBe(expected)
   })
 
   it('handles version without prefix', () => {

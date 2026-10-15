@@ -29,9 +29,15 @@ describe('rollupDetector', () => {
     }
     const result = rollupDetector('/some/path', pkg)
 
-    expect(result).not.toBeNull()
-    expect(result?.id).toBe('rollup')
-    expect(result?.name).toBe('Rollup')
+    expect(result).toEqual(expect.objectContaining({ id: 'rollup', name: 'Rollup' }))
+  })
+
+  it('scores a rollup dependency at least 55', () => {
+    const pkg: PackageJson = {
+      devDependencies: { rollup: '^3.0.0' },
+    }
+    const result = rollupDetector('/some/path', pkg)
+
     expect(result?.confidence).toBeGreaterThanOrEqual(55)
   })
 
@@ -55,8 +61,22 @@ describe('rollupDetector', () => {
     }
     const result = rollupDetector('/project', pkg)
 
-    expect(result?.configPath).toBe('/project/rollup.config.js')
-    expect(result?.detectedFrom.some((s) => s.type === 'config-file')).toBe(true)
+    expect(result).toEqual(
+      expect.objectContaining({
+        configPath: '/project/rollup.config.js',
+        detectedFrom: expect.arrayContaining([expect.objectContaining({ type: 'config-file' })]),
+      })
+    )
+  })
+
+  it('increases confidence with a rollup config file', () => {
+    jest.mocked(detectorHelpers.locateConfigFile).mockReturnValueOnce('/project/rollup.config.js')
+
+    const pkg: PackageJson = {
+      devDependencies: { rollup: '^3.0.0' },
+    }
+    const result = rollupDetector('/project', pkg)
+
     expect(result?.confidence).toBeGreaterThanOrEqual(95)
   })
 

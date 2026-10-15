@@ -29,10 +29,15 @@ describe('turborepoDetector', () => {
       devDependencies: { turbo: '^1.10.0' },
     })
 
-    expect(result).not.toBeNull()
-    expect(result?.id).toBe('turborepo')
-    expect(result?.name).toBe('Turborepo')
-    expect(result?.version).toBe('1.10.0')
+    expect(result).toEqual(expect.objectContaining({ id: 'turborepo', name: 'Turborepo', version: '1.10.0' }))
+  })
+
+  it('scores a turbo dependency above zero', () => {
+    const result = turborepoDetector(mockProjectPath, {
+      name: 'test-project',
+      devDependencies: { turbo: '^1.10.0' },
+    })
+
     expect(result?.confidence).toBeGreaterThan(0)
   })
 
@@ -56,8 +61,24 @@ describe('turborepoDetector', () => {
       devDependencies: { turbo: '^1.10.0' },
     })
 
-    expect(result?.configPath).toBe('turbo.json')
-    expect(result?.detectedFrom.some((s) => s.path === 'turbo.json')).toBe(true)
+    expect(result).toEqual(
+      expect.objectContaining({
+        configPath: 'turbo.json',
+        detectedFrom: expect.arrayContaining([expect.objectContaining({ path: 'turbo.json' })]),
+      })
+    )
+  })
+
+  it('scores a turbo.json config file at least 80', () => {
+    jest.mocked(fs.exists).mockImplementation((path: string) => {
+      return path.includes('turbo.json')
+    })
+
+    const result = turborepoDetector(mockProjectPath, {
+      name: 'test-project',
+      devDependencies: { turbo: '^1.10.0' },
+    })
+
     expect(result?.confidence).toBeGreaterThanOrEqual(80)
   })
 

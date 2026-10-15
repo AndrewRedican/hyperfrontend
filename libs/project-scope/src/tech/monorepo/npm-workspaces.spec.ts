@@ -30,9 +30,15 @@ describe('npmWorkspacesDetector', () => {
       workspaces: ['packages/*'],
     })
 
-    expect(result).not.toBeNull()
-    expect(result?.id).toBe('npm-workspaces')
-    expect(result?.name).toBe('npm Workspaces')
+    expect(result).toEqual(expect.objectContaining({ id: 'npm-workspaces', name: 'npm Workspaces' }))
+  })
+
+  it('scores a workspaces field above zero', () => {
+    const result = npmWorkspacesDetector(mockProjectPath, {
+      name: 'test-project',
+      workspaces: ['packages/*'],
+    })
+
     expect(result?.confidence).toBeGreaterThan(0)
   })
 
@@ -47,7 +53,19 @@ describe('npmWorkspacesDetector', () => {
     })
 
     expect(result?.confidence).toBeGreaterThanOrEqual(90)
-    expect(result?.detectedFrom.some((s) => s.type === 'lockfile')).toBe(true)
+  })
+
+  it('records package-lock.json as a lockfile detection source', () => {
+    jest.mocked(fs.exists).mockImplementation((path: string) => {
+      return path.includes('package-lock.json')
+    })
+
+    const result = npmWorkspacesDetector(mockProjectPath, {
+      name: 'test-project',
+      workspaces: ['packages/*'],
+    })
+
+    expect(result?.detectedFrom).toEqual(expect.arrayContaining([expect.objectContaining({ type: 'lockfile' })]))
   })
 
   it('returns null when yarn.lock is present', () => {
@@ -69,7 +87,6 @@ describe('npmWorkspacesDetector', () => {
       workspaces: ['packages/*', 'apps/*'],
     })
 
-    expect(result).not.toBeNull()
-    expect(result?.detectedFrom.some((s) => s.field === 'workspaces')).toBe(true)
+    expect(result?.detectedFrom).toEqual(expect.arrayContaining([expect.objectContaining({ field: 'workspaces' })]))
   })
 })

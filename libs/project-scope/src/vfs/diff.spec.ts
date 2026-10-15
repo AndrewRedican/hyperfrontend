@@ -17,10 +17,15 @@ describe('vfs/diff', () => {
           type: 'CREATE',
           content: Buffer.from('line1\nline2\n'),
         }
-        const diff = generateDiff(change)
-        expect(diff.additions).toBe(2)
-        expect(diff.deletions).toBe(0)
-        expect(diff.lines.every((l) => l.type === 'add')).toBe(true)
+        expect(generateDiff(change)).toEqual({
+          path: 'new.txt',
+          lines: [
+            { type: 'add', line: 1, content: 'line1' },
+            { type: 'add', line: 2, content: 'line2' },
+          ],
+          additions: 2,
+          deletions: 0,
+        })
       })
 
       it('generates diff for empty new file', () => {
@@ -29,9 +34,7 @@ describe('vfs/diff', () => {
           type: 'CREATE',
           content: Buffer.from(''),
         }
-        const diff = generateDiff(change)
-        expect(diff.additions).toBe(1)
-        expect(diff.deletions).toBe(0)
+        expect(generateDiff(change)).toEqual(expect.objectContaining({ additions: 1, deletions: 0 }))
       })
 
       it('generates diff for single line new file', () => {
@@ -40,10 +43,12 @@ describe('vfs/diff', () => {
           type: 'CREATE',
           content: Buffer.from('single line'),
         }
-        const diff = generateDiff(change)
-        expect(diff.additions).toBe(1)
-        expect(diff.deletions).toBe(0)
-        expect(diff.lines[0].content).toBe('single line')
+        expect(generateDiff(change)).toEqual({
+          path: 'single.txt',
+          lines: [{ type: 'add', line: 1, content: 'single line' }],
+          additions: 1,
+          deletions: 0,
+        })
       })
     })
 
@@ -54,10 +59,12 @@ describe('vfs/diff', () => {
           type: 'DELETE',
           originalContent: Buffer.from('old content\n'),
         }
-        const diff = generateDiff(change)
-        expect(diff.deletions).toBe(1)
-        expect(diff.additions).toBe(0)
-        expect(diff.lines.every((l) => l.type === 'remove')).toBe(true)
+        expect(generateDiff(change)).toEqual({
+          path: 'deleted.txt',
+          lines: [{ type: 'remove', line: 1, content: 'old content' }],
+          additions: 0,
+          deletions: 1,
+        })
       })
 
       it('generates diff for multi-line deleted file', () => {
@@ -66,9 +73,7 @@ describe('vfs/diff', () => {
           type: 'DELETE',
           originalContent: Buffer.from('line1\nline2\nline3\n'),
         }
-        const diff = generateDiff(change)
-        expect(diff.deletions).toBe(3)
-        expect(diff.additions).toBe(0)
+        expect(generateDiff(change)).toEqual(expect.objectContaining({ deletions: 3, additions: 0 }))
       })
     })
 
@@ -80,10 +85,13 @@ describe('vfs/diff', () => {
           originalContent: Buffer.from('line1\nline2\nline3\n'),
           content: Buffer.from('line1\nmodified\nline3\n'),
         }
-        const diff = generateDiff(change)
-        expect(diff.additions).toBe(1)
-        expect(diff.deletions).toBe(1)
-        expect(diff.lines.filter((l) => l.type === 'context').length).toBeGreaterThan(0)
+        expect(generateDiff(change)).toEqual(
+          expect.objectContaining({
+            additions: 1,
+            deletions: 1,
+            lines: expect.arrayContaining([expect.objectContaining({ type: 'context' })]),
+          })
+        )
       })
 
       it('generates diff for file with multiple changes', () => {
@@ -93,9 +101,7 @@ describe('vfs/diff', () => {
           originalContent: Buffer.from('a\nb\nc\nd\ne\n'),
           content: Buffer.from('a\nB\nc\nD\ne\n'),
         }
-        const diff = generateDiff(change)
-        expect(diff.additions).toBe(2)
-        expect(diff.deletions).toBe(2)
+        expect(generateDiff(change)).toEqual(expect.objectContaining({ additions: 2, deletions: 2 }))
       })
 
       it('handles added lines', () => {
@@ -105,9 +111,7 @@ describe('vfs/diff', () => {
           originalContent: Buffer.from('line1\nline3\n'),
           content: Buffer.from('line1\nline2\nline3\n'),
         }
-        const diff = generateDiff(change)
-        expect(diff.additions).toBe(1)
-        expect(diff.deletions).toBe(0)
+        expect(generateDiff(change)).toEqual(expect.objectContaining({ additions: 1, deletions: 0 }))
       })
 
       it('handles removed lines', () => {
@@ -117,9 +121,7 @@ describe('vfs/diff', () => {
           originalContent: Buffer.from('line1\nline2\nline3\n'),
           content: Buffer.from('line1\nline3\n'),
         }
-        const diff = generateDiff(change)
-        expect(diff.additions).toBe(0)
-        expect(diff.deletions).toBe(1)
+        expect(generateDiff(change)).toEqual(expect.objectContaining({ additions: 0, deletions: 1 }))
       })
 
       it('respects contextLines option', () => {
@@ -153,11 +155,7 @@ describe('vfs/diff', () => {
         additions: 1,
         deletions: 1,
       }
-      const formatted = formatUnifiedDiff(fileDiff)
-      expect(formatted).toContain('--- a/test.txt')
-      expect(formatted).toContain('+++ b/test.txt')
-      expect(formatted).toContain('-old')
-      expect(formatted).toContain('+new')
+      expect(formatUnifiedDiff(fileDiff)).toBe('--- a/test.txt\n+++ b/test.txt\n@@ -1,2 +1,2 @@\n unchanged\n-old\n+new')
     })
 
     it('includes hunk headers', () => {
@@ -183,9 +181,7 @@ describe('vfs/diff', () => {
         additions: 0,
         deletions: 0,
       }
-      const formatted = formatUnifiedDiff(fileDiff)
-      expect(formatted).toContain('--- a/empty.txt')
-      expect(formatted).toContain('+++ b/empty.txt')
+      expect(formatUnifiedDiff(fileDiff)).toBe('--- a/empty.txt\n+++ b/empty.txt')
     })
 
     it('uses correct prefixes for line types', () => {
@@ -199,13 +195,9 @@ describe('vfs/diff', () => {
         additions: 1,
         deletions: 1,
       }
-      const formatted = formatUnifiedDiff(fileDiff)
-      const lines = formatted.split(/\r?\n/)
+      const contentLines = formatUnifiedDiff(fileDiff).split(/\r?\n/).slice(3)
 
-      const contentLines = lines.slice(3)
-      expect(contentLines.some((l) => l.startsWith(' context line'))).toBe(true)
-      expect(contentLines.some((l) => l.startsWith('-removed line'))).toBe(true)
-      expect(contentLines.some((l) => l.startsWith('+added line'))).toBe(true)
+      expect(contentLines).toEqual([' context line', '-removed line', '+added line'])
     })
   })
 
@@ -225,9 +217,11 @@ describe('vfs/diff', () => {
       tree.write('new.txt', 'new file content')
       tree.write('existing.txt', 'modified content')
 
-      const diffs = generateAllDiffs(tree)
-      expect(diffs.length).toBe(2)
-      expect(diffs.map((d) => d.path).sort()).toEqual(['existing.txt', 'new.txt'])
+      expect(
+        generateAllDiffs(tree)
+          .map((d) => d.path)
+          .sort()
+      ).toEqual(['existing.txt', 'new.txt'])
     })
 
     it('returns empty array for tree with no changes', () => {
@@ -236,15 +230,11 @@ describe('vfs/diff', () => {
       expect(diffs).toEqual([])
     })
 
-    it('passes options to generateDiff', () => {
+    it.each([5, 0])('generates one diff per change with %s context lines', (contextLines) => {
       const tree = createFsTree(TEST_DIR)
       tree.write('new.txt', '1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n')
 
-      const diffsWithContext = generateAllDiffs(tree, { contextLines: 5 })
-      const diffsMinimal = generateAllDiffs(tree, { contextLines: 0 })
-
-      expect(diffsWithContext.length).toBe(1)
-      expect(diffsMinimal.length).toBe(1)
+      expect(generateAllDiffs(tree, { contextLines })).toHaveLength(1)
     })
   })
 
@@ -266,40 +256,55 @@ describe('vfs/diff', () => {
       tree.write('README.md', '# Project\n')
       tree.delete('src/index.ts')
 
-      const changes = tree.listChanges()
-      expect(changes.length).toBeGreaterThan(0)
-
-      const diffs = generateAllDiffs(tree)
-      for (const diff of diffs) {
-        const formatted = formatUnifiedDiff(diff)
-        expect(typeof formatted).toBe('string')
-        expect(formatted).toContain('---')
-        expect(formatted).toContain('+++')
-      }
+      const headers = generateAllDiffs(tree).map((diff) => formatUnifiedDiff(diff).split(/\r?\n/).slice(0, 2))
+      expect(headers).toEqual([
+        ['--- a/README.md', '+++ b/README.md'],
+        ['--- a/src/index.ts', '+++ b/src/index.ts'],
+      ])
     })
   })
 
   describe('edge cases for branch coverage', () => {
-    it('handles UPDATE diff with changes spread far apart to skip context lines', () => {
+    function spreadChange(): FileChange {
       const originalLines = Array.from({ length: 20 }, (_, i) => `line${i + 1}`)
       const newLines = [...originalLines]
       newLines[0] = 'CHANGED_LINE_1'
       newLines[19] = 'CHANGED_LINE_20'
 
-      const change: FileChange = {
+      return {
         path: 'spread.txt',
         type: 'UPDATE',
         originalContent: Buffer.from(originalLines.join('\n') + '\n'),
         content: Buffer.from(newLines.join('\n') + '\n'),
       }
+    }
 
-      const diff = generateDiff(change, { contextLines: 2 })
+    function sameChange(): FileChange {
+      const originalLines: string[] = []
+      const newLines: string[] = []
 
-      expect(diff.additions).toBe(2)
-      expect(diff.deletions).toBe(2)
+      for (let i = 0; i < 30; i++) {
+        originalLines.push(`unchanged_${i}`)
+        newLines.push(`unchanged_${i}`)
+      }
 
-      const totalLines = diff.lines.length
-      expect(totalLines).toBeLessThan(20)
+      newLines[0] = 'MODIFIED_START'
+      newLines[29] = 'MODIFIED_END'
+
+      return {
+        path: 'skip-same.txt',
+        type: 'UPDATE',
+        originalContent: Buffer.from(originalLines.join('\n')),
+        content: Buffer.from(newLines.join('\n')),
+      }
+    }
+
+    it('counts the changes spread far apart in an UPDATE diff', () => {
+      expect(generateDiff(spreadChange(), { contextLines: 2 })).toEqual(expect.objectContaining({ additions: 2, deletions: 2 }))
+    })
+
+    it('skips the context lines between changes spread far apart', () => {
+      expect(generateDiff(spreadChange(), { contextLines: 2 }).lines.length).toBeLessThan(20)
     })
 
     it('handles skipped add operations outside context window', () => {
@@ -313,10 +318,7 @@ describe('vfs/diff', () => {
         content: Buffer.from(newLines.join('\n')),
       }
 
-      const diff = generateDiff(change, { contextLines: 1 })
-
-      expect(diff.additions).toBe(2)
-      expect(diff.deletions).toBe(0)
+      expect(generateDiff(change, { contextLines: 1 })).toEqual(expect.objectContaining({ additions: 2, deletions: 0 }))
     })
 
     it('handles skipped remove operations outside context window', () => {
@@ -330,39 +332,21 @@ describe('vfs/diff', () => {
         content: Buffer.from(newLines.join('\n')),
       }
 
-      const diff = generateDiff(change, { contextLines: 1 })
-
-      expect(diff.deletions).toBe(2)
-      expect(diff.additions).toBe(0)
+      expect(generateDiff(change, { contextLines: 1 })).toEqual(expect.objectContaining({ deletions: 2, additions: 0 }))
     })
 
-    it('handles skipped same operations outside context window', () => {
-      const originalLines: string[] = []
-      const newLines: string[] = []
+    it('reports the modified ends with surrounding context when same operations are skipped', () => {
+      expect(generateDiff(sameChange(), { contextLines: 2 })).toEqual(
+        expect.objectContaining({
+          additions: 2,
+          deletions: 2,
+          lines: expect.arrayContaining([expect.objectContaining({ type: 'context' })]),
+        })
+      )
+    })
 
-      for (let i = 0; i < 30; i++) {
-        originalLines.push(`unchanged_${i}`)
-        newLines.push(`unchanged_${i}`)
-      }
-
-      newLines[0] = 'MODIFIED_START'
-      newLines[29] = 'MODIFIED_END'
-
-      const change: FileChange = {
-        path: 'skip-same.txt',
-        type: 'UPDATE',
-        originalContent: Buffer.from(originalLines.join('\n')),
-        content: Buffer.from(newLines.join('\n')),
-      }
-
-      const diff = generateDiff(change, { contextLines: 2 })
-
-      expect(diff.lines.length).toBeLessThan(30)
-
-      const contextLines = diff.lines.filter((l) => l.type === 'context')
-      expect(contextLines.length).toBeGreaterThan(0)
-      expect(diff.additions).toBe(2)
-      expect(diff.deletions).toBe(2)
+    it('omits the unchanged lines outside the context window', () => {
+      expect(generateDiff(sameChange(), { contextLines: 2 }).lines.length).toBeLessThan(30)
     })
   })
 })

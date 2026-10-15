@@ -9,7 +9,6 @@ jest.mock('../../project/package', () => ({
 
 describe('legacyDetectors', () => {
   it('contains all legacy framework detectors', () => {
-    expect(legacyDetectors).toHaveLength(4)
     expect(legacyDetectors.map((d) => d.id)).toEqual(['angularjs', 'backbone', 'ember', 'jquery'])
   })
 
@@ -35,9 +34,20 @@ describe('detectLegacyFrameworks', () => {
       },
     })
 
-    expect(result.length).toBe(2)
-    expect(result.map((r) => r.id)).toContain('jquery')
-    expect(result.map((r) => r.id)).toContain('angularjs')
+    expect(result.map((r) => r.id).sort()).toEqual(['angularjs', 'jquery'])
+  })
+
+  it('detects jquery, backbone and angularjs together', () => {
+    const result = detectLegacyFrameworks(mockProjectPath, {
+      name: 'test-project',
+      dependencies: {
+        jquery: '^3.7.0',
+        backbone: '^1.4.0',
+        angular: '^1.8.0',
+      },
+    })
+
+    expect(result.map((r) => r.id).sort()).toEqual(['angularjs', 'backbone', 'jquery'])
   })
 
   it('sorts results by confidence (descending)', () => {
@@ -50,7 +60,6 @@ describe('detectLegacyFrameworks', () => {
       },
     })
 
-    expect(result.length).toBe(3)
     for (let i = 0; i < result.length - 1; i++) {
       expect(result[i]?.confidence).toBeGreaterThanOrEqual(result[i + 1]?.confidence ?? 0)
     }

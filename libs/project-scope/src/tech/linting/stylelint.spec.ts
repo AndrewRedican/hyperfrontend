@@ -37,12 +37,23 @@ describe('stylelintDetector', () => {
       devDependencies: { stylelint: '^15.0.0' },
     })
 
-    expect(result).not.toBeNull()
-    expect(result?.id).toBe('stylelint')
-    expect(result?.name).toBe('Stylelint')
-    expect(result?.version).toBe('15.0.0')
+    expect(result).toEqual(
+      expect.objectContaining({
+        id: 'stylelint',
+        name: 'Stylelint',
+        version: '15.0.0',
+        detectedFrom: expect.arrayContaining([{ type: 'package.json', field: 'dependencies.stylelint' }]),
+      })
+    )
+  })
+
+  it('scores a stylelint dependency above zero', () => {
+    const result = stylelintDetector(mockProjectPath, {
+      name: 'test-project',
+      devDependencies: { stylelint: '^15.0.0' },
+    })
+
     expect(result?.confidence).toBeGreaterThan(0)
-    expect(result?.detectedFrom).toEqual(expect.arrayContaining([{ type: 'package.json', field: 'dependencies.stylelint' }]))
   })
 
   it('increases confidence with stylelint plugins', () => {
@@ -60,7 +71,18 @@ describe('stylelintDetector', () => {
     })
 
     expect(withPlugins?.confidence).toBeGreaterThan(withoutPlugins?.confidence ?? 0)
-    expect(withPlugins?.detectedFrom.some((s) => s.field === 'dependencies (stylelint plugins)')).toBe(true)
+  })
+
+  it('records stylelint plugins as a detection source', () => {
+    const result = stylelintDetector(mockProjectPath, {
+      name: 'test-project',
+      devDependencies: {
+        stylelint: '^15.0.0',
+        'stylelint-config-standard': '^34.0.0',
+      },
+    })
+
+    expect(result?.detectedFrom).toEqual(expect.arrayContaining([expect.objectContaining({ field: 'dependencies (stylelint plugins)' })]))
   })
 
   it('detects stylelint config file (.stylelintrc)', () => {
@@ -73,8 +95,20 @@ describe('stylelintDetector', () => {
       devDependencies: { stylelint: '^15.0.0' },
     })
 
-    expect(result?.confidence).toBeGreaterThanOrEqual(95)
     expect(result?.configPath).toBe('.stylelintrc')
+  })
+
+  it('scores a .stylelintrc config file at least 95', () => {
+    mockExists.mockImplementation((path: string) => {
+      return path.includes('.stylelintrc') && !path.includes('.stylelintrc.')
+    })
+
+    const result = stylelintDetector(mockProjectPath, {
+      name: 'test-project',
+      devDependencies: { stylelint: '^15.0.0' },
+    })
+
+    expect(result?.confidence).toBeGreaterThanOrEqual(95)
   })
 
   it('detects stylelint.config.js file', () => {
@@ -87,8 +121,20 @@ describe('stylelintDetector', () => {
       devDependencies: { stylelint: '^15.0.0' },
     })
 
-    expect(result?.confidence).toBeGreaterThanOrEqual(95)
     expect(result?.configPath).toBe('stylelint.config.js')
+  })
+
+  it('scores a stylelint.config.js file at least 95', () => {
+    mockExists.mockImplementation((path: string) => {
+      return path.includes('stylelint.config.js')
+    })
+
+    const result = stylelintDetector(mockProjectPath, {
+      name: 'test-project',
+      devDependencies: { stylelint: '^15.0.0' },
+    })
+
+    expect(result?.confidence).toBeGreaterThanOrEqual(95)
   })
 
   it('has maximum confidence with all indicators', () => {

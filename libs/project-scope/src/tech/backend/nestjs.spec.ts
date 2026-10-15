@@ -15,9 +15,16 @@ describe('nestDetector', () => {
       dependencies: { '@nestjs/core': '^10.0.0' },
     }
     const result = nestDetector('/some/path', pkg)
-    expect(result).not.toBeNull()
-    expect(result?.id).toBe('nestjs')
-    expect(result?.version).toBe('10.0.0')
+    expect(result).toEqual(expect.objectContaining({ id: 'nestjs', version: '10.0.0' }))
+  })
+
+  it('scores a @nestjs/core dependency at least 70', () => {
+    const pkg: PackageJson = {
+      name: 'test',
+      version: '1.0.0',
+      dependencies: { '@nestjs/core': '^10.0.0' },
+    }
+    const result = nestDetector('/some/path', pkg)
     expect(result?.confidence).toBeGreaterThanOrEqual(70)
   })
 
@@ -55,7 +62,7 @@ describe('nestDetector', () => {
     expect(withCommon?.confidence).toBeGreaterThan(withoutCommon?.confidence ?? 0)
   })
 
-  it('detects multiple @nestjs packages and increases confidence', () => {
+  it('increases confidence past 85 with several @nestjs packages', () => {
     const pkg: PackageJson = {
       name: 'test',
       version: '1.0.0',
@@ -67,8 +74,21 @@ describe('nestDetector', () => {
       },
     }
     const result = nestDetector('/some/path', pkg)
-    expect(result).not.toBeNull()
     expect(result?.confidence).toBeGreaterThan(85)
+  })
+
+  it('records the @nestjs package set as a detection source', () => {
+    const pkg: PackageJson = {
+      name: 'test',
+      version: '1.0.0',
+      dependencies: {
+        '@nestjs/core': '^10.0.0',
+        '@nestjs/common': '^10.0.0',
+        '@nestjs/platform-express': '^10.0.0',
+        '@nestjs/swagger': '^7.0.0',
+      },
+    }
+    const result = nestDetector('/some/path', pkg)
     expect(result?.detectedFrom).toEqual(expect.arrayContaining([{ type: 'package.json', field: 'dependencies (@nestjs packages)' }]))
   })
 
@@ -100,7 +120,6 @@ describe('nestDetector', () => {
       devDependencies: { '@nestjs/core': '^10.0.0' },
     }
     const result = nestDetector('/some/path', pkg)
-    expect(result).not.toBeNull()
-    expect(result?.id).toBe('nestjs')
+    expect(result).toEqual(expect.objectContaining({ id: 'nestjs' }))
   })
 })

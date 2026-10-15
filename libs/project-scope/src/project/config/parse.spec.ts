@@ -10,27 +10,24 @@ describe('parseConfig', () => {
   it('parses JSON config files', () => {
     const result = parseConfig(resolve(MINIMAL_PROJECT, 'package.json'))
 
-    expect(result.format).toBe('json')
-    expect(result.type).toBe('package.json')
-    expect(result.data).toBeDefined()
-    expect((result.data as Record<string, unknown>)['name']).toBe('minimal-test-project')
+    expect(result).toEqual(
+      expect.objectContaining({ format: 'json', type: 'package.json', data: expect.objectContaining({ name: 'minimal-test-project' }) })
+    )
   })
 
   it('parses tsconfig.json as JSONC', () => {
     const result = parseConfig(resolve(MINIMAL_PROJECT, 'tsconfig.json'))
 
-    expect(result.format).toBe('jsonc')
-    expect(result.type).toBe('tsconfig')
-    expect(result.data).toBeDefined()
-    expect((result.data as Record<string, unknown>)['compilerOptions']).toBeDefined()
+    expect(result).toEqual(
+      expect.objectContaining({ format: 'jsonc', type: 'tsconfig', data: expect.objectContaining({ compilerOptions: expect.any(Object) }) })
+    )
   })
 
   it('returns raw content for JS config files', () => {
-    const result = parseConfig(resolve(import.meta.dirname, '../../../test.config.ts'), 'jest')
+    const configPath = resolve(import.meta.dirname, '../../../test.config.ts')
+    const result = parseConfig(configPath, 'jest')
 
-    expect(result.format).toBe('ts')
-    expect(result.raw).toBeDefined()
-    expect(result.data).toBeUndefined()
+    expect(result).toEqual({ type: 'jest', path: configPath, format: 'ts', raw: expect.any(String) })
   })
 
   it('throws error for non-existent file', () => {
@@ -40,42 +37,40 @@ describe('parseConfig', () => {
   it('parses INI format config files', () => {
     const result = parseConfig(resolve(CONFIG_FILES, 'config.ini'))
 
-    expect(result.format).toBe('ini')
-    expect(result.data).toBeDefined()
-    expect(((result.data as Record<string, unknown>)['section1'] as Record<string, unknown>)['key1']).toBe('value1')
+    expect(result).toEqual(
+      expect.objectContaining({ format: 'ini', data: expect.objectContaining({ section1: expect.objectContaining({ key1: 'value1' }) }) })
+    )
   })
 
   it('parses dotenv format config files', () => {
     const result = parseConfig(resolve(CONFIG_FILES, '.env'))
 
-    expect(result.format).toBe('dotenv')
-    expect(result.type).toBe('env')
-    expect(result.data).toBeDefined()
-    expect((result.data as Record<string, unknown>)['DATABASE_URL']).toBe('postgres://localhost/db')
+    expect(result).toEqual(
+      expect.objectContaining({
+        format: 'dotenv',
+        type: 'env',
+        data: expect.objectContaining({ DATABASE_URL: 'postgres://localhost/db' }),
+      })
+    )
   })
 
   it('parses YAML config files', () => {
     const result = parseConfig(resolve(CONFIG_FILES, 'config.yaml'))
 
-    expect(result.format).toBe('yaml')
-    expect(result.data).toBeDefined()
-    expect((result.data as Record<string, unknown>)['name']).toBe('test-project')
+    expect(result).toEqual(expect.objectContaining({ format: 'yaml', data: expect.objectContaining({ name: 'test-project' }) }))
   })
 
   it('parses .yml extension as YAML', () => {
     const result = parseConfig(resolve(CONFIG_FILES, 'config.yml'))
 
-    expect(result.format).toBe('yaml')
-    expect(result.data).toBeDefined()
-    expect((result.data as Record<string, unknown>)['name']).toBe('test-yml')
+    expect(result).toEqual(expect.objectContaining({ format: 'yaml', data: expect.objectContaining({ name: 'test-yml' }) }))
   })
 
   it('returns raw content for text files', () => {
-    const result = parseConfig(resolve(CONFIG_FILES, 'config.txt'))
+    const configPath = resolve(CONFIG_FILES, 'config.txt')
+    const result = parseConfig(configPath)
 
-    expect(result.format).toBe('text')
-    expect(result.raw).toBeDefined()
-    expect(result.data).toBeUndefined()
+    expect(result).toEqual({ type: 'unknown', path: configPath, format: 'text', raw: expect.any(String) })
   })
 
   it('auto-detects unknown config type', () => {
@@ -85,26 +80,23 @@ describe('parseConfig', () => {
   })
 
   it('returns raw content for .cjs files', () => {
-    const result = parseConfig(resolve(CONFIG_FILES, 'config.cjs'))
+    const configPath = resolve(CONFIG_FILES, 'config.cjs')
+    const result = parseConfig(configPath)
 
-    expect(result.format).toBe('js')
-    expect(result.raw).toBeDefined()
-    expect(result.data).toBeUndefined()
+    expect(result).toEqual({ type: 'unknown', path: configPath, format: 'js', raw: expect.any(String) })
   })
 
   it('returns raw content for .mjs files', () => {
-    const result = parseConfig(resolve(CONFIG_FILES, 'config.mjs'))
+    const configPath = resolve(CONFIG_FILES, 'config.mjs')
+    const result = parseConfig(configPath)
 
-    expect(result.format).toBe('js')
-    expect(result.raw).toBeDefined()
-    expect(result.data).toBeUndefined()
+    expect(result).toEqual({ type: 'unknown', path: configPath, format: 'js', raw: expect.any(String) })
   })
 
   it('returns raw content for .toml files (not parsed)', () => {
     const result = parseConfig(resolve(CONFIG_FILES, 'config.toml'))
 
-    expect(result.format).toBe('text')
-    expect(result.raw).toBeDefined()
+    expect(result).toEqual(expect.objectContaining({ format: 'text', raw: expect.any(String) }))
   })
 })
 
@@ -276,8 +268,7 @@ describe('readConfigIfExists', () => {
   it('reads existing JSON config', () => {
     const result = readConfigIfExists<{ name: string }>(resolve(MINIMAL_PROJECT, 'package.json'))
 
-    expect(result).not.toBeNull()
-    expect(result?.name).toBe('minimal-test-project')
+    expect(result).toEqual(expect.objectContaining({ name: 'minimal-test-project' }))
   })
 
   it('returns null for non-existent file', () => {
@@ -289,15 +280,13 @@ describe('readConfigIfExists', () => {
   it('reads tsconfig.json with potential comments', () => {
     const result = readConfigIfExists<{ compilerOptions: object }>(resolve(MINIMAL_PROJECT, 'tsconfig.json'))
 
-    expect(result).not.toBeNull()
-    expect(result?.compilerOptions).toBeDefined()
+    expect(result).toEqual(expect.objectContaining({ compilerOptions: expect.any(Object) }))
   })
 
   it('reads YAML config files', () => {
     const result = readConfigIfExists<{ name: string }>(resolve(CONFIG_FILES, 'config.yaml'))
 
-    expect(result).not.toBeNull()
-    expect(result?.name).toBe('test-project')
+    expect(result).toEqual(expect.objectContaining({ name: 'test-project' }))
   })
 
   it('returns null for unsupported formats', () => {
@@ -396,15 +385,14 @@ describe('parseIniConfig edge cases', () => {
     const result = parseConfig(resolve(CONFIG_FILES, 'config.ini'))
 
     const section1 = (result.data as Record<string, unknown>)['section1'] as Record<string, string>
-    expect(section1['key1']).toBe('value1')
-    expect(section1['key2']).toBe('value2')
+    expect(section1).toEqual({ key1: 'value1', key2: 'value2' })
   })
 
   it('ignores INI comment lines starting with # or ;', () => {
     const result = parseConfig(resolve(CONFIG_FILES, 'config.ini'))
 
-    expect(result.data).not.toHaveProperty('# This is a comment')
-    expect(result.data).not.toHaveProperty('; Also a comment')
+    const keys = Object.keys(result.data as Record<string, unknown>)
+    expect(keys.filter((key) => key.startsWith('#') || key.startsWith(';'))).toEqual([])
   })
 })
 

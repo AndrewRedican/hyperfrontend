@@ -29,10 +29,15 @@ describe('nxDetector', () => {
       devDependencies: { nx: '^17.0.0' },
     })
 
-    expect(result).not.toBeNull()
-    expect(result?.id).toBe('nx')
-    expect(result?.name).toBe('NX')
-    expect(result?.version).toBe('17.0.0')
+    expect(result).toEqual(expect.objectContaining({ id: 'nx', name: 'NX', version: '17.0.0' }))
+  })
+
+  it('scores an nx dependency above zero', () => {
+    const result = nxDetector(mockProjectPath, {
+      name: 'test-project',
+      devDependencies: { nx: '^17.0.0' },
+    })
+
     expect(result?.confidence).toBeGreaterThan(0)
   })
 
@@ -76,8 +81,24 @@ describe('nxDetector', () => {
       devDependencies: { nx: '^17.0.0' },
     })
 
-    expect(result?.configPath).toBe('nx.json')
-    expect(result?.detectedFrom.some((s) => s.path === 'nx.json')).toBe(true)
+    expect(result).toEqual(
+      expect.objectContaining({
+        configPath: 'nx.json',
+        detectedFrom: expect.arrayContaining([expect.objectContaining({ path: 'nx.json' })]),
+      })
+    )
+  })
+
+  it('scores an nx.json config file at least 70', () => {
+    jest.mocked(fs.exists).mockImplementation((path: string) => {
+      return path.includes('nx.json')
+    })
+
+    const result = nxDetector(mockProjectPath, {
+      name: 'test-project',
+      devDependencies: { nx: '^17.0.0' },
+    })
+
     expect(result?.confidence).toBeGreaterThanOrEqual(70)
   })
 
@@ -95,7 +116,19 @@ describe('nxDetector', () => {
       appsDir: 'apps',
       libsDir: 'libs',
     })
-    expect(result?.detectedFrom.some((s) => s.path === 'apps/ or libs/')).toBe(true)
+  })
+
+  it('records the apps and libs directories as a detection source', () => {
+    jest.mocked(fs.exists).mockImplementation((path: string) => {
+      return path.includes('apps') || path.includes('libs') || path.includes('nx.json')
+    })
+
+    const result = nxDetector(mockProjectPath, {
+      name: 'test-project',
+      devDependencies: { nx: '^17.0.0' },
+    })
+
+    expect(result?.detectedFrom).toEqual(expect.arrayContaining([expect.objectContaining({ path: 'apps/ or libs/' })]))
   })
 
   it('handles only apps directory', () => {
@@ -108,7 +141,6 @@ describe('nxDetector', () => {
       devDependencies: { nx: '^17.0.0' },
     })
 
-    expect(result?.workspaceLayout?.appsDir).toBe('apps')
-    expect(result?.workspaceLayout?.libsDir).toBe('')
+    expect(result?.workspaceLayout).toEqual({ appsDir: 'apps', libsDir: '' })
   })
 })

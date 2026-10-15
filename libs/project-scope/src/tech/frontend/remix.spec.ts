@@ -28,8 +28,15 @@ describe('remixDetector', () => {
     }
     const result = remixDetector('/some/path', pkg)
 
-    expect(result).not.toBeNull()
-    expect(result?.id).toBe('remix')
+    expect(result).toEqual(expect.objectContaining({ id: 'remix' }))
+  })
+
+  it('scores @remix-run/react at least 70', () => {
+    const pkg: PackageJson = {
+      dependencies: { '@remix-run/react': '^2.0.0' },
+    }
+    const result = remixDetector('/some/path', pkg)
+
     expect(result?.confidence).toBeGreaterThanOrEqual(70)
   })
 
@@ -43,7 +50,18 @@ describe('remixDetector', () => {
     const result = remixDetector('/some/path', pkg)
 
     expect(result?.confidence).toBeGreaterThanOrEqual(90)
-    expect(result?.detectedFrom.some((s) => s.field === 'dependencies.@remix-run/*')).toBe(true)
+  })
+
+  it('records @remix-run/node as a detection source', () => {
+    const pkg: PackageJson = {
+      dependencies: {
+        '@remix-run/react': '^2.0.0',
+        '@remix-run/node': '^2.0.0',
+      },
+    }
+    const result = remixDetector('/some/path', pkg)
+
+    expect(result?.detectedFrom).toEqual(expect.arrayContaining([expect.objectContaining({ field: 'dependencies.@remix-run/*' })]))
   })
 
   it('increases confidence with @remix-run/cloudflare', () => {
@@ -81,7 +99,19 @@ describe('remixDetector', () => {
     const result = remixDetector('/some/path', pkg)
 
     expect(result?.confidence).toBeGreaterThanOrEqual(80)
-    expect(result?.detectedFrom.some((s) => s.path === 'remix.config.*')).toBe(true)
+  })
+
+  it('records remix.config.js as a detection source', () => {
+    mockExists.mockImplementation((path: string) => {
+      return path.includes('remix.config.js')
+    })
+
+    const pkg: PackageJson = {
+      dependencies: { '@remix-run/react': '^2.0.0' },
+    }
+    const result = remixDetector('/some/path', pkg)
+
+    expect(result?.detectedFrom).toEqual(expect.arrayContaining([expect.objectContaining({ path: 'remix.config.*' })]))
   })
 
   it('increases confidence with remix.config.ts', () => {

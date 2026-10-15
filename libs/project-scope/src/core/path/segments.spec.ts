@@ -58,12 +58,7 @@ describe('core/path/segments', () => {
 
   describe('parsePath', () => {
     it('parses path into components', () => {
-      const result = parsePath('/root/dir/file.ts')
-      expect(result.root).toBe('/')
-      expect(result.dir).toBe('/root/dir')
-      expect(result.base).toBe('file.ts')
-      expect(result.name).toBe('file')
-      expect(result.ext).toBe('.ts')
+      expect(parsePath('/root/dir/file.ts')).toEqual({ root: '/', dir: '/root/dir', base: 'file.ts', name: 'file', ext: '.ts' })
     })
   })
 })

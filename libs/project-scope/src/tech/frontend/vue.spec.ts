@@ -28,9 +28,15 @@ describe('vueDetector', () => {
     }
     const result = vueDetector('/some/path', pkg)
 
-    expect(result).not.toBeNull()
-    expect(result?.id).toBe('vue')
-    expect(result?.name).toBe('Vue')
+    expect(result).toEqual(expect.objectContaining({ id: 'vue', name: 'Vue' }))
+  })
+
+  it('scores a vue dependency at least 70', () => {
+    const pkg: PackageJson = {
+      dependencies: { vue: '^3.0.0' },
+    }
+    const result = vueDetector('/some/path', pkg)
+
     expect(result?.confidence).toBeGreaterThanOrEqual(70)
   })
 
@@ -66,7 +72,16 @@ describe('vueDetector', () => {
     const result = vueDetector('/some/path', pkg)
 
     expect(result?.confidence).toBeGreaterThanOrEqual(85)
-    expect(result?.detectedFrom.some((s) => s.field === 'dependencies.@vue/cli-service')).toBe(true)
+  })
+
+  it('records @vue/cli-service as a detection source', () => {
+    const pkg: PackageJson = {
+      dependencies: { vue: '^3.0.0' },
+      devDependencies: { '@vue/cli-service': '^5.0.0' },
+    }
+    const result = vueDetector('/some/path', pkg)
+
+    expect(result?.detectedFrom).toEqual(expect.arrayContaining([expect.objectContaining({ field: 'dependencies.@vue/cli-service' })]))
   })
 
   it('increases confidence with .vue files in src', () => {
@@ -80,7 +95,19 @@ describe('vueDetector', () => {
     const result = vueDetector('/some/path', pkg)
 
     expect(result?.confidence).toBeGreaterThanOrEqual(80)
-    expect(result?.detectedFrom.some((s) => s.path === 'src/*.vue')).toBe(true)
+  })
+
+  it('records .vue files in src as a detection source', () => {
+    mockExists.mockImplementation((path: string) => {
+      return path.includes('App.vue') || path.includes('main.vue')
+    })
+
+    const pkg: PackageJson = {
+      dependencies: { vue: '^3.0.0' },
+    }
+    const result = vueDetector('/some/path', pkg)
+
+    expect(result?.detectedFrom).toEqual(expect.arrayContaining([expect.objectContaining({ path: 'src/*.vue' })]))
   })
 
   it('increases confidence with vue.config.js', () => {
@@ -94,6 +121,18 @@ describe('vueDetector', () => {
     const result = vueDetector('/some/path', pkg)
 
     expect(result?.confidence).toBeGreaterThanOrEqual(75)
-    expect(result?.detectedFrom.some((s) => s.path === 'vue.config.js')).toBe(true)
+  })
+
+  it('records vue.config.js as a detection source', () => {
+    mockExists.mockImplementation((path: string) => {
+      return path.includes('vue.config.js')
+    })
+
+    const pkg: PackageJson = {
+      dependencies: { vue: '^3.0.0' },
+    }
+    const result = vueDetector('/some/path', pkg)
+
+    expect(result?.detectedFrom).toEqual(expect.arrayContaining([expect.objectContaining({ path: 'vue.config.js' })]))
   })
 })

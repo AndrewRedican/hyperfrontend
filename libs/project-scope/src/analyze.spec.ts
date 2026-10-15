@@ -11,23 +11,26 @@ describe('analyzeProject', () => {
     it('returns complete analysis result', () => {
       const result = analyzeProject(MINIMAL_PROJECT)
 
-      expect(result).toHaveProperty('name')
-      expect(result).toHaveProperty('root')
-      expect(result).toHaveProperty('projectType')
-      expect(result).toHaveProperty('workspaceType')
-      expect(result).toHaveProperty('frameworks')
-      expect(result).toHaveProperty('buildTools')
-      expect(result).toHaveProperty('testingFrameworks')
-      expect(result).toHaveProperty('entryPoints')
-      expect(result).toHaveProperty('configFiles')
-      expect(result).toHaveProperty('dependencies')
-      expect(result).toHaveProperty('metadata')
+      expect(result).toEqual(
+        expect.objectContaining({
+          name: expect.any(String),
+          root: expect.any(String),
+          projectType: expect.any(String),
+          workspaceType: expect.any(String),
+          frameworks: expect.any(Array),
+          buildTools: expect.any(Array),
+          testingFrameworks: expect.any(Array),
+          entryPoints: expect.any(Array),
+          configFiles: expect.any(Array),
+          dependencies: expect.any(Object),
+          metadata: expect.any(Object),
+        })
+      )
     })
 
     it('includes correct project name', () => {
       const result = analyzeProject(MINIMAL_PROJECT)
-      expect(typeof result.name).toBe('string')
-      expect(result.name.length).toBeGreaterThan(0)
+      expect(result.name).toBe('minimal-test-project')
     })
 
     it('includes resolved root path', () => {
@@ -40,33 +43,45 @@ describe('analyzeProject', () => {
       expect(['application', 'library', 'e2e', 'tool', 'plugin', 'unknown']).toContain(result.projectType)
     })
 
-    it('includes metadata with timestamp and duration', () => {
+    it('includes metadata with timestamp, duration and version', () => {
       const result = analyzeProject(MINIMAL_PROJECT)
 
-      expect(result.metadata.timestamp).toBeInstanceOf(Date)
-      expect(typeof result.metadata.durationMs).toBe('number')
+      expect(result.metadata).toEqual({
+        timestamp: expect.any(Date),
+        durationMs: expect.any(Number),
+        version: expect.any(String),
+      })
+    })
+
+    it('reports a non-negative analysis duration', () => {
+      const result = analyzeProject(MINIMAL_PROJECT)
       expect(result.metadata.durationMs).toBeGreaterThanOrEqual(0)
-      expect(typeof result.metadata.version).toBe('string')
     })
 
     it('returns arrays for collections', () => {
       const result = analyzeProject(MINIMAL_PROJECT)
 
-      expect(Array.isArray(result.frameworks)).toBe(true)
-      expect(Array.isArray(result.buildTools)).toBe(true)
-      expect(Array.isArray(result.testingFrameworks)).toBe(true)
-      expect(Array.isArray(result.entryPoints)).toBe(true)
-      expect(Array.isArray(result.configFiles)).toBe(true)
+      expect(result).toEqual(
+        expect.objectContaining({
+          frameworks: expect.any(Array),
+          buildTools: expect.any(Array),
+          testingFrameworks: expect.any(Array),
+          entryPoints: expect.any(Array),
+          configFiles: expect.any(Array),
+        })
+      )
     })
 
     it('returns dependency summary with counts', () => {
       const result = analyzeProject(MINIMAL_PROJECT)
 
-      expect(typeof result.dependencies.production).toBe('number')
-      expect(typeof result.dependencies.development).toBe('number')
-      expect(typeof result.dependencies.peer).toBe('number')
-      expect(typeof result.dependencies.optional).toBe('number')
-      expect(typeof result.dependencies.total).toBe('number')
+      expect(result.dependencies).toEqual({
+        production: expect.any(Number),
+        development: expect.any(Number),
+        peer: expect.any(Number),
+        optional: expect.any(Number),
+        total: expect.any(Number),
+      })
     })
   })
 
@@ -78,12 +93,14 @@ describe('analyzeProject', () => {
   })
 
   describe('options.depth', () => {
-    it('basic depth skips tech detection in project type', () => {
-      const basic = analyzeProject(MINIMAL_PROJECT, { depth: 'basic' })
-      const full = analyzeProject(MINIMAL_PROJECT, { depth: 'full' })
+    it('still resolves a project type at basic depth', () => {
+      const result = analyzeProject(MINIMAL_PROJECT, { depth: 'basic' })
+      expect(result.projectType).toBeDefined()
+    })
 
-      expect(basic.projectType).toBeDefined()
-      expect(full.projectType).toBeDefined()
+    it('resolves a project type at full depth', () => {
+      const result = analyzeProject(MINIMAL_PROJECT, { depth: 'full' })
+      expect(result.projectType).toBeDefined()
     })
   })
 
@@ -93,22 +110,31 @@ describe('analyzeProject', () => {
         include: ['frameworks'],
       })
 
-      expect(Array.isArray(result.frameworks)).toBe(true)
-
-      expect(result.buildTools).toEqual([])
-      expect(result.testingFrameworks).toEqual([])
-      expect(result.entryPoints).toEqual([])
-      expect(result.configFiles).toEqual([])
+      expect(result).toEqual(
+        expect.objectContaining({
+          frameworks: expect.any(Array),
+          buildTools: [],
+          testingFrameworks: [],
+          entryPoints: [],
+          configFiles: [],
+        })
+      )
     })
   })
 
   describe('options.exclude', () => {
-    it('skips excluded analyses', () => {
+    it('zeroes the dependency summary when dependencies are excluded', () => {
       const result = analyzeProject(MINIMAL_PROJECT, {
         exclude: ['dependencies'],
       })
 
       expect(result.dependencies.total).toBe(0)
+    })
+
+    it('still detects the project type when dependencies are excluded', () => {
+      const result = analyzeProject(MINIMAL_PROJECT, {
+        exclude: ['dependencies'],
+      })
 
       expect(result.projectType).toBeDefined()
     })
@@ -119,10 +145,14 @@ describe('analyzeProject', () => {
       const result = analyzeProject(MINIMAL_PROJECT)
 
       for (const framework of result.frameworks) {
-        expect(typeof framework.id).toBe('string')
-        expect(typeof framework.name).toBe('string')
-        expect(typeof framework.confidence).toBe('number')
-        expect(['frontend', 'backend', 'fullstack']).toContain(framework.category)
+        expect(framework).toEqual(
+          expect.objectContaining({
+            id: expect.any(String),
+            name: expect.any(String),
+            confidence: expect.any(Number),
+            category: expect.stringMatching(/^(?:frontend|backend|fullstack)$/),
+          })
+        )
       }
     })
   })
@@ -132,9 +162,13 @@ describe('analyzeProject', () => {
       const result = analyzeProject(MINIMAL_PROJECT)
 
       for (const tool of result.buildTools) {
-        expect(typeof tool.id).toBe('string')
-        expect(typeof tool.name).toBe('string')
-        expect(typeof tool.confidence).toBe('number')
+        expect(tool).toEqual(
+          expect.objectContaining({
+            id: expect.any(String),
+            name: expect.any(String),
+            confidence: expect.any(Number),
+          })
+        )
       }
     })
   })
@@ -144,9 +178,13 @@ describe('analyzeProject', () => {
       const result = analyzeProject(MINIMAL_PROJECT)
 
       for (const entry of result.entryPoints) {
-        expect(typeof entry.path).toBe('string')
-        expect(['main', 'app', 'server', 'cli', 'test']).toContain(entry.type)
-        expect(typeof entry.confidence).toBe('number')
+        expect(entry).toEqual(
+          expect.objectContaining({
+            path: expect.any(String),
+            type: expect.stringMatching(/^(?:main|app|server|cli|test)$/),
+            confidence: expect.any(Number),
+          })
+        )
       }
     })
   })
@@ -156,9 +194,13 @@ describe('analyzeProject', () => {
       const result = analyzeProject(MINIMAL_PROJECT)
 
       for (const config of result.configFiles) {
-        expect(typeof config.path).toBe('string')
-        expect(typeof config.name).toBe('string')
-        expect(['json', 'yaml', 'js', 'ts', 'toml', 'env']).toContain(config.format)
+        expect(config).toEqual(
+          expect.objectContaining({
+            path: expect.any(String),
+            name: expect.any(String),
+            format: expect.stringMatching(/^(?:json|yaml|js|ts|toml|env)$/),
+          })
+        )
       }
     })
   })
@@ -187,8 +229,7 @@ describe('analyzeProject', () => {
   describe('options.verbose', () => {
     it('enables verbose logging when verbose option is true', () => {
       const result = analyzeProject(MINIMAL_PROJECT, { verbose: true })
-      expect(result).toBeDefined()
-      expect(result.projectType).toBeDefined()
+      expect(result).toEqual(expect.objectContaining({ projectType: expect.any(String) }))
     })
   })
 
@@ -211,8 +252,7 @@ describe('analyzeProject', () => {
     it('handles empty project directory', () => {
       const emptyDir = resolve(FIXTURES_DIR, 'empty')
       const result = analyzeProject(emptyDir)
-      expect(result).toBeDefined()
-      expect(result.projectType).toBeDefined()
+      expect(result).toEqual(expect.objectContaining({ projectType: expect.any(String) }))
     })
   })
 })

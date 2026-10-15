@@ -4,8 +4,11 @@ import { matchGlobPattern, matchesAnyPattern, matchesExact } from './glob'
 describe('core/patterns/glob', () => {
   describe('matchGlobPattern', () => {
     describe('exact matches', () => {
-      it('matches exact paths', () => {
+      it('matches an identical path', () => {
         expect(matchGlobPattern('src/index.ts', 'src/index.ts')).toBe(true)
+      })
+
+      it('rejects a path that differs from the literal pattern', () => {
         expect(matchGlobPattern('src/index.ts', 'src/main.ts')).toBe(false)
       })
     })
@@ -13,6 +16,9 @@ describe('core/patterns/glob', () => {
     describe('single asterisk (*)', () => {
       it('matches any characters in segment', () => {
         expect(matchGlobPattern('src/file.ts', 'src/*.ts')).toBe(true)
+      })
+
+      it('rejects a segment whose literal tail differs', () => {
         expect(matchGlobPattern('src/file.js', 'src/*.ts')).toBe(false)
       })
 
@@ -35,8 +41,9 @@ describe('core/patterns/glob', () => {
 
     describe('double asterisk (**)', () => {
       it('matches any number of directories', () => {
-        expect(matchGlobPattern('src/lib/utils/file.ts', 'src/**/file.ts')).toBe(true)
-        expect(matchGlobPattern('src/file.ts', 'src/**/file.ts')).toBe(true)
+        for (const path of ['src/lib/utils/file.ts', 'src/file.ts']) {
+          expect(matchGlobPattern(path, 'src/**/file.ts')).toBe(true)
+        }
       })
 
       it('matches at beginning', () => {
@@ -55,6 +62,9 @@ describe('core/patterns/glob', () => {
     describe('question mark (?)', () => {
       it('matches exactly one character', () => {
         expect(matchGlobPattern('src/file1.ts', 'src/file?.ts')).toBe(true)
+      })
+
+      it('rejects two characters for one question mark', () => {
         expect(matchGlobPattern('src/file12.ts', 'src/file?.ts')).toBe(false)
       })
 
@@ -69,21 +79,27 @@ describe('core/patterns/glob', () => {
 
     describe('braces {a,b,c}', () => {
       it('matches any alternative', () => {
-        expect(matchGlobPattern('file.ts', 'file.{ts,js}')).toBe(true)
-        expect(matchGlobPattern('file.js', 'file.{ts,js}')).toBe(true)
+        for (const path of ['file.ts', 'file.js']) {
+          expect(matchGlobPattern(path, 'file.{ts,js}')).toBe(true)
+        }
+      })
+
+      it('rejects an extension outside the alternatives', () => {
         expect(matchGlobPattern('file.css', 'file.{ts,js}')).toBe(false)
       })
 
       it('works with multiple alternatives', () => {
-        expect(matchGlobPattern('file.ts', 'file.{ts,js,jsx,tsx}')).toBe(true)
-        expect(matchGlobPattern('file.tsx', 'file.{ts,js,jsx,tsx}')).toBe(true)
+        for (const path of ['file.ts', 'file.tsx']) {
+          expect(matchGlobPattern(path, 'file.{ts,js,jsx,tsx}')).toBe(true)
+        }
       })
     })
 
     describe('complex patterns', () => {
       it('handles ** with * together', () => {
-        expect(matchGlobPattern('src/lib/file.spec.ts', 'src/**/*.spec.ts')).toBe(true)
-        expect(matchGlobPattern('src/file.spec.ts', 'src/**/*.spec.ts')).toBe(true)
+        for (const path of ['src/lib/file.spec.ts', 'src/file.spec.ts']) {
+          expect(matchGlobPattern(path, 'src/**/*.spec.ts')).toBe(true)
+        }
       })
 
       it('handles multiple placeholders', () => {
@@ -91,19 +107,26 @@ describe('core/patterns/glob', () => {
       })
 
       it('handles braces with wildcards', () => {
-        expect(matchGlobPattern('src/file.spec.ts', 'src/*.{spec,test}.ts')).toBe(true)
-        expect(matchGlobPattern('src/file.test.ts', 'src/*.{spec,test}.ts')).toBe(true)
+        for (const path of ['src/file.spec.ts', 'src/file.test.ts']) {
+          expect(matchGlobPattern(path, 'src/*.{spec,test}.ts')).toBe(true)
+        }
       })
     })
 
     describe('edge cases', () => {
-      it('handles empty pattern', () => {
+      it('matches an empty path against an empty pattern', () => {
         expect(matchGlobPattern('', '')).toBe(true)
+      })
+
+      it('rejects a non-empty path against an empty pattern', () => {
         expect(matchGlobPattern('file.ts', '')).toBe(false)
       })
 
-      it('handles empty path', () => {
+      it('rejects an empty path against a literal pattern', () => {
         expect(matchGlobPattern('', 'file.ts')).toBe(false)
+      })
+
+      it('matches an empty path against a lone asterisk', () => {
         expect(matchGlobPattern('', '*')).toBe(true)
       })
 
@@ -186,6 +209,9 @@ describe('core/patterns/glob', () => {
   describe('edge cases - malformed patterns', () => {
     it('treats unmatched opening brace as literal character', () => {
       expect(matchGlobPattern('file{.ts', 'file{.ts')).toBe(true)
+    })
+
+    it('rejects a path missing the literal unmatched brace', () => {
       expect(matchGlobPattern('file.ts', 'file{.ts')).toBe(false)
     })
 
@@ -211,8 +237,11 @@ describe('core/patterns/glob', () => {
       expect(matchGlobPattern('file.ts', 'file.{ts}')).toBe(true)
     })
 
-    it('tests all alternatives before returning false', () => {
+    it('rejects a path once every alternative has been tried', () => {
       expect(matchGlobPattern('file.tsx', 'file.{ts,js,jsx}')).toBe(false)
+    })
+
+    it('matches the last alternative in the list', () => {
       expect(matchGlobPattern('file.tsx', 'file.{ts,js,jsx,tsx}')).toBe(true)
     })
   })

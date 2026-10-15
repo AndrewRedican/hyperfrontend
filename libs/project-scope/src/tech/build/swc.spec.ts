@@ -14,9 +14,15 @@ describe('swcDetector', () => {
     }
     const result = swcDetector('/some/path', pkg)
 
-    expect(result).not.toBeNull()
-    expect(result?.id).toBe('swc')
-    expect(result?.name).toBe('SWC')
+    expect(result).toEqual(expect.objectContaining({ id: 'swc', name: 'SWC' }))
+  })
+
+  it('scores @swc/core at least 60', () => {
+    const pkg: PackageJson = {
+      devDependencies: { '@swc/core': '^1.0.0' },
+    }
+    const result = swcDetector('/some/path', pkg)
+
     expect(result?.confidence).toBeGreaterThanOrEqual(60)
   })
 

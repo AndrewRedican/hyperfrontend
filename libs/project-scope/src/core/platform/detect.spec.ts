@@ -7,16 +7,17 @@ const originalPlatform = process.platform
 describe('core/platform/detect', () => {
   describe('detectPlatform', () => {
     it('returns platform info object', () => {
-      const info = detectPlatform()
-      expect(info).toHaveProperty('os')
-      expect(info).toHaveProperty('arch')
-      expect(info).toHaveProperty('isWindows')
-      expect(info).toHaveProperty('isMac')
-      expect(info).toHaveProperty('isLinux')
-      expect(info).toHaveProperty('pathSeparator')
-      expect(info).toHaveProperty('lineEnding')
-      expect(info).toHaveProperty('caseSensitive')
-      expect(info).toHaveProperty('nodeVersion')
+      expect(detectPlatform()).toEqual({
+        os: expect.any(String),
+        arch: expect.any(String),
+        nodeVersion: expect.any(String),
+        isWindows: expect.any(Boolean),
+        isMac: expect.any(Boolean),
+        isLinux: expect.any(Boolean),
+        caseSensitive: expect.any(Boolean),
+        pathSeparator: expect.any(String),
+        lineEnding: expect.any(String),
+      })
     })
 
     it('has valid os value', () => {
@@ -128,13 +129,9 @@ describe('core/platform/detect with mocked platforms', () => {
         tmpdir: jest.fn(() => 'C:\\Temp'),
       }))
       const { getPlatformInfo: getInfo } = await import('./detect')
-      const info = getInfo()
-      expect(info.os).toBe('win32')
-      expect(info.isWindows).toBe(true)
-      expect(info.isMac).toBe(false)
-      expect(info.isLinux).toBe(false)
-      expect(info.pathSeparator).toBe('\\')
-      expect(info.lineEnding).toBe('\r\n')
+      expect(getInfo()).toEqual(
+        expect.objectContaining({ os: 'win32', isWindows: true, isMac: false, isLinux: false, pathSeparator: '\\', lineEnding: '\r\n' })
+      )
     })
   })
 
@@ -147,13 +144,9 @@ describe('core/platform/detect with mocked platforms', () => {
         tmpdir: jest.fn(() => '/var/folders/tmp'),
       }))
       const { getPlatformInfo: getInfo } = await import('./detect')
-      const info = getInfo()
-      expect(info.os).toBe('darwin')
-      expect(info.isWindows).toBe(false)
-      expect(info.isMac).toBe(true)
-      expect(info.isLinux).toBe(false)
-      expect(info.pathSeparator).toBe('/')
-      expect(info.lineEnding).toBe('\n')
+      expect(getInfo()).toEqual(
+        expect.objectContaining({ os: 'darwin', isWindows: false, isMac: true, isLinux: false, pathSeparator: '/', lineEnding: '\n' })
+      )
     })
   })
 
@@ -166,12 +159,9 @@ describe('core/platform/detect with mocked platforms', () => {
         tmpdir: jest.fn(() => '/var/tmp'),
       }))
       const { getPlatformInfo: getInfo } = await import('./detect')
-      const info = getInfo()
-      expect(info.os).toBe('freebsd')
-      expect(info.isWindows).toBe(false)
-      expect(info.isMac).toBe(false)
-      expect(info.isLinux).toBe(false)
-      expect(info.pathSeparator).toBe('/')
+      expect(getInfo()).toEqual(
+        expect.objectContaining({ os: 'freebsd', isWindows: false, isMac: false, isLinux: false, pathSeparator: '/' })
+      )
     })
   })
 
@@ -184,11 +174,7 @@ describe('core/platform/detect with mocked platforms', () => {
         tmpdir: jest.fn(() => '/var/tmp'),
       }))
       const { getPlatformInfo: getInfo } = await import('./detect')
-      const info = getInfo()
-      expect(info.os).toBe('sunos')
-      expect(info.isWindows).toBe(false)
-      expect(info.isMac).toBe(false)
-      expect(info.isLinux).toBe(false)
+      expect(getInfo()).toEqual(expect.objectContaining({ os: 'sunos', isWindows: false, isMac: false, isLinux: false }))
     })
   })
 
@@ -201,11 +187,7 @@ describe('core/platform/detect with mocked platforms', () => {
         tmpdir: jest.fn(() => '/var/tmp'),
       }))
       const { getPlatformInfo: getInfo } = await import('./detect')
-      const info = getInfo()
-      expect(info.os).toBe('aix')
-      expect(info.isWindows).toBe(false)
-      expect(info.isMac).toBe(false)
-      expect(info.isLinux).toBe(false)
+      expect(getInfo()).toEqual(expect.objectContaining({ os: 'aix', isWindows: false, isMac: false, isLinux: false }))
     })
   })
 
@@ -218,11 +200,7 @@ describe('core/platform/detect with mocked platforms', () => {
         tmpdir: jest.fn(() => '/var/tmp'),
       }))
       const { getPlatformInfo: getInfo } = await import('./detect')
-      const info = getInfo()
-      expect(info.os).toBe('other')
-      expect(info.isWindows).toBe(false)
-      expect(info.isMac).toBe(false)
-      expect(info.isLinux).toBe(false)
+      expect(getInfo()).toEqual(expect.objectContaining({ os: 'other', isWindows: false, isMac: false, isLinux: false }))
     })
   })
 })

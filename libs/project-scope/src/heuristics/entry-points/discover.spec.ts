@@ -30,7 +30,6 @@ describe('discoverEntryPoints', () => {
     it('discovers entry points', () => {
       const result = discoverEntryPoints(MINIMAL_PROJECT)
 
-      expect(Array.isArray(result)).toBe(true)
       expect(result.length).toBeGreaterThan(0)
     })
 
@@ -38,12 +37,19 @@ describe('discoverEntryPoints', () => {
       const result = discoverEntryPoints(MINIMAL_PROJECT)
 
       for (const entry of result) {
-        expect(typeof entry.path).toBe('string')
-        expect(['main', 'app', 'server', 'cli', 'test']).toContain(entry.type)
-        expect(typeof entry.confidence).toBe('number')
-        expect(entry.confidence).toBeGreaterThanOrEqual(0)
-        expect(entry.confidence).toBeLessThanOrEqual(100)
+        expect(entry).toEqual({
+          path: expect.any(String),
+          type: expect.stringMatching(/^(?:main|app|server|cli|test)$/),
+          confidence: expect.any(Number),
+        })
       }
+    })
+
+    it('keeps every confidence between 0 and 100', () => {
+      const result = discoverEntryPoints(MINIMAL_PROJECT)
+
+      const outOfRange = result.map((e) => e.confidence).filter((confidence) => confidence < 0 || confidence > 100)
+      expect(outOfRange).toEqual([])
     })
 
     it('sorts by confidence descending', () => {
@@ -58,35 +64,27 @@ describe('discoverEntryPoints', () => {
       const result = discoverEntryPoints(MINIMAL_PROJECT)
 
       const indexEntry = result.find((e) => e.path === 'src/index.ts')
-      expect(indexEntry).toBeDefined()
       expect(indexEntry?.type).toBe('main')
     })
 
     it('detects main field from package.json', () => {
       const result = discoverEntryPoints(MINIMAL_PROJECT)
 
-      const mainEntry = result.find((e) => e.path === 'src/main.js')
-      expect(mainEntry).toBeDefined()
-      expect(mainEntry?.type).toBe('main')
-      expect(mainEntry?.confidence).toBe(100)
+      expect(result.find((e) => e.path === 'src/main.js')).toEqual({ path: 'src/main.js', type: 'main', confidence: 100 })
     })
   })
 
   describe('options', () => {
     it('respects includeFrameworkEntries option', () => {
-      const withFramework = discoverEntryPoints(MINIMAL_PROJECT, { includeFrameworkEntries: true })
-      const withoutFramework = discoverEntryPoints(MINIMAL_PROJECT, { includeFrameworkEntries: false })
-
-      expect(Array.isArray(withFramework)).toBe(true)
-      expect(Array.isArray(withoutFramework)).toBe(true)
+      for (const includeFrameworkEntries of [true, false]) {
+        expect(discoverEntryPoints(MINIMAL_PROJECT, { includeFrameworkEntries })).toEqual(expect.any(Array))
+      }
     })
 
     it('respects maxDepth option', () => {
-      const shallow = discoverEntryPoints(MINIMAL_PROJECT, { maxDepth: 1 })
-      const deep = discoverEntryPoints(MINIMAL_PROJECT, { maxDepth: 10 })
-
-      expect(Array.isArray(shallow)).toBe(true)
-      expect(Array.isArray(deep)).toBe(true)
+      for (const maxDepth of [1, 10]) {
+        expect(discoverEntryPoints(MINIMAL_PROJECT, { maxDepth })).toEqual(expect.any(Array))
+      }
     })
 
     it('respects skipCache option', () => {
@@ -94,8 +92,7 @@ describe('discoverEntryPoints', () => {
       const result2 = discoverEntryPoints(MINIMAL_PROJECT)
       const result3 = discoverEntryPoints(MINIMAL_PROJECT, { skipCache: true })
 
-      expect(result1).toEqual(result2)
-      expect(result1).toEqual(result3)
+      expect({ cached: result2, fresh: result3 }).toEqual({ cached: result1, fresh: result1 })
     })
 
     it('uses cached results on subsequent calls', () => {
@@ -120,19 +117,13 @@ describe('discoverEntryPoints', () => {
     it('detects module field from package.json', () => {
       const result = discoverEntryPoints(LIBRARY_WITH_EXPORTS)
 
-      const moduleEntry = result.find((e) => e.path === 'dist/index.mjs')
-      expect(moduleEntry).toBeDefined()
-      expect(moduleEntry?.type).toBe('main')
-      expect(moduleEntry?.confidence).toBe(100)
+      expect(result.find((e) => e.path === 'dist/index.mjs')).toEqual({ path: 'dist/index.mjs', type: 'main', confidence: 100 })
     })
 
     it('detects browser field from package.json', () => {
       const result = discoverEntryPoints(LIBRARY_WITH_EXPORTS)
 
-      const browserEntry = result.find((e) => e.path === 'dist/browser.js')
-      expect(browserEntry).toBeDefined()
-      expect(browserEntry?.type).toBe('main')
-      expect(browserEntry?.confidence).toBe(95)
+      expect(result.find((e) => e.path === 'dist/browser.js')).toEqual({ path: 'dist/browser.js', type: 'main', confidence: 95 })
     })
 
     it('detects bin field entries from package.json (object format)', () => {
@@ -140,17 +131,13 @@ describe('discoverEntryPoints', () => {
 
       const cliEntry = result.find((e) => e.path === 'bin/cli.js')
       const toolEntry = result.find((e) => e.path === 'bin/tool.js')
-      expect(cliEntry).toBeDefined()
-      expect(cliEntry?.type).toBe('cli')
-      expect(toolEntry).toBeDefined()
-      expect(toolEntry?.type).toBe('cli')
+      expect([cliEntry, toolEntry]).toEqual([expect.objectContaining({ type: 'cli' }), expect.objectContaining({ type: 'cli' })])
     })
 
     it('detects exports field with string values', () => {
       const result = discoverEntryPoints(LIBRARY_WITH_EXPORTS)
 
       const utilsEntry = result.find((e) => e.path === './dist/utils.js')
-      expect(utilsEntry).toBeDefined()
       expect(utilsEntry?.type).toBe('main')
     })
 
@@ -158,7 +145,6 @@ describe('discoverEntryPoints', () => {
       const result = discoverEntryPoints(LIBRARY_WITH_EXPORTS)
 
       const helpersEntry = result.find((e) => e.path === './dist/helpers.mjs')
-      expect(helpersEntry).toBeDefined()
       expect(helpersEntry?.type).toBe('main')
     })
   })
@@ -167,10 +153,7 @@ describe('discoverEntryPoints', () => {
     it('detects bin field as string from package.json', () => {
       const result = discoverEntryPoints(LIBRARY_WITH_BIN_STRING)
 
-      const cliEntry = result.find((e) => e.path === './bin/cli.js')
-      expect(cliEntry).toBeDefined()
-      expect(cliEntry?.type).toBe('cli')
-      expect(cliEntry?.confidence).toBe(100)
+      expect(result.find((e) => e.path === './bin/cli.js')).toEqual({ path: './bin/cli.js', type: 'cli', confidence: 100 })
     })
   })
 
@@ -179,23 +162,31 @@ describe('discoverEntryPoints', () => {
       const result = discoverEntryPoints(ENTRY_FILE_ONLY)
 
       const indexEntry = result.find((e) => e.path === 'index.ts')
-      expect(indexEntry).toBeDefined()
       expect(indexEntry?.type).toBe('main')
     })
   })
 
   describe('framework-specific entries', () => {
     describe('Next.js pages directory', () => {
-      it('discovers page entries excluding _app, _document, and api routes', () => {
+      it('discovers page entries', () => {
         const result = discoverEntryPoints(NEXTJS_APP, { includeFrameworkEntries: true })
 
         const pageEntries = result.filter((e) => e.path.includes(`pages${posix.sep}`))
-        const appEntry = pageEntries.find((e) => e.path.includes('_app'))
-        const apiEntry = pageEntries.find((e) => e.path.includes(`api${posix.sep}`))
-
         expect(pageEntries.length).toBeGreaterThan(0)
-        expect(appEntry).toBeUndefined()
-        expect(apiEntry).toBeUndefined()
+      })
+
+      it('excludes _app from page entries', () => {
+        const result = discoverEntryPoints(NEXTJS_APP, { includeFrameworkEntries: true })
+
+        const pageEntries = result.filter((e) => e.path.includes(`pages${posix.sep}`))
+        expect(pageEntries.find((e) => e.path.includes('_app'))).toBeUndefined()
+      })
+
+      it('excludes api routes from page entries', () => {
+        const result = discoverEntryPoints(NEXTJS_APP, { includeFrameworkEntries: true })
+
+        const pageEntries = result.filter((e) => e.path.includes(`pages${posix.sep}`))
+        expect(pageEntries.find((e) => e.path.includes(`api${posix.sep}`))).toBeUndefined()
       })
     })
 
@@ -213,7 +204,6 @@ describe('discoverEntryPoints', () => {
         const result = discoverEntryPoints(ANGULAR_APP, { includeFrameworkEntries: true })
 
         const angularEntry = result.find((e) => e.path === 'src/main.ts')
-        expect(angularEntry).toBeDefined()
         expect(angularEntry?.type).toBe('app')
       })
     })
@@ -240,24 +230,18 @@ describe('discoverEntryPoints', () => {
 
 describe('ENTRY_POINT_PATTERNS', () => {
   it('has library patterns', () => {
-    expect(ENTRY_POINT_PATTERNS.library).toContain('src/index.ts')
-    expect(ENTRY_POINT_PATTERNS.library).toContain('src/index.js')
-    expect(ENTRY_POINT_PATTERNS.library).toContain('index.ts')
+    expect(ENTRY_POINT_PATTERNS.library).toEqual(expect.arrayContaining(['src/index.ts', 'src/index.js', 'index.ts']))
   })
 
   it('has application patterns', () => {
-    expect(ENTRY_POINT_PATTERNS.application).toContain('src/main.ts')
-    expect(ENTRY_POINT_PATTERNS.application).toContain('src/main.tsx')
+    expect(ENTRY_POINT_PATTERNS.application).toEqual(expect.arrayContaining(['src/main.ts', 'src/main.tsx']))
   })
 
   it('has server patterns', () => {
-    expect(ENTRY_POINT_PATTERNS.server).toContain('src/server.ts')
-    expect(ENTRY_POINT_PATTERNS.server).toContain('server.ts')
+    expect(ENTRY_POINT_PATTERNS.server).toEqual(expect.arrayContaining(['src/server.ts', 'server.ts']))
   })
 
   it('has cli patterns', () => {
-    expect(ENTRY_POINT_PATTERNS.cli).toContain('src/cli.ts')
-    expect(ENTRY_POINT_PATTERNS.cli).toContain('bin/cli.ts')
-    expect(ENTRY_POINT_PATTERNS.cli).toContain('cli.ts')
+    expect(ENTRY_POINT_PATTERNS.cli).toEqual(expect.arrayContaining(['src/cli.ts', 'bin/cli.ts', 'cli.ts']))
   })
 })

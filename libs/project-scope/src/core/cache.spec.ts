@@ -49,31 +49,54 @@ describe('core/cache', () => {
         const cache = createCache<string, number>()
         testCaches.push(cache)
 
-        expect(cache.size()).toBe(0)
+        const sizes = [cache.size()]
         cache.set('a', 1)
-        expect(cache.size()).toBe(1)
+        sizes.push(cache.size())
         cache.set('b', 2)
-        expect(cache.size()).toBe(2)
+        sizes.push(cache.size())
         cache.set('a', 3)
-        expect(cache.size()).toBe(2)
+        sizes.push(cache.size())
+        expect(sizes).toEqual([0, 1, 2, 2])
       })
 
-      it('checks if key exists with has()', () => {
+      it('reports a missing key as absent via has()', () => {
         const cache = createCache<string, number>()
         testCaches.push(cache)
 
         expect(cache.has('key')).toBe(false)
+      })
+
+      it('reports a stored key as present via has()', () => {
+        const cache = createCache<string, number>()
+        testCaches.push(cache)
+
         cache.set('key', 42)
         expect(cache.has('key')).toBe(true)
       })
 
-      it('deletes entries', () => {
+      it('reports a successful delete', () => {
         const cache = createCache<string, number>()
         testCaches.push(cache)
 
         cache.set('key', 42)
         expect(cache.delete('key')).toBe(true)
+      })
+
+      it('forgets a deleted entry', () => {
+        const cache = createCache<string, number>()
+        testCaches.push(cache)
+
+        cache.set('key', 42)
+        cache.delete('key')
         expect(cache.get('key')).toBeUndefined()
+      })
+
+      it('reports a repeated delete as a miss', () => {
+        const cache = createCache<string, number>()
+        testCaches.push(cache)
+
+        cache.set('key', 42)
+        cache.delete('key')
         expect(cache.delete('key')).toBe(false)
       })
 
@@ -87,13 +110,13 @@ describe('core/cache', () => {
 
         cache.clear()
 
-        expect(cache.size()).toBe(0)
-        expect(cache.get('a')).toBeUndefined()
-        expect(cache.get('b')).toBeUndefined()
-        expect(cache.get('c')).toBeUndefined()
+        expect({ size: cache.size(), values: ['a', 'b', 'c'].map((key) => cache.get(key)) }).toEqual({
+          size: 0,
+          values: [undefined, undefined, undefined],
+        })
       })
 
-      it('returns all keys', () => {
+      it('returns all keys in insertion order', () => {
         const cache = createCache<string, number>()
         testCaches.push(cache)
 
@@ -101,11 +124,7 @@ describe('core/cache', () => {
         cache.set('b', 2)
         cache.set('c', 3)
 
-        const keys = cache.keys()
-        expect(keys).toHaveLength(3)
-        expect(keys).toContain('a')
-        expect(keys).toContain('b')
-        expect(keys).toContain('c')
+        expect(cache.keys()).toEqual(['a', 'b', 'c'])
       })
 
       it('supports object values', () => {
@@ -123,8 +142,7 @@ describe('core/cache', () => {
 
         cache.set(1, 'one')
         cache.set(2, 'two')
-        expect(cache.get(1)).toBe('one')
-        expect(cache.get(2)).toBe('two')
+        expect([cache.get(1), cache.get(2)]).toEqual(['one', 'two'])
       })
     })
 
@@ -164,10 +182,10 @@ describe('core/cache', () => {
         testCaches.push(cache)
 
         cache.set('key', 42)
-        expect(cache.has('key')).toBe(true)
+        const presentBeforeExpiry = cache.has('key')
 
         jest.advanceTimersByTime(1001)
-        expect(cache.has('key')).toBe(false)
+        expect([presentBeforeExpiry, cache.has('key')]).toEqual([true, false])
       })
 
       it('refreshes TTL on update', () => {
@@ -195,8 +213,7 @@ describe('core/cache', () => {
 
         jest.advanceTimersByTime(600)
 
-        expect(cache.get('first')).toBeUndefined()
-        expect(cache.get('second')).toBe(2)
+        expect([cache.get('first'), cache.get('second')]).toEqual([undefined, 2])
       })
     })
 
@@ -209,10 +226,10 @@ describe('core/cache', () => {
         cache.set('second', 2)
         cache.set('third', 3)
 
-        expect(cache.get('first')).toBeUndefined()
-        expect(cache.get('second')).toBe(2)
-        expect(cache.get('third')).toBe(3)
-        expect(cache.size()).toBe(2)
+        expect({ values: ['first', 'second', 'third'].map((key) => cache.get(key)), size: cache.size() }).toEqual({
+          values: [undefined, 2, 3],
+          size: 2,
+        })
       })
 
       it('updates do not cause eviction', () => {
@@ -223,9 +240,10 @@ describe('core/cache', () => {
         cache.set('second', 2)
         cache.set('first', 100)
 
-        expect(cache.get('first')).toBe(100)
-        expect(cache.get('second')).toBe(2)
-        expect(cache.size()).toBe(2)
+        expect({ values: ['first', 'second'].map((key) => cache.get(key)), size: cache.size() }).toEqual({
+          values: [100, 2],
+          size: 2,
+        })
       })
 
       it('evicts multiple entries when needed', () => {
@@ -238,10 +256,7 @@ describe('core/cache', () => {
         cache.set('c', 3)
         cache.set('d', 4)
 
-        expect(cache.get('a')).toBeUndefined()
-        expect(cache.get('b')).toBeUndefined()
-        expect(cache.get('c')).toBe(3)
-        expect(cache.get('d')).toBe(4)
+        expect(['a', 'b', 'c', 'd'].map((key) => cache.get(key))).toEqual([undefined, undefined, 3, 4])
       })
 
       it('handles maxSize of 1', () => {
@@ -252,10 +267,10 @@ describe('core/cache', () => {
         cache.set('b', 2)
         cache.set('c', 3)
 
-        expect(cache.size()).toBe(1)
-        expect(cache.get('c')).toBe(3)
-        expect(cache.get('a')).toBeUndefined()
-        expect(cache.get('b')).toBeUndefined()
+        expect({ size: cache.size(), values: ['a', 'b', 'c'].map((key) => cache.get(key)) }).toEqual({
+          size: 1,
+          values: [undefined, undefined, 3],
+        })
       })
     })
 
@@ -277,15 +292,12 @@ describe('core/cache', () => {
 
         jest.advanceTimersByTime(500)
         cache.set('c', 3)
-
-        expect(cache.get('a')).toBeUndefined()
-        expect(cache.get('b')).toBe(2)
-        expect(cache.get('c')).toBe(3)
+        const afterEviction = ['a', 'b', 'c'].map((key) => cache.get(key))
 
         jest.advanceTimersByTime(600)
+        const afterExpiry = ['b', 'c'].map((key) => cache.get(key))
 
-        expect(cache.get('b')).toBeUndefined()
-        expect(cache.get('c')).toBe(3)
+        expect({ afterEviction, afterExpiry }).toEqual({ afterEviction: [undefined, 2, 3], afterExpiry: [undefined, 3] })
       })
     })
   })
@@ -301,10 +313,10 @@ describe('core/cache', () => {
 
       clearAllCaches()
 
-      expect(cache1.get('a')).toBeUndefined()
-      expect(cache2.get('b')).toBeUndefined()
-      expect(cache1.size()).toBe(0)
-      expect(cache2.size()).toBe(0)
+      expect({ values: [cache1.get('a'), cache2.get('b')], sizes: [cache1.size(), cache2.size()] }).toEqual({
+        values: [undefined, undefined],
+        sizes: [0, 0],
+      })
     })
   })
 
@@ -325,10 +337,14 @@ describe('core/cache', () => {
       const initialCount = getCacheCount()
 
       const cache = createCache<string, number>()
-      expect(getCacheCount()).toBe(initialCount + 1)
+      const countAfterCreate = getCacheCount()
+      const removed = unregisterCache(cache)
 
-      expect(unregisterCache(cache)).toBe(true)
-      expect(getCacheCount()).toBe(initialCount)
+      expect({ countAfterCreate, removed, countAfterRemove: getCacheCount() }).toEqual({
+        countAfterCreate: initialCount + 1,
+        removed: true,
+        countAfterRemove: initialCount,
+      })
     })
 
     it('returns false for already unregistered cache', () => {
@@ -350,11 +366,9 @@ describe('core/cache', () => {
       // Note: memoize creates its own cache, we need to unregister it manually
       testCaches.push(memoized.cache)
 
-      expect(memoized('hello')).toBe(5)
-      expect(memoized('hello')).toBe(5)
-      expect(memoized('hello')).toBe(5)
+      const results = [memoized('hello'), memoized('hello'), memoized('hello')]
 
-      expect(callCount).toBe(1)
+      expect({ results, callCount }).toEqual({ results: [5, 5, 5], callCount: 1 })
     })
 
     it('caches different keys separately', () => {
@@ -367,26 +381,31 @@ describe('core/cache', () => {
       const memoized = memoize(expensive)
       testCaches.push(memoized.cache)
 
-      expect(memoized('a')).toBe(1)
-      expect(memoized('bb')).toBe(2)
-      expect(memoized('ccc')).toBe(3)
+      const firstPass = [memoized('a'), memoized('bb'), memoized('ccc')]
+      const callsAfterFirstPass = callCount
+      const secondPass = [memoized('a'), memoized('bb'), memoized('ccc')]
 
-      expect(callCount).toBe(3)
-
-      expect(memoized('a')).toBe(1)
-      expect(memoized('bb')).toBe(2)
-      expect(memoized('ccc')).toBe(3)
-
-      expect(callCount).toBe(3)
+      expect({ firstPass, callsAfterFirstPass, secondPass, callsAfterSecondPass: callCount }).toEqual({
+        firstPass: [1, 2, 3],
+        callsAfterFirstPass: 3,
+        secondPass: [1, 2, 3],
+        callsAfterSecondPass: 3,
+      })
     })
 
-    it('exposes cache for direct manipulation', () => {
+    it('exposes the cache holding memoized keys', () => {
       const memoized = memoize((key: string) => key.toUpperCase())
       testCaches.push(memoized.cache)
 
       memoized('test')
       expect(memoized.cache.has('test')).toBe(true)
+    })
 
+    it('forgets memoized keys when the exposed cache is cleared', () => {
+      const memoized = memoize((key: string) => key.toUpperCase())
+      testCaches.push(memoized.cache)
+
+      memoized('test')
       memoized.cache.clear()
       expect(memoized.cache.has('test')).toBe(false)
     })
@@ -405,15 +424,15 @@ describe('core/cache', () => {
       testCaches.push(memoized.cache)
 
       memoized('test')
-      expect(callCount).toBe(1)
+      const callsAfterFirst = callCount
 
       memoized('test')
-      expect(callCount).toBe(1)
+      const callsAfterRepeat = callCount
 
       jest.advanceTimersByTime(1001)
 
       memoized('test')
-      expect(callCount).toBe(2)
+      expect([callsAfterFirst, callsAfterRepeat, callCount]).toEqual([1, 1, 2])
 
       jest.useRealTimers()
     })
@@ -432,14 +451,13 @@ describe('core/cache', () => {
       memoized('a')
       memoized('bb')
       memoized('ccc')
-
-      expect(callCount).toBe(3)
+      const callsAfterFill = callCount
 
       memoized('a')
-      expect(callCount).toBe(4)
+      const callsAfterEvictedKey = callCount
 
       memoized('ccc')
-      expect(callCount).toBe(4)
+      expect([callsAfterFill, callsAfterEvictedKey, callCount]).toEqual([3, 4, 4])
     })
   })
 })

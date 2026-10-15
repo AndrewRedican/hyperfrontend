@@ -4,6 +4,7 @@ import { treeCommand, treeCommandDef } from './tree'
 
 const FIXTURES_DIR = resolve(import.meta.dirname, '../../../__fixtures__')
 const MINIMAL_PROJECT = resolve(FIXTURES_DIR, 'minimal-project')
+const SIZE_TAG = /\[\d+(\.\d)?[BKMG]\]/
 
 describe('treeCommand', () => {
   it('returns success exit code for valid path', () => {
@@ -13,7 +14,6 @@ describe('treeCommand', () => {
 
   it('returns text output by default', () => {
     const result = treeCommand({ path: MINIMAL_PROJECT })
-    expect(result.output).toBeDefined()
     expect(result.output).toContain('minimal-project')
   })
 
@@ -24,17 +24,18 @@ describe('treeCommand', () => {
 
   it('returns JSON output when format is json', () => {
     const result = treeCommand({ path: MINIMAL_PROJECT, format: 'json' })
-    expect(result.output).toBeDefined()
-    const parsed = JSON.parse(result.output as string)
-    expect(parsed).toHaveProperty('name')
-    expect(parsed).toHaveProperty('isDirectory')
-    expect(parsed).toHaveProperty('children')
+    expect(JSON.parse(result.output as string)).toEqual(
+      expect.objectContaining({ name: 'minimal-project', isDirectory: true, children: expect.any(Array) })
+    )
   })
 
-  it('respects depth option', () => {
+  it('succeeds with a shallow depth option', () => {
     const shallow = treeCommand({ path: MINIMAL_PROJECT, depth: 1 })
-    const deep = treeCommand({ path: MINIMAL_PROJECT, depth: 5 })
     expect(shallow.exitCode).toBe(0)
+  })
+
+  it('succeeds with a deep depth option', () => {
+    const deep = treeCommand({ path: MINIMAL_PROJECT, depth: 5 })
     expect(deep.exitCode).toBe(0)
   })
 
@@ -53,23 +54,33 @@ describe('treeCommand', () => {
 
   it('uses current directory when no path specified', () => {
     const result = treeCommand({})
-    expect(result.exitCode).toBe(0)
-    expect(result.output).toBeDefined()
+    expect(result).toEqual({ exitCode: 0, output: expect.any(String) })
   })
 })
 
 describe('treeCommandDef', () => {
   it('has correct name and description', () => {
-    expect(treeCommandDef.name).toBe('tree')
-    expect(treeCommandDef.description).toContain('tree')
+    expect(treeCommandDef).toEqual(expect.objectContaining({ name: 'tree', description: expect.stringContaining('tree') }))
   })
 
-  it('provides help text', () => {
-    const help = treeCommandDef.getHelp()
-    expect(help).toContain('project-scope tree')
-    expect(help).toContain('--depth')
-    expect(help).toContain('--dirs-only')
-    expect(help).toContain('--files-only')
+  it('opens the help text with the usage line', () => {
+    expect(treeCommandDef.getHelp()).toContain('project-scope tree [path] [options]')
+  })
+
+  it('lists every option in the help text', () => {
+    expect(treeCommandDef.getHelp()).toContain(
+      [
+        'Options:',
+        '  --depth, -d       Maximum depth (default: 3)',
+        '  --pattern, -p     Glob pattern to match',
+        '  --ignore          Patterns to ignore (comma-separated)',
+        '  --dirs-only       Show directories only',
+        '  --files-only      Show files only',
+        '  --size            Show file sizes',
+        '  --modified        Show modification times',
+        '  --format, -f      Output format: text, json (default: text)',
+      ].join('\n')
+    )
   })
 
   it('executes with parsed args', () => {
@@ -113,40 +124,36 @@ describe('treeCommand with options', () => {
 
   it('shows file sizes with showSize', () => {
     const result = treeCommand({ path: MINIMAL_PROJECT, showSize: true })
-    expect(result.exitCode).toBe(0)
-    expect(result.output).toBeDefined()
+    expect(result).toEqual({ exitCode: 0, output: expect.stringMatching(SIZE_TAG) })
   })
 
   it('shows modification dates with showModified', () => {
     const result = treeCommand({ path: MINIMAL_PROJECT, showModified: true })
-    expect(result.exitCode).toBe(0)
-    expect(result.output).toBeDefined()
+    expect(result).toEqual({ exitCode: 0, output: expect.stringMatching(/\[\d{2}-\d{2} \d{2}:\d{2}\]/) })
   })
 
   it('shows both size and modified together', () => {
     const result = treeCommand({ path: MINIMAL_PROJECT, showSize: true, showModified: true })
-    expect(result.exitCode).toBe(0)
-    expect(result.output).toBeDefined()
+    expect(result).toEqual({ exitCode: 0, output: expect.stringMatching(/\[\d+(\.\d)?[BKMG] \d{2}-\d{2} \d{2}:\d{2}\]/) })
   })
 
   it('includes size in JSON output', () => {
     const result = treeCommand({ path: MINIMAL_PROJECT, showSize: true, format: 'json' })
-    const parsed = JSON.parse(result.output as string)
-    expect(parsed).toBeDefined()
-    expect(parsed).toHaveProperty('children')
+    expect(JSON.parse(result.output as string).children).toEqual(
+      expect.arrayContaining([expect.objectContaining({ name: 'package.json', size: expect.any(Number) })])
+    )
   })
 
   it('includes modified in JSON output', () => {
     const result = treeCommand({ path: MINIMAL_PROJECT, showModified: true, format: 'json' })
-    const parsed = JSON.parse(result.output as string)
-    expect(parsed).toBeDefined()
-    expect(parsed).toHaveProperty('children')
+    expect(JSON.parse(result.output as string).children).toEqual(
+      expect.arrayContaining([expect.objectContaining({ name: 'package.json', modified: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T/) })])
+    )
   })
 
   it('handles ignore patterns', () => {
     const result = treeCommand({ path: MINIMAL_PROJECT, ignore: ['node_modules', 'dist'] })
-    expect(result.exitCode).toBe(0)
-    expect(result.output).toBeDefined()
+    expect(result).toEqual({ exitCode: 0, output: expect.any(String) })
   })
 
   it('handles pattern filter', () => {
@@ -156,7 +163,6 @@ describe('treeCommand with options', () => {
 
   it('handles non-existent path gracefully', () => {
     const result = treeCommand({ path: '/non/existent/path/xyz' })
-    expect(result).toBeDefined()
     expect(result).toHaveProperty('exitCode')
   })
 
@@ -189,25 +195,20 @@ describe('treeCommand edge cases', () => {
 
   it('formats file sizes for files of different sizes', () => {
     const result = treeCommand({ path: MINIMAL_PROJECT, showSize: true, filesOnly: true })
-    expect(result.exitCode).toBe(0)
-    expect(result.output).toBeDefined()
+    expect(result).toEqual({ exitCode: 0, output: expect.stringMatching(SIZE_TAG) })
   })
 
   it('formats zero-byte files in size display', () => {
     const emptyDir = resolve(FIXTURES_DIR, 'empty')
     const result = treeCommand({ path: emptyDir, showSize: true })
-    expect(result.exitCode).toBe(0)
-    expect(result.output).toBeDefined()
+    expect(result).toEqual({ exitCode: 0, output: expect.any(String) })
   })
 
   it('returns valid JSON structure with all metadata', () => {
     const result = treeCommand({ path: MINIMAL_PROJECT, format: 'json', showSize: true, showModified: true })
-    expect(result.exitCode).toBe(0)
-    const parsed = JSON.parse(result.output as string)
-    expect(parsed).toHaveProperty('name')
-    expect(parsed).toHaveProperty('path')
-    expect(parsed).toHaveProperty('isDirectory')
-    expect(parsed).toHaveProperty('children')
+    expect(JSON.parse(result.output as string)).toEqual(
+      expect.objectContaining({ name: 'minimal-project', path: MINIMAL_PROJECT, isDirectory: true, children: expect.any(Array) })
+    )
   })
 
   it('handles permission denied scenarios (skips inaccessible paths)', () => {
@@ -215,12 +216,15 @@ describe('treeCommand edge cases', () => {
     expect(result.exitCode).toBe(0)
   })
 
+  it('lists more than one child at the root in JSON output', () => {
+    const result = treeCommand({ path: MINIMAL_PROJECT, format: 'json' })
+    const parsed = JSON.parse(result.output as string)
+    expect(parsed.children.length).toBeGreaterThan(1)
+  })
+
   it('sorts directories before files in output', () => {
     const result = treeCommand({ path: MINIMAL_PROJECT, format: 'json' })
-    expect(result.exitCode).toBe(0)
     const parsed = JSON.parse(result.output as string)
-    expect(parsed.children).toBeDefined()
-    expect(parsed.children.length).toBeGreaterThan(1)
     const lastFile = parsed.children.findLastIndex((c: { isDirectory: boolean }) => !c.isDirectory)
     const lastDir = parsed.children.findLastIndex((c: { isDirectory: boolean }) => c.isDirectory)
     expect(lastDir < lastFile || lastDir === -1 || lastFile === -1).toBe(true)
@@ -262,19 +266,16 @@ describe('treeCommandDef argument parsing', () => {
 describe('treeCommand formatSize coverage', () => {
   it('formats small file sizes in bytes', () => {
     const result = treeCommand({ path: MINIMAL_PROJECT, showSize: true, filesOnly: true })
-    expect(result.exitCode).toBe(0)
-    expect(result.output).toMatch(/\d+B/)
+    expect(result).toEqual({ exitCode: 0, output: expect.stringMatching(/\d+B/) })
   })
 
   it('formats file sizes in KB range', () => {
     const result = treeCommand({ path: MINIMAL_PROJECT, showSize: true })
-    expect(result.exitCode).toBe(0)
-    expect(result.output).toBeDefined()
+    expect(result).toEqual({ exitCode: 0, output: expect.any(String) })
   })
 
   it('handles all size ranges in JSON output with showSize', () => {
     const result = treeCommand({ path: MINIMAL_PROJECT, showSize: true, format: 'json' })
-    expect(result.exitCode).toBe(0)
     const parsed = JSON.parse(result.output as string)
 
     const findFilesWithSize = (node: { size?: number; children: unknown[] }): number[] => {
@@ -294,8 +295,9 @@ describe('treeCommand formatSize coverage', () => {
 describe('treeCommand error handling', () => {
   it('returns error for path with null bytes', () => {
     const result = treeCommand({ path: '/path/with/\x00/null' })
-    expect([0, 1]).toContain(result.exitCode)
-    expect(result.exitCode === 1 ? result.error : 'Tree failed').toContain('Tree failed')
+    const expected =
+      result.exitCode === 1 ? { exitCode: 1, error: expect.stringContaining('Tree failed') } : { exitCode: 0, output: expect.any(String) }
+    expect(result).toEqual(expected)
   })
 
   it('returns error for permission denied paths', () => {

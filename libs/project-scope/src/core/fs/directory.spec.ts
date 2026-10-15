@@ -26,22 +26,18 @@ describe('core/fs/directory', () => {
 
   describe('readDirectory', () => {
     it('lists directory contents', () => {
-      const entries = readDirectory(TEST_DIR)
-      expect(entries.length).toBeGreaterThan(0)
-      const names = entries.map((e) => e.name)
-      expect(names).toContain('file1.txt')
-      expect(names).toContain('file2.txt')
-      expect(names).toContain('subdir')
+      const names = readDirectory(TEST_DIR).map((e) => e.name)
+      expect(names).toEqual(expect.arrayContaining(['file1.txt', 'file2.txt', 'subdir']))
     })
 
-    it('includes file type information', () => {
+    it('flags a file entry as a file', () => {
       const entries = readDirectory(TEST_DIR)
-      const file = entries.find((e) => e.name === 'file1.txt')
-      const dir = entries.find((e) => e.name === 'subdir')
-      expect(file?.isFile).toBe(true)
-      expect(file?.isDirectory).toBe(false)
-      expect(dir?.isFile).toBe(false)
-      expect(dir?.isDirectory).toBe(true)
+      expect(entries.find((e) => e.name === 'file1.txt')).toEqual(expect.objectContaining({ isFile: true, isDirectory: false }))
+    })
+
+    it('flags a subdirectory entry as a directory', () => {
+      const entries = readDirectory(TEST_DIR)
+      expect(entries.find((e) => e.name === 'subdir')).toEqual(expect.objectContaining({ isFile: false, isDirectory: true }))
     })
 
     it('throws for non-existent directory', () => {
@@ -55,17 +51,17 @@ describe('core/fs/directory', () => {
 
   describe('readDirectoryRecursive', () => {
     it('lists all files recursively', () => {
-      const entries = readDirectoryRecursive(TEST_DIR, { includeHidden: true })
-      const names = entries.map((e) => e.name)
-      expect(names).toContain('file1.txt')
-      expect(names).toContain('file3.txt')
-      expect(names).toContain('file4.txt')
+      const names = readDirectoryRecursive(TEST_DIR, { includeHidden: true }).map((e) => e.name)
+      expect(names).toEqual(expect.arrayContaining(['file1.txt', 'file3.txt', 'file4.txt']))
     })
 
-    it('filters hidden files by default', () => {
-      const entries = readDirectoryRecursive(TEST_DIR)
-      const names = entries.map((e) => e.name)
+    it('omits a hidden file by default', () => {
+      const names = readDirectoryRecursive(TEST_DIR).map((e) => e.name)
       expect(names).not.toContain('.dotfile')
+    })
+
+    it('omits a hidden directory by default', () => {
+      const names = readDirectoryRecursive(TEST_DIR).map((e) => e.name)
       expect(names).not.toContain('.hidden')
     })
 
@@ -76,37 +72,32 @@ describe('core/fs/directory', () => {
     })
 
     it('respects maxDepth option', () => {
-      const entries = readDirectoryRecursive(TEST_DIR, { maxDepth: 0 })
-      const names = entries.map((e) => e.name)
-      expect(names).toContain('file1.txt')
-      expect(names).toContain('subdir')
-      expect(names).not.toContain('file3.txt')
+      const names = readDirectoryRecursive(TEST_DIR, { maxDepth: 0 }).map((e) => e.name)
+      expect(names.sort()).toEqual(['file1.txt', 'file2.txt', 'subdir'])
     })
 
     it('respects maxDepth: 1 to include subdir but not deeply nested', () => {
-      const entries = readDirectoryRecursive(TEST_DIR, { maxDepth: 1 })
-      const names = entries.map((e) => e.name)
-      expect(names).toContain('file1.txt')
-      expect(names).toContain('subdir')
-      expect(names).toContain('file3.txt')
-      expect(names).not.toContain('file4.txt')
+      const names = readDirectoryRecursive(TEST_DIR, { maxDepth: 1 }).map((e) => e.name)
+      expect(names.sort()).toEqual(['file1.txt', 'file2.txt', 'file3.txt', 'nested', 'subdir'])
     })
 
     it('includes depth information', () => {
       const entries = readDirectoryRecursive(TEST_DIR, { includeHidden: true })
-      const file1 = entries.find((e) => e.name === 'file1.txt')
-      const file3 = entries.find((e) => e.name === 'file3.txt')
-      expect(file1?.depth).toBe(0)
-      expect(file3?.depth).toBe(1)
+      expect(entries).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ name: 'file1.txt', depth: 0 }),
+          expect.objectContaining({ name: 'file3.txt', depth: 1 }),
+        ])
+      )
     })
   })
 
   describe('createDirectory', () => {
     it('creates directory', () => {
       const dirPath = join(TEST_DIR, 'new-create-dir')
-      expect(existsSync(dirPath)).toBe(false)
+      const existedBefore = existsSync(dirPath)
       createDirectory(dirPath)
-      expect(existsSync(dirPath)).toBe(true)
+      expect({ before: existedBefore, after: existsSync(dirPath) }).toEqual({ before: false, after: true })
     })
 
     it('creates nested directories by default', () => {
@@ -120,9 +111,9 @@ describe('core/fs/directory', () => {
     it('removes empty directory with recursive option', () => {
       const dirPath = join(TEST_DIR, 'to-remove')
       mkdirSync(dirPath)
-      expect(existsSync(dirPath)).toBe(true)
+      const existedBefore = existsSync(dirPath)
       removeDirectory(dirPath, { recursive: true })
-      expect(existsSync(dirPath)).toBe(false)
+      expect({ before: existedBefore, after: existsSync(dirPath) }).toEqual({ before: true, after: false })
     })
 
     it('removes directory with contents recursively', () => {

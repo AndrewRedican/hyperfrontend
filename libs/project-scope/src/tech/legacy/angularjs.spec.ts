@@ -19,11 +19,15 @@ describe('angularJSDetector', () => {
       dependencies: { angular: '^1.8.0' },
     })
 
-    expect(result).not.toBeNull()
-    expect(result?.id).toBe('angularjs')
-    expect(result?.name).toBe('AngularJS')
-    expect(result?.category).toBe('legacy-frontend')
-    expect(result?.version).toBe('1.8.0')
+    expect(result).toEqual(expect.objectContaining({ id: 'angularjs', name: 'AngularJS', category: 'legacy-frontend', version: '1.8.0' }))
+  })
+
+  it('scores an angular dependency above zero', () => {
+    const result = angularJSDetector(mockProjectPath, {
+      name: 'test-project',
+      dependencies: { angular: '^1.8.0' },
+    })
+
     expect(result?.confidence).toBeGreaterThan(0)
   })
 
@@ -39,7 +43,15 @@ describe('angularJSDetector', () => {
     })
 
     expect(withRoute?.confidence).toBeGreaterThan(withoutRoute?.confidence ?? 0)
-    expect(withRoute?.detectedFrom.some((s) => s.field === 'dependencies.angular-route')).toBe(true)
+  })
+
+  it('records angular-route as a detection source', () => {
+    const result = angularJSDetector(mockProjectPath, {
+      name: 'test-project',
+      dependencies: { angular: '^1.8.0', 'angular-route': '^1.8.0' },
+    })
+
+    expect(result?.detectedFrom).toEqual(expect.arrayContaining([expect.objectContaining({ field: 'dependencies.angular-route' })]))
   })
 
   it('increases confidence with angular-resource', () => {
@@ -49,7 +61,15 @@ describe('angularJSDetector', () => {
     })
 
     expect(result?.confidence).toBeGreaterThanOrEqual(80)
-    expect(result?.detectedFrom.some((s) => s.field === 'dependencies.angular-resource')).toBe(true)
+  })
+
+  it('records angular-resource as a detection source', () => {
+    const result = angularJSDetector(mockProjectPath, {
+      name: 'test-project',
+      dependencies: { angular: '^1.8.0', 'angular-resource': '^1.8.0' },
+    })
+
+    expect(result?.detectedFrom).toEqual(expect.arrayContaining([expect.objectContaining({ field: 'dependencies.angular-resource' })]))
   })
 
   it('increases confidence with angular-animate', () => {
@@ -59,7 +79,15 @@ describe('angularJSDetector', () => {
     })
 
     expect(result?.confidence).toBeGreaterThanOrEqual(75)
-    expect(result?.detectedFrom.some((s) => s.field === 'dependencies.angular-animate')).toBe(true)
+  })
+
+  it('records angular-animate as a detection source', () => {
+    const result = angularJSDetector(mockProjectPath, {
+      name: 'test-project',
+      dependencies: { angular: '^1.8.0', 'angular-animate': '^1.8.0' },
+    })
+
+    expect(result?.detectedFrom).toEqual(expect.arrayContaining([expect.objectContaining({ field: 'dependencies.angular-animate' })]))
   })
 
   it('has maximum confidence with all angular packages', () => {

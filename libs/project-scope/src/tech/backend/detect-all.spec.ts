@@ -15,8 +15,7 @@ describe('detectBackendFrameworks', () => {
       dependencies: { express: '^4.18.0' },
     }
     const results = detectBackendFrameworks('/some/path', pkg)
-    expect(results).toHaveLength(1)
-    expect(results[0].id).toBe('express')
+    expect(results).toEqual([expect.objectContaining({ id: 'express' })])
   })
 
   it('detects multiple backend frameworks', () => {
@@ -29,10 +28,7 @@ describe('detectBackendFrameworks', () => {
       },
     }
     const results = detectBackendFrameworks('/some/path', pkg)
-    expect(results.length).toBeGreaterThanOrEqual(2)
-    const ids = results.map((r) => r.id)
-    expect(ids).toContain('nestjs')
-    expect(ids).toContain('fastify')
+    expect(results.map((r) => r.id)).toEqual(expect.arrayContaining(['nestjs', 'fastify']))
   })
 
   it('sorts results by confidence', () => {
@@ -53,14 +49,13 @@ describe('detectBackendFrameworks', () => {
 })
 
 describe('backendDetectors', () => {
-  it('exports array of detector objects', () => {
-    expect(Array.isArray(backendDetectors)).toBe(true)
-    expect(backendDetectors.length).toBe(5)
+  it('exports every backend detector', () => {
+    expect(backendDetectors.map((detector) => detector.id)).toEqual(['express', 'nestjs', 'fastify', 'koa', 'hono'])
+  })
+
+  it('gives every detector an id, a name and a detect function', () => {
     backendDetectors.forEach((detector) => {
-      expect(typeof detector).toBe('object')
-      expect(typeof detector.detect).toBe('function')
-      expect(typeof detector.id).toBe('string')
-      expect(typeof detector.name).toBe('string')
+      expect(detector).toEqual(expect.objectContaining({ id: expect.any(String), name: expect.any(String), detect: expect.any(Function) }))
     })
   })
 })

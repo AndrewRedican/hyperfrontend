@@ -38,13 +38,24 @@ describe('playwrightDetector', () => {
       devDependencies: { '@playwright/test': '^1.40.0' },
     })
 
-    expect(result).not.toBeNull()
-    expect(result?.id).toBe('playwright')
-    expect(result?.name).toBe('Playwright')
-    expect(result?.type).toBe('e2e')
-    expect(result?.version).toBe('1.40.0')
+    expect(result).toEqual(
+      expect.objectContaining({
+        id: 'playwright',
+        name: 'Playwright',
+        type: 'e2e',
+        version: '1.40.0',
+        detectedFrom: expect.arrayContaining([{ type: 'package.json', field: 'dependencies.@playwright/test' }]),
+      })
+    )
+  })
+
+  it('scores a @playwright/test dependency above zero', () => {
+    const result = playwrightDetector(mockProjectPath, {
+      name: 'test-project',
+      devDependencies: { '@playwright/test': '^1.40.0' },
+    })
+
     expect(result?.confidence).toBeGreaterThan(0)
-    expect(result?.detectedFrom).toEqual(expect.arrayContaining([{ type: 'package.json', field: 'dependencies.@playwright/test' }]))
   })
 
   it('detects playwright package', () => {
@@ -53,9 +64,13 @@ describe('playwrightDetector', () => {
       devDependencies: { playwright: '^1.40.0' },
     })
 
-    expect(result?.id).toBe('playwright')
-    expect(result?.version).toBe('1.40.0')
-    expect(result?.detectedFrom.some((s) => s.field === 'dependencies.playwright')).toBe(true)
+    expect(result).toEqual(
+      expect.objectContaining({
+        id: 'playwright',
+        version: '1.40.0',
+        detectedFrom: expect.arrayContaining([expect.objectContaining({ field: 'dependencies.playwright' })]),
+      })
+    )
   })
 
   it('prefers @playwright/test version over playwright', () => {
@@ -81,6 +96,18 @@ describe('playwrightDetector', () => {
     })
 
     expect(result?.confidence).toBeGreaterThanOrEqual(95)
+  })
+
+  it('records playwright.config.ts as the config path', () => {
+    mockExists.mockImplementation((path: string) => {
+      return path.includes('playwright.config.ts')
+    })
+
+    const result = playwrightDetector(mockProjectPath, {
+      name: 'test-project',
+      devDependencies: { '@playwright/test': '^1.40.0' },
+    })
+
     expect(result?.configPath).toBe('playwright.config.ts')
   })
 
@@ -95,7 +122,19 @@ describe('playwrightDetector', () => {
     })
 
     expect(result?.confidence).toBeGreaterThanOrEqual(75)
-    expect(result?.detectedFrom.some((s) => s.path === 'e2e/ or tests/')).toBe(true)
+  })
+
+  it('records the e2e directory as a detection source', () => {
+    mockExists.mockImplementation((path: string) => {
+      return path.endsWith('e2e') || path.includes(`${sep}e2e`)
+    })
+
+    const result = playwrightDetector(mockProjectPath, {
+      name: 'test-project',
+      devDependencies: { '@playwright/test': '^1.40.0' },
+    })
+
+    expect(result?.detectedFrom).toEqual(expect.arrayContaining([expect.objectContaining({ path: 'e2e/ or tests/' })]))
   })
 
   it('increases confidence with tests directory', () => {
@@ -119,7 +158,16 @@ describe('playwrightDetector', () => {
     })
 
     expect(result?.confidence).toBeGreaterThanOrEqual(75)
-    expect(result?.detectedFrom.some((s) => s.field === 'scripts.e2e or scripts.test:e2e')).toBe(true)
+  })
+
+  it('records the playwright e2e script as a detection source', () => {
+    const result = playwrightDetector(mockProjectPath, {
+      name: 'test-project',
+      devDependencies: { '@playwright/test': '^1.40.0' },
+      scripts: { e2e: 'playwright test' },
+    })
+
+    expect(result?.detectedFrom).toEqual(expect.arrayContaining([expect.objectContaining({ field: 'scripts.e2e or scripts.test:e2e' })]))
   })
 
   it('has maximum confidence with all indicators', () => {

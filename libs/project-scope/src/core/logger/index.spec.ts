@@ -13,9 +13,9 @@ describe('core/logger', () => {
     })
 
     it('returns primitive values unchanged', () => {
-      expect(sanitize('hello')).toBe('hello')
-      expect(sanitize(42)).toBe(42)
-      expect(sanitize(true)).toBe(true)
+      for (const value of ['hello', 42, true]) {
+        expect(sanitize(value)).toBe(value)
+      }
     })
 
     it('redacts keys containing "token"', () => {
@@ -137,27 +137,31 @@ describe('core/logger', () => {
 
     it('creates a logger with all expected methods', () => {
       const log = createScopedLogger('test-ns', { level: 'info' })
-      expect(log.error).toBeDefined()
-      expect(log.warn).toBeDefined()
-      expect(log.log).toBeDefined()
-      expect(log.info).toBeDefined()
-      expect(log.debug).toBeDefined()
-      expect(log.setLogLevel).toBeDefined()
-      expect(log.getLogLevel).toBeDefined()
+      expect(log).toEqual({
+        error: expect.any(Function),
+        warn: expect.any(Function),
+        log: expect.any(Function),
+        info: expect.any(Function),
+        debug: expect.any(Function),
+        setLogLevel: expect.any(Function),
+        getLogLevel: expect.any(Function),
+      })
     })
 
     it('can call logging methods without error', () => {
       const log = createScopedLogger('test-ns', { level: 'debug' })
-      expect(() => log.error('Error message')).not.toThrow()
-      expect(() => log.warn('Warning message')).not.toThrow()
-      expect(() => log.log('Log message')).not.toThrow()
-      expect(() => log.info('Info message')).not.toThrow()
-      expect(() => log.debug('Debug message')).not.toThrow()
+      for (const level of ['error', 'warn', 'log', 'info', 'debug'] as const) {
+        expect(() => log[level](`${level} message`)).not.toThrow()
+      }
     })
 
-    it('can call logging methods with metadata', () => {
+    it('can call info with flat metadata', () => {
       const log = createScopedLogger('test-ns', { level: 'debug' })
       expect(() => log.info('Message', { key: 'value' })).not.toThrow()
+    })
+
+    it('can call debug with nested metadata', () => {
+      const log = createScopedLogger('test-ns', { level: 'debug' })
       expect(() => log.debug('Debug', { nested: { deep: true } })).not.toThrow()
     })
 
@@ -178,8 +182,9 @@ describe('core/logger', () => {
     })
 
     it('accepts sanitizeSecrets option', () => {
-      expect(() => createScopedLogger('test', { sanitizeSecrets: true })).not.toThrow()
-      expect(() => createScopedLogger('test', { sanitizeSecrets: false })).not.toThrow()
+      for (const sanitizeSecrets of [true, false]) {
+        expect(() => createScopedLogger('test', { sanitizeSecrets })).not.toThrow()
+      }
     })
 
     it('sanitizes secrets in metadata when sanitizeSecrets is true', () => {
@@ -189,15 +194,16 @@ describe('core/logger', () => {
   })
 
   describe('default logger', () => {
-    it('is exported and has correct namespace', () => {
-      expect(logger).toBeDefined()
-      expect(logger.getLogLevel).toBeDefined()
-      expect(logger.setLogLevel).toBeDefined()
-      expect(logger.error).toBeDefined()
-      expect(logger.warn).toBeDefined()
-      expect(logger.log).toBeDefined()
-      expect(logger.info).toBeDefined()
-      expect(logger.debug).toBeDefined()
+    it('is exported with every logging method', () => {
+      expect(logger).toEqual({
+        error: expect.any(Function),
+        warn: expect.any(Function),
+        log: expect.any(Function),
+        info: expect.any(Function),
+        debug: expect.any(Function),
+        setLogLevel: expect.any(Function),
+        getLogLevel: expect.any(Function),
+      })
     })
   })
 
@@ -212,23 +218,24 @@ describe('core/logger', () => {
 
       setGlobalLogLevel('debug')
 
-      expect(testLogger1.getLogLevel()).toBe('debug')
-      expect(testLogger2.getLogLevel()).toBe('debug')
+      expect([testLogger1.getLogLevel(), testLogger2.getLogLevel()]).toEqual(['debug', 'debug'])
     })
 
-    it('getGlobalLogLevel returns current global level', () => {
+    it('getGlobalLogLevel returns null before any global level is set', () => {
       expect(getGlobalLogLevel()).toBeNull()
+    })
 
+    it('getGlobalLogLevel returns the level set by setGlobalLogLevel', () => {
       setGlobalLogLevel('warn')
       expect(getGlobalLogLevel()).toBe('warn')
     })
 
     it('resetGlobalLogLevel clears global override', () => {
       setGlobalLogLevel('info')
-      expect(getGlobalLogLevel()).toBe('info')
+      const levelBeforeReset = getGlobalLogLevel()
 
       resetGlobalLogLevel()
-      expect(getGlobalLogLevel()).toBeNull()
+      expect({ beforeReset: levelBeforeReset, afterReset: getGlobalLogLevel() }).toEqual({ beforeReset: 'info', afterReset: null })
     })
 
     it('new loggers use global level when set', () => {

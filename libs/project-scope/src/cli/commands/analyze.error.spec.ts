@@ -68,12 +68,10 @@ describe('analyzeCommand meta-frameworks branch (L72)', () => {
 
     const result = analyzeCommand({ path: MINIMAL_PROJECT })
 
-    expect(result.exitCode).toBe(0)
-    expect(result.output).toContain('React')
-    expect(result.output).toContain('Next.js')
-    expect(result.output).toContain('Remix')
-    expect(result.output).toMatch(/\s+-\s+Next\.js/)
-    expect(result.output).toMatch(/\s+-\s+Remix/)
+    expect(result).toEqual({
+      exitCode: 0,
+      output: expect.stringContaining('Frameworks:\n  * React 18.0.0 (confidence: 95%)\n    - Next.js\n    - Remix\n'),
+    })
   })
 })
 
@@ -99,11 +97,10 @@ describe('analyzeCommand build tools formatting (L80-85)', () => {
 
     const result = analyzeCommand({ path: MINIMAL_PROJECT })
 
-    expect(result.exitCode).toBe(0)
-    expect(result.output).toContain('Build Tools:')
-    expect(result.output).toContain('Webpack 5.88.0')
-    expect(result.output).toContain('Babel 7.22.0')
-    expect(result.output).toContain('ESBuild 0.18.0')
+    expect(result).toEqual({
+      exitCode: 0,
+      output: expect.stringContaining('Build Tools:\n  * Webpack 5.88.0\n  * Babel 7.22.0\n  * ESBuild 0.18.0\n'),
+    })
   })
 
   it('displays build tools without version when version is undefined', () => {
@@ -115,8 +112,7 @@ describe('analyzeCommand build tools formatting (L80-85)', () => {
 
     const result = analyzeCommand({ path: MINIMAL_PROJECT })
 
-    expect(result.exitCode).toBe(0)
-    expect(result.output).toContain('Vite')
+    expect(result).toEqual({ exitCode: 0, output: expect.stringContaining('Build Tools:\n  * Vite\n') })
   })
 })
 
@@ -147,12 +143,22 @@ describe('analyzeCommand entry points truncation (L103)', () => {
 
     const result = analyzeCommand({ path: MINIMAL_PROJECT })
 
-    expect(result.exitCode).toBe(0)
-    expect(result.output).toContain('Entry Points:')
-    expect(result.output).toContain('src/index.ts')
-    expect(result.output).toContain('src/worker.ts')
-    expect(result.output).toContain('... and 3 more')
-    expect(result.output).not.toContain('src/utils.ts')
+    expect(result).toEqual({
+      exitCode: 0,
+      output: expect.stringContaining(
+        [
+          'Entry Points:',
+          '  * src/index.ts (main)',
+          '  * src/app.ts (main)',
+          '  * src/server.ts (main)',
+          '  * src/cli.ts (main)',
+          '  * src/worker.ts (main)',
+          '  ... and 3 more',
+          '',
+          'Dependencies:',
+        ].join('\n')
+      ),
+    })
   })
 })
 
@@ -186,12 +192,25 @@ describe('analyzeCommand config files truncation (L114)', () => {
 
     const result = analyzeCommand({ path: MINIMAL_PROJECT })
 
-    expect(result.exitCode).toBe(0)
-    expect(result.output).toContain('Configurations:')
-    expect(result.output).toContain('package.json')
-    expect(result.output).toContain('postcss.config.js')
-    expect(result.output).toContain('... and 3 more')
-    expect(result.output).not.toContain('webpack.config.js')
+    expect(result).toEqual({
+      exitCode: 0,
+      output: expect.stringContaining(
+        [
+          'Configurations:',
+          '  * package.json',
+          '  * tsconfig.json',
+          '  * eslint.config.js',
+          '  * prettier.config.js',
+          '  * jest.config.js',
+          '  * vite.config.ts',
+          '  * tailwind.config.js',
+          '  * postcss.config.js',
+          '  ... and 3 more',
+          '',
+          'Dependencies:',
+        ].join('\n')
+      ),
+    })
   })
 })
 
@@ -216,11 +235,12 @@ describe('analyzeCommand YAML toYaml branches (L171, L185)', () => {
 
     const result = analyzeCommand({ path: MINIMAL_PROJECT, format: 'yaml' })
 
-    expect(result.exitCode).toBe(0)
-    expect(result.output).toContain('dependencies:')
-    expect(result.output).toMatch(/\s+production: 5/)
-    expect(result.output).toMatch(/\s+development: 10/)
-    expect(result.output).toContain('metadata:')
+    expect(result).toEqual({
+      exitCode: 0,
+      output: expect.stringContaining(
+        'dependencies:\n  production: 5\n  development: 10\n  peer: 2\n  optional: 0\n  total: 17\nmetadata:\n'
+      ),
+    })
   })
 
   it('handles arrays with items in YAML output', () => {
@@ -235,9 +255,25 @@ describe('analyzeCommand YAML toYaml branches (L171, L185)', () => {
 
     const result = analyzeCommand({ path: MINIMAL_PROJECT, format: 'yaml' })
 
-    expect(result.exitCode).toBe(0)
-    expect(result.output).toContain('frameworks:')
-    expect(result.output).toMatch(/-\s+.*name:\s*React/s)
+    expect(result).toEqual({
+      exitCode: 0,
+      output: expect.stringContaining(
+        [
+          'frameworks:',
+          '  - id: react',
+          '    name: React',
+          '    version: 18.0.0',
+          '    confidence: 95',
+          '    category: frontend',
+          '  - id: vue',
+          '    name: Vue',
+          '    version: 3.0.0',
+          '    confidence: 85',
+          '    category: frontend',
+          'buildTools: []',
+        ].join('\n')
+      ),
+    })
   })
 
   it('handles strings with special characters in YAML', () => {
@@ -249,8 +285,7 @@ describe('analyzeCommand YAML toYaml branches (L171, L185)', () => {
 
     const result = analyzeCommand({ path: MINIMAL_PROJECT, format: 'yaml' })
 
-    expect(result.exitCode).toBe(0)
-    expect(result.output).toContain('"project:with:colons"')
+    expect(result).toEqual({ exitCode: 0, output: expect.stringContaining('name: "project:with:colons"\n') })
   })
 
   it('handles empty arrays in YAML', () => {
@@ -263,8 +298,7 @@ describe('analyzeCommand YAML toYaml branches (L171, L185)', () => {
 
     const result = analyzeCommand({ path: MINIMAL_PROJECT, format: 'yaml' })
 
-    expect(result.exitCode).toBe(0)
-    expect(result.output).toMatch(/frameworks: \[\]/)
+    expect(result).toEqual({ exitCode: 0, output: expect.stringContaining('frameworks: []\nbuildTools: []\n') })
   })
 
   it('handles deeply nested objects requiring prefix indentation', () => {
@@ -290,9 +324,26 @@ describe('analyzeCommand YAML toYaml branches (L171, L185)', () => {
 
     const result = analyzeCommand({ path: MINIMAL_PROJECT, format: 'yaml' })
 
-    expect(result.exitCode).toBe(0)
-    expect(result.output).toContain('frameworks:')
-    expect(result.output).toContain('buildTools:')
-    expect(result.output).toMatch(/-\s+.*name:/s)
+    expect(result).toEqual({
+      exitCode: 0,
+      output: expect.stringContaining(
+        [
+          'frameworks:',
+          '  - id: react',
+          '    name: React',
+          '    version: 18.0.0',
+          '    confidence: 95',
+          '    category: frontend',
+          '    metaFrameworks:',
+          '      - Next.js',
+          'buildTools:',
+          '  - id: webpack',
+          '    name: Webpack',
+          '    version: 5.0.0',
+          '    confidence: 90',
+          'testingFrameworks:',
+        ].join('\n')
+      ),
+    })
   })
 })

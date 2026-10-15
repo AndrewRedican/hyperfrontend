@@ -29,9 +29,15 @@ describe('nextjsDetector', () => {
     }
     const result = nextjsDetector('/some/path', pkg)
 
-    expect(result).not.toBeNull()
-    expect(result?.id).toBe('nextjs')
-    expect(result?.name).toBe('Next.js')
+    expect(result).toEqual(expect.objectContaining({ id: 'nextjs', name: 'Next.js' }))
+  })
+
+  it('scores a next dependency at least 70', () => {
+    const pkg: PackageJson = {
+      dependencies: { next: '^14.0.0' },
+    }
+    const result = nextjsDetector('/some/path', pkg)
+
     expect(result?.confidence).toBeGreaterThanOrEqual(70)
   })
 
@@ -46,7 +52,19 @@ describe('nextjsDetector', () => {
     const result = nextjsDetector('/some/path', pkg)
 
     expect(result?.confidence).toBeGreaterThanOrEqual(95)
-    expect(result?.detectedFrom.some((s) => s.path === 'next.config.*')).toBe(true)
+  })
+
+  it('records next.config.js as a detection source', () => {
+    mockExists.mockImplementation((path: string) => {
+      return path.includes('next.config.js')
+    })
+
+    const pkg: PackageJson = {
+      dependencies: { next: '^14.0.0' },
+    }
+    const result = nextjsDetector('/some/path', pkg)
+
+    expect(result?.detectedFrom).toEqual(expect.arrayContaining([expect.objectContaining({ path: 'next.config.*' })]))
   })
 
   it('increases confidence with next.config.mjs', () => {
@@ -86,7 +104,19 @@ describe('nextjsDetector', () => {
     const result = nextjsDetector('/some/path', pkg)
 
     expect(result?.confidence).toBeGreaterThanOrEqual(75)
-    expect(result?.detectedFrom.some((s) => s.path === 'pages/ or app/')).toBe(true)
+  })
+
+  it('records the pages directory as a detection source', () => {
+    mockExists.mockImplementation((path: string) => {
+      return path.endsWith(`${sep}pages`)
+    })
+
+    const pkg: PackageJson = {
+      dependencies: { next: '^14.0.0' },
+    }
+    const result = nextjsDetector('/some/path', pkg)
+
+    expect(result?.detectedFrom).toEqual(expect.arrayContaining([expect.objectContaining({ path: 'pages/ or app/' })]))
   })
 
   it('increases confidence with app directory', () => {

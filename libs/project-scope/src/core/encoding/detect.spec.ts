@@ -36,24 +36,17 @@ describe('core/encoding/detect', () => {
   describe('detectEncodingInfo', () => {
     it('detects text file with UTF-8 BOM', () => {
       const buffer = Buffer.from([...UTF8_BOM_BYTES, 0x68, 0x69])
-      const info = detectEncodingInfo(buffer)
-      expect(info.type).toBe('text')
-      expect(info).toHaveProperty('encoding', 'utf-8')
-      expect(info).toHaveProperty('hasBom', true)
+      expect(detectEncodingInfo(buffer)).toEqual({ type: 'text', encoding: 'utf-8', hasBom: true })
     })
 
     it('detects text file without BOM', () => {
       const buffer = Buffer.from('hello world', 'utf-8')
-      const info = detectEncodingInfo(buffer)
-      expect(info.type).toBe('text')
-      expect(info).toHaveProperty('hasBom', false)
+      expect(detectEncodingInfo(buffer)).toEqual({ type: 'text', encoding: 'utf-8', hasBom: false })
     })
 
     it('detects PNG binary', () => {
       const buffer = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])
-      const info = detectEncodingInfo(buffer)
-      expect(info.type).toBe('binary')
-      expect(info).toHaveProperty('format', 'PNG')
+      expect(detectEncodingInfo(buffer)).toEqual({ type: 'binary', format: 'PNG' })
     })
 
     it('detects binary by null bytes', () => {
@@ -102,18 +95,12 @@ describe('core/encoding/detect', () => {
   describe('detectEncodingInfo - UTF-16 BOM paths', () => {
     it('detects UTF-16 BE BOM with correct encoding', () => {
       const buffer = Buffer.from([...UTF16_BE_BOM_BYTES, 0x00, 0x48, 0x00, 0x69])
-      const info = detectEncodingInfo(buffer)
-      expect(info.type).toBe('text')
-      expect(info).toHaveProperty('encoding', 'utf16le')
-      expect(info).toHaveProperty('hasBom', true)
+      expect(detectEncodingInfo(buffer)).toEqual({ type: 'text', encoding: 'utf16le', hasBom: true })
     })
 
     it('detects UTF-16 LE BOM with correct encoding', () => {
       const buffer = Buffer.from([...UTF16_LE_BOM_BYTES, 0x48, 0x00, 0x69, 0x00])
-      const info = detectEncodingInfo(buffer)
-      expect(info.type).toBe('text')
-      expect(info).toHaveProperty('encoding', 'utf16le')
-      expect(info).toHaveProperty('hasBom', true)
+      expect(detectEncodingInfo(buffer)).toEqual({ type: 'text', encoding: 'utf16le', hasBom: true })
     })
   })
 

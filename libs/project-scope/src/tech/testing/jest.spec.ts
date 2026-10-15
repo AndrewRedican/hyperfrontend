@@ -27,13 +27,24 @@ describe('jestDetector', () => {
       dependencies: { jest: '^29.0.0' },
     })
 
-    expect(result).not.toBeNull()
-    expect(result?.id).toBe('jest')
-    expect(result?.name).toBe('Jest')
-    expect(result?.type).toBe('unit')
-    expect(result?.version).toBe('29.0.0')
+    expect(result).toEqual(
+      expect.objectContaining({
+        id: 'jest',
+        name: 'Jest',
+        type: 'unit',
+        version: '29.0.0',
+        detectedFrom: expect.arrayContaining([{ type: 'package.json', field: 'dependencies.jest' }]),
+      })
+    )
+  })
+
+  it('scores a jest dependency above zero', () => {
+    const result = jestDetector(mockProjectPath, {
+      name: 'test-project',
+      dependencies: { jest: '^29.0.0' },
+    })
+
     expect(result?.confidence).toBeGreaterThan(0)
-    expect(result?.detectedFrom).toEqual(expect.arrayContaining([{ type: 'package.json', field: 'dependencies.jest' }]))
   })
 
   it('detects jest from devDependencies', () => {

@@ -27,12 +27,23 @@ describe('eslintDetector', () => {
       devDependencies: { eslint: '^8.0.0' },
     })
 
-    expect(result).not.toBeNull()
-    expect(result?.id).toBe('eslint')
-    expect(result?.name).toBe('ESLint')
-    expect(result?.version).toBe('8.0.0')
+    expect(result).toEqual(
+      expect.objectContaining({
+        id: 'eslint',
+        name: 'ESLint',
+        version: '8.0.0',
+        detectedFrom: expect.arrayContaining([{ type: 'package.json', field: 'dependencies.eslint' }]),
+      })
+    )
+  })
+
+  it('scores an eslint dependency above zero', () => {
+    const result = eslintDetector(mockProjectPath, {
+      name: 'test-project',
+      devDependencies: { eslint: '^8.0.0' },
+    })
+
     expect(result?.confidence).toBeGreaterThan(0)
-    expect(result?.detectedFrom).toEqual(expect.arrayContaining([{ type: 'package.json', field: 'dependencies.eslint' }]))
   })
 
   it('increases confidence with eslint plugins', () => {

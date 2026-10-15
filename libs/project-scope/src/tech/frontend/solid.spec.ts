@@ -14,8 +14,15 @@ describe('solidDetector', () => {
     }
     const result = solidDetector('/some/path', pkg)
 
-    expect(result).not.toBeNull()
-    expect(result?.id).toBe('solid')
+    expect(result).toEqual(expect.objectContaining({ id: 'solid' }))
+  })
+
+  it('scores a solid-js dependency at least 70', () => {
+    const pkg: PackageJson = {
+      dependencies: { 'solid-js': '^1.0.0' },
+    }
+    const result = solidDetector('/some/path', pkg)
+
     expect(result?.confidence).toBeGreaterThanOrEqual(70)
   })
 
@@ -27,7 +34,16 @@ describe('solidDetector', () => {
     const result = solidDetector('/some/path', pkg)
 
     expect(result?.confidence).toBeGreaterThanOrEqual(90)
-    expect(result?.detectedFrom.some((s) => s.field === 'dependencies.vite-plugin-solid')).toBe(true)
+  })
+
+  it('records vite-plugin-solid as a detection source', () => {
+    const pkg: PackageJson = {
+      dependencies: { 'solid-js': '^1.0.0' },
+      devDependencies: { 'vite-plugin-solid': '^2.0.0' },
+    }
+    const result = solidDetector('/some/path', pkg)
+
+    expect(result?.detectedFrom).toEqual(expect.arrayContaining([expect.objectContaining({ field: 'dependencies.vite-plugin-solid' })]))
   })
 
   it('increases confidence with solid-start', () => {
@@ -40,7 +56,18 @@ describe('solidDetector', () => {
     const result = solidDetector('/some/path', pkg)
 
     expect(result?.confidence).toBeGreaterThanOrEqual(80)
-    expect(result?.detectedFrom.some((s) => s.field === 'dependencies.solid-start')).toBe(true)
+  })
+
+  it('records solid-start as a detection source', () => {
+    const pkg: PackageJson = {
+      dependencies: {
+        'solid-js': '^1.0.0',
+        'solid-start': '^0.3.0',
+      },
+    }
+    const result = solidDetector('/some/path', pkg)
+
+    expect(result?.detectedFrom).toEqual(expect.arrayContaining([expect.objectContaining({ field: 'dependencies.solid-start' })]))
   })
 
   it('increases confidence with @solidjs/start', () => {

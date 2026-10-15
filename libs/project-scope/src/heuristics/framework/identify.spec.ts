@@ -14,29 +14,29 @@ describe('identifyFrameworks', () => {
     it('returns correct structure', () => {
       const result = identifyFrameworks(MINIMAL_PROJECT)
 
-      expect(result).toHaveProperty('frontend')
-      expect(result).toHaveProperty('backend')
-      expect(result).toHaveProperty('testing')
-      expect(result).toHaveProperty('metaFrameworks')
-      expect(result).toHaveProperty('summary')
-      expect(result).toHaveProperty('stack')
-      expect(Array.isArray(result.frontend)).toBe(true)
-      expect(Array.isArray(result.backend)).toBe(true)
-      expect(Array.isArray(result.testing)).toBe(true)
-      expect(Array.isArray(result.metaFrameworks)).toBe(true)
-      expect(typeof result.summary).toBe('string')
+      expect(result).toEqual(
+        expect.objectContaining({
+          frontend: expect.any(Array),
+          backend: expect.any(Array),
+          testing: expect.any(Array),
+          metaFrameworks: expect.any(Array),
+          summary: expect.any(String),
+          stack: expect.any(Object),
+        })
+      )
     })
 
     it('returns stack summary', () => {
       const result = identifyFrameworks(MINIMAL_PROJECT)
 
-      expect(result.stack).toBeDefined()
-      expect(Array.isArray(result.stack.frontend)).toBe(true)
-      expect(Array.isArray(result.stack.backend)).toBe(true)
-      expect(Array.isArray(result.stack.testing)).toBe(true)
-      expect(Array.isArray(result.stack.build)).toBe(true)
-      expect(Array.isArray(result.stack.typeSystem)).toBe(true)
-      expect(Array.isArray(result.stack.linting)).toBe(true)
+      expect(result.stack).toEqual({
+        frontend: expect.any(Array),
+        backend: expect.any(Array),
+        testing: expect.any(Array),
+        build: expect.any(Array),
+        typeSystem: expect.any(Array),
+        linting: expect.any(Array),
+      })
     })
   })
 
@@ -44,9 +44,7 @@ describe('identifyFrameworks', () => {
     it('returns empty arrays', () => {
       const result = identifyFrameworks('/non/existent/path')
 
-      expect(result.frontend).toEqual([])
-      expect(result.backend).toEqual([])
-      expect(result.primary).toBeUndefined()
+      expect(result).toMatchObject({ frontend: [], backend: [], primary: undefined })
     })
 
     it('returns "No frameworks detected" summary', () => {
@@ -88,8 +86,7 @@ describe('identifyFrameworks', () => {
       const cached = identifyFrameworks(MINIMAL_PROJECT)
       const fresh = identifyFrameworks(MINIMAL_PROJECT, { skipCache: true })
 
-      expect(cached.summary).toBeDefined()
-      expect(fresh.summary).toBeDefined()
+      expect(fresh).not.toBe(cached)
     })
   })
 
@@ -97,8 +94,7 @@ describe('identifyFrameworks', () => {
     it('generates human-readable summary', () => {
       const result = identifyFrameworks(MINIMAL_PROJECT)
 
-      expect(typeof result.summary).toBe('string')
-      expect(result.summary.length).toBeGreaterThan(0)
+      expect(result.summary).toEqual(expect.stringMatching(/\S/))
     })
 
     it('includes frontend frameworks in summary', () => {
@@ -119,13 +115,19 @@ describe('identifyFrameworks', () => {
       const result = identifyFrameworks(MINIMAL_PROJECT)
 
       const allFrameworks = [...result.frontend, ...result.backend]
-      allFrameworks.forEach((framework) => {
-        expect(typeof framework.id).toBe('string')
-        expect(typeof framework.name).toBe('string')
-        expect(typeof framework.confidence).toBe('number')
-        expect(framework.confidence).toBeGreaterThanOrEqual(0)
-        expect(framework.confidence).toBeLessThanOrEqual(100)
-      })
+      for (const framework of allFrameworks) {
+        expect(framework).toEqual(
+          expect.objectContaining({ id: expect.any(String), name: expect.any(String), confidence: expect.any(Number) })
+        )
+      }
+    })
+
+    it('keeps every detected framework confidence between 0 and 100', () => {
+      const result = identifyFrameworks(MINIMAL_PROJECT)
+
+      const allFrameworks = [...result.frontend, ...result.backend]
+      const outOfRange = allFrameworks.map((f) => f.confidence).filter((confidence) => confidence < 0 || confidence > 100)
+      expect(outOfRange).toEqual([])
     })
 
     it('includes version when available', () => {
@@ -197,10 +199,9 @@ describe('clearFrameworkIdentificationCache', () => {
   it('clears the cache without error', () => {
     identifyFrameworks(MINIMAL_PROJECT)
 
-    expect(() => clearFrameworkIdentificationCache()).not.toThrow()
+    clearFrameworkIdentificationCache()
 
-    const result = identifyFrameworks(MINIMAL_PROJECT)
-    expect(result).toBeDefined()
+    expect(identifyFrameworks(MINIMAL_PROJECT)).toBeDefined()
   })
 
   it('forces fresh detection after clearing', () => {
@@ -210,8 +211,7 @@ describe('clearFrameworkIdentificationCache', () => {
 
     const fresh = identifyFrameworks(MINIMAL_PROJECT)
 
-    expect(fresh.summary).toBe(cached.summary)
-    expect(fresh.frontend.length).toBe(cached.frontend.length)
+    expect(fresh).toEqual(cached)
   })
 })
 
@@ -219,22 +219,34 @@ describe('identifyFrameworks summary building', () => {
   it('builds summary with frontend frameworks', () => {
     const result = identifyFrameworks(FRONTEND_APP)
 
-    expect(result.frontend.length).toBeGreaterThan(0)
-    expect(result.summary).not.toBe('No frameworks detected')
+    expect(result).toEqual(
+      expect.objectContaining({
+        frontend: expect.arrayContaining([expect.objectContaining({ id: 'react', name: 'React' })]),
+        summary: expect.stringContaining('React'),
+      })
+    )
   })
 
   it('builds summary with backend frameworks', () => {
     const result = identifyFrameworks(DOCKER_APP)
 
-    expect(result.backend.length).toBeGreaterThan(0)
-    expect(result.summary).not.toBe('No frameworks detected')
+    expect(result).toEqual(
+      expect.objectContaining({
+        backend: expect.arrayContaining([expect.objectContaining({ id: 'express', name: 'Express' })]),
+        summary: expect.stringContaining('Express'),
+      })
+    )
   })
 
   it('builds summary with testing frameworks', () => {
     const result = identifyFrameworks(MINIMAL_PROJECT)
 
-    expect(result.testing.length).toBeGreaterThan(0)
-    expect(result.stack.testing.length).toBeGreaterThan(0)
+    expect(result).toEqual(
+      expect.objectContaining({
+        testing: expect.arrayContaining([expect.objectContaining({ id: 'jest', name: 'Jest' })]),
+        stack: expect.objectContaining({ testing: expect.arrayContaining(['jest']) }),
+      })
+    )
   })
 })
 
@@ -262,10 +274,9 @@ describe('usesFramework advanced', () => {
 
   it('checks all framework categories', () => {
     const hasFrontend = usesFramework(FRONTEND_APP, 'react', 10)
-    expect(typeof hasFrontend).toBe('boolean')
-
     const hasBackend = usesFramework(DOCKER_APP, 'express', 10)
-    expect(typeof hasBackend).toBe('boolean')
+
+    expect([hasFrontend, hasBackend]).toEqual([true, true])
   })
 })
 
@@ -280,17 +291,14 @@ describe('identifyFrameworks caching', () => {
     const first = identifyFrameworks(BACKEND_ONLY)
     const second = identifyFrameworks(BACKEND_ONLY)
 
-    expect(first.summary).toBe(second.summary)
-    expect(first.frontend.length).toBe(second.frontend.length)
-    expect(first.backend.length).toBe(second.backend.length)
+    expect(second).toEqual(first)
   })
 
   it('generates different cache keys for different minConfidence', () => {
     const low = identifyFrameworks(BACKEND_ONLY, { minConfidence: 10 })
     const high = identifyFrameworks(BACKEND_ONLY, { minConfidence: 90 })
 
-    expect(low).toBeDefined()
-    expect(high).toBeDefined()
+    expect(high).not.toBe(low)
   })
 })
 
@@ -298,9 +306,12 @@ describe('identifyFrameworks summary with backend only', () => {
   it('builds summary when only backend frameworks are present', () => {
     const result = identifyFrameworks(BACKEND_ONLY)
 
-    expect(result.backend.length).toBeGreaterThan(0)
-    expect(result.summary).not.toBe('No frameworks detected')
-    expect(result.summary.toLowerCase()).toContain('express')
+    expect(result).toEqual(
+      expect.objectContaining({
+        backend: expect.arrayContaining([expect.objectContaining({ id: 'express' })]),
+        summary: expect.stringMatching(/express/i),
+      })
+    )
   })
 
   it('builds summary with backend but no frontend', () => {
@@ -346,10 +357,7 @@ describe('identifyFrameworks minConfidence option coverage', () => {
 
     const midThreshold = identifyFrameworks(NEXTJS_APP, { minConfidence: 40 })
 
-    for (const framework of midThreshold.frontend) {
-      expect(framework.confidence).toBeGreaterThanOrEqual(40)
-    }
-    for (const framework of midThreshold.backend) {
+    for (const framework of [...midThreshold.frontend, ...midThreshold.backend]) {
       expect(framework.confidence).toBeGreaterThanOrEqual(40)
     }
   })

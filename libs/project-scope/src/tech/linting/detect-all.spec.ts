@@ -13,7 +13,6 @@ jest.mock('../../project/package', () => ({
 
 describe('lintingDetectors', () => {
   it('contains all linting tool detectors', () => {
-    expect(lintingDetectors).toHaveLength(4)
     expect(lintingDetectors.map((d) => d.id)).toEqual(['eslint', 'prettier', 'stylelint', 'biome'])
   })
 })
@@ -33,9 +32,20 @@ describe('detectLintingTools', () => {
       },
     })
 
-    expect(result.length).toBe(2)
-    expect(result.map((r) => r.id)).toContain('eslint')
-    expect(result.map((r) => r.id)).toContain('prettier')
+    expect(result.map((r) => r.id).sort()).toEqual(['eslint', 'prettier'])
+  })
+
+  it('detects eslint, prettier and biome together', () => {
+    const result = detectLintingTools(mockProjectPath, {
+      name: 'test-project',
+      devDependencies: {
+        eslint: '^8.0.0',
+        prettier: '^3.0.0',
+        '@biomejs/biome': '^1.5.0',
+      },
+    })
+
+    expect(result.map((r) => r.id).sort()).toEqual(['biome', 'eslint', 'prettier'])
   })
 
   it('sorts results by confidence (descending)', () => {
@@ -48,7 +58,6 @@ describe('detectLintingTools', () => {
       },
     })
 
-    expect(result.length).toBe(3)
     for (let i = 0; i < result.length - 1; i++) {
       expect(result[i]?.confidence).toBeGreaterThanOrEqual(result[i + 1]?.confidence ?? 0)
     }

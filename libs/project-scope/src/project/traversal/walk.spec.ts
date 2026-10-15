@@ -44,9 +44,12 @@ describe('walkDirectory', () => {
 
     walkDirectory(MINIMAL_PROJECT, visitor, { includeHidden: true })
 
-    expect(entries.length).toBeGreaterThan(0)
-    expect(entries.some((e) => e.name === 'package.json')).toBe(true)
-    expect(entries.some((e) => e.name === 'src' && e.isDirectory)).toBe(true)
+    expect(entries).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ name: 'package.json' }),
+        expect.objectContaining({ name: 'src', isDirectory: true }),
+      ])
+    )
   })
 
   it('respects maxDepth option', () => {
@@ -136,8 +139,12 @@ describe('walkDirectory', () => {
 
     walkDirectory(MONOREPO, visitor, { includeHidden: true })
 
-    expect(entries.some((e) => e.name === 'packages' && e.isDirectory)).toBe(true)
-    expect(entries.some((e) => e.name === 'project.json')).toBe(true)
+    expect(entries).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ name: 'packages', isDirectory: true }),
+        expect.objectContaining({ name: 'project.json' }),
+      ])
+    )
   })
 })
 
@@ -151,8 +158,7 @@ describe('walkTree', () => {
 
     walkTree(tree, '', visitor, { includeHidden: true })
 
-    expect(entries.length).toBeGreaterThan(0)
-    expect(entries.some((e) => e.name === 'package.json')).toBe(true)
+    expect(entries).toEqual(expect.arrayContaining([expect.objectContaining({ name: 'package.json' })]))
   })
 
   it('respects maxDepth option for tree walking', () => {
@@ -252,8 +258,9 @@ describe('walkTree', () => {
 
     walkTree(tree, '', visitor, { includeHidden: true })
 
-    expect(entries.some((e) => e.name === 'packages')).toBe(true)
-    expect(entries.some((e) => e.relativePath === 'packages/core')).toBe(true)
+    expect(entries).toEqual(
+      expect.arrayContaining([expect.objectContaining({ name: 'packages' }), expect.objectContaining({ relativePath: 'packages/core' })])
+    )
   })
 })
 
@@ -287,19 +294,10 @@ describe('walkDirectory - edge cases', () => {
     writeFileSync(join(TEST_DIR, 'gitignore-test', 'node_modules', 'pkg.js'), 'module.exports = {}')
     writeFileSync(join(TEST_DIR, 'gitignore-test', 'dist', 'index.js'), 'console.log("dist")')
 
-    const entries: WalkEntry[] = []
-    const visitor: WalkVisitor = (entry) => {
-      entries.push(entry)
-    }
-
-    walkDirectory(join(TEST_DIR, 'gitignore-test'), visitor, {
-      includeHidden: true,
-      respectGitignore: true,
-    })
-
-    expect(entries.some((e) => e.name === 'node_modules')).toBe(false)
-    expect(entries.some((e) => e.name === 'dist')).toBe(false)
-    expect(entries.some((e) => e.name === 'index.ts')).toBe(true)
+    expect(collectRelativePaths(join(TEST_DIR, 'gitignore-test'), { includeHidden: true, respectGitignore: true })).toEqual([
+      '.gitignore',
+      'index.ts',
+    ])
   })
 
   it('ignores gitignore when respectGitignore is false', () => {
@@ -396,8 +394,7 @@ describe('walkDirectory - edge cases', () => {
 
     walkDirectory(join(TEST_DIR, 'nested-stop'), visitor, { includeHidden: true })
 
-    expect(entries.some((e) => e.name === 'aaa-stop.txt')).toBe(true)
-    expect(entries.some((e) => e.name === 'after.txt')).toBe(false)
+    expect(entries.map((entry) => entry.name)).toEqual(['aaa-stop.txt'])
   })
 
   it('handles empty directory', () => {
