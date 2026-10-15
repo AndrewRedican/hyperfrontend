@@ -224,7 +224,7 @@ flowchart TB
 | `@hyperfrontend/random-generator-utils` | `0.2.1` |
 | `@hyperfrontend/state-machine` | `0.2.1` |
 | `@hyperfrontend/string-utils` | `1.0.1` |
-| `@hyperfrontend/testing` | `0.0.0` |
+| `@hyperfrontend/testing` | `0.1.0` |
 | `@hyperfrontend/time-utils` | `1.0.1` |
 | `@hyperfrontend/ui-utils` | `0.0.9` |
 | `@hyperfrontend/versioning` | `0.9.2` |

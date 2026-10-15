@@ -1,6 +1,6 @@
 {
   "name": "@hyperfrontend/testing",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Jest-style describe, it, expect and jest on Node's built-in test runner, with module mocks, fake timers, an optional DOM and a coverage gate.",
   "license": "MIT",
   "sideEffects": false,

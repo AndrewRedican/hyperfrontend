@@ -5,7 +5,7 @@
   "private": true,
   "dependencies": {
     "@hyperfrontend/builder": "0.5.1",
-    "@hyperfrontend/testing": "0.0.0"
+    "@hyperfrontend/testing": "0.1.0"
   },
   "devDependencies": {
     "@hyperfrontend/project-scope": "0.3.0",

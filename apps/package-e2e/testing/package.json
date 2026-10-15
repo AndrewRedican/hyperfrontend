@@ -7,7 +7,7 @@
     "pack-install": "cd ../../../dist/libs/testing && npm pack && cd - && npm install ../../../dist/libs/testing/*.tgz"
   },
   "dependencies": {
-    "@hyperfrontend/testing": "file:../../../tmp/e2e-packs/hyperfrontend-testing-0.0.0.tgz"
+    "@hyperfrontend/testing": "file:../../../tmp/e2e-packs/hyperfrontend-testing-0.1.0.tgz"
   },
   "devDependencies": {
     "@types/node": "25.3.3",
