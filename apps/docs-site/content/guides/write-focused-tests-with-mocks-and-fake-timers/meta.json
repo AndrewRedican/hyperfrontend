@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "type": "how-to",
+  "title": "How to write focused tests with mocks, fake timers and module replacements",
+  "problem": "My tests pass, but when one fails I cannot tell what broke: each test checks several things, timers are awaited for real, and the module a function depends on cannot be replaced without restructuring the code.",
+  "outcome": "A set of specs that each pin one observable fact, with mocked collaborators, a controlled clock, modules replaced before they link and re-evaluated on demand, and promise outcomes asserted directly, each failing with a message that names the fact.",
+  "priority": "P1",
+  "packages": ["@hyperfrontend/testing"],
+  "verification": {
+    "kind": "authored",
+    "verifiedAgainst": "@hyperfrontend/testing@0.1.0",
+    "verifiedOn": "2026-10-15"
+  },
+  "complexity": "intermediate",
+  "estMinutes": 25,
+  "apis": [
+    { "package": "@hyperfrontend/testing", "symbol": "expect" },
+    { "package": "@hyperfrontend/testing", "symbol": "Assertions" },
+    { "package": "@hyperfrontend/testing", "symbol": "Expectation" },
+    { "package": "@hyperfrontend/testing", "symbol": "JestApi" },
+    { "package": "@hyperfrontend/testing", "symbol": "MockFn" },
+    { "package": "@hyperfrontend/testing", "symbol": "MockState" },
+    { "package": "@hyperfrontend/testing", "symbol": "it" }
+  ],
+  "prerequisites": {
+    "guides": ["run-typescript-tests-on-node-test"],
+    "knowledge": ["A project whose specs already run through @hyperfrontend/testing"]
+  },
+  "related": {
+    "guides": ["migrate-from-jest-to-node-test", "test-interactive-prompts-without-a-terminal"],
+    "reference": ["/docs/libraries/testing", "/docs/libraries/testing/hooks"],
+    "explanation": ["/docs/libraries/testing/architecture"]
+  },
+  "keywords": [
+    "unit test",
+    "one assertion per test",
+    "asymmetric matchers",
+    "objectContaining",
+    "arrayContaining",
+    "jest.fn",
+    "jest.spyOn",
+    "jest.mock",
+    "requireActual",
+    "automock",
+    "doMock",
+    "resetModules",
+    "fake timers",
+    "useFakeTimers",
+    "advanceTimersByTime",
+    "runAllTimers",
+    "setSystemTime",
+    "resolves",
+    "rejects",
+    "expect.assertions"
+  ]
+}
