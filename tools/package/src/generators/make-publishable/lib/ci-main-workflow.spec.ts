@@ -23,7 +23,7 @@ function at(projectRoot: string): ReturnType<typeof deriveLibraryFacts> {
 
 const BEFORE = ['        run: |', '          # Define library coverage mappings: flag:path', '          LIBS=(']
 
-const LIBS = [
+const ENTRIES = [
   '"builder:libs/builder"',
   '"questions:libs/questions"',
   '"versioning:libs/versioning"',
@@ -45,35 +45,35 @@ function workflow(entries: readonly string[]): string {
 
 describe('registerLibraryCoverageUpload', () => {
   it('lists a package alphabetically among the packages under libs', () => {
-    expect(registerLibraryCoverageUpload(workflow(LIBS), at('libs/testing'))).toBe(
-      workflow([...LIBS.slice(0, 2), '"testing:libs/testing"', ...LIBS.slice(2)])
+    expect(registerLibraryCoverageUpload(workflow(ENTRIES), at('libs/testing'))).toBe(
+      workflow([...ENTRIES.slice(0, 2), '"testing:libs/testing"', ...ENTRIES.slice(2)])
     )
   })
 
   it('lists a utility alphabetically among the utilities', () => {
-    expect(registerLibraryCoverageUpload(workflow(LIBS), at('libs/utils/function'))).toBe(
-      workflow([...LIBS.slice(0, 4), '"function-utils:libs/utils/function"', ...LIBS.slice(4)])
+    expect(registerLibraryCoverageUpload(workflow(ENTRIES), at('libs/utils/function'))).toBe(
+      workflow([...ENTRIES.slice(0, 4), '"function-utils:libs/utils/function"', ...ENTRIES.slice(4)])
     )
   })
 
   it('lists a utility sorting last at the end', () => {
-    expect(registerLibraryCoverageUpload(workflow(LIBS), at('libs/utils/ui'))).toBe(workflow([...LIBS, '"ui-utils:libs/utils/ui"']))
+    expect(registerLibraryCoverageUpload(workflow(ENTRIES), at('libs/utils/ui'))).toBe(workflow([...ENTRIES, '"ui-utils:libs/utils/ui"']))
   })
 
   it('lists the first utility after every package under libs', () => {
-    expect(registerLibraryCoverageUpload(workflow(LIBS.slice(0, 3)), at('libs/utils/data'))).toBe(
-      workflow([...LIBS.slice(0, 3), '"data-utils:libs/utils/data"'])
+    expect(registerLibraryCoverageUpload(workflow(ENTRIES.slice(0, 3)), at('libs/utils/data'))).toBe(
+      workflow([...ENTRIES.slice(0, 3), '"data-utils:libs/utils/data"'])
     )
   })
 
   it('lists a package under libs before the utilities when it sorts after every other', () => {
-    expect(registerLibraryCoverageUpload(workflow(LIBS), at('libs/web-worker'))).toBe(
-      workflow([...LIBS.slice(0, 3), '"web-worker:libs/web-worker"', ...LIBS.slice(3)])
+    expect(registerLibraryCoverageUpload(workflow(ENTRIES), at('libs/web-worker'))).toBe(
+      workflow([...ENTRIES.slice(0, 3), '"web-worker:libs/web-worker"', ...ENTRIES.slice(3)])
     )
   })
 
   it('skips lines of the array that are not entries', () => {
-    const odd = ['# a comment', '"broken', '"noseparator"', ...LIBS]
+    const odd = ['# a comment', '"broken', '"noseparator"', ...ENTRIES]
     expect(registerLibraryCoverageUpload(workflow(odd), at('libs/testing'))).toBe(
       workflow([...odd.slice(0, 5), '"testing:libs/testing"', ...odd.slice(5)])
     )
@@ -84,7 +84,7 @@ describe('registerLibraryCoverageUpload', () => {
   })
 
   it('changes nothing the second time', () => {
-    const once = registerLibraryCoverageUpload(workflow(LIBS), at('libs/testing'))
+    const once = registerLibraryCoverageUpload(workflow(ENTRIES), at('libs/testing'))
     expect(registerLibraryCoverageUpload(once, at('libs/testing'))).toBe(once)
   })
 
@@ -98,8 +98,8 @@ describe('registerLibraryCoverageUpload', () => {
 describe('hasCoverageEntry', () => {
   it('finds the flag and path pair', () => {
     expect([
-      hasCoverageEntry(workflow(LIBS), 'builder', 'libs/builder'),
-      hasCoverageEntry(workflow(LIBS), 'builder', 'libs/other'),
+      hasCoverageEntry(workflow(ENTRIES), 'builder', 'libs/builder'),
+      hasCoverageEntry(workflow(ENTRIES), 'builder', 'libs/other'),
     ]).toEqual([true, false])
   })
 })
