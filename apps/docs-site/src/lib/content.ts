@@ -201,6 +201,22 @@ export const LIBRARIES: LibraryInfo[] = [
     ],
     category: 'core',
   },
+  {
+    name: 'Testing',
+    packageName: '@hyperfrontend/testing',
+    slug: 'testing',
+    readmePath: 'libs/testing/README.md',
+    architecturePath: 'libs/testing/ARCHITECTURE.md',
+    entryPoints: [
+      'libs/testing/src/index.ts',
+      'libs/testing/src/coverage/index.ts',
+      'libs/testing/src/dom/index.ts',
+      'libs/testing/src/hooks/index.ts',
+      'libs/testing/src/reporter/index.ts',
+      'libs/testing/src/runner/index.ts',
+    ],
+    category: 'core',
+  },
 ]
 
 /**

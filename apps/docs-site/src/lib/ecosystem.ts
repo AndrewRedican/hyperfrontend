@@ -88,7 +88,14 @@ export const ECOSYSTEM_TIERS: readonly EcosystemTier[] = [
     columns: 2,
     topicLimit: 3,
     // why: what the `hf` command is made of, ordered by how large the problem is on its own: builder packages a feature, versioning owns commits through releases, project-scope is the file layer both of those stand on, questions is the prompt surface of a single command.
-    packages: ['@hyperfrontend/builder', '@hyperfrontend/versioning', '@hyperfrontend/project-scope', '@hyperfrontend/questions'],
+    // why: testing closes the level because it is what every package here is tested with rather than a part of the `hf` command, so it belongs with the tooling without leading any of it.
+    packages: [
+      '@hyperfrontend/builder',
+      '@hyperfrontend/versioning',
+      '@hyperfrontend/project-scope',
+      '@hyperfrontend/questions',
+      '@hyperfrontend/testing',
+    ],
   },
   {
     id: 'primitives',
