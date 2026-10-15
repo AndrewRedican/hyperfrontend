@@ -1,4 +1,4 @@
-import type { TestConfig } from '@hyperfrontend/testing'
+import type { TestConfig } from '@hyperfrontend/testing/runner'
 
 /**
  * How the JSON utilities are tested. Every source file is measured and must be fully covered.
