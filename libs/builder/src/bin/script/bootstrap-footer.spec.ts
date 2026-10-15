@@ -24,10 +24,7 @@ describe('defaultBootstrap', () => {
 
   it('forwards process.argv.slice(2), cwd, stderr, and stdout to the runner', () => {
     const footer = defaultBootstrap({ runner: 'r', format: 'cjs' })
-    expect(footer).toContain('argv: process.argv.slice(2)')
-    expect(footer).toContain('cwd: process.cwd()')
-    expect(footer).toContain('stderr: process.stderr')
-    expect(footer).toContain('stdout: process.stdout')
+    expect(footer).toContain('r({ argv: process.argv.slice(2), cwd: process.cwd(), stderr: process.stderr, stdout: process.stdout })')
   })
 
   it('maps the resolved exit code through process.exit on success', () => {
@@ -37,7 +34,13 @@ describe('defaultBootstrap', () => {
 
   it('writes a stringified error to stderr and exits 1 on rejection', () => {
     const footer = defaultBootstrap({ runner: 'r', format: 'cjs' })
-    expect(footer).toContain("process.stderr.write((error instanceof Error ? error.message : String(error)) + '\\n')")
-    expect(footer).toContain('process.exit(1)')
+    expect(footer).toContain(
+      [
+        '  (error) => {',
+        "    process.stderr.write((error instanceof Error ? error.message : String(error)) + '\\n')",
+        '    process.exit(1)',
+        '  }',
+      ].join('\n')
+    )
   })
 })

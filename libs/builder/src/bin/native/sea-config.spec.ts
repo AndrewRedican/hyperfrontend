@@ -21,7 +21,6 @@ describe('generateSeaConfig', () => {
 
   it('preserves the supplied paths verbatim (no normalization)', () => {
     const doc = generateSeaConfig({ mainPath: '/a/./b/../c', outputPath: '/x/./y' })
-    expect(doc.main).toBe('/a/./b/../c')
-    expect(doc.output).toBe('/x/./y')
+    expect(doc).toMatchObject({ main: '/a/./b/../c', output: '/x/./y' })
   })
 })

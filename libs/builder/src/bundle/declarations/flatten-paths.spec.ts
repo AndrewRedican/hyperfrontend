@@ -114,9 +114,8 @@ describe('flattenDeclarationPaths', () => {
         ])
       )
     )
-    expect(existsSync(join(outputPath, 'browser', 'index.d.ts'))).toBe(true)
-    expect(existsSync(join(outputPath, 'node', 'index.d.ts'))).toBe(true)
-    expect(existsSync(join(outputPath, 'lib', 'f', 'f.d.ts'))).toBe(true)
+    const kept = ['browser/index.d.ts', 'node/index.d.ts', 'lib/f/f.d.ts']
+    expect(kept.filter((rel) => existsSync(join(outputPath, rel)))).toEqual(kept)
   })
 
   it('copies declaration files from the lib/ folder when present', () => {
@@ -156,9 +155,8 @@ describe('flattenDeclarationPaths', () => {
     flattenDeclarationPaths(
       makeContext(makeDiscovery([{ exportPath: '.', srcPath: '', inputFile: join(projectRoot, 'src/index.ts'), isRoot: true }]))
     )
-    expect(existsSync(join(outputPath, 'index.d.ts'))).toBe(true)
-    expect(existsSync(join(outputPath, 'shared', 'consts.d.ts'))).toBe(true)
-    expect(existsSync(join(outputPath, 'shared', 'consts.js'))).toBe(false)
+    const candidates = ['index.d.ts', 'shared/consts.d.ts', 'shared/consts.js']
+    expect(candidates.filter((rel) => existsSync(join(outputPath, rel)))).toEqual(['index.d.ts', 'shared/consts.d.ts'])
   })
 
   it('removes the leftover libs / plugins / apps directories at the output root', () => {

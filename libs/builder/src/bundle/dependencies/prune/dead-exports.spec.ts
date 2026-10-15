@@ -4,6 +4,9 @@ import { stripDeadExports } from './dead-exports'
 
 const keepOf = (...names: string[]): Set<string> => createSet(names)
 
+const survivors = (code: string | undefined, fragments: string[]): string[] =>
+  fragments.filter((fragment) => (code ?? '').includes(fragment))
+
 describe('stripDeadExports', () => {
   it('returns null when the demand is all', () => {
     expect(stripDeadExports('const a = 1;\nexport { a };', 'esm', 'all')).toBeNull()
@@ -204,22 +207,33 @@ const mathChunkEsm = [...mathChunkDecls, 'export { abs, random, round, floor, ce
 
 describe('stripDeadExports namespace collapse', () => {
   it('collapses the error namespace to the single demanded factory (esm)', () => {
+    const code = stripDeadExports(errorChunkEsm, 'esm', keepOf('createError'))?.code
+    // why: the freeze call is the only consumer of the namespace; `_freeze` disappearing proves the aggregator and its captures cascaded out.
+    expect(
+      survivors(code, [
+        'export { createError };',
+        'const createError = (msg) => new _Error(msg);',
+        '_freeze',
+        'createTypeError',
+        '_TypeError',
+      ])
+    ).toEqual(['export { createError };', 'const createError = (msg) => new _Error(msg);'])
+  })
+
+  it('reports the namespace and every undemanded factory as removed (esm)', () => {
     const result = stripDeadExports(errorChunkEsm, 'esm', keepOf('createError'))
-    expect(result?.code).toContain('export { createError };')
-    expect(result?.code).toContain('const createError = (msg) => new _Error(msg);')
-    // why: the freeze call is the only consumer of the namespace; its disappearance proves the aggregator and `_freeze` cascaded out.
-    expect(result?.code).not.toContain('_freeze')
-    expect(result?.code).not.toContain('createTypeError')
-    expect(result?.code).not.toContain('_TypeError')
     expect(result?.removedNames.sort()).toEqual(['Error', ...errorFactoryNames.slice(1)].sort())
   })
 
   it('collapses the error namespace to the single demanded factory (cjs)', () => {
+    const code = stripDeadExports(errorChunkCjs, 'cjs', keepOf('createError'))?.code
+    expect(survivors(code, ['exports.createError = createError;', 'exports.Error', 'exports.createTypeError', '_freeze'])).toEqual([
+      'exports.createError = createError;',
+    ])
+  })
+
+  it('reports the namespace and every undemanded factory as removed (cjs)', () => {
     const result = stripDeadExports(errorChunkCjs, 'cjs', keepOf('createError'))
-    expect(result?.code).toContain('exports.createError = createError;')
-    expect(result?.code).not.toContain('exports.Error')
-    expect(result?.code).not.toContain('exports.createTypeError')
-    expect(result?.code).not.toContain('_freeze')
     expect(result?.removedNames.sort()).toEqual(['Error', ...errorFactoryNames.slice(1)].sort())
   })
 
@@ -229,14 +243,15 @@ describe('stripDeadExports namespace collapse', () => {
   })
 
   it('collapses the math namespace to the demanded members and drops the now-dead freeze (esm)', () => {
+    const code = stripDeadExports(mathChunkEsm, 'esm', keepOf('abs', 'random', 'round'))?.code
+    // why: `_Math` is still read by the three surviving members so the shared capture stays, while the last freeze call vanishes with the namespace and takes `_freeze` with it.
+    expect(
+      survivors(code, ['export { abs, random, round };', 'const _Math = globalThis.Math;', 'const floor', 'const ceil', '_freeze'])
+    ).toEqual(['export { abs, random, round };', 'const _Math = globalThis.Math;'])
+  })
+
+  it('reports the math namespace and its undemanded members as removed (esm)', () => {
     const result = stripDeadExports(mathChunkEsm, 'esm', keepOf('abs', 'random', 'round'))
-    expect(result?.code).toContain('export { abs, random, round };')
-    // why: `_Math` is still read by the three surviving members, so the shared capture must stay.
-    expect(result?.code).toContain('const _Math = globalThis.Math;')
-    expect(result?.code).not.toContain('const floor')
-    expect(result?.code).not.toContain('const ceil')
-    // why: the last freeze call vanishes with the namespace, so `_freeze` is unreferenced and removed.
-    expect(result?.code).not.toContain('_freeze')
     expect(result?.removedNames.sort()).toEqual(['Math', 'ceil', 'floor'])
   })
 })

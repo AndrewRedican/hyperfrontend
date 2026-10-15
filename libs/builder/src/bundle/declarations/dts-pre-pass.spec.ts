@@ -55,23 +55,37 @@ describe('runDtsPrePass', () => {
 
   it('builds one dts job per bundled dep and forwards them to runPrePass', async () => {
     await runDtsPrePass(makeContext(['rollup', 'postject']))
-    expect(runPrePass).toHaveBeenCalledTimes(1)
-    const [jobs, options] = (runPrePass as Mock).mock.calls[0]
-    expect(jobs).toHaveLength(2)
-    expect(jobs.every((j: { kind: string; format: string }) => j.kind === 'dts' && j.format === 'esm')).toBe(true)
-    expect(jobs[0].outputPath).toBe(normalizeToNative('/abs/dist/libs/foo/_dependencies/rollup/index.d.ts'))
-    expect(jobs[1].outputPath).toBe(normalizeToNative('/abs/dist/libs/foo/_dependencies/postject/index.d.ts'))
-    expect(jobs[0].otherDeps).toEqual(['postject'])
-    expect(jobs[1].otherDeps).toEqual(['rollup'])
-    expect(options.workerPath).toBe('/abs/dist/libs/builder/bundle/dependencies/worker/index.cjs')
+    expect((runPrePass as Mock).mock.calls).toEqual([
+      [
+        [
+          expect.objectContaining({
+            kind: 'dts',
+            format: 'esm',
+            outputPath: normalizeToNative('/abs/dist/libs/foo/_dependencies/rollup/index.d.ts'),
+            otherDeps: ['postject'],
+          }),
+          expect.objectContaining({
+            kind: 'dts',
+            format: 'esm',
+            outputPath: normalizeToNative('/abs/dist/libs/foo/_dependencies/postject/index.d.ts'),
+            otherDeps: ['rollup'],
+          }),
+        ],
+        expect.objectContaining({ workerPath: '/abs/dist/libs/builder/bundle/dependencies/worker/index.cjs' }),
+      ],
+    ])
   })
 
   it('threads the optional memory monitor through to runPrePass', async () => {
     const monitor = { check: jest.fn() }
     await runDtsPrePass(makeContext(['rollup']), monitor as unknown as Parameters<typeof runDtsPrePass>[1])
     expect((runPrePass as Mock).mock.calls[0][1].monitor).toBe(monitor)
-    expect(monitor.check).toHaveBeenCalledWith('bundle:declarations:dts-prepass:start')
-    expect(monitor.check).toHaveBeenCalledWith('bundle:declarations:dts-prepass:end')
+  })
+
+  it('checkpoints the monitor at the start and end of the pre-pass', async () => {
+    const monitor = { check: jest.fn() }
+    await runDtsPrePass(makeContext(['rollup']), monitor as unknown as Parameters<typeof runDtsPrePass>[1])
+    expect(monitor.check.mock.calls).toEqual([['bundle:declarations:dts-prepass:start'], ['bundle:declarations:dts-prepass:end']])
   })
 
   it('threads npmDeps, workspaceRoutes, and depsRoot through to npm dts jobs', async () => {
@@ -87,11 +101,15 @@ describe('runDtsPrePass', () => {
       },
     ]
     await runDtsPrePass(ctx)
-    const jobs = (runPrePass as Mock).mock.calls[0][0]
-    expect(jobs[0].depsRoot).toBe(normalizeToNative('/abs/dist/libs/foo/_dependencies'))
-    expect(jobs[0].npmDeps).toEqual(['postject'])
-    expect(jobs[0].workspaceRoutes).toEqual([{ packageName: '@hyperfrontend/logging', policy: 'whole-surface' }])
-    expect(jobs[1].npmDeps).toEqual(['rollup'])
+    const npmJobs = (runPrePass as Mock).mock.calls[0][0].filter((job: { kind: string }) => job.kind === 'dts')
+    expect(npmJobs).toEqual([
+      expect.objectContaining({
+        depsRoot: normalizeToNative('/abs/dist/libs/foo/_dependencies'),
+        npmDeps: ['postject'],
+        workspaceRoutes: [{ packageName: '@hyperfrontend/logging', policy: 'whole-surface' }],
+      }),
+      expect.objectContaining({ npmDeps: ['rollup'] }),
+    ])
   })
 
   it('threads workspace-dts jobs with self-package excluded from workspaceRoutes', async () => {
@@ -115,15 +133,19 @@ describe('runDtsPrePass', () => {
       },
     ]
     await runDtsPrePass(ctx)
-    const jobs = (runPrePass as Mock).mock.calls[0][0]
-    expect(jobs).toHaveLength(2)
-    expect(jobs[0].kind).toBe('workspace-dts')
-    expect(jobs[0].dep).toBe('@hyperfrontend/logging')
-    expect(jobs[0].depsRoot).toBe(normalizeToNative('/abs/dist/libs/foo/_dependencies'))
-    expect(jobs[0].npmDeps).toEqual([])
-    expect(jobs[0].workspaceRoutes).toEqual([{ packageName: '@hyperfrontend/project-scope', policy: 'whole-surface' }])
-    expect(jobs[1].dep).toBe('@hyperfrontend/project-scope')
-    expect(jobs[1].workspaceRoutes).toEqual([{ packageName: '@hyperfrontend/logging', policy: 'whole-surface' }])
+    expect((runPrePass as Mock).mock.calls[0][0]).toEqual([
+      expect.objectContaining({
+        kind: 'workspace-dts',
+        dep: '@hyperfrontend/logging',
+        depsRoot: normalizeToNative('/abs/dist/libs/foo/_dependencies'),
+        npmDeps: [],
+        workspaceRoutes: [{ packageName: '@hyperfrontend/project-scope', policy: 'whole-surface' }],
+      }),
+      expect.objectContaining({
+        dep: '@hyperfrontend/project-scope',
+        workspaceRoutes: [{ packageName: '@hyperfrontend/logging', policy: 'whole-surface' }],
+      }),
+    ])
   })
 
   it('excludes only the self specifier (not the whole package) when workspace dep policy is sub-path', async () => {
@@ -147,14 +169,14 @@ describe('runDtsPrePass', () => {
       },
     ]
     await runDtsPrePass(ctx)
-    const jobs = (runPrePass as Mock).mock.calls[0][0]
-    expect(jobs).toHaveLength(2)
-    expect(jobs[0].dep).toBe('@hyperfrontend/iau/a')
-    expect(jobs[0].workspaceRoutes).toEqual([
-      { packageName: '@hyperfrontend/iau', policy: 'sub-path', specifiers: ['@hyperfrontend/iau/b'] },
-    ])
-    expect(jobs[1].workspaceRoutes).toEqual([
-      { packageName: '@hyperfrontend/iau', policy: 'sub-path', specifiers: ['@hyperfrontend/iau/a'] },
+    expect((runPrePass as Mock).mock.calls[0][0]).toEqual([
+      expect.objectContaining({
+        dep: '@hyperfrontend/iau/a',
+        workspaceRoutes: [{ packageName: '@hyperfrontend/iau', policy: 'sub-path', specifiers: ['@hyperfrontend/iau/b'] }],
+      }),
+      expect.objectContaining({
+        workspaceRoutes: [{ packageName: '@hyperfrontend/iau', policy: 'sub-path', specifiers: ['@hyperfrontend/iau/a'] }],
+      }),
     ])
   })
 })

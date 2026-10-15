@@ -40,6 +40,11 @@ const makeContext = (outputPath: string, entries: EntryPoint[]): BuildContext =>
 
 const namesIn = (dir: string): string[] => readdirSync(dir).sort()
 
+const touch = (dir: string, names: string[]): void => {
+  mkdirSync(dir, { recursive: true })
+  for (const name of names) writeFileSync(join(dir, name), '')
+}
+
 describe('pruneOrphanDeclarations', () => {
   let outputPath: string
 
@@ -53,15 +58,15 @@ describe('pruneOrphanDeclarations', () => {
 
   it('removes per-source .d.ts and .d.ts.map orphans, keeping index.d.ts and index.d.ts.map', () => {
     const dir = join(outputPath, 'bin', 'native')
-    mkdirSync(dir, { recursive: true })
-    writeFileSync(join(dir, 'index.d.ts'), '')
-    writeFileSync(join(dir, 'index.d.ts.map'), '')
-    writeFileSync(join(dir, 'build-native.d.ts'), '')
-    writeFileSync(join(dir, 'build-native.d.ts.map'), '')
-    writeFileSync(join(dir, 'codesign.d.ts'), '')
-    const removed = pruneOrphanDeclarations(makeContext(outputPath, [SUB_ENTRY]))
-    expect(removed).toBe(3)
+    touch(dir, ['index.d.ts', 'index.d.ts.map', 'build-native.d.ts', 'build-native.d.ts.map', 'codesign.d.ts'])
+    pruneOrphanDeclarations(makeContext(outputPath, [SUB_ENTRY]))
     expect(namesIn(dir)).toEqual(['index.d.ts', 'index.d.ts.map'])
+  })
+
+  it('reports three removals for the per-source orphans beside an entry index', () => {
+    const dir = join(outputPath, 'bin', 'native')
+    touch(dir, ['index.d.ts', 'index.d.ts.map', 'build-native.d.ts', 'build-native.d.ts.map', 'codesign.d.ts'])
+    expect(pruneOrphanDeclarations(makeContext(outputPath, [SUB_ENTRY]))).toBe(3)
   })
 
   it('does not touch non-d.ts files like index.cjs or index.mjs', () => {
@@ -121,115 +126,151 @@ describe('pruneOrphanDeclarations', () => {
     expect(pruneOrphanDeclarations(makeContext(outputPath, [BUNDLE_ENTRY]))).toBe(0)
   })
 
+  const reExportingIndex = [
+    "export { createLogger } from './create-logger'",
+    "export type { Logger } from './create-logger'",
+    "export { logger } from './logger'",
+  ].join('\n')
+
   it('keeps siblings the surviving index.d.ts still re-exports from (skipped flatten)', () => {
-    writeFileSync(
-      join(outputPath, 'index.d.ts'),
-      [
-        "export { createLogger } from './create-logger'",
-        "export type { Logger } from './create-logger'",
-        "export { logger } from './logger'",
-      ].join('\n')
-    )
-    writeFileSync(join(outputPath, 'create-logger.d.ts'), '')
-    writeFileSync(join(outputPath, 'create-logger.d.ts.map'), '')
-    writeFileSync(join(outputPath, 'logger.d.ts'), '')
-    writeFileSync(join(outputPath, 'orphan.d.ts'), '')
-    const removed = pruneOrphanDeclarations(makeContext(outputPath, [ROOT_ENTRY]))
-    expect(removed).toBe(1)
+    writeFileSync(join(outputPath, 'index.d.ts'), reExportingIndex)
+    touch(outputPath, ['create-logger.d.ts', 'create-logger.d.ts.map', 'logger.d.ts', 'orphan.d.ts'])
+    pruneOrphanDeclarations(makeContext(outputPath, [ROOT_ENTRY]))
     expect(namesIn(outputPath)).toEqual(['create-logger.d.ts', 'create-logger.d.ts.map', 'index.d.ts', 'logger.d.ts'])
+  })
+
+  it('reports one removal when the surviving index.d.ts still re-exports its siblings', () => {
+    writeFileSync(join(outputPath, 'index.d.ts'), reExportingIndex)
+    touch(outputPath, ['create-logger.d.ts', 'create-logger.d.ts.map', 'logger.d.ts', 'orphan.d.ts'])
+    expect(pruneOrphanDeclarations(makeContext(outputPath, [ROOT_ENTRY]))).toBe(1)
   })
 
   it('prunes every sibling once the flatten has made index.d.ts self-contained', () => {
     writeFileSync(join(outputPath, 'index.d.ts'), 'export declare const createLogger: () => void;\n')
-    writeFileSync(join(outputPath, 'create-logger.d.ts'), '')
-    writeFileSync(join(outputPath, 'logger.d.ts'), '')
-    const removed = pruneOrphanDeclarations(makeContext(outputPath, [ROOT_ENTRY]))
-    expect(removed).toBe(2)
+    touch(outputPath, ['create-logger.d.ts', 'logger.d.ts'])
+    pruneOrphanDeclarations(makeContext(outputPath, [ROOT_ENTRY]))
     expect(namesIn(outputPath)).toEqual(['index.d.ts'])
+  })
+
+  it('reports two removals once the flatten has made index.d.ts self-contained', () => {
+    writeFileSync(join(outputPath, 'index.d.ts'), 'export declare const createLogger: () => void;\n')
+    touch(outputPath, ['create-logger.d.ts', 'logger.d.ts'])
+    expect(pruneOrphanDeclarations(makeContext(outputPath, [ROOT_ENTRY]))).toBe(2)
   })
 
   it('keeps a sibling referenced via a dynamic type import', () => {
     writeFileSync(join(outputPath, 'index.d.ts'), 'export type Cfg = typeof import("./config");\n')
-    writeFileSync(join(outputPath, 'config.d.ts'), '')
-    writeFileSync(join(outputPath, 'orphan.d.ts'), '')
-    const removed = pruneOrphanDeclarations(makeContext(outputPath, [ROOT_ENTRY]))
-    expect(removed).toBe(1)
+    touch(outputPath, ['config.d.ts', 'orphan.d.ts'])
+    pruneOrphanDeclarations(makeContext(outputPath, [ROOT_ENTRY]))
     expect(namesIn(outputPath)).toEqual(['config.d.ts', 'index.d.ts'])
+  })
+
+  it('reports one removal when a sibling is kept via a dynamic type import', () => {
+    writeFileSync(join(outputPath, 'index.d.ts'), 'export type Cfg = typeof import("./config");\n')
+    touch(outputPath, ['config.d.ts', 'orphan.d.ts'])
+    expect(pruneOrphanDeclarations(makeContext(outputPath, [ROOT_ENTRY]))).toBe(1)
   })
 
   it('processes every entry directory in a multi-entry build', () => {
     const dirA = join(outputPath, 'bundle')
     const dirB = join(outputPath, 'bin', 'native')
-    mkdirSync(dirA, { recursive: true })
-    mkdirSync(dirB, { recursive: true })
-    writeFileSync(join(dirA, 'index.d.ts'), '')
-    writeFileSync(join(dirA, 'orphan-a.d.ts'), '')
-    writeFileSync(join(dirB, 'index.d.ts'), '')
-    writeFileSync(join(dirB, 'orphan-b.d.ts'), '')
-    writeFileSync(join(dirB, 'orphan-b.d.ts.map'), '')
+    touch(dirA, ['index.d.ts', 'orphan-a.d.ts'])
+    touch(dirB, ['index.d.ts', 'orphan-b.d.ts', 'orphan-b.d.ts.map'])
+    pruneOrphanDeclarations(makeContext(outputPath, [BUNDLE_ENTRY, SUB_ENTRY]))
+    for (const dir of [dirA, dirB]) expect(namesIn(dir)).toEqual(['index.d.ts'])
+  })
+
+  it('reports the removals across every entry directory in a multi-entry build', () => {
+    touch(join(outputPath, 'bundle'), ['index.d.ts', 'orphan-a.d.ts'])
+    touch(join(outputPath, 'bin', 'native'), ['index.d.ts', 'orphan-b.d.ts', 'orphan-b.d.ts.map'])
     expect(pruneOrphanDeclarations(makeContext(outputPath, [BUNDLE_ENTRY, SUB_ENTRY]))).toBe(3)
-    expect(namesIn(dirA)).toEqual(['index.d.ts'])
-    expect(namesIn(dirB)).toEqual(['index.d.ts'])
   })
 
   it('keeps a sibling reachable only transitively through a non-index .d.ts', () => {
     const shared = join(outputPath, 'shared')
-    mkdirSync(shared, { recursive: true })
     writeFileSync(join(outputPath, 'index.d.ts'), "export { Consts } from './shared/consts'\n")
+    touch(shared, ['helpers.d.ts', 'orphan.d.ts'])
     writeFileSync(join(shared, 'consts.d.ts'), "export { Helpers } from './helpers'\n")
-    writeFileSync(join(shared, 'helpers.d.ts'), '')
-    writeFileSync(join(shared, 'orphan.d.ts'), '')
-    const removed = pruneOrphanDeclarations(makeContext(outputPath, [ROOT_ENTRY]))
-    expect(removed).toBe(1)
+    pruneOrphanDeclarations(makeContext(outputPath, [ROOT_ENTRY]))
     expect(namesIn(shared)).toEqual(['consts.d.ts', 'helpers.d.ts'])
+  })
+
+  it('reports one removal when a sibling is reachable only transitively', () => {
+    const shared = join(outputPath, 'shared')
+    writeFileSync(join(outputPath, 'index.d.ts'), "export { Consts } from './shared/consts'\n")
+    touch(shared, ['helpers.d.ts', 'orphan.d.ts'])
+    writeFileSync(join(shared, 'consts.d.ts'), "export { Helpers } from './helpers'\n")
+    expect(pruneOrphanDeclarations(makeContext(outputPath, [ROOT_ENTRY]))).toBe(1)
   })
 
   it('resolves a directory import to its index.d.ts, keeping it', () => {
     const shared = join(outputPath, 'shared')
-    mkdirSync(shared, { recursive: true })
     writeFileSync(join(outputPath, 'index.d.ts'), "export { Shared } from './shared'\n")
-    writeFileSync(join(shared, 'index.d.ts'), '')
-    writeFileSync(join(shared, 'dead.d.ts'), '')
-    const removed = pruneOrphanDeclarations(makeContext(outputPath, [ROOT_ENTRY]))
-    expect(removed).toBe(1)
+    touch(shared, ['index.d.ts', 'dead.d.ts'])
+    pruneOrphanDeclarations(makeContext(outputPath, [ROOT_ENTRY]))
     expect(namesIn(shared)).toEqual(['index.d.ts'])
+  })
+
+  it('reports one removal when a directory import resolves to its index.d.ts', () => {
+    writeFileSync(join(outputPath, 'index.d.ts'), "export { Shared } from './shared'\n")
+    touch(join(outputPath, 'shared'), ['index.d.ts', 'dead.d.ts'])
+    expect(pruneOrphanDeclarations(makeContext(outputPath, [ROOT_ENTRY]))).toBe(1)
   })
 
   it('deletes an unreferenced non-entry index.d.ts', () => {
     const internal = join(outputPath, 'internal')
-    mkdirSync(internal, { recursive: true })
-    writeFileSync(join(outputPath, 'index.d.ts'), '')
-    writeFileSync(join(internal, 'index.d.ts'), '')
-    const removed = pruneOrphanDeclarations(makeContext(outputPath, [ROOT_ENTRY]))
-    expect(removed).toBe(1)
+    touch(outputPath, ['index.d.ts'])
+    touch(internal, ['index.d.ts'])
+    pruneOrphanDeclarations(makeContext(outputPath, [ROOT_ENTRY]))
     expect(namesIn(internal)).toEqual([])
+  })
+
+  it('reports one removal for an unreferenced non-entry index.d.ts', () => {
+    touch(outputPath, ['index.d.ts'])
+    touch(join(outputPath, 'internal'), ['index.d.ts'])
+    expect(pruneOrphanDeclarations(makeContext(outputPath, [ROOT_ENTRY]))).toBe(1)
   })
 
   it('keeps all declarations when a reached d.ts has a dynamic specifier', () => {
     writeFileSync(join(outputPath, 'index.d.ts'), 'export type T = typeof import("./" + name);\n')
-    writeFileSync(join(outputPath, 'orphan.d.ts'), '')
-    const removed = pruneOrphanDeclarations(makeContext(outputPath, [ROOT_ENTRY]))
-    expect(removed).toBe(0)
+    touch(outputPath, ['orphan.d.ts'])
+    pruneOrphanDeclarations(makeContext(outputPath, [ROOT_ENTRY]))
     expect(namesIn(outputPath)).toEqual(['index.d.ts', 'orphan.d.ts'])
+  })
+
+  it('reports no removals when a reached d.ts has a dynamic specifier', () => {
+    writeFileSync(join(outputPath, 'index.d.ts'), 'export type T = typeof import("./" + name);\n')
+    touch(outputPath, ['orphan.d.ts'])
+    expect(pruneOrphanDeclarations(makeContext(outputPath, [ROOT_ENTRY]))).toBe(0)
   })
 
   it('treats a reference into _dependencies as a non-edge and leaves it untouched', () => {
     const depDir = join(outputPath, '_dependencies', 'dep')
-    mkdirSync(depDir, { recursive: true })
     writeFileSync(join(outputPath, 'index.d.ts'), "export { Dep } from './_dependencies/dep/index.js'\n")
-    writeFileSync(join(depDir, 'index.d.ts'), '')
-    writeFileSync(join(outputPath, 'orphan.d.ts'), '')
-    const removed = pruneOrphanDeclarations(makeContext(outputPath, [ROOT_ENTRY]))
-    expect(removed).toBe(1)
+    touch(depDir, ['index.d.ts'])
+    touch(outputPath, ['orphan.d.ts'])
+    pruneOrphanDeclarations(makeContext(outputPath, [ROOT_ENTRY]))
     expect(namesIn(depDir)).toEqual(['index.d.ts'])
+  })
+
+  it('reports one removal when a reference into _dependencies is a non-edge', () => {
+    writeFileSync(join(outputPath, 'index.d.ts'), "export { Dep } from './_dependencies/dep/index.js'\n")
+    touch(join(outputPath, '_dependencies', 'dep'), ['index.d.ts'])
+    touch(outputPath, ['orphan.d.ts'])
+    expect(pruneOrphanDeclarations(makeContext(outputPath, [ROOT_ENTRY]))).toBe(1)
   })
 
   it('drops a specifier that resolves to no file on disk', () => {
     writeFileSync(join(outputPath, 'index.d.ts'), "export { Gone } from './missing'\n")
-    writeFileSync(join(outputPath, 'orphan.d.ts'), '')
-    const removed = pruneOrphanDeclarations(makeContext(outputPath, [ROOT_ENTRY]))
-    expect(removed).toBe(1)
+    touch(outputPath, ['orphan.d.ts'])
+    pruneOrphanDeclarations(makeContext(outputPath, [ROOT_ENTRY]))
     expect(namesIn(outputPath)).toEqual(['index.d.ts'])
+  })
+
+  it('reports one removal when a specifier resolves to no file on disk', () => {
+    writeFileSync(join(outputPath, 'index.d.ts'), "export { Gone } from './missing'\n")
+    touch(outputPath, ['orphan.d.ts'])
+    expect(pruneOrphanDeclarations(makeContext(outputPath, [ROOT_ENTRY]))).toBe(1)
   })
 
   it('returns zero when the output root does not exist', () => {
@@ -238,10 +279,14 @@ describe('pruneOrphanDeclarations', () => {
 
   it('resolves a .js-extension specifier onto its .d.ts sibling', () => {
     writeFileSync(join(outputPath, 'index.d.ts'), "export { createLogger } from './create-logger.js'\n")
-    writeFileSync(join(outputPath, 'create-logger.d.ts'), '')
-    writeFileSync(join(outputPath, 'orphan.d.ts'), '')
-    const removed = pruneOrphanDeclarations(makeContext(outputPath, [ROOT_ENTRY]))
-    expect(removed).toBe(1)
+    touch(outputPath, ['create-logger.d.ts', 'orphan.d.ts'])
+    pruneOrphanDeclarations(makeContext(outputPath, [ROOT_ENTRY]))
     expect(namesIn(outputPath)).toEqual(['create-logger.d.ts', 'index.d.ts'])
+  })
+
+  it('reports one removal when a .js-extension specifier resolves onto its .d.ts sibling', () => {
+    writeFileSync(join(outputPath, 'index.d.ts'), "export { createLogger } from './create-logger.js'\n")
+    touch(outputPath, ['create-logger.d.ts', 'orphan.d.ts'])
+    expect(pruneOrphanDeclarations(makeContext(outputPath, [ROOT_ENTRY]))).toBe(1)
   })
 })

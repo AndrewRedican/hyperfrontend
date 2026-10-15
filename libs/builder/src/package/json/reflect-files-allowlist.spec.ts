@@ -67,9 +67,7 @@ describe('reflectFilesAllowlist', () => {
 
   it("never names an index file's JS sourcemap sibling and subtracts it via the trailing negation", () => {
     writeTree(outputPath, ['index.mjs', 'index.mjs.map'])
-    const files = reflectFilesAllowlist(outputPath)
-    expect(files).not.toContain('index.mjs.map')
-    expect(files.slice(-3)).toEqual(['!**/*.js.map', '!**/*.mjs.map', '!**/*.cjs.map'])
+    expect(reflectFilesAllowlist(outputPath)).toEqual(['**/index.*', '**/index.d.ts', '!**/*.js.map', '!**/*.mjs.map', '!**/*.cjs.map'])
   })
 
   it('leaves a d.ts.map (declarationMap) untouched — JS-only exclusion does not subtract it', () => {

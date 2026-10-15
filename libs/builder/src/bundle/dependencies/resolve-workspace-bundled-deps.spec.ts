@@ -141,20 +141,17 @@ describe('resolveWorkspaceBundledDeps', () => {
         },
       },
     })
-    const result = resolveWorkspaceBundledDeps(pkgPath, workspaceRoot, { isWorkspacePackage: isHyperfrontend })
-    expect(result).toHaveLength(3)
-    expect(result.map((r) => r.specifier)).toEqual([
-      '@hyperfrontend/immutable-api-utils',
-      '@hyperfrontend/immutable-api-utils/built-in-copy/array',
-      '@hyperfrontend/immutable-api-utils/built-in-copy/error',
+    expect(resolveWorkspaceBundledDeps(pkgPath, workspaceRoot, { isWorkspacePackage: isHyperfrontend })).toEqual([
+      expect.objectContaining({ specifier: '@hyperfrontend/immutable-api-utils' }),
+      expect.objectContaining({
+        specifier: '@hyperfrontend/immutable-api-utils/built-in-copy/array',
+        subPath: 'built-in-copy/array',
+        inputPath: arrayPath,
+        tsConfigPath: join(workspaceRoot, 'libs/utils/immutable-api/tsconfig.lib.json'),
+        policy: 'sub-path',
+      }),
+      expect.objectContaining({ specifier: '@hyperfrontend/immutable-api-utils/built-in-copy/error', inputPath: errorPath }),
     ])
-    expect(result[1]).toMatchObject({
-      subPath: 'built-in-copy/array',
-      inputPath: arrayPath,
-      tsConfigPath: join(workspaceRoot, 'libs/utils/immutable-api/tsconfig.lib.json'),
-      policy: 'sub-path',
-    })
-    expect(result[2]?.inputPath).toBe(errorPath)
   })
 
   it('falls back to tsconfig.json when the dep has no tsconfig.lib.json', () => {
@@ -380,9 +377,10 @@ describe('loadWorkspacePathMappings', () => {
       extends: './tsconfig.parent.json',
       compilerOptions: { paths: { '@x/y': ['libs/x/y/src/index.ts'] } },
     })
-    const map = loadWorkspacePathMappings(workspaceRoot)
-    expect(map.get('@a/b')).toEqual([join(workspaceRoot, 'libs/a/b/src/index.ts')])
-    expect(map.get('@x/y')).toEqual([join(workspaceRoot, 'libs/x/y/src/index.ts')])
+    expect(Object.fromEntries(loadWorkspacePathMappings(workspaceRoot))).toEqual({
+      '@a/b': [join(workspaceRoot, 'libs/a/b/src/index.ts')],
+      '@x/y': [join(workspaceRoot, 'libs/x/y/src/index.ts')],
+    })
   })
 
   it('returns the inherited table when a tsconfig has only extends', () => {

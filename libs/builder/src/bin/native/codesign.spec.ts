@@ -26,11 +26,20 @@ const setPlatform = (platform: NodeJS.Platform): (() => void) => {
 beforeEach(() => mockSpawn.mockReset())
 
 describe('removeCodesign', () => {
-  it('skips silently on non-macOS hosts', () => {
+  it('reports that it did not run on non-macOS hosts', () => {
     const restore = setPlatform('linux')
     try {
       const result = removeCodesign({ binary: '/dist/cli' })
       expect(result).toEqual({ ran: false, status: null, stderr: '' })
+    } finally {
+      restore()
+    }
+  })
+
+  it('spawns no codesign process on non-macOS hosts', () => {
+    const restore = setPlatform('linux')
+    try {
+      removeCodesign({ binary: '/dist/cli' })
       expect(mockSpawn).not.toHaveBeenCalled()
     } finally {
       restore()
@@ -41,8 +50,18 @@ describe('removeCodesign', () => {
     const restore = setPlatform('darwin')
     try {
       mockSpawn.mockReturnValueOnce(okResult())
-      const result = removeCodesign({ binary: '/dist/cli' })
+      removeCodesign({ binary: '/dist/cli' })
       expect(mockSpawn).toHaveBeenCalledWith('codesign', ['--remove-signature', '/dist/cli'], { encoding: 'utf8' })
+    } finally {
+      restore()
+    }
+  })
+
+  it('reports a successful removal on macOS', () => {
+    const restore = setPlatform('darwin')
+    try {
+      mockSpawn.mockReturnValueOnce(okResult())
+      const result = removeCodesign({ binary: '/dist/cli' })
       expect(result).toEqual({ ran: true, status: 0, stderr: '' })
     } finally {
       restore()
@@ -65,8 +84,7 @@ describe('removeCodesign', () => {
     try {
       mockSpawn.mockReturnValueOnce({ ...okResult(), status: null })
       const result = removeCodesign({ binary: '/dist/cli' })
-      expect(result.status).toBeNull()
-      expect(result.ran).toBe(true)
+      expect(result).toMatchObject({ ran: true, status: null })
     } finally {
       restore()
     }
@@ -85,11 +103,20 @@ describe('removeCodesign', () => {
 })
 
 describe('applyCodesign', () => {
-  it('skips silently on non-macOS hosts', () => {
+  it('reports that it did not run on non-macOS hosts', () => {
     const restore = setPlatform('win32')
     try {
       const result = applyCodesign({ binary: '/dist/cli' })
       expect(result).toEqual({ ran: false, status: null, stderr: '' })
+    } finally {
+      restore()
+    }
+  })
+
+  it('spawns no codesign process on non-macOS hosts', () => {
+    const restore = setPlatform('win32')
+    try {
+      applyCodesign({ binary: '/dist/cli' })
       expect(mockSpawn).not.toHaveBeenCalled()
     } finally {
       restore()

@@ -81,16 +81,24 @@ describe('createBuildContext', () => {
     expect(ctx.tsConfigPath).toBe('/abs/custom/tsconfig.json')
   })
 
-  it('defaults external and assets to empty arrays', () => {
+  it('defaults external to an empty array', () => {
     const ctx = createBuildContext(baseConfig())
     expect(ctx.external).toEqual([])
+  })
+
+  it('defaults assets to an empty array', () => {
+    const ctx = createBuildContext(baseConfig())
     expect(ctx.assets).toEqual([])
   })
 
-  it('threads through configured external and asset specs verbatim', () => {
-    const assets = [{ from: '/abs/repo/libs/foo', files: ['README.md'] }]
-    const ctx = createBuildContext({ ...baseConfig(), external: ['rollup'], assets })
+  it('threads the configured external list through verbatim', () => {
+    const ctx = createBuildContext({ ...baseConfig(), external: ['rollup'] })
     expect(ctx.external).toEqual(['rollup'])
+  })
+
+  it('preserves the configured asset specs by reference', () => {
+    const assets = [{ from: '/abs/repo/libs/foo', files: ['README.md'] }]
+    const ctx = createBuildContext({ ...baseConfig(), assets })
     expect(ctx.assets).toBe(assets)
   })
 
@@ -105,9 +113,13 @@ describe('createBuildContext', () => {
     expect(ctx.isWorkspacePackage).toBe(predicate)
   })
 
-  it('runs entry-point discovery against the project root and stores the result', () => {
-    const ctx = createBuildContext(baseConfig())
+  it('runs entry-point discovery against the project root', () => {
+    createBuildContext(baseConfig())
     expect(discoverEntries).toHaveBeenCalledWith('/abs/repo/libs/foo')
+  })
+
+  it('stores the entry-point discovery result on the context', () => {
+    const ctx = createBuildContext(baseConfig())
     expect(ctx.entryPointDiscovery).toBe(DISCOVERY)
   })
 
@@ -115,8 +127,7 @@ describe('createBuildContext', () => {
     const before = Date.now()
     const ctx = createBuildContext(baseConfig())
     const after = Date.now()
-    expect(ctx.startedAt).toBeGreaterThanOrEqual(before)
-    expect(ctx.startedAt).toBeLessThanOrEqual(after)
+    expect({ notBefore: ctx.startedAt >= before, notAfter: ctx.startedAt <= after }).toEqual({ notBefore: true, notAfter: true })
   })
 
   describe('bundleAllDeps integration', () => {
@@ -226,18 +237,28 @@ describe('build', () => {
     expect(finalizeFilesAllowlist).toHaveBeenCalledWith(ctxArg, config)
   })
 
-  it('forwards the resolved BuildContext to every phase', async () => {
+  it('forwards a BuildContext resolved from the config to the bundle phase', async () => {
     await build(baseConfig())
-    const ctxArg = (runBundlePhase as Mock).mock.calls[0][0]
-    expect(ctxArg).toEqual(expect.objectContaining({ projectRoot: '/abs/repo/libs/foo', workspaceRoot: '/abs/repo' }))
-    expect((runPackagePhase as Mock).mock.calls[0][0]).toBe(ctxArg)
-    expect((runBinPhase as Mock).mock.calls[0][0]).toBe(ctxArg)
+    expect((runBundlePhase as Mock).mock.calls[0][0]).toEqual(
+      expect.objectContaining({ projectRoot: '/abs/repo/libs/foo', workspaceRoot: '/abs/repo' })
+    )
   })
 
-  it('forwards the BuildConfig to bundle and package phases', async () => {
+  it('forwards the same BuildContext instance to the package and bin phases', async () => {
+    await build(baseConfig())
+    const ctxArg = (runBundlePhase as Mock).mock.calls[0][0]
+    for (const phase of [runPackagePhase, runBinPhase]) expect((phase as Mock).mock.calls[0][0]).toBe(ctxArg)
+  })
+
+  it('forwards the BuildConfig to the bundle phase', async () => {
     const config = baseConfig()
     await build(config)
     expect(runBundlePhase).toHaveBeenCalledWith(expect.any(Object), config, undefined)
+  })
+
+  it('forwards the BuildConfig to the package phase', async () => {
+    const config = baseConfig()
+    await build(config)
     expect(runPackagePhase).toHaveBeenCalledWith(expect.any(Object), config, EMPTY_FORMATS)
   })
 
@@ -271,8 +292,7 @@ describe('build', () => {
     }
     ;(runBundlePhase as Mock).mockResolvedValueOnce(formats)
     const result = await build(baseConfig())
-    expect(result.success).toBe(true)
-    expect(result.formatCounts).toEqual({ esm: 2, cjs: 1, iife: 1, umd: 2 })
+    expect(result).toMatchObject({ success: true, formatCounts: { esm: 2, cjs: 1, iife: 1, umd: 2 } })
   })
 
   it('aggregates the bin outputs returned by runBinPhase', async () => {
@@ -293,14 +313,29 @@ describe('build', () => {
   })
 
   it('creates a memory monitor with default thresholds when memoryMonitor is true', async () => {
+    ;(createMemoryMonitor as Mock).mockReturnValueOnce(makeMonitor())
+    await build({ ...baseConfig(), memoryMonitor: true })
+    expect(createMemoryMonitor).toHaveBeenCalledWith(undefined)
+  })
+
+  it('logs the build start through the monitor', async () => {
     const monitor = makeMonitor()
     ;(createMemoryMonitor as Mock).mockReturnValueOnce(monitor)
     await build({ ...baseConfig(), memoryMonitor: true })
-    expect(createMemoryMonitor).toHaveBeenCalledWith(undefined)
     expect(monitor.logDebug).toHaveBeenCalledWith('build:start')
-    expect(monitor.check).toHaveBeenCalledWith('bundle:end')
-    expect(monitor.check).toHaveBeenCalledWith('package:end')
-    expect(monitor.check).toHaveBeenCalledWith('bin:end')
+  })
+
+  it('checkpoints the monitor after the bundle, package and bin phases', async () => {
+    const monitor = makeMonitor()
+    ;(createMemoryMonitor as Mock).mockReturnValueOnce(monitor)
+    await build({ ...baseConfig(), memoryMonitor: true })
+    expect(monitor.check.mock.calls.map(([label]) => label)).toEqual(expect.arrayContaining(['bundle:end', 'package:end', 'bin:end']))
+  })
+
+  it('flushes the monitor summary once when the build completes', async () => {
+    const monitor = makeMonitor()
+    ;(createMemoryMonitor as Mock).mockReturnValueOnce(monitor)
+    await build({ ...baseConfig(), memoryMonitor: true })
     expect(monitor.logSummary).toHaveBeenCalledTimes(1)
   })
 
@@ -320,15 +355,26 @@ describe('build', () => {
     expect(runBundlePhase).toHaveBeenCalledWith(expect.any(Object), config, monitor)
   })
 
-  it('flushes the monitor summary and rethrows when a phase fails', async () => {
-    const monitor = makeMonitor()
-    ;(createMemoryMonitor as Mock).mockReturnValueOnce(monitor)
+  it('rethrows when a phase fails with a monitor configured', async () => {
+    ;(createMemoryMonitor as Mock).mockReturnValueOnce(makeMonitor())
     const boom = new Error('bundle failed')
     ;(runBundlePhase as Mock).mockRejectedValueOnce(boom)
     await expect(build({ ...baseConfig(), memoryMonitor: true })).rejects.toBe(boom)
+  })
+
+  it('flushes the monitor summary when a phase fails', async () => {
+    const monitor = makeMonitor()
+    ;(createMemoryMonitor as Mock).mockReturnValueOnce(monitor)
+    ;(runBundlePhase as Mock).mockRejectedValueOnce(new Error('bundle failed'))
+    await build({ ...baseConfig(), memoryMonitor: true }).catch(() => undefined)
     expect(monitor.logSummary).toHaveBeenCalledTimes(1)
-    expect(runPackagePhase).not.toHaveBeenCalled()
-    expect(runBinPhase).not.toHaveBeenCalled()
+  })
+
+  it('runs no later phase once a phase fails', async () => {
+    ;(createMemoryMonitor as Mock).mockReturnValueOnce(makeMonitor())
+    ;(runBundlePhase as Mock).mockRejectedValueOnce(new Error('bundle failed'))
+    await build({ ...baseConfig(), memoryMonitor: true }).catch(() => undefined)
+    for (const phase of [runPackagePhase, runBinPhase]) expect(phase).not.toHaveBeenCalled()
   })
 
   it('rethrows phase failures even when no monitor is configured', async () => {

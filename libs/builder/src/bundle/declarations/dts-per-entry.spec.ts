@@ -73,10 +73,9 @@ describe('runDtsPerEntry', () => {
       },
     ]
     await runDtsPerEntry(ctx)
-    expect(runPrePass).toHaveBeenCalledTimes(1)
-    const jobs = (runPrePass as Mock).mock.calls[0][0]
-    expect(jobs).toHaveLength(1)
-    expect(jobs[0].inputPath).toBe('/abs/dist/libs/foo/index.d.ts')
+    expect((runPrePass as Mock).mock.calls.map(([jobs]) => jobs)).toEqual([
+      [expect.objectContaining({ inputPath: '/abs/dist/libs/foo/index.d.ts' })],
+    ])
   })
 
   it('throws a context-rich error when the worker artifact is missing', async () => {
@@ -88,30 +87,37 @@ describe('runDtsPerEntry', () => {
 
   it('builds one dts job per entry whose tsc-emitted .d.ts exists', async () => {
     await runDtsPerEntry(makeContext(['rollup'], [ROOT_ENTRY, SUB_ENTRY]))
-    expect(runPrePass).toHaveBeenCalledTimes(1)
-    const jobs = (runPrePass as Mock).mock.calls[0][0]
-    expect(jobs).toHaveLength(2)
-    expect(jobs[0].inputPath).toBe('/abs/dist/libs/foo/index.d.ts')
-    expect(jobs[1].inputPath).toBe('/abs/dist/libs/foo/sub/index.d.ts')
-    expect(jobs.every((j: { kind: string; otherDeps: string[] }) => j.kind === 'dts' && j.otherDeps.includes('rollup'))).toBe(true)
+    expect((runPrePass as Mock).mock.calls.map(([jobs]) => jobs)).toEqual([
+      [
+        expect.objectContaining({ kind: 'dts', inputPath: '/abs/dist/libs/foo/index.d.ts', otherDeps: expect.arrayContaining(['rollup']) }),
+        expect.objectContaining({
+          kind: 'dts',
+          inputPath: '/abs/dist/libs/foo/sub/index.d.ts',
+          otherDeps: expect.arrayContaining(['rollup']),
+        }),
+      ],
+    ])
   })
 
   it('threads sibling-entry descriptors and selfDtsPath into each job', async () => {
     await runDtsPerEntry(makeContext(['rollup'], [ROOT_ENTRY, SUB_ENTRY]))
-    const jobs = (runPrePass as Mock).mock.calls[0][0]
-    expect(jobs[0].selfDtsPath).toBe('/abs/dist/libs/foo/index.d.ts')
-    expect(jobs[0].selfSrcPath).toBe('')
-    expect(jobs[0].siblingEntries).toEqual([{ srcPath: 'sub', indexDtsPath: '/abs/dist/libs/foo/sub/index.d.ts' }])
-    expect(jobs[1].selfDtsPath).toBe('/abs/dist/libs/foo/sub/index.d.ts')
-    expect(jobs[1].siblingEntries).toEqual([{ srcPath: '', indexDtsPath: '/abs/dist/libs/foo/index.d.ts' }])
+    expect((runPrePass as Mock).mock.calls[0][0]).toEqual([
+      expect.objectContaining({
+        selfDtsPath: '/abs/dist/libs/foo/index.d.ts',
+        selfSrcPath: '',
+        siblingEntries: [{ srcPath: 'sub', indexDtsPath: '/abs/dist/libs/foo/sub/index.d.ts' }],
+      }),
+      expect.objectContaining({
+        selfDtsPath: '/abs/dist/libs/foo/sub/index.d.ts',
+        siblingEntries: [{ srcPath: '', indexDtsPath: '/abs/dist/libs/foo/index.d.ts' }],
+      }),
+    ])
   })
 
   it('skips entries whose tsc output is missing', async () => {
     ;(exists as Mock).mockImplementation((path: string) => path.endsWith('index.d.ts') && !path.includes('sub'))
     await runDtsPerEntry(makeContext(['rollup'], [ROOT_ENTRY, SUB_ENTRY]))
-    const jobs = (runPrePass as Mock).mock.calls[0][0]
-    expect(jobs).toHaveLength(1)
-    expect(jobs[0].inputPath).toBe('/abs/dist/libs/foo/index.d.ts')
+    expect((runPrePass as Mock).mock.calls[0][0]).toEqual([expect.objectContaining({ inputPath: '/abs/dist/libs/foo/index.d.ts' })])
   })
 
   it('exits early when no entry has a tsc-emitted .d.ts', async () => {
@@ -124,8 +130,12 @@ describe('runDtsPerEntry', () => {
     const monitor = { check: jest.fn() }
     await runDtsPerEntry(makeContext(['rollup'], [ROOT_ENTRY]), monitor as unknown as Parameters<typeof runDtsPerEntry>[1])
     expect((runPrePass as Mock).mock.calls[0][1].monitor).toBe(monitor)
-    expect(monitor.check).toHaveBeenCalledWith('bundle:declarations:dts-perentry:start')
-    expect(monitor.check).toHaveBeenCalledWith('bundle:declarations:dts-perentry:end')
+  })
+
+  it('checkpoints the monitor at the start and end of the per-entry pass', async () => {
+    const monitor = { check: jest.fn() }
+    await runDtsPerEntry(makeContext(['rollup'], [ROOT_ENTRY]), monitor as unknown as Parameters<typeof runDtsPerEntry>[1])
+    expect(monitor.check.mock.calls).toEqual([['bundle:declarations:dts-perentry:start'], ['bundle:declarations:dts-perentry:end']])
   })
 
   it('threads npmDeps, workspaceRoutes, and depsRoot into every per-entry job', async () => {
@@ -149,15 +159,14 @@ describe('runDtsPerEntry', () => {
       },
     ]
     await runDtsPerEntry(ctx)
-    const jobs = (runPrePass as Mock).mock.calls[0][0]
-    expect(jobs).toHaveLength(2)
-    for (const job of jobs) {
-      expect(job.depsRoot).toBe(normalizeToNative('/abs/dist/libs/foo/_dependencies'))
-      expect(job.npmDeps).toEqual(['rollup', 'postject'])
-      expect(job.workspaceRoutes).toEqual([
+    const routing = expect.objectContaining({
+      depsRoot: normalizeToNative('/abs/dist/libs/foo/_dependencies'),
+      npmDeps: ['rollup', 'postject'],
+      workspaceRoutes: [
         { packageName: '@hyperfrontend/logging', policy: 'whole-surface' },
         { packageName: '@hyperfrontend/iau', policy: 'sub-path', specifiers: ['@hyperfrontend/iau/a'] },
-      ])
-    }
+      ],
+    })
+    expect((runPrePass as Mock).mock.calls[0][0]).toEqual([routing, routing])
   })
 })

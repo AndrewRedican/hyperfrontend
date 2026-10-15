@@ -3,10 +3,11 @@ import { generateThirdPartyLicensesContent } from './generate-content'
 
 describe('generateThirdPartyLicensesContent', () => {
   it('emits the heading and table header even when there are no entries', () => {
-    const md = generateThirdPartyLicensesContent([])
-    expect(md).toContain('# Third-Party Licenses')
-    expect(md).toContain('| Dependency       | Link')
-    expect(md.endsWith('\n')).toBe(true)
+    expect(generateThirdPartyLicensesContent([])).toContain('# Third-Party Licenses\n\n| Dependency       | Link')
+  })
+
+  it('ends the body with a trailing newline even when there are no entries', () => {
+    expect(generateThirdPartyLicensesContent([]).endsWith('\n')).toBe(true)
   })
 
   it('renders entries with a markdown link when a license URL is known', () => {

@@ -16,6 +16,8 @@ const makeDiscovery = (entries: EntryPoint[]): EntryPointDiscovery => ({
   featureEntries: [],
 })
 
+const survivors = (code: string, fragments: string[]): string[] => fragments.filter((fragment) => code.includes(fragment))
+
 const makeContext = (outputPath: string): BuildContext => ({
   projectRoot: '/abs/libs/foo',
   workspaceRoot: '/abs/repo',
@@ -99,60 +101,87 @@ describe('pruneDependencies', () => {
     expect(pruneDependencies(makeContext(outputPath)).deadExportsRemoved).toBe(1)
   })
 
+  const ESM_NS_CHUNK =
+    'const freeze = 1;\nconst keys = 2;\nconst SafeObject = Object.freeze({ freeze, keys });\nexport { freeze, keys, SafeObject };'
+  const CJS_NS_CHUNK =
+    'var freeze = 1;\nvar keys = 2;\nvar SafeObject = Object.freeze({ freeze, keys });\nexports.freeze = freeze;\nexports.keys = keys;\nexports.SafeObject = SafeObject;'
+
+  it('reports one dead property for an unread slot of a wholesale-imported namespace', () => {
+    write('index.mjs', "import { SafeObject } from './_dependencies/d/index.mjs';\nexport const use = SafeObject.freeze;")
+    write('_dependencies/d/index.mjs', ESM_NS_CHUNK)
+    expect(pruneDependencies(makeContext(outputPath)).deadPropertiesRemoved).toBe(1)
+  })
+
   it('drops an unread slot of a wholesale-imported namespace and cascades its factory away', () => {
     write('index.mjs', "import { SafeObject } from './_dependencies/d/index.mjs';\nexport const use = SafeObject.freeze;")
-    write(
-      '_dependencies/d/index.mjs',
-      'const freeze = 1;\nconst keys = 2;\nconst SafeObject = Object.freeze({ freeze, keys });\nexport { freeze, keys, SafeObject };'
-    )
-    const report = pruneDependencies(makeContext(outputPath))
-    expect(report.deadPropertiesRemoved).toBe(1)
+    write('_dependencies/d/index.mjs', ESM_NS_CHUNK)
+    pruneDependencies(makeContext(outputPath))
     const chunk = readFileSync(join(outputPath, '_dependencies/d/index.mjs'), 'utf8')
-    expect(chunk).toContain('Object.freeze({ freeze })')
-    expect(chunk).not.toContain('keys')
+    expect(survivors(chunk, ['Object.freeze({ freeze })', 'keys'])).toEqual(['Object.freeze({ freeze })'])
+  })
+
+  it('reports one dead property for an unread slot of a CJS require namespace', () => {
+    write('index.cjs', "var d = require('./_dependencies/d/index.cjs');\nexports.use = d.SafeObject.freeze;")
+    write('_dependencies/d/index.cjs', CJS_NS_CHUNK)
+    expect(pruneDependencies(makeContext(outputPath)).deadPropertiesRemoved).toBe(1)
   })
 
   it('drops an unread slot of a CJS require namespace and cascades its factory away', () => {
     write('index.cjs', "var d = require('./_dependencies/d/index.cjs');\nexports.use = d.SafeObject.freeze;")
-    write(
-      '_dependencies/d/index.cjs',
-      'var freeze = 1;\nvar keys = 2;\nvar SafeObject = Object.freeze({ freeze, keys });\nexports.freeze = freeze;\nexports.keys = keys;\nexports.SafeObject = SafeObject;'
-    )
-    const report = pruneDependencies(makeContext(outputPath))
-    expect(report.deadPropertiesRemoved).toBe(1)
+    write('_dependencies/d/index.cjs', CJS_NS_CHUNK)
+    pruneDependencies(makeContext(outputPath))
     const chunk = readFileSync(join(outputPath, '_dependencies/d/index.cjs'), 'utf8')
-    expect(chunk).toContain('Object.freeze({ freeze })')
-    expect(chunk).not.toContain('keys')
+    expect(survivors(chunk, ['Object.freeze({ freeze })', 'keys'])).toEqual(['Object.freeze({ freeze })'])
+  })
+
+  const WHOLESALE_CHUNK = 'const freeze = 1;\nconst keys = 2;\nconst SafeObject = Object.freeze({ freeze, keys });\nexport { SafeObject };'
+
+  it('reports no dead property when a consumer reads a namespace wholesale', () => {
+    write('index.mjs', "import { SafeObject } from './_dependencies/d/index.mjs';\nexport const all = { ...SafeObject };")
+    write('_dependencies/d/index.mjs', WHOLESALE_CHUNK)
+    expect(pruneDependencies(makeContext(outputPath)).deadPropertiesRemoved).toBe(0)
   })
 
   it('keeps a namespace whole when a consumer reads it wholesale', () => {
     write('index.mjs', "import { SafeObject } from './_dependencies/d/index.mjs';\nexport const all = { ...SafeObject };")
-    write(
-      '_dependencies/d/index.mjs',
-      'const freeze = 1;\nconst keys = 2;\nconst SafeObject = Object.freeze({ freeze, keys });\nexport { SafeObject };'
-    )
-    expect(pruneDependencies(makeContext(outputPath)).deadPropertiesRemoved).toBe(0)
-    expect(readFileSync(join(outputPath, '_dependencies/d/index.mjs'), 'utf8')).toContain('{ freeze, keys }')
+    write('_dependencies/d/index.mjs', WHOLESALE_CHUNK)
+    pruneDependencies(makeContext(outputPath))
+    expect(readFileSync(join(outputPath, '_dependencies/d/index.mjs'), 'utf8')).toBe(WHOLESALE_CHUNK)
+  })
+
+  it('reports one destructured binding for a whole-module CJS require read only as static members', () => {
+    write('index.cjs', "const a = require('./_dependencies/a/index.cjs');\nexports.use = a.abs;")
+    write('_dependencies/a/index.cjs', "const b = require('../b/index.cjs');\nconst abs = b.abs;\nexports.abs = abs;")
+    write('_dependencies/b/index.cjs', 'const abs = Math.abs;\nexports.abs = abs;')
+    expect(pruneDependencies(makeContext(outputPath)).requireBindingsDestructured).toBe(1)
   })
 
   it('destructures a whole-module CJS require binding read only as static members', () => {
     write('index.cjs', "const a = require('./_dependencies/a/index.cjs');\nexports.use = a.abs;")
     write('_dependencies/a/index.cjs', "const b = require('../b/index.cjs');\nconst abs = b.abs;\nexports.abs = abs;")
     write('_dependencies/b/index.cjs', 'const abs = Math.abs;\nexports.abs = abs;')
-    const report = pruneDependencies(makeContext(outputPath))
-    expect(report.requireBindingsDestructured).toBe(1)
-    const chunk = readFileSync(join(outputPath, '_dependencies/a/index.cjs'), 'utf8')
-    expect(chunk).toContain("const { abs: abs$1 } = require('../b/index.cjs')")
-    expect(chunk).toContain('const abs = abs$1;')
+    pruneDependencies(makeContext(outputPath))
+    expect(readFileSync(join(outputPath, '_dependencies/a/index.cjs'), 'utf8')).toBe(
+      "const { abs: abs$1 } = require('../b/index.cjs');\nconst abs = abs$1;\nexports.abs = abs;"
+    )
+  })
+
+  const CYCLE_CHUNK_A = "const b = require('../b/index.cjs');\nconst fa = () => b.fb();\nexports.fa = fa;"
+  const CYCLE_CHUNK_B = "const a = require('../a/index.cjs');\nconst fb = () => a.fa();\nexports.fb = fb;"
+
+  it('reports no destructured binding when the edge is part of a require cycle', () => {
+    write('index.cjs', "const a = require('./_dependencies/a/index.cjs');\nexports.use = a.fa;")
+    write('_dependencies/a/index.cjs', CYCLE_CHUNK_A)
+    write('_dependencies/b/index.cjs', CYCLE_CHUNK_B)
+    expect(pruneDependencies(makeContext(outputPath)).requireBindingsDestructured).toBe(0)
   })
 
   it('leaves a require binding alone when the edge is part of a require cycle', () => {
     write('index.cjs', "const a = require('./_dependencies/a/index.cjs');\nexports.use = a.fa;")
-    write('_dependencies/a/index.cjs', "const b = require('../b/index.cjs');\nconst fa = () => b.fb();\nexports.fa = fa;")
-    write('_dependencies/b/index.cjs', "const a = require('../a/index.cjs');\nconst fb = () => a.fa();\nexports.fb = fb;")
-    const report = pruneDependencies(makeContext(outputPath))
-    expect(report.requireBindingsDestructured).toBe(0)
-    expect(readFileSync(join(outputPath, '_dependencies/a/index.cjs'), 'utf8')).toContain("const b = require('../b/index.cjs')")
+    write('_dependencies/a/index.cjs', CYCLE_CHUNK_A)
+    write('_dependencies/b/index.cjs', CYCLE_CHUNK_B)
+    pruneDependencies(makeContext(outputPath))
+    expect(readFileSync(join(outputPath, '_dependencies/a/index.cjs'), 'utf8')).toBe(CYCLE_CHUNK_A)
   })
 
   it('reclaims a chunk left orphaned once stripping drops its last importing edge', () => {

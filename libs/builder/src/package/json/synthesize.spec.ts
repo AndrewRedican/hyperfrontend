@@ -70,55 +70,46 @@ describe('synthesizePackageJson', () => {
   it('emits main / module / types pointers when a root entry was bundled', () => {
     const formats: FormatOutputs = { esm: [ROOT], cjs: [ROOT], iife: [], umd: [] }
     const result = synthesizePackageJson({ name: 'foo' }, makeContext(), formats)
-    expect(result.main).toBe('./index.cjs')
-    expect(result.module).toBe('./index.mjs')
-    expect(result.types).toBe('./index.d.ts')
+    expect(result).toEqual(expect.objectContaining({ main: './index.cjs', module: './index.mjs', types: './index.d.ts' }))
   })
 
   it('omits the module field when no ESM root output was produced', () => {
     const formats: FormatOutputs = { esm: [], cjs: [ROOT], iife: [], umd: [] }
     const result = synthesizePackageJson({ name: 'foo' }, makeContext(), formats)
-    expect(result.module).toBeUndefined()
-    expect(result.main).toBe('./index.cjs')
+    expect({ main: result.main, module: result.module }).toEqual({ main: './index.cjs' })
   })
 
   it('omits the main field when no CJS root output was produced', () => {
     const formats: FormatOutputs = { esm: [ROOT], cjs: [], iife: [], umd: [] }
     const result = synthesizePackageJson({ name: 'foo' }, makeContext(), formats)
-    expect(result.main).toBeUndefined()
-    expect(result.module).toBe('./index.mjs')
+    expect({ main: result.main, module: result.module }).toEqual({ module: './index.mjs' })
   })
 
   it('removes inherited main / module / types when no root entry exists', () => {
     const ctx = makeContext(baseDiscovery({ hasRootEntry: false, entryPoints: [BROWSER] }))
     const formats: FormatOutputs = { esm: [], cjs: [], iife: [], umd: [] }
     const result = synthesizePackageJson({ name: 'foo', main: 'old', module: 'old', types: 'old' }, ctx, formats)
-    expect(result.main).toBeUndefined()
-    expect(result.module).toBeUndefined()
-    expect(result.types).toBeUndefined()
+    expect({ main: result.main, module: result.module, types: result.types }).toEqual({})
   })
 
   it('appends unpkg / jsdelivr fields when a UMD or IIFE bundle was emitted', () => {
     const umdConfig: UmdConfig = { globalName: 'X' }
     const formats: FormatOutputs = { esm: [], cjs: [], iife: [], umd: [{ config: umdConfig, entries: [ROOT] }] }
     const result = synthesizePackageJson({ name: 'foo' }, makeContext(), formats)
-    expect(result.unpkg).toBe('./bundle/index.umd.min.js')
-    expect(result.jsdelivr).toBe('./bundle/index.umd.min.js')
+    expect(result).toEqual(expect.objectContaining({ unpkg: './bundle/index.umd.min.js', jsdelivr: './bundle/index.umd.min.js' }))
   })
 
   it('honors explicit unpkg / jsdelivr overrides', () => {
     const umdConfig: UmdConfig = { globalName: 'X' }
     const formats: FormatOutputs = { esm: [], cjs: [], iife: [], umd: [{ config: umdConfig, entries: [ROOT] }] }
     const result = synthesizePackageJson({ name: 'foo' }, makeContext(), formats, { unpkg: './u.js', jsdelivr: './j.js' })
-    expect(result.unpkg).toBe('./u.js')
-    expect(result.jsdelivr).toBe('./j.js')
+    expect(result).toEqual(expect.objectContaining({ unpkg: './u.js', jsdelivr: './j.js' }))
   })
 
   it('does not emit CDN fields when no UMD or IIFE bundle was produced', () => {
     const formats: FormatOutputs = { esm: [ROOT], cjs: [], iife: [], umd: [] }
     const result = synthesizePackageJson({ name: 'foo' }, makeContext(), formats)
-    expect(result.unpkg).toBeUndefined()
-    expect(result.jsdelivr).toBeUndefined()
+    expect({ unpkg: result.unpkg, jsdelivr: result.jsdelivr }).toEqual({})
   })
 
   it('strips workspace dependencies when filtering is enabled', () => {
@@ -154,10 +145,7 @@ describe('synthesizePackageJson', () => {
     const formats: FormatOutputs = { esm: [], cjs: [], iife: [], umd: [] }
     const srcPkg: PackageJson = { name: 'foo', version: '1.0.0', license: 'MIT', keywords: ['x'] }
     const result = synthesizePackageJson(srcPkg, makeContext(), formats)
-    expect(result.name).toBe('foo')
-    expect(result.version).toBe('1.0.0')
-    expect(result.license).toBe('MIT')
-    expect(result.keywords).toEqual(['x'])
+    expect(result).toEqual(expect.objectContaining({ name: 'foo', version: '1.0.0', license: 'MIT', keywords: ['x'] }))
   })
 
   it('strips scripts, devDependencies, packageManager and type while keeping the other source fields', () => {

@@ -23,25 +23,52 @@ describe('runPrePassWorkerJob', () => {
     return path
   }
 
-  it('writes an ESM bundle and a JSON report when given a JS job', async () => {
+  it('reports a positive output size, positive memory figures and a non-negative duration for a JS job', async () => {
     const inputPath = writeSrc('input.mjs', 'export const value = 42\n')
-    const outputPath = join(root, 'out.esm.js')
+    const report = await runPrePassWorkerJob({
+      kind: 'js',
+      dep: 'fixture',
+      inputPath,
+      format: 'esm',
+      outputPath: join(root, 'out.esm.js'),
+      otherDeps: [],
+      reportPath: join(root, 'report.json'),
+    })
+    expect({
+      outputSize: report.outputSize > 0,
+      endHeapMB: report.endHeapMB > 0,
+      endRssMB: report.endRssMB > 0,
+      durationMs: report.durationMs >= 0,
+    }).toEqual({ outputSize: true, endHeapMB: true, endRssMB: true, durationMs: true })
+  })
+
+  it('persists the returned report as JSON at reportPath', async () => {
+    const inputPath = writeSrc('input.mjs', 'export const value = 42\n')
     const reportPath = join(root, 'report.json')
     const report = await runPrePassWorkerJob({
       kind: 'js',
       dep: 'fixture',
       inputPath,
       format: 'esm',
-      outputPath,
+      outputPath: join(root, 'out.esm.js'),
       otherDeps: [],
       reportPath,
     })
-    expect(report.outputSize).toBeGreaterThan(0)
-    expect(report.endHeapMB).toBeGreaterThan(0)
-    expect(report.endRssMB).toBeGreaterThan(0)
-    expect(report.durationMs).toBeGreaterThanOrEqual(0)
-    const persisted = JSON.parse(readFileSync(reportPath, 'utf8'))
-    expect(persisted.outputSize).toBe(report.outputSize)
+    expect(JSON.parse(readFileSync(reportPath, 'utf8'))).toEqual(report)
+  })
+
+  it('writes an ESM bundle at outputPath when given a JS job', async () => {
+    const inputPath = writeSrc('input.mjs', 'export const value = 42\n')
+    const outputPath = join(root, 'out.esm.js')
+    await runPrePassWorkerJob({
+      kind: 'js',
+      dep: 'fixture',
+      inputPath,
+      format: 'esm',
+      outputPath,
+      otherDeps: [],
+      reportPath: join(root, 'report.json'),
+    })
     expect(readFileSync(outputPath, 'utf8')).toContain('42')
   })
 
@@ -96,11 +123,8 @@ describe('runPrePassWorkerJob', () => {
     expect(contents).toMatch(/from\s+["']other-dep\/sub["']/)
   })
 
-  it('marks node:* and node builtins as external', async () => {
-    const inputPath = writeSrc(
-      'input.mjs',
-      "import { join } from 'node:path'\nimport os from 'os'\nexport default join('a', os.tmpdir())\n"
-    )
+  it('marks node:-prefixed builtins as external', async () => {
+    const inputPath = writeSrc('input.mjs', "import { join } from 'node:path'\nexport default join('a', 'b')\n")
     const outputPath = join(root, 'out.esm.js')
     const reportPath = join(root, 'report.json')
     await runPrePassWorkerJob({
@@ -112,9 +136,23 @@ describe('runPrePassWorkerJob', () => {
       outputPath,
       reportPath,
     })
-    const contents = readFileSync(outputPath, 'utf8')
-    expect(contents).toMatch(/from\s+["']node:path["']/)
-    expect(contents).toMatch(/from\s+["']os["']/)
+    expect(readFileSync(outputPath, 'utf8')).toMatch(/from\s+["']node:path["']/)
+  })
+
+  it('marks bare node builtins as external', async () => {
+    const inputPath = writeSrc('input.mjs', "import os from 'os'\nexport default os.tmpdir()\n")
+    const outputPath = join(root, 'out.esm.js')
+    const reportPath = join(root, 'report.json')
+    await runPrePassWorkerJob({
+      kind: 'js',
+      dep: 'fixture',
+      inputPath,
+      format: 'esm',
+      otherDeps: [],
+      outputPath,
+      reportPath,
+    })
+    expect(readFileSync(outputPath, 'utf8')).toMatch(/from\s+["']os["']/)
   })
 
   it('suppresses circular-dependency warnings while still completing the bundle', async () => {
@@ -182,9 +220,7 @@ describe('runPrePassWorkerJob', () => {
       outputPath,
       reportPath,
     })
-    const contents = readFileSync(outputPath, 'utf8')
-    expect(contents).toContain('Hello')
-    expect(contents).toContain('value')
+    expect(readFileSync(outputPath, 'utf8')).toMatch(/interface Hello \{\s*value: number;?\s*\}/)
   })
 
   it('runs a workspace-js job over a TypeScript source entry', async () => {
@@ -365,9 +401,7 @@ describe('runPrePassWorkerJob', () => {
       tsConfigPath,
       workspaceRoot: root,
     })
-    const contents = readFileSync(outputPath, 'utf8')
-    expect(contents).toContain('Hello')
-    expect(contents).toContain('value')
+    expect(readFileSync(outputPath, 'utf8')).toMatch(/interface Hello \{\s*value: number;?\s*\}/)
   })
 
   it('rewrites cross-bundled-dep imports to relative paths under depsRoot when npmDeps is non-empty (js kind)', async () => {

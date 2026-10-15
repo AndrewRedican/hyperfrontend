@@ -53,12 +53,10 @@ describe('generateExportsFromFormats', () => {
       },
     }
     const formats: FormatOutputs = { esm: [ROOT, BROWSER], cjs: [ROOT, BROWSER], iife: [], umd: [] }
-    const result = generateExportsFromFormats(discovery, formats, srcPkg)
-    expect(result['.']).toEqual({ types: './index.d.ts', import: './index.mjs', require: './index.cjs' })
-    expect(result['./browser']).toEqual({
-      types: './browser/index.d.ts',
-      import: './browser/index.mjs',
-      require: './browser/index.cjs',
+    expect(generateExportsFromFormats(discovery, formats, srcPkg)).toEqual({
+      './package.json': './package.json',
+      '.': { types: './index.d.ts', import: './index.mjs', require: './index.cjs' },
+      './browser': { types: './browser/index.d.ts', import: './browser/index.mjs', require: './browser/index.cjs' },
     })
   })
 

@@ -32,7 +32,15 @@ describe('runBinPhase', () => {
   it('returns an empty array when no bins are declared', async () => {
     const result = await runBinPhase(makeContext(), [])
     expect(result).toEqual([])
+  })
+
+  it('builds no JS bin when no bins are declared', async () => {
+    await runBinPhase(makeContext(), [])
     expect(buildJsBin).not.toHaveBeenCalled()
+  })
+
+  it('builds no native bin when no bins are declared', async () => {
+    await runBinPhase(makeContext(), [])
     expect(buildNativeBin).not.toHaveBeenCalled()
   })
 
@@ -106,6 +114,13 @@ describe('runBinPhase', () => {
     await expect(
       runBinPhase(makeContext(), [{ name: 'hf-build', format: 'esm', sea: { platforms: ['linux-x64'] } }] as BinConfig[])
     ).rejects.toThrow(/SEA requires a CJS bin output/)
+  })
+
+  it('builds no native bin when a sea-enabled bin has no CJS output', async () => {
+    ;(buildJsBin as Mock).mockResolvedValueOnce([{ name: 'hf-build', kind: 'esm', outputPath: '/abs/dist/libs/foo/bin/hf-build.mjs' }])
+    await runBinPhase(makeContext(), [{ name: 'hf-build', format: 'esm', sea: { platforms: ['linux-x64'] } }] as BinConfig[]).catch(
+      () => undefined
+    )
     expect(buildNativeBin).not.toHaveBeenCalled()
   })
 

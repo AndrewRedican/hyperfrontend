@@ -73,13 +73,26 @@ describe('stripDeadPropertiesPass', () => {
     expect(run()).toEqual({ deadPropertiesRemoved: 0, bytesRemoved: 0 })
   })
 
+  it('reports the slot stripped off a wholesale-imported namespace and the bytes it freed', () => {
+    write('index.mjs', "import { SafeObject } from './_dependencies/d/index.mjs';\nexport const u = SafeObject.freeze;")
+    write('_dependencies/d/index.mjs', NS_CHUNK)
+    expect(run()).toEqual({ deadPropertiesRemoved: 1, bytesRemoved: Buffer.byteLength(', keys') })
+  })
+
   it('strips the slots an entry never reads off a wholesale-imported namespace', () => {
     write('index.mjs', "import { SafeObject } from './_dependencies/d/index.mjs';\nexport const u = SafeObject.freeze;")
     write('_dependencies/d/index.mjs', NS_CHUNK)
-    const report = run()
-    expect(report.deadPropertiesRemoved).toBe(1)
-    expect(report.bytesRemoved).toBeGreaterThan(0)
+    run()
     expect(chunkText()).toContain('Object.freeze({ freeze })')
+  })
+
+  it('reports no dead property when a consumer reads every slot', () => {
+    write(
+      'index.mjs',
+      "import { SafeObject } from './_dependencies/d/index.mjs';\nexport const u = SafeObject.freeze;\nexport const v = SafeObject.keys;"
+    )
+    write('_dependencies/d/index.mjs', NS_CHUNK)
+    expect(run().deadPropertiesRemoved).toBe(0)
   })
 
   it('keeps every slot a consumer reads', () => {
@@ -88,8 +101,8 @@ describe('stripDeadPropertiesPass', () => {
       "import { SafeObject } from './_dependencies/d/index.mjs';\nexport const u = SafeObject.freeze;\nexport const v = SafeObject.keys;"
     )
     write('_dependencies/d/index.mjs', NS_CHUNK)
-    expect(run().deadPropertiesRemoved).toBe(0)
-    expect(chunkText()).toContain('{ freeze, keys }')
+    run()
+    expect(chunkText()).toBe(NS_CHUNK)
   })
 
   it('keeps a namespace whole when a consumer spreads it', () => {
@@ -104,25 +117,46 @@ describe('stripDeadPropertiesPass', () => {
     expect(run().deadPropertiesRemoved).toBe(0)
   })
 
+  const SELF_READING_CHUNK =
+    'const freeze = 1;\nconst keys = 2;\nconst create = 3;\nconst SafeObject = Object.freeze({ freeze, keys, create });\nconst self = SafeObject.keys;\nexport { SafeObject, self };'
+
+  it('reports only the slot neither the consumer nor the defining chunk reads', () => {
+    write('index.mjs', "import { SafeObject } from './_dependencies/d/index.mjs';\nexport const u = SafeObject.freeze;")
+    write('_dependencies/d/index.mjs', SELF_READING_CHUNK)
+    expect(run().deadPropertiesRemoved).toBe(1)
+  })
+
   it('honors the defining chunk own internal read when computing demand', () => {
     write('index.mjs', "import { SafeObject } from './_dependencies/d/index.mjs';\nexport const u = SafeObject.freeze;")
-    write(
-      '_dependencies/d/index.mjs',
-      'const freeze = 1;\nconst keys = 2;\nconst create = 3;\nconst SafeObject = Object.freeze({ freeze, keys, create });\nconst self = SafeObject.keys;\nexport { SafeObject, self };'
-    )
-    expect(run().deadPropertiesRemoved).toBe(1)
+    write('_dependencies/d/index.mjs', SELF_READING_CHUNK)
+    run()
     expect(chunkText()).toContain('Object.freeze({ freeze, keys })')
+  })
+
+  it('reports no dead property when a consumer only reads a property the namespace does not define', () => {
+    write('index.mjs', "import { SafeObject } from './_dependencies/d/index.mjs';\nexport const u = SafeObject.missing;")
+    write('_dependencies/d/index.mjs', NS_CHUNK)
+    expect(run().deadPropertiesRemoved).toBe(0)
   })
 
   it('keeps a namespace whole when a consumer only reads a property it does not define', () => {
     write('index.mjs', "import { SafeObject } from './_dependencies/d/index.mjs';\nexport const u = SafeObject.missing;")
     write('_dependencies/d/index.mjs', NS_CHUNK)
-    expect(run().deadPropertiesRemoved).toBe(0)
-    expect(chunkText()).toContain('{ freeze, keys }')
+    run()
+    expect(chunkText()).toBe(NS_CHUNK)
   })
 
   it('leaves a wholly-unread namespace import to the export pass', () => {
     write('index.mjs', "import { SafeObject } from './_dependencies/d/index.mjs';\nexport const u = 1;")
+    write('_dependencies/d/index.mjs', NS_CHUNK)
+    expect(run().deadPropertiesRemoved).toBe(0)
+  })
+
+  it('reports no dead property when a dynamic specifier appears anywhere in the graph', () => {
+    write(
+      'index.mjs',
+      "import { SafeObject } from './_dependencies/d/index.mjs';\nexport const u = SafeObject.freeze;\nconst p = import('./x' + u);"
+    )
     write('_dependencies/d/index.mjs', NS_CHUNK)
     expect(run().deadPropertiesRemoved).toBe(0)
   })
@@ -133,15 +167,22 @@ describe('stripDeadPropertiesPass', () => {
       "import { SafeObject } from './_dependencies/d/index.mjs';\nexport const u = SafeObject.freeze;\nconst p = import('./x' + u);"
     )
     write('_dependencies/d/index.mjs', NS_CHUNK)
-    expect(run().deadPropertiesRemoved).toBe(0)
-    expect(chunkText()).toContain('{ freeze, keys }')
+    run()
+    expect(chunkText()).toBe(NS_CHUNK)
+  })
+
+  it('reports one dead property when demand arrives through a sibling dependency chunk', () => {
+    write('index.mjs', "import { mid } from './_dependencies/a/index.mjs';\nexport const u = mid;")
+    write('_dependencies/a/index.mjs', "import { SafeObject } from '../d/index.mjs';\nconst mid = SafeObject.freeze;\nexport { mid };")
+    write('_dependencies/d/index.mjs', NS_CHUNK)
+    expect(run().deadPropertiesRemoved).toBe(1)
   })
 
   it('reads namespace demand across a sibling dependency chunk', () => {
     write('index.mjs', "import { mid } from './_dependencies/a/index.mjs';\nexport const u = mid;")
     write('_dependencies/a/index.mjs', "import { SafeObject } from '../d/index.mjs';\nconst mid = SafeObject.freeze;\nexport { mid };")
     write('_dependencies/d/index.mjs', NS_CHUNK)
-    expect(run().deadPropertiesRemoved).toBe(1)
+    run()
     expect(chunkText()).toContain('Object.freeze({ freeze })')
   })
 
@@ -149,25 +190,51 @@ describe('stripDeadPropertiesPass', () => {
     'var freeze = 1;\nvar keys = 2;\nvar SafeObject = Object.freeze({ freeze, keys });\nexports.freeze = freeze;\nexports.keys = keys;\nexports.SafeObject = SafeObject;'
   const cjsChunkText = (): string => readFileSync(join(outputPath, '_dependencies/d/index.cjs'), 'utf8')
 
-  it('strips a slot read two-level off a CJS require namespace binding', () => {
+  it('reports one dead property for a slot read two-level off a CJS require namespace binding', () => {
     write('index.cjs', "var d = require('./_dependencies/d/index.cjs');\nexports.u = d.SafeObject.freeze;")
     write('_dependencies/d/index.cjs', CJS_NS_CHUNK)
     expect(run().deadPropertiesRemoved).toBe(1)
+  })
+
+  it('strips a slot read two-level off a CJS require namespace binding', () => {
+    write('index.cjs', "var d = require('./_dependencies/d/index.cjs');\nexports.u = d.SafeObject.freeze;")
+    write('_dependencies/d/index.cjs', CJS_NS_CHUNK)
+    run()
     expect(cjsChunkText()).toContain('Object.freeze({ freeze })')
+  })
+
+  it('reports no dead property when a CJS module binding is consumed wholesale', () => {
+    write('index.cjs', "var d = require('./_dependencies/d/index.cjs');\nexports.all = d.SafeObject;")
+    write('_dependencies/d/index.cjs', CJS_NS_CHUNK)
+    expect(run().deadPropertiesRemoved).toBe(0)
   })
 
   it('keeps a CJS namespace whole when the module binding is consumed wholesale', () => {
     write('index.cjs', "var d = require('./_dependencies/d/index.cjs');\nexports.all = d.SafeObject;")
     write('_dependencies/d/index.cjs', CJS_NS_CHUNK)
-    expect(run().deadPropertiesRemoved).toBe(0)
-    expect(cjsChunkText()).toContain('{ freeze, keys }')
+    run()
+    expect(cjsChunkText()).toBe(CJS_NS_CHUNK)
+  })
+
+  it('reports one dead property for a CJS namespace read through a destructured require binding', () => {
+    write('index.cjs', "var { SafeObject } = require('./_dependencies/d/index.cjs');\nexports.u = SafeObject.keys;")
+    write('_dependencies/d/index.cjs', CJS_NS_CHUNK)
+    expect(run().deadPropertiesRemoved).toBe(1)
   })
 
   it('strips a CJS namespace read through a destructured require binding', () => {
     write('index.cjs', "var { SafeObject } = require('./_dependencies/d/index.cjs');\nexports.u = SafeObject.keys;")
     write('_dependencies/d/index.cjs', CJS_NS_CHUNK)
-    expect(run().deadPropertiesRemoved).toBe(1)
+    run()
     expect(cjsChunkText()).toContain('Object.freeze({ keys })')
+  })
+
+  it('counts the slots stripped from ESM and CJS chunks in the same run', () => {
+    write('index.mjs', "import { SafeObject } from './_dependencies/e/index.mjs';\nexport const u = SafeObject.freeze;")
+    write('index.cjs', "var d = require('./_dependencies/d/index.cjs');\nexports.u = d.SafeObject.keys;")
+    write('_dependencies/e/index.mjs', NS_CHUNK)
+    write('_dependencies/d/index.cjs', CJS_NS_CHUNK)
+    expect(run().deadPropertiesRemoved).toBe(2)
   })
 
   it('processes ESM and CJS chunks in the same run', () => {
@@ -175,8 +242,10 @@ describe('stripDeadPropertiesPass', () => {
     write('index.cjs', "var d = require('./_dependencies/d/index.cjs');\nexports.u = d.SafeObject.keys;")
     write('_dependencies/e/index.mjs', NS_CHUNK)
     write('_dependencies/d/index.cjs', CJS_NS_CHUNK)
-    expect(run().deadPropertiesRemoved).toBe(2)
-    expect(cjsChunkText()).toContain('Object.freeze({ keys })')
-    expect(readFileSync(join(outputPath, '_dependencies/e/index.mjs'), 'utf8')).toContain('Object.freeze({ freeze })')
+    run()
+    expect([cjsChunkText(), readFileSync(join(outputPath, '_dependencies/e/index.mjs'), 'utf8')]).toEqual([
+      expect.stringContaining('Object.freeze({ keys })'),
+      expect.stringContaining('Object.freeze({ freeze })'),
+    ])
   })
 })

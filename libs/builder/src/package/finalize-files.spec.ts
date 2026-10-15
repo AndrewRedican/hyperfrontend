@@ -39,25 +39,39 @@ beforeEach(() => {
 })
 
 describe('finalizeFilesAllowlist', () => {
-  it('reflects the allowlist from the output tree and writes it back onto the dist manifest', () => {
+  it('reflects the allowlist from the output tree', () => {
     finalizeFilesAllowlist(makeContext(), baseConfig)
     expect(reflectFilesAllowlist).toHaveBeenCalledWith('/abs/dist/libs/foo')
+  })
+
+  it('reads the dist manifest it writes the allowlist onto', () => {
+    finalizeFilesAllowlist(makeContext(), baseConfig)
     expect(readJsonFile).toHaveBeenCalledWith(normalizeToNative('/abs/dist/libs/foo/package.json'))
+  })
+
+  it('writes the reflected allowlist onto the dist manifest', () => {
+    finalizeFilesAllowlist(makeContext(), baseConfig)
     expect(writeOutputPackageJson).toHaveBeenCalledWith('/abs/dist/libs/foo', {
       name: 'foo',
       files: ['**/index.*', '**/index.d.ts', 'README.md'],
     })
   })
 
-  it('honors an explicit config.files override without reflecting', () => {
+  it('skips reflecting when config.files is set explicitly', () => {
     finalizeFilesAllowlist(makeContext(), { ...baseConfig, files: ['only-this.js'] })
     expect(reflectFilesAllowlist).not.toHaveBeenCalled()
+  })
+
+  it('writes an explicit config.files override onto the dist manifest', () => {
+    finalizeFilesAllowlist(makeContext(), { ...baseConfig, files: ['only-this.js'] })
     expect(writeOutputPackageJson).toHaveBeenCalledWith('/abs/dist/libs/foo', { name: 'foo', files: ['only-this.js'] })
   })
 
   it('leaves the manifest untouched when the allowlist is empty', () => {
     finalizeFilesAllowlist(makeContext(), { ...baseConfig, files: [] })
-    expect(readJsonFile).not.toHaveBeenCalled()
-    expect(writeOutputPackageJson).not.toHaveBeenCalled()
+    expect({ reads: (readJsonFile as Mock).mock.calls, writes: (writeOutputPackageJson as Mock).mock.calls }).toEqual({
+      reads: [],
+      writes: [],
+    })
   })
 })

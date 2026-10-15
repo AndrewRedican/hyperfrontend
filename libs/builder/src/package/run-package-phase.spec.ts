@@ -90,9 +90,13 @@ describe('runPackagePhase', () => {
     expect(copyAssets).toHaveBeenCalledWith(ctx.assets, '/abs/dist/libs/foo', { name: 'foo' })
   })
 
-  it('skips license generation when thirdPartyLicenses is disabled', async () => {
+  it('skips license collection when thirdPartyLicenses is disabled', async () => {
     await runPackagePhase(makeContext(), baseConfig, formats)
     expect(collectThirdPartyLicenses).not.toHaveBeenCalled()
+  })
+
+  it('skips writing THIRD_PARTY_LICENSES.md when thirdPartyLicenses is disabled', async () => {
+    await runPackagePhase(makeContext(), baseConfig, formats)
     expect(writeThirdPartyLicensesFile).not.toHaveBeenCalled()
   })
 
@@ -138,6 +142,12 @@ describe('runPackagePhase', () => {
     ;(collectThirdPartyLicenses as Mock).mockReturnValue([{ name: 'rollup', licenseType: 'MIT', licenseUrl: null }])
     await runPackagePhase(makeContext({ bundledDeps: ['rollup', 'postject'] }), baseConfig, formats)
     expect(collectThirdPartyLicenses).toHaveBeenCalledWith('/abs/repo', ['rollup', 'postject'])
+  })
+
+  it('writes THIRD_PARTY_LICENSES.md when the bundled-deps default enables license generation', async () => {
+    ;(synthesizePackageJson as Mock).mockReturnValue({ name: 'foo' } as PackageJson)
+    ;(collectThirdPartyLicenses as Mock).mockReturnValue([{ name: 'rollup', licenseType: 'MIT', licenseUrl: null }])
+    await runPackagePhase(makeContext({ bundledDeps: ['rollup', 'postject'] }), baseConfig, formats)
     expect(writeThirdPartyLicensesFile).toHaveBeenCalled()
   })
 

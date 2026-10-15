@@ -54,9 +54,9 @@ describe('rewriteEntry', () => {
 
   it('omits a hoisted private helper referenced only by another hoisted export', () => {
     const parsed = parseEntry('const handlers = {};\nconst rootReducer = (s) => handlers;\nexport { rootReducer };\n', 'esm')
-    const rewritten = rewriteEntry(parsed, [{ decls: parsed.decls, specifier: SHARED }], 'esm')
-    expect(rewritten).toContain('import { rootReducer }')
-    expect(rewritten).not.toContain('handlers')
+    expect(rewriteEntry(parsed, [{ decls: parsed.decls, specifier: SHARED }], 'esm')).toBe(
+      `import { rootReducer } from '${SHARED}';\n\nexport { rootReducer };\n`
+    )
   })
 
   it('retains a hoisted private helper still referenced by surviving entry code', () => {
@@ -70,9 +70,7 @@ describe('rewriteEntry', () => {
 
   it('inserts no import when every hoisted declaration is dead after splicing', () => {
     const parsed = parseEntry('const dead = 1;\nfoo();\n', 'esm')
-    const rewritten = rewriteEntry(parsed, [{ decls: parsed.decls, specifier: SHARED }], 'esm')
-    expect(rewritten).not.toContain('import')
-    expect(rewritten).toContain('foo();')
+    expect(rewriteEntry(parsed, [{ decls: parsed.decls, specifier: SHARED }], 'esm')).toBe('\nfoo();\n')
   })
 
   it('combines multiple hoisted modules into the inserted block', () => {
