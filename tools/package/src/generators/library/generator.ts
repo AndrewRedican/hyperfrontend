@@ -108,9 +108,10 @@ function addFiles(tree: Tree, options: NormalizedOptions): void {
  * - README.md template
  *
  * If publishable option is true, also runs the make-publishable generator
- * to declare runtime compatibility and add build targets, CI configuration,
- * and E2E project. An internal library declares no compatibility, because it
- * is never published for anyone to read it.
+ * to declare runtime compatibility, add build targets, the E2E project and
+ * the CI configuration, and register the package in the root README and the
+ * docs site. An internal library declares no compatibility, because it is
+ * never published for anyone to read it.
  *
  * @param tree - The Nx virtual file system tree
  * @param options - Configuration options for the library
@@ -145,6 +146,8 @@ export async function libraryGenerator(tree: Tree, options: LibraryGeneratorSche
       project: normalizedOptions.projectName,
       keywords: options.keywords,
       compatibility: options.compatibility,
+      docsCategory: options.docsCategory,
+      ecosystemTier: options.ecosystemTier,
       skipFormat: true,
     })
   }

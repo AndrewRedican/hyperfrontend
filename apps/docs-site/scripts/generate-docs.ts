@@ -226,6 +226,7 @@ const LIBRARIES: LibraryConfig[] = [
   { name: 'UI Utils', packageName: '@hyperfrontend/ui-utils', slug: 'ui-utils', srcPath: 'libs/utils/ui', category: 'utils' },
   { name: 'Features', packageName: '@hyperfrontend/features', slug: 'features', srcPath: 'libs/features', category: 'core' },
   { name: 'Questions', packageName: '@hyperfrontend/questions', slug: 'questions', srcPath: 'libs/questions', category: 'supporting' },
+  { name: 'Testing', packageName: '@hyperfrontend/testing', slug: 'testing', srcPath: 'libs/testing', category: 'core' },
 ]
 
 /**
@@ -257,6 +258,7 @@ const LIBRARY_SLUGS: Record<string, string> = {
   questions: 'questions',
   'web-worker': 'web-worker',
   versioning: 'versioning',
+  testing: 'testing',
 }
 
 /**

@@ -1,4 +1,4 @@
-import type { CompatibilityProfile } from '../make-publishable/schema'
+import type { CompatibilityProfile, DocsCategoryOption, EcosystemTierOption } from '../make-publishable/schema'
 
 /**
  * Schema options for the library generator.
@@ -18,6 +18,10 @@ export interface LibraryGeneratorSchema {
   keywords?: string[]
   /** Runtime profile written to metadata.compatibility (required when publishable is true) */
   compatibility?: CompatibilityProfile
+  /** Section of the docs-site index (only used when publishable is true) */
+  docsCategory?: DocsCategoryOption
+  /** Level of the docs-site ecosystem hierarchy (only used when publishable is true) */
+  ecosystemTier?: EcosystemTierOption
   /** Skip formatting the generated files */
   skipFormat?: boolean
 }

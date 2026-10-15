@@ -1,0 +1,123 @@
+# Architecture
+
+How [`@hyperfrontend/testing`](https://www.hyperfrontend.dev/docs/libraries/testing/) makes a Jest-style spec run on Node's built-in test runner, and where its pieces sit. For installation, usage and the migration path from Jest, see the [README](./README.md); for each entry's own surface, see the entry pages for [`/hooks`](https://www.hyperfrontend.dev/docs/libraries/testing/hooks/), [`/dom`](https://www.hyperfrontend.dev/docs/libraries/testing/dom/), [`/reporter`](https://www.hyperfrontend.dev/docs/libraries/testing/reporter/), [`/runner`](https://www.hyperfrontend.dev/docs/libraries/testing/runner/) and [`/coverage`](https://www.hyperfrontend.dev/docs/libraries/testing/coverage/).
+
+---
+
+## System Overview
+
+The package is a layer over `node:test`, not a runner of its own. Only the four things Node lacks are reimplemented: a [`describe`](https://www.hyperfrontend.dev/docs/libraries/testing/#api-describe) and [`it`](https://www.hyperfrontend.dev/docs/libraries/testing/#api-it) carrying Jest's modifiers, an [`expect`](https://www.hyperfrontend.dev/docs/libraries/testing/#api-expect) with Jest's matcher names, a [`jest`](https://www.hyperfrontend.dev/docs/libraries/testing/#api-jest) namespace for mock functions, spies and fake timers, and a loader that honours [`jest.mock`](https://www.hyperfrontend.dev/docs/libraries/testing/#api-JestApi) under native ES modules. Lifecycle hooks are imported from `node:test` by the spec itself, a failed matcher throws Node's own [`AssertionError`](https://nodejs.org/api/assert.html#class-assertassertionerror), and the fake clock is Node's [`mock.timers`](https://nodejs.org/api/test.html#class-mocktimers) behind a Jest-shaped surface.
+
+- **Spec surface** (the root entry): the Jest-shaped API, implemented on `node:test`, `node:assert` and Node's fake clock.
+- **Preloads** ([`/hooks`](https://www.hyperfrontend.dev/docs/libraries/testing/hooks/) and [`/dom`](https://www.hyperfrontend.dev/docs/libraries/testing/dom/)): modules handed to `node --import` that prepare the process before any spec loads.
+- **Reporter** ([`/reporter`](https://www.hyperfrontend.dev/docs/libraries/testing/reporter/)): Node's spec reporter with its per-evaluation coverage summary held back.
+- **Runner and coverage** ([`/runner`](https://www.hyperfrontend.dev/docs/libraries/testing/runner/) and [`/coverage`](https://www.hyperfrontend.dev/docs/libraries/testing/coverage/)): one `node --test` process per configured environment, then the lcov merge, the threshold gate and the completeness check.
+
+```mermaid
+---
+config:
+  theme: base
+  themeVariables:
+    fontSize: 12px
+---
+flowchart TB
+    driver["driver script (package script, task runner, CI step)"] --> runner["runProjectTests()"]
+    runner -->|"one process per environment"| node["node --test"]
+    hooks["--import /hooks"] --> node
+    dom["--import /dom (optional)"] --> node
+    setup["--import setup modules"] --> node
+    node --> spec["spec: describe / it / expect / jest"]
+    spec --> primitives["node:test, node:assert, mock.timers"]
+    node --> reporter["/reporter on stdout"]
+    node --> lcov["lcov.&lt;environment&gt;.info"]
+    lcov --> coverage["mergeLcov, gate, completeness"]
+    coverage --> outcome["RunOutcome + lcov.info"]
+    outcome --> driver
+```
+
+The root entry never re-exports the preloads, because they act the moment they are imported. Every entry sits in its own directory in the published package, and the runner and the hooks find the other entries by that directory layout, so the package has to stay installed as one unit rather than have entries copied out of it.
+
+---
+
+## How a Spec Is Loaded
+
+ES modules link their imports before any statement runs, so [`jest.mock`](https://www.hyperfrontend.dev/docs/libraries/testing/#api-JestApi) cannot be hoisted the way Jest hoists it. Node does call a module's load hook before resolving that module's imports, and that is where the preload reads the declarations out of a spec's source, with string literals and comments blanked first so a [`jest.mock`](https://www.hyperfrontend.dev/docs/libraries/testing/#api-JestApi) that is text is never taken for one that is code. The substitution happens in the resolve hook, under the package's own `hf-mock:` scheme, because a built-in the loader has already imported would never reach the load hook again. Nothing is loaded at registration except an automock's target, so a barrel that re-exports a module mocked by a later declaration cannot bind the real one first.
+
+```mermaid
+---
+config:
+  theme: base
+  themeVariables:
+    fontSize: 12px
+---
+sequenceDiagram
+    participant Node as node:test
+    participant Resolve as resolve hook
+    participant Load as load hook
+    participant Registry as registry (globalThis)
+    participant Replacement as hf-mock: module
+
+    Node->>Load: load(spec.ts)
+    Load->>Load: scrub literals, read jest.mock / jest.unmock
+    Load->>Registry: register the replacement under the module's URL
+    Load-->>Node: spec source
+    Node->>Resolve: resolve('./dep', from spec.ts)
+    Resolve->>Registry: is file:///…/dep.ts replaced?
+    Registry-->>Resolve: yes
+    Resolve-->>Node: hf-mock:…dep.ts
+    Node->>Load: load(hf-mock:…)
+    Load-->>Node: generated replacement module
+    Node->>Replacement: evaluate
+    Replacement->>Resolve: import the real module
+    Resolve-->>Node: the real module, no substitution
+    Replacement->>Registry: publish the real namespace and the factory's product
+```
+
+The generated replacement imports [`jest`](https://www.hyperfrontend.dev/docs/libraries/testing/#api-jest) from the root entry, imports the real module under its own name, re-exports everything the factory did not define, and publishes both the real namespace and the factory's product for [`jest.requireActual`](https://www.hyperfrontend.dev/docs/libraries/testing/#api-JestApi) and [`jest.requireMock`](https://www.hyperfrontend.dev/docs/libraries/testing/#api-JestApi) to read later. A factory with no body, the automock form, exports a fresh [`jest.fn`](https://www.hyperfrontend.dev/docs/libraries/testing/#api-JestApi) under every name the real module defines.
+
+### Module generations
+
+[`jest.resetModules`](https://www.hyperfrontend.dev/docs/libraries/testing/#api-JestApi) has nothing to evict, because Node's module registry has no eviction API. It advances a counter instead, and from then on every file URL the resolve hook returns carries a generation query, which is a new module to Node and so a fresh evaluation on the next dynamic import. A relative import inside a re-evaluated module strips the query before resolving its neighbours, so the module still finds them, and a replacement's URL carries the generation too, which is why a [`jest.doMock`](https://www.hyperfrontend.dev/docs/libraries/testing/#api-JestApi) declared after a reset is served instead of a cached replacement. The order to keep is reset, then declare, then import dynamically.
+
+### Shared state
+
+The registry, the generation counter, the loader's own resolution and the context a replacement publishes into all live on `globalThis` under registered symbols rather than in module scope. The resolve hook reaches them from the [`/hooks`](https://www.hyperfrontend.dev/docs/libraries/testing/hooks/) entry and the [`jest`](https://www.hyperfrontend.dev/docs/libraries/testing/#api-jest) object from the root entry, and a build is free to give each entry its own copy of a module; the global object is the one place every copy finds the same state, with no import edge between the two entries. Nothing else is global: a spec imports what it uses.
+
+---
+
+## The DOM Preload
+
+Loaded after the hooks and before an environment's setup modules, the [`/dom`](https://www.hyperfrontend.dev/docs/libraries/testing/dom/) entry creates one jsdom window and copies its own properties onto the process global by value. It skips the ECMAScript intrinsics, derived from a bare `node:vm` context so every `instanceof` in the process keeps agreeing with itself, and a reserved set that stays Node's: the timer functions and `performance`, because they are what the fake clock replaces; `crypto`, because Node's implements `subtle`; `URL` and `URLSearchParams`, because `node:url` recognises only its own class; and `atob` and `btoa`, because jsdom's delegate to the global of the same name and a copy would recurse into itself. `window` and its aliases then all point at the process global, so a spy installed on `window.getComputedStyle` is visible to code calling the bare name.
+
+---
+
+## A Configured Run
+
+[`runProjectTests`](https://www.hyperfrontend.dev/docs/libraries/testing/runner/#api-runProjectTests) spawns one process per environment and judges the results together. Each environment is its own process because the preloads act on the process they load into: a DOM installed for one environment would leak into the next, and the resolution hooks cannot be unregistered between runs.
+
+```mermaid
+---
+config:
+  theme: base
+  themeVariables:
+    fontSize: 12px
+---
+flowchart TB
+    start["runProjectTests(config, context)"] --> defaults["withDefaults(): baseline excludes, 30 s timeout"]
+    defaults --> loop["for each environment"]
+    loop --> plan["buildRunPlan(): --import hooks [dom] [setup…],<br/>--test, coverage flags, two reporters, files"]
+    plan --> spawn["spawn node --test"]
+    spawn --> raw["lcov.&lt;environment&gt;.info"]
+    raw --> loop
+    loop -->|done| merge["mergeLcov(): one record per file"]
+    merge --> write["renderLcov() → lcov.info,<br/>paths from the workspace root"]
+    merge --> gate["findThresholdShortfalls()"]
+    merge --> complete["findUnmeasuredFiles()"]
+    gate --> outcome["RunOutcome: success, failures, coverageTable"]
+    complete --> outcome
+    write --> outcome
+```
+
+Coverage is judged on the merged report and never on Node's own summary. Node measures each evaluation of a module as a script of its own and omits files no test loaded, so every threshold is compared against an lcov merge keyed by file, with records combined per line, per function and per branch, and the include globs are checked against the report for files that never appeared. Node's own threshold flags are never passed, and the [`/reporter`](https://www.hyperfrontend.dev/docs/libraries/testing/reporter/) entry drops the per-evaluation summary Node would print beside the merged table.
+
+The runner writes nothing to the terminal. The driver prints the table and the failures and sets the exit code, which is what keeps a command-line protocol out of the package: how a driver finds a configuration and where it reports are the driver's own decisions.

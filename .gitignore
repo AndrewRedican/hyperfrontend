@@ -27,7 +27,8 @@ node_modules
 /.sass-cache
 /connect.lock
 coverage
-!tools/testing/src/coverage
+!libs/testing/src/coverage
+!apps/docs-site/src/app/docs/libraries/*/coverage
 /libpeerconnection.log
 npm-debug.log
 yarn-error.log

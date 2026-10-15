@@ -9,6 +9,10 @@
  * global the floor does not have. Run this on the floor release after the
  * packages are built: a module that loads there keeps the declared floor true.
  *
+ * A package whose own `engines.node` floor is above the running release is
+ * reported and skipped rather than probed: it never claimed to load there, and
+ * its entries are checked whenever the probe runs on a release it does cover.
+ *
  * Written as plain JavaScript with no dependencies so it runs on the floor
  * release itself, whichever that is. Each entry is loaded by a child process
  * whose target arrives through the environment, never argv: some entries are
@@ -56,12 +60,39 @@ const loadTarget = async () => {
   }
 }
 
+/**
+ * Read the lowest Node.js release a package declares it loads on.
+ *
+ * @param range - The `engines.node` range, such as `>=22.18.0`.
+ * @returns The floor as `[major, minor, patch]`, or null when the package declares none.
+ */
+const declaredFloor = (range) => {
+  const match = /^\s*>=\s*(\d+)(?:\.(\d+))?(?:\.(\d+))?/.exec(typeof range === 'string' ? range : '')
+  return match === null ? null : [Number(match[1]), Number(match[2] ?? 0), Number(match[3] ?? 0)]
+}
+
+const RUNNING = process.versions.node.split('.').map(Number)
+
+/**
+ * Whether the running release sits below a declared floor.
+ *
+ * @param floor - A floor from `declaredFloor`, or null.
+ * @returns True when the floor is declared and the running release does not reach it.
+ */
+const runsBelow = (floor) => {
+  if (floor === null) return false
+  for (let index = 0; index < 3; index++) {
+    if ((RUNNING[index] ?? 0) !== floor[index]) return (RUNNING[index] ?? 0) < floor[index]
+  }
+  return false
+}
+
 const findPackages = (root, depth = 0) => {
   const manifest = join(root, 'package.json')
   if (existsSync(manifest)) {
     const parsed = JSON.parse(readFileSync(manifest, 'utf8'))
     if (typeof parsed.name === 'string' && parsed.name.startsWith('@hyperfrontend/')) {
-      return [{ root, name: parsed.name, exports: parsed.exports ?? {} }]
+      return [{ root, name: parsed.name, exports: parsed.exports ?? {}, floor: declaredFloor(parsed.engines?.node) }]
     }
   }
   if (depth >= 2) return []
@@ -133,9 +164,14 @@ const main = async () => {
     process.stderr.write(`no built packages under ${distRoot}; build them first\n`)
     process.exit(2)
   }
-  const packages = findPackages(distRoot).sort((a, b) => a.name.localeCompare(b.name))
+  const built = findPackages(distRoot).sort((a, b) => a.name.localeCompare(b.name))
+  const skipped = built.filter((pkg) => runsBelow(pkg.floor))
+  const packages = built.filter((pkg) => !runsBelow(pkg.floor))
   const probes = collectProbes(packages)
   process.stdout.write(`node ${process.version}: probing ${probes.length} entries across ${packages.length} packages under ${distRoot}\n`)
+  for (const pkg of skipped) {
+    process.stdout.write(`skip  ${pkg.name} declares node >=${pkg.floor.join('.')}, above ${process.version}\n`)
+  }
   const results = await runAll(probes)
   const failures = results.filter((result) => !result.ok)
   for (const result of results.filter((item) => item.flags.length > 0)) {

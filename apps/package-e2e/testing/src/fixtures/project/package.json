@@ -1,0 +1,6 @@
+{
+  "name": "@hyperfrontend/e2e-testing-fixture-project",
+  "version": "0.0.0",
+  "private": true,
+  "description": "A project the installed runner is pointed at; each run selects the spec that proves one behaviour"
+}

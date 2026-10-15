@@ -7,6 +7,7 @@ import { pathToFileURL } from 'node:url'
 import { createError } from '@hyperfrontend/immutable-api-utils/built-in-copy/error'
 import { parse, stringify } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
 import { logger } from '../../lib/logger'
+import { resolveTestingEntry, testingAliases } from '../../lib/testing-runtime'
 
 /**
  * Slice of `package.json` we need when locating a built artifact's tarball.
@@ -125,9 +126,9 @@ const FORMAT_RUNS: Record<string, FormatRun> = {
  * Runs one format's suites on the node test runner.
  *
  * The specs are selected by convention from the format table and run with the workspace's
- * resolution hooks installed, but with the workspace path aliases replaced by a single
- * entry for the test runtime: the packed tarball's own name has to resolve from the test
- * project's `node_modules`, or the suite would silently exercise workspace source.
+ * resolution hooks installed, but with the workspace path aliases replaced by the test
+ * runtime's own: the packed tarball's own name has to resolve from the test project's
+ * `node_modules`, or the suite would silently exercise workspace source.
  *
  * @param testDir - The test project directory
  * @param format - The module format to test (e.g., 'cjs', 'esm', 'browser')
@@ -153,8 +154,8 @@ function runNodeTests(testDir: string, format: string, workspaceRoot: string): b
     '--disable-warning=MODULE_TYPELESS_PACKAGE_JSON',
     // why: Node reads a preload value as a module specifier, and a Windows absolute path parses as a URL whose scheme is the drive letter.
     '--import',
-    pathToFileURL(join(workspaceRoot, 'tools/testing/src/hooks/register.ts')).href,
-    ...(run.dom ? ['--import', pathToFileURL(join(workspaceRoot, 'tools/testing/src/environment/dom.ts')).href] : []),
+    pathToFileURL(resolveTestingEntry(workspaceRoot, 'hooks')).href,
+    ...(run.dom ? ['--import', pathToFileURL(resolveTestingEntry(workspaceRoot, 'dom')).href] : []),
     '--test',
     `--test-timeout=${run.timeoutMs}`,
     ...specs,
@@ -168,7 +169,7 @@ function runNodeTests(testDir: string, format: string, workspaceRoot: string): b
       env: {
         ...process.env,
         HF_TEST_WORKSPACE_ROOT: workspaceRoot,
-        HF_TEST_ALIASES: stringify({ '@hyperfrontend/testing': ['tools/testing/src/index.ts'] }),
+        HF_TEST_ALIASES: stringify(testingAliases(workspaceRoot)),
       },
     })
     logger.info(`${format} tests passed`)

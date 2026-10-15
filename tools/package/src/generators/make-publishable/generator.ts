@@ -1,4 +1,5 @@
 import type { Tree } from '@nx/devkit'
+import type { DocsCategory, EcosystemTierId } from './lib/library-facts'
 import type { CompatibilityProfile, MakePublishableGeneratorSchema } from './schema'
 import { join } from 'node:path'
 import { formatFiles, generateFiles, names, offsetFromRoot, readProjectConfiguration, updateJson, joinPathFragments } from '@nx/devkit'
@@ -7,6 +8,9 @@ import { keys } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { logger } from '../../lib/logger'
 import { derivePackageName } from '../../lib/naming-utils'
 import { readPackageJsonInfo } from '../../lib/package-json-utils'
+import { defaultEcosystemTier } from './lib/library-facts'
+import { DEFAULT_NODE_ENGINE, DEFAULT_NPM_ENGINE, compactVersion, nodeFloorOf } from './lib/node-floor'
+import { collectLibraryFacts, registerLibrary } from './registrations'
 
 /**
  * The level a package's support for one runtime is declared at. Profiles only
@@ -38,6 +42,16 @@ const COMPATIBILITY_PROFILES: Record<CompatibilityProfile, CompatibilityEnvironm
   isomorphic: { node: 'full', browser: 'full', webWorker: 'full' },
   'node-only': { node: 'full', browser: 'none', webWorker: 'none' },
   'browser-only': { node: 'none', browser: 'full', webWorker: 'full' },
+}
+
+/**
+ * The npm keyword each runtime profile adds to a package that chose no
+ * keywords of its own, naming where it runs the way npm searches do.
+ */
+const PROFILE_KEYWORDS: Record<CompatibilityProfile, string> = {
+  isomorphic: 'isomorphic',
+  'node-only': 'nodejs',
+  'browser-only': 'browser',
 }
 
 /**
@@ -95,6 +109,10 @@ interface NormalizedOptions {
   skipFormat: boolean
   /** Offset from project root to workspace root */
   offsetFromRoot: string
+  /** Section of the docs-site index, when chosen rather than derived */
+  docsCategory?: DocsCategory
+  /** Level of the docs-site ecosystem hierarchy, when chosen rather than derived */
+  ecosystemTier?: EcosystemTierId
 }
 
 /**
@@ -126,8 +144,10 @@ function normalizeOptions(tree: Tree, options: MakePublishableGeneratorSchema): 
 
   const globalName = options.globalName || `Hyperfrontend${names(libName).className}`
 
-  const defaultKeywords = [libName, 'hyperfrontend', 'typescript', 'isomorphic']
-  const keywords = options.keywords || defaultKeywords
+  // why: keywords a package already chose describe it better than a template can, so they are kept unless the run names its own
+  const defaultKeywords =
+    pkgInfo.keywords.length > 0 ? pkgInfo.keywords : [libName, 'hyperfrontend', 'typescript', PROFILE_KEYWORDS[options.compatibility]]
+  const keywords = options.keywords ?? defaultKeywords
 
   const bundleEntry = options.bundleEntry || '.'
 
@@ -151,6 +171,8 @@ function normalizeOptions(tree: Tree, options: MakePublishableGeneratorSchema): 
     skipCI: options.skipCI ?? false,
     skipFormat: options.skipFormat ?? false,
     offsetFromRoot: offsetFromRoot(projectRoot),
+    docsCategory: options.docsCategory,
+    ecosystemTier: options.ecosystemTier,
   }
 }
 
@@ -221,20 +243,30 @@ function updateProjectJson(tree: Tree, options: NormalizedOptions): void {
 /**
  * Update package.json with publishable fields.
  *
+ * A package that already declares the engines it runs on keeps them: the
+ * floor it states is a fact about its code, and the README badge is rendered
+ * from whatever floor this writes. Peer and optional dependencies are the
+ * package's own business and are not touched.
+ *
  * @param tree - Virtual file system tree
  * @param options - Normalized options
+ * @returns The lowest Node.js version the package now declares, `18.0.0`
  */
-function updatePackageJson(tree: Tree, options: NormalizedOptions): void {
+function updatePackageJson(tree: Tree, options: NormalizedOptions): string {
   const packageJsonPath = joinPathFragments(options.projectRoot, 'package.json')
+  let nodeEngine = DEFAULT_NODE_ENGINE
 
   updateJson(tree, packageJsonPath, (json) => {
     delete json.private
 
     json.license = json.license || 'MIT'
     json.sideEffects = false
+    const engines = (json.engines ?? {}) as Record<string, string>
+    nodeEngine = engines['node'] ?? DEFAULT_NODE_ENGINE
     json.engines = {
-      node: '>=18.0.0',
-      npm: '>=8.0.0',
+      ...engines,
+      node: nodeEngine,
+      npm: engines['npm'] ?? DEFAULT_NPM_ENGINE,
     }
 
     if (!json.exports) {
@@ -255,6 +287,8 @@ function updatePackageJson(tree: Tree, options: NormalizedOptions): void {
 
     return json
   })
+
+  return nodeFloorOf(nodeEngine)
 }
 
 /**
@@ -292,8 +326,9 @@ function createE2EProject(tree: Tree, options: NormalizedOptions): void {
  *
  * @param tree - Virtual file system tree
  * @param options - Normalized options
+ * @param nodeFloor - The lowest Node.js version the package declares, `18.0.0`
  */
-function generatePublishableReadme(tree: Tree, options: NormalizedOptions): void {
+function generatePublishableReadme(tree: Tree, options: NormalizedOptions, nodeFloor: string): void {
   const templateOptions = {
     ...options,
     compatibilityGlyphs: {
@@ -301,6 +336,8 @@ function generatePublishableReadme(tree: Tree, options: NormalizedOptions): void
       browser: SUPPORT_GLYPHS[options.compatibility.browser],
       webWorker: SUPPORT_GLYPHS[options.compatibility.webWorker],
     },
+    nodeFloorEncoded: encodeURIComponent(`>=${nodeFloor}`),
+    nodeFloorLabel: compactVersion(nodeFloor),
     template: '',
   }
 
@@ -342,34 +379,23 @@ jobs:
 }
 
 /**
- * Log instruction to add library to root README.md.
+ * Register the library everywhere the workspace lists its packages: the CI
+ * workflows, the root README's packages table and the docs site.
  *
+ * @param tree - Virtual file system tree
  * @param options - Normalized options
  */
-function updateRootReadme(options: NormalizedOptions): void {
-  logger.info(`Note: Please manually add ${options.packageName} to the root README.md packages table.`)
-}
-
-/**
- * Log instructions to update CI libraries workflow with path filter and matrix entry.
- *
- * @param options - Normalized options
- */
-function updateCILibrariesWorkflow(options: NormalizedOptions): void {
-  if (options.skipCI) return
-
-  logger.info(`Note: Please manually update .github/workflows/ci-libraries.yml to add:`)
-  logger.info(`  - Path filter for: ${options.libName}`)
-  logger.info(`  - Matrix entry for: ${options.projectName}`)
-}
-
-/**
- * Log instruction to add library to docs-site LIBRARIES array.
- *
- * @param options - Normalized options
- */
-function updateDocsSiteConfig(options: NormalizedOptions): void {
-  logger.info(`Note: Please add ${options.packageName} to apps/docs-site/scripts/generate-docs.ts LIBRARIES array.`)
+function registerAcrossWorkspace(tree: Tree, options: NormalizedOptions): void {
+  const facts = collectLibraryFacts(tree, {
+    projectName: options.projectName,
+    projectRoot: options.projectRoot,
+    packageName: options.packageName,
+    docsCategory: options.docsCategory,
+  })
+  registerLibrary(tree, facts, {
+    skipCI: options.skipCI,
+    ecosystemTier: options.ecosystemTier ?? defaultEcosystemTier(facts.docsCategory),
+  })
 }
 
 /**
@@ -395,11 +421,14 @@ function recordReadmeMedia(options: NormalizedOptions): void {
  * 1. Updates project.json with build, version, and publish targets, keeping any target it does not write
  * 2. Declares metadata.compatibility from the chosen runtime profile
  * 3. Changes scope:internal tag to scope:public
- * 4. Adds required package.json fields (exports, engines, sideEffects, keywords)
- * 5. Generates publishable README with required structure
+ * 4. Adds required package.json fields (exports, engines, sideEffects, keywords), keeping the engines and keywords the package already declares
+ * 5. Generates publishable README with required structure, its Node.js badge reading the declared floor
  * 6. Creates E2E project in apps/package-e2e/
  * 7. Creates CI workflow status file
- * 8. Provides instructions for additional manual steps
+ * 8. Adds the path filter, matrix entry and coverage upload to the shared CI workflows
+ * 9. Lists the package in the root README's packages table, in the order the docs-site index presents the packages
+ * 10. Registers the package with the docs site: generator, content model, navigation, ecosystem hierarchy and page routes
+ * 11. Names the one step left for a human: recording the readme media
  *
  * @param tree - The Nx virtual file system tree
  * @param options - Configuration options
@@ -415,25 +444,29 @@ function recordReadmeMedia(options: NormalizedOptions): void {
  * ```bash
  * nx generate @hyperfrontend/package:make-publishable lib-my-utils --compatibility=browser-only --globalName=MyUtils --bundleEntry=./browser
  * ```
+ *
+ * @example Placed on a chosen level of the docs-site hierarchy and section of its index
+ * ```bash
+ * nx generate @hyperfrontend/package:make-publishable lib-my-utils --compatibility=node-only --ecosystemTier=tooling --docsCategory=core
+ * ```
  */
 export async function makePublishableGenerator(tree: Tree, options: MakePublishableGeneratorSchema): Promise<void> {
   const normalizedOptions = normalizeOptions(tree, options)
 
   updateProjectJson(tree, normalizedOptions)
 
-  updatePackageJson(tree, normalizedOptions)
+  const nodeFloor = updatePackageJson(tree, normalizedOptions)
 
-  generatePublishableReadme(tree, normalizedOptions)
+  generatePublishableReadme(tree, normalizedOptions, nodeFloor)
 
   createE2EProject(tree, normalizedOptions)
 
   createCIWorkflow(tree, normalizedOptions)
 
+  registerAcrossWorkspace(tree, normalizedOptions)
+
   logger.info('')
   logger.info('=== Manual Steps Required ===')
-  updateRootReadme(normalizedOptions)
-  updateCILibrariesWorkflow(normalizedOptions)
-  updateDocsSiteConfig(normalizedOptions)
   recordReadmeMedia(normalizedOptions)
   logger.info('')
 

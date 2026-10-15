@@ -1,4 +1,5 @@
 import type { ChangelogItem, ChangelogRelease, ChangelogSection } from './changelog-parse'
+import type { LibraryInfo } from './content'
 import { existsSync, readFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { parseChangelog } from './changelog-parse'
@@ -73,6 +74,19 @@ export function changelogRouteFor(packageRoute: string): string {
 }
 
 /**
+ * Whether a documented package has a changelog on disk.
+ *
+ * The versioning flow writes the file with the package's first release, so
+ * its presence is what tells the site the package has been released at all.
+ *
+ * @param library - The documented package
+ * @returns True when the changelog sits beside the package's README
+ */
+function hasChangelog(library: LibraryInfo): boolean {
+  return existsSync(join(WORKSPACE_ROOT, dirname(library.readmePath), 'CHANGELOG.md'))
+}
+
+/**
  * The route of every package changelog page the site publishes.
  *
  * One per documented package whose changelog exists on disk, which is every
@@ -86,9 +100,26 @@ export function changelogRouteFor(packageRoute: string): string {
  * ```
  */
 export function getChangelogRoutes(): string[] {
-  return LIBRARIES.filter((library) => existsSync(join(WORKSPACE_ROOT, dirname(library.readmePath), 'CHANGELOG.md'))).map((library) =>
-    changelogRouteFor(`/docs/libraries/${library.slug}`)
-  )
+  return LIBRARIES.filter((library) => hasChangelog(library)).map((library) => changelogRouteFor(`/docs/libraries/${library.slug}`))
+}
+
+/**
+ * The route of every package changelog page still waiting for a first release.
+ *
+ * A package is documented before it is published and its releases page is
+ * routed with the rest of its pages, but the page answers not found until the
+ * versioning flow writes the changelog. The sitemap leaves these routes out
+ * on purpose, and the sitemap check reads them here so it can do the same.
+ *
+ * @returns Site-relative routes without a trailing slash
+ *
+ * @example
+ * ```typescript
+ * getPendingChangelogRoutes() // ['/docs/libraries/testing/releases']
+ * ```
+ */
+export function getPendingChangelogRoutes(): string[] {
+  return LIBRARIES.filter((library) => !hasChangelog(library)).map((library) => changelogRouteFor(`/docs/libraries/${library.slug}`))
 }
 
 /**

@@ -1,6 +1,6 @@
 ---
 name: library-ci-workflows
-version: 1.0.0
+version: 1.1.0
 description: Configure CI/CD workflows for publishable hyperfrontend libraries. Use when adding CI configuration for a new library, fixing lib-ci-workflows lint errors, or setting up path filters for library builds.
 allowed-tools:
   - Read
@@ -12,13 +12,13 @@ allowed-tools:
 
 # Library CI Workflows
 
-`make-publishable` creates status workflow. Three manual entries required.
+`make-publishable` writes all four pieces: the status workflow, the path filter, the matrix entry and the coverage entry. The entries below are what it writes, for fixing a library registered some other way, or a `lib-ci-workflows` report by hand.
 
 ESLint rule: `lib-ci-workflows`
 
 ---
 
-## Manual Steps
+## Entries the Rule Expects
 
 ### 1. Path Filter → `.github/workflows/ci-libraries.yml`
 

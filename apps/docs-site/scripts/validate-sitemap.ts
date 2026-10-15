@@ -5,6 +5,7 @@ import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { createURL } from '@hyperfrontend/immutable-api-utils/built-in-copy/url'
 import { logger } from '@hyperfrontend/logging'
 import sitemap from '../src/app/sitemap'
+import { getPendingChangelogRoutes } from '../src/lib/changelog'
 
 logger.setLogLevel('log')
 
@@ -53,11 +54,15 @@ async function validateSitemap(): Promise<void> {
     })
   )
 
+  // why: a documented package's releases page answers not found until the versioning flow writes its changelog with the first release, and the sitemap leaves the route out for the same reason
+  const pendingReleases = createSet(getPendingChangelogRoutes().map((route) => `${route}/`))
+
   const routes = await collectFilesystemRoutes()
-  const missing = routes.filter((route) => !sitemapPaths.has(route) && !SITEMAP_EXEMPT_ROUTES.has(route))
+  const missing = routes.filter((route) => !sitemapPaths.has(route) && !SITEMAP_EXEMPT_ROUTES.has(route) && !pendingReleases.has(route))
 
   logger.log(`📄 Filesystem routes: ${routes.length}`)
-  logger.log(`🔗 Sitemap URLs:      ${sitemapPaths.size}\n`)
+  logger.log(`🔗 Sitemap URLs:      ${sitemapPaths.size}`)
+  logger.log(`⏳ Awaiting a release: ${pendingReleases.size}\n`)
 
   if (missing.length > 0) {
     logger.error('❌ Routes missing from the sitemap:')

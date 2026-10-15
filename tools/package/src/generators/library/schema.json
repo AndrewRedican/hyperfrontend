@@ -29,13 +29,25 @@
     },
     "keywords": {
       "type": "array",
-      "items": { "type": "string" },
+      "items": {
+        "type": "string"
+      },
       "description": "npm keywords for the package, used only when publishable is true"
     },
     "compatibility": {
       "type": "string",
       "enum": ["isomorphic", "node-only", "browser-only"],
       "description": "Runtime profile written to metadata.compatibility in project.json, required when publishable is true: 'isomorphic' runs in Node, browsers and Web Workers, 'node-only' runs in Node alone, 'browser-only' runs in browsers and Web Workers"
+    },
+    "docsCategory": {
+      "type": "string",
+      "enum": ["core", "supporting", "utils"],
+      "description": "Section of the docs-site library index the package is listed under, used only when publishable is true. Defaults to 'utils' for a package under libs/utils, 'core' for type core, and 'supporting' otherwise."
+    },
+    "ecosystemTier": {
+      "type": "string",
+      "enum": ["sdk", "messaging", "tooling", "primitives", "standalone", "utilities"],
+      "description": "Level of the docs-site ecosystem hierarchy the package is appended to, used only when publishable is true. Defaults to 'utilities' for a package under libs/utils and 'standalone' otherwise."
     },
     "skipFormat": {
       "type": "boolean",

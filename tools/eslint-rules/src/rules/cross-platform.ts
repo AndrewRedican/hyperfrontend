@@ -53,7 +53,7 @@ const DEFAULT_HELPERS: PathHelperModule[] = [
   { module: '@hyperfrontend/project-scope/core', native: PROJECT_SCOPE_NATIVE, portable: PROJECT_SCOPE_PORTABLE },
   { module: 'libs/project-scope/src/core', native: PROJECT_SCOPE_NATIVE, portable: PROJECT_SCOPE_PORTABLE },
   { module: 'libs/builder/src/bundle/fs/posix-path', portable: ['join', 'normalizeToForwardSlashes'] },
-  { module: 'tools/testing/src/runner/portable-paths', portable: ['normalizePath', 'relativePath', 'workspaceRelativePath'] },
+  { module: 'libs/testing/src/runner/portable-paths', portable: ['normalizePath', 'relativePath', 'workspaceRelativePath'] },
 ]
 
 /**

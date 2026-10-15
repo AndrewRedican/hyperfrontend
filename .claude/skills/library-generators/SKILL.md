@@ -1,6 +1,6 @@
 ---
 name: library-generators
-version: 1.1.0
+version: 1.2.0
 description: Use @hyperfrontend/package generators to create, promote, rename, or move libraries. Use when scaffolding a new library, promoting internal to publishable, renaming a project, or relocating a library directory.
 allowed-tools:
   - Read
@@ -30,6 +30,9 @@ nx generate @hyperfrontend/package:library --name=my-utils --type=util --descrip
 # Promote to publishable
 nx generate @hyperfrontend/package:make-publishable --project=lib-my-utils --compatibility=isomorphic
 
+# Choose where the docs site lists it (both default: utils for libs/utils/*, core for type:core, else supporting; utilities for a utility, else standalone)
+nx generate @hyperfrontend/package:make-publishable --project=lib-my-utils --compatibility=node-only --docsCategory=core --ecosystemTier=tooling
+
 # Rename
 nx generate @hyperfrontend/package:rename --project=lib-my-utils --newName=my-helpers
 
@@ -45,20 +48,26 @@ The publishable path asks "Where does this package run?" and writes the answer t
 
 ---
 
-## make-publishable Manual Steps
+## What make-publishable Writes
 
-Generator creates E2E project + CI status workflow. **6 manual entries required:**
+Besides the project's own files, the E2E project and the status workflow, the generator registers the package everywhere the workspace lists its packages. Every registration is written only when missing, so re-running it changes nothing.
 
-| Step | File                                                    | Entry                        |
-| ---- | ------------------------------------------------------- | ---------------------------- |
-| 1    | `.github/workflows/ci-libraries.yml`                    | Path filter + matrix entry   |
-| 2    | `.github/workflows/ci-main.yml`                         | Coverage entry in LIBS array |
-| 3    | `README.md`                                             | Row in packages table        |
-| 4    | `apps/docs-site/scripts/generate-docs.ts`               | LIBRARIES array entry        |
-| 5    | `apps/docs-site/src/lib/content.ts`                     | LIBRARIES array entry        |
-| 6    | `apps/docs-site/src/app/docs/libraries/{slug}/page.tsx` | Page route file              |
+| Surface                                                    | What is written                                                                                                  |
+| ---------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `.github/workflows/ci-libraries.yml`                       | Path filter (last active filter) + matrix entry (last active entry)                                              |
+| `.github/workflows/ci-main.yml`                            | `"flag:path"` in the `LIBS` array, alphabetical within the libs group or the utils group                         |
+| `README.md`                                                | Row in the Packages table after the package the ecosystem hierarchy places before it; summary count              |
+| `apps/docs-site/scripts/generate-docs.ts`                  | `LIBRARIES` entry; `LIBRARY_SLUGS` entry for a core or supporting package                                        |
+| `apps/docs-site/src/lib/content.ts`                        | `LIBRARIES` entry with every export's entry point and the architecture document when `ARCHITECTURE.md` exists    |
+| `apps/docs-site/src/lib/navigation.ts`                     | Entry in the section's array at its alphabetical position, one child per secondary export (plus architecture)    |
+| `apps/docs-site/src/lib/ecosystem.ts`                      | Package appended to the `--ecosystemTier` level of `ECOSYSTEM_TIERS`                                             |
+| `apps/docs-site/src/app/docs/libraries/{slug}/**/page.tsx` | `page.tsx`, `releases/page.tsx`, `architecture/page.tsx` when the document exists, one page per secondary export |
 
-See `library-ci-workflows` skill for steps 1–2.
+`package.json` keeps the `engines`, `peerDependencies` and `peerDependenciesMeta` the project already declares; the README's Node badge and compatibility row read the declared floor.
+
+**Left to do by hand**: record the package banner and runtime strip (`npx nx media tool-media --scene=banner-{slug} --scene=runtimes-{slug}`), replace the README template's placeholder sections, and add `fallbackFeatures` to the docs page if the README cannot supply key features. Leave `package.json` at version `0.0.0` and never seed a `CHANGELOG.md`: the versioning flow computes the first version from the commits and writes the changelog with it, and until then the `releases` page answers not found and the sitemap check skips it.
+
+The transforms live in `tools/package/src/generators/make-publishable/lib/` as pure functions with specs beside them; the CI entries are the ones `lib-ci-workflows` checks, and the docs-site entries are the ones `docs-site-libraries`, `docs-site-routes`, `docs-site-secondary-entries` and `docs-site-library-docs` check.
 
 ---
 

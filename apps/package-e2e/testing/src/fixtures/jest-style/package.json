@@ -1,0 +1,6 @@
+{
+  "name": "@hyperfrontend/e2e-testing-fixture-jest-style",
+  "version": "0.0.0",
+  "private": true,
+  "description": "A consumer suite run under the installed preload: module mocks, fake timers, it.each and assertion counts"
+}

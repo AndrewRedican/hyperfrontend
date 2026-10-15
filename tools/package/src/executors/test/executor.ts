@@ -5,11 +5,13 @@ import { existsSync } from 'node:fs'
 import { join } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { logger } from '../../lib/logger'
+import { resolveTestingEntry } from '../../lib/testing-runtime'
 
 /**
- * Where the test runtime lives, relative to the workspace root.
+ * The process entry the executor spawns, beside this module. It loads the project's
+ * configuration and hands it to the runtime's runner.
  */
-const RUNTIME_ROOT = join('tools', 'testing', 'src')
+const RUNNER_CLI = join(__dirname, 'runner-cli.ts')
 
 /**
  * Test executor for workspace projects.
@@ -57,8 +59,8 @@ export default async function testExecutor(options: TestExecutorOptions, context
       '--disable-warning=MODULE_TYPELESS_PACKAGE_JSON',
       // why: Node reads a preload value as a module specifier, and a Windows absolute path parses as a URL whose scheme is the drive letter.
       '--import',
-      pathToFileURL(join(workspaceRoot, RUNTIME_ROOT, 'hooks', 'register.ts')).href,
-      join(workspaceRoot, RUNTIME_ROOT, 'runner', 'cli.ts'),
+      pathToFileURL(resolveTestingEntry(workspaceRoot, 'hooks')).href,
+      RUNNER_CLI,
       workspaceRoot,
       projectRoot,
       coverageDirectory,

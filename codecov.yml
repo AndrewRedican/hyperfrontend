@@ -65,6 +65,11 @@ flag_management:
         - libs/state-machine/src/**
       carryforward: true
 
+    - name: testing
+      paths:
+        - libs/testing/src/**
+      carryforward: true
+
     - name: web-worker
       paths:
         - libs/web-worker/src/**

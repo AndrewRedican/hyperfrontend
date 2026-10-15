@@ -16,6 +16,8 @@ module.exports = [
         'error',
         {
           ignoredDependencies: [
+            // why: the test runtime is imported only by the specs and test.config.ts, which the published package never ships.
+            '@hyperfrontend/testing',
             // why: the bundled TypeScript plugin resolves tslib from the consumer's node_modules at build time; it is never imported here, so the graph cannot see it.
             'tslib',
             // why: rollup platform bindings are optionalDependencies so the bundled rollup worker resolves its native binding on a cold install; they are never imported, so the graph cannot see them.

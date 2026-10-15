@@ -884,6 +884,49 @@
           "solid": true
         }
       ]
+    },
+    "@hyperfrontend/testing": {
+      "note": "The verdict: a spec sheet with its tick, the one mark every run ends on.",
+      "hue": 136,
+      "mark": [
+        {
+          "as": "rect",
+          "attrs": {
+            "x": 5.5,
+            "y": 4,
+            "width": 21,
+            "height": 24,
+            "rx": 3
+          }
+        },
+        {
+          "as": "path",
+          "attrs": {
+            "d": "M10 10.5h12"
+          }
+        },
+        {
+          "as": "path",
+          "attrs": {
+            "d": "M10 15h7"
+          }
+        },
+        {
+          "as": "path",
+          "attrs": {
+            "d": "M11.5 21.5l3.2 3.2 6.3-7"
+          }
+        },
+        {
+          "as": "circle",
+          "attrs": {
+            "cx": 22.5,
+            "cy": 23.5,
+            "r": 1.15
+          },
+          "solid": true
+        }
+      ]
     }
   }
 }

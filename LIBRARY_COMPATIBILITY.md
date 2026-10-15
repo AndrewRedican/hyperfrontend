@@ -22,6 +22,7 @@
 | `@hyperfrontend/random-generator-utils` | ✅ | ✅ | ✅ | ✅ |
 | `@hyperfrontend/state-machine` | ✅ | ✅ | ✅ | ✅ |
 | `@hyperfrontend/string-utils` | ✅ | ✅ | ✅ | ✅ |
+| `@hyperfrontend/testing` | ✅ | ❌ | ❌ | ❌ |
 | `@hyperfrontend/time-utils` | ✅ | ✅ | ✅ | ✅ |
 | `@hyperfrontend/ui-utils` | ⚠️ | ✅ | ✅ | ✅ |
 | `@hyperfrontend/versioning` | ✅ | ❌ | ❌ | ❌ |
@@ -35,6 +36,7 @@ Legend: ✅ full support, ⚠️ partial support, ❌ no support, ❓ nothing de
 - `@hyperfrontend/features`: Support is per entry point: `/host` and `/hostee` are browser runtimes, `/cli`, `/server`, and `/generators` are Node-only, and the root entry is DOM-free and runs anywhere. TypeScript `feature.config.*` and `*.contract.*` files need Node.js 23.6+ (22.6+ with `--experimental-strip-types`); JSON and JavaScript files load on every supported Node.js.
 - `@hyperfrontend/immutable-api-utils`: `built-in-copy/websocket` loads without a `WebSocket` global (Node.js before 22); only construction throws there.
 - `@hyperfrontend/project-scope`: `/cli` parses arguments with `util.parseArgs`, so it needs Node.js 18.3+; every other entry runs on 18.0.
+- `@hyperfrontend/testing`: Needs Node.js 22.18 or later: the preload installs synchronous module hooks and loads TypeScript specs through Node's own type stripping, neither of which older releases provide.
 - `@hyperfrontend/ui-utils`: Some utilities require browser APIs; check individual exports.
 
 ## Output Formats
@@ -57,6 +59,7 @@ Legend: ✅ full support, ⚠️ partial support, ❌ no support, ❓ nothing de
 | `@hyperfrontend/random-generator-utils` | ✅ | ✅ | ✅ | ✅ | `HyperfrontendRandomGenerator` |
 | `@hyperfrontend/state-machine` | ✅ | ✅ | ✅ | ✅ | `HyperfrontendStateMachine` |
 | `@hyperfrontend/string-utils` | ✅ | ✅ | ✅ | ✅ | `HyperfrontendStringUtils` |
+| `@hyperfrontend/testing` | ✅ | ✅ | ❌ | ❌ | - |
 | `@hyperfrontend/time-utils` | ✅ | ✅ | ✅ | ✅ | `HyperfrontendTimeUtils` |
 | `@hyperfrontend/ui-utils` | ✅ | ✅ | ✅ | ✅ | `HyperfrontendUIUtils` |
 | `@hyperfrontend/versioning` | ✅ | ✅ | ❌ | ❌ | - |
@@ -81,6 +84,7 @@ Legend: ✅ full support, ⚠️ partial support, ❌ no support, ❓ nothing de
 | `@hyperfrontend/random-generator-utils` | `>=18.0.0` | `>=8.0.0` |
 | `@hyperfrontend/state-machine` | `>=18.0.0` | `>=8.0.0` |
 | `@hyperfrontend/string-utils` | `>=18.0.0` | `>=8.0.0` |
+| `@hyperfrontend/testing` | `>=22.18.0` | `>=8.0.0` |
 | `@hyperfrontend/time-utils` | `>=18.0.0` | `>=8.0.0` |
 | `@hyperfrontend/ui-utils` | `>=18.0.0` | `>=8.0.0` |
 | `@hyperfrontend/versioning` | `>=18.0.0` | `>=8.0.0` |
@@ -105,6 +109,7 @@ Legend: ✅ full support, ⚠️ partial support, ❌ no support, ❓ nothing de
 | `@hyperfrontend/random-generator-utils` | `@hyperfrontend/data-utils`, `@hyperfrontend/immutable-api-utils` |
 | `@hyperfrontend/state-machine` | `@hyperfrontend/data-utils`, `@hyperfrontend/immutable-api-utils` |
 | `@hyperfrontend/string-utils` | `@hyperfrontend/immutable-api-utils` |
+| `@hyperfrontend/testing` | - |
 | `@hyperfrontend/time-utils` | `@hyperfrontend/immutable-api-utils` |
 | `@hyperfrontend/ui-utils` | `@hyperfrontend/data-utils`, `@hyperfrontend/function-utils`, `@hyperfrontend/immutable-api-utils`, `@hyperfrontend/list-utils`, `@hyperfrontend/logging`, `@hyperfrontend/random-generator-utils` |
 | `@hyperfrontend/versioning` | `@hyperfrontend/immutable-api-utils`, `@hyperfrontend/json-utils`, `@hyperfrontend/logging`, `@hyperfrontend/project-scope`, `@hyperfrontend/questions` |
@@ -135,6 +140,7 @@ flowchart TB
     random_generator_utils["random-generator-utils"]
     state_machine["state-machine"]
     string_utils["string-utils"]
+    testing["testing"]
     time_utils["time-utils"]
     ui_utils["ui-utils"]
     versioning["versioning"]
@@ -218,6 +224,7 @@ flowchart TB
 | `@hyperfrontend/random-generator-utils` | `0.2.1` |
 | `@hyperfrontend/state-machine` | `0.2.1` |
 | `@hyperfrontend/string-utils` | `1.0.1` |
+| `@hyperfrontend/testing` | `0.1.0` |
 | `@hyperfrontend/time-utils` | `1.0.1` |
 | `@hyperfrontend/ui-utils` | `0.0.9` |
 | `@hyperfrontend/versioning` | `0.9.2` |

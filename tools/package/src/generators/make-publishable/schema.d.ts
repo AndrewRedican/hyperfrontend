@@ -11,6 +11,18 @@
 export type CompatibilityProfile = 'isomorphic' | 'node-only' | 'browser-only'
 
 /**
+ * The section of the docs-site library index a package is listed under.
+ */
+export type DocsCategoryOption = 'core' | 'supporting' | 'utils'
+
+/**
+ * One level of the docs-site ecosystem hierarchy, top to bottom. The package
+ * is appended to the level it names, and the root README's packages table
+ * lists it where that places it.
+ */
+export type EcosystemTierOption = 'sdk' | 'messaging' | 'tooling' | 'primitives' | 'standalone' | 'utilities'
+
+/**
  * Schema options for the make-publishable generator.
  */
 export interface MakePublishableGeneratorSchema {
@@ -24,6 +36,10 @@ export interface MakePublishableGeneratorSchema {
   keywords?: string[]
   /** Runtime profile written to metadata.compatibility in project.json */
   compatibility?: CompatibilityProfile
+  /** Section of the docs-site index; derived from the project's location and type tag when absent */
+  docsCategory?: DocsCategoryOption
+  /** Level of the docs-site ecosystem hierarchy; utilities for a utility and standalone otherwise when absent */
+  ecosystemTier?: EcosystemTierOption
   /** Skip creating E2E project */
   skipE2E?: boolean
   /** Skip creating CI workflow files */

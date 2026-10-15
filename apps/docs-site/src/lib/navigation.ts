@@ -193,6 +193,19 @@ const coreLibraries: NavItem[] = [
     href: '/docs/libraries/nexus',
     children: [{ slug: 'architecture', href: '/docs/libraries/nexus/architecture' }],
   },
+  {
+    slug: 'testing',
+    packageName: '@hyperfrontend/testing',
+    href: '/docs/libraries/testing',
+    children: [
+      { slug: 'architecture', href: '/docs/libraries/testing/architecture' },
+      { slug: 'coverage', href: '/docs/libraries/testing/coverage' },
+      { slug: 'dom', href: '/docs/libraries/testing/dom' },
+      { slug: 'hooks', href: '/docs/libraries/testing/hooks' },
+      { slug: 'reporter', href: '/docs/libraries/testing/reporter' },
+      { slug: 'runner', href: '/docs/libraries/testing/runner' },
+    ],
+  },
 ]
 
 /**
