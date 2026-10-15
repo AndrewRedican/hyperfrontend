@@ -213,9 +213,7 @@ describe('mergeChangelogs', () => {
     })
 
     const result = mergeChangelogs(source, target)
-    expect(result.stats.sourceOnly).toBe(1)
-    expect(result.stats.targetOnly).toBe(1)
-    expect(result.stats.merged).toBe(1)
+    expect(result.stats).toEqual(expect.objectContaining({ sourceOnly: 1, targetOnly: 1, merged: 1 }))
   })
 
   it('merges items with latest strategy replacing by description', () => {
@@ -317,8 +315,7 @@ describe('mergeChangelogs', () => {
     })
 
     const result = mergeChangelogs(source, target)
-    expect(result.changelog.entries).toHaveLength(1)
-    expect(result.stats.sourceOnly).toBe(1)
+    expect(result).toMatchObject({ changelog: { entries: [{ version: '1.0.0' }] }, stats: { sourceOnly: 1 } })
   })
 
   it('handles entry only in target', () => {
@@ -334,8 +331,7 @@ describe('mergeChangelogs', () => {
     })
 
     const result = mergeChangelogs(source, target)
-    expect(result.changelog.entries).toHaveLength(1)
-    expect(result.stats.targetOnly).toBe(1)
+    expect(result).toMatchObject({ changelog: { entries: [{ version: '1.0.0' }] }, stats: { targetOnly: 1 } })
   })
 
   it('handles section only in source during merge', () => {
@@ -434,8 +430,7 @@ describe('mergeChangelogs', () => {
     })
 
     const result = mergeChangelogs(source, target)
-    expect(result.changelog.entries).toHaveLength(1)
-    expect(result.stats.conflictsResolved).toBe(0)
+    expect(result).toMatchObject({ changelog: { entries: [{ version: '1.0.0' }] }, stats: { conflictsResolved: 0 } })
   })
 })
 

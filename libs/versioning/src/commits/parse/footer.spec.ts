@@ -6,51 +6,41 @@ describe('parseFooters', () => {
     const lines = ['Refs: ABC-123']
     const result = parseFooters(lines, 0)
 
-    expect(result.footers).toHaveLength(1)
-    expect(result.footers[0]).toMatchObject({
-      key: 'Refs',
-      value: 'ABC-123',
-      separator: ':',
-    })
+    expect(result.footers).toEqual([{ key: 'Refs', value: 'ABC-123', separator: ':' }])
   })
 
   it('parses footer with space-hash separator', () => {
     const lines = ['Fixes #123']
     const result = parseFooters(lines, 0)
 
-    expect(result.footers).toHaveLength(1)
-    expect(result.footers[0]).toMatchObject({
-      key: 'Fixes',
-      value: '123',
-      separator: ' #',
-    })
+    expect(result.footers).toEqual([{ key: 'Fixes', value: '123', separator: ' #' }])
   })
 
   it('parses multiple footers', () => {
     const lines = ['Refs: ABC-123', 'Reviewed-by: John Doe']
     const result = parseFooters(lines, 0)
 
-    expect(result.footers).toHaveLength(2)
-    expect(result.footers[0]?.key).toBe('Refs')
-    expect(result.footers[1]?.key).toBe('Reviewed-by')
+    expect(result.footers).toEqual([expect.objectContaining({ key: 'Refs' }), expect.objectContaining({ key: 'Reviewed-by' })])
   })
 
   it('parses BREAKING CHANGE footer', () => {
     const lines = ['BREAKING CHANGE: The API has changed']
     const result = parseFooters(lines, 0)
 
-    expect(result.footers).toHaveLength(1)
-    expect(result.footers[0]?.key).toBe('BREAKING CHANGE')
-    expect(result.breakingDescription).toBe('The API has changed')
+    expect(result).toEqual({
+      footers: [expect.objectContaining({ key: 'BREAKING CHANGE' })],
+      breakingDescription: 'The API has changed',
+    })
   })
 
   it('parses BREAKING-CHANGE footer', () => {
     const lines = ['BREAKING-CHANGE: New API signature']
     const result = parseFooters(lines, 0)
 
-    expect(result.footers).toHaveLength(1)
-    expect(result.footers[0]?.key).toBe('BREAKING-CHANGE')
-    expect(result.breakingDescription).toBe('New API signature')
+    expect(result).toEqual({
+      footers: [expect.objectContaining({ key: 'BREAKING-CHANGE' })],
+      breakingDescription: 'New API signature',
+    })
   })
 
   it('handles multi-line breaking change', () => {
@@ -63,9 +53,10 @@ describe('parseFooters', () => {
     ]
     const result = parseFooters(lines, 0)
 
-    expect(result.breakingDescription).toContain('changed significantly')
-    expect(result.breakingDescription).toContain('migration guide')
-    expect(result.footers).toHaveLength(2)
+    expect(result).toEqual({
+      footers: [expect.objectContaining({ key: 'BREAKING CHANGE' }), expect.objectContaining({ key: 'Refs' })],
+      breakingDescription: 'The API has changed significantly.\nUsers need to update their code.\nSee migration guide.',
+    })
   })
 
   it('skips leading blank lines', () => {
@@ -79,8 +70,7 @@ describe('parseFooters', () => {
     const lines = ['Signed-off-by: John']
     const result = parseFooters(lines, 0)
 
-    expect(result.footers).toHaveLength(1)
-    expect(result.footers[0]?.key).toBe('Signed-off-by')
+    expect(result.footers).toEqual([expect.objectContaining({ key: 'Signed-off-by' })])
   })
 
   it('handles footer value with special characters', () => {
@@ -94,8 +84,7 @@ describe('parseFooters', () => {
     const lines = ['Note:']
     const result = parseFooters(lines, 0)
 
-    expect(result.footers).toHaveLength(1)
-    expect(result.footers[0]?.value).toBe('')
+    expect(result.footers).toEqual([expect.objectContaining({ value: '' })])
   })
 
   it('handles multiple consecutive footers', () => {
@@ -109,39 +98,40 @@ describe('parseFooters', () => {
     const lines = ['BREAKING-CHANGE: desc', 'Refs: 123']
     const result = parseFooters(lines, 0)
 
-    expect(result.breakingDescription).toBe('desc')
-    expect(result.footers).toHaveLength(2)
+    expect(result).toEqual({
+      footers: [expect.objectContaining({ key: 'BREAKING-CHANGE' }), expect.objectContaining({ key: 'Refs' })],
+      breakingDescription: 'desc',
+    })
   })
 
   it('starts from specified index', () => {
     const lines = ['Ignore this', 'Also ignore', 'Refs: ABC-123']
     const result = parseFooters(lines, 2)
 
-    expect(result.footers).toHaveLength(1)
-    expect(result.footers[0]?.key).toBe('Refs')
+    expect(result.footers).toEqual([expect.objectContaining({ key: 'Refs' })])
   })
 
   it('skips lines starting with special characters', () => {
     const lines = ['@not-a-footer: value', 'Refs: ABC-123']
     const result = parseFooters(lines, 0)
 
-    expect(result.footers).toHaveLength(1)
-    expect(result.footers[0]?.key).toBe('Refs')
+    expect(result.footers).toEqual([expect.objectContaining({ key: 'Refs' })])
   })
 
   it('skips lines with no valid separator', () => {
     const lines = ['InvalidLine', 'Refs: ABC-123']
     const result = parseFooters(lines, 0)
 
-    expect(result.footers).toHaveLength(1)
-    expect(result.footers[0]?.key).toBe('Refs')
+    expect(result.footers).toEqual([expect.objectContaining({ key: 'Refs' })])
   })
 
   it('handles multi-line breaking change with blank lines in between', () => {
     const lines = ['BREAKING CHANGE: First line', '', 'Third line', 'Refs: 123']
     const result = parseFooters(lines, 0)
 
-    expect(result.breakingDescription).toBe('First line\nThird line')
-    expect(result.footers).toHaveLength(2)
+    expect(result).toEqual({
+      footers: [expect.objectContaining({ key: 'BREAKING CHANGE' }), expect.objectContaining({ key: 'Refs' })],
+      breakingDescription: 'First line\nThird line',
+    })
   })
 })

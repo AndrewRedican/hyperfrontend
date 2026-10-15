@@ -7,7 +7,7 @@ import { normalizePath, normalizeToNative } from '@hyperfrontend/project-scope/c
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { executeFlow, dryRun, validateFlow } from './executor/execute'
 import { createVersionFlow, createDryRunFlow, getAvailablePresets, getPresetDescription } from './factory'
-import { addStep, removeStep, hasStep } from './models/flow'
+import { addStep, removeStep } from './models/flow'
 import { createStep, createSuccessResult } from './models/step'
 import { createConventionalFlow, createMinimalFlow, createChangelogOnlyFlow } from './presets/conventional'
 import {
@@ -181,13 +181,16 @@ describe('Flow System', () => {
     it('creates a conventional flow by default', () => {
       const flow = createVersionFlow()
       expect(flow.id).toBe('conventional')
+    })
+
+    it('populates the default flow with steps', () => {
+      const flow = createVersionFlow()
       expect(flow.steps.length).toBeGreaterThan(0)
     })
 
     it('creates an independent flow', () => {
       const flow = createVersionFlow('independent')
-      expect(flow.id).toBe('independent')
-      expect(flow.config.trackDeps).toBe(true)
+      expect(flow).toEqual(expect.objectContaining({ id: 'independent', config: expect.objectContaining({ trackDeps: true }) }))
     })
 
     it('creates a synced flow', () => {
@@ -200,17 +203,14 @@ describe('Flow System', () => {
         skipTag: true,
         dryRun: true,
       })
-      expect(flow.config.skipTag).toBe(true)
-      expect(flow.config.dryRun).toBe(true)
+      expect(flow.config).toEqual(expect.objectContaining({ skipTag: true, dryRun: true }))
     })
   })
 
   describe('getAvailablePresets', () => {
     it('returns all available presets', () => {
       const presets = getAvailablePresets()
-      expect(presets).toContain('conventional')
-      expect(presets).toContain('independent')
-      expect(presets).toContain('synced')
+      expect(presets).toEqual(expect.arrayContaining(['conventional', 'independent', 'synced']))
     })
   })
 
@@ -253,6 +253,27 @@ describe('Flow System', () => {
       })
 
       expect(result.status).toBe('success')
+    })
+
+    it('records step results for a dry run', async () => {
+      const flow = createConventionalFlow({ dryRun: true })
+      const tree = createMockTree({
+        '/workspace/libs/test/package.json': JSON.stringify({
+          name: '@test/pkg',
+          version: '1.0.0',
+        }),
+      })
+      const registry = createMockRegistry('1.0.0')
+      const git = createMockGitClient([{ type: 'feat', subject: 'new feature' }])
+
+      const result = await executeFlow(flow, 'lib-test', '/workspace', {
+        dryRun: true,
+        tree,
+        registry,
+        git,
+        projectRoot: 'libs/test',
+      })
+
       expect(result.steps.length).toBeGreaterThan(0)
     })
 
@@ -277,8 +298,7 @@ describe('Flow System', () => {
         projectRoot: 'libs/test',
       })
 
-      expect(result.state.bumpType).toBe('minor')
-      expect(result.state.nextVersion).toBe('1.1.0')
+      expect(result.state).toEqual(expect.objectContaining({ bumpType: 'minor', nextVersion: '1.1.0' }))
     })
 
     it('handles first release', async () => {
@@ -299,8 +319,7 @@ describe('Flow System', () => {
         projectRoot: 'libs/test',
       })
 
-      expect(result.state.isFirstRelease).toBe(true)
-      expect(result.state.nextVersion).toBe('0.1.0')
+      expect(result.state).toEqual(expect.objectContaining({ isFirstRelease: true, nextVersion: '0.1.0' }))
     })
 
     it('skips step when skipIf returns true', async () => {
@@ -361,10 +380,12 @@ describe('Flow System', () => {
         projectRoot: 'libs/test',
       })
 
-      expect(result.status).toBe('partial')
-
-      const afterResult = result.steps.find((s) => s.stepId === 'after-fail')
-      expect(afterResult?.status).toBe('success')
+      expect(result).toEqual(
+        expect.objectContaining({
+          status: 'partial',
+          steps: expect.arrayContaining([expect.objectContaining({ stepId: 'after-fail', status: 'success' })]),
+        })
+      )
     })
   })
 
@@ -374,16 +395,24 @@ describe('Flow System', () => {
       const customStep = createStep('custom', 'Custom Step', async () => createSuccessResult('OK'))
       const modified = addStep(flow, customStep)
 
-      expect(hasStep(modified, 'custom')).toBe(true)
-      expect(modified.steps.length).toBe(flow.steps.length + 1)
+      expect(modified.steps.map((s) => s.id)).toEqual([...flow.steps.map((s) => s.id), 'custom'])
     })
 
     it('removes a step from a flow', () => {
       const flow = createConventionalFlow()
       const modified = removeStep(flow, 'create-tag')
 
-      expect(hasStep(modified, 'create-tag')).toBe(false)
-      expect(modified.steps.length).toBe(flow.steps.length - 1)
+      expect(modified.steps.map((s) => s.id)).toEqual([
+        'fetch-registry',
+        'resolve-repository',
+        'analyze-commits',
+        'calculate-bump',
+        'check-idempotency',
+        'generate-changelog',
+        'update-packages',
+        'write-changelog',
+        'create-commit',
+      ])
     })
   })
 })
@@ -393,15 +422,19 @@ describe('Flow Presets', () => {
     it('has all required steps', () => {
       const flow = createConventionalFlow()
 
-      expect(hasStep(flow, 'fetch-registry')).toBe(true)
-      expect(hasStep(flow, 'analyze-commits')).toBe(true)
-      expect(hasStep(flow, 'calculate-bump')).toBe(true)
-      expect(hasStep(flow, 'check-idempotency')).toBe(true)
-      expect(hasStep(flow, 'generate-changelog')).toBe(true)
-      expect(hasStep(flow, 'update-packages')).toBe(true)
-      expect(hasStep(flow, 'write-changelog')).toBe(true)
-      expect(hasStep(flow, 'create-commit')).toBe(true)
-      expect(hasStep(flow, 'create-tag')).toBe(true)
+      expect(flow.steps.map((s) => s.id)).toEqual(
+        expect.arrayContaining([
+          'fetch-registry',
+          'analyze-commits',
+          'calculate-bump',
+          'check-idempotency',
+          'generate-changelog',
+          'update-packages',
+          'write-changelog',
+          'create-commit',
+          'create-tag',
+        ])
+      )
     })
   })
 
@@ -413,8 +446,7 @@ describe('Flow Presets', () => {
 
     it('includes cascade steps', () => {
       const flow = createIndependentFlow()
-      expect(hasStep(flow, 'check-dependent-bumps')).toBe(true)
-      expect(hasStep(flow, 'cascade-dependencies')).toBe(true)
+      expect(flow.steps.map((s) => s.id)).toEqual(expect.arrayContaining(['check-dependent-bumps', 'cascade-dependencies']))
     })
   })
 
@@ -431,32 +463,33 @@ describe('Flow Presets', () => {
   describe('createBatchReleaseFlow', () => {
     it('creates a flow with batch-release identifier', () => {
       const flow = createBatchReleaseFlow()
-      expect(flow.id).toBe('batch-release')
-      expect(flow.name).toBe('Batch Release Flow')
+      expect(flow).toEqual(expect.objectContaining({ id: 'batch-release', name: 'Batch Release Flow' }))
     })
 
     it('excludes git commit and tag steps', () => {
       const flow = createBatchReleaseFlow()
       const stepIds = flow.steps.map((s) => s.id)
-      expect(stepIds).not.toContain('git-commit')
-      expect(stepIds).not.toContain('create-tag')
+      expect(stepIds.filter((id) => id === 'git-commit' || id === 'create-tag')).toEqual([])
     })
 
     it('includes core release steps', () => {
       const flow = createBatchReleaseFlow()
       const stepIds = flow.steps.map((s) => s.id)
-      expect(stepIds).toContain('fetch-registry')
-      expect(stepIds).toContain('analyze-commits')
-      expect(stepIds).toContain('calculate-bump')
-      expect(stepIds).toContain('generate-changelog')
-      expect(stepIds).toContain('update-packages')
-      expect(stepIds).toContain('write-changelog')
+      expect(stepIds).toEqual(
+        expect.arrayContaining([
+          'fetch-registry',
+          'analyze-commits',
+          'calculate-bump',
+          'generate-changelog',
+          'update-packages',
+          'write-changelog',
+        ])
+      )
     })
 
     it('has skipGit and skipTag in config', () => {
       const flow = createBatchReleaseFlow()
-      expect(flow.config.skipGit).toBe(true)
-      expect(flow.config.skipTag).toBe(true)
+      expect(flow.config).toEqual(expect.objectContaining({ skipGit: true, skipTag: true }))
     })
 
     it('applies config overrides', () => {
@@ -466,23 +499,28 @@ describe('Flow Presets', () => {
   })
 
   describe('createChangelogOnlyFlow', () => {
+    it('creates a flow with the changelog-only identity', () => {
+      const flow = createChangelogOnlyFlow()
+
+      expect(flow).toEqual(expect.objectContaining({ id: 'changelog-only', name: 'Changelog Only Flow' }))
+    })
+
     it('has changelog-related steps only', () => {
       const flow = createChangelogOnlyFlow()
 
-      expect(flow.id).toBe('changelog-only')
-      expect(flow.name).toBe('Changelog Only Flow')
-      expect(hasStep(flow, 'fetch-registry')).toBe(true)
-      expect(hasStep(flow, 'analyze-commits')).toBe(true)
-      expect(hasStep(flow, 'calculate-bump')).toBe(true)
-      expect(hasStep(flow, 'generate-changelog')).toBe(true)
-      expect(hasStep(flow, 'write-changelog')).toBe(true)
+      expect(flow.steps.map((s) => s.id)).toEqual([
+        'fetch-registry',
+        'analyze-commits',
+        'calculate-bump',
+        'generate-changelog',
+        'write-changelog',
+      ])
     })
 
     it('skips git and tag operations by default', () => {
       const flow = createChangelogOnlyFlow()
 
-      expect(flow.config.skipGit).toBe(true)
-      expect(flow.config.skipTag).toBe(true)
+      expect(flow.config).toEqual(expect.objectContaining({ skipGit: true, skipTag: true }))
     })
 
     it('applies custom config overrides', () => {
@@ -495,14 +533,12 @@ describe('Flow Presets', () => {
   describe('createSyncedFlow', () => {
     it('has synced configuration', () => {
       const flow = createSyncedFlow()
-      expect(flow.id).toBe('synced')
-      expect(flow.config.preset).toBe('synced')
+      expect(flow).toEqual(expect.objectContaining({ id: 'synced', config: expect.objectContaining({ preset: 'synced' }) }))
     })
 
     it('applies custom config overrides', () => {
       const flow = createSyncedFlow({ dryRun: true, skipTag: true })
-      expect(flow.config.dryRun).toBe(true)
-      expect(flow.config.skipTag).toBe(true)
+      expect(flow.config).toEqual(expect.objectContaining({ dryRun: true, skipTag: true }))
     })
   })
 })
@@ -522,15 +558,12 @@ describe('Factory Functions', () => {
 
     it('creates a dry run flow with specific preset', () => {
       const flow = createDryRunFlow('independent')
-      expect(flow.id).toBe('independent')
-      expect(flow.config.dryRun).toBe(true)
+      expect(flow).toEqual(expect.objectContaining({ id: 'independent', config: expect.objectContaining({ dryRun: true }) }))
     })
 
     it('applies custom config with dryRun', () => {
       const flow = createDryRunFlow('synced', { skipTag: true })
-      expect(flow.id).toBe('synced')
-      expect(flow.config.dryRun).toBe(true)
-      expect(flow.config.skipTag).toBe(true)
+      expect(flow).toEqual(expect.objectContaining({ id: 'synced', config: expect.objectContaining({ dryRun: true, skipTag: true }) }))
     })
   })
 
@@ -609,9 +642,12 @@ describe('Step Execution Edge Cases', () => {
       projectRoot: 'libs/test',
     })
 
-    expect(result.status).toBe('failed')
-    const afterResult = result.steps.find((s) => s.stepId === 'after')
-    expect(afterResult).toBeUndefined()
+    expect(result).toEqual(
+      expect.objectContaining({
+        status: 'failed',
+        steps: expect.not.arrayContaining([expect.objectContaining({ stepId: 'after' })]),
+      })
+    )
   })
 
   it('skips step when dependencies fail', async () => {
@@ -648,8 +684,7 @@ describe('Step Execution Edge Cases', () => {
     })
 
     const dependentResult = result.steps.find((s) => s.stepId === 'dependent')
-    expect(dependentResult?.status).toBe('skipped')
-    expect(dependentResult?.message).toBe('Dependencies not met')
+    expect(dependentResult).toEqual(expect.objectContaining({ status: 'skipped', message: 'Dependencies not met' }))
   })
 })
 
@@ -680,8 +715,7 @@ describe('Independent Flow Steps', () => {
 
       const result = await step.execute(ctx as never)
 
-      expect(result.status).toBe('skipped')
-      expect(result.message).toBe('Dependency tracking not enabled')
+      expect(result).toEqual({ status: 'skipped', message: 'Dependency tracking not enabled' })
     })
 
     it('skips when no bump needed', async () => {
@@ -709,8 +743,7 @@ describe('Independent Flow Steps', () => {
 
       const result = await step.execute(ctx as never)
 
-      expect(result.status).toBe('skipped')
-      expect(result.message).toBe('No bump to propagate')
+      expect(result).toEqual({ status: 'skipped', message: 'No bump to propagate' })
     })
 
     it('succeeds when dependency tracking enabled with bump', async () => {
@@ -770,8 +803,7 @@ describe('Synced Flow Steps', () => {
 
       const result = await step.execute(ctx as never)
 
-      expect(result.status).toBe('skipped')
-      expect(result.message).toBe('No version bump needed')
+      expect(result).toEqual({ status: 'skipped', message: 'No version bump needed' })
     })
 
     it('updates root package.json when bump needed', async () => {
@@ -804,9 +836,13 @@ describe('Synced Flow Steps', () => {
 
       const result = await step.execute(ctx as never)
 
-      expect(result.status).toBe('success')
-      expect(result.message).toContain('Synced')
-      expect(result.stateUpdates?.modifiedFiles).toContain(normalizeToNative('/workspace/package.json'))
+      expect(result).toEqual(
+        expect.objectContaining({
+          status: 'success',
+          message: expect.stringContaining('Synced'),
+          stateUpdates: expect.objectContaining({ modifiedFiles: expect.arrayContaining([normalizeToNative('/workspace/package.json')]) }),
+        })
+      )
     })
 
     it('handles missing root package.json gracefully', async () => {
@@ -843,6 +879,36 @@ describe('Synced Flow Steps', () => {
         '/workspace/package.json': '{ invalid json }',
       })
 
+      const ctx = {
+        workspaceRoot: '/workspace',
+        projectName: 'lib-test',
+        projectRoot: '/workspace/libs/test',
+        packageName: '@test/pkg',
+        tree,
+        registry: createMockRegistry(),
+        git: createMockGitClient(),
+        logger: {
+          debug: jest.fn(),
+          info: jest.fn(),
+          warn: jest.fn(),
+          error: jest.fn(),
+          setLogLevel: jest.fn(),
+        },
+        config: {},
+        state: { bumpType: 'minor', nextVersion: '1.1.0' },
+      }
+
+      const result = await step.execute(ctx as never)
+
+      expect(result.status).toBe('success')
+    })
+
+    it('warns when the root package.json holds invalid JSON', async () => {
+      const step = createSyncAllPackagesStep()
+      const tree = createMockTree({
+        '/workspace/package.json': '{ invalid json }',
+      })
+
       const warnFn = jest.fn()
       const ctx = {
         workspaceRoot: '/workspace',
@@ -863,9 +929,8 @@ describe('Synced Flow Steps', () => {
         state: { bumpType: 'minor', nextVersion: '1.1.0' },
       }
 
-      const result = await step.execute(ctx as never)
+      await step.execute(ctx as never)
 
-      expect(result.status).toBe('success')
       expect(warnFn).toHaveBeenCalled()
     })
   })
@@ -960,16 +1025,14 @@ describe('Synced Flow Steps', () => {
     it('creates a flow with fixed version', () => {
       const flow = createFixedVersionFlow('2.5.0')
 
-      expect(flow.id).toBe('fixed')
-      expect(flow.name).toBe('Fixed Version Flow')
-      expect(flow.description).toContain('fixed version 2.5.0')
+      expect(flow).toEqual(
+        expect.objectContaining({ id: 'fixed', name: 'Fixed Version Flow', description: expect.stringContaining('fixed version 2.5.0') })
+      )
     })
 
     it('has a calculate-bump step that returns the fixed version', async () => {
       const flow = createFixedVersionFlow('3.0.0')
       const calcBumpStep = flow.steps.find((s) => s.id === 'calculate-bump')
-
-      expect(calcBumpStep).toBeDefined()
 
       const ctx = {
         workspaceRoot: '/workspace',
@@ -990,19 +1053,21 @@ describe('Synced Flow Steps', () => {
         state: {},
       }
 
-      expect(calcBumpStep).toBeDefined()
       const result = await calcBumpStep?.execute(ctx as never)
 
-      expect(result?.status).toBe('success')
-      expect(result?.stateUpdates?.nextVersion).toBe('3.0.0')
-      expect(result?.message).toContain('fixed version')
+      expect(result).toEqual(
+        expect.objectContaining({
+          status: 'success',
+          message: expect.stringContaining('fixed version'),
+          stateUpdates: expect.objectContaining({ nextVersion: '3.0.0' }),
+        })
+      )
     })
 
     it('applies custom config overrides', () => {
       const flow = createFixedVersionFlow('1.0.0', { dryRun: true, skipTag: true })
 
-      expect(flow.config.dryRun).toBe(true)
-      expect(flow.config.skipTag).toBe(true)
+      expect(flow.config).toEqual(expect.objectContaining({ dryRun: true, skipTag: true }))
     })
   })
 })

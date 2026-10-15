@@ -10,10 +10,15 @@ describe('omitKeys', () => {
     expect(omitKeys({ a: 1, b: 2, c: 3 }, ['a', 'c'])).toEqual({ b: 2 })
   })
 
-  it('returns a copy even when no keys match', () => {
+  it('keeps every key when no keys match', () => {
     const source = { a: 1 }
     const result = omitKeys(source, [] as (keyof typeof source)[])
     expect(result).toEqual({ a: 1 })
+  })
+
+  it('returns a new object even when no keys match', () => {
+    const source = { a: 1 }
+    const result = omitKeys(source, [] as (keyof typeof source)[])
     expect(result).not.toBe(source)
   })
 })

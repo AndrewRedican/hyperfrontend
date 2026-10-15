@@ -112,8 +112,7 @@ describe('executeFlow - project discovery with explicit projectRoot', () => {
       git: createMockGitClient(),
     })
 
-    expect(result.status).toBe('failed')
-    expect(result.summary).toContain('not found')
+    expect(result).toMatchObject({ status: 'failed', summary: expect.stringContaining('not found') })
   })
 })
 
@@ -319,8 +318,7 @@ describe('executeFlow - discoverProjectRoot behavior', () => {
       git: createMockGitClient(),
     })
 
-    expect(result.status).toBe('failed')
-    expect(result.summary).toContain('not found')
+    expect(result).toMatchObject({ status: 'failed', summary: expect.stringContaining('not found') })
   })
 
   it('returns failed status when package.json does not exist at resolved path', async () => {
@@ -342,8 +340,7 @@ describe('executeFlow - discoverProjectRoot behavior', () => {
       projectRoot: 'libs/missing',
     })
 
-    expect(result.status).toBe('failed')
-    expect(result.summary).toContain('Invalid project root')
+    expect(result).toMatchObject({ status: 'failed', summary: expect.stringContaining('Invalid project root') })
   })
 })
 
@@ -402,21 +399,80 @@ describe('executeFlow - context properties', () => {
       projectRoot: 'libs/test',
     })
 
-    expect(capturedContext.workspaceRoot).toBe('/workspace')
-    expect(capturedContext.projectName).toBe('lib-test')
-    expect(capturedContext.projectRoot).toBeDefined()
-    expect(capturedContext.packageName).toBe('@test/pkg')
-    expect(capturedContext.tree).toBe(tree)
-    expect(capturedContext.registry).toBe(registry)
-    expect(capturedContext.git).toBe(git)
-    expect(capturedContext.logger).toBe(logger)
-    expect(capturedContext.config).toBeDefined()
-    expect(capturedContext.config?.dryRun).toBe(true)
-    expect(capturedContext.state).toEqual({})
+    expect(capturedContext).toEqual({
+      workspaceRoot: '/workspace',
+      projectName: 'lib-test',
+      projectRoot: normalizeToNative('/workspace/libs/test'),
+      packageName: '@test/pkg',
+      tree,
+      registry,
+      git,
+      logger,
+      config: expect.objectContaining({ dryRun: true }),
+      state: {},
+    })
   })
 })
 
 describe('executeFlow - Nx workspace project discovery', () => {
+  it('asks whether the workspace root is an Nx workspace', async () => {
+    projectScopeNx.isNxWorkspace.mockReturnValue(true)
+    projectScopeNx.discoverNxProjects.mockReturnValue(new Map([['lib-my-package', { root: 'libs/my-package', name: 'lib-my-package' }]]))
+
+    const logger = createMockLogger()
+    const flow = {
+      id: 'test',
+      name: 'Test Flow',
+      config: { dryRun: true },
+      steps: [createStep('step1', 'Step 1', async () => createSuccessResult('OK'))],
+    }
+
+    const tree = createMockTree({
+      '/workspace/libs/my-package/package.json': JSON.stringify({
+        name: '@test/my-package',
+        version: '1.0.0',
+      }),
+    })
+
+    await executeFlow(flow, 'lib-my-package', '/workspace', {
+      tree,
+      registry: createMockRegistry(),
+      git: createMockGitClient(),
+      logger,
+    })
+
+    expect(projectScopeNx.isNxWorkspace).toHaveBeenCalledWith('/workspace')
+  })
+
+  it('reads the Nx project graph from the workspace root', async () => {
+    projectScopeNx.isNxWorkspace.mockReturnValue(true)
+    projectScopeNx.discoverNxProjects.mockReturnValue(new Map([['lib-my-package', { root: 'libs/my-package', name: 'lib-my-package' }]]))
+
+    const logger = createMockLogger()
+    const flow = {
+      id: 'test',
+      name: 'Test Flow',
+      config: { dryRun: true },
+      steps: [createStep('step1', 'Step 1', async () => createSuccessResult('OK'))],
+    }
+
+    const tree = createMockTree({
+      '/workspace/libs/my-package/package.json': JSON.stringify({
+        name: '@test/my-package',
+        version: '1.0.0',
+      }),
+    })
+
+    await executeFlow(flow, 'lib-my-package', '/workspace', {
+      tree,
+      registry: createMockRegistry(),
+      git: createMockGitClient(),
+      logger,
+    })
+
+    expect(projectScopeNx.discoverNxProjects).toHaveBeenCalledWith('/workspace')
+  })
+
   it('discovers project via Nx when workspace is Nx-based and project exists', async () => {
     projectScopeNx.isNxWorkspace.mockReturnValue(true)
     projectScopeNx.discoverNxProjects.mockReturnValue(new Map([['lib-my-package', { root: 'libs/my-package', name: 'lib-my-package' }]]))
@@ -443,13 +499,111 @@ describe('executeFlow - Nx workspace project discovery', () => {
       logger,
     })
 
-    expect(projectScopeNx.isNxWorkspace).toHaveBeenCalledWith('/workspace')
-    expect(projectScopeNx.discoverNxProjects).toHaveBeenCalledWith('/workspace')
     expect(result.status).toBe('success')
+  })
+
+  it('logs that an Nx workspace was detected', async () => {
+    projectScopeNx.isNxWorkspace.mockReturnValue(true)
+    projectScopeNx.discoverNxProjects.mockReturnValue(new Map([['lib-my-package', { root: 'libs/my-package', name: 'lib-my-package' }]]))
+
+    const logger = createMockLogger()
+    const flow = {
+      id: 'test',
+      name: 'Test Flow',
+      config: { dryRun: true },
+      steps: [createStep('step1', 'Step 1', async () => createSuccessResult('OK'))],
+    }
+
+    const tree = createMockTree({
+      '/workspace/libs/my-package/package.json': JSON.stringify({
+        name: '@test/my-package',
+        version: '1.0.0',
+      }),
+    })
+
+    await executeFlow(flow, 'lib-my-package', '/workspace', {
+      tree,
+      registry: createMockRegistry(),
+      git: createMockGitClient(),
+      logger,
+    })
+
     expect(logger.debug).toHaveBeenCalledWith(expect.stringContaining('Nx workspace detected'))
   })
 
+  it('logs the Nx discovery failure before falling back', async () => {
+    projectScopeNx.isNxWorkspace.mockReturnValue(true)
+    projectScopeNx.discoverNxProjects.mockImplementation(() => {
+      throw new Error('Nx project graph read failed')
+    })
+    workspaceDiscovery.discoverProjectByName.mockReturnValue({
+      name: 'fallback-pkg',
+      path: '/workspace/libs/fallback',
+      version: '1.0.0',
+    })
+
+    const logger = createMockLogger()
+    const flow = {
+      id: 'test',
+      name: 'Test Flow',
+      config: { dryRun: true },
+      steps: [createStep('step1', 'Step 1', async () => createSuccessResult('OK'))],
+    }
+
+    const tree = createMockTree({
+      '/workspace/libs/fallback/package.json': JSON.stringify({
+        name: '@test/fallback-pkg',
+        version: '1.0.0',
+      }),
+    })
+
+    await executeFlow(flow, 'lib-fallback', '/workspace', {
+      tree,
+      registry: createMockRegistry(),
+      git: createMockGitClient(),
+      logger,
+    })
+
+    expect(logger.debug).toHaveBeenCalledWith(expect.stringContaining('Nx project discovery failed'))
+  })
+
   it('falls back to workspace discovery when Nx discovery throws an error', async () => {
+    projectScopeNx.isNxWorkspace.mockReturnValue(true)
+    projectScopeNx.discoverNxProjects.mockImplementation(() => {
+      throw new Error('Nx project graph read failed')
+    })
+    workspaceDiscovery.discoverProjectByName.mockReturnValue({
+      name: 'fallback-pkg',
+      path: '/workspace/libs/fallback',
+      version: '1.0.0',
+    })
+
+    const logger = createMockLogger()
+    const flow = {
+      id: 'test',
+      name: 'Test Flow',
+      config: { dryRun: true },
+      steps: [createStep('step1', 'Step 1', async () => createSuccessResult('OK'))],
+    }
+
+    const tree = createMockTree({
+      '/workspace/libs/fallback/package.json': JSON.stringify({
+        name: '@test/fallback-pkg',
+        version: '1.0.0',
+      }),
+    })
+
+    await executeFlow(flow, 'lib-fallback', '/workspace', {
+      tree,
+      registry: createMockRegistry(),
+      git: createMockGitClient(),
+      logger,
+    })
+
+    expect(workspaceDiscovery.discoverProjectByName).toHaveBeenCalled()
+  })
+
+  it('succeeds with the project found by workspace discovery when Nx discovery throws an error', async () => {
     projectScopeNx.isNxWorkspace.mockReturnValue(true)
     projectScopeNx.discoverNxProjects.mockImplementation(() => {
       throw new Error('Nx project graph read failed')
@@ -482,12 +636,81 @@ describe('executeFlow - Nx workspace project discovery', () => {
       logger,
     })
 
-    expect(logger.debug).toHaveBeenCalledWith(expect.stringContaining('Nx project discovery failed'))
-    expect(workspaceDiscovery.discoverProjectByName).toHaveBeenCalled()
     expect(result.status).toBe('success')
   })
 
+  it('logs that the project is missing from the Nx project graph', async () => {
+    projectScopeNx.isNxWorkspace.mockReturnValue(true)
+    projectScopeNx.discoverNxProjects.mockReturnValue(new Map())
+    workspaceDiscovery.discoverProjectByName.mockReturnValue({
+      name: 'discovered-pkg',
+      path: '/workspace/packages/discovered',
+      version: '2.0.0',
+    })
+
+    const logger = createMockLogger()
+    const flow = {
+      id: 'test',
+      name: 'Test Flow',
+      config: { dryRun: true },
+      steps: [createStep('step1', 'Step 1', async () => createSuccessResult('OK'))],
+    }
+
+    const tree = createMockTree({
+      '/workspace/packages/discovered/package.json': JSON.stringify({
+        name: '@test/discovered-pkg',
+        version: '2.0.0',
+      }),
+    })
+
+    await executeFlow(flow, 'lib-discovered', '/workspace', {
+      tree,
+      registry: createMockRegistry(),
+      git: createMockGitClient(),
+      logger,
+    })
+
+    expect(logger.debug).toHaveBeenCalledWith(expect.stringContaining('not found in Nx project graph'))
+  })
+
   it('falls back to workspace discovery when project not found in Nx graph', async () => {
+    projectScopeNx.isNxWorkspace.mockReturnValue(true)
+    projectScopeNx.discoverNxProjects.mockReturnValue(new Map())
+    workspaceDiscovery.discoverProjectByName.mockReturnValue({
+      name: 'discovered-pkg',
+      path: '/workspace/packages/discovered',
+      version: '2.0.0',
+    })
+
+    const logger = createMockLogger()
+    const flow = {
+      id: 'test',
+      name: 'Test Flow',
+      config: { dryRun: true },
+      steps: [createStep('step1', 'Step 1', async () => createSuccessResult('OK'))],
+    }
+
+    const tree = createMockTree({
+      '/workspace/packages/discovered/package.json': JSON.stringify({
+        name: '@test/discovered-pkg',
+        version: '2.0.0',
+      }),
+    })
+
+    await executeFlow(flow, 'lib-discovered', '/workspace', {
+      tree,
+      registry: createMockRegistry(),
+      git: createMockGitClient(),
+      logger,
+    })
+
+    expect(workspaceDiscovery.discoverProjectByName).toHaveBeenCalledWith(
+      'lib-discovered',
+      expect.objectContaining({ workspaceRoot: '/workspace', tree })
+    )
+  })
+
+  it('succeeds with the project found by workspace discovery when it is missing from the Nx graph', async () => {
     projectScopeNx.isNxWorkspace.mockReturnValue(true)
     projectScopeNx.discoverNxProjects.mockReturnValue(new Map())
     workspaceDiscovery.discoverProjectByName.mockReturnValue({
@@ -518,17 +741,81 @@ describe('executeFlow - Nx workspace project discovery', () => {
       logger,
     })
 
-    expect(logger.debug).toHaveBeenCalledWith(expect.stringContaining('not found in Nx project graph'))
-    expect(workspaceDiscovery.discoverProjectByName).toHaveBeenCalledWith(
-      'lib-discovered',
-      expect.objectContaining({ workspaceRoot: '/workspace', tree })
-    )
     expect(result.status).toBe('success')
   })
 })
 
 describe('executeFlow - workspace discovery fallback', () => {
+  it('skips Nx project discovery when not in Nx workspace', async () => {
+    projectScopeNx.isNxWorkspace.mockReturnValue(false)
+    workspaceDiscovery.discoverProjectByName.mockReturnValue({
+      name: 'my-lib',
+      path: '/workspace/packages/my-lib',
+      version: '1.0.0',
+    })
+
+    const logger = createMockLogger()
+    const flow = {
+      id: 'test',
+      name: 'Test Flow',
+      config: { dryRun: true },
+      steps: [createStep('step1', 'Step 1', async () => createSuccessResult('OK'))],
+    }
+
+    const tree = createMockTree({
+      '/workspace/packages/my-lib/package.json': JSON.stringify({
+        name: '@test/my-lib',
+        version: '1.0.0',
+      }),
+    })
+
+    await executeFlow(flow, 'my-lib', '/workspace', {
+      tree,
+      registry: createMockRegistry(),
+      git: createMockGitClient(),
+      logger,
+    })
+
+    expect(projectScopeNx.discoverNxProjects).not.toHaveBeenCalled()
+  })
+
   it('discovers project via discoverProjectByName when not in Nx workspace', async () => {
+    projectScopeNx.isNxWorkspace.mockReturnValue(false)
+    workspaceDiscovery.discoverProjectByName.mockReturnValue({
+      name: 'my-lib',
+      path: '/workspace/packages/my-lib',
+      version: '1.0.0',
+    })
+
+    const logger = createMockLogger()
+    const flow = {
+      id: 'test',
+      name: 'Test Flow',
+      config: { dryRun: true },
+      steps: [createStep('step1', 'Step 1', async () => createSuccessResult('OK'))],
+    }
+
+    const tree = createMockTree({
+      '/workspace/packages/my-lib/package.json': JSON.stringify({
+        name: '@test/my-lib',
+        version: '1.0.0',
+      }),
+    })
+
+    await executeFlow(flow, 'my-lib', '/workspace', {
+      tree,
+      registry: createMockRegistry(),
+      git: createMockGitClient(),
+      logger,
+    })
+
+    expect(workspaceDiscovery.discoverProjectByName).toHaveBeenCalledWith(
+      'my-lib',
+      expect.objectContaining({ workspaceRoot: '/workspace', tree })
+    )
+  })
+
+  it('succeeds with the project found by workspace discovery when not in Nx workspace', async () => {
     projectScopeNx.isNxWorkspace.mockReturnValue(false)
     workspaceDiscovery.discoverProjectByName.mockReturnValue({
       name: 'my-lib',
@@ -558,16 +845,69 @@ describe('executeFlow - workspace discovery fallback', () => {
       logger,
     })
 
-    expect(projectScopeNx.discoverNxProjects).not.toHaveBeenCalled()
-    expect(workspaceDiscovery.discoverProjectByName).toHaveBeenCalledWith(
-      'my-lib',
-      expect.objectContaining({ workspaceRoot: '/workspace', tree })
-    )
     expect(result.status).toBe('success')
+  })
+
+  it('logs the workspace discovery attempt when not in Nx workspace', async () => {
+    projectScopeNx.isNxWorkspace.mockReturnValue(false)
+    workspaceDiscovery.discoverProjectByName.mockReturnValue({
+      name: 'my-lib',
+      path: '/workspace/packages/my-lib',
+      version: '1.0.0',
+    })
+
+    const logger = createMockLogger()
+    const flow = {
+      id: 'test',
+      name: 'Test Flow',
+      config: { dryRun: true },
+      steps: [createStep('step1', 'Step 1', async () => createSuccessResult('OK'))],
+    }
+
+    const tree = createMockTree({
+      '/workspace/packages/my-lib/package.json': JSON.stringify({
+        name: '@test/my-lib',
+        version: '1.0.0',
+      }),
+    })
+
+    await executeFlow(flow, 'my-lib', '/workspace', {
+      tree,
+      registry: createMockRegistry(),
+      git: createMockGitClient(),
+      logger,
+    })
+
     expect(logger.debug).toHaveBeenCalledWith(expect.stringContaining('workspace discovery'))
   })
 
-  it('logs error and returns failed when workspace discovery throws', async () => {
+  it('logs the workspace discovery failure', async () => {
+    projectScopeNx.isNxWorkspace.mockReturnValue(false)
+    workspaceDiscovery.discoverProjectByName.mockImplementation(() => {
+      throw new Error('Workspace traversal failed')
+    })
+
+    const logger = createMockLogger()
+    const flow = {
+      id: 'test',
+      name: 'Test Flow',
+      config: { dryRun: true },
+      steps: [createStep('step1', 'Step 1', async () => createSuccessResult('OK'))],
+    }
+
+    const tree = createMockTree({})
+
+    await executeFlow(flow, 'broken-project', '/workspace', {
+      tree,
+      registry: createMockRegistry(),
+      git: createMockGitClient(),
+      logger,
+    })
+
+    expect(logger.debug).toHaveBeenCalledWith(expect.stringContaining('Workspace discovery failed'))
+  })
+
+  it('returns failed with a not-found summary when workspace discovery throws', async () => {
     projectScopeNx.isNxWorkspace.mockReturnValue(false)
     workspaceDiscovery.discoverProjectByName.mockImplementation(() => {
       throw new Error('Workspace traversal failed')
@@ -590,8 +930,6 @@ describe('executeFlow - workspace discovery fallback', () => {
       logger,
     })
 
-    expect(logger.debug).toHaveBeenCalledWith(expect.stringContaining('Workspace discovery failed'))
-    expect(result.status).toBe('failed')
-    expect(result.summary).toContain('not found')
+    expect(result).toMatchObject({ status: 'failed', summary: expect.stringContaining('not found') })
   })
 })

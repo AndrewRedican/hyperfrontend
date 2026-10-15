@@ -6,7 +6,7 @@ import { StepStatus } from '../models/step'
 import { bodyStep } from './body'
 
 describe('bodyStep', () => {
-  it('leaves body undefined when user submits empty input', async () => {
+  it('completes the step when user submits empty input', async () => {
     const term = createMockTerminal()
     const ctx = createSessionContext(createTestConfig({ input: term.input, output: term.output }))
 
@@ -15,6 +15,17 @@ describe('bodyStep', () => {
     const result = await pending
 
     expect(result).toEqual({ status: StepStatus.Done })
+    term.destroy()
+  })
+
+  it('leaves body undefined when user submits empty input', async () => {
+    const term = createMockTerminal()
+    const ctx = createSessionContext(createTestConfig({ input: term.input, output: term.output }))
+
+    const pending = bodyStep.run(ctx)
+    term.input.enqueueKeys([TestKey.Enter])
+    await pending
+
     expect(ctx.draft.body).toBeUndefined()
     term.destroy()
   })

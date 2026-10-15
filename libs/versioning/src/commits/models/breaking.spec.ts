@@ -3,35 +3,23 @@ import { createBreakingFromSubject, createBreakingFromFooter, createNonBreaking,
 
 describe('createBreakingFromSubject', () => {
   it('creates breaking from subject', () => {
-    const breaking = createBreakingFromSubject('API changed')
-    expect(breaking.isBreaking).toBe(true)
-    expect(breaking.source).toBe('subject')
-    expect(breaking.description).toBe('API changed')
+    expect(createBreakingFromSubject('API changed')).toEqual({ isBreaking: true, source: 'subject', description: 'API changed' })
   })
 
   it('creates breaking from subject without description', () => {
-    const breaking = createBreakingFromSubject()
-    expect(breaking.isBreaking).toBe(true)
-    expect(breaking.source).toBe('subject')
-    expect(breaking.description).toBeUndefined()
+    expect(createBreakingFromSubject()).toEqual({ isBreaking: true, source: 'subject', description: undefined })
   })
 })
 
 describe('createBreakingFromFooter', () => {
   it('creates breaking from footer', () => {
-    const breaking = createBreakingFromFooter('API changed')
-    expect(breaking.isBreaking).toBe(true)
-    expect(breaking.source).toBe('footer')
-    expect(breaking.description).toBe('API changed')
+    expect(createBreakingFromFooter('API changed')).toEqual({ isBreaking: true, source: 'footer', description: 'API changed' })
   })
 })
 
 describe('createNonBreaking', () => {
   it('creates non-breaking', () => {
-    const nonBreaking = createNonBreaking()
-    expect(nonBreaking.isBreaking).toBe(false)
-    expect(nonBreaking.source).toBe('none')
-    expect(nonBreaking.description).toBeUndefined()
+    expect(createNonBreaking()).toEqual({ isBreaking: false, source: 'none', description: undefined })
   })
 })
 
@@ -45,13 +33,10 @@ describe('isBreakingFooterKey', () => {
   })
 
   it('handles lowercase', () => {
-    expect(isBreakingFooterKey('breaking change')).toBe(true)
-    expect(isBreakingFooterKey('breaking-change')).toBe(true)
+    expect(['breaking change', 'breaking-change'].map((key) => isBreakingFooterKey(key))).toEqual([true, true])
   })
 
   it('returns false for non-breaking keys', () => {
-    expect(isBreakingFooterKey('Other')).toBe(false)
-    expect(isBreakingFooterKey('Refs')).toBe(false)
-    expect(isBreakingFooterKey('Fixes')).toBe(false)
+    expect(['Other', 'Refs', 'Fixes'].map((key) => isBreakingFooterKey(key))).toEqual([false, false, false])
   })
 })

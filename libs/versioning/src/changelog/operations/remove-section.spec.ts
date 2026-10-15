@@ -18,8 +18,7 @@ describe('removeSection', () => {
     })
 
     const result = removeSection(changelog, '1.0.0', 'features')
-    expect(result.entries[0].sections).toHaveLength(1)
-    expect(result.entries[0].sections[0].type).toBe('fixes')
+    expect(result.entries[0].sections.map((section) => section.type)).toEqual(['fixes'])
   })
 
   it('throws error when version not found by default', () => {
@@ -94,8 +93,7 @@ describe('removeItem', () => {
     })
 
     const result = removeItem(changelog, '1.0.0', 'features', 'Feature A')
-    expect(result.entries[0].sections[0].items).toHaveLength(1)
-    expect(result.entries[0].sections[0].items[0].description).toBe('Feature B')
+    expect(result.entries[0].sections[0].items.map((item) => item.description)).toEqual(['Feature B'])
   })
 
   it('throws error when version not found by default', () => {
@@ -204,8 +202,7 @@ describe('removeEmptySections', () => {
     })
 
     const result = removeEmptySections(changelog)
-    expect(result.entries[0].sections).toHaveLength(1)
-    expect(result.entries[0].sections[0].type).toBe('features')
+    expect(result.entries[0].sections.map((section) => section.type)).toEqual(['features'])
   })
 
   it('removes empty sections from all entries', () => {
@@ -226,8 +223,7 @@ describe('removeEmptySections', () => {
     })
 
     const result = removeEmptySections(changelog)
-    expect(result.entries[0].sections).toHaveLength(0)
-    expect(result.entries[1].sections).toHaveLength(1)
+    expect(result.entries.map((entry) => entry.sections.map((section) => section.type))).toEqual([[], ['fixes']])
   })
 
   it('keeps all sections when none are empty', () => {
@@ -263,8 +259,7 @@ describe('removeEmptyEntries', () => {
     })
 
     const result = removeEmptyEntries(changelog)
-    expect(result.entries).toHaveLength(1)
-    expect(result.entries[0].version).toBe('2.0.0')
+    expect(result.entries.map((entry) => entry.version)).toEqual(['2.0.0'])
   })
 
   it('removes entries with only empty sections', () => {
@@ -282,8 +277,7 @@ describe('removeEmptyEntries', () => {
     })
 
     const result = removeEmptyEntries(changelog)
-    expect(result.entries).toHaveLength(1)
-    expect(result.entries[0].version).toBe('2.0.0')
+    expect(result.entries.map((entry) => entry.version)).toEqual(['2.0.0'])
   })
 
   it('keeps all entries when none are empty', () => {
@@ -323,8 +317,7 @@ describe('removeEmptyEntries', () => {
     })
 
     const result = removeEmptyEntries(changelog)
-    expect(result.entries).toHaveLength(1)
-    expect(result.entries[0].unreleased).toBe(true)
+    expect(result.entries).toEqual([expect.objectContaining({ version: 'Unreleased', unreleased: true })])
   })
 
   it('removes empty unreleased entry when keepUnreleased is false', () => {
@@ -338,8 +331,7 @@ describe('removeEmptyEntries', () => {
     })
 
     const result = removeEmptyEntries(changelog, false)
-    expect(result.entries).toHaveLength(1)
-    expect(result.entries[0].version).toBe('1.0.0')
+    expect(result.entries.map((entry) => entry.version)).toEqual(['1.0.0'])
   })
 
   it('keeps entry with rawContent even if no sections', () => {
@@ -353,7 +345,6 @@ describe('removeEmptyEntries', () => {
     })
 
     const result = removeEmptyEntries(changelog)
-    expect(result.entries).toHaveLength(1)
-    expect(result.entries[0].version).toBe('2.0.0')
+    expect(result.entries.map((entry) => entry.version)).toEqual(['2.0.0'])
   })
 })

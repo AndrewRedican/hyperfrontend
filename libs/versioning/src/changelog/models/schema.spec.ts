@@ -5,11 +5,7 @@ import { validateChangelog, checkSchemaCompatibility, changelogSchema } from './
 
 describe('changelogSchema', () => {
   it('exports a valid JSON schema object', () => {
-    expect(changelogSchema).toBeDefined()
-    expect(changelogSchema.type).toBe('object')
-    expect(changelogSchema.required).toContain('header')
-    expect(changelogSchema.required).toContain('entries')
-    expect(changelogSchema.required).toContain('metadata')
+    expect(changelogSchema).toMatchObject({ type: 'object', required: expect.arrayContaining(['header', 'entries', 'metadata']) })
   })
 })
 
@@ -49,9 +45,7 @@ describe('validateChangelog', () => {
   }
 
   it('validates a valid changelog', () => {
-    const result = validateChangelog(validChangelog)
-    expect(result.valid).toBe(true)
-    expect(result.errors).toHaveLength(0)
+    expect(validateChangelog(validChangelog)).toEqual({ valid: true, errors: [] })
   })
 
   it('rejects missing header', () => {
@@ -117,9 +111,7 @@ describe('checkSchemaCompatibility', () => {
   }
 
   it('returns compatible for identical changelogs', () => {
-    const result = checkSchemaCompatibility(baseChangelog, baseChangelog)
-    expect(result.compatible).toBe(true)
-    expect(result.differences).toHaveLength(0)
+    expect(checkSchemaCompatibility(baseChangelog, baseChangelog)).toEqual({ compatible: true, differences: [] })
   })
 
   it('detects format mismatch', () => {
@@ -127,9 +119,10 @@ describe('checkSchemaCompatibility', () => {
       ...baseChangelog,
       metadata: { ...baseChangelog.metadata, format: 'conventional' },
     }
-    const result = checkSchemaCompatibility(baseChangelog, other)
-    expect(result.compatible).toBe(false)
-    expect(result.differences.some((d) => d.path === 'metadata.format')).toBe(true)
+    expect(checkSchemaCompatibility(baseChangelog, other)).toMatchObject({
+      compatible: false,
+      differences: expect.arrayContaining([expect.objectContaining({ path: 'metadata.format' })]),
+    })
   })
 
   it('detects missing section types', () => {
@@ -142,9 +135,10 @@ describe('checkSchemaCompatibility', () => {
         },
       ],
     }
-    const result = checkSchemaCompatibility(baseChangelog, other)
-    expect(result.compatible).toBe(false)
-    expect(result.differences.some((d) => d.type === 'missing-property')).toBe(true)
+    expect(checkSchemaCompatibility(baseChangelog, other)).toMatchObject({
+      compatible: false,
+      differences: expect.arrayContaining([expect.objectContaining({ type: 'missing-property' })]),
+    })
   })
 
   it('detects extra section types', () => {
@@ -164,9 +158,10 @@ describe('checkSchemaCompatibility', () => {
         },
       ],
     }
-    const result = checkSchemaCompatibility(baseChangelog, other)
-    expect(result.compatible).toBe(false)
-    expect(result.differences.some((d) => d.type === 'extra-property')).toBe(true)
+    expect(checkSchemaCompatibility(baseChangelog, other)).toMatchObject({
+      compatible: false,
+      differences: expect.arrayContaining([expect.objectContaining({ type: 'extra-property' })]),
+    })
   })
 
   it('handles changelogs with no entries', () => {
@@ -183,8 +178,6 @@ describe('checkSchemaCompatibility', () => {
       ...baseChangelog,
       header: { ...baseChangelog.header, title: '# Different Title' },
     }
-    const result = checkSchemaCompatibility(baseChangelog, other)
-    expect(result.compatible).toBe(true)
-    expect(result.differences).toHaveLength(0)
+    expect(checkSchemaCompatibility(baseChangelog, other)).toEqual({ compatible: true, differences: [] })
   })
 })

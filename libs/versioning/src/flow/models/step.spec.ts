@@ -29,9 +29,7 @@ describe('Flow Step Model', () => {
       const execute = jest.fn().mockResolvedValue({ status: 'success' })
       const step = createStep('test-id', 'Test Step', execute)
 
-      expect(step.id).toBe('test-id')
-      expect(step.name).toBe('Test Step')
-      expect(step.execute).toBe(execute)
+      expect(step).toEqual(expect.objectContaining({ id: 'test-id', name: 'Test Step', execute }))
     })
 
     it('creates a step with optional description', () => {
@@ -43,15 +41,30 @@ describe('Flow Step Model', () => {
       expect(step.description).toBe('A test step that does things')
     })
 
-    it('creates a step with skipIf condition', () => {
+    it('stores the skipIf condition on the step', () => {
       const execute = jest.fn().mockResolvedValue({ status: 'success' })
       const skipIf = jest.fn().mockReturnValue(true)
       const step = createStep('test-id', 'Test Step', execute, { skipIf })
 
       expect(step.skipIf).toBe(skipIf)
+    })
 
+    it('returns the condition verdict from skipIf', () => {
+      const execute = jest.fn().mockResolvedValue({ status: 'success' })
+      const skipIf = jest.fn().mockReturnValue(true)
+      const step = createStep('test-id', 'Test Step', execute, { skipIf })
+
+      expect(step.skipIf?.(createMockContext())).toBe(true)
+    })
+
+    it('passes the context to the skipIf condition', () => {
+      const execute = jest.fn().mockResolvedValue({ status: 'success' })
+      const skipIf = jest.fn().mockReturnValue(true)
+      const step = createStep('test-id', 'Test Step', execute, { skipIf })
       const ctx = createMockContext()
-      expect(step.skipIf?.(ctx)).toBe(true)
+
+      step.skipIf?.(ctx)
+
       expect(skipIf).toHaveBeenCalledWith(ctx)
     })
 
@@ -83,28 +96,44 @@ describe('Flow Step Model', () => {
         dependsOn: ['dep-1', 'dep-2', 'dep-3'],
       })
 
-      expect(step.id).toBe('full-step')
-      expect(step.name).toBe('Full Step')
-      expect(step.execute).toBe(execute)
-      expect(step.description).toBe('A fully configured step')
-      expect(step.skipIf).toBe(skipIf)
-      expect(step.continueOnError).toBe(true)
-      expect(step.dependsOn).toEqual(['dep-1', 'dep-2', 'dep-3'])
+      expect(step).toEqual({
+        id: 'full-step',
+        name: 'Full Step',
+        execute,
+        description: 'A fully configured step',
+        skipIf,
+        continueOnError: true,
+        dependsOn: ['dep-1', 'dep-2', 'dep-3'],
+      })
     })
 
     it('creates a step with empty options object', () => {
       const execute = jest.fn().mockResolvedValue({ status: 'success' })
       const step = createStep('test-id', 'Test Step', execute, {})
 
-      expect(step.id).toBe('test-id')
-      expect(step.name).toBe('Test Step')
-      expect(step.description).toBeUndefined()
-      expect(step.skipIf).toBeUndefined()
-      expect(step.continueOnError).toBeUndefined()
-      expect(step.dependsOn).toBeUndefined()
+      expect(step).toStrictEqual({
+        id: 'test-id',
+        name: 'Test Step',
+        execute,
+        description: undefined,
+        skipIf: undefined,
+        continueOnError: undefined,
+        dependsOn: undefined,
+        requiresDiskFlush: undefined,
+      })
     })
 
-    it('executes the step function correctly', async () => {
+    it('passes the context to the step executor', async () => {
+      const execute = jest.fn().mockResolvedValue({ status: 'success' })
+      const step = createStep('test-id', 'Test Step', execute)
+      const ctx = createMockContext()
+
+      await step.execute(ctx)
+
+      expect(execute).toHaveBeenCalledWith(ctx)
+    })
+
+    it('resolves with the executor result', async () => {
       const expectedResult: FlowStepResult = {
         status: 'success',
         message: 'Done!',
@@ -113,26 +142,26 @@ describe('Flow Step Model', () => {
       const execute = jest.fn().mockResolvedValue(expectedResult)
       const step = createStep('test-id', 'Test Step', execute)
 
-      const ctx = createMockContext()
-      const result = await step.execute(ctx)
+      const result = await step.execute(createMockContext())
 
-      expect(execute).toHaveBeenCalledWith(ctx)
       expect(result).toEqual(expectedResult)
     })
   })
 
   describe('createNoopStep', () => {
-    it('creates a step with default message', async () => {
+    it('creates a step with the given identity', () => {
       const step = createNoopStep('noop-id', 'Noop Step')
 
-      expect(step.id).toBe('noop-id')
-      expect(step.name).toBe('Noop Step')
+      expect(step).toEqual(expect.objectContaining({ id: 'noop-id', name: 'Noop Step' }))
+    })
+
+    it('creates a step with default message', async () => {
+      const step = createNoopStep('noop-id', 'Noop Step')
 
       const ctx = createMockContext()
       const result = await step.execute(ctx)
 
-      expect(result.status).toBe('success')
-      expect(result.message).toBe('Step completed (no-op)')
+      expect(result).toEqual({ status: 'success', message: 'Step completed (no-op)' })
     })
 
     it('creates a step with custom message', async () => {
@@ -141,8 +170,7 @@ describe('Flow Step Model', () => {
       const ctx = createMockContext()
       const result = await step.execute(ctx)
 
-      expect(result.status).toBe('success')
-      expect(result.message).toBe('Custom completion message')
+      expect(result).toEqual({ status: 'success', message: 'Custom completion message' })
     })
 
     it('always returns success status', async () => {
@@ -152,8 +180,7 @@ describe('Flow Step Model', () => {
       const result1 = await step.execute(ctx)
       const result2 = await step.execute(ctx)
 
-      expect(result1.status).toBe('success')
-      expect(result2.status).toBe('success')
+      expect([result1.status, result2.status]).toEqual(['success', 'success'])
     })
   })
 
@@ -161,15 +188,13 @@ describe('Flow Step Model', () => {
     it('creates a skipped result with message', () => {
       const result = createSkippedResult('Skipped because of condition')
 
-      expect(result.status).toBe('skipped')
-      expect(result.message).toBe('Skipped because of condition')
+      expect(result).toEqual({ status: 'skipped', message: 'Skipped because of condition' })
     })
 
     it('creates a skipped result with empty message', () => {
       const result = createSkippedResult('')
 
-      expect(result.status).toBe('skipped')
-      expect(result.message).toBe('')
+      expect(result).toEqual({ status: 'skipped', message: '' })
     })
   })
 
@@ -177,9 +202,7 @@ describe('Flow Step Model', () => {
     it('creates a success result with message only', () => {
       const result = createSuccessResult('Operation completed successfully')
 
-      expect(result.status).toBe('success')
-      expect(result.message).toBe('Operation completed successfully')
-      expect(result.stateUpdates).toBeUndefined()
+      expect(result).toStrictEqual({ status: 'success', message: 'Operation completed successfully', stateUpdates: undefined })
     })
 
     it('creates a success result with state updates', () => {
@@ -188,19 +211,20 @@ describe('Flow Step Model', () => {
         bumpType: 'major',
       })
 
-      expect(result.status).toBe('success')
-      expect(result.message).toBe('Version calculated')
-      expect(result.stateUpdates).toEqual({
-        nextVersion: '2.0.0',
-        bumpType: 'major',
+      expect(result).toEqual({
+        status: 'success',
+        message: 'Version calculated',
+        stateUpdates: {
+          nextVersion: '2.0.0',
+          bumpType: 'major',
+        },
       })
     })
 
     it('creates a success result with empty state updates', () => {
       const result = createSuccessResult('Done', {})
 
-      expect(result.status).toBe('success')
-      expect(result.stateUpdates).toEqual({})
+      expect(result).toEqual({ status: 'success', message: 'Done', stateUpdates: {} })
     })
   })
 
@@ -209,35 +233,35 @@ describe('Flow Step Model', () => {
       const error = new Error('Something went wrong')
       const result = createFailedResult(error)
 
-      expect(result.status).toBe('failed')
+      expect(result).toEqual({ status: 'failed', error, message: 'Something went wrong' })
+    })
+
+    it('keeps the original error object on the result', () => {
+      const error = new Error('Something went wrong')
+      const result = createFailedResult(error)
+
       expect(result.error).toBe(error)
-      expect(result.message).toBe('Something went wrong')
     })
 
     it('creates a failed result with custom message', () => {
       const error = new Error('Original error message')
       const result = createFailedResult(error, 'Custom failure message')
 
-      expect(result.status).toBe('failed')
-      expect(result.error).toBe(error)
-      expect(result.message).toBe('Custom failure message')
+      expect(result).toEqual({ status: 'failed', error, message: 'Custom failure message' })
     })
 
     it('uses error message when custom message is undefined', () => {
       const error = new Error('Error from exception')
       const result = createFailedResult(error, undefined)
 
-      expect(result.status).toBe('failed')
-      expect(result.message).toBe('Error from exception')
+      expect(result).toEqual({ status: 'failed', error, message: 'Error from exception' })
     })
 
     it('handles errors with empty message', () => {
       const error = new Error('')
       const result = createFailedResult(error)
 
-      expect(result.status).toBe('failed')
-      expect(result.error).toBe(error)
-      expect(result.message).toBe('')
+      expect(result).toEqual({ status: 'failed', error, message: '' })
     })
   })
 })

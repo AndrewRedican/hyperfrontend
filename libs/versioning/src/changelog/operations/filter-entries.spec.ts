@@ -49,7 +49,6 @@ describe('filterEntries', () => {
     const changelog = createTestChangelog()
     const result = filterEntries(changelog, (entry) => entry.version === '1.0.0')
 
-    expect(result.entries).toHaveLength(1)
     expect(result.entries).toEqual([expect.objectContaining({ version: '1.0.0' })])
   })
 })
@@ -66,9 +65,7 @@ describe('filterByVersionRange', () => {
     })
 
     const result = filterByVersionRange(changelog, '>=1.0.0 <3.0.0')
-    expect(result.entries).toHaveLength(2)
-    expect(result.entries.map((e) => e.version)).toContain('1.0.0')
-    expect(result.entries.map((e) => e.version)).toContain('2.0.0')
+    expect(result.entries.map((e) => e.version).sort()).toEqual(['1.0.0', '2.0.0'])
   })
 
   it('throws error for invalid range', () => {
@@ -84,7 +81,6 @@ describe('filterByVersionRange', () => {
     })
 
     const result = filterByVersionRange(changelog, '>=1.0.0')
-    expect(result.entries).toHaveLength(1)
     expect(result.entries).toEqual([expect.objectContaining({ version: '1.0.0' })])
   })
 
@@ -96,7 +92,6 @@ describe('filterByVersionRange', () => {
     })
 
     const result = filterByVersionRange(changelog, '>=1.0.0')
-    expect(result.entries).toHaveLength(1)
     expect(result.entries).toEqual([expect.objectContaining({ version: '1.0.0' })])
   })
 })
@@ -113,9 +108,7 @@ describe('filterFromVersion', () => {
     })
 
     const result = filterFromVersion(changelog, '2.0.0')
-    expect(result.entries).toHaveLength(2)
-    expect(result.entries.map((e) => e.version)).toContain('2.0.0')
-    expect(result.entries.map((e) => e.version)).toContain('3.0.0')
+    expect(result.entries.map((e) => e.version).sort()).toEqual(['2.0.0', '3.0.0'])
   })
 
   it('throws error for invalid start version', () => {
@@ -131,8 +124,7 @@ describe('filterFromVersion', () => {
     })
 
     const result = filterFromVersion(changelog, '1.0.0')
-    expect(result.entries).toHaveLength(2)
-    expect(result.entries.some((e) => e.unreleased)).toBe(true)
+    expect(result.entries).toEqual([expect.objectContaining({ unreleased: true }), expect.objectContaining({ version: '1.0.0' })])
   })
 
   it('excludes entries with invalid versions', () => {
@@ -143,7 +135,6 @@ describe('filterFromVersion', () => {
     })
 
     const result = filterFromVersion(changelog, '1.0.0')
-    expect(result.entries).toHaveLength(1)
     expect(result.entries).toEqual([expect.objectContaining({ version: '2.0.0' })])
   })
 })
@@ -160,7 +151,6 @@ describe('filterRecentEntries', () => {
     })
 
     const result = filterRecentEntries(changelog, 2)
-    expect(result.entries).toHaveLength(2)
     expect(result.entries).toEqual([expect.objectContaining({ version: '3.0.0' }), expect.objectContaining({ version: '2.0.0' })])
   })
 
@@ -176,7 +166,6 @@ describe('filterRecentEntries', () => {
     })
 
     const result = filterRecentEntries(changelog, 2, true)
-    expect(result.entries).toHaveLength(2)
     expect(result.entries).toEqual([expect.objectContaining({ version: 'Unreleased' }), expect.objectContaining({ version: '2.0.0' })])
   })
 
@@ -192,7 +181,6 @@ describe('filterRecentEntries', () => {
     })
 
     const result = filterRecentEntries(changelog, 1)
-    expect(result.entries).toHaveLength(2)
     expect(result.entries).toEqual([expect.objectContaining({ version: 'Unreleased' }), expect.objectContaining({ version: '2.0.0' })])
   })
 
@@ -216,7 +204,6 @@ describe('filterBreakingChanges', () => {
     })
 
     const result = filterBreakingChanges(changelog)
-    expect(result.entries).toHaveLength(1)
     expect(result.entries).toEqual([expect.objectContaining({ version: '2.0.0' })])
   })
 
@@ -233,7 +220,6 @@ describe('filterBreakingChanges', () => {
     })
 
     const result = filterBreakingChanges(changelog)
-    expect(result.entries).toHaveLength(1)
     expect(result.entries).toEqual([expect.objectContaining({ version: '2.0.0' })])
   })
 })
@@ -253,7 +239,6 @@ describe('filterByScope', () => {
     })
 
     const result = filterByScope(changelog, ['api'])
-    expect(result.entries).toHaveLength(2)
     expect(result.entries).toEqual([
       expect.objectContaining({
         sections: [expect.objectContaining({ items: [expect.objectContaining({ scope: 'api' })] })],
@@ -278,9 +263,7 @@ describe('filterToVersion', () => {
     })
 
     const result = filterToVersion(changelog, '2.0.0')
-    expect(result.entries).toHaveLength(2)
-    expect(result.entries.map((e) => e.version)).toContain('1.0.0')
-    expect(result.entries.map((e) => e.version)).toContain('2.0.0')
+    expect(result.entries.map((e) => e.version).sort()).toEqual(['1.0.0', '2.0.0'])
   })
 
   it('throws error for invalid version', () => {
@@ -301,8 +284,7 @@ describe('filterToVersion', () => {
     })
 
     const result = filterToVersion(changelog, '2.0.0')
-    expect(result.entries).toHaveLength(2)
-    expect(result.entries.every((e) => !e.unreleased)).toBe(true)
+    expect(result.entries.map((e) => e.unreleased)).toEqual([false, false])
   })
 
   it('excludes entries with invalid versions', () => {
@@ -317,7 +299,6 @@ describe('filterToVersion', () => {
     })
 
     const result = filterToVersion(changelog, '2.0.0')
-    expect(result.entries).toHaveLength(1)
     expect(result.entries).toEqual([expect.objectContaining({ version: '1.0.0' })])
   })
 })
@@ -335,7 +316,6 @@ describe('filterVersionRange', () => {
     })
 
     const result = filterVersionRange(changelog, '1.0.0', '2.0.0')
-    expect(result.entries).toHaveLength(2)
     expect(result.entries.map((e) => e.version).sort()).toEqual(['1.0.0', '2.0.0'])
   })
 
@@ -362,8 +342,7 @@ describe('filterVersionRange', () => {
     })
 
     const result = filterVersionRange(changelog, '1.0.0', '2.0.0')
-    expect(result.entries).toHaveLength(2)
-    expect(result.entries.every((e) => !e.unreleased)).toBe(true)
+    expect(result.entries.map((e) => e.unreleased)).toEqual([false, false])
   })
 
   it('excludes entries with invalid versions', () => {
@@ -378,7 +357,6 @@ describe('filterVersionRange', () => {
     })
 
     const result = filterVersionRange(changelog, '0.0.1', '4.0.0')
-    expect(result.entries).toHaveLength(2)
     expect(result.entries.map((e) => e.version).sort()).toEqual(['1.0.0', '3.0.0'])
   })
 })
@@ -396,7 +374,6 @@ describe('filterByDateRange', () => {
     })
 
     const result = filterByDateRange(changelog, '2024-01-15', '2024-02-15')
-    expect(result.entries).toHaveLength(1)
     expect(result.entries).toEqual([expect.objectContaining({ version: '2.0.0' })])
   })
 
@@ -408,7 +385,6 @@ describe('filterByDateRange', () => {
     })
 
     const result = filterByDateRange(changelog, '2024-01-01', '2024-12-31')
-    expect(result.entries).toHaveLength(1)
     expect(result.entries).toEqual([expect.objectContaining({ version: '2.0.0' })])
   })
 
@@ -423,7 +399,6 @@ describe('filterByDateRange', () => {
     })
 
     const result = filterByDateRange(changelog, undefined, '2024-01-15')
-    expect(result.entries).toHaveLength(1)
     expect(result.entries).toEqual([expect.objectContaining({ version: '1.0.0' })])
   })
 
@@ -438,7 +413,6 @@ describe('filterByDateRange', () => {
     })
 
     const result = filterByDateRange(changelog, '2024-01-15')
-    expect(result.entries).toHaveLength(1)
     expect(result.entries).toEqual([expect.objectContaining({ version: '2.0.0' })])
   })
 })

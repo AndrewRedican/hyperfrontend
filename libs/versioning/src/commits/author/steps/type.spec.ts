@@ -6,7 +6,7 @@ import { StepStatus } from '../models/step'
 import { typeStep } from './type'
 
 describe('typeStep', () => {
-  it('writes the selected type into the draft on submit', async () => {
+  it('completes the step on submit', async () => {
     const term = createMockTerminal()
     const ctx = createSessionContext(createTestConfig({ input: term.input, output: term.output }))
 
@@ -15,6 +15,17 @@ describe('typeStep', () => {
     const result = await pending
 
     expect(result).toEqual({ status: StepStatus.Done })
+    term.destroy()
+  })
+
+  it('writes the selected type into the draft on submit', async () => {
+    const term = createMockTerminal()
+    const ctx = createSessionContext(createTestConfig({ input: term.input, output: term.output }))
+
+    const pending = typeStep.run(ctx)
+    term.input.enqueueKeys([TestKey.Enter])
+    await pending
+
     expect(ctx.draft.type).toBe('feat')
     term.destroy()
   })

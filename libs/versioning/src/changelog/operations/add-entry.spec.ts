@@ -40,8 +40,7 @@ describe('addEntry', () => {
 
     const result = addEntry(changelog, newEntry)
 
-    expect(result.entries).toHaveLength(3)
-    expect(result.entries[0]).toEqual(expect.objectContaining({ version: '3.0.0' }))
+    expect(result.entries.map((e) => e.version)).toEqual(['3.0.0', '2.0.0', '1.0.0'])
   })
 
   it('adds entry at specified position', () => {
@@ -87,9 +86,10 @@ describe('addEntry', () => {
 
     const result = addEntry(changelog, newEntry, { replaceExisting: true })
 
-    expect(result.entries).toHaveLength(2)
-    const entry = result.entries.find((e) => e.version === '2.0.0')
-    expect(entry?.date).toBe('2024-12-01')
+    expect(result.entries).toEqual([
+      expect.objectContaining({ version: '2.0.0', date: '2024-12-01' }),
+      expect.objectContaining({ version: '1.0.0' }),
+    ])
   })
 
   it('updates metadata when updateMetadata is true', () => {
@@ -111,8 +111,7 @@ describe('addUnreleasedEntry', () => {
     const changelog = createTestChangelog()
     const result = addUnreleasedEntry(changelog, [])
 
-    expect(result.entries[0]).toEqual(expect.objectContaining({ version: 'Unreleased' }))
-    expect(result.entries).toHaveLength(3)
+    expect(result.entries.map((e) => e.version)).toEqual(['Unreleased', '2.0.0', '1.0.0'])
   })
 
   it('does not add duplicate Unreleased entry', () => {

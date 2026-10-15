@@ -3,23 +3,36 @@ import { createChangelogSection, createChangelogItem, getSectionType, SECTION_HE
 
 describe('createChangelogSection', () => {
   it('creates a section', () => {
-    const section = createChangelogSection('features', 'Features', [createChangelogItem('New feature')])
-    expect(section.type).toBe('features')
-    expect(section.heading).toBe('Features')
-    expect(section.items).toHaveLength(1)
+    expect(createChangelogSection('features', 'Features', [createChangelogItem('New feature')])).toMatchObject({
+      type: 'features',
+      heading: 'Features',
+      items: [{ description: 'New feature' }],
+    })
   })
 })
 
 describe('getSectionType', () => {
-  it('returns correct types for standard headings', () => {
+  it('maps the Features heading to features', () => {
     expect(getSectionType('Features')).toBe('features')
+  })
+
+  it('maps the Bug Fixes heading to fixes', () => {
     expect(getSectionType('Bug Fixes')).toBe('fixes')
+  })
+
+  it('maps the Breaking Changes heading to breaking', () => {
     expect(getSectionType('Breaking Changes')).toBe('breaking')
+  })
+
+  it('maps the Performance heading to performance', () => {
     expect(getSectionType('Performance')).toBe('performance')
   })
 
-  it('handles case insensitively', () => {
+  it('ignores upper case in a heading', () => {
     expect(getSectionType('FEATURES')).toBe('features')
+  })
+
+  it('ignores lower case in a heading', () => {
     expect(getSectionType('bug fixes')).toBe('fixes')
   })
 
@@ -29,9 +42,7 @@ describe('getSectionType', () => {
 })
 
 describe('SECTION_HEADINGS', () => {
-  it('has all section types', () => {
-    expect(SECTION_HEADINGS.features).toBe('Features')
-    expect(SECTION_HEADINGS.fixes).toBe('Bug Fixes')
-    expect(SECTION_HEADINGS.breaking).toBe('Breaking Changes')
+  it('names the core section types', () => {
+    expect(SECTION_HEADINGS).toMatchObject({ features: 'Features', fixes: 'Bug Fixes', breaking: 'Breaking Changes' })
   })
 })

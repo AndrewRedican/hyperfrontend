@@ -3,11 +3,7 @@ import { createChangelogEntry, createUnreleasedEntry, createChangelogItem, creat
 
 describe('createChangelogEntry', () => {
   it('creates an entry with defaults', () => {
-    const entry = createChangelogEntry('1.0.0')
-    expect(entry.version).toBe('1.0.0')
-    expect(entry.date).toBeNull()
-    expect(entry.unreleased).toBe(false)
-    expect(entry.sections).toHaveLength(0)
+    expect(createChangelogEntry('1.0.0')).toEqual({ version: '1.0.0', date: null, unreleased: false, sections: [] })
   })
 
   it('creates an entry with options', () => {
@@ -15,28 +11,25 @@ describe('createChangelogEntry', () => {
       date: '2024-01-01',
       sections: [createChangelogSection('features', 'Features')],
     })
-    expect(entry.date).toBe('2024-01-01')
-    expect(entry.sections).toHaveLength(1)
+    expect(entry).toMatchObject({ date: '2024-01-01', sections: [{ type: 'features' }] })
   })
 })
 
 describe('createUnreleasedEntry', () => {
   it('creates an unreleased entry', () => {
-    const entry = createUnreleasedEntry()
-    expect(entry.version).toBe('Unreleased')
-    expect(entry.unreleased).toBe(true)
-    expect(entry.date).toBeNull()
+    expect(createUnreleasedEntry()).toMatchObject({ version: 'Unreleased', unreleased: true, date: null })
   })
 })
 
 describe('createChangelogItem', () => {
   it('creates an item with defaults', () => {
-    const item = createChangelogItem('Test description')
-    expect(item.description).toBe('Test description')
-    expect(item.scope).toBeUndefined()
-    expect(item.commits).toHaveLength(0)
-    expect(item.references).toHaveLength(0)
-    expect(item.breaking).toBe(false)
+    expect(createChangelogItem('Test description')).toEqual({
+      description: 'Test description',
+      scope: undefined,
+      commits: [],
+      references: [],
+      breaking: false,
+    })
   })
 
   it('creates an item with options', () => {
@@ -45,8 +38,6 @@ describe('createChangelogItem', () => {
       breaking: true,
       commits: [createCommitRef('abc1234')],
     })
-    expect(item.scope).toBe('api')
-    expect(item.breaking).toBe(true)
-    expect(item.commits).toHaveLength(1)
+    expect(item).toMatchObject({ scope: 'api', breaking: true, commits: [{ hash: 'abc1234' }] })
   })
 })

@@ -36,16 +36,20 @@ describe('serializeChangelogToJson', () => {
     const result = serializeChangelogToJson(changelog)
 
     expect(result).not.toContain('\n')
-    expect(JSON.parse(result)).toHaveProperty('header')
-    expect(JSON.parse(result)).toHaveProperty('entries')
+  })
+
+  it('keeps the header and entries in compact JSON', () => {
+    const changelog = createTestChangelog()
+    const result = serializeChangelogToJson(changelog)
+
+    expect(JSON.parse(result)).toEqual(expect.objectContaining({ header: expect.anything(), entries: expect.anything() }))
   })
 
   it('serializes to pretty JSON', () => {
     const changelog = createTestChangelog()
     const result = serializeChangelogToJson(changelog, { pretty: true })
 
-    expect(result).toContain('\n')
-    expect(result).toContain('  ')
+    expect(result).toContain('{\n  "header"')
   })
 
   it('includes source when configured', () => {
@@ -74,9 +78,11 @@ describe('toJsonObject', () => {
     })
 
     const result = toJsonObject(changelog)
-    expect(typeof result).toBe('object')
-    expect(result['header']).toBeDefined()
-    expect(result['entries']).toEqual([])
+    expect(result).toEqual({
+      header: { title: '# Changelog', description: [], links: [] },
+      entries: [],
+      metadata: { format: 'unknown', isConventional: false, warnings: [] },
+    })
   })
 
   it('includes compareUrl when present', () => {

@@ -1,3 +1,4 @@
+import type { SerializeOptions } from './templates'
 import { describe, expect, it } from '@hyperfrontend/testing'
 import { resolveOptions, getSectionHeading, formatLink, getListMarker, createSpacing, DEFAULT_SERIALIZE_OPTIONS } from './templates'
 
@@ -14,12 +15,11 @@ describe('resolveOptions', () => {
 
   it('merges partial options with defaults', () => {
     const result = resolveOptions({ useAsterisks: true })
-    expect(result.useAsterisks).toBe(true)
-    expect(result.includeDescription).toBe(true)
+    expect(result).toEqual({ ...DEFAULT_SERIALIZE_OPTIONS, useAsterisks: true })
   })
 
   it('preserves all custom option values', () => {
-    const result = resolveOptions({
+    const custom: SerializeOptions = {
       includeDescription: false,
       includeLinks: false,
       includeCompareUrls: false,
@@ -31,26 +31,18 @@ describe('resolveOptions', () => {
       entrySpacing: 2,
       sectionSpacing: 3,
       useAsterisks: true,
-    })
-    expect(result.includeDescription).toBe(false)
-    expect(result.includeLinks).toBe(false)
-    expect(result.includeCompareUrls).toBe(false)
-    expect(result.includeCommits).toBe(false)
-    expect(result.includeReferences).toBe(false)
-    expect(result.includeScope).toBe(false)
-    expect(result.includeRawContent).toBe(true)
-    expect(result.lineEnding).toBe('\r\n')
-    expect(result.entrySpacing).toBe(2)
-    expect(result.sectionSpacing).toBe(3)
-    expect(result.useAsterisks).toBe(true)
+    }
+    expect(resolveOptions(custom)).toEqual({ ...DEFAULT_SERIALIZE_OPTIONS, ...custom })
   })
 })
 
 describe('getSectionHeading', () => {
   it('returns default heading when no custom headings provided', () => {
-    expect(getSectionHeading('features')).toBe('Features')
-    expect(getSectionHeading('fixes')).toBe('Bug Fixes')
-    expect(getSectionHeading('breaking')).toBe('Breaking Changes')
+    expect({
+      features: getSectionHeading('features'),
+      fixes: getSectionHeading('fixes'),
+      breaking: getSectionHeading('breaking'),
+    }).toEqual({ features: 'Features', fixes: 'Bug Fixes', breaking: 'Breaking Changes' })
   })
 
   it('returns default heading when custom headings map is empty', () => {
@@ -59,8 +51,10 @@ describe('getSectionHeading', () => {
 
   it('returns custom heading when provided', () => {
     const custom = { features: 'New Features', fixes: 'Bugfixes' }
-    expect(getSectionHeading('features', custom)).toBe('New Features')
-    expect(getSectionHeading('fixes', custom)).toBe('Bugfixes')
+    expect({ features: getSectionHeading('features', custom), fixes: getSectionHeading('fixes', custom) }).toEqual({
+      features: 'New Features',
+      fixes: 'Bugfixes',
+    })
   })
 
   it('falls back to default when type not in custom headings', () => {

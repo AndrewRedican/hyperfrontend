@@ -138,8 +138,7 @@ describe('Calculate Bump Step', () => {
     it('creates a step with correct ID and name', () => {
       const step = createCalculateBumpStep()
 
-      expect(step.id).toBe(CALCULATE_BUMP_STEP_ID)
-      expect(step.name).toBe('Calculate Version Bump')
+      expect(step).toEqual(expect.objectContaining({ id: CALCULATE_BUMP_STEP_ID, name: 'Calculate Version Bump' }))
     })
 
     it('depends on analyze-commits step', () => {
@@ -175,8 +174,9 @@ describe('Calculate Bump Step', () => {
 
       const result = await step.execute(ctx)
 
-      expect(result.status).toBe('success')
-      expect(result.stateUpdates?.nextVersion).toBe('1.4.0')
+      expect(result).toEqual(
+        expect.objectContaining({ status: 'success', stateUpdates: expect.objectContaining({ nextVersion: '1.4.0' }) })
+      )
     })
 
     it('handles first release with custom version', async () => {
@@ -595,9 +595,12 @@ describe('Calculate Bump Step', () => {
 
       const result = await step.execute(ctx)
 
-      expect(result.status).toBe('success')
-      expect(result.stateUpdates?.nextVersion).toBe('0.2.2')
-      expect(result.stateUpdates?.isPendingPublication).toBe(false)
+      expect(result).toEqual(
+        expect.objectContaining({
+          status: 'success',
+          stateUpdates: expect.objectContaining({ nextVersion: '0.2.2', isPendingPublication: false }),
+        })
+      )
     })
 
     it('keeps recalculating from the published version when the branch is ahead', async () => {
@@ -610,9 +613,12 @@ describe('Calculate Bump Step', () => {
 
       const result = await step.execute(ctx)
 
-      expect(result.status).toBe('success')
-      expect(result.stateUpdates?.nextVersion).toBe('0.2.2')
-      expect(result.stateUpdates?.isPendingPublication).toBe(true)
+      expect(result).toEqual(
+        expect.objectContaining({
+          status: 'success',
+          stateUpdates: expect.objectContaining({ nextVersion: '0.2.2', isPendingPublication: true }),
+        })
+      )
     })
 
     it('forces the bump from the published version rather than the local one', async () => {
@@ -621,8 +627,9 @@ describe('Calculate Bump Step', () => {
 
       const result = await step.execute(ctx)
 
-      expect(result.status).toBe('success')
-      expect(result.stateUpdates?.nextVersion).toBe('1.0.0')
+      expect(result).toEqual(
+        expect.objectContaining({ status: 'success', stateUpdates: expect.objectContaining({ nextVersion: '1.0.0' }) })
+      )
     })
 
     it('refuses when the local version has already run ahead of the published one', async () => {
@@ -631,8 +638,7 @@ describe('Calculate Bump Step', () => {
 
       const result = await step.execute(ctx)
 
-      expect(result.status).toBe('failed')
-      expect(result.message).toContain('disagrees with published')
+      expect(result).toEqual(expect.objectContaining({ status: 'failed', message: expect.stringContaining('disagrees with published') }))
     })
 
     it('refuses when the local version is behind the published one', async () => {
@@ -641,8 +647,7 @@ describe('Calculate Bump Step', () => {
 
       const result = await step.execute(ctx)
 
-      expect(result.status).toBe('failed')
-      expect(result.message).toContain('disagrees with published')
+      expect(result).toEqual(expect.objectContaining({ status: 'failed', message: expect.stringContaining('disagrees with published') }))
     })
 
     it('forces the bump from the local version when nothing has been published yet', async () => {
@@ -651,8 +656,9 @@ describe('Calculate Bump Step', () => {
 
       const result = await step.execute(ctx)
 
-      expect(result.status).toBe('success')
-      expect(result.stateUpdates?.nextVersion).toBe('0.5.0')
+      expect(result).toEqual(
+        expect.objectContaining({ status: 'success', stateUpdates: expect.objectContaining({ nextVersion: '0.5.0' }) })
+      )
     })
 
     it('fails when the published version cannot be parsed', async () => {
@@ -661,8 +667,9 @@ describe('Calculate Bump Step', () => {
 
       const result = await step.execute(ctx)
 
-      expect(result.status).toBe('failed')
-      expect(result.message).toContain('Could not parse published version')
+      expect(result).toEqual(
+        expect.objectContaining({ status: 'failed', message: expect.stringContaining('Could not parse published version') })
+      )
     })
 
     it('releaseAs fails with invalid current version', async () => {
@@ -925,9 +932,7 @@ describe('Calculate Bump Step', () => {
 
       const result = await step.execute(ctx)
 
-      expect(result.message).toContain('0.1.0')
-      expect(result.message).toContain('0.1.1')
-      expect(result.message).toContain('pending')
+      expect(result.message).toBe('patch bump (pending): 0.1.0 → 0.1.1')
     })
   })
 })
@@ -937,8 +942,7 @@ describe('Check Idempotency Step', () => {
     it('creates a step with correct ID and name', () => {
       const step = createCheckIdempotencyStep()
 
-      expect(step.id).toBe('check-idempotency')
-      expect(step.name).toBe('Check Idempotency')
+      expect(step).toEqual(expect.objectContaining({ id: 'check-idempotency', name: 'Check Idempotency' }))
     })
 
     it('depends on calculate-bump step', () => {
@@ -955,8 +959,7 @@ describe('Check Idempotency Step', () => {
 
       const result = await step.execute(ctx)
 
-      expect(result.status).toBe('success')
-      expect(result.message).toContain('No version to check')
+      expect(result).toEqual(expect.objectContaining({ status: 'success', message: expect.stringContaining('No version to check') }))
     })
 
     it('succeeds when bumpType is none', async () => {
@@ -976,8 +979,7 @@ describe('Check Idempotency Step', () => {
 
       const result = await step.execute(ctx)
 
-      expect(result.status).toBe('failed')
-      expect(result.message).toContain('does not advance past')
+      expect(result).toEqual(expect.objectContaining({ status: 'failed', message: expect.stringContaining('does not advance past') }))
     })
 
     it('accepts a version that advances past the published one', async () => {
@@ -1000,8 +1002,7 @@ describe('Check Idempotency Step', () => {
 
       const result = await step.execute(ctx)
 
-      expect(result.status).toBe('success')
-      expect(result.message).toContain('not yet published')
+      expect(result).toEqual(expect.objectContaining({ status: 'success', message: expect.stringContaining('not yet published') }))
     })
   })
 

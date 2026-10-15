@@ -227,8 +227,11 @@ describe('hasVersion', () => {
     metadata: { format: 'unknown', isConventional: false, warnings: [] },
   })
 
-  it('returns true for existing version', () => {
+  it('returns true for the oldest version present', () => {
     expect(hasVersion(changelog, '1.0.0')).toBe(true)
+  })
+
+  it('returns true for the newest version present', () => {
     expect(hasVersion(changelog, '2.0.0')).toBe(true)
   })
 
@@ -248,10 +251,7 @@ describe('getEntryByVersion', () => {
   })
 
   it('returns entry for existing version', () => {
-    const entry = getEntryByVersion(changelog, '1.0.0')
-    expect(entry).toBeDefined()
-    expect(entry?.version).toBe('1.0.0')
-    expect(entry?.date).toBe('2024-01-01')
+    expect(getEntryByVersion(changelog, '1.0.0')).toEqual(expect.objectContaining({ version: '1.0.0', date: '2024-01-01' }))
   })
 
   it('returns undefined for non-existing version', () => {

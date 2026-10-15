@@ -37,14 +37,12 @@ describe('parseVersionFromHeading', () => {
   describe('date extraction', () => {
     it('parses date with dash separator', () => {
       const result = parseVersionFromHeading('[1.0.0] - 2024-01-15')
-      expect(result.version).toBe('1.0.0')
-      expect(result.date).toBe('2024-01-15')
+      expect(result).toEqual({ version: '1.0.0', date: '2024-01-15', compareUrl: undefined })
     })
 
     it('parses date with en-dash separator', () => {
       const result = parseVersionFromHeading('[1.0.0] – 2024-01-15')
-      expect(result.version).toBe('1.0.0')
-      expect(result.date).toBe('2024-01-15')
+      expect(result).toEqual({ version: '1.0.0', date: '2024-01-15', compareUrl: undefined })
     })
 
     it('parses date in parentheses', () => {
@@ -133,8 +131,7 @@ describe('parseVersionFromHeading', () => {
   describe('unreleased', () => {
     it('parses Unreleased', () => {
       const result = parseVersionFromHeading('Unreleased')
-      expect(result.version).toBe('Unreleased')
-      expect(result.date).toBeNull()
+      expect(result).toEqual({ version: 'Unreleased', date: null })
     })
 
     it('parses [Unreleased]', () => {
@@ -153,44 +150,43 @@ describe('parseVersionFromHeading', () => {
       const heading = '[0.0.4](https://github.com/owner/repo/compare/lib@0.0.3...lib@0.0.4) (2026-03-08)'
       const result = parseVersionFromHeading(heading)
 
-      expect(result.version).toBe('0.0.4')
-      expect(result.date).toBe('2026-03-08')
-      expect(result.compareUrl).toBe('https://github.com/owner/repo/compare/lib@0.0.3...lib@0.0.4')
+      expect(result).toEqual({
+        version: '0.0.4',
+        date: '2026-03-08',
+        compareUrl: 'https://github.com/owner/repo/compare/lib@0.0.3...lib@0.0.4',
+      })
     })
 
     it('parses version with inline URL but no date', () => {
       const heading = '[0.0.4](https://github.com/owner/repo/compare/v0.0.3...v0.0.4)'
       const result = parseVersionFromHeading(heading)
 
-      expect(result.version).toBe('0.0.4')
-      expect(result.compareUrl).toBe('https://github.com/owner/repo/compare/v0.0.3...v0.0.4')
-      expect(result.date).toBeNull()
+      expect(result).toEqual({ version: '0.0.4', date: null, compareUrl: 'https://github.com/owner/repo/compare/v0.0.3...v0.0.4' })
     })
 
     it('parses version with parenthetical date only (no URL)', () => {
       const heading = '0.0.1 (2026-02-15)'
       const result = parseVersionFromHeading(heading)
 
-      expect(result.version).toBe('0.0.1')
-      expect(result.date).toBe('2026-02-15')
-      expect(result.compareUrl).toBeUndefined()
+      expect(result).toEqual({ version: '0.0.1', date: '2026-02-15', compareUrl: undefined })
     })
 
     it('handles nested parentheses in URL', () => {
       const heading = '[1.0.0](https://github.com/owner/repo/compare/v0.9.0...v1.0.0) (2026-01-15)'
       const result = parseVersionFromHeading(heading)
 
-      expect(result.compareUrl).toBe('https://github.com/owner/repo/compare/v0.9.0...v1.0.0')
-      expect(result.date).toBe('2026-01-15')
+      expect(result).toEqual({ version: '1.0.0', date: '2026-01-15', compareUrl: 'https://github.com/owner/repo/compare/v0.9.0...v1.0.0' })
     })
 
     it('handles version prefix in URL with @ scope', () => {
       const heading = '[0.0.2](https://github.com/AndrewRedican/hyperfrontend/compare/lib-logging@0.0.1...lib-logging@0.0.2) (2026-02-26)'
       const result = parseVersionFromHeading(heading)
 
-      expect(result.version).toBe('0.0.2')
-      expect(result.date).toBe('2026-02-26')
-      expect(result.compareUrl).toBe('https://github.com/AndrewRedican/hyperfrontend/compare/lib-logging@0.0.1...lib-logging@0.0.2')
+      expect(result).toEqual({
+        version: '0.0.2',
+        date: '2026-02-26',
+        compareUrl: 'https://github.com/AndrewRedican/hyperfrontend/compare/lib-logging@0.0.1...lib-logging@0.0.2',
+      })
     })
   })
 })
@@ -198,26 +194,22 @@ describe('parseVersionFromHeading', () => {
 describe('parseScopeFromItem', () => {
   it('parses bold scope with colon inside', () => {
     const result = parseScopeFromItem('**api:** New endpoint')
-    expect(result.scope).toBe('api')
-    expect(result.description).toBe('New endpoint')
+    expect(result).toEqual({ scope: 'api', description: 'New endpoint' })
   })
 
   it('parses bold scope with colon outside', () => {
     const result = parseScopeFromItem('**api**: New endpoint')
-    expect(result.scope).toBe('api')
-    expect(result.description).toBe('New endpoint')
+    expect(result).toEqual({ scope: 'api', description: 'New endpoint' })
   })
 
   it('parses bold scope with colon inside and no space after', () => {
     const result = parseScopeFromItem('**api:**description')
-    expect(result.scope).toBe('api')
-    expect(result.description).toBe('description')
+    expect(result).toEqual({ scope: 'api', description: 'description' })
   })
 
   it('parses bold scope with colon outside and no space', () => {
     const result = parseScopeFromItem('**api**:description')
-    expect(result.scope).toBe('api')
-    expect(result.description).toBe('description')
+    expect(result).toEqual({ scope: 'api', description: 'description' })
   })
 
   it('trims whitespace after scope', () => {
@@ -227,14 +219,12 @@ describe('parseScopeFromItem', () => {
 
   it('parses simple scope', () => {
     const result = parseScopeFromItem('api: New endpoint')
-    expect(result.scope).toBe('api')
-    expect(result.description).toBe('New endpoint')
+    expect(result).toEqual({ scope: 'api', description: 'New endpoint' })
   })
 
   it('handles no scope', () => {
     const result = parseScopeFromItem('New feature without scope')
-    expect(result.scope).toBeUndefined()
-    expect(result.description).toBe('New feature without scope')
+    expect(result).toEqual({ scope: undefined, description: 'New feature without scope' })
   })
 
   it('handles scope with hyphen', () => {
@@ -249,8 +239,7 @@ describe('parseScopeFromItem', () => {
 
   it('handles bold without scope pattern', () => {
     const result = parseScopeFromItem('**Important notice** This is important')
-    expect(result.scope).toBe('Important notice')
-    expect(result.description).toBe('This is important')
+    expect(result).toEqual({ scope: 'Important notice', description: 'This is important' })
   })
 
   it('rejects invalid scope characters', () => {
@@ -260,28 +249,24 @@ describe('parseScopeFromItem', () => {
 
   it('handles empty scope', () => {
     const result = parseScopeFromItem(': description')
-    expect(result.scope).toBeUndefined()
-    expect(result.description).toBe(': description')
+    expect(result).toEqual({ scope: undefined, description: ': description' })
   })
 
   it('handles numbers in scope', () => {
     const result = parseScopeFromItem('v2: New version')
-    expect(result.scope).toBe('v2')
-    expect(result.description).toBe('New version')
+    expect(result).toEqual({ scope: 'v2', description: 'New version' })
   })
 
   it('trims input whitespace', () => {
     const result = parseScopeFromItem('  api: description  ')
-    expect(result.scope).toBe('api')
-    expect(result.description).toBe('description')
+    expect(result).toEqual({ scope: 'api', description: 'description' })
   })
 })
 
 describe('parseCommitRefs', () => {
   it('parses hash in parentheses', () => {
     const refs = parseCommitRefs('Fix bug (abc1234)')
-    expect(refs).toHaveLength(1)
-    expect(refs[0]?.shortHash).toBe('abc1234')
+    expect(refs).toEqual([expect.objectContaining({ shortHash: 'abc1234' })])
   })
 
   it('parses hash in brackets', () => {
@@ -297,8 +282,7 @@ describe('parseCommitRefs', () => {
   it('handles full hash', () => {
     const fullHash = 'abc1234567890abc1234567890abc1234567890a'
     const refs = parseCommitRefs(`Fix (${fullHash})`)
-    expect(refs[0]?.hash).toBe(fullHash)
-    expect(refs[0]?.shortHash).toBe('abc1234')
+    expect(refs[0]).toEqual(expect.objectContaining({ hash: fullHash, shortHash: 'abc1234' }))
   })
 
   it('includes URL if base URL provided', () => {
@@ -330,16 +314,12 @@ describe('parseCommitRefs', () => {
 describe('parseIssueRefs', () => {
   it('parses issue reference', () => {
     const refs = parseIssueRefs('Fix #123')
-    expect(refs).toHaveLength(1)
-    expect(refs[0]?.number).toBe(123)
-    expect(refs[0]?.type).toBe('issue')
+    expect(refs).toEqual([expect.objectContaining({ number: 123, type: 'issue' })])
   })
 
   it('parses multiple references', () => {
     const refs = parseIssueRefs('Fix #123 and #456')
-    expect(refs).toHaveLength(2)
-    expect(refs[0]?.number).toBe(123)
-    expect(refs[1]?.number).toBe(456)
+    expect(refs.map((ref) => ref.number)).toEqual([123, 456])
   })
 
   it('detects PR references from PR keyword', () => {
@@ -374,7 +354,6 @@ describe('parseIssueRefs', () => {
 
   it('handles reference at start of text', () => {
     const refs = parseIssueRefs('#42 is the answer')
-    expect(refs).toHaveLength(1)
-    expect(refs[0]?.number).toBe(42)
+    expect(refs).toEqual([expect.objectContaining({ number: 42 })])
   })
 })

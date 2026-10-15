@@ -3,10 +3,7 @@ import { createChangelog, createEmptyChangelog, createChangelogLink, createChang
 
 describe('createChangelog', () => {
   it('creates a changelog with defaults', () => {
-    const changelog = createChangelog()
-    expect(changelog.header.title).toBe('# Changelog')
-    expect(changelog.entries).toHaveLength(0)
-    expect(changelog.metadata.format).toBe('unknown')
+    expect(createChangelog()).toMatchObject({ header: { title: '# Changelog' }, entries: [], metadata: { format: 'unknown' } })
   })
 
   it('creates a changelog with options', () => {
@@ -14,24 +11,24 @@ describe('createChangelog', () => {
       source: 'CHANGELOG.md',
       entries: [createChangelogEntry('1.0.0')],
     })
-    expect(changelog.source).toBe('CHANGELOG.md')
-    expect(changelog.entries).toHaveLength(1)
+    expect(changelog).toMatchObject({ source: 'CHANGELOG.md', entries: [{ version: '1.0.0' }] })
   })
 })
 
 describe('createEmptyChangelog', () => {
   it('creates a standard empty changelog', () => {
-    const changelog = createEmptyChangelog()
-    expect(changelog.header.title).toBe('# Changelog')
-    expect(changelog.header.description.length).toBeGreaterThan(0)
-    expect(changelog.metadata.format).toBe('keep-a-changelog')
+    expect(createEmptyChangelog()).toMatchObject({
+      header: { title: '# Changelog', description: expect.arrayContaining([expect.any(String)]) },
+      metadata: { format: 'keep-a-changelog' },
+    })
   })
 })
 
 describe('createChangelogLink', () => {
   it('creates a link', () => {
-    const link = createChangelogLink('Keep a Changelog', 'https://keepachangelog.com')
-    expect(link.label).toBe('Keep a Changelog')
-    expect(link.url).toBe('https://keepachangelog.com')
+    expect(createChangelogLink('Keep a Changelog', 'https://keepachangelog.com')).toEqual({
+      label: 'Keep a Changelog',
+      url: 'https://keepachangelog.com',
+    })
   })
 })

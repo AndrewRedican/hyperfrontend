@@ -17,14 +17,18 @@ describe('parseReferences', () => {
     expect(parseReferences('nothing here')).toEqual([])
   })
 
+  it('returns no references for long letter-only input', () => {
+    const huge = 'A'.repeat(200_000)
+    expect(parseReferences(huge)).toEqual([])
+  })
+
   it('handles long letter-only input in linear time without backtracking', () => {
     // why: guards against polynomial-time backtracking on long letter-only inputs
     const huge = 'A'.repeat(200_000)
     const start = Date.now()
-    const footers = parseReferences(huge)
+    parseReferences(huge)
     const elapsedMs = Date.now() - start
 
-    expect(footers).toEqual([])
     expect(elapsedMs).toBeLessThan(200)
   })
 
@@ -38,7 +42,7 @@ describe('parseReferences', () => {
 })
 
 describe('issuesStep', () => {
-  it('drops the step without touching footers when user says no', async () => {
+  it('completes the step when user says no', async () => {
     const term = createMockTerminal()
     const ctx = createSessionContext(createTestConfig({ input: term.input, output: term.output }))
 
@@ -47,6 +51,17 @@ describe('issuesStep', () => {
     const result = await pending
 
     expect(result).toEqual({ status: StepStatus.Done })
+    term.destroy()
+  })
+
+  it('leaves footers untouched when user says no', async () => {
+    const term = createMockTerminal()
+    const ctx = createSessionContext(createTestConfig({ input: term.input, output: term.output }))
+
+    const pending = issuesStep.run(ctx)
+    term.input.enqueueKeys(['n'])
+    await pending
+
     expect(ctx.draft.footers).toBeUndefined()
     term.destroy()
   })

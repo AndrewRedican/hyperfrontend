@@ -165,9 +165,7 @@ describe('fetch-registry step', () => {
     it('creates a step with correct ID and name', () => {
       const step = createFetchRegistryStep()
 
-      expect(step.id).toBe('fetch-registry')
-      expect(step.name).toBe('Fetch Registry Version')
-      expect(typeof step.execute).toBe('function')
+      expect(step).toEqual(expect.objectContaining({ id: 'fetch-registry', name: 'Fetch Registry Version', execute: expect.any(Function) }))
     })
 
     describe('execute', () => {
@@ -183,8 +181,9 @@ describe('fetch-registry step', () => {
 
         const result = await step.execute(context)
 
-        expect(result.status).toBe('success')
-        expect(result.stateUpdates?.currentVersion).toBe('1.2.3')
+        expect(result).toEqual(
+          expect.objectContaining({ status: 'success', stateUpdates: expect.objectContaining({ currentVersion: '1.2.3' }) })
+        )
       })
 
       it('defaults to 0.0.0 when package.json has no version', async () => {
@@ -198,8 +197,9 @@ describe('fetch-registry step', () => {
 
         const result = await step.execute(context)
 
-        expect(result.status).toBe('success')
-        expect(result.stateUpdates?.currentVersion).toBe('0.0.0')
+        expect(result).toEqual(
+          expect.objectContaining({ status: 'success', stateUpdates: expect.objectContaining({ currentVersion: '0.0.0' }) })
+        )
       })
 
       it('defaults to 0.0.0 when package.json does not exist', async () => {
@@ -209,20 +209,31 @@ describe('fetch-registry step', () => {
 
         const result = await step.execute(context)
 
-        expect(result.status).toBe('success')
-        expect(result.stateUpdates?.currentVersion).toBe('0.0.0')
+        expect(result).toEqual(
+          expect.objectContaining({ status: 'success', stateUpdates: expect.objectContaining({ currentVersion: '0.0.0' }) })
+        )
       })
 
-      it('logs warning and defaults to 0.0.0 when package.json read throws', async () => {
+      it('defaults to 0.0.0 when package.json read throws', async () => {
+        const tree = createMockTree({}, true)
+        const context = createMockContext({ tree })
+        const step = createFetchRegistryStep()
+
+        const result = await step.execute(context)
+
+        expect(result).toEqual(
+          expect.objectContaining({ status: 'success', stateUpdates: expect.objectContaining({ currentVersion: '0.0.0' }) })
+        )
+      })
+
+      it('logs a warning when package.json read throws', async () => {
         const tree = createMockTree({}, true)
         const logger = createMockLogger()
         const context = createMockContext({ tree, logger })
         const step = createFetchRegistryStep()
 
-        const result = await step.execute(context)
+        await step.execute(context)
 
-        expect(result.status).toBe('success')
-        expect(result.stateUpdates?.currentVersion).toBe('0.0.0')
         expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('Could not read package.json'))
       })
 
@@ -239,9 +250,12 @@ describe('fetch-registry step', () => {
 
         const result = await step.execute(context)
 
-        expect(result.status).toBe('success')
-        expect(result.stateUpdates?.publishedVersion).toBe('1.0.0')
-        expect(result.stateUpdates?.isFirstRelease).toBe(false)
+        expect(result).toEqual(
+          expect.objectContaining({
+            status: 'success',
+            stateUpdates: expect.objectContaining({ publishedVersion: '1.0.0', isFirstRelease: false }),
+          })
+        )
       })
 
       it('handles first release when no published version exists', async () => {
@@ -257,10 +271,13 @@ describe('fetch-registry step', () => {
 
         const result = await step.execute(context)
 
-        expect(result.status).toBe('success')
-        expect(result.stateUpdates?.publishedVersion).toBe(null)
-        expect(result.stateUpdates?.isFirstRelease).toBe(true)
-        expect(result.message).toContain('First release')
+        expect(result).toEqual(
+          expect.objectContaining({
+            status: 'success',
+            stateUpdates: expect.objectContaining({ publishedVersion: null, isFirstRelease: true }),
+            message: expect.stringContaining('First release'),
+          })
+        )
       })
 
       it('surfaces a registry query failure instead of assuming a first release', async () => {
@@ -291,9 +308,7 @@ describe('fetch-registry step', () => {
 
         const result = await step.execute(context)
 
-        expect(result.status).toBe('success')
-        expect(result.message).toContain('Published: 1.5.0')
-        expect(result.message).toContain('Local: 2.0.0')
+        expect(result).toEqual(expect.objectContaining({ status: 'success', message: 'Published: 1.5.0, Local: 2.0.0' }))
       })
 
       describe('publishedCommit extraction', () => {
@@ -308,14 +323,33 @@ describe('fetch-registry step', () => {
             version: '1.0.0',
             gitHead: 'abc1234567890def',
           })
-          const logger = createMockLogger()
-          const context = createMockContext({ tree, registry, logger })
+          const context = createMockContext({ tree, registry })
           const step = createFetchRegistryStep()
 
           const result = await step.execute(context)
 
-          expect(result.status).toBe('success')
-          expect(result.stateUpdates?.publishedCommit).toBe('abc1234567890def')
+          expect(result).toEqual(
+            expect.objectContaining({ status: 'success', stateUpdates: expect.objectContaining({ publishedCommit: 'abc1234567890def' }) })
+          )
+        })
+
+        it('logs the published commit when gitHead is available', async () => {
+          const tree = createMockTree({
+            '/workspace/libs/test/package.json': JSON.stringify({
+              name: '@test/pkg',
+              version: '1.0.0',
+            }),
+          })
+          const registry = createMockRegistry({
+            version: '1.0.0',
+            gitHead: 'abc1234567890def',
+          })
+          const logger = createMockLogger()
+          const context = createMockContext({ tree, registry, logger })
+          const step = createFetchRegistryStep()
+
+          await step.execute(context)
+
           expect(logger.debug).toHaveBeenCalledWith(expect.stringContaining('Published 1.0.0 at commit abc1234'))
         })
 
@@ -330,14 +364,33 @@ describe('fetch-registry step', () => {
             version: '1.0.0',
             gitHead: null,
           })
-          const logger = createMockLogger()
-          const context = createMockContext({ tree, registry, logger })
+          const context = createMockContext({ tree, registry })
           const step = createFetchRegistryStep()
 
           const result = await step.execute(context)
 
-          expect(result.status).toBe('success')
-          expect(result.stateUpdates?.publishedCommit).toBe(null)
+          expect(result).toEqual(
+            expect.objectContaining({ status: 'success', stateUpdates: expect.objectContaining({ publishedCommit: null }) })
+          )
+        })
+
+        it('logs that the published version has no gitHead when it is missing', async () => {
+          const tree = createMockTree({
+            '/workspace/libs/test/package.json': JSON.stringify({
+              name: '@test/pkg',
+              version: '1.0.0',
+            }),
+          })
+          const registry = createMockRegistry({
+            version: '1.0.0',
+            gitHead: null,
+          })
+          const logger = createMockLogger()
+          const context = createMockContext({ tree, registry, logger })
+          const step = createFetchRegistryStep()
+
+          await step.execute(context)
+
           expect(logger.debug).toHaveBeenCalledWith(expect.stringContaining('has no gitHead'))
         })
 
@@ -375,9 +428,7 @@ describe('fetch-registry step', () => {
 
           const result = await step.execute(context)
 
-          expect(result.status).toBe('success')
-          expect(result.message).toContain('Published: 1.5.0 @ def4567')
-          expect(result.message).toContain('Local: 2.0.0')
+          expect(result).toEqual(expect.objectContaining({ status: 'success', message: 'Published: 1.5.0 @ def4567, Local: 2.0.0' }))
         })
 
         it('sets publishedCommit to null for first release', async () => {
@@ -393,9 +444,12 @@ describe('fetch-registry step', () => {
 
           const result = await step.execute(context)
 
-          expect(result.status).toBe('success')
-          expect(result.stateUpdates?.publishedCommit).toBe(null)
-          expect(result.stateUpdates?.isFirstRelease).toBe(true)
+          expect(result).toEqual(
+            expect.objectContaining({
+              status: 'success',
+              stateUpdates: expect.objectContaining({ publishedCommit: null, isFirstRelease: true }),
+            })
+          )
         })
       })
     })

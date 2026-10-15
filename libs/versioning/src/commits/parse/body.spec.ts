@@ -6,8 +6,7 @@ describe('parseBody', () => {
     const lines = ['feat: test', '', 'Body content']
     const result = parseBody(lines, 1)
 
-    expect(result?.body).toBe('Body content')
-    expect(result?.endIndex).toBe(3)
+    expect(result).toEqual({ body: 'Body content', endIndex: 3 })
   })
 
   it('parses multi-line body', () => {
@@ -21,8 +20,7 @@ describe('parseBody', () => {
     const lines = ['feat: test', '', 'First paragraph.', '', 'Second paragraph.']
     const result = parseBody(lines, 1)
 
-    expect(result?.body).toContain('First paragraph.')
-    expect(result?.body).toContain('Second paragraph.')
+    expect(result?.body).toBe('First paragraph.\n\nSecond paragraph.')
   })
 
   it('returns undefined when no body', () => {
@@ -50,8 +48,7 @@ describe('parseBody', () => {
     const lines = ['feat: test', '', 'Body content', 'Refs: ABC-123']
     const result = parseBody(lines, 1)
 
-    expect(result?.body).toBe('Body content')
-    expect(result?.endIndex).toBe(3)
+    expect(result).toEqual({ body: 'Body content', endIndex: 3 })
   })
 
   it('stops at blank line followed by footer', () => {

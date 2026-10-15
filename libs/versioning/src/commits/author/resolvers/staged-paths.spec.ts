@@ -36,6 +36,11 @@ describe('getStagedPaths', () => {
   it('returns root-anchored paths when invoked from a subdirectory', () => {
     mockGit('/repo\n', 'libs/a/index.ts\0')
     expect(getStagedPaths({ cwd: '/repo/apps/demo' })).toEqual([normalizeToNative('/repo/libs/a/index.ts')])
+  })
+
+  it('resolves the repository root from the caller cwd', () => {
+    mockGit('/repo\n', 'libs/a/index.ts\0')
+    getStagedPaths({ cwd: '/repo/apps/demo' })
     expect(execFileSync).toHaveBeenCalledWith('git', ['rev-parse', '--show-toplevel'], expect.objectContaining({ cwd: '/repo/apps/demo' }))
   })
 

@@ -26,14 +26,14 @@ describe('toDraft', () => {
   it('carries through default array / boolean fields', () => {
     const commit = createConventionalCommit('fix', 'oops')
 
-    const draft = toDraft(commit)
-
-    expect(draft.type).toBe('fix')
-    expect(draft.subject).toBe('oops')
-    expect(draft.scope).toEqual([])
-    expect(draft.footers).toEqual([])
-    expect(draft.breaking).toBe(false)
-    expect(draft.body).toBeUndefined()
-    expect(draft.breakingDescription).toBeUndefined()
+    expect(toDraft(commit)).toEqual({
+      type: 'fix',
+      subject: 'oops',
+      scope: [],
+      footers: [],
+      breaking: false,
+      body: undefined,
+      breakingDescription: undefined,
+    })
   })
 })

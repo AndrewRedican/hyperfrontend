@@ -4,10 +4,7 @@ import { createConventionalCommit, createCommitFooter } from './conventional'
 describe('createConventionalCommit', () => {
   it('creates a simple commit', () => {
     const commit = createConventionalCommit('feat', 'add new feature')
-    expect(commit.type).toBe('feat')
-    expect(commit.subject).toBe('add new feature')
-    expect(commit.scope).toEqual([])
-    expect(commit.breaking).toBe(false)
+    expect(commit).toEqual(expect.objectContaining({ type: 'feat', subject: 'add new feature', scope: [], breaking: false }))
   })
 
   it('creates a commit with scope', () => {
@@ -17,8 +14,7 @@ describe('createConventionalCommit', () => {
 
   it('creates a commit with multi-scope', () => {
     const commit = createConventionalCommit('feat', 'add feature', { scope: ['versioning', 'questions'] })
-    expect(commit.scope).toEqual(['versioning', 'questions'])
-    expect(commit.raw).toBe('feat(versioning,questions): add feature')
+    expect(commit).toEqual(expect.objectContaining({ scope: ['versioning', 'questions'], raw: 'feat(versioning,questions): add feature' }))
   })
 
   it('creates a breaking change commit', () => {
@@ -26,8 +22,7 @@ describe('createConventionalCommit', () => {
       breaking: true,
       breakingDescription: 'API has changed',
     })
-    expect(commit.breaking).toBe(true)
-    expect(commit.breakingDescription).toBe('API has changed')
+    expect(commit).toEqual(expect.objectContaining({ breaking: true, breakingDescription: 'API has changed' }))
   })
 
   it('generates raw message', () => {
@@ -75,10 +70,7 @@ describe('createConventionalCommit', () => {
 
 describe('createCommitFooter', () => {
   it('creates a footer with colon', () => {
-    const footer = createCommitFooter('Refs', 'ABC-123')
-    expect(footer.key).toBe('Refs')
-    expect(footer.value).toBe('ABC-123')
-    expect(footer.separator).toBe(':')
+    expect(createCommitFooter('Refs', 'ABC-123')).toEqual({ key: 'Refs', value: 'ABC-123', separator: ':' })
   })
 
   it('creates a footer with hash', () => {

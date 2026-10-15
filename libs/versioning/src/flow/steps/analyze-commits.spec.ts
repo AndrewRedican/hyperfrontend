@@ -16,9 +16,7 @@ describe('analyze-commits step', () => {
     it('creates a step with correct ID and name', () => {
       const step = createAnalyzeCommitsStep()
 
-      expect(step.id).toBe('analyze-commits')
-      expect(step.name).toBe('Analyze Commits')
-      expect(typeof step.execute).toBe('function')
+      expect(step).toEqual(expect.objectContaining({ id: 'analyze-commits', name: 'Analyze Commits', execute: expect.any(Function) }))
     })
 
     it('depends on fetch-registry step', () => {
@@ -30,6 +28,31 @@ describe('analyze-commits step', () => {
     describe('execute', () => {
       describe('publishedCommit scoping', () => {
         it('uses publishedCommit from state when commit is reachable', async () => {
+          const git = createMockGitClient({
+            commits: [
+              { message: 'feat: new feature', hash: 'ghi789' },
+              { message: 'fix: bug fix', hash: 'jkl012' },
+            ],
+            commitReachable: true,
+          })
+          const context = createMockContext({
+            git,
+            state: {
+              isFirstRelease: false,
+              publishedCommit: 'abc1234',
+              publishedVersion: '1.0.0',
+            },
+          })
+          const step = createAnalyzeCommitsStep()
+
+          const result = await step.execute(context)
+
+          expect(result).toEqual(
+            expect.objectContaining({ status: 'success', stateUpdates: expect.objectContaining({ effectiveBaseCommit: 'abc1234' }) })
+          )
+        })
+
+        it('logs the commits found since publishedCommit when the commit is reachable', async () => {
           const git = createMockGitClient({
             commits: [
               { message: 'feat: new feature', hash: 'ghi789' },
@@ -49,14 +72,34 @@ describe('analyze-commits step', () => {
           })
           const step = createAnalyzeCommitsStep()
 
-          const result = await step.execute(context)
+          await step.execute(context)
 
-          expect(result.status).toBe('success')
-          expect(result.stateUpdates?.effectiveBaseCommit).toBe('abc1234')
           expect(logger.debug).toHaveBeenCalledWith(expect.stringContaining('Found 2 commits since abc1234'))
         })
 
         it('falls back gracefully when publishedCommit is not reachable from HEAD', async () => {
+          const git = createMockGitClient({
+            commits: [{ message: 'feat: new feature', hash: 'xyz789' }],
+            commitReachable: false,
+          })
+          const context = createMockContext({
+            git,
+            state: {
+              isFirstRelease: false,
+              publishedCommit: 'orphaned123',
+              publishedVersion: '1.0.0',
+            },
+          })
+          const step = createAnalyzeCommitsStep()
+
+          const result = await step.execute(context)
+
+          expect(result).toEqual(
+            expect.objectContaining({ status: 'success', stateUpdates: expect.objectContaining({ effectiveBaseCommit: null }) })
+          )
+        })
+
+        it('warns about a rebase or force push when publishedCommit is not reachable from HEAD', async () => {
           const git = createMockGitClient({
             commits: [{ message: 'feat: new feature', hash: 'xyz789' }],
             commitReachable: false,
@@ -73,15 +116,35 @@ describe('analyze-commits step', () => {
           })
           const step = createAnalyzeCommitsStep()
 
-          const result = await step.execute(context)
+          await step.execute(context)
 
-          expect(result.status).toBe('success')
-          expect(result.stateUpdates?.effectiveBaseCommit).toBe(null)
-          expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('Published commit orphane not found in history'))
-          expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('rebase or force push'))
+          expect(logger.warn).toHaveBeenCalledWith(
+            expect.stringMatching(/Published commit orphane not found in history.*rebase or force push/)
+          )
         })
 
         it('handles no publishedCommit (first release from registry perspective)', async () => {
+          const git = createMockGitClient({
+            commits: [{ message: 'feat: initial', hash: 'def456' }],
+          })
+          const context = createMockContext({
+            git,
+            state: {
+              isFirstRelease: false,
+              publishedCommit: null,
+              publishedVersion: '1.0.0',
+            },
+          })
+          const step = createAnalyzeCommitsStep()
+
+          const result = await step.execute(context)
+
+          expect(result).toEqual(
+            expect.objectContaining({ status: 'success', stateUpdates: expect.objectContaining({ effectiveBaseCommit: null }) })
+          )
+        })
+
+        it('logs a first release analysis when there is no publishedCommit', async () => {
           const git = createMockGitClient({
             commits: [{ message: 'feat: initial', hash: 'def456' }],
           })
@@ -97,14 +160,29 @@ describe('analyze-commits step', () => {
           })
           const step = createAnalyzeCommitsStep()
 
-          const result = await step.execute(context)
+          await step.execute(context)
 
-          expect(result.status).toBe('success')
-          expect(result.stateUpdates?.effectiveBaseCommit).toBe(null)
           expect(logger.debug).toHaveBeenCalledWith(expect.stringContaining('First release'))
         })
 
         it('skips commit verification for first release', async () => {
+          const git = createMockGitClient({
+            commits: [{ message: 'feat: initial', hash: 'def456' }],
+          })
+          const context = createMockContext({
+            git,
+            state: { isFirstRelease: true },
+          })
+          const step = createAnalyzeCommitsStep()
+
+          const result = await step.execute(context)
+
+          expect(result).toEqual(
+            expect.objectContaining({ status: 'success', stateUpdates: expect.objectContaining({ effectiveBaseCommit: null }) })
+          )
+        })
+
+        it('logs a first release analysis when commit verification is skipped', async () => {
           const git = createMockGitClient({
             commits: [{ message: 'feat: initial', hash: 'def456' }],
           })
@@ -116,16 +194,43 @@ describe('analyze-commits step', () => {
           })
           const step = createAnalyzeCommitsStep()
 
-          const result = await step.execute(context)
+          await step.execute(context)
 
-          expect(result.status).toBe('success')
-          expect(result.stateUpdates?.effectiveBaseCommit).toBe(null)
           expect(logger.debug).toHaveBeenCalledWith(expect.stringContaining('First release'))
         })
       })
 
       describe('commit analysis', () => {
         it('gets commits since publishedCommit', async () => {
+          const git = createMockGitClient({
+            commits: [
+              { message: 'feat: feature 1', hash: 'commit1' },
+              { message: 'fix: bug fix', hash: 'commit2' },
+            ],
+            commitReachable: true,
+          })
+          const context = createMockContext({
+            git,
+            state: {
+              isFirstRelease: false,
+              publishedCommit: 'abc123',
+            },
+          })
+          const step = createAnalyzeCommitsStep()
+
+          const result = await step.execute(context)
+
+          expect(result).toEqual(
+            expect.objectContaining({
+              status: 'success',
+              stateUpdates: expect.objectContaining({
+                commits: [expect.objectContaining({ subject: 'feature 1' }), expect.objectContaining({ subject: 'bug fix' })],
+              }),
+            })
+          )
+        })
+
+        it('logs the number of commits found since publishedCommit', async () => {
           const git = createMockGitClient({
             commits: [
               { message: 'feat: feature 1', hash: 'commit1' },
@@ -144,14 +249,36 @@ describe('analyze-commits step', () => {
           })
           const step = createAnalyzeCommitsStep()
 
-          const result = await step.execute(context)
+          await step.execute(context)
 
-          expect(result.status).toBe('success')
-          expect(result.stateUpdates?.commits).toHaveLength(2)
           expect(logger.debug).toHaveBeenCalledWith(expect.stringContaining('Found 2 commits since'))
         })
 
         it('gets all commits for first release (limited by default maxCommitFallback of 500)', async () => {
+          const commits = Array.from({ length: 600 }, (_, i) => ({
+            message: `feat: feature ${i}`,
+            hash: `commit${i}`,
+          }))
+          const git = createMockGitClient({ commits })
+          const context = createMockContext({
+            git,
+            state: { isFirstRelease: true },
+          })
+          const step = createAnalyzeCommitsStep()
+
+          const result = await step.execute(context)
+
+          expect(result).toEqual(
+            expect.objectContaining({
+              status: 'success',
+              stateUpdates: expect.objectContaining({
+                commits: Array.from({ length: 500 }, (_, i) => expect.objectContaining({ subject: `feature ${i}` })),
+              }),
+            })
+          )
+        })
+
+        it('logs a first release analysis when the commit log exceeds the default maxCommitFallback', async () => {
           const commits = Array.from({ length: 600 }, (_, i) => ({
             message: `feat: feature ${i}`,
             hash: `commit${i}`,
@@ -165,10 +292,8 @@ describe('analyze-commits step', () => {
           })
           const step = createAnalyzeCommitsStep()
 
-          const result = await step.execute(context)
+          await step.execute(context)
 
-          expect(result.status).toBe('success')
-          expect(result.stateUpdates?.commits?.length).toBeLessThanOrEqual(500)
           expect(logger.debug).toHaveBeenCalledWith(expect.stringContaining('First release'))
         })
 
@@ -189,8 +314,14 @@ describe('analyze-commits step', () => {
 
           const result = await step.execute(context)
 
-          expect(result.status).toBe('success')
-          expect(result.stateUpdates?.commits?.length).toBeLessThanOrEqual(50)
+          expect(result).toEqual(
+            expect.objectContaining({
+              status: 'success',
+              stateUpdates: expect.objectContaining({
+                commits: Array.from({ length: 50 }, (_, i) => expect.objectContaining({ subject: `feature ${i}` })),
+              }),
+            })
+          )
         })
 
         it('parses conventional commits and filters by release types', async () => {
@@ -213,8 +344,18 @@ describe('analyze-commits step', () => {
 
           const result = await step.execute(context)
 
-          expect(result.status).toBe('success')
-          expect(result.stateUpdates?.commits).toHaveLength(3)
+          expect(result).toEqual(
+            expect.objectContaining({
+              status: 'success',
+              stateUpdates: expect.objectContaining({
+                commits: [
+                  expect.objectContaining({ type: 'feat' }),
+                  expect.objectContaining({ type: 'fix' }),
+                  expect.objectContaining({ type: 'perf' }),
+                ],
+              }),
+            })
+          )
         })
 
         it('filters invalid conventional commits', async () => {
@@ -234,8 +375,14 @@ describe('analyze-commits step', () => {
 
           const result = await step.execute(context)
 
-          expect(result.status).toBe('success')
-          expect(result.stateUpdates?.commits).toHaveLength(2)
+          expect(result).toEqual(
+            expect.objectContaining({
+              status: 'success',
+              stateUpdates: expect.objectContaining({
+                commits: [expect.objectContaining({ subject: 'valid feature' }), expect.objectContaining({ subject: 'valid fix' })],
+              }),
+            })
+          )
         })
 
         it('returns empty commits array when no releasable commits found', async () => {
@@ -254,9 +401,13 @@ describe('analyze-commits step', () => {
 
           const result = await step.execute(context)
 
-          expect(result.status).toBe('success')
-          expect(result.stateUpdates?.commits).toHaveLength(0)
-          expect(result.message).toContain('No releasable commits found')
+          expect(result).toEqual(
+            expect.objectContaining({
+              status: 'success',
+              stateUpdates: expect.objectContaining({ commits: [] }),
+              message: expect.stringContaining('No releasable commits found'),
+            })
+          )
         })
 
         it('returns appropriate message when releasable commits are found', async () => {
@@ -275,9 +426,9 @@ describe('analyze-commits step', () => {
 
           const result = await step.execute(context)
 
-          expect(result.status).toBe('success')
-          expect(result.message).toContain('Found 2 releasable commits')
-          expect(result.message).toContain('3 total')
+          expect(result).toEqual(
+            expect.objectContaining({ status: 'success', message: expect.stringContaining('Found 2 releasable commits (3 total') })
+          )
         })
       })
 
@@ -295,8 +446,12 @@ describe('analyze-commits step', () => {
 
           const result = await step.execute(context)
 
-          expect(result.status).toBe('success')
-          expect(result.stateUpdates?.commits).toHaveLength(1)
+          expect(result).toEqual(
+            expect.objectContaining({
+              status: 'success',
+              stateUpdates: expect.objectContaining({ commits: [expect.objectContaining({ type: 'feat' })] }),
+            })
+          )
         })
 
         it('respects custom release types', async () => {
@@ -315,9 +470,12 @@ describe('analyze-commits step', () => {
 
           const result = await step.execute(context)
 
-          expect(result.status).toBe('success')
-          expect(result.stateUpdates?.commits).toHaveLength(1)
-          expect(result.stateUpdates?.commits?.[0].type).toBe('custom')
+          expect(result).toEqual(
+            expect.objectContaining({
+              status: 'success',
+              stateUpdates: expect.objectContaining({ commits: [expect.objectContaining({ type: 'custom' })] }),
+            })
+          )
         })
       })
 
@@ -438,8 +596,7 @@ describe('analyze-commits step', () => {
 
           const result = await step.execute(context)
 
-          expect(result.message).toContain('No releasable commits')
-          expect(result.message).toContain('strategy:')
+          expect(result.message).toMatch(/No releasable commits.*strategy:/)
         })
 
         it('shows total commit count in message', async () => {
@@ -478,10 +635,12 @@ describe('analyze-commits step', () => {
 
           const result = await step.execute(context)
 
-          expect(result.status).toBe('success')
-          const commits = result.stateUpdates?.commits ?? []
-          expect(commits).toHaveLength(1)
-          expect(commits[0].scope).toEqual([])
+          expect(result).toEqual(
+            expect.objectContaining({
+              status: 'success',
+              stateUpdates: expect.objectContaining({ commits: [expect.objectContaining({ scope: [] })] }),
+            })
+          )
         })
 
         it('preserves scope for file-based commits with different scope', async () => {
@@ -509,10 +668,12 @@ describe('analyze-commits step', () => {
 
           const result = await step.execute(context)
 
-          expect(result.status).toBe('success')
-          const resultCommits = result.stateUpdates?.commits ?? []
-          expect(resultCommits).toHaveLength(1)
-          expect(resultCommits[0].scope).toEqual(['other-project'])
+          expect(result).toEqual(
+            expect.objectContaining({
+              status: 'success',
+              stateUpdates: expect.objectContaining({ commits: [expect.objectContaining({ scope: ['other-project'] })] }),
+            })
+          )
         })
       })
 

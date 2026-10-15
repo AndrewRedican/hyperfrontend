@@ -17,10 +17,15 @@ describe('scopeStep', () => {
     )
   })
 
-  it('writes an empty scope and proceeds when scope is optional with no candidates', async () => {
+  it('proceeds when scope is optional with no candidates', async () => {
     const ctx = createSessionContext(createTestConfig({ scopeOptional: true }))
     const result = await scopeStep.run(ctx)
     expect(result).toEqual({ status: StepStatus.Done })
+  })
+
+  it('writes an empty scope when scope is optional with no candidates', async () => {
+    const ctx = createSessionContext(createTestConfig({ scopeOptional: true }))
+    await scopeStep.run(ctx)
     expect(ctx.draft.scope).toEqual([])
   })
 

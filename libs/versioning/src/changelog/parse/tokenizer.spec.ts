@@ -5,24 +5,22 @@ describe('tokenize', () => {
   describe('basic tokenization', () => {
     it('tokenizes an empty string', () => {
       const tokens = tokenize('')
-      expect(tokens).toHaveLength(1)
-      expect(tokens[0]?.type).toBe('eof')
+      expect(tokens).toEqual([expect.objectContaining({ type: 'eof' })])
     })
 
     it('tokenizes plain text', () => {
       const tokens = tokenize('Hello world')
-      expect(tokens).toHaveLength(2)
-      expect(tokens[0]).toMatchObject({ type: 'text', value: 'Hello world' })
-      expect(tokens[1]?.type).toBe('eof')
+      expect(tokens).toEqual([expect.objectContaining({ type: 'text', value: 'Hello world' }), expect.objectContaining({ type: 'eof' })])
     })
 
     it('tokenizes text with newlines', () => {
       const tokens = tokenize('Line 1\nLine 2')
-      expect(tokens).toHaveLength(4)
-      expect(tokens[0]).toMatchObject({ type: 'text', value: 'Line 1' })
-      expect(tokens[1]).toMatchObject({ type: 'newline' })
-      expect(tokens[2]).toMatchObject({ type: 'text', value: 'Line 2' })
-      expect(tokens[3]?.type).toBe('eof')
+      expect(tokens).toEqual([
+        expect.objectContaining({ type: 'text', value: 'Line 1' }),
+        expect.objectContaining({ type: 'newline' }),
+        expect.objectContaining({ type: 'text', value: 'Line 2' }),
+        expect.objectContaining({ type: 'eof' }),
+      ])
     })
 
     it('handles blank lines', () => {
@@ -96,36 +94,36 @@ describe('tokenize', () => {
     it('parses multiple list items', () => {
       const tokens = tokenize('- Item 1\n- Item 2\n- Item 3')
       const listItems = tokens.filter((t) => t.type === 'list-item')
-      expect(listItems).toHaveLength(3)
-      expect(listItems[0]?.value).toBe('Item 1')
-      expect(listItems[1]?.value).toBe('Item 2')
-      expect(listItems[2]?.value).toBe('Item 3')
+      expect(listItems.map((t) => t.value)).toEqual(['Item 1', 'Item 2', 'Item 3'])
     })
   })
 
   describe('links', () => {
     it('tokenizes a markdown link', () => {
       const tokens = tokenize('[text](url)')
-      expect(tokens[0]).toMatchObject({ type: 'link-text', value: 'text' })
-      expect(tokens[1]).toMatchObject({ type: 'link-url', value: 'url' })
+      expect(tokens).toEqual([
+        expect.objectContaining({ type: 'link-text', value: 'text' }),
+        expect.objectContaining({ type: 'link-url', value: 'url' }),
+        expect.objectContaining({ type: 'eof' }),
+      ])
     })
 
     it('tokenizes a link with full URL', () => {
       const tokens = tokenize('[Keep a Changelog](https://keepachangelog.com)')
-      expect(tokens[0]).toMatchObject({
-        type: 'link-text',
-        value: 'Keep a Changelog',
-      })
-      expect(tokens[1]).toMatchObject({
-        type: 'link-url',
-        value: 'https://keepachangelog.com',
-      })
+      expect(tokens).toEqual([
+        expect.objectContaining({ type: 'link-text', value: 'Keep a Changelog' }),
+        expect.objectContaining({ type: 'link-url', value: 'https://keepachangelog.com' }),
+        expect.objectContaining({ type: 'eof' }),
+      ])
     })
 
     it('handles unclosed bracket as text', () => {
       const tokens = tokenize('[unclosed')
-      expect(tokens[0]).toMatchObject({ type: 'text', value: '[' })
-      expect(tokens[1]).toMatchObject({ type: 'text', value: 'unclosed' })
+      expect(tokens).toEqual([
+        expect.objectContaining({ type: 'text', value: '[' }),
+        expect.objectContaining({ type: 'text', value: 'unclosed' }),
+        expect.objectContaining({ type: 'eof' }),
+      ])
     })
 
     it('handles bracket without url as text', () => {
@@ -178,19 +176,16 @@ All notable changes will be documented here.
 
       const tokens = tokenize(content)
 
-      const h1 = tokens.find((t) => t.type === 'heading-1')
-      expect(h1?.value).toBe('Changelog')
-
-      const h2 = tokens.find((t) => t.type === 'heading-2')
-      expect(h2?.value).toBe('[1.0.0] - 2024-01-01')
-
-      const h3s = tokens.filter((t) => t.type === 'heading-3')
-      expect(h3s).toHaveLength(2)
-      expect(h3s[0]?.value).toBe('Added')
-      expect(h3s[1]?.value).toBe('Fixed')
-
-      const listItems = tokens.filter((t) => t.type === 'list-item')
-      expect(listItems).toHaveLength(3)
+      const outline = tokens.filter((t) => t.type.startsWith('heading-') || t.type === 'list-item').map((t) => [t.type, t.value])
+      expect(outline).toEqual([
+        ['heading-1', 'Changelog'],
+        ['heading-2', '[1.0.0] - 2024-01-01'],
+        ['heading-3', 'Added'],
+        ['list-item', 'First feature'],
+        ['list-item', 'Second feature'],
+        ['heading-3', 'Fixed'],
+        ['list-item', 'Bug fix one'],
+      ])
     })
   })
 
@@ -206,13 +201,9 @@ All notable changes will be documented here.
       const tokens = tokenize('# Title\n\n## Version\n- Item')
 
       const title = tokens.find((t) => t.type === 'heading-1')
-      expect(title?.line).toBe(1)
-
       const version = tokens.find((t) => t.type === 'heading-2')
-      expect(version?.line).toBe(3)
-
       const item = tokens.find((t) => t.type === 'list-item')
-      expect(item?.line).toBe(4)
+      expect({ title: title?.line, version: version?.line, item: item?.line }).toEqual({ title: 1, version: 3, item: 4 })
     })
   })
 
@@ -243,29 +234,37 @@ All notable changes will be documented here.
 
     it('handles bold with newline in middle', () => {
       const tokens = tokenize('**first\nsecond**')
-      const bold = tokens.find((t) => t.type === 'bold')
-      expect(bold).toBeDefined()
-      expect(bold?.value).toBe('first\nsecond')
+      expect(tokens.find((t) => t.type === 'bold')).toEqual(expect.objectContaining({ value: 'first\nsecond' }))
     })
   })
 
   describe('text tokenization edge cases', () => {
     it('stops at asterisk when followed by another asterisk', () => {
       const tokens = tokenize('text**bold**')
-      expect(tokens.find((t) => t.type === 'text' && t.value === 'text')).toBeDefined()
-      expect(tokens.find((t) => t.type === 'bold' && t.value === 'bold')).toBeDefined()
+      expect(tokens).toEqual([
+        expect.objectContaining({ type: 'text', value: 'text' }),
+        expect.objectContaining({ type: 'bold', value: 'bold' }),
+        expect.objectContaining({ type: 'eof' }),
+      ])
     })
 
     it('stops at backtick', () => {
       const tokens = tokenize('text`code`')
-      expect(tokens.find((t) => t.type === 'text' && t.value === 'text')).toBeDefined()
-      expect(tokens.find((t) => t.type === 'code' && t.value === 'code')).toBeDefined()
+      expect(tokens).toEqual([
+        expect.objectContaining({ type: 'text', value: 'text' }),
+        expect.objectContaining({ type: 'code', value: 'code' }),
+        expect.objectContaining({ type: 'eof' }),
+      ])
     })
 
     it('stops at bracket', () => {
       const tokens = tokenize('text[link](url)')
-      expect(tokens.find((t) => t.type === 'text' && t.value === 'text')).toBeDefined()
-      expect(tokens.find((t) => t.type === 'link-text' && t.value === 'link')).toBeDefined()
+      expect(tokens).toEqual([
+        expect.objectContaining({ type: 'text', value: 'text' }),
+        expect.objectContaining({ type: 'link-text', value: 'link' }),
+        expect.objectContaining({ type: 'link-url', value: 'url' }),
+        expect.objectContaining({ type: 'eof' }),
+      ])
     })
 
     it('stops at carriage return', () => {
@@ -312,18 +311,15 @@ All notable changes will be documented here.
 describe('helper functions', () => {
   describe('isLetter', () => {
     it('returns true for lowercase letters', () => {
-      expect(isLetter('a')).toBe(true)
-      expect(isLetter('z')).toBe(true)
+      expect(['a', 'z'].map((char) => isLetter(char))).toEqual([true, true])
     })
 
     it('returns true for uppercase letters', () => {
-      expect(isLetter('A')).toBe(true)
-      expect(isLetter('Z')).toBe(true)
+      expect(['A', 'Z'].map((char) => isLetter(char))).toEqual([true, true])
     })
 
     it('returns false for digits', () => {
-      expect(isLetter('0')).toBe(false)
-      expect(isLetter('9')).toBe(false)
+      expect(['0', '9'].map((char) => isLetter(char))).toEqual([false, false])
     })
 
     it('returns false for undefined', () => {
@@ -333,8 +329,7 @@ describe('helper functions', () => {
 
   describe('isDigit', () => {
     it('returns true for digits', () => {
-      expect(isDigit('0')).toBe(true)
-      expect(isDigit('9')).toBe(true)
+      expect(['0', '9'].map((char) => isDigit(char))).toEqual([true, true])
     })
 
     it('returns false for letters', () => {
@@ -348,8 +343,7 @@ describe('helper functions', () => {
 
   describe('isAlphanumeric', () => {
     it('returns true for letters', () => {
-      expect(isAlphanumeric('a')).toBe(true)
-      expect(isAlphanumeric('Z')).toBe(true)
+      expect(['a', 'Z'].map((char) => isAlphanumeric(char))).toEqual([true, true])
     })
 
     it('returns true for digits', () => {

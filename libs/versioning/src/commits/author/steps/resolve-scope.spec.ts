@@ -27,8 +27,12 @@ describe('resolveScopeStep', () => {
   it('cancels with the empty-staging error when nothing is staged', async () => {
     const ctx = createSessionContext(configWith([]))
     const result = await resolveScopeStep.run(ctx)
-    expect(result).toEqual(expect.objectContaining({ status: StepStatus.Cancelled }))
-    expect(result.error?.message).toBe(EMPTY_STAGING_MESSAGE)
+    expect(result).toEqual(
+      expect.objectContaining({
+        status: StepStatus.Cancelled,
+        error: expect.objectContaining({ message: EMPTY_STAGING_MESSAGE }),
+      })
+    )
   })
 
   it('populates candidateScopes from discovered projects', async () => {
