@@ -12,6 +12,7 @@ Nx plugin providing executors for building, type-checking, versioning, and publi
 | `version:all` | Batch versioning for all affected libraries                       | -                                           |
 | `publish`     | Publish to npm with dry-run support                               | [README](./src/executors/publish/README.md) |
 | `e2e`         | Test package outputs via npm pack + tarball install               | -                                           |
+| `test`        | Run a project's suites on Node's test runner via the test runtime | -                                           |
 
 ## Quick Start
 
@@ -128,6 +129,17 @@ End-to-end testing for package build outputs. Validates that built packages inst
 | `formats`        | Output formats to test (`cjs`, `esm`, `iife`, `umd`)             |
 | `skipInstall`    | Skip npm pack and install step                                   |
 | `cleanupTarball` | Remove tarball after installation (default: true)                |
+
+### test
+
+Runs a project's `test.config.ts` on Node's built-in test runner. The executor starts a Node process with the `@hyperfrontend/testing` preload and `src/executors/test/runner-cli.ts`, which loads the configuration and hands it to the runtime's runner, then prints the coverage table and the reasons a run failed. The runtime is located through the `@hyperfrontend/testing/*` aliases in `tsconfig.base.json`, so the workspace tests every project, the runtime included, on the library's own source, the same way it builds with `@hyperfrontend/builder` from source.
+
+**Options:**
+
+| Option              | Description                                                               |
+| ------------------- | ------------------------------------------------------------------------- |
+| `testConfig`        | Path to the project's test configuration (defaults to `test.config.ts`)   |
+| `coverageDirectory` | Where coverage reports are written (defaults to `coverage/{projectRoot}`) |
 
 ---
 

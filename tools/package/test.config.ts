@@ -1,4 +1,4 @@
-import type { TestConfig } from '@hyperfrontend/testing'
+import type { TestConfig } from '@hyperfrontend/testing/runner'
 
 /**
  * How the package plugin is tested.
