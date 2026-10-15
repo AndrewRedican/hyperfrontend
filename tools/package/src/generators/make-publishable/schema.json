@@ -21,7 +21,9 @@
     },
     "keywords": {
       "type": "array",
-      "items": { "type": "string" },
+      "items": {
+        "type": "string"
+      },
       "description": "npm keywords for the package",
       "x-prompt": "Enter npm keywords for this package (comma-separated)"
     },
@@ -30,6 +32,16 @@
       "enum": ["isomorphic", "node-only", "browser-only"],
       "description": "Runtime profile written to metadata.compatibility in project.json: 'isomorphic' runs in Node, browsers and Web Workers, 'node-only' runs in Node alone, 'browser-only' runs in browsers and Web Workers. A package with partial support in a runtime declares it by hand instead.",
       "x-prompt": "Where does this package run?"
+    },
+    "docsCategory": {
+      "type": "string",
+      "enum": ["core", "supporting", "utils"],
+      "description": "Section of the docs-site library index the package is listed under. Defaults to 'utils' for a package under libs/utils, 'core' for a project tagged type:core, and 'supporting' otherwise."
+    },
+    "ecosystemTier": {
+      "type": "string",
+      "enum": ["sdk", "messaging", "tooling", "primitives", "standalone", "utilities"],
+      "description": "Level of the docs-site ecosystem hierarchy the package is appended to, which also fixes its place in the root README's packages table. Defaults to 'utilities' for a package listed under utils and 'standalone' otherwise."
     },
     "skipE2E": {
       "type": "boolean",
