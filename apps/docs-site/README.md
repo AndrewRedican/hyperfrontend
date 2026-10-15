@@ -233,6 +233,11 @@ What a published file carries:
 
 - the document body, after the same badge stripping, link rewriting, and comment removal
   the HTML page applies, so nothing the page withholds appears in the Markdown;
+- on a package page or a secondary entry point, the API reference the page renders from
+  the package's TypeDoc bundle, written by `src/lib/api-markdown.ts` as headings, fenced
+  declarations and tables: a package with several entry points is grouped by entry point
+  and documents each declaration once, under the most specific entry point that exports
+  it; an entry point with a reference but no README publishes a counterpart too;
 - every site link resolved to an absolute URL, pointing at the `.md` counterpart where one
   exists, so an agent following links stays inside the corpus;
 - a footer naming the canonical page, the file itself, and `/llms.txt`.
