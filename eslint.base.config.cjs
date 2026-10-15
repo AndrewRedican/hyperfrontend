@@ -31,9 +31,9 @@ module.exports = [
         'error',
         {
           enforceBuildableLibDependency: true,
-          // context: @hyperfrontend/testing is the test runtime every project's specs import. It is private and has no
-          // context: build target, so both the buildable-dependency check and the tag constraints would reject it.
-          allow: ['^.*/eslint(\\.base)?\\.config\\.[cm]?js$', '^@hyperfrontend/testing$'],
+          // context: @hyperfrontend/testing is the test runtime every project's specs import, whatever tag the project
+          // context: carries, so the tag constraints below would reject the import from every core library.
+          allow: ['^.*/eslint(\\.base)?\\.config\\.[cm]?js$', '^@hyperfrontend/testing(/.*)?$'],
           depConstraints: [
             // Core libraries: no dependencies on other libraries
             {
