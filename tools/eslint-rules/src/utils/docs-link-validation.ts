@@ -15,7 +15,7 @@ import { dirname, join, posix } from 'node:path'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { createURL } from '@hyperfrontend/immutable-api-utils/built-in-copy/url'
 import { workspaceRelativePath } from '@hyperfrontend/project-scope/core/path'
-import { API_ANCHOR_PREFIX, PROPERTY_ANCHOR_INFIX } from './docs-links'
+import { API_ANCHOR_PREFIX, METHOD_ANCHOR_INFIX, PROPERTY_ANCHOR_INFIX } from './docs-links'
 import { entryOfRoute, markdownOfRoute, routeExists } from './docs-targets'
 import { exists, isDirectory, readFileIfExists } from './fs'
 
@@ -142,9 +142,15 @@ function checkAnchor(index: DocsTargetIndex, route: string, anchor: string): Lin
       return { ok: true }
     }
     const [name, property] = anchor.slice(API_ANCHOR_PREFIX.length).split(PROPERTY_ANCHOR_INFIX) as [string, string | undefined]
+    const [parentName, method] = name.split(METHOD_ANCHOR_INFIX) as [string, string | undefined]
     const entries = owner.entry === null ? [...owner.pkg.entries.values()] : [owner.entry]
-    const symbol = entries.map((entry) => entry.symbols.get(name)).find((candidate) => candidate !== undefined)
+    const symbol = entries.map((entry) => entry.symbols.get(parentName)).find((candidate) => candidate !== undefined)
     if (symbol !== undefined) {
+      if (method !== undefined) {
+        return symbol.methods.includes(method)
+          ? { ok: true }
+          : { ok: false, reason: `${parentName} has no method '${method}' with an anchor of its own` }
+      }
       if (property === undefined || symbol.properties.includes(property)) {
         return { ok: true }
       }

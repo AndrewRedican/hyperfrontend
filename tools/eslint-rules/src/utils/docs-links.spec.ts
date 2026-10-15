@@ -56,6 +56,7 @@ function createWorkspace(): TempWorkspace {
       }),
       'libs/alpha/src/index.ts': `export type { Options, Mode } from './shared/types'
 export { DEFAULT_OPTIONS } from './shared/types'
+export { Store } from './shared/store'
 export { validate } from './shared/validate'
 export { nested } from './deep/nested/index'
 `,
@@ -68,6 +69,12 @@ export type Mode = 'v3' | 'v4'
 export const DEFAULT_OPTIONS = { onDrop: undefined, status: 'idle' }
 `,
       'libs/alpha/src/shared/validate.ts': 'export function validate(): void {}\n',
+      'libs/alpha/src/shared/store.ts': `export class Store {
+  readonly subscribe = (listener: () => void): (() => void) => listener
+  state = 'idle'
+  dispatch(): void {}
+}
+`,
       'libs/alpha/src/host/index.ts': "export { createShell } from './create-shell'\nexport type { ShellHandle } from './create-shell'\n",
       'libs/alpha/src/host/create-shell.ts': `export interface ShellHandle {
   open(): void
@@ -289,6 +296,29 @@ describe('docs-links', () => {
       })
     })
 
+    it('anchors a class method on its own line, a function-valued property among them', () => {
+      const { index, readme } = setUp()
+
+      expect(resolveCodeMention(index, ORIGINS, 'dispatch', readme)).toEqual({
+        kind: 'resolved',
+        target: 'member',
+        url: `https://docs.example${SITE}/alpha/#api-Store-method-dispatch`,
+        via: 'Store',
+      })
+      expect(resolveCodeMention(index, ORIGINS, 'subscribe', readme)).toEqual({
+        kind: 'resolved',
+        target: 'member',
+        url: `https://docs.example${SITE}/alpha/#api-Store-method-subscribe`,
+        via: 'Store',
+      })
+      expect(resolveCodeMention(index, ORIGINS, 'state', readme)).toEqual({
+        kind: 'resolved',
+        target: 'member',
+        url: `https://docs.example${SITE}/alpha/#api-Store-prop-state`,
+        via: 'Store',
+      })
+    })
+
     it('prefers the interface to the defaults constant that mirrors it', () => {
       const { index, readme } = setUp()
 
@@ -452,6 +482,17 @@ describe('docs-links', () => {
       expect(validateLink(index, ORIGINS, 'https://docs.example/docs/libraries/alpha/#api-Options-prop-send', readme)).toEqual({
         ok: false,
         reason: "Options has no property 'send' with an anchor of its own",
+      })
+      expect(validateLink(index, ORIGINS, 'https://docs.example/docs/libraries/alpha/#api-Store-method-subscribe', readme)).toEqual({
+        ok: true,
+      })
+      expect(validateLink(index, ORIGINS, 'https://docs.example/docs/libraries/alpha/#api-Store-prop-subscribe', readme)).toEqual({
+        ok: false,
+        reason: "Store has no property 'subscribe' with an anchor of its own",
+      })
+      expect(validateLink(index, ORIGINS, 'https://docs.example/docs/libraries/alpha/#api-Store-method-state', readme)).toEqual({
+        ok: false,
+        reason: "Store has no method 'state' with an anchor of its own",
       })
       expect(validateLink(index, ORIGINS, 'https://docs.example/docs/libraries/alpha/host/#api-validate', readme)).toEqual({
         ok: false,

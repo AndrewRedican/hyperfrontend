@@ -82,7 +82,11 @@ export class Widget {
   public readonly size = 1
   private readonly secret = 2
   #hidden = 3
+  public readonly draw = (): void => {}
+  public readonly paint: () => void = () => {}
+  private readonly hide = (): void => {}
   public render(): void {}
+  private conceal(): void {}
 }
 function helper(): void {}
 interface Internal { a: number }
@@ -172,7 +176,7 @@ describe('docs-targets', () => {
         'extra',
         'open',
       ])
-      expect(root?.symbols.get('external')).toEqual({ name: 'external', kind: 'unknown', members: [], properties: [] })
+      expect(root?.symbols.get('external')).toEqual({ name: 'external', kind: 'unknown', members: [], properties: [], methods: [] })
     })
 
     it('records the kind, members and anchored properties of each declaration', () => {
@@ -185,12 +189,25 @@ describe('docs-targets', () => {
         kind: 'interface',
         members: ['label', 'onDrop', 'send'],
         properties: ['label', 'onDrop'],
+        methods: [],
       })
-      expect(root?.symbols.get('Mode')).toEqual({ name: 'Mode', kind: 'type', members: ['v3', 'v4', 'none'], properties: [] })
-      expect(root?.symbols.get('Handle')).toEqual({ name: 'Handle', kind: 'type', members: ['close'], properties: [] })
-      expect(root?.symbols.get('Widget')).toEqual({ name: 'Widget', kind: 'class', members: ['size', 'render'], properties: ['size'] })
-      expect(root?.symbols.get('Level')).toEqual({ name: 'Level', kind: 'enum', members: ['Low', 'low', 'High', 'high'], properties: [] })
-      expect(root?.symbols.get('open')).toEqual({ name: 'open', kind: 'function', members: [], properties: [] })
+      expect(root?.symbols.get('Mode')).toEqual({ name: 'Mode', kind: 'type', members: ['v3', 'v4', 'none'], properties: [], methods: [] })
+      expect(root?.symbols.get('Handle')).toEqual({ name: 'Handle', kind: 'type', members: ['close'], properties: [], methods: [] })
+      expect(root?.symbols.get('Widget')).toEqual({
+        name: 'Widget',
+        kind: 'class',
+        members: ['size', 'draw', 'paint', 'render'],
+        properties: ['size', 'paint'],
+        methods: ['draw', 'render'],
+      })
+      expect(root?.symbols.get('Level')).toEqual({
+        name: 'Level',
+        kind: 'enum',
+        members: ['Low', 'low', 'High', 'high'],
+        properties: [],
+        methods: [],
+      })
+      expect(root?.symbols.get('open')).toEqual({ name: 'open', kind: 'function', members: [], properties: [], methods: [] })
     })
 
     it('reads a frozen code map by its keys and its string values', () => {
@@ -203,6 +220,7 @@ describe('docs-targets', () => {
         kind: 'variable',
         members: ['Replayed', 'replayed', 'Malformed', 'malformed'],
         properties: [],
+        methods: [],
       })
     })
 

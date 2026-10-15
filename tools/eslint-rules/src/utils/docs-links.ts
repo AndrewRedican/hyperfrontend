@@ -23,6 +23,9 @@ export const API_ANCHOR_PREFIX = 'api-'
 /** What the site puts between a symbol's anchor and one of its properties'. */
 export const PROPERTY_ANCHOR_INFIX = '-prop-'
 
+/** What the site puts between a class's anchor and one of its methods'. */
+export const METHOD_ANCHOR_INFIX = '-method-'
+
 /** What a code span turned out to be. */
 export type CodeMention = ExemptMention | ResolvedMention | AmbiguousMention | ElsewhereMention | UnknownMention
 
@@ -173,8 +176,12 @@ function resolveOwnMember(origins: LinkOrigins, allHits: readonly MemberHit[]): 
   }
   if (parents.size === 1) {
     const first = hits[0] as MemberHit
-    // why: an interface or class property has an anchor of its own on the site, so the reader lands on the line rather than on the type
-    const suffix = first.parent.properties.includes(first.member) ? `${PROPERTY_ANCHOR_INFIX}${first.member}` : ''
+    // why: an interface or class property, and a class method, each have an anchor of their own on the site, so the reader lands on the line rather than on the type
+    const suffix = first.parent.properties.includes(first.member)
+      ? `${PROPERTY_ANCHOR_INFIX}${first.member}`
+      : first.parent.methods.includes(first.member)
+        ? `${METHOD_ANCHOR_INFIX}${first.member}`
+        : ''
     return { kind: 'resolved', target: 'member', url: `${anchorOf(first.parent.name)}${suffix}`, via: first.parent.name }
   }
   return { kind: 'ambiguous', candidates: [...parents].map((parent) => `${parent}: ${anchorOf(parent)}`) }
