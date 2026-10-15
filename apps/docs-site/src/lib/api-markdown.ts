@@ -62,16 +62,25 @@ function heading(depth: number, text: string): string {
 }
 
 /**
+ * Escapes the pipes that would split a table cell. A table reads a backslash and the
+ * character after it as one escaped pair, so existing pairs pass through whole: an
+ * authored `\|` stays escaped and an authored `\\` stays a literal backslash.
+ *
+ * @param text - The cell text
+ * @returns The text with every bare pipe escaped
+ */
+function escapePipes(text: string): string {
+  return text.replace(/\\[\s\S]|\|/g, (match) => (match === '|' ? '\\|' : match))
+}
+
+/**
  * Text fit for one table cell: on one line, with the pipes that would split it escaped.
  *
  * @param text - The text as authored
  * @returns The cell contents
  */
 function cell(text: string): string {
-  return text
-    .replace(/\s*\n\s*/g, ' ')
-    .replace(/\|/g, '\\|')
-    .trim()
+  return escapePipes(text.replace(/\s*\n\s*/g, ' ')).trim()
 }
 
 /**
@@ -81,7 +90,7 @@ function cell(text: string): string {
  * @returns The code span
  */
 function typeSpan(text: string): string {
-  return `\`${text.replace(/\|/g, '\\|')}\``
+  return `\`${escapePipes(text)}\``
 }
 
 /**
