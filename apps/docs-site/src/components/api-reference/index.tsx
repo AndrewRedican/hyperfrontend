@@ -4,27 +4,14 @@ import type { ApiFilterState } from './api-search-filter'
 import type { TypeDocOutput, TypeDocNode } from './types'
 import { useState, useMemo, useCallback, useEffect } from 'react'
 import { values } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
-import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { useHashNavigation } from '../../hooks/use-hash-navigation'
 import { AnchorLink } from '../anchor-link'
+import { flattenExports, groupByKind, hasModules } from './api-exports'
 import { ApiSearchFilter, defaultFilters } from './api-search-filter'
 import { FunctionSignature } from './function-signature'
-import { ModuleGroupedView, hasModules } from './module-grouped-view'
+import { ModuleGroupedView } from './module-grouped-view'
 import { TypeDefinition } from './type-definition'
 import { TYPE_EXPRESSION_ATTRIBUTES, TypeLink } from './type-link'
-import { buildNodeLookup, resolveReference } from './type-utils'
-import { ReflectionKind } from './types'
-
-/** Marker added to a flattened export pointing at the module it came from */
-interface SourceModuleAttribution {
-  sourceModule?: string
-}
-
-/**
- * A TypeDoc node decorated with the module that originally exported it.
- * Used while flattening per-module exports into a single deduplicated list.
- */
-type ExportWithSourceModule = TypeDocNode & SourceModuleAttribution
 
 type ViewMode = 'flat' | 'grouped'
 
@@ -49,50 +36,17 @@ export function ApiReference({ data }: ApiReferenceProps) {
     }
   }, [])
 
-  const allExports = useMemo(() => {
-    if (!data.children) return []
-
-    const hasModules = data.children.some((child) => child.kind === ReflectionKind.Module)
-
-    if (hasModules) {
-      const lookup = buildNodeLookup(data)
-      const exports: Array<ExportWithSourceModule> = []
-      const seenIds = createSet<number>()
-
-      for (const module of data.children) {
-        if (module.kind === ReflectionKind.Module && module.children) {
-          for (const child of module.children) {
-            const resolved = resolveReference(child, lookup)
-            if (!seenIds.has(resolved.id)) {
-              seenIds.add(resolved.id)
-              exports.push({ ...resolved, sourceModule: module.name })
-            }
-          }
-        }
-      }
-      return exports
-    }
-
-    return data.children
-  }, [data])
+  const allExports = useMemo(() => flattenExports(data), [data])
 
   const categorizedExports = useMemo(() => {
-    const functions = allExports.filter((child) => child.kind === ReflectionKind.Function)
-    const classes = allExports.filter((child) => child.kind === ReflectionKind.Class)
-    const interfaces = allExports.filter((child) => child.kind === ReflectionKind.Interface)
-    const typeAliases = allExports.filter((child) => child.kind === ReflectionKind.TypeAlias)
-    const variables = allExports.filter((child) => child.kind === ReflectionKind.Variable)
-    const enums = allExports.filter((child) => child.kind === ReflectionKind.Enum)
-
-    const sortByName = (a: TypeDocNode, b: TypeDocNode) => a.name.localeCompare(b.name)
-
+    const groups = groupByKind(allExports)
     return {
-      functions: functions.sort(sortByName),
-      classes: classes.sort(sortByName),
-      interfaces: interfaces.sort(sortByName),
-      typeAliases: typeAliases.sort(sortByName),
-      variables: variables.sort(sortByName),
-      enums: enums.sort(sortByName),
+      functions: groups.functions,
+      classes: groups.classes,
+      interfaces: groups.interfaces,
+      typeAliases: groups.types,
+      variables: groups.variables,
+      enums: groups.enums,
     }
   }, [allExports])
 
@@ -392,12 +346,13 @@ function ViewModeToggle({ mode, onModeChange }: ViewModeToggleProps) {
 
 export type { ApiLinkIndex, PackageSymbolLinks } from './api-link-context'
 export type { TypeDocOutput, TypeDocNode } from './types'
+export { hasModules } from './api-exports'
 export { ApiLinkProvider } from './api-link-context'
 export { ApiSearchFilter, defaultFilters } from './api-search-filter'
 export { CopyButton } from './copy-button'
 export { ExampleBlock } from './example-block'
 export { FunctionSignature } from './function-signature'
-export { ModuleGroupedView, hasModules } from './module-grouped-view'
+export { ModuleGroupedView } from './module-grouped-view'
 export { ParameterList } from './parameter-list'
 export { ScopedApiReference } from './scoped-api-reference'
 export { TypeDefinition } from './type-definition'

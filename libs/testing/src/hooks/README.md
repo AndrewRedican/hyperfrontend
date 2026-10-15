@@ -53,45 +53,13 @@ The hooks run in the test process and take their settings from the environment, 
 
 ## Module replacements
 
-Jest hoists [`jest.mock`](https://www.hyperfrontend.dev/docs/libraries/testing/#api-JestApi) above the `require` calls a spec compiles down to. ES modules have no equivalent: imports are linked before any statement runs. The loophole is that Node calls a module's load hook before it resolves that module's imports, so the declarations are read out of the spec's source text there, with string literals and comments blanked first so that a [`jest.mock`](https://www.hyperfrontend.dev/docs/libraries/testing/#api-JestApi) inside a template or a comment registers nothing.
+Jest hoists [`jest.mock`](https://www.hyperfrontend.dev/docs/libraries/testing/#api-JestApi) above the imports a spec compiles down to. ES modules have no equivalent, so the declarations are read out of the spec's source text as it loads, before its imports link, with string literals and comments blanked first so a [`jest.mock`](https://www.hyperfrontend.dev/docs/libraries/testing/#api-JestApi) inside a template or a comment registers nothing. How a replacement is generated, served and reset is described in [How a Spec Is Loaded](https://www.hyperfrontend.dev/docs/libraries/testing/architecture/#how-a-spec-is-loaded).
 
-A file counts as a spec by its name, the way Jest's default pattern recognises one: `.spec` or `.test` before `.ts`, `.tsx`, `.mts`, `.cts`, `.js`, `.jsx`, `.mjs` or `.cjs`. A setup module is not recognisable by name, which is what HF_TEST_SETUP_FILES is for: its declarations are registered before any spec loads and apply to every spec in the environment, and a spec's own declaration for the same module is read later and wins. [`jest.unmock`](https://www.hyperfrontend.dev/docs/libraries/testing/#api-JestApi) in a spec removes a setup module's registration for that spec. A declaration inside a helper module a spec imports is never read.
+What a spec can rely on:
 
-```mermaid
----
-config:
-  theme: base
-  themeVariables:
-    fontSize: 12px
----
-sequenceDiagram
-    participant Node as node:test
-    participant Load as load hook
-    participant Registry as mock registry
-    participant Resolve as resolve hook
-
-    Node->>Load: load(spec.ts)
-    Load->>Load: read jest.mock / jest.unmock out of the source
-    Load->>Registry: register each target by resolved URL
-    Load-->>Node: the spec's source
-    Node->>Resolve: resolve('./dep', from spec.ts)
-    Resolve->>Registry: is file:///…/dep.ts mocked?
-    Registry-->>Resolve: yes
-    Resolve-->>Node: hf-mock:file%3A%2F%2F%2F…%2Fdep.ts?g=0
-    Node->>Load: load(hf-mock:…)
-    Load-->>Node: generated replacement module
-```
-
-Nothing is loaded at registration time. Resolving a specifier is enough to know which URL to replace, and loading the module would pull its importers in early: a barrel re-exporting a module mocked by a later declaration would bind the real one and keep it. The one exception is the automock form, which has no factory to generate exports from and loads the module once to read its export names.
-
-The substitution happens in the resolve hook rather than the load hook, under the package's own `hf-mock:` scheme, because a built-in the loader has already imported would never reach the load hook again. The generated replacement imports the real module by URL, publishes its namespace for [`jest.requireActual`](https://www.hyperfrontend.dev/docs/libraries/testing/#api-JestApi), re-exports every real export, runs the factory verbatim, publishes its product for [`jest.requireMock`](https://www.hyperfrontend.dev/docs/libraries/testing/#api-JestApi), and exports each key of the factory's object literal under its own name. Because the real exports pass through, a factory that names only some of them leaves the rest reachable, where Jest left them undefined; under ES modules an undefined import would be a link error.
-
-### Generations
-
-Node's module registry has no eviction API. [`jest.resetModules`](https://www.hyperfrontend.dev/docs/libraries/testing/#api-JestApi) advances a counter kept on `globalThis` under a registered symbol, and from then on every file URL the resolve hook returns carries `?__hfGeneration=N`, which is a new module to Node and so a fresh evaluation. A relative import inside a re-evaluated module strips the query before resolving its neighbours, and a replacement's URL carries the generation too, so a [`jest.doMock`](https://www.hyperfrontend.dev/docs/libraries/testing/#api-JestApi) declared after a reset is served instead of a cached replacement. That ordering is the one to keep: reset, then declare, then import dynamically.
-
-## Design
-
-The registry, the generation counter and the context a replacement publishes into all live on `globalThis` under registered symbols rather than in module scope. The resolve hook and the [`jest`](https://www.hyperfrontend.dev/docs/libraries/testing/#api-jest) object reach them from different entries of the package, and a build is free to give each entry its own copy of a module; a key on the global object is the one place every copy finds the same state.
-
-The registry resolves a declaration's specifier with the same function the resolve hook uses. Without that, a [`jest.mock`](https://www.hyperfrontend.dev/docs/libraries/testing/#api-JestApi) naming a path alias would resolve nowhere and register nothing, silently leaving the real module in place.
+- A file counts as a spec by its name, the way Jest's default pattern recognises one: `.spec` or `.test` before `.ts`, `.tsx`, `.mts`, `.cts`, `.js`, `.jsx`, `.mjs` or `.cjs`. A declaration inside a helper module a spec imports is never read.
+- A setup module named in HF_TEST_SETUP_FILES has its declarations applied to every spec in the environment. A spec's own declaration for the same module wins, and [`jest.unmock`](https://www.hyperfrontend.dev/docs/libraries/testing/#api-JestApi) in a spec removes the setup module's registration for that spec.
+- A factory that names only some exports leaves the rest reachable and real, where Jest left them undefined; under ES modules an undefined import would be a link error that stops the whole file.
+- The automock form, [`jest.mock`](https://www.hyperfrontend.dev/docs/libraries/testing/#api-JestApi) with no factory, replaces every export with a fresh [`jest.fn`](https://www.hyperfrontend.dev/docs/libraries/testing/#api-JestApi). It is the one case where the module is loaded at registration, to learn its export names.
+- [`jest.resetModules`](https://www.hyperfrontend.dev/docs/libraries/testing/#api-JestApi) makes later dynamic imports evaluate their target again, and a [`jest.doMock`](https://www.hyperfrontend.dev/docs/libraries/testing/#api-JestApi) declared after it is served instead of a cached replacement. The order to keep is reset, then declare, then import dynamically.
+- A [`jest.mock`](https://www.hyperfrontend.dev/docs/libraries/testing/#api-JestApi) naming a path alias is resolved by the same function the resolve hook uses, so it registers against the module the spec will import.

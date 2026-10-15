@@ -1,4 +1,4 @@
-import type { TypeRef, TextBlock, Comment, TypeDocOutput, TypeDocNode } from './types'
+import type { TypeRef, TextBlock, Comment, Signature, TypeDocOutput, TypeDocNode } from './types'
 import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { ReflectionKind } from './types'
@@ -136,6 +136,60 @@ export function renderTypeSegments(type: TypeRef | undefined, resolve?: TypeLink
     default:
       return [{ text: 'unknown' }]
   }
+}
+
+/**
+ * Render a signature's type parameters, parameters and return type as segments, the way a
+ * reference prints them after the symbol's name: `<T>(a: A, b?: B, ...rest: C[]): R`.
+ *
+ * Every surface that prints a callable shares this, so a function, a method and a
+ * constructor fold their optional and rest markers identically.
+ *
+ * @param signature - The signature to render
+ * @param resolve - Resolver mapping a reference type to a link target
+ * @returns Segments that concatenate to the signature text
+ * @example
+ * ```typescript
+ * signatureSegments(node.signatures[0]).map((segment) => segment.text).join('')
+ * // '(event: Event, eventHandler: EventHandler): void'
+ * ```
+ */
+export function signatureSegments(signature: Signature, resolve?: TypeLinkResolver): TypeSegment[] {
+  return [...parameterSegments(signature, resolve), { text: ': ' }, ...renderTypeSegments(signature.type, resolve)]
+}
+
+/**
+ * Render a signature's type parameters and parameter list without its return type:
+ * `<T>(a: A, b?: B)`. A constructor prints this alone, since what it returns is the class
+ * whose entry it sits in.
+ *
+ * @param signature - The signature to render
+ * @param resolve - Resolver mapping a reference type to a link target
+ * @returns Segments that concatenate to the parenthesised parameter list
+ */
+export function parameterSegments(signature: Signature, resolve?: TypeLinkResolver): TypeSegment[] {
+  const typeParams = signature.typeParameters?.map((tp) => tp.name).join(', ')
+  const segments: TypeSegment[] = [{ text: `${typeParams ? `<${typeParams}>` : ''}(` }]
+  signature.parameters?.forEach((p, index) => {
+    const optional = p.flags?.isOptional ? '?' : ''
+    const rest = p.flags?.isRest ? '...' : ''
+    if (index > 0) segments.push({ text: ', ' })
+    segments.push({ text: `${rest}${p.name}${optional}: ` }, ...renderTypeSegments(p.type, resolve))
+  })
+  segments.push({ text: ')' })
+  return segments
+}
+
+/**
+ * Render a signature to plain text, for surfaces that cannot carry links.
+ *
+ * @param signature - The signature to render
+ * @returns The signature text after the symbol's name
+ */
+export function signatureText(signature: Signature): string {
+  return signatureSegments(signature)
+    .map((segment) => segment.text)
+    .join('')
 }
 
 /**

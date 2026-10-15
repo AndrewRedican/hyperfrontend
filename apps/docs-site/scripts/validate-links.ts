@@ -4,9 +4,11 @@ import { resolve, join, dirname, relative, sep, posix } from 'node:path'
 import { glob } from 'glob'
 import { isArray } from '@hyperfrontend/immutable-api-utils/built-in-copy/array'
 import { parse } from '@hyperfrontend/immutable-api-utils/built-in-copy/json'
+import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
 import { values } from '@hyperfrontend/immutable-api-utils/built-in-copy/object'
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { logger } from '@hyperfrontend/logging'
+import { LIBRARIES } from '../src/lib/content'
 import { REPO_URL } from './repo'
 
 logger.setLogLevel('log')
@@ -299,6 +301,188 @@ function pathExists(targetPath: string): boolean {
   return hasDynamicRoute(targetPath)
 }
 
+/** The reflection kinds TypeDoc writes that the anchor check tells apart. */
+const MODULE_KIND = 2
+const CLASS_KIND = 128
+const INTERFACE_KIND = 256
+const CONSTRUCTOR_KIND = 512
+const PROPERTY_KIND = 1024
+const METHOD_KIND = 2048
+const ACCESSOR_KIND = 262144
+const REFERENCE_KIND = 4194304
+
+/** The prefix every symbol anchor on a reference page carries. */
+const API_ANCHOR_PREFIX = 'api-'
+
+/** The anchor of the reference section itself, present on every page that renders one. */
+const API_REFERENCE_ANCHOR = 'api-reference'
+
+/** The route every library page sits under. */
+const LIBRARY_ROUTE_PREFIX = '/docs/libraries/'
+
+/** The slugs utils libraries publish under, mapped to their generated bundle directories. */
+const UTILS_BUNDLES: Record<string, string> = {
+  data: 'data-utils',
+  function: 'function-utils',
+  'immutable-api': 'immutable-api-utils',
+  json: 'json-utils',
+  list: 'list-utils',
+  'random-generator': 'random-generator-utils',
+  string: 'string-utils',
+  time: 'time-utils',
+  ui: 'ui-utils',
+}
+
+/**
+ * The anchors one module's reference renders.
+ */
+interface ModuleAnchors {
+  /** Every exported symbol, each anchored as `api-<name>` */
+  symbols: Set<string>
+  /** Every property and method anchored individually, as the full anchor id */
+  members: Set<string>
+}
+
+/**
+ * A TypeDoc reflection, read only as far as the anchor check needs.
+ */
+interface Reflection {
+  /** Reflection id, unique within the bundle */
+  id?: number
+  /** Reflection kind */
+  kind?: number
+  /** Symbol name */
+  name?: string
+  /** Child reflections */
+  children?: Reflection[]
+  /** For a re-export, the id of the declaration it stands for */
+  target?: number
+}
+
+/** Each library's bundle, read once, keyed by module name; null when the bundle was not generated. */
+const bundleAnchors = createMap<string, Map<string, ModuleAnchors> | null>()
+
+/**
+ * Collect the anchors a module's reference page renders.
+ *
+ * Mirrors the site's reference components: every export gets `api-<name>`,
+ * and an interface or class also anchors each property and accessor as
+ * `api-<Parent>-prop-<member>`, each method as `api-<Parent>-method-<member>`
+ * and, for a class, its constructor as `api-<Parent>-constructor`. A type
+ * alias renders its members inline with no anchor of their own, so a link to
+ * one of those lands on the alias.
+ *
+ * A module re-exporting a symbol declared elsewhere lists a reference to it,
+ * and the page renders the declaration the reference points at, so the
+ * anchors come from the declaration while the name stays the export's.
+ *
+ * @param exports - The module's child reflections
+ * @param lookup - Every reflection in the bundle, by id
+ * @returns The anchors the page carries
+ */
+function collectModuleAnchors(exports: Reflection[], lookup: Map<number, Reflection>): ModuleAnchors {
+  const symbols = createSet<string>()
+  const members = createSet<string>()
+
+  for (const exported of exports) {
+    if (typeof exported.name !== 'string') continue
+    symbols.add(exported.name)
+    const node = exported.kind === REFERENCE_KIND && exported.target !== undefined ? (lookup.get(exported.target) ?? exported) : exported
+    if (node.kind !== INTERFACE_KIND && node.kind !== CLASS_KIND) continue
+    for (const child of node.children ?? []) {
+      if (typeof child.name !== 'string') continue
+      if (child.kind === PROPERTY_KIND || child.kind === ACCESSOR_KIND) members.add(`${API_ANCHOR_PREFIX}${node.name}-prop-${child.name}`)
+      if (child.kind === METHOD_KIND) members.add(`${API_ANCHOR_PREFIX}${node.name}-method-${child.name}`)
+      if (child.kind === CONSTRUCTOR_KIND) members.add(`${API_ANCHOR_PREFIX}${node.name}-constructor`)
+    }
+  }
+
+  return { symbols, members }
+}
+
+/**
+ * Read a library's generated bundle into the anchors each of its modules renders.
+ *
+ * A library with several entry points is a project of modules named by import
+ * path; one with a single entry point is a project whose children are the
+ * symbols themselves, and reads as one module named after the package.
+ *
+ * @param bundleSlug - The bundle's directory under the generated API directory
+ * @param packageName - The package the bundle documents
+ * @returns The anchors by module name, or null when the bundle was not generated
+ */
+function readBundleAnchors(bundleSlug: string, packageName: string): Map<string, ModuleAnchors> | null {
+  const cached = bundleAnchors.get(bundleSlug)
+  if (cached !== undefined) return cached
+
+  const bundlePath = join(GENERATED_API_DIR, bundleSlug, 'api.json')
+  if (!existsSync(bundlePath)) {
+    bundleAnchors.set(bundleSlug, null)
+    return null
+  }
+
+  const project = parse(readFileSync(bundlePath, 'utf-8')) as Reflection
+  const modules = createMap<string, ModuleAnchors>()
+  const children = project.children ?? []
+  const lookup = createMap<number, Reflection>()
+
+  const index = (node: Reflection): void => {
+    if (typeof node.id === 'number') lookup.set(node.id, node)
+    for (const child of node.children ?? []) index(child)
+  }
+  children.forEach(index)
+
+  if (children.some((child) => child.kind === MODULE_KIND)) {
+    for (const module of children) {
+      if (module.kind === MODULE_KIND && typeof module.name === 'string')
+        modules.set(module.name, collectModuleAnchors(module.children ?? [], lookup))
+    }
+  } else {
+    modules.set(packageName, collectModuleAnchors(children, lookup))
+  }
+
+  bundleAnchors.set(bundleSlug, modules)
+  return modules
+}
+
+/**
+ * Check that an `api-` anchor on a library page names something the page renders.
+ *
+ * The markdown sweep used to accept any fragment, so a link could name a
+ * symbol that was renamed, or reach the right page and the wrong entry, and
+ * still pass. A landing page renders every entry's reference, so it anchors
+ * any entry's exports; an entry page anchors only its own.
+ *
+ * @param sitePath - The site-absolute link, fragment included
+ * @returns The problem, or null when the anchor resolves or is not an API anchor
+ */
+function apiAnchorProblem(sitePath: string): string | null {
+  const [pathname, fragment] = sitePath.split('#')
+  if (fragment === undefined || !fragment.startsWith(API_ANCHOR_PREFIX) || fragment === API_REFERENCE_ANCHOR) return null
+  if (!pathname.startsWith(LIBRARY_ROUTE_PREFIX)) return null
+
+  const route = pathname.slice(LIBRARY_ROUTE_PREFIX.length).replace(/\/$/, '')
+  const library = LIBRARIES.filter((candidate) => route === candidate.slug || route.startsWith(`${candidate.slug}/`)).sort(
+    (a, b) => b.slug.length - a.slug.length
+  )[0]
+  if (library === undefined) return `No library is documented at ${pathname}`
+
+  const subpath = route.slice(library.slug.length).replace(/^\//, '')
+  const bundleSlug = library.slug.startsWith('utils/') ? (UTILS_BUNDLES[library.slug.slice('utils/'.length)] ?? library.slug) : library.slug
+  const modules = readBundleAnchors(bundleSlug, library.packageName)
+  // why: a bundle is generated by `npm run generate`; without one there is nothing to check against, which the source-link sweep already treats as "nothing to report"
+  if (modules === null) return null
+
+  const scope = subpath === '' ? [...modules.values()] : [modules.get(`${library.packageName}/${subpath}`)]
+  const page = scope.filter((anchors): anchors is ModuleAnchors => anchors !== undefined)
+  if (page.length === 0) return `No API reference is rendered at ${pathname}`
+
+  const symbol = fragment.slice(API_ANCHOR_PREFIX.length)
+  if (page.some((anchors) => anchors.symbols.has(symbol) || anchors.members.has(fragment))) return null
+
+  return `API anchor #${fragment} is not rendered at ${pathname}`
+}
+
 /**
  * Validate a single link
  *
@@ -322,11 +506,13 @@ function validateLink(link: string, filePath: string, line: number): LinkValidat
     const sitePath = toSitePath(link)
     if (sitePath !== '') {
       if (publicAssetExists(sitePath) || pathExists(resolveRelativePath(sitePath, filePath))) {
+        const anchorProblem = apiAnchorProblem(sitePath)
         return {
           file: filePath,
           line,
           link,
-          status: 'valid',
+          status: anchorProblem === null ? 'valid' : 'broken',
+          ...(anchorProblem === null ? {} : { message: anchorProblem }),
         }
       }
       return {
@@ -362,11 +548,13 @@ function validateLink(link: string, filePath: string, line: number): LinkValidat
   const resolvedPath = resolveRelativePath(link, filePath)
 
   if (pathExists(resolvedPath) || publicAssetExists(link)) {
+    const anchorProblem = link.startsWith('/') ? apiAnchorProblem(link) : null
     return {
       file: filePath,
       line,
       link,
-      status: 'valid',
+      status: anchorProblem === null ? 'valid' : 'broken',
+      ...(anchorProblem === null ? {} : { message: anchorProblem }),
     }
   }
 

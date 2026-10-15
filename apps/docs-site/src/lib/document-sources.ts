@@ -1,9 +1,13 @@
+import type { TypeDocOutput } from '@/components/api-reference/types'
 import type { DocumentDescriptor, DocumentKind } from './document-model'
 import type { NavItem } from './navigation'
+import { createMap } from '@hyperfrontend/immutable-api-utils/built-in-copy/map'
+import { renderApiReferenceMarkdown } from './api-markdown'
 import { getAllArticles } from './articles'
 import { removeBadges, transformLinks } from './content'
 import {
   getAcknowledgments,
+  getLibraryApi,
   getLibraryArchitecture,
   getLibraryReadme,
   getManifest,
@@ -23,7 +27,9 @@ import { docsNavigation } from './navigation'
  *
  * The `markdown` field carries exactly the text the HTML page is rendered
  * from, after the same badge stripping and link rewriting the page applies, so
- * the two representations cannot describe different documents.
+ * the two representations cannot describe different documents. A page that
+ * also renders an API reference from the package's TypeDoc bundle carries that
+ * reference here too, rendered from the same bundle.
  */
 export interface DocumentSource extends DocumentDescriptor {
   /** The document body, as the page renders it */
@@ -36,6 +42,40 @@ export interface DocumentSource extends DocumentDescriptor {
  * Route prefix under which every library and submodule document lives.
  */
 const LIBRARIES_PREFIX = '/docs/libraries/'
+
+/**
+ * What a secondary entry point's page says in place of a README it does not
+ * have, repeated here so the counterpart reads the same.
+ */
+export const NO_SUBMODULE_README = 'This submodule does not yet have a written description.'
+
+/** Each library's TypeDoc bundle, read once however many entry points share it. */
+const apiBundles = createMap<string, TypeDocOutput | null>()
+
+/**
+ * Read a library's TypeDoc bundle, once.
+ *
+ * @param librarySlug - Library slug as the loader resolves it
+ * @returns The bundle, or null when the library has no generated API
+ */
+function libraryApi(librarySlug: string): TypeDocOutput | null {
+  const cached = apiBundles.get(librarySlug)
+  if (cached !== undefined) return cached
+  const api = getLibraryApi(librarySlug) as TypeDocOutput | null
+  apiBundles.set(librarySlug, api)
+  return api
+}
+
+/**
+ * Append a rendered API reference to a document body.
+ *
+ * @param body - The document body
+ * @param reference - The reference section, or null when the page renders none
+ * @returns The body with the reference after it
+ */
+function withApiReference(body: string, reference: string | null): string {
+  return reference === null ? body : `${body.trimEnd()}\n\n${reference}\n`
+}
 
 /**
  * Build one document source.
@@ -91,6 +131,8 @@ function collectLibraryDocuments(): DocumentSource[] {
 
     const readme = getLibraryReadme(library.slug)
     if (readme) {
+      const api = libraryApi(library.slug)
+      const reference = api === null ? null : renderApiReferenceMarkdown(api, { packageName: library.packageName })
       documents.push(
         source(
           route,
@@ -98,7 +140,7 @@ function collectLibraryDocuments(): DocumentSource[] {
           library.name,
           library.packageName,
           library.description || `Documentation for ${library.packageName}.`,
-          transformLinks(removeBadges(readme), { librarySlug: pageSlug })
+          withApiReference(transformLinks(removeBadges(readme), { librarySlug: pageSlug }), reference)
         )
       )
     }
@@ -141,8 +183,12 @@ function collectSubmoduleDocuments(items: NavItem[], packageName: string | undef
     if (route && ownPackage && !item.packageName && route.startsWith(LIBRARIES_PREFIX) && item.slug !== 'architecture') {
       const { librarySlug, submodulePath } = splitSubmoduleRoute(route)
       const readme = getSubmoduleReadme(librarySlug, submodulePath)
-      if (readme) {
+      const api = libraryApi(librarySlug)
+      const reference = api === null ? null : renderApiReferenceMarkdown(api, { packageName: ownPackage, subpath: submodulePath })
+      // why: the page publishes a counterpart when it has a README or a reference to show, and says the same thing in place of a README it lacks
+      if (readme || reference !== null) {
         const importPath = `${ownPackage}/${submodulePath}`
+        const body = readme ? transformLinks(removeBadges(readme), { librarySlug, submodulePath }) : NO_SUBMODULE_README
         documents.push(
           source(
             route,
@@ -150,7 +196,7 @@ function collectSubmoduleDocuments(items: NavItem[], packageName: string | undef
             importPath,
             importPath,
             `The ${submodulePath} entry point of ${ownPackage}.`,
-            transformLinks(removeBadges(readme), { librarySlug, submodulePath })
+            withApiReference(body, reference)
           )
         )
       }

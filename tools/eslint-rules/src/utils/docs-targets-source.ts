@@ -28,6 +28,8 @@ export interface DocsSymbol {
   members: readonly string[]
   /** The subset of members that are properties of an interface or class, which the site anchors individually. */
   properties: readonly string[]
+  /** The subset of members that are methods of a class, which the site anchors individually; an untyped property initialised with a function is documented as a method. */
+  methods: readonly string[]
 }
 
 /** One entry point of a package: a subpath the manifest exports and the page the site gives it. */
@@ -289,18 +291,68 @@ function propertiesOfDeclaration(statement: ts.Statement): string[] {
   }
   if (ts.isClassDeclaration(statement)) {
     return statement.members.flatMap((member) => {
-      if (!ts.isPropertyDeclaration(member)) {
+      // why: the reference documents an untyped property that holds a function as a method, and anchors it as one
+      if (!ts.isPropertyDeclaration(member) || holdsFunction(member)) {
         return []
       }
-      const modifiers = ts.getModifiers(member) ?? []
-      if (modifiers.some((modifier) => modifier.kind === ts.SyntaxKind.PrivateKeyword)) {
-        return []
-      }
-      const declared = memberName(member.name)
-      return declared === null || declared.startsWith('#') ? [] : [declared]
+      const declared = publicMemberName(member)
+      return declared === null ? [] : [declared]
     })
   }
   return []
+}
+
+/**
+ * Collects the method names of a class, the members the site anchors as
+ * methods: method declarations, and untyped properties initialised with a
+ * function, which the reference documents as methods.
+ *
+ * @param statement - The declaring statement.
+ * @returns The method names, empty for any other declaration.
+ */
+function methodsOfDeclaration(statement: ts.Statement): string[] {
+  if (!ts.isClassDeclaration(statement)) {
+    return []
+  }
+  return statement.members.flatMap((member) => {
+    if (!ts.isMethodDeclaration(member) && !(ts.isPropertyDeclaration(member) && holdsFunction(member))) {
+      return []
+    }
+    const declared = publicMemberName(member)
+    return declared === null ? [] : [declared]
+  })
+}
+
+/**
+ * Whether a class property is one the reference documents as a method: it is
+ * initialised with a function and carries no type annotation of its own. A
+ * property that declares its type stays a property, whatever it is initialised
+ * with.
+ *
+ * @param member - The property declaration.
+ * @returns True when the reference lists the property among the methods.
+ */
+function holdsFunction(member: ts.PropertyDeclaration): boolean {
+  if (member.type !== undefined || member.initializer === undefined) {
+    return false
+  }
+  return ts.isArrowFunction(member.initializer) || ts.isFunctionExpression(member.initializer)
+}
+
+/**
+ * The name of a class member the reference publishes, or null for one it
+ * keeps out: a private member, or one with a private name.
+ *
+ * @param member - The property or method declaration.
+ * @returns The member name, or null when the reference does not list it.
+ */
+function publicMemberName(member: ts.PropertyDeclaration | ts.MethodDeclaration): string | null {
+  const modifiers = ts.getModifiers(member) ?? []
+  if (modifiers.some((modifier) => modifier.kind === ts.SyntaxKind.PrivateKeyword)) {
+    return null
+  }
+  const declared = memberName(member.name)
+  return declared === null || declared.startsWith('#') ? null : declared
 }
 
 /**
@@ -406,8 +458,15 @@ export function readSymbols(cache: SourceCache, file: string): Map<string, DocsS
     const declaration = findDeclaration(cache, file, name)
     const members = declaration === null ? [] : membersOfDeclaration(declaration.statement, declaration.name)
     const properties = declaration === null ? [] : propertiesOfDeclaration(declaration.statement)
+    const methods = declaration === null ? [] : methodsOfDeclaration(declaration.statement)
     const kind = declaration === null ? 'unknown' : kindOfDeclaration(declaration.statement)
-    symbols.set(name, { name, kind, members: [...createSet(members)], properties: [...createSet(properties)] })
+    symbols.set(name, {
+      name,
+      kind,
+      members: [...createSet(members)],
+      properties: [...createSet(properties)],
+      methods: [...createSet(methods)],
+    })
   }
   return symbols
 }

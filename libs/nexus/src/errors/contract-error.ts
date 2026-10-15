@@ -22,11 +22,18 @@ export type ContractErrorJSON = {
  * ```
  */
 export class ContractError extends Error {
+  /** Fixed discriminator, so a handler can tell this error apart by name where `instanceof` is unreliable. */
   override readonly name = 'ContractError'
 
   /** Contract the failure was measured against. */
   readonly contract?: IChannelContract
 
+  /**
+   * Builds the error with the contract it was measured against.
+   *
+   * @param message - What went wrong, in words
+   * @param contract - The contract the failing action was checked against, when one applies
+   */
   constructor(message: string, contract?: IChannelContract) {
     super(message)
     this.contract = contract

@@ -14,17 +14,17 @@ The rule resolves names from the workspace itself rather than from a list anyone
 
 ### What counts as resolved
 
-| Mention                                  | Destination                                                                                                          |
-| ---------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
-| `@hyperfrontend/features`                | The package's landing page                                                                                           |
-| `@hyperfrontend/features/host`, `/host`  | The entry point's page, or a module page the site publishes without an export (`/data` in network-protocol)          |
-| `createShell`                            | `#api-createShell` on the page of the one entry exporting it; the deepest entry when several re-export it            |
-| `createChannel` (browser and node twins) | `#api-createChannel` on the package landing page, whose reference opens the module holding the symbol                |
-| `onDrop`, `emitted`                      | `#api-Parent-prop-onDrop` when the parent is an interface or class property; `#api-Parent` for any other member kind |
-| `v4`, `replayed`                         | The literal-union type or the frozen code map that lists the value                                                   |
-| `protocol.seal`, `queue.size`            | The member on the type the variable is named after                                                                   |
-| `HyperfrontendFeaturesHost`              | The page of the entry the bundle exposes                                                                             |
-| `handleRequest` (declared, not exported) | The declaring source file in the repository                                                                          |
+| Mention                                  | Destination                                                                                                                                                                                              |
+| ---------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@hyperfrontend/features`                | The package's landing page                                                                                                                                                                               |
+| `@hyperfrontend/features/host`, `/host`  | The entry point's page, or a module page the site publishes without an export (`/data` in network-protocol)                                                                                              |
+| `createShell`                            | `#api-createShell` on the page of the one entry exporting it; the deepest entry when several re-export it                                                                                                |
+| `createChannel` (browser and node twins) | `#api-createChannel` on the package landing page, whose reference opens the module holding the symbol                                                                                                    |
+| `onDrop`, `emitted`, `subscribe`         | `#api-Parent-prop-onDrop` for an interface or class property, `#api-Parent-method-subscribe` for a class method (an untyped property holding a function is one); `#api-Parent` for any other member kind |
+| `v4`, `replayed`                         | The literal-union type or the frozen code map that lists the value                                                                                                                                       |
+| `protocol.seal`, `queue.size`            | The member on the type the variable is named after                                                                                                                                                       |
+| `HyperfrontendFeaturesHost`              | The page of the entry the bundle exposes                                                                                                                                                                 |
+| `handleRequest` (declared, not exported) | The declaring source file in the repository                                                                                                                                                              |
 
 A name the package's own entry points export is applied by the fixer. A name only another package exports, or only a single lowercase word that a sibling entry exports (`status`, `error`), is offered in the message and never applied: prose that says `cancel` more often means the word than a selector some other package happens to export.
 
@@ -33,7 +33,7 @@ A name the package's own entry points export is applied by the fixer. A name onl
 A link around inline code is checked wherever it points:
 
 - A site URL must name a page the site publishes: a `page.tsx` under the documentation site's app directory, a guide with content, or an article with content.
-- A `#api-Name` anchor must name a symbol the page's reference lists: the entry's exports on an entry page, any entry's exports on a landing page. A `#api-Name-prop-member` anchor must name a property the site anchors individually.
+- A `#api-Name` anchor must name a symbol the page's reference lists: the entry's exports on an entry page, any entry's exports on a landing page. A `#api-Name-prop-member` anchor must name a property the site anchors individually, and a `#api-Name-method-member` anchor a method of a class.
 - Any other anchor must be a heading of the markdown document the page renders, slugged the way the site slugs it.
 - A repository `blob` or `tree` URL must name a file or directory that exists in the workspace.
 - A relative link must name a file that exists beside the document, and a bare `#anchor` a heading of the document itself.

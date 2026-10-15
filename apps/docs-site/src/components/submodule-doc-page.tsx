@@ -10,6 +10,7 @@ import { ReadmeContent } from '@/components/readme-content'
 import { removeBadges, transformLinks } from '@/lib/content'
 import { getLibraryApi, getSubmoduleReadme, getApiLinkIndex } from '@/lib/docs-loader'
 import { documentSubject } from '@/lib/document-model'
+import { NO_SUBMODULE_README } from '@/lib/document-sources'
 import { markdownToHtml } from '@/lib/markdown'
 import { extractMermaidBlocks } from '@/lib/mermaid-utils'
 import { extractMarkdownSections } from '@/lib/slug'
@@ -57,7 +58,8 @@ export async function SubmoduleDocPage({ librarySlug, packageName, submodulePath
     sections = extractMarkdownSections(extracted.processedContent)
   }
 
-  if (apiData && hasScopedApiReference(apiData, packageName, submodulePath)) {
+  const hasApi = apiData !== null && hasScopedApiReference(apiData, packageName, submodulePath)
+  if (hasApi) {
     // why: the reference is a section of this page with a server-rendered anchor, but its symbols are not; the index offers the way in and the reference's own listing takes over from there
     sections.push({ title: 'API Reference', anchor: 'api-reference', level: 2 })
   }
@@ -67,9 +69,9 @@ export async function SubmoduleDocPage({ librarySlug, packageName, submodulePath
       {/* why: an entry point is a page of its package, so it carries the same hue the package's own page does */}
       <PageAccent hue={packageAccentHue(packageName)} />
       <DocumentShell
-        // why: an entrypoint with no README publishes no markdown counterpart, so it must not offer actions that would fetch one
+        // why: the counterpart carries the README and the reference, so an entrypoint with neither publishes none and must not offer actions that would fetch one
         descriptor={
-          readmeContent
+          readmeContent || hasApi
             ? {
                 route: `/docs/libraries/${librarySlug}/${submodulePath}`,
                 title: importPath,
@@ -96,7 +98,7 @@ export async function SubmoduleDocPage({ librarySlug, packageName, submodulePath
         {readmeHtml ? (
           <ReadmeContent html={readmeHtml} mermaidDiagrams={readmeDiagrams} />
         ) : (
-          <p className="text-sm italic text-slate-500 dark:text-slate-400 mb-6">This submodule does not yet have a written description.</p>
+          <p className="text-sm italic text-slate-500 dark:text-slate-400 mb-6">{NO_SUBMODULE_README}</p>
         )}
 
         {apiData && (

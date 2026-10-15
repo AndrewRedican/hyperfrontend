@@ -96,7 +96,7 @@ isLoading plus error is two booleans and four combinations, and none of them rec
 
 ### Nothing to mount, nothing to adapt
 
-There is no provider, no hook, no framework binding, no third-party package pulled in behind it. [`store.subscribe`](https://www.hyperfrontend.dev/docs/libraries/state-machine/store/#api-Store-prop-subscribe) returns its own unsubscribe, [`AsyncOperation`](https://www.hyperfrontend.dev/docs/libraries/state-machine/async-operation/#api-AsyncOperation) is a class you can hold in a closure, and both work the same in a React effect, a Svelte store, a worker, or a plain script. That matters most in the places a framework store cannot reach: a shared module, an SDK, an embed, a Node process.
+There is no provider, no hook, no framework binding, no third-party package pulled in behind it. [`store.subscribe`](https://www.hyperfrontend.dev/docs/libraries/state-machine/store/#api-Store-method-subscribe) returns its own unsubscribe, [`AsyncOperation`](https://www.hyperfrontend.dev/docs/libraries/state-machine/async-operation/#api-AsyncOperation) is a class you can hold in a closure, and both work the same in a React effect, a Svelte store, a worker, or a plain script. That matters most in the places a framework store cannot reach: a shared module, an SDK, an embed, a Node process.
 
 ### Init races handled by the base class, not by convention
 

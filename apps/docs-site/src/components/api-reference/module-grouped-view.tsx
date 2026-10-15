@@ -6,12 +6,12 @@ import { Fragment, useState, useMemo, useEffect, useCallback, useRef } from 'rea
 import { createSet } from '@hyperfrontend/immutable-api-utils/built-in-copy/set'
 import { requestAnimationFrame, setTimeout } from '@hyperfrontend/immutable-api-utils/built-in-copy/timers'
 import { AnchorLink } from '../anchor-link'
+import { collectModules, groupByKind, moduleImportPath } from './api-exports'
 import { CopyButton } from './copy-button'
 import { FunctionSignature } from './function-signature'
 import { headingTag } from './heading-level'
 import { HighlightMatch } from './highlight-match'
 import { TypeDefinition } from './type-definition'
-import { buildNodeLookup, getModuleDescription, resolveUniqueExports } from './type-utils'
 import { ReflectionKind } from './types'
 
 interface ModuleGroupedViewProps {
@@ -28,28 +28,6 @@ interface ModuleGroup {
 }
 
 /**
- * Computes the full import path for a module.
- *
- * TypeDoc names each module by its `@module` tag, which is the fully-qualified
- * import specifier (e.g. '@hyperfrontend/ui-utils/color'). Such names are
- * returned as-is to avoid duplicating the package prefix. Bare subpaths (e.g.
- * 'color') are joined onto the package name, and the root module ('index' or a
- * name equal to the package) resolves to the package name alone.
- * @param packageName - The root package name (e.g., '@hyperfrontend/ui-utils')
- * @param moduleName - The module name from TypeDoc (full specifier or subpath)
- * @returns The full import path (omits '/index' suffix)
- */
-function getFullImportPath(packageName: string, moduleName: string): string {
-  if (moduleName === 'index' || moduleName === packageName) {
-    return packageName
-  }
-  if (moduleName.startsWith(`${packageName}/`)) {
-    return moduleName
-  }
-  return `${packageName}/${moduleName}`
-}
-
-/**
  * Renders API documentation grouped by module/entry-point
  * Used for libraries with multiple entry points like network-protocol, state-machine, ui-utils
  * @param props - Component props
@@ -60,35 +38,21 @@ function getFullImportPath(packageName: string, moduleName: string): string {
 export function ModuleGroupedView({ data, searchQuery = '', initialHash }: ModuleGroupedViewProps) {
   const [expandedModules, setExpandedModules] = useState<Set<string>>(createSet())
 
-  const nodeLookup = useMemo(() => buildNodeLookup(data), [data])
+  const allModules = useMemo(() => collectModules(data), [data])
 
   const modules = useMemo(() => {
-    if (!data.children) return []
-
     const groups: ModuleGroup[] = []
+    const query = searchQuery.toLowerCase()
 
-    for (const child of data.children) {
-      if (child.kind === ReflectionKind.Module && child.children) {
-        const exports = resolveUniqueExports(child.children, nodeLookup).filter((c) => {
-          if (searchQuery) {
-            return c.name.toLowerCase().includes(searchQuery.toLowerCase())
-          }
-          return true
-        })
-
-        if (exports.length > 0) {
-          groups.push({
-            name: child.name,
-            displayName: formatModuleName(child.name),
-            description: getModuleDescription(child.comment),
-            exports,
-          })
-        }
+    for (const module of allModules) {
+      const exports = query ? module.exports.filter((c) => c.name.toLowerCase().includes(query)) : module.exports
+      if (exports.length > 0) {
+        groups.push({ name: module.name, displayName: formatModuleName(module.name), description: module.description, exports })
       }
     }
 
-    return groups.sort((a, b) => a.name.localeCompare(b.name))
-  }, [data, searchQuery, nodeLookup])
+    return groups
+  }, [allModules, searchQuery])
 
   const toggleModule = (moduleName: string) => {
     setExpandedModules((prev) => {
@@ -244,13 +208,8 @@ export function ModuleGroupedView({ data, searchQuery = '', initialHash }: Modul
         {modules.map((module) => {
           const isExpanded = expandedModules.has(module.name)
 
-          const functions = module.exports.filter((e) => e.kind === ReflectionKind.Function)
-          const classes = module.exports.filter((e) => e.kind === ReflectionKind.Class)
-          const interfaces = module.exports.filter((e) => e.kind === ReflectionKind.Interface)
-          const types = module.exports.filter((e) => e.kind === ReflectionKind.TypeAlias)
-          const variables = module.exports.filter((e) => e.kind === ReflectionKind.Variable)
-          const namespaces = module.exports.filter((e) => e.kind === ReflectionKind.Namespace)
-          const fullImportPath = getFullImportPath(data.name, module.name)
+          const { functions, classes, interfaces, types, variables, namespaces } = groupByKind(module.exports)
+          const fullImportPath = moduleImportPath(data.name, module.name)
           const importStatement = `import {} from '${fullImportPath}'`
           const moduleId = `module-${module.name.replace(/\//g, '-')}`
 
@@ -554,13 +513,4 @@ function NamespaceSection({ node, searchQuery = '', level = 3 }: NamespaceSectio
       )}
     </div>
   )
-}
-
-/**
- * Check if a TypeDoc output has modules (multiple entry points)
- * @param data - TypeDoc output data to check
- */
-export function hasModules(data: TypeDocOutput): boolean {
-  if (!data.children) return false
-  return data.children.some((child) => child.kind === ReflectionKind.Module)
 }

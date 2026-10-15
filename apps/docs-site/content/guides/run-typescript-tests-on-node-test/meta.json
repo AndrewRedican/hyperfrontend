@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 1,
+  "type": "how-to",
+  "title": "How to configure and run TypeScript tests on Node's test runner",
+  "problem": "node:test runs TypeScript files through type stripping, but it resolves no extensionless imports or path aliases, has no environment concept for a DOM, and lets a file nobody tested through a full-coverage gate.",
+  "outcome": "A project whose TypeScript specs run with npm test in a Node environment and a jsdom environment, through one test.config.ts and a ten-line driver, with a merged coverage table and a run that fails on an unmeasured file.",
+  "priority": "P0",
+  "packages": ["@hyperfrontend/testing"],
+  "verification": {
+    "kind": "authored",
+    "verifiedAgainst": "@hyperfrontend/testing@0.1.0",
+    "verifiedOn": "2026-10-15"
+  },
+  "complexity": "beginner",
+  "estMinutes": 20,
+  "apis": [
+    { "package": "@hyperfrontend/testing", "symbol": "TestConfig" },
+    { "package": "@hyperfrontend/testing", "symbol": "TestEnvironment" },
+    { "package": "@hyperfrontend/testing", "symbol": "runProjectTests" },
+    { "package": "@hyperfrontend/testing", "symbol": "RunContext" },
+    { "package": "@hyperfrontend/testing", "symbol": "RunOutcome" },
+    { "package": "@hyperfrontend/testing", "symbol": "ItApi" }
+  ],
+  "prerequisites": {
+    "knowledge": ["A TypeScript project with a package.json", "Node.js 22.18 or later"]
+  },
+  "related": {
+    "guides": ["write-focused-tests-with-mocks-and-fake-timers", "migrate-from-jest-to-node-test"],
+    "reference": [
+      "/docs/libraries/testing",
+      "/docs/libraries/testing/runner",
+      "/docs/libraries/testing/hooks",
+      "/docs/libraries/testing/dom",
+      "/docs/libraries/testing/coverage"
+    ],
+    "explanation": ["/docs/libraries/testing/architecture"]
+  },
+  "keywords": [
+    "node:test",
+    "node --test",
+    "TypeScript",
+    "type stripping",
+    "test.config.ts",
+    "coverage",
+    "lcov",
+    "jsdom",
+    "DOM",
+    "setupFiles",
+    "moduleNameMapper",
+    "path alias",
+    "npm test",
+    "exit code",
+    "monorepo"
+  ]
+}

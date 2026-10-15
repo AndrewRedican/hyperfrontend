@@ -52,19 +52,37 @@ export function installResizeObserverStub(): ResizeObserverStubController {
   class ResizeObserverStub {
     private readonly record: ObserverRecord
 
+    /**
+     * Creates an observer whose callback the controller can drive.
+     *
+     * @param callback - The observation callback a real `ResizeObserver` would be handed
+     */
     constructor(callback: (entries: unknown[], observer: unknown) => void) {
       this.record = { callback, targets: createSet<Element>() }
       records.add(this.record)
     }
 
+    /**
+     * Starts observing a target, so a `resize` of it reaches this observer's callback.
+     *
+     * @param target - The element to observe
+     */
     observe(target: Element): void {
       this.record.targets.add(target)
     }
 
+    /**
+     * Stops observing one target while the observer stays live for the others.
+     *
+     * @param target - The element to stop observing
+     */
     unobserve(target: Element): void {
       this.record.targets.delete(target)
     }
 
+    /**
+     * Drops every target and retires the observer, so later resizes never reach its callback.
+     */
     disconnect(): void {
       this.record.targets.clear()
       records.delete(this.record)

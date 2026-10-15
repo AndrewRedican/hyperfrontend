@@ -1,0 +1,58 @@
+{
+  "schemaVersion": 1,
+  "type": "how-to",
+  "title": "How to migrate a Jest suite to Node's test runner",
+  "problem": "Jest pulls a framework, a transformer and a reporter stack into a project whose runtime already ships a test runner, but rewriting thousands of Jest-style tests into node:test calls is not an option.",
+  "outcome": "The same suite running on node:test through @hyperfrontend/testing, with its describe blocks, matchers, mocks and jest.mock declarations unchanged, the same test count as the Jest baseline, coverage at or above it, and Jest uninstalled.",
+  "priority": "P0",
+  "packages": ["@hyperfrontend/testing"],
+  "verification": {
+    "kind": "authored",
+    "verifiedAgainst": "@hyperfrontend/testing@0.1.0",
+    "verifiedOn": "2026-10-15"
+  },
+  "complexity": "intermediate",
+  "estMinutes": 45,
+  "apis": [
+    { "package": "@hyperfrontend/testing", "symbol": "TestConfig" },
+    { "package": "@hyperfrontend/testing", "symbol": "TestEnvironment" },
+    { "package": "@hyperfrontend/testing", "symbol": "CoverageThresholds" },
+    { "package": "@hyperfrontend/testing", "symbol": "runProjectTests" },
+    { "package": "@hyperfrontend/testing", "symbol": "RunOutcome" },
+    { "package": "@hyperfrontend/testing", "symbol": "JestApi" },
+    { "package": "@hyperfrontend/testing", "symbol": "Assertions" },
+    { "package": "@hyperfrontend/testing", "symbol": "ItApi" }
+  ],
+  "prerequisites": {
+    "knowledge": [
+      "A suite that runs green under Jest today, with its test count and coverage table recorded",
+      "Node.js 22.18 or later on every machine that runs the tests",
+      "No snapshot tests and no custom matchers registered through expect.extend"
+    ]
+  },
+  "related": {
+    "guides": ["run-typescript-tests-on-node-test", "write-focused-tests-with-mocks-and-fake-timers"],
+    "reference": ["/docs/libraries/testing", "/docs/libraries/testing/runner", "/docs/libraries/testing/hooks"],
+    "explanation": ["/docs/libraries/testing/architecture"]
+  },
+  "keywords": [
+    "jest",
+    "migration",
+    "node:test",
+    "node --test",
+    "ts-jest",
+    "@nx/jest",
+    "jest.config",
+    "test.config.ts",
+    "jest.mock",
+    "ESM",
+    "coverage threshold",
+    "istanbul",
+    "V8 coverage",
+    "snapshot",
+    "expect.extend",
+    "jsdom",
+    "dependencies",
+    "lockfile"
+  ]
+}

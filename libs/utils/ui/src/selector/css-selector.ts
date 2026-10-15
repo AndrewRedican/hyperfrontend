@@ -124,6 +124,14 @@ function escapeAttributeValue(value: string): string {
 export class CssSelector {
   private selector: string
 
+  /**
+   * Starts a selector from a base, usually a tag name or the universal `*`.
+   *
+   * The base is taken as written, neither validated nor escaped, so it may already be a
+   * complete selector that the builder methods then extend.
+   *
+   * @param selector - The initial selector text
+   */
   constructor(selector: string) {
     this.selector = selector
   }

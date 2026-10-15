@@ -61,7 +61,8 @@ export function ArticlesIndexList({ articles }: ArticlesIndexListProps) {
     <div className="mt-8 md:flex md:gap-8">
       <ArticlesYearNav years={years} />
 
-      <div className="min-w-0 flex-1">
+      {/* why: the column is a size container, so the cards pair up by the room they actually have rather than by the viewport, which the sidebar and the document rail both take a share of */}
+      <div className="min-w-0 flex-1 @container">
         {showFilter ? (
           <div className="mt-4 md:mt-0">
             <ArticleFilter terms={terms} selected={selected} onChange={setSelected} />
@@ -84,7 +85,8 @@ export function ArticlesIndexList({ articles }: ArticlesIndexListProps) {
               >
                 {group.year}
               </h2>
-              <div className="grid gap-8">
+              {/* why: two abreast once the column can give each card a readable measure, one beneath the other on a phone and beside an open drawer */}
+              <div className="grid gap-6 @2xl:grid-cols-2 @2xl:gap-8">
                 {group.articles.map((article) => (
                   <ArticleCard key={article.slug} article={article} />
                 ))}
@@ -114,12 +116,15 @@ function ArticleCard({ article }: ArticleCardProps) {
   return (
     <Link
       href={`/articles/${article.slug}`}
-      className="group overflow-hidden rounded-xl border border-slate-200 bg-white transition-shadow hover:shadow-lg dark:border-slate-800 dark:bg-slate-900"
+      className="group flex flex-col overflow-hidden rounded-xl border border-slate-200 bg-white transition-shadow hover:shadow-lg dark:border-slate-800 dark:bg-slate-900"
     >
+      {/* why: the hero is shown whole and centred at a fixed height, scaled down rather than cropped, so a wide figure and a squarer illustration both read as the picture they are and neither outweighs the words beneath */}
       {article.heroImage ? (
-        <img src={article.heroImage} alt="" className="aspect-2/1 w-full object-cover sm:aspect-3/1" loading="lazy" />
+        <div className="flex justify-center px-6 pt-6 sm:px-8 sm:pt-8">
+          <img src={article.heroImage} alt="" className="h-40 max-w-full object-contain sm:h-44" loading="lazy" />
+        </div>
       ) : null}
-      <div className="p-6 sm:p-8">
+      <div className="flex flex-1 flex-col p-6 sm:p-8">
         <div className="flex flex-wrap items-center gap-2">
           {article.category ? (
             <span className="rounded-full bg-primary-100 px-2.5 py-0.5 text-xs font-medium text-primary-800 dark:bg-primary-900/50 dark:text-primary-200">
@@ -136,7 +141,8 @@ function ArticleCard({ article }: ArticleCardProps) {
           {article.title}
         </h3>
         <p className="mt-3 text-slate-600 dark:text-slate-400">{article.description}</p>
-        <p className="mt-4 text-sm text-slate-500 dark:text-slate-500">
+        {/* why: the byline sits at the foot of every card, so a pair of cards of different length still line up along the bottom */}
+        <p className="mt-auto pt-4 text-sm text-slate-500 dark:text-slate-500">
           {formatArticleDate(article.date)} · {article.readingTime}
         </p>
       </div>
