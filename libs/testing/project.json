@@ -1,0 +1,37 @@
+{
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "name": "lib-testing",
+  "description": "Jest-style describe, it, expect and jest on Node's built-in test runner, with module mocks, fake timers, an optional DOM and a coverage gate.",
+  "sourceRoot": "{projectRoot}/src",
+  "projectType": "library",
+  "tags": ["type:core", "scope:public"],
+  "metadata": {
+    "compatibility": {
+      "environments": {
+        "node": "full",
+        "browser": "none",
+        "webWorker": "none"
+      },
+      "note": "Needs Node.js 22.18 or later: the preload installs synchronous module hooks and loads TypeScript specs through Node's own type stripping, neither of which older releases provide."
+    }
+  },
+  "targets": {
+    "version": {},
+    "version-check": {},
+    "build": {
+      "executor": "@hyperfrontend/package:build",
+      "options": {
+        "external": ["node:test", "node:test/reporters"],
+        "esm": {
+          "bundleWorkspaceDeps": true
+        },
+        "cjs": {
+          "bundleWorkspaceDeps": true
+        }
+      }
+    },
+    "publish": {},
+    "typecheck": {},
+    "test": {}
+  }
+}

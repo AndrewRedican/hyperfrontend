@@ -1,0 +1,50 @@
+{
+  "name": "@hyperfrontend/testing",
+  "version": "0.0.0",
+  "description": "Jest-style describe, it, expect and jest on Node's built-in test runner, with module mocks, fake timers, an optional DOM and a coverage gate.",
+  "license": "MIT",
+  "sideEffects": false,
+  "engines": {
+    "node": ">=22.18.0",
+    "npm": ">=8.0.0"
+  },
+  "exports": {
+    ".": "./src/index.js",
+    "./coverage": "./src/coverage/index.js",
+    "./dom": "./src/dom/index.js",
+    "./hooks": "./src/hooks/index.js",
+    "./reporter": "./src/reporter/index.js",
+    "./runner": "./src/runner/index.js",
+    "./package.json": "./package.json"
+  },
+  "peerDependencies": {
+    "jsdom": ">=26.0.0"
+  },
+  "peerDependenciesMeta": {
+    "jsdom": {
+      "optional": true
+    }
+  },
+  "keywords": [
+    "testing",
+    "test-runner",
+    "node-test",
+    "jest",
+    "jest-compatible",
+    "expect",
+    "matchers",
+    "mock",
+    "jest-mock",
+    "fake-timers",
+    "coverage",
+    "lcov",
+    "coverage-gate",
+    "esm",
+    "typescript",
+    "hyperfrontend"
+  ],
+  "funding": {
+    "type": "github",
+    "url": "https://github.com/sponsors/AndrewRedican"
+  }
+}
