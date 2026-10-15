@@ -16,6 +16,8 @@ module.exports = [
         'error',
         {
           ignoredDependencies: [
+            // why: the test runtime is imported only by the specs and test.config.ts, which the published package never ships.
+            '@hyperfrontend/testing',
             'typescript',
             // why: the compile-time parity spec (src/nx/model.compat.spec.ts) type-imports @nx/devkit to pin the structural mirror in src/nx/model.ts, and the nx adapter optionally loads it at RUNTIME from the consumer workspace via createRequire; it is never a declared dependency.
             '@nx/devkit',
