@@ -10,11 +10,17 @@ describe('validateProperties', () => {
     expect(validateProperties({}, {}, ctx)).toBe(true)
   })
 
-  it('validates defined properties', () => {
+  it('passes when defined properties satisfy their schemas', () => {
     // @ts-expect-error readonly context
     ctx.validate = (v: unknown, s: Schema) => typeof v === s.type
     const schema: Schema = { properties: { foo: { type: 'number' } } }
     expect(validateProperties({ foo: 1 }, schema, ctx)).toBe(true)
+  })
+
+  it('fails when a defined property violates its schema', () => {
+    // @ts-expect-error readonly context
+    ctx.validate = (v: unknown, s: Schema) => typeof v === s.type
+    const schema: Schema = { properties: { foo: { type: 'number' } } }
     expect(validateProperties({ foo: 'a' }, schema, ctx)).toBe(false)
   })
 })
@@ -49,11 +55,17 @@ describe('validateAdditionalProperties', () => {
     expect(validateAdditionalProperties({ foo: 1, bar: 2 }, schema, ctx)).toBe(false)
   })
 
-  it('validates additional property with schema', () => {
+  it('passes when an additional property satisfies the additionalProperties schema', () => {
     // @ts-expect-error readonly context
     ctx.validate = (v: unknown, s: Schema) => typeof v === s.type
     const schema: Schema = { properties: { foo: { type: 'number' } }, additionalProperties: { type: 'string' } }
     expect(validateAdditionalProperties({ foo: 1, bar: 'x' }, schema, ctx)).toBe(true)
+  })
+
+  it('fails when an additional property violates the additionalProperties schema', () => {
+    // @ts-expect-error readonly context
+    ctx.validate = (v: unknown, s: Schema) => typeof v === s.type
+    const schema: Schema = { properties: { foo: { type: 'number' } }, additionalProperties: { type: 'string' } }
     expect(validateAdditionalProperties({ foo: 1, bar: 2 }, schema, ctx)).toBe(false)
   })
 
@@ -69,6 +81,14 @@ describe('validateAdditionalProperties', () => {
       additionalProperties: false,
     }
     expect(validateAdditionalProperties({ foo: 1, x_bar: 'test' }, schema, ctx)).toBe(true)
+  })
+
+  it('fails a property matching no patternProperties pattern when additionalProperties is false', () => {
+    const schema: Schema = {
+      properties: { foo: { type: 'number' } },
+      patternProperties: { '^x_': { type: 'string' } },
+      additionalProperties: false,
+    }
     expect(validateAdditionalProperties({ foo: 1, bar: 2 }, schema, ctx)).toBe(false)
   })
 })

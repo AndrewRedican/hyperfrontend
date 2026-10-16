@@ -57,7 +57,7 @@ describe('validateStringBounds', () => {
   })
 
   describe('strictPatterns mode', () => {
-    it('reports error for invalid regex pattern when strictPatterns is true', () => {
+    it('fails for invalid regex pattern when strictPatterns is true', () => {
       const strictCtx = {
         errors: [],
         strictPatterns: true,
@@ -67,12 +67,23 @@ describe('validateStringBounds', () => {
       const result = validateStringBounds('abc', schema, strictCtx)
 
       expect(result).toBe(false)
-      expect(strictCtx.errors.length).toBe(1)
-      expect(strictCtx.errors[0].code).toBe('pattern')
-      expect(strictCtx.errors[0].message).toContain('Invalid regex pattern')
     })
 
-    it('does not report error for invalid regex when strictPatterns is false', () => {
+    it('reports error for invalid regex pattern when strictPatterns is true', () => {
+      const strictCtx = {
+        errors: [],
+        strictPatterns: true,
+        collectAllErrors: true,
+      } as ValidationContext
+      const schema: Schema = { pattern: '[' }
+      validateStringBounds('abc', schema, strictCtx)
+
+      expect(strictCtx.errors).toEqual([
+        expect.objectContaining({ code: 'pattern', message: expect.stringContaining('Invalid regex pattern') }),
+      ])
+    })
+
+    it('passes for invalid regex when strictPatterns is false', () => {
       const nonStrictCtx = {
         errors: [],
         strictPatterns: false,
@@ -82,6 +93,17 @@ describe('validateStringBounds', () => {
       const result = validateStringBounds('abc', schema, nonStrictCtx)
 
       expect(result).toBe(true)
+    })
+
+    it('does not report error for invalid regex when strictPatterns is false', () => {
+      const nonStrictCtx = {
+        errors: [],
+        strictPatterns: false,
+        collectAllErrors: true,
+      } as ValidationContext
+      const schema: Schema = { pattern: '[' }
+      validateStringBounds('abc', schema, nonStrictCtx)
+
       expect(nonStrictCtx.errors.length).toBe(0)
     })
   })

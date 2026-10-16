@@ -20,9 +20,13 @@ describe('validateObjectBounds', () => {
     expect(validateObjectBounds({ a: 1, b: 2 }, schema, ctx)).toBe(false)
   })
 
-  it('passes within bounds', () => {
+  it('passes within bounds at minProperties', () => {
     const schema: Schema = { minProperties: 1, maxProperties: 2 }
     expect(validateObjectBounds({ a: 1 }, schema, ctx)).toBe(true)
+  })
+
+  it('passes within bounds at maxProperties', () => {
+    const schema: Schema = { minProperties: 1, maxProperties: 2 }
     expect(validateObjectBounds({ a: 1, b: 2 }, schema, ctx)).toBe(true)
   })
 })

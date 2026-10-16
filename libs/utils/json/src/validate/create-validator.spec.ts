@@ -7,8 +7,7 @@ describe('createValidator', () => {
     const schema: Schema = { type: 'string' }
     const validator = createValidator(schema)
 
-    expect(validator('hello').valid).toBe(true)
-    expect(validator(123).valid).toBe(false)
+    expect({ string: validator('hello').valid, number: validator(123).valid }).toEqual({ string: true, number: false })
   })
 
   it('can be reused multiple times', () => {
@@ -22,10 +21,12 @@ describe('createValidator', () => {
     }
     const validator = createValidator(schema)
 
-    expect(validator({ name: 'Alice', age: 30 }).valid).toBe(true)
-    expect(validator({ name: 'Bob' }).valid).toBe(true)
-    expect(validator({}).valid).toBe(false)
-    expect(validator({ name: 123 }).valid).toBe(false)
+    expect({
+      complete: validator({ name: 'Alice', age: 30 }).valid,
+      requiredOnly: validator({ name: 'Bob' }).valid,
+      missingRequired: validator({}).valid,
+      wrongType: validator({ name: 123 }).valid,
+    }).toEqual({ complete: true, requiredOnly: true, missingRequired: false, wrongType: false })
   })
 
   it('accepts validation options', () => {
@@ -39,7 +40,6 @@ describe('createValidator', () => {
     const validator = createValidator(schema, { collectAllErrors: false })
     const result = validator({ a: 1, b: 2 })
 
-    expect(result.valid).toBe(false)
-    expect(result.errors.length).toBe(1)
+    expect({ valid: result.valid, errorCount: result.errors.length }).toEqual({ valid: false, errorCount: 1 })
   })
 })

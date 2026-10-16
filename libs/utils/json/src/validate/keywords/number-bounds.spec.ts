@@ -20,21 +20,33 @@ describe('validateNumberBounds', () => {
     expect(validateNumberBounds(4, schema, ctx)).toBe(false)
   })
 
-  it('respects exclusiveMinimum', () => {
+  it('fails at the minimum when exclusiveMinimum is true', () => {
     const schema: Schema = { minimum: 3, exclusiveMinimum: true }
     expect(validateNumberBounds(3, schema, ctx)).toBe(false)
+  })
+
+  it('passes above the minimum when exclusiveMinimum is true', () => {
+    const schema: Schema = { minimum: 3, exclusiveMinimum: true }
     expect(validateNumberBounds(4, schema, ctx)).toBe(true)
   })
 
-  it('respects exclusiveMaximum', () => {
+  it('fails at the maximum when exclusiveMaximum is true', () => {
     const schema: Schema = { maximum: 3, exclusiveMaximum: true }
     expect(validateNumberBounds(3, schema, ctx)).toBe(false)
+  })
+
+  it('passes below the maximum when exclusiveMaximum is true', () => {
+    const schema: Schema = { maximum: 3, exclusiveMaximum: true }
     expect(validateNumberBounds(2, schema, ctx)).toBe(true)
   })
 
-  it('validates multipleOf', () => {
+  it('passes a multiple of multipleOf', () => {
     const schema: Schema = { multipleOf: 2 }
     expect(validateNumberBounds(4, schema, ctx)).toBe(true)
+  })
+
+  it('fails a value that is not a multiple of multipleOf', () => {
+    const schema: Schema = { multipleOf: 2 }
     expect(validateNumberBounds(5, schema, ctx)).toBe(false)
   })
 })

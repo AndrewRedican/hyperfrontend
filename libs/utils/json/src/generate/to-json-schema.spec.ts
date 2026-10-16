@@ -176,8 +176,7 @@ describe('toJsonSchema', () => {
       const data = ['string', 123, true]
       const schema = toJsonSchema(data, { arrays: { mode: 'uniform' } })
 
-      expect(schema.type).toBe('array')
-      expect(schema.items).toBeDefined()
+      expect(schema).toEqual({ type: 'array', items: { type: ['string', 'integer', 'boolean'] } })
     })
 
     it('differs between first and uniform modes with mixed array', () => {
@@ -186,20 +185,20 @@ describe('toJsonSchema', () => {
       const firstSchema = toJsonSchema(data, { arrays: { mode: 'first' } })
       const uniformSchema = toJsonSchema(data, { arrays: { mode: 'uniform' } })
 
-      expect(firstSchema).toEqual({
-        type: 'array',
-        items: { type: 'string' },
+      expect({ first: firstSchema, uniform: uniformSchema }).toEqual({
+        first: {
+          type: 'array',
+          items: { type: 'string' },
+        },
+        uniform: { type: 'array', items: { type: ['string', 'integer', 'boolean'] } },
       })
-
-      expect(uniformSchema.items).toBeDefined()
     })
 
     it('handles mixed type arrays', () => {
       const data = ['hello', 123, true]
       const schema = toJsonSchema(data, { arrays: { mode: 'all' } })
 
-      expect(schema.type).toBe('array')
-      expect(schema.items).toBeDefined()
+      expect(schema).toEqual({ type: 'array', items: { type: ['string', 'integer', 'boolean'] } })
     })
   })
 

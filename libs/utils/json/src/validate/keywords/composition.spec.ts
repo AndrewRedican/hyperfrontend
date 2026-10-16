@@ -9,8 +9,11 @@ import { validateAllOf, validateAnyOf, validateNot, validateOneOf } from './comp
 describe('validateAllOf', () => {
   const ctx = { errors: [], validate: (v, s) => v === s } as unknown as ValidationContext
 
-  it('returns true if no allOf', () => {
+  it('returns true if allOf is absent', () => {
     expect(validateAllOf(1, {}, ctx)).toBe(true)
+  })
+
+  it('returns true if allOf is empty', () => {
     expect(validateAllOf(1, { allOf: [] }, ctx)).toBe(true)
   })
 

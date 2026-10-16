@@ -30,9 +30,13 @@ describe('validateArrayBounds', () => {
     expect(validateArrayBounds([1, 2, 2], schema, ctx)).toBe(false)
   })
 
-  it('handles deep equality for uniqueItems', () => {
+  it('fails uniqueItems true for deeply equal items', () => {
     const schema: Schema = { uniqueItems: true }
     expect(validateArrayBounds([[1], [1]], schema, ctx)).toBe(false)
+  })
+
+  it('passes uniqueItems true for deeply different items', () => {
+    const schema: Schema = { uniqueItems: true }
     expect(validateArrayBounds([[1], [2]], schema, ctx)).toBe(true)
   })
 })

@@ -3,88 +3,71 @@ import { checkPatternSafety } from './pattern-safety'
 
 describe('checkPatternSafety', () => {
   describe('safe patterns', () => {
-    it('returns safe for simple patterns', () => {
-      expect(checkPatternSafety('^[a-z]+$')).toEqual({ safe: true })
-      expect(checkPatternSafety('\\d{3}-\\d{4}')).toEqual({ safe: true })
-      expect(checkPatternSafety('[A-Za-z0-9_]+')).toEqual({ safe: true })
-      expect(checkPatternSafety('foo|bar|baz')).toEqual({ safe: true })
+    it.each(['^[a-z]+$', '\\d{3}-\\d{4}', '[A-Za-z0-9_]+', 'foo|bar|baz'])('returns safe for the simple pattern %p', (pattern: string) => {
+      expect(checkPatternSafety(pattern)).toEqual({ safe: true })
     })
 
-    it('returns safe for patterns with single quantifiers', () => {
-      expect(checkPatternSafety('a+')).toEqual({ safe: true })
-      expect(checkPatternSafety('a*')).toEqual({ safe: true })
-      expect(checkPatternSafety('a{1,10}')).toEqual({ safe: true })
+    it.each(['a+', 'a*', 'a{1,10}'])('returns safe for the single-quantifier pattern %p', (pattern: string) => {
+      expect(checkPatternSafety(pattern)).toEqual({ safe: true })
     })
 
-    it('returns safe for anchored patterns', () => {
-      expect(checkPatternSafety('^start')).toEqual({ safe: true })
-      expect(checkPatternSafety('end$')).toEqual({ safe: true })
-      expect(checkPatternSafety('^exact$')).toEqual({ safe: true })
+    it.each(['^start', 'end$', '^exact$'])('returns safe for the anchored pattern %p', (pattern: string) => {
+      expect(checkPatternSafety(pattern)).toEqual({ safe: true })
     })
   })
 
   describe('nested quantifiers', () => {
     it('detects (a+)+ pattern', () => {
       const result = checkPatternSafety('(a+)+')
-      expect(result.safe).toBe(false)
-      expect(result.reason).toContain('Nested quantifiers')
+      expect(result).toEqual({ safe: false, reason: expect.stringContaining('Nested quantifiers') })
     })
 
     it('detects (a*)* pattern', () => {
       const result = checkPatternSafety('(a*)*')
-      expect(result.safe).toBe(false)
-      expect(result.reason).toContain('Nested quantifiers')
+      expect(result).toEqual({ safe: false, reason: expect.stringContaining('Nested quantifiers') })
     })
 
     it('detects (a+)* pattern', () => {
       const result = checkPatternSafety('(a+)*')
-      expect(result.safe).toBe(false)
-      expect(result.reason).toContain('Nested quantifiers')
+      expect(result).toEqual({ safe: false, reason: expect.stringContaining('Nested quantifiers') })
     })
 
     it('detects ([a-z]+)+ pattern', () => {
       const result = checkPatternSafety('([a-z]+)+')
-      expect(result.safe).toBe(false)
-      expect(result.reason).toContain('Nested quantifiers')
+      expect(result).toEqual({ safe: false, reason: expect.stringContaining('Nested quantifiers') })
     })
 
     it('detects nested quantifiers with bounds', () => {
       const result = checkPatternSafety('(a+){2,}')
-      expect(result.safe).toBe(false)
-      expect(result.reason).toContain('Nested quantifiers')
+      expect(result).toEqual({ safe: false, reason: expect.stringContaining('Nested quantifiers') })
     })
 
     it('detects nested quantifiers with upper bound', () => {
       const result = checkPatternSafety('(a+){1,100}')
-      expect(result.safe).toBe(false)
-      expect(result.reason).toContain('Nested quantifiers')
+      expect(result).toEqual({ safe: false, reason: expect.stringContaining('Nested quantifiers') })
     })
   })
 
   describe('overlapping alternations', () => {
     it('detects (x|x)+ pattern', () => {
       const result = checkPatternSafety('(a|a)+')
-      expect(result.safe).toBe(false)
-      expect(result.reason).toContain('Overlapping alternation')
+      expect(result).toEqual({ safe: false, reason: expect.stringContaining('Overlapping alternation') })
     })
 
     it('detects (ab|ab)+ pattern', () => {
       const result = checkPatternSafety('(ab|ab)+')
-      expect(result.safe).toBe(false)
-      expect(result.reason).toContain('Overlapping alternation')
+      expect(result).toEqual({ safe: false, reason: expect.stringContaining('Overlapping alternation') })
     })
   })
 
   describe('large quantifier bounds', () => {
     it('detects extremely large upper bounds', () => {
       const result = checkPatternSafety('a{1,100000}')
-      expect(result.safe).toBe(false)
-      expect(result.reason).toContain('exceeds safe threshold')
+      expect(result).toEqual({ safe: false, reason: expect.stringContaining('exceeds safe threshold') })
     })
 
-    it('allows reasonable bounds', () => {
-      expect(checkPatternSafety('a{1,1000}')).toEqual({ safe: true })
-      expect(checkPatternSafety('a{1,9999}')).toEqual({ safe: true })
+    it.each(['a{1,1000}', 'a{1,9999}'])('allows the reasonable bound %p', (pattern: string) => {
+      expect(checkPatternSafety(pattern)).toEqual({ safe: true })
     })
 
     it('handles pattern with no quantifier braces', () => {
@@ -107,20 +90,17 @@ describe('checkPatternSafety', () => {
   describe('multiple unbounded wildcards', () => {
     it('detects .*.* pattern', () => {
       const result = checkPatternSafety('.*.*')
-      expect(result.safe).toBe(false)
-      expect(result.reason).toContain('unbounded wildcards')
+      expect(result).toEqual({ safe: false, reason: expect.stringContaining('unbounded wildcards') })
     })
 
     it('detects .+.+ pattern', () => {
       const result = checkPatternSafety('.+.+')
-      expect(result.safe).toBe(false)
-      expect(result.reason).toContain('unbounded wildcards')
+      expect(result).toEqual({ safe: false, reason: expect.stringContaining('unbounded wildcards') })
     })
 
     it('detects .* followed by .* with content between', () => {
       const result = checkPatternSafety('.*foo.*')
-      expect(result.safe).toBe(false)
-      expect(result.reason).toContain('unbounded wildcards')
+      expect(result).toEqual({ safe: false, reason: expect.stringContaining('unbounded wildcards') })
     })
   })
 
@@ -128,8 +108,7 @@ describe('checkPatternSafety', () => {
     it('rejects patterns exceeding maximum length', () => {
       const longPattern = 'a'.repeat(1001)
       const result = checkPatternSafety(longPattern)
-      expect(result.safe).toBe(false)
-      expect(result.reason).toContain('exceeds maximum allowed')
+      expect(result).toEqual({ safe: false, reason: expect.stringContaining('exceeds maximum allowed') })
     })
 
     it('allows patterns at the maximum length boundary', () => {
