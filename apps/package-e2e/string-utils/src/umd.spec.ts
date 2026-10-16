@@ -45,10 +45,13 @@ describe('@hyperfrontend/string-utils UMD bundle', () => {
     const bundleCode = loadBundleCode(bundlePath)
     const exports = requireUmdBundle(bundleCode) as Record<string, unknown>
 
-    expect(exports).toBeDefined()
-    expect(typeof exports.utf8StringToUint8Array).toBe('function')
-    expect(typeof exports.uint8ArrayToUtf8String).toBe('function')
-    expect(typeof exports.toBase64).toBe('function')
-    expect(typeof exports.fromBase64).toBe('function')
+    expect(exports).toEqual(
+      expect.objectContaining({
+        utf8StringToUint8Array: expect.any(Function),
+        uint8ArrayToUtf8String: expect.any(Function),
+        toBase64: expect.any(Function),
+        fromBase64: expect.any(Function),
+      })
+    )
   })
 })
