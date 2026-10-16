@@ -4,6 +4,7 @@
  * surface, and that the installed preloads, runner and reporter work from a consumer's seat.
  */
 
+import type { FileCoverage } from '@hyperfrontend/testing/coverage'
 import type { RunOutcome, TestConfig } from '@hyperfrontend/testing/runner'
 import type { ChildRun } from './support/installed-package'
 import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
@@ -128,18 +129,23 @@ describe('@hyperfrontend/testing ESM', () => {
     })
 
     it('ships an ES module, a CommonJS twin and a declaration for every entry', () => {
-      for (const entry of ENTRIES) {
-        expect(existsSync(installedPath(entry, 'index.mjs'))).toBe(true)
-        expect(existsSync(installedPath(entry, 'index.cjs'))).toBe(true)
-        expect(existsSync(installedPath(entry, 'index.d.ts'))).toBe(true)
-      }
+      const files = ENTRIES.flatMap((entry) => ['index.mjs', 'index.cjs', 'index.d.ts'].map((file) => join(entry, file)))
+      expect(files.filter((file) => !existsSync(installedPath(file)))).toEqual([])
     })
 
-    it('carries no runtime dependencies and names jsdom as an optional peer', () => {
+    it('declares no runtime dependencies', () => {
       expect(manifest.dependencies).toBeUndefined()
-      expect(manifest.peerDependencies).toEqual({ jsdom: '>=26.0.0' })
-      expect(manifest.peerDependenciesMeta).toEqual({ jsdom: { optional: true } })
+    })
+
+    it('installs without a node_modules directory of its own', () => {
       expect(existsSync(installedPath('node_modules'))).toBe(false)
+    })
+
+    it('names jsdom as an optional peer', () => {
+      expect({ peerDependencies: manifest.peerDependencies, peerDependenciesMeta: manifest.peerDependenciesMeta }).toEqual({
+        peerDependencies: { jsdom: '>=26.0.0' },
+        peerDependenciesMeta: { jsdom: { optional: true } },
+      })
     })
 
     it('requires Node 22.18 or later', () => {
@@ -148,27 +154,43 @@ describe('@hyperfrontend/testing ESM', () => {
   })
 
   describe('main entry', () => {
-    it('exports the Jest-style surface and neither preload', async () => {
+    it('exports the Jest-style surface', async () => {
       const packed = await import(installedUrl('index.mjs'))
       expect(Object.keys(packed).sort()).toEqual(MAIN_EXPORTS)
+    })
+
+    it('pulls in neither preload, so no document appears on the global', async () => {
+      await import(installedUrl('index.mjs'))
       expect(typeof document).toBe('undefined')
     })
 
-    it('is a copy of its own, distinct from the workspace runtime this suite runs on', async () => {
+    it('carries an expect of its own, distinct from the workspace runtime this suite runs on', async () => {
       const packed = await import(installedUrl('index.mjs'))
       expect(packed.expect).not.toBe(expect)
+    })
+
+    it('carries an it of its own, distinct from the workspace runtime this suite runs on', async () => {
+      const packed = await import(installedUrl('index.mjs'))
       expect(packed.it).not.toBe(it)
     })
 
-    it('carries the it and describe modifiers', async () => {
+    it('carries the it modifiers', async () => {
       const packed = await import(installedUrl('index.mjs'))
       for (const name of IT_MODIFIERS) expect(typeof packed.it[name]).toBe('function')
+    })
+
+    it('carries the describe modifiers', async () => {
+      const packed = await import(installedUrl('index.mjs'))
       for (const name of DESCRIBE_MODIFIERS) expect(typeof packed.describe[name]).toBe('function')
     })
 
-    it('carries the expect statics and their negations', async () => {
+    it('carries the expect statics', async () => {
       const packed = await import(installedUrl('index.mjs'))
       for (const name of EXPECT_STATICS) expect(typeof packed.expect[name]).toBe('function')
+    })
+
+    it('carries the negations of the expect statics', async () => {
+      const packed = await import(installedUrl('index.mjs'))
       for (const name of EXPECT_NEGATIONS) expect(typeof packed.expect.not[name]).toBe('function')
     })
 
@@ -177,11 +199,23 @@ describe('@hyperfrontend/testing ESM', () => {
       for (const name of JEST_METHODS) expect(typeof packed.jest[name]).toBe('function')
     })
 
-    it('exports the equality helpers behind the matchers', async () => {
+    it('exports an equals helper that accepts deeply equal values', async () => {
       const packed = await import(installedUrl('index.mjs'))
       expect(packed.equals({ a: [1, { b: 2 }] }, { a: [1, { b: 2 }] })).toBe(true)
+    })
+
+    it('exports an equals helper that rejects differing values', async () => {
+      const packed = await import(installedUrl('index.mjs'))
       expect(packed.equals({ a: 1 }, { a: 2 })).toBe(false)
+    })
+
+    it('exports a matchesSubset helper that accepts a subset', async () => {
+      const packed = await import(installedUrl('index.mjs'))
       expect(packed.matchesSubset({ a: 1, b: 2 }, { a: 1 })).toBe(true)
+    })
+
+    it('exports a matchesSubset helper that rejects an expectation the value does not cover', async () => {
+      const packed = await import(installedUrl('index.mjs'))
       expect(packed.matchesSubset({ a: 1 }, { a: 1, b: 2 })).toBe(false)
     })
   })
@@ -200,9 +234,13 @@ describe('@hyperfrontend/testing ESM', () => {
       packed('abc').toEqual(packed.not.stringContaining('z'))
     })
 
-    it('raises a failed matcher as a thrown assertion', async () => {
+    it('raises a failed toBe as a thrown assertion naming both values', async () => {
       const { expect: packed } = await import(installedUrl('index.mjs'))
       expect(() => packed(1).toBe(2)).toThrow(/expected 1 to be 2/)
+    })
+
+    it('raises a failed toEqual against an asymmetric matcher as a thrown assertion', async () => {
+      const { expect: packed } = await import(installedUrl('index.mjs'))
       expect(() => packed({ a: 1 }).toEqual({ a: packed.any(String) })).toThrow()
     })
 
@@ -235,13 +273,20 @@ describe('@hyperfrontend/testing ESM', () => {
       expect(() => packed(add).toHaveBeenCalledWith(9, 9)).toThrow()
     })
 
-    it('spies on a method, calls through, and restores it', async () => {
+    it('spies on a method and calls through to it', async () => {
       const { expect: packed, jest: packedJest } = await import(installedUrl('index.mjs'))
       const target = { greet: (name: string) => `hello ${name}` }
-      const original = target.greet
       const spy = packedJest.spyOn(target, 'greet')
       expect(target.greet('ada')).toBe('hello ada')
       packed(spy).toHaveBeenCalledWith('ada')
+    })
+
+    it('restores a spied method to the original', async () => {
+      const { jest: packedJest } = await import(installedUrl('index.mjs'))
+      const target = { greet: (name: string) => `hello ${name}` }
+      const original = target.greet
+      const spy = packedJest.spyOn(target, 'greet')
+      target.greet('ada')
       spy.mockRestore()
       expect(target.greet).toBe(original)
     })
@@ -255,12 +300,17 @@ describe('@hyperfrontend/testing ESM', () => {
       suite = runChildSuite(fixtureDir('jest-style'), [hooks], JEST_STYLE_SPECS)
     })
 
-    it('runs a Jest-style suite to completion: module mocks, fake timers, it.each and assertion counts', () => {
-      expect(suite.stderr).toBe('')
+    it('exits 0 after a Jest-style suite: module mocks, fake timers, it.each and assertion counts', () => {
       expect(suite.status).toBe(0)
-      expect(tapCount(suite.stdout, 'tests')).toBe(14)
-      expect(tapCount(suite.stdout, 'pass')).toBe(14)
-      expect(tapCount(suite.stdout, 'fail')).toBe(0)
+    })
+
+    it('writes nothing to stderr while running the Jest-style suite', () => {
+      expect(suite.stderr).toBe('')
+    })
+
+    it('passes all 14 tests of the Jest-style suite', () => {
+      const totals = { tests: tapCount(suite.stdout, 'tests'), pass: tapCount(suite.stdout, 'pass'), fail: tapCount(suite.stdout, 'fail') }
+      expect(totals).toEqual({ tests: 14, pass: 14, fail: 0 })
     })
 
     it('reports every fixture suite as passed under its own name', () => {
@@ -268,32 +318,53 @@ describe('@hyperfrontend/testing ESM', () => {
     })
 
     it('renders it.each titles with %s and %p', () => {
-      expect(suite.stdout).toContain('# Subtest: adds 1 and 2 to make 3')
-      expect(suite.stdout).toContain('# Subtest: adds 2 and 3 to make 5')
-      expect(suite.stdout).toContain("# Subtest: joins ab and cd into 'abcd'")
+      const titles = ['# Subtest: adds 1 and 2 to make 3', '# Subtest: adds 2 and 3 to make 5', "# Subtest: joins ab and cd into 'abcd'"]
+      expect(titles.filter((title) => !suite.stdout.includes(title))).toEqual([])
     })
 
-    it('exits non-zero and counts the failures when a suite fails, so a clean exit is not vacuous', () => {
-      const run = runChildSuite(fixtureDir('failing'), [hooks], ['src/failing.spec.ts'])
-      expect(run.status).toBe(1)
-      expect(tapCount(run.stdout, 'tests')).toBe(3)
-      expect(tapCount(run.stdout, 'pass')).toBe(1)
-      expect(tapCount(run.stdout, 'fail')).toBe(2)
-      expect(run.stdout).toContain('not ok 1 - a suite that fails on purpose')
+    describe('when a suite fails', () => {
+      let failed: ChildRun
+
+      before(() => {
+        failed = runChildSuite(fixtureDir('failing'), [hooks], ['src/failing.spec.ts'])
+      })
+
+      it('exits non-zero, so a clean exit is not vacuous', () => {
+        expect(failed.status).toBe(1)
+      })
+
+      it('counts the failures', () => {
+        const totals = {
+          tests: tapCount(failed.stdout, 'tests'),
+          pass: tapCount(failed.stdout, 'pass'),
+          fail: tapCount(failed.stdout, 'fail'),
+        }
+        expect(totals).toEqual({ tests: 3, pass: 1, fail: 2 })
+      })
+
+      it('reports the failing suite as not ok', () => {
+        expect(failed.stdout).toContain('not ok 1 - a suite that fails on purpose')
+      })
     })
   })
 
   describe('installed dom preload', () => {
+    let domRun: ChildRun
+
+    before(() => {
+      domRun = runChildSuite(fixtureDir('dom'), [installedUrl('hooks', 'index.mjs'), installedUrl('dom', 'index.mjs')], ['src/dom.spec.ts'])
+    })
+
     it('gives a suite a document and makes window the global object', () => {
-      const run = runChildSuite(
-        fixtureDir('dom'),
-        [installedUrl('hooks', 'index.mjs'), installedUrl('dom', 'index.mjs')],
-        ['src/dom.spec.ts']
-      )
-      expect(run.stderr).toBe('')
-      expect(run.status).toBe(0)
-      expect(tapCount(run.stdout, 'pass')).toBe(3)
-      expect(tapCount(run.stdout, 'fail')).toBe(0)
+      expect({ pass: tapCount(domRun.stdout, 'pass'), fail: tapCount(domRun.stdout, 'fail') }).toEqual({ pass: 3, fail: 0 })
+    })
+
+    it('exits 0 after the suite that needs a document', () => {
+      expect(domRun.status).toBe(0)
+    })
+
+    it('writes nothing to stderr while running the suite that needs a document', () => {
+      expect(domRun.stderr).toBe('')
     })
 
     it('takes jsdom from the consumer project, which installs the optional peer itself', () => {
@@ -302,24 +373,38 @@ describe('@hyperfrontend/testing ESM', () => {
   })
 
   describe('installed reporter', () => {
-    it('prints the pass line and withholds the coverage block', () => {
-      const run = runChildSuite(fixtureDir('project'), [installedUrl('hooks', 'index.mjs')], ['src/math.spec.ts'], {
+    let reported: ChildRun
+    let printed: ChildRun
+
+    before(() => {
+      reported = runChildSuite(fixtureDir('project'), [installedUrl('hooks', 'index.mjs')], ['src/math.spec.ts'], {
         reporter: installedUrl('reporter', 'index.mjs'),
         nodeArgs: COVERAGE_FLAGS,
       })
-      expect(run.status).toBe(0)
-      expect(run.stdout).toMatch(/\bpass 2\b/)
-      expect(run.stdout).not.toMatch(/coverage report/)
-    })
-
-    it('withholds a block that Node prints for the very same run', () => {
-      const run = runChildSuite(fixtureDir('project'), [installedUrl('hooks', 'index.mjs')], ['src/math.spec.ts'], {
+      printed = runChildSuite(fixtureDir('project'), [installedUrl('hooks', 'index.mjs')], ['src/math.spec.ts'], {
         reporter: 'spec',
         nodeArgs: COVERAGE_FLAGS,
       })
-      expect(run.status).toBe(0)
-      expect(run.stdout).toMatch(/start of coverage report/)
-      expect(run.stdout).toMatch(/end of coverage report/)
+    })
+
+    it('exits 0 for a run it reports', () => {
+      expect(reported.status).toBe(0)
+    })
+
+    it('prints the pass line', () => {
+      expect(reported.stdout).toMatch(/\bpass 2\b/)
+    })
+
+    it('withholds the coverage block', () => {
+      expect(reported.stdout).not.toMatch(/coverage report/)
+    })
+
+    it('exits 0 for the very same run under the spec reporter', () => {
+      expect(printed.status).toBe(0)
+    })
+
+    it('withholds a block that Node prints for the very same run', () => {
+      expect(printed.stdout).toMatch(/start of coverage report[\s\S]*end of coverage report/)
     })
   })
 
@@ -340,16 +425,41 @@ describe('@hyperfrontend/testing ESM', () => {
       return { ...outcome, coverageDir }
     }
 
-    it('exports the runner surface', async () => {
+    function passingMathConfig(): TestConfig {
+      return {
+        environments: [{ name: 'node', testMatch: ['src/math.spec.ts'] }],
+        coverageInclude: ['src/math.ts'],
+        coverageThresholds: { lines: 100, branches: 100, functions: 100 },
+      }
+    }
+
+    function mappedStubConfig(): TestConfig {
+      return {
+        environments: [{ name: 'node', testMatch: ['src/real.spec.ts'] }],
+        coverageInclude: ['src/stub.ts'],
+        moduleNameMapper: { '^\\./real$': '<rootDir>/src/stub.ts' },
+      }
+    }
+
+    it('exports the runner functions', async () => {
       const runner = await import(installedUrl('runner', 'index.mjs'))
       for (const name of RUNNER_FUNCTIONS) expect(typeof runner[name]).toBe('function')
+    })
+
+    it('exports the baseline coverage exclusions', async () => {
+      const runner = await import(installedUrl('runner', 'index.mjs'))
       expect(runner.BASELINE_COVERAGE_EXCLUDE).toEqual(BASELINE_EXCLUDE)
     })
 
-    it('fills in the baseline exclusions and the default timeout', async () => {
+    it('fills in the default timeout', async () => {
       const { withDefaults } = await import(installedUrl('runner', 'index.mjs'))
       const resolved = withDefaults({ environments: [], coverageInclude: ['src/**/*.ts'], coverageExclude: ['src/generated/**'] })
       expect(resolved.testTimeout).toBe(30_000)
+    })
+
+    it('fills in the baseline exclusions ahead of the configured ones', async () => {
+      const { withDefaults } = await import(installedUrl('runner', 'index.mjs'))
+      const resolved = withDefaults({ environments: [], coverageInclude: ['src/**/*.ts'], coverageExclude: ['src/generated/**'] })
       expect(resolved.coverageExclude).toEqual([...BASELINE_EXCLUDE, 'src/generated/**'])
     })
 
@@ -360,33 +470,42 @@ describe('@hyperfrontend/testing ESM', () => {
         coverageInclude: ['src/**/*.ts'],
       })
       const plan = buildRunPlan(config, config.environments[0], fixtureDir('project'), join(tmpdir(), 'unused'))
-      expect(plan.argv).toContain(installedUrl('hooks', 'index.mjs'))
-      expect(plan.argv).toContain(installedUrl('dom', 'index.mjs'))
-      expect(plan.argv).toContain(`--test-reporter=${installedUrl('reporter', 'index.mjs')}`)
-      expect(plan.argv).toContain('--experimental-test-coverage')
+      expect(plan.argv).toEqual(
+        expect.arrayContaining([
+          installedUrl('hooks', 'index.mjs'),
+          installedUrl('dom', 'index.mjs'),
+          `--test-reporter=${installedUrl('reporter', 'index.mjs')}`,
+          '--experimental-test-coverage',
+        ])
+      )
     })
 
-    it('passes a project whose tests pass and whose thresholds are met, tabling its source file', async () => {
-      const outcome = await run({
-        environments: [{ name: 'node', testMatch: ['src/math.spec.ts'] }],
-        coverageInclude: ['src/math.ts'],
-        coverageThresholds: { lines: 100, branches: 100, functions: 100 },
-      })
-      expect(outcome.failures).toEqual([])
-      expect(outcome.success).toBe(true)
+    it('passes a project whose tests pass and whose thresholds are met', async () => {
+      const outcome = await run(passingMathConfig())
+      expect({ success: outcome.success, failures: outcome.failures }).toEqual({ success: true, failures: [] })
+    })
+
+    it('tables the source file of a passing project at full coverage', async () => {
+      const outcome = await run(passingMathConfig())
       expect(outcome.coverageTable.some((row) => row.startsWith('src/math.ts') && row.includes('100.00'))).toBe(true)
     })
 
     it('writes the merged lcov.info naming the file from the workspace root', async () => {
       const outcome = await run({ environments: [{ name: 'node', testMatch: ['src/math.spec.ts'] }], coverageInclude: ['src/math.ts'] })
       expect(readFileSync(join(outcome.coverageDir, 'lcov.info'), 'utf8')).toContain('SF:src/fixtures/project/src/math.ts\n')
+    })
+
+    it('keeps the per-environment lcov.node.info beside the merged report', async () => {
+      const outcome = await run({ environments: [{ name: 'node', testMatch: ['src/math.spec.ts'] }], coverageInclude: ['src/math.ts'] })
       expect(existsSync(join(outcome.coverageDir, 'lcov.node.info'))).toBe(true)
     })
 
     it('fails a run that never loaded a file it was asked to measure', async () => {
       const outcome = await run({ environments: [{ name: 'node', testMatch: ['src/math.spec.ts'] }], coverageInclude: ['src/**/*.ts'] })
-      expect(outcome.success).toBe(false)
-      expect(outcome.failures.join('\n')).toMatch(/no test loaded these files[\s\S]*src\/orphan\.ts/)
+      expect({ success: outcome.success, failureText: outcome.failures.join('\n') }).toEqual({
+        success: false,
+        failureText: expect.stringMatching(/no test loaded these files[\s\S]*src\/orphan\.ts/),
+      })
     })
 
     it('fails a run whose coverage misses a declared threshold', async () => {
@@ -395,8 +514,10 @@ describe('@hyperfrontend/testing ESM', () => {
         coverageInclude: ['src/extras.ts'],
         coverageThresholds: { functions: 100 },
       })
-      expect(outcome.success).toBe(false)
-      expect(outcome.failures).toEqual(['50.00% function coverage does not meet threshold of 100%'])
+      expect({ success: outcome.success, failures: outcome.failures }).toEqual({
+        success: false,
+        failures: ['50.00% function coverage does not meet threshold of 100%'],
+      })
     })
 
     it('fails a run whose suite fails, naming the environment', async () => {
@@ -404,8 +525,10 @@ describe('@hyperfrontend/testing ESM', () => {
         environments: [{ name: 'node', testMatch: ['src/greeting.spec.ts'] }],
         coverageInclude: ['src/greeting.ts'],
       })
-      expect(outcome.success).toBe(false)
-      expect(outcome.failures).toEqual(['environment "node" reported failures'])
+      expect({ success: outcome.success, failures: outcome.failures }).toEqual({
+        success: false,
+        failures: ['environment "node" reported failures'],
+      })
     })
 
     it('preloads a setup module whose jest.mock applies to every spec', async () => {
@@ -413,58 +536,97 @@ describe('@hyperfrontend/testing ESM', () => {
         environments: [{ name: 'node', testMatch: ['src/greeting.spec.ts'], setupFiles: ['test.setup.ts'] }],
         coverageInclude: ['src/greeting.ts'],
       })
-      expect(outcome.failures).toEqual([])
-      expect(outcome.success).toBe(true)
+      expect({ success: outcome.success, failures: outcome.failures }).toEqual({ success: true, failures: [] })
     })
 
-    it('redirects a specifier through moduleNameMapper', async () => {
-      const outcome = await run({
-        environments: [{ name: 'node', testMatch: ['src/real.spec.ts'] }],
-        coverageInclude: ['src/stub.ts'],
-        moduleNameMapper: { '^\\./real$': '<rootDir>/src/stub.ts' },
-      })
-      expect(outcome.failures).toEqual([])
-      expect(outcome.success).toBe(true)
+    it('redirects a specifier through moduleNameMapper, so the spec passes against the stub', async () => {
+      const outcome = await run(mappedStubConfig())
+      expect({ success: outcome.success, failures: outcome.failures }).toEqual({ success: true, failures: [] })
+    })
+
+    it('measures the stub a moduleNameMapper redirect loaded', async () => {
+      const outcome = await run(mappedStubConfig())
       expect(outcome.coverageTable.some((row) => row.startsWith('src/stub.ts'))).toBe(true)
     })
   })
 
   describe('installed coverage entry', () => {
+    async function mergeSampleReportTwice(): Promise<FileCoverage[]> {
+      const { mergeLcov } = await import(installedUrl('coverage', 'index.mjs'))
+      const dir = mkdtempSync(join(tmpdir(), 'hf-testing-e2e-lcov-'))
+      try {
+        const report = join(dir, 'lcov.node.info')
+        writeFileSync(report, SAMPLE_LCOV)
+        return [...mergeLcov([report, report]).values()]
+      } finally {
+        rmSync(dir, { recursive: true, force: true })
+      }
+    }
+
     it('exports the merge, render, gate and completeness functions', async () => {
       const coverage = await import(installedUrl('coverage', 'index.mjs'))
       for (const name of COVERAGE_EXPORTS) expect(typeof coverage[name]).toBe('function')
     })
 
-    it('merges the records of one file, totals them, gates them and renders them back out', async () => {
-      const { mergeLcov, fileTotals, overallTotals, percentOf, uncoveredRanges, renderLcov, renderCoverageTable, findThresholdShortfalls } =
-        await import(installedUrl('coverage', 'index.mjs'))
-      const dir = mkdtempSync(join(tmpdir(), 'hf-testing-e2e-lcov-'))
-      const report = join(dir, 'lcov.node.info')
-      writeFileSync(report, SAMPLE_LCOV)
+    it('merges the records of one file into a single record', async () => {
+      const files = await mergeSampleReportTwice()
+      expect(files.map((file) => file.path)).toStrictEqual(['src/sample.ts'])
+    })
 
-      const files = [...mergeLcov([report, report]).values()]
-      expect(files).toHaveLength(1)
-      expect(files[0].path).toBe('src/sample.ts')
+    it('totals the lines, branches and functions of a merged record', async () => {
+      const { fileTotals } = await import(installedUrl('coverage', 'index.mjs'))
+      const files = await mergeSampleReportTwice()
       expect(fileTotals(files[0])).toEqual({ lines: { found: 3, hit: 2 }, branches: { found: 2, hit: 1 }, functions: { found: 1, hit: 1 } })
+    })
+
+    it('expresses the overall line total as a percentage', async () => {
+      const { overallTotals, percentOf } = await import(installedUrl('coverage', 'index.mjs'))
+      const files = await mergeSampleReportTwice()
       expect(percentOf(overallTotals(files).lines)).toBeCloseTo(66.67, 1)
+    })
+
+    it('lists the uncovered lines of a merged record as ranges', async () => {
+      const { uncoveredRanges } = await import(installedUrl('coverage', 'index.mjs'))
+      const files = await mergeSampleReportTwice()
       expect(uncoveredRanges(files[0])).toEqual(['3'])
+    })
+
+    it('gates the merged totals against their thresholds', async () => {
+      const { findThresholdShortfalls } = await import(installedUrl('coverage', 'index.mjs'))
+      const files = await mergeSampleReportTwice()
       expect(findThresholdShortfalls(files, { lines: 100, functions: 100 })).toEqual([
         '66.67% line coverage does not meet threshold of 100%',
       ])
-      expect(renderLcov(files)).toContain('DA:1,2\n')
-      const table = renderCoverageTable(files)
-      expect(table.some((row: string) => row.startsWith('src/sample.ts'))).toBe(true)
-      expect(table[table.length - 2]).toMatch(/^all files/)
+    })
 
-      rmSync(dir, { recursive: true, force: true })
+    it('renders the merged record back out as lcov with the hits summed', async () => {
+      const { renderLcov } = await import(installedUrl('coverage', 'index.mjs'))
+      const files = await mergeSampleReportTwice()
+      expect(renderLcov(files)).toContain('DA:1,2\n')
+    })
+
+    it('renders a coverage table row for the merged file', async () => {
+      const { renderCoverageTable } = await import(installedUrl('coverage', 'index.mjs'))
+      const table = renderCoverageTable(await mergeSampleReportTwice())
+      expect(table.some((row: string) => row.startsWith('src/sample.ts'))).toBe(true)
+    })
+
+    it('renders the all files row second to last in the coverage table', async () => {
+      const { renderCoverageTable } = await import(installedUrl('coverage', 'index.mjs'))
+      const table = renderCoverageTable(await mergeSampleReportTwice())
+      expect(table[table.length - 2]).toMatch(/^all files/)
     })
 
     it('lists the files a report never measured', async () => {
       const { findUnmeasuredFiles } = await import(installedUrl('coverage', 'index.mjs'))
       const { missing, covered } = findUnmeasuredFiles([], fixtureDir('project'), ['src/**/*.ts'], ['**/*.spec.ts'])
-      expect(covered).toBe(0)
-      expect(missing).toContain('src/orphan.ts')
-      expect(missing.some((file: string) => file.endsWith('.spec.ts'))).toBe(false)
+      expect({ covered, missing }).toEqual({ covered: 0, missing: expect.arrayContaining(['src/orphan.ts']) })
+    })
+
+    it('leaves files matching an exclusion off the unmeasured list', async () => {
+      const { findUnmeasuredFiles } = await import(installedUrl('coverage', 'index.mjs'))
+      const { missing } = findUnmeasuredFiles([], fixtureDir('project'), ['src/**/*.ts'], ['**/*.spec.ts'])
+      expect(missing.filter((file: string) => file.endsWith('.spec.ts'))).toEqual([])
     })
   })
 })
