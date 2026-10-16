@@ -53,8 +53,11 @@ describe('getKeysFromIterable (with config detecting circular references)', () =
   beforeEach(() => setConfig({ detectCircularReferences: true }))
   afterEach(() => setConfig({ detectCircularReferences: false }))
 
-  it('excludes any marker properties added to track references', () => {
+  it('excludes any marker properties added to track references from the keys of an object', () => {
     expect(getKeysFromIterable({ pizza: 'hawaiian', __$96184805415709618480541570: Symbol() }, 'object')).toEqual(['pizza'])
+  })
+
+  it('excludes any marker properties added to track references from the keys of an array', () => {
     expect(getKeysFromIterable({ 0: 'apple', 1: 'banana', __$96184805415709618480541570: Symbol() }, 'array')).toEqual(['0', '1'])
   })
 })

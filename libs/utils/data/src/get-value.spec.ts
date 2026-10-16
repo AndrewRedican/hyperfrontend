@@ -10,11 +10,16 @@ describe('getValue', () => {
     target = { a: { b: { c: ['foo', 'bar'] } } }
   })
 
-  it('returns the value of the path when it exists', () => {
-    expect(getValue(target, ['a'])).toEqual({ b: { c: ['foo', 'bar'] } })
-    expect(getValue(target, ['a', 'b'])).toEqual({ c: ['foo', 'bar'] })
-    expect(getValue(target, ['a', 'b', 'c'])).toEqual(['foo', 'bar'])
-    expect(getValue(target, ['a', 'b', 'c', '0'])).toEqual('foo')
+  it.each([
+    [['a'], { b: { c: ['foo', 'bar'] } }],
+    [['a', 'b'], { c: ['foo', 'bar'] }],
+    [
+      ['a', 'b', 'c'],
+      ['foo', 'bar'],
+    ],
+    [['a', 'b', 'c', '0'], 'foo'],
+  ])('returns the value of the path %p when it exists', (path: [string, ...string[]], expected: unknown) => {
+    expect(getValue(target, path)).toEqual(expected)
   })
 
   it('returns same value when path is empty list', () => {
@@ -22,15 +27,21 @@ describe('getValue', () => {
     expect(getValue(target, [])).toEqual(target)
   })
 
-  it('throw error when path is not an array', () => {
+  it('throws error when path is omitted', () => {
     // @ts-expect-error Testing invalid input
     expect(() => getValue(target)).toThrow('Expected path to be a non-empty array of strings.')
+  })
 
+  it('throws error when path is null instead of an array', () => {
     expect(() => getValue(target, null)).toThrow('Expected path to be a non-empty array of strings.')
+  })
 
+  it('throws error when path is a dotted string instead of an array', () => {
     // @ts-expect-error Testing invalid input
     expect(() => getValue(target, 'a.b.c')).toThrow('Expected path to be a non-empty array of strings.')
+  })
 
+  it('throws error when path is an object instead of an array', () => {
     // @ts-expect-error Testing invalid input
     expect(() => getValue(target, {})).toThrow('Expected path to be a non-empty array of strings.')
   })
@@ -40,8 +51,11 @@ describe('getValue', () => {
     expect(() => getValue(target, ['a', 123])).toThrow('Expected path[1] to be a string, got number.')
   })
 
-  it('returns onMissingKey default when key is missing', () => {
+  it('returns onMissingKey default when the last key is missing', () => {
     expect(getValue(target, ['a', 'b', 'd'], { onMissingKey: 'default-value' })).toEqual('default-value')
+  })
+
+  it('returns a null onMissingKey default when an intermediate key is missing', () => {
     expect(getValue(target, ['a', 'x', 'y'], { onMissingKey: null })).toEqual(null)
   })
 

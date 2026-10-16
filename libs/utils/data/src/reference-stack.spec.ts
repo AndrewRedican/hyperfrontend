@@ -14,17 +14,16 @@ describe('referenceStack', () => {
     const stack2 = referenceStack()
     stack.add(value)
     stack2.add(value)
-    expect(stack.size).toBe(1)
-    expect(stack2.size).toBe(1)
+    expect({ stack: stack.size, stack2: stack2.size }).toEqual({ stack: 1, stack2: 1 })
   })
 
   describe('size', () => {
     it('returns size of stack', () => {
-      expect(stack.size).toBe(0)
+      const empty = stack.size
       stack.add({})
-      expect(stack.size).toBe(1)
+      const afterOneAdd = stack.size
       stack.add([])
-      expect(stack.size).toBe(2)
+      expect({ empty, afterOneAdd, afterTwoAdds: stack.size }).toEqual({ empty: 0, afterOneAdd: 1, afterTwoAdds: 2 })
     })
   })
 
@@ -41,11 +40,8 @@ describe('referenceStack', () => {
       expect(stack.exists({})).toBe(false)
     })
 
-    it('returns false when reference is not iterable', () => {
-      expect(stack.exists(42)).toBe(false)
-      expect(stack.exists('hello')).toBe(false)
-      expect(stack.exists(null)).toBe(false)
-      expect(stack.exists(undefined)).toBe(false)
+    it.each([[42], ['hello'], [null], [undefined]])('returns false when reference %p is not iterable', (value: unknown) => {
+      expect(stack.exists(value)).toBe(false)
     })
   })
 
@@ -55,25 +51,24 @@ describe('referenceStack', () => {
     it('returns a number corresponding to how long ago the reference was added to the stack', () => {
       const [a, b, c] = [{}, {}, {}]
       stack.add(a)
-      expect(stack.lastSeen(a)).toBe(-1)
+      const afterAddingA = { a: stack.lastSeen(a) }
       stack.add(b)
-      expect(stack.lastSeen(b)).toBe(-1)
-      expect(stack.lastSeen(a)).toBe(-2)
+      const afterAddingB = { b: stack.lastSeen(b), a: stack.lastSeen(a) }
       stack.add(c)
-      expect(stack.lastSeen(c)).toBe(-1)
-      expect(stack.lastSeen(b)).toBe(-2)
-      expect(stack.lastSeen(a)).toBe(-3)
+      const afterAddingC = { c: stack.lastSeen(c), b: stack.lastSeen(b), a: stack.lastSeen(a) }
+      expect({ afterAddingA, afterAddingB, afterAddingC }).toEqual({
+        afterAddingA: { a: -1 },
+        afterAddingB: { b: -1, a: -2 },
+        afterAddingC: { c: -1, b: -2, a: -3 },
+      })
     })
 
-    it('returns false when reference is not registered', () => {
-      expect(stack.lastSeen({})).toBeNull()
-      expect(stack.lastSeen([])).toBeNull()
+    it.each([[{}], [[]]])('returns null when reference %p is not registered', (value: unknown) => {
+      expect(stack.lastSeen(value)).toBeNull()
     })
 
-    it('returns false when reference is not iterable', () => {
-      expect(stack.lastSeen(42)).toBeNull()
-      expect(stack.lastSeen(null)).toBeNull()
-      expect(stack.lastSeen(void 0)).toBeNull()
+    it.each([[42], [null], [void 0]])('returns null when reference %p is not iterable', (value: unknown) => {
+      expect(stack.lastSeen(value)).toBeNull()
     })
   })
 
@@ -81,17 +76,17 @@ describe('referenceStack', () => {
     beforeEach(() => (stack = referenceStack()))
 
     it('reisters a new reference in the stack', () => {
-      expect(stack.size).toBe(0)
+      const before = stack.size
       stack.add({})
-      expect(stack.size).toBe(1)
+      expect({ before, after: stack.size }).toEqual({ before: 0, after: 1 })
     })
 
     it('does not register a reference that already exists in the stack', () => {
       const value: unknown[] = []
-      expect(stack.size).toBe(0)
+      const before = stack.size
       stack.add(value)
       stack.add(value)
-      expect(stack.size).toBe(1)
+      expect({ before, after: stack.size }).toEqual({ before: 0, after: 1 })
     })
 
     it('does not register a reference that is not iterable', () => {
@@ -149,9 +144,9 @@ describe('referenceStack', () => {
       stack.add(value)
       stack.add(value.a)
       stack.add(value.a.b)
-      expect(stack.size).toBe(3)
+      const beforeClear = stack.size
       stack.clear()
-      expect(stack.size).toBe(0)
+      expect({ beforeClear, afterClear: stack.size }).toEqual({ beforeClear: 3, afterClear: 0 })
     })
 
     it('never writes a marker onto the references it tracks', () => {

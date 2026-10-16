@@ -9,23 +9,18 @@ import { selectiveCopy } from './selective-copy'
 import { setConfig } from './shared/consts'
 
 describe('selectiveCopy', () => {
-  it('clones primitive type data', () => {
-    const symbol = Symbol()
-    expect(selectiveCopy(symbol).clone).toEqual(symbol)
-    expect(selectiveCopy('open sesame').clone).toEqual('open sesame')
-    expect(selectiveCopy(5).clone).toEqual(5)
-    expect(selectiveCopy(NaN).clone).toEqual(NaN)
-    expect(selectiveCopy(true).clone).toEqual(true)
-    expect(selectiveCopy(BigInt(9007199254740991)).clone).toEqual(BigInt(9007199254740991))
-    expect(selectiveCopy(void 0).clone).toBeUndefined()
-    expect(selectiveCopy(null).clone).toBeNull()
-    const fn = () => {}
-    expect(selectiveCopy(fn).clone).toEqual(fn)
+  it.each([[Symbol()], ['open sesame'], [5], [NaN], [true], [BigInt(9007199254740991)], [void 0], [null], [() => {}]])(
+    'clones primitive type data: %p',
+    (value: unknown) => {
+      expect(selectiveCopy(value).clone).toEqual(value)
+    }
+  )
+
+  it('throws error when the second argument is null instead of an object', () => {
+    expect(() => selectiveCopy(5, null)).toThrow('Invalid options argument.')
   })
 
-  it('throw error when second argument is not an object', () => {
-    expect(() => selectiveCopy(5, null)).toThrow('Invalid options argument.')
-
+  it('throws error when the second argument is an array instead of an object', () => {
     // @ts-expect-error Testing invalid input
     expect(() => selectiveCopy(5, [])).toThrow('Invalid options argument.')
   })
@@ -38,61 +33,70 @@ describe('selectiveCopy', () => {
 
   it('copies function references by default', () => {
     const target = { method: () => true }
-    const { clone, skipped } = selectiveCopy(target)
-    expect(clone.method).toBe(target.method)
-    expect(skipped).toEqual([])
+    expect(selectiveCopy(target)).toEqual({ clone: { method: target.method }, skipped: [] })
   })
 
   it('skips copying functions when flagged', () => {
     const target = { method: () => true }
-    const { clone, skipped } = selectiveCopy(target, { skipFunctions: true })
-    expect(clone).toEqual({})
-    expect(skipped).toEqual([
-      {
-        target: target.method,
-        path: ['method'],
-        key: 'method',
-        dataType: 'function',
-      },
-    ])
+    expect(selectiveCopy(target, { skipFunctions: true })).toEqual({
+      clone: {},
+      skipped: [
+        {
+          target: target.method,
+          path: ['method'],
+          key: 'method',
+          dataType: 'function',
+        },
+      ],
+    })
   })
 
   it('copies top-level keys that have been specified', () => {
     const target = { a: 5, b: 'hello world', c: [0] }
-    const { clone, skipped } = selectiveCopy(target, {
-      includeKeys: ['b', 'c'],
+    expect(
+      selectiveCopy(target, {
+        includeKeys: ['b', 'c'],
+      })
+    ).toEqual({
+      clone: { b: 'hello world', c: [0] },
+      skipped: [{ target: 5, path: ['a'], key: 'a', dataType: 'number' }],
     })
-    expect(clone).toEqual({ b: 'hello world', c: [0] })
-    expect(skipped).toEqual([{ target: 5, path: ['a'], key: 'a', dataType: 'number' }])
   })
 
   it('does not copy top-level keys that have been specified', () => {
     const target = { a: 7, b: 'foo bar', c: { b: 'hey' } }
-    const { clone, skipped } = selectiveCopy(target, { excludeKeys: ['b'] })
-    expect(clone).toEqual({ a: 7, c: { b: 'hey' } })
-    expect(skipped).toEqual([{ target: 'foo bar', path: ['b'], key: 'b', dataType: 'string' }])
+    expect(selectiveCopy(target, { excludeKeys: ['b'] })).toEqual({
+      clone: { a: 7, c: { b: 'hey' } },
+      skipped: [{ target: 'foo bar', path: ['b'], key: 'b', dataType: 'string' }],
+    })
   })
 
   it('selectively copies based on include callback', () => {
     const target = { a: 7, b: 'foo bar', c: { b: 'hey' } }
-    const { clone, skipped } = selectiveCopy(target, {
-      include: (target, path, key, dataType) => ['object', 'string'].includes(dataType),
+    expect(
+      selectiveCopy(target, {
+        include: (target, path, key, dataType) => ['object', 'string'].includes(dataType),
+      })
+    ).toEqual({
+      clone: { b: 'foo bar', c: { b: 'hey' } },
+      skipped: [{ target: 7, path: ['a'], key: 'a', dataType: 'number' }],
     })
-    expect(clone).toEqual({ b: 'foo bar', c: { b: 'hey' } })
-    expect(skipped).toEqual([{ target: 7, path: ['a'], key: 'a', dataType: 'number' }])
   })
 
   it('selectively copies based on exclude callback', () => {
     const target = ['lorem', 'ipsum', 'suet', 'corvi']
 
-    const { clone, skipped } = selectiveCopy(target, {
-      exclude: (target, path, key, dataType) => +key > 1,
+    expect(
+      selectiveCopy(target, {
+        exclude: (target, path, key, dataType) => +key > 1,
+      })
+    ).toEqual({
+      clone: ['lorem', 'ipsum'],
+      skipped: [
+        { target: 'suet', path: ['2'], key: '2', dataType: 'string' },
+        { target: 'corvi', path: ['3'], key: '3', dataType: 'string' },
+      ],
     })
-    expect(clone).toEqual(['lorem', 'ipsum'])
-    expect(skipped).toEqual([
-      { target: 'suet', path: ['2'], key: '2', dataType: 'string' },
-      { target: 'corvi', path: ['3'], key: '3', dataType: 'string' },
-    ])
   })
 
   it('supports custom classes', () => {
@@ -149,23 +153,18 @@ describe('selectiveCopy - with config detectCircularReferences:true', () => {
     delete (Object.prototype as any).value
   })
 
-  it('clones primitive type data', () => {
-    const symbol = Symbol()
-    expect(selectiveCopy(symbol).clone).toEqual(symbol)
-    expect(selectiveCopy('open sesame').clone).toEqual('open sesame')
-    expect(selectiveCopy(5).clone).toEqual(5)
-    expect(selectiveCopy(NaN).clone).toEqual(NaN)
-    expect(selectiveCopy(true).clone).toEqual(true)
-    expect(selectiveCopy(BigInt(9007199254740991)).clone).toEqual(BigInt(9007199254740991))
-    expect(selectiveCopy(void 0).clone).toBeUndefined()
-    expect(selectiveCopy(null).clone).toBeNull()
-    const fn = () => {}
-    expect(selectiveCopy(fn).clone).toEqual(fn)
+  it.each([[Symbol()], ['open sesame'], [5], [NaN], [true], [BigInt(9007199254740991)], [void 0], [null], [() => {}]])(
+    'clones primitive type data: %p',
+    (value: unknown) => {
+      expect(selectiveCopy(value).clone).toEqual(value)
+    }
+  )
+
+  it('throws error when the second argument is null instead of an object', () => {
+    expect(() => selectiveCopy(5, null)).toThrow('Invalid options argument.')
   })
 
-  it('throw error when second argument is not an object', () => {
-    expect(() => selectiveCopy(5, null)).toThrow('Invalid options argument.')
-
+  it('throws error when the second argument is an array instead of an object', () => {
     // @ts-expect-error Testing invalid input
     expect(() => selectiveCopy(5, [])).toThrow('Invalid options argument.')
   })
@@ -178,61 +177,70 @@ describe('selectiveCopy - with config detectCircularReferences:true', () => {
 
   it('copies function references by default', () => {
     const target = { method: () => true }
-    const { clone, skipped } = selectiveCopy(target)
-    expect(clone.method).toBe(target.method)
-    expect(skipped).toEqual([])
+    expect(selectiveCopy(target)).toEqual({ clone: { method: target.method }, skipped: [] })
   })
 
   it('skips copying functions when flagged', () => {
     const target = { method: () => true }
-    const { clone, skipped } = selectiveCopy(target, { skipFunctions: true })
-    expect(clone).toEqual({})
-    expect(skipped).toEqual([
-      {
-        target: target.method,
-        path: ['method'],
-        key: 'method',
-        dataType: 'function',
-      },
-    ])
+    expect(selectiveCopy(target, { skipFunctions: true })).toEqual({
+      clone: {},
+      skipped: [
+        {
+          target: target.method,
+          path: ['method'],
+          key: 'method',
+          dataType: 'function',
+        },
+      ],
+    })
   })
 
   it('copies top-level keys that have been specified', () => {
     const target = { a: 5, b: 'hello world', c: [0] }
-    const { clone, skipped } = selectiveCopy(target, {
-      includeKeys: ['b', 'c'],
+    expect(
+      selectiveCopy(target, {
+        includeKeys: ['b', 'c'],
+      })
+    ).toEqual({
+      clone: { b: 'hello world', c: [0] },
+      skipped: [{ target: 5, path: ['a'], key: 'a', dataType: 'number' }],
     })
-    expect(clone).toEqual({ b: 'hello world', c: [0] })
-    expect(skipped).toEqual([{ target: 5, path: ['a'], key: 'a', dataType: 'number' }])
   })
 
   it('does not copy top-level keys that have been specified', () => {
     const target = { a: 7, b: 'foo bar', c: { b: 'hey' } }
-    const { clone, skipped } = selectiveCopy(target, { excludeKeys: ['b'] })
-    expect(clone).toEqual({ a: 7, c: { b: 'hey' } })
-    expect(skipped).toEqual([{ target: 'foo bar', path: ['b'], key: 'b', dataType: 'string' }])
+    expect(selectiveCopy(target, { excludeKeys: ['b'] })).toEqual({
+      clone: { a: 7, c: { b: 'hey' } },
+      skipped: [{ target: 'foo bar', path: ['b'], key: 'b', dataType: 'string' }],
+    })
   })
 
   it('selectively copies based on include callback', () => {
     const target = { a: 7, b: 'foo bar', c: { b: 'hey' } }
-    const { clone, skipped } = selectiveCopy(target, {
-      include: (target, path, key, dataType) => ['object', 'string'].includes(dataType),
+    expect(
+      selectiveCopy(target, {
+        include: (target, path, key, dataType) => ['object', 'string'].includes(dataType),
+      })
+    ).toEqual({
+      clone: { b: 'foo bar', c: { b: 'hey' } },
+      skipped: [{ target: 7, path: ['a'], key: 'a', dataType: 'number' }],
     })
-    expect(clone).toEqual({ b: 'foo bar', c: { b: 'hey' } })
-    expect(skipped).toEqual([{ target: 7, path: ['a'], key: 'a', dataType: 'number' }])
   })
 
   it('selectively copies based on exclude callback', () => {
     const target = ['lorem', 'ipsum', 'suet', 'corvi']
 
-    const { clone, skipped } = selectiveCopy(target, {
-      exclude: (target, path, key, dataType) => +key > 1,
+    expect(
+      selectiveCopy(target, {
+        exclude: (target, path, key, dataType) => +key > 1,
+      })
+    ).toEqual({
+      clone: ['lorem', 'ipsum'],
+      skipped: [
+        { target: 'suet', path: ['2'], key: '2', dataType: 'string' },
+        { target: 'corvi', path: ['3'], key: '3', dataType: 'string' },
+      ],
     })
-    expect(clone).toEqual(['lorem', 'ipsum'])
-    expect(skipped).toEqual([
-      { target: 'suet', path: ['2'], key: '2', dataType: 'string' },
-      { target: 'corvi', path: ['3'], key: '3', dataType: 'string' },
-    ])
   })
 
   it('supports custom classes', () => {
@@ -290,6 +298,12 @@ describe('selectiveCopy - with config detectCircularReferences:true', () => {
     target['self'] = target
     const { clone } = selectiveCopy(target)
     expect(clone['self'] as Record<string, unknown>).toBe(clone)
+  })
+
+  it('copies the other values of an object with a self-reference', () => {
+    const target: Record<string, unknown> = { value: 42 }
+    target['self'] = target
+    const { clone } = selectiveCopy(target)
     expect(clone['value'] as Record<string, unknown>).toBe(42)
   })
 
@@ -298,7 +312,13 @@ describe('selectiveCopy - with config detectCircularReferences:true', () => {
     target.push(target)
     const { clone } = selectiveCopy(target)
     expect(clone[3] as unknown[]).toBe(clone)
-    expect(clone[0] as unknown[]).toBe(1)
+  })
+
+  it('copies the other items of an array with a self-reference', () => {
+    const target: unknown[] = [1, 2, 3]
+    target.push(target)
+    const { clone } = selectiveCopy(target)
+    expect(clone.slice(0, 3)).toEqual([1, 2, 3])
   })
 })
 
@@ -370,7 +390,7 @@ describe('selectiveCopy - __proto__ pollution prevention (non-circular)', () => 
     delete (Object.prototype as any).value
   })
 
-  it('prevents __proto__ pollution during basic copy', () => {
+  it('leaves the __proto__ key out of the clone during basic copy', () => {
     const malicious: Record<string, unknown> = { safe: 'value' }
     Object.defineProperty(malicious, '__proto__', {
       value: { polluted: true },
@@ -378,12 +398,21 @@ describe('selectiveCopy - __proto__ pollution prevention (non-circular)', () => 
       configurable: true,
     })
     const { clone } = selectiveCopy(malicious)
-    expect(clone).toEqual({ safe: 'value' })
-    expect(Object.keys(clone)).toEqual(['safe'])
+    expect({ clone, keys: Object.keys(clone) }).toEqual({ clone: { safe: 'value' }, keys: ['safe'] })
+  })
+
+  it('prevents __proto__ pollution during basic copy', () => {
+    const malicious: Record<string, unknown> = { safe: 'value' }
+    Object.defineProperty(malicious, '__proto__', {
+      value: { polluted: true },
+      enumerable: true,
+      configurable: true,
+    })
+    selectiveCopy(malicious)
     expect(Object.prototype).not.toHaveProperty('polluted')
   })
 
-  it('safely handles nested objects with __proto__ key', () => {
+  it('leaves the __proto__ key of a nested object out of the clone', () => {
     const nested: Record<string, unknown> = { alsoSafe: 42 }
     Object.defineProperty(nested, '__proto__', {
       value: { polluted: true },
@@ -392,12 +421,25 @@ describe('selectiveCopy - __proto__ pollution prevention (non-circular)', () => 
     })
     const target = { safe: 'value', nested }
     const { clone } = selectiveCopy(target)
-    expect(clone).toEqual({ safe: 'value', nested: { alsoSafe: 42 } })
-    expect(Object.keys((clone as Record<string, unknown>)['nested'] as object)).toEqual(['alsoSafe'])
+    expect({ clone, nestedKeys: Object.keys((clone as Record<string, unknown>)['nested'] as object) }).toEqual({
+      clone: { safe: 'value', nested: { alsoSafe: 42 } },
+      nestedKeys: ['alsoSafe'],
+    })
+  })
+
+  it('prevents __proto__ pollution when copying a nested object with a __proto__ key', () => {
+    const nested: Record<string, unknown> = { alsoSafe: 42 }
+    Object.defineProperty(nested, '__proto__', {
+      value: { polluted: true },
+      enumerable: true,
+      configurable: true,
+    })
+    const target = { safe: 'value', nested }
+    selectiveCopy(target)
     expect(Object.prototype).not.toHaveProperty('polluted')
   })
 
-  it('safely handles arrays with __proto__ property', () => {
+  it('copies the items of an array with __proto__ property', () => {
     const arr = ['a', 'b', 'c']
     Object.defineProperty(arr, '__proto__', {
       value: { polluted: true },
@@ -406,6 +448,16 @@ describe('selectiveCopy - __proto__ pollution prevention (non-circular)', () => 
     })
     const { clone } = selectiveCopy(arr)
     expect(clone).toEqual(['a', 'b', 'c'])
+  })
+
+  it('prevents __proto__ pollution when copying an array with a __proto__ property', () => {
+    const arr = ['a', 'b', 'c']
+    Object.defineProperty(arr, '__proto__', {
+      value: { polluted: true },
+      enumerable: true,
+      configurable: true,
+    })
+    selectiveCopy(arr)
     expect(Object.prototype).not.toHaveProperty('polluted')
   })
 })
@@ -433,11 +485,24 @@ describe('selectiveCopy - __proto__ pollution prevention (circular references)',
       writable: true,
     })
     const { clone } = selectiveCopy(outer)
-    expect(clone).toHaveProperty('inner')
-    expect(clone['inner']).toEqual({ value: 'inner' })
-    expect(Object.keys(clone['inner'] as Record<string, unknown>)).toEqual(['value'])
+    expect({ inner: clone['inner'], innerKeys: Object.keys(clone['inner'] as Record<string, unknown>) }).toEqual({
+      inner: { value: 'inner' },
+      innerKeys: ['value'],
+    })
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     delete (inner as any).__proto__
+  })
+
+  it('keeps the circular path when __proto__ appears in startPath during circular ref resolution', () => {
+    const target: Record<string, unknown> = { a: { b: {} } }
+    ;(target['a'] as Record<string, unknown>)['b'] = target['a']
+    Object.defineProperty(target, '__proto__', {
+      value: { polluted: 'bad' },
+      enumerable: true,
+      configurable: true,
+    })
+    const { clone } = selectiveCopy(target)
+    expect(clone).toHaveProperty(['a', 'b'])
   })
 
   it('prevents pollution when __proto__ appears in startPath during circular ref resolution', () => {
@@ -448,11 +513,25 @@ describe('selectiveCopy - __proto__ pollution prevention (circular references)',
       enumerable: true,
       configurable: true,
     })
-    const { clone } = selectiveCopy(target)
-    expect(clone).toHaveProperty('a')
-    expect(clone['a'] as Record<string, unknown>).toHaveProperty('b')
+    selectiveCopy(target)
     expect(Object.prototype).not.toHaveProperty('polluted')
   })
+
+  it.each([['self'], ['safe']])(
+    'keeps the %s property of the nested value when __proto__ appears in destinationPath during circular ref resolution',
+    (key: string) => {
+      const inner: Record<string, unknown> = { safe: 'value' }
+      const target: Record<string, unknown> = { inner }
+      inner['self'] = inner
+      Object.defineProperty(target, '__proto__', {
+        value: { polluted: 'bad' },
+        enumerable: true,
+        configurable: true,
+      })
+      const { clone } = selectiveCopy(target)
+      expect(clone).toHaveProperty(['inner', key])
+    }
+  )
 
   it('prevents pollution when __proto__ appears in destinationPath during circular ref resolution', () => {
     const inner: Record<string, unknown> = { safe: 'value' }
@@ -463,11 +542,22 @@ describe('selectiveCopy - __proto__ pollution prevention (circular references)',
       enumerable: true,
       configurable: true,
     })
-    const { clone } = selectiveCopy(target)
-    expect(clone).toHaveProperty('inner')
-    expect(clone['inner'] as Record<string, unknown>).toHaveProperty('self')
-    expect(clone['inner'] as Record<string, unknown>).toHaveProperty('safe')
+    selectiveCopy(target)
     expect(Object.prototype).not.toHaveProperty('polluted')
+  })
+
+  it('keeps the path to the cycle during path traversal in circular ref resolution', () => {
+    const deep: Record<string, unknown> = { level3: {} }
+    const mid: Record<string, unknown> = { level2: deep }
+    const target: Record<string, unknown> = { level1: mid }
+    deep['level3'] = target
+    Object.defineProperty(mid, '__proto__', {
+      value: { polluted: 'traversal' },
+      enumerable: true,
+      configurable: true,
+    })
+    const { clone } = selectiveCopy(target)
+    expect(clone).toHaveProperty(['level1', 'level2'])
   })
 
   it('prevents pollution during path traversal in circular ref resolution', () => {
@@ -480,9 +570,7 @@ describe('selectiveCopy - __proto__ pollution prevention (circular references)',
       enumerable: true,
       configurable: true,
     })
-    const { clone } = selectiveCopy(target)
-    expect(clone).toHaveProperty('level1')
-    expect(clone['level1'] as Record<string, unknown>).toHaveProperty('level2')
+    selectiveCopy(target)
     expect(Object.prototype).not.toHaveProperty('polluted')
   })
 })

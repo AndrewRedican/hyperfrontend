@@ -24,12 +24,7 @@ describe('registerIterableClass', () => {
       (set, value) => set.add(value),
       (set, key) => set.delete(key)
     )
-    expect(registeredIterableClasses.length).toBe(4)
-    const registeredIterableClassRefs = registeredIterableClasses.map((entry) => entry.classRef)
-    expect(registeredIterableClassRefs).toContain(Map)
-    expect(registeredIterableClassRefs).toContain(Set)
-    expect(registeredIterableClassRefs).toContain(Array)
-    expect(registeredIterableClassRefs).toContain(Object)
+    expect(registeredIterableClasses.map((entry) => entry.classRef)).toEqual([Set, Map, Array, Object])
   })
 
   it('registers the corresponding class data types', () => {

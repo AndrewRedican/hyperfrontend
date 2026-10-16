@@ -16,62 +16,54 @@ const configReset: Config = Object.freeze({
 describe('isIdentical', () => {
   beforeEach(() => setConfig(configReset))
 
-  it('returns true when strict check quality check is true', () => {
-    expect(isIdentical(25, 25)).toEqual(true)
-    expect(isIdentical(null, null)).toEqual(true)
-    expect(isIdentical(undefined, void 0)).toEqual(true)
-    expect(isIdentical('hello world', 'hello world')).toEqual(true)
+  it.each([
+    [25, 25],
+    [null, null],
+    [undefined, void 0],
+    ['hello world', 'hello world'],
+  ])('returns true when strict check quality check is true: %p and %p', (left: unknown, right: unknown) => {
+    expect(isIdentical(left, right)).toEqual(true)
   })
 
-  it('returns true when strict check quality check is true for non-primitive data type references', () => {
+  it('returns true when strict check quality check is true for an array reference', () => {
     const array: unknown[] = []
     expect(isIdentical(array, array)).toEqual(true)
+  })
 
+  it('returns true when strict check quality check is true for an object reference', () => {
     const object = {}
     expect(isIdentical(object, object)).toEqual(true)
   })
 
-  it('returns true for empty iterables of the same type', () => {
-    expect(isIdentical({}, {})).toEqual(true)
-    expect(isIdentical([], [])).toEqual(true)
+  it.each([
+    [{}, {}],
+    [[], []],
+  ])('returns true for empty iterables of the same type: %p and %p', (left: unknown, right: unknown) => {
+    expect(isIdentical(left, right)).toEqual(true)
   })
 
-  it('returns true when complex types have same key value pairs', () => {
-    expect(isIdentical({ a: 1 }, { a: 1 })).toEqual(true)
-    expect(isIdentical(['banana'], ['banana'])).toEqual(true)
+  it.each([
+    [{ a: 1 }, { a: 1 }],
+    [['banana'], ['banana']],
+  ])('returns true when complex types have same key value pairs: %p and %p', (left: unknown, right: unknown) => {
+    expect(isIdentical(left, right)).toEqual(true)
   })
 
   it('returns true for non-indexed iterables whose keys match, but are in wrong order', () => {
     expect(isIdentical({ a: 1, b: '2' }, { b: '2', a: 1 })).toEqual(true)
   })
 
-  it('returns true for functions that have the exact same declaration, arguments, and content', () => {
-    expect(
-      isIdentical(
-        function () {},
-        function () {}
-      )
-    ).toEqual(true)
-    expect(
-      isIdentical(
-        () => {},
-        () => {}
-      )
-    ).toEqual(true)
-    expect(
-      isIdentical(
-        function A(...args: unknown[]) {},
-        function A(...args: unknown[]) {}
-      )
-    ).toEqual(true)
-
-    expect(
-      isIdentical(
-        (_: unknown) => void 0,
-        (_: unknown) => void 0
-      )
-    ).toEqual(true)
-  })
+  it.each([
+    ['anonymous function expressions', function () {}, function () {}],
+    ['arrow functions', () => {}, () => {}],
+    ['named function expressions with a rest parameter', function A(...args: unknown[]) {}, function A(...args: unknown[]) {}],
+    ['arrow functions with a parameter', (_: unknown) => void 0, (_: unknown) => void 0],
+  ])(
+    'returns true for functions that have the exact same declaration, arguments, and content: %s',
+    (_label: string, left: unknown, right: unknown) => {
+      expect(isIdentical(left, right)).toEqual(true)
+    }
+  )
 
   it('returns false for functions with different content', () => {
     expect(
@@ -84,29 +76,41 @@ describe('isIdentical', () => {
     ).toEqual(false)
   })
 
-  it('returns false for functions with different declaration/assignment', () => {
+  it('returns false for functions with different declaration/assignment: a function expression and an arrow function', () => {
     expect(
       isIdentical(
         function () {},
         () => {}
       )
     ).toEqual(false)
+  })
 
+  it('returns false for functions with different declaration/assignment: an arrow function and a function expression of the same name', () => {
     const funcA = () => {}
     expect(isIdentical(funcA, function funcA() {})).toEqual(false)
   })
 
-  it('returns false for lists with items in the wrong order', () => {
-    expect(isIdentical([1, 2, 3], [3, 1, 2])).toEqual(false)
-    expect(isIdentical([4, 1, 2], [3, 2, 4])).toEqual(false)
+  it.each([
+    [
+      [1, 2, 3],
+      [3, 1, 2],
+    ],
+    [
+      [4, 1, 2],
+      [3, 2, 4],
+    ],
+  ])('returns false for lists with items in the wrong order: %p and %p', (left: unknown, right: unknown) => {
+    expect(isIdentical(left, right)).toEqual(false)
   })
 
-  it('returns false for values that do not match', () => {
-    expect(isIdentical(Symbol(), Symbol())).toEqual(false)
-    expect(isIdentical('', [])).toEqual(false)
-    expect(isIdentical([], {})).toEqual(false)
-    expect(isIdentical(-23, 23)).toEqual(false)
-    expect(isIdentical(undefined, null)).toEqual(false)
+  it.each([
+    [Symbol(), Symbol()],
+    ['', []],
+    [[], {}],
+    [-23, 23],
+    [undefined, null],
+  ])('returns false for values that do not match: %p and %p', (left: unknown, right: unknown) => {
+    expect(isIdentical(left, right)).toEqual(false)
   })
 
   it('throws an error when given values with circular references and detection is OFF', () => {
@@ -143,62 +147,54 @@ describe('isIdentical - with config detectCircularReferences:true', () => {
 
   afterEach(() => setConfig(configReset))
 
-  it('returns true when strict check quality check is true', () => {
-    expect(isIdentical(25, 25)).toEqual(true)
-    expect(isIdentical(null, null)).toEqual(true)
-    expect(isIdentical(undefined, void 0)).toEqual(true)
-    expect(isIdentical('hello world', 'hello world')).toEqual(true)
+  it.each([
+    [25, 25],
+    [null, null],
+    [undefined, void 0],
+    ['hello world', 'hello world'],
+  ])('returns true when strict check quality check is true: %p and %p', (left: unknown, right: unknown) => {
+    expect(isIdentical(left, right)).toEqual(true)
   })
 
-  it('returns true when strict check quality check is true for non-primitive data type references', () => {
+  it('returns true when strict check quality check is true for an array reference', () => {
     const array: unknown[] = []
     expect(isIdentical(array, array)).toEqual(true)
+  })
 
+  it('returns true when strict check quality check is true for an object reference', () => {
     const object = {}
     expect(isIdentical(object, object)).toEqual(true)
   })
 
-  it('returns true for empty iterables of the same type', () => {
-    expect(isIdentical({}, {})).toEqual(true)
-    expect(isIdentical([], [])).toEqual(true)
+  it.each([
+    [{}, {}],
+    [[], []],
+  ])('returns true for empty iterables of the same type: %p and %p', (left: unknown, right: unknown) => {
+    expect(isIdentical(left, right)).toEqual(true)
   })
 
-  it('returns true when complex types have same key value pairs', () => {
-    expect(isIdentical({ a: 1 }, { a: 1 })).toEqual(true)
-    expect(isIdentical(['banana'], ['banana'])).toEqual(true)
+  it.each([
+    [{ a: 1 }, { a: 1 }],
+    [['banana'], ['banana']],
+  ])('returns true when complex types have same key value pairs: %p and %p', (left: unknown, right: unknown) => {
+    expect(isIdentical(left, right)).toEqual(true)
   })
 
   it('returns true for non-indexed iterables whose keys match, but are in wrong order', () => {
     expect(isIdentical({ a: 1, b: '2' }, { b: '2', a: 1 })).toEqual(true)
   })
 
-  it('returns true for functions that have the exact same declaration, arguments, and content', () => {
-    expect(
-      isIdentical(
-        function () {},
-        function () {}
-      )
-    ).toEqual(true)
-    expect(
-      isIdentical(
-        () => {},
-        () => {}
-      )
-    ).toEqual(true)
-    expect(
-      isIdentical(
-        function A(...args: unknown[]) {},
-        function A(...args: unknown[]) {}
-      )
-    ).toEqual(true)
-
-    expect(
-      isIdentical(
-        (_: unknown) => void 0,
-        (_: unknown) => void 0
-      )
-    ).toEqual(true)
-  })
+  it.each([
+    ['anonymous function expressions', function () {}, function () {}],
+    ['arrow functions', () => {}, () => {}],
+    ['named function expressions with a rest parameter', function A(...args: unknown[]) {}, function A(...args: unknown[]) {}],
+    ['arrow functions with a parameter', (_: unknown) => void 0, (_: unknown) => void 0],
+  ])(
+    'returns true for functions that have the exact same declaration, arguments, and content: %s',
+    (_label: string, left: unknown, right: unknown) => {
+      expect(isIdentical(left, right)).toEqual(true)
+    }
+  )
 
   it('returns false for functions with different content', () => {
     expect(
@@ -211,29 +207,41 @@ describe('isIdentical - with config detectCircularReferences:true', () => {
     ).toEqual(false)
   })
 
-  it('returns false for functions with different declaration/assignment', () => {
+  it('returns false for functions with different declaration/assignment: a function expression and an arrow function', () => {
     expect(
       isIdentical(
         function () {},
         () => {}
       )
     ).toEqual(false)
+  })
 
+  it('returns false for functions with different declaration/assignment: an arrow function and a function expression of the same name', () => {
     const funcA = () => {}
     expect(isIdentical(funcA, function funcA() {})).toEqual(false)
   })
 
-  it('returns false for lists with items in the wrong order', () => {
-    expect(isIdentical([1, 2, 3], [3, 1, 2])).toEqual(false)
-    expect(isIdentical([4, 1, 2], [3, 2, 4])).toEqual(false)
+  it.each([
+    [
+      [1, 2, 3],
+      [3, 1, 2],
+    ],
+    [
+      [4, 1, 2],
+      [3, 2, 4],
+    ],
+  ])('returns false for lists with items in the wrong order: %p and %p', (left: unknown, right: unknown) => {
+    expect(isIdentical(left, right)).toEqual(false)
   })
 
-  it('returns false for values that do not match', () => {
-    expect(isIdentical(Symbol(), Symbol())).toEqual(false)
-    expect(isIdentical('', [])).toEqual(false)
-    expect(isIdentical([], {})).toEqual(false)
-    expect(isIdentical(-23, 23)).toEqual(false)
-    expect(isIdentical(undefined, null)).toEqual(false)
+  it.each([
+    [Symbol(), Symbol()],
+    ['', []],
+    [[], {}],
+    [-23, 23],
+    [undefined, null],
+  ])('returns false for values that do not match: %p and %p', (left: unknown, right: unknown) => {
+    expect(isIdentical(left, right)).toEqual(false)
   })
 
   it('returns true when given values with the exact same circular references', () => {
@@ -243,17 +251,21 @@ describe('isIdentical - with config detectCircularReferences:true', () => {
     expect(isIdentical(selfReferencingObjectA, selfReferencingObjectB)).toEqual(true)
   })
 
-  it('returns false when given values with the different same circular references', () => {
+  it('returns false when given values with the different same circular references: back to the root against back to the parent', () => {
     const [selfReferencingObjectA, selfReferencingObjectB] = [{ a: { b: { c: {} } } }, { a: { b: { c: {} } } }]
     selfReferencingObjectA.a.b.c = selfReferencingObjectA
     selfReferencingObjectB.a.b.c = selfReferencingObjectB.a.b
     expect(isIdentical(selfReferencingObjectA, selfReferencingObjectB)).toEqual(false)
+  })
 
+  it('returns false when given values with the different same circular references: back to the root from different depths', () => {
     const [selfReferencingObjectC, selfReferencingObjectD] = [{ a: { b: { c: { d: {} } } } }, { a: { b: {} } }]
     selfReferencingObjectC.a.b.c.d = selfReferencingObjectC
     selfReferencingObjectD.a.b = selfReferencingObjectD
     expect(isIdentical(selfReferencingObjectC, selfReferencingObjectD)).toEqual(false)
+  })
 
+  it('returns false when given values with the different same circular references: back to the root against back to a nested value', () => {
     const [selfReferencingObjectE, selfReferencingObjectF] = [{ a: { b: { c: { d: {} } } } }, { a: { b: {} } }]
     selfReferencingObjectE.a.b.c.d = selfReferencingObjectE
     selfReferencingObjectF.a.b = { c: { d: selfReferencingObjectF.a } }

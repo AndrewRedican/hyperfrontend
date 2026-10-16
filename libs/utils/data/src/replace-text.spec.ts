@@ -40,12 +40,15 @@ describe('replaceText', () => {
     expect(() => replaceText(target, '', null)).toThrow('Expected name to be a string.')
   })
 
-  it('returns locations where text matches exactly', () => {
-    prepareTarget()
-    expect(replaceText(target, 'does-not-exist', '')).toEqual([])
+  it.each([
+    ['does-not-exist', '', []],
+    ['121.144.216.170', 'xxx.xxx.xxx.xxx', [['1', 'ip_address']]],
+  ])('returns locations where text matches %p exactly', (pattern: string, text: string, expected: string[][]) => {
+    expect(replaceText(target, pattern, text)).toEqual(expected)
+  })
 
-    prepareTarget()
-    expect(replaceText(target, '121.144.216.170', 'xxx.xxx.xxx.xxx')).toEqual([['1', 'ip_address']])
+  it('replaces the text that matches exactly', () => {
+    replaceText(target, '121.144.216.170', 'xxx.xxx.xxx.xxx')
     expect(target[1].ip_address).toEqual('xxx.xxx.xxx.xxx')
   })
 
@@ -58,8 +61,11 @@ describe('replaceText', () => {
       ['0', 'ip_address'],
       ['1', 'ip_address'],
     ])
-    expect(target[0].ip_address).toEqual('xxx.xxx.xxx.xxx')
-    expect(target[1].ip_address).toEqual('xxx.xxx.xxx.xxx')
+  })
+
+  it('replaces the text that matches a pattern', () => {
+    replaceText(target, /[0-9]{3}\.[0-9]{3}\.[0-9]{3}\.[0-9]{3}/i, 'xxx.xxx.xxx.xxx')
+    expect(target.map((item: { ip_address: string }) => item.ip_address)).toEqual(['xxx.xxx.xxx.xxx', 'xxx.xxx.xxx.xxx'])
   })
 
   it('does not support regular expression string, it uses native regular expressions instead', () => {
@@ -110,12 +116,15 @@ describe('replaceText - with config detectCircularReferences:true', () => {
     expect(() => replaceText(target, '', null)).toThrow('Expected name to be a string.')
   })
 
-  it('returns locations where text matches exactly', () => {
-    prepareTarget()
-    expect(replaceText(target, 'does-not-exist', '')).toEqual([])
+  it.each([
+    ['does-not-exist', '', []],
+    ['121.144.216.170', 'xxx.xxx.xxx.xxx', [['1', 'ip_address']]],
+  ])('returns locations where text matches %p exactly', (pattern: string, text: string, expected: string[][]) => {
+    expect(replaceText(target, pattern, text)).toEqual(expected)
+  })
 
-    prepareTarget()
-    expect(replaceText(target, '121.144.216.170', 'xxx.xxx.xxx.xxx')).toEqual([['1', 'ip_address']])
+  it('replaces the text that matches exactly', () => {
+    replaceText(target, '121.144.216.170', 'xxx.xxx.xxx.xxx')
     expect(target[1].ip_address).toEqual('xxx.xxx.xxx.xxx')
   })
 
@@ -128,8 +137,11 @@ describe('replaceText - with config detectCircularReferences:true', () => {
       ['0', 'ip_address'],
       ['1', 'ip_address'],
     ])
-    expect(target[0].ip_address).toEqual('xxx.xxx.xxx.xxx')
-    expect(target[1].ip_address).toEqual('xxx.xxx.xxx.xxx')
+  })
+
+  it('replaces the text that matches a pattern', () => {
+    replaceText(target, /[0-9]{3}\.[0-9]{3}\.[0-9]{3}\.[0-9]{3}/i, 'xxx.xxx.xxx.xxx')
+    expect(target.map((item: { ip_address: string }) => item.ip_address)).toEqual(['xxx.xxx.xxx.xxx', 'xxx.xxx.xxx.xxx'])
   })
 
   it('does not support regular expression string, it uses native regular expressions instead', () => {

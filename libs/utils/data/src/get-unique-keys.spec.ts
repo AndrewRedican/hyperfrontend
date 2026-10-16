@@ -28,11 +28,13 @@ describe('getUniqueKeys', () => {
     expect(getUniqueKeys(target)).toEqual(['hello-world', 'b', 'HELICOPTER', 'c', 'helium', 'verthel', 'helicopter', '0', '1'])
   })
 
-  it('returns all the uniques keys that match the name exactly', () => {
-    expect(getUniqueKeys(target, 'h', { depth: [0, '*'] })).toEqual([])
-    expect(getUniqueKeys(target, 'h*', { depth: [0, '*'] })).toEqual([])
-    expect(getUniqueKeys(target, 'helix', { depth: [0, '*'] })).toEqual([])
-    expect(getUniqueKeys(target, 'helicopter', { depth: [0, '*'] })).toEqual(['helicopter'])
+  it.each([
+    ['h', []],
+    ['h*', []],
+    ['helix', []],
+    ['helicopter', ['helicopter']],
+  ])('returns all the uniques keys that match the name %p exactly', (name: string, expected: string[]) => {
+    expect(getUniqueKeys(target, name, { depth: [0, '*'] })).toEqual(expected)
   })
 
   it('does not support glob patterns, it uses native regular expressions instead', () => {
@@ -75,11 +77,13 @@ describe('getUniqueKeys - with config detectCircularReferences:true', () => {
     expect(getUniqueKeys(target)).toEqual(['hello-world', 'b', 'HELICOPTER', 'c', 'helium', 'verthel', 'helicopter', '0', '1'])
   })
 
-  it('returns all the uniques keys that match the name exactly', () => {
-    expect(getUniqueKeys(target, 'h', { depth: [0, '*'] })).toEqual([])
-    expect(getUniqueKeys(target, 'h*', { depth: [0, '*'] })).toEqual([])
-    expect(getUniqueKeys(target, 'helix', { depth: [0, '*'] })).toEqual([])
-    expect(getUniqueKeys(target, 'helicopter', { depth: [0, '*'] })).toEqual(['helicopter'])
+  it.each([
+    ['h', []],
+    ['h*', []],
+    ['helix', []],
+    ['helicopter', ['helicopter']],
+  ])('returns all the uniques keys that match the name %p exactly', (name: string, expected: string[]) => {
+    expect(getUniqueKeys(target, name, { depth: [0, '*'] })).toEqual(expected)
   })
 
   it('does not support glob patterns, it uses native regular expressions instead', () => {

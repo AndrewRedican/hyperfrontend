@@ -24,11 +24,13 @@ describe('locateKey', () => {
     expect(() => locateKey(target, null)).toThrow('Expected pattern to be either a string of a regular expression.')
   })
 
-  it('returns locations where key name matches exactly', () => {
-    expect(locateKey(target, 'h', { depth: [0, '*'] })).toEqual([])
-    expect(locateKey(target, 'h*', { depth: [0, '*'] })).toEqual([])
-    expect(locateKey(target, 'helix', { depth: [0, '*'] })).toEqual([])
-    expect(locateKey(target, 'helicopter', { depth: [0, '*'] })).toEqual([['b', 'helicopter']])
+  it.each([
+    ['h', []],
+    ['h*', []],
+    ['helix', []],
+    ['helicopter', [['b', 'helicopter']]],
+  ])('returns locations where key name matches %p exactly', (name: string, expected: string[][]) => {
+    expect(locateKey(target, name, { depth: [0, '*'] })).toEqual(expected)
   })
 
   it('does not support glob patterns, it uses native regular expressions instead', () => {
@@ -67,11 +69,13 @@ describe('locateKey - with config detectCircularReferences:true', () => {
     target.b.helicopter = target.verthel
   })
 
-  it('returns locations where key name matches exactly', () => {
-    expect(locateKey(target, 'h', { depth: [0, '*'] })).toEqual([])
-    expect(locateKey(target, 'h*', { depth: [0, '*'] })).toEqual([])
-    expect(locateKey(target, 'helix', { depth: [0, '*'] })).toEqual([])
-    expect(locateKey(target, 'helicopter', { depth: [0, '*'] })).toEqual([['b', 'helicopter']])
+  it.each([
+    ['h', []],
+    ['h*', []],
+    ['helix', []],
+    ['helicopter', [['b', 'helicopter']]],
+  ])('returns locations where key name matches %p exactly', (name: string, expected: string[][]) => {
+    expect(locateKey(target, name, { depth: [0, '*'] })).toEqual(expected)
   })
 
   it('does not support glob patterns, it uses native regular expressions instead', () => {

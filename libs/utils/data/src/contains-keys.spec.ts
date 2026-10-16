@@ -25,11 +25,13 @@ describe('containsKeys', () => {
     expect(containsKeys({ x: 42 }, [])).toBe(false)
   })
 
-  it('returns false when value is not iterable', () => {
-    expect(containsKeys(12345, ['0'])).toBe(false)
-    expect(containsKeys(null, ['a'])).toBe(false)
-    expect(containsKeys(undefined, ['a'])).toBe(false)
-    expect(containsKeys(true, ['a'])).toBe(false)
+  it.each([
+    [12345, ['0']],
+    [null, ['a']],
+    [undefined, ['a']],
+    [true, ['a']],
+  ])('returns false when value %p is not iterable', (value: unknown, keys: string[]) => {
+    expect(containsKeys(value, keys)).toBe(false)
   })
 })
 
@@ -53,11 +55,13 @@ describe('containsKeys (with registered iterable class)', () => {
 
   afterAll(() => deregisterIterableClass())
 
-  it('returns list of known iterable classes which includes those that have been registered classes', () => {
+  it('returns true when the key is present in a registered Map', () => {
     const map = new Map<string, number>()
     map.set('emerald', 65)
     expect(containsKeys(map, ['emerald'])).toBe(true)
+  })
 
+  it('returns true when the item is present in a registered Set', () => {
     const set = new Set<string>()
     set.add('ruby')
     expect(containsKeys(set, ['ruby'])).toBe(true)

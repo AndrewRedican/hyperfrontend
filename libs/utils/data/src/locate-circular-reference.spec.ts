@@ -16,21 +16,29 @@ describe('locateCircularReference', () => {
     input = { ar, ob }
   })
 
-  it('throws an error when incorrect arguments are passed', () => {
+  it('throws an error when maxResults is neither a string nor a number', () => {
     // @ts-expect-error TS2345 - deliberately passing wrong parameters
     expect(() => locateCircularReference(null, null)).toThrow('Invalid maxResults argument.')
+  })
+
+  it('throws an error when maxResults is a string other than "*"', () => {
     // @ts-expect-error TS2345 - deliberately passing wrong parameters
     expect(() => locateCircularReference(null, '@')).toThrow('Invalid maxResults argument.')
+  })
+
+  it('throws an error when maxResults is a number below 1', () => {
     expect(() => locateCircularReference(null, -10)).toThrow('Invalid maxResults argument.')
   })
 
-  it('returns an empty list when no circular references found', () => {
-    expect(locateCircularReference(void 0)).toEqual([])
-    expect(locateCircularReference(null)).toEqual([])
-    expect(locateCircularReference(0)).toEqual([])
-    expect(locateCircularReference({})).toEqual([])
-    expect(locateCircularReference([])).toEqual([])
-    expect(locateCircularReference({ a: [{ l: ['a', 'b'] }] })).toEqual([])
+  it.each([
+    ['undefined', void 0],
+    ['null', null],
+    ['zero', 0],
+    ['an empty object', {}],
+    ['an empty array', []],
+    ['an acyclic nested value', { a: [{ l: ['a', 'b'] }] }],
+  ])('returns an empty list when no circular references found in %s', (_label: string, value: unknown) => {
+    expect(locateCircularReference(value)).toEqual([])
   })
 
   it('returns first of circular reference encountered by default', () => {
@@ -38,10 +46,7 @@ describe('locateCircularReference', () => {
   })
 
   it('returns a list of circular references', () => {
-    const result = locateCircularReference(input, '*')
-    expect(result.length).toEqual(2)
-    expect(result[0].toString()).toEqual('ar·0 → ar')
-    expect(result[1].toString()).toEqual('ob·a·b·c → ob')
+    expect(locateCircularReference(input, '*').map((reference) => reference.toString())).toEqual(['ar·0 → ar', 'ob·a·b·c → ob'])
   })
 
   it('returns a designated maximum circular references', () => {
@@ -100,13 +105,26 @@ describe('locateCircularReference - with non-extensible input', () => {
 })
 
 describe('locateCircularReference - when reading a value throws', () => {
-  it('restores the configuration it turned on', () => {
+  it('lets the error thrown by the reader propagate', () => {
     const target = {
       get explode(): unknown {
         throw new Error('reader exploded')
       },
     }
     expect(() => locateCircularReference(target)).toThrow('reader exploded')
+  })
+
+  it('restores the configuration it turned on', () => {
+    const target = {
+      get explode(): unknown {
+        throw new Error('reader exploded')
+      },
+    }
+    try {
+      locateCircularReference(target)
+    } catch {
+      // note: the reader's error only triggers the restore here; the test above pins that it propagates.
+    }
     expect(getConfig().detectCircularReferences).toBe(false)
   })
 })
@@ -151,16 +169,26 @@ describe('locateCircularReference - with detectCircularReferences already enable
   })
 
   it('returns list of circular references when config is already enabled', () => {
-    expect(getConfig().detectCircularReferences).toBe(true)
-    const result = locateCircularReference(input, '*')
-    expect(result.length).toEqual(2)
-    expect(getConfig().detectCircularReferences).toBe(true)
+    expect(locateCircularReference(input, '*').length).toEqual(2)
   })
 
-  it('returns empty list when no circular references when config is already enabled', () => {
-    expect(getConfig().detectCircularReferences).toBe(true)
-    expect(locateCircularReference({})).toEqual([])
-    expect(locateCircularReference({ a: { b: { c: {} } } })).toEqual([])
-    expect(getConfig().detectCircularReferences).toBe(true)
+  it('leaves the already enabled config enabled after locating circular references', () => {
+    const before = getConfig().detectCircularReferences
+    locateCircularReference(input, '*')
+    expect({ before, after: getConfig().detectCircularReferences }).toEqual({ before: true, after: true })
+  })
+
+  it.each([[{}], [{ a: { b: { c: {} } } }]])(
+    'returns empty list when no circular references in %p when config is already enabled',
+    (value: unknown) => {
+      expect(locateCircularReference(value)).toEqual([])
+    }
+  )
+
+  it('leaves the already enabled config enabled after finding no circular references', () => {
+    const before = getConfig().detectCircularReferences
+    locateCircularReference({})
+    locateCircularReference({ a: { b: { c: {} } } })
+    expect({ before, after: getConfig().detectCircularReferences }).toEqual({ before: true, after: true })
   })
 })

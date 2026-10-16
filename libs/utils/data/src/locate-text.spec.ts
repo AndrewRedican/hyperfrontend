@@ -18,10 +18,12 @@ describe('locateText', () => {
     expect(() => locateText(target, null)).toThrow('Expected pattern to be either a string of a regular expression.')
   })
 
-  it('returns locations where text matches exactly', () => {
-    expect(locateText(target, 't')).toEqual([])
-    expect(locateText(target, 'The')).toEqual([])
-    expect(locateText(target, 'The Yellow Curtain')).toEqual([['favorites', '2']])
+  it.each([
+    ['t', []],
+    ['The', []],
+    ['The Yellow Curtain', [['favorites', '2']]],
+  ])('returns locations where text matches %p exactly', (text: string, expected: string[][]) => {
+    expect(locateText(target, text)).toEqual(expected)
   })
 
   it('does not support glob patterns, it uses native regular expressions instead', () => {
@@ -58,10 +60,12 @@ describe('locateText - with config detectCircularReferences:true', () => {
     target.favorites[3] = target.favorites
   })
 
-  it('returns locations where text matches exactly', () => {
-    expect(locateText(target, 't')).toEqual([])
-    expect(locateText(target, 'The')).toEqual([])
-    expect(locateText(target, 'The Yellow Curtain')).toEqual([['favorites', '2']])
+  it.each([
+    ['t', []],
+    ['The', []],
+    ['The Yellow Curtain', [['favorites', '2']]],
+  ])('returns locations where text matches %p exactly', (text: string, expected: string[][]) => {
+    expect(locateText(target, text)).toEqual(expected)
   })
 
   it('does not support glob patterns, it uses native regular expressions instead', () => {
