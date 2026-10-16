@@ -18,7 +18,7 @@ describe('@hyperfrontend/logging CJS', () => {
     expect(typeof createLogger).toBe('function')
   })
 
-  it('creates a logger with info method', () => {
+  it('creates a logger with info, error, warn and log methods', () => {
     const { createLogger } = require('@hyperfrontend/logging')
 
     const mockError = jest.fn()
@@ -28,16 +28,23 @@ describe('@hyperfrontend/logging CJS', () => {
 
     const logger = createLogger(mockError, mockWarn, mockLog, mockInfo)
 
-    expect(logger).toBeDefined()
-    expect(typeof logger.info).toBe('function')
-    expect(typeof logger.error).toBe('function')
-    expect(typeof logger.warn).toBe('function')
-    expect(typeof logger.log).toBe('function')
+    expect(logger).toEqual(
+      expect.objectContaining({
+        info: expect.any(Function),
+        error: expect.any(Function),
+        warn: expect.any(Function),
+        log: expect.any(Function),
+      })
+    )
   })
 
   it('exports isValidLogger function', () => {
-    const { isValidLogger, createLogger } = require('@hyperfrontend/logging')
+    const { isValidLogger } = require('@hyperfrontend/logging')
     expect(typeof isValidLogger).toBe('function')
+  })
+
+  it('recognises a created logger through isValidLogger', () => {
+    const { isValidLogger, createLogger } = require('@hyperfrontend/logging')
 
     const logger = createLogger(jest.fn())
     expect(isValidLogger(logger)).toBe(true)

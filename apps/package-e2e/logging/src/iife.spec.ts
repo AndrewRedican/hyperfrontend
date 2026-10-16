@@ -51,8 +51,11 @@ describe('@hyperfrontend/logging IIFE bundle', () => {
     const mockInfo = jest.fn()
     const logger = global.createLogger(mockError, jest.fn(), jest.fn(), mockInfo)
 
-    expect(logger).toBeDefined()
-    expect(typeof logger.info).toBe('function')
-    expect(typeof logger.error).toBe('function')
+    expect(logger).toEqual(
+      expect.objectContaining({
+        info: expect.any(Function),
+        error: expect.any(Function),
+      })
+    )
   })
 })
