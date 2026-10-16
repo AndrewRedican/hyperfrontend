@@ -45,8 +45,7 @@ describe('@hyperfrontend/versioning ESM', () => {
 - Initial release
 `
       const result = parseChangelog(changelogContent)
-      expect(result).toBeDefined()
-      expect(result.entries).toBeDefined()
+      expect(result).toEqual(expect.objectContaining({ entries: expect.anything() }))
     })
   })
 
@@ -65,8 +64,7 @@ describe('@hyperfrontend/versioning ESM', () => {
       const { parseConventionalCommit } = await import('@hyperfrontend/versioning')
 
       const commit = parseConventionalCommit('feat: add new feature')
-      expect(commit).toBeDefined()
-      expect(commit.type).toBe('feat')
+      expect(commit).toEqual(expect.objectContaining({ type: 'feat' }))
     })
   })
 
@@ -100,23 +98,16 @@ describe('@hyperfrontend/versioning ESM', () => {
       const { parseVersion, format } = await import('@hyperfrontend/versioning')
 
       const result = parseVersion('1.2.3')
-      expect(result.success).toBe(true)
-      expect(result.version).toBeDefined()
-      if (result.version) {
-        expect(format(result.version)).toBe('1.2.3')
-      }
+      const formatted = result.version ? format(result.version) : undefined
+      expect({ success: result.success, formatted }).toEqual({ success: true, formatted: '1.2.3' })
     })
 
     it('increments a version', async () => {
       const { parseVersion, increment, format } = await import('@hyperfrontend/versioning')
 
       const result = parseVersion('1.0.0')
-      expect(result.success).toBe(true)
-      expect(result.version).toBeDefined()
-      if (result.version) {
-        const incremented = increment(result.version, 'minor')
-        expect(format(incremented)).toBe('1.1.0')
-      }
+      const formatted = result.version ? format(increment(result.version, 'minor')) : undefined
+      expect({ success: result.success, formatted }).toEqual({ success: true, formatted: '1.1.0' })
     })
   })
 
