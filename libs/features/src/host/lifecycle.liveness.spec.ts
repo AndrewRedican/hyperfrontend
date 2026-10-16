@@ -105,6 +105,12 @@ describe('createShellHandle liveness states and observability', () => {
     ctx.handle.open()
     ctx.triggerVisibility(true)
     expect(ctx.monitor.setObservable).toHaveBeenLastCalledWith(false)
+  })
+
+  it('marks the pair observable again when the host page shows', () => {
+    const ctx = setup()
+    ctx.handle.open()
+    ctx.triggerVisibility(true)
     ctx.triggerVisibility(false)
     expect(ctx.monitor.setObservable).toHaveBeenLastCalledWith(true)
   })
@@ -115,6 +121,13 @@ describe('createShellHandle liveness states and observability', () => {
     ctx.mock.trigger('open')
     ctx.mock.triggerMessage('__hf:visibility', { hidden: true })
     expect(ctx.monitor.setObservable).toHaveBeenLastCalledWith(false)
+  })
+
+  it('marks the pair observable again once the feature page reports visible', () => {
+    const ctx = setup()
+    ctx.handle.open()
+    ctx.mock.trigger('open')
+    ctx.mock.triggerMessage('__hf:visibility', { hidden: true })
     ctx.mock.triggerMessage('__hf:visibility', { hidden: false })
     expect(ctx.monitor.setObservable).toHaveBeenLastCalledWith(true)
   })
@@ -183,17 +196,29 @@ describe('createShellHandle teardown and dirty state', () => {
     expect(closings).toEqual([{ initiatedLocally: false }])
   })
 
-  it('tracks the feature-declared dirty state and emits dirty-state', () => {
+  it('tracks the feature-declared dirty state', () => {
+    const ctx = setup()
+    ctx.handle.open()
+    ctx.mock.trigger('open')
+    const beforeDeclaration = ctx.handle.isDirty
+    ctx.mock.triggerMessage('__hf:dirty', { dirty: true })
+    const afterDirty = ctx.handle.isDirty
+    ctx.mock.triggerMessage('__hf:dirty', { dirty: false })
+    expect({ beforeDeclaration, afterDirty, afterClean: ctx.handle.isDirty }).toEqual({
+      beforeDeclaration: false,
+      afterDirty: true,
+      afterClean: false,
+    })
+  })
+
+  it('emits dirty-state for each declared change', () => {
     const ctx = setup()
     const events: unknown[] = []
     ctx.emitter.on('dirty-state', (data) => events.push(data))
     ctx.handle.open()
     ctx.mock.trigger('open')
-    expect(ctx.handle.isDirty).toBe(false)
     ctx.mock.triggerMessage('__hf:dirty', { dirty: true })
-    expect(ctx.handle.isDirty).toBe(true)
     ctx.mock.triggerMessage('__hf:dirty', { dirty: false })
-    expect(ctx.handle.isDirty).toBe(false)
     expect(events).toEqual([{ dirty: true }, { dirty: false }])
   })
 

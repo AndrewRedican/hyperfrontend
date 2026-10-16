@@ -297,10 +297,14 @@ describe('startStaticServer', () => {
     })
   })
 
-  it('binds the configured host and reports it in the handle url', async () => {
+  it('reports the configured host in the handle url', async () => {
     handle = await startStaticServer(config({ root: dir, host: '127.0.0.1' }))
     expect(handle.url).toBe(`http://127.0.0.1:${handle.port}/`)
-    await expect(fetchRaw(handle.url)).resolves.toEqual(expect.objectContaining({ status: 200 }))
+  })
+
+  it('binds the configured host', async () => {
+    handle = await startStaticServer(config({ root: dir, host: '127.0.0.1' }))
+    await expect(fetchRaw(`http://127.0.0.1:${handle.port}/`)).resolves.toEqual(expect.objectContaining({ status: 200 }))
   })
 
   it('reports localhost for a wildcard bind', async () => {

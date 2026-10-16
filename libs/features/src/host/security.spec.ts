@@ -22,6 +22,21 @@ function createMockBroker(): { broker: BrokerHandle; registerProtocol: Mock } {
   return { broker: { registerProtocol, logger: { id: 'logger' } } as unknown as BrokerHandle, registerProtocol }
 }
 
+/**
+ * Attempts a registration the spec expects to be refused.
+ *
+ * @param register - The registration to attempt.
+ * @returns Whether the registration threw.
+ */
+function isRefused(register: () => unknown): boolean {
+  try {
+    register()
+    return false
+  } catch {
+    return true
+  }
+}
+
 describe('registerSecurity', () => {
   describe('v4', () => {
     it('builds the v4 provider from the broker logger and the shared key', () => {
@@ -59,13 +74,16 @@ describe('registerSecurity', () => {
 
     it('registers nothing when the shared key is rejected', () => {
       const { broker, registerProtocol } = createMockBroker()
-      expect(() => registerSecurity(broker, 'v4', 'short')).toThrow()
-      expect(registerProtocol).not.toHaveBeenCalled()
+      const refused = isRefused(() => registerSecurity(broker, 'v4', 'short'))
+      expect({ refused, registrations: registerProtocol.mock.calls }).toEqual({ refused: true, registrations: [] })
     })
 
     it('never constructs the v4 provider from a rejected key', () => {
-      expect(() => registerSecurity(createMockBroker().broker, 'v4', 'short')).toThrow()
-      expect(createV4Protocol).not.toHaveBeenCalledWith(expect.anything(), 'short')
+      const refused = isRefused(() => registerSecurity(createMockBroker().broker, 'v4', 'short'))
+      expect({ refused, v4Constructions: jest.mocked(createV4Protocol).mock.calls }).toEqual({
+        refused: true,
+        v4Constructions: expect.not.arrayContaining([[expect.anything(), 'short']]),
+      })
     })
   })
 
@@ -95,8 +113,8 @@ describe('registerSecurity', () => {
 
     it('registers nothing when a stray key is rejected', () => {
       const { broker, registerProtocol } = createMockBroker()
-      expect(() => registerSecurity(broker, 'v3', KEY)).toThrow()
-      expect(registerProtocol).not.toHaveBeenCalled()
+      const refused = isRefused(() => registerSecurity(broker, 'v3', KEY))
+      expect({ refused, registrations: registerProtocol.mock.calls }).toEqual({ refused: true, registrations: [] })
     })
   })
 

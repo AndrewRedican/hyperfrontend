@@ -165,9 +165,12 @@ describe('createShellHandle', () => {
       },
     })
     ctx.handle.open()
-    expect(ctx.mock.connect).not.toHaveBeenCalled()
+    const connectsBeforeReady = ctx.mock.connect.mock.calls.length
     begin?.()
-    expect(ctx.mock.connect).toHaveBeenCalledTimes(1)
+    expect({ connectsBeforeReady, connectsAfterReady: ctx.mock.connect.mock.calls.length }).toEqual({
+      connectsBeforeReady: 0,
+      connectsAfterReady: 1,
+    })
   })
 
   it('cancels a held handshake alongside mount cleanup when destroyed before readiness', () => {
@@ -175,9 +178,11 @@ describe('createShellHandle', () => {
     const ctx = setup({ whenReady: () => cancel })
     ctx.handle.open()
     ctx.handle.destroy()
-    expect(cancel).toHaveBeenCalledTimes(1)
-    expect(ctx.cleanup).toHaveBeenCalledTimes(1)
-    expect(ctx.mock.connect).not.toHaveBeenCalled()
+    expect({
+      holdCancels: cancel.mock.calls.length,
+      mountCleanups: ctx.cleanup.mock.calls.length,
+      connects: ctx.mock.connect.mock.calls.length,
+    }).toEqual({ holdCancels: 1, mountCleanups: 1, connects: 0 })
   })
 
   it('marks the shell open when the channel opens', () => {

@@ -323,8 +323,11 @@ describe('createRequestPeer', () => {
       const peer = createRequestPeer('host', jest.fn())
       const pending = peer.request('a')
       peer.rejectAll('channel closed')
-      await expect(pending).rejects.toThrow()
-      expect(scheduledTimers()).toHaveLength(0)
+      const rejection = await pending.then(
+        () => undefined,
+        (error: unknown) => error
+      )
+      expect({ rejection, pendingTimers: scheduledTimers().length }).toEqual({ rejection: expect.any(Error), pendingTimers: 0 })
     })
 
     it('keeps serving requests made after the flush', async () => {

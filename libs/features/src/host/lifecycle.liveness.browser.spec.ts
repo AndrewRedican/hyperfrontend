@@ -114,8 +114,17 @@ describe('a feature frame killed while the tab was in the background', () => {
     // note: The frame dies here. It sends nothing ever again — no beat, and no visibility report to clear the host's copy of its hidden state.
     setPageVisibility('visible')
     jest.advanceTimersByTime(3000)
-    expect(ctx.errors).toHaveLength(1)
-    expect(ctx.errors[0]).toMatchObject({ reason: 'unresponsive' })
+    expect(ctx.errors).toEqual([expect.objectContaining({ reason: 'unresponsive' })])
+  })
+
+  it('is reported suspect once the tab comes back', () => {
+    const ctx = setup()
+    ctx.mock.triggerMessage('__hf:beat')
+    setPageVisibility('hidden')
+    ctx.mock.triggerMessage('__hf:visibility', { hidden: true })
+    // note: The frame dies here, exactly as in the test above.
+    setPageVisibility('visible')
+    jest.advanceTimersByTime(3000)
     expect(ctx.states).toEqual(['healthy', 'unobservable', 'suspect'])
   })
 
@@ -150,8 +159,21 @@ describe('a feature frame that survives the tab going away', () => {
     jest.advanceTimersByTime(2000)
     ctx.mock.triggerMessage('__hf:beat')
     jest.advanceTimersByTime(2000)
-    expect(ctx.errors).toHaveLength(0)
     expect(ctx.states).toEqual(['healthy', 'unobservable', 'healthy'])
+  })
+
+  it('is never declared unresponsive', () => {
+    const ctx = setup()
+    ctx.mock.triggerMessage('__hf:beat')
+    setPageVisibility('hidden')
+    ctx.mock.triggerMessage('__hf:visibility', { hidden: true })
+    setPageVisibility('visible')
+    ctx.mock.triggerMessage('__hf:visibility', { hidden: false })
+    ctx.mock.triggerMessage('__hf:beat')
+    jest.advanceTimersByTime(2000)
+    ctx.mock.triggerMessage('__hf:beat')
+    jest.advanceTimersByTime(2000)
+    expect(ctx.errors).toHaveLength(0)
   })
 })
 
@@ -173,12 +195,16 @@ describe('a killed feature frame under the reopen policy', () => {
     ctx.mock.triggerMessage('__hf:visibility', { hidden: true })
     setPageVisibility('visible')
     jest.advanceTimersByTime(3000)
-    expect(ctx.errors).toEqual([expect.objectContaining({ reason: 'unresponsive', frame: 'present' })])
+    const errorsAtVerdict = [...ctx.errors]
     jest.advanceTimersByTime(3999)
-    expect(ctx.reopens).toEqual([])
+    const reopensBeforeGraceEnds = [...ctx.reopens]
     jest.advanceTimersByTime(1)
-    expect(ctx.reopens).toEqual([{ attempt: 1, attempts: 3, displayMode: 'embedded' }])
-    expect(ctx.mount).toHaveBeenCalledTimes(2)
+    expect({ errorsAtVerdict, reopensBeforeGraceEnds, reopensAfterGrace: ctx.reopens, mounts: ctx.mount.mock.calls.length }).toEqual({
+      errorsAtVerdict: [expect.objectContaining({ reason: 'unresponsive', frame: 'present' })],
+      reopensBeforeGraceEnds: [],
+      reopensAfterGrace: [{ attempt: 1, attempts: 3, displayMode: 'embedded' }],
+      mounts: 2,
+    })
   })
 
   it('waits for the tab to come back before replacing a frame that died in view', () => {
@@ -187,10 +213,10 @@ describe('a killed feature frame under the reopen policy', () => {
     jest.advanceTimersByTime(3000)
     setPageVisibility('hidden')
     jest.advanceTimersByTime(60_000)
-    expect(ctx.reopens).toEqual([])
+    const reopensWhileHidden = [...ctx.reopens]
     setPageVisibility('visible')
     jest.advanceTimersByTime(4000)
-    expect(ctx.reopens).toHaveLength(1)
+    expect({ reopensWhileHidden, reopensAfterReturn: ctx.reopens.length }).toEqual({ reopensWhileHidden: [], reopensAfterReturn: 1 })
   })
 })
 
@@ -207,26 +233,32 @@ describe('a silent feature frame the host asked to conceal', () => {
   it('disappears on the verdict and returns with its next beat', () => {
     const ctx = setup(undefined, true)
     ctx.mock.triggerMessage('__hf:beat')
-    expect(ctx.frame.style.visibility).toBe('visible')
+    const beforeVerdict = ctx.frame.style.visibility
     jest.advanceTimersByTime(3000)
-    expect(ctx.states).toEqual(['healthy', 'suspect'])
-    expect(ctx.frame.style.visibility).toBe('hidden')
+    const atVerdict = { states: [...ctx.states], visibility: ctx.frame.style.visibility }
     ctx.mock.triggerMessage('__hf:beat')
-    expect(ctx.frame.style.visibility).toBe('visible')
+    expect({ beforeVerdict, atVerdict, afterBeat: ctx.frame.style.visibility }).toEqual({
+      beforeVerdict: 'visible',
+      atVerdict: { states: ['healthy', 'suspect'], visibility: 'hidden' },
+      afterBeat: 'visible',
+    })
   })
 
   it('stays hidden through the reopen grace until its replacement opens', () => {
     const ctx = setup('reopen', true)
     ctx.mock.triggerMessage('__hf:beat')
     jest.advanceTimersByTime(3000)
-    expect(ctx.frame.style.visibility).toBe('hidden')
+    const atVerdict = ctx.frame.style.visibility
     jest.advanceTimersByTime(3999)
-    expect(ctx.reopens).toEqual([])
-    expect(ctx.frame.style.visibility).toBe('hidden')
+    const beforeGraceEnds = { reopens: [...ctx.reopens], visibility: ctx.frame.style.visibility }
     jest.advanceTimersByTime(1)
-    expect(ctx.reopens).toHaveLength(1)
-    expect(ctx.frame.style.visibility).toBe('hidden')
+    const atReopen = { reopens: ctx.reopens.length, visibility: ctx.frame.style.visibility }
     ctx.mock.trigger('open')
-    expect(ctx.frame.style.visibility).toBe('visible')
+    expect({ atVerdict, beforeGraceEnds, atReopen, afterOpen: ctx.frame.style.visibility }).toEqual({
+      atVerdict: 'hidden',
+      beforeGraceEnds: { reopens: [], visibility: 'hidden' },
+      atReopen: { reopens: 1, visibility: 'hidden' },
+      afterOpen: 'visible',
+    })
   })
 })

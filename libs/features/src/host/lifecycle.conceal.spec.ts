@@ -183,9 +183,12 @@ describe('createShellHandle frame concealment', () => {
     ctx.connect()
     ctx.silence()
     ctx.latest().trigger('close', { notify: false, reason: 'peer-reload' })
-    expect(ctx.frames[0].reveal).toHaveBeenCalledTimes(1)
+    const revealsBeforeFreshSession = ctx.frames[0].reveal.mock.calls.length
     ctx.connect()
-    expect(ctx.frames[0].reveal).toHaveBeenCalledTimes(3)
+    expect({ revealsBeforeFreshSession, revealsAfterFreshSession: ctx.frames[0].reveal.mock.calls.length }).toEqual({
+      revealsBeforeFreshSession: 1,
+      revealsAfterFreshSession: 3,
+    })
   })
 
   it('lets a callback policy hide the frame itself', () => {
@@ -232,15 +235,39 @@ describe('createShellHandle frame concealment under the reopen policy', () => {
   beforeEach(() => jest.useFakeTimers())
   afterEach(() => jest.useRealTimers())
 
-  it('keeps the silent frame hidden through the grace and shows its replacement once it opens', () => {
+  it('mounts a replacement frame once the grace runs out', () => {
     const ctx = setup({ policy: { reopen: { graceMs: 1000 } }, conceal: true })
     ctx.handle.open()
     ctx.connect()
     ctx.silence()
     jest.advanceTimersByTime(1000)
     expect(ctx.frames).toHaveLength(2)
+  })
+
+  it('keeps the silent frame hidden through the grace', () => {
+    const ctx = setup({ policy: { reopen: { graceMs: 1000 } }, conceal: true })
+    ctx.handle.open()
+    ctx.connect()
+    ctx.silence()
+    jest.advanceTimersByTime(1000)
     expect(ctx.frames[0].reveal).toHaveBeenCalledTimes(1)
+  })
+
+  it('keeps the replacement frame hidden until its session opens', () => {
+    const ctx = setup({ policy: { reopen: { graceMs: 1000 } }, conceal: true })
+    ctx.handle.open()
+    ctx.connect()
+    ctx.silence()
+    jest.advanceTimersByTime(1000)
     expect(ctx.frames[1].reveal).not.toHaveBeenCalled()
+  })
+
+  it('shows the replacement frame once its session opens', () => {
+    const ctx = setup({ policy: { reopen: { graceMs: 1000 } }, conceal: true })
+    ctx.handle.open()
+    ctx.connect()
+    ctx.silence()
+    jest.advanceTimersByTime(1000)
     ctx.connect()
     expect(ctx.frames[1].reveal).toHaveBeenCalledTimes(1)
   })

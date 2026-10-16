@@ -33,9 +33,9 @@ describe('openExternalWindow', () => {
     const opened = { closed: false, close: jest.fn() }
     jest.spyOn(window, 'open').mockReturnValue(opened as unknown as Window)
     const { isGone } = openExternalWindow('https://feature.example/')
-    expect(isGone?.()).toBe(false)
+    const whileOpen = isGone?.()
     opened.closed = true
-    expect(isGone?.()).toBe(true)
+    expect({ whileOpen, onceClosed: isGone?.() }).toEqual({ whileOpen: false, onceClosed: true })
   })
 
   it('offers no gone probe when the window was blocked', () => {

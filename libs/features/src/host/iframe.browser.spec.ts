@@ -114,9 +114,9 @@ describe('frameReadiness', () => {
     const iframe = createFeatureIframe('https://feature.example/')
     const begin = jest.fn()
     frameReadiness(iframe, 'https://feature.example/')?.(begin)
-    expect(begin).not.toHaveBeenCalled()
+    const callsBeforeLoad = begin.mock.calls.length
     iframe.dispatchEvent(new Event('load'))
-    expect(begin).toHaveBeenCalledTimes(1)
+    expect({ callsBeforeLoad, callsAfterLoad: begin.mock.calls.length }).toEqual({ callsBeforeLoad: 0, callsAfterLoad: 1 })
   })
 
   it('begins the handshake only once across repeated load events', () => {

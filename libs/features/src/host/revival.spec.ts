@@ -1,3 +1,4 @@
+import type { UnresponsivePolicy } from '../shared/types'
 import { afterEach, beforeEach } from 'node:test'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
 import { createRevival, resolveReopenPolicy } from './revival'
@@ -24,11 +25,13 @@ function setup() {
 }
 
 describe('resolveReopenPolicy', () => {
-  it('reads no tuning from the other policies', () => {
-    expect(resolveReopenPolicy(undefined)).toBeNull()
-    expect(resolveReopenPolicy('emit')).toBeNull()
-    expect(resolveReopenPolicy('unmount')).toBeNull()
-    expect(resolveReopenPolicy(() => undefined)).toBeNull()
+  it.each([
+    ['no policy', undefined],
+    ['the emit policy', 'emit'],
+    ['the unmount policy', 'unmount'],
+    ['a callback policy', () => undefined],
+  ])('reads no tuning from %s', (_label: string, policy: UnresponsivePolicy | undefined) => {
+    expect(resolveReopenPolicy(policy)).toBeNull()
   })
 
   it('applies the defaults to the shorthand', () => {
@@ -48,19 +51,16 @@ describe('resolveReopenPolicy', () => {
     })
   })
 
-  it('rejects a grace that is negative or not finite', () => {
-    expect(() => resolveReopenPolicy({ reopen: { graceMs: -1 } })).toThrow('"graceMs" must be a finite number')
-    expect(() => resolveReopenPolicy({ reopen: { graceMs: Infinity } })).toThrow('"graceMs" must be a finite number')
+  it.each([-1, Infinity])('rejects the grace %p as negative or not finite', (graceMs: number) => {
+    expect(() => resolveReopenPolicy({ reopen: { graceMs } })).toThrow('"graceMs" must be a finite number')
   })
 
-  it('rejects a backoff below one or not finite', () => {
-    expect(() => resolveReopenPolicy({ reopen: { backoff: 0.5 } })).toThrow('"backoff" must be a finite factor')
-    expect(() => resolveReopenPolicy({ reopen: { backoff: NaN } })).toThrow('"backoff" must be a finite factor')
+  it.each([0.5, NaN])('rejects the backoff %p as below one or not finite', (backoff: number) => {
+    expect(() => resolveReopenPolicy({ reopen: { backoff } })).toThrow('"backoff" must be a finite factor')
   })
 
-  it('rejects an attempt budget that is not a positive integer', () => {
-    expect(() => resolveReopenPolicy({ reopen: { attempts: 0 } })).toThrow('"attempts" must be a positive integer')
-    expect(() => resolveReopenPolicy({ reopen: { attempts: 1.5 } })).toThrow('"attempts" must be a positive integer')
+  it.each([0, 1.5])('rejects the attempt budget %p as not a positive integer', (attempts: number) => {
+    expect(() => resolveReopenPolicy({ reopen: { attempts } })).toThrow('"attempts" must be a positive integer')
   })
 
   it('rejects a stability window that is negative or not finite', () => {
@@ -76,9 +76,12 @@ describe('createRevival', () => {
     const { hooks, revival } = setup()
     revival.unresponsive()
     jest.advanceTimersByTime(999)
-    expect(hooks.reopen).not.toHaveBeenCalled()
+    const reopensBeforeGraceEnds = [...hooks.reopen.mock.calls]
     jest.advanceTimersByTime(1)
-    expect(hooks.reopen).toHaveBeenCalledWith(1, 2)
+    expect({ reopensBeforeGraceEnds, reopensAtGraceEnd: hooks.reopen.mock.calls }).toEqual({
+      reopensBeforeGraceEnds: [],
+      reopensAtGraceEnd: [[1, 2]],
+    })
   })
 
   it('leaves a frame that beat again during the grace alone', () => {
@@ -104,9 +107,12 @@ describe('createRevival', () => {
     revival.opened()
     revival.unresponsive()
     jest.advanceTimersByTime(1999)
-    expect(hooks.reopen).toHaveBeenCalledTimes(1)
+    const reopensBeforeLongerGraceEnds = hooks.reopen.mock.calls.length
     jest.advanceTimersByTime(1)
-    expect(hooks.reopen).toHaveBeenLastCalledWith(2, 2)
+    expect({ reopensBeforeLongerGraceEnds, lastReopen: hooks.reopen.mock.lastCall }).toEqual({
+      reopensBeforeLongerGraceEnds: 1,
+      lastReopen: [2, 2],
+    })
   })
 
   it('gives up once the budget is spent and the frame is still silent', () => {
@@ -119,10 +125,13 @@ describe('createRevival', () => {
     revival.opened()
     revival.unresponsive()
     jest.advanceTimersByTime(3999)
-    expect(hooks.giveUp).not.toHaveBeenCalled()
+    const giveUpsBeforeGraceEnds = [...hooks.giveUp.mock.calls]
     jest.advanceTimersByTime(1)
-    expect(hooks.giveUp).toHaveBeenCalledWith(2)
-    expect(hooks.reopen).toHaveBeenCalledTimes(2)
+    expect({ giveUpsBeforeGraceEnds, giveUpsAtGraceEnd: hooks.giveUp.mock.calls, reopens: hooks.reopen.mock.calls.length }).toEqual({
+      giveUpsBeforeGraceEnds: [],
+      giveUpsAtGraceEnd: [[2]],
+      reopens: 2,
+    })
   })
 
   it('restores the budget once a reopened session stays open', () => {
@@ -167,12 +176,16 @@ describe('createRevival', () => {
     revival.unresponsive()
     revival.setObservable(false)
     jest.advanceTimersByTime(10_000)
-    expect(hooks.reopen).not.toHaveBeenCalled()
+    const reopensWhileUnobservable = [...hooks.reopen.mock.calls]
     revival.setObservable(true)
     jest.advanceTimersByTime(999)
-    expect(hooks.reopen).not.toHaveBeenCalled()
+    const reopensBeforeFreshGraceEnds = [...hooks.reopen.mock.calls]
     jest.advanceTimersByTime(1)
-    expect(hooks.reopen).toHaveBeenCalledWith(1, 2)
+    expect({ reopensWhileUnobservable, reopensBeforeFreshGraceEnds, reopensAtFreshGraceEnd: hooks.reopen.mock.calls }).toEqual({
+      reopensWhileUnobservable: [],
+      reopensBeforeFreshGraceEnds: [],
+      reopensAtFreshGraceEnd: [[1, 2]],
+    })
   })
 
   it('ignores a return to observability when nothing is held', () => {

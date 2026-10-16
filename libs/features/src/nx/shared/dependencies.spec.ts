@@ -40,9 +40,13 @@ describe('ensureSdkDependency', () => {
     resolveSdkVersionMock.mockReturnValue('0.4.0')
   })
 
+  it('reports a change when the package is undeclared', () => {
+    expect(ensureSdkDependency(createTree('{ "name": "consumer", "dependencies": { "react": "19.0.0" } }'), {})).toBe(true)
+  })
+
   it('adds the package to dependencies with a caret range on the plugin version when undeclared', () => {
     const tree = createTree('{ "name": "consumer", "dependencies": { "react": "19.0.0" } }')
-    expect(ensureSdkDependency(tree, {})).toBe(true)
+    ensureSdkDependency(tree, {})
     expect(writtenManifest(tree)).toEqual(
       expect.objectContaining({
         name: 'consumer',
@@ -51,9 +55,13 @@ describe('ensureSdkDependency', () => {
     )
   })
 
+  it('reports a change when the manifest has no dependencies section', () => {
+    expect(ensureSdkDependency(createTree('{ "name": "consumer" }'), {})).toBe(true)
+  })
+
   it('creates the dependencies section when the manifest has none', () => {
     const tree = createTree('{ "name": "consumer" }')
-    expect(ensureSdkDependency(tree, {})).toBe(true)
+    ensureSdkDependency(tree, {})
     expect(writtenManifest(tree)).toEqual(expect.objectContaining({ dependencies: { '@hyperfrontend/features': '^0.4.0' } }))
   })
 
@@ -63,22 +71,47 @@ describe('ensureSdkDependency', () => {
     expect(tree.write.mock.calls[0]?.[1]).toBe('{\n  "dependencies": {\n    "@hyperfrontend/features": "^0.4.0"\n  }\n}\n')
   })
 
-  it('leaves an existing dependencies declaration untouched and reports no change', () => {
+  it('reports no change for an existing dependencies declaration', () => {
+    expect(ensureSdkDependency(createTree('{ "dependencies": { "@hyperfrontend/features": "0.1.0" } }'), {})).toBe(false)
+  })
+
+  it('leaves an existing dependencies declaration untouched', () => {
     const tree = createTree('{ "dependencies": { "@hyperfrontend/features": "0.1.0" } }')
-    expect(ensureSdkDependency(tree, {})).toBe(false)
+    ensureSdkDependency(tree, {})
     expect(tree.write).not.toHaveBeenCalled()
+  })
+
+  it('reports no change for a devDependencies declaration', () => {
+    expect(
+      ensureSdkDependency(createTree('{ "devDependencies": { "@hyperfrontend/features": "^0.3.0" } }'), { keepExistingVersions: true })
+    ).toBe(false)
   })
 
   it('leaves a devDependencies declaration in its section untouched', () => {
     const tree = createTree('{ "devDependencies": { "@hyperfrontend/features": "^0.3.0" } }')
-    expect(ensureSdkDependency(tree, { keepExistingVersions: true })).toBe(false)
+    ensureSdkDependency(tree, { keepExistingVersions: true })
     expect(tree.write).not.toHaveBeenCalled()
+  })
+
+  it('reports a change when keepExistingVersions is false re-pins an existing declaration', () => {
+    expect(
+      ensureSdkDependency(createTree('{ "devDependencies": { "@hyperfrontend/features": "^0.3.0", "jest": "30.0.0" } }'), {
+        keepExistingVersions: false,
+      })
+    ).toBe(true)
   })
 
   it('re-pins an existing declaration in its own section when keepExistingVersions is false', () => {
     const tree = createTree('{ "devDependencies": { "@hyperfrontend/features": "^0.3.0", "jest": "30.0.0" } }')
-    expect(ensureSdkDependency(tree, { keepExistingVersions: false })).toBe(true)
+    ensureSdkDependency(tree, { keepExistingVersions: false })
     expect(writtenManifest(tree)).toEqual({ devDependencies: { '@hyperfrontend/features': '^0.4.0', jest: '30.0.0' } })
+  })
+
+  it('reports a change when it falls back to latest', () => {
+    resolveSdkVersionMock.mockImplementation(() => {
+      throw new Error('not found')
+    })
+    expect(ensureSdkDependency(createTree('{}'), {})).toBe(true)
   })
 
   it('declares latest when the plugin version cannot be resolved', () => {
@@ -86,7 +119,7 @@ describe('ensureSdkDependency', () => {
       throw new Error('not found')
     })
     const tree = createTree('{}')
-    expect(ensureSdkDependency(tree, {})).toBe(true)
+    ensureSdkDependency(tree, {})
     expect(writtenManifest(tree)).toEqual({ dependencies: { '@hyperfrontend/features': 'latest' } })
   })
 

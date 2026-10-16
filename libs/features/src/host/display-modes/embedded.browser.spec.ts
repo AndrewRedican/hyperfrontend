@@ -88,9 +88,9 @@ describe('mountEmbedded', () => {
 
   it('reports the frame gone once it leaves the page', () => {
     const { result } = mount({})
-    expect(result.isGone?.()).toBe(false)
+    const beforeCleanup = result.isGone?.()
     result.cleanup()
-    expect(result.isGone?.()).toBe(true)
+    expect({ beforeCleanup, afterCleanup: result.isGone?.() }).toEqual({ beforeCleanup: false, afterCleanup: true })
   })
 
   it('removes the iframe on cleanup', () => {
