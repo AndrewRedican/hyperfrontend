@@ -1,14 +1,10 @@
+import type { LogLevel } from './create-log-level-config'
 import { describe, expect, it } from '@hyperfrontend/testing'
 import { isValidLogLevel, createLogLevelConfig } from './create-log-level-config'
 
 describe('Log Level Configuration Tests', () => {
-  it('returns true for valid log levels', () => {
-    expect(isValidLogLevel('none')).toBe(true)
-    expect(isValidLogLevel('error')).toBe(true)
-    expect(isValidLogLevel('warn')).toBe(true)
-    expect(isValidLogLevel('log')).toBe(true)
-    expect(isValidLogLevel('info')).toBe(true)
-    expect(isValidLogLevel('debug')).toBe(true)
+  it.each(['none', 'error', 'warn', 'log', 'info', 'debug'])('returns true for the valid log level %s', (level: string) => {
+    expect(isValidLogLevel(level)).toBe(true)
   })
 
   it('returns false for invalid log levels', () => {
@@ -77,10 +73,9 @@ describe('Log Level Configuration Tests', () => {
     })
 
     describe('shouldLog', () => {
-      it('returns true if the level is equal or higher priority than current level', () => {
+      it.each(['error', 'warn'])('returns true for %s, equal or higher priority than the current warn level', (level: LogLevel) => {
         const config = createLogLevelConfig('warn')
-        expect(config.shouldLog('error')).toBe(true)
-        expect(config.shouldLog('warn')).toBe(true)
+        expect(config.shouldLog(level)).toBe(true)
       })
 
       it('returns false if the level is lower priority than current level', () => {
