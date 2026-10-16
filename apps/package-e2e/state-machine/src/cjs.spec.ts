@@ -18,22 +18,27 @@ describe('@hyperfrontend/state-machine CJS', () => {
 
     it('exports action creators', () => {
       const { start, cancel, pause, success, fail } = require('@hyperfrontend/state-machine/actions')
-      expect(typeof start).toBe('function')
-      expect(typeof cancel).toBe('function')
-      expect(typeof pause).toBe('function')
-      expect(typeof success).toBe('function')
-      expect(typeof fail).toBe('function')
+      expect({ start, cancel, pause, success, fail }).toEqual({
+        start: expect.any(Function),
+        cancel: expect.any(Function),
+        pause: expect.any(Function),
+        success: expect.any(Function),
+        fail: expect.any(Function),
+      })
     })
 
-    it('creates valid action objects', () => {
-      const { start, success } = require('@hyperfrontend/state-machine/actions')
+    it('creates a start action with a type', () => {
+      const { start } = require('@hyperfrontend/state-machine/actions')
 
       const startAction = start()
       expect(startAction).toHaveProperty('type')
+    })
+
+    it('creates a success action with a type and a payload', () => {
+      const { success } = require('@hyperfrontend/state-machine/actions')
 
       const successAction = success({ data: 'test' })
-      expect(successAction).toHaveProperty('type')
-      expect(successAction).toHaveProperty('payload')
+      expect(successAction).toEqual(expect.objectContaining({ type: expect.anything(), payload: expect.anything() }))
     })
   })
 

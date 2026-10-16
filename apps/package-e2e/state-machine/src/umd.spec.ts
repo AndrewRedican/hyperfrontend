@@ -37,7 +37,6 @@ describe('@hyperfrontend/state-machine UMD bundle', () => {
     const bundleCode = loadBundleCode(bundlePath)
     const exports = requireUmdBundle(bundleCode) as Record<string, unknown>
 
-    expect(exports).toBeDefined()
     expect(exports.Store).toBeDefined()
   })
 })
