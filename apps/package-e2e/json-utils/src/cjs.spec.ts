@@ -18,7 +18,7 @@ describe('@hyperfrontend/json-utils CJS', () => {
     expect(typeof validate).toBe('function')
   })
 
-  it('validates data against a schema', () => {
+  it('validates data that satisfies a schema as valid', () => {
     const { validate } = require('@hyperfrontend/json-utils')
 
     const schema = {
@@ -31,10 +31,24 @@ describe('@hyperfrontend/json-utils CJS', () => {
     }
 
     const validData = { name: 'John', age: 30 }
-    const invalidData = { age: 30 }
 
     const validResult = validate(validData, schema)
     expect(validResult.valid).toBe(true)
+  })
+
+  it('validates data missing a required property as invalid', () => {
+    const { validate } = require('@hyperfrontend/json-utils')
+
+    const schema = {
+      type: 'object',
+      properties: {
+        name: { type: 'string' },
+        age: { type: 'number' },
+      },
+      required: ['name'],
+    }
+
+    const invalidData = { age: 30 }
 
     const invalidResult = validate(invalidData, schema)
     expect(invalidResult.valid).toBe(false)
@@ -45,7 +59,7 @@ describe('@hyperfrontend/json-utils CJS', () => {
     expect(typeof createValidator).toBe('function')
   })
 
-  it('creates a reusable validator', () => {
+  it('creates a reusable validator as a function', () => {
     const { createValidator } = require('@hyperfrontend/json-utils')
 
     const schema = {
@@ -54,6 +68,16 @@ describe('@hyperfrontend/json-utils CJS', () => {
 
     const validator = createValidator(schema)
     expect(typeof validator).toBe('function')
+  })
+
+  it('creates a reusable validator that accepts data matching its schema', () => {
+    const { createValidator } = require('@hyperfrontend/json-utils')
+
+    const schema = {
+      type: 'string',
+    }
+
+    const validator = createValidator(schema)
 
     const result = validator('hello')
     expect(result.valid).toBe(true)
@@ -70,8 +94,6 @@ describe('@hyperfrontend/json-utils CJS', () => {
     const data = { name: 'John', age: 30 }
     const schema = toJsonSchema(data)
 
-    expect(schema).toBeDefined()
-    expect(schema.type).toBe('object')
-    expect(schema.properties).toBeDefined()
+    expect(schema).toEqual(expect.objectContaining({ type: 'object', properties: expect.anything() }))
   })
 })

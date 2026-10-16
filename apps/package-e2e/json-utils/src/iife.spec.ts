@@ -33,7 +33,7 @@ describe('@hyperfrontend/json-utils IIFE bundle', () => {
     expect(typeof global.validate).toBe('function')
   })
 
-  it('validates data against schema from IIFE bundle', () => {
+  it('validates data matching a schema as valid from IIFE bundle', () => {
     const bundleCode = loadBundleCode(bundlePath)
     const global = executeBundleInWindow(bundleCode, 'HyperfrontendJsonUtils') as {
       validate: (data: unknown, schema: object) => { valid: boolean }
@@ -45,6 +45,17 @@ describe('@hyperfrontend/json-utils IIFE bundle', () => {
 
     const result = global.validate('hello', schema)
     expect(result.valid).toBe(true)
+  })
+
+  it('validates data of the wrong type as invalid from IIFE bundle', () => {
+    const bundleCode = loadBundleCode(bundlePath)
+    const global = executeBundleInWindow(bundleCode, 'HyperfrontendJsonUtils') as {
+      validate: (data: unknown, schema: object) => { valid: boolean }
+    }
+
+    const schema = {
+      type: 'string',
+    }
 
     const invalidResult = global.validate(123, schema)
     expect(invalidResult.valid).toBe(false)
@@ -64,7 +75,6 @@ describe('@hyperfrontend/json-utils IIFE bundle', () => {
     }
 
     const schema = global.toJsonSchema({ name: 'test' })
-    expect(schema).toBeDefined()
-    expect(schema.type).toBe('object')
+    expect(schema).toEqual(expect.objectContaining({ type: 'object' }))
   })
 })
