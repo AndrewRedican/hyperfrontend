@@ -301,9 +301,12 @@ export default contract
     })
 
     it('narrows the declared display modes in the emitted declarations', () => {
-      const declaration = outFiles.find((file) => file.endsWith('.d.ts'))
-      expect(declaration).toBeDefined()
-      expect(readFileSync(join(outDir, declaration as string), 'utf8')).toContain("export type FeatureDisplayMode = 'embedded' | 'dialog'")
+      // note: The first emitted declaration is read into a list, so a build that emitted none fails here as an empty list.
+      const declarations = outFiles
+        .filter((file) => file.endsWith('.d.ts'))
+        .slice(0, 1)
+        .map((file) => readFileSync(join(outDir, file), 'utf8'))
+      expect(declarations).toEqual([expect.stringContaining("export type FeatureDisplayMode = 'embedded' | 'dialog'")])
     })
 
     describe('installed into an isolated consumer', () => {
@@ -518,9 +521,13 @@ describe('hf serve', () => {
   })
 
   it('gzip-compresses the large script for a client that accepts gzip', () => {
-    // note: Encoding and payload are two facets of the same compressed response, so both expectations live in this one test.
-    expect(bigJsResponse).toEqual(expect.objectContaining({ status: 200, encoding: 'gzip' }))
-    expect(gunzipSync(bigJsResponse?.body as Buffer).toString('utf8')).toBe(BIG_JS_BODY)
+    // note: Encoding and payload are two facets of the same compressed response, so one assertion pins both.
+    const payload = gunzipSync(bigJsResponse?.body as Buffer).toString('utf8')
+    expect({ status: bigJsResponse?.status, encoding: bigJsResponse?.encoding, payload }).toEqual({
+      status: 200,
+      encoding: 'gzip',
+      payload: BIG_JS_BODY,
+    })
   })
 
   it('denies the artifact-carried config file itself', () => {

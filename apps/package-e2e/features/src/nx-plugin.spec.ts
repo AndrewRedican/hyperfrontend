@@ -54,13 +54,19 @@ describe('@hyperfrontend/features Nx plugin', () => {
     })
 
     it('names the init and feature generators', () => {
-      expect(result.output).toContain('init : Ensure @hyperfrontend/features is declared in the workspace')
-      expect(result.output).toContain('feature : Scaffold a hyperfrontend feature via the SDK.')
+      const generators = [
+        'init : Ensure @hyperfrontend/features is declared in the workspace',
+        'feature : Scaffold a hyperfrontend feature via the SDK.',
+      ]
+      expect(generators.filter((line) => !result.output.includes(line))).toEqual([])
     })
 
     it('names the build and serve executors', () => {
-      expect(result.output).toContain("build : Build a hyperfrontend feature's shell package via the SDK.")
-      expect(result.output).toContain('serve : Serve a hyperfrontend feature dev server via the SDK.')
+      const executors = [
+        "build : Build a hyperfrontend feature's shell package via the SDK.",
+        'serve : Serve a hyperfrontend feature dev server via the SDK.',
+      ]
+      expect(executors.filter((line) => !result.output.includes(line))).toEqual([])
     })
   })
 
@@ -87,9 +93,15 @@ describe('@hyperfrontend/features Nx plugin', () => {
       expect(installedDeclaration).toMatch(/hyperfrontend-features-.+\.tgz$/)
     })
 
-    it('exits 0 without staging a manifest change', () => {
+    it('exits 0', () => {
       expect(result.status).toBe(0)
+    })
+
+    it('runs the init generator', () => {
       expect(result.output).toContain(`Generating ${PLUGIN_NAME}:init`)
+    })
+
+    it('stages no manifest change', () => {
       expect(result.output).not.toContain('UPDATE package.json')
     })
 
@@ -120,8 +132,11 @@ describe('@hyperfrontend/features Nx plugin', () => {
       { timeout: SCENARIO_TIMEOUT }
     )
 
-    it('exits 0 without staging a manifest change', () => {
+    it('exits 0', () => {
       expect(result.status).toBe(0)
+    })
+
+    it('stages no manifest change', () => {
       expect(result.output).not.toContain('UPDATE package.json')
     })
 
@@ -160,8 +175,11 @@ describe('@hyperfrontend/features Nx plugin', () => {
       { timeout: SCENARIO_TIMEOUT }
     )
 
-    it('exits 0 and stages the manifest update', () => {
+    it('exits 0', () => {
       expect(result.status).toBe(0)
+    })
+
+    it('stages the manifest update', () => {
       expect(result.output).toContain('UPDATE package.json')
     })
 
@@ -170,19 +188,26 @@ describe('@hyperfrontend/features Nx plugin', () => {
     })
 
     it('preserves the existing dependency entries and key order', () => {
-      expect(Object.keys(sectionOf(afterManifest, 'dependencies'))).toEqual(['prettier', PLUGIN_NAME])
-      expect(Object.keys(afterManifest)).toEqual(seededKeys)
+      expect({ dependencyKeys: Object.keys(sectionOf(afterManifest, 'dependencies')), manifestKeys: Object.keys(afterManifest) }).toEqual({
+        dependencyKeys: ['prettier', PLUGIN_NAME],
+        manifestKeys: seededKeys,
+      })
     })
 
     it('writes 2-space indentation and a single trailing newline', () => {
       // how: Re-serializing the parsed manifest with the expected formatting and comparing bytes proves indentation, key order, and the exact trailing newline at once.
-      expect(afterFirstRun).toBe(`${JSON.stringify(afterManifest, null, 2)}\n`)
-      expect(afterFirstRun.endsWith('\n')).toBe(true)
-      expect(afterFirstRun.endsWith('\n\n')).toBe(false)
+      expect({
+        bytes: afterFirstRun,
+        endsWithNewline: afterFirstRun.endsWith('\n'),
+        endsWithBlankLine: afterFirstRun.endsWith('\n\n'),
+      }).toEqual({ bytes: `${JSON.stringify(afterManifest, null, 2)}\n`, endsWithNewline: true, endsWithBlankLine: false })
+    })
+
+    it('exits 0 on a second run', () => {
+      expect(secondRun.status).toBe(0)
     })
 
     it('is idempotent across a second run', () => {
-      expect(secondRun.status).toBe(0)
       expect(afterSecondRun).toBe(afterFirstRun)
     })
   })
@@ -205,8 +230,11 @@ describe('@hyperfrontend/features Nx plugin', () => {
       { timeout: SCENARIO_TIMEOUT }
     )
 
-    it('exits 0 and stages the manifest update', () => {
+    it('exits 0', () => {
       expect(result.status).toBe(0)
+    })
+
+    it('stages the manifest update', () => {
       expect(result.output).toContain('UPDATE package.json')
     })
 
@@ -246,15 +274,24 @@ describe('@hyperfrontend/features Nx plugin', () => {
       { timeout: SCENARIO_TIMEOUT }
     )
 
-    it('treats either declaration as satisfying by default', () => {
+    it('exits 0 on a default run', () => {
       expect(defaultRun.status).toBe(0)
+    })
+
+    it('treats either declaration as satisfying by default', () => {
       expect(afterDefaultRun).toBe(before)
     })
 
-    it('re-pins both sections when keepExistingVersions is false', () => {
+    it('exits 0 when keepExistingVersions is false', () => {
       expect(repinRun.status).toBe(0)
-      expect(sectionOf(repinnedManifest, 'dependencies')[PLUGIN_NAME]).toBe(`^${workspace.packedVersion}`)
-      expect(sectionOf(repinnedManifest, 'devDependencies')[PLUGIN_NAME]).toBe(`^${workspace.packedVersion}`)
+    })
+
+    it('re-pins both sections when keepExistingVersions is false', () => {
+      const pins = {
+        dependencies: sectionOf(repinnedManifest, 'dependencies')[PLUGIN_NAME],
+        devDependencies: sectionOf(repinnedManifest, 'devDependencies')[PLUGIN_NAME],
+      }
+      expect(pins).toEqual({ dependencies: `^${workspace.packedVersion}`, devDependencies: `^${workspace.packedVersion}` })
     })
   })
 
@@ -277,8 +314,11 @@ describe('@hyperfrontend/features Nx plugin', () => {
       { timeout: SCENARIO_TIMEOUT }
     )
 
-    it('exits 0 and previews the staged update', () => {
+    it('exits 0', () => {
       expect(result.status).toBe(0)
+    })
+
+    it('previews the staged update', () => {
       expect(result.output).toContain('UPDATE package.json')
     })
 
@@ -310,8 +350,11 @@ describe('@hyperfrontend/features Nx plugin', () => {
       { timeout: SCENARIO_TIMEOUT }
     )
 
-    it('exits 0 and reports the scaffold summary', () => {
+    it('exits 0', () => {
       expect(result.status).toBe(0)
+    })
+
+    it('reports the scaffold summary', () => {
       expect(result.output).toContain('Scaffolded feature "clock" (created 3, updated 1, kept 0)')
     })
 
@@ -326,15 +369,24 @@ describe('@hyperfrontend/features Nx plugin', () => {
       })
     })
 
-    it('scaffolds the hostee glue module beside the entry file', () => {
+    it('scaffolds the hostee glue module beside the entry file, importing createFeature from the hostee entry', () => {
       expect(glueModule).toContain("import { createFeature } from '@hyperfrontend/features/hostee'")
+    })
+
+    it('imports the contract into the hostee glue module', () => {
       expect(glueModule).toContain("import contract from '../clock.contract'")
+    })
+
+    it('creates the feature from its name, version and contract in the hostee glue module', () => {
       // note: The consumer's prettier config governs the final shape (devkit formatFiles runs in the generator body), so the pin tolerates line breaks and a trailing comma.
       expect(glueModule).toMatch(/export const feature = createFeature\(\{\s*name: 'clock',\s*version: '0\.1\.0',\s*contract,?\s*\}\)/)
     })
 
-    it('stubs a handler per accepted action and an example send per emitted action', () => {
+    it('stubs a handler per accepted action', () => {
       expect(glueModule).toContain("feature.on('ping', (_data: unknown) => {")
+    })
+
+    it('stubs an example send per emitted action', () => {
       expect(glueModule).toContain("// feature.send('tick', undefined)")
     })
 
