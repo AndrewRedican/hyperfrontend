@@ -45,7 +45,7 @@ describe('analyzeCommandDef', () => {
   })
 
   it('opens the help text with the usage line', () => {
-    expect(analyzeCommandDef.getHelp()).toContain('project-scope analyze [path] [options]')
+    expect(analyzeCommandDef.getHelp()).toMatch(/^project-scope analyze \[path\] \[options\]\n/)
   })
 
   it('lists every option in the help text', () => {
@@ -107,7 +107,14 @@ describe('analyzeCommand with include/exclude filters', () => {
     const parsed = JSON.parse(
       analyzeCommand({ path: MINIMAL_PROJECT, include: ['frameworks', 'buildTools'], format: 'json' }).output as string
     )
-    expect(parsed).toEqual(expect.objectContaining({ entryPoints: [], configFiles: [] }))
+    expect(parsed).toEqual(
+      expect.objectContaining({
+        testingFrameworks: [],
+        entryPoints: [],
+        configFiles: [],
+        dependencies: { production: 0, development: 0, peer: 0, optional: 0, total: 0 },
+      })
+    )
   })
 
   it('exits successfully with comma-separated exclude patterns', () => {
@@ -119,7 +126,9 @@ describe('analyzeCommand with include/exclude filters', () => {
     const parsed = JSON.parse(
       analyzeCommand({ path: MINIMAL_PROJECT, exclude: ['dependencies', 'entryPoints'], format: 'json' }).output as string
     )
-    expect(parsed).toEqual(expect.objectContaining({ dependencies: expect.objectContaining({ total: 0 }), entryPoints: [] }))
+    expect(parsed).toEqual(
+      expect.objectContaining({ dependencies: { production: 0, development: 0, peer: 0, optional: 0, total: 0 }, entryPoints: [] })
+    )
   })
 
   it('combines include and exclude filters', () => {

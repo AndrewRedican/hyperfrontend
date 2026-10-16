@@ -280,7 +280,7 @@ describe('typescriptDetector edge cases', () => {
   })
 
   it('does not report strict mode when tsconfig.json is invalid', () => {
-    expect(typescriptDetector(INVALID_TSCONFIG)?.strictMode).not.toBe(true)
+    expect([undefined, false]).toContain(typescriptDetector(INVALID_TSCONFIG)?.strictMode)
   })
 
   it('handles non-existent tsconfig gracefully', () => {
@@ -289,6 +289,8 @@ describe('typescriptDetector edge cases', () => {
       version: '1.0.0',
       devDependencies: { typescript: '^5.0.0' },
     }
-    expect(typescriptDetector('/non/existent/path', pkg)).toEqual(expect.objectContaining({ id: 'typescript', strictMode: undefined }))
+    const result = typescriptDetector('/non/existent/path', pkg)
+
+    expect({ id: result?.id, strictMode: result?.strictMode }).toEqual({ id: 'typescript', strictMode: undefined })
   })
 })

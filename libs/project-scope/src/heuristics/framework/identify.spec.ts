@@ -272,11 +272,12 @@ describe('usesFramework advanced', () => {
     expect(typeof result).toBe('boolean')
   })
 
-  it('checks all framework categories', () => {
-    const hasFrontend = usesFramework(FRONTEND_APP, 'react', 10)
-    const hasBackend = usesFramework(DOCKER_APP, 'express', 10)
+  it('detects a frontend framework category', () => {
+    expect(usesFramework(FRONTEND_APP, 'react', 10)).toBe(true)
+  })
 
-    expect([hasFrontend, hasBackend]).toEqual([true, true])
+  it('detects a backend framework category', () => {
+    expect(usesFramework(DOCKER_APP, 'express', 10)).toBe(true)
   })
 })
 

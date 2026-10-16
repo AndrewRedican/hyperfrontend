@@ -64,7 +64,7 @@ describe('treeCommandDef', () => {
   })
 
   it('opens the help text with the usage line', () => {
-    expect(treeCommandDef.getHelp()).toContain('project-scope tree [path] [options]')
+    expect(treeCommandDef.getHelp()).toMatch(/^project-scope tree \[path\] \[options\]\n/)
   })
 
   it('lists every option in the help text', () => {
@@ -206,9 +206,10 @@ describe('treeCommand edge cases', () => {
 
   it('returns valid JSON structure with all metadata', () => {
     const result = treeCommand({ path: MINIMAL_PROJECT, format: 'json', showSize: true, showModified: true })
-    expect(JSON.parse(result.output as string)).toEqual(
-      expect.objectContaining({ name: 'minimal-project', path: MINIMAL_PROJECT, isDirectory: true, children: expect.any(Array) })
-    )
+    expect({ exitCode: result.exitCode, tree: JSON.parse(result.output as string) }).toEqual({
+      exitCode: 0,
+      tree: expect.objectContaining({ name: 'minimal-project', path: MINIMAL_PROJECT, isDirectory: true, children: expect.any(Array) }),
+    })
   })
 
   it('handles permission denied scenarios (skips inaccessible paths)', () => {
@@ -288,7 +289,7 @@ describe('treeCommand formatSize coverage', () => {
     }
 
     const sizes = findFilesWithSize(parsed)
-    expect(sizes.length).toBeGreaterThan(0)
+    expect({ exitCode: result.exitCode, sizes }).toEqual({ exitCode: 0, sizes: expect.arrayContaining([expect.any(Number)]) })
   })
 })
 

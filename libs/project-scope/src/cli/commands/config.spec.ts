@@ -69,7 +69,7 @@ describe('configCommandDef', () => {
   })
 
   it('opens the help text with the usage line', () => {
-    expect(configCommandDef.getHelp()).toContain('project-scope config [path] [options]')
+    expect(configCommandDef.getHelp()).toMatch(/^project-scope config \[path\] \[options\]\n/)
   })
 
   it('lists every option in the help text', () => {
@@ -101,7 +101,10 @@ describe('configCommandDef', () => {
 
   it('parses -f shorthand for format', () => {
     const result = configCommandDef.execute([MINIMAL_PROJECT, '-f', 'json'], {})
-    expect(JSON.parse(result.output as string)).toEqual(expect.any(Array))
+    expect({ exitCode: result.exitCode, configs: JSON.parse(result.output as string) }).toEqual({
+      exitCode: 0,
+      configs: expect.any(Array),
+    })
   })
 
   it('parses -t shorthand for type', () => {
@@ -118,7 +121,10 @@ describe('configCommand with showContents', () => {
 
   it('shows contents in JSON format', () => {
     const result = configCommand({ path: MINIMAL_PROJECT, showContents: true, format: 'json' })
-    expect(JSON.parse(result.output as string)).toEqual(expect.arrayContaining([expect.objectContaining({ contents: expect.any(Object) })]))
+    expect({ exitCode: result.exitCode, configs: JSON.parse(result.output as string) }).toEqual({
+      exitCode: 0,
+      configs: expect.arrayContaining([expect.objectContaining({ contents: expect.any(Object) })]),
+    })
   })
 
   it('handles config files that cannot be parsed', () => {
@@ -153,17 +159,21 @@ describe('configCommand with showContents', () => {
   it('shows contents in JSON format for env files', () => {
     const largeConfigDir = resolve(FIXTURES_DIR, 'large-config')
     const result = configCommand({ path: largeConfigDir, showContents: true, format: 'json', type: 'env' })
-    expect(JSON.parse(result.output as string)).toEqual(
-      expect.arrayContaining([expect.objectContaining({ type: 'env', contents: expect.any(Object) })])
-    )
+    expect({ exitCode: result.exitCode, configs: JSON.parse(result.output as string) }).toEqual({
+      exitCode: 0,
+      configs: expect.arrayContaining([expect.objectContaining({ type: 'env', contents: expect.any(Object) })]),
+    })
   })
 
   it('includes extends field when present in JSON format for tsconfig with extends', () => {
     const tsconfigExtendsDir = resolve(FIXTURES_DIR, 'tsconfig-extends')
     const result = configCommand({ path: tsconfigExtendsDir, showContents: true, format: 'json', type: 'tsconfig' })
-    expect(JSON.parse(result.output as string)).toEqual(
-      expect.arrayContaining([expect.objectContaining({ type: 'tsconfig', path: 'tsconfig.json', extends: ['./tsconfig.base.json'] })])
-    )
+    expect({ exitCode: result.exitCode, configs: JSON.parse(result.output as string) }).toEqual({
+      exitCode: 0,
+      configs: expect.arrayContaining([
+        expect.objectContaining({ type: 'tsconfig', path: 'tsconfig.json', extends: ['./tsconfig.base.json'] }),
+      ]),
+    })
   })
 
   it('shows config description in text output', () => {
@@ -211,9 +221,10 @@ describe('configCommand edge cases', () => {
   it('shows raw contents in JSON format for JS config files', () => {
     const sveltekitDir = resolve(FIXTURES_DIR, 'sveltekit-app')
     const result = configCommand({ path: sveltekitDir, showContents: true, format: 'json', type: 'svelte' })
-    expect(JSON.parse(result.output as string)).toEqual(
-      expect.arrayContaining([expect.objectContaining({ type: 'svelte', rawContents: expect.any(String) })])
-    )
+    expect({ exitCode: result.exitCode, configs: JSON.parse(result.output as string) }).toEqual({
+      exitCode: 0,
+      configs: expect.arrayContaining([expect.objectContaining({ type: 'svelte', rawContents: expect.any(String) })]),
+    })
   })
 
   it('shows truncation indicator for very long raw content', () => {
@@ -232,9 +243,10 @@ describe('configCommand error handling', () => {
   it('handles configs with unreadable contents in JSON format gracefully', () => {
     const invalidDir = resolve(FIXTURES_DIR, 'invalid-tsconfig')
     const result = configCommand({ path: invalidDir, showContents: true, format: 'json' })
-    expect(JSON.parse(result.output as string)).toEqual(
-      expect.arrayContaining([expect.objectContaining({ error: 'Unable to parse', contents: null })])
-    )
+    expect({ exitCode: result.exitCode, configs: JSON.parse(result.output as string) }).toEqual({
+      exitCode: 0,
+      configs: expect.arrayContaining([expect.objectContaining({ error: 'Unable to parse', contents: null })]),
+    })
   })
 
   it('handles configCommand with path that causes detectConfigs to throw', () => {

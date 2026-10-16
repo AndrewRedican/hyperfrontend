@@ -185,7 +185,10 @@ describe('core/cache', () => {
         const presentBeforeExpiry = cache.has('key')
 
         jest.advanceTimersByTime(1001)
-        expect([presentBeforeExpiry, cache.has('key')]).toEqual([true, false])
+        expect({ presentBeforeExpiry, presentAfterExpiry: cache.has('key') }).toEqual({
+          presentBeforeExpiry: true,
+          presentAfterExpiry: false,
+        })
       })
 
       it('refreshes TTL on update', () => {

@@ -229,7 +229,7 @@ describe('vfs/FsTree - symlink security', () => {
       rmSync(targetPath)
     })
 
-    it('throws generic error when symlink validation fails unexpectedly', () => {
+    it('returns null when reading a symlink whose in-root target does not exist', () => {
       const tree = createFsTree(TEST_DIR)
       const linkPath = join(TEST_DIR, 'broken-symlink.txt')
 

@@ -62,9 +62,10 @@ describe('configCommand error branches', () => {
 
       const result = configCommand({ path: MINIMAL_PROJECT, showContents: true, format: 'json' })
 
-      expect(JSON.parse(result.output as string)).toEqual(
-        expect.arrayContaining([expect.objectContaining({ error: 'Unable to parse', contents: null })])
-      )
+      expect({ exitCode: result.exitCode, configs: JSON.parse(result.output as string) }).toEqual({
+        exitCode: 0,
+        configs: expect.arrayContaining([expect.objectContaining({ error: 'Unable to parse', contents: null })]),
+      })
     })
   })
 

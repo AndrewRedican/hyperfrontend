@@ -560,12 +560,11 @@ describe('vfs/FsTree', () => {
     describe('read after delete', () => {
       it('returns null for file marked as deleted in buffer', () => {
         const tree = createFsTree(TEST_DIR)
-        const observed: unknown[] = [tree.exists('package.json')]
+        const existedBefore = tree.exists('package.json')
 
         tree.delete('package.json')
-        observed.push(tree.read('package.json'))
 
-        expect(observed).toEqual([true, null])
+        expect({ existedBefore, readAfterDelete: tree.read('package.json') }).toEqual({ existedBefore: true, readAfterDelete: null })
       })
 
       it('returns null for file deleted then read with encoding', () => {

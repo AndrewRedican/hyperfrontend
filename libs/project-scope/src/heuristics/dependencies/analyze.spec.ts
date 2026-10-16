@@ -328,10 +328,10 @@ describe('buildDependencyGraph with directory imports', () => {
     const graph = buildDependencyGraph(DIRECTORY_IMPORTS)
 
     const indexNode = [...graph.nodes.values()].find((n) => n.path === 'src/index.ts')
-    const hasUtilsDep = indexNode?.dependencies.some((d) => d.includes('utils/index.ts'))
-    const hasHelpersDep = indexNode?.dependencies.some((d) => d.includes('helpers/index.ts'))
 
-    expect([hasUtilsDep, hasHelpersDep]).toEqual([true, true])
+    expect(indexNode?.dependencies).toEqual(
+      expect.arrayContaining([expect.stringContaining('utils/index.ts'), expect.stringContaining('helpers/index.ts')])
+    )
   })
 })
 

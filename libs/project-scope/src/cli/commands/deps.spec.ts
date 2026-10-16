@@ -108,7 +108,7 @@ describe('depsCommandDef', () => {
   })
 
   it('opens the help text with the usage line', () => {
-    expect(depsCommandDef.getHelp()).toContain('project-scope deps [path] [options]')
+    expect(depsCommandDef.getHelp()).toMatch(/^project-scope deps \[path\] \[options\]\n/)
   })
 
   it('lists every option in the help text', () => {

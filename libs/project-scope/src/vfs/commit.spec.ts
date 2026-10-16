@@ -194,23 +194,21 @@ describe('vfs/commit', () => {
     it('restores disk state visibility', () => {
       const tree = createFsTree(TEST_DIR)
       tree.delete('package.json')
-      const visible = [tree.exists('package.json')]
+      const beforeRollback = tree.exists('package.json')
 
       rollbackChanges(tree)
-      visible.push(tree.exists('package.json'))
 
-      expect(visible).toEqual([false, true])
+      expect({ beforeRollback, afterRollback: tree.exists('package.json') }).toEqual({ beforeRollback: false, afterRollback: true })
     })
 
     it('removes buffered writes', () => {
       const tree = createFsTree(TEST_DIR)
       tree.write('new.txt', 'content')
-      const visible = [tree.exists('new.txt')]
+      const beforeRollback = tree.exists('new.txt')
 
       rollbackChanges(tree)
-      visible.push(tree.exists('new.txt'))
 
-      expect(visible).toEqual([true, false])
+      expect({ beforeRollback, afterRollback: tree.exists('new.txt') }).toEqual({ beforeRollback: true, afterRollback: false })
     })
   })
 

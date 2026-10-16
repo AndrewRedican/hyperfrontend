@@ -100,7 +100,7 @@ describe('detectProjectType', () => {
       detectProjectType(MINIMAL_PROJECT, { skipTechDetection: false })
       const full = Date.now() - start2
 
-      expect([skip, full]).toEqual([expect.any(Number), expect.any(Number)])
+      expect({ skip, full }).toEqual({ skip: expect.any(Number), full: expect.any(Number) })
     })
   })
 

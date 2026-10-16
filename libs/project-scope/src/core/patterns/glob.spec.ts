@@ -40,10 +40,8 @@ describe('core/patterns/glob', () => {
     })
 
     describe('double asterisk (**)', () => {
-      it('matches any number of directories', () => {
-        for (const path of ['src/lib/utils/file.ts', 'src/file.ts']) {
-          expect(matchGlobPattern(path, 'src/**/file.ts')).toBe(true)
-        }
+      it.each(['src/lib/utils/file.ts', 'src/file.ts'])('matches %s against src/**/file.ts', (path: string) => {
+        expect(matchGlobPattern(path, 'src/**/file.ts')).toBe(true)
       })
 
       it('matches at beginning', () => {
@@ -78,38 +76,30 @@ describe('core/patterns/glob', () => {
     })
 
     describe('braces {a,b,c}', () => {
-      it('matches any alternative', () => {
-        for (const path of ['file.ts', 'file.js']) {
-          expect(matchGlobPattern(path, 'file.{ts,js}')).toBe(true)
-        }
+      it.each(['file.ts', 'file.js'])('matches %s against file.{ts,js}', (path: string) => {
+        expect(matchGlobPattern(path, 'file.{ts,js}')).toBe(true)
       })
 
       it('rejects an extension outside the alternatives', () => {
         expect(matchGlobPattern('file.css', 'file.{ts,js}')).toBe(false)
       })
 
-      it('works with multiple alternatives', () => {
-        for (const path of ['file.ts', 'file.tsx']) {
-          expect(matchGlobPattern(path, 'file.{ts,js,jsx,tsx}')).toBe(true)
-        }
+      it.each(['file.ts', 'file.tsx'])('matches %s against file.{ts,js,jsx,tsx}', (path: string) => {
+        expect(matchGlobPattern(path, 'file.{ts,js,jsx,tsx}')).toBe(true)
       })
     })
 
     describe('complex patterns', () => {
-      it('handles ** with * together', () => {
-        for (const path of ['src/lib/file.spec.ts', 'src/file.spec.ts']) {
-          expect(matchGlobPattern(path, 'src/**/*.spec.ts')).toBe(true)
-        }
+      it.each(['src/lib/file.spec.ts', 'src/file.spec.ts'])('matches %s against src/**/*.spec.ts', (path: string) => {
+        expect(matchGlobPattern(path, 'src/**/*.spec.ts')).toBe(true)
       })
 
       it('handles multiple placeholders', () => {
         expect(matchGlobPattern('src/lib/test.spec.ts', 'src/*/*.*.ts')).toBe(true)
       })
 
-      it('handles braces with wildcards', () => {
-        for (const path of ['src/file.spec.ts', 'src/file.test.ts']) {
-          expect(matchGlobPattern(path, 'src/*.{spec,test}.ts')).toBe(true)
-        }
+      it.each(['src/file.spec.ts', 'src/file.test.ts'])('matches %s against src/*.{spec,test}.ts', (path: string) => {
+        expect(matchGlobPattern(path, 'src/*.{spec,test}.ts')).toBe(true)
       })
     })
 

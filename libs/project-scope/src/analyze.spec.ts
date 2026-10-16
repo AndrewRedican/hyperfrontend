@@ -117,6 +117,7 @@ describe('analyzeProject', () => {
           testingFrameworks: [],
           entryPoints: [],
           configFiles: [],
+          dependencies: { production: 0, development: 0, peer: 0, optional: 0, total: 0 },
         })
       )
     })
@@ -128,7 +129,7 @@ describe('analyzeProject', () => {
         exclude: ['dependencies'],
       })
 
-      expect(result.dependencies.total).toBe(0)
+      expect(result.dependencies).toEqual({ production: 0, development: 0, peer: 0, optional: 0, total: 0 })
     })
 
     it('still detects the project type when dependencies are excluded', () => {

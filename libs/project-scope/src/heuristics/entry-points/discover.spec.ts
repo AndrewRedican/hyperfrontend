@@ -76,15 +76,17 @@ describe('discoverEntryPoints', () => {
 
   describe('options', () => {
     it('respects includeFrameworkEntries option', () => {
-      for (const includeFrameworkEntries of [true, false]) {
-        expect(discoverEntryPoints(MINIMAL_PROJECT, { includeFrameworkEntries })).toEqual(expect.any(Array))
-      }
+      const withFramework = discoverEntryPoints(MINIMAL_PROJECT, { includeFrameworkEntries: true })
+      const withoutFramework = discoverEntryPoints(MINIMAL_PROJECT, { includeFrameworkEntries: false })
+
+      expect({ withFramework, withoutFramework }).toEqual({ withFramework: expect.any(Array), withoutFramework: expect.any(Array) })
     })
 
     it('respects maxDepth option', () => {
-      for (const maxDepth of [1, 10]) {
-        expect(discoverEntryPoints(MINIMAL_PROJECT, { maxDepth })).toEqual(expect.any(Array))
-      }
+      const shallow = discoverEntryPoints(MINIMAL_PROJECT, { maxDepth: 1 })
+      const deep = discoverEntryPoints(MINIMAL_PROJECT, { maxDepth: 10 })
+
+      expect({ shallow, deep }).toEqual({ shallow: expect.any(Array), deep: expect.any(Array) })
     })
 
     it('respects skipCache option', () => {
@@ -131,7 +133,7 @@ describe('discoverEntryPoints', () => {
 
       const cliEntry = result.find((e) => e.path === 'bin/cli.js')
       const toolEntry = result.find((e) => e.path === 'bin/tool.js')
-      expect([cliEntry, toolEntry]).toEqual([expect.objectContaining({ type: 'cli' }), expect.objectContaining({ type: 'cli' })])
+      expect({ 'bin/cli.js': cliEntry?.type, 'bin/tool.js': toolEntry?.type }).toEqual({ 'bin/cli.js': 'cli', 'bin/tool.js': 'cli' })
     })
 
     it('detects exports field with string values', () => {

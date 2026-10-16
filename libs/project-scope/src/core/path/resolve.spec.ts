@@ -34,6 +34,10 @@ describe('core/path/resolve', () => {
 
   describe('resolvePath', () => {
     it('resolves to absolute path', () => {
+      expect(isAbsolute(resolvePath('a', 'b', 'c'))).toBe(true)
+    })
+
+    it('resolves segments against the working directory', () => {
       expect(resolvePath('a', 'b', 'c')).toBe(normalizePath(resolve('a', 'b', 'c')))
     })
 
