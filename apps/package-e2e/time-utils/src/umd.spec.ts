@@ -41,8 +41,7 @@ describe('@hyperfrontend/time-utils UMD bundle', () => {
 
     const timer = global.createTimer(() => {}, 1000)
 
-    expect(timer).toBeDefined()
-    expect(typeof timer.pause).toBe('function')
+    expect(timer).toEqual(expect.objectContaining({ pause: expect.any(Function) }))
 
     timer.pause()
   })
@@ -51,9 +50,12 @@ describe('@hyperfrontend/time-utils UMD bundle', () => {
     const bundleCode = loadBundleCode(bundlePath)
     const exports = requireUmdBundle(bundleCode) as Record<string, unknown>
 
-    expect(exports).toBeDefined()
-    expect(typeof exports.sleep).toBe('function')
-    expect(typeof exports.createTimer).toBe('function')
-    expect(typeof exports.createClock).toBe('function')
+    expect(exports).toEqual(
+      expect.objectContaining({
+        sleep: expect.any(Function),
+        createTimer: expect.any(Function),
+        createClock: expect.any(Function),
+      })
+    )
   })
 })
