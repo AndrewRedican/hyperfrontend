@@ -16,6 +16,17 @@ describe('@hyperfrontend/function-utils ESM', () => {
     expect(typeof createRunOnceFunction).toBe('function')
   })
 
+  it('creates a run-once function that returns the result on every call', async () => {
+    const { createRunOnceFunction } = await import('@hyperfrontend/function-utils')
+
+    const fn = createRunOnceFunction(() => 'result')
+
+    const firstCall = fn()
+    const secondCall = fn()
+
+    expect({ firstCall, secondCall }).toEqual({ firstCall: 'result', secondCall: 'result' })
+  })
+
   it('creates a run-once function that executes only once', async () => {
     const { createRunOnceFunction } = await import('@hyperfrontend/function-utils')
 
@@ -25,20 +36,29 @@ describe('@hyperfrontend/function-utils ESM', () => {
       return 'result'
     })
 
-    expect(fn()).toBe('result')
-    expect(fn()).toBe('result')
+    fn()
+    fn()
+
     expect(callCount).toBe(1)
   })
 
   it('exports noop', async () => {
     const { noop } = await import('@hyperfrontend/function-utils')
     expect(typeof noop).toBe('function')
+  })
+
+  it('returns undefined from noop', async () => {
+    const { noop } = await import('@hyperfrontend/function-utils')
     expect(noop()).toBeUndefined()
   })
 
   it('exports createErrorIgnoringFunction', async () => {
     const { createErrorIgnoringFunction } = await import('@hyperfrontend/function-utils')
     expect(typeof createErrorIgnoringFunction).toBe('function')
+  })
+
+  it('creates an error-ignoring function that swallows the error its target throws', async () => {
+    const { createErrorIgnoringFunction } = await import('@hyperfrontend/function-utils')
 
     const safeFn = createErrorIgnoringFunction(() => {
       throw new Error('test error')
@@ -49,6 +69,10 @@ describe('@hyperfrontend/function-utils ESM', () => {
   it('exports createConditionalExecutionFunction', async () => {
     const { createConditionalExecutionFunction } = await import('@hyperfrontend/function-utils')
     expect(typeof createConditionalExecutionFunction).toBe('function')
+  })
+
+  it('creates a conditional function that executes its target when the condition holds', async () => {
+    const { createConditionalExecutionFunction } = await import('@hyperfrontend/function-utils')
 
     let executed = false
     const conditionalFn = createConditionalExecutionFunction(
