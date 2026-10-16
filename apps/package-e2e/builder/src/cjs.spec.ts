@@ -31,16 +31,39 @@ describe('@hyperfrontend/builder CJS', () => {
     }
   })
 
-  it('resolves the /presets subpath export with working predicates', () => {
+  it('resolves the /presets subpath export with byNames and byPrefix functions', () => {
     const { byNames, byPrefix } = require('@hyperfrontend/builder/presets')
-    expect(typeof byNames).toBe('function')
-    expect(typeof byPrefix).toBe('function')
+    expect({ byNames, byPrefix }).toEqual({ byNames: expect.any(Function), byPrefix: expect.any(Function) })
+  })
+
+  it('builds a byNames predicate from the /presets subpath that accepts a listed name', () => {
+    const { byNames } = require('@hyperfrontend/builder/presets')
     const isNamed = byNames(['internal-utils'])
     expect(isNamed('internal-utils')).toBe(true)
+  })
+
+  it('builds a byNames predicate from the /presets subpath that rejects an unlisted name', () => {
+    const { byNames } = require('@hyperfrontend/builder/presets')
+    const isNamed = byNames(['internal-utils'])
     expect(isNamed('rollup')).toBe(false)
+  })
+
+  it('builds a byPrefix predicate from the /presets subpath that accepts a name under the prefix', () => {
+    const { byPrefix } = require('@hyperfrontend/builder/presets')
     const isScoped = byPrefix('@hyperfrontend/')
     expect(isScoped('@hyperfrontend/logging')).toBe(true)
+  })
+
+  it('builds a byPrefix predicate from the /presets subpath that rejects a name outside the prefix', () => {
+    const { byPrefix } = require('@hyperfrontend/builder/presets')
+    const isScoped = byPrefix('@hyperfrontend/')
     expect(isScoped('rollup')).toBe(false)
+  })
+
+  it('declares the hf-build bin as a path string in its package.json', () => {
+    const pkg = require('@hyperfrontend/builder/package.json')
+    const binRelative = pkg.bin['hf-build']
+    expect(typeof binRelative).toBe('string')
   })
 
   it('exposes a runnable hf-build bin (`--help` exits 0)', () => {
@@ -48,7 +71,6 @@ describe('@hyperfrontend/builder CJS', () => {
     const { dirname, join } = require('node:path')
     const pkg = require('@hyperfrontend/builder/package.json')
     const binRelative = pkg.bin['hf-build']
-    expect(typeof binRelative).toBe('string')
     const packageDir = dirname(require.resolve('@hyperfrontend/builder/package.json'))
     const binPath = join(packageDir, binRelative)
     // execFileSync throws on a non-zero exit code, so a clean return asserts exit 0.
