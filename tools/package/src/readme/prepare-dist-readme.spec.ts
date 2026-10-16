@@ -202,12 +202,24 @@ describe('prepareDistReadme', () => {
     expect([prepareDistReadme(optionsFor(fixture)), existsSync(join(fixture.outputPath, 'README.md'))]).toEqual([undefined, false])
   })
 
-  it('removes the copied readme from the output when the transform fails', () => {
+  it('names the region and the missing scene when the transform fails', () => {
     const fixture = workspace(SOURCE, BANNER_MEDIA)
     expect(() => prepareDistReadme(optionsFor(fixture))).toThrow(
       /Could not prepare .*README\.md: Region "cycles" \(line 5\): no scene named "data-utils-circular"/
     )
-    expect([existsSync(join(fixture.outputPath, 'README.md')), existsSync(join(fixture.projectRoot, 'README.md'))]).toEqual([false, true])
+  })
+
+  it('removes the copied readme from the output when the transform fails', () => {
+    const fixture = workspace(SOURCE, BANNER_MEDIA)
+    try {
+      prepareDistReadme(optionsFor(fixture))
+    } catch {
+      // why: the failure itself is asserted in its own test; this one reads what the failure left on disk
+    }
+    expect({
+      output: existsSync(join(fixture.outputPath, 'README.md')),
+      source: existsSync(join(fixture.projectRoot, 'README.md')),
+    }).toEqual({ output: false, source: true })
   })
 
   it('refuses a package whose banner has not been recorded', () => {

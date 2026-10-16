@@ -50,8 +50,11 @@ describe('renderLibraryPage', () => {
     )
   })
 
-  it('gives a utility its manifest slug for the metadata and its last segment for the page', () => {
+  it('gives a utility its manifest slug for the metadata', () => {
     expect(renderLibraryPage(JSON_UTILS)).toEqual(expect.stringContaining("getLibraryMetadata('json-utils')"))
+  })
+
+  it('gives a utility its last segment for the page', () => {
     expect(renderLibraryPage(JSON_UTILS)).toEqual(expect.stringContaining('      slug="json"\n      category="utils"'))
   })
 })
