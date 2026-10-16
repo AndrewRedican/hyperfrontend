@@ -16,7 +16,7 @@ describe('@hyperfrontend/list-utils ESM', () => {
     expect(typeof createFifoList).toBe('function')
   })
 
-  it('creates a FIFO list that works correctly', async () => {
+  it('creates a FIFO list that counts every pushed item', async () => {
     const { createFifoList } = await import('@hyperfrontend/list-utils')
 
     const list = createFifoList()
@@ -27,7 +27,32 @@ describe('@hyperfrontend/list-utils ESM', () => {
     list.push(item2)
 
     expect(list.size()).toBe(2)
+  })
+
+  it('creates a FIFO list that pulls the first pushed item first', async () => {
+    const { createFifoList } = await import('@hyperfrontend/list-utils')
+
+    const list = createFifoList()
+    const item1 = { id: 1 }
+    const item2 = { id: 2 }
+
+    list.push(item1)
+    list.push(item2)
+
     expect(list.pull()).toBe(item1) // First in, first out
+  })
+
+  it('creates a FIFO list that no longer counts a pulled item', async () => {
+    const { createFifoList } = await import('@hyperfrontend/list-utils')
+
+    const list = createFifoList()
+    const item1 = { id: 1 }
+    const item2 = { id: 2 }
+
+    list.push(item1)
+    list.push(item2)
+    list.pull()
+
     expect(list.size()).toBe(1)
   })
 
@@ -36,7 +61,7 @@ describe('@hyperfrontend/list-utils ESM', () => {
     expect(typeof createLifoList).toBe('function')
   })
 
-  it('creates a LIFO list that works correctly', async () => {
+  it('creates a LIFO list that counts every pushed item', async () => {
     const { createLifoList } = await import('@hyperfrontend/list-utils')
 
     const list = createLifoList()
@@ -47,7 +72,32 @@ describe('@hyperfrontend/list-utils ESM', () => {
     list.push(item2)
 
     expect(list.size()).toBe(2)
+  })
+
+  it('creates a LIFO list that pulls the last pushed item first', async () => {
+    const { createLifoList } = await import('@hyperfrontend/list-utils')
+
+    const list = createLifoList()
+    const item1 = { id: 1 }
+    const item2 = { id: 2 }
+
+    list.push(item1)
+    list.push(item2)
+
     expect(list.pull()).toBe(item2) // Last in, first out
+  })
+
+  it('creates a LIFO list that no longer counts a pulled item', async () => {
+    const { createLifoList } = await import('@hyperfrontend/list-utils')
+
+    const list = createLifoList()
+    const item1 = { id: 1 }
+    const item2 = { id: 2 }
+
+    list.push(item1)
+    list.push(item2)
+    list.pull()
+
     expect(list.size()).toBe(1)
   })
 

@@ -32,7 +32,7 @@ describe('@hyperfrontend/list-utils IIFE bundle', () => {
     expect(typeof global.createFifoList).toBe('function')
   })
 
-  it('creates a working FIFO list from IIFE bundle', () => {
+  it('creates a FIFO list from IIFE bundle that counts every pushed item', () => {
     const bundleCode = loadBundleCode(bundlePath)
     const global = executeBundleInWindow(bundleCode, 'HyperfrontendListUtils') as {
       createFifoList: <T extends object>() => {
@@ -50,6 +50,25 @@ describe('@hyperfrontend/list-utils IIFE bundle', () => {
     list.push(item2)
 
     expect(list.size()).toBe(2)
+  })
+
+  it('creates a FIFO list from IIFE bundle that pulls the first pushed item first', () => {
+    const bundleCode = loadBundleCode(bundlePath)
+    const global = executeBundleInWindow(bundleCode, 'HyperfrontendListUtils') as {
+      createFifoList: <T extends object>() => {
+        push: (item: T) => void
+        pull: () => T
+        size: () => number
+      }
+    }
+
+    const list = global.createFifoList<{ id: number }>()
+    const item1 = { id: 1 }
+    const item2 = { id: 2 }
+
+    list.push(item1)
+    list.push(item2)
+
     expect(list.pull()).toBe(item1)
   })
 
