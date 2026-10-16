@@ -1,4 +1,3 @@
-import type { ParsedSection } from './lib-readme-structure'
 import { join } from 'node:path'
 import { after as afterAll } from 'node:test'
 import { describe, expect, it, jest } from '@hyperfrontend/testing'
@@ -552,11 +551,15 @@ Content 2
 
 ## Next Parent`
       const [parent, child1, child2] = parseMarkdownSections(content)
-      const insideParent = (child: ParsedSection) => child.startLine > parent.startLine && child.startLine < parent.endLine
+      const childPlacements = [child1, child2].map((child) => ({
+        title: child.title,
+        startsAfterParentStart: child.startLine > parent.startLine,
+        startsBeforeParentEnd: child.startLine < parent.endLine,
+      }))
 
-      expect([child1, child2].map((child) => ({ title: child.title, insideParent: insideParent(child) }))).toEqual([
-        { title: 'Child 1', insideParent: true },
-        { title: 'Child 2', insideParent: true },
+      expect(childPlacements).toEqual([
+        { title: 'Child 1', startsAfterParentStart: true, startsBeforeParentEnd: true },
+        { title: 'Child 2', startsAfterParentStart: true, startsBeforeParentEnd: true },
       ])
     })
   })
