@@ -52,9 +52,12 @@ describe('@hyperfrontend/immutable-api-utils UMD bundle', () => {
     const bundleCode = loadBundleCode(bundlePath)
     const exports = requireUmdBundle(bundleCode) as Record<string, unknown>
 
-    expect(exports).toBeDefined()
-    expect(typeof exports.lockedPropertyDescriptors).toBe('function')
-    expect(typeof exports.lockedProps).toBe('function')
-    expect(typeof exports.locked).toBe('function')
+    expect(exports).toEqual(
+      expect.objectContaining({
+        lockedPropertyDescriptors: expect.any(Function),
+        lockedProps: expect.any(Function),
+        locked: expect.any(Function),
+      })
+    )
   })
 })
