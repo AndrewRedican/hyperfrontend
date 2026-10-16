@@ -23,15 +23,16 @@ describe('normalizeToBaseTimeWindow', () => {
     expect(normalizeToBaseTimeWindow(time, baseTimeWindow)).toEqual(expectedTime)
   })
 
-  it('handles null or invalid time input', () => {
-    expect(() => normalizeToBaseTimeWindow(null as any, 30)).toThrow()
-    expect(() => normalizeToBaseTimeWindow(new Date('invalid-date'), 30)).toThrow()
+  it.each([
+    ['null', null as any],
+    ['an invalid date', new Date('invalid-date')],
+  ])('throws for %s as the time input', (_label: string, time: Date) => {
+    expect(() => normalizeToBaseTimeWindow(time, 30)).toThrow()
   })
 
-  it('handles zero or negative base time window', () => {
+  it.each([0, -30])('throws for the base time window %s', (baseTimeWindow: number) => {
     const time = new Date('2024-01-17T00:30:00Z')
-    expect(() => normalizeToBaseTimeWindow(time, 0)).toThrow()
-    expect(() => normalizeToBaseTimeWindow(time, -30)).toThrow()
+    expect(() => normalizeToBaseTimeWindow(time, baseTimeWindow)).toThrow()
   })
 
   it('rejects a NaN base time window', () => {

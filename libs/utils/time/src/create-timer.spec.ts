@@ -16,9 +16,9 @@ describe('createTimer', () => {
   it('correctly calls the callback after the specified delay', async () => {
     timer.resume()
     await sleep(100)
-    expect(callback).not.toHaveBeenCalled()
+    const callsBeforeDelay = callback.mock.calls.length
     await sleep(150)
-    expect(callback).toHaveBeenCalled()
+    expect({ callsBeforeDelay, callsAfterDelay: callback.mock.calls.length }).toEqual({ callsBeforeDelay: 0, callsAfterDelay: 1 })
   })
 
   it('pauses and does not call the callback if not resumed in time', async () => {
@@ -34,9 +34,12 @@ describe('createTimer', () => {
     await sleep(100)
     timer.reset(300)
     await sleep(250)
-    expect(callback).not.toHaveBeenCalled()
+    const callsBeforeNewDelay = callback.mock.calls.length
     await sleep(100)
-    expect(callback).toHaveBeenCalled()
+    expect({ callsBeforeNewDelay, callsAfterNewDelay: callback.mock.calls.length }).toEqual({
+      callsBeforeNewDelay: 0,
+      callsAfterNewDelay: 1,
+    })
   })
 
   it('resets and calls the callback after the same delay', async () => {
@@ -44,9 +47,9 @@ describe('createTimer', () => {
     await sleep(100)
     timer.reset()
     await sleep(100)
-    expect(callback).not.toHaveBeenCalled()
+    const callsBeforeDelay = callback.mock.calls.length
     await sleep(150)
-    expect(callback).toHaveBeenCalled()
+    expect({ callsBeforeDelay, callsAfterDelay: callback.mock.calls.length }).toEqual({ callsBeforeDelay: 0, callsAfterDelay: 1 })
   })
 
   it('does nothing when pause is called while already paused', async () => {

@@ -20,8 +20,7 @@ describe('createClock', () => {
     await sleep(350)
     clock.stop()
 
-    expect(callback).toHaveBeenCalledTimes(3)
-    expect(callback).toHaveBeenCalledWith(expect.any(Date))
+    expect(callback.mock.calls).toEqual([[expect.any(Date)], [expect.any(Date)], [expect.any(Date)]])
   })
 
   it('stops notifying subscribers after being stopped', async () => {
