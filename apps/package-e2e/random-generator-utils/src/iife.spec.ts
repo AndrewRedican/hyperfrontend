@@ -33,7 +33,7 @@ describe('@hyperfrontend/random-generator-utils IIFE bundle', () => {
     expect(typeof global.uuidV4).toBe('function')
   })
 
-  it('generates valid UUIDv4 from IIFE bundle', () => {
+  it('generates a UUIDv4 as a string from IIFE bundle', () => {
     const bundleCode = loadBundleCode(bundlePath)
     const global = executeBundleInWindow(bundleCode, 'HyperfrontendRandomGenerator') as {
       uuidV4: () => string
@@ -42,6 +42,16 @@ describe('@hyperfrontend/random-generator-utils IIFE bundle', () => {
 
     const uuid = global.uuidV4()
     expect(typeof uuid).toBe('string')
+  })
+
+  it('generates a UUIDv4 from IIFE bundle that isUuidV4 accepts', () => {
+    const bundleCode = loadBundleCode(bundlePath)
+    const global = executeBundleInWindow(bundleCode, 'HyperfrontendRandomGenerator') as {
+      uuidV4: () => string
+      isUuidV4: (str: string) => boolean
+    }
+
+    const uuid = global.uuidV4()
     expect(global.isUuidV4(uuid)).toBe(true)
   })
 
@@ -52,9 +62,25 @@ describe('@hyperfrontend/random-generator-utils IIFE bundle', () => {
     }
 
     expect(typeof global.randomUniform).toBe('function')
+  })
+
+  it('draws a uniform value no lower than the minimum from IIFE bundle', () => {
+    const bundleCode = loadBundleCode(bundlePath)
+    const global = executeBundleInWindow(bundleCode, 'HyperfrontendRandomGenerator') as {
+      randomUniform: (min: number, max: number) => number
+    }
 
     const value = global.randomUniform(0, 10)
     expect(value).toBeGreaterThanOrEqual(0)
+  })
+
+  it('draws a uniform value below the maximum from IIFE bundle', () => {
+    const bundleCode = loadBundleCode(bundlePath)
+    const global = executeBundleInWindow(bundleCode, 'HyperfrontendRandomGenerator') as {
+      randomUniform: (min: number, max: number) => number
+    }
+
+    const value = global.randomUniform(0, 10)
     expect(value).toBeLessThan(10)
   })
 })
