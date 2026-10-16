@@ -101,8 +101,7 @@ describe('text', () => {
 
       const result = await promise
 
-      expect(result.result).toBe(PromptResult.Submitted)
-      expect(result.value).toBe('hello')
+      expect(result).toEqual({ result: PromptResult.Submitted, value: 'hello' })
     })
 
     it('returns empty string when submitted with no input', async () => {
@@ -113,8 +112,7 @@ describe('text', () => {
 
       const result = await promise
 
-      expect(result.result).toBe(PromptResult.Submitted)
-      expect(result.value).toBe('')
+      expect(result).toEqual({ result: PromptResult.Submitted, value: '' })
     })
 
     it('returns initial value when submitted with no input', async () => {
@@ -125,8 +123,7 @@ describe('text', () => {
 
       const result = await promise
 
-      expect(result.result).toBe(PromptResult.Submitted)
-      expect(result.value).toBe('default')
+      expect(result).toEqual({ result: PromptResult.Submitted, value: 'default' })
     })
 
     it('submits text and Enter delivered in one chunk', async () => {
@@ -157,8 +154,7 @@ describe('text', () => {
 
       const result = await promise
 
-      expect(result.result).toBe(PromptResult.Cancelled)
-      expect(result.value).toBeUndefined()
+      expect(result).toEqual({ result: PromptResult.Cancelled, value: undefined })
     })
 
     it('returns cancelled result after partial input', async () => {
@@ -169,8 +165,7 @@ describe('text', () => {
 
       const result = await promise
 
-      expect(result.result).toBe(PromptResult.Cancelled)
-      expect(result.value).toBeUndefined()
+      expect(result).toEqual({ result: PromptResult.Cancelled, value: undefined })
     })
 
     it('returns cancelled result when the input ends', async () => {
@@ -192,8 +187,7 @@ describe('text', () => {
 
       const result = await promise
 
-      expect(result.result).toBe(PromptResult.Submitted)
-      expect(result.value).toBe('ab')
+      expect(result).toEqual({ result: PromptResult.Submitted, value: 'ab' })
     })
 
     it('handles alternate backspace character', async () => {
@@ -204,8 +198,7 @@ describe('text', () => {
 
       const result = await promise
 
-      expect(result.result).toBe(PromptResult.Submitted)
-      expect(result.value).toBe('x')
+      expect(result).toEqual({ result: PromptResult.Submitted, value: 'x' })
     })
 
     it('ignores backspace at start', async () => {
@@ -216,8 +209,7 @@ describe('text', () => {
 
       const result = await promise
 
-      expect(result.result).toBe(PromptResult.Submitted)
-      expect(result.value).toBe('a')
+      expect(result).toEqual({ result: PromptResult.Submitted, value: 'a' })
     })
 
     it('handles left arrow movement', async () => {
@@ -228,8 +220,7 @@ describe('text', () => {
 
       const result = await promise
 
-      expect(result.result).toBe(PromptResult.Submitted)
-      expect(result.value).toBe('abc')
+      expect(result).toEqual({ result: PromptResult.Submitted, value: 'abc' })
     })
 
     it('handles right arrow movement', async () => {
@@ -240,8 +231,7 @@ describe('text', () => {
 
       const result = await promise
 
-      expect(result.result).toBe(PromptResult.Submitted)
-      expect(result.value).toBe('abc')
+      expect(result).toEqual({ result: PromptResult.Submitted, value: 'abc' })
     })
 
     it('ignores left arrow at start', async () => {
@@ -252,8 +242,7 @@ describe('text', () => {
 
       const result = await promise
 
-      expect(result.result).toBe(PromptResult.Submitted)
-      expect(result.value).toBe('a')
+      expect(result).toEqual({ result: PromptResult.Submitted, value: 'a' })
     })
 
     it('ignores right arrow at end', async () => {
@@ -264,13 +253,12 @@ describe('text', () => {
 
       const result = await promise
 
-      expect(result.result).toBe(PromptResult.Submitted)
-      expect(result.value).toBe('ab')
+      expect(result).toEqual({ result: PromptResult.Submitted, value: 'ab' })
     })
   })
 
   describe('validation', () => {
-    it('rejects invalid input and shows error', async () => {
+    it('rejects invalid input until the value passes validation', async () => {
       const config = createConfig({
         validate: (value) => (value.length < 3 ? 'Too short' : undefined),
       })
@@ -281,13 +269,20 @@ describe('text', () => {
 
       const result = await promise
 
-      expect(result.result).toBe(PromptResult.Submitted)
-      expect(result.value).toBe('abc')
+      expect(result).toEqual({ result: PromptResult.Submitted, value: 'abc' })
+    })
 
-      // why: error should have been displayed
-      const data = output.getWrittenData()
+    it('shows the validation error for rejected input', async () => {
+      const config = createConfig({
+        validate: (value) => (value.length < 3 ? 'Too short' : undefined),
+      })
+      const promise = text(config)
 
-      expect(data).toContain('Too short')
+      // why: first submit fails validation, second succeeds
+      input.enqueueKeys(['a', Key.Enter, 'b', 'c', Key.Enter])
+      await promise
+
+      expect(output.getWrittenData()).toContain('Too short')
     })
 
     it('accepts valid input immediately', async () => {
@@ -300,8 +295,7 @@ describe('text', () => {
 
       const result = await promise
 
-      expect(result.result).toBe(PromptResult.Submitted)
-      expect(result.value).toBe('a@b')
+      expect(result).toEqual({ result: PromptResult.Submitted, value: 'a@b' })
     })
 
     it('validates initial value', async () => {
@@ -316,8 +310,7 @@ describe('text', () => {
 
       const result = await promise
 
-      expect(result.result).toBe(PromptResult.Submitted)
-      expect(result.value).toBe('abc')
+      expect(result).toEqual({ result: PromptResult.Submitted, value: 'abc' })
     })
   })
 
@@ -340,11 +333,8 @@ describe('text', () => {
       input.enqueueKeys([Key.Backspace, Key.Backspace, Key.Backspace, Key.Enter])
       await promise
 
-      // why: clearing the value repaints the dim hint and parks the caret before it
-      const data = output.getWrittenData()
-
-      expect(data).toContain('\x1B[2m') // why: dim ANSI for the hint
-      expect(data).toContain('\x1B[15C') // why: caret parked at the end of the 15-column prefix
+      // why: the cleared frame paints the dim hint, then parks the caret at column 15, the end of the prefix, right before it
+      expect(output.getWrittenData()).toContain('\x1B[2mabc\x1B[0m\r\x1B[15C')
     })
   })
 
@@ -357,8 +347,7 @@ describe('text', () => {
 
       const result = await promise
 
-      expect(result.result).toBe(PromptResult.Submitted)
-      expect(result.value).toBe('hello world')
+      expect(result).toEqual({ result: PromptResult.Submitted, value: 'hello world' })
     })
 
     it('inserts bracketed paste content accumulated across chunks', async () => {
@@ -444,9 +433,28 @@ describe('text', () => {
       output.columns = 40
       output.emit('resize')
       await new Promise((resolve) => setImmediate(resolve))
+      const repaint = output.getWrittenData().slice(before)
+
+      input.enqueueKeys([Key.Enter])
+      await promise
 
       // why: the repaint after resize re-renders the preserved value
-      expect(output.getWrittenData().slice(before)).toContain('ab')
+      expect(repaint).toContain('ab')
+    })
+
+    it('submits the value typed before the terminal resized', async () => {
+      output.columns = 80
+      const config = createConfig()
+      const promise = text(config)
+
+      input.enqueueKeys(['a', 'b'])
+      await new Promise((resolve) => setImmediate(resolve))
+      await new Promise((resolve) => setImmediate(resolve))
+      await new Promise((resolve) => setImmediate(resolve))
+
+      output.columns = 40
+      output.emit('resize')
+      await new Promise((resolve) => setImmediate(resolve))
 
       input.enqueueKeys([Key.Enter])
 
@@ -469,8 +477,27 @@ describe('text', () => {
       const before = output.getWrittenData().length
       output.emit('resize')
       await new Promise((resolve) => setImmediate(resolve))
+      const repaint = output.getWrittenData().slice(before)
 
-      expect(output.getWrittenData().slice(before)).toContain('Too short')
+      input.enqueueKeys(['b', 'c', Key.Enter])
+      await promise
+
+      expect(repaint).toContain('Too short')
+    })
+
+    it('submits a corrected value after a resize repainted the validation error', async () => {
+      const config = createConfig({
+        validate: (value) => (value.length < 3 ? 'Too short' : undefined),
+      })
+      const promise = text(config)
+
+      input.enqueueKeys(['a', Key.Enter])
+      await new Promise((resolve) => setImmediate(resolve))
+      await new Promise((resolve) => setImmediate(resolve))
+      await new Promise((resolve) => setImmediate(resolve))
+
+      output.emit('resize')
+      await new Promise((resolve) => setImmediate(resolve))
 
       input.enqueueKeys(['b', 'c', Key.Enter])
 
@@ -496,10 +523,18 @@ describe('text', () => {
 
       // why: initial render plus one per keystroke
       expect(snapshots).toEqual(['', 'a', 'ab', 'abc', 'abc'])
+    })
 
-      const data = output.getWrittenData()
+    it('renders the message computed from the current value', async () => {
+      const config = createConfig({
+        renderMessage: (value) => `Length: ${value.length}`,
+      })
+      const promise = text(config)
 
-      expect(data).toContain('Length: 3')
+      input.enqueueKeys(['a', 'b', 'c', Key.Enter])
+      await promise
+
+      expect(output.getWrittenData()).toContain('Length: 3')
     })
 
     it('falls back to static message when renderMessage is absent', async () => {
@@ -514,7 +549,7 @@ describe('text', () => {
   })
 
   describe('format', () => {
-    it('applies format function for display', async () => {
+    it('submits the raw value while a format function masks the display', async () => {
       const config = createConfig({
         format: (value) => '*'.repeat(value.length),
       })
@@ -524,13 +559,20 @@ describe('text', () => {
 
       const result = await promise
 
-      expect(result.result).toBe(PromptResult.Submitted)
-      expect(result.value).toBe('secret')
+      expect(result).toEqual({ result: PromptResult.Submitted, value: 'secret' })
+    })
+
+    it('applies format function for display', async () => {
+      const config = createConfig({
+        format: (value) => '*'.repeat(value.length),
+      })
+      const promise = text(config)
+
+      input.enqueueKeys(['s', 'e', 'c', 'r', 'e', 't', Key.Enter])
+      await promise
 
       // why: output should show masked value
-      const data = output.getWrittenData()
-
-      expect(data).toContain('******')
+      expect(output.getWrittenData()).toContain('******')
     })
   })
 

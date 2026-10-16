@@ -2,6 +2,7 @@ import type { SelectConfig, Choice } from '../types'
 import { PassThrough } from 'node:stream'
 import { afterEach, beforeEach } from 'node:test'
 import { describe, expect, it } from '@hyperfrontend/testing'
+import { stripAnsi } from '../ansi-text'
 import { Key } from '../terminal'
 import { PromptResult } from '../types'
 import { select } from './select'
@@ -109,8 +110,7 @@ describe('select', () => {
 
       const result = await promise
 
-      expect(result.result).toBe(PromptResult.Submitted)
-      expect(result.value).toBe('red')
+      expect(result).toEqual({ result: PromptResult.Submitted, value: 'red' })
     })
 
     it('selects second item with Down+Enter', async () => {
@@ -121,8 +121,7 @@ describe('select', () => {
 
       const result = await promise
 
-      expect(result.result).toBe(PromptResult.Submitted)
-      expect(result.value).toBe('green')
+      expect(result).toEqual({ result: PromptResult.Submitted, value: 'green' })
     })
 
     it('selects third item with Down+Down+Enter', async () => {
@@ -133,8 +132,7 @@ describe('select', () => {
 
       const result = await promise
 
-      expect(result.result).toBe(PromptResult.Submitted)
-      expect(result.value).toBe('blue')
+      expect(result).toEqual({ result: PromptResult.Submitted, value: 'blue' })
     })
 
     it('uses initial selection', async () => {
@@ -145,8 +143,7 @@ describe('select', () => {
 
       const result = await promise
 
-      expect(result.result).toBe(PromptResult.Submitted)
-      expect(result.value).toBe('blue')
+      expect(result).toEqual({ result: PromptResult.Submitted, value: 'blue' })
     })
   })
 
@@ -159,8 +156,7 @@ describe('select', () => {
 
       const result = await promise
 
-      expect(result.result).toBe(PromptResult.Submitted)
-      expect(result.value).toBe('green')
+      expect(result).toEqual({ result: PromptResult.Submitted, value: 'green' })
     })
 
     it('stops at top when pressing Up', async () => {
@@ -171,8 +167,7 @@ describe('select', () => {
 
       const result = await promise
 
-      expect(result.result).toBe(PromptResult.Submitted)
-      expect(result.value).toBe('red')
+      expect(result).toEqual({ result: PromptResult.Submitted, value: 'red' })
     })
 
     it('stops at bottom when pressing Down', async () => {
@@ -183,8 +178,7 @@ describe('select', () => {
 
       const result = await promise
 
-      expect(result.result).toBe(PromptResult.Submitted)
-      expect(result.value).toBe('blue')
+      expect(result).toEqual({ result: PromptResult.Submitted, value: 'blue' })
     })
   })
 
@@ -202,8 +196,7 @@ describe('select', () => {
 
       const result = await promise
 
-      expect(result.result).toBe(PromptResult.Submitted)
-      expect(result.value).toBe('3')
+      expect(result).toEqual({ result: PromptResult.Submitted, value: '3' })
     })
 
     it('skips disabled choices when navigating up', async () => {
@@ -219,8 +212,7 @@ describe('select', () => {
 
       const result = await promise
 
-      expect(result.result).toBe(PromptResult.Submitted)
-      expect(result.value).toBe('1')
+      expect(result).toEqual({ result: PromptResult.Submitted, value: '1' })
     })
 
     it('prevents selection of disabled choice on Enter', async () => {
@@ -246,8 +238,7 @@ describe('select', () => {
 
       const result = await promise
 
-      expect(result.result).toBe(PromptResult.Cancelled)
-      expect(result.value).toBeUndefined()
+      expect(result).toEqual({ result: PromptResult.Cancelled, value: undefined })
     })
 
     it('returns cancelled after navigation', async () => {
@@ -279,8 +270,7 @@ describe('select', () => {
 
       const result = await promise
 
-      expect(result.result).toBe(PromptResult.Submitted)
-      expect(result.value).toBe('opt8')
+      expect(result).toEqual({ result: PromptResult.Submitted, value: 'opt8' })
     })
 
     it('scrolls up when navigating above visible', async () => {
@@ -291,8 +281,7 @@ describe('select', () => {
 
       const result = await promise
 
-      expect(result.result).toBe(PromptResult.Submitted)
-      expect(result.value).toBe('opt5')
+      expect(result).toEqual({ result: PromptResult.Submitted, value: 'opt5' })
     })
 
     it('shows scroll indicators', async () => {
@@ -304,9 +293,8 @@ describe('select', () => {
 
       const data = output.getWrittenData()
 
-      // why: middle of list should show both indicators
-      expect(data).toContain('more above')
-      expect(data).toContain('more below')
+      // why: the middle of the list renders the above indicator before the below indicator in one frame
+      expect(data).toMatch(/more above[\s\S]*more below/)
     })
   })
 
@@ -391,8 +379,7 @@ describe('select', () => {
 
       const result = await promise
 
-      expect(result.result).toBe(PromptResult.Submitted)
-      expect(result.value).toBe(2)
+      expect(result).toEqual({ result: PromptResult.Submitted, value: 2 })
     })
 
     it('works with object values', async () => {
@@ -411,8 +398,7 @@ describe('select', () => {
 
       const result = await promise
 
-      expect(result.result).toBe(PromptResult.Submitted)
-      expect(result.value).toEqual({ id: 1, name: 'a' })
+      expect(result).toEqual({ result: PromptResult.Submitted, value: { id: 1, name: 'a' } })
     })
   })
 
@@ -438,8 +424,7 @@ describe('select', () => {
 
       const result = await promise
 
-      expect(result.result).toBe(PromptResult.Submitted)
-      expect(result.value).toBe('5')
+      expect(result).toEqual({ result: PromptResult.Submitted, value: '5' })
     })
 
     it('skips multiple consecutive disabled items when navigating up', async () => {
@@ -458,8 +443,7 @@ describe('select', () => {
 
       const result = await promise
 
-      expect(result.result).toBe(PromptResult.Submitted)
-      expect(result.value).toBe('1')
+      expect(result).toEqual({ result: PromptResult.Submitted, value: '1' })
     })
 
     it('shows scroll down indicator at top of long list', async () => {
@@ -483,8 +467,7 @@ describe('select', () => {
 
       const result = await promise
 
-      expect(result.result).toBe(PromptResult.Submitted)
-      expect(result.value).toBe('opt3')
+      expect(result).toEqual({ result: PromptResult.Submitted, value: 'opt3' })
     })
 
     it('adjusts scroll offset when cursor moves below visible', async () => {
@@ -498,8 +481,7 @@ describe('select', () => {
 
       const result = await promise
 
-      expect(result.result).toBe(PromptResult.Submitted)
-      expect(result.value).toBe('opt13')
+      expect(result).toEqual({ result: PromptResult.Submitted, value: 'opt13' })
     })
   })
 
@@ -512,8 +494,7 @@ describe('select', () => {
 
       const result = await promise
 
-      expect(result.result).toBe(PromptResult.Submitted)
-      expect(result.value).toBe('red')
+      expect(result).toEqual({ result: PromptResult.Submitted, value: 'red' })
     })
   })
 
@@ -529,9 +510,25 @@ describe('select', () => {
       const before = output.getWrittenData().length
       output.emit('resize')
       await new Promise((resolve) => setImmediate(resolve))
+      const repaint = output.getWrittenData().slice(before)
 
-      // why: the repaint after resize re-renders every choice line
-      expect(output.getWrittenData().slice(before)).toContain('Green')
+      input.enqueueKeys([Key.Enter])
+      await promise
+
+      // why: the repaint after resize draws the pointer on the choice focused before the resize
+      expect(stripAnsi(repaint)).toContain('❯ Green')
+    })
+
+    it('submits the choice focused before the terminal resized', async () => {
+      const config = createConfig()
+      const promise = select(config)
+
+      input.enqueueKeys([Key.Down])
+      await new Promise((resolve) => setImmediate(resolve))
+      await new Promise((resolve) => setImmediate(resolve))
+
+      output.emit('resize')
+      await new Promise((resolve) => setImmediate(resolve))
 
       input.enqueueKeys([Key.Enter])
 

@@ -94,16 +94,20 @@ describe('Ansi', () => {
     expect(Ansi.CursorStart).toBe('\r')
   })
 
-  it('generates cursor up sequence', () => {
-    expect(Ansi.cursorUp(3)).toBe('\x1B[3A')
-    expect(Ansi.cursorUp(1)).toBe('\x1B[1A')
-    expect(Ansi.cursorUp(10)).toBe('\x1B[10A')
+  it.each([
+    [3, '\x1B[3A'],
+    [1, '\x1B[1A'],
+    [10, '\x1B[10A'],
+  ])('generates cursor up sequence for count %d', (count: number, sequence: string) => {
+    expect(Ansi.cursorUp(count)).toBe(sequence)
   })
 
-  it('generates cursor down sequence', () => {
-    expect(Ansi.cursorDown(3)).toBe('\x1B[3B')
-    expect(Ansi.cursorDown(1)).toBe('\x1B[1B')
-    expect(Ansi.cursorDown(5)).toBe('\x1B[5B')
+  it.each([
+    [3, '\x1B[3B'],
+    [1, '\x1B[1B'],
+    [5, '\x1B[5B'],
+  ])('generates cursor down sequence for count %d', (count: number, sequence: string) => {
+    expect(Ansi.cursorDown(count)).toBe(sequence)
   })
 
   it('generates cursor left sequence', () => {
@@ -237,14 +241,14 @@ describe('createTerminal', () => {
     })
 
     it('sets cancelled on Ctrl+C', async () => {
-      expect(terminal.isCancelled()).toBe(false)
+      const cancelledBefore = terminal.isCancelled()
 
       const keyPromise = terminal.readKey()
       input.emit('data', Buffer.from(Key.CtrlC))
 
       await keyPromise
 
-      expect(terminal.isCancelled()).toBe(true)
+      expect({ cancelledBefore, cancelledAfter: terminal.isCancelled() }).toEqual({ cancelledBefore: false, cancelledAfter: true })
     })
 
     it('reads arrow key sequences', async () => {
@@ -262,8 +266,9 @@ describe('createTerminal', () => {
       input.emit('data', Buffer.from('a'))
       input.emit('data', Buffer.from('b'))
 
-      expect(await first).toBe('a')
-      expect(await terminal.readKey()).toBe('b')
+      const keysInReadOrder = [await first, await terminal.readKey()]
+
+      expect(keysInReadOrder).toEqual(['a', 'b'])
     })
 
     it('skips resize tokens', async () => {
@@ -343,10 +348,10 @@ describe('createTerminal', () => {
       output.emit('resize')
       input.emit('data', Buffer.from('a'))
 
-      expect(await first).toEqual({ type: TokenType.Resize })
-      // why: the second and third resize events collapse into the single queued token
-      expect(await terminal.readToken()).toEqual({ type: TokenType.Resize })
-      expect(await terminal.readToken()).toEqual({ type: TokenType.Key, value: 'a' })
+      const tokensInReadOrder = [await first, await terminal.readToken(), await terminal.readToken()]
+
+      // why: the first resize resolves the waiting read; the second and third resize events collapse into the single queued token
+      expect(tokensInReadOrder).toEqual([{ type: TokenType.Resize }, { type: TokenType.Resize }, { type: TokenType.Key, value: 'a' }])
     })
 
     it('keeps a multibyte character split across chunks intact', async () => {
@@ -368,12 +373,21 @@ describe('createTerminal', () => {
       expect(await tokenPromise).toEqual({ type: TokenType.Key, value: Key.Up })
     })
 
-    it('does not cancel on Ctrl+C inside a bracketed paste', async () => {
+    it('delivers Ctrl+C inside a bracketed paste as paste data', async () => {
       const tokenPromise = terminal.readToken()
 
       input.emit('data', Buffer.from('\x1B[200~a\x03b\x1B[201~'))
 
       expect(await tokenPromise).toEqual({ type: TokenType.Paste, value: 'a\x03b' })
+    })
+
+    it('does not cancel on Ctrl+C inside a bracketed paste', async () => {
+      const tokenPromise = terminal.readToken()
+
+      input.emit('data', Buffer.from('\x1B[200~a\x03b\x1B[201~'))
+
+      await tokenPromise
+
       expect(terminal.isCancelled()).toBe(false)
     })
 
@@ -423,7 +437,7 @@ describe('createTerminal', () => {
     })
 
     it('sets cancelled on close', async () => {
-      expect(terminal.isCancelled()).toBe(false)
+      const cancelledBefore = terminal.isCancelled()
 
       const linePromise = terminal.readLine()
 
@@ -434,7 +448,7 @@ describe('createTerminal', () => {
 
       await linePromise
 
-      expect(terminal.isCancelled()).toBe(true)
+      expect({ cancelledBefore, cancelledAfter: terminal.isCancelled() }).toEqual({ cancelledBefore: false, cancelledAfter: true })
     })
   })
 
@@ -450,10 +464,8 @@ describe('createTerminal', () => {
     it('clears single line', () => {
       terminal.clearLines(1)
 
-      const data = output.getWrittenData()
-
-      expect(data).toContain(Ansi.CursorStart)
-      expect(data).toContain(Ansi.ClearLine)
+      // why: clearing a line returns to its start, then erases it
+      expect(output.getWrittenData()).toContain(Ansi.CursorStart + Ansi.ClearLine)
     })
 
     it('clears multiple lines', () => {

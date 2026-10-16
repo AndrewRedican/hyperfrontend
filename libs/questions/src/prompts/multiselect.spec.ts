@@ -109,8 +109,7 @@ describe('multiselect', () => {
 
       const result = await promise
 
-      expect(result.result).toBe(PromptResult.Submitted)
-      expect(result.value).toEqual([])
+      expect(result).toEqual({ result: PromptResult.Submitted, value: [] })
     })
 
     it('toggles selection with space', async () => {
@@ -121,8 +120,7 @@ describe('multiselect', () => {
 
       const result = await promise
 
-      expect(result.result).toBe(PromptResult.Submitted)
-      expect(result.value).toEqual(['apple'])
+      expect(result).toEqual({ result: PromptResult.Submitted, value: ['apple'] })
     })
 
     it('selects multiple items', async () => {
@@ -133,8 +131,7 @@ describe('multiselect', () => {
 
       const result = await promise
 
-      expect(result.result).toBe(PromptResult.Submitted)
-      expect(result.value).toEqual(['apple', 'cherry'])
+      expect(result).toEqual({ result: PromptResult.Submitted, value: ['apple', 'cherry'] })
     })
 
     it('deselects with second space', async () => {
@@ -145,8 +142,7 @@ describe('multiselect', () => {
 
       const result = await promise
 
-      expect(result.result).toBe(PromptResult.Submitted)
-      expect(result.value).toEqual([])
+      expect(result).toEqual({ result: PromptResult.Submitted, value: [] })
     })
 
     it('uses initial selection', async () => {
@@ -157,8 +153,7 @@ describe('multiselect', () => {
 
       const result = await promise
 
-      expect(result.result).toBe(PromptResult.Submitted)
-      expect(result.value).toEqual(['banana', 'cherry'])
+      expect(result).toEqual({ result: PromptResult.Submitted, value: ['banana', 'cherry'] })
     })
 
     it('can modify initial selection', async () => {
@@ -170,8 +165,7 @@ describe('multiselect', () => {
 
       const result = await promise
 
-      expect(result.result).toBe(PromptResult.Submitted)
-      expect(result.value).toEqual(['apple'])
+      expect(result).toEqual({ result: PromptResult.Submitted, value: ['apple'] })
     })
   })
 
@@ -184,8 +178,7 @@ describe('multiselect', () => {
 
       const result = await promise
 
-      expect(result.result).toBe(PromptResult.Submitted)
-      expect(result.value).toEqual(['banana'])
+      expect(result).toEqual({ result: PromptResult.Submitted, value: ['banana'] })
     })
 
     it('moves up with Up key', async () => {
@@ -196,8 +189,7 @@ describe('multiselect', () => {
 
       const result = await promise
 
-      expect(result.result).toBe(PromptResult.Submitted)
-      expect(result.value).toEqual(['banana'])
+      expect(result).toEqual({ result: PromptResult.Submitted, value: ['banana'] })
     })
 
     it('stops at top when pressing Up', async () => {
@@ -208,8 +200,7 @@ describe('multiselect', () => {
 
       const result = await promise
 
-      expect(result.result).toBe(PromptResult.Submitted)
-      expect(result.value).toEqual(['apple'])
+      expect(result).toEqual({ result: PromptResult.Submitted, value: ['apple'] })
     })
 
     it('stops at bottom when pressing Down', async () => {
@@ -220,8 +211,7 @@ describe('multiselect', () => {
 
       const result = await promise
 
-      expect(result.result).toBe(PromptResult.Submitted)
-      expect(result.value).toEqual(['cherry'])
+      expect(result).toEqual({ result: PromptResult.Submitted, value: ['cherry'] })
     })
   })
 
@@ -234,8 +224,7 @@ describe('multiselect', () => {
 
       const result = await promise
 
-      expect(result.result).toBe(PromptResult.Cancelled)
-      expect(result.value).toBeUndefined()
+      expect(result).toEqual({ result: PromptResult.Cancelled, value: undefined })
     })
 
     it('returns cancelled after partial selection', async () => {
@@ -260,8 +249,7 @@ describe('multiselect', () => {
 
       const result = await promise
 
-      expect(result.result).toBe(PromptResult.Submitted)
-      expect(result.value).toEqual([])
+      expect(result).toEqual({ result: PromptResult.Submitted, value: [] })
     })
 
     it('displays disabled hint in output', async () => {
@@ -291,44 +279,56 @@ describe('multiselect', () => {
 
       const result = await promise
 
-      expect(result.result).toBe(PromptResult.Submitted)
-      expect(result.value).toEqual([])
+      expect(result).toEqual({ result: PromptResult.Submitted, value: [] })
     })
   })
 
   describe('min/max constraints', () => {
-    it('enforces minimum selections', async () => {
+    it('blocks submission until the minimum is selected', async () => {
       const config = createConfig({ min: 2 })
       const promise = multiselect(config)
 
-      // why: try submit with 1 selection, shows error, add another
+      // why: the first Enter has one selection and is rejected; a second selection lets the next Enter submit
       input.enqueueKeys([Key.Space, Key.Enter, Key.Down, Key.Space, Key.Enter])
 
       const result = await promise
 
-      expect(result.result).toBe(PromptResult.Submitted)
-      expect(result.value).toEqual(['apple', 'banana'])
-
-      const data = output.getWrittenData()
-
-      expect(data).toContain('at least 2')
+      expect(result).toEqual({ result: PromptResult.Submitted, value: ['apple', 'banana'] })
     })
 
-    it('enforces singular minimum message', async () => {
+    it('shows the minimum message when submitting below the minimum', async () => {
+      const config = createConfig({ min: 2 })
+      const promise = multiselect(config)
+
+      input.enqueueKeys([Key.Space, Key.Enter, Key.Down, Key.Space, Key.Enter])
+      await promise
+
+      expect(output.getWrittenData()).toContain('at least 2')
+    })
+
+    it('submits under a minimum of one once an option is selected', async () => {
       const config = createConfig({ min: 1 })
       const promise = multiselect(config)
 
-      // why: try submit with 0 selections
+      // why: the first Enter has no selection and is rejected
       input.enqueueKeys([Key.Enter, Key.Space, Key.Enter])
 
       const result = await promise
 
-      expect(result.result).toBe(PromptResult.Submitted)
+      expect(result).toEqual({ result: PromptResult.Submitted, value: ['apple'] })
+    })
+
+    it('uses the singular noun in the minimum message for a minimum of one', async () => {
+      const config = createConfig({ min: 1 })
+      const promise = multiselect(config)
+
+      input.enqueueKeys([Key.Enter, Key.Space, Key.Enter])
+      await promise
 
       const data = output.getWrittenData()
 
-      expect(data).toContain('at least 1 option')
-      expect(data).not.toContain('options')
+      // why: the message keeps the singular noun and the plural form is printed nowhere in the output
+      expect({ singular: /at least 1 option\b/.test(data), plural: data.includes('options') }).toEqual({ singular: true, plural: false })
     })
 
     it('enforces maximum selections', async () => {
@@ -340,8 +340,7 @@ describe('multiselect', () => {
 
       const result = await promise
 
-      expect(result.result).toBe(PromptResult.Submitted)
-      expect(result.value).toEqual(['apple', 'banana'])
+      expect(result).toEqual({ result: PromptResult.Submitted, value: ['apple', 'banana'] })
     })
 
     it('shows min/max hints', async () => {
@@ -353,8 +352,8 @@ describe('multiselect', () => {
 
       const data = output.getWrittenData()
 
-      expect(data).toContain('min: 1')
-      expect(data).toContain('max: 3')
+      // why: both hints render inside one parenthesised counter suffix
+      expect(data).toContain('(min: 1, max: 3)')
     })
   })
 
@@ -373,8 +372,7 @@ describe('multiselect', () => {
 
       const result = await promise
 
-      expect(result.result).toBe(PromptResult.Submitted)
-      expect(result.value).toEqual(['item8'])
+      expect(result).toEqual({ result: PromptResult.Submitted, value: ['item8'] })
     })
 
     it('shows scroll indicators', async () => {
@@ -387,8 +385,8 @@ describe('multiselect', () => {
 
       const data = output.getWrittenData()
 
-      expect(data).toContain('more above')
-      expect(data).toContain('more below')
+      // why: one frame renders the above indicator before the below indicator
+      expect(data).toMatch(/more above[\s\S]*more below/)
     })
   })
 
@@ -422,8 +420,8 @@ describe('multiselect', () => {
 
       const data = output.getWrittenData()
 
-      expect(data).toContain('Apple')
-      expect(data).toContain('Banana')
+      // why: the submitted line joins the selected labels with a comma
+      expect(data).toContain('Apple, Banana')
     })
 
     it('shows none when nothing selected', async () => {
@@ -491,8 +489,7 @@ describe('multiselect', () => {
 
       const result = await promise
 
-      expect(result.result).toBe(PromptResult.Submitted)
-      expect(result.value).toEqual([1, 3])
+      expect(result).toEqual({ result: PromptResult.Submitted, value: [1, 3] })
     })
 
     it('works with object values', async () => {
@@ -511,8 +508,7 @@ describe('multiselect', () => {
 
       const result = await promise
 
-      expect(result.result).toBe(PromptResult.Submitted)
-      expect(result.value).toEqual([{ id: 2, name: 'b' }])
+      expect(result).toEqual({ result: PromptResult.Submitted, value: [{ id: 2, name: 'b' }] })
     })
   })
 
@@ -534,8 +530,7 @@ describe('multiselect', () => {
 
       const result = await promise
 
-      expect(result.result).toBe(PromptResult.Submitted)
-      expect(result.value).toContain('item5')
+      expect(result).toEqual({ result: PromptResult.Submitted, value: expect.arrayContaining(['item5']) })
     })
 
     it('skips multiple consecutive disabled items when navigating down', async () => {
@@ -554,8 +549,7 @@ describe('multiselect', () => {
 
       const result = await promise
 
-      expect(result.result).toBe(PromptResult.Submitted)
-      expect(result.value).toEqual(['5'])
+      expect(result).toEqual({ result: PromptResult.Submitted, value: ['5'] })
     })
 
     it('skips multiple consecutive disabled items when navigating up', async () => {
@@ -574,8 +568,7 @@ describe('multiselect', () => {
 
       const result = await promise
 
-      expect(result.result).toBe(PromptResult.Submitted)
-      expect(result.value).toEqual(['1'])
+      expect(result).toEqual({ result: PromptResult.Submitted, value: ['1'] })
     })
 
     it('renders selected but non-focused items with green styling', async () => {
@@ -587,8 +580,7 @@ describe('multiselect', () => {
 
       const result = await promise
 
-      expect(result.result).toBe(PromptResult.Submitted)
-      expect(result.value).toEqual(['apple'])
+      expect(result).toEqual({ result: PromptResult.Submitted, value: ['apple'] })
 
       // why: The selected item styling is internally applied - we just verify selection worked
     })
@@ -602,8 +594,8 @@ describe('multiselect', () => {
 
       const data = output.getWrittenData()
 
-      expect(data).toContain('min: 2')
-      expect(data).not.toContain('max:')
+      // why: the counter suffix carries the min hint alone and no frame prints a max hint
+      expect({ minHint: data.includes('(min: 2)'), maxHint: data.includes('max:') }).toEqual({ minHint: true, maxHint: false })
     })
 
     it('shows only max hint when only max is set', async () => {
@@ -615,8 +607,8 @@ describe('multiselect', () => {
 
       const data = output.getWrittenData()
 
-      expect(data).toContain('max: 3')
-      expect(data).not.toContain('min:')
+      // why: the counter suffix carries the max hint alone and no frame prints a min hint
+      expect({ maxHint: data.includes('(max: 3)'), minHint: data.includes('min:') }).toEqual({ maxHint: true, minHint: false })
     })
 
     it('submits with singular max validation message', async () => {
@@ -629,8 +621,7 @@ describe('multiselect', () => {
 
       const result = await promise
 
-      expect(result.result).toBe(PromptResult.Submitted)
-      expect(result.value).toEqual(['apple'])
+      expect(result).toEqual({ result: PromptResult.Submitted, value: ['apple'] })
     })
 
     it('validates maximum selections overflow', async () => {
@@ -643,8 +634,7 @@ describe('multiselect', () => {
 
       const result = await promise
 
-      expect(result.result).toBe(PromptResult.Submitted)
-      expect(result.value).toHaveLength(1)
+      expect(result).toEqual({ result: PromptResult.Submitted, value: ['apple'] })
     })
   })
 
@@ -658,8 +648,7 @@ describe('multiselect', () => {
 
       const result = await promise
 
-      expect(result.result).toBe(PromptResult.Submitted)
-      expect(result.value).toEqual(['apple'])
+      expect(result).toEqual({ result: PromptResult.Submitted, value: ['apple'] })
     })
   })
 
@@ -677,9 +666,27 @@ describe('multiselect', () => {
       const before = output.getWrittenData().length
       output.emit('resize')
       await new Promise((resolve) => setImmediate(resolve))
+      const repaint = output.getWrittenData().slice(before)
+
+      input.enqueueKeys([Key.Enter])
+      await promise
 
       // why: the repaint after resize keeps the selection counter intact
-      expect(output.getWrittenData().slice(before)).toContain('2 selected')
+      expect(repaint).toContain('2 selected')
+    })
+
+    it('submits the selections made before the terminal resized', async () => {
+      const config = createConfig()
+      const promise = multiselect(config)
+
+      input.enqueueKeys([Key.Space, Key.Down, Key.Space])
+      await new Promise((resolve) => setImmediate(resolve))
+      await new Promise((resolve) => setImmediate(resolve))
+      await new Promise((resolve) => setImmediate(resolve))
+      await new Promise((resolve) => setImmediate(resolve))
+
+      output.emit('resize')
+      await new Promise((resolve) => setImmediate(resolve))
 
       input.enqueueKeys([Key.Enter])
 

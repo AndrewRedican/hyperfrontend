@@ -17,8 +17,6 @@ describe('PromptResult', () => {
   it('has exactly two keys', () => {
     const keys = Object.keys(PromptResult)
 
-    expect(keys).toHaveLength(2)
-    expect(keys).toContain('Submitted')
-    expect(keys).toContain('Cancelled')
+    expect(keys).toEqual(['Submitted', 'Cancelled'])
   })
 })
