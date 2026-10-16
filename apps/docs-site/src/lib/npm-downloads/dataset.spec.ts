@@ -58,6 +58,22 @@ function interruptedIo(operation: keyof DatasetIo, call: number): DatasetIo {
   }
 }
 
+/**
+ * Run a call that is meant to fail and report the message it failed with, so a
+ * test can pin the failure and the files it left behind in one observation.
+ *
+ * @param call - The call to run
+ * @returns The thrown error's message, or null when the call returned normally
+ */
+function failureOf(call: () => unknown): string | null {
+  try {
+    call()
+  } catch (error) {
+    return (error as Error).message
+  }
+  return null
+}
+
 describe('recordsFileFor', () => {
   it('drops the scope and adds the extension', () => {
     expect(recordsFileFor('@hyperfrontend/immutable-api-utils')).toBe('immutable-api-utils.ndjson')
@@ -202,7 +218,7 @@ describe('commitDataset', () => {
         [nexus, run(nexus, 1, [1])],
       ])
     )
-    expect(() =>
+    const failure = failureOf(() =>
       commitDataset(
         dir,
         MANIFEST,
@@ -212,12 +228,14 @@ describe('commitDataset', () => {
         ]),
         interruptedIo('writeFile', 2)
       )
-    ).toThrow('writeFile interrupted')
+    )
     expect({
+      failure,
       features: readFileSync(join(dir, 'features.ndjson'), 'utf8'),
       nexus: readFileSync(join(dir, 'nexus.ndjson'), 'utf8'),
       temps: readdirSync(dir).filter((file) => file.endsWith('.tmp')),
     }).toEqual({
+      failure: expect.stringContaining('writeFile interrupted'),
       features: '{"package":"@hyperfrontend/features","day":"2026-09-01","downloads":1}\n',
       nexus: '{"package":"@hyperfrontend/nexus","day":"2026-09-01","downloads":1}\n',
       temps: [],
@@ -234,7 +252,7 @@ describe('commitDataset', () => {
         [nexus, run(nexus, 1, [1])],
       ])
     )
-    expect(() =>
+    const failure = failureOf(() =>
       commitDataset(
         dir,
         MANIFEST,
@@ -244,12 +262,14 @@ describe('commitDataset', () => {
         ]),
         interruptedIo('rename', 2)
       )
-    ).toThrow('rename interrupted')
+    )
     expect({
+      failure,
       features: readFileSync(join(dir, 'features.ndjson'), 'utf8'),
       nexus: readFileSync(join(dir, 'nexus.ndjson'), 'utf8'),
       temps: readdirSync(dir).filter((file) => file.endsWith('.tmp')),
     }).toEqual({
+      failure: expect.stringContaining('rename interrupted'),
       features: '{"package":"@hyperfrontend/features","day":"2026-09-01","downloads":1}\n',
       nexus: '{"package":"@hyperfrontend/nexus","day":"2026-09-01","downloads":1}\n',
       temps: [],
@@ -257,9 +277,10 @@ describe('commitDataset', () => {
   })
 
   it('removes a file it had created when a rename is interrupted on a first commit', () => {
-    expect(() => commitDataset(dir, MANIFEST, new Map([[PACKAGE, run(PACKAGE, 1, [1])]]), interruptedIo('rename', 2))).toThrow(
-      'rename interrupted'
-    )
-    expect(existsSync(join(dir, 'features.ndjson'))).toBe(false)
+    const failure = failureOf(() => commitDataset(dir, MANIFEST, new Map([[PACKAGE, run(PACKAGE, 1, [1])]]), interruptedIo('rename', 2)))
+    expect({ failure, featuresExists: existsSync(join(dir, 'features.ndjson')) }).toEqual({
+      failure: expect.stringContaining('rename interrupted'),
+      featuresExists: false,
+    })
   })
 })

@@ -98,16 +98,22 @@ function everyCauseFor(familyId: string, answers: Record<string, string>): Elimi
 }
 
 describe('evaluate', () => {
-  it('starts with every approach viable and nothing decided', () => {
+  it('starts with every approach viable', () => {
     const result = evaluate({})
 
-    expect(result.surviving).toHaveLength(decisionFramework.families.length)
-    expect(result.eliminated).toHaveLength(0)
-    expect(result.outcome).toBe('open')
-    expect(result.next).not.toBeNull()
+    expect({ surviving: result.surviving.length, eliminated: result.eliminated.length }).toEqual({
+      surviving: decisionFramework.families.length,
+      eliminated: 0,
+    })
   })
 
-  it('is deterministic: the same answers always produce the same eliminations', () => {
+  it('starts with nothing decided and a question to ask', () => {
+    const result = evaluate({})
+
+    expect({ outcome: result.outcome, next: result.next }).toEqual({ outcome: 'open', next: expect.anything() })
+  })
+
+  it('is deterministic: the same answers always produce the same eliminations and outcome', () => {
     const chosen = mustFind(
       findEliminatingAnswer(() => true),
       'eliminating answer'
@@ -117,8 +123,20 @@ describe('evaluate', () => {
     const first = evaluate(answers)
     const second = evaluate(answers)
 
-    expect(second.eliminated.map((entry) => entry.family.id)).toEqual(first.eliminated.map((entry) => entry.family.id))
-    expect(second.outcome).toBe(first.outcome)
+    expect({ eliminated: second.eliminated.map((entry) => entry.family.id), outcome: second.outcome }).toEqual({
+      eliminated: first.eliminated.map((entry) => entry.family.id),
+      outcome: first.outcome,
+    })
+  })
+
+  it('rules out at least one family for an eliminating answer', () => {
+    const chosen = mustFind(
+      findEliminatingAnswer(() => true),
+      'eliminating answer'
+    )
+    const result = evaluate({ [chosen.questionId]: chosen.answerId })
+
+    expect(result.eliminated.length).toBeGreaterThan(0)
   })
 
   it('attributes every elimination to the answer responsible', () => {
@@ -128,10 +146,8 @@ describe('evaluate', () => {
     )
     const result = evaluate({ [chosen.questionId]: chosen.answerId })
 
-    expect(result.eliminated.length).toBeGreaterThan(0)
     for (const entry of result.eliminated) {
-      expect(entry.by.questionId).toBe(chosen.questionId)
-      expect(entry.by.answerId).toBe(chosen.answerId)
+      expect(entry.by).toMatchObject({ questionId: chosen.questionId, answerId: chosen.answerId })
     }
   })
 
@@ -140,8 +156,7 @@ describe('evaluate', () => {
 
     const result = evaluate({ [question.id]: 'question.removed#gone' })
 
-    expect(result.answered).toHaveLength(0)
-    expect(result.eliminated).toHaveLength(0)
+    expect({ answered: result.answered, eliminated: result.eliminated }).toStrictEqual({ answered: [], eliminated: [] })
   })
 
   it('reports the no-microfrontends outcome when only baselines survive', () => {
@@ -152,8 +167,10 @@ describe('evaluate', () => {
 
     const result = evaluate({ [killsEveryMicrofrontend.questionId]: killsEveryMicrofrontend.answerId })
 
-    expect(result.outcome).toBe('baselines-only')
-    expect(result.surviving.every((family) => family.kind === 'baseline')).toBe(true)
+    expect({
+      outcome: result.outcome,
+      nonBaselineSurvivors: result.surviving.filter((family) => family.kind !== 'baseline'),
+    }).toStrictEqual({ outcome: 'baselines-only', nonBaselineSurvivors: [] })
   })
 
   it('records how hyperfrontend fared and what ruled it out', () => {
@@ -164,34 +181,56 @@ describe('evaluate', () => {
 
     const result = evaluate({ [kills.questionId]: kills.answerId })
 
-    expect(result.hyperfrontend.viable).toBe(false)
-    expect(result.hyperfrontend.ruledOutBy?.answerId).toBe(kills.answerId)
+    expect(result.hyperfrontend).toMatchObject({ viable: false, ruledOutBy: { answerId: kills.answerId } })
   })
 
   it('leaves hyperfrontend viable when no answer eliminates its family', () => {
     const result = evaluate({})
 
-    expect(result.hyperfrontend.viable).toBe(true)
-    expect(result.hyperfrontend.ruledOutBy).toBeUndefined()
+    expect({ viable: result.hyperfrontend.viable, ruledOutBy: result.hyperfrontend.ruledOutBy }).toStrictEqual({
+      viable: true,
+      ruledOutBy: undefined,
+    })
   })
 })
 
 describe('alsoEliminatedBy', () => {
+  it('rules families out when every question takes its most eliminating answer', () => {
+    const answers = answerEveryUngatedQuestion((answer) => answer.eliminates.length)
+    const result = evaluate(answers)
+
+    expect(result.eliminated.length).toBeGreaterThan(0)
+  })
+
   it('reports every elimination, not only the one the result attributes', () => {
     const answers = answerEveryUngatedQuestion((answer) => answer.eliminates.length)
     const result = evaluate(answers)
-    expect(result.eliminated.length).toBeGreaterThan(0)
 
-    let withMoreThanOneCause = 0
     for (const entry of result.eliminated) {
       const causes = result.alsoEliminatedBy.get(entry.family.id) ?? []
 
       expect(causes).toEqual(everyCauseFor(entry.family.id, answers))
-      expect(causes[0]).toEqual(entry.by)
-      if (causes.length > 1) withMoreThanOneCause += 1
     }
+  })
 
-    expect(withMoreThanOneCause).toBeGreaterThan(0)
+  it('lists first the elimination the result attributes', () => {
+    const answers = answerEveryUngatedQuestion((answer) => answer.eliminates.length)
+    const result = evaluate(answers)
+
+    for (const entry of result.eliminated) {
+      const causes = result.alsoEliminatedBy.get(entry.family.id) ?? []
+
+      expect(causes[0]).toEqual(entry.by)
+    }
+  })
+
+  it('reports more than one cause for a family that several answers ruled out', () => {
+    const answers = answerEveryUngatedQuestion((answer) => answer.eliminates.length)
+    const result = evaluate(answers)
+
+    const withMoreThanOneCause = result.eliminated.filter((entry) => (result.alsoEliminatedBy.get(entry.family.id) ?? []).length > 1)
+
+    expect(withMoreThanOneCause.length).toBeGreaterThan(0)
   })
 
   it('is keyed by exactly the families that were ruled out', () => {
@@ -199,6 +238,12 @@ describe('alsoEliminatedBy', () => {
     const result = evaluate(answers)
 
     expect([...result.alsoEliminatedBy.keys()].sort()).toEqual(result.eliminated.map((entry) => entry.family.id).sort())
+  })
+
+  it('holds no entry for a family that survived', () => {
+    const answers = answerEveryUngatedQuestion((answer) => answer.eliminates.length)
+    const result = evaluate(answers)
+
     for (const family of result.surviving) expect(result.alsoEliminatedBy.has(family.id)).toBe(false)
   })
 
@@ -208,15 +253,35 @@ describe('alsoEliminatedBy', () => {
 })
 
 describe('favoredBy', () => {
+  it('favors families when every question takes its most favoring answer', () => {
+    const answers = answerEveryUngatedQuestion((answer) => answer.favors.length)
+    const result = evaluate(answers)
+
+    expect(result.favored.size).toBeGreaterThan(0)
+  })
+
+  it('is keyed by exactly the families the answers favored', () => {
+    const answers = answerEveryUngatedQuestion((answer) => answer.favors.length)
+    const result = evaluate(answers)
+
+    expect([...result.favoredBy.keys()].sort()).toEqual([...result.favored].sort())
+  })
+
   it('lists every answered question whose answer favors the family', () => {
     const answers = answerEveryUngatedQuestion((answer) => answer.favors.length)
     const result = evaluate(answers)
-    expect(result.favored.size).toBeGreaterThan(0)
 
-    expect([...result.favoredBy.keys()].sort()).toEqual([...result.favored].sort())
     for (const [familyId, entries] of result.favoredBy) {
       const expected = result.answered.filter(({ answer }) => answer.favors.includes(familyId))
       expect(entries.map(({ answer }) => answer.id)).toEqual(expected.map(({ answer }) => answer.id))
+    }
+  })
+
+  it('pairs every favoring answer with the question that offers it', () => {
+    const answers = answerEveryUngatedQuestion((answer) => answer.favors.length)
+    const result = evaluate(answers)
+
+    for (const entries of result.favoredBy.values()) {
       for (const entry of entries) expect(entry.question.answers).toContain(entry.answer)
     }
   })
@@ -238,17 +303,35 @@ describe('favoredBy', () => {
 })
 
 describe('inertAnswers', () => {
+  it('collects inert answers when every question takes one where it can', () => {
+    const answers = answerEveryUngatedQuestion((answer) => (answer.eliminates.length === 0 && answer.favors.length === 0 ? 1 : 0))
+    const result = evaluate(answers)
+
+    expect(result.inertAnswers.length).toBeGreaterThan(0)
+  })
+
   it('collects only answers that neither eliminated nor favored anything', () => {
     const answers = answerEveryUngatedQuestion((answer) => (answer.eliminates.length === 0 && answer.favors.length === 0 ? 1 : 0))
     const result = evaluate(answers)
-    expect(result.inertAnswers.length).toBeGreaterThan(0)
+
+    for (const entry of result.inertAnswers) {
+      expect(entry.answer).toMatchObject({ eliminates: [], favors: [] })
+    }
+  })
+
+  it('never collects an answer that ruled a family out', () => {
+    const answers = answerEveryUngatedQuestion((answer) => (answer.eliminates.length === 0 && answer.favors.length === 0 ? 1 : 0))
+    const result = evaluate(answers)
 
     const inertAnswerIds = createSet(result.inertAnswers.map(({ answer }) => answer.id))
-    for (const entry of result.inertAnswers) {
-      expect(entry.answer.eliminates).toHaveLength(0)
-      expect(entry.answer.favors).toHaveLength(0)
-    }
     for (const entry of result.eliminated) expect(inertAnswerIds.has(entry.by.answerId)).toBe(false)
+  })
+
+  it('never collects an answer that favored a family', () => {
+    const answers = answerEveryUngatedQuestion((answer) => (answer.eliminates.length === 0 && answer.favors.length === 0 ? 1 : 0))
+    const result = evaluate(answers)
+
+    const inertAnswerIds = createSet(result.inertAnswers.map(({ answer }) => answer.id))
     for (const entries of result.favoredBy.values()) {
       for (const entry of entries) expect(inertAnswerIds.has(entry.answer.id)).toBe(false)
     }
@@ -276,10 +359,15 @@ describe('isRelevant', () => {
     expect(isRelevant(ungated, {})).toBe(true)
   })
 
-  it('hides a gated question until one of its unlocking answers is chosen', () => {
-    const { question: gated, gate } = mustFind(findGatedQuestion(), 'gated question')
+  it('hides a gated question while none of its unlocking answers is chosen', () => {
+    const { question: gated } = mustFind(findGatedQuestion(), 'gated question')
 
     expect(isRelevant(gated, {})).toBe(false)
+  })
+
+  it('reveals a gated question once one of its unlocking answers is chosen', () => {
+    const { question: gated, gate } = mustFind(findGatedQuestion(), 'gated question')
+
     expect(isRelevant(gated, { [gate.questionId]: gate.answerId })).toBe(true)
   })
 })
@@ -290,6 +378,13 @@ describe('pruneAnswers', () => {
     const answers = { [ungated.id]: ungated.answers[0].id }
 
     expect(pruneAnswers(answers)).toEqual(answers)
+  })
+
+  it('keeps an answer to a gated question while the gate that revealed it is open', () => {
+    const { question: gated, gate } = mustFind(findGatedQuestion(), 'gated question')
+
+    const withGateOpen = { [gate.questionId]: gate.answerId, [gated.id]: gated.answers[0].id }
+    expect(pruneAnswers(withGateOpen)[gated.id]).toBe(gated.answers[0].id)
   })
 
   it('drops an answer once the gate that revealed its question closes', () => {
@@ -304,8 +399,6 @@ describe('pruneAnswers', () => {
     )
 
     const withGateOpen = { [gate.questionId]: gate.answerId, [gated.id]: gated.answers[0].id }
-    expect(pruneAnswers(withGateOpen)[gated.id]).toBe(gated.answers[0].id)
-
     const withGateClosed = { ...withGateOpen, [gate.questionId]: otherAnswer.id }
     expect(pruneAnswers(withGateClosed)[gated.id]).toBeUndefined()
   })
@@ -316,12 +409,19 @@ describe('pruneAnswers', () => {
 })
 
 describe('progressOf', () => {
-  it('counts answered questions against those currently relevant', () => {
+  it('counts the questions answered so far', () => {
     const ungated = mustFind(findUngatedQuestion(), 'ungated question')
 
     const progress = progressOf(evaluate({ [ungated.id]: ungated.answers[0].id }))
 
     expect(progress.answered).toBe(1)
+  })
+
+  it('counts at least as many relevant questions as answered ones', () => {
+    const ungated = mustFind(findUngatedQuestion(), 'ungated question')
+
+    const progress = progressOf(evaluate({ [ungated.id]: ungated.answers[0].id }))
+
     expect(progress.total).toBeGreaterThanOrEqual(progress.answered)
   })
 })
@@ -343,9 +443,18 @@ describe('dataset integrity', () => {
     for (const question of decisionFramework.questions) {
       for (const gate of question.unlockedBy ?? []) {
         const source = decisionFramework.questions.find((candidate) => candidate.id === gate.questionId)
-        expect(source, `${question.id} gated by unknown ${gate.questionId}`).toBeDefined()
-        expect(source?.answers.some((answer) => answer.id === gate.answerId)).toBe(true)
+        // note: an unknown gate question leaves `source` undefined, which fails this check too, so the message names both cases
+        expect(
+          source?.answers.some((answer) => answer.id === gate.answerId),
+          `${question.id} gated by unknown ${gate.questionId} or its unknown answer ${gate.answerId}`
+        ).toBe(true)
       }
+    }
+  })
+
+  it('maps every implementation onto at least one family', () => {
+    for (const implementation of decisionFramework.implementations) {
+      expect(implementation.families.length, `${implementation.id} maps onto no family`).toBeGreaterThan(0)
     }
   })
 
@@ -353,17 +462,21 @@ describe('dataset integrity', () => {
     const familyIds = new Set(decisionFramework.families.map((family) => family.id))
 
     for (const implementation of decisionFramework.implementations) {
-      expect(implementation.families.length).toBeGreaterThan(0)
       for (const familyId of implementation.families) {
         expect(familyIds.has(familyId), `${implementation.id} references ${familyId}`).toBe(true)
       }
     }
   })
 
-  it('never presents a planned capability as available', () => {
+  it('lists at least one planned capability', () => {
     const planned = decisionFramework.implementations.filter((implementation) => implementation.availability === 'announced-planned')
 
     expect(planned.length).toBeGreaterThan(0)
+  })
+
+  it('never presents a planned capability as available', () => {
+    const planned = decisionFramework.implementations.filter((implementation) => implementation.availability === 'announced-planned')
+
     for (const implementation of planned) {
       expect(implementation.availability).not.toBe('available')
     }

@@ -38,10 +38,15 @@ describe('docsNavigation', () => {
     expect(routed.length).toBe(createSet(routed).size)
   })
 
-  it('reaches every package page from under Libraries', () => {
+  it('lists at least twenty packages under Libraries', () => {
     const packages = flatten(LIBRARIES_ENTRY?.children ?? []).filter((item) => item.packageName)
 
     expect(packages.length).toBeGreaterThanOrEqual(20)
+  })
+
+  it('reaches every package page from under Libraries', () => {
+    const packages = flatten(LIBRARIES_ENTRY?.children ?? []).filter((item) => item.packageName)
+
     for (const item of packages) {
       expect(item.href).toMatch(/^\/docs\/libraries\//)
     }

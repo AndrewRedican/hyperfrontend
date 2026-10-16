@@ -28,10 +28,15 @@ function fakeWindow(options: FakeWindowOptions): Window {
 }
 
 describe('readScrollProgress', () => {
-  it('is zero at the top of a long page and one at its end', () => {
+  it('is zero at the top of a long page', () => {
     const long = { scrollHeight: 16_000, innerHeight: 900 }
 
     expect(readScrollProgress(fakeWindow({ ...long, scrollY: 0 }))).toBe(0)
+  })
+
+  it('is one at the end of a long page', () => {
+    const long = { scrollHeight: 16_000, innerHeight: 900 }
+
     expect(readScrollProgress(fakeWindow({ ...long, scrollY: 15_100 }))).toBe(1)
   })
 
@@ -45,11 +50,16 @@ describe('readScrollProgress', () => {
     expect(readScrollProgress(fakeWindow({ scrollHeight: 700, innerHeight: 900, scrollY: 0 }))).toBe(0)
   })
 
+  it('measures a stub page scrolled to its end by the screens travelled', () => {
+    const end = readScrollProgress(fakeWindow({ scrollHeight: 1_273, innerHeight: 900, scrollY: 373 }))
+
+    expect(end).toBeCloseTo(373 / (3.5 * 900), 5)
+  })
+
   it('holds a stub page near the top even when it is scrolled to its end', () => {
     // why: three hundred pixels of scrolling is not a descent, and treating it as one would give the shortest documents the deepest treatment
     const end = readScrollProgress(fakeWindow({ scrollHeight: 1_273, innerHeight: 900, scrollY: 373 }))
 
-    expect(end).toBeCloseTo(373 / (3.5 * 900), 5)
     expect(end).toBeLessThan(0.2)
   })
 
@@ -59,10 +69,15 @@ describe('readScrollProgress', () => {
     expect(end).toBeGreaterThan(0.9)
   })
 
-  it('clamps a scroll position past either end of the document', () => {
+  it('clamps a scroll position above the top of the document to zero', () => {
     const page = { scrollHeight: 16_000, innerHeight: 900 }
 
     expect(readScrollProgress(fakeWindow({ ...page, scrollY: -240 }))).toBe(0)
+  })
+
+  it('clamps a scroll position past the end of the document to one', () => {
+    const page = { scrollHeight: 16_000, innerHeight: 900 }
+
     expect(readScrollProgress(fakeWindow({ ...page, scrollY: 99_000 }))).toBe(1)
   })
 })
@@ -89,7 +104,7 @@ describe('trackScrollProgress', () => {
     const read = () => document.documentElement.style.getPropertyValue('--page-progress')
 
     // why: jsdom lays nothing out, so on installation the document has no height to be part of the way down
-    expect(read()).toBe('0.00')
+    const installed = read()
 
     vi.spyOn(document.documentElement, 'scrollHeight', 'get').mockReturnValue(10_000)
     window.innerHeight = 1_000
@@ -97,11 +112,11 @@ describe('trackScrollProgress', () => {
     window.dispatchEvent(new Event('scroll'))
     await nextFrame()
 
-    expect(read()).toBe('0.50')
+    const scrolled = read()
 
     stop()
 
-    expect(read()).toBe('')
+    expect({ installed, scrolled, stopped: read() }).toEqual({ installed: '0.00', scrolled: '0.50', stopped: '' })
   })
 
   it('writes nothing while the page is still', async () => {
@@ -136,8 +151,7 @@ describe('trackScrollProgress', () => {
     }
     await nextFrame()
 
-    expect(setProperty).toHaveBeenCalledTimes(1)
-    expect(setProperty).toHaveBeenCalledWith('--page-progress', '0.40')
+    expect(setProperty.mock.calls).toEqual([['--page-progress', '0.40']])
 
     stop()
   })
