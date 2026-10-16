@@ -576,6 +576,14 @@ describe('createGitClient', () => {
       const result = client.fetch()
 
       expect(result).toBe(true)
+    })
+
+    it('fetches from origin by default', () => {
+      mockExecFileSync.mockReturnValue('')
+
+      const client = createGitClient()
+      client.fetch()
+
       expect(mockExecFileSync).toHaveBeenCalledWith('git', expect.arrayContaining(['fetch', 'origin']), expect.any(Object))
     })
 
@@ -626,6 +634,14 @@ describe('createGitClient', () => {
       const result = client.pull()
 
       expect(result).toBe(true)
+    })
+
+    it('pulls from origin by default', () => {
+      mockExecFileSync.mockReturnValue('')
+
+      const client = createGitClient()
+      client.pull()
+
       expect(mockExecFileSync).toHaveBeenCalledWith('git', expect.arrayContaining(['pull', 'origin']), expect.any(Object))
     })
 
@@ -667,6 +683,14 @@ describe('createGitClient', () => {
       const result = client.push()
 
       expect(result).toBe(true)
+    })
+
+    it('pushes to origin by default', () => {
+      mockExecFileSync.mockReturnValue('')
+
+      const client = createGitClient()
+      client.push()
+
       expect(mockExecFileSync).toHaveBeenCalledWith('git', expect.arrayContaining(['push', 'origin']), expect.any(Object))
     })
 
@@ -726,16 +750,32 @@ describe('createGitClient', () => {
       const result = client.getRemoteUrl()
 
       expect(result).toBe('https://github.com/owner/repo.git')
+    })
+
+    it('reads the origin remote URL by default', () => {
+      mockExecFileSync.mockReturnValue('https://github.com/owner/repo.git\n')
+
+      const client = createGitClient()
+      client.getRemoteUrl()
+
       expect(mockExecFileSync).toHaveBeenCalledWith('git', ['remote', 'get-url', 'origin'], expect.any(Object))
     })
 
-    it('uses custom remote name', () => {
+    it('returns the URL of a custom remote', () => {
       mockExecFileSync.mockReturnValue('https://github.com/other/repo.git\n')
 
       const client = createGitClient()
       const result = client.getRemoteUrl('upstream')
 
       expect(result).toBe('https://github.com/other/repo.git')
+    })
+
+    it('uses custom remote name', () => {
+      mockExecFileSync.mockReturnValue('https://github.com/other/repo.git\n')
+
+      const client = createGitClient()
+      client.getRemoteUrl('upstream')
+
       expect(mockExecFileSync).toHaveBeenCalledWith('git', ['remote', 'get-url', 'upstream'], expect.any(Object))
     })
 
@@ -772,8 +812,6 @@ describe('createGitClient', () => {
 
 describe('DEFAULT_GIT_CLIENT_CONFIG', () => {
   it('has sensible defaults', () => {
-    expect(DEFAULT_GIT_CLIENT_CONFIG.timeout).toBe(30000)
-    expect(DEFAULT_GIT_CLIENT_CONFIG.throwOnError).toBe(true)
-    expect(DEFAULT_GIT_CLIENT_CONFIG.cwd).toBe(process.cwd())
+    expect(DEFAULT_GIT_CLIENT_CONFIG).toEqual(expect.objectContaining({ timeout: 30000, throwOnError: true, cwd: process.cwd() }))
   })
 })

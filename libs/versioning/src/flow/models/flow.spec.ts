@@ -115,7 +115,10 @@ describe('Flow Model', () => {
       const newStep = createMockStep('step-2')
       const modified = addStep(flow, newStep)
 
-      expect([flow.steps.map((s) => s.id), modified.steps.map((s) => s.id)]).toEqual([['step-1'], ['step-1', 'step-2']])
+      expect({ original: flow.steps.map((s) => s.id), returned: modified.steps.map((s) => s.id) }).toEqual({
+        original: ['step-1'],
+        returned: ['step-1', 'step-2'],
+      })
     })
 
     it('preserves other flow properties', () => {
@@ -157,7 +160,10 @@ describe('Flow Model', () => {
       const flow = createTestFlow(['step-1', 'step-2'])
       const modified = removeStep(flow, 'step-1')
 
-      expect([flow.steps.map((s) => s.id), modified.steps.map((s) => s.id)]).toEqual([['step-1', 'step-2'], ['step-2']])
+      expect({ original: flow.steps.map((s) => s.id), returned: modified.steps.map((s) => s.id) }).toEqual({
+        original: ['step-1', 'step-2'],
+        returned: ['step-2'],
+      })
     })
 
     it('returns same content if step not found', () => {
@@ -215,10 +221,10 @@ describe('Flow Model', () => {
       const flow = createTestFlow(['a', 'b'])
       const modified = insertStep(flow, createMockStep('c'), 1)
 
-      expect([flow.steps.map((s) => s.id), modified.steps.map((s) => s.id)]).toEqual([
-        ['a', 'b'],
-        ['a', 'c', 'b'],
-      ])
+      expect({ original: flow.steps.map((s) => s.id), returned: modified.steps.map((s) => s.id) }).toEqual({
+        original: ['a', 'b'],
+        returned: ['a', 'c', 'b'],
+      })
     })
 
     it('handles inserting past the end', () => {

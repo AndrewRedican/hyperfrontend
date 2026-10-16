@@ -275,14 +275,33 @@ describe('createClassificationContext', () => {
       includeScopes: ['shared'],
     })
 
-    expect(context).toEqual(
-      expect.objectContaining({
-        dependencyCommitMap: depMap,
-        infrastructureCommitHashes: infraHashes,
-        excludeScopes: ['custom-exclude'],
-        includeScopes: ['shared'],
-      })
-    )
+    expect(context).toEqual(expect.objectContaining({ excludeScopes: ['custom-exclude'], includeScopes: ['shared'] }))
+  })
+
+  it('keeps the given dependency commit map by reference', () => {
+    const depMap = new Map([['lib-utils', new Set(['def456'])]])
+    const infraHashes = new Set(['ghi789'])
+    const context = createClassificationContext(['versioning'], new Set(['abc123']), {
+      dependencyCommitMap: depMap,
+      infrastructureCommitHashes: infraHashes,
+      excludeScopes: ['custom-exclude'],
+      includeScopes: ['shared'],
+    })
+
+    expect(context.dependencyCommitMap).toBe(depMap)
+  })
+
+  it('keeps the given infrastructure commit hash set by reference', () => {
+    const depMap = new Map([['lib-utils', new Set(['def456'])]])
+    const infraHashes = new Set(['ghi789'])
+    const context = createClassificationContext(['versioning'], new Set(['abc123']), {
+      dependencyCommitMap: depMap,
+      infrastructureCommitHashes: infraHashes,
+      excludeScopes: ['custom-exclude'],
+      includeScopes: ['shared'],
+    })
+
+    expect(context.infrastructureCommitHashes).toBe(infraHashes)
   })
 })
 

@@ -11,16 +11,18 @@ describe('createGitCommit', () => {
       subject: 'feat: add new feature',
     })
 
-    expect(commit.hash).toBe('abc1234567890def1234567890abc1234567890de')
-    expect(commit.shortHash).toBe('abc1234')
-    expect(commit.authorName).toBe('John Doe')
-    expect(commit.authorEmail).toBe('john@example.com')
-    expect(commit.authorDate).toBe('2026-03-12T10:00:00Z')
-    expect(commit.subject).toBe('feat: add new feature')
-    expect(commit.body).toBe('')
-    expect(commit.message).toBe('feat: add new feature')
-    expect(commit.parents).toEqual([])
-    expect(commit.refs).toEqual([])
+    expect(commit).toMatchObject({
+      hash: 'abc1234567890def1234567890abc1234567890de',
+      shortHash: 'abc1234',
+      authorName: 'John Doe',
+      authorEmail: 'john@example.com',
+      authorDate: '2026-03-12T10:00:00Z',
+      subject: 'feat: add new feature',
+      body: '',
+      message: 'feat: add new feature',
+      parents: [],
+      refs: [],
+    })
   })
 
   it('creates a commit with optional fields', () => {
@@ -38,13 +40,15 @@ describe('createGitCommit', () => {
       refs: ['HEAD', 'main'],
     })
 
-    expect(commit.committerName).toBe('Jane Doe')
-    expect(commit.committerEmail).toBe('jane@example.com')
-    expect(commit.commitDate).toBe('2026-03-12T11:00:00Z')
-    expect(commit.body).toBe('This is the commit body.')
-    expect(commit.message).toBe('feat: add new feature\n\nThis is the commit body.')
-    expect(commit.parents).toEqual(['parent1', 'parent2'])
-    expect(commit.refs).toEqual(['HEAD', 'main'])
+    expect(commit).toMatchObject({
+      committerName: 'Jane Doe',
+      committerEmail: 'jane@example.com',
+      commitDate: '2026-03-12T11:00:00Z',
+      body: 'This is the commit body.',
+      message: 'feat: add new feature\n\nThis is the commit body.',
+      parents: ['parent1', 'parent2'],
+      refs: ['HEAD', 'main'],
+    })
   })
 
   it('defaults committer to author', () => {
@@ -56,9 +60,11 @@ describe('createGitCommit', () => {
       subject: 'test',
     })
 
-    expect(commit.committerName).toBe('John Doe')
-    expect(commit.committerEmail).toBe('john@example.com')
-    expect(commit.commitDate).toBe('2026-03-12T10:00:00Z')
+    expect(commit).toMatchObject({
+      committerName: 'John Doe',
+      committerEmail: 'john@example.com',
+      commitDate: '2026-03-12T10:00:00Z',
+    })
   })
 })
 
@@ -169,14 +175,15 @@ describe('isRootCommit', () => {
 })
 
 describe('extractScope', () => {
-  it('extracts scope from conventional commit', () => {
-    expect(extractScope('feat(lib-versioning): add git support')).toBe('lib-versioning')
-    expect(extractScope('fix(core): bug fix')).toBe('core')
+  it.each([
+    ['feat(lib-versioning): add git support', 'lib-versioning'],
+    ['fix(core): bug fix', 'core'],
+  ])('extracts the scope from the conventional commit %p', (subject, scope) => {
+    expect(extractScope(subject)).toBe(scope)
   })
 
-  it('returns undefined for no scope', () => {
-    expect(extractScope('fix: resolve issue')).toBeUndefined()
-    expect(extractScope('random message')).toBeUndefined()
+  it.each(['fix: resolve issue', 'random message'])('returns undefined for the scopeless subject %p', (subject) => {
+    expect(extractScope(subject)).toBeUndefined()
   })
 
   it('handles breaking change marker', () => {
@@ -193,15 +200,16 @@ describe('extractScope', () => {
 })
 
 describe('extractType', () => {
-  it('extracts type from conventional commit', () => {
-    expect(extractType('feat(lib): add feature')).toBe('feat')
-    expect(extractType('fix: resolve issue')).toBe('fix')
-    expect(extractType('chore!: breaking')).toBe('chore')
+  it.each([
+    ['feat(lib): add feature', 'feat'],
+    ['fix: resolve issue', 'fix'],
+    ['chore!: breaking', 'chore'],
+  ])('extracts the type from the conventional commit %p', (subject, type) => {
+    expect(extractType(subject)).toBe(type)
   })
 
-  it('returns undefined for non-conventional', () => {
-    expect(extractType('random message')).toBeUndefined()
-    expect(extractType('123: number prefix')).toBeUndefined()
+  it.each(['random message', '123: number prefix'])('returns undefined for the non-conventional subject %p', (subject) => {
+    expect(extractType(subject)).toBeUndefined()
   })
 
   it('returns undefined when subject is just the type', () => {

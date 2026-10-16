@@ -347,7 +347,7 @@ describe('serializeChangelog', () => {
     })
 
     const result = serializeChangelog(changelog)
-    expect(result).toContain('## Unreleased\n')
+    expect(result).toBe('# Changelog\n\n## Unreleased\n\n### Features\n\n- Upcoming feature\n')
   })
 
   it('serializes header links when includeLinks is true', () => {

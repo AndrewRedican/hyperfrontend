@@ -311,15 +311,18 @@ All notable changes will be documented here.
 describe('helper functions', () => {
   describe('isLetter', () => {
     it('returns true for lowercase letters', () => {
-      expect(['a', 'z'].map((char) => isLetter(char))).toEqual([true, true])
+      const chars = ['a', 'z']
+      expect(chars.map((char) => [char, isLetter(char)])).toEqual(chars.map((char) => [char, true]))
     })
 
     it('returns true for uppercase letters', () => {
-      expect(['A', 'Z'].map((char) => isLetter(char))).toEqual([true, true])
+      const chars = ['A', 'Z']
+      expect(chars.map((char) => [char, isLetter(char)])).toEqual(chars.map((char) => [char, true]))
     })
 
     it('returns false for digits', () => {
-      expect(['0', '9'].map((char) => isLetter(char))).toEqual([false, false])
+      const chars = ['0', '9']
+      expect(chars.map((char) => [char, isLetter(char)])).toEqual(chars.map((char) => [char, false]))
     })
 
     it('returns false for undefined', () => {
@@ -329,7 +332,8 @@ describe('helper functions', () => {
 
   describe('isDigit', () => {
     it('returns true for digits', () => {
-      expect(['0', '9'].map((char) => isDigit(char))).toEqual([true, true])
+      const chars = ['0', '9']
+      expect(chars.map((char) => [char, isDigit(char)])).toEqual(chars.map((char) => [char, true]))
     })
 
     it('returns false for letters', () => {
@@ -343,7 +347,8 @@ describe('helper functions', () => {
 
   describe('isAlphanumeric', () => {
     it('returns true for letters', () => {
-      expect(['a', 'Z'].map((char) => isAlphanumeric(char))).toEqual([true, true])
+      const chars = ['a', 'Z']
+      expect(chars.map((char) => [char, isAlphanumeric(char)])).toEqual(chars.map((char) => [char, true]))
     })
 
     it('returns true for digits', () => {

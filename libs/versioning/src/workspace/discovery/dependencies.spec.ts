@@ -76,9 +76,7 @@ describe('findInternalDependencies', () => {
 
     const internal = findInternalDependencies(packageJson, allPackages)
 
-    expect(internal).toContain('@scope/lib-a')
-    expect(internal).toContain('@scope/lib-b')
-    expect(internal).not.toContain('lodash')
+    expect(internal).toEqual(['@scope/lib-a', '@scope/lib-b'])
   })
 
   it('finds dev dependencies', () => {
@@ -170,18 +168,10 @@ describe('findInternalDependenciesWithTypes', () => {
 
     const edges = findInternalDependenciesWithTypes('my-app', packageJson, allPackages)
 
-    expect(edges).toHaveLength(2)
-
-    const depEdge = edges.find((e) => e.to === '@scope/lib-a')
-    expect(depEdge).toBeDefined()
-    expect(depEdge?.type).toBe('dependencies')
-    expect(depEdge?.from).toBe('my-app')
-    expect(depEdge?.versionRange).toBe('^1.0.0')
-
-    const devEdge = edges.find((e) => e.to === '@scope/testing')
-    expect(devEdge).toBeDefined()
-    expect(devEdge?.type).toBe('devDependencies')
-    expect(devEdge?.versionRange).toBe('^2.0.0')
+    expect(edges).toEqual([
+      { from: 'my-app', to: '@scope/lib-a', type: 'dependencies', versionRange: '^1.0.0' },
+      { from: 'my-app', to: '@scope/testing', type: 'devDependencies', versionRange: '^2.0.0' },
+    ])
   })
 
   it('includes peer dependencies', () => {
@@ -228,7 +218,7 @@ describe('findInternalDependenciesWithTypes', () => {
 })
 
 describe('buildDependencyGraph', () => {
-  it('builds graph for linear dependencies', () => {
+  it('builds the dependents graph for linear dependencies', () => {
     const projects = [
       createTestProject('app', '1.0.0', { 'lib-a': '^1.0.0' }),
       createTestProject('lib-a', '1.0.0', { 'lib-b': '^1.0.0' }),
@@ -237,13 +227,35 @@ describe('buildDependencyGraph', () => {
 
     const analysis = buildDependencyGraph(projects)
 
-    expect(analysis.dependencyGraph.get('lib-b')).toContain('lib-a')
-    expect(analysis.dependencyGraph.get('lib-a')).toContain('app')
-    expect(analysis.dependencyGraph.get('app')).toEqual([])
+    expect({
+      'lib-b': analysis.dependencyGraph.get('lib-b'),
+      'lib-a': analysis.dependencyGraph.get('lib-a'),
+      app: analysis.dependencyGraph.get('app'),
+    }).toEqual({
+      'lib-b': expect.arrayContaining(['lib-a']),
+      'lib-a': expect.arrayContaining(['app']),
+      app: [],
+    })
+  })
 
-    expect(analysis.reverseDependencyGraph.get('app')).toContain('lib-a')
-    expect(analysis.reverseDependencyGraph.get('lib-a')).toContain('lib-b')
-    expect(analysis.reverseDependencyGraph.get('lib-b')).toEqual([])
+  it('builds the reverse dependencies graph for linear dependencies', () => {
+    const projects = [
+      createTestProject('app', '1.0.0', { 'lib-a': '^1.0.0' }),
+      createTestProject('lib-a', '1.0.0', { 'lib-b': '^1.0.0' }),
+      createTestProject('lib-b', '1.0.0'),
+    ]
+
+    const analysis = buildDependencyGraph(projects)
+
+    expect({
+      app: analysis.reverseDependencyGraph.get('app'),
+      'lib-a': analysis.reverseDependencyGraph.get('lib-a'),
+      'lib-b': analysis.reverseDependencyGraph.get('lib-b'),
+    }).toEqual({
+      app: expect.arrayContaining(['lib-a']),
+      'lib-a': expect.arrayContaining(['lib-b']),
+      'lib-b': [],
+    })
   })
 
   it('identifies leaf packages (no dependents)', () => {
@@ -251,8 +263,7 @@ describe('buildDependencyGraph', () => {
 
     const analysis = buildDependencyGraph(projects)
 
-    expect(analysis.leafPackages).toContain('app')
-    expect(analysis.leafPackages).not.toContain('lib-a')
+    expect(analysis.leafPackages).toEqual(['app'])
   })
 
   it('identifies root packages (no dependencies)', () => {
@@ -260,8 +271,7 @@ describe('buildDependencyGraph', () => {
 
     const analysis = buildDependencyGraph(projects)
 
-    expect(analysis.rootPackages).toContain('lib-a')
-    expect(analysis.rootPackages).not.toContain('app')
+    expect(analysis.rootPackages).toEqual(['lib-a'])
   })
 
   it('detects circular dependencies', () => {
@@ -272,8 +282,10 @@ describe('buildDependencyGraph', () => {
 
     const analysis = buildDependencyGraph(projects)
 
-    expect(analysis.hasCircularDependencies).toBe(true)
-    expect(analysis.circularDependencies.length).toBeGreaterThan(0)
+    expect({
+      hasCircularDependencies: analysis.hasCircularDependencies,
+      reportsCycles: analysis.circularDependencies.length > 0,
+    }).toEqual({ hasCircularDependencies: true, reportsCycles: true })
   })
 
   it('handles packages with no dependencies', () => {
@@ -281,9 +293,7 @@ describe('buildDependencyGraph', () => {
 
     const analysis = buildDependencyGraph(projects)
 
-    expect(analysis.rootPackages).toContain('standalone')
-    expect(analysis.leafPackages).toContain('standalone')
-    expect(analysis.hasCircularDependencies).toBe(false)
+    expect(analysis).toMatchObject({ rootPackages: ['standalone'], leafPackages: ['standalone'], hasCircularDependencies: false })
   })
 
   it('collects all edges', () => {
@@ -295,17 +305,14 @@ describe('buildDependencyGraph', () => {
 
     const analysis = buildDependencyGraph(projects)
 
-    expect(analysis.edges).toHaveLength(2)
-
-    const prodEdge = analysis.edges.find((e) => e.to === 'lib-a')
-    expect(prodEdge?.type).toBe('dependencies')
-
-    const devEdge = analysis.edges.find((e) => e.to === 'lib-b')
-    expect(devEdge?.type).toBe('devDependencies')
+    expect(analysis.edges).toEqual([
+      expect.objectContaining({ to: 'lib-a', type: 'dependencies' }),
+      expect.objectContaining({ to: 'lib-b', type: 'devDependencies' }),
+    ])
   })
 
-  it('handles complex dependency graph', () => {
-    const projects = [
+  describe('with a complex dependency graph', () => {
+    const createComplexGraphProjects = (): Project[] => [
       createTestProject('app-1', '1.0.0', { 'lib-shared': '^1.0.0', 'lib-a': '^1.0.0' }),
       createTestProject('app-2', '1.0.0', { 'lib-shared': '^1.0.0', 'lib-b': '^1.0.0' }),
       createTestProject('lib-a', '1.0.0', { 'lib-core': '^1.0.0' }),
@@ -314,16 +321,24 @@ describe('buildDependencyGraph', () => {
       createTestProject('lib-core', '1.0.0'),
     ]
 
-    const analysis = buildDependencyGraph(projects)
+    it('lists every direct dependent of the shared core package', () => {
+      const analysis = buildDependencyGraph(createComplexGraphProjects())
 
-    const coreDependents = analysis.dependencyGraph.get('lib-core') ?? []
-    expect(coreDependents).toContain('lib-a')
-    expect(coreDependents).toContain('lib-b')
-    expect(coreDependents).toContain('lib-shared')
+      const coreDependents = analysis.dependencyGraph.get('lib-core') ?? []
+      expect(coreDependents).toEqual(expect.arrayContaining(['lib-a', 'lib-b', 'lib-shared']))
+    })
 
-    expect(analysis.rootPackages).toContain('lib-core')
-    expect(analysis.leafPackages).toContain('app-1')
-    expect(analysis.leafPackages).toContain('app-2')
+    it('identifies the shared core package as a root package', () => {
+      const analysis = buildDependencyGraph(createComplexGraphProjects())
+
+      expect(analysis.rootPackages).toContain('lib-core')
+    })
+
+    it('identifies both applications as leaf packages', () => {
+      const analysis = buildDependencyGraph(createComplexGraphProjects())
+
+      expect(analysis.leafPackages).toEqual(expect.arrayContaining(['app-1', 'app-2']))
+    })
   })
 
   it('detects multiple separate cycles in a graph', () => {
@@ -338,8 +353,10 @@ describe('buildDependencyGraph', () => {
 
     const analysis = buildDependencyGraph(projects)
 
-    expect(analysis.hasCircularDependencies).toBe(true)
-    expect(analysis.circularDependencies.length).toBeGreaterThanOrEqual(1)
+    expect({
+      hasCircularDependencies: analysis.hasCircularDependencies,
+      reportsCycles: analysis.circularDependencies.length >= 1,
+    }).toEqual({ hasCircularDependencies: true, reportsCycles: true })
   })
 
   it('correctly builds dependency graph with missing package references', () => {
@@ -350,8 +367,10 @@ describe('buildDependencyGraph', () => {
 
     const analysis = buildDependencyGraph(projects)
 
-    expect(analysis.dependencyGraph.has('external-lib')).toBe(false)
-    expect(analysis.dependencyGraph.get('lib-a')).toContain('app')
+    expect({
+      tracksExternalLib: analysis.dependencyGraph.has('external-lib'),
+      libADependents: analysis.dependencyGraph.get('lib-a'),
+    }).toEqual({ tracksExternalLib: false, libADependents: expect.arrayContaining(['app']) })
   })
 
   it('handles single package with self-reference (edge case)', () => {
@@ -362,7 +381,7 @@ describe('buildDependencyGraph', () => {
     expect(analysis.hasCircularDependencies).toBe(true)
   })
 
-  it('processes complex diamond with multiple path cycles', () => {
+  it('detects the cycle in a complex diamond with multiple path cycles', () => {
     const projects = [
       createTestProject('lib-a', '1.0.0', { 'lib-b': '^1.0.0', 'lib-c': '^1.0.0' }),
       createTestProject('lib-b', '1.0.0', { 'lib-d': '^1.0.0' }),
@@ -373,9 +392,20 @@ describe('buildDependencyGraph', () => {
     const analysis = buildDependencyGraph(projects)
 
     expect(analysis.hasCircularDependencies).toBe(true)
+  })
+
+  it('records both diamond branches as dependents in a complex diamond with multiple path cycles', () => {
+    const projects = [
+      createTestProject('lib-a', '1.0.0', { 'lib-b': '^1.0.0', 'lib-c': '^1.0.0' }),
+      createTestProject('lib-b', '1.0.0', { 'lib-d': '^1.0.0' }),
+      createTestProject('lib-c', '1.0.0', { 'lib-d': '^1.0.0' }),
+      createTestProject('lib-d', '1.0.0', { 'lib-a': '^1.0.0' }),
+    ]
+
+    const analysis = buildDependencyGraph(projects)
+
     const dependentsOfD = analysis.dependencyGraph.get('lib-d') ?? []
-    expect(dependentsOfD).toContain('lib-b')
-    expect(dependentsOfD).toContain('lib-c')
+    expect(dependentsOfD).toEqual(expect.arrayContaining(['lib-b', 'lib-c']))
   })
 })
 
@@ -390,12 +420,7 @@ describe('getTopologicalOrder', () => {
     const analysis = buildDependencyGraph(projects)
     const order = getTopologicalOrder(analysis)
 
-    const libBIndex = order.indexOf('lib-b')
-    const libAIndex = order.indexOf('lib-a')
-    const appIndex = order.indexOf('app')
-
-    expect(libBIndex).toBeLessThan(libAIndex)
-    expect(libAIndex).toBeLessThan(appIndex)
+    expect(order).toEqual(['lib-b', 'lib-a', 'app'])
   })
 
   it('throws on circular dependencies', () => {
@@ -415,10 +440,7 @@ describe('getTopologicalOrder', () => {
     const analysis = buildDependencyGraph(projects)
     const order = getTopologicalOrder(analysis)
 
-    expect(order).toHaveLength(3)
-    expect(order).toContain('pkg-a')
-    expect(order).toContain('pkg-b')
-    expect(order).toContain('pkg-c')
+    expect(order).toEqual(['pkg-a', 'pkg-b', 'pkg-c'])
   })
 
   it('orders multiple independent root packages', () => {
@@ -431,9 +453,7 @@ describe('getTopologicalOrder', () => {
     const analysis = buildDependencyGraph(projects)
     const order = getTopologicalOrder(analysis)
 
-    expect(order).toHaveLength(3)
-    expect(order.indexOf('app')).toBeGreaterThan(order.indexOf('root-a'))
-    expect(order.indexOf('app')).toBeGreaterThan(order.indexOf('root-b'))
+    expect(order).toEqual(['root-a', 'root-b', 'app'])
   })
 
   it('handles empty package list', () => {
@@ -460,9 +480,7 @@ describe('getTransitiveDependents', () => {
 
     const dependents = getTransitiveDependents(workspace, 'lib-core')
 
-    expect(dependents.has('lib-a')).toBe(true)
-    expect(dependents.has('app')).toBe(true)
-    expect(dependents.has('lib-core')).toBe(false)
+    expect(dependents).toEqual(createSet(['lib-a', 'app']))
   })
 
   it('returns empty set for leaf packages', () => {
@@ -491,9 +509,11 @@ describe('getTransitiveDependents', () => {
 
     const dependents = getTransitiveDependents(workspace, 'core')
 
-    expect(dependents.has('lib-a')).toBe(true)
-    expect(dependents.has('lib-b')).toBe(true)
-    expect(dependents.has('app')).toBe(true)
+    expect({ 'lib-a': dependents.has('lib-a'), 'lib-b': dependents.has('lib-b'), app: dependents.has('app') }).toEqual({
+      'lib-a': true,
+      'lib-b': true,
+      app: true,
+    })
   })
 
   it('returns empty set for unknown package', () => {
@@ -533,9 +553,7 @@ describe('getTransitiveDependencies', () => {
 
     const deps = getTransitiveDependencies(workspace, 'app')
 
-    expect(deps.has('lib-a')).toBe(true)
-    expect(deps.has('lib-core')).toBe(true)
-    expect(deps.has('app')).toBe(false)
+    expect(deps).toEqual(createSet(['lib-a', 'lib-core']))
   })
 
   it('returns empty set for root packages', () => {
@@ -578,8 +596,7 @@ describe('edge cases', () => {
 
     const analysis = buildDependencyGraph(projects)
 
-    expect(analysis.rootPackages).toContain('app')
-    expect(analysis.leafPackages).toContain('app')
+    expect(analysis).toMatchObject({ rootPackages: ['app'], leafPackages: ['app'] })
   })
 
   it('handles large linear dependency chain', () => {
@@ -592,9 +609,7 @@ describe('edge cases', () => {
     const analysis = buildDependencyGraph(projects)
     const order = getTopologicalOrder(analysis)
 
-    expect(order).toHaveLength(10)
-    expect(order[0]).toBe('pkg-0')
-    expect(order[9]).toBe('pkg-9')
+    expect(order).toEqual(['pkg-0', 'pkg-1', 'pkg-2', 'pkg-3', 'pkg-4', 'pkg-5', 'pkg-6', 'pkg-7', 'pkg-8', 'pkg-9'])
   })
 
   it('handles workspace with empty dependency graph entries', () => {
@@ -611,8 +626,7 @@ describe('edge cases', () => {
     const dependentsA = getTransitiveDependents(workspace, 'lib-a')
     const dependentsB = getTransitiveDependents(workspace, 'lib-b')
 
-    expect(dependentsA.size).toBe(0)
-    expect(dependentsB.size).toBe(0)
+    expect({ 'lib-a': dependentsA.size, 'lib-b': dependentsB.size }).toEqual({ 'lib-a': 0, 'lib-b': 0 })
   })
 
   it('correctly processes cycle detection with deep nesting', () => {
@@ -626,8 +640,10 @@ describe('edge cases', () => {
 
     const analysis = buildDependencyGraph(projects)
 
-    expect(analysis.hasCircularDependencies).toBe(true)
-    expect(analysis.circularDependencies.length).toBeGreaterThan(0)
+    expect({
+      hasCircularDependencies: analysis.hasCircularDependencies,
+      reportsCycles: analysis.circularDependencies.length > 0,
+    }).toEqual({ hasCircularDependencies: true, reportsCycles: true })
   })
 
   it('handles adjacency list missing entry during topological sort', () => {
@@ -635,7 +651,6 @@ describe('edge cases', () => {
     const analysis = buildDependencyGraph(projects)
 
     const order = getTopologicalOrder(analysis)
-    expect(order).toHaveLength(1)
-    expect(order[0]).toBe('standalone')
+    expect(order).toEqual(['standalone'])
   })
 })

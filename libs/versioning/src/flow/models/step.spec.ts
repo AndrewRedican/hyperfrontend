@@ -250,6 +250,13 @@ describe('Flow Step Model', () => {
       expect(result).toEqual({ status: 'failed', error, message: 'Custom failure message' })
     })
 
+    it('keeps the original error object when a custom message is given', () => {
+      const error = new Error('Original error message')
+      const result = createFailedResult(error, 'Custom failure message')
+
+      expect(result.error).toBe(error)
+    })
+
     it('uses error message when custom message is undefined', () => {
       const error = new Error('Error from exception')
       const result = createFailedResult(error, undefined)
@@ -262,6 +269,13 @@ describe('Flow Step Model', () => {
       const result = createFailedResult(error)
 
       expect(result).toEqual({ status: 'failed', error, message: '' })
+    })
+
+    it('keeps the original error object when its message is empty', () => {
+      const error = new Error('')
+      const result = createFailedResult(error)
+
+      expect(result.error).toBe(error)
     })
   })
 })

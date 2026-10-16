@@ -5,53 +5,42 @@ describe('parseVersion', () => {
   describe('valid versions', () => {
     it('parses basic version', () => {
       const result = parseVersion('1.2.3')
-      expect(result.success).toBe(true)
-      expect(result.version?.major).toBe(1)
-      expect(result.version?.minor).toBe(2)
-      expect(result.version?.patch).toBe(3)
+      expect(result).toMatchObject({ success: true, version: { major: 1, minor: 2, patch: 3 } })
     })
 
     it('parses version with leading v', () => {
       const result = parseVersion('v1.0.0')
-      expect(result.success).toBe(true)
-      expect(result.version?.major).toBe(1)
+      expect(result).toMatchObject({ success: true, version: { major: 1 } })
     })
 
     it('parses version with prerelease', () => {
       const result = parseVersion('1.0.0-alpha.1')
-      expect(result.success).toBe(true)
-      expect(result.version?.prerelease).toEqual(['alpha', '1'])
+      expect(result).toMatchObject({ success: true, version: { prerelease: ['alpha', '1'] } })
     })
 
     it('parses version with build metadata', () => {
       const result = parseVersion('1.0.0+build.123')
-      expect(result.success).toBe(true)
-      expect(result.version?.build).toEqual(['build', '123'])
+      expect(result).toMatchObject({ success: true, version: { build: ['build', '123'] } })
     })
 
     it('parses version with prerelease and build', () => {
       const result = parseVersion('1.0.0-beta.2+build.456')
-      expect(result.success).toBe(true)
-      expect(result.version?.prerelease).toEqual(['beta', '2'])
-      expect(result.version?.build).toEqual(['build', '456'])
+      expect(result).toMatchObject({ success: true, version: { prerelease: ['beta', '2'], build: ['build', '456'] } })
     })
 
     it('parses 0.0.0', () => {
       const result = parseVersion('0.0.0')
-      expect(result.success).toBe(true)
-      expect(result.version?.major).toBe(0)
+      expect(result).toMatchObject({ success: true, version: { major: 0 } })
     })
 
     it('handles leading/trailing whitespace', () => {
       const result = parseVersion('  1.0.0  ')
-      expect(result.success).toBe(true)
-      expect(result.version?.major).toBe(1)
+      expect(result).toMatchObject({ success: true, version: { major: 1 } })
     })
 
     it('handles = prefix', () => {
       const result = parseVersion('=1.0.0')
-      expect(result.success).toBe(true)
-      expect(result.version?.major).toBe(1)
+      expect(result).toMatchObject({ success: true, version: { major: 1 } })
     })
   })
 
@@ -63,8 +52,7 @@ describe('parseVersion', () => {
 
     it('rejects leading zeros', () => {
       const result = parseVersion('01.0.0')
-      expect(result.success).toBe(false)
-      expect(result.error).toContain('leading zeros')
+      expect(result).toMatchObject({ success: false, error: expect.stringContaining('leading zeros') })
     })
 
     it('rejects missing minor', () => {
@@ -84,8 +72,7 @@ describe('parseVersion', () => {
 
     it('rejects version exceeding max length', () => {
       const result = parseVersion('1.' + '0'.repeat(300))
-      expect(result.success).toBe(false)
-      expect(result.error).toContain('maximum length')
+      expect(result).toMatchObject({ success: false, error: expect.stringContaining('maximum length') })
     })
 
     it('rejects invalid characters', () => {
@@ -105,8 +92,7 @@ describe('parseVersion', () => {
 
     it('rejects version with leading zeros', () => {
       const result = parseVersion('01.2.3')
-      expect(result.success).toBe(false)
-      expect(result.error).toContain('leading zeros')
+      expect(result).toMatchObject({ success: false, error: expect.stringContaining('leading zeros') })
     })
   })
 })
@@ -124,24 +110,19 @@ describe('parseVersionStrict', () => {
 
 describe('coerceVersion', () => {
   it('coerces partial versions', () => {
-    expect(coerceVersion('1')?.major).toBe(1)
-    expect(coerceVersion('1')?.minor).toBe(0)
-    expect(coerceVersion('1')?.patch).toBe(0)
+    expect(coerceVersion('1')).toMatchObject({ major: 1, minor: 0, patch: 0 })
   })
 
   it('coerces two-part versions', () => {
-    expect(coerceVersion('1.2')?.major).toBe(1)
-    expect(coerceVersion('1.2')?.minor).toBe(2)
-    expect(coerceVersion('1.2')?.patch).toBe(0)
+    expect(coerceVersion('1.2')).toMatchObject({ major: 1, minor: 2, patch: 0 })
   })
 
   it('handles v prefix', () => {
     expect(coerceVersion('v2')?.major).toBe(2)
   })
 
-  it('returns null for invalid input', () => {
-    expect(coerceVersion('')).toBeNull()
-    expect(coerceVersion('abc')).toBeNull()
+  it.each(['', 'abc'])('returns null for the invalid input %p', (input) => {
+    expect(coerceVersion(input)).toBeNull()
   })
 
   it('handles leading whitespace', () => {
@@ -153,8 +134,7 @@ describe('coerceVersion', () => {
   })
 
   it('handles both leading and trailing whitespace', () => {
-    expect(coerceVersion('  1.2  ')?.major).toBe(1)
-    expect(coerceVersion('  1.2  ')?.minor).toBe(2)
+    expect(coerceVersion('  1.2  ')).toMatchObject({ major: 1, minor: 2 })
   })
 
   it('handles uppercase V prefix', () => {
@@ -174,38 +154,32 @@ describe('parseVersion - edge cases', () => {
 
   it('handles numeric overflow in major version', () => {
     const result = parseVersion('99999999999999999999.0.0')
-    expect(result.success).toBe(false)
-    expect(result.error).toContain('too large')
+    expect(result).toMatchObject({ success: false, error: expect.stringContaining('too large') })
   })
 
   it('strips equals prefix', () => {
     const result = parseVersion('=1.2.3')
-    expect(result.success).toBe(true)
-    expect(result.version?.major).toBe(1)
+    expect(result).toMatchObject({ success: true, version: { major: 1 } })
   })
 
   it('handles multiple prerelease identifiers', () => {
     const result = parseVersion('1.0.0-alpha.beta.gamma')
-    expect(result.success).toBe(true)
-    expect(result.version?.prerelease).toEqual(['alpha', 'beta', 'gamma'])
+    expect(result).toMatchObject({ success: true, version: { prerelease: ['alpha', 'beta', 'gamma'] } })
   })
 
   it('handles prerelease with numeric and text', () => {
     const result = parseVersion('1.0.0-rc.1.test')
-    expect(result.success).toBe(true)
-    expect(result.version?.prerelease).toEqual(['rc', '1', 'test'])
+    expect(result).toMatchObject({ success: true, version: { prerelease: ['rc', '1', 'test'] } })
   })
 
   it('rejects missing dot after major', () => {
     const result = parseVersion('1')
-    expect(result.success).toBe(false)
-    expect(result.error).toContain('Expected "."')
+    expect(result).toMatchObject({ success: false, error: expect.stringContaining('Expected "."') })
   })
 
   it('rejects missing dot after minor', () => {
     const result = parseVersion('1.2')
-    expect(result.success).toBe(false)
-    expect(result.error).toContain('Expected "."')
+    expect(result).toMatchObject({ success: false, error: expect.stringContaining('Expected "."') })
   })
 
   it('rejects invalid minor version', () => {
@@ -220,43 +194,34 @@ describe('parseVersion - edge cases', () => {
 
   it('rejects leading zeros in minor', () => {
     const result = parseVersion('1.01.3')
-    expect(result.success).toBe(false)
-    expect(result.error).toContain('leading zeros')
+    expect(result).toMatchObject({ success: false, error: expect.stringContaining('leading zeros') })
   })
 
   it('rejects leading zeros in patch', () => {
     const result = parseVersion('1.2.03')
-    expect(result.success).toBe(false)
-    expect(result.error).toContain('leading zeros')
+    expect(result).toMatchObject({ success: false, error: expect.stringContaining('leading zeros') })
   })
 
   it('handles build metadata', () => {
     const result = parseVersion('1.2.3+build.123')
-    expect(result.success).toBe(true)
-    expect(result.version?.build).toEqual(['build', '123'])
+    expect(result).toMatchObject({ success: true, version: { build: ['build', '123'] } })
   })
 
   it('handles both prerelease and build metadata', () => {
     const result = parseVersion('1.2.3-alpha.1+build.456')
-    expect(result.success).toBe(true)
-    expect(result.version?.prerelease).toEqual(['alpha', '1'])
-    expect(result.version?.build).toEqual(['build', '456'])
+    expect(result).toMatchObject({ success: true, version: { prerelease: ['alpha', '1'], build: ['build', '456'] } })
   })
 })
 
 describe('coerceVersion - edge cases', () => {
   it('coerces single digit', () => {
     const v = coerceVersion('1')
-    expect(v?.major).toBe(1)
-    expect(v?.minor).toBe(0)
-    expect(v?.patch).toBe(0)
+    expect(v).toMatchObject({ major: 1, minor: 0, patch: 0 })
   })
 
   it('coerces two-part version', () => {
     const v = coerceVersion('1.2')
-    expect(v?.major).toBe(1)
-    expect(v?.minor).toBe(2)
-    expect(v?.patch).toBe(0)
+    expect(v).toMatchObject({ major: 1, minor: 2, patch: 0 })
   })
 
   it('coerces with v prefix', () => {
@@ -291,36 +256,29 @@ describe('parseVersionStrict - error fallback', () => {
 describe('coerceVersion - minor parsing edge cases', () => {
   it('handles version where minor fails to parse after dot', () => {
     const v = coerceVersion('1.')
-    expect(v?.major).toBe(1)
-    expect(v?.minor).toBe(0)
+    expect(v).toMatchObject({ major: 1, minor: 0 })
   })
 
   it('handles version with invalid character after minor dot', () => {
     const v = coerceVersion('1.abc')
-    expect(v?.major).toBe(1)
-    expect(v?.minor).toBe(0)
+    expect(v).toMatchObject({ major: 1, minor: 0 })
   })
 
   it('handles version where patch fails to parse', () => {
     const v = coerceVersion('1.2.abc')
-    expect(v?.major).toBe(1)
-    expect(v?.minor).toBe(2)
-    expect(v?.patch).toBe(0)
+    expect(v).toMatchObject({ major: 1, minor: 2, patch: 0 })
   })
 
   it('coerces version with extra content after patch', () => {
     const v = coerceVersion('1.2.3extra')
-    expect(v?.major).toBe(1)
-    expect(v?.minor).toBe(2)
-    expect(v?.patch).toBe(3)
+    expect(v).toMatchObject({ major: 1, minor: 2, patch: 3 })
   })
 })
 
 describe('coerceVersion - invalid input handling', () => {
   it('coerces version with invalid minor after dot', () => {
     const v = coerceVersion('1.!')
-    expect(v?.major).toBe(1)
-    expect(v?.minor).toBe(0)
+    expect(v).toMatchObject({ major: 1, minor: 0 })
   })
 
   it('handles version with only whitespace', () => {
@@ -331,14 +289,12 @@ describe('coerceVersion - invalid input handling', () => {
 describe('parseVersion - additional error paths', () => {
   it('handles versions with only trailing whitespace', () => {
     const result = parseVersion('1.2.3   ')
-    expect(result.success).toBe(true)
-    expect(result.version?.patch).toBe(3)
+    expect(result).toMatchObject({ success: true, version: { patch: 3 } })
   })
 
   it('handles versions with mixed whitespace', () => {
     const result = parseVersion('  1.2.3  ')
-    expect(result.success).toBe(true)
-    expect(result.version?.major).toBe(1)
+    expect(result).toMatchObject({ success: true, version: { major: 1 } })
   })
 
   it('rejects invalid characters in patch', () => {
@@ -360,8 +316,7 @@ describe('parseVersion - prerelease and build metadata', () => {
 
   it('handles V prefix uppercase', () => {
     const result = parseVersion('V1.2.3')
-    expect(result.success).toBe(true)
-    expect(result.version?.major).toBe(1)
+    expect(result).toMatchObject({ success: true, version: { major: 1 } })
   })
 
   it('handles version starting with leading zeros in major', () => {
@@ -371,33 +326,28 @@ describe('parseVersion - prerelease and build metadata', () => {
 
   it('handles build metadata without prerelease', () => {
     const result = parseVersion('1.2.3+build')
-    expect(result.success).toBe(true)
-    expect(result.version?.build).toContain('build')
+    expect(result).toMatchObject({ success: true, version: { build: expect.arrayContaining(['build']) } })
   })
 })
 
 describe('parseVersion - identifier parsing errors', () => {
   it('rejects invalid characters in prerelease identifier', () => {
     const result = parseVersion('1.2.3-alpha$beta')
-    expect(result.success).toBe(false)
-    expect(result.error).toContain('Invalid character')
+    expect(result).toMatchObject({ success: false, error: expect.stringContaining('Invalid character') })
   })
 
   it('rejects invalid characters in build metadata', () => {
     const result = parseVersion('1.2.3+build$123')
-    expect(result.success).toBe(false)
-    expect(result.error).toContain('Invalid character')
+    expect(result).toMatchObject({ success: false, error: expect.stringContaining('Invalid character') })
   })
 
   it('rejects trailing dot in prerelease', () => {
     const result = parseVersion('1.2.3-alpha.')
-    expect(result.success).toBe(false)
-    expect(result.error).toContain('Identifier expected after dot')
+    expect(result).toMatchObject({ success: false, error: expect.stringContaining('Identifier expected after dot') })
   })
 
   it('rejects trailing dot in build metadata', () => {
     const result = parseVersion('1.2.3+build.')
-    expect(result.success).toBe(false)
-    expect(result.error).toContain('Identifier expected after dot')
+    expect(result).toMatchObject({ success: false, error: expect.stringContaining('Identifier expected after dot') })
   })
 })

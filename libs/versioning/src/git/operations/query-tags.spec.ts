@@ -34,11 +34,10 @@ describe('getTags', () => {
 
     const tags = getTags()
 
-    expect(tags).toHaveLength(2)
-    expect(tags[0].name).toBe('v1.0.0')
-    expect(tags[0].type).toBe('lightweight')
-    expect(tags[1].name).toBe('v2.0.0')
-    expect(tags[1].type).toBe('lightweight')
+    expect(tags).toEqual([
+      expect.objectContaining({ name: 'v1.0.0', type: 'lightweight' }),
+      expect.objectContaining({ name: 'v2.0.0', type: 'lightweight' }),
+    ])
   })
 
   it('parses annotated tags with metadata', () => {
@@ -55,13 +54,16 @@ describe('getTags', () => {
 
     const tags = getTags()
 
-    expect(tags).toHaveLength(1)
-    expect(tags[0].name).toBe('v1.0.0')
-    expect(tags[0].type).toBe('annotated')
-    expect(tags[0].message).toBe('Release v1.0.0')
-    expect(tags[0].taggerName).toBe('John Doe')
-    expect(tags[0].taggerEmail).toBe('john@example.com')
-    expect(tags[0].tagDate).toBeDefined()
+    expect(tags).toEqual([
+      expect.objectContaining({
+        name: 'v1.0.0',
+        type: 'annotated',
+        message: 'Release v1.0.0',
+        taggerName: 'John Doe',
+        taggerEmail: 'john@example.com',
+        tagDate: expect.any(String),
+      }),
+    ])
   })
 
   it('filters tags by pattern', () => {
@@ -140,10 +142,9 @@ describe('getTag', () => {
 
     const tag = getTag('v1.0.0')
 
-    expect(tag).not.toBeNull()
-    expect(tag?.name).toBe('v1.0.0')
-    expect(tag?.type).toBe('lightweight')
-    expect(tag?.commitHash).toBe('abc123def456789012345678901234567890abcd')
+    expect(tag).toEqual(
+      expect.objectContaining({ name: 'v1.0.0', type: 'lightweight', commitHash: 'abc123def456789012345678901234567890abcd' })
+    )
   })
 
   it('returns annotated tag details', () => {
@@ -159,12 +160,15 @@ describe('getTag', () => {
 
     const tag = getTag('v1.0.0')
 
-    expect(tag).not.toBeNull()
-    expect(tag?.name).toBe('v1.0.0')
-    expect(tag?.type).toBe('annotated')
-    expect(tag?.message).toBe('Version 1.0.0 release\nWith multiline message')
-    expect(tag?.taggerName).toBe('Jane Doe')
-    expect(tag?.taggerEmail).toBe('jane@example.com')
+    expect(tag).toEqual(
+      expect.objectContaining({
+        name: 'v1.0.0',
+        type: 'annotated',
+        message: 'Version 1.0.0 release\nWith multiline message',
+        taggerName: 'Jane Doe',
+        taggerEmail: 'jane@example.com',
+      })
+    )
   })
 
   it('returns null for non-existent tag', () => {
@@ -200,6 +204,13 @@ describe('tagExists', () => {
     const result = tagExists('v1.0.0')
 
     expect(result).toBe(true)
+  })
+
+  it('resolves the tag name through git rev-parse', () => {
+    mockExecFileSync.mockReturnValue('abc123def456789012345678901234567890abcd')
+
+    tagExists('v1.0.0')
+
     expect(mockExecFileSync).toHaveBeenCalledWith('git', expect.arrayContaining(['rev-parse', 'v1.0.0']), expect.any(Object))
   })
 
@@ -236,8 +247,7 @@ describe('getLatestTag', () => {
 
     const tag = getLatestTag()
 
-    expect(tag).not.toBeNull()
-    expect(tag?.name).toBe('v2.0.0')
+    expect(tag).toEqual(expect.objectContaining({ name: 'v2.0.0' }))
   })
 
   it('returns null when no tags exist', () => {
@@ -283,9 +293,7 @@ describe('getTagsForPackage', () => {
 
     const tags = getTagsForPackage('@scope/pkg')
 
-    expect(tags).toHaveLength(2)
-    expect(tags[0].name).toBe('@scope/pkg@1.0.0')
-    expect(tags[1].name).toBe('@scope/pkg@2.0.0')
+    expect(tags.map((tag) => tag.name)).toEqual(['@scope/pkg@1.0.0', '@scope/pkg@2.0.0'])
   })
 
   it('returns tags matching package-v pattern', () => {
@@ -301,9 +309,7 @@ describe('getTagsForPackage', () => {
 
     const tags = getTagsForPackage('mypackage')
 
-    expect(tags).toHaveLength(2)
-    expect(tags[0].name).toBe('mypackage-v1.0.0')
-    expect(tags[1].name).toBe('mypackage-v2.0.0')
+    expect(tags.map((tag) => tag.name)).toEqual(['mypackage-v1.0.0', 'mypackage-v2.0.0'])
   })
 
   it('returns empty array when no matching tags', () => {
@@ -353,8 +359,7 @@ describe('Edge cases and parsing', () => {
 
     const tags = getTags()
 
-    expect(tags[0].taggerName).toBe('')
-    expect(tags[0].taggerEmail).toBe('')
+    expect(tags[0]).toEqual(expect.objectContaining({ taggerName: '', taggerEmail: '' }))
   })
 
   it('handles malformed tagger line gracefully', () => {

@@ -412,6 +412,56 @@ describe('executeFlow - context properties', () => {
       state: {},
     })
   })
+
+  it('passes the injected tree, registry, git client and logger instances to steps', async () => {
+    const capturedContext: {
+      tree?: Tree
+      registry?: Registry
+      git?: GitClient
+      logger?: ReturnType<typeof createMockLogger>
+    } = {}
+
+    const captureStep = createStep('capture', 'Capture', async (ctx: FlowContext) => {
+      capturedContext.tree = ctx.tree
+      capturedContext.registry = ctx.registry
+      capturedContext.git = ctx.git
+      capturedContext.logger = ctx.logger as ReturnType<typeof createMockLogger>
+      return createSuccessResult('OK')
+    })
+
+    const flow = {
+      id: 'test',
+      name: 'Test Flow',
+      config: { dryRun: true },
+      steps: [captureStep],
+    }
+
+    const tree = createMockTree({
+      '/workspace/libs/test/package.json': JSON.stringify({
+        name: '@test/pkg',
+        version: '1.0.0',
+      }),
+    })
+
+    const registry = createMockRegistry()
+    const git = createMockGitClient()
+    const logger = createMockLogger()
+
+    await executeFlow(flow, 'lib-test', '/workspace', {
+      tree,
+      registry,
+      git,
+      logger,
+      projectRoot: 'libs/test',
+    })
+
+    expect({
+      tree: capturedContext.tree === tree,
+      registry: capturedContext.registry === registry,
+      git: capturedContext.git === git,
+      logger: capturedContext.logger === logger,
+    }).toEqual({ tree: true, registry: true, git: true, logger: true })
+  })
 })
 
 describe('executeFlow - Nx workspace project discovery', () => {
@@ -531,7 +581,7 @@ describe('executeFlow - Nx workspace project discovery', () => {
     expect(logger.debug).toHaveBeenCalledWith(expect.stringContaining('Nx workspace detected'))
   })
 
-  it('logs the Nx discovery failure before falling back', async () => {
+  it('logs the Nx discovery failure when reading the Nx project graph throws', async () => {
     projectScopeNx.isNxWorkspace.mockReturnValue(true)
     projectScopeNx.discoverNxProjects.mockImplementation(() => {
       throw new Error('Nx project graph read failed')

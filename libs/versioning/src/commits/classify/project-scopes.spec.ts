@@ -99,11 +99,17 @@ describe('scopeMatchesProject', () => {
   const projectScopes = ['lib-versioning', 'versioning']
 
   it('matches exact scope', () => {
-    expect([['versioning'], ['lib-versioning']].map((scopes) => scopeMatchesProject(scopes, projectScopes))).toEqual([true, true])
+    const commitScopes = [['versioning'], ['lib-versioning']]
+    expect(commitScopes.map((scopes) => [scopes, scopeMatchesProject(scopes, projectScopes)])).toEqual(
+      commitScopes.map((scopes) => [scopes, true])
+    )
   })
 
   it('matches case-insensitively', () => {
-    expect([['Versioning'], ['VERSIONING']].map((scopes) => scopeMatchesProject(scopes, projectScopes))).toEqual([true, true])
+    const commitScopes = [['Versioning'], ['VERSIONING']]
+    expect(commitScopes.map((scopes) => [scopes, scopeMatchesProject(scopes, projectScopes)])).toEqual(
+      commitScopes.map((scopes) => [scopes, true])
+    )
   })
 
   it('matches when any scope in a multi-scope list matches', () => {
@@ -115,7 +121,10 @@ describe('scopeMatchesProject', () => {
   })
 
   it('returns false for non-matching scope', () => {
-    expect([['logging'], ['cryptography']].map((scopes) => scopeMatchesProject(scopes, projectScopes))).toEqual([false, false])
+    const commitScopes = [['logging'], ['cryptography']]
+    expect(commitScopes.map((scopes) => [scopes, scopeMatchesProject(scopes, projectScopes)])).toEqual(
+      commitScopes.map((scopes) => [scopes, false])
+    )
   })
 
   it('returns false for empty scope array', () => {
@@ -132,11 +141,16 @@ describe('scopeIsExcluded', () => {
 
   it('returns true when all scopes are excluded', () => {
     const commitScopes = [['release'], ['deps'], ['release', 'deps']]
-    expect(commitScopes.map((scopes) => scopeIsExcluded(scopes, excludeScopes))).toEqual([true, true, true])
+    expect(commitScopes.map((scopes) => [scopes, scopeIsExcluded(scopes, excludeScopes)])).toEqual(
+      commitScopes.map((scopes) => [scopes, true])
+    )
   })
 
   it('matches case-insensitively', () => {
-    expect([['Release'], ['DEPS']].map((scopes) => scopeIsExcluded(scopes, excludeScopes))).toEqual([true, true])
+    const commitScopes = [['Release'], ['DEPS']]
+    expect(commitScopes.map((scopes) => [scopes, scopeIsExcluded(scopes, excludeScopes)])).toEqual(
+      commitScopes.map((scopes) => [scopes, true])
+    )
   })
 
   it('returns false for non-excluded scope', () => {

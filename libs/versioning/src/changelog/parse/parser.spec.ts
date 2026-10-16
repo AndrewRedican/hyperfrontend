@@ -170,7 +170,7 @@ Based on [Keep a Changelog](https://keepachangelog.com).
 
       const changelog = parseChangelog(content)
 
-      expect(changelog.entries[0]?.sections[0]?.items.map((item) => item.breaking)).toEqual([true, false])
+      expect(changelog.entries[0]?.sections[0]?.items).toMatchObject([{ breaking: true }, { breaking: false }])
     })
 
     it('reads the serialized breaking marker back off an item', () => {

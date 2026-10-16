@@ -76,9 +76,7 @@ function createMockLogEntry(data: {
 
 describe('DEFAULT_LOG_OPTIONS', () => {
   it('has expected default values', () => {
-    expect(DEFAULT_LOG_OPTIONS.maxCount).toBe(100)
-    expect(DEFAULT_LOG_OPTIONS.includeMerges).toBe(true)
-    expect(DEFAULT_LOG_OPTIONS.timeout).toBe(30000)
+    expect(DEFAULT_LOG_OPTIONS).toEqual({ maxCount: 100, includeMerges: true, timeout: 30000 })
   })
 })
 
@@ -114,11 +112,14 @@ describe('getCommitLog', () => {
 
     const result = getCommitLog()
 
-    expect(result).toHaveLength(1)
-    expect(result[0]?.hash).toBe('abc1234567890def1234567890abc1234567890de')
-    expect(result[0]?.authorName).toBe('Jane Doe')
-    expect(result[0]?.authorEmail).toBe('jane@example.com')
-    expect(result[0]?.subject).toBe('fix: resolve bug')
+    expect(result).toEqual([
+      expect.objectContaining({
+        hash: 'abc1234567890def1234567890abc1234567890de',
+        authorName: 'Jane Doe',
+        authorEmail: 'jane@example.com',
+        subject: 'fix: resolve bug',
+      }),
+    ])
   })
 
   it('parses multiple commits', () => {
@@ -130,10 +131,7 @@ describe('getCommitLog', () => {
 
     const result = getCommitLog()
 
-    expect(result).toHaveLength(3)
-    expect(result[0]?.hash).toBe('aaa111')
-    expect(result[1]?.hash).toBe('bbb222')
-    expect(result[2]?.hash).toBe('ccc333')
+    expect(result.map((commit) => commit.hash)).toEqual(['aaa111', 'bbb222', 'ccc333'])
   })
 
   it('parses commit with body', () => {
@@ -145,8 +143,7 @@ describe('getCommitLog', () => {
 
     const result = getCommitLog()
 
-    expect(result).toHaveLength(1)
-    expect(result[0]?.body).toBe('This is a detailed description\nwith multiple lines.')
+    expect(result).toEqual([expect.objectContaining({ body: 'This is a detailed description\nwith multiple lines.' })])
   })
 
   it('parses commit with parent hashes', () => {
@@ -157,8 +154,7 @@ describe('getCommitLog', () => {
 
     const result = getCommitLog()
 
-    expect(result).toHaveLength(1)
-    expect(result[0]?.parents).toEqual(['parent1abc', 'parent2def'])
+    expect(result).toEqual([expect.objectContaining({ parents: ['parent1abc', 'parent2def'] })])
   })
 
   it('parses commit with refs (branch and tag)', () => {
@@ -169,11 +165,7 @@ describe('getCommitLog', () => {
 
     const result = getCommitLog()
 
-    expect(result).toHaveLength(1)
-    expect(result[0]?.refs).toContain('HEAD')
-    expect(result[0]?.refs).toContain('main')
-    expect(result[0]?.refs).toContain('v1.0.0')
-    expect(result[0]?.refs).toContain('origin/main')
+    expect(result).toEqual([expect.objectContaining({ refs: ['HEAD', 'main', 'v1.0.0', 'origin/main'] })])
   })
 
   it('parses commit with only tag refs', () => {
@@ -184,8 +176,7 @@ describe('getCommitLog', () => {
 
     const result = getCommitLog()
 
-    expect(result).toHaveLength(1)
-    expect(result[0]?.refs).toContain('v2.0.0')
+    expect(result).toEqual([expect.objectContaining({ refs: ['v2.0.0'] })])
   })
 
   it('handles empty refs string', () => {
@@ -196,8 +187,7 @@ describe('getCommitLog', () => {
 
     const result = getCommitLog()
 
-    expect(result).toHaveLength(1)
-    expect(result[0]?.refs).toEqual([])
+    expect(result).toEqual([expect.objectContaining({ refs: [] })])
   })
 
   it('skips records with insufficient fields', () => {
@@ -208,8 +198,7 @@ describe('getCommitLog', () => {
 
     const result = getCommitLog()
 
-    expect(result).toHaveLength(1)
-    expect(result[0]?.hash).toBe('valid123')
+    expect(result).toEqual([expect.objectContaining({ hash: 'valid123' })])
   })
 
   it('applies maxCount option', () => {
@@ -387,8 +376,7 @@ describe('getCommit', () => {
 
     const result = getCommit('abc123')
 
-    expect(result).not.toBeNull()
-    expect(result?.hash).toBe('abc123def456')
+    expect(result).toEqual(expect.objectContaining({ hash: 'abc123def456' }))
   })
 
   it('returns null when commit not found', () => {
@@ -421,6 +409,13 @@ describe('commitExists', () => {
     const result = commitExists('abc123')
 
     expect(result).toBe(true)
+  })
+
+  it('runs git cat-file -t to look the commit up', () => {
+    mockExecFileSync.mockReturnValue('commit')
+
+    commitExists('abc123')
+
     expect(mockExecFileSync).toHaveBeenCalledWith('git', expect.arrayContaining(['cat-file', '-t']), expect.any(Object))
   })
 
@@ -462,6 +457,13 @@ describe('commitReachableFromHead', () => {
     const result = commitReachableFromHead('abc123')
 
     expect(result).toBe(true)
+  })
+
+  it('runs git merge-base --is-ancestor against HEAD', () => {
+    mockExecFileSync.mockReturnValue('')
+
+    commitReachableFromHead('abc123')
+
     expect(mockExecFileSync).toHaveBeenCalledWith('git', ['merge-base', '--is-ancestor', 'abc123', 'HEAD'], expect.any(Object))
   })
 
@@ -513,29 +515,23 @@ describe('commitReachableFromHead', () => {
 })
 
 describe('escapeGitRef', () => {
-  it('allows valid git references', () => {
-    expect(escapeGitRef('main')).toBe('main')
-    expect(escapeGitRef('feature/add-stuff')).toBe('feature/add-stuff')
-    expect(escapeGitRef('v1.0.0')).toBe('v1.0.0')
-    expect(escapeGitRef('HEAD')).toBe('HEAD')
-    expect(escapeGitRef('HEAD~1')).toBe('HEAD~1')
-    expect(escapeGitRef('HEAD^2')).toBe('HEAD^2')
-    expect(escapeGitRef('main@{1}')).toBe('main@{1}')
-    expect(escapeGitRef('refs/heads/main')).toBe('refs/heads/main')
-  })
+  it.each(['main', 'feature/add-stuff', 'v1.0.0', 'HEAD', 'HEAD~1', 'HEAD^2', 'main@{1}', 'refs/heads/main'])(
+    'allows the valid git reference %p',
+    (ref) => {
+      expect(escapeGitRef(ref)).toBe(ref)
+    }
+  )
 
-  it('allows underscores and hyphens', () => {
-    expect(escapeGitRef('feature_branch')).toBe('feature_branch')
-    expect(escapeGitRef('fix-bug-123')).toBe('fix-bug-123')
+  it.each(['feature_branch', 'fix-bug-123'])('allows the underscores and hyphens in %p', (ref) => {
+    expect(escapeGitRef(ref)).toBe(ref)
   })
 
   it('throws for empty reference', () => {
     expect(() => escapeGitRef('')).toThrow('Git reference is required')
   })
 
-  it('throws for non-string reference', () => {
-    expect(() => escapeGitRef(null as unknown as string)).toThrow('Git reference is required')
-    expect(() => escapeGitRef(undefined as unknown as string)).toThrow('Git reference is required')
+  it.each([null, undefined])('throws for the non-string reference %p', (ref) => {
+    expect(() => escapeGitRef(ref as unknown as string)).toThrow('Git reference is required')
   })
 
   it('throws for reference exceeding max length', () => {
@@ -543,25 +539,23 @@ describe('escapeGitRef', () => {
     expect(() => escapeGitRef(longRef)).toThrow('exceeds maximum length')
   })
 
-  it('throws for invalid characters', () => {
-    expect(() => escapeGitRef('branch;rm -rf')).toThrow('Invalid character')
-    expect(() => escapeGitRef('branch`whoami`')).toThrow('Invalid character')
-    expect(() => escapeGitRef('branch$(cmd)')).toThrow('Invalid character')
-    expect(() => escapeGitRef('branch|pipe')).toThrow('Invalid character')
-    expect(() => escapeGitRef('branch&bg')).toThrow('Invalid character')
-    expect(() => escapeGitRef("branch'quote")).toThrow('Invalid character')
-    expect(() => escapeGitRef('branch"quote')).toThrow('Invalid character')
-    expect(() => escapeGitRef('branch\nnewline')).toThrow('Invalid character')
+  it.each([
+    'branch;rm -rf',
+    'branch`whoami`',
+    'branch$(cmd)',
+    'branch|pipe',
+    'branch&bg',
+    "branch'quote",
+    'branch"quote',
+    'branch\nnewline',
+  ])('throws for the invalid character in %p', (ref) => {
+    expect(() => escapeGitRef(ref)).toThrow('Invalid character')
   })
 })
 
 describe('escapeGitPath', () => {
-  it('allows valid file paths', () => {
-    expect(escapeGitPath('src/index.ts')).toBe('src/index.ts')
-    expect(escapeGitPath('path/to/file.txt')).toBe('path/to/file.txt')
-    expect(escapeGitPath('file-name.js')).toBe('file-name.js')
-    expect(escapeGitPath('file_name.js')).toBe('file_name.js')
-    expect(escapeGitPath('My File.txt')).toBe('My File.txt')
+  it.each(['src/index.ts', 'path/to/file.txt', 'file-name.js', 'file_name.js', 'My File.txt'])('allows the valid file path %p', (path) => {
+    expect(escapeGitPath(path)).toBe(path)
   })
 
   it('allows backslashes for Windows paths', () => {
@@ -572,9 +566,8 @@ describe('escapeGitPath', () => {
     expect(() => escapeGitPath('')).toThrow('Path is required')
   })
 
-  it('throws for non-string path', () => {
-    expect(() => escapeGitPath(null as unknown as string)).toThrow('Path is required')
-    expect(() => escapeGitPath(undefined as unknown as string)).toThrow('Path is required')
+  it.each([null, undefined])('throws for the non-string path %p', (path) => {
+    expect(() => escapeGitPath(path as unknown as string)).toThrow('Path is required')
   })
 
   it('throws for path exceeding max length', () => {
@@ -582,26 +575,21 @@ describe('escapeGitPath', () => {
     expect(() => escapeGitPath(longPath)).toThrow('exceeds maximum length')
   })
 
-  it('throws for invalid characters', () => {
-    expect(() => escapeGitPath('path;rm -rf')).toThrow('Invalid character')
-    expect(() => escapeGitPath('path`cmd`')).toThrow('Invalid character')
-    expect(() => escapeGitPath('path$(cmd)')).toThrow('Invalid character')
-    expect(() => escapeGitPath('path|pipe')).toThrow('Invalid character')
-    expect(() => escapeGitPath('path&bg')).toThrow('Invalid character')
-    expect(() => escapeGitPath("path'quote")).toThrow('Invalid character')
-    expect(() => escapeGitPath('path\nnewline')).toThrow('Invalid character')
-  })
+  it.each(['path;rm -rf', 'path`cmd`', 'path$(cmd)', 'path|pipe', 'path&bg', "path'quote", 'path\nnewline'])(
+    'throws for the invalid character in %p',
+    (path) => {
+      expect(() => escapeGitPath(path)).toThrow('Invalid character')
+    }
+  )
 })
 
 describe('escapeGitArg', () => {
-  it('allows valid arguments', () => {
-    expect(escapeGitArg('John Doe')).toBe('John Doe')
-    expect(escapeGitArg('user@example.com')).toBe('user@example.com')
-    expect(escapeGitArg('name@domain.com')).toBe('name@domain.com')
-    expect(escapeGitArg('user-name')).toBe('user-name')
-    expect(escapeGitArg('user_name')).toBe('user_name')
-    expect(escapeGitArg('user+tag@example.com')).toBe('user+tag@example.com')
-  })
+  it.each(['John Doe', 'user@example.com', 'name@domain.com', 'user-name', 'user_name', 'user+tag@example.com'])(
+    'allows the valid argument %p',
+    (arg) => {
+      expect(escapeGitArg(arg)).toBe(arg)
+    }
+  )
 
   it('allows angle brackets for email format', () => {
     expect(escapeGitArg('<user@example.com>')).toBe('<user@example.com>')
@@ -611,9 +599,8 @@ describe('escapeGitArg', () => {
     expect(() => escapeGitArg('')).toThrow('Argument is required')
   })
 
-  it('throws for non-string argument', () => {
-    expect(() => escapeGitArg(null as unknown as string)).toThrow('Argument is required')
-    expect(() => escapeGitArg(undefined as unknown as string)).toThrow('Argument is required')
+  it.each([null, undefined])('throws for the non-string argument %p', (arg) => {
+    expect(() => escapeGitArg(arg as unknown as string)).toThrow('Argument is required')
   })
 
   it('throws for argument exceeding max length', () => {
@@ -621,13 +608,10 @@ describe('escapeGitArg', () => {
     expect(() => escapeGitArg(longArg)).toThrow('exceeds maximum length')
   })
 
-  it('throws for invalid characters', () => {
-    expect(() => escapeGitArg('arg;rm -rf')).toThrow('Invalid character')
-    expect(() => escapeGitArg('arg`cmd`')).toThrow('Invalid character')
-    expect(() => escapeGitArg('arg$(cmd)')).toThrow('Invalid character')
-    expect(() => escapeGitArg('arg|pipe')).toThrow('Invalid character')
-    expect(() => escapeGitArg('arg&bg')).toThrow('Invalid character')
-    expect(() => escapeGitArg("arg'quote")).toThrow('Invalid character')
-    expect(() => escapeGitArg('arg\nnewline')).toThrow('Invalid character')
-  })
+  it.each(['arg;rm -rf', 'arg`cmd`', 'arg$(cmd)', 'arg|pipe', 'arg&bg', "arg'quote", 'arg\nnewline'])(
+    'throws for the invalid character in %p',
+    (arg) => {
+      expect(() => escapeGitArg(arg)).toThrow('Invalid character')
+    }
+  )
 })

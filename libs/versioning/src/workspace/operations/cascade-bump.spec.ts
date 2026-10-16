@@ -50,10 +50,12 @@ function createTestWorkspace(
 
 describe('DEFAULT_CASCADE_OPTIONS', () => {
   it('has expected default values', () => {
-    expect(DEFAULT_CASCADE_OPTIONS.cascadeBumpType).toBe('patch')
-    expect(DEFAULT_CASCADE_OPTIONS.includeDevDependencies).toBe(false)
-    expect(DEFAULT_CASCADE_OPTIONS.includePeerDependencies).toBe(true)
-    expect(DEFAULT_CASCADE_OPTIONS.prereleaseId).toBe('alpha')
+    expect(DEFAULT_CASCADE_OPTIONS).toEqual({
+      cascadeBumpType: 'patch',
+      includeDevDependencies: false,
+      includePeerDependencies: true,
+      prereleaseId: 'alpha',
+    })
   })
 })
 
@@ -79,6 +81,33 @@ describe('calculateCascadeBumps', () => {
     ])
   })
 
+  it('separates the direct bump from the cascade bumps it causes', () => {
+    const libCore = createTestProject('lib-core', '1.0.0')
+    const libA = createTestProject('lib-a', '1.0.0', { 'lib-core': '^1.0.0' })
+    const app = createTestProject('app', '1.0.0', { 'lib-a': '^1.0.0' })
+
+    const depGraph = createMap([
+      ['lib-core', ['lib-a'] as readonly string[]],
+      ['lib-a', ['app'] as readonly string[]],
+      ['app', [] as readonly string[]],
+    ])
+
+    const reverseDepGraph = createMap([
+      ['app', ['lib-a'] as readonly string[]],
+      ['lib-a', ['lib-core'] as readonly string[]],
+      ['lib-core', [] as readonly string[]],
+    ])
+
+    const workspace = createTestWorkspace([libCore, libA, app], depGraph, reverseDepGraph)
+
+    const result = calculateCascadeBumps(workspace, [{ name: 'lib-core', bumpType: 'minor' }])
+
+    expect({ directBumpCount: result.directBumps.length, hasCascadeBumps: result.cascadeBumps.length >= 1 }).toEqual({
+      directBumpCount: 1,
+      hasCascadeBumps: true,
+    })
+  })
+
   it('cascades to dependents', () => {
     const libCore = createTestProject('lib-core', '1.0.0')
     const libA = createTestProject('lib-a', '1.0.0', { 'lib-core': '^1.0.0' })
@@ -100,14 +129,10 @@ describe('calculateCascadeBumps', () => {
 
     const result = calculateCascadeBumps(workspace, [{ name: 'lib-core', bumpType: 'minor' }])
 
-    expect(result.directBumps).toHaveLength(1)
-    expect(result.cascadeBumps.length).toBeGreaterThanOrEqual(1)
-
     const libABump = result.bumps.find((b) => b.name === 'lib-a')
-    expect(libABump).toBeDefined()
-    expect(libABump?.reason).toBe('cascade')
-    expect(libABump?.bumpType).toBe('patch')
-    expect(libABump?.triggeredBy).toContain('lib-core')
+    expect(libABump).toEqual(
+      expect.objectContaining({ reason: 'cascade', bumpType: 'patch', triggeredBy: expect.arrayContaining(['lib-core']) })
+    )
   })
 
   it('respects cascadeBumpType option', () => {
@@ -232,9 +257,15 @@ describe('calculateCascadeBumps', () => {
       { name: 'lib-b', bumpType: 'patch' },
     ])
 
-    expect(result.directBumps).toHaveLength(2)
-    expect(result.bumps.find((b) => b.name === 'lib-a')?.nextVersion).toBe('1.1.0')
-    expect(result.bumps.find((b) => b.name === 'lib-b')?.nextVersion).toBe('2.0.1')
+    expect(result).toEqual(
+      expect.objectContaining({
+        directBumps: [expect.objectContaining({ name: 'lib-a' }), expect.objectContaining({ name: 'lib-b' })],
+        bumps: expect.arrayContaining([
+          expect.objectContaining({ name: 'lib-a', nextVersion: '1.1.0' }),
+          expect.objectContaining({ name: 'lib-b', nextVersion: '2.0.1' }),
+        ]),
+      })
+    )
   })
 
   it('direct bumps take precedence over cascade bumps', () => {
@@ -259,8 +290,7 @@ describe('calculateCascadeBumps', () => {
     ])
 
     const libABump = result.bumps.find((b) => b.name === 'lib-a')
-    expect(libABump?.reason).toBe('direct')
-    expect(libABump?.bumpType).toBe('major')
+    expect(libABump).toEqual(expect.objectContaining({ reason: 'direct', bumpType: 'major' }))
   })
 
   it('returns sorted bumps', () => {
@@ -320,8 +350,7 @@ describe('calculateCascadeBumps', () => {
     ])
 
     const appBump = result.bumps.find((b) => b.name === 'app')
-    expect(appBump?.triggeredBy).toContain('lib-a')
-    expect(appBump?.triggeredBy).toContain('lib-b')
+    expect(appBump?.triggeredBy).toEqual(expect.arrayContaining(['lib-a', 'lib-b']))
   })
 })
 
@@ -382,9 +411,16 @@ describe('summarizeCascadeBumps', () => {
 
     const summary = summarizeCascadeBumps(result)
 
-    expect(summary).toContain('1 package(s) affected')
-    expect(summary).toContain('1 direct bump')
-    expect(summary).toContain('lib-a: 1.0.0 -> 1.1.0')
+    expect(summary).toBe(
+      [
+        '1 package(s) affected:',
+        '  - 1 direct bump(s)',
+        '  - 0 cascade bump(s)',
+        '',
+        'Planned bumps:',
+        '  lib-a: 1.0.0 -> 1.1.0 [minor]',
+      ].join('\n')
+    )
   })
 
   it('summarizes cascade bumps', () => {
@@ -415,8 +451,16 @@ describe('summarizeCascadeBumps', () => {
 
     const summary = summarizeCascadeBumps(result)
 
-    expect(summary).toContain('cascade bump')
-    expect(summary).toContain('triggered by lib-core')
+    expect(summary).toBe(
+      [
+        '1 package(s) affected:',
+        '  - 0 direct bump(s)',
+        '  - 1 cascade bump(s)',
+        '',
+        'Planned bumps:',
+        '  lib-a: 1.0.0 -> 1.0.1 [patch] (triggered by lib-core)',
+      ].join('\n')
+    )
   })
 })
 

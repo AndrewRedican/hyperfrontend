@@ -28,25 +28,24 @@ const createTestProject = (name: string) =>
 
 describe('DEFAULT_PATTERNS', () => {
   it('includes common monorepo patterns', () => {
-    expect(DEFAULT_PATTERNS).toContain('libs/*/package.json')
-    expect(DEFAULT_PATTERNS).toContain('apps/*/package.json')
-    expect(DEFAULT_PATTERNS).toContain('packages/*/package.json')
+    expect(DEFAULT_PATTERNS).toEqual(expect.arrayContaining(['libs/*/package.json', 'apps/*/package.json', 'packages/*/package.json']))
   })
 })
 
 describe('DEFAULT_EXCLUDE', () => {
   it('excludes node_modules and dist', () => {
-    expect(DEFAULT_EXCLUDE).toContain('**/node_modules/**')
-    expect(DEFAULT_EXCLUDE).toContain('**/dist/**')
+    expect(DEFAULT_EXCLUDE).toEqual(expect.arrayContaining(['**/node_modules/**', '**/dist/**']))
   })
 })
 
 describe('DEFAULT_WORKSPACE_CONFIG', () => {
   it('has expected default values', () => {
-    expect(DEFAULT_WORKSPACE_CONFIG.includeChangelogs).toBe(true)
-    expect(DEFAULT_WORKSPACE_CONFIG.trackDependencies).toBe(true)
-    expect(DEFAULT_WORKSPACE_CONFIG.patterns).toEqual(DEFAULT_PATTERNS)
-    expect(DEFAULT_WORKSPACE_CONFIG.exclude).toEqual(DEFAULT_EXCLUDE)
+    expect(DEFAULT_WORKSPACE_CONFIG).toEqual({
+      includeChangelogs: true,
+      trackDependencies: true,
+      patterns: DEFAULT_PATTERNS,
+      exclude: DEFAULT_EXCLUDE,
+    })
   })
 })
 
@@ -54,10 +53,12 @@ describe('createWorkspaceConfig', () => {
   it('creates config with defaults', () => {
     const config = createWorkspaceConfig()
 
-    expect(config.patterns).toEqual(DEFAULT_PATTERNS)
-    expect(config.exclude).toEqual(DEFAULT_EXCLUDE)
-    expect(config.includeChangelogs).toBe(true)
-    expect(config.trackDependencies).toBe(true)
+    expect(config).toEqual({
+      patterns: DEFAULT_PATTERNS,
+      exclude: DEFAULT_EXCLUDE,
+      includeChangelogs: true,
+      trackDependencies: true,
+    })
   })
 
   it('allows overriding patterns', () => {
@@ -65,8 +66,7 @@ describe('createWorkspaceConfig', () => {
       patterns: ['custom/*/package.json'],
     })
 
-    expect(config.patterns).toEqual(['custom/*/package.json'])
-    expect(config.exclude).toEqual(DEFAULT_EXCLUDE)
+    expect(config).toEqual(expect.objectContaining({ patterns: ['custom/*/package.json'], exclude: DEFAULT_EXCLUDE }))
   })
 
   it('allows overriding exclude', () => {
@@ -112,10 +112,12 @@ describe('createWorkspace', () => {
       reverseDependencyGraph: createMap<string, readonly string[]>(),
     })
 
-    expect(workspace.root).toBe('/workspace')
-    expect(workspace.type).toBe('nx')
-    expect(workspace.projects.size).toBe(2)
-    expect(workspace.projectList).toHaveLength(2)
+    expect({
+      root: workspace.root,
+      type: workspace.type,
+      projectCount: workspace.projects.size,
+      projectListLength: workspace.projectList.length,
+    }).toEqual({ root: '/workspace', type: 'nx', projectCount: 2, projectListLength: 2 })
   })
 
   it('sorts projectList alphabetically', () => {
@@ -166,8 +168,10 @@ describe('createWorkspace', () => {
       reverseDependencyGraph: reverseDepGraph,
     })
 
-    expect(workspace.dependencyGraph.get('project-a')).toEqual(['project-b'])
-    expect(workspace.reverseDependencyGraph.get('project-b')).toEqual(['project-a'])
+    expect({
+      dependentsOfA: workspace.dependencyGraph.get('project-a'),
+      dependenciesOfB: workspace.reverseDependencyGraph.get('project-b'),
+    }).toEqual({ dependentsOfA: ['project-b'], dependenciesOfB: ['project-a'] })
   })
 })
 
@@ -270,8 +274,7 @@ describe('getProjectNames', () => {
     })
 
     const names = getProjectNames(workspace)
-    expect(names).toContain('project-a')
-    expect(names).toContain('project-b')
+    expect(names).toEqual(expect.arrayContaining(['project-a', 'project-b']))
   })
 
   it('returns empty array for empty workspace', () => {

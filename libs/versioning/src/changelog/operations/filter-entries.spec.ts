@@ -284,7 +284,10 @@ describe('filterToVersion', () => {
     })
 
     const result = filterToVersion(changelog, '2.0.0')
-    expect(result.entries.map((e) => e.unreleased)).toEqual([false, false])
+    expect(result.entries).toMatchObject([
+      { version: '2.0.0', unreleased: false },
+      { version: '1.0.0', unreleased: false },
+    ])
   })
 
   it('excludes entries with invalid versions', () => {
@@ -342,7 +345,10 @@ describe('filterVersionRange', () => {
     })
 
     const result = filterVersionRange(changelog, '1.0.0', '2.0.0')
-    expect(result.entries.map((e) => e.unreleased)).toEqual([false, false])
+    expect(result.entries).toMatchObject([
+      { version: '2.0.0', unreleased: false },
+      { version: '1.0.0', unreleased: false },
+    ])
   })
 
   it('excludes entries with invalid versions', () => {

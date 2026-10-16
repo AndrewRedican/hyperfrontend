@@ -33,10 +33,12 @@ describe('isBreakingFooterKey', () => {
   })
 
   it('handles lowercase', () => {
-    expect(['breaking change', 'breaking-change'].map((key) => isBreakingFooterKey(key))).toEqual([true, true])
+    const keys = ['breaking change', 'breaking-change']
+    expect(keys.map((key) => [key, isBreakingFooterKey(key)])).toEqual(keys.map((key) => [key, true]))
   })
 
   it('returns false for non-breaking keys', () => {
-    expect(['Other', 'Refs', 'Fixes'].map((key) => isBreakingFooterKey(key))).toEqual([false, false, false])
+    const keys = ['Other', 'Refs', 'Fixes']
+    expect(keys.map((key) => [key, isBreakingFooterKey(key)])).toEqual(keys.map((key) => [key, false]))
   })
 })

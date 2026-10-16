@@ -483,12 +483,41 @@ describe('cloneChangelog', () => {
 
   it('shares no object with the original at any nesting level', () => {
     const clone = cloneChangelog(original)
+    const cloneSection = clone.entries[0]?.sections[0]
+    const originalSection = original.entries[0]?.sections[0]
+    const cloneItem = cloneSection?.items[0]
+    const originalItem = originalSection?.items[0]
     expect({
       changelog: clone === original,
+      header: clone.header === original.header,
+      headerDescription: clone.header.description === original.header.description,
+      headerLinks: clone.header.links === original.header.links,
       entries: clone.entries === original.entries,
       entry: clone.entries[0] === original.entries[0],
-      section: clone.entries[0]?.sections[0] === original.entries[0]?.sections[0],
-    }).toEqual({ changelog: false, entries: false, entry: false, section: false })
+      sections: clone.entries[0]?.sections === original.entries[0]?.sections,
+      section: cloneSection === originalSection,
+      items: cloneSection?.items === originalSection?.items,
+      item: cloneItem === originalItem,
+      itemCommits: cloneItem?.commits === originalItem?.commits,
+      itemReferences: cloneItem?.references === originalItem?.references,
+      metadata: clone.metadata === original.metadata,
+      metadataWarnings: clone.metadata.warnings === original.metadata.warnings,
+    }).toEqual({
+      changelog: false,
+      header: false,
+      headerDescription: false,
+      headerLinks: false,
+      entries: false,
+      entry: false,
+      sections: false,
+      section: false,
+      items: false,
+      item: false,
+      itemCommits: false,
+      itemReferences: false,
+      metadata: false,
+      metadataWarnings: false,
+    })
   })
 
   it('gives the clone its own header and entries objects', () => {

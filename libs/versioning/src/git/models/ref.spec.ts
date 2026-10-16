@@ -20,10 +20,12 @@ describe('createGitRef', () => {
       commitHash: 'abc123',
     })
 
-    expect(ref.fullName).toBe('refs/heads/main')
-    expect(ref.name).toBe('main')
-    expect(ref.type).toBe('branch')
-    expect(ref.commitHash).toBe('abc123')
+    expect(ref).toEqual({
+      fullName: 'refs/heads/main',
+      name: 'main',
+      type: 'branch',
+      commitHash: 'abc123',
+    })
   })
 
   it('parses tag ref', () => {
@@ -32,8 +34,7 @@ describe('createGitRef', () => {
       commitHash: 'abc123',
     })
 
-    expect(ref.name).toBe('v1.0.0')
-    expect(ref.type).toBe('tag')
+    expect(ref).toMatchObject({ name: 'v1.0.0', type: 'tag' })
   })
 
   it('parses remote ref', () => {
@@ -42,9 +43,7 @@ describe('createGitRef', () => {
       commitHash: 'abc123',
     })
 
-    expect(ref.name).toBe('main')
-    expect(ref.type).toBe('remote')
-    expect(ref.remote).toBe('origin')
+    expect(ref).toMatchObject({ name: 'main', type: 'remote', remote: 'origin' })
   })
 
   it('parses HEAD ref', () => {
@@ -53,8 +52,7 @@ describe('createGitRef', () => {
       commitHash: 'abc123',
     })
 
-    expect(ref.name).toBe('HEAD')
-    expect(ref.type).toBe('head')
+    expect(ref).toMatchObject({ name: 'HEAD', type: 'head' })
   })
 
   it('parses stash ref', () => {
@@ -63,8 +61,7 @@ describe('createGitRef', () => {
       commitHash: 'abc123',
     })
 
-    expect(ref.name).toBe('stash')
-    expect(ref.type).toBe('stash')
+    expect(ref).toMatchObject({ name: 'stash', type: 'stash' })
   })
 
   it('parses unknown ref pattern as branch (default fallback)', () => {
@@ -73,8 +70,7 @@ describe('createGitRef', () => {
       commitHash: 'abc123',
     })
 
-    expect(ref.name).toBe('some-unknown-ref')
-    expect(ref.type).toBe('branch')
+    expect(ref).toMatchObject({ name: 'some-unknown-ref', type: 'branch' })
   })
 
   it('parses nested branch name with slashes', () => {
@@ -83,8 +79,7 @@ describe('createGitRef', () => {
       commitHash: 'abc123',
     })
 
-    expect(ref.name).toBe('feature/nested/branch')
-    expect(ref.type).toBe('branch')
+    expect(ref).toMatchObject({ name: 'feature/nested/branch', type: 'branch' })
   })
 })
 
@@ -202,9 +197,7 @@ describe('filterRefsByType', () => {
     ]
 
     const branches = filterRefsByType(refs, 'branch')
-    expect(branches.length).toBe(2)
-    expect(branches[0]?.name).toBe('main')
-    expect(branches[1]?.name).toBe('feature')
+    expect(branches.map((ref) => ref.name)).toEqual(['main', 'feature'])
   })
 })
 

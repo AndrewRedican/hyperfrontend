@@ -7,9 +7,11 @@ describe('Generate Changelog Step', () => {
     it('creates a step with correct ID and name', () => {
       const step = createGenerateChangelogStep()
 
-      expect(step.id).toBe(GENERATE_CHANGELOG_STEP_ID)
-      expect(step.id).toBe('generate-changelog')
-      expect(step.name).toBe('Generate Changelog Entry')
+      expect(step).toEqual(expect.objectContaining({ id: GENERATE_CHANGELOG_STEP_ID, name: 'Generate Changelog Entry' }))
+    })
+
+    it('exposes generate-changelog as the step ID constant', () => {
+      expect(GENERATE_CHANGELOG_STEP_ID).toBe('generate-changelog')
     })
 
     it('depends on check-idempotency step', () => {
@@ -26,8 +28,7 @@ describe('Generate Changelog Step', () => {
 
       const result = await step.execute(ctx)
 
-      expect(result.status).toBe('skipped')
-      expect(result.message).toContain('No version bump')
+      expect(result).toEqual(expect.objectContaining({ status: 'skipped', message: expect.stringContaining('No version bump') }))
     })
 
     it('skips when bumpType is none', async () => {
@@ -45,8 +46,9 @@ describe('Generate Changelog Step', () => {
 
       const result = await step.execute(ctx)
 
-      expect(result.status).toBe('skipped')
-      expect(result.message).toContain('Changelog generation disabled')
+      expect(result).toEqual(
+        expect.objectContaining({ status: 'skipped', message: expect.stringContaining('Changelog generation disabled') })
+      )
     })
   })
 
@@ -61,10 +63,13 @@ describe('Generate Changelog Step', () => {
 
       const result = await step.execute(ctx)
 
-      expect(result.status).toBe('success')
-      expect(result.stateUpdates?.changelogEntry).toBeDefined()
-      expect(result.stateUpdates?.changelogEntry.version).toBe('1.0.0')
-      expect(result.message).toContain('initial release')
+      expect(result).toEqual(
+        expect.objectContaining({
+          status: 'success',
+          stateUpdates: expect.objectContaining({ changelogEntry: expect.objectContaining({ version: '1.0.0' }) }),
+          message: expect.stringContaining('initial release'),
+        })
+      )
     })
 
     it('announces a stable promotion when a published 0.x line reaches 1.0.0', async () => {
@@ -79,13 +84,23 @@ describe('Generate Changelog Step', () => {
 
       const result = await step.execute(ctx)
 
-      expect(result.status).toBe('success')
-      expect(result.message).toContain('stable promotion')
-
-      const entry = result.stateUpdates?.changelogEntry
-      expect(entry.version).toBe('1.0.0')
-      expect(entry.sections[0].heading).toBe('Features')
-      expect(entry.sections[0].items[0].description).toBe('Marked stable. No API changes since 0.2.1.')
+      expect(result).toEqual(
+        expect.objectContaining({
+          status: 'success',
+          message: expect.stringContaining('stable promotion'),
+          stateUpdates: expect.objectContaining({
+            changelogEntry: expect.objectContaining({
+              version: '1.0.0',
+              sections: [
+                expect.objectContaining({
+                  heading: 'Features',
+                  items: [expect.objectContaining({ description: 'Marked stable. No API changes since 0.2.1.' })],
+                }),
+              ],
+            }),
+          }),
+        })
+      )
     })
 
     it('records a plain no-change release when the version does not cross into 1.0.0', async () => {
@@ -100,12 +115,22 @@ describe('Generate Changelog Step', () => {
 
       const result = await step.execute(ctx)
 
-      expect(result.status).toBe('success')
-      expect(result.message).toContain('no-change')
-
-      const entry = result.stateUpdates?.changelogEntry
-      expect(entry.sections[0].heading).toBe('Other')
-      expect(entry.sections[0].items[0].description).toBe('Released with no functional changes since 1.2.3.')
+      expect(result).toEqual(
+        expect.objectContaining({
+          status: 'success',
+          message: expect.stringContaining('no-change'),
+          stateUpdates: expect.objectContaining({
+            changelogEntry: expect.objectContaining({
+              sections: [
+                expect.objectContaining({
+                  heading: 'Other',
+                  items: [expect.objectContaining({ description: 'Released with no functional changes since 1.2.3.' })],
+                }),
+              ],
+            }),
+          }),
+        })
+      )
     })
 
     it('records a plain no-change release when a 0.x line stays below 1.0.0', async () => {
@@ -120,9 +145,21 @@ describe('Generate Changelog Step', () => {
 
       const result = await step.execute(ctx)
 
-      expect(result.status).toBe('success')
-      expect(result.message).toContain('no-change')
-      expect(result.stateUpdates?.changelogEntry.sections[0].items[0].description).toBe('Released with no functional changes since 0.2.1.')
+      expect(result).toEqual(
+        expect.objectContaining({
+          status: 'success',
+          message: expect.stringContaining('no-change'),
+          stateUpdates: expect.objectContaining({
+            changelogEntry: expect.objectContaining({
+              sections: [
+                expect.objectContaining({
+                  items: [expect.objectContaining({ description: 'Released with no functional changes since 0.2.1.' })],
+                }),
+              ],
+            }),
+          }),
+        })
+      )
     })
 
     it('generates initial release entry when commits is undefined', async () => {
@@ -134,8 +171,9 @@ describe('Generate Changelog Step', () => {
 
       const result = await step.execute(ctx)
 
-      expect(result.status).toBe('success')
-      expect(result.stateUpdates?.changelogEntry).toBeDefined()
+      expect(result).toEqual(
+        expect.objectContaining({ status: 'success', stateUpdates: expect.objectContaining({ changelogEntry: expect.anything() }) })
+      )
     })
   })
 
@@ -154,15 +192,22 @@ describe('Generate Changelog Step', () => {
 
       const result = await step.execute(ctx)
 
-      expect(result.status).toBe('success')
-      const entry = result.stateUpdates?.changelogEntry
-      expect(entry.sections.length).toBeGreaterThanOrEqual(2)
-
-      const featuresSection = entry.sections.find((s: { type: string }) => s.type === 'features')
-      const fixesSection = entry.sections.find((s: { type: string }) => s.type === 'fixes')
-
-      expect(featuresSection?.items).toHaveLength(2)
-      expect(fixesSection?.items).toHaveLength(1)
+      expect(result).toEqual(
+        expect.objectContaining({
+          status: 'success',
+          stateUpdates: expect.objectContaining({
+            changelogEntry: expect.objectContaining({
+              sections: expect.arrayContaining([
+                expect.objectContaining({
+                  type: 'features',
+                  items: [expect.objectContaining({ description: 'feature 1' }), expect.objectContaining({ description: 'feature 2' })],
+                }),
+                expect.objectContaining({ type: 'fixes', items: [expect.objectContaining({ description: 'bug fix' })] }),
+              ]),
+            }),
+          }),
+        })
+      )
     })
 
     it('carries the commit scope on the changelog item', async () => {
@@ -196,8 +241,7 @@ describe('Generate Changelog Step', () => {
       const result = await step.execute(ctx)
 
       const entry = result.stateUpdates?.changelogEntry
-      expect(entry.sections[0].type).toBe('breaking')
-      expect(entry.sections[0].heading).toBe('Breaking Changes')
+      expect(entry.sections[0]).toEqual(expect.objectContaining({ type: 'breaking', heading: 'Breaking Changes' }))
     })
 
     it('uses breakingDescription when available', async () => {
@@ -339,8 +383,7 @@ describe('Generate Changelog Step', () => {
 
       const entry = result.stateUpdates?.changelogEntry
       const refactorSection = entry.sections.find((s: { type: string }) => s.type === 'refactoring')
-      expect(refactorSection).toBeDefined()
-      expect(refactorSection?.heading).toBe('Code Refactoring')
+      expect(refactorSection).toEqual(expect.objectContaining({ heading: 'Code Refactoring' }))
     })
 
     it('maps revert to other section', async () => {
@@ -385,8 +428,7 @@ describe('Generate Changelog Step', () => {
 
       const entry = result.stateUpdates?.changelogEntry
       const ciSection = entry.sections.find((s: { type: string }) => s.type === 'ci')
-      expect(ciSection).toBeDefined()
-      expect(ciSection?.heading).toBe('Continuous Integration')
+      expect(ciSection).toEqual(expect.objectContaining({ heading: 'Continuous Integration' }))
     })
 
     it('maps test to tests section', async () => {
@@ -466,10 +508,8 @@ describe('Generate Changelog Step', () => {
       const result = await step.execute(ctx)
 
       const entry = result.stateUpdates?.changelogEntry
-      const otherSection = entry.sections.find((s: { type: string }) => s.type === 'other')
-      expect(otherSection).toBeDefined()
-      const choresSection = entry.sections.find((s: { type: string }) => s.type === 'chores')
-      expect(choresSection).toBeUndefined()
+      const sectionTypes = entry.sections.map((s: { type: string }) => s.type)
+      expect(sectionTypes).toEqual(['other'])
     })
 
     it('adds custom commit type via config', async () => {
@@ -507,10 +547,8 @@ describe('Generate Changelog Step', () => {
       const result = await step.execute(ctx)
 
       const entry = result.stateUpdates?.changelogEntry
-      const docsSection = entry.sections.find((s: { type: string }) => s.type === 'documentation')
-      expect(docsSection).toBeUndefined()
-      const featuresSection = entry.sections.find((s: { type: string }) => s.type === 'features')
-      expect(featuresSection).toBeDefined()
+      const sectionTypes = entry.sections.map((s: { type: string }) => s.type)
+      expect(sectionTypes).toEqual(['features'])
     })
 
     it('falls back to chores for unmapped custom type without config', async () => {
@@ -551,9 +589,7 @@ describe('Generate Changelog Step', () => {
       const entry = result.stateUpdates?.changelogEntry
       const types = entry.sections.map((s: { type: string }) => s.type)
 
-      expect(types.indexOf('features')).toBeLessThan(types.indexOf('fixes'))
-      expect(types.indexOf('fixes')).toBeLessThan(types.indexOf('documentation'))
-      expect(types.indexOf('documentation')).toBeLessThan(types.indexOf('chores'))
+      expect(types).toEqual(['features', 'fixes', 'documentation', 'chores'])
     })
   })
 
@@ -572,8 +608,7 @@ describe('Generate Changelog Step', () => {
 
       const result = await step.execute(ctx)
 
-      expect(result.message).toMatch(/\d+ section\(s\)/)
-      expect(result.message).toMatch(/\d+ commit\(s\)/)
+      expect(result.message).toMatch(/\d+ section\(s\), \d+ commit\(s\)/)
     })
   })
 })

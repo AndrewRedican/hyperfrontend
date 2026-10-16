@@ -11,10 +11,15 @@ describe('compare', () => {
     expect(compare(a, b)).toBe(0)
   })
 
-  it('compares major versions', () => {
+  it('returns -1 when the first major version is lower', () => {
     const a = createSemVer({ major: 1, minor: 0, patch: 0 })
     const b = createSemVer({ major: 2, minor: 0, patch: 0 })
     expect(compare(a, b)).toBe(-1)
+  })
+
+  it('returns 1 when the first major version is higher', () => {
+    const a = createSemVer({ major: 1, minor: 0, patch: 0 })
+    const b = createSemVer({ major: 2, minor: 0, patch: 0 })
     expect(compare(b, a)).toBe(1)
   })
 
@@ -54,35 +59,59 @@ describe('comparison helpers', () => {
   const v2 = createSemVer({ major: 2, minor: 0, patch: 0 })
   const v1copy = createSemVer({ major: 1, minor: 0, patch: 0 })
 
-  it('eq checks equality', () => {
+  it('eq returns true for equal versions', () => {
     expect(eq(v1, v1copy)).toBe(true)
+  })
+
+  it('eq returns false for different versions', () => {
     expect(eq(v1, v2)).toBe(false)
   })
 
-  it('lt checks less than', () => {
+  it('lt returns true when the first version is lower', () => {
     expect(lt(v1, v2)).toBe(true)
+  })
+
+  it('lt returns false when the first version is higher', () => {
     expect(lt(v2, v1)).toBe(false)
   })
 
-  it('lte checks less than or equal', () => {
+  it('lte returns true when the first version is lower', () => {
     expect(lte(v1, v2)).toBe(true)
+  })
+
+  it('lte returns true for equal versions', () => {
     expect(lte(v1, v1copy)).toBe(true)
+  })
+
+  it('lte returns false when the first version is higher', () => {
     expect(lte(v2, v1)).toBe(false)
   })
 
-  it('gt checks greater than', () => {
+  it('gt returns true when the first version is higher', () => {
     expect(gt(v2, v1)).toBe(true)
+  })
+
+  it('gt returns false when the first version is lower', () => {
     expect(gt(v1, v2)).toBe(false)
   })
 
-  it('gte checks greater than or equal', () => {
+  it('gte returns true when the first version is higher', () => {
     expect(gte(v2, v1)).toBe(true)
+  })
+
+  it('gte returns true for equal versions', () => {
     expect(gte(v1, v1copy)).toBe(true)
+  })
+
+  it('gte returns false when the first version is lower', () => {
     expect(gte(v1, v2)).toBe(false)
   })
 
-  it('neq checks inequality', () => {
+  it('neq returns true for different versions', () => {
     expect(neq(v1, v2)).toBe(true)
+  })
+
+  it('neq returns false for equal versions', () => {
     expect(neq(v1, v1copy)).toBe(false)
   })
 })
@@ -112,12 +141,16 @@ describe('satisfies', () => {
     expect(satisfies(v, range)).toBe(true)
   })
 
-  it('satisfies caret range', () => {
-    const v1 = createSemVer({ major: 1, minor: 5, patch: 0 })
-    const v2 = createSemVer({ major: 2, minor: 0, patch: 0 })
+  it('satisfies caret range within the same major', () => {
+    const v = createSemVer({ major: 1, minor: 5, patch: 0 })
     const range = parseRangeStrict('^1.0.0')
-    expect(satisfies(v1, range)).toBe(true)
-    expect(satisfies(v2, range)).toBe(false)
+    expect(satisfies(v, range)).toBe(true)
+  })
+
+  it('does not satisfy caret range across a major bump', () => {
+    const v = createSemVer({ major: 2, minor: 0, patch: 0 })
+    const range = parseRangeStrict('^1.0.0')
+    expect(satisfies(v, range)).toBe(false)
   })
 
   it('satisfies OR range', () => {
@@ -136,8 +169,7 @@ describe('maxSatisfying', () => {
     ]
     const range = parseRangeStrict('^1.0.0')
     const result = maxSatisfying(versions, range)
-    expect(result?.major).toBe(1)
-    expect(result?.minor).toBe(5)
+    expect(result).toEqual(createSemVer({ major: 1, minor: 5, patch: 0 }))
   })
 
   it('returns null if none satisfy', () => {
@@ -156,8 +188,7 @@ describe('minSatisfying', () => {
     ]
     const range = parseRangeStrict('>=1.0.0')
     const result = minSatisfying(versions, range)
-    expect(result?.major).toBe(1)
-    expect(result?.minor).toBe(0)
+    expect(result).toEqual(createSemVer({ major: 1, minor: 0, patch: 0 }))
   })
 })
 

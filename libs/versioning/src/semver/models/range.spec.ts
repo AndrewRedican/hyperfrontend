@@ -3,10 +3,15 @@ import { createComparator, createComparatorSet, createRange, createAnyRange, cre
 import { createSemVer } from './version'
 
 describe('createComparator', () => {
-  it('creates a comparator', () => {
+  it('creates a comparator with the given operator', () => {
     const v = createSemVer({ major: 1, minor: 0, patch: 0 })
     const c = createComparator('>=', v)
     expect(c.operator).toBe('>=')
+  })
+
+  it('creates a comparator that references the given version object', () => {
+    const v = createSemVer({ major: 1, minor: 0, patch: 0 })
+    const c = createComparator('>=', v)
     expect(c.version).toBe(v)
   })
 })
@@ -25,16 +30,14 @@ describe('createRange', () => {
     const v = createSemVer({ major: 1, minor: 0, patch: 0 })
     const set = createComparatorSet([createComparator('>=', v)])
     const range = createRange([set], '>=1.0.0')
-    expect(range.sets).toHaveLength(1)
-    expect(range.raw).toBe('>=1.0.0')
+    expect(range).toEqual({ sets: [set], raw: '>=1.0.0' })
   })
 })
 
 describe('createAnyRange', () => {
   it('creates a wildcard range', () => {
     const range = createAnyRange()
-    expect(range.sets).toEqual([])
-    expect(range.raw).toBe('*')
+    expect(range).toEqual({ sets: [], raw: '*' })
   })
 })
 

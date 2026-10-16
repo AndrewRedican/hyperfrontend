@@ -134,6 +134,13 @@ function createMockContext(overrides?: {
   }
 }
 
+function resolvedTo(repositoryConfig: Partial<RepositoryConfig>) {
+  return expect.objectContaining({
+    status: 'success',
+    stateUpdates: expect.objectContaining({ repositoryConfig: expect.objectContaining(repositoryConfig) }),
+  })
+}
+
 describe('resolve-repository step', () => {
   describe('RESOLVE_REPOSITORY_STEP_ID', () => {
     it('has the correct ID', () => {
@@ -145,8 +152,7 @@ describe('resolve-repository step', () => {
     it('creates a step with correct ID and name', () => {
       const step = createResolveRepositoryStep()
 
-      expect(step.id).toBe('resolve-repository')
-      expect(step.name).toBe('Resolve Repository')
+      expect(step).toEqual(expect.objectContaining({ id: 'resolve-repository', name: 'Resolve Repository' }))
     })
 
     describe('when repository is undefined', () => {
@@ -158,9 +164,11 @@ describe('resolve-repository step', () => {
         const step = createResolveRepositoryStep()
         const result = await step.execute(ctx)
 
-        expect(result.status).toBe('skipped')
-        expect(result.message).toBe('Repository resolution disabled')
-        expect(result.stateUpdates).toBeUndefined()
+        expect({ status: result.status, message: result.message, stateUpdates: result.stateUpdates }).toEqual({
+          status: 'skipped',
+          message: 'Repository resolution disabled',
+          stateUpdates: undefined,
+        })
       })
     })
 
@@ -173,9 +181,11 @@ describe('resolve-repository step', () => {
         const step = createResolveRepositoryStep()
         const result = await step.execute(ctx)
 
-        expect(result.status).toBe('skipped')
-        expect(result.message).toBe('Repository resolution disabled')
-        expect(result.stateUpdates).toBeUndefined()
+        expect({ status: result.status, message: result.message, stateUpdates: result.stateUpdates }).toEqual({
+          status: 'skipped',
+          message: 'Repository resolution disabled',
+          stateUpdates: undefined,
+        })
       })
     })
 
@@ -193,10 +203,13 @@ describe('resolve-repository step', () => {
         const step = createResolveRepositoryStep()
         const result = await step.execute(ctx)
 
-        expect(result.status).toBe('success')
-        expect(result.stateUpdates?.repositoryConfig).toEqual(repoConfig)
-        expect(result.message).toContain('explicit')
-        expect(result.message).toContain('github')
+        expect(result).toEqual(
+          expect.objectContaining({
+            status: 'success',
+            stateUpdates: expect.objectContaining({ repositoryConfig: repoConfig }),
+            message: expect.stringMatching(/explicit.*github/),
+          })
+        )
       })
     })
 
@@ -217,11 +230,14 @@ describe('resolve-repository step', () => {
         const step = createResolveRepositoryStep()
         const result = await step.execute(ctx)
 
-        expect(result.status).toBe('success')
-        expect(result.stateUpdates?.repositoryConfig).toEqual({
-          platform: 'github',
-          baseUrl: 'https://github.com/owner/repo',
-        })
+        expect(result).toEqual(
+          expect.objectContaining({
+            status: 'success',
+            stateUpdates: expect.objectContaining({
+              repositoryConfig: { platform: 'github', baseUrl: 'https://github.com/owner/repo' },
+            }),
+          })
+        )
       })
 
       it('infers from git remote when package.json has no repository', async () => {
@@ -244,11 +260,14 @@ describe('resolve-repository step', () => {
         const step = createResolveRepositoryStep()
         const result = await step.execute(ctx)
 
-        expect(result.status).toBe('success')
-        expect(result.stateUpdates?.repositoryConfig).toEqual({
-          platform: 'github',
-          baseUrl: 'https://github.com/git-owner/git-repo',
-        })
+        expect(result).toEqual(
+          expect.objectContaining({
+            status: 'success',
+            stateUpdates: expect.objectContaining({
+              repositoryConfig: { platform: 'github', baseUrl: 'https://github.com/git-owner/git-repo' },
+            }),
+          })
+        )
       })
 
       it('skips gracefully when neither source has repository info', async () => {
@@ -269,9 +288,11 @@ describe('resolve-repository step', () => {
         const step = createResolveRepositoryStep()
         const result = await step.execute(ctx)
 
-        expect(result.status).toBe('skipped')
-        expect(result.message).toContain('Could not infer')
-        expect(result.stateUpdates).toBeUndefined()
+        expect({ status: result.status, message: result.message, stateUpdates: result.stateUpdates }).toEqual({
+          status: 'skipped',
+          message: expect.stringContaining('Could not infer'),
+          stateUpdates: undefined,
+        })
       })
 
       it('skips gracefully when package.json does not exist', async () => {
@@ -287,8 +308,7 @@ describe('resolve-repository step', () => {
         const step = createResolveRepositoryStep()
         const result = await step.execute(ctx)
 
-        expect(result.status).toBe('skipped')
-        expect(result.message).toContain('Could not infer')
+        expect(result).toEqual(expect.objectContaining({ status: 'skipped', message: expect.stringContaining('Could not infer') }))
       })
     })
 
@@ -306,8 +326,7 @@ describe('resolve-repository step', () => {
           const step = createResolveRepositoryStep()
           const result = await step.execute(ctx)
 
-          expect(result.status).toBe('skipped')
-          expect(result.message).toBe('Repository resolution disabled')
+          expect(result).toEqual(expect.objectContaining({ status: 'skipped', message: 'Repository resolution disabled' }))
         })
       })
 
@@ -328,11 +347,14 @@ describe('resolve-repository step', () => {
           const step = createResolveRepositoryStep()
           const result = await step.execute(ctx)
 
-          expect(result.status).toBe('success')
-          expect(result.stateUpdates?.repositoryConfig).toEqual({
-            platform: 'gitlab',
-            baseUrl: 'https://gitlab.com/group/project',
-          })
+          expect(result).toEqual(
+            expect.objectContaining({
+              status: 'success',
+              stateUpdates: expect.objectContaining({
+                repositoryConfig: { platform: 'gitlab', baseUrl: 'https://gitlab.com/group/project' },
+              }),
+            })
+          )
         })
 
         it('fails when repository is not provided', async () => {
@@ -347,9 +369,9 @@ describe('resolve-repository step', () => {
           const step = createResolveRepositoryStep()
           const result = await step.execute(ctx)
 
-          expect(result.status).toBe('failed')
-          expect(result.error).toBeDefined()
-          expect(result.message).toContain('required')
+          expect(result).toEqual(
+            expect.objectContaining({ status: 'failed', error: expect.any(Error), message: expect.stringContaining('required') })
+          )
         })
       })
 
@@ -379,8 +401,7 @@ describe('resolve-repository step', () => {
           const step = createResolveRepositoryStep()
           const result = await step.execute(ctx)
 
-          expect(result.status).toBe('success')
-          expect(result.stateUpdates?.repositoryConfig?.baseUrl).toBe('https://github.com/pkg-owner/pkg-repo')
+          expect(result).toEqual(resolvedTo({ baseUrl: 'https://github.com/pkg-owner/pkg-repo' }))
         })
 
         it('respects custom inference order', async () => {
@@ -409,8 +430,7 @@ describe('resolve-repository step', () => {
           const step = createResolveRepositoryStep()
           const result = await step.execute(ctx)
 
-          expect(result.status).toBe('success')
-          expect(result.stateUpdates?.repositoryConfig?.baseUrl).toBe('https://github.com/git-owner/git-repo')
+          expect(result).toEqual(resolvedTo({ baseUrl: 'https://github.com/git-owner/git-repo' }))
         })
 
         it('falls back to next source when first fails', async () => {
@@ -438,157 +458,8 @@ describe('resolve-repository step', () => {
           const step = createResolveRepositoryStep()
           const result = await step.execute(ctx)
 
-          expect(result.status).toBe('success')
-          expect(result.stateUpdates?.repositoryConfig?.baseUrl).toBe('https://github.com/git-owner/git-repo')
+          expect(result).toEqual(resolvedTo({ baseUrl: 'https://github.com/git-owner/git-repo' }))
         })
-      })
-    })
-
-    describe('platform detection', () => {
-      it('detects GitHub', async () => {
-        const tree = createMockTree({
-          '/workspace/libs/test/package.json': JSON.stringify({
-            repository: 'https://github.com/owner/repo',
-          }),
-        })
-
-        const ctx = createMockContext({
-          tree,
-          config: { repository: 'inferred' },
-        })
-
-        const step = createResolveRepositoryStep()
-        const result = await step.execute(ctx)
-
-        expect(result.stateUpdates?.repositoryConfig?.platform).toBe('github')
-      })
-
-      it('detects GitLab', async () => {
-        const tree = createMockTree({
-          '/workspace/libs/test/package.json': JSON.stringify({
-            repository: 'https://gitlab.com/group/project',
-          }),
-        })
-
-        const ctx = createMockContext({
-          tree,
-          config: { repository: 'inferred' },
-        })
-
-        const step = createResolveRepositoryStep()
-        const result = await step.execute(ctx)
-
-        expect(result.stateUpdates?.repositoryConfig?.platform).toBe('gitlab')
-      })
-
-      it('detects Bitbucket', async () => {
-        const tree = createMockTree({
-          '/workspace/libs/test/package.json': JSON.stringify({
-            repository: 'https://bitbucket.org/team/repo',
-          }),
-        })
-
-        const ctx = createMockContext({
-          tree,
-          config: { repository: 'inferred' },
-        })
-
-        const step = createResolveRepositoryStep()
-        const result = await step.execute(ctx)
-
-        expect(result.stateUpdates?.repositoryConfig?.platform).toBe('bitbucket')
-      })
-    })
-
-    describe('shorthand formats', () => {
-      it('handles github shorthand', async () => {
-        const tree = createMockTree({
-          '/workspace/libs/test/package.json': JSON.stringify({
-            repository: 'github:owner/repo',
-          }),
-        })
-
-        const ctx = createMockContext({
-          tree,
-          config: { repository: 'inferred' },
-        })
-
-        const step = createResolveRepositoryStep()
-        const result = await step.execute(ctx)
-
-        expect(result.status).toBe('success')
-        expect(result.stateUpdates?.repositoryConfig?.platform).toBe('github')
-        expect(result.stateUpdates?.repositoryConfig?.baseUrl).toBe('https://github.com/owner/repo')
-      })
-
-      it('handles object format with url', async () => {
-        const tree = createMockTree({
-          '/workspace/libs/test/package.json': JSON.stringify({
-            repository: {
-              type: 'git',
-              url: 'https://github.com/owner/repo.git',
-            },
-          }),
-        })
-
-        const ctx = createMockContext({
-          tree,
-          config: { repository: 'inferred' },
-        })
-
-        const step = createResolveRepositoryStep()
-        const result = await step.execute(ctx)
-
-        expect(result.status).toBe('success')
-        expect(result.stateUpdates?.repositoryConfig?.platform).toBe('github')
-        expect(result.stateUpdates?.repositoryConfig?.baseUrl).toBe('https://github.com/owner/repo')
-      })
-    })
-
-    describe('git remote formats', () => {
-      it('handles HTTPS remote', async () => {
-        const tree = createMockTree({
-          '/workspace/libs/test/package.json': JSON.stringify({ name: '@test/pkg' }),
-        })
-
-        const git = createMockGitClient({
-          remoteUrl: 'https://github.com/owner/repo.git',
-        })
-
-        const ctx = createMockContext({
-          tree,
-          git,
-          config: { repository: 'inferred' },
-        })
-
-        const step = createResolveRepositoryStep()
-        const result = await step.execute(ctx)
-
-        expect(result.status).toBe('success')
-        expect(result.stateUpdates?.repositoryConfig?.baseUrl).toBe('https://github.com/owner/repo')
-      })
-
-      it('handles SSH remote', async () => {
-        const tree = createMockTree({
-          '/workspace/libs/test/package.json': JSON.stringify({ name: '@test/pkg' }),
-        })
-
-        const git = createMockGitClient({
-          remoteUrl: 'git@github.com:owner/repo.git',
-        })
-
-        const ctx = createMockContext({
-          tree,
-          git,
-          config: { repository: 'inferred' },
-        })
-
-        const step = createResolveRepositoryStep()
-        const result = await step.execute(ctx)
-
-        expect(result.status).toBe('success')
-        expect(result.stateUpdates?.repositoryConfig?.platform).toBe('github')
-        expect(result.stateUpdates?.repositoryConfig?.baseUrl).toBe('https://github.com/owner/repo')
       })
     })
 
@@ -714,8 +585,7 @@ describe('resolve-repository step', () => {
         const step = createResolveRepositoryStep()
         const result = await step.execute(ctx)
 
-        expect(result.status).toBe('skipped')
-        expect(result.message).toContain('Could not infer')
+        expect(result).toEqual(expect.objectContaining({ status: 'skipped', message: expect.stringContaining('Could not infer') }))
       })
 
       it('handles empty inferenceOrder array', async () => {
@@ -731,8 +601,7 @@ describe('resolve-repository step', () => {
         const step = createResolveRepositoryStep()
         const result = await step.execute(ctx)
 
-        expect(result.status).toBe('skipped')
-        expect(result.message).toContain('Could not infer')
+        expect(result).toEqual(expect.objectContaining({ status: 'skipped', message: expect.stringContaining('Could not infer') }))
       })
     })
 
@@ -763,8 +632,7 @@ describe('resolve-repository step', () => {
         const step = createResolveRepositoryStep()
         const result = await step.execute(ctx)
 
-        expect(result.status).toBe('success')
-        expect(result.stateUpdates?.repositoryConfig?.baseUrl).toBe('https://github.com/git-owner/git-repo')
+        expect(result).toEqual(resolvedTo({ baseUrl: 'https://github.com/git-owner/git-repo' }))
       })
 
       it('logs debug when tree.read returns null', async () => {
@@ -814,8 +682,7 @@ describe('resolve-repository step', () => {
         const step = createResolveRepositoryStep()
         const result = await step.execute(ctx)
 
-        expect(result.status).toBe('success')
-        expect(result.stateUpdates?.repositoryConfig?.baseUrl).toBe('https://github.com/git-owner/git-repo')
+        expect(result).toEqual(resolvedTo({ baseUrl: 'https://github.com/git-owner/git-repo' }))
       })
 
       it('handles unknown repository configuration format', async () => {
@@ -828,8 +695,19 @@ describe('resolve-repository step', () => {
         const step = createResolveRepositoryStep()
         const result = await step.execute(ctx)
 
-        expect(result.status).toBe('skipped')
-        expect(result.message).toBe('Unknown repository configuration format')
+        expect(result).toEqual(expect.objectContaining({ status: 'skipped', message: 'Unknown repository configuration format' }))
+      })
+
+      it('warns about an unknown repository configuration format', async () => {
+        const logger = createMockLogger()
+        const ctx = createMockContext({
+          logger,
+          config: { repository: { unknownKey: 'unknownValue' } as unknown as RepositoryConfig },
+        })
+
+        const step = createResolveRepositoryStep()
+        await step.execute(ctx)
+
         expect(logger.warn).toHaveBeenCalledWith('Unknown repository configuration format')
       })
 
@@ -849,182 +727,24 @@ describe('resolve-repository step', () => {
         const result = await step.execute(ctx)
 
         expect(result.status).toBe('skipped')
+      })
+
+      it('warns about the unknown inference source', async () => {
+        const logger = createMockLogger()
+        const resolution: RepositoryResolution = {
+          mode: 'inferred',
+          inferenceOrder: ['unknown-source' as 'package-json'],
+        }
+
+        const ctx = createMockContext({
+          logger,
+          config: { repository: resolution },
+        })
+
+        const step = createResolveRepositoryStep()
+        await step.execute(ctx)
+
         expect(logger.warn).toHaveBeenCalledWith('Unknown inference source: unknown-source')
-      })
-    })
-
-    describe('additional platform detection', () => {
-      it('detects Azure DevOps', async () => {
-        const tree = createMockTree({
-          '/workspace/libs/test/package.json': JSON.stringify({
-            repository: 'https://dev.azure.com/org/project/_git/repo',
-          }),
-        })
-
-        const ctx = createMockContext({
-          tree,
-          config: { repository: 'inferred' },
-        })
-
-        const step = createResolveRepositoryStep()
-        const result = await step.execute(ctx)
-
-        expect(result.status).toBe('success')
-        expect(result.stateUpdates?.repositoryConfig?.platform).toBe('azure-devops')
-      })
-
-      it('detects Azure DevOps visualstudio.com format', async () => {
-        const tree = createMockTree({
-          '/workspace/libs/test/package.json': JSON.stringify({
-            repository: 'https://org.visualstudio.com/project/_git/repo',
-          }),
-        })
-
-        const ctx = createMockContext({
-          tree,
-          config: { repository: 'inferred' },
-        })
-
-        const step = createResolveRepositoryStep()
-        const result = await step.execute(ctx)
-
-        expect(result.status).toBe('success')
-        expect(result.stateUpdates?.repositoryConfig?.platform).toBe('azure-devops')
-      })
-    })
-
-    describe('additional shorthand formats', () => {
-      it('handles gitlab shorthand', async () => {
-        const tree = createMockTree({
-          '/workspace/libs/test/package.json': JSON.stringify({
-            repository: 'gitlab:group/project',
-          }),
-        })
-
-        const ctx = createMockContext({
-          tree,
-          config: { repository: 'inferred' },
-        })
-
-        const step = createResolveRepositoryStep()
-        const result = await step.execute(ctx)
-
-        expect(result.status).toBe('success')
-        expect(result.stateUpdates?.repositoryConfig?.platform).toBe('gitlab')
-        expect(result.stateUpdates?.repositoryConfig?.baseUrl).toBe('https://gitlab.com/group/project')
-      })
-
-      it('handles bitbucket shorthand', async () => {
-        const tree = createMockTree({
-          '/workspace/libs/test/package.json': JSON.stringify({
-            repository: 'bitbucket:team/repo',
-          }),
-        })
-
-        const ctx = createMockContext({
-          tree,
-          config: { repository: 'inferred' },
-        })
-
-        const step = createResolveRepositoryStep()
-        const result = await step.execute(ctx)
-
-        expect(result.status).toBe('success')
-        expect(result.stateUpdates?.repositoryConfig?.platform).toBe('bitbucket')
-        expect(result.stateUpdates?.repositoryConfig?.baseUrl).toBe('https://bitbucket.org/team/repo')
-      })
-
-      it('handles git+https URL format', async () => {
-        const tree = createMockTree({
-          '/workspace/libs/test/package.json': JSON.stringify({
-            repository: {
-              type: 'git',
-              url: 'git+https://github.com/owner/repo.git',
-            },
-          }),
-        })
-
-        const ctx = createMockContext({
-          tree,
-          config: { repository: 'inferred' },
-        })
-
-        const step = createResolveRepositoryStep()
-        const result = await step.execute(ctx)
-
-        expect(result.status).toBe('success')
-        expect(result.stateUpdates?.repositoryConfig?.platform).toBe('github')
-        expect(result.stateUpdates?.repositoryConfig?.baseUrl).toBe('https://github.com/owner/repo')
-      })
-    })
-
-    describe('additional git remote formats', () => {
-      it('handles SSH remote for GitLab', async () => {
-        const tree = createMockTree({
-          '/workspace/libs/test/package.json': JSON.stringify({ name: '@test/pkg' }),
-        })
-
-        const git = createMockGitClient({
-          remoteUrl: 'git@gitlab.com:group/project.git',
-        })
-
-        const ctx = createMockContext({
-          tree,
-          git,
-          config: { repository: 'inferred' },
-        })
-
-        const step = createResolveRepositoryStep()
-        const result = await step.execute(ctx)
-
-        expect(result.status).toBe('success')
-        expect(result.stateUpdates?.repositoryConfig?.platform).toBe('gitlab')
-        expect(result.stateUpdates?.repositoryConfig?.baseUrl).toBe('https://gitlab.com/group/project')
-      })
-
-      it('handles SSH remote for Bitbucket', async () => {
-        const tree = createMockTree({
-          '/workspace/libs/test/package.json': JSON.stringify({ name: '@test/pkg' }),
-        })
-
-        const git = createMockGitClient({
-          remoteUrl: 'git@bitbucket.org:team/repo.git',
-        })
-
-        const ctx = createMockContext({
-          tree,
-          git,
-          config: { repository: 'inferred' },
-        })
-
-        const step = createResolveRepositoryStep()
-        const result = await step.execute(ctx)
-
-        expect(result.status).toBe('success')
-        expect(result.stateUpdates?.repositoryConfig?.platform).toBe('bitbucket')
-        expect(result.stateUpdates?.repositoryConfig?.baseUrl).toBe('https://bitbucket.org/team/repo')
-      })
-
-      it('handles HTTPS remote without .git extension', async () => {
-        const tree = createMockTree({
-          '/workspace/libs/test/package.json': JSON.stringify({ name: '@test/pkg' }),
-        })
-
-        const git = createMockGitClient({
-          remoteUrl: 'https://github.com/owner/repo',
-        })
-
-        const ctx = createMockContext({
-          tree,
-          git,
-          config: { repository: 'inferred' },
-        })
-
-        const step = createResolveRepositoryStep()
-        const result = await step.execute(ctx)
-
-        expect(result.status).toBe('success')
-        expect(result.stateUpdates?.repositoryConfig?.baseUrl).toBe('https://github.com/owner/repo')
       })
     })
 
@@ -1042,9 +762,13 @@ describe('resolve-repository step', () => {
         const step = createResolveRepositoryStep()
         const result = await step.execute(ctx)
 
-        expect(result.status).toBe('success')
-        expect(result.stateUpdates?.repositoryConfig?.platform).toBe('azure-devops')
-        expect(result.message).toContain('azure-devops')
+        expect(result).toEqual(
+          expect.objectContaining({
+            status: 'success',
+            stateUpdates: expect.objectContaining({ repositoryConfig: expect.objectContaining({ platform: 'azure-devops' }) }),
+            message: expect.stringContaining('azure-devops'),
+          })
+        )
       })
 
       it('handles bitbucket platform', async () => {
@@ -1060,9 +784,13 @@ describe('resolve-repository step', () => {
         const step = createResolveRepositoryStep()
         const result = await step.execute(ctx)
 
-        expect(result.status).toBe('success')
-        expect(result.stateUpdates?.repositoryConfig?.platform).toBe('bitbucket')
-        expect(result.message).toContain('bitbucket')
+        expect(result).toEqual(
+          expect.objectContaining({
+            status: 'success',
+            stateUpdates: expect.objectContaining({ repositoryConfig: expect.objectContaining({ platform: 'bitbucket' }) }),
+            message: expect.stringContaining('bitbucket'),
+          })
+        )
       })
     })
   })

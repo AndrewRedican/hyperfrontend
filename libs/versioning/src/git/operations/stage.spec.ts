@@ -13,12 +13,19 @@ describe('stage', () => {
     jest.clearAllMocks()
   })
 
-  it('stages files', () => {
+  it('returns true when staging succeeds', () => {
     mockExecFileSync.mockReturnValue('')
 
     const result = stage(['package.json', 'src/index.ts'])
 
     expect(result).toBe(true)
+  })
+
+  it('runs git add with the given files', () => {
+    mockExecFileSync.mockReturnValue('')
+
+    stage(['package.json', 'src/index.ts'])
+
     expect(mockExecFileSync).toHaveBeenCalledWith(
       'git',
       expect.arrayContaining(['add', 'package.json', 'src/index.ts']),
@@ -74,12 +81,19 @@ describe('unstage', () => {
     jest.clearAllMocks()
   })
 
-  it('unstages files', () => {
+  it('returns true when unstaging succeeds', () => {
     mockExecFileSync.mockReturnValue('')
 
     const result = unstage(['package.json'])
 
     expect(result).toBe(true)
+  })
+
+  it('runs git reset HEAD with the given files', () => {
+    mockExecFileSync.mockReturnValue('')
+
+    unstage(['package.json'])
+
     expect(mockExecFileSync).toHaveBeenCalledWith(
       'git',
       expect.arrayContaining(['reset', 'HEAD', '--', 'package.json']),
@@ -111,12 +125,19 @@ describe('stageAll', () => {
     jest.clearAllMocks()
   })
 
-  it('stages all files', () => {
+  it('returns true when staging all files succeeds', () => {
     mockExecFileSync.mockReturnValue('')
 
     const result = stageAll()
 
     expect(result).toBe(true)
+  })
+
+  it('runs git add -A', () => {
+    mockExecFileSync.mockReturnValue('')
+
+    stageAll()
+
     expect(mockExecFileSync).toHaveBeenCalledWith('git', expect.arrayContaining(['add', '-A']), expect.any(Object))
   })
 
@@ -142,6 +163,15 @@ describe('hasStagedChanges', () => {
     const result = hasStagedChanges()
 
     expect(result).toBe(true)
+  })
+
+  it('probes the index with git diff --cached --quiet', () => {
+    mockExecFileSync.mockImplementation(() => {
+      throw new Error('Exit code 1')
+    })
+
+    hasStagedChanges()
+
     expect(mockExecFileSync).toHaveBeenCalledWith('git', ['diff', '--cached', '--quiet'], expect.any(Object))
   })
 
@@ -175,6 +205,15 @@ describe('hasUnstagedChanges', () => {
     const result = hasUnstagedChanges()
 
     expect(result).toBe(true)
+  })
+
+  it('probes the working tree with git diff --quiet', () => {
+    mockExecFileSync.mockImplementation(() => {
+      throw new Error('Exit code 1')
+    })
+
+    hasUnstagedChanges()
+
     expect(mockExecFileSync).toHaveBeenCalledWith('git', ['diff', '--quiet'], expect.any(Object))
   })
 
@@ -200,30 +239,51 @@ describe('discardChanges', () => {
     jest.clearAllMocks()
   })
 
-  it('discards all changes when no files specified', () => {
+  it('returns true when discarding succeeds', () => {
     mockExecFileSync.mockReturnValue('')
 
     const result = discardChanges()
 
     expect(result).toBe(true)
+  })
+
+  it('checks out the whole tree when no files specified', () => {
+    mockExecFileSync.mockReturnValue('')
+
+    discardChanges()
+
     expect(mockExecFileSync).toHaveBeenCalledWith('git', ['checkout', '--', '.'], expect.any(Object))
   })
 
-  it('discards specific files when files provided', () => {
+  it('returns true when discarding specific files succeeds', () => {
     mockExecFileSync.mockReturnValue('')
 
     const result = discardChanges({ files: ['package.json', 'CHANGELOG.md'] })
 
     expect(result).toBe(true)
+  })
+
+  it('checks out only the given files when files provided', () => {
+    mockExecFileSync.mockReturnValue('')
+
+    discardChanges({ files: ['package.json', 'CHANGELOG.md'] })
+
     expect(mockExecFileSync).toHaveBeenCalledWith('git', ['checkout', '--', 'package.json', 'CHANGELOG.md'], expect.any(Object))
   })
 
-  it('discards files with empty array (all changes)', () => {
+  it('returns true when discarding with an empty file list succeeds', () => {
     mockExecFileSync.mockReturnValue('')
 
     const result = discardChanges({ files: [] })
 
     expect(result).toBe(true)
+  })
+
+  it('checks out the whole tree when the file list is empty', () => {
+    mockExecFileSync.mockReturnValue('')
+
+    discardChanges({ files: [] })
+
     expect(mockExecFileSync).toHaveBeenCalledWith('git', ['checkout', '--', '.'], expect.any(Object))
   })
 
@@ -251,14 +311,25 @@ describe('discardAllChanges', () => {
     jest.clearAllMocks()
   })
 
-  it('calls discardChanges and unstage', () => {
+  it('returns true when both discard and unstage succeed', () => {
     mockExecFileSync.mockReturnValue('')
 
     const result = discardAllChanges()
 
     expect(result).toBe(true)
-    expect(mockExecFileSync).toHaveBeenCalledWith('git', ['checkout', '--', '.'], expect.any(Object))
-    expect(mockExecFileSync).toHaveBeenCalledWith('git', ['reset', 'HEAD', '--', '.'], expect.any(Object))
+  })
+
+  it('checks out and unstages the whole tree', () => {
+    mockExecFileSync.mockReturnValue('')
+
+    discardAllChanges()
+
+    expect(mockExecFileSync.mock.calls).toEqual(
+      expect.arrayContaining([
+        ['git', ['checkout', '--', '.'], expect.any(Object)],
+        ['git', ['reset', 'HEAD', '--', '.'], expect.any(Object)],
+      ])
+    )
   })
 
   it('returns false if discardChanges fails', () => {

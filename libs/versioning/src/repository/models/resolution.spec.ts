@@ -11,9 +11,7 @@ describe('createDisabledResolution', () => {
   it('creates a disabled resolution', () => {
     const resolution = createDisabledResolution()
 
-    expect(resolution.mode).toBe('disabled')
-    expect(resolution.repository).toBeUndefined()
-    expect(resolution.inferenceOrder).toBeUndefined()
+    expect(resolution).toEqual({ mode: 'disabled', repository: undefined, inferenceOrder: undefined })
   })
 })
 
@@ -26,9 +24,18 @@ describe('createExplicitResolution', () => {
 
     const resolution = createExplicitResolution(repository)
 
-    expect(resolution.mode).toBe('explicit')
+    expect(resolution).toEqual({ mode: 'explicit', repository, inferenceOrder: undefined })
+  })
+
+  it('keeps the given repository config by reference', () => {
+    const repository = {
+      platform: 'github',
+      baseUrl: 'https://github.com/owner/repo',
+    } as const
+
+    const resolution = createExplicitResolution(repository)
+
     expect(resolution.repository).toBe(repository)
-    expect(resolution.inferenceOrder).toBeUndefined()
   })
 
   it('preserves the repository config exactly', () => {
@@ -41,8 +48,7 @@ describe('createExplicitResolution', () => {
 
     const resolution = createExplicitResolution(repository)
 
-    expect(resolution.repository?.platform).toBe('custom')
-    expect(resolution.repository?.formatCompareUrl).toBe(formatter)
+    expect(resolution.repository).toMatchObject({ platform: 'custom', formatCompareUrl: formatter })
   })
 })
 
@@ -50,16 +56,13 @@ describe('createInferredResolution', () => {
   it('creates an inferred resolution with default order', () => {
     const resolution = createInferredResolution()
 
-    expect(resolution.mode).toBe('inferred')
-    expect(resolution.inferenceOrder).toEqual(['package-json', 'git-remote'])
-    expect(resolution.repository).toBeUndefined()
+    expect(resolution).toEqual({ mode: 'inferred', inferenceOrder: ['package-json', 'git-remote'], repository: undefined })
   })
 
   it('creates an inferred resolution with custom order', () => {
     const resolution = createInferredResolution(['git-remote', 'package-json'])
 
-    expect(resolution.mode).toBe('inferred')
-    expect(resolution.inferenceOrder).toEqual(['git-remote', 'package-json'])
+    expect(resolution).toEqual({ mode: 'inferred', inferenceOrder: ['git-remote', 'package-json'], repository: undefined })
   })
 
   it('accepts single source order', () => {

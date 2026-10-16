@@ -13,7 +13,8 @@ describe('COMMIT_TYPES', () => {
 
 describe('isStandardType', () => {
   it('returns true for standard types', () => {
-    expect(['feat', 'fix'].map((type) => isStandardType(type))).toEqual([true, true])
+    const types = ['feat', 'fix']
+    expect(types.map((type) => [type, isStandardType(type)])).toEqual(types.map((type) => [type, true]))
   })
 
   it('returns false for non-standard types', () => {
@@ -23,17 +24,20 @@ describe('isStandardType', () => {
 
 describe('isReleaseType', () => {
   it('returns true for release types', () => {
-    expect(['feat', 'fix'].map((type) => isReleaseType(type))).toEqual([true, true])
+    const types = ['feat', 'fix']
+    expect(types.map((type) => [type, isReleaseType(type)])).toEqual(types.map((type) => [type, true]))
   })
 
   it('returns false for non-release types', () => {
-    expect(['docs', 'chore'].map((type) => isReleaseType(type))).toEqual([false, false])
+    const types = ['docs', 'chore']
+    expect(types.map((type) => [type, isReleaseType(type)])).toEqual(types.map((type) => [type, false]))
   })
 })
 
 describe('getSemverBump', () => {
   it('returns major for breaking changes', () => {
-    expect(['feat', 'fix'].map((type) => getSemverBump(type, true))).toEqual(['major', 'major'])
+    const types = ['feat', 'fix']
+    expect(types.map((type) => [type, getSemverBump(type, true)])).toEqual(types.map((type) => [type, 'major']))
   })
 
   it('returns minor for features', () => {
@@ -45,11 +49,13 @@ describe('getSemverBump', () => {
   })
 
   it('returns none for non-release types', () => {
-    expect(['docs', 'chore'].map((type) => getSemverBump(type, false))).toEqual(['none', 'none'])
+    const types = ['docs', 'chore']
+    expect(types.map((type) => [type, getSemverBump(type, false)])).toEqual(types.map((type) => [type, 'none']))
   })
 
   it('returns none for unknown custom types', () => {
-    expect(['custom-type', 'unknown'].map((type) => getSemverBump(type, false))).toEqual(['none', 'none'])
+    const types = ['custom-type', 'unknown']
+    expect(types.map((type) => [type, getSemverBump(type, false)])).toEqual(types.map((type) => [type, 'none']))
   })
 })
 

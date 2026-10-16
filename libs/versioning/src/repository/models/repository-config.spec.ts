@@ -9,9 +9,11 @@ describe('createRepositoryConfig', () => {
         baseUrl: 'https://github.com/owner/repo',
       })
 
-      expect(config.platform).toBe('github')
-      expect(config.baseUrl).toBe('https://github.com/owner/repo')
-      expect(config.formatCompareUrl).toBeUndefined()
+      expect(config).toEqual({
+        platform: 'github',
+        baseUrl: 'https://github.com/owner/repo',
+        formatCompareUrl: undefined,
+      })
     })
 
     it('creates a GitLab repository config', () => {
@@ -20,8 +22,11 @@ describe('createRepositoryConfig', () => {
         baseUrl: 'https://gitlab.com/group/project',
       })
 
-      expect(config.platform).toBe('gitlab')
-      expect(config.baseUrl).toBe('https://gitlab.com/group/project')
+      expect(config).toEqual({
+        platform: 'gitlab',
+        baseUrl: 'https://gitlab.com/group/project',
+        formatCompareUrl: undefined,
+      })
     })
 
     it('creates a Bitbucket repository config', () => {
@@ -30,8 +35,11 @@ describe('createRepositoryConfig', () => {
         baseUrl: 'https://bitbucket.org/owner/repo',
       })
 
-      expect(config.platform).toBe('bitbucket')
-      expect(config.baseUrl).toBe('https://bitbucket.org/owner/repo')
+      expect(config).toEqual({
+        platform: 'bitbucket',
+        baseUrl: 'https://bitbucket.org/owner/repo',
+        formatCompareUrl: undefined,
+      })
     })
 
     it('creates an Azure DevOps repository config', () => {
@@ -40,8 +48,11 @@ describe('createRepositoryConfig', () => {
         baseUrl: 'https://dev.azure.com/org/project/_git/repo',
       })
 
-      expect(config.platform).toBe('azure-devops')
-      expect(config.baseUrl).toBe('https://dev.azure.com/org/project/_git/repo')
+      expect(config).toEqual({
+        platform: 'azure-devops',
+        baseUrl: 'https://dev.azure.com/org/project/_git/repo',
+        formatCompareUrl: undefined,
+      })
     })
   })
 
@@ -102,9 +113,11 @@ describe('createRepositoryConfig', () => {
         formatCompareUrl: formatter,
       })
 
-      expect(config.platform).toBe('custom')
-      expect(config.baseUrl).toBe('https://custom.com/repo')
-      expect(config.formatCompareUrl).toBe(formatter)
+      expect(config).toEqual({
+        platform: 'custom',
+        baseUrl: 'https://custom.com/repo',
+        formatCompareUrl: formatter,
+      })
     })
 
     it('throws error when custom platform has no formatter', () => {
@@ -127,8 +140,11 @@ describe('createRepositoryConfig', () => {
         formatCompareUrl: customFormatter,
       })
 
-      expect(config.platform).toBe('github')
-      expect(config.formatCompareUrl).toBe(customFormatter)
+      expect(config).toEqual({
+        platform: 'github',
+        baseUrl: 'https://github.com/owner/repo',
+        formatCompareUrl: customFormatter,
+      })
     })
   })
 
@@ -139,8 +155,11 @@ describe('createRepositoryConfig', () => {
         baseUrl: 'https://git.internal.com/repo',
       })
 
-      expect(config.platform).toBe('unknown')
-      expect(config.baseUrl).toBe('https://git.internal.com/repo')
+      expect(config).toEqual({
+        platform: 'unknown',
+        baseUrl: 'https://git.internal.com/repo',
+        formatCompareUrl: undefined,
+      })
     })
   })
 })
