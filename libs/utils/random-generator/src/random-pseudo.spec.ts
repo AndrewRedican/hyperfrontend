@@ -12,8 +12,7 @@ describe('randomPseudo', () => {
   it('returns a number between 0 and 1', () => {
     const seed = 456
     const result = randomPseudo(seed)
-    expect(result).toBeGreaterThanOrEqual(0)
-    expect(result).toBeLessThan(1)
+    expect([result].filter((value) => !(value >= 0 && value < 1))).toStrictEqual([])
   })
 
   it('returns different numbers for different seeds', () => {
@@ -27,14 +26,12 @@ describe('randomPseudo', () => {
   it('handles large seed values', () => {
     const seed = Number.MAX_SAFE_INTEGER
     const result = randomPseudo(seed)
-    expect(result).toBeGreaterThanOrEqual(0)
-    expect(result).toBeLessThan(1)
+    expect([result].filter((value) => !(value >= 0 && value < 1))).toStrictEqual([])
   })
 
   it('handles negative seed values', () => {
     const seed = -123456
     const result = randomPseudo(seed)
-    expect(result).toBeGreaterThanOrEqual(0)
-    expect(result).toBeLessThan(1)
+    expect([result].filter((value) => !(value >= 0 && value < 1))).toStrictEqual([])
   })
 })

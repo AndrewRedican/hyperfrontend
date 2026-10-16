@@ -5,8 +5,7 @@ import { uuidV4, isUuidV4 } from './uuid-v4'
 describe('UUID generation and validation', () => {
   it('generates a UUID v4', () => {
     const uuid = uuidV4()
-    expect(getType(uuid)).toBe('string')
-    expect(uuid).toHaveLength(36)
+    expect({ type: getType(uuid), length: uuid.length }).toEqual({ type: 'string', length: 36 })
   })
 
   it('validates a UUID v4', () => {

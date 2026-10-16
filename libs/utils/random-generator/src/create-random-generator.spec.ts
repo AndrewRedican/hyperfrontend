@@ -32,8 +32,7 @@ describe('createRandomGenerator', () => {
 
   it('keeps the gaussian draw inside its bounds', () => {
     const value = createRandomGenerator(3).gaussian(10, 20)
-    expect(value).toBeGreaterThanOrEqual(10)
-    expect(value).toBeLessThanOrEqual(20)
+    expect([value].filter((draw) => !(draw >= 10 && draw <= 20))).toStrictEqual([])
   })
 
   it('generates a valid version 4 uuid from the stream', () => {
