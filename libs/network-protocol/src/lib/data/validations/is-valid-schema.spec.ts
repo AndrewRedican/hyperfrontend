@@ -49,33 +49,22 @@ describe('isValidSchema', () => {
     expect(isValidSchema(schema)).toBe(true)
   })
 
-  it('accepts when definition is blank of incomplete', () => {
-    schema = {}
-    expect(isValidSchema(schema)).toBe(true)
+  it.each([{}, { type: 'string' }, { required: ['type'] }, { type: 'object', required: ['type'] }, { type: 'array', required: ['type'] }])(
+    'accepts the blank or incomplete definition %p',
+    (definition) => {
+      expect(isValidSchema(definition)).toBe(true)
+    }
+  )
 
-    schema = { type: 'string' }
-    expect(isValidSchema(schema)).toBe(true)
-
-    schema = { required: ['type'] }
-    expect(isValidSchema(schema)).toBe(true)
-
-    schema = { type: 'object', required: ['type'] }
-    expect(isValidSchema(schema)).toBe(true)
-
-    schema = { type: 'array', required: ['type'] }
-    expect(isValidSchema(schema)).toBe(true)
-  })
-
-  it('rejects incorrect value type for a reserved schema property', () => {
-    expect(isValidSchema({ type: 5 })).toBe(false)
-    expect(isValidSchema({ required: false })).toBe(false)
+  it.each([{ type: 5 }, { required: false }])('rejects the incorrect value type for a reserved schema property in %p', (definition) => {
+    expect(isValidSchema(definition)).toBe(false)
   })
 
   it('ignores any non-compliant property that does not conform to schema', () => {
     expect(isValidSchema({ weird: 'unknown' })).toBe(true)
   })
 
-  it('validates schemas using jsonschema Validator', () => {
+  it('validates a schema with typed properties using jsonschema Validator', () => {
     schema = {
       type: 'object',
       properties: {
@@ -83,7 +72,9 @@ describe('isValidSchema', () => {
       },
     }
     expect(isValidSchema(schema)).toBe(true)
+  })
 
+  it('rejects a schema naming a type that does not exist using jsonschema Validator', () => {
     expect(isValidSchema({ type: 'invalid-type-that-does-not-exist' })).toBe(false)
   })
 

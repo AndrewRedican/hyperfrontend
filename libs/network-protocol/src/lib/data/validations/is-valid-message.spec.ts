@@ -2,50 +2,46 @@ import { describe, expect, it } from '@hyperfrontend/testing'
 import { isValidMessage } from './is-valid-message'
 
 describe('isValidMessage', () => {
-  it('returns true for a valid message', () => {
-    expect(isValidMessage('')).toBe(true)
-    expect(isValidMessage({})).toBe(true)
-    expect(isValidMessage(false)).toBe(true)
-    expect(isValidMessage('qwerty')).toBe(true)
-    expect(isValidMessage(42)).toBe(true)
-    expect(isValidMessage([])).toBe(true)
+  // note: a table holding an array value wraps every row in an array, because a bare array row is spread across the test's parameters.
+  it.each([[''], [{}], [false], ['qwerty'], [42], [[]]])('returns true for the valid message %p', (message) => {
+    expect(isValidMessage(message)).toBe(true)
   })
 
-  it('returns false for a valid message', () => {
-    expect(isValidMessage(void 0)).toBe(false)
-    expect(isValidMessage(null)).toBe(false)
-    expect(isValidMessage({ a: void 0 })).toBe(false)
-    expect(isValidMessage({ b: null })).toBe(false)
-    expect(isValidMessage([() => void 0])).toBe(false)
+  it.each([[void 0], [null], [{ a: void 0 }], [{ b: null }], [[() => void 0]]])('returns false for the invalid message %p', (message) => {
+    expect(isValidMessage(message)).toBe(false)
   })
 
-  it('returns true for nested valid objects', () => {
-    expect(isValidMessage({ a: { b: { c: 'deep' } } })).toBe(true)
-    expect(isValidMessage({ nested: [1, 2, { value: 'test' }] })).toBe(true)
+  it.each([{ a: { b: { c: 'deep' } } }, { nested: [1, 2, { value: 'test' }] }])(
+    'returns true for the nested valid object %p',
+    (message) => {
+      expect(isValidMessage(message)).toBe(true)
+    }
+  )
+
+  it.each([[{ valid: 'yes', invalid: undefined }], [{ nested: { deep: { value: null } } }], [[1, 2, undefined]]])(
+    'returns false for the nested invalid value %p',
+    (message) => {
+      expect(isValidMessage(message)).toBe(false)
+    }
+  )
+
+  it.each([BigInt(123), { value: BigInt(456) }])('returns false for the bigint value %p', (message) => {
+    expect(isValidMessage(message)).toBe(false)
   })
 
-  it('returns false for nested invalid values', () => {
-    expect(isValidMessage({ valid: 'yes', invalid: undefined })).toBe(false)
-    expect(isValidMessage({ nested: { deep: { value: null } } })).toBe(false)
-    expect(isValidMessage([1, 2, undefined])).toBe(false)
+  it.each([Symbol('test'), { value: Symbol('symbol') }])('returns false for the symbol value %p', (message) => {
+    expect(isValidMessage(message)).toBe(false)
   })
 
-  it('returns false for bigint values', () => {
-    expect(isValidMessage(BigInt(123))).toBe(false)
-    expect(isValidMessage({ value: BigInt(456) })).toBe(false)
-  })
-
-  it('returns false for symbol values', () => {
-    expect(isValidMessage(Symbol('test'))).toBe(false)
-    expect(isValidMessage({ value: Symbol('symbol') })).toBe(false)
-  })
-
-  it('handles arrays with mixed valid/invalid types', () => {
+  it('returns true for an array mixing numbers, strings and booleans', () => {
     expect(isValidMessage([1, 'two', true])).toBe(true)
+  })
+
+  it('returns false for an array mixing valid types with null', () => {
     expect(isValidMessage([1, 'two', null])).toBe(false)
   })
 
-  it('traverses deeply nested structures using depth options', () => {
+  it('traverses a valid structure nested ten levels deep', () => {
     const deeplyNested = {
       level1: {
         level2: {
@@ -68,7 +64,9 @@ describe('isValidMessage', () => {
       },
     }
     expect(isValidMessage(deeplyNested)).toBe(true)
+  })
 
+  it('traverses to an undefined value nested five levels deep', () => {
     const deeplyNestedInvalid = {
       level1: {
         level2: {

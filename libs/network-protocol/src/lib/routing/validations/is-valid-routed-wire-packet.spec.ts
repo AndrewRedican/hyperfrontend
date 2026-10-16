@@ -7,10 +7,8 @@ describe('isValidRoutedWirePacket', () => {
     expect(isValidRoutedWirePacket(routedWirePacket)).toBe(true)
   })
 
-  it('returns false for anything other than a valid routed wire packet', () => {
-    expect(isValidRoutedWirePacket(void 0)).toBe(false)
-    expect(isValidRoutedWirePacket(null)).toBe(false)
-    expect(isValidRoutedWirePacket([])).toBe(false)
-    expect(isValidRoutedWirePacket({ topicId: '' })).toBe(false)
+  // note: every row is wrapped in an array because a bare array row is spread across the test's parameters.
+  it.each([[void 0], [null], [[]], [{ topicId: '' }]])('returns false for %p, which is not a valid routed wire packet', (value) => {
+    expect(isValidRoutedWirePacket(value)).toBe(false)
   })
 })

@@ -7,10 +7,8 @@ describe('isValidRoutedUnencryptedPacket', () => {
     expect(isValidRoutedUnencryptedPacket(routedUnencryptedPacket)).toBe(true)
   })
 
-  it('returns false for anything other than a valid routed unencrypted packet', () => {
-    expect(isValidRoutedUnencryptedPacket(void 0)).toBe(false)
-    expect(isValidRoutedUnencryptedPacket(null)).toBe(false)
-    expect(isValidRoutedUnencryptedPacket([])).toBe(false)
-    expect(isValidRoutedUnencryptedPacket({ topicId: '' })).toBe(false)
+  // note: every row is wrapped in an array because a bare array row is spread across the test's parameters.
+  it.each([[void 0], [null], [[]], [{ topicId: '' }]])('returns false for %p, which is not a valid routed unencrypted packet', (value) => {
+    expect(isValidRoutedUnencryptedPacket(value)).toBe(false)
   })
 })

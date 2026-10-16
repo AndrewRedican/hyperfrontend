@@ -7,12 +7,7 @@ describe('isValidTarget', () => {
     expect(isValidTarget(uuidV4())).toBe(true)
   })
 
-  it('returns false for invalid target', () => {
-    expect(isValidTarget(null)).toBe(false)
-    expect(isValidTarget(void 0)).toBe(false)
-    expect(isValidTarget(5)).toBe(false)
-    expect(isValidTarget({})).toBe(false)
-    expect(isValidTarget('')).toBe(false)
-    expect(isValidTarget('not-a-guid')).toBe(false)
+  it.each([null, void 0, 5, {}, '', 'not-a-guid'])('returns false for the invalid target %p', (value) => {
+    expect(isValidTarget(value)).toBe(false)
   })
 })

@@ -3,15 +3,15 @@ import { dynamicRouting, staticRouting } from '../creators/mocks'
 import { isValidRoutingOptions } from './is-valid-routing-options'
 
 describe('isValidRoutingOptions', () => {
-  it('returns true for valid routing options', () => {
+  it('returns true for valid static routing options', () => {
     expect(isValidRoutingOptions(staticRouting)).toBe(true)
+  })
+
+  it('returns true for valid dynamic routing options', () => {
     expect(isValidRoutingOptions(dynamicRouting)).toBe(true)
   })
 
-  it('returms false for anything other than routing options', () => {
-    expect(isValidRoutingOptions(void 0)).toBe(false)
-    expect(isValidRoutingOptions(null)).toBe(false)
-    expect(isValidRoutingOptions({})).toBe(false)
-    expect(isValidRoutingOptions({ enabled: false })).toBe(false)
+  it.each([void 0, null, {}, { enabled: false }])('returns false for %p, which is not routing options', (value) => {
+    expect(isValidRoutingOptions(value)).toBe(false)
   })
 })

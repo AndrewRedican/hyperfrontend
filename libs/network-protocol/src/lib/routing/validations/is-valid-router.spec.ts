@@ -7,12 +7,8 @@ describe('isValidRouter', () => {
     expect(isValidRouter(router)).toBe(true)
   })
 
-  it('returns false for anything other than function', () => {
-    expect(isValidRouter(void 0)).toBe(false)
-    expect(isValidRouter(null)).toBe(false)
-    expect(isValidRouter(94)).toBe(false)
-    expect(isValidRouter({})).toBe(false)
-    expect(isValidRouter([])).toBe(false)
-    expect(isValidRouter(() => new WeakSet())).toBe(false)
+  // note: every row is wrapped in an array because a bare array row is spread across the test's parameters.
+  it.each([[void 0], [null], [94], [{}], [[]], [() => new WeakSet()]])('returns false for %p, which is not a router', (value) => {
+    expect(isValidRouter(value)).toBe(false)
   })
 })

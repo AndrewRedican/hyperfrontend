@@ -10,15 +10,14 @@ describe('createDataFactory (Browser)', () => {
         const createData = createDataFactory(createHash)
         const result = await createData(pid, sequence, message)
 
-        expect(result).toBeDefined()
-        expect(result.pid).toBe(pid)
-        expect(result.sequence).toBe(sequence)
-        expect(result.id).toBeDefined()
-        expect(typeof result.id).toBe('string')
-        expect(result.message).toBe(JSON.stringify(message))
-        expect(result.schema).toBeDefined()
-        expect(result.schemaHash).toBeDefined()
-        expect(typeof result.schemaHash).toBe('string')
+        expect(result).toEqual({
+          pid,
+          sequence,
+          id: expect.any(String),
+          message: JSON.stringify(message),
+          schema: expect.anything(),
+          schemaHash: expect.any(String),
+        })
       })
     })
 
@@ -59,6 +58,13 @@ describe('createDataFactory (Browser)', () => {
       const data = await createData<typeof message>('550e8400-e29b-41d4-a716-446655440000', 1, message)
 
       expect(data.message).toBe(JSON.stringify(message))
+    })
+
+    it('serializes message to JSON that parses back to the original message', async () => {
+      const createData = createDataFactory(createHash)
+      const message = { nested: { value: 42 } }
+      const data = await createData<typeof message>('550e8400-e29b-41d4-a716-446655440000', 1, message)
+
       expect(JSON.parse(data.message)).toEqual(message)
     })
   })

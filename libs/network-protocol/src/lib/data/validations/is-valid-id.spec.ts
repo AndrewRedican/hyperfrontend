@@ -7,12 +7,7 @@ describe('isValidId', () => {
     expect(isValidId(uuidV4())).toBe(true)
   })
 
-  it('returns false for an invalid process id', () => {
-    expect(isValidId(void 0)).toBe(false)
-    expect(isValidId(null)).toBe(false)
-    expect(isValidId(0)).toBe(false)
-    expect(isValidId('')).toBe(false)
-    expect(isValidId('1sdfw4')).toBe(false)
-    expect(isValidId({})).toBe(false)
+  it.each([void 0, null, 0, '', '1sdfw4', {}])('returns false for the invalid process id %p', (value) => {
+    expect(isValidId(value)).toBe(false)
   })
 })
