@@ -37,9 +37,12 @@ describe('@hyperfrontend/cryptography UMD bundle', () => {
     const bundleCode = loadBundleCode(bundlePath)
     const exports = requireUmdBundle(bundleCode) as Record<string, unknown>
 
-    expect(exports).toBeDefined()
-    expect(typeof exports.createHash).toBe('function')
-    expect(typeof exports.encrypt).toBe('function')
-    expect(typeof exports.decrypt).toBe('function')
+    expect(exports).toEqual(
+      expect.objectContaining({
+        createHash: expect.any(Function),
+        encrypt: expect.any(Function),
+        decrypt: expect.any(Function),
+      })
+    )
   })
 })
