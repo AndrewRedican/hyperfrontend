@@ -37,8 +37,7 @@ describe('Schema Validation', () => {
       const validator = createValidator(schema)
       const result = validator({ name: 'Alice', age: 30 })
 
-      expect(result.valid).toBe(true)
-      expect(result.errors).toHaveLength(0)
+      expect(result).toEqual({ valid: true, errors: [] })
     })
 
     it('detects invalid data', () => {
@@ -54,8 +53,7 @@ describe('Schema Validation', () => {
       const validator = createValidator(schema)
       const result = validator({ age: 'not-a-number' })
 
-      expect(result.valid).toBe(false)
-      expect(result.errors.length).toBeGreaterThan(0)
+      expect({ valid: result.valid, hasErrors: result.errors.length > 0 }).toEqual({ valid: false, hasErrors: true })
     })
 
     it('provides error details', () => {
@@ -70,8 +68,10 @@ describe('Schema Validation', () => {
       const validator = createValidator(schema)
       const result = validator({ email: 123 })
 
-      expect(result.valid).toBe(false)
-      expect(result.errors[0]).toHaveProperty('message')
+      expect({ valid: result.valid, firstError: result.errors[0] }).toEqual({
+        valid: false,
+        firstError: expect.objectContaining({ message: expect.any(String) }),
+      })
     })
   })
 
@@ -88,8 +88,7 @@ describe('Schema Validation', () => {
       }
 
       const result = validateAction(action)
-      expect(result.valid).toBe(true)
-      expect(result.errors).toHaveLength(0)
+      expect(result).toEqual({ valid: true, errors: [] })
     })
 
     it('detects missing required fields', () => {
@@ -98,8 +97,7 @@ describe('Schema Validation', () => {
       } as IAction
 
       const result = validateAction(action)
-      expect(result.valid).toBe(false)
-      expect(result.errors.length).toBeGreaterThan(0)
+      expect({ valid: result.valid, hasErrors: result.errors.length > 0 }).toEqual({ valid: false, hasErrors: true })
     })
 
     it('detects invalid processId format', () => {
@@ -152,8 +150,7 @@ describe('Schema Validation', () => {
       }
 
       const result = validateContract(contract)
-      expect(result.valid).toBe(true)
-      expect(result.errors).toHaveLength(0)
+      expect(result).toEqual({ valid: true, errors: [] })
     })
 
     it('detects missing required properties', () => {
@@ -184,8 +181,7 @@ describe('Schema Validation', () => {
       }
 
       const result = validateMessage(message)
-      expect(result.valid).toBe(true)
-      expect(result.errors).toHaveLength(0)
+      expect(result).toEqual({ valid: true, errors: [] })
     })
 
     it('detects missing type', () => {

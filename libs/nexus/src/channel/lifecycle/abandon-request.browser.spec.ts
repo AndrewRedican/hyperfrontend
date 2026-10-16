@@ -1,3 +1,4 @@
+import type { Mock } from '@hyperfrontend/testing'
 import type { ChannelState } from '../../types'
 import type { ChannelInternals } from '../types'
 import { after as afterAll, afterEach, before as beforeAll, beforeEach } from 'node:test'
@@ -38,12 +39,19 @@ describe('channel/lifecycle/abandon-request', () => {
     }
   })
 
-  it('removes the pending process and clears the pending process id', () => {
+  it('removes the pending process', () => {
     state = { ...state, pendingProcessId: 'process-1' }
 
     abandonRequest(mockChannel)
 
     expect(mockChannel.removeProcess).toHaveBeenCalledWith('process-1')
+  })
+
+  it('clears the pending process id', () => {
+    state = { ...state, pendingProcessId: 'process-1' }
+
+    abandonRequest(mockChannel)
+
     expect(state.pendingProcessId).toBeNull()
   })
 
@@ -55,8 +63,10 @@ describe('channel/lifecycle/abandon-request', () => {
     abandonRequest(mockChannel)
     jest.advanceTimersByTime(20_000)
 
-    expect(onDeadline).not.toHaveBeenCalled()
-    expect(mockChannel.sendAction).not.toHaveBeenCalled()
+    expect({ deadlines: onDeadline.mock.calls, resends: (mockChannel.sendAction as Mock).mock.calls }).toEqual({
+      deadlines: [],
+      resends: [],
+    })
   })
 
   it('does nothing when no request is pending', () => {

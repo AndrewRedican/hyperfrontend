@@ -54,9 +54,7 @@ describe('Integration: Contract Validation', () => {
         settings: { logLevel: 'error' },
       })
 
-      expect(broker.acceptedActionTypes).toHaveLength(2)
-      expect(broker.acceptedActionTypes).toContain('RESPONSE_1')
-      expect(broker.acceptedActionTypes).toContain('RESPONSE_2')
+      expect(broker.acceptedActionTypes).toEqual(['RESPONSE_1', 'RESPONSE_2'])
     })
 
     it('handles contract with optional fields', () => {
@@ -94,8 +92,10 @@ describe('Integration: Contract Validation', () => {
 
       const updatedContract = broker.contract
 
-      expect(updatedContract.emitted).toHaveLength(2)
-      expect(updatedContract.accepted).toHaveLength(2)
+      expect(updatedContract).toEqual({
+        emitted: [{ type: 'BASE_EMIT' }, { type: 'EXTENDED_EMIT' }],
+        accepted: [{ type: 'BASE_ACCEPT' }, { type: 'EXTENDED_ACCEPT' }],
+      })
     })
 
     it('throws error when extension is disabled', () => {
@@ -140,8 +140,10 @@ describe('Integration: Contract Validation', () => {
 
       const finalContract = broker.contract
 
-      expect(finalContract.emitted).toHaveLength(3)
-      expect(finalContract.accepted).toHaveLength(3)
+      expect(finalContract).toEqual({
+        emitted: [{ type: 'BASE_EMIT' }, { type: 'EXT_1_EMIT' }, { type: 'EXT_2_EMIT' }],
+        accepted: [{ type: 'BASE_ACCEPT' }, { type: 'EXT_1_ACCEPT' }, { type: 'EXT_2_ACCEPT' }],
+      })
     })
   })
 
@@ -159,8 +161,10 @@ describe('Integration: Contract Validation', () => {
 
       const merged = mergeContracts(contract1, contract2)
 
-      expect(merged.emitted).toHaveLength(2)
-      expect(merged.accepted).toHaveLength(2)
+      expect(merged).toEqual({
+        emitted: [{ type: 'A1' }, { type: 'A2' }],
+        accepted: [{ type: 'B1' }, { type: 'B2' }],
+      })
     })
 
     it('handles duplicate action types in merge', () => {
@@ -176,9 +180,10 @@ describe('Integration: Contract Validation', () => {
 
       const merged = mergeContracts(contract1, contract2)
 
-      const sharedCount = merged.emitted.filter((a) => a.type === 'SHARED').length
-      expect(sharedCount).toBe(1)
-      expect(merged.accepted).toHaveLength(2)
+      expect(merged).toEqual({
+        emitted: [{ type: 'SHARED' }],
+        accepted: [{ type: 'UNIQUE_1' }, { type: 'UNIQUE_2' }],
+      })
     })
 
     it('merges multiple contracts', () => {
@@ -199,8 +204,10 @@ describe('Integration: Contract Validation', () => {
 
       const merged = mergeContracts(mergeContracts(c1, c2), c3)
 
-      expect(merged.emitted).toHaveLength(3)
-      expect(merged.accepted).toHaveLength(3)
+      expect(merged).toEqual({
+        emitted: [{ type: 'A' }, { type: 'C' }, { type: 'E' }],
+        accepted: [{ type: 'B' }, { type: 'D' }, { type: 'F' }],
+      })
     })
 
     it('preserves action descriptions when merging', () => {
@@ -216,16 +223,15 @@ describe('Integration: Contract Validation', () => {
 
       const merged = mergeContracts(c1, c2)
 
-      const actionA = merged.emitted.find((a) => a.type === 'A')
-      expect(actionA?.description).toBe('Action A')
-
-      const actionC = merged.emitted.find((a) => a.type === 'C')
-      expect(actionC?.description).toBe('Action C')
+      expect(merged.emitted).toEqual([
+        { type: 'A', description: 'Action A' },
+        { type: 'C', description: 'Action C' },
+      ])
     })
   })
 
   describe('Contract in Channel Communication', () => {
-    it('validates messages against contract', () => {
+    it('sends a message type the contract emits', () => {
       const strictContract: IChannelContract = {
         emitted: [{ type: 'ALLOWED_EMIT' }],
         accepted: [{ type: 'ALLOWED_ACCEPT' }],
@@ -243,6 +249,22 @@ describe('Integration: Contract Validation', () => {
       expect(() => {
         channel.send('ALLOWED_EMIT', {})
       }).not.toThrow()
+    })
+
+    it('rejects a message type outside the contract', () => {
+      const strictContract: IChannelContract = {
+        emitted: [{ type: 'ALLOWED_EMIT' }],
+        accepted: [{ type: 'ALLOWED_ACCEPT' }],
+      }
+
+      const broker = createBroker({
+        name: 'strict-broker',
+        contract: strictContract,
+        settings: { logLevel: 'error' },
+      })
+
+      const channel = broker.addChannel('test-channel', mockWindow as unknown as Window)
+      channel.connect()
 
       expect(() => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -297,10 +319,7 @@ describe('Integration: Contract Validation', () => {
         settings: { logLevel: 'error' },
       })
 
-      expect(broker.acceptedActionTypes).toHaveLength(3)
-      expect(broker.acceptedActionTypes).toContain('API_RESPONSE')
-      expect(broker.acceptedActionTypes).toContain('API_ERROR')
-      expect(broker.acceptedActionTypes).toContain('API_PROGRESS')
+      expect(broker.acceptedActionTypes).toEqual(['API_RESPONSE', 'API_ERROR', 'API_PROGRESS'])
     })
 
     it('handles bidirectional contract', () => {
@@ -343,8 +362,10 @@ describe('Integration: Contract Validation', () => {
 
       broker.extendContract(authExtension)
 
-      expect(broker.contract.emitted).toHaveLength(5)
-      expect(broker.contract.accepted).toHaveLength(5)
+      expect(broker.contract).toEqual({
+        emitted: [...serviceContract.emitted, ...authExtension.emitted],
+        accepted: [...serviceContract.accepted, ...authExtension.accepted],
+      })
     })
   })
 

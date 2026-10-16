@@ -13,21 +13,27 @@ describe('Logging Utilities', () => {
     it('creates logger with debug level', () => {
       const logger = createLogger({ level: 'debug' })
 
-      expect(logger).toBeDefined()
-      expect(typeof logger.debug).toBe('function')
-      expect(typeof logger.info).toBe('function')
-      expect(typeof logger.warn).toBe('function')
-      expect(typeof logger.error).toBe('function')
+      expect(logger).toEqual(
+        expect.objectContaining({
+          debug: expect.any(Function),
+          info: expect.any(Function),
+          warn: expect.any(Function),
+          error: expect.any(Function),
+        })
+      )
     })
 
     it('creates logger with error level (default)', () => {
       const logger = createLogger({ level: 'error' })
 
-      expect(logger).toBeDefined()
-      expect(typeof logger.debug).toBe('function')
-      expect(typeof logger.info).toBe('function')
-      expect(typeof logger.warn).toBe('function')
-      expect(typeof logger.error).toBe('function')
+      expect(logger).toEqual(
+        expect.objectContaining({
+          debug: expect.any(Function),
+          info: expect.any(Function),
+          warn: expect.any(Function),
+          error: expect.any(Function),
+        })
+      )
     })
 
     it('creates different logger instances', () => {
@@ -71,10 +77,17 @@ describe('Logging Utilities', () => {
       logger.info('info message')
       logger.debug('debug message', 'extra')
 
-      expect(customLogger.error).toHaveBeenCalledWith('error message', { data: 1 })
-      expect(customLogger.warn).toHaveBeenCalledWith('warning message', 42)
-      expect(customLogger.info).toHaveBeenCalledWith('info message')
-      expect(customLogger.debug).toHaveBeenCalledWith('debug message', 'extra')
+      expect({
+        error: (customLogger.error as Mock).mock.calls,
+        warn: (customLogger.warn as Mock).mock.calls,
+        info: (customLogger.info as Mock).mock.calls,
+        debug: (customLogger.debug as Mock).mock.calls,
+      }).toEqual({
+        error: [['error message', { data: 1 }]],
+        warn: [['warning message', 42]],
+        info: [['info message']],
+        debug: [['debug message', 'extra']],
+      })
     })
 
     it('custom logger is used regardless of level setting', () => {
@@ -98,11 +111,14 @@ describe('Logging Utilities', () => {
     it('falls back to library logger when no custom logger provided', () => {
       const logger = createLogger({ level: 'debug' })
 
-      expect(logger).toBeDefined()
-      expect(logger.debug).toBeDefined()
-      expect(logger.info).toBeDefined()
-      expect(logger.warn).toBeDefined()
-      expect(logger.error).toBeDefined()
+      expect(logger).toEqual(
+        expect.objectContaining({
+          debug: expect.anything(),
+          info: expect.anything(),
+          warn: expect.anything(),
+          error: expect.anything(),
+        })
+      )
     })
 
     it('debug is noop when level is error and no custom logger', () => {
@@ -190,7 +206,6 @@ describe('Logging Utilities', () => {
       it('creates logger with options object', () => {
         const logger = createLogger({ level: 'warn' })
 
-        expect(logger).toBeDefined()
         expect(logger.getLogLevel()).toBe('warn')
       })
 
@@ -222,14 +237,12 @@ describe('Logging Utilities', () => {
       it('creates logger with default options when empty object passed', () => {
         const logger = createLogger({})
 
-        expect(logger).toBeDefined()
         expect(logger.getLogLevel()).toBe('error')
       })
 
       it('creates logger with default options when no arguments passed', () => {
         const logger = createLogger()
 
-        expect(logger).toBeDefined()
         expect(logger.getLogLevel()).toBe('error')
       })
     })
@@ -428,11 +441,17 @@ describe('Logging Utilities', () => {
       }
 
       logAction(mockLogger, action, 'sent')
-      expect(mockLogger.debug).toHaveBeenCalledWith('Action sent:', ACTION_TYPES.NEW_MESSAGE, action)
+      // note: mockClear truncates the calls array in place, so each observation is a copy taken before the next step.
+      const sentCalls = [...(mockLogger.debug as Mock).mock.calls]
       ;(mockLogger.debug as Mock).mockClear()
 
       logAction(mockLogger, action, 'received')
-      expect(mockLogger.debug).toHaveBeenCalledWith('Action received:', ACTION_TYPES.NEW_MESSAGE, action)
+      const receivedCalls = [...(mockLogger.debug as Mock).mock.calls]
+
+      expect({ sentCalls, receivedCalls }).toEqual({
+        sentCalls: [['Action sent:', ACTION_TYPES.NEW_MESSAGE, action]],
+        receivedCalls: [['Action received:', ACTION_TYPES.NEW_MESSAGE, action]],
+      })
     })
 
     it('works together for event logging flow', () => {
@@ -447,12 +466,12 @@ describe('Logging Utilities', () => {
       }
 
       logEvent(mockLogger, 'open', { channelId: '1' })
-      expect(mockLogger.debug).toHaveBeenNthCalledWith(1, 'Channel event:', 'open', { channelId: '1' })
-
       logEvent(mockLogger, 'close', { reason: 'done' })
-      expect(mockLogger.debug).toHaveBeenNthCalledWith(2, 'Channel event:', 'close', { reason: 'done' })
 
-      expect(mockLogger.debug).toHaveBeenCalledTimes(2)
+      expect((mockLogger.debug as Mock).mock.calls).toEqual([
+        ['Channel event:', 'open', { channelId: '1' }],
+        ['Channel event:', 'close', { reason: 'done' }],
+      ])
     })
   })
 })

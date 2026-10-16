@@ -10,18 +10,29 @@ import { getByWindow } from './get-by-window'
 import { remove } from './remove'
 
 describe('Channel Registry', () => {
+  const ids = (channels: MinimalChannel[]): string[] => channels.map((channel) => channel.id).sort()
+  const invalidChannels: readonly [string, unknown][] = [
+    ['null', null],
+    ['an empty object', {}],
+    ['a channel without a name', { id: 'test' }],
+    ['a channel without an id', { name: 'test' }],
+  ]
+
   describe('createRegistry', () => {
     it('creates a new registry instance', () => {
       const registry = createRegistry()
 
-      expect(registry).toBeDefined()
-      expect(typeof registry.add).toBe('function')
-      expect(typeof registry.remove).toBe('function')
-      expect(typeof registry.getByWindow).toBe('function')
-      expect(typeof registry.getById).toBe('function')
-      expect(typeof registry.getByName).toBe('function')
-      expect(typeof registry.getAll).toBe('function')
-      expect(typeof registry.clear).toBe('function')
+      expect(registry).toEqual(
+        expect.objectContaining({
+          add: expect.any(Function),
+          remove: expect.any(Function),
+          getByWindow: expect.any(Function),
+          getById: expect.any(Function),
+          getByName: expect.any(Function),
+          getAll: expect.any(Function),
+          clear: expect.any(Function),
+        })
+      )
     })
 
     it('creates independent registry instances', () => {
@@ -32,8 +43,7 @@ describe('Channel Registry', () => {
 
       registry1.add(channel1)
 
-      expect(registry1.getById('id1')).toBe(channel1)
-      expect(registry2.getById('id1')).toBeUndefined()
+      expect({ first: registry1.getById('id1'), second: registry2.getById('id1') }).toEqual({ first: channel1, second: undefined })
     })
   })
 
@@ -44,18 +54,21 @@ describe('Channel Registry', () => {
 
       add(registry, channel)
 
-      expect(getById(registry, 'test-id')).toBe(channel)
-      expect(getByName(registry, 'test-channel')).toBe(channel)
-      expect(getByWindow(registry, window)).toBe(channel)
+      expect({
+        byId: getById(registry, 'test-id'),
+        byName: getByName(registry, 'test-channel'),
+        byWindow: getByWindow(registry, window),
+      }).toEqual({
+        byId: channel,
+        byName: channel,
+        byWindow: channel,
+      })
     })
 
-    it('throws error for invalid channel', () => {
+    it.each(invalidChannels)('throws when the channel is %s', (_label: string, channel: unknown) => {
       const registry = createRegistry()
 
-      expect(() => add(registry, null as unknown as MinimalChannel)).toThrow('Invalid channel')
-      expect(() => add(registry, {} as unknown as MinimalChannel)).toThrow('Invalid channel')
-      expect(() => add(registry, { id: 'test' } as unknown as MinimalChannel)).toThrow('Invalid channel')
-      expect(() => add(registry, { name: 'test' } as unknown as MinimalChannel)).toThrow('Invalid channel')
+      expect(() => add(registry, channel as MinimalChannel)).toThrow('Invalid channel')
     })
 
     it('allows adding multiple channels', () => {
@@ -69,9 +82,10 @@ describe('Channel Registry', () => {
       add(registry, channel1)
       add(registry, channel2)
 
-      expect(getAll(registry)).toHaveLength(2)
-      expect(getById(registry, 'id1')).toBe(channel1)
-      expect(getById(registry, 'id2')).toBe(channel2)
+      expect({ all: ids(getAll(registry)), byId: [getById(registry, 'id1'), getById(registry, 'id2')] }).toEqual({
+        all: ['id1', 'id2'],
+        byId: [channel1, channel2],
+      })
     })
 
     it('updates existing channel when adding with same ID', () => {
@@ -92,13 +106,16 @@ describe('Channel Registry', () => {
       const channel = { id: 'test-id', name: 'test-channel', target: window }
 
       add(registry, channel)
-      expect(getById(registry, 'test-id')).toBe(channel)
+      const before = getById(registry, 'test-id')
 
       remove(registry, channel)
 
-      expect(getById(registry, 'test-id')).toBeUndefined()
-      expect(getByName(registry, 'test-channel')).toBeUndefined()
-      expect(getByWindow(registry, window)).toBeUndefined()
+      const after = {
+        byId: getById(registry, 'test-id'),
+        byName: getByName(registry, 'test-channel'),
+        byWindow: getByWindow(registry, window),
+      }
+      expect({ before, after }).toEqual({ before: channel, after: { byId: undefined, byName: undefined, byWindow: undefined } })
     })
 
     it('handles removing non-existent channel', () => {
@@ -185,14 +202,16 @@ describe('Channel Registry', () => {
       expect(getByName(registry, 'non-existent')).toBeUndefined()
     })
 
-    it('be case-sensitive', () => {
+    it('matches names case-sensitively', () => {
       const registry = createRegistry()
       const channel = { id: 'test-id', name: 'TestChannel', target: window }
 
       add(registry, channel)
 
-      expect(getByName(registry, 'TestChannel')).toBe(channel)
-      expect(getByName(registry, 'testchannel')).toBeUndefined()
+      expect({ exact: getByName(registry, 'TestChannel'), lowercased: getByName(registry, 'testchannel') }).toEqual({
+        exact: channel,
+        lowercased: undefined,
+      })
     })
   })
 
@@ -218,14 +237,12 @@ describe('Channel Registry', () => {
       add(registry, channel3)
 
       const all = getAll(registry)
+      const missing = [channel1, channel2, channel3].filter((channel) => !all.includes(channel))
 
-      expect(all).toHaveLength(3)
-      expect(all).toContain(channel1)
-      expect(all).toContain(channel2)
-      expect(all).toContain(channel3)
+      expect({ count: all.length, missing }).toEqual({ count: 3, missing: [] })
     })
 
-    it('return a new array each time', () => {
+    it('returns a distinct array each time', () => {
       const registry = createRegistry()
       const channel = { id: 'test-id', name: 'test-channel', target: window }
 
@@ -235,6 +252,17 @@ describe('Channel Registry', () => {
       const all2 = getAll(registry)
 
       expect(all1).not.toBe(all2)
+    })
+
+    it('returns the same contents each time', () => {
+      const registry = createRegistry()
+      const channel = { id: 'test-id', name: 'test-channel', target: window }
+
+      add(registry, channel)
+
+      const all1 = getAll(registry)
+      const all2 = getAll(registry)
+
       expect(all1).toEqual(all2)
     })
   })
@@ -250,23 +278,27 @@ describe('Channel Registry', () => {
 
       add(registry, channel1)
       add(registry, channel2)
-
-      expect(getAll(registry)).toHaveLength(2)
+      const before = ids(getAll(registry))
 
       clear(registry)
 
-      expect(getAll(registry)).toHaveLength(0)
-      expect(getById(registry, 'id1')).toBeUndefined()
-      expect(getById(registry, 'id2')).toBeUndefined()
-      expect(getByName(registry, 'channel1')).toBeUndefined()
-      expect(getByName(registry, 'channel2')).toBeUndefined()
+      const after = {
+        all: getAll(registry),
+        byId: [getById(registry, 'id1'), getById(registry, 'id2')],
+        byName: [getByName(registry, 'channel1'), getByName(registry, 'channel2')],
+      }
+      expect({ before, after }).toEqual({
+        before: ['id1', 'id2'],
+        after: { all: [], byId: [undefined, undefined], byName: [undefined, undefined] },
+      })
     })
 
     it('handles clearing empty registry', () => {
       const registry = createRegistry()
 
-      expect(() => clear(registry)).not.toThrow()
-      expect(getAll(registry)).toHaveLength(0)
+      clear(registry)
+
+      expect(getAll(registry)).toEqual([])
     })
 
     it('allows adding channels after clear', () => {
@@ -278,9 +310,10 @@ describe('Channel Registry', () => {
       clear(registry)
       add(registry, channel2)
 
-      expect(getAll(registry)).toHaveLength(1)
-      expect(getById(registry, 'id2')).toBe(channel2)
-      expect(getById(registry, 'id1')).toBeUndefined()
+      expect({ all: ids(getAll(registry)), byId: { id1: getById(registry, 'id1'), id2: getById(registry, 'id2') } }).toEqual({
+        all: ['id2'],
+        byId: { id1: undefined, id2: channel2 },
+      })
     })
   })
 
@@ -292,20 +325,26 @@ describe('Channel Registry', () => {
 
       const channel1 = { id: 'id1', name: 'channel1', target: mockWindow1 }
       const channel2 = { id: 'id2', name: 'channel2', target: mockWindow2 }
+      const observed: Array<[string, unknown]> = []
 
       add(registry, channel1)
       add(registry, channel2)
-      expect(getAll(registry)).toHaveLength(2)
-
+      observed.push(['after adding both', ids(getAll(registry))])
       remove(registry, channel1)
-      expect(getAll(registry)).toHaveLength(1)
-      expect(getById(registry, 'id2')).toBe(channel2)
-
+      observed.push(['after removing channel1', ids(getAll(registry))])
+      observed.push(['channel2 after removing channel1', getById(registry, 'id2')])
       add(registry, channel1)
-      expect(getAll(registry)).toHaveLength(2)
-
+      observed.push(['after re-adding channel1', ids(getAll(registry))])
       clear(registry)
-      expect(getAll(registry)).toHaveLength(0)
+      observed.push(['after clear', ids(getAll(registry))])
+
+      expect(observed).toEqual([
+        ['after adding both', ['id1', 'id2']],
+        ['after removing channel1', ['id2']],
+        ['channel2 after removing channel1', channel2],
+        ['after re-adding channel1', ['id1', 'id2']],
+        ['after clear', []],
+      ])
     })
 
     it('maintain lookup consistency across operations', () => {
@@ -319,11 +358,7 @@ describe('Channel Registry', () => {
       const byName = getByName(registry, 'test-channel')
       const byWindow = getByWindow(registry, mockWindow)
 
-      expect(byId).toBe(channel)
-      expect(byName).toBe(channel)
-      expect(byWindow).toBe(channel)
-      expect(byId).toBe(byName)
-      expect(byName).toBe(byWindow)
+      expect({ byId, byName, byWindow }).toEqual({ byId: channel, byName: channel, byWindow: channel })
     })
 
     it('handles multiple channels with different targets', () => {
@@ -339,16 +374,13 @@ describe('Channel Registry', () => {
       add(registry, channel1)
       add(registry, channel2)
       add(registry, channel3)
-
-      expect(getByWindow(registry, mockWindow1)).toBe(channel1)
-      expect(getByWindow(registry, mockWindow2)).toBe(channel2)
-      expect(getByWindow(registry, mockWindow3)).toBe(channel3)
+      const targets = [mockWindow1, mockWindow2, mockWindow3]
+      const before = targets.map((target) => getByWindow(registry, target))
 
       remove(registry, channel2)
 
-      expect(getByWindow(registry, mockWindow1)).toBe(channel1)
-      expect(getByWindow(registry, mockWindow2)).toBeUndefined()
-      expect(getByWindow(registry, mockWindow3)).toBe(channel3)
+      const after = targets.map((target) => getByWindow(registry, target))
+      expect({ before, after }).toEqual({ before: [channel1, channel2, channel3], after: [channel1, undefined, channel3] })
     })
   })
 })

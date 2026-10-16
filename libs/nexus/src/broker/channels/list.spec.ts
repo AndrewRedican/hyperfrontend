@@ -52,7 +52,7 @@ describe('listChannels', () => {
     expect(channels).toEqual([])
   })
 
-  it('return array of channel JSON representations', () => {
+  it('returns one JSON representation per channel', () => {
     const window1 = {} as Window
     const window2 = {} as Window
 
@@ -61,11 +61,10 @@ describe('listChannels', () => {
 
     const channels = listChannels(registry)
 
-    expect(channels).toHaveLength(2)
-    expect(channels[0]).toHaveProperty('id')
-    expect(channels[0]).toHaveProperty('name')
-    expect(channels[1]).toHaveProperty('id')
-    expect(channels[1]).toHaveProperty('name')
+    expect(channels).toEqual([
+      expect.objectContaining({ id: expect.any(String), name: 'channel-1' }),
+      expect.objectContaining({ id: expect.any(String), name: 'channel-2' }),
+    ])
   })
 
   it('includes channel names in JSON', () => {
@@ -78,7 +77,7 @@ describe('listChannels', () => {
     expect(channels[0].name).toBe('test-channel')
   })
 
-  it('return fresh array on each call', () => {
+  it('returns a distinct array on each call', () => {
     const window1 = {} as Window
     addChannel(mockBrokerState, registry, processManager, actions, 'channel-1', window1)
 
@@ -86,6 +85,15 @@ describe('listChannels', () => {
     const list2 = listChannels(registry)
 
     expect(list1).not.toBe(list2)
+  })
+
+  it('returns the same contents on each call', () => {
+    const window1 = {} as Window
+    addChannel(mockBrokerState, registry, processManager, actions, 'channel-1', window1)
+
+    const list1 = listChannels(registry)
+    const list2 = listChannels(registry)
+
     expect(list1).toEqual(list2)
   })
 
@@ -99,7 +107,6 @@ describe('listChannels', () => {
     addChannel(mockBrokerState, registry, processManager, actions, 'channel-2', window2)
     const list2 = listChannels(registry)
 
-    expect(list1).toHaveLength(1)
-    expect(list2).toHaveLength(2)
+    expect([list1, list2].map((list) => list.map((channel) => channel.name))).toEqual([['channel-1'], ['channel-1', 'channel-2']])
   })
 })

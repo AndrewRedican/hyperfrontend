@@ -75,12 +75,19 @@ describe('channel/lifecycle/begin-response', () => {
     expect(sentActions).toEqual([acceptAction, acceptAction, acceptAction])
   })
 
-  it('fires timeout and removes the process when the deadline expires', () => {
+  it('removes the process when the deadline expires', () => {
     beginResponse(mockChannel, activation, acceptAction)
 
     jest.advanceTimersByTime(state.connectTimeoutMs)
 
     expect(mockChannel.removeProcess).toHaveBeenCalledWith('process-1')
+  })
+
+  it('fires connect-timeout when the deadline expires', () => {
+    beginResponse(mockChannel, activation, acceptAction)
+
+    jest.advanceTimersByTime(state.connectTimeoutMs)
+
     expect(mockChannel.notifyEvent).toHaveBeenCalledWith('connect-timeout', { elapsedMs: state.connectTimeoutMs })
   })
 })

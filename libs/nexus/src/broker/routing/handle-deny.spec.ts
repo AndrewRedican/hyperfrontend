@@ -202,7 +202,6 @@ describe('handleDeny', () => {
       _uniqueId: 'window-2',
     } as unknown as Window
     const channel2 = addChannel(mockBrokerState, registry, processManager, actions, 'channel-2', window2)
-    expect(channel2).toBeDefined()
     const processId2 = processManager.create(channel2)
 
     const action1: IAction = {
@@ -229,7 +228,6 @@ describe('handleDeny', () => {
       source: window2,
     } as MessageEvent<IAction>)
 
-    expect(processManager.get(processId1)).toBeUndefined()
-    expect(processManager.get(processId2)).toBeUndefined()
+    expect([processId1, processId2].filter((processId) => processManager.has(processId))).toEqual([])
   })
 })

@@ -9,11 +9,19 @@ describe('Custom Error Classes', () => {
     it('creates error with message', () => {
       const error = new ValidationError('Validation failed')
 
-      expect(error).toBeInstanceOf(Error)
-      expect(error).toBeInstanceOf(ValidationError)
-      expect(error.name).toBe('ValidationError')
-      expect(error.message).toBe('Validation failed')
-      expect(error.errors).toEqual([])
+      expect({
+        isError: error instanceof Error,
+        isValidationError: error instanceof ValidationError,
+        name: error.name,
+        message: error.message,
+        errors: error.errors,
+      }).toEqual({
+        isError: true,
+        isValidationError: true,
+        name: 'ValidationError',
+        message: 'Validation failed',
+        errors: [],
+      })
     })
 
     it('creates error with validation errors', () => {
@@ -24,21 +32,21 @@ describe('Custom Error Classes', () => {
       const error = new ValidationError('Validation failed', validationErrors)
 
       expect(error.errors).toEqual(validationErrors)
-      expect(error.errors).toHaveLength(2)
     })
 
     it('preserves stack trace', () => {
       const error = new ValidationError('Test error')
 
-      expect(error.stack).toBeDefined()
       expect(error.stack).toContain('ValidationError')
     })
 
     it('supports instanceof checks', () => {
       const error = new ValidationError('Test')
 
-      expect(error instanceof Error).toBe(true)
-      expect(error instanceof ValidationError).toBe(true)
+      expect({ isError: error instanceof Error, isValidationError: error instanceof ValidationError }).toEqual({
+        isError: true,
+        isValidationError: true,
+      })
     })
 
     it('serializes to JSON', () => {
@@ -68,9 +76,7 @@ describe('Custom Error Classes', () => {
       const error = new ValidationError('Validation failed', validationErrors)
       const str = error.toString()
 
-      expect(str).toContain('ValidationError: Validation failed')
-      expect(str).toContain('name: Required field')
-      expect(str).toContain('email: Invalid format')
+      expect(str).toBe('ValidationError: Validation failed\n  - name: Required field\n  - email: Invalid format')
     })
 
     it('handles errors without path', () => {
@@ -86,40 +92,48 @@ describe('Custom Error Classes', () => {
     it('creates error with message only', () => {
       const error = new ConnectionError('Connection failed')
 
-      expect(error).toBeInstanceOf(Error)
-      expect(error).toBeInstanceOf(ConnectionError)
-      expect(error.name).toBe('ConnectionError')
-      expect(error.message).toBe('Connection failed')
-      expect(error.channelId).toBeUndefined()
-      expect(error.origin).toBeUndefined()
+      expect({
+        isError: error instanceof Error,
+        isConnectionError: error instanceof ConnectionError,
+        name: error.name,
+        message: error.message,
+        channelId: error.channelId,
+        origin: error.origin,
+      }).toEqual({
+        isError: true,
+        isConnectionError: true,
+        name: 'ConnectionError',
+        message: 'Connection failed',
+        channelId: undefined,
+        origin: undefined,
+      })
     })
 
     it('creates error with channel ID', () => {
       const error = new ConnectionError('Failed', 'channel-123')
 
-      expect(error.channelId).toBe('channel-123')
-      expect(error.origin).toBeUndefined()
+      expect({ channelId: error.channelId, origin: error.origin }).toEqual({ channelId: 'channel-123', origin: undefined })
     })
 
     it('creates error with channel ID and origin', () => {
       const error = new ConnectionError('Failed', 'channel-123', 'https://example.com')
 
-      expect(error.channelId).toBe('channel-123')
-      expect(error.origin).toBe('https://example.com')
+      expect({ channelId: error.channelId, origin: error.origin }).toEqual({ channelId: 'channel-123', origin: 'https://example.com' })
     })
 
     it('preserves stack trace', () => {
       const error = new ConnectionError('Test error')
 
-      expect(error.stack).toBeDefined()
       expect(error.stack).toContain('ConnectionError')
     })
 
     it('supports instanceof checks', () => {
       const error = new ConnectionError('Test')
 
-      expect(error instanceof Error).toBe(true)
-      expect(error instanceof ConnectionError).toBe(true)
+      expect({ isError: error instanceof Error, isConnectionError: error instanceof ConnectionError }).toEqual({
+        isError: true,
+        isConnectionError: true,
+      })
     })
 
     it('serializes to JSON without optional fields', () => {
@@ -160,11 +174,19 @@ describe('Custom Error Classes', () => {
     it('creates error with message only', () => {
       const error = new ContractError('Invalid contract')
 
-      expect(error).toBeInstanceOf(Error)
-      expect(error).toBeInstanceOf(ContractError)
-      expect(error.name).toBe('ContractError')
-      expect(error.message).toBe('Invalid contract')
-      expect(error.contract).toBeUndefined()
+      expect({
+        isError: error instanceof Error,
+        isContractError: error instanceof ContractError,
+        name: error.name,
+        message: error.message,
+        contract: error.contract,
+      }).toEqual({
+        isError: true,
+        isContractError: true,
+        name: 'ContractError',
+        message: 'Invalid contract',
+        contract: undefined,
+      })
     })
 
     it('creates error with contract', () => {
@@ -180,15 +202,16 @@ describe('Custom Error Classes', () => {
     it('preserves stack trace', () => {
       const error = new ContractError('Test error')
 
-      expect(error.stack).toBeDefined()
       expect(error.stack).toContain('ContractError')
     })
 
     it('supports instanceof checks', () => {
       const error = new ContractError('Test')
 
-      expect(error instanceof Error).toBe(true)
-      expect(error instanceof ContractError).toBe(true)
+      expect({ isError: error instanceof Error, isContractError: error instanceof ContractError }).toEqual({
+        isError: true,
+        isContractError: true,
+      })
     })
 
     it('serializes to JSON without contract', () => {
@@ -228,6 +251,12 @@ describe('Custom Error Classes', () => {
   })
 
   describe('Error hierarchy', () => {
+    const classify = (error: Error) => ({
+      ValidationError: error instanceof ValidationError,
+      ConnectionError: error instanceof ConnectionError,
+      ContractError: error instanceof ContractError,
+    })
+
     it('allows catching all as Error', () => {
       const errors = [
         new ValidationError('Validation failed'),
@@ -240,22 +269,22 @@ describe('Custom Error Classes', () => {
       })
     })
 
-    it('distinguish between error types', () => {
+    it('distinguishes a ValidationError from the other error types', () => {
       const validationError = new ValidationError('Test')
+
+      expect(classify(validationError)).toEqual({ ValidationError: true, ConnectionError: false, ContractError: false })
+    })
+
+    it('distinguishes a ConnectionError from the other error types', () => {
       const connectionError = new ConnectionError('Test')
+
+      expect(classify(connectionError)).toEqual({ ValidationError: false, ConnectionError: true, ContractError: false })
+    })
+
+    it('distinguishes a ContractError from the other error types', () => {
       const contractError = new ContractError('Test')
 
-      expect(validationError instanceof ValidationError).toBe(true)
-      expect(validationError instanceof ConnectionError).toBe(false)
-      expect(validationError instanceof ContractError).toBe(false)
-
-      expect(connectionError instanceof ConnectionError).toBe(true)
-      expect(connectionError instanceof ValidationError).toBe(false)
-      expect(connectionError instanceof ContractError).toBe(false)
-
-      expect(contractError instanceof ContractError).toBe(true)
-      expect(contractError instanceof ValidationError).toBe(false)
-      expect(contractError instanceof ConnectionError).toBe(false)
+      expect(classify(contractError)).toEqual({ ValidationError: false, ConnectionError: false, ContractError: true })
     })
   })
 })

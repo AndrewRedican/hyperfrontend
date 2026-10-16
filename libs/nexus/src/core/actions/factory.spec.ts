@@ -64,8 +64,10 @@ describe('createActionCreators', () => {
         preferred: 'v3',
       })
 
-      expect('security' in actionWithoutSecurity).toBe(false)
-      expect('security' in actionWithSecurity).toBe(true)
+      expect({ withoutSecurity: 'security' in actionWithoutSecurity, withSecurity: 'security' in actionWithSecurity }).toEqual({
+        withoutSecurity: false,
+        withSecurity: true,
+      })
     })
 
     it('creates frozen action with security', () => {
@@ -113,8 +115,10 @@ describe('createActionCreators', () => {
       const actionWithoutSecurity = actions.acceptConnection('process-1')
       const actionWithSecurity = actions.acceptConnection('process-2', { negotiated: 'v3' })
 
-      expect('security' in actionWithoutSecurity).toBe(false)
-      expect('security' in actionWithSecurity).toBe(true)
+      expect({ withoutSecurity: 'security' in actionWithoutSecurity, withSecurity: 'security' in actionWithSecurity }).toEqual({
+        withoutSecurity: false,
+        withSecurity: true,
+      })
     })
   })
 
@@ -193,8 +197,10 @@ describe('createActionCreators', () => {
       const actionWithoutSecurity = actions.openConnection('process-1')
       const actionWithSecurity = actions.openConnection('process-2', { active: true, protocol: 'v3' })
 
-      expect('security' in actionWithoutSecurity).toBe(false)
-      expect('security' in actionWithSecurity).toBe(true)
+      expect({ withoutSecurity: 'security' in actionWithoutSecurity, withSecurity: 'security' in actionWithSecurity }).toEqual({
+        withoutSecurity: false,
+        withSecurity: true,
+      })
     })
 
     it('creates frozen action with security', () => {
@@ -333,13 +339,17 @@ describe('createActionCreators', () => {
   })
 
   describe('immutability', () => {
-    it('return frozen actions that cannot be modified', () => {
+    it('rejects reassigning the action type', () => {
       const action = actions.requestConnection('process-test')
 
       expect(() => {
         // @ts-expect-error - testing runtime immutability
         action.type = 'changed'
       }).toThrow()
+    })
+
+    it('rejects reassigning the process id', () => {
+      const action = actions.requestConnection('process-test')
 
       expect(() => {
         // @ts-expect-error - testing runtime immutability
@@ -352,31 +362,46 @@ describe('createActionCreators', () => {
       expect(Object.isFrozen(action)).toBe(true)
     })
 
-    it('freezes nested contract object', () => {
+    it('leaves the nested contract object unfrozen', () => {
       const action = actions.requestConnection('process-test')
-      expect(Object.isFrozen(action.contract)).toBe(false)
-      expect(Object.isFrozen(action.contract.emitted)).toBe(false)
-      expect(Object.isFrozen(action.contract.accepted)).toBe(false)
+
+      expect({
+        contract: Object.isFrozen(action.contract),
+        emitted: Object.isFrozen(action.contract.emitted),
+        accepted: Object.isFrozen(action.contract.accepted),
+      }).toEqual({ contract: false, emitted: false, accepted: false })
     })
   })
 
   describe('type safety', () => {
-    it('haves correct TypeScript types', () => {
+    it('types the request action with a contract', () => {
       const reqAction = actions.requestConnection('p1')
-      expect(reqAction.type).toBe(ACTION_TYPES.REQUEST_CONNECTION)
-      expect('contract' in reqAction).toBe(true)
 
+      expect({ type: reqAction.type, hasContract: 'contract' in reqAction }).toEqual({
+        type: ACTION_TYPES.REQUEST_CONNECTION,
+        hasContract: true,
+      })
+    })
+
+    it('types the deny action with an error', () => {
       const denyAction = actions.denyConnection('p2', 'error')
-      expect(denyAction.type).toBe(ACTION_TYPES.DENY_CONNECTION)
-      expect('error' in denyAction).toBe(true)
 
+      expect({ type: denyAction.type, hasError: 'error' in denyAction }).toEqual({ type: ACTION_TYPES.DENY_CONNECTION, hasError: true })
+    })
+
+    it('types the message action with data', () => {
       const msgAction = actions.newMessage({ type: 'greeting', data: 'hi' })
-      expect(msgAction.type).toBe(ACTION_TYPES.NEW_MESSAGE)
-      expect('data' in msgAction).toBe(true)
 
+      expect({ type: msgAction.type, hasData: 'data' in msgAction }).toEqual({ type: ACTION_TYPES.NEW_MESSAGE, hasData: true })
+    })
+
+    it('types the destroy action without a processId', () => {
       const destroyAction = actions.destroyConnection()
-      expect(destroyAction.type).toBe(ACTION_TYPES.DESTROY_CONNECTION)
-      expect('processId' in destroyAction).toBe(false)
+
+      expect({ type: destroyAction.type, hasProcessId: 'processId' in destroyAction }).toEqual({
+        type: ACTION_TYPES.DESTROY_CONNECTION,
+        hasProcessId: false,
+      })
     })
   })
 })

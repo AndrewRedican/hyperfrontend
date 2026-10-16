@@ -97,7 +97,9 @@ describe('channel/lifecycle/complete-connection', () => {
 
     completeConnection(mockChannel, 'https://example.com', peerContract, 'peer-1', openAction)
 
-    expect(targetWindow.postMessage).toHaveBeenCalledWith(expect.objectContaining({ type: '[nexus] new-message' }), 'https://example.com')
-    expect(state.queuedMessages).toHaveLength(0)
+    expect({ posted: targetWindow.postMessage.mock.calls, queued: state.queuedMessages }).toEqual({
+      posted: [[expect.objectContaining({ type: '[nexus] new-message' }), 'https://example.com']],
+      queued: [],
+    })
   })
 })

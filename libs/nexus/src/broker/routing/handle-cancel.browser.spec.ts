@@ -219,8 +219,11 @@ describe('handleCancel', () => {
       source: window2,
     } as MessageEvent<IAction>)
 
-    expect(mockWindow.postMessage).toHaveBeenCalled()
-    expect(window2.postMessage).toHaveBeenCalled()
+    const postedTypes = (target: Window): string[] => (target.postMessage as Mock).mock.calls.map(([action]) => (action as IAction).type)
+    expect({ first: postedTypes(mockWindow), second: postedTypes(window2) }).toEqual({
+      first: ['[nexus] connection-request-cancelled-acknowledged'],
+      second: ['[nexus] connection-request-cancelled-acknowledged'],
+    })
   })
 
   it('ignores a cancel from an instance other than the counterpart the channel answered', () => {

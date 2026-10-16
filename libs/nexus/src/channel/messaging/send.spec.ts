@@ -1,3 +1,4 @@
+import type { Mock } from '@hyperfrontend/testing'
 import type { ChannelState } from '../../types/channel'
 import type { IMessage } from '../../types/message'
 import type { ChannelInternals } from '../types'
@@ -16,6 +17,14 @@ describe('channel/messaging/send', () => {
   const foreign: IMessage = { type: 'UNAUTHORIZED_ACTION', data: {} }
   const notEmitted = (type: string): string =>
     `Cannot send message to test-channel channel. Message type '${type}' is not in the emitted actions of channel contract.`
+  const thrownBy = (attempt: () => void): unknown => {
+    try {
+      attempt()
+    } catch (error) {
+      return error
+    }
+    return undefined
+  }
 
   let state: ChannelState
   let channel: ChannelInternals
@@ -112,8 +121,9 @@ describe('channel/messaging/send', () => {
     })
 
     it('queues nothing for a message type outside the emitted actions', () => {
-      expect(() => send(channel, foreign)).toThrow()
-      expect(queueModule.queue).not.toHaveBeenCalled()
+      const error = thrownBy(() => send(channel, foreign))
+
+      expect({ error, queued: (queueModule.queue as Mock).mock.calls }).toEqual({ error: expect.any(Error), queued: [] })
     })
   })
 

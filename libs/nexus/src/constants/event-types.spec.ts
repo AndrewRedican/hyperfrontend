@@ -29,10 +29,12 @@ describe('constants/event-types', () => {
     const deny: 'deny' = DENY
     const invalid: 'invalid' = INVALID
 
-    expect(open).toBe('open')
-    expect(close).toBe('close')
-    expect(cancel).toBe('cancel')
-    expect(deny).toBe('deny')
-    expect(invalid).toBe('invalid')
+    expect({ open, close, cancel, deny, invalid }).toEqual({
+      open: 'open',
+      close: 'close',
+      cancel: 'cancel',
+      deny: 'deny',
+      invalid: 'invalid',
+    })
   })
 })

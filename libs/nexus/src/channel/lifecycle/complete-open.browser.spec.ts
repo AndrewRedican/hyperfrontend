@@ -62,8 +62,9 @@ describe('channel/lifecycle/complete-open', () => {
   })
 
   it('returns false and changes nothing when no accept is pending', () => {
-    expect(completeScheduledOpen(mockChannel)).toBe(false)
-    expect(state.active).toBe(false)
+    const opened = completeScheduledOpen(mockChannel)
+
+    expect({ opened, active: state.active }).toEqual({ opened: false, active: false })
   })
 
   it('activates from the pending accept, keeping the own contract', () => {
@@ -100,7 +101,9 @@ describe('channel/lifecycle/complete-open', () => {
 
     completeScheduledOpen(mockChannel)
 
-    expect(targetWindow.postMessage).toHaveBeenCalledWith(expect.objectContaining({ type: '[nexus] new-message' }), 'https://example.com')
-    expect(state.queuedMessages).toHaveLength(0)
+    expect({ posted: targetWindow.postMessage.mock.calls, queued: state.queuedMessages }).toEqual({
+      posted: [[expect.objectContaining({ type: '[nexus] new-message' }), 'https://example.com']],
+      queued: [],
+    })
   })
 })

@@ -7,11 +7,8 @@ import { validateSettings } from './settings'
 
 describe('Validation Functions', () => {
   describe('validateName', () => {
-    it('acceptss valid names', () => {
-      expect(() => validateName('channel-1')).not.toThrow()
-      expect(() => validateName('my-channel')).not.toThrow()
-      expect(() => validateName('a')).not.toThrow()
-      expect(() => validateName('Channel_Name_123')).not.toThrow()
+    it.each(['channel-1', 'my-channel', 'a', 'Channel_Name_123'])('accepts the name %s', (name: string) => {
+      expect(() => validateName(name)).not.toThrow()
     })
 
     it('rejects null name', () => {
@@ -22,15 +19,19 @@ describe('Validation Functions', () => {
       expect(() => validateName(undefined as unknown as string)).toThrow('Name cannot be null or undefined')
     })
 
-    it('rejects non-string names', () => {
-      expect(() => validateName(123 as unknown as string)).toThrow('Name must be a string')
-      expect(() => validateName({} as unknown as string)).toThrow('Name must be a string')
-      expect(() => validateName([] as unknown as string)).toThrow('Name must be a string')
+    it.each([
+      ['a number', 123],
+      ['an object', {}],
+      ['an array', []],
+    ])('rejects a name that is %s as not a string', (_label: string, name: unknown) => {
+      expect(() => validateName(name as string)).toThrow('Name must be a string')
     })
 
-    it('rejects empty strings', () => {
-      expect(() => validateName('')).toThrow('Name cannot be empty')
-      expect(() => validateName('   ')).toThrow('Name cannot be empty')
+    it.each([
+      ['an empty string', ''],
+      ['whitespace only', '   '],
+    ])('rejects a name that is %s as empty', (_label: string, name: string) => {
+      expect(() => validateName(name)).toThrow('Name cannot be empty')
     })
   })
 
@@ -67,10 +68,12 @@ describe('Validation Functions', () => {
       expect(() => validateContract(undefined)).toThrow('Contract cannot be null or undefined')
     })
 
-    it('rejects non-object contracts', () => {
-      expect(() => validateContract('contract' as unknown)).toThrow('Contract must be an object')
-      expect(() => validateContract(123 as unknown)).toThrow('Contract must be an object')
-      expect(() => validateContract([] as unknown)).toThrow('Contract must be an object')
+    it.each([
+      ['a string', 'contract'],
+      ['a number', 123],
+      ['an array', []],
+    ])('rejects a contract that is %s', (_label: string, contract: unknown) => {
+      expect(() => validateContract(contract)).toThrow('Contract must be an object')
     })
 
     it('rejects empty contracts', () => {
@@ -225,9 +228,11 @@ describe('Validation Functions', () => {
       expect(() => validateAction(undefined)).toThrow('Action cannot be null or undefined')
     })
 
-    it('rejects non-object actions', () => {
-      expect(() => validateAction('action' as unknown)).toThrow('Action must be an object')
-      expect(() => validateAction(123 as unknown)).toThrow('Action must be an object')
+    it.each([
+      ['a string', 'action'],
+      ['a number', 123],
+    ])('rejects an action that is %s', (_label: string, action: unknown) => {
+      expect(() => validateAction(action)).toThrow('Action must be an object')
     })
 
     it('rejects action without type', () => {
@@ -285,14 +290,12 @@ describe('Validation Functions', () => {
   })
 
   describe('validateOrigin', () => {
-    it('acceptss valid http origins', () => {
-      expect(() => validateOrigin('http://example.com')).not.toThrow()
-      expect(() => validateOrigin('http://localhost:3000')).not.toThrow()
+    it.each(['http://example.com', 'http://localhost:3000'])('accepts the http origin %s', (origin: string) => {
+      expect(() => validateOrigin(origin)).not.toThrow()
     })
 
-    it('acceptss valid https origins', () => {
-      expect(() => validateOrigin('https://example.com')).not.toThrow()
-      expect(() => validateOrigin('https://api.example.com')).not.toThrow()
+    it.each(['https://example.com', 'https://api.example.com'])('accepts the https origin %s', (origin: string) => {
+      expect(() => validateOrigin(origin)).not.toThrow()
     })
 
     it('acceptss wildcard origin', () => {
@@ -307,24 +310,26 @@ describe('Validation Functions', () => {
       expect(() => validateOrigin(undefined as unknown as string)).toThrow('Origin cannot be null or undefined')
     })
 
-    it('rejects non-string origins', () => {
-      expect(() => validateOrigin(123 as unknown as string)).toThrow('Origin must be a string')
-      expect(() => validateOrigin({} as unknown as string)).toThrow('Origin must be a string')
+    it.each([
+      ['a number', 123],
+      ['an object', {}],
+    ])('rejects an origin that is %s as not a string', (_label: string, origin: unknown) => {
+      expect(() => validateOrigin(origin as string)).toThrow('Origin must be a string')
     })
 
-    it('rejects empty string', () => {
-      expect(() => validateOrigin('')).toThrow('Origin cannot be empty')
-      expect(() => validateOrigin('   ')).toThrow('Origin cannot be empty')
+    it.each([
+      ['an empty string', ''],
+      ['whitespace only', '   '],
+    ])('rejects an origin that is %s as empty', (_label: string, origin: string) => {
+      expect(() => validateOrigin(origin)).toThrow('Origin cannot be empty')
     })
 
-    it('rejects invalid URLs', () => {
-      expect(() => validateOrigin('not-a-url')).toThrow('Invalid origin URL')
-      expect(() => validateOrigin('://broken')).toThrow('Invalid origin URL')
+    it.each(['not-a-url', '://broken'])('rejects the invalid URL %s', (origin: string) => {
+      expect(() => validateOrigin(origin)).toThrow('Invalid origin URL')
     })
 
-    it('rejects non-http(s) protocols', () => {
-      expect(() => validateOrigin('ftp://example.com')).toThrow('Origin must use http or https protocol')
-      expect(() => validateOrigin('file:///path/to/file')).toThrow('Origin must use http or https protocol')
+    it.each(['ftp://example.com', 'file:///path/to/file'])('rejects the non-http protocol of %s', (origin: string) => {
+      expect(() => validateOrigin(origin)).toThrow('Origin must use http or https protocol')
     })
   })
 
@@ -341,19 +346,16 @@ describe('Validation Functions', () => {
       expect(() => validateSettings({})).not.toThrow()
     })
 
-    it('acceptss valid settings with queueMessages', () => {
-      expect(() => validateSettings({ queueMessages: true })).not.toThrow()
-      expect(() => validateSettings({ queueMessages: false })).not.toThrow()
+    it.each([true, false])('accepts settings with queueMessages set to %s', (queueMessages: boolean) => {
+      expect(() => validateSettings({ queueMessages })).not.toThrow()
     })
 
-    it('acceptss valid settings with debug', () => {
-      expect(() => validateSettings({ logLevel: 'debug' })).not.toThrow()
-      expect(() => validateSettings({ logLevel: 'error' })).not.toThrow()
+    it.each(['debug', 'error'])('accepts settings with the log level %s', (logLevel: string) => {
+      expect(() => validateSettings({ logLevel })).not.toThrow()
     })
 
-    it('acceptss valid settings with origin', () => {
-      expect(() => validateSettings({ origin: 'http://example.com' })).not.toThrow()
-      expect(() => validateSettings({ origin: '*' })).not.toThrow()
+    it.each(['http://example.com', '*'])('accepts settings with the origin %s', (origin: string) => {
+      expect(() => validateSettings({ origin })).not.toThrow()
     })
 
     it('acceptss valid settings with contract', () => {
@@ -371,30 +373,40 @@ describe('Validation Functions', () => {
       expect(() => validateSettings(settings)).not.toThrow()
     })
 
-    it('rejects non-object settings', () => {
-      expect(() => validateSettings('settings' as unknown)).toThrow('Settings must be an object')
-      expect(() => validateSettings(123 as unknown)).toThrow('Settings must be an object')
-      expect(() => validateSettings([] as unknown)).toThrow('Settings must be an object')
+    it.each([
+      ['a string', 'settings'],
+      ['a number', 123],
+      ['an array', []],
+    ])('rejects settings that are %s', (_label: string, settings: unknown) => {
+      expect(() => validateSettings(settings)).toThrow('Settings must be an object')
     })
 
-    it('rejects invalid queueMessages type', () => {
-      expect(() => validateSettings({ queueMessages: 'true' as unknown })).toThrow('Setting queueMessages must be a boolean')
-      expect(() => validateSettings({ queueMessages: 1 as unknown })).toThrow('Setting queueMessages must be a boolean')
+    it.each([
+      ['a string', 'true'],
+      ['a number', 1],
+    ])('rejects a queueMessages setting that is %s', (_label: string, queueMessages: unknown) => {
+      expect(() => validateSettings({ queueMessages })).toThrow('Setting queueMessages must be a boolean')
     })
 
-    it('rejects invalid debug type', () => {
-      expect(() => validateSettings({ debug: 'true' as unknown })).toThrow('Setting debug must be a boolean')
-      expect(() => validateSettings({ debug: 1 as unknown })).toThrow('Setting debug must be a boolean')
+    it.each([
+      ['a string', 'true'],
+      ['a number', 1],
+    ])('rejects a debug setting that is %s', (_label: string, debug: unknown) => {
+      expect(() => validateSettings({ debug })).toThrow('Setting debug must be a boolean')
     })
 
-    it('rejects invalid origin type', () => {
-      expect(() => validateSettings({ origin: 123 as unknown })).toThrow('Setting origin must be a string')
-      expect(() => validateSettings({ origin: {} as unknown })).toThrow('Setting origin must be a string')
+    it.each([
+      ['a number', 123],
+      ['an object', {}],
+    ])('rejects an origin setting that is %s', (_label: string, origin: unknown) => {
+      expect(() => validateSettings({ origin })).toThrow('Setting origin must be a string')
     })
 
-    it('rejects invalid contract type', () => {
-      expect(() => validateSettings({ contract: 'contract' as unknown })).toThrow('Setting contract must be an object')
-      expect(() => validateSettings({ contract: 123 as unknown })).toThrow('Setting contract must be an object')
+    it.each([
+      ['a string', 'contract'],
+      ['a number', 123],
+    ])('rejects a contract setting that is %s', (_label: string, contract: unknown) => {
+      expect(() => validateSettings({ contract })).toThrow('Setting contract must be an object')
     })
 
     it('acceptss null contract', () => {
