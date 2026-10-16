@@ -3,12 +3,14 @@ import { start, cancel, pause, success, fail } from './actions'
 import { START, CANCEL, PAUSE, SUCCESS, FAIL } from './actions.types'
 
 describe('actions', () => {
-  it('verifies action types are defined', () => {
-    expect(START).toBeDefined()
-    expect(CANCEL).toBeDefined()
-    expect(PAUSE).toBeDefined()
-    expect(SUCCESS).toBeDefined()
-    expect(FAIL).toBeDefined()
+  it.each([
+    ['START', START],
+    ['CANCEL', CANCEL],
+    ['PAUSE', PAUSE],
+    ['SUCCESS', SUCCESS],
+    ['FAIL', FAIL],
+  ])('defines the %s action type', (_name: string, actionType: string) => {
+    expect(actionType).toBeDefined()
   })
 
   it('start', () => {

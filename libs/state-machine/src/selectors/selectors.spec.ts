@@ -1,3 +1,4 @@
+import type { State } from '../models'
 import { describe, expect, it } from '@hyperfrontend/testing'
 import {
   notStarted,
@@ -14,71 +15,84 @@ import {
 } from './selectors'
 
 describe('derivedState', () => {
-  it('notStarted', () => {
-    expect(
-      notStarted({
-        inProgress: false,
-        success: false,
-        fail: false,
-        halt: false,
-      })
-    ).toBe(true)
-    expect(notStarted({ inProgress: true, success: false, fail: false, halt: false })).toBe(false)
-    expect(notStarted({ inProgress: false, success: true, fail: false, halt: false })).toBe(false)
-    expect(notStarted({ inProgress: false, success: false, fail: true, halt: false })).toBe(false)
+  it.each([
+    [true, { inProgress: false, success: false, fail: false, halt: false }],
+    [false, { inProgress: true, success: false, fail: false, halt: false }],
+    [false, { inProgress: false, success: true, fail: false, halt: false }],
+    [false, { inProgress: false, success: false, fail: true, halt: false }],
+  ])('notStarted returns %s for %p', (expected: boolean, state: State) => {
+    expect(notStarted(state)).toBe(expected)
   })
 
-  it('inProgress', () => {
-    expect(inProgress({ inProgress: true, success: false, fail: false, halt: false })).toBe(true)
-    expect(inProgress({ inProgress: false, success: true, fail: false, halt: false })).toBe(false)
+  it.each([
+    [true, { inProgress: true, success: false, fail: false, halt: false }],
+    [false, { inProgress: false, success: true, fail: false, halt: false }],
+  ])('inProgress returns %s for %p', (expected: boolean, state: State) => {
+    expect(inProgress(state)).toBe(expected)
   })
 
-  it('done', () => {
-    expect(done({ inProgress: false, success: true, fail: false, halt: false })).toBe(true)
-    expect(done({ inProgress: false, success: false, fail: true, halt: false })).toBe(true)
-    expect(done({ inProgress: true, success: false, fail: false, halt: false })).toBe(false)
+  it.each([
+    [true, { inProgress: false, success: true, fail: false, halt: false }],
+    [true, { inProgress: false, success: false, fail: true, halt: false }],
+    [false, { inProgress: true, success: false, fail: false, halt: false }],
+  ])('done returns %s for %p', (expected: boolean, state: State) => {
+    expect(done(state)).toBe(expected)
   })
 
-  it('successful', () => {
-    expect(successful({ inProgress: false, success: true, fail: false, halt: false })).toBe(true)
-    expect(successful({ inProgress: true, success: false, fail: false, halt: false })).toBe(false)
-    expect(successful({ inProgress: false, success: false, fail: true, halt: false })).toBe(false)
+  it.each([
+    [true, { inProgress: false, success: true, fail: false, halt: false }],
+    [false, { inProgress: true, success: false, fail: false, halt: false }],
+    [false, { inProgress: false, success: false, fail: true, halt: false }],
+  ])('successful returns %s for %p', (expected: boolean, state: State) => {
+    expect(successful(state)).toBe(expected)
   })
 
-  it('failed', () => {
-    expect(failed({ inProgress: false, success: false, fail: true, halt: false })).toBe(true)
-    expect(failed({ inProgress: true, success: false, fail: false, halt: false })).toBe(false)
-    expect(failed({ inProgress: false, success: true, fail: false, halt: false })).toBe(false)
+  it.each([
+    [true, { inProgress: false, success: false, fail: true, halt: false }],
+    [false, { inProgress: true, success: false, fail: false, halt: false }],
+    [false, { inProgress: false, success: true, fail: false, halt: false }],
+  ])('failed returns %s for %p', (expected: boolean, state: State) => {
+    expect(failed(state)).toBe(expected)
   })
 
-  it('retrying', () => {
-    expect(retrying({ inProgress: true, success: false, fail: true, halt: false })).toBe(true)
-    expect(retrying({ inProgress: false, success: false, fail: true, halt: false })).toBe(false)
-    expect(retrying({ inProgress: true, success: false, fail: false, halt: false })).toBe(false)
+  it.each([
+    [true, { inProgress: true, success: false, fail: true, halt: false }],
+    [false, { inProgress: false, success: false, fail: true, halt: false }],
+    [false, { inProgress: true, success: false, fail: false, halt: false }],
+  ])('retrying returns %s for %p', (expected: boolean, state: State) => {
+    expect(retrying(state)).toBe(expected)
   })
 
-  it('restarting', () => {
-    expect(restarting({ inProgress: true, success: true, fail: false, halt: false })).toBe(true)
-    expect(restarting({ inProgress: false, success: true, fail: false, halt: false })).toBe(false)
-    expect(restarting({ inProgress: true, success: false, fail: false, halt: false })).toBe(false)
+  it.each([
+    [true, { inProgress: true, success: true, fail: false, halt: false }],
+    [false, { inProgress: false, success: true, fail: false, halt: false }],
+    [false, { inProgress: true, success: false, fail: false, halt: false }],
+  ])('restarting returns %s for %p', (expected: boolean, state: State) => {
+    expect(restarting(state)).toBe(expected)
   })
 
-  it('halted', () => {
-    expect(halted({ inProgress: false, success: false, fail: false, halt: true })).toBe(true)
-    expect(halted({ inProgress: false, success: false, fail: false, halt: false })).toBe(false)
+  it.each([
+    [true, { inProgress: false, success: false, fail: false, halt: true }],
+    [false, { inProgress: false, success: false, fail: false, halt: false }],
+  ])('halted returns %s for %p', (expected: boolean, state: State) => {
+    expect(halted(state)).toBe(expected)
   })
 
-  it('paused', () => {
-    expect(paused({ inProgress: true, success: false, fail: false, halt: true })).toBe(true)
-    expect(paused({ inProgress: true, success: false, fail: false, halt: false })).toBe(false)
-    expect(paused({ inProgress: false, success: false, fail: false, halt: true })).toBe(false)
+  it.each([
+    [true, { inProgress: true, success: false, fail: false, halt: true }],
+    [false, { inProgress: true, success: false, fail: false, halt: false }],
+    [false, { inProgress: false, success: false, fail: false, halt: true }],
+  ])('paused returns %s for %p', (expected: boolean, state: State) => {
+    expect(paused(state)).toBe(expected)
   })
 
-  it('cancelled', () => {
-    expect(cancelled({ inProgress: false, success: false, fail: false, halt: true })).toBe(true)
-    expect(cancelled({ inProgress: true, success: false, fail: false, halt: true })).toBe(false)
-    expect(cancelled({ inProgress: false, success: true, fail: false, halt: true })).toBe(false)
-    expect(cancelled({ inProgress: false, success: false, fail: true, halt: true })).toBe(false)
+  it.each([
+    [true, { inProgress: false, success: false, fail: false, halt: true }],
+    [false, { inProgress: true, success: false, fail: false, halt: true }],
+    [false, { inProgress: false, success: true, fail: false, halt: true }],
+    [false, { inProgress: false, success: false, fail: true, halt: true }],
+  ])('cancelled returns %s for %p', (expected: boolean, state: State) => {
+    expect(cancelled(state)).toBe(expected)
   })
 
   it('derivedState', () => {

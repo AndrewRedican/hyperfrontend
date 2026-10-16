@@ -13,8 +13,11 @@ describe('Store', () => {
     initialState = store.getState()
   })
 
-  it('creates a new store with initial state', () => {
+  it('creates a new store', () => {
     expect(store).toBeDefined()
+  })
+
+  it('reads an initial state from a new store', () => {
     expect(initialState).toBeDefined()
   })
 
@@ -29,12 +32,19 @@ describe('Store', () => {
     expect(state).toEqual(initialState)
   })
 
-  it('subscribes and unsubscribes a listener', () => {
+  it('calls a subscribed listener on dispatch', () => {
+    const listener = jest.fn()
+    store.subscribe(listener)
+
+    store.dispatch(pause())
+    expect(listener).toHaveBeenCalledTimes(1)
+  })
+
+  it('stops calling a listener once it is unsubscribed', () => {
     const listener = jest.fn()
     const unsubscribe = store.subscribe(listener)
 
     store.dispatch(pause())
-    expect(listener).toHaveBeenCalledTimes(1)
 
     unsubscribe()
 
