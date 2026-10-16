@@ -14,15 +14,33 @@ describe('component', () => {
     create = jest.fn()
   })
 
-  it('creates an element and applies style only once', () => {
+  it('applies the style only once across repeated calls', () => {
+    create.mockImplementation(() => {
+      return { ref: document.createElement('span') }
+    })
+    const testComponent = component(create, style)
+    testComponent()
+    testComponent()
+    expect(style).toHaveBeenCalledTimes(1)
+  })
+
+  it('creates the element only once across repeated calls', () => {
+    create.mockImplementation(() => {
+      return { ref: document.createElement('span') }
+    })
+    const testComponent = component(create, style)
+    testComponent()
+    testComponent()
+    expect(create).toHaveBeenCalledTimes(1)
+  })
+
+  it('returns the same element on repeated calls', () => {
     create.mockImplementation(() => {
       return { ref: document.createElement('span') }
     })
     const testComponent = component(create, style)
     const result1 = testComponent()
     const result2 = testComponent()
-    expect(style).toHaveBeenCalledTimes(1)
-    expect(create).toHaveBeenCalledTimes(1)
     expect(result1).toBe(result2)
   })
 
@@ -35,8 +53,10 @@ describe('component', () => {
       return element
     }, style)
     const instance = createComponent(testNumber)
-    expect(instance.ref.innerText).toBe(testNumber.toString())
-    expect(instance.ref.className).toBe('test-class')
+    expect({ innerText: instance.ref.innerText, className: instance.ref.className }).toEqual({
+      innerText: testNumber.toString(),
+      className: 'test-class',
+    })
   })
 
   it('works without style function', () => {

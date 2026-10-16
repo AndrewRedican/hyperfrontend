@@ -40,8 +40,7 @@ describe('getElementAsync', () => {
     getElementAsync('.my-element', { onSuccess, onFail })
 
     jest.advanceTimersByTime(11000)
-    expect(onSuccess).not.toHaveBeenCalled()
-    expect(onFail).toHaveBeenCalled()
+    expect({ onSuccess: onSuccess.mock.calls, onFail: onFail.mock.calls }).toEqual({ onSuccess: [], onFail: [[null]] })
   })
 
   it('uses default parameters when not provided', (done) => {
@@ -85,12 +84,11 @@ describe('getElementAsync', () => {
 
     jest.advanceTimersByTime(11000)
 
-    expect(onSuccess).not.toHaveBeenCalled()
-    expect(onFail).toHaveBeenCalled()
+    expect({ onSuccess: onSuccess.mock.calls, onFail: onFail.mock.calls }).toEqual({ onSuccess: [], onFail: [[null]] })
   })
 
   it('cancels the operation when cancel function is called', () => {
-    expect.assertions(2)
+    expect.assertions(1)
 
     const mockElement = document.createElement('div')
     mockQuerySelector.mockReturnValue(mockElement)
@@ -108,8 +106,7 @@ describe('getElementAsync', () => {
 
     jest.advanceTimersByTime(100)
 
-    expect(onSuccess).not.toHaveBeenCalled()
-    expect(onFail).not.toHaveBeenCalled()
+    expect({ onSuccess: onSuccess.mock.calls, onFail: onFail.mock.calls }).toEqual({ onSuccess: [], onFail: [] })
   })
 
   it('calls a throwing onSuccess exactly once and stops polling', () => {
@@ -121,11 +118,19 @@ describe('getElementAsync', () => {
 
     getElementAsync('.my-element', { duration: 1000, interval: 100, onSuccess })
 
-    // why: the callback throws out of the timer, so the first tick is advanced inside a guard.
-    expect(() => jest.advanceTimersByTime(100)).toThrow('onSuccess failed')
+    // why: the callback throws out of the timer, so the first tick is advanced inside a guard that keeps the error for the assertion.
+    let firstTickError: unknown
+    try {
+      jest.advanceTimersByTime(100)
+    } catch (error) {
+      firstTickError = error
+    }
     jest.advanceTimersByTime(2000)
 
-    expect(onSuccess).toHaveBeenCalledTimes(1)
+    expect({ firstTickError, onSuccessCalls: onSuccess.mock.calls.length }).toEqual({
+      firstTickError: expect.objectContaining({ message: expect.stringContaining('onSuccess failed') }),
+      onSuccessCalls: 1,
+    })
   })
 
   it('handles invocation with undefined callbacks', () => {

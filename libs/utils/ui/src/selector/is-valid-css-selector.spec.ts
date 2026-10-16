@@ -2,16 +2,11 @@ import { describe, expect, it } from '@hyperfrontend/testing'
 import { isValidCssSelector } from './is-valid-css-selector'
 
 describe('isValidCssSelector', () => {
-  it('returns true when valid css selector is valid', () => {
-    expect(isValidCssSelector('#id')).toBe(true)
-    expect(isValidCssSelector("[id='value']")).toBe(true)
+  it.each(['#id', "[id='value']"])('returns true for the valid css selector %p', (selector: string) => {
+    expect(isValidCssSelector(selector)).toBe(true)
   })
 
-  it('returns false when valid css selector is not valid', () => {
-    expect(isValidCssSelector('')).toBe(false)
-    expect(isValidCssSelector('"')).toBe(false)
-    expect(isValidCssSelector(',')).toBe(false)
-    expect(isValidCssSelector(':')).toBe(false)
-    expect(isValidCssSelector(' ')).toBe(false)
+  it.each(['', '"', ',', ':', ' '])('returns false for the invalid css selector %p', (selector: string) => {
+    expect(isValidCssSelector(selector)).toBe(false)
   })
 })

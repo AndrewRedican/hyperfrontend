@@ -16,10 +16,7 @@ describe('cssRules', () => {
     expect(result).toEqual('.selector1{color: red;}\n.selector2{font-size: 16px;}\n.selector3{background-color: green;}')
   })
 
-  it('returns empty string for non-object input', () => {
-    expect(cssRules(null as unknown as Record<string, string>)).toEqual('')
-    expect(cssRules(undefined as unknown as Record<string, string>)).toEqual('')
-    expect(cssRules('string' as unknown as Record<string, string>)).toEqual('')
-    expect(cssRules(123 as unknown as Record<string, string>)).toEqual('')
+  it.each([null, undefined, 'string', 123])('returns empty string for the non-object input %p', (styles: unknown) => {
+    expect(cssRules(styles as Record<string, string>)).toEqual('')
   })
 })

@@ -18,7 +18,7 @@ describe('cssObjectToString', () => {
     expect(cssObjectToString({ content: '' })).toEqual(`content: ''; `)
   })
 
-  it('logs warning when property conversion fails', () => {
+  it('keeps the convertible properties when a property conversion fails', () => {
     const loggerWarnSpy = jest.spyOn(logger, 'warn').mockImplementation(() => void 0)
 
     const problematicValue = {
@@ -35,8 +35,29 @@ describe('cssObjectToString', () => {
     const result = cssObjectToString(problematicObject as Partial<CSSStyleDeclaration>)
 
     expect(result).toContain('background-color: red;')
-    expect(loggerWarnSpy).toHaveBeenCalledWith(expect.stringContaining('Some properties failed to convert'))
-    expect(loggerWarnSpy).toHaveBeenCalledWith(expect.stringContaining('Failed to convert property "badProperty"'))
+
+    loggerWarnSpy.mockRestore()
+  })
+
+  it('logs warning when property conversion fails', () => {
+    const loggerWarnSpy = jest.spyOn(logger, 'warn').mockImplementation(() => void 0)
+
+    const problematicValue = {
+      toString() {
+        throw new Error('Conversion failed')
+      },
+    }
+
+    const problematicObject: Record<string, unknown> = {
+      backgroundColor: 'red',
+      badProperty: problematicValue,
+    }
+
+    cssObjectToString(problematicObject as Partial<CSSStyleDeclaration>)
+
+    expect(loggerWarnSpy).toHaveBeenCalledWith(
+      expect.stringMatching(/Some properties failed to convert[\s\S]*Failed to convert property "badProperty"/)
+    )
 
     loggerWarnSpy.mockRestore()
   })

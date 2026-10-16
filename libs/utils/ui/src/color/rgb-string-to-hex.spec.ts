@@ -18,10 +18,12 @@ describe('rgbStringToHex', () => {
     expect(rgbStringToHex('rgba(10,81,90,0)')).toBe('#0a515a00')
   })
 
-  it('throws an error if the input is not a valid RGB or RGBA string', () => {
-    expect(() => rgbStringToHex('rgb(256, 81, 90)')).toThrow('Invalid RGB or RGBA string')
-    expect(() => rgbStringToHex('rgba(10, 81, 90, 1.2)')).toThrow('Invalid RGB or RGBA string')
-    expect(() => rgbStringToHex('rgba(10, 81, 90, -0.1)')).toThrow('Invalid RGB or RGBA string')
-    expect(() => rgbStringToHex('not a color')).toThrow('Invalid RGB or RGBA string')
+  it.each([
+    ['rgb(256, 81, 90)', 'a channel above 255'],
+    ['rgba(10, 81, 90, 1.2)', 'an alpha above 1'],
+    ['rgba(10, 81, 90, -0.1)', 'a negative alpha'],
+    ['not a color', 'no color notation'],
+  ])('throws an error for the invalid RGB or RGBA string %p, with %s', (rgbString: string) => {
+    expect(() => rgbStringToHex(rgbString)).toThrow('Invalid RGB or RGBA string')
   })
 })

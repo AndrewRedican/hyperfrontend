@@ -34,9 +34,8 @@ describe('createElement', () => {
       },
     }
     element = createElement<HTMLDivElement>('div', config)
-    expect(element.ref.style.backgroundColor).toBe('red')
-    expect(element.ref.style.width).toBe('100px')
-    expect(element.ref.style.height).toBe('100px')
+    const { backgroundColor, width, height } = element.ref.style
+    expect({ backgroundColor, width, height }).toEqual({ backgroundColor: 'red', width: '100px', height: '100px' })
   })
 
   it('adds a child element', () => {
@@ -53,16 +52,25 @@ describe('createElement', () => {
     document.body.removeChild(parent)
   })
 
-  it('shows the element', () => {
+  it('makes the element opaque when showing it', () => {
     element.show()
     expect(element.ref.style.opacity).toBe('1')
+  })
+
+  it('reports the element as visible once shown', () => {
+    element.show()
     expect(element.visible).toBe(true)
   })
 
-  it('hides the element', () => {
+  it('makes the element transparent when hiding it', () => {
     element.show()
     element.hide()
     expect(element.ref.style.opacity).toBe('0')
+  })
+
+  it('reports the element as not visible once hidden', () => {
+    element.show()
+    element.hide()
     expect(element.visible).toBe(false)
   })
 
@@ -109,8 +117,8 @@ describe('createElement', () => {
       classNames: ['test-class', 'another-class'],
     }
     const divElement = createElement<HTMLDivElement>('div', config)
-    expect(divElement.ref.classList.contains('test-class')).toBe(true)
-    expect(divElement.ref.classList.contains('another-class')).toBe(true)
+    const classNames = ['test-class', 'another-class']
+    expect(classNames.filter((name) => !divElement.ref.classList.contains(name))).toEqual([])
   })
 
   it('applies className from the config object', () => {
