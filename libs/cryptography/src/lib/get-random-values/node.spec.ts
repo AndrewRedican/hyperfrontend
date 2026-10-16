@@ -5,16 +5,17 @@ import { getRandomValues } from './node'
 describe('getRandomValues (node)', () => {
   it('creates a random value', () => {
     const randomValue = getRandomValues(4)
-    expect(randomValue).not.toBeNull()
-    expect(randomValue.length).toEqual(4)
-    expect(getType(randomValue.at(0))).toEqual('number')
-    expect(getType(randomValue.at(1))).toEqual('number')
-    expect(getType(randomValue.at(2))).toEqual('number')
-    expect(getType(randomValue.at(3))).toEqual('number')
+    expect({
+      length: randomValue.length,
+      types: [0, 1, 2, 3].map((index) => getType(randomValue.at(index))),
+    }).toEqual({ length: 4, types: ['number', 'number', 'number', 'number'] })
   })
 
-  it('throws error with 0 or empty byte length', () => {
+  it('throws error with 0 byte length', () => {
     expect(() => getRandomValues(0)).toThrow('Cannot generate random values without a byte length.')
+  })
+
+  it('throws error with empty byte length', () => {
     expect(() => getRandomValues(null as unknown as number)).toThrow('Cannot generate random values without a byte length.')
   })
 })

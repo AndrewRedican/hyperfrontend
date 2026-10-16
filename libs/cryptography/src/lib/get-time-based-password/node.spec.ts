@@ -11,26 +11,20 @@ describe('getTimeBasedPassword (node)', () => {
 
   const getPassword = (offset = 0) => getTimeBasedPassword(new Date(referenceTime.getTime() + offset), baseTimeWindow)
 
-  it('creates a consistent password dependent on time', async () => {
+  it.each([s1, s5, s30, m1 - s1])('creates the reference password %i ms later, inside the same time window', async (offsetMs: number) => {
     const targetPassword = await getPassword()
-
-    const isEqual = async (offsetMs: number) => expect(await getPassword(offsetMs)).toEqual(targetPassword)
-    const notEqual = async (offsetMs: number) => expect(await getPassword(offsetMs)).not.toEqual(targetPassword)
-
-    await isEqual(s1)
-    await isEqual(s5)
-    await isEqual(s30)
-    await isEqual(m1 - s1)
-    await notEqual(m1)
-    await notEqual(m1 + s1)
-    await notEqual(m1 + s5)
+    expect(await getPassword(offsetMs)).toEqual(targetPassword)
   })
 
-  it('throws error for invalid number range', async () => {
-    const getPassword = (windowOffset: number) =>
-      getTimeBasedPassword(new Date(referenceTime.getTime()), baseTimeWindow, windowOffset as unknown as -1 | 0 | 1)
+  it.each([m1, m1 + s1, m1 + s5])('creates a different password %i ms later, once the time window has passed', async (offsetMs: number) => {
+    const targetPassword = await getPassword()
+    expect(await getPassword(offsetMs)).not.toEqual(targetPassword)
+  })
 
-    await expect(getPassword(-2)).rejects.toThrow('Window offset must be -1, 0, or 1.')
-    await expect(getPassword(2)).rejects.toThrow('Window offset must be -1, 0, or 1.')
+  it.each([-2, 2])('throws error for the out-of-range window offset %i', async (windowOffset: number) => {
+    const getPassword = (offset: number) =>
+      getTimeBasedPassword(new Date(referenceTime.getTime()), baseTimeWindow, offset as unknown as -1 | 0 | 1)
+
+    await expect(getPassword(windowOffset)).rejects.toThrow('Window offset must be -1, 0, or 1.')
   })
 })

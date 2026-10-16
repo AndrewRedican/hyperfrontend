@@ -19,10 +19,13 @@ describe('generateKey (browser)', () => {
     )
   })
 
-  it('throws an error when password is empty', async () => {
+  it('throws an error when password is not a string', async () => {
     await expect(generateKey(null as unknown as string, getRandomValues(4))).rejects.toThrow(
       'Cannot generate key without a password type string'
     )
+  })
+
+  it('throws an error when password is empty', async () => {
     await expect(generateKey('', getRandomValues(4))).rejects.toThrow('Cannot generate key with an empty string as password')
   })
 
