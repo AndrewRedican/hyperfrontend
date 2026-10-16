@@ -179,8 +179,11 @@ describe('buildRunPlan', () => {
 })
 
 describe('moduleUrl', () => {
-  it('renders a path as a file URL, which Node loads where a drive-letter path would not parse', () => {
+  it('renders a path the way pathToFileURL does', () => {
     assert.equal(moduleUrl(PROJECT), pathToFileURL(PROJECT).href)
+  })
+
+  it('renders a path as a file URL, which Node loads where a drive-letter path would not parse', () => {
     assert.equal(moduleUrl(PROJECT).startsWith('file:///'), true)
   })
 
@@ -191,10 +194,12 @@ describe('moduleUrl', () => {
     })
     const preloads = args.filter((_, index) => args[index - 1] === '--import')
     const reporters = args.filter((arg) => arg.startsWith('--test-reporter=')).map((arg) => arg.slice('--test-reporter='.length))
-    assert.equal(preloads.length, 3)
     assert.deepEqual(
-      [...preloads, ...reporters].filter((value) => value !== 'lcov' && !value.startsWith('file:///')),
-      []
+      {
+        preloadCount: preloads.length,
+        barePaths: [...preloads, ...reporters].filter((value) => value !== 'lcov' && !value.startsWith('file:///')),
+      },
+      { preloadCount: 3, barePaths: [] }
     )
   })
 })

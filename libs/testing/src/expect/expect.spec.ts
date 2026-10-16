@@ -14,24 +14,70 @@ type MatcherCase = {
   run: () => void
   /** Whether the matcher should accept the subject. */
   passes: boolean
+  /** The error a rejection raises when it is not an assertion error, as when a matcher refuses a subject it cannot judge. */
+  error?: new (...args: never[]) => Error
 }
 
 /**
- * Asserts that a matcher accepted its subject.
- *
- * @param run - The matcher invocation.
+ * One promise-mode matcher invocation and the verdict it should reach.
  */
-function assertAccepts(run: () => void): void {
-  assert.doesNotThrow(run)
+type PromiseCase = {
+  /** How the test reads in the report. */
+  title: string
+  /** Applies the matcher to a promise, settling once the matcher has judged it. */
+  run: () => Promise<void>
+  /** Whether the matcher should accept the promise. */
+  passes: boolean
 }
 
 /**
- * Asserts that a matcher rejected its subject with an assertion error.
+ * Declares one test per case, each pinning the verdict its case should reach.
  *
- * @param run - The matcher invocation.
+ * `node:assert` judges every verdict, never the `expect` under test: an accepted case must
+ * not throw, and a rejected one must throw an assertion error, or the error the case names.
+ *
+ * @param cases - The cases, in report order.
+ * @param titleOf - Renders a case as its test title.
  */
-function assertRejects(run: () => void): void {
-  assert.throws(run, AssertionError)
+function declareCases(
+  cases: readonly MatcherCase[],
+  titleOf: (matcherCase: MatcherCase) => string = (matcherCase) => matcherCase.title
+): void {
+  for (const matcherCase of cases) {
+    const { run, error = AssertionError } = matcherCase
+    if (matcherCase.passes) {
+      it(titleOf(matcherCase), () => {
+        assert.doesNotThrow(run)
+      })
+    } else {
+      it(titleOf(matcherCase), () => {
+        assert.throws(run, error)
+      })
+    }
+  }
+}
+
+/**
+ * Declares one test per promise-mode case, each pinning the verdict its case should reach.
+ *
+ * `node:assert` judges every verdict: an accepted case must settle without rejecting, and a
+ * rejected one must reject with an assertion error.
+ *
+ * @param cases - The cases, in report order.
+ */
+function declarePromiseCases(cases: readonly PromiseCase[]): void {
+  for (const promiseCase of cases) {
+    const { title, run } = promiseCase
+    if (promiseCase.passes) {
+      it(title, async () => {
+        await assert.doesNotReject(run)
+      })
+    } else {
+      it(title, async () => {
+        await assert.rejects(run, AssertionError)
+      })
+    }
+  }
 }
 
 const CASES: MatcherCase[] = [
@@ -170,228 +216,206 @@ const CASES: MatcherCase[] = [
 ]
 
 describe('expect matchers', () => {
-  for (const matcherCase of CASES) {
-    it(`${matcherCase.passes ? 'accepts' : 'rejects'} ${matcherCase.title}`, () => {
-      if (matcherCase.passes) assertAccepts(matcherCase.run)
-      else assertRejects(matcherCase.run)
-    })
-  }
+  declareCases(CASES, (matcherCase) => `${matcherCase.passes ? 'accepts' : 'rejects'} ${matcherCase.title}`)
 })
 
-describe('expect negation', () => {
-  it('accepts a failing matcher', () => {
-    assertAccepts(() => expect(1).not.toBe(2))
-  })
-
-  it('rejects a passing matcher', () => {
-    assertRejects(() => expect(1).not.toBe(1))
-  })
-
-  it('inverts toThrow for a function that does not throw', () => {
-    assertAccepts(() => expect(() => undefined).not.toThrow())
-  })
-
-  it('inverts toThrow for a function that does throw', () => {
-    assertRejects(() =>
+const NEGATION_CASES: MatcherCase[] = [
+  { title: 'accepts a failing matcher', run: () => expect(1).not.toBe(2), passes: true },
+  { title: 'rejects a passing matcher', run: () => expect(1).not.toBe(1), passes: false },
+  { title: 'inverts toThrow for a function that does not throw', run: () => expect(() => undefined).not.toThrow(), passes: true },
+  {
+    title: 'inverts toThrow for a function that does throw',
+    run: () =>
       expect(() => {
         throw new Error('boom')
-      }).not.toThrow()
-    )
-  })
+      }).not.toThrow(),
+    passes: false,
+  },
+]
+
+describe('expect negation', () => {
+  declareCases(NEGATION_CASES)
 })
+
+const MOCK_CASES: MatcherCase[] = [
+  {
+    title: 'accepts toHaveBeenCalled after a call',
+    run: () => {
+      const mock = createMockFn()
+      mock()
+      expect(mock).toHaveBeenCalled()
+    },
+    passes: true,
+  },
+  { title: 'rejects toHaveBeenCalled before any call', run: () => expect(createMockFn()).toHaveBeenCalled(), passes: false },
+  {
+    title: 'accepts toHaveBeenCalledTimes for the exact count',
+    run: () => {
+      const mock = createMockFn()
+      mock()
+      mock()
+      expect(mock).toHaveBeenCalledTimes(2)
+    },
+    passes: true,
+  },
+  {
+    title: 'rejects toHaveBeenCalledTimes for a differing count',
+    run: () => expect(createMockFn()).toHaveBeenCalledTimes(1),
+    passes: false,
+  },
+  {
+    title: 'accepts toHaveBeenCalledWith for a matching call',
+    run: () => {
+      const mock = createMockFn()
+      mock('a', 1)
+      expect(mock).toHaveBeenCalledWith('a', 1)
+    },
+    passes: true,
+  },
+  {
+    title: 'rejects toHaveBeenCalledWith for differing arguments',
+    run: () => {
+      const mock = createMockFn()
+      mock('a')
+      expect(mock).toHaveBeenCalledWith('b')
+    },
+    passes: false,
+  },
+  {
+    title: 'accepts toHaveBeenLastCalledWith for the final call',
+    run: () => {
+      const mock = createMockFn()
+      mock('first')
+      mock('second')
+      expect(mock).toHaveBeenLastCalledWith('second')
+    },
+    passes: true,
+  },
+  {
+    title: 'rejects toHaveBeenLastCalledWith for an earlier call',
+    run: () => {
+      const mock = createMockFn()
+      mock('first')
+      mock('second')
+      expect(mock).toHaveBeenLastCalledWith('first')
+    },
+    passes: false,
+  },
+  {
+    title: 'accepts toHaveBeenNthCalledWith counting from one',
+    run: () => {
+      const mock = createMockFn()
+      mock('first')
+      mock('second')
+      expect(mock).toHaveBeenNthCalledWith(1, 'first')
+    },
+    passes: true,
+  },
+  {
+    title: 'rejects toHaveBeenNthCalledWith beyond the call count',
+    run: () => expect(createMockFn()).toHaveBeenNthCalledWith(3, 'x'),
+    passes: false,
+  },
+  {
+    title: 'refuses a call matcher applied to a plain function',
+    run: () => expect(() => undefined).toHaveBeenCalled(),
+    passes: false,
+    error: TypeError,
+  },
+  {
+    title: 'matches a call recorded with an asymmetric matcher',
+    run: () => {
+      const mock = createMockFn()
+      mock({ id: 1, extra: true })
+      expect(mock).toHaveBeenCalledWith(expect.objectContaining({ id: 1 }))
+    },
+    passes: true,
+  },
+]
 
 describe('expect on mocks', () => {
-  it('accepts toHaveBeenCalled after a call', () => {
-    const mock = createMockFn()
-    mock()
-    assertAccepts(() => expect(mock).toHaveBeenCalled())
-  })
-
-  it('rejects toHaveBeenCalled before any call', () => {
-    assertRejects(() => expect(createMockFn()).toHaveBeenCalled())
-  })
-
-  it('accepts toHaveBeenCalledTimes for the exact count', () => {
-    const mock = createMockFn()
-    mock()
-    mock()
-    assertAccepts(() => expect(mock).toHaveBeenCalledTimes(2))
-  })
-
-  it('rejects toHaveBeenCalledTimes for a differing count', () => {
-    assertRejects(() => expect(createMockFn()).toHaveBeenCalledTimes(1))
-  })
-
-  it('accepts toHaveBeenCalledWith for a matching call', () => {
-    const mock = createMockFn()
-    mock('a', 1)
-    assertAccepts(() => expect(mock).toHaveBeenCalledWith('a', 1))
-  })
-
-  it('rejects toHaveBeenCalledWith for differing arguments', () => {
-    const mock = createMockFn()
-    mock('a')
-    assertRejects(() => expect(mock).toHaveBeenCalledWith('b'))
-  })
-
-  it('accepts toHaveBeenLastCalledWith for the final call', () => {
-    const mock = createMockFn()
-    mock('first')
-    mock('second')
-    assertAccepts(() => expect(mock).toHaveBeenLastCalledWith('second'))
-  })
-
-  it('rejects toHaveBeenLastCalledWith for an earlier call', () => {
-    const mock = createMockFn()
-    mock('first')
-    mock('second')
-    assertRejects(() => expect(mock).toHaveBeenLastCalledWith('first'))
-  })
-
-  it('accepts toHaveBeenNthCalledWith counting from one', () => {
-    const mock = createMockFn()
-    mock('first')
-    mock('second')
-    assertAccepts(() => expect(mock).toHaveBeenNthCalledWith(1, 'first'))
-  })
-
-  it('rejects toHaveBeenNthCalledWith beyond the call count', () => {
-    assertRejects(() => expect(createMockFn()).toHaveBeenNthCalledWith(3, 'x'))
-  })
-
-  it('refuses a call matcher applied to a plain function', () => {
-    assert.throws(() => expect(() => undefined).toHaveBeenCalled(), TypeError)
-  })
-
-  it('matches a call recorded with an asymmetric matcher', () => {
-    const mock = createMockFn()
-    mock({ id: 1, extra: true })
-    assertAccepts(() => expect(mock).toHaveBeenCalledWith(expect.objectContaining({ id: 1 })))
-  })
+  declareCases(MOCK_CASES)
 })
+
+const NON_FUNCTION_CASES: MatcherCase[] = [
+  { title: 'refuses toThrow applied to a value', run: () => expect(5).toThrow(), passes: false },
+  { title: 'refuses a negated toThrow applied to a value', run: () => expect(5).not.toThrow(), passes: false },
+]
 
 describe('expect on non-functions', () => {
-  it('refuses toThrow applied to a value', () => {
-    assertRejects(() => expect(5).toThrow())
-  })
-
-  it('refuses a negated toThrow applied to a value', () => {
-    assertRejects(() => expect(5).not.toThrow())
-  })
+  declareCases(NON_FUNCTION_CASES)
 })
+
+const PROMISE_CASES: PromiseCase[] = [
+  { title: 'accepts resolves for a fulfilled promise', run: () => expect(Promise.resolve(1)).resolves.toBe(1), passes: true },
+  { title: 'rejects resolves when the value differs', run: () => expect(Promise.resolve(1)).resolves.toBe(2), passes: false },
+  {
+    title: 'accepts rejects for a rejected promise',
+    run: () => expect(Promise.reject(new Error('boom'))).rejects.toThrow('boom'),
+    passes: true,
+  },
+  { title: 'rejects rejects when the promise fulfils', run: () => expect(Promise.resolve(1)).rejects.toThrow(), passes: false },
+  { title: 'inverts a negated resolves matcher', run: () => expect(Promise.resolve(1)).resolves.not.toBe(2), passes: true },
+  {
+    title: 'reads the rejection reason for a value matcher',
+    run: () => expect(Promise.reject(new Error('boom'))).rejects.toBeInstanceOf(Error),
+    passes: true,
+  },
+  {
+    title: 'matches the rejection reason with toThrow',
+    run: () => expect(Promise.reject(new TypeError('boom'))).rejects.toThrow(TypeError),
+    passes: true,
+  },
+  {
+    title: 'rejects a resolved value that toThrow cannot match',
+    run: () => expect(Promise.resolve(new Error('other'))).resolves.toThrow('boom'),
+    passes: false,
+  },
+  {
+    title: 'inverts a negated rejects matcher',
+    run: () => expect(Promise.reject(new Error('boom'))).rejects.not.toThrow('other'),
+    passes: true,
+  },
+]
 
 describe('expect promise modes', () => {
-  it('accepts resolves for a fulfilled promise', async () => {
-    await expect(Promise.resolve(1)).resolves.toBe(1)
-  })
-
-  it('rejects resolves when the value differs', async () => {
-    await assert.rejects(() => expect(Promise.resolve(1)).resolves.toBe(2), AssertionError)
-  })
-
-  it('accepts rejects for a rejected promise', async () => {
-    await expect(Promise.reject(new Error('boom'))).rejects.toThrow('boom')
-  })
-
-  it('rejects rejects when the promise fulfils', async () => {
-    await assert.rejects(() => expect(Promise.resolve(1)).rejects.toThrow(), AssertionError)
-  })
-
-  it('inverts a negated resolves matcher', async () => {
-    await expect(Promise.resolve(1)).resolves.not.toBe(2)
-  })
-
-  it('reads the rejection reason for a value matcher', async () => {
-    await expect(Promise.reject(new Error('boom'))).rejects.toBeInstanceOf(Error)
-  })
-
-  it('matches the rejection reason with toThrow', async () => {
-    await expect(Promise.reject(new TypeError('boom'))).rejects.toThrow(TypeError)
-  })
-
-  it('rejects a resolved value that toThrow cannot match', async () => {
-    await assert.rejects(() => expect(Promise.resolve(new Error('other'))).resolves.toThrow('boom'), AssertionError)
-  })
-
-  it('inverts a negated rejects matcher', async () => {
-    await expect(Promise.reject(new Error('boom'))).rejects.not.toThrow('other')
-  })
+  declarePromiseCases(PROMISE_CASES)
 })
 
+const ASYMMETRIC_CASES: MatcherCase[] = [
+  { title: 'matches any value of a primitive constructor', run: () => expect({ a: 'x' }).toEqual({ a: expect.any(String) }), passes: true },
+  { title: 'rejects a value of the wrong constructor', run: () => expect({ a: 1 }).toEqual({ a: expect.any(String) }), passes: false },
+  { title: 'matches any value of a class', run: () => expect(new TypeError('x')).toEqual(expect.any(TypeError)), passes: true },
+  { title: 'matches anything that is not nullish', run: () => expect({ a: 0 }).toEqual({ a: expect.anything() }), passes: true },
+  { title: 'rejects null for anything', run: () => expect({ a: null }).toEqual({ a: expect.anything() }), passes: false },
+  {
+    title: 'matches an object carrying the sample keys',
+    run: () => expect({ a: 1, b: 2 }).toEqual(expect.objectContaining({ a: 1 })),
+    passes: true,
+  },
+  {
+    title: 'rejects an object missing a sample key',
+    run: () => expect({ b: 2 }).toEqual(expect.objectContaining({ a: 1 })),
+    passes: false,
+  },
+  {
+    title: 'matches an array containing the sample members',
+    run: () => expect([1, 2, 3]).toEqual(expect.arrayContaining([3, 1])),
+    passes: true,
+  },
+  { title: 'rejects an array missing a sample member', run: () => expect([1]).toEqual(expect.arrayContaining([2])), passes: false },
+  { title: 'matches a string containing the sample', run: () => expect('abcdef').toEqual(expect.stringContaining('cde')), passes: true },
+  { title: 'rejects a string missing the sample', run: () => expect('abc').toEqual(expect.stringContaining('z')), passes: false },
+  { title: 'matches a string against a pattern', run: () => expect('abc').toEqual(expect.stringMatching(/^a/)), passes: true },
+  { title: 'rejects a string failing the pattern', run: () => expect('abc').toEqual(expect.stringMatching(/^z/)), passes: false },
+  { title: 'matches a number close to the sample', run: () => expect(0.1 + 0.2).toEqual(expect.closeTo(0.3)), passes: true },
+  { title: 'rejects a number outside the precision', run: () => expect(0.1).toEqual(expect.closeTo(0.9)), passes: false },
+  { title: 'inverts objectContaining', run: () => expect({ b: 2 }).toEqual(expect.not.objectContaining({ a: 1 })), passes: true },
+  { title: 'inverts arrayContaining', run: () => expect([1]).toEqual(expect.not.arrayContaining([2])), passes: true },
+  { title: 'inverts stringContaining', run: () => expect('abc').toEqual(expect.not.stringContaining('z')), passes: true },
+  { title: 'inverts stringMatching', run: () => expect('abc').toEqual(expect.not.stringMatching(/^z/)), passes: true },
+]
+
 describe('asymmetric matchers', () => {
-  it('matches any value of a primitive constructor', () => {
-    assertAccepts(() => expect({ a: 'x' }).toEqual({ a: expect.any(String) }))
-  })
-
-  it('rejects a value of the wrong constructor', () => {
-    assertRejects(() => expect({ a: 1 }).toEqual({ a: expect.any(String) }))
-  })
-
-  it('matches any value of a class', () => {
-    assertAccepts(() => expect(new TypeError('x')).toEqual(expect.any(TypeError)))
-  })
-
-  it('matches anything that is not nullish', () => {
-    assertAccepts(() => expect({ a: 0 }).toEqual({ a: expect.anything() }))
-  })
-
-  it('rejects null for anything', () => {
-    assertRejects(() => expect({ a: null }).toEqual({ a: expect.anything() }))
-  })
-
-  it('matches an object carrying the sample keys', () => {
-    assertAccepts(() => expect({ a: 1, b: 2 }).toEqual(expect.objectContaining({ a: 1 })))
-  })
-
-  it('rejects an object missing a sample key', () => {
-    assertRejects(() => expect({ b: 2 }).toEqual(expect.objectContaining({ a: 1 })))
-  })
-
-  it('matches an array containing the sample members', () => {
-    assertAccepts(() => expect([1, 2, 3]).toEqual(expect.arrayContaining([3, 1])))
-  })
-
-  it('rejects an array missing a sample member', () => {
-    assertRejects(() => expect([1]).toEqual(expect.arrayContaining([2])))
-  })
-
-  it('matches a string containing the sample', () => {
-    assertAccepts(() => expect('abcdef').toEqual(expect.stringContaining('cde')))
-  })
-
-  it('rejects a string missing the sample', () => {
-    assertRejects(() => expect('abc').toEqual(expect.stringContaining('z')))
-  })
-
-  it('matches a string against a pattern', () => {
-    assertAccepts(() => expect('abc').toEqual(expect.stringMatching(/^a/)))
-  })
-
-  it('rejects a string failing the pattern', () => {
-    assertRejects(() => expect('abc').toEqual(expect.stringMatching(/^z/)))
-  })
-
-  it('matches a number close to the sample', () => {
-    assertAccepts(() => expect(0.1 + 0.2).toEqual(expect.closeTo(0.3)))
-  })
-
-  it('rejects a number outside the precision', () => {
-    assertRejects(() => expect(0.1).toEqual(expect.closeTo(0.9)))
-  })
-
-  it('inverts objectContaining', () => {
-    assertAccepts(() => expect({ b: 2 }).toEqual(expect.not.objectContaining({ a: 1 })))
-  })
-
-  it('inverts arrayContaining', () => {
-    assertAccepts(() => expect([1]).toEqual(expect.not.arrayContaining([2])))
-  })
-
-  it('inverts stringContaining', () => {
-    assertAccepts(() => expect('abc').toEqual(expect.not.stringContaining('z')))
-  })
-
-  it('inverts stringMatching', () => {
-    assertAccepts(() => expect('abc').toEqual(expect.not.stringMatching(/^z/)))
-  })
+  declareCases(ASYMMETRIC_CASES)
 })
