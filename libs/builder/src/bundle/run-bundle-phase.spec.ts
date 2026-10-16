@@ -392,7 +392,7 @@ describe('runBundlePhase', () => {
     expect(checks.slice(0, 2)).toEqual(['bundle:dependencies:prepass:start', 'bundle:dependencies:prepass:end'])
   })
 
-  it('runs the d.ts pre-pass once after declarations when bundledDeps is non-empty', async () => {
+  it('runs the d.ts pre-pass once when bundledDeps is non-empty', async () => {
     const config = {
       projectRoot: '',
       workspaceRoot: '',
@@ -404,7 +404,7 @@ describe('runBundlePhase', () => {
     expect(runDtsPrePass).toHaveBeenCalledTimes(1)
   })
 
-  it('runs the per-entry d.ts pass once after declarations when bundledDeps is non-empty', async () => {
+  it('runs the per-entry d.ts pass once when bundledDeps is non-empty', async () => {
     const config = {
       projectRoot: '',
       workspaceRoot: '',
@@ -414,6 +414,29 @@ describe('runBundlePhase', () => {
     ctx.bundledDeps = ['rollup']
     await runBundlePhase(ctx, config)
     expect(runDtsPerEntry).toHaveBeenCalledTimes(1)
+  })
+
+  it('runs the d.ts pre-pass, then the per-entry d.ts pass, after declarations when bundledDeps is non-empty', async () => {
+    const order: string[] = []
+    asMock(generateDeclarations).mockImplementationOnce(async () => {
+      order.push('declarations')
+      return { success: true, stdout: '', stderr: '' }
+    })
+    asMock(runDtsPrePass).mockImplementationOnce(async () => {
+      order.push('dts-pre-pass')
+    })
+    asMock(runDtsPerEntry).mockImplementationOnce(async () => {
+      order.push('dts-per-entry')
+    })
+    const config = {
+      projectRoot: '',
+      workspaceRoot: '',
+      esm: { bundleWorkspaceDeps: false, bundleAllDeps: true },
+    } as BuildConfig
+    const ctx = makeContext()
+    ctx.bundledDeps = ['rollup']
+    await runBundlePhase(ctx, config)
+    expect(order).toEqual(['declarations', 'dts-pre-pass', 'dts-per-entry'])
   })
 
   it('always prunes orphan .d.ts files after declarations, regardless of bundleAllDeps', async () => {

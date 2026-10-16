@@ -383,10 +383,13 @@ describe('runRollupWorkerJob', () => {
         bundle: { globalName: 'MyLib', minify: true },
       })
     )
-    expect([readFileSync(join(outputDir, 'index.iife.js'), 'utf8'), readFileSync(join(outputDir, 'index.iife.min.js'), 'utf8')]).toEqual([
-      expect.stringContaining('MyLib'),
-      expect.stringContaining('MyLib'),
-    ])
+    expect({
+      unminified: readFileSync(join(outputDir, 'index.iife.js'), 'utf8'),
+      minified: readFileSync(join(outputDir, 'index.iife.min.js'), 'utf8'),
+    }).toEqual({
+      unminified: expect.stringContaining('MyLib'),
+      minified: expect.stringContaining('MyLib'),
+    })
   })
 
   it('writes a UMD bundle with amdId when supplied', async () => {

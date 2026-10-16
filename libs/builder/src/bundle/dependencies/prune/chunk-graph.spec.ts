@@ -145,7 +145,7 @@ describe('analyzeChunk pure-freeze recognition', () => {
 
   it('does not add an alias bound to a call to the pure set', () => {
     const source = 'const f = mk();\nconst Y = f({ a: 1 });'
-    for (const name of ['f', 'Y']) expect(freeOf(source, name)).toBe(false)
+    expect(['f', 'Y'].filter((name) => freeOf(source, name))).toEqual([])
   })
 
   it('drops the direct Object.freeze seed when Object is shadowed by a top-level binding', () => {

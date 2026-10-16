@@ -127,7 +127,7 @@ describe('stripComments', () => {
   it('is idempotent on a second run', () => {
     const source = ['/** doc */', 'export const a = 1; // tail'].join('\n')
     const once = stripComments(source)
-    expect([once, stripComments(once as string)]).toEqual(['export const a = 1; ', null])
+    expect({ firstRun: once, secondRun: stripComments(once as string) }).toEqual({ firstRun: 'export const a = 1; ', secondRun: null })
   })
 })
 
@@ -166,7 +166,7 @@ describe('stripCommentsPass', () => {
     write('a/index.mjs', '/** doc */\nexport const a = 1;')
     write('a/index.cjs', '/** doc */\nexports.a = 1;')
     stripCommentsPass(depsRoot())
-    expect([read('a/index.mjs'), read('a/index.cjs')]).toEqual(['export const a = 1;', 'exports.a = 1;'])
+    expect({ esm: read('a/index.mjs'), cjs: read('a/index.cjs') }).toEqual({ esm: 'export const a = 1;', cjs: 'exports.a = 1;' })
   })
 
   it('counts nothing for non-chunk files and chunks with nothing removable', () => {
@@ -186,9 +186,11 @@ describe('stripCommentsPass', () => {
 
   it('is idempotent across two passes over the same tree', () => {
     write('a/index.mjs', '/** doc */\nexport const a = 1;')
-    expect([stripCommentsPass(depsRoot()), stripCommentsPass(depsRoot())]).toEqual([
-      { commentBytesRemoved: Buffer.byteLength('/** doc */\n') },
-      { commentBytesRemoved: 0 },
-    ])
+    const firstPass = stripCommentsPass(depsRoot())
+    const secondPass = stripCommentsPass(depsRoot())
+    expect({ firstPass, secondPass }).toEqual({
+      firstPass: { commentBytesRemoved: Buffer.byteLength('/** doc */\n') },
+      secondPass: { commentBytesRemoved: 0 },
+    })
   })
 })

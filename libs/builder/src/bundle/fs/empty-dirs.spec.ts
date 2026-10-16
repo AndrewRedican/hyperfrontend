@@ -29,7 +29,7 @@ describe('removeEmptyDirs', () => {
     return abs
   }
 
-  const exists = (...relPaths: string[]): boolean[] => relPaths.map((relPath) => existsSync(join(root, relPath)))
+  const surviving = (...relPaths: string[]): string[] => relPaths.filter((relPath) => existsSync(join(root, relPath)))
 
   it('counts a single removed empty directory', () => {
     dir('generate')
@@ -50,7 +50,7 @@ describe('removeEmptyDirs', () => {
   it('removes nested empty directories post-order', () => {
     dir('json/types/inner')
     removeEmptyDirs(root)
-    expect(exists('json/types/inner', 'json')).toEqual([false, false])
+    expect(surviving('json/types/inner', 'json/types', 'json')).toEqual([])
   })
 
   it('counts nothing when a directory holds a file', () => {
@@ -85,7 +85,10 @@ describe('removeEmptyDirs', () => {
     file('data/shared/keep.d.ts')
     dir('data/orphan/leaf')
     removeEmptyDirs(root)
-    expect(exists('data/orphan/leaf', 'data/orphan', 'data/shared/keep.d.ts', 'data/shared')).toEqual([false, false, true, true])
+    expect(surviving('data/orphan/leaf', 'data/orphan', 'data/shared/keep.d.ts', 'data/shared')).toEqual([
+      'data/shared/keep.d.ts',
+      'data/shared',
+    ])
   })
 
   it('counts nothing for an empty root', () => {

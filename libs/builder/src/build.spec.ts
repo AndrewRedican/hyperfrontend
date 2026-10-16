@@ -244,10 +244,16 @@ describe('build', () => {
     )
   })
 
-  it('forwards the same BuildContext instance to the package and bin phases', async () => {
+  it('passes the package phase the same BuildContext instance as the bundle phase', async () => {
     await build(baseConfig())
     const ctxArg = (runBundlePhase as Mock).mock.calls[0][0]
-    for (const phase of [runPackagePhase, runBinPhase]) expect((phase as Mock).mock.calls[0][0]).toBe(ctxArg)
+    expect((runPackagePhase as Mock).mock.calls[0][0]).toBe(ctxArg)
+  })
+
+  it('passes the bin phase the same BuildContext instance as the bundle phase', async () => {
+    await build(baseConfig())
+    const ctxArg = (runBundlePhase as Mock).mock.calls[0][0]
+    expect((runBinPhase as Mock).mock.calls[0][0]).toBe(ctxArg)
   })
 
   it('forwards the BuildConfig to the bundle phase', async () => {
@@ -374,7 +380,7 @@ describe('build', () => {
     ;(createMemoryMonitor as Mock).mockReturnValueOnce(makeMonitor())
     ;(runBundlePhase as Mock).mockRejectedValueOnce(new Error('bundle failed'))
     await build({ ...baseConfig(), memoryMonitor: true }).catch(() => undefined)
-    for (const phase of [runPackagePhase, runBinPhase]) expect(phase).not.toHaveBeenCalled()
+    expect({ package: (runPackagePhase as Mock).mock.calls, bin: (runBinPhase as Mock).mock.calls }).toEqual({ package: [], bin: [] })
   })
 
   it('rethrows phase failures even when no monitor is configured', async () => {
