@@ -18,16 +18,18 @@ describe('@hyperfrontend/data-utils CJS', () => {
     expect(typeof getType).toBe('function')
   })
 
-  it('correctly detects types', () => {
+  it.each([
+    ['hello', 'string'],
+    [123, 'number'],
+    [true, 'boolean'],
+    [null, 'null'],
+    [undefined, 'undefined'],
+    [[], 'array'],
+    [{}, 'object'],
+  ])('detects the type of %p as %s', (input, expected) => {
     const { getType } = require('@hyperfrontend/data-utils')
 
-    expect(getType('hello')).toBe('string')
-    expect(getType(123)).toBe('number')
-    expect(getType(true)).toBe('boolean')
-    expect(getType(null)).toBe('null')
-    expect(getType(undefined)).toBe('undefined')
-    expect(getType([])).toBe('array')
-    expect(getType({})).toBe('object')
+    expect(getType(input)).toBe(expected)
   })
 
   it('exports isIdentical function', () => {
@@ -35,19 +37,38 @@ describe('@hyperfrontend/data-utils CJS', () => {
     expect(typeof isIdentical).toBe('function')
   })
 
-  it('detects identical values', () => {
+  it('detects structurally equal objects as identical', () => {
     const { isIdentical } = require('@hyperfrontend/data-utils')
 
     expect(isIdentical({ a: 1 }, { a: 1 })).toBe(true)
+  })
+
+  it('detects objects with different values as not identical', () => {
+    const { isIdentical } = require('@hyperfrontend/data-utils')
+
     expect(isIdentical({ a: 1 }, { a: 2 })).toBe(false)
+  })
+
+  it('detects structurally equal arrays as identical', () => {
+    const { isIdentical } = require('@hyperfrontend/data-utils')
+
     expect(isIdentical([1, 2, 3], [1, 2, 3])).toBe(true)
   })
 
   it('exports sameType function', () => {
     const { sameType } = require('@hyperfrontend/data-utils')
     expect(typeof sameType).toBe('function')
+  })
+
+  it('names the type two strings share through sameType', () => {
+    const { sameType } = require('@hyperfrontend/data-utils')
 
     expect(sameType('hello', 'world')).toBe('string')
+  })
+
+  it('returns false from sameType for a string and a number', () => {
+    const { sameType } = require('@hyperfrontend/data-utils')
+
     expect(sameType('hello', 123)).toBe(false)
   })
 
@@ -64,12 +85,18 @@ describe('@hyperfrontend/data-utils CJS', () => {
   it('exports hasCircularReference function', () => {
     const { hasCircularReference } = require('@hyperfrontend/data-utils')
     expect(typeof hasCircularReference).toBe('function')
+  })
+
+  it('reports a circular reference only once the object references itself', () => {
+    const { hasCircularReference } = require('@hyperfrontend/data-utils')
 
     const obj: Record<string, unknown> = { a: 1 }
-    expect(hasCircularReference(obj)).toBe(false)
+    const beforeSelfReference = hasCircularReference(obj)
 
     obj.self = obj
-    expect(hasCircularReference(obj)).toBe(true)
+    const afterSelfReference = hasCircularReference(obj)
+
+    expect({ beforeSelfReference, afterSelfReference }).toEqual({ beforeSelfReference: false, afterSelfReference: true })
   })
 
   it('exports getDepth function', () => {
