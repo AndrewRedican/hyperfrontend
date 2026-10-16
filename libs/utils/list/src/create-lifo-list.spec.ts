@@ -44,14 +44,39 @@ describe('createLifoList', () => {
   })
 
   describe('pull()', () => {
-    it('removes and returns the last item', () => {
+    it('returns the last item', () => {
       const item1 = {}
       const item2 = {}
       lifoList.push(item1)
       lifoList.push(item2)
       expect(lifoList.pull()).toBe(item2)
+    })
+
+    it('removes the last item it returns', () => {
+      const item1 = {}
+      const item2 = {}
+      lifoList.push(item1)
+      lifoList.push(item2)
+      lifoList.pull()
       expect(lifoList.size()).toBe(1)
+    })
+
+    it('returns the earlier item on the next pull', () => {
+      const item1 = {}
+      const item2 = {}
+      lifoList.push(item1)
+      lifoList.push(item2)
+      lifoList.pull()
       expect(lifoList.pull()).toBe(item1)
+    })
+
+    it('empties the list once every item is pulled', () => {
+      const item1 = {}
+      const item2 = {}
+      lifoList.push(item1)
+      lifoList.push(item2)
+      lifoList.pull()
+      lifoList.pull()
       expect(lifoList.size()).toBe(0)
     })
 
@@ -80,10 +105,16 @@ describe('createLifoList', () => {
   })
 
   describe('remove()', () => {
-    it('deletes an item and returns true', () => {
+    it('returns true when it deletes an item', () => {
       const item = {}
       lifoList.push(item)
       expect(lifoList.remove(item)).toBe(true)
+    })
+
+    it('deletes the item from the list', () => {
+      const item = {}
+      lifoList.push(item)
+      lifoList.remove(item)
       expect(lifoList.has(item)).toBe(false)
     })
 
@@ -93,10 +124,15 @@ describe('createLifoList', () => {
   })
 
   describe('has()', () => {
-    it('checks if an item exists in the list', () => {
+    it('returns true for an item in the list', () => {
       const item = {}
       lifoList.push(item)
       expect(lifoList.has(item)).toBe(true)
+    })
+
+    it('returns false for an item outside the list', () => {
+      const item = {}
+      lifoList.push(item)
       expect(lifoList.has({})).toBe(false)
     })
   })

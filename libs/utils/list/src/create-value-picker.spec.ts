@@ -24,17 +24,16 @@ describe('createValuePicker', () => {
     })
 
     it('next cycles through elements and return to start', () => {
-      expect(valuePicker.next()).toBe('a')
-      expect(valuePicker.next()).toBe('b')
-      expect(valuePicker.next()).toBe('c')
-      expect(valuePicker.next()).toBe('a')
+      const picked = [valuePicker.next(), valuePicker.next(), valuePicker.next(), valuePicker.next()]
+      expect(picked).toEqual(['a', 'b', 'c', 'a'])
     })
 
     it('state persists between next and current calls', () => {
       valuePicker.next()
-      expect(valuePicker.current()).toBe('a')
+      const afterFirstNext = valuePicker.current()
       valuePicker.next()
-      expect(valuePicker.current()).toBe('b')
+      const afterSecondNext = valuePicker.current()
+      expect({ afterFirstNext, afterSecondNext }).toEqual({ afterFirstNext: 'a', afterSecondNext: 'b' })
     })
   })
 })

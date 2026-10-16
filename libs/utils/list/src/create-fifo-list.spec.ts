@@ -50,10 +50,16 @@ describe('createFifoList', () => {
   })
 
   describe('pull()', () => {
-    it('removes and returns the first item', () => {
+    it('returns the first item', () => {
       const item = {}
       fifoList.push(item)
       expect(fifoList.pull()).toBe(item)
+    })
+
+    it('removes the item it returns', () => {
+      const item = {}
+      fifoList.push(item)
+      fifoList.pull()
       expect(fifoList.size()).toBe(0)
     })
 
@@ -82,10 +88,16 @@ describe('createFifoList', () => {
   })
 
   describe('remove()', () => {
-    it('deletes an item and returns true', () => {
+    it('returns true when it deletes an item', () => {
       const item = {}
       fifoList.push(item)
       expect(fifoList.remove(item)).toBe(true)
+    })
+
+    it('deletes the item from the list', () => {
+      const item = {}
+      fifoList.push(item)
+      fifoList.remove(item)
       expect(fifoList.has(item)).toBe(false)
     })
 
@@ -95,10 +107,15 @@ describe('createFifoList', () => {
   })
 
   describe('has()', () => {
-    it('checks if an item exists in the list', () => {
+    it('returns true for an item in the list', () => {
       const item = {}
       fifoList.push(item)
       expect(fifoList.has(item)).toBe(true)
+    })
+
+    it('returns false for an item outside the list', () => {
+      const item = {}
+      fifoList.push(item)
       expect(fifoList.has({})).toBe(false)
     })
   })
